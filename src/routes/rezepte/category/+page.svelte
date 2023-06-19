@@ -8,8 +8,8 @@
 <h2>Kategorien</h2>
 <section>
 <TagCloud>
-{#each data.tags as tag}
-	<TagBall {tag} ref="/rezepte/tag">
+{#each data.categories as tag}
+	<TagBall {tag} ref="/rezepte/category">
 	</TagBall>
 {/each}
 </TagCloud>

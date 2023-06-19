@@ -7,11 +7,11 @@
     import Card from '$lib/components/Card.svelte'
 </script>
 <h1>Rezepte</h1>
-<h2>In Tag {data.tag}</h2>
+<h2>In Kategorie {data.category}</h2>
 <section>
 <Recipes>
 	{#each data.recipes as recipe}
 		<Card {recipe} {current_month}></Card>
 	{/each}
-	</Recipes>
+</Recipes>
 </section>
