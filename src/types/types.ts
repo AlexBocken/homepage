@@ -31,13 +31,14 @@ export type RecipeModelType = {
 	  list: [{
 		  name: string;
 		  unit: string;
-		  amount: number;
+		  amount: string;
 	  }]
   }]
   instructions?: [{
 	  name?: string;
 	  steps: [string]
   }]
+  addendum?: string
 };
 
 export type BriefRecipeType = {

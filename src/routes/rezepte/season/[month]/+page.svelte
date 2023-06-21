@@ -2,7 +2,6 @@
     import type { PageData } from './$types';
     import Recipes from '$lib/components/Recipes.svelte';
     import SeasonLayout from '$lib/components/SeasonLayout.svelte';
-    import '$lib/components/card.css';
     import MediaScroller from '$lib/components/MediaScroller.svelte';
     import Card from '$lib/components/Card.svelte';
     import Search from '$lib/components/Search.svelte';
