@@ -6,7 +6,7 @@
 	let description
 	let datecreated = new Date()
 	let datemodified = datecreated
-	let tags : string[] = []
+	let tags
 
     	import type { PageData } from './$types';
 	import CardAdd from '$lib/components/CardAdd.svelte';
@@ -61,15 +61,11 @@ input{
 <CardAdd></CardAdd>
 
 <input bind:value={short_name} placeholder="Kurzname"/>
-<input bind:value={name} placeholder="Name des Rezeptes"/>
-<input bind:value={icon} placeholder="Saison-Emoji"/>
-<input bind:value={category} placeholder="Kategorie" />
-<input bind:value={description} placeholder="Kurzbeschreibung"/>
-<input bind:value={tags} placeholder="Stichwort 1, Stichwort 2, ...">
 <h2>Zutaten</h2>
 <input>
 <h2>Zubereitung</h2>
 <button on:click={doPost}>HIT IT</button>
+<button on:click={console.log(tags)}>TAGS</button>
 <h3>Zutaten</h3>
 
 <!-- already added ingredients
