@@ -1,20 +1,20 @@
 <script lang="ts">
-    	let name = 'name'
-	let short_name = 'short_name'
-	let category = 'category'
-	let icon = 'icon'
-	let description = 'description'
+    	let name
+	let short_name
+	let category
+	let icon
+	let description
 	let datecreated = new Date()
 	let datemodified = datecreated
 	let tags : string[] = []
 
-    import type { PageData } from './$types';
-    import '$lib/components/card.css';
-    import MediaScroller from '$lib/components/MediaScroller.svelte';
-    import Card from '$lib/components/Card.svelte';
-    import Search from '$lib/components/Search.svelte';
-    export let data: PageData;
-    export let current_month = new Date().getMonth() + 1
+    	import type { PageData } from './$types';
+	import CardAdd from '$lib/components/CardAdd.svelte';
+    	import MediaScroller from '$lib/components/MediaScroller.svelte';
+    	import Card from '$lib/components/Card.svelte';
+    	import Search from '$lib/components/Search.svelte';
+    	export let data: PageData;
+    	export let current_month = new Date().getMonth() + 1
 	async function doPost () {
 		const res = await fetch('/api/add', {
 			method: 'POST',
@@ -42,23 +42,33 @@
 		result = JSON.stringify(json)
 		console.log(result)
 	}
+
 </script>
 
 <style>
 input{
+	all: unset;
 	display: block;
 	margin: 1rem;
+	padding: 0.2em 1em;
+	border-radius: 1000px;
+	background-color: var(--nord4);
+
 }
 </style>
 <h1>Rezept hinzufügen</h1>
 
-<input bind:value={short_name} />
-<input bind:value={name} />
-<input bind:value={icon} />
-<input bind:value={category} />
-<input bind:value={description} />
-<input type="text" name="" id="" bind:value={tags}>
+<CardAdd></CardAdd>
 
+<input bind:value={short_name} placeholder="Kurzname"/>
+<input bind:value={name} placeholder="Name des Rezeptes"/>
+<input bind:value={icon} placeholder="Saison-Emoji"/>
+<input bind:value={category} placeholder="Kategorie" />
+<input bind:value={description} placeholder="Kurzbeschreibung"/>
+<input bind:value={tags} placeholder="Stichwort 1, Stichwort 2, ...">
+<h2>Zutaten</h2>
+<input>
+<h2>Zubereitung</h2>
 <button on:click={doPost}>HIT IT</button>
 <h3>Zutaten</h3>
 
