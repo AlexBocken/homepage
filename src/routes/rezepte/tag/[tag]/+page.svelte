@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import '$lib/components/card.css';
     import Recipes from '$lib/components/Recipes.svelte';
     export let data: PageData;
     export let current_month = new Date().getMonth() + 1;

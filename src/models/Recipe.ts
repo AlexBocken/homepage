@@ -16,9 +16,9 @@ const RecipeSchema = new mongoose.Schema(
     description: {type: String, required: true},
     tags : [String],
     season : [Number],
-    baking: { temperature: {type: String, default: ""},
-	      length: {type: String, default: ""},
-	      mode: {type: String, default: ""},
+    baking: { temperature: String,
+	      length: String,
+	      mode: String,
     },
     preparation : String,
     fermentation: {bulk: String,
@@ -29,12 +29,13 @@ const RecipeSchema = new mongoose.Schema(
     ingredients : [ { name: {type: String, default: ""},
 	    list: [{name: {type: String, default: ""},
 		    unit: String,
-		    amount: Number,
+		    amount: String,
 	    }]
     }],
      instructions : [{name: {type: String, default: ""},
      		      steps: [String]}],
-     }
+     addendum : String,
+     },
 );
 
 export const Recipe = mongoose.model("Recipe", RecipeSchema);

@@ -2,8 +2,12 @@
 import "$lib/components/nordtheme.css"
 </script>
 <style>
-*{
+:global(*){
 box-sizing: border-box;
+}
+:global(body){
+	margin:0;
+	padding:0;
 }
 li{
 	list-style-type:none;
@@ -16,7 +20,9 @@ li>a{
 	font-size: 1.5rem;
 	color: inherit
 }
-li:hover{
+li:hover,
+li:focus-within
+{
 	cursor: pointer;
 	color: var(--red);
 	transform: scale(1.1,1.1);
@@ -29,6 +35,7 @@ ul {
 	gap: 1rem;
 	justify-content: space-evenly;
 	max-width: 1000px;
+	margin: 0;
 	margin-inline: auto;
 }
 nav{
@@ -37,16 +44,15 @@ nav{
 .wrapper{
 	display:flex;
 	flex-direction: column;
-	min-height: 95vh;
-	justify-content: space-between;
+	min-height: 100svh;
 }
 footer{
 padding-block: 1rem;
-justify-self: end;
 text-align: center;
+margin-top: auto;
 }
 </style>
-<div class=wrapper>
+<div class=wrapper style="">
 <div>
 <nav>
 <ul>
