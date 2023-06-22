@@ -13,6 +13,8 @@
     	import MediaScroller from '$lib/components/MediaScroller.svelte';
     	import Card from '$lib/components/Card.svelte';
     	import Search from '$lib/components/Search.svelte';
+	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
+	import CreateStepList from '$lib/components/CreateStepList.svelte';
     	export let data: PageData;
     	export let current_month = new Date().getMonth() + 1
 	async function doPost () {
@@ -43,6 +45,7 @@
 		console.log(result)
 	}
 
+
 </script>
 
 <style>
@@ -55,6 +58,47 @@ input{
 	background-color: var(--nord4);
 
 }
+.ingredient{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.ingredient > input{
+	display: inline;
+	margin-inline: 0.25em;
+}
+.ingredient>#unit{
+	max-width: 40px;
+}
+.ingredient>#amount{
+	max-width: 100px;
+}
+.ingredient button{
+	all: unset;
+	background-color: var(--red);
+	padding: 0.3em;
+	height: 100%;
+	border-radius: 1000px;
+	display:flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+	transition: 100ms;
+}
+.ingredient button svg{
+	fill: white;
+	width: 1.5rem;
+	height: 1.5rem;
+}
+.ingredient button:hover{
+	background-color: var(--orange);
+	transform: scale(1.1, 1.1);
+}
+.ingredient button:hover svg{
+	transform: scale(1.1, 1.1);
+}
+
 </style>
 <h1>Rezept hinzufügen</h1>
 
@@ -62,21 +106,6 @@ input{
 
 <input bind:value={short_name} placeholder="Kurzname"/>
 <h2>Zutaten</h2>
-<input>
+<CreateIngredientList></CreateIngredientList>
 <h2>Zubereitung</h2>
-<button on:click={doPost}>HIT IT</button>
-<button on:click={console.log(tags)}>TAGS</button>
-<h3>Zutaten</h3>
-
-<!-- already added ingredients
-<input type="number"><select name="" id=""></select><input type="text">
-
-<br>
-<br>
-<input type="text" name="" id=""><button>Neue Unterkategorie hinzufügen</button>
-
-<h3> Schritte </h3>
-<input type="text">
-<button>Neue Unterkategorie hinzufügen</button>
-<br>
-<input type="text"><button>Schritt hinzufügen</button>-->
+<CreateStepList></CreateStepList>
