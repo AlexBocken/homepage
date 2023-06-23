@@ -2,9 +2,15 @@
 
 import Cross from '$lib/assets/icons/Cross.svelte'
 
-export let tags:string[] = []
-let new_tag
+// all data shared with rest of page in card_data
+export let card_data
 
+if(!card_data.tags){
+	card_data.tags = []
+}
+
+//locals
+let new_tag
 let image_preview_url
 
 // Winter: ❄️
@@ -13,7 +19,6 @@ let image_preview_url
 // Fastenzeit: ✝️
 // Herbst: 🍂
 // Sommer: ☀️
-import upload_src from "$lib/assets/icons/upload.svg"
 
 
 export function show_local_image(){
@@ -38,15 +43,15 @@ export function remove_selected_images(){
 
 export function add_to_tags(){
 	if(new_tag){
-		if(! tags.includes(new_tag)){
-			tags.push(new_tag)
-			tags = tags;
+		if(! card_data.tags.includes(new_tag)){
+			card_data.tags.push(new_tag)
+			card_data.tags = card_data.tags;
 		}
 	}
 	new_tag = ""
 }
 export function remove_from_tags(tag){
-	tags = tags.filter(item => item !== tag)
+	card_data.tags = card_data.tags.filter(item => item !== tag)
 }
 export function add_on_enter(event){
 	if(event.key === 'Enter'){
@@ -55,14 +60,14 @@ export function add_on_enter(event){
 }
 export function remove_on_enter(event, tag){
 	if(event.key === 'Enter'){
-		tags = tags.filter(item => item !== tag)
+		card_data.tags = card_data.tags.filter(item => item !== tag)
 	}
 }
 </script>
 <style>
 .card{
 	position: relative;
-	margin-left: 100px;
+	margin-inline: auto;
 	--card-width: 300px;
 	text-decoration: none;
 	position: relative;
@@ -126,11 +131,6 @@ export function remove_on_enter(event, tag){
 	opacity: 0%;
 	z-index: 4;
 	transition:200ms;
-}
-.delete svg{
-	width: 2rem;
-	height: 2rem;
-	fill: white;
 }
 .delete:hover{
 	transform: scale(1.2, 1.2);
@@ -333,7 +333,7 @@ input::placeholder{
 
 <div class=card href="" >
 
-	<input class=icon placeholder=😀/>
+	<input class=icon placeholder=😀 bind:value={card_data.icon}/>
 	{#if image_preview_url}
 		<img src={image_preview_url} class=img_preview width=300px height=300px />
 	{/if}
@@ -351,13 +351,13 @@ input::placeholder{
 	</div>
 	<input type="file" id=img_picker accept="image/webp image/jpeg" on:change={show_local_image}>
 	<div class=title>
-		<input class=category placeholder=Kategorie.../>
+		<input class=category placeholder=Kategorie... bind:value={card_data.category}/>
 		<div>
-			<input class=name placeholder=Name.../>
-			<input class=description placeholder=Kurzbeschreibung.../>
+			<input class=name placeholder=Name... bind:value={card_data.name}/>
+			<input class=description placeholder=Kurzbeschreibung... bind:value={card_data.description}/>
 		</div>
 		<div class=tags>
-			{#each tags as tag}
+			{#each card_data.tags as tag}
 				<div class="tag" tabindex="0" on:keypress={remove_on_enter(event ,tag)} on:click='{remove_from_tags(tag)}'>{tag}</div>
 			{/each}
         	<div class="tag input_wrapper"><span class=input>+</span><input class="tag_input" type="text" on:keypress={add_on_enter} on:focusout={add_to_tags} size="1" bind:value={new_tag} placeholder=Stichwort...></div>

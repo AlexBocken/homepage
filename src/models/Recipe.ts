@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const RecipeSchema = new mongoose.Schema(
   {
-    short_name: {type: String, required: true},
+    short_name: {type: String, required: true, unique: true},
     name : {type: String, required: true,},
     category : {type: String, required: true,},
     icon: {type: String, required: true},

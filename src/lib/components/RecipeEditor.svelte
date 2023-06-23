@@ -7,9 +7,12 @@
 	let datemodified = datecreated
 
 	import CardAdd from '$lib/components/CardAdd.svelte';
+    	import MediaScroller from '$lib/components/MediaScroller.svelte';
+    	import Card from '$lib/components/Card.svelte';
+    	import Search from '$lib/components/Search.svelte';
 
-	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 	export let season = []
+	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 
 	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
 	export let ingredients = []
@@ -22,7 +25,7 @@
 			method: 'POST',
 			body: JSON.stringify({
 				recipe: {
-					season: get_season(),
+					season: season,
 					...card_data,
 					images: [{
 						mediapath: short_name + '.webp',
@@ -47,7 +50,6 @@
 		console.log(result)
 	}
 </script>
-
 <style>
 input.temp{
 	all: unset;
@@ -59,18 +61,16 @@ input.temp{
 
 }
 </style>
-<h1>Rezept hinzufügen</h1>
 
 <CardAdd {card_data}></CardAdd>
 
 <input class=temp bind:value={short_name} placeholder="Kurzname"/>
 
 <SeasonSelect {season}></SeasonSelect>
-
+<button on:click={() => console.log(season)}>PRINTOUT season</button>
 
 <h2>Zutaten</h2>
 <CreateIngredientList {ingredients}></CreateIngredientList>
 <h2>Zubereitung</h2>
 <CreateStepList {instructions} ></CreateStepList>
 <input class=temp type="password" placeholder=Passwort bind:value={password}>
-<button on:click={doPost}>ADD RECIPE</button>
