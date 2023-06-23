@@ -8,30 +8,17 @@
     export let data: PageData;
     export let current_month = new Date().getMonth() + 1
 </script>
-<style>
-.accordion{
-	display:flex;
-	background-color: #111111;
-	flex-direction: row;
-	margin-inline: auto;
-	padding-inline: 1rem;
-	padding-block: 3rem;
-	margin-block: 3rem;
-	align-items:center;
-	justify-content: center;
-	gap: 1rem;
-}
-</style>
+
 <h1>Rezepte</h1>
 <h2>In Saison</h2>
 <section>
 <MediaScroller>
 {#each data.season as recipe}
-	<Card {recipe} {current_month}></Card>
+	<Card {recipe} {current_month} search=""></Card>
 {/each}
 </MediaScroller>
 </section>
-<!--<Search></Search>-->
+<Search></Search>
 <h2>Alle Rezepte</h2>
 <Recipes>
 	{#each data.all_brief as recipe}

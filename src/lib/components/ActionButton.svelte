@@ -1,6 +1,7 @@
 <script lang='ts'>
 export let href
 import "$lib/components/nordtheme.css"
+import "$lib/css/action_button.css"
 </script>
 
 <style>
@@ -8,14 +9,13 @@ import "$lib/components/nordtheme.css"
 position: fixed;
 bottom:0;
 right:0;
-width: 2rem;
-height: 2rem;
+width: 1rem;
+height: 1rem;
 padding: 2rem;
 border-radius: 1000px;
 margin: 2rem;
 transition: 200ms;
 background-color: var(--red);
-box-shadow: 0em 0em 0.2em 0.2em rgba(0,0,0,0.2);
 display: grid;
 justify-content: center;
 align-content: center;
@@ -24,7 +24,7 @@ align-content: center;
 :global(.icon_svg){
 width: 2rem;
 height: 2rem;
-fill: var(--nord4);
+fill: white;
 }
 
 :root{
@@ -33,7 +33,7 @@ fill: var(--nord4);
 .container:hover,
 .container:focus-within
 {
-	background-color: var(--nord3);
+	background-color: var(--nord0);
 box-shadow: 0em 0em 0.5em 0.5em rgba(0,0,0,0.2);
 	/*transform: scale(1.2,1.2);*/
 	animation: shake 0.5s;
@@ -73,6 +73,6 @@ box-shadow: 0em 0em 0.5em 0.5em rgba(0,0,0,0.2);
     }
   }
 </style>
-<a class=container {href}>
+<a class="container action_button" {href}>
 	<slot></slot>
 </a>

@@ -6,16 +6,16 @@ import Plus from '$lib/assets/icons/Plus.svelte'
 import Check from '$lib/assets/icons/Check.svelte'
 
 import '$lib/components/nordtheme.css'
+import "$lib/css/action_button.css"
+
+import { do_on_key } from '$lib/components/do_on_key.js'
 
 const step_placeholder = "Kartoffeln schälen..."
-let instructions = [{
-	name: "",
-	steps: [],
-}]
+export let instructions
 
 let new_step = {
 	name: "",
-	step: "Kartoffeln schälen..."
+	step: step_placeholder
 	}
 
 let edit_heading = {
@@ -37,6 +37,9 @@ export function remove_list(list_index){
 }
 
 export function add_new_step(){
+	if(new_step.step == step_placeholder){
+		return
+	}
 	let list_index = get_sublist_index(new_step.name, instructions)
 	if(list_index == -1){
 		instructions.push({
@@ -51,9 +54,6 @@ export function add_new_step(){
 	const el = document.querySelector("#step")
 	el.innerHTML = step_placeholder
 	instructions = instructions //tells svelte to update dom
-
-	new_step.step = ""
-	add_placeholder()
 }
 
 export function remove_step(list_index, step_index){
@@ -107,7 +107,7 @@ export function clear_step(){
 export function add_placeholder(){
 	const el = document.querySelector("#step")
 	if(el.innerHTML == ""){
-		el.innerHTML = "Kartoffeln schälen..."
+		el.innerHTML = step_placeholder
 	}
 }
 </script>
@@ -117,6 +117,43 @@ input::placeholder{
 	all:unset;
 }
 
+
+input.heading{
+	all: unset;
+	background-color: var(--nord0);
+	padding: 1rem;
+	padding-inline: 2rem;
+	font-size: 1.5rem;
+	width: 100%;
+	border-radius: 1000px;
+	color: white;
+	justify-content: center;
+	align-items: center;
+	transition: 200ms;
+}
+input.heading:hover,
+input.heading:focus-visible
+{
+	background-color: var(--nord1);
+}
+
+.heading_wrapper{
+	position: relative;
+	width: 300px;
+	margin-inline: auto;
+	transition: 200ms;
+}
+.heading_wrapper:hover,
+.heading_wrapper:focus-visible
+{
+	transform:scale(1.1,1.1);
+}
+
+.heading_wrapper button{
+	position: absolute;
+	bottom: -1.5rem;
+	right: -5rem;
+}
 .adder{
 	margin-inline: auto;
 	position: relative;
@@ -129,24 +166,9 @@ input::placeholder{
 	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
 }
 .adder button{
-	all:unset;
 	position: absolute;
 	right: -1.5rem;
 	bottom: -1.5rem;
-	cursor: pointer;
-	display:flex;
-	justify-content: center;
-	align-items: center;
-	background-color: var(--red);
-	border-radius:100000px;
-	padding: 1rem;
-	transition: 100ms;
-	box-shadow: 0 0 1em 0.4em rgba(0,0,0,0.3);
-}
-.adder button:hover{
-	background-color: var(--nord0);
-	transform: scale(1.1,1.1);
-	box-shadow: 0 0 1em 0.8em rgba(0,0,0,0.3);
 }
 .category{
 	all: unset;
@@ -164,11 +186,15 @@ input::placeholder{
 	transition: 100ms;
 	box-shadow: 0.5em 0.5em 1em 0.4em rgba(0,0,0,0.3);
 }
-.category:hover{
+.category:hover,
+.category:focus-visible
+{
 	background-color: var(--nord1);
 	transform: scale(1.05,1.05);
 }
-.adder:hover{
+.adder:hover,
+.adder:focus-within
+{
 	transform: scale(1.1, 1.1);
 }
 
@@ -193,9 +219,11 @@ dialog{
 	box-sizing: content-box;
 	width: 100%;
 	height: 100%;
-	background-color: rgba(0, 0, 0, 0.6);
+	background-color: rgba(255,255,255, 0.001);
 	border: unset;
+	backdrop-filter: blur(10px);
 	margin: 0;
+	transition: 200ms;
 }
 dialog .adder{
 	margin-top: 5rem;
@@ -205,37 +233,23 @@ dialog h2{
 	font-family: sans-serif;
 	color: white;
 	text-align: center;
-	margin-top: 30%;
+	margin-top: 30vh;
+	margin-top: 30dvh;
+	filter: drop-shadow(0 0 0.4em black)
+		drop-shadow(0 0 1em black)
+		;
 }
-
-@keyframes shake{
-    0%{
-      transform: rotate(0)
-		scale(1,1);
+dialog[open]{
+    animation: show 200ms ease forwards;
+}
+@keyframes show{
+    from {
+	backdrop-filter: blur(0px);
     }
-    25%{
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-      	transform: rotate(30deg)
-      		scale(1.2,1.2)
-      ;
+    to {
+	backdrop-filter: blur(10px);
     }
-    50%{
-
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-      	transform: rotate(-30deg)
-      		scale(1.2,1.2);
-    }
-    74%{
-
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-  	transform: rotate(30deg)
-  		scale(1.2, 1.2);
-	}
-	100%{
-      transform: rotate(0)
-      	scale(1,1);
-    }
-  }
+}
 </style>
 
 
@@ -269,10 +283,10 @@ dialog h2{
 {/each}
 
 <div class='adder shadow'>
-<input class=category type="text" bind:value={new_step.name} placeholder="Unterkategorie (optional)">
+<input class=category type="text" bind:value={new_step.name} placeholder="Kategorie (optional)"on:keypress={(event) => do_on_key(event, 'Enter', false , add_new_step)} >
 <div class=add_step>
-	<p id=step contenteditable on:focus='{clear_step}' on:blur={add_placeholder} bind:innerHTML={new_step.step}></p>
-	<button on:click={() => add_new_step()}>
+	<p id=step contenteditable on:focus='{clear_step}' on:blur={add_placeholder} bind:innerHTML={new_step.step} on:keypress={(event) => do_on_key(event, 'Enter', true , add_new_step)}></p>
+	<button on:click={() => add_new_step()} class=action_button>
 		<Plus fill=white style="height: 2rem; width: 2rem"></Plus>
 	</button>
 
@@ -281,18 +295,21 @@ dialog h2{
 <dialog id=edit_step_modal>
 	<h2>Schritt verändern</h2>
 	<div class=adder>
-	<input class=category type="text" bind:value={edit_step.name} placeholder="Unterkategorie (optional)">
+	<input class=category type="text" bind:value={edit_step.name} placeholder="Unterkategorie (optional)" on:keypress={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
 	<div class=add_step>
-		<p id=step contenteditable bind:innerHTML={edit_step.step}></p>
-	<button on:click="{() => edit_step_and_close_modal()}" >
+		<p id=step contenteditable bind:innerHTML={edit_step.step} on:keypress={(event) => do_on_key(event, 'Enter', true , edit_step_and_close_modal)}></p>
+	<button class=action_button on:click="{() => edit_step_and_close_modal()}" >
 		<Check fill=white style="height: 2rem; width: 2rem"></Check>
 	</button>
 </div>
 </dialog>
 
 <dialog id=edit_subheading_steps_modal>
-	<input type="text" bind:value={edit_heading.name}>
-	<button on:click={edit_subheading_steps_and_close_modal}>
-	<Check></Check>
-	</button>
+	<h2>Kategorie umbenennen</h2>
+	<div class=heading_wrapper>
+		<input class="heading" type="text" bind:value={edit_heading.name} on:keypress={(event) => do_on_key(event, 'Enter', false, edit_subheading_steps_and_close_modal)}>
+		<button on:click={edit_subheading_steps_and_close_modal} class=action_button>
+		<Check fill=white style="height: 2rem; width: 2rem"></Check>
+		</button>
+	</div>
 </dialog>

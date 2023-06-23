@@ -11,9 +11,7 @@
 </script>
 
 <SeasonLayout>
-
 <h2 slot=test>Rezepte des Monats </h2>
-
 <Recipes slot=recipes>
 	{#each data.season as recipe}
 		<Card {recipe} {current_month}></Card>
