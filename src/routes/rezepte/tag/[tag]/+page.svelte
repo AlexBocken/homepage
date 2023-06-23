@@ -4,9 +4,11 @@
     export let data: PageData;
     export let current_month = new Date().getMonth() + 1;
     import Card from '$lib/components/Card.svelte'
+    import Search from '$lib/components/Search.svelte';
 </script>
 <h1>Rezepte</h1>
 <h2>In Tag {data.tag}</h2>
+<Search></Search>
 <section>
 <Recipes>
 	{#each data.recipes as recipe}

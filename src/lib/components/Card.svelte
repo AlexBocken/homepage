@@ -2,6 +2,7 @@
 export let recipe
 export let current_month
 export let icon_override = false;
+export let search = "search_me"
 
 if(icon_override){
 	current_month = recipe.season[0]
@@ -29,9 +30,9 @@ if(icon_override){
 	display: flex;
 	flex-direction: column;
 	justify-content: end;
-	transition: 200ms;
 	background-color:  var(--blue);
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.3);
+	transition: 200ms;
 }
 .card .icon{
 	text-decoration: unset;
@@ -45,17 +46,24 @@ if(icon_override){
 	border-radius:1000px;
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.6);
 }
+.card:hover,
+.card:focus-within{
+	transform: scale(1.02,1.02);
+	background-color: var(--red);
+	box-shadow: 0.2em 0.2em 2em 1em rgba(0, 0, 0, 0.3);
+}
+.card:active{
+	scale: 0.95 0.95;
+}
 .card .icon:hover,
 .card .icon:focus-visible
 {
 	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
 	transform:scale(1.2, 1.2)
 }
-.card:hover,
-.card:focus-within{
-	transform: scale(1.02,1.02);
-	background-color: var(--red);
-	box-shadow: 0.2em 0.2em 2em 1em rgba(0, 0, 0, 0.3);
+.icon:active{
+	scale: 0.8 0.8;
+	rotate: 30deg;
 }
 
 .card img{
@@ -116,7 +124,10 @@ if(icon_override){
 	background-color: var(--orange);
 	box-shadow: 0.2em 0.2em 0.2em 0.1em rgba(0, 0, 0, 0.3);
 }
-
+.card .tag:active{
+	transition: 100ms;
+	scale: 0.8 0.8;
+}
 .card .title .category{
 	position: absolute;
 	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
@@ -138,6 +149,10 @@ if(icon_override){
 	background-color: var(--nord3);
 	transform: scale(1.05, 1.05)
 }
+.card .category:active{
+	scale: 0.9 0.9;
+}
+
 .card:hover .icon,
 .card:focus-visible .icon
 {
@@ -174,7 +189,7 @@ if(icon_override){
   }
 
 </style>
-<a class=card href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
+<a class="card {search}" href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
 {#if icon_override || recipe.season.includes(current_month)}
 	<a class=icon href="/rezepte/season/{current_month}">{recipe.icon}</a>
 {/if}
