@@ -4,10 +4,12 @@ import "$lib/components/nordtheme.css"
 <style>
 :global(*){
 box-sizing: border-box;
+font-family: sans-serif;
 }
 :global(body){
 	margin:0;
 	padding:0;
+	background-color: #fbf9f3;
 }
 li{
 	list-style-type:none;
@@ -17,9 +19,10 @@ li{
 li>a{
 	text-decoration: none;
 	font-family: sans-serif;
-	font-size: 1.5rem;
+	font-size: 1.2rem;
 	color: inherit
 }
+
 li:hover,
 li:focus-within
 {
@@ -27,7 +30,6 @@ li:focus-within
 	color: var(--red);
 	transform: scale(1.1,1.1);
 }
-
 ul {
 	padding-block: 2rem;
 	display: flex;
@@ -38,6 +40,16 @@ ul {
 	margin: 0;
 	margin-inline: auto;
 }
+@media screen and (max-width: 500px) {
+	ul{
+	flex-direction: column;
+	}
+	li:hover,
+	li:focus-within{
+	transform: unset;
+	}
+}
+
 nav{
 	background-color: var(--nord0);
 }
@@ -49,7 +61,7 @@ nav{
 footer{
 padding-block: 1rem;
 text-align: center;
-margin-top: auto;
+margin-top: 3rem;
 }
 </style>
 <div class=wrapper style="">

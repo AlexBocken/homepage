@@ -12,6 +12,7 @@ import { do_on_key } from '$lib/components/do_on_key.js'
 
 const step_placeholder = "Kartoffeln schälen..."
 export let instructions
+export let add_info
 
 let new_step = {
 	name: "",
@@ -32,6 +33,12 @@ function get_sublist_index(sublist_name, list){
 	return -1
 }
 export function remove_list(list_index){
+	if(instructions[list_index].steps.length > 1){
+		const response = confirm("Bist du dir sicher, dass du diese Liste löschen möchtest? Alle Zubereitungsschritte der Liste werden hiermit auch gelöscht.");
+		if(!response){
+			return
+		}
+	}
 	instructions.splice(list_index, 1);
 	instructions = instructions //tells svelte to update dom
 }
@@ -117,9 +124,23 @@ input::placeholder{
 	all:unset;
 }
 
-
+li > div{
+	display:flex;
+	flex-direction: row;
+	justify-items: space-between;
+	align-items:center;
+}
+li > div > div:first-child{
+	flex-grow: 1;
+	cursor: pointer;
+}
+li > div > div:last-child{
+	display: flex;
+	flex-direction: row;
+}
 input.heading{
 	all: unset;
+	box-sizing: border-box;
 	background-color: var(--nord0);
 	padding: 1rem;
 	padding-inline: 2rem;
@@ -139,7 +160,7 @@ input.heading:focus-visible
 
 .heading_wrapper{
 	position: relative;
-	width: 300px;
+	width: min(300px, 95dvw);
 	margin-inline: auto;
 	transition: 200ms;
 }
@@ -152,15 +173,20 @@ input.heading:focus-visible
 .heading_wrapper button{
 	position: absolute;
 	bottom: -1.5rem;
-	right: -5rem;
+	right: -1.5rem;
 }
 .adder{
 	margin-inline: auto;
 	position: relative;
 	margin-block: 3rem;
-	width: 50ch;
+	width: 90%;
 	border-radius: 20px;
 	transition: 200ms;
+	background-color: var(--blue);
+	padding: 1.5rem 2rem;
+}
+dialog .adder{
+	width: 400px;
 }
 .shadow{
 	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
@@ -202,17 +228,18 @@ input.heading:focus-visible
 	font-family: sans-serif;
 	width: 100%;
 	font-size: 1.2rem;
-	padding: 2rem;
-	padding-top: 2.5rem;
 	border-radius: 20px;
-	background-color: var(--blue);
-	color: #bbb;
-	transition: 200ms;
+	border: 2px solid var(--nord4);
+	border-radius: 30px;
+	padding: 0.5em 1em;
+	color: var(--nord4);
+	transition: 100ms;
 }
 .add_step p:hover,
 .add_step p:focus-visible
 {
 	color: white;
+	scale: 1.02 1.02;
 }
 
 dialog{
@@ -239,6 +266,21 @@ dialog h2{
 		drop-shadow(0 0 1em black)
 		;
 }
+@media screen and (max-width: 500px){
+	dialog h2{
+		margin-top: 2rem;
+	}
+	dialog .adder{
+		width: 85%;
+		padding-inline: 0.5em;
+	}
+	dialog .adder .category{
+		width: 70%;
+	}
+	dialog .adder input::placeholder{
+		font-size: 1.2rem;
+	}
+}
 dialog[open]{
     animation: show 200ms ease forwards;
 }
@@ -250,10 +292,122 @@ dialog[open]{
 	backdrop-filter: blur(10px);
     }
 }
+ol li::marker{
+	font-weight: bold;
+	color: var(--blue);
+	font-size: 1.2rem;
+}
+.instructions{
+	flex-basis: 0;
+	flex-grow: 2;
+	background-color: var(--nord5);
+	padding-block: 1rem;
+	padding-inline: 2rem;
+}
+.instructions ol{
+	padding-left: 1em;
+}
+.instructions li{
+	margin-block: 0.5em;
+	font-size: 1.1rem;
+}
+
+.additional_info{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1em;
+}
+.additional_info > *{
+	flex-grow: 0;
+	overflow: hidden;
+	padding: 1em;
+	background-color: #FAFAFE;
+	box-shadow: 0.3em 0.3em 1em 0.2em rgba(0,0,0,0.3);
+	/*max-width: 30%*/
+}
+.additional_info > div > *:not(h4){
+	line-height: 2em;
+}
+h4{
+	line-height: 1em;
+	margin-block: 0;
+}
+.button_subtle{
+	padding: 0em;
+	animation: unset;
+	margin: 0.2em 0.1em;
+	background-color: transparent;
+	box-shadow: unset;
+	display:inline;
+}
+.button_subtle:hover{
+	scale: 1.2 1.2;
+}
+h3{
+	display:flex;
+	gap: 1rem;
+}
+.additional_info input{
+	all:unset;
+	display: inline;
+	width: 10ch;
+	border-radius: 1000px;
+	border: 2px solid grey;
+	padding: 0em 0.5em;
+}
+.additional_info input::placeholder{
+	color: grey;
+}
+.additional_info p[contenteditable]{
+	display: inline;
+	padding: 0.25em 1em;
+	border: 2px solid grey;
+	border-radius: 1000px;
+}
+.additional_info div:has(p[contenteditable]){
+	transition: 200ms;
+	display: inline;
+}
+.additional_info div:has(p[contenteditable]):hover,
+.additional_info div:has(p[contenteditable]):focus-within
+{
+	transform: scale(1.1, 1.1);
+}
+@media screen and (max-width: 500px){
+	dialog h2{
+	margin-top: 2rem;
+	}
+	dialog .heading_wrapper{
+		width: 80%;
+	}
+}
 </style>
 
+<div class=instructions>
+<div class=additional_info>
+
+	<div><h4>Vorbereitung:</h4>
+		<p contenteditable type="text" bind:innerText={add_info.preparation}></p>
+	</div>
 
 
+	<div><h4>Stockgare:</h4>
+		<p contenteditable type="text" bind:innerText={add_info.fermentation.bulk}></p>
+	</div>
+
+	<div><h4>Stückgare:</h4>
+		<p contenteditable type="text" bind:innerText={add_info.fermentation.final}></p>
+	</div>
+
+	<div><h4>Backen:</h4>
+		<div><p type="text" bind:innerText={add_info.baking.length} contenteditable placeholder="40 min..."></p></div> bei <div><p type="text" bind:innerText={add_info.baking.temperature} contenteditable placeholder=200...></p></div> °C <div><p type="text" bind:innerText={add_info.baking.mode} contenteditable placeholder="Ober-/Unterhitze..."></p></div></div>
+
+	<div><h4>Auf dem Teller:</h4>
+		<div><p contenteditable type="text" bind:innerText={add_info.total_time}></p></div>
+		</div>
+</div>
+
+<h2>Zubereitung</h2>
 {#each instructions as list, list_index}
 	<h3>
 	{#if list.name}
@@ -261,31 +415,34 @@ dialog[open]{
 	{:else}
 		Leer
 	{/if}
-	<button class=edit on:click="{() => show_modal_edit_subheading_step(list_index)}">
-			<Pen></Pen>	</button>
-		<button class=remove on:click="{() => remove_list(list_index)}">
-				<Cross></Cross>
+	<div>
+	<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}">
+			<Pen fill=var(--nord1)></Pen>	</button>
+		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}">
+				<Cross fill=var(--nord1)></Cross>
 		</button>
+	</div>
 	</h3>
 	<ol>
 	{#each list.steps as step, step_index}
-		<li>{step}
-			<button class=edit on:click={() => show_modal_edit_step(list_index, step_index)}>
-				<Pen></Pen>
+		<li><div><div on:click={() => show_modal_edit_step(list_index, step_index)}>{step}</div>
+			<div><button class="action_button button_subtle" on:click={() => show_modal_edit_step(list_index, step_index)}>
+				<Pen fill=var(--nord1)></Pen>
 		</button>
-		<button class=remove on:click="{() => remove_step(list_index, step_index)}">
-			<Cross></Cross>
+		<button class="action_button button_subtle" on:click="{() => remove_step(list_index, step_index)}">
+			<Cross fill=var(--nord1)></Cross>
 		</button>
-
+			</div></div>
 		</li>
 	{/each}
 	</ol>
 {/each}
+</div>
 
 <div class='adder shadow'>
 <input class=category type="text" bind:value={new_step.name} placeholder="Kategorie (optional)"on:keypress={(event) => do_on_key(event, 'Enter', false , add_new_step)} >
 <div class=add_step>
-	<p id=step contenteditable on:focus='{clear_step}' on:blur={add_placeholder} bind:innerHTML={new_step.step} on:keypress={(event) => do_on_key(event, 'Enter', true , add_new_step)}></p>
+	<p id=step contenteditable on:focus='{clear_step}' on:blur={add_placeholder} bind:innerText={new_step.step} on:keypress={(event) => do_on_key(event, 'Enter', true , add_new_step)}></p>
 	<button on:click={() => add_new_step()} class=action_button>
 		<Plus fill=white style="height: 2rem; width: 2rem"></Plus>
 	</button>

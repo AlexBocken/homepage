@@ -16,10 +16,12 @@ const test_json = [
 		caption: "",
 	}],
 	description: "Alles was das Bauernherz erfreuen lässt in einer Mahlzeit.",
-	tags: ["Schweiz", "Käse", "Speck", "Nudeln", "Apfelmuß", "Kartoffeln"],
-	season: [6,7,8,9,10,11,12,1],
+	preamble: "Dieser Schweizer Klassiker ist wohl das beste Essen nach einem langen Tag von Skifahren. Die Beilage aus Apfelmus ist ein Muss.",
+	tags: ["Schweiz", "Käse", "Speck", "Nudeln", "Apfelmuß", "Kartoffeln", "Fleisch"],
+	season: [10,11,12,1],
   	portions: "4 Hauptspeisen",
-  	total_time: "30 Minuten",
+	preparation: "10 min",
+  	total_time: "30 min",
   	ingredients: [ {
 	  name: "",
 	  list: [

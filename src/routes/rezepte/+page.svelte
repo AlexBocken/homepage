@@ -8,7 +8,6 @@
     export let data: PageData;
     export let current_month = new Date().getMonth() + 1
 </script>
-
 <h1>Rezepte</h1>
 <h2>In Saison</h2>
 <section>

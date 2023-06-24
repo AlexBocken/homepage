@@ -19,7 +19,11 @@ background-color: var(--red);
 display: grid;
 justify-content: center;
 align-content: center;
-
+}
+@media screen and (max-width: 500px) {
+	.container{
+		margin: 1rem;
+	}
 }
 :global(.icon_svg){
 width: 2rem;
