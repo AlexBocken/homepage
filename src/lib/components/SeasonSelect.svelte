@@ -1,9 +1,16 @@
 <script lang=ts>
 import "$lib/components/nordtheme.css"
+import { season } from '$lib/js/season_store.js'
 import {onMount} from "svelte";
 let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
 
-export let season : Number[]
+
+
+let season_local
+
+season.subscribe((s) => {
+	season_local = s
+});
 
 export function set_season(){
 	let temp = []
@@ -13,18 +20,18 @@ export function set_season(){
 			temp.push(i+1)
 		}
 	}
-	season = temp
+	season.update((s) => temp)
 }
 
 function write_season(season){
 	const el = document.getElementById("labels");
 	for(var i = 0; i < season.length; i++){
-		el.children[i].children[0].children[0].checked = true
+		el.children[season[i]-1].children[0].children[0].checked = true
 	}
 }
 
 onMount(() => {
-	write_season(season)
+	write_season(season_local)
 });
 
 </script>
@@ -75,6 +82,3 @@ input[type=checkbox]::after
 	</div>
 {/each}
 </div>
-
-
-<button on:click={() => console.log("season", season)}> PRINT SEASON FROM SEASON_SELECT</button>

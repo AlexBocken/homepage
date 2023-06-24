@@ -10,6 +10,7 @@ import "$lib/css/action_button.css"
 import { do_on_key } from '$lib/components/do_on_key.js'
 
 export let ingredients
+export let portions
 
 let new_ingredient = {
 	amount: "",
@@ -107,7 +108,6 @@ export function show_keys(event){
 </script>
 
 <style>
-
 input::placeholder{
 	all:unset;
 }
@@ -117,6 +117,7 @@ input{
 
 input.heading{
 	all: unset;
+	box-sizing: border-box;
 	background-color: var(--nord0);
 	padding: 1rem;
 	padding-inline: 2rem;
@@ -146,13 +147,14 @@ input.heading:hover{
 .heading_wrapper button{
 	position: absolute;
 	bottom: -1.5rem;
-	right: -5rem;
+	right: -2rem;
 }
 .adder{
+	box-sizing: border-box;
 	margin-inline: auto;
 	position: relative;
 	margin-block: 3rem;
-	width: 400px;
+	width: 90%;
 	border-radius: 20px;
 	transition: 200ms;
 }
@@ -269,32 +271,11 @@ dialog h2{
 		drop-shadow(0 0 1em black)
 		;
 }
-ul{
-	width: fit-content;
-	margin-inline: auto;
-}
-li{
-	font-size: 1.2rem;
-	max-width: 1000px;
-	align-items: center;
-}
-.li_wrapper{
-	display: flex;
-	justify-content: space-between;
-}
 .mod_icons{
 	display: flex;
 	flex-direction: row;
 	margin-left: 2rem;
 }
-li:nth-child(2n){
-	background-color: var(--nord4);
-
-}
-li:nth-child(2n+1){
-	background-color: var(--nord6);
-}
-
 .button_subtle{
 	padding: 0em;
 	animation: unset;
@@ -306,16 +287,64 @@ li:nth-child(2n+1){
 	scale: 1.2 1.2;
 }
 h3{
-	margin-inline: auto;
 	width: fit-content;
 	display: flex;
 	flex-direction: row;
 	max-width: 1000px;
 	justify-content: space-between;
 }
+.ingredients_grid{
+	box-sizing: border-box;
+	display: grid;
+	font-size: 1.1em;
+	grid-template-columns: 2fr 3fr 1fr;
+	grid-template-rows: auto;
+	grid-auto-flow: row;
+	align-items: center;
+	row-gap: 0.5em;
+	column-gap: 0.5em;
+}
+
+.ingredients_grid > *{
+	cursor: pointer;
+}
+.ingredients_grid>*:nth-child(3n+1){
+	min-width: 5ch;
+}
+
+.list_wrapper{
+	padding-inline: 2em;
+	padding-block: 1em;
+}
+.list_wrapper p[contenteditable]{
+	border: 2px solid grey;
+	border-radius: 1000px;
+	padding: 0.25em 1em;
+	background-color: white;
+	transition: 200ms;
+}
+.list_wrapper p[contenteditable]:hover,
+.list_wrapper p[contenteditable]:focus-within{
+	scale: 1.05 1.05;
+}
+@media screen and (max-width: 500px){
+	dialog h2{
+	margin-top: 2rem;
+	}
+	dialog .heading_wrapper{
+		width: 80%;
+	}
+	.ingredients_grid .mod_icons{
+		margin-left: 0;
+	}
+}
 </style>
 
+<div class=list_wrapper>
+<h4>Portionen:</h4>
+<p contenteditable type="text" bind:innerText={portions}></p>
 
+<h2>Zutaten</h2>
 {#each ingredients as list, list_index}
 	<h3>
 	<div>
@@ -326,26 +355,23 @@ h3{
 	{/if}
 	</div>
 	<div class=mod_icons>
-	<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
+		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
 			<Pen fill=var(--nord1)></Pen>	</button>
 		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}">
-				<Cross fill=var(--nord1)></Cross>
-		</button>
+			<Cross fill=var(--nord1)></Cross></button>
 	</div>
 	</h3>
-	<ul>
+	<div class=ingredients_grid>
 	{#each list.list as ingredient, ingredient_index}
-		<li><div class=li_wrapper><div>{ingredient.amount} {ingredient.unit} {ingredient.name}</div>
+		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.amount} {ingredient.unit}</div>
+		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.name}</div>
 		<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
-		<Pen fill=var(--nord1) height=1em width=1em></Pen>
-		</button>
-		<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}">
-			<Cross fill=var(--nord1) height=1em width=1em></Cross>
-		</button></div></div>
-	</li>
+			<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
+			<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
 	{/each}
-	</ul>
+	</div>
 {/each}
+</div>
 
 <div class="adder shadow">
 	<input class=category type="text" bind:value={new_ingredient.sublist} placeholder="Kategorie (optional)" on:keypress={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
@@ -358,7 +384,6 @@ h3{
 		</button>
 	</div>
 </div>
-
 <dialog id=edit_ingredient_modal>
 	<h2>Zutat verändern</h2>
 	<div class=adder>

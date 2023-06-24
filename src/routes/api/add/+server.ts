@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({request}) => {
   	await dbConnect();
 	await Recipe.create(recipe_json);
   	await dbDisconnect();
-	return {status: 400} //TODO: cleanup error throwing
+	return {status: 200} //TODO: cleanup error throwing
   }
   else{
 	console.log("PASSWORD INCORRECT")
