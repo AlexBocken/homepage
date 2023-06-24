@@ -38,6 +38,7 @@ export type RecipeModelType = {
 	  name?: string;
 	  steps: [string]
   }]
+  preamble?: String
   addendum?: string
 };
 

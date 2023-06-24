@@ -215,12 +215,19 @@ input::placeholder{
 	color:var(--nord0);
 }
 .card .description{
+	box-sizing:border-box;
+	border: 2px solid var(--nord5);
+	border-radius: 30px;
 	padding-inline: 1em;
+	padding-block: 0.5em;
+	margin-inline: 1em;
+	margin-top: 0;
 	color: var(--nord4);
 	width: calc(300px - 2em); /*??*/
 }
 .card .description:hover{
 	color: var(--nord0);
+	border: 2px solid var(--nord0);
 }
 .card .tags{
 	display: flex;
@@ -354,7 +361,7 @@ input::placeholder{
 		<input class=category placeholder=Kategorie... bind:value={card_data.category}/>
 		<div>
 			<input class=name placeholder=Name... bind:value={card_data.name}/>
-			<input class=description placeholder=Kurzbeschreibung... bind:value={card_data.description}/>
+			<p contenteditable class=description placeholder=Kurzbeschreibung... bind:innerText={card_data.description}></p>
 		</div>
 		<div class=tags>
 			{#each card_data.tags as tag}

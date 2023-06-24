@@ -5,7 +5,6 @@
 
 onMount(() => {
 	const recipes = document.querySelectorAll(".search_me");
-	console.log("######", recipes)
 	const search = document.getElementById("search");
   	const clearSearch = document.getElementById("clear-search");
 
