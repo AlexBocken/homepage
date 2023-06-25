@@ -8,6 +8,7 @@
 	import EditButton from '$lib/components/EditButton.svelte';
 	import InstructionsPage from '$lib/components/InstructionsPage.svelte';
 	import IngredientsPage from '$lib/components/IngredientsPage.svelte';
+	import TitleImgParallax from '$lib/components/TitleImgParallax.svelte';
 
     	export let data: PageData;
 
@@ -86,6 +87,16 @@ h1{
 	box-shadow: 0.1em 0.1em 0.2em 0.2em rgba(0,0,0,0.3);
 }
 
+.wrapper_wrapper{
+	background-color: #fbf9f3;
+	width: 100svw;
+	padding-top: 3rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-bottom: 3rem;
+}
+
 .wrapper{
 	display: flex;
 	flex-direction: row;
@@ -100,26 +111,14 @@ h1{
 	}
 }
 
-.title_container{
-	max-width: 1000px;
-	display: flex;
-	flex-direction: column;
-	margin-inline: auto;
-}
 .title{
 	position: relative;
 	width: min(800px, 80vw);
 	margin-inline: auto;
-	transform: translateY(-4rem);
 	background-color: var(--nord6);
 	padding: 1rem 2rem;
-}
-.title_container .img{
-	width: 100%;
-	height: 700px;
-	background-size: cover;
-	background-repeat: no-repeat;
-	background-position: center;
+	translate: 0 1px; /*bruh*/
+	z-index: -1;
 }
 .icon{
 	position: absolute;
@@ -198,33 +197,29 @@ h4{
 {/each}
 </MultiImgWrapper>-->
 
+<TitleImgParallax src=/images/{data.images[0].mediapath}>
+	<div class=title>
+		<a class="icon" href='/rezepte/season/{data.season[0]}'>{data.icon}</a>
+		<h1>{data.name}</h1>
+		{#if data.preamble}
+			<p>{data.preamble}</p>
+		{/if}
+		<div class=tags>
+			<h4>Saison:</h4>
+			{#each season_iv as season}
+				<a class=tag href="/rezepte/season/{season[0]}">{months[season[0] - 1]}-{months[season[1] - 1]}</a>
+			{/each}
+		</div>
+		<div class=tags>
+			<h4>Stichwörter:</h4>
+			{#each data.tags as tag}
+				<a class=tag href="/rezepte/tag/{tag}">{tag}</a>
+			{/each}
+		</div>
 
-<div class=title_container>
-<div class=img style="background-image: url({hero_img_src})"></div>
-<div class=title>
-<a class="icon" href='/rezepte/season/{data.season[0]}'>{data.icon}</a>
-<h1>{data.name}</h1>
-{#if data.preamble}
-	<p>{data.preamble}</p>
-{/if}
-<div class=tags>
-<h4>Saison:</h4>
-{#each season_iv as season}
-	<a class=tag href="/rezepte/season/{season[0]}">{months[season[0] - 1]}-{months[season[1] - 1]}</a>
-{/each}
-</div>
+	</div>
 
-
-<h4>Stichwörter:</h4>
-<div class=tags>
-{#each data.tags as tag}
-	<a href="/rezepte/tag/{tag}" class=tag>{tag}</a>
-{/each}
-</div>
-
-</div>
-</div>
-
+<div class=wrapper_wrapper>
 <div class=wrapper>
 <IngredientsPage {data}></IngredientsPage>
 <InstructionsPage {data}></InstructionsPage>
@@ -234,4 +229,7 @@ h4{
 	{@html data.addendum}
 {/if}
 </div>
+</div>
+</TitleImgParallax>
+
 <EditButton href="/rezepte/edit/{data.short_name}"></EditButton>
