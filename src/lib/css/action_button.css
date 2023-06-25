@@ -1,5 +1,5 @@
 .action_button{
-	all: unset;
+	border: none;
 	cursor: pointer;
 	background-color: var(--red);
 	transition: 200ms;

@@ -129,6 +129,7 @@ li > div{
 	flex-direction: row;
 	justify-items: space-between;
 	align-items:center;
+	user-select: none;
 }
 li > div > div:first-child{
 	flex-grow: 1;
@@ -139,7 +140,6 @@ li > div > div:last-child{
 	flex-direction: row;
 }
 input.heading{
-	all: unset;
 	box-sizing: border-box;
 	background-color: var(--nord0);
 	padding: 1rem;
@@ -197,8 +197,8 @@ dialog .adder{
 	bottom: -1.5rem;
 }
 .category{
-	all: unset;
 	position: absolute;
+	border: none;
 	--font_size: 1.5rem;
 	top: -1em;
 	left: -1em;
@@ -266,6 +266,10 @@ dialog h2{
 		drop-shadow(0 0 1em black)
 		;
 }
+dialog .adder input::placeholder{
+	font-size: 1.2rem;
+}
+
 @media screen and (max-width: 500px){
 	dialog h2{
 		margin-top: 2rem;
@@ -276,9 +280,6 @@ dialog h2{
 	}
 	dialog .adder .category{
 		width: 70%;
-	}
-	dialog .adder input::placeholder{
-		font-size: 1.2rem;
 	}
 }
 dialog[open]{
@@ -346,6 +347,8 @@ h4{
 h3{
 	display:flex;
 	gap: 1rem;
+	cursor: pointer;
+	user-select: none;
 }
 .additional_info input{
 	all:unset;
@@ -409,7 +412,7 @@ h3{
 
 <h2>Zubereitung</h2>
 {#each instructions as list, list_index}
-	<h3>
+	<h3 on:click={() => show_modal_edit_subheading_step(list_index)}>
 	{#if list.name}
 		{list.name}
 	{:else}
@@ -454,7 +457,7 @@ h3{
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_step.name} placeholder="Unterkategorie (optional)" on:keypress={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
 	<div class=add_step>
-		<p id=step contenteditable bind:innerHTML={edit_step.step} on:keypress={(event) => do_on_key(event, 'Enter', true , edit_step_and_close_modal)}></p>
+		<p id=step contenteditable bind:innerText={edit_step.step} on:keypress={(event) => do_on_key(event, 'Enter', true , edit_step_and_close_modal)}></p>
 	<button class=action_button on:click="{() => edit_step_and_close_modal()}" >
 		<Check fill=white style="height: 2rem; width: 2rem"></Check>
 	</button>

@@ -61,10 +61,10 @@ nav{
 footer{
 padding-block: 1rem;
 text-align: center;
-margin-top: 3rem;
+margin-top: auto;
 }
 </style>
-<div class=wrapper style="">
+<div class=wrapper>
 <div>
 <nav>
 <ul>
