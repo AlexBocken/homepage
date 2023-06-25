@@ -9,18 +9,12 @@
     export let current_month = new Date().getMonth() + 1
 </script>
 <style>
-h1,
-h2{
-	max-width: 1000px;
-	margin-left: 5rem;
-	margin-bottom: 0;
-}
 h1{
-font-size: 4rem;
-}
-h2{
-	font-size: 3rem;
-	margin-bottom: 1rem;
+	box-sizing: border-box;
+	max-width: 1000px;
+	padding-left: 5rem;
+	margin-bottom: 0;
+	font-size: 4rem;
 }
 </style>
 <h1>Rezepte</h1>
