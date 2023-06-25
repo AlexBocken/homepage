@@ -15,12 +15,15 @@ li{
 	list-style-type:none;
 	transition: 100ms;
 	color: white;
+	user-select: none;
 }
 li>a{
 	text-decoration: none;
 	font-family: sans-serif;
 	font-size: 1.2rem;
-	color: inherit
+	color: inherit;
+	border-radius: 1000px;
+	padding: 0.5rem 1rem;
 }
 
 li:hover,
@@ -31,7 +34,7 @@ li:focus-within
 	transform: scale(1.1,1.1);
 }
 ul {
-	padding-block: 2rem;
+	padding-block: 1.5rem;
 	display: flex;
 	flex-direction: row;
 	gap: 1rem;
@@ -51,7 +54,10 @@ ul {
 }
 
 nav{
+	position: sticky;
 	background-color: var(--nord0);
+	top: 0;
+	z-index: 10;
 }
 .wrapper{
 	display:flex;
