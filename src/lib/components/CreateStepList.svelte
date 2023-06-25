@@ -406,8 +406,8 @@ h3{
 		<div><p type="text" bind:innerText={add_info.baking.length} contenteditable placeholder="40 min..."></p></div> bei <div><p type="text" bind:innerText={add_info.baking.temperature} contenteditable placeholder=200...></p></div> °C <div><p type="text" bind:innerText={add_info.baking.mode} contenteditable placeholder="Ober-/Unterhitze..."></p></div></div>
 
 	<div><h4>Auf dem Teller:</h4>
-		<div><p contenteditable type="text" bind:innerText={add_info.total_time}></p></div>
-		</div>
+		<p contenteditable type="text" bind:innerText={add_info.total_time}></p>
+	</div>
 </div>
 
 <h2>Zubereitung</h2>
