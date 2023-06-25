@@ -109,10 +109,13 @@ export function show_keys(event){
 
 <style>
 input::placeholder{
-	all:unset;
+	color: inherit;
 }
 input{
-	all:unset;
+	color: unset;
+	font-size: unset;
+	padding: unset;
+	background-color: unset;
 }
 
 input.heading{
@@ -170,7 +173,7 @@ input.heading:hover{
 	bottom: -1.5rem;
 }
 .category{
-	all: unset;
+	border: none;
 	position: absolute;
 	--font_size: 1.5rem;
 	top: -1em;
@@ -292,6 +295,8 @@ h3{
 	flex-direction: row;
 	max-width: 1000px;
 	justify-content: space-between;
+	user-select: none;
+	cursor: pointer;
 }
 .ingredients_grid{
 	box-sizing: border-box;
@@ -307,6 +312,7 @@ h3{
 
 .ingredients_grid > *{
 	cursor: pointer;
+	user-select: none;
 }
 .ingredients_grid>*:nth-child(3n+1){
 	min-width: 5ch;
@@ -346,7 +352,7 @@ h3{
 
 <h2>Zutaten</h2>
 {#each ingredients as list, list_index}
-	<h3>
+	<h3 on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
 	<div>
 	{#if list.name }
 		{list.name}
@@ -388,11 +394,11 @@ h3{
 	<h2>Zutat verändern</h2>
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_ingredient.sublist} placeholder="Kategorie (optional)">
-	<div class=add_ingredient on:keypress={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-	<input type="text" placeholder="250..." bind:value={edit_ingredient.amount} on:keypress={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-	<input type="text" placeholder="mL..." bind:value={edit_ingredient.unit} on:keypress={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
+	<div class=add_ingredient on:keypress={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<input type="text" placeholder="250..." bind:value={edit_ingredient.amount} on:keypress={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<input type="text" placeholder="mL..." bind:value={edit_ingredient.unit} on:keypress={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
 	<input type="text" placeholder="Milch..." bind:value={edit_ingredient.name} on:keypress={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<button class=action_button on:click={edit_ingredient_and_close_modal}>
+	<button class=action_button on:keypress={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)} on:click={edit_ingredient_and_close_modal}>
 		<Check fill=white style="width: 2rem; height: 2rem;"></Check>
 		</button>
 	</div>
@@ -402,8 +408,8 @@ h3{
 <dialog id=edit_subheading_ingredient_modal>
 	<h2>Kategorie umbenennen</h2>
 	<div class=heading_wrapper>
-		<input class=heading type="text" bind:value={edit_heading.name} on:keypress={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-		<button class=action_button on:click={edit_subheading_and_close_modal}>
+		<input class=heading type="text" bind:value={edit_heading.name} on:keypress={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} >
+		<button class=action_button on:keypress={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} on:click={edit_subheading_and_close_modal}>
 		<Check fill=white style="width:2rem; height:2rem;"></Check>
 		</button>
 	</div>

@@ -340,7 +340,7 @@ input::placeholder{
 
 <div class=card href="" >
 
-	<input class=icon placeholder=😀 bind:value={card_data.icon}/>
+	<input class=icon placeholder=🥫 bind:value={card_data.icon}/>
 	{#if image_preview_url}
 		<img src={image_preview_url} class=img_preview width=300px height=300px />
 	{/if}
