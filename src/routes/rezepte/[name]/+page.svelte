@@ -8,7 +8,9 @@
 	import EditButton from '$lib/components/EditButton.svelte';
 	import InstructionsPage from '$lib/components/InstructionsPage.svelte';
 	import IngredientsPage from '$lib/components/IngredientsPage.svelte';
+
     	export let data: PageData;
+
 	let hero_img_src = "/images/" + data.images[0].mediapath
     	export let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
 	function season_intervals() {

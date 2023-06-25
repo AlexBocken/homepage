@@ -2,6 +2,7 @@
 import "$lib/components/nordtheme.css"
 import { season } from '$lib/js/season_store.js'
 import {onMount} from "svelte";
+    import {do_on_key} from "./do_on_key";
 let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
 
 
@@ -30,6 +31,9 @@ function write_season(season){
 	}
 }
 
+function toggle_checkbox_on_key(event){
+	event.path[0].children[0].checked = !event.path[0].children[0].checked
+}
 onMount(() => {
 	write_season(season_local)
 });
@@ -44,15 +48,20 @@ label{
 	cursor: pointer;
 	position: relative;
 	transition: 100ms;
+	user-select: none;
 }
 
 .checkbox_container{
 	transition: 100ms;
 }
-.checkbox_container:hover{
+.checkbox_container:hover,
+.checkbox_container:focus-within
+{
 	transform: scale(1.1,1.1);
 }
-label:hover{
+label:hover,
+label:focus-visible
+{
 	background-color: var(--lightblue);
 }
 
@@ -64,6 +73,7 @@ input[type=checkbox]::before,
 input[type=checkbox]::after
 {
 	all: unset;
+	user-select: none;
 }
 
 #labels{
@@ -78,7 +88,7 @@ input[type=checkbox]::after
 <div id=labels>
 {#each months as month}
 	<div class=checkbox_container>
-		<label><input type="checkbox" name="checkbox" value="value" on:click={set_season}>{month}</label>
+		<label tabindex="0" on:keypress={(event) => do_on_key(event, 'Enter', false, () => {toggle_checkbox_on_key(event)}) } ><input tabindex=-1 type="checkbox" name="checkbox" value="value" on:click={set_season}>{month}</label>
 	</div>
 {/each}
 </div>
