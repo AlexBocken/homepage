@@ -5,6 +5,8 @@ import Cross from '$lib/assets/icons/Cross.svelte'
 // all data shared with rest of page in card_data
 export let card_data
 
+import { img } from '$lib/js/img_store';
+
 if(!card_data.tags){
 	card_data.tags = []
 }
@@ -20,20 +22,22 @@ let image_preview_url
 // Herbst: 🍂
 // Sommer: ☀️
 
-
 export function show_local_image(){
 	var file = this.files[0]
 	    // allowed MIME types
-    var mime_types = [ 'image/jpeg', 'image/webp' ];
+    var mime_types = [ 'image/webp' ];
 
     // validate MIME
     if(mime_types.indexOf(file.type) == -1) {
         alert('Error : Incorrect file type');
         return;
     }
-	image_preview_url = URL.createObjectURL(file);
-
-
+    image_preview_url = URL.createObjectURL(file);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = e => {
+    	img.update(() => e.target.result.split(',')[1]);
+	};
 }
 
 export function remove_selected_images(){

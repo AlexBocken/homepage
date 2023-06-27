@@ -69,6 +69,10 @@ h4{
 <div><h4>Backen:</h4> {data.baking.length} bei {data.baking.temperature} °C {data.baking.mode}</div>
 {/if}
 
+{#if data.cooking}
+<div><h4>Kochen:</h4>{data.cooking}</div>
+{/if}
+
 {#if data.total_time}
 <div><h4>Auf dem Teller:</h4>{data.total_time}</div>
 {/if}

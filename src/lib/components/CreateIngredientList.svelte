@@ -8,9 +8,18 @@ import Check from '$lib/assets/icons/Check.svelte'
 import "$lib/css/action_button.css"
 
 import { do_on_key } from '$lib/components/do_on_key.js'
+import { portions } from '$lib/js/portions_store.js'
+
+let portions_local
+portions.subscribe((p) => {
+	portions_local = p
+});
+
+export function set_portions(){
+	portions.update((p) => portions_local)
+}
 
 export let ingredients
-export let portions
 
 let new_ingredient = {
 	amount: "",
@@ -348,7 +357,7 @@ h3{
 
 <div class=list_wrapper>
 <h4>Portionen:</h4>
-<p contenteditable type="text" bind:innerText={portions}></p>
+<p contenteditable type="text" bind:innerText={portions_local} on:blur={set_portions}></p>
 
 <h2>Zutaten</h2>
 {#each ingredients as list, list_index}
