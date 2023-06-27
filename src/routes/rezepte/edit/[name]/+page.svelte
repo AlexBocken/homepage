@@ -10,6 +10,14 @@
 	let addendum = data.recipe.addendum
 
 	import { season } from '$lib/js/season_store';
+	import { portions } from '$lib/js/portions_store';
+
+	portions.update(() => data.recipe.portions)
+	let portions_local
+	portions.subscribe((p) => {
+		portions_local = p
+		});
+
 	season.update(() => data.recipe.season)
 	let season_local
 	season.subscribe((s) => {
@@ -37,10 +45,10 @@
 			mode: data.recipe.baking.mode,
 		},
 		total_time: data.recipe.total_time,
+		cooking: data.recipe.cooking,
 	}
 
 	let images = data.recipe.images
-	export let portions = data.recipe.portions
 
 	let short_name = data.recipe.short_name
 	let password
@@ -102,6 +110,7 @@
 					season: season_local,
 					short_name,
 					datecreated,
+					portions: portions_local,
 					datemodified,
 					instructions,
 					ingredients,
@@ -247,7 +256,7 @@ h3{
 
 <div class=list_wrapper>
 <div>
-<CreateIngredientList {ingredients} {portions}></CreateIngredientList>
+<CreateIngredientList {ingredients}></CreateIngredientList>
 </div>
 <div>
 <CreateStepList {instructions} {add_info}></CreateStepList>
