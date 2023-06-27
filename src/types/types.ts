@@ -22,9 +22,10 @@ export type RecipeModelType = {
   preparation?: string;
   fermentation?:{
 	  bulk: string;
-	  final: string
+	  final: string;
 	}
   portions?: string;
+  cooking?: string;
   total_time?: string;
   ingredients?: [{
 	  name?: string;

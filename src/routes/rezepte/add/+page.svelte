@@ -8,11 +8,23 @@
 	let addendum = ""
 
 	import { season } from '$lib/js/season_store';
+	import { portions } from '$lib/js/portions_store';
+	import { img } from '$lib/js/img_store';
 	season.update(() => [])
 	let season_local
 	season.subscribe((s) => {
 		season_local = s
 	});
+	let portions_local
+	portions.update(() => "")
+	portions.subscribe((p) => {
+		portions_local = p});
+	let img_local
+	img.update(() => "")
+	img.subscribe((i) => {
+		img_local = i});
+
+
 
 	export let card_data ={
 		icon: "",
@@ -33,13 +45,12 @@
 			mode: "",
 		},
 		total_time: "",
+		cooking: "",
 	}
 
+	let password = ""
 	let images = []
-	export let portions = ""
-
 	let short_name = ""
-	let password
 	let datecreated =  new Date()
 	let datemodified = datecreated
 
@@ -70,7 +81,28 @@
 		}
 	}
 
+	async function upload_img(){
+    		console.log("uploading...")
+		console.log(img_local)
+        	const data = {
+			image: img_local,
+			filename: short_name + '.webp',
+			bearer: password,
+		}
+        	await fetch(`/api/img/add`, {
+        	    method: 'POST',
+        	    headers: {
+        	        'Content-Type': 'application/json',
+        	        Accept: 'application/json',
+			bearer: password,
+        	    },
+        	    body: JSON.stringify(data)
+        	});
+		}
+
 	async function doPost () {
+
+		upload_img()
 		console.log(add_info.total_time)
 		const res = await fetch('/api/add', {
 			method: 'POST',
@@ -81,6 +113,7 @@
 					images: {mediapath: short_name + '.webp', alt: "", caption: ""}, // TODO
 					season: season_local,
 					short_name,
+					portions: portions_local,
 					datecreated,
 					datemodified,
 					instructions,
@@ -221,7 +254,7 @@ h3{
 
 <div class=list_wrapper>
 <div>
-<CreateIngredientList {ingredients} {portions}></CreateIngredientList>
+<CreateIngredientList {ingredients}></CreateIngredientList>
 </div>
 <div>
 <CreateStepList {instructions} {add_info}></CreateStepList>

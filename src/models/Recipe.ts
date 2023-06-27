@@ -26,6 +26,7 @@ const RecipeSchema = new mongoose.Schema(
 
 	},
     portions :{type:String, default: ""},
+    cooking: {type:String, default: ""},
     total_time : {type:String, default: ""},
     ingredients : [ { name: {type: String, default: ""},
 	    list: [{name: {type: String, default: ""},
