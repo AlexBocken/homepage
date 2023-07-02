@@ -98,6 +98,15 @@
 			})
 
 		})
+		if(res.status === 200){
+			const url = location.href.split('/')
+			url.splice(url.length -2, 2);
+			location.assign(url.join('/'))
+		}
+		else{
+			const item = await res.json();
+			alert(item.message)
+		}
 	}
 	async function doEdit() {
 		const res = await fetch('/api/edit', {
@@ -124,7 +133,15 @@
      				}
 			})
 		})
-		const item = await res.json();
+		if(res.status === 200){
+			const url = location.href.split('/');
+			url.splice(url.length -2, 1);
+			location.assign(url.join('/'))
+		}
+		else{
+			const item = await res.json()
+			alert(item.message)
+		}
 	}
 </script>
 

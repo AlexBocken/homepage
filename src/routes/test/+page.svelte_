@@ -1,3 +1,9 @@
+<form action="/api/img/add" method="post" enctype="multipart/form-data">
+  <input type="file" name="image" placeholder="avatar" />
+  <input type="text" name="filename" placeholder=filename />
+  <button type="submit">upload</button>
+</form>
+
 <script lang="ts">
 	import Check from '$lib/assets/icons/Check.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
@@ -8,23 +14,11 @@
 	let addendum = ""
 
 	import { season } from '$lib/js/season_store';
-	import { portions } from '$lib/js/portions_store';
-	import { img } from '$lib/js/img_store';
 	season.update(() => [])
 	let season_local
 	season.subscribe((s) => {
 		season_local = s
 	});
-	let portions_local
-	portions.update(() => "")
-	portions.subscribe((p) => {
-		portions_local = p});
-	let img_local
-	img.update(() => "")
-	img.subscribe((i) => {
-		img_local = i});
-
-
 
 	export let card_data ={
 		icon: "",
@@ -48,9 +42,11 @@
 		cooking: "",
 	}
 
-	let password = ""
 	let images = []
+	export let portions = ""
+
 	let short_name = ""
+	let password
 	let datecreated =  new Date()
 	let datemodified = datecreated
 
@@ -81,28 +77,7 @@
 		}
 	}
 
-	async function upload_img(){
-    		console.log("uploading...")
-		console.log(img_local)
-        	const data = {
-			image: img_local,
-			filename: short_name + '.webp',
-			bearer: password,
-		}
-        	await fetch(`/api/img/add`, {
-        	    method: 'POST',
-        	    headers: {
-        	        'Content-Type': 'application/json',
-        	        Accept: 'application/json',
-			bearer: password,
-        	    },
-        	    body: JSON.stringify(data)
-        	});
-		}
-
 	async function doPost () {
-
-		upload_img()
 		console.log(add_info.total_time)
 		const res = await fetch('/api/add', {
 			method: 'POST',
@@ -113,7 +88,7 @@
 					images: {mediapath: short_name + '.webp', alt: "", caption: ""}, // TODO
 					season: season_local,
 					short_name,
-					portions: portions_local,
+					portions,
 					datecreated,
 					datemodified,
 					instructions,
@@ -126,17 +101,7 @@
 				bearer: password,
      				}
 			})
-		});
-		if(res.status === 200){
-			const url = location.href.split('/')
-			url.splice(url.length -1, 1);
-			url.push(short_name)
-			location.assign(url.join('/'))
-		}
-		else{
-			const item = await res.json();
-			alert(item.message)
-		}
+		})
 
 	}
 
@@ -244,7 +209,7 @@ h3{
 }
 </style>
 <h1>Rezept erstellen</h1>
-
+<form action="/api/img/add" method="post" enctype="multipart/form-data">
 <CardAdd {card_data}></CardAdd>
 
 <h3>Kurzname (für URL):</h3>
@@ -264,7 +229,7 @@ h3{
 
 <div class=list_wrapper>
 <div>
-<CreateIngredientList {ingredients}></CreateIngredientList>
+<CreateIngredientList {ingredients} {portions}></CreateIngredientList>
 </div>
 <div>
 <CreateStepList {instructions} {add_info}></CreateStepList>
@@ -279,5 +244,6 @@ h3{
 <div class=submit_wrapper>
 <h2>Neues Rezept hinzufügen:</h2>
 <input type="password" placeholder=Passwort bind:value={password}>
-<button class=action_button on:click={doPost}><Check fill=white width=2rem height=2rem></Check></button>
+<button type=submit class=action_button on:click={doPost}><Check fill=white width=2rem height=2rem></Check></button>
+</form>
 </div>

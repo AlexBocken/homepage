@@ -15,11 +15,12 @@ export const POST: RequestHandler = async ({request}) => {
   	await dbConnect();
 	await Recipe.findOneAndUpdate({short_name: message.old_short_name }, recipe_json);
   	await dbDisconnect();
-	const res = new Response(JSON.stringify({ message: "Updated Recipe successfully"}), { status: 200 })
-	return res
+	return new Response(JSON.stringify({msg: "Edited recipe successfully"}),{
+			    status: 200,
+  	});
+
   }
   else{
-	console.log("INCORRECT PASSWORD")
 	throw error(403, "Password incorrect")
   }
 };

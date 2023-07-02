@@ -5,6 +5,7 @@ function show_sidebar(){
 	const nav_el = document.querySelector("nav")
 	nav_el.hidden = !nav_el.hidden
 }
+
 </script>
 <style>
 :global(*){
@@ -28,13 +29,13 @@ nav[hidden]{
 	display:block;
 }
 
-li{
+:global(.site_header li){
 	list-style-type:none;
 	transition: 100ms;
 	color: white;
 	user-select: none;
 }
-li>a{
+:global(.site_header li>a){
 	text-decoration: none;
 	font-family: sans-serif;
 	font-size: 1.2rem;
@@ -43,14 +44,14 @@ li>a{
 	padding: 0.5rem 1rem;
 }
 
-li:hover,
-li:focus-within
+:global(.site_header li:hover),
+:global(.site_header li:focus-within)
 {
 	cursor: pointer;
 	color: var(--red);
 	transform: scale(1.1,1.1);
 }
-ul {
+:global(.site_header) {
 	padding-block: 1.5rem;
 	display: flex;
 	flex-direction: row;
@@ -104,18 +105,18 @@ ul {
 		transform: translateX(100%);
 	}
 
-	ul{
+	:global(.site_header){
 		flex-direction: column;
 		padding-top: min(10rem, 10vh);
 	}
-	li{
+	:global(.site_header li){
 		font-size: 4rem;
 	}
-	li > a{
+	:global(.site_header li > a){
 		font-size: 2rem;
 	}
-	li:hover,
-	li:focus-within{
+	:global(.site_header li:hover),
+	:global(.site_header li:focus-within){
 	transform: unset;
 	}
 }
@@ -136,14 +137,9 @@ margin-top: auto;
 <button class=nav_button on:click={show_sidebar}><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></button>
 </div>
 <nav hidden>
-<ul>
-	<li><a href="/">Home</a></li>
-	<li><a href="/rezepte">Alle Rezepte</a></li>
-	<li><a href="/rezepte/season">In Saison</a></li>
-	<li><a href="/rezepte/category">Nach Kategorie</a></li>
-	<li><a href="/rezepte/tag">Stichwörter</a></li>
-</ul>
+	<slot name=links></slot>
 </nav>
+
 <slot></slot>
 
 </div>
