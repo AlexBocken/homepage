@@ -197,7 +197,7 @@ if(icon_override){
 	<div class=title>
 		<a class=category href="/rezepte/category/{recipe.category}" >{recipe.category}</a>
 		<div>
-			<div class=name>{recipe.name}</div>
+			<div class=name>{@html recipe.name}</div>
 			<div class=description>{recipe.description}</div>
 		</div>
 		<div class=tags>

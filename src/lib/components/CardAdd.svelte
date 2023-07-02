@@ -346,6 +346,7 @@ input::placeholder{
 
 	<input class=icon placeholder=🥫 bind:value={card_data.icon}/>
 	{#if image_preview_url}
+		<!-- svelte-ignore a11y-missing-attribute -->
 		<img src={image_preview_url} class=img_preview width=300px height=300px />
 	{/if}
 	<div class=img_label_wrapper>
@@ -369,9 +370,10 @@ input::placeholder{
 		</div>
 		<div class=tags>
 			{#each card_data.tags as tag}
-				<div class="tag" tabindex="0" on:keypress={remove_on_enter(event ,tag)} on:click='{remove_from_tags(tag)}'>{tag}</div>
+				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+				<div class="tag" tabindex="0" on:keydown={remove_on_enter(event ,tag)} on:click='{remove_from_tags(tag)}'>{tag}</div>
 			{/each}
-        	<div class="tag input_wrapper"><span class=input>+</span><input class="tag_input" type="text" on:keypress={add_on_enter} on:focusout={add_to_tags} size="1" bind:value={new_tag} placeholder=Stichwort...></div>
+        	<div class="tag input_wrapper"><span class=input>+</span><input class="tag_input" type="text" on:keydown={add_on_enter} on:focusout={add_to_tags} size="1" bind:value={new_tag} placeholder=Stichwort...></div>
 		</div>
 	</div>
 

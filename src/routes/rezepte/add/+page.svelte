@@ -3,7 +3,6 @@
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 	import '$lib/css/action_button.css'
 
-    	export let data: PageData;
 	let preamble = ""
 	let addendum = ""
 
