@@ -245,12 +245,6 @@ h1{
 h3{
 	text-align: center;
 }
-.delete{
-	position: fixed;
-	right: 0;
-	bottom: 0;
-	margin: 2rem;
-}
 </style>
 <h1>Rezept editieren</h1>
 

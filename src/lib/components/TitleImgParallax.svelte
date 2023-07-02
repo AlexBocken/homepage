@@ -35,13 +35,6 @@
   position: relative;
   margin: 30vh auto 0;
 }
-.blocker{
-	display:block;
-	z-index: 10;
-	background-color: white;
-	width: 100%;
-	height: 20vh;
-}
 
 .image-container {
   position: sticky;

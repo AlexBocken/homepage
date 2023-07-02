@@ -350,17 +350,6 @@ h3{
 	cursor: pointer;
 	user-select: none;
 }
-.additional_info input{
-	all:unset;
-	display: inline;
-	width: 10ch;
-	border-radius: 1000px;
-	border: 2px solid grey;
-	padding: 0em 0.5em;
-}
-.additional_info input::placeholder{
-	color: grey;
-}
 .additional_info p[contenteditable]{
 	display: inline;
 	padding: 0.25em 1em;
@@ -416,6 +405,7 @@ h3{
 
 <h2>Zubereitung</h2>
 {#each instructions as list, list_index}
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<h3 on:click={() => show_modal_edit_subheading_step(list_index)}>
 	{#if list.name}
 		{list.name}
@@ -432,6 +422,7 @@ h3{
 	</h3>
 	<ol>
 	{#each list.steps as step, step_index}
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<li><div><div on:click={() => show_modal_edit_step(list_index, step_index)}>{step}</div>
 			<div><button class="action_button button_subtle" on:click={() => show_modal_edit_step(list_index, step_index)}>
 				<Pen fill=var(--nord1)></Pen>
@@ -447,9 +438,9 @@ h3{
 </div>
 
 <div class='adder shadow'>
-<input class=category type="text" bind:value={new_step.name} placeholder="Kategorie (optional)"on:keypress={(event) => do_on_key(event, 'Enter', false , add_new_step)} >
+<input class=category type="text" bind:value={new_step.name} placeholder="Kategorie (optional)"on:keydown={(event) => do_on_key(event, 'Enter', false , add_new_step)} >
 <div class=add_step>
-	<p id=step contenteditable on:focus='{clear_step}' on:blur={add_placeholder} bind:innerText={new_step.step} on:keypress={(event) => do_on_key(event, 'Enter', true , add_new_step)}></p>
+	<p id=step contenteditable on:focus='{clear_step}' on:blur={add_placeholder} bind:innerText={new_step.step} on:keydown={(event) => do_on_key(event, 'Enter', true , add_new_step)}></p>
 	<button on:click={() => add_new_step()} class=action_button>
 		<Plus fill=white style="height: 2rem; width: 2rem"></Plus>
 	</button>
@@ -459,9 +450,9 @@ h3{
 <dialog id=edit_step_modal>
 	<h2>Schritt verändern</h2>
 	<div class=adder>
-	<input class=category type="text" bind:value={edit_step.name} placeholder="Unterkategorie (optional)" on:keypress={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
+	<input class=category type="text" bind:value={edit_step.name} placeholder="Unterkategorie (optional)" on:keydown={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
 	<div class=add_step>
-		<p id=step contenteditable bind:innerText={edit_step.step} on:keypress={(event) => do_on_key(event, 'Enter', true , edit_step_and_close_modal)}></p>
+		<p id=step contenteditable bind:innerText={edit_step.step} on:keydown={(event) => do_on_key(event, 'Enter', true , edit_step_and_close_modal)}></p>
 	<button class=action_button on:click="{() => edit_step_and_close_modal()}" >
 		<Check fill=white style="height: 2rem; width: 2rem"></Check>
 	</button>
@@ -471,7 +462,7 @@ h3{
 <dialog id=edit_subheading_steps_modal>
 	<h2>Kategorie umbenennen</h2>
 	<div class=heading_wrapper>
-		<input class="heading" type="text" bind:value={edit_heading.name} on:keypress={(event) => do_on_key(event, 'Enter', false, edit_subheading_steps_and_close_modal)}>
+		<input class="heading" type="text" bind:value={edit_heading.name} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_steps_and_close_modal)}>
 		<button on:click={edit_subheading_steps_and_close_modal} class=action_button>
 		<Check fill=white style="height: 2rem; width: 2rem"></Check>
 		</button>
