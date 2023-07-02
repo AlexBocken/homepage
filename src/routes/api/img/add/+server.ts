@@ -6,7 +6,6 @@ import { error } from '@sveltejs/kit';
 
 export const POST =  (async ({ request })  => {
     const data = await request.json();
-    console.log(data)
     const filePath = path.join(
             process.cwd(),
             "static",
@@ -14,13 +13,13 @@ export const POST =  (async ({ request })  => {
 	    data.filename as string
         );
     const file = data.image;
-    console.log(data.headers)
     if(data.bearer === BEARER_TOKEN){
-	console.log("PASSWORD CORRECT")
     	writeFileSync(filePath, file, 'base64');
+	return new Response(JSON.stringify({msg: "Added image successfully"}),{
+			    status: 200,
+  	});
     }
     else{
-	console.log("PASSWORD INCORRECT")
     	throw error(403, "Password incorrect")
     }
 

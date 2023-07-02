@@ -89,12 +89,13 @@ h1{
 
 .wrapper_wrapper{
 	background-color: #fbf9f3;
-	width: 100svw;
-	padding-top: 3rem;
+	padding-top: 10rem;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	margin-bottom: 3rem;
+	transform: translateY(-7rem);
+	z-index: -2;
 }
 
 .wrapper{
@@ -118,7 +119,7 @@ h1{
 	background-color: var(--nord6);
 	padding: 1rem 2rem;
 	translate: 0 1px; /*bruh*/
-	z-index: -1;
+	z-index: 1;
 }
 .icon{
 	position: absolute;
@@ -185,22 +186,13 @@ h4{
 
 </style>
 
-
-<!--<MultiImgWrapper wrap={data.images.length>1} class=double>
-{#each data.images as img}
-	<img width=100% src="/images/{img.mediapath}" alt="{img.alt}">
-	<figure>
-	{#if img.caption}
-		<caption>{img.caption}</caption>
-	{/if}
-	</figure>
-{/each}
-</MultiImgWrapper>-->
-
 <TitleImgParallax src=/images/{data.images[0].mediapath}>
 	<div class=title>
 		<a class="icon" href='/rezepte/season/{data.season[0]}'>{data.icon}</a>
 		<h1>{data.name}</h1>
+		{#if data.description && ! data.preamble}
+			<p>{data.description}</p>
+		{/if}
 		{#if data.preamble}
 			<p>{data.preamble}</p>
 		{/if}
