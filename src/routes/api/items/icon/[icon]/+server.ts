@@ -5,7 +5,7 @@ import type {BriefRecipeType} from '../../../../../types/types';
 
 export const GET: RequestHandler = async ({params}) => {
   await dbConnect();
-  let recipes = (await Recipe.find({tags: params.icon}, 'name short_name images tags category icon description season').lean()) as BriefRecipeType[];
+  let recipes = (await Recipe.find({icon: params.icon}, 'name short_name images tags category icon description season').lean()) as BriefRecipeType[];
   await dbDisconnect();
 
   recipes = JSON.parse(JSON.stringify(recipes));

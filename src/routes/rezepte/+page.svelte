@@ -1,12 +1,12 @@
 <script lang="ts">
-    import type { PageData } from './$types';
-    import MediaScroller from '$lib/components/MediaScroller.svelte';
-    import Recipes from '$lib/components/Recipes.svelte';
-    import AddButton from '$lib/components/AddButton.svelte';
-    import Card from '$lib/components/Card.svelte';
-    import Search from '$lib/components/Search.svelte';
-    export let data: PageData;
-    export let current_month = new Date().getMonth() + 1
+	import type { PageData } from './$types';
+    	import MediaScroller from '$lib/components/MediaScroller.svelte';
+    	import AddButton from '$lib/components/AddButton.svelte';
+    	import Card from '$lib/components/Card.svelte';
+    	import Search from '$lib/components/Search.svelte';
+    	export let data: PageData;
+    	export let current_month = new Date().getMonth() + 1
+	const all_categories = [ ...new Set (data.all_brief.map(item => item.category))];
 </script>
 <style>
 h1{
@@ -26,9 +26,13 @@ h1{
 </MediaScroller>
 </section>
 <Search></Search>
-<Recipes title="Alle Rezepte:">
-	{#each data.all_brief as recipe}
-	<Card {recipe} {current_month}></Card>
+
+{#each all_categories as category}
+	<MediaScroller title={category}>
+	{#each data.all_brief.filter(recipe => recipe.category == category) as recipe}
+		<Card {recipe} {current_month}></Card>
 	{/each}
-</Recipes>
+	</MediaScroller>
+{/each}
+<p>{data.all_brief.length}</p>
 <AddButton></AddButton>
