@@ -189,7 +189,7 @@ h4{
 <TitleImgParallax src=/images/{data.images[0].mediapath}>
 	<div class=title>
 		<a class="icon" href='/rezepte/season/{data.season[0]}'>{data.icon}</a>
-		<h1>{data.name}</h1>
+		<h1>{@html data.name}</h1>
 		{#if data.description && ! data.preamble}
 			<p>{data.description}</p>
 		{/if}
