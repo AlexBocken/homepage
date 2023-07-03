@@ -4,7 +4,6 @@
 
 	import type { PageData } from './$types';
     	import "$lib/components/nordtheme.css"
-    	import MultiImgWrapper from './MultiImgWrapper.svelte'
 	import EditButton from '$lib/components/EditButton.svelte';
 	import InstructionsPage from '$lib/components/InstructionsPage.svelte';
 	import IngredientsPage from '$lib/components/IngredientsPage.svelte';
@@ -188,7 +187,7 @@ h4{
 
 <TitleImgParallax src=/images/{data.images[0].mediapath}>
 	<div class=title>
-		<a class="icon" href='/rezepte/season/{data.season[0]}'>{data.icon}</a>
+		<a class="icon" href='/rezepte/icon/{data.icon}'>{data.icon}</a>
 		<h1>{@html data.name}</h1>
 		{#if data.description && ! data.preamble}
 			<p>{data.description}</p>

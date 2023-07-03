@@ -191,7 +191,7 @@ if(icon_override){
 </style>
 <a class="card {search}" href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
 {#if icon_override || recipe.season.includes(current_month)}
-	<a class=icon href="/rezepte/season/{current_month}">{recipe.icon}</a>
+	<a class=icon href="/rezepte/icon/{recipe.icon}">{recipe.icon}</a>
 {/if}
 	<img width=300px height=300px src="/images/{recipe.images[0].mediapath}" alt="{recipe.alt}" />
 	<div class=title>
