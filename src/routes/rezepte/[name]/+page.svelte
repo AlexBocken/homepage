@@ -193,7 +193,7 @@ h4{
 			<p>{data.description}</p>
 		{/if}
 		{#if data.preamble}
-			<p>{data.preamble}</p>
+			<p>{@html data.preamble}</p>
 		{/if}
 		<div class=tags>
 			<h4>Saison:</h4>
