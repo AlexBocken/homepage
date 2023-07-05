@@ -235,7 +235,7 @@ input::placeholder{
 }
 .card .tags{
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: wrap-reverse;
 	overflow: hidden;
 	column-gap: 0.25em;
 	padding-inline: 0.5em;
