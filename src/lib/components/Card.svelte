@@ -3,17 +3,13 @@ export let recipe
 export let current_month
 export let icon_override = false;
 export let search = "search_me"
+import "$lib/css/icon.css";
+import "$lib/css/shake.css";
 
 if(icon_override){
 	current_month = recipe.season[0]
 }
 
-// Winter: ❄️
-// Weihnachten: 🎄
-// Ostern: 🐇
-// Fastenzeit: ✝️
-// Herbst: 🍂
-// Sommer: ☀️
 </script>
 <style>
 .card{
@@ -34,18 +30,6 @@ if(icon_override){
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.3);
 	transition: 200ms;
 }
-.card .icon{
-	text-decoration: unset;
-	transition: 100ms;
-	position: absolute;
-	font-size: 1.5rem;
-	top:-0.5em;
-	right:-0.5em;
-	padding: 0.25em;
-	background-color: var(--nord6);
-	border-radius:1000px;
-	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.6);
-}
 .card:hover,
 .card:focus-within{
 	transform: scale(1.02,1.02);
@@ -55,17 +39,6 @@ if(icon_override){
 .card:active{
 	scale: 0.95 0.95;
 }
-.card .icon:hover,
-.card .icon:focus-visible
-{
-	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-	transform:scale(1.2, 1.2)
-}
-.icon:active{
-	scale: 0.8 0.8;
-	rotate: 30deg;
-}
-
 .card img{
 	height: 50%;
 	object-fit: cover;
@@ -115,7 +88,7 @@ if(icon_override){
 	line-height: 1.5em;
 	margin-bottom: 0.5em;
 	transition: 100ms;
-	box-shadow: 0.2em 0.2em 0.2em 0.05em rgba(0, 0, 0, 0.3);
+	box-shadow: 0em 0em 0.2em 0.05em rgba(0, 0, 0, 0.3);
 }
 .card .tag:hover,
 .card .tag:focus-visible
@@ -158,36 +131,6 @@ if(icon_override){
 {
 	animation:  shake 0.6s
 }
-
-  @keyframes shake{
-    0%{
-      transform: rotate(0)
-		scale(1,1);
-    }
-    25%{
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-      	transform: rotate(30deg)
-      		scale(1.2,1.2)
-      ;
-    }
-    50%{
-
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-      	transform: rotate(-30deg)
-      		scale(1.2,1.2);
-    }
-    74%{
-
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-  	transform: rotate(30deg)
-  		scale(1.2, 1.2);
-	}
-	100%{
-      transform: rotate(0)
-      	scale(1,1);
-    }
-  }
-
 </style>
 <a class="card {search}" href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
 {#if icon_override || recipe.season.includes(current_month)}
