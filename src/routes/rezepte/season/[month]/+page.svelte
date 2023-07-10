@@ -7,11 +7,12 @@
     import Search from '$lib/components/Search.svelte';
     export let data: PageData;
     let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
+    import { rand_array } from '$lib/js/randomize';
 </script>
 <SeasonLayout>
 <h2 slot=test>Rezepte die im {months[data.month-1]} in Saison sind</h2>
 <Recipes slot=recipes>
-	{#each data.season as recipe}
+	{#each rand_array(data.season) as recipe}
 		<Card {recipe} icon_override=true></Card>
 	{/each}
 </Recipes>

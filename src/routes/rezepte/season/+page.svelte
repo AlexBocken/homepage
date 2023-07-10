@@ -8,12 +8,13 @@
     import Search from '$lib/components/Search.svelte';
     export let data: PageData;
     export let current_month = new Date().getMonth() + 1
+    import { rand_array } from '$lib/js/randomize';
 </script>
 
 <SeasonLayout>
 <h2 slot=test>Rezepte des Monats </h2>
 <Recipes slot=recipes>
-	{#each data.season as recipe}
+	{#each rand_array(data.season) as recipe}
 		<Card {recipe} {current_month}></Card>
 	{/each}
 </Recipes>
