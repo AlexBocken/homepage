@@ -17,7 +17,9 @@
 		border-radius: 1000px;
     		box-shadow: 0em 0em 0.5em 0.2em rgba(0, 0, 0, 0.2);
 	}
-	a:hover{
+	a:hover,
+	a:focus-visible
+	{
 		--angle: 15deg;
 		animation: shake 0.5s ease forwards;
 	}
