@@ -1,0 +1,28 @@
+  @keyframes shake{
+    0%{
+      transform: rotate(0)
+		scale(1,1);
+    }
+    25%{
+    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
+      	transform: rotate(var(--angle, 30deg))
+      		scale(1.2,1.2)
+      ;
+    }
+    50%{
+
+    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
+      	transform: rotate(calc(-1 * var(--angle,30deg)))
+      		scale(1.2,1.2);
+    }
+    75%{
+
+    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
+  	transform: rotate(var(--angle,30deg))
+  		scale(1.2, 1.2);
+	}
+	100%{
+      transform: rotate(0);
+	scale: var(--endscale, 1);
+    }
+  }
