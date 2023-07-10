@@ -3,8 +3,8 @@ export let recipe
 export let current_month
 export let icon_override = false;
 export let search = "search_me"
-import "$lib/css/icon.css";
 import "$lib/css/shake.css";
+import "$lib/css/icon.css";
 
 if(icon_override){
 	current_month = recipe.season[0]
