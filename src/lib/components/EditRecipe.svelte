@@ -3,6 +3,7 @@
 	import Cross from '$lib/assets/icons/Cross.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 	import '$lib/css/action_button.css'
+	import '$lib/css/shake.css'
 	import { redirect } from '@sveltejs/kit';
 	import { RecipeModelType } from '../../types/types';
 
