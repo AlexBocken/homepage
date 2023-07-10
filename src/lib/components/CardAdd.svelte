@@ -1,6 +1,8 @@
 <script lang="ts">
 
 import Cross from '$lib/assets/icons/Cross.svelte'
+import "$lib/css/shake.css"
+import "$lib/css/icon.css"
 
 // all data shared with rest of page in card_data
 export let card_data
@@ -15,12 +17,6 @@ if(!card_data.tags){
 let new_tag
 let image_preview_url
 
-// Winter: ❄️
-// Weihnachten: 🎄
-// Ostern: 🐇
-// Fastenzeit: ✝️
-// Herbst: 🍂
-// Sommer: ☀️
 
 export function show_local_image(){
 	var file = this.files[0]
