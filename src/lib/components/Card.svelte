@@ -52,7 +52,7 @@ div:has(#image){
 	border-top-right-radius: inherit;
 }
 div:has(div #image){
-	height: 100%;
+	height: calc(var(--card-width)*0.85);
 	position: absolute;
 	width: var(--card-width);
 	top: 0;
