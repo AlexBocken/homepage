@@ -3,7 +3,6 @@ import path from 'path'
 import type { RequestHandler } from '@sveltejs/kit';
 import { BEARER_TOKEN } from '$env/static/private'
 import { error } from '@sveltejs/kit';
-import { Image } from '../../../../models/Image';
 import { IMAGE_DIR } from '$env/static/private'
 import sharp from 'sharp';
 
