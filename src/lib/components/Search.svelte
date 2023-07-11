@@ -19,7 +19,7 @@ onMount(() => {
       			const searchString = `${recipe.textContent} ${recipe.dataset.tags}`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "");
       			const isMatch = searchTerms.every(term => searchString.includes(term));
 
-      			recipe.style.display = (isMatch ? 'block' : 'none');
+      			recipe.style.display = (isMatch ? 'flex' : 'none');
       			recipe.classList.toggle("matched-recipe", hasFilter && isMatch);
     		})
 		}
@@ -31,7 +31,7 @@ onMount(() => {
   	clearSearch.addEventListener("click", () => {
     		search.value = "";
     		recipes.forEach(recipe => {
-      			recipe.style.display = 'block';
+      			recipe.style.display = 'flex';
       			recipe.classList.remove("matched-recipe");
     		})
   	})
@@ -105,7 +105,7 @@ scale: 0.8 0.8;
 }
 </style>
 <div class="search js-only">
-  <input type="text" id="search" placeholder="Suche nach Stichwörtern...">
+  <input type="text" id="search" placeholder="Suche...">
   <button id="clear-search">
 	  <svg  xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><title>Sucheintrag löschen</title><path d="M135.19 390.14a28.79 28.79 0 0021.68 9.86h246.26A29 29 0 00432 371.13V140.87A29 29 0 00403.13 112H156.87a28.84 28.84 0 00-21.67 9.84v0L46.33 256l88.86 134.11z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"></path><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33"></path></svg></button>
 </div>
