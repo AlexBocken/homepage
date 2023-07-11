@@ -1,41 +1,46 @@
 <script lang=ts>
-    let fileInput;
-    let files;
-    let temp
-    let image : String;
-    let base64
+let src_full = ''
+let src_thumbnail = ''
+let src_placeholder = ''
+let alt = 'Random Image'
+let API = '/api/img/test1'
+import { onMount } from 'svelte';
+import Card from '$lib/components/Card.svelte';
 
-    export function store_img_base64(image) {
-        const reader = new FileReader();
-        reader.readAsDataURL(image);
-        reader.onload = e => {
-            base64 = e.target.result.split(',')[1];
-	    //base64 = temp.split(',')[1]
-        };
-    };
+onMount(async () => {
+    loadPlaceholder()
+    loadImage()
+  });
 
-    export async function upload(){
-    	console.log("uploading...")
-        const data = {
-		image: base64,
-		filename: "test.webp"
-	}
-        await fetch(`/api/img/add`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
+export async function loadImage() {
+    const res = await fetch(API)
+    let image = await res.json()
+    image = JSON.parse(image.img)
+    src_placeholder = "data:image/webp;base64, " + image.image
+    const img_el = document.querySelector("#img")
+    img_el?.classList.toggle("blur")
+    src_thumbnail = "data:image/webp;base64, " + image.thumbnail
+  }
+export async function loadPlaceholder() {
+    const url = '/api/img/placeholder/test1'
+    const res = await fetch(url)
+    let image = await res.json()
+    image = JSON.parse(image.img)
+    src_placeholder = "data:image/webp;base64, " + image.placeholder
+  }
 
-    }
+
 
 </script>
-
-<input id="file-to-upload" type="file" accept=".png,.jpg,.webp" bind:files bind:this={fileInput} on:change={() => store_img_base64(files[0])}/>
-<button class="upload-btn" on:click="{upload}">Upload</button>
-<button on:click={console.log(base64)}></button>
-
 <style>
+img{
+	width: 300px;
+	height: 300px;
+	object-fit: cover;
+	transition: 300ms;
+}
+.blur{
+	filter: blur(8px);
+}
 </style>
+<img id=img src={src_placeholder} class=blur {alt}/>
