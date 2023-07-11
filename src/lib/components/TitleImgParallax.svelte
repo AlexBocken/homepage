@@ -54,12 +54,15 @@
   top: 0;
   width: min(1000px, 100dvw);
   z-index: -1;
+  opacity: 0;
+  transition: 200ms;
   height: max(60dvh,600px);
   object-fit: cover;
   object-position: 50% 20%;
   backdrop-filter: blur(20px);
-  transition: 50ms;
+  transition: 200ms;
   filter: blur(20px);
+  z-index: -10;
 }
 
 .image-container::after {
@@ -81,6 +84,11 @@
   	height: max(60dvh,600px);
 	z-index: -2;
 }
+.placeholder_blur{
+	width: inherit;
+	height: inherit;
+	backdrop-filter: blur(20px);
+}
 div:has(.placeholder){
 	position: absolute;
 	top: 0;
@@ -90,13 +98,16 @@ div:has(.placeholder){
 }
 .unblur#image{
 	filter: blur(0px) !important;
+	opacity: 1;
 }
 </style>
 <section class="section">
     <figure class="image-container">
     	<div>
 		<div class=placeholder style="background-image:url({placeholder_src})" >
+			<div class=placeholder_blur>
 			<img class:unblur={isloaded} id=image {src} on:load={() => isloaded=true} alt=""/>
+			</div>
 		</div>
 	</div>
 	</figure>
