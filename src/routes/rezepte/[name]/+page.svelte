@@ -11,7 +11,8 @@
 
     	export let data: PageData;
 
-	let hero_img_src = "/images/" + data.images[0].mediapath
+	const hero_img_src = "https://new.bocken.org/static/rezepte/full/" + data.short_name + ".webp"
+	const placeholder_src = "https://new.bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
     	export let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
 	function season_intervals() {
 		let interval_arr = []
@@ -184,8 +185,7 @@ h4{
   }
 
 </style>
-
-<TitleImgParallax src=/images/{data.images[0].mediapath}>
+<TitleImgParallax src={hero_img_src} {placeholder_src}>
 	<div class=title>
 		<a class="icon" href='/rezepte/icon/{data.icon}'>{data.icon}</a>
 		<h1>{@html data.name}</h1>
@@ -201,8 +201,8 @@ h4{
 				<a class=tag href="/rezepte/season/{season[0]}">{months[season[0] - 1]}-{months[season[1] - 1]}</a>
 			{/each}
 		</div>
+		<h4>Stichwörter:</h4>
 		<div class=tags>
-			<h4>Stichwörter:</h4>
 			{#each data.tags as tag}
 				<a class=tag href="/rezepte/tag/{tag}">{tag}</a>
 			{/each}
