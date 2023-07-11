@@ -7,7 +7,7 @@
     	export let data: PageData;
     	export let current_month = new Date().getMonth() + 1
 	const all_categories = [ ...new Set (data.all_brief.map(item => item.category))];
-	import { rand_array } from '$lib/js/randomize';
+	const categories = ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Sauce", "Zutat", "Aufstrich", "Guetzli"]
 </script>
 <style>
 h1{
@@ -21,16 +21,16 @@ h1{
 <h1>Rezepte</h1>
 <section>
 <MediaScroller title="In Saison:">
-{#each rand_array(data.season) as recipe}
+{#each data.season as recipe}
 	<Card {recipe} {current_month} search=""></Card>
 {/each}
 </MediaScroller>
 </section>
 <Search></Search>
 
-{#each all_categories as category}
+{#each categories as category}
 	<MediaScroller title={category}>
-	{#each rand_array(data.all_brief.filter(recipe => recipe.category == category)) as recipe}
+	{#each data.all_brief.filter(recipe => recipe.category == category) as recipe}
 		<Card {recipe} {current_month}></Card>
 	{/each}
 	</MediaScroller>

@@ -85,7 +85,7 @@
 		console.log(img_local)
         	const data = {
 			image: img_local,
-			filename: short_name + '.webp',
+			name: short_name,
 			bearer: password,
 		}
         	await fetch(`/api/img/add`, {
