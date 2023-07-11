@@ -10,17 +10,19 @@ if(icon_override){
 	current_month = recipe.season[0]
 }
 
+let isloaded = false
 </script>
 <style>
 .card{
+	flex-shrink: 0;
 	--card-width: 300px;
 	text-decoration: none;
 	position: relative;
 	box-sizing: border-box;
 	font-family: sans-serif;
 	cursor: pointer;
+	height: calc(7/4 * var(--card-width)); /* otherwise card is not initialized at correct size and readjusts when populated*/
 	width: var(--card-width);
-	aspect-ratio: 4/7;
 	border-radius: 20px;
 	background-size: contain;
 	display: flex;
@@ -28,7 +30,32 @@ if(icon_override){
 	justify-content: end;
 	background-color:  var(--blue);
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.3);
+}
+.card #image{
+	width: var(--card-width);
+	height: calc(var(--card-width)*0.85);
+	object-fit: cover;
 	transition: 200ms;
+	backdrop-filter: blur(10px);
+	filter: blur(10px);
+}
+.unblur{
+	filter: blur(0px) !important;
+}
+div:has(#image){
+	width: var(--card-width);
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: center;
+	overflow: hidden;
+	border-top-left-radius: inherit;
+	border-top-right-radius: inherit;
+}
+div:has(div #image){
+	height: 100%;
+	position: absolute;
+	width: var(--card-width);
+	top: 0;
 }
 .card:hover,
 .card:focus-within{
@@ -38,12 +65,6 @@ if(icon_override){
 }
 .card:active{
 	scale: 0.95 0.95;
-}
-.card img{
-	height: 50%;
-	object-fit: cover;
-	border-top-left-radius: inherit;
-	border-top-right-radius: inherit;
 }
 .card .title {
 	position: relative;
@@ -129,14 +150,20 @@ if(icon_override){
 .card:hover .icon,
 .card:focus-visible .icon
 {
-	animation:  shake 0.6s
+	animation: shake 0.6s;
 }
 </style>
+
 <a class="card {search}" href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
-{#if icon_override || recipe.season.includes(current_month)}
+	<div>
+	<div style="background-image:url({'https://new.bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
+	<img class:unblur={isloaded} id=image src={'https://new.bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
+	</div>
+	</div>
+	{#if icon_override || recipe.season.includes(current_month)}
 	<a class=icon href="/rezepte/icon/{recipe.icon}">{recipe.icon}</a>
 {/if}
-	<img width=300px height=300px src="/images/{recipe.images[0].mediapath}" alt="{recipe.alt}" />
+
 	<div class=title>
 		<a class=category href="/rezepte/category/{recipe.category}" >{recipe.category}</a>
 		<div>

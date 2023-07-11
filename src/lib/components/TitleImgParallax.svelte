@@ -1,5 +1,7 @@
 <script>
 	export let src
+	export let placeholder_src
+	let isloaded=false
 </script>
 <style>
 :root {
@@ -46,7 +48,7 @@
   z-index: -10;
 }
 
-.image-container img {
+#image{
   display: block;
   position: absolute;
   top: 0;
@@ -54,8 +56,10 @@
   z-index: -1;
   height: max(60dvh,600px);
   object-fit: cover;
-  /*object-position: top;*/
   object-position: 50% 20%;
+  backdrop-filter: blur(20px);
+  transition: 50ms;
+  filter: blur(20px);
 }
 
 .image-container::after {
@@ -68,9 +72,33 @@
 :global(h1){
 	width: 100%;
 }
-
+.placeholder{
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: 50% 20%;
+	position: absolute;
+        width: min(1000px, 100dvw);
+  	height: max(60dvh,600px);
+	z-index: -2;
+}
+div:has(.placeholder){
+	position: absolute;
+	top: 0;
+        width: min(1000px, 100dvw);
+  	height: max(60dvh,600px);
+	overflow: hidden;
+}
+.unblur#image{
+	filter: blur(0px) !important;
+}
 </style>
 <section class="section">
-    <figure class="image-container"><img {src} alt=""/></figure>
+    <figure class="image-container">
+    	<div>
+		<div class=placeholder style="background-image:url({placeholder_src})" >
+			<img class:unblur={isloaded} id=image {src} on:load={() => isloaded=true} alt=""/>
+		</div>
+	</div>
+	</figure>
     <div class=content><slot></slot></div>
 </section>

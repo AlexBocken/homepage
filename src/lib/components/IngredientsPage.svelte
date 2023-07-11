@@ -27,7 +27,7 @@ h4{
 {#if data.ingredients}
 <div class=ingredients>
 {#if data.portions}
-	<h4>Portionen:</h4>
+	<h3>Portionen:</h3>
 	{data.portions}
 {/if}
 <h2>Zutaten</h2>

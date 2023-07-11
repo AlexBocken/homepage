@@ -38,7 +38,7 @@ const RecipeSchema = new mongoose.Schema(
      		      steps: [String]}],
      preamble : String,
      addendum : String,
-     },
+     }, {timestamps: true}
 );
 
 export const Recipe = mongoose.model("Recipe", RecipeSchema);
