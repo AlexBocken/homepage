@@ -68,7 +68,6 @@
   object-fit: cover;
   object-position: 50% 20%;
   backdrop-filter: blur(20px);
-  transition: 50ms;
   filter: blur(20px);
   z-index: -10;
 }
