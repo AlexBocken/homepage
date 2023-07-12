@@ -9,9 +9,9 @@ function mulberry32(a) {
 	  return ((t ^ t >>> 14) >>> 0) / 4294967296;
 	}
 }
-let rand = mulberry32(seed)
 
 export function rand_array(array){
+	let rand = mulberry32(seed)
 	array.sort((a,b) => 0.5 - rand())
 	return array
 }
