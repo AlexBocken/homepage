@@ -7,7 +7,6 @@ import { error } from '@sveltejs/kit';
 // header: use for bearer token for now
 // recipe json in body
 export const POST: RequestHandler = async ({request}) => {
-	console.log("AT EDIT API")
   let message = await request.json()
   const recipe_json = message.recipe
   const bearer_token = message.headers.bearer

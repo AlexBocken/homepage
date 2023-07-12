@@ -99,17 +99,18 @@
 			method: 'POST',
 			body: JSON.stringify({
 				name: old_short_name,
+				bearer: password,}),
 			headers : {
        				'content-type': 'application/json',
 				bearer: password
 				}
-			})
 			})
 		if(!res_img.ok){
 			const item = await res_img.json();
 			alert(item.message)
 			return
 		}
+		return
 		const res = await fetch('/api/delete', {
 			method: 'POST',
 			body: JSON.stringify({
@@ -142,16 +143,16 @@
 					method: 'POST',
 					body: JSON.stringify({
 						name: old_short_name,
+						bearer: password,
+						}),
 					headers : {
        						'content-type': 'application/json',
 						bearer: password
 						}
-					})
 				})
 				if(!res_img.ok){
 					const item = await res_img.json();
 					alert(item.message)
-					return
 				}
 			}
 			async function upload_img(){
@@ -172,7 +173,6 @@
 				if(!res.ok){
 					const item = await res_img.json();
 					alert(item.message)
-					return
 				}
 			}
 			delete_img()
@@ -180,11 +180,19 @@
 		}
 		// case new short_name:
 		else if(short_name != old_short_name){
+			console.log("MOVING")
+			console.log("PASSWORD:", password)
 			const res_img = await fetch('/api/img/mv', {
 				method: 'POST',
+				headers: {
+        			        'Content-Type': 'application/json',
+        			        Accept: 'application/json',
+					bearer: password,
+        			    },
 				body: JSON.stringify({
 					old_name: old_short_name,
-					new_name: short_name
+					new_name: short_name,
+					bearer:	password,
 				})
 			})
 			if(!res_img.ok){
@@ -219,7 +227,8 @@
 		})
 		if(res.ok){
 			const url = location.href.split('/');
-			url.splice(url.length -2, 1);
+			url.splice(url.length -2, 2);
+			url.push(short_name);
 			location.assign(url.join('/'))
 		}
 		else{
