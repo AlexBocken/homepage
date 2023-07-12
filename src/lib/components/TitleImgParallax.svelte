@@ -2,6 +2,14 @@
 	export let src
 	export let placeholder_src
 	let isloaded=false
+	import { onMount } from "svelte";
+	onMount(() => {
+		const el = document.querySelector("img")
+		if(el.complete){
+			isloaded = true
+		}
+	})
+
 </script>
 <style>
 :root {
@@ -60,7 +68,7 @@
   object-fit: cover;
   object-position: 50% 20%;
   backdrop-filter: blur(20px);
-  transition: 200ms;
+  transition: 50ms;
   filter: blur(20px);
   z-index: -10;
 }
@@ -106,7 +114,7 @@ div:has(.placeholder){
     	<div>
 		<div class=placeholder style="background-image:url({placeholder_src})" >
 			<div class=placeholder_blur>
-			<img class:unblur={isloaded} id=image {src} on:load={() => isloaded=true} alt=""/>
+			<img class:unblur={isloaded} id=image {src} on:load={() => {isloaded=true}} alt=""/>
 			</div>
 		</div>
 	</div>

@@ -11,6 +11,14 @@ if(icon_override){
 }
 
 let isloaded = false
+
+import { onMount } from "svelte";
+	onMount(() => {
+		const el = document.querySelector("img")
+		if(el.complete){
+			isloaded = true
+		}
+	})
 </script>
 <style>
 .card{
