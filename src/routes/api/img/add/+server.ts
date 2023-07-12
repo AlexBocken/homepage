@@ -1,4 +1,3 @@
-import { writeFileSync } from 'fs';
 import path from 'path'
 import type { RequestHandler } from '@sveltejs/kit';
 import { BEARER_TOKEN } from '$env/static/private'
