@@ -21,18 +21,21 @@ export const POST =  (async ({ request })  => {
 	await sharp(full_res)
 		.toFormat('webp')
 		.toFile(path.join(IMAGE_DIR,
+				  "rezepte",
 				  "full",
 				  data.name + ".webp"))
 	await sharp(full_res)
 		.resize({ width: 800})
 		.toFormat('webp')
 		.toFile(path.join(IMAGE_DIR,
+			  "rezepte",
 			  "thumb",
 			  data.name + ".webp"))
 	await sharp(full_res)
 		.resize({ width: 20})
 		.toFormat('webp')
 		.toFile(path.join(IMAGE_DIR,
+		          "rezepte",
 			  "placeholder",
 			  data.name + ".webp"))
 	return new Response(JSON.stringify({msg: "Added image successfully"}),{
