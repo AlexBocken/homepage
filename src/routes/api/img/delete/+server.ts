@@ -9,7 +9,7 @@ export const POST =  (async ({ request })  => {
     const data = await request.json();
     if(data.bearer === BEARER_TOKEN){
 	[ "full", "thumb", "placeholder"].forEach((folder) => {
-		unlink(path.join(IMAGE_DIR, folder, data.name + ".webp"), (e) => {
+		unlink(path.join(IMAGE_DIR, "rezepte", folder, data.name + ".webp"), (e) => {
 			if(e) throw error(500, "could not delete: " + folder + "/" + data.name + ".webp")
 		})
 	})

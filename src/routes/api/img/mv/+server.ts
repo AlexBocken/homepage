@@ -9,8 +9,10 @@ export const POST =  (async ({ request })  => {
     const data = await request.json();
     if(data.bearer === BEARER_TOKEN){
 	[ "full", "thumb", "placeholder"].forEach((folder) => {
-		rename(path.join(IMAGE_DIR, folder, data.old_name + ".webp"), path.join(IMAGE_DIR, folder, data.new_name + ".webp"), (e) => {
-		if(e) throw error(500, "could not mv: " + folder + "/" + data.old_name + ".webp")
+		const old_path = path.join(IMAGE_DIR, "rezepte", folder, data.old_name + ".webp")
+		rename(old_path, path.join(IMAGE_DIR, "rezepte", folder, data.new_name + ".webp"), (e) => {
+		console.log(e)
+		if(e) throw error(500, "could not mv: " + old_path)
 		})
 	});
 	return new Response(JSON.stringify({msg: "Deleted image successfully"}),{
