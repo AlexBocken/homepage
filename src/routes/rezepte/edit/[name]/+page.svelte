@@ -8,6 +8,7 @@
     	export let data: PageData;
 	let preamble = data.recipe.preamble
 	let addendum = data.recipe.addendum
+	let image_preview_url="https://new.bocken.org/static/rezepte/thumb/" + data.recipe.short_name + ".webp"
 
 	import { season } from '$lib/js/season_store';
 	import { portions } from '$lib/js/portions_store';
@@ -23,6 +24,13 @@
 	season.subscribe((s) => {
 		season_local = s
 	});
+
+
+	import { img } from '$lib/js/img_store';
+	let img_local
+	img.update(() => "")
+	img.subscribe((i) => {
+		img_local = i});
 
 	let old_short_name = data.recipe.short_name
 
@@ -87,6 +95,21 @@
 		if(!response){
 			return
 		}
+		const res_img = await fetch('/api/img/delete', {
+			method: 'POST',
+			body: JSON.stringify({
+				name: old_short_name,
+			headers : {
+       				'content-type': 'application/json',
+				bearer: password
+				}
+			})
+			})
+		if(!res_img.ok){
+			const item = await res_img.json();
+			alert(item.message)
+			return
+		}
 		const res = await fetch('/api/delete', {
 			method: 'POST',
 			body: JSON.stringify({
@@ -98,7 +121,7 @@
 			})
 
 		})
-		if(res.status === 200){
+		if(res.ok){
 			const url = location.href.split('/')
 			url.splice(url.length -2, 2);
 			location.assign(url.join('/'))
@@ -109,6 +132,67 @@
 		}
 	}
 	async function doEdit() {
+		// two cases:
+		//new image uploaded (not implemented yet)
+		// new short_name -> move images as well
+		// if new image
+		if(img_local != ""){
+			async function delete_img(){
+				const res_img = await fetch('/api/img/delete', {
+					method: 'POST',
+					body: JSON.stringify({
+						name: old_short_name,
+					headers : {
+       						'content-type': 'application/json',
+						bearer: password
+						}
+					})
+				})
+				if(!res_img.ok){
+					const item = await res_img.json();
+					alert(item.message)
+					return
+				}
+			}
+			async function upload_img(){
+        			const data = {
+					image: img_local,
+					name: short_name,
+					bearer: password,
+				}
+        			const res = await fetch(`/api/img/add`, {
+        			    method: 'POST',
+        			    headers: {
+        			        'Content-Type': 'application/json',
+        			        Accept: 'application/json',
+					bearer: password,
+        			    },
+        			    body: JSON.stringify(data)
+        			});
+				if(!res.ok){
+					const item = await res_img.json();
+					alert(item.message)
+					return
+				}
+			}
+			delete_img()
+			upload_img()
+		}
+		// case new short_name:
+		else if(short_name != old_short_name){
+			const res_img = await fetch('/api/img/mv', {
+				method: 'POST',
+				body: JSON.stringify({
+					old_name: old_short_name,
+					new_name: short_name
+				})
+			})
+			if(!res_img.ok){
+				const item = await res_img.json();
+				alert(item.message)
+				return
+			}
+		}
 		const res = await fetch('/api/edit', {
 			method: 'POST',
 			body: JSON.stringify({
@@ -133,7 +217,7 @@
      				}
 			})
 		})
-		if(res.status === 200){
+		if(res.ok){
 			const url = location.href.split('/');
 			url.splice(url.length -2, 1);
 			location.assign(url.join('/'))
@@ -248,7 +332,7 @@ h3{
 </style>
 <h1>Rezept editieren</h1>
 
-<CardAdd {card_data}></CardAdd>
+<CardAdd {card_data} {image_preview_url} ></CardAdd>
 
 <h3>Kurzname (für URL):</h3>
 <input bind:value={short_name} placeholder="Kurzname"/>

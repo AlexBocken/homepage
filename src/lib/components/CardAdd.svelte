@@ -6,6 +6,7 @@ import "$lib/css/icon.css"
 
 // all data shared with rest of page in card_data
 export let card_data
+export let image_preview_url
 
 import { img } from '$lib/js/img_store';
 
@@ -13,9 +14,9 @@ if(!card_data.tags){
 	card_data.tags = []
 }
 
+
 //locals
 let new_tag
-let image_preview_url
 
 
 export function show_local_image(){
