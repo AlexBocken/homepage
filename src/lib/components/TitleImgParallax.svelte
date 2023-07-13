@@ -133,7 +133,7 @@ dialog{
 }
 dialog img{
 	max-width: calc(95vmin - 2rem);
-	max-height: calc(95vmin- 2rem);
+	max-height: 95vmin; /* cannot use calc() for some reason */
 }
 dialog[open]::backdrop{
     animation: show 200ms ease forwards;
