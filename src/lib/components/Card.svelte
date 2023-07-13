@@ -22,8 +22,9 @@ import { onMount } from "svelte";
 </script>
 <style>
 .card{
-	flex-shrink: 0;
 	--card-width: 300px;
+	flex-shrink: 0;
+	transition: 200ms;
 	text-decoration: none;
 	position: relative;
 	box-sizing: border-box;
