@@ -72,7 +72,7 @@ div:has(div #image){
 	background-color: var(--red);
 	box-shadow: 0.2em 0.2em 2em 1em rgba(0, 0, 0, 0.3);
 }
-.card:active{
+.card:focus{
 	scale: 0.95 0.95;
 }
 .card .title {
@@ -127,9 +127,9 @@ div:has(div #image){
 	background-color: var(--orange);
 	box-shadow: 0.2em 0.2em 0.2em 0.1em rgba(0, 0, 0, 0.3);
 }
-.card .tag:active{
+.card .tag:focus{
 	transition: 100ms;
-	scale: 0.8 0.8;
+	scale: 0.9;
 }
 .card .title .category{
 	position: absolute;
@@ -152,7 +152,7 @@ div:has(div #image){
 	background-color: var(--nord3);
 	transform: scale(1.05, 1.05)
 }
-.card .category:active{
+.card .category:focus{
 	scale: 0.9 0.9;
 }
 
