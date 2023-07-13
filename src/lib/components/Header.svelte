@@ -104,7 +104,7 @@ nav[hidden]{
 		height: 100%;
 		transition: 100ms;
 	}
-	.nav_button:active{
+	.nav_button:focus{
 		fill: var(--red);
 		scale: 0.9;
 	}

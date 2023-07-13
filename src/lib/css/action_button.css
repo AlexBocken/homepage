@@ -22,7 +22,7 @@
 	animation: shake 0.5s ease forwards;
 }
 
-.action_button:active{
+.action_button:focus{
 	transition: 50ms;
 	scale: 0.8 0.8;
 }
