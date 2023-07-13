@@ -67,6 +67,9 @@ h1{
 	border-radius: 10000px;
 	margin:0;
 	font-size: 3rem;
+	overflow-wrap: break-word;
+	hyphens: auto;
+	text-wrap: balance;
 }
 .tags{
 	margin-block: 1rem;
