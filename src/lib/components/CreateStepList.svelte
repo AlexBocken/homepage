@@ -248,7 +248,6 @@ dialog{
 	height: 100%;
 	background-color: rgba(255,255,255, 0.001);
 	border: unset;
-	backdrop-filter: blur(10px);
 	margin: 0;
 	transition: 200ms;
 }
@@ -282,7 +281,7 @@ dialog .adder input::placeholder{
 		width: 70%;
 	}
 }
-dialog[open]{
+dialog[open]::backdrop{
     animation: show 200ms ease forwards;
 }
 @keyframes show{
