@@ -253,12 +253,12 @@ dialog{
 	box-sizing: content-box;
 	width: 100%;
 	height: 100%;
-	background-color: rgba(255,255,255, 0.001);
+	background-color: transparent;
 	border: unset;
 	margin: 0;
 	transition: 500ms;
 }
-dialog[open]{
+dialog[open]::backdrop{
     animation: show 200ms ease forwards;
 }
 @keyframes show{
