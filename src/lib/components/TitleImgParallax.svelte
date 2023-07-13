@@ -10,6 +10,18 @@
 		}
 	})
 
+	function show_dialog_img(){
+		if(document.querySelector("img").complete){
+			document.querySelector("#img_carousel").showModal();
+		}
+	}
+	function close_dialog_img(){
+		document.querySelector("#img_carousel").close();
+	}
+	import Cross from "$lib/assets/icons/Cross.svelte";
+	import "$lib/css/action_button.css";
+	import "$lib/css/shake.css";
+	import { do_on_key } from "./do_on_key";
 </script>
 <style>
 :root {
@@ -102,21 +114,64 @@ div:has(.placeholder){
         width: min(1000px, 100dvw);
   	height: max(60dvh,600px);
 	overflow: hidden;
+	cursor:zoom-in;
 }
 .unblur#image{
 	filter: blur(0px) !important;
 	opacity: 1;
 }
+
+
+/* DIALOG */
+dialog{
+	position: relative;
+	background-color: unset;
+	padding:0;
+	max-height: 90vh;
+	margin-inline: auto;
+	overflow: visible;
+	border: unset;
+}
+dialog img{
+	max-width: calc(95vmin - 2rem);
+	max-height: calc(95vmin- 2rem);
+}
+dialog[open]::backdrop{
+    animation: show 200ms ease forwards;
+}
+@keyframes show{
+    from {
+	backdrop-filter: blur(0px);
+    }
+    to {
+	backdrop-filter: blur(10px);
+    }
+}
+dialog button{
+	position: absolute;
+	top: -2rem;
+	right: -2rem;
+}
 </style>
 <section class="section">
     <figure class="image-container">
-    	<div>
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+    	<div on:click={show_dialog_img}>
 		<div class=placeholder style="background-image:url({placeholder_src})" >
 			<div class=placeholder_blur>
-			<img class:unblur={isloaded} id=image {src} on:load={() => {isloaded=true}} alt=""/>
+			<img class:unblur={isloaded} id=image {src} on:load={() => {isloaded=true}}  alt=""/>
 			</div>
 		</div>
 	</div>
 	</figure>
     <div class=content><slot></slot></div>
 </section>
+
+<dialog id=img_carousel>
+	<div>
+	<img class:unblur={isloaded} {src} alt="">
+		<button class=action_button on:keydown={(event) => do_on_key(event, 'Enter', false, close_dialog_img)} on:click={close_dialog_img}>
+	<Cross fill=white width=2rem height=2rem></Cross>
+		</button>
+	</div>
+</dialog>
