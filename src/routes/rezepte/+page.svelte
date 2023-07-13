@@ -6,8 +6,7 @@
     	import Search from '$lib/components/Search.svelte';
     	export let data: PageData;
     	export let current_month = new Date().getMonth() + 1
-	const all_categories = [ ...new Set (data.all_brief.map(item => item.category))];
-	const categories = ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Sauce", "Zutat", "Aufstrich", "Guetzli"]
+	const categories = ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Sauce", "Zutat", "Getränk", "Aufstrich", "Guetzli"]
 </script>
 <style>
 h1{
