@@ -136,10 +136,12 @@
 		// two cases:
 		//new image uploaded (not implemented yet)
 		// new short_name -> move images as well
+
 		// if new image
+		console.log("img_local", img_local)
 		if(img_local != ""){
 			async function delete_img(){
-				const res_img = await fetch('/api/img/delete', {
+				const res = await fetch('/api/img/delete', {
 					method: 'POST',
 					body: JSON.stringify({
 						name: old_short_name,
@@ -150,8 +152,8 @@
 						bearer: password
 						}
 				})
-				if(!res_img.ok){
-					const item = await res_img.json();
+				if(!res.ok){
+					const item = await res.json();
 					alert(item.message)
 				}
 			}
@@ -171,7 +173,7 @@
         			    body: JSON.stringify(data)
         			});
 				if(!res.ok){
-					const item = await res_img.json();
+					const item = await res.json();
 					alert(item.message)
 				}
 			}
