@@ -114,7 +114,6 @@ div:has(.placeholder){
         width: min(1000px, 100dvw);
   	height: max(60dvh,600px);
 	overflow: hidden;
-	cursor:zoom-in;
 }
 .unblur#image{
 	filter: blur(0px) !important;
@@ -152,11 +151,14 @@ dialog button{
 	top: -2rem;
 	right: -2rem;
 }
+.zoom-in{
+	cursor: zoom-in;
+}
 </style>
 <section class="section">
     <figure class="image-container">
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
-    	<div on:click={show_dialog_img}>
+    	<div class:zoom-in={isloaded} on:click={show_dialog_img}>
 		<div class=placeholder style="background-image:url({placeholder_src})" >
 			<div class=placeholder_blur>
 			<img class:unblur={isloaded} id=image {src} on:load={() => {isloaded=true}}  alt=""/>
