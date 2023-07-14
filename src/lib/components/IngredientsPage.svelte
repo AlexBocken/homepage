@@ -58,18 +58,22 @@ function findGCD(a, b) {
   return findGCD(b, a % b);
 }
 
-// For portions, not sure whether to keep or let it be
-function multiplyFirstNumberInString(inputString, constant) {
-  const firstNumberRegex = /\d+(?:[\.,]\d+)?/;
-  const match = inputString.match(firstNumberRegex);
-  if (match) {
-    const number = match[0].includes(',') ? match[0].replace(/\./g, '').replace(',', '.') : match[0];
-    const multiplied = (parseFloat(number) * constant).toString();
-    const rounded = parseFloat(multiplied).toString();
-    const result = match[0].includes(',') ? rounded.replace('.', ',') : rounded;
-    return inputString.replace(firstNumberRegex, result);
-  }
-  return inputString;
+// "1-2 Kuchen (Durchmesser: 26cm", constant=2 ->  "2-4 Kuchen (Durchmesser: 26cm)"
+function multiplyFirstAndSecondNumbers(inputString, constant) {
+  const regex = /(\d+(?:[\.,]\d+)?)(\s*-\s*\d+(?:[\.,]\d+)?)?/;
+  return inputString.replace(regex, (match, firstNumber, secondNumber) => {
+    const numbersToMultiply = [firstNumber];
+    if (secondNumber) {
+      numbersToMultiply.push(secondNumber.replace(/-\s*/, ''));
+    }
+    const multipliedNumbers = numbersToMultiply.map(number => {
+      const multiplied = (parseFloat(number) * constant).toString();
+      const rounded = parseFloat(multiplied).toString();
+      const result = number.includes(',') ? rounded.replace('.', ',') : rounded;
+      return result;
+    });
+    return multipliedNumbers.join('-')
+  });
 }
 
 function adjust_amount(string, multiplier){
@@ -130,7 +134,7 @@ button.selected{
 <div class=ingredients>
 {#if data.portions}
 	<h3>Portionen:</h3>
-	{@html convertFloatingPointToFraction(multiplyFirstNumberInString(data.portions, multiplier))}
+	{@html convertFloatingPointToFraction(multiplyFirstAndSecondNumbers(data.portions, multiplier))}
 {/if}
 
 <h3>Menge anpassen:</h3>
