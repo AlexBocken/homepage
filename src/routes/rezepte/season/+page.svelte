@@ -11,8 +11,7 @@
     import { rand_array } from '$lib/js/randomize';
 </script>
 
-<SeasonLayout>
-<h2 slot=test>Rezepte des Monats </h2>
+<SeasonLayout active_index={current_month-1}>
 <Recipes slot=recipes>
 	{#each rand_array(data.season) as recipe}
 		<Card {recipe} {current_month}></Card>

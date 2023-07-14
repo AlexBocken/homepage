@@ -8,8 +8,7 @@
     export let data: PageData;
     import { rand_array } from '$lib/js/randomize';
 </script>
-<IconLayout icons={data.icons}>
-<h2 slot=test>Rezepte mit {data.icon}</h2>
+<IconLayout icons={data.icons} active_icon={data.icon} >
 <Recipes slot=recipes>
 	{#each rand_array(data.season) as recipe}
 		<Card {recipe} icon_override=true></Card>
