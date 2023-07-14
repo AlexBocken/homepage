@@ -79,6 +79,9 @@ h1{
 	flex-wrap: wrap;
 	gap: 1em;
 }
+.center{
+	justify-content: center;
+}
 .tag{
 	all:unset;
 	color: var(--nord0);
@@ -195,13 +198,18 @@ h4{
     }
   }
 
+.description{
+	text-align: center;
+	margin-bottom: 2em;
+	margin-top: -0.5em;
+}
 </style>
 <TitleImgParallax src={hero_img_src} {placeholder_src}>
 	<div class=title>
 		<a class="icon" href='/rezepte/icon/{data.icon}'>{data.icon}</a>
 		<h1>{@html data.name}</h1>
 		{#if data.description && ! data.preamble}
-			<p>{data.description}</p>
+			<p class=description>{data.description}</p>
 		{/if}
 		{#if data.preamble}
 			<p>{@html data.preamble}</p>
@@ -213,7 +221,7 @@ h4{
 			{/each}
 		</div>
 		<h4>Stichwörter:</h4>
-		<div class=tags>
+		<div class="tags center">
 			{#each data.tags as tag}
 				<a class=tag href="/rezepte/tag/{tag}">{tag}</a>
 			{/each}
