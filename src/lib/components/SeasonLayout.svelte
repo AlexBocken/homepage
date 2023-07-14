@@ -4,8 +4,10 @@
     import Search from './Search.svelte';
     let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
     let month : number;
-</script>
+    export let active_index;
+    console.log(active_index)
 
+</script>
 <style>
 a.month{
 	text-decoration: unset;
@@ -18,9 +20,11 @@ a.month{
 	min-width: 4em;
 	text-align: center;
 }
-a.month:hover{
-	transform: scale(1.1,1.1);
-	background-color: var(--red);
+a.month:hover,
+.active
+{
+	transform: scale(1.1,1.1) !important;
+	background-color: var(--red) !important;
 }
 .months{
 	display:flex;
@@ -32,11 +36,9 @@ a.month:hover{
 }
 </style>
 
-<slot name="test"></slot>
-
 <div class=months>
 {#each months as month, i}
-	<a class=month href="/rezepte/season/{i+1}">{month}</a>
+	<a class:active={i == active_index}  class=month href="/rezepte/season/{i+1}">{month}</a>
 {/each}
 </div>
 <section>
