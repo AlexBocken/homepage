@@ -1,14 +1,97 @@
 <script>
 export let data
 let multiplier = 1
+let custom_mul = "…"
 
-//function multiplyNumbersInString(inputString, constant) {
-//  return inputString.replace(/(\d+(?:[\.,]\d+)?)/g, match => {
-//    const number = match.includes(',') ? match.replace(/\./g, '').replace(',', '.') : match;
-//    const multiplied = (parseFloat(number) * constant).toString();
-//    return match.includes(',') ? multiplied.replace('.', ',') : multiplied;
-//  });
-//}
+function convertFloatsToFractions(inputString) {
+  // Split the input string into individual words
+  const words = inputString.split(' ');
+
+  // Define a helper function to check if a number is close to an integer
+  const isCloseToInt = (num) => Math.abs(num - Math.round(num)) < 0.001;
+
+  // Iterate through the words and convert floats to fractions
+  const result = words.map((word) => {
+    const number = parseFloat(word);
+
+    if (!isNaN(number)) {
+      if (isCloseToInt(number)) {
+        return Math.round(number).toString();
+      } else {
+	let bestNumerator = 0;
+  	let bestDenominator = 1;
+  	let minDifference = Math.abs(number);
+
+  	for (let denominator = 1; denominator <= 10; denominator++) {
+  	  const numerator = Math.round(number* denominator);
+  	  const difference = Math.abs(number- (numerator / denominator));
+
+  	  if (difference < minDifference) {
+  	    bestNumerator = numerator;
+  	    bestDenominator = denominator;
+  	    minDifference = difference;
+  	  }
+  	}
+	if(bestDenominator == 1) return bestNumerator
+	else{
+		let full_amount = Math.floor(bestNumerator/bestDenominator)
+		if(full_amount > 0) return `${full_amount}<sup>${bestNumerator - full_amount * bestDenominator}</sup>/<sub>${bestDenominator}</sub>`;
+		return `<sup>${bestNumerator}</sup>/<sub>${bestDenominator}</sub>`;
+	}
+      }
+    }
+
+    return word;
+  });
+
+  // Join the words back into a string
+  return result.join(' ');
+}
+
+function convertFloatsToFractionsMath(inputString) {
+  // Split the input string into individual words
+  const words = inputString.split(' ');
+
+  // Define a helper function to check if a number is close to an integer
+  const isCloseToInt = (num) => Math.abs(num - Math.round(num)) < 0.001;
+
+  // Iterate through the words and convert floats to fractions
+  const result = words.map((word) => {
+    const number = parseFloat(word);
+
+    if (!isNaN(number)) {
+      if (isCloseToInt(number)) {
+        return Math.round(number)
+      } else {
+	let bestNumerator = 0;
+  	let bestDenominator = 1;
+  	let minDifference = Math.abs(number);
+
+  	for (let denominator = 1; denominator <= 10; denominator++) {
+  	  const numerator = Math.round(number* denominator);
+  	  const difference = Math.abs(number- (numerator / denominator));
+
+  	  if (difference < minDifference) {
+  	    bestNumerator = numerator;
+  	    bestDenominator = denominator;
+  	    minDifference = difference;
+  	  }
+  	}
+	if(bestDenominator == 1) return bestNumerator
+	else{
+		let full_amount = Math.floor(bestNumerator/bestDenominator)
+		return full_amount + (bestNumerator - full_amount * bestDenominator)/ bestDenominator
+	}
+      }
+    }
+
+    return word;
+  });
+
+  return result
+}
+
+
 function multiplyNumbersInString(inputString, constant) {
   return inputString.replace(/(\d+(?:[\.,]\d+)?)/g, match => {
     const number = match.includes(',') ? match.replace(/\./g, '').replace(',', '.') : match;
@@ -17,45 +100,6 @@ function multiplyNumbersInString(inputString, constant) {
     const trimmed = parseFloat(rounded).toString();
     return match.includes(',') ? trimmed.replace('.', ',') : trimmed;
   });
-}
-
-
-function convertFloatingPointToFraction(input) {
-  const parts = input.split(/(\d*\.?\d+)/);
-
-  return parts
-    .map(part => {
-      const number = parseFloat(part);
-
-      if (!isNaN(number) && number % 1 !== 0) {
-        const denominator = 10 ** number.toString().split('.')[1].length;
-        const numerator = Math.round(number * denominator);
-
-        if (numerator > 8 || denominator > 8) {
-          const wholeNumber = Math.floor(numerator / denominator);
-          const mixedNumerator = numerator % denominator;
-          const gcd = findGCD(mixedNumerator, denominator);
-          const simplifiedNumerator = mixedNumerator / gcd;
-          const simplifiedDenominator = denominator / gcd;
-
-          if (wholeNumber > 0) {
-            return `${wholeNumber}<sup>${simplifiedNumerator}</sup>&frasl;<sub>${simplifiedDenominator}</sub>`;
-          } else {
-            return `<sup>${simplifiedNumerator}</sup>&frasl;<sub>${simplifiedDenominator}</sub>`;
-          }
-        }
-      }
-
-      return part;
-    })
-    .join('');
-}
-
-function findGCD(a, b) {
-  if (b === 0) {
-    return a;
-  }
-  return findGCD(b, a % b);
 }
 
 // "1-2 Kuchen (Durchmesser: 26cm", constant=2 ->  "2-4 Kuchen (Durchmesser: 26cm)"
@@ -76,10 +120,28 @@ function multiplyFirstAndSecondNumbers(inputString, constant) {
   });
 }
 
+
 function adjust_amount(string, multiplier){
 	let temp = multiplyNumbersInString(string, multiplier)
-	temp = convertFloatingPointToFraction(temp)
+	temp = convertFloatsToFractions(temp)
 	return temp
+}
+
+function apply_if_not_NaN(custom){
+	const multipliers = [0.5, 1, 1.5, 2, 3]
+	if((!isNaN(custom * 1)) && custom != ""){
+		if(multipliers.includes(parseFloat(custom))){
+			multiplier = custom
+			custom_mul = "…"
+		}
+		else{
+			custom_mul = convertFloatsToFractions(custom)
+			multiplier = convertFloatsToFractionsMath(custom)
+		}
+	}
+	else{
+		custom_mul = "…"
+	}
 }
 </script>
 <style>
@@ -105,9 +167,10 @@ font-family: sans-serif;
 	display:flex;
 	gap: 0.5rem;
 	justify-content: center;
+	flex-wrap:wrap;
 }
 .multipliers button{
-	width: 2em;
+	min-width: 2em;
 	font-size: 1.1rem;
 	border-radius: 0.3rem;
 	border: none;
@@ -117,33 +180,67 @@ font-family: sans-serif;
 	background-color: var(--nord5);
 	box-shadow: 0px 0px 0.4em 0.05em rgba(0,0,0, 0.2);
 }
-.multipliers button:is(:hover, :focus-visible){
+.multipliers :is(button, div):is(:hover, :focus-within){
 	scale: 1.2;
 	background-color: var(--orange);
 	box-shadow: 0px 0px 0.5em 0.1em rgba(0,0,0, 0.3);
 }
-button.selected{
-	background-color: var(--nord9);
-	color: white;
+.selected{
+	background-color: var(--nord9) !important;
+	color: white !important;
 	font-weight: bold;
-	scale: 1.1;
-	box-shadow: 0px 0px 0.4em 0.1em rgba(0,0,0, 0.3);
+	scale: 1.2 !important;
+	box-shadow: 0px 0px 0.4em 0.1em rgba(0,0,0, 0.3) !important;
+}
+input.selected,
+span.selected
+{
+	box-shadow: none !important;
+	background-color: transparent;
+	scale: 1 !important;
+}
+input,
+span
+{
+	display: inline;
+	flex-grow: 1;
+	min-width: 1.5ch;
+	background-color: transparent;
+	border: unset;
+	padding: 0;
+	margin: 0;
+}
+.multipliers button:last-child{
+	display: flex;
+	align-items: center;
 }
 </style>
 {#if data.ingredients}
 <div class=ingredients>
 {#if data.portions}
 	<h3>Portionen:</h3>
-	{@html convertFloatingPointToFraction(multiplyFirstAndSecondNumbers(data.portions, multiplier))}
+	{@html convertFloatsToFractions(multiplyFirstAndSecondNumbers(data.portions, multiplier))}
 {/if}
 
 <h3>Menge anpassen:</h3>
 <div class=multipliers>
 	<button class:selected={multiplier==0.5} on:click={() => multiplier=0.5}><sup>1</sup>&frasl;<sub>2</sub>x</button>
-	<button class:selected={multiplier==1} on:click={() => multiplier=1}>1x</button>
-	<button class:selected={multiplier==1.5} on:click={() => multiplier=1.5}><sup>3</sup>&frasl;<sub>2</sub>x</button>
-	<button class:selected={multiplier==2} on:click="{() => multiplier=2}">2x</button>
-	<button class:selected={multiplier==3} on:click="{() => multiplier=3}">3x</button>
+	<button class:selected={multiplier==1} on:click={() => {multiplier=1; custom_mul="…"}}>1x</button>
+	<button class:selected={multiplier==1.5} on:click={() => {multiplier=1.5; custom_mul="…"}}><sup>3</sup>&frasl;<sub>2</sub>x</button>
+	<button class:selected={multiplier==2} on:click="{() => {multiplier=2; custom_mul="…"}}">2x</button>
+	<button class:selected={multiplier==3} on:click="{() => {multiplier=3; custom_mul="…"}}">3x</button>
+	<button class:selected={multiplier==custom_mul} on:click={(e) => { console.log(e) ;const el = e.composedPath()[0].children[0]; if(el){ el.focus()}}}>
+		<span class:selected={multiplier==custom_mul}
+			on:focus={() => { custom_mul="" }
+				}
+			on:blur="{() => { apply_if_not_NaN(custom_mul);
+					if(custom_mul == "")
+						{custom_mul = "…"}
+						}}"
+					bind:innerHTML={custom_mul}
+					contenteditable > </span>
+		x
+	</button>
 </div>
 
 <h2>Zutaten</h2>
