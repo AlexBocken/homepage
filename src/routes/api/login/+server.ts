@@ -11,7 +11,6 @@ import { User } from '../../../models/User';
 // recipe json in body
 export const POST: RequestHandler = async ({request}) => {
 	const {username, password} = await request.json()
-	// TODO: get salt from user in DB
 	await dbConnect()
 	let res = await User.findOne({username: username}, 'pass_hash salt').lean()
 	await dbDisconnect()
@@ -30,17 +29,6 @@ export const POST: RequestHandler = async ({request}) => {
 	res = await createJWT(username)
 	return new Response(JSON.stringify(res))
 };
-
-async function hashPassword(password) {
-  try {
-    const salt = await generateSalt(); // Generate a random salt
-    const hashedPassword = await hash(password, salt); // Hash the password with the salt
-    return { hashedPassword, salt };
-  } catch (error) {
-    console.error('Error hashing password:', error);
-  }
-}
-
 
 async function createJWT(username) {
 	const payload = {

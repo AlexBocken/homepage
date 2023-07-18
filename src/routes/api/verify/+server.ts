@@ -15,7 +15,6 @@ import { getJWTFromRequest } from '../../../utils/cookie';
 // recipe json in body
 export const GET: RequestHandler = async ({request}) => {
 	const jwt = getJWTFromRequest(request)
-	console.log(jwt)
 
   	// Set your master secret key (replace with your own secret)
   	const masterSecret = COOKIE_SECRET;

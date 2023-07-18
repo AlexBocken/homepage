@@ -9,7 +9,7 @@
 	import IngredientsPage from '$lib/components/IngredientsPage.svelte';
 	import TitleImgParallax from '$lib/components/TitleImgParallax.svelte';
 	import { afterNavigate } from '$app/navigation';
-    import {season} from '$lib/js/season_store';
+    	import {season} from '$lib/js/season_store';
 
     	export let data: PageData;
 
