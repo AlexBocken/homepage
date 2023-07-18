@@ -14,7 +14,6 @@ const link_els = document.querySelectorAll("nav a")
 link_els.forEach((el) => {
 	el.addEventListener("click", () => {toggle_sidebar(true)});
 })
-console.log(link_els)
 })
 
 </script>

@@ -1,8 +1,9 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
 import { sign } from 'jsonwebtoken';
-import { hash, verify} from 'argon2';
+import { verify} from 'argon2';
 import { COOKIE_SECRET } from '$env/static/private'
+import { PEPPER } from '$env/static/private'
 
 import { dbConnect, dbDisconnect } from '../../../utils/db';
 import { User } from '../../../models/User';
@@ -15,13 +16,14 @@ export const POST: RequestHandler = async ({request}) => {
 	let res = await User.findOne({username: username}, 'pass_hash salt').lean()
 	await dbDisconnect()
 	if(!res){
+		console.log("NOT FOUND")
 		throw error(401, {message: "wrong password or user does not exist"})
 	}
 
 	const stored_pw = res.pass_hash
 	const salt = res.salt
 
-	const isMatch = await verify(stored_pw, password, {salt})
+	const isMatch = await verify(stored_pw, password + PEPPER, {salt})
 	if(!isMatch){
 		throw error(401, {message: "wrong password or user does not exist"})
 	}
@@ -38,5 +40,6 @@ async function createJWT(username) {
   	const masterSecret = COOKIE_SECRET;
   	const secretKey = masterSecret;
   	const jwt = sign(payload, secretKey);
+	console.log(jwt)
   	return jwt
 }

@@ -4,7 +4,7 @@ import { redirect } from "@sveltejs/kit"
 import { error } from "@sveltejs/kit"
 
 export const handle : Handle = async({event, resolve}) => {
-	event.locals.user = await authenticateUser(event)
+	event.locals.user = await authenticateUser(event.cookies)
 	if(event.url.pathname.startsWith('/rezepte/edit') || event.url.pathname.startsWith('/rezepte/add')){
 		if(!event.locals.user){
 				throw redirect(303, "/login")

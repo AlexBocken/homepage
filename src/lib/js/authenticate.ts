@@ -5,9 +5,8 @@ import { error } from "@sveltejs/kit";
 import { dbConnect, dbDisconnect } from "../../utils/db";
 import { User } from "../../models/User";;
 
-export async function authenticateUser(event: RequestEvent){
+export async function authenticateUser(cookies){
 // Set your master secret key (replace with your own secret)
-	const { cookies } = event;
 	const masterSecret = COOKIE_SECRET;
 	const secretKey = masterSecret
 	let decoded
@@ -19,7 +18,7 @@ export async function authenticateUser(event: RequestEvent){
 
 	}
 	catch(e){
-		throw error(401, "Cookies have changed, please log in again")
+		return null
 	}
 
 	if(decoded){
