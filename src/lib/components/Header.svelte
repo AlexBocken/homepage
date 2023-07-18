@@ -1,6 +1,7 @@
 <script>
 import "$lib/components/nordtheme.css"
 import { onMount } from "svelte";
+import Symbol from "./Symbol.svelte"
 
 function toggle_sidebar(state){
 	// state: force hidden state (optional)
@@ -34,18 +35,26 @@ nav{
 	background-color: var(--nord0);
 	top: 0;
 	z-index: 10;
+	display: flex !important;
+	flex-direction: row;
+	justify-content: space-between !important;
+	align-items: center;
 }
 nav[hidden]{
 	display:block;
 }
 
-:global(.site_header li){
+:global(.site_header li),
+a.entry
+{
 	list-style-type:none;
 	transition: 100ms;
 	color: white;
 	user-select: none;
 }
-:global(.site_header li>a){
+:global(.site_header li>a),
+.entry
+{
 	text-decoration: none;
 	font-family: sans-serif;
 	font-size: 1.2rem;
@@ -55,7 +64,9 @@ nav[hidden]{
 }
 
 :global(.site_header li:hover),
-:global(.site_header li:focus-within)
+:global(.site_header li:focus-within),
+.entry:hover,
+.entry:focus-visible
 {
 	cursor: pointer;
 	color: var(--red);
@@ -77,10 +88,21 @@ nav[hidden]{
 .button_wrapper{
 	display: none;
 }
-@media screen and (max-width: 500px) {
+:global(svg.icon){
+	height: 3.5rem;
+	width: 3.5rem;
+	border-radius: 10000px;
+}
+:global(a:has(svg)){
+	padding: 0 !important;
+	width: 3.5rem;
+	height: 3.5rem;
+	margin-left: 1rem;
+}
+@media screen and (max-width: 800px) {
 	.button_wrapper{
 		display: flex;
-		justify-content: right;
+		justify-content: space-between;
 		align-items: center;
 		position: sticky;
 		background-color: var(--nord0);
@@ -111,23 +133,38 @@ nav[hidden]{
 		position: fixed;
 		top: 0;
 		right: 0;
-		height: 150vh; /* dvh does not work, breaks because of transition and only being applied after scroll ends*/
-		width: min(80svw, 40em);
+		height: 100vh; /* dvh does not work, breaks because of transition and only being applied after scroll ends*/
+		margin-bottom: 50vh;
+		width: min(95svw, 25em);
 		transition: 100ms;
 		z-index: 10;
+		flex-direction: column;
+		justify-content: flex-start !important;
+		align-items: left;
+		justify-content: space-between!important;
+		padding-inline: 0.5rem;
+	}
+	:global(nav ul){
+		width: 100% ;
+	}
+	nav :first-child{
+		display:none;
 	}
 	nav[hidden]{
 		transform: translateX(100%);
+	}
+	nav a:last-child{
+		margin-bottom: 2rem;
 	}
 
 	:global(.site_header){
 		flex-direction: column;
 		padding-top: min(10rem, 10vh);
 	}
-	:global(.site_header li){
+	:global(.site_header li, .site_header a){
 		font-size: 4rem;
 	}
-	:global(.site_header li > a){
+	:global(.site_header li > a, .site_header a){
 		font-size: 2rem;
 	}
 	:global(.site_header li:hover),
@@ -149,10 +186,13 @@ margin-top: auto;
 <div class=wrapper lang=de>
 <div>
 <div class=button_wrapper>
+<a href="/"><Symbol></Symbol></a>
 <button class=nav_button on:click={() => {toggle_sidebar()}}><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></button>
 </div>
 <nav hidden>
+	<a class=entry href="/"><Symbol></Symbol></a>
 	<slot name=links></slot>
+	<a class=entry href="/login">Log In</a>
 </nav>
 
 <slot></slot>
