@@ -8,8 +8,9 @@
 	svg{
 		transition: 100ms;
 	}
-	svg:hover{
-		scale: 1.1;
+	svg:hover,
+	svg:focus
+	{
 		--icon_fill: var(--red);
 	}
 </style>
