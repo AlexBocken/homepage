@@ -13,7 +13,7 @@
 		--icon_fill: var(--red);
 	}
 </style>
-<svg class=icon
+<svg class=symbol
    width="165.32942mm"
    height="165.32944mm"
    viewBox="0 0 165.32942 165.32945"
