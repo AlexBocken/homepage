@@ -59,7 +59,6 @@
 	let images = data.recipe.images
 
 	let short_name = data.recipe.short_name
-	let password
 	let datecreated = data.recipe.datecreated
 	let datemodified = new Date()
 
@@ -99,10 +98,10 @@
 			method: 'POST',
 			body: JSON.stringify({
 				name: old_short_name,
-				bearer: password,}),
+				}),
 			headers : {
        				'content-type': 'application/json',
-				bearer: password
+				credentials: 'include',
 				}
 			})
 		if(!res_img.ok){
@@ -117,7 +116,6 @@
 				old_short_name,
 			headers: {
        				'content-type': 'application/json',
-				bearer: password,
      				}
 			})
 
@@ -145,11 +143,10 @@
 					method: 'POST',
 					body: JSON.stringify({
 						name: old_short_name,
-						bearer: password,
 						}),
 					headers : {
        						'content-type': 'application/json',
-						bearer: password
+						credentials: 'include',
 						}
 				})
 				if(!res.ok){
@@ -161,14 +158,13 @@
         			const data = {
 					image: img_local,
 					name: short_name,
-					bearer: password,
 				}
         			const res = await fetch(`/api/img/add`, {
         			    method: 'POST',
         			    headers: {
         			        'Content-Type': 'application/json',
         			        Accept: 'application/json',
-					bearer: password,
+				    	credentials: 'include',
         			    },
         			    body: JSON.stringify(data)
         			});
@@ -183,18 +179,16 @@
 		// case new short_name:
 		else if(short_name != old_short_name){
 			console.log("MOVING")
-			console.log("PASSWORD:", password)
 			const res_img = await fetch('/api/img/mv', {
 				method: 'POST',
 				headers: {
         			        'Content-Type': 'application/json',
         			        Accept: 'application/json',
-					bearer: password,
+					credentials: 'include',
         			    },
 				body: JSON.stringify({
 					old_name: old_short_name,
 					new_name: short_name,
-					bearer:	password,
 				})
 			})
 			if(!res_img.ok){
@@ -223,7 +217,7 @@
 				old_short_name,
 			headers: {
        				'content-type': 'application/json',
-				bearer: password,
+				credentials: 'include',
      				}
 			})
 		})
@@ -269,26 +263,6 @@ input:focus-visible
 	.list_wrapper{
 		flex-direction: column;
 	}
-}
-input[type=password]{
-	box-sizing: border-box;
-	font-size: 1.5rem;
-	padding-block: 0.5em;
-	display: inline;
-	width: 100%;
-}
-.submit_wrapper{
-	position: relative;
-	margin-inline: auto;
-	width: max(300px, 50vw)
-}
-.submit_wrapper button{
-	position: absolute;
-	right:-1em;
-	bottom: -0.5em;
-}
-.submit_wrapper h2{
-	margin-bottom: 0;
 }
 h1{
 	text-align: center;
@@ -340,6 +314,25 @@ h1{
 h3{
 	text-align: center;
 }
+button.action_button{
+	animation: unset !important;
+	font-size: 1.3rem;
+	color: white;
+}
+.submit_buttons{
+	display: flex;
+	margin-inline: auto;
+	max-width: 1000px;
+	margin-block: 1rem;
+	justify-content: center;
+	align-items: center;
+	gap: 2rem;
+}
+.submit_buttons p{
+	padding: 0;
+	padding-right: 0.5em;
+	margin: 0;
+}
 </style>
 <h1>Rezept editieren</h1>
 <CardAdd {card_data} {image_preview_url} ></CardAdd>
@@ -373,14 +366,7 @@ h3{
 <div class=addendum bind:innerText={addendum} contenteditable></div>
 </div>
 
-<div class=submit_wrapper>
-<h2>Editiertes Rezept abspeichern:</h2>
-<input type="password" placeholder=Passwort bind:value={password}>
-<button class=action_button on:click={doEdit}><Check fill=white width=2rem height=2rem></Check></button>
-</div>
-
-<div class=submit_wrapper>
-<h2>Rezept löschen:</h2>
-<input type="password" placeholder=Passwort bind:value={password}>
-<button class=action_button on:click={doDelete}><Cross fill=white width=2rem height=2rem></Cross></button>
+<div class=submit_buttons>
+<button class=action_button on:click={doDelete}><p>Löschen</p><Cross fill=white width=2rem height=2rem></Cross></button>
+<button class=action_button on:click={doEdit}><p>Speichern</p><Check fill=white width=2rem height=2rem></Check></button>
 </div>

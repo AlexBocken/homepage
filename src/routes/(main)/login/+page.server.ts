@@ -1,5 +1,6 @@
 import { redirect } from "@sveltejs/kit"
 import type { Actions, PageServerLoad } from "./$types"
+import { error } from "@sveltejs/kit"
 
 export const load: PageServerLoad = async ({ locals }) => {
 	return {
@@ -18,7 +19,8 @@ export const actions: Actions = {
 			})
 			}
 			)
-	    const jwt = await res.json()
+	    	const jwt = await res.json()
+		if(res.ok){
 		event.cookies.set("UserSession", jwt, {
 			path: "/",
 			httpOnly: true,
@@ -28,5 +30,12 @@ export const actions: Actions = {
 		})
 
 		throw redirect(303, "/")
+		}
+		else{
+			throw error(401, jwt.message)
+		}
+	},
+	logout: async () => {
+		throw redirect(303, "/logout")
 	},
 }

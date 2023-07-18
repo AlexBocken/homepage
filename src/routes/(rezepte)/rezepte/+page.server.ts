@@ -1,6 +1,6 @@
-import type { PageLoad } from "./$types";
+import type { PageServerLoad } from "./$types";
 
-export async function load({ fetch }) {
+export async function load({ fetch, locals }) {
     let current_month = new Date().getMonth() + 1
     const res_season = await fetch(`/api/items/in_season/` + current_month);
     const res_all_brief = await fetch(`/api/items/all_brief`);
@@ -9,5 +9,6 @@ export async function load({ fetch }) {
     return {
 	    season: item_season,
 	    all_brief: item_all_brief,
+	    user: locals.user,
     };
 };

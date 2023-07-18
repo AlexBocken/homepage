@@ -1,5 +1,4 @@
 <script>
-	import Header from '$lib/components/Header.svelte'
   	import { setCookie } from 'svelte-cookie';
 
 	export async function createJWT() {
@@ -18,16 +17,8 @@
 <style>
 </style>
 
-<Header>
-<ul class=site_header slot=links>
-	<li><a href="/rezepte">Rezepte</a></li>
-	<li><a href="/bilder">Bilder</a></li>
-	<li><a href="/git">Git</a></li>
-	<li><a href="/transmission">Transmission</a></li>
-</ul>
-
-<h1>Log In</h1>
-<form action="?/login" method=POST>
+<h1>Register</h1>
+<form action="?/register" method=POST>
 	<label>
 		Username
 		<input type="text" name="username">
@@ -36,7 +27,18 @@
 		Passwort
 		<input  name="password" type="password">
 	</label>
+	<label>
+		Rezepte
+		<input type="checkbox" name="rezepte">
+	</label>
+	<label>
+		Abrechnungen
+		<input type="checkbox" name="abrechnung">
+	</label>
+	<label>
+		Flims
+		<input type="checkbox" name="flims">
+	</label>
 
-	<button type="submit">Log In</button>
+	<button type="submit">Register</button>
 </form>
-</Header>

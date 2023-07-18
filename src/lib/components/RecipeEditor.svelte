@@ -47,7 +47,6 @@
 
 		const json = await res.json()
 		result = JSON.stringify(json)
-		console.log(result)
 	}
 </script>
 <style>
