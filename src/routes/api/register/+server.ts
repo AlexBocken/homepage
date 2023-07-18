@@ -1,10 +1,9 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
-import { sign } from 'jsonwebtoken';
-import { hash, verify }  from 'argon2';
+import { hash }  from 'argon2';
 import { randomBytes } from 'crypto';
-import { COOKIE_SECRET } from '$env/static/private'
-import { ALLOW_REGISTRATION } from '$env/static/private'
+import { ALLOW_REGISTRATION } from '$env/static/private';
+import { PEPPER } from '$env/static/private';
 
 import { User } from '../../../models/User';
 import { dbConnect, dbDisconnect } from '../../../utils/db';
@@ -16,7 +15,7 @@ export const POST: RequestHandler = async ({request}) => {
 		const {username, password, access} = await request.json()
 		const salt = randomBytes(32).toString('hex'); // Generate a random salt
 
-		const pass_hash =  await hashPassword(password, salt)
+		const pass_hash =  await hashPassword(password + PEPPER, salt)
 		await dbConnect();
 		try{
 			await User.create({
@@ -43,7 +42,7 @@ export const POST: RequestHandler = async ({request}) => {
 
 async function hashPassword(password, salt) {
   try {
-    const hashedPassword = await hash(password, salt); // Hash the password with the salt
+    const hashedPassword = await hash(password, salt); // Hash the password with the salt and pepper
     return hashedPassword;
   } catch (error) {
     console.error('Error hashing password:', error);

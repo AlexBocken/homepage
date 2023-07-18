@@ -229,7 +229,7 @@ span
 	<button class:selected={multiplier==1.5} on:click={() => {multiplier=1.5; custom_mul="…"}}><sup>3</sup>&frasl;<sub>2</sub>x</button>
 	<button class:selected={multiplier==2} on:click="{() => {multiplier=2; custom_mul="…"}}">2x</button>
 	<button class:selected={multiplier==3} on:click="{() => {multiplier=3; custom_mul="…"}}">3x</button>
-	<button class:selected={multiplier==custom_mul} on:click={(e) => { console.log(e) ;const el = e.composedPath()[0].children[0]; if(el){ el.focus()}}}>
+	<button class:selected={multiplier==custom_mul} on:click={(e) => { const el = e.composedPath()[0].children[0]; if(el){ el.focus()}}}>
 		<span class:selected={multiplier==custom_mul}
 			on:focus={() => { custom_mul="" }
 				}

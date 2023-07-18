@@ -5,7 +5,6 @@
     let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
     let month : number;
     export let active_index;
-    console.log(active_index)
 
 </script>
 <style>

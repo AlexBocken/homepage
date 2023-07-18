@@ -122,7 +122,6 @@
 		const item = await res.json();
 	}
 	async function doAdd () {
-		console.log(add_info.total_time)
 		const res = await fetch('/api/add', {
 			method: 'POST',
 			body: JSON.stringify({

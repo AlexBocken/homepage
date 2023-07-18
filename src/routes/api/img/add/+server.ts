@@ -1,13 +1,15 @@
 import path from 'path'
 import type { RequestHandler } from '@sveltejs/kit';
-import { BEARER_TOKEN } from '$env/static/private'
 import { error } from '@sveltejs/kit';
 import { IMAGE_DIR } from '$env/static/private'
 import sharp from 'sharp';
+import { authenticateUser } from '$lib/js/authenticate';
 
-export const POST =  (async ({ request })  => {
-    const data = await request.json();
-    if(data.bearer === BEARER_TOKEN){
+export const POST =  (async ({ request, cookies })  => {
+	const data = await request.json();
+    	const user = await authenticateUser(cookies)
+	if (!user) throw error(401, "Need to be logged in")
+	if (!user.access.includes("rezepte")) throw error(401, "You don't have sufficient permissions for this")
 	let full_res = new Buffer.from(data.image, 'base64')
 	// reduce image size if over 500KB
 	const MAX_SIZE_KB = 500
@@ -41,9 +43,4 @@ export const POST =  (async ({ request })  => {
 	return new Response(JSON.stringify({msg: "Added image successfully"}),{
 			    status: 200,
   	});
-    }
-    else{
-    	throw error(403, "Password incorrect")
-    }
-
 }) satisfies RequestHandler;

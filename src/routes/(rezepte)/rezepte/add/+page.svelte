@@ -47,7 +47,6 @@
 		cooking: "",
 	}
 
-	let password = ""
 	let images = []
 	let short_name = ""
 	let datecreated =  new Date()
@@ -86,14 +85,13 @@
         	const data = {
 			image: img_local,
 			name: short_name,
-			bearer: password,
 		}
         	await fetch(`/api/img/add`, {
         	    method: 'POST',
         	    headers: {
         	        'Content-Type': 'application/json',
         	        Accept: 'application/json',
-			bearer: password,
+			credentials: 'include',
         	    },
         	    body: JSON.stringify(data)
         	});
@@ -241,6 +239,25 @@ h1{
 h3{
 	text-align: center;
 }
+button.action_button{
+	animation: unset !important;
+	font-size: 1.3rem;
+	color: white;
+}
+.submit_buttons{
+	display: flex;
+	margin-inline: auto;
+	max-width: 1000px;
+	margin-block: 1rem;
+	justify-content: center;
+	align-items: center;
+	gap: 2rem;
+}
+.submit_buttons p{
+	padding: 0;
+	padding-right: 0.5em;
+	margin: 0;
+}
 </style>
 <h1>Rezept erstellen</h1>
 
@@ -275,8 +292,6 @@ h3{
 <div class=addendum bind:innerText={addendum} contenteditable></div>
 </div>
 
-<div class=submit_wrapper>
-<h2>Neues Rezept hinzufügen:</h2>
-<input type="password" placeholder=Passwort bind:value={password}>
-<button class=action_button on:click={doPost}><Check fill=white width=2rem height=2rem></Check></button>
+<div class=submit_buttons>
+<button class=action_button on:click={doPost}><p>Hinzufügen</p><Check fill=white width=2rem height=2rem></Check></button>
 </div>

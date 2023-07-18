@@ -111,9 +111,6 @@ export function edit_ingredient_and_close_modal(){
 	modal_el.close();
 }
 
-export function show_keys(event){
-	console.log(event.ctrlKey, event.key)
-}
 </script>
 
 <style>
