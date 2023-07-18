@@ -1,6 +1,7 @@
 import type { RequestEvent } from "@sveltejs/kit";
 import { COOKIE_SECRET } from "$env/static/private";
-import { verify } from "jsonwebtoken";
+import pkg from 'jsonwebtoken';
+const { verify } = pkg;
 import { error } from "@sveltejs/kit";
 import { dbConnect, dbDisconnect } from "../../utils/db";
 import { User } from "../../models/User";;
