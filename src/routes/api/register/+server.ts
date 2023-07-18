@@ -49,16 +49,3 @@ async function hashPassword(password, salt) {
     console.error('Error hashing password:', error);
   }
 }
-
-
-
-async function createJWT(username, userSalt) {
-	const payload = {
-  	  username: username,
-  	};
-
-  	const masterSecret = COOKIE_SECRET;
-  	const secretKey = masterSecret + userSalt;
-  	const jwt = sign(payload, secretKey);
-  	return jwt
-}
