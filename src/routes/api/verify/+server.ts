@@ -1,6 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
-import { verify } from 'jsonwebtoken';
+import pkg from 'jsonwebtoken';
+const { verify } = pkg;
 import { hash}  from 'argon2';
 import { randomBytes } from 'crypto';
 import { COOKIE_SECRET } from '$env/static/private'
