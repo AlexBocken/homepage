@@ -93,7 +93,7 @@ a.entry
 	width: 3.5rem;
 	border-radius: 10000px;
 }
-:global(a:has(svg)){
+:global(a:has(svg.symbol)){
 	padding: 0 !important;
 	width: 3.5rem;
 	height: 3.5rem;
