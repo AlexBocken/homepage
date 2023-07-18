@@ -5,7 +5,6 @@ import Header from '$lib/components/Header.svelte'
 
 <Header>
 	<ul class=site_header slot=links>
-	<li><a href="/">Home</a></li>
 	<li><a href="/rezepte">Alle Rezepte</a></li>
 	<li><a href="/rezepte/season">In Saison</a></li>
 	<li><a href="/rezepte/category">Kategorie</a></li>
