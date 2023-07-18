@@ -342,7 +342,6 @@ h3{
 }
 </style>
 <h1>Rezept editieren</h1>
-
 <CardAdd {card_data} {image_preview_url} ></CardAdd>
 
 <h3>Kurzname (für URL):</h3>
