@@ -1,6 +1,11 @@
 <script>
 import Header from '$lib/components/Header.svelte'
-
+import UserHeader from '$lib/components/UserHeader.svelte';
+export let data
+let username = ""
+if(data.user){
+	username = data.user.username
+}
 </script>
 
 <Header>
@@ -10,5 +15,6 @@ import Header from '$lib/components/Header.svelte'
 	<li><a href="/git">Git</a></li>
 	<li><a href="/transmission">Transmission</a></li>
 	</ul>
+	<UserHeader {username} slot=right_side></UserHeader>
 	<slot></slot>
 </Header>
