@@ -242,6 +242,4 @@ h4{
 </div>
 </TitleImgParallax>
 
-{#if data.user && data.user.access.includes("rezepte")}
 <EditButton href="/rezepte/edit/{data.short_name}"></EditButton>
-{/if}

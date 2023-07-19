@@ -45,7 +45,7 @@ nav[hidden]{
 }
 
 :global(.site_header li),
-a.entry
+:global(a.entry)
 {
 	list-style-type:none;
 	transition: 100ms;
@@ -53,7 +53,7 @@ a.entry
 	user-select: none;
 }
 :global(.site_header li>a),
-.entry
+:global(.entry)
 {
 	text-decoration: none;
 	font-family: sans-serif;
@@ -65,8 +65,8 @@ a.entry
 
 :global(.site_header li:hover),
 :global(.site_header li:focus-within),
-.entry:hover,
-.entry:focus-visible
+:global(.entry:hover),
+:global(.entry:focus-visible)
 {
 	cursor: pointer;
 	color: var(--red);
@@ -153,7 +153,7 @@ a.entry
 	nav[hidden]{
 		transform: translateX(100%);
 	}
-	nav a:last-child{
+	:global(nav a:last-child){
 		margin-bottom: 2rem;
 	}
 
@@ -192,7 +192,7 @@ margin-top: auto;
 <nav hidden>
 	<a class=entry href="/"><Symbol></Symbol></a>
 	<slot name=links></slot>
-	<a class=entry href="/login">Log In</a>
+	<slot name=right_side></slot>
 </nav>
 
 <slot></slot>

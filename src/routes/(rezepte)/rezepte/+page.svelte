@@ -34,7 +34,6 @@ h1{
 	{/each}
 	</MediaScroller>
 {/each}
-<p>{data.all_brief.length}</p>
 {#if data.user && data.user.access.includes("rezepte")}
 	<AddButton></AddButton>
 {/if}
