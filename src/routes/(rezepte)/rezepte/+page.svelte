@@ -19,7 +19,7 @@ h1{
 </style>
 <h1>Rezepte</h1>
 <section>
-<MediaScroller title="In Saison:">
+<MediaScroller title="In Saison">
 {#each data.season as recipe}
 	<Card {recipe} {current_month} search=""></Card>
 {/each}
@@ -34,6 +34,4 @@ h1{
 	{/each}
 	</MediaScroller>
 {/each}
-{#if data.user && data.user.access.includes("rezepte")}
-	<AddButton></AddButton>
-{/if}
+<AddButton></AddButton>
