@@ -14,6 +14,7 @@ const RecipeSchema = new mongoose.Schema(
 	    caption: String,
     }],
     description: {type: String, required: true},
+    note: {type: String},
     tags : [String],
     season : [Number],
     baking: { temperature: {type:String, default: ""},

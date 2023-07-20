@@ -44,6 +44,8 @@ label{
 	background-color: var(--nord0);
 	color: white;
 	padding: 0.25em 1em;
+	margin-inline: 0.1em;
+	line-height: 2em;
 	border-radius: 1000px;
 	cursor: pointer;
 	position: relative;
@@ -81,7 +83,8 @@ input[type=checkbox]::after
 	flex-wrap: wrap;
 	flex-direction: row;
 	justify-content: center;
-	gap: min(1rem, 1dvh);
+	margin-bottom: 1em;
+
 }
 </style>
 

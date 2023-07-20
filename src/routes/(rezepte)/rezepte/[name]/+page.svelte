@@ -10,6 +10,7 @@
 	import TitleImgParallax from '$lib/components/TitleImgParallax.svelte';
 	import { afterNavigate } from '$app/navigation';
     	import {season} from '$lib/js/season_store';
+	import RecipeNote from '$lib/components/RecipeNote.svelte';
 
     	export let data: PageData;
 
@@ -226,8 +227,10 @@ h4{
 				<a class=tag href="/rezepte/tag/{tag}">{tag}</a>
 			{/each}
 		</div>
-
-	</div>
+		{#if data.note}
+			<RecipeNote note={data.note}></RecipeNote>
+		{/if}
+</div>
 
 <div class=wrapper_wrapper>
 <div class=wrapper>

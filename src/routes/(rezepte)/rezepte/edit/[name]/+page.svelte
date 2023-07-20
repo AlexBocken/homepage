@@ -4,11 +4,13 @@
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 	import '$lib/css/action_button.css'
 	import { redirect } from '@sveltejs/kit';
+	import EditRecipeNote from '$lib/components/EditRecipeNote.svelte';
 
     	export let data: PageData;
 	let preamble = data.recipe.preamble
 	let addendum = data.recipe.addendum
 	let image_preview_url="https://new.bocken.org/static/rezepte/thumb/" + data.recipe.short_name + ".webp"
+	let note = data.recipe.note
 
 	import { season } from '$lib/js/season_store';
 	import { portions } from '$lib/js/portions_store';
@@ -212,7 +214,8 @@
 					instructions,
 					ingredients,
 					addendum,
-					preamble
+					preamble,
+					note,
 				},
 				old_short_name,
 			headers: {
@@ -347,6 +350,7 @@ button.action_button{
 <div class=tags>
 <h4>Saison:</h4>
 <SeasonSelect></SeasonSelect>
+<EditRecipeNote><p contenteditable bind:innerText={note}></p></EditRecipeNote>
 </div>
 
 </div>
