@@ -1,10 +1,10 @@
 <script lang="ts">
 	export let username;
-	console.log("username UESRHEADER", username)
 	function show_options(){
 		const el = document.querySelector("#options")
 		el.hidden = !el.hidden
 	}
+	let src="https://new.bocken.org/static/user/thumb/" +  username + ".webp"
 </script>
 <style>
 	/* (A) SPEECH BOX */
@@ -54,12 +54,9 @@
 		height: 2.5rem;
 		border-radius: 50%;
 		margin-right: var(--margin-right);
-	}
-	img{
-		height: 2.5rem;
-		border-radius: 50%;
-		object-fit: cover;
-		object-position: center;
+		background-color: var(--nord4);
+		background-position: center;
+		background-size: contain;
 	}
 	#options{
 		--bg_color: var(--nord3);
@@ -117,8 +114,8 @@
 </style>
 
 {#if username}
-	<button on:click={show_options}><img src="https://new.bocken.org/static/user/thumb/{username}.webp">
-		<div id=options class="speech top" hidden>
+	<button on:click={show_options} style="background-image: url({src})">
+	<div id=options class="speech top" hidden>
 			<ul>
 				<li><a href="/logout">Log Out</a></li>
 			</ul>
