@@ -32,17 +32,6 @@
   position: absolute;
 }
 
-/* (B2) BOTTOM "CALLOUT TAIL" */
-.bottom.speech::after {
-  /* (B2-1) DOWN TRIANGLE */
-  border-top-color: #a53d38;
-  border-bottom: 0;
-
-  /* (B2-2) POSITION AT BOTTOM */
-  bottom: -20px; left: 50%;
-  margin-left: -20px;
-}
-
 /* (C) DIFFERENT TAIL POSITIONS */
 /* (C1) TOP */
 .top.speech::after {
@@ -51,31 +40,10 @@
   border-top: 0;
 
   /* (C1-2) POSITION AT TOP */
-  top: -20px; left:87%;
+  top: -10px; left:87%;
   margin-left: -20px;
 }
 
-/* (C2) LEFT */
-.left.speech::after {
-  /* (C2-1) LEFT TRIANGLE */
-  border-right-color: black;
-  border-left: 0;
-
-  /* (C2-2) POSITION AT LEFT */
-  left: -20px; top: 50%;
-  margin-top: -20px;
-}
-
-/* (C3) RIGHT */
-.right.speech::after {
-  /* (C3-1) RIGHT TRIANGLE */
-  border-left-color: black;
-  border-right: 0;
-
-  /* (C3-2) POSITION AT RIGHT */
-  right: -20px; top: 50%;
-  margin-top: -20px;
-}
 
 	button{
 		--margin-right: 1rem;
@@ -99,7 +67,7 @@
 		border-radius: 5px;
 		position: absolute;
 		right: calc( -1*var(--margin-right) + 0.25rem);
-		top: calc(100% + 20px);
+		top: calc(100% + 10px);
 		background-color: var(--bg_color);
 		width: 30ch;
 		padding: 1rem;
@@ -124,6 +92,28 @@
 	#options li:hover a{
 		color: var(--red);
 	}
+	/* (B2) BOTTOM "CALLOUT TAIL" */
+@media screen and (max-width: 800px){
+	#options{
+		top: unset;
+		bottom: calc(100% + 15px);
+		right: -200%;
+		z-index: 99999999999999999999;
+	}
+	.top.speech::after {
+	  /* (B2-1) DOWN TRIANGLE */
+	  border-top-color: #a53d38;
+	  border-bottom: 0;
+		z-index: 99999999999999999999;
+
+	  /* (B2-2) POSITION AT BOTTOM */
+	  bottom: -20px; left: 50%;
+	  margin-left: -20px;
+	}
+	button{
+		margin-bottom: 2rem;
+	}
+}
 </style>
 
 {#if username}
