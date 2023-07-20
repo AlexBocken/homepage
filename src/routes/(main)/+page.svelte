@@ -4,6 +4,7 @@
 section{
 	padding: 2rem 1rem;
 	min-height: 350px;
+	overflow: hidden;
 	transition: 200ms;
 }
 section:nth-child(3n){
