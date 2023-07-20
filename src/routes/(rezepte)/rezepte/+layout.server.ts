@@ -1,8 +1,5 @@
-import { authenticateUser } from '$lib/js/authenticate';;
+import { get_username } from '$lib/js/get_username';;
 
 export const load = (async ({cookies}) => {
-	const user =  await authenticateUser(cookies)
-	return {
-		user
-	}
+	return { user: await get_username(cookies) }
 });
