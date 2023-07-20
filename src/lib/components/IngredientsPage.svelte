@@ -10,87 +10,51 @@ function convertFloatsToFractions(inputString) {
   // Define a helper function to check if a number is close to an integer
   const isCloseToInt = (num) => Math.abs(num - Math.round(num)) < 0.001;
 
-  // Iterate through the words and convert floats to fractions
-  const result = words.map((word) => {
-    const number = parseFloat(word);
+  // Function to convert a float to a fraction
+  const floatToFraction = (number) => {
+    let bestNumerator = 0;
+    let bestDenominator = 1;
+    let minDifference = Math.abs(number);
 
-    if (!isNaN(number)) {
-      if (isCloseToInt(number)) {
-        return Math.round(number).toString();
-      } else {
-	let bestNumerator = 0;
-  	let bestDenominator = 1;
-  	let minDifference = Math.abs(number);
+    for (let denominator = 1; denominator <= 10; denominator++) {
+      const numerator = Math.round(number * denominator);
+      const difference = Math.abs(number - numerator / denominator);
 
-  	for (let denominator = 1; denominator <= 10; denominator++) {
-  	  const numerator = Math.round(number* denominator);
-  	  const difference = Math.abs(number- (numerator / denominator));
-
-  	  if (difference < minDifference) {
-  	    bestNumerator = numerator;
-  	    bestDenominator = denominator;
-  	    minDifference = difference;
-  	  }
-  	}
-	if(bestDenominator == 1) return bestNumerator
-	else{
-		let full_amount = Math.floor(bestNumerator/bestDenominator)
-		if(full_amount > 0) return `${full_amount}<sup>${bestNumerator - full_amount * bestDenominator}</sup>/<sub>${bestDenominator}</sub>`;
-		return `<sup>${bestNumerator}</sup>/<sub>${bestDenominator}</sub>`;
-	}
+      if (difference < minDifference) {
+        bestNumerator = numerator;
+        bestDenominator = denominator;
+        minDifference = difference;
       }
     }
 
-    return word;
+    if (bestDenominator == 1) return bestNumerator;
+    else {
+      let full_amount = Math.floor(bestNumerator / bestDenominator);
+      if (full_amount > 0)
+        return `${full_amount}<sup>${bestNumerator - full_amount * bestDenominator}</sup>/<sub>${bestDenominator}</sub>`;
+      return `<sup>${bestNumerator}</sup>/<sub>${bestDenominator}</sub>`;
+    }
+  };
+
+  // Iterate through the words and convert floats to fractions
+  const result = words.map((word) => {
+    // Check if the word contains a range (e.g., "300-400")
+    if (word.includes('-')) {
+      const rangeNumbers = word.split('-');
+      const rangeFractions = rangeNumbers.map((num) => {
+        const number = parseFloat(num);
+        return !isNaN(number) ? floatToFraction(number) : num;
+      });
+      return rangeFractions.join('-');
+    } else {
+      const number = parseFloat(word);
+      return !isNaN(number) ? floatToFraction(number) : word;
+    }
   });
 
   // Join the words back into a string
   return result.join(' ');
 }
-
-function convertFloatsToFractionsMath(inputString) {
-  // Split the input string into individual words
-  const words = inputString.split(' ');
-
-  // Define a helper function to check if a number is close to an integer
-  const isCloseToInt = (num) => Math.abs(num - Math.round(num)) < 0.001;
-
-  // Iterate through the words and convert floats to fractions
-  const result = words.map((word) => {
-    const number = parseFloat(word);
-
-    if (!isNaN(number)) {
-      if (isCloseToInt(number)) {
-        return Math.round(number)
-      } else {
-	let bestNumerator = 0;
-  	let bestDenominator = 1;
-  	let minDifference = Math.abs(number);
-
-  	for (let denominator = 1; denominator <= 10; denominator++) {
-  	  const numerator = Math.round(number* denominator);
-  	  const difference = Math.abs(number- (numerator / denominator));
-
-  	  if (difference < minDifference) {
-  	    bestNumerator = numerator;
-  	    bestDenominator = denominator;
-  	    minDifference = difference;
-  	  }
-  	}
-	if(bestDenominator == 1) return bestNumerator
-	else{
-		let full_amount = Math.floor(bestNumerator/bestDenominator)
-		return full_amount + (bestNumerator - full_amount * bestDenominator)/ bestDenominator
-	}
-      }
-    }
-
-    return word;
-  });
-
-  return result
-}
-
 
 function multiplyNumbersInString(inputString, constant) {
   return inputString.replace(/(\d+(?:[\.,]\d+)?)/g, match => {
@@ -136,7 +100,7 @@ function apply_if_not_NaN(custom){
 		}
 		else{
 			custom_mul = convertFloatsToFractions(custom)
-			multiplier = convertFloatsToFractionsMath(custom)
+			multiplier = custom
 		}
 	}
 	else{
