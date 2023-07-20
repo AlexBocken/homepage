@@ -91,7 +91,7 @@ h1{
 	border-radius: 10000px;
 	padding: 0.25em 1em;
 	transition: 100ms;
-	box-shadow: 0.2em 0.2em 0.4em 0.1em rgba(0,0,0,0.3);
+	box-shadow: 0em 0em 0.5em 0.05em rgba(0,0,0,0.3);
 }
 .tag:hover,
 .tag:focus-visible
@@ -99,7 +99,7 @@ h1{
 	cursor: pointer;
 	transform: scale(1.1,1.1);
 	background-color: var(--orange);
-	box-shadow: 0.1em 0.1em 0.2em 0.2em rgba(0,0,0,0.3);
+	box-shadow: 0.1em 0.1em 0.5em 0.1em rgba(0,0,0,0.3);
 }
 
 .wrapper_wrapper{
