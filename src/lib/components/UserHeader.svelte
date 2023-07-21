@@ -40,7 +40,7 @@
   border-top: 0;
 
   /* (C1-2) POSITION AT TOP */
-  top: -10px; left:87%;
+  top: -10px; left:84.5%;
   margin-left: -20px;
 }
 
@@ -90,6 +90,9 @@
 		color: var(--red);
 	}
 	/* (B2) BOTTOM "CALLOUT TAIL" */
+h2{
+	margin-block: 0;
+}
 @media screen and (max-width: 800px){
 	#options{
 		top: unset;
@@ -116,8 +119,10 @@
 {#if username}
 	<button on:click={show_options} style="background-image: url({src})">
 	<div id=options class="speech top" hidden>
+			<h2>{username}</h2>
 			<ul>
-				<li><a href="/logout">Log Out</a></li>
+				<!--<li><a href="/settings">Einstellungen</a></li>-->
+				<li><a href="/logout" >Log Out</a></li>
 			</ul>
 		</div>
 	</button>
