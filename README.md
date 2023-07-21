@@ -6,11 +6,12 @@ My own homepage, bocken.org (new.bocken.org for now), built with svelte-kit.
 ### General
 - [] Admin user management
 - [] upload/change pfp
-- [] registration only with minimal permissions
+- [x] registration only with minimal permissions
 - [] logout without /logout page
 - [] no DB request for every Layout change if session already got the username once
 - [] preferences page
 - [] change password
+- [] fail2ban integration
 
 ### Rezepte
 - [] nutrition facts
@@ -36,3 +37,14 @@ My own homepage, bocken.org (new.bocken.org for now), built with svelte-kit.
 - [] DB setup
 - [] Google Speech to Text API integration?
 - [] Gebete
+
+
+### Outside of this sveltekit project but planned to run on the server as well
+#### E-Mail
+- [] emailwiz setup
+- [] fail2ban
+
+### Dendrite
+- [] setup dendrite
+- [] OAuth? -> Everything OAuth or OpenID?
+- [] Serve some web-frontend -> Just element?
