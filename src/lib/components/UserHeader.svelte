@@ -1,10 +1,19 @@
 <script lang="ts">
+	import { onMount } from "svelte";
 	export let username;
-	function show_options(){
+	function toggle_options(){
 		const el = document.querySelector("#options")
 		el.hidden = !el.hidden
 	}
 	let src="https://new.bocken.org/static/user/thumb/" +  username + ".webp"
+	onMount( () => {
+		document.addEventListener("click", (e) => {
+			const el = document.querySelector("#button")
+			if(!el.contains(e.target)){
+				document.querySelector("#options").hidden = true
+			}
+		})
+	})
 </script>
 <style>
 	/* (A) SPEECH BOX */
@@ -117,7 +126,7 @@ h2{
 </style>
 
 {#if username}
-	<button on:click={show_options} style="background-image: url({src})">
+	<button on:click={toggle_options} style="background-image: url({src})" id=button>
 	<div id=options class="speech top" hidden>
 			<h2>{username}</h2>
 			<ul>
