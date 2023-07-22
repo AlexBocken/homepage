@@ -86,7 +86,7 @@
 			image: img_local,
 			name: short_name,
 		}
-        	await fetch(`/api/img/add`, {
+        	await fetch(`/api/rezepte/img/add`, {
         	    method: 'POST',
         	    headers: {
         	        'Content-Type': 'application/json',
@@ -101,7 +101,7 @@
 
 		upload_img()
 		console.log(add_info.total_time)
-		const res = await fetch('/api/add', {
+		const res = await fetch('/api/rezepte/add', {
 			method: 'POST',
 			body: JSON.stringify({
 				recipe: {
