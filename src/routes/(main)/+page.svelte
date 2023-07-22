@@ -55,13 +55,10 @@ a{
 	color: var(--nord0);
 	transition: 200ms;
 }
-a:hover{
+section:hover{
 	scale: 1.02;
 }
 section:has(a:hover){
-	box-shadow: 1em 1em 1em 1em rgba(0,0,0, 0.3);
-}
-section:has(a:hover) + section{
 	box-shadow: 1em 1em 1em 1em rgba(0,0,0, 0.3);
 }
 </style>
