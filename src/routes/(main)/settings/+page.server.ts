@@ -15,7 +15,7 @@ export const actions: Actions = {
 	},
 	login: async (event) => {
 		const data = await event.request.formData()
- 		const res = await event.fetch('/api/login',
+ 		const res = await event.fetch('/api/user/login',
 	    		{method: 'POST',
 			body: JSON.stringify({
 				username: data.get('username'),

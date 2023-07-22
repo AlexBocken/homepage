@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	register: async (event) => {
 		const data = await event.request.formData();
- 		const res = await event.fetch('/api/register',
+ 		const res = await event.fetch('/api/user/register',
 	    		{method: 'POST',
 			body: JSON.stringify({
 

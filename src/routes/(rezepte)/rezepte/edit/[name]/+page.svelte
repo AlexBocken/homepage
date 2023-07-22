@@ -96,7 +96,7 @@
 		if(!response){
 			return
 		}
-		const res_img = await fetch('/api/img/delete', {
+		const res_img = await fetch('/api/rezepte/img/delete', {
 			method: 'POST',
 			body: JSON.stringify({
 				name: old_short_name,
@@ -112,7 +112,7 @@
 			return
 		}
 		return
-		const res = await fetch('/api/delete', {
+		const res = await fetch('/api/rezepte/delete', {
 			method: 'POST',
 			body: JSON.stringify({
 				old_short_name,
@@ -141,7 +141,7 @@
 		console.log("img_local", img_local)
 		if(img_local != ""){
 			async function delete_img(){
-				const res = await fetch('/api/img/delete', {
+				const res = await fetch('/api/rezepte/img/delete', {
 					method: 'POST',
 					body: JSON.stringify({
 						name: old_short_name,
@@ -161,7 +161,7 @@
 					image: img_local,
 					name: short_name,
 				}
-        			const res = await fetch(`/api/img/add`, {
+        			const res = await fetch(`/api/rezepte/img/add`, {
         			    method: 'POST',
         			    headers: {
         			        'Content-Type': 'application/json',
@@ -181,7 +181,7 @@
 		// case new short_name:
 		else if(short_name != old_short_name){
 			console.log("MOVING")
-			const res_img = await fetch('/api/img/mv', {
+			const res_img = await fetch('/api/rezepte/img/mv', {
 				method: 'POST',
 				headers: {
         			        'Content-Type': 'application/json',
@@ -199,7 +199,7 @@
 				return
 			}
 		}
-		const res = await fetch('/api/edit', {
+		const res = await fetch('/api/rezepte/edit', {
 			method: 'POST',
 			body: JSON.stringify({
 				recipe: {
