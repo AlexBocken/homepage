@@ -1,49 +1,17 @@
-<style>
-	form{
-		background-color: var(--nord5);
-		display: flex;
-		flex-direction: column;
-		max-width: 600px;
-		gap: 0.5em;
-		margin-inline: auto;
-		justify-content: center;
-		align-items: center;
-		padding-block: 2rem;
-		margin-block: 2rem;
-	}
-	label{
-		font-size: 1.2em;
-	}
-	input{
-		display: block;
-		font-size: 1.2rem;
-	}
-	button{
-		 background-color: var(--red);
-		 color: white;
-		 border: none;
-		 padding: 0.5em 1em;
-		 font-size: 1.3em;
-		 border-radius: 1000px;
-		 margin-top: 1em;
-	}
-	@media screen and (max-width: 600px){
-		form{
-			margin-top: 0;
-		}
-	}
-
-</style>
+<script>
+import "$lib/css/form.css"
+</script>
 <form action="?/login" method=POST>
 	<h1>Log In</h1>
 	<label>
-		Username
-		<input type="text" name="username">
+		Benutzername
+		<input type="text" name="username" required>
 	</label>
 	<label>
 		Passwort
-		<input  name="password" type="password">
+		<input  name="password" type="password" required>
 	</label>
 
 	<button type="submit">Log In</button>
+	<p>Noch keinen Account? <a href=/register>Hier registrieren</a>.</p>
 </form>
