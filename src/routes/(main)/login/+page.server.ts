@@ -2,12 +2,6 @@ import { redirect } from "@sveltejs/kit"
 import type { Actions, PageServerLoad } from "./$types"
 import { error } from "@sveltejs/kit"
 
-export const load: PageServerLoad = async ({ locals }) => {
-	return {
-		user: locals.user,
-	}
-}
-
 export const actions: Actions = {
 	login: async (event) => {
 		const data = await event.request.formData()
