@@ -3,7 +3,7 @@ import "$lib/css/form.css"
 </script>
 
 <form action="?/register" method=POST>
-	<h1>Regrieren</h1>
+	<h1>Registrieren</h1>
 	<label>
 		Username
 		<input type="text" name="username" required>
