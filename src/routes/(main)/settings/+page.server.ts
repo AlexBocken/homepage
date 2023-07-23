@@ -10,36 +10,26 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	change_password: async (event) => {
-		const data = await event.fetch.request.formData()
-
-	},
-	login: async (event) => {
+    console.log("Changin password")
 		const data = await event.request.formData()
- 		const res = await event.fetch('/api/user/login',
+ 		const res = await event.fetch('/api/user/change_pw',
 	    		{method: 'POST',
 			body: JSON.stringify({
-				username: data.get('username'),
-				password: data.get('password'),
+        username:     data.get('username'),
+				new_password: data.get('new_password'),
+				new_password_rep: data.get('new_password_rep'),
+				old_password: data.get('old_password'),
+			}),
+      headers: {
+        credentials: 'include',
+      }
 			})
-			}
-			)
-	    	const jwt = await res.json()
-		if(res.ok){
-		event.cookies.set("UserSession", jwt, {
-			path: "/",
-			httpOnly: true,
-			sameSite: "strict",
-			secure: process.env.NODE_ENV === "production",
-			maxAge: 60 * 60 * 24 * 7, // 1 week
-		})
-
-		throw redirect(303, "/")
-		}
-		else{
-			throw error(401, jwt.message)
-		}
-	},
-	logout: async () => {
-		throw redirect(303, "/logout")
-	},
+    if(res.ok){
+      console.log("OK response")
+    }
+    else{
+      const item = await res.json()
+      throw error(401, item.message) 
+    }
+  }
 }

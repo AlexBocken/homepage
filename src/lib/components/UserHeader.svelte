@@ -130,7 +130,7 @@ h2{
 	<div id=options class="speech top" hidden>
 			<h2>{username}</h2>
 			<ul>
-				<!--<li><a href="/settings">Einstellungen</a></li>-->
+				<li><a href="/settings" >Einstellungen</a></li>
 				<li><a href="/logout" >Log Out</a></li>
 			</ul>
 		</div>
