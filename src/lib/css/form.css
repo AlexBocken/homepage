@@ -10,14 +10,14 @@ form{
 	padding-block: 2rem;
 	margin-block: 2rem;
 }
-label{
+form label{
 	font-size: 1.2em;
 }
-input{
+form input{
 	display: block;
 	font-size: 1.2rem;
 }
-button{
+form button{
 	 background-color: var(--red);
 	 color: white;
 	 border: none;
@@ -27,16 +27,16 @@ button{
 	 margin-top: 1em;
 	 transition: 100ms;
 }
-button:hover,
-button:focus-visible
+form button:hover,
+form button:focus-visible
 {
 	scale: 1.1;
 }
-p{
+form p{
 	max-width: 400px;
 	margin-top: 0;
 }
-h4{
+form h4{
 	margin-bottom:0;
 }
 @media screen and (max-width: 600px){
