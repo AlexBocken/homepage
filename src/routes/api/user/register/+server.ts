@@ -1,9 +1,9 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
-import { hash }  from 'argon2';
 import { randomBytes } from 'crypto';
 import { ALLOW_REGISTRATION } from '$env/static/private';
 import { PEPPER } from '$env/static/private';
+import {hashPassword} from '$lib/js/hashPassword'
 
 import { User } from '../../../../models/User';
 import { dbConnect, dbDisconnect } from '../../../../utils/db';
@@ -39,12 +39,3 @@ export const POST: RequestHandler = async ({request}) => {
 
 
 };
-
-async function hashPassword(password, salt) {
-  try {
-    const hashedPassword = await hash(password, salt); // Hash the password with the salt and pepper
-    return hashedPassword;
-  } catch (error) {
-    console.error('Error hashing password:', error);
-  }
-}
