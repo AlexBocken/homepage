@@ -1,6 +1,8 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
-import { hash }  from 'argon2';
+import { verify }  from 'argon2';
+import { hashPassword } from '$lib/js/hashPassword'
+import {randomBytes} from 'crypto'
 
 import { PEPPER } from '$env/static/private';
 
@@ -10,31 +12,25 @@ import { dbConnect, dbDisconnect } from '../../../../utils/db';
 // header: use for bearer token for now
 // recipe json in body
 export const POST: RequestHandler = async ({request}) => {
-	const {username, old_password, new_password} = await request.json()
+	const {username, old_password, new_password, new_password_rep} = await request.json()
+  if(new_password != new_password_rep){
+    throw error(400, 'new passwords do not match!')
+  }
 	await dbConnect();
-	const salt = await User.findOne({username: username}, 'salt');
-	const pass_hash =  await hashPassword(old_password + PEPPER, salt)
-	try{
-		await User.updateOne({
-				username: username,
-				pass_hash: pass_hash,
-		})
-	}catch(e){
-		await dbDisconnect();
-		throw error(400, e);
-	}
-	await dbDisconnect();
-	return new Response(JSON.stringify({message: "User added successfully"}),
-			    	{status: 200}
-		);
+	const user = await User.findOne({username: username});
+  console.log("Found user:", user)
+  const isMatch = await verify(user.pass_hash, old_password + PEPPER, {salt: user.salt})
+  console.log("isMatch:", isMatch)
+  if(isMatch){
+		const salt = randomBytes(32).toString('hex'); // Generate a random salt
+    const pass_hash = await hashPassword(new_password + PEPPER, salt)
+    await User.findOneAndUpdate({username: username}, {pass_hash: pass_hash, salt: salt})
+    await dbDisconnect()
+	  return new Response(JSON.stringify({message: "Password updated successfully"}),
+                        {status: 200})
+  }
+  else{
+	  await dbDisconnect();
+    throw error(401, "Wrong old password")
 	}
 };
-
-async function hashPassword(password, salt) {
-  try {
-    const hashedPassword = await hash(password, salt); // Hash the password with the salt and pepper
-    return hashedPassword;
-  } catch (error) {
-    console.error('Error hashing password:', error);
-  }
-}
