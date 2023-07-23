@@ -153,7 +153,7 @@ nav[hidden]{
 	nav[hidden]{
 		transform: translateX(100%);
 	}
-	:global(nav a:last-child){
+	nav a:last-child{
 		margin-bottom: 2rem;
 	}
 
