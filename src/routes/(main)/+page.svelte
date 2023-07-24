@@ -66,8 +66,8 @@ section:has(a:hover){
 <section>
 <a href="/rezepte" class=flex>
 <div class=text>
-<h2><a href="/rezepte">Rezepte</a></h2>
-<p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Odit unde aperiam necessitatibus recusandae sapiente, eveniet et. Magni dignissimos expedita neque temporibus dolores? Est laboriosam deleniti tenetur iusto? Neque, ea dolorem.</p>
+<h2>Rezepte</h2>
+<p>Die eigenen Rezepte für das ganze Jahr kann man hier finden. Von traditionell Kärntner Küche zu Schweizer Klassikern oder auch das ein oder andere Hipsterrezept findet man für das ganze Jahr Rezepte. An den Rezepten wird kontinuirlich gefeilscht. </p>
 </div>
 <div>
 <img src="https://new.bocken.org/static/rezepte/thumb/al_ragu.webp" alt="">
@@ -79,7 +79,7 @@ section:has(a:hover){
 <section>
 <a href="/git" class=flex>
 <div class=text>
-<h2><a href="/git">Git</a></h2>
+<h2>Git</h2>
 <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Debitis, ipsa maiores? Corrupti harum minima voluptatem temporibus illum fugit sint similique, laborum veritatis recusandae? Fuga delectus reiciendis ratione cumque nihil error.</p>
 </div>
 <div>
