@@ -9,7 +9,6 @@ import {IMAGE_DIR} from '$env/static/private';
 
 export const POST: RequestHandler = async ({request, cookies}) => {
   	const user = await authenticateUser(cookies)
-	console.log(user)
   	if(!user){
   		throw error(401, "Not logged in")
   	}
@@ -25,7 +24,6 @@ export const POST: RequestHandler = async ({request, cookies}) => {
 			payee: formData.get("payee"),
 			added_by: user._id
 		}
-
 		await dbConnect();
 		let id;
   		try{
@@ -38,7 +36,7 @@ export const POST: RequestHandler = async ({request, cookies}) => {
   		await dbDisconnect();
 		const img = formData.get("file")
 		if(img){
-			console.log("IMG:", img)
+			//this feels stupid, is there a smarter way directly to Buffer?
 			const full_res = Buffer.from(await img.arrayBuffer())
 
 			await sharp(full_res)
