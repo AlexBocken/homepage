@@ -80,7 +80,7 @@ section:has(a:hover){
 <a href="/git" class=flex>
 <div class=text>
 <h2>Git</h2>
-<p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Debitis, ipsa maiores? Corrupti harum minima voluptatem temporibus illum fugit sint similique, laborum veritatis recusandae? Fuga delectus reiciendis ratione cumque nihil error.</p>
+<p>Alle Möglichen eigene Codingprojekte kann man auf dieser eigenen gehosteten Gitea Instanz finden. So auch z.B. diese Website. Anki-Vokabelkarten oder auch nur kleinere Personalisierungen von Linux Desktopprogrammen à la DWM oder dmenu sind auch hier zu finden.</p>
 </div>
 <div>
 <img src="/icons/Git.svg" alt="The Git Icon in orange">
