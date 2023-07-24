@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { Payment } from '../../../../models/Payment';
-import { dbConnect, dbDisconnect } from '../../../../utils/db';
+import { Payment } from '../../../../../models/Payment';
+import { dbConnect, dbDisconnect } from '../../../../../utils/db';
 import { error } from '@sveltejs/kit';
 import { authenticateUser } from '$lib/js/authenticate';
 // header: use for bearer token for now
