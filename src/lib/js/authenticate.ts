@@ -31,7 +31,8 @@ export async function authenticateUser(cookies){
 		}
 		return {
 			username: decoded.username,
-			access: res.access
+			access: res.access,
+			_id: res._id.toString(),
 		}
 	}
 	else{
