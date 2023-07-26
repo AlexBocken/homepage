@@ -12,7 +12,7 @@ My own homepage, bocken.org (new.bocken.org for now), built with svelte-kit.
 - [ ] preferences page
 - [x] change password
 - [ ] fail2ban integration
-- [ ] dark mode 
+- [ ] dark mode
 
 ### Rezepte
 - [ ] nutrition facts
@@ -41,14 +41,21 @@ My own homepage, bocken.org (new.bocken.org for now), built with svelte-kit.
 
 
 ### Outside of this sveltekit project but planned to run on the server as well
+- [ ] create LDAP and OpenID
+
 #### E-Mail
 - [ ] emailwiz setup
 - [ ] fail2ban
+- [ ] LDAP?
 
 ### Dendrite
 - [ ] setup dendrite
-- [ ] OAuth? -> Everything OAuth or OpenID?
+- [ ] Connect to LDAP
 - [ ] Serve some web-frontend -> Just element?
 
 ### Gitea
 - [ ] consistent theming
+- [ ] LDAP/OpenID
+
+### Jellyfin
+- [ ] connect to LDAP

@@ -89,6 +89,18 @@ section:has(a:hover){
 </section>
 
 <section>
+<a href="https://stream.bocken.org" class=flex>
+<div class=text>
+<h2>Filme und TV Shows</h2>
+<p>Die persönliche Filme und TV-Shows zum streamen gehosted via Jellyfin. Somit wird Netflix und Co. vollends ersetzt. Login notwendiged. (Zur Zeit noch separat von main-page login)</p>
+</div>
+<div>
+<img src="/icons/Jellyfin.svg" alt="">
+</div>
+</a>
+
+</section>
+<section>
 <a href="/bilder" class=flex>
 <div class=text>
 <h2>Familienbilder</h2>

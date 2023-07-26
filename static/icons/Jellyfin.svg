@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  - Part of the Jellyfin project (https://jellyfin.media)
+  - 
+  - All copyright belongs to the Jellyfin contributors; a full list can
+  - be found in the file CONTRIBUTORS.md
+  - 
+  - This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.
+  - To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/.
+- ***** END LICENSE BLOCK ***** -->
+
+<svg
+   id="svg30"
+   viewBox="0 0 465.40958 465.39288"
+   version="1.1"
+   sodipodi:docname="Jelly-banner-light.svg"
+   width="465.40958"
+   height="465.39288"
+   inkscape:export-filename="src/homepage/jellyfin_logo.svg"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview32"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false" />
+  <defs
+     id="defs7">
+    <linearGradient
+       id="linear-gradient"
+       x1="110.25"
+       y1="213.3"
+       x2="496.14001"
+       y2="436.09"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#aa5cc3"
+         id="stop2" />
+      <stop
+         offset="1"
+         stop-color="#00a4dc"
+         id="stop4" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linear-gradient"
+       id="linearGradient679"
+       gradientUnits="userSpaceOnUse"
+       x1="110.25"
+       y1="213.3"
+       x2="496.14001"
+       y2="436.09" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linear-gradient"
+       id="linearGradient681"
+       gradientUnits="userSpaceOnUse"
+       x1="110.25"
+       y1="213.3"
+       x2="496.14001"
+       y2="436.09" />
+  </defs>
+  <title
+     id="title9">banner-light</title>
+  <g
+     id="banner-light"
+     transform="translate(-28.68525,-23.3)">
+    <g
+       id="banner-light-icon">
+      <path
+         id="inner-shape"
+         d="m 261.42,201.62 c -20.44,0 -86.24,119.29 -76.2,139.43 10.04,20.14 142.48,19.92 152.4,0 9.92,-19.92 -55.76,-139.42 -76.2,-139.43 z"
+         fill="url(#linear-gradient)"
+         style="fill:url(#linearGradient679)" />
+      <path
+         id="outer-shape"
+         d="M 261.42,23.3 C 199.83,23.3 1.57,382.73 31.8,443.43 c 30.23,60.7 429.34,60 459.24,0 C 520.94,383.43 323,23.3 261.42,23.3 Z M 411.9,390.76 c -19.59,39.33 -281.08,39.77 -300.9,0 -19.82,-39.77 110.1,-275.28 150.45,-275.28 40.35,0 170.04,235.94 150.45,275.28 z"
+         fill="url(#linear-gradient)"
+         style="fill:url(#linearGradient681)" />
+    </g>
+    <g
+       id="jellyfin-dark-outlines"
+       style="isolation:isolate"
+       transform="translate(43.8)" />
+  </g>
+</svg>
