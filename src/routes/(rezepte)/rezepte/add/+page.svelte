@@ -120,7 +120,6 @@
 				},
 			headers: {
        				'content-type': 'application/json',
-				bearer: password,
      				}
 			})
 		});
@@ -168,13 +167,6 @@ input:focus-visible
 	.list_wrapper{
 		flex-direction: column;
 	}
-}
-input[type=password]{
-	box-sizing: border-box;
-	font-size: 1.5rem;
-	padding-block: 0.5em;
-	display: inline;
-	width: 100%;
 }
 .submit_wrapper{
 	position: relative;
