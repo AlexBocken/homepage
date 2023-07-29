@@ -114,10 +114,10 @@ section:has(a:hover){
 </section>
 
 <section>
-<a href="https://searx.bocken.org/searx" class=flex>
+<a href="/searx" class=flex>
 <div class=text>
 <h2>Private Suchmaschine</h2>
-<p>Eine selbsgehostete Searx-Instanz für private Suche durch diese Metasuchmaschine. Überraschend gut.</p>
+<p>Eine selbsgehostete Searx-Instanz für private Suche durch diese Metasuchmaschine. Überraschend gut für Manches, überraschend schlecht für Anderes.</p>
 </div>
 <div>
 <img src="/icons/Searx.svg" alt="">
