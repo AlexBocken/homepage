@@ -87,6 +87,7 @@ nav[hidden]{
 }
 .button_wrapper{
 	display: none;
+	padding-inline: 0.5rem;
 }
 :global(svg.symbol){
 	height: 3.5rem;
@@ -117,7 +118,7 @@ nav[hidden]{
 		display: block;
 		fill: white;
 		margin-inline: 1rem;
-		width: 3rem;
+		width: 2.5rem;
 		aspect-ratio: 1;
 	}
 	.nav_button svg{
