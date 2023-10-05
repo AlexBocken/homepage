@@ -1,6 +1,6 @@
 # Personal Homepage
 
-My own homepage, bocken.org (new.bocken.org for now), built with svelte-kit.
+My own homepage, bocken.org, built with svelte-kit.
 
 ## TODO
 ### General
