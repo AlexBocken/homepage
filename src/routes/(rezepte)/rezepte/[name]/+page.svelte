@@ -14,8 +14,8 @@
 
     	export let data: PageData;
 
-	let hero_img_src = "https://new.bocken.org/static/rezepte/full/" + data.short_name + ".webp"
-	let placeholder_src = "https://new.bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
+	let hero_img_src = "https://bocken.org/static/rezepte/full/" + data.short_name + ".webp"
+	let placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
     	export let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
 	function season_intervals() {
 		let interval_arr = []
@@ -53,8 +53,8 @@
 	export let season_iv = season_intervals();
 
 	afterNavigate(() => {
-		hero_img_src = "https://new.bocken.org/static/rezepte/full/" + data.short_name + ".webp"
-		placeholder_src = "https://new.bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
+		hero_img_src = "https://bocken.org/static/rezepte/full/" + data.short_name + ".webp"
+		placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
 		season_iv = season_intervals();
 	})
 </script>

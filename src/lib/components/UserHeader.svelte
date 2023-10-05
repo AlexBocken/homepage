@@ -5,7 +5,7 @@
 		const el = document.querySelector("#options")
 		el.hidden = !el.hidden
 	}
-	let src="https://new.bocken.org/static/user/thumb/" +  username + ".webp"
+	let src="https://bocken.org/static/user/thumb/" +  username + ".webp"
 	onMount( () => {
 		document.addEventListener("click", (e) => {
 			const el = document.querySelector("#button")

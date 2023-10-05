@@ -70,7 +70,7 @@ section:has(a:hover){
 <p>Die eigenen Rezepte für das ganze Jahr kann man hier finden. Von traditionell Kärntner Küche zu Schweizer Klassikern oder auch das ein oder andere Hipsterrezept findet man für das ganze Jahr Rezepte. An den Rezepten wird kontinuirlich gefeilscht. </p>
 </div>
 <div>
-<img src="https://new.bocken.org/static/rezepte/thumb/al_ragu.webp" alt="">
+<img src="https://bocken.org/static/rezepte/thumb/al_ragu.webp" alt="">
 </div>
 </a>
 </section>

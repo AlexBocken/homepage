@@ -9,7 +9,7 @@
     	export let data: PageData;
 	let preamble = data.recipe.preamble
 	let addendum = data.recipe.addendum
-	let image_preview_url="https://new.bocken.org/static/rezepte/thumb/" + data.recipe.short_name + ".webp"
+	let image_preview_url="https://bocken.org/static/rezepte/thumb/" + data.recipe.short_name + ".webp"
 	let note = data.recipe.note
 
 	import { season } from '$lib/js/season_store';

@@ -165,8 +165,8 @@ div:has(div #image){
 
 <a class="card {search}" href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
 	<div>
-	<div style="background-image:url({'https://new.bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
-	<img class:unblur={isloaded} id=image src={'https://new.bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
+	<div style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
+	<img class:unblur={isloaded} id=image src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
 	</div>
 	</div>
 	{#if icon_override || recipe.season.includes(current_month)}
