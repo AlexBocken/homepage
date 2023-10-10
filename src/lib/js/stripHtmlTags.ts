@@ -1,7 +1,7 @@
 // Function to strip HTML tags from a string
-function stripHtmlTags(input) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(input, 'text/html');
-  const textContent = doc.body.textContent || "";
-  return textContent;
+import {load} from 'cheerio';
+
+export function stripHtmlTags(input) {
+  const $ = load(input)
+  return $.text();
 }
