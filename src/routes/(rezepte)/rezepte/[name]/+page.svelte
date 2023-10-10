@@ -11,6 +11,7 @@
 	import { afterNavigate } from '$app/navigation';
     	import {season} from '$lib/js/season_store';
 	import RecipeNote from '$lib/components/RecipeNote.svelte';
+	import {stripHtmlTags} from '$lib/js/stripHtmlTags';
 
     	export let data: PageData;
 
@@ -206,12 +207,12 @@ h4{
 }
 </style>
 <svelte:head>
-	<title>Bocken - {@html data.name}</title>
-	<meta name="description" content="{data.description}" />
+	<title>Bocken - {stripHtmlTags(data.name)}</title>
+	<meta name="description" content="{stripHtmlTags(data.description)}" />
 	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/{data.short_name}.webp" />
 	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{data.short_name}.webp" />
 	<meta property="og:image:type" content="image/webp" />
-	<meta property="og:image:alt" content="{@html data.name}" />
+	<meta property="og:image:alt" content="{stripHtmlTags(data.name)}" />
 </svelte:head>
 
 <TitleImgParallax src={hero_img_src} {placeholder_src}>
