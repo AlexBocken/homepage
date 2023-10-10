@@ -251,6 +251,11 @@ button.action_button{
 	margin: 0;
 }
 </style>
+<svelte:head>
+	<title>Rezept erstellen</title>
+	<meta name="description" content="Hier können neue Rezepte hinzugefügt werden" />
+</svelte:head>
+
 <h1>Rezept erstellen</h1>
 
 <CardAdd {card_data}></CardAdd>
