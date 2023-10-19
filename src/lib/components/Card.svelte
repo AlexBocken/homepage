@@ -66,6 +66,28 @@ div:has(div #image){
 	width: var(--card-width);
 	top: 0;
 }
+@supports(-moz-appearance:none){
+	#image{
+	}
+	#image, #div_image{
+		border-top-left-radius: 20px;
+		border-top-right-radius: 20px;
+		height: 100%;
+	}
+	#div_image{
+		background-repeat: no-repeat;
+		background-size: cover;
+
+	}
+	#div_div_image{
+		height: calc(var(--card-width)*0.85);
+		position: absolute;
+		width: var(--card-width);
+		top: 0;
+	}
+}
+
+
 .card:hover,
 .card:focus-within{
 	transform: scale(1.02,1.02);
@@ -164,8 +186,8 @@ div:has(div #image){
 </style>
 
 <a class="card {search}" href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
-	<div>
-	<div style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
+	<div id=div_div_image >
+	<div id=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
 	<img class:unblur={isloaded} id=image src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
 	</div>
 	</div>
