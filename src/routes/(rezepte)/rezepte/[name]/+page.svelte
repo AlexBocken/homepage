@@ -73,6 +73,25 @@ h1{
 	hyphens: auto;
 	text-wrap: balance;
 }
+.category{
+	--size: 1.75rem;
+	position: absolute;
+	top: calc(-1* var(--size) );
+	left:calc(-3/2 * var(--size));
+	background-color: var(--nord0);
+	color: var(--nord6);
+	text-decoration: none;
+	font-size: var(--size);
+	padding: calc(var(--size) * 2/3);
+	border-radius: 1000px;
+	transition: 100ms;
+	box-shadow: 0em 0em 1em 0.3em rgba(0,0,0,0.4);
+}
+.category:hover,
+.category:focus-visible{
+	background-color: var(--nord1);
+	scale: 1.1;
+}
 .tags{
 	margin-block: 1rem;
 	display: flex;
@@ -127,7 +146,6 @@ h1{
 		flex-direction:column;
 	}
 }
-
 .title{
 	position: relative;
 	width: min(800px, 80vw);
@@ -147,7 +165,7 @@ h1{
 	font-size: 1.5rem;
 	border-radius: 100000px;
 	transition: 100ms;
-	box-shadow: 0em 0em 1em 0.5em rgba(0,0,0,0.5);
+	box-shadow: 0em 0em 1em 0.3em rgba(0,0,0,0.4);
 }
 .icon:hover,
 .icon:focus-visible{
@@ -169,6 +187,9 @@ h4{
 	}
 	.icon{
 		right: 1rem;
+	}
+	.category{
+		left: 1rem;
 	}
 }
 @keyframes shake{
@@ -207,7 +228,7 @@ h4{
 }
 </style>
 <svelte:head>
-	<title>Bocken - {stripHtmlTags(data.name)}</title>
+	<title>{stripHtmlTags(data.name)} - Bocken'sche Rezepte</title>
 	<meta name="description" content="{stripHtmlTags(data.description)}" />
 	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/{data.short_name}.webp" />
 	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{data.short_name}.webp" />
@@ -217,6 +238,7 @@ h4{
 
 <TitleImgParallax src={hero_img_src} {placeholder_src}>
 	<div class=title>
+		<a class="category" href='/rezepte/category/{data.category}'>{data.category}</a>
 		<a class="icon" href='/rezepte/icon/{data.icon}'>{data.icon}</a>
 		<h1>{@html data.name}</h1>
 		{#if data.description && ! data.preamble}
