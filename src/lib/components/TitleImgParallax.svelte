@@ -68,12 +68,6 @@
   z-index: -10;
 }
 
-@supports (-moz-appearance:none) {
-	.image-container{
-		justify-content: inherit;
-		align-items: inherit;
-	}
-}
 
 #image{
   display: block;
@@ -127,6 +121,11 @@ div:has(.placeholder){
 	opacity: 1;
 }
 
+@supports (-moz-appearance:none) {
+	.placeholder{
+		translate: -50% -50%;
+	}
+}
 
 /* DIALOG */
 dialog{
