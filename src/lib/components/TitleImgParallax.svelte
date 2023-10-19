@@ -68,6 +68,13 @@
   z-index: -10;
 }
 
+@supports (-moz-appearance:none) {
+	.image-container{
+		justify-content: inherit;
+		align-items: inherit;
+	}
+}
+
 #image{
   display: block;
   position: absolute;
@@ -165,7 +172,7 @@ dialog button{
 			</div>
 		</div>
 	</div>
-	</figure>
+    </figure>
     <div class=content><slot></slot></div>
 </section>
 
