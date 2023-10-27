@@ -22,7 +22,8 @@ under Server -> General -> Custom CSS Code
 .iconOsdProgressInner{
   background-color: var(--blue);
 }
-.mdl-slider{
+.mdl-slider,
+.emby-tab-button:hover{
     color: var(--blue);
 }
 @media (hover: hover) and (pointer: fine){
@@ -32,13 +33,13 @@ under Server -> General -> Custom CSS Code
 }
 }
 
-
-.mdl-spinner__layer-1,
-.mdl-spinner__layer-2,
-.mdl-spinner__layer-3{
+/* Loading spinner */
+.mdl-spinner__layer{
  border-color: var(--blue);
 }
 
+/* volume and timeline button color */
+/* Need to be separate to apply*/
 input[type="range"]::-moz-range-thumb{
    background-color: var(--blue);
 }
