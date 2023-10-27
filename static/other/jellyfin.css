@@ -10,6 +10,7 @@ under Server -> General -> Custom CSS Code
 /* Attempt to change accent color */
 
 :root{
+--nord0: #2E3440;
 --blue: #5E81AC;
 --lightblue: #81A1C1;
 --swiper-theme-color: var(--blue);
@@ -105,4 +106,15 @@ progress[value]::-webkit-progress-value {
 /* For Mozilla-based browsers (Firefox) */
 progress[value]::-moz-progress-bar {
    background-color: var(--blue);
+}
+
+.skinHeader,
+.mainDrawer{
+  background: var(--nord0);
+}
+.card{
+transition: 200ms;
+}
+.card:hover{
+scale: 1.05;
 }
