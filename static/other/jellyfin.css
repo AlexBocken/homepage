@@ -1,0 +1,47 @@
+/*
+This file styles jellyfin and can be imported by adding:
+@import url("https://bocken.org/other/jellyfin.css");
+under Server -> General -> Custom CSS Code
+*/
+/* jellyscrub default: width: 15vw, annoying for smaller screen sizes */
+.chapterThumbContainer{
+     width: min(80vw, 500px);
+}
+/* Attempt to change accent color */
+
+:root{
+--blue: #5E81AC;
+--lightblue: #81A1C1;
+--swiper-theme-color: var(--blue);
+}
+
+.selectionCommandsPanel,
+.countIndicator, .fullSyncIndicator, .mediaSourceIndicator, .playedIndicator,
+.itemProgressBarForeground,
+.mdl-slider-background-lower,
+.iconOsdProgressInner{
+  background-color: var(--blue);
+}
+.mdl-slider{
+    color: var(--blue);
+}
+@media (hover: hover) and (pointer: fine){
+.paper-icon-button-light:hover:not(:disabled) {
+   color: var(--lightblue);
+   background-color: rgba(var(--blue), 0.2);
+}
+}
+
+
+.mdl-spinner__layer-1,
+.mdl-spinner__layer-2,
+.mdl-spinner__layer-3{
+ border-color: var(--blue);
+}
+
+input[type="range"]::-moz-range-thumb{
+   background-color: var(--blue);
+}
+input[type="range"]::-webkit-slider-thumb{
+   background-color: var(--blue);
+}
