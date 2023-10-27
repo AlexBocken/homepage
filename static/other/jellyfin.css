@@ -50,7 +50,11 @@ input[type="range"]::-webkit-slider-thumb{
 .listItemIcon:not(.listItemIcon-transparent),
 .navMenuOption-selected,
 .button-submit,
+.defaultCardBackground1,
+.defaultCardBackground2,
 .defaultCardBackground3,
+.defaultCardBackground4,
+.defaultCardBackground5,
 .emby-checkbox:checked + span + .checkboxOutline, .itemProgressBarForeground
 {
     background-color: var(--blue) !important;
@@ -65,4 +69,40 @@ border-color: var(--blue);
 .btnUserRating:hover,
 .cardOverlayButton:has(.favorite):hover{
     color: #BF616A !important;
+}
+
+.emby-input:focus, .emby-textarea:focus{
+ border-color: var(--blue);
+}
+.emby-select-withcolor:focus{
+    border-color: var(--blue) !important;
+}
+.listItemIcon:not(.listItemIcon-transparent),
+.navMenuOption-selected,
+.button-submit,
+.defaultCardBackground1,
+.defaultCardBackground2,
+.defaultCardBackground3,
+.defaultCardBackground4,
+.defaultCardBackground5,
+.emby-checkbox:checked + span + .checkboxOutline, .itemProgressBarForeground,
+.taskProgressInner
+{
+    background-color: var(--blue) !important;
+}
+
+#divRunningTasks > p > progress + span,
+div.taskProgressOuter + span{
+    color: var(--blue) !important;
+}
+progress[value] {
+    background-color: var(--blue);
+}
+progress[value]::-webkit-progress-value {
+   background-color: var(--blue);
+}
+
+/* For Mozilla-based browsers (Firefox) */
+progress[value]::-moz-progress-bar {
+   background-color: var(--blue);
 }
