@@ -46,3 +46,23 @@ input[type="range"]::-moz-range-thumb{
 input[type="range"]::-webkit-slider-thumb{
    background-color: var(--blue);
 }
+
+.listItemIcon:not(.listItemIcon-transparent),
+.navMenuOption-selected,
+.button-submit,
+.defaultCardBackground3,
+.emby-checkbox:checked + span + .checkboxOutline, .itemProgressBarForeground
+{
+    background-color: var(--blue) !important;
+}
+.button-link,
+.button-flat:hover{
+   color: var(--blue);
+}
+.emby-checkbox:checked + span + .checkboxOutline{
+border-color: var(--blue);
+}
+.btnUserRating:hover,
+.cardOverlayButton:has(.favorite):hover{
+    color: #BF616A !important;
+}
