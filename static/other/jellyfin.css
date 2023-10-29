@@ -118,3 +118,19 @@ transition: 200ms;
 .card:hover{
 scale: 1.05;
 }
+
+.listItem{
+   transition: 200ms;
+   overflow: visible;
+}
+.listItem:hover {
+    scale: 1.02;
+}
+@media (max-width: 64em){
+.listItemImageButton, .listItemIndicators {
+    font-size: initial !important;
+}
+}
+.emby-scroller{
+   overflow: visible !important;
+}
