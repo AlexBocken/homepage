@@ -11,7 +11,7 @@ export let title
   gap: 2rem;
   padding: 3rem;
 }
-.wrapper{
+.media_scroller_wrapper{
   background-color: var(--nord2);
 }
 h2{
@@ -23,7 +23,7 @@ h2{
 
 
 </style>
-<div class=wrapper>
+<div class=media_scroller_wrapper>
 {#if title}
 	<h2>{title}</h2>
 {/if}

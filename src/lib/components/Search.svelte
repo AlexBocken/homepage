@@ -14,6 +14,8 @@ onMount(() => {
     		const searchTerms = searchText.split(" ");
     		const hasFilter = searchText.length > 0;
 
+		let scrollers_with_results = [];
+		let scrollers = [];
     		// for each recipe hide all but matched
     		recipes.forEach(recipe => {
       			const searchString = `${recipe.textContent} ${recipe.dataset.tags}`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "");
@@ -21,7 +23,19 @@ onMount(() => {
 
       			recipe.style.display = (isMatch ? 'flex' : 'none');
       			recipe.classList.toggle("matched-recipe", hasFilter && isMatch);
-    		})
+			if(!scrollers.includes(recipe.parentNode)){
+				scrollers.push(recipe.parentNode)
+			}
+			if(!scrollers_with_results.includes(recipe.parentNode) && isMatch){
+				scrollers_with_results.push(recipe.parentNode)
+			}
+		})
+		scrollers_with_results.forEach( scroller => {
+			scroller.parentNode.style.display= 'block'
+		})
+		scrollers.filter(item => !scrollers_with_results.includes(item)).forEach( scroller => {
+			scroller.parentNode.style.display= 'none'
+		})
 		}
 
 	search.addEventListener("input", () => {
@@ -33,7 +47,10 @@ onMount(() => {
     		recipes.forEach(recipe => {
       			recipe.style.display = 'flex';
       			recipe.classList.remove("matched-recipe");
-    		})
+		})
+		document.querySelectorAll(".media_scroller_wrapper").forEach( scroller => {
+			scroller.style.display= 'block'
+		})
   	})
 
 	let paramString = window.location.href.split('?')[1];
