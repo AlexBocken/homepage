@@ -38,7 +38,6 @@ width: 66%;
 .flex > *:last-child{
 	position: relative;
 	max-width: 34%;
-	background-color: red;
 }
 .flex > *:last-child img{
 	position:absolute;
@@ -66,7 +65,7 @@ section:has(a:hover){
 <section>
 <a href="/rezepte" class=flex>
 <div class=text>
-<h2>Rezepte</h2>
+	<h2>Re&shy;zep&shy;te</h2>
 <p>Die eigenen Rezepte für das ganze Jahr kann man hier finden. Von traditionell Kärntner Küche zu Schweizer Klassikern oder auch das ein oder andere Hipsterrezept findet man für das ganze Jahr Rezepte. An den Rezepten wird kontinuirlich gefeilscht. </p>
 </div>
 <div>
@@ -91,7 +90,7 @@ section:has(a:hover){
 <section>
 <a href="https://stream.bocken.org" class=flex>
 <div class=text>
-<h2>Filme und TV Shows</h2>
+	<h2>Strea&shy;ming</h2>
 <p>Die persönliche Filme und TV-Shows zum streamen gehosted via Jellyfin. Somit wird Netflix und Co. vollends ersetzt. Login notwendiged. (Zur Zeit noch separat von main-page login)</p>
 </div>
 <div>
@@ -104,19 +103,40 @@ section:has(a:hover){
 <section>
 <a href="/bilder" class=flex>
 <div class=text>
-<h2>Familienbilder</h2>
-<p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste vel, iure eius veniam, ex recusandae libero ratione tempora, molestiae vitae eos dolorum rerum enim exercitationem tempore magnam cupiditate neque quia?</p>
+	<h2>Fa&shy;mil&shy;ien&shy;bil&shy;der</h2>
+<p></p>
 </div>
 <div>
-<img src="/familie.jpg" alt="">
+<img src="/icons/Photoprism.svg" alt="">
 </div>
 </a>
 </section>
 
 <section>
+	<a href="https://cloud.bocken.org" class=flex>
+		<div class=text>
+			<h2>Cloud</h2>
+			<p>Die priavte Cloud für Datensynchronisiserung, Kontakte und Kalender.</p>
+		</div>
+		<div><img src="/icons/Nextcloud.svg" alt=""></div>
+	</a>
+</section>
+<section>
+<a href="https://meet.bocken.org" class=flex>
+<div class=text>
+<h2>Jitsi</h2>
+<p>Für die eigenene Meetings ohne ein mithören von Zoom oder Microsoft</p>
+</div>
+<div>
+<img src="/icons/Jitsi.svg" alt="">
+</div>
+</a>
+
+</section>
+<section>
 <a href="/searx" class=flex>
 <div class=text>
-<h2>Private Suchmaschine</h2>
+	<h2>Pri&shy;va&shy;te Such&shy;ma&shy;schi&shy;ne</h2>
 <p>Eine selbsgehostete Searx-Instanz für private Suche durch diese Metasuchmaschine. Überraschend gut für Manches, überraschend schlecht für Anderes.</p>
 </div>
 <div>
@@ -126,57 +146,9 @@ section:has(a:hover){
 </section>
 
 <section>
-	<a href="/flims" class=flex>
-	<div class="text">
-		<h2>Flims (WIP)</h2>
-		<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Unde cum suscipit aliquid nam facilis ipsa omnis natus. Quisquam nisi ducimus minima asperiores laboriosam modi unde quos, earum odio repellat quam.</p>
-	</div>
-	<div>
-	<img src="/flims.jpg" alt="">
-	</div>
-	</a>
-</section>
-
-<section>
-<a href="/abrechnung" class="flex">
-	<span class="text">
-		<h2>Abrechnung (WIP)</h2>
-		<p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nobis voluptate accusamus hic quasi quae assumenda accusantium excepturi voluptatem tempore sunt, mollitia rem. Doloribus natus quis accusamus atque quas explicabo illum?</p>
-	</span>
-	<div>
-		<img src="/icons/shopping_cart.svg" alt="">
-	</div>
-</a>
-</section>
-
-<section>
-<a href="/christ" class="flex">
-	<div class="text">
-		<h2>Glaube (WIP)</h2>
-		<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat, quasi! Delectus totam rem officiis ea odit quaerat, vel nihil quod commodi deleniti quo eos aut voluptatum eligendi quasi nesciunt quidem!</p>
-	</div>
-	<div>
-		<img src="" alt="">
-	</div>
-</a>
-</section>
-
-<section>
-<a href="jitsi" class=flex>
-<div class=text>
-<h2>Jitsi (WIP)</h2>
-<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero doloremque atque totam nam voluptatum at facere itaque autem quae? Saepe hic iure delectus vero culpa maiores fuga, provident ipsam consectetur.</p>
-</div>
-<div>
-<img src="/icons/Jitsi.svg" alt="">
-</div>
-</a>
-</section>
-
-<section>
 <a href="/transmission" class=flex>
 <div class=text>
-<h2>Transmission</h2>
+	<h2>Trans&shy;mis&shy;sion</h2>
 <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero doloremque atque totam nam voluptatum at facere itaque autem quae? Saepe hic iure delectus vero culpa maiores fuga, provident ipsam consectetur.</p>
 </div>
 <div>
