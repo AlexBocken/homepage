@@ -121,8 +121,8 @@ scale: 1.05;
 
 .listItem{
    transition: 200ms;
-   overflow: visible;
 }
+.listItme
 .listItem:hover {
     scale: 1.02;
 }
