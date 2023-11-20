@@ -36,7 +36,17 @@ onMount(() => {
 		scrollers.filter(item => !scrollers_with_results.includes(item)).forEach( scroller => {
 			scroller.parentNode.style.display= 'none'
 		})
+		scroll
+		// if only one result and click_only_result is true, click it
+		if(click_only_result && scrollers_with_results.length == 1 && scrollers_with_results[0].querySelector(".matched-recipe").length == 1){
+			scrollers_with_results[0].querySelector(".matched-recipe").click()
 		}
+		// if scrollers with results are presenet scroll first result into view
+		if(scrollers_with_results.length > 0){
+			scrollers_with_results[0].scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+		}
+
+	}
 
 	search.addEventListener("input", () => {
 		do_search();
@@ -60,12 +70,11 @@ onMount(() => {
 		if(pair[0] == 'q'){
 			const search = document.getElementById("search");
 			search.value=pair[1];
-			do_search(click_only_result=true);
+			do_search(true);
 		}
 	}
 });
 
-// @license-end
 </script>
 <style>
 input#search {
