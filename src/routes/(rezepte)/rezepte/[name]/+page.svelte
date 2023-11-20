@@ -276,7 +276,6 @@ h4{
 		</div>
 		{#if data.note}
 			<RecipeNote note={data.note}></RecipeNote>
-				d
 		{/if}
 </div>
 
