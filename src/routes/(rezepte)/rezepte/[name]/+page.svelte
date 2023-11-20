@@ -58,7 +58,7 @@
 		placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
 		season_iv = season_intervals();
 	})
-	let display_date = new Date(data.createdAt);
+	let display_date = new Date(data.dateCreated);
 	if (data.updatedAt){
 		display_date = new Date(data.updatedAt);
 	}
@@ -290,11 +290,7 @@ h4{
 	{@html data.addendum}
 {/if}
 </div>
-		{#if data.updatedAt}
-			<p class=date>Letzte Änderung: {formatted_display_date}</p>
-		{:else}
-			<p class=date>Erstellt am: {formatted_display_date}</p>
-		{/if}
+	<p class=date>Letzte Änderung: {formatted_display_date}</p>
 </div>
 </TitleImgParallax>
 
