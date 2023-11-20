@@ -58,6 +58,18 @@
 		placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
 		season_iv = season_intervals();
 	})
+	let display_date = new Date(data.createdAt);
+	if (data.updatedAt){
+		display_date = new Date(data.updatedAt);
+	}
+	const options = {
+ 	 day: '2-digit',
+ 	 month: 'short', // German abbreviation for the month
+ 	 year: 'numeric',
+ 	 hour: '2-digit',
+ 	 minute: '2-digit',
+	};
+	const formatted_display_date = display_date.toLocaleDateString('de-DE', options)
 </script>
 <style>
 *{
@@ -226,6 +238,9 @@ h4{
 	margin-bottom: 2em;
 	margin-top: -0.5em;
 }
+.date{
+	margin-bottom: 0;
+}
 </style>
 <svelte:head>
 	<title>{stripHtmlTags(data.name)} - Bocken'sche Rezepte</title>
@@ -261,6 +276,7 @@ h4{
 		</div>
 		{#if data.note}
 			<RecipeNote note={data.note}></RecipeNote>
+				d
 		{/if}
 </div>
 
@@ -274,6 +290,11 @@ h4{
 	{@html data.addendum}
 {/if}
 </div>
+		{#if data.updatedAt}
+			<p class=date>Letzte Änderung: {formatted_display_date}</p>
+		{:else}
+			<p class=date>Erstellt am: {formatted_display_date}</p>
+		{/if}
 </div>
 </TitleImgParallax>
 
