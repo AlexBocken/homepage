@@ -1,5 +1,6 @@
 <script lang='ts'>
 
+import {flip} from "svelte/animate"
 import Pen from '$lib/assets/icons/Pen.svelte'
 import Cross from '$lib/assets/icons/Cross.svelte'
 import Plus from '$lib/assets/icons/Plus.svelte'
@@ -109,6 +110,36 @@ export function edit_ingredient_and_close_modal(){
 	ingredients[edit_ingredient.list_index].name = edit_ingredient.sublist
 	const modal_el = document.querySelector("#edit_ingredient_modal");
 	modal_el.close();
+}
+export function update_list_position(list_index, direction){
+	if(direction == 1){
+		if(list_index == 0){
+			return
+		}
+		ingredients.splice(list_index - 1, 0, ingredients.splice(list_index, 1)[0])
+	}
+	else if(direction == -1){
+		if(list_index == ingredients.length - 1){
+			return
+		}
+		ingredients.splice(list_index + 1, 0, ingredients.splice(list_index, 1)[0])
+	}
+	ingredients = ingredients //tells svelte to update dom
+}
+export function update_ingredient_position(list_index, ingredient_index, direction){
+	if(direction == 1){
+		if(ingredient_index == 0){
+			return
+		}
+		ingredients[list_index].list.splice(ingredient_index - 1, 0, ingredients[list_index].list.splice(ingredient_index, 1)[0])
+	}
+	else if(direction == -1){
+		if(ingredient_index == ingredients[list_index].list.length - 1){
+			return
+		}
+		ingredients[list_index].list.splice(ingredient_index + 1, 0, ingredients[list_index].list.splice(ingredient_index, 1)[0])
+	}
+	ingredients = ingredients //tells svelte to update dom
 }
 
 </script>
@@ -283,7 +314,6 @@ dialog h2{
 .mod_icons{
 	display: flex;
 	flex-direction: row;
-	margin-left: 2rem;
 }
 .button_subtle{
 	padding: 0em;
@@ -295,20 +325,36 @@ dialog h2{
 .button_subtle:hover{
 	scale: 1.2 1.2;
 }
+.move_buttons_container{
+	display: flex;
+	flex-direction: column;
+}
+.move_buttons_container button{
+	background-color: transparent;
+	border: none;
+	padding: 0;
+	margin: 0;
+	transition: 200ms;
+}
+.move_buttons_container button:hover{
+	scale: 1.4;
+}
 h3{
 	width: fit-content;
 	display: flex;
 	flex-direction: row;
+	align-items: center;
 	max-width: 1000px;
 	justify-content: space-between;
 	user-select: none;
 	cursor: pointer;
+	gap: 1em;
 }
 .ingredients_grid{
 	box-sizing: border-box;
 	display: grid;
 	font-size: 1.1em;
-	grid-template-columns: 2fr 3fr 1fr;
+	grid-template-columns: 0.5fr 2fr 3fr 1fr;
 	grid-template-rows: auto;
 	grid-auto-flow: row;
 	align-items: center;
@@ -359,8 +405,17 @@ h3{
 <h2>Zutaten</h2>
 {#each ingredients as list, list_index}
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<h3 on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
-	<div>
+	<h3>
+	<div class=move_buttons_container>
+		<button on:click="{() => update_list_position(list_index, 1)}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+                </button>
+		<button  on:click="{() => update_list_position(list_index, -1)}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+		</button>
+	</div>
+
+	<div on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
 	{#if list.name }
 		{list.name}
 	{:else}
@@ -375,7 +430,15 @@ h3{
 	</div>
 	</h3>
 	<div class=ingredients_grid>
-	{#each list.list as ingredient, ingredient_index}
+		{#each list.list as ingredient, ingredient_index (ingredient_index)}
+		<div class=move_buttons_container>
+			<button on:click="{() => update_ingredient_position(list_index, ingredient_index, 1)}">
+                	        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+                	</button>
+			<button  on:click="{() => update_ingredient_position(list_index, ingredient_index, -1)}">
+                	        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+			</button>
+		</div>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.amount} {ingredient.unit}</div>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
