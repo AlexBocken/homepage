@@ -117,13 +117,66 @@ export function add_placeholder(){
 		el.innerHTML = step_placeholder
 	}
 }
+
+export function update_list_position(list_index, direction){
+	if(direction == 1){
+		if(list_index == 0){
+			return
+		}
+		instructions.splice(list_index - 1, 0, instructions.splice(list_index, 1)[0])
+	}
+	else if(direction == -1){
+		if(list_index == instructions.length - 1){
+			return
+		}
+		instructions.splice(list_index + 1, 0, instructions.splice(list_index, 1)[0])
+	}
+	instructions = instructions //tells svelte to update dom
+}
+export function update_step_position(list_index, step_index, direction){
+	if(direction == 1){
+		if(step_index == 0){
+			return
+		}
+		instructions[list_index].steps.splice(step_index - 1, 0, instructions[list_index].steps.splice(step_index, 1)[0])
+	}
+	else if(direction == -1){
+		if(step_index == instructions[list_index].steps.length - 1){
+			return
+		}
+		instructions[list_index].steps.splice(step_index + 1, 0, instructions[list_index].steps.splice(step_index, 1)[0])
+	}
+	instructions = instructions //tells svelte to update dom
+}
 </script>
 
 <style>
+.move_buttons_container{
+	display: inline-flex;
+	flex-direction: column;
+}
+.move_buttons_container button{
+	background-color: transparent;
+	border: none;
+	padding: 0;
+	margin: 0;
+	transition: 200ms;
+}
+.move_buttons_container button:hover{
+	scale: 1.4;
+}
+.step_move_buttons{
+	position: absolute;
+	left: -2.5rem;
+	flex-direction: column;
+}
 input::placeholder{
 	all:unset;
 }
 
+li {
+	position: relative;
+}
 li > div{
 	display:flex;
 	flex-direction: row;
@@ -405,24 +458,42 @@ h3{
 <h2>Zubereitung</h2>
 {#each instructions as list, list_index}
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<h3 on:click={() => show_modal_edit_subheading_step(list_index)}>
+	<h3>
+	<div class=move_buttons_container>
+		<button on:click="{() => update_list_position(list_index, 1)}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+                </button>
+		<button  on:click="{() => update_list_position(list_index, -1)}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+		</button>
+	</div>
+	<div on:click={() => show_modal_edit_subheading_step(list_index)}>
 	{#if list.name}
 		{list.name}
 	{:else}
 		Leer
 	{/if}
-	<div>
+	</div>
 	<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}">
 			<Pen fill=var(--nord1)></Pen>	</button>
 		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}">
 				<Cross fill=var(--nord1)></Cross>
 		</button>
-	</div>
 	</h3>
 	<ol>
 	{#each list.steps as step, step_index}
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<li><div><div on:click={() => show_modal_edit_step(list_index, step_index)}>{step}</div>
+		<li>
+			<div class="move_buttons_container step_move_buttons">
+				<button on:click="{() => update_step_position(list_index, step_index, 1)}">
+		                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+		                </button>
+				<button  on:click="{() => update_step_position(list_index, step_index, -1)}">
+		                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+				</button>
+			</div>
+			<div>
+				<div on:click={() => show_modal_edit_step(list_index, step_index)}>{step}</div>
 			<div><button class="action_button button_subtle" on:click={() => show_modal_edit_step(list_index, step_index)}>
 				<Pen fill=var(--nord1)></Pen>
 		</button>
