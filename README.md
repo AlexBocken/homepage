@@ -4,11 +4,11 @@ My own homepage, bocken.org, built with svelte-kit.
 
 ## TODO
 ### General
-- [ ] Admin user management
+- [ ]
+- [ ] Admin user management -> move to authentik via oIDC
 - [ ] upload/change pfp
 - [x] registration only with minimal permissions
 - [ ] logout without /logout page
-- [ ] no DB request for every Layout change if session already got the username once
 - [ ] preferences page
 - [x] change password
 - [ ] fail2ban integration
@@ -16,15 +16,9 @@ My own homepage, bocken.org, built with svelte-kit.
 
 ### Rezepte
 - [ ] nutrition facts
-- [ ] verify randomize arrays based on day
-- [ ] notes for next time
-
-### Abrechnungen
-- [ ] DB setup
-- [ ] create new entries
-- [ ] delete entries
-- [ ] edit entries
-- [ ] upload img
+- [x] verify randomize arrays based on day
+- [x] notes for next time
+- [ ] refactor, like, a lot
 
 ### Flims
 - [ ] Calendar layout
@@ -49,13 +43,13 @@ My own homepage, bocken.org, built with svelte-kit.
 - [ ] LDAP?
 
 ### Dendrite
-- [ ] setup dendrite
+- [x] setup dendrite
 - [ ] Connect to LDAP
-- [ ] Serve some web-frontend -> Just element?
+- [x] Serve some web-frontend -> Just element?
 
 ### Gitea
 - [ ] consistent theming
 - [ ] LDAP/OpenID
 
 ### Jellyfin
-- [ ] connect to LDAP
+- [x] connect to LDAP
