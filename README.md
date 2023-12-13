@@ -15,6 +15,7 @@ My own homepage, bocken.org, built with svelte-kit.
 - [ ] dark mode
 
 ### Rezepte
+- [ ] Do not list recipes that are all-year as "seasonal"
 - [ ] nutrition facts
 - [x] verify randomize arrays based on day
 - [x] notes for next time
