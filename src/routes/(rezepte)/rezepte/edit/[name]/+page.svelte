@@ -108,7 +108,7 @@
 			})
 		if(!res_img.ok){
 			const item = await res_img.json();
-			alert(item.message)
+			//alert(item.message)
 			return
 		}
 		return
@@ -129,7 +129,7 @@
 		}
 		else{
 			const item = await res.json();
-			alert(item.message)
+			// alert(item.message)
 		}
 	}
 	async function doEdit() {
@@ -153,7 +153,7 @@
 				})
 				if(!res.ok){
 					const item = await res.json();
-					alert(item.message)
+					// alert(item.message)
 				}
 			}
 			async function upload_img(){
@@ -172,7 +172,7 @@
         			});
 				if(!res.ok){
 					const item = await res.json();
-					alert(item.message)
+					// alert(item.message)
 				}
 			}
 			delete_img()
@@ -195,7 +195,7 @@
 			})
 			if(!res_img.ok){
 				const item = await res_img.json();
-				alert(item.message)
+				//alert(item.message)
 				return
 			}
 		}
@@ -232,7 +232,7 @@
 		}
 		else{
 			const item = await res.json()
-			alert(item.message)
+			//alert(item.message)
 		}
 	}
 </script>
