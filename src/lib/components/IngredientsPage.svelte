@@ -1,7 +1,14 @@
 <script>
+import { onMount } from 'svelte';
 export let data
 let multiplier = 1
 let custom_mul = "…"
+
+onMount(() => {
+	// Apply multiplier from URL
+	const urlParams = new URLSearchParams(window.location.search);
+	multiplier = urlParams.get('multiplier') || 1;
+})
 
 function convertFloatsToFractions(inputString) {
   // Split the input string into individual words
@@ -214,7 +221,7 @@ span
 {/if}
 <div class=ingredients_grid>
 	{#each list.list as item}
-		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div><div class=name>{@html item.name}</div>
+		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div><div class=name>{@html item.name.replace("{{multiplier}}", multiplier)}</div>
 	{/each}
 </div>
 {/each}
