@@ -396,6 +396,9 @@ h3{
 		margin-left: 0;
 	}
 }
+.force_wrap{
+	overflow-wrap: break-word;
+}
 </style>
 
 <div class=list_wrapper>
@@ -442,7 +445,7 @@ h3{
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.amount} {ingredient.unit}</div>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.name}</div>
+		<div class=force_wrap on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.name}</div>
 		<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
 			<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
 			<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
