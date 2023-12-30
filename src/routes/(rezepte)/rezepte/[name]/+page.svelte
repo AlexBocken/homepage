@@ -199,9 +199,11 @@ h4{
 	}
 	.icon{
 		right: 1rem;
+		top: -1.75rem;
 	}
 	.category{
 		left: 1rem;
+		top: calc(var(--size) * -1.5);
 	}
 }
 @keyframes shake{
