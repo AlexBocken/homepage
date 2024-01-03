@@ -4,7 +4,6 @@ My own homepage, bocken.org, built with svelte-kit.
 
 ## TODO
 ### General
-- [ ]
 - [ ] Admin user management -> move to authentik via oIDC
 - [ ] upload/change pfp
 - [x] registration only with minimal permissions
@@ -21,13 +20,6 @@ My own homepage, bocken.org, built with svelte-kit.
 - [x] notes for next time
 - [ ] refactor, like, a lot
 
-### Flims
-- [ ] Calendar layout
-- [ ] DB setup
-- [ ] create new entries
-- [ ] delete entries
-- [ ] edit entries
-
 ### Glaube
 - [ ] just keep it as MD rendering for now?
 - [ ] DB setup
@@ -36,10 +28,10 @@ My own homepage, bocken.org, built with svelte-kit.
 
 
 ### Outside of this sveltekit project but planned to run on the server as well
-- [ ] create LDAP and OpenID
+- [x] create LDAP and OpenID
 
 #### E-Mail
-- [ ] emailwiz setup
+- [x] emailwiz setup
 - [ ] fail2ban
 - [ ] LDAP?
 
@@ -50,7 +42,8 @@ My own homepage, bocken.org, built with svelte-kit.
 
 ### Gitea
 - [ ] consistent theming
-- [ ] LDAP/OpenID
+- [ ] LDAP
+- [x] OpenID Connect
 
 ### Jellyfin
 - [x] connect to LDAP
