@@ -267,7 +267,12 @@ h4{
 		<div class=tags>
 			<h4>Saison:</h4>
 			{#each season_iv as season}
-				<a class=tag href="/rezepte/season/{season[0]}">{months[season[0] - 1]}-{months[season[1] - 1]}</a>
+				<a class=tag href="/rezepte/season/{season[0]}">
+					{months[season[0] - 1]}
+					{#if season[1]}
+						- {months[season[1] - 1]}
+					{/if}
+				</a>
 			{/each}
 		</div>
 		<h4>Stichwörter:</h4>
