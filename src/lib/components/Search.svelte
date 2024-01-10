@@ -2,7 +2,6 @@
     import {onMount} from "svelte";
     import "$lib/css/nordtheme.css";
 
-
 onMount(() => {
 	const recipes = document.querySelectorAll(".search_me");
 	const search = document.getElementById("search");
@@ -10,7 +9,7 @@ onMount(() => {
 
 	function do_search(click_only_result=false){
    		// grab search input value
-    		const searchText = search.value.toLowerCase().trim().normalize('NFD').replace(/\p{Diacritic}/gu, "");
+		const searchText = search.value.toLowerCase().trim().normalize('NFD').replace(/\p{Diacritic}/gu, "");
     		const searchTerms = searchText.split(" ");
     		const hasFilter = searchText.length > 0;
 
@@ -18,7 +17,7 @@ onMount(() => {
 		let scrollers = [];
     		// for each recipe hide all but matched
     		recipes.forEach(recipe => {
-      			const searchString = `${recipe.textContent} ${recipe.dataset.tags}`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "");
+			const searchString = `${recipe.textContent} ${recipe.dataset.tags}`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").replace(/&shy;|­/g, '');
       			const isMatch = searchTerms.every(term => searchString.includes(term));
 
       			recipe.style.display = (isMatch ? 'flex' : 'none');
