@@ -41,9 +41,9 @@ onMount(() => {
 			scrollers_with_results[0].querySelector(".matched-recipe").click()
 		}
 		// if scrollers with results are presenet scroll first result into view
-		if(scrollers_with_results.length > 0){
+		/*if(scrollers_with_results.length > 0){
 			scrollers_with_results[0].scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
-		}
+		}*/ // For now disabled because it is annoying on mobile
 
 	}
 
