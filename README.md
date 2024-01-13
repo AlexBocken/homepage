@@ -11,7 +11,7 @@ My own homepage, bocken.org, built with svelte-kit.
 - [ ] preferences page
 - [x] change password
 - [ ] fail2ban integration
-- [ ] dark mode
+- [ ] dark mode `@media (prefers-color-scheme: dark) {}`
 
 ### Rezepte
 - [ ] Do not list recipes that are all-year as "seasonal"
@@ -19,6 +19,7 @@ My own homepage, bocken.org, built with svelte-kit.
 - [x] verify randomize arrays based on day
 - [x] notes for next time
 - [ ] refactor, like, a lot
+- [ ] expose json-ld for recipes https://json-ld.org/ https://github.com/flauschtrud/broccoli
 
 ### Glaube
 - [ ] just keep it as MD rendering for now?
@@ -32,7 +33,7 @@ My own homepage, bocken.org, built with svelte-kit.
 
 #### E-Mail
 - [x] emailwiz setup
-- [ ] fail2ban
+- [x] fail2ban
 - [ ] LDAP?
 
 ### Dendrite
