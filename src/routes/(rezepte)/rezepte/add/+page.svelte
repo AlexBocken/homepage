@@ -168,19 +168,6 @@ input:focus-visible
 		flex-direction: column;
 	}
 }
-.submit_wrapper{
-	position: relative;
-	margin-inline: auto;
-	width: max(300px, 50vw)
-}
-.submit_wrapper button{
-	position: absolute;
-	right:-1em;
-	bottom: -0.5em;
-}
-.submit_wrapper h2{
-	margin-bottom: 0;
-}
 h1{
 	text-align: center;
 	margin-bottom: 2rem;
@@ -249,6 +236,11 @@ button.action_button{
 	padding: 0;
 	padding-right: 0.5em;
 	margin: 0;
+}
+@media (prefers-color-scheme: dark){
+	.title{
+		background-color: var(--nord6-dark);
+	}
 }
 </style>
 <svelte:head>

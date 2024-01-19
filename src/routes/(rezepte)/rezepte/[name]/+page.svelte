@@ -125,6 +125,12 @@ h1{
 	transition: 100ms;
 	box-shadow: 0em 0em 0.5em 0.05em rgba(0,0,0,0.3);
 }
+@media (prefers-color-scheme: dark) {
+	.tag{
+		background-color: var(--nord0);
+		color: white;
+	}
+}
 .tag:hover,
 .tag:focus-visible
 {
@@ -143,6 +149,11 @@ h1{
 	margin-bottom: 3rem;
 	transform: translateY(-7rem);
 	z-index: -2;
+}
+@media (prefers-color-scheme: dark) {
+	.wrapper_wrapper{
+		background-color: var(--background-dark);
+	}
 }
 
 .wrapper{
@@ -167,6 +178,12 @@ h1{
 	translate: 0 1px; /*bruh*/
 	z-index: 1;
 }
+@media (prefers-color-scheme: dark) {
+	.title{
+		background-color: var(--nord6-dark);
+	}
+}
+
 .icon{
 	position: absolute;
 	top: -1em;
@@ -179,6 +196,12 @@ h1{
 	transition: 100ms;
 	box-shadow: 0em 0em 1em 0.3em rgba(0,0,0,0.4);
 }
+@media (prefers-color-scheme: dark) {
+	.icon{
+		background-color: var(--accent-dark);
+	}
+}
+
 .icon:hover,
 .icon:focus-visible{
 	scale: 1.2 1.2;
@@ -243,6 +266,7 @@ h4{
 .date{
 	margin-bottom: 0;
 }
+
 </style>
 <svelte:head>
 	<title>{stripHtmlTags(data.name)} - Bocken'sche Rezepte</title>

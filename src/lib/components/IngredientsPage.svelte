@@ -151,6 +151,12 @@ font-family: sans-serif;
 	background-color: var(--nord5);
 	box-shadow: 0px 0px 0.4em 0.05em rgba(0,0,0, 0.2);
 }
+@media (prefers-color-scheme: dark){
+	.multipliers button{
+		color: var(--tag-font);
+		background-color: var(--nord6-dark);
+	}
+}
 .multipliers :is(button, div):is(:hover, :focus-within){
 	scale: 1.2;
 	background-color: var(--orange);

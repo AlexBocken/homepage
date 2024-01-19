@@ -3,6 +3,7 @@
 	import Cross from '$lib/assets/icons/Cross.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 	import '$lib/css/action_button.css'
+	import '$lib/css/nordtheme.css'
 	import '$lib/css/shake.css'
 	import { redirect } from '@sveltejs/kit';
 	import { RecipeModelType } from '../../types/types';
@@ -214,6 +215,7 @@ h1{
 	margin-block: 2rem;
 	margin-inline: auto;
 	background-color: var(--nord6);
+	background-color: red;
 	padding: 1rem 2rem;
 }
 .title p{
@@ -253,6 +255,12 @@ h3{
 	right: 0;
 	bottom: 0;
 	margin: 2rem;
+}
+@media (prefers-color-scheme: dark){
+	.title{
+		background-color: var(--nord6-dark);
+		background-color: green;
+	}
 }
 </style>
 <h1>{title}</h1>
