@@ -27,14 +27,14 @@ h1{
 </svelte:head>
 
 <h1>Rezepte</h1>
-<section>
+
+<Search></Search>
+
 <MediaScroller title="In Saison">
 {#each data.season as recipe}
-	<Card {recipe} {current_month} search=""></Card>
+	<Card {recipe} {current_month}></Card>
 {/each}
 </MediaScroller>
-</section>
-<Search></Search>
 
 {#each categories as category}
 	<MediaScroller title={category}>
