@@ -38,6 +38,14 @@ ol li::marker{
 	box-shadow: 0.3em 0.3em 1em 0.2em rgba(0,0,0,0.3);
 	max-width: 30%
 }
+@media (prefers-color-scheme: dark){
+	.instructions{
+		background-color: var(--nord6-dark);
+	}
+	.additional_info > *{
+		background-color: var(--accent-dark);
+	}
+}
 @media screen and (max-width: 500px){
 	.additional_info > *{
 		max-width: 60%;

@@ -10,6 +10,11 @@ form{
 	padding-block: 2rem;
 	margin-block: 2rem;
 }
+@media (prefers-color-scheme: dark){
+	form{
+		background-color: var(--accent-dark);
+	}
+}
 form label{
 	font-size: 1.2em;
 }

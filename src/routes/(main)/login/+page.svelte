@@ -1,5 +1,6 @@
 <script>
 import "$lib/css/form.css"
+import "$lib/css/nordtheme.css"
 </script>
 <form action="?/login" method=POST>
 	<h1>Log In</h1>

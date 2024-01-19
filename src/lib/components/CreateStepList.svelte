@@ -425,6 +425,22 @@ h3{
 		width: 80%;
 	}
 }
+@media (prefers-color-scheme: dark){
+	.additional_info div{
+		background-color: var(--accent-dark);
+	}
+	.instructions{
+		background-color: var(--nord6-dark);
+	}
+}
+.button_arrow{
+	fill: var(--nord1);
+}
+@media (prefers-color-scheme: dark){
+	.button_arrow{
+		fill: var(--nord4);
+	}
+}
 </style>
 
 <div class=instructions>
@@ -461,10 +477,10 @@ h3{
 	<h3>
 	<div class=move_buttons_container>
 		<button on:click="{() => update_list_position(list_index, 1)}">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
                 </button>
 		<button  on:click="{() => update_list_position(list_index, -1)}">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 		</button>
 	</div>
 	<div on:click={() => show_modal_edit_subheading_step(list_index)}>
@@ -486,10 +502,10 @@ h3{
 		<li>
 			<div class="move_buttons_container step_move_buttons">
 				<button on:click="{() => update_step_position(list_index, step_index, 1)}">
-		                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 		                </button>
 				<button  on:click="{() => update_step_position(list_index, step_index, -1)}">
-		                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 				</button>
 			</div>
 			<div>

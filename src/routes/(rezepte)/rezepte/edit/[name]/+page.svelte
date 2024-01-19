@@ -3,6 +3,7 @@
 	import Cross from '$lib/assets/icons/Cross.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 	import '$lib/css/action_button.css'
+	import '$lib/css/nordtheme.css'
 	import { redirect } from '@sveltejs/kit';
 	import EditRecipeNote from '$lib/components/EditRecipeNote.svelte';
 
@@ -285,6 +286,11 @@ h1{
 	background-color: var(--nord6);
 	padding: 1rem 2rem;
 }
+@media (prefers-color-scheme: dark){
+	.title{
+		background-color: var(--nord6-dark);
+	}
+}
 .title p{
 	border: 2px solid var(--nord1);
 	border-radius: 10000px;
@@ -335,6 +341,11 @@ button.action_button{
 	padding: 0;
 	padding-right: 0.5em;
 	margin: 0;
+}
+@media (prefers-color-scheme: dark){
+	:global(body){
+		background-color: var(--background-dark);
+	}
 }
 </style>
 <h1>Rezept editieren</h1>
