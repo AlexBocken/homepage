@@ -11,10 +11,11 @@ My own homepage, bocken.org, built with svelte-kit.
 - [ ] preferences page
 - [x] change password
 - [ ] fail2ban integration
-- [ ] dark mode `@media (prefers-color-scheme: dark) {}`
+- [x] css dark mode `@media (prefers-color-scheme: dark) {}`
+- [ ] dark mode toggle
 
 ### Rezepte
-- [ ] Do not list recipes that are all-year as "seasonal"
+- [x] Do not list recipes that are all-year as "seasonal"
 - [ ] nutrition facts
 - [x] verify randomize arrays based on day
 - [x] notes for next time
