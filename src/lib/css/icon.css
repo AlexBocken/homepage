@@ -17,6 +17,11 @@ a.icon{
 	border-radius:1000px;
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.6);
 }
+@media (prefers-color-scheme: dark) {
+	a.icon{
+		background-color: var(--accent-dark);
+	}
+}
 input.icon{
 	z-index: 3;
 	box-sizing: border-box;
