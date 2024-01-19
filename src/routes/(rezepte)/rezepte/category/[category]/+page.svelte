@@ -7,8 +7,13 @@
     import Card from '$lib/components/Card.svelte'
     import { rand_array } from '$lib/js/randomize';
 </script>
-<h1>Rezepte</h1>
-<h2>In Kategorie {data.category}</h2>
+<style>
+	h1 {
+		text-align: center;
+		font-size: 3em;
+	}
+</style>
+<h1>Rezepte in Kategorie <q>{data.category}</q>:</h1>
 <Search></Search>
 <section>
 <Recipes>

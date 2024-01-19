@@ -22,4 +22,8 @@
 	--yellow: var(--nord13);
 	--green: var(--nord14);
 	--purple: var(--nord15);
+	--nord6-dark: #292c31;
+	--accent-dark: #1f1f21;
+	--background-dark: #21201b;
+	--font-default-dark: #ffffff;
 }

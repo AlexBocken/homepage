@@ -10,12 +10,20 @@
 </script>
 <style>
 	a{
+		--padding: 0.5em;
 		font-size: 3rem;
 		text-decoration: none;
-		padding: 0.5em;
+		padding: var(--padding);
 		background-color: var(--nord4);
 		border-radius: 1000px;
     		box-shadow: 0em 0em 0.5em 0.2em rgba(0, 0, 0, 0.2);
+		text-align: center;
+		--width: calc(1.2em + var(--padding) * 2);
+		width: var(--width);
+		line-height: calc(var(--width) - 2*var(--padding));
+		height: var(--width);
+
+
 	}
 	a:hover,
 	a:focus-visible

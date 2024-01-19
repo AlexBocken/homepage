@@ -1,6 +1,6 @@
 <script lang='ts'>
+import { onMount } from 'svelte';
 
-import {flip} from "svelte/animate"
 import Pen from '$lib/assets/icons/Pen.svelte'
 import Cross from '$lib/assets/icons/Cross.svelte'
 import Plus from '$lib/assets/icons/Plus.svelte'
@@ -8,26 +8,8 @@ import Check from '$lib/assets/icons/Check.svelte'
 
 import "$lib/css/action_button.css"
 
-import { do_on_key } from '$lib/components/do_on_key.js'
-import { portions } from '$lib/js/portions_store.js'
-
-let portions_local
-portions.subscribe((p) => {
-	portions_local = p
-});
-
-export function set_portions(){
-	portions.update((p) => portions_local)
-}
-
-export let ingredients
-
-let new_ingredient = {
-	amount: "",
-	unit: "",
-	name: "",
-	sublist: "",
-}
+export let list;
+export let list_index;
 
 let edit_ingredient = {
 	amount: "",
@@ -111,42 +93,86 @@ export function edit_ingredient_and_close_modal(){
 	const modal_el = document.querySelector("#edit_ingredient_modal");
 	modal_el.close();
 }
-export function update_list_position(list_index, direction){
-	if(direction == 1){
-		if(list_index == 0){
-			return
-		}
-		ingredients.splice(list_index - 1, 0, ingredients.splice(list_index, 1)[0])
-	}
-	else if(direction == -1){
-		if(list_index == ingredients.length - 1){
-			return
-		}
-		ingredients.splice(list_index + 1, 0, ingredients.splice(list_index, 1)[0])
-	}
-	ingredients = ingredients //tells svelte to update dom
-}
-export function update_ingredient_position(list_index, ingredient_index, direction){
-	if(direction == 1){
-		if(ingredient_index == 0){
-			return
-		}
-		ingredients[list_index].list.splice(ingredient_index - 1, 0, ingredients[list_index].list.splice(ingredient_index, 1)[0])
-	}
-	else if(direction == -1){
-		if(ingredient_index == ingredients[list_index].list.length - 1){
-			return
-		}
-		ingredients[list_index].list.splice(ingredient_index + 1, 0, ingredients[list_index].list.splice(ingredient_index, 1)[0])
-	}
-	ingredients = ingredients //tells svelte to update dom
-}
 
+    let ghost;
+    let grabbed;
+
+    let lastTarget;
+
+    let mouseY = 0; // pointer y coordinate within client
+    let offsetY = 0; // y distance from top of grabbed element to pointer
+    let layerY = 0; // distance from top of list to top of client
+
+    function grab(clientY, element) {
+        // modify grabbed element
+        grabbed = element;
+        grabbed.dataset.grabY = clientY;
+
+        // modify ghost element (which is actually dragged)
+        ghost.innerHTML = grabbed.innerHTML;
+
+        // record offset from cursor to top of element
+        // (used for positioning ghost)
+        offsetY = grabbed.getBoundingClientRect().y - clientY;
+        drag(clientY);
+    }
+
+    // drag handler updates cursor position
+    function drag(clientY) {
+        if (grabbed) {
+            mouseY = clientY;
+            layerY = ghost.parentNode.getBoundingClientRect().y;
+        }
+    }
+
+    // touchEnter handler emulates the mouseenter event for touch input
+    // (more or less)
+    function touchEnter(ev) {
+        drag(ev.clientY);
+        // trigger dragEnter the first time the cursor moves over a list item
+        let target = document.elementFromPoint(ev.clientX, ev.clientY).closest(".item");
+        if (target && target != lastTarget) {
+            lastTarget = target;
+            dragEnter(ev, target);
+        }
+    }
+
+    function dragEnter(ev, target) {
+        // swap items in data
+        if (grabbed && target != grabbed && target.classList.contains("item")) {
+            moveDatum(parseInt(grabbed.dataset.index), parseInt(target.dataset.index));
+        }
+    }
+
+    // does the actual moving of items in data
+    function moveDatum(from, to) {
+        let temp = list[0].list[from];
+        list[0].list = [...list[0].list.slice(0, from), ...list[0].list.slice(from + 1)];
+        list[0].list= [...list[0].list.slice(0, to), temp, ...list[0].list.slice(to)];
+    }
+
+    function release(ev) {
+        grabbed = null;
+    }
+
+    function removeDatum(index) {
+        list= [...list.slice(0, index), ...list.slice(index + 1)];
+    }
 </script>
 
 <style>
 input::placeholder{
 	color: inherit;
+}
+
+.drag_handle{
+	cursor: grab;
+	display:flex;
+	justify-content: flex-start;
+	align-items: center;
+}
+.drag_handle_header{
+	padding-right: 0.5em;
 }
 input{
 	color: unset;
@@ -197,12 +223,6 @@ input.heading:hover{
 	width: 90%;
 	border-radius: 20px;
 	transition: 200ms;
-}
-.shadow{
-	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
-}
-.shadow:hover{
-	box-shadow: 0 0 1em 0.4em rgba(0,0,0,0.3);
 }
 .adder button{
 	position: absolute;
@@ -314,6 +334,7 @@ dialog h2{
 .mod_icons{
 	display: flex;
 	flex-direction: row;
+	margin-left: 2rem;
 }
 .button_subtle{
 	padding: 0em;
@@ -325,36 +346,20 @@ dialog h2{
 .button_subtle:hover{
 	scale: 1.2 1.2;
 }
-.move_buttons_container{
-	display: flex;
-	flex-direction: column;
-}
-.move_buttons_container button{
-	background-color: transparent;
-	border: none;
-	padding: 0;
-	margin: 0;
-	transition: 200ms;
-}
-.move_buttons_container button:hover{
-	scale: 1.4;
-}
 h3{
 	width: fit-content;
 	display: flex;
 	flex-direction: row;
-	align-items: center;
 	max-width: 1000px;
 	justify-content: space-between;
 	user-select: none;
 	cursor: pointer;
-	gap: 1em;
 }
-.ingredients_grid{
+.ingredients_grid > span{
 	box-sizing: border-box;
 	display: grid;
 	font-size: 1.1em;
-	grid-template-columns: 0.5fr 2fr 3fr 1fr;
+	grid-template-columns: 1em 2fr 3fr 2em;
 	grid-template-rows: auto;
 	grid-auto-flow: row;
 	align-items: center;
@@ -381,10 +386,6 @@ h3{
 	background-color: white;
 	transition: 200ms;
 }
-.list_wrapper p[contenteditable]:hover,
-.list_wrapper p[contenteditable]:focus-within{
-	scale: 1.05 1.05;
-}
 @media screen and (max-width: 500px){
 	dialog h2{
 	margin-top: 2rem;
@@ -396,46 +397,106 @@ h3{
 		margin-left: 0;
 	}
 }
-.force_wrap{
-	overflow-wrap: break-word;
-}
-.button_arrow{
-	fill: var(--nord1);
-}
-@media (prefers-color-scheme: dark){
-	.button_arrow{
-		fill: var(--nord4);
-	}
-	.list_wrapper p[contenteditable]{
-		background-color: var(--accent-dark);
 
-	}
-}
+   .list {
+        cursor: grab;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .item {
+        min-height: 3em;
+        margin-bottom: 0.5em;
+        border-radius: 2px;
+        user-select: none;
+    }
+
+    .item:last-child {
+        margin-bottom: 0;
+    }
+
+    .item:not(#grabbed):not(#ghost) {
+        z-index: 10;
+    }
+
+    .item > * {
+        margin: auto;
+    }
+
+    .buttons {
+        width: 32px;
+        min-width: 32px;
+        margin: auto 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .buttons button {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+        margin: 0 auto;
+        padding: 0;
+        border: 1px solid rgba(0, 0, 0, 0);
+        background-color: inherit;
+    }
+
+    .buttons button:focus {
+        border: 1px solid black;
+    }
+
+    .delete {
+        width: 32px;
+    }
+
+    #grabbed {
+        opacity: 0.0;
+    }
+
+    #ghost {
+        pointer-events: none;
+        z-index: -5;
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0.0;
+    }
+
+    #ghost * {
+        pointer-events: none;
+    }
+
+    #ghost.haunting {
+        z-index: 20;
+        opacity: 1.0;
+    }
+
+main {
+        position: relative;
+    }
 </style>
 
-<div class=list_wrapper>
-<h4>Portionen:</h4>
-<p contenteditable type="text" bind:innerText={portions_local} on:blur={set_portions}></p>
 
-<h2>Zutaten</h2>
-{#each ingredients as list, list_index}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<h3>
-	<div class=move_buttons_container>
-		<button on:click="{() => update_list_position(list_index, 1)}">
-                        <svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-                </button>
-		<button  on:click="{() => update_list_position(list_index, -1)}">
-                        <svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-		</button>
-	</div>
+<main>
+<div class=dragdroplist>
 
-	<div on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
-	{#if list.name }
-		{list.name}
-	{:else}
-		Leer
-	{/if}
+<div
+        bind:this={ghost}
+        id="ghost"
+        class={grabbed ? "item haunting" : "item"}
+	style={"top: " + (mouseY + offsetY - layerY) + "px"}><p></p>
+</div>
+
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<h3 on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
+	<div class="drag_handle drag_handle_header"><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></div>
+	<div>
+		{#if list.name }
+			{list.name}
+		{:else}
+			Leer
+		{/if}
 	</div>
 	<div class=mod_icons>
 		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
@@ -443,40 +504,41 @@ h3{
 		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}">
 			<Cross fill=var(--nord1)></Cross></button>
 	</div>
-	</h3>
-	<div class=ingredients_grid>
-		{#each list.list as ingredient, ingredient_index (ingredient_index)}
-		<div class=move_buttons_container>
-			<button on:click="{() => update_ingredient_position(list_index, ingredient_index, 1)}">
-                	        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-                	</button>
-			<button  on:click="{() => update_ingredient_position(list_index, ingredient_index, -1)}">
-                	        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-			</button>
-		</div>
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.amount} {ingredient.unit}</div>
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div class=force_wrap on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.name}</div>
-		<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
-			<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
-			<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
-	{/each}
-	</div>
+</h3>
+
+<div class="ingredients_grid list"
+        on:mousemove={function(ev) {ev.stopPropagation(); drag(ev.clientY);}}
+        on:touchmove={function(ev) {ev.stopPropagation(); drag(ev.touches[0].clientY);}}
+        on:mouseup={function(ev) {ev.stopPropagation(); release(ev);}}
+     on:touchend={function(ev) {ev.stopPropagation(); release(ev.touches[0]);}}
+     >
+{#each list.list as ingredient, ingredient_index}
+	<span
+                id={(grabbed && (ingredient.id ? ingredient.id : JSON.stringify(ingredient)) == grabbed.dataset.id) ? "grabbed" : ""}
+class="item"
+                data-index={ingredient_index}
+                data-id={(ingredient.id ? ingredient.id : JSON.stringify(ingredient))}
+                data-grabY="0"
+                on:mousedown={function(ev) {grab(ev.clientY, this);}}
+                on:touchstart={function(ev) {grab(ev.touches[0].clientY, this);}}
+                on:mouseenter={function(ev) {ev.stopPropagation(); dragEnter(ev, ev.target);}}
+                on:touchmove={function(ev) {ev.stopPropagation(); ev.preventDefault(); touchEnter(ev.touches[0]);}}
+		>
+	<div class=drag_handle><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></div>
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.amount} {ingredient.unit}</div>
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{@html ingredient.name}</div>
+	<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
+		<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
+		<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
+	</span>
 {/each}
 </div>
 
-<div class="adder shadow">
-	<input class=category type="text" bind:value={new_ingredient.sublist} placeholder="Kategorie (optional)" on:keydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-	<div class=add_ingredient>
-		<input type="text"  placeholder="250..." bind:value={new_ingredient.amount} on:keydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-		<input type="text" placeholder="mL..." bind:value={new_ingredient.unit} on:keydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-		<input type="text" placeholder="Milch..." bind:value={new_ingredient.name} on:keydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-		<button on:click={() => add_new_ingredient()} class=action_button>
-			<Plus fill=white style="width: 2rem; height: 2rem;"></Plus>
-		</button>
-	</div>
 </div>
+</main>
+
 <dialog id=edit_ingredient_modal>
 	<h2>Zutat verändern</h2>
 	<div class=adder>

@@ -7,8 +7,13 @@
     import Search from '$lib/components/Search.svelte';
     import { rand_array } from '$lib/js/randomize';
 </script>
-<h1>Rezepte</h1>
-<h2>In Tag {data.tag}</h2>
+<style>
+	h1 {
+		text-align: center;
+		font-size: 2em;
+	}
+</style>
+<h1>Rezepte mit Stichwort <q>{data.tag}</q>:</h1>
 <Search></Search>
 <section>
 <Recipes>

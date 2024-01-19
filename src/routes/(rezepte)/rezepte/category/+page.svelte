@@ -1,11 +1,17 @@
 <script lang="ts">
     import type { PageData } from './$types';
+    import "$lib/css/nordtheme.css";
     export let data: PageData;
     import TagCloud from '$lib/components/TagCloud.svelte';
     import TagBall from '$lib/components/TagBall.svelte';
 </script>
-<h1>Rezepte</h1>
-<h2>Kategorien</h2>
+<style>
+	h1 {
+		text-align: center;
+		font-size: 3rem;
+	}
+</style>
+<h1>Kategorien</h1>
 <section>
 <TagCloud>
 {#each data.categories as tag}

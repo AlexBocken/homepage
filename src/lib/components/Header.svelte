@@ -29,6 +29,12 @@ font-family: sans-serif;
 	background-color: #fbf9f3;
 	overflow-x: hidden;
 }
+@media (prefers-color-scheme: dark) {
+	:global(body){
+		color: white;
+		background-color: var(--background-dark);
+	}
+}
 
 nav{
 	position: sticky;
