@@ -11,7 +11,7 @@
 		font-size: 3rem;
 	}
 </style>
-<h1>Kategorien</h1>
+<h1>Stichwörter</h1>
 <section>
 <TagCloud>
 {#each data.categories as tag}
