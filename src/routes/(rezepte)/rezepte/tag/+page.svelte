@@ -11,7 +11,7 @@
 		text-align: center;
 	}
 </style>
-<h1>Kategorien</h1>
+<h1>Stichwörter</h1>
 <section>
 <TagCloud>
 {#each data.tags as tag}
