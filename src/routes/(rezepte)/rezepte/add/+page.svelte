@@ -2,6 +2,7 @@
 	import Check from '$lib/assets/icons/Check.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 	import '$lib/css/action_button.css'
+	import '$lib/css/nordtheme.css'
 
 	let preamble = ""
 	let addendum = ""
