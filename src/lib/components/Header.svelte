@@ -107,8 +107,20 @@ nav[hidden]{
 	height: 3.5rem;
 	margin-left: 1rem;
 }
+.wrapper{
+	display:flex;
+	flex-direction: column;
+	min-height: 100svh;
+}
+footer{
+	padding-block: 1rem;
+	text-align: center;
+	margin-top: auto;
+}
+
 @media screen and (max-width: 800px) {
 	.button_wrapper{
+		box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -137,7 +149,7 @@ nav[hidden]{
 		fill: var(--red);
 		scale: 0.9;
 	}
-	nav{
+	.nav_site{
 		position: fixed;
 		top: 0;
 		right: 0;
@@ -152,16 +164,16 @@ nav[hidden]{
 		justify-content: space-between!important;
 		padding-inline: 0.5rem;
 	}
-	:global(nav ul){
+	:global(.nav_site ul){
 		width: 100% ;
 	}
-	nav :first-child{
+	.nav_site :first-child{
 		display:none;
 	}
-	nav[hidden]{
+	.nav_site[hidden]{
 		transform: translateX(100%);
 	}
-	nav a:last-child{
+	:global(.nav_site a:last-child){
 		margin-bottom: 2rem;
 	}
 
@@ -180,16 +192,6 @@ nav[hidden]{
 	transform: unset;
 	}
 }
-.wrapper{
-	display:flex;
-	flex-direction: column;
-	min-height: 100svh;
-}
-footer{
-padding-block: 1rem;
-text-align: center;
-margin-top: auto;
-}
 </style>
 <div class=wrapper lang=de>
 <div>
@@ -197,7 +199,7 @@ margin-top: auto;
 <a href="/"><Symbol></Symbol></a>
 <button class=nav_button on:click={() => {toggle_sidebar()}}><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></button>
 </div>
-<nav hidden>
+<nav hidden class=nav_site>
 	<a class=entry href="/"><Symbol></Symbol></a>
 	<slot name=links></slot>
 	<slot name=right_side></slot>
