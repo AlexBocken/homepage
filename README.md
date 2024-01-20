@@ -21,6 +21,12 @@ My own homepage, bocken.org, built with svelte-kit.
 - [x] notes for next time
 - [ ] refactor, like, a lot
 - [ ] expose json-ld for recipes https://json-ld.org/ https://github.com/flauschtrud/broccoli
+- [ ] graceful degradation for JS-less browsers
+	- use js-only class with display:none and remove it with JS
+	- disable search -> use form action instead on submit?
+	- do not blur images without js
+	- correct Recipe Card rendering
+
 
 ### Glaube
 - [ ] just keep it as MD rendering for now?
