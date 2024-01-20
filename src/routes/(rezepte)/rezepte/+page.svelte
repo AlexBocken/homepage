@@ -10,10 +10,7 @@
 </script>
 <style>
 h1{
-	box-sizing: border-box;
 	text-align: center;
-	max-width: 1000px;
-	padding-left: 5rem;
 	margin-bottom: 0;
 	font-size: 4rem;
 }
