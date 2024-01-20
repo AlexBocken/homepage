@@ -45,6 +45,7 @@ nav{
 	flex-direction: row;
 	justify-content: space-between !important;
 	align-items: center;
+	box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
 }
 nav[hidden]{
 	display:block;
