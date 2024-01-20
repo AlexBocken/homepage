@@ -3,7 +3,7 @@
 	export const multiplier = writable(0);
 
 	import type { PageData } from './$types';
-    	import "$lib/components/nordtheme.css"
+    	import "$lib/css/nordtheme.css"
 	import EditButton from '$lib/components/EditButton.svelte';
 	import InstructionsPage from '$lib/components/InstructionsPage.svelte';
 	import IngredientsPage from '$lib/components/IngredientsPage.svelte';
