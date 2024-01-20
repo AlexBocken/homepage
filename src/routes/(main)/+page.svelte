@@ -1,27 +1,19 @@
 <script>
 	import "$lib/css/nordtheme.css";
+	export let data;
 </script>
 <style>
 
-section{
-	padding: 2rem 1rem;
-	min-height: 350px;
-	overflow: hidden;
-	transition: 200ms;
-}
-section:nth-child(3n),
 .grid_section a:nth-child(4n),
 .grid_section a:nth-child(4n) svg{
 	background-color: var(--nord4);
 	fill: var(--nord11);
 }
-section:nth-child(4n+1),
 .grid_section a:nth-child(4n+1),
 .grid_section a:nth-child(4n+1) svg{
 	background-color: var(--nord6);
 	fill: var(--nord10);
 }
-section:nth-child(3n+2),
 .grid_section a:nth-child(4n+2){
 	background-color: var(--nord5);
 }
@@ -29,49 +21,10 @@ section:nth-child(3n+2),
 	background-color: var(--nord5);
 }
 
-section:nth-child(2n) .flex{
-	flex-direction: row-reverse;
-}
-section:nth-child(2n) img{
-	object-position: right;
-	left: -350px;
-}
-.flex{
-	display: flex;
-	gap: 2rem;
-	flex-direction: row;
-	justify-content: flex-start;
-	max-width: 1000px;
-	margin-inline: auto;
-	min-height: 350px;
-}
-.flex > *:first-child{
-width: 66%;
-}
-.flex > *:last-child{
-	position: relative;
-	max-width: 34%;
-}
-.flex > *:last-child img{
-	position:absolute;
-}
-img{
-	height: 350px;
-	object-fit: cover;
-}
-h2{
-	font-size: 3rem;
-}
 a{
 	text-decoration: unset;
 	color: var(--nord0);
 	transition: 200ms;
-}
-section:hover{
-	scale: 1.02;
-}
-section:has(a:hover){
-	box-shadow: 1em 1em 1em 1em rgba(0,0,0, 0.3);
 }
 .grid_section a:hover{
 	box-shadow: 1em 1em 2em 1em rgba(0,0,0, 0.3);
@@ -109,23 +62,41 @@ section:has(a:hover){
 	font-size: 1.5rem;
 }
 
+
+.hero{
+	display: flex;
+	align-items: center;
+	max-width: 1400px;
+	margin-inline: auto;
+	gap: 3rem;
+}
+.hero img{
+	border-radius: 1000px;
+	margin: 1rem;
+	width: clamp(100px, 300px, 50vw);
+	object-fit: cover;
+	background-color: var(--nord4);
+	box-shadow: 0.2em 0.2em 1em 1em rgba(0, 0, 0, 0.1);
+}
+
+section h2{
+	font-size: 2rem;
+	text-align: center;
+}
 @media (prefers-color-scheme: dark){
 	*{
 		color: white;
 	}
-	section:nth-child(3n),
 	.grid_section a:nth-child(4n),
 	.grid_section a:nth-child(4n) svg{
 		background-color: var(--nord6-dark);
 		fill: var(--nord11);
 	}
-	section:nth-child(4n+1),
 	.grid_section a:nth-child(4n+1),
 	.grid_section a:nth-child(4n+1) svg{
 		background-color: var(--accent-dark);
 		fill: var(--nord9);
 	}
-	section:nth-child(3n+2),
 	.grid_section a:nth-child(4n+2),
 	.grid_section a:nth-child(4n+2) svg{
 		background-color: var(--nord1);
@@ -137,22 +108,30 @@ section:has(a:hover){
 		background-color: var(--background-dark);
 		fill: var(--nord7);
 	}
+	.hero img{
+		box-shadow: 0.1em 0.1em 2em 0.5em rgba(255, 255, 255, 0.1);
+	}
 }
-
 </style>
 
-<section>
-<a href="/rezepte" class=flex>
-<div class=text>
-	<h2>Re&shy;zep&shy;te</h2>
-<p>Die eigenen Rezepte für das ganze Jahr kann man hier finden. Von traditionell Kärntner Küche zu Schweizer Klassikern oder auch das ein oder andere Hipsterrezept findet man für das ganze Jahr Rezepte. An den Rezepten wird kontinuirlich gefeilscht. </p>
-</div>
+{#if ! data.user}
+<section class=hero>
+<img src="https://bocken.org/static/user/full/Alexander.webp" alt="Smiling Alexander Bocken">
 <div>
-<img src="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" alt="">
+<h1><q>Willkommen auf bocken.org</q></h1>
+<p>
+	Hallo, ich bin Alexander Bocken. Auf dieser Seite findest du einige Softwareprojekte für Freunde, Familie und mich.
+	Zu empfeheln ist meine stetig wachsende Rezeptsammlung. Dort findest du viele leckere Rezepte, die ich selbst ausprobiert habe und ständig weiterfeilsche.
+	Zudem ist kannst du gerne meine Suchmaschine oder auch Jitsi-instanz für Videokonferenzen nutzen.
+	Einiges ist hinter einem Login versteckt, anderes ist öffentlich zugänglich.
+	Wer sich ein bisschen mit Programmieren auskennt, kann auch gerne in meinen Git-Repositories stöbern.
+</p>
 </div>
-</a>
 </section>
+{/if}
 
+<section>
+<h2>Seiten</h2>
 <div class=grid_section>
 	<a href="rezepte">
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M240 144A96 96 0 1 0 48 144a96 96 0 1 0 192 0zm44.4 32C269.9 240.1 212.5 288 144 288C64.5 288 0 223.5 0 144S64.5 0 144 0c68.5 0 125.9 47.9 140.4 112h71.8c8.8-9.8 21.6-16 35.8-16H496c26.5 0 48 21.5 48 48s-21.5 48-48 48H392c-14.2 0-27-6.2-35.8-16H284.4zM144 80a64 64 0 1 1 0 128 64 64 0 1 1 0-128zM400 240c13.3 0 24 10.7 24 24v8h96c13.3 0 24 10.7 24 24s-10.7 24-24 24H280c-13.3 0-24-10.7-24-24s10.7-24 24-24h96v-8c0-13.3 10.7-24 24-24zM288 464V352H512V464c0 26.5-21.5 48-48 48H336c-26.5 0-48-21.5-48-48zM48 320h80 16 32c26.5 0 48 21.5 48 48s-21.5 48-48 48H160c0 17.7-14.3 32-32 32H64c-17.7 0-32-14.3-32-32V336c0-8.8 7.2-16 16-16zm128 64c8.8 0 16-7.2 16-16s-7.2-16-16-16H160v32h16zM24 464H200c13.3 0 24 10.7 24 24s-10.7 24-24 24H24c-13.3 0-24-10.7-24-24s10.7-24 24-24z"/></svg>
@@ -199,3 +178,4 @@ section:has(a:hover){
 		<h3>Stammbaum</h3>
 	</a>
 </div>
+</section>
