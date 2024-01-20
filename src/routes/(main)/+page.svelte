@@ -140,7 +140,7 @@ section h2{
 </p>
 <p>
 	Zu empfeheln ist meine stetig wachsende Rezeptsammlung. Dort findest du viele leckere Rezepte, die ich selbst ausprobiert habe und ständig weiterfeilsche.
-	Zudem ist kannst du gerne meine Suchmaschine oder auch Jitsi-instanz für Videokonferenzen nutzen.
+	Zudem kannst du gerne meine Suchmaschine oder auch Jitsi-instanz für Videokonferenzen nutzen.
 	Einiges ist hinter einem Login versteckt, anderes ist öffentlich zugänglich.
 	Wer sich ein bisschen mit Programmieren auskennt, kann auch gerne in meinen Git-Repositories stöbern.
 </p>
