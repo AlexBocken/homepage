@@ -34,7 +34,6 @@ My own homepage, bocken.org, built with svelte-kit.
 - [ ] Google Speech to Text API integration?
 - [ ] Gebete
 
-
 ### Outside of this sveltekit project but planned to run on the server as well
 - [x] create LDAP and OpenID
 
@@ -43,15 +42,39 @@ My own homepage, bocken.org, built with svelte-kit.
 - [x] fail2ban
 - [ ] LDAP?
 
-### Dendrite
+#### Dendrite
 - [x] setup dendrite
 - [ ] Connect to LDAP
 - [x] Serve some web-frontend -> Just element?
 
-### Gitea
+#### Gitea
 - [ ] consistent theming
 - [ ] LDAP
 - [x] OpenID Connect
+- [ ] sane landing page
 
-### Jellyfin
+#### Jellyfin
 - [x] connect to LDAP
+- [x] consitent theming
+
+#### Webtrees
+- [ ] setup Oauth2proxy
+- [ ] connect to OIDC using Oauth2proxy
+- [ ] consistent theming
+
+#### Jitsi
+- [ ] consistent theming
+- [ ] move away from docker
+- [ ] find a way to improve max video quality without jitsi becoming unreliable
+
+#### Searx
+- [ ] investigate SearxNG as more reliable alternative
+- [ ] consistent theming
+
+#### Photoprism
+- [ ] consistent theming
+- [ ] OIDC integration (waiting on upstream)
+
+#### Nextcloud
+- [ ] consistent theming
+- [ ] collabora integration
