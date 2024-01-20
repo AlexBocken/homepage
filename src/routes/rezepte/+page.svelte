@@ -18,8 +18,8 @@ h1{
 <svelte:head>
 	<title>Bocken Rezepte</title>
 	<meta name="description" content="Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche." />
-	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/al_ragu.webp" />
-	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/al_ragu.webp" />
+	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" />
+	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" />
 	<meta property="og:image:type" content="image/webp" />
 	<meta property="og:image:alt" content="Pasta al Ragu mit Linguine" />
 </svelte:head>
