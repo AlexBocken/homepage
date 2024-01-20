@@ -68,7 +68,7 @@ a{
 	align-items: center;
 	max-width: 1400px;
 	margin-inline: auto;
-	gap: 3rem;
+	gap: 2rem;
 }
 .hero img{
 	border-radius: 1000px;
@@ -77,6 +77,9 @@ a{
 	object-fit: cover;
 	background-color: var(--nord4);
 	box-shadow: 0.2em 0.2em 1em 1em rgba(0, 0, 0, 0.1);
+}
+.hero div{
+	margin-inline: 1rem;
 }
 
 section h2{
@@ -112,6 +115,18 @@ section h2{
 		box-shadow: 0.1em 0.1em 2em 0.5em rgba(255, 255, 255, 0.1);
 	}
 }
+@media (max-width: 600px){
+	.hero{
+		flex-direction: column;
+		gap: 1rem;
+	}
+	.hero img{
+		width: clamp(100px, 200px, 80vw);
+	}
+	.hero h1{
+		text-align: center;
+	}
+}
 </style>
 
 {#if ! data.user}
@@ -121,6 +136,9 @@ section h2{
 <h1><q>Willkommen auf bocken.org</q></h1>
 <p>
 	Hallo, ich bin Alexander Bocken. Auf dieser Seite findest du einige Softwareprojekte für Freunde, Familie und mich.
+	Alles ist selbst gehostet bei mir daheim auf einem kleinen Mini-Server (Arch, btw).
+</p>
+<p>
 	Zu empfeheln ist meine stetig wachsende Rezeptsammlung. Dort findest du viele leckere Rezepte, die ich selbst ausprobiert habe und ständig weiterfeilsche.
 	Zudem ist kannst du gerne meine Suchmaschine oder auch Jitsi-instanz für Videokonferenzen nutzen.
 	Einiges ist hinter einem Login versteckt, anderes ist öffentlich zugänglich.
