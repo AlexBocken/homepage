@@ -1,3 +1,6 @@
+<script>
+	import "$lib/css/nordtheme.css";
+</script>
 <style>
 	:root{
 		--icon_fill: var(--nord4);

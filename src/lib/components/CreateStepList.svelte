@@ -5,7 +5,7 @@ import Cross from '$lib/assets/icons/Cross.svelte'
 import Plus from '$lib/assets/icons/Plus.svelte'
 import Check from '$lib/assets/icons/Check.svelte'
 
-import '$lib/components/nordtheme.css'
+import '$lib/css/nordtheme.css'
 import "$lib/css/action_button.css"
 
 import { do_on_key } from '$lib/components/do_on_key.js'
