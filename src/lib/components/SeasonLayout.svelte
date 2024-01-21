@@ -1,5 +1,5 @@
 <script lang="ts">
-    import '$lib/components/nordtheme.css';
+    import '$lib/css/nordtheme.css';
     import Recipes from '$lib/components/Recipes.svelte';
     import Search from './Search.svelte';
     let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]

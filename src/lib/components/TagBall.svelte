@@ -1,7 +1,7 @@
 <script lang="ts">
 export let tag : string;
 export let ref: string;
-import '$lib/components/nordtheme.css'
+import '$lib/css/nordtheme.css'
 </script>
 <style>
 a{

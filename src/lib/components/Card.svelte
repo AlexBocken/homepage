@@ -2,7 +2,8 @@
 export let recipe
 export let current_month
 export let icon_override = false;
-export let search = "search_me"
+export let search = true;
+import "$lib/css/nordtheme.css";
 import "$lib/css/shake.css";
 import "$lib/css/icon.css";
 
@@ -14,14 +15,11 @@ let isloaded = false
 
 import { onMount } from "svelte";
 	onMount(() => {
-		const el = document.querySelector("img")
-		if(el.complete){
-			isloaded = true
-		}
+		isloaded = document.querySelector("img")?.complete ? true : false
 	})
 </script>
 <style>
-.card{
+#card{
 	--card-width: 300px;
 	flex-shrink: 0;
 	transition: 200ms;
@@ -40,13 +38,13 @@ import { onMount } from "svelte";
 	background-color:  var(--blue);
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.3);
 }
-.card #image{
+#image{
 	width: var(--card-width);
 	height: calc(var(--card-width)*0.85);
 	object-fit: cover;
 	transition: 200ms;
-	backdrop-filter: blur(10px);
 	filter: blur(10px);
+	backdrop-filter: blur(10px);
 }
 .unblur{
 	filter: blur(0px) !important;
@@ -67,8 +65,6 @@ div:has(div #image){
 	top: 0;
 }
 @supports(-moz-appearance:none){
-	#image{
-	}
 	#image, #div_image{
 		border-top-left-radius: 20px;
 		border-top-right-radius: 20px;
@@ -87,19 +83,17 @@ div:has(div #image){
 	}
 }
 
-
-.card:hover,
-.card:focus-within{
+#card:hover,
+#card:focus-within{
 	transform: scale(1.02,1.02);
 	background-color: var(--red);
 	box-shadow: 0.2em 0.2em 2em 1em rgba(0, 0, 0, 0.3);
 }
-.card:focus{
+#card:focus{
 	scale: 0.95 0.95;
 }
-.card .title {
+.title {
 	position: relative;
-	box-sizing: border-box;
 	padding-top: 0.5em;
 	height: 50%;
 	width: 100% ;
@@ -110,17 +104,17 @@ div:has(div #image){
 	justify-content: space-between;
 	transition: 100ms;
 }
-.card .name{
+.name{
 	font-size: 2em;
 	color: white;
 	padding-inline: 0.5em;
 	padding-block: 0.2em;
 }
-.card .description{
+.description{
 	padding-inline: 1em;
 	color: var(--nord4);
 }
-.card .tags{
+.tags{
 	display: flex;
 	flex-wrap: wrap-reverse;
 	overflow: hidden;
@@ -130,7 +124,7 @@ div:has(div #image){
 	margin-bottom:0.5em;
 	flex-grow: 0;
 }
-.card .tag{
+.tag{
 	cursor: pointer;
 	text-decoration: unset;
 	background-color: var(--nord4);
@@ -142,18 +136,18 @@ div:has(div #image){
 	transition: 100ms;
 	box-shadow: 0em 0em 0.2em 0.05em rgba(0, 0, 0, 0.3);
 }
-.card .tag:hover,
-.card .tag:focus-visible
+.tag:hover,
+.tag:focus-visible
 {
 	transform: scale(1.04, 1.04);
 	background-color: var(--orange);
 	box-shadow: 0.2em 0.2em 0.2em 0.1em rgba(0, 0, 0, 0.3);
 }
-.card .tag:focus{
+.tag:focus{
 	transition: 100ms;
 	scale: 0.9;
 }
-.card .title .category{
+.title .category{
 	position: absolute;
 	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
 	text-decoration: none;
@@ -167,33 +161,33 @@ div:has(div #image){
 	transition: 100ms;
 
 }
-.card .title .category:hover,
-.card .title .category:focus-within
+.title .category:hover,
+.title .category:focus-within
 {
 	box-shadow: -0.2em 0.2em 1em 0.1em rgba(0, 0, 0, 0.6);
 	background-color: var(--nord3);
 	transform: scale(1.05, 1.05)
 }
-.card .category:focus{
+.category:focus{
 	scale: 0.9 0.9;
 }
 
-.card:hover .icon,
-.card:focus-visible .icon
+#card:hover .icon,
+#card:focus-visible .icon
 {
 	animation: shake 0.6s;
 }
 </style>
 
-<a class="card {search}" href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
+<a id="card" class:search_me={search}  href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
 	<div id=div_div_image >
-	<div id=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
-	<img class:unblur={isloaded} id=image src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
-	</div>
+		<div id=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
+			<img class:unblur={isloaded} id=image src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
+		</div>
 	</div>
 	{#if icon_override || recipe.season.includes(current_month)}
-	<a class=icon href="/rezepte/icon/{recipe.icon}">{recipe.icon}</a>
-{/if}
+		<a class=icon href="/rezepte/icon/{recipe.icon}">{recipe.icon}</a>
+	{/if}
 
 	<div class=title>
 		<a class=category href="/rezepte/category/{recipe.category}" >{recipe.category}</a>

@@ -1,5 +1,5 @@
 <script>
-import "$lib/components/nordtheme.css"
+import "$lib/css/nordtheme.css"
 import { onMount } from "svelte";
 import Symbol from "./Symbol.svelte"
 

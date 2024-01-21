@@ -1,6 +1,6 @@
 <script lang='ts'>
 export let href
-import "$lib/components/nordtheme.css"
+import "$lib/css/nordtheme.css"
 import "$lib/css/action_button.css"
 </script>
 
