@@ -21,11 +21,18 @@ My own homepage, bocken.org, built with svelte-kit.
 - [x] notes for next time
 - [ ] refactor, like, a lot
 - [ ] expose json-ld for recipes https://json-ld.org/ https://github.com/flauschtrud/broccoli
+- [ ] add favoriting ability when logged in
+	- [ ] favorite button on recipe
+	- [ ] store favorites in DB -> add to user object
+	- [ ] favorite API endpoint (requires auth of user)
+		- [ ] set
+		- [ ] retrieve
+	- [ ] favorite page/MediaScroller
 - [ ] graceful degradation for JS-less browsers
-	- use js-only class with display:none and remove it with JS
-	- disable search -> use form action instead on submit?
-	- do not blur images without js
-	- correct Recipe Card rendering
+	- [ ] use js-only class with display:none and remove it with JS
+	- [ ] disable search -> use form action instead on submit?
+	- [ ] do not blur images without js
+	- [ ] correct Recipe Card rendering
 
 
 ### Glaube
