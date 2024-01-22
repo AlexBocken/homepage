@@ -36,9 +36,12 @@ onMount(() => {
 			scroller.parentNode.style.display= 'none'
 		})
 		scroll
+		let items = document.querySelectorAll(".matched-recipe");
+		items = [...new Set(items)] // make unique as seasonal mediascroller can lead to duplicates
 		// if only one result and click_only_result is true, click it
-		if(click_only_result && scrollers_with_results.length == 1 && scrollers_with_results[0].querySelector(".matched-recipe").length == 1){
-			scrollers_with_results[0].querySelector(".matched-recipe").click()
+		if(click_only_result && scrollers_with_results.length == 1 && items.length == 1){
+			// add '/rezepte' to history to not force-redirect back to recipe if going back
+			items[0].click();
 		}
 		// if scrollers with results are presenet scroll first result into view
 		/*if(scrollers_with_results.length > 0){
