@@ -170,8 +170,8 @@ onMount(() => {
 }
 </style>
 
-<a class=card_anchor href="/rezepte/{recipe.short_name}">
-<div class="card" class:search_me={search} data-tags=[{recipe.tags}]>
+<a class=card_anchor href="/rezepte/{recipe.short_name}" class:search_me={search} data-tags=[{recipe.tags}]>
+<div class="card" >
 	<div class=div_div_image >
 		<div class=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
 			<noscript>
