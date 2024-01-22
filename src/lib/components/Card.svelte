@@ -49,7 +49,8 @@ import { onMount } from "svelte";
 .unblur{
 	filter: blur(0px) !important;
 }
-div:has(#image){
+#div_image,
+#div_div_image{
 	width: var(--card-width);
 	background-repeat: no-repeat;
 	background-size: cover;
@@ -58,29 +59,11 @@ div:has(#image){
 	border-top-left-radius: inherit;
 	border-top-right-radius: inherit;
 }
-div:has(div #image){
+#div_div_image{
 	height: calc(var(--card-width)*0.85);
 	position: absolute;
 	width: var(--card-width);
 	top: 0;
-}
-@supports(-moz-appearance:none){
-	#image, #div_image{
-		border-top-left-radius: 20px;
-		border-top-right-radius: 20px;
-		height: 100%;
-	}
-	#div_image{
-		background-repeat: no-repeat;
-		background-size: cover;
-
-	}
-	#div_div_image{
-		height: calc(var(--card-width)*0.85);
-		position: absolute;
-		width: var(--card-width);
-		top: 0;
-	}
 }
 
 #card:hover,
