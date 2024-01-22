@@ -14,22 +14,27 @@ if(icon_override){
 let isloaded = false
 
 import { onMount } from "svelte";
-	onMount(() => {
-		isloaded = document.querySelector("img")?.complete ? true : false
-	})
+
+onMount(() => {
+	isloaded = document.querySelector("img")?.complete ? true : false
+})
+
 </script>
 <style>
-#card{
+.card_anchor{
+	border-radius: 20px;
+}
+.card{
 	--card-width: 300px;
+	position: relative;
 	flex-shrink: 0;
 	transition: 200ms;
 	text-decoration: none;
-	position: relative;
 	box-sizing: border-box;
 	font-family: sans-serif;
 	cursor: pointer;
-	height: calc(7/4 * var(--card-width)); /* otherwise card is not initialized at correct size and readjusts when populated*/
-	width: var(--card-width);
+	height: 525px;
+	width: 300px;
 	border-radius: 20px;
 	background-size: contain;
 	display: flex;
@@ -39,8 +44,8 @@ import { onMount } from "svelte";
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.3);
 }
 #image{
-	width: var(--card-width);
-	height: calc(var(--card-width)*0.85);
+	width: 300px;
+	height: 255px;
 	object-fit: cover;
 	transition: 200ms;
 	filter: blur(10px);
@@ -49,9 +54,9 @@ import { onMount } from "svelte";
 .unblur{
 	filter: blur(0px) !important;
 }
-#div_image,
-#div_div_image{
-	width: var(--card-width);
+.div_image,
+.div_div_image{
+	width: 300px;
 	background-repeat: no-repeat;
 	background-size: cover;
 	background-position: center;
@@ -59,27 +64,28 @@ import { onMount } from "svelte";
 	border-top-left-radius: inherit;
 	border-top-right-radius: inherit;
 }
-#div_div_image{
-	height: calc(var(--card-width)*0.85);
+.div_div_image{
+	height: 255px;
 	position: absolute;
-	width: var(--card-width);
+	width: 300px;
 	top: 0;
 }
 
-#card:hover,
-#card:focus-within{
+.card:hover,
+.card:focus-within{
 	transform: scale(1.02,1.02);
 	background-color: var(--red);
 	box-shadow: 0.2em 0.2em 2em 1em rgba(0, 0, 0, 0.3);
 }
-#card:focus{
+.card:focus{
 	scale: 0.95 0.95;
 }
-.title {
-	position: relative;
+.card_title {
+	position: absolute;
 	padding-top: 0.5em;
-	height: 50%;
-	width: 100% ;
+	height: 262.5px;
+	width: 300px;
+	top: 262.5px;
 	border-bottom-left-radius: inherit;
 	border-bottom-right-radius: inherit;
 	display: flex;
@@ -130,7 +136,7 @@ import { onMount } from "svelte";
 	transition: 100ms;
 	scale: 0.9;
 }
-.title .category{
+.card_title .category{
 	position: absolute;
 	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
 	text-decoration: none;
@@ -144,8 +150,8 @@ import { onMount } from "svelte";
 	transition: 100ms;
 
 }
-.title .category:hover,
-.title .category:focus-within
+.card_title .category:hover,
+.card_title .category:focus-within
 {
 	box-shadow: -0.2em 0.2em 1em 0.1em rgba(0, 0, 0, 0.6);
 	background-color: var(--nord3);
@@ -155,24 +161,24 @@ import { onMount } from "svelte";
 	scale: 0.9 0.9;
 }
 
-#card:hover .icon,
-#card:focus-visible .icon
+.card:hover .icon,
+.card:focus-visible .icon
 {
 	animation: shake 0.6s;
 }
 </style>
 
-<a id="card" class:search_me={search}  href="/rezepte/{recipe.short_name}" data-tags=[{recipe.tags}]>
-	<div id=div_div_image >
-		<div id=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
+<a class=card_anchor href="/rezepte/{recipe.short_name}">
+<div class="card" class:search_me={search} data-tags=[{recipe.tags}]>
+	<div class=div_div_image >
+		<div class=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
 			<img class:unblur={isloaded} id=image src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
 		</div>
 	</div>
 	{#if icon_override || recipe.season.includes(current_month)}
 		<a class=icon href="/rezepte/icon/{recipe.icon}">{recipe.icon}</a>
 	{/if}
-
-	<div class=title>
+	<div class="card_title">
 		<a class=category href="/rezepte/category/{recipe.category}" >{recipe.category}</a>
 		<div>
 			<div class=name>{@html recipe.name}</div>
@@ -184,4 +190,5 @@ import { onMount } from "svelte";
 		{/each}
 		</div>
 	</div>
+</div>
 </a>
