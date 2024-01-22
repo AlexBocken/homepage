@@ -48,6 +48,8 @@ onMount(() => {
 	height: 255px;
 	object-fit: cover;
 	transition: 200ms;
+}
+.blur{
 	filter: blur(10px);
 	backdrop-filter: blur(10px);
 }
@@ -172,7 +174,10 @@ onMount(() => {
 <div class="card" class:search_me={search} data-tags=[{recipe.tags}]>
 	<div class=div_div_image >
 		<div class=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
-			<img class:unblur={isloaded} id=image src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
+			<noscript>
+				<img id=image src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}"/>
+			</noscript>
+			<img class:blur={!isloaded} id=image class=blur src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
 		</div>
 	</div>
 	{#if icon_override || recipe.season.includes(current_month)}

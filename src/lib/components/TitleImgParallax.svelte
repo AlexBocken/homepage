@@ -170,6 +170,11 @@ dialog button{
 			<img class:unblur={isloaded} id=image {src} on:load={() => {isloaded=true}}  alt=""/>
 			</div>
 		</div>
+		<noscript>
+			<div class=placeholder style="background-image:url({placeholder_src})" >
+				<img class="unblur" id=image {src} on:load={() => {isloaded=true}}  alt=""/>
+			</div>
+		</noscript>
 	</div>
     </figure>
     <div class=content><slot></slot></div>
