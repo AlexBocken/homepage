@@ -25,6 +25,7 @@ onMount(() => {
 	border-radius: 20px;
 }
 .card{
+	margin-right: 2em; /* gap in MediaScroller does not work due to double insertion of a tag on server side */
 	--card-width: 300px;
 	position: relative;
 	flex-shrink: 0;

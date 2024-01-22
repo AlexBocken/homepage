@@ -8,7 +8,7 @@ export let title
   flex-direction: row;
   flex-wrap:nowrap;
   overflow-x: auto;
-  gap: 2rem;
+  /*gap: 2rem;*/ /*messes up if js disabled as anchor tag is inserted twice...*/
   padding: 3rem;
 }
 .media_scroller_wrapper{
