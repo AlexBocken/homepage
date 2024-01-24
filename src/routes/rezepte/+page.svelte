@@ -30,14 +30,14 @@ h1{
 
 <MediaScroller title="In Saison">
 {#each data.season as recipe}
-	<Card {recipe} {current_month}></Card>
+	<Card {recipe} {current_month} do_margin_right={true}></Card>
 {/each}
 </MediaScroller>
 
 {#each categories as category}
 	<MediaScroller title={category}>
 	{#each data.all_brief.filter(recipe => recipe.category == category) as recipe}
-		<Card {recipe} {current_month}></Card>
+		<Card {recipe} {current_month} do_margin_right={true}></Card>
 	{/each}
 	</MediaScroller>
 {/each}
