@@ -40,8 +40,7 @@ My own homepage, bocken.org, built with svelte-kit.
 
 
 ### Glaube
-- [ ] just keep it as MD rendering for now?
-- [ ] DB setup
+- [ ] just keep it md rendered
 - [ ] Google Speech to Text API integration?
 - [ ] Gebete
 
@@ -55,12 +54,11 @@ My own homepage, bocken.org, built with svelte-kit.
 
 #### Dendrite
 - [x] setup dendrite
-- [ ] Connect to LDAP
+- [ ] Connect to LDAP/OIDC (waiting on upstream)
 - [x] Serve some web-frontend -> Just element?
 
 #### Gitea
 - [ ] consistent theming
-- [ ] LDAP
 - [x] OpenID Connect
 - [ ] sane landing page
 
@@ -69,9 +67,10 @@ My own homepage, bocken.org, built with svelte-kit.
 - [x] consitent theming
 
 #### Webtrees
-- [ ] setup Oauth2proxy
-- [ ] connect to OIDC using Oauth2proxy
+- [x] setup Oauth2proxy -> not necessary, authentik has proxy integrated
+- [x] connect to OIDC using Oauth2proxy (using authentik)
 - [ ] consistent theming
+- [ ] auto-login if not logged in
 
 #### Jitsi
 - [ ] consistent theming
@@ -79,7 +78,7 @@ My own homepage, bocken.org, built with svelte-kit.
 - [ ] find a way to improve max video quality without jitsi becoming unreliable
 
 #### Searx
-- [ ] investigate SearxNG as more reliable alternative
+- [x] investigate SearxNG as more reliable alternative
 - [ ] consistent theming
 
 #### Photoprism
@@ -89,3 +88,6 @@ My own homepage, bocken.org, built with svelte-kit.
 #### Nextcloud
 - [ ] consistent theming
 - [ ] collabora integration
+
+#### Transmission
+- [ ] move behind authentik
