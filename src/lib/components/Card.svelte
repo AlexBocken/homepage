@@ -6,6 +6,7 @@ export let search = true;
 import "$lib/css/nordtheme.css";
 import "$lib/css/shake.css";
 import "$lib/css/icon.css";
+export let do_margin_right = false;
 
 if(icon_override){
 	current_month = recipe.season[0]
@@ -25,7 +26,6 @@ onMount(() => {
 	border-radius: 20px;
 }
 .card{
-	margin-right: 2em; /* gap in MediaScroller does not work due to double insertion of a tag on server side */
 	--card-width: 300px;
 	position: relative;
 	flex-shrink: 0;
@@ -168,10 +168,13 @@ onMount(() => {
 {
 	animation: shake 0.6s;
 }
+.margin_right{
+	margin-right: 2em;
+}
 </style>
 
-<a class=card_anchor href="/rezepte/{recipe.short_name}" class:search_me={search} data-tags=[{recipe.tags}]>
-<div class="card" >
+<a class=card_anchor href="/rezepte/{recipe.short_name}" class:search_me={search} data-tags=[{recipe.tags}] >
+<div class="card" class:margin_right={do_margin_right}>
 	<div class=div_div_image >
 		<div class=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
 			<noscript>
