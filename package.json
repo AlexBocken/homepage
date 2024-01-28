@@ -27,6 +27,7 @@
 		"jsonwebtoken": "^9.0.1",
 		"mongoose": "^7.4.0",
 		"sharp": "^0.32.3",
-		"svelte-cookie": "^1.0.1"
+		"svelte-cookie": "^1.0.1",
+		"sveltekit-oidc": "^0.0.8"
 	}
 }
