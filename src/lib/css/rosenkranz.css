@@ -1,0 +1,204 @@
+@font-face {
+  font-family: 'crosses';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/crosses.ttf);
+}
+ @font-face {
+  font-family: 'LibertineMinimal';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/LinLibertine_minimal.ttf);
+ }
+.sbeads{
+	fill: var(--nord10);
+}
+
+.chain{
+	stroke:black;
+	stroke-width: 0.7;
+	stroke-miterlimit: 4;
+	stroke: gray;
+	fill: none;
+}
+
+.sbeads circle.hitbox{
+	r: 3.2px;
+	stroke-width:0;
+}
+
+#start1 circle{
+	cx:15.559271px;
+	cy: 20.881956px;
+}
+#start2 circle{
+        cx:21.633902px;
+	cy:20.367514px;
+}
+#start3 circle{
+	cx:27.96961px;
+	cy:21.178484px;
+}
+#lbead5 circle{
+        cx:118.50725px;
+        cy:59.477211px;
+}
+#lbead4 circle{
+        cx:126.81134px;
+        cy:15.751753px;
+}
+#lbead1 circle{
+           cx:7.6719489px;
+           cy:25.364584px;
+}
+#lbead2 circle{
+           cx:36.798512px;
+           cy:23.486462px;
+}
+#lbead3 circle{
+           cx:84.105789px;
+           cy:3.0456686px;
+}
+#lbead6 circle{
+           cx:72.185097px;
+           cy:64.006859px;
+   }
+#start1:hover .msg,
+#start2:hover .msg,
+#start3:hover .msg,
+#secret1:hover .msg,
+#secret2:hover .msg,
+#secret3:hover .msg,
+#secret4:hover .msg,
+#secret5:hover .msg,
+#lbeads .beforedecades:hover .msg,
+#lbeads .afterdecade:hover .msg,
+#cross:hover .msg
+{
+	display:block;
+}
+
+#start1:hover .sbeads circle:not(.hitbox),
+#start2:hover .sbeads circle:not(.hitbox),
+#start3:hover .sbeads circle:not(.hitbox),
+#secret1:hover .sbeads circle,
+#secret2:hover .sbeads circle,
+#secret3:hover .sbeads circle,
+#secret4:hover .sbeads circle,
+#secret5:hover .sbeads circle
+{
+	fill: var(--nord11);
+	r: 1.5px;
+}
+#lbead1:hover .lbead,
+#lbead2:hover .lbead,
+#lbead3:hover .lbead,
+#lbead4:hover .lbead,
+#lbead5:hover .lbead,
+#lbead6:hover .lbead{
+	r: 2.8px;
+	fill: var(--nord11);
+}
+#cross:hover .symbol{
+	fill: var(--nord11);
+	stroke: var(--nord11);
+	stroke-width: 0.25;
+}
+#lbeads.msg{
+	display:block;
+}
+.sbeads circle{
+	r: 1.25px;
+}
+.msg .diff{
+	fill: var(--nord11);
+}
+.msg .b{
+	font-family: crosses;
+	font-weight: bold;
+}
+.msg .title{
+	fill: var(--nord10);
+	font-weight: bold;
+	font-size: 5px;
+}
+.msg{
+	font-size: 4px;
+	stroke: none;
+	fill: var(--nord4);
+	display:none;
+}
+text{
+	font-family: LibertineMinimal;
+}
+#lbeads circle.hitbox{
+	r:5px;
+	stroke:none;
+	stroke-width:0;
+}
+.lbead{
+	fill: var(--nord12);
+	r: 2.65px;
+}
+
+.hitbox{
+	opacity:0;
+	stroke-width: 2;
+	fill: red;
+	stroke: red;
+}
+#coin circle{
+	r: 2.7px;
+	fill:darkgray;
+}
+
+#coin text{
+	fill:var(--nord0);
+	font-size: 4.259px;
+	line-height:1.25;
+	font-family: crosses;
+}
+
+#cross .symbol{
+	font-family: crosses;
+	fill: var(--nord4);
+	font-size: 17.3637px;
+	line-height: 1.25;
+	stroke-width:0.434093
+}
+
+table{
+	width: 100%;
+	border-collapse: collapse;
+}
+td{
+	text-align:center;
+	border-left: 1px solid;
+	border-right: 1px solid;
+	border-color: var(--nord2);
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+tr :last-child{
+	border-right: none;
+}
+
+tr :first-child{
+	border-left: 0px solid;
+}
+
+thead td{
+        color: var(--nord4);
+	border-bottom-width: 3px;
+	border-bottom-color: var(--nord10);
+	border-bottom-style: dotted;
+	font-size: 110%;
+	font-weight: bold;
+}
+.table{
+	width:100%;
+	overflow-x: auto;
+}

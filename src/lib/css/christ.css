@@ -1,0 +1,32 @@
+div.gebet{
+	text-align: center;
+	font-size: 1.25em;
+}
+ul {
+	font-size: 120%;
+}
+.gebet v{
+	margin:0;
+}
+.gebet v:lang(la) {
+	color: var(--nord6);
+}
+.gebet.bilingue v:lang(de){
+	color: grey;
+}
+
+i{
+	font-style: normal;
+	color: var(--nord11);
+	font-weight: 900;
+}
+i.txt {
+	font-size: 70%;
+	font-weight: normal;
+}
+v{
+	display: block;
+}
+.mobile audio{
+	width:70%;
+}
