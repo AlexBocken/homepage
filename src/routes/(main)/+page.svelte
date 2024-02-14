@@ -2,6 +2,10 @@
 	import "$lib/css/nordtheme.css";
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
 	export let data;
+	import { SignIn, SignOut } from "@auth/sveltekit/components"
+	import { page } from "$app/stores"
+	/*console.log($page)*/
+	/*console.log($page.daja.session.user)*/
 </script>
 <style>
 .hero{
@@ -49,7 +53,8 @@ section h2{
 }
 </style>
 
-{#if ! data.user}
+{#if ! data.session}
+
 <section class=hero>
 <img src="https://bocken.org/static/user/full/Alexander.webp" alt="Smiling Alexander Bocken">
 <div>
