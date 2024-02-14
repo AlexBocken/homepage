@@ -3,19 +3,14 @@ import { Recipe } from '../../../../models/Recipe';
 import { dbConnect, dbDisconnect } from '../../../../utils/db';
 import type {RecipeModelType} from '../../../../types/types';
 import { error } from '@sveltejs/kit';
-import { authenticateUser } from '$lib/js/authenticate';
 // header: use for bearer token for now
 // recipe json in body
-export const POST: RequestHandler = async ({request, cookies}) => {
+export const POST: RequestHandler = async ({request, locals}) => {
   let message = await request.json()
   const recipe_json = message.recipe
-  const user = await authenticateUser(cookies)
-  console.log(user)
-  if(!user){
+  const auth = await locals.auth();
+  if(!auth){
 	  throw error(403, "Not logged in")
-  }
-  else if(!user.access.includes("rezepte")){
-	throw error(403, "This user does not have edit permissions for recipes")
   }
   else{
 	await dbConnect();

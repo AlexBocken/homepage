@@ -3,8 +3,8 @@ import Header from '$lib/components/Header.svelte'
     import UserHeader from '$lib/components/UserHeader.svelte';
 export let data
 let username = ""
-if(data.user){
-	username = data.user.username
+if(data.session){
+	username = data.session.user.name
 }
 </script>
 
