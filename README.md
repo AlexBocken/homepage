@@ -5,12 +5,15 @@ My own homepage, bocken.org, built with svelte-kit.
 ## TODO
 ### General
 - [ ] Admin user management -> move to authentik via oIDC
+	- [x] login to authentik
+	- [x] only let rezepte_users edit recipes -> currently only letting them log in, should be changed
+	- [ ] get user info from authentik (more than email and name)
+	- [ ] upload pfp
 - [ ] upload/change pfp
 - [x] registration only with minimal permissions
 - [ ] logout without /logout page
 - [ ] preferences page
 - [x] change password
-- [ ] fail2ban integration
 - [x] css dark mode `@media (prefers-color-scheme: dark) {}`
 - [ ] dark mode toggle
 
