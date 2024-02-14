@@ -130,11 +130,11 @@ h2{
 	<div id=options class="speech top" hidden>
 			<h2>{username}</h2>
 			<ul>
-				<li><a href="/settings" >Einstellungen</a></li>
-				<li><a href="/logout" >Log Out</a></li>
+				<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
+				<li><a href="/auth/signout" >Log Out</a></li>
 			</ul>
 		</div>
 	</button>
 {:else}
-	<a class=entry href=/login>Log In</a>
+	<a class=entry href=/auth/signin>Log In</a>
 {/if}
