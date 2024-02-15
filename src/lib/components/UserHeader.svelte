@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	export let username;
+	export let user;
+
 	function toggle_options(){
 		const el = document.querySelector("#options")
 		el.hidden = !el.hidden
 	}
-	let src="https://bocken.org/static/user/thumb/" +  username + ".webp"
+
 	onMount( () => {
 		document.addEventListener("click", (e) => {
 			const el = document.querySelector("#button")
@@ -101,6 +102,12 @@
 	/* (B2) BOTTOM "CALLOUT TAIL" */
 h2{
 	margin-block: 0;
+	font-size: 1.2rem;
+}
+h2 + p{
+	padding-top: 0;
+	margin-top: 0;
+	font-size: 1.2rem;
 }
 @media screen and (max-width: 800px){
 	#options{
@@ -125,10 +132,11 @@ h2{
 }
 </style>
 
-{#if username}
-	<button on:click={toggle_options} style="background-image: url({src})" id=button>
+{#if user}
+	<button on:click={toggle_options} style="background-image: url(https://bocken.org/static/user/thumb/{user.nickname}.webp)" id=button>
 	<div id=options class="speech top" hidden>
-			<h2>{username}</h2>
+			<h2>{user.name}</h2>
+			<p>({user.nickname})</p>
 			<ul>
 				<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
 				<li><a href="/auth/signout" >Log Out</a></li>
