@@ -2,11 +2,10 @@
 import Header from '$lib/components/Header.svelte'
 import UserHeader from '$lib/components/UserHeader.svelte';
 export let data
-let username = ""
+let user;
 if(data.session){
-	username = data.session.user.name
+	user = data.session.user
 }
-console.log(data)
 </script>
 
 <Header>
@@ -19,6 +18,6 @@ console.log(data)
 	<li><a href="https://cloud.bocken.org">Cloud</a></li>
 	<li><a href="/searx">Searx</a></li>
 	</ul>
-	<UserHeader {username} slot=right_side></UserHeader>
+	<UserHeader {user} slot=right_side></UserHeader>
 	<slot></slot>
 </Header>

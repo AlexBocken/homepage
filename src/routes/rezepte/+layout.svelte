@@ -2,9 +2,9 @@
 import Header from '$lib/components/Header.svelte'
     import UserHeader from '$lib/components/UserHeader.svelte';
 export let data
-let username = ""
+let user;
 if(data.session){
-	username = data.session.user.name
+	user = data.session.user
 }
 </script>
 
@@ -16,6 +16,6 @@ if(data.session){
 	<li><a href="/rezepte/icon">Icon</a></li>
 	<li><a href="/rezepte/tag">Stichwörter</a></li>
 	</ul>
-	<UserHeader slot=right_side {username}></UserHeader>
+	<UserHeader slot=right_side {user}></UserHeader>
 	<slot></slot>
 </Header>
