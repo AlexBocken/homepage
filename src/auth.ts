@@ -9,4 +9,21 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 			clientSecret: AUTHENTIK_SECRET,
 			issuer: AUTHENTIK_ISSUER,
 		})],
+	callbacks: {
+		// this feels like an extremely hacky way to get nickname and groups into the session object
+		// TODO: investigate if there's a better way to do this
+		jwt: async ({token, profile}) => {
+			if(profile){
+				token.nickname = profile.nickname;
+				token.groups = profile.groups;
+			}
+			return token;
+		},
+		session: async ({session, token}) => {
+			session.user.nickname = token.nickname;
+			session.user.groups = token.groups;
+			return session;
+		},
+
+	}
 })
