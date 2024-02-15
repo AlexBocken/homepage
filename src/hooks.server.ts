@@ -15,6 +15,12 @@ async function authorization({ event, resolve }) {
 		if (!session) {
 			throw redirect(303, '/auth/signin');
 		}
+		else if (! session.user.groups.includes('rezepte_users')) {
+			// strip last dir from url
+			// TODO: give indication of why access failed
+			const new_url = event.url.pathname.split('/').slice(0, -1).join('/');
+			throw redirect(303, new_url);
+		}
 	}
 
 	// If the request is still here, just proceed as normally
