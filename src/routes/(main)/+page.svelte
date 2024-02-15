@@ -53,6 +53,14 @@ section h2{
 }
 </style>
 
+<svelte:head>
+	<title>Bocken</title>
+	<meta name="description" content="Die persönliche Website von Alexander Bocken" />
+	<meta property="og:image" content="https://bocken.org/static/favicon.png" />
+	<meta property="og:image:secure_url" content="https://bocken.org/favicon.png" />
+	<meta property="og:image:type" content="image/png" />
+	<meta property="og:image:alt" content="Das Familienwappen simplifiziert" />
+</svelte:head>
 {#if ! data.session}
 
 <section class=hero>
@@ -74,6 +82,7 @@ section h2{
 {/if}
 
 <section>
+
 <h2>Seiten</h2>
 <LinksGrid>
 	<a href="rezepte">
