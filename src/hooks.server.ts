@@ -2,28 +2,26 @@ import { authenticateUser } from "$lib/js/authenticate"
 import type { Handle } from "@sveltejs/kit"
 import { redirect } from "@sveltejs/kit"
 import { error } from "@sveltejs/kit"
-export { handle } from "./auth"
+import { SvelteKitAuth } from "@auth/sveltekit"
+import Authentik from "@auth/core/providers/authentik"
+import { AUTHENTIK_ID, AUTHENTIK_SECRET, AUTHENTIK_ISSUER } from "$env/static/private";
+import { sequence } from "@sveltejs/kit/hooks"
+import * as auth from "./auth"
 
-//export const handle : Handle = async({event, resolve}) => {
-//	if(event.url.pathname.startsWith('/rezepte/edit') || event.url.pathname.startsWith('/rezepte/add')){
-//		event.locals.user = await authenticateUser(event.cookies)
-//		if(!event.locals.user){
-//				throw redirect(303, "/login")
-//		}
-//		else if(!event.locals.user.access.includes("rezepte")){
-//			throw error(401, "Your user does not have access to this page")
-//		}
-//	}
-//	else if(event.url.pathname.startsWith('/abrechnung')){
-//		event.locals.user = await authenticateUser(event.cookies)
-//		if(!event.locals.user){
-//				throw redirect(303, "/login")
-//		}
-//		else if(!event.locals.user.access.includes("abrechnung")){
-//				throw error(401, "Your User does not have access to this page")
-//		}
-//	}
-//
-//	const response = await resolve(event)
-//	return response
-//}
+async function authorization({ event, resolve }) {
+	// Protect any routes under /authenticated
+	if (event.url.pathname.startsWith('/rezepte/edit') || event.url.pathname.startsWith('/rezepte/add')) {
+   const session = await event.locals.getSession();
+		if (!session) {
+			throw redirect(303, '/auth/signin');
+		}
+	}
+
+	// If the request is still here, just proceed as normally
+	return resolve(event);
+}
+
+export const handle: Handle = sequence(
+	auth.handle,
+	authorization
+);
