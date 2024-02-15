@@ -2,10 +2,7 @@
 	import "$lib/css/nordtheme.css";
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
 	export let data;
-	import { SignIn, SignOut } from "@auth/sveltekit/components"
 	import { page } from "$app/stores"
-	/*console.log($page)*/
-	/*console.log($page.daja.session.user)*/
 </script>
 <style>
 .hero{
@@ -52,7 +49,6 @@ section h2{
 	}
 }
 </style>
-
 <svelte:head>
 	<title>Bocken</title>
 	<meta name="description" content="Die persönliche Website von Alexander Bocken" />
@@ -64,7 +60,7 @@ section h2{
 {#if ! data.session}
 
 <section class=hero>
-<img src="https://bocken.org/static/user/full/Alexander.webp" alt="Smiling Alexander Bocken">
+<img src="https://bocken.org/static/user/full/alexander.webp" alt="Smiling Alexander Bocken">
 <div>
 <h1><q>Willkommen auf bocken.org</q></h1>
 <p>
