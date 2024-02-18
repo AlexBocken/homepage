@@ -35,3 +35,20 @@ a:not(:visited){
 a:visited{
 	color: var(--purple);
 }
+
+*{
+	box-sizing: border-box;
+	font-family: Helvetica, Arial, "Noto Sans", sans-serif
+}
+body{
+	margin:0;
+	padding:0;
+	background-color: #fbf9f3;
+	overflow-x: hidden;
+}
+@media (prefers-color-scheme: dark) {
+	body{
+		color: white;
+		background-color: var(--background-dark);
+	}
+}
