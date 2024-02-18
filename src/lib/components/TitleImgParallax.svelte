@@ -2,15 +2,25 @@
 	export let src
 	export let placeholder_src
 	let isloaded=false
+	let isredirected=false
 	import { onMount } from "svelte";
 	onMount(() => {
 		const el = document.querySelector("img")
 		if(el.complete){
 			isloaded = true
 		}
+		fetch(src, { method: 'HEAD' })
+		  .then(response => {
+			  if(response.redirected){
+				isredirected = true
+			  }
+		    })
 	})
 
 	function show_dialog_img(){
+		if(isredirected){
+			return
+		}
 		if(document.querySelector("img").complete){
 			document.querySelector("#img_carousel").showModal();
 		}
@@ -160,11 +170,12 @@ dialog button{
 .zoom-in{
 	cursor: zoom-in;
 }
+
 </style>
 <section class="section">
     <figure class="image-container">
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
-    	<div class:zoom-in={isloaded} on:click={show_dialog_img}>
+    	<div class:zoom-in={isloaded && !isredirected} on:click={show_dialog_img}>
 		<div class=placeholder style="background-image:url({placeholder_src})" >
 			<div class=placeholder_blur>
 			<img class:unblur={isloaded} id=image {src} on:load={() => {isloaded=true}}  alt=""/>
