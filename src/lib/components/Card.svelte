@@ -20,6 +20,8 @@ onMount(() => {
 	isloaded = document.querySelector("img")?.complete ? true : false
 })
 
+const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
+console.log(recipe)
 </script>
 <style>
 .card_anchor{
@@ -176,9 +178,9 @@ onMount(() => {
 <a class=card_anchor href="/rezepte/{recipe.short_name}" class:search_me={search} data-tags=[{recipe.tags}] >
 <div class="card" class:margin_right={do_margin_right}>
 	<div class=div_div_image >
-		<div class=div_image style="background-image:url({'https://bocken.org/static/rezepte/placeholder/' + recipe.short_name + '.webp'})">
+		<div class=div_image style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
 			<noscript>
-				<img id=image class="backdrop_blur" src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}"/>
+				<img id=image class="backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading=lazy  alt="{recipe.alt}"/>
 			</noscript>
 			<img class:blur={!isloaded} id=image class="backdrop_blur" src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
 		</div>
