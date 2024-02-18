@@ -3,10 +3,20 @@
 import Cross from '$lib/assets/icons/Cross.svelte'
 import "$lib/css/shake.css"
 import "$lib/css/icon.css"
+import { onMount } from 'svelte'
 
 // all data shared with rest of page in card_data
 export let card_data
 export let image_preview_url
+
+onMount( () => {
+	fetch(image_preview_url, { method: 'HEAD' })
+	  .then(response => {
+		  if(response.redirected){
+		  	image_preview_url = ""
+		  }
+	    })
+})
 
 import { img } from '$lib/js/img_store';
 
