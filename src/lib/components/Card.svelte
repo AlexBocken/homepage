@@ -21,7 +21,6 @@ onMount(() => {
 })
 
 const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
-console.log(recipe)
 </script>
 <style>
 .card_anchor{
