@@ -27,3 +27,11 @@
 	--background-dark: #21201b;
 	--font-default-dark: #ffffff;
 }
+
+a:not(:visited){
+	color: var(--red);
+}
+
+a:visited{
+	color: var(--purple);
+}
