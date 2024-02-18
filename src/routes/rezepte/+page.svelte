@@ -14,6 +14,11 @@ h1{
 	margin-bottom: 0;
 	font-size: 4rem;
 }
+.subheading{
+	text-align: center;
+	margin-top: 0;
+	font-size: 1.5rem;
+}
 </style>
 <svelte:head>
 	<title>Bocken Rezepte</title>
@@ -25,6 +30,7 @@ h1{
 </svelte:head>
 
 <h1>Rezepte</h1>
+<p class=subheading>{data.all_brief.length} Rezepte und stetig wachsend...</p>
 
 <Search></Search>
 
