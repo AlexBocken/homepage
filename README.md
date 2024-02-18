@@ -7,7 +7,7 @@ My own homepage, bocken.org, built with svelte-kit.
 - [ ] Admin user management -> move to authentik via oIDC
 	- [x] login to authentik
 	- [x] only let rezepte_users edit recipes -> currently only letting them log in, should be changed
-	- [ ] get user info from authentik (more than email and name)
+	- [x] get user info from authentik (more than email and name)
 	- [ ] upload pfp
 - [ ] upload/change pfp
 - [x] registration only with minimal permissions
@@ -23,7 +23,7 @@ My own homepage, bocken.org, built with svelte-kit.
 - [x] verify randomize arrays based on day
 - [x] notes for next time
 - [ ] refactor, like, a lot
-- [ ] expose json-ld for recipes https://json-ld.org/ https://github.com/flauschtrud/broccoli
+- [ ] expose json-ld for recipes https://json-ld.org/ https://schema.org/Recipe
 - [ ] reference other recipes in recipe
 	- [ ] add a link to the recipe
 	- [ ] add ingredients to the ingredients list
@@ -63,7 +63,7 @@ My own homepage, bocken.org, built with svelte-kit.
 #### Gitea
 - [ ] consistent theming
 - [x] OpenID Connect
-- [ ] sane landing page
+- [x] sane landing page
 
 #### Jellyfin
 - [x] connect to LDAP
@@ -73,7 +73,7 @@ My own homepage, bocken.org, built with svelte-kit.
 - [x] setup Oauth2proxy -> not necessary, authentik has proxy integrated
 - [x] connect to OIDC using Oauth2proxy (using authentik)
 - [ ] consistent theming
-- [ ] auto-login if not logged in
+- [x] auto-login if not logged in
 
 #### Jitsi
 - [ ] consistent theming
@@ -89,8 +89,8 @@ My own homepage, bocken.org, built with svelte-kit.
 - [ ] OIDC integration (waiting on upstream)
 
 #### Nextcloud
-- [ ] consistent theming
-- [ ] collabora integration
+- [x] consistent theming
+- [x] collabora integration
 
 #### Transmission
-- [ ] move behind authentik
+- [x] move behind authentik
