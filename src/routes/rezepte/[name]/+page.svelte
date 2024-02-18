@@ -15,8 +15,8 @@
 
     	export let data: PageData;
 
-	let hero_img_src = "https://bocken.org/static/rezepte/full/" + data.short_name + ".webp"
-	let placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
+	let hero_img_src = "https://bocken.org/static/rezepte/full/" + data.short_name + ".webp?v=" + data.dateModified
+	let placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp?v=" + data.dateModified
     	export let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
 	function season_intervals() {
 		let interval_arr = []
