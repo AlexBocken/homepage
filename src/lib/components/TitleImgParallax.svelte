@@ -11,9 +11,7 @@
 		}
 		fetch(src, { method: 'HEAD' })
 		  .then(response => {
-			  if(response.redirected){
-				isredirected = true
-			  }
+			isredirected = response.redirected
 		    })
 	})
 
