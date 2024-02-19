@@ -1,7 +1,7 @@
-import { get_username } from '$lib/js/get_username';;
-import type { Actions, PageServerLoad } from "./$types"
-import { error } from "@sveltejs/kit"
+import type { PageServerLoad } from "./$types"
 
-export const load = (async ({cookies}) => {
-	return { user: await get_username(cookies) }
+export const load : PageServerLoad = (async ({locals}) => {
+	return {
+		session: await locals.auth(),
+	}
 });
