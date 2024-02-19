@@ -24,12 +24,8 @@
 	"dependencies": {
 		"@auth/sveltekit": "^0.12.3",
 		"@sveltejs/adapter-node": "^2.0.0",
-		"argon2": "^0.30.3",
 		"cheerio": "1.0.0-rc.12",
-		"jsonwebtoken": "^9.0.1",
 		"mongoose": "^7.4.0",
-		"sharp": "^0.32.3",
-		"svelte-cookie": "^1.0.1",
-		"sveltekit-oidc": "^0.0.8"
+		"sharp": "^0.32.3"
 	}
 }
