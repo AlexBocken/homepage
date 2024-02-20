@@ -7,6 +7,7 @@
 	}
 	svg{
 		transition: 100ms;
+		height: 3em;
 	}
 	svg:hover,
 	svg:focus-visible
@@ -29,14 +30,9 @@
 </style>
 
 <svg
-   width="calc(45.742325px/ 1.3)"
-   height="calc(80.310539px / 1.3)"
    viewBox="0 0 45.742326 80.310541"
    version="1.1"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
+   xmlns="http://www.w3.org/2000/svg">
   <g class=stroke
      id="branches"
      transform="translate(-42.033271,-37.145192)" >
