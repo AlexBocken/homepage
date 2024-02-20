@@ -29,6 +29,7 @@ nav{
 	justify-content: space-between !important;
 	align-items: center;
 	box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
+	height: 4rem;
 }
 nav[hidden]{
 	display:block;
@@ -80,16 +81,16 @@ nav[hidden]{
 	padding-inline: 0.5rem;
 }
 :global(svg.symbol){
-	height: 3.5rem;
-	width: 3.5rem;
+	height: 4rem;
+	width: 4rem;
 	border-radius: 10000px;
 }
-:global(a:has(svg.symbol)){
+/*:global(a:has(svg.symbol)){
 	padding: 0 !important;
-	width: 3.5rem;
-	height: 3.5rem;
+	width: 4rem;
+	height: 4rem;
 	margin-left: 1rem;
-}
+}*/
 .wrapper{
 	display:flex;
 	flex-direction: column;
@@ -110,7 +111,7 @@ footer{
 		position: sticky;
 		background-color: var(--nord0);
 		width: 100%;
-		height: 3rem;
+		height: 4rem;
 		top: 0;
 		z-index: 9999;
 	}
@@ -119,8 +120,8 @@ footer{
 		background-color: unset;
 		display: block;
 		fill: white;
-		margin-inline: 1rem;
-		width: 2.5rem;
+		margin-inline: 0.5rem;
+		width: 2rem;
 		aspect-ratio: 1;
 	}
 	.nav_button svg{
