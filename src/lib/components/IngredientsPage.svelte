@@ -1,11 +1,16 @@
 <script>
 import { onMount } from 'svelte';
+import { onNavigate } from "$app/navigation";
 export let data
-let multiplier = 1
+let multiplier;
 let custom_mul = "…"
 
 onMount(() => {
 	// Apply multiplier from URL
+	const urlParams = new URLSearchParams(window.location.search);
+	multiplier = urlParams.get('multiplier') || 1;
+})
+onNavigate(() => {
 	const urlParams = new URLSearchParams(window.location.search);
 	multiplier = urlParams.get('multiplier') || 1;
 })
