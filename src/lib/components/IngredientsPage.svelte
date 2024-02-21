@@ -227,7 +227,7 @@ span
 {/if}
 <div class=ingredients_grid>
 	{#each list.list as item}
-		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div><div class=name>{@html item.name.replace("{{multiplier}}", multiplier)}</div>
+		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div><div class=name>{@html item.name.replace("{{multiplier}}", multiplier * item.amount)}</div>
 	{/each}
 </div>
 {/each}
