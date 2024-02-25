@@ -5,6 +5,7 @@
 </script>
 <style>
 	a{
+		font-family: "Noto Color Emoji", emoji;
 		font-size: 2rem;
 		text-decoration: none;
 		padding: 0.5em;

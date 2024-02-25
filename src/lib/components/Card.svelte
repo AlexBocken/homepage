@@ -45,6 +45,9 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	background-color:  var(--blue);
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.3);
 }
+.icon{
+	font-family: "Noto Color Emoji", emoji, sans-serif;
+}
 #image{
 	width: 300px;
 	height: 255px;

@@ -10,6 +10,7 @@
 </script>
 <style>
 	a{
+		font-family: "Noto Color Emoji", emoji, sans-serif;
 		--padding: 0.5em;
 		font-size: 3rem;
 		text-decoration: none;
