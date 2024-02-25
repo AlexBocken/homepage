@@ -7,6 +7,11 @@ import "$lib/css/nordtheme.css";
 import "$lib/css/shake.css";
 import "$lib/css/icon.css";
 export let do_margin_right = false;
+// to manually override lazy loading for top cards
+export let loading_strat : "lazy" | "eager" | undefined;
+if(loading_strat === undefined){
+	loading_strat = "lazy"
+}
 
 if(icon_override){
 	current_month = recipe.season[0]
@@ -182,9 +187,9 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	<div class=div_div_image >
 		<div class=div_image style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
 			<noscript>
-				<img id=image class="backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading=lazy  alt="{recipe.alt}"/>
+				<img id=image class="backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{recipe.alt}"/>
 			</noscript>
-			<img class:blur={!isloaded} id=image class="backdrop_blur" src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading=lazy  alt="{recipe.alt}" on:load={() => isloaded=true}/>
+			<img class:blur={!isloaded} id=image class="backdrop_blur" src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
 		</div>
 	</div>
 	{#if icon_override || recipe.season.includes(current_month)}

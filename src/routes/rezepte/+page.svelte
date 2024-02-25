@@ -36,7 +36,7 @@ h1{
 
 <MediaScroller title="In Saison">
 {#each data.season as recipe}
-	<Card {recipe} {current_month} do_margin_right={true}></Card>
+	<Card {recipe} {current_month} loading_strat={"eager"} do_margin_right={true}></Card>
 {/each}
 </MediaScroller>
 
