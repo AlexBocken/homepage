@@ -185,6 +185,7 @@ h1{
 }
 
 .icon{
+	font-family: "Noto Color Emoji", emoji;
 	position: absolute;
 	top: -1em;
 	right: -0.75em;
@@ -292,7 +293,9 @@ h4{
 			<h4>Saison:</h4>
 			{#each season_iv as season}
 				<a class=tag href="/rezepte/season/{season[0]}">
-					{months[season[0] - 1]}
+					{#if season[0]}
+						{months[season[0] - 1]}
+					{/if}
 					{#if season[1]}
 						- {months[season[1] - 1]}
 					{/if}
