@@ -509,7 +509,9 @@ h3{
 				</button>
 			</div>
 			<div>
-				<div on:click={() => show_modal_edit_step(list_index, step_index)}>{step}</div>
+				<div on:click={() => show_modal_edit_step(list_index, step_index)}>
+					{@html step}
+				</div>
 			<div><button class="action_button button_subtle" on:click={() => show_modal_edit_step(list_index, step_index)}>
 				<Pen fill=var(--nord1)></Pen>
 		</button>

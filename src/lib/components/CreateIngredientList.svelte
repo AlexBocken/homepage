@@ -413,7 +413,7 @@ h3{
 }
 </style>
 
-<div class=list_wrapper>
+<div class=list_wrapper >
 <h4>Portionen:</h4>
 <p contenteditable type="text" bind:innerText={portions_local} on:blur={set_portions}></p>
 
@@ -455,9 +455,13 @@ h3{
 			</button>
 		</div>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.amount} {ingredient.unit}</div>
+		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >
+			{ingredient.amount} {ingredient.unit}
+		</div>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div class=force_wrap on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.name}</div>
+		<div class=force_wrap on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >
+			{@html ingredient.name}
+		</div>
 		<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
 			<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
 			<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
