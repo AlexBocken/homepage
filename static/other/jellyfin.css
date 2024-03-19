@@ -7,8 +7,6 @@ under Server -> General -> Custom CSS Code
 .chapterThumbContainer{
      width: min(80vw, 500px, 50vh);
 }
-/* Attempt to change accent color */
-
 :root{
 --nord0: #2E3440;
 --blue: #5E81AC;
@@ -131,6 +129,9 @@ scale: 1.05;
     font-size: initial !important;
 }
 }
-.emby-scroller{
-   overflow: visible !important;
+.backgroundContainer{
+    background-color:  #21201b;
+}
+.pageTitleWithDefaultLogo {
+    background-image: url(https://bocken.org/static/css/logos/logo_text_light.png);
 }
