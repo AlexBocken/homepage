@@ -5,7 +5,6 @@
 	import { page } from "$app/stores"
 
 	const redirect_to_docs = () => {
-		console.log(data.session.user.groups);
 		if (!data.session){
 			alert("Du musst dich einloggen, um diese Seite zu betreten.");
 			window.location.href = "/auth/signin";
