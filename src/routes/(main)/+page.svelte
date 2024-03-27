@@ -3,6 +3,23 @@
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
 	export let data;
 	import { page } from "$app/stores"
+
+	const redirect_to_docs = () => {
+		console.log(data.session.user.groups);
+		if (!data.session){
+			alert("Du musst dich einloggen, um diese Seite zu betreten.");
+			window.location.href = "/auth/signin";
+
+		}
+		else if (data.session.user.groups.includes("paperless_users")){
+			window.location.href = "https://docs.bocken.org";
+		}
+		else if (data.session.user.groups.includes("paperless_eltern_users")){
+			window.location.href = "https://dokumente.bocken.org";
+		}
+		else
+			alert("Du hast keine Berechtigung, diese Seite zu betreten.");
+	}
 </script>
 <style>
 .hero{
@@ -132,7 +149,8 @@ section h2{
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg>
 		<h3>Transmission</h3>
 	</a>
-	<a href=https://docs.bocken.org>
+	<!-- TODO: clean this up with proper aria roles etc -->
+	<a on:click="{() => redirect_to_docs()}" >
 		<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m106 512h300c24.814 0 45-20.186 45-45v-317h-105c-24.814 0-45-20.186-45-45v-105h-195c-24.814 0-45 20.186-45 45v422c0 24.814 20.186 45 45 45zm60-301h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h120c8.291 0 15 6.709 15 15s-6.709 15-15 15h-120c-8.291 0-15-6.709-15-15s6.709-15 15-15z"/><path d="m346 120h96.211l-111.211-111.211v96.211c0 8.276 6.724 15 15 15z"/></svg>
 		<h3>Dokumente</h3>
 	</a>
