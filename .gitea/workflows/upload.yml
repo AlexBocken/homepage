@@ -30,4 +30,4 @@ jobs:
           cd /usr/share/webapps/homepage
           git pull --force https://Alexander:${{ secrets.homepage_gitea_token }}@git.bocken.org/Alexander/homepage
           npm run build
-          sudo systemctl restart bocken_main_node.service
+          sudo systemctl restart homepage.service
