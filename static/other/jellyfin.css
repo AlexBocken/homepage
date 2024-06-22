@@ -84,8 +84,10 @@ border-color: var(--blue);
 .defaultCardBackground3,
 .defaultCardBackground4,
 .defaultCardBackground5,
-.emby-checkbox:checked + span + .checkboxOutline, .itemProgressBarForeground,
-.taskProgressInner
+.emby-checkbox:checked + span + .checkboxOutline,
+.itemProgressBarForeground,
+.taskProgressInner,
+.slideMarker.watched
 {
     background-color: var(--blue) !important;
 }
