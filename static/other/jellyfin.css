@@ -3,10 +3,6 @@ This file styles jellyfin and can be imported by adding:
 @import url("https://bocken.org/other/jellyfin.css");
 under Server -> General -> Custom CSS Code
 */
-/* jellyscrub default: width: 15vw, annoying for smaller screen sizes */
-.chapterThumbContainer{
-     width: min(80vw, 500px, 50vh);
-}
 :root{
 --nord0: #2E3440;
 --blue: #5E81AC;
@@ -87,7 +83,7 @@ border-color: var(--blue);
 .emby-checkbox:checked + span + .checkboxOutline,
 .itemProgressBarForeground,
 .taskProgressInner,
-.slideMarker.watched
+.sliderMarker.watched
 {
     background-color: var(--blue) !important;
 }
