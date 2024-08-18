@@ -160,7 +160,7 @@
 			async function upload_img(){
         			const data = {
 					image: img_local,
-					name: short_name,
+					name: short_name.trim(),
 				}
         			const res = await fetch(`/api/rezepte/img/add`, {
         			    method: 'POST',
@@ -191,7 +191,7 @@
         			    },
 				body: JSON.stringify({
 					old_name: old_short_name,
-					new_name: short_name,
+					new_name: short_name.trim(),
 				})
 			})
 			if(!res_img.ok){
@@ -208,7 +208,7 @@
 					...add_info,
 					images, // TODO
 					season: season_local,
-					short_name,
+					short_name short_name.trim(),
 					datecreated,
 					portions: portions_local,
 					datemodified,
@@ -228,7 +228,7 @@
 		if(res.ok){
 			const url = location.href.split('/');
 			url.splice(url.length -2, 2);
-			url.push(short_name);
+			url.push(short_name.trim());
 			location.assign(url.join('/'))
 		}
 		else{
