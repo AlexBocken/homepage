@@ -110,7 +110,7 @@
 					...add_info,
 					images: {mediapath: short_name + '.webp', alt: "", caption: ""}, // TODO
 					season: season_local,
-					short_name,
+					short_name : short_name.trim(),
 					portions: portions_local,
 					datecreated,
 					datemodified,
