@@ -208,7 +208,7 @@
 					...add_info,
 					images, // TODO
 					season: season_local,
-					short_name short_name.trim(),
+					short_name: short_name.trim(),
 					datecreated,
 					portions: portions_local,
 					datemodified,

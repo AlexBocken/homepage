@@ -85,7 +85,7 @@
 		console.log(img_local)
         	const data = {
 			image: img_local,
-			name: short_name,
+			name: short_name.trim(),
 		}
         	await fetch(`/api/rezepte/img/add`, {
         	    method: 'POST',
@@ -108,7 +108,7 @@
 				recipe: {
 					...card_data,
 					...add_info,
-					images: {mediapath: short_name + '.webp', alt: "", caption: ""}, // TODO
+					images: {mediapath: short_name.trim() + '.webp', alt: "", caption: ""}, // TODO
 					season: season_local,
 					short_name : short_name.trim(),
 					portions: portions_local,
