@@ -199,7 +199,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 		<a class=category href="/rezepte/category/{recipe.category}" >{recipe.category}</a>
 		<div>
 			<div class=name>{@html recipe.name}</div>
-			<div class=description>{recipe.description}</div>
+			<div class=description>{@html recipe.description}</div>
 		</div>
 		<div class=tags>
 		{#each recipe.tags as tag}
