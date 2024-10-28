@@ -15,6 +15,7 @@ if(data.session){
 	<li><a href="/rezepte/category">Kategorie</a></li>
 	<li><a href="/rezepte/icon">Icon</a></li>
 	<li><a href="/rezepte/tag">Stichwörter</a></li>
+	<li><a href="/rezepte/tips-and-tricks">Tipps</a></li>
 	</ul>
 	<UserHeader slot=right_side {user}></UserHeader>
 	<slot></slot>
