@@ -1,8 +1,7 @@
 <script lang="ts">
 	import "$lib/css/nordtheme.css";
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
-	import { page } from "$app/stores"
-	let { data } = $props();
+	export let data;
 
 	const redirect_to_docs = () => {
 		if (!data.session){
