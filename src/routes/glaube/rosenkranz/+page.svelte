@@ -463,19 +463,19 @@ Der unten abgebildete Rosenkranz zeigt die aktuellen Gehmeinisse des Tages nach 
 			</g>
 			<g id=lbead5>
 				<circle class=lbead />
-				<circle class=hitbox onclick="" />
+				<circle class=hitbox onclick="{true}" />
 			</g>
 			<g id=lbead4>
 				<circle class=lbead />
-				<circle class=hitbox onclick="" />
+				<circle class=hitbox onclick="{true}" />
 			</g>
 			<g id=lbead3>
 				<circle class=lbead />
-				<circle class=hitbox onclick="" />
+				<circle class=hitbox onclick="{true}" />
 			</g>
 			<g id=lbead6>
 				<circle class=lbead />
-				<circle class=hitbox onclick="" />
+				<circle class=hitbox onclick="{true}" />
 			</g>
 		</g>
 		<g class=beforedecades>
@@ -490,11 +490,11 @@ Der unten abgebildete Rosenkranz zeigt die aktuellen Gehmeinisse des Tages nach 
 			</g>
 			<g id=lbead1>
 				<circle class=lbead />
-				<circle class=hitbox onclick="" />
+				<circle class=hitbox onclick="{true}" />
 			</g>
 			<g id=lbead2>
 				<circle class=lbead />
-				<circle class=hitbox onclick="" />
+				<circle class=hitbox onclick="{true}" />
 			</g>
 		</g>
 	</g>
@@ -511,7 +511,7 @@ Dieser Plan ist wie folgt:
 <div class=table >
 <table>
 	<tbody>
-	<thead>
+	<tr>
 		<td>Mo</td>
 		<td>Di</td>
 		<td>Mi</td>
@@ -519,7 +519,7 @@ Dieser Plan ist wie folgt:
 		<td>Fr</td>
 		<td>Sa</td>
 		<td>So</td>
-	</thead>
+	</tr>
 	<tr>
 		<td>freudenreich</td>
 		<td>schmerzhaft</td>
@@ -546,7 +546,7 @@ Der Plan ohne lichtreiche Geheimnisse ist wie folgt:
 <div class=table>
 <table>
 	<tbody>
-	<thead>
+	<tr>
 		<td>Mo</td>
 		<td>Di</td>
 		<td>Mi</td>
@@ -554,7 +554,7 @@ Der Plan ohne lichtreiche Geheimnisse ist wie folgt:
 		<td>Fr</td>
 		<td>Sa</td>
 		<td>So</td>
-	</thead>
+	</tr>
 	<tr>
 		<td>freudenreich</td>
 		<td>schmerzhaft</td>
