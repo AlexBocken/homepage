@@ -2,22 +2,6 @@
 	import "$lib/css/nordtheme.css";
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
 	export let data;
-
-	const redirect_to_docs = () => {
-		if (!data.session){
-			alert("Du musst dich einloggen, um diese Seite zu betreten.");
-			window.location.href = "/auth/signin";
-
-		}
-		else if (data.session.user.groups.includes("paperless_users")){
-			window.location.href = "https://docs.bocken.org";
-		}
-		else if (data.session.user.groups.includes("paperless_eltern_users")){
-			window.location.href = "https://dokumente.bocken.org";
-		}
-		else
-			alert("Du hast keine Berechtigung, diese Seite zu betreten.");
-	}
 </script>
 <style>
 .hero{
@@ -147,11 +131,24 @@ section h2{
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg>
 		<h3>Transmission</h3>
 	</a>
-	<!-- TODO: clean this up with proper aria roles etc -->
-	<a onclick={"() => redirect_to_docs()"} >
-		<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m106 512h300c24.814 0 45-20.186 45-45v-317h-105c-24.814 0-45-20.186-45-45v-105h-195c-24.814 0-45 20.186-45 45v422c0 24.814 20.186 45 45 45zm60-301h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h120c8.291 0 15 6.709 15 15s-6.709 15-15 15h-120c-8.291 0-15-6.709-15-15s6.709-15 15-15z"/><path d="m346 120h96.211l-111.211-111.211v96.211c0 8.276 6.724 15 15 15z"/></svg>
-		<h3>Dokumente</h3>
-	</a>
+	<!-- instead of redirect_to_docs(), use a normal link with internal checks for data.session -->
+	{#if !data.session}
+		<a href="/auth/signin">
+			<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m106 512h300c24.814 0 45-20.186 45-45v-317h-105c-24.814 0-45-20.186-45-45v-105h-195c-24.814 0-45 20.186-45 45v422c0 24.814 20.186 45 45 45zm60-301h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h120c8.291 0 15 6.709 15 15s-6.709 15-15 15h-120c-8.291 0-15-6.709-15-15s6.709-15 15-15z"/><path d="m346 120h96.211l-111.211-111.211v96.211c0 8.276 6.724 15 15 15z"/></svg>
+			<h3>Dokumente</h3>
+		</a>
+	{:else if data.session.user.groups.includes("paperless_users")}
+		<a href="https://docs.bocken.org">
+			<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m256 0c-141.384 0-256 114.616-256 256s114.616 256 256 256 256-114.616 256-256-114.616-256-256-256zm0 480c-119.103 0-224-104.897-224-224s104.897-224 224-224 224 104.897 224 224-104.897 224-224 224zm-64-192h128c8.837 0 16-7.163 16-16s-7.163-16-16-16h-128c-8.837 0-16 7.163-16 16s7.163 16 16 16zm0 64h128c8.837 0 16-7.163 16-16s-7.163-16-16-16h-128c-8.837 0-16 7.163-16 16s7.163 16 16 16zm0 64h128c8.837 0 16-7.163 16-16s-7.163-16-16-16h-128c-8.837 0-16 7.163-16 16s7.163 16 16 16z"/></svg>
+			<h3>Dokumente</h3>
+		</a>
+	{:else if data.session.user.groups.includes("paperless_eltern_users")}
+		<a href="https://dokumente.bocken.org">
+			<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m256 0c-141.384 0-256 114.616-256 256s114.616 256 256 256 256-114.616 256-256-114.616-256-256-256zm0 480c-119.103 0-224-104.897-224-224s104.897-224 224-224 224 104.897 224 224-104.897 224-224 224zm-64-192h128c8.837 0 16-7.163 16-16s-7.163-16-16-16h-128c-8.837 0-16 7.163-16 16s7.163 16 16 16zm0 64h128c8.837 0 16-7.163 16-16s-7.163-16-16-16h-128c-8.837 0-16 7.163-16 16s7.163 16 16 16zm0 64h128c8.837 0 16-7.163 16-16s-7.163-16-16-16h-128c-8.837 0-16 7.163-16 16s7.163 16 16 16z"/></svg>
+			<h3>Dokumente</h3>
+		</a>
+	{/if}
+
 	<a href=https://audio.bocken.org>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M256 80C149.9 80 62.4 159.4 49.6 262c9.4-3.8 19.6-6 30.4-6c26.5 0 48 21.5 48 48l0 128c0 26.5-21.5 48-48 48c-44.2 0-80-35.8-80-80l0-16 0-48 0-48C0 146.6 114.6 32 256 32s256 114.6 256 256l0 48 0 48 0 16c0 44.2-35.8 80-80 80c-26.5 0-48-21.5-48-48l0-128c0-26.5 21.5-48 48-48c10.8 0 21 2.1 30.4 6C449.6 159.4 362.1 80 256 80z"/></svg>
 		<h3>Hörbücher & Podcasts</h3>
