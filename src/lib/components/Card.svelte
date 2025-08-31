@@ -56,8 +56,8 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	background: none;
 	cursor: pointer;
 	position: absolute;
-	top: 15px;
-	right: 15px;
+	top: -25px;
+	right: -25px;
 	width: 50px;
 	height: 50px;
 	border-radius: 50%;
