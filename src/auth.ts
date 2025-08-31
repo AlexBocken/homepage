@@ -4,17 +4,11 @@ import { AUTHENTIK_ID, AUTHENTIK_SECRET, AUTHENTIK_ISSUER } from "$env/static/pr
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
 	providers: [
-		{
-			id: "authentik",
-			name: "Authentik",
-			type: "oidc",
+		Authentik({
 			clientId: AUTHENTIK_ID,
 			clientSecret: AUTHENTIK_SECRET,
 			issuer: AUTHENTIK_ISSUER,
-			checks: ["state"],
-		}],
-	trustHost: true,
-	debug: process.env.NODE_ENV === "development",
+		})],
 	callbacks: {
 		// this feels like an extremely hacky way to get nickname and groups into the session object
 		// TODO: investigate if there's a better way to do this
