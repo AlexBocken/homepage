@@ -24,7 +24,7 @@
 		"vite": "^7.1.3"
 	},
 	"dependencies": {
-		"@auth/sveltekit": "^0.14.0",
+		"@auth/sveltekit": "^1.10.0",
 		"@sveltejs/adapter-node": "^5.0.0",
 		"cheerio": "1.0.0-rc.12",
 		"mongoose": "^8.0.0",
