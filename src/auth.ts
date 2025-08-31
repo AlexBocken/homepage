@@ -26,4 +26,5 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 		},
 
 	}
+	trustHost: true, // needed for reverse proxy setups
 })
