@@ -12,7 +12,9 @@ async function authorization({ event, resolve }) {
 	if (event.url.pathname.startsWith('/rezepte/edit') || event.url.pathname.startsWith('/rezepte/add')) {
    const session = await event.locals.auth();
 		if (!session) {
-			redirect(303, '/auth/signin');
+			// Preserve the original URL the user was trying to access
+			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
+			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
 		else if (! session.user.groups.includes('rezepte_users')) {
 			// strip last dir from url
