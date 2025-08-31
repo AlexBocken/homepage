@@ -139,10 +139,10 @@ h2 + p{
 			<p>({user.nickname})</p>
 			<ul>
 				<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
-				<li><a href="/auth/signout" >Log Out</a></li>
+				<li><a href="/logout" >Log Out</a></li>
 			</ul>
 		</div>
 	</button>
 {:else}
-	<a class=entry href=/auth/signin>Log In</a>
+	<a class=entry href=/login>Log In</a>
 {/if}
