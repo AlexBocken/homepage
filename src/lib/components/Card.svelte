@@ -52,6 +52,9 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 }
 .icon{
 	font-family: "Noto Color Emoji", emoji, sans-serif;
+	border: none;
+	background: none;
+	cursor: pointer;
 }
 #image{
 	width: 300px;
@@ -135,6 +138,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	margin-bottom: 0.5em;
 	transition: 100ms;
 	box-shadow: 0em 0em 0.2em 0.05em rgba(0, 0, 0, 0.3);
+	border: none;
 }
 .tag:hover,
 .tag:focus-visible
@@ -159,7 +163,8 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	padding-inline: 1em;
 	border-radius: 1000px;
 	transition: 100ms;
-
+	border: none;
+	cursor: pointer;
 }
 .card_title .category:hover,
 .card_title .category:focus-within
@@ -193,17 +198,17 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 		</div>
 	</div>
 	{#if icon_override || recipe.season.includes(current_month)}
-		<a class=icon href="/rezepte/icon/{recipe.icon}">{recipe.icon}</a>
+		<button class=icon on:click={(e) => {e.stopPropagation(); window.location.href = `/rezepte/icon/${recipe.icon}`}}>{recipe.icon}</button>
 	{/if}
 	<div class="card_title">
-		<a class=category href="/rezepte/category/{recipe.category}" >{recipe.category}</a>
+		<button class=category on:click={(e) => {e.stopPropagation(); window.location.href = `/rezepte/category/${recipe.category}`}}>{recipe.category}</button>
 		<div>
 			<div class=name>{@html recipe.name}</div>
 			<div class=description>{@html recipe.description}</div>
 		</div>
 		<div class=tags>
 		{#each recipe.tags as tag}
-			<a class=tag href="/rezepte/tag/{tag}">{tag}</a>
+			<button class=tag on:click={(e) => {e.stopPropagation(); window.location.href = `/rezepte/tag/${tag}`}}>{tag}</button>
 		{/each}
 		</div>
 	</div>
