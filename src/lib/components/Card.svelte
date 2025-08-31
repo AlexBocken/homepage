@@ -55,6 +55,21 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	border: none;
 	background: none;
 	cursor: pointer;
+	position: absolute;
+	top: 15px;
+	right: 15px;
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	background-color: var(--nord0);
+	color: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.5em;
+	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
+	transition: 100ms;
+	z-index: 10;
 }
 #image{
 	width: 300px;
@@ -175,6 +190,18 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 }
 .category:focus{
 	scale: 0.9 0.9;
+}
+
+.icon:hover,
+.icon:focus-visible
+{
+	transform: scale(1.1, 1.1);
+	background-color: var(--nord3);
+	box-shadow: 0.2em 0.2em 1em 0.1em rgba(0, 0, 0, 0.8);
+}
+
+.icon:focus {
+	transform: scale(0.9, 0.9);
 }
 
 .card:hover .icon,
