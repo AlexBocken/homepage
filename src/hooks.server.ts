@@ -10,7 +10,7 @@ import * as auth from "./auth"
 async function authorization({ event, resolve }) {
 	// Protect any routes under /authenticated
 	if (event.url.pathname.startsWith('/rezepte/edit') || event.url.pathname.startsWith('/rezepte/add')) {
-   const session = await event.locals.getSession();
+   const session = await event.locals.auth();
 		if (!session) {
 			redirect(303, '/auth/signin');
 		}
