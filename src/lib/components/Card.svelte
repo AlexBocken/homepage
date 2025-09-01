@@ -7,6 +7,8 @@ import "$lib/css/nordtheme.css";
 import "$lib/css/shake.css";
 import "$lib/css/icon.css";
 export let do_margin_right = false;
+export let isFavorite = false;
+export let showFavoriteIndicator = false;
 // to manually override lazy loading for top cards
 export let loading_strat : "lazy" | "eager" | undefined;
 if(loading_strat === undefined){
@@ -192,6 +194,14 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	scale: 0.9 0.9;
 }
 
+.favorite-indicator{
+	position: absolute;
+	font-size: 2rem;
+	top: -0.5em;
+	left: -0.5em;
+	filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+}
+
 .icon:hover,
 .icon:focus-visible
 {
@@ -224,6 +234,9 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 			<img class:blur={!isloaded} id=image class="backdrop_blur" src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
 		</div>
 	</div>
+	{#if showFavoriteIndicator && isFavorite}
+		<div class="favorite-indicator">❤️</div>
+	{/if}
 	{#if icon_override || recipe.season.includes(current_month)}
 		<button class=icon on:click={(e) => {e.stopPropagation(); window.location.href = `/rezepte/icon/${recipe.icon}`}}>{recipe.icon}</button>
 	{/if}
