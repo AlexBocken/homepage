@@ -11,6 +11,9 @@ if(data.session){
 <Header>
 	<ul class=site_header slot=links>
 	<li><a href="/rezepte">Alle Rezepte</a></li>
+	{#if user}
+		<li><a href="/rezepte/favorites">Favoriten</a></li>
+	{/if}
 	<li><a href="/rezepte/season">In Saison</a></li>
 	<li><a href="/rezepte/category">Kategorie</a></li>
 	<li><a href="/rezepte/icon">Icon</a></li>
