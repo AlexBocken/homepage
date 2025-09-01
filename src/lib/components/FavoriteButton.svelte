@@ -1,6 +1,4 @@
 <script lang="ts">
-  import Heart from '$lib/assets/icons/Heart.svelte';
-  
   export let recipeId: string;
   export let isFavorite: boolean = false;
   export let isLoggedIn: boolean = false;
@@ -36,17 +34,13 @@
 <style>
   .favorite-button {
     all: unset;
-    color: var(--nord0);
-    font-size: 1.1rem;
-    background-color: var(--nord5);
-    border-radius: 10000px;
-    padding: 0.5em 1em;
-    transition: 100ms;
-    box-shadow: 0em 0em 0.5em 0.05em rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    gap: 0.5em;
+    font-size: 1.5rem;
     cursor: pointer;
+    transition: 100ms;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+    position: absolute;
+    bottom: 0.5em;
+    right: 0.5em;
   }
   
   .favorite-button:disabled {
@@ -54,49 +48,19 @@
     cursor: not-allowed;
   }
   
-  .favorite-button.favorited {
-    background-color: var(--nord11);
-    color: white;
-  }
-  
-  .favorite-button:not(.favorited):hover,
-  .favorite-button:not(.favorited):focus-visible {
-    transform: scale(1.1);
-    background-color: var(--nord11);
-    color: white;
-    box-shadow: 0.1em 0.1em 0.5em 0.1em rgba(0,0,0,0.3);
-  }
-  
-  .favorite-button.favorited:hover,
-  .favorite-button.favorited:focus-visible {
-    transform: scale(1.1);
-    background-color: var(--nord5);
-    color: var(--nord0);
-    box-shadow: 0.1em 0.1em 0.5em 0.1em rgba(0,0,0,0.3);
-  }
-  
-  @media (prefers-color-scheme: dark) {
-    .favorite-button {
-      background-color: var(--nord0);
-      color: white;
-    }
-    
-    .favorite-button.favorited:hover,
-    .favorite-button.favorited:focus-visible {
-      background-color: var(--nord6);
-      color: var(--nord0);
-    }
+  .favorite-button:hover,
+  .favorite-button:focus-visible {
+    transform: scale(1.2);
   }
 </style>
 
 {#if isLoggedIn}
   <button 
-    class="favorite-button" 
-    class:favorited={isFavorite}
+    class="favorite-button"
     disabled={isLoading}
     on:click={toggleFavorite}
+    title={isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern'}
   >
-    <Heart />
-    {isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern'}
+    {isFavorite ? '❤️' : '🖤'}
   </button>
 {/if}
