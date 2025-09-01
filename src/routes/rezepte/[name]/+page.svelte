@@ -12,6 +12,7 @@
     	import {season} from '$lib/js/season_store';
 	import RecipeNote from '$lib/components/RecipeNote.svelte';
 	import {stripHtmlTags} from '$lib/js/stripHtmlTags';
+	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 
     	export let data: PageData;
 
@@ -308,6 +309,15 @@ h4{
 				<a class=tag href="/rezepte/tag/{tag}">{tag}</a>
 			{/each}
 		</div>
+		
+		<div class="tags center">
+			<FavoriteButton 
+				recipeId={data.short_name} 
+				isFavorite={data.isFavorite || false} 
+				isLoggedIn={!!data.session?.user} 
+			/>
+		</div>
+		
 		{#if data.note}
 			<RecipeNote note={data.note}></RecipeNote>
 		{/if}
