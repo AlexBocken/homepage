@@ -11,7 +11,7 @@
 <IconLayout icons={data.icons} active_icon={data.icon} >
 <Recipes slot=recipes>
 	{#each rand_array(data.season) as recipe}
-		<Card {recipe} icon_override=true></Card>
+		<Card {recipe} icon_override=true isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user}></Card>
 	{/each}
 </Recipes>
 </IconLayout>

@@ -12,6 +12,6 @@ export function rand_array(array){
 	let time = new Date()
 	const seed = Math.floor(time.getTime()/MS_PER_DAY)
 	let rand = mulberry32(seed)
-	array.sort((a,b) => 0.5 - rand())
-	return array
+	// Create a copy to avoid mutating the original array
+	return [...array].sort((a,b) => 0.5 - rand())
 }

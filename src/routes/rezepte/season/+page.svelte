@@ -14,7 +14,7 @@
 <SeasonLayout active_index={current_month-1}>
 <Recipes slot=recipes>
 	{#each rand_array(data.season) as recipe}
-		<Card {recipe} {current_month}></Card>
+		<Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user}></Card>
 	{/each}
 </Recipes>
 </SeasonLayout>

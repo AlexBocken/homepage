@@ -47,7 +47,7 @@ h1{
 {:else if data.favorites.length > 0}
     <Recipes>
         {#each data.favorites as recipe}
-            <Card {recipe} {current_month}></Card>
+            <Card {recipe} {current_month} isFavorite={true} showFavoriteIndicator={true}></Card>
         {/each}
     </Recipes>
 {:else}

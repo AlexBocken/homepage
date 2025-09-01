@@ -310,13 +310,11 @@ h4{
 			{/each}
 		</div>
 		
-		<div class="tags center">
-			<FavoriteButton 
-				recipeId={data.short_name} 
-				isFavorite={data.isFavorite || false} 
-				isLoggedIn={!!data.session?.user} 
-			/>
-		</div>
+		<FavoriteButton 
+			recipeId={data.short_name} 
+			isFavorite={data.isFavorite || false} 
+			isLoggedIn={!!data.session?.user} 
+		/>
 		
 		{#if data.note}
 			<RecipeNote note={data.note}></RecipeNote>
