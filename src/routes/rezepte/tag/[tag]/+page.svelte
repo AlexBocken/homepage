@@ -14,7 +14,7 @@
 	}
 </style>
 <h1>Rezepte mit Stichwort <q>{data.tag}</q>:</h1>
-<Search></Search>
+<Search tag={data.tag}></Search>
 <section>
 <Recipes>
 	{#each rand_array(data.recipes) as recipe}

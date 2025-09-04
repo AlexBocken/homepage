@@ -40,7 +40,7 @@ h1{
     {/if}
 </p>
 
-<Search></Search>
+<Search favoritesOnly={true}></Search>
 
 {#if data.error}
     <p class="empty-state">Fehler beim Laden der Favoriten: {data.error}</p>
