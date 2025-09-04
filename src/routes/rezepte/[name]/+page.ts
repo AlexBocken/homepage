@@ -1,4 +1,5 @@
 import { error } from "@sveltejs/kit";
+import { generateRecipeJsonLd } from '$lib/js/recipeJsonLd';
 
 export async function load({ fetch, params, url}) {
     const res = await fetch(`/api/rezepte/items/${params.name}`);
@@ -101,9 +102,13 @@ export async function load({ fetch, params, url}) {
         }
     }
     
+    // Generate JSON-LD server-side
+    const recipeJsonLd = generateRecipeJsonLd(item);
+    
     return {
         ...item,
         isFavorite,
-        multiplier
+        multiplier,
+        recipeJsonLd
     };
 }
