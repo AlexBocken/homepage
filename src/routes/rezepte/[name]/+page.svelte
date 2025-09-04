@@ -278,7 +278,7 @@ h4{
 	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{data.short_name}.webp" />
 	<meta property="og:image:type" content="image/webp" />
 	<meta property="og:image:alt" content="{stripHtmlTags(data.name)}" />
-	<link rel="alternate" type="application/ld+json" href="/api/rezepte/json-ld/{data.short_name}" />
+	<script type="application/ld+json">{JSON.stringify(generateRecipeJsonLd(data))}</script>
 </svelte:head>
 
 <TitleImgParallax src={hero_img_src} {placeholder_src}>
