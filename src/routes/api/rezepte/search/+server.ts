@@ -42,11 +42,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     
     // Handle favorites filter
     if (favoritesOnly && locals.session?.user) {
-      const User = (await import('../../../../models/User')).User;
-      const user = await User.findById(locals.session.user.id);
-      if (user && user.favoriteRecipes) {
-        const favoriteShortNames = user.favoriteRecipes;
-        recipes = recipes.filter(recipe => favoriteShortNames.includes(recipe.short_name));
+      const { UserFavorites } = await import('../../../../models/UserFavorites');
+      const userFavorites = await UserFavorites.findOne({ username: locals.session.user.username });
+      if (userFavorites && userFavorites.favorites) {
+        const favoriteIds = userFavorites.favorites;
+        recipes = recipes.filter(recipe => favoriteIds.some(id => id.toString() === recipe._id?.toString()));
       } else {
         recipes = [];
       }
