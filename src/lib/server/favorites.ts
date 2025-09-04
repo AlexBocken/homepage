@@ -10,20 +10,10 @@ export async function getUserFavorites(fetch: any, locals: any): Promise<string[
     }
     
     try {
-        // Use absolute URL for internal server-side fetch to avoid nginx routing issues
-        const baseUrl = process.env.NODE_ENV === 'production' 
-            ? 'http://localhost:3000' 
-            : 'http://localhost:5173';
-        
-        console.log(`Fetching favorites from: ${baseUrl}/api/rezepte/favorites`);
-        const favRes = await fetch(`${baseUrl}/api/rezepte/favorites`);
-        
+        const favRes = await fetch('/api/rezepte/favorites');
         if (favRes.ok) {
             const favData = await favRes.json();
-            console.log(`Loaded ${favData.favorites?.length || 0} favorites for user ${session.user.nickname}`);
             return favData.favorites || [];
-        } else {
-            console.error(`Favorites fetch failed with status: ${favRes.status}`);
         }
     } catch (e) {
         // Silently fail if favorites can't be loaded
