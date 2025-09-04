@@ -1,33 +1,42 @@
 <script lang="ts">
+  import { browser } from '$app/environment';
+  import { enhance } from '$app/forms';
+  
   export let recipeId: string;
   export let isFavorite: boolean = false;
   export let isLoggedIn: boolean = false;
   
   let isLoading = false;
 
-  async function toggleFavorite() {
-    if (!isLoggedIn || isLoading) return;
-    
-    isLoading = true;
-    
-    try {
-      const method = isFavorite ? 'DELETE' : 'POST';
-      const response = await fetch('/api/rezepte/favorites', {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ recipeId }),
-      });
+  async function toggleFavorite(event: Event) {
+    // If JavaScript is available, prevent form submission and handle client-side
+    if (browser) {
+      event.preventDefault();
       
-      if (response.ok) {
-        isFavorite = !isFavorite;
+      if (!isLoggedIn || isLoading) return;
+      
+      isLoading = true;
+      
+      try {
+        const method = isFavorite ? 'DELETE' : 'POST';
+        const response = await fetch('/api/rezepte/favorites', {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ recipeId }),
+        });
+        
+        if (response.ok) {
+          isFavorite = !isFavorite;
+        }
+      } catch (error) {
+        console.error('Failed to toggle favorite:', error);
+      } finally {
+        isLoading = false;
       }
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
-    } finally {
-      isLoading = false;
     }
+    // If no JS, form will submit normally
   }
 </script>
 
@@ -55,12 +64,17 @@
 </style>
 
 {#if isLoggedIn}
-  <button 
-    class="favorite-button"
-    disabled={isLoading}
-    on:click={toggleFavorite}
-    title={isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern'}
-  >
-    {isFavorite ? '❤️' : '🖤'}
-  </button>
+  <form method="post" action="?/toggleFavorite" style="display: inline;" use:enhance>
+    <input type="hidden" name="recipeId" value={recipeId} />
+    <input type="hidden" name="isFavorite" value={isFavorite} />
+    <button 
+      type="submit"
+      class="favorite-button"
+      disabled={isLoading}
+      on:click={toggleFavorite}
+      title={isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern'}
+    >
+      {isFavorite ? '❤️' : '🖤'}
+    </button>
+  </form>
 {/if}
