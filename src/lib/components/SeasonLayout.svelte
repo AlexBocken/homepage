@@ -41,7 +41,7 @@ a.month:hover,
 {/each}
 </div>
 <section>
-<Search></Search>
+<Search season={active_index + 1}></Search>
 </section>
 <section>
 <slot name=recipes></slot>
