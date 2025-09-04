@@ -71,7 +71,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	font-size: 1.5em;
 	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
 	transition: 100ms;
-	z-index: 10;
+	z-index: 5;
 }
 #image{
 	width: 300px;
@@ -197,8 +197,8 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 .favorite-indicator{
 	position: absolute;
 	font-size: 2rem;
-	top: -0.5em;
-	left: -0.5em;
+	top: 0.1em;
+	left: 0.1em;
 	filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
 }
 
