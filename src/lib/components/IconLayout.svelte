@@ -72,7 +72,7 @@
 {/each}
 </div>
 <section>
-<Search></Search>
+<Search icon={active_icon}></Search>
 </section>
 <section>
 <slot name=recipes></slot>
