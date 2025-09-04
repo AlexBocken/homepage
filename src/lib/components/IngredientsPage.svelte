@@ -2,9 +2,33 @@
 import { onMount } from 'svelte';
 import { onNavigate } from "$app/navigation";
 import { browser } from '$app/environment';
+import { page } from '$app/stores';
 import HefeSwapper from './HefeSwapper.svelte';
 export let data
 let multiplier = data.multiplier || 1;
+
+// Calculate yeast IDs for each yeast ingredient
+let yeastIds = {};
+$: {
+	yeastIds = {};
+	let yeastCounter = 0;
+	if (data.ingredients) {
+		for (let listIndex = 0; listIndex < data.ingredients.length; listIndex++) {
+			const list = data.ingredients[listIndex];
+			if (list.list) {
+				for (let ingredientIndex = 0; ingredientIndex < list.list.length; ingredientIndex++) {
+					const ingredient = list.list[ingredientIndex];
+					if (ingredient.name === "Frischhefe" || ingredient.name === "Trockenhefe") {
+						yeastIds[`${listIndex}-${ingredientIndex}`] = yeastCounter++;
+					}
+				}
+			}
+		}
+	}
+}
+
+// Get all current URL parameters to preserve state in multiplier forms
+$: currentParams = browser ? new URLSearchParams(window.location.search) : $page.url.searchParams;
 
 // Progressive enhancement - use JS if available
 onMount(() => {
@@ -154,14 +178,7 @@ function adjust_amount(string, multiplier){
 }
 
 
-function handleHefeToggle(event, item) {
-	item.name = event.detail.name;
-	item.amount = event.detail.amount;
-	if (event.detail.unit) {
-		item.unit = event.detail.unit;
-	}
-	data = data; // Trigger reactivity
-}
+// No need for complex yeast toggle handling - everything is calculated server-side now
 </script>
 <style>
 *{
@@ -309,25 +326,55 @@ span
 <div class=multipliers>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="0.5" />
+		{#each Array.from(currentParams.entries()) as [key, value]}
+			{#if key !== 'multiplier'}
+				<input type="hidden" name={key} value={value} />
+			{/if}
+		{/each}
 		<button type="submit" class:selected={multiplier==0.5} on:click={(e) => handleMultiplierClick(e, 0.5)}>{@html "<sup>1</sup>/<sub>2</sub>x"}</button>
 	</form>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="1" />
+		{#each Array.from(currentParams.entries()) as [key, value]}
+			{#if key !== 'multiplier'}
+				<input type="hidden" name={key} value={value} />
+			{/if}
+		{/each}
 		<button type="submit" class:selected={multiplier==1} on:click={(e) => handleMultiplierClick(e, 1)}>1x</button>
 	</form>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="1.5" />
+		{#each Array.from(currentParams.entries()) as [key, value]}
+			{#if key !== 'multiplier'}
+				<input type="hidden" name={key} value={value} />
+			{/if}
+		{/each}
 		<button type="submit" class:selected={multiplier==1.5} on:click={(e) => handleMultiplierClick(e, 1.5)}>{@html "<sup>3</sup>/<sub>2</sub>x"}</button>
 	</form>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="2" />
+		{#each Array.from(currentParams.entries()) as [key, value]}
+			{#if key !== 'multiplier'}
+				<input type="hidden" name={key} value={value} />
+			{/if}
+		{/each}
 		<button type="submit" class:selected={multiplier==2} on:click={(e) => handleMultiplierClick(e, 2)}>2x</button>
 	</form>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="3" />
+		{#each Array.from(currentParams.entries()) as [key, value]}
+			{#if key !== 'multiplier'}
+				<input type="hidden" name={key} value={value} />
+			{/if}
+		{/each}
 		<button type="submit" class:selected={multiplier==3} on:click={(e) => handleMultiplierClick(e, 3)}>3x</button>
 	</form>
 	<form method="get" style="display: inline;" class="custom-multiplier" on:submit={handleCustomSubmit}>
+		{#each Array.from(currentParams.entries()) as [key, value]}
+			{#if key !== 'multiplier'}
+				<input type="hidden" name={key} value={value} />
+			{/if}
+		{/each}
 		<input 
 			type="text" 
 			name="multiplier" 
@@ -343,17 +390,18 @@ span
 </div>
 
 <h2>Zutaten</h2>
-{#each data.ingredients as list}
+{#each data.ingredients as list, listIndex}
 {#if list.name}
 	<h3>{list.name}</h3>
 {/if}
 <div class=ingredients_grid>
-	{#each list.list as item}
+	{#each list.list as item, ingredientIndex}
 		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div>
 		<div class=name>
-			{@html item.name.replace("{{multiplier}}", multiplier * item.amount)}
+			{@html item.name.replace("{{multiplier}}", isNaN(parseFloat(item.amount)) ? multiplier : multiplier * parseFloat(item.amount))}
 			{#if item.name === "Frischhefe" || item.name === "Trockenhefe"}
-				<HefeSwapper {item} {multiplier} on:toggle={(event) => handleHefeToggle(event, item)} />
+				{@const yeastId = yeastIds[`${listIndex}-${ingredientIndex}`] ?? 0}
+				<HefeSwapper {item} {multiplier} {yeastId} />
 			{/if}
 		</div>
 	{/each}
