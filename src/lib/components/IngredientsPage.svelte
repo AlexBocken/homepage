@@ -1,20 +1,69 @@
 <script>
 import { onMount } from 'svelte';
 import { onNavigate } from "$app/navigation";
+import { browser } from '$app/environment';
 import HefeSwapper from './HefeSwapper.svelte';
 export let data
-let multiplier;
-let custom_mul = "…"
+let multiplier = data.multiplier || 1;
 
+// Progressive enhancement - use JS if available
 onMount(() => {
-	// Apply multiplier from URL
-	const urlParams = new URLSearchParams(window.location.search);
-	multiplier = urlParams.get('multiplier') || 1;
+	if (browser) {
+		const urlParams = new URLSearchParams(window.location.search);
+		multiplier = parseFloat(urlParams.get('multiplier')) || 1;
+	}
 })
+
 onNavigate(() => {
-	const urlParams = new URLSearchParams(window.location.search);
-	multiplier = urlParams.get('multiplier') || 1;
+	if (browser) {
+		const urlParams = new URLSearchParams(window.location.search);
+		multiplier = parseFloat(urlParams.get('multiplier')) || 1;
+	}
 })
+
+function handleMultiplierClick(event, value) {
+	if (browser) {
+		event.preventDefault();
+		multiplier = value;
+		
+		// Update URL without reloading
+		const url = new URL(window.location);
+		if (value === 1) {
+			url.searchParams.delete('multiplier');
+		} else {
+			url.searchParams.set('multiplier', value);
+		}
+		window.history.replaceState({}, '', url);
+	}
+	// If no JS, form will submit normally
+}
+
+function handleCustomInput(event) {
+	if (browser) {
+		const value = parseFloat(event.target.value);
+		if (!isNaN(value) && value > 0) {
+			multiplier = value;
+			
+			// Update URL without reloading
+			const url = new URL(window.location);
+			if (value === 1) {
+				url.searchParams.delete('multiplier');
+			} else {
+				url.searchParams.set('multiplier', value);
+			}
+			window.history.replaceState({}, '', url);
+		}
+	}
+}
+
+function handleCustomSubmit(event) {
+	if (browser) {
+		event.preventDefault();
+		// Value already updated by handleCustomInput
+	}
+	// If no JS, form will submit normally
+}
+
 
 function convertFloatsToFractions(inputString) {
   // Split the input string into individual words
@@ -104,22 +153,6 @@ function adjust_amount(string, multiplier){
 	return temp
 }
 
-function apply_if_not_NaN(custom){
-	const multipliers = [0.5, 1, 1.5, 2, 3]
-	if((!isNaN(custom * 1)) && custom != ""){
-		if(multipliers.includes(parseFloat(custom))){
-			multiplier = custom
-			custom_mul = "…"
-		}
-		else{
-			custom_mul = convertFloatsToFractions(custom)
-			multiplier = custom
-		}
-	}
-	else{
-		custom_mul = "…"
-	}
-}
 
 function handleHefeToggle(event, item) {
 	item.name = event.detail.name;
@@ -202,9 +235,67 @@ span
 	padding: 0;
 	margin: 0;
 }
-.multipliers button:last-child{
+.custom-multiplier {
 	display: flex;
 	align-items: center;
+	min-width: 2em;
+	font-size: 1.1rem;
+	border-radius: 0.3rem;
+	border: none;
+	cursor: pointer;
+	transition: 100ms;
+	color: var(--nord0);
+	background-color: var(--nord5);
+	box-shadow: 0px 0px 0.4em 0.05em rgba(0,0,0, 0.2);
+}
+
+.custom-input {
+	width: 3em;
+	padding: 0;
+	margin: 0;
+	border: none;
+	background: transparent;
+	text-align: center;
+	color: inherit;
+	font-size: inherit;
+	outline: none;
+	box-shadow: none;
+}
+
+/* Remove number input arrows */
+.custom-input::-webkit-outer-spin-button,
+.custom-input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.custom-input[type=number] {
+	-moz-appearance: textfield;
+}
+
+.custom-button {
+	padding: 0;
+	margin: 0;
+	border: none;
+	background: transparent;
+	color: inherit;
+	font-size: inherit;
+	cursor: pointer;
+	box-shadow: none;
+}
+
+@media (prefers-color-scheme: dark){
+	.custom-multiplier {
+		color: var(--tag-font);
+		background-color: var(--nord6-dark);
+	}
+}
+
+.custom-multiplier:hover,
+.custom-multiplier:focus-within {
+	scale: 1.2;
+	background-color: var(--orange);
+	box-shadow: 0px 0px 0.5em 0.1em rgba(0,0,0, 0.3);
 }
 </style>
 {#if data.ingredients}
@@ -216,23 +307,39 @@ span
 
 <h3>Menge anpassen:</h3>
 <div class=multipliers>
-	<button class:selected={multiplier==0.5} on:click={() => multiplier=0.5}><sup>1</sup>&frasl;<sub>2</sub>x</button>
-	<button class:selected={multiplier==1} on:click={() => {multiplier=1; custom_mul="…"}}>1x</button>
-	<button class:selected={multiplier==1.5} on:click={() => {multiplier=1.5; custom_mul="…"}}><sup>3</sup>&frasl;<sub>2</sub>x</button>
-	<button class:selected={multiplier==2} on:click="{() => {multiplier=2; custom_mul="…"}}">2x</button>
-	<button class:selected={multiplier==3} on:click="{() => {multiplier=3; custom_mul="…"}}">3x</button>
-	<button class:selected={multiplier==custom_mul} on:click={(e) => { const el = e.composedPath()[0].children[0]; if(el){ el.focus()}}}>
-		<span class:selected={multiplier==custom_mul}
-			on:focus={() => { custom_mul="" }
-				}
-			on:blur="{() => { apply_if_not_NaN(custom_mul);
-					if(custom_mul == "")
-						{custom_mul = "…"}
-						}}"
-					bind:innerHTML={custom_mul}
-					contenteditable > </span>
-		x
-	</button>
+	<form method="get" style="display: inline;">
+		<input type="hidden" name="multiplier" value="0.5" />
+		<button type="submit" class:selected={multiplier==0.5} on:click={(e) => handleMultiplierClick(e, 0.5)}>{@html "<sup>1</sup>/<sub>2</sub>x"}</button>
+	</form>
+	<form method="get" style="display: inline;">
+		<input type="hidden" name="multiplier" value="1" />
+		<button type="submit" class:selected={multiplier==1} on:click={(e) => handleMultiplierClick(e, 1)}>1x</button>
+	</form>
+	<form method="get" style="display: inline;">
+		<input type="hidden" name="multiplier" value="1.5" />
+		<button type="submit" class:selected={multiplier==1.5} on:click={(e) => handleMultiplierClick(e, 1.5)}>{@html "<sup>3</sup>/<sub>2</sub>x"}</button>
+	</form>
+	<form method="get" style="display: inline;">
+		<input type="hidden" name="multiplier" value="2" />
+		<button type="submit" class:selected={multiplier==2} on:click={(e) => handleMultiplierClick(e, 2)}>2x</button>
+	</form>
+	<form method="get" style="display: inline;">
+		<input type="hidden" name="multiplier" value="3" />
+		<button type="submit" class:selected={multiplier==3} on:click={(e) => handleMultiplierClick(e, 3)}>3x</button>
+	</form>
+	<form method="get" style="display: inline;" class="custom-multiplier" on:submit={handleCustomSubmit}>
+		<input 
+			type="text" 
+			name="multiplier" 
+			pattern="[0-9]+(\.[0-9]*)?" 
+			title="Enter a positive number (e.g., 2.5, 0.75, 3.14)" 
+			placeholder="…" 
+			class="custom-input"
+			value={multiplier != 0.5 && multiplier != 1 && multiplier != 1.5 && multiplier != 2 && multiplier != 3 ? multiplier : ''}
+			on:input={handleCustomInput}
+		/>
+		<button type="submit" class="custom-button">x</button>
+	</form>
 </div>
 
 <h2>Zutaten</h2>
