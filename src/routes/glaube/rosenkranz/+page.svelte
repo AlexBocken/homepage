@@ -463,19 +463,19 @@ Der unten abgebildete Rosenkranz zeigt die aktuellen Gehmeinisse des Tages nach 
 			</g>
 			<g id=lbead5>
 				<circle class=lbead />
-				<circle class=hitbox onclick="{true}" />
+				<circle class=hitbox onclick="{true}" role="button" tabindex="0" />
 			</g>
 			<g id=lbead4>
 				<circle class=lbead />
-				<circle class=hitbox onclick="{true}" />
+				<circle class=hitbox onclick="{true}" role="button" tabindex="0" />
 			</g>
 			<g id=lbead3>
 				<circle class=lbead />
-				<circle class=hitbox onclick="{true}" />
+				<circle class=hitbox onclick="{true}" role="button" tabindex="0" />
 			</g>
 			<g id=lbead6>
 				<circle class=lbead />
-				<circle class=hitbox onclick="{true}" />
+				<circle class=hitbox onclick="{true}" role="button" tabindex="0" />
 			</g>
 		</g>
 		<g class=beforedecades>
@@ -490,11 +490,11 @@ Der unten abgebildete Rosenkranz zeigt die aktuellen Gehmeinisse des Tages nach 
 			</g>
 			<g id=lbead1>
 				<circle class=lbead />
-				<circle class=hitbox onclick="{true}" />
+				<circle class=hitbox onclick="{true}" role="button" tabindex="0" />
 			</g>
 			<g id=lbead2>
 				<circle class=lbead />
-				<circle class=hitbox onclick="{true}" />
+				<circle class=hitbox onclick="{true}" role="button" tabindex="0" />
 			</g>
 		</g>
 	</g>

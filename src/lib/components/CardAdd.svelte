@@ -378,7 +378,7 @@ input::placeholder{
 		<div class=tags>
 			{#each card_data.tags as tag}
 				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<div class="tag" tabindex="0" on:keydown={remove_on_enter(event ,tag)} on:click='{remove_from_tags(tag)}'>{tag}</div>
+				<div class="tag" role="button" tabindex="0" on:keydown={remove_on_enter(event ,tag)} on:click='{remove_from_tags(tag)}' aria-label="Tag {tag} entfernen">{tag}</div>
 			{/each}
         	<div class="tag input_wrapper"><span class=input>+</span><input class="tag_input" type="text" on:keydown={add_on_enter} on:focusout={add_to_tags} size="1" bind:value={new_tag} placeholder=Stichwort...></div>
 		</div>
