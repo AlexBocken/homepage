@@ -1,28 +1,30 @@
 <script lang="ts">
-  import { favorites } from '$lib/stores/favorites';
-  import { onMount } from 'svelte';
-  
-  export let recipeId: string; // This will be short_name from the component usage
-  export let isFavorite: boolean = false; // Initial state from server
+  export let recipeId: string;
+  export let isFavorite: boolean = false;
   export let isLoggedIn: boolean = false;
   
-  let currentIsFavorite = isFavorite;
   let isLoading = false;
-
-  // Load current favorite status when component mounts
-  onMount(async () => {
-    if (isLoggedIn) {
-      currentIsFavorite = await favorites.isFavoriteByShortName(recipeId);
-    }
-  });
 
   async function toggleFavorite() {
     if (!isLoggedIn || isLoading) return;
     
     isLoading = true;
+    
     try {
-      await favorites.toggle(recipeId);
-      currentIsFavorite = !currentIsFavorite;
+      const method = isFavorite ? 'DELETE' : 'POST';
+      const response = await fetch('/api/rezepte/favorites', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ recipeId }),
+      });
+      
+      if (response.ok) {
+        isFavorite = !isFavorite;
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
     } finally {
       isLoading = false;
     }
@@ -57,8 +59,8 @@
     class="favorite-button"
     disabled={isLoading}
     on:click={toggleFavorite}
-    title={currentIsFavorite ? 'Favorit entfernen' : 'Als Favorit speichern'}
+    title={isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern'}
   >
-    {currentIsFavorite ? '❤️' : '🖤'}
+    {isFavorite ? '❤️' : '🖤'}
   </button>
 {/if}
