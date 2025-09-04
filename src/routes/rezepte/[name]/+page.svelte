@@ -13,6 +13,7 @@
 	import RecipeNote from '$lib/components/RecipeNote.svelte';
 	import {stripHtmlTags} from '$lib/js/stripHtmlTags';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
+	import { generateRecipeJsonLd } from '$lib/js/recipeJsonLd';
 
     	export let data: PageData;
 
@@ -277,6 +278,7 @@ h4{
 	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{data.short_name}.webp" />
 	<meta property="og:image:type" content="image/webp" />
 	<meta property="og:image:alt" content="{stripHtmlTags(data.name)}" />
+	<link rel="alternate" type="application/ld+json" href="/api/rezepte/json-ld/{data.short_name}" />
 </svelte:head>
 
 <TitleImgParallax src={hero_img_src} {placeholder_src}>
