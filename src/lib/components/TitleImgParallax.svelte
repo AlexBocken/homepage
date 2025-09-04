@@ -173,6 +173,7 @@ dialog button{
 <section class="section">
     <figure class="image-container">
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
     	<div class:zoom-in={isloaded && !isredirected} on:click={show_dialog_img}>
 		<div class=placeholder style="background-image:url({placeholder_src})" >
 			<div class=placeholder_blur>

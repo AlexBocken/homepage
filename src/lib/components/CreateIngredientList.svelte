@@ -411,6 +411,25 @@ h3{
 
 	}
 }
+
+/* Styling for converted div-to-button elements */
+.subheading-button {
+	all: unset;
+	cursor: pointer;
+	user-select: none;
+	display: block;
+	width: 100%;
+	text-align: left;
+}
+
+.ingredient-amount-button, .ingredient-name-button {
+	all: unset;
+	cursor: pointer;
+	user-select: none;
+	display: block;
+	width: 100%;
+	text-align: left;
+}
 </style>
 
 <div class=list_wrapper >
@@ -422,49 +441,47 @@ h3{
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<h3>
 	<div class=move_buttons_container>
-		<button on:click="{() => update_list_position(list_index, 1)}">
+		<button on:click="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
                         <svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
                 </button>
-		<button  on:click="{() => update_list_position(list_index, -1)}">
+		<button  on:click="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
                         <svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 		</button>
 	</div>
 
-	<div on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
+	<button on:click="{() => show_modal_edit_subheading_ingredient(list_index)}" class="subheading-button">
 	{#if list.name }
 		{list.name}
 	{:else}
 		Leer
 	{/if}
-	</div>
+	</button>
 	<div class=mod_icons>
-		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
+		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}" aria-label="Überschrift bearbeiten">
 			<Pen fill=var(--nord1)></Pen>	</button>
-		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}">
+		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label="Liste entfernen">
 			<Cross fill=var(--nord1)></Cross></button>
 	</div>
 	</h3>
 	<div class=ingredients_grid>
 		{#each list.list as ingredient, ingredient_index (ingredient_index)}
 		<div class=move_buttons_container>
-			<button on:click="{() => update_ingredient_position(list_index, ingredient_index, 1)}">
+			<button on:click="{() => update_ingredient_position(list_index, ingredient_index, 1)}" aria-label="Zutat nach oben verschieben">
                 	        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
                 	</button>
-			<button  on:click="{() => update_ingredient_position(list_index, ingredient_index, -1)}">
+			<button  on:click="{() => update_ingredient_position(list_index, ingredient_index, -1)}" aria-label="Zutat nach unten verschieben">
                 	        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 			</button>
 		</div>
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >
+		<button on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} class="ingredient-amount-button">
 			{ingredient.amount} {ingredient.unit}
-		</div>
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div class=force_wrap on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >
+		</button>
+		<button class="force_wrap ingredient-name-button" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
 			{@html ingredient.name}
-		</div>
-		<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
+		</button>
+		<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} aria-label="Zutat bearbeiten">
 			<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
-			<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
+			<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}" aria-label="Zutat entfernen"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
 	{/each}
 	</div>
 {/each}
@@ -485,7 +502,7 @@ h3{
 	<h2>Zutat verändern</h2>
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_ingredient.sublist} placeholder="Kategorie (optional)">
-	<div class=add_ingredient on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<div class=add_ingredient role="group" on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
 	<input type="text" placeholder="250..." bind:value={edit_ingredient.amount} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
 	<input type="text" placeholder="mL..." bind:value={edit_ingredient.unit} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
 	<input type="text" placeholder="Milch..." bind:value={edit_ingredient.name} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>

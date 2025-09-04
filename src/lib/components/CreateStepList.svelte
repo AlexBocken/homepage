@@ -441,6 +441,16 @@ h3{
 		fill: var(--nord4);
 	}
 }
+
+/* Styling for converted div-to-button elements */
+.subheading-button, .step-button {
+	all: unset;
+	cursor: pointer;
+	user-select: none;
+	display: block;
+	width: 100%;
+	text-align: left;
+}
 </style>
 
 <div class=instructions>
@@ -476,23 +486,23 @@ h3{
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<h3>
 	<div class=move_buttons_container>
-		<button on:click="{() => update_list_position(list_index, 1)}">
+		<button on:click="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
                         <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
                 </button>
-		<button  on:click="{() => update_list_position(list_index, -1)}">
+		<button  on:click="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
                         <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 		</button>
 	</div>
-	<div on:click={() => show_modal_edit_subheading_step(list_index)}>
+	<button on:click={() => show_modal_edit_subheading_step(list_index)} class="subheading-button">
 	{#if list.name}
 		{list.name}
 	{:else}
 		Leer
 	{/if}
-	</div>
-	<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}">
+	</button>
+	<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}" aria-label="Überschrift bearbeiten">
 			<Pen fill=var(--nord1)></Pen>	</button>
-		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}">
+		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label="Liste entfernen">
 				<Cross fill=var(--nord1)></Cross>
 		</button>
 	</h3>
@@ -501,17 +511,17 @@ h3{
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<li>
 			<div class="move_buttons_container step_move_buttons">
-				<button on:click="{() => update_step_position(list_index, step_index, 1)}">
+				<button on:click="{() => update_step_position(list_index, step_index, 1)}" aria-label="Schritt nach oben verschieben">
 		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 		                </button>
-				<button  on:click="{() => update_step_position(list_index, step_index, -1)}">
+				<button  on:click="{() => update_step_position(list_index, step_index, -1)}" aria-label="Schritt nach unten verschieben">
 		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 				</button>
 			</div>
 			<div>
-				<div on:click={() => show_modal_edit_step(list_index, step_index)}>
+				<button on:click={() => show_modal_edit_step(list_index, step_index)} class="step-button">
 					{@html step}
-				</div>
+				</button>
 			<div><button class="action_button button_subtle" on:click={() => show_modal_edit_step(list_index, step_index)}>
 				<Pen fill=var(--nord1)></Pen>
 		</button>
