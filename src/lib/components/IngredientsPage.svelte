@@ -1,6 +1,7 @@
 <script>
 import { onMount } from 'svelte';
 import { onNavigate } from "$app/navigation";
+import HefeSwapper from './HefeSwapper.svelte';
 export let data
 let multiplier;
 let custom_mul = "…"
@@ -119,6 +120,15 @@ function apply_if_not_NaN(custom){
 		custom_mul = "…"
 	}
 }
+
+function handleHefeToggle(event, item) {
+	item.name = event.detail.name;
+	item.amount = event.detail.amount;
+	if (event.detail.unit) {
+		item.unit = event.detail.unit;
+	}
+	data = data; // Trigger reactivity
+}
 </script>
 <style>
 *{
@@ -232,7 +242,13 @@ span
 {/if}
 <div class=ingredients_grid>
 	{#each list.list as item}
-		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div><div class=name>{@html item.name.replace("{{multiplier}}", multiplier * item.amount)}</div>
+		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div>
+		<div class=name>
+			{@html item.name.replace("{{multiplier}}", multiplier * item.amount)}
+			{#if item.name === "Frischhefe" || item.name === "Trockenhefe"}
+				<HefeSwapper {item} {multiplier} on:toggle={(event) => handleHefeToggle(event, item)} />
+			{/if}
+		</div>
 	{/each}
 </div>
 {/each}
