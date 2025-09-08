@@ -2,6 +2,8 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { fly } from 'svelte/transition';
+  import { quintOut } from 'svelte/easing';
   import PaymentModal from '$lib/components/PaymentModal.svelte';
 
   let showModal = false;
@@ -41,7 +43,11 @@
   <div class="side-panel">
     {#if showModal}
       <div class="modal-content">
-        <PaymentModal {paymentId} on:close={() => showModal = false} />
+        {#key paymentId}
+          <div in:fly={{x: 50, duration: 300, easing: quintOut}} out:fly={{x: -50, duration: 300, easing: quintOut}}>
+            <PaymentModal {paymentId} on:close={() => showModal = false} />
+          </div>
+        {/key}
       </div>
     {/if}
   </div>
@@ -82,19 +88,17 @@
   }
 
   .modal-content {
-    opacity: 0;
-    animation: fadeIn 0.3s ease-out 0.1s forwards;
+    position: relative;
+    height: 100%;
   }
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+  .modal-content > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
   }
 
   @media (max-width: 768px) {
