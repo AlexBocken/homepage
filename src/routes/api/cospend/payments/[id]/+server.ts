@@ -61,6 +61,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
         paidBy: data.paidBy,
         date: data.date ? new Date(data.date) : payment.date,
         image: data.image,
+        category: data.category || payment.category,
         splitMethod: data.splitMethod
       },
       { new: true }

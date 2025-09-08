@@ -9,6 +9,7 @@ export interface IPayment {
   paidBy: string; // username/nickname of the person who paid
   date: Date;
   image?: string; // path to uploaded image
+  category: 'groceries' | 'shopping' | 'travel' | 'restaurant' | 'utilities' | 'fun';
   splitMethod: 'equal' | 'full' | 'proportional';
   createdBy: string; // username/nickname of the person who created the payment
   createdAt?: Date;
@@ -50,6 +51,12 @@ const PaymentSchema = new mongoose.Schema(
     image: { 
       type: String,
       trim: true 
+    },
+    category: {
+      type: String,
+      required: true,
+      enum: ['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun'],
+      default: 'groceries'
     },
     splitMethod: {
       type: String,

@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { pushState } from '$app/navigation';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
 
   export let data; // Used by the layout for session data
 
@@ -109,8 +110,12 @@
                 >
                   <div class="activity-header">
                     <div class="user-info">
-                      <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
+                      <div class="payment-title-row">
+                        <span class="category-emoji">{getCategoryEmoji(split.paymentId?.category || 'groceries')}</span>
+                        <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
+                      </div>
                       <span class="username">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
+                      <span class="category-name">{getCategoryName(split.paymentId?.category || 'groceries')}</span>
                     </div>
                     <div class="activity-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                       {#if split.amount > 0}
@@ -366,6 +371,23 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+  }
+
+  .payment-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .category-emoji {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .category-name {
+    color: #888;
+    font-size: 0.8rem;
+    font-style: italic;
   }
 
   .payment-title {

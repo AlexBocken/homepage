@@ -1,13 +1,18 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { getCategoryOptions } from '$lib/utils/categories';
   
   export let data;
 
   let payment = null;
   let loading = true;
   let saving = false;
+  let uploading = false;
   let error = null;
+  let imageFile = null;
+  
+  $: categoryOptions = getCategoryOptions();
 
   onMount(async () => {
     await loadPayment();
@@ -25,6 +30,45 @@
       error = err.message;
     } finally {
       loading = false;
+    }
+  }
+
+  async function handleImageUpload() {
+    if (!imageFile) return;
+
+    uploading = true;
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const response = await fetch('/api/cospend/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const result = await response.json();
+      payment.image = result.imageUrl;
+      imageFile = null;
+    } catch (err) {
+      error = err.message;
+    } finally {
+      uploading = false;
+    }
+  }
+
+  function handleImageRemove() {
+    payment.image = null;
+  }
+
+  function handleFileChange(event) {
+    const file = event.target.files[0];
+    if (file) {
+      imageFile = file;
+      handleImageUpload();
     }
   }
 
@@ -98,6 +142,15 @@
           ></textarea>
         </div>
 
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" bind:value={payment.category} required>
+            {#each categoryOptions as option}
+              <option value={option.value}>{option.label}</option>
+            {/each}
+          </select>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="amount">Amount (CHF) *</label>
@@ -131,6 +184,38 @@
             bind:value={payment.paidBy} 
             required
           />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Receipt Image</h2>
+        
+        {#if payment.image}
+          <div class="current-image">
+            <img src={payment.image} alt="Receipt" class="receipt-preview" />
+            <div class="image-actions">
+              <button type="button" class="btn-remove" on:click={handleImageRemove}>
+                Remove Image
+              </button>
+            </div>
+          </div>
+        {/if}
+
+        <div class="form-group">
+          <label for="imageUpload" class="upload-label">
+            {payment.image ? 'Replace Image' : 'Upload Receipt Image'}
+          </label>
+          <input 
+            type="file" 
+            id="imageUpload" 
+            accept="image/*"
+            on:change={handleFileChange}
+            disabled={uploading}
+            class="file-input"
+          />
+          {#if uploading}
+            <div class="upload-status">Uploading image...</div>
+          {/if}
         </div>
       </div>
 
@@ -242,7 +327,7 @@
     color: #555;
   }
 
-  input, textarea {
+  input, textarea, select {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ddd;
@@ -251,10 +336,15 @@
     box-sizing: border-box;
   }
 
-  input:focus, textarea:focus {
+  input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: #1976d2;
     box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  }
+
+  select {
+    background-color: white;
+    cursor: pointer;
   }
 
   .splits-display {
@@ -327,6 +417,78 @@
 
   .btn-secondary:hover {
     background-color: #e8e8e8;
+  }
+
+  .current-image {
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .receipt-preview {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    border: 1px solid #ddd;
+    margin-bottom: 0.75rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .image-actions {
+    display: flex;
+    justify-content: center;
+  }
+
+  .btn-remove {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+
+  .btn-remove:hover {
+    background-color: #c62828;
+  }
+
+  .upload-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+  }
+
+  .file-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px dashed #ddd;
+    border-radius: 0.5rem;
+    background-color: #fafafa;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .file-input:hover {
+    border-color: #1976d2;
+    background-color: #f5f5f5;
+  }
+
+  .file-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .upload-status {
+    margin-top: 0.5rem;
+    color: #1976d2;
+    font-size: 0.9rem;
+    text-align: center;
   }
 
   @media (max-width: 600px) {
