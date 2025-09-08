@@ -1,38 +1,76 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { json } from '@sveltejs/kit';
-import { Payment } from '$lib/models/Payment'; // adjust path as needed
-import { dbConnect, dbDisconnect } from '$lib/db/db';
+import { PaymentSplit } from '../../../../models/PaymentSplit';
+import { Payment } from '../../../../models/Payment'; // Need to import Payment for populate to work
+import { dbConnect, dbDisconnect } from '../../../../utils/db';
+import { error, json } from '@sveltejs/kit';
 
-const UPLOAD_DIR = '/var/lib/www/static/test';
-const BASE_CURRENCY = 'CHF'; // Default currency
-
-export const GET: RequestHandler = async ({ request, locals }) => {
-    await dbConnect();
-
-    const result = await Payment.aggregate([
-  {
-    $group: {
-      _id: "$paid_by",
-      totalPaid: { $sum: "$total_amount" },
-      totalForSelf: { $sum: { $ifNull: ["$for_self", 0] } },
-      totalForOther: { $sum: { $ifNull: ["$for_other", 0] } }
-    }
-  },
-  {
-    $project: {
-      _id: 0,
-      paid_by: "$_id",
-      netTotal: {
-	$multiply: [
-		{ $add: [
-          { $subtract: ["$totalPaid", "$totalForSelf"] },
-	  "$totalForOther"
-        ] },
-	0.5]
-      }
-    }
+export const GET: RequestHandler = async ({ locals, url }) => {
+  const auth = await locals.auth();
+  if (!auth || !auth.user?.nickname) {
+    throw error(401, 'Not logged in');
   }
-]);
+
+  const username = auth.user.nickname;
+  const includeAll = url.searchParams.get('all') === 'true';
+
+  await dbConnect();
+  
+  try {
+    if (includeAll) {
+      const allSplits = await PaymentSplit.aggregate([
+        {
+          $group: {
+            _id: '$username',
+            totalOwed: { $sum: { $cond: [{ $gt: ['$amount', 0] }, '$amount', 0] } },
+            totalOwing: { $sum: { $cond: [{ $lt: ['$amount', 0] }, { $abs: '$amount' }, 0] } },
+            netBalance: { $sum: '$amount' }
+          }
+        },
+        {
+          $project: {
+            username: '$_id',
+            totalOwed: 1,
+            totalOwing: 1,
+            netBalance: 1,
+            _id: 0
+          }
+        }
+      ]);
+
+      const currentUserBalance = allSplits.find(balance => balance.username === username) || {
+        username,
+        totalOwed: 0,
+        totalOwing: 0,
+        netBalance: 0
+      };
+
+      return json({
+        currentUser: currentUserBalance,
+        allBalances: allSplits
+      });
+
+    } else {
+      const userSplits = await PaymentSplit.find({ username }).lean();
+      
+      // Calculate net balance: negative = you are owed money, positive = you owe money
+      const netBalance = userSplits.reduce((sum, split) => sum + split.amount, 0);
+
+      const recentSplits = await PaymentSplit.find({ username })
+        .populate('paymentId')
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean();
+
+      return json({
+        netBalance,
+        recentSplits
+      });
+    }
+
+  } catch (e) {
+    console.error('Error calculating balance:', e);
+    throw error(500, 'Failed to calculate balance');
+  } finally {
     await dbDisconnect();
-    return json(result);
+  }
 };
