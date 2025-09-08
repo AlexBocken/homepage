@@ -38,38 +38,63 @@
     <slot />
   </div>
   
-  {#if showModal}
-    <div class="side-panel">
-      <PaymentModal {paymentId} on:close={() => showModal = false} />
-    </div>
-  {/if}
+  <div class="side-panel">
+    {#if showModal}
+      <div class="modal-content">
+        <PaymentModal {paymentId} on:close={() => showModal = false} />
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
   .layout-container {
     display: flex;
     min-height: 100vh;
-    transition: all 0.3s ease;
   }
 
   .main-content {
     flex: 1;
-    transition: all 0.3s ease;
+    transition: margin-right 0.3s ease-out;
   }
 
   .layout-container.has-modal .main-content {
-    flex: 0 0 60%;
+    margin-right: 400px;
   }
 
   .side-panel {
-    flex: 0 0 40%;
-    min-width: 400px;
-    max-width: 500px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100vh;
     background: white;
     border-left: 1px solid #dee2e6;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     z-index: 100;
     overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
+  }
+
+  .layout-container.has-modal .side-panel {
+    transform: translateX(0);
+  }
+
+  .modal-content {
+    opacity: 0;
+    animation: fadeIn 0.3s ease-out 0.1s forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   @media (max-width: 768px) {

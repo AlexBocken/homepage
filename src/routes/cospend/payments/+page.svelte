@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import ProfilePicture from '$lib/components/ProfilePicture.svelte';
 
   export let data;
 
@@ -133,11 +134,14 @@
       {#each payments as payment}
         <div class="payment-card">
           <div class="payment-header">
-            <div class="payment-title">
-              <h3>{payment.title}</h3>
-              <div class="payment-meta">
-                <span class="date">{formatDate(payment.date)}</span>
-                <span class="amount">{formatCurrency(payment.amount)}</span>
+            <div class="payment-title-section">
+              <ProfilePicture username={payment.paidBy} size={40} />
+              <div class="payment-title">
+                <h3>{payment.title}</h3>
+                <div class="payment-meta">
+                  <span class="date">{formatDate(payment.date)}</span>
+                  <span class="amount">{formatCurrency(payment.amount)}</span>
+                </div>
               </div>
             </div>
             {#if payment.image}
@@ -333,6 +337,13 @@
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 1rem;
+  }
+
+  .payment-title-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex: 1;
   }
 
   .payment-title h3 {

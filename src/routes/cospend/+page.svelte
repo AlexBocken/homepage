@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { pushState } from '$app/navigation';
+  import ProfilePicture from '$lib/components/ProfilePicture.svelte';
 
   export let data; // Used by the layout for session data
 
@@ -96,39 +97,44 @@
     {#if balance.recentSplits && balance.recentSplits.length > 0}
       <div class="recent-activity">
         <h2>Recent Activity</h2>
-        <div class="activity-list">
+        <div class="activity-dialog">
           {#each balance.recentSplits as split}
-            <a 
-              href="/cospend/payments/view/{split.paymentId?._id}" 
-              class="activity-item"
-              on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
-            >
-              <div class="activity-info">
-                <div class="activity-header">
-                  <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
-                  <div class="activity-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
-                    {#if split.amount > 0}
-                      -{formatCurrency(split.amount)}
-                    {:else if split.amount < 0}
-                      +{formatCurrency(split.amount)}
-                    {:else}
-                      even
+            <div class="activity-message" class:is-me={split.paymentId?.paidBy === data.session?.user?.nickname}>
+              <div class="message-content">
+                <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={36} />
+                <a 
+                  href="/cospend/payments/view/{split.paymentId?._id}" 
+                  class="activity-bubble"
+                  on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
+                >
+                  <div class="activity-header">
+                    <div class="user-info">
+                      <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
+                      <span class="username">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
+                    </div>
+                    <div class="activity-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
+                      {#if split.amount > 0}
+                        -{formatCurrency(split.amount)}
+                      {:else if split.amount < 0}
+                        +{formatCurrency(split.amount)}
+                      {:else}
+                        even
+                      {/if}
+                    </div>
+                  </div>
+                  <div class="payment-details">
+                    <div class="payment-meta">
+                      <span class="payment-date">{formatDate(split.createdAt)}</span>
+                    </div>
+                    {#if split.paymentId?.description}
+                      <div class="payment-description">
+                        {truncateDescription(split.paymentId.description)}
+                      </div>
                     {/if}
                   </div>
-                </div>
-                <div class="payment-details">
-                  <div class="payment-meta">
-                    <span class="paid-by">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
-                    <span class="payment-date">{formatDate(split.createdAt)}</span>
-                  </div>
-                  {#if split.paymentId?.description}
-                    <div class="payment-description">
-                      {truncateDescription(split.paymentId.description)}
-                    </div>
-                  {/if}
-                </div>
+                </a>
               </div>
-            </a>
+            </div>
           {/each}
         </div>
       </div>
@@ -277,45 +283,112 @@
     color: #333;
   }
 
-  .activity-list {
+  .activity-dialog {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
   }
 
-  .activity-item {
-    display: block;
-    padding: 1rem;
+  .activity-message {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .activity-message.is-me {
+    flex-direction: row-reverse;
+  }
+
+  .message-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .activity-message.is-me .message-content {
+    flex-direction: row-reverse;
+  }
+
+  .activity-bubble {
     background: #f8f9fa;
-    border-radius: 0.5rem;
+    border-radius: 1rem;
+    padding: 1rem;
+    position: relative;
+    border: 1px solid #e9ecef;
     text-decoration: none;
     color: inherit;
+    display: block;
     transition: all 0.2s;
-    border: 1px solid transparent;
+    flex: 1;
   }
 
-  .activity-item:hover {
-    background: #e9ecef;
-    border-color: #1976d2;
+  .activity-message.is-me .activity-bubble {
+    background: #e3f2fd;
+    border-color: #2196f3;
+  }
+
+  .activity-bubble:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
-  .activity-info {
-    width: 100%;
+  .activity-bubble::before {
+    content: '';
+    position: absolute;
+    top: 1rem;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+  }
+
+  .activity-bubble::before {
+    left: -15px;
+    border-right-color: #f8f9fa;
+  }
+
+  .activity-message.is-me .activity-bubble::before {
+    left: auto;
+    right: -15px;
+    border-left-color: #e3f2fd;
+    border-right-color: transparent;
   }
 
   .activity-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   .payment-title {
     color: #333;
     font-size: 1.1rem;
-    margin-right: 1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .username {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .you-badge {
+    background-color: #1976d2;
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
   }
 
   .activity-amount {
