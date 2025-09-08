@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   
   export let data;
 
@@ -123,10 +124,13 @@
             {#each payment.splits as split}
               <div class="split-item" class:current-user={split.username === data.session.user.nickname}>
                 <div class="split-user">
-                  <span class="username">{split.username}</span>
-                  {#if split.username === data.session.user.nickname}
-                    <span class="you-badge">You</span>
-                  {/if}
+                  <ProfilePicture username={split.username} size={24} />
+                  <div class="user-info">
+                    <span class="username">{split.username}</span>
+                    {#if split.username === data.session.user.nickname}
+                      <span class="you-badge">You</span>
+                    {/if}
+                  </div>
                 </div>
                 <div class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                   {#if split.amount > 0}
@@ -327,6 +331,12 @@
   }
 
   .split-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .split-user .user-info {
     display: flex;
     align-items: center;
     gap: 0.5rem;
