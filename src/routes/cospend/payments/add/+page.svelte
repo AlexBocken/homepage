@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { getCategoryOptions } from '$lib/utils/categories';
   
   export let data;
 
@@ -10,6 +11,7 @@
     amount: '',
     paidBy: data.session?.user?.nickname || '',
     date: new Date().toISOString().split('T')[0],
+    category: 'groceries',
     splitMethod: 'equal',
     splits: []
   };
@@ -21,6 +23,8 @@
   let splitAmounts = {};
   let loading = false;
   let error = null;
+  
+  $: categoryOptions = getCategoryOptions();
 
   onMount(() => {
     if (data.session?.user?.nickname) {
@@ -236,6 +240,15 @@
           placeholder="Additional details..."
           rows="3"
         ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category *</label>
+        <select id="category" bind:value={formData.category} required>
+          {#each categoryOptions as option}
+            <option value={option.value}>{option.label}</option>
+          {/each}
+        </select>
       </div>
 
       <div class="form-row">

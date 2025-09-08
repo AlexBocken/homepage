@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   const data = await request.json();
-  const { title, description, amount, paidBy, date, image, splitMethod, splits } = data;
+  const { title, description, amount, paidBy, date, image, category, splitMethod, splits } = data;
 
   if (!title || !amount || !paidBy || !splitMethod || !splits) {
     throw error(400, 'Missing required fields');
@@ -52,6 +52,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Invalid split method');
   }
 
+  if (category && !['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun'].includes(category)) {
+    throw error(400, 'Invalid category');
+  }
+
   await dbConnect();
   
   try {
@@ -63,6 +67,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       paidBy,
       date: date ? new Date(date) : new Date(),
       image,
+      category: category || 'groceries',
       splitMethod,
       createdBy: auth.user.nickname
     });

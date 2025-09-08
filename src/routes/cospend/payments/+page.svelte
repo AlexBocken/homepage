@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
 
   export let data;
 
@@ -137,8 +138,12 @@
             <div class="payment-title-section">
               <ProfilePicture username={payment.paidBy} size={40} />
               <div class="payment-title">
-                <h3>{payment.title}</h3>
+                <div class="title-with-category">
+                  <span class="category-emoji">{getCategoryEmoji(payment.category || 'groceries')}</span>
+                  <h3>{payment.title}</h3>
+                </div>
                 <div class="payment-meta">
+                  <span class="category-name">{getCategoryName(payment.category || 'groceries')}</span>
                   <span class="date">{formatDate(payment.date)}</span>
                   <span class="amount">{formatCurrency(payment.amount)}</span>
                 </div>
@@ -346,8 +351,20 @@
     flex: 1;
   }
 
+  .title-with-category {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .title-with-category .category-emoji {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
   .payment-title h3 {
-    margin: 0 0 0.5rem 0;
+    margin: 0;
     color: #333;
     font-size: 1.25rem;
   }
@@ -357,6 +374,13 @@
     gap: 1rem;
     font-size: 0.9rem;
     color: #666;
+    flex-wrap: wrap;
+  }
+
+  .payment-meta .category-name {
+    color: #888;
+    font-style: italic;
+    font-size: 0.8rem;
   }
 
   .payment-meta .amount {
