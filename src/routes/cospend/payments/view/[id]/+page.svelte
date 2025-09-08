@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   
   export let data;
 
@@ -77,7 +78,10 @@
     <div class="payment-card">
       <div class="payment-header">
         <div class="title-section">
-          <h1>{payment.title}</h1>
+          <div class="title-with-category">
+            <span class="category-emoji">{getCategoryEmoji(payment.category || 'groceries')}</span>
+            <h1>{payment.title}</h1>
+          </div>
           <div class="payment-amount">
             {formatCurrency(payment.amount)}
           </div>
@@ -102,6 +106,10 @@
           <div class="info-item">
             <span class="label">Created by:</span>
             <span class="value">{payment.createdBy}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Category:</span>
+            <span class="value">{getCategoryName(payment.category || 'groceries')}</span>
           </div>
           <div class="info-item">
             <span class="label">Split method:</span>
@@ -226,8 +234,20 @@
     border-bottom: 1px solid #dee2e6;
   }
 
+  .title-with-category {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .title-with-category .category-emoji {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
   .title-section h1 {
-    margin: 0 0 0.5rem 0;
+    margin: 0;
     color: #333;
     font-size: 1.75rem;
   }
