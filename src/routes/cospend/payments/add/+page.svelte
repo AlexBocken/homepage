@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { getCategoryOptions } from '$lib/utils/categories';
+  import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
+  import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   
   export let data;
 
@@ -18,17 +20,34 @@
 
   let imageFile = null;
   let imagePreview = '';
-  let users = [data.session?.user?.nickname || ''];
+  let users = [];
   let newUser = '';
   let splitAmounts = {};
+  let personalAmounts = {};
   let loading = false;
   let error = null;
+  let personalTotalError = false;
+  let predefinedMode = isPredefinedUsersMode();
   
   $: categoryOptions = getCategoryOptions();
 
   onMount(() => {
-    if (data.session?.user?.nickname) {
-      addSplitForUser(data.session.user.nickname);
+    if (predefinedMode) {
+      // Use predefined users and always split between them
+      users = [...PREDEFINED_USERS];
+      users.forEach(user => addSplitForUser(user));
+      // Default to current user as payer if they're in the predefined list
+      if (data.session?.user?.nickname && PREDEFINED_USERS.includes(data.session.user.nickname)) {
+        formData.paidBy = data.session.user.nickname;
+      } else {
+        formData.paidBy = PREDEFINED_USERS[0];
+      }
+    } else {
+      // Original behavior for manual user management
+      if (data.session?.user?.nickname) {
+        users = [data.session.user.nickname];
+        addSplitForUser(data.session.user.nickname);
+      }
     }
   });
 
@@ -61,6 +80,8 @@
   }
 
   function addUser() {
+    if (predefinedMode) return; // No adding users in predefined mode
+    
     if (newUser.trim() && !users.includes(newUser.trim())) {
       users = [...users, newUser.trim()];
       addSplitForUser(newUser.trim());
@@ -69,6 +90,8 @@
   }
 
   function removeUser(userToRemove) {
+    if (predefinedMode) return; // No removing users in predefined mode
+    
     if (users.length > 1 && userToRemove !== data.session.user.nickname) {
       users = users.filter(u => u !== userToRemove);
       delete splitAmounts[userToRemove];
@@ -114,11 +137,42 @@
     splitAmounts = { ...splitAmounts };
   }
 
+  function calculatePersonalEqualSplit() {
+    if (!formData.amount || users.length === 0) return;
+    
+    const totalAmount = parseFloat(formData.amount);
+    
+    // Calculate total personal amounts
+    const totalPersonal = users.reduce((sum, user) => {
+      return sum + (parseFloat(personalAmounts[user]) || 0);
+    }, 0);
+    
+    // Remaining amount to be split equally
+    const remainder = Math.max(0, totalAmount - totalPersonal);
+    const equalShare = remainder / users.length;
+    
+    users.forEach(user => {
+      const personalAmount = parseFloat(personalAmounts[user]) || 0;
+      const totalOwed = personalAmount + equalShare;
+      
+      if (user === formData.paidBy) {
+        // Person who paid gets back what others owe minus what they personally used
+        splitAmounts[user] = totalOwed - totalAmount;
+      } else {
+        // Others owe their personal amount + equal share
+        splitAmounts[user] = totalOwed;
+      }
+    });
+    splitAmounts = { ...splitAmounts };
+  }
+
   function handleSplitMethodChange() {
     if (formData.splitMethod === 'equal') {
       calculateEqualSplits();
     } else if (formData.splitMethod === 'full') {
       calculateFullPayment();
+    } else if (formData.splitMethod === 'personal_equal') {
+      calculatePersonalEqualSplit();
     }
   }
 
@@ -152,6 +206,17 @@
       return;
     }
 
+    // Validate personal amounts for personal_equal split
+    if (formData.splitMethod === 'personal_equal') {
+      const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+      const totalAmount = parseFloat(formData.amount);
+      
+      if (totalPersonal > totalAmount) {
+        error = 'Personal amounts cannot exceed the total payment amount';
+        return;
+      }
+    }
+
     if (users.length === 0) {
       error = 'Please add at least one user to split with';
       return;
@@ -169,7 +234,8 @@
       const splits = users.map(user => ({
         username: user,
         amount: splitAmounts[user] || 0,
-        proportion: formData.splitMethod === 'proportional' ? (splitAmounts[user] || 0) / parseFloat(formData.amount) : undefined
+        proportion: formData.splitMethod === 'proportional' ? (splitAmounts[user] || 0) / parseFloat(formData.amount) : undefined,
+        personalAmount: formData.splitMethod === 'personal_equal' ? (parseFloat(personalAmounts[user]) || 0) : undefined
       }));
 
       const payload = {
@@ -204,6 +270,17 @@
 
   $: if (formData.amount && formData.splitMethod && formData.paidBy) {
     handleSplitMethodChange();
+  }
+
+  // Validate and recalculate when personal amounts change
+  $: if (formData.splitMethod === 'personal_equal' && personalAmounts && formData.amount) {
+    const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+    const totalAmount = parseFloat(formData.amount);
+    personalTotalError = totalPersonal > totalAmount;
+    
+    if (!personalTotalError) {
+      calculatePersonalEqualSplit();
+    }
   }
 </script>
 
@@ -323,28 +400,46 @@
     <div class="form-section">
       <h2>Split Between Users</h2>
       
-      <div class="users-list">
-        {#each users as user}
-          <div class="user-item">
-            <span>{user}</span>
-            {#if user !== data.session.user.nickname}
-              <button type="button" class="remove-user" on:click={() => removeUser(user)}>
-                Remove
-              </button>
-            {/if}
+      {#if predefinedMode}
+        <div class="predefined-users">
+          <p class="predefined-note">Splitting between predefined users:</p>
+          <div class="users-list">
+            {#each users as user}
+              <div class="user-item with-profile">
+                <ProfilePicture username={user} size={32} />
+                <span class="username">{user}</span>
+                {#if user === data.session?.user?.nickname}
+                  <span class="you-badge">You</span>
+                {/if}
+              </div>
+            {/each}
           </div>
-        {/each}
-      </div>
+        </div>
+      {:else}
+        <div class="users-list">
+          {#each users as user}
+            <div class="user-item with-profile">
+              <ProfilePicture username={user} size={32} />
+              <span class="username">{user}</span>
+              {#if user !== data.session.user.nickname}
+                <button type="button" class="remove-user" on:click={() => removeUser(user)}>
+                  Remove
+                </button>
+              {/if}
+            </div>
+          {/each}
+        </div>
 
-      <div class="add-user">
-        <input 
-          type="text" 
-          bind:value={newUser} 
-          placeholder="Add user..."
-          on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addUser())}
-        />
-        <button type="button" on:click={addUser}>Add User</button>
-      </div>
+        <div class="add-user">
+          <input 
+            type="text" 
+            bind:value={newUser} 
+            placeholder="Add user..."
+            on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addUser())}
+          />
+          <button type="button" on:click={addUser}>Add User</button>
+        </div>
+      {/if}
     </div>
 
     <div class="form-section">
@@ -353,7 +448,11 @@
       <div class="split-method">
         <label>
           <input type="radio" bind:group={formData.splitMethod} value="equal" />
-          Equal Split
+          {predefinedMode && users.length === 2 ? 'Split 50/50' : 'Equal Split'}
+        </label>
+        <label>
+          <input type="radio" bind:group={formData.splitMethod} value="personal_equal" />
+          Personal + Equal Split
         </label>
         <label>
           <input type="radio" bind:group={formData.splitMethod} value="full" />
@@ -382,12 +481,43 @@
         </div>
       {/if}
 
+      {#if formData.splitMethod === 'personal_equal'}
+        <div class="personal-splits">
+          <h3>Personal Amounts</h3>
+          <p class="description">Enter personal amounts for each user. The remainder will be split equally.</p>
+          {#each users as user}
+            <div class="split-input">
+              <label>{user}</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                min="0"
+                bind:value={personalAmounts[user]}
+                placeholder="0.00"
+              />
+            </div>
+          {/each}
+          {#if formData.amount}
+            <div class="remainder-info" class:error={personalTotalError}>
+              <span>Total Personal: CHF {Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0).toFixed(2)}</span>
+              <span>Remainder to Split: CHF {Math.max(0, parseFloat(formData.amount) - Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)).toFixed(2)}</span>
+              {#if personalTotalError}
+                <div class="error-message">⚠️ Personal amounts exceed total payment amount!</div>
+              {/if}
+            </div>
+          {/if}
+        </div>
+      {/if}
+
       {#if Object.keys(splitAmounts).length > 0}
         <div class="split-preview">
           <h3>Split Preview</h3>
           {#each users as user}
             <div class="split-item">
-              <span>{user}</span>
+              <div class="split-user">
+                <ProfilePicture username={user} size={24} />
+                <span class="username">{user}</span>
+              </div>
               <span class="amount" class:positive={splitAmounts[user] < 0} class:negative={splitAmounts[user] > 0}>
                 {#if splitAmounts[user] > 0}
                   owes CHF {splitAmounts[user].toFixed(2)}
@@ -564,6 +694,37 @@
     border-radius: 1rem;
   }
 
+  .user-item.with-profile {
+    gap: 0.75rem;
+  }
+
+  .user-item .username {
+    font-weight: 500;
+  }
+
+  .you-badge {
+    background-color: #1976d2;
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .predefined-users {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+  }
+
+  .predefined-note {
+    margin: 0 0 1rem 0;
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
   .remove-user {
     background-color: #d32f2f;
     color: white;
@@ -652,6 +813,12 @@
     margin-bottom: 0.5rem;
   }
 
+  .split-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   .amount.positive {
     color: #2e7d32;
     font-weight: 500;
@@ -707,6 +874,43 @@
 
   .btn-secondary:hover {
     background-color: #e8e8e8;
+  }
+
+  .personal-splits {
+    margin-top: 1rem;
+  }
+
+  .personal-splits .description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-style: italic;
+  }
+
+  .remainder-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+  }
+
+  .remainder-info.error {
+    background-color: #fff5f5;
+    border-color: #fed7d7;
+  }
+
+  .remainder-info span {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .error-message {
+    color: #d32f2f;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
   }
 
   @media (max-width: 600px) {

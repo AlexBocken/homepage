@@ -47,6 +47,8 @@
       return `Split equally among ${payment.splits.length} people`;
     } else if (payment.splitMethod === 'full') {
       return `Paid in full by ${payment.paidBy}`;
+    } else if (payment.splitMethod === 'personal_equal') {
+      return `Personal amounts + equal split among ${payment.splits.length} people`;
     } else {
       return `Custom split among ${payment.splits.length} people`;
     }

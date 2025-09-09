@@ -48,12 +48,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Amount must be positive');
   }
 
-  if (!['equal', 'full', 'proportional'].includes(splitMethod)) {
+  if (!['equal', 'full', 'proportional', 'personal_equal'].includes(splitMethod)) {
     throw error(400, 'Invalid split method');
   }
 
   if (category && !['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun'].includes(category)) {
     throw error(400, 'Invalid category');
+  }
+
+  // Validate personal + equal split method
+  if (splitMethod === 'personal_equal' && splits) {
+    const totalPersonal = splits.reduce((sum: number, split: any) => {
+      return sum + (parseFloat(split.personalAmount) || 0);
+    }, 0);
+    
+    if (totalPersonal > amount) {
+      throw error(400, 'Personal amounts cannot exceed total payment amount');
+    }
   }
 
   await dbConnect();
@@ -77,7 +88,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         paymentId: payment._id,
         username: split.username,
         amount: split.amount,
-        proportion: split.proportion
+        proportion: split.proportion,
+        personalAmount: split.personalAmount
       });
     });
 
