@@ -3,6 +3,8 @@
   import { page } from '$app/stores';
   import { pushState } from '$app/navigation';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import EnhancedBalance from '$lib/components/EnhancedBalance.svelte';
+  import DebtBreakdown from '$lib/components/DebtBreakdown.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
 
   export let data; // Used by the layout for session data
@@ -67,83 +69,67 @@
     <p>Track and split expenses with your friends and family</p>
   </div>
 
+  <EnhancedBalance />
+
+  <div class="actions">
+    <a href="/cospend/payments/add" class="btn btn-primary">Add Payment</a>
+    <a href="/cospend/payments" class="btn btn-secondary">View All Payments</a>
+  </div>
+
+  <DebtBreakdown />
+
   {#if loading}
-    <div class="loading">Loading your balance...</div>
+    <div class="loading">Loading recent activity...</div>
   {:else if error}
     <div class="error">Error: {error}</div>
-  {:else}
-    <div class="balance-cards">
-      <div class="balance-card net-balance" class:positive={balance.netBalance <= 0} class:negative={balance.netBalance > 0}>
-        <h3>Your Balance</h3>
-        <div class="amount">
-          {#if balance.netBalance < 0}
-            <span class="positive">+{formatCurrency(balance.netBalance)}</span>
-            <small>You are owed</small>
-          {:else if balance.netBalance > 0}
-            <span class="negative">-{formatCurrency(balance.netBalance)}</span>
-            <small>You owe</small>
-          {:else}
-            <span class="even">CHF 0.00</span>
-            <small>You're all even</small>
-          {/if}
-        </div>
-      </div>
-    </div>
-
-    <div class="actions">
-      <a href="/cospend/payments/add" class="btn btn-primary">Add Payment</a>
-      <a href="/cospend/payments" class="btn btn-secondary">View All Payments</a>
-    </div>
-
-    {#if balance.recentSplits && balance.recentSplits.length > 0}
-      <div class="recent-activity">
-        <h2>Recent Activity</h2>
-        <div class="activity-dialog">
-          {#each balance.recentSplits as split}
-            <div class="activity-message" class:is-me={split.paymentId?.paidBy === data.session?.user?.nickname}>
-              <div class="message-content">
-                <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={36} />
-                <a 
-                  href="/cospend/payments/view/{split.paymentId?._id}" 
-                  class="activity-bubble"
-                  on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
-                >
-                  <div class="activity-header">
-                    <div class="user-info">
-                      <div class="payment-title-row">
-                        <span class="category-emoji">{getCategoryEmoji(split.paymentId?.category || 'groceries')}</span>
-                        <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
-                      </div>
-                      <span class="username">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
-                      <span class="category-name">{getCategoryName(split.paymentId?.category || 'groceries')}</span>
+  {:else if balance.recentSplits && balance.recentSplits.length > 0}
+    <div class="recent-activity">
+      <h2>Recent Activity</h2>
+      <div class="activity-dialog">
+        {#each balance.recentSplits as split}
+          <div class="activity-message" class:is-me={split.paymentId?.paidBy === data.session?.user?.nickname}>
+            <div class="message-content">
+              <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={36} />
+              <a 
+                href="/cospend/payments/view/{split.paymentId?._id}" 
+                class="activity-bubble"
+                on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
+              >
+                <div class="activity-header">
+                  <div class="user-info">
+                    <div class="payment-title-row">
+                      <span class="category-emoji">{getCategoryEmoji(split.paymentId?.category || 'groceries')}</span>
+                      <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
                     </div>
-                    <div class="activity-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
-                      {#if split.amount > 0}
-                        -{formatCurrency(split.amount)}
-                      {:else if split.amount < 0}
-                        +{formatCurrency(split.amount)}
-                      {:else}
-                        even
-                      {/if}
-                    </div>
+                    <span class="username">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
+                    <span class="category-name">{getCategoryName(split.paymentId?.category || 'groceries')}</span>
                   </div>
-                  <div class="payment-details">
-                    <div class="payment-meta">
-                      <span class="payment-date">{formatDate(split.createdAt)}</span>
-                    </div>
-                    {#if split.paymentId?.description}
-                      <div class="payment-description">
-                        {truncateDescription(split.paymentId.description)}
-                      </div>
+                  <div class="activity-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
+                    {#if split.amount > 0}
+                      -{formatCurrency(split.amount)}
+                    {:else if split.amount < 0}
+                      +{formatCurrency(split.amount)}
+                    {:else}
+                      even
                     {/if}
                   </div>
-                </a>
-              </div>
+                </div>
+                <div class="payment-details">
+                  <div class="payment-meta">
+                    <span class="payment-date">{formatDate(split.createdAt)}</span>
+                  </div>
+                  {#if split.paymentId?.description}
+                    <div class="payment-description">
+                      {truncateDescription(split.paymentId.description)}
+                    </div>
+                  {/if}
+                </div>
+              </a>
             </div>
-          {/each}
-        </div>
+          </div>
+        {/each}
       </div>
-    {/if}
+    </div>
   {/if}
 </main>
 
@@ -182,52 +168,6 @@
     border-radius: 0.5rem;
   }
 
-  .balance-cards {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
-  }
-
-  .balance-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    min-width: 300px;
-  }
-
-  .balance-card.net-balance {
-    background: linear-gradient(135deg, #f5f5f5, #e8e8e8);
-  }
-
-  .balance-card.net-balance.positive {
-    background: linear-gradient(135deg, #e8f5e8, #d4edda);
-  }
-
-  .balance-card.net-balance.negative {
-    background: linear-gradient(135deg, #ffeaea, #f8d7da);
-  }
-
-  .balance-card h3 {
-    margin-bottom: 1rem;
-    color: #555;
-    font-size: 1.1rem;
-  }
-
-  .amount {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-  }
-
-  .amount small {
-    display: block;
-    font-size: 0.9rem;
-    font-weight: normal;
-    color: #666;
-    margin-top: 0.5rem;
-  }
 
   .positive {
     color: #2e7d32;
@@ -447,11 +387,6 @@
   @media (max-width: 600px) {
     .cospend-main {
       padding: 1rem;
-    }
-
-    .balance-card {
-      min-width: unset;
-      width: 100%;
     }
 
     .actions {

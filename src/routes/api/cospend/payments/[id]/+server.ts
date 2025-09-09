@@ -75,7 +75,8 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
           paymentId: id,
           username: split.username,
           amount: split.amount,
-          proportion: split.proportion
+          proportion: split.proportion,
+          personalAmount: split.personalAmount
         });
       });
 
