@@ -6,6 +6,7 @@
   import EnhancedBalance from '$lib/components/EnhancedBalance.svelte';
   import DebtBreakdown from '$lib/components/DebtBreakdown.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
+  import { isSettlementPayment, getSettlementIcon, getSettlementClasses, getSettlementReceiver } from '$lib/utils/settlements';
 
   export let data; // Used by the layout for session data
 
@@ -57,6 +58,27 @@
     // Use pushState for true shallow routing - only updates URL without navigation
     pushState(`/cospend/payments/view/${paymentId}`, { paymentId });
   }
+
+  function getSettlementReceiverFromSplit(split) {
+    if (!isSettlementPayment(split.paymentId)) {
+      return '';
+    }
+    
+    // In a settlement, the receiver is the person who is NOT the payer
+    // Since we're viewing the current user's activity, the receiver is the current user
+    // when someone else paid, or the other user when current user paid
+    
+    const paidBy = split.paymentId?.paidBy;
+    const currentUser = data.session?.user?.nickname;
+    
+    if (paidBy === currentUser) {
+      // Current user paid, so receiver is the other user
+      return split.otherUser || '';
+    } else {
+      // Someone else paid, so current user is the receiver
+      return currentUser;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -74,6 +96,9 @@
   <div class="actions">
     <a href="/cospend/payments/add" class="btn btn-primary">Add Payment</a>
     <a href="/cospend/payments" class="btn btn-secondary">View All Payments</a>
+    {#if balance.netBalance !== 0}
+      <a href="/cospend/settle" class="btn btn-settlement">Settle Debts</a>
+    {/if}
   </div>
 
   <DebtBreakdown />
@@ -87,46 +112,79 @@
       <h2>Recent Activity</h2>
       <div class="activity-dialog">
         {#each balance.recentSplits as split}
-          <div class="activity-message" class:is-me={split.paymentId?.paidBy === data.session?.user?.nickname}>
-            <div class="message-content">
-              <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={36} />
-              <a 
-                href="/cospend/payments/view/{split.paymentId?._id}" 
-                class="activity-bubble"
-                on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
-              >
-                <div class="activity-header">
-                  <div class="user-info">
-                    <div class="payment-title-row">
-                      <span class="category-emoji">{getCategoryEmoji(split.paymentId?.category || 'groceries')}</span>
-                      <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
-                    </div>
-                    <span class="username">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
-                    <span class="category-name">{getCategoryName(split.paymentId?.category || 'groceries')}</span>
+          {#if isSettlementPayment(split.paymentId)}
+            <!-- Settlement Payment Display - User -> User Flow -->
+            <a 
+              href="/cospend/payments/view/{split.paymentId?._id}" 
+              class="settlement-flow-activity"
+              on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
+            >
+              <div class="settlement-activity-content">
+                <div class="settlement-user-flow">
+                  <div class="settlement-payer">
+                    <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={64} />
+                    <span class="settlement-username">{split.paymentId?.paidBy || 'Unknown'}</span>
                   </div>
-                  <div class="activity-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
-                    {#if split.amount > 0}
-                      -{formatCurrency(split.amount)}
-                    {:else if split.amount < 0}
-                      +{formatCurrency(split.amount)}
-                    {:else}
-                      even
+                  <div class="settlement-arrow-section">
+                    <div class="settlement-amount-large">
+                      {formatCurrency(Math.abs(split.amount))}
+                    </div>
+                    <div class="settlement-flow-arrow">→</div>
+                    <div class="settlement-date">{formatDate(split.createdAt)}</div>
+                  </div>
+                  <div class="settlement-receiver">
+                    <ProfilePicture username={getSettlementReceiverFromSplit(split) || 'Unknown'} size={64} />
+                    <span class="settlement-username">{getSettlementReceiverFromSplit(split) || 'Unknown'}</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          {:else}
+            <!-- Regular Payment Display - Speech Bubble Style -->
+            <div class="activity-message" 
+                 class:is-me={split.paymentId?.paidBy === data.session?.user?.nickname}>
+              <div class="message-content">
+                <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={36} />
+                <a 
+                  href="/cospend/payments/view/{split.paymentId?._id}" 
+                  class="activity-bubble"
+                  on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
+                >
+                  <div class="activity-header">
+                    <div class="user-info">
+                      <div class="payment-title-row">
+                        <span class="category-emoji">{getCategoryEmoji(split.paymentId?.category || 'groceries')}</span>
+                        <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
+                      </div>
+                      <span class="username">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
+                      <span class="category-name">{getCategoryName(split.paymentId?.category || 'groceries')}</span>
+                    </div>
+                    <div class="activity-amount" 
+                         class:positive={split.amount < 0} 
+                         class:negative={split.amount > 0}>
+                      {#if split.amount > 0}
+                        -{formatCurrency(split.amount)}
+                      {:else if split.amount < 0}
+                        +{formatCurrency(split.amount)}
+                      {:else}
+                        even
+                      {/if}
+                    </div>
+                  </div>
+                  <div class="payment-details">
+                    <div class="payment-meta">
+                      <span class="payment-date">{formatDate(split.createdAt)}</span>
+                    </div>
+                    {#if split.paymentId?.description}
+                      <div class="payment-description">
+                        {truncateDescription(split.paymentId.description)}
+                      </div>
                     {/if}
                   </div>
-                </div>
-                <div class="payment-details">
-                  <div class="payment-meta">
-                    <span class="payment-date">{formatDate(split.createdAt)}</span>
-                  </div>
-                  {#if split.paymentId?.description}
-                    <div class="payment-description">
-                      {truncateDescription(split.paymentId.description)}
-                    </div>
-                  {/if}
-                </div>
-              </a>
+                </a>
+              </div>
             </div>
-          </div>
+          {/if}
         {/each}
       </div>
     </div>
@@ -216,6 +274,16 @@
     background-color: #e8e8e8;
   }
 
+  .btn-settlement {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+  }
+
+  .btn-settlement:hover {
+    background: linear-gradient(135deg, #20c997, #1e7e34);
+  }
+
   .recent-activity {
     background: white;
     padding: 1.5rem;
@@ -298,6 +366,79 @@
     right: -15px;
     border-left-color: #e3f2fd;
     border-right-color: transparent;
+  }
+
+
+  /* New Settlement Flow Activity Styles */
+  .settlement-flow-activity {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: linear-gradient(135deg, #f8fff9, #e8f5e8);
+    border: 2px solid #28a745;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin: 0 auto 1rem auto;
+    max-width: 400px;
+    transition: all 0.2s ease;
+  }
+
+  .settlement-flow-activity:hover {
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .settlement-activity-content {
+    width: 100%;
+  }
+
+  .settlement-user-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .settlement-payer, .settlement-receiver {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+  }
+
+  .settlement-username {
+    font-weight: 600;
+    color: #28a745;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .settlement-arrow-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  .settlement-amount-large {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #28a745;
+    text-align: center;
+  }
+
+  .settlement-flow-arrow {
+    font-size: 1.8rem;
+    color: #28a745;
+    font-weight: bold;
+  }
+
+  .settlement-date {
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
   }
 
   .activity-header {
@@ -398,6 +539,29 @@
       width: 100%;
       max-width: 300px;
       text-align: center;
+    }
+
+    /* Mobile Settlement Flow */
+    .settlement-user-flow {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .settlement-payer, .settlement-receiver {
+      order: 1;
+    }
+
+    .settlement-arrow-section {
+      order: 2;
+    }
+
+    .settlement-flow-arrow {
+      transform: rotate(90deg);
+      font-size: 1.5rem;
+    }
+
+    .settlement-amount-large {
+      font-size: 1.3rem;
     }
   }
 </style>

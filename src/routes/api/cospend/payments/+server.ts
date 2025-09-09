@@ -52,7 +52,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Invalid split method');
   }
 
-  if (category && !['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun'].includes(category)) {
+  if (category && !['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun', 'settlement'].includes(category)) {
     throw error(400, 'Invalid category');
   }
 
