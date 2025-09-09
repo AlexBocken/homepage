@@ -61,6 +61,21 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         .limit(10)
         .lean();
 
+      // For settlements, fetch the other user's split info
+      for (const split of recentSplits) {
+        if (split.paymentId && split.paymentId.category === 'settlement') {
+          // This is a settlement, find the other user
+          const otherSplit = await PaymentSplit.findOne({
+            paymentId: split.paymentId._id,
+            username: { $ne: username }
+          }).lean();
+          
+          if (otherSplit) {
+            split.otherUser = otherSplit.username;
+          }
+        }
+      }
+
       return json({
         netBalance,
         recentSplits

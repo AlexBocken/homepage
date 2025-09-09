@@ -43,16 +43,6 @@
     // Recalculate when debtData changes
     singleDebtUser = getSingleDebtUser();
     shouldShowIntegratedView = singleDebtUser !== null;
-    
-    // Temporary debug logging
-    if (!loading) {
-      console.log('🔍 Debug Info:');
-      console.log('- debtData:', debtData);
-      console.log('- whoOwesMe length:', debtData.whoOwesMe.length);
-      console.log('- whoIOwe length:', debtData.whoIOwe.length);
-      console.log('- singleDebtUser:', singleDebtUser);
-      console.log('- shouldShowIntegratedView:', shouldShowIntegratedView);
-    }
   }
   
 

@@ -22,6 +22,10 @@ export const PAYMENT_CATEGORIES = {
   fun: {
     name: 'Fun',
     emoji: '🎉'
+  },
+  settlement: {
+    name: 'Settlement',
+    emoji: '🤝'
   }
 } as const;
 

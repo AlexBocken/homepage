@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
+  import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
 
   export let data;
 
@@ -135,24 +136,45 @@
   {:else}
     <div class="payments-grid">
       {#each payments as payment}
-        <div class="payment-card">
+        <div class="payment-card" class:settlement-card={isSettlementPayment(payment)}>
           <div class="payment-header">
-            <div class="payment-title-section">
-              <ProfilePicture username={payment.paidBy} size={40} />
-              <div class="payment-title">
-                <div class="title-with-category">
-                  <span class="category-emoji">{getCategoryEmoji(payment.category || 'groceries')}</span>
-                  <h3>{payment.title}</h3>
+            {#if isSettlementPayment(payment)}
+              <div class="settlement-flow">
+                <div class="settlement-user-from">
+                  <ProfilePicture username={payment.paidBy} size={32} />
+                  <span class="username">{payment.paidBy}</span>
                 </div>
-                <div class="payment-meta">
-                  <span class="category-name">{getCategoryName(payment.category || 'groceries')}</span>
-                  <span class="date">{formatDate(payment.date)}</span>
-                  <span class="amount">{formatCurrency(payment.amount)}</span>
+                <div class="settlement-arrow">
+                  <span class="arrow">→</span>
+                  <span class="settlement-badge-small">Settlement</span>
+                </div>
+                <div class="settlement-user-to">
+                  <ProfilePicture username={getSettlementReceiver(payment)} size={32} />
+                  <span class="username">{getSettlementReceiver(payment)}</span>
                 </div>
               </div>
-            </div>
-            {#if payment.image}
-              <img src={payment.image} alt="Receipt" class="receipt-thumb" />
+              <div class="settlement-amount">
+                <span class="amount settlement-amount-text">{formatCurrency(payment.amount)}</span>
+                <span class="date">{formatDate(payment.date)}</span>
+              </div>
+            {:else}
+              <div class="payment-title-section">
+                <ProfilePicture username={payment.paidBy} size={40} />
+                <div class="payment-title">
+                  <div class="title-with-category">
+                    <span class="category-emoji">{getCategoryEmoji(payment.category || 'groceries')}</span>
+                    <h3>{payment.title}</h3>
+                  </div>
+                  <div class="payment-meta">
+                    <span class="category-name">{getCategoryName(payment.category || 'groceries')}</span>
+                    <span class="date">{formatDate(payment.date)}</span>
+                    <span class="amount">{formatCurrency(payment.amount)}</span>
+                  </div>
+                </div>
+              </div>
+              {#if payment.image}
+                <img src={payment.image} alt="Receipt" class="receipt-thumb" />
+              {/if}
             {/if}
           </div>
 
@@ -337,6 +359,71 @@
 
   .payment-card:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .settlement-card {
+    background: linear-gradient(135deg, #f8fff9, #f0f8f0);
+    border: 2px solid #28a745;
+  }
+
+  .settlement-card:hover {
+    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.2);
+  }
+
+  .settlement-flow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+  }
+
+  .settlement-user-from, .settlement-user-to {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .settlement-user-from .username,
+  .settlement-user-to .username {
+    font-weight: 500;
+    color: #28a745;
+  }
+
+  .settlement-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .settlement-arrow .arrow {
+    color: #28a745;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  .settlement-badge-small {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.75rem;
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .settlement-amount {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+
+  .settlement-amount-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #28a745;
   }
 
   .payment-header {
