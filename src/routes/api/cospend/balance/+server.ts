@@ -55,11 +55,20 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       // Calculate net balance: negative = you are owed money, positive = you owe money
       const netBalance = userSplits.reduce((sum, split) => sum + split.amount, 0);
 
-      const recentSplits = await PaymentSplit.find({ username })
-        .populate('paymentId')
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .lean();
+      const recentSplits = await PaymentSplit.aggregate([
+        { $match: { username } },
+        {
+          $lookup: {
+            from: 'payments',
+            localField: 'paymentId',
+            foreignField: '_id',
+            as: 'paymentId'
+          }
+        },
+        { $unwind: '$paymentId' },
+        { $sort: { 'paymentId.date': -1 } },
+        { $limit: 10 }
+      ]);
 
       // For settlements, fetch the other user's split info
       for (const split of recentSplits) {
