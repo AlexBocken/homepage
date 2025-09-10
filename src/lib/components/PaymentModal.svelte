@@ -85,6 +85,34 @@
       return `Custom split among ${payment.splits.length} people`;
     }
   }
+
+  let deleting = false;
+
+  async function deletePayment() {
+    if (!confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      deleting = true;
+      const response = await fetch(`/api/cospend/payments/${paymentId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete payment');
+      }
+
+      // Close modal and dispatch event to refresh data
+      dispatch('paymentDeleted', paymentId);
+      closeModal();
+      
+    } catch (err) {
+      error = err.message;
+    } finally {
+      deleting = false;
+    }
+  }
 </script>
 
 <div class="panel-content" bind:this={modal}>
@@ -187,6 +215,13 @@
           <div class="panel-actions">
             {#if payment && payment.createdBy === session?.user?.nickname}
               <a href="/cospend/payments/edit/{paymentId}" class="btn btn-primary">Edit Payment</a>
+              <button 
+                class="btn btn-danger" 
+                on:click={deletePayment}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
             {/if}
             <button class="btn btn-secondary" on:click={closeModal}>Close</button>
           </div>
@@ -460,6 +495,20 @@
 
   .btn-secondary:hover {
     background-color: #f5f5f5;
+  }
+
+  .btn-danger {
+    background-color: #d32f2f;
+    color: white;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: #c62828;
+  }
+
+  .btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   @media (max-width: 600px) {

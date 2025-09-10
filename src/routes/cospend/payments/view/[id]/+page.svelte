@@ -53,6 +53,33 @@
       return `Custom split among ${payment.splits.length} people`;
     }
   }
+
+  let deleting = false;
+
+  async function deletePayment() {
+    if (!confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      deleting = true;
+      const response = await fetch(`/api/cospend/payments/${data.paymentId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete payment');
+      }
+
+      // Redirect to dashboard after successful deletion
+      goto('/cospend');
+      
+    } catch (err) {
+      error = err.message;
+    } finally {
+      deleting = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -66,6 +93,13 @@
       <div class="header-actions">
         {#if payment && payment.createdBy === data.session.user.nickname}
           <a href="/cospend/payments/edit/{data.paymentId}" class="btn btn-secondary">Edit</a>
+          <button 
+            class="btn btn-danger" 
+            on:click={deletePayment}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
         {/if}
         <a href="/cospend/payments" class="btn btn-secondary">All Payments</a>
       </div>
@@ -196,6 +230,8 @@
     text-decoration: none;
     font-size: 0.9rem;
     transition: all 0.2s;
+    border: none;
+    cursor: pointer;
   }
 
   .btn-secondary {
@@ -206,6 +242,20 @@
 
   .btn-secondary:hover {
     background-color: #e8e8e8;
+  }
+
+  .btn-danger {
+    background-color: #d32f2f;
+    color: white;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: #c62828;
+  }
+
+  .btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .loading, .error {
