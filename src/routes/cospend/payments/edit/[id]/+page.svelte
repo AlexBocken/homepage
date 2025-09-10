@@ -102,6 +102,33 @@
   function formatDate(dateString) {
     return new Date(dateString).toISOString().split('T')[0];
   }
+
+  let deleting = false;
+
+  async function deletePayment() {
+    if (!confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      deleting = true;
+      const response = await fetch(`/api/cospend/payments/${data.paymentId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete payment');
+      }
+
+      // Redirect to payments list after successful deletion
+      goto('/cospend/payments');
+      
+    } catch (err) {
+      error = err.message;
+    } finally {
+      deleting = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -243,12 +270,22 @@
       {/if}
 
       <div class="form-actions">
-        <button type="button" class="btn-secondary" on:click={() => goto('/cospend/payments')}>
-          Cancel
+        <button 
+          type="button" 
+          class="btn-danger" 
+          on:click={deletePayment}
+          disabled={deleting || saving}
+        >
+          {deleting ? 'Deleting...' : 'Delete Payment'}
         </button>
-        <button type="submit" class="btn-primary" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        <div class="main-actions">
+          <button type="button" class="btn-secondary" on:click={() => goto('/cospend/payments')}>
+            Cancel
+          </button>
+          <button type="submit" class="btn-primary" disabled={saving || deleting}>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
     </form>
   {/if}
@@ -382,11 +419,17 @@
 
   .form-actions {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 1rem;
-    justify-content: flex-end;
   }
 
-  .btn-primary, .btn-secondary {
+  .main-actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .btn-primary, .btn-secondary, .btn-danger {
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-size: 1rem;
@@ -417,6 +460,21 @@
 
   .btn-secondary:hover {
     background-color: #e8e8e8;
+  }
+
+  .btn-danger {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: #c62828;
+  }
+
+  .btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .current-image {
@@ -501,6 +559,11 @@
     }
 
     .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .main-actions {
       flex-direction: column;
     }
   }
