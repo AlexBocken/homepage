@@ -31,7 +31,7 @@
         throw new Error('Failed to fetch debt data');
       }
       debtData = await response.json();
-      
+
       // For predefined mode with 2 users, auto-select the debt if there's only one
       if (predefinedMode && PREDEFINED_USERS.length === 2) {
         const totalDebts = debtData.whoOwesMe.length + debtData.whoIOwe.length;
@@ -95,11 +95,6 @@
     const amount = parseFloat(settlementAmount);
     if (isNaN(amount) || amount <= 0) {
       error = 'Please enter a valid positive amount';
-      return;
-    }
-
-    if (amount > selectedSettlement.amount) {
-      error = 'Settlement amount cannot exceed the debt amount';
       return;
     }
 
@@ -185,12 +180,12 @@
       <!-- Available Settlements -->
       <div class="available-settlements">
         <h2>Available Settlements</h2>
-        
+
         {#if debtData.whoOwesMe.length > 0}
           <div class="settlement-section">
             <h3>Money You're Owed</h3>
             {#each debtData.whoOwesMe as debt}
-              <div class="settlement-option" 
+              <div class="settlement-option"
                    class:selected={selectedSettlement?.type === 'receive' && selectedSettlement?.from === debt.username}
                    on:click={() => selectSettlement('receive', debt.username, debt.netAmount)}>
                 <div class="settlement-user">
@@ -235,7 +230,7 @@
       {#if selectedSettlement}
         <div class="settlement-details">
           <h2>Settlement Details</h2>
-          
+
           <div class="settlement-summary">
             <div class="settlement-flow">
               <div class="user-from">
@@ -254,23 +249,21 @@
                 {/if}
               </div>
             </div>
-            
+
             <div class="settlement-amount-section">
               <label for="amount">Settlement Amount</label>
               <div class="amount-input">
                 <span class="currency">CHF</span>
-                <input 
+                <input
                   id="amount"
-                  type="number" 
-                  step="0.01" 
+                  type="number"
+                  step="0.01"
                   min="0.01"
-                  max={selectedSettlement.amount}
                   bind:value={settlementAmount}
                   placeholder="0.00"
                 />
               </div>
               <small class="max-amount">
-                Maximum: {formatCurrency(selectedSettlement.amount)}
               </small>
             </div>
 
@@ -280,8 +273,8 @@
           </div>
 
           <div class="settlement-actions">
-            <button 
-              class="btn btn-settlement" 
+            <button
+              class="btn btn-settlement"
               on:click={processSettlement}
               disabled={submitting || !settlementAmount}>
               {#if submitting}
