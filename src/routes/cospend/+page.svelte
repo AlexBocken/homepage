@@ -66,13 +66,11 @@
   async function fetchMonthlyExpenses() {
     try {
       expensesLoading = true;
-      console.log('Fetching monthly expenses...');
       const response = await fetch('/api/cospend/monthly-expenses');
       if (!response.ok) {
         throw new Error('Failed to fetch monthly expenses');
       }
       monthlyExpensesData = await response.json();
-      console.log('Monthly expenses data:', monthlyExpensesData);
     } catch (err) {
       console.error('Error fetching monthly expenses:', err);
       // Don't show this error in the main error state
@@ -170,15 +168,15 @@
     {#if expensesLoading}
       <div class="loading">Loading monthly expenses chart...</div>
     {:else if monthlyExpensesData.datasets && monthlyExpensesData.datasets.length > 0}
-      <BarChart 
-        data={monthlyExpensesData} 
+      <BarChart
+        data={monthlyExpensesData}
         title="Monthly Expenses by Category"
         height="400px"
       />
     {:else}
       <div class="loading">
-        Debug: expensesLoading={expensesLoading}, 
-        datasets={monthlyExpensesData.datasets?.length || 0}, 
+        Debug: expensesLoading={expensesLoading},
+        datasets={monthlyExpensesData.datasets?.length || 0},
         data={JSON.stringify(monthlyExpensesData)}
       </div>
     {/if}
