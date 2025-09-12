@@ -43,6 +43,11 @@
       currency: 'CHF'
     }).format(amount);
   }
+
+  // Export refresh method for parent components to call
+  export async function refresh() {
+    await fetchDebtBreakdown();
+  }
 </script>
 
 {#if !shouldHide}

@@ -191,7 +191,7 @@
                   {:else if split.amount < 0}
                     owed {formatCurrency(split.amount)}
                   {:else}
-                    even
+                    owes {formatCurrency(split.amount)}
                   {/if}
                 </div>
               </div>

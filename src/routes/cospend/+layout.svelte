@@ -24,6 +24,17 @@
       paymentId = null;
     }
   }
+
+  async function handlePaymentDeleted() {
+    // Close the modal
+    showModal = false;
+    paymentId = null;
+    
+    // Dispatch a custom event to trigger dashboard refresh
+    if ($page.route.id === '/cospend') {
+      window.dispatchEvent(new CustomEvent('dashboardRefresh'));
+    }
+  }
 </script>
 
 <div class="layout-container" class:has-modal={showModal}>
@@ -36,7 +47,7 @@
       <div class="modal-content">
         {#key paymentId}
           <div in:fly={{x: 50, duration: 300, easing: quintOut}} out:fly={{x: -50, duration: 300, easing: quintOut}}>
-            <PaymentModal {paymentId} on:close={() => showModal = false} />
+            <PaymentModal {paymentId} on:close={() => showModal = false} on:paymentDeleted={handlePaymentDeleted} />
           </div>
         {/key}
       </div>

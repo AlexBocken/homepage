@@ -66,7 +66,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
           }
         },
         { $unwind: '$paymentId' },
-        { $sort: { 'paymentId.date': -1 } },
+        { $sort: { 'paymentId.date': -1, 'paymentId.createdAt': -1 } },
         { $limit: 10 }
       ]);
 
