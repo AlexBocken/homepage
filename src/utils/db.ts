@@ -29,9 +29,7 @@ export const dbConnect = async () => {
 };
 
 export const dbDisconnect = async () => {
-  if (process.env.NODE_ENV === 'development') return;
-  if (mongoConnection.isConnected === 0) return;
-
-  await mongoose.disconnect();
-  mongoConnection.isConnected = 0;
+  // Don't disconnect in production to avoid "Client must be connected" errors
+  // The connection pool will handle connection cleanup automatically
+  return;
 };
