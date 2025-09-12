@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { getCategoryOptions } from '$lib/utils/categories';
+  import FormSection from '$lib/components/FormSection.svelte';
+  import ImageUpload from '$lib/components/ImageUpload.svelte';
   
   export let data;
 
@@ -11,6 +13,7 @@
   let uploading = false;
   let error = null;
   let imageFile = null;
+  let imagePreview = '';
   
   $: categoryOptions = getCategoryOptions();
 
@@ -33,6 +36,24 @@
     }
   }
 
+  function handleImageSelected(event) {
+    imageFile = event.detail;
+    handleImageUpload();
+  }
+
+  function handleImageError(event) {
+    error = event.detail;
+  }
+
+  function handleImageRemoved() {
+    imageFile = null;
+    imagePreview = '';
+  }
+
+  function handleCurrentImageRemoved() {
+    payment.image = null;
+  }
+
   async function handleImageUpload() {
     if (!imageFile) return;
 
@@ -53,22 +74,11 @@
       const result = await response.json();
       payment.image = result.imageUrl;
       imageFile = null;
+      imagePreview = '';
     } catch (err) {
       error = err.message;
     } finally {
       uploading = false;
-    }
-  }
-
-  function handleImageRemove() {
-    payment.image = null;
-  }
-
-  function handleFileChange(event) {
-    const file = event.target.files[0];
-    if (file) {
-      imageFile = file;
-      handleImageUpload();
     }
   }
 
@@ -147,9 +157,7 @@
     <div class="error">Error: {error}</div>
   {:else if payment}
     <form on:submit|preventDefault={handleSubmit} class="payment-form">
-      <div class="form-section">
-        <h2>Payment Details</h2>
-        
+      <FormSection title="Payment Details">
         <div class="form-group">
           <label for="title">Title *</label>
           <input 
@@ -212,43 +220,21 @@
             required
           />
         </div>
-      </div>
+      </FormSection>
 
-      <div class="form-section">
-        <h2>Receipt Image</h2>
-        
-        {#if payment.image}
-          <div class="current-image">
-            <img src={payment.image} alt="Receipt" class="receipt-preview" />
-            <div class="image-actions">
-              <button type="button" class="btn-remove" on:click={handleImageRemove}>
-                Remove Image
-              </button>
-            </div>
-          </div>
-        {/if}
-
-        <div class="form-group">
-          <label for="imageUpload" class="upload-label">
-            {payment.image ? 'Replace Image' : 'Upload Receipt Image'}
-          </label>
-          <input 
-            type="file" 
-            id="imageUpload" 
-            accept="image/*"
-            on:change={handleFileChange}
-            disabled={uploading}
-            class="file-input"
-          />
-          {#if uploading}
-            <div class="upload-status">Uploading image...</div>
-          {/if}
-        </div>
-      </div>
+      <ImageUpload
+        bind:imagePreview={imagePreview}
+        bind:imageFile={imageFile}
+        bind:uploading={uploading}
+        currentImage={payment.image}
+        on:imageSelected={handleImageSelected}
+        on:imageRemoved={handleImageRemoved}
+        on:currentImageRemoved={handleCurrentImageRemoved}
+        on:error={handleImageError}
+      />
 
       {#if payment.splits && payment.splits.length > 0}
-        <div class="form-section">
-          <h2>Current Splits</h2>
+        <FormSection title="Current Splits">
           <div class="splits-display">
             {#each payment.splits as split}
               <div class="split-item">
@@ -266,7 +252,7 @@
             {/each}
           </div>
           <p class="note">Note: To modify splits, please delete and recreate the payment.</p>
-        </div>
+        </FormSection>
       {/if}
 
       <div class="form-actions">
@@ -551,101 +537,6 @@
     cursor: not-allowed;
   }
 
-  .current-image {
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-
-  .receipt-preview {
-    max-width: 200px;
-    max-height: 200px;
-    object-fit: cover;
-    border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
-    margin-bottom: 0.75rem;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .receipt-preview {
-      border-color: var(--nord2);
-    }
-  }
-
-  .image-actions {
-    display: flex;
-    justify-content: center;
-  }
-
-  .btn-remove {
-    background-color: var(--red);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-  }
-
-  .btn-remove:hover {
-    background-color: var(--nord11);
-    transform: translateY(-1px);
-  }
-
-  .upload-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--nord2);
-    cursor: pointer;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .upload-label {
-      color: var(--nord5);
-    }
-  }
-
-  .file-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px dashed var(--nord4);
-    border-radius: 0.5rem;
-    background-color: var(--nord5);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .file-input:hover {
-    border-color: var(--blue);
-    background-color: var(--nord4);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .file-input {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-
-    .file-input:hover {
-      background-color: var(--nord3);
-    }
-  }
-
-  .file-input:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .upload-status {
-    margin-top: 0.5rem;
-    color: var(--blue);
-    font-size: 0.9rem;
-    text-align: center;
-  }
 
   @media (max-width: 600px) {
     .edit-payment {

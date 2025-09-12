@@ -5,6 +5,8 @@
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { validateCronExpression, getFrequencyDescription, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import SplitMethodSelector from '$lib/components/SplitMethodSelector.svelte';
+  import UsersList from '$lib/components/UsersList.svelte';
   
   export let data;
 
@@ -30,7 +32,6 @@
   let loading = false;
   let loadingPayment = true;
   let error = null;
-  let personalTotalError = false;
   let predefinedMode = isPredefinedUsersMode();
   let cronError = false;
   let nextExecutionPreview = '';
@@ -86,100 +87,10 @@
     }
   }
 
-  function addUser() {
-    if (predefinedMode) return;
-    
-    if (newUser.trim() && !users.includes(newUser.trim())) {
-      users = [...users, newUser.trim()];
-      addSplitForUser(newUser.trim());
-      newUser = '';
-    }
-  }
-
-  function removeUser(userToRemove) {
-    if (predefinedMode) return;
-    
-    if (users.length > 1) {
-      users = users.filter(u => u !== userToRemove);
-      delete splitAmounts[userToRemove];
-      delete personalAmounts[userToRemove];
-      splitAmounts = { ...splitAmounts };
-      personalAmounts = { ...personalAmounts };
-    }
-  }
-
   function addSplitForUser(username) {
     if (!splitAmounts[username]) {
       splitAmounts[username] = 0;
       splitAmounts = { ...splitAmounts };
-    }
-  }
-
-  function calculateEqualSplits() {
-    if (!formData.amount || users.length === 0) return;
-    
-    const amountNum = parseFloat(formData.amount);
-    const splitAmount = amountNum / users.length;
-    
-    users.forEach(user => {
-      if (user === formData.paidBy) {
-        splitAmounts[user] = splitAmount - amountNum;
-      } else {
-        splitAmounts[user] = splitAmount;
-      }
-    });
-    splitAmounts = { ...splitAmounts };
-  }
-
-  function calculateFullPayment() {
-    if (!formData.amount) return;
-    
-    const amountNum = parseFloat(formData.amount);
-    const otherUsers = users.filter(user => user !== formData.paidBy);
-    const amountPerOtherUser = otherUsers.length > 0 ? amountNum / otherUsers.length : 0;
-    
-    users.forEach(user => {
-      if (user === formData.paidBy) {
-        splitAmounts[user] = -amountNum; // They paid it all, so they're owed the full amount
-      } else {
-        splitAmounts[user] = amountPerOtherUser; // Others owe their share of the full amount
-      }
-    });
-    splitAmounts = { ...splitAmounts };
-  }
-
-  function calculatePersonalEqualSplit() {
-    if (!formData.amount || users.length === 0) return;
-    
-    const totalAmount = parseFloat(formData.amount);
-    
-    const totalPersonal = users.reduce((sum, user) => {
-      return sum + (parseFloat(personalAmounts[user]) || 0);
-    }, 0);
-    
-    const remainder = Math.max(0, totalAmount - totalPersonal);
-    const equalShare = remainder / users.length;
-    
-    users.forEach(user => {
-      const personalAmount = parseFloat(personalAmounts[user]) || 0;
-      const totalOwed = personalAmount + equalShare;
-      
-      if (user === formData.paidBy) {
-        splitAmounts[user] = totalOwed - totalAmount;
-      } else {
-        splitAmounts[user] = totalOwed;
-      }
-    });
-    splitAmounts = { ...splitAmounts };
-  }
-
-  function handleSplitMethodChange() {
-    if (formData.splitMethod === 'equal') {
-      calculateEqualSplits();
-    } else if (formData.splitMethod === 'full') {
-      calculateFullPayment();
-    } else if (formData.splitMethod === 'personal_equal') {
-      calculatePersonalEqualSplit();
     }
   }
 
@@ -224,15 +135,6 @@
       return;
     }
 
-    if (formData.splitMethod === 'personal_equal') {
-      const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-      const totalAmount = parseFloat(formData.amount);
-      
-      if (totalPersonal > totalAmount) {
-        error = 'Personal amounts cannot exceed the total payment amount';
-        return;
-      }
-    }
 
     if (users.length === 0) {
       error = 'Please add at least one user to split with';
@@ -282,19 +184,6 @@
     }
   }
 
-  $: if (formData.amount && formData.splitMethod && formData.paidBy && !loadingPayment) {
-    handleSplitMethodChange();
-  }
-
-  $: if (formData.splitMethod === 'personal_equal' && personalAmounts && formData.amount && !loadingPayment) {
-    const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-    const totalAmount = parseFloat(formData.amount);
-    personalTotalError = totalPersonal > totalAmount;
-    
-    if (!personalTotalError) {
-      calculatePersonalEqualSplit();
-    }
-  }
 
   $: if (formData.cronExpression) {
     validateCron();
@@ -460,129 +349,24 @@
         {/if}
       </div>
 
-      <div class="form-section">
-        <h2>Split Between Users</h2>
-        
-        <div class="users-list">
-          {#each users as user}
-            <div class="user-item with-profile">
-              <ProfilePicture username={user} size={32} />
-              <span class="username">{user}</span>
-              {#if user === data.session?.user?.nickname}
-                <span class="you-badge">You</span>
-              {/if}
-              {#if !predefinedMode && user !== data.session?.user?.nickname}
-                <button type="button" class="remove-user" on:click={() => removeUser(user)}>
-                  Remove
-                </button>
-              {/if}
-            </div>
-          {/each}
-        </div>
+      <UsersList 
+        bind:users={users}
+        bind:newUser={newUser}
+        currentUser={data.session?.user?.nickname}
+        {predefinedMode}
+        canRemoveUsers={!predefinedMode}
+      />
 
-        {#if !predefinedMode}
-          <div class="add-user">
-            <input 
-              type="text" 
-              bind:value={newUser} 
-              placeholder="Add user..."
-              on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addUser())}
-            />
-            <button type="button" on:click={addUser}>Add User</button>
-          </div>
-        {/if}
-      </div>
-
-      <div class="form-section">
-        <h2>Split Method</h2>
-        
-        <div class="split-method">
-          <label>
-            <input type="radio" bind:group={formData.splitMethod} value="equal" />
-            Equal Split
-          </label>
-          <label>
-            <input type="radio" bind:group={formData.splitMethod} value="personal_equal" />
-            Personal + Equal Split
-          </label>
-          <label>
-            <input type="radio" bind:group={formData.splitMethod} value="full" />
-            Paid in Full by {formData.paidBy}
-          </label>
-          <label>
-            <input type="radio" bind:group={formData.splitMethod} value="proportional" />
-            Custom Proportions
-          </label>
-        </div>
-
-        {#if formData.splitMethod === 'proportional'}
-          <div class="proportional-splits">
-            <h3>Custom Split Amounts</h3>
-            {#each users as user}
-              <div class="split-input">
-                <label>{user}</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  bind:value={splitAmounts[user]}
-                  placeholder="0.00"
-                />
-              </div>
-            {/each}
-          </div>
-        {/if}
-
-        {#if formData.splitMethod === 'personal_equal'}
-          <div class="personal-splits">
-            <h3>Personal Amounts</h3>
-            <p class="description">Enter personal amounts for each user. The remainder will be split equally.</p>
-            {#each users as user}
-              <div class="split-input">
-                <label>{user}</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  min="0"
-                  bind:value={personalAmounts[user]}
-                  placeholder="0.00"
-                />
-              </div>
-            {/each}
-            {#if formData.amount}
-              <div class="remainder-info" class:error={personalTotalError}>
-                <span>Total Personal: CHF {Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0).toFixed(2)}</span>
-                <span>Remainder to Split: CHF {Math.max(0, parseFloat(formData.amount) - Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)).toFixed(2)}</span>
-                {#if personalTotalError}
-                  <div class="error-message">⚠️ Personal amounts exceed total payment amount!</div>
-                {/if}
-              </div>
-            {/if}
-          </div>
-        {/if}
-
-        {#if Object.keys(splitAmounts).length > 0}
-          <div class="split-preview">
-            <h3>Split Preview</h3>
-            {#each users as user}
-              <div class="split-item">
-                <div class="split-user">
-                  <ProfilePicture username={user} size={24} />
-                  <span class="username">{user}</span>
-                </div>
-                <span class="amount" class:positive={splitAmounts[user] < 0} class:negative={splitAmounts[user] > 0}>
-                  {#if splitAmounts[user] > 0}
-                    owes CHF {splitAmounts[user].toFixed(2)}
-                  {:else if splitAmounts[user] < 0}
-                    is owed CHF {Math.abs(splitAmounts[user]).toFixed(2)}
-                  {:else}
-                    owes CHF {splitAmounts[user].toFixed(2)}
-                  {/if}
-                </span>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
+      <SplitMethodSelector 
+        bind:splitMethod={formData.splitMethod}
+        bind:splitAmounts={splitAmounts}
+        bind:personalAmounts={personalAmounts}
+        {users}
+        amount={formData.amount}
+        paidBy={formData.paidBy}
+        currentUser={data.session?.user?.nickname}
+        {predefinedMode}
+      />
 
       {#if error}
         <div class="error">{error}</div>
@@ -616,11 +400,11 @@
 
   .header h1 {
     margin: 0;
-    color: #333;
+    color: var(--nord0);
   }
 
   .back-link {
-    color: #1976d2;
+    color: var(--blue);
     text-decoration: none;
   }
 
@@ -637,16 +421,17 @@
   }
 
   .form-section {
-    background: white;
+    background: var(--nord6);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
   }
 
   .form-section h2 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.25rem;
   }
 
@@ -664,39 +449,42 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: #555;
+    color: var(--nord3);
   }
 
   input, textarea, select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--nord4);
     border-radius: 0.5rem;
     font-size: 1rem;
     box-sizing: border-box;
+    background: var(--nord5);
+    color: var(--nord0);
   }
 
   input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #1976d2;
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.2);
   }
 
   input.error {
-    border-color: #d32f2f;
+    border-color: var(--red);
   }
 
   .help-text {
     margin-top: 0.5rem;
-    color: #666;
+    color: var(--nord3);
     font-size: 0.9rem;
   }
 
   .help-text code {
-    background-color: #f5f5f5;
+    background-color: var(--nord5);
     padding: 0.125rem 0.25rem;
     border-radius: 0.25rem;
     font-family: monospace;
+    color: var(--nord0);
   }
 
   .help-text ul {
@@ -709,14 +497,14 @@
   }
 
   .field-error {
-    color: #d32f2f;
+    color: var(--red);
     font-size: 0.875rem;
     margin-top: 0.25rem;
   }
 
   .execution-preview {
-    background-color: #e3f2fd;
-    border: 1px solid #2196f3;
+    background-color: var(--nord8);
+    border: 1px solid var(--blue);
     border-radius: 0.5rem;
     padding: 1rem;
     margin-top: 1rem;
@@ -724,200 +512,34 @@
 
   .execution-preview h3 {
     margin: 0 0 0.5rem 0;
-    color: #1976d2;
+    color: var(--blue);
     font-size: 1rem;
   }
 
   .next-execution {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #1976d2;
+    color: var(--blue);
     margin: 0.5rem 0;
   }
 
   .frequency-description {
-    color: #666;
+    color: var(--nord3);
     font-size: 0.9rem;
     margin: 0;
     font-style: italic;
   }
 
-  .users-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
 
-  .user-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #f5f5f5;
-    padding: 0.5rem 0.75rem;
-    border-radius: 1rem;
-  }
 
-  .user-item.with-profile {
-    gap: 0.75rem;
-  }
-
-  .user-item .username {
-    font-weight: 500;
-  }
-
-  .you-badge {
-    background-color: #1976d2;
-    color: white;
-    padding: 0.125rem 0.5rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-
-  .remove-user {
-    background-color: #d32f2f;
-    color: white;
-    border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    cursor: pointer;
-  }
-
-  .add-user {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .add-user input {
-    flex: 1;
-  }
-
-  .add-user button {
-    background-color: #1976d2;
-    color: white;
-    border: none;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-  }
-
-  .split-method {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .split-method label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-  }
-
-  .proportional-splits, .personal-splits {
-    border: 1px solid #ddd;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .proportional-splits h3, .personal-splits h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-  }
-
-  .personal-splits .description {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    font-style: italic;
-  }
-
-  .split-input {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .split-input label {
-    min-width: 100px;
-    margin-bottom: 0;
-  }
-
-  .split-input input {
-    max-width: 120px;
-  }
-
-  .remainder-info {
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 0.5rem;
-    border: 1px solid #e9ecef;
-  }
-
-  .remainder-info.error {
-    background-color: #fff5f5;
-    border-color: #fed7d7;
-  }
-
-  .remainder-info span {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-  }
-
-  .error-message {
-    color: #d32f2f;
-    font-weight: 600;
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  .split-preview {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 0.5rem;
-  }
-
-  .split-preview h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-  }
-
-  .split-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .split-user {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .amount.positive {
-    color: #2e7d32;
-    font-weight: 500;
-  }
-
-  .amount.negative {
-    color: #d32f2f;
-    font-weight: 500;
-  }
 
   .error {
-    background-color: #ffebee;
-    color: #d32f2f;
+    background-color: var(--nord6);
+    color: var(--red);
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
+    border: 1px solid var(--red);
   }
 
   .form-actions {
@@ -935,13 +557,13 @@
   }
 
   .btn-primary {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     border: none;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background-color: #1565c0;
+    background-color: var(--lightblue);
   }
 
   .btn-primary:disabled {
@@ -950,13 +572,71 @@
   }
 
   .btn-secondary {
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: var(--nord5);
+    color: var(--nord0);
+    border: 1px solid var(--nord4);
   }
 
   .btn-secondary:hover {
-    background-color: #e8e8e8;
+    background-color: var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .header h1 {
+      color: var(--font-default-dark);
+    }
+
+    .form-section {
+      background: var(--accent-dark);
+      border-color: var(--nord2);
+    }
+
+    .form-section h2 {
+      color: var(--font-default-dark);
+    }
+
+    label {
+      color: var(--nord4);
+    }
+
+    input, textarea, select {
+      background: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord2);
+    }
+
+    input:focus, textarea:focus, select:focus {
+      box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.2);
+    }
+
+    .help-text {
+      color: var(--nord4);
+    }
+
+    .help-text code {
+      background-color: var(--nord1);
+      color: var(--font-default-dark);
+    }
+
+    .execution-preview {
+      background-color: var(--nord2);
+      border-color: var(--blue);
+    }
+
+
+    .error {
+      background-color: var(--accent-dark);
+    }
+
+    .btn-secondary {
+      background-color: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord2);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--nord2);
+    }
   }
 
   @media (max-width: 600px) {
