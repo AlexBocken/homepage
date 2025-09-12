@@ -1,4 +1,4 @@
-import type { Handle } from "@sveltejs/kit"
+import type { Handle, HandleServerError } from "@sveltejs/kit"
 import { redirect } from "@sveltejs/kit"
 import { error } from "@sveltejs/kit"
 import { SvelteKitAuth } from "@auth/sveltekit"
@@ -7,6 +7,8 @@ import { AUTHENTIK_ID, AUTHENTIK_SECRET, AUTHENTIK_ISSUER } from "$env/static/pr
 import { sequence } from "@sveltejs/kit/hooks"
 import * as auth from "./auth"
 import { initializeScheduler } from "./lib/server/scheduler"
+import fs from 'fs'
+import path from 'path'
 
 // Initialize the recurring payment scheduler
 initializeScheduler();
@@ -54,6 +56,82 @@ async function authorization({ event, resolve }) {
 	// If the request is still here, just proceed as normally
 	return resolve(event);
 }
+
+// Bible verse functionality for error pages
+interface BibleVerse {
+  bookName: string;
+  abbreviation: string;
+  chapter: number;
+  verse: number;
+  verseNumber: number;
+  text: string;
+}
+
+let cachedVerses: BibleVerse[] | null = null;
+
+function loadVerses(): BibleVerse[] {
+  if (cachedVerses) {
+    return cachedVerses;
+  }
+
+  try {
+    const filePath = path.join(process.cwd(), 'static', 'allioli.tsv');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const lines = content.trim().split('\n');
+    
+    cachedVerses = lines.map(line => {
+      const [bookName, abbreviation, chapter, verse, verseNumber, text] = line.split('\t');
+      return {
+        bookName,
+        abbreviation, 
+        chapter: parseInt(chapter),
+        verse: parseInt(verse),
+        verseNumber: parseInt(verseNumber),
+        text
+      };
+    });
+
+    return cachedVerses;
+  } catch (err) {
+    console.error('Error loading Bible verses:', err);
+    return [];
+  }
+}
+
+function getRandomVerse(): BibleVerse | null {
+  try {
+    const verses = loadVerses();
+    if (verses.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * verses.length);
+    return verses[randomIndex];
+  } catch (err) {
+    console.error('Error getting random verse:', err);
+    return null;
+  }
+}
+
+function formatVerse(verse: BibleVerse): string {
+  return `${verse.bookName} ${verse.chapter}:${verse.verseNumber}`;
+}
+
+export const handleError: HandleServerError = async ({ error, event, status, message }) => {
+  console.error('Error occurred:', { error, status, message, url: event.url.pathname });
+  
+  // Add Bible verse to error context
+  const randomVerse = getRandomVerse();
+  const bibleQuote = randomVerse ? {
+    text: randomVerse.text,
+    reference: formatVerse(randomVerse),
+    book: randomVerse.bookName,
+    chapter: randomVerse.chapter,
+    verse: randomVerse.verseNumber
+  } : null;
+
+  return {
+    message: message,
+    bibleQuote
+  };
+};
 
 export const handle: Handle = sequence(
 	auth.handle,
