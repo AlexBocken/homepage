@@ -7,15 +7,23 @@
 
   export let data;
 
-  let payments = [];
-  let loading = true;
+  // Use server-side data with progressive enhancement
+  let payments = data.payments || [];
+  let loading = false; // Start as false since we have server data
   let error = null;
-  let currentPage = 0;
-  let limit = 20;
-  let hasMore = true;
+  let currentPage = Math.floor(data.currentOffset / data.limit);
+  let limit = data.limit || 20;
+  let hasMore = data.hasMore || false;
 
+  // Progressive enhancement: only load if JavaScript is available
   onMount(async () => {
-    await loadPayments();
+    // Mark that JavaScript is loaded for CSS
+    document.body.classList.add('js-loaded');
+    
+    // Only refresh if we don't have server data
+    if (payments.length === 0) {
+      await loadPayments();
+    }
   });
 
   async function loadPayments(page = 0) {
@@ -136,7 +144,7 @@
   {:else}
     <div class="payments-grid">
       {#each payments as payment}
-        <div class="payment-card" class:settlement-card={isSettlementPayment(payment)}>
+        <a href="/cospend/payments/view/{payment._id}" class="payment-card" class:settlement-card={isSettlementPayment(payment)}>
           <div class="payment-header">
             {#if isSettlementPayment(payment)}
               <div class="settlement-flow">
@@ -234,17 +242,34 @@
               </div>
             {/if}
           </div>
-        </div>
+        </a>
       {/each}
     </div>
 
-    {#if hasMore}
-      <div class="load-more">
-        <button class="btn btn-secondary" on:click={loadMore} disabled={loading}>
-          {loading ? 'Loading...' : 'Load More'}
+    <!-- Pagination that works without JavaScript -->
+    <div class="pagination">
+      {#if data.currentOffset > 0}
+        <a href="?offset={Math.max(0, data.currentOffset - data.limit)}&limit={data.limit}" 
+           class="btn btn-secondary">
+          ← Previous
+        </a>
+      {/if}
+      
+      {#if hasMore}
+        <a href="?offset={data.currentOffset + data.limit}&limit={data.limit}" 
+           class="btn btn-secondary">
+          Next →
+        </a>
+      {/if}
+      
+      <!-- Progressive enhancement: JavaScript load more button -->
+      {#if hasMore}
+        <button class="btn btn-secondary js-only" on:click={loadMore} disabled={loading} 
+                style="display: none;">
+          {loading ? 'Loading...' : 'Load More (JS)'}
         </button>
-      </div>
-    {/if}
+      {/if}
+    </div>
   {/if}
 </main>
 
@@ -350,15 +375,20 @@
   }
 
   .payment-card {
+    display: block;
     background: white;
     border-radius: 0.75rem;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
   }
 
   .payment-card:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+    color: inherit;
   }
 
   .settlement-card {
@@ -593,9 +623,20 @@
     background-color: #c62828;
   }
 
-  .load-more {
-    text-align: center;
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
     margin-top: 2rem;
+  }
+
+  /* Progressive enhancement: show JS features only when JS is loaded */
+  .js-only {
+    display: none;
+  }
+  
+  :global(body.js-loaded) .js-only {
+    display: inline-block;
   }
 
   @media (max-width: 600px) {

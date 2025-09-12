@@ -6,16 +6,25 @@
   
   export let data;
 
-  let payment = null;
-  let loading = true;
+  // Use server-side data with progressive enhancement
+  let payment = data.payment || null;
+  let loading = false; // Start as false since we have server data
   let error = null;
 
+  // Progressive enhancement: refresh data if JavaScript is available
   onMount(async () => {
-    await loadPayment();
+    // Mark that JavaScript is loaded
+    document.body.classList.add('js-loaded');
+    
+    // Only refresh if we don't have server data
+    if (!payment) {
+      await loadPayment();
+    }
   });
 
   async function loadPayment() {
     try {
+      loading = true;
       const response = await fetch(`/api/cospend/payments/${data.paymentId}`);
       if (!response.ok) {
         throw new Error('Failed to load payment');
