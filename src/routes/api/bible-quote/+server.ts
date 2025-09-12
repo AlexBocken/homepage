@@ -1,7 +1,5 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import fs from 'fs';
-import path from 'path';
 
 interface BibleVerse {
   bookName: string;
@@ -15,14 +13,17 @@ interface BibleVerse {
 // Cache for parsed verses to avoid reading file repeatedly
 let cachedVerses: BibleVerse[] | null = null;
 
-function loadVerses(): BibleVerse[] {
+async function loadVerses(): Promise<BibleVerse[]> {
   if (cachedVerses) {
     return cachedVerses;
   }
 
   try {
-    const filePath = path.join(process.cwd(), 'static', 'allioli.tsv');
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const response = await fetch('/allioli.tsv');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const content = await response.text();
     const lines = content.trim().split('\n');
     
     cachedVerses = lines.map(line => {
@@ -55,7 +56,7 @@ function formatVerse(verse: BibleVerse): string {
 
 export const GET: RequestHandler = async () => {
   try {
-    const verses = loadVerses();
+    const verses = await loadVerses();
     const randomVerse = getRandomVerse(verses);
     
     return json({
