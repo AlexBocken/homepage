@@ -1,71 +1,60 @@
 <script>
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { enhance } from '$app/forms';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
 
   export let data;
+  export let form;
 
-  let debtData = {
+  // Use server-side data with progressive enhancement
+  let debtData = data.debtData || {
     whoOwesMe: [],
     whoIOwe: [],
     totalOwedToMe: 0,
     totalIOwe: 0
   };
-  let loading = true;
-  let error = null;
+  let loading = false; // Start as false since we have server data
+  let error = data.error || form?.error || null;
   let selectedSettlement = null;
-  let settlementAmount = '';
+  let settlementAmount = form?.values?.amount || '';
   let submitting = false;
   let predefinedMode = isPredefinedUsersMode();
 
-  onMount(async () => {
-    await fetchDebtData();
-  });
-
-  async function fetchDebtData() {
-    try {
-      loading = true;
-      const response = await fetch('/api/cospend/debts');
-      if (!response.ok) {
-        throw new Error('Failed to fetch debt data');
-      }
-      debtData = await response.json();
-
-      // For predefined mode with 2 users, auto-select the debt if there's only one
-      if (predefinedMode && PREDEFINED_USERS.length === 2) {
-        const totalDebts = debtData.whoOwesMe.length + debtData.whoIOwe.length;
-        if (totalDebts === 1) {
-          if (debtData.whoOwesMe.length === 1) {
-            selectedSettlement = {
-              type: 'receive',
-              from: debtData.whoOwesMe[0].username,
-              to: data.session?.user?.nickname,
-              amount: debtData.whoOwesMe[0].netAmount,
-              description: `Settlement: ${debtData.whoOwesMe[0].username} pays ${data.session?.user?.nickname}`
-            };
+  onMount(() => {
+    // For predefined mode with 2 users, auto-select the debt if there's only one
+    if (predefinedMode && PREDEFINED_USERS.length === 2) {
+      const totalDebts = debtData.whoOwesMe.length + debtData.whoIOwe.length;
+      if (totalDebts === 1) {
+        if (debtData.whoOwesMe.length === 1) {
+          selectedSettlement = {
+            type: 'receive',
+            from: debtData.whoOwesMe[0].username,
+            to: data.currentUser,
+            amount: debtData.whoOwesMe[0].netAmount,
+            description: `Settlement: ${debtData.whoOwesMe[0].username} pays ${data.currentUser}`
+          };
+          if (!settlementAmount) {
             settlementAmount = debtData.whoOwesMe[0].netAmount.toString();
-          } else if (debtData.whoIOwe.length === 1) {
-            selectedSettlement = {
-              type: 'pay',
-              from: data.session?.user?.nickname,
-              to: debtData.whoIOwe[0].username,
-              amount: debtData.whoIOwe[0].netAmount,
-              description: `Settlement: ${data.session?.user?.nickname} pays ${debtData.whoIOwe[0].username}`
-            };
+          }
+        } else if (debtData.whoIOwe.length === 1) {
+          selectedSettlement = {
+            type: 'pay',
+            from: data.currentUser,
+            to: debtData.whoIOwe[0].username,
+            amount: debtData.whoIOwe[0].netAmount,
+            description: `Settlement: ${data.currentUser} pays ${debtData.whoIOwe[0].username}`
+          };
+          if (!settlementAmount) {
             settlementAmount = debtData.whoIOwe[0].netAmount.toString();
           }
         }
       }
-    } catch (err) {
-      error = err.message;
-    } finally {
-      loading = false;
     }
-  }
+  });
 
   function selectSettlement(type, user, amount) {
-    const currentUser = data.session?.user?.nickname;
+    const currentUser = data.currentUser;
     if (type === 'receive') {
       selectedSettlement = {
         type: 'receive',
@@ -98,18 +87,18 @@
       return;
     }
 
-    try {
-      submitting = true;
-      error = null;
+    submitting = true;
+    error = null;
 
-      // Create a settlement payment
+    try {
+      // Create a settlement payment directly using the API
       const payload = {
-        title: `Settlement Payment`,
+        title: 'Settlement Payment',
         description: selectedSettlement.description,
         amount: amount,
         paidBy: selectedSettlement.from,
         date: new Date().toISOString().split('T')[0],
-        category: 'settlement', // Using settlement category
+        category: 'settlement',
         splitMethod: 'full',
         splits: [
           {
@@ -136,11 +125,10 @@
         throw new Error(errorData.message || 'Failed to record settlement');
       }
 
-      // Redirect back to dashboard
-      goto('/cospend');
+      // Redirect back to dashboard on success
+      window.location.href = '/cospend';
     } catch (err) {
       error = err.message;
-    } finally {
       submitting = false;
     }
   }
@@ -236,7 +224,7 @@
               <div class="user-from">
                 <ProfilePicture username={selectedSettlement.from} size={48} />
                 <span class="username">{selectedSettlement.from}</span>
-                {#if selectedSettlement.from === data.session?.user?.nickname}
+                {#if selectedSettlement.from === data.currentUser}
                   <span class="you-badge">You</span>
                 {/if}
               </div>
@@ -244,7 +232,7 @@
               <div class="user-to">
                 <ProfilePicture username={selectedSettlement.to} size={48} />
                 <span class="username">{selectedSettlement.to}</span>
-                {#if selectedSettlement.to === data.session?.user?.nickname}
+                {#if selectedSettlement.to === data.currentUser}
                   <span class="you-badge">You</span>
                 {/if}
               </div>
@@ -288,12 +276,75 @@
             </button>
           </div>
         </div>
+      {:else}
+        <!-- No-JS Fallback Form -->
+        <div class="settlement-details no-js-fallback">
+          <h2>Record Settlement</h2>
+          <form method="POST" action="?/settle" class="settlement-form">
+            <div class="form-group">
+              <label for="settlementType">Settlement Type</label>
+              <select id="settlementType" name="settlementType" required>
+                <option value="">Select settlement type</option>
+                {#each debtData.whoOwesMe as debt}
+                  <option value="receive" data-from="{debt.username}" data-to="{data.currentUser}">
+                    Receive {formatCurrency(debt.netAmount)} from {debt.username}
+                  </option>
+                {/each}
+                {#each debtData.whoIOwe as debt}
+                  <option value="pay" data-from="{data.currentUser}" data-to="{debt.username}">
+                    Pay {formatCurrency(debt.netAmount)} to {debt.username}
+                  </option>
+                {/each}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="fromUser">From User</label>
+              <select id="fromUser" name="fromUser" required>
+                <option value="">Select payer</option>
+                {#each [...debtData.whoOwesMe.map(d => d.username), data.currentUser].filter(Boolean) as user}
+                  <option value="{user}">{user}{user === data.currentUser ? ' (You)' : ''}</option>
+                {/each}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="toUser">To User</label>
+              <select id="toUser" name="toUser" required>
+                <option value="">Select recipient</option>
+                {#each [...debtData.whoIOwe.map(d => d.username), data.currentUser].filter(Boolean) as user}
+                  <option value="{user}">{user}{user === data.currentUser ? ' (You)' : ''}</option>
+                {/each}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="fallback-amount">Settlement Amount (CHF)</label>
+              <input
+                id="fallback-amount"
+                name="amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={form?.values?.amount || ''}
+                placeholder="0.00"
+                required
+              />
+            </div>
+
+            <div class="settlement-actions">
+              <button type="submit" class="btn btn-settlement">
+                Record Settlement
+              </button>
+              <a href="/cospend" class="btn btn-secondary">
+                Cancel
+              </a>
+            </div>
+          </form>
+        </div>
       {/if}
     </div>
 
-    <div class="back-actions">
-      <a href="/cospend" class="btn btn-secondary">← Back to Dashboard</a>
-    </div>
   {/if}
 </main>
 
@@ -310,12 +361,12 @@
   }
 
   .header-section h1 {
-    color: #333;
+    color: var(--nord0);
     margin-bottom: 0.5rem;
   }
 
   .header-section p {
-    color: #666;
+    color: var(--nord3);
     font-size: 1.1rem;
   }
 
@@ -326,8 +377,8 @@
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
+    color: var(--red);
+    background-color: var(--nord6);
     border-radius: 0.5rem;
     margin-bottom: 1rem;
   }
@@ -335,13 +386,14 @@
   .no-debts {
     text-align: center;
     padding: 3rem 2rem;
-    background: white;
+    background: var(--nord6);
     border-radius: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
   }
 
   .no-debts h2 {
-    color: #28a745;
+    color: var(--green);
     margin-bottom: 1rem;
   }
 
@@ -359,10 +411,11 @@
   }
 
   .available-settlements {
-    background: white;
+    background: var(--nord6);
     padding: 1.5rem;
     border-radius: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
   }
 
   .settlement-section {
@@ -370,7 +423,7 @@
   }
 
   .settlement-section h3 {
-    color: #333;
+    color: var(--nord0);
     margin-bottom: 1rem;
     font-size: 1.1rem;
   }
@@ -380,21 +433,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--nord4);
     border-radius: 0.75rem;
     margin-bottom: 0.75rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    background: var(--nord5);
   }
 
   .settlement-option:hover {
-    border-color: #28a745;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.1);
+    border-color: var(--green);
+    box-shadow: 0 2px 8px rgba(163, 190, 140, 0.1);
   }
 
   .settlement-option.selected {
-    border-color: #28a745;
-    background-color: #f8fff9;
+    border-color: var(--green);
+    background-color: var(--nord5);
   }
 
   .settlement-user {
@@ -412,24 +466,25 @@
 
   .username {
     font-weight: 600;
-    color: #333;
+    color: var(--nord0);
   }
 
   .debt-amount {
-    color: #666;
+    color: var(--nord3);
     font-size: 0.9rem;
   }
 
   .settlement-action {
-    color: #28a745;
+    color: var(--green);
     font-weight: 500;
   }
 
   .settlement-details {
-    background: white;
+    background: var(--nord6);
     padding: 1.5rem;
     border-radius: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
     height: fit-content;
   }
 
@@ -444,7 +499,7 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: var(--nord5);
     border-radius: 0.5rem;
   }
 
@@ -457,12 +512,12 @@
 
   .flow-arrow {
     font-size: 1.5rem;
-    color: #28a745;
+    color: var(--green);
     font-weight: bold;
   }
 
   .you-badge {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     padding: 0.125rem 0.5rem;
     border-radius: 1rem;
@@ -478,20 +533,20 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: #333;
+    color: var(--nord0);
   }
 
   .amount-input {
     display: flex;
     align-items: center;
-    background: #f8f9fa;
-    border: 1px solid #ced4da;
+    background: var(--nord5);
+    border: 1px solid var(--nord4);
     border-radius: 0.375rem;
     padding: 0.5rem;
   }
 
   .currency {
-    color: #666;
+    color: var(--nord3);
     font-weight: 500;
     margin-right: 0.5rem;
   }
@@ -502,6 +557,7 @@
     flex: 1;
     padding: 0.25rem;
     font-size: 1rem;
+    color: var(--nord0);
   }
 
   .amount-input input:focus {
@@ -509,17 +565,17 @@
   }
 
   .max-amount {
-    color: #666;
+    color: var(--nord3);
     font-size: 0.85rem;
     margin-top: 0.25rem;
     display: block;
   }
 
   .settlement-description {
-    color: #333;
+    color: var(--nord0);
     font-size: 0.9rem;
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: var(--nord5);
     border-radius: 0.375rem;
   }
 
@@ -527,6 +583,48 @@
     display: flex;
     gap: 1rem;
     justify-content: center;
+  }
+
+  .settlement-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    color: var(--nord0);
+  }
+
+  .form-group select,
+  .form-group input {
+    padding: 0.75rem;
+    border: 1px solid var(--nord4);
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    background-color: var(--nord5);
+    color: var(--nord0);
+  }
+
+  .form-group select:focus,
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
+  }
+
+  .no-js-fallback {
+    display: block;
+  }
+
+  :global(body:has(script)) .no-js-fallback {
+    display: none;
   }
 
   .btn {
@@ -542,31 +640,31 @@
   }
 
   .btn-primary {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
   }
 
   .btn-primary:hover {
-    background-color: #1565c0;
+    background-color: var(--lightblue);
   }
 
   .btn-secondary {
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: var(--nord5);
+    color: var(--nord0);
+    border: 1px solid var(--nord4);
   }
 
   .btn-secondary:hover {
-    background-color: #e8e8e8;
+    background-color: var(--nord4);
   }
 
   .btn-settlement {
-    background: linear-gradient(135deg, #28a745, #20c997);
+    background: linear-gradient(135deg, var(--green), var(--lightblue));
     color: white;
   }
 
   .btn-settlement:hover:not(:disabled) {
-    background: linear-gradient(135deg, #20c997, #1e7e34);
+    background: linear-gradient(135deg, var(--lightblue), var(--green));
   }
 
   .btn-settlement:disabled {
@@ -581,6 +679,111 @@
 
   .actions {
     margin-top: 1.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .header-section h1 {
+      color: var(--font-default-dark);
+    }
+
+    .header-section p {
+      color: var(--nord4);
+    }
+
+    .error {
+      background-color: var(--accent-dark);
+    }
+
+    .no-debts {
+      background: var(--accent-dark);
+      border-color: var(--nord2);
+    }
+
+    .available-settlements {
+      background: var(--accent-dark);
+      border-color: var(--nord2);
+    }
+
+    .settlement-section h3 {
+      color: var(--font-default-dark);
+    }
+
+    .settlement-option {
+      border-color: var(--nord2);
+      background: var(--nord1);
+    }
+
+    .settlement-option:hover {
+      box-shadow: 0 2px 8px rgba(163, 190, 140, 0.2);
+    }
+
+    .settlement-option.selected {
+      background-color: var(--nord1);
+    }
+
+    .username {
+      color: var(--font-default-dark);
+    }
+
+    .debt-amount {
+      color: var(--nord4);
+    }
+
+    .settlement-details {
+      background: var(--accent-dark);
+      border-color: var(--nord2);
+    }
+
+    .settlement-flow {
+      background-color: var(--nord1);
+    }
+
+    .settlement-amount-section label {
+      color: var(--font-default-dark);
+    }
+
+    .amount-input {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+
+    .currency {
+      color: var(--nord4);
+    }
+
+    .max-amount {
+      color: var(--nord4);
+    }
+
+    .settlement-description {
+      color: var(--font-default-dark);
+      background-color: var(--nord1);
+    }
+
+    .amount-input input {
+      color: var(--font-default-dark);
+    }
+
+    .btn-secondary {
+      background-color: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord2);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--nord2);
+    }
+
+    .form-group label {
+      color: var(--font-default-dark);
+    }
+
+    .form-group select,
+    .form-group input {
+      background-color: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord2);
+    }
   }
 
   @media (max-width: 600px) {

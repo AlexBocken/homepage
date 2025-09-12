@@ -6,6 +6,9 @@
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { validateCronExpression, getFrequencyDescription, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import SplitMethodSelector from '$lib/components/SplitMethodSelector.svelte';
+  import UsersList from '$lib/components/UsersList.svelte';
+  import ImageUpload from '$lib/components/ImageUpload.svelte';
   
   export let data;
   export let form;
@@ -33,12 +36,12 @@
 
   let imageFile = null;
   let imagePreview = '';
+  let uploading = false;
   let newUser = '';
   let splitAmounts = {};
   let personalAmounts = {};
   let loading = false;
   let error = form?.error || null;
-  let personalTotalError = false;
   let predefinedMode = data.predefinedUsers.length > 0;
   let jsEnhanced = false;
   let cronError = false;
@@ -109,52 +112,17 @@
     }
   });
 
-  function handleImageChange(event) {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
-        return;
-      }
-      
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Please select a valid image file (JPEG, PNG, WebP)');
-        return;
-      }
-
-      imageFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        imagePreview = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
+  function handleImageSelected(event) {
+    imageFile = event.detail;
   }
 
-  function removeImage() {
+  function handleImageError(event) {
+    error = event.detail;
+  }
+
+  function handleImageRemoved() {
     imageFile = null;
     imagePreview = '';
-  }
-
-  function addUser() {
-    if (predefinedMode) return; // No adding users in predefined mode
-    
-    if (newUser.trim() && !users.includes(newUser.trim())) {
-      users = [...users, newUser.trim()];
-      addSplitForUser(newUser.trim());
-      newUser = '';
-    }
-  }
-
-  function removeUser(userToRemove) {
-    if (predefinedMode) return; // No removing users in predefined mode
-    
-    if (users.length > 1 && userToRemove !== data.session.user.nickname) {
-      users = users.filter(u => u !== userToRemove);
-      delete splitAmounts[userToRemove];
-      splitAmounts = { ...splitAmounts };
-    }
   }
 
   function addSplitForUser(username) {
@@ -164,89 +132,10 @@
     }
   }
 
-  function calculateEqualSplits() {
-    if (!formData.amount || users.length === 0) return;
-    
-    const amountNum = parseFloat(formData.amount);
-    const splitAmount = amountNum / users.length;
-    
-    users.forEach(user => {
-      if (user === formData.paidBy) {
-        splitAmounts[user] = splitAmount - amountNum; // They get negative (they're owed)
-      } else {
-        splitAmounts[user] = splitAmount; // They owe positive amount
-      }
-    });
-    splitAmounts = { ...splitAmounts };
-  }
-
-  function calculateFullPayment() {
-    if (!formData.amount) return;
-    
-    const amountNum = parseFloat(formData.amount);
-    const otherUsers = users.filter(user => user !== formData.paidBy);
-    const amountPerOtherUser = otherUsers.length > 0 ? amountNum / otherUsers.length : 0;
-    
-    users.forEach(user => {
-      if (user === formData.paidBy) {
-        splitAmounts[user] = -amountNum; // They paid it all, so they're owed the full amount
-      } else {
-        splitAmounts[user] = amountPerOtherUser; // Others owe their share of the full amount
-      }
-    });
-    splitAmounts = { ...splitAmounts };
-  }
-
-  function calculatePersonalEqualSplit() {
-    if (!formData.amount || users.length === 0) return;
-    
-    const totalAmount = parseFloat(formData.amount);
-    
-    // Calculate total personal amounts
-    const totalPersonal = users.reduce((sum, user) => {
-      return sum + (parseFloat(personalAmounts[user]) || 0);
-    }, 0);
-    
-    // Remaining amount to be split equally
-    const remainder = Math.max(0, totalAmount - totalPersonal);
-    const equalShare = remainder / users.length;
-    
-    users.forEach(user => {
-      const personalAmount = parseFloat(personalAmounts[user]) || 0;
-      const totalOwed = personalAmount + equalShare;
-      
-      if (user === formData.paidBy) {
-        // Person who paid gets back what others owe minus what they personally used
-        splitAmounts[user] = totalOwed - totalAmount;
-      } else {
-        // Others owe their personal amount + equal share
-        splitAmounts[user] = totalOwed;
-      }
-    });
-    splitAmounts = { ...splitAmounts };
-  }
-
-  function handleSplitMethodChange() {
-    if (formData.splitMethod === 'equal') {
-      calculateEqualSplits();
-    } else if (formData.splitMethod === 'full') {
-      calculateFullPayment();
-    } else if (formData.splitMethod === 'personal_equal') {
-      calculatePersonalEqualSplit();
-    } else if (formData.splitMethod === 'proportional') {
-      // For proportional, user enters amounts manually - just ensure all users have entries
-      users.forEach(user => {
-        if (!(user in splitAmounts)) {
-          splitAmounts[user] = 0;
-        }
-      });
-      splitAmounts = { ...splitAmounts };
-    }
-  }
-
   async function uploadImage() {
     if (!imageFile) return null;
     
+    uploading = true;
     const formData = new FormData();
     formData.append('image', imageFile);
     
@@ -265,6 +154,8 @@
     } catch (err) {
       console.error('Image upload failed:', err);
       return null;
+    } finally {
+      uploading = false;
     }
   }
 
@@ -274,16 +165,6 @@
       return;
     }
 
-    // Validate personal amounts for personal_equal split
-    if (formData.splitMethod === 'personal_equal') {
-      const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-      const totalAmount = parseFloat(formData.amount);
-      
-      if (totalPersonal > totalAmount) {
-        error = 'Personal amounts cannot exceed the total payment amount';
-        return;
-      }
-    }
 
     if (users.length === 0) {
       error = 'Please add at least one user to split with';
@@ -336,20 +217,6 @@
     }
   }
 
-  $: if (formData.amount && formData.splitMethod && formData.paidBy) {
-    handleSplitMethodChange();
-  }
-
-  // Validate and recalculate when personal amounts change
-  $: if (formData.splitMethod === 'personal_equal' && personalAmounts && formData.amount) {
-    const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-    const totalAmount = parseFloat(formData.amount);
-    personalTotalError = totalPersonal > totalAmount;
-    
-    if (!personalTotalError) {
-      calculatePersonalEqualSplit();
-    }
-  }
 
   function validateCron() {
     if (recurringData.frequency !== 'custom') {
@@ -569,189 +436,54 @@
       </div>
     {/if}
 
-    <div class="form-section">
-      <h2>Receipt Image</h2>
-      
-      {#if imagePreview}
-        <div class="image-preview">
-          <img src={imagePreview} alt="Receipt preview" />
-          <button type="button" class="remove-image" on:click={removeImage}>
-            Remove Image
-          </button>
-        </div>
-      {:else}
-        <div class="image-upload">
-          <label for="image" class="upload-label">
-            <div class="upload-content">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/>
-                <line x1="16" y1="5" x2="22" y2="5"/>
-                <line x1="19" y1="2" x2="19" y2="8"/>
-              </svg>
-              <p>Upload Receipt Image</p>
-              <small>JPEG, PNG, WebP (max 5MB)</small>
-            </div>
-          </label>
-          <input 
-            type="file" 
-            id="image" 
-            accept="image/jpeg,image/jpg,image/png,image/webp" 
-            on:change={handleImageChange}
-            hidden
-          />
-        </div>
-      {/if}
+    <ImageUpload
+      bind:imagePreview={imagePreview}
+      bind:imageFile={imageFile}
+      bind:uploading={uploading}
+      on:imageSelected={handleImageSelected}
+      on:imageRemoved={handleImageRemoved}
+      on:error={handleImageError}
+    />
+
+    <UsersList 
+      bind:users={users}
+      bind:newUser={newUser}
+      currentUser={data.session?.user?.nickname || data.currentUser}
+      predefinedMode={predefinedMode}
+      canRemoveUsers={!predefinedMode}
+    />
+
+    <!-- Server-side fallback: simple text inputs for users -->
+    <div class="manual-users no-js-only">
+      <p>Enter users to split with (one per line):</p>
+      <textarea 
+        name="users_manual" 
+        placeholder="{data.currentUser}&#10;Enter additional users..."
+        rows="4"
+      >{data.currentUser}</textarea>
     </div>
 
-    <div class="form-section">
-      <h2>Split Between Users</h2>
-      
-      {#if predefinedMode}
-        <div class="predefined-users">
-          <p class="predefined-note">Splitting between predefined users:</p>
-          <div class="users-list">
-            {#each users as user}
-              <div class="user-item with-profile">
-                <ProfilePicture username={user} size={32} />
-                <span class="username">{user}</span>
-                {#if user === data.session?.user?.nickname}
-                  <span class="you-badge">You</span>
-                {/if}
-              </div>
-            {/each}
-          </div>
-        </div>
-      {:else}
-        <div class="users-list">
-          {#each users as user}
-            <div class="user-item with-profile">
-              <ProfilePicture username={user} size={32} />
-              <span class="username">{user}</span>
-              {#if user !== data.session.user.nickname}
-                <button type="button" class="remove-user" on:click={() => removeUser(user)}>
-                  Remove
-                </button>
-              {/if}
-            </div>
-          {/each}
-        </div>
+    <!-- Hidden inputs for JavaScript-managed users -->
+    {#if predefinedMode}
+      {#each data.predefinedUsers as user, i}
+        <input type="hidden" name="user_{i}" value={user} />
+      {/each}
+    {:else}
+      {#each users as user, i}
+        <input type="hidden" name="user_{i}" value={user} />
+      {/each}
+    {/if}
 
-        <div class="add-user js-enhanced" style="display: none;">
-          <input 
-            type="text" 
-            bind:value={newUser} 
-            placeholder="Add user..."
-            on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addUser())}
-          />
-          <button type="button" on:click={addUser}>Add User</button>
-        </div>
-
-        <!-- Server-side fallback: simple text inputs for users -->
-        <div class="manual-users no-js-only">
-          <p>Enter users to split with (one per line):</p>
-          <textarea 
-            name="users_manual" 
-            placeholder="{data.currentUser}&#10;Enter additional users..."
-            rows="4"
-          >{data.currentUser}</textarea>
-        </div>
-      {/if}
-
-      <!-- Hidden inputs for JavaScript-managed users -->
-      {#if predefinedMode}
-        {#each data.predefinedUsers as user, i}
-          <input type="hidden" name="user_{i}" value={user} />
-        {/each}
-      {:else}
-        {#each users as user, i}
-          <input type="hidden" name="user_{i}" value={user} />
-        {/each}
-      {/if}
-    </div>
-
-    <div class="form-section">
-      <h2>Split Method</h2>
-      
-      <div class="form-group">
-        <label for="splitMethod">How should this payment be split?</label>
-        <select id="splitMethod" name="splitMethod" bind:value={formData.splitMethod} required>
-          <option value="equal">{predefinedMode && users.length === 2 ? 'Split 50/50' : 'Equal Split'}</option>
-          <option value="personal_equal">Personal + Equal Split</option>
-          <option value="full">{paidInFullText}</option>
-          <option value="proportional">Custom Proportions</option>
-        </select>
-      </div>
-
-      {#if formData.splitMethod === 'proportional'}
-        <div class="proportional-splits">
-          <h3>Custom Split Amounts</h3>
-          {#each users as user}
-            <div class="split-input">
-              <label>{user}</label>
-              <input 
-                type="number" 
-                step="0.01" 
-                name="split_{user}"
-                bind:value={splitAmounts[user]}
-                placeholder="0.00"
-              />
-            </div>
-          {/each}
-        </div>
-      {/if}
-
-      {#if formData.splitMethod === 'personal_equal'}
-        <div class="personal-splits">
-          <h3>Personal Amounts</h3>
-          <p class="description">Enter personal amounts for each user. The remainder will be split equally.</p>
-          {#each users as user}
-            <div class="split-input">
-              <label>{user}</label>
-              <input 
-                type="number" 
-                step="0.01" 
-                min="0"
-                name="personal_{user}"
-                bind:value={personalAmounts[user]}
-                placeholder="0.00"
-              />
-            </div>
-          {/each}
-          {#if formData.amount}
-            <div class="remainder-info" class:error={personalTotalError}>
-              <span>Total Personal: CHF {Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0).toFixed(2)}</span>
-              <span>Remainder to Split: CHF {Math.max(0, parseFloat(formData.amount) - Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)).toFixed(2)}</span>
-              {#if personalTotalError}
-                <div class="error-message">⚠️ Personal amounts exceed total payment amount!</div>
-              {/if}
-            </div>
-          {/if}
-        </div>
-      {/if}
-
-      {#if Object.keys(splitAmounts).length > 0}
-        <div class="split-preview">
-          <h3>Split Preview</h3>
-          {#each users as user}
-            <div class="split-item">
-              <div class="split-user">
-                <ProfilePicture username={user} size={24} />
-                <span class="username">{user}</span>
-              </div>
-              <span class="amount" class:positive={splitAmounts[user] < 0} class:negative={splitAmounts[user] > 0}>
-                {#if splitAmounts[user] > 0}
-                  owes CHF {splitAmounts[user].toFixed(2)}
-                {:else if splitAmounts[user] < 0}
-                  is owed CHF {Math.abs(splitAmounts[user]).toFixed(2)}
-                {:else}
-                  owes CHF {splitAmounts[user].toFixed(2)}
-                {/if}
-              </span>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
+    <SplitMethodSelector 
+      bind:splitMethod={formData.splitMethod}
+      bind:splitAmounts={splitAmounts}
+      bind:personalAmounts={personalAmounts}
+      {users}
+      amount={formData.amount}
+      paidBy={formData.paidBy}
+      currentUser={data.session?.user?.nickname || data.currentUser}
+      {predefinedMode}
+    />
 
     {#if error}
       <div class="error">{error}</div>
@@ -882,283 +614,9 @@
     }
   }
 
-  .image-upload {
-    border: 2px dashed var(--nord4);
-    border-radius: 0.5rem;
-    padding: 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    background-color: var(--nord5);
-  }
-
-  .image-upload:hover {
-    border-color: var(--blue);
-    background-color: var(--nord4);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .image-upload {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-
-    .image-upload:hover {
-      background-color: var(--nord3);
-    }
-  }
-
-  .upload-label {
-    cursor: pointer;
-    display: block;
-  }
-
-  .upload-content svg {
-    color: var(--nord3);
-    margin-bottom: 1rem;
-  }
-
-  .upload-content p {
-    margin: 0 0 0.5rem 0;
-    font-weight: 500;
-    color: var(--nord0);
-  }
-
-  .upload-content small {
-    color: var(--nord3);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .upload-content svg {
-      color: var(--nord4);
-    }
-
-    .upload-content p {
-      color: var(--font-default-dark);
-    }
-
-    .upload-content small {
-      color: var(--nord4);
-    }
-  }
-
-  .image-preview {
-    text-align: center;
-  }
-
-  .image-preview img {
-    max-width: 100%;
-    max-height: 300px;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .remove-image {
-    background-color: var(--red);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .remove-image:hover {
-    background-color: var(--nord11);
-    transform: translateY(-1px);
-  }
-
-  .users-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .user-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: var(--nord5);
-    padding: 0.5rem 0.75rem;
-    border-radius: 1rem;
-    border: 1px solid var(--nord4);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .user-item {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-
-  .user-item.with-profile {
-    gap: 0.75rem;
-  }
-
-  .user-item .username {
-    font-weight: 500;
-    color: var(--nord0);
-  }
-
-  .you-badge {
-    background-color: var(--blue);
-    color: white;
-    padding: 0.125rem 0.5rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .user-item .username {
-      color: var(--font-default-dark);
-    }
-  }
-
-  .predefined-users {
-    background-color: var(--nord5);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
-  }
-
-  .predefined-note {
-    margin: 0 0 1rem 0;
-    color: var(--nord2);
-    font-size: 0.9rem;
-    font-style: italic;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .predefined-users {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-
-    .predefined-note {
-      color: var(--nord4);
-    }
-  }
-
-  .remove-user {
-    background-color: var(--red);
-    color: white;
-    border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .remove-user:hover {
-    background-color: var(--nord11);
-    transform: translateY(-1px);
-  }
-
-  .add-user {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .add-user input {
-    flex: 1;
-  }
-
-  .add-user button {
-    background-color: var(--blue);
-    color: white;
-    border: none;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .add-user button:hover {
-    background-color: var(--nord10);
-    transform: translateY(-1px);
-  }
 
 
-  .proportional-splits {
-    border: 1px solid var(--nord4);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background-color: var(--nord5);
-  }
 
-  @media (prefers-color-scheme: dark) {
-    .proportional-splits {
-      border-color: var(--nord3);
-      background-color: var(--nord2);
-    }
-  }
-
-  .proportional-splits h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-  }
-
-  .split-input {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .split-input label {
-    min-width: 100px;
-    margin-bottom: 0;
-  }
-
-  .split-input input {
-    max-width: 120px;
-  }
-
-  .split-preview {
-    background-color: var(--nord5);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .split-preview {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-
-  .split-preview h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-  }
-
-  .split-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .split-user {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .amount.positive {
-    color: var(--green);
-    font-weight: 500;
-  }
-
-  .amount.negative {
-    color: var(--red);
-    font-weight: 500;
-  }
 
   .error {
     background-color: var(--nord6);
@@ -1232,59 +690,6 @@
     }
   }
 
-  .personal-splits {
-    margin-top: 1rem;
-  }
-
-  .personal-splits .description {
-    color: var(--nord2);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    font-style: italic;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .personal-splits .description {
-      color: var(--nord4);
-    }
-  }
-
-  .remainder-info {
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: var(--nord5);
-    border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
-  }
-
-  .remainder-info.error {
-    background-color: var(--nord6);
-    border-color: var(--red);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .remainder-info {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-
-    .remainder-info.error {
-      background-color: var(--accent-dark);
-    }
-  }
-
-  .remainder-info span {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-  }
-
-  .error-message {
-    color: var(--red);
-    font-weight: 600;
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-  }
 
   /* Progressive enhancement styles */
   .no-js-only {

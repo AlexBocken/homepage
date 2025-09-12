@@ -219,25 +219,6 @@
             </div>
           {/if}
 
-          <div class="payment-actions">
-            <span class="created-by">Created by {payment.createdBy}</span>
-            {#if payment.createdBy === data.session.user.nickname}
-              <div class="action-buttons">
-                <button
-                  class="btn-edit"
-                  on:click={() => goto(`/cospend/payments/edit/${payment._id}`)}
-                >
-                  Edit
-                </button>
-                <button
-                  class="btn-delete"
-                  on:click={() => deletePayment(payment._id)}
-                >
-                  Delete
-                </button>
-              </div>
-            {/if}
-          </div>
         </a>
       {/each}
     </div>
@@ -678,73 +659,6 @@
     }
   }
 
-  .payment-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid var(--nord4);
-    padding-top: 1rem;
-  }
-
-  .created-by {
-    font-size: 0.9rem;
-    color: var(--nord3);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .payment-actions {
-      border-top-color: var(--nord2);
-    }
-
-    .created-by {
-      color: var(--nord4);
-    }
-  }
-
-  .action-buttons {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .btn-edit, .btn-delete {
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.25rem;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-  }
-
-  .btn-edit {
-    background-color: var(--nord5);
-    color: var(--nord0);
-    border: 1px solid var(--nord4);
-  }
-
-  .btn-edit:hover {
-    background-color: var(--nord4);
-  }
-
-  .btn-delete {
-    background-color: var(--red);
-    color: white;
-  }
-
-  .btn-delete:hover {
-    background-color: var(--nord11);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .btn-edit {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-
-    .btn-edit:hover {
-      background-color: var(--nord3);
-    }
-  }
 
   .pagination {
     display: flex;
@@ -781,10 +695,5 @@
       grid-template-columns: 1fr;
     }
 
-    .payment-actions {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-    }
   }
 </style>
