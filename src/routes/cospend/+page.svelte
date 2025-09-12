@@ -153,33 +153,38 @@
 <main class="cospend-main">
     <h1>Cospend</h1>
 
-  <EnhancedBalance bind:this={enhancedBalanceComponent} initialBalance={data.balance} initialDebtData={data.debtData} />
+  <!-- Responsive layout for balance and chart -->
+  <div class="dashboard-layout">
+    <div class="balance-section">
+      <EnhancedBalance bind:this={enhancedBalanceComponent} initialBalance={data.balance} initialDebtData={data.debtData} />
 
-  <div class="actions">
-    {#if balance.netBalance !== 0}
-      <a href="/cospend/settle" class="btn btn-settlement">Settle Debts</a>
-    {/if}
-  </div>
-
-  <DebtBreakdown bind:this={debtBreakdownComponent} />
-
-  <!-- Monthly Expenses Chart -->
-  <div class="chart-section">
-    {#if expensesLoading}
-      <div class="loading">Loading monthly expenses chart...</div>
-    {:else if monthlyExpensesData.datasets && monthlyExpensesData.datasets.length > 0}
-      <BarChart
-        data={monthlyExpensesData}
-        title="Monthly Expenses by Category"
-        height="400px"
-      />
-    {:else}
-      <div class="loading">
-        Debug: expensesLoading={expensesLoading},
-        datasets={monthlyExpensesData.datasets?.length || 0},
-        data={JSON.stringify(monthlyExpensesData)}
+      <div class="actions">
+        {#if balance.netBalance !== 0}
+          <a href="/cospend/settle" class="btn btn-settlement">Settle Debts</a>
+        {/if}
       </div>
-    {/if}
+
+      <DebtBreakdown bind:this={debtBreakdownComponent} />
+    </div>
+
+    <!-- Monthly Expenses Chart -->
+    <div class="chart-section">
+      {#if expensesLoading}
+        <div class="loading">Loading monthly expenses chart...</div>
+      {:else if monthlyExpensesData.datasets && monthlyExpensesData.datasets.length > 0}
+        <BarChart
+          data={monthlyExpensesData}
+          title="Monthly Expenses by Category"
+          height="400px"
+        />
+      {:else}
+        <div class="loading">
+          Debug: expensesLoading={expensesLoading},
+          datasets={monthlyExpensesData.datasets?.length || 0},
+          data={JSON.stringify(monthlyExpensesData)}
+        </div>
+      {/if}
+    </div>
   </div>
 
   {#if loading}
@@ -274,7 +279,6 @@
 
 <style>
   .cospend-main {
-    max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
   }
@@ -355,6 +359,9 @@
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--nord4);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .recent-activity h2 {
@@ -705,8 +712,33 @@
     }
   }
 
-  .chart-section {
+  .dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
     margin-bottom: 2rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (min-width: 1200px) {
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .balance-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  }
+
+  .chart-section {
+    min-height: 400px;
   }
 
   .chart-section .loading {

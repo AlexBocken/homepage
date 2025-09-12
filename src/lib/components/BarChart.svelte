@@ -1,21 +1,21 @@
 <script>
   import { onMount } from 'svelte';
   import { Chart, registerables } from 'chart.js';
-  
+
   export let data = { labels: [], datasets: [] };
   export let title = '';
   export let height = '400px';
-  
+
   let canvas;
   let chart;
-  
+
   // Register Chart.js components
   Chart.register(...registerables);
-  
+
   // Nord theme colors for categories
   const nordColors = [
     '#5E81AC', // Nord Blue
-    '#88C0D0', // Nord Light Blue  
+    '#88C0D0', // Nord Light Blue
     '#81A1C1', // Nord Lighter Blue
     '#A3BE8C', // Nord Green
     '#EBCB8B', // Nord Yellow
@@ -25,11 +25,11 @@
     '#8FBCBB', // Nord Cyan
     '#ECEFF4', // Nord Light Gray
   ];
-  
+
   function getCategoryColor(category, index) {
     const categoryColorMap = {
       'groceries': '#A3BE8C',      // Green
-      'restaurant': '#D08770',     // Orange  
+      'restaurant': '#D08770',     // Orange
       'transport': '#5E81AC',      // Blue
       'entertainment': '#B48EAD',  // Purple
       'shopping': '#EBCB8B',       // Yellow
@@ -39,28 +39,29 @@
       'travel': '#8FBCBB',         // Light Cyan
       'other': '#4C566A'           // Dark Gray
     };
-    
+
     return categoryColorMap[category] || nordColors[index % nordColors.length];
   }
-  
+
   function createChart() {
     if (!canvas || !data.datasets) return;
-    
+
     // Destroy existing chart
     if (chart) {
       chart.destroy();
     }
-    
+
     const ctx = canvas.getContext('2d');
-    
-    // Process datasets with colors
+
+    // Process datasets with colors and capitalize labels
     const processedDatasets = data.datasets.map((dataset, index) => ({
       ...dataset,
+      label: dataset.label.charAt(0).toUpperCase() + dataset.label.slice(1),
       backgroundColor: getCategoryColor(dataset.label, index),
       borderColor: getCategoryColor(dataset.label, index),
       borderWidth: 1
     }));
-    
+
     chart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -70,16 +71,26 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 40
+          }
+        },
         scales: {
           x: {
             stacked: true,
             grid: {
               display: false
             },
+            border: {
+              display: false
+            },
             ticks: {
-              color: 'var(--nord3)',
+              color: '#ffffff',
               font: {
-                family: 'Inter, system-ui, sans-serif'
+                family: 'Inter, system-ui, sans-serif',
+                size: 14,
+                weight: 'bold'
               }
             }
           },
@@ -87,58 +98,74 @@
             stacked: true,
             beginAtZero: true,
             grid: {
-              color: 'var(--nord4)',
-              borderDash: [2, 2]
+              display: false
+            },
+            border: {
+              display: false
             },
             ticks: {
-              color: 'var(--nord3)',
+              color: 'transparent',
               font: {
-                family: 'Inter, system-ui, sans-serif'
-              },
-              callback: function(value) {
-                return 'CHF ' + value.toFixed(0);
+                size: 0
               }
             }
           }
         },
         plugins: {
+          datalabels: {
+            display: false
+          },
           legend: {
             position: 'bottom',
             labels: {
               padding: 20,
               usePointStyle: true,
-              color: 'var(--nord1)',
+              color: '#ffffff',
               font: {
                 family: 'Inter, system-ui, sans-serif',
-                size: 12
+                size: 14,
+                weight: 'bold'
               }
             }
           },
           title: {
             display: !!title,
             text: title,
-            color: 'var(--nord0)',
+            color: '#ffffff',
             font: {
               family: 'Inter, system-ui, sans-serif',
-              size: 16,
+              size: 18,
               weight: 'bold'
             },
             padding: 20
           },
           tooltip: {
-            backgroundColor: 'var(--nord1)',
-            titleColor: 'var(--nord6)',
-            bodyColor: 'var(--nord6)',
-            borderColor: 'var(--nord3)',
-            borderWidth: 1,
-            cornerRadius: 8,
+            backgroundColor: '#2e3440',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderWidth: 0,
+            cornerRadius: 12,
+            padding: 12,
+            displayColors: true,
+            titleAlign: 'center',
+            bodyAlign: 'center',
             titleFont: {
-              family: 'Inter, system-ui, sans-serif'
+              family: 'Inter, system-ui, sans-serif',
+              size: 13,
+              weight: 'bold'
             },
             bodyFont: {
-              family: 'Inter, system-ui, sans-serif'
+              family: 'Inter, system-ui, sans-serif',
+              size: 14,
+              weight: '500'
             },
+            titleMarginBottom: 8,
+            usePointStyle: true,
+            boxPadding: 6,
             callbacks: {
+              title: function(context) {
+                return '';
+              },
               label: function(context) {
                 return context.dataset.label + ': CHF ' + context.parsed.y.toFixed(2);
               }
@@ -146,24 +173,67 @@
           }
         },
         interaction: {
-          intersect: false,
-          mode: 'index'
+          intersect: true,
+          mode: 'dataset'
         }
-      }
+      },
+      plugins: [{
+        id: 'monthlyTotals',
+        afterDatasetsDraw: function(chart) {
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          
+          ctx.save();
+          ctx.font = 'bold 14px Inter, system-ui, sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          
+          // Calculate and display monthly totals
+          chart.data.labels.forEach((label, index) => {
+            let total = 0;
+            chart.data.datasets.forEach(dataset => {
+              total += dataset.data[index] || 0;
+            });
+            
+            if (total > 0) {
+              // Get the x position for this month from any dataset
+              const meta = chart.getDatasetMeta(0);
+              if (meta && meta.data[index]) {
+                const x = meta.data[index].x;
+                
+                // Find the highest point for this month across all datasets
+                let maxY = chartArea.bottom;
+                for (let datasetIndex = 0; datasetIndex < chart.data.datasets.length; datasetIndex++) {
+                  const datasetMeta = chart.getDatasetMeta(datasetIndex);
+                  if (datasetMeta && datasetMeta.data[index]) {
+                    maxY = Math.min(maxY, datasetMeta.data[index].y);
+                  }
+                }
+                
+                // Display the total above the bar
+                ctx.fillText(`CHF ${total.toFixed(0)}`, x, maxY - 10);
+              }
+            }
+          });
+          
+          ctx.restore();
+        }
+      }]
     });
   }
-  
+
   onMount(() => {
     createChart();
-    
+
     // Watch for theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleThemeChange = () => {
       setTimeout(createChart, 100); // Small delay to let CSS variables update
     };
-    
+
     mediaQuery.addEventListener('change', handleThemeChange);
-    
+
     return () => {
       mediaQuery.removeEventListener('change', handleThemeChange);
       if (chart) {
@@ -171,7 +241,7 @@
       }
     };
   });
-  
+
   // Recreate chart when data changes
   $: if (canvas && data) {
     createChart();
@@ -190,14 +260,14 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--nord4);
   }
-  
+
   @media (prefers-color-scheme: dark) {
     .chart-container {
       background: var(--nord1);
       border-color: var(--nord2);
     }
   }
-  
+
   canvas {
     max-width: 100%;
     height: 100% !important;
