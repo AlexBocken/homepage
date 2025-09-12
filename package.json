@@ -27,6 +27,7 @@
 	"dependencies": {
 		"@auth/sveltekit": "^1.10.0",
 		"@sveltejs/adapter-node": "^5.0.0",
+		"chart.js": "^4.5.0",
 		"cheerio": "1.0.0-rc.12",
 		"mongoose": "^8.0.0",
 		"node-cron": "^4.2.1",
