@@ -5,9 +5,18 @@
   import { fly } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import PaymentModal from '$lib/components/PaymentModal.svelte';
+  import Header from '$lib/components/Header.svelte';
+  import UserHeader from '$lib/components/UserHeader.svelte';
 
+  export let data;
+  
   let showModal = false;
   let paymentId = null;
+  let user;
+  
+  if (data.session) {
+    user = data.session.user;
+  }
 
   $: {
     // Check if URL contains payment view route OR if we have paymentId in state
@@ -37,28 +46,37 @@
   }
 </script>
 
-<div class="layout-container" class:has-modal={showModal}>
-  <div class="main-content">
-    <slot />
-  </div>
+<Header>
+  <ul class="site_header" slot="links">
+    <li><a href="/cospend">Dashboard</a></li>
+    <li><a href="/cospend/payments">All Payments</a></li>
+    <li><a href="/cospend/recurring">Recurring Payments</a></li>
+  </ul>
+  <UserHeader slot="right_side" {user}></UserHeader>
+  
+  <div class="layout-container" class:has-modal={showModal}>
+    <div class="main-content">
+      <slot />
+    </div>
 
-  <div class="side-panel">
-    {#if showModal}
-      <div class="modal-content">
-        {#key paymentId}
-          <div in:fly={{x: 50, duration: 300, easing: quintOut}} out:fly={{x: -50, duration: 300, easing: quintOut}}>
-            <PaymentModal {paymentId} on:close={() => showModal = false} on:paymentDeleted={handlePaymentDeleted} />
-          </div>
-        {/key}
-      </div>
-    {/if}
+    <div class="side-panel">
+      {#if showModal}
+        <div class="modal-content">
+          {#key paymentId}
+            <div in:fly={{x: 50, duration: 300, easing: quintOut}} out:fly={{x: -50, duration: 300, easing: quintOut}}>
+              <PaymentModal {paymentId} on:close={() => showModal = false} on:paymentDeleted={handlePaymentDeleted} />
+            </div>
+          {/key}
+        </div>
+      {/if}
+    </div>
   </div>
-</div>
+</Header>
 
 <style>
   .layout-container {
     display: flex;
-    min-height: 100vh;
+    min-height: calc(100vh - 4rem);
   }
 
   .main-content {
@@ -72,11 +90,11 @@
 
   .side-panel {
     position: fixed;
-    top: 0;
+    top: 4rem;
     right: 0;
     width: 400px;
-    height: 100vh;
-    background: white;
+    height: calc(100vh - 4rem);
+    background: #fbf9f3;
     border-left: 1px solid #dee2e6;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     z-index: 100;
@@ -103,6 +121,13 @@
     overflow-y: auto;
   }
 
+  @media (prefers-color-scheme: dark) {
+    .side-panel {
+      background: var(--background-dark);
+      border-left-color: #434C5E;
+    }
+  }
+
   @media (max-width: 768px) {
     .layout-container.has-modal {
       flex-direction: column;
@@ -122,6 +147,14 @@
       border-left: none;
       border-top: 1px solid #dee2e6;
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      top: auto;
+      bottom: 0;
+    }
+  }
+
+  @media (max-width: 768px) and (prefers-color-scheme: dark) {
+    .side-panel {
+      border-top-color: #434C5E;
     }
   }
 </style>
