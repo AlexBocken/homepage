@@ -47,4 +47,4 @@ h1{
 	{/each}
 	</MediaScroller>
 {/each}
-<AddButton></AddButton>
+<AddButton href="/rezepte/add"></AddButton>

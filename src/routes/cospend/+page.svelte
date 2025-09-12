@@ -7,6 +7,7 @@
   import DebtBreakdown from '$lib/components/DebtBreakdown.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { isSettlementPayment, getSettlementIcon, getSettlementClasses, getSettlementReceiver } from '$lib/utils/settlements';
+  import AddButton from '$lib/components/AddButton.svelte';
 
   export let data; // Contains session data and balance from server
 
@@ -17,7 +18,7 @@
   };
   let loading = false; // Start as false since we have server data
   let error = null;
-  
+
   // Component references for refreshing
   let enhancedBalanceComponent;
   let debtBreakdownComponent;
@@ -27,14 +28,14 @@
     // Mark that JavaScript is loaded for progressive enhancement
     document.body.classList.add('js-loaded');
     await fetchBalance();
-    
+
     // Listen for dashboard refresh events from the layout
     const handleDashboardRefresh = () => {
       refreshAllComponents();
     };
-    
+
     window.addEventListener('dashboardRefresh', handleDashboardRefresh);
-    
+
     // Cleanup
     return () => {
       window.removeEventListener('dashboardRefresh', handleDashboardRefresh);
@@ -60,13 +61,13 @@
   async function refreshAllComponents() {
     // Refresh the main balance and recent activity
     await fetchBalance();
-    
+
     // Refresh the enhanced balance component if it exists and has a refresh method
     if (enhancedBalanceComponent && enhancedBalanceComponent.refresh) {
       await enhancedBalanceComponent.refresh();
     }
-    
-    // Refresh the debt breakdown component if it exists and has a refresh method  
+
+    // Refresh the debt breakdown component if it exists and has a refresh method
     if (debtBreakdownComponent && debtBreakdownComponent.refresh) {
       await debtBreakdownComponent.refresh();
     }
@@ -102,14 +103,14 @@
     if (!isSettlementPayment(split.paymentId)) {
       return '';
     }
-    
+
     // In a settlement, the receiver is the person who is NOT the payer
     // Since we're viewing the current user's activity, the receiver is the current user
     // when someone else paid, or the other user when current user paid
-    
+
     const paidBy = split.paymentId?.paidBy;
     const currentUser = data.session?.user?.nickname;
-    
+
     if (paidBy === currentUser) {
       // Current user paid, so receiver is the other user
       return split.otherUser || '';
@@ -125,16 +126,11 @@
 </svelte:head>
 
 <main class="cospend-main">
-  <div class="header-section">
     <h1>Cospend</h1>
-    <p>Track and split expenses with your friends and family</p>
-  </div>
 
   <EnhancedBalance bind:this={enhancedBalanceComponent} initialBalance={data.balance} initialDebtData={data.debtData} />
 
   <div class="actions">
-    <a href="/cospend/payments/add" class="btn btn-primary">Add Payment</a>
-    <a href="/cospend/payments" class="btn btn-secondary">View All Payments</a>
     {#if balance.netBalance !== 0}
       <a href="/cospend/settle" class="btn btn-settlement">Settle Debts</a>
     {/if}
@@ -153,8 +149,8 @@
         {#each balance.recentSplits as split}
           {#if isSettlementPayment(split.paymentId)}
             <!-- Settlement Payment Display - User -> User Flow -->
-            <a 
-              href="/cospend/payments/view/{split.paymentId?._id}" 
+            <a
+              href="/cospend/payments/view/{split.paymentId?._id}"
               class="settlement-flow-activity"
               on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
             >
@@ -180,12 +176,12 @@
             </a>
           {:else}
             <!-- Regular Payment Display - Speech Bubble Style -->
-            <div class="activity-message" 
+            <div class="activity-message"
                  class:is-me={split.paymentId?.paidBy === data.session?.user?.nickname}>
               <div class="message-content">
                 <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={36} />
-                <a 
-                  href="/cospend/payments/view/{split.paymentId?._id}" 
+                <a
+                  href="/cospend/payments/view/{split.paymentId?._id}"
                   class="activity-bubble"
                   on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
                 >
@@ -198,8 +194,8 @@
                       <span class="username">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
                       <span class="category-name">{getCategoryName(split.paymentId?.category || 'groceries')}</span>
                     </div>
-                    <div class="activity-amount" 
-                         class:positive={split.amount < 0} 
+                    <div class="activity-amount"
+                         class:positive={split.amount < 0}
                          class:negative={split.amount > 0}>
                       {#if split.amount > 0}
                         -{formatCurrency(split.amount)}
@@ -230,6 +226,8 @@
   {/if}
 </main>
 
+<AddButton href="/cospend/payments/add" />
+
 <style>
   .cospend-main {
     max-width: 800px;
@@ -237,20 +235,11 @@
     padding: 2rem;
   }
 
-  .header-section {
+  h1 {
     text-align: center;
-    margin-bottom: 2rem;
-  }
-
-  .header-section h1 {
     font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-    color: #333;
-  }
-
-  .header-section p {
-    color: #666;
-    font-size: 1.1rem;
+    margin-block: 0.5rem 1.5rem;
+    color: var(--nord0);
   }
 
   .loading, .error {
@@ -260,22 +249,32 @@
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
+    color: var(--red);
+    background-color: var(--nord6);
     border-radius: 0.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    h1 {
+      color: var(--font-default-dark);
+    }
+
+    .error {
+      background-color: var(--accent-dark);
+    }
   }
 
 
   .positive {
-    color: #2e7d32;
+    color: var(--green);
   }
 
   .negative {
-    color: #d32f2f;
+    color: var(--red);
   }
 
   .even {
-    color: #666;
+    color: var(--nord3);
   }
 
   .actions {
@@ -294,45 +293,40 @@
     transition: all 0.2s;
   }
 
-  .btn-primary {
-    background-color: #1976d2;
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background-color: #1565c0;
-  }
-
-  .btn-secondary {
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-  }
-
-  .btn-secondary:hover {
-    background-color: #e8e8e8;
-  }
-
   .btn-settlement {
-    background: linear-gradient(135deg, #28a745, #20c997);
+    background: linear-gradient(135deg, var(--green), var(--lightblue));
     color: white;
     border: none;
   }
 
   .btn-settlement:hover {
-    background: linear-gradient(135deg, #20c997, #1e7e34);
+    background: linear-gradient(135deg, var(--lightblue), var(--green));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .recent-activity {
-    background: white;
+    background: var(--nord6);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
   }
 
   .recent-activity h2 {
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--nord0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .recent-activity {
+      background: var(--accent-dark);
+      border-color: var(--nord2);
+    }
+
+    .recent-activity h2 {
+      color: var(--font-default-dark);
+    }
   }
 
   .activity-dialog {
@@ -364,11 +358,11 @@
   }
 
   .activity-bubble {
-    background: #f8f9fa;
+    background: var(--nord5);
     border-radius: 1rem;
     padding: 1rem;
     position: relative;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--nord4);
     text-decoration: none;
     color: inherit;
     display: block;
@@ -377,8 +371,20 @@
   }
 
   .activity-message.is-me .activity-bubble {
-    background: #e3f2fd;
-    border-color: #2196f3;
+    background: var(--nord8);
+    border-color: var(--blue);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .activity-bubble {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+
+    .activity-message.is-me .activity-bubble {
+      background: var(--nord2);
+      border-color: var(--blue);
+    }
   }
 
   .activity-bubble:hover {
@@ -397,14 +403,24 @@
 
   .activity-bubble::before {
     left: -15px;
-    border-right-color: #f8f9fa;
+    border-right-color: var(--nord5);
   }
 
   .activity-message.is-me .activity-bubble::before {
     left: auto;
     right: -15px;
-    border-left-color: #e3f2fd;
+    border-left-color: var(--nord8);
     border-right-color: transparent;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .activity-bubble::before {
+      border-right-color: var(--nord1);
+    }
+
+    .activity-message.is-me .activity-bubble::before {
+      border-left-color: var(--nord2);
+    }
   }
 
 
@@ -413,8 +429,8 @@
     display: block;
     text-decoration: none;
     color: inherit;
-    background: linear-gradient(135deg, #f8fff9, #e8f5e8);
-    border: 2px solid #28a745;
+    background: linear-gradient(135deg, var(--nord6), var(--nord5));
+    border: 2px solid var(--green);
     border-radius: 1rem;
     padding: 1.5rem;
     margin: 0 auto 1rem auto;
@@ -423,8 +439,19 @@
   }
 
   .settlement-flow-activity:hover {
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.2);
+    box-shadow: 0 6px 20px rgba(163, 190, 140, 0.3);
     transform: translateY(-2px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .settlement-flow-activity {
+      background: linear-gradient(135deg, var(--nord2), var(--nord1));
+      border-color: var(--green);
+    }
+
+    .settlement-flow-activity:hover {
+      box-shadow: 0 6px 20px rgba(163, 190, 140, 0.2);
+    }
   }
 
   .settlement-activity-content {
@@ -448,7 +475,7 @@
 
   .settlement-username {
     font-weight: 600;
-    color: #28a745;
+    color: var(--green);
     font-size: 1rem;
     text-align: center;
   }
@@ -464,20 +491,26 @@
   .settlement-amount-large {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #28a745;
+    color: var(--green);
     text-align: center;
   }
 
   .settlement-flow-arrow {
     font-size: 1.8rem;
-    color: #28a745;
+    color: var(--green);
     font-weight: bold;
   }
 
   .settlement-date {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--nord3);
     text-align: center;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .settlement-date {
+      color: var(--nord4);
+    }
   }
 
   .activity-header {
@@ -505,26 +538,40 @@
   }
 
   .category-name {
-    color: #888;
+    color: var(--nord3);
     font-size: 0.8rem;
     font-style: italic;
   }
 
   .payment-title {
-    color: #333;
+    color: var(--nord0);
     font-size: 1.1rem;
     font-weight: 600;
     margin: 0;
   }
 
   .username {
-    color: #666;
+    color: var(--nord3);
     font-size: 0.9rem;
     font-weight: 500;
   }
 
+  @media (prefers-color-scheme: dark) {
+    .category-name {
+      color: var(--nord4);
+    }
+
+    .payment-title {
+      color: var(--font-default-dark);
+    }
+
+    .username {
+      color: var(--nord4);
+    }
+  }
+
   .you-badge {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     padding: 0.125rem 0.5rem;
     border-radius: 1rem;
@@ -552,16 +599,26 @@
   }
 
   .paid-by, .payment-date {
-    color: #666;
+    color: var(--nord3);
     font-size: 0.9rem;
   }
 
   .payment-description {
-    color: #555;
+    color: var(--nord2);
     font-size: 0.9rem;
     font-style: italic;
     margin-top: 0.25rem;
     line-height: 1.3;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .paid-by, .payment-date {
+      color: var(--nord4);
+    }
+
+    .payment-description {
+      color: var(--nord5);
+    }
   }
 
   @media (max-width: 600px) {
