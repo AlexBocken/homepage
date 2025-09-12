@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
+  import EditButton from '$lib/components/EditButton.svelte';
   
   export let data;
 
@@ -96,24 +97,6 @@
 </svelte:head>
 
 <main class="payment-view">
-  <div class="header">
-    <div class="header-content">
-      <a href="/cospend" class="back-link">← Back to Dashboard</a>
-      <div class="header-actions">
-        {#if payment && payment.createdBy === data.session.user.nickname}
-          <a href="/cospend/payments/edit/{data.paymentId}" class="btn btn-secondary">Edit</a>
-          <button 
-            class="btn btn-danger" 
-            on:click={deletePayment}
-            disabled={deleting}
-          >
-            {deleting ? 'Deleting...' : 'Delete'}
-          </button>
-        {/if}
-        <a href="/cospend/payments" class="btn btn-secondary">All Payments</a>
-      </div>
-    </div>
-  </div>
 
   {#if loading}
     <div class="loading">Loading payment...</div>
@@ -203,6 +186,10 @@
   {/if}
 </main>
 
+{#if payment && payment.createdBy === data.session.user.nickname}
+  <EditButton href="/cospend/payments/edit/{data.paymentId}" />
+{/if}
+
 <style>
   .payment-view {
     max-width: 800px;
@@ -210,62 +197,7 @@
     padding: 2rem;
   }
 
-  .header {
-    margin-bottom: 2rem;
-  }
 
-  .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .back-link {
-    color: #1976d2;
-    text-decoration: none;
-    font-weight: 500;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    border: none;
-    cursor: pointer;
-  }
-
-  .btn-secondary {
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-  }
-
-  .btn-secondary:hover {
-    background-color: #e8e8e8;
-  }
-
-  .btn-danger {
-    background-color: #d32f2f;
-    color: white;
-  }
-
-  .btn-danger:hover:not(:disabled) {
-    background-color: #c62828;
-  }
-
-  .btn-danger:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 
   .loading, .error {
     text-align: center;
@@ -274,16 +206,31 @@
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
+    color: var(--red);
+    background-color: var(--nord6);
     border-radius: 0.5rem;
+    border: 1px solid var(--red);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .error {
+      background-color: var(--accent-dark);
+    }
   }
 
   .payment-card {
-    background: white;
+    background: var(--nord6);
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    border: 1px solid var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-card {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
   }
 
   .payment-header {
@@ -291,8 +238,14 @@
     justify-content: space-between;
     align-items: flex-start;
     padding: 2rem;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-bottom: 1px solid #dee2e6;
+    background: linear-gradient(135deg, var(--nord5), var(--nord4));
+    border-bottom: 1px solid var(--nord3);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-header {
+      background: linear-gradient(135deg, var(--nord2), var(--nord3));
+    }
   }
 
   .title-with-category {
@@ -309,14 +262,20 @@
 
   .title-section h1 {
     margin: 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.75rem;
   }
 
   .payment-amount {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #1976d2;
+    color: var(--blue);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .title-section h1 {
+      color: var(--font-default-dark);
+    }
   }
 
   .receipt-image {
@@ -329,7 +288,13 @@
     max-height: 150px;
     object-fit: cover;
     border-radius: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .receipt-image img {
+      border-color: var(--nord2);
+    }
   }
 
   .payment-info {
@@ -351,43 +316,77 @@
 
   .label {
     font-weight: 600;
-    color: #666;
+    color: var(--nord3);
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
   .value {
-    color: #333;
+    color: var(--nord0);
     font-size: 1rem;
   }
 
+  @media (prefers-color-scheme: dark) {
+    .label {
+      color: var(--nord4);
+    }
+
+    .value {
+      color: var(--font-default-dark);
+    }
+  }
+
   .description {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--nord4);
     padding-top: 1.5rem;
   }
 
   .description h3 {
     margin: 0 0 0.75rem 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.1rem;
   }
 
   .description p {
     margin: 0;
-    color: #555;
+    color: var(--nord2);
     line-height: 1.5;
   }
 
+  @media (prefers-color-scheme: dark) {
+    .description {
+      border-top-color: var(--nord2);
+    }
+
+    .description h3 {
+      color: var(--font-default-dark);
+    }
+
+    .description p {
+      color: var(--nord5);
+    }
+  }
+
   .splits-section {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--nord4);
     padding: 2rem;
   }
 
   .splits-section h3 {
     margin: 0 0 1rem 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .splits-section {
+      border-top-color: var(--nord2);
+    }
+
+    .splits-section h3 {
+      color: var(--font-default-dark);
+    }
   }
 
   .splits-list {
@@ -401,14 +400,26 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    background: #f8f9fa;
+    background: var(--nord5);
     border-radius: 0.5rem;
-    border: 1px solid transparent;
+    border: 1px solid var(--nord4);
   }
 
   .split-item.current-user {
-    background: #e3f2fd;
-    border-color: #2196f3;
+    background: var(--nord8);
+    border-color: var(--blue);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .split-item {
+      background: var(--nord2);
+      border-color: var(--nord3);
+    }
+
+    .split-item.current-user {
+      background: var(--nord3);
+      border-color: var(--blue);
+    }
   }
 
   .split-user {
@@ -425,16 +436,22 @@
 
   .username {
     font-weight: 500;
-    color: #333;
+    color: var(--nord0);
   }
 
   .you-badge {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     padding: 0.125rem 0.5rem;
     border-radius: 1rem;
     font-size: 0.75rem;
     font-weight: 500;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .username {
+      color: var(--font-default-dark);
+    }
   }
 
   .split-amount {
@@ -443,11 +460,11 @@
   }
 
   .split-amount.positive {
-    color: #2e7d32;
+    color: var(--green);
   }
 
   .split-amount.negative {
-    color: #d32f2f;
+    color: var(--red);
   }
 
   @media (max-width: 600px) {

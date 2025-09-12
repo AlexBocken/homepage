@@ -3,6 +3,7 @@
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { getFrequencyDescription, formatNextExecution } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import AddButton from '$lib/components/AddButton.svelte';
   
   export let data;
 
@@ -97,10 +98,7 @@
 <main class="recurring-payments">
   <div class="header">
     <h1>Recurring Payments</h1>
-    <div class="header-actions">
-      <a href="/cospend/recurring/add" class="btn btn-primary">Add Recurring Payment</a>
-      <a href="/cospend" class="back-link">← Back to Cospend</a>
-    </div>
+    <p>Automate your regular shared expenses</p>
   </div>
 
   <div class="filters">
@@ -118,7 +116,7 @@
     <div class="empty-state">
       <h2>No recurring payments found</h2>
       <p>Create your first recurring payment to automate regular expenses like rent, utilities, or subscriptions.</p>
-      <a href="/cospend/recurring/add" class="btn btn-primary">Add Your First Recurring Payment</a>
+      <a href="/cospend/payments/add" class="btn btn-primary">Add Your First Payment</a>
     </div>
   {:else}
     <div class="payments-grid">
@@ -228,6 +226,8 @@
   {/if}
 </main>
 
+<AddButton href="/cospend/payments/add" />
+
 <style>
   .recurring-payments {
     max-width: 1200px;
@@ -236,34 +236,39 @@
   }
 
   .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 2rem;
+    text-align: center;
   }
 
   .header h1 {
+    margin: 0 0 0.5rem 0;
+    color: var(--nord0);
+    font-size: 2rem;
+  }
+
+  .header p {
     margin: 0;
-    color: #333;
+    color: var(--nord3);
+    font-size: 1.1rem;
   }
 
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
+  @media (prefers-color-scheme: dark) {
+    .header h1 {
+      color: var(--font-default-dark);
+    }
 
-  .back-link {
-    color: #1976d2;
-    text-decoration: none;
+    .header p {
+      color: var(--nord4);
+    }
   }
 
   .filters {
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background: white;
+    background: var(--nord6);
     border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
   }
 
   .filters label {
@@ -272,6 +277,18 @@
     gap: 0.5rem;
     cursor: pointer;
     font-weight: 500;
+    color: var(--nord0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .filters {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+
+    .filters label {
+      color: var(--font-default-dark);
+    }
   }
 
   .loading, .error {
@@ -281,30 +298,53 @@
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
+    color: var(--red);
+    background-color: var(--nord6);
     border-radius: 0.5rem;
+    border: 1px solid var(--red);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .error {
+      background-color: var(--accent-dark);
+    }
   }
 
   .empty-state {
     text-align: center;
     padding: 4rem 2rem;
-    background: white;
+    background: var(--nord6);
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
   }
 
   .empty-state h2 {
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--nord0);
   }
 
   .empty-state p {
-    color: #666;
+    color: var(--nord2);
     margin-bottom: 2rem;
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+
+    .empty-state h2 {
+      color: var(--font-default-dark);
+    }
+
+    .empty-state p {
+      color: var(--nord4);
+    }
   }
 
   .payments-grid {
@@ -314,21 +354,40 @@
   }
 
   .payment-card {
-    background: white;
+    background: var(--nord6);
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
-    transition: transform 0.2s;
+    transition: all 0.2s;
+    border: 1px solid var(--nord4);
   }
 
   .payment-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border-color: var(--nord3);
   }
 
   .payment-card.inactive {
     opacity: 0.7;
-    background: #f8f9fa;
+    background: var(--nord5);
+    border-color: var(--nord3);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-card {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+
+    .payment-card:hover {
+      border-color: var(--nord3);
+    }
+
+    .payment-card.inactive {
+      background: var(--nord2);
+      border-color: var(--nord3);
+    }
   }
 
   .card-header {
@@ -351,8 +410,14 @@
 
   .payment-title h3 {
     margin: 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.25rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-title h3 {
+      color: var(--font-default-dark);
+    }
   }
 
   .status-badge {
@@ -365,25 +430,31 @@
   }
 
   .status-badge.active {
-    background-color: #e8f5e8;
-    color: #2e7d32;
+    background-color: var(--green);
+    color: white;
   }
 
   .status-badge.inactive {
-    background-color: #fff3e0;
-    color: #f57c00;
+    background-color: var(--orange);
+    color: white;
   }
 
   .payment-amount {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1976d2;
+    color: var(--blue);
   }
 
   .payment-description {
-    color: #666;
+    color: var(--nord2);
     margin-bottom: 1rem;
     font-style: italic;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-description {
+      color: var(--nord5);
+    }
   }
 
   .payment-details {
@@ -400,18 +471,28 @@
 
   .label {
     font-weight: 500;
-    color: #666;
+    color: var(--nord3);
     font-size: 0.9rem;
   }
 
   .value {
-    color: #333;
+    color: var(--nord0);
     font-weight: 500;
   }
 
   .next-execution {
-    color: #1976d2;
+    color: var(--blue);
     font-weight: 600;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .label {
+      color: var(--nord4);
+    }
+
+    .value {
+      color: var(--font-default-dark);
+    }
   }
 
   .payer-info {
@@ -423,16 +504,28 @@
   .splits-preview {
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: var(--nord5);
     border-radius: 0.5rem;
+    border: 1px solid var(--nord4);
   }
 
   .splits-preview h4 {
     margin: 0 0 0.75rem 0;
     font-size: 0.9rem;
-    color: #666;
+    color: var(--nord2);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .splits-preview {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
+
+    .splits-preview h4 {
+      color: var(--nord4);
+    }
   }
 
   .splits-list {
@@ -450,6 +543,7 @@
   .split-item .username {
     flex: 1;
     font-weight: 500;
+    color: var(--nord0);
   }
 
   .split-amount {
@@ -458,11 +552,17 @@
   }
 
   .split-amount.positive {
-    color: #2e7d32;
+    color: var(--green);
   }
 
   .split-amount.negative {
-    color: #d32f2f;
+    color: var(--red);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .split-item .username {
+      color: var(--font-default-dark);
+    }
   }
 
   .card-actions {
@@ -488,49 +588,66 @@
   }
 
   .btn-primary {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
   }
 
   .btn-primary:hover {
-    background-color: #1565c0;
+    background-color: var(--nord10);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .btn-secondary {
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: var(--nord5);
+    color: var(--nord0);
+    border: 1px solid var(--nord4);
   }
 
   .btn-secondary:hover {
-    background-color: #e8e8e8;
+    background-color: var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-secondary {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--nord3);
+    }
   }
 
   .btn-warning {
-    background-color: #ff9800;
+    background-color: var(--orange);
     color: white;
   }
 
   .btn-warning:hover {
-    background-color: #f57c00;
+    background-color: var(--nord12);
+    transform: translateY(-1px);
   }
 
   .btn-success {
-    background-color: #4caf50;
+    background-color: var(--green);
     color: white;
   }
 
   .btn-success:hover {
-    background-color: #45a049;
+    background-color: var(--nord14);
+    transform: translateY(-1px);
   }
 
   .btn-danger {
-    background-color: #f44336;
+    background-color: var(--red);
     color: white;
   }
 
   .btn-danger:hover {
-    background-color: #d32f2f;
+    background-color: var(--nord11);
+    transform: translateY(-1px);
   }
 
   @media (max-width: 768px) {

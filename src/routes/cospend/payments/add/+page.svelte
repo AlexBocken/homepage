@@ -399,7 +399,7 @@
 <main class="add-payment">
   <div class="header">
     <h1>Add New Payment</h1>
-    <a href="/cospend" class="back-link">← Back to Cospend</a>
+    <p>Create a new shared expense or recurring payment</p>
   </div>
 
   <form method="POST" use:enhance class="payment-form">
@@ -776,20 +776,30 @@
   }
 
   .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    text-align: center;
     margin-bottom: 2rem;
   }
 
   .header h1 {
-    margin: 0;
-    color: #333;
+    margin: 0 0 0.5rem 0;
+    color: var(--nord0);
+    font-size: 2rem;
   }
 
-  .back-link {
-    color: #1976d2;
-    text-decoration: none;
+  .header p {
+    margin: 0;
+    color: var(--nord3);
+    font-size: 1.1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .header h1 {
+      color: var(--font-default-dark);
+    }
+
+    .header p {
+      color: var(--nord4);
+    }
   }
 
   .payment-form {
@@ -799,17 +809,29 @@
   }
 
   .form-section {
-    background: white;
+    background: var(--nord6);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
   }
 
   .form-section h2 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.25rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .form-section {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+
+    .form-section h2 {
+      color: var(--font-default-dark);
+    }
   }
 
   .form-group {
@@ -826,36 +848,64 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: #555;
+    color: var(--nord2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    label {
+      color: var(--nord5);
+    }
   }
 
   input, textarea, select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--nord4);
     border-radius: 0.5rem;
     font-size: 1rem;
     box-sizing: border-box;
+    background-color: var(--nord6);
+    color: var(--nord0);
   }
 
   input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #1976d2;
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    input, textarea, select {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+    }
   }
 
   .image-upload {
-    border: 2px dashed #ddd;
+    border: 2px dashed var(--nord4);
     border-radius: 0.5rem;
     padding: 2rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
+    background-color: var(--nord5);
   }
 
   .image-upload:hover {
-    border-color: #1976d2;
-    background-color: #f5f5f5;
+    border-color: var(--blue);
+    background-color: var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .image-upload {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
+
+    .image-upload:hover {
+      background-color: var(--nord3);
+    }
   }
 
   .upload-label {
@@ -864,18 +914,32 @@
   }
 
   .upload-content svg {
-    color: #666;
+    color: var(--nord3);
     margin-bottom: 1rem;
   }
 
   .upload-content p {
     margin: 0 0 0.5rem 0;
     font-weight: 500;
-    color: #333;
+    color: var(--nord0);
   }
 
   .upload-content small {
-    color: #666;
+    color: var(--nord3);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .upload-content svg {
+      color: var(--nord4);
+    }
+
+    .upload-content p {
+      color: var(--font-default-dark);
+    }
+
+    .upload-content small {
+      color: var(--nord4);
+    }
   }
 
   .image-preview {
@@ -890,12 +954,18 @@
   }
 
   .remove-image {
-    background-color: #d32f2f;
+    background-color: var(--red);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .remove-image:hover {
+    background-color: var(--nord11);
+    transform: translateY(-1px);
   }
 
   .users-list {
@@ -909,9 +979,17 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background-color: #f5f5f5;
+    background-color: var(--nord5);
     padding: 0.5rem 0.75rem;
     border-radius: 1rem;
+    border: 1px solid var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .user-item {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
   }
 
   .user-item.with-profile {
@@ -920,10 +998,11 @@
 
   .user-item .username {
     font-weight: 500;
+    color: var(--nord0);
   }
 
   .you-badge {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     padding: 0.125rem 0.5rem;
     border-radius: 1rem;
@@ -931,28 +1010,51 @@
     font-weight: 500;
   }
 
+  @media (prefers-color-scheme: dark) {
+    .user-item .username {
+      color: var(--font-default-dark);
+    }
+  }
+
   .predefined-users {
-    background-color: #f8f9fa;
+    background-color: var(--nord5);
     padding: 1rem;
     border-radius: 0.5rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--nord4);
   }
 
   .predefined-note {
     margin: 0 0 1rem 0;
-    color: #666;
+    color: var(--nord2);
     font-size: 0.9rem;
     font-style: italic;
   }
 
+  @media (prefers-color-scheme: dark) {
+    .predefined-users {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
+
+    .predefined-note {
+      color: var(--nord4);
+    }
+  }
+
   .remove-user {
-    background-color: #d32f2f;
+    background-color: var(--red);
     color: white;
     border: none;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
     font-size: 0.75rem;
     cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .remove-user:hover {
+    background-color: var(--nord11);
+    transform: translateY(-1px);
   }
 
   .add-user {
@@ -965,20 +1067,34 @@
   }
 
   .add-user button {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     border: none;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
     cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .add-user button:hover {
+    background-color: var(--nord10);
+    transform: translateY(-1px);
   }
 
 
   .proportional-splits {
-    border: 1px solid #ddd;
+    border: 1px solid var(--nord4);
     border-radius: 0.5rem;
     padding: 1rem;
     margin-bottom: 1rem;
+    background-color: var(--nord5);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .proportional-splits {
+      border-color: var(--nord3);
+      background-color: var(--nord2);
+    }
   }
 
   .proportional-splits h3 {
@@ -1003,9 +1119,17 @@
   }
 
   .split-preview {
-    background-color: #f8f9fa;
+    background-color: var(--nord5);
     padding: 1rem;
     border-radius: 0.5rem;
+    border: 1px solid var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .split-preview {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
   }
 
   .split-preview h3 {
@@ -1027,21 +1151,28 @@
   }
 
   .amount.positive {
-    color: #2e7d32;
+    color: var(--green);
     font-weight: 500;
   }
 
   .amount.negative {
-    color: #d32f2f;
+    color: var(--red);
     font-weight: 500;
   }
 
   .error {
-    background-color: #ffebee;
-    color: #d32f2f;
+    background-color: var(--nord6);
+    color: var(--red);
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
+    border: 1px solid var(--red);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .error {
+      background-color: var(--accent-dark);
+    }
   }
 
   .form-actions {
@@ -1059,13 +1190,15 @@
   }
 
   .btn-primary {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     border: none;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background-color: #1565c0;
+    background-color: var(--nord10);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .btn-primary:disabled {
@@ -1074,13 +1207,29 @@
   }
 
   .btn-secondary {
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: var(--nord5);
+    color: var(--nord0);
+    border: 1px solid var(--nord4);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
   }
 
   .btn-secondary:hover {
-    background-color: #e8e8e8;
+    background-color: var(--nord4);
+    text-decoration: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-secondary {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--nord3);
+    }
   }
 
   .personal-splits {
@@ -1088,23 +1237,40 @@
   }
 
   .personal-splits .description {
-    color: #666;
+    color: var(--nord2);
     font-size: 0.9rem;
     margin-bottom: 1rem;
     font-style: italic;
   }
 
+  @media (prefers-color-scheme: dark) {
+    .personal-splits .description {
+      color: var(--nord4);
+    }
+  }
+
   .remainder-info {
     margin-top: 1rem;
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: var(--nord5);
     border-radius: 0.5rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--nord4);
   }
 
   .remainder-info.error {
-    background-color: #fff5f5;
-    border-color: #fed7d7;
+    background-color: var(--nord6);
+    border-color: var(--red);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .remainder-info {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
+
+    .remainder-info.error {
+      background-color: var(--accent-dark);
+    }
   }
 
   .remainder-info span {
@@ -1114,7 +1280,7 @@
   }
 
   .error-message {
-    color: #d32f2f;
+    color: var(--red);
     font-weight: 600;
     margin-top: 0.5rem;
     font-size: 0.9rem;
@@ -1150,7 +1316,13 @@
   .manual-users p {
     margin: 0 0 0.5rem 0;
     font-size: 0.9rem;
-    color: #666;
+    color: var(--nord2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .manual-users p {
+      color: var(--nord4);
+    }
   }
 
   /* Recurring payment styles */
@@ -1169,17 +1341,30 @@
   .recurring-options {
     margin-top: 1rem;
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: var(--nord5);
     border-radius: 0.5rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .recurring-options {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
   }
 
   .help-text {
     display: block;
     margin-top: 0.25rem;
     font-size: 0.8rem;
-    color: #666;
+    color: var(--nord3);
     font-style: italic;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .help-text {
+      color: var(--nord4);
+    }
   }
 
   .help-text p {
@@ -1187,11 +1372,19 @@
   }
 
   .help-text code {
-    background-color: #f5f5f5;
+    background-color: var(--nord5);
     padding: 0.125rem 0.25rem;
     border-radius: 0.25rem;
     font-family: monospace;
     font-size: 0.85em;
+    border: 1px solid var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .help-text code {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
   }
 
   .help-text ul {
@@ -1204,20 +1397,20 @@
   }
 
   .field-error {
-    color: #d32f2f;
+    color: var(--red);
     font-size: 0.875rem;
     margin-top: 0.25rem;
     font-weight: 500;
   }
 
   input.error {
-    border-color: #d32f2f;
-    box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2);
+    border-color: var(--red);
+    box-shadow: 0 0 0 2px rgba(191, 97, 106, 0.2);
   }
 
   .execution-preview {
-    background-color: #e3f2fd;
-    border: 1px solid #2196f3;
+    background-color: var(--nord8);
+    border: 1px solid var(--blue);
     border-radius: 0.5rem;
     padding: 1rem;
     margin-top: 1rem;
@@ -1225,22 +1418,32 @@
 
   .execution-preview h3 {
     margin: 0 0 0.5rem 0;
-    color: #1976d2;
+    color: var(--blue);
     font-size: 1rem;
   }
 
   .next-execution {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #1976d2;
+    color: var(--blue);
     margin: 0.5rem 0;
   }
 
   .frequency-description {
-    color: #666;
+    color: var(--nord2);
     font-size: 0.9rem;
     margin: 0;
     font-style: italic;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .execution-preview {
+      background-color: var(--nord2);
+    }
+
+    .frequency-description {
+      color: var(--nord4);
+    }
   }
 
   @media (max-width: 600px) {

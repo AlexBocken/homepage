@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import ProfilePicture from './ProfilePicture.svelte';
+  import EditButton from './EditButton.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   
   export let paymentId;
@@ -214,28 +215,31 @@
 
           <div class="panel-actions">
             {#if payment && payment.createdBy === session?.user?.nickname}
-              <a href="/cospend/payments/edit/{paymentId}" class="btn btn-primary">Edit Payment</a>
               <button 
-                class="btn btn-danger" 
+                class="btn-danger" 
                 on:click={deletePayment}
                 disabled={deleting}
               >
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? 'Deleting...' : 'Delete Payment'}
               </button>
             {/if}
-            <button class="btn btn-secondary" on:click={closeModal}>Close</button>
+            <button class="btn-secondary" on:click={closeModal}>Close</button>
           </div>
         </div>
       {/if}
   </div>
 </div>
 
+{#if payment && payment.createdBy === session?.user?.nickname}
+  <EditButton href="/cospend/payments/edit/{paymentId}" />
+{/if}
+
 <style>
   .panel-content {
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: white;
+    background: var(--nord6);
   }
 
   .panel-header {
@@ -243,14 +247,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem;
-    border-bottom: 1px solid #eee;
-    background: #f8f9fa;
+    border-bottom: 1px solid var(--nord4);
+    background: var(--nord5);
     flex-shrink: 0;
   }
 
   .panel-header h2 {
     margin: 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.25rem;
   }
 
@@ -260,13 +264,13 @@
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 0.25rem;
-    color: #666;
+    color: var(--nord3);
     transition: all 0.2s;
   }
 
   .close-button:hover {
-    background: #e9ecef;
-    color: #333;
+    background: var(--nord4);
+    color: var(--nord0);
   }
 
   .panel-body {
@@ -282,8 +286,10 @@
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
+    color: var(--red);
+    background-color: var(--nord6);
+    border-radius: 0.5rem;
+    border: 1px solid var(--red);
   }
 
   .payment-details {
@@ -296,8 +302,8 @@
     justify-content: space-between;
     align-items: flex-start;
     padding: 1.5rem;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-bottom: 1px solid #dee2e6;
+    background: linear-gradient(135deg, var(--nord5), var(--nord4));
+    border-bottom: 1px solid var(--nord3);
   }
 
   .title-with-category {
@@ -314,14 +320,14 @@
 
   .title-section h1 {
     margin: 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.5rem;
   }
 
   .payment-amount {
     font-size: 1.25rem;
     font-weight: bold;
-    color: #1976d2;
+    color: var(--blue);
   }
 
   .receipt-image {
@@ -334,7 +340,7 @@
     max-height: 100px;
     object-fit: cover;
     border-radius: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--nord4);
   }
 
   .payment-info {
@@ -356,43 +362,43 @@
 
   .label {
     font-weight: 600;
-    color: #666;
+    color: var(--nord3);
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
   .value {
-    color: #333;
+    color: var(--nord0);
     font-size: 0.95rem;
   }
 
   .description {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--nord4);
     padding-top: 1.5rem;
   }
 
   .description h3 {
     margin: 0 0 0.75rem 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1rem;
   }
 
   .description p {
     margin: 0;
-    color: #555;
+    color: var(--nord2);
     line-height: 1.5;
     font-size: 0.95rem;
   }
 
   .splits-section {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--nord4);
     padding: 1.5rem;
   }
 
   .splits-section h3 {
     margin: 0 0 1rem 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1rem;
   }
 
@@ -407,14 +413,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
-    background: #f8f9fa;
+    background: var(--nord5);
     border-radius: 0.5rem;
-    border: 1px solid transparent;
+    border: 1px solid var(--nord4);
   }
 
   .split-item.current-user {
-    background: #e3f2fd;
-    border-color: #2196f3;
+    background: var(--nord8);
+    border-color: var(--blue);
   }
 
   .split-user {
@@ -431,12 +437,12 @@
 
   .username {
     font-weight: 500;
-    color: #333;
+    color: var(--nord0);
     font-size: 0.95rem;
   }
 
   .you-badge {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     padding: 0.125rem 0.375rem;
     border-radius: 1rem;
@@ -450,65 +456,164 @@
   }
 
   .split-amount.positive {
-    color: #2e7d32;
+    color: var(--green);
   }
 
   .split-amount.negative {
-    color: #d32f2f;
+    color: var(--red);
   }
 
   .panel-actions {
     padding: 1.5rem;
-    border-top: 1px solid #eee;
-    background: #f8f9fa;
+    border-top: 1px solid var(--nord4);
+    background: var(--nord5);
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
     flex-shrink: 0;
   }
 
-  .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
+  .btn-primary, .btn-secondary, .btn-danger {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
     transition: all 0.2s;
     border: none;
-    cursor: pointer;
   }
 
   .btn-primary {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
   }
 
-  .btn-primary:hover {
-    background-color: #1565c0;
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--nord10);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .btn-secondary {
-    background-color: white;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: var(--nord5);
+    color: var(--nord0);
+    border: 1px solid var(--nord4);
   }
 
   .btn-secondary:hover {
-    background-color: #f5f5f5;
+    background-color: var(--nord4);
+    transform: translateY(-1px);
   }
 
   .btn-danger {
-    background-color: #d32f2f;
+    background-color: var(--red);
     color: white;
   }
 
   .btn-danger:hover:not(:disabled) {
-    background-color: #c62828;
+    background-color: var(--nord11);
+    transform: translateY(-1px);
   }
 
   .btn-danger:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .panel-content {
+      background: var(--nord1);
+    }
+
+    .panel-header {
+      background: var(--nord2);
+      border-bottom-color: var(--nord3);
+    }
+
+    .panel-header h2 {
+      color: var(--font-default-dark);
+    }
+
+    .close-button {
+      color: var(--nord4);
+    }
+
+    .close-button:hover {
+      background: var(--nord3);
+      color: var(--font-default-dark);
+    }
+
+    .error {
+      background-color: var(--accent-dark);
+    }
+
+    .payment-header {
+      background: linear-gradient(135deg, var(--nord2), var(--nord3));
+    }
+
+    .title-section h1 {
+      color: var(--font-default-dark);
+    }
+
+    .receipt-image img {
+      border-color: var(--nord2);
+    }
+
+    .label {
+      color: var(--nord4);
+    }
+
+    .value {
+      color: var(--font-default-dark);
+    }
+
+    .description {
+      border-top-color: var(--nord2);
+    }
+
+    .description h3 {
+      color: var(--font-default-dark);
+    }
+
+    .description p {
+      color: var(--nord5);
+    }
+
+    .splits-section {
+      border-top-color: var(--nord2);
+    }
+
+    .splits-section h3 {
+      color: var(--font-default-dark);
+    }
+
+    .split-item {
+      background: var(--nord2);
+      border-color: var(--nord3);
+    }
+
+    .split-item.current-user {
+      background: var(--nord3);
+      border-color: var(--blue);
+    }
+
+    .username {
+      color: var(--font-default-dark);
+    }
+
+    .panel-actions {
+      background: var(--nord2);
+      border-top-color: var(--nord3);
+    }
+
+    .btn-secondary {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--nord3);
+    }
   }
 
   @media (max-width: 600px) {

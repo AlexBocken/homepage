@@ -59,4 +59,4 @@ h1{
 </p>
 </div>
 
-<AddButton></AddButton>
+<AddButton href="/rezepte/add"></AddButton>
