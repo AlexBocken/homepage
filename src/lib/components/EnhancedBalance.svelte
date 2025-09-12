@@ -43,7 +43,8 @@
   }
 
   $: {
-    // Recalculate when debtData changes
+    // Recalculate when debtData changes - trigger on the arrays specifically
+    const totalUsers = debtData.whoOwesMe.length + debtData.whoIOwe.length;
     singleDebtUser = getSingleDebtUser();
     shouldShowIntegratedView = singleDebtUser !== null;
   }
@@ -67,7 +68,12 @@
       if (!response.ok) {
         throw new Error('Failed to fetch balance');
       }
-      balance = await response.json();
+      const newBalance = await response.json();
+      // Force reactivity by creating new object with spread arrays
+      balance = {
+        netBalance: newBalance.netBalance || 0,
+        recentSplits: [...(newBalance.recentSplits || [])]
+      };
     } catch (err) {
       error = err.message;
     }
@@ -79,7 +85,14 @@
       if (!response.ok) {
         throw new Error('Failed to fetch debt breakdown');
       }
-      debtData = await response.json();
+      const newDebtData = await response.json();
+      // Force reactivity by creating new object with spread arrays
+      debtData = {
+        whoOwesMe: [...(newDebtData.whoOwesMe || [])],
+        whoIOwe: [...(newDebtData.whoIOwe || [])],
+        totalOwedToMe: newDebtData.totalOwedToMe || 0,
+        totalIOwe: newDebtData.totalIOwe || 0
+      };
     } catch (err) {
       error = err.message;
     } finally {
@@ -92,6 +105,12 @@
       style: 'currency',
       currency: 'CHF'
     }).format(Math.abs(amount));
+  }
+
+  // Export refresh method for parent components to call
+  export async function refresh() {
+    loading = true;
+    await Promise.all([fetchBalance(), fetchDebtBreakdown()]);
   }
 
 </script>

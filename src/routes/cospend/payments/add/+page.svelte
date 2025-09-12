@@ -4,6 +4,7 @@
   import { enhance } from '$app/forms';
   import { getCategoryOptions } from '$lib/utils/categories';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
+  import { validateCronExpression, getFrequencyDescription, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   
   export let data;
@@ -18,7 +19,16 @@
     date: form?.values?.date || new Date().toISOString().split('T')[0],
     category: form?.values?.category || 'groceries',
     splitMethod: form?.values?.splitMethod || 'equal',
-    splits: []
+    splits: [],
+    isRecurring: form?.values?.isRecurring === 'true' || false
+  };
+
+  // Recurring payment settings
+  let recurringData = {
+    frequency: form?.values?.recurringFrequency || 'monthly',
+    cronExpression: form?.values?.recurringCronExpression || '',
+    startDate: form?.values?.recurringStartDate || new Date().toISOString().split('T')[0],
+    endDate: form?.values?.recurringEndDate || ''
   };
 
   let imageFile = null;
@@ -31,6 +41,8 @@
   let personalTotalError = false;
   let predefinedMode = data.predefinedUsers.length > 0;
   let jsEnhanced = false;
+  let cronError = false;
+  let nextExecutionPreview = '';
   
   // Initialize users from server data for no-JS support
   let users = predefinedMode ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []);
@@ -172,12 +184,14 @@
     if (!formData.amount) return;
     
     const amountNum = parseFloat(formData.amount);
+    const otherUsers = users.filter(user => user !== formData.paidBy);
+    const amountPerOtherUser = otherUsers.length > 0 ? amountNum / otherUsers.length : 0;
     
     users.forEach(user => {
       if (user === formData.paidBy) {
         splitAmounts[user] = -amountNum; // They paid it all, so they're owed the full amount
       } else {
-        splitAmounts[user] = 0; // Others don't owe anything
+        splitAmounts[user] = amountPerOtherUser; // Others owe their share of the full amount
       }
     });
     splitAmounts = { ...splitAmounts };
@@ -336,6 +350,46 @@
       calculatePersonalEqualSplit();
     }
   }
+
+  function validateCron() {
+    if (recurringData.frequency !== 'custom') {
+      cronError = false;
+      return;
+    }
+    cronError = !validateCronExpression(recurringData.cronExpression);
+  }
+
+  function updateNextExecutionPreview() {
+    try {
+      if (recurringData.frequency && recurringData.startDate && formData.isRecurring) {
+        const recurringPayment = {
+          ...recurringData,
+          startDate: new Date(recurringData.startDate)
+        };
+        const nextDate = calculateNextExecutionDate(recurringPayment, new Date(recurringData.startDate));
+        nextExecutionPreview = nextDate.toLocaleString('de-CH', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } else {
+        nextExecutionPreview = '';
+      }
+    } catch (e) {
+      nextExecutionPreview = 'Invalid configuration';
+    }
+  }
+
+  $: if (recurringData.cronExpression) {
+    validateCron();
+  }
+
+  $: if (recurringData.frequency || recurringData.cronExpression || recurringData.startDate || formData.isRecurring) {
+    updateNextExecutionPreview();
+  }
 </script>
 
 <svelte:head>
@@ -419,7 +473,101 @@
           {/each}
         </select>
       </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input 
+            type="checkbox" 
+            name="isRecurring" 
+            bind:checked={formData.isRecurring}
+            value="true"
+          />
+          Make this a recurring payment
+        </label>
+      </div>
     </div>
+
+    {#if formData.isRecurring}
+      <div class="form-section">
+        <h2>Recurring Payment</h2>
+        
+        <div class="recurring-options">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="frequency">Frequency *</label>
+              <select id="frequency" name="recurringFrequency" bind:value={recurringData.frequency} required>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="yearly">Yearly</option>
+                <option value="custom">Custom (Cron)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="recurringStartDate">Start Date *</label>
+              <input 
+                type="date" 
+                id="recurringStartDate" 
+                name="recurringStartDate"
+                bind:value={recurringData.startDate}
+                required
+              />
+            </div>
+          </div>
+
+          {#if recurringData.frequency === 'custom'}
+            <div class="form-group">
+              <label for="recurringCronExpression">Cron Expression *</label>
+              <input 
+                type="text" 
+                id="recurringCronExpression" 
+                name="recurringCronExpression"
+                bind:value={recurringData.cronExpression} 
+                required 
+                placeholder="0 9 * * 1  (Every Monday at 9:00 AM)"
+                class:error={cronError}
+              />
+              <div class="help-text">
+                <p>Cron format: minute hour day-of-month month day-of-week</p>
+                <p>Examples:</p>
+                <ul>
+                  <li><code>0 9 * * *</code> - Every day at 9:00 AM</li>
+                  <li><code>0 9 1 * *</code> - Every 1st of the month at 9:00 AM</li>
+                  <li><code>0 9 * * 1</code> - Every Monday at 9:00 AM</li>
+                  <li><code>0 9 1,15 * *</code> - 1st and 15th of every month at 9:00 AM</li>
+                </ul>
+              </div>
+              {#if cronError}
+                <div class="field-error">Invalid cron expression</div>
+              {/if}
+            </div>
+          {/if}
+
+          <div class="form-group">
+            <label for="recurringEndDate">End Date (optional)</label>
+            <input 
+              type="date" 
+              id="recurringEndDate" 
+              name="recurringEndDate"
+              bind:value={recurringData.endDate}
+              min={recurringData.startDate}
+            />
+            <small class="help-text">Leave empty for indefinite recurring</small>
+          </div>
+
+
+          {#if nextExecutionPreview}
+            <div class="execution-preview">
+              <h3>Next Execution</h3>
+              <p class="next-execution">{nextExecutionPreview}</p>
+              <p class="frequency-description">{getFrequencyDescription(recurringData)}</p>
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <div class="form-section">
       <h2>Receipt Image</h2>
@@ -524,23 +672,14 @@
     <div class="form-section">
       <h2>Split Method</h2>
       
-      <div class="split-method">
-        <label>
-          <input type="radio" name="splitMethod" value="equal" bind:group={formData.splitMethod} />
-          {predefinedMode && users.length === 2 ? 'Split 50/50' : 'Equal Split'}
-        </label>
-        <label>
-          <input type="radio" name="splitMethod" value="personal_equal" bind:group={formData.splitMethod} />
-          Personal + Equal Split
-        </label>
-        <label>
-          <input type="radio" name="splitMethod" value="full" bind:group={formData.splitMethod} />
-          {paidInFullText}
-        </label>
-        <label>
-          <input type="radio" name="splitMethod" value="proportional" bind:group={formData.splitMethod} />
-          Custom Proportions
-        </label>
+      <div class="form-group">
+        <label for="splitMethod">How should this payment be split?</label>
+        <select id="splitMethod" name="splitMethod" bind:value={formData.splitMethod} required>
+          <option value="equal">{predefinedMode && users.length === 2 ? 'Split 50/50' : 'Equal Split'}</option>
+          <option value="personal_equal">Personal + Equal Split</option>
+          <option value="full">{paidInFullText}</option>
+          <option value="proportional">Custom Proportions</option>
+        </select>
       </div>
 
       {#if formData.splitMethod === 'proportional'}
@@ -605,7 +744,7 @@
                 {:else if splitAmounts[user] < 0}
                   is owed CHF {Math.abs(splitAmounts[user]).toFixed(2)}
                 {:else}
-                  even
+                  owes CHF {splitAmounts[user].toFixed(2)}
                 {/if}
               </span>
             </div>
@@ -623,7 +762,7 @@
         Cancel
       </a>
       <button type="submit" class="btn-primary" disabled={loading}>
-        {loading ? 'Creating...' : 'Create Payment'}
+        {loading ? 'Creating...' : (formData.isRecurring ? 'Create Recurring Payment' : 'Create Payment')}
       </button>
     </div>
   </form>
@@ -834,19 +973,6 @@
     cursor: pointer;
   }
 
-  .split-method {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .split-method label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-  }
 
   .proportional-splits {
     border: 1px solid #ddd;
@@ -1025,6 +1151,96 @@
     margin: 0 0 0.5rem 0;
     font-size: 0.9rem;
     color: #666;
+  }
+
+  /* Recurring payment styles */
+  .checkbox-label {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+  }
+
+  .recurring-options {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+  }
+
+  .help-text {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: #666;
+    font-style: italic;
+  }
+
+  .help-text p {
+    margin: 0.5rem 0 0.25rem 0;
+  }
+
+  .help-text code {
+    background-color: #f5f5f5;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.85em;
+  }
+
+  .help-text ul {
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+  }
+
+  .help-text li {
+    margin-bottom: 0.25rem;
+  }
+
+  .field-error {
+    color: #d32f2f;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+  }
+
+  input.error {
+    border-color: #d32f2f;
+    box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2);
+  }
+
+  .execution-preview {
+    background-color: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .execution-preview h3 {
+    margin: 0 0 0.5rem 0;
+    color: #1976d2;
+    font-size: 1rem;
+  }
+
+  .next-execution {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1976d2;
+    margin: 0.5rem 0;
+  }
+
+  .frequency-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+    font-style: italic;
   }
 
   @media (max-width: 600px) {

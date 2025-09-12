@@ -17,12 +17,28 @@
   };
   let loading = false; // Start as false since we have server data
   let error = null;
+  
+  // Component references for refreshing
+  let enhancedBalanceComponent;
+  let debtBreakdownComponent;
 
   // Progressive enhancement: refresh data if JavaScript is available
   onMount(async () => {
     // Mark that JavaScript is loaded for progressive enhancement
     document.body.classList.add('js-loaded');
     await fetchBalance();
+    
+    // Listen for dashboard refresh events from the layout
+    const handleDashboardRefresh = () => {
+      refreshAllComponents();
+    };
+    
+    window.addEventListener('dashboardRefresh', handleDashboardRefresh);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('dashboardRefresh', handleDashboardRefresh);
+    };
   });
 
   async function fetchBalance() {
@@ -37,6 +53,22 @@
       error = err.message;
     } finally {
       loading = false;
+    }
+  }
+
+  // Function to refresh all dashboard components after payment deletion
+  async function refreshAllComponents() {
+    // Refresh the main balance and recent activity
+    await fetchBalance();
+    
+    // Refresh the enhanced balance component if it exists and has a refresh method
+    if (enhancedBalanceComponent && enhancedBalanceComponent.refresh) {
+      await enhancedBalanceComponent.refresh();
+    }
+    
+    // Refresh the debt breakdown component if it exists and has a refresh method  
+    if (debtBreakdownComponent && debtBreakdownComponent.refresh) {
+      await debtBreakdownComponent.refresh();
     }
   }
 
@@ -98,18 +130,17 @@
     <p>Track and split expenses with your friends and family</p>
   </div>
 
-  <EnhancedBalance initialBalance={data.balance} initialDebtData={data.debtData} />
+  <EnhancedBalance bind:this={enhancedBalanceComponent} initialBalance={data.balance} initialDebtData={data.debtData} />
 
   <div class="actions">
     <a href="/cospend/payments/add" class="btn btn-primary">Add Payment</a>
     <a href="/cospend/payments" class="btn btn-secondary">View All Payments</a>
-    <a href="/cospend/recurring" class="btn btn-recurring">Recurring Payments</a>
     {#if balance.netBalance !== 0}
       <a href="/cospend/settle" class="btn btn-settlement">Settle Debts</a>
     {/if}
   </div>
 
-  <DebtBreakdown />
+  <DebtBreakdown bind:this={debtBreakdownComponent} />
 
   {#if loading}
     <div class="loading">Loading recent activity...</div>
@@ -175,7 +206,7 @@
                       {:else if split.amount < 0}
                         +{formatCurrency(split.amount)}
                       {:else}
-                        even
+                        {formatCurrency(split.amount)}
                       {/if}
                     </div>
                   </div>
@@ -280,16 +311,6 @@
 
   .btn-secondary:hover {
     background-color: #e8e8e8;
-  }
-
-  .btn-recurring {
-    background: linear-gradient(135deg, #9c27b0, #673ab7);
-    color: white;
-    border: none;
-  }
-
-  .btn-recurring:hover {
-    background: linear-gradient(135deg, #8e24aa, #5e35b1);
   }
 
   .btn-settlement {

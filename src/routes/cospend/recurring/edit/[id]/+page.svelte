@@ -135,12 +135,14 @@
     if (!formData.amount) return;
     
     const amountNum = parseFloat(formData.amount);
+    const otherUsers = users.filter(user => user !== formData.paidBy);
+    const amountPerOtherUser = otherUsers.length > 0 ? amountNum / otherUsers.length : 0;
     
     users.forEach(user => {
       if (user === formData.paidBy) {
-        splitAmounts[user] = -amountNum;
+        splitAmounts[user] = -amountNum; // They paid it all, so they're owed the full amount
       } else {
-        splitAmounts[user] = 0;
+        splitAmounts[user] = amountPerOtherUser; // Others owe their share of the full amount
       }
     });
     splitAmounts = { ...splitAmounts };
@@ -573,7 +575,7 @@
                   {:else if splitAmounts[user] < 0}
                     is owed CHF {Math.abs(splitAmounts[user]).toFixed(2)}
                   {:else}
-                    even
+                    owes CHF {splitAmounts[user].toFixed(2)}
                   {/if}
                 </span>
               </div>

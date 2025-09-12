@@ -259,7 +259,7 @@
                   {:else if split.amount < 0}
                     owed CHF {Math.abs(split.amount).toFixed(2)}
                   {:else}
-                    even
+                    owes CHF {split.amount.toFixed(2)}
                   {/if}
                 </span>
               </div>
