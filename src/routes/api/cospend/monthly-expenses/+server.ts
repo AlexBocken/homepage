@@ -5,13 +5,13 @@ import { dbConnect } from '../../../../utils/db';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   const session = await locals.auth();
-  
+
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   await dbConnect();
-  
+
   try {
 
     // Get query parameters for date range (default to last 12 months)
@@ -20,10 +20,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - monthsBack);
 
-    // First, let's get all payments and see what we have
-    console.log('Searching for payments for user:', session.user.nickname);
-    console.log('Date range:', startDate.toISOString(), 'to', endDate.toISOString());
-    
     const totalPayments = await Payment.countDocuments();
     const paymentsInRange = await Payment.countDocuments({
       date: {
@@ -36,14 +32,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         $gte: startDate,
         $lte: endDate
       },
-      category: { $ne: 'settlement' },
-      $or: [
-        { paidBy: session.user.nickname },
-        { createdBy: session.user.nickname }
-      ]
+      category: { $ne: 'settlement' }
     });
-    console.log('Total payments:', totalPayments, 'In date range:', paymentsInRange, 'User expenses:', expensePayments);
-    
+
     // Aggregate payments by month and category
     const pipeline = [
       {
@@ -54,11 +45,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
           },
           // Exclude settlements - only show actual expenses
           category: { $ne: 'settlement' },
-          // Only include payments where current user is involved
-          $or: [
-            { paidBy: session.user.nickname },
-            { createdBy: session.user.nickname }
-          ]
         }
       },
       {
@@ -109,20 +95,20 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     results.forEach((result: any) => {
       const { yearMonth, category } = result._id;
       const amount = result.totalAmount;
-      
+
       categories.add(category);
-      
+
       if (!monthsMap.has(yearMonth)) {
         monthsMap.set(yearMonth, {});
       }
-      
+
       monthsMap.get(yearMonth)[category] = amount;
     });
 
     // Convert to arrays for Chart.js
     const months = Array.from(monthsMap.keys()).sort();
     const categoryList = Array.from(categories).sort();
-    
+
     const datasets = categoryList.map((category: string) => ({
       label: category,
       data: months.map(month => monthsMap.get(month)[category] || 0)
