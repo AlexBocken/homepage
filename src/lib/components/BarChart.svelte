@@ -174,7 +174,7 @@
         },
         interaction: {
           intersect: true,
-          mode: 'dataset'
+          mode: 'point'
         }
       },
       plugins: [{
