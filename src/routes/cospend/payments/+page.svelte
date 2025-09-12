@@ -4,6 +4,7 @@
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
+  import AddButton from '$lib/components/AddButton.svelte';
 
   export let data;
 
@@ -19,7 +20,7 @@
   onMount(async () => {
     // Mark that JavaScript is loaded for CSS
     document.body.classList.add('js-loaded');
-    
+
     // Only refresh if we don't have server data
     if (payments.length === 0) {
       await loadPayments();
@@ -30,22 +31,22 @@
     try {
       loading = true;
       const response = await fetch(`/api/cospend/payments?limit=${limit}&offset=${page * limit}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to load payments');
       }
 
       const result = await response.json();
-      
+
       if (page === 0) {
         payments = result.payments;
       } else {
         payments = [...payments, ...result.payments];
       }
-      
+
       hasMore = result.payments.length === limit;
       currentPage = page;
-      
+
     } catch (err) {
       error = err.message;
     } finally {
@@ -97,7 +98,7 @@
 
   function getSplitDescription(payment) {
     if (!payment.splits || payment.splits.length === 0) return 'No splits';
-    
+
     if (payment.splitMethod === 'equal') {
       return `Split equally among ${payment.splits.length} people`;
     } else if (payment.splitMethod === 'full') {
@@ -118,12 +119,6 @@
   <div class="header">
     <div class="header-content">
       <h1>All Payments</h1>
-      <p>Manage your shared expenses</p>
-    </div>
-    <div class="header-actions">
-      <a href="/cospend/payments/add" class="btn btn-primary">Add Payment</a>
-      <a href="/cospend/recurring" class="btn btn-recurring">Recurring Payments</a>
-      <a href="/cospend" class="btn btn-secondary">Back to Dashboard</a>
     </div>
   </div>
 
@@ -228,14 +223,14 @@
             <span class="created-by">Created by {payment.createdBy}</span>
             {#if payment.createdBy === data.session.user.nickname}
               <div class="action-buttons">
-                <button 
-                  class="btn-edit" 
+                <button
+                  class="btn-edit"
                   on:click={() => goto(`/cospend/payments/edit/${payment._id}`)}
                 >
                   Edit
                 </button>
-                <button 
-                  class="btn-delete" 
+                <button
+                  class="btn-delete"
                   on:click={() => deletePayment(payment._id)}
                 >
                   Delete
@@ -250,22 +245,22 @@
     <!-- Pagination that works without JavaScript -->
     <div class="pagination">
       {#if data.currentOffset > 0}
-        <a href="?offset={Math.max(0, data.currentOffset - data.limit)}&limit={data.limit}" 
+        <a href="?offset={Math.max(0, data.currentOffset - data.limit)}&limit={data.limit}"
            class="btn btn-secondary">
           ← Previous
         </a>
       {/if}
-      
+
       {#if hasMore}
-        <a href="?offset={data.currentOffset + data.limit}&limit={data.limit}" 
+        <a href="?offset={data.currentOffset + data.limit}&limit={data.limit}"
            class="btn btn-secondary">
           Next →
         </a>
       {/if}
-      
+
       <!-- Progressive enhancement: JavaScript load more button -->
       {#if hasMore}
-        <button class="btn btn-secondary js-only" on:click={loadMore} disabled={loading} 
+        <button class="btn btn-secondary js-only" on:click={loadMore} disabled={loading}
                 style="display: none;">
           {loading ? 'Loading...' : 'Load More (JS)'}
         </button>
@@ -274,6 +269,8 @@
   {/if}
 </main>
 
+<AddButton href="/cospend/payments/add" />
+
 <style>
   .payments-list {
     max-width: 1200px;
@@ -281,30 +278,19 @@
     padding: 2rem;
   }
 
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2rem;
-    gap: 2rem;
+
+   h1 {
+    margin-block: 0 2rem;
+    margin-inline: auto;
+    color: var(--nord0);
+    text-align: center;
   }
 
-  .header-content h1 {
-    margin: 0 0 0.5rem 0;
-    color: #333;
-    font-size: 2rem;
-  }
+  @media (prefers-color-scheme: dark) {
+     h1 {
+      color: var(--font-default-dark);
+    }
 
-  .header-content p {
-    margin: 0;
-    color: #666;
-    font-size: 1.1rem;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 1rem;
-    flex-shrink: 0;
   }
 
   .btn {
@@ -318,32 +304,36 @@
   }
 
   .btn-primary {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
   }
 
   .btn-primary:hover {
-    background-color: #1565c0;
+    background-color: var(--nord10);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .btn-secondary {
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: var(--nord5);
+    color: var(--nord0);
+    border: 1px solid var(--nord4);
   }
 
   .btn-secondary:hover {
-    background-color: #e8e8e8;
+    background-color: var(--nord4);
   }
 
-  .btn-recurring {
-    background: linear-gradient(135deg, #9c27b0, #673ab7);
-    color: white;
-    border: none;
-  }
+  @media (prefers-color-scheme: dark) {
+    .btn-secondary {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+    }
 
-  .btn-recurring:hover {
-    background: linear-gradient(135deg, #8e24aa, #5e35b1);
+    .btn-secondary:hover {
+      background-color: var(--nord3);
+    }
   }
 
   .loading, .error {
@@ -353,9 +343,16 @@
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
+    color: var(--red);
+    background-color: var(--nord6);
     border-radius: 0.5rem;
+    border: 1px solid var(--red);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .error {
+      background-color: var(--accent-dark);
+    }
   }
 
   .empty-state {
@@ -364,18 +361,32 @@
   }
 
   .empty-content svg {
-    color: #ccc;
+    color: var(--nord3);
     margin-bottom: 1rem;
   }
 
   .empty-content h2 {
     margin: 0 0 0.5rem 0;
-    color: #555;
+    color: var(--nord1);
   }
 
   .empty-content p {
     margin: 0 0 2rem 0;
-    color: #777;
+    color: var(--nord2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-content svg {
+      color: var(--nord4);
+    }
+
+    .empty-content h2 {
+      color: var(--nord5);
+    }
+
+    .empty-content p {
+      color: var(--nord4);
+    }
   }
 
   .payments-grid {
@@ -387,28 +398,52 @@
 
   .payment-card {
     display: block;
-    background: white;
+    background: var(--nord6);
     border-radius: 0.75rem;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.2s;
     text-decoration: none;
     color: inherit;
+    border: 1px solid var(--nord4);
   }
 
   .payment-card:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     text-decoration: none;
     color: inherit;
+    transform: translateY(-1px);
+    border-color: var(--nord3);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-card {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+
+    .payment-card:hover {
+      border-color: var(--nord3);
+    }
   }
 
   .settlement-card {
-    background: linear-gradient(135deg, #f8fff9, #f0f8f0);
-    border: 2px solid #28a745;
+    background: linear-gradient(135deg, var(--nord6), var(--nord5));
+    border: 2px solid var(--green);
   }
 
   .settlement-card:hover {
-    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.2);
+    box-shadow: 0 4px 16px rgba(163, 190, 140, 0.3);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .settlement-card {
+      background: linear-gradient(135deg, var(--nord2), var(--nord1));
+    }
+
+    .settlement-card:hover {
+      box-shadow: 0 4px 16px rgba(163, 190, 140, 0.2);
+    }
   }
 
   .settlement-flow {
@@ -427,7 +462,7 @@
   .settlement-user-from .username,
   .settlement-user-to .username {
     font-weight: 500;
-    color: #28a745;
+    color: var(--green);
   }
 
   .settlement-arrow {
@@ -438,13 +473,13 @@
   }
 
   .settlement-arrow .arrow {
-    color: #28a745;
+    color: var(--green);
     font-size: 1.2rem;
     font-weight: bold;
   }
 
   .settlement-badge-small {
-    background: linear-gradient(135deg, #28a745, #20c997);
+    background: linear-gradient(135deg, var(--green), var(--lightblue));
     color: white;
     padding: 0.125rem 0.375rem;
     border-radius: 0.75rem;
@@ -464,7 +499,7 @@
   .settlement-amount-text {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #28a745;
+    color: var(--green);
   }
 
   .payment-header {
@@ -495,27 +530,43 @@
 
   .payment-title h3 {
     margin: 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.25rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-title h3 {
+      color: var(--font-default-dark);
+    }
   }
 
   .payment-meta {
     display: flex;
     gap: 1rem;
     font-size: 0.9rem;
-    color: #666;
+    color: var(--nord3);
     flex-wrap: wrap;
   }
 
   .payment-meta .category-name {
-    color: #888;
+    color: var(--nord3);
     font-style: italic;
     font-size: 0.8rem;
   }
 
   .payment-meta .amount {
     font-weight: 600;
-    color: #1976d2;
+    color: var(--blue);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-meta {
+      color: var(--nord4);
+    }
+
+    .payment-meta .category-name {
+      color: var(--nord4);
+    }
   }
 
   .receipt-thumb {
@@ -523,13 +574,25 @@
     height: 60px;
     object-fit: cover;
     border-radius: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .receipt-thumb {
+      border-color: var(--nord2);
+    }
   }
 
   .payment-description {
-    color: #555;
+    color: var(--nord2);
     margin-bottom: 1rem;
     font-style: italic;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-description {
+      color: var(--nord5);
+    }
   }
 
   .payment-details {
@@ -543,24 +606,44 @@
   }
 
   .detail-row .label {
-    color: #666;
+    color: var(--nord3);
     font-weight: 500;
   }
 
   .detail-row .value {
-    color: #333;
+    color: var(--nord0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .detail-row .label {
+      color: var(--nord4);
+    }
+
+    .detail-row .value {
+      color: var(--font-default-dark);
+    }
   }
 
   .splits-summary {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--nord4);
     padding-top: 1rem;
     margin-bottom: 1rem;
   }
 
   .splits-summary h4 {
     margin: 0 0 0.75rem 0;
-    color: #333;
+    color: var(--nord0);
     font-size: 1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .splits-summary {
+      border-top-color: var(--nord2);
+    }
+
+    .splits-summary h4 {
+      color: var(--font-default-dark);
+    }
   }
 
   .splits-list {
@@ -576,30 +659,46 @@
   }
 
   .split-user {
-    color: #555;
+    color: var(--nord2);
   }
 
   .split-amount.positive {
-    color: #2e7d32;
+    color: var(--green);
     font-weight: 500;
   }
 
   .split-amount.negative {
-    color: #d32f2f;
+    color: var(--red);
     font-weight: 500;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .split-user {
+      color: var(--nord5);
+    }
   }
 
   .payment-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--nord4);
     padding-top: 1rem;
   }
 
   .created-by {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--nord3);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .payment-actions {
+      border-top-color: var(--nord2);
+    }
+
+    .created-by {
+      color: var(--nord4);
+    }
   }
 
   .action-buttons {
@@ -617,21 +716,34 @@
   }
 
   .btn-edit {
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: var(--nord5);
+    color: var(--nord0);
+    border: 1px solid var(--nord4);
   }
 
   .btn-edit:hover {
-    background-color: #e8e8e8;
+    background-color: var(--nord4);
   }
 
   .btn-delete {
-    background-color: #d32f2f;
+    background-color: var(--red);
     color: white;
   }
 
   .btn-delete:hover {
-    background-color: #c62828;
+    background-color: var(--nord11);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-edit {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+    }
+
+    .btn-edit:hover {
+      background-color: var(--nord3);
+    }
   }
 
   .pagination {
@@ -645,7 +757,7 @@
   .js-only {
     display: none;
   }
-  
+
   :global(body.js-loaded) .js-only {
     display: inline-block;
   }

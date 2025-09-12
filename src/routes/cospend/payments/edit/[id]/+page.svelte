@@ -138,7 +138,7 @@
 <main class="edit-payment">
   <div class="header">
     <h1>Edit Payment</h1>
-    <a href="/cospend/payments" class="back-link">← Back to Payments</a>
+    <p>Modify payment details and receipt image</p>
   </div>
 
   {#if loading}
@@ -299,20 +299,30 @@
   }
 
   .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    text-align: center;
     margin-bottom: 2rem;
   }
 
   .header h1 {
-    margin: 0;
-    color: #333;
+    margin: 0 0 0.5rem 0;
+    color: var(--nord0);
+    font-size: 2rem;
   }
 
-  .back-link {
-    color: #1976d2;
-    text-decoration: none;
+  .header p {
+    margin: 0;
+    color: var(--nord3);
+    font-size: 1.1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .header h1 {
+      color: var(--font-default-dark);
+    }
+
+    .header p {
+      color: var(--nord4);
+    }
   }
 
   .loading, .error {
@@ -322,9 +332,16 @@
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
+    color: var(--red);
+    background-color: var(--nord6);
     border-radius: 0.5rem;
+    border: 1px solid var(--red);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .error {
+      background-color: var(--accent-dark);
+    }
   }
 
   .payment-form {
@@ -334,17 +351,29 @@
   }
 
   .form-section {
-    background: white;
+    background: var(--nord6);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
   }
 
   .form-section h2 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--nord0);
     font-size: 1.25rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .form-section {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+
+    .form-section h2 {
+      color: var(--font-default-dark);
+    }
   }
 
   .form-group {
@@ -361,27 +390,42 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: #555;
+    color: var(--nord2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    label {
+      color: var(--nord5);
+    }
   }
 
   input, textarea, select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--nord4);
     border-radius: 0.5rem;
     font-size: 1rem;
     box-sizing: border-box;
+    background-color: var(--nord6);
+    color: var(--nord0);
   }
 
   input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #1976d2;
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
   }
 
   select {
-    background-color: white;
     cursor: pointer;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    input, textarea, select {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+    }
   }
 
   .splits-display {
@@ -396,25 +440,39 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
-    background-color: #f8f9fa;
+    background-color: var(--nord5);
     border-radius: 0.5rem;
+    border: 1px solid var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .split-item {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
   }
 
   .positive {
-    color: #2e7d32;
+    color: var(--green);
     font-weight: 500;
   }
 
   .negative {
-    color: #d32f2f;
+    color: var(--red);
     font-weight: 500;
   }
 
   .note {
-    color: #666;
+    color: var(--nord2);
     font-size: 0.9rem;
     font-style: italic;
     margin: 0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .note {
+      color: var(--nord4);
+    }
   }
 
   .form-actions {
@@ -438,13 +496,15 @@
   }
 
   .btn-primary {
-    background-color: #1976d2;
+    background-color: var(--blue);
     color: white;
     border: none;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background-color: #1565c0;
+    background-color: var(--nord10);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .btn-primary:disabled {
@@ -453,23 +513,37 @@
   }
 
   .btn-secondary {
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: var(--nord5);
+    color: var(--nord0);
+    border: 1px solid var(--nord4);
   }
 
   .btn-secondary:hover {
-    background-color: #e8e8e8;
+    background-color: var(--nord4);
+    transform: translateY(-1px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-secondary {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--nord3);
+    }
   }
 
   .btn-danger {
-    background-color: #d32f2f;
+    background-color: var(--red);
     color: white;
     border: none;
   }
 
   .btn-danger:hover:not(:disabled) {
-    background-color: #c62828;
+    background-color: var(--nord11);
+    transform: translateY(-1px);
   }
 
   .btn-danger:disabled {
@@ -487,11 +561,17 @@
     max-height: 200px;
     object-fit: cover;
     border-radius: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--nord4);
     margin-bottom: 0.75rem;
     display: block;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .receipt-preview {
+      border-color: var(--nord2);
+    }
   }
 
   .image-actions {
@@ -500,7 +580,7 @@
   }
 
   .btn-remove {
-    background-color: #d32f2f;
+    background-color: var(--red);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -511,30 +591,48 @@
   }
 
   .btn-remove:hover {
-    background-color: #c62828;
+    background-color: var(--nord11);
+    transform: translateY(-1px);
   }
 
   .upload-label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: #555;
+    color: var(--nord2);
     cursor: pointer;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .upload-label {
+      color: var(--nord5);
+    }
   }
 
   .file-input {
     width: 100%;
     padding: 0.75rem;
-    border: 2px dashed #ddd;
+    border: 2px dashed var(--nord4);
     border-radius: 0.5rem;
-    background-color: #fafafa;
+    background-color: var(--nord5);
     cursor: pointer;
     transition: all 0.2s;
   }
 
   .file-input:hover {
-    border-color: #1976d2;
-    background-color: #f5f5f5;
+    border-color: var(--blue);
+    background-color: var(--nord4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .file-input {
+      background-color: var(--nord2);
+      border-color: var(--nord3);
+    }
+
+    .file-input:hover {
+      background-color: var(--nord3);
+    }
   }
 
   .file-input:disabled {
@@ -544,7 +642,7 @@
 
   .upload-status {
     margin-top: 0.5rem;
-    color: #1976d2;
+    color: var(--blue);
     font-size: 0.9rem;
     text-align: center;
   }
