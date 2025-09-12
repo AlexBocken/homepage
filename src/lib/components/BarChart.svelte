@@ -1,0 +1,205 @@
+<script>
+  import { onMount } from 'svelte';
+  import { Chart, registerables } from 'chart.js';
+  
+  export let data = { labels: [], datasets: [] };
+  export let title = '';
+  export let height = '400px';
+  
+  let canvas;
+  let chart;
+  
+  // Register Chart.js components
+  Chart.register(...registerables);
+  
+  // Nord theme colors for categories
+  const nordColors = [
+    '#5E81AC', // Nord Blue
+    '#88C0D0', // Nord Light Blue  
+    '#81A1C1', // Nord Lighter Blue
+    '#A3BE8C', // Nord Green
+    '#EBCB8B', // Nord Yellow
+    '#D08770', // Nord Orange
+    '#BF616A', // Nord Red
+    '#B48EAD', // Nord Purple
+    '#8FBCBB', // Nord Cyan
+    '#ECEFF4', // Nord Light Gray
+  ];
+  
+  function getCategoryColor(category, index) {
+    const categoryColorMap = {
+      'groceries': '#A3BE8C',      // Green
+      'restaurant': '#D08770',     // Orange  
+      'transport': '#5E81AC',      // Blue
+      'entertainment': '#B48EAD',  // Purple
+      'shopping': '#EBCB8B',       // Yellow
+      'utilities': '#81A1C1',      // Light Blue
+      'healthcare': '#BF616A',     // Red
+      'education': '#88C0D0',      // Cyan
+      'travel': '#8FBCBB',         // Light Cyan
+      'other': '#4C566A'           // Dark Gray
+    };
+    
+    return categoryColorMap[category] || nordColors[index % nordColors.length];
+  }
+  
+  function createChart() {
+    if (!canvas || !data.datasets) return;
+    
+    // Destroy existing chart
+    if (chart) {
+      chart.destroy();
+    }
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Process datasets with colors
+    const processedDatasets = data.datasets.map((dataset, index) => ({
+      ...dataset,
+      backgroundColor: getCategoryColor(dataset.label, index),
+      borderColor: getCategoryColor(dataset.label, index),
+      borderWidth: 1
+    }));
+    
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: processedDatasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: 'var(--nord3)',
+              font: {
+                family: 'Inter, system-ui, sans-serif'
+              }
+            }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            grid: {
+              color: 'var(--nord4)',
+              borderDash: [2, 2]
+            },
+            ticks: {
+              color: 'var(--nord3)',
+              font: {
+                family: 'Inter, system-ui, sans-serif'
+              },
+              callback: function(value) {
+                return 'CHF ' + value.toFixed(0);
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              usePointStyle: true,
+              color: 'var(--nord1)',
+              font: {
+                family: 'Inter, system-ui, sans-serif',
+                size: 12
+              }
+            }
+          },
+          title: {
+            display: !!title,
+            text: title,
+            color: 'var(--nord0)',
+            font: {
+              family: 'Inter, system-ui, sans-serif',
+              size: 16,
+              weight: 'bold'
+            },
+            padding: 20
+          },
+          tooltip: {
+            backgroundColor: 'var(--nord1)',
+            titleColor: 'var(--nord6)',
+            bodyColor: 'var(--nord6)',
+            borderColor: 'var(--nord3)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            titleFont: {
+              family: 'Inter, system-ui, sans-serif'
+            },
+            bodyFont: {
+              family: 'Inter, system-ui, sans-serif'
+            },
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': CHF ' + context.parsed.y.toFixed(2);
+              }
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        }
+      }
+    });
+  }
+  
+  onMount(() => {
+    createChart();
+    
+    // Watch for theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleThemeChange = () => {
+      setTimeout(createChart, 100); // Small delay to let CSS variables update
+    };
+    
+    mediaQuery.addEventListener('change', handleThemeChange);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+      if (chart) {
+        chart.destroy();
+      }
+    };
+  });
+  
+  // Recreate chart when data changes
+  $: if (canvas && data) {
+    createChart();
+  }
+</script>
+
+<div class="chart-container" style="height: {height}">
+  <canvas bind:this={canvas}></canvas>
+</div>
+
+<style>
+  .chart-container {
+    background: var(--nord6);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .chart-container {
+      background: var(--nord1);
+      border-color: var(--nord2);
+    }
+  }
+  
+  canvas {
+    max-width: 100%;
+    height: 100% !important;
+  }
+</style>
