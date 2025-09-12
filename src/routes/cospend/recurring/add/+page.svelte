@@ -1,132 +1,60 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { enhance } from '$app/forms';
   import { getCategoryOptions } from '$lib/utils/categories';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
+  import { validateCronExpression, getFrequencyDescription, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   
   export let data;
-  export let form;
 
-  // Initialize form data with server values if available (for error handling)
   let formData = {
-    title: form?.values?.title || '',
-    description: form?.values?.description || '',
-    amount: form?.values?.amount || '',
-    paidBy: form?.values?.paidBy || data.currentUser || '',
-    date: form?.values?.date || new Date().toISOString().split('T')[0],
-    category: form?.values?.category || 'groceries',
-    splitMethod: form?.values?.splitMethod || 'equal',
-    splits: []
+    title: '',
+    description: '',
+    amount: '',
+    paidBy: data.session?.user?.nickname || '',
+    category: 'groceries',
+    splitMethod: 'equal',
+    splits: [],
+    frequency: 'monthly',
+    cronExpression: '',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: ''
   };
 
-  let imageFile = null;
-  let imagePreview = '';
+  let users = [];
   let newUser = '';
   let splitAmounts = {};
   let personalAmounts = {};
   let loading = false;
-  let error = form?.error || null;
+  let error = null;
   let personalTotalError = false;
-  let predefinedMode = data.predefinedUsers.length > 0;
-  let jsEnhanced = false;
-  
-  // Initialize users from server data for no-JS support
-  let users = predefinedMode ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []);
-  
-  // Initialize split amounts for server-side users
-  users.forEach(user => {
-    splitAmounts[user] = 0;
-    personalAmounts[user] = 0;
-  });
+  let predefinedMode = isPredefinedUsersMode();
+  let cronError = false;
+  let nextExecutionPreview = '';
   
   $: categoryOptions = getCategoryOptions();
-  
-  // Reactive text for "Paid in Full" option
-  $: paidInFullText = (() => {
-    // No-JS fallback text - always generic
-    if (!jsEnhanced) {
-      if (predefinedMode) {
-        return users.length === 2 ? 'Paid in Full for other' : 'Paid in Full for others';
-      } else {
-        return 'Paid in Full for others';
-      }
-    }
-    
-    // JavaScript-enhanced reactive text
-    if (!formData.paidBy) {
-      return 'Paid in Full';
-    }
-    
-    // Special handling for 2-user predefined setup
-    if (predefinedMode && users.length === 2) {
-      const otherUser = users.find(user => user !== formData.paidBy);
-      // Always show "for" the other user (who benefits) regardless of who pays
-      return otherUser ? `Paid in Full for ${otherUser}` : 'Paid in Full';
-    }
-    
-    // General case with JS
-    if (formData.paidBy === data.currentUser) {
-      return 'Paid in Full by You';
-    } else {
-      return `Paid in Full by ${formData.paidBy}`;
-    }
-  })();
 
   onMount(() => {
-    jsEnhanced = true;
-    document.body.classList.add('js-loaded');
-    
     if (predefinedMode) {
-      // Use predefined users and always split between them
-      users = [...data.predefinedUsers];
+      users = [...PREDEFINED_USERS];
       users.forEach(user => addSplitForUser(user));
-      // Default to current user as payer if they're in the predefined list
-      if (data.currentUser && data.predefinedUsers.includes(data.currentUser)) {
-        formData.paidBy = data.currentUser;
+      if (data.session?.user?.nickname && PREDEFINED_USERS.includes(data.session.user.nickname)) {
+        formData.paidBy = data.session.user.nickname;
       } else {
-        formData.paidBy = data.predefinedUsers[0];
+        formData.paidBy = PREDEFINED_USERS[0];
       }
     } else {
-      // Original behavior for manual user management
-      if (data.currentUser) {
-        users = [data.currentUser];
-        addSplitForUser(data.currentUser);
+      if (data.session?.user?.nickname) {
+        users = [data.session.user.nickname];
+        addSplitForUser(data.session.user.nickname);
       }
     }
+    updateNextExecutionPreview();
   });
 
-  function handleImageChange(event) {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
-        return;
-      }
-      
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Please select a valid image file (JPEG, PNG, WebP)');
-        return;
-      }
-
-      imageFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        imagePreview = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  function removeImage() {
-    imageFile = null;
-    imagePreview = '';
-  }
-
   function addUser() {
-    if (predefinedMode) return; // No adding users in predefined mode
+    if (predefinedMode) return;
     
     if (newUser.trim() && !users.includes(newUser.trim())) {
       users = [...users, newUser.trim()];
@@ -136,7 +64,7 @@
   }
 
   function removeUser(userToRemove) {
-    if (predefinedMode) return; // No removing users in predefined mode
+    if (predefinedMode) return;
     
     if (users.length > 1 && userToRemove !== data.session.user.nickname) {
       users = users.filter(u => u !== userToRemove);
@@ -160,9 +88,9 @@
     
     users.forEach(user => {
       if (user === formData.paidBy) {
-        splitAmounts[user] = splitAmount - amountNum; // They get negative (they're owed)
+        splitAmounts[user] = splitAmount - amountNum;
       } else {
-        splitAmounts[user] = splitAmount; // They owe positive amount
+        splitAmounts[user] = splitAmount;
       }
     });
     splitAmounts = { ...splitAmounts };
@@ -175,9 +103,9 @@
     
     users.forEach(user => {
       if (user === formData.paidBy) {
-        splitAmounts[user] = -amountNum; // They paid it all, so they're owed the full amount
+        splitAmounts[user] = -amountNum;
       } else {
-        splitAmounts[user] = 0; // Others don't owe anything
+        splitAmounts[user] = 0;
       }
     });
     splitAmounts = { ...splitAmounts };
@@ -188,12 +116,10 @@
     
     const totalAmount = parseFloat(formData.amount);
     
-    // Calculate total personal amounts
     const totalPersonal = users.reduce((sum, user) => {
       return sum + (parseFloat(personalAmounts[user]) || 0);
     }, 0);
     
-    // Remaining amount to be split equally
     const remainder = Math.max(0, totalAmount - totalPersonal);
     const equalShare = remainder / users.length;
     
@@ -202,10 +128,8 @@
       const totalOwed = personalAmount + equalShare;
       
       if (user === formData.paidBy) {
-        // Person who paid gets back what others owe minus what they personally used
         splitAmounts[user] = totalOwed - totalAmount;
       } else {
-        // Others owe their personal amount + equal share
         splitAmounts[user] = totalOwed;
       }
     });
@@ -219,38 +143,36 @@
       calculateFullPayment();
     } else if (formData.splitMethod === 'personal_equal') {
       calculatePersonalEqualSplit();
-    } else if (formData.splitMethod === 'proportional') {
-      // For proportional, user enters amounts manually - just ensure all users have entries
-      users.forEach(user => {
-        if (!(user in splitAmounts)) {
-          splitAmounts[user] = 0;
-        }
-      });
-      splitAmounts = { ...splitAmounts };
     }
   }
 
-  async function uploadImage() {
-    if (!imageFile) return null;
-    
-    const formData = new FormData();
-    formData.append('image', imageFile);
-    
+  function validateCron() {
+    if (formData.frequency !== 'custom') {
+      cronError = false;
+      return;
+    }
+    cronError = !validateCronExpression(formData.cronExpression);
+  }
+
+  function updateNextExecutionPreview() {
     try {
-      const response = await fetch('/api/cospend/upload', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
+      if (formData.frequency && formData.startDate) {
+        const recurringPayment = {
+          ...formData,
+          startDate: new Date(formData.startDate)
+        };
+        const nextDate = calculateNextExecutionDate(recurringPayment, new Date(formData.startDate));
+        nextExecutionPreview = nextDate.toLocaleString('de-CH', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
       }
-      
-      const result = await response.json();
-      return result.path;
-    } catch (err) {
-      console.error('Image upload failed:', err);
-      return null;
+    } catch (e) {
+      nextExecutionPreview = 'Invalid configuration';
     }
   }
 
@@ -260,7 +182,11 @@
       return;
     }
 
-    // Validate personal amounts for personal_equal split
+    if (formData.frequency === 'custom' && cronError) {
+      error = 'Please enter a valid cron expression';
+      return;
+    }
+
     if (formData.splitMethod === 'personal_equal') {
       const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
       const totalAmount = parseFloat(formData.amount);
@@ -280,11 +206,6 @@
     error = null;
 
     try {
-      let imagePath = null;
-      if (imageFile) {
-        imagePath = await uploadImage();
-      }
-
       const splits = users.map(user => ({
         username: user,
         amount: splitAmounts[user] || 0,
@@ -295,11 +216,13 @@
       const payload = {
         ...formData,
         amount: parseFloat(formData.amount),
-        image: imagePath,
+        startDate: formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString(),
+        endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
+        cronExpression: formData.frequency === 'custom' ? formData.cronExpression : undefined,
         splits
       };
 
-      const response = await fetch('/api/cospend/payments', {
+      const response = await fetch('/api/cospend/recurring-payments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -309,11 +232,11 @@
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create payment');
+        throw new Error(errorData.message || 'Failed to create recurring payment');
       }
 
       const result = await response.json();
-      await goto('/cospend');
+      await goto('/cospend/recurring');
 
     } catch (err) {
       error = err.message;
@@ -326,7 +249,6 @@
     handleSplitMethodChange();
   }
 
-  // Validate and recalculate when personal amounts change
   $: if (formData.splitMethod === 'personal_equal' && personalAmounts && formData.amount) {
     const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
     const totalAmount = parseFloat(formData.amount);
@@ -336,19 +258,27 @@
       calculatePersonalEqualSplit();
     }
   }
+
+  $: if (formData.cronExpression) {
+    validateCron();
+  }
+
+  $: if (formData.frequency || formData.cronExpression || formData.startDate) {
+    updateNextExecutionPreview();
+  }
 </script>
 
 <svelte:head>
-  <title>Add Payment - Cospend</title>
+  <title>Add Recurring Payment - Cospend</title>
 </svelte:head>
 
-<main class="add-payment">
+<main class="add-recurring-payment">
   <div class="header">
-    <h1>Add New Payment</h1>
+    <h1>Add Recurring Payment</h1>
     <a href="/cospend" class="back-link">← Back to Cospend</a>
   </div>
 
-  <form method="POST" use:enhance class="payment-form">
+  <form on:submit|preventDefault={handleSubmit} class="payment-form">
     <div class="form-section">
       <h2>Payment Details</h2>
       
@@ -357,10 +287,9 @@
         <input 
           type="text" 
           id="title" 
-          name="title"
-          value={formData.title}
+          bind:value={formData.title} 
           required 
-          placeholder="e.g., Dinner at restaurant"
+          placeholder="e.g., Monthly rent, Weekly groceries"
         />
       </div>
 
@@ -368,16 +297,15 @@
         <label for="description">Description</label>
         <textarea 
           id="description" 
-          name="description"
-          value={formData.description} 
-          placeholder="Additional details..."
+          bind:value={formData.description} 
+          placeholder="Additional details about this recurring payment..."
           rows="3"
         ></textarea>
       </div>
 
       <div class="form-group">
         <label for="category">Category *</label>
-        <select id="category" name="category" value={formData.category} required>
+        <select id="category" bind:value={formData.category} required>
           {#each categoryOptions as option}
             <option value={option.value}>{option.label}</option>
           {/each}
@@ -390,7 +318,6 @@
           <input 
             type="number" 
             id="amount" 
-            name="amount"
             bind:value={formData.amount} 
             required 
             min="0" 
@@ -400,57 +327,83 @@
         </div>
 
         <div class="form-group">
-          <label for="date">Date</label>
+          <label for="paidBy">Paid by</label>
+          <select id="paidBy" bind:value={formData.paidBy} required>
+            {#each users as user}
+              <option value={user}>{user}</option>
+            {/each}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>Recurring Schedule</h2>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="frequency">Frequency *</label>
+          <select id="frequency" bind:value={formData.frequency} required>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="custom">Custom (Cron)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="startDate">Start Date *</label>
           <input 
             type="date" 
-            id="date" 
-            name="date"
-            value={formData.date} 
+            id="startDate" 
+            bind:value={formData.startDate} 
             required
           />
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="paidBy">Paid by</label>
-        <select id="paidBy" name="paidBy" bind:value={formData.paidBy} required>
-          {#each users as user}
-            <option value={user}>{user}</option>
-          {/each}
-        </select>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h2>Receipt Image</h2>
-      
-      {#if imagePreview}
-        <div class="image-preview">
-          <img src={imagePreview} alt="Receipt preview" />
-          <button type="button" class="remove-image" on:click={removeImage}>
-            Remove Image
-          </button>
-        </div>
-      {:else}
-        <div class="image-upload">
-          <label for="image" class="upload-label">
-            <div class="upload-content">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/>
-                <line x1="16" y1="5" x2="22" y2="5"/>
-                <line x1="19" y1="2" x2="19" y2="8"/>
-              </svg>
-              <p>Upload Receipt Image</p>
-              <small>JPEG, PNG, WebP (max 5MB)</small>
-            </div>
-          </label>
+      {#if formData.frequency === 'custom'}
+        <div class="form-group">
+          <label for="cronExpression">Cron Expression *</label>
           <input 
-            type="file" 
-            id="image" 
-            accept="image/jpeg,image/jpg,image/png,image/webp" 
-            on:change={handleImageChange}
-            hidden
+            type="text" 
+            id="cronExpression" 
+            bind:value={formData.cronExpression} 
+            required 
+            placeholder="0 9 * * 1  (Every Monday at 9:00 AM)"
+            class:error={cronError}
           />
+          <div class="help-text">
+            <p>Cron format: minute hour day-of-month month day-of-week</p>
+            <p>Examples:</p>
+            <ul>
+              <li><code>0 9 * * *</code> - Every day at 9:00 AM</li>
+              <li><code>0 9 1 * *</code> - Every 1st of the month at 9:00 AM</li>
+              <li><code>0 9 * * 1</code> - Every Monday at 9:00 AM</li>
+              <li><code>0 9 1,15 * *</code> - 1st and 15th of every month at 9:00 AM</li>
+            </ul>
+          </div>
+          {#if cronError}
+            <div class="field-error">Invalid cron expression</div>
+          {/if}
+        </div>
+      {/if}
+
+      <div class="form-group">
+        <label for="endDate">End Date (optional)</label>
+        <input 
+          type="date" 
+          id="endDate" 
+          bind:value={formData.endDate}
+        />
+        <div class="help-text">Leave blank for indefinite recurring payments</div>
+      </div>
+
+      {#if nextExecutionPreview}
+        <div class="execution-preview">
+          <h3>Next Execution</h3>
+          <p class="next-execution">{nextExecutionPreview}</p>
+          <p class="frequency-description">{getFrequencyDescription(formData)}</p>
         </div>
       {/if}
     </div>
@@ -488,7 +441,7 @@
           {/each}
         </div>
 
-        <div class="add-user js-enhanced" style="display: none;">
+        <div class="add-user">
           <input 
             type="text" 
             bind:value={newUser} 
@@ -497,27 +450,6 @@
           />
           <button type="button" on:click={addUser}>Add User</button>
         </div>
-
-        <!-- Server-side fallback: simple text inputs for users -->
-        <div class="manual-users no-js-only">
-          <p>Enter users to split with (one per line):</p>
-          <textarea 
-            name="users_manual" 
-            placeholder="{data.currentUser}&#10;Enter additional users..."
-            rows="4"
-          >{data.currentUser}</textarea>
-        </div>
-      {/if}
-
-      <!-- Hidden inputs for JavaScript-managed users -->
-      {#if predefinedMode}
-        {#each data.predefinedUsers as user, i}
-          <input type="hidden" name="user_{i}" value={user} />
-        {/each}
-      {:else}
-        {#each users as user, i}
-          <input type="hidden" name="user_{i}" value={user} />
-        {/each}
       {/if}
     </div>
 
@@ -526,19 +458,19 @@
       
       <div class="split-method">
         <label>
-          <input type="radio" name="splitMethod" value="equal" bind:group={formData.splitMethod} />
+          <input type="radio" bind:group={formData.splitMethod} value="equal" />
           {predefinedMode && users.length === 2 ? 'Split 50/50' : 'Equal Split'}
         </label>
         <label>
-          <input type="radio" name="splitMethod" value="personal_equal" bind:group={formData.splitMethod} />
+          <input type="radio" bind:group={formData.splitMethod} value="personal_equal" />
           Personal + Equal Split
         </label>
         <label>
-          <input type="radio" name="splitMethod" value="full" bind:group={formData.splitMethod} />
-          {paidInFullText}
+          <input type="radio" bind:group={formData.splitMethod} value="full" />
+          Paid in Full by {formData.paidBy}
         </label>
         <label>
-          <input type="radio" name="splitMethod" value="proportional" bind:group={formData.splitMethod} />
+          <input type="radio" bind:group={formData.splitMethod} value="proportional" />
           Custom Proportions
         </label>
       </div>
@@ -552,7 +484,6 @@
               <input 
                 type="number" 
                 step="0.01" 
-                name="split_{user}"
                 bind:value={splitAmounts[user]}
                 placeholder="0.00"
               />
@@ -572,7 +503,6 @@
                 type="number" 
                 step="0.01" 
                 min="0"
-                name="personal_{user}"
                 bind:value={personalAmounts[user]}
                 placeholder="0.00"
               />
@@ -619,18 +549,18 @@
     {/if}
 
     <div class="form-actions">
-      <a href="/cospend" class="btn-secondary">
+      <button type="button" class="btn-secondary" on:click={() => goto('/cospend')}>
         Cancel
-      </a>
-      <button type="submit" class="btn-primary" disabled={loading}>
-        {loading ? 'Creating...' : 'Create Payment'}
+      </button>
+      <button type="submit" class="btn-primary" disabled={loading || cronError}>
+        {loading ? 'Creating...' : 'Create Recurring Payment'}
       </button>
     </div>
   </form>
 </main>
 
 <style>
-  .add-payment {
+  .add-recurring-payment {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
@@ -705,58 +635,64 @@
     box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
   }
 
-  .image-upload {
-    border: 2px dashed #ddd;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
+  input.error {
+    border-color: #d32f2f;
   }
 
-  .image-upload:hover {
-    border-color: #1976d2;
+  .help-text {
+    margin-top: 0.5rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .help-text code {
     background-color: #f5f5f5;
-  }
-
-  .upload-label {
-    cursor: pointer;
-    display: block;
-  }
-
-  .upload-content svg {
-    color: #666;
-    margin-bottom: 1rem;
-  }
-
-  .upload-content p {
-    margin: 0 0 0.5rem 0;
-    font-weight: 500;
-    color: #333;
-  }
-
-  .upload-content small {
-    color: #666;
-  }
-
-  .image-preview {
-    text-align: center;
-  }
-
-  .image-preview img {
-    max-width: 100%;
-    max-height: 300px;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .remove-image {
-    background-color: #d32f2f;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.125rem 0.25rem;
     border-radius: 0.25rem;
-    cursor: pointer;
+    font-family: monospace;
+  }
+
+  .help-text ul {
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+  }
+
+  .help-text li {
+    margin-bottom: 0.25rem;
+  }
+
+  .field-error {
+    color: #d32f2f;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  .execution-preview {
+    background-color: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .execution-preview h3 {
+    margin: 0 0 0.5rem 0;
+    color: #1976d2;
+    font-size: 1rem;
+  }
+
+  .next-execution {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1976d2;
+    margin: 0.5rem 0;
+  }
+
+  .frequency-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+    font-style: italic;
   }
 
   .users-list {
@@ -848,16 +784,23 @@
     cursor: pointer;
   }
 
-  .proportional-splits {
+  .proportional-splits, .personal-splits {
     border: 1px solid #ddd;
     border-radius: 0.5rem;
     padding: 1rem;
     margin-bottom: 1rem;
   }
 
-  .proportional-splits h3 {
+  .proportional-splits h3, .personal-splits h3 {
     margin-top: 0;
     margin-bottom: 1rem;
+  }
+
+  .personal-splits .description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-style: italic;
   }
 
   .split-input {
@@ -874,6 +817,32 @@
 
   .split-input input {
     max-width: 120px;
+  }
+
+  .remainder-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+  }
+
+  .remainder-info.error {
+    background-color: #fff5f5;
+    border-color: #fed7d7;
+  }
+
+  .remainder-info span {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .error-message {
+    color: #d32f2f;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
   }
 
   .split-preview {
@@ -957,78 +926,8 @@
     background-color: #e8e8e8;
   }
 
-  .personal-splits {
-    margin-top: 1rem;
-  }
-
-  .personal-splits .description {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    font-style: italic;
-  }
-
-  .remainder-info {
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 0.5rem;
-    border: 1px solid #e9ecef;
-  }
-
-  .remainder-info.error {
-    background-color: #fff5f5;
-    border-color: #fed7d7;
-  }
-
-  .remainder-info span {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-  }
-
-  .error-message {
-    color: #d32f2f;
-    font-weight: 600;
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  /* Progressive enhancement styles */
-  .no-js-only {
-    display: block;
-  }
-
-  .js-enhanced {
-    display: none;
-  }
-
-  :global(body.js-loaded) .no-js-only {
-    display: none;
-  }
-
-  :global(body.js-loaded) .js-enhanced {
-    display: block;
-  }
-
-  .manual-users textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 0.5rem;
-    font-family: inherit;
-    font-size: 0.9rem;
-    resize: vertical;
-  }
-
-  .manual-users p {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.9rem;
-    color: #666;
-  }
-
   @media (max-width: 600px) {
-    .add-payment {
+    .add-recurring-payment {
       padding: 1rem;
     }
 

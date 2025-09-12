@@ -14,16 +14,7 @@
     const match = $page.url.pathname.match(/\/cospend\/payments\/view\/([^\/]+)/);
     const statePaymentId = $page.state?.paymentId;
     const isOnDashboard = $page.route.id === '/cospend';
-    
-    console.log('Layout debug:', {
-      pathname: $page.url.pathname,
-      routeId: $page.route.id,
-      match: match,
-      statePaymentId: statePaymentId,
-      isOnDashboard: isOnDashboard,
-      showModal: showModal
-    });
-    
+
     // Only show modal if we're on the dashboard AND have a payment to show
     if (isOnDashboard && (match || statePaymentId)) {
       showModal = true;
@@ -39,7 +30,7 @@
   <div class="main-content">
     <slot />
   </div>
-  
+
   <div class="side-panel">
     {#if showModal}
       <div class="modal-content">
@@ -105,13 +96,13 @@
     .layout-container.has-modal {
       flex-direction: column;
     }
-    
+
     .layout-container.has-modal .main-content {
       flex: none;
       height: 50vh;
       overflow-y: auto;
     }
-    
+
     .side-panel {
       flex: none;
       height: 50vh;

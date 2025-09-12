@@ -6,6 +6,10 @@ import Authentik from "@auth/core/providers/authentik"
 import { AUTHENTIK_ID, AUTHENTIK_SECRET, AUTHENTIK_ISSUER } from "$env/static/private";
 import { sequence } from "@sveltejs/kit/hooks"
 import * as auth from "./auth"
+import { initializeScheduler } from "./lib/server/scheduler"
+
+// Initialize the recurring payment scheduler
+initializeScheduler();
 
 async function authorization({ event, resolve }) {
 	// Protect any routes under /authenticated

@@ -8,16 +8,20 @@
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { isSettlementPayment, getSettlementIcon, getSettlementClasses, getSettlementReceiver } from '$lib/utils/settlements';
 
-  export let data; // Used by the layout for session data
+  export let data; // Contains session data and balance from server
 
-  let balance = {
+  // Use server-side data, with fallback for progressive enhancement
+  let balance = data.balance || {
     netBalance: 0,
     recentSplits: []
   };
-  let loading = true;
+  let loading = false; // Start as false since we have server data
   let error = null;
 
+  // Progressive enhancement: refresh data if JavaScript is available
   onMount(async () => {
+    // Mark that JavaScript is loaded for progressive enhancement
+    document.body.classList.add('js-loaded');
     await fetchBalance();
   });
 
@@ -54,9 +58,12 @@
   }
 
   function handlePaymentClick(paymentId, event) {
-    event.preventDefault();
-    // Use pushState for true shallow routing - only updates URL without navigation
-    pushState(`/cospend/payments/view/${paymentId}`, { paymentId });
+    // Progressive enhancement: if JavaScript is available, use pushState for modal behavior
+    if (typeof pushState !== 'undefined') {
+      event.preventDefault();
+      pushState(`/cospend/payments/view/${paymentId}`, { paymentId });
+    }
+    // Otherwise, let the regular link navigation happen (no preventDefault)
   }
 
   function getSettlementReceiverFromSplit(split) {
@@ -91,11 +98,12 @@
     <p>Track and split expenses with your friends and family</p>
   </div>
 
-  <EnhancedBalance />
+  <EnhancedBalance initialBalance={data.balance} initialDebtData={data.debtData} />
 
   <div class="actions">
     <a href="/cospend/payments/add" class="btn btn-primary">Add Payment</a>
     <a href="/cospend/payments" class="btn btn-secondary">View All Payments</a>
+    <a href="/cospend/recurring" class="btn btn-recurring">Recurring Payments</a>
     {#if balance.netBalance !== 0}
       <a href="/cospend/settle" class="btn btn-settlement">Settle Debts</a>
     {/if}
@@ -272,6 +280,16 @@
 
   .btn-secondary:hover {
     background-color: #e8e8e8;
+  }
+
+  .btn-recurring {
+    background: linear-gradient(135deg, #9c27b0, #673ab7);
+    color: white;
+    border: none;
+  }
+
+  .btn-recurring:hover {
+    background: linear-gradient(135deg, #8e24aa, #5e35b1);
   }
 
   .btn-settlement {

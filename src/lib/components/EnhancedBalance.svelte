@@ -2,17 +2,20 @@
   import { onMount } from 'svelte';
   import ProfilePicture from './ProfilePicture.svelte';
 
-  let balance = {
+  export let initialBalance = null;
+  export let initialDebtData = null;
+
+  let balance = initialBalance || {
     netBalance: 0,
     recentSplits: []
   };
-  let debtData = {
+  let debtData = initialDebtData || {
     whoOwesMe: [],
     whoIOwe: [],
     totalOwedToMe: 0,
     totalIOwe: 0
   };
-  let loading = true;
+  let loading = !initialBalance || !initialDebtData; // Only show loading if we don't have initial data
   let error = null;
   let singleDebtUser = null;
   let shouldShowIntegratedView = false;
@@ -47,7 +50,15 @@
   
 
   onMount(async () => {
-    await Promise.all([fetchBalance(), fetchDebtBreakdown()]);
+    // Mark that JavaScript is loaded
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('js-loaded');
+    }
+    
+    // Only fetch data if we don't have initial data (progressive enhancement)
+    if (!initialBalance || !initialDebtData) {
+      await Promise.all([fetchBalance(), fetchDebtBreakdown()]);
+    }
   });
 
   async function fetchBalance() {
