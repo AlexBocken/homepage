@@ -58,7 +58,7 @@ async function authorization({ event, resolve }) {
 }
 
 // Bible verse functionality for error pages
-async function getRandomVerse(): Promise<any> {
+async function getRandomVerse(fetch: typeof globalThis.fetch): Promise<any> {
   try {
     const response = await fetch('/api/bible-quote');
     if (!response.ok) {
@@ -75,7 +75,7 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
   console.error('Error occurred:', { error, status, message, url: event.url.pathname });
   
   // Add Bible verse to error context
-  const bibleQuote = await getRandomVerse();
+  const bibleQuote = await getRandomVerse(event.fetch);
 
   return {
     message: message,
