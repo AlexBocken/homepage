@@ -32,6 +32,13 @@ export const actions: Actions = {
     const date = formData.get('date')?.toString();
     const category = formData.get('category')?.toString() || 'groceries';
     const splitMethod = formData.get('splitMethod')?.toString() || 'equal';
+    
+    // Recurring payment data
+    const isRecurring = formData.get('isRecurring') === 'true';
+    const recurringFrequency = formData.get('recurringFrequency')?.toString() || 'monthly';
+    const recurringCronExpression = formData.get('recurringCronExpression')?.toString() || '';
+    const recurringStartDate = formData.get('recurringStartDate')?.toString() || '';
+    const recurringEndDate = formData.get('recurringEndDate')?.toString() || '';
 
     // Basic validation
     if (!title || amount <= 0 || !paidBy) {
@@ -39,6 +46,16 @@ export const actions: Actions = {
         error: 'Please fill in all required fields with valid values',
         values: Object.fromEntries(formData)
       });
+    }
+
+    // Recurring payment validation
+    if (isRecurring) {
+      if (recurringFrequency === 'custom' && !recurringCronExpression) {
+        return fail(400, {
+          error: 'Please provide a cron expression for custom recurring payments',
+          values: Object.fromEntries(formData)
+        });
+      }
     }
 
     try {
@@ -83,10 +100,13 @@ export const actions: Actions = {
           amount: user === paidBy ? paidByAmount : splitAmount
         }));
       } else if (splitMethod === 'full') {
-        // Payer pays everything, others owe nothing
+        // Payer pays everything, others owe their share of the full amount
+        const otherUsers = users.filter(user => user !== paidBy);
+        const amountPerOtherUser = otherUsers.length > 0 ? amount / otherUsers.length : 0;
+        
         splits = users.map(user => ({
           username: user,
-          amount: user === paidBy ? -amount : 0
+          amount: user === paidBy ? -amount : amountPerOtherUser
         }));
       } else if (splitMethod === 'personal_equal') {
         // Get personal amounts from form
@@ -158,8 +178,43 @@ export const actions: Actions = {
         });
       }
 
-      // Success - redirect to payments list
-      throw redirect(303, '/cospend/payments');
+      const paymentResult = await response.json();
+
+      // If this is a recurring payment, create the recurring payment record
+      if (isRecurring) {
+        const recurringPayload = {
+          title,
+          description,
+          amount,
+          paidBy,
+          category,
+          splitMethod,
+          splits,
+          frequency: recurringFrequency,
+          cronExpression: recurringFrequency === 'custom' ? recurringCronExpression : undefined,
+          startDate: recurringStartDate ? new Date(recurringStartDate).toISOString() : new Date().toISOString(),
+          endDate: recurringEndDate ? new Date(recurringEndDate).toISOString() : null,
+          isActive: true,
+          nextExecutionDate: recurringStartDate ? new Date(recurringStartDate).toISOString() : new Date().toISOString()
+        };
+
+        const recurringResponse = await fetch('/api/cospend/recurring-payments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(recurringPayload)
+        });
+
+        if (!recurringResponse.ok) {
+          // Log the error but don't fail the entire operation since the payment was created
+          console.error('Failed to create recurring payment:', await recurringResponse.text());
+          // Could optionally return a warning to the user
+        }
+      }
+
+      // Success - redirect to dashboard
+      throw redirect(303, '/cospend');
 
     } catch (error) {
       if (error.status === 303) throw error; // Re-throw redirect

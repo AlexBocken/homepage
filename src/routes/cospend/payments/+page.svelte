@@ -122,6 +122,7 @@
     </div>
     <div class="header-actions">
       <a href="/cospend/payments/add" class="btn btn-primary">Add Payment</a>
+      <a href="/cospend/recurring" class="btn btn-recurring">Recurring Payments</a>
       <a href="/cospend" class="btn btn-secondary">Back to Dashboard</a>
     </div>
   </div>
@@ -214,7 +215,7 @@
                       {:else if split.amount < 0}
                         owed {formatCurrency(Math.abs(split.amount))}
                       {:else}
-                        even
+                        owes {formatCurrency(split.amount)}
                       {/if}
                     </span>
                   </div>
@@ -333,6 +334,16 @@
 
   .btn-secondary:hover {
     background-color: #e8e8e8;
+  }
+
+  .btn-recurring {
+    background: linear-gradient(135deg, #9c27b0, #673ab7);
+    color: white;
+    border: none;
+  }
+
+  .btn-recurring:hover {
+    background: linear-gradient(135deg, #8e24aa, #5e35b1);
   }
 
   .loading, .error {

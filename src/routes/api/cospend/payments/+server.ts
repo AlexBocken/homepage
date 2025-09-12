@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   try {
     const payments = await Payment.find()
       .populate('splits')
-      .sort({ date: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .limit(limit)
       .skip(offset)
       .lean();
