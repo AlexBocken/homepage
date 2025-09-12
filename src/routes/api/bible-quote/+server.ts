@@ -13,7 +13,7 @@ interface BibleVerse {
 // Cache for parsed verses to avoid reading file repeatedly
 let cachedVerses: BibleVerse[] | null = null;
 
-async function loadVerses(): Promise<BibleVerse[]> {
+async function loadVerses(fetch: typeof globalThis.fetch): Promise<BibleVerse[]> {
   if (cachedVerses) {
     return cachedVerses;
   }
@@ -54,9 +54,9 @@ function formatVerse(verse: BibleVerse): string {
   return `${verse.bookName} ${verse.chapter}:${verse.verseNumber}`;
 }
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ fetch }) => {
   try {
-    const verses = await loadVerses();
+    const verses = await loadVerses(fetch);
     const randomVerse = getRandomVerse(verses);
     
     return json({
