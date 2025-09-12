@@ -106,8 +106,22 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     });
 
     // Convert to arrays for Chart.js
-    const months = Array.from(monthsMap.keys()).sort();
+    const allMonths = Array.from(monthsMap.keys()).sort();
     const categoryList = Array.from(categories).sort();
+
+    // Find the first month with any data and trim empty months from the start
+    let firstMonthWithData = 0;
+    for (let i = 0; i < allMonths.length; i++) {
+      const monthData = monthsMap.get(allMonths[i]);
+      const hasData = Object.values(monthData).some(value => value > 0);
+      if (hasData) {
+        firstMonthWithData = i;
+        break;
+      }
+    }
+
+    // Trim the months array to start from the first month with data
+    const months = allMonths.slice(firstMonthWithData);
 
     const datasets = categoryList.map((category: string) => ({
       label: category,
