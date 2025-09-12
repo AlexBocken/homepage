@@ -5,6 +5,7 @@
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import EnhancedBalance from '$lib/components/EnhancedBalance.svelte';
   import DebtBreakdown from '$lib/components/DebtBreakdown.svelte';
+  import BarChart from '$lib/components/BarChart.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { isSettlementPayment, getSettlementIcon, getSettlementClasses, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
@@ -18,6 +19,8 @@
   };
   let loading = false; // Start as false since we have server data
   let error = null;
+  let monthlyExpensesData = { labels: [], datasets: [] };
+  let expensesLoading = false;
 
   // Component references for refreshing
   let enhancedBalanceComponent;
@@ -27,7 +30,10 @@
   onMount(async () => {
     // Mark that JavaScript is loaded for progressive enhancement
     document.body.classList.add('js-loaded');
-    await fetchBalance();
+    await Promise.all([
+      fetchBalance(),
+      fetchMonthlyExpenses()
+    ]);
 
     // Listen for dashboard refresh events from the layout
     const handleDashboardRefresh = () => {
@@ -57,10 +63,31 @@
     }
   }
 
+  async function fetchMonthlyExpenses() {
+    try {
+      expensesLoading = true;
+      console.log('Fetching monthly expenses...');
+      const response = await fetch('/api/cospend/monthly-expenses');
+      if (!response.ok) {
+        throw new Error('Failed to fetch monthly expenses');
+      }
+      monthlyExpensesData = await response.json();
+      console.log('Monthly expenses data:', monthlyExpensesData);
+    } catch (err) {
+      console.error('Error fetching monthly expenses:', err);
+      // Don't show this error in the main error state
+    } finally {
+      expensesLoading = false;
+    }
+  }
+
   // Function to refresh all dashboard components after payment deletion
   async function refreshAllComponents() {
     // Refresh the main balance and recent activity
-    await fetchBalance();
+    await Promise.all([
+      fetchBalance(),
+      fetchMonthlyExpenses()
+    ]);
 
     // Refresh the enhanced balance component if it exists and has a refresh method
     if (enhancedBalanceComponent && enhancedBalanceComponent.refresh) {
@@ -137,6 +164,25 @@
   </div>
 
   <DebtBreakdown bind:this={debtBreakdownComponent} />
+
+  <!-- Monthly Expenses Chart -->
+  <div class="chart-section">
+    {#if expensesLoading}
+      <div class="loading">Loading monthly expenses chart...</div>
+    {:else if monthlyExpensesData.datasets && monthlyExpensesData.datasets.length > 0}
+      <BarChart 
+        data={monthlyExpensesData} 
+        title="Monthly Expenses by Category"
+        height="400px"
+      />
+    {:else}
+      <div class="loading">
+        Debug: expensesLoading={expensesLoading}, 
+        datasets={monthlyExpensesData.datasets?.length || 0}, 
+        data={JSON.stringify(monthlyExpensesData)}
+      </div>
+    {/if}
+  </div>
 
   {#if loading}
     <div class="loading">Loading recent activity...</div>
@@ -658,6 +704,28 @@
 
     .settlement-amount-large {
       font-size: 1.3rem;
+    }
+  }
+
+  .chart-section {
+    margin-bottom: 2rem;
+  }
+
+  .chart-section .loading {
+    background: var(--nord6);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nord4);
+    text-align: center;
+    color: var(--nord2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .chart-section .loading {
+      background: var(--nord1);
+      border-color: var(--nord2);
+      color: var(--nord4);
     }
   }
 </style>
