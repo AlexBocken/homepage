@@ -80,11 +80,19 @@
     }
   }
 
-  function formatCurrency(amount) {
+  function formatCurrency(amount, currency = 'CHF') {
     return new Intl.NumberFormat('de-CH', {
       style: 'currency',
-      currency: 'CHF'
+      currency: currency
     }).format(amount);
+  }
+
+  function formatAmountWithCurrency(payment) {
+    if (payment.currency === 'CHF' || !payment.originalAmount) {
+      return formatCurrency(payment.amount);
+    }
+    
+    return `${formatCurrency(payment.originalAmount, payment.currency)} ≈ ${formatCurrency(payment.amount)}`;
   }
 
   function formatDate(dateString) {
@@ -158,7 +166,7 @@
                 </div>
               </div>
               <div class="settlement-amount">
-                <span class="amount settlement-amount-text">{formatCurrency(payment.amount)}</span>
+                <span class="amount settlement-amount-text">{formatAmountWithCurrency(payment)}</span>
                 <span class="date">{formatDate(payment.date)}</span>
               </div>
             {:else}
@@ -172,7 +180,7 @@
                   <div class="payment-meta">
                     <span class="category-name">{getCategoryName(payment.category || 'groceries')}</span>
                     <span class="date">{formatDate(payment.date)}</span>
-                    <span class="amount">{formatCurrency(payment.amount)}</span>
+                    <span class="amount">{formatAmountWithCurrency(payment)}</span>
                   </div>
                 </div>
               </div>

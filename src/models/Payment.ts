@@ -4,8 +4,10 @@ export interface IPayment {
   _id?: string;
   title: string;
   description?: string;
-  amount: number;
-  currency: string;
+  amount: number; // Always in CHF (converted if necessary)
+  currency: string; // Currency code (CHF if no conversion, foreign currency if converted)
+  originalAmount?: number; // Amount in foreign currency (only if currency != CHF)
+  exchangeRate?: number; // Exchange rate used for conversion (only if currency != CHF)
   paidBy: string; // username/nickname of the person who paid
   date: Date;
   image?: string; // path to uploaded image
@@ -36,7 +38,17 @@ const PaymentSchema = new mongoose.Schema(
       type: String, 
       required: true, 
       default: 'CHF',
-      enum: ['CHF'] // For now only CHF as requested
+      uppercase: true
+    },
+    originalAmount: {
+      type: Number,
+      required: false,
+      min: 0
+    },
+    exchangeRate: {
+      type: Number,
+      required: false,
+      min: 0
     },
     paidBy: { 
       type: String, 
