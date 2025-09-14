@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { UserFavorites } from '../../../../../../models/UserFavorites';
 import { Recipe } from '../../../../../../models/Recipe';
-import { dbConnect, dbDisconnect } from '../../../../../../utils/db';
+import { dbConnect } from '../../../../../../utils/db';
 import { error } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals, params }) => {
@@ -17,7 +17,6 @@ export const GET: RequestHandler = async ({ locals, params }) => {
     // Find the recipe by short_name to get its ObjectId
     const recipe = await Recipe.findOne({ short_name: params.shortName });
     if (!recipe) {
-      await dbDisconnect();
       throw error(404, 'Recipe not found');
     }
     
@@ -27,13 +26,11 @@ export const GET: RequestHandler = async ({ locals, params }) => {
       favorites: recipe._id
     }).lean();
     
-    await dbDisconnect();
     
     return json({
       isFavorite: !!userFavorites
     });
   } catch (e) {
-    await dbDisconnect();
     if (e instanceof Error && e.message.includes('404')) {
       throw e;
     }

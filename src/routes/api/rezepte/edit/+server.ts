@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '../../../../models/Recipe';
-import { dbConnect, dbDisconnect } from '../../../../utils/db';
+import { dbConnect } from '../../../../utils/db';
 import type {RecipeModelType} from '../../../../types/types';
 import { error } from '@sveltejs/kit';
 // header: use for bearer token for now
@@ -15,7 +15,6 @@ export const POST: RequestHandler = async ({request, locals}) => {
   else{
 	await dbConnect();
 	await Recipe.findOneAndUpdate({short_name: message.old_short_name }, recipe_json);
-  	await dbDisconnect();
 	return new Response(JSON.stringify({msg: "Edited recipe successfully"}),{
 			    status: 200,
   	});
