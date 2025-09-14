@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { PaymentSplit } from '../../../../models/PaymentSplit';
 import { Payment } from '../../../../models/Payment'; // Need to import Payment for populate to work
-import { dbConnect, dbDisconnect } from '../../../../utils/db';
+import { dbConnect } from '../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
@@ -94,7 +94,5 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   } catch (e) {
     console.error('Error calculating balance:', e);
     throw error(500, 'Failed to calculate balance');
-  } finally {
-    await dbDisconnect();
   }
 };

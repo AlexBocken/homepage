@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { Payment } from '../../../../../models/Payment';
 import { PaymentSplit } from '../../../../../models/PaymentSplit';
-import { dbConnect, dbDisconnect } from '../../../../../utils/db';
+import { dbConnect } from '../../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -26,7 +26,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     if (e.status === 404) throw e;
     throw error(500, 'Failed to fetch payment');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };
 
@@ -88,7 +88,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     if (e.status) throw e;
     throw error(500, 'Failed to update payment');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };
 
@@ -121,6 +121,6 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     if (e.status) throw e;
     throw error(500, 'Failed to delete payment');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };

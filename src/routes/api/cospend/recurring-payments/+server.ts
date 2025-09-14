@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { RecurringPayment } from '../../../../models/RecurringPayment';
-import { dbConnect, dbDisconnect } from '../../../../utils/db';
+import { dbConnect } from '../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '../../../../lib/utils/recurring';
 
@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     console.error('Error fetching recurring payments:', e);
     throw error(500, 'Failed to fetch recurring payments');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };
 
@@ -134,6 +134,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     console.error('Error creating recurring payment:', e);
     throw error(500, 'Failed to create recurring payment');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };

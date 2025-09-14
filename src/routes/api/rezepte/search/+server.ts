@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import type { BriefRecipeType } from '../../../../types/types';
 import { Recipe } from '../../../../models/Recipe';
-import { dbConnect, dbDisconnect } from '../../../../utils/db';
+import { dbConnect } from '../../../../utils/db';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   await dbConnect();
@@ -64,11 +64,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       });
     }
     
-    await dbDisconnect();
     return json(JSON.parse(JSON.stringify(recipes)));
     
   } catch (error) {
-    await dbDisconnect();
     return json({ error: 'Search failed' }, { status: 500 });
   }
 };

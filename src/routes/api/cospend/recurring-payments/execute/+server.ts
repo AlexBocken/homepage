@@ -2,9 +2,10 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { RecurringPayment } from '../../../../../models/RecurringPayment';
 import { Payment } from '../../../../../models/Payment';
 import { PaymentSplit } from '../../../../../models/PaymentSplit';
-import { dbConnect, dbDisconnect } from '../../../../../utils/db';
+import { dbConnect } from '../../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate } from '../../../../../lib/utils/recurring';
+import { convertToCHF } from '../../../../../lib/utils/currency';
 
 export const POST: RequestHandler = async ({ locals }) => {
   const auth = await locals.auth();
@@ -32,12 +33,35 @@ export const POST: RequestHandler = async ({ locals }) => {
 
     for (const recurringPayment of duePayments) {
       try {
+        // Handle currency conversion for execution date
+        let finalAmount = recurringPayment.amount;
+        let originalAmount: number | undefined;
+        let exchangeRate: number | undefined;
+
+        if (recurringPayment.currency !== 'CHF') {
+          try {
+            const conversion = await convertToCHF(
+              recurringPayment.amount, 
+              recurringPayment.currency, 
+              now.toISOString()
+            );
+            finalAmount = conversion.convertedAmount;
+            originalAmount = recurringPayment.amount;
+            exchangeRate = conversion.exchangeRate;
+          } catch (conversionError) {
+            console.error(`Currency conversion failed for recurring payment ${recurringPayment._id}:`, conversionError);
+            // Continue with original amount if conversion fails
+          }
+        }
+
         // Create the payment
         const payment = await Payment.create({
           title: recurringPayment.title,
           description: recurringPayment.description,
-          amount: recurringPayment.amount,
+          amount: finalAmount,
           currency: recurringPayment.currency,
+          originalAmount,
+          exchangeRate,
           paidBy: recurringPayment.paidBy,
           date: now,
           category: recurringPayment.category,
@@ -45,15 +69,31 @@ export const POST: RequestHandler = async ({ locals }) => {
           createdBy: recurringPayment.createdBy
         });
 
-        // Create payment splits
-        const splitPromises = recurringPayment.splits.map((split) => {
-          return PaymentSplit.create({
+        // Convert split amounts to CHF if needed
+        const convertedSplits = recurringPayment.splits.map((split) => {
+          let convertedAmount = split.amount || 0;
+          let convertedPersonalAmount = split.personalAmount;
+          
+          // Convert amounts if we have a foreign currency and exchange rate
+          if (recurringPayment.currency !== 'CHF' && exchangeRate && split.amount) {
+            convertedAmount = split.amount * exchangeRate;
+            if (split.personalAmount) {
+              convertedPersonalAmount = split.personalAmount * exchangeRate;
+            }
+          }
+          
+          return {
             paymentId: payment._id,
             username: split.username,
-            amount: split.amount,
+            amount: convertedAmount,
             proportion: split.proportion,
-            personalAmount: split.personalAmount
-          });
+            personalAmount: convertedPersonalAmount
+          };
+        });
+
+        // Create payment splits
+        const splitPromises = convertedSplits.map((split) => {
+          return PaymentSplit.create(split);
         });
 
         await Promise.all(splitPromises);
@@ -99,6 +139,6 @@ export const POST: RequestHandler = async ({ locals }) => {
     console.error('Error executing recurring payments:', e);
     throw error(500, 'Failed to execute recurring payments');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };

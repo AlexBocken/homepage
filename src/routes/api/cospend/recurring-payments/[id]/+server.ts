@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { RecurringPayment } from '../../../../../models/RecurringPayment';
-import { dbConnect, dbDisconnect } from '../../../../../utils/db';
+import { dbConnect } from '../../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '../../../../../lib/utils/recurring';
 import mongoose from 'mongoose';
@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     console.error('Error fetching recurring payment:', e);
     throw error(500, 'Failed to fetch recurring payment');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };
 
@@ -149,7 +149,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     }
     throw error(500, 'Failed to update recurring payment');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };
 
@@ -179,6 +179,6 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     console.error('Error deleting recurring payment:', e);
     throw error(500, 'Failed to delete recurring payment');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };
