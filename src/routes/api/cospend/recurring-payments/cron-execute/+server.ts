@@ -2,7 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { RecurringPayment } from '../../../../../models/RecurringPayment';
 import { Payment } from '../../../../../models/Payment';
 import { PaymentSplit } from '../../../../../models/PaymentSplit';
-import { dbConnect, dbDisconnect } from '../../../../../utils/db';
+import { dbConnect } from '../../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate } from '../../../../../lib/utils/recurring';
 
@@ -119,6 +119,6 @@ export const POST: RequestHandler = async ({ request }) => {
     console.error('[Cron] Error executing recurring payments:', e);
     throw error(500, 'Failed to execute recurring payments');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };

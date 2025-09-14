@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { UserFavorites } from '../../../../models/UserFavorites';
 import { Recipe } from '../../../../models/Recipe';
-import { dbConnect, dbDisconnect } from '../../../../utils/db';
+import { dbConnect } from '../../../../utils/db';
 import { error } from '@sveltejs/kit';
 import mongoose from 'mongoose';
 
@@ -19,13 +19,11 @@ export const GET: RequestHandler = async ({ locals }) => {
       username: session.user.nickname 
     }).lean();
     
-    await dbDisconnect();
     
     return json({
       favorites: userFavorites?.favorites || []
     });
   } catch (e) {
-    await dbDisconnect();
     throw error(500, 'Failed to fetch favorites');
   }
 };
@@ -49,8 +47,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // Validate that the recipe exists and get its ObjectId
     const recipe = await Recipe.findOne({ short_name: recipeId });
     if (!recipe) {
-      await dbDisconnect();
-      throw error(404, 'Recipe not found');
+        throw error(404, 'Recipe not found');
     }
     
     await UserFavorites.findOneAndUpdate(
@@ -59,11 +56,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       { upsert: true, new: true }
     );
     
-    await dbDisconnect();
     
     return json({ success: true });
   } catch (e) {
-    await dbDisconnect();
     if (e instanceof Error && e.message.includes('404')) {
       throw e;
     }
@@ -90,8 +85,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
     // Find the recipe's ObjectId
     const recipe = await Recipe.findOne({ short_name: recipeId });
     if (!recipe) {
-      await dbDisconnect();
-      throw error(404, 'Recipe not found');
+        throw error(404, 'Recipe not found');
     }
     
     await UserFavorites.findOneAndUpdate(
@@ -99,11 +93,9 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
       { $pull: { favorites: recipe._id } }
     );
     
-    await dbDisconnect();
     
     return json({ success: true });
   } catch (e) {
-    await dbDisconnect();
     if (e instanceof Error && e.message.includes('404')) {
       throw e;
     }

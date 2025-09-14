@@ -1,7 +1,8 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { Payment } from '../../../../models/Payment';
 import { PaymentSplit } from '../../../../models/PaymentSplit';
-import { dbConnect, dbDisconnect } from '../../../../utils/db';
+import { dbConnect } from '../../../../utils/db';
+import { convertToCHF, isValidCurrencyCode } from '../../../../lib/utils/currency';
 import { error, json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
@@ -27,7 +28,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   } catch (e) {
     throw error(500, 'Failed to fetch payments');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };
 
@@ -38,7 +39,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   const data = await request.json();
-  const { title, description, amount, paidBy, date, image, category, splitMethod, splits } = data;
+  const { title, description, amount, currency, paidBy, date, image, category, splitMethod, splits } = data;
 
   if (!title || !amount || !paidBy || !splitMethod || !splits) {
     throw error(400, 'Missing required fields');
@@ -56,6 +57,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Invalid category');
   }
 
+  // Validate currency if provided
+  const inputCurrency = currency?.toUpperCase() || 'CHF';
+  if (currency && !isValidCurrencyCode(inputCurrency)) {
+    throw error(400, 'Invalid currency code');
+  }
+
   // Validate personal + equal split method
   if (splitMethod === 'personal_equal' && splits) {
     const totalPersonal = splits.reduce((sum: number, split: any) => {
@@ -67,30 +74,66 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
   }
 
+  const paymentDate = date ? new Date(date) : new Date();
+  let finalAmount = amount;
+  let originalAmount: number | undefined;
+  let exchangeRate: number | undefined;
+
+  // Convert currency if not CHF
+  if (inputCurrency !== 'CHF') {
+    try {
+      const conversion = await convertToCHF(amount, inputCurrency, paymentDate.toISOString());
+      finalAmount = conversion.convertedAmount;
+      originalAmount = amount;
+      exchangeRate = conversion.exchangeRate;
+    } catch (e) {
+      console.error('Currency conversion error:', e);
+      throw error(400, `Failed to convert ${inputCurrency} to CHF: ${e.message}`);
+    }
+  }
+
   await dbConnect();
   
   try {
     const payment = await Payment.create({
       title,
       description,
-      amount,
-      currency: 'CHF',
+      amount: finalAmount,
+      currency: inputCurrency,
+      originalAmount,
+      exchangeRate,
       paidBy,
-      date: date ? new Date(date) : new Date(),
+      date: paymentDate,
       image,
       category: category || 'groceries',
       splitMethod,
       createdBy: auth.user.nickname
     });
 
-    const splitPromises = splits.map((split: any) => {
-      return PaymentSplit.create({
+    // Convert split amounts to CHF if needed
+    const convertedSplits = splits.map((split: any) => {
+      let convertedAmount = split.amount;
+      let convertedPersonalAmount = split.personalAmount;
+      
+      // Convert amounts if we have a foreign currency
+      if (inputCurrency !== 'CHF' && exchangeRate) {
+        convertedAmount = split.amount * exchangeRate;
+        if (split.personalAmount) {
+          convertedPersonalAmount = split.personalAmount * exchangeRate;
+        }
+      }
+      
+      return {
         paymentId: payment._id,
         username: split.username,
-        amount: split.amount,
+        amount: convertedAmount,
         proportion: split.proportion,
-        personalAmount: split.personalAmount
-      });
+        personalAmount: convertedPersonalAmount
+      };
+    });
+
+    const splitPromises = convertedSplits.map((split) => {
+      return PaymentSplit.create(split);
     });
 
     await Promise.all(splitPromises);
@@ -104,6 +147,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     console.error('Error creating payment:', e);
     throw error(500, 'Failed to create payment');
   } finally {
-    await dbDisconnect();
+    // Connection will be reused
   }
 };

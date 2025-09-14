@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { UserFavorites } from '../../../../../models/UserFavorites';
 import { Recipe } from '../../../../../models/Recipe';
-import { dbConnect, dbDisconnect } from '../../../../../utils/db';
+import { dbConnect } from '../../../../../utils/db';
 import type { RecipeModelType } from '../../../../../types/types';
 import { error } from '@sveltejs/kit';
 
@@ -20,7 +20,6 @@ export const GET: RequestHandler = async ({ locals }) => {
     }).lean();
     
     if (!userFavorites?.favorites?.length) {
-      await dbDisconnect();
       return json([]);
     }
     
@@ -28,13 +27,11 @@ export const GET: RequestHandler = async ({ locals }) => {
       _id: { $in: userFavorites.favorites }
     }).lean() as RecipeModelType[];
     
-    await dbDisconnect();
     
     recipes = JSON.parse(JSON.stringify(recipes));
     
     return json(recipes);
   } catch (e) {
-    await dbDisconnect();
     throw error(500, 'Failed to fetch favorite recipes');
   }
 };

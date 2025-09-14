@@ -7,11 +7,21 @@ import { AUTHENTIK_ID, AUTHENTIK_SECRET, AUTHENTIK_ISSUER } from "$env/static/pr
 import { sequence } from "@sveltejs/kit/hooks"
 import * as auth from "./auth"
 import { initializeScheduler } from "./lib/server/scheduler"
+import { dbConnect } from "./utils/db"
 import fs from 'fs'
 import path from 'path'
 
-// Initialize the recurring payment scheduler
-initializeScheduler();
+// Initialize database connection on server startup
+console.log('🚀 Server starting - initializing database connection...');
+await dbConnect().then(() => {
+  console.log('✅ Database connected successfully');
+  // Initialize the recurring payment scheduler after DB is ready
+  initializeScheduler();
+  console.log('✅ Recurring payment scheduler initialized');
+}).catch((error) => {
+  console.error('❌ Failed to connect to database on startup:', error);
+  // Don't crash the server - API routes will attempt reconnection
+});
 
 async function authorization({ event, resolve }) {
 	const session = await event.locals.auth();

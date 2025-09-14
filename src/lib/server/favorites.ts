@@ -24,6 +24,12 @@ export async function getUserFavorites(fetch: any, locals: any): Promise<string[
 }
 
 export function addFavoriteStatusToRecipes(recipes: any[], userFavorites: string[]): any[] {
+    // Safety check: ensure recipes is an array
+    if (!Array.isArray(recipes)) {
+        console.error('addFavoriteStatusToRecipes: recipes is not an array:', recipes);
+        return [];
+    }
+    
     return recipes.map(recipe => ({
         ...recipe,
         isFavorite: userFavorites.some(favId => favId.toString() === recipe._id.toString())

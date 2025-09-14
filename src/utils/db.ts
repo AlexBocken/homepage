@@ -1,35 +1,54 @@
 import mongoose from 'mongoose';
 import { MONGO_URL } from '$env/static/private';
-/*
-  0 - disconnected
-  1 - connected
-  2 - connecting
-  3 - disconnecting
-  4 - uninitialized
-*/
-const mongoConnection = {
-  isConnected: 0,
-};
+
+let isConnected = false;
 
 export const dbConnect = async () => {
-  if (mongoConnection.isConnected === 1) {
-    return;
+  // If already connected, return immediately
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return mongoose.connection;
   }
 
-  if (mongoose.connections.length > 0) {
-    mongoConnection.isConnected = mongoose.connections[0].readyState;
-    if (mongoConnection.isConnected === 1) {
-      return;
-    }
+  try {
+    // Configure MongoDB driver options
+    const options = {
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    };
 
-    await mongoose.disconnect();
+    const connection = await mongoose.connect(MONGO_URL ?? '', options);
+    
+    isConnected = true;
+    console.log('MongoDB connected with persistent connection');
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+      isConnected = false;
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected');
+      isConnected = false;
+    });
+
+    mongoose.connection.on('reconnected', () => {
+      console.log('MongoDB reconnected');
+      isConnected = true;
+    });
+
+    return connection;
+  } catch (error) {
+    console.error('MongoDB connection failed:', error);
+    isConnected = false;
+    throw error;
   }
-  await mongoose.connect(MONGO_URL ?? '');
-  mongoConnection.isConnected = 1;
 };
 
+// No longer disconnect - let the connection pool manage connections
 export const dbDisconnect = async () => {
-  // Don't disconnect in production to avoid "Client must be connected" errors
-  // The connection pool will handle connection cleanup automatically
+  // Keep connections persistent for performance and to avoid race conditions
+  // MongoDB driver will handle connection pooling and cleanup automatically
   return;
 };
