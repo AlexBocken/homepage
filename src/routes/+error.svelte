@@ -88,15 +88,15 @@
       <div class="error-icon">
         {getErrorIcon(status)}
       </div>
-      
+
       <h1 class="error-title">
         {getErrorTitle(status)}
       </h1>
-      
+
       <div class="error-code">
         Fehler {status}
       </div>
-      
+
       <p class="error-description">
         {getErrorDescription(status)}
       </p>
@@ -163,7 +163,7 @@
 
 <style>
   .error-page {
-    min-height: calc(100vh - 4rem);
+    min-height: calc(100vh - 6rem);
     display: flex;
     align-items: center;
     justify-content: center;

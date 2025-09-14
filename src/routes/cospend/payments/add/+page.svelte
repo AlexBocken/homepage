@@ -18,6 +18,7 @@
     title: form?.values?.title || '',
     description: form?.values?.description || '',
     amount: form?.values?.amount || '',
+    currency: form?.values?.currency || 'CHF',
     paidBy: form?.values?.paidBy || data.currentUser || '',
     date: form?.values?.date || new Date().toISOString().split('T')[0],
     category: form?.values?.category || 'groceries',
@@ -46,6 +47,13 @@
   let jsEnhanced = false;
   let cronError = false;
   let nextExecutionPreview = '';
+  let supportedCurrencies = ['CHF'];
+  let loadingCurrencies = false;
+  let currentExchangeRate = null;
+  let convertedAmount = null;
+  let loadingExchangeRate = false;
+  let exchangeRateError = null;
+  let exchangeRateTimeout;
   
   // Initialize users from server data for no-JS support
   let users = predefinedMode ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []);
@@ -89,7 +97,7 @@
     }
   })();
 
-  onMount(() => {
+  onMount(async () => {
     jsEnhanced = true;
     document.body.classList.add('js-loaded');
     
@@ -110,7 +118,64 @@
         addSplitForUser(data.currentUser);
       }
     }
+
+    // Load supported currencies
+    await loadSupportedCurrencies();
   });
+
+  async function loadSupportedCurrencies() {
+    try {
+      loadingCurrencies = true;
+      const response = await fetch('/api/cospend/exchange-rates?action=currencies');
+      if (response.ok) {
+        const data = await response.json();
+        supportedCurrencies = ['CHF', ...data.currencies.filter(c => c !== 'CHF')];
+      }
+    } catch (e) {
+      console.warn('Could not load supported currencies:', e);
+      // Keep default CHF
+    } finally {
+      loadingCurrencies = false;
+    }
+  }
+
+  async function fetchExchangeRate() {
+    if (formData.currency === 'CHF' || !formData.currency || !formData.date) {
+      currentExchangeRate = null;
+      convertedAmount = null;
+      exchangeRateError = null;
+      return;
+    }
+
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      convertedAmount = null;
+      return;
+    }
+
+    try {
+      loadingExchangeRate = true;
+      exchangeRateError = null;
+
+      const url = `/api/cospend/exchange-rates?from=${formData.currency}&date=${formData.date}`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch exchange rate');
+      }
+
+      const data = await response.json();
+      currentExchangeRate = data.rate;
+      convertedAmount = parseFloat(formData.amount) * data.rate;
+    } catch (e) {
+      console.warn('Could not fetch exchange rate:', e);
+      exchangeRateError = e.message;
+      currentExchangeRate = null;
+      convertedAmount = null;
+    } finally {
+      loadingExchangeRate = false;
+    }
+  }
 
   function handleImageSelected(event) {
     imageFile = event.detail;
@@ -190,6 +255,7 @@
       const payload = {
         ...formData,
         amount: parseFloat(formData.amount),
+        currency: formData.currency,
         image: imagePath,
         splits
       };
@@ -257,6 +323,13 @@
   $: if (recurringData.frequency || recurringData.cronExpression || recurringData.startDate || formData.isRecurring) {
     updateNextExecutionPreview();
   }
+
+  // Fetch exchange rate when currency, amount, or date changes
+  $: if (jsEnhanced && formData.currency && formData.currency !== 'CHF' && formData.date && formData.amount) {
+    // Add a small delay to avoid excessive API calls while user is typing
+    clearTimeout(exchangeRateTimeout);
+    exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
+  }
 </script>
 
 <svelte:head>
@@ -307,28 +380,61 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="amount">Amount (CHF) *</label>
-          <input 
-            type="number" 
-            id="amount" 
-            name="amount"
-            bind:value={formData.amount} 
-            required 
-            min="0" 
-            step="0.01"
-            placeholder="0.00"
-          />
+          <label for="amount">Amount *</label>
+          <div class="amount-currency">
+            <input 
+              type="number" 
+              id="amount" 
+              name="amount"
+              bind:value={formData.amount} 
+              required 
+              min="0" 
+              step="0.01"
+              placeholder="0.00"
+            />
+            <select id="currency" name="currency" bind:value={formData.currency} disabled={loadingCurrencies}>
+              {#each supportedCurrencies as currency}
+                <option value={currency}>{currency}</option>
+              {/each}
+            </select>
+          </div>
+          {#if formData.currency !== 'CHF'}
+            <div class="conversion-info">
+              <small class="help-text">Amount will be converted to CHF using exchange rates for the payment date</small>
+              
+              {#if loadingExchangeRate}
+                <div class="conversion-preview loading">
+                  <small>🔄 Fetching exchange rate...</small>
+                </div>
+              {:else if exchangeRateError}
+                <div class="conversion-preview error">
+                  <small>⚠️ {exchangeRateError}</small>
+                </div>
+              {:else if convertedAmount !== null && currentExchangeRate !== null && formData.amount}
+                <div class="conversion-preview success">
+                  <small>
+                    {formData.currency} {parseFloat(formData.amount).toFixed(2)} ≈ CHF {convertedAmount.toFixed(2)}
+                    <br>
+                    (Rate: 1 {formData.currency} = {currentExchangeRate.toFixed(4)} CHF)
+                  </small>
+                </div>
+              {/if}
+            </div>
+          {/if}
         </div>
 
         <div class="form-group">
-          <label for="date">Date</label>
+          <label for="date">Payment Date</label>
           <input 
             type="date" 
             id="date" 
             name="date"
-            value={formData.date} 
+            bind:value={formData.date} 
             required
           />
+          {#if formData.currency !== 'CHF'}
+            <small class="help-text">Exchange rate will be fetched for this date</small>
+          {/if}
         </div>
       </div>
 
@@ -480,6 +586,7 @@
       bind:personalAmounts={personalAmounts}
       {users}
       amount={formData.amount}
+      currency={formData.currency}
       paidBy={formData.paidBy}
       currentUser={data.session?.user?.nickname || data.currentUser}
       {predefinedMode}
@@ -851,6 +958,71 @@
     }
   }
 
+  /* Amount-currency styling */
+  .amount-currency {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .amount-currency input {
+    flex: 2;
+  }
+
+  .amount-currency select {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  /* Currency conversion preview */
+  .conversion-info {
+    margin-top: 0.5rem;
+  }
+
+  .conversion-preview {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+  }
+
+  .conversion-preview.loading {
+    background-color: var(--nord8);
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .conversion-preview.error {
+    background-color: var(--nord6);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .conversion-preview.success {
+    background-color: var(--nord14);
+    border-color: var(--green);
+    color: var(--nord0);
+  }
+
+  .conversion-preview small {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .conversion-preview.loading {
+      background-color: var(--nord2);
+    }
+
+    .conversion-preview.error {
+      background-color: var(--accent-dark);
+    }
+
+    .conversion-preview.success {
+      background-color: var(--nord2);
+      color: var(--font-default-dark);
+    }
+  }
+
   @media (max-width: 600px) {
     .add-payment {
       padding: 1rem;
@@ -862,6 +1034,15 @@
 
     .form-actions {
       flex-direction: column;
+    }
+
+    .amount-currency {
+      flex-direction: column;
+    }
+
+    .amount-currency input,
+    .amount-currency select {
+      flex: none;
     }
   }
 </style>
