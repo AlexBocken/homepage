@@ -9,6 +9,7 @@
   export let personalAmounts = {};
   export let currentUser = '';
   export let predefinedMode = false;
+  export let currency = 'CHF';
   
   let personalTotalError = false;
   
@@ -173,8 +174,8 @@
       {/each}
       {#if amount}
         <div class="remainder-info" class:error={personalTotalError}>
-          <span>Total Personal: CHF {Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0).toFixed(2)}</span>
-          <span>Remainder to Split: CHF {Math.max(0, parseFloat(amount) - Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)).toFixed(2)}</span>
+          <span>Total Personal: {currency} {Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0).toFixed(2)}</span>
+          <span>Remainder to Split: {currency} {Math.max(0, parseFloat(amount) - Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)).toFixed(2)}</span>
           {#if personalTotalError}
             <div class="error-message">⚠️ Personal amounts exceed total payment amount!</div>
           {/if}
@@ -194,11 +195,11 @@
           </div>
           <span class="amount" class:positive={splitAmounts[user] < 0} class:negative={splitAmounts[user] > 0}>
             {#if splitAmounts[user] > 0}
-              owes CHF {splitAmounts[user].toFixed(2)}
+              owes {currency} {splitAmounts[user].toFixed(2)}
             {:else if splitAmounts[user] < 0}
-              is owed CHF {Math.abs(splitAmounts[user]).toFixed(2)}
+              is owed {currency} {Math.abs(splitAmounts[user]).toFixed(2)}
             {:else}
-              owes CHF {splitAmounts[user].toFixed(2)}
+              owes {currency} {splitAmounts[user].toFixed(2)}
             {/if}
           </span>
         </div>

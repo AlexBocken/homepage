@@ -39,11 +39,19 @@
     }
   }
 
-  function formatCurrency(amount) {
+  function formatCurrency(amount, currency = 'CHF') {
     return new Intl.NumberFormat('de-CH', {
       style: 'currency',
-      currency: 'CHF'
+      currency: currency
     }).format(Math.abs(amount));
+  }
+
+  function formatAmountWithCurrency(payment) {
+    if (payment.currency === 'CHF' || !payment.originalAmount) {
+      return formatCurrency(payment.amount);
+    }
+    
+    return `${formatCurrency(payment.originalAmount, payment.currency)} ≈ ${formatCurrency(payment.amount)}`;
   }
 
   function formatDate(dateString) {
@@ -111,7 +119,12 @@
             <h1>{payment.title}</h1>
           </div>
           <div class="payment-amount">
-            {formatCurrency(payment.amount)}
+            {formatAmountWithCurrency(payment)}
+            {#if payment.currency !== 'CHF' && payment.exchangeRate}
+              <div class="exchange-rate-info">
+                <small>Exchange rate: 1 {payment.currency} = {payment.exchangeRate.toFixed(4)} CHF</small>
+              </div>
+            {/if}
           </div>
         </div>
         {#if payment.image}
@@ -465,6 +478,22 @@
 
   .split-amount.negative {
     color: var(--red);
+  }
+
+  .exchange-rate-info {
+    margin-top: 0.5rem;
+    color: var(--nord3);
+    font-style: italic;
+  }
+
+  .exchange-rate-info small {
+    font-size: 0.8rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .exchange-rate-info {
+      color: var(--nord4);
+    }
   }
 
   @media (max-width: 600px) {

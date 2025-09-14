@@ -28,6 +28,7 @@ export const actions: Actions = {
     const title = formData.get('title')?.toString().trim();
     const description = formData.get('description')?.toString().trim() || '';
     const amount = parseFloat(formData.get('amount')?.toString() || '0');
+    const currency = formData.get('currency')?.toString()?.toUpperCase() || 'CHF';
     const paidBy = formData.get('paidBy')?.toString().trim();
     const date = formData.get('date')?.toString();
     const category = formData.get('category')?.toString() || 'groceries';
@@ -155,6 +156,7 @@ export const actions: Actions = {
         title,
         description,
         amount,
+        currency,
         paidBy,
         date: date || new Date().toISOString().split('T')[0],
         category,
@@ -186,6 +188,7 @@ export const actions: Actions = {
           title,
           description,
           amount,
+          currency,
           paidBy,
           category,
           splitMethod,

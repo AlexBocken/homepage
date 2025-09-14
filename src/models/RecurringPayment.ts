@@ -4,16 +4,16 @@ export interface IRecurringPayment {
   _id?: string;
   title: string;
   description?: string;
-  amount: number;
-  currency: string;
+  amount: number; // Amount in the original currency
+  currency: string; // Original currency code
   paidBy: string; // username/nickname of the person who paid
   category: 'groceries' | 'shopping' | 'travel' | 'restaurant' | 'utilities' | 'fun' | 'settlement';
   splitMethod: 'equal' | 'full' | 'proportional' | 'personal_equal';
   splits: Array<{
     username: string;
-    amount?: number;
+    amount?: number; // Amount in original currency
     proportion?: number;
-    personalAmount?: number;
+    personalAmount?: number; // Amount in original currency
   }>;
   frequency: 'daily' | 'weekly' | 'monthly' | 'custom';
   cronExpression?: string; // For custom frequencies using cron syntax
@@ -47,7 +47,7 @@ const RecurringPaymentSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: 'CHF',
-      enum: ['CHF']
+      uppercase: true
     },
     paidBy: {
       type: String,
