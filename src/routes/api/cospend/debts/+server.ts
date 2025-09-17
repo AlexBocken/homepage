@@ -89,10 +89,13 @@ export const GET: RequestHandler = async ({ locals }) => {
     // Separate into who owes you vs who you owe
     const whoOwesMe = debtSummaries.filter(debt => debt.netAmount < 0).map(debt => ({
       ...debt,
-      netAmount: Math.abs(debt.netAmount) // Make positive for display
+      netAmount: Math.round(Math.abs(debt.netAmount) * 100) / 100 // Round to 2 decimal places and make positive for display
     }));
 
-    const whoIOwe = debtSummaries.filter(debt => debt.netAmount > 0);
+    const whoIOwe = debtSummaries.filter(debt => debt.netAmount > 0).map(debt => ({
+      ...debt,
+      netAmount: Math.round(debt.netAmount * 100) / 100 // Round to 2 decimal places
+    }));
 
     return json({
       whoOwesMe,
