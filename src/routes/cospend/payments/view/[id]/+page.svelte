@@ -72,32 +72,6 @@
     }
   }
 
-  let deleting = false;
-
-  async function deletePayment() {
-    if (!confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      deleting = true;
-      const response = await fetch(`/api/cospend/payments/${data.paymentId}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete payment');
-      }
-
-      // Redirect to dashboard after successful deletion
-      goto('/cospend');
-      
-    } catch (err) {
-      error = err.message;
-    } finally {
-      deleting = false;
-    }
-  }
 </script>
 
 <svelte:head>
@@ -199,7 +173,7 @@
   {/if}
 </main>
 
-{#if payment && payment.createdBy === data.session.user.nickname}
+{#if payment}
   <EditButton href="/cospend/payments/edit/{data.paymentId}" />
 {/if}
 
