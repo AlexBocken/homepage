@@ -214,15 +214,6 @@
           {/if}
 
           <div class="panel-actions">
-            {#if payment && payment.createdBy === session?.user?.nickname}
-              <button 
-                class="btn-danger" 
-                on:click={deletePayment}
-                disabled={deleting}
-              >
-                {deleting ? 'Deleting...' : 'Delete Payment'}
-              </button>
-            {/if}
             <button class="btn-secondary" on:click={closeModal}>Close</button>
           </div>
         </div>
@@ -230,7 +221,7 @@
   </div>
 </div>
 
-{#if payment && payment.createdBy === session?.user?.nickname}
+{#if payment}
   <EditButton href="/cospend/payments/edit/{paymentId}" />
 {/if}
 
@@ -480,6 +471,9 @@
     cursor: pointer;
     transition: all 0.2s;
     border: none;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
   }
 
   .btn-primary {
@@ -616,11 +610,50 @@
     }
   }
 
+  @media (max-width: 768px) {
+    .panel-content {
+      height: 100vh;
+    }
+    
+    .panel-header {
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .panel-header h2 {
+      font-size: 1.2rem;
+    }
+
+    .close-button {
+      padding: 0.75rem;
+    }
+  }
+
   @media (max-width: 600px) {
+    .panel-header h2 {
+      font-size: 1.1rem;
+    }
+
     .payment-header {
       flex-direction: column;
       gap: 1rem;
       text-align: center;
+      padding: 1rem;
+    }
+
+    .payment-info {
+      padding: 1rem;
+    }
+
+    .splits-section {
+      padding: 1rem;
+    }
+
+    .panel-actions {
+      padding: 1rem;
+      flex-direction: column;
     }
 
     .receipt-image {
@@ -629,16 +662,55 @@
 
     .info-grid {
       grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
     }
 
-    .panel-actions {
-      flex-direction: column;
+    .info-item {
+      gap: 0.125rem;
+    }
+
+    .label {
+      font-size: 0.8rem;
+    }
+
+    .value {
+      font-size: 0.9rem;
+    }
+
+    .description {
+      padding-top: 1rem;
+      margin-bottom: 0;
+    }
+
+    .description h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .description p {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .splits-section h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .splits-list {
+      gap: 0.5rem;
     }
 
     .split-item {
       flex-direction: column;
       align-items: flex-start;
       gap: 0.5rem;
+      padding: 0.75rem;
+    }
+
+    .split-amount {
+      font-size: 0.9rem;
     }
   }
 </style>
