@@ -264,12 +264,12 @@
   .payments-list {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem;
   }
 
 
    h1 {
-    margin-block: 0 2rem;
+    margin-block: 0 1rem;
     margin-inline: auto;
     color: var(--nord0);
     text-align: center;
@@ -380,9 +380,9 @@
 
   .payments-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .payment-card {
@@ -684,24 +684,70 @@
     display: inline-block;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     .payments-list {
-      padding: 1rem;
-    }
-
-    .header {
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .header-actions {
-      flex-direction: column;
-      width: 100%;
+      padding: 0.75rem;
+      max-width: none;
     }
 
     .payments-grid {
       grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
     }
 
+    .payment-card {
+      padding: 1rem;
+    }
+
+    .payment-header {
+      margin-bottom: 0.75rem;
+    }
+
+    .payment-meta {
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .title-with-category .category-emoji {
+      font-size: 1.1rem;
+    }
+
+    .payment-title h3 {
+      font-size: 1.1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .payments-list {
+      padding: 0.5rem;
+    }
+
+    .payments-grid {
+      gap: 0.5rem;
+    }
+
+    .payment-card {
+      padding: 0.75rem;
+    }
+
+    /* Make settlement flow more compact on very small screens */
+    .settlement-flow {
+      gap: 0.5rem;
+    }
+
+    .settlement-user-from, .settlement-user-to {
+      gap: 0.25rem;
+    }
+
+    .settlement-user-from .username,
+    .settlement-user-to .username {
+      font-size: 0.8rem;
+    }
+
+    .settlement-badge-small {
+      font-size: 0.55rem;
+      padding: 0.1rem 0.25rem;
+    }
   }
 </style>

@@ -674,12 +674,18 @@
 
   @media (max-width: 600px) {
     .cospend-main {
-      padding: 1rem;
+      padding: 0.75rem;
+    }
+
+    .dashboard-layout {
+      gap: 0.75rem;
+      margin-bottom: 1rem;
     }
 
     .actions {
       flex-direction: column;
       align-items: center;
+      margin-bottom: 1rem;
     }
 
     .btn {
@@ -688,52 +694,87 @@
       text-align: center;
     }
 
-    /* Mobile Settlement Flow */
+    /* Mobile Settlement Flow - Keep Horizontal */
+    .settlement-flow-activity {
+      padding: 0.75rem;
+      margin: 0 auto 0.75rem auto;
+      max-width: none;
+    }
+
     .settlement-user-flow {
-      flex-direction: column;
-      gap: 1rem;
+      gap: 0.75rem;
+      justify-content: space-between;
     }
 
     .settlement-payer, .settlement-receiver {
-      order: 1;
+      gap: 0.5rem;
+      flex: 0 0 auto;
+      min-width: 0;
+    }
+
+    .settlement-payer :global(.profile-picture),
+    .settlement-receiver :global(.profile-picture) {
+      width: 40px !important;
+      height: 40px !important;
+    }
+
+    .settlement-username {
+      font-size: 0.8rem;
+      line-height: 1.1;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .settlement-arrow-section {
-      order: 2;
-    }
-
-    .settlement-flow-arrow {
-      transform: rotate(90deg);
-      font-size: 1.5rem;
+      gap: 0.25rem;
+      flex: 1;
+      min-width: 0;
     }
 
     .settlement-amount-large {
-      font-size: 1.3rem;
+      font-size: 1.1rem;
+    }
+
+    .settlement-flow-arrow {
+      font-size: 1.2rem;
+    }
+
+    .settlement-date {
+      font-size: 0.75rem;
     }
   }
 
   .dashboard-layout {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    margin-bottom: 2rem;
-    max-width: 1400px;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  @media (min-width: 768px) {
+    .dashboard-layout {
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
   }
 
   @media (min-width: 1200px) {
     .dashboard-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 3rem;
+      gap: 2rem;
       align-items: start;
+      max-width: 1200px;
     }
 
     .balance-section {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.5rem;
     }
   }
 
