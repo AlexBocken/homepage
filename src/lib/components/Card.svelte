@@ -32,6 +32,8 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 <style>
 .card_anchor{
 	border-radius: 20px;
+	cursor: pointer;
+	display: inline-block;
 }
 .card{
 	--card-width: 300px;
@@ -224,7 +226,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 }
 </style>
 
-<a class=card_anchor href="/rezepte/{recipe.short_name}" class:search_me={search} data-tags=[{recipe.tags}] >
+<div class=card_anchor class:search_me={search} data-tags=[{recipe.tags}] on:click={() => window.location.href = `/rezepte/${recipe.short_name}`}>
 <div class="card" class:margin_right={do_margin_right}>
 	<div class=div_div_image >
 		<div class=div_image style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
@@ -253,4 +255,4 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 		</div>
 	</div>
 </div>
-</a>
+</div>
