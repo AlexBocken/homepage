@@ -8,6 +8,7 @@
 
   let canvas;
   let chart;
+  let hiddenCategories = new Set(); // Track which categories are hidden
 
   // Register Chart.js components
   Chart.register(...registerables);
@@ -126,6 +127,30 @@
                 size: 14,
                 weight: 'bold'
               }
+            },
+            onClick: (event, legendItem, legend) => {
+              const datasetIndex = legendItem.datasetIndex;
+              const clickedMeta = chart.getDatasetMeta(datasetIndex);
+
+              // Check if only this dataset is currently visible
+              const onlyThisVisible = chart.data.datasets.every((dataset, idx) => {
+                const meta = chart.getDatasetMeta(idx);
+                return idx === datasetIndex ? !meta.hidden : meta.hidden;
+              });
+
+              if (onlyThisVisible) {
+                // Show all categories
+                chart.data.datasets.forEach((dataset, idx) => {
+                  chart.getDatasetMeta(idx).hidden = false;
+                });
+              } else {
+                // Hide all except the clicked one
+                chart.data.datasets.forEach((dataset, idx) => {
+                  chart.getDatasetMeta(idx).hidden = idx !== datasetIndex;
+                });
+              }
+
+              chart.update();
             }
           },
           title: {
@@ -175,6 +200,31 @@
         interaction: {
           intersect: true,
           mode: 'point'
+        },
+        onClick: (event, activeElements) => {
+          if (activeElements.length > 0) {
+            const datasetIndex = activeElements[0].datasetIndex;
+
+            // Check if only this dataset is currently visible
+            const onlyThisVisible = chart.data.datasets.every((dataset, idx) => {
+              const meta = chart.getDatasetMeta(idx);
+              return idx === datasetIndex ? !meta.hidden : meta.hidden;
+            });
+
+            if (onlyThisVisible) {
+              // Show all categories
+              chart.data.datasets.forEach((dataset, idx) => {
+                chart.getDatasetMeta(idx).hidden = false;
+              });
+            } else {
+              // Hide all except the clicked one
+              chart.data.datasets.forEach((dataset, idx) => {
+                chart.getDatasetMeta(idx).hidden = idx !== datasetIndex;
+              });
+            }
+
+            chart.update();
+          }
         }
       },
       plugins: [{
@@ -182,41 +232,46 @@
         afterDatasetsDraw: function(chart) {
           const ctx = chart.ctx;
           const chartArea = chart.chartArea;
-          
+
           ctx.save();
           ctx.font = 'bold 14px Inter, system-ui, sans-serif';
           ctx.fillStyle = '#ffffff';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
-          
-          // Calculate and display monthly totals
+
+          // Calculate and display monthly totals (only for visible categories)
           chart.data.labels.forEach((label, index) => {
             let total = 0;
-            chart.data.datasets.forEach(dataset => {
-              total += dataset.data[index] || 0;
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+              // Only add to total if the dataset is visible
+              const meta = chart.getDatasetMeta(datasetIndex);
+              if (meta && !meta.hidden) {
+                total += dataset.data[index] || 0;
+              }
             });
-            
+
             if (total > 0) {
-              // Get the x position for this month from any dataset
-              const meta = chart.getDatasetMeta(0);
-              if (meta && meta.data[index]) {
-                const x = meta.data[index].x;
-                
-                // Find the highest point for this month across all datasets
-                let maxY = chartArea.bottom;
-                for (let datasetIndex = 0; datasetIndex < chart.data.datasets.length; datasetIndex++) {
-                  const datasetMeta = chart.getDatasetMeta(datasetIndex);
-                  if (datasetMeta && datasetMeta.data[index]) {
-                    maxY = Math.min(maxY, datasetMeta.data[index].y);
+              // Get the x position for this month from any visible dataset
+              let x = null;
+              let maxY = chartArea.bottom;
+
+              for (let datasetIndex = 0; datasetIndex < chart.data.datasets.length; datasetIndex++) {
+                const datasetMeta = chart.getDatasetMeta(datasetIndex);
+                if (datasetMeta && !datasetMeta.hidden && datasetMeta.data[index]) {
+                  if (x === null) {
+                    x = datasetMeta.data[index].x;
                   }
+                  maxY = Math.min(maxY, datasetMeta.data[index].y);
                 }
-                
+              }
+
+              if (x !== null) {
                 // Display the total above the bar
                 ctx.fillText(`CHF ${total.toFixed(0)}`, x, maxY - 10);
               }
             }
           });
-          
+
           ctx.restore();
         }
       }]
@@ -271,5 +326,10 @@
   canvas {
     max-width: 100%;
     height: 100% !important;
+    cursor: pointer;
+  }
+
+  canvas:hover {
+    opacity: 0.95;
   }
 </style>
