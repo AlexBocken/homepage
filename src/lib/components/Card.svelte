@@ -34,6 +34,25 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	border-radius: 20px;
 	cursor: pointer;
 	display: inline-block;
+	text-decoration: none;
+	color: inherit;
+}
+.card-main-link {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	text-decoration: none;
+}
+.card-main-link .visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0,0,0,0);
+	white-space: nowrap;
+	border: 0;
 }
 .card{
 	--card-width: 300px;
@@ -73,7 +92,8 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	font-size: 1.5em;
 	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
 	transition: 100ms;
-	z-index: 5;
+	z-index: 10;
+	text-decoration: none;
 }
 #image{
 	width: 300px;
@@ -148,7 +168,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 }
 .tag{
 	cursor: pointer;
-	text-decoration: unset;
+	text-decoration: none;
 	background-color: var(--nord4);
 	color: var(--nord0);
 	border-radius: 100px;
@@ -158,6 +178,9 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	transition: 100ms;
 	box-shadow: 0em 0em 0.2em 0.05em rgba(0, 0, 0, 0.3);
 	border: none;
+	position: relative;
+	z-index: 10;
+	display: inline-block;
 }
 .tag:hover,
 .tag:focus-visible
@@ -184,6 +207,8 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	transition: 100ms;
 	border: none;
 	cursor: pointer;
+	z-index: 10;
+	display: inline-block;
 }
 .card_title .category:hover,
 .card_title .category:focus-within
@@ -226,8 +251,11 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 }
 </style>
 
-<div class=card_anchor class:search_me={search} data-tags=[{recipe.tags}] on:click={() => window.location.href = `/rezepte/${recipe.short_name}`}>
+<div class=card_anchor class:search_me={search} data-tags=[{recipe.tags}]>
 <div class="card" class:margin_right={do_margin_right}>
+	<a href="/rezepte/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}">
+		<span class="visually-hidden">View recipe: {recipe.name}</span>
+	</a>
 	<div class=div_div_image >
 		<div class=div_image style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
 			<noscript>
@@ -240,17 +268,17 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 		<div class="favorite-indicator">❤️</div>
 	{/if}
 	{#if icon_override || recipe.season.includes(current_month)}
-		<button class=icon on:click={(e) => {e.stopPropagation(); window.location.href = `/rezepte/icon/${recipe.icon}`}}>{recipe.icon}</button>
+		<a href="/rezepte/icon/{recipe.icon}" class=icon>{recipe.icon}</a>
 	{/if}
 	<div class="card_title">
-		<button class=category on:click={(e) => {e.stopPropagation(); window.location.href = `/rezepte/category/${recipe.category}`}}>{recipe.category}</button>
+		<a href="/rezepte/category/{recipe.category}" class=category>{recipe.category}</a>
 		<div>
 			<div class=name>{@html recipe.name}</div>
 			<div class=description>{@html recipe.description}</div>
 		</div>
 		<div class=tags>
 		{#each recipe.tags as tag}
-			<button class=tag on:click={(e) => {e.stopPropagation(); window.location.href = `/rezepte/tag/${tag}`}}>{tag}</button>
+			<a href="/rezepte/tag/{tag}" class=tag>{tag}</a>
 		{/each}
 		</div>
 	</div>
