@@ -10,7 +10,8 @@
   import { isSettlementPayment, getSettlementIcon, getSettlementClasses, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
 
-  export let data; // Contains session data and balance from server
+
+  import { formatCurrency } from '$lib/utils/formatters';  export let data; // Contains session data and balance from server
 
   // Use server-side data, with fallback for progressive enhancement
   let balance = data.balance || {
@@ -96,13 +97,6 @@
     if (debtBreakdownComponent && debtBreakdownComponent.refresh) {
       await debtBreakdownComponent.refresh();
     }
-  }
-
-  function formatCurrency(amount) {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: 'CHF'
-    }).format(Math.abs(amount));
   }
 
   function formatDate(dateString) {
@@ -211,10 +205,10 @@
                   </div>
                   <div class="settlement-arrow-section">
                     <div class="settlement-amount-large">
-                      {formatCurrency(Math.abs(split.amount))}
+                      {formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
                     </div>
                     <div class="settlement-flow-arrow">→</div>
-                    <div class="settlement-date">{formatDate(split.createdAt)}</div>
+                    <div class="settlement-date">{formatDate(split.paymentId?.date || split.paymentId?.createdAt)}</div>
                   </div>
                   <div class="settlement-receiver">
                     <ProfilePicture username={getSettlementReceiverFromSplit(split) || 'Unknown'} size={64} />
@@ -247,17 +241,17 @@
                          class:positive={split.amount < 0}
                          class:negative={split.amount > 0}>
                       {#if split.amount > 0}
-                        -{formatCurrency(split.amount)}
+                        -{formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
                       {:else if split.amount < 0}
-                        +{formatCurrency(split.amount)}
+                        +{formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
                       {:else}
-                        {formatCurrency(split.amount)}
+                        {formatCurrency(split.amount, 'CHF', 'de-CH')}
                       {/if}
                     </div>
                   </div>
                   <div class="payment-details">
                     <div class="payment-meta">
-                      <span class="payment-date">{formatDate(split.createdAt)}</span>
+                      <span class="payment-date">{formatDate(split.paymentId?.date || split.paymentId?.createdAt)}</span>
                     </div>
                     {#if split.paymentId?.description}
                       <div class="payment-description">

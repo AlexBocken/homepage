@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import ProfilePicture from './ProfilePicture.svelte';
+  import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
 
   export let initialBalance = null;
   export let initialDebtData = null;
@@ -101,10 +102,7 @@
   }
 
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: 'CHF'
-    }).format(Math.abs(amount));
+    return formatCurrencyUtil(Math.abs(amount), 'CHF', 'de-CH');
   }
 
   // Export refresh method for parent components to call
