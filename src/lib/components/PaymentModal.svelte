@@ -5,7 +5,8 @@
   import ProfilePicture from './ProfilePicture.svelte';
   import EditButton from './EditButton.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
-  
+  import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
+
   export let paymentId;
   
   // Get session from page store
@@ -63,10 +64,7 @@
   }
 
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: 'CHF'
-    }).format(Math.abs(amount));
+    return formatCurrencyUtil(Math.abs(amount), 'CHF', 'de-CH');
   }
 
   function formatDate(dateString) {

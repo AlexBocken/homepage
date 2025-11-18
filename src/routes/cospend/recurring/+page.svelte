@@ -5,7 +5,8 @@
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import AddButton from '$lib/components/AddButton.svelte';
   
-  export let data;
+
+  import { formatCurrency } from '$lib/utils/formatters';  export let data;
 
   let recurringPayments = [];
   let loading = true;
@@ -75,13 +76,6 @@
     }
   }
 
-  function formatCurrency(amount) {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: 'CHF'
-    }).format(Math.abs(amount));
-  }
-
   function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('de-CH');
   }
@@ -131,7 +125,7 @@
               </span>
             </div>
             <div class="payment-amount">
-              {formatCurrency(payment.amount)}
+              {formatCurrency(payment.amount, 'CHF', 'de-CH')}
             </div>
           </div>
 
@@ -189,11 +183,11 @@
                   <span class="username">{split.username}</span>
                   <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                     {#if split.amount > 0}
-                      owes {formatCurrency(split.amount)}
+                      owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
                     {:else if split.amount < 0}
-                      gets {formatCurrency(split.amount)}
+                      gets {formatCurrency(split.amount, 'CHF', 'de-CH')}
                     {:else}
-                      owes {formatCurrency(split.amount)}
+                      owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
                     {/if}
                   </span>
                 </div>

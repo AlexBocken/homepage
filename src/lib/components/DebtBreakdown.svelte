@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import ProfilePicture from './ProfilePicture.svelte';
+  import { formatCurrency } from '$lib/utils/formatters';
 
   let debtData = {
     whoOwesMe: [],
@@ -10,9 +11,9 @@
   };
   let loading = true;
   let error = null;
-  
+
   $: shouldHide = getShouldHide();
-  
+
   function getShouldHide() {
     const totalUsers = debtData.whoOwesMe.length + debtData.whoIOwe.length;
     return totalUsers <= 1; // Hide if 0 or 1 user (1 user is handled by enhanced balance)
@@ -37,13 +38,6 @@
     }
   }
 
-  function formatCurrency(amount) {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: 'CHF'
-    }).format(amount);
-  }
-
   // Export refresh method for parent components to call
   export async function refresh() {
     await fetchDebtBreakdown();
@@ -64,7 +58,7 @@
         <div class="debt-section owed-to-me">
           <h3>Who owes you</h3>
           <div class="total-amount positive">
-            Total: {formatCurrency(debtData.totalOwedToMe)}
+            Total: {formatCurrency(debtData.totalOwedToMe, 'CHF', 'de-CH')}
           </div>
           
           <div class="debt-list">
@@ -74,7 +68,7 @@
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
                     <span class="username">{debt.username}</span>
-                    <span class="amount positive">{formatCurrency(debt.netAmount)}</span>
+                    <span class="amount positive">{formatCurrency(debt.netAmount, 'CHF', 'de-CH')}</span>
                   </div>
                 </div>
                 <div class="transaction-count">
@@ -90,7 +84,7 @@
         <div class="debt-section owe-to-others">
           <h3>You owe</h3>
           <div class="total-amount negative">
-            Total: {formatCurrency(debtData.totalIOwe)}
+            Total: {formatCurrency(debtData.totalIOwe, 'CHF', 'de-CH')}
           </div>
           
           <div class="debt-list">
@@ -100,7 +94,7 @@
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
                     <span class="username">{debt.username}</span>
-                    <span class="amount negative">{formatCurrency(debt.netAmount)}</span>
+                    <span class="amount negative">{formatCurrency(debt.netAmount, 'CHF', 'de-CH')}</span>
                   </div>
                 </div>
                 <div class="transaction-count">
