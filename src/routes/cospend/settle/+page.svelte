@@ -4,7 +4,8 @@
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
 
-  export let data;
+
+  import { formatCurrency } from '$lib/utils/formatters';  export let data;
   export let form;
 
   // Use server-side data with progressive enhancement
@@ -133,12 +134,6 @@
     }
   }
 
-  function formatCurrency(amount) {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: 'CHF'
-    }).format(amount);
-  }
 </script>
 
 <svelte:head>
@@ -180,7 +175,7 @@
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
                     <span class="username">{debt.username}</span>
-                    <span class="debt-amount">owes you {formatCurrency(debt.netAmount)}</span>
+                    <span class="debt-amount">owes you {formatCurrency(debt.netAmount, 'CHF', 'de-CH')}</span>
                   </div>
                 </div>
                 <div class="settlement-action">
@@ -202,7 +197,7 @@
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
                     <span class="username">{debt.username}</span>
-                    <span class="debt-amount">you owe {formatCurrency(debt.netAmount)}</span>
+                    <span class="debt-amount">you owe {formatCurrency(debt.netAmount, 'CHF', 'de-CH')}</span>
                   </div>
                 </div>
                 <div class="settlement-action">
@@ -287,12 +282,12 @@
                 <option value="">Select settlement type</option>
                 {#each debtData.whoOwesMe as debt}
                   <option value="receive" data-from="{debt.username}" data-to="{data.currentUser}">
-                    Receive {formatCurrency(debt.netAmount)} from {debt.username}
+                    Receive {formatCurrency(debt.netAmount, 'CHF', 'de-CH')} from {debt.username}
                   </option>
                 {/each}
                 {#each debtData.whoIOwe as debt}
                   <option value="pay" data-from="{data.currentUser}" data-to="{debt.username}">
-                    Pay {formatCurrency(debt.netAmount)} to {debt.username}
+                    Pay {formatCurrency(debt.netAmount, 'CHF', 'de-CH')} to {debt.username}
                   </option>
                 {/each}
               </select>

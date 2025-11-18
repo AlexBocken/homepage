@@ -5,7 +5,8 @@
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import EditButton from '$lib/components/EditButton.svelte';
   
-  export let data;
+
+  import { formatCurrency } from '$lib/utils/formatters';  export let data;
 
   // Use server-side data with progressive enhancement
   let payment = data.payment || null;
@@ -39,19 +40,12 @@
     }
   }
 
-  function formatCurrency(amount, currency = 'CHF') {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: currency
-    }).format(Math.abs(amount));
-  }
-
   function formatAmountWithCurrency(payment) {
     if (payment.currency === 'CHF' || !payment.originalAmount) {
-      return formatCurrency(payment.amount);
+      return formatCurrency(payment.amount, 'CHF', 'de-CH');
     }
     
-    return `${formatCurrency(payment.originalAmount, payment.currency)} ≈ ${formatCurrency(payment.amount)}`;
+    return `${formatCurrency(payment.originalAmount, payment.currency, 'CHF', 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
   }
 
   function formatDate(dateString) {
@@ -157,11 +151,11 @@
                 </div>
                 <div class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                   {#if split.amount > 0}
-                    owes {formatCurrency(split.amount)}
+                    owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
                   {:else if split.amount < 0}
-                    owed {formatCurrency(split.amount)}
+                    owed {formatCurrency(split.amount, 'CHF', 'de-CH')}
                   {:else}
-                    owes {formatCurrency(split.amount)}
+                    owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
                   {/if}
                 </div>
               </div>
