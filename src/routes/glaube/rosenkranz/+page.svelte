@@ -353,9 +353,15 @@ h1 {
 		<!-- Sidebar: Rosary Visualization -->
 		<div class="rosary-sidebar">
 			<div class="rosary-visualization" bind:this={svgContainer}>
-				<svg class="linear-rosary" viewBox="0 0 100 1700" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">
-					<!-- Vertical chain -->
-					<line x1="50" y1="0" x2="50" y2="1700" class="chain" />
+				<svg class="linear-rosary" viewBox="0 0 100 1700" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" style="overflow:visible" >					<!-- Vertical chain -->
+					<line x1="50" y1="34" x2="50" y2="1640" class="chain" />
+
+					<!-- Circular connection: from last bead to medal (bezier curve) -->
+					<path d="M 50 1640 Q -3000 4000, -100 940 Q -1500 600, 50 235"
+						class="chain"
+						fill="none"
+						stroke="5,5"
+						opacity="0.4" />
 
 					<!-- Cross (at top) -->
 					<g id="cross-section">
@@ -373,6 +379,22 @@ h1 {
 
 					<!-- Large bead before decades -->
 					<circle cx="50" cy="200" r="15" class="large-bead" class:active-large-bead={activeSection === 'lbead2'} />
+
+					<!-- Benedictus Medal (inline) -->
+					<g id="benedictus-medal">
+						<!-- Medal circle -->
+						<circle cx="50" cy="240" r="20" class="medal" fill="var(--nord9)" stroke="var(--nord4)" stroke-width="2"/>
+
+						<!-- Cross on medal (bar cross) -->
+						<line x1="50" y1="228" x2="50" y2="252" stroke="var(--nord4)" stroke-width="2.5"/>
+						<line x1="38" y1="240" x2="62" y2="240" stroke="var(--nord4)" stroke-width="2.5"/>
+
+						<!-- Letters around the medal: C S S M -->
+						<text x="50" y="223" text-anchor="middle" font-size="8" fill="var(--nord4)" font-weight="bold">C</text>
+						<text x="50" y="260" text-anchor="middle" font-size="8" fill="var(--nord4)" font-weight="bold">S</text>
+						<text x="35" y="244" text-anchor="middle" font-size="8" fill="var(--nord4)" font-weight="bold">S</text>
+						<text x="65" y="244" text-anchor="middle" font-size="8" fill="var(--nord4)" font-weight="bold">M</text>
+					</g>
 
 					<!-- Decade 1: Ave Maria (10 beads) -->
 					{#each Array(10) as _, i}
