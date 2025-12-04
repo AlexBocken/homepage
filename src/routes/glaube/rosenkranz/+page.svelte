@@ -8,6 +8,7 @@ import Paternoster from "$lib/components/prayers/Paternoster.svelte";
 import AveMaria from "$lib/components/prayers/AveMaria.svelte";
 import GloriaPatri from "$lib/components/prayers/GloriaPatri.svelte";
 import FatimaGebet from "$lib/components/prayers/FatimaGebet.svelte";
+import SalveRegina from "$lib/components/prayers/SalveRegina.svelte";
 
 // Mystery variations for each type of rosary
 const mysteries = {
@@ -183,6 +184,18 @@ onMount(() => {
 	scroll-behavior: smooth;
 	scrollbar-width: none; /* Firefox */
 	-ms-overflow-style: none; /* IE and Edge */
+	/* Mask to hide portions where curve goes off-screen (left side) */
+	/* Using radial gradient to create smooth fade at both connection points */
+	-webkit-mask-image:
+		linear-gradient(to right, transparent 0%, black 20%, black 100%),
+		radial-gradient(ellipse 200px 150px at 50% 0%, transparent 0%, black 40%),
+		radial-gradient(ellipse 200px 150px at 50% 100%, transparent 0%, black 40%);
+	-webkit-mask-composite: source-in;
+	mask-image:
+		linear-gradient(to right, transparent 0%, black 20%, black 100%),
+		radial-gradient(ellipse 200px 150px at 50% 0%, transparent 0%, black 40%),
+		radial-gradient(ellipse 200px 150px at 50% 100%, transparent 0%, black 40%);
+	mask-composite: intersect;
 }
 
 /* Hide scrollbar completely */
@@ -353,15 +366,14 @@ h1 {
 		<!-- Sidebar: Rosary Visualization -->
 		<div class="rosary-sidebar">
 			<div class="rosary-visualization" bind:this={svgContainer}>
-				<svg class="linear-rosary" viewBox="0 0 100 1700" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" style="overflow:visible" >					<!-- Vertical chain -->
-					<line x1="50" y1="34" x2="50" y2="1640" class="chain" />
+				<svg class="linear-rosary" viewBox="-100 -100 250 2200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">
+					<!-- Vertical chain -->
+					<line x1="50" y1="50" x2="50" y2="1655" class="chain" />
 
 					<!-- Circular connection: from last bead to medal (bezier curve) -->
-					<path d="M 50 1640 Q -3000 4000, -100 940 Q -1500 600, 50 235"
+					<path d="M 50 1640 Q -3000 4000, -3000 140 Q -1550 580, 50 235"
 						class="chain"
-						fill="none"
-						stroke="5,5"
-						opacity="0.4" />
+						fill="none" />
 
 					<!-- Cross (at top) -->
 					<g id="cross-section">
@@ -464,7 +476,7 @@ h1 {
 				bind:this={sectionElements.start1}
 				data-section="start1"
 			>
-				<h2>Gegrüßet seist du Maria</h2>
+				<h2>Ave Maria</h2>
 				<AveMaria
 					mysteryLatin="Jesus, qui fidem in nobis augeat"
 					mystery="Jesus, der in uns den Glauben vermehre"
@@ -477,7 +489,7 @@ h1 {
 				bind:this={sectionElements.start2}
 				data-section="start2"
 			>
-				<h2>Gegrüßet seist du Maria</h2>
+				<h2>Ave Maria</h2>
 				<AveMaria
 					mysteryLatin="Jesus, qui spem in nobis firmet"
 					mystery="Jesus, der in uns die Hoffnung stärke"
@@ -490,7 +502,7 @@ h1 {
 				bind:this={sectionElements.start3}
 				data-section="start3"
 			>
-				<h2>Gegrüßet seist du Maria</h2>
+				<h2>Ave Maria</h2>
 				<AveMaria
 					mysteryLatin="Jesus, qui caritatem in nobis accendat"
 					mystery="Jesus, der in uns die Liebe entzünde"
@@ -503,7 +515,7 @@ h1 {
 				bind:this={sectionElements.lbead2}
 				data-section="lbead2"
 			>
-				<h2>Gloria Patri</h2>
+				<h3>Gloria Patri</h3>
 				<GloriaPatri />
 				<h3>Vater unser</h3>
 				<Paternoster />
@@ -518,7 +530,7 @@ h1 {
 					data-section="secret{decadeNum}"
 				>
 					<h2>{decadeNum}. Gesätz</h2>
-					<h3>Gegrüßet seist du Maria <span class="repeat-count">(10×)</span></h3>
+					<h3>Ave Maria <span class="repeat-count">(10×)</span></h3>
 					<AveMaria
 						mysteryLatin={currentMysteriesLatin[decadeNum - 1]}
 						mystery={currentMysteries[decadeNum - 1]}
@@ -532,7 +544,7 @@ h1 {
 						bind:this={sectionElements[`secret${decadeNum}_transition`]}
 						data-section="secret{decadeNum}_transition"
 					>
-						<h2>Gloria Patri</h2>
+						<h3>Gloria Patri</h3>
 						<GloriaPatri />
 
 						<h3>Das Fatima Gebet <span class="repeat-count">(optional)</span></h3>
@@ -544,26 +556,22 @@ h1 {
 				{/if}
 			{/each}
 
-			<!-- Final transition after 5th decade -->
+			<!-- Final prayers after 5th decade -->
 			<div
 				class="prayer-section"
 				bind:this={sectionElements.final_transition}
 				data-section="final_transition"
 			>
-				<h2>Gloria Patri</h2>
+				<h2>Abschluss</h2>
+
+				<h3>Gloria Patri</h3>
 				<GloriaPatri />
 
 				<h3>Das Fatima Gebet <span class="repeat-count">(optional)</span></h3>
 				<FatimaGebet />
-			</div>
 
-			<!-- Closing Prayer -->
-			<div class="prayer-section">
-				<h2>Abschluss</h2>
 				<h3>Salve Regina</h3>
-				<p class="prayer-text">
-					Sei gegrüßt, o Königin, Mutter der Barmherzigkeit, unser Leben, unsre Wonne und unsere Hoffnung, sei gegrüßt...
-				</p>
+				<SalveRegina />
 			</div>
 		</div>
 	</div>
