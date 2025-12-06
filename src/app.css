@@ -1,0 +1,272 @@
+/* ============================================
+   BOCKEN.ORG CENTRALIZED STYLES
+   ============================================ */
+
+/* ============================================
+   FONT DEFINITIONS
+   ============================================ */
+
+@font-face {
+	font-family: 'crosses';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(/fonts/crosses.woff2) format('woff2'),
+	     url(/fonts/crosses.ttf) format('truetype');
+}
+
+/* ============================================
+   COLOR SYSTEM
+   Based on Nord Theme with semantic naming
+   ============================================ */
+
+:root {
+	/* ============================================
+	   BASE NORD COLORS
+	   Keep original Nord colors for reference
+	   ============================================ */
+	--nord0: #2E3440;
+	--nord1: #3B4252;
+	--nord2: #434C5E;
+	--nord3: #4C566A;
+	--nord4: #D8DEE9;
+	--nord5: #E5E9F0;
+	--nord6: #ECEFF4;
+	--nord7: #8FBCBB;
+	--nord8: #88C0D0;
+	--nord9: #81A1C1;
+	--nord10: #5E81AC;
+	--nord11: #BF616A;
+	--nord12: #D08770;
+	--nord13: #EBCB8B;
+	--nord14: #A3BE8C;
+	--nord15: #B48EAD;
+
+	/* Named color aliases (backward compatibility) */
+	--lightblue: var(--nord9);
+	--blue: var(--nord10);
+	--red: var(--nord11);
+	--orange: var(--nord12);
+	--yellow: var(--nord13);
+	--green: var(--nord14);
+	--purple: var(--nord15);
+
+	/* ============================================
+	   SEMANTIC COLOR SYSTEM - LIGHT MODE
+	   ============================================ */
+
+	/* Primary Color - Main interactive elements */
+	--color-primary: var(--nord10);
+	--color-primary-hover: var(--nord9);
+	--color-primary-active: var(--nord8);
+
+	/* Accent Color - Call-to-action, emphasis */
+	--color-accent: var(--nord11);
+	--color-accent-hover: #d07179;
+	--color-accent-active: #a04e56;
+
+	/* Secondary Accent - Alternative emphasis */
+	--color-secondary: var(--nord12);
+	--color-secondary-hover: #e09880;
+	--color-secondary-active: #b87060;
+
+	/* Background Colors */
+	--color-bg-primary: #fbf9f3;
+	--color-bg-secondary: var(--nord5);
+	--color-bg-tertiary: var(--nord6);
+	--color-bg-elevated: var(--nord4);
+
+	/* Surface Colors (cards, panels, etc.) */
+	--color-surface: var(--nord6);
+	--color-surface-hover: var(--nord5);
+
+	/* Text Colors */
+	--color-text-primary: var(--nord0);
+	--color-text-secondary: var(--nord3);
+	--color-text-tertiary: var(--nord2);
+	--color-text-inverse: white;
+	--color-text-on-primary: white;
+	--color-text-on-accent: white;
+	--color-text-muted: var(--nord4);
+
+	/* UI Element Colors */
+	--color-ui-dark: var(--nord0);
+	--color-ui-mid: var(--nord3);
+	--color-ui-light: var(--nord4);
+	--color-ui-hover: var(--nord3);
+
+	/* Border Colors */
+	--color-border: var(--nord4);
+	--color-border-hover: var(--nord3);
+
+	/* Link Colors */
+	--color-link: var(--nord11);
+	--color-link-visited: var(--nord15);
+	--color-link-hover: var(--color-accent-hover);
+
+	/* Status Colors */
+	--color-success: var(--nord14);
+	--color-warning: var(--nord13);
+	--color-error: var(--nord11);
+	--color-info: var(--nord10);
+}
+
+/* ============================================
+   DARK MODE COLOR OVERRIDES
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		/* Dark mode custom colors */
+		--nord6-dark: #292c31;
+		--accent-dark: #1f1f21;
+		--background-dark: #21201b;
+		--font-default-dark: #ffffff;
+
+		/* Primary Color - Same but adjusted for dark backgrounds */
+		--color-primary: var(--nord9);
+		--color-primary-hover: var(--nord8);
+		--color-primary-active: var(--nord7);
+
+		/* Accent Color - Slightly lighter for dark mode */
+		--color-accent: #d07179;
+		--color-accent-hover: #e08189;
+		--color-accent-active: var(--nord11);
+
+		/* Secondary Accent */
+		--color-secondary: #e09880;
+		--color-secondary-hover: #f0a890;
+		--color-secondary-active: var(--nord12);
+
+		/* Background Colors */
+		--color-bg-primary: var(--background-dark);
+		--color-bg-secondary: var(--accent-dark);
+		--color-bg-tertiary: var(--nord6-dark);
+		--color-bg-elevated: var(--nord0);
+
+		/* Surface Colors */
+		--color-surface: var(--nord0);
+		--color-surface-hover: var(--nord1);
+
+		/* Text Colors */
+		--color-text-primary: var(--font-default-dark);
+		--color-text-secondary: var(--nord4);
+		--color-text-tertiary: var(--nord5);
+		--color-text-inverse: var(--nord0);
+		--color-text-on-primary: white;
+		--color-text-on-accent: white;
+		--color-text-muted: var(--nord3);
+
+		/* UI Element Colors */
+		--color-ui-dark: var(--nord6);
+		--color-ui-mid: var(--nord4);
+		--color-ui-light: var(--nord3);
+		--color-ui-hover: var(--nord2);
+
+		/* Border Colors */
+		--color-border: var(--nord2);
+		--color-border-hover: var(--nord3);
+
+		/* Link Colors */
+		--color-link: #d07179;
+		--color-link-visited: #c89fb6;
+		--color-link-hover: var(--color-accent-hover);
+	}
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+* {
+	box-sizing: border-box;
+	font-family: Helvetica, Arial, "Noto Sans", sans-serif;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background-color: var(--color-bg-primary);
+	color: var(--color-text-primary);
+	overflow-x: hidden;
+}
+
+/* ============================================
+   LINK STYLES
+   ============================================ */
+
+a:not(:visited) {
+	color: var(--color-link);
+}
+
+a:visited {
+	color: var(--color-link-visited);
+}
+
+a:hover,
+a:focus-visible {
+	color: var(--color-link-hover);
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+
+form {
+	background-color: var(--color-bg-secondary);
+	display: flex;
+	flex-direction: column;
+	max-width: 600px;
+	gap: 0.5em;
+	margin-inline: auto;
+	justify-content: center;
+	align-items: center;
+	padding-block: 2rem;
+	margin-block: 2rem;
+}
+
+form label {
+	font-size: 1.2em;
+}
+
+form input {
+	display: block;
+	font-size: 1.2rem;
+}
+
+form:not(.search) button {
+	background-color: var(--color-accent);
+	color: var(--color-text-on-accent);
+	border: none;
+	padding: 0.5em 1em;
+	font-size: 1.3em;
+	border-radius: 1000px;
+	margin-top: 1em;
+	transition: 100ms;
+	cursor: pointer;
+}
+
+form:not(.search) button:hover,
+form:not(.search) button:focus-visible {
+	background-color: var(--color-accent-hover);
+	scale: 1.1;
+}
+
+form:not(.search) button:active {
+	background-color: var(--color-accent-active);
+}
+
+form p {
+	max-width: 400px;
+	margin-top: 0;
+}
+
+form h4 {
+	margin-bottom: 0;
+}
+
+@media screen and (max-width: 600px) {
+	form {
+		margin-top: 0;
+	}
+}
