@@ -719,6 +719,7 @@ onMount(() => {
 .rosary-visualization :global(.cross-symbol) {
 	fill: var(--nord4);
 	transition: all 0.3s ease;
+	font-family: crosses;
 }
 
 /* Active states */
