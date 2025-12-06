@@ -19,6 +19,7 @@ i{
 	font-style: normal;
 	color: var(--nord11);
 	font-weight: 900;
+	font-family: 'crosses', sans-serif;
 }
 i.txt {
 	font-size: 70%;
