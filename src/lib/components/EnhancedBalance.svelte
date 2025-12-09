@@ -333,8 +333,9 @@
     .balance-card {
       min-width: unset;
       width: 100%;
+      padding: 1rem;
     }
-    
+
     .balance-card.enhanced {
       min-width: unset;
     }
@@ -343,6 +344,7 @@
       flex-direction: column;
       gap: 0.75rem;
       align-items: flex-start;
+      padding: 0.75rem;
     }
 
     .transaction-count {
