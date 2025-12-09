@@ -676,6 +676,10 @@
       margin-bottom: 1rem;
     }
 
+    .recent-activity {
+      padding: 0.75rem;
+    }
+
     .actions {
       flex-direction: column;
       align-items: center;
