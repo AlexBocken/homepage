@@ -275,6 +275,8 @@
   .cospend-main {
     margin: 0 auto;
     padding: 2rem;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   h1 {
