@@ -323,6 +323,12 @@
     }
   }
 
+  @media (max-width: 600px) {
+    .chart-container {
+      padding: 0.75rem;
+    }
+  }
+
   canvas {
     max-width: 100%;
     height: 100% !important;

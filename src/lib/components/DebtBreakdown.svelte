@@ -242,4 +242,14 @@
     font-size: 0.85rem;
     text-align: right;
   }
+
+  @media (max-width: 600px) {
+    .debt-breakdown {
+      padding: 0.75rem;
+    }
+
+    .debt-section {
+      padding: 0.75rem;
+    }
+  }
 </style>
