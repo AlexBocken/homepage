@@ -81,6 +81,8 @@
 
   .main-content {
     flex: 1;
+    max-width: 100%;
+    overflow-x: hidden;
     transition: margin-right 0.3s ease-out;
   }
 
