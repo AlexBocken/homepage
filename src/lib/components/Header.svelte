@@ -61,7 +61,6 @@ nav[hidden]{
 {
 	cursor: pointer;
 	color: var(--red);
-	transform: scale(1.1,1.1);
 }
 :global(.site_header) {
 	padding-block: 1.5rem;
