@@ -92,7 +92,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	font-size: 1.5em;
 	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
 	transition: 100ms;
-	z-index: 10;
+	z-index: 5;
 	text-decoration: none;
 }
 #image{
@@ -179,7 +179,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	box-shadow: 0em 0em 0.2em 0.05em rgba(0, 0, 0, 0.3);
 	border: none;
 	position: relative;
-	z-index: 10;
+	z-index: 2;
 	display: inline-block;
 }
 .tag:hover,
@@ -207,7 +207,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 	transition: 100ms;
 	border: none;
 	cursor: pointer;
-	z-index: 10;
+	z-index: 2;
 	display: inline-block;
 }
 .card_title .category:hover,

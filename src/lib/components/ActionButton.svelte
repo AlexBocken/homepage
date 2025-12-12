@@ -19,6 +19,7 @@ background-color: var(--red);
 display: grid;
 justify-content: center;
 align-content: center;
+z-index: 100;
 }
 @media screen and (max-width: 500px) {
 	.container{
