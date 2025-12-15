@@ -46,32 +46,32 @@ const mysteries = {
 
 const mysteriesLatin = {
 	freudenreich: [
-		"Jesus, quem tu, Virgo, de Spiritu Sancto concepisti.",
-		"Jesus, quem tu, Virgo, ad Elisabeth portasti.",
-		"Jesus, quem tu, Virgo, Bethlehemi peperisti.",
-		"Jesus, quem tu, Virgo, in templo praesentasti.",
-		"Jesus, quem tu, Virgo, in templo invenisti."
+		"Jesus, quem, virgo, concepísti.",
+		"Jesus, quem visitándo Elísabeth portásti.",
+		"Jesus, quem, virgo, genuísti.",
+		"Jesus, quem in templo præsentásti.",
+		"Jesus, quem in templo invenisti."
 	],
 	schmerzhaften: [
-		"Jesus, qui pro nobis sanguinem sudavit.",
-		"Jesus, qui pro nobis flagellatus est.",
-		"Jesus, qui pro nobis spinis coronatus est.",
-		"Jesus, qui pro nobis crucem baiulavit.",
+		"Jesus, qui pro nobis sánguinem sudavit.",
+		"Jesus, qui pro nobis flagellátus est.",
+		"Jesus, qui pro nobis spinis coronátus est.",
+		"Jesus, qui pro nobis crucem baiulávit.",
 		"Jesus, qui pro nobis crucifixus est."
 	],
 	glorreichen: [
-		"Jesus, qui resurrexit a mortuis.",
-		"Jesus, qui in caelum ascendit.",
-		"Jesus, qui Spiritum Sanctum misit.",
-		"Jesus, qui te, Virgo, in caelum assumpsit.",
-		"Jesus, qui te, Virgo, in caelis coronavit."
+		"Jesus, qui resurréxit a mórtuis.",
+		"Jesus, qui ascendit in cælum .",
+		"Jesus, qui misit Spíritum Sanctum.",
+		"Jesus, qui te, virgo, in cælum assúmpsit.",
+		"Jesus, qui te, virgo, in cælo coronávit."
 	],
 	lichtreichen: [
-		"Jesus, qui a Ioanne baptizatus est.",
-		"Jesus, qui in Cana se manifestavit.",
-		"Jesus, qui regnum Dei proclamavit.",
-		"Jesus, qui in monte transfiguratus est.",
-		"Jesus, qui Eucharistiam donavit."
+		"Jesus, qui a Ioánne baptizátus est.",
+		"Jesus, qui se in Cana revelávit.",
+		"Jesus, qui regnum Dei prædicávit.",
+		"Jesus, qui in monte transfigurátus est.",
+		"Jesus, Sacraméntum Altáris instítuit."
 	]
 };
 
@@ -1155,7 +1155,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 			>
 				<h3>Ave Maria</h3>
 				<AveMaria
-					mysteryLatin="Jesus, qui fidem in nobis augeat"
+					mysteryLatin="Jesus, qui adáugeat nobis fidem"
 					mystery="Jesus, der in uns den Glauben vermehre"
 				/>
 			</div>
@@ -1168,7 +1168,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 			>
 				<h3>Ave Maria</h3>
 				<AveMaria
-					mysteryLatin="Jesus, qui spem in nobis firmet"
+					mysteryLatin="Jesus, qui corróboret nobis spem"
 					mystery="Jesus, der in uns die Hoffnung stärke"
 				/>
 			</div>
@@ -1181,7 +1181,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 			>
 				<h3>Ave Maria</h3>
 				<AveMaria
-					mysteryLatin="Jesus, qui caritatem in nobis accendat"
+					mysteryLatin="Jesus, qui perficiat in nobis caritátem"
 					mystery="Jesus, der in uns die Liebe entzünde"
 				/>
 			</div>
