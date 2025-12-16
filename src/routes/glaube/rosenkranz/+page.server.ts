@@ -1,26 +1,34 @@
-import { mysteryReferences, type MysteryDescription } from '$lib/data/mysteryDescriptions';
+import { mysteryReferences, type MysteryDescription, type VerseData } from '$lib/data/mysteryDescriptions';
 import type { PageServerLoad } from './$types';
 
 export const prerender = true;
 
-async function fetchBibleText(reference: string, fetch: typeof globalThis.fetch): Promise<string> {
+async function fetchBibleData(reference: string, fetch: typeof globalThis.fetch): Promise<{ text: string; verseData: VerseData | null }> {
   try {
     const response = await fetch(`/api/glaube/bibel/${encodeURIComponent(reference)}`);
     if (!response.ok) {
       console.error(`Failed to fetch reference ${reference}:`, response.status);
-      return '';
+      return { text: '', verseData: null };
     }
     const data = await response.json();
 
     // Format the verses into a single text with guillemets
+    let text = '';
     if (data.verses && data.verses.length > 0) {
-      const text = data.verses.map((v: { verse: number; text: string }) => v.text).join(' ');
-      return `«${text}»`;
+      text = `«${data.verses.map((v: { verse: number; text: string }) => v.text).join(' ')}»`;
     }
-    return '';
+
+    // Store the full verse data for the modal
+    const verseData: VerseData = {
+      book: data.book,
+      chapter: data.chapter,
+      verses: data.verses
+    };
+
+    return { text, verseData };
   } catch (err) {
     console.error(`Error fetching reference ${reference}:`, err);
-    return '';
+    return { text: '', verseData: null };
   }
 }
 
@@ -38,11 +46,12 @@ export const load: PageServerLoad = async ({ fetch }) => {
     const descriptions: MysteryDescription[] = [];
 
     for (const ref of references) {
-      const text = await fetchBibleText(ref.reference, fetch);
+      const { text, verseData } = await fetchBibleData(ref.reference, fetch);
       descriptions.push({
         title: ref.title,
         reference: ref.reference,
-        text
+        text,
+        verseData
       });
     }
 

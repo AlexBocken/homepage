@@ -1,35 +1,16 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import type { VerseData } from '$lib/data/mysteryDescriptions';
 
   export let reference: string = '';
   export let title: string = '';
+  export let verseData: VerseData | null = null;
   export let onClose: () => void;
 
-  let book: string = '';
-  let chapter: number = 0;
-  let verses: Array<{ verse: number; text: string }> = [];
-  let loading = true;
-  let error = '';
-
-  onMount(async () => {
-    if (!reference) return;
-
-    try {
-      const response = await fetch(`/api/glaube/bibel/${encodeURIComponent(reference)}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch verses');
-      }
-      const data = await response.json();
-      book = data.book;
-      chapter = data.chapter;
-      verses = data.verses;
-    } catch (err) {
-      console.error('Error fetching Bible verses:', err);
-      error = 'Fehler beim Laden der Bibelstelle';
-    } finally {
-      loading = false;
-    }
-  });
+  let book: string = verseData?.book || '';
+  let chapter: number = verseData?.chapter || 0;
+  let verses: Array<{ verse: number; text: string }> = verseData?.verses || [];
+  let loading = false;
+  let error = verseData ? '' : 'Keine Versdaten verfügbar';
 
   function handleBackdropClick(event: MouseEvent) {
     if (event.target === event.currentTarget) {

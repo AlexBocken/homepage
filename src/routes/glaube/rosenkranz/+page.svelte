@@ -190,6 +190,7 @@ let decadeCounters = {
 let showModal = false;
 let selectedReference = '';
 let selectedTitle = '';
+let selectedVerseData = null;
 
 // Function to advance the counter for a specific decade
 function advanceDecade(decadeNum) {
@@ -225,9 +226,10 @@ function advanceDecade(decadeNum) {
 }
 
 // Function to handle citation click
-function handleCitationClick(reference, title = '') {
+function handleCitationClick(reference, title = '', verseData = null) {
 	selectedReference = reference;
 	selectedTitle = title;
+	selectedVerseData = verseData;
 	showModal = true;
 }
 
@@ -1376,7 +1378,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 							<span class="bible-reference-text">{description.reference}</span>
 							<button
 								class="bible-reference-button"
-								on:click={() => handleCitationClick(description.reference, description.title)}
+								on:click={() => handleCitationClick(description.reference, description.title, description.verseData)}
 								aria-label="Bibelstelle anzeigen"
 							>
 								📖
@@ -1574,5 +1576,5 @@ Anders als die Geheimnisse in Deutsch ist es üblich beim beten des Rosenkranzes
 
 <!-- Bible citation modal -->
 {#if showModal}
-	<BibleModal reference={selectedReference} title={selectedTitle} onClose={() => showModal = false} />
+	<BibleModal reference={selectedReference} title={selectedTitle} verseData={selectedVerseData} onClose={() => showModal = false} />
 {/if}
