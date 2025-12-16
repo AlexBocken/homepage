@@ -3,8 +3,15 @@ export interface MysteryReference {
   reference: string;
 }
 
+export interface VerseData {
+  book: string;
+  chapter: number;
+  verses: Array<{ verse: number; text: string }>;
+}
+
 export interface MysteryDescription extends MysteryReference {
   text: string;
+  verseData?: VerseData | null;
 }
 
 // Only store references - texts will be fetched at build time
