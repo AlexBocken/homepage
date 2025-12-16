@@ -4,8 +4,8 @@ import type { RequestHandler } from './$types';
 interface BibleVerse {
   bookName: string;
   abbreviation: string;
+  bookNumber: number;
   chapter: number;
-  verse: number;
   verseNumber: number;
   text: string;
 }
@@ -25,14 +25,14 @@ async function loadVerses(fetch: typeof globalThis.fetch): Promise<BibleVerse[]>
     }
     const content = await response.text();
     const lines = content.trim().split('\n');
-    
+
     cachedVerses = lines.map(line => {
-      const [bookName, abbreviation, chapter, verse, verseNumber, text] = line.split('\t');
+      const [bookName, abbreviation, bookNumber, chapter, verseNumber, text] = line.split('\t');
       return {
         bookName,
-        abbreviation, 
+        abbreviation,
+        bookNumber: parseInt(bookNumber),
         chapter: parseInt(chapter),
-        verse: parseInt(verse),
         verseNumber: parseInt(verseNumber),
         text
       };
@@ -58,7 +58,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
   try {
     const verses = await loadVerses(fetch);
     const randomVerse = getRandomVerse(verses);
-    
+
     return json({
       text: randomVerse.text,
       reference: formatVerse(randomVerse),

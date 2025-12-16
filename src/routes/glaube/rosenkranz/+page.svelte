@@ -12,6 +12,9 @@ import SalveRegina from "$lib/components/prayers/SalveRegina.svelte";
 import RosaryFinalPrayer from "$lib/components/prayers/RosaryFinalPrayer.svelte";
 import BenedictusMedal from "$lib/components/BenedictusMedal.svelte";
 import CounterButton from "$lib/components/CounterButton.svelte";
+import BibleModal from "$lib/components/BibleModal.svelte";
+
+export let data;
 
 // Mystery variations for each type of rosary
 const mysteries = {
@@ -144,9 +147,14 @@ function getMysteryForWeekday(date, includeLuminous) {
 
 // Determine which mystery to use based on current weekday
 let selectedMystery = getMysteryForWeekday(new Date(), includeLuminous);
+let todaysMystery = selectedMystery; // Track today's auto-selected mystery
 let currentMysteries = mysteries[selectedMystery];
 let currentMysteriesLatin = mysteriesLatin[selectedMystery];
 let currentMysteryTitles = mysteryTitles[selectedMystery];
+let currentMysteryDescriptions = data.mysteryDescriptions[selectedMystery] || [];
+
+// Reactive statement to update mystery descriptions when selectedMystery changes
+$: currentMysteryDescriptions = data.mysteryDescriptions[selectedMystery] || [];
 
 // Function to switch mysteries
 function selectMystery(mysteryType) {
@@ -159,7 +167,7 @@ function selectMystery(mysteryType) {
 // Function to handle toggle change
 function handleToggleChange() {
 	// Recalculate the default mystery for today
-	const todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
+	todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
 	// Update to today's mystery
 	selectMystery(todaysMystery);
 }
@@ -177,6 +185,11 @@ let decadeCounters = {
 	secret4: 0,
 	secret5: 0
 };
+
+// Modal state for displaying Bible citations
+let showModal = false;
+let selectedReference = '';
+let selectedTitle = '';
 
 // Function to advance the counter for a specific decade
 function advanceDecade(decadeNum) {
@@ -209,6 +222,13 @@ function advanceDecade(decadeNum) {
 			}, 500);
 		}
 	}
+}
+
+// Function to handle citation click
+function handleCitationClick(reference, title = '') {
+	selectedReference = reference;
+	selectedTitle = title;
+	showModal = true;
 }
 
 // Map sections to their vertical positions in the SVG
@@ -662,12 +682,12 @@ onMount(() => {
 .prayer-section.decade {
 	scroll-snap-align: start;
 	min-height: 50vh; /* Only decades need minimum height for scroll-snap */
-	padding-bottom: 4.5rem; /* Extra space for the counter button */
+	padding-bottom: 2rem;
 }
 
 @media (max-width: 1023px) {
 	.prayer-section.decade {
-		padding-bottom: 3.5rem; /* Adjusted for mobile padding */
+		padding-bottom: 1.5rem;
 	}
 	.prayer-section {
 		padding: 0.5rem;
@@ -796,35 +816,26 @@ h1 {
 
 /* Luminous mysteries toggle */
 .luminous-toggle {
-	text-align: center;
+	display: flex;
+	justify-content: center;
 	margin-bottom: 2rem;
-	padding: 1rem;
-	background: var(--nord1);
-	border-radius: 8px;
-	max-width: 600px;
+	max-width: 1200px;
 	margin-left: auto;
 	margin-right: auto;
-}
-
-@media(prefers-color-scheme: light) {
-	.luminous-toggle {
-		background: var(--nord5);
-	}
 }
 
 .luminous-toggle label {
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	gap: 1rem;
+	gap: 0.75rem;
 	cursor: pointer;
-	font-size: 1.1rem;
+	font-size: 0.95rem;
 	color: var(--nord4);
 }
 
 @media(prefers-color-scheme: light) {
 	.luminous-toggle label {
-		color: var(--nord0);
+		color: var(--nord2);
 	}
 }
 
@@ -845,6 +856,7 @@ h1 {
 	transition: background 0.3s ease;
 	outline: none;
 	border: none;
+	flex-shrink: 0;
 }
 
 @media(prefers-color-scheme: light) {
@@ -874,32 +886,41 @@ h1 {
 	transform: translateX(20px);
 }
 
-.luminous-toggle .toggle-description {
-	margin-top: 1rem;
-	font-size: 0.95rem;
-	color: var(--nord8);
-	line-height: 1.6;
-	text-align: center;
-	max-width: 500px;
-	margin-left: auto;
-	margin-right: auto;
-}
-
-@media(prefers-color-scheme: light) {
-	.luminous-toggle .toggle-description {
-		color: var(--nord3);
-	}
-}
-
 /* Mystery selector grid */
 .mystery-selector {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	grid-template-columns: repeat(3, 1fr);
 	gap: 1.5rem;
 	margin-bottom: 3rem;
-	max-width: 1000px;
+	max-width: 750px;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+.mystery-selector.four-mysteries {
+	grid-template-columns: repeat(2, 1fr);
+	max-width: 500px;
+}
+
+@media (min-width: 1024px) {
+	.mystery-selector.four-mysteries {
+		grid-template-columns: repeat(4, 1fr);
+		max-width: 900px;
+	}
+}
+
+@media (max-width: 768px) {
+	.mystery-selector:not(.four-mysteries) {
+		grid-template-columns: 1fr;
+		max-width: 400px;
+	}
+}
+
+@media (max-width: 500px) {
+	.mystery-selector.four-mysteries {
+		grid-template-columns: 1fr;
+		max-width: 400px;
+	}
 }
 
 .mystery-button {
@@ -914,6 +935,7 @@ h1 {
 	flex-direction: column;
 	align-items: center;
 	gap: 1rem;
+	position: relative;
 }
 
 @media(prefers-color-scheme: light) {
@@ -929,20 +951,18 @@ h1 {
 
 .mystery-button.selected {
 	border-color: var(--nord10);
-	background: var(--nord2);
+	transform: translateY(-4px);
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
-@media(prefers-color-scheme: light) {
-	.mystery-button.selected {
-		border-color: var(--nord10);
-		background: var(--nord5);
-	}
-}
-
-.mystery-button:nth-child(1):hover { background: var(--nord15); }
-.mystery-button:nth-child(2):hover { background: var(--nord13); }
-.mystery-button:nth-child(3):hover { background: var(--nord14); }
-.mystery-button:nth-child(4):hover { background: var(--nord12); }
+.mystery-button:nth-child(1):hover,
+.mystery-button:nth-child(1).selected { background: var(--nord15); }
+.mystery-button:nth-child(2):hover,
+.mystery-button:nth-child(2).selected { background: var(--nord13); }
+.mystery-button:nth-child(3):hover,
+.mystery-button:nth-child(3).selected { background: var(--nord14); }
+.mystery-button:nth-child(4):hover,
+.mystery-button:nth-child(4).selected { background: var(--nord12); }
 
 .mystery-button svg {
 	width: 80px;
@@ -978,44 +998,126 @@ h1 {
 	font-weight: 700;
 }
 
+/* Today's mystery badge */
+.today-badge {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	background: var(--nord11);
+	color: white;
+	padding: 0.4rem 0.8rem;
+	border-radius: 4px;
+	font-size: 0.85rem;
+	font-weight: 600;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	z-index: 10;
+}
+
 /* Highlighted bead (orange for counting) */
 .rosary-visualization :global(.counted-bead) {
 	fill: var(--nord13) !important;
 	filter: drop-shadow(0 0 8px var(--nord13));
 }
+
+/* Mystery description styling */
+.mystery-description {
+	margin: 1.5rem 0 1.5rem 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	align-items: center;
+}
+
+.mystery-title {
+	font-weight: 700;
+	color: var(--nord10);
+	font-size: 1.1rem;
+	text-align: center;
+}
+
+.decade-buttons {
+	display: flex;
+	flex-direction: row;
+	gap: 1rem;
+	justify-content: flex-end;
+	align-items: center;
+	margin-top: 1.5rem;
+}
+
+.bible-reference-text {
+	color: var(--nord8);
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+@media(prefers-color-scheme: light) {
+	.bible-reference-text {
+		color: var(--nord10);
+	}
+}
+
+.bible-reference-button {
+	background: var(--nord3);
+	border: 2px solid var(--nord2);
+	color: var(--nord6);
+	font-size: 1.2rem;
+	cursor: pointer;
+	padding: 0;
+	width: 3rem;
+	height: 3rem;
+	border-radius: 50%;
+	transition: all 0.2s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bible-reference-button:hover {
+	background: var(--nord8);
+	border-color: var(--nord9);
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.bible-reference-button:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media(prefers-color-scheme: light) {
+	.bible-reference-button {
+		background: var(--nord5);
+		border-color: var(--nord4);
+		color: var(--nord0);
+	}
+
+	.bible-reference-button:hover {
+		background: var(--nord4);
+		border-color: var(--nord3);
+	}
+}
 </style>
 <svelte:head>
-	<title>Rosenkranz - Interaktiv</title>
+	<title>Interaktiver Rosenkranz</title>
 	<meta name="description" content="Interaktive digitale Version des Rosenkranzes zum Mitbeten. Scrolle durch die Gebete und folge der Visualisierung.">
 </svelte:head>
 
 <div class="page-container">
 	<h1>Interaktiver Rosenkranz</h1>
 
-	<!-- Luminous Mysteries Toggle -->
-	<div class="luminous-toggle">
-		<label>
-			<input type="checkbox" bind:checked={includeLuminous} on:change={handleToggleChange} />
-			<span>Lichtreiche Geheimnisse einbeziehen</span>
-		</label>
-		<p class="toggle-description">
-			Die Geheimnisse werden automatisch nach dem Wochenplan ausgewählt.
-			{#if includeLuminous}
-				Mit lichtreichen Geheimnissen: Do=Lichtreich, andere Tage folgen dem traditionellen Plan.
-			{:else}
-				Traditioneller Plan ohne lichtreiche Geheimnisse.
-			{/if}
-			Sie können jederzeit manuell ein anderes Geheimnis wählen.
-		</p>
-	</div>
 
+	<h2 style="text-align:center;">Geheimnisse</h2>
 	<!-- Mystery Selector -->
-	<div class="mystery-selector">
+	<div class="mystery-selector" class:four-mysteries={includeLuminous}>
 		<button
 			class="mystery-button"
 			class:selected={selectedMystery === 'freudenreich'}
 			on:click={() => selectMystery('freudenreich')}
 		>
+			{#if todaysMystery === 'freudenreich'}
+				<span class="today-badge">Heutige</span>
+			{/if}
 				<svg viewBox="-10 0 2058 2048">
   <path d="M1935 90q0 32 -38 91q-21 29 -56 90q-20 55 -63 164q-35 86 -95 143q-22 -21 -43 -45q51 -49 85 -139q49 -130 61 -152q-126 48 -152 63q-76 46 -95 128q-27 -18 -58 -25q28 -104 97 -149q31 -20 138 -52q90 -28 137 -74l29 -39q22 -30 32 -30q21 0 21 26zM1714 653 q-90 30 -113 43q-65 36 -65 90q0 19 20 119q23 116 23 247q0 169 -103 299q-111 141 -275 141q-254 0 -283 87q-16 104 -31 207q-27 162 -76 162q-21 0 -41 -20q-16 -19 -32 -37q-10 3 -33 22q-18 15 -39 15q-28 0 -50 -44.5t-30 -44.5q-10 0 -35.5 11.5t-41.5 11.5 q-47 0 -58.5 -45.5t-21.5 -45.5t-29.5 2.5t-29.5 2.5q-46 0 -46 -30q0 -16 14 -44.5t14 -44.5q0 -8 -46.5 -25.5t-46.5 -48.5q0 -34 35.5 -52t99.5 -31q91 -19 103 -22q113 -32 171 -93q37 -39 105 -165q34 -64 43 -82q26 -53 31 -85q-129 -67 -224 -76q-33 0 -96 -11 q-36 -13 -36 -41q0 -7 2 -19.5t2 -19.5q0 -20 -67.5 -42t-67.5 -64q0 -11 8.5 -30t8.5 -30q0 -15 -79 -39t-79 -63q0 -16 9 -45t9 -45q0 -20 -29 -43q-23 -17 -46 -33q-49 -44 -49 -215q0 -8 1 -15q91 53 194 68l282 16q202 12 304 59q143 65 143 210q0 15 -2 44t-2 44 q0 122 78 122q73 0 108 -133q16 -70 32 -139q21 -81 57 -119q46 -51 130 -51q71 0 122 61q90 107 154 149zM1597 636q-25 -22 -77 -91q-30 -40 -75 -40q-91 0 -131 115q-30 106 -59 213q-44 115 -144 115q-146 0 -146 -180q0 -16 2.5 -46.5t2.5 -46.5q0 -62 -19 -87 q-70 -92 -303 -115q-173 -9 -347 -18q-55 -6 -116 -30v34q0 27 57.5 73.5t57.5 91.5q0 16 -10.5 45t-10.5 44q1 1 7 1q3 0 7 1q146 36 146 105q0 13 -8.5 32.5t-8.5 27.5h10q5 0 9 1q61 15 86 36q32 28 28 85q173 15 372 107q-7 77 -80 215q-67 128 -127 195 q-67 74 -169 104q-96 24 -193 47q-10 3 -29 13q86 18 86 70q0 19 -19 62q15 -5 33 -5q42 0 59 26q8 11 22 61l-1 3q10 0 34.5 -11.5t42.5 -11.5q55 0 88 84q38 -32 64 -32q37 0 66 41q25 -53 33 -151q10 -112 23 -154q43 -136 337 -136q116 0 215 -108q105 -114 105 -277 q0 -23 -12 -112l-28 -207q-4 -30 -4 -42q0 -97 124 -147zM1506 605q0 38 -38 38q-39 0 -39 -38t39 -38q38 0 38 38z" />
   <path d="m 1724.44,1054.6641 c -31.1769,-18 -37.7653,-42.5884 -19.7653,-73.76528 5.3333,-9.2376 12.354,-16.7312 21.0621,-22.4808 6.2201,-4.1068 44.7886,-7.2427 115.7055,-9.4077 70.9168,-2.1649 110.128,-1.0807 117.6336,3.2526 30.0222,17.3334 35.5333,42.45448 16.5333,75.36348 -7.3333,12.7017 -16.1754,20.6833 -26.5263,23.9448 -24.5645,1.2137 -56.7805,3.0135 -96.648,5.3994 -72.6282,5.7957 -115.2931,5.0269 -127.9949,-2.3065 z" />
@@ -1032,6 +1134,9 @@ h1 {
 			class:selected={selectedMystery === 'schmerzhaften'}
 			on:click={() => selectMystery('schmerzhaften')}
 		>
+			{#if todaysMystery === 'schmerzhaften'}
+				<span class="today-badge">Heutige</span>
+			{/if}
 			<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 				<svg  viewBox="0 0 512 512" ><path d="M255.094 24.875c-16.73 9.388-34.47 42.043-41.688 59.47-14.608-2.407-28.87-3.664-42.562-3.75-11.446-.074-22.49.68-33.03 2.218-16.34-8.284-34.766-29.065-42.626-50-9.324 15.704-9.558 42.313-5.782 64.593-19.443 9.72-35.107 23.633-45.53 41.688-7.262 12.577-11.5 26.34-12.97 40.875 13.294-25.904 35-46.957 65.656-54.345-34.99 31.783-59.85 87.186-51.5 129.406-1.2 22.87-9.48 37.647-24.75 44.595 16.335 4.59 35.497 3.343 49.438-1.28 24.94 34.82 60.818 67.882 105.063 94.342-6.952 17.613-16.677 49.21-16.47 66.032 10.846-13.178 37.433-40.585 61.72-42.783 23.656 10.27 47.35 17.698 70.312 22.313 12.423 17.25 12.895 38.867 7.375 53.594 16.402-9.2 33.82-33.187 39.938-48 47.1 1.423 88.046-10.534 114.718-35.563 17.536 5.52 30.744 15.707 39.813 30.5.243-19.578-8.05-44.353-18-60.31 13.42-28.268 12.786-61.81.5-96.158l.405.47c9.976-11.804 18.304-33.19 18.063-52.907-8.535 10.373-20.727 15.14-36.75 14.188-13.56-22.597-31.81-44.812-54.032-65.375 10.56-19.27 30.402-36.43 44.156-47.97-18.985-5.337-67.794 5.2-80.78 17.782l5.906 8.5c5.637 11.99 9.503 24.423 11.093 37.063-26.323-37.275-70.72-74.72-114.905-95.625-15.894-25.424-19.322-56.118-12.78-73.563zm-82.875 97.063c1.13-.015 2.258-.008 3.405 0 31.56.2 68.888 8.842 107 25.656-8.8 20.095-14.74 44.482-10 61.344 13.33-18.637 37.313-34.22 55.406-37.5 55.904 34.315 96.215 78.718 111.658 118.718l.093.22c16.088 37.88 13.36 85.186-26.56 117.312 4.79-11.41 7.986-23.828 9.5-36.438-14.078 10.012-33.524 15.304-56.314 15.97-1.954-17.242-9.117-52.874-22.28-65.72 1.565 16.122-8.11 46.272-26.22 61.063-31.916-6.495-66.794-19.67-101.03-39.438-9.538-5.506-18.65-11.307-27.314-17.344-3.444-23.614 7.842-53.562 20.563-64.03-18.967-.234-46.71 22.156-59.313 32.75-40.974-38.47-64.14-81.11-61.25-115 16.275-1.708 36.144.927 51.72 8-3.92-15.382-18.553-31.733-34.407-44.344 14.757-13.826 37.7-20.852 65.344-21.22z"/></svg>
 			</svg>
@@ -1043,6 +1148,9 @@ h1 {
 			class:selected={selectedMystery === 'glorreichen'}
 			on:click={() => selectMystery('glorreichen')}
 		>
+			{#if todaysMystery === 'glorreichen'}
+				<span class="today-badge">Heutige</span>
+			{/if}
 		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="-10 0 2060 2048">
    <path
 d="M1968 505l-119 632q101 61 101 163q0 149 -228 212q-171 47 -356 47h-682q-47 0 -111 -8q-210 -26 -293 -55q-180 -62 -180 -196q0 -124 101 -163l-119 -632h37q87 0 170 43q-18 85 -18 103q0 116 75 130q31 -47 77 -129l40 147q49 -37 95 -37t100 37q9 -38 31 -113
@@ -1063,6 +1171,9 @@ q0 -31 22 -54.5t52 -23.5q31 0 52.5 23.5t21.5 54.5zM596 888q0 34 -34 34q-30 0 -30
 			class:selected={selectedMystery === 'lichtreichen'}
 			on:click={() => selectMystery('lichtreichen')}
 		>
+			{#if todaysMystery === 'lichtreichen'}
+				<span class="today-badge">Heutige</span>
+			{/if}
 					<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="-10 0 2156 2048">
    <path
 d="M1668 383q0 14 -48.5 92.5t-64.5 96t-41 17.5q-53 0 -53 -54q0 -16 46 -92q41 -68 60 -92q16 -20 43 -20q58 0 58 52zM688 535q0 54 -54 54q-16 0 -30 -7q-10 -5 -66 -95.5t-56 -103.5q0 -52 57 -52q22 0 34 11q20 31 53 81q62 90 62 112zM2064 842q0 59 -56 100
@@ -1074,6 +1185,14 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 			<h3>Lichtreichen</h3>
 		</button>
 		{/if}
+	</div>
+
+	<!-- Luminous Mysteries Toggle -->
+	<div class="luminous-toggle">
+		<label>
+			<input type="checkbox" bind:checked={includeLuminous} on:change={handleToggleChange} />
+			<span>Lichtreiche Geheimnisse einbeziehen</span>
+		</label>
 	</div>
 
 	<div class="rosary-layout">
@@ -1242,14 +1361,29 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 					data-section="secret{decadeNum}"
 				>
 					<h2>{decadeNum}. Gesätz: {currentMysteryTitles[decadeNum - 1]}</h2>
+
+					<!-- Mystery description with Bible reference button -->
 					<h3>Ave Maria <span class="repeat-count">(10×)</span></h3>
 					<AveMaria
 						mysteryLatin={currentMysteriesLatin[decadeNum - 1]}
 						mystery={currentMysteries[decadeNum - 1]}
 					/>
 
-					<!-- Counter button -->
-					<CounterButton onClick={() => advanceDecade(decadeNum)} />
+					<!-- Bible reference and counter buttons -->
+					<div class="decade-buttons">
+						{#if currentMysteryDescriptions[decadeNum - 1]}
+							{@const description = currentMysteryDescriptions[decadeNum - 1]}
+							<span class="bible-reference-text">{description.reference}</span>
+							<button
+								class="bible-reference-button"
+								on:click={() => handleCitationClick(description.reference, description.title)}
+								aria-label="Bibelstelle anzeigen"
+							>
+								📖
+							</button>
+						{/if}
+						<CounterButton onClick={() => advanceDecade(decadeNum)} />
+					</div>
 				</div>
 
 				<!-- Transition prayers (Gloria, Fatima, Paternoster) -->
@@ -1437,3 +1571,8 @@ Anders als die Geheimnisse in Deutsch ist es üblich beim beten des Rosenkranzes
 </ol>
 	</div>
 </div>
+
+<!-- Bible citation modal -->
+{#if showModal}
+	<BibleModal reference={selectedReference} title={selectedTitle} onClose={() => showModal = false} />
+{/if}
