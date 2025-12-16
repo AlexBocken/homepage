@@ -74,7 +74,7 @@ h1{
 </Gebet>
 
 <Gebet name={"Glória"} is_bilingue={true}>
-	<p slot="intro">Der uralte Gesang beginnt mit den Worten, mit denen die Engelscharen den neugeborenen Welterlöser feierten. Er preist zunächst Gott Vater, dann Gott Sohn; er schließt mit einer Huldigung an die Heiligste Dreifaltigkeit, wobei man sich mit dem großen Kreuze bezeichnet.</p>
+	<p slot="intro">Der uralte Gesang beginnt mit den Worten, mit denen die Engelscharen den neugeborenen Welterlöser feierten. Er preist zunächst Gott Vater, dann Gott Sohn; er schliesst mit einer Huldigung an die Heiligste Dreifaltigkeit, wobei man sich mit dem grossen Kreuze bezeichnet.</p>
 	<Gloria />
 </Gebet>
 

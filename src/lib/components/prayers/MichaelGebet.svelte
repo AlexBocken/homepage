@@ -12,7 +12,7 @@
 	<v lang="la">tuque, Prínceps milítæ cæléstis,</v>
 	<v lang="de">Du aber, Fürst der himmlischen Heerscharen,</v>
 	<v lang="la">Sátanam aliósque spíritus malígnos,</v>
-	<v lang="de">stoße den Satan und die anderen bösen Geister,</v>
+	<v lang="de">stosse den Satan und die anderen bösen Geister,</v>
 	<v lang="la">qui ad perditiónem animárum</v>
 	<v lang="la">pervagántur in múndo,</v>
 	<v lang="de">die in der Welt umhergehen,</v>

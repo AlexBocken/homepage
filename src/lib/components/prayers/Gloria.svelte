@@ -16,7 +16,7 @@
 	<v lang="la"><i><sup>⚬</sup></i> Grátias ágimus tibi</v>
 	<v lang="de"><i><sup>⚬</sup></i> Wir sagen Dir Dank</v>
 	<v lang="la">propter magnam glóriam tuam.</v>
-	<v lang="de">ob Deiner großen Herrlichkeit.</v>
+	<v lang="de">ob Deiner grossen Herrlichkeit.</v>
 	<v lang="la">Dómine Deus, Rex cæléstis,</v>
 	<v lang="de">Herr und Gott, König des Himmels,</v>
 	<v lang="la">Deus Pater omnípotens.</v>

@@ -12,11 +12,11 @@
 	<v lang="la">concéde, quæsumus;</v>
 	<v lang="de">verleihe uns, wir bitten dich,</v>
 	<v lang="la">út, hæc mystéria sanctíssimo beátæ Maríæ Vírginis Rosário recoléntes;</v>
-	<v lang="de">daß wir, indem wir die Geheimisse des heiligen Rosenkranzes der allerseligsten Jungfrau ehren,</v>
+	<v lang="de">dass wir, indem wir die Geheimisse des heiligen Rosenkranzes der allerseligsten Jungfrau ehren,</v>
 	<v lang="la">ét imitémur quód cóntinent,</v>
 	<v lang="de">was sie enthalten nachahmen</v>
 	<v lang="la">ét quód promíttunt, assequámur.</v>
-	<v lang="de">und dadurch erlangen, was uns in denselben verheißen ist.</v>
+	<v lang="de">und dadurch erlangen, was uns in denselben verheissen ist.</v>
 	<v lang="la">Pér eúmdem Chrístum Dóminum nóstrum.</v>
 	<v lang="de">Durch unsern Herrn Jesus Christus.</v>
 	<v lang="la">Ámen.</v>
