@@ -18,11 +18,10 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   await dbConnect();
-  
+
   try {
     const now = new Date();
-    console.log(`[Cron] Starting recurring payments processing at ${now.toISOString()}`);
-    
+
     // Find all active recurring payments that are due
     const duePayments = await RecurringPayment.find({
       isActive: true,
@@ -34,16 +33,12 @@ export const POST: RequestHandler = async ({ request }) => {
       ]
     });
 
-    console.log(`[Cron] Found ${duePayments.length} due recurring payments`);
-
     const results = [];
     let successCount = 0;
     let failureCount = 0;
 
     for (const recurringPayment of duePayments) {
       try {
-        console.log(`[Cron] Processing recurring payment: ${recurringPayment.title} (${recurringPayment._id})`);
-
         // Create the payment
         const payment = await Payment.create({
           title: `${recurringPayment.title} (Auto)`,
@@ -89,8 +84,6 @@ export const POST: RequestHandler = async ({ request }) => {
           success: true
         });
 
-        console.log(`[Cron] Successfully processed: ${recurringPayment.title}, next execution: ${nextExecutionDate.toISOString()}`);
-
       } catch (paymentError) {
         console.error(`[Cron] Error processing recurring payment ${recurringPayment._id}:`, paymentError);
         failureCount++;
@@ -103,8 +96,6 @@ export const POST: RequestHandler = async ({ request }) => {
         });
       }
     }
-
-    console.log(`[Cron] Completed processing. Success: ${successCount}, Failures: ${failureCount}`);
 
     return json({ 
       success: true,

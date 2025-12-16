@@ -33,7 +33,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     switch (action) {
       case 'execute':
-        console.log(`[API] Manual execution requested by ${auth.user.nickname}`);
         await recurringPaymentScheduler.executeNow();
         return json({
           success: true,
