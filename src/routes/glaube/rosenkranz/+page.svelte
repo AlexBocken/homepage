@@ -24,7 +24,7 @@ const mysteries = {
 	],
 	schmerzhaften: [
 		"Jesus, der für uns Blut geschwitzt hat.",
-		"Jesus, der für uns gegeißelt worden ist.",
+		"Jesus, der für uns gegeisselt worden ist.",
 		"Jesus, der für uns mit Dornen gekrönt worden ist.",
 		"Jesus, der für uns das schwere Kreuz getragen hat.",
 		"Jesus, der für uns gekreuzigt worden ist."
@@ -87,7 +87,7 @@ const mysteryTitles = {
 	],
 	schmerzhaften: [
 		"Todesangst",
-		"Geißelung",
+		"Geisselung",
 		"Dornenkrönung",
 		"Kreuzweg",
 		"Kreuzigung"
@@ -1388,7 +1388,7 @@ Der Plan ohne lichtreiche Geheimnisse ist wie folgt:
 <h3>Die schmerzhaften Geheimnisse <i>(über das Leiden und Sterben Jesu)</i></h3>
 <ol><!-- dolorosa -->
 	<li>... Jesus, der für uns Blut geschwitzt hat.</li>
-	<li>... Jesus, der für uns gegeißelt worden ist.</li>
+	<li>... Jesus, der für uns gegeisselt worden ist.</li>
 	<li>... Jesus, der für uns mit Dornen gekrönt worden ist.</li>
 	<li>... Jesus, der für uns das schwere Kreuz getragen hat.</li>
 	<li>... Jesus, der für uns gekreuzigt worden ist.</li>

@@ -74,16 +74,16 @@ h4{
 <h2>Der Osterfestkreis</h2>
 <div class=schott>
 <p>
-Der Weihnachtsfestkreis schließt mit der Woche vor Septuagesima.
+Der Weihnachtsfestkreis schliesst mit der Woche vor Septuagesima.
 Der ersehnte Erlöser ist gekommen und hat in seiner ersten Ankunft zugleich seine zweite, die am Gerichtstage erfolgen wird, begründet und begonnen.
 </p>
 <p>
 Jetzt ist die Zeit des anstrengten Kampfes gegen Sünde, Welt und Fleisch gekommen, die Zeit der mühevollen Aussaat, des sturmumtobten Wachsens.
-Durch Kampf zum Sieg, durch Sterben zum Leben, zur Auferstehung, zur Vollherrschaft Christi und schließlich zur Verklärung im Osterlichte!
-Christus soll in uns den Thron seiner Herrschaft errichten, einer Herrschaft, die uns nicht erdrückt, sondern erhöht; nicht beraubt, sondern bereichert; nicht einschränkt, sondern innerlich weitet und uns einmal mitherrschen läßt im ewigen Ostern des Himmels.
+Durch Kampf zum Sieg, durch Sterben zum Leben, zur Auferstehung, zur Vollherrschaft Christi und schliesslich zur Verklärung im Osterlichte!
+Christus soll in uns den Thron seiner Herrschaft errichten, einer Herrschaft, die uns nicht erdrückt, sondern erhöht; nicht beraubt, sondern bereichert; nicht einschränkt, sondern innerlich weitet und uns einmal mitherrschen lässt im ewigen Ostern des Himmels.
 </p>
 <p>
-Der Osterfestkreis umfaßt drei Abschnitte:
+Der Osterfestkreis umfasst drei Abschnitte:
 die Zeit der Vorbereitung: Vorfasten- und Fastenzeit;
 die eigentliche Festzeit: Oster- und Pfingstfest;
 endlich die Zeit nach Pfingsten
@@ -94,15 +94,15 @@ endlich die Zeit nach Pfingsten
 <h3> 1. Die Vorfastenzeit</h3>
 <div class=schott >
 	<p>
-	Sie umfaßt die Sonntage Septuagesima, Sexagesima und Quinquagesima.
+	Sie umfasst die Sonntage Septuagesima, Sexagesima und Quinquagesima.
 	Diese Namen bezeichnen nicht die genauen Abstände bis zum Osterfest, sonder deuten auf die rund berechnete 70tägige, 60tägige, 50tägige Vorbereitungzeit auf Ostern.
 	</p>
 	<p>
-	Der Name Septuagesima weckt die Erinnerung an die 70 Jahre der Gefangenschaft, welche die Juden zur Strafe für ihre Untreue fern von Jerusalem, zu Babylon, verbringen mußten, bevor sie wieder ins Gelobte Land zurückkerhen durften.
+	Der Name Septuagesima weckt die Erinnerung an die 70 Jahre der Gefangenschaft, welche die Juden zur Strafe für ihre Untreue fern von Jerusalem, zu Babylon, verbringen mussten, bevor sie wieder ins Gelobte Land zurückkerhen durften.
 	So mahnt uns diese Zeit an unsre eigene Pilgerschaft aus der Fremde, aus der gottfernen Welt (Babylon), zum wahren Vaterland (Jerusalem).
 	Diese Pilgerschaft ist für uns eine beständiger Kampf gegen die Feinde unsres Heiles.
-	Für den göttlichen Heiland bedeutet das öffentliche Wirken Mühsal und Leiden und schließlich den Tod;
-	so muß sich auch unser Leben, soll es dem seinen nachgebildet werden, auf Kämpfe, selbst auf ein geistiges Sterben gefaßt machen;
+	Für den göttlichen Heiland bedeutet das öffentliche Wirken Mühsal und Leiden und schliesslich den Tod;
+	so muss sich auch unser Leben, soll es dem seinen nachgebildet werden, auf Kämpfe, selbst auf ein geistiges Sterben gefasst machen;
 	erst dann wird es mit dem Heiland zum endlichen Triumph gelangen.
 	</p>
 </div>
@@ -123,14 +123,14 @@ endlich die Zeit nach Pfingsten
 		<h3> Epistel </h3>
 		<div class="epistel bibel">
 			<ol><i>1 Cor. 9</i>
-			<li value=24>Wisset ihr nicht, daß die, welche in der Rennbahn laufen, zwar alle laufen, aber nur einer erlangt den Preis? Laufet fo, daß ihr ihn erlanget!</li>
+			<li value=24>Wisset ihr nicht, dass die, welche in der Rennbahn laufen, zwar alle laufen, aber nur einer erlangt den Preis? Laufet fo, dass ihr ihn erlanget!</li>
 			<li>Jeder aber, der im Kampfspiele ringt, enthält sich von allem, und zwar jene, um eine vergängliche Krone zu empfangen, wir aber eine unvergängliche.</li>
 			<li>Ich laufe demnach, nicht wie in's Ungewisse; ich kämpfe, nicht indem ich Luftstreiche thue,</li>
-			<li>sondern ich züchtige meinen Leib, und bringe ihn in die Botmäßigkeit, damit ich nicht etwa, nachdem ich anderen gepredigt habe, selbst verworfen werde.</li>
+			<li>sondern ich züchtige meinen Leib, und bringe ihn in die Botmässigkeit, damit ich nicht etwa, nachdem ich anderen gepredigt habe, selbst verworfen werde.</li>
 			<i>1 Cor. 10</i>
-			<li value=1>Denn ich will euch nicht in Unwissenheit lassen, Brüder! Daß unsere Väter alle unter der Wolke waren, und alle durch das Meer hindurch gingen,</li>
+			<li value=1>Denn ich will euch nicht in Unwissenheit lassen, Brüder! Dass unsere Väter alle unter der Wolke waren, und alle durch das Meer hindurch gingen,</li>
 			<li>und alle auf Moses getauft wurden, in der Wolke und in dem Meere,</li>
-			<li>und alle dieselbe geistige Speise aßen,</li>
+			<li>und alle dieselbe geistige Speise assen,</li>
 			<li>und alle dieselbe geistigen Trank tranken (sie tranken nämlich aus einem geistigen, sie begleitenden Felsen, der Felsen aber war Christus);</li>
 			<li>aber an der Mehrzahl von ihnen hatte Gott kein Wohlgefallen; denn sie wurden niedergestreckt in der Wüste.</li>
 			</ol>
@@ -141,14 +141,14 @@ endlich die Zeit nach Pfingsten
 			<ol><i>Matth. 20</i>
 				<li>Das Himmelreich ist gleich einem Hausvater, der am frühen Morgen ausging, um Arbeiter in seinen Weinberg zu dingen.</li>
 				<li>Nachdem er nun mit den Arbeitern um einen Denar für den Tag übereingekommen war, sandte er sie in seinen Weinberg.</li>
-				<li>Und als er um die dritte Stunde ausging, sah er andere au  dem Markte müßig stehen,</li>
+				<li>Und als er um die dritte Stunde ausging, sah er andere au  dem Markte müssig stehen,</li>
 				<li>und sprach zu ihnen: Gehet auch ihr in meinen Weinberg, und was recht ist, werde ich euch geben.</li>
 				<li>Sie aber gingen hin. Abermals ging er um die sechste und neunte Stunde aus, und that ebenso.</li>
-				<li>Um die elfte Stunde aber ging er aus, und fand andere andere stehen, und sprach zu ihnen: Was stehet ihr hier den ganzen Tag müßig?</li>
+				<li>Um die elfte Stunde aber ging er aus, und fand andere andere stehen, und sprach zu ihnen: Was stehet ihr hier den ganzen Tag müssig?</li>
 				<li>Sie antworteten ihm: Weil uns niemand gedungen hat. Da sprach er zu ihnen: Gehet auch ihr in meinen Weinberg,</li>
 				<li>Als es nun Abend geworden, sagte der Herr des Weinberges zu seinem Verwalter: Rufe die Arbeiter, und gib ihnen den Lohn, von den letzten anfangend, bis zu den ersten.</li>
 				<li>Da nun die kamen, welche um die elfte Stunde eingetreten waren, empfingen sie jeder einen Denar.</li>
-				<li>Wie aber auch die ersten kamen, meinten sie, daß sie mehr empfangen würden, aber auch sie erhielten jeder einen Denar.</li>
+				<li>Wie aber auch die ersten kamen, meinten sie, dass sie mehr empfangen würden, aber auch sie erhielten jeder einen Denar.</li>
 				<li>Und da sie ihn empfingen, murrten sie wider den Hausvater.</li>
 				<li>und sprachen: Siese letzten haben eine einzige Stunde gearbeitet, und du hast sie uns gleich gehalten, die wir die Last und Hitze des Tages getragen haben.</li>
 				<li>Er aber antowrtete einem aus ihnen, und sprach: Freund! ich thue dir nicht Unrecht; bist du nicht auf einen Denar mit mir eins geworden?</li>
@@ -168,7 +168,7 @@ endlich die Zeit nach Pfingsten
 		Wir sollen gleich den Sportlern verzichten für das Heil der Seelen, dem Heil der eigenen Seele.
 		</p>
 		<p>
-		Diese Bildnis der Spiele im Stadion waren vermutlich ein gutes Bildnis für die Korinter. So hatten sie alle zwei Jahre Sportspiele von April bis Anfang Mai, welche wie auch Fußball heute noch, vieles der Gesellschaft lahmlegte.
+		Diese Bildnis der Spiele im Stadion waren vermutlich ein gutes Bildnis für die Korinter. So hatten sie alle zwei Jahre Sportspiele von April bis Anfang Mai, welche wie auch Fussball heute noch, vieles der Gesellschaft lahmlegte.
 		Auch die Gläubigen gehörten damals wie heute zu den Begeisterten solcher Spiele.
 		</p>
 
@@ -194,7 +194,7 @@ endlich die Zeit nach Pfingsten
 		So beging er zwei Todsünden durch einen Blick auf eine Frau: Ehebruch und Mord am Manne dieser Frau.
 		</p>
 		<p>
-		Als Kind hat er Löwen und Bären mit bloßen Händen besiegt, aber nun wird dieser einst mutige und starke Mann bezwungen wegen seinem <em>Müßiggang</em>.
+		Als Kind hat er Löwen und Bären mit blossen Händen besiegt, aber nun wird dieser einst mutige und starke Mann bezwungen wegen seinem <em>Müssiggang</em>.
 		Wie man zu sagen pflegt: Wer man kein Beschäftigugn welche Platz einnimmt so wird der Teufel selbst den ganzen Platz einnehmen, den wir freigelassen haben.
 		Es wäre besser gewesen für David, noch in der Ängstlichkeit der Flucht vor Saulus zu sein, als in seinem Palast in Jerusalem.
 		</p>
@@ -208,10 +208,10 @@ endlich die Zeit nach Pfingsten
 		</div>
 
 		<p>
-		Müßiggang hat ihn besiegt und der Gedanke, dass er nichts mehr zu erobern hatte.
+		Müssiggang hat ihn besiegt und der Gedanke, dass er nichts mehr zu erobern hatte.
 		Es gibt immer etwas weiteres zu erobern. Es gibt immer eine Ecke in unserer Seele die uns, und damit Gott, nicht gehört.
 		Es gibt immer etwas, was man besser tun kann, es gibt immer schlechte Gewohnheiten die man ablegen muss.
-		In dieser Vorfastenzeit geht es darum sich diesem deutlicher bewusst zu werden und seinen Kampf gegen diese Müßigkeit für die kommende Fastenzeit zu planen.
+		In dieser Vorfastenzeit geht es darum sich diesem deutlicher bewusst zu werden und seinen Kampf gegen diese Müssigkeit für die kommende Fastenzeit zu planen.
 		</p>
 		<p>
 		Als Beispiel hilft hier das Königreich Spanien. Jahrhunderte von Kampf um die Anwesenheit der Muslime zu bekämpfen. Als sie endlich die letzte Stadt, welche unter der Vollmacht der Muslime war, erobert hatten, hat die Vorsehung ihnen noch etwas zu erobern gegeben:
@@ -226,7 +226,7 @@ endlich die Zeit nach Pfingsten
 		<p>
 		Von den Ägyptern durch die Wunder Gottes befreit, sind sie nun auf dem weiten Weg zum versprochenen Land.
 		Sie schicken Kundschafter in dieses Land. Diese Kundschafter gehen und verbringen 40 Tage dort.
-		Diese Kundschafter finden ein wunderbares Land. Es fließt Honig und Milch. Aber es ist nicht unbevölkert. Es gibt viele, starke Stämme.
+		Diese Kundschafter finden ein wunderbares Land. Es fliesst Honig und Milch. Aber es ist nicht unbevölkert. Es gibt viele, starke Stämme.
 		Die Kundschafter haben Angst, sie verbreiteten Lügen über dieses Land da sie Angst haben zu fallen im Versuch es einzunehmen.
 		Das Volk will murren, beklagen. Sie wollen nicht kämpfen.
 		</p>
@@ -251,7 +251,7 @@ endlich die Zeit nach Pfingsten
 		Diese Knechtschaft soll abgelegt werden um so zu einem kämpferischen Geist zu kommen. Das wird auch bestätigt im Johannesevangelium wo steht:
 		<div class=bibel>
 			<ol><i> Johannes 15</i>
-				<li value=15>Ich nenne euch nun nicht mehr Knechte, denn der Knecht weiß nicht, was sein Herr tut; euch aber habe ich Freunde genannt; denn alles, was ich von meinem Vater gehört, habe ich euch kundgetan.
+				<li value=15>Ich nenne euch nun nicht mehr Knechte, denn der Knecht weiss nicht, was sein Herr tut; euch aber habe ich Freunde genannt; denn alles, was ich von meinem Vater gehört, habe ich euch kundgetan.
 				</li>
 			</ol>
 		</div>
@@ -280,7 +280,7 @@ endlich die Zeit nach Pfingsten
 				<li value=10>Simon Petrus also, der sein Schwert hatte, zog es und schlug den Knecht des Hohenpriesters, und hieb ihm sein rechtes Ohr ab. Der Name des Knechtes aber war Malchus.</li>
 				<i>Matthäus 26</i>
 				<li value=35>Da sprach Petrus zu ihm: Wenn ich auch mit dir sterben müsste, werde ich dich doch nicht verleugnen. In gleicher Weise sprachen auch alle Jünger.</li>
-				<li value=69>Petrus aber saß draußen in dem Hofe; und eine Magd trat zu ihm hin, und sprach: Du warest auch bei Jesus, dem Galiläer!</li>
+				<li value=69>Petrus aber sass draussen in dem Hofe; und eine Magd trat zu ihm hin, und sprach: Du warest auch bei Jesus, dem Galiläer!</li>
 				<li>Doch er leugnete vor allen, und sprach: Ich weiss nicht, was du sagst.</li>
 			</ol>
 		</div>

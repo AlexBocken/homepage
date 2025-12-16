@@ -52,7 +52,7 @@ h1{
 
 <p>
 	Die Fensterprobe ist eine Methode um den optimalen Knetzustand eines Teiges zu bestimmen.
-	Dazu wird ein kleines, ca. Walnussgrosses Stück Teig zwischen den Fingern auseinandergezogen. Ist der Teig elastisch und reißt nicht bis der Teig so dünn ist, dass man leicht licht durchsehen kann, so ist der Teig optimal verknetet.
+	Dazu wird ein kleines, ca. Walnussgrosses Stück Teig zwischen den Fingern auseinandergezogen. Ist der Teig elastisch und reisst nicht bis der Teig so dünn ist, dass man leicht licht durchsehen kann, so ist der Teig optimal verknetet.
 </p>
 <p>
 	Teig lässt sich leichter verkneten wenn er noch trockener ist. Daher lohnt es sich zunächst etwa 10% der Flüssigkeit zurückzuhalten und erst nach und nach zuzugeben nachdem der Teig bereits für einige Minuten geknetet wurde.

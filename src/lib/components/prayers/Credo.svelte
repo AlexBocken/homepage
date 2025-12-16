@@ -47,7 +47,7 @@
 	<v lang="la">Et resurréxit tértia die,</v>
 	<v lang="de">Er ist auferstanden am dritten Tage,</v>
 	<v lang="la">secúndum Scriptúras.</v>
-	<v lang="de">gemäß der Schrift;</v>
+	<v lang="de">gemäss der Schrift;</v>
 	<v lang="la">Et ascéndit in cáelum:</v>
 	<v lang="de">Er ist aufgefahren in den Himmel</v>
 	<v lang="la">sedet ad déxteram Patris.</v>
