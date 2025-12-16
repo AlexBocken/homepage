@@ -44,5 +44,10 @@
 		"mongoose": "^8.0.0",
 		"node-cron": "^4.2.1",
 		"sharp": "^0.33.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild"
+		]
 	}
 }

@@ -9,6 +9,7 @@ import AveMaria from "$lib/components/prayers/AveMaria.svelte";
 import GloriaPatri from "$lib/components/prayers/GloriaPatri.svelte";
 import FatimaGebet from "$lib/components/prayers/FatimaGebet.svelte";
 import SalveRegina from "$lib/components/prayers/SalveRegina.svelte";
+import RosaryFinalPrayer from "$lib/components/prayers/RosaryFinalPrayer.svelte";
 import BenedictusMedal from "$lib/components/BenedictusMedal.svelte";
 import CounterButton from "$lib/components/CounterButton.svelte";
 
@@ -75,6 +76,38 @@ const mysteriesLatin = {
 	]
 };
 
+// Short titles for mysteries (for display in headings)
+const mysteryTitles = {
+	freudenreich: [
+		"Verkündigung",
+		"Heimsuchung",
+		"Geburt",
+		"Darstellung",
+		"Wiederfindung"
+	],
+	schmerzhaften: [
+		"Todesangst",
+		"Geißelung",
+		"Dornenkrönung",
+		"Kreuzweg",
+		"Kreuzigung"
+	],
+	glorreichen: [
+		"Auferstehung",
+		"Himmelfahrt",
+		"Geistsendung",
+		"Aufnahme Mariens",
+		"Krönung Mariens"
+	],
+	lichtreichen: [
+		"Taufe",
+		"Hochzeit zu Kana",
+		"Verkündigung des Reiches",
+		"Verklärung",
+		"Einsetzung der Eucharistie"
+	]
+};
+
 // Toggle for including Luminous mysteries
 let includeLuminous = true;
 
@@ -113,12 +146,14 @@ function getMysteryForWeekday(date, includeLuminous) {
 let selectedMystery = getMysteryForWeekday(new Date(), includeLuminous);
 let currentMysteries = mysteries[selectedMystery];
 let currentMysteriesLatin = mysteriesLatin[selectedMystery];
+let currentMysteryTitles = mysteryTitles[selectedMystery];
 
 // Function to switch mysteries
 function selectMystery(mysteryType) {
 	selectedMystery = mysteryType;
 	currentMysteries = mysteries[mysteryType];
 	currentMysteriesLatin = mysteriesLatin[mysteryType];
+	currentMysteryTitles = mysteryTitles[mysteryType];
 }
 
 // Function to handle toggle change
@@ -1153,7 +1188,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.start1}
 				data-section="start1"
 			>
-				<h3>Ave Maria</h3>
+				<h3>Ave Maria: Glaube</h3>
 				<AveMaria
 					mysteryLatin="Jesus, qui adáugeat nobis fidem"
 					mystery="Jesus, der in uns den Glauben vermehre"
@@ -1166,7 +1201,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.start2}
 				data-section="start2"
 			>
-				<h3>Ave Maria</h3>
+				<h3>Ave Maria: Hoffnung</h3>
 				<AveMaria
 					mysteryLatin="Jesus, qui corróboret nobis spem"
 					mystery="Jesus, der in uns die Hoffnung stärke"
@@ -1179,7 +1214,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.start3}
 				data-section="start3"
 			>
-				<h3>Ave Maria</h3>
+				<h3>Ave Maria: Liebe</h3>
 				<AveMaria
 					mysteryLatin="Jesus, qui perficiat in nobis caritátem"
 					mystery="Jesus, der in uns die Liebe entzünde"
@@ -1206,7 +1241,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 					bind:this={sectionElements[`secret${decadeNum}`]}
 					data-section="secret{decadeNum}"
 				>
-					<h2>{decadeNum}. Gesätz</h2>
+					<h2>{decadeNum}. Gesätz: {currentMysteryTitles[decadeNum - 1]}</h2>
 					<h3>Ave Maria <span class="repeat-count">(10×)</span></h3>
 					<AveMaria
 						mysteryLatin={currentMysteriesLatin[decadeNum - 1]}
@@ -1252,6 +1287,11 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 
 				<h3>Salve Regina</h3>
 				<SalveRegina />
+
+				<h3>Schlussgebet</h3>
+				<RosaryFinalPrayer />
+
+				<h3 style="text-align: center; font-size: 2.5rem; margin-top: 2rem;">♱</h3>
 			</div>
 		</div>
 	</div>
