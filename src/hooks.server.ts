@@ -70,7 +70,7 @@ async function authorization({ event, resolve }) {
 // Bible verse functionality for error pages
 async function getRandomVerse(fetch: typeof globalThis.fetch): Promise<any> {
   try {
-    const response = await fetch('/api/bible-quote');
+    const response = await fetch('/api/glaube/bibel/zufallszitat');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

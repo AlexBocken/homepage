@@ -10,9 +10,6 @@ export let onClick;
 
 <style>
 .counter-button {
-	position: absolute;
-	bottom: 0.5rem;
-	right: 0.5rem;
 	width: 3rem;
 	height: 3rem;
 	border-radius: 50%;
