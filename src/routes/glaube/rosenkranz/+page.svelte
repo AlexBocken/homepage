@@ -65,7 +65,7 @@ const mysteriesLatin = {
 	],
 	glorreichen: [
 		"Jesus, qui resurréxit a mórtuis.",
-		"Jesus, qui ascendit in cælum .",
+		"Jesus, qui ascendit in cælum.",
 		"Jesus, qui misit Spíritum Sanctum.",
 		"Jesus, qui te, virgo, in cælum assúmpsit.",
 		"Jesus, qui te, virgo, in cælo coronávit."
