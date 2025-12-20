@@ -20,7 +20,7 @@ export let data;
 const mysteries = {
 	freudenreich: [
 		"Jesus, den du, o Jungfrau, vom Heiligen Geist empfangen hast.",
-		"Jesus, den du, o Jungfrau, zu Elisabet getragen hast.",
+		"Jesus, den du, o Jungfrau, zu Elisabeth getragen hast.",
 		"Jesus, den du, o Jungfrau, in Betlehem geboren hast.",
 		"Jesus, den du, o Jungfrau, im Tempel geopfert hast.",
 		"Jesus, den du, o Jungfrau, im Tempel wiedergefunden hast."
@@ -1506,7 +1506,7 @@ Der Plan ohne lichtreiche Geheimnisse ist wie folgt:
 <h3>Die freudenreichen Geheimnisse <i>(über die Geburt und Kindheit Jesu)</i></h3>
 <ol><!-- gaudiosa -->
 	<li>... Jesus, den du, o Jungfrau, vom Heiligen Geist empfangen hast.</li>
-	<li>... Jesus, den du, o Jungfrau, zu Elisabet getragen hast.</li>
+	<li>... Jesus, den du, o Jungfrau, zu Elisabeth getragen hast.</li>
 	<li>... Jesus, den du, o Jungfrau, in Betlehem geboren hast.</li>
 	<li>... Jesus, den du, o Jungfrau, im Tempel geopfert hast.</li>
 	<li>... Jesus, den du, o Jungfrau, im Tempel wiedergefunden hast.</li>
