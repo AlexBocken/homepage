@@ -357,7 +357,39 @@ onMount(() => {
 	const observer = new IntersectionObserver((entries) => {
 		entries.forEach((entry) => {
 			if (entry.isIntersecting && scrollLock !== 'svg' && scrollLock !== 'click') {
-				activeSection = entry.target.dataset.section;
+				const section = entry.target.dataset.section;
+				activeSection = section;
+
+				// Don't auto-scroll if we're at the absolute top of the page and viewing the first section
+				const scrollY = window.scrollY || window.pageYOffset;
+				if (scrollY < 50 && section === 'cross') {
+					// User is at the very top - don't trigger auto-scroll, just update SVG
+					if (svgContainer && sectionPositions[activeSection] !== undefined) {
+						const svg = svgContainer.querySelector('svg');
+						if (!svg) return;
+
+						const svgYPosition = sectionPositions[activeSection];
+						const viewBox = svg.viewBox.baseVal;
+						const svgHeight = svg.clientHeight;
+						const viewBoxHeight = viewBox.height;
+
+						// Get CSS transform scale (3.5 on mobile, 1 on desktop)
+						const computedStyle = window.getComputedStyle(svg);
+						const matrix = new DOMMatrix(computedStyle.transform);
+						const cssScale = matrix.a || 1;
+
+						// Convert SVG coordinates to pixel coordinates
+						const scale = (svgHeight / viewBoxHeight) * cssScale;
+						const pixelPosition = svgYPosition * scale;
+
+						// Position with some padding to show context above
+						const targetScroll = pixelPosition - 100;
+
+						setScrollLock('prayer');
+						smoothScrollElement(svgContainer, Math.max(0, targetScroll));
+					}
+					return; // Skip the page scroll
+				}
 
 				// Scroll SVG to keep active section visible at top
 				if (svgContainer && sectionPositions[activeSection] !== undefined) {
@@ -398,6 +430,8 @@ onMount(() => {
 		if (scrollLock === 'svg' || scrollLock === 'click' || !svgContainer) return;
 
 		const viewportHeight = window.innerHeight;
+		const scrollY = window.scrollY || window.pageYOffset;
+		const documentHeight = document.documentElement.scrollHeight;
 
 		// Get the first and final prayer sections
 		const firstSection = sectionElements.cross;
@@ -407,8 +441,23 @@ onMount(() => {
 		const firstSectionRect = firstSection.getBoundingClientRect();
 		const finalSectionRect = finalSection.getBoundingClientRect();
 
+		// Check if we're at the absolute top of the page
+		if (scrollY < 50) {
+			// Scroll SVG to top
+			if (svgContainer.scrollTop > 10) { // Only if not already at top
+				smoothScrollElement(svgContainer, 0);
+			}
+		}
+		// Check if we're at the absolute bottom of the page
+		else if (scrollY + viewportHeight >= documentHeight - 50) {
+			// Scroll SVG to bottom
+			const maxScroll = svgContainer.scrollHeight - svgContainer.clientHeight;
+			if (svgContainer.scrollTop < maxScroll - 10) { // Only if not already at bottom
+				smoothScrollElement(svgContainer, maxScroll);
+			}
+		}
 		// Check if we've scrolled above the first section (it's completely below viewport)
-		if (firstSectionRect.top > viewportHeight * 0.6) {
+		else if (firstSectionRect.top > viewportHeight * 0.6) {
 			// Scroll SVG to top
 			if (svgContainer.scrollTop > 10) { // Only if not already at top
 				smoothScrollElement(svgContainer, 0);
@@ -1099,6 +1148,30 @@ h1 {
 		border-color: var(--nord3);
 	}
 }
+
+/* Footnote styles */
+.footnotes-section {
+	margin-top: 1.5rem;
+	font-size: 0.85rem;
+	color: var(--nord4);
+}
+
+@media(prefers-color-scheme: light) {
+	.footnotes-section {
+		color: var(--nord0);
+	}
+}
+
+.footnotes-section p {
+	margin: 0.25rem 0;
+	text-align: left;
+}
+
+.footnotes-section .symbol {
+	font-weight: bold;
+	margin-right: 0.5em;
+	color: var(--nord11);
+}
 </style>
 <svelte:head>
 	<title>Interaktiver Rosenkranz</title>
@@ -1291,6 +1364,10 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				<Kreuzzeichen />
 				<h3>Credo</h3>
 				<Credo />
+				<div class="footnotes-section">
+					<p><span class="symbol">♱</span>Hier das Kreuzzeichen machen</p>
+					<p><span class="symbol">⚬</span>Hier den Kopf senken</p>
+				</div>
 			</div>
 
 			<!-- First Large Bead -->
@@ -1428,6 +1505,9 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				<RosaryFinalPrayer />
 
 				<h3 style="text-align: center; font-size: 2.5rem; margin-top: 2rem;">♱</h3>
+				<div class="footnotes-section">
+					<p><span class="symbol">♱</span>Hier das Kreuzzeichen machen</p>
+				</div>
 			</div>
 		</div>
 	</div>
