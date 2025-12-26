@@ -9,7 +9,7 @@
 
 	const isEnglish = $derived(data.lang === 'en');
 	const categories = $derived(isEnglish
-		? ["Main Course", "Pasta", "Bread", "Dessert", "Soup", "Side Dish", "Salad", "Cake", "Breakfast", "Sauce", "Ingredient", "Drink", "Spread", "Cookie", "Snack"]
+		? ["Main course", "Noodle", "Bread", "Dessert", "Soup", "Side dish", "Salad", "Cake", "Breakfast", "Sauce", "Ingredient", "Drink", "Spread", "Cookie", "Snack"]
 		: ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Frühstück", "Sauce", "Zutat", "Getränk", "Aufstrich", "Guetzli", "Snack"]);
 
 	const labels = $derived({
