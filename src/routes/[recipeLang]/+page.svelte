@@ -49,7 +49,7 @@ h1{
 <h1>{labels.title}</h1>
 <p class=subheading>{labels.subheading}</p>
 
-<Search></Search>
+<Search lang={data.lang}></Search>
 
 <MediaScroller title={labels.inSeason}>
 {#each data.season as recipe}

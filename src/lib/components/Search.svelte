@@ -2,16 +2,19 @@
     import {onMount} from "svelte";
     import { browser } from '$app/environment';
     import "$lib/css/nordtheme.css";
-    
+
     // Filter props for different contexts
-    export let category = null;
-    export let tag = null;
-    export let icon = null;
-    export let season = null;
-    export let favoritesOnly = false;
-    export let searchResultsUrl = '/rezepte/search';
-    
-    let searchQuery = '';
+    let { category = null, tag = null, icon = null, season = null, favoritesOnly = false, lang = 'de' } = $props();
+
+    const isEnglish = $derived(lang === 'en');
+    const searchResultsUrl = $derived(isEnglish ? '/recipes/search' : '/rezepte/search');
+    const labels = $derived({
+        placeholder: isEnglish ? 'Search...' : 'Suche...',
+        searchTitle: isEnglish ? 'Search' : 'Suchen',
+        clearTitle: isEnglish ? 'Clear search' : 'Sucheintrag löschen'
+    });
+
+    let searchQuery = $state('');
     
     // Build search URL with current filters
     function buildSearchUrl(query) {
@@ -190,15 +193,15 @@ scale: 0.8 0.8;
   {#if season}<input type="hidden" name="season" value={season} />{/if}
   {#if favoritesOnly}<input type="hidden" name="favorites" value="true" />{/if}
   
-  <input type="text" id="search" name="q" placeholder="Suche..." bind:value={searchQuery}>
-  
+  <input type="text" id="search" name="q" placeholder={labels.placeholder} bind:value={searchQuery}>
+
   <!-- Submit button (visible by default, hidden when JS loads) -->
   <button type="submit" id="submit-search" class="search-button" style="display: flex;">
-	  <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512" style="width: 100%; height: 100%;"><title>Suchen</title><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"></path><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="m338.29 338.29 105.25 105.25"></path></svg>
+	  <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512" style="width: 100%; height: 100%;"><title>{labels.searchTitle}</title><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"></path><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="m338.29 338.29 105.25 105.25"></path></svg>
   </button>
-  
+
   <!-- Clear button (hidden by default, shown when JS loads) -->
   <button type="button" id="clear-search" class="search-button js-only" style="display: none;" on:click={clearSearch}>
-	  <svg  xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><title>Sucheintrag löschen</title><path d="M135.19 390.14a28.79 28.79 0 0021.68 9.86h246.26A29 29 0 00432 371.13V140.87A29 29 0 00403.13 112H156.87a28.84 28.84 0 00-21.67 9.84v0L46.33 256l88.86 134.11z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"></path><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33"></path></svg>
+	  <svg  xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><title>{labels.clearTitle}</title><path d="M135.19 390.14a28.79 28.79 0 0021.68 9.86h246.26A29 29 0 00432 371.13V140.87A29 29 0 00403.13 112H156.87a28.84 28.84 0 00-21.67 9.84v0L46.33 256l88.86 134.11z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"></path><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33"></path></svg>
   </button>
 </form>

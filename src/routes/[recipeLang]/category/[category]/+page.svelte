@@ -17,7 +17,7 @@
 	}
 </style>
 <h1>{label} <q>{data.category}</q>:</h1>
-<Search category={data.category}></Search>
+<Search category={data.category} lang={data.lang}></Search>
 <section>
 <Recipes>
 	{#each rand_array(data.recipes) as recipe}
