@@ -14,6 +14,8 @@ import RosaryFinalPrayer from "$lib/components/prayers/RosaryFinalPrayer.svelte"
 import BenedictusMedal from "$lib/components/BenedictusMedal.svelte";
 import CounterButton from "$lib/components/CounterButton.svelte";
 import BibleModal from "$lib/components/BibleModal.svelte";
+import Toggle from "$lib/components/Toggle.svelte";
+import LanguageToggle from "$lib/components/LanguageToggle.svelte";
 
 export let data;
 
@@ -115,23 +117,15 @@ const mysteryTitles = {
 // Toggle for including Luminous mysteries
 let includeLuminous = true;
 
-// Create language context for prayer components
-const { showLatin } = createLanguageContext();
-let showBilingual = true;
-
 // Flag to prevent saving before we've loaded from localStorage
 let hasLoadedFromStorage = false;
 
-// Sync checkbox with context
-$: $showLatin = showBilingual;
+// Create language context for prayer components (LanguageToggle will use this)
+createLanguageContext();
 
-// Save toggle states to localStorage whenever they change (but only after initial load)
+// Save luminous toggle state to localStorage whenever it changes (but only after initial load)
 $: if (typeof localStorage !== 'undefined' && hasLoadedFromStorage) {
 	localStorage.setItem('rosary_includeLuminous', includeLuminous.toString());
-}
-
-$: if (typeof localStorage !== 'undefined' && hasLoadedFromStorage) {
-	localStorage.setItem('rosary_showBilingual', showBilingual.toString());
 }
 
 // Function to get the appropriate mystery for a given weekday
@@ -274,16 +268,11 @@ const sectionPositions = {
 };
 
 onMount(() => {
-	// Load toggle states from localStorage
+	// Load toggle state from localStorage
 	const savedIncludeLuminous = localStorage.getItem('rosary_includeLuminous');
-	const savedShowBilingual = localStorage.getItem('rosary_showBilingual');
 
 	if (savedIncludeLuminous !== null) {
 		includeLuminous = savedIncludeLuminous === 'true';
-	}
-
-	if (savedShowBilingual !== null) {
-		showBilingual = savedShowBilingual === 'true';
 	}
 
 	// Recalculate mystery based on loaded includeLuminous value
@@ -912,78 +901,6 @@ h1 {
 	margin-bottom: 2rem;
 }
 
-/* Luminous mysteries toggle */
-.luminous-toggle {
-	display: flex;
-	justify-content: center;
-	margin-bottom: 2rem;
-	max-width: 1200px;
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.luminous-toggle label {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	cursor: pointer;
-	font-size: 0.95rem;
-	color: var(--nord4);
-}
-
-@media(prefers-color-scheme: light) {
-	.luminous-toggle label {
-		color: var(--nord2);
-	}
-}
-
-.luminous-toggle span {
-	user-select: none;
-}
-
-/* iOS-style toggle switch */
-.luminous-toggle input[type="checkbox"] {
-	appearance: none;
-	-webkit-appearance: none;
-	width: 51px;
-	height: 31px;
-	background: var(--nord2);
-	border-radius: 31px;
-	position: relative;
-	cursor: pointer;
-	transition: background 0.3s ease;
-	outline: none;
-	border: none;
-	flex-shrink: 0;
-}
-
-@media(prefers-color-scheme: light) {
-	.luminous-toggle input[type="checkbox"] {
-		background: var(--nord4);
-	}
-}
-
-.luminous-toggle input[type="checkbox"]:checked {
-	background: var(--nord14);
-}
-
-.luminous-toggle input[type="checkbox"]::before {
-	content: '';
-	position: absolute;
-	width: 27px;
-	height: 27px;
-	border-radius: 50%;
-	top: 2px;
-	left: 2px;
-	background: white;
-	transition: transform 0.3s ease;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.luminous-toggle input[type="checkbox"]:checked::before {
-	transform: translateX(20px);
-}
-
 /* Mystery selector grid */
 .mystery-selector {
 	display: grid;
@@ -1310,20 +1227,14 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 	</div>
 
 	<!-- Luminous Mysteries Toggle -->
-	<div class="luminous-toggle">
-		<label>
-			<input type="checkbox" bind:checked={includeLuminous} on:change={handleToggleChange} />
-			<span>Lichtreiche Geheimnisse einbeziehen</span>
-		</label>
-	</div>
+	<Toggle
+		bind:checked={includeLuminous}
+		label="Lichtreiche Geheimnisse einbeziehen"
+		on:change={handleToggleChange}
+	/>
 
 	<!-- Language Toggle -->
-	<div class="luminous-toggle">
-		<label>
-			<input type="checkbox" bind:checked={showBilingual} />
-			<span>Lateinisch und Deutsch anzeigen</span>
-		</label>
-	</div>
+	<LanguageToggle />
 
 	<div class="rosary-layout">
 		<!-- Sidebar: Rosary Visualization -->
