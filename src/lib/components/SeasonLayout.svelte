@@ -6,6 +6,7 @@
     let month : number;
     export let active_index;
     export let routePrefix = '/rezepte';
+    export let lang = 'de';
 
 </script>
 <style>
@@ -42,7 +43,7 @@ a.month:hover,
 {/each}
 </div>
 <section>
-<Search season={active_index + 1}></Search>
+<Search season={active_index + 1} {lang}></Search>
 </section>
 <section>
 <slot name=recipes></slot>

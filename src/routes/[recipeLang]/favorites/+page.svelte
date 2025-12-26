@@ -61,7 +61,7 @@ h1{
     {/if}
 </p>
 
-<Search favoritesOnly={true}></Search>
+<Search favoritesOnly={true} lang={data.lang}></Search>
 
 {#if data.error}
     <p class="empty-state">{labels.errorLoading} {data.error}</p>

@@ -70,6 +70,7 @@
     icon={data.filters.icon}
     season={data.filters.season}
     favoritesOnly={data.filters.favoritesOnly}
+    lang={data.lang}
 />
 
 {#if data.error}

@@ -14,7 +14,7 @@
 
     import { rand_array } from '$lib/js/randomize';
 </script>
-<SeasonLayout active_index={data.month -1} {months} routePrefix="/{data.recipeLang}">
+<SeasonLayout active_index={data.month -1} {months} routePrefix="/{data.recipeLang}" lang={data.lang}>
 <Recipes slot=recipes>
 	{#each rand_array(data.season) as recipe}
 		<Card {recipe} icon_override=true isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>

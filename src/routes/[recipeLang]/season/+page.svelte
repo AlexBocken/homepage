@@ -16,7 +16,7 @@
         : ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]);
 </script>
 
-<SeasonLayout active_index={current_month-1} {months} routePrefix="/{data.recipeLang}">
+<SeasonLayout active_index={current_month-1} {months} routePrefix="/{data.recipeLang}" lang={data.lang}>
 <Recipes slot=recipes>
 	{#each rand_array(data.season) as recipe}
 		<Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
