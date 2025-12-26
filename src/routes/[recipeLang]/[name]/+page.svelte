@@ -14,8 +14,24 @@
 	import {stripHtmlTags} from '$lib/js/stripHtmlTags';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import RecipeLanguageSwitcher from '$lib/components/RecipeLanguageSwitcher.svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
 
     	let { data }: { data: PageData } = $props();
+
+	// Set store for recipe translation data so UserHeader can access it
+	onMount(() => {
+		recipeTranslationStore.set({
+			germanShortName: data.germanShortName || data.short_name,
+			englishShortName: data.englishShortName,
+			hasEnglishTranslation: data.hasEnglishTranslation || false
+		});
+	});
+
+	// Clear store when leaving recipe page
+	onDestroy(() => {
+		recipeTranslationStore.set(null);
+	});
 
 	const isEnglish = $derived(data.lang === 'en');
 
