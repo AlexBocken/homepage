@@ -18,6 +18,10 @@
 				currentLang = 'en';
 			} else if (path.startsWith('/rezepte')) {
 				currentLang = 'de';
+			} else if (path === '/') {
+				// On main page, read from localStorage
+				const preferredLanguage = localStorage.getItem('preferredLanguage');
+				currentLang = preferredLanguage === 'en' ? 'en' : 'de';
 			}
 		}
 	});
@@ -44,6 +48,12 @@
 		// Get the current path directly from window
 		const path = typeof window !== 'undefined' ? window.location.pathname : currentPath;
 
+		// If on main page, dispatch event instead of reloading
+		if (path === '/') {
+			window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
+			return;
+		}
+
 		// If we have recipe translation data from store, use the correct short names
 		const recipeData = $recipeTranslationStore;
 		if (recipeData) {
@@ -62,8 +72,8 @@
 			newPath = path.replace('/rezepte', '/recipes');
 		} else if (lang === 'de' && path.startsWith('/recipes')) {
 			newPath = path.replace('/recipes', '/rezepte');
-		} else if (path === '/' || (!path.startsWith('/rezepte') && !path.startsWith('/recipes'))) {
-			// On main page or other pages, go to recipe home
+		} else if (!path.startsWith('/rezepte') && !path.startsWith('/recipes')) {
+			// On other pages (glaube, cospend, etc), go to recipe home
 			newPath = lang === 'en' ? '/recipes' : '/rezepte';
 		}
 
