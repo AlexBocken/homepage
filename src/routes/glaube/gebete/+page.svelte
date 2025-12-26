@@ -1,7 +1,9 @@
 <script>
+	import { createLanguageContext } from "$lib/contexts/languageContext.js";
 	import "$lib/css/christ.css";
 	import "$lib/css/nordtheme.css";
 	import Gebet from "./Gebet.svelte";
+	import LanguageToggle from "$lib/components/LanguageToggle.svelte";
 	import Kreuzzeichen from "$lib/components/prayers/Kreuzzeichen.svelte";
 	import GloriaPatri from "$lib/components/prayers/GloriaPatri.svelte";
 	import Paternoster from "$lib/components/prayers/Paternoster.svelte";
@@ -13,6 +15,9 @@
 	import MichaelGebet from "$lib/components/prayers/MichaelGebet.svelte";
 	import BruderKlausGebet from "$lib/components/prayers/BruderKlausGebet.svelte";
 	import JosephGebet from "$lib/components/prayers/JosephGebet.svelte";
+
+	// Create language context for prayer components
+	createLanguageContext();
 </script>
 <style>
 .ccontainer{
@@ -41,6 +46,7 @@ h1{
 </style>
 <h1>Gebete</h1>
 
+<LanguageToggle />
 
 <div class="ccontainer">
 <div class=container>
