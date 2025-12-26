@@ -1,37 +1,33 @@
 <script lang="ts">
-export let recipe
-export let current_month
-export let icon_override = false;
-export let search = true;
 import "$lib/css/nordtheme.css";
 import "$lib/css/shake.css";
 import "$lib/css/icon.css";
-export let do_margin_right = false;
-export let isFavorite = false;
-export let showFavoriteIndicator = false;
-// to manually override lazy loading for top cards
-export let loading_strat : "lazy" | "eager" | undefined;
-// route prefix for language support (/rezepte or /recipes)
-export let routePrefix = '/rezepte';
-if(loading_strat === undefined){
-	loading_strat = "lazy"
-}
-
-if(icon_override){
-	current_month = recipe.season[0]
-}
-
-let isloaded = false
-
 import { onMount } from "svelte";
+
+let {
+	recipe,
+	current_month: currentMonthProp = 0,
+	icon_override = false,
+	search = true,
+	do_margin_right = false,
+	isFavorite = false,
+	showFavoriteIndicator = false,
+	loading_strat = "lazy",
+	routePrefix = '/rezepte'
+} = $props();
+
+// Make current_month reactive based on icon_override
+let current_month = $derived(icon_override ? recipe.season[0] : currentMonthProp);
+
+let isloaded = $state(false);
 
 onMount(() => {
 	isloaded = document.querySelector("img")?.complete ? true : false
-})
+});
 
 // Use germanShortName for images if available (English recipes), otherwise use short_name (German recipes)
-const imageShortName = recipe.germanShortName || recipe.short_name;
-const img_name = imageShortName + ".webp?v=" + recipe.dateModified
+const imageShortName = $derived(recipe.germanShortName || recipe.short_name);
+const img_name = $derived(imageShortName + ".webp?v=" + recipe.dateModified);
 </script>
 <style>
 .card_anchor{
@@ -255,7 +251,7 @@ const img_name = imageShortName + ".webp?v=" + recipe.dateModified
 }
 </style>
 
-<div class=card_anchor class:search_me={search} data-tags=[{recipe.tags}]>
+<div class=card_anchor class:search_me={search} data-tags="[{recipe.tags}]">
 <div class="card" class:margin_right={do_margin_right}>
 	<a href="{routePrefix}/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}">
 		<span class="visually-hidden">View recipe: {recipe.name}</span>
