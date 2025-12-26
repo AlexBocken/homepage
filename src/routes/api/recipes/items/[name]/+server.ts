@@ -1,0 +1,96 @@
+import type { RequestHandler } from '@sveltejs/kit';
+import { Recipe } from '../../../../../models/Recipe';
+import { dbConnect } from '../../../../../utils/db';
+import { error } from '@sveltejs/kit';
+
+/**
+ * GET /api/recipes/items/[name]
+ * Fetch an English recipe by its English short_name
+ */
+export const GET: RequestHandler = async ({ params }) => {
+	await dbConnect();
+
+	try {
+		// Find recipe by English short_name
+		const recipe = await Recipe.findOne({
+			"translations.en.short_name": params.name
+		});
+
+		if (!recipe) {
+			throw error(404, 'Recipe not found');
+		}
+
+		if (!recipe.translations?.en) {
+			throw error(404, 'English translation not available for this recipe');
+		}
+
+		// Return English translation with necessary metadata
+		const englishRecipe = {
+			_id: recipe._id,
+			short_name: recipe.translations.en.short_name,
+			name: recipe.translations.en.name,
+			description: recipe.translations.en.description,
+			preamble: recipe.translations.en.preamble || '',
+			addendum: recipe.translations.en.addendum || '',
+			note: recipe.translations.en.note || '',
+			category: recipe.translations.en.category,
+			tags: recipe.translations.en.tags || [],
+			ingredients: recipe.translations.en.ingredients || [],
+			instructions: recipe.translations.en.instructions || [],
+			images: recipe.images || [], // Use original images with full paths, but English alt/captions
+			// Copy timing/metadata from German version (with defaults)
+			icon: recipe.icon || '',
+			dateCreated: recipe.dateCreated,
+			dateModified: recipe.dateModified,
+			season: recipe.season || [],
+			baking: recipe.baking || { temperature: '', length: '', mode: '' },
+			preparation: recipe.preparation || '',
+			fermentation: recipe.fermentation || { bulk: '', final: '' },
+			portions: recipe.portions || '',
+			cooking: recipe.cooking || '',
+			total_time: recipe.total_time || '',
+			// Include translation status for display
+			translationStatus: recipe.translations.en.translationStatus,
+			// Include German short_name for language switcher
+			germanShortName: recipe.short_name,
+		};
+
+		// Merge English alt/caption with original image paths
+		// Handle both array and single object (there's a bug in add page that sometimes saves as object)
+		const imagesArray = Array.isArray(recipe.images) ? recipe.images : (recipe.images ? [recipe.images] : []);
+
+		if (imagesArray.length > 0) {
+			const translatedImages = recipe.translations.en.images || [];
+
+			if (translatedImages.length > 0) {
+				englishRecipe.images = imagesArray.map((img: any, index: number) => ({
+					mediapath: img.mediapath,
+					alt: translatedImages[index]?.alt || img.alt || '',
+					caption: translatedImages[index]?.caption || img.caption || '',
+				}));
+			} else {
+				// No translated image captions, use German ones
+				englishRecipe.images = imagesArray.map((img: any) => ({
+					mediapath: img.mediapath,
+					alt: img.alt || '',
+					caption: img.caption || '',
+				}));
+			}
+		}
+
+		return new Response(JSON.stringify(englishRecipe), {
+			status: 200,
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		});
+	} catch (err: any) {
+		console.error('Error fetching English recipe:', err);
+
+		if (err.status) {
+			throw err;
+		}
+
+		throw error(500, 'Failed to fetch recipe');
+	}
+};

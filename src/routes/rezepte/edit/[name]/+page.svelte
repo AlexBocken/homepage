@@ -2,6 +2,7 @@
 	import Check from '$lib/assets/icons/Check.svelte';
 	import Cross from '$lib/assets/icons/Cross.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
+	import TranslationApproval from '$lib/components/TranslationApproval.svelte';
 	import '$lib/css/action_button.css'
 	import '$lib/css/nordtheme.css'
 	import { redirect } from '@sveltejs/kit';
@@ -12,6 +13,14 @@
 	let addendum = data.recipe.addendum
 	let image_preview_url="https://bocken.org/static/rezepte/thumb/" + data.recipe.short_name + ".webp?v=" + data.recipe.dateModified;
 	let note = data.recipe.note
+
+	// Translation workflow state
+	let showTranslationWorkflow = false;
+	let translationData: any = data.recipe.translations?.en || null;
+	let changedFields: string[] = [];
+
+	// Store original recipe data for change detection
+	const originalRecipe = JSON.parse(JSON.stringify(data.recipe));
 
 	import { season } from '$lib/js/season_store';
 	import { portions } from '$lib/js/portions_store';
@@ -90,6 +99,78 @@
 		for(var i = 0; i < season.length; i++){
 			el.children[i].children[0].children[0].checked = true
 		}
+	}
+
+	// Get current German recipe data
+	function getCurrentRecipeData() {
+		return {
+			...card_data,
+			...add_info,
+			images,
+			season: season_local,
+			short_name: short_name.trim(),
+			datecreated,
+			portions: portions_local,
+			datemodified,
+			instructions,
+			ingredients,
+			addendum,
+			preamble,
+			note,
+		};
+	}
+
+	// Detect which fields have changed from the original
+	function detectChangedFields() {
+		const current = getCurrentRecipeData();
+		const changed: string[] = [];
+
+		const fieldsToCheck = [
+			'name', 'description', 'preamble', 'addendum',
+			'note', 'category', 'tags', 'ingredients', 'instructions'
+		];
+
+		for (const field of fieldsToCheck) {
+			const oldValue = JSON.stringify(originalRecipe[field] || '');
+			const newValue = JSON.stringify(current[field] || '');
+			if (oldValue !== newValue) {
+				changed.push(field);
+			}
+		}
+
+		return changed;
+	}
+
+	// Show translation workflow before submission
+	function prepareSubmit() {
+		changedFields = detectChangedFields();
+		showTranslationWorkflow = true;
+
+		// Scroll to translation section
+		setTimeout(() => {
+			document.getElementById('translation-section')?.scrollIntoView({ behavior: 'smooth' });
+		}, 100);
+	}
+
+	// Handle translation approval
+	function handleTranslationApproved(event: CustomEvent) {
+		translationData = event.detail.translatedRecipe;
+		doEdit();
+	}
+
+	// Handle translation skipped
+	function handleTranslationSkipped() {
+		// Mark translation as needing update if fields changed
+		if (changedFields.length > 0 && translationData) {
+			translationData.translationStatus = 'needs_update';
+			translationData.changedFields = changedFields;
+		}
+		doEdit();
+	}
+
+	// Handle translation cancelled
+	function handleTranslationCancelled() {
+		showTranslationWorkflow = false;
 	}
 
 	async function doDelete(){
@@ -200,30 +281,34 @@
 				return
 			}
 		}
+		const recipeData = getCurrentRecipeData();
+
+		// Add translations if available
+		if (translationData) {
+			recipeData.translations = {
+				en: translationData
+			};
+
+			// Update translation metadata
+			if (changedFields.length > 0) {
+				recipeData.translationMetadata = {
+					lastModifiedGerman: new Date(),
+					fieldsModifiedSinceTranslation: translationData.translationStatus === 'needs_update' ? changedFields : [],
+				};
+			}
+		}
+
 		const res = await fetch('/api/rezepte/edit', {
 			method: 'POST',
 			body: JSON.stringify({
-				recipe: {
-					...card_data,
-					...add_info,
-					images, // TODO
-					season: season_local,
-					short_name: short_name.trim(),
-					datecreated,
-					portions: portions_local,
-					datemodified,
-					instructions,
-					ingredients,
-					addendum,
-					preamble,
-					note,
-				},
+				recipe: recipeData,
 				old_short_name,
+				old_recipe: originalRecipe, // For change detection in API
+			}),
 			headers: {
        				'content-type': 'application/json',
 				credentials: 'include',
-     				}
-			})
+     			}
 		})
 		if(res.ok){
 			const url = location.href.split('/');
@@ -381,7 +466,23 @@ button.action_button{
 <div class=addendum bind:innerText={addendum} contenteditable></div>
 </div>
 
+{#if !showTranslationWorkflow}
 <div class=submit_buttons>
 <button class=action_button on:click={doDelete}><p>Löschen</p><Cross fill=white width=2rem height=2rem></Cross></button>
-<button class=action_button on:click={doEdit}><p>Speichern</p><Check fill=white width=2rem height=2rem></Check></button>
+<button class=action_button on:click={prepareSubmit}><p>Weiter zur Übersetzung</p><Check fill=white width=2rem height=2rem></Check></button>
 </div>
+{/if}
+
+{#if showTranslationWorkflow}
+<div id="translation-section">
+	<TranslationApproval
+		germanData={getCurrentRecipeData()}
+		englishData={translationData}
+		{changedFields}
+		isEditMode={true}
+		on:approved={handleTranslationApproved}
+		on:skipped={handleTranslationSkipped}
+		on:cancelled={handleTranslationCancelled}
+	/>
+</div>
+{/if}

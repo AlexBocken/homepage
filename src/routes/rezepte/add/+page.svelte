@@ -1,11 +1,16 @@
 <script lang="ts">
 	import Check from '$lib/assets/icons/Check.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
+	import TranslationApproval from '$lib/components/TranslationApproval.svelte';
 	import '$lib/css/action_button.css'
 	import '$lib/css/nordtheme.css'
 
 	let preamble = ""
 	let addendum = ""
+
+	// Translation workflow state
+	let showTranslationWorkflow = false;
+	let translationData: any = null;
 
 	import { season } from '$lib/js/season_store';
 	import { portions } from '$lib/js/portions_store';
@@ -98,32 +103,89 @@
         	});
 		}
 
-	async function doPost () {
+	// Prepare the German recipe data
+	function getGermanRecipeData() {
+		return {
+			...card_data,
+			...add_info,
+			images: {mediapath: short_name.trim() + '.webp', alt: "", caption: ""},
+			season: season_local,
+			short_name : short_name.trim(),
+			portions: portions_local,
+			datecreated,
+			datemodified,
+			instructions,
+			ingredients,
+			preamble,
+			addendum,
+		};
+	}
 
+	// Show translation workflow before submission
+	function prepareSubmit() {
+		// Validate required fields
+		if (!short_name.trim()) {
+			alert('Bitte geben Sie einen Kurznamen ein');
+			return;
+		}
+		if (!card_data.name) {
+			alert('Bitte geben Sie einen Namen ein');
+			return;
+		}
+
+		showTranslationWorkflow = true;
+		// Scroll to translation section
+		setTimeout(() => {
+			document.getElementById('translation-section')?.scrollIntoView({ behavior: 'smooth' });
+		}, 100);
+	}
+
+	// Handle translation approval
+	function handleTranslationApproved(event: CustomEvent) {
+		translationData = event.detail.translatedRecipe;
+		doPost();
+	}
+
+	// Handle translation skipped
+	function handleTranslationSkipped() {
+		translationData = null;
+		doPost();
+	}
+
+	// Handle translation cancelled
+	function handleTranslationCancelled() {
+		showTranslationWorkflow = false;
+		translationData = null;
+	}
+
+	// Actually submit the recipe
+	async function doPost () {
 		upload_img()
 		console.log(add_info.total_time)
+
+		const recipeData = getGermanRecipeData();
+
+		// Add translations if available
+		if (translationData) {
+			recipeData.translations = {
+				en: translationData
+			};
+			recipeData.translationMetadata = {
+				lastModifiedGerman: new Date(),
+				fieldsModifiedSinceTranslation: [],
+			};
+		}
+
 		const res = await fetch('/api/rezepte/add', {
 			method: 'POST',
 			body: JSON.stringify({
-				recipe: {
-					...card_data,
-					...add_info,
-					images: {mediapath: short_name.trim() + '.webp', alt: "", caption: ""}, // TODO
-					season: season_local,
-					short_name : short_name.trim(),
-					portions: portions_local,
-					datecreated,
-					datemodified,
-					instructions,
-					ingredients,
-					preamble,
-					addendum,
-				},
+				recipe: recipeData,
+			}),
 			headers: {
        				'content-type': 'application/json',
-     				}
-			})
+     			}
 		});
+
 		if(res.status === 200){
 			const url = location.href.split('/')
 			url.splice(url.length -1, 1);
@@ -282,6 +344,19 @@ button.action_button{
 <div class=addendum bind:innerText={addendum} contenteditable></div>
 </div>
 
+{#if !showTranslationWorkflow}
 <div class=submit_buttons>
-<button class=action_button on:click={doPost}><p>Hinzufügen</p><Check fill=white width=2rem height=2rem></Check></button>
+<button class=action_button on:click={prepareSubmit}><p>Weiter zur Übersetzung</p><Check fill=white width=2rem height=2rem></Check></button>
 </div>
+{/if}
+
+{#if showTranslationWorkflow}
+<div id="translation-section">
+	<TranslationApproval
+		germanData={getGermanRecipeData()}
+		on:approved={handleTranslationApproved}
+		on:skipped={handleTranslationSkipped}
+		on:cancelled={handleTranslationCancelled}
+	/>
+</div>
+{/if}

@@ -17,12 +17,13 @@
 
     	export let data: PageData;
 
-	let hero_img_src = "https://bocken.org/static/rezepte/full/" + data.short_name + ".webp?v=" + data.dateModified
-	let placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp?v=" + data.dateModified
-    	export let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
+	// Use German short_name for images (they're the same for both languages)
+	let hero_img_src = "https://bocken.org/static/rezepte/full/" + data.germanShortName + ".webp?v=" + data.dateModified
+	let placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.germanShortName + ".webp?v=" + data.dateModified
+    	export let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
 	function season_intervals() {
 		let interval_arr = []
-
 
 		let start_i = 0
 		for(var i = 12; i > 0; i--){
@@ -56,8 +57,8 @@
 	export let season_iv = season_intervals();
 
 	afterNavigate(() => {
-		hero_img_src = "https://bocken.org/static/rezepte/full/" + data.short_name + ".webp"
-		placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.short_name + ".webp"
+		hero_img_src = "https://bocken.org/static/rezepte/full/" + data.germanShortName + ".webp"
+		placeholder_src = "https://bocken.org/static/rezepte/placeholder/" + data.germanShortName + ".webp"
 		season_iv = season_intervals();
 	})
 	let display_date = new Date(data.dateCreated);
@@ -66,12 +67,12 @@
 	}
 	const options = {
  	 day: '2-digit',
- 	 month: 'short', // German abbreviation for the month
+ 	 month: 'short',
  	 year: 'numeric',
  	 hour: '2-digit',
  	 minute: '2-digit',
 	};
-	const formatted_display_date = display_date.toLocaleDateString('de-DE', options)
+	const formatted_display_date = display_date.toLocaleDateString('en-US', options)
 </script>
 <style>
 *{
@@ -272,34 +273,30 @@ h4{
 
 </style>
 <svelte:head>
-	<title>{stripHtmlTags(data.name)} - Bocken'sche Rezepte</title>
+	<title>{stripHtmlTags(data.name)} - Bocken's Recipes</title>
 	<meta name="description" content="{stripHtmlTags(data.description)}" />
-	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/{data.short_name}.webp" />
-	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{data.short_name}.webp" />
+	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/{data.germanShortName}.webp" />
+	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{data.germanShortName}.webp" />
 	<meta property="og:image:type" content="image/webp" />
 	<meta property="og:image:alt" content="{stripHtmlTags(data.name)}" />
 	{@html `<script type="application/ld+json">${JSON.stringify(data.recipeJsonLd)}</script>`}
 	<!-- SEO: hreflang tags -->
-	<link rel="alternate" hreflang="de" href="https://bocken.org/rezepte/{data.short_name}" />
-	{#if data.hasEnglishTranslation}
-		<link rel="alternate" hreflang="en" href="https://bocken.org/recipes/{data.englishShortName}" />
-	{/if}
-	<link rel="alternate" hreflang="x-default" href="https://bocken.org/rezepte/{data.short_name}" />
+	<link rel="alternate" hreflang="de" href="https://bocken.org/rezepte/{data.germanShortName}" />
+	<link rel="alternate" hreflang="en" href="https://bocken.org/recipes/{data.short_name}" />
+	<link rel="alternate" hreflang="x-default" href="https://bocken.org/rezepte/{data.germanShortName}" />
 </svelte:head>
 
-{#if data.hasEnglishTranslation}
-	<RecipeLanguageSwitcher
-		germanUrl="/rezepte/{data.short_name}"
-		englishUrl="/recipes/{data.englishShortName}"
-		currentLang="de"
-		hasTranslation={true}
-	/>
-{/if}
+<RecipeLanguageSwitcher
+	germanUrl="/rezepte/{data.germanShortName}"
+	englishUrl="/recipes/{data.short_name}"
+	currentLang="en"
+	hasTranslation={true}
+/>
 
 <TitleImgParallax src={hero_img_src} {placeholder_src}>
 	<div class=title>
-		<a class="category" href='/rezepte/category/{data.category}'>{data.category}</a>
-		<a class="icon" href='/rezepte/icon/{data.icon}'>{data.icon}</a>
+		<a class="category" href='/recipes/category/{data.category}'>{data.category}</a>
+		<a class="icon" href='/recipes/icon/{data.icon}'>{data.icon}</a>
 		<h1>{@html data.name}</h1>
 		{#if data.description && ! data.preamble}
 			<p class=description>{data.description}</p>
@@ -308,9 +305,9 @@ h4{
 			<p>{@html data.preamble}</p>
 		{/if}
 		<div class=tags>
-			<h4>Saison:</h4>
+			<h4>Season:</h4>
 			{#each season_iv as season}
-				<a class=tag href="/rezepte/season/{season[0]}">
+				<a class=tag href="/recipes/season/{season[0]}">
 					{#if season[0]}
 						{months[season[0] - 1]}
 					{/if}
@@ -320,19 +317,19 @@ h4{
 				</a>
 			{/each}
 		</div>
-		<h4>Stichwörter:</h4>
+		<h4>Keywords:</h4>
 		<div class="tags center">
 			{#each data.tags as tag}
-				<a class=tag href="/rezepte/tag/{tag}">{tag}</a>
+				<a class=tag href="/recipes/tag/{tag}">{tag}</a>
 			{/each}
 		</div>
-		
-		<FavoriteButton 
-			recipeId={data.short_name} 
-			isFavorite={data.isFavorite || false} 
-			isLoggedIn={!!data.session?.user} 
+
+		<FavoriteButton
+			recipeId={data.germanShortName}
+			isFavorite={data.isFavorite || false}
+			isLoggedIn={!!data.session?.user}
 		/>
-		
+
 		{#if data.note}
 			<RecipeNote note={data.note}></RecipeNote>
 		{/if}
@@ -348,8 +345,8 @@ h4{
 	{@html data.addendum}
 {/if}
 </div>
-	<p class=date>Letzte Änderung: {formatted_display_date}</p>
+	<p class=date>Last modified: {formatted_display_date}</p>
 </div>
 </TitleImgParallax>
 
-<EditButton href="/rezepte/edit/{data.short_name}"></EditButton>
+<EditButton href="/rezepte/edit/{data.germanShortName}"></EditButton>
