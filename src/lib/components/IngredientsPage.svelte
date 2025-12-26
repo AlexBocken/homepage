@@ -4,13 +4,20 @@ import { onNavigate } from "$app/navigation";
 import { browser } from '$app/environment';
 import { page } from '$app/stores';
 import HefeSwapper from './HefeSwapper.svelte';
-export let data
-let multiplier = data.multiplier || 1;
+
+let { data } = $props();
+let multiplier = $state(data.multiplier || 1);
+
+const isEnglish = $derived(data.lang === 'en');
+const labels = $derived({
+	portions: isEnglish ? 'Portions:' : 'Portionen:',
+	adjustAmount: isEnglish ? 'Adjust Amount:' : 'Menge anpassen:',
+	ingredients: isEnglish ? 'Ingredients' : 'Zutaten'
+});
 
 // Calculate yeast IDs for each yeast ingredient
-let yeastIds = {};
-$: {
-	yeastIds = {};
+const yeastIds = $derived.by(() => {
+	const ids = {};
 	let yeastCounter = 0;
 	if (data.ingredients) {
 		for (let listIndex = 0; listIndex < data.ingredients.length; listIndex++) {
@@ -18,17 +25,19 @@ $: {
 			if (list.list) {
 				for (let ingredientIndex = 0; ingredientIndex < list.list.length; ingredientIndex++) {
 					const ingredient = list.list[ingredientIndex];
-					if (ingredient.name === "Frischhefe" || ingredient.name === "Trockenhefe") {
-						yeastIds[`${listIndex}-${ingredientIndex}`] = yeastCounter++;
+					if (ingredient.name === "Frischhefe" || ingredient.name === "Trockenhefe" ||
+					    ingredient.name === "Fresh Yeast" || ingredient.name === "Dry Yeast") {
+						ids[`${listIndex}-${ingredientIndex}`] = yeastCounter++;
 					}
 				}
 			}
 		}
 	}
-}
+	return ids;
+});
 
 // Get all current URL parameters to preserve state in multiplier forms
-$: currentParams = browser ? new URLSearchParams(window.location.search) : $page.url.searchParams;
+const currentParams = $derived(browser ? new URLSearchParams(window.location.search) : $page.url.searchParams);
 
 // Progressive enhancement - use JS if available
 onMount(() => {
@@ -318,11 +327,11 @@ span
 {#if data.ingredients}
 <div class=ingredients>
 {#if data.portions}
-	<h3>Portionen:</h3>
+	<h3>{labels.portions}</h3>
 	{@html convertFloatsToFractions(multiplyFirstAndSecondNumbers(data.portions, multiplier))}
 {/if}
 
-<h3>Menge anpassen:</h3>
+<h3>{labels.adjustAmount}</h3>
 <div class=multipliers>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="0.5" />
@@ -389,7 +398,7 @@ span
 	</form>
 </div>
 
-<h2>Zutaten</h2>
+<h2>{labels.ingredients}</h2>
 {#each data.ingredients as list, listIndex}
 {#if list.name}
 	<h3>{list.name}</h3>
@@ -399,7 +408,7 @@ span
 		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div>
 		<div class=name>
 			{@html item.name.replace("{{multiplier}}", isNaN(parseFloat(item.amount)) ? multiplier : multiplier * parseFloat(item.amount))}
-			{#if item.name === "Frischhefe" || item.name === "Trockenhefe"}
+			{#if item.name === "Frischhefe" || item.name === "Trockenhefe" || item.name === "Fresh Yeast" || item.name === "Dry Yeast"}
 				{@const yeastId = yeastIds[`${listIndex}-${ingredientIndex}`] ?? 0}
 				<HefeSwapper {item} {multiplier} {yeastId} />
 			{/if}

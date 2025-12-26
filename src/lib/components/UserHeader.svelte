@@ -2,6 +2,8 @@
 	import { onMount } from "svelte";
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
+
 	let { user, showLanguageSelector = false } = $props();
 
 	let currentLang = $state('de');
@@ -42,7 +44,19 @@
 		// Get the current path directly from window
 		const path = typeof window !== 'undefined' ? window.location.pathname : currentPath;
 
-		// Convert current path to target language
+		// If we have recipe translation data from store, use the correct short names
+		const recipeData = $recipeTranslationStore;
+		if (recipeData) {
+			if (lang === 'en' && recipeData.englishShortName) {
+				goto(`/recipes/${recipeData.englishShortName}`);
+				return;
+			} else if (lang === 'de' && recipeData.germanShortName) {
+				goto(`/rezepte/${recipeData.germanShortName}`);
+				return;
+			}
+		}
+
+		// Convert current path to target language (for non-recipe pages)
 		let newPath = path;
 		if (lang === 'en' && path.startsWith('/rezepte')) {
 			newPath = path.replace('/rezepte', '/recipes');

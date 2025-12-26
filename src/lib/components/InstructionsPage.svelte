@@ -1,5 +1,17 @@
 <script>
-export let data
+let { data } = $props();
+
+const isEnglish = $derived(data.lang === 'en');
+const labels = $derived({
+	preparation: isEnglish ? 'Preparation:' : 'Vorbereitung:',
+	bulkFermentation: isEnglish ? 'Bulk Fermentation:' : 'Stockgare:',
+	finalProof: isEnglish ? 'Final Proof:' : 'Stückgare:',
+	baking: isEnglish ? 'Baking:' : 'Backen:',
+	cooking: isEnglish ? 'Cooking:' : 'Kochen:',
+	onThePlate: isEnglish ? 'On the Plate:' : 'Auf dem Teller:',
+	instructions: isEnglish ? 'Instructions' : 'Zubereitung',
+	at: isEnglish ? 'at' : 'bei'
+});
 </script>
 <style>
 *{
@@ -59,35 +71,35 @@ h4{
 <div class=instructions>
 <div class=additional_info>
 {#if data.preparation}
-<div><h4>Vorbereitung:</h4>{data.preparation}</div>
+<div><h4>{labels.preparation}</h4>{data.preparation}</div>
 {/if}
 
 
 {#if data.fermentation}
 	{#if data.fermentation.bulk}
-		<div><h4>Stockgare:</h4>{data.fermentation.bulk}</div>
+		<div><h4>{labels.bulkFermentation}</h4>{data.fermentation.bulk}</div>
 	{/if}
 
 	{#if data.fermentation.final}
-		<div><h4>Stückgare:</h4> {data.fermentation.final}</div>
+		<div><h4>{labels.finalProof}</h4> {data.fermentation.final}</div>
 	{/if}
 {/if}
 
 {#if data.baking.temperature}
-<div><h4>Backen:</h4> {data.baking.length} bei {data.baking.temperature} °C {data.baking.mode}</div>
+<div><h4>{labels.baking}</h4> {data.baking.length} {labels.at} {data.baking.temperature} °C {data.baking.mode}</div>
 {/if}
 
 {#if data.cooking}
-<div><h4>Kochen:</h4>{data.cooking}</div>
+<div><h4>{labels.cooking}</h4>{data.cooking}</div>
 {/if}
 
 {#if data.total_time}
-<div><h4>Auf dem Teller:</h4>{data.total_time}</div>
+<div><h4>{labels.onThePlate}</h4>{data.total_time}</div>
 {/if}
 </div>
 
 {#if data.instructions}
-<h2>Zubereitung</h2>
+<h2>{labels.instructions}</h2>
 {#each data.instructions as list}
 {#if list.name}
 	<h3>{list.name}</h3>
