@@ -3,6 +3,12 @@
 	export let englishUrl: string;
 	export let currentLang: 'de' | 'en' = 'de';
 	export let hasTranslation: boolean = true;
+
+	function setLanguagePreference(lang: 'de' | 'en') {
+		if (typeof localStorage !== 'undefined') {
+			localStorage.setItem('preferredLanguage', lang);
+		}
+	}
 </script>
 
 <style>
@@ -101,6 +107,7 @@
 		href={germanUrl}
 		class:active={currentLang === 'de'}
 		aria-label="Switch to German"
+		onclick={() => setLanguagePreference('de')}
 	>
 		<span class="flag">🇩🇪</span>
 		<span class="label">DE</span>
@@ -110,6 +117,7 @@
 			href={englishUrl}
 			class:active={currentLang === 'en'}
 			aria-label="Switch to English"
+			onclick={() => setLanguagePreference('en')}
 		>
 			<span class="flag">🇬🇧</span>
 			<span class="label">EN</span>

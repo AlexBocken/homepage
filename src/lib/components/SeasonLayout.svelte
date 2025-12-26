@@ -2,9 +2,10 @@
     import '$lib/css/nordtheme.css';
     import Recipes from '$lib/components/Recipes.svelte';
     import Search from './Search.svelte';
-    let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
+    export let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
     let month : number;
     export let active_index;
+    export let routePrefix = '/rezepte';
 
 </script>
 <style>
@@ -37,7 +38,7 @@ a.month:hover,
 
 <div class=months>
 {#each months as month, i}
-	<a class:active={i == active_index}  class=month href="/rezepte/season/{i+1}">{month}</a>
+	<a class:active={i == active_index}  class=month href="{routePrefix}/season/{i+1}">{month}</a>
 {/each}
 </div>
 <section>

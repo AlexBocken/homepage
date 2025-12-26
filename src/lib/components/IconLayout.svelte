@@ -4,6 +4,7 @@
     import Search from './Search.svelte';
     export let icons
     export let active_icon
+    export let routePrefix = '/rezepte'
 </script>
 
 <style>
@@ -68,7 +69,7 @@
 
 <div class=flex>
 {#each icons as icon, i}
-	<a class:active={active_icon == icon} href="/rezepte/icon/{icon}">{icon}</a>
+	<a class:active={active_icon == icon} href="{routePrefix}/icon/{icon}">{icon}</a>
 {/each}
 </div>
 <section>
