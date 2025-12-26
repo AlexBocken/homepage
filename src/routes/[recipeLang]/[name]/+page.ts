@@ -38,9 +38,10 @@ export async function load({ fetch, params, url}) {
                 for (let ingredientIndex = 0; ingredientIndex < list.list.length; ingredientIndex++) {
                     const ingredient = list.list[ingredientIndex];
                     
-                    // Check if this is a yeast ingredient (both German and English names)
-                    const isFreshYeast = ingredient.name === "Frischhefe" || ingredient.name === "Fresh Yeast";
-                    const isDryYeast = ingredient.name === "Trockenhefe" || ingredient.name === "Dry Yeast";
+                    // Check if this is a yeast ingredient (both German and English names, case-insensitive)
+                    const nameLower = ingredient.name.toLowerCase();
+                    const isFreshYeast = nameLower === "frischhefe" || nameLower === "fresh yeast";
+                    const isDryYeast = nameLower === "trockenhefe" || nameLower === "dry yeast";
 
                     if (isFreshYeast || isDryYeast) {
                         // Check if this yeast should be toggled
@@ -57,7 +58,7 @@ export async function load({ fetch, params, url}) {
 
                             if (isFreshYeast) {
                                 // Convert fresh yeast to dry yeast
-                                newName = isEnglish ? "Dry Yeast" : "Trockenhefe";
+                                newName = isEnglish ? "Dry yeast" : "Trockenhefe";
                                 
                                 if (originalUnit === "Prise") {
                                     // "1 Prise Frischhefe" → "1 Prise Trockenhefe"
@@ -74,7 +75,7 @@ export async function load({ fetch, params, url}) {
                                 }
                             } else if (isDryYeast) {
                                 // Convert dry yeast to fresh yeast
-                                newName = isEnglish ? "Fresh Yeast" : "Frischhefe";
+                                newName = isEnglish ? "Fresh yeast" : "Frischhefe";
                                 
                                 if (originalUnit === "Prise") {
                                     // "1 Prise Trockenhefe" → "1 g Frischhefe"

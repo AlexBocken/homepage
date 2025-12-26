@@ -25,8 +25,9 @@ const yeastIds = $derived.by(() => {
 			if (list.list) {
 				for (let ingredientIndex = 0; ingredientIndex < list.list.length; ingredientIndex++) {
 					const ingredient = list.list[ingredientIndex];
-					if (ingredient.name === "Frischhefe" || ingredient.name === "Trockenhefe" ||
-					    ingredient.name === "Fresh Yeast" || ingredient.name === "Dry Yeast") {
+					const nameLower = ingredient.name.toLowerCase();
+					if (nameLower === "frischhefe" || nameLower === "trockenhefe" ||
+					    nameLower === "fresh yeast" || nameLower === "dry yeast") {
 						ids[`${listIndex}-${ingredientIndex}`] = yeastCounter++;
 					}
 				}
@@ -408,9 +409,9 @@ span
 		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div>
 		<div class=name>
 			{@html item.name.replace("{{multiplier}}", isNaN(parseFloat(item.amount)) ? multiplier : multiplier * parseFloat(item.amount))}
-			{#if item.name === "Frischhefe" || item.name === "Trockenhefe" || item.name === "Fresh Yeast" || item.name === "Dry Yeast"}
+			{#if item.name.toLowerCase() === "frischhefe" || item.name.toLowerCase() === "trockenhefe" || item.name.toLowerCase() === "fresh yeast" || item.name.toLowerCase() === "dry yeast"}
 				{@const yeastId = yeastIds[`${listIndex}-${ingredientIndex}`] ?? 0}
-				<HefeSwapper {item} {multiplier} {yeastId} />
+				<HefeSwapper {item} {multiplier} {yeastId} lang={data.lang} />
 			{/if}
 		</div>
 	{/each}
