@@ -11,6 +11,8 @@ export let isFavorite = false;
 export let showFavoriteIndicator = false;
 // to manually override lazy loading for top cards
 export let loading_strat : "lazy" | "eager" | undefined;
+// route prefix for language support (/rezepte or /recipes)
+export let routePrefix = '/rezepte';
 if(loading_strat === undefined){
 	loading_strat = "lazy"
 }
@@ -27,7 +29,9 @@ onMount(() => {
 	isloaded = document.querySelector("img")?.complete ? true : false
 })
 
-const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
+// Use germanShortName for images if available (English recipes), otherwise use short_name (German recipes)
+const imageShortName = recipe.germanShortName || recipe.short_name;
+const img_name = imageShortName + ".webp?v=" + recipe.dateModified
 </script>
 <style>
 .card_anchor{
@@ -253,7 +257,7 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 
 <div class=card_anchor class:search_me={search} data-tags=[{recipe.tags}]>
 <div class="card" class:margin_right={do_margin_right}>
-	<a href="/rezepte/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}">
+	<a href="{routePrefix}/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}">
 		<span class="visually-hidden">View recipe: {recipe.name}</span>
 	</a>
 	<div class=div_div_image >
@@ -261,24 +265,24 @@ const img_name=recipe.short_name + ".webp?v=" + recipe.dateModified
 			<noscript>
 				<img id=image class="backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{recipe.alt}"/>
 			</noscript>
-			<img class:blur={!isloaded} id=image class="backdrop_blur" src={'https://bocken.org/static/rezepte/thumb/' + recipe.short_name + '.webp'} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
+			<img class:blur={!isloaded} id=image class="backdrop_blur" src={'https://bocken.org/static/rezepte/thumb/' + imageShortName + '.webp'} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
 		</div>
 	</div>
 	{#if showFavoriteIndicator && isFavorite}
 		<div class="favorite-indicator">❤️</div>
 	{/if}
 	{#if icon_override || recipe.season.includes(current_month)}
-		<a href="/rezepte/icon/{recipe.icon}" class=icon>{recipe.icon}</a>
+		<a href="{routePrefix}/icon/{recipe.icon}" class=icon>{recipe.icon}</a>
 	{/if}
 	<div class="card_title">
-		<a href="/rezepte/category/{recipe.category}" class=category>{recipe.category}</a>
+		<a href="{routePrefix}/category/{recipe.category}" class=category>{recipe.category}</a>
 		<div>
 			<div class=name>{@html recipe.name}</div>
 			<div class=description>{@html recipe.description}</div>
 		</div>
 		<div class=tags>
 		{#each recipe.tags as tag}
-			<a href="/rezepte/tag/{tag}" class=tag>{tag}</a>
+			<a href="{routePrefix}/tag/{tag}" class=tag>{tag}</a>
 		{/each}
 		</div>
 	</div>
