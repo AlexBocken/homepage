@@ -1,12 +1,18 @@
-<p>
-	<v lang="la">Ó mí Jésú, dímitte nóbís débita nostra,</v>
-	<v lang="de">O mein Jesus, verzeih' uns unsere Sünden,</v>
-	<v lang="la">líberá nós ab igne ínferní,</v>
-	<v lang="de">bewahre uns vor den Feuern der Hölle</v>
-	<v lang="la">condúc in cælum omnés animás, </v>
-	<v lang="de">und führe alle Seelen in den Himmel,</v>
-	<v lang="la">præsertim illás,</v>
-	<v lang="de">besonders jene,</v>
-	<v lang="la">quæ maximé indigent misericordiá tuá. Amen.</v>
-	<v lang="de">die Deiner Barmherzigkeit am meisten bedürfen. Amen.</v>
-</p>
+<script>
+	import Prayer from './Prayer.svelte';
+</script>
+
+<Prayer>
+	<p>
+		<v lang="la">Ó mí Jésú, dímitte nóbís débita nostra,</v>
+		<v lang="de">O mein Jesus, verzeih' uns unsere Sünden,</v>
+		<v lang="la">líberá nós ab igne ínferní,</v>
+		<v lang="de">bewahre uns vor den Feuern der Hölle</v>
+		<v lang="la">condúc in cælum omnés animás, </v>
+		<v lang="de">und führe alle Seelen in den Himmel,</v>
+		<v lang="la">præsertim illás,</v>
+		<v lang="de">besonders jene,</v>
+		<v lang="la">quæ maximé indigent misericordiá tuá. Amen.</v>
+		<v lang="de">die Deiner Barmherzigkeit am meisten bedürfen. Amen.</v>
+	</p>
+</Prayer>

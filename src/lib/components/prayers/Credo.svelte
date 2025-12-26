@@ -1,5 +1,10 @@
-<p>
-	<v lang="la">Credo in unum <i><sup>⚬</sup></i> Deum, Patrem omnipoténtem,</v>
+<script>
+	import Prayer from './Prayer.svelte';
+</script>
+
+<Prayer>
+	<p>
+		<v lang="la">Credo in unum <i><sup>⚬</sup></i> Deum, Patrem omnipoténtem,</v>
 	<v lang="de">Ich glaub an den einen <i><sup>⚬</sup></i> Gott. Den allmächtigen Vater,</v>
 	<v lang="la">factórem cæli et terræ,</v>
 	<v lang="de">Schöpfer des Himmels und der Erde,</v>
@@ -80,6 +85,7 @@
 	<v lang="de">zur Vergebung der Sünden.</v>
 	<v lang="la">Et exspécto resurrectiónem mortuórum.</v>
 	<v lang="de">Ich erwarte die Auferstehung der Toten.</v>
-	<v lang="la"><i>♱</i> Et vitam ventúri sǽculi. Amen.</v>
-	<v lang="de"><i>♱</i> Und das Leben der zukünftigen Welt. Amen.</v>
-</p>
+		<v lang="la"><i>♱</i> Et vitam ventúri sǽculi. Amen.</v>
+		<v lang="de"><i>♱</i> Und das Leben der zukünftigen Welt. Amen.</v>
+	</p>
+</Prayer>

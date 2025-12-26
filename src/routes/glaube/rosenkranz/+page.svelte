@@ -1,5 +1,6 @@
 <script>
 import { onMount } from "svelte";
+import { createLanguageContext } from "$lib/contexts/languageContext.js";
 import "$lib/css/christ.css";
 import "$lib/css/rosenkranz.css";
 import Kreuzzeichen from "$lib/components/prayers/Kreuzzeichen.svelte";
@@ -113,6 +114,25 @@ const mysteryTitles = {
 
 // Toggle for including Luminous mysteries
 let includeLuminous = true;
+
+// Create language context for prayer components
+const { showLatin } = createLanguageContext();
+let showBilingual = true;
+
+// Flag to prevent saving before we've loaded from localStorage
+let hasLoadedFromStorage = false;
+
+// Sync checkbox with context
+$: $showLatin = showBilingual;
+
+// Save toggle states to localStorage whenever they change (but only after initial load)
+$: if (typeof localStorage !== 'undefined' && hasLoadedFromStorage) {
+	localStorage.setItem('rosary_includeLuminous', includeLuminous.toString());
+}
+
+$: if (typeof localStorage !== 'undefined' && hasLoadedFromStorage) {
+	localStorage.setItem('rosary_showBilingual', showBilingual.toString());
+}
 
 // Function to get the appropriate mystery for a given weekday
 function getMysteryForWeekday(date, includeLuminous) {
@@ -254,6 +274,25 @@ const sectionPositions = {
 };
 
 onMount(() => {
+	// Load toggle states from localStorage
+	const savedIncludeLuminous = localStorage.getItem('rosary_includeLuminous');
+	const savedShowBilingual = localStorage.getItem('rosary_showBilingual');
+
+	if (savedIncludeLuminous !== null) {
+		includeLuminous = savedIncludeLuminous === 'true';
+	}
+
+	if (savedShowBilingual !== null) {
+		showBilingual = savedShowBilingual === 'true';
+	}
+
+	// Recalculate mystery based on loaded includeLuminous value
+	todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
+	selectMystery(todaysMystery);
+
+	// Now allow saving to localStorage
+	hasLoadedFromStorage = true;
+
 	let scrollLock = null; // Track which side initiated the scroll: 'prayer', 'svg', or 'click'
 	let scrollLockTimeout = null;
 
@@ -736,9 +775,17 @@ onMount(() => {
 	padding-bottom: 2rem;
 }
 
+/* Reduce min-height in monolingual mode since content is shorter */
+.prayer-section.decade:has(:global(.prayer-wrapper.monolingual)) {
+	min-height: 30vh;
+}
+
 @media (max-width: 1023px) {
 	.prayer-section.decade {
 		padding-bottom: 1.5rem;
+	}
+	.prayer-section.decade:has(:global(.prayer-wrapper.monolingual)) {
+		min-height: 20vh;
 	}
 	.prayer-section {
 		padding: 0.5rem;
@@ -1267,6 +1314,14 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 		<label>
 			<input type="checkbox" bind:checked={includeLuminous} on:change={handleToggleChange} />
 			<span>Lichtreiche Geheimnisse einbeziehen</span>
+		</label>
+	</div>
+
+	<!-- Language Toggle -->
+	<div class="luminous-toggle">
+		<label>
+			<input type="checkbox" bind:checked={showBilingual} />
+			<span>Lateinisch und Deutsch anzeigen</span>
 		</label>
 	</div>
 
