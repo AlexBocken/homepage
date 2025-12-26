@@ -43,10 +43,17 @@ h1{
 	text-align: center;
 	font-size: 3rem;
 }
+.toggle-controls {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 2rem;
+}
 </style>
 <h1>Gebete</h1>
 
-<LanguageToggle />
+<div class="toggle-controls">
+	<LanguageToggle />
+</div>
 
 <div class="ccontainer">
 <div class=container>

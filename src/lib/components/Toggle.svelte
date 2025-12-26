@@ -7,11 +7,6 @@
 <style>
 .toggle-wrapper {
 	display: flex;
-	justify-content: center;
-	margin-bottom: 2rem;
-	max-width: 1200px;
-	margin-left: auto;
-	margin-right: auto;
 }
 
 .toggle-wrapper label {

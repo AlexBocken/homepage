@@ -100,6 +100,7 @@
 /* German gets primary styling in monolingual mode */
 .prayer-wrapper.monolingual :global(v:lang(de)) {
 	color: var(--nord6);
+	margin-bottom: 0.5em;
 }
 
 @media(prefers-color-scheme: light) {
