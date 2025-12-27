@@ -18,7 +18,7 @@
     user = data.session.user;
   }
 
-  $: {
+  $effect(() => {
     // Check if URL contains payment view route OR if we have paymentId in state
     const match = $page.url.pathname.match(/\/cospend\/payments\/view\/([^\/]+)/);
     const statePaymentId = $page.state?.paymentId;
@@ -32,7 +32,7 @@
       showModal = false;
       paymentId = null;
     }
-  }
+  });
 
   async function handlePaymentDeleted() {
     // Close the modal
