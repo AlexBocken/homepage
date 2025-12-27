@@ -250,9 +250,15 @@ footer{
 		margin-bottom: 2rem;
 	}
 
+	.nav_site .links-wrapper {
+		align-self: flex-start;
+		width: 100%;
+		margin: 2rem;
+	}
 	:global(.site_header){
 		flex-direction: column;
 		padding-top: min(10rem, 10vh);
+		align-items: flex-start;
 	}
 	:global(.site_header li, .site_header a){
 		font-size: 4rem;
@@ -266,6 +272,10 @@ footer{
 	}
 	.nav_site .header-right{
 		flex-direction: column;
+		position: absolute;
+		bottom: 2rem;
+		left: 50%;
+		transform: translateX(-50%);
 	}
 	.language-selector-desktop{
 		display: none;
