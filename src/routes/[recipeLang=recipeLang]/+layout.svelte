@@ -1,6 +1,7 @@
 <script>
 import Header from '$lib/components/Header.svelte'
-    import UserHeader from '$lib/components/UserHeader.svelte';
+import UserHeader from '$lib/components/UserHeader.svelte';
+import LanguageSelector from '$lib/components/LanguageSelector.svelte';
 let { data } = $props();
 
 let user = $derived(data.session?.user);
@@ -29,6 +30,8 @@ const labels = $derived({
 	<li><a href="/{data.recipeLang}/tag">{labels.keywords}</a></li>
 	<li><a href="/rezepte/tips-and-tricks">{labels.tips}</a></li>
 	</ul>
-	<UserHeader slot=right_side {user} showLanguageSelector={true}></UserHeader>
+	<LanguageSelector slot=language_selector_mobile />
+	<LanguageSelector slot=language_selector_desktop />
+	<UserHeader slot=right_side {user}></UserHeader>
 	<slot></slot>
 </Header>
