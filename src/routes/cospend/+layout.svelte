@@ -38,19 +38,29 @@
     // Close the modal
     showModal = false;
     paymentId = null;
-    
+
     // Dispatch a custom event to trigger dashboard refresh
     if ($page.route.id === '/cospend') {
       window.dispatchEvent(new CustomEvent('dashboardRefresh'));
     }
   }
+
+  function isActive(path) {
+    const currentPath = $page.url.pathname;
+    // Exact match for cospend root
+    if (path === '/cospend') {
+      return currentPath === '/cospend' || currentPath === '/cospend/';
+    }
+    // For other paths, check if current path starts with the link path
+    return currentPath.startsWith(path);
+  }
 </script>
 
 <Header>
   <ul class="site_header" slot="links">
-    <li><a href="/cospend">Dashboard</a></li>
-    <li><a href="/cospend/payments">All Payments</a></li>
-    <li><a href="/cospend/recurring">Recurring Payments</a></li>
+    <li><a href="/cospend" class:active={isActive('/cospend')}>Dashboard</a></li>
+    <li><a href="/cospend/payments" class:active={isActive('/cospend/payments')}>All Payments</a></li>
+    <li><a href="/cospend/recurring" class:active={isActive('/cospend/recurring')}>Recurring Payments</a></li>
   </ul>
   <UserHeader slot="right_side" {user}></UserHeader>
   

@@ -1,4 +1,5 @@
 <script>
+import { page } from '$app/stores';
 import Header from '$lib/components/Header.svelte'
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
@@ -10,25 +11,33 @@ const isEnglish = $derived(data.lang === 'en');
 const labels = $derived({
 	allRecipes: isEnglish ? 'All Recipes' : 'Alle Rezepte',
 	favorites: isEnglish ? 'Favorites' : 'Favoriten',
-	inSeason: isEnglish ? 'In Season' : 'In Saison',
+	inSeason: isEnglish ? 'In Season' : 'Saison',
 	category: isEnglish ? 'Category' : 'Kategorie',
 	icon: 'Icon',
-	keywords: isEnglish ? 'Keywords' : 'Stichwörter',
-	tips: isEnglish ? 'Tips' : 'Tipps'
+	keywords: isEnglish ? 'Keywords' : 'Tags'
 });
+
+function isActive(path) {
+	const currentPath = $page.url.pathname;
+	// Exact match for recipe lang root
+	if (path === `/${data.recipeLang}`) {
+		return currentPath === `/${data.recipeLang}` || currentPath === `/${data.recipeLang}/`;
+	}
+	// For other paths, check if current path starts with the link path
+	return currentPath.startsWith(path);
+}
 </script>
 
 <Header>
 	<ul class=site_header slot=links>
-	<li><a href="/{data.recipeLang}">{labels.allRecipes}</a></li>
+	<li><a href="/{data.recipeLang}" class:active={isActive(`/${data.recipeLang}`)}>{labels.allRecipes}</a></li>
 	{#if user}
-		<li><a href="/{data.recipeLang}/favorites">{labels.favorites}</a></li>
+		<li><a href="/{data.recipeLang}/favorites" class:active={isActive(`/${data.recipeLang}/favorites`)}>{labels.favorites}</a></li>
 	{/if}
-	<li><a href="/{data.recipeLang}/season">{labels.inSeason}</a></li>
-	<li><a href="/{data.recipeLang}/category">{labels.category}</a></li>
-	<li><a href="/{data.recipeLang}/icon">{labels.icon}</a></li>
-	<li><a href="/{data.recipeLang}/tag">{labels.keywords}</a></li>
-	<li><a href="/rezepte/tips-and-tricks">{labels.tips}</a></li>
+	<li><a href="/{data.recipeLang}/season" class:active={isActive(`/${data.recipeLang}/season`)}>{labels.inSeason}</a></li>
+	<li><a href="/{data.recipeLang}/category" class:active={isActive(`/${data.recipeLang}/category`)}>{labels.category}</a></li>
+	<li><a href="/{data.recipeLang}/icon" class:active={isActive(`/${data.recipeLang}/icon`)}>{labels.icon}</a></li>
+	<li><a href="/{data.recipeLang}/tag" class:active={isActive(`/${data.recipeLang}/tag`)}>{labels.keywords}</a></li>
 	</ul>
 	<LanguageSelector slot=language_selector_mobile />
 	<LanguageSelector slot=language_selector_desktop />
