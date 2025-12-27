@@ -1,7 +1,12 @@
 <script>
 import "$lib/css/nordtheme.css"
 import { onMount } from "svelte";
+import { page } from '$app/stores';
 import Symbol from "./Symbol.svelte"
+
+let underlineLeft = $state(0);
+let underlineWidth = $state(0);
+let disableTransition = $state(false);
 
 function toggle_sidebar(state){
 	// state: force hidden state (optional)
@@ -10,11 +15,61 @@ function toggle_sidebar(state){
 	else nav_el.hidden = state
 }
 
+function updateUnderline() {
+	const activeLink = document.querySelector('.site_header a.active');
+	const linksWrapper = document.querySelector('.links-wrapper');
+
+	if (activeLink && linksWrapper) {
+		const wrapperRect = linksWrapper.getBoundingClientRect();
+		const linkRect = activeLink.getBoundingClientRect();
+
+		// Get computed padding to exclude from width and adjust position
+		const computedStyle = window.getComputedStyle(activeLink);
+		const paddingLeft = parseFloat(computedStyle.paddingLeft);
+		const paddingRight = parseFloat(computedStyle.paddingRight);
+
+		underlineLeft = linkRect.left - wrapperRect.left + paddingLeft;
+		underlineWidth = linkRect.width - paddingLeft - paddingRight;
+	} else {
+		underlineWidth = 0;
+	}
+}
+
+// Update underline when page changes
+$effect(() => {
+	$page.url.pathname; // Subscribe to pathname changes
+	// Use setTimeout to ensure DOM has updated
+	setTimeout(updateUnderline, 0);
+});
+
 onMount( () => {
-const link_els = document.querySelectorAll("nav a")
-link_els.forEach((el) => {
-	el.addEventListener("click", () => {toggle_sidebar(true)});
-})
+	const link_els = document.querySelectorAll("nav a")
+	link_els.forEach((el) => {
+		el.addEventListener("click", () => {toggle_sidebar(true)});
+	})
+
+	// Initialize underline position
+	updateUnderline();
+
+	// Update underline on resize, with transition disabled
+	let resizeTimer;
+	function handleResize() {
+		disableTransition = true;
+		updateUnderline(); // Update immediately to prevent lag
+
+		clearTimeout(resizeTimer);
+		resizeTimer = setTimeout(() => {
+			// Re-enable transition after resize has settled
+			disableTransition = false;
+		}, 150);
+	}
+
+	window.addEventListener('resize', handleResize);
+
+	return () => {
+		window.removeEventListener('resize', handleResize);
+		clearTimeout(resizeTimer);
+	};
 })
 
 </script>
@@ -39,7 +94,7 @@ nav[hidden]{
 :global(a.entry)
 {
 	list-style-type:none;
-	transition: 100ms;
+	transition: color 100ms;
 	color: white;
 	user-select: none;
 }
@@ -51,11 +106,12 @@ nav[hidden]{
 	font-size: 1.2rem;
 	color: inherit;
 	border-radius: 1000px;
-	padding: 0.5rem 1rem;
+	padding: 0.5rem 0.75rem;
 }
 
 :global(.site_header li:hover),
 :global(.site_header li:focus-within),
+:global(.site_header li:has(a.active)),
 :global(.entry:hover),
 :global(.entry:focus-visible)
 {
@@ -66,11 +122,26 @@ nav[hidden]{
 	padding-block: 1.5rem;
 	display: flex;
 	flex-direction: row;
-	gap: 1rem;
+	gap: 0.5rem;
 	justify-content: space-evenly;
 	max-width: 1000px;
 	margin: 0;
 	margin-inline: auto;
+}
+.links-wrapper {
+	position: relative;
+	flex: 1;
+}
+.active-underline {
+	position: absolute;
+	bottom: 1.2rem;
+	height: 2px;
+	background-color: var(--red);
+	transition: left 300ms ease-out, width 300ms ease-out;
+	pointer-events: none;
+}
+.active-underline.no-transition {
+	transition: none;
 }
 .nav_button{
 	display: none;
@@ -158,7 +229,7 @@ footer{
 		height: 100vh; /* dvh does not work, breaks because of transition and only being applied after scroll ends*/
 		margin-bottom: 50vh;
 		width: min(95svw, 25em);
-		transition: 100ms;
+		transition: transform 100ms;
 		z-index: 10;
 		flex-direction: column;
 		justify-content: flex-start !important;
@@ -199,6 +270,15 @@ footer{
 	.language-selector-desktop{
 		display: none;
 	}
+	.active-underline {
+		display: none;
+	}
+	:global(.nav_site .site_header a.active) {
+		text-decoration: underline;
+		text-decoration-color: var(--red);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 0.3rem;
+	}
 }
 </style>
 <div class=wrapper lang=de>
@@ -213,7 +293,10 @@ footer{
 </div>
 <nav hidden class=nav_site>
 	<a class=entry href="/"><Symbol></Symbol></a>
-	<slot name=links></slot>
+	<div class="links-wrapper">
+		<slot name=links></slot>
+		<div class="active-underline" class:no-transition={disableTransition} style="left: {underlineLeft}px; width: {underlineWidth}px;"></div>
+	</div>
 	<div class="header-right">
 		<div class="language-selector-desktop">
 			<slot name=language_selector_desktop></slot>
