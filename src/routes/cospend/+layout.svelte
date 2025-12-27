@@ -8,7 +8,7 @@
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
 
-  export let data;
+  let { data, children } = $props();
   
   let showModal = false;
   let paymentId = null;
@@ -57,16 +57,21 @@
 </script>
 
 <Header>
-  <ul class="site_header" slot="links">
-    <li><a href="/cospend" class:active={isActive('/cospend')}>Dashboard</a></li>
-    <li><a href="/cospend/payments" class:active={isActive('/cospend/payments')}>All Payments</a></li>
-    <li><a href="/cospend/recurring" class:active={isActive('/cospend/recurring')}>Recurring Payments</a></li>
-  </ul>
-  <UserHeader slot="right_side" {user}></UserHeader>
-  
+  {#snippet links()}
+    <ul class="site_header">
+      <li><a href="/cospend" class:active={isActive('/cospend')}>Dashboard</a></li>
+      <li><a href="/cospend/payments" class:active={isActive('/cospend/payments')}>All Payments</a></li>
+      <li><a href="/cospend/recurring" class:active={isActive('/cospend/recurring')}>Recurring Payments</a></li>
+    </ul>
+  {/snippet}
+
+  {#snippet right_side()}
+    <UserHeader {user}></UserHeader>
+  {/snippet}
+
   <div class="layout-container" class:has-modal={showModal}>
     <div class="main-content">
-      <slot />
+      {@render children()}
     </div>
 
     <div class="side-panel">

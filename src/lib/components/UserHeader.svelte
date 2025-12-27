@@ -136,7 +136,7 @@ h2 + p{
 </style>
 
 {#if user}
-	<button on:click={toggle_options} style="background-image: url(https://bocken.org/static/user/thumb/{user.nickname}.webp)" id=button>
+	<button onclick={toggle_options} style="background-image: url(https://bocken.org/static/user/thumb/{user.nickname}.webp)" id=button>
 	<div id=options class="speech top" hidden>
 			<h2>{user.name}</h2>
 			<p>({user.nickname})</p>
