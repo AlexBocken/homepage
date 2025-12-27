@@ -11,10 +11,10 @@ const isEnglish = $derived(data.lang === 'en');
 const labels = $derived({
 	allRecipes: isEnglish ? 'All Recipes' : 'Alle Rezepte',
 	favorites: isEnglish ? 'Favorites' : 'Favoriten',
-	inSeason: isEnglish ? 'In Season' : 'Saison',
+	inSeason: isEnglish ? 'Season' : 'Saison',
 	category: isEnglish ? 'Category' : 'Kategorie',
 	icon: 'Icon',
-	keywords: isEnglish ? 'Keywords' : 'Tags'
+	keywords: 'Tags'
 });
 
 function isActive(path) {
