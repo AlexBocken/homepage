@@ -14,6 +14,74 @@ const CATEGORY_TRANSLATIONS: Record<string, string> = {
 	"Snack": "Snack"
 };
 
+// Ingredient terminology dictionary - German cooking terms to British English
+// These override DeepL translations for consistent terminology
+const INGREDIENT_TERMINOLOGY: Record<string, string> = {
+	// Measurement abbreviations
+	"EL": "tbsp",
+	"TL": "tsp",
+	"Msp": "pinch",
+	"Prise": "pinch",
+	"Zweig": "twig",
+	"Zweige": "twigs",
+	"Bund": "bunch",
+
+	// Common ingredients
+	"Ei": "egg",
+	"Öl": "Oil",
+	"Backen": "Baking",
+};
+
+// US English to British English food terminology
+// Applied after DeepL translation to ensure British English
+const US_TO_BRITISH_ENGLISH: Record<string, string> = {
+	"zucchini": "courgette",
+	"zucchinis": "courgettes",
+	"eggplant": "aubergine",
+	"eggplants": "aubergines",
+	"cilantro": "coriander",
+	"arugula": "rocket",
+	"rutabaga": "swede",
+	"rutabagas": "swedes",
+	"bell pepper": "pepper",
+	"bell peppers": "peppers",
+	"scallion": "spring onion",
+	"scallions": "spring onions",
+	"green onion": "spring onion",
+	"green onions": "spring onions",
+};
+
+/**
+ * Apply ingredient terminology replacements to translated text
+ * Handles both German terms that may have slipped through DeepL
+ * and US English to British English conversions
+ * @param text - The translated text to process
+ * @returns Text with terminology replacements applied
+ */
+function applyIngredientTerminology(text: string): string {
+	if (!text) return text;
+
+	let result = text;
+
+	// First pass: Replace any remaining German terms with British English
+	// Using word boundaries to avoid partial matches
+	Object.entries(INGREDIENT_TERMINOLOGY).forEach(([german, english]) => {
+		// Case-insensitive replacement with word boundaries
+		const regex = new RegExp(`\\b${german}\\b`, 'gi');
+		result = result.replace(regex, english);
+	});
+
+	// Second pass: Replace US English terms with British English
+	// More careful here to handle both whole words and phrases
+	Object.entries(US_TO_BRITISH_ENGLISH).forEach(([us, british]) => {
+		// Case-insensitive replacement with word boundaries
+		const regex = new RegExp(`\\b${us}\\b`, 'gi');
+		result = result.replace(regex, british);
+	});
+
+	return result;
+}
+
 interface DeepLResponse {
 	translations: Array<{
 		detected_source_language: string;
@@ -46,13 +114,13 @@ class DeepLTranslationService {
 	/**
 	 * Translate a single text string
 	 * @param text - The text to translate
-	 * @param targetLang - Target language code (default: 'EN')
+	 * @param targetLang - Target language code (default: 'EN-GB' for British English)
 	 * @param preserveFormatting - Whether to preserve HTML/formatting
 	 * @returns Translated text
 	 */
 	async translateText(
 		text: string | null | undefined,
-		targetLang: string = 'EN',
+		targetLang: string = 'EN-GB',
 		preserveFormatting: boolean = false
 	): Promise<string> {
 		// Return empty string for null, undefined, or empty strings
@@ -86,7 +154,10 @@ class DeepLTranslationService {
 			}
 
 			const data: DeepLResponse = await response.json();
-			return data.translations[0]?.text || '';
+			const translatedText = data.translations[0]?.text || '';
+
+			// Apply ingredient terminology replacements for British English
+			return applyIngredientTerminology(translatedText);
 		} catch (error) {
 			console.error('Translation error:', error);
 			throw error;
@@ -97,12 +168,12 @@ class DeepLTranslationService {
 	 * Translate multiple texts in a single batch request
 	 * More efficient than individual calls
 	 * @param texts - Array of texts to translate
-	 * @param targetLang - Target language code
+	 * @param targetLang - Target language code (default: 'EN-GB' for British English)
 	 * @returns Array of translated texts (preserves empty strings in original positions)
 	 */
 	async translateBatch(
 		texts: string[],
-		targetLang: string = 'EN'
+		targetLang: string = 'EN-GB'
 	): Promise<string[]> {
 		if (!texts.length) {
 			return [];
@@ -155,13 +226,16 @@ class DeepLTranslationService {
 			const data: DeepLResponse = await response.json();
 			const translatedTexts = data.translations.map(t => t.text);
 
+			// Apply ingredient terminology replacements for British English
+			const processedTexts = translatedTexts.map(text => applyIngredientTerminology(text));
+
 			// Map translated texts back to original positions, preserving empty strings
 			const result: string[] = [];
 			let translatedIndex = 0;
 
 			for (let i = 0; i < texts.length; i++) {
 				if (nonEmptyIndices.includes(i)) {
-					result.push(translatedTexts[translatedIndex]);
+					result.push(processedTexts[translatedIndex]);
 					translatedIndex++;
 				} else {
 					result.push(''); // Keep empty string
@@ -340,10 +414,10 @@ class DeepLTranslationService {
 					result.description = await this.translateText(recipe.description);
 					break;
 				case 'preamble':
-					result.preamble = await this.translateText(recipe.preamble || '', 'EN', true);
+					result.preamble = await this.translateText(recipe.preamble || '', 'EN-GB', true);
 					break;
 				case 'addendum':
-					result.addendum = await this.translateText(recipe.addendum || '', 'EN', true);
+					result.addendum = await this.translateText(recipe.addendum || '', 'EN-GB', true);
 					break;
 				case 'note':
 					result.note = await this.translateText(recipe.note || '');
