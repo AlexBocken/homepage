@@ -127,7 +127,9 @@
 
 		const fieldsToCheck = [
 			'name', 'description', 'preamble', 'addendum',
-			'note', 'category', 'tags', 'ingredients', 'instructions'
+			'note', 'category', 'tags', 'portions', 'preparation',
+			'cooking', 'total_time', 'baking', 'fermentation',
+			'ingredients', 'instructions'
 		];
 
 		for (const field of fieldsToCheck) {
@@ -143,7 +145,9 @@
 
 	// Show translation workflow before submission
 	function prepareSubmit() {
-		changedFields = detectChangedFields();
+		// Only detect changed fields if there's an existing translation
+		// For first-time translations, changedFields should be empty
+		changedFields = translationData ? detectChangedFields() : [];
 		showTranslationWorkflow = true;
 
 		// Scroll to translation section

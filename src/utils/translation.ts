@@ -52,18 +52,17 @@ const US_TO_BRITISH_ENGLISH: Record<string, string> = {
 };
 
 /**
- * Apply ingredient terminology replacements to translated text
- * Handles both German terms that may have slipped through DeepL
- * and US English to British English conversions
- * @param text - The translated text to process
- * @returns Text with terminology replacements applied
+ * Pre-process German text to replace cooking terminology BEFORE DeepL translation
+ * This ensures German abbreviations like EL, TL are correctly translated to tbsp, tsp
+ * @param text - The German text to pre-process
+ * @returns Text with German cooking terms replaced with English equivalents
  */
-function applyIngredientTerminology(text: string): string {
+function replaceGermanCookingTerms(text: string): string {
 	if (!text) return text;
 
 	let result = text;
 
-	// First pass: Replace any remaining German terms with British English
+	// Replace German cooking terms with English equivalents
 	// Using word boundaries to avoid partial matches
 	Object.entries(INGREDIENT_TERMINOLOGY).forEach(([german, english]) => {
 		// Case-insensitive replacement with word boundaries
@@ -71,8 +70,21 @@ function applyIngredientTerminology(text: string): string {
 		result = result.replace(regex, english);
 	});
 
-	// Second pass: Replace US English terms with British English
-	// More careful here to handle both whole words and phrases
+	return result;
+}
+
+/**
+ * Post-process English text to convert US English to British English
+ * Applied AFTER DeepL translation
+ * @param text - The translated English text to process
+ * @returns Text with US English terms converted to British English
+ */
+function applyBritishEnglish(text: string): string {
+	if (!text) return text;
+
+	let result = text;
+
+	// Replace US English terms with British English
 	Object.entries(US_TO_BRITISH_ENGLISH).forEach(([us, british]) => {
 		// Case-insensitive replacement with word boundaries
 		const regex = new RegExp(`\\b${us}\\b`, 'gi');
@@ -133,9 +145,12 @@ class DeepLTranslationService {
 		}
 
 		try {
+			// Pre-process: Replace German cooking terms BEFORE sending to DeepL
+			const preprocessedText = replaceGermanCookingTerms(text);
+
 			const params = new URLSearchParams({
 				auth_key: this.apiKey,
-				text: text,
+				text: preprocessedText,
 				target_lang: targetLang,
 				...(preserveFormatting && { tag_handling: 'xml' })
 			});
@@ -156,8 +171,8 @@ class DeepLTranslationService {
 			const data: DeepLResponse = await response.json();
 			const translatedText = data.translations[0]?.text || '';
 
-			// Apply ingredient terminology replacements for British English
-			return applyIngredientTerminology(translatedText);
+			// Post-process: Convert US English to British English
+			return applyBritishEnglish(translatedText);
 		} catch (error) {
 			console.error('Translation error:', error);
 			throw error;
@@ -190,7 +205,9 @@ class DeepLTranslationService {
 		texts.forEach((text, index) => {
 			if (text && text.trim()) {
 				nonEmptyIndices.push(index);
-				nonEmptyTexts.push(text);
+				// Pre-process: Replace German cooking terms BEFORE sending to DeepL
+				const preprocessed = replaceGermanCookingTerms(text);
+				nonEmptyTexts.push(preprocessed);
 			}
 		});
 
@@ -205,7 +222,7 @@ class DeepLTranslationService {
 				target_lang: targetLang,
 			});
 
-			// Add each non-empty text as a separate 'text' parameter
+			// Add each preprocessed non-empty text as a separate 'text' parameter
 			nonEmptyTexts.forEach(text => {
 				params.append('text', text);
 			});
@@ -226,8 +243,8 @@ class DeepLTranslationService {
 			const data: DeepLResponse = await response.json();
 			const translatedTexts = data.translations.map(t => t.text);
 
-			// Apply ingredient terminology replacements for British English
-			const processedTexts = translatedTexts.map(text => applyIngredientTerminology(text));
+			// Post-process: Convert US English to British English
+			const processedTexts = translatedTexts.map(text => applyBritishEnglish(text));
 
 			// Map translated texts back to original positions, preserving empty strings
 			const result: string[] = [];
@@ -267,7 +284,22 @@ class DeepLTranslationService {
 				recipe.preamble || '',
 				recipe.addendum || '',
 				recipe.note || '',
+				recipe.portions || '',
+				recipe.preparation || '',
+				recipe.cooking || '',
+				recipe.total_time || '',
 			];
+
+			// Add baking object fields
+			const baking = recipe.baking || {};
+			textsToTranslate.push(baking.temperature || '');
+			textsToTranslate.push(baking.length || '');
+			textsToTranslate.push(baking.mode || '');
+
+			// Add fermentation object fields
+			const fermentation = recipe.fermentation || {};
+			textsToTranslate.push(fermentation.bulk || '');
+			textsToTranslate.push(fermentation.final || '');
 
 			// Add tags
 			const tags = recipe.tags || [];
@@ -279,6 +311,7 @@ class DeepLTranslationService {
 				textsToTranslate.push(ing.name || '');
 				(ing.list || []).forEach((item: any) => {
 					textsToTranslate.push(item.name || '');
+					textsToTranslate.push(item.unit || ''); // Translate units (EL→tbsp, TL→tsp)
 				});
 			});
 
@@ -310,13 +343,26 @@ class DeepLTranslationService {
 				preamble: translated[index++],
 				addendum: translated[index++],
 				note: translated[index++],
+				portions: translated[index++],
+				preparation: translated[index++],
+				cooking: translated[index++],
+				total_time: translated[index++],
+				baking: {
+					temperature: translated[index++],
+					length: translated[index++],
+					mode: translated[index++],
+				},
+				fermentation: {
+					bulk: translated[index++],
+					final: translated[index++],
+				},
 				category: translatedCategory,
 				tags: tags.map(() => translated[index++]),
 				ingredients: ingredients.map((ing: any) => ({
 					name: translated[index++],
 					list: (ing.list || []).map((item: any) => ({
 						name: translated[index++],
-						unit: item.unit,
+						unit: translated[index++], // Use translated unit (tbsp, tsp, etc.)
 						amount: item.amount,
 					}))
 				})),
@@ -356,6 +402,12 @@ class DeepLTranslationService {
 			'note',
 			'category',
 			'tags',
+			'portions',
+			'preparation',
+			'cooking',
+			'total_time',
+			'baking',
+			'fermentation',
 			'ingredients',
 			'instructions',
 		];
@@ -429,6 +481,31 @@ class DeepLTranslationService {
 				case 'tags':
 					result.tags = await this.translateBatch(recipe.tags || []);
 					break;
+				case 'portions':
+					result.portions = await this.translateText(recipe.portions || '');
+					break;
+				case 'preparation':
+					result.preparation = await this.translateText(recipe.preparation || '');
+					break;
+				case 'cooking':
+					result.cooking = await this.translateText(recipe.cooking || '');
+					break;
+				case 'total_time':
+					result.total_time = await this.translateText(recipe.total_time || '');
+					break;
+				case 'baking':
+					result.baking = {
+						temperature: await this.translateText(recipe.baking?.temperature || ''),
+						length: await this.translateText(recipe.baking?.length || ''),
+						mode: await this.translateText(recipe.baking?.mode || ''),
+					};
+					break;
+				case 'fermentation':
+					result.fermentation = {
+						bulk: await this.translateText(recipe.fermentation?.bulk || ''),
+						final: await this.translateText(recipe.fermentation?.final || ''),
+					};
+					break;
 				case 'ingredients':
 					// This would be complex - for now, re-translate all ingredients
 					result.ingredients = await this._translateIngredients(recipe.ingredients || []);
@@ -455,6 +532,7 @@ class DeepLTranslationService {
 			allTexts.push(ing.name || '');
 			(ing.list || []).forEach((item: any) => {
 				allTexts.push(item.name || '');
+				allTexts.push(item.unit || ''); // Translate units (EL→tbsp, TL→tsp)
 			});
 		});
 
@@ -465,7 +543,7 @@ class DeepLTranslationService {
 			name: translated[index++],
 			list: (ing.list || []).map((item: any) => ({
 				name: translated[index++],
-				unit: item.unit,
+				unit: translated[index++], // Use translated unit
 				amount: item.amount,
 			}))
 		}));
