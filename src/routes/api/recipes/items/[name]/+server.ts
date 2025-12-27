@@ -38,17 +38,17 @@ export const GET: RequestHandler = async ({ params }) => {
 			ingredients: recipe.translations.en.ingredients || [],
 			instructions: recipe.translations.en.instructions || [],
 			images: recipe.images || [], // Use original images with full paths, but English alt/captions
-			// Copy timing/metadata from German version (with defaults)
+			// Use English translations for timing/metadata fields when available, fallback to German version
 			icon: recipe.icon || '',
 			dateCreated: recipe.dateCreated,
 			dateModified: recipe.dateModified,
 			season: recipe.season || [],
-			baking: recipe.baking || { temperature: '', length: '', mode: '' },
-			preparation: recipe.preparation || '',
-			fermentation: recipe.fermentation || { bulk: '', final: '' },
-			portions: recipe.portions || '',
-			cooking: recipe.cooking || '',
-			total_time: recipe.total_time || '',
+			baking: recipe.translations.en.baking || recipe.baking || { temperature: '', length: '', mode: '' },
+			preparation: recipe.translations.en.preparation || recipe.preparation || '',
+			fermentation: recipe.translations.en.fermentation || recipe.fermentation || { bulk: '', final: '' },
+			portions: recipe.translations.en.portions || recipe.portions || '',
+			cooking: recipe.translations.en.cooking || recipe.cooking || '',
+			total_time: recipe.translations.en.total_time || recipe.total_time || '',
 			// Include translation status for display
 			translationStatus: recipe.translations.en.translationStatus,
 			// Include German short_name for language switcher
