@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
+	import { languageStore } from '$lib/stores/language';
 	import { onMount } from 'svelte';
 
-	let currentLang = $state('de');
 	let currentPath = $state('');
 	let langButton: HTMLButtonElement;
 	let langOptions: HTMLDivElement;
@@ -14,13 +14,13 @@
 			const path = window.location.pathname;
 			currentPath = path;
 			if (path.startsWith('/recipes')) {
-				currentLang = 'en';
+				languageStore.set('en');
 			} else if (path.startsWith('/rezepte')) {
-				currentLang = 'de';
+				languageStore.set('de');
 			} else if (path === '/') {
 				// On main page, read from localStorage
 				const preferredLanguage = localStorage.getItem('preferredLanguage');
-				currentLang = preferredLanguage === 'en' ? 'en' : 'de';
+				languageStore.set(preferredLanguage === 'en' ? 'en' : 'de');
 			}
 		}
 	});
@@ -32,8 +32,8 @@
 	}
 
 	async function switchLanguage(lang: 'de' | 'en') {
-		// Update the current language state immediately
-		currentLang = lang;
+		// Update the shared language store immediately
+		languageStore.set(lang);
 
 		// Store preference
 		if (typeof localStorage !== 'undefined') {
@@ -144,17 +144,17 @@
 
 <div class="language-selector">
 	<button bind:this={langButton} onclick={toggle_language_options} class="language-button">
-		{currentLang.toUpperCase()}
+		{$languageStore.toUpperCase()}
 	</button>
 	<div bind:this={langOptions} class="language-options" hidden>
 		<button
-			class:active={currentLang === 'de'}
+			class:active={$languageStore === 'de'}
 			onclick={() => switchLanguage('de')}
 		>
 			DE
 		</button>
 		<button
-			class:active={currentLang === 'en'}
+			class:active={$languageStore === 'en'}
 			onclick={() => switchLanguage('en')}
 		>
 			EN
