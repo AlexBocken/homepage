@@ -44,7 +44,15 @@
 			}
 
 			const result = await response.json();
-			editableEnglish = result.translatedRecipe;
+
+			// If translating only specific fields, merge with existing translation
+			// Otherwise use the full translation result
+			if (isEditMode && changedFields.length > 0 && englishData) {
+				editableEnglish = { ...englishData, ...result.translatedRecipe };
+			} else {
+				editableEnglish = result.translatedRecipe;
+			}
+
 			translationState = 'preview';
 
 			// Notify parent component
