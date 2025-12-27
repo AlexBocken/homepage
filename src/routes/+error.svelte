@@ -80,8 +80,10 @@
 </svelte:head>
 
 <Header>
-  <ul class="site_header" slot="links">
-  </ul>
+  {#snippet links()}
+    <ul class="site_header">
+    </ul>
+  {/snippet}
 
   <main class="error-page">
     <div class="error-container">
@@ -109,38 +111,38 @@
 
       <div class="error-actions">
         {#if status === 401}
-          <button class="btn btn-primary" on:click={login}>
+          <button class="btn btn-primary" onclick={login}>
             Anmelden
           </button>
-          <button class="btn btn-secondary" on:click={goHome}>
+          <button class="btn btn-secondary" onclick={goHome}>
             Zur Startseite
           </button>
         {:else if status === 403}
-          <button class="btn btn-primary" on:click={goHome}>
+          <button class="btn btn-primary" onclick={goHome}>
             Zur Startseite
           </button>
-          <button class="btn btn-secondary" on:click={goBack}>
+          <button class="btn btn-secondary" onclick={goBack}>
             Zurück
           </button>
         {:else if status === 404}
-          <button class="btn btn-primary" on:click={goHome}>
+          <button class="btn btn-primary" onclick={goHome}>
             Zur Startseite
           </button>
-          <button class="btn btn-secondary" on:click={goBack}>
+          <button class="btn btn-secondary" onclick={goBack}>
             Zurück
           </button>
         {:else if status === 500}
-          <button class="btn btn-primary" on:click={goHome}>
+          <button class="btn btn-primary" onclick={goHome}>
             Zur Startseite
           </button>
-          <button class="btn btn-secondary" on:click={goBack}>
+          <button class="btn btn-secondary" onclick={goBack}>
             Erneut versuchen
           </button>
         {:else}
-          <button class="btn btn-primary" on:click={goHome}>
+          <button class="btn btn-primary" onclick={goHome}>
             Zur Startseite
           </button>
-          <button class="btn btn-secondary" on:click={goBack}>
+          <button class="btn btn-secondary" onclick={goBack}>
             Zurück
           </button>
         {/if}

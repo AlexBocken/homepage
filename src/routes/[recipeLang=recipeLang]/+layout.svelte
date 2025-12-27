@@ -3,7 +3,7 @@ import { page } from '$app/stores';
 import Header from '$lib/components/Header.svelte'
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-let { data } = $props();
+let { data, children } = $props();
 
 let user = $derived(data.session?.user);
 
@@ -29,18 +29,30 @@ function isActive(path) {
 </script>
 
 <Header>
-	<ul class=site_header slot=links>
-	<li><a href="/{data.recipeLang}" class:active={isActive(`/${data.recipeLang}`)}>{labels.allRecipes}</a></li>
-	{#if user}
-		<li><a href="/{data.recipeLang}/favorites" class:active={isActive(`/${data.recipeLang}/favorites`)}>{labels.favorites}</a></li>
-	{/if}
-	<li><a href="/{data.recipeLang}/season" class:active={isActive(`/${data.recipeLang}/season`)}>{labels.inSeason}</a></li>
-	<li><a href="/{data.recipeLang}/category" class:active={isActive(`/${data.recipeLang}/category`)}>{labels.category}</a></li>
-	<li><a href="/{data.recipeLang}/icon" class:active={isActive(`/${data.recipeLang}/icon`)}>{labels.icon}</a></li>
-	<li><a href="/{data.recipeLang}/tag" class:active={isActive(`/${data.recipeLang}/tag`)}>{labels.keywords}</a></li>
-	</ul>
-	<LanguageSelector slot=language_selector_mobile />
-	<LanguageSelector slot=language_selector_desktop />
-	<UserHeader slot=right_side {user}></UserHeader>
-	<slot></slot>
+	{#snippet links()}
+		<ul class=site_header>
+		<li><a href="/{data.recipeLang}" class:active={isActive(`/${data.recipeLang}`)}>{labels.allRecipes}</a></li>
+		{#if user}
+			<li><a href="/{data.recipeLang}/favorites" class:active={isActive(`/${data.recipeLang}/favorites`)}>{labels.favorites}</a></li>
+		{/if}
+		<li><a href="/{data.recipeLang}/season" class:active={isActive(`/${data.recipeLang}/season`)}>{labels.inSeason}</a></li>
+		<li><a href="/{data.recipeLang}/category" class:active={isActive(`/${data.recipeLang}/category`)}>{labels.category}</a></li>
+		<li><a href="/{data.recipeLang}/icon" class:active={isActive(`/${data.recipeLang}/icon`)}>{labels.icon}</a></li>
+		<li><a href="/{data.recipeLang}/tag" class:active={isActive(`/${data.recipeLang}/tag`)}>{labels.keywords}</a></li>
+		</ul>
+	{/snippet}
+
+	{#snippet language_selector_mobile()}
+		<LanguageSelector />
+	{/snippet}
+
+	{#snippet language_selector_desktop()}
+		<LanguageSelector />
+	{/snippet}
+
+	{#snippet right_side()}
+		<UserHeader {user}></UserHeader>
+	{/snippet}
+
+	{@render children()}
 </Header>
