@@ -51,6 +51,19 @@ const RecipeSchema = new mongoose.Schema(
          note: {type: String},
          category: {type: String},
          tags: [String],
+         portions: {type: String},
+         preparation: {type: String},
+         cooking: {type: String},
+         total_time: {type: String},
+         baking: {
+           temperature: {type: String},
+           length: {type: String},
+           mode: {type: String},
+         },
+         fermentation: {
+           bulk: {type: String},
+           final: {type: String},
+         },
          ingredients: [{
            name: {type: String, default: ""},
            list: [{
