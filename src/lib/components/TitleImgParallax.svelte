@@ -1,12 +1,14 @@
 <script>
-	export let src
-	export let placeholder_src
-	let isloaded=false
-	let isredirected=false
 	import { onMount } from "svelte";
+
+	let { src, placeholder_src } = $props();
+
+	let isloaded = $state(false);
+	let isredirected = $state(false);
+
 	onMount(() => {
 		const el = document.querySelector("img")
-		if(el.complete){
+		if(el?.complete){
 			isloaded = true
 		}
 		fetch(src, { method: 'HEAD' })
@@ -77,7 +79,7 @@
 }
 
 
-#image{
+.image{
   display: block;
   position: absolute;
   top: 0;
@@ -124,7 +126,7 @@ div:has(.placeholder){
   	height: max(60dvh,600px);
 	overflow: hidden;
 }
-.unblur#image{
+.unblur.image{
 	filter: blur(0px) !important;
 	opacity: 1;
 }
@@ -172,17 +174,17 @@ dialog button{
 </style>
 <section class="section">
     <figure class="image-container">
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-    	<div class:zoom-in={isloaded && !isredirected} on:click={show_dialog_img}>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+    	<div class:zoom-in={isloaded && !isredirected} onclick={show_dialog_img}>
 		<div class=placeholder style="background-image:url({placeholder_src})" >
 			<div class=placeholder_blur>
-			<img class:unblur={isloaded} id=image {src} on:load={() => {isloaded=true}}  alt=""/>
+			<img class="image" class:unblur={isloaded} {src} onload={() => {isloaded=true}}  alt=""/>
 			</div>
 		</div>
 		<noscript>
 			<div class=placeholder style="background-image:url({placeholder_src})" >
-				<img class="unblur" id=image {src} on:load={() => {isloaded=true}}  alt=""/>
+				<img class="image unblur" {src} onload={() => {isloaded=true}}  alt=""/>
 			</div>
 		</noscript>
 	</div>
@@ -193,7 +195,7 @@ dialog button{
 <dialog id=img_carousel>
 	<div>
 	<img class:unblur={isloaded} {src} alt="">
-		<button class=action_button on:keydown={(event) => do_on_key(event, 'Enter', false, close_dialog_img)} on:click={close_dialog_img}>
+		<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, close_dialog_img)} onclick={close_dialog_img}>
 	<Cross fill=white width=2rem height=2rem></Cross>
 		</button>
 	</div>
