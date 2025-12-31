@@ -25,6 +25,45 @@
 		? ["Main course", "Noodle", "Bread", "Dessert", "Soup", "Side dish", "Salad", "Cake", "Breakfast", "Sauce", "Ingredient", "Drink", "Spread", "Cookie", "Snack"]
 		: ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Frühstück", "Sauce", "Zutat", "Getränk", "Aufstrich", "Guetzli", "Snack"]);
 
+	// Pre-compute category-to-recipes Map for O(1) lookups
+	const recipesByCategory = $derived.by(() => {
+		const map = new Map();
+		for (const recipe of data.all_brief) {
+			if (!map.has(recipe.category)) {
+				map.set(recipe.category, []);
+			}
+			map.get(recipe.category).push(recipe);
+		}
+		return map;
+	});
+
+	// Memoized filtered recipes by category
+	const filteredRecipesByCategory = $derived.by(() => {
+		if (!hasActiveSearch) {
+			// No search active - return all recipes by category
+			return recipesByCategory;
+		}
+
+		// Filter each category's recipes based on search results
+		const filtered = new Map();
+		for (const [category, recipes] of recipesByCategory) {
+			const matchedInCategory = recipes.filter(r => matchedRecipeIds.has(r._id));
+			if (matchedInCategory.length > 0) {
+				filtered.set(category, matchedInCategory);
+			}
+		}
+		return filtered;
+	});
+
+	// Memoized season recipes
+	const seasonRecipes = $derived.by(() => {
+		const recipes = data.season;
+		if (!hasActiveSearch) {
+			return recipes;
+		}
+		return recipes.filter(recipe => matchedRecipeIds.has(recipe._id));
+	});
+
 	const labels = $derived({
 		title: isEnglish ? 'Recipes' : 'Rezepte',
 		subheading: isEnglish
@@ -64,28 +103,20 @@ h1{
 
 <Search lang={data.lang} recipes={data.all_brief} onSearchResults={handleSearchResults}></Search>
 
-{#if true}
-	{@const seasonRecipes = data.season.filter(recipe =>
-		!hasActiveSearch || matchedRecipeIds.has(recipe._id)
-	)}
-	{#if seasonRecipes.length > 0}
-		<LazyCategory title={labels.inSeason} eager={true}>
-			{#snippet children()}
-				<MediaScroller title={labels.inSeason}>
-				{#each seasonRecipes as recipe}
-					<Card {recipe} {current_month} loading_strat={"eager"} do_margin_right={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
-				{/each}
-				</MediaScroller>
-			{/snippet}
-		</LazyCategory>
-	{/if}
+{#if seasonRecipes.length > 0}
+	<LazyCategory title={labels.inSeason} eager={true}>
+		{#snippet children()}
+			<MediaScroller title={labels.inSeason}>
+			{#each seasonRecipes as recipe}
+				<Card {recipe} {current_month} loading_strat={"eager"} do_margin_right={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+			{/each}
+			</MediaScroller>
+		{/snippet}
+	</LazyCategory>
 {/if}
 
 {#each categories as category, index}
-	{@const categoryRecipes = data.all_brief.filter(recipe =>
-		recipe.category === category &&
-		(!hasActiveSearch || matchedRecipeIds.has(recipe._id))
-	)}
+	{@const categoryRecipes = filteredRecipesByCategory.get(category) || []}
 	{#if categoryRecipes.length > 0}
 		<LazyCategory
 			title={category}

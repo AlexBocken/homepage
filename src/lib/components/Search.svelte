@@ -1,5 +1,5 @@
 <script>
-    import {onMount, onDestroy} from "svelte";
+    import {onMount} from "svelte";
     import { browser } from '$app/environment';
     import "$lib/css/nordtheme.css";
 
@@ -24,8 +24,47 @@
     });
 
     let searchQuery = $state('');
-    let worker = $state(null);
-    let isWorkerReady = $state(false);
+
+    // Perform search directly (no worker)
+    function performSearch(query) {
+        // Empty query = show all recipes
+        if (!query || query.trim().length === 0) {
+            onSearchResults(
+                new Set(recipes.map(r => r._id)),
+                new Set(recipes.map(r => r.category))
+            );
+            return;
+        }
+
+        // Normalize and split search query
+        const searchText = query.toLowerCase().trim()
+            .normalize('NFD')
+            .replace(/\p{Diacritic}/gu, "");
+        const searchTerms = searchText.split(" ").filter(term => term.length > 0);
+
+        // Filter recipes
+        const matched = recipes.filter(recipe => {
+            // Build searchable string from recipe data
+            const searchString = [
+                recipe.name || '',
+                recipe.description || '',
+                ...(recipe.tags || [])
+            ].join(' ')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/\p{Diacritic}/gu, "")
+                .replace(/&shy;|­/g, ''); // Remove soft hyphens
+
+            // All search terms must match
+            return searchTerms.every(term => searchString.includes(term));
+        });
+
+        // Return matched recipe IDs and categories
+        onSearchResults(
+            new Set(matched.map(r => r._id)),
+            new Set(matched.map(r => r.category))
+        );
+    }
 
     // Build search URL with current filters
     function buildSearchUrl(query) {
@@ -43,45 +82,34 @@
             return searchResultsUrl;
         }
     }
-    
+
     function handleSubmit(event) {
         if (browser) {
             // For JS-enabled browsers, prevent default and navigate programmatically
-            // This allows for future enhancements like instant search
             const url = buildSearchUrl(searchQuery);
             window.location.href = url;
         }
         // If no JS, form will submit normally
     }
-    
+
     function clearSearch() {
         searchQuery = '';
-        // Trigger search with empty query to show all results
-        if (worker && isWorkerReady) {
-            worker.postMessage({
-                type: 'search',
-                data: { query: '' }
-            });
-        }
+        performSearch('');
     }
 
-    // Effect to update worker data when recipes change (e.g., language switch)
+    // Debounced search effect - only triggers search 100ms after user stops typing
     $effect(() => {
-        if (worker && isWorkerReady && browser && recipes.length > 0) {
-            worker.postMessage({
-                type: 'init',
-                data: { recipes }
-            });
-        }
-    });
+        if (browser && recipes.length > 0) {
+            // Read searchQuery to track it as a dependency
+            const query = searchQuery;
 
-    // Effect to trigger search when query changes
-    $effect(() => {
-        if (worker && isWorkerReady && browser) {
-            worker.postMessage({
-                type: 'search',
-                data: { query: searchQuery }
-            });
+            // Set debounce timer
+            const timer = setTimeout(() => {
+                performSearch(query);
+            }, 100);
+
+            // Cleanup function - clear timer on re-run or unmount
+            return () => clearTimeout(timer);
         }
     });
 
@@ -100,54 +128,9 @@
         const urlQuery = urlParams.get('q');
         if (urlQuery) {
             searchQuery = urlQuery;
-        }
-
-        // Initialize Web Worker for search
-        if (recipes.length > 0) {
-            worker = new Worker(
-                new URL('./search.worker.js', import.meta.url),
-                { type: 'module' }
-            );
-
-            // Handle messages from worker
-            worker.onmessage = (e) => {
-                const { type, matchedIds, matchedCategories } = e.data;
-
-                if (type === 'ready') {
-                    isWorkerReady = true;
-                    // Perform initial search if URL had query
-                    if (urlQuery) {
-                        worker.postMessage({
-                            type: 'search',
-                            data: { query: urlQuery }
-                        });
-                    } else {
-                        // Show all recipes initially
-                        worker.postMessage({
-                            type: 'search',
-                            data: { query: '' }
-                        });
-                    }
-                }
-
-                if (type === 'results') {
-                    // Pass results to parent component
-                    onSearchResults(new Set(matchedIds), matchedCategories);
-                }
-            };
-
-            // Initialize worker with recipe data
-            worker.postMessage({
-                type: 'init',
-                data: { recipes }
-            });
-        }
-    });
-
-    onDestroy(() => {
-        // Clean up worker
-        if (worker) {
-            worker.terminate();
+        } else {
+            // Show all recipes initially
+            performSearch('');
         }
     });
 
