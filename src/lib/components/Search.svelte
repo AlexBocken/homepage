@@ -1,10 +1,19 @@
 <script>
-    import {onMount} from "svelte";
+    import {onMount, onDestroy} from "svelte";
     import { browser } from '$app/environment';
     import "$lib/css/nordtheme.css";
 
     // Filter props for different contexts
-    let { category = null, tag = null, icon = null, season = null, favoritesOnly = false, lang = 'de' } = $props();
+    let {
+        category = null,
+        tag = null,
+        icon = null,
+        season = null,
+        favoritesOnly = false,
+        lang = 'de',
+        recipes = [],
+        onSearchResults = (matchedIds, matchedCategories) => {}
+    } = $props();
 
     const isEnglish = $derived(lang === 'en');
     const searchResultsUrl = $derived(isEnglish ? '/recipes/search' : '/rezepte/search');
@@ -15,7 +24,9 @@
     });
 
     let searchQuery = $state('');
-    
+    let worker = $state(null);
+    let isWorkerReady = $state(false);
+
     // Build search URL with current filters
     function buildSearchUrl(query) {
         if (browser) {
@@ -45,85 +56,98 @@
     
     function clearSearch() {
         searchQuery = '';
-        if (browser) {
-            // Reset any client-side filtering if present
-            const recipes = document.querySelectorAll(".search_me");
-            recipes.forEach(recipe => {
-                recipe.style.display = 'flex';
-                recipe.classList.remove("matched-recipe");
-            });
-            document.querySelectorAll(".media_scroller_wrapper").forEach( scroller => {
-                scroller.style.display= 'block'
+        // Trigger search with empty query to show all results
+        if (worker && isWorkerReady) {
+            worker.postMessage({
+                type: 'search',
+                data: { query: '' }
             });
         }
     }
+
+    // Effect to update worker data when recipes change (e.g., language switch)
+    $effect(() => {
+        if (worker && isWorkerReady && browser && recipes.length > 0) {
+            worker.postMessage({
+                type: 'init',
+                data: { recipes }
+            });
+        }
+    });
+
+    // Effect to trigger search when query changes
+    $effect(() => {
+        if (worker && isWorkerReady && browser) {
+            worker.postMessage({
+                type: 'search',
+                data: { query: searchQuery }
+            });
+        }
+    });
 
     onMount(() => {
         // Swap buttons for JS-enabled experience
         const submitButton = document.getElementById('submit-search');
         const clearButton = document.getElementById('clear-search');
-        
+
         if (submitButton && clearButton) {
             submitButton.style.display = 'none';
             clearButton.style.display = 'flex';
         }
-        
+
         // Get initial search value from URL if present
         const urlParams = new URLSearchParams(window.location.search);
         const urlQuery = urlParams.get('q');
         if (urlQuery) {
             searchQuery = urlQuery;
         }
-        
-        // Enhanced client-side filtering (existing functionality)
-        const recipes = document.querySelectorAll(".search_me");
-        const search = document.getElementById("search");
-        
-        if (recipes.length > 0 && search) {
-            function do_search(click_only_result=false){
-                const searchText = search.value.toLowerCase().trim().normalize('NFD').replace(/\p{Diacritic}/gu, "");
-                const searchTerms = searchText.split(" ");
-                const hasFilter = searchText.length > 0;
 
-                let scrollers_with_results = [];
-                let scrollers = [];
-                
-                recipes.forEach(recipe => {
-                    const searchString = `${recipe.textContent} ${recipe.dataset.tags}`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").replace(/&shy;|­/g, '');
-                    const isMatch = searchTerms.every(term => searchString.includes(term));
+        // Initialize Web Worker for search
+        if (recipes.length > 0) {
+            worker = new Worker(
+                new URL('./search.worker.js', import.meta.url),
+                { type: 'module' }
+            );
 
-                    recipe.style.display = (isMatch ? 'flex' : 'none');
-                    recipe.classList.toggle("matched-recipe", hasFilter && isMatch);
-                    if(!scrollers.includes(recipe.parentNode)){
-                        scrollers.push(recipe.parentNode)
+            // Handle messages from worker
+            worker.onmessage = (e) => {
+                const { type, matchedIds, matchedCategories } = e.data;
+
+                if (type === 'ready') {
+                    isWorkerReady = true;
+                    // Perform initial search if URL had query
+                    if (urlQuery) {
+                        worker.postMessage({
+                            type: 'search',
+                            data: { query: urlQuery }
+                        });
+                    } else {
+                        // Show all recipes initially
+                        worker.postMessage({
+                            type: 'search',
+                            data: { query: '' }
+                        });
                     }
-                    if(!scrollers_with_results.includes(recipe.parentNode) && isMatch){
-                        scrollers_with_results.push(recipe.parentNode)
-                    }
-                })
-                scrollers_with_results.forEach( scroller => {
-                    scroller.parentNode.style.display= 'block'
-                })
-                scrollers.filter(item => !scrollers_with_results.includes(item)).forEach( scroller => {
-                    scroller.parentNode.style.display= 'none'
-                })
-                
-                let items = document.querySelectorAll(".matched-recipe");
-                items = [...new Set(items)]
-                if(click_only_result && scrollers_with_results.length == 1 && items.length == 1){
-                    items[0].click();
                 }
-            }
 
-            search.addEventListener("input", () => {
-                searchQuery = search.value;
-                do_search();
-            })
-            
-            // Initial search if URL had query
-            if (urlQuery) {
-                do_search(true);
-            }
+                if (type === 'results') {
+                    // Pass results to parent component
+                    onSearchResults(new Set(matchedIds), matchedCategories);
+                }
+            };
+
+            // Initialize worker with recipe data
+            worker.postMessage({
+                type: 'init',
+                data: { recipes }
+            });
+        }
+    });
+
+    onDestroy(() => {
+        // Clean up worker
+        if (worker) {
+            worker.terminate();
         }
     });
 
@@ -186,7 +210,7 @@ scale: 0.8 0.8;
   height: 100%;
 }
 </style>
-<form class="search" method="get" action={buildSearchUrl('')} on:submit|preventDefault={handleSubmit}>
+<form class="search" method="get" action={buildSearchUrl('')} onsubmit={(e) => { e.preventDefault(); handleSubmit(e); }}>
   {#if category}<input type="hidden" name="category" value={category} />{/if}
   {#if tag}<input type="hidden" name="tag" value={tag} />{/if}
   {#if icon}<input type="hidden" name="icon" value={icon} />{/if}
@@ -201,7 +225,7 @@ scale: 0.8 0.8;
   </button>
 
   <!-- Clear button (hidden by default, shown when JS loads) -->
-  <button type="button" id="clear-search" class="search-button js-only" style="display: none;" on:click={clearSearch}>
+  <button type="button" id="clear-search" class="search-button js-only" style="display: none;" onclick={clearSearch}>
 	  <svg  xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><title>{labels.clearTitle}</title><path d="M135.19 390.14a28.79 28.79 0 0021.68 9.86h246.26A29 29 0 00432 371.13V140.87A29 29 0 00403.13 112H156.87a28.84 28.84 0 00-21.67 9.84v0L46.33 256l88.86 134.11z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"></path><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33"></path></svg>
   </button>
 </form>
