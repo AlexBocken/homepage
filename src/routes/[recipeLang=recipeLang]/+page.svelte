@@ -4,6 +4,7 @@
     	import AddButton from '$lib/components/AddButton.svelte';
     	import Card from '$lib/components/Card.svelte';
     	import Search from '$lib/components/Search.svelte';
+	import LazyCategory from '$lib/components/LazyCategory.svelte';
     	let { data }: { data: PageData } = $props();
     	let current_month = new Date().getMonth() + 1;
 
@@ -68,25 +69,38 @@ h1{
 		!hasActiveSearch || matchedRecipeIds.has(recipe._id)
 	)}
 	{#if seasonRecipes.length > 0}
-		<MediaScroller title={labels.inSeason}>
-		{#each seasonRecipes as recipe}
-			<Card {recipe} {current_month} loading_strat={"eager"} do_margin_right={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
-		{/each}
-		</MediaScroller>
+		<LazyCategory title={labels.inSeason} eager={true}>
+			{#snippet children()}
+				<MediaScroller title={labels.inSeason}>
+				{#each seasonRecipes as recipe}
+					<Card {recipe} {current_month} loading_strat={"eager"} do_margin_right={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+				{/each}
+				</MediaScroller>
+			{/snippet}
+		</LazyCategory>
 	{/if}
 {/if}
 
-{#each categories as category}
+{#each categories as category, index}
 	{@const categoryRecipes = data.all_brief.filter(recipe =>
 		recipe.category === category &&
 		(!hasActiveSearch || matchedRecipeIds.has(recipe._id))
 	)}
 	{#if categoryRecipes.length > 0}
-		<MediaScroller title={category}>
-		{#each categoryRecipes as recipe}
-			<Card {recipe} {current_month} do_margin_right={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
-		{/each}
-		</MediaScroller>
+		<LazyCategory
+			title={category}
+			eager={index < 2 || hasActiveSearch}
+			estimatedHeight={300}
+			rootMargin="600px"
+		>
+			{#snippet children()}
+				<MediaScroller title={category}>
+				{#each categoryRecipes as recipe}
+					<Card {recipe} {current_month} do_margin_right={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+				{/each}
+				</MediaScroller>
+			{/snippet}
+		</LazyCategory>
 	{/if}
 {/each}
 {#if !isEnglish}
