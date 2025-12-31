@@ -95,7 +95,7 @@ const img_name = $derived(imageShortName + ".webp?v=" + recipe.dateModified);
 	z-index: 5;
 	text-decoration: none;
 }
-#image{
+.image{
 	width: 300px;
 	height: 255px;
 	object-fit: cover;
@@ -259,9 +259,9 @@ const img_name = $derived(imageShortName + ".webp?v=" + recipe.dateModified);
 	<div class=div_div_image >
 		<div class=div_image style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
 			<noscript>
-				<img id=image class="backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{recipe.alt}"/>
+				<img class="image backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{recipe.alt}"/>
 			</noscript>
-			<img class:blur={!isloaded} id=image class="backdrop_blur" src={'https://bocken.org/static/rezepte/thumb/' + imageShortName + '.webp'} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
+			<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + imageShortName + '.webp'} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
 		</div>
 	</div>
 	{#if showFavoriteIndicator && isFavorite}
