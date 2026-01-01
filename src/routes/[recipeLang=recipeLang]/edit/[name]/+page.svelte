@@ -482,6 +482,7 @@ button.action_button{
 	<TranslationApproval
 		germanData={getCurrentRecipeData()}
 		englishData={translationData}
+		oldRecipeData={originalRecipe}
 		{changedFields}
 		isEditMode={true}
 		on:approved={handleTranslationApproved}

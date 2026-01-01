@@ -16,7 +16,7 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
-		const { recipe, fields } = body;
+		const { recipe, fields, oldRecipe, existingTranslation } = body;
 
 		if (!recipe) {
 			throw error(400, 'Recipe data is required');
@@ -28,18 +28,28 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		let translatedRecipe;
+		let translationMetadata;
 
-		// If specific fields are provided, translate only those
+		// If specific fields are provided, translate only those with granular detection
 		if (fields && Array.isArray(fields) && fields.length > 0) {
-			translatedRecipe = await translationService.translateFields(recipe, fields);
+			const result = await translationService.translateFields(
+				recipe,
+				fields,
+				oldRecipe, // For granular change detection
+				existingTranslation // To merge with existing translations
+			);
+			translatedRecipe = result.translatedRecipe;
+			translationMetadata = result.translationMetadata;
 		} else {
 			// Translate entire recipe
 			translatedRecipe = await translationService.translateRecipe(recipe);
+			translationMetadata = null; // Full translation, all fields are new
 		}
 
 		return json({
 			success: true,
 			translatedRecipe,
+			translationMetadata,
 		});
 
 	} catch (err: any) {

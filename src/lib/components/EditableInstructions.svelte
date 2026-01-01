@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 
 	export let instructions: any[] = [];
+	export let translationMetadata: any[] | null | undefined = null;
 
 	const dispatch = createEventDispatcher();
 
@@ -19,6 +20,16 @@
 		const target = event.target as HTMLTextAreaElement;
 		instructions[groupIndex].steps[stepIndex] = target.value;
 		handleChange();
+	}
+
+	// Check if a group name was re-translated
+	function isGroupNameTranslated(groupIndex: number): boolean {
+		return translationMetadata?.[groupIndex]?.nameTranslated ?? false;
+	}
+
+	// Check if a specific step was re-translated
+	function isStepTranslated(groupIndex: number, stepIndex: number): boolean {
+		return translationMetadata?.[groupIndex]?.stepsTranslated?.[stepIndex] ?? false;
 	}
 </script>
 
@@ -113,6 +124,21 @@
 	outline: 2px solid var(--nord14);
 	border-color: var(--nord14);
 }
+
+/* Highlight re-translated items with red border */
+.retranslated {
+	border: 2px solid var(--nord11) !important;
+	animation: highlight-flash 0.6s ease-out;
+}
+
+@keyframes highlight-flash {
+	0% {
+		box-shadow: 0 0 10px var(--nord11);
+	}
+	100% {
+		box-shadow: 0 0 0 transparent;
+	}
+}
 </style>
 
 <div class="instructions-editor">
@@ -121,6 +147,7 @@
 			<input
 				type="text"
 				class="group-name"
+				class:retranslated={isGroupNameTranslated(groupIndex)}
 				value={group.name || ''}
 				on:input={(e) => updateInstructionGroupName(groupIndex, e)}
 				placeholder="Instruction section name"
@@ -129,6 +156,7 @@
 				<div class="step-item">
 					<div class="step-number">{stepIndex + 1}</div>
 					<textarea
+						class:retranslated={isStepTranslated(groupIndex, stepIndex)}
 						value={step || ''}
 						on:input={(e) => updateStep(groupIndex, stepIndex, e)}
 						placeholder="Step description"
