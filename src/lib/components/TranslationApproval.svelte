@@ -20,6 +20,12 @@
 	// Editable English data (clone of englishData)
 	let editableEnglish: any = englishData ? { ...englishData } : null;
 
+	// Store old recipe data for granular change detection
+	export let oldRecipeData: any = null;
+
+	// Translation metadata (tracks which items were re-translated)
+	let translationMetadata: any = null;
+
 	// Handle auto-translate button click
 	async function handleAutoTranslate() {
 		translationState = 'translating';
@@ -35,6 +41,8 @@
 				body: JSON.stringify({
 					recipe: germanData,
 					fields: isEditMode && changedFields.length > 0 ? changedFields : undefined,
+					oldRecipe: oldRecipeData, // For granular item-level change detection
+					existingTranslation: englishData, // To merge with unchanged items
 				}),
 			});
 
@@ -44,6 +52,9 @@
 			}
 
 			const result = await response.json();
+
+			// Capture metadata about what was re-translated
+			translationMetadata = result.translationMetadata;
 
 			// If translating only specific fields, merge with existing translation
 			// Otherwise use the full translation result
@@ -838,6 +849,7 @@ button:disabled {
 						<div class="field-label">Ingredients (Editable)</div>
 						<EditableIngredients
 							ingredients={editableEnglish.ingredients}
+							translationMetadata={translationMetadata?.ingredientTranslations}
 							on:change={handleIngredientsChange}
 						/>
 					</div>
@@ -848,6 +860,7 @@ button:disabled {
 						<div class="field-label">Instructions (Editable)</div>
 						<EditableInstructions
 							instructions={editableEnglish.instructions}
+							translationMetadata={translationMetadata?.instructionTranslations}
 							on:change={handleInstructionsChange}
 						/>
 					</div>

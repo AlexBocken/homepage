@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 
 	export let ingredients: any[] = [];
+	export let translationMetadata: any[] | null | undefined = null;
 
 	const dispatch = createEventDispatcher();
 
@@ -19,6 +20,16 @@
 		const target = event.target as HTMLInputElement;
 		ingredients[groupIndex].list[itemIndex][field] = target.value;
 		handleChange();
+	}
+
+	// Check if a group name was re-translated
+	function isGroupNameTranslated(groupIndex: number): boolean {
+		return translationMetadata?.[groupIndex]?.nameTranslated ?? false;
+	}
+
+	// Check if a specific item was re-translated
+	function isItemTranslated(groupIndex: number, itemIndex: number): boolean {
+		return translationMetadata?.[groupIndex]?.itemsTranslated?.[itemIndex] ?? false;
 	}
 </script>
 
@@ -95,6 +106,21 @@
 .ingredient-item input.amount {
 	text-align: right;
 }
+
+/* Highlight re-translated items with red border */
+.retranslated {
+	border: 2px solid var(--nord11) !important;
+	animation: highlight-flash 0.6s ease-out;
+}
+
+@keyframes highlight-flash {
+	0% {
+		box-shadow: 0 0 10px var(--nord11);
+	}
+	100% {
+		box-shadow: 0 0 0 transparent;
+	}
+}
 </style>
 
 <div class="ingredients-editor">
@@ -103,6 +129,7 @@
 			<input
 				type="text"
 				class="group-name"
+				class:retranslated={isGroupNameTranslated(groupIndex)}
 				value={group.name || ''}
 				on:input={(e) => updateIngredientGroupName(groupIndex, e)}
 				placeholder="Ingredient group name"
@@ -119,6 +146,7 @@
 					<input
 						type="text"
 						class="unit"
+						class:retranslated={isItemTranslated(groupIndex, itemIndex)}
 						value={item.unit || ''}
 						on:input={(e) => updateIngredientItem(groupIndex, itemIndex, 'unit', e)}
 						placeholder="Unit"
@@ -126,6 +154,7 @@
 					<input
 						type="text"
 						class="name"
+						class:retranslated={isItemTranslated(groupIndex, itemIndex)}
 						value={item.name || ''}
 						on:input={(e) => updateIngredientItem(groupIndex, itemIndex, 'name', e)}
 						placeholder="Ingredient name"
