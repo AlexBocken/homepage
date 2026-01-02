@@ -93,6 +93,7 @@
 
 	input {
 		all: unset;
+		box-sizing: border-box;
 		font-family: "Noto Color Emoji", emoji, sans-serif;
 		background: var(--nord0);
 		color: var(--nord6);

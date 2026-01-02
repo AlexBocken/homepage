@@ -265,6 +265,7 @@
 <style>
 input#search {
   all: unset;
+  box-sizing: border-box;
   font-family: sans-serif;
   background: var(--nord0);
   color: #fff;
