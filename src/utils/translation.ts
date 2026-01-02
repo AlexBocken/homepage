@@ -325,7 +325,7 @@ class DeepLTranslationService {
 			});
 
 			// Add image alt and caption texts
-			const images = recipe.images || [];
+			const images = Array.isArray(recipe.images) ? recipe.images : [];
 			images.forEach((img: any) => {
 				textsToTranslate.push(img.alt || '');
 				textsToTranslate.push(img.caption || '');
