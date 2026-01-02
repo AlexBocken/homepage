@@ -13,14 +13,14 @@
 	import RecipeNote from '$lib/components/RecipeNote.svelte';
 	import {stripHtmlTags} from '$lib/js/stripHtmlTags';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
-	import RecipeLanguageSwitcher from '$lib/components/RecipeLanguageSwitcher.svelte';
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
 
     	let { data }: { data: PageData } = $props();
 
 	// Set store for recipe translation data so UserHeader can access it
-	onMount(() => {
+	// Use $effect instead of onMount to react to data changes during client-side navigation
+	$effect(() => {
 		recipeTranslationStore.set({
 			germanShortName: data.germanShortName || data.short_name,
 			englishShortName: data.englishShortName,
