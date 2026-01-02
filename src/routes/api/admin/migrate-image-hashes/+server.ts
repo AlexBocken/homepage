@@ -11,7 +11,7 @@ import { rename } from 'node:fs/promises';
 
 export const POST = (async ({ locals, request }) => {
 	// Only allow in production (check if IMAGE_DIR contains production path)
-	const isProd = IMAGE_DIR.includes('/var/lib/www');
+	const isProd = IMAGE_DIR.includes('/var/www/static');
 
 	// Require confirmation token to prevent accidental runs
 	const data = await request.json();
@@ -19,7 +19,7 @@ export const POST = (async ({ locals, request }) => {
 	const adminToken = data?.adminToken;
 
 	if (!isProd) {
-		throw error(403, 'This endpoint only runs in production (IMAGE_DIR must be /var/lib/www)');
+		throw error(403, 'This endpoint only runs in production (IMAGE_DIR must be /var/www/static)');
 	}
 
 	if (confirmToken !== 'MIGRATE_IMAGES') {
