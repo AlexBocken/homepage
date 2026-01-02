@@ -42,7 +42,7 @@ export function generateRecipeJsonLd(data: any) {
     "keywords": data.tags?.join(', '),
     "image": {
       "@type": "ImageObject",
-      "url": `https://bocken.org/static/rezepte/full/${data.short_name}.webp`,
+      "url": `https://bocken.org/static/rezepte/full/${data.images?.[0]?.mediapath || `${data.short_name}.webp`}`,
       "width": 1200,
       "height": 800
     },

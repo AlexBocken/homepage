@@ -9,7 +9,7 @@ const RecipeSchema = new mongoose.Schema(
     dateCreated: {type: Date, default: Date.now},
     dateModified: {type: Date, default: Date.now},
     images: [ {
-	    mediapath: {type: String, required: true},
+	    mediapath: {type: String, required: true}, // filename with hash for cache busting: e.g., "maccaroni.a1b2c3d4.webp"
 	    alt: String,
 	    caption: String,
     }],
