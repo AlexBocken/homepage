@@ -79,9 +79,16 @@
 
 	.filter-panel {
 		display: grid;
-		grid-template-columns: 120px 120px 1fr 160px 140px;
 		gap: 2rem;
 		align-items: start;
+	}
+
+	.filter-panel.with-favorites {
+		grid-template-columns: 120px 120px 1fr 160px 90px;
+	}
+
+	.filter-panel.without-favorites {
+		grid-template-columns: 120px 120px 1fr 160px;
 	}
 
 	@media (max-width: 968px) {
@@ -125,7 +132,7 @@
 		<span class="arrow" class:open={filtersOpen}>▼</span>
 	</button>
 
-	<div class="filter-panel" class:open={filtersOpen}>
+	<div class="filter-panel" class:open={filtersOpen} class:with-favorites={isLoggedIn} class:without-favorites={!isLoggedIn}>
 		<CategoryFilter
 			categories={availableCategories}
 			selected={selectedCategory}
@@ -154,11 +161,13 @@
 			{months}
 		/>
 
-		<FavoritesFilter
-			enabled={selectedFavoritesOnly}
-			onToggle={onFavoritesToggle}
-			{isLoggedIn}
-			{lang}
-		/>
+		{#if isLoggedIn}
+			<FavoritesFilter
+				enabled={selectedFavoritesOnly}
+				onToggle={onFavoritesToggle}
+				{isLoggedIn}
+				{lang}
+			/>
+		{/if}
 	</div>
 </div>
