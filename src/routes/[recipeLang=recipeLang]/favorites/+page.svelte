@@ -27,6 +27,24 @@
             : 'Besuche ein Rezept und klicke auf das Herz-Symbol, um es zu deinen Favoriten hinzuzufügen.',
         recipesLink: isEnglish ? 'recipe' : 'Rezept'
     });
+
+    // Search state
+    let matchedRecipeIds = $state(new Set());
+    let hasActiveSearch = $state(false);
+
+    // Handle search results from Search component
+    function handleSearchResults(ids, categories) {
+        matchedRecipeIds = ids;
+        hasActiveSearch = ids.size < data.favorites.length;
+    }
+
+    // Filter recipes based on search
+    const filteredFavorites = $derived.by(() => {
+        if (!hasActiveSearch) {
+            return data.favorites;
+        }
+        return data.favorites.filter(r => matchedRecipeIds.has(r._id));
+    });
 </script>
 
 <style>
@@ -61,16 +79,20 @@ h1{
     {/if}
 </p>
 
-<Search favoritesOnly={true} lang={data.lang}></Search>
+<Search favoritesOnly={true} lang={data.lang} recipes={data.favorites} onSearchResults={handleSearchResults}></Search>
 
 {#if data.error}
     <p class="empty-state">{labels.errorLoading} {data.error}</p>
-{:else if data.favorites.length > 0}
+{:else if filteredFavorites.length > 0}
     <Recipes>
-        {#each data.favorites as recipe}
+        {#each filteredFavorites as recipe}
             <Card {recipe} {current_month} isFavorite={true} showFavoriteIndicator={true} routePrefix="/{data.recipeLang}"></Card>
         {/each}
     </Recipes>
+{:else if data.favorites.length > 0}
+    <div class="empty-state">
+        <p>{isEnglish ? 'No matching favorites found.' : 'Keine passenden Favoriten gefunden.'}</p>
+    </div>
 {:else}
     <div class="empty-state">
         <p>{labels.emptyState1}</p>

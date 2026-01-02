@@ -26,6 +26,26 @@
         noResults: isEnglish ? 'No recipes found.' : 'Keine Rezepte gefunden.',
         tryOther: isEnglish ? 'Try different search terms.' : 'Versuche es mit anderen Suchbegriffen.'
     });
+
+    // Search state for live filtering
+    let matchedRecipeIds = $state(new Set());
+    let hasActiveSearch = $state(false);
+
+    // Handle search results from Search component
+    function handleSearchResults(ids, categories) {
+        matchedRecipeIds = ids;
+        hasActiveSearch = ids.size < data.allRecipes.length;
+    }
+
+    // Filter recipes based on live search
+    const displayedRecipes = $derived.by(() => {
+        if (!hasActiveSearch) {
+            // No active search - show server-side results
+            return data.results;
+        }
+        // Active search - show client-side filtered results
+        return data.allRecipes.filter(r => matchedRecipeIds.has(r._id));
+    });
 </script>
 
 <style>
@@ -71,11 +91,17 @@
     season={data.filters.season}
     favoritesOnly={data.filters.favoritesOnly}
     lang={data.lang}
+    recipes={data.allRecipes}
+    onSearchResults={handleSearchResults}
 />
 
 {#if data.error}
     <div class="search-info">
         <p>{labels.searchError} {data.error}</p>
+    </div>
+{:else if hasActiveSearch}
+    <div class="search-info">
+        <p>{displayedRecipes.length} {labels.resultsFor} "{data.query}"</p>
     </div>
 {:else if data.query}
     <div class="search-info">
@@ -83,13 +109,13 @@
     </div>
 {/if}
 
-{#if data.results.length > 0}
+{#if displayedRecipes.length > 0}
     <Recipes>
-        {#each data.results as recipe}
+        {#each displayedRecipes as recipe}
             <Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={true} routePrefix="/{data.recipeLang}"></Card>
         {/each}
     </Recipes>
-{:else if data.query && !data.error}
+{:else if (data.query || hasActiveSearch) && !data.error}
     <div class="search-info">
         <p>{labels.noResults}</p>
         <p>{labels.tryOther}</p>
