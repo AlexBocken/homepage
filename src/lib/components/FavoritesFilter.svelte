@@ -10,8 +10,7 @@
 	} = $props();
 
 	const isEnglish = $derived(lang === 'en');
-	const label = $derived(isEnglish ? 'Favorites Only' : 'Nur Favoriten');
-	const loginRequiredLabel = $derived(isEnglish ? 'Login required' : 'Anmeldung erforderlich');
+	const label = $derived(isEnglish ? 'Favorites' : 'Favoriten');
 
 	let checked = $state(enabled);
 
@@ -57,24 +56,13 @@
 			text-align: left;
 		}
 	}
-
-	.login-required {
-		font-size: 0.85rem;
-		color: var(--nord3);
-		font-style: italic;
-		padding: 0.5rem 0;
-	}
 </style>
 
 <div class="filter-section">
 	<div class="filter-label">{label}</div>
-	{#if isLoggedIn}
-		<Toggle
-			bind:checked={checked}
-			label=""
-			on:change={handleChange}
-		/>
-	{:else}
-		<div class="login-required">{loginRequiredLabel}</div>
-	{/if}
+	<Toggle
+		bind:checked={checked}
+		label=""
+		on:change={handleChange}
+	/>
 </div>

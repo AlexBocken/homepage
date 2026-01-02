@@ -27,6 +27,7 @@
     });
 
     let searchQuery = $state('');
+    let showFilters = $state(false);
 
     // Filter data loaded from APIs
     let availableTags = $state([]);
@@ -246,6 +247,9 @@
             clearButton.style.display = 'flex';
         }
 
+        // Enable filter panel for JS-enabled browsers
+        showFilters = true;
+
         // Get initial search value from URL if present
         const urlParams = new URLSearchParams(window.location.search);
         const urlQuery = urlParams.get('q');
@@ -340,20 +344,22 @@ scale: 0.8 0.8;
   </button>
 </form>
 
-<FilterPanel
-  availableCategories={categories}
-  {availableTags}
-  {availableIcons}
-  {selectedCategory}
-  {selectedTags}
-  {selectedIcon}
-  {selectedSeasons}
-  {selectedFavoritesOnly}
-  {lang}
-  {isLoggedIn}
-  onCategoryChange={handleCategoryChange}
-  onTagToggle={handleTagToggle}
-  onIconChange={handleIconChange}
-  onSeasonChange={handleSeasonChange}
-  onFavoritesToggle={handleFavoritesToggle}
-/>
+{#if showFilters}
+  <FilterPanel
+    availableCategories={categories}
+    {availableTags}
+    {availableIcons}
+    {selectedCategory}
+    {selectedTags}
+    {selectedIcon}
+    {selectedSeasons}
+    {selectedFavoritesOnly}
+    {lang}
+    {isLoggedIn}
+    onCategoryChange={handleCategoryChange}
+    onTagToggle={handleTagToggle}
+    onIconChange={handleIconChange}
+    onSeasonChange={handleSeasonChange}
+    onFavoritesToggle={handleFavoritesToggle}
+  />
+{/if}
