@@ -7,11 +7,11 @@ import { rand_array } from '$lib/js/randomize';
 export const GET: RequestHandler = async ({params}) => {
 	await dbConnect();
 
-	// Find recipes in this category that have English translations
+	// Find recipes in this category that have approved English translations
 	const recipes = await Recipe.find(
 		{
 			'translations.en.category': params.category,
-			'translations.en': { $exists: true }
+			'translations.en.translationStatus': 'approved'
 		},
 		'_id translations.en short_name images season dateModified icon'
 	).lean();

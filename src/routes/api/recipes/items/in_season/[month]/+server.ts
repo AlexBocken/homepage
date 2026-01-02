@@ -6,12 +6,12 @@ import { rand_array } from '$lib/js/randomize';
 export const GET: RequestHandler = async ({params}) => {
 	await dbConnect();
 
-	// Find recipes in season that have English translations
+	// Find recipes in season that have approved English translations
 	const recipes = await Recipe.find(
 		{
 			season: params.month,
 			icon: {$ne: "🍽️"},
-			'translations.en': { $exists: true }
+			'translations.en.translationStatus': 'approved'
 		},
 		'_id translations.en short_name images season dateModified icon'
 	).lean();

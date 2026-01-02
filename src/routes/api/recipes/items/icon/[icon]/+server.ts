@@ -7,11 +7,11 @@ import { rand_array } from '$lib/js/randomize';
 export const GET: RequestHandler = async ({params}) => {
 	await dbConnect();
 
-	// Find recipes with this icon that have English translations
+	// Find recipes with this icon that have approved English translations
 	const recipes = await Recipe.find(
 		{
 			icon: params.icon,
-			'translations.en': { $exists: true }
+			'translations.en.translationStatus': 'approved'
 		},
 		'_id translations.en short_name images season dateModified icon'
 	).lean();
