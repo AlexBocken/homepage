@@ -101,7 +101,7 @@ h1{
 <h1>{labels.title}</h1>
 <p class=subheading>{labels.subheading}</p>
 
-<Search lang={data.lang} recipes={data.all_brief} onSearchResults={handleSearchResults}></Search>
+<Search lang={data.lang} recipes={data.all_brief} categories={categories} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 
 {#if seasonRecipes.length > 0}
 	<LazyCategory title={labels.inSeason} eager={true}>
