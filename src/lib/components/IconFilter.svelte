@@ -134,6 +134,7 @@
 		background: var(--nord0);
 		border-radius: 6px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
 		max-height: 200px;
 		overflow-y: auto;
 		z-index: 100;

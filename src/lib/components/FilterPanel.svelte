@@ -96,7 +96,8 @@
 			display: flex;
 		}
 
-		.filter-panel {
+		.filter-panel.with-favorites,
+		.filter-panel.without-favorites {
 			grid-template-columns: 1fr;
 			gap: 1rem;
 			max-width: 600px;
