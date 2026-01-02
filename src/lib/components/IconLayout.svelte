@@ -6,6 +6,8 @@
     export let active_icon
     export let routePrefix = '/rezepte'
     export let lang = 'de'
+    export let recipes = []
+    export let onSearchResults = (ids, categories) => {}
 </script>
 
 <style>
@@ -74,7 +76,7 @@
 {/each}
 </div>
 <section>
-<Search icon={active_icon} {lang}></Search>
+<Search icon={active_icon} {lang} {recipes} {onSearchResults}></Search>
 </section>
 <section>
 <slot name=recipes></slot>

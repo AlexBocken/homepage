@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
+import { getUserFavorites, addFavoriteStatusToRecipes } from "$lib/server/favorites";
 
-export const load: PageServerLoad = async ({ url, fetch, params }) => {
+export const load: PageServerLoad = async ({ url, fetch, params, locals }) => {
     const isEnglish = params.recipeLang === 'recipes';
     const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
 
@@ -19,15 +20,23 @@ export const load: PageServerLoad = async ({ url, fetch, params }) => {
     if (icon) apiUrl.searchParams.set('icon', icon);
     if (season) apiUrl.searchParams.set('season', season);
     if (favoritesOnly) apiUrl.searchParams.set('favorites', 'true');
-    
+
     try {
-        const response = await fetch(apiUrl.toString());
-        const results = await response.json();
-        
+        // Fetch both search results and all recipes for live search
+        const [searchResponse, allRecipesResponse, userFavorites] = await Promise.all([
+            fetch(apiUrl.toString()),
+            fetch(`${apiBase}/items/all_brief`),
+            getUserFavorites(fetch, locals)
+        ]);
+
+        const results = await searchResponse.json();
+        const allRecipes = await allRecipesResponse.json();
+
         return {
             query,
-            results: response.ok ? results : [],
-            error: response.ok ? null : results.error || 'Search failed',
+            results: searchResponse.ok ? addFavoriteStatusToRecipes(results, userFavorites) : [],
+            allRecipes: addFavoriteStatusToRecipes(allRecipes, userFavorites),
+            error: searchResponse.ok ? null : results.error || 'Search failed',
             filters: {
                 category,
                 tag,
@@ -40,6 +49,7 @@ export const load: PageServerLoad = async ({ url, fetch, params }) => {
         return {
             query,
             results: [],
+            allRecipes: [],
             error: 'Search failed',
             filters: {
                 category,

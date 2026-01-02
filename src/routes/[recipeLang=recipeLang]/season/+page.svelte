@@ -14,11 +14,29 @@
     const months = $derived(isEnglish
         ? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
         : ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]);
+
+    // Search state
+    let matchedRecipeIds = $state(new Set());
+    let hasActiveSearch = $state(false);
+
+    // Handle search results from Search component
+    function handleSearchResults(ids, categories) {
+        matchedRecipeIds = ids;
+        hasActiveSearch = ids.size < data.season.length;
+    }
+
+    // Filter recipes based on search
+    const filteredRecipes = $derived.by(() => {
+        if (!hasActiveSearch) {
+            return data.season;
+        }
+        return data.season.filter(r => matchedRecipeIds.has(r._id));
+    });
 </script>
 
-<SeasonLayout active_index={current_month-1} {months} routePrefix="/{data.recipeLang}" lang={data.lang}>
+<SeasonLayout active_index={current_month-1} {months} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
 <Recipes slot=recipes>
-	{#each rand_array(data.season) as recipe}
+	{#each rand_array(filteredRecipes) as recipe}
 		<Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
 	{/each}
 </Recipes>
