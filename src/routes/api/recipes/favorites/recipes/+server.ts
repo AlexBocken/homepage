@@ -23,10 +23,10 @@ export const GET: RequestHandler = async ({ locals }) => {
       return json([]);
     }
 
-    // Get recipes that are favorited AND have English translations
+    // Get recipes that are favorited AND have approved English translations
     let recipes = await Recipe.find({
       _id: { $in: userFavorites.favorites },
-      'translations.en': { $exists: true }
+      'translations.en.translationStatus': 'approved'
     }).lean();
 
     // Transform to English format

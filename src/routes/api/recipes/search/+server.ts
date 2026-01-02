@@ -14,9 +14,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const favoritesOnly = url.searchParams.get('favorites') === 'true';
 
   try {
-    // Build base query - only recipes with English translations
+    // Build base query - only recipes with approved English translations
     let dbQuery: any = {
-      'translations.en': { $exists: true }
+      'translations.en.translationStatus': 'approved'
     };
 
     // Apply filters based on context

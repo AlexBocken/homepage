@@ -5,9 +5,9 @@ import { dbConnect } from '../../../../../utils/db';
 export const GET: RequestHandler = async ({params}) => {
   await dbConnect();
 
-  // Get all recipes with English translations
+  // Get all recipes with approved English translations
   const recipes = await Recipe.find({
-    'translations.en': { $exists: true }
+    'translations.en.translationStatus': 'approved'
   }, 'translations.en.tags').lean();
 
   // Extract and flatten all unique tags
