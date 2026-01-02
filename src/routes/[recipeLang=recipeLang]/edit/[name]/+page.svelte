@@ -11,7 +11,7 @@
     	export let data: PageData;
 	let preamble = data.recipe.preamble
 	let addendum = data.recipe.addendum
-	let image_preview_url="https://bocken.org/static/rezepte/thumb/" + data.recipe.short_name + ".webp?v=" + data.recipe.dateModified;
+	let image_preview_url="https://bocken.org/static/rezepte/thumb/" + (data.recipe.images?.[0]?.mediapath || `${data.recipe.short_name}.webp`);
 	let note = data.recipe.note
 
 	// Translation workflow state
