@@ -20,15 +20,15 @@ The migration will:
    - Otherwise → generate hash and create hashed copy
 3. **Generate content hash** from the full-size image (8-char SHA-256)
 4. **Copy files** (keeps originals!) in all three directories:
-   - `/var/lib/www/static/rezepte/full/`
-   - `/var/lib/www/static/rezepte/thumb/`
-   - `/var/lib/www/static/rezepte/placeholder/`
+   - `/var/www/static/rezepte/full/`
+   - `/var/www/static/rezepte/thumb/`
+   - `/var/www/static/rezepte/placeholder/`
 5. **Update database** with new hashed filename in `images[0].mediapath`
 
 ## Prerequisites
 
 - **Authentication**: Either be logged in as admin OR have `ADMIN_SECRET_TOKEN` set
-- Only runs in production (when `IMAGE_DIR=/var/lib/www/static`)
+- Only runs in production (when `IMAGE_DIR=/var/www/static`)
 - Requires confirmation token to prevent accidental runs
 - Backup your database before running (recommended)
 
@@ -59,7 +59,7 @@ Add this to your nginx site configuration for `bocken.org`:
 
 ```nginx
 location /static/rezepte/ {
-    root /var/lib/www;
+    root /var/www;
 
     # Cache hashed files forever (they have content hash in filename)
     location ~ /static/rezepte/(thumb|placeholder|full)/[^/]+\.[a-f0-9]{8}\.webp$ {
@@ -211,13 +211,13 @@ If something goes wrong:
 2. **Files**: The original unhashed files are still on disk - no data loss
 3. **Remove hashed files** (optional):
    ```bash
-   cd /var/lib/www/static/rezepte
+   cd /var/www/static/rezepte
    find . -name '*.[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9].webp' -delete
    ```
 
 ## Safety Features
 
-1. ✅ **Production-only**: Won't run unless `IMAGE_DIR=/var/lib/www/static`
+1. ✅ **Production-only**: Won't run unless `IMAGE_DIR=/var/www/static`
 2. ✅ **Confirmation token**: Requires `{"confirm": "MIGRATE_IMAGES"}` in request body
 3. ✅ **Authentication**: Requires either logged-in user OR valid `ADMIN_SECRET_TOKEN`
 4. ✅ **Non-destructive**: Copies files (keeps originals)
@@ -236,7 +236,7 @@ If something goes wrong:
 ### File Structure
 
 ```
-/var/lib/www/static/rezepte/
+/var/www/static/rezepte/
 ├── full/
 │   ├── maccaroni.webp           ← Unhashed (fallback)
 │   ├── maccaroni.a1b2c3d4.webp  ← Hashed (cache busting)
@@ -282,7 +282,7 @@ images: [{
 If you encounter issues:
 1. Check nginx error logs: `sudo tail -f /var/log/nginx/error.log`
 2. Check application logs for the migration endpoint
-3. Verify file permissions on `/var/lib/www/static/rezepte/`
+3. Verify file permissions on `/var/www/static/rezepte/`
 4. Ensure database connection is working
 
 The migration is designed to be safe and non-destructive. Original files are never deleted, only copied.
