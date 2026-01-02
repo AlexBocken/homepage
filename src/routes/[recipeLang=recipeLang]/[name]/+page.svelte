@@ -35,10 +35,14 @@
 
 	const isEnglish = $derived(data.lang === 'en');
 
-	// Use German short_name for images (they're the same for both languages)
-	const imageShortName = $derived(data.germanShortName || data.short_name);
-	const hero_img_src = $derived("https://bocken.org/static/rezepte/full/" + imageShortName + ".webp?v=" + data.dateModified);
-	const placeholder_src = $derived("https://bocken.org/static/rezepte/placeholder/" + imageShortName + ".webp?v=" + data.dateModified);
+	// Use mediapath from images array (includes hash for cache busting)
+	// Fallback to short_name.webp for backward compatibility
+	const img_filename = $derived(
+		data.images?.[0]?.mediapath ||
+		`${data.germanShortName || data.short_name}.webp`
+	);
+	const hero_img_src = $derived("https://bocken.org/static/rezepte/full/" + img_filename);
+	const placeholder_src = $derived("https://bocken.org/static/rezepte/placeholder/" + img_filename);
 
     	const months = $derived(isEnglish
 		? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -296,8 +300,8 @@ h4{
 <svelte:head>
 	<title>{stripHtmlTags(data.name)} - {labels.title}</title>
 	<meta name="description" content="{stripHtmlTags(data.description)}" />
-	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/{imageShortName}.webp" />
-	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{imageShortName}.webp" />
+	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/{img_filename}" />
+	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{img_filename}" />
 	<meta property="og:image:type" content="image/webp" />
 	<meta property="og:image:alt" content="{stripHtmlTags(data.name)}" />
 	{@html `<script type="application/ld+json">${JSON.stringify(data.recipeJsonLd)}</script>`}

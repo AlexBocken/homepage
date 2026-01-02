@@ -25,9 +25,12 @@ onMount(() => {
 	isloaded = document.querySelector("img")?.complete ? true : false
 });
 
-// Use germanShortName for images if available (English recipes), otherwise use short_name (German recipes)
-const imageShortName = $derived(recipe.germanShortName || recipe.short_name);
-const img_name = $derived(imageShortName + ".webp?v=" + recipe.dateModified);
+// Use mediapath from images array (includes hash for cache busting)
+// Fallback to short_name.webp for backward compatibility
+const img_name = $derived(
+	recipe.images?.[0]?.mediapath ||
+	`${recipe.germanShortName || recipe.short_name}.webp`
+);
 </script>
 <style>
 .card_anchor{
@@ -261,7 +264,7 @@ const img_name = $derived(imageShortName + ".webp?v=" + recipe.dateModified);
 			<noscript>
 				<img class="image backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{recipe.alt}"/>
 			</noscript>
-			<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + imageShortName + '.webp'} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
+			<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
 		</div>
 	</div>
 	{#if showFavoriteIndicator && isFavorite}
