@@ -1,6 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
 import { IMAGE_DIR } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { Recipe } from '$models/Recipe';
 import { connectDB } from '$utils/db';
 import { generateImageHash, getHashedFilename } from '$utils/imageHash';
@@ -15,6 +16,7 @@ export const POST = (async ({ locals, request }) => {
 	// Require confirmation token to prevent accidental runs
 	const data = await request.json();
 	const confirmToken = data?.confirm;
+	const adminToken = data?.adminToken;
 
 	if (!isProd) {
 		throw error(403, 'This endpoint only runs in production (IMAGE_DIR must be /var/lib/www)');
@@ -24,8 +26,13 @@ export const POST = (async ({ locals, request }) => {
 		throw error(400, 'Missing or invalid confirmation token. Send {"confirm": "MIGRATE_IMAGES"}');
 	}
 
+	// Check authentication: either valid session OR admin token from env
 	const auth = await locals.auth();
-	if (!auth) throw error(401, 'Need to be logged in');
+	const isAdminToken = adminToken && env.ADMIN_SECRET_TOKEN && adminToken === env.ADMIN_SECRET_TOKEN;
+
+	if (!auth && !isAdminToken) {
+		throw error(401, 'Need to be logged in or provide valid admin token');
+	}
 
 	await connectDB();
 
