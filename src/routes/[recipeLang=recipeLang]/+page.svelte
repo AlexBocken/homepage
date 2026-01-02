@@ -22,7 +22,7 @@
 
 	const isEnglish = $derived(data.lang === 'en');
 	const categories = $derived(isEnglish
-		? ["Main course", "Noodle", "Bread", "Dessert", "Soup", "Side dish", "Salad", "Cake", "Breakfast", "Sauce", "Ingredient", "Drink", "Spread", "Cookie", "Snack"]
+		? ["Main course", "Noodle", "Bread", "Dessert", "Soup", "Side dish", "Salad", "Cake", "Breakfast", "Sauce", "Ingredient", "Drink", "Spread", "Biscuits", "Snack"]
 		: ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Frühstück", "Sauce", "Zutat", "Getränk", "Aufstrich", "Guetzli", "Snack"]);
 
 	// Pre-compute category-to-recipes Map for O(1) lookups
