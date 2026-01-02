@@ -29,5 +29,6 @@ jobs:
         script: |
           cd /usr/share/webapps/homepage
           git pull --force https://Alexander:${{ secrets.homepage_gitea_token }}@git.bocken.org/Alexander/homepage
+          git reset --hard origin/master
           npm run build
           sudo systemctl restart homepage.service
