@@ -156,6 +156,18 @@
 		}, 100);
 	}
 
+	// Force full retranslation of entire recipe
+	function forceFullRetranslation() {
+		// Set changedFields to empty array to trigger full translation
+		changedFields = [];
+		showTranslationWorkflow = true;
+
+		// Scroll to translation section
+		setTimeout(() => {
+			document.getElementById('translation-section')?.scrollIntoView({ behavior: 'smooth' });
+		}, 100);
+	}
+
 	// Handle translation approval
 	function handleTranslationApproved(event: CustomEvent) {
 		translationData = event.detail.translatedRecipe;
@@ -473,6 +485,9 @@ button.action_button{
 {#if !showTranslationWorkflow}
 <div class=submit_buttons>
 <button class=action_button on:click={doDelete}><p>Löschen</p><Cross fill=white width=2rem height=2rem></Cross></button>
+{#if translationData}
+<button class=action_button style="background-color: var(--nord13);" on:click={forceFullRetranslation}><p>Vollständig neu übersetzen</p><Check fill=white width=2rem height=2rem></Check></button>
+{/if}
 <button class=action_button on:click={prepareSubmit}><p>Weiter zur Übersetzung</p><Check fill=white width=2rem height=2rem></Check></button>
 </div>
 {/if}
