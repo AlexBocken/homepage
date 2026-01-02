@@ -28,7 +28,8 @@ jobs:
         port: 22
         script: |
           cd /usr/share/webapps/homepage
-          git pull --force https://Alexander:${{ secrets.homepage_gitea_token }}@git.bocken.org/Alexander/homepage
+          git remote set-url origin https://Alexander:${{ secrets.homepage_gitea_token }}@git.bocken.org/Alexander/homepage
+          git fetch origin
           git reset --hard origin/master
           npm run build
           sudo systemctl restart homepage.service
