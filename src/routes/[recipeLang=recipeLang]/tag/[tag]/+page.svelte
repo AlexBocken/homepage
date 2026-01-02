@@ -9,6 +9,24 @@
 
     const isEnglish = $derived(data.lang === 'en');
     const label = $derived(isEnglish ? 'Recipes with Keyword' : 'Rezepte mit Stichwort');
+
+    // Search state
+    let matchedRecipeIds = $state(new Set());
+    let hasActiveSearch = $state(false);
+
+    // Handle search results from Search component
+    function handleSearchResults(ids, categories) {
+        matchedRecipeIds = ids;
+        hasActiveSearch = ids.size < data.recipes.length;
+    }
+
+    // Filter recipes based on search
+    const filteredRecipes = $derived.by(() => {
+        if (!hasActiveSearch) {
+            return data.recipes;
+        }
+        return data.recipes.filter(r => matchedRecipeIds.has(r._id));
+    });
 </script>
 <style>
 	h1 {
@@ -17,10 +35,10 @@
 	}
 </style>
 <h1>{label} <q>{data.tag}</q>:</h1>
-<Search tag={data.tag} lang={data.lang}></Search>
+<Search tag={data.tag} lang={data.lang} recipes={data.recipes} onSearchResults={handleSearchResults}></Search>
 <section>
 <Recipes>
-	{#each rand_array(data.recipes) as recipe}
+	{#each rand_array(filteredRecipes) as recipe}
 		<Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
 	{/each}
 	</Recipes>

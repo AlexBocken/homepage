@@ -7,6 +7,8 @@
     export let active_index;
     export let routePrefix = '/rezepte';
     export let lang = 'de';
+    export let recipes = []
+    export let onSearchResults = (ids, categories) => {}
 
 </script>
 <style>
@@ -43,7 +45,7 @@ a.month:hover,
 {/each}
 </div>
 <section>
-<Search season={active_index + 1} {lang}></Search>
+<Search season={active_index + 1} {lang} {recipes} {onSearchResults}></Search>
 </section>
 <section>
 <slot name=recipes></slot>
