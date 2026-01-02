@@ -7,6 +7,9 @@
     let current_month = new Date().getMonth() + 1;
 
     const isEnglish = $derived(data.lang === 'en');
+    const categories = $derived(isEnglish
+        ? ["Main course", "Noodle", "Bread", "Dessert", "Soup", "Side dish", "Salad", "Cake", "Breakfast", "Sauce", "Ingredient", "Drink", "Spread", "Biscuits", "Snack"]
+        : ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Frühstück", "Sauce", "Zutat", "Getränk", "Aufstrich", "Guetzli", "Snack"]);
     const labels = $derived({
         title: isEnglish ? 'Search Results' : 'Suchergebnisse',
         pageTitle: isEnglish
@@ -17,9 +20,9 @@
             : 'Suchergebnisse in den Bockenschen Rezepten.',
         filteredBy: isEnglish ? 'Filtered by:' : 'Gefiltert nach:',
         category: isEnglish ? 'Category' : 'Kategorie',
-        keyword: isEnglish ? 'Keyword' : 'Stichwort',
+        keywords: isEnglish ? 'Keywords' : 'Stichwörter',
         icon: 'Icon',
-        season: isEnglish ? 'Season' : 'Saison',
+        seasons: isEnglish ? 'Seasons' : 'Monate',
         favoritesOnly: isEnglish ? 'Favorites only' : 'Nur Favoriten',
         searchError: isEnglish ? 'Search error:' : 'Fehler bei der Suche:',
         resultsFor: isEnglish ? 'results for' : 'Ergebnisse für',
@@ -73,25 +76,27 @@
 
 <h1>{labels.title}</h1>
 
-{#if data.filters.category || data.filters.tag || data.filters.icon || data.filters.season || data.filters.favoritesOnly}
+{#if data.filters.category || data.filters.tags?.length > 0 || data.filters.icon || data.filters.seasons?.length > 0 || data.filters.favoritesOnly}
     <div class="filter-info">
         {labels.filteredBy}
-        {#if data.filters.category}{labels.category} "{data.filters.category}"{/if}
-        {#if data.filters.tag}{labels.keyword} "{data.filters.tag}"{/if}
-        {#if data.filters.icon}{labels.icon} "{data.filters.icon}"{/if}
-        {#if data.filters.season}{labels.season} "{data.filters.season}"{/if}
+        {#if data.filters.category}{labels.category}: "{data.filters.category}"{/if}
+        {#if data.filters.tags?.length > 0}{labels.keywords}: {data.filters.tags.join(', ')}{/if}
+        {#if data.filters.icon}{labels.icon}: "{data.filters.icon}"{/if}
+        {#if data.filters.seasons?.length > 0}{labels.seasons}: {data.filters.seasons.join(', ')}{/if}
         {#if data.filters.favoritesOnly}{labels.favoritesOnly}{/if}
     </div>
 {/if}
 
 <Search
     category={data.filters.category}
-    tag={data.filters.tag}
+    tag={data.filters.tags?.[0] || null}
     icon={data.filters.icon}
-    season={data.filters.season}
+    season={data.filters.seasons?.[0] || null}
     favoritesOnly={data.filters.favoritesOnly}
     lang={data.lang}
     recipes={data.allRecipes}
+    categories={categories}
+    isLoggedIn={!!data.session?.user}
     onSearchResults={handleSearchResults}
 />
 

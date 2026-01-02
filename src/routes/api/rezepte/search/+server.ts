@@ -5,36 +5,49 @@ import { dbConnect } from '../../../../utils/db';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   await dbConnect();
-  
+
   const query = url.searchParams.get('q')?.toLowerCase().trim() || '';
   const category = url.searchParams.get('category');
-  const tag = url.searchParams.get('tag');
+
+  // Support both single tag (backwards compat) and multiple tags
+  const singleTag = url.searchParams.get('tag');
+  const multipleTags = url.searchParams.get('tags');
+  const tags = multipleTags
+    ? multipleTags.split(',').map(t => t.trim()).filter(Boolean)
+    : (singleTag ? [singleTag] : []);
+
   const icon = url.searchParams.get('icon');
-  const season = url.searchParams.get('season');
+
+  // Support both single season (backwards compat) and multiple seasons
+  const singleSeason = url.searchParams.get('season');
+  const multipleSeasons = url.searchParams.get('seasons');
+  const seasons = multipleSeasons
+    ? multipleSeasons.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+    : (singleSeason ? [parseInt(singleSeason)].filter(n => !isNaN(n)) : []);
+
   const favoritesOnly = url.searchParams.get('favorites') === 'true';
-  
+
   try {
     // Build base query
     let dbQuery: any = {};
-    
+
     // Apply filters based on context
     if (category) {
       dbQuery.category = category;
     }
-    
-    if (tag) {
-      dbQuery.tags = { $in: [tag] };
+
+    // Multi-tag AND logic: recipe must have ALL selected tags
+    if (tags.length > 0) {
+      dbQuery.tags = { $all: tags };
     }
-    
+
     if (icon) {
       dbQuery.icon = icon;
     }
-    
-    if (season) {
-      const seasonNum = parseInt(season);
-      if (!isNaN(seasonNum)) {
-        dbQuery.season = { $in: [seasonNum] };
-      }
+
+    // Multi-season OR logic: recipe in any selected season
+    if (seasons.length > 0) {
+      dbQuery.season = { $in: seasons };
     }
     
     // Get all recipes matching base filters
