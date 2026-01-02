@@ -32,4 +32,9 @@ jobs:
           git fetch origin
           git reset --hard origin/master
           npm run build
-          sudo systemctl restart homepage.service
+          sudo systemctl stop homepage.service
+          mkdir -p dist
+          rm -rf dist/*
+          mv build/* dist/
+          rmdir build
+          sudo systemctl start homepage.service
