@@ -7,18 +7,41 @@ export const load: PageServerLoad = async ({ url, fetch, params, locals }) => {
 
     const query = url.searchParams.get('q') || '';
     const category = url.searchParams.get('category');
-    const tag = url.searchParams.get('tag');
+
+    // Handle both old and new tag params
+    const singleTag = url.searchParams.get('tag');
+    const multipleTags = url.searchParams.get('tags');
+    const tags = multipleTags
+        ? multipleTags.split(',').map(t => t.trim()).filter(Boolean)
+        : (singleTag ? [singleTag] : []);
+
     const icon = url.searchParams.get('icon');
-    const season = url.searchParams.get('season');
+
+    // Handle multiple seasons
+    const singleSeason = url.searchParams.get('season');
+    const multipleSeasons = url.searchParams.get('seasons');
+    const seasons = multipleSeasons
+        ? multipleSeasons.split(',').map(s => s.trim()).filter(Boolean)
+        : (singleSeason ? [singleSeason] : []);
+
     const favoritesOnly = url.searchParams.get('favorites') === 'true';
 
     // Build API URL with filters
     const apiUrl = new URL(`${apiBase}/search`, url.origin);
     if (query) apiUrl.searchParams.set('q', query);
     if (category) apiUrl.searchParams.set('category', category);
-    if (tag) apiUrl.searchParams.set('tag', tag);
+
+    // Pass as comma-separated to API
+    if (tags.length > 0) {
+        apiUrl.searchParams.set('tags', tags.join(','));
+    }
+
     if (icon) apiUrl.searchParams.set('icon', icon);
-    if (season) apiUrl.searchParams.set('season', season);
+
+    if (seasons.length > 0) {
+        apiUrl.searchParams.set('seasons', seasons.join(','));
+    }
+
     if (favoritesOnly) apiUrl.searchParams.set('favorites', 'true');
 
     try {
@@ -39,9 +62,9 @@ export const load: PageServerLoad = async ({ url, fetch, params, locals }) => {
             error: searchResponse.ok ? null : results.error || 'Search failed',
             filters: {
                 category,
-                tag,
+                tags, // Now an array
                 icon,
-                season,
+                seasons, // Now an array
                 favoritesOnly
             }
         };
@@ -53,9 +76,9 @@ export const load: PageServerLoad = async ({ url, fetch, params, locals }) => {
             error: 'Search failed',
             filters: {
                 category,
-                tag,
+                tags: [],
                 icon,
-                season,
+                seasons: [],
                 favoritesOnly
             }
         };
