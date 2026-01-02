@@ -63,7 +63,13 @@
 
 		// Convert current path to target language (for non-recipe pages)
 		let newPath = path;
-		if (lang === 'en' && path.startsWith('/rezepte')) {
+
+		// Special handling for category and tag pages - reset to selection page
+		// Icons are consistent across languages, so they can be swapped directly
+		if (path.match(/\/(rezepte|recipes)\/(category|tag)\//)) {
+			const pathType = path.match(/\/(category|tag)\//)?.[1];
+			newPath = lang === 'en' ? `/recipes/${pathType}` : `/rezepte/${pathType}`;
+		} else if (lang === 'en' && path.startsWith('/rezepte')) {
 			newPath = path.replace('/rezepte', '/recipes');
 		} else if (lang === 'de' && path.startsWith('/recipes')) {
 			newPath = path.replace('/recipes', '/rezepte');
