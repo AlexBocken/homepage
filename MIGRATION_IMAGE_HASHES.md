@@ -27,10 +27,24 @@ The migration will:
 
 ## Prerequisites
 
-- Must be logged in as admin
+- **Authentication**: Either be logged in as admin OR have `ADMIN_SECRET_TOKEN` set
 - Only runs in production (when `IMAGE_DIR=/var/lib/www/static`)
 - Requires confirmation token to prevent accidental runs
 - Backup your database before running (recommended)
+
+### Setting Up Admin Token (Production Server)
+
+Add `ADMIN_SECRET_TOKEN` to your production `.env` file:
+
+```bash
+# Generate a secure random token
+openssl rand -hex 32
+
+# Add to .env (production only!)
+echo "ADMIN_SECRET_TOKEN=your-generated-token-here" >> .env
+```
+
+**Important**: Keep this token secret and only set it on the production server. Do NOT commit it to git.
 
 ## Step 1: Deploy Code Changes
 
@@ -66,7 +80,41 @@ sudo nginx -t && sudo nginx -s reload
 
 ## Step 3: Run Migration
 
-### Option 1: Using curl (Recommended)
+### Option 1: Using Shell Script (Recommended for Server)
+
+SSH into your production server and run:
+
+```bash
+cd /path/to/homepage
+
+# Source your .env to get ADMIN_SECRET_TOKEN
+source .env
+
+# Make script executable (first time only)
+chmod +x scripts/migrate-image-hashes.sh
+
+# Run migration
+./scripts/migrate-image-hashes.sh
+```
+
+The script will:
+- Check that `ADMIN_SECRET_TOKEN` is set
+- Ask for confirmation
+- Call the API endpoint with the admin token
+- Pretty-print the results
+
+### Option 2: Using curl with Admin Token
+
+```bash
+# On production server with .env sourced
+source .env
+
+curl -X POST https://bocken.org/api/admin/migrate-image-hashes \
+  -H "Content-Type: application/json" \
+  -d "{\"confirm\": \"MIGRATE_IMAGES\", \"adminToken\": \"$ADMIN_SECRET_TOKEN\"}"
+```
+
+### Option 3: Using curl with Session Cookie (Browser)
 
 ```bash
 # Get your session cookie from browser DevTools
@@ -78,22 +126,7 @@ curl -X POST https://bocken.org/api/admin/migrate-image-hashes \
   -d '{"confirm": "MIGRATE_IMAGES"}'
 ```
 
-### Option 2: Using the Shell Script
-
-```bash
-cd /path/to/homepage
-
-# Save your session cookie to a file (from browser DevTools)
-echo "your-session-cookie-value" > .prod-session-cookie
-
-# Make script executable
-chmod +x scripts/migrate-image-hashes.sh
-
-# Run migration
-./scripts/migrate-image-hashes.sh
-```
-
-### Option 3: Using Browser (Postman, Insomnia, etc.)
+### Option 4: Using Browser (Postman, Insomnia, etc.)
 
 1. Make sure you're logged in to bocken.org in your browser
 2. Send POST request to: `https://bocken.org/api/admin/migrate-image-hashes`
@@ -186,7 +219,7 @@ If something goes wrong:
 
 1. ✅ **Production-only**: Won't run unless `IMAGE_DIR=/var/lib/www/static`
 2. ✅ **Confirmation token**: Requires `{"confirm": "MIGRATE_IMAGES"}` in request body
-3. ✅ **Authentication**: Requires logged-in user
+3. ✅ **Authentication**: Requires either logged-in user OR valid `ADMIN_SECRET_TOKEN`
 4. ✅ **Non-destructive**: Copies files (keeps originals)
 5. ✅ **Skip already migrated**: Won't re-process files that already have hashes
 6. ✅ **Detailed logging**: Returns detailed report of what was changed
