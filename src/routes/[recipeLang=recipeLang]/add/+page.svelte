@@ -108,7 +108,7 @@
 		return {
 			...card_data,
 			...add_info,
-			images: {mediapath: short_name.trim() + '.webp', alt: "", caption: ""},
+			images: [{mediapath: short_name.trim() + '.webp', alt: "", caption: ""}],
 			season: season_local,
 			short_name : short_name.trim(),
 			portions: portions_local,
