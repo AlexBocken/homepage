@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit';
 import { IMAGE_DIR } from '$env/static/private';
 import { env } from '$env/dynamic/private';
 import { Recipe } from '$models/Recipe';
-import { connectDB } from '$utils/db';
+import { dbConnect } from '$utils/db';
 import { generateImageHash, getHashedFilename } from '$utils/imageHash';
 import path from 'path';
 import fs from 'fs';
@@ -34,7 +34,7 @@ export const POST = (async ({ locals, request }) => {
 		throw error(401, 'Need to be logged in or provide valid admin token');
 	}
 
-	await connectDB();
+	await dbConnect();
 
 	const results = {
 		total: 0,
