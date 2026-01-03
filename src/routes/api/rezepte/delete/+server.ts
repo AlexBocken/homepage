@@ -1,5 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '../../../../models/Recipe';
+import { UserFavorites } from '../../../../models/UserFavorites';
 import { dbConnect } from '../../../../utils/db';
 import type {RecipeModelType} from '../../../../types/types';
 import { error } from '@sveltejs/kit';
@@ -13,8 +14,23 @@ export const POST: RequestHandler = async ({request, locals}) => {
 
   	const short_name = message.old_short_name
 	await dbConnect();
+
+	// Find the recipe to get its ObjectId before deleting
+	const recipe = await Recipe.findOne({short_name: short_name});
+	if (!recipe) {
+		throw error(404, "Recipe not found");
+	}
+
+	// Remove this recipe from all users' favorites
+	await UserFavorites.updateMany(
+		{ favorites: recipe._id },
+		{ $pull: { favorites: recipe._id } }
+	);
+
+	// Delete the recipe
 	await Recipe.findOneAndDelete({short_name: short_name});
+
 	return new Response(JSON.stringify({msg: "Deleted recipe successfully"}),{
-			    status: 200,
+		    status: 200,
   	});
 }

@@ -209,16 +209,15 @@
 			//alert(item.message)
 			return
 		}
-		return
 		const res = await fetch('/api/rezepte/delete', {
 			method: 'POST',
 			body: JSON.stringify({
 				old_short_name,
+			}),
 			headers: {
        				'content-type': 'application/json',
-     				}
-			})
-
+				credentials: 'include',
+     			}
 		})
 		if(res.ok){
 			const url = location.href.split('/')
