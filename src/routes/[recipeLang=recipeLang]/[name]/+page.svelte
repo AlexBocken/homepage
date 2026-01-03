@@ -350,7 +350,7 @@ h4{
 			isLoggedIn={!!data.session?.user}
 		/>
 
-		{#if data.note}
+		{#if data.note && data.note.trim()}
 			<RecipeNote note={data.note}></RecipeNote>
 		{/if}
 </div>
