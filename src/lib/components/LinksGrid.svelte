@@ -46,6 +46,7 @@
 	transition: 200ms;
 	width: 100%;
 	padding: 1rem;
+	position: relative;
 }
 :global(.links_grid a:hover){
 	scale: 1.02;
@@ -57,10 +58,22 @@
 :global(.links_grid h3){
 	font-size: 1.5rem;
 }
+:global(.links_grid a .lock-icon){
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	width: 1.5rem;
+	height: 1.5rem;
+	fill: var(--nord0);
+	opacity: 0.6;
+}
 
 @media (prefers-color-scheme: dark){
 	:global(.links_grid h3){
 		color: white;
+	}
+	:global(.links_grid a .lock-icon){
+		fill: white;
 	}
 	:global(.links_grid a:nth-child(4n)),
 	:global(.links_grid a:nth-child(4n) svg){
