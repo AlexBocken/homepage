@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
 	import { languageStore } from '$lib/stores/language';
 	import { onMount } from 'svelte';
@@ -9,16 +10,17 @@
 	let langOptions: HTMLDivElement;
 
 	$effect(() => {
-		// Update current language and path when page changes
-		if (typeof window !== 'undefined') {
-			const path = window.location.pathname;
-			currentPath = path;
-			if (path.startsWith('/recipes')) {
-				languageStore.set('en');
-			} else if (path.startsWith('/rezepte')) {
-				languageStore.set('de');
-			} else if (path === '/') {
-				// On main page, read from localStorage
+		// Update current language and path when page changes (reactive to browser navigation)
+		const path = $page.url.pathname;
+		currentPath = path;
+
+		if (path.startsWith('/recipes')) {
+			languageStore.set('en');
+		} else if (path.startsWith('/rezepte')) {
+			languageStore.set('de');
+		} else if (path === '/') {
+			// On main page, read from localStorage
+			if (typeof localStorage !== 'undefined') {
 				const preferredLanguage = localStorage.getItem('preferredLanguage');
 				languageStore.set(preferredLanguage === 'en' ? 'en' : 'de');
 			}
