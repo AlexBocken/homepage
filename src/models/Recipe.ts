@@ -100,5 +100,6 @@ const RecipeSchema = new mongoose.Schema(
 
 // Indexes for efficient querying
 RecipeSchema.index({ "translations.en.short_name": 1 });
+RecipeSchema.index({ "translations.en.translationStatus": 1 });
 
 export const Recipe = mongoose.model("Recipe", RecipeSchema);

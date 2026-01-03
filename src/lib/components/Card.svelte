@@ -13,7 +13,8 @@ let {
 	isFavorite = false,
 	showFavoriteIndicator = false,
 	loading_strat = "lazy",
-	routePrefix = '/rezepte'
+	routePrefix = '/rezepte',
+	translationStatus = undefined
 } = $props();
 
 // Make current_month reactive based on icon_override
@@ -232,6 +233,31 @@ const img_name = $derived(
 	filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
 }
 
+.translation-badge{
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	padding: 0.4rem 0.8rem;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	z-index: 3;
+	color: var(--nord0);
+}
+
+.translation-badge.none{
+	background-color: var(--nord14);
+}
+
+.translation-badge.pending{
+	background-color: var(--nord13);
+}
+
+.translation-badge.needs_update{
+	background-color: var(--nord12);
+}
+
 .icon:hover,
 .icon:focus-visible
 {
@@ -269,6 +295,17 @@ const img_name = $derived(
 	</div>
 	{#if showFavoriteIndicator && isFavorite}
 		<div class="favorite-indicator">❤️</div>
+	{/if}
+	{#if translationStatus !== undefined}
+		<div class="translation-badge {translationStatus || 'none'}">
+			{#if translationStatus === 'pending'}
+				Freigabe ausstehend
+			{:else if translationStatus === 'needs_update'}
+				Aktualisierung erforderlich
+			{:else}
+				Keine Übersetzung
+			{/if}
+		</div>
 	{/if}
 	{#if icon_override || recipe.season.includes(current_month)}
 		<a href="{routePrefix}/icon/{recipe.icon}" class=icon>{recipe.icon}</a>
