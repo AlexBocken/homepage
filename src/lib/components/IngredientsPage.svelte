@@ -7,27 +7,32 @@ import HefeSwapper from './HefeSwapper.svelte';
 
 let { data } = $props();
 
-// Flatten ingredient references for display
-const flattenedIngredients = $derived.by(() => {
-	if (!data.ingredients) return [];
+// Recursively flatten nested ingredient references
+function flattenIngredientReferences(items, lang, visited = new Set()) {
+	const result = [];
 
-	return data.ingredients.flatMap((item) => {
+	for (const item of items) {
 		if (item.type === 'reference' && item.resolvedRecipe) {
-			const sections = [];
+			// Prevent circular references
+			const recipeId = item.resolvedRecipe._id?.toString() || item.resolvedRecipe.short_name;
+			if (visited.has(recipeId)) {
+				console.warn('Circular reference detected:', recipeId);
+				continue;
+			}
+
+			const newVisited = new Set(visited);
+			newVisited.add(recipeId);
 
 			// Get translated or original ingredients
-			const lang = data.lang || 'de';
 			const ingredientsToUse = (lang === 'en' &&
 									item.resolvedRecipe.translations?.en?.ingredients)
 				? item.resolvedRecipe.translations.en.ingredients
 				: item.resolvedRecipe.ingredients || [];
 
-			// Filter to only sections (not nested references)
-			const baseIngredients = item.includeIngredients
-				? ingredientsToUse.filter(i => i.type === 'section' || !i.type)
-				: [];
+			// Recursively flatten nested references
+			const flattenedNested = flattenIngredientReferences(ingredientsToUse, lang, newVisited);
 
-			// Combine all items into one section
+			// Combine all items into one list
 			const combinedList = [];
 
 			// Add items before
@@ -35,12 +40,14 @@ const flattenedIngredients = $derived.by(() => {
 				combinedList.push(...item.itemsBefore);
 			}
 
-			// Add base recipe ingredients
-			baseIngredients.forEach(section => {
-				if (section.list) {
-					combinedList.push(...section.list);
-				}
-			});
+			// Add base recipe ingredients (now recursively flattened)
+			if (item.includeIngredients) {
+				flattenedNested.forEach(section => {
+					if (section.list) {
+						combinedList.push(...section.list);
+					}
+				});
+			}
 
 			// Add items after
 			if (item.itemsAfter && item.itemsAfter.length > 0) {
@@ -49,12 +56,11 @@ const flattenedIngredients = $derived.by(() => {
 
 			// Push as one section with optional label
 			if (combinedList.length > 0) {
-				// Use labelOverride if present, otherwise use base recipe name (translated if viewing in English)
 				const baseRecipeName = (lang === 'en' && item.resolvedRecipe.translations?.en?.name)
 					? item.resolvedRecipe.translations.en.name
 					: item.resolvedRecipe.name;
 
-				sections.push({
+				result.push({
 					type: 'section',
 					name: item.showLabel ? (item.labelOverride || baseRecipeName) : '',
 					list: combinedList,
@@ -62,13 +68,20 @@ const flattenedIngredients = $derived.by(() => {
 					short_name: item.resolvedRecipe.short_name
 				});
 			}
-
-			return sections;
+		} else if (item.type === 'section' || !item.type) {
+			// Regular section - pass through
+			result.push(item);
 		}
+	}
 
-		// Regular section - pass through
-		return [item];
-	});
+	return result;
+}
+
+// Flatten ingredient references for display
+const flattenedIngredients = $derived.by(() => {
+	if (!data.ingredients) return [];
+	const lang = data.lang || 'de';
+	return flattenIngredientReferences(data.ingredients, lang);
 });
 let multiplier = $state(data.multiplier || 1);
 

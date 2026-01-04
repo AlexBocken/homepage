@@ -27,7 +27,7 @@
 	let translationMetadata: any = null;
 
 	// Track base recipes that need translation
-	let untranslatedBaseRecipes: { id: string, name: string }[] = [];
+	let untranslatedBaseRecipes: { shortName: string, name: string }[] = [];
 	let checkingBaseRecipes = false;
 
 	// Sync base recipe references from German to English
@@ -36,21 +36,32 @@
 
 		checkingBaseRecipes = true;
 
+		// Helper to extract short_name from baseRecipeRef (which might be an object or string)
+		const getShortName = (baseRecipeRef: any): string => {
+			return typeof baseRecipeRef === 'object' ? baseRecipeRef.short_name : baseRecipeRef;
+		};
+
 		// Collect all base recipe references from German data
-		const germanBaseRecipeIds = new Set<string>();
+		const germanBaseRecipeShortNames = new Set<string>();
+		const baseRecipeRefMap = new Map<string, any>(); // Map short_name to baseRecipeRef (ID or object)
+
 		(germanData.ingredients || []).forEach((ing: any) => {
 			if (ing.type === 'reference' && ing.baseRecipeRef) {
-				germanBaseRecipeIds.add(ing.baseRecipeRef);
+				const shortName = getShortName(ing.baseRecipeRef);
+				germanBaseRecipeShortNames.add(shortName);
+				baseRecipeRefMap.set(shortName, ing.baseRecipeRef);
 			}
 		});
 		(germanData.instructions || []).forEach((inst: any) => {
 			if (inst.type === 'reference' && inst.baseRecipeRef) {
-				germanBaseRecipeIds.add(inst.baseRecipeRef);
+				const shortName = getShortName(inst.baseRecipeRef);
+				germanBaseRecipeShortNames.add(shortName);
+				baseRecipeRefMap.set(shortName, inst.baseRecipeRef);
 			}
 		});
 
 		// If no base recipes in German, just initialize editableEnglish from German data if needed
-		if (germanBaseRecipeIds.size === 0) {
+		if (germanBaseRecipeShortNames.size === 0) {
 			if (!editableEnglish) {
 				editableEnglish = {
 					...germanData,
@@ -64,25 +75,25 @@
 		}
 
 		// Fetch all base recipes and check their English translations
-		const untranslated: { id: string, name: string }[] = [];
+		const untranslated: { shortName: string, name: string }[] = [];
 		const baseRecipeTranslations = new Map<string, { deName: string, enName: string }>();
 
-		for (const recipeId of germanBaseRecipeIds) {
+		for (const shortName of germanBaseRecipeShortNames) {
 			try {
-				const response = await fetch(`/api/rezepte/${recipeId}`);
+				const response = await fetch(`/api/rezepte/items/${shortName}`);
 				if (response.ok) {
 					const recipe = await response.json();
 					if (!recipe.translations?.en) {
-						untranslated.push({ id: recipeId, name: recipe.name });
+						untranslated.push({ shortName, name: recipe.name });
 					} else {
-						baseRecipeTranslations.set(recipeId, {
+						baseRecipeTranslations.set(shortName, {
 							deName: recipe.name,
 							enName: recipe.translations.en.name
 						});
 					}
 				}
 			} catch (error) {
-				console.error(`Error fetching base recipe ${recipeId}:`, error);
+				console.error(`Error fetching base recipe ${shortName}:`, error);
 			}
 		}
 
@@ -104,14 +115,16 @@
 				translationStatus: 'pending',
 				ingredients: JSON.parse(JSON.stringify(germanData.ingredients || [])).map((ing: any) => {
 					if (ing.type === 'reference' && ing.baseRecipeRef) {
-						const translation = baseRecipeTranslations.get(ing.baseRecipeRef);
+						const shortName = getShortName(ing.baseRecipeRef);
+						const translation = baseRecipeTranslations.get(shortName);
 						return translation ? { ...ing, name: translation.enName } : ing;
 					}
 					return ing;
 				}),
 				instructions: JSON.parse(JSON.stringify(germanData.instructions || [])).map((inst: any) => {
 					if (inst.type === 'reference' && inst.baseRecipeRef) {
-						const translation = baseRecipeTranslations.get(inst.baseRecipeRef);
+						const shortName = getShortName(inst.baseRecipeRef);
+						const translation = baseRecipeTranslations.get(shortName);
 						return translation ? { ...inst, name: translation.enName } : inst;
 					}
 					return inst;
@@ -125,7 +138,8 @@
 				ingredients: germanData.ingredients.map((germanIng: any, index: number) => {
 					if (germanIng.type === 'reference' && germanIng.baseRecipeRef) {
 						// This is a base recipe reference - use English base recipe name
-						const translation = baseRecipeTranslations.get(germanIng.baseRecipeRef);
+						const shortName = getShortName(germanIng.baseRecipeRef);
+						const translation = baseRecipeTranslations.get(shortName);
 						const englishIng = editableEnglish.ingredients[index];
 
 						// If English already has this reference at same position, keep it
@@ -148,7 +162,8 @@
 				instructions: germanData.instructions.map((germanInst: any, index: number) => {
 					if (germanInst.type === 'reference' && germanInst.baseRecipeRef) {
 						// This is a base recipe reference - use English base recipe name
-						const translation = baseRecipeTranslations.get(germanInst.baseRecipeRef);
+						const shortName = getShortName(germanInst.baseRecipeRef);
+						const translation = baseRecipeTranslations.get(shortName);
 						const englishInst = editableEnglish.instructions[index];
 
 						// If English already has this reference at same position, keep it

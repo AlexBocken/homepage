@@ -17,11 +17,27 @@ export const GET: RequestHandler = async ({ params }) => {
 		})
 		.populate({
 			path: 'translations.en.ingredients.baseRecipeRef',
-			select: 'short_name name ingredients instructions translations'
+			select: 'short_name name ingredients instructions translations',
+			populate: {
+				path: 'ingredients.baseRecipeRef',
+				select: 'short_name name ingredients instructions translations',
+				populate: {
+					path: 'ingredients.baseRecipeRef',
+					select: 'short_name name ingredients instructions translations'
+				}
+			}
 		})
 		.populate({
 			path: 'translations.en.instructions.baseRecipeRef',
-			select: 'short_name name ingredients instructions translations'
+			select: 'short_name name ingredients instructions translations',
+			populate: {
+				path: 'instructions.baseRecipeRef',
+				select: 'short_name name ingredients instructions translations',
+				populate: {
+					path: 'instructions.baseRecipeRef',
+					select: 'short_name name ingredients instructions translations'
+				}
+			}
 		})
 		.lean();
 
@@ -64,23 +80,32 @@ export const GET: RequestHandler = async ({ params }) => {
 			germanShortName: recipe.short_name,
 		};
 
-		// Map populated base recipe refs to resolvedRecipe field
-		if (englishRecipe.ingredients) {
-			englishRecipe.ingredients = englishRecipe.ingredients.map((item: any) => {
+		// Recursively map populated base recipe refs to resolvedRecipe field
+		function mapBaseRecipeRefs(items: any[]): any[] {
+			return items.map((item: any) => {
 				if (item.type === 'reference' && item.baseRecipeRef) {
-					return { ...item, resolvedRecipe: item.baseRecipeRef };
+					const resolvedRecipe = { ...item.baseRecipeRef };
+
+					// Recursively map nested baseRecipeRefs
+					if (resolvedRecipe.ingredients) {
+						resolvedRecipe.ingredients = mapBaseRecipeRefs(resolvedRecipe.ingredients);
+					}
+					if (resolvedRecipe.instructions) {
+						resolvedRecipe.instructions = mapBaseRecipeRefs(resolvedRecipe.instructions);
+					}
+
+					return { ...item, resolvedRecipe };
 				}
 				return item;
 			});
 		}
 
+		if (englishRecipe.ingredients) {
+			englishRecipe.ingredients = mapBaseRecipeRefs(englishRecipe.ingredients);
+		}
+
 		if (englishRecipe.instructions) {
-			englishRecipe.instructions = englishRecipe.instructions.map((item: any) => {
-				if (item.type === 'reference' && item.baseRecipeRef) {
-					return { ...item, resolvedRecipe: item.baseRecipeRef };
-				}
-				return item;
-			});
+			englishRecipe.instructions = mapBaseRecipeRefs(englishRecipe.instructions);
 		}
 
 		// Merge English alt/caption with original image paths
