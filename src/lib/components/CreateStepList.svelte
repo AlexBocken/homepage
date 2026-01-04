@@ -210,8 +210,10 @@ export function edit_step_and_close_modal(){
 				editing: false,
 				step_index: -1
 			};
-			const modal_el = document.querySelector("#edit_step_modal");
-			modal_el.close();
+			const modal_el = document.querySelector("#edit_step_modal") as HTMLDialogElement;
+			if (modal_el) {
+				setTimeout(() => modal_el.close(), 0);
+			}
 			return;
 		}
 
@@ -237,8 +239,11 @@ export function edit_step_and_close_modal(){
 		// Normal edit behavior
 		instructions[edit_step.list_index].steps[edit_step.step_index] = edit_step.step
 	}
-	const modal_el = document.querySelector("#edit_step_modal");
-	modal_el.close();
+	const modal_el = document.querySelector("#edit_step_modal") as HTMLDialogElement;
+	if (modal_el) {
+		// Defer closing to next tick to ensure all bindings are updated
+		setTimeout(() => modal_el.close(), 0);
+	}
 }
 
 export function show_modal_edit_subheading_step(list_index){
@@ -252,6 +257,17 @@ export function edit_subheading_steps_and_close_modal(){
 	instructions[edit_heading.list_index].name = edit_heading.name
 	const modal_el = document.querySelector("#edit_subheading_steps_modal");
 	modal_el.close();
+}
+
+function handleStepModalCancel() {
+	// Reset reference adding state when modal is cancelled (Escape key)
+	addingToReference = {
+		active: false,
+		list_index: -1,
+		position: 'before',
+		editing: false,
+		step_index: -1
+	};
 }
 
 
@@ -850,7 +866,7 @@ h3{
 
 </div>
 </div>
-<dialog id=edit_step_modal>
+<dialog id=edit_step_modal on:cancel={handleStepModalCancel}>
 	<h2>Schritt verändern</h2>
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_step.name} placeholder="Unterkategorie (optional)" on:keydown={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
