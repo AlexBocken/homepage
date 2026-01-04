@@ -605,12 +605,37 @@ button:disabled {
 						<div class="field-label">Ingredients</div>
 						<div class="field-value readonly readonly-text">
 							{#each germanData.ingredients as ing}
-								<strong>{ing.name || 'Ingredients'}</strong>
-								<ul>
-									{#each ing.list as item}
-										<li>{item.amount} {item.unit} {item.name}</li>
-									{/each}
-								</ul>
+								{#if ing.type === 'reference'}
+									<div style="background: var(--nord3); padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+										<strong>🔗 Base Recipe Reference</strong>
+										{#if ing.labelOverride}
+											<div><em>Label: {ing.labelOverride}</em></div>
+										{/if}
+										{#if ing.itemsBefore && ing.itemsBefore.length > 0}
+											<div style="margin-top: 0.5rem;"><strong>Items Before:</strong></div>
+											<ul>
+												{#each ing.itemsBefore as item}
+													<li>{item.amount} {item.unit} {item.name}</li>
+												{/each}
+											</ul>
+										{/if}
+										{#if ing.itemsAfter && ing.itemsAfter.length > 0}
+											<div style="margin-top: 0.5rem;"><strong>Items After:</strong></div>
+											<ul>
+												{#each ing.itemsAfter as item}
+													<li>{item.amount} {item.unit} {item.name}</li>
+												{/each}
+											</ul>
+										{/if}
+									</div>
+								{:else}
+									<strong>{ing.name || 'Ingredients'}</strong>
+									<ul>
+										{#each ing.list as item}
+											<li>{item.amount} {item.unit} {item.name}</li>
+										{/each}
+									</ul>
+								{/if}
 							{/each}
 						</div>
 					</div>
@@ -621,12 +646,37 @@ button:disabled {
 						<div class="field-label">Instructions</div>
 						<div class="field-value readonly readonly-text">
 							{#each germanData.instructions as inst}
-								<strong>{inst.name || 'Steps'}</strong>
-								<ol>
-									{#each inst.steps as step}
-										<li>{step}</li>
-									{/each}
-								</ol>
+								{#if inst.type === 'reference'}
+									<div style="background: var(--nord3); padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+										<strong>🔗 Base Recipe Reference</strong>
+										{#if inst.labelOverride}
+											<div><em>Label: {inst.labelOverride}</em></div>
+										{/if}
+										{#if inst.stepsBefore && inst.stepsBefore.length > 0}
+											<div style="margin-top: 0.5rem;"><strong>Steps Before:</strong></div>
+											<ol>
+												{#each inst.stepsBefore as step}
+													<li>{step}</li>
+												{/each}
+											</ol>
+										{/if}
+										{#if inst.stepsAfter && inst.stepsAfter.length > 0}
+											<div style="margin-top: 0.5rem;"><strong>Steps After:</strong></div>
+											<ol>
+												{#each inst.stepsAfter as step}
+													<li>{step}</li>
+												{/each}
+											</ol>
+										{/if}
+									</div>
+								{:else}
+									<strong>{inst.name || 'Steps'}</strong>
+									<ol>
+										{#each inst.steps as step}
+											<li>{step}</li>
+										{/each}
+									</ol>
+								{/if}
 							{/each}
 						</div>
 					</div>
