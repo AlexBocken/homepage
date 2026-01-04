@@ -11,10 +11,19 @@ export const GET: RequestHandler = async ({ params }) => {
 	await dbConnect();
 
 	try {
-		// Find recipe by English short_name
+		// Find recipe by English short_name and populate base recipe references
 		const recipe = await Recipe.findOne({
 			"translations.en.short_name": params.name
-		});
+		})
+		.populate({
+			path: 'translations.en.ingredients.baseRecipeRef',
+			select: 'short_name name ingredients instructions translations'
+		})
+		.populate({
+			path: 'translations.en.instructions.baseRecipeRef',
+			select: 'short_name name ingredients instructions translations'
+		})
+		.lean();
 
 		if (!recipe) {
 			throw error(404, 'Recipe not found');
@@ -25,7 +34,7 @@ export const GET: RequestHandler = async ({ params }) => {
 		}
 
 		// Return English translation with necessary metadata
-		const englishRecipe = {
+		let englishRecipe: any = {
 			_id: recipe._id,
 			short_name: recipe.translations.en.short_name,
 			name: recipe.translations.en.name,
@@ -54,6 +63,25 @@ export const GET: RequestHandler = async ({ params }) => {
 			// Include German short_name for language switcher
 			germanShortName: recipe.short_name,
 		};
+
+		// Map populated base recipe refs to resolvedRecipe field
+		if (englishRecipe.ingredients) {
+			englishRecipe.ingredients = englishRecipe.ingredients.map((item: any) => {
+				if (item.type === 'reference' && item.baseRecipeRef) {
+					return { ...item, resolvedRecipe: item.baseRecipeRef };
+				}
+				return item;
+			});
+		}
+
+		if (englishRecipe.instructions) {
+			englishRecipe.instructions = englishRecipe.instructions.map((item: any) => {
+				if (item.type === 'reference' && item.baseRecipeRef) {
+					return { ...item, resolvedRecipe: item.baseRecipeRef };
+				}
+				return item;
+			});
+		}
 
 		// Merge English alt/caption with original image paths
 		// Handle both array and single object (there's a bug in add page that sometimes saves as object)
