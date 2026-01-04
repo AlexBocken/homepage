@@ -22,6 +22,31 @@
 		handleChange();
 	}
 
+	// Base recipe reference handlers
+	function updateLabelOverride(groupIndex: number, event: Event) {
+		const target = event.target as HTMLInputElement;
+		instructions[groupIndex].labelOverride = target.value;
+		handleChange();
+	}
+
+	function updateStepBefore(groupIndex: number, stepIndex: number, event: Event) {
+		const target = event.target as HTMLTextAreaElement;
+		if (!instructions[groupIndex].stepsBefore) {
+			instructions[groupIndex].stepsBefore = [];
+		}
+		instructions[groupIndex].stepsBefore[stepIndex] = target.value;
+		handleChange();
+	}
+
+	function updateStepAfter(groupIndex: number, stepIndex: number, event: Event) {
+		const target = event.target as HTMLTextAreaElement;
+		if (!instructions[groupIndex].stepsAfter) {
+			instructions[groupIndex].stepsAfter = [];
+		}
+		instructions[groupIndex].stepsAfter[stepIndex] = target.value;
+		handleChange();
+	}
+
 	// Check if a group name was re-translated
 	function isGroupNameTranslated(groupIndex: number): boolean {
 		return translationMetadata?.[groupIndex]?.nameTranslated ?? false;
@@ -139,30 +164,109 @@
 		box-shadow: 0 0 0 transparent;
 	}
 }
+
+.reference-badge {
+	display: inline-block;
+	padding: 0.25rem 0.5rem;
+	background: var(--nord9);
+	color: var(--nord6);
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	margin-bottom: 0.5rem;
+}
+
+.reference-section {
+	padding: 0.5rem;
+	background: var(--nord2);
+	border-radius: 4px;
+	margin-bottom: 0.5rem;
+}
+
+@media(prefers-color-scheme: light) {
+	.reference-section {
+		background: var(--nord4);
+	}
+}
+
+.reference-section-label {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--nord8);
+	margin-bottom: 0.25rem;
+}
 </style>
 
 <div class="instructions-editor">
 	{#each instructions as group, groupIndex}
 		<div class="instruction-group">
-			<input
-				type="text"
-				class="group-name"
-				class:retranslated={isGroupNameTranslated(groupIndex)}
-				value={group.name || ''}
-				on:input={(e) => updateInstructionGroupName(groupIndex, e)}
-				placeholder="Instruction section name"
-			/>
-			{#each group.steps as step, stepIndex}
-				<div class="step-item">
-					<div class="step-number">{stepIndex + 1}</div>
-					<textarea
-						class:retranslated={isStepTranslated(groupIndex, stepIndex)}
-						value={step || ''}
-						on:input={(e) => updateStep(groupIndex, stepIndex, e)}
-						placeholder="Step description"
+			{#if group.type === 'reference'}
+				<span class="reference-badge">🔗 Base Recipe Reference</span>
+
+				{#if group.labelOverride !== undefined}
+					<input
+						type="text"
+						class="group-name"
+						value={group.labelOverride || ''}
+						on:input={(e) => updateLabelOverride(groupIndex, e)}
+						placeholder="Label override (optional)"
 					/>
-				</div>
-			{/each}
+				{/if}
+
+				{#if group.stepsBefore && group.stepsBefore.length > 0}
+					<div class="reference-section">
+						<div class="reference-section-label">Steps Before Base Recipe:</div>
+						{#each group.stepsBefore as step, stepIndex}
+							<div class="step-item">
+								<div class="step-number">{stepIndex + 1}</div>
+								<textarea
+									class:retranslated={isStepTranslated(groupIndex, stepIndex)}
+									value={step || ''}
+									on:input={(e) => updateStepBefore(groupIndex, stepIndex, e)}
+									placeholder="Step description"
+								/>
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				{#if group.stepsAfter && group.stepsAfter.length > 0}
+					<div class="reference-section">
+						<div class="reference-section-label">Steps After Base Recipe:</div>
+						{#each group.stepsAfter as step, stepIndex}
+							<div class="step-item">
+								<div class="step-number">{stepIndex + 1}</div>
+								<textarea
+									class:retranslated={isStepTranslated(groupIndex, stepIndex)}
+									value={step || ''}
+									on:input={(e) => updateStepAfter(groupIndex, stepIndex, e)}
+									placeholder="Step description"
+								/>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{:else}
+				<input
+					type="text"
+					class="group-name"
+					class:retranslated={isGroupNameTranslated(groupIndex)}
+					value={group.name || ''}
+					on:input={(e) => updateInstructionGroupName(groupIndex, e)}
+					placeholder="Instruction section name"
+				/>
+				{#each group.steps as step, stepIndex}
+					<div class="step-item">
+						<div class="step-number">{stepIndex + 1}</div>
+						<textarea
+							class:retranslated={isStepTranslated(groupIndex, stepIndex)}
+							value={step || ''}
+							on:input={(e) => updateStep(groupIndex, stepIndex, e)}
+							placeholder="Step description"
+						/>
+					</div>
+				{/each}
+			{/if}
 		</div>
 	{/each}
 </div>
