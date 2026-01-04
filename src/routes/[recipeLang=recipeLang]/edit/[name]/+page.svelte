@@ -73,6 +73,7 @@
 	let short_name = data.recipe.short_name
 	let datecreated = data.recipe.datecreated
 	let datemodified = new Date()
+	let isBaseRecipe = data.recipe.isBaseRecipe || false
 
     	import type { PageData } from './$types';
 	import CardAdd from '$lib/components/CardAdd.svelte';
@@ -117,6 +118,7 @@
 			addendum,
 			preamble,
 			note,
+			isBaseRecipe,
 		};
 	}
 
@@ -190,7 +192,25 @@
 	}
 
 	async function doDelete(){
-		const response = confirm("Bist du dir sicher, dass du das Rezept löschen willst?")
+		// Check for references if this is a base recipe
+		const checkRes = await fetch(`/api/rezepte/check-references/${data.recipe._id}`);
+		const checkData = await checkRes.json();
+
+		let response;
+		if (checkData.isReferenced) {
+			const refList = checkData.references
+				.map(r => `  • ${r.name}`)
+				.join('\n');
+
+			response = confirm(
+				`Dieses Rezept wird von folgenden Rezepten referenziert:\n\n${refList}\n\n` +
+				`Die Referenzen werden in regulären Inhalt umgewandelt.\n` +
+				`Möchtest du fortfahren?`
+			);
+		} else {
+			response = confirm("Bist du dir sicher, dass du das Rezept löschen willst?");
+		}
+
 		if(!response){
 			return
 		}
@@ -453,6 +473,42 @@ button.action_button{
 
 <h3>Kurzname (für URL):</h3>
 <input bind:value={short_name} placeholder="Kurzname"/>
+
+<div style="text-align: center; margin: 1rem;">
+	<label style="font-size: 1.1rem; cursor: pointer;">
+		<input type="checkbox" bind:checked={isBaseRecipe} style="width: auto; display: inline; margin-right: 0.5em;" />
+		Als Basisrezept markieren (kann von anderen Rezepten referenziert werden)
+	</label>
+</div>
+
+{#if isBaseRecipe}
+	<div style="background-color: var(--nord14); padding: 1.5rem; margin: 1rem auto; max-width: 600px; border-radius: 10px; border: 2px solid var(--nord9);">
+		<h3 style="margin-top: 0; color: var(--nord0);">📋 Basisrezept-Informationen</h3>
+		{#await fetch(`/api/rezepte/check-references/${data.recipe._id}`).then(r => r.json())}
+			<p style="color: var(--nord3);">Lade Referenzen...</p>
+		{:then refData}
+			{#if refData.isReferenced}
+				<h4 style="color: var(--nord0);">Wird referenziert von:</h4>
+				<ul style="color: var(--nord1); list-style-position: inside;">
+					{#each refData.references as ref}
+						<li>
+							<a href="/{data.lang}/edit/{ref.short_name}" style="color: var(--nord10); font-weight: bold; text-decoration: underline;">
+								{ref.name}
+							</a>
+						</li>
+					{/each}
+				</ul>
+				<p style="color: var(--nord11); font-weight: bold; margin-top: 1rem;">
+					⚠️ Änderungen an diesem Basisrezept wirken sich auf alle referenzierenden Rezepte aus.
+				</p>
+			{:else}
+				<p style="color: var(--nord3);">Dieses Basisrezept wird noch nicht referenziert.</p>
+			{/if}
+		{:catch error}
+			<p style="color: var(--nord11);">Fehler beim Laden der Referenzen.</p>
+		{/await}
+	</div>
+{/if}
 
 <div class=title_container>
 <div class=title>

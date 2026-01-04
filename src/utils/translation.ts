@@ -308,20 +308,50 @@ class DeepLTranslationService {
 			// Add ingredient names and list items
 			const ingredients = recipe.ingredients || [];
 			ingredients.forEach((ing: any) => {
-				textsToTranslate.push(ing.name || '');
-				(ing.list || []).forEach((item: any) => {
-					textsToTranslate.push(item.name || '');
-					textsToTranslate.push(item.unit || ''); // Translate units (EL→tbsp, TL→tsp)
-				});
+				// Handle base recipe references differently
+				if (ing.type === 'reference') {
+					// Only translate labelOverride if present
+					textsToTranslate.push(ing.labelOverride || '');
+					// Translate items before and after
+					(ing.itemsBefore || []).forEach((item: any) => {
+						textsToTranslate.push(item.name || '');
+						textsToTranslate.push(item.unit || '');
+					});
+					(ing.itemsAfter || []).forEach((item: any) => {
+						textsToTranslate.push(item.name || '');
+						textsToTranslate.push(item.unit || '');
+					});
+				} else {
+					// Regular ingredient section
+					textsToTranslate.push(ing.name || '');
+					(ing.list || []).forEach((item: any) => {
+						textsToTranslate.push(item.name || '');
+						textsToTranslate.push(item.unit || ''); // Translate units (EL→tbsp, TL→tsp)
+					});
+				}
 			});
 
 			// Add instruction names and steps
 			const instructions = recipe.instructions || [];
 			instructions.forEach((inst: any) => {
-				textsToTranslate.push(inst.name || '');
-				(inst.steps || []).forEach((step: string) => {
-					textsToTranslate.push(step || '');
-				});
+				// Handle base recipe references differently
+				if (inst.type === 'reference') {
+					// Only translate labelOverride if present
+					textsToTranslate.push(inst.labelOverride || '');
+					// Translate steps before and after
+					(inst.stepsBefore || []).forEach((step: string) => {
+						textsToTranslate.push(step || '');
+					});
+					(inst.stepsAfter || []).forEach((step: string) => {
+						textsToTranslate.push(step || '');
+					});
+				} else {
+					// Regular instruction section
+					textsToTranslate.push(inst.name || '');
+					(inst.steps || []).forEach((step: string) => {
+						textsToTranslate.push(step || '');
+					});
+				}
 			});
 
 			// Add image alt and caption texts
@@ -358,18 +388,56 @@ class DeepLTranslationService {
 				},
 				category: translatedCategory,
 				tags: tags.map(() => translated[index++]),
-				ingredients: ingredients.map((ing: any) => ({
-					name: translated[index++],
-					list: (ing.list || []).map((item: any) => ({
-						name: translated[index++],
-						unit: translated[index++], // Use translated unit (tbsp, tsp, etc.)
-						amount: item.amount,
-					}))
-				})),
-				instructions: instructions.map((inst: any) => ({
-					name: translated[index++],
-					steps: (inst.steps || []).map(() => translated[index++])
-				})),
+				ingredients: ingredients.map((ing: any) => {
+					if (ing.type === 'reference') {
+						return {
+							type: 'reference',
+							name: ing.name,
+							baseRecipeRef: ing.baseRecipeRef,
+							includeIngredients: ing.includeIngredients,
+							showLabel: ing.showLabel,
+							labelOverride: translated[index++],
+							itemsBefore: (ing.itemsBefore || []).map((item: any) => ({
+								name: translated[index++],
+								unit: translated[index++],
+								amount: item.amount,
+							})),
+							itemsAfter: (ing.itemsAfter || []).map((item: any) => ({
+								name: translated[index++],
+								unit: translated[index++],
+								amount: item.amount,
+							})),
+						};
+					} else {
+						return {
+							name: translated[index++],
+							list: (ing.list || []).map((item: any) => ({
+								name: translated[index++],
+								unit: translated[index++],
+								amount: item.amount,
+							}))
+						};
+					}
+				}),
+				instructions: instructions.map((inst: any) => {
+					if (inst.type === 'reference') {
+						return {
+							type: 'reference',
+							name: inst.name,
+							baseRecipeRef: inst.baseRecipeRef,
+							includeInstructions: inst.includeInstructions,
+							showLabel: inst.showLabel,
+							labelOverride: translated[index++],
+							stepsBefore: (inst.stepsBefore || []).map(() => translated[index++]),
+							stepsAfter: (inst.stepsAfter || []).map(() => translated[index++]),
+						};
+					} else {
+						return {
+							name: translated[index++],
+							steps: (inst.steps || []).map(() => translated[index++])
+						};
+					}
+				}),
 				images: images.map((img: any) => ({
 					alt: translated[index++],
 					caption: translated[index++],
