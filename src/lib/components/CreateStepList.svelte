@@ -11,6 +11,82 @@ import "$lib/css/action_button.css"
 import { do_on_key } from '$lib/components/do_on_key.js'
 import BaseRecipeSelector from '$lib/components/BaseRecipeSelector.svelte'
 
+export let lang: 'de' | 'en' = 'de';
+
+// Translation strings
+const t = {
+	de: {
+		preparation: 'Vorbereitung:',
+		bulkFermentation: 'Stockgare:',
+		finalFermentation: 'Stückgare:',
+		baking: 'Backen:',
+		cooking: 'Kochen:',
+		totalTime: 'Auf dem Teller:',
+		instructions: 'Zubereitung',
+		baseRecipe: 'Basisrezept',
+		unnamed: 'Unbenannt',
+		additionalStepsBefore: 'Zusätzliche Schritte davor:',
+		additionalStepsAfter: 'Zusätzliche Schritte danach:',
+		addStepBefore: 'Schritt davor hinzufügen',
+		addStepAfter: 'Schritt danach hinzufügen',
+		baseRecipeContent: '→ Inhalt vom Basisrezept wird hier eingefügt ←',
+		insertBaseRecipe: 'Basisrezept einfügen',
+		categoryOptional: 'Kategorie (optional)',
+		subcategoryOptional: 'Unterkategorie (optional)',
+		editStep: 'Schritt verändern',
+		renameCategory: 'Kategorie umbenennen',
+		confirmDeleteReference: 'Bist du dir sicher, dass du diese Referenz löschen möchtest?',
+		confirmDeleteList: 'Bist du dir sicher, dass du diese Liste löschen möchtest? Alle Zubereitungsschritte der Liste werden hiermit auch gelöscht.',
+		empty: 'Leer',
+		editHeading: 'Überschrift bearbeiten',
+		removeList: 'Liste entfernen',
+		editStepAria: 'Schritt bearbeiten',
+		removeStepAria: 'Schritt entfernen',
+		moveUpAria: 'Nach oben verschieben',
+		moveDownAria: 'Nach unten verschieben',
+		moveReferenceUpAria: 'Referenz nach oben verschieben',
+		moveReferenceDownAria: 'Referenz nach unten verschieben',
+		removeReferenceAria: 'Referenz entfernen',
+		moveListUpAria: 'Liste nach oben verschieben',
+		moveListDownAria: 'Liste nach unten verschieben'
+	},
+	en: {
+		preparation: 'Preparation:',
+		bulkFermentation: 'Bulk Fermentation:',
+		finalFermentation: 'Final Fermentation:',
+		baking: 'Baking:',
+		cooking: 'Cooking:',
+		totalTime: 'Total Time:',
+		instructions: 'Instructions',
+		baseRecipe: 'Base Recipe',
+		unnamed: 'Unnamed',
+		additionalStepsBefore: 'Additional steps before:',
+		additionalStepsAfter: 'Additional steps after:',
+		addStepBefore: 'Add step before',
+		addStepAfter: 'Add step after',
+		baseRecipeContent: '→ Base recipe content will be inserted here ←',
+		insertBaseRecipe: 'Insert Base Recipe',
+		categoryOptional: 'Category (optional)',
+		subcategoryOptional: 'Subcategory (optional)',
+		editStep: 'Edit Step',
+		renameCategory: 'Rename Category',
+		confirmDeleteReference: 'Are you sure you want to delete this reference?',
+		confirmDeleteList: 'Are you sure you want to delete this list? All preparation steps in the list will also be deleted.',
+		empty: 'Empty',
+		editHeading: 'Edit heading',
+		removeList: 'Remove list',
+		editStepAria: 'Edit step',
+		removeStepAria: 'Remove step',
+		moveUpAria: 'Move up',
+		moveDownAria: 'Move down',
+		moveReferenceUpAria: 'Move reference up',
+		moveReferenceDownAria: 'Move reference down',
+		removeReferenceAria: 'Remove reference',
+		moveListUpAria: 'Move list up',
+		moveListDownAria: 'Move list down'
+	}
+};
+
 const step_placeholder = "Kartoffeln schälen..."
 export let instructions
 export let add_info
@@ -61,7 +137,7 @@ function handleSelect(recipe: any, options: any) {
 }
 
 export function removeReference(list_index: number) {
-	const confirmed = confirm("Bist du dir sicher, dass du diese Referenz löschen möchtest?");
+	const confirmed = confirm(t[lang].confirmDeleteReference);
 	if (confirmed) {
 		instructions.splice(list_index, 1);
 		instructions = instructions;
@@ -147,7 +223,7 @@ function get_sublist_index(sublist_name, list){
 }
 export function remove_list(list_index){
 	if(instructions[list_index].steps.length > 1){
-		const response = confirm("Bist du dir sicher, dass du diese Liste löschen möchtest? Alle Zubereitungsschritte der Liste werden hiermit auch gelöscht.");
+		const response = confirm(t[lang].confirmDeleteList);
 		if(!response){
 			return
 		}
@@ -682,50 +758,50 @@ h3{
 <div class=instructions>
 <div class=additional_info>
 
-	<div><h4>Vorbereitung:</h4>
+	<div><h4>{t[lang].preparation}</h4>
 		<p contenteditable type="text" bind:innerText={add_info.preparation}></p>
 	</div>
 
 
-	<div><h4>Stockgare:</h4>
+	<div><h4>{t[lang].bulkFermentation}</h4>
 		<p contenteditable type="text" bind:innerText={add_info.fermentation.bulk}></p>
 	</div>
 
-	<div><h4>Stückgare:</h4>
+	<div><h4>{t[lang].finalFermentation}</h4>
 		<p contenteditable type="text" bind:innerText={add_info.fermentation.final}></p>
 	</div>
 
-	<div><h4>Backen:</h4>
+	<div><h4>{t[lang].baking}</h4>
 		<div><p type="text" bind:innerText={add_info.baking.length} contenteditable placeholder="40 min..."></p></div> bei <div><p type="text" bind:innerText={add_info.baking.temperature} contenteditable placeholder=200...></p></div> °C <div><p type="text" bind:innerText={add_info.baking.mode} contenteditable placeholder="Ober-/Unterhitze..."></p></div></div>
 
-	<div><h4>Kochen:</h4>
+	<div><h4>{t[lang].cooking}</h4>
 		<p contenteditable type="text" bind:innerText={add_info.cooking}></p>
 	</div>
 
-	<div><h4>Auf dem Teller:</h4>
+	<div><h4>{t[lang].totalTime}</h4>
 		<p contenteditable type="text" bind:innerText={add_info.total_time}></p>
 	</div>
 </div>
 
-<h2>Zubereitung</h2>
+<h2>{t[lang].instructions}</h2>
 {#each instructions as list, list_index}
 	{#if list.type === 'reference'}
 		<!-- Reference item display -->
 		<div class="reference-container">
 			<div class="reference-header">
 				<div class="move_buttons_container">
-					<button on:click={() => update_list_position(list_index, 1)} aria-label="Referenz nach oben verschieben">
+					<button on:click={() => update_list_position(list_index, 1)} aria-label={t[lang].moveReferenceUpAria}>
 						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 					</button>
-					<button on:click={() => update_list_position(list_index, -1)} aria-label="Referenz nach unten verschieben">
+					<button on:click={() => update_list_position(list_index, -1)} aria-label={t[lang].moveReferenceDownAria}>
 						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 					</button>
 				</div>
 				<div class="reference-badge">
-					📋 Basisrezept: {list.name || 'Unbenannt'}
+					📋 {t[lang].baseRecipe}: {list.name || t[lang].unnamed}
 				</div>
 				<div class="mod_icons">
-					<button class="action_button button_subtle" on:click={() => removeReference(list_index)} aria-label="Referenz entfernen">
+					<button class="action_button button_subtle" on:click={() => removeReference(list_index)} aria-label={t[lang].removeReferenceAria}>
 						<Cross fill="var(--nord11)"></Cross>
 					</button>
 				</div>
@@ -733,7 +809,7 @@ h3{
 
 			<!-- Steps before base recipe -->
 			{#if list.stepsBefore && list.stepsBefore.length > 0}
-				<h4 style="margin-block: 0.5em; color: var(--nord9);">Zusätzliche Schritte davor:</h4>
+				<h4 style="margin-block: 0.5em; color: var(--nord9);">{t[lang].additionalStepsBefore}</h4>
 				<ol>
 					{#each list.stepsBefore as step, step_index}
 						<li>
@@ -745,10 +821,10 @@ h3{
 									{@html step}
 								</button>
 								<div>
-									<button class="action_button button_subtle" on:click={() => editStepFromReference(list_index, 'before', step_index)} aria-label="Schritt bearbeiten">
+									<button class="action_button button_subtle" on:click={() => editStepFromReference(list_index, 'before', step_index)} aria-label={t[lang].editStepAria}>
 										<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 									</button>
-									<button class="action_button button_subtle" on:click={() => removeStepFromReference(list_index, 'before', step_index)} aria-label="Schritt entfernen">
+									<button class="action_button button_subtle" on:click={() => removeStepFromReference(list_index, 'before', step_index)} aria-label={t[lang].removeStepAria}>
 										<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 									</button>
 								</div>
@@ -758,20 +834,20 @@ h3{
 				</ol>
 			{/if}
 			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'before')}>
-				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> Schritt davor hinzufügen
+				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> {t[lang].addStepBefore}
 			</button>
 
 			<!-- Base recipe content indicator -->
 			<div style="text-align: center; padding: 0.5em; margin: 0.5em 0; font-style: italic; color: var(--nord10); background-color: rgba(143, 188, 187, 0.4); border-radius: 5px;">
-				→ Inhalt vom Basisrezept wird hier eingefügt ←
+				{t[lang].baseRecipeContent}
 			</div>
 
 			<!-- Steps after base recipe -->
 			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'after')}>
-				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> Schritt danach hinzufügen
+				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> {t[lang].addStepAfter}
 			</button>
 			{#if list.stepsAfter && list.stepsAfter.length > 0}
-				<h4 style="margin-block: 0.5em; color: var(--nord9);">Zusätzliche Schritte danach:</h4>
+				<h4 style="margin-block: 0.5em; color: var(--nord9);">{t[lang].additionalStepsAfter}</h4>
 				<ol>
 					{#each list.stepsAfter as step, step_index}
 						<li>
@@ -783,10 +859,10 @@ h3{
 									{@html step}
 								</button>
 								<div>
-									<button class="action_button button_subtle" on:click={() => editStepFromReference(list_index, 'after', step_index)} aria-label="Schritt bearbeiten">
+									<button class="action_button button_subtle" on:click={() => editStepFromReference(list_index, 'after', step_index)} aria-label={t[lang].editStepAria}>
 										<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 									</button>
-									<button class="action_button button_subtle" on:click={() => removeStepFromReference(list_index, 'after', step_index)} aria-label="Schritt entfernen">
+									<button class="action_button button_subtle" on:click={() => removeStepFromReference(list_index, 'after', step_index)} aria-label={t[lang].removeStepAria}>
 										<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 									</button>
 								</div>
@@ -800,10 +876,10 @@ h3{
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<h3>
 		<div class=move_buttons_container>
-			<button on:click="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
+			<button on:click="{() => update_list_position(list_index, 1)}" aria-label={t[lang].moveListUpAria}>
 							<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 					</button>
-			<button  on:click="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
+			<button  on:click="{() => update_list_position(list_index, -1)}" aria-label={t[lang].moveListDownAria}>
 							<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 			</button>
 		</div>
@@ -811,12 +887,12 @@ h3{
 		{#if list.name}
 			{list.name}
 		{:else}
-			Leer
+			{t[lang].empty}
 		{/if}
 		</button>
-		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}" aria-label="Überschrift bearbeiten">
+		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}" aria-label={t[lang].editHeading}>
 				<Pen fill=var(--nord1)></Pen>	</button>
-			<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label="Liste entfernen">
+			<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label={t[lang].removeList}>
 					<Cross fill=var(--nord1)></Cross>
 		</button>
 	</h3>
@@ -825,10 +901,10 @@ h3{
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<li>
 			<div class="move_buttons_container step_move_buttons">
-				<button on:click="{() => update_step_position(list_index, step_index, 1)}" aria-label="Schritt nach oben verschieben">
+				<button on:click="{() => update_step_position(list_index, step_index, 1)}" aria-label={t[lang].moveUpAria}>
 		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 		                </button>
-				<button  on:click="{() => update_step_position(list_index, step_index, -1)}" aria-label="Schritt nach unten verschieben">
+				<button  on:click="{() => update_step_position(list_index, step_index, -1)}" aria-label={t[lang].moveDownAria}>
 		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 				</button>
 			</div>
@@ -836,10 +912,10 @@ h3{
 				<button on:click={() => show_modal_edit_step(list_index, step_index)} class="step-button">
 					{@html step}
 				</button>
-			<div><button class="action_button button_subtle" on:click={() => show_modal_edit_step(list_index, step_index)}>
+			<div><button class="action_button button_subtle" on:click={() => show_modal_edit_step(list_index, step_index)} aria-label={t[lang].editStepAria}>
 				<Pen fill=var(--nord1)></Pen>
 		</button>
-		<button class="action_button button_subtle" on:click="{() => remove_step(list_index, step_index)}">
+		<button class="action_button button_subtle" on:click="{() => remove_step(list_index, step_index)}" aria-label={t[lang].removeStepAria}>
 			<Cross fill=var(--nord1)></Cross>
 		</button>
 			</div></div>
@@ -852,12 +928,12 @@ h3{
 <!-- Button to insert base recipe -->
 <button class="insert-base-recipe-button" on:click={() => openSelector(instructions.length)}>
 	<Plus fill="white" style="display: inline; width: 1.5em; height: 1.5em; vertical-align: middle;"></Plus>
-	Basisrezept einfügen
+	{t[lang].insertBaseRecipe}
 </button>
 </div>
 
 <div class='adder shadow'>
-<input class=category type="text" bind:value={new_step.name} placeholder="Kategorie (optional)"on:keydown={(event) => do_on_key(event, 'Enter', false , add_new_step)} >
+<input class=category type="text" bind:value={new_step.name} placeholder={t[lang].categoryOptional} on:keydown={(event) => do_on_key(event, 'Enter', false , add_new_step)} >
 <div class=add_step>
 	<p id=step contenteditable on:focus='{clear_step}' on:blur={add_placeholder} bind:innerText={new_step.step} on:keydown={(event) => do_on_key(event, 'Enter', true , add_new_step)}></p>
 	<button on:click={() => add_new_step()} class=action_button>
@@ -867,9 +943,9 @@ h3{
 </div>
 </div>
 <dialog id=edit_step_modal on:cancel={handleStepModalCancel}>
-	<h2>Schritt verändern</h2>
+	<h2>{t[lang].editStep}</h2>
 	<div class=adder>
-	<input class=category type="text" bind:value={edit_step.name} placeholder="Unterkategorie (optional)" on:keydown={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
+	<input class=category type="text" bind:value={edit_step.name} placeholder={t[lang].subcategoryOptional} on:keydown={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
 	<div class=add_step>
 		<p id=step contenteditable bind:innerText={edit_step.step} on:keydown={(event) => do_on_key(event, 'Enter', true , edit_step_and_close_modal)}></p>
 	<button class=action_button on:click="{() => edit_step_and_close_modal()}" >
@@ -879,7 +955,7 @@ h3{
 </dialog>
 
 <dialog id=edit_subheading_steps_modal>
-	<h2>Kategorie umbenennen</h2>
+	<h2>{t[lang].renameCategory}</h2>
 	<div class=heading_wrapper>
 		<input class="heading" type="text" bind:value={edit_heading.name} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_steps_and_close_modal)}>
 		<button on:click={edit_subheading_steps_and_close_modal} class=action_button>
