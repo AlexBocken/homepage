@@ -43,9 +43,14 @@ const flattenedInstructions = $derived.by(() => {
 
 			// Push as one section with optional label
 			if (combinedSteps.length > 0) {
+				// Use labelOverride if present, otherwise use base recipe name (translated if viewing in English)
+				const baseRecipeName = (lang === 'en' && item.resolvedRecipe.translations?.en?.name)
+					? item.resolvedRecipe.translations.en.name
+					: item.resolvedRecipe.name;
+
 				return [{
 					type: 'section',
-					name: item.showLabel ? (item.labelOverride || item.resolvedRecipe.name) : '',
+					name: item.showLabel ? (item.labelOverride || baseRecipeName) : '',
 					steps: combinedSteps,
 					isReference: item.showLabel,
 					short_name: item.resolvedRecipe.short_name
