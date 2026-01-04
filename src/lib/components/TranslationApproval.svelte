@@ -4,6 +4,8 @@
 	import TranslationFieldComparison from './TranslationFieldComparison.svelte';
 	import EditableIngredients from './EditableIngredients.svelte';
 	import EditableInstructions from './EditableInstructions.svelte';
+	import IngredientsPage from './IngredientsPage.svelte';
+	import InstructionsPage from './InstructionsPage.svelte';
 
 	export let germanData: any;
 	export let englishData: TranslatedRecipeType | null = null;
@@ -156,6 +158,11 @@
 		dispatch('cancelled');
 	}
 
+	// Handle force full retranslation
+	function handleForceFullRetranslation() {
+		dispatch('forceFullRetranslation');
+	}
+
 	// Get status badge color
 	function getStatusColor(status: string): string {
 		switch (status) {
@@ -221,17 +228,13 @@
 	background: var(--nord12);
 }
 
-.comparison-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 1.5rem;
-	margin: 1.5rem 0;
+.translation-preview {
+	max-width: 800px;
+	margin: 1.5rem auto;
 }
 
-@media (max-width: 800px) {
-	.comparison-grid {
-		grid-template-columns: 1fr;
-	}
+.field-section {
+	margin-bottom: 1.5rem;
 }
 
 .column-header {
@@ -423,505 +426,246 @@ button:disabled {
 		</div>
 
 	{:else if translationState === 'preview' || translationState === 'approved'}
-		<div class="comparison-grid">
-			<div>
-				<div class="column-header">🇩🇪 German (Original)</div>
+		<div class="translation-preview">
+			<h3 style="margin-bottom: 1.5rem; color: var(--nord8);">🇬🇧 English Translation</h3>
 
-				<div class="field-group">
-					<TranslationFieldComparison
-						label="Name"
-						germanValue={germanData.name}
-						englishValue={editableEnglish?.name || ''}
-						fieldName="name"
-						readonly={true}
-						on:change={handleFieldChange}
-					/>
-				</div>
-
-				<div class="field-group">
-					<TranslationFieldComparison
-						label="Short Name (URL)"
-						germanValue={germanData.short_name}
-						englishValue={editableEnglish?.short_name || ''}
-						fieldName="short_name"
-						readonly={true}
-						on:change={handleFieldChange}
-					/>
-				</div>
-
-				<div class="field-group">
-					<TranslationFieldComparison
-						label="Description"
-						germanValue={germanData.description}
-						englishValue={editableEnglish?.description || ''}
-						fieldName="description"
-						readonly={true}
-						multiline={true}
-						on:change={handleFieldChange}
-					/>
-				</div>
-
-				<div class="field-group">
-					<TranslationFieldComparison
-						label="Category"
-						germanValue={germanData.category}
-						englishValue={editableEnglish?.category || ''}
-						fieldName="category"
-						readonly={true}
-						on:change={handleFieldChange}
-					/>
-				</div>
-
-				{#if germanData.tags && germanData.tags.length > 0}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Tags"
-							germanValue={germanData.tags.join(', ')}
-							englishValue={editableEnglish?.tags?.join(', ') || ''}
-							fieldName="tags"
-							readonly={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if germanData.preamble}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Preamble"
-							germanValue={germanData.preamble}
-							englishValue={editableEnglish?.preamble || ''}
-							fieldName="preamble"
-							readonly={true}
-							multiline={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if germanData.addendum}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Addendum"
-							germanValue={germanData.addendum}
-							englishValue={editableEnglish?.addendum || ''}
-							fieldName="addendum"
-							readonly={true}
-							multiline={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if germanData.note}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Note"
-							germanValue={germanData.note}
-							englishValue={editableEnglish?.note || ''}
-							fieldName="note"
-							readonly={true}
-							multiline={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if germanData.portions}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Portions"
-							germanValue={germanData.portions}
-							englishValue={editableEnglish?.portions || ''}
-							fieldName="portions"
-							readonly={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if germanData.preparation}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Preparation Time"
-							germanValue={germanData.preparation}
-							englishValue={editableEnglish?.preparation || ''}
-							fieldName="preparation"
-							readonly={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if germanData.cooking}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Cooking Time"
-							germanValue={germanData.cooking}
-							englishValue={editableEnglish?.cooking || ''}
-							fieldName="cooking"
-							readonly={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if germanData.total_time}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Total Time"
-							germanValue={germanData.total_time}
-							englishValue={editableEnglish?.total_time || ''}
-							fieldName="total_time"
-							readonly={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if germanData.baking && (germanData.baking.temperature || germanData.baking.length || germanData.baking.mode)}
-					<div class="field-group">
-						<div class="field-label">Baking</div>
-						<div class="field-value readonly readonly-text">
-							{#if germanData.baking.temperature}Temperature: {germanData.baking.temperature}<br>{/if}
-							{#if germanData.baking.length}Time: {germanData.baking.length}<br>{/if}
-							{#if germanData.baking.mode}Mode: {germanData.baking.mode}{/if}
-						</div>
-					</div>
-				{/if}
-
-				{#if germanData.fermentation && (germanData.fermentation.bulk || germanData.fermentation.final)}
-					<div class="field-group">
-						<div class="field-label">Fermentation</div>
-						<div class="field-value readonly readonly-text">
-							{#if germanData.fermentation.bulk}Bulk: {germanData.fermentation.bulk}<br>{/if}
-							{#if germanData.fermentation.final}Final: {germanData.fermentation.final}{/if}
-						</div>
-					</div>
-				{/if}
-
-				{#if germanData.ingredients && germanData.ingredients.length > 0}
-					<div class="field-group">
-						<div class="field-label">Ingredients</div>
-						<div class="field-value readonly readonly-text">
-							{#each germanData.ingredients as ing}
-								{#if ing.type === 'reference'}
-									<div style="background: var(--nord3); padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
-										<strong>🔗 Base Recipe Reference</strong>
-										{#if ing.labelOverride}
-											<div><em>Label: {ing.labelOverride}</em></div>
-										{/if}
-										{#if ing.itemsBefore && ing.itemsBefore.length > 0}
-											<div style="margin-top: 0.5rem;"><strong>Items Before:</strong></div>
-											<ul>
-												{#each ing.itemsBefore as item}
-													<li>{item.amount} {item.unit} {item.name}</li>
-												{/each}
-											</ul>
-										{/if}
-										{#if ing.itemsAfter && ing.itemsAfter.length > 0}
-											<div style="margin-top: 0.5rem;"><strong>Items After:</strong></div>
-											<ul>
-												{#each ing.itemsAfter as item}
-													<li>{item.amount} {item.unit} {item.name}</li>
-												{/each}
-											</ul>
-										{/if}
-									</div>
-								{:else}
-									<strong>{ing.name || 'Ingredients'}</strong>
-									<ul>
-										{#each ing.list as item}
-											<li>{item.amount} {item.unit} {item.name}</li>
-										{/each}
-									</ul>
-								{/if}
-							{/each}
-						</div>
-					</div>
-				{/if}
-
-				{#if germanData.instructions && germanData.instructions.length > 0}
-					<div class="field-group">
-						<div class="field-label">Instructions</div>
-						<div class="field-value readonly readonly-text">
-							{#each germanData.instructions as inst}
-								{#if inst.type === 'reference'}
-									<div style="background: var(--nord3); padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
-										<strong>🔗 Base Recipe Reference</strong>
-										{#if inst.labelOverride}
-											<div><em>Label: {inst.labelOverride}</em></div>
-										{/if}
-										{#if inst.stepsBefore && inst.stepsBefore.length > 0}
-											<div style="margin-top: 0.5rem;"><strong>Steps Before:</strong></div>
-											<ol>
-												{#each inst.stepsBefore as step}
-													<li>{step}</li>
-												{/each}
-											</ol>
-										{/if}
-										{#if inst.stepsAfter && inst.stepsAfter.length > 0}
-											<div style="margin-top: 0.5rem;"><strong>Steps After:</strong></div>
-											<ol>
-												{#each inst.stepsAfter as step}
-													<li>{step}</li>
-												{/each}
-											</ol>
-										{/if}
-									</div>
-								{:else}
-									<strong>{inst.name || 'Steps'}</strong>
-									<ol>
-										{#each inst.steps as step}
-											<li>{step}</li>
-										{/each}
-									</ol>
-								{/if}
-							{/each}
-						</div>
-					</div>
-				{/if}
+			<!-- Basic Fields -->
+			<div class="field-section">
+				<TranslationFieldComparison
+					label="Name"
+					germanValue={germanData.name}
+					englishValue={editableEnglish?.name || ''}
+					fieldName="name"
+					readonly={false}
+					on:change={handleFieldChange}
+				/>
 			</div>
 
-			<div>
-				<div class="column-header">🇬🇧 English (Translated)</div>
+			<div class="field-section">
+				<TranslationFieldComparison
+					label="Short Name (URL)"
+					germanValue={germanData.short_name}
+					englishValue={editableEnglish?.short_name || ''}
+					fieldName="short_name"
+					readonly={false}
+					on:change={handleFieldChange}
+				/>
+			</div>
 
-				<div class="field-group">
+			<div class="field-section">
+				<TranslationFieldComparison
+					label="Description"
+					germanValue={germanData.description}
+					englishValue={editableEnglish?.description || ''}
+					fieldName="description"
+					readonly={false}
+					multiline={true}
+					on:change={handleFieldChange}
+				/>
+			</div>
+
+			<div class="field-section">
+				<TranslationFieldComparison
+					label="Category"
+					germanValue={germanData.category}
+					englishValue={editableEnglish?.category || ''}
+					fieldName="category"
+					readonly={false}
+					on:change={handleFieldChange}
+				/>
+			</div>
+
+			{#if editableEnglish?.tags}
+				<div class="field-section">
 					<TranslationFieldComparison
-						label="Name"
-						germanValue={germanData.name}
-						englishValue={editableEnglish?.name || ''}
-						fieldName="name"
+						label="Tags"
+						germanValue={germanData.tags?.join(', ') || ''}
+						englishValue={editableEnglish.tags.join(', ')}
+						fieldName="tags"
 						readonly={false}
 						on:change={handleFieldChange}
 					/>
 				</div>
+			{/if}
 
-				<div class="field-group">
+			{#if editableEnglish?.preamble !== undefined}
+				<div class="field-section">
 					<TranslationFieldComparison
-						label="Short Name (URL)"
-						germanValue={germanData.short_name}
-						englishValue={editableEnglish?.short_name || ''}
-						fieldName="short_name"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-				</div>
-
-				<div class="field-group">
-					<TranslationFieldComparison
-						label="Description"
-						germanValue={germanData.description}
-						englishValue={editableEnglish?.description || ''}
-						fieldName="description"
+						label="Preamble"
+						germanValue={germanData.preamble || ''}
+						englishValue={editableEnglish.preamble}
+						fieldName="preamble"
 						readonly={false}
 						multiline={true}
 						on:change={handleFieldChange}
 					/>
 				</div>
+			{/if}
 
-				<div class="field-group">
+			{#if editableEnglish?.note !== undefined}
+				<div class="field-section">
 					<TranslationFieldComparison
-						label="Category"
-						germanValue={germanData.category}
-						englishValue={editableEnglish?.category || ''}
-						fieldName="category"
+						label="Note"
+						germanValue={germanData.note || ''}
+						englishValue={editableEnglish.note}
+						fieldName="note"
+						readonly={false}
+						multiline={true}
+						on:change={handleFieldChange}
+					/>
+				</div>
+			{/if}
+
+			{#if editableEnglish?.portions !== undefined}
+				<div class="field-section">
+					<TranslationFieldComparison
+						label="Portions"
+						germanValue={germanData.portions || ''}
+						englishValue={editableEnglish.portions}
+						fieldName="portions"
 						readonly={false}
 						on:change={handleFieldChange}
 					/>
 				</div>
+			{/if}
 
-				{#if editableEnglish?.tags}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Tags"
-							germanValue={germanData.tags?.join(', ') || ''}
-							englishValue={editableEnglish.tags.join(', ')}
-							fieldName="tags"
-							readonly={false}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
+			{#if editableEnglish?.preparation !== undefined}
+				<div class="field-section">
+					<TranslationFieldComparison
+						label="Preparation Time"
+						germanValue={germanData.preparation || ''}
+						englishValue={editableEnglish.preparation}
+						fieldName="preparation"
+						readonly={false}
+						on:change={handleFieldChange}
+					/>
+				</div>
+			{/if}
 
-				{#if editableEnglish?.preamble}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Preamble"
-							germanValue={germanData.preamble}
-							englishValue={editableEnglish.preamble}
-							fieldName="preamble"
-							readonly={false}
-							multiline={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
+			{#if editableEnglish?.cooking !== undefined}
+				<div class="field-section">
+					<TranslationFieldComparison
+						label="Cooking Time"
+						germanValue={germanData.cooking || ''}
+						englishValue={editableEnglish.cooking}
+						fieldName="cooking"
+						readonly={false}
+						on:change={handleFieldChange}
+					/>
+				</div>
+			{/if}
 
-				{#if editableEnglish?.addendum}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Addendum"
-							germanValue={germanData.addendum}
-							englishValue={editableEnglish.addendum}
-							fieldName="addendum"
-							readonly={false}
-							multiline={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
+			{#if editableEnglish?.total_time !== undefined}
+				<div class="field-section">
+					<TranslationFieldComparison
+						label="Total Time"
+						germanValue={germanData.total_time || ''}
+						englishValue={editableEnglish.total_time}
+						fieldName="total_time"
+						readonly={false}
+						on:change={handleFieldChange}
+					/>
+				</div>
+			{/if}
 
-				{#if editableEnglish?.note}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Note"
-							germanValue={germanData.note}
-							englishValue={editableEnglish.note}
-							fieldName="note"
-							readonly={false}
-							multiline={true}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
+			{#if editableEnglish?.baking}
+				<div class="field-section">
+					<h4 style="margin-bottom: 0.5rem;">Baking</h4>
+					<TranslationFieldComparison
+						label="Temperature"
+						germanValue={germanData.baking?.temperature || ''}
+						englishValue={editableEnglish.baking.temperature || ''}
+						fieldName="baking.temperature"
+						readonly={false}
+						on:change={handleFieldChange}
+					/>
+					<TranslationFieldComparison
+						label="Time"
+						germanValue={germanData.baking?.length || ''}
+						englishValue={editableEnglish.baking.length || ''}
+						fieldName="baking.length"
+						readonly={false}
+						on:change={handleFieldChange}
+					/>
+					<TranslationFieldComparison
+						label="Mode"
+						germanValue={germanData.baking?.mode || ''}
+						englishValue={editableEnglish.baking.mode || ''}
+						fieldName="baking.mode"
+						readonly={false}
+						on:change={handleFieldChange}
+					/>
+				</div>
+			{/if}
 
-				{#if editableEnglish?.portions !== undefined}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Portions"
-							germanValue={germanData.portions || ''}
-							englishValue={editableEnglish.portions}
-							fieldName="portions"
-							readonly={false}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
+			{#if editableEnglish?.fermentation}
+				<div class="field-section">
+					<h4 style="margin-bottom: 0.5rem;">Fermentation</h4>
+					<TranslationFieldComparison
+						label="Bulk"
+						germanValue={germanData.fermentation?.bulk || ''}
+						englishValue={editableEnglish.fermentation.bulk || ''}
+						fieldName="fermentation.bulk"
+						readonly={false}
+						on:change={handleFieldChange}
+					/>
+					<TranslationFieldComparison
+						label="Final"
+						germanValue={germanData.fermentation?.final || ''}
+						englishValue={editableEnglish.fermentation.final || ''}
+						fieldName="fermentation.final"
+						readonly={false}
+						on:change={handleFieldChange}
+					/>
+				</div>
+			{/if}
 
-				{#if editableEnglish?.preparation !== undefined}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Preparation Time"
-							germanValue={germanData.preparation || ''}
-							englishValue={editableEnglish.preparation}
-							fieldName="preparation"
-							readonly={false}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
+			<!-- Ingredients -->
+			{#if editableEnglish?.ingredients && editableEnglish.ingredients.length > 0}
+				<div class="field-section">
+					<h4 style="margin-bottom: 0.5rem;">Ingredients</h4>
+					<EditableIngredients
+						ingredients={editableEnglish.ingredients}
+						translationMetadata={translationMetadata?.ingredientTranslations}
+						on:change={handleIngredientsChange}
+					/>
+				</div>
+			{/if}
 
-				{#if editableEnglish?.cooking !== undefined}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Cooking Time"
-							germanValue={germanData.cooking || ''}
-							englishValue={editableEnglish.cooking}
-							fieldName="cooking"
-							readonly={false}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
+			<!-- Instructions -->
+			{#if editableEnglish?.instructions && editableEnglish.instructions.length > 0}
+				<div class="field-section">
+					<h4 style="margin-bottom: 0.5rem;">Instructions</h4>
+					<EditableInstructions
+						instructions={editableEnglish.instructions}
+						translationMetadata={translationMetadata?.instructionTranslations}
+						on:change={handleInstructionsChange}
+					/>
+				</div>
+			{/if}
 
-				{#if editableEnglish?.total_time !== undefined}
-					<div class="field-group">
-						<TranslationFieldComparison
-							label="Total Time"
-							germanValue={germanData.total_time || ''}
-							englishValue={editableEnglish.total_time}
-							fieldName="total_time"
-							readonly={false}
-							on:change={handleFieldChange}
-						/>
-					</div>
-				{/if}
-
-				{#if editableEnglish?.baking}
-					<div class="field-group">
-						<div class="field-label">Baking (Editable)</div>
-						<div class="field-value">
-							<TranslationFieldComparison
-								label="Temperature"
-								germanValue={germanData.baking?.temperature || ''}
-								englishValue={editableEnglish.baking.temperature}
-								fieldName="baking.temperature"
-								readonly={false}
-								on:change={handleFieldChange}
-							/>
-							<TranslationFieldComparison
-								label="Time"
-								germanValue={germanData.baking?.length || ''}
-								englishValue={editableEnglish.baking.length}
-								fieldName="baking.length"
-								readonly={false}
-								on:change={handleFieldChange}
-							/>
-							<TranslationFieldComparison
-								label="Mode"
-								germanValue={germanData.baking?.mode || ''}
-								englishValue={editableEnglish.baking.mode}
-								fieldName="baking.mode"
-								readonly={false}
-								on:change={handleFieldChange}
-							/>
-						</div>
-					</div>
-				{/if}
-
-				{#if editableEnglish?.fermentation}
-					<div class="field-group">
-						<div class="field-label">Fermentation (Editable)</div>
-						<div class="field-value">
-							<TranslationFieldComparison
-								label="Bulk"
-								germanValue={germanData.fermentation?.bulk || ''}
-								englishValue={editableEnglish.fermentation.bulk}
-								fieldName="fermentation.bulk"
-								readonly={false}
-								on:change={handleFieldChange}
-							/>
-							<TranslationFieldComparison
-								label="Final"
-								germanValue={germanData.fermentation?.final || ''}
-								englishValue={editableEnglish.fermentation.final}
-								fieldName="fermentation.final"
-								readonly={false}
-								on:change={handleFieldChange}
-							/>
-						</div>
-					</div>
-				{/if}
-
-				{#if editableEnglish?.ingredients && editableEnglish.ingredients.length > 0}
-					<div class="field-group">
-						<div class="field-label">Ingredients (Editable)</div>
-						<EditableIngredients
-							ingredients={editableEnglish.ingredients}
-							translationMetadata={translationMetadata?.ingredientTranslations}
-							on:change={handleIngredientsChange}
-						/>
-					</div>
-				{/if}
-
-				{#if editableEnglish?.instructions && editableEnglish.instructions.length > 0}
-					<div class="field-group">
-						<div class="field-label">Instructions (Editable)</div>
-						<EditableInstructions
-							instructions={editableEnglish.instructions}
-							translationMetadata={translationMetadata?.instructionTranslations}
-							on:change={handleInstructionsChange}
-						/>
-					</div>
-				{/if}
-			</div>
+			{#if editableEnglish?.addendum !== undefined}
+				<div class="field-section">
+					<TranslationFieldComparison
+						label="Addendum"
+						germanValue={germanData.addendum || ''}
+						englishValue={editableEnglish.addendum}
+						fieldName="addendum"
+						readonly={false}
+						multiline={true}
+						on:change={handleFieldChange}
+					/>
+				</div>
+			{/if}
 		</div>
 
 		<div class="actions">
 			{#if translationState !== 'approved'}
 				<button class="btn-danger" on:click={handleCancel}>
 					Cancel
+				</button>
+				<button class="btn-secondary" on:click={handleForceFullRetranslation}>
+					Vollständig neu übersetzen
 				</button>
 				<button class="btn-secondary" on:click={handleAutoTranslate}>
 					Re-translate

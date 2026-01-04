@@ -540,9 +540,6 @@ button.action_button{
 {#if !showTranslationWorkflow}
 <div class=submit_buttons>
 <button class=action_button on:click={doDelete}><p>Löschen</p><Cross fill=white width=2rem height=2rem></Cross></button>
-{#if translationData}
-<button class=action_button style="background-color: var(--nord13);" on:click={forceFullRetranslation}><p>Vollständig neu übersetzen</p><Check fill=white width=2rem height=2rem></Check></button>
-{/if}
 <button class=action_button on:click={prepareSubmit}><p>Weiter zur Übersetzung</p><Check fill=white width=2rem height=2rem></Check></button>
 </div>
 {/if}
@@ -558,6 +555,7 @@ button.action_button{
 		on:approved={handleTranslationApproved}
 		on:skipped={handleTranslationSkipped}
 		on:cancelled={handleTranslationCancelled}
+		on:forceFullRetranslation={forceFullRetranslation}
 	/>
 </div>
 {/if}
