@@ -931,6 +931,98 @@ class DeepLTranslationService {
 			const group = newIngredients[i];
 			const existingGroup = existingTranslatedIngredients[i];
 
+			// Handle base recipe references
+			if (group.type === 'reference') {
+				// If entire group doesn't exist in old version or no change info, translate all reference fields
+				if (!changeInfo || !existingGroup) {
+					const textsToTranslate: string[] = [group.labelOverride || ''];
+					(group.itemsBefore || []).forEach((item: any) => {
+						textsToTranslate.push(item.name || '');
+						textsToTranslate.push(item.unit || '');
+					});
+					(group.itemsAfter || []).forEach((item: any) => {
+						textsToTranslate.push(item.name || '');
+						textsToTranslate.push(item.unit || '');
+					});
+
+					const translated = await this.translateBatch(textsToTranslate);
+					let index = 0;
+
+					result.push({
+						type: 'reference',
+						name: group.name,
+						baseRecipeRef: group.baseRecipeRef,
+						includeIngredients: group.includeIngredients,
+						showLabel: group.showLabel,
+						labelOverride: translated[index++],
+						itemsBefore: (group.itemsBefore || []).map((item: any) => ({
+							name: translated[index++],
+							unit: translated[index++],
+							amount: item.amount,
+						})),
+						itemsAfter: (group.itemsAfter || []).map((item: any) => ({
+							name: translated[index++],
+							unit: translated[index++],
+							amount: item.amount,
+						}))
+					});
+					continue;
+				}
+
+				// Reference changed - translate changed fields
+				const translatedRef: any = {
+					type: 'reference',
+					name: group.name,
+					baseRecipeRef: group.baseRecipeRef,
+					includeIngredients: group.includeIngredients,
+					showLabel: group.showLabel,
+					labelOverride: existingGroup.labelOverride,
+					itemsBefore: existingGroup.itemsBefore || [],
+					itemsAfter: existingGroup.itemsAfter || []
+				};
+
+				// Translate labelOverride if changed
+				if (changeInfo.nameChanged) {
+					translatedRef.labelOverride = await this.translateText(group.labelOverride || '');
+				}
+
+				// Translate itemsBefore if changed
+				if (JSON.stringify(group.itemsBefore) !== JSON.stringify(existingGroup.itemsBefore)) {
+					const textsToTranslate: string[] = [];
+					(group.itemsBefore || []).forEach((item: any) => {
+						textsToTranslate.push(item.name || '');
+						textsToTranslate.push(item.unit || '');
+					});
+					const translated = await this.translateBatch(textsToTranslate);
+					let index = 0;
+					translatedRef.itemsBefore = (group.itemsBefore || []).map((item: any) => ({
+						name: translated[index++],
+						unit: translated[index++],
+						amount: item.amount,
+					}));
+				}
+
+				// Translate itemsAfter if changed
+				if (JSON.stringify(group.itemsAfter) !== JSON.stringify(existingGroup.itemsAfter)) {
+					const textsToTranslate: string[] = [];
+					(group.itemsAfter || []).forEach((item: any) => {
+						textsToTranslate.push(item.name || '');
+						textsToTranslate.push(item.unit || '');
+					});
+					const translated = await this.translateBatch(textsToTranslate);
+					let index = 0;
+					translatedRef.itemsAfter = (group.itemsAfter || []).map((item: any) => ({
+						name: translated[index++],
+						unit: translated[index++],
+						amount: item.amount,
+					}));
+				}
+
+				result.push(translatedRef);
+				continue;
+			}
+
+			// Handle regular ingredient sections
 			// If entire group doesn't exist in old version or no change info, translate everything
 			if (!changeInfo || !existingGroup) {
 				const textsToTranslate: string[] = [group.name || ''];
@@ -1068,6 +1160,76 @@ class DeepLTranslationService {
 			const group = newInstructions[i];
 			const existingGroup = existingTranslatedInstructions[i];
 
+			// Handle base recipe references
+			if (group.type === 'reference') {
+				// If entire group doesn't exist in old version or no change info, translate all reference fields
+				if (!changeInfo || !existingGroup) {
+					const textsToTranslate: string[] = [group.labelOverride || ''];
+					(group.stepsBefore || []).forEach((step: string) => {
+						textsToTranslate.push(step || '');
+					});
+					(group.stepsAfter || []).forEach((step: string) => {
+						textsToTranslate.push(step || '');
+					});
+
+					const translated = await this.translateBatch(textsToTranslate);
+					let index = 0;
+
+					result.push({
+						type: 'reference',
+						name: group.name,
+						baseRecipeRef: group.baseRecipeRef,
+						includeInstructions: group.includeInstructions,
+						showLabel: group.showLabel,
+						labelOverride: translated[index++],
+						stepsBefore: (group.stepsBefore || []).map(() => translated[index++]),
+						stepsAfter: (group.stepsAfter || []).map(() => translated[index++])
+					});
+					continue;
+				}
+
+				// Reference changed - translate changed fields
+				const translatedRef: any = {
+					type: 'reference',
+					name: group.name,
+					baseRecipeRef: group.baseRecipeRef,
+					includeInstructions: group.includeInstructions,
+					showLabel: group.showLabel,
+					labelOverride: existingGroup.labelOverride,
+					stepsBefore: existingGroup.stepsBefore || [],
+					stepsAfter: existingGroup.stepsAfter || []
+				};
+
+				// Translate labelOverride if changed
+				if (changeInfo.nameChanged) {
+					translatedRef.labelOverride = await this.translateText(group.labelOverride || '');
+				}
+
+				// Translate stepsBefore if changed
+				if (JSON.stringify(group.stepsBefore) !== JSON.stringify(existingGroup.stepsBefore)) {
+					const textsToTranslate: string[] = [];
+					(group.stepsBefore || []).forEach((step: string) => {
+						textsToTranslate.push(step || '');
+					});
+					const translated = await this.translateBatch(textsToTranslate);
+					translatedRef.stepsBefore = translated;
+				}
+
+				// Translate stepsAfter if changed
+				if (JSON.stringify(group.stepsAfter) !== JSON.stringify(existingGroup.stepsAfter)) {
+					const textsToTranslate: string[] = [];
+					(group.stepsAfter || []).forEach((step: string) => {
+						textsToTranslate.push(step || '');
+					});
+					const translated = await this.translateBatch(textsToTranslate);
+					translatedRef.stepsAfter = translated;
+				}
+
+				result.push(translatedRef);
+				continue;
+			}
+
+			// Handle regular instruction sections
 			// If entire group doesn't exist in old version or no change info, translate everything
 			if (!changeInfo || !existingGroup) {
 				const textsToTranslate: string[] = [group.name || ''];
