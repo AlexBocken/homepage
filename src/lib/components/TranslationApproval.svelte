@@ -17,7 +17,7 @@
 	let errorMessage: string = '';
 	let validationErrors: string[] = [];
 
-	// Editable English data (clone of englishData)
+	// Editable English data (clone of englishData or initialized from germanData)
 	let editableEnglish: any = englishData ? { ...englishData } : null;
 
 	// Store old recipe data for granular change detection
@@ -25,6 +25,155 @@
 
 	// Translation metadata (tracks which items were re-translated)
 	let translationMetadata: any = null;
+
+	// Track base recipes that need translation
+	let untranslatedBaseRecipes: { id: string, name: string }[] = [];
+	let checkingBaseRecipes = false;
+
+	// Sync base recipe references from German to English
+	async function syncBaseRecipeReferences() {
+		if (!germanData) return;
+
+		checkingBaseRecipes = true;
+
+		// Collect all base recipe references from German data
+		const germanBaseRecipeIds = new Set<string>();
+		(germanData.ingredients || []).forEach((ing: any) => {
+			if (ing.type === 'reference' && ing.baseRecipeRef) {
+				germanBaseRecipeIds.add(ing.baseRecipeRef);
+			}
+		});
+		(germanData.instructions || []).forEach((inst: any) => {
+			if (inst.type === 'reference' && inst.baseRecipeRef) {
+				germanBaseRecipeIds.add(inst.baseRecipeRef);
+			}
+		});
+
+		// If no base recipes in German, just initialize editableEnglish from German data if needed
+		if (germanBaseRecipeIds.size === 0) {
+			if (!editableEnglish) {
+				editableEnglish = {
+					...germanData,
+					translationStatus: 'pending',
+					ingredients: JSON.parse(JSON.stringify(germanData.ingredients || [])),
+					instructions: JSON.parse(JSON.stringify(germanData.instructions || []))
+				};
+			}
+			checkingBaseRecipes = false;
+			return;
+		}
+
+		// Fetch all base recipes and check their English translations
+		const untranslated: { id: string, name: string }[] = [];
+		const baseRecipeTranslations = new Map<string, { deName: string, enName: string }>();
+
+		for (const recipeId of germanBaseRecipeIds) {
+			try {
+				const response = await fetch(`/api/rezepte/${recipeId}`);
+				if (response.ok) {
+					const recipe = await response.json();
+					if (!recipe.translations?.en) {
+						untranslated.push({ id: recipeId, name: recipe.name });
+					} else {
+						baseRecipeTranslations.set(recipeId, {
+							deName: recipe.name,
+							enName: recipe.translations.en.name
+						});
+					}
+				}
+			} catch (error) {
+				console.error(`Error fetching base recipe ${recipeId}:`, error);
+			}
+		}
+
+		untranslatedBaseRecipes = untranslated;
+		checkingBaseRecipes = false;
+
+		// Don't proceed if there are untranslated base recipes
+		if (untranslated.length > 0) {
+			return;
+		}
+
+		// Now merge German base recipe references into editableEnglish
+		// This works for both new translations and existing translations
+
+		if (!editableEnglish) {
+			// No existing English translation - create from German structure with English base recipe names
+			editableEnglish = {
+				...germanData,
+				translationStatus: 'pending',
+				ingredients: JSON.parse(JSON.stringify(germanData.ingredients || [])).map((ing: any) => {
+					if (ing.type === 'reference' && ing.baseRecipeRef) {
+						const translation = baseRecipeTranslations.get(ing.baseRecipeRef);
+						return translation ? { ...ing, name: translation.enName } : ing;
+					}
+					return ing;
+				}),
+				instructions: JSON.parse(JSON.stringify(germanData.instructions || [])).map((inst: any) => {
+					if (inst.type === 'reference' && inst.baseRecipeRef) {
+						const translation = baseRecipeTranslations.get(inst.baseRecipeRef);
+						return translation ? { ...inst, name: translation.enName } : inst;
+					}
+					return inst;
+				})
+			};
+		} else {
+			// Existing English translation - merge German structure with English translations
+			// Use German structure but keep English translations where they exist
+			editableEnglish = {
+				...editableEnglish,
+				ingredients: germanData.ingredients.map((germanIng: any, index: number) => {
+					if (germanIng.type === 'reference' && germanIng.baseRecipeRef) {
+						// This is a base recipe reference - use English base recipe name
+						const translation = baseRecipeTranslations.get(germanIng.baseRecipeRef);
+						const englishIng = editableEnglish.ingredients[index];
+
+						// If English already has this reference at same position, keep it
+						if (englishIng?.type === 'reference' && englishIng.baseRecipeRef === germanIng.baseRecipeRef) {
+							return englishIng;
+						}
+
+						// Otherwise, create new reference with English base recipe name
+						return translation ? { ...germanIng, name: translation.enName } : germanIng;
+					} else {
+						// Regular ingredient section - keep existing English translation if it exists
+						const englishIng = editableEnglish.ingredients[index];
+						if (englishIng && englishIng.type !== 'reference') {
+							return englishIng;
+						}
+						// If no English translation exists, use German structure (will be translated later)
+						return germanIng;
+					}
+				}),
+				instructions: germanData.instructions.map((germanInst: any, index: number) => {
+					if (germanInst.type === 'reference' && germanInst.baseRecipeRef) {
+						// This is a base recipe reference - use English base recipe name
+						const translation = baseRecipeTranslations.get(germanInst.baseRecipeRef);
+						const englishInst = editableEnglish.instructions[index];
+
+						// If English already has this reference at same position, keep it
+						if (englishInst?.type === 'reference' && englishInst.baseRecipeRef === germanInst.baseRecipeRef) {
+							return englishInst;
+						}
+
+						// Otherwise, create new reference with English base recipe name
+						return translation ? { ...germanInst, name: translation.enName } : germanInst;
+					} else {
+						// Regular instruction section - keep existing English translation if it exists
+						const englishInst = editableEnglish.instructions[index];
+						if (englishInst && englishInst.type !== 'reference') {
+							return englishInst;
+						}
+						// If no English translation exists, use German structure (will be translated later)
+						return germanInst;
+					}
+				})
+			};
+		}
+	}
+
+	// Always sync base recipe references when component mounts
+	syncBaseRecipeReferences();
 
 	// Handle auto-translate button click
 	async function handleAutoTranslate() {
@@ -445,28 +594,52 @@ button:disabled {
 		</div>
 	{/if}
 
+	{#if checkingBaseRecipes}
+		<div style="background: var(--nord9); color: var(--nord6); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; text-align: center;">
+			<p>Checking if referenced base recipes are translated...</p>
+		</div>
+	{/if}
+
+	{#if untranslatedBaseRecipes.length > 0}
+		<div style="background: var(--nord12); color: var(--nord0); padding: 1.5rem; border-radius: 4px; margin-bottom: 1.5rem;">
+			<h4 style="margin-top: 0;">⚠️ Base Recipes Need Translation</h4>
+			<p>The following base recipes need to be translated to English before you can translate this recipe:</p>
+			<ul style="margin: 1rem 0;">
+				{#each untranslatedBaseRecipes as baseRecipe}
+					<li>
+						<strong>{baseRecipe.name}</strong>
+						<a href="/de/edit/{baseRecipe.id}" target="_blank" rel="noopener noreferrer" style="margin-left: 0.5rem; color: var(--nord10);">
+							Open in new tab →
+						</a>
+					</li>
+				{/each}
+			</ul>
+			<p style="margin-bottom: 0;">
+				<button class="btn-secondary" on:click={syncBaseRecipeReferences}>
+					Re-check Base Recipes
+				</button>
+			</p>
+		</div>
+	{/if}
+
 	{#if translationState === 'idle'}
-		<div class="idle-state">
-			<p>Click "Auto-translate" to generate English translation using DeepL.</p>
-			<div class="actions">
-				<button class="btn-primary" on:click={handleAutoTranslate}>
-					Auto-translate
-				</button>
-				<button class="btn-secondary" on:click={handleSkip}>
-					Skip Translation
-				</button>
-			</div>
+		<div style="background: var(--nord13); color: var(--nord0); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; text-align: center;">
+			<strong>Preview (Not yet translated)</strong>
+			<p style="margin: 0.5rem 0;">The structure below shows what will be translated. Click "Auto-translate" to generate English translation.</p>
 		</div>
 
-	{:else if translationState === 'translating'}
+	{/if}
+
+	{#if translationState === 'translating'}
 		<div class="idle-state">
 			<p>
 				<span class="loading-spinner"></span>
 				Translating recipe...
 			</p>
 		</div>
+	{/if}
 
-	{:else if translationState === 'preview' || translationState === 'approved'}
+	{#if translationState === 'idle' || translationState === 'preview' || translationState === 'approved'}
 		<div class="translation-preview">
 			<h3 style="margin-bottom: 1.5rem; color: var(--nord8);">🇬🇧 English Translation</h3>
 
@@ -575,12 +748,12 @@ button:disabled {
 				<div class="list-wrapper">
 					<div>
 						{#if editableEnglish?.ingredients}
-							<CreateIngredientList bind:ingredients={editableEnglish.ingredients} />
+							<CreateIngredientList bind:ingredients={editableEnglish.ingredients} lang="en" />
 						{/if}
 					</div>
 					<div>
 						{#if editableEnglish?.instructions && englishAddInfo}
-							<CreateStepList bind:instructions={editableEnglish.instructions} add_info={englishAddInfo} />
+							<CreateStepList bind:instructions={editableEnglish.instructions} add_info={englishAddInfo} lang="en" />
 						{/if}
 					</div>
 				</div>
@@ -602,7 +775,21 @@ button:disabled {
 		</div>
 
 		<div class="actions">
-			{#if translationState !== 'approved'}
+			{#if translationState === 'idle'}
+				<button class="btn-danger" on:click={handleCancel}>
+					Cancel
+				</button>
+				<button class="btn-secondary" on:click={handleSkip}>
+					Skip Translation
+				</button>
+				<button class="btn-primary" on:click={handleAutoTranslate} disabled={untranslatedBaseRecipes.length > 0}>
+					{#if untranslatedBaseRecipes.length > 0}
+						Translate base recipes first
+					{:else}
+						Auto-translate
+					{/if}
+				</button>
+			{:else if translationState !== 'approved'}
 				<button class="btn-danger" on:click={handleCancel}>
 					Cancel
 				</button>
