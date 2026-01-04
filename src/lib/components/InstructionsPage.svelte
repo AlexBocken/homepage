@@ -3,25 +3,32 @@ let { data } = $props();
 
 let multiplier = $state(data.multiplier || 1);
 
-// Flatten instruction references for display
-const flattenedInstructions = $derived.by(() => {
-	if (!data.instructions) return [];
+// Recursively flatten nested instruction references
+function flattenInstructionReferences(items, lang, visited = new Set()) {
+	const result = [];
 
-	return data.instructions.flatMap((item) => {
+	for (const item of items) {
 		if (item.type === 'reference' && item.resolvedRecipe) {
+			// Prevent circular references
+			const recipeId = item.resolvedRecipe._id?.toString() || item.resolvedRecipe.short_name;
+			if (visited.has(recipeId)) {
+				console.warn('Circular reference detected:', recipeId);
+				continue;
+			}
+
+			const newVisited = new Set(visited);
+			newVisited.add(recipeId);
+
 			// Get translated or original instructions
-			const lang = data.lang || 'de';
 			const instructionsToUse = (lang === 'en' &&
 									item.resolvedRecipe.translations?.en?.instructions)
 				? item.resolvedRecipe.translations.en.instructions
 				: item.resolvedRecipe.instructions || [];
 
-			// Filter to only sections (not nested references)
-			const baseInstructions = item.includeInstructions
-				? instructionsToUse.filter(i => i.type === 'section' || !i.type)
-				: [];
+			// Recursively flatten nested references
+			const flattenedNested = flattenInstructionReferences(instructionsToUse, lang, newVisited);
 
-			// Combine all steps into one section
+			// Combine all steps into one list
 			const combinedSteps = [];
 
 			// Add steps before
@@ -29,12 +36,14 @@ const flattenedInstructions = $derived.by(() => {
 				combinedSteps.push(...item.stepsBefore);
 			}
 
-			// Add base recipe instructions
-			baseInstructions.forEach(section => {
-				if (section.steps) {
-					combinedSteps.push(...section.steps);
-				}
-			});
+			// Add base recipe instructions (now recursively flattened)
+			if (item.includeInstructions) {
+				flattenedNested.forEach(section => {
+					if (section.steps) {
+						combinedSteps.push(...section.steps);
+					}
+				});
+			}
 
 			// Add steps after
 			if (item.stepsAfter && item.stepsAfter.length > 0) {
@@ -43,26 +52,32 @@ const flattenedInstructions = $derived.by(() => {
 
 			// Push as one section with optional label
 			if (combinedSteps.length > 0) {
-				// Use labelOverride if present, otherwise use base recipe name (translated if viewing in English)
 				const baseRecipeName = (lang === 'en' && item.resolvedRecipe.translations?.en?.name)
 					? item.resolvedRecipe.translations.en.name
 					: item.resolvedRecipe.name;
 
-				return [{
+				result.push({
 					type: 'section',
 					name: item.showLabel ? (item.labelOverride || baseRecipeName) : '',
 					steps: combinedSteps,
 					isReference: item.showLabel,
 					short_name: item.resolvedRecipe.short_name
-				}];
+				});
 			}
-
-			return [];
+		} else if (item.type === 'section' || !item.type) {
+			// Regular section - pass through
+			result.push(item);
 		}
+	}
 
-		// Regular section - pass through
-		return [item];
-	});
+	return result;
+}
+
+// Flatten instruction references for display
+const flattenedInstructions = $derived.by(() => {
+	if (!data.instructions) return [];
+	const lang = data.lang || 'de';
+	return flattenInstructionReferences(data.instructions, lang);
 });
 
 const isEnglish = $derived(data.lang === 'en');
