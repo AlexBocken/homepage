@@ -541,6 +541,30 @@ class DeepLTranslationService {
 				continue;
 			}
 
+			// Handle base recipe references
+			if (oldGroup.type === 'reference' || newGroup.type === 'reference') {
+				// If type changed (reference <-> section), it's definitely changed
+				if (oldGroup.type !== newGroup.type) {
+					changes.push({ groupIndex: i, changed: true });
+					continue;
+				}
+
+				// Both are references - check reference-specific fields
+				if (oldGroup.type === 'reference' && newGroup.type === 'reference') {
+					const referenceChanged =
+						String(oldGroup.baseRecipeRef) !== String(newGroup.baseRecipeRef) ||
+						oldGroup.includeIngredients !== newGroup.includeIngredients ||
+						oldGroup.showLabel !== newGroup.showLabel ||
+						oldGroup.labelOverride !== newGroup.labelOverride ||
+						JSON.stringify(oldGroup.itemsBefore || []) !== JSON.stringify(newGroup.itemsBefore || []) ||
+						JSON.stringify(oldGroup.itemsAfter || []) !== JSON.stringify(newGroup.itemsAfter || []);
+
+					changes.push({ groupIndex: i, changed: referenceChanged });
+					continue;
+				}
+			}
+
+			// Regular section handling
 			// Check if group name changed
 			const nameChanged = oldGroup.name !== newGroup.name;
 
@@ -608,6 +632,30 @@ class DeepLTranslationService {
 				continue;
 			}
 
+			// Handle base recipe references
+			if (oldGroup.type === 'reference' || newGroup.type === 'reference') {
+				// If type changed (reference <-> section), it's definitely changed
+				if (oldGroup.type !== newGroup.type) {
+					changes.push({ groupIndex: i, changed: true });
+					continue;
+				}
+
+				// Both are references - check reference-specific fields
+				if (oldGroup.type === 'reference' && newGroup.type === 'reference') {
+					const referenceChanged =
+						String(oldGroup.baseRecipeRef) !== String(newGroup.baseRecipeRef) ||
+						oldGroup.includeInstructions !== newGroup.includeInstructions ||
+						oldGroup.showLabel !== newGroup.showLabel ||
+						oldGroup.labelOverride !== newGroup.labelOverride ||
+						JSON.stringify(oldGroup.stepsBefore || []) !== JSON.stringify(newGroup.stepsBefore || []) ||
+						JSON.stringify(oldGroup.stepsAfter || []) !== JSON.stringify(newGroup.stepsAfter || []);
+
+					changes.push({ groupIndex: i, changed: referenceChanged });
+					continue;
+				}
+			}
+
+			// Regular section handling
 			// Check if group name changed
 			const nameChanged = oldGroup.name !== newGroup.name;
 
