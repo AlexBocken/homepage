@@ -180,6 +180,17 @@ export function edit_subheading_and_close_modal(){
 	el.close()
 }
 
+function handleIngredientModalCancel() {
+	// Reset reference adding state when modal is cancelled (Escape key)
+	addingToReference = {
+		active: false,
+		list_index: -1,
+		position: 'before',
+		editing: false,
+		item_index: -1
+	};
+}
+
 export function add_new_ingredient(){
 	if(!new_ingredient.name){
 		return
@@ -230,8 +241,10 @@ export function edit_ingredient_and_close_modal(){
 				editing: false,
 				item_index: -1
 			};
-			const modal_el = document.querySelector("#edit_ingredient_modal");
-			modal_el.close();
+			const modal_el = document.querySelector("#edit_ingredient_modal") as HTMLDialogElement;
+			if (modal_el) {
+				setTimeout(() => modal_el.close(), 0);
+			}
 			return;
 		}
 
@@ -268,8 +281,11 @@ export function edit_ingredient_and_close_modal(){
 		}
 		ingredients[edit_ingredient.list_index].name = edit_ingredient.sublist
 	}
-	const modal_el = document.querySelector("#edit_ingredient_modal");
-	modal_el.close();
+	const modal_el = document.querySelector("#edit_ingredient_modal") as HTMLDialogElement;
+	if (modal_el) {
+		// Defer closing to next tick to ensure all bindings are updated
+		setTimeout(() => modal_el.close(), 0);
+	}
 }
 export function update_list_position(list_index, direction){
 	if(direction == 1){
@@ -811,7 +827,7 @@ h3{
 		</button>
 	</div>
 </div>
-<dialog id=edit_ingredient_modal>
+<dialog id=edit_ingredient_modal on:cancel={handleIngredientModalCancel}>
 	<h2>Zutat verändern</h2>
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_ingredient.sublist} placeholder="Kategorie (optional)">
