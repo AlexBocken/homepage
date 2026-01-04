@@ -60,12 +60,16 @@ function flattenIngredientReferences(items, lang, visited = new Set()) {
 					? item.resolvedRecipe.translations.en.name
 					: item.resolvedRecipe.name;
 
+				const baseRecipeShortName = (lang === 'en' && item.resolvedRecipe.translations?.en?.short_name)
+					? item.resolvedRecipe.translations.en.short_name
+					: item.resolvedRecipe.short_name;
+
 				result.push({
 					type: 'section',
 					name: item.showLabel ? (item.labelOverride || baseRecipeName) : '',
 					list: combinedList,
 					isReference: item.showLabel,
-					short_name: item.resolvedRecipe.short_name
+					short_name: baseRecipeShortName
 				});
 			}
 		} else if (item.type === 'section' || !item.type) {

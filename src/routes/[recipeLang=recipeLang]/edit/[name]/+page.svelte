@@ -492,7 +492,7 @@ button.action_button{
 				<ul style="color: var(--nord1); list-style-position: inside;">
 					{#each refData.references as ref}
 						<li>
-							<a href="/{data.lang}/edit/{ref.short_name}" style="color: var(--nord10); font-weight: bold; text-decoration: underline;">
+							<a href="/rezepte/edit/{ref.short_name}" style="color: var(--nord10); font-weight: bold; text-decoration: underline;">
 								{ref.name}
 							</a>
 						</li>
