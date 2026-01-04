@@ -10,6 +10,7 @@ import "$lib/css/action_button.css"
 
 import { do_on_key } from '$lib/components/do_on_key.js'
 import { portions } from '$lib/js/portions_store.js'
+import BaseRecipeSelector from '$lib/components/BaseRecipeSelector.svelte'
 
 let portions_local
 portions.subscribe((p) => {
@@ -42,6 +43,122 @@ let edit_heading = {
 	name:"",
 	list_index: "",
 	}
+
+// Base recipe selector state
+let showSelector = false;
+let insertPosition = 0;
+
+// State for adding items to references
+let addingToReference = {
+	active: false,
+	list_index: -1,
+	position: 'before' as 'before' | 'after',
+	editing: false,
+	item_index: -1
+};
+
+function openSelector(position: number) {
+	insertPosition = position;
+	showSelector = true;
+}
+
+function handleSelect(recipe: any, options: any) {
+	const reference = {
+		type: 'reference',
+		name: options.labelOverride || (options.showLabel ? recipe.name : ''),
+		baseRecipeRef: recipe._id,
+		includeIngredients: options.includeIngredients,
+		showLabel: options.showLabel,
+		labelOverride: options.labelOverride || '',
+		itemsBefore: [],
+		itemsAfter: []
+	};
+
+	ingredients.splice(insertPosition, 0, reference);
+	ingredients = ingredients;
+	showSelector = false;
+}
+
+export function removeReference(list_index: number) {
+	const confirmed = confirm("Bist du dir sicher, dass du diese Referenz löschen möchtest?");
+	if (confirmed) {
+		ingredients.splice(list_index, 1);
+		ingredients = ingredients;
+	}
+}
+
+// Functions to manage items before/after base recipe in references
+function addItemToReference(list_index: number, position: 'before' | 'after', item: any) {
+	if (!ingredients[list_index].itemsBefore) ingredients[list_index].itemsBefore = [];
+	if (!ingredients[list_index].itemsAfter) ingredients[list_index].itemsAfter = [];
+
+	if (position === 'before') {
+		ingredients[list_index].itemsBefore.push(item);
+	} else {
+		ingredients[list_index].itemsAfter.push(item);
+	}
+	ingredients = ingredients;
+}
+
+function removeItemFromReference(list_index: number, position: 'before' | 'after', item_index: number) {
+	if (position === 'before') {
+		ingredients[list_index].itemsBefore.splice(item_index, 1);
+	} else {
+		ingredients[list_index].itemsAfter.splice(item_index, 1);
+	}
+	ingredients = ingredients;
+}
+
+function editItemFromReference(list_index: number, position: 'before' | 'after', item_index: number) {
+	const items = position === 'before' ? ingredients[list_index].itemsBefore : ingredients[list_index].itemsAfter;
+	const item = items[item_index];
+
+	// Set up edit state
+	addingToReference = {
+		active: true,
+		list_index,
+		position,
+		editing: true,
+		item_index
+	};
+
+	edit_ingredient = {
+		amount: item.amount || "",
+		unit: item.unit || "",
+		name: item.name || "",
+		sublist: "",
+		list_index: "",
+		ingredient_index: "",
+	};
+
+	const modal_el = document.querySelector("#edit_ingredient_modal") as HTMLDialogElement;
+	if (modal_el) {
+		modal_el.showModal();
+	}
+}
+
+function openAddToReferenceModal(list_index: number, position: 'before' | 'after') {
+	addingToReference = {
+		active: true,
+		list_index,
+		position,
+		editing: false,
+		item_index: -1
+	};
+	// Clear and open the edit ingredient modal for adding
+	edit_ingredient = {
+		amount: "",
+		unit: "",
+		name: "",
+		sublist: "",
+		list_index: "",
+		ingredient_index: "",
+	};
+	const modal_el = document.querySelector("#edit_ingredient_modal") as HTMLDialogElement;
+	if (modal_el) {
+		modal_el.showModal();
+	}
+}
 
 function get_sublist_index(sublist_name, list){
 	for(var i =0; i < list.length; i++){
@@ -102,12 +219,55 @@ export function show_modal_edit_ingredient(list_index, ingredient_index){
 	modal_el.showModal();
 }
 export function edit_ingredient_and_close_modal(){
-	ingredients[edit_ingredient.list_index].list[edit_ingredient.ingredient_index] = {
-	amount: edit_ingredient.amount,
-	unit: edit_ingredient.unit,
-	name: edit_ingredient.name,
+	// Check if we're adding to or editing a reference
+	if (addingToReference.active) {
+		// Don't add empty ingredients
+		if (!edit_ingredient.name) {
+			addingToReference = {
+				active: false,
+				list_index: -1,
+				position: 'before',
+				editing: false,
+				item_index: -1
+			};
+			const modal_el = document.querySelector("#edit_ingredient_modal");
+			modal_el.close();
+			return;
+		}
+
+		const item = {
+			amount: edit_ingredient.amount,
+			unit: edit_ingredient.unit,
+			name: edit_ingredient.name
+		};
+
+		if (addingToReference.editing) {
+			// Edit existing item in reference
+			const items = addingToReference.position === 'before'
+				? ingredients[addingToReference.list_index].itemsBefore
+				: ingredients[addingToReference.list_index].itemsAfter;
+			items[addingToReference.item_index] = item;
+			ingredients = ingredients;
+		} else {
+			// Add new item to reference
+			addItemToReference(addingToReference.list_index, addingToReference.position, item);
+		}
+		addingToReference = {
+			active: false,
+			list_index: -1,
+			position: 'before',
+			editing: false,
+			item_index: -1
+		};
+	} else {
+		// Normal edit behavior
+		ingredients[edit_ingredient.list_index].list[edit_ingredient.ingredient_index] = {
+			amount: edit_ingredient.amount,
+			unit: edit_ingredient.unit,
+			name: edit_ingredient.name,
+		}
+		ingredients[edit_ingredient.list_index].name = edit_ingredient.sublist
 	}
-	ingredients[edit_ingredient.list_index].name = edit_ingredient.sublist
 	const modal_el = document.querySelector("#edit_ingredient_modal");
 	modal_el.close();
 }
@@ -430,6 +590,66 @@ h3{
 	width: 100%;
 	text-align: left;
 }
+
+/* Base recipe reference styles */
+.reference-container {
+	margin-block: 1em;
+	padding: 1em;
+	background-color: var(--nord14);
+	border-radius: 10px;
+	border: 2px solid var(--nord9);
+	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
+}
+
+.reference-header {
+	display: flex;
+	align-items: center;
+	gap: 1em;
+	margin-bottom: 0.5em;
+}
+
+.reference-badge {
+	flex-grow: 1;
+	font-weight: bold;
+	color: var(--nord0);
+	font-size: 1.1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+	.reference-container {
+		background-color: var(--nord1);
+	}
+	.reference-badge {
+		color: var(--nord6);
+	}
+}
+
+.insert-base-recipe-button {
+	margin-block: 1rem;
+	padding: 1em 2em;
+	font-size: 1.1rem;
+	border-radius: 1000px;
+	background-color: var(--nord9);
+	color: white;
+	border: none;
+	cursor: pointer;
+	transition: 200ms;
+	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
+}
+
+.insert-base-recipe-button:hover {
+	transform: scale(1.05, 1.05);
+	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
+}
+
+.add-to-reference-button {
+	color: white;
+}
+
+.add-to-reference-button:hover {
+	scale: 1.02 1.02 !important;
+	transform: scale(1.02) !important;
+}
 </style>
 
 <div class=list_wrapper >
@@ -438,32 +658,118 @@ h3{
 
 <h2>Zutaten</h2>
 {#each ingredients as list, list_index}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<h3>
-	<div class=move_buttons_container>
-		<button on:click="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
-                        <svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-                </button>
-		<button  on:click="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
-                        <svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-		</button>
-	</div>
+	{#if list.type === 'reference'}
+		<!-- Reference item display -->
+		<div class="reference-container">
+			<div class="reference-header">
+				<div class="move_buttons_container">
+					<button on:click={() => update_list_position(list_index, 1)} aria-label="Referenz nach oben verschieben">
+						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+					</button>
+					<button on:click={() => update_list_position(list_index, -1)} aria-label="Referenz nach unten verschieben">
+						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+					</button>
+				</div>
+				<div class="reference-badge">
+					📋 Basisrezept: {list.name || 'Unbenannt'}
+				</div>
+				<div class="mod_icons">
+					<button class="action_button button_subtle" on:click={() => removeReference(list_index)} aria-label="Referenz entfernen">
+						<Cross fill="var(--nord11)"></Cross>
+					</button>
+				</div>
+			</div>
 
-	<button on:click="{() => show_modal_edit_subheading_ingredient(list_index)}" class="subheading-button">
-	{#if list.name }
-		{list.name}
+			<!-- Items before base recipe -->
+			{#if list.itemsBefore && list.itemsBefore.length > 0}
+				<h4 style="margin-block: 0.5em; color: var(--nord9);">Zusätzliche Zutaten davor:</h4>
+				<div class="ingredients_grid">
+					{#each list.itemsBefore as item, item_index}
+						<div class=move_buttons_container>
+							<!-- Empty for consistency -->
+						</div>
+						<button on:click={() => editItemFromReference(list_index, 'before', item_index)} class="ingredient-amount-button">
+							{item.amount} {item.unit}
+						</button>
+						<button class="force_wrap ingredient-name-button" on:click={() => editItemFromReference(list_index, 'before', item_index)}>
+							{@html item.name}
+						</button>
+						<div class="mod_icons">
+							<button class="action_button button_subtle" on:click={() => editItemFromReference(list_index, 'before', item_index)} aria-label="Zutat bearbeiten">
+								<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
+							</button>
+							<button class="action_button button_subtle" on:click={() => removeItemFromReference(list_index, 'before', item_index)} aria-label="Zutat entfernen">
+								<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
+							</button>
+						</div>
+					{/each}
+				</div>
+			{/if}
+			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'before')}>
+				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> Zutat davor hinzufügen
+			</button>
+
+			<!-- Base recipe content indicator -->
+			<div style="text-align: center; padding: 0.5em; margin: 0.5em 0; font-style: italic; color: var(--nord10); background-color: rgba(143, 188, 187, 0.4); border-radius: 5px;">
+				→ Inhalt vom Basisrezept wird hier eingefügt ←
+			</div>
+
+			<!-- Items after base recipe -->
+			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'after')}>
+				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> Zutat danach hinzufügen
+			</button>
+			{#if list.itemsAfter && list.itemsAfter.length > 0}
+				<h4 style="margin-block: 0.5em; color: var(--nord9);">Zusätzliche Zutaten danach:</h4>
+				<div class="ingredients_grid">
+					{#each list.itemsAfter as item, item_index}
+						<div class=move_buttons_container>
+							<!-- Empty for consistency -->
+						</div>
+						<button on:click={() => editItemFromReference(list_index, 'after', item_index)} class="ingredient-amount-button">
+							{item.amount} {item.unit}
+						</button>
+						<button class="force_wrap ingredient-name-button" on:click={() => editItemFromReference(list_index, 'after', item_index)}>
+							{@html item.name}
+						</button>
+						<div class="mod_icons">
+							<button class="action_button button_subtle" on:click={() => editItemFromReference(list_index, 'after', item_index)} aria-label="Zutat bearbeiten">
+								<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
+							</button>
+							<button class="action_button button_subtle" on:click={() => removeItemFromReference(list_index, 'after', item_index)} aria-label="Zutat entfernen">
+								<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
+							</button>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	{:else}
-		Leer
-	{/if}
-	</button>
-	<div class=mod_icons>
-		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}" aria-label="Überschrift bearbeiten">
-			<Pen fill=var(--nord1)></Pen>	</button>
-		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label="Liste entfernen">
-			<Cross fill=var(--nord1)></Cross></button>
-	</div>
-	</h3>
-	<div class=ingredients_grid>
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<h3>
+		<div class=move_buttons_container>
+			<button on:click="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
+							<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+					</button>
+			<button  on:click="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
+							<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+			</button>
+		</div>
+
+		<button on:click="{() => show_modal_edit_subheading_ingredient(list_index)}" class="subheading-button">
+		{#if list.name }
+			{list.name}
+		{:else}
+			Leer
+		{/if}
+		</button>
+		<div class=mod_icons>
+			<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}" aria-label="Überschrift bearbeiten">
+				<Pen fill=var(--nord1)></Pen>	</button>
+			<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label="Liste entfernen">
+				<Cross fill=var(--nord1)></Cross></button>
+		</div>
+		</h3>
+		<div class=ingredients_grid>
 		{#each list.list as ingredient, ingredient_index (ingredient_index)}
 		<div class=move_buttons_container>
 			<button on:click="{() => update_ingredient_position(list_index, ingredient_index, 1)}" aria-label="Zutat nach oben verschieben">
@@ -483,8 +789,15 @@ h3{
 			<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
 			<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}" aria-label="Zutat entfernen"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
 	{/each}
-	</div>
+		</div>
+	{/if}
 {/each}
+
+<!-- Button to insert base recipe -->
+<button class="insert-base-recipe-button" on:click={() => openSelector(ingredients.length)}>
+	<Plus fill="white" style="display: inline; width: 1.5em; height: 1.5em; vertical-align: middle;"></Plus>
+	Basisrezept einfügen
+</button>
 </div>
 
 <div class="adder shadow">
@@ -522,3 +835,10 @@ h3{
 		</button>
 	</div>
 </dialog>
+
+<!-- Base recipe selector -->
+<BaseRecipeSelector
+	type="ingredients"
+	onSelect={handleSelect}
+	bind:open={showSelector}
+/>

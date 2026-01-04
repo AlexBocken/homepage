@@ -21,6 +21,45 @@ export const POST: RequestHandler = async ({request, locals}) => {
 		throw error(404, "Recipe not found");
 	}
 
+	// Check if this recipe is referenced by others
+	const referencingRecipes = await Recipe.find({
+		$or: [
+			{ 'ingredients.baseRecipeRef': recipe._id },
+			{ 'instructions.baseRecipeRef': recipe._id }
+		]
+	});
+
+	// Expand all references into regular content before deletion
+	for (const depRecipe of referencingRecipes) {
+		// Expand ingredient references
+		if (depRecipe.ingredients) {
+			depRecipe.ingredients = depRecipe.ingredients.flatMap((item: any) => {
+				if (item.type === 'reference' && item.baseRecipeRef && item.baseRecipeRef.equals(recipe._id)) {
+					if (item.includeIngredients && recipe.ingredients) {
+						return recipe.ingredients.filter((i: any) => i.type === 'section' || !i.type);
+					}
+					return [];
+				}
+				return [item];
+			});
+		}
+
+		// Expand instruction references
+		if (depRecipe.instructions) {
+			depRecipe.instructions = depRecipe.instructions.flatMap((item: any) => {
+				if (item.type === 'reference' && item.baseRecipeRef && item.baseRecipeRef.equals(recipe._id)) {
+					if (item.includeInstructions && recipe.instructions) {
+						return recipe.instructions.filter((i: any) => i.type === 'section' || !i.type);
+					}
+					return [];
+				}
+				return [item];
+			});
+		}
+
+		await depRecipe.save();
+	}
+
 	// Remove this recipe from all users' favorites
 	await UserFavorites.updateMany(
 		{ favorites: recipe._id },
