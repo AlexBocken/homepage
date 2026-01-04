@@ -29,16 +29,55 @@ const RecipeSchema = new mongoose.Schema(
     portions :{type:String, default: ""},
     cooking: {type:String, default: ""},
     total_time : {type:String, default: ""},
-    ingredients : [ { name: {type: String, default: ""},
-	    list: [{name: {type: String, default: ""},
-		    unit: String,
-		    amount: String,
-	    }]
+    ingredients: [{
+      // Common fields
+      name: { type: String, default: "" },
+      type: { type: String, enum: ['section', 'reference'], default: 'section' },
+
+      // For type='section' (existing structure)
+      list: [{
+        name: { type: String, default: "" },
+        unit: String,
+        amount: String,
+      }],
+
+      // For type='reference' (new base recipe references)
+      baseRecipeRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' },
+      includeIngredients: { type: Boolean, default: true },
+      showLabel: { type: Boolean, default: true },
+      labelOverride: { type: String, default: "" },
+      itemsBefore: [{
+        name: { type: String, default: "" },
+        unit: String,
+        amount: String,
+      }],
+      itemsAfter: [{
+        name: { type: String, default: "" },
+        unit: String,
+        amount: String,
+      }],
     }],
-     instructions : [{name: {type: String, default: ""},
-     		      steps: [String]}],
+     instructions: [{
+       // Common fields
+       name: { type: String, default: "" },
+       type: { type: String, enum: ['section', 'reference'], default: 'section' },
+
+       // For type='section' (existing structure)
+       steps: [String],
+
+       // For type='reference' (new base recipe references)
+       baseRecipeRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' },
+       includeInstructions: { type: Boolean, default: true },
+       showLabel: { type: Boolean, default: true },
+       labelOverride: { type: String, default: "" },
+       stepsBefore: [String],
+       stepsAfter: [String],
+     }],
      preamble : String,
      addendum : String,
+
+     // Base recipe flag
+     isBaseRecipe: {type: Boolean, default: false},
 
      // English translations
      translations: {
@@ -65,16 +104,38 @@ const RecipeSchema = new mongoose.Schema(
            final: {type: String},
          },
          ingredients: [{
-           name: {type: String, default: ""},
+           name: { type: String, default: "" },
+           type: { type: String, enum: ['section', 'reference'], default: 'section' },
            list: [{
-             name: {type: String, default: ""},
+             name: { type: String, default: "" },
              unit: String,
              amount: String,
-           }]
+           }],
+           baseRecipeRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' },
+           includeIngredients: { type: Boolean, default: true },
+           showLabel: { type: Boolean, default: true },
+           labelOverride: { type: String, default: "" },
+           itemsBefore: [{
+             name: { type: String, default: "" },
+             unit: String,
+             amount: String,
+           }],
+           itemsAfter: [{
+             name: { type: String, default: "" },
+             unit: String,
+             amount: String,
+           }],
          }],
          instructions: [{
-           name: {type: String, default: ""},
-           steps: [String]
+           name: { type: String, default: "" },
+           type: { type: String, enum: ['section', 'reference'], default: 'section' },
+           steps: [String],
+           baseRecipeRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' },
+           includeInstructions: { type: Boolean, default: true },
+           showLabel: { type: Boolean, default: true },
+           labelOverride: { type: String, default: "" },
+           stepsBefore: [String],
+           stepsAfter: [String],
          }],
          images: [{
            alt: String,

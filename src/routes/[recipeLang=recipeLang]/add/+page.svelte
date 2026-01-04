@@ -57,6 +57,7 @@
 	let short_name = ""
 	let datecreated =  new Date()
 	let datemodified = datecreated
+	let isBaseRecipe = false
 
     	import type { PageData } from './$types';
 	import CardAdd from '$lib/components/CardAdd.svelte';
@@ -118,6 +119,7 @@
 			ingredients,
 			preamble,
 			addendum,
+			isBaseRecipe,
 		};
 	}
 
@@ -317,6 +319,13 @@ button.action_button{
 
 <h3>Kurzname (für URL):</h3>
 <input bind:value={short_name} placeholder="Kurzname"/>
+
+<div style="text-align: center; margin: 1rem;">
+	<label style="font-size: 1.1rem; cursor: pointer;">
+		<input type="checkbox" bind:checked={isBaseRecipe} style="width: auto; display: inline; margin-right: 0.5em;" />
+		Als Basisrezept markieren (kann von anderen Rezepten referenziert werden)
+	</label>
+</div>
 
 <div class=title_container>
 <div class=title>

@@ -9,6 +9,7 @@ import '$lib/css/nordtheme.css'
 import "$lib/css/action_button.css"
 
 import { do_on_key } from '$lib/components/do_on_key.js'
+import BaseRecipeSelector from '$lib/components/BaseRecipeSelector.svelte'
 
 const step_placeholder = "Kartoffeln schälen..."
 export let instructions
@@ -23,6 +24,118 @@ let edit_heading = {
 	name:"",
 	list_index: "",
 	}
+
+// Base recipe selector state
+let showSelector = false;
+let insertPosition = 0;
+
+// State for adding steps to references
+let addingToReference = {
+	active: false,
+	list_index: -1,
+	position: 'before' as 'before' | 'after',
+	editing: false,
+	step_index: -1
+};
+
+function openSelector(position: number) {
+	insertPosition = position;
+	showSelector = true;
+}
+
+function handleSelect(recipe: any, options: any) {
+	const reference = {
+		type: 'reference',
+		name: options.labelOverride || (options.showLabel ? recipe.name : ''),
+		baseRecipeRef: recipe._id,
+		includeInstructions: options.includeInstructions,
+		showLabel: options.showLabel,
+		labelOverride: options.labelOverride || '',
+		stepsBefore: [],
+		stepsAfter: []
+	};
+
+	instructions.splice(insertPosition, 0, reference);
+	instructions = instructions;
+	showSelector = false;
+}
+
+export function removeReference(list_index: number) {
+	const confirmed = confirm("Bist du dir sicher, dass du diese Referenz löschen möchtest?");
+	if (confirmed) {
+		instructions.splice(list_index, 1);
+		instructions = instructions;
+	}
+}
+
+// Functions to manage steps before/after base recipe in references
+function addStepToReference(list_index: number, position: 'before' | 'after', step: string) {
+	if (!instructions[list_index].stepsBefore) instructions[list_index].stepsBefore = [];
+	if (!instructions[list_index].stepsAfter) instructions[list_index].stepsAfter = [];
+
+	if (position === 'before') {
+		instructions[list_index].stepsBefore.push(step);
+	} else {
+		instructions[list_index].stepsAfter.push(step);
+	}
+	instructions = instructions;
+}
+
+function removeStepFromReference(list_index: number, position: 'before' | 'after', step_index: number) {
+	if (position === 'before') {
+		instructions[list_index].stepsBefore.splice(step_index, 1);
+	} else {
+		instructions[list_index].stepsAfter.splice(step_index, 1);
+	}
+	instructions = instructions;
+}
+
+function editStepFromReference(list_index: number, position: 'before' | 'after', step_index: number) {
+	const steps = position === 'before' ? instructions[list_index].stepsBefore : instructions[list_index].stepsAfter;
+	const step = steps[step_index];
+
+	// Set up edit state
+	addingToReference = {
+		active: true,
+		list_index,
+		position,
+		editing: true,
+		step_index
+	};
+
+	edit_step = {
+		step: step || "",
+		name: "",
+		list_index: 0,
+		step_index: 0,
+	};
+
+	const modal_el = document.querySelector("#edit_step_modal") as HTMLDialogElement;
+	if (modal_el) {
+		modal_el.showModal();
+	}
+}
+
+function openAddToReferenceModal(list_index: number, position: 'before' | 'after') {
+	addingToReference = {
+		active: true,
+		list_index,
+		position,
+		editing: false,
+		step_index: -1
+	};
+	// Clear and open the edit step modal for adding
+	edit_step = {
+		step: "",
+		name: "",
+		list_index: 0,
+		step_index: 0,
+	};
+	const modal_el = document.querySelector("#edit_step_modal") as HTMLDialogElement;
+	if (modal_el) {
+		modal_el.showModal();
+	}
+}
 
 function get_sublist_index(sublist_name, list){
 	for(var i =0; i < list.length; i++){
@@ -86,7 +199,44 @@ export function show_modal_edit_step(list_index, step_index){
 }
 
 export function edit_step_and_close_modal(){
-	instructions[edit_step.list_index].steps[edit_step.step_index] = edit_step.step
+	// Check if we're adding to or editing a reference
+	if (addingToReference.active) {
+		// Don't add empty steps
+		if (!edit_step.step || edit_step.step.trim() === '') {
+			addingToReference = {
+				active: false,
+				list_index: -1,
+				position: 'before',
+				editing: false,
+				step_index: -1
+			};
+			const modal_el = document.querySelector("#edit_step_modal");
+			modal_el.close();
+			return;
+		}
+
+		if (addingToReference.editing) {
+			// Edit existing step in reference
+			const steps = addingToReference.position === 'before'
+				? instructions[addingToReference.list_index].stepsBefore
+				: instructions[addingToReference.list_index].stepsAfter;
+			steps[addingToReference.step_index] = edit_step.step;
+			instructions = instructions;
+		} else {
+			// Add new step to reference
+			addStepToReference(addingToReference.list_index, addingToReference.position, edit_step.step);
+		}
+		addingToReference = {
+			active: false,
+			list_index: -1,
+			position: 'before',
+			editing: false,
+			step_index: -1
+		};
+	} else {
+		// Normal edit behavior
+		instructions[edit_step.list_index].steps[edit_step.step_index] = edit_step.step
+	}
 	const modal_el = document.querySelector("#edit_step_modal");
 	modal_el.close();
 }
@@ -451,6 +601,66 @@ h3{
 	width: 100%;
 	text-align: left;
 }
+
+/* Base recipe reference styles */
+.reference-container {
+	margin-block: 1em;
+	padding: 1em;
+	background-color: var(--nord14);
+	border-radius: 10px;
+	border: 2px solid var(--nord9);
+	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
+}
+
+.reference-header {
+	display: flex;
+	align-items: center;
+	gap: 1em;
+	margin-bottom: 0.5em;
+}
+
+.reference-badge {
+	flex-grow: 1;
+	font-weight: bold;
+	color: var(--nord0);
+	font-size: 1.1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+	.reference-container {
+		background-color: var(--nord1);
+	}
+	.reference-badge {
+		color: var(--nord6);
+	}
+}
+
+.insert-base-recipe-button {
+	margin-block: 1rem;
+	padding: 1em 2em;
+	font-size: 1.1rem;
+	border-radius: 1000px;
+	background-color: var(--nord9);
+	color: white;
+	border: none;
+	cursor: pointer;
+	transition: 200ms;
+	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
+}
+
+.insert-base-recipe-button:hover {
+	transform: scale(1.05, 1.05);
+	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
+}
+
+.add-to-reference-button {
+	color: white;
+}
+
+.add-to-reference-button:hover {
+	scale: 1.02 1.02 !important;
+	transform: scale(1.02) !important;
+}
 </style>
 
 <div class=instructions>
@@ -483,27 +693,115 @@ h3{
 
 <h2>Zubereitung</h2>
 {#each instructions as list, list_index}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<h3>
-	<div class=move_buttons_container>
-		<button on:click="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
-                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-                </button>
-		<button  on:click="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
-                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-		</button>
-	</div>
-	<button on:click={() => show_modal_edit_subheading_step(list_index)} class="subheading-button">
-	{#if list.name}
-		{list.name}
+	{#if list.type === 'reference'}
+		<!-- Reference item display -->
+		<div class="reference-container">
+			<div class="reference-header">
+				<div class="move_buttons_container">
+					<button on:click={() => update_list_position(list_index, 1)} aria-label="Referenz nach oben verschieben">
+						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+					</button>
+					<button on:click={() => update_list_position(list_index, -1)} aria-label="Referenz nach unten verschieben">
+						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+					</button>
+				</div>
+				<div class="reference-badge">
+					📋 Basisrezept: {list.name || 'Unbenannt'}
+				</div>
+				<div class="mod_icons">
+					<button class="action_button button_subtle" on:click={() => removeReference(list_index)} aria-label="Referenz entfernen">
+						<Cross fill="var(--nord11)"></Cross>
+					</button>
+				</div>
+			</div>
+
+			<!-- Steps before base recipe -->
+			{#if list.stepsBefore && list.stepsBefore.length > 0}
+				<h4 style="margin-block: 0.5em; color: var(--nord9);">Zusätzliche Schritte davor:</h4>
+				<ol>
+					{#each list.stepsBefore as step, step_index}
+						<li>
+							<div style="display: flex; align-items: center;">
+								<div class="move_buttons_container step_move_buttons">
+									<!-- Empty for consistency -->
+								</div>
+								<button on:click={() => editStepFromReference(list_index, 'before', step_index)} class="step-button" style="flex-grow: 1;">
+									{@html step}
+								</button>
+								<div>
+									<button class="action_button button_subtle" on:click={() => editStepFromReference(list_index, 'before', step_index)} aria-label="Schritt bearbeiten">
+										<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
+									</button>
+									<button class="action_button button_subtle" on:click={() => removeStepFromReference(list_index, 'before', step_index)} aria-label="Schritt entfernen">
+										<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
+									</button>
+								</div>
+							</div>
+						</li>
+					{/each}
+				</ol>
+			{/if}
+			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'before')}>
+				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> Schritt davor hinzufügen
+			</button>
+
+			<!-- Base recipe content indicator -->
+			<div style="text-align: center; padding: 0.5em; margin: 0.5em 0; font-style: italic; color: var(--nord10); background-color: rgba(143, 188, 187, 0.4); border-radius: 5px;">
+				→ Inhalt vom Basisrezept wird hier eingefügt ←
+			</div>
+
+			<!-- Steps after base recipe -->
+			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'after')}>
+				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> Schritt danach hinzufügen
+			</button>
+			{#if list.stepsAfter && list.stepsAfter.length > 0}
+				<h4 style="margin-block: 0.5em; color: var(--nord9);">Zusätzliche Schritte danach:</h4>
+				<ol>
+					{#each list.stepsAfter as step, step_index}
+						<li>
+							<div style="display: flex; align-items: center;">
+								<div class="move_buttons_container step_move_buttons">
+									<!-- Empty for consistency -->
+								</div>
+								<button on:click={() => editStepFromReference(list_index, 'after', step_index)} class="step-button" style="flex-grow: 1;">
+									{@html step}
+								</button>
+								<div>
+									<button class="action_button button_subtle" on:click={() => editStepFromReference(list_index, 'after', step_index)} aria-label="Schritt bearbeiten">
+										<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
+									</button>
+									<button class="action_button button_subtle" on:click={() => removeStepFromReference(list_index, 'after', step_index)} aria-label="Schritt entfernen">
+										<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
+									</button>
+								</div>
+							</div>
+						</li>
+					{/each}
+				</ol>
+			{/if}
+		</div>
 	{:else}
-		Leer
-	{/if}
-	</button>
-	<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}" aria-label="Überschrift bearbeiten">
-			<Pen fill=var(--nord1)></Pen>	</button>
-		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label="Liste entfernen">
-				<Cross fill=var(--nord1)></Cross>
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<h3>
+		<div class=move_buttons_container>
+			<button on:click="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
+							<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+					</button>
+			<button  on:click="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
+							<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+			</button>
+		</div>
+		<button on:click={() => show_modal_edit_subheading_step(list_index)} class="subheading-button">
+		{#if list.name}
+			{list.name}
+		{:else}
+			Leer
+		{/if}
+		</button>
+		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}" aria-label="Überschrift bearbeiten">
+				<Pen fill=var(--nord1)></Pen>	</button>
+			<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label="Liste entfernen">
+					<Cross fill=var(--nord1)></Cross>
 		</button>
 	</h3>
 	<ol>
@@ -532,7 +830,14 @@ h3{
 		</li>
 	{/each}
 	</ol>
+	{/if}
 {/each}
+
+<!-- Button to insert base recipe -->
+<button class="insert-base-recipe-button" on:click={() => openSelector(instructions.length)}>
+	<Plus fill="white" style="display: inline; width: 1.5em; height: 1.5em; vertical-align: middle;"></Plus>
+	Basisrezept einfügen
+</button>
 </div>
 
 <div class='adder shadow'>
@@ -566,3 +871,10 @@ h3{
 		</button>
 	</div>
 </dialog>
+
+<!-- Base recipe selector -->
+<BaseRecipeSelector
+	type="instructions"
+	onSelect={handleSelect}
+	bind:open={showSelector}
+/>

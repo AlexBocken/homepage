@@ -1,6 +1,65 @@
 <script>
 let { data } = $props();
 
+let multiplier = $state(data.multiplier || 1);
+
+// Flatten instruction references for display
+const flattenedInstructions = $derived.by(() => {
+	if (!data.instructions) return [];
+
+	return data.instructions.flatMap((item) => {
+		if (item.type === 'reference' && item.resolvedRecipe) {
+			// Get translated or original instructions
+			const lang = data.lang || 'de';
+			const instructionsToUse = (lang === 'en' &&
+									item.resolvedRecipe.translations?.en?.instructions)
+				? item.resolvedRecipe.translations.en.instructions
+				: item.resolvedRecipe.instructions || [];
+
+			// Filter to only sections (not nested references)
+			const baseInstructions = item.includeInstructions
+				? instructionsToUse.filter(i => i.type === 'section' || !i.type)
+				: [];
+
+			// Combine all steps into one section
+			const combinedSteps = [];
+
+			// Add steps before
+			if (item.stepsBefore && item.stepsBefore.length > 0) {
+				combinedSteps.push(...item.stepsBefore);
+			}
+
+			// Add base recipe instructions
+			baseInstructions.forEach(section => {
+				if (section.steps) {
+					combinedSteps.push(...section.steps);
+				}
+			});
+
+			// Add steps after
+			if (item.stepsAfter && item.stepsAfter.length > 0) {
+				combinedSteps.push(...item.stepsAfter);
+			}
+
+			// Push as one section with optional label
+			if (combinedSteps.length > 0) {
+				return [{
+					type: 'section',
+					name: item.showLabel ? (item.labelOverride || item.resolvedRecipe.name) : '',
+					steps: combinedSteps,
+					isReference: item.showLabel,
+					short_name: item.resolvedRecipe.short_name
+				}];
+			}
+
+			return [];
+		}
+
+		// Regular section - pass through
+		return [item];
+	});
+});
+
 const isEnglish = $derived(data.lang === 'en');
 const labels = $derived({
 	preparation: isEnglish ? 'Preparation:' : 'Vorbereitung:',
@@ -67,6 +126,19 @@ ol li::marker{
 h4{
 	margin-block: 0;
 }
+
+/* Base recipe reference link styling */
+h3 a {
+	color: var(--nord11);
+	text-decoration: underline;
+	text-decoration-color: var(--nord11);
+}
+
+h3 a:hover {
+	color: var(--nord11);
+	text-decoration: underline;
+	text-decoration-color: var(--nord11);
+}
 </style>
 <div class=instructions>
 <div class=additional_info>
@@ -100,15 +172,21 @@ h4{
 
 {#if data.instructions}
 <h2>{labels.instructions}</h2>
-{#each data.instructions as list}
+{#each flattenedInstructions as list}
 {#if list.name}
-	<h3>{list.name}</h3>
+	{#if list.isReference}
+		<h3><a href="{list.short_name}?multiplier={multiplier}">{@html list.name}</a></h3>
+	{:else}
+		<h3>{@html list.name}</h3>
+	{/if}
 {/if}
+{#if list.steps}
 <ol>
 	{#each list.steps as step}
 		<li>{@html step}</li>
 	{/each}
 </ol>
+{/if}
 {/each}
 {/if}
 </div>

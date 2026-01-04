@@ -7,6 +7,74 @@ export type TranslationMetadata = {
   fieldsModifiedSinceTranslation?: string[];
 };
 
+// Ingredient discriminated union types
+export type IngredientSection = {
+  name?: string;
+  type: 'section';
+  list: [{
+    name: string;
+    unit: string;
+    amount: string;
+  }];
+};
+
+export type IngredientReference = {
+  name?: string;
+  type: 'reference';
+  baseRecipeRef: string; // ObjectId as string
+  includeIngredients: boolean;
+  showLabel: boolean;
+  labelOverride?: string;
+  itemsBefore?: [{
+    name: string;
+    unit: string;
+    amount: string;
+  }];
+  itemsAfter?: [{
+    name: string;
+    unit: string;
+    amount: string;
+  }];
+  // Populated after server-side resolution
+  resolvedRecipe?: {
+    _id: string;
+    name: string;
+    short_name: string;
+    ingredients?: IngredientSection[];
+    translations?: any;
+  };
+};
+
+export type IngredientItem = IngredientSection | IngredientReference;
+
+// Instruction discriminated union types
+export type InstructionSection = {
+  name?: string;
+  type: 'section';
+  steps: [string];
+};
+
+export type InstructionReference = {
+  name?: string;
+  type: 'reference';
+  baseRecipeRef: string; // ObjectId as string
+  includeInstructions: boolean;
+  showLabel: boolean;
+  labelOverride?: string;
+  stepsBefore?: [string];
+  stepsAfter?: [string];
+  // Populated after server-side resolution
+  resolvedRecipe?: {
+    _id: string;
+    name: string;
+    short_name: string;
+    instructions?: InstructionSection[];
+    translations?: any;
+  };
+};
+
+export type InstructionItem = InstructionSection | InstructionReference;
+
 // Translated recipe type (English version)
 export type TranslatedRecipeType = {
   short_name: string;
@@ -17,18 +85,8 @@ export type TranslatedRecipeType = {
   note?: string;
   category: string;
   tags?: string[];
-  ingredients?: [{
-    name?: string;
-    list: [{
-      name: string;
-      unit: string;
-      amount: string;
-    }]
-  }];
-  instructions?: [{
-    name?: string;
-    steps: string[];
-  }];
+  ingredients?: IngredientItem[];
+  instructions?: InstructionItem[];
   images?: [{
     alt: string;
     caption?: string;
@@ -68,20 +126,11 @@ export type RecipeModelType = {
   portions?: string;
   cooking?: string;
   total_time?: string;
-  ingredients?: [{
-	  name?: string;
-	  list: [{
-		  name: string;
-		  unit: string;
-		  amount: string;
-	  }]
-  }]
-  instructions?: [{
-	  name?: string;
-	  steps: [string]
-  }]
+  ingredients?: IngredientItem[];
+  instructions?: InstructionItem[];
   preamble?: String
   addendum?: string
+  isBaseRecipe?: boolean;
   translations?: {
     en?: TranslatedRecipeType;
   };

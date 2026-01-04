@@ -6,6 +6,65 @@ import { page } from '$app/stores';
 import HefeSwapper from './HefeSwapper.svelte';
 
 let { data } = $props();
+
+// Flatten ingredient references for display
+const flattenedIngredients = $derived.by(() => {
+	if (!data.ingredients) return [];
+
+	return data.ingredients.flatMap((item) => {
+		if (item.type === 'reference' && item.resolvedRecipe) {
+			const sections = [];
+
+			// Get translated or original ingredients
+			const lang = data.lang || 'de';
+			const ingredientsToUse = (lang === 'en' &&
+									item.resolvedRecipe.translations?.en?.ingredients)
+				? item.resolvedRecipe.translations.en.ingredients
+				: item.resolvedRecipe.ingredients || [];
+
+			// Filter to only sections (not nested references)
+			const baseIngredients = item.includeIngredients
+				? ingredientsToUse.filter(i => i.type === 'section' || !i.type)
+				: [];
+
+			// Combine all items into one section
+			const combinedList = [];
+
+			// Add items before
+			if (item.itemsBefore && item.itemsBefore.length > 0) {
+				combinedList.push(...item.itemsBefore);
+			}
+
+			// Add base recipe ingredients
+			baseIngredients.forEach(section => {
+				if (section.list) {
+					combinedList.push(...section.list);
+				}
+			});
+
+			// Add items after
+			if (item.itemsAfter && item.itemsAfter.length > 0) {
+				combinedList.push(...item.itemsAfter);
+			}
+
+			// Push as one section with optional label
+			if (combinedList.length > 0) {
+				sections.push({
+					type: 'section',
+					name: item.showLabel ? (item.labelOverride || item.resolvedRecipe.name) : '',
+					list: combinedList,
+					isReference: item.showLabel,
+					short_name: item.resolvedRecipe.short_name
+				});
+			}
+
+			return sections;
+		}
+
+		// Regular section - pass through
+		return [item];
+	});
+});
 let multiplier = $state(data.multiplier || 1);
 
 const isEnglish = $derived(data.lang === 'en');
@@ -324,6 +383,19 @@ span
 	background-color: var(--orange);
 	box-shadow: 0px 0px 0.5em 0.1em rgba(0,0,0, 0.3);
 }
+
+/* Base recipe reference link styling */
+h3 a {
+	color: var(--nord11);
+	text-decoration: underline;
+	text-decoration-color: var(--nord11);
+}
+
+h3 a:hover {
+	color: var(--nord11);
+	text-decoration: underline;
+	text-decoration-color: var(--nord11);
+}
 </style>
 {#if data.ingredients}
 <div class=ingredients>
@@ -400,10 +472,15 @@ span
 </div>
 
 <h2>{labels.ingredients}</h2>
-{#each data.ingredients as list, listIndex}
+{#each flattenedIngredients as list, listIndex}
 {#if list.name}
-	<h3>{list.name}</h3>
+	{#if list.isReference}
+		<h3><a href="{list.short_name}?multiplier={multiplier}">{@html list.name}</a></h3>
+	{:else}
+		<h3>{@html list.name}</h3>
+	{/if}
 {/if}
+{#if list.list}
 <div class=ingredients_grid>
 	{#each list.list as item, ingredientIndex}
 		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div>
@@ -416,6 +493,7 @@ span
 		</div>
 	{/each}
 </div>
+{/if}
 {/each}
 </div>
 {/if}
