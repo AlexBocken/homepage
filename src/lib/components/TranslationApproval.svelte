@@ -2,10 +2,8 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { TranslatedRecipeType } from '$types/types';
 	import TranslationFieldComparison from './TranslationFieldComparison.svelte';
-	import EditableIngredients from './EditableIngredients.svelte';
-	import EditableInstructions from './EditableInstructions.svelte';
-	import IngredientsPage from './IngredientsPage.svelte';
-	import InstructionsPage from './InstructionsPage.svelte';
+	import CreateIngredientList from './CreateIngredientList.svelte';
+	import CreateStepList from './CreateStepList.svelte';
 
 	export let germanData: any;
 	export let englishData: TranslatedRecipeType | null = null;
@@ -100,21 +98,45 @@
 		}
 	}
 
-	// Handle ingredients changes
-	function handleIngredientsChange(event: CustomEvent) {
-		if (editableEnglish) {
-			editableEnglish.ingredients = event.detail.ingredients;
-			editableEnglish = editableEnglish; // Trigger reactivity
-		}
-	}
-
-	// Handle instructions changes
-	function handleInstructionsChange(event: CustomEvent) {
-		if (editableEnglish) {
-			editableEnglish.instructions = event.detail.instructions;
-			editableEnglish = editableEnglish; // Trigger reactivity
-		}
-	}
+	// Create add_info object for CreateStepList that references editableEnglish properties
+	// This allows CreateStepList to modify the values directly
+	$: englishAddInfo = editableEnglish ? {
+		get preparation() { return editableEnglish.preparation || ''; },
+		set preparation(value) { editableEnglish.preparation = value; },
+		fermentation: {
+			get bulk() { return editableEnglish.fermentation?.bulk || ''; },
+			set bulk(value) {
+				if (!editableEnglish.fermentation) editableEnglish.fermentation = { bulk: '', final: '' };
+				editableEnglish.fermentation.bulk = value;
+			},
+			get final() { return editableEnglish.fermentation?.final || ''; },
+			set final(value) {
+				if (!editableEnglish.fermentation) editableEnglish.fermentation = { bulk: '', final: '' };
+				editableEnglish.fermentation.final = value;
+			},
+		},
+		baking: {
+			get length() { return editableEnglish.baking?.length || ''; },
+			set length(value) {
+				if (!editableEnglish.baking) editableEnglish.baking = { length: '', temperature: '', mode: '' };
+				editableEnglish.baking.length = value;
+			},
+			get temperature() { return editableEnglish.baking?.temperature || ''; },
+			set temperature(value) {
+				if (!editableEnglish.baking) editableEnglish.baking = { length: '', temperature: '', mode: '' };
+				editableEnglish.baking.temperature = value;
+			},
+			get mode() { return editableEnglish.baking?.mode || ''; },
+			set mode(value) {
+				if (!editableEnglish.baking) editableEnglish.baking = { length: '', temperature: '', mode: '' };
+				editableEnglish.baking.mode = value;
+			},
+		},
+		get total_time() { return editableEnglish.total_time || ''; },
+		set total_time(value) { editableEnglish.total_time = value; },
+		get cooking() { return editableEnglish.cooking || ''; },
+		set cooking(value) { editableEnglish.cooking = value; },
+	} : null;
 
 	// Handle approval
 	function handleApprove() {
@@ -229,12 +251,31 @@
 }
 
 .translation-preview {
-	max-width: 800px;
+	max-width: 1000px;
 	margin: 1.5rem auto;
 }
 
 .field-section {
 	margin-bottom: 1.5rem;
+	max-width: 800px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.list-wrapper {
+	margin-inline: auto;
+	display: flex;
+	flex-direction: row;
+	max-width: 1000px;
+	gap: 2rem;
+	justify-content: center;
+	margin-bottom: 2rem;
+}
+
+@media screen and (max-width: 700px) {
+	.list-wrapper {
+		flex-direction: column;
+	}
 }
 
 .column-header {
@@ -529,118 +570,19 @@ button:disabled {
 				</div>
 			{/if}
 
-			{#if editableEnglish?.preparation !== undefined}
-				<div class="field-section">
-					<TranslationFieldComparison
-						label="Preparation Time"
-						germanValue={germanData.preparation || ''}
-						englishValue={editableEnglish.preparation}
-						fieldName="preparation"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-				</div>
-			{/if}
-
-			{#if editableEnglish?.cooking !== undefined}
-				<div class="field-section">
-					<TranslationFieldComparison
-						label="Cooking Time"
-						germanValue={germanData.cooking || ''}
-						englishValue={editableEnglish.cooking}
-						fieldName="cooking"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-				</div>
-			{/if}
-
-			{#if editableEnglish?.total_time !== undefined}
-				<div class="field-section">
-					<TranslationFieldComparison
-						label="Total Time"
-						germanValue={germanData.total_time || ''}
-						englishValue={editableEnglish.total_time}
-						fieldName="total_time"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-				</div>
-			{/if}
-
-			{#if editableEnglish?.baking}
-				<div class="field-section">
-					<h4 style="margin-bottom: 0.5rem;">Baking</h4>
-					<TranslationFieldComparison
-						label="Temperature"
-						germanValue={germanData.baking?.temperature || ''}
-						englishValue={editableEnglish.baking.temperature || ''}
-						fieldName="baking.temperature"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-					<TranslationFieldComparison
-						label="Time"
-						germanValue={germanData.baking?.length || ''}
-						englishValue={editableEnglish.baking.length || ''}
-						fieldName="baking.length"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-					<TranslationFieldComparison
-						label="Mode"
-						germanValue={germanData.baking?.mode || ''}
-						englishValue={editableEnglish.baking.mode || ''}
-						fieldName="baking.mode"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-				</div>
-			{/if}
-
-			{#if editableEnglish?.fermentation}
-				<div class="field-section">
-					<h4 style="margin-bottom: 0.5rem;">Fermentation</h4>
-					<TranslationFieldComparison
-						label="Bulk"
-						germanValue={germanData.fermentation?.bulk || ''}
-						englishValue={editableEnglish.fermentation.bulk || ''}
-						fieldName="fermentation.bulk"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-					<TranslationFieldComparison
-						label="Final"
-						germanValue={germanData.fermentation?.final || ''}
-						englishValue={editableEnglish.fermentation.final || ''}
-						fieldName="fermentation.final"
-						readonly={false}
-						on:change={handleFieldChange}
-					/>
-				</div>
-			{/if}
-
-			<!-- Ingredients -->
-			{#if editableEnglish?.ingredients && editableEnglish.ingredients.length > 0}
-				<div class="field-section">
-					<h4 style="margin-bottom: 0.5rem;">Ingredients</h4>
-					<EditableIngredients
-						ingredients={editableEnglish.ingredients}
-						translationMetadata={translationMetadata?.ingredientTranslations}
-						on:change={handleIngredientsChange}
-					/>
-				</div>
-			{/if}
-
-			<!-- Instructions -->
-			{#if editableEnglish?.instructions && editableEnglish.instructions.length > 0}
-				<div class="field-section">
-					<h4 style="margin-bottom: 0.5rem;">Instructions</h4>
-					<EditableInstructions
-						instructions={editableEnglish.instructions}
-						translationMetadata={translationMetadata?.instructionTranslations}
-						on:change={handleInstructionsChange}
-					/>
+			<!-- Ingredients and Instructions in two-column layout -->
+			{#if editableEnglish?.ingredients || editableEnglish?.instructions}
+				<div class="list-wrapper">
+					<div>
+						{#if editableEnglish?.ingredients}
+							<CreateIngredientList bind:ingredients={editableEnglish.ingredients} />
+						{/if}
+					</div>
+					<div>
+						{#if editableEnglish?.instructions && englishAddInfo}
+							<CreateStepList bind:instructions={editableEnglish.instructions} add_info={englishAddInfo} />
+						{/if}
+					</div>
 				</div>
 			{/if}
 
