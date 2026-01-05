@@ -100,6 +100,7 @@ nav{
 	align-items: center;
 	box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
 	height: 4rem;
+	padding-left: 0.5rem;
 }
 nav[hidden]{
 	display:block;
@@ -324,7 +325,7 @@ footer{
 </div>
 </div>
 <nav hidden class=nav_site>
-	<a class=entry href="/" aria-label="Home"><Symbol></Symbol></a>
+	<a href="/" aria-label="Home"><Symbol></Symbol></a>
 	<div class="links-wrapper">
 		{@render links?.()}
 		<div class="active-underline" class:no-transition={disableTransition} style="left: {underlineLeft}px; width: {underlineWidth}px;"></div>
