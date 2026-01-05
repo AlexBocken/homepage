@@ -147,5 +147,5 @@ h2 + p{
 		</div>
 	</button>
 {:else}
-	<a class=entry href=/login>Log In</a>
+	<a class=entry href=/login>Login</a>
 {/if}
