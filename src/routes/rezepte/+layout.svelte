@@ -24,9 +24,6 @@
 			<li><a href="/rezepte/category" class:active={isActive('/rezepte/category')}>Kategorie</a></li>
 			<li><a href="/rezepte/icon" class:active={isActive('/rezepte/icon')}>Icon</a></li>
 			<li><a href="/rezepte/tag" class:active={isActive('/rezepte/tag')}>Tags</a></li>
-			{#if user?.groups?.includes('rezepte_users')}
-				<li><a href="/rezepte/untranslated" class:active={isActive('/rezepte/untranslated')}>Unübersetzt</a></li>
-			{/if}
 		</ul>
 	{/snippet}
 
@@ -39,7 +36,7 @@
 	{/snippet}
 
 	{#snippet right_side()}
-		<UserHeader {user}></UserHeader>
+		<UserHeader {user} recipeLang="rezepte" lang="de"></UserHeader>
 	{/snippet}
 
 	{@render children()}
