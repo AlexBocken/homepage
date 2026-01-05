@@ -137,13 +137,6 @@
     border-radius: 0.5rem;
   }
 
-  .no-debts {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
-    font-size: 1.1rem;
-  }
-
   .debt-sections {
     display: grid;
     gap: 1.5rem;

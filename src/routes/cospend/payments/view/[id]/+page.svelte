@@ -479,15 +479,6 @@
       margin-left: 0;
     }
 
-    .header-content {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .header-actions {
-      justify-content: center;
-    }
-
     .info-grid {
       grid-template-columns: 1fr;
     }

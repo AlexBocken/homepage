@@ -136,7 +136,7 @@ const img_alt = $derived(
 .card:hover,
 .card:focus-within{
 	transform: scale(1.02,1.02);
-	background-color: var(--red);
+	background-color: hsl(from var(--nord6) 100 s l);
 	box-shadow: 0.2em 0.2em 2em 1em rgba(0, 0, 0, 0.3);
 }
 .card:focus{
@@ -295,7 +295,7 @@ const img_alt = $derived(
 			<noscript>
 				<img class="image backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{img_alt}"/>
 			</noscript>
-			<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{img_alt}" on:load={() => isloaded=true}/>
+			<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{img_alt}" onload={() => isloaded=true}/>
 		</div>
 	</div>
 	{#if showFavoriteIndicator && isFavorite}

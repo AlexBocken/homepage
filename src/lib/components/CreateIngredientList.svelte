@@ -730,7 +730,7 @@ h3{
 
 <div class=list_wrapper >
 <h4>{t[lang].portions}</h4>
-<p contenteditable type="text" bind:innerText={portions_local} on:blur={set_portions}></p>
+<p contenteditable type="text" bind:innerText={portions_local} onblur={set_portions}></p>
 
 <h2>{t[lang].ingredients}</h2>
 {#each ingredients as list, list_index}
@@ -739,10 +739,10 @@ h3{
 		<div class="reference-container">
 			<div class="reference-header">
 				<div class="move_buttons_container">
-					<button on:click={() => update_list_position(list_index, 1)} aria-label={t[lang].moveReferenceUpAria}>
+					<button onclick={() => update_list_position(list_index, 1)} aria-label={t[lang].moveReferenceUpAria}>
 						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 					</button>
-					<button on:click={() => update_list_position(list_index, -1)} aria-label={t[lang].moveReferenceDownAria}>
+					<button onclick={() => update_list_position(list_index, -1)} aria-label={t[lang].moveReferenceDownAria}>
 						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 					</button>
 				</div>
@@ -750,7 +750,7 @@ h3{
 					📋 {t[lang].baseRecipe}: {list.name || t[lang].unnamed}
 				</div>
 				<div class="mod_icons">
-					<button class="action_button button_subtle" on:click={() => removeReference(list_index)} aria-label={t[lang].removeReferenceAria}>
+					<button class="action_button button_subtle" onclick={() => removeReference(list_index)} aria-label={t[lang].removeReferenceAria}>
 						<Cross fill="var(--nord11)"></Cross>
 					</button>
 				</div>
@@ -764,24 +764,24 @@ h3{
 						<div class=move_buttons_container>
 							<!-- Empty for consistency -->
 						</div>
-						<button on:click={() => editItemFromReference(list_index, 'before', item_index)} class="ingredient-amount-button">
+						<button onclick={() => editItemFromReference(list_index, 'before', item_index)} class="ingredient-amount-button">
 							{item.amount} {item.unit}
 						</button>
-						<button class="force_wrap ingredient-name-button" on:click={() => editItemFromReference(list_index, 'before', item_index)}>
+						<button class="force_wrap ingredient-name-button" onclick={() => editItemFromReference(list_index, 'before', item_index)}>
 							{@html item.name}
 						</button>
 						<div class="mod_icons">
-							<button class="action_button button_subtle" on:click={() => editItemFromReference(list_index, 'before', item_index)} aria-label={t[lang].editIngredientAria}>
+							<button class="action_button button_subtle" onclick={() => editItemFromReference(list_index, 'before', item_index)} aria-label={t[lang].editIngredientAria}>
 								<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 							</button>
-							<button class="action_button button_subtle" on:click={() => removeItemFromReference(list_index, 'before', item_index)} aria-label={t[lang].removeIngredientAria}>
+							<button class="action_button button_subtle" onclick={() => removeItemFromReference(list_index, 'before', item_index)} aria-label={t[lang].removeIngredientAria}>
 								<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 							</button>
 						</div>
 					{/each}
 				</div>
 			{/if}
-			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'before')}>
+			<button class="action_button button_subtle add-to-reference-button" onclick={() => openAddToReferenceModal(list_index, 'before')}>
 				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> {t[lang].addIngredientBefore}
 			</button>
 
@@ -791,7 +791,7 @@ h3{
 			</div>
 
 			<!-- Items after base recipe -->
-			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'after')}>
+			<button class="action_button button_subtle add-to-reference-button" onclick={() => openAddToReferenceModal(list_index, 'after')}>
 				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> {t[lang].addIngredientAfter}
 			</button>
 			{#if list.itemsAfter && list.itemsAfter.length > 0}
@@ -801,17 +801,17 @@ h3{
 						<div class=move_buttons_container>
 							<!-- Empty for consistency -->
 						</div>
-						<button on:click={() => editItemFromReference(list_index, 'after', item_index)} class="ingredient-amount-button">
+						<button onclick={() => editItemFromReference(list_index, 'after', item_index)} class="ingredient-amount-button">
 							{item.amount} {item.unit}
 						</button>
-						<button class="force_wrap ingredient-name-button" on:click={() => editItemFromReference(list_index, 'after', item_index)}>
+						<button class="force_wrap ingredient-name-button" onclick={() => editItemFromReference(list_index, 'after', item_index)}>
 							{@html item.name}
 						</button>
 						<div class="mod_icons">
-							<button class="action_button button_subtle" on:click={() => editItemFromReference(list_index, 'after', item_index)} aria-label={t[lang].editIngredientAria}>
+							<button class="action_button button_subtle" onclick={() => editItemFromReference(list_index, 'after', item_index)} aria-label={t[lang].editIngredientAria}>
 								<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 							</button>
-							<button class="action_button button_subtle" on:click={() => removeItemFromReference(list_index, 'after', item_index)} aria-label={t[lang].removeIngredientAria}>
+							<button class="action_button button_subtle" onclick={() => removeItemFromReference(list_index, 'after', item_index)} aria-label={t[lang].removeIngredientAria}>
 								<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 							</button>
 						</div>
@@ -823,15 +823,15 @@ h3{
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<h3>
 		<div class=move_buttons_container>
-			<button on:click="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
+			<button onclick="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
 							<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 					</button>
-			<button  on:click="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
+			<button  onclick="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
 							<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 			</button>
 		</div>
 
-		<button on:click="{() => show_modal_edit_subheading_ingredient(list_index)}" class="subheading-button">
+		<button onclick="{() => show_modal_edit_subheading_ingredient(list_index)}" class="subheading-button">
 		{#if list.name }
 			{list.name}
 		{:else}
@@ -839,63 +839,63 @@ h3{
 		{/if}
 		</button>
 		<div class=mod_icons>
-			<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}" aria-label={t[lang].editHeading}>
+			<button class="action_button button_subtle" onclick="{() => show_modal_edit_subheading_ingredient(list_index)}" aria-label={t[lang].editHeading}>
 				<Pen fill=var(--nord1)></Pen>	</button>
-			<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label={t[lang].removeList}>
+			<button class="action_button button_subtle" onclick="{() => remove_list(list_index)}" aria-label={t[lang].removeList}>
 				<Cross fill=var(--nord1)></Cross></button>
 		</div>
 		</h3>
 		<div class=ingredients_grid>
 		{#each list.list as ingredient, ingredient_index (ingredient_index)}
 		<div class=move_buttons_container>
-			<button on:click="{() => update_ingredient_position(list_index, ingredient_index, 1)}" aria-label={t[lang].moveUpAria}>
+			<button onclick="{() => update_ingredient_position(list_index, ingredient_index, 1)}" aria-label={t[lang].moveUpAria}>
                 	        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
                 	</button>
-			<button  on:click="{() => update_ingredient_position(list_index, ingredient_index, -1)}" aria-label={t[lang].moveDownAria}>
+			<button  onclick="{() => update_ingredient_position(list_index, ingredient_index, -1)}" aria-label={t[lang].moveDownAria}>
                 	        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 			</button>
 		</div>
-		<button on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} class="ingredient-amount-button">
+		<button onclick={() => show_modal_edit_ingredient(list_index, ingredient_index)} class="ingredient-amount-button">
 			{ingredient.amount} {ingredient.unit}
 		</button>
-		<button class="force_wrap ingredient-name-button" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
+		<button class="force_wrap ingredient-name-button" onclick={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
 			{@html ingredient.name}
 		</button>
-		<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} aria-label={t[lang].editIngredientAria}>
+		<div class=mod_icons><button class="action_button button_subtle" onclick={() => show_modal_edit_ingredient(list_index, ingredient_index)} aria-label={t[lang].editIngredientAria}>
 			<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
-			<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}" aria-label={t[lang].removeIngredientAria}><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
+			<button class="action_button button_subtle" onclick="{() => remove_ingredient(list_index, ingredient_index)}" aria-label={t[lang].removeIngredientAria}><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
 	{/each}
 		</div>
 	{/if}
 {/each}
 
 <!-- Button to insert base recipe -->
-<button class="insert-base-recipe-button" on:click={() => openSelector(ingredients.length)}>
+<button class="insert-base-recipe-button" onclick={() => openSelector(ingredients.length)}>
 	<Plus fill="white" style="display: inline; width: 1.5em; height: 1.5em; vertical-align: middle;"></Plus>
 	{t[lang].insertBaseRecipe}
 </button>
 </div>
 
 <div class="adder shadow">
-	<input class=category type="text" bind:value={new_ingredient.sublist} placeholder={t[lang].categoryOptional} on:keydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
+	<input class=category type="text" bind:value={new_ingredient.sublist} placeholder={t[lang].categoryOptional} onkeydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
 	<div class=add_ingredient>
-		<input type="text"  placeholder="250..." bind:value={new_ingredient.amount} on:keydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-		<input type="text" placeholder="mL..." bind:value={new_ingredient.unit} on:keydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-		<input type="text" placeholder="Milch..." bind:value={new_ingredient.name} on:keydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
-		<button on:click={() => add_new_ingredient()} class=action_button>
+		<input type="text"  placeholder="250..." bind:value={new_ingredient.amount} onkeydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
+		<input type="text" placeholder="mL..." bind:value={new_ingredient.unit} onkeydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
+		<input type="text" placeholder="Milch..." bind:value={new_ingredient.name} onkeydown={(event) => do_on_key(event, 'Enter', false, add_new_ingredient)}>
+		<button onclick={() => add_new_ingredient()} class=action_button>
 			<Plus fill=white style="width: 2rem; height: 2rem;"></Plus>
 		</button>
 	</div>
 </div>
-<dialog id=edit_ingredient_modal on:cancel={handleIngredientModalCancel}>
+<dialog id=edit_ingredient_modal oncancel={handleIngredientModalCancel}>
 	<h2>{t[lang].editIngredient}</h2>
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_ingredient.sublist} placeholder={t[lang].categoryOptional}>
-	<div class=add_ingredient role="group" on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<input type="text" placeholder="250..." bind:value={edit_ingredient.amount} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<input type="text" placeholder="mL..." bind:value={edit_ingredient.unit} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<input type="text" placeholder="Milch..." bind:value={edit_ingredient.name} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<button class=action_button on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)} on:click={edit_ingredient_and_close_modal}>
+	<div class=add_ingredient role="group">
+	<input type="text" placeholder="250..." bind:value={edit_ingredient.amount} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<input type="text" placeholder="mL..." bind:value={edit_ingredient.unit} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<input type="text" placeholder="Milch..." bind:value={edit_ingredient.name} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)} onclick={edit_ingredient_and_close_modal}>
 		<Check fill=white style="width: 2rem; height: 2rem;"></Check>
 		</button>
 	</div>
@@ -905,8 +905,8 @@ h3{
 <dialog id=edit_subheading_ingredient_modal>
 	<h2>{t[lang].renameCategory}</h2>
 	<div class=heading_wrapper>
-		<input class=heading type="text" bind:value={edit_heading.name} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} >
-		<button class=action_button on:keydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} on:click={edit_subheading_and_close_modal}>
+		<input class=heading type="text" bind:value={edit_heading.name} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} >
+		<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} onclick={edit_subheading_and_close_modal}>
 		<Check fill=white style="width:2rem; height:2rem;"></Check>
 		</button>
 	</div>

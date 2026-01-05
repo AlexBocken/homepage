@@ -142,10 +142,11 @@
       <h3>Custom Split Amounts</h3>
       {#each users as user}
         <div class="split-input">
-          <label>{user}</label>
-          <input 
-            type="number" 
-            step="0.01" 
+          <label for="split_{user}">{user}</label>
+          <input
+            id="split_{user}"
+            type="number"
+            step="0.01"
             name="split_{user}"
             bind:value={splitAmounts[user]}
             placeholder="0.00"
@@ -161,10 +162,11 @@
       <p class="description">Enter personal amounts for each user. The remainder will be split equally.</p>
       {#each users as user}
         <div class="split-input">
-          <label>{user}</label>
-          <input 
-            type="number" 
-            step="0.01" 
+          <label for="personal_{user}">{user}</label>
+          <input
+            id="personal_{user}"
+            type="number"
+            step="0.01"
             min="0"
             name="personal_{user}"
             bind:value={personalAmounts[user]}

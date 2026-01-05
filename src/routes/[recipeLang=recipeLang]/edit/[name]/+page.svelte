@@ -499,8 +499,9 @@ button.action_button{
 					<p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--nord3);"><strong>Bild {i + 1}:</strong> {image.mediapath}</p>
 
 					<div style="margin-bottom: 0.75rem;">
-						<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.9rem;">Alt-Text (DE):</label>
+						<label for="image-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.9rem;">Alt-Text (DE):</label>
 						<input
+							id="image-alt-{i}"
 							type="text"
 							bind:value={image.alt}
 							placeholder="Beschreibung des Bildes für Screenreader (Deutsch)"
@@ -509,8 +510,9 @@ button.action_button{
 					</div>
 
 					<div style="margin-bottom: 0.75rem;">
-						<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.9rem;">Caption (DE):</label>
+						<label for="image-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.9rem;">Caption (DE):</label>
 						<input
+							id="image-caption-{i}"
 							type="text"
 							bind:value={image.caption}
 							placeholder="Bildunterschrift (optional)"

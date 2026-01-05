@@ -325,24 +325,6 @@ font-family: sans-serif;
 	scale: 1.2 !important;
 	box-shadow: 0px 0px 0.4em 0.1em rgba(0,0,0, 0.3) !important;
 }
-input.selected,
-span.selected
-{
-	box-shadow: none !important;
-	background-color: transparent;
-	scale: 1 !important;
-}
-input,
-span
-{
-	display: inline;
-	flex-grow: 1;
-	min-width: 1.5ch;
-	background-color: transparent;
-	border: unset;
-	padding: 0;
-	margin: 0;
-}
 .custom-multiplier {
 	display: flex;
 	align-items: center;
@@ -377,9 +359,6 @@ span
 	margin: 0;
 }
 
-.custom-input[type=number] {
-	-moz-appearance: textfield;
-}
 
 .custom-button {
 	padding: 0;
@@ -447,7 +426,7 @@ h3 a:hover {
 				<input type="hidden" name={key} value={value} />
 			{/if}
 		{/each}
-		<button type="submit" class:selected={multiplier==0.5} on:click={(e) => handleMultiplierClick(e, 0.5)}>{@html "<sup>1</sup>/<sub>2</sub>x"}</button>
+		<button type="submit" class:selected={multiplier==0.5} onclick={(e) => handleMultiplierClick(e, 0.5)}>{@html "<sup>1</sup>/<sub>2</sub>x"}</button>
 	</form>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="1" />
@@ -456,7 +435,7 @@ h3 a:hover {
 				<input type="hidden" name={key} value={value} />
 			{/if}
 		{/each}
-		<button type="submit" class:selected={multiplier==1} on:click={(e) => handleMultiplierClick(e, 1)}>1x</button>
+		<button type="submit" class:selected={multiplier==1} onclick={(e) => handleMultiplierClick(e, 1)}>1x</button>
 	</form>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="1.5" />
@@ -465,7 +444,7 @@ h3 a:hover {
 				<input type="hidden" name={key} value={value} />
 			{/if}
 		{/each}
-		<button type="submit" class:selected={multiplier==1.5} on:click={(e) => handleMultiplierClick(e, 1.5)}>{@html "<sup>3</sup>/<sub>2</sub>x"}</button>
+		<button type="submit" class:selected={multiplier==1.5} onclick={(e) => handleMultiplierClick(e, 1.5)}>{@html "<sup>3</sup>/<sub>2</sub>x"}</button>
 	</form>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="2" />
@@ -474,7 +453,7 @@ h3 a:hover {
 				<input type="hidden" name={key} value={value} />
 			{/if}
 		{/each}
-		<button type="submit" class:selected={multiplier==2} on:click={(e) => handleMultiplierClick(e, 2)}>2x</button>
+		<button type="submit" class:selected={multiplier==2} onclick={(e) => handleMultiplierClick(e, 2)}>2x</button>
 	</form>
 	<form method="get" style="display: inline;">
 		<input type="hidden" name="multiplier" value="3" />
@@ -483,9 +462,9 @@ h3 a:hover {
 				<input type="hidden" name={key} value={value} />
 			{/if}
 		{/each}
-		<button type="submit" class:selected={multiplier==3} on:click={(e) => handleMultiplierClick(e, 3)}>3x</button>
+		<button type="submit" class:selected={multiplier==3} onclick={(e) => handleMultiplierClick(e, 3)}>3x</button>
 	</form>
-	<form method="get" style="display: inline;" class="custom-multiplier" on:submit={handleCustomSubmit}>
+	<form method="get" style="display: inline;" class="custom-multiplier" onsubmit={handleCustomSubmit}>
 		{#each Array.from(currentParams.entries()) as [key, value]}
 			{#if key !== 'multiplier'}
 				<input type="hidden" name={key} value={value} />
@@ -499,7 +478,7 @@ h3 a:hover {
 			placeholder="…" 
 			class="custom-input"
 			value={multiplier != 0.5 && multiplier != 1 && multiplier != 1.5 && multiplier != 2 && multiplier != 3 ? multiplier : ''}
-			on:input={handleCustomInput}
+			oninput={handleCustomInput}
 		/>
 		<button type="submit" class="custom-button">x</button>
 	</form>
