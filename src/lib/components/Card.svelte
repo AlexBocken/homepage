@@ -32,6 +32,11 @@ const img_name = $derived(
 	recipe.images?.[0]?.mediapath ||
 	`${recipe.germanShortName || recipe.short_name}.webp`
 );
+
+// Get alt text from images array
+const img_alt = $derived(
+	recipe.images?.[0]?.alt || recipe.name
+);
 </script>
 <style>
 .card_anchor{
@@ -288,9 +293,9 @@ const img_name = $derived(
 	<div class=div_div_image >
 		<div class=div_image style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
 			<noscript>
-				<img class="image backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{recipe.alt}"/>
+				<img class="image backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{img_alt}"/>
 			</noscript>
-			<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{recipe.alt}" on:load={() => isloaded=true}/>
+			<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{img_alt}" on:load={() => isloaded=true}/>
 		</div>
 	</div>
 	{#if showFavoriteIndicator && isFavorite}

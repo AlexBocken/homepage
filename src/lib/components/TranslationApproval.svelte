@@ -4,6 +4,7 @@
 	import TranslationFieldComparison from './TranslationFieldComparison.svelte';
 	import CreateIngredientList from './CreateIngredientList.svelte';
 	import CreateStepList from './CreateStepList.svelte';
+	import GenerateAltTextButton from './GenerateAltTextButton.svelte';
 
 	export let germanData: any;
 	export let englishData: TranslatedRecipeType | null = null;
@@ -17,8 +18,21 @@
 	let errorMessage: string = '';
 	let validationErrors: string[] = [];
 
+	// Helper function to initialize images array for English translation
+	function initializeImagesArray(germanImages: any[]): any[] {
+		if (!germanImages || germanImages.length === 0) return [];
+		return germanImages.map(() => ({
+			alt: '',
+			caption: ''
+		}));
+	}
+
 	// Editable English data (clone of englishData or initialized from germanData)
-	let editableEnglish: any = englishData ? { ...englishData } : null;
+	let editableEnglish: any = englishData ? {
+		...englishData,
+		// Ensure images array exists and matches German images length
+		images: englishData.images || initializeImagesArray(germanData.images || [])
+	} : null;
 
 	// Store old recipe data for granular change detection
 	export let oldRecipeData: any = null;
@@ -67,7 +81,8 @@
 					...germanData,
 					translationStatus: 'pending',
 					ingredients: JSON.parse(JSON.stringify(germanData.ingredients || [])),
-					instructions: JSON.parse(JSON.stringify(germanData.instructions || []))
+					instructions: JSON.parse(JSON.stringify(germanData.instructions || [])),
+					images: editableEnglish?.images || initializeImagesArray(germanData.images || [])
 				};
 			}
 			checkingBaseRecipes = false;
@@ -128,7 +143,8 @@
 						return translation ? { ...inst, name: translation.enName } : inst;
 					}
 					return inst;
-				})
+				}),
+				images: initializeImagesArray(germanData.images || [])
 			};
 		} else {
 			// Existing English translation - merge German structure with English translations
@@ -182,7 +198,12 @@
 						// If no English translation exists, use German structure (will be translated later)
 						return germanInst;
 					}
-				})
+				}),
+				// Sync images array - keep existing English alt/caption or initialize empty
+				images: germanData.images?.map((germanImg: any, index: number) => {
+					const existingEnImage = editableEnglish.images?.[index];
+					return existingEnImage || { alt: '', caption: '' };
+				}) || []
 			};
 		}
 	}
@@ -755,6 +776,73 @@ button:disabled {
 						readonly={false}
 						on:change={handleFieldChange}
 					/>
+				</div>
+			{/if}
+
+			<!-- Images Section -->
+			{#if germanData.images && germanData.images.length > 0}
+				<div class="field-section" style="background-color: var(--nord13); padding: 1rem; border-radius: 5px; margin-top: 1.5rem;">
+					<h4 style="margin-top: 0; color: var(--nord0);">🖼️ Images - English Alt Texts & Captions</h4>
+					{#each germanData.images as germanImage, i}
+						<div style="background-color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 5px; border: 2px solid var(--nord9);">
+							<div style="display: flex; gap: 1rem; align-items: start;">
+								<img
+									src="https://bocken.org/static/rezepte/thumb/{germanImage.mediapath}"
+									alt={germanImage.alt || 'Recipe image'}
+									style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;"
+								/>
+								<div style="flex: 1;">
+									<p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--nord3);"><strong>Image {i + 1}:</strong> {germanImage.mediapath}</p>
+
+									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+										<div>
+											<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Alt-Text:</label>
+											<input
+												type="text"
+												value={germanImage.alt || ''}
+												disabled
+												style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord4); border-radius: 3px; background-color: var(--nord5); color: var(--nord2); font-size: 0.85rem;"
+											/>
+										</div>
+										<div>
+											<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Alt-Text:</label>
+											<input
+												type="text"
+												bind:value={editableEnglish.images[i].alt}
+												placeholder="English image description for screen readers"
+												style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord8); border-radius: 3px; font-size: 0.85rem;"
+											/>
+										</div>
+									</div>
+
+									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+										<div>
+											<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Caption:</label>
+											<input
+												type="text"
+												value={germanImage.caption || ''}
+												disabled
+												style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord4); border-radius: 3px; background-color: var(--nord5); color: var(--nord2); font-size: 0.85rem;"
+											/>
+										</div>
+										<div>
+											<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Caption:</label>
+											<input
+												type="text"
+												bind:value={editableEnglish.images[i].caption}
+												placeholder="English caption (optional)"
+												style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord8); border-radius: 3px; font-size: 0.85rem;"
+											/>
+										</div>
+									</div>
+
+									<div style="margin-top: 0.75rem;">
+										<GenerateAltTextButton shortName={germanData.short_name} imageIndex={i} />
+									</div>
+								</div>
+							</div>
+						</div>
+					{/each}
 				</div>
 			{/if}
 
