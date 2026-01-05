@@ -100,9 +100,9 @@
 	--color-border-hover: var(--nord3);
 
 	/* Link Colors */
-	--color-link: var(--nord11);
+	--color-link: var(--nord10);
 	--color-link-visited: var(--nord15);
-	--color-link-hover: var(--color-accent-hover);
+	--color-link-hover: var(--nord9);
 
 	/* Status Colors */
 	--color-success: var(--nord14);
@@ -168,9 +168,9 @@
 		--color-border-hover: var(--nord3);
 
 		/* Link Colors */
-		--color-link: #d07179;
+		--color-link: var(--nord8);
 		--color-link-visited: #c89fb6;
-		--color-link-hover: var(--color-accent-hover);
+		--color-link-hover: var(--nord7);
 	}
 }
 

@@ -131,7 +131,7 @@ nav[hidden]{
 :global(.entry:focus-visible)
 {
 	cursor: pointer;
-	color: var(--red);
+	color: var(--nord8);
 }
 :global(.site_header) {
 	padding-block: 1.5rem;
@@ -151,7 +151,7 @@ nav[hidden]{
 	position: absolute;
 	bottom: 1.2rem;
 	height: 2px;
-	background-color: var(--red);
+	background-color: var(--nord8);
 	transition: left 300ms ease-out, width 300ms ease-out;
 	pointer-events: none;
 }
@@ -300,7 +300,7 @@ footer{
 	}
 	:global(.nav_site .site_header a.active) {
 		text-decoration: underline;
-		text-decoration-color: var(--red);
+		text-decoration-color: var(--nord8);
 		text-decoration-thickness: 2px;
 		text-underline-offset: 0.3rem;
 	}
@@ -310,14 +310,14 @@ footer{
 <div>
 <span class=button_wrapper_shadow></span>
 <div class=button_wrapper>
-<a href="/"><Symbol></Symbol></a>
+<a href="/" aria-label="Home"><Symbol></Symbol></a>
 <div class="right-buttons">
 	{@render language_selector_mobile?.()}
-	<button class=nav_button onclick={() => {toggle_sidebar()}}><svg xmlns="http://www.w3.org/2000/svg" height="0.5em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></button>
+	<button class=nav_button onclick={() => {toggle_sidebar()}} aria-label="Toggle navigation menu"><svg xmlns="http://www.w3.org/2000/svg" height="0.5em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></button>
 </div>
 </div>
 <nav hidden class=nav_site>
-	<a class=entry href="/"><Symbol></Symbol></a>
+	<a class=entry href="/" aria-label="Home"><Symbol></Symbol></a>
 	<div class="links-wrapper">
 		{@render links?.()}
 		<div class="active-underline" class:no-transition={disableTransition} style="left: {underlineLeft}px; width: {underlineWidth}px;"></div>
@@ -330,7 +330,9 @@ footer{
 	</div>
 </nav>
 
+<main>
 {@render children?.()}
+</main>
 
 </div>
 <footer>

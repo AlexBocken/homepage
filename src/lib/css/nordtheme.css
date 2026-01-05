@@ -29,11 +29,17 @@
 }
 
 a:not(:visited){
-	color: var(--red);
+	color: var(--blue);
 }
 
 a:visited{
 	color: var(--purple);
+}
+
+@media (prefers-color-scheme: dark) {
+	a:not(:visited){
+		color: var(--nord8);
+	}
 }
 
 *{

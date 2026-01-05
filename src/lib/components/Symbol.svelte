@@ -12,7 +12,7 @@
 	svg:hover,
 	svg:focus-visible
 	{
-		--icon_fill: var(--red);
+		--icon_fill: var(--nord8);
 	}
 	svg g.leaf path,
 	.fill

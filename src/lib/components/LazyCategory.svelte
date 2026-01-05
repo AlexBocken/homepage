@@ -58,6 +58,7 @@
 	<div
 		bind:this={containerRef}
 		style="height: {estimatedHeight}px; min-height: {estimatedHeight}px;"
+		role="status"
 		aria-label="Loading {title}"
 	>
 		<!-- Empty placeholder - IntersectionObserver will trigger when this enters viewport -->
