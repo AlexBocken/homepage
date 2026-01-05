@@ -315,7 +315,7 @@ font-family: sans-serif;
 }
 .multipliers :is(button, div):is(:hover, :focus-within){
 	scale: 1.2;
-	background-color: var(--orange);
+	background-color: var(--nord8);
 	box-shadow: 0px 0px 0.5em 0.1em rgba(0,0,0, 0.3);
 }
 .selected{
@@ -402,21 +402,33 @@ span
 .custom-multiplier:hover,
 .custom-multiplier:focus-within {
 	scale: 1.2;
-	background-color: var(--orange);
+	background-color: var(--nord8);
 	box-shadow: 0px 0px 0.5em 0.1em rgba(0,0,0, 0.3);
 }
 
 /* Base recipe reference link styling */
 h3 a {
-	color: var(--nord11);
+	color: var(--nord10);
 	text-decoration: underline;
-	text-decoration-color: var(--nord11);
+	text-decoration-color: var(--nord10);
 }
 
 h3 a:hover {
-	color: var(--nord11);
+	color: var(--nord9);
 	text-decoration: underline;
-	text-decoration-color: var(--nord11);
+	text-decoration-color: var(--nord9);
+}
+
+@media (prefers-color-scheme: dark) {
+	h3 a {
+		color: var(--nord8);
+		text-decoration-color: var(--nord8);
+	}
+
+	h3 a:hover {
+		color: var(--nord7);
+		text-decoration-color: var(--nord7);
+	}
 }
 </style>
 {#if data.ingredients}
