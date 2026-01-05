@@ -1,4 +1,8 @@
 const MS_PER_DAY = 86400000
+
+/**
+ * @param {number} a
+ */
 function mulberry32(a) {
 	return function() {
 	  var t = a += 0x6D2B79F5;
@@ -8,6 +12,11 @@ function mulberry32(a) {
 	}
 }
 
+/**
+ * @template T
+ * @param {T[]} array
+ * @returns {T[]}
+ */
 export function rand_array(array){
 	let time = new Date()
 	const seed = Math.floor(time.getTime()/MS_PER_DAY)
