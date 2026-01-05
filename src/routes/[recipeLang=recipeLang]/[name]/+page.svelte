@@ -44,6 +44,11 @@
 	const hero_img_src = $derived("https://bocken.org/static/rezepte/full/" + img_filename);
 	const placeholder_src = $derived("https://bocken.org/static/rezepte/placeholder/" + img_filename);
 
+	// Get alt text from images array (with fallback to recipe name)
+	const img_alt = $derived(
+		data.images?.[0]?.alt || stripHtmlTags(data.name)
+	);
+
     	const months = $derived(isEnglish
 		? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 		: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]);
@@ -318,7 +323,7 @@ h2{
 	<link rel="alternate" hreflang="x-default" href="https://bocken.org/rezepte/{data.germanShortName}" />
 </svelte:head>
 
-<TitleImgParallax src={hero_img_src} {placeholder_src}>
+<TitleImgParallax src={hero_img_src} {placeholder_src} alt={img_alt}>
 	<div class=title>
 		<a class="category" href='/{data.recipeLang}/category/{data.category}'>{data.category}</a>
 		<a class="icon" href='/{data.recipeLang}/icon/{data.icon}'>{data.icon}</a>

@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from "svelte";
 
-	let { src, placeholder_src } = $props();
+	let { src, placeholder_src, alt = "" } = $props();
 
 	let isloaded = $state(false);
 	let isredirected = $state(false);
@@ -179,12 +179,12 @@ dialog button{
     	<div class:zoom-in={isloaded && !isredirected} onclick={show_dialog_img}>
 		<div class=placeholder style="background-image:url({placeholder_src})" >
 			<div class=placeholder_blur>
-			<img class="image" class:unblur={isloaded} {src} onload={() => {isloaded=true}}  alt=""/>
+			<img class="image" class:unblur={isloaded} {src} onload={() => {isloaded=true}}  {alt}/>
 			</div>
 		</div>
 		<noscript>
 			<div class=placeholder style="background-image:url({placeholder_src})" >
-				<img class="image unblur" {src} onload={() => {isloaded=true}}  alt=""/>
+				<img class="image unblur" {src} onload={() => {isloaded=true}}  {alt}/>
 			</div>
 		</noscript>
 	</div>
@@ -194,7 +194,7 @@ dialog button{
 
 <dialog id=img_carousel>
 	<div>
-	<img class:unblur={isloaded} {src} alt="">
+	<img class:unblur={isloaded} {src} {alt}>
 		<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, close_dialog_img)} onclick={close_dialog_img}>
 	<Cross fill=white width=2rem height=2rem></Cross>
 		</button>

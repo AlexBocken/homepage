@@ -3,6 +3,7 @@
 	import Cross from '$lib/assets/icons/Cross.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
 	import TranslationApproval from '$lib/components/TranslationApproval.svelte';
+	import GenerateAltTextButton from '$lib/components/GenerateAltTextButton.svelte';
 	import '$lib/css/action_button.css'
 	import '$lib/css/nordtheme.css'
 	import { redirect } from '@sveltejs/kit';
@@ -466,10 +467,64 @@ button.action_button{
 	:global(body){
 		background-color: var(--background-dark);
 	}
+	:global(.image-management-section) {
+		background-color: var(--nord1) !important;
+	}
+	:global(.image-item) {
+		background-color: var(--nord0) !important;
+		border-color: var(--nord2) !important;
+	}
+	:global(.image-item input) {
+		background-color: var(--nord2) !important;
+		color: white !important;
+		border-color: var(--nord3) !important;
+	}
 }
 </style>
 <h1>Rezept editieren</h1>
 <CardAdd {card_data} {image_preview_url} ></CardAdd>
+
+{#if images && images.length > 0}
+<div class="image-management-section" style="background-color: var(--nord6); padding: 1.5rem; margin: 2rem auto; max-width: 800px; border-radius: 10px;">
+	<h3 style="margin-top: 0;">🖼️ Bilder & Alt-Texte</h3>
+	{#each images as image, i}
+		<div class="image-item" style="background-color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 5px; border: 1px solid var(--nord4);">
+			<div style="display: flex; gap: 1rem; align-items: start;">
+				<img
+					src="https://bocken.org/static/rezepte/thumb/{image.mediapath}"
+					alt={image.alt || 'Recipe image'}
+					style="width: 120px; height: 120px; object-fit: cover; border-radius: 5px;"
+				/>
+				<div style="flex: 1;">
+					<p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--nord3);"><strong>Bild {i + 1}:</strong> {image.mediapath}</p>
+
+					<div style="margin-bottom: 0.75rem;">
+						<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.9rem;">Alt-Text (DE):</label>
+						<input
+							type="text"
+							bind:value={image.alt}
+							placeholder="Beschreibung des Bildes für Screenreader (Deutsch)"
+							style="width: 100%; padding: 0.5rem; border: 1px solid var(--nord4); border-radius: 3px;"
+						/>
+					</div>
+
+					<div style="margin-bottom: 0.75rem;">
+						<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.9rem;">Caption (DE):</label>
+						<input
+							type="text"
+							bind:value={image.caption}
+							placeholder="Bildunterschrift (optional)"
+							style="width: 100%; padding: 0.5rem; border: 1px solid var(--nord4); border-radius: 3px;"
+						/>
+					</div>
+
+					<GenerateAltTextButton shortName={data.recipe.short_name} imageIndex={i} />
+				</div>
+			</div>
+		</div>
+	{/each}
+</div>
+{/if}
 
 <h3>Kurzname (für URL):</h3>
 <input bind:value={short_name} placeholder="Kurzname"/>
