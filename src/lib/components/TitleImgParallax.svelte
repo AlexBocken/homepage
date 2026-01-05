@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from "svelte";
 
-	let { src, placeholder_src, alt = "" } = $props();
+	let { src, placeholder_src, alt = "", children } = $props();
 
 	let isloaded = $state(false);
 	let isredirected = $state(false);
@@ -189,7 +189,7 @@ dialog button{
 		</noscript>
 	</div>
     </figure>
-    <div class=content><slot></slot></div>
+    <div class=content>{@render children()}</div>
 </section>
 
 <dialog id=img_carousel>

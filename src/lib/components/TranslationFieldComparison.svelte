@@ -127,15 +127,15 @@ textarea.field-value {
 		<textarea
 			class="field-value"
 			value={englishValue}
-			on:input={handleInput}
+			oninput={handleInput}
 			placeholder="Enter {label.toLowerCase()}..."
-		/>
+		></textarea>
 	{:else}
 		<input
 			type="text"
 			class="field-value"
 			value={englishValue}
-			on:input={handleInput}
+			oninput={handleInput}
 			placeholder="Enter {label.toLowerCase()}..."
 		/>
 	{/if}

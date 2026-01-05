@@ -796,8 +796,9 @@ button:disabled {
 
 									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
 										<div>
-											<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Alt-Text:</label>
+											<label for="german-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Alt-Text:</label>
 											<input
+												id="german-alt-{i}"
 												type="text"
 												value={germanImage.alt || ''}
 												disabled
@@ -805,8 +806,9 @@ button:disabled {
 											/>
 										</div>
 										<div>
-											<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Alt-Text:</label>
+											<label for="english-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Alt-Text:</label>
 											<input
+												id="english-alt-{i}"
 												type="text"
 												bind:value={editableEnglish.images[i].alt}
 												placeholder="English image description for screen readers"
@@ -817,8 +819,9 @@ button:disabled {
 
 									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
 										<div>
-											<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Caption:</label>
+											<label for="german-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Caption:</label>
 											<input
+												id="german-caption-{i}"
 												type="text"
 												value={germanImage.caption || ''}
 												disabled
@@ -826,8 +829,9 @@ button:disabled {
 											/>
 										</div>
 										<div>
-											<label style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Caption:</label>
+											<label for="english-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Caption:</label>
 											<input
+												id="english-caption-{i}"
 												type="text"
 												bind:value={editableEnglish.images[i].caption}
 												placeholder="English caption (optional)"

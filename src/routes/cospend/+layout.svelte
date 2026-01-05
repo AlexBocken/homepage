@@ -9,14 +9,10 @@
   import UserHeader from '$lib/components/UserHeader.svelte';
 
   let { data, children } = $props();
-  
-  let showModal = false;
-  let paymentId = null;
-  let user;
-  
-  if (data.session) {
-    user = data.session.user;
-  }
+
+  let showModal = $state(false);
+  let paymentId = $state(null);
+  let user = $state(data.session?.user);
 
   $effect(() => {
     // Check if URL contains payment view route OR if we have paymentId in state
