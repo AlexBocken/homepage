@@ -18,7 +18,7 @@
 
 	let inputValue = $state('');
 	let dropdownOpen = $state(false);
-	let dropdownElement = null;
+	let dropdownElement = $state(null);
 
 	// Filter tags based on input
 	const filteredTags = $derived(

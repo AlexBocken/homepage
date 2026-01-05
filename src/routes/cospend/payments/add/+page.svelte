@@ -803,16 +803,8 @@
     display: block;
   }
 
-  .js-enhanced {
-    display: none;
-  }
-
   :global(body.js-loaded) .no-js-only {
     display: none;
-  }
-
-  :global(body.js-loaded) .js-enhanced {
-    display: block;
   }
 
   .manual-users textarea {

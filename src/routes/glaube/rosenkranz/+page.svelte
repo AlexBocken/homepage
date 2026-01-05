@@ -794,18 +794,6 @@ onMount(() => {
 	font-size: 1.3rem;
 }
 
-.prayer-text {
-	font-size: 1.15rem;
-	line-height: 1.8;
-	color: var(--nord4);
-}
-
-@media(prefers-color-scheme: light) {
-	.prayer-text {
-		color: var(--nord0);
-	}
-}
-
 /* Prayer component bilingual styling */
 .prayer-section :global(p) {
 	text-align: center;
@@ -1045,21 +1033,6 @@ h1 {
 }
 
 /* Mystery description styling */
-.mystery-description {
-	margin: 1.5rem 0 1.5rem 0;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-	align-items: center;
-}
-
-.mystery-title {
-	font-weight: 700;
-	color: var(--nord10);
-	font-size: 1.1rem;
-	text-align: center;
-}
-
 .decade-buttons {
 	display: flex;
 	flex-direction: row;
@@ -1533,8 +1506,7 @@ Die Integration der lichtreichen Geheimnisse hat einige Kontroversen um sich.
 Ohne diese 5 Dekaden sind die 150 Gebete der drei Sätzen an Geheimnissen eine direkte Parallele zu den 150 Psalmen der Bibel.
 Die Gottgegebenheit der lichtreichen Geheimnisse ist auch umstritten.
 </p>
-Der Plan ohne lichtreiche Geheimnisse ist wie folgt:
-<p>
+<p>Der Plan ohne lichtreiche Geheimnisse ist wie folgt:</p>
 <div class=table>
 <table>
 	<tbody>

@@ -317,10 +317,6 @@
     color: var(--red);
   }
 
-  .even {
-    color: var(--nord3);
-  }
-
   .actions {
     display: flex;
     gap: 1rem;
@@ -617,16 +613,6 @@
     }
   }
 
-  .you-badge {
-    background-color: var(--blue);
-    color: white;
-    padding: 0.125rem 0.5rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    display: inline-block;
-  }
-
   .activity-amount {
     font-weight: bold;
     font-size: 1rem;
@@ -645,7 +631,7 @@
     flex-wrap: wrap;
   }
 
-  .paid-by, .payment-date {
+  .payment-date {
     color: var(--nord3);
     font-size: 0.9rem;
   }
@@ -659,7 +645,7 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .paid-by, .payment-date {
+    .payment-date {
       color: var(--nord4);
     }
 

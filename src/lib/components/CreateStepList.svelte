@@ -790,10 +790,10 @@ h3{
 		<div class="reference-container">
 			<div class="reference-header">
 				<div class="move_buttons_container">
-					<button on:click={() => update_list_position(list_index, 1)} aria-label={t[lang].moveReferenceUpAria}>
+					<button onclick={() => update_list_position(list_index, 1)} aria-label={t[lang].moveReferenceUpAria}>
 						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 					</button>
-					<button on:click={() => update_list_position(list_index, -1)} aria-label={t[lang].moveReferenceDownAria}>
+					<button onclick={() => update_list_position(list_index, -1)} aria-label={t[lang].moveReferenceDownAria}>
 						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 					</button>
 				</div>
@@ -801,7 +801,7 @@ h3{
 					📋 {t[lang].baseRecipe}: {list.name || t[lang].unnamed}
 				</div>
 				<div class="mod_icons">
-					<button class="action_button button_subtle" on:click={() => removeReference(list_index)} aria-label={t[lang].removeReferenceAria}>
+					<button class="action_button button_subtle" onclick={() => removeReference(list_index)} aria-label={t[lang].removeReferenceAria}>
 						<Cross fill="var(--nord11)"></Cross>
 					</button>
 				</div>
@@ -817,14 +817,14 @@ h3{
 								<div class="move_buttons_container step_move_buttons">
 									<!-- Empty for consistency -->
 								</div>
-								<button on:click={() => editStepFromReference(list_index, 'before', step_index)} class="step-button" style="flex-grow: 1;">
+								<button onclick={() => editStepFromReference(list_index, 'before', step_index)} class="step-button" style="flex-grow: 1;">
 									{@html step}
 								</button>
 								<div>
-									<button class="action_button button_subtle" on:click={() => editStepFromReference(list_index, 'before', step_index)} aria-label={t[lang].editStepAria}>
+									<button class="action_button button_subtle" onclick={() => editStepFromReference(list_index, 'before', step_index)} aria-label={t[lang].editStepAria}>
 										<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 									</button>
-									<button class="action_button button_subtle" on:click={() => removeStepFromReference(list_index, 'before', step_index)} aria-label={t[lang].removeStepAria}>
+									<button class="action_button button_subtle" onclick={() => removeStepFromReference(list_index, 'before', step_index)} aria-label={t[lang].removeStepAria}>
 										<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 									</button>
 								</div>
@@ -833,7 +833,7 @@ h3{
 					{/each}
 				</ol>
 			{/if}
-			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'before')}>
+			<button class="action_button button_subtle add-to-reference-button" onclick={() => openAddToReferenceModal(list_index, 'before')}>
 				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> {t[lang].addStepBefore}
 			</button>
 
@@ -843,7 +843,7 @@ h3{
 			</div>
 
 			<!-- Steps after base recipe -->
-			<button class="action_button button_subtle add-to-reference-button" on:click={() => openAddToReferenceModal(list_index, 'after')}>
+			<button class="action_button button_subtle add-to-reference-button" onclick={() => openAddToReferenceModal(list_index, 'after')}>
 				<Plus fill="var(--nord9)" height="1em" width="1em"></Plus> {t[lang].addStepAfter}
 			</button>
 			{#if list.stepsAfter && list.stepsAfter.length > 0}
@@ -855,14 +855,14 @@ h3{
 								<div class="move_buttons_container step_move_buttons">
 									<!-- Empty for consistency -->
 								</div>
-								<button on:click={() => editStepFromReference(list_index, 'after', step_index)} class="step-button" style="flex-grow: 1;">
+								<button onclick={() => editStepFromReference(list_index, 'after', step_index)} class="step-button" style="flex-grow: 1;">
 									{@html step}
 								</button>
 								<div>
-									<button class="action_button button_subtle" on:click={() => editStepFromReference(list_index, 'after', step_index)} aria-label={t[lang].editStepAria}>
+									<button class="action_button button_subtle" onclick={() => editStepFromReference(list_index, 'after', step_index)} aria-label={t[lang].editStepAria}>
 										<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 									</button>
-									<button class="action_button button_subtle" on:click={() => removeStepFromReference(list_index, 'after', step_index)} aria-label={t[lang].removeStepAria}>
+									<button class="action_button button_subtle" onclick={() => removeStepFromReference(list_index, 'after', step_index)} aria-label={t[lang].removeStepAria}>
 										<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 									</button>
 								</div>
@@ -876,23 +876,23 @@ h3{
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<h3>
 		<div class=move_buttons_container>
-			<button on:click="{() => update_list_position(list_index, 1)}" aria-label={t[lang].moveListUpAria}>
+			<button onclick="{() => update_list_position(list_index, 1)}" aria-label={t[lang].moveListUpAria}>
 							<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 					</button>
-			<button  on:click="{() => update_list_position(list_index, -1)}" aria-label={t[lang].moveListDownAria}>
+			<button  onclick="{() => update_list_position(list_index, -1)}" aria-label={t[lang].moveListDownAria}>
 							<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 			</button>
 		</div>
-		<button on:click={() => show_modal_edit_subheading_step(list_index)} class="subheading-button">
+		<button onclick={() => show_modal_edit_subheading_step(list_index)} class="subheading-button">
 		{#if list.name}
 			{list.name}
 		{:else}
 			{t[lang].empty}
 		{/if}
 		</button>
-		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_step(list_index)}" aria-label={t[lang].editHeading}>
+		<button class="action_button button_subtle" onclick="{() => show_modal_edit_subheading_step(list_index)}" aria-label={t[lang].editHeading}>
 				<Pen fill=var(--nord1)></Pen>	</button>
-			<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}" aria-label={t[lang].removeList}>
+			<button class="action_button button_subtle" onclick="{() => remove_list(list_index)}" aria-label={t[lang].removeList}>
 					<Cross fill=var(--nord1)></Cross>
 		</button>
 	</h3>
@@ -901,21 +901,21 @@ h3{
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<li>
 			<div class="move_buttons_container step_move_buttons">
-				<button on:click="{() => update_step_position(list_index, step_index, 1)}" aria-label={t[lang].moveUpAria}>
+				<button onclick="{() => update_step_position(list_index, step_index, 1)}" aria-label={t[lang].moveUpAria}>
 		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
 		                </button>
-				<button  on:click="{() => update_step_position(list_index, step_index, -1)}" aria-label={t[lang].moveDownAria}>
+				<button  onclick="{() => update_step_position(list_index, step_index, -1)}" aria-label={t[lang].moveDownAria}>
 		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
 				</button>
 			</div>
 			<div>
-				<button on:click={() => show_modal_edit_step(list_index, step_index)} class="step-button">
+				<button onclick={() => show_modal_edit_step(list_index, step_index)} class="step-button">
 					{@html step}
 				</button>
-			<div><button class="action_button button_subtle" on:click={() => show_modal_edit_step(list_index, step_index)} aria-label={t[lang].editStepAria}>
+			<div><button class="action_button button_subtle" onclick={() => show_modal_edit_step(list_index, step_index)} aria-label={t[lang].editStepAria}>
 				<Pen fill=var(--nord1)></Pen>
 		</button>
-		<button class="action_button button_subtle" on:click="{() => remove_step(list_index, step_index)}" aria-label={t[lang].removeStepAria}>
+		<button class="action_button button_subtle" onclick="{() => remove_step(list_index, step_index)}" aria-label={t[lang].removeStepAria}>
 			<Cross fill=var(--nord1)></Cross>
 		</button>
 			</div></div>
@@ -926,39 +926,40 @@ h3{
 {/each}
 
 <!-- Button to insert base recipe -->
-<button class="insert-base-recipe-button" on:click={() => openSelector(instructions.length)}>
+<button class="insert-base-recipe-button" onclick={() => openSelector(instructions.length)}>
 	<Plus fill="white" style="display: inline; width: 1.5em; height: 1.5em; vertical-align: middle;"></Plus>
 	{t[lang].insertBaseRecipe}
 </button>
 </div>
 
 <div class='adder shadow'>
-<input class=category type="text" bind:value={new_step.name} placeholder={t[lang].categoryOptional} on:keydown={(event) => do_on_key(event, 'Enter', false , add_new_step)} >
+<input class=category type="text" bind:value={new_step.name} placeholder={t[lang].categoryOptional} onkeydown={(event) => do_on_key(event, 'Enter', false , add_new_step)} >
 <div class=add_step>
-	<p id=step contenteditable on:focus='{clear_step}' on:blur={add_placeholder} bind:innerText={new_step.step} on:keydown={(event) => do_on_key(event, 'Enter', true , add_new_step)}></p>
-	<button on:click={() => add_new_step()} class=action_button>
+	<p id=step contenteditable onfocus='{clear_step}' onblur={add_placeholder} bind:innerText={new_step.step} onkeydown={(event) => do_on_key(event, 'Enter', true , add_new_step)}></p>
+	<button onclick={() => add_new_step()} class=action_button>
 		<Plus fill=white style="height: 2rem; width: 2rem"></Plus>
 	</button>
 
 </div>
 </div>
-<dialog id=edit_step_modal on:cancel={handleStepModalCancel}>
+<dialog id=edit_step_modal oncancel={handleStepModalCancel}>
 	<h2>{t[lang].editStep}</h2>
 	<div class=adder>
-	<input class=category type="text" bind:value={edit_step.name} placeholder={t[lang].subcategoryOptional} on:keydown={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
+	<input class=category type="text" bind:value={edit_step.name} placeholder={t[lang].subcategoryOptional} onkeydown={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
 	<div class=add_step>
-		<p id=step contenteditable bind:innerText={edit_step.step} on:keydown={(event) => do_on_key(event, 'Enter', true , edit_step_and_close_modal)}></p>
-	<button class=action_button on:click="{() => edit_step_and_close_modal()}" >
+		<p id=step contenteditable bind:innerText={edit_step.step} onkeydown={(event) => do_on_key(event, 'Enter', true , edit_step_and_close_modal)}></p>
+	<button class=action_button onclick="{() => edit_step_and_close_modal()}" >
 		<Check fill=white style="height: 2rem; width: 2rem"></Check>
 	</button>
 </div>
+	</div>
 </dialog>
 
 <dialog id=edit_subheading_steps_modal>
 	<h2>{t[lang].renameCategory}</h2>
 	<div class=heading_wrapper>
-		<input class="heading" type="text" bind:value={edit_heading.name} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_steps_and_close_modal)}>
-		<button on:click={edit_subheading_steps_and_close_modal} class=action_button>
+		<input class="heading" type="text" bind:value={edit_heading.name} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_steps_and_close_modal)}>
+		<button onclick={edit_subheading_steps_and_close_modal} class=action_button>
 		<Check fill=white style="height: 2rem; width: 2rem"></Check>
 		</button>
 	</div>
