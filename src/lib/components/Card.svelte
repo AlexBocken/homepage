@@ -136,7 +136,7 @@ const img_alt = $derived(
 .card:hover,
 .card:focus-within{
 	transform: scale(1.02,1.02);
-	background-color: hsl(from var(--nord6) 100 s l);
+	background-color: var(--red);
 	box-shadow: 0.2em 0.2em 2em 1em rgba(0, 0, 0, 0.3);
 }
 .card:focus{
