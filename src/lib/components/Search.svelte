@@ -345,7 +345,7 @@ scale: 0.8 0.8;
   </button>
 </form>
 
-{#if showFilters}
+<div style="visibility: {showFilters ? 'visible' : 'hidden'}; pointer-events: {showFilters ? 'auto' : 'none'};">
   <FilterPanel
     availableCategories={categories}
     {availableTags}
@@ -363,4 +363,4 @@ scale: 0.8 0.8;
     onSeasonChange={handleSeasonChange}
     onFavoritesToggle={handleFavoritesToggle}
   />
-{/if}
+</div>
