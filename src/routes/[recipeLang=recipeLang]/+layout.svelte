@@ -51,7 +51,7 @@ function isActive(path) {
 	{/snippet}
 
 	{#snippet right_side()}
-		<UserHeader {user}></UserHeader>
+		<UserHeader {user} recipeLang={data.recipeLang} lang={data.lang}></UserHeader>
 	{/snippet}
 
 	{@render children()}
