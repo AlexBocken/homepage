@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 
-	let { user } = $props();
+	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
 
 	function toggle_options(){
 		const el = document.querySelector("#options")
@@ -141,6 +141,9 @@ h2 + p{
 			<h2>{user.name}</h2>
 			<p>({user.nickname})</p>
 			<ul>
+				{#if user.groups?.includes('rezepte_users')}
+					<li><a href="/{recipeLang}/administration">Administration</a></li>
+				{/if}
 				<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
 				<li><a href="/logout" >Log Out</a></li>
 			</ul>
