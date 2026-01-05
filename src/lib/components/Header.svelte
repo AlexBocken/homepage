@@ -113,8 +113,7 @@ nav[hidden]{
 	color: white;
 	user-select: none;
 }
-:global(.site_header li>a),
-:global(.entry)
+:global(.site_header li>a)
 {
 	text-decoration: none;
 	font-family: sans-serif;
@@ -123,12 +122,20 @@ nav[hidden]{
 	border-radius: 1000px;
 	padding: 0.5rem 0.75rem;
 }
+:global(a.entry)
+{
+	text-decoration: none;
+	font-family: sans-serif;
+	font-size: 1.2rem;
+	border-radius: 1000px;
+	padding: 0.5rem 0.75rem;
+}
 
 :global(.site_header li:hover),
 :global(.site_header li:focus-within),
 :global(.site_header li:has(a.active)),
-:global(.entry:hover),
-:global(.entry:focus-visible)
+:global(a.entry:hover),
+:global(a.entry:focus-visible)
 {
 	cursor: pointer;
 	color: var(--nord8);
