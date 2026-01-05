@@ -190,7 +190,7 @@ const img_name = $derived(
 .tag:focus-visible
 {
 	transform: scale(1.04, 1.04);
-	background-color: var(--orange);
+	background-color: var(--nord8);
 	box-shadow: 0.2em 0.2em 0.2em 0.1em rgba(0, 0, 0, 0.3);
 }
 .tag:focus{

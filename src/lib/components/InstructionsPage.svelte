@@ -147,50 +147,62 @@ ol li::marker{
 	}
 }
 
-h4{
+h3{
 	margin-block: 0;
 }
 
 /* Base recipe reference link styling */
 h3 a {
-	color: var(--nord11);
+	color: var(--nord10);
 	text-decoration: underline;
-	text-decoration-color: var(--nord11);
+	text-decoration-color: var(--nord10);
 }
 
 h3 a:hover {
-	color: var(--nord11);
+	color: var(--nord9);
 	text-decoration: underline;
-	text-decoration-color: var(--nord11);
+	text-decoration-color: var(--nord9);
+}
+
+@media (prefers-color-scheme: dark) {
+	h3 a {
+		color: var(--nord8);
+		text-decoration-color: var(--nord8);
+	}
+
+	h3 a:hover {
+		color: var(--nord7);
+		text-decoration-color: var(--nord7);
+	}
 }
 </style>
 <div class=instructions>
 <div class=additional_info>
 {#if data.preparation}
-<div><h4>{labels.preparation}</h4>{data.preparation}</div>
+<div><h3>{labels.preparation}</h3>{data.preparation}</div>
 {/if}
 
 
 {#if data.fermentation}
 	{#if data.fermentation.bulk}
-		<div><h4>{labels.bulkFermentation}</h4>{data.fermentation.bulk}</div>
+		<div><h3>{labels.bulkFermentation}</h3>{data.fermentation.bulk}</div>
 	{/if}
 
 	{#if data.fermentation.final}
-		<div><h4>{labels.finalProof}</h4> {data.fermentation.final}</div>
+		<div><h3>{labels.finalProof}</h3> {data.fermentation.final}</div>
 	{/if}
 {/if}
 
 {#if data.baking.temperature}
-<div><h4>{labels.baking}</h4> {data.baking.length} {labels.at} {data.baking.temperature} °C {data.baking.mode}</div>
+<div><h3>{labels.baking}</h3> {data.baking.length} {labels.at} {data.baking.temperature} °C {data.baking.mode}</div>
 {/if}
 
 {#if data.cooking}
-<div><h4>{labels.cooking}</h4>{data.cooking}</div>
+<div><h3>{labels.cooking}</h3>{data.cooking}</div>
 {/if}
 
 {#if data.total_time}
-<div><h4>{labels.onThePlate}</h4>{data.total_time}</div>
+<div><h3>{labels.onThePlate}</h3>{data.total_time}</div>
 {/if}
 </div>
 

@@ -140,6 +140,11 @@ h1{
 	flex-wrap: wrap;
 	gap: 1em;
 }
+.tags h2,
+h2.section-label{
+	font-size: 1.2rem;
+	font-weight: bold;
+}
 .center{
 	justify-content: center;
 }
@@ -164,7 +169,7 @@ h1{
 {
 	cursor: pointer;
 	transform: scale(1.1,1.1);
-	background-color: var(--orange);
+	background-color: var(--nord8);
 	box-shadow: 0.1em 0.1em 0.5em 0.1em rgba(0,0,0,0.3);
 }
 
@@ -237,7 +242,7 @@ h1{
 	animation: shake 0.5s ease forwards;
 }
 
-h4{
+h2{
 	margin-block: 0;
 }
 .addendum{
@@ -325,7 +330,7 @@ h4{
 			<p>{@html data.preamble}</p>
 		{/if}
 		<div class=tags>
-			<h4>{labels.season}</h4>
+			<h2>{labels.season}</h2>
 			{#each season_iv as season}
 				<a class=tag href="/{data.recipeLang}/season/{season[0]}">
 					{#if season[0]}
@@ -337,7 +342,7 @@ h4{
 				</a>
 			{/each}
 		</div>
-		<h4>{labels.keywords}</h4>
+		<h2 class="section-label">{labels.keywords}</h2>
 		<div class="tags center">
 			{#each data.tags as tag}
 				<a class=tag href="/{data.recipeLang}/tag/{tag}">{tag}</a>

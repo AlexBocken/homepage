@@ -1,5 +1,6 @@
 <script lang='ts'>
 export let href
+export let ariaLabel: string | undefined = undefined
 import "$lib/css/nordtheme.css"
 import "$lib/css/action_button.css"
 </script>
@@ -78,6 +79,6 @@ box-shadow: 0em 0em 0.5em 0.5em rgba(0,0,0,0.2);
     }
   }
 </style>
-<a class="container action_button" {href}>
+<a class="container action_button" {href} aria-label={ariaLabel}>
 	<slot></slot>
 </a>
