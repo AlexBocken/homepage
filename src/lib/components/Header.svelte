@@ -123,11 +123,14 @@ nav[hidden]{
 	border-radius: 1000px;
 	padding: 0.5rem 0.75rem;
 }
-:global(a.entry)
+:global(a.entry),
+:global(a.entry:link),
+:global(a.entry:visited)
 {
 	text-decoration: none;
 	font-family: sans-serif;
 	font-size: 1.2rem;
+	color: white !important;
 	border-radius: 1000px;
 	padding: 0.5rem 0.75rem;
 }
@@ -136,10 +139,13 @@ nav[hidden]{
 :global(.site_header li:focus-within),
 :global(.site_header li:has(a.active)),
 :global(a.entry:hover),
-:global(a.entry:focus-visible)
+:global(a.entry:focus-visible),
+:global(a.entry:link:hover),
+:global(a.entry:visited:hover),
+:global(a.entry:visited:focus-visible)
 {
 	cursor: pointer;
-	color: var(--nord8);
+	color: var(--nord8) !important;
 }
 :global(.site_header) {
 	padding-block: 1.5rem;
