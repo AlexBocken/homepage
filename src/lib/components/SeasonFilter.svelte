@@ -95,10 +95,16 @@
 
 	.filter-label {
 		font-size: 0.9rem;
-		color: var(--nord6);
+		color: var(--nord2);
 		font-weight: 600;
 		margin-bottom: 0.25rem;
 		text-align: center;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.filter-label {
+			color: var(--nord6);
+		}
 	}
 
 	@media (max-width: 968px) {
@@ -134,7 +140,7 @@
 	}
 
 	input::placeholder {
-		color: var(--nord3);
+		color: var(--nord4);
 	}
 
 	input:hover {
