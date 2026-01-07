@@ -4,6 +4,7 @@ import { UserFavorites } from '../../../../models/UserFavorites';
 import { dbConnect } from '../../../../utils/db';
 import type {RecipeModelType} from '../../../../types/types';
 import { error } from '@sveltejs/kit';
+import { invalidateRecipeCaches } from '$lib/server/cache';
 // header: use for bearer token for now
 // recipe json in body
 export const POST: RequestHandler = async ({request, locals}) => {
@@ -68,6 +69,9 @@ export const POST: RequestHandler = async ({request, locals}) => {
 
 	// Delete the recipe
 	await Recipe.findOneAndDelete({short_name: short_name});
+
+	// Invalidate recipe caches after successful deletion
+	await invalidateRecipeCaches();
 
 	return new Response(JSON.stringify({msg: "Deleted recipe successfully"}),{
 		    status: 200,
