@@ -2,6 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '../../../../models/Recipe';
 import { dbConnect } from '../../../../utils/db';
 import { error } from '@sveltejs/kit';
+import { invalidateRecipeCaches } from '$lib/server/cache';
 // header: use for bearer token for now
 // recipe json in body
 export const POST: RequestHandler = async ({request, cookies, locals}) => {
@@ -19,6 +20,8 @@ export const POST: RequestHandler = async ({request, cookies, locals}) => {
 	await dbConnect();
 	try{
       		await Recipe.create(recipe_json);
+		// Invalidate recipe caches after successful creation
+		await invalidateRecipeCaches();
 	} catch(e){
       		throw error(400, e)
       	}
