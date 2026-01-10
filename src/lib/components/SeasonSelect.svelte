@@ -92,6 +92,7 @@ input[type=checkbox]::after
 {#each months as month}
 	<div class=checkbox_container>
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<label tabindex="0" onkeydown={(event) => do_on_key(event, 'Enter', false, () => {toggle_checkbox_on_key(event)}) } ><input tabindex=-1 type="checkbox" name="checkbox" value="value" onclick={set_season}>{month}</label>
 	</div>
 {/each}

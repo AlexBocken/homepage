@@ -162,20 +162,19 @@ function getMysteryForWeekday(date, includeLuminous) {
 }
 
 // Determine which mystery to use based on current weekday
-let selectedMystery = $state(getMysteryForWeekday(new Date(), includeLuminous));
-let todaysMystery = $state(selectedMystery); // Track today's auto-selected mystery
-let currentMysteries = $state(mysteries[selectedMystery]);
-let currentMysteriesLatin = $state(mysteriesLatin[selectedMystery]);
-let currentMysteryTitles = $state(mysteryTitles[selectedMystery]);
-// Reactive statement to update mystery descriptions when selectedMystery changes
+const initialMystery = getMysteryForWeekday(new Date(), true); // Use literal true to avoid capturing reactive state
+let selectedMystery = $state(initialMystery);
+let todaysMystery = $state(initialMystery); // Track today's auto-selected mystery
+
+// Derive these values from selectedMystery so they update automatically
+let currentMysteries = $derived(mysteries[selectedMystery]);
+let currentMysteriesLatin = $derived(mysteriesLatin[selectedMystery]);
+let currentMysteryTitles = $derived(mysteryTitles[selectedMystery]);
 let currentMysteryDescriptions = $derived(data.mysteryDescriptions[selectedMystery] || []);
 
 // Function to switch mysteries
 function selectMystery(mysteryType) {
 	selectedMystery = mysteryType;
-	currentMysteries = mysteries[mysteryType];
-	currentMysteriesLatin = mysteriesLatin[mysteryType];
-	currentMysteryTitles = mysteryTitles[mysteryType];
 }
 
 // Function to handle toggle change
