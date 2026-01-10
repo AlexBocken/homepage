@@ -1,7 +1,5 @@
 <script>
-	export let x = 0;
-	export let y = 0;
-	export let size = 40;
+	let { x = 0, y = 0, size = 40 } = $props();
 </script>
 
 <svg {x} {y} width={size} height={size} viewBox="0 0 334 326" xmlns="http://www.w3.org/2000/svg">

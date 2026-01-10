@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { shortName, imageIndex }: { shortName: string; imageIndex: number } = $props();
+	let { shortName, imageIndex } = $props<{ shortName: string; imageIndex: number }>();
 
 	let loading = $state(false);
 	let error = $state('');

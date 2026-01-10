@@ -6,7 +6,7 @@
     import SeasonLayout from '$lib/components/SeasonLayout.svelte'
     import Card from '$lib/components/Card.svelte';
     import Search from '$lib/components/Search.svelte';
-    let { data }: { data: PageData } = $props();
+    let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1
     import { rand_array } from '$lib/js/randomize';
 
@@ -35,9 +35,11 @@
 </script>
 
 <SeasonLayout active_index={current_month-1} {months} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
-<Recipes slot=recipes>
-	{#each rand_array(filteredRecipes) as recipe}
-		<Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
-	{/each}
-</Recipes>
+	{#snippet recipesSlot()}
+		<Recipes>
+			{#each rand_array(filteredRecipes) as recipe}
+				<Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+			{/each}
+		</Recipes>
+	{/snippet}
 </SeasonLayout>

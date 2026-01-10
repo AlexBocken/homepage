@@ -5,7 +5,7 @@
     	import Card from '$lib/components/Card.svelte';
     	import Search from '$lib/components/Search.svelte';
 	import LazyCategory from '$lib/components/LazyCategory.svelte';
-    	let { data }: { data: PageData } = $props();
+    	let { data } = $props<{ data: PageData }>();
     	let current_month = new Date().getMonth() + 1;
 
 	// Search state

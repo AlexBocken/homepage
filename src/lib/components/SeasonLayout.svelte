@@ -1,15 +1,28 @@
 <script lang="ts">
+    import type { Snippet } from 'svelte';
     import '$lib/css/nordtheme.css';
     import Recipes from '$lib/components/Recipes.svelte';
     import Search from './Search.svelte';
-    export let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
-    let month : number;
-    export let active_index;
-    export let routePrefix = '/rezepte';
-    export let lang = 'de';
-    export let recipes = []
-    export let onSearchResults = (ids, categories) => {}
 
+    let {
+        months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+        active_index,
+        routePrefix = '/rezepte',
+        lang = 'de',
+        recipes = [],
+        onSearchResults = (ids, categories) => {},
+        recipesSlot
+    }: {
+        months?: string[],
+        active_index: number,
+        routePrefix?: string,
+        lang?: string,
+        recipes?: any[],
+        onSearchResults?: (ids: any[], categories: any[]) => void,
+        recipesSlot?: Snippet
+    } = $props();
+
+    let month: number = $state();
 </script>
 <style>
 a.month{
@@ -48,5 +61,5 @@ a.month:hover,
 <Search season={active_index + 1} {lang} {recipes} {onSearchResults}></Search>
 </section>
 <section>
-<slot name=recipes></slot>
+{@render recipesSlot?.()}
 </section>

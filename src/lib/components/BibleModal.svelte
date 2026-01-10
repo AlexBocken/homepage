@@ -1,16 +1,23 @@
 <script lang="ts">
   import type { VerseData } from '$lib/data/mysteryDescriptions';
 
-  export let reference: string = '';
-  export let title: string = '';
-  export let verseData: VerseData | null = null;
-  export let onClose: () => void;
+  let {
+    reference = '',
+    title = '',
+    verseData = null,
+    onClose
+  }: {
+    reference?: string,
+    title?: string,
+    verseData?: VerseData | null,
+    onClose: () => void
+  } = $props();
 
-  let book: string = verseData?.book || '';
-  let chapter: number = verseData?.chapter || 0;
-  let verses: Array<{ verse: number; text: string }> = verseData?.verses || [];
-  let loading = false;
-  let error = verseData ? '' : 'Keine Versdaten verfügbar';
+  let book: string = $state(verseData?.book || '');
+  let chapter: number = $state(verseData?.chapter || 0);
+  let verses: Array<{ verse: number; text: string }> = $state(verseData?.verses || []);
+  let loading = $state(false);
+  let error = $state(verseData ? '' : 'Keine Versdaten verfügbar');
 
   function handleBackdropClick(event: MouseEvent) {
     if (event.target === event.currentTarget) {
@@ -25,9 +32,9 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
-<div class="modal-backdrop" on:click={handleBackdropClick} role="presentation">
+<div class="modal-backdrop" onclick={handleBackdropClick} role="presentation">
   <div class="modal-content">
     <div class="modal-header">
       <div class="header-content">
@@ -42,7 +49,7 @@
         {/if}
         <p class="modal-reference">{reference}</p>
       </div>
-      <button class="close-button" on:click={onClose} aria-label="Schließen">
+      <button class="close-button" onclick={onClose} aria-label="Schließen">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>

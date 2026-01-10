@@ -6,12 +6,14 @@
   import EditButton from '$lib/components/EditButton.svelte';
   
 
-  import { formatCurrency } from '$lib/utils/formatters';  export let data;
+  import { formatCurrency } from '$lib/utils/formatters';
+
+  let { data } = $props();
 
   // Use server-side data with progressive enhancement
-  let payment = data.payment || null;
-  let loading = false; // Start as false since we have server data
-  let error = null;
+  let payment = $state(data.payment || null);
+  let loading = $state(false); // Start as false since we have server data
+  let error = $state(null);
 
   // Progressive enhancement: refresh data if JavaScript is available
   onMount(async () => {

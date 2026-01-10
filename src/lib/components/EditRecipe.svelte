@@ -7,59 +7,65 @@
 	import '$lib/css/shake.css'
 	import { redirect } from '@sveltejs/kit';
 	import { RecipeModelType } from '../../types/types';
+	import type { PageData } from './$types';
+	import CardAdd from '$lib/components/CardAdd.svelte';
+	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
+	import CreateStepList from '$lib/components/CreateStepList.svelte';
 
-    	export let data: PageData;
-	export let actions :[String];
-	export let title
-	let preamble = data.preamble
-	let addendum = data.addendum
+	let {
+		data,
+		actions,
+		title,
+		card_data = $bindable({
+			icon: data.icon,
+			category: data.category,
+			name: data.name,
+			description: data.description,
+			tags: data.tags,
+		}),
+		add_info = $bindable({
+			preparation: data.preparation,
+			fermentation: {
+				bulk: data.fermentation.bulk,
+				final: data.fermentation.final,
+			},
+			baking: {
+				length: data.baking.length,
+				temperature: data.baking.temperature,
+				mode: data.baking.mode,
+			},
+			total_time: data.total_time,
+		}),
+		portions = $bindable(data.portions),
+		ingredients = $bindable(data.ingredients),
+		instructions = $bindable(data.instructions)
+	}: {
+		data: PageData,
+		actions: [String],
+		title: string,
+		card_data?: any,
+		add_info?: any,
+		portions?: any,
+		ingredients?: any,
+		instructions?: any
+	} = $props();
+
+	let preamble = $state(data.preamble);
+	let addendum = $state(data.addendum);
 
 	import { season } from '$lib/js/season_store';
 	season.update(() => data.season)
-	let season_local
+	let season_local = $state();
 	season.subscribe((s) => {
 		season_local = s
 	});
 
-	let old_short_name = data.short_name
-
-	export let card_data ={
-		icon: data.icon,
-		category: data.category,
-		name: data.name,
-		description: data.description,
-		tags: data.tags,
-	}
-	export let add_info ={
-		preparation: data.preparation,
-		fermentation: {
-			bulk: data.fermentation.bulk,
-			final: data.fermentation.final,
-		},
-		baking: {
-			length: data.baking.length,
-			temperature: data.baking.temperature,
-			mode: data.baking.mode,
-		},
-		total_time: data.total_time,
-	}
-
-	let images = data.images
-	export let portions = data.portions
-
-	let short_name = data.short_name
-	let password
-	let datecreated = data.datecreated
-	let datemodified = new Date()
-
-    	import type { PageData } from './$types';
-	import CardAdd from '$lib/components/CardAdd.svelte';
-
-	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
-	export let ingredients = data.ingredients
-
-	import CreateStepList from '$lib/components/CreateStepList.svelte';
-	export let instructions = data.instructions
+	let old_short_name = $state(data.short_name);
+	let images = $state(data.images);
+	let short_name = $state(data.short_name);
+	let password = $state();
+	let datecreated = $state(data.datecreated);
+	let datemodified = $state(new Date());
 
 
 	function get_season(){
@@ -300,14 +306,14 @@ h3{
 <div class=submit_wrapper>
 <h2>Neues Rezept hinzufügen:</h2>
 <input type="password" placeholder=Passwort bind:value={password}>
-<button class=action_button on:click={doAdd}><Check fill=white width=2rem height=2rem></Check></button>
+<button class=action_button onclick={doAdd}><Check fill=white width=2rem height=2rem></Check></button>
 </div>
 {/if}
 {#if actions.includes('edit')}
 <div class=submit_wrapper>
 <h2>Editiertes Rezept abspeichern:</h2>
 <input type="password" placeholder=Passwort bind:value={password}>
-<button class=action_button on:click={doEdit}><Check fill=white width=2rem height=2rem></Check></button>
+<button class=action_button onclick={doEdit}><Check fill=white width=2rem height=2rem></Check></button>
 </div>
 {/if}
 
@@ -315,6 +321,6 @@ h3{
 <div class=submit_wrapper>
 <h2>Rezept löschen:</h2>
 <input type="password" placeholder=Passwort bind:value={password}>
-<button class=action_button on:click={doDelete}><Cross fill=white width=2rem height=2rem></Cross></button>
+<button class=action_button onclick={doDelete}><Cross fill=white width=2rem height=2rem></Cross></button>
 </div>
 {/if}

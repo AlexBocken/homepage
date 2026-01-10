@@ -4,14 +4,14 @@
   import { getFrequencyDescription, formatNextExecution } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import AddButton from '$lib/components/AddButton.svelte';
-  
+  import { formatCurrency } from '$lib/utils/formatters';
 
-  import { formatCurrency } from '$lib/utils/formatters';  export let data;
+  let { data } = $props();
 
-  let recurringPayments = [];
-  let loading = true;
-  let error = null;
-  let showActiveOnly = true;
+  let recurringPayments = $state([]);
+  let loading = $state(true);
+  let error = $state(null);
+  let showActiveOnly = $state(true);
 
   onMount(async () => {
     await fetchRecurringPayments();
@@ -80,9 +80,11 @@
     return new Date(dateString).toLocaleDateString('de-CH');
   }
 
-  $: if (showActiveOnly !== undefined) {
-    fetchRecurringPayments();
-  }
+  $effect(() => {
+    if (showActiveOnly !== undefined) {
+      fetchRecurringPayments();
+    }
+  });
 </script>
 
 <svelte:head>
@@ -199,17 +201,17 @@
             <a href="/cospend/recurring/edit/{payment._id}" class="btn btn-secondary btn-small">
               Edit
             </a>
-            <button 
-              class="btn btn-small" 
-              class:btn-warning={payment.isActive} 
+            <button
+              class="btn btn-small"
+              class:btn-warning={payment.isActive}
               class:btn-success={!payment.isActive}
-              on:click={() => toggleActiveStatus(payment._id, payment.isActive)}
+              onclick={() => toggleActiveStatus(payment._id, payment.isActive)}
             >
               {payment.isActive ? 'Pause' : 'Activate'}
             </button>
-            <button 
+            <button
               class="btn btn-danger btn-small"
-              on:click={() => deleteRecurringPayment(payment._id, payment.title)}
+              onclick={() => deleteRecurringPayment(payment._id, payment.title)}
             >
               Delete
             </button>

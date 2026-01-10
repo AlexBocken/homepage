@@ -1,6 +1,8 @@
-<script>
-export let title
-let overflow
+<script lang="ts">
+import type { Snippet } from 'svelte';
+
+let { title = '', children } = $props<{ title?: string, children?: Snippet }>();
+let overflow = $state();
 </script>
 <style>
 
@@ -31,6 +33,6 @@ section{
 	<h2>{title}</h2>
 {/if}
 <div class=wrapper>
-	<slot></slot>
+	{@render children?.()}
 </div>
 </section>

@@ -11,7 +11,7 @@ import "$lib/css/action_button.css"
 import { do_on_key } from '$lib/components/do_on_key.js'
 import BaseRecipeSelector from '$lib/components/BaseRecipeSelector.svelte'
 
-export let lang: 'de' | 'en' = 'de';
+let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() } = $props<{ lang?: 'de' | 'en', instructions: any, add_info: any }>();
 
 // Translation strings
 const t = {
@@ -88,31 +88,29 @@ const t = {
 };
 
 const step_placeholder = "Kartoffeln schälen..."
-export let instructions
-export let add_info
 
-let new_step = {
+let new_step = $state({
 	name: "",
 	step: step_placeholder
-	}
+	});
 
-let edit_heading = {
+let edit_heading = $state({
 	name:"",
 	list_index: "",
-	}
+	});
 
 // Base recipe selector state
-let showSelector = false;
-let insertPosition = 0;
+let showSelector = $state(false);
+let insertPosition = $state(0);
 
 // State for adding steps to references
-let addingToReference = {
+let addingToReference = $state({
 	active: false,
 	list_index: -1,
 	position: 'before' as 'before' | 'after',
 	editing: false,
 	step_index: -1
-};
+});
 
 function openSelector(position: number) {
 	insertPosition = position;
@@ -257,12 +255,12 @@ export function remove_step(list_index, step_index){
 	instructions = instructions //tells svelte to update dom
 }
 
-let edit_step = {
+let edit_step = $state({
 	name: "",
 	step: "",
 	list_index: 0,
 	step_index: 0,
-}
+});
 export function show_modal_edit_step(list_index, step_index){
 	edit_step = {
 		step: instructions[list_index].steps[step_index],
@@ -873,7 +871,7 @@ h3{
 			{/if}
 		</div>
 	{:else}
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<h3>
 		<div class=move_buttons_container>
 			<button onclick="{() => update_list_position(list_index, 1)}" aria-label={t[lang].moveListUpAria}>
@@ -898,7 +896,7 @@ h3{
 	</h3>
 	<ol>
 	{#each list.steps as step, step_index}
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<li>
 			<div class="move_buttons_container step_move_buttons">
 				<button onclick="{() => update_step_position(list_index, step_index, 1)}" aria-label={t[lang].moveUpAria}>

@@ -15,7 +15,6 @@ function isActive(path) {
 		<ul class=site_header>
 		<li><a href="/glaube/gebete" class:active={isActive('/glaube/gebete')}>Gebete</a></li>
 		<li><a href="/glaube/rosenkranz" class:active={isActive('/glaube/rosenkranz')}>Rosenkranz</a></li>
-		<li><a href="/glaube/predigten" class:active={isActive('/glaube/predigten')}>Predigten</a></li>
 		</ul>
 	{/snippet}
 

@@ -1,29 +1,27 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import ProfilePicture from './ProfilePicture.svelte';
   import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
 
-  export let initialBalance = null;
-  export let initialDebtData = null;
+  let { initialBalance = null, initialDebtData = null } = $props<{ initialBalance?: any, initialDebtData?: any }>();
 
-  let balance = initialBalance || {
+  let balance = $state(initialBalance || {
     netBalance: 0,
     recentSplits: []
-  };
-  let debtData = initialDebtData || {
+  });
+  let debtData = $state(initialDebtData || {
     whoOwesMe: [],
     whoIOwe: [],
     totalOwedToMe: 0,
     totalIOwe: 0
-  };
-  let loading = !initialBalance || !initialDebtData; // Only show loading if we don't have initial data
-  let error = null;
-  let singleDebtUser = null;
-  let shouldShowIntegratedView = false;
+  });
+  let loading = $state(!initialBalance || !initialDebtData);
+  let error = $state(null);
 
-  function getSingleDebtUser() {
+  // Use $derived instead of $effect for computed values
+  let singleDebtUser = $derived.by(() => {
     const totalUsers = debtData.whoOwesMe.length + debtData.whoIOwe.length;
-    
+
     if (totalUsers === 1) {
       if (debtData.whoOwesMe.length === 1) {
         return {
@@ -33,22 +31,17 @@
         };
       } else if (debtData.whoIOwe.length === 1) {
         return {
-          type: 'iOwe', 
+          type: 'iOwe',
           user: debtData.whoIOwe[0],
           amount: debtData.whoIOwe[0].netAmount
         };
       }
     }
-    
-    return null;
-  }
 
-  $: {
-    // Recalculate when debtData changes - trigger on the arrays specifically
-    const totalUsers = debtData.whoOwesMe.length + debtData.whoIOwe.length;
-    singleDebtUser = getSingleDebtUser();
-    shouldShowIntegratedView = singleDebtUser !== null;
-  }
+    return null;
+  });
+
+  let shouldShowIntegratedView = $derived(singleDebtUser !== null);
   
 
   onMount(async () => {

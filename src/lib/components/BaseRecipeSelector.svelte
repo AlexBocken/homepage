@@ -4,29 +4,35 @@ import { browser } from '$app/environment';
 import { do_on_key } from '$lib/components/do_on_key.js'
 import Check from '$lib/assets/icons/Check.svelte'
 
-export let type: 'ingredients' | 'instructions' = 'ingredients';
-export let onSelect: (recipe: any, options: any) => void;
-export let open = false;
+let {
+	type = 'ingredients' as 'ingredients' | 'instructions',
+	onSelect,
+	open = $bindable(false)
+}: {
+	type?: 'ingredients' | 'instructions',
+	onSelect: (recipe: any, options: any) => void,
+	open?: boolean
+} = $props();
 
 // Unique dialog ID based on type to prevent conflicts when both are on the same page
 const dialogId = `base-recipe-selector-modal-${type}`;
 
-let baseRecipes: any[] = [];
-let selectedRecipe: any = null;
-let options = {
+let baseRecipes: any[] = $state([]);
+let selectedRecipe: any = $state(null);
+let options = $state({
 	includeIngredients: false,
 	includeInstructions: false,
 	showLabel: true,
 	labelOverride: ''
-};
+});
 
 // Reset options whenever type or modal state changes
-$: {
+$effect(() => {
 	if (open || type) {
 		options.includeIngredients = type === 'ingredients';
 		options.includeInstructions = type === 'instructions';
 	}
-}
+});
 
 onMount(async () => {
 	const res = await fetch('/api/rezepte/base-recipes');
@@ -63,13 +69,15 @@ function openModal() {
 	}
 }
 
-$: if (browser) {
-	if (open) {
-		setTimeout(openModal, 0);
-	} else {
-		closeModal();
+$effect(() => {
+	if (browser) {
+		if (open) {
+			setTimeout(openModal, 0);
+		} else {
+			closeModal();
+		}
 	}
-}
+});
 </script>
 
 <style>
@@ -232,16 +240,16 @@ dialog h2 {
 					type="text"
 					bind:value={options.labelOverride}
 					placeholder={selectedRecipe?.name || 'Überschrift eingeben...'}
-					on:keydown={(event) => do_on_key(event, 'Enter', false, handleInsert)}
+					onkeydown={(event) => do_on_key(event, 'Enter', false, handleInsert)}
 				/>
 			</label>
 		{/if}
 
 		<div class="button-group">
-			<button class="button-insert" on:click={handleInsert} disabled={!selectedRecipe}>
+			<button class="button-insert" onclick={handleInsert} disabled={!selectedRecipe}>
 				Einfügen
 			</button>
-			<button class="button-cancel" on:click={closeModal}>
+			<button class="button-cancel" onclick={closeModal}>
 				Abbrechen
 			</button>
 		</div>

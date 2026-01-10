@@ -1,13 +1,16 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
-	export let instructions: any[] = [];
-	export let translationMetadata: any[] | null | undefined = null;
-
-	const dispatch = createEventDispatcher();
+	let {
+		instructions = $bindable([]),
+		translationMetadata = null,
+		onchange
+	}: {
+		instructions?: any[],
+		translationMetadata?: any[] | null | undefined,
+		onchange?: (detail: { instructions: any[] }) => void
+	} = $props();
 
 	function handleChange() {
-		dispatch('change', { instructions });
+		onchange?.({ instructions });
 	}
 
 	function updateInstructionGroupName(groupIndex: number, event: Event) {

@@ -1,12 +1,10 @@
 <script lang="ts">
   import { browser } from '$app/environment';
   import { enhance } from '$app/forms';
-  
-  export let recipeId: string;
-  export let isFavorite: boolean = false;
-  export let isLoggedIn: boolean = false;
-  
-  let isLoading = false;
+
+  let { recipeId, isFavorite = $bindable(false), isLoggedIn = false } = $props<{ recipeId: string, isFavorite?: boolean, isLoggedIn?: boolean }>();
+
+  let isLoading = $state(false);
 
   async function toggleFavorite(event: Event) {
     // If JavaScript is available, prevent form submission and handle client-side
@@ -71,7 +69,7 @@
       type="submit"
       class="favorite-button"
       disabled={isLoading}
-      on:click={toggleFavorite}
+      onclick={toggleFavorite}
       title={isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern'}
     >
       {isFavorite ? '❤️' : '🖤'}

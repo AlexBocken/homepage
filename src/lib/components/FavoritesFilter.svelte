@@ -69,6 +69,6 @@
 	<Toggle
 		bind:checked={checked}
 		label=""
-		on:change={handleChange}
+		onchange={handleChange}
 	/>
 </div>

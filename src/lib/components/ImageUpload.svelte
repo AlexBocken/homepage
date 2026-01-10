@@ -1,25 +1,37 @@
-<script>
-  export let imagePreview = '';
-  export let imageFile = null;
-  export let uploading = false;
-  export let currentImage = null; // For edit mode
-  export let title = 'Receipt Image';
-  
-  // Events
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
+<script lang="ts">
+  let {
+    imagePreview = $bindable(''),
+    imageFile = $bindable(null),
+    uploading = $bindable(false),
+    currentImage = $bindable(null),
+    title = 'Receipt Image',
+    onerror,
+    onimageSelected,
+    onimageRemoved,
+    oncurrentImageRemoved
+  } = $props<{
+    imagePreview?: string,
+    imageFile?: File | null,
+    uploading?: boolean,
+    currentImage?: string | null,
+    title?: string,
+    onerror?: (message: string) => void,
+    onimageSelected?: (file: File) => void,
+    onimageRemoved?: () => void,
+    oncurrentImageRemoved?: () => void
+  }>();
 
   function handleImageChange(event) {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        dispatch('error', 'File size must be less than 5MB');
+        onerror?.('File size must be less than 5MB');
         return;
       }
-      
+
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        dispatch('error', 'Please select a valid image file (JPEG, PNG, WebP)');
+        onerror?.('Please select a valid image file (JPEG, PNG, WebP)');
         return;
       }
 
@@ -29,8 +41,8 @@
         imagePreview = e.target.result;
       };
       reader.readAsDataURL(file);
-      
-      dispatch('imageSelected', file);
+
+      onimageSelected?.(file);
     }
   }
 
@@ -38,12 +50,12 @@
     imageFile = null;
     imagePreview = '';
     currentImage = null;
-    dispatch('imageRemoved');
+    onimageRemoved?.();
   }
 
   function removeCurrentImage() {
     currentImage = null;
-    dispatch('currentImageRemoved');
+    oncurrentImageRemoved?.();
   }
 </script>
 
@@ -54,7 +66,7 @@
     <div class="current-image">
       <img src={currentImage} alt="Receipt" class="receipt-preview" />
       <div class="image-actions">
-        <button type="button" class="btn-remove" on:click={removeCurrentImage}>
+        <button type="button" class="btn-remove" onclick={removeCurrentImage}>
           Remove Image
         </button>
       </div>
@@ -64,7 +76,7 @@
   {#if imagePreview}
     <div class="image-preview">
       <img src={imagePreview} alt="Receipt preview" />
-      <button type="button" class="remove-image" on:click={removeImage}>
+      <button type="button" class="remove-image" onclick={removeImage}>
         Remove Image
       </button>
     </div>
@@ -85,7 +97,7 @@
         type="file" 
         id="image" 
         accept="image/jpeg,image/jpg,image/png,image/webp" 
-        on:change={handleImageChange}
+        onchange={handleImageChange}
         disabled={uploading}
         hidden
       />
