@@ -5,6 +5,7 @@
     	import Card from '$lib/components/Card.svelte';
     	import Search from '$lib/components/Search.svelte';
 	import LazyCategory from '$lib/components/LazyCategory.svelte';
+	import { getCategories } from '$lib/js/categories';
     	let { data } = $props<{ data: PageData }>();
     	let current_month = new Date().getMonth() + 1;
 
@@ -21,9 +22,7 @@
 	}
 
 	const isEnglish = $derived(data.lang === 'en');
-	const categories = $derived(isEnglish
-		? ["Main course", "Noodle", "Bread", "Dessert", "Soup", "Side dish", "Salad", "Cake", "Breakfast", "Sauce", "Ingredient", "Drink", "Spread", "Biscuits", "Snack"]
-		: ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Frühstück", "Sauce", "Zutat", "Getränk", "Aufstrich", "Guetzli", "Snack"]);
+	const categories = $derived(getCategories(data.lang));
 
 	// Pre-compute category-to-recipes Map for O(1) lookups
 	const recipesByCategory = $derived.by(() => {
@@ -101,7 +100,7 @@ h1{
 <h1>{labels.title}</h1>
 <p class=subheading>{labels.subheading}</p>
 
-<Search lang={data.lang} recipes={data.all_brief} categories={categories} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
+<Search lang={data.lang} recipes={data.all_brief} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 
 {#if seasonRecipes.length > 0}
 	<LazyCategory title={labels.inSeason} eager={true}>

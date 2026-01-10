@@ -3,6 +3,7 @@
     import { browser } from '$app/environment';
     import "$lib/css/nordtheme.css";
     import FilterPanel from './FilterPanel.svelte';
+    import { getCategories } from '$lib/js/categories';
 
     // Filter props for different contexts
     let {
@@ -13,10 +14,12 @@
         favoritesOnly = false,
         lang = 'de',
         recipes = [],
-        categories = [],
         onSearchResults = (matchedIds, matchedCategories) => {},
         isLoggedIn = false
     } = $props();
+
+    // Generate categories internally based on language
+    const categories = $derived(getCategories(lang));
 
     const isEnglish = $derived(lang === 'en');
     const searchResultsUrl = $derived(isEnglish ? '/recipes/search' : '/rezepte/search');
@@ -158,10 +161,9 @@
         }
     }
 
-    // Filter change handlers
+    // Filter change handlers - the effect will automatically trigger search
     function handleCategoryChange(newCategory) {
         selectedCategory = newCategory;
-        performSearch(searchQuery);
     }
 
     function handleTagToggle(tag) {
@@ -170,22 +172,18 @@
         } else {
             selectedTags = [...selectedTags, tag];
         }
-        performSearch(searchQuery);
     }
 
     function handleIconChange(newIcon) {
         selectedIcon = newIcon;
-        performSearch(searchQuery);
     }
 
     function handleSeasonChange(newSeasons) {
         selectedSeasons = newSeasons;
-        performSearch(searchQuery);
     }
 
     function handleFavoritesToggle(enabled) {
         selectedFavoritesOnly = enabled;
-        performSearch(searchQuery);
     }
 
     function handleSubmit(event) {
@@ -202,11 +200,16 @@
         performSearch('');
     }
 
-    // Debounced search effect - only triggers search 100ms after user stops typing
+    // Debounced search effect - triggers search when query or filters change
     $effect(() => {
         if (browser && recipes.length > 0) {
-            // Read searchQuery to track it as a dependency
+            // Read all dependencies to track them
             const query = searchQuery;
+            const cat = selectedCategory;
+            const tags = selectedTags;
+            const icn = selectedIcon;
+            const seasons = selectedSeasons;
+            const favsOnly = selectedFavoritesOnly;
 
             // Set debounce timer
             const timer = setTimeout(() => {
@@ -357,6 +360,7 @@ scale: 0.8 0.8;
     {selectedFavoritesOnly}
     {lang}
     {isLoggedIn}
+    hideFavoritesFilter={favoritesOnly}
     onCategoryChange={handleCategoryChange}
     onTagToggle={handleTagToggle}
     onIconChange={handleIconChange}
