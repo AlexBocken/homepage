@@ -9,11 +9,6 @@ h1{
 	margin-bottom: 0;
 	font-size: 4rem;
 }
-.subheading{
-	text-align: center;
-	margin-top: 0;
-	font-size: 1.5rem;
-}
 .content{
 	max-width: 800px;
 	margin: 0 auto;
