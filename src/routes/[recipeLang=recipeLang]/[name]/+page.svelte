@@ -16,7 +16,7 @@
 	import { onDestroy } from 'svelte';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
 
-    	let { data }: { data: PageData } = $props();
+    	let { data } = $props<{ data: PageData }>();
 
 	// Set store for recipe translation data so UserHeader can access it
 	// Use $effect instead of onMount to react to data changes during client-side navigation

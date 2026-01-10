@@ -1,12 +1,9 @@
 <script>
-	import { createEventDispatcher } from 'svelte';
 	import { browser } from '$app/environment';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 
 	let { item, multiplier = 1, yeastId = 0, lang = 'de' } = $props();
-
-	const dispatch = createEventDispatcher();
 
 	const isEnglish = $derived(lang === 'en');
 	const toggleTitle = $derived(isEnglish

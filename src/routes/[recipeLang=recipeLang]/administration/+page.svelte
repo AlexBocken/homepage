@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import '$lib/css/nordtheme.css';
 
-	let { data }: { data: PageData } = $props();
+	let { data } = $props<{ data: PageData }>();
 
 	const isEnglish = data.lang === 'en';
 	const pageTitle = isEnglish ? 'Administration' : 'Administration';

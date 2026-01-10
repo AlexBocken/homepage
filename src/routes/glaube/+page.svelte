@@ -16,10 +16,8 @@
 
 <h1>Glaube</h1>
 <p>
-	Hier findet man einige Gebete, den Rosenkranz und aufgearbeitete Predigten zum katholischen Glauben.
+	Hier findet man einige Gebete und einen interaktiven Rosenkranz zum katholischen Glauben.
 	Ein Fokus auf Latein und den tridentinischen Ritus wird zu bemerken sein.
-	Diese Seiten sind noch im Aufbau und werden nach und nach erweitert.
-	Bis jetzt sind nur die Gebete in einem guten Stand.
 </p>
 
 <LinksGrid>
@@ -54,22 +52,5 @@
 </g>
 </svg>
 		<h3>Rosenkranz</h3>
-	</a>
-	<a href="/glaube/predigten">
-	<svg
-       enable-background="new 0 0 512 512"
-       viewBox="0 0 512 512"
-       xmlns="http://www.w3.org/2000/svg">
-			<g>
-			<path
-	   d="m134.057 149.979v-69.942h-74.41c-8.284 0-15 6.716-15 15v39.94c0 8.284 6.716 15 15 15z"/>
-			<path d="m437.947 391.026v-211.047h-60.004v150.343c0 4.694-2.197 9.118-5.938 11.954-2.637 1.999-5.826 3.046-9.062 3.046-1.354 0-2.717-.184-4.051-.558l-102.892-28.865-102.892 28.865c-4.521 1.267-9.374.346-13.113-2.489-3.741-2.836-5.938-7.259-5.938-11.954v-150.342h-60.004v211.047z"/>
-			<path d="m377.943 149.979 74.409-.002c8.284 0 15-6.716 15-15v-39.94c0-8.284-6.716-15-15-15h-74.409z"/>
-			<path d="m164.057 310.535 87.892-24.657c1.325-.372 2.688-.558 4.052-.558s2.727.186 4.052.558l87.892 24.657v-230.5h-183.888zm106.943-175.06v17.394h15.34c8.284 0 15 6.716 15 15s-6.716 15-15 15h-15.34v57.793c0 8.284-6.716 15-15 15s-15-6.716-15-15v-57.793h-15.34c-8.284 0-15-6.716-15-15s6.716-15 15-15h15.34v-17.394c0-8.284 6.716-15 15-15s15 6.715 15 15z"/>
-			<path d="m497 482h-18.397v-35.972c0-13.785-11.215-25-25-25h-395.206c-13.785 0-25 11.215-25 25v35.972h-18.397c-8.284 0-15 6.716-15 15s6.716 15 15 15h482c8.284 0 15-6.716 15-15s-6.716-15-15-15z"/>
-			<path d="m377.943 50.035v-35.035c0-8.284-6.716-15-15-15h-76.926c-11.523 0-22.046 4.357-30.017 11.505-7.971-7.148-18.494-11.505-30.018-11.505h-76.926c-8.284 0-15 6.716-15 15v35.035z"/>
-			</g>
-		</svg>
-	<h3>Predigten</h3>
 	</a>
 </LinksGrid>

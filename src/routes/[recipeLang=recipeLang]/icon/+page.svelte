@@ -6,7 +6,7 @@
     import SeasonLayout from '$lib/components/SeasonLayout.svelte'
     import Card from '$lib/components/Card.svelte';
     import Search from '$lib/components/Search.svelte';
-    let { data }: { data: PageData } = $props();
+    let { data } = $props<{ data: PageData }>();
 </script>
 <style>
 	a{

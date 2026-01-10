@@ -1,5 +1,5 @@
 <script>
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import ProfilePicture from './ProfilePicture.svelte';
@@ -7,17 +7,15 @@
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
 
-  export let paymentId;
-  
-  // Get session from page store
-  $: session = $page.data?.session;
-  
-  const dispatch = createEventDispatcher();
+  let { paymentId, onclose, onpaymentDeleted } = $props();
 
-  let payment = null;
-  let loading = true;
-  let error = null;
-  let modal;
+  // Get session from page store
+  let session = $derived($page.data?.session);
+
+  let payment = $state(null);
+  let loading = $state(true);
+  let error = $state(null);
+  let modal = $state();
 
   onMount(async () => {
     await loadPayment();
@@ -54,7 +52,7 @@
   function closeModal() {
     // Use shallow routing to go back to dashboard without full navigation
     goto('/cospend', { replaceState: true, noScroll: true, keepFocus: true });
-    dispatch('close');
+    onclose?.();
   }
 
   function handleBackdropClick(event) {
@@ -85,7 +83,7 @@
     }
   }
 
-  let deleting = false;
+  let deleting = $state(false);
 
   async function deletePayment() {
     if (!confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
@@ -103,7 +101,7 @@
       }
 
       // Close modal and dispatch event to refresh data
-      dispatch('paymentDeleted', paymentId);
+      onpaymentDeleted?.(paymentId);
       closeModal();
       
     } catch (err) {
@@ -117,7 +115,7 @@
 <div class="panel-content" bind:this={modal}>
   <div class="panel-header">
       <h2>Payment Details</h2>
-      <button class="close-button" on:click={closeModal} aria-label="Close modal">
+      <button class="close-button" onclick={closeModal} aria-label="Close modal">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -212,7 +210,7 @@
           {/if}
 
           <div class="panel-actions">
-            <button class="btn-secondary" on:click={closeModal}>Close</button>
+            <button class="btn-secondary" onclick={closeModal}>Close</button>
           </div>
         </div>
       {/if}

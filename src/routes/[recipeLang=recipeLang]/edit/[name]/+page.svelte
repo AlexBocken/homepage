@@ -16,7 +16,7 @@
 	import { portions } from '$lib/js/portions_store';
 	import { img } from '$lib/js/img_store';
 
-	let { data }: { data: PageData } = $props();
+	let { data } = $props<{ data: PageData }>();
 
 	let preamble = $state(data.recipe.preamble);
 	let addendum = $state(data.recipe.addendum);
@@ -612,8 +612,8 @@ button.action_button{
 
 {#if !showTranslationWorkflow}
 <div class=submit_buttons>
-<button class=action_button on:click={doDelete}><p>Löschen</p><Cross fill=white width=2rem height=2rem></Cross></button>
-<button class=action_button on:click={prepareSubmit}><p>Weiter zur Übersetzung</p><Check fill=white width=2rem height=2rem></Check></button>
+<button class=action_button onclick={doDelete}><p>Löschen</p><Cross fill=white width=2rem height=2rem></Cross></button>
+<button class=action_button onclick={prepareSubmit}><p>Weiter zur Übersetzung</p><Check fill=white width=2rem height=2rem></Check></button>
 </div>
 {/if}
 

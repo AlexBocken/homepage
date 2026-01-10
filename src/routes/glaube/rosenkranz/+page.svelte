@@ -17,7 +17,7 @@ import BibleModal from "$lib/components/BibleModal.svelte";
 import Toggle from "$lib/components/Toggle.svelte";
 import LanguageToggle from "$lib/components/LanguageToggle.svelte";
 
-export let data;
+let { data } = $props();
 
 // Mystery variations for each type of rosary
 const mysteries = {
@@ -115,7 +115,7 @@ const mysteryTitles = {
 };
 
 // Toggle for including Luminous mysteries
-let includeLuminous = true;
+let includeLuminous = $state(true);
 
 // Flag to prevent saving before we've loaded from localStorage
 let hasLoadedFromStorage = false;
@@ -124,9 +124,11 @@ let hasLoadedFromStorage = false;
 createLanguageContext();
 
 // Save luminous toggle state to localStorage whenever it changes (but only after initial load)
-$: if (typeof localStorage !== 'undefined' && hasLoadedFromStorage) {
-	localStorage.setItem('rosary_includeLuminous', includeLuminous.toString());
-}
+$effect(() => {
+	if (typeof localStorage !== 'undefined' && hasLoadedFromStorage) {
+		localStorage.setItem('rosary_includeLuminous', includeLuminous.toString());
+	}
+});
 
 // Function to get the appropriate mystery for a given weekday
 function getMysteryForWeekday(date, includeLuminous) {
@@ -160,15 +162,13 @@ function getMysteryForWeekday(date, includeLuminous) {
 }
 
 // Determine which mystery to use based on current weekday
-let selectedMystery = getMysteryForWeekday(new Date(), includeLuminous);
-let todaysMystery = selectedMystery; // Track today's auto-selected mystery
-let currentMysteries = mysteries[selectedMystery];
-let currentMysteriesLatin = mysteriesLatin[selectedMystery];
-let currentMysteryTitles = mysteryTitles[selectedMystery];
-let currentMysteryDescriptions = data.mysteryDescriptions[selectedMystery] || [];
-
+let selectedMystery = $state(getMysteryForWeekday(new Date(), includeLuminous));
+let todaysMystery = $state(selectedMystery); // Track today's auto-selected mystery
+let currentMysteries = $state(mysteries[selectedMystery]);
+let currentMysteriesLatin = $state(mysteriesLatin[selectedMystery]);
+let currentMysteryTitles = $state(mysteryTitles[selectedMystery]);
 // Reactive statement to update mystery descriptions when selectedMystery changes
-$: currentMysteryDescriptions = data.mysteryDescriptions[selectedMystery] || [];
+let currentMysteryDescriptions = $derived(data.mysteryDescriptions[selectedMystery] || []);
 
 // Function to switch mysteries
 function selectMystery(mysteryType) {
@@ -187,7 +187,7 @@ function handleToggleChange() {
 }
 
 // Active section tracking
-let activeSection = "cross";
+let activeSection = $state("cross");
 let sectionElements = {};
 let svgContainer;
 
@@ -201,10 +201,10 @@ let decadeCounters = {
 };
 
 // Modal state for displaying Bible citations
-let showModal = false;
-let selectedReference = '';
-let selectedTitle = '';
-let selectedVerseData = null;
+let showModal = $state(false);
+let selectedReference = $state('');
+let selectedTitle = $state('');
+let selectedVerseData = $state(null);
 
 // Function to advance the counter for a specific decade
 function advanceDecade(decadeNum) {
@@ -1135,7 +1135,7 @@ h1 {
 		<button
 			class="mystery-button"
 			class:selected={selectedMystery === 'freudenreich'}
-			on:click={() => selectMystery('freudenreich')}
+			onclick={() => selectMystery('freudenreich')}
 		>
 			{#if todaysMystery === 'freudenreich'}
 				<span class="today-badge">Heutige</span>
@@ -1154,7 +1154,7 @@ h1 {
 		<button
 			class="mystery-button"
 			class:selected={selectedMystery === 'schmerzhaften'}
-			on:click={() => selectMystery('schmerzhaften')}
+			onclick={() => selectMystery('schmerzhaften')}
 		>
 			{#if todaysMystery === 'schmerzhaften'}
 				<span class="today-badge">Heutige</span>
@@ -1168,7 +1168,7 @@ h1 {
 		<button
 			class="mystery-button"
 			class:selected={selectedMystery === 'glorreichen'}
-			on:click={() => selectMystery('glorreichen')}
+			onclick={() => selectMystery('glorreichen')}
 		>
 			{#if todaysMystery === 'glorreichen'}
 				<span class="today-badge">Heutige</span>
@@ -1191,7 +1191,7 @@ q0 -31 22 -54.5t52 -23.5q31 0 52.5 23.5t21.5 54.5zM596 888q0 34 -34 34q-30 0 -30
 		<button
 			class="mystery-button"
 			class:selected={selectedMystery === 'lichtreichen'}
-			on:click={() => selectMystery('lichtreichen')}
+			onclick={() => selectMystery('lichtreichen')}
 		>
 			{#if todaysMystery === 'lichtreichen'}
 				<span class="today-badge">Heutige</span>
@@ -1407,7 +1407,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 							<span class="bible-reference-text">{description.reference}</span>
 							<button
 								class="bible-reference-button"
-								on:click={() => handleCitationClick(description.reference, description.title, description.verseData)}
+								onclick={() => handleCitationClick(description.reference, description.title, description.verseData)}
 								aria-label="Bibelstelle anzeigen"
 							>
 								📖

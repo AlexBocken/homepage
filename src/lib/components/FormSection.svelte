@@ -1,12 +1,14 @@
-<script>
-  export let title = '';
+<script lang="ts">
+  import type { Snippet } from 'svelte';
+
+  let { title = '', children } = $props<{ title?: string, children?: Snippet }>();
 </script>
 
 <div class="form-section">
   {#if title}
     <h2>{title}</h2>
   {/if}
-  <slot />
+  {@render children?.()}
 </div>
 
 <style>

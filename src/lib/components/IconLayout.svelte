@@ -1,13 +1,26 @@
 <script lang="ts">
+    import type { Snippet } from 'svelte';
     import '$lib/css/nordtheme.css';
     import Recipes from '$lib/components/Recipes.svelte';
     import Search from './Search.svelte';
-    export let icons
-    export let active_icon
-    export let routePrefix = '/rezepte'
-    export let lang = 'de'
-    export let recipes = []
-    export let onSearchResults = (ids, categories) => {}
+
+    let {
+        icons,
+        active_icon,
+        routePrefix = '/rezepte',
+        lang = 'de',
+        recipes = [],
+        onSearchResults = (ids, categories) => {},
+        recipesSlot
+    }: {
+        icons: string[],
+        active_icon: string,
+        routePrefix?: string,
+        lang?: string,
+        recipes?: any[],
+        onSearchResults?: (ids: any[], categories: any[]) => void,
+        recipesSlot?: Snippet
+    } = $props();
 </script>
 
 <style>
@@ -79,5 +92,5 @@
 <Search icon={active_icon} {lang} {recipes} {onSearchResults}></Search>
 </section>
 <section>
-<slot name=recipes></slot>
+{@render recipesSlot?.()}
 </section>

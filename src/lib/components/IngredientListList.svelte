@@ -8,22 +8,21 @@ import Check from '$lib/assets/icons/Check.svelte'
 
 import "$lib/css/action_button.css"
 
-export let list;
-export let list_index;
+let { list = $bindable(), list_index } = $props<{ list: any, list_index: number }>();
 
-let edit_ingredient = {
+let edit_ingredient = $state({
 	amount: "",
 	unit: "",
 	name: "",
 	sublist: "",
 	list_index: "",
 	ingredient_index: "",
-}
+});
 
-let edit_heading = {
+let edit_heading = $state({
 	name:"",
 	list_index: "",
-	}
+	});
 
 function get_sublist_index(sublist_name, list){
 	for(var i =0; i < list.length; i++){
@@ -488,8 +487,8 @@ main {
 	style={"top: " + (mouseY + offsetY - layerY) + "px"}><p></p>
 </div>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<h3 on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<h3 onclick={() => show_modal_edit_subheading_ingredient(list_index)}>
 	<div class="drag_handle drag_handle_header"><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></div>
 	<div>
 		{#if list.name }
@@ -499,9 +498,9 @@ main {
 		{/if}
 	</div>
 	<div class=mod_icons>
-		<button class="action_button button_subtle" on:click="{() => show_modal_edit_subheading_ingredient(list_index)}">
+		<button class="action_button button_subtle" onclick={() => show_modal_edit_subheading_ingredient(list_index)}>
 			<Pen fill=var(--nord1)></Pen>	</button>
-		<button class="action_button button_subtle" on:click="{() => remove_list(list_index)}">
+		<button class="action_button button_subtle" onclick={() => remove_list(list_index)}>
 			<Cross fill=var(--nord1)></Cross></button>
 	</div>
 </h3>
@@ -525,13 +524,13 @@ class="item"
                 on:touchmove={function(ev) {ev.stopPropagation(); ev.preventDefault(); touchEnter(ev.touches[0]);}}
 		>
 	<div class=drag_handle><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></div>
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.amount} {ingredient.unit}</div>
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<div on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{@html ingredient.name}</div>
-	<div class=mod_icons><button class="action_button button_subtle" on:click={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<div onclick={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{ingredient.amount} {ingredient.unit}</div>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<div onclick={() => show_modal_edit_ingredient(list_index, ingredient_index)} >{@html ingredient.name}</div>
+	<div class=mod_icons><button class="action_button button_subtle" onclick={() => show_modal_edit_ingredient(list_index, ingredient_index)}>
 		<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
-		<button class="action_button button_subtle" on:click="{() => remove_ingredient(list_index, ingredient_index)}"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
+		<button class="action_button button_subtle" onclick="{() => remove_ingredient(list_index, ingredient_index)}"><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
 	</span>
 {/each}
 </div>
@@ -543,11 +542,11 @@ class="item"
 	<h2>Zutat verändern</h2>
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_ingredient.sublist} placeholder="Kategorie (optional)">
-	<div class=add_ingredient on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<input type="text" placeholder="250..." bind:value={edit_ingredient.amount} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<input type="text" placeholder="mL..." bind:value={edit_ingredient.unit} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<input type="text" placeholder="Milch..." bind:value={edit_ingredient.name} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
-	<button class=action_button on:keydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)} on:click={edit_ingredient_and_close_modal}>
+	<div class=add_ingredient onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<input type="text" placeholder="250..." bind:value={edit_ingredient.amount} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<input type="text" placeholder="mL..." bind:value={edit_ingredient.unit} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<input type="text" placeholder="Milch..." bind:value={edit_ingredient.name} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)}>
+	<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, edit_ingredient_and_close_modal)} onclick={edit_ingredient_and_close_modal}>
 		<Check fill=white style="width: 2rem; height: 2rem;"></Check>
 		</button>
 	</div>
@@ -557,8 +556,8 @@ class="item"
 <dialog id=edit_subheading_ingredient_modal>
 	<h2>Kategorie umbenennen</h2>
 	<div class=heading_wrapper>
-		<input class=heading type="text" bind:value={edit_heading.name} on:keydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} >
-		<button class=action_button on:keydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} on:click={edit_subheading_and_close_modal}>
+		<input class=heading type="text" bind:value={edit_heading.name} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} >
+		<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} onclick={edit_subheading_and_close_modal}>
 		<Check fill=white style="width:2rem; height:2rem;"></Check>
 		</button>
 	</div>

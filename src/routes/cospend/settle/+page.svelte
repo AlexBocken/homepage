@@ -5,21 +5,22 @@
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
 
 
-  import { formatCurrency } from '$lib/utils/formatters';  export let data;
-  export let form;
+  import { formatCurrency } from '$lib/utils/formatters';
+
+  let { data, form } = $props();
 
   // Use server-side data with progressive enhancement
-  let debtData = data.debtData || {
+  let debtData = $state(data.debtData || {
     whoOwesMe: [],
     whoIOwe: [],
     totalOwedToMe: 0,
     totalIOwe: 0
-  };
-  let loading = false; // Start as false since we have server data
-  let error = data.error || form?.error || null;
-  let selectedSettlement = null;
-  let settlementAmount = form?.values?.amount || '';
-  let submitting = false;
+  });
+  let loading = $state(false); // Start as false since we have server data
+  let error = $state(data.error || form?.error || null);
+  let selectedSettlement = $state(null);
+  let settlementAmount = $state(form?.values?.amount || '');
+  let submitting = $state(false);
   let predefinedMode = isPredefinedUsersMode();
 
   onMount(() => {

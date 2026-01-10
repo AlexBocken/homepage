@@ -1,6 +1,5 @@
 <script lang="ts">
-export let tag : string;
-export let ref: string;
+let { tag, ref } = $props<{ tag: string, ref: string }>();
 import '$lib/css/nordtheme.css'
 </script>
 <style>
