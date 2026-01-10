@@ -17,6 +17,7 @@
 		selectedFavoritesOnly = false,
 		lang = 'de',
 		isLoggedIn = false,
+		hideFavoritesFilter = false,
 		onCategoryChange = () => {},
 		onTagToggle = () => {},
 		onIconChange = () => {},
@@ -133,7 +134,7 @@
 		<span class="arrow" class:open={filtersOpen}>▼</span>
 	</button>
 
-	<div class="filter-panel" class:open={filtersOpen} class:with-favorites={isLoggedIn} class:without-favorites={!isLoggedIn}>
+	<div class="filter-panel" class:open={filtersOpen} class:with-favorites={isLoggedIn && !hideFavoritesFilter} class:without-favorites={!isLoggedIn || hideFavoritesFilter}>
 		<CategoryFilter
 			categories={availableCategories}
 			selected={selectedCategory}
@@ -162,7 +163,7 @@
 			{months}
 		/>
 
-		{#if isLoggedIn}
+		{#if isLoggedIn && !hideFavoritesFilter}
 			<FavoritesFilter
 				enabled={selectedFavoritesOnly}
 				onToggle={onFavoritesToggle}

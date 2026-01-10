@@ -26,7 +26,7 @@
         return data.season.filter(r => matchedRecipeIds.has(r._id));
     });
 </script>
-<IconLayout icons={data.icons} active_icon={data.icon} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
+<IconLayout icons={data.icons} active_icon={data.icon} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}
 		<Recipes>
 			{#each rand_array(filteredRecipes) as recipe}
