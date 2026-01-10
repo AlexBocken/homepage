@@ -1,15 +1,10 @@
 import type { Handle, HandleServerError } from "@sveltejs/kit"
 import { redirect } from "@sveltejs/kit"
 import { error } from "@sveltejs/kit"
-import { SvelteKitAuth } from "@auth/sveltekit"
-import Authentik from "@auth/core/providers/authentik"
-import { AUTHENTIK_ID, AUTHENTIK_SECRET, AUTHENTIK_ISSUER } from "$env/static/private";
 import { sequence } from "@sveltejs/kit/hooks"
 import * as auth from "./auth"
 import { initializeScheduler } from "./lib/server/scheduler"
 import { dbConnect } from "./utils/db"
-import fs from 'fs'
-import path from 'path'
 
 // Initialize database connection on server startup
 console.log('🚀 Server starting - initializing database connection...');
