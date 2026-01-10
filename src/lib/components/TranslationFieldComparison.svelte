@@ -1,21 +1,27 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	interface Props {
+		label: string;
+		germanValue: string;
+		englishValue: string;
+		fieldName: string;
+		readonly?: boolean;
+		multiline?: boolean;
+		onchange?: (value: string) => void;
+	}
 
-	export let label: string;
-	export let germanValue: string;
-	export let englishValue: string;
-	export let fieldName: string;
-	export let readonly: boolean = false;
-	export let multiline: boolean = false;
-
-	const dispatch = createEventDispatcher();
+	let {
+		label,
+		germanValue,
+		englishValue,
+		fieldName,
+		readonly = false,
+		multiline = false,
+		onchange
+	}: Props = $props();
 
 	function handleInput(event: Event) {
 		const target = event.target as HTMLInputElement | HTMLTextAreaElement;
-		dispatch('change', {
-			field: fieldName,
-			value: target.value
-		});
+		onchange?.(target.value);
 	}
 </script>
 

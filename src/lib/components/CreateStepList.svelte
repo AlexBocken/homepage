@@ -186,7 +186,7 @@ function editStepFromReference(list_index: number, position: 'before' | 'after',
 		step_index: 0,
 	};
 
-	const modal_el = document.querySelector("#edit_step_modal") as HTMLDialogElement;
+	const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement;
 	if (modal_el) {
 		modal_el.showModal();
 	}
@@ -207,7 +207,7 @@ function openAddToReferenceModal(list_index: number, position: 'before' | 'after
 		list_index: 0,
 		step_index: 0,
 	};
-	const modal_el = document.querySelector("#edit_step_modal") as HTMLDialogElement;
+	const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement;
 	if (modal_el) {
 		modal_el.showModal();
 	}
@@ -270,7 +270,7 @@ export function show_modal_edit_step(list_index, step_index){
 	}
 	edit_step.list_index = list_index
 	edit_step.step_index = step_index
-	const modal_el = document.querySelector("#edit_step_modal");
+	const modal_el = document.querySelector(`#edit_step_modal-${lang}`);
 	modal_el.showModal();
 }
 
@@ -286,7 +286,7 @@ export function edit_step_and_close_modal(){
 				editing: false,
 				step_index: -1
 			};
-			const modal_el = document.querySelector("#edit_step_modal") as HTMLDialogElement;
+			const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement;
 			if (modal_el) {
 				setTimeout(() => modal_el.close(), 0);
 			}
@@ -315,7 +315,7 @@ export function edit_step_and_close_modal(){
 		// Normal edit behavior
 		instructions[edit_step.list_index].steps[edit_step.step_index] = edit_step.step
 	}
-	const modal_el = document.querySelector("#edit_step_modal") as HTMLDialogElement;
+	const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement;
 	if (modal_el) {
 		// Defer closing to next tick to ensure all bindings are updated
 		setTimeout(() => modal_el.close(), 0);
@@ -325,7 +325,7 @@ export function edit_step_and_close_modal(){
 export function show_modal_edit_subheading_step(list_index){
 	edit_heading.name = instructions[list_index].name
 	edit_heading.list_index = list_index
-	const el = document.querySelector('#edit_subheading_steps_modal')
+	const el = document.querySelector(`#edit_subheading_steps_modal-${lang}`)
 	el.showModal()
 }
 
@@ -942,7 +942,7 @@ h3{
 
 </div>
 </div>
-<dialog id=edit_step_modal oncancel={handleStepModalCancel}>
+<dialog id="edit_step_modal-{lang}" oncancel={handleStepModalCancel}>
 	<h2>{t[lang].editStep}</h2>
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_step.name} placeholder={t[lang].subcategoryOptional} onkeydown={(event) => do_on_key(event, 'Enter', false , edit_step_and_close_modal)}>
@@ -955,7 +955,7 @@ h3{
 	</div>
 </dialog>
 
-<dialog id=edit_subheading_steps_modal>
+<dialog id="edit_subheading_steps_modal-{lang}">
 	<h2>{t[lang].renameCategory}</h2>
 	<div class=heading_wrapper>
 		<input class="heading" type="text" bind:value={edit_heading.name} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_steps_and_close_modal)}>
