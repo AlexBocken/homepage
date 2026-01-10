@@ -8,53 +8,64 @@
 	import '$lib/css/nordtheme.css'
 	import { redirect } from '@sveltejs/kit';
 	import EditRecipeNote from '$lib/components/EditRecipeNote.svelte';
+	import type { PageData } from './$types';
+	import CardAdd from '$lib/components/CardAdd.svelte';
+	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
+	import CreateStepList from '$lib/components/CreateStepList.svelte';
+	import { season } from '$lib/js/season_store';
+	import { portions } from '$lib/js/portions_store';
+	import { img } from '$lib/js/img_store';
 
-    	export let data: PageData;
-	let preamble = data.recipe.preamble
-	let addendum = data.recipe.addendum
-	let image_preview_url="https://bocken.org/static/rezepte/thumb/" + (data.recipe.images?.[0]?.mediapath || `${data.recipe.short_name}.webp`);
-	let note = data.recipe.note
+	let { data }: { data: PageData } = $props();
+
+	let preamble = $state(data.recipe.preamble);
+	let addendum = $state(data.recipe.addendum);
+	let image_preview_url = $state("https://bocken.org/static/rezepte/thumb/" + (data.recipe.images?.[0]?.mediapath || `${data.recipe.short_name}.webp`));
+	let note = $state(data.recipe.note);
 
 	// Translation workflow state
-	let showTranslationWorkflow = false;
-	let translationData: any = data.recipe.translations?.en || null;
-	let changedFields: string[] = [];
+	let showTranslationWorkflow = $state(false);
+	let translationData = $state<any>(data.recipe.translations?.en || null);
+	let changedFields = $state<string[]>([]);
 
 	// Store original recipe data for change detection
 	const originalRecipe = JSON.parse(JSON.stringify(data.recipe));
 
-	import { season } from '$lib/js/season_store';
-	import { portions } from '$lib/js/portions_store';
-
-	portions.update(() => data.recipe.portions)
-	let portions_local
-	portions.subscribe((p) => {
-		portions_local = p
+	portions.update(() => data.recipe.portions);
+	let portions_local = $state<any>(data.recipe.portions);
+	$effect(() => {
+		portions.subscribe((p) => {
+			portions_local = p;
 		});
-
-	season.update(() => data.recipe.season)
-	let season_local
-	season.subscribe((s) => {
-		season_local = s
 	});
 
+	season.update(() => data.recipe.season);
+	let season_local = $state<any>(data.recipe.season);
+	$effect(() => {
+		season.subscribe((s) => {
+			season_local = s;
+		});
+	});
 
-	import { img } from '$lib/js/img_store';
-	let img_local
-	img.update(() => "")
-	img.subscribe((i) => {
-		img_local = i});
+	let img_local = $state<string>('');
+	img.update(() => '');
+	$effect(() => {
+		img.subscribe((i) => {
+			img_local = i;
+		});
+	});
 
-	let old_short_name = data.recipe.short_name
+	let old_short_name = $state(data.recipe.short_name);
 
-	export let card_data ={
+	let card_data = $state({
 		icon: data.recipe.icon,
 		category: data.recipe.category,
 		name: data.recipe.name,
 		description: data.recipe.description,
 		tags: data.recipe.tags,
-	}
-	export let add_info ={
+	});
+
+	let add_info = $state({
 		preparation: data.recipe.preparation,
 		fermentation: {
 			bulk: data.recipe.fermentation.bulk,
@@ -67,23 +78,17 @@
 		},
 		total_time: data.recipe.total_time,
 		cooking: data.recipe.cooking,
-	}
+	});
 
-	let images = data.recipe.images
+	let images = $state(data.recipe.images);
 
-	let short_name = data.recipe.short_name
-	let datecreated = data.recipe.datecreated
-	let datemodified = new Date()
-	let isBaseRecipe = data.recipe.isBaseRecipe || false
+	let short_name = $state(data.recipe.short_name);
+	let datecreated = $state(data.recipe.datecreated);
+	let datemodified = $state(new Date());
+	let isBaseRecipe = $state(data.recipe.isBaseRecipe || false);
 
-    	import type { PageData } from './$types';
-	import CardAdd from '$lib/components/CardAdd.svelte';
-
-	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
-	export let ingredients = data.recipe.ingredients
-
-	import CreateStepList from '$lib/components/CreateStepList.svelte';
-	export let instructions = data.recipe.instructions
+	let ingredients = $state(data.recipe.ingredients);
+	let instructions = $state(data.recipe.instructions);
 
 
 	function get_season(){
@@ -389,6 +394,17 @@ input:focus-visible
 		flex-direction: column;
 	}
 }
+
+/* Fix button icon visibility in dark mode */
+@media (prefers-color-scheme: dark) {
+	.list_wrapper :global(svg) {
+		fill: white !important;
+	}
+	.list_wrapper :global(.button_arrow) {
+		fill: var(--nord4) !important;
+	}
+}
+
 h1{
 	text-align: center;
 	margin-bottom: 2rem;
@@ -609,10 +625,10 @@ button.action_button{
 		oldRecipeData={originalRecipe}
 		{changedFields}
 		isEditMode={true}
-		on:approved={handleTranslationApproved}
-		on:skipped={handleTranslationSkipped}
-		on:cancelled={handleTranslationCancelled}
-		on:forceFullRetranslation={forceFullRetranslation}
+		onapproved={handleTranslationApproved}
+		onskipped={handleTranslationSkipped}
+		oncancelled={handleTranslationCancelled}
+		onforceFullRetranslation={forceFullRetranslation}
 	/>
 </div>
 {/if}

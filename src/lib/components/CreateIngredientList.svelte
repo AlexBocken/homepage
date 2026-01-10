@@ -191,7 +191,7 @@ function editItemFromReference(list_index: number, position: 'before' | 'after',
 		ingredient_index: "",
 	};
 
-	const modal_el = document.querySelector("#edit_ingredient_modal") as HTMLDialogElement;
+	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
 	if (modal_el) {
 		modal_el.showModal();
 	}
@@ -214,7 +214,7 @@ function openAddToReferenceModal(list_index: number, position: 'before' | 'after
 		list_index: "",
 		ingredient_index: "",
 	};
-	const modal_el = document.querySelector("#edit_ingredient_modal") as HTMLDialogElement;
+	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
 	if (modal_el) {
 		modal_el.showModal();
 	}
@@ -231,12 +231,12 @@ function get_sublist_index(sublist_name, list){
 export function show_modal_edit_subheading_ingredient(list_index){
 	edit_heading.name = ingredients[list_index].name
 	edit_heading.list_index = list_index
-	const el = document.querySelector('#edit_subheading_ingredient_modal')
+	const el = document.querySelector(`#edit_subheading_ingredient_modal-${lang}`)
 	el.showModal()
 }
 export function edit_subheading_and_close_modal(){
 	ingredients[edit_heading.list_index].name = edit_heading.name
-	const el = document.querySelector('#edit_subheading_ingredient_modal')
+	const el = document.querySelector(`#edit_subheading_ingredient_modal-${lang}`)
 	el.close()
 }
 
@@ -286,7 +286,7 @@ export function show_modal_edit_ingredient(list_index, ingredient_index){
 	edit_ingredient.list_index = list_index
 	edit_ingredient.ingredient_index = ingredient_index
 	edit_ingredient.sublist = ingredients[list_index].name
-	const modal_el = document.querySelector("#edit_ingredient_modal");
+	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`);
 	modal_el.showModal();
 }
 export function edit_ingredient_and_close_modal(){
@@ -301,7 +301,7 @@ export function edit_ingredient_and_close_modal(){
 				editing: false,
 				item_index: -1
 			};
-			const modal_el = document.querySelector("#edit_ingredient_modal") as HTMLDialogElement;
+			const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
 			if (modal_el) {
 				setTimeout(() => modal_el.close(), 0);
 			}
@@ -341,7 +341,7 @@ export function edit_ingredient_and_close_modal(){
 		}
 		ingredients[edit_ingredient.list_index].name = edit_ingredient.sublist
 	}
-	const modal_el = document.querySelector("#edit_ingredient_modal") as HTMLDialogElement;
+	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
 	if (modal_el) {
 		// Defer closing to next tick to ensure all bindings are updated
 		setTimeout(() => modal_el.close(), 0);
@@ -887,7 +887,7 @@ h3{
 		</button>
 	</div>
 </div>
-<dialog id=edit_ingredient_modal oncancel={handleIngredientModalCancel}>
+<dialog id="edit_ingredient_modal-{lang}" oncancel={handleIngredientModalCancel}>
 	<h2>{t[lang].editIngredient}</h2>
 	<div class=adder>
 	<input class=category type="text" bind:value={edit_ingredient.sublist} placeholder={t[lang].categoryOptional}>
@@ -902,7 +902,7 @@ h3{
 	</div>
 </dialog>
 
-<dialog id=edit_subheading_ingredient_modal>
+<dialog id="edit_subheading_ingredient_modal-{lang}">
 	<h2>{t[lang].renameCategory}</h2>
 	<div class=heading_wrapper>
 		<input class=heading type="text" bind:value={edit_heading.name} onkeydown={(event) => do_on_key(event, 'Enter', false, edit_subheading_and_close_modal)} >
