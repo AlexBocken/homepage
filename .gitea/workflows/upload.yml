@@ -31,7 +31,8 @@ jobs:
           git remote set-url origin https://Alexander:${{ secrets.homepage_gitea_token }}@git.bocken.org/Alexander/homepage
           git fetch origin
           git reset --hard origin/master
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm run build
           sudo systemctl stop homepage.service
           mkdir -p dist
           rm -rf dist/*
