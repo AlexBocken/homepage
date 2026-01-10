@@ -1,5 +1,5 @@
 import { SvelteKitAuth } from "@auth/sveltekit"
-import Authentik from "@auth/core/providers/authentik"
+import Authentik from "@auth/sveltekit/providers/authentik"
 import { AUTHENTIK_ID, AUTHENTIK_SECRET, AUTHENTIK_ISSUER } from "$env/static/private";
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
