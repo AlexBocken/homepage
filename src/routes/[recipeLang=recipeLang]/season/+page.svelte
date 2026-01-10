@@ -34,7 +34,7 @@
     });
 </script>
 
-<SeasonLayout active_index={current_month-1} {months} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
+<SeasonLayout active_index={current_month-1} {months} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}
 		<Recipes>
 			{#each rand_array(filteredRecipes) as recipe}

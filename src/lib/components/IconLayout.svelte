@@ -10,6 +10,7 @@
         routePrefix = '/rezepte',
         lang = 'de',
         recipes = [],
+        isLoggedIn = false,
         onSearchResults = (ids, categories) => {},
         recipesSlot
     }: {
@@ -18,6 +19,7 @@
         routePrefix?: string,
         lang?: string,
         recipes?: any[],
+        isLoggedIn?: boolean,
         onSearchResults?: (ids: any[], categories: any[]) => void,
         recipesSlot?: Snippet
     } = $props();
@@ -89,7 +91,7 @@
 {/each}
 </div>
 <section>
-<Search icon={active_icon} {lang} {recipes} {onSearchResults}></Search>
+<Search icon={active_icon} {lang} {recipes} {isLoggedIn} {onSearchResults}></Search>
 </section>
 <section>
 {@render recipesSlot?.()}

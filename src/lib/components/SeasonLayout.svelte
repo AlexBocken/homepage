@@ -10,6 +10,7 @@
         routePrefix = '/rezepte',
         lang = 'de',
         recipes = [],
+        isLoggedIn = false,
         onSearchResults = (ids, categories) => {},
         recipesSlot
     }: {
@@ -18,6 +19,7 @@
         routePrefix?: string,
         lang?: string,
         recipes?: any[],
+        isLoggedIn?: boolean,
         onSearchResults?: (ids: any[], categories: any[]) => void,
         recipesSlot?: Snippet
     } = $props();
@@ -58,7 +60,7 @@ a.month:hover,
 {/each}
 </div>
 <section>
-<Search season={active_index + 1} {lang} {recipes} {onSearchResults}></Search>
+<Search season={active_index + 1} {lang} {recipes} {isLoggedIn} {onSearchResults}></Search>
 </section>
 <section>
 {@render recipesSlot?.()}

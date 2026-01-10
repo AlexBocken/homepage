@@ -79,7 +79,7 @@ h1{
     {/if}
 </p>
 
-<Search favoritesOnly={true} lang={data.lang} recipes={data.favorites} onSearchResults={handleSearchResults}></Search>
+<Search favoritesOnly={true} lang={data.lang} recipes={data.favorites} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 
 {#if data.error}
     <p class="empty-state">{labels.errorLoading} {data.error}</p>

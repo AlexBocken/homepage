@@ -14,13 +14,13 @@
 
 	let checked = $state(enabled);
 
+	// Watch for changes to checked and call onToggle
 	$effect(() => {
-		checked = enabled;
+		// Track checked as dependency
+		const currentChecked = checked;
+		// Call onToggle whenever checked changes
+		onToggle(currentChecked);
 	});
-
-	function handleChange() {
-		onToggle(checked);
-	}
 </script>
 
 <style>
@@ -69,6 +69,5 @@
 	<Toggle
 		bind:checked={checked}
 		label=""
-		onchange={handleChange}
 	/>
 </div>

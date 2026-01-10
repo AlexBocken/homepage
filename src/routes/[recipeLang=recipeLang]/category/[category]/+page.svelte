@@ -35,7 +35,7 @@
 	}
 </style>
 <h1>{label} <q>{data.category}</q>:</h1>
-<Search category={data.category} lang={data.lang} recipes={data.recipes} onSearchResults={handleSearchResults}></Search>
+<Search category={data.category} lang={data.lang} recipes={data.recipes} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 <section>
 <Recipes>
 	{#each rand_array(filteredRecipes) as recipe}
