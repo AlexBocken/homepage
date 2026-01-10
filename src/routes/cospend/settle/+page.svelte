@@ -170,8 +170,11 @@
             <h3>Money You're Owed</h3>
             {#each debtData.whoOwesMe as debt}
               <div class="settlement-option"
+                   role="button"
+                   tabindex="0"
                    class:selected={selectedSettlement?.type === 'receive' && selectedSettlement?.from === debt.username}
-                   on:click={() => selectSettlement('receive', debt.username, debt.netAmount)}>
+                   onclick={() => selectSettlement('receive', debt.username, debt.netAmount)}
+                   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSettlement('receive', debt.username, debt.netAmount); } }}>
                 <div class="settlement-user">
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
@@ -192,8 +195,11 @@
             <h3>Money You Owe</h3>
             {#each debtData.whoIOwe as debt}
               <div class="settlement-option"
+                   role="button"
+                   tabindex="0"
                    class:selected={selectedSettlement?.type === 'pay' && selectedSettlement?.to === debt.username}
-                   on:click={() => selectSettlement('pay', debt.username, debt.netAmount)}>
+                   onclick={() => selectSettlement('pay', debt.username, debt.netAmount)}
+                   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSettlement('pay', debt.username, debt.netAmount); } }}>
                 <div class="settlement-user">
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
@@ -259,7 +265,7 @@
           <div class="settlement-actions">
             <button
               class="btn btn-settlement"
-              on:click={processSettlement}
+              onclick={processSettlement}
               disabled={submitting || !settlementAmount}>
               {#if submitting}
                 Recording Settlement...
@@ -267,7 +273,7 @@
                 Record Settlement
               {/if}
             </button>
-            <button class="btn btn-secondary" on:click={() => selectedSettlement = null}>
+            <button class="btn btn-secondary" onclick={() => selectedSettlement = null}>
               Cancel
             </button>
           </div>
@@ -666,11 +672,6 @@
   .btn-settlement:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-  }
-
-  .back-actions {
-    text-align: center;
-    margin-top: 2rem;
   }
 
   .actions {

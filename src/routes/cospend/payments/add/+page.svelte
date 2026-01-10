@@ -54,11 +54,12 @@
   let exchangeRateError = $state(null);
   let exchangeRateTimeout = $state();
 
-  // Initialize users from server data for no-JS support
-  let users = $state(predefinedMode ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []));
-  
-  // Initialize split amounts for server-side users
-  users.forEach(user => {
+  // Initialize users from server data for no-JS support (use data directly to avoid reactivity warning)
+  const initialUsers = data.predefinedUsers.length > 0 ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []);
+  let users = $state(initialUsers);
+
+  // Initialize split amounts for server-side users (use initialUsers to avoid reactivity warning)
+  initialUsers.forEach(user => {
     splitAmounts[user] = 0;
     personalAmounts[user] = 0;
   });

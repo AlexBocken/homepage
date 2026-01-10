@@ -657,10 +657,6 @@
       align-items: stretch;
     }
 
-    .header-actions {
-      justify-content: space-between;
-    }
-
     .payments-grid {
       grid-template-columns: 1fr;
     }
