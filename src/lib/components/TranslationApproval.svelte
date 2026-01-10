@@ -1,22 +1,38 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import type { TranslatedRecipeType } from '$types/types';
 	import TranslationFieldComparison from './TranslationFieldComparison.svelte';
 	import CreateIngredientList from './CreateIngredientList.svelte';
 	import CreateStepList from './CreateStepList.svelte';
 	import GenerateAltTextButton from './GenerateAltTextButton.svelte';
 
-	export let germanData: any;
-	export let englishData: TranslatedRecipeType | null = null;
-	export let changedFields: string[] = [];
-	export let isEditMode: boolean = false; // true when editing existing recipe
+	interface Props {
+		germanData: any;
+		englishData?: TranslatedRecipeType | null;
+		changedFields?: string[];
+		isEditMode?: boolean;
+		oldRecipeData?: any;
+		onapproved?: (event: CustomEvent) => void;
+		onskipped?: () => void;
+		oncancelled?: () => void;
+		onforceFullRetranslation?: () => void;
+	}
 
-	const dispatch = createEventDispatcher();
+	let {
+		germanData,
+		englishData = null,
+		changedFields = [],
+		isEditMode = false,
+		oldRecipeData = null,
+		onapproved,
+		onskipped,
+		oncancelled,
+		onforceFullRetranslation
+	}: Props = $props();
 
 	type TranslationState = 'idle' | 'translating' | 'preview' | 'approved' | 'error';
-	let translationState: TranslationState = englishData ? 'preview' : 'idle';
-	let errorMessage: string = '';
-	let validationErrors: string[] = [];
+	let translationState = $state<TranslationState>(englishData ? 'preview' : 'idle');
+	let errorMessage = $state('');
+	let validationErrors = $state<string[]>([]);
 
 	// Helper function to initialize images array for English translation
 	function initializeImagesArray(germanImages: any[]): any[] {
@@ -27,22 +43,26 @@
 		}));
 	}
 
-	// Editable English data (clone of englishData or initialized from germanData)
-	let editableEnglish: any = englishData ? {
-		...englishData,
-		// Ensure images array exists and matches German images length
-		images: englishData.images || initializeImagesArray(germanData.images || [])
-	} : null;
-
-	// Store old recipe data for granular change detection
-	export let oldRecipeData: any = null;
+	// Eagerly initialize editableEnglish from germanData if no English translation exists
+	let editableEnglish = $state<any>(
+		englishData ? {
+			...englishData,
+			images: englishData.images || initializeImagesArray(germanData.images || [])
+		} : {
+			...germanData,
+			translationStatus: 'pending',
+			ingredients: JSON.parse(JSON.stringify(germanData.ingredients || [])),
+			instructions: JSON.parse(JSON.stringify(germanData.instructions || [])),
+			images: initializeImagesArray(germanData.images || [])
+		}
+	);
 
 	// Translation metadata (tracks which items were re-translated)
-	let translationMetadata: any = null;
+	let translationMetadata = $state<any>(null);
 
 	// Track base recipes that need translation
-	let untranslatedBaseRecipes: { shortName: string, name: string }[] = [];
-	let checkingBaseRecipes = false;
+	let untranslatedBaseRecipes = $state<{ shortName: string, name: string }[]>([]);
+	let checkingBaseRecipes = $state(false);
 
 	// Sync base recipe references from German to English
 	async function syncBaseRecipeReferences() {
@@ -74,17 +94,8 @@
 			}
 		});
 
-		// If no base recipes in German, just initialize editableEnglish from German data if needed
+		// If no base recipes in German, we're done
 		if (germanBaseRecipeShortNames.size === 0) {
-			if (!editableEnglish) {
-				editableEnglish = {
-					...germanData,
-					translationStatus: 'pending',
-					ingredients: JSON.parse(JSON.stringify(germanData.ingredients || [])),
-					instructions: JSON.parse(JSON.stringify(germanData.instructions || [])),
-					images: editableEnglish?.images || initializeImagesArray(germanData.images || [])
-				};
-			}
 			checkingBaseRecipes = false;
 			return;
 		}
@@ -120,96 +131,68 @@
 			return;
 		}
 
-		// Now merge German base recipe references into editableEnglish
-		// This works for both new translations and existing translations
+		// Merge German base recipe references into editableEnglish
+		// Update ingredients with English base recipe names
+		editableEnglish.ingredients = germanData.ingredients.map((germanIng: any, index: number) => {
+			if (germanIng.type === 'reference' && germanIng.baseRecipeRef) {
+				const shortName = getShortName(germanIng.baseRecipeRef);
+				const translation = baseRecipeTranslations.get(shortName);
+				const englishIng = editableEnglish.ingredients[index];
 
-		if (!editableEnglish) {
-			// No existing English translation - create from German structure with English base recipe names
-			editableEnglish = {
-				...germanData,
-				translationStatus: 'pending',
-				ingredients: JSON.parse(JSON.stringify(germanData.ingredients || [])).map((ing: any) => {
-					if (ing.type === 'reference' && ing.baseRecipeRef) {
-						const shortName = getShortName(ing.baseRecipeRef);
-						const translation = baseRecipeTranslations.get(shortName);
-						return translation ? { ...ing, name: translation.enName } : ing;
-					}
-					return ing;
-				}),
-				instructions: JSON.parse(JSON.stringify(germanData.instructions || [])).map((inst: any) => {
-					if (inst.type === 'reference' && inst.baseRecipeRef) {
-						const shortName = getShortName(inst.baseRecipeRef);
-						const translation = baseRecipeTranslations.get(shortName);
-						return translation ? { ...inst, name: translation.enName } : inst;
-					}
-					return inst;
-				}),
-				images: initializeImagesArray(germanData.images || [])
-			};
-		} else {
-			// Existing English translation - merge German structure with English translations
-			// Use German structure but keep English translations where they exist
-			editableEnglish = {
-				...editableEnglish,
-				ingredients: germanData.ingredients.map((germanIng: any, index: number) => {
-					if (germanIng.type === 'reference' && germanIng.baseRecipeRef) {
-						// This is a base recipe reference - use English base recipe name
-						const shortName = getShortName(germanIng.baseRecipeRef);
-						const translation = baseRecipeTranslations.get(shortName);
-						const englishIng = editableEnglish.ingredients[index];
+				// If English already has this reference at same position, keep it
+				if (englishIng?.type === 'reference' && englishIng.baseRecipeRef === germanIng.baseRecipeRef) {
+					return englishIng;
+				}
 
-						// If English already has this reference at same position, keep it
-						if (englishIng?.type === 'reference' && englishIng.baseRecipeRef === germanIng.baseRecipeRef) {
-							return englishIng;
-						}
+				// Otherwise, create new reference with English base recipe name
+				return translation ? { ...germanIng, name: translation.enName } : germanIng;
+			} else {
+				// Regular ingredient section - keep existing English translation if it exists
+				const englishIng = editableEnglish.ingredients[index];
+				if (englishIng && englishIng.type !== 'reference') {
+					return englishIng;
+				}
+				// If no English translation exists, use German structure (will be translated later)
+				return germanIng;
+			}
+		});
 
-						// Otherwise, create new reference with English base recipe name
-						return translation ? { ...germanIng, name: translation.enName } : germanIng;
-					} else {
-						// Regular ingredient section - keep existing English translation if it exists
-						const englishIng = editableEnglish.ingredients[index];
-						if (englishIng && englishIng.type !== 'reference') {
-							return englishIng;
-						}
-						// If no English translation exists, use German structure (will be translated later)
-						return germanIng;
-					}
-				}),
-				instructions: germanData.instructions.map((germanInst: any, index: number) => {
-					if (germanInst.type === 'reference' && germanInst.baseRecipeRef) {
-						// This is a base recipe reference - use English base recipe name
-						const shortName = getShortName(germanInst.baseRecipeRef);
-						const translation = baseRecipeTranslations.get(shortName);
-						const englishInst = editableEnglish.instructions[index];
+		// Update instructions with English base recipe names
+		editableEnglish.instructions = germanData.instructions.map((germanInst: any, index: number) => {
+			if (germanInst.type === 'reference' && germanInst.baseRecipeRef) {
+				const shortName = getShortName(germanInst.baseRecipeRef);
+				const translation = baseRecipeTranslations.get(shortName);
+				const englishInst = editableEnglish.instructions[index];
 
-						// If English already has this reference at same position, keep it
-						if (englishInst?.type === 'reference' && englishInst.baseRecipeRef === germanInst.baseRecipeRef) {
-							return englishInst;
-						}
+				// If English already has this reference at same position, keep it
+				if (englishInst?.type === 'reference' && englishInst.baseRecipeRef === germanInst.baseRecipeRef) {
+					return englishInst;
+				}
 
-						// Otherwise, create new reference with English base recipe name
-						return translation ? { ...germanInst, name: translation.enName } : germanInst;
-					} else {
-						// Regular instruction section - keep existing English translation if it exists
-						const englishInst = editableEnglish.instructions[index];
-						if (englishInst && englishInst.type !== 'reference') {
-							return englishInst;
-						}
-						// If no English translation exists, use German structure (will be translated later)
-						return germanInst;
-					}
-				}),
-				// Sync images array - keep existing English alt/caption or initialize empty
-				images: germanData.images?.map((germanImg: any, index: number) => {
-					const existingEnImage = editableEnglish.images?.[index];
-					return existingEnImage || { alt: '', caption: '' };
-				}) || []
-			};
-		}
+				// Otherwise, create new reference with English base recipe name
+				return translation ? { ...germanInst, name: translation.enName } : germanInst;
+			} else {
+				// Regular instruction section - keep existing English translation if it exists
+				const englishInst = editableEnglish.instructions[index];
+				if (englishInst && englishInst.type !== 'reference') {
+					return englishInst;
+				}
+				// If no English translation exists, use German structure (will be translated later)
+				return germanInst;
+			}
+		});
+
+		// Sync images array - keep existing English alt/caption or initialize empty
+		editableEnglish.images = germanData.images?.map((germanImg: any, index: number) => {
+			const existingEnImage = editableEnglish.images?.[index];
+			return existingEnImage || { alt: '', caption: '' };
+		}) || [];
 	}
 
-	// Always sync base recipe references when component mounts
-	syncBaseRecipeReferences();
+	// Run base recipe check in background (non-blocking)
+	$effect(() => {
+		syncBaseRecipeReferences();
+	});
 
 	// Handle auto-translate button click
 	async function handleAutoTranslate() {
@@ -251,9 +234,6 @@
 
 			translationState = 'preview';
 
-			// Notify parent component
-			dispatch('translated', { translatedRecipe: editableEnglish });
-
 		} catch (error: any) {
 			console.error('Translation error:', error);
 			translationState = 'error';
@@ -262,30 +242,26 @@
 	}
 
 	// Handle field changes from TranslationFieldComparison components
-	function handleFieldChange(event: CustomEvent) {
-		const { field, value } = event.detail;
-		if (editableEnglish) {
-			// Special handling for tags (comma-separated string -> array)
-			if (field === 'tags') {
-				editableEnglish[field] = value.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+	function handleFieldChange(value: string, field: string) {
+		// Special handling for tags (comma-separated string -> array)
+		if (field === 'tags') {
+			editableEnglish[field] = value.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+		}
+		// Handle nested fields (e.g., baking.temperature, fermentation.bulk)
+		else if (field.includes('.')) {
+			const [parent, child] = field.split('.');
+			if (!editableEnglish[parent]) {
+				editableEnglish[parent] = {};
 			}
-			// Handle nested fields (e.g., baking.temperature, fermentation.bulk)
-			else if (field.includes('.')) {
-				const [parent, child] = field.split('.');
-				if (!editableEnglish[parent]) {
-					editableEnglish[parent] = {};
-				}
-				editableEnglish[parent][child] = value;
-			} else {
-				editableEnglish[field] = value;
-			}
-			editableEnglish = editableEnglish; // Trigger reactivity
+			editableEnglish[parent][child] = value;
+		} else {
+			editableEnglish[field] = value;
 		}
 	}
 
 	// Create add_info object for CreateStepList that references editableEnglish properties
 	// This allows CreateStepList to modify the values directly
-	$: englishAddInfo = editableEnglish ? {
+	let englishAddInfo = $derived({
 		get preparation() { return editableEnglish.preparation || ''; },
 		set preparation(value) { editableEnglish.preparation = value; },
 		fermentation: {
@@ -321,7 +297,7 @@
 		set total_time(value) { editableEnglish.total_time = value; },
 		get cooking() { return editableEnglish.cooking || ''; },
 		set cooking(value) { editableEnglish.cooking = value; },
-	} : null;
+	});
 
 	// Handle approval
 	function handleApprove() {
@@ -343,31 +319,39 @@
 		}
 
 		translationState = 'approved';
-		dispatch('approved', {
-			translatedRecipe: {
-				...editableEnglish,
-				translationStatus: 'approved',
-				lastTranslated: new Date(),
-				changedFields: [],
+		onapproved?.(new CustomEvent('approved', {
+			detail: {
+				translatedRecipe: {
+					...editableEnglish,
+					translationStatus: 'approved',
+					lastTranslated: new Date(),
+					changedFields: [],
+				}
 			}
-		});
+		}));
 	}
 
 	// Handle skip translation
 	function handleSkip() {
-		dispatch('skipped');
+		onskipped?.();
 	}
 
 	// Handle cancel
 	function handleCancel() {
 		translationState = 'idle';
-		editableEnglish = null;
-		dispatch('cancelled');
+		editableEnglish = {
+			...germanData,
+			translationStatus: 'pending',
+			ingredients: JSON.parse(JSON.stringify(germanData.ingredients || [])),
+			instructions: JSON.parse(JSON.stringify(germanData.instructions || [])),
+			images: initializeImagesArray(germanData.images || [])
+		};
+		oncancelled?.();
 	}
 
 	// Handle force full retranslation
 	function handleForceFullRetranslation() {
-		dispatch('forceFullRetranslation');
+		onforceFullRetranslation?.();
 	}
 
 	// Get status badge color
@@ -460,6 +444,16 @@
 @media screen and (max-width: 700px) {
 	.list-wrapper {
 		flex-direction: column;
+	}
+}
+
+/* Fix button icon visibility in dark mode */
+@media (prefers-color-scheme: dark) {
+	.list-wrapper :global(svg) {
+		fill: white !important;
+	}
+	.list-wrapper :global(.button_arrow) {
+		fill: var(--nord4) !important;
 	}
 }
 
@@ -687,7 +681,7 @@ button:disabled {
 					englishValue={editableEnglish?.name || ''}
 					fieldName="name"
 					readonly={false}
-					on:change={handleFieldChange}
+					onchange={(value) => handleFieldChange(value, 'name')}
 				/>
 			</div>
 
@@ -698,7 +692,7 @@ button:disabled {
 					englishValue={editableEnglish?.short_name || ''}
 					fieldName="short_name"
 					readonly={false}
-					on:change={handleFieldChange}
+					onchange={(value) => handleFieldChange(value, 'short_name')}
 				/>
 			</div>
 
@@ -710,7 +704,7 @@ button:disabled {
 					fieldName="description"
 					readonly={false}
 					multiline={true}
-					on:change={handleFieldChange}
+					onchange={(value) => handleFieldChange(value, 'description')}
 				/>
 			</div>
 
@@ -721,7 +715,7 @@ button:disabled {
 					englishValue={editableEnglish?.category || ''}
 					fieldName="category"
 					readonly={false}
-					on:change={handleFieldChange}
+					onchange={(value) => handleFieldChange(value, 'category')}
 				/>
 			</div>
 
@@ -733,7 +727,7 @@ button:disabled {
 						englishValue={editableEnglish.tags.join(', ')}
 						fieldName="tags"
 						readonly={false}
-						on:change={handleFieldChange}
+						onchange={(value) => handleFieldChange(value, 'tags')}
 					/>
 				</div>
 			{/if}
@@ -747,7 +741,7 @@ button:disabled {
 						fieldName="preamble"
 						readonly={false}
 						multiline={true}
-						on:change={handleFieldChange}
+						onchange={(value) => handleFieldChange(value, 'preamble')}
 					/>
 				</div>
 			{/if}
@@ -761,7 +755,7 @@ button:disabled {
 						fieldName="note"
 						readonly={false}
 						multiline={true}
-						on:change={handleFieldChange}
+						onchange={(value) => handleFieldChange(value, 'note')}
 					/>
 				</div>
 			{/if}
@@ -774,7 +768,7 @@ button:disabled {
 						englishValue={editableEnglish.portions}
 						fieldName="portions"
 						readonly={false}
-						on:change={handleFieldChange}
+						onchange={(value) => handleFieldChange(value, 'portions')}
 					/>
 				</div>
 			{/if}
@@ -875,7 +869,7 @@ button:disabled {
 						fieldName="addendum"
 						readonly={false}
 						multiline={true}
-						on:change={handleFieldChange}
+						onchange={(value) => handleFieldChange(value, 'addendum')}
 					/>
 				</div>
 			{/if}
