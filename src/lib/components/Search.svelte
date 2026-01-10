@@ -42,6 +42,7 @@
     let selectedIcon = $state(null);
     let selectedSeasons = $state([]);
     let selectedFavoritesOnly = $state(false);
+    let useAndLogic = $state(true);
 
     // Initialize from props (for backwards compatibility)
     $effect(() => {
@@ -55,38 +56,61 @@
     // Apply non-text filters (category, tags, icon, season)
     function applyNonTextFilters(recipeList) {
         return recipeList.filter(recipe => {
-            // Category filter
-            if (selectedCategory && recipe.category !== selectedCategory) {
-                return false;
-            }
-
-            // Multi-tag AND logic: recipe must have ALL selected tags
-            if (selectedTags.length > 0) {
-                const recipeTags = recipe.tags || [];
-                if (!selectedTags.every(tag => recipeTags.includes(tag))) {
+            if (useAndLogic) {
+                // AND mode: recipe must satisfy ALL active filters
+                // Category filter (single value in AND mode)
+                if (selectedCategory && recipe.category !== selectedCategory) {
                     return false;
                 }
-            }
 
-            // Icon filter
-            if (selectedIcon && recipe.icon !== selectedIcon) {
-                return false;
-            }
+                // Multi-tag AND logic: recipe must have ALL selected tags
+                if (selectedTags.length > 0) {
+                    const recipeTags = recipe.tags || [];
+                    if (!selectedTags.every(tag => recipeTags.includes(tag))) {
+                        return false;
+                    }
+                }
 
-            // Season filter: recipe in any selected season
-            if (selectedSeasons.length > 0) {
-                const recipeSeasons = recipe.season || [];
-                if (!selectedSeasons.some(s => recipeSeasons.includes(s))) {
+                // Icon filter (single value in AND mode)
+                if (selectedIcon && recipe.icon !== selectedIcon) {
                     return false;
                 }
-            }
 
-            // Favorites filter
-            if (selectedFavoritesOnly && !recipe.isFavorite) {
-                return false;
-            }
+                // Season filter: recipe in any selected season
+                if (selectedSeasons.length > 0) {
+                    const recipeSeasons = recipe.season || [];
+                    if (!selectedSeasons.some(s => recipeSeasons.includes(s))) {
+                        return false;
+                    }
+                }
 
-            return true;
+                // Favorites filter
+                if (selectedFavoritesOnly && !recipe.isFavorite) {
+                    return false;
+                }
+
+                return true;
+            } else {
+                // OR mode: recipe must satisfy AT LEAST ONE active filter
+                const categoryArray = Array.isArray(selectedCategory) ? selectedCategory : (selectedCategory ? [selectedCategory] : []);
+                const iconArray = Array.isArray(selectedIcon) ? selectedIcon : (selectedIcon ? [selectedIcon] : []);
+
+                const hasActiveFilters = categoryArray.length > 0 || selectedTags.length > 0 || iconArray.length > 0 || selectedSeasons.length > 0 || selectedFavoritesOnly;
+
+                // If no filters active, return all
+                if (!hasActiveFilters) {
+                    return true;
+                }
+
+                // Check if recipe matches any filter
+                const matchesCategory = categoryArray.length > 0 ? categoryArray.includes(recipe.category) : false;
+                const matchesTags = selectedTags.length > 0 ? selectedTags.some(tag => (recipe.tags || []).includes(tag)) : false;
+                const matchesIcon = iconArray.length > 0 ? iconArray.includes(recipe.icon) : false;
+                const matchesSeasons = selectedSeasons.length > 0 ? selectedSeasons.some(s => (recipe.season || []).includes(s)) : false;
+                const matchesFavorites = selectedFavoritesOnly ? recipe.isFavorite : false;
+
+                return matchesCategory || matchesTags || matchesIcon || matchesSeasons || matchesFavorites;
+            }
         });
     }
 
@@ -186,6 +210,20 @@
         selectedFavoritesOnly = enabled;
     }
 
+    function handleLogicModeToggle(useAnd) {
+        useAndLogic = useAnd;
+
+        // When switching to AND mode, convert arrays to single values
+        if (useAnd) {
+            if (Array.isArray(selectedCategory)) {
+                selectedCategory = selectedCategory.length > 0 ? selectedCategory[0] : null;
+            }
+            if (Array.isArray(selectedIcon)) {
+                selectedIcon = selectedIcon.length > 0 ? selectedIcon[0] : null;
+            }
+        }
+    }
+
     function handleSubmit(event) {
         if (browser) {
             // For JS-enabled browsers, prevent default and navigate programmatically
@@ -210,6 +248,7 @@
             const icn = selectedIcon;
             const seasons = selectedSeasons;
             const favsOnly = selectedFavoritesOnly;
+            const andLogic = useAndLogic;
 
             // Set debounce timer
             const timer = setTimeout(() => {
@@ -358,6 +397,7 @@ scale: 0.8 0.8;
     {selectedIcon}
     {selectedSeasons}
     {selectedFavoritesOnly}
+    {useAndLogic}
     {lang}
     {isLoggedIn}
     hideFavoritesFilter={favoritesOnly}
@@ -366,5 +406,6 @@ scale: 0.8 0.8;
     onIconChange={handleIconChange}
     onSeasonChange={handleSeasonChange}
     onFavoritesToggle={handleFavoritesToggle}
+    onLogicModeToggle={handleLogicModeToggle}
   />
 </div>

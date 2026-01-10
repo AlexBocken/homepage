@@ -5,6 +5,7 @@
 	import IconFilter from './IconFilter.svelte';
 	import SeasonFilter from './SeasonFilter.svelte';
 	import FavoritesFilter from './FavoritesFilter.svelte';
+	import LogicModeToggle from './LogicModeToggle.svelte';
 
 	let {
 		availableCategories = [],
@@ -15,6 +16,7 @@
 		selectedIcon = null,
 		selectedSeasons = [],
 		selectedFavoritesOnly = false,
+		useAndLogic = true,
 		lang = 'de',
 		isLoggedIn = false,
 		hideFavoritesFilter = false,
@@ -22,7 +24,8 @@
 		onTagToggle = () => {},
 		onIconChange = () => {},
 		onSeasonChange = () => {},
-		onFavoritesToggle = () => {}
+		onFavoritesToggle = () => {},
+		onLogicModeToggle = () => {}
 	} = $props();
 
 	const isEnglish = $derived(lang === 'en');
@@ -85,11 +88,11 @@
 	}
 
 	.filter-panel.with-favorites {
-		grid-template-columns: 120px 120px 1fr 160px 90px;
+		grid-template-columns: 110px 120px 120px 1fr 160px 90px;
 	}
 
 	.filter-panel.without-favorites {
-		grid-template-columns: 120px 120px 1fr 160px;
+		grid-template-columns: 110px 120px 120px 1fr 160px;
 	}
 
 	@media (max-width: 968px) {
@@ -135,11 +138,18 @@
 	</button>
 
 	<div class="filter-panel" class:open={filtersOpen} class:with-favorites={isLoggedIn && !hideFavoritesFilter} class:without-favorites={!isLoggedIn || hideFavoritesFilter}>
+		<LogicModeToggle
+			{useAndLogic}
+			onToggle={onLogicModeToggle}
+			{lang}
+		/>
+
 		<CategoryFilter
 			categories={availableCategories}
 			selected={selectedCategory}
 			onChange={onCategoryChange}
 			{lang}
+			{useAndLogic}
 		/>
 
 		<IconFilter
@@ -147,6 +157,7 @@
 			selected={selectedIcon}
 			onChange={onIconChange}
 			{lang}
+			{useAndLogic}
 		/>
 
 		<TagFilter
