@@ -12,7 +12,7 @@ import { do_on_key } from '$lib/components/do_on_key.js'
 import { portions } from '$lib/js/portions_store.js'
 import BaseRecipeSelector from '$lib/components/BaseRecipeSelector.svelte'
 
-let portions_local
+let portions_local = $state()
 portions.subscribe((p) => {
 	portions_local = p
 });
@@ -21,7 +21,7 @@ export function set_portions(){
 	portions.update((p) => portions_local)
 }
 
-export let lang: 'de' | 'en' = 'de';
+let { lang = 'de' as 'de' | 'en', ingredients = $bindable() } = $props<{ lang?: 'de' | 'en', ingredients: any }>();
 
 // Translation strings
 const t = {
@@ -81,41 +81,39 @@ const t = {
 	}
 };
 
-export let ingredients
-
-let new_ingredient = {
+let new_ingredient = $state({
 	amount: "",
 	unit: "",
 	name: "",
 	sublist: "",
-}
+});
 
-let edit_ingredient = {
+let edit_ingredient = $state({
 	amount: "",
 	unit: "",
 	name: "",
 	sublist: "",
 	list_index: "",
 	ingredient_index: "",
-}
+});
 
-let edit_heading = {
+let edit_heading = $state({
 	name:"",
 	list_index: "",
-	}
+	});
 
 // Base recipe selector state
-let showSelector = false;
-let insertPosition = 0;
+let showSelector = $state(false);
+let insertPosition = $state(0);
 
 // State for adding items to references
-let addingToReference = {
+let addingToReference = $state({
 	active: false,
 	list_index: -1,
 	position: 'before' as 'before' | 'after',
 	editing: false,
 	item_index: -1
-};
+});
 
 function openSelector(position: number) {
 	insertPosition = position;
@@ -820,7 +818,7 @@ h3{
 			{/if}
 		</div>
 	{:else}
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<h3>
 		<div class=move_buttons_container>
 			<button onclick="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">

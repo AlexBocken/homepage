@@ -9,12 +9,11 @@
   import SplitMethodSelector from '$lib/components/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/UsersList.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
-  
-  export let data;
-  export let form;
+
+  let { data, form } = $props();
 
   // Initialize form data with server values if available (for error handling)
-  let formData = {
+  let formData = $state({
     title: form?.values?.title || '',
     description: form?.values?.description || '',
     amount: form?.values?.amount || '',
@@ -25,49 +24,49 @@
     splitMethod: form?.values?.splitMethod || 'equal',
     splits: [],
     isRecurring: form?.values?.isRecurring === 'true' || false
-  };
+  });
 
   // Recurring payment settings
-  let recurringData = {
+  let recurringData = $state({
     frequency: form?.values?.recurringFrequency || 'monthly',
     cronExpression: form?.values?.recurringCronExpression || '',
     startDate: form?.values?.recurringStartDate || new Date().toISOString().split('T')[0],
     endDate: form?.values?.recurringEndDate || ''
-  };
+  });
 
-  let imageFile = null;
-  let imagePreview = '';
-  let uploading = false;
-  let newUser = '';
-  let splitAmounts = {};
-  let personalAmounts = {};
-  let loading = false;
-  let error = form?.error || null;
-  let predefinedMode = data.predefinedUsers.length > 0;
-  let jsEnhanced = false;
-  let cronError = false;
-  let nextExecutionPreview = '';
-  let supportedCurrencies = ['CHF'];
-  let loadingCurrencies = false;
-  let currentExchangeRate = null;
-  let convertedAmount = null;
-  let loadingExchangeRate = false;
-  let exchangeRateError = null;
-  let exchangeRateTimeout;
-  
+  let imageFile = $state(null);
+  let imagePreview = $state('');
+  let uploading = $state(false);
+  let newUser = $state('');
+  let splitAmounts = $state({});
+  let personalAmounts = $state({});
+  let loading = $state(false);
+  let error = $state(form?.error || null);
+  let predefinedMode = $state(data.predefinedUsers.length > 0);
+  let jsEnhanced = $state(false);
+  let cronError = $state(false);
+  let nextExecutionPreview = $state('');
+  let supportedCurrencies = $state(['CHF']);
+  let loadingCurrencies = $state(false);
+  let currentExchangeRate = $state(null);
+  let convertedAmount = $state(null);
+  let loadingExchangeRate = $state(false);
+  let exchangeRateError = $state(null);
+  let exchangeRateTimeout = $state();
+
   // Initialize users from server data for no-JS support
-  let users = predefinedMode ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []);
+  let users = $state(predefinedMode ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []));
   
   // Initialize split amounts for server-side users
   users.forEach(user => {
     splitAmounts[user] = 0;
     personalAmounts[user] = 0;
   });
-  
-  $: categoryOptions = getCategoryOptions();
-  
+
+  let categoryOptions = $derived(getCategoryOptions());
+
   // Reactive text for "Paid in Full" option
-  $: paidInFullText = (() => {
+  let paidInFullText = $derived.by(() => {
     // No-JS fallback text - always generic
     if (!jsEnhanced) {
       if (predefinedMode) {
@@ -76,26 +75,26 @@
         return 'Paid in Full for others';
       }
     }
-    
+
     // JavaScript-enhanced reactive text
     if (!formData.paidBy) {
       return 'Paid in Full';
     }
-    
+
     // Special handling for 2-user predefined setup
     if (predefinedMode && users.length === 2) {
       const otherUser = users.find(user => user !== formData.paidBy);
       // Always show "for" the other user (who benefits) regardless of who pays
       return otherUser ? `Paid in Full for ${otherUser}` : 'Paid in Full';
     }
-    
+
     // General case with JS
     if (formData.paidBy === data.currentUser) {
       return 'Paid in Full by You';
     } else {
       return `Paid in Full by ${formData.paidBy}`;
     }
-  })();
+  });
 
   onMount(async () => {
     jsEnhanced = true;
@@ -316,20 +315,26 @@
     }
   }
 
-  $: if (recurringData.cronExpression) {
-    validateCron();
-  }
+  $effect(() => {
+    if (recurringData.cronExpression) {
+      validateCron();
+    }
+  });
 
-  $: if (recurringData.frequency || recurringData.cronExpression || recurringData.startDate || formData.isRecurring) {
-    updateNextExecutionPreview();
-  }
+  $effect(() => {
+    if (recurringData.frequency || recurringData.cronExpression || recurringData.startDate || formData.isRecurring) {
+      updateNextExecutionPreview();
+    }
+  });
 
   // Fetch exchange rate when currency, amount, or date changes
-  $: if (jsEnhanced && formData.currency && formData.currency !== 'CHF' && formData.date && formData.amount) {
-    // Add a small delay to avoid excessive API calls while user is typing
-    clearTimeout(exchangeRateTimeout);
-    exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
-  }
+  $effect(() => {
+    if (jsEnhanced && formData.currency && formData.currency !== 'CHF' && formData.date && formData.amount) {
+      // Add a small delay to avoid excessive API calls while user is typing
+      clearTimeout(exchangeRateTimeout);
+      exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
+    }
+  });
 </script>
 
 <svelte:head>

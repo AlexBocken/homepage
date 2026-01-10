@@ -3,15 +3,15 @@
   import { goto } from '$app/navigation';
   import Header from '$lib/components/Header.svelte';
 
-  $: status = $page.status;
-  $: error = $page.error;
+  let status = $derived($page.status);
+  let error = $derived($page.error);
 
   // Get session data if available (may not be available in error context)
-  $: session = $page.data?.session;
-  $: user = session?.user;
+  let session = $derived($page.data?.session);
+  let user = $derived(session?.user);
 
   // Get Bible quote from SSR via handleError hook
-  $: bibleQuote = $page.error?.bibleQuote;
+  let bibleQuote = $derived($page.error?.bibleQuote);
 
   function getErrorTitle(status) {
     switch (status) {

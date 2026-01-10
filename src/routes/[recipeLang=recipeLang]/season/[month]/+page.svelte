@@ -5,7 +5,7 @@
     import MediaScroller from '$lib/components/MediaScroller.svelte';
     import Card from '$lib/components/Card.svelte';
     import Search from '$lib/components/Search.svelte';
-    let { data }: { data: PageData } = $props();
+    let { data } = $props<{ data: PageData }>();
 
     const isEnglish = $derived(data.lang === 'en');
     const months = $derived(isEnglish
@@ -33,9 +33,11 @@
     });
 </script>
 <SeasonLayout active_index={data.month -1} {months} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
-<Recipes slot=recipes>
-	{#each rand_array(filteredRecipes) as recipe}
-		<Card {recipe} icon_override=true isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
-	{/each}
-</Recipes>
+	{#snippet recipesSlot()}
+		<Recipes>
+			{#each rand_array(filteredRecipes) as recipe}
+				<Card {recipe} icon_override=true isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+			{/each}
+		</Recipes>
+	{/snippet}
 </SeasonLayout>

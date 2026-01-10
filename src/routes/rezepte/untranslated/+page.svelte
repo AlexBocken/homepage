@@ -4,7 +4,7 @@
 	import Recipes from '$lib/components/Recipes.svelte';
 	import Card from '$lib/components/Card.svelte';
 
-	let { data }: { data: PageData } = $props();
+	let { data } = $props<{ data: PageData }>();
 	let current_month = new Date().getMonth() + 1;
 
 	// Calculate statistics

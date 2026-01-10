@@ -7,10 +7,10 @@
   import ProfilePicture from '$lib/components/ProfilePicture.svelte';
   import SplitMethodSelector from '$lib/components/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/UsersList.svelte';
-  
-  export let data;
 
-  let formData = {
+  let { data } = $props();
+
+  let formData = $state({
     title: '',
     description: '',
     amount: '',
@@ -24,28 +24,28 @@
     startDate: '',
     endDate: '',
     isActive: true
-  };
+  });
 
-  let users = [];
-  let newUser = '';
-  let splitAmounts = {};
-  let personalAmounts = {};
-  let loading = false;
-  let loadingPayment = true;
-  let error = null;
-  let predefinedMode = isPredefinedUsersMode();
-  let cronError = false;
-  let nextExecutionPreview = '';
-  let supportedCurrencies = ['CHF'];
-  let loadingCurrencies = false;
-  let currentExchangeRate = null;
-  let convertedAmount = null;
-  let loadingExchangeRate = false;
-  let exchangeRateError = null;
-  let exchangeRateTimeout;
-  let jsEnhanced = false;
-  
-  $: categoryOptions = getCategoryOptions();
+  let users = $state([]);
+  let newUser = $state('');
+  let splitAmounts = $state({});
+  let personalAmounts = $state({});
+  let loading = $state(false);
+  let loadingPayment = $state(true);
+  let error = $state(null);
+  let predefinedMode = $state(isPredefinedUsersMode());
+  let cronError = $state(false);
+  let nextExecutionPreview = $state('');
+  let supportedCurrencies = $state(['CHF']);
+  let loadingCurrencies = $state(false);
+  let currentExchangeRate = $state(null);
+  let convertedAmount = $state(null);
+  let loadingExchangeRate = $state(false);
+  let exchangeRateError = $state(null);
+  let exchangeRateTimeout = $state();
+  let jsEnhanced = $state(false);
+
+  let categoryOptions = $derived(getCategoryOptions());
 
   onMount(async () => {
     jsEnhanced = true;
@@ -198,13 +198,17 @@
   }
 
 
-  $: if (formData.cronExpression) {
-    validateCron();
-  }
+  $effect(() => {
+    if (formData.cronExpression) {
+      validateCron();
+    }
+  });
 
-  $: if (formData.frequency || formData.cronExpression || formData.startDate) {
-    updateNextExecutionPreview();
-  }
+  $effect(() => {
+    if (formData.frequency || formData.cronExpression || formData.startDate) {
+      updateNextExecutionPreview();
+    }
+  });
 
   async function loadSupportedCurrencies() {
     try {
@@ -260,10 +264,12 @@
   }
 
   // Reactive statement for exchange rate fetching
-  $: if (jsEnhanced && formData.currency && formData.currency !== 'CHF' && formData.startDate && formData.amount) {
-    clearTimeout(exchangeRateTimeout);
-    exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
-  }
+  $effect(() => {
+    if (jsEnhanced && formData.currency && formData.currency !== 'CHF' && formData.startDate && formData.amount) {
+      clearTimeout(exchangeRateTimeout);
+      exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
+    }
+  });
 </script>
 
 <svelte:head>
@@ -283,7 +289,7 @@
   {:else if error && !formData.title}
     <div class="error">Error: {error}</div>
   {:else}
-    <form on:submit|preventDefault={handleSubmit} class="payment-form">
+    <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="payment-form">
       <div class="form-section">
         <h2>Payment Details</h2>
         
@@ -476,7 +482,7 @@
       {/if}
 
       <div class="form-actions">
-        <button type="button" class="btn-secondary" on:click={() => goto('/cospend/recurring')}>
+        <button type="button" class="btn-secondary" onclick={() => goto('/cospend/recurring')}>
           Cancel
         </button>
         <button type="submit" class="btn-primary" disabled={loading || cronError}>

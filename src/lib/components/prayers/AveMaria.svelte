@@ -1,8 +1,7 @@
-<script>
+<script lang="ts">
 	import Prayer from './Prayer.svelte';
 
-	export let mystery = ""; // For rosary mysteries (German)
-	export let mysteryLatin = ""; // For rosary mysteries (Latin)
+	let { mystery = "", mysteryLatin = "" } = $props<{ mystery?: string, mysteryLatin?: string }>();
 </script>
 
 <Prayer>

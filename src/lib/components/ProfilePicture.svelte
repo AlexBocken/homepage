@@ -1,12 +1,10 @@
-<script>
-  export let username;
-  export let size = 40; // Default size in pixels
-  export let alt = '';
+<script lang="ts">
+  let { username, size = 40, alt = '' } = $props<{ username: string, size?: number, alt?: string }>();
 
-  let imageError = false;
+  let imageError = $state(false);
 
-  $: profileUrl = `https://bocken.org/static/user/full/${username}.webp`;
-  $: altText = alt || `${username}'s profile picture`;
+  let profileUrl = $derived(`https://bocken.org/static/user/full/${username}.webp`);
+  let altText = $derived(alt || `${username}'s profile picture`);
 
   function handleError() {
     imageError = true;
@@ -27,7 +25,7 @@
     <img
       src={profileUrl}
       alt={altText}
-      on:error={handleError}
+      onerror={handleError}
       loading="lazy"
     />
   {:else}

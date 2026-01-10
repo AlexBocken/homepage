@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { getLanguageContext } from '$lib/contexts/languageContext.js';
 
-	export let latinPrimary = true; // Controls which language is shown prominently
+	let { latinPrimary = true, children } = $props<{ latinPrimary?: boolean, children?: Snippet }>();
 
 	// Get context if available (graceful fallback for standalone usage)
 	let showLatinStore;
@@ -12,7 +13,7 @@
 		showLatinStore = null;
 	}
 
-	$: showLatin = showLatinStore ? $showLatinStore : true;
+	let showLatin = $derived(showLatinStore ? $showLatinStore : true);
 </script>
 
 <style>
@@ -123,5 +124,5 @@
 </style>
 
 <div class="prayer-wrapper" class:german-primary={!latinPrimary} class:monolingual={!showLatin}>
-	<slot></slot>
+	{@render children?.()}
 </div>

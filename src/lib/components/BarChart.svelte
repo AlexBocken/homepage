@@ -1,14 +1,12 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { Chart, registerables } from 'chart.js';
 
-  export let data = { labels: [], datasets: [] };
-  export let title = '';
-  export let height = '400px';
+  let { data = { labels: [], datasets: [] }, title = '', height = '400px' } = $props<{ data?: any, title?: string, height?: string }>();
 
-  let canvas;
-  let chart;
-  let hiddenCategories = new Set(); // Track which categories are hidden
+  let canvas = $state();
+  let chart = $state();
+  let hiddenCategories = $state(new Set()); // Track which categories are hidden
 
   // Register Chart.js components
   Chart.register(...registerables);
@@ -54,10 +52,17 @@
 
     const ctx = canvas.getContext('2d');
 
+    // Convert $state proxy to plain arrays to avoid Chart.js property descriptor issues
+    const plainLabels = [...(data.labels || [])];
+    const plainDatasets = (data.datasets || []).map(ds => ({
+      label: ds.label,
+      data: [...(ds.data || [])]
+    }));
+
     // Process datasets with colors and capitalize labels
-    const processedDatasets = data.datasets.map((dataset, index) => ({
-      ...dataset,
+    const processedDatasets = plainDatasets.map((dataset, index) => ({
       label: dataset.label.charAt(0).toUpperCase() + dataset.label.slice(1),
+      data: dataset.data,
       backgroundColor: getCategoryColor(dataset.label, index),
       borderColor: getCategoryColor(dataset.label, index),
       borderWidth: 1
@@ -66,7 +71,7 @@
     chart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: data.labels,
+        labels: plainLabels,
         datasets: processedDatasets
       },
       options: {
@@ -296,11 +301,6 @@
       }
     };
   });
-
-  // Recreate chart when data changes
-  $: if (canvas && data) {
-    createChart();
-  }
 </script>
 
 <div class="chart-container" style="height: {height}">

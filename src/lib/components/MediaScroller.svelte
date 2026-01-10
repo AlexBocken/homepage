@@ -1,6 +1,7 @@
-<script>
+<script lang="ts">
+import type { Snippet } from 'svelte';
 import "$lib/css/nordtheme.css"
-export let title
+let { title = '', children } = $props<{ title?: string, children?: Snippet }>();
 </script>
 <style>
 .media-scroller {
@@ -28,6 +29,6 @@ h2{
 	<h2>{title}</h2>
 {/if}
 <div class="media-scroller snaps-inline">
-	<slot></slot>
+	{@render children?.()}
 </div>
 </div>

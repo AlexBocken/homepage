@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '$lib/css/nordtheme.css';
 	import "$lib/css/shake.css"
-	export let icon : string;
+	let { icon, ...restProps } = $props<{ icon: string, [key: string]: any }>();
 </script>
 <style>
 	a{
@@ -24,4 +24,4 @@
 	}
 
 </style>
-<a href="/rezepte/icon/{icon}" {...$$restProps} >{icon}</a>
+<a href="/rezepte/icon/{icon}" {...restProps} >{icon}</a>

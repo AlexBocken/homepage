@@ -1,11 +1,19 @@
-<script>
+<script lang="ts">
   import ProfilePicture from './ProfilePicture.svelte';
-  
-  export let users = [];
-  export let currentUser = '';
-  export let predefinedMode = false;
-  export let canRemoveUsers = true;
-  export let newUser = '';
+
+  let {
+    users = $bindable([]),
+    currentUser = '',
+    predefinedMode = false,
+    canRemoveUsers = true,
+    newUser = $bindable('')
+  } = $props<{
+    users?: string[],
+    currentUser?: string,
+    predefinedMode?: boolean,
+    canRemoveUsers?: boolean,
+    newUser?: string
+  }>();
   
   function addUser() {
     if (predefinedMode) return;
@@ -54,7 +62,7 @@
             <span class="you-badge">You</span>
           {/if}
           {#if canRemoveUsers && user !== currentUser}
-            <button type="button" class="remove-user" on:click={() => removeUser(user)}>
+            <button type="button" class="remove-user" onclick={() => removeUser(user)}>
               Remove
             </button>
           {/if}
@@ -63,13 +71,13 @@
     </div>
 
     <div class="add-user js-enhanced" style="display: none;">
-      <input 
-        type="text" 
-        bind:value={newUser} 
+      <input
+        type="text"
+        bind:value={newUser}
         placeholder="Add user..."
-        on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addUser())}
+        onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addUser())}
       />
-      <button type="button" on:click={addUser}>Add User</button>
+      <button type="button" onclick={addUser}>Add User</button>
     </div>
   {/if}
 </div>

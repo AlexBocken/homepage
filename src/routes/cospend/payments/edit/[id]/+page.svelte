@@ -5,25 +5,25 @@
   import FormSection from '$lib/components/FormSection.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   
-  export let data;
+  let { data } = $props();
 
-  let payment = null;
-  let loading = true;
-  let saving = false;
-  let uploading = false;
-  let error = null;
-  let imageFile = null;
-  let imagePreview = '';
-  let supportedCurrencies = ['CHF'];
-  let loadingCurrencies = false;
-  let currentExchangeRate = null;
-  let convertedAmount = null;
-  let loadingExchangeRate = false;
-  let exchangeRateError = null;
+  let payment = $state(null);
+  let loading = $state(true);
+  let saving = $state(false);
+  let uploading = $state(false);
+  let error = $state(null);
+  let imageFile = $state(null);
+  let imagePreview = $state('');
+  let supportedCurrencies = $state(['CHF']);
+  let loadingCurrencies = $state(false);
+  let currentExchangeRate = $state(null);
+  let convertedAmount = $state(null);
+  let loadingExchangeRate = $state(false);
+  let exchangeRateError = $state(null);
   let exchangeRateTimeout;
-  let jsEnhanced = false;
-  
-  $: categoryOptions = getCategoryOptions();
+  let jsEnhanced = $state(false);
+
+  let categoryOptions = $derived(getCategoryOptions());
 
   onMount(async () => {
     jsEnhanced = true;
@@ -124,7 +124,7 @@
     return new Date(dateString).toISOString().split('T')[0];
   }
 
-  let deleting = false;
+  let deleting = $state(false);
 
   async function deletePayment() {
     if (!confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
@@ -206,10 +206,12 @@
   }
 
   // Reactive statement for exchange rate fetching
-  $: if (jsEnhanced && payment && payment.currency && payment.currency !== 'CHF' && payment.date && payment.originalAmount) {
-    clearTimeout(exchangeRateTimeout);
-    exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
-  }
+  $effect(() => {
+    if (jsEnhanced && payment && payment.currency && payment.currency !== 'CHF' && payment.date && payment.originalAmount) {
+      clearTimeout(exchangeRateTimeout);
+      exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
+    }
+  });
 
   function formatDateForInput(dateString) {
     if (!dateString) return '';
@@ -232,7 +234,7 @@
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if payment}
-    <form on:submit|preventDefault={handleSubmit} class="payment-form">
+    <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="payment-form">
       <FormSection title="Payment Details">
         <div class="form-group">
           <label for="title">Title *</label>
@@ -328,11 +330,11 @@
 
           <div class="form-group">
             <label for="date">Date</label>
-            <input 
-              type="date" 
-              id="date" 
+            <input
+              type="date"
+              id="date"
               value={formatDateForInput(payment.date)}
-              on:change={(e) => payment.date = new Date(e.target.value).toISOString()}
+              onchange={(e) => payment.date = new Date(e.target.value).toISOString()}
               required
             />
           </div>
@@ -383,16 +385,16 @@
       {/if}
 
       <div class="form-actions">
-        <button 
-          type="button" 
-          class="btn-danger" 
-          on:click={deletePayment}
+        <button
+          type="button"
+          class="btn-danger"
+          onclick={deletePayment}
           disabled={deleting || saving}
         >
           {deleting ? 'Deleting...' : 'Delete Payment'}
         </button>
         <div class="main-actions">
-          <button type="button" class="btn-secondary" on:click={() => goto('/cospend/payments')}>
+          <button type="button" class="btn-secondary" onclick={() => goto('/cospend/payments')}>
             Cancel
           </button>
           <button type="submit" class="btn-primary" disabled={saving || deleting}>

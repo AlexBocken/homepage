@@ -7,15 +7,17 @@
   import AddButton from '$lib/components/AddButton.svelte';
 
 
-  import { formatCurrency } from '$lib/utils/formatters';  export let data;
+  import { formatCurrency } from '$lib/utils/formatters';
+
+  let { data } = $props();
 
   // Use server-side data with progressive enhancement
-  let payments = data.payments || [];
-  let loading = false; // Start as false since we have server data
-  let error = null;
-  let currentPage = Math.floor(data.currentOffset / data.limit);
-  let limit = data.limit || 20;
-  let hasMore = data.hasMore || false;
+  let payments = $state(data.payments || []);
+  let loading = $state(false); // Start as false since we have server data
+  let error = $state(null);
+  let currentPage = $state(Math.floor(data.currentOffset / data.limit));
+  let limit = $state(data.limit || 20);
+  let hasMore = $state(data.hasMore || false);
 
   // Progressive enhancement: only load if JavaScript is available
   onMount(async () => {
@@ -86,7 +88,7 @@
     if (payment.currency === 'CHF' || !payment.originalAmount) {
       return formatCurrency(payment.amount, 'CHF', 'de-CH');
     }
-    
+
     return `${formatCurrency(payment.originalAmount, payment.currency, 'CHF', 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
   }
 
@@ -244,7 +246,7 @@
 
       <!-- Progressive enhancement: JavaScript load more button -->
       {#if hasMore}
-        <button class="btn btn-secondary js-only" on:click={loadMore} disabled={loading}
+        <button class="btn btn-secondary js-only" onclick={loadMore} disabled={loading}
                 style="display: none;">
           {loading ? 'Loading...' : 'Load More (JS)'}
         </button>

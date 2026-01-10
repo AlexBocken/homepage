@@ -1,8 +1,15 @@
 <script lang="ts">
-	export let germanUrl: string;
-	export let englishUrl: string;
-	export let currentLang: 'de' | 'en' = 'de';
-	export let hasTranslation: boolean = true;
+	let {
+		germanUrl,
+		englishUrl,
+		currentLang = 'de',
+		hasTranslation = true
+	}: {
+		germanUrl: string,
+		englishUrl: string,
+		currentLang?: 'de' | 'en',
+		hasTranslation?: boolean
+	} = $props();
 
 	function setLanguagePreference(lang: 'de' | 'en') {
 		if (typeof localStorage !== 'undefined') {

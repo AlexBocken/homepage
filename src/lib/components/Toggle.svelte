@@ -1,7 +1,5 @@
-<script>
-	export let checked = false;
-	export let label = "";
-	export let accentColor = "var(--nord14)"; // Default to nord14, can be overridden
+<script lang="ts">
+	let { checked = $bindable(false), label = "", accentColor = "var(--nord14)" } = $props<{ checked?: boolean, label?: string, accentColor?: string }>();
 </script>
 
 <style>
@@ -74,7 +72,7 @@
 
 <div class="toggle-wrapper" style="--accent-color: {accentColor}">
 	<label>
-		<input type="checkbox" bind:checked on:change />
+		<input type="checkbox" bind:checked />
 		<span>{label}</span>
 	</label>
 </div>

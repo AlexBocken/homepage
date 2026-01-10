@@ -11,17 +11,19 @@
   import AddButton from '$lib/components/AddButton.svelte';
 
 
-  import { formatCurrency } from '$lib/utils/formatters';  export let data; // Contains session data and balance from server
+  import { formatCurrency } from '$lib/utils/formatters';
+
+  let { data } = $props(); // Contains session data and balance from server
 
   // Use server-side data, with fallback for progressive enhancement
-  let balance = data.balance || {
+  let balance = $state(data.balance || {
     netBalance: 0,
     recentSplits: []
-  };
-  let loading = false; // Start as false since we have server data
-  let error = null;
-  let monthlyExpensesData = { labels: [], datasets: [] };
-  let expensesLoading = false;
+  });
+  let loading = $state(false); // Start as false since we have server data
+  let error = $state(null);
+  let monthlyExpensesData = $state(data.monthlyExpensesData || { labels: [], datasets: [] });
+  let expensesLoading = $state(false);
 
   // Component references for refreshing
   let enhancedBalanceComponent;
@@ -31,10 +33,15 @@
   onMount(async () => {
     // Mark that JavaScript is loaded for progressive enhancement
     document.body.classList.add('js-loaded');
-    await Promise.all([
-      fetchBalance(),
-      fetchMonthlyExpenses()
-    ]);
+
+    // Only fetch if we don't have server-side data
+    if (!balance.recentSplits || balance.recentSplits.length === 0) {
+      await fetchBalance();
+    }
+
+    if (!monthlyExpensesData.datasets || monthlyExpensesData.datasets.length === 0) {
+      await fetchMonthlyExpenses();
+    }
 
     // Listen for dashboard refresh events from the layout
     const handleDashboardRefresh = () => {
@@ -195,7 +202,7 @@
             <a
               href="/cospend/payments/view/{split.paymentId?._id}"
               class="settlement-flow-activity"
-              on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
+              onclick={(e) => handlePaymentClick(split.paymentId?._id, e)}
             >
               <div class="settlement-activity-content">
                 <div class="settlement-user-flow">
@@ -226,7 +233,7 @@
                 <a
                   href="/cospend/payments/view/{split.paymentId?._id}"
                   class="activity-bubble"
-                  on:click={(e) => handlePaymentClick(split.paymentId?._id, e)}
+                  onclick={(e) => handlePaymentClick(split.paymentId?._id, e)}
                 >
                   <div class="activity-header">
                     <div class="user-info">

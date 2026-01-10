@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { PageData } from './$types';
     import "$lib/css/nordtheme.css";
-    let { data }: { data: PageData } = $props();
+    let { data } = $props<{ data: PageData }>();
     import TagCloud from '$lib/components/TagCloud.svelte';
     import TagBall from '$lib/components/TagBall.svelte';
 

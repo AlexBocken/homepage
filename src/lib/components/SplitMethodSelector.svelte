@@ -1,20 +1,32 @@
-<script>
+<script lang="ts">
   import ProfilePicture from './ProfilePicture.svelte';
-  
-  export let splitMethod = 'equal';
-  export let users = [];
-  export let amount = 0;
-  export let paidBy = '';
-  export let splitAmounts = {};
-  export let personalAmounts = {};
-  export let currentUser = '';
-  export let predefinedMode = false;
-  export let currency = 'CHF';
-  
-  let personalTotalError = false;
-  
+
+  let {
+    splitMethod = $bindable('equal'),
+    users = $bindable([]),
+    amount = $bindable(0),
+    paidBy = $bindable(''),
+    splitAmounts = $bindable({}),
+    personalAmounts = $bindable({}),
+    currentUser = $bindable(''),
+    predefinedMode = $bindable(false),
+    currency = $bindable('CHF')
+  } = $props<{
+    splitMethod?: string,
+    users?: string[],
+    amount?: number,
+    paidBy?: string,
+    splitAmounts?: Record<string, number>,
+    personalAmounts?: Record<string, number>,
+    currentUser?: string,
+    predefinedMode?: boolean,
+    currency?: string
+  }>();
+
+  let personalTotalError = $state(false);
+
   // Reactive text for "Paid in Full" option
-  $: paidInFullText = (() => {
+  let paidInFullText = $derived((() => {
     if (!paidBy) {
       return 'Paid in Full';
     }
@@ -31,7 +43,7 @@
     } else {
       return `Paid in Full by ${paidBy}`;
     }
-  })();
+  })());
   
   function calculateEqualSplits() {
     if (!amount || users.length === 0) return;
@@ -109,19 +121,23 @@
   }
 
   // Validate and recalculate when personal amounts change
-  $: if (splitMethod === 'personal_equal' && personalAmounts && amount) {
-    const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-    const totalAmount = parseFloat(amount);
-    personalTotalError = totalPersonal > totalAmount;
-    
-    if (!personalTotalError) {
-      calculatePersonalEqualSplit();
-    }
-  }
+  $effect(() => {
+    if (splitMethod === 'personal_equal' && personalAmounts && amount) {
+      const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+      const totalAmount = parseFloat(amount);
+      personalTotalError = totalPersonal > totalAmount;
 
-  $: if (amount && splitMethod && paidBy) {
-    handleSplitMethodChange();
-  }
+      if (!personalTotalError) {
+        calculatePersonalEqualSplit();
+      }
+    }
+  });
+
+  $effect(() => {
+    if (amount && splitMethod && paidBy) {
+      handleSplitMethodChange();
+    }
+  });
 </script>
 
 <div class="form-section">

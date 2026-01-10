@@ -1,5 +1,5 @@
 <script lang="ts">
-	export let note : string;
+	let { note, ...restProps } = $props<{ note: string, [key: string]: any }>();
 </script>
 <style>
 div{
@@ -17,7 +17,7 @@ h3{
 }
 </style>
 
-<div {...$$restProps} >
+<div {...restProps} >
 	<h3>Notiz:</h3>
 	{@html note}
 </div>

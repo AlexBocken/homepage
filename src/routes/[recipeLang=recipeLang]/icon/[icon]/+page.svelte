@@ -5,7 +5,7 @@
     import MediaScroller from '$lib/components/MediaScroller.svelte';
     import Card from '$lib/components/Card.svelte';
     import Search from '$lib/components/Search.svelte';
-    let { data }: { data: PageData } = $props();
+    let { data } = $props<{ data: PageData }>();
     import { rand_array } from '$lib/js/randomize';
 
     // Search state
@@ -27,9 +27,11 @@
     });
 </script>
 <IconLayout icons={data.icons} active_icon={data.icon} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
-<Recipes slot=recipes>
-	{#each rand_array(filteredRecipes) as recipe}
-		<Card {recipe} icon_override=true isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
-	{/each}
-</Recipes>
+	{#snippet recipesSlot()}
+		<Recipes>
+			{#each rand_array(filteredRecipes) as recipe}
+				<Card {recipe} icon_override=true isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+			{/each}
+		</Recipes>
+	{/snippet}
 </IconLayout>

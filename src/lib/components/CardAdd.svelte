@@ -5,9 +5,7 @@ import "$lib/css/shake.css"
 import "$lib/css/icon.css"
 import { onMount } from 'svelte'
 
-// all data shared with rest of page in card_data
-export let card_data
-export let image_preview_url
+let { card_data = $bindable(), image_preview_url = $bindable() } = $props<{ card_data: any, image_preview_url: string }>();
 
 onMount( () => {
 	fetch(image_preview_url, { method: 'HEAD' })
@@ -26,7 +24,7 @@ if(!card_data.tags){
 
 
 //locals
-let new_tag
+let new_tag = $state("");
 
 
 export function show_local_image(){
@@ -353,12 +351,12 @@ input::placeholder{
 
 	<input class=icon placeholder=🥫 bind:value={card_data.icon}/>
 	{#if image_preview_url}
-		<!-- svelte-ignore a11y-missing-attribute -->
+		<!-- svelte-ignore a11y_missing_attribute -->
 		<img src={image_preview_url} class=img_preview width=300px height=300px />
 	{/if}
 	<div class=img_label_wrapper>
 		{#if image_preview_url}
-			<button class=delete on:click={remove_selected_images}>
+			<button class=delete onclick={remove_selected_images}>
 			<Cross fill=white style="width:2rem;height:2rem;"></Cross>
 </button>
 		{/if}
@@ -368,7 +366,7 @@ input::placeholder{
 		<svg class="upload over_img" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/></svg>
 		</label>
 	</div>
-	<input type="file" id=img_picker accept="image/webp image/jpeg" on:change={show_local_image}>
+	<input type="file" id=img_picker accept="image/webp image/jpeg" onchange={show_local_image}>
 	<div class=title>
 		<input class=category placeholder=Kategorie... bind:value={card_data.category}/>
 		<div>
@@ -377,10 +375,10 @@ input::placeholder{
 		</div>
 		<div class=tags>
 			{#each card_data.tags as tag}
-				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<div class="tag" role="button" tabindex="0" on:keydown={remove_on_enter(event ,tag)} on:click='{remove_from_tags(tag)}' aria-label="Tag {tag} entfernen">{tag}</div>
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+				<div class="tag" role="button" tabindex="0" onkeydown={(event) => remove_on_enter(event, tag)} onclick={() => remove_from_tags(tag)} aria-label="Tag {tag} entfernen">{tag}</div>
 			{/each}
-        	<div class="tag input_wrapper"><span class=input>+</span><input class="tag_input" type="text" on:keydown={add_on_enter} on:focusout={add_to_tags} size="1" bind:value={new_tag} placeholder=Stichwort...></div>
+        	<div class="tag input_wrapper"><span class=input>+</span><input class="tag_input" type="text" onkeydown={add_on_enter} onfocusout={add_to_tags} size="1" bind:value={new_tag} placeholder=Stichwort...></div>
 		</div>
 	</div>
 
