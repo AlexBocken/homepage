@@ -27,7 +27,7 @@
 	.filter-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.3rem;
 		max-width: 100%;
 		align-items: center;
 	}

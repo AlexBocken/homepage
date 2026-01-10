@@ -30,10 +30,10 @@
 .toggle-wrapper input[type="checkbox"] {
 	appearance: none;
 	-webkit-appearance: none;
-	width: 51px;
-	height: 31px;
+	width: 44px;
+	height: 24px;
 	background: var(--nord2);
-	border-radius: 31px;
+	border-radius: 24px;
 	position: relative;
 	cursor: pointer;
 	transition: background 0.3s ease;
@@ -55,8 +55,8 @@
 .toggle-wrapper input[type="checkbox"]::before {
 	content: '';
 	position: absolute;
-	width: 27px;
-	height: 27px;
+	width: 20px;
+	height: 20px;
 	border-radius: 50%;
 	top: 2px;
 	left: 2px;

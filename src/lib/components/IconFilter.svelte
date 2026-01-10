@@ -6,12 +6,20 @@
 		availableIcons = [],
 		selected = null,
 		onChange = () => {},
-		lang = 'de'
+		lang = 'de',
+		useAndLogic = true
 	} = $props();
 
 	const isEnglish = $derived(lang === 'en');
 	const label = 'Icon';
 	const selectLabel = $derived(isEnglish ? 'Select icon...' : 'Icon auswählen...');
+
+	// Convert selected to array for OR mode, keep as single value for AND mode
+	const selectedArray = $derived(
+		useAndLogic
+			? (selected ? [selected] : [])
+			: (Array.isArray(selected) ? selected : (selected ? [selected] : []))
+	);
 
 	let inputValue = $state('');
 	let dropdownOpen = $state(false);
@@ -37,9 +45,22 @@
 	}
 
 	function handleIconSelect(icon) {
-		onChange(icon);
-		inputValue = '';
-		dropdownOpen = false;
+		if (useAndLogic) {
+			// AND mode: single select
+			onChange(icon);
+			inputValue = '';
+			dropdownOpen = false;
+		} else {
+			// OR mode: multi-select toggle
+			const currentSelected = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+			if (currentSelected.includes(icon)) {
+				const newSelected = currentSelected.filter(i => i !== icon);
+				onChange(newSelected.length > 0 ? newSelected : null);
+			} else {
+				onChange([...currentSelected, icon]);
+			}
+			inputValue = '';
+		}
 	}
 
 	function handleKeyDown(event) {
@@ -49,8 +70,14 @@
 		}
 	}
 
-	function handleRemove() {
-		onChange(null);
+	function handleRemove(icon) {
+		if (useAndLogic) {
+			onChange(null);
+		} else {
+			const currentSelected = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+			const newSelected = currentSelected.filter(i => i !== icon);
+			onChange(newSelected.length > 0 ? newSelected : null);
+		}
 	}
 </script>
 
@@ -180,7 +207,7 @@
 				{#each filteredIcons as icon}
 					<TagChip
 						tag={icon}
-						selected={false}
+						selected={selectedArray.includes(icon)}
 						removable={false}
 						onToggle={() => handleIconSelect(icon)}
 					/>
@@ -189,15 +216,17 @@
 		{/if}
 	</div>
 
-	<!-- Selected icon display below -->
-	{#if selected}
+	<!-- Selected icons display below -->
+	{#if selectedArray.length > 0}
 		<div class="selected-icon">
-			<TagChip
-				tag={selected}
-				selected={true}
-				removable={true}
-				onToggle={handleRemove}
-			/>
+			{#each selectedArray as icon}
+				<TagChip
+					tag={icon}
+					selected={true}
+					removable={true}
+					onToggle={() => handleRemove(icon)}
+				/>
+			{/each}
 		</div>
 	{/if}
 </div>

@@ -6,12 +6,20 @@
 		categories = [],
 		selected = null,
 		onChange = () => {},
-		lang = 'de'
+		lang = 'de',
+		useAndLogic = true
 	} = $props();
 
 	const isEnglish = $derived(lang === 'en');
 	const label = $derived(isEnglish ? 'Category' : 'Kategorie');
 	const selectLabel = $derived(isEnglish ? 'Select category...' : 'Kategorie auswählen...');
+
+	// Convert selected to array for OR mode, keep as single value for AND mode
+	const selectedArray = $derived(
+		useAndLogic
+			? (selected ? [selected] : [])
+			: (Array.isArray(selected) ? selected : (selected ? [selected] : []))
+	);
 
 	let inputValue = $state('');
 	let dropdownOpen = $state(false);
@@ -37,9 +45,22 @@
 	}
 
 	function handleCategorySelect(category) {
-		onChange(category);
-		inputValue = '';
-		dropdownOpen = false;
+		if (useAndLogic) {
+			// AND mode: single select
+			onChange(category);
+			inputValue = '';
+			dropdownOpen = false;
+		} else {
+			// OR mode: multi-select toggle
+			const currentSelected = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+			if (currentSelected.includes(category)) {
+				const newSelected = currentSelected.filter(c => c !== category);
+				onChange(newSelected.length > 0 ? newSelected : null);
+			} else {
+				onChange([...currentSelected, category]);
+			}
+			inputValue = '';
+		}
 	}
 
 	function handleKeyDown(event) {
@@ -49,8 +70,7 @@
 			const matchedCat = categories.find(c => c.toLowerCase() === value.toLowerCase())
 				|| filteredCategories[0];
 			if (matchedCat) {
-				onChange(matchedCat);
-				inputValue = '';
+				handleCategorySelect(matchedCat);
 			}
 		} else if (event.key === 'Escape') {
 			dropdownOpen = false;
@@ -58,8 +78,14 @@
 		}
 	}
 
-	function handleRemove() {
-		onChange(null);
+	function handleRemove(category) {
+		if (useAndLogic) {
+			onChange(null);
+		} else {
+			const currentSelected = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+			const newSelected = currentSelected.filter(c => c !== category);
+			onChange(newSelected.length > 0 ? newSelected : null);
+		}
 	}
 </script>
 
@@ -188,7 +214,7 @@
 				{#each filteredCategories as category}
 					<TagChip
 						tag={category}
-						selected={false}
+						selected={selectedArray.includes(category)}
 						removable={false}
 						onToggle={() => handleCategorySelect(category)}
 					/>
@@ -197,15 +223,17 @@
 		{/if}
 	</div>
 
-	<!-- Selected category display below -->
-	{#if selected}
+	<!-- Selected categories display below -->
+	{#if selectedArray.length > 0}
 		<div class="selected-category">
-			<TagChip
-				tag={selected}
-				selected={true}
-				removable={true}
-				onToggle={handleRemove}
-			/>
+			{#each selectedArray as category}
+				<TagChip
+					tag={category}
+					selected={true}
+					removable={true}
+					onToggle={() => handleRemove(category)}
+				/>
+			{/each}
 		</div>
 	{/if}
 </div>
