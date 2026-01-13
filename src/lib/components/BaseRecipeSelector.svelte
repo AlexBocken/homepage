@@ -23,7 +23,8 @@ let options = $state({
 	includeIngredients: false,
 	includeInstructions: false,
 	showLabel: true,
-	labelOverride: ''
+	labelOverride: '',
+	baseMultiplier: 1
 });
 
 // Reset options whenever type or modal state changes
@@ -46,6 +47,7 @@ function handleInsert() {
 		selectedRecipe = null;
 		options.labelOverride = '';
 		options.showLabel = true;
+		options.baseMultiplier = 1;
 		closeModal();
 	}
 }
@@ -134,7 +136,8 @@ dialog h2 {
 }
 
 .selector-content select,
-.selector-content input[type="text"] {
+.selector-content input[type="text"],
+.selector-content input[type="number"] {
 	width: 100%;
 	padding: 0.5em 1em;
 	margin-top: 0.5em;
@@ -149,7 +152,9 @@ dialog h2 {
 .selector-content select:hover,
 .selector-content select:focus,
 .selector-content input[type="text"]:hover,
-.selector-content input[type="text"]:focus {
+.selector-content input[type="text"]:focus,
+.selector-content input[type="number"]:hover,
+.selector-content input[type="number"]:focus {
 	border-color: var(--nord9);
 	transform: scale(1.02, 1.02);
 }
@@ -244,6 +249,18 @@ dialog h2 {
 				/>
 			</label>
 		{/if}
+
+		<label>
+			Mengenfaktor (Multiplikator):
+			<input
+				type="number"
+				bind:value={options.baseMultiplier}
+				min="0.1"
+				step="0.1"
+				placeholder="1"
+				onkeydown={(event) => do_on_key(event, 'Enter', false, handleInsert)}
+			/>
+		</label>
 
 		<div class="button-group">
 			<button class="button-insert" onclick={handleInsert} disabled={!selectedRecipe}>

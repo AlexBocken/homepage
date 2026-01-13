@@ -125,6 +125,7 @@ function handleSelect(recipe: any, options: any) {
 		includeInstructions: options.includeInstructions,
 		showLabel: options.showLabel,
 		labelOverride: options.labelOverride || '',
+		baseMultiplier: options.baseMultiplier || 1,
 		stepsBefore: [],
 		stepsAfter: []
 	};
@@ -797,6 +798,18 @@ h3{
 				</div>
 				<div class="reference-badge">
 					📋 {t[lang].baseRecipe}: {list.name || t[lang].unnamed}
+					<div style="margin-top: 0.5em;">
+						<label style="font-size: 0.9em; display: flex; align-items: center; gap: 0.5em;">
+							{t[lang].baseMultiplier || 'Mengenfaktor'}:
+							<input
+								type="number"
+								bind:value={list.baseMultiplier}
+								min="0.1"
+								step="0.1"
+								style="width: 5em; padding: 0.25em 0.5em; border-radius: 5px; border: 1px solid var(--nord4);"
+							/>
+						</label>
+					</div>
 				</div>
 				<div class="mod_icons">
 					<button type="button" class="action_button button_subtle" onclick={() => removeReference(list_index)} aria-label={t[lang].removeReferenceAria}>
