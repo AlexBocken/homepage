@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { tick } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import Check from '$lib/assets/icons/Check.svelte';
 	import Cross from '$lib/assets/icons/Cross.svelte';
@@ -199,8 +200,11 @@
 	}
 
 	// Handle translation approval - populate form and submit
-	function handleTranslationApproved(event: CustomEvent) {
+	async function handleTranslationApproved(event: CustomEvent) {
 		translationData = event.detail.translatedRecipe;
+
+		// Wait for Svelte to update the DOM with the hidden inputs
+		await tick();
 
 		// Submit the form programmatically
 		if (formElement) {
@@ -209,12 +213,15 @@
 	}
 
 	// Handle translation skipped - submit without translation update
-	function handleTranslationSkipped() {
+	async function handleTranslationSkipped() {
 		// Mark translation as needing update if fields changed
 		if (changedFields.length > 0 && translationData) {
 			translationData.translationStatus = 'needs_update';
 			translationData.changedFields = changedFields;
 		}
+
+		// Wait for Svelte to update the DOM with the updated hidden inputs
+		await tick();
 
 		// Submit the form programmatically
 		if (formElement) {
