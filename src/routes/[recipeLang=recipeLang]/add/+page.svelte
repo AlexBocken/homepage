@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { tick } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import Check from '$lib/assets/icons/Check.svelte';
 	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
@@ -122,8 +123,11 @@
 	}
 
 	// Handle translation approval - populate form and submit
-	function handleTranslationApproved(event: CustomEvent) {
+	async function handleTranslationApproved(event: CustomEvent) {
 		translationData = event.detail.translatedRecipe;
+
+		// Wait for Svelte to update the DOM with the hidden inputs
+		await tick();
 
 		// Submit the form programmatically
 		if (formElement) {
@@ -132,8 +136,11 @@
 	}
 
 	// Handle translation skipped - submit without translation
-	function handleTranslationSkipped() {
+	async function handleTranslationSkipped() {
 		translationData = null;
+
+		// Wait for Svelte to update the DOM (remove hidden inputs)
+		await tick();
 
 		// Submit the form programmatically
 		if (formElement) {
