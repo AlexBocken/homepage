@@ -255,8 +255,8 @@ dialog h2 {
 			<input
 				type="number"
 				bind:value={options.baseMultiplier}
-				min="0.1"
-				step="0.1"
+				min="0"
+				step="any"
 				placeholder="1"
 				onkeydown={(event) => do_on_key(event, 'Enter', false, handleInsert)}
 			/>
