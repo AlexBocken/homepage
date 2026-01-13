@@ -4,7 +4,7 @@
 
 <style>
 .toggle-wrapper {
-	display: flex;
+	display: inline-flex;
 }
 
 .toggle-wrapper label {
