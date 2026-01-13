@@ -37,7 +37,8 @@
 	// Helper function to initialize images array for English translation
 	function initializeImagesArray(germanImages: any[]): any[] {
 		if (!germanImages || germanImages.length === 0) return [];
-		return germanImages.map(() => ({
+		return germanImages.map((img) => ({
+			mediapath: img.mediapath || '',
 			alt: '',
 			caption: ''
 		}));
@@ -63,6 +64,14 @@
 	// Track base recipes that need translation
 	let untranslatedBaseRecipes = $state<{ shortName: string, name: string }[]>([]);
 	let checkingBaseRecipes = $state(false);
+
+	// Ensure images array is properly synced when germanData changes
+	$effect(() => {
+		if (germanData?.images && (!editableEnglish.images || editableEnglish.images.length !== germanData.images.length)) {
+			// Re-initialize images array to match germanData length
+			editableEnglish.images = initializeImagesArray(germanData.images);
+		}
+	});
 
 	// Sync base recipe references from German to English
 	async function syncBaseRecipeReferences() {
@@ -778,68 +787,70 @@ button:disabled {
 				<div class="field-section" style="background-color: var(--nord13); padding: 1rem; border-radius: 5px; margin-top: 1.5rem;">
 					<h4 style="margin-top: 0; color: var(--nord0);">🖼️ Images - English Alt Texts & Captions</h4>
 					{#each germanData.images as germanImage, i}
-						<div style="background-color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 5px; border: 2px solid var(--nord9);">
-							<div style="display: flex; gap: 1rem; align-items: start;">
-								<img
-									src="https://bocken.org/static/rezepte/thumb/{germanImage.mediapath}"
-									alt={germanImage.alt || 'Recipe image'}
-									style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;"
-								/>
-								<div style="flex: 1;">
-									<p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--nord3);"><strong>Image {i + 1}:</strong> {germanImage.mediapath}</p>
+						{#if editableEnglish.images && editableEnglish.images[i]}
+							<div style="background-color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 5px; border: 2px solid var(--nord9);">
+								<div style="display: flex; gap: 1rem; align-items: start;">
+									<img
+										src="https://bocken.org/static/rezepte/thumb/{germanImage.mediapath}"
+										alt={germanImage.alt || 'Recipe image'}
+										style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;"
+									/>
+									<div style="flex: 1;">
+										<p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--nord3);"><strong>Image {i + 1}:</strong> {germanImage.mediapath}</p>
 
-									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
-										<div>
-											<label for="german-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Alt-Text:</label>
-											<input
-												id="german-alt-{i}"
-												type="text"
-												value={germanImage.alt || ''}
-												disabled
-												style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord4); border-radius: 3px; background-color: var(--nord5); color: var(--nord2); font-size: 0.85rem;"
-											/>
+										<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+											<div>
+												<label for="german-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Alt-Text:</label>
+												<input
+													id="german-alt-{i}"
+													type="text"
+													value={germanImage.alt || ''}
+													disabled
+													style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord4); border-radius: 3px; background-color: var(--nord5); color: var(--nord2); font-size: 0.85rem;"
+												/>
+											</div>
+											<div>
+												<label for="english-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Alt-Text:</label>
+												<input
+													id="english-alt-{i}"
+													type="text"
+													bind:value={editableEnglish.images[i].alt}
+													placeholder="English image description for screen readers"
+													style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord8); border-radius: 3px; font-size: 0.85rem;"
+												/>
+											</div>
 										</div>
-										<div>
-											<label for="english-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Alt-Text:</label>
-											<input
-												id="english-alt-{i}"
-												type="text"
-												bind:value={editableEnglish.images[i].alt}
-												placeholder="English image description for screen readers"
-												style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord8); border-radius: 3px; font-size: 0.85rem;"
-											/>
-										</div>
-									</div>
 
-									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-										<div>
-											<label for="german-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Caption:</label>
-											<input
-												id="german-caption-{i}"
-												type="text"
-												value={germanImage.caption || ''}
-												disabled
-												style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord4); border-radius: 3px; background-color: var(--nord5); color: var(--nord2); font-size: 0.85rem;"
-											/>
+										<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+											<div>
+												<label for="german-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Caption:</label>
+												<input
+													id="german-caption-{i}"
+													type="text"
+													value={germanImage.caption || ''}
+													disabled
+													style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord4); border-radius: 3px; background-color: var(--nord5); color: var(--nord2); font-size: 0.85rem;"
+												/>
+											</div>
+											<div>
+												<label for="english-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Caption:</label>
+												<input
+													id="english-caption-{i}"
+													type="text"
+													bind:value={editableEnglish.images[i].caption}
+													placeholder="English caption (optional)"
+													style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord8); border-radius: 3px; font-size: 0.85rem;"
+												/>
+											</div>
 										</div>
-										<div>
-											<label for="english-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Caption:</label>
-											<input
-												id="english-caption-{i}"
-												type="text"
-												bind:value={editableEnglish.images[i].caption}
-												placeholder="English caption (optional)"
-												style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord8); border-radius: 3px; font-size: 0.85rem;"
-											/>
-										</div>
-									</div>
 
-									<div style="margin-top: 0.75rem;">
-										<GenerateAltTextButton shortName={germanData.short_name} imageIndex={i} />
+										<div style="margin-top: 0.75rem;">
+											<GenerateAltTextButton shortName={germanData.short_name} imageIndex={i} />
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
+						{/if}
 					{/each}
 				</div>
 			{/if}
