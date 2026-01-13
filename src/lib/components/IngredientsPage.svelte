@@ -7,8 +7,20 @@ import HefeSwapper from './HefeSwapper.svelte';
 
 let { data } = $props();
 
+// Helper function to multiply numbers in ingredient amounts
+function multiplyIngredientAmount(amount, multiplier) {
+	if (!amount || multiplier === 1) return amount;
+	return amount.replace(/(\d+(?:[\.,]\d+)?)/g, match => {
+		const number = match.includes(',') ? match.replace(/\./g, '').replace(',', '.') : match;
+		const multiplied = (parseFloat(number) * multiplier).toString();
+		const rounded = parseFloat(multiplied).toFixed(3);
+		const trimmed = parseFloat(rounded).toString();
+		return match.includes(',') ? trimmed.replace('.', ',') : trimmed;
+	});
+}
+
 // Recursively flatten nested ingredient references
-function flattenIngredientReferences(items, lang, visited = new Set()) {
+function flattenIngredientReferences(items, lang, visited = new Set(), baseMultiplier = 1) {
 	const result = [];
 
 	for (const item of items) {
@@ -29,18 +41,22 @@ function flattenIngredientReferences(items, lang, visited = new Set()) {
 				? item.resolvedRecipe.translations.en.ingredients
 				: item.resolvedRecipe.ingredients || [];
 
-			// Recursively flatten nested references
-			const flattenedNested = flattenIngredientReferences(ingredientsToUse, lang, newVisited);
+			// Calculate combined multiplier for this reference
+			const itemBaseMultiplier = item.baseMultiplier || 1;
+			const combinedMultiplier = baseMultiplier * itemBaseMultiplier;
+
+			// Recursively flatten nested references with the combined multiplier
+			const flattenedNested = flattenIngredientReferences(ingredientsToUse, lang, newVisited, combinedMultiplier);
 
 			// Combine all items into one list
 			const combinedList = [];
 
-			// Add items before
+			// Add items before (not affected by baseMultiplier)
 			if (item.itemsBefore && item.itemsBefore.length > 0) {
 				combinedList.push(...item.itemsBefore);
 			}
 
-			// Add base recipe ingredients (now recursively flattened)
+			// Add base recipe ingredients (now recursively flattened with multiplier applied)
 			if (item.includeIngredients) {
 				flattenedNested.forEach(section => {
 					if (section.list) {
@@ -49,7 +65,7 @@ function flattenIngredientReferences(items, lang, visited = new Set()) {
 				});
 			}
 
-			// Add items after
+			// Add items after (not affected by baseMultiplier)
 			if (item.itemsAfter && item.itemsAfter.length > 0) {
 				combinedList.push(...item.itemsAfter);
 			}
@@ -69,12 +85,24 @@ function flattenIngredientReferences(items, lang, visited = new Set()) {
 					name: item.showLabel ? (item.labelOverride || baseRecipeName) : '',
 					list: combinedList,
 					isReference: item.showLabel,
-					short_name: baseRecipeShortName
+					short_name: baseRecipeShortName,
+					baseMultiplier: itemBaseMultiplier
 				});
 			}
 		} else if (item.type === 'section' || !item.type) {
-			// Regular section - pass through
-			result.push(item);
+			// Regular section - pass through with multiplier applied to amounts
+			if (baseMultiplier !== 1 && item.list) {
+				const adjustedList = item.list.map(ingredient => ({
+					...ingredient,
+					amount: multiplyIngredientAmount(ingredient.amount, baseMultiplier)
+				}));
+				result.push({
+					...item,
+					list: adjustedList
+				});
+			} else {
+				result.push(item);
+			}
 		}
 	}
 
@@ -488,7 +516,7 @@ h3 a:hover {
 {#each flattenedIngredients as list, listIndex}
 {#if list.name}
 	{#if list.isReference}
-		<h3><a href="{list.short_name}?multiplier={multiplier}">{@html list.name}</a></h3>
+		<h3><a href="{list.short_name}?multiplier={multiplier * (list.baseMultiplier || 1)}">{@html list.name}</a></h3>
 	{:else}
 		<h3>{@html list.name}</h3>
 	{/if}

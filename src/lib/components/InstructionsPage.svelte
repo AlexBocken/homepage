@@ -60,12 +60,15 @@ function flattenInstructionReferences(items, lang, visited = new Set()) {
 					? item.resolvedRecipe.translations.en.short_name
 					: item.resolvedRecipe.short_name;
 
+				const itemBaseMultiplier = item.baseMultiplier || 1;
+
 				result.push({
 					type: 'section',
 					name: item.showLabel ? (item.labelOverride || baseRecipeName) : '',
 					steps: combinedSteps,
 					isReference: item.showLabel,
-					short_name: baseRecipeShortName
+					short_name: baseRecipeShortName,
+					baseMultiplier: itemBaseMultiplier
 				});
 			}
 		} else if (item.type === 'section' || !item.type) {
@@ -211,7 +214,7 @@ h3 a:hover {
 {#each flattenedInstructions as list}
 {#if list.name}
 	{#if list.isReference}
-		<h3><a href="{list.short_name}?multiplier={multiplier}">{@html list.name}</a></h3>
+		<h3><a href="{list.short_name}?multiplier={multiplier * (list.baseMultiplier || 1)}">{@html list.name}</a></h3>
 	{:else}
 		<h3>{@html list.name}</h3>
 	{/if}
