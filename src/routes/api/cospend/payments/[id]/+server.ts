@@ -3,6 +3,7 @@ import { Payment } from '../../../../../models/Payment';
 import { PaymentSplit } from '../../../../../models/PaymentSplit';
 import { dbConnect } from '../../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
+import cache, { invalidateCospendCaches } from '$lib/server/cache';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   const auth = await locals.auth();
@@ -13,15 +14,28 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const { id } = params;
 
   await dbConnect();
-  
+
   try {
+    // Try cache first
+    const cacheKey = `cospend:payment:${id}`;
+    const cached = await cache.get(cacheKey);
+
+    if (cached) {
+      return json(JSON.parse(cached));
+    }
+
     const payment = await Payment.findById(id).populate('splits').lean();
-    
+
     if (!payment) {
       throw error(404, 'Payment not found');
     }
 
-    return json({ payment });
+    const result = { payment };
+
+    // Cache for 30 minutes
+    await cache.set(cacheKey, JSON.stringify(result), 1800);
+
+    return json(result);
   } catch (e) {
     if (e.status === 404) throw e;
     throw error(500, 'Failed to fetch payment');
@@ -40,10 +54,10 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   const data = await request.json();
 
   await dbConnect();
-  
+
   try {
     const payment = await Payment.findById(id);
-    
+
     if (!payment) {
       throw error(404, 'Payment not found');
     }
@@ -52,9 +66,13 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       throw error(403, 'Not authorized to edit this payment');
     }
 
+    // Get old splits to invalidate caches for users who were in the original payment
+    const oldSplits = await PaymentSplit.find({ paymentId: id }).lean();
+    const oldUsernames = oldSplits.map(split => split.username);
+
     const updatedPayment = await Payment.findByIdAndUpdate(
       id,
-      { 
+      {
         title: data.title,
         description: data.description,
         amount: data.amount,
@@ -67,9 +85,10 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       { new: true }
     );
 
+    let newUsernames: string[] = [];
     if (data.splits) {
       await PaymentSplit.deleteMany({ paymentId: id });
-      
+
       const splitPromises = data.splits.map((split: any) => {
         return PaymentSplit.create({
           paymentId: id,
@@ -81,7 +100,12 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       });
 
       await Promise.all(splitPromises);
+      newUsernames = data.splits.map((split: any) => split.username);
     }
+
+    // Invalidate caches for all users (old and new)
+    const allAffectedUsers = [...new Set([...oldUsernames, ...newUsernames])];
+    await invalidateCospendCaches(allAffectedUsers, id);
 
     return json({ success: true, payment: updatedPayment });
   } catch (e) {
@@ -101,10 +125,10 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   const { id } = params;
 
   await dbConnect();
-  
+
   try {
     const payment = await Payment.findById(id);
-    
+
     if (!payment) {
       throw error(404, 'Payment not found');
     }
@@ -113,8 +137,15 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
       throw error(403, 'Not authorized to delete this payment');
     }
 
+    // Get splits to invalidate caches for affected users
+    const splits = await PaymentSplit.find({ paymentId: id }).lean();
+    const affectedUsernames = splits.map(split => split.username);
+
     await PaymentSplit.deleteMany({ paymentId: id });
     await Payment.findByIdAndDelete(id);
+
+    // Invalidate caches for all affected users
+    await invalidateCospendCaches(affectedUsernames, id);
 
     return json({ success: true });
   } catch (e) {

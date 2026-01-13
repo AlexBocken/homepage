@@ -5,6 +5,7 @@ import { PaymentSplit } from '../../../../../models/PaymentSplit';
 import { dbConnect } from '../../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate } from '../../../../../lib/utils/recurring';
+import { invalidateCospendCaches } from '$lib/server/cache';
 
 // This endpoint is designed to be called by a cron job or external scheduler
 // It processes all recurring payments that are due for execution
@@ -64,6 +65,10 @@ export const POST: RequestHandler = async ({ request }) => {
         });
 
         await Promise.all(splitPromises);
+
+        // Invalidate caches for all affected users
+        const affectedUsernames = recurringPayment.splits.map((split) => split.username);
+        await invalidateCospendCaches(affectedUsernames, payment._id.toString());
 
         // Calculate next execution date
         const nextExecutionDate = calculateNextExecutionDate(recurringPayment, now);
