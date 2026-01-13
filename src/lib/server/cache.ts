@@ -302,9 +302,43 @@ export async function invalidateRecipeCaches(): Promise<void> {
 			cache.delPattern('recipes:category:*'),
 			cache.delPattern('recipes:icon:*'),
 		]);
-		console.log('[Cache] Invalidated all recipe caches');
 	} catch (err) {
 		console.error('[Cache] Error invalidating recipe caches:', err);
+	}
+}
+
+/**
+ * Helper function to invalidate cospend caches for specific users and/or payments
+ * Call this after payment create/update/delete operations
+ * @param usernames - Array of usernames whose caches should be invalidated
+ * @param paymentId - Optional payment ID to invalidate specific payment cache
+ */
+export async function invalidateCospendCaches(usernames: string[], paymentId?: string): Promise<void> {
+	try {
+		const invalidations: Promise<any>[] = [];
+
+		// Invalidate balance and debts caches for all affected users
+		for (const username of usernames) {
+			invalidations.push(
+				cache.del(`cospend:balance:${username}`),
+				cache.del(`cospend:debts:${username}`)
+			);
+		}
+
+		// Invalidate global balance cache
+		invalidations.push(cache.del('cospend:balance:all'));
+
+		// Invalidate payment list caches (all pagination variants)
+		invalidations.push(cache.delPattern('cospend:payments:list:*'));
+
+		// If specific payment ID provided, invalidate its cache
+		if (paymentId) {
+			invalidations.push(cache.del(`cospend:payment:${paymentId}`));
+		}
+
+		await Promise.all(invalidations);
+	} catch (err) {
+		console.error('[Cache] Error invalidating cospend caches:', err);
 	}
 }
 

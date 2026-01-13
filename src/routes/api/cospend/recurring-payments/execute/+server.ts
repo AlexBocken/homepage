@@ -6,6 +6,7 @@ import { dbConnect } from '../../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate } from '../../../../../lib/utils/recurring';
 import { convertToCHF } from '../../../../../lib/utils/currency';
+import { invalidateCospendCaches } from '$lib/server/cache';
 
 export const POST: RequestHandler = async ({ locals }) => {
   const auth = await locals.auth();
@@ -97,6 +98,10 @@ export const POST: RequestHandler = async ({ locals }) => {
         });
 
         await Promise.all(splitPromises);
+
+        // Invalidate caches for all affected users
+        const affectedUsernames = recurringPayment.splits.map((split) => split.username);
+        await invalidateCospendCaches(affectedUsernames, payment._id.toString());
 
         // Calculate next execution date
         const nextExecutionDate = calculateNextExecutionDate(recurringPayment, now);

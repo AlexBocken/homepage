@@ -3,6 +3,7 @@ import { PaymentSplit } from '../../../../models/PaymentSplit';
 import { Payment } from '../../../../models/Payment';
 import { dbConnect } from '../../../../utils/db';
 import { error, json } from '@sveltejs/kit';
+import cache from '$lib/server/cache';
 
 interface DebtSummary {
   username: string;
@@ -25,8 +26,16 @@ export const GET: RequestHandler = async ({ locals }) => {
   const currentUser = auth.user.nickname;
 
   await dbConnect();
-  
+
   try {
+    // Try cache first
+    const cacheKey = `cospend:debts:${currentUser}`;
+    const cached = await cache.get(cacheKey);
+
+    if (cached) {
+      return json(JSON.parse(cached));
+    }
+
     // Get all splits for the current user
     const userSplits = await PaymentSplit.find({ username: currentUser })
       .populate('paymentId')
@@ -50,13 +59,13 @@ export const GET: RequestHandler = async ({ locals }) => {
       if (!payment) continue;
 
       // Find other participants in this payment
-      const otherSplits = allRelatedSplits.filter(s => 
+      const otherSplits = allRelatedSplits.filter(s =>
         s.paymentId._id.toString() === split.paymentId._id.toString()
       );
 
       for (const otherSplit of otherSplits) {
         const otherUser = otherSplit.username;
-        
+
         if (!debtsByUser.has(otherUser)) {
           debtsByUser.set(otherUser, {
             username: otherUser,
@@ -66,11 +75,11 @@ export const GET: RequestHandler = async ({ locals }) => {
         }
 
         const debt = debtsByUser.get(otherUser)!;
-        
+
         // Current user's amount: positive = they owe, negative = they are owed
         // We want to show net between the two users
         debt.netAmount += split.amount;
-        
+
         debt.transactions.push({
           paymentId: payment._id.toString(),
           title: payment.title,
@@ -97,12 +106,17 @@ export const GET: RequestHandler = async ({ locals }) => {
       netAmount: Math.round(debt.netAmount * 100) / 100 // Round to 2 decimal places
     }));
 
-    return json({
+    const result = {
       whoOwesMe,
       whoIOwe,
       totalOwedToMe: whoOwesMe.reduce((sum, debt) => sum + debt.netAmount, 0),
       totalIOwe: whoIOwe.reduce((sum, debt) => sum + debt.netAmount, 0)
-    });
+    };
+
+    // Cache for 15 minutes (as suggested in plan for debt breakdown)
+    await cache.set(cacheKey, JSON.stringify(result), 900);
+
+    return json(result);
 
   } catch (e) {
     console.error('Error calculating debt breakdown:', e);
