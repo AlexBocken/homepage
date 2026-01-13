@@ -46,6 +46,7 @@ const RecipeSchema = new mongoose.Schema(
       includeIngredients: { type: Boolean, default: true },
       showLabel: { type: Boolean, default: true },
       labelOverride: { type: String, default: "" },
+      baseMultiplier: { type: Number, default: 1 },
       itemsBefore: [{
         name: { type: String, default: "" },
         unit: String,
@@ -70,6 +71,7 @@ const RecipeSchema = new mongoose.Schema(
        includeInstructions: { type: Boolean, default: true },
        showLabel: { type: Boolean, default: true },
        labelOverride: { type: String, default: "" },
+       baseMultiplier: { type: Number, default: 1 },
        stepsBefore: [String],
        stepsAfter: [String],
      }],
@@ -115,6 +117,7 @@ const RecipeSchema = new mongoose.Schema(
            includeIngredients: { type: Boolean, default: true },
            showLabel: { type: Boolean, default: true },
            labelOverride: { type: String, default: "" },
+           baseMultiplier: { type: Number, default: 1 },
            itemsBefore: [{
              name: { type: String, default: "" },
              unit: String,
@@ -134,6 +137,7 @@ const RecipeSchema = new mongoose.Schema(
            includeInstructions: { type: Boolean, default: true },
            showLabel: { type: Boolean, default: true },
            labelOverride: { type: String, default: "" },
+           baseMultiplier: { type: Number, default: 1 },
            stepsBefore: [String],
            stepsAfter: [String],
          }],

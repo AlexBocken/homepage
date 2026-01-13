@@ -25,6 +25,7 @@ export type IngredientReference = {
   includeIngredients: boolean;
   showLabel: boolean;
   labelOverride?: string;
+  baseMultiplier?: number;
   itemsBefore?: [{
     name: string;
     unit: string;
@@ -61,6 +62,7 @@ export type InstructionReference = {
   includeInstructions: boolean;
   showLabel: boolean;
   labelOverride?: string;
+  baseMultiplier?: number;
   stepsBefore?: [string];
   stepsAfter?: [string];
   // Populated after server-side resolution
