@@ -11,6 +11,7 @@
 	import CardAdd from '$lib/components/CardAdd.svelte';
 	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
 	import CreateStepList from '$lib/components/CreateStepList.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 	import { season } from '$lib/js/season_store';
 	import { portions } from '$lib/js/portions_store';
 	import '$lib/css/action_button.css';
@@ -417,17 +418,13 @@
 	<input type="hidden" name="category" value={card_data.category} />
 	<input type="hidden" name="icon" value={card_data.icon} />
 	<input type="hidden" name="portions" value={portions_local} />
+	<input type="hidden" name="isBaseRecipe" value={isBaseRecipe ? "true" : "false"} />
 
 	<div style="text-align: center; margin: 1rem;">
-		<label style="font-size: 1.1rem; cursor: pointer;">
-			<input
-				type="checkbox"
-				name="isBaseRecipe"
-				bind:checked={isBaseRecipe}
-				style="width: auto; display: inline; margin-right: 0.5em;"
-			/>
-			Als Basisrezept markieren (kann von anderen Rezepten referenziert werden)
-		</label>
+		<Toggle
+			bind:checked={isBaseRecipe}
+			label="Als Basisrezept markieren (kann von anderen Rezepten referenziert werden)"
+		/>
 	</div>
 
 	<!-- Recipe Note Component -->
