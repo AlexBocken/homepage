@@ -103,8 +103,8 @@
 		return season;
 	}
 
-	// Get current German recipe data
-	function getCurrentRecipeData() {
+	// Get current German recipe data - use $derived to prevent infinite effect loops
+	let currentRecipeData = $derived.by(() => {
 		// Ensure we always have a valid images array with at least one item
 		let recipeImages;
 		if (uploaded_image_filename) {
@@ -142,11 +142,11 @@
 			note,
 			isBaseRecipe,
 		};
-	}
+	});
 
 	// Detect which fields have changed from the original
 	function detectChangedFields(): string[] {
-		const current = getCurrentRecipeData();
+		const current = currentRecipeData;
 		const changed: string[] = [];
 
 		const fieldsToCheck = [
@@ -486,7 +486,7 @@
 {#if showTranslationWorkflow}
 	<div id="translation-section">
 		<TranslationApproval
-			germanData={getCurrentRecipeData()}
+			germanData={currentRecipeData}
 			englishData={translationData}
 			changedFields={changedFields}
 			isEditMode={true}

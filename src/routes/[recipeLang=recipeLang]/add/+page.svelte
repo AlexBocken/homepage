@@ -85,24 +85,22 @@
 		return season;
 	}
 
-	// Prepare German recipe data
-	function getGermanRecipeData() {
-		return {
-			...card_data,
-			...add_info,
-			images: uploaded_image_filename ? [{ mediapath: uploaded_image_filename, alt: "", caption: "" }] : [],
-			season: season_local,
-			short_name: short_name.trim(),
-			portions: portions_local,
-			datecreated: new Date(),
-			datemodified: new Date(),
-			instructions,
-			ingredients,
-			preamble,
-			addendum,
-			isBaseRecipe,
-		};
-	}
+	// Prepare German recipe data - use $derived to prevent infinite effect loops
+	let germanRecipeData = $derived({
+		...card_data,
+		...add_info,
+		images: uploaded_image_filename ? [{ mediapath: uploaded_image_filename, alt: "", caption: "" }] : [],
+		season: season_local,
+		short_name: short_name.trim(),
+		portions: portions_local,
+		datecreated: new Date(),
+		datemodified: new Date(),
+		instructions,
+		ingredients,
+		preamble,
+		addendum,
+		isBaseRecipe,
+	});
 
 	// Show translation workflow before submission
 	function prepareSubmit() {
@@ -385,7 +383,7 @@ button.action_button {
 {#if showTranslationWorkflow}
 	<div id="translation-section">
 		<TranslationApproval
-			germanData={getGermanRecipeData()}
+			germanData={germanRecipeData}
 			onapproved={handleTranslationApproved}
 			onskipped={handleTranslationSkipped}
 			oncancelled={handleTranslationCancelled}
