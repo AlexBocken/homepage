@@ -247,7 +247,8 @@ export function add_new_step(){
 		instructions[list_index].steps.push(new_step.step)
 	}
 	const el = document.querySelector("#step")
-	el.innerHTML = step_placeholder
+	el.innerHTML = ""
+	new_step.step = ""
 	instructions = instructions //tells svelte to update dom
 }
 
