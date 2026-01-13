@@ -4,6 +4,7 @@ import { PaymentSplit } from '../../../../models/PaymentSplit';
 import { dbConnect } from '../../../../utils/db';
 import { convertToCHF, isValidCurrencyCode } from '../../../../lib/utils/currency';
 import { error, json } from '@sveltejs/kit';
+import cache, { invalidateCospendCaches } from '$lib/server/cache';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
   const auth = await locals.auth();
@@ -15,8 +16,16 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const offset = parseInt(url.searchParams.get('offset') || '0');
 
   await dbConnect();
-  
+
   try {
+    // Try cache first (include pagination params in key)
+    const cacheKey = `cospend:payments:list:${limit}:${offset}`;
+    const cached = await cache.get(cacheKey);
+
+    if (cached) {
+      return json(JSON.parse(cached));
+    }
+
     const payments = await Payment.find()
       .populate('splits')
       .sort({ date: -1, createdAt: -1 })
@@ -24,7 +33,12 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       .skip(offset)
       .lean();
 
-    return json({ payments });
+    const result = { payments };
+
+    // Cache for 10 minutes (shorter TTL since this changes frequently)
+    await cache.set(cacheKey, JSON.stringify(result), 600);
+
+    return json(result);
   } catch (e) {
     throw error(500, 'Failed to fetch payments');
   } finally {
@@ -138,9 +152,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     await Promise.all(splitPromises);
 
-    return json({ 
-      success: true, 
-      payment: payment._id 
+    // Invalidate caches for all affected users
+    const affectedUsernames = splits.map((split: any) => split.username);
+    await invalidateCospendCaches(affectedUsernames, payment._id.toString());
+
+    return json({
+      success: true,
+      payment: payment._id
     });
 
   } catch (e) {
