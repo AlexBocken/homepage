@@ -355,7 +355,7 @@ button.action_button{
 
 {#if !showTranslationWorkflow}
 <div class=submit_buttons>
-<button class=action_button on:click={prepareSubmit}><p>Weiter zur Übersetzung</p><Check fill=white width=2rem height=2rem></Check></button>
+<button class=action_button onclick={prepareSubmit}><p>Weiter zur Übersetzung</p><Check fill=white width=2rem height=2rem></Check></button>
 </div>
 {/if}
 
@@ -363,9 +363,9 @@ button.action_button{
 <div id="translation-section">
 	<TranslationApproval
 		germanData={getGermanRecipeData()}
-		on:approved={handleTranslationApproved}
-		on:skipped={handleTranslationSkipped}
-		on:cancelled={handleTranslationCancelled}
+		onapproved={handleTranslationApproved}
+		onskipped={handleTranslationSkipped}
+		oncancelled={handleTranslationCancelled}
 	/>
 </div>
 {/if}
