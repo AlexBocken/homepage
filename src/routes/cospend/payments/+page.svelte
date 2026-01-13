@@ -145,28 +145,44 @@
   {:else}
     <div class="payments-grid">
       {#each payments as payment}
-        <a href="/cospend/payments/view/{payment._id}" class="payment-card" class:settlement-card={isSettlementPayment(payment)}>
-          <div class="payment-header">
-            {#if isSettlementPayment(payment)}
-              <div class="settlement-flow">
-                <div class="settlement-user-from">
-                  <ProfilePicture username={payment.paidBy} size={32} />
-                  <span class="username">{payment.paidBy}</span>
-                </div>
-                <div class="settlement-arrow">
-                  <span class="arrow">→</span>
-                  <span class="settlement-badge-small">Settlement</span>
-                </div>
-                <div class="settlement-user-to">
-                  <ProfilePicture username={getSettlementReceiver(payment)} size={32} />
-                  <span class="username">{getSettlementReceiver(payment)}</span>
-                </div>
+        {#if isSettlementPayment(payment)}
+          <!-- Settlement Card - Distinct Layout -->
+          <a href="/cospend/payments/view/{payment._id}" class="payment-card settlement-card">
+            <div class="settlement-header">
+              <div class="settlement-badge">
+                <span class="settlement-icon">💸</span>
+                <span class="settlement-label">Settlement</span>
               </div>
-              <div class="settlement-amount">
-                <span class="amount settlement-amount-text">{formatAmountWithCurrency(payment)}</span>
-                <span class="date">{formatDate(payment.date)}</span>
+              <span class="settlement-date">{formatDate(payment.date)}</span>
+            </div>
+
+            <div class="settlement-flow">
+              <div class="settlement-user">
+                <ProfilePicture username={payment.paidBy} size={48} />
+                <span class="username">{payment.paidBy}</span>
               </div>
-            {:else}
+
+              <div class="settlement-arrow-container">
+                <div class="settlement-amount-display">
+                  {formatAmountWithCurrency(payment)}
+                </div>
+                <div class="settlement-arrow">→</div>
+              </div>
+
+              <div class="settlement-user">
+                <ProfilePicture username={getSettlementReceiver(payment)} size={48} />
+                <span class="username">{getSettlementReceiver(payment)}</span>
+              </div>
+            </div>
+
+            {#if payment.description}
+              <p class="settlement-description">{payment.description}</p>
+            {/if}
+          </a>
+        {:else}
+          <!-- Regular Payment Card -->
+          <a href="/cospend/payments/view/{payment._id}" class="payment-card">
+            <div class="payment-header">
               <div class="payment-title-section">
                 <ProfilePicture username={payment.paidBy} size={40} />
                 <div class="payment-title">
@@ -184,47 +200,46 @@
               {#if payment.image}
                 <img src={payment.image} alt="Receipt" class="receipt-thumb" />
               {/if}
+            </div>
+
+            {#if payment.description}
+              <p class="payment-description">{payment.description}</p>
             {/if}
-          </div>
 
-          {#if payment.description}
-            <p class="payment-description">{payment.description}</p>
-          {/if}
-
-          <div class="payment-details">
-            <div class="detail-row">
-              <span class="label">Paid by:</span>
-              <span class="value">{payment.paidBy}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Split:</span>
-              <span class="value">{getSplitDescription(payment)}</span>
-            </div>
-          </div>
-
-          {#if payment.splits && payment.splits.length > 0}
-            <div class="splits-summary">
-              <h4>Split Details</h4>
-              <div class="splits-list">
-                {#each payment.splits as split}
-                  <div class="split-item">
-                    <span class="split-user">{split.username}</span>
-                    <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
-                      {#if split.amount > 0}
-                        owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
-                      {:else if split.amount < 0}
-                        owed {formatCurrency(Math.abs(split.amount, 'CHF', 'de-CH'))}
-                      {:else}
-                        owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
-                      {/if}
-                    </span>
-                  </div>
-                {/each}
+            <div class="payment-details">
+              <div class="detail-row">
+                <span class="label">Paid by:</span>
+                <span class="value">{payment.paidBy}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Split:</span>
+                <span class="value">{getSplitDescription(payment)}</span>
               </div>
             </div>
-          {/if}
 
-        </a>
+            {#if payment.splits && payment.splits.length > 0}
+              <div class="splits-summary">
+                <h4>Split Details</h4>
+                <div class="splits-list">
+                  {#each payment.splits as split}
+                    <div class="split-item">
+                      <span class="split-user">{split.username}</span>
+                      <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
+                        {#if split.amount > 0}
+                          owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                        {:else if split.amount < 0}
+                          owed {formatCurrency(Math.abs(split.amount, 'CHF', 'de-CH'))}
+                        {:else}
+                          owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                        {/if}
+                      </span>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          </a>
+        {/if}
       {/each}
     </div>
 
@@ -413,79 +428,137 @@
     }
   }
 
+  /* Settlement Card Styles */
   .settlement-card {
-    background: linear-gradient(135deg, var(--nord6), var(--nord5));
+    background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
     border: 2px solid var(--green);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .settlement-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--green), var(--lightblue));
   }
 
   .settlement-card:hover {
-    box-shadow: 0 4px 16px rgba(163, 190, 140, 0.3);
+    box-shadow: 0 6px 20px rgba(163, 190, 140, 0.4);
+    border-color: var(--lightblue);
   }
 
   @media (prefers-color-scheme: dark) {
     .settlement-card {
-      background: linear-gradient(135deg, var(--nord2), var(--nord1));
+      background: linear-gradient(135deg, #1a2e1a, #1e2b1e);
     }
 
     .settlement-card:hover {
-      box-shadow: 0 4px 16px rgba(163, 190, 140, 0.2);
+      box-shadow: 0 6px 20px rgba(163, 190, 140, 0.3);
+    }
+  }
+
+  .settlement-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .settlement-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, var(--green), var(--lightblue));
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(163, 190, 140, 0.3);
+  }
+
+  .settlement-icon {
+    font-size: 1.2rem;
+  }
+
+  .settlement-date {
+    color: var(--nord3);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .settlement-date {
+      color: var(--nord4);
     }
   }
 
   .settlement-flow {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    flex: 1;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
 
-  .settlement-user-from, .settlement-user-to {
+  .settlement-user {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
   }
 
-  .settlement-user-from .username,
-  .settlement-user-to .username {
-    font-weight: 500;
+  .settlement-user .username {
+    font-weight: 600;
     color: var(--green);
+    font-size: 0.95rem;
+    text-align: center;
+    word-break: break-word;
+  }
+
+  .settlement-arrow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .settlement-amount-display {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--green);
+    white-space: nowrap;
+    text-align: center;
   }
 
   .settlement-arrow {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .settlement-arrow .arrow {
     color: var(--green);
-    font-size: 1.2rem;
+    font-size: 2rem;
     font-weight: bold;
+    line-height: 1;
   }
 
-  .settlement-badge-small {
-    background: linear-gradient(135deg, var(--green), var(--lightblue));
-    color: white;
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.75rem;
-    font-size: 0.65rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
+  .settlement-description {
+    color: var(--nord2);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--nord4);
+    font-style: italic;
+    font-size: 0.9rem;
   }
 
-  .settlement-amount {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.25rem;
-  }
-
-  .settlement-amount-text {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--green);
+  @media (prefers-color-scheme: dark) {
+    .settlement-description {
+      color: var(--nord5);
+      border-top-color: var(--nord3);
+    }
   }
 
   .payment-header {
@@ -728,23 +801,64 @@
       padding: 0.75rem;
     }
 
-    /* Make settlement flow more compact on very small screens */
-    .settlement-flow {
+    /* Make settlement more compact on small screens */
+    .settlement-header {
+      flex-direction: column;
+      align-items: flex-start;
       gap: 0.5rem;
+      margin-bottom: 1rem;
     }
 
-    .settlement-user-from, .settlement-user-to {
-      gap: 0.25rem;
-    }
-
-    .settlement-user-from .username,
-    .settlement-user-to .username {
+    .settlement-badge {
+      padding: 0.4rem 0.75rem;
       font-size: 0.8rem;
     }
 
-    .settlement-badge-small {
-      font-size: 0.55rem;
-      padding: 0.1rem 0.25rem;
+    .settlement-icon {
+      font-size: 1rem;
+    }
+
+    .settlement-date {
+      font-size: 0.8rem;
+    }
+
+    .settlement-flow {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .settlement-user {
+      width: 100%;
+    }
+
+    .settlement-user .username {
+      font-size: 0.85rem;
+    }
+
+    .settlement-arrow-container {
+      transform: rotate(90deg);
+      gap: 0.75rem;
+    }
+
+    .settlement-amount-display {
+      font-size: 1.1rem;
+      transform: rotate(-90deg);
+    }
+
+    .settlement-arrow {
+      font-size: 1.5rem;
+      transform: rotate(-90deg);
+    }
+  }
+
+  /* Very small screens - simplify further */
+  @media (max-width: 360px) {
+    .settlement-amount-display {
+      font-size: 1rem;
+    }
+
+    .settlement-user .username {
+      font-size: 0.75rem;
     }
   }
 </style>
