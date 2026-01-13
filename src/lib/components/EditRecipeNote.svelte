@@ -1,4 +1,5 @@
 <script lang="ts">
+	let { note = $bindable("") } = $props<{ note?: string }>();
 </script>
 <style>
 div{
@@ -14,9 +15,25 @@ div{
 h3{
 	margin-block: 0;
 }
+textarea {
+	width: 100%;
+	min-height: 80px;
+	padding: 0.5em;
+	border-radius: 5px;
+	border: none;
+	color: white;
+	font-size: 1rem;
+	resize: vertical;
+	margin-top: 0.5em;
+	font-family: sans-serif;
+	background-color: transparent;
+}
+textarea::placeholder {
+	color: rgba(255, 255, 255, 0.6);
+}
 </style>
 
 <div>
 	<h3>Notiz:</h3>
-	<slot></slot>
+	<textarea bind:value={note} placeholder="Füge eine Notiz für dieses Rezept hinzu..."></textarea>
 </div>
