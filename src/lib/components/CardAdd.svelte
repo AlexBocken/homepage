@@ -113,7 +113,7 @@ export async function show_local_image(){
 		}
 
 		const result = await response.json();
-		uploaded_image_filename = result.unhashedFilename;
+		uploaded_image_filename = result.filename;
 		upload_error = "";
 
 	} catch (error: any) {
