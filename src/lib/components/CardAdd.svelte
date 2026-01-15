@@ -8,12 +8,12 @@ import { onMount } from 'svelte'
 let {
 	card_data = $bindable(),
 	image_preview_url = $bindable(),
-	uploaded_image_filename = $bindable(''),
+	selected_image_file = $bindable(null),
 	short_name = ''
 } = $props<{
 	card_data: any,
 	image_preview_url: string,
-	uploaded_image_filename?: string,
+	selected_image_file?: File | null,
 	short_name: string
 }>();
 
@@ -52,12 +52,11 @@ if(!card_data.tags){
 
 //locals
 let new_tag = $state("");
-let uploading = $state(false);
 let upload_error = $state("");
 
 /**
- * Handles image file selection and upload
- * Now uses FormData instead of base64 encoding for better security and performance
+ * Handles image file selection and preview
+ * The actual upload will happen when the form is submitted
  */
 export async function show_local_image(){
 	const file = this.files[0];
@@ -81,57 +80,15 @@ export async function show_local_image(){
 		return;
 	}
 
-	// Show preview immediately
+	// Show preview and store file for later upload
 	image_preview_url = URL.createObjectURL(file);
+	selected_image_file = file;
 	upload_error = "";
-
-	// Upload to server
-	try {
-		uploading = true;
-
-		// Validate short_name is provided
-		if (!short_name || short_name.trim() === '') {
-			upload_error = 'Please provide a short name (URL) before uploading an image.';
-			alert(upload_error);
-			uploading = false;
-			return;
-		}
-
-		// Create FormData for upload
-		const formData = new FormData();
-		formData.append('image', file);
-		formData.append('name', short_name.trim());
-
-		const response = await fetch('/api/rezepte/img/add', {
-			method: 'POST',
-			body: formData
-		});
-
-		if (!response.ok) {
-			const error_data = await response.json();
-			throw new Error(error_data.message || 'Upload failed');
-		}
-
-		const result = await response.json();
-		uploaded_image_filename = result.filename;
-		upload_error = "";
-
-	} catch (error: any) {
-		console.error('Image upload error:', error);
-		upload_error = error.message || 'Failed to upload image. Please try again.';
-		alert(`Upload failed: ${upload_error}`);
-
-		// Clear preview on error
-		image_preview_url = "";
-		uploaded_image_filename = "";
-	} finally {
-		uploading = false;
-	}
 }
 
 export function remove_selected_images(){
 	image_preview_url = "";
-	uploaded_image_filename = "";
+	selected_image_file = null;
 	upload_error = "";
 }
 
@@ -430,11 +387,6 @@ input::placeholder{
 .tag_input{
 	width: 12ch;
 }
-.upload-spinner {
-	color: white;
-	font-size: 1.2rem;
-	font-weight: bold;
-}
 </style>
 
 
@@ -453,15 +405,11 @@ input::placeholder{
 		{/if}
 
 
-		<label class=img_label for=img_picker style={uploading ? 'opacity: 0.5; cursor: not-allowed;' : ''}>
-		{#if uploading}
-			<div class="upload-spinner">Uploading...</div>
-		{:else}
+		<label class=img_label for=img_picker>
 			<svg class="upload over_img" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/></svg>
-		{/if}
 		</label>
 	</div>
-	<input type="file" id=img_picker accept="image/webp,image/jpeg,image/jpg,image/png" onchange={show_local_image} disabled={uploading}>
+	<input type="file" id=img_picker accept="image/webp,image/jpeg,image/jpg,image/png" onchange={show_local_image}>
 	<div class=title>
 		<input class=category placeholder=Kategorie... bind:value={card_data.category}/>
 		<div>

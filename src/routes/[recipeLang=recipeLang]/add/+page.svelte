@@ -18,7 +18,7 @@
 	let preamble = $state("");
 	let addendum = $state("");
 	let image_preview_url = $state("");
-	let uploaded_image_filename = $state("");
+	let selected_image_file = $state<File | null>(null);
 
 	// Translation workflow state
 	let showTranslationWorkflow = $state(false);
@@ -91,7 +91,7 @@
 	let germanRecipeData = $derived({
 		...card_data,
 		...add_info,
-		images: uploaded_image_filename ? [{ mediapath: uploaded_image_filename, alt: "", caption: "" }] : [],
+		images: selected_image_file ? [{ mediapath: 'pending', alt: "", caption: "" }] : [],
 		season: season_local,
 		short_name: short_name.trim(),
 		portions: portions_local,
@@ -291,9 +291,14 @@ button.action_button {
 <form
 	method="POST"
 	bind:this={formElement}
+	enctype="multipart/form-data"
 	use:enhance={() => {
 		submitting = true;
-		return async ({ update }) => {
+		return async ({ update, formData }) => {
+			// Append the image file if one was selected
+			if (selected_image_file) {
+				formData.append('recipe_image', selected_image_file);
+			}
 			await update();
 			submitting = false;
 		};
@@ -305,7 +310,6 @@ button.action_button {
 	<input type="hidden" name="add_info_json" value={JSON.stringify(add_info)} />
 	<input type="hidden" name="season" value={JSON.stringify(season_local)} />
 	<input type="hidden" name="tags" value={JSON.stringify(card_data.tags)} />
-	<input type="hidden" name="uploaded_image_filename" value={uploaded_image_filename} />
 
 	<!-- Translation data (added after approval) -->
 	{#if translationData}
@@ -319,7 +323,7 @@ button.action_button {
 	<CardAdd
 		bind:card_data
 		bind:image_preview_url
-		bind:uploaded_image_filename
+		bind:selected_image_file
 		short_name={short_name}
 	/>
 
