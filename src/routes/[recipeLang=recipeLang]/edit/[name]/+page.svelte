@@ -27,7 +27,7 @@
 		"https://bocken.org/static/rezepte/thumb/" +
 			(data.recipe.images?.[0]?.mediapath || `${data.recipe.short_name}.webp`)
 	);
-	let uploaded_image_filename = $state("");
+	let selected_image_file = $state<File | null>(null);
 
 	// Translation workflow state
 	let showTranslationWorkflow = $state(false);
@@ -109,10 +109,10 @@
 	let currentRecipeData = $derived.by(() => {
 		// Ensure we always have a valid images array with at least one item
 		let recipeImages;
-		if (uploaded_image_filename) {
-			// New image uploaded
+		if (selected_image_file) {
+			// New image selected (will be uploaded on form submission)
 			recipeImages = [{
-				mediapath: uploaded_image_filename,
+				mediapath: 'pending',
 				alt: images[0]?.alt || "",
 				caption: images[0]?.caption || ""
 			}];
@@ -371,9 +371,14 @@
 <form
 	method="POST"
 	bind:this={formElement}
+	enctype="multipart/form-data"
 	use:enhance={() => {
 		submitting = true;
-		return async ({ update }) => {
+		return async ({ update, formData }) => {
+			// Append the image file if one was selected
+			if (selected_image_file) {
+				formData.append('recipe_image', selected_image_file);
+			}
 			await update();
 			submitting = false;
 		};
@@ -381,7 +386,7 @@
 >
 	<!-- Hidden inputs for tracking -->
 	<input type="hidden" name="original_short_name" value={old_short_name} />
-	<input type="hidden" name="keep_existing_image" value={uploaded_image_filename ? "false" : "true"} />
+	<input type="hidden" name="keep_existing_image" value={selected_image_file ? "false" : "true"} />
 	<input type="hidden" name="existing_image_path" value={images[0]?.mediapath || `${old_short_name}.webp`} />
 
 	<!-- Hidden inputs for complex nested data -->
@@ -390,7 +395,6 @@
 	<input type="hidden" name="add_info_json" value={JSON.stringify(add_info)} />
 	<input type="hidden" name="season" value={JSON.stringify(season_local)} />
 	<input type="hidden" name="tags" value={JSON.stringify(card_data.tags)} />
-	<input type="hidden" name="uploaded_image_filename" value={uploaded_image_filename} />
 	<input type="hidden" name="datecreated" value={datecreated?.toString()} />
 
 	<!-- Translation data (updated after approval or marked needs_update) -->
@@ -405,7 +409,7 @@
 	<CardAdd
 		bind:card_data
 		bind:image_preview_url
-		bind:uploaded_image_filename
+		bind:selected_image_file
 		short_name={short_name}
 	/>
 

@@ -3,6 +3,8 @@ import type { Actions, PageServerLoad } from './$types';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { invalidateRecipeCaches } from '$lib/server/cache';
+import { IMAGE_DIR } from '$env/static/private';
+import { processAndSaveRecipeImage } from '$utils/imageProcessing';
 import {
 	extractRecipeFromFormData,
 	validateRecipeData,
@@ -49,14 +51,29 @@ export const actions = {
 			}
 
 			// Handle optional image upload
-			const uploadedImage = formData.get('uploaded_image_filename')?.toString();
-			if (uploadedImage && uploadedImage.trim() !== '') {
-				// Image was uploaded - use it
-				recipeData.images = [{
-					mediapath: uploadedImage,
-					alt: '',
-					caption: ''
-				}];
+			const recipeImage = formData.get('recipe_image') as File | null;
+			if (recipeImage && recipeImage.size > 0) {
+				try {
+					// Process and save the image
+					const { filename } = await processAndSaveRecipeImage(
+						recipeImage,
+						recipeData.short_name,
+						IMAGE_DIR
+					);
+
+					recipeData.images = [{
+						mediapath: filename,
+						alt: '',
+						caption: ''
+					}];
+				} catch (imageError: any) {
+					console.error('Image processing error:', imageError);
+					return fail(400, {
+						error: `Failed to process image: ${imageError.message}`,
+						errors: ['Image processing failed'],
+						values: Object.fromEntries(formData)
+					});
+				}
 			} else {
 				// No image uploaded - use placeholder based on short_name
 				recipeData.images = [{

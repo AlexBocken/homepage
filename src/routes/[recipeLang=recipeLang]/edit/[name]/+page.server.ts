@@ -7,6 +7,7 @@ import { IMAGE_DIR } from '$env/static/private';
 import { rename, access, unlink } from 'fs/promises';
 import { join } from 'path';
 import { constants } from 'fs';
+import { processAndSaveRecipeImage } from '$utils/imageProcessing';
 import {
 	extractRecipeFromFormData,
 	validateRecipeData,
@@ -111,21 +112,37 @@ export const actions = {
 			}
 
 			// Handle image scenarios
-			const uploadedImage = formData.get('uploaded_image_filename')?.toString();
+			const recipeImage = formData.get('recipe_image') as File | null;
 			const keepExistingImage = formData.get('keep_existing_image') === 'true';
 			const existingImagePath = formData.get('existing_image_path')?.toString();
 
-			if (uploadedImage) {
-				// New image uploaded - delete old image files and use new one
-				if (existingImagePath && existingImagePath !== uploadedImage) {
-					await deleteRecipeImage(existingImagePath);
-				}
+			if (recipeImage && recipeImage.size > 0) {
+				try {
+					// Process and save the new image
+					const { filename } = await processAndSaveRecipeImage(
+						recipeImage,
+						recipeData.short_name,
+						IMAGE_DIR
+					);
 
-				recipeData.images = [{
-					mediapath: uploadedImage,
-					alt: existingImagePath ? (recipeData.images?.[0]?.alt || '') : '',
-					caption: existingImagePath ? (recipeData.images?.[0]?.caption || '') : ''
-				}];
+					// Delete old image files
+					if (existingImagePath && existingImagePath !== filename) {
+						await deleteRecipeImage(existingImagePath);
+					}
+
+					recipeData.images = [{
+						mediapath: filename,
+						alt: existingImagePath ? (recipeData.images?.[0]?.alt || '') : '',
+						caption: existingImagePath ? (recipeData.images?.[0]?.caption || '') : ''
+					}];
+				} catch (imageError: any) {
+					console.error('Image processing error:', imageError);
+					return fail(400, {
+						error: `Failed to process image: ${imageError.message}`,
+						errors: ['Image processing failed'],
+						values: Object.fromEntries(formData)
+					});
+				}
 			} else if (keepExistingImage && existingImagePath) {
 				// Keep existing image
 				recipeData.images = [{
