@@ -1,4 +1,19 @@
 import { redirect, error } from '@sveltejs/kit';
+import { stripHtmlTags } from '$lib/js/stripHtmlTags';
+
+export async function load({ parent }) {
+    // Get data from universal load function
+    const data = await parent();
+
+    // Strip HTML tags server-side to avoid bundling cheerio in client
+    const strippedName = stripHtmlTags(data.name);
+    const strippedDescription = stripHtmlTags(data.description);
+
+    return {
+        strippedName,
+        strippedDescription,
+    };
+}
 
 export const actions = {
     toggleFavorite: async ({ request, locals, url, fetch }) => {
