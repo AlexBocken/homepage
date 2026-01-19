@@ -11,7 +11,6 @@
 	import { afterNavigate } from '$app/navigation';
     	import {season} from '$lib/js/season_store';
 	import RecipeNote from '$lib/components/RecipeNote.svelte';
-	import {stripHtmlTags} from '$lib/js/stripHtmlTags';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { onDestroy } from 'svelte';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
@@ -44,10 +43,8 @@
 	const hero_img_src = $derived("https://bocken.org/static/rezepte/full/" + img_filename);
 	const placeholder_src = $derived("https://bocken.org/static/rezepte/placeholder/" + img_filename);
 
-	// Get alt text from images array (with fallback to recipe name)
-	const img_alt = $derived(
-		data.images?.[0]?.alt || stripHtmlTags(data.name)
-	);
+	// Get alt text from images array
+	const img_alt = $derived(data.images?.[0]?.alt || '');
 
     	const months = $derived(isEnglish
 		? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -308,12 +305,12 @@ h2{
 
 </style>
 <svelte:head>
-	<title>{stripHtmlTags(data.name)} - {labels.title}</title>
-	<meta name="description" content="{stripHtmlTags(data.description)}" />
+	<title>{data.strippedName} - {labels.title}</title>
+	<meta name="description" content="{data.strippedDescription}" />
 	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/{img_filename}" />
 	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{img_filename}" />
 	<meta property="og:image:type" content="image/webp" />
-	<meta property="og:image:alt" content="{stripHtmlTags(data.name)}" />
+	<meta property="og:image:alt" content="{data.strippedName}" />
 	{@html `<script type="application/ld+json">${JSON.stringify(data.recipeJsonLd)}</script>`}
 	<!-- SEO: hreflang tags -->
 	<link rel="alternate" hreflang="de" href="https://bocken.org/rezepte/{data.germanShortName}" />
