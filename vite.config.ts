@@ -6,4 +6,28 @@ export default defineConfig({
 		allowedHosts: ["bocken.org"]
 	},
 	plugins: [sveltekit()],
+	build: {
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true,
+				drop_debugger: true
+			}
+		},
+		rollupOptions: {
+			output: {
+				manualChunks: (id) => {
+					// Separate large dependencies into their own chunks
+					if (id.includes('node_modules')) {
+						if (id.includes('chart.js')) {
+							return 'chart';
+						}
+						if (id.includes('@auth/sveltekit')) {
+							return 'auth';
+						}
+					}
+				}
+			}
+		}
+	}
 });

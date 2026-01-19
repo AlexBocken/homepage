@@ -3,14 +3,16 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/fonts/crosses.ttf);
+  src: url(/fonts/crosses.woff2) format('woff2'),
+       url(/fonts/crosses.ttf) format('truetype');
 }
  @font-face {
   font-family: 'LibertineMinimal';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/fonts/LinLibertine_minimal.ttf);
+  src: url(/fonts/LinLibertine_minimal.woff2) format('woff2'),
+       url(/fonts/LinLibertine_minimal.ttf) format('truetype');
  }
 .sbeads{
 	fill: var(--nord10);
