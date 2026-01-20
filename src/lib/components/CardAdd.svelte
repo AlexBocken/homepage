@@ -7,28 +7,86 @@ import { onMount } from 'svelte'
 
 let {
 	card_data = $bindable(),
-	image_preview_url = $bindable(),
-	selected_image_file = $bindable(null),
+	image_preview_url = $bindable(''),
+	selected_image_file = $bindable<File | null>(null),
 	short_name = ''
-} = $props<{
+}: {
 	card_data: any,
 	image_preview_url: string,
-	selected_image_file?: File | null,
+	selected_image_file: File | null,
 	short_name: string
-}>();
+} = $props();
 
-// Check if image redirects to placeholder by attempting to load it
+// Local state for file input binding (Svelte 5 best practice)
+let files = $state<FileList | null>(null);
+let upload_error = $state("");
+
+// Constants for validation
+const ALLOWED_MIME_TYPES = ['image/webp', 'image/jpeg', 'image/jpg', 'image/png'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+// React to file selection using $effect (Svelte 5 best practice)
+// This effect intentionally has side effects - it's reacting to user file selection
+$effect(() => {
+	const file = files?.[0];
+
+	// Only process when there's an actual file selected
+	if (!file) return;
+
+	console.log('[CardAdd] File selected via bind:files:', {
+		name: file.name,
+		size: file.size,
+		type: file.type
+	});
+
+	// Validate MIME type
+	if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+		upload_error = 'Invalid file type. Please upload a JPEG, PNG, or WebP image.';
+		console.error('[CardAdd] Invalid MIME type:', file.type);
+		alert(upload_error);
+		files = null;
+		return;
+	}
+	console.log('[CardAdd] MIME type valid:', file.type);
+
+	// Validate file size
+	if (file.size > MAX_FILE_SIZE) {
+		upload_error = `File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`;
+		console.error('[CardAdd] File too large:', file.size);
+		alert(upload_error);
+		files = null;
+		return;
+	}
+	console.log('[CardAdd] File size valid:', file.size, 'bytes');
+
+	// Validation passed - create preview and update bindable prop
+	upload_error = "";
+
+	// Clean up old preview URL if exists
+	if (image_preview_url && image_preview_url.startsWith('blob:')) {
+		URL.revokeObjectURL(image_preview_url);
+	}
+
+	image_preview_url = URL.createObjectURL(file);
+	selected_image_file = file;
+	console.log('[CardAdd] Image preview created, file stored for upload:', {
+		previewUrl: image_preview_url,
+		fileName: selected_image_file.name
+	});
+});
+
+// Check if initial image_preview_url redirects to placeholder
 onMount(() => {
-	if (image_preview_url) {
+	if (image_preview_url && !image_preview_url.startsWith('blob:')) {
 		const img = new Image();
 
 		img.onload = () => {
 			// Check if this is the placeholder image (150x150)
 			if (img.naturalWidth === 150 && img.naturalHeight === 150) {
-				console.log('Detected placeholder image (150x150), clearing preview');
+				console.log('[CardAdd] Detected placeholder image (150x150), clearing preview');
 				image_preview_url = ""
 			} else {
-				console.log('Real image loaded:', {
+				console.log('[CardAdd] Real image loaded:', {
 					url: image_preview_url,
 					naturalWidth: img.naturalWidth,
 					naturalHeight: img.naturalHeight
@@ -37,98 +95,55 @@ onMount(() => {
 		};
 
 		img.onerror = () => {
-			// Image failed to load - could be 404 or network error
-			console.log('Image failed to load, clearing preview');
+			console.log('[CardAdd] Image failed to load, clearing preview');
 			image_preview_url = ""
 		};
 
 		img.src = image_preview_url;
 	}
-})
+});
 
-if(!card_data.tags){
+// Initialize tags if needed
+if (!card_data.tags) {
 	card_data.tags = []
 }
 
-//locals
+// Tag management
 let new_tag = $state("");
-let upload_error = $state("");
 
-/**
- * Handles image file selection and preview
- * The actual upload will happen when the form is submitted
- */
-export async function show_local_image(event: Event){
-	const input = event.target as HTMLInputElement;
-	const file = input.files?.[0];
-	if (!file) {
-		console.log('[CardAdd] No file selected');
-		return;
-	}
-
-	console.log('[CardAdd] File selected:', {
-		name: file.name,
-		size: file.size,
-		type: file.type
-	});
-
-	// Client-side validation
-	const allowed_mime_types = ['image/webp', 'image/jpeg', 'image/jpg', 'image/png'];
-	const max_size = 5 * 1024 * 1024; // 5MB
-
-	// Validate MIME type
-	if(!allowed_mime_types.includes(file.type)) {
-		upload_error = 'Invalid file type. Please upload a JPEG, PNG, or WebP image.';
-		console.error('[CardAdd] Invalid MIME type:', file.type);
-		alert(upload_error);
-		return;
-	}
-	console.log('[CardAdd] MIME type valid:', file.type);
-
-	// Validate file size
-	if(file.size > max_size) {
-		upload_error = `File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`;
-		console.error('[CardAdd] File too large:', file.size);
-		alert(upload_error);
-		return;
-	}
-	console.log('[CardAdd] File size valid:', file.size, 'bytes');
-
-	// Show preview and store file for later upload
-	image_preview_url = URL.createObjectURL(file);
-	selected_image_file = file;
-	upload_error = "";
-	console.log('[CardAdd] Image preview created and file stored for upload');
-}
-
-export function remove_selected_images(){
+function remove_selected_images() {
 	console.log('[CardAdd] Removing selected image');
+	if (image_preview_url && image_preview_url.startsWith('blob:')) {
+		URL.revokeObjectURL(image_preview_url);
+	}
 	image_preview_url = "";
 	selected_image_file = null;
+	files = null;
 	upload_error = "";
 }
 
 
-export function add_to_tags(){
-	if(new_tag){
-		if(! card_data.tags.includes(new_tag)){
-			card_data.tags.push(new_tag)
-			card_data.tags = card_data.tags;
-		}
+function add_to_tags() {
+	if (new_tag && !card_data.tags.includes(new_tag)) {
+		card_data.tags = [...card_data.tags, new_tag];
 	}
-	new_tag = ""
+	new_tag = "";
 }
-export function remove_from_tags(tag){
-	card_data.tags = card_data.tags.filter(item => item !== tag)
+
+function remove_from_tags(tag: string) {
+	card_data.tags = card_data.tags.filter((item: string) => item !== tag);
 }
-export function add_on_enter(event){
-	if(event.key === 'Enter'){
-		add_to_tags()
+
+function add_on_enter(event: KeyboardEvent) {
+	if (event.key === 'Enter') {
+		event.preventDefault();
+		add_to_tags();
 	}
 }
-export function remove_on_enter(event, tag){
-	if(event.key === 'Enter'){
-		card_data.tags = card_data.tags.filter(item => item !== tag)
+
+function remove_on_enter(event: KeyboardEvent, tag: string) {
+	if (event.key === 'Enter') {
+		card_data.tags = card_data.tags.filter((item: string) => item !== tag);
 	}
 }
 </script>
@@ -425,7 +440,7 @@ input::placeholder{
 			<svg class="upload over_img" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/></svg>
 		</label>
 	</div>
-	<input type="file" id=img_picker accept="image/webp,image/jpeg,image/jpg,image/png" onchange={show_local_image}>
+	<input type="file" id="img_picker" accept="image/webp,image/jpeg,image/jpg,image/png" bind:files>
 	<div class=title>
 		<input class=category placeholder=Kategorie... bind:value={card_data.category}/>
 		<div>
@@ -433,7 +448,7 @@ input::placeholder{
 			<p contenteditable class=description placeholder=Kurzbeschreibung... bind:innerText={card_data.description}></p>
 		</div>
 		<div class=tags>
-			{#each card_data.tags as tag}
+			{#each card_data.tags as tag (tag)}
 				<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 				<div class="tag" role="button" tabindex="0" onkeydown={(event) => remove_on_enter(event, tag)} onclick={() => remove_from_tags(tag)} aria-label="Tag {tag} entfernen">{tag}</div>
 			{/each}
