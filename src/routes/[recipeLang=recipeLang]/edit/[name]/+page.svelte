@@ -372,13 +372,13 @@
 	method="POST"
 	bind:this={formElement}
 	enctype="multipart/form-data"
-	use:enhance={() => {
+	use:enhance={({ formData }) => {
 		submitting = true;
-		return async ({ update, formData }) => {
-			// Append the image file if one was selected
-			if (selected_image_file) {
-				formData.append('recipe_image', selected_image_file);
-			}
+		// Append the image file BEFORE submission (in the outer function)
+		if (selected_image_file) {
+			formData.append('recipe_image', selected_image_file);
+		}
+		return async ({ update }) => {
 			await update();
 			submitting = false;
 		};
