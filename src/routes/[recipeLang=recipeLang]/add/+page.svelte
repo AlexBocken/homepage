@@ -292,26 +292,14 @@ button.action_button {
 	method="POST"
 	bind:this={formElement}
 	enctype="multipart/form-data"
-	use:enhance={() => {
+	use:enhance={({ formData }) => {
 		submitting = true;
-		console.log('[RecipeAdd:Client] Form submission started');
-		console.log('[RecipeAdd:Client] Selected image file:', {
-			hasFile: !!selected_image_file,
-			fileName: selected_image_file?.name,
-			fileSize: selected_image_file?.size,
-			fileType: selected_image_file?.type
-		});
-		return async ({ update, formData }) => {
-			// Append the image file if one was selected
-			if (selected_image_file) {
-				console.log('[RecipeAdd:Client] Appending image to FormData');
-				formData.append('recipe_image', selected_image_file);
-			} else {
-				console.log('[RecipeAdd:Client] No image to append');
-			}
-			console.log('[RecipeAdd:Client] Sending form to server...');
+		// Append the image file BEFORE submission (in the outer function)
+		if (selected_image_file) {
+			formData.append('recipe_image', selected_image_file);
+		}
+		return async ({ update }) => {
 			await update();
-			console.log('[RecipeAdd:Client] Form submission complete');
 			submitting = false;
 		};
 	}}

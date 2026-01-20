@@ -27,33 +27,22 @@ function handleFileSelect(event: Event) {
 	const file = input.files?.[0];
 
 	if (!file) {
-		console.log('[CardAdd] No file selected');
 		return;
 	}
 
-	console.log('[CardAdd] File selected:', {
-		name: file.name,
-		size: file.size,
-		type: file.type
-	});
-
 	// Validate MIME type
 	if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-		console.error('[CardAdd] Invalid MIME type:', file.type);
 		alert('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
 		input.value = '';
 		return;
 	}
-	console.log('[CardAdd] MIME type valid:', file.type);
 
 	// Validate file size
 	if (file.size > MAX_FILE_SIZE) {
-		console.error('[CardAdd] File too large:', file.size);
 		alert(`File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
 		input.value = '';
 		return;
 	}
-	console.log('[CardAdd] File size valid:', file.size, 'bytes');
 
 	// Clean up old preview URL if exists
 	if (image_preview_url && image_preview_url.startsWith('blob:')) {
@@ -63,10 +52,6 @@ function handleFileSelect(event: Event) {
 	// Create preview and store file
 	image_preview_url = URL.createObjectURL(file);
 	selected_image_file = file;
-	console.log('[CardAdd] Image preview created, file stored for upload:', {
-		previewUrl: image_preview_url,
-		fileName: file.name
-	});
 }
 
 // Check if initial image_preview_url redirects to placeholder
@@ -77,19 +62,11 @@ onMount(() => {
 		img.onload = () => {
 			// Check if this is the placeholder image (150x150)
 			if (img.naturalWidth === 150 && img.naturalHeight === 150) {
-				console.log('[CardAdd] Detected placeholder image (150x150), clearing preview');
 				image_preview_url = ""
-			} else {
-				console.log('[CardAdd] Real image loaded:', {
-					url: image_preview_url,
-					naturalWidth: img.naturalWidth,
-					naturalHeight: img.naturalHeight
-				});
 			}
 		};
 
 		img.onerror = () => {
-			console.log('[CardAdd] Image failed to load, clearing preview');
 			image_preview_url = ""
 		};
 
@@ -109,7 +86,6 @@ let new_tag = $state("");
 let fileInput: HTMLInputElement;
 
 function remove_selected_images() {
-	console.log('[CardAdd] Removing selected image');
 	if (image_preview_url && image_preview_url.startsWith('blob:')) {
 		URL.revokeObjectURL(image_preview_url);
 	}
