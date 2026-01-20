@@ -58,8 +58,9 @@ let upload_error = $state("");
  * Handles image file selection and preview
  * The actual upload will happen when the form is submitted
  */
-export async function show_local_image(){
-	const file = this.files[0];
+export async function show_local_image(event: Event){
+	const input = event.target as HTMLInputElement;
+	const file = input.files?.[0];
 	if (!file) {
 		console.log('[CardAdd] No file selected');
 		return;
