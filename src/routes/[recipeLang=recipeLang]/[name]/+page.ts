@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { generateRecipeJsonLd } from '$lib/js/recipeJsonLd';
 
-export async function load({ fetch, params, url}) {
+export async function load({ fetch, params, url, data }) {
     const isEnglish = params.recipeLang === 'recipes';
     const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
 
@@ -119,6 +119,7 @@ export async function load({ fetch, params, url}) {
     const germanShortName = isEnglish ? (item.germanShortName || '') : item.short_name;
 
     return {
+        ...data,  // Include server load data (strippedName, strippedDescription)
         ...item,
         isFavorite,
         multiplier,

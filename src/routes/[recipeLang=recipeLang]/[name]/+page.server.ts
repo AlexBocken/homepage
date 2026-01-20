@@ -1,13 +1,24 @@
 import { redirect, error } from '@sveltejs/kit';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
 
-export async function load({ parent }) {
-    // Get data from universal load function
-    const data = await parent();
+export async function load({ params, fetch }) {
+    // Fetch recipe data to strip HTML tags server-side
+    // This avoids bundling cheerio in the client bundle
+    const isEnglish = params.recipeLang === 'recipes';
+    const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
 
-    // Strip HTML tags server-side to avoid bundling cheerio in client
-    const strippedName = stripHtmlTags(data.name);
-    const strippedDescription = stripHtmlTags(data.description);
+    const res = await fetch(`${apiBase}/items/${params.name}`);
+    if (!res.ok) {
+        // Let the universal load function handle the error
+        return {
+            strippedName: '',
+            strippedDescription: '',
+        };
+    }
+
+    const item = await res.json();
+    const strippedName = stripHtmlTags(item.name);
+    const strippedDescription = stripHtmlTags(item.description);
 
     return {
         strippedName,
