@@ -60,7 +60,16 @@ let upload_error = $state("");
  */
 export async function show_local_image(){
 	const file = this.files[0];
-	if (!file) return;
+	if (!file) {
+		console.log('[CardAdd] No file selected');
+		return;
+	}
+
+	console.log('[CardAdd] File selected:', {
+		name: file.name,
+		size: file.size,
+		type: file.type
+	});
 
 	// Client-side validation
 	const allowed_mime_types = ['image/webp', 'image/jpeg', 'image/jpg', 'image/png'];
@@ -69,24 +78,30 @@ export async function show_local_image(){
 	// Validate MIME type
 	if(!allowed_mime_types.includes(file.type)) {
 		upload_error = 'Invalid file type. Please upload a JPEG, PNG, or WebP image.';
+		console.error('[CardAdd] Invalid MIME type:', file.type);
 		alert(upload_error);
 		return;
 	}
+	console.log('[CardAdd] MIME type valid:', file.type);
 
 	// Validate file size
 	if(file.size > max_size) {
 		upload_error = `File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`;
+		console.error('[CardAdd] File too large:', file.size);
 		alert(upload_error);
 		return;
 	}
+	console.log('[CardAdd] File size valid:', file.size, 'bytes');
 
 	// Show preview and store file for later upload
 	image_preview_url = URL.createObjectURL(file);
 	selected_image_file = file;
 	upload_error = "";
+	console.log('[CardAdd] Image preview created and file stored for upload');
 }
 
 export function remove_selected_images(){
+	console.log('[CardAdd] Removing selected image');
 	image_preview_url = "";
 	selected_image_file = null;
 	upload_error = "";
