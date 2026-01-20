@@ -892,25 +892,6 @@
     }
   }
 
-  .split-details {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.25rem;
-  }
-
-  .personal-amount {
-    font-size: 0.85rem;
-    color: var(--nord3);
-    font-style: italic;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .personal-amount {
-      color: var(--nord4);
-    }
-  }
-
   .split-amount.positive {
     color: var(--green);
     font-weight: 500;
