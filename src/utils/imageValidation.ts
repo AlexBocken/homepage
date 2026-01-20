@@ -34,8 +34,15 @@ const MAGIC_BYTES = {
  * @returns ValidationResult with valid flag and optional error message
  */
 export async function validateImageFile(file: File): Promise<ValidationResult> {
+	console.log('[ImageValidation] Starting validation for file:', {
+		name: file.name,
+		size: file.size,
+		type: file.type
+	});
+
 	// Layer 1: Check file size
 	if (file.size > MAX_FILE_SIZE) {
+		console.error('[ImageValidation] File too large:', file.size, 'bytes');
 		return {
 			valid: false,
 			error: `File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`
@@ -43,6 +50,7 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
 	}
 
 	if (file.size === 0) {
+		console.error('[ImageValidation] File is empty');
 		return {
 			valid: false,
 			error: 'File is empty'
@@ -51,20 +59,24 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
 
 	// Layer 2: Check MIME type (client-provided)
 	if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+		console.error('[ImageValidation] Invalid MIME type:', file.type);
 		return {
 			valid: false,
 			error: `Invalid file type. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}. Received: ${file.type || 'unknown'}`
 		};
 	}
+	console.log('[ImageValidation] MIME type valid:', file.type);
 
 	// Layer 3: Check file extension
 	const extension = file.name.split('.').pop()?.toLowerCase();
 	if (!extension || !ALLOWED_EXTENSIONS.includes(extension)) {
+		console.error('[ImageValidation] Invalid extension:', extension);
 		return {
 			valid: false,
 			error: `Invalid file extension. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}. Received: ${extension || 'none'}`
 		};
 	}
+	console.log('[ImageValidation] Extension valid:', extension);
 
 	// Convert File to Buffer for magic bytes validation
 	const arrayBuffer = await file.arrayBuffer();
@@ -75,14 +87,18 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
 		const fileType = await fileTypeFromBuffer(buffer);
 
 		if (!fileType) {
+			console.error('[ImageValidation] Unable to detect file type from headers');
 			return {
 				valid: false,
 				error: 'Unable to detect file type from file headers. File may be corrupted or not a valid image.'
 			};
 		}
 
+		console.log('[ImageValidation] Detected file type from headers:', fileType.mime);
+
 		// Verify detected type matches allowed types
 		if (!ALLOWED_MIME_TYPES.includes(fileType.mime)) {
+			console.error('[ImageValidation] Detected type not allowed:', fileType.mime);
 			return {
 				valid: false,
 				error: `File headers indicate type "${fileType.mime}" which is not allowed. This file may have been renamed to bypass filters.`
@@ -91,12 +107,18 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
 
 		// Verify MIME type consistency
 		if (fileType.mime !== file.type) {
+			console.error('[ImageValidation] MIME type mismatch:', {
+				claimed: file.type,
+				actual: fileType.mime
+			});
 			return {
 				valid: false,
 				error: `File type mismatch: claimed to be "${file.type}" but actual type is "${fileType.mime}". Possible file spoofing attempt.`
 			};
 		}
+		console.log('[ImageValidation] Magic bytes validation passed');
 	} catch (error) {
+		console.error('[ImageValidation] Magic bytes validation error:', error);
 		return {
 			valid: false,
 			error: `Failed to validate file headers: ${error.message}`
@@ -107,7 +129,14 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
 	try {
 		const metadata = await sharp(buffer).metadata();
 
+		console.log('[ImageValidation] Sharp metadata:', {
+			width: metadata.width,
+			height: metadata.height,
+			format: metadata.format
+		});
+
 		if (!metadata.width || !metadata.height) {
+			console.error('[ImageValidation] Unable to read image dimensions');
 			return {
 				valid: false,
 				error: 'Invalid image: unable to read image dimensions'
@@ -115,18 +144,25 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
 		}
 
 		if (metadata.width > 10000 || metadata.height > 10000) {
+			console.error('[ImageValidation] Image dimensions too large:', {
+				width: metadata.width,
+				height: metadata.height
+			});
 			return {
 				valid: false,
 				error: `Image dimensions too large: ${metadata.width}x${metadata.height}. Maximum: 10000x10000px`
 			};
 		}
+		console.log('[ImageValidation] Sharp validation passed');
 	} catch (error) {
+		console.error('[ImageValidation] Sharp validation error:', error);
 		return {
 			valid: false,
 			error: `Invalid or corrupted image file: ${error.message}`
 		};
 	}
 
+	console.log('[ImageValidation] All validation layers passed ✓');
 	return { valid: true };
 }
 
