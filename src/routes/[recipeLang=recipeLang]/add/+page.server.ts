@@ -36,13 +36,19 @@ export const actions = {
 
 		try {
 			const formData = await request.formData();
+			console.log('[RecipeAdd] Form data received');
 
 			// Extract recipe data from FormData
 			const recipeData = extractRecipeFromFormData(formData);
+			console.log('[RecipeAdd] Recipe data extracted:', {
+				short_name: recipeData.short_name,
+				title: recipeData.title
+			});
 
 			// Validate required fields
 			const validationErrors = validateRecipeData(recipeData);
 			if (validationErrors.length > 0) {
+				console.error('[RecipeAdd] Validation errors:', validationErrors);
 				return fail(400, {
 					error: validationErrors.join(', '),
 					errors: validationErrors,
@@ -52,8 +58,16 @@ export const actions = {
 
 			// Handle optional image upload
 			const recipeImage = formData.get('recipe_image') as File | null;
+			console.log('[RecipeAdd] Recipe image from form:', {
+				hasImage: !!recipeImage,
+				size: recipeImage?.size,
+				name: recipeImage?.name,
+				type: recipeImage?.type
+			});
+
 			if (recipeImage && recipeImage.size > 0) {
 				try {
+					console.log('[RecipeAdd] Starting image processing...');
 					// Process and save the image
 					const { filename } = await processAndSaveRecipeImage(
 						recipeImage,
@@ -61,13 +75,14 @@ export const actions = {
 						IMAGE_DIR
 					);
 
+					console.log('[RecipeAdd] Image processed successfully, filename:', filename);
 					recipeData.images = [{
 						mediapath: filename,
 						alt: '',
 						caption: ''
 					}];
 				} catch (imageError: any) {
-					console.error('Image processing error:', imageError);
+					console.error('[RecipeAdd] Image processing error:', imageError);
 					return fail(400, {
 						error: `Failed to process image: ${imageError.message}`,
 						errors: ['Image processing failed'],
@@ -75,6 +90,7 @@ export const actions = {
 					});
 				}
 			} else {
+				console.log('[RecipeAdd] No image uploaded, using placeholder');
 				// No image uploaded - use placeholder based on short_name
 				recipeData.images = [{
 					mediapath: `${recipeData.short_name}.webp`,
