@@ -17,23 +17,21 @@ let {
 	short_name: string
 } = $props();
 
-// Local state for file input binding (Svelte 5 best practice)
-let files = $state<FileList | null>(null);
-let upload_error = $state("");
-
 // Constants for validation
 const ALLOWED_MIME_TYPES = ['image/webp', 'image/jpeg', 'image/jpg', 'image/png'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-// React to file selection using $effect (Svelte 5 best practice)
-// This effect intentionally has side effects - it's reacting to user file selection
-$effect(() => {
-	const file = files?.[0];
+// Handle file selection via onchange event
+function handleFileSelect(event: Event) {
+	const input = event.currentTarget as HTMLInputElement;
+	const file = input.files?.[0];
 
-	// Only process when there's an actual file selected
-	if (!file) return;
+	if (!file) {
+		console.log('[CardAdd] No file selected');
+		return;
+	}
 
-	console.log('[CardAdd] File selected via bind:files:', {
+	console.log('[CardAdd] File selected:', {
 		name: file.name,
 		size: file.size,
 		type: file.type
@@ -41,39 +39,35 @@ $effect(() => {
 
 	// Validate MIME type
 	if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-		upload_error = 'Invalid file type. Please upload a JPEG, PNG, or WebP image.';
 		console.error('[CardAdd] Invalid MIME type:', file.type);
-		alert(upload_error);
-		files = null;
+		alert('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
+		input.value = '';
 		return;
 	}
 	console.log('[CardAdd] MIME type valid:', file.type);
 
 	// Validate file size
 	if (file.size > MAX_FILE_SIZE) {
-		upload_error = `File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`;
 		console.error('[CardAdd] File too large:', file.size);
-		alert(upload_error);
-		files = null;
+		alert(`File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
+		input.value = '';
 		return;
 	}
 	console.log('[CardAdd] File size valid:', file.size, 'bytes');
-
-	// Validation passed - create preview and update bindable prop
-	upload_error = "";
 
 	// Clean up old preview URL if exists
 	if (image_preview_url && image_preview_url.startsWith('blob:')) {
 		URL.revokeObjectURL(image_preview_url);
 	}
 
+	// Create preview and store file
 	image_preview_url = URL.createObjectURL(file);
 	selected_image_file = file;
 	console.log('[CardAdd] Image preview created, file stored for upload:', {
 		previewUrl: image_preview_url,
-		fileName: selected_image_file.name
+		fileName: file.name
 	});
-});
+}
 
 // Check if initial image_preview_url redirects to placeholder
 onMount(() => {
@@ -111,6 +105,9 @@ if (!card_data.tags) {
 // Tag management
 let new_tag = $state("");
 
+// Reference to file input for clearing
+let fileInput: HTMLInputElement;
+
 function remove_selected_images() {
 	console.log('[CardAdd] Removing selected image');
 	if (image_preview_url && image_preview_url.startsWith('blob:')) {
@@ -118,8 +115,10 @@ function remove_selected_images() {
 	}
 	image_preview_url = "";
 	selected_image_file = null;
-	files = null;
-	upload_error = "";
+	// Reset the file input
+	if (fileInput) {
+		fileInput.value = '';
+	}
 }
 
 
@@ -440,7 +439,7 @@ input::placeholder{
 			<svg class="upload over_img" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/></svg>
 		</label>
 	</div>
-	<input type="file" id="img_picker" accept="image/webp,image/jpeg,image/jpg,image/png" bind:files>
+	<input type="file" id="img_picker" accept="image/webp,image/jpeg,image/jpg,image/png" onchange={handleFileSelect} bind:this={fileInput}>
 	<div class=title>
 		<input class=category placeholder=Kategorie... bind:value={card_data.category}/>
 		<div>
