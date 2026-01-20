@@ -8,6 +8,9 @@
     let { data } = $props<{ data: PageData }>();
     import { rand_array } from '$lib/js/randomize';
 
+    const isEnglish = $derived(data.lang === 'en');
+    const siteTitle = $derived(isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte');
+
     // Search state
     let matchedRecipeIds = $state(new Set());
     let hasActiveSearch = $state(false);
@@ -26,6 +29,11 @@
         return data.season.filter(r => matchedRecipeIds.has(r._id));
     });
 </script>
+
+<svelte:head>
+    <title>{data.icon} - {siteTitle}</title>
+</svelte:head>
+
 <IconLayout icons={data.icons} active_icon={data.icon} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}
 		<Recipes>

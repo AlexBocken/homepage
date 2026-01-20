@@ -1,6 +1,11 @@
 <script>
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
 </script>
+
+<svelte:head>
+	<title>Glaube - Bocken</title>
+	<meta name="description" content="Gebete und ein interaktiver Rosenkranz zum katholischen Glauben." />
+</svelte:head>
 <style>
 	h1{
 		text-align: center;

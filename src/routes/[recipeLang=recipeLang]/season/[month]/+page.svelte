@@ -11,6 +11,8 @@
     const months = $derived(isEnglish
         ? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
         : ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]);
+    const siteTitle = $derived(isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte');
+    const currentMonth = $derived(months[data.month - 1]);
 
     import { rand_array } from '$lib/js/randomize';
 
@@ -32,6 +34,11 @@
         return data.season.filter(r => matchedRecipeIds.has(r._id));
     });
 </script>
+
+<svelte:head>
+    <title>{currentMonth} - {siteTitle}</title>
+</svelte:head>
+
 <SeasonLayout active_index={data.month -1} {months} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}
 		<Recipes>

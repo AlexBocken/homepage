@@ -7,9 +7,14 @@
 
     const isEnglish = $derived(data.lang === 'en');
     const labels = $derived({
-        title: isEnglish ? 'Categories' : 'Kategorien'
+        title: isEnglish ? 'Categories' : 'Kategorien',
+        siteTitle: isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte'
     });
 </script>
+
+<svelte:head>
+    <title>{labels.title} - {labels.siteTitle}</title>
+</svelte:head>
 <style>
 	h1 {
 		text-align: center;
