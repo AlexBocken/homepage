@@ -2,6 +2,16 @@
 	import type { PageData } from './$types';
     	import AddButton from '$lib/components/AddButton.svelte';
 	import Converter from './Converter.svelte';
+	let { data } = $props<{ data: PageData }>();
+
+	const isEnglish = $derived(data.lang === 'en');
+	const labels = $derived({
+		title: isEnglish ? 'Tips & Tricks' : 'Tipps & Tricks',
+		siteTitle: isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte',
+		description: isEnglish
+			? "A constantly growing collection of recipes from Bocken's kitchen."
+			: 'Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche.'
+	});
 </script>
 <style>
 h1{
@@ -18,15 +28,15 @@ h1{
 }
 </style>
 <svelte:head>
-	<title>Bocken Rezepte</title>
-	<meta name="description" content="Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche." />
+	<title>{labels.title} - {labels.siteTitle}</title>
+	<meta name="description" content="{labels.description}" />
 	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" />
 	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" />
 	<meta property="og:image:type" content="image/webp" />
 	<meta property="og:image:alt" content="Pasta al Ragu mit Linguine" />
 </svelte:head>
 
-<h1>Tipps & Tricks</h1>
+<h1>{labels.title}</h1>
 
 <div class=content>
 <h2>Trockenhefe vs. Frischhefe</h2>

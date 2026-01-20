@@ -98,7 +98,7 @@
 		season: isEnglish ? 'Season:' : 'Saison:',
 		keywords: isEnglish ? 'Keywords:' : 'Stichwörter:',
 		lastModified: isEnglish ? 'Last modified:' : 'Letzte Änderung:',
-		title: isEnglish ? "Bocken's Recipes" : "Bocken'sche Rezepte"
+		title: isEnglish ? "Bocken Recipes" : "Bocken'sche Rezepte"
 	});
 </script>
 <style>

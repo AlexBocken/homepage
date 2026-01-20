@@ -7,7 +7,17 @@
     import Card from '$lib/components/Card.svelte';
     import Search from '$lib/components/Search.svelte';
     let { data } = $props<{ data: PageData }>();
+
+    const isEnglish = $derived(data.lang === 'en');
+    const labels = $derived({
+        title: isEnglish ? 'Icons' : 'Icons',
+        siteTitle: isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte'
+    });
 </script>
+
+<svelte:head>
+    <title>{labels.title} - {labels.siteTitle}</title>
+</svelte:head>
 <style>
 	a{
 		font-family: "Noto Color Emoji", emoji, sans-serif;

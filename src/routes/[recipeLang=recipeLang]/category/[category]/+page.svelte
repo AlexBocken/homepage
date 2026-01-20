@@ -9,6 +9,7 @@
 
     const isEnglish = $derived(data.lang === 'en');
     const label = $derived(isEnglish ? 'Recipes in Category' : 'Rezepte in Kategorie');
+    const siteTitle = $derived(isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte');
 
     // Search state
     let matchedRecipeIds = $state(new Set());
@@ -34,6 +35,11 @@
 		font-size: 3em;
 	}
 </style>
+
+<svelte:head>
+    <title>{data.category} - {siteTitle}</title>
+</svelte:head>
+
 <h1>{label} <q>{data.category}</q>:</h1>
 <Search category={data.category} lang={data.lang} recipes={data.recipes} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 <section>

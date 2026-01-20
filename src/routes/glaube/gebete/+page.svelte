@@ -19,6 +19,11 @@
 	// Create language context for prayer components
 	createLanguageContext();
 </script>
+
+<svelte:head>
+	<title>Gebete - Bocken</title>
+	<meta name="description" content="Katholische Gebete auf Deutsch und Latein." />
+</svelte:head>
 <style>
 .ccontainer{
 	margin: auto;
