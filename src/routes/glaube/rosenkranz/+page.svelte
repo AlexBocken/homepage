@@ -191,13 +191,13 @@ let sectionElements = {};
 let svgContainer;
 
 // Counter for tracking Ave Maria progress in each decade (0-10 for each)
-let decadeCounters = {
+let decadeCounters = $state({
 	secret1: 0,
 	secret2: 0,
 	secret3: 0,
 	secret4: 0,
 	secret5: 0
-};
+});
 
 // Modal state for displaying Bible citations
 let showModal = $state(false);
@@ -1388,7 +1388,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				<div
 					class="prayer-section decade"
 					bind:this={sectionElements[`secret${decadeNum}`]}
-					data-section="secret{decadeNum}"
+					data-section={`secret${decadeNum}`}
 				>
 					<h2>{decadeNum}. Gesätz: {currentMysteryTitles[decadeNum - 1]}</h2>
 
@@ -1421,7 +1421,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 					<div
 						class="prayer-section"
 						bind:this={sectionElements[`secret${decadeNum}_transition`]}
-						data-section="secret{decadeNum}_transition"
+						data-section={`secret${decadeNum}_transition`}
 					>
 						<h3>Gloria Patri</h3>
 						<GloriaPatri />
