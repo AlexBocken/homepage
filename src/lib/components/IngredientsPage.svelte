@@ -4,6 +4,7 @@ import { onNavigate } from "$app/navigation";
 import { browser } from '$app/environment';
 import { page } from '$app/stores';
 import HefeSwapper from './HefeSwapper.svelte';
+import '$lib/css/recipe-links.css';
 
 let { data } = $props();
 
@@ -328,52 +329,34 @@ font-family: sans-serif;
 	column-gap: 0.5em;
 }
 .multipliers{
-	display:flex;
+	display: flex;
 	gap: 0.5rem;
 	justify-content: center;
-	flex-wrap:wrap;
+	flex-wrap: wrap;
 }
+/* Size overrides for multiplier buttons */
 .multipliers button{
 	min-width: 2em;
 	font-size: 1.1rem;
-	border-radius: 0.3rem;
-	border: none;
-	cursor: pointer;
-	transition: 100ms;
-	color: var(--nord0);
-	background-color: var(--nord5);
-	box-shadow: 0px 0px 0.4em 0.05em rgba(0,0,0, 0.2);
+	border-radius: var(--radius-sm);
 }
-@media (prefers-color-scheme: dark){
-	.multipliers button{
-		color: var(--tag-font);
-		background-color: var(--nord6-dark);
-	}
-}
-.multipliers :is(button, div):is(:hover, :focus-within){
+/* Hover scale override - larger than default */
+.multipliers :is(button, form):is(:hover, :focus-within){
 	scale: 1.2;
 	background-color: var(--nord8);
-	box-shadow: 0px 0px 0.5em 0.1em rgba(0,0,0, 0.3);
 }
 .selected{
 	background-color: var(--nord9) !important;
 	color: white !important;
 	font-weight: bold;
 	scale: 1.2 !important;
-	box-shadow: 0px 0px 0.4em 0.1em rgba(0,0,0, 0.3) !important;
 }
 .custom-multiplier {
 	display: flex;
 	align-items: center;
 	min-width: 2em;
 	font-size: 1.1rem;
-	border-radius: 0.3rem;
-	border: none;
-	cursor: pointer;
-	transition: 100ms;
-	color: var(--nord0);
-	background-color: var(--nord5);
-	box-shadow: 0px 0px 0.4em 0.05em rgba(0,0,0, 0.2);
+	border-radius: var(--radius-sm);
 }
 
 .custom-input {
@@ -408,44 +391,6 @@ font-family: sans-serif;
 	box-shadow: none;
 }
 
-@media (prefers-color-scheme: dark){
-	.custom-multiplier {
-		color: var(--tag-font);
-		background-color: var(--nord6-dark);
-	}
-}
-
-.custom-multiplier:hover,
-.custom-multiplier:focus-within {
-	scale: 1.2;
-	background-color: var(--nord8);
-	box-shadow: 0px 0px 0.5em 0.1em rgba(0,0,0, 0.3);
-}
-
-/* Base recipe reference link styling */
-h3 a {
-	color: var(--nord10);
-	text-decoration: underline;
-	text-decoration-color: var(--nord10);
-}
-
-h3 a:hover {
-	color: var(--nord9);
-	text-decoration: underline;
-	text-decoration-color: var(--nord9);
-}
-
-@media (prefers-color-scheme: dark) {
-	h3 a {
-		color: var(--nord8);
-		text-decoration-color: var(--nord8);
-	}
-
-	h3 a:hover {
-		color: var(--nord7);
-		text-decoration-color: var(--nord7);
-	}
-}
 </style>
 {#if data.ingredients}
 <div class=ingredients>
@@ -464,10 +409,10 @@ h3 a:hover {
 					<input type="hidden" name={key} {value} />
 				{/if}
 			{/each}
-			<button type="submit" class:selected={multiplier === opt.value} onclick={(e) => handleMultiplierClick(e, opt.value)}>{@html opt.label}</button>
+			<button type="submit" class="g-pill g-btn-light g-interactive" class:selected={multiplier === opt.value} onclick={(e) => handleMultiplierClick(e, opt.value)}>{@html opt.label}</button>
 		</form>
 	{/each}
-	<form method="get" style="display: inline;" class="custom-multiplier" onsubmit={handleCustomSubmit}>
+	<form method="get" style="display: inline;" class="custom-multiplier g-pill g-btn-light g-interactive" onsubmit={handleCustomSubmit}>
 		{#each Array.from(currentParams.entries()) as [key, value]}
 			{#if key !== 'multiplier'}
 				<input type="hidden" name={key} {value} />
