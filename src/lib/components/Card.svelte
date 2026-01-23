@@ -157,7 +157,7 @@ const img_alt = $derived(
 }
 .tags{
 	display: flex;
-	flex-wrap: wrap-reverse;
+	flex-wrap: wrap;
 	overflow: hidden;
 	column-gap: 0.25em;
 	padding-inline: 0.5em;
@@ -172,6 +172,7 @@ const img_alt = $derived(
 	line-height: 1.5em;
 	margin-bottom: 0.5em;
 	position: relative;
+	color: black;
 	z-index: 2;
 }
 /* Position overrides for Card category */
