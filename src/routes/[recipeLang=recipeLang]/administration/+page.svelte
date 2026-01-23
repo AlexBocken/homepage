@@ -16,7 +16,7 @@
 			description: isEnglish
 				? 'View and manage recipes that need translation'
 				: 'Rezepte ansehen und verwalten, die übersetzt werden müssen',
-			href: '/rezepte/untranslated',
+			href: `/${data.recipeLang}/admin/untranslated`,
 			icon: '🌐'
 		},
 		{

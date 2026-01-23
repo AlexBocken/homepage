@@ -127,16 +127,16 @@ h1 {
 			<Card
 				{recipe}
 				{current_month}
-				routePrefix="/rezepte"
+				routePrefix="/{data.recipeLang}"
 				translationStatus={recipe.translationStatus}
 			></Card>
 		{/each}
 	</Recipes>
 {:else}
 	<div class="empty-state">
-		<p>🎉 Alle Rezepte sind übersetzt!</p>
+		<p>Alle Rezepte sind übersetzt!</p>
 		<p style="font-size: 1rem; margin-top: 1rem;">
-			<a href="/rezepte">Zurück zu den Rezepten</a>
+			<a href="/{data.recipeLang}">Zurück zu den Rezepten</a>
 		</p>
 	</div>
 {/if}

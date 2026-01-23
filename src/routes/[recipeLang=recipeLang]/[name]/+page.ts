@@ -1,15 +1,10 @@
-import { error } from "@sveltejs/kit";
 import { generateRecipeJsonLd } from '$lib/js/recipeJsonLd';
 
 export async function load({ fetch, params, url, data }) {
     const isEnglish = params.recipeLang === 'recipes';
-    const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
 
-    const res = await fetch(`${apiBase}/items/${params.name}`);
-    let item = await res.json();
-    if(!res.ok){
-	    throw error(res.status, item.message)
-    }
+    // Use item from server load - no duplicate fetch needed
+    let item = { ...data.item };
 
     // Check if this recipe is favorited by the user
     let isFavorite = false;
@@ -118,8 +113,11 @@ export async function load({ fetch, params, url, data }) {
     const englishShortName = !isEnglish ? (item.translations?.en?.short_name || '') : '';
     const germanShortName = isEnglish ? (item.germanShortName || '') : item.short_name;
 
+    // Destructure to exclude item (already spread below)
+    const { item: _, ...serverData } = data;
+
     return {
-        ...data,  // Include server load data (strippedName, strippedDescription)
+        ...serverData,  // Include server load data (strippedName, strippedDescription)
         ...item,
         isFavorite,
         multiplier,
