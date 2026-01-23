@@ -124,6 +124,15 @@ const labels = $derived({
 	ingredients: isEnglish ? 'Ingredients' : 'Zutaten'
 });
 
+// Multiplier button options
+const multiplierOptions = [
+	{ value: 0.5, label: '<sup>1</sup>/<sub>2</sub>x' },
+	{ value: 1, label: '1x' },
+	{ value: 1.5, label: '<sup>3</sup>/<sub>2</sub>x' },
+	{ value: 2, label: '2x' },
+	{ value: 3, label: '3x' }
+];
+
 // Calculate yeast IDs for each yeast ingredient
 const yeastIds = $derived.by(() => {
 	const ids = {};
@@ -447,65 +456,31 @@ h3 a:hover {
 
 <h3>{labels.adjustAmount}</h3>
 <div class=multipliers>
-	<form method="get" style="display: inline;">
-		<input type="hidden" name="multiplier" value="0.5" />
-		{#each Array.from(currentParams.entries()) as [key, value]}
-			{#if key !== 'multiplier'}
-				<input type="hidden" name={key} value={value} />
-			{/if}
-		{/each}
-		<button type="submit" class:selected={multiplier==0.5} onclick={(e) => handleMultiplierClick(e, 0.5)}>{@html "<sup>1</sup>/<sub>2</sub>x"}</button>
-	</form>
-	<form method="get" style="display: inline;">
-		<input type="hidden" name="multiplier" value="1" />
-		{#each Array.from(currentParams.entries()) as [key, value]}
-			{#if key !== 'multiplier'}
-				<input type="hidden" name={key} value={value} />
-			{/if}
-		{/each}
-		<button type="submit" class:selected={multiplier==1} onclick={(e) => handleMultiplierClick(e, 1)}>1x</button>
-	</form>
-	<form method="get" style="display: inline;">
-		<input type="hidden" name="multiplier" value="1.5" />
-		{#each Array.from(currentParams.entries()) as [key, value]}
-			{#if key !== 'multiplier'}
-				<input type="hidden" name={key} value={value} />
-			{/if}
-		{/each}
-		<button type="submit" class:selected={multiplier==1.5} onclick={(e) => handleMultiplierClick(e, 1.5)}>{@html "<sup>3</sup>/<sub>2</sub>x"}</button>
-	</form>
-	<form method="get" style="display: inline;">
-		<input type="hidden" name="multiplier" value="2" />
-		{#each Array.from(currentParams.entries()) as [key, value]}
-			{#if key !== 'multiplier'}
-				<input type="hidden" name={key} value={value} />
-			{/if}
-		{/each}
-		<button type="submit" class:selected={multiplier==2} onclick={(e) => handleMultiplierClick(e, 2)}>2x</button>
-	</form>
-	<form method="get" style="display: inline;">
-		<input type="hidden" name="multiplier" value="3" />
-		{#each Array.from(currentParams.entries()) as [key, value]}
-			{#if key !== 'multiplier'}
-				<input type="hidden" name={key} value={value} />
-			{/if}
-		{/each}
-		<button type="submit" class:selected={multiplier==3} onclick={(e) => handleMultiplierClick(e, 3)}>3x</button>
-	</form>
+	{#each multiplierOptions as opt}
+		<form method="get" style="display: inline;">
+			<input type="hidden" name="multiplier" value={opt.value} />
+			{#each Array.from(currentParams.entries()) as [key, value]}
+				{#if key !== 'multiplier'}
+					<input type="hidden" name={key} {value} />
+				{/if}
+			{/each}
+			<button type="submit" class:selected={multiplier === opt.value} onclick={(e) => handleMultiplierClick(e, opt.value)}>{@html opt.label}</button>
+		</form>
+	{/each}
 	<form method="get" style="display: inline;" class="custom-multiplier" onsubmit={handleCustomSubmit}>
 		{#each Array.from(currentParams.entries()) as [key, value]}
 			{#if key !== 'multiplier'}
-				<input type="hidden" name={key} value={value} />
+				<input type="hidden" name={key} {value} />
 			{/if}
 		{/each}
-		<input 
-			type="text" 
-			name="multiplier" 
-			pattern="[0-9]+(\.[0-9]*)?" 
-			title="Enter a positive number (e.g., 2.5, 0.75, 3.14)" 
-			placeholder="…" 
+		<input
+			type="text"
+			name="multiplier"
+			pattern="[0-9]+(\.[0-9]*)?"
+			title="Enter a positive number (e.g., 2.5, 0.75, 3.14)"
+			placeholder="…"
 			class="custom-input"
-			value={multiplier != 0.5 && multiplier != 1 && multiplier != 1.5 && multiplier != 2 && multiplier != 3 ? multiplier : ''}
+			value={!multiplierOptions.some(o => o.value === multiplier) ? multiplier : ''}
 			oninput={handleCustomInput}
 		/>
 		<button type="submit" class="custom-button">x</button>
