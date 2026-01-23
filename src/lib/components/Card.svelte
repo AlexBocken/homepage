@@ -40,7 +40,7 @@ const img_alt = $derived(
 </script>
 <style>
 .card_anchor{
-	border-radius: 20px;
+	border-radius: var(--radius-card);
 	cursor: pointer;
 	display: inline-block;
 	text-decoration: none;
@@ -67,48 +67,38 @@ const img_alt = $derived(
 	--card-width: 300px;
 	position: relative;
 	flex-shrink: 0;
-	transition: 200ms;
+	transition: var(--transition-normal);
 	text-decoration: none;
 	box-sizing: border-box;
 	font-family: sans-serif;
 	cursor: pointer;
 	height: 525px;
 	width: 300px;
-	border-radius: 20px;
+	border-radius: var(--radius-card);
 	background-size: contain;
 	display: flex;
 	flex-direction: column;
 	justify-content: end;
 	background-color:  var(--blue);
-	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.3);
+	box-shadow: var(--shadow-lg);
 }
+/* Position/size overrides for global g-icon-badge */
 .icon{
-	font-family: "Noto Color Emoji", emoji, sans-serif;
-	border: none;
-	background: none;
-	cursor: pointer;
 	position: absolute;
 	top: -25px;
 	right: -25px;
 	width: 50px;
 	height: 50px;
-	border-radius: 50%;
+	font-size: 1.5em;
 	background-color: var(--nord0);
 	color: white;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 1.5em;
-	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
-	transition: 100ms;
 	z-index: 5;
-	text-decoration: none;
 }
 .image{
 	width: 300px;
 	height: 255px;
 	object-fit: cover;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .blur{
 	filter: blur(10px);
@@ -137,7 +127,7 @@ const img_alt = $derived(
 .card:focus-within{
 	transform: scale(1.02,1.02);
 	background-color: var(--red);
-	box-shadow: 0.2em 0.2em 2em 1em rgba(0, 0, 0, 0.3);
+	box-shadow: var(--shadow-hover);
 }
 .card:focus{
 	scale: 0.95 0.95;
@@ -153,7 +143,7 @@ const img_alt = $derived(
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
-	transition: 100ms;
+	transition: var(--transition-fast);
 }
 .name{
 	font-size: 2em;
@@ -175,59 +165,27 @@ const img_alt = $derived(
 	margin-bottom:0.5em;
 	flex-grow: 0;
 }
+/* Overrides for Card tags - uses g-tag base, with Card-specific adjustments */
 .tag{
-	cursor: pointer;
-	text-decoration: none;
 	background-color: var(--nord4);
-	color: var(--nord0);
-	border-radius: 100px;
 	padding-inline: 1em;
 	line-height: 1.5em;
 	margin-bottom: 0.5em;
-	transition: 100ms;
-	box-shadow: 0em 0em 0.2em 0.05em rgba(0, 0, 0, 0.3);
-	border: none;
 	position: relative;
 	z-index: 2;
-	display: inline-block;
 }
-.tag:hover,
-.tag:focus-visible
-{
-	transform: scale(1.04, 1.04);
-	background-color: var(--nord8);
-	box-shadow: 0.2em 0.2em 0.2em 0.1em rgba(0, 0, 0, 0.3);
-}
-.tag:focus{
-	transition: 100ms;
-	scale: 0.9;
-}
+/* Position overrides for Card category */
 .card_title .category{
 	position: absolute;
-	box-shadow: 0em 0em 1em 0.1em rgba(0, 0, 0, 0.6);
-	text-decoration: none;
-	color: var(--nord6);
 	font-size: 1.5rem;
 	top: -0.8em;
 	left: -0.5em;
-	background-color: var(--nord0);
 	padding-inline: 1em;
-	border-radius: 1000px;
-	transition: 100ms;
-	border: none;
-	cursor: pointer;
 	z-index: 2;
-	display: inline-block;
 }
 .card_title .category:hover,
-.card_title .category:focus-within
-{
-	box-shadow: -0.2em 0.2em 1em 0.1em rgba(0, 0, 0, 0.6);
-	background-color: var(--nord3);
-	transform: scale(1.05, 1.05)
-}
-.category:focus{
-	scale: 0.9 0.9;
+.card_title .category:focus-within {
+	transform: scale(1.05);
 }
 
 .favorite-indicator{
@@ -263,16 +221,10 @@ const img_alt = $derived(
 	background-color: var(--nord12);
 }
 
+/* Override hover color for Card icon */
 .icon:hover,
-.icon:focus-visible
-{
-	transform: scale(1.1, 1.1);
+.icon:focus-visible {
 	background-color: var(--nord3);
-	box-shadow: 0.2em 0.2em 1em 0.1em rgba(0, 0, 0, 0.8);
-}
-
-.icon:focus {
-	transform: scale(0.9, 0.9);
 }
 
 .card:hover .icon,
@@ -313,17 +265,17 @@ const img_alt = $derived(
 		</div>
 	{/if}
 	{#if icon_override || recipe.season.includes(current_month)}
-		<a href="{routePrefix}/icon/{recipe.icon}" class=icon>{recipe.icon}</a>
+		<a href="{routePrefix}/icon/{recipe.icon}" class="icon g-icon-badge">{recipe.icon}</a>
 	{/if}
 	<div class="card_title">
-		<a href="{routePrefix}/category/{recipe.category}" class=category>{recipe.category}</a>
+		<a href="{routePrefix}/category/{recipe.category}" class="category g-pill g-btn-dark">{recipe.category}</a>
 		<div>
 			<div class=name>{@html recipe.name}</div>
 			<div class=description>{@html recipe.description}</div>
 		</div>
 		<div class=tags>
 		{#each recipe.tags as tag}
-			<a href="{routePrefix}/tag/{tag}" class=tag>{tag}</a>
+			<a href="{routePrefix}/tag/{tag}" class="tag g-pill g-interactive">{tag}</a>
 		{/each}
 		</div>
 	</div>

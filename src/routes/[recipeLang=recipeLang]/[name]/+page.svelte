@@ -115,23 +115,17 @@ h1{
 	hyphens: auto;
 	text-wrap: balance;
 }
+/* Position overrides for global classes */
 .category{
 	--size: 1.75rem;
 	position: absolute;
-	top: calc(-1* var(--size) );
-	left:calc(-3/2 * var(--size));
-	background-color: var(--nord0);
-	color: var(--nord6);
-	text-decoration: none;
+	top: calc(-1* var(--size));
+	left: calc(-3/2 * var(--size));
 	font-size: var(--size);
 	padding: calc(var(--size) * 2/3);
-	border-radius: 1000px;
-	transition: 100ms;
-	box-shadow: 0em 0em 1em 0.3em rgba(0,0,0,0.4);
 }
 .category:hover,
 .category:focus-visible{
-	background-color: var(--nord1);
 	scale: 1.1;
 }
 .tags{
@@ -149,30 +143,6 @@ h2.section-label{
 }
 .center{
 	justify-content: center;
-}
-.tag{
-	all:unset;
-	color: var(--nord0);
-	font-size: 1.1rem;
-	background-color: var(--nord5);
-	border-radius: 10000px;
-	padding: 0.25em 1em;
-	transition: 100ms;
-	box-shadow: 0em 0em 0.5em 0.05em rgba(0,0,0,0.3);
-}
-@media (prefers-color-scheme: dark) {
-	.tag{
-		background-color: var(--nord0);
-		color: white;
-	}
-}
-.tag:hover,
-.tag:focus-visible
-{
-	cursor: pointer;
-	transform: scale(1.1,1.1);
-	background-color: var(--nord8);
-	box-shadow: 0.1em 0.1em 0.5em 0.1em rgba(0,0,0,0.3);
 }
 
 .wrapper_wrapper{
@@ -220,27 +190,21 @@ h2.section-label{
 }
 
 .icon{
-	font-family: "Noto Color Emoji", emoji;
 	position: absolute;
 	top: -1em;
 	right: -0.75em;
-	text-decoration: unset;
-	background-color: #FAFAFE;
 	padding: 0.5em;
 	font-size: 1.5rem;
-	border-radius: 100000px;
-	transition: 100ms;
-	box-shadow: 0em 0em 1em 0.3em rgba(0,0,0,0.4);
+	background-color: #FAFAFE;
 }
 @media (prefers-color-scheme: dark) {
 	.icon{
 		background-color: var(--accent-dark);
 	}
 }
-
 .icon:hover,
 .icon:focus-visible{
-	scale: 1.2 1.2;
+	scale: 1.2;
 	animation: shake 0.5s ease forwards;
 }
 
@@ -322,8 +286,8 @@ h2{
 
 <TitleImgParallax src={hero_img_src} {placeholder_src} alt={img_alt}>
 	<div class=title>
-		<a class="category" href='/{data.recipeLang}/category/{data.category}'>{data.category}</a>
-		<a class="icon" href='/{data.recipeLang}/icon/{data.icon}'>{data.icon}</a>
+		<a class="category g-pill g-btn-dark" href='/{data.recipeLang}/category/{data.category}'>{data.category}</a>
+		<a class="icon g-icon-badge" href='/{data.recipeLang}/icon/{data.icon}'>{data.icon}</a>
 		<h1>{@html data.name}</h1>
 		{#if data.description && ! data.preamble}
 			<p class=description>{data.description}</p>
@@ -334,7 +298,7 @@ h2{
 		<div class=tags>
 			<h2>{labels.season}</h2>
 			{#each season_iv as season}
-				<a class=tag href="/{data.recipeLang}/season/{season[0]}">
+				<a class="g-tag" href="/{data.recipeLang}/season/{season[0]}">
 					{#if season[0]}
 						{months[season[0] - 1]}
 					{/if}
@@ -347,7 +311,7 @@ h2{
 		<h2 class="section-label">{labels.keywords}</h2>
 		<div class="tags center">
 			{#each data.tags as tag}
-				<a class=tag href="/{data.recipeLang}/tag/{tag}">{tag}</a>
+				<a class="g-tag" href="/{data.recipeLang}/tag/{tag}">{tag}</a>
 			{/each}
 		</div>
 
