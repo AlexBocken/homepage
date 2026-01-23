@@ -1,4 +1,5 @@
 <script>
+import '$lib/css/recipe-links.css';
 let { data } = $props();
 
 let multiplier = $state(data.multiplier || 1);
@@ -133,7 +134,7 @@ ol li::marker{
 	flex-grow: 0;
 	padding: 1em;
 	background-color: #FAFAFE;
-	box-shadow: 0.3em 0.3em 1em 0.2em rgba(0,0,0,0.3);
+	box-shadow: var(--shadow-md);
 	max-width: 30%
 }
 @media (prefers-color-scheme: dark){
@@ -152,31 +153,6 @@ ol li::marker{
 
 h3{
 	margin-block: 0;
-}
-
-/* Base recipe reference link styling */
-h3 a {
-	color: var(--nord10);
-	text-decoration: underline;
-	text-decoration-color: var(--nord10);
-}
-
-h3 a:hover {
-	color: var(--nord9);
-	text-decoration: underline;
-	text-decoration-color: var(--nord9);
-}
-
-@media (prefers-color-scheme: dark) {
-	h3 a {
-		color: var(--nord8);
-		text-decoration-color: var(--nord8);
-	}
-
-	h3 a:hover {
-		color: var(--nord7);
-		text-decoration-color: var(--nord7);
-	}
 }
 </style>
 <div class=instructions>
