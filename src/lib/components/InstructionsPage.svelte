@@ -162,17 +162,15 @@ h3{
 {/if}
 
 
-{#if data.fermentation}
-	{#if data.fermentation.bulk}
-		<div><h3>{labels.bulkFermentation}</h3>{data.fermentation.bulk}</div>
-	{/if}
-
-	{#if data.fermentation.final}
-		<div><h3>{labels.finalProof}</h3> {data.fermentation.final}</div>
-	{/if}
+{#if data.fermentation?.bulk}
+	<div><h3>{labels.bulkFermentation}</h3>{data.fermentation.bulk}</div>
 {/if}
 
-{#if data.baking.temperature}
+{#if data.fermentation?.final}
+	<div><h3>{labels.finalProof}</h3> {data.fermentation.final}</div>
+{/if}
+
+{#if data.baking?.temperature}
 <div><h3>{labels.baking}</h3> {data.baking.length} {labels.at} {data.baking.temperature} °C {data.baking.mode}</div>
 {/if}
 

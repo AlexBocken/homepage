@@ -110,8 +110,8 @@
 	background-size: cover;
 	background-position: 50% 20%;
 	position: absolute;
-        width: min(1000px, 100dvw);
-  	height: max(60dvh,600px);
+	width: min(1000px, 100dvw);
+	height: max(60dvh,600px);
 	z-index: -2;
 }
 .placeholder_blur{
@@ -193,10 +193,8 @@ dialog button{
 </section>
 
 <dialog id=img_carousel>
-	<div>
 	<img class:unblur={isloaded} {src} {alt}>
-		<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, close_dialog_img)} onclick={close_dialog_img}>
-	<Cross fill=white width=2rem height=2rem></Cross>
-		</button>
-	</div>
+	<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, close_dialog_img)} onclick={close_dialog_img}>
+		<Cross fill=white width=2rem height=2rem></Cross>
+	</button>
 </dialog>
