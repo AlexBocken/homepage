@@ -387,7 +387,7 @@ scale: 0.8 0.8;
   </button>
 </form>
 
-<div style="visibility: {showFilters ? 'visible' : 'hidden'}; pointer-events: {showFilters ? 'auto' : 'none'};">
+{#if showFilters}
   <FilterPanel
     availableCategories={categories}
     {availableTags}
@@ -408,4 +408,4 @@ scale: 0.8 0.8;
     onFavoritesToggle={handleFavoritesToggle}
     onLogicModeToggle={handleLogicModeToggle}
   />
-</div>
+{/if}

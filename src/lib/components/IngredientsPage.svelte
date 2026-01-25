@@ -400,24 +400,16 @@ font-family: sans-serif;
 {/if}
 
 <h3>{labels.adjustAmount}</h3>
-<div class=multipliers>
-	{#each multiplierOptions as opt}
-		<form method="get" style="display: inline;">
-			<input type="hidden" name="multiplier" value={opt.value} />
-			{#each Array.from(currentParams.entries()) as [key, value]}
-				{#if key !== 'multiplier'}
-					<input type="hidden" name={key} {value} />
-				{/if}
-			{/each}
-			<button type="submit" class="g-pill g-btn-light g-interactive" class:selected={multiplier === opt.value} onclick={(e) => handleMultiplierClick(e, opt.value)}>{@html opt.label}</button>
-		</form>
+<form method="get" class="multipliers">
+	{#each Array.from(currentParams.entries()) as [key, value]}
+		{#if key !== 'multiplier'}
+			<input type="hidden" name={key} {value} />
+		{/if}
 	{/each}
-	<form method="get" style="display: inline;" class="custom-multiplier g-pill g-btn-light g-interactive" onsubmit={handleCustomSubmit}>
-		{#each Array.from(currentParams.entries()) as [key, value]}
-			{#if key !== 'multiplier'}
-				<input type="hidden" name={key} {value} />
-			{/if}
-		{/each}
+	{#each multiplierOptions as opt}
+		<button type="submit" name="multiplier" value={opt.value} class="g-pill g-btn-light g-interactive" class:selected={multiplier === opt.value} onclick={(e) => handleMultiplierClick(e, opt.value)}>{@html opt.label}</button>
+	{/each}
+	<span class="custom-multiplier g-pill g-btn-light g-interactive">
 		<input
 			type="text"
 			name="multiplier"
@@ -429,8 +421,8 @@ font-family: sans-serif;
 			oninput={handleCustomInput}
 		/>
 		<button type="submit" class="custom-button">x</button>
-	</form>
-</div>
+	</span>
+</form>
 
 <h2>{labels.ingredients}</h2>
 {#each flattenedIngredients as list, listIndex}
