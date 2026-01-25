@@ -2,32 +2,18 @@
     import type { PageData } from './$types';
     import Recipes from '$lib/components/Recipes.svelte';
     import Search from '$lib/components/Search.svelte';
+    import Card from '$lib/components/Card.svelte';
+    import { rand_array } from '$lib/js/randomize';
+    import { createSearchFilter } from '$lib/js/searchFilter.svelte';
+
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1;
-    import Card from '$lib/components/Card.svelte'
-    import { rand_array } from '$lib/js/randomize';
 
     const isEnglish = $derived(data.lang === 'en');
     const label = $derived(isEnglish ? 'Recipes in Category' : 'Rezepte in Kategorie');
     const siteTitle = $derived(isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte');
 
-    // Search state
-    let matchedRecipeIds = $state(new Set());
-    let hasActiveSearch = $state(false);
-
-    // Handle search results from Search component
-    function handleSearchResults(ids, categories) {
-        matchedRecipeIds = ids;
-        hasActiveSearch = ids.size < data.recipes.length;
-    }
-
-    // Filter recipes based on search
-    const filteredRecipes = $derived.by(() => {
-        if (!hasActiveSearch) {
-            return data.recipes;
-        }
-        return data.recipes.filter(r => matchedRecipeIds.has(r._id));
-    });
+    const { filtered: filteredRecipes, handleSearchResults } = createSearchFilter(() => data.recipes);
 </script>
 <style>
 	h1 {

@@ -39,13 +39,6 @@ const img_alt = $derived(
 );
 </script>
 <style>
-.card_anchor{
-	border-radius: var(--radius-card);
-	cursor: pointer;
-	display: inline-block;
-	text-decoration: none;
-	color: inherit;
-}
 .card-main-link {
 	position: absolute;
 	inset: 0;
@@ -76,11 +69,12 @@ const img_alt = $derived(
 	width: 300px;
 	border-radius: var(--radius-card);
 	background-size: contain;
-	display: flex;
+	display: inline-flex;
 	flex-direction: column;
 	justify-content: end;
-	background-color:  var(--blue);
+	background-color: var(--blue);
 	box-shadow: var(--shadow-lg);
+	color: inherit;
 }
 /* Position/size overrides for global g-icon-badge */
 .icon{
@@ -106,21 +100,17 @@ const img_alt = $derived(
 .backdrop_blur{
 	backdrop-filter: blur(10px);
 }
-.div_image,
-.div_div_image{
+.card-image{
 	width: 300px;
+	height: 255px;
+	position: absolute;
+	top: 0;
 	background-repeat: no-repeat;
 	background-size: cover;
 	background-position: center;
 	overflow: hidden;
 	border-top-left-radius: inherit;
 	border-top-right-radius: inherit;
-}
-.div_div_image{
-	height: 255px;
-	position: absolute;
-	width: 300px;
-	top: 0;
 }
 
 .card:hover,
@@ -238,18 +228,15 @@ const img_alt = $derived(
 }
 </style>
 
-<div class=card_anchor class:search_me={search} data-tags="[{recipe.tags}]">
-<div class="card" class:margin_right={do_margin_right}>
+<div class="card" class:search_me={search} class:margin_right={do_margin_right} data-tags="[{recipe.tags}]">
 	<a href="{routePrefix}/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}">
 		<span class="visually-hidden">View recipe: {recipe.name}</span>
 	</a>
-	<div class=div_div_image >
-		<div class=div_image style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
-			<noscript>
-				<img class="image backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{img_alt}"/>
-			</noscript>
-			<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{img_alt}" onload={() => isloaded=true}/>
-		</div>
+	<div class="card-image" style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
+		<noscript>
+			<img class="image backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{img_alt}"/>
+		</noscript>
+		<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{img_alt}" onload={() => isloaded=true}/>
 	</div>
 	{#if showFavoriteIndicator && isFavorite}
 		<div class="favorite-indicator">❤️</div>
@@ -280,5 +267,4 @@ const img_alt = $derived(
 		{/each}
 		</div>
 	</div>
-</div>
 </div>
