@@ -4,6 +4,8 @@
     import Recipes from '$lib/components/Recipes.svelte';
     import Card from '$lib/components/Card.svelte';
     import Search from '$lib/components/Search.svelte';
+    import { createSearchFilter } from '$lib/js/searchFilter.svelte';
+
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1;
 
@@ -28,23 +30,7 @@
         recipesLink: isEnglish ? 'recipe' : 'Rezept'
     });
 
-    // Search state
-    let matchedRecipeIds = $state(new Set());
-    let hasActiveSearch = $state(false);
-
-    // Handle search results from Search component
-    function handleSearchResults(ids, categories) {
-        matchedRecipeIds = ids;
-        hasActiveSearch = ids.size < data.favorites.length;
-    }
-
-    // Filter recipes based on search
-    const filteredFavorites = $derived.by(() => {
-        if (!hasActiveSearch) {
-            return data.favorites;
-        }
-        return data.favorites.filter(r => matchedRecipeIds.has(r._id));
-    });
+    const { filtered: filteredFavorites, handleSearchResults } = createSearchFilter(() => data.favorites);
 </script>
 
 <style>
