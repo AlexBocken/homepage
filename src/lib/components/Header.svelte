@@ -212,17 +212,8 @@ footer{
 }
 
 @media screen and (max-width: 800px) {
-	.button_wrapper_shadow{
-		box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
-		position: fixed;
-		width: 100%;
-		height: 4rem;
-		top: 0;
-		left: 0;
-		z-index: 9;
-		pointer-events: none;
-	}
 	.button_wrapper{
+		box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -322,7 +313,6 @@ footer{
 </style>
 <div class=wrapper lang=de>
 <div>
-<span class=button_wrapper_shadow></span>
 <div class=button_wrapper>
 <a href="/" aria-label="Home"><Symbol></Symbol></a>
 <div class="right-buttons">
