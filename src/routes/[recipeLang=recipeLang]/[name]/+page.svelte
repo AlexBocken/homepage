@@ -146,32 +146,45 @@ h2.section-label{
 }
 
 .wrapper_wrapper{
-	background-color: #fbf9f3;
+	--bg-color: #fbf9f3;
+	display: grid;
+	grid-template-columns: 1fr 2fr;
+	max-width: 1000px;
+	margin-inline: auto;
 	padding-top: 10rem;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
 	margin-bottom: 3rem;
 	transform: translateY(-7rem);
 	z-index: -2;
+	position: relative;
+}
+.wrapper_wrapper::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 100vw;
+	background-color: var(--bg-color);
+	z-index: -1;
+}
+.addendum, .date {
+	grid-column: 1 / -1;
+	justify-self: center;
 }
 @media (prefers-color-scheme: dark) {
 	.wrapper_wrapper{
-		background-color: var(--background-dark);
+		--bg-color: var(--background-dark);
 	}
 }
-
-.wrapper{
-	display: flex;
-	flex-direction: row;
-	max-width: 1000px;
-	justify-content: center;
-	margin-inline: auto;
-}
-
 @media screen and (max-width: 700px){
-	.wrapper{
-		flex-direction:column;
+	.wrapper_wrapper{
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	.wrapper_wrapper > :global(.ingredients),
+	.wrapper_wrapper > :global(.instructions) {
+		width: 100%;
 	}
 }
 .title{
@@ -213,7 +226,7 @@ h2{
 }
 .addendum{
 	max-width: 800px;
-	margin-inline: auto;
+	justify-self: center;
 	padding-inline: 2rem;
 }
 @media screen and (max-width: 800px){
@@ -327,10 +340,8 @@ h2{
 </div>
 
 <div class=wrapper_wrapper>
-<div class=wrapper>
 <IngredientsPage {data}></IngredientsPage>
 <InstructionsPage {data}></InstructionsPage>
-</div>
 <div class=addendum>
 {#if data.addendum}
 	{@html data.addendum}
