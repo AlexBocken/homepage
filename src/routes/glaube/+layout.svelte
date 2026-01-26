@@ -10,6 +10,9 @@ function isActive(path) {
 	return currentPath.startsWith(path);
 }
 </script>
+<svelte:head>
+	<link rel="preload" href="/fonts/crosses.woff2" as="font" type="font/woff2" crossorigin>
+</svelte:head>
 <Header>
 	{#snippet links()}
 		<ul class=site_header>
