@@ -1,12 +1,4 @@
 @font-face {
-  font-family: 'crosses';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(/fonts/crosses.woff2) format('woff2'),
-       url(/fonts/crosses.ttf) format('truetype');
-}
- @font-face {
   font-family: 'LibertineMinimal';
   font-style: normal;
   font-weight: 400;
