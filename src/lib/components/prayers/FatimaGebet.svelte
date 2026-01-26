@@ -4,15 +4,15 @@
 
 <Prayer>
 	<p>
-		<v lang="la">Ó mí Jésú, dímitte nóbís débita nostra,</v>
+		<v lang="la">Mí Jésú, indúlge peccáta nostra,</v>
 		<v lang="de">O mein Jesus, verzeih' uns unsere Sünden,</v>
-		<v lang="la">líberá nós ab igne ínferní,</v>
+		<v lang="la">præsérva nos ab igne inférni,</v>
 		<v lang="de">bewahre uns vor den Feuern der Hölle</v>
-		<v lang="la">condúc in cælum omnés animás, </v>
+		<v lang="la">duc omnes ad cæli glóriam, </v>
 		<v lang="de">und führe alle Seelen in den Himmel,</v>
-		<v lang="la">præsertim illás,</v>
+		<v lang="la">præcípe tua</v>
 		<v lang="de">besonders jene,</v>
-		<v lang="la">quæ maximé indigent misericordiá tuá. Amen.</v>
+		<v lang="la">misericórdia máxime egéntes. Amen.</v>
 		<v lang="de">die Deiner Barmherzigkeit am meisten bedürfen. Amen.</v>
 	</p>
 </Prayer>
