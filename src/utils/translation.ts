@@ -149,7 +149,6 @@ class DeepLTranslationService {
 			const preprocessedText = replaceGermanCookingTerms(text);
 
 			const params = new URLSearchParams({
-				auth_key: this.apiKey,
 				text: preprocessedText,
 				target_lang: targetLang,
 				...(preserveFormatting && { tag_handling: 'xml' })
@@ -159,6 +158,7 @@ class DeepLTranslationService {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
+					'Authorization': `DeepL-Auth-Key ${this.apiKey}`,
 				},
 				body: params.toString()
 			});
@@ -218,7 +218,6 @@ class DeepLTranslationService {
 
 		try {
 			const params = new URLSearchParams({
-				auth_key: this.apiKey,
 				target_lang: targetLang,
 			});
 
@@ -231,6 +230,7 @@ class DeepLTranslationService {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
+					'Authorization': `DeepL-Auth-Key ${this.apiKey}`,
 				},
 				body: params.toString()
 			});
