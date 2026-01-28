@@ -1,26 +1,35 @@
 import { redirect, error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
 
-export async function load({ params, fetch }) {
+export const load: PageServerLoad = async ({ fetch, params, locals }) => {
     const isEnglish = params.recipeLang === 'recipes';
     const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
 
     const res = await fetch(`${apiBase}/items/${params.name}`);
+
     if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: 'Recipe not found' }));
-        throw error(res.status, errorData.message);
+        throw error(res.status, 'Recipe not found');
     }
 
     const item = await res.json();
+
+    // Strip HTML for meta tags (server-side only for SEO)
     const strippedName = stripHtmlTags(item.name);
     const strippedDescription = stripHtmlTags(item.description);
+
+    // Get session for user info
+    const session = await locals.auth();
 
     return {
         item,
         strippedName,
         strippedDescription,
+        lang: isEnglish ? 'en' : 'de',
+        recipeLang: params.recipeLang,
+        session
     };
-}
+};
 
 export const actions = {
     toggleFavorite: async ({ request, locals, url, fetch }) => {
