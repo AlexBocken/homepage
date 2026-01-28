@@ -1,10 +1,77 @@
+import { browser } from '$app/environment';
 import { generateRecipeJsonLd } from '$lib/js/recipeJsonLd';
+import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
+import { getFullRecipe, isOfflineDataAvailable } from '$lib/offline/db';
+import { stripHtmlTags } from '$lib/js/stripHtmlTags';
 
 export async function load({ fetch, params, url, data }) {
     const isEnglish = params.recipeLang === 'recipes';
 
-    // Use item from server load - no duplicate fetch needed
-    let item = { ...data.item };
+    // Check if we need to load from IndexedDB (offline mode)
+    // Only check on the client side
+    let item: any;
+    let isOfflineMode = false;
+
+    // On the client, check if we need to load from IndexedDB
+    const shouldUseOfflineData = browser && (isOffline() || data?.isOffline || !data?.item) && canUseOfflineData();
+
+    if (shouldUseOfflineData) {
+        try {
+            const hasOfflineData = await isOfflineDataAvailable();
+            if (hasOfflineData) {
+                // For English routes, the name param is the English short_name
+                // We need to find the recipe by its translations.en.short_name or short_name
+                let recipe = await getFullRecipe(params.name);
+
+                if (recipe) {
+                    // Apply English translation if needed
+                    if (isEnglish && recipe.translations?.en) {
+                        const enTrans = recipe.translations.en;
+                        // Use type assertion to avoid tuple/array type mismatch
+                        const recipeAny = recipe as any;
+                        item = {
+                            ...recipeAny,
+                            name: enTrans.name || recipe.name,
+                            description: enTrans.description || recipe.description,
+                            preamble: enTrans.preamble || recipe.preamble,
+                            addendum: enTrans.addendum || recipe.addendum,
+                            note: enTrans.note,
+                            category: enTrans.category || recipe.category,
+                            tags: enTrans.tags || recipe.tags,
+                            portions: enTrans.portions || recipe.portions,
+                            preparation: enTrans.preparation || recipe.preparation,
+                            cooking: enTrans.cooking || recipe.cooking,
+                            total_time: enTrans.total_time || recipe.total_time,
+                            baking: enTrans.baking || recipe.baking,
+                            fermentation: enTrans.fermentation || recipe.fermentation,
+                            ingredients: enTrans.ingredients || recipe.ingredients,
+                            instructions: enTrans.instructions || recipe.instructions,
+                            germanShortName: recipe.short_name
+                        };
+                    } else {
+                        item = recipe;
+                    }
+                    isOfflineMode = true;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load offline recipe:', error);
+        }
+    }
+
+    // Use server data if not offline or offline load failed
+    if (!item && data?.item) {
+        item = { ...data.item };
+    }
+
+    // If still no item, we're offline without cached data - return error state
+    if (!item) {
+        return {
+            ...data,
+            isOffline: true,
+            error: 'Recipe not available offline'
+        };
+    }
 
     // Check if this recipe is favorited by the user
     let isFavorite = false;
@@ -114,7 +181,11 @@ export async function load({ fetch, params, url, data }) {
     const germanShortName = isEnglish ? (item.germanShortName || '') : item.short_name;
 
     // Destructure to exclude item (already spread below)
-    const { item: _, ...serverData } = data;
+    const { item: _, ...serverData } = data || {};
+
+    // For offline mode, generate stripped versions locally
+    const strippedName = isOfflineMode ? stripHtmlTags(item.name) : (serverData as any)?.strippedName;
+    const strippedDescription = isOfflineMode ? stripHtmlTags(item.description) : (serverData as any)?.strippedDescription;
 
     return {
         ...serverData,  // Include server load data (strippedName, strippedDescription)
@@ -125,5 +196,8 @@ export async function load({ fetch, params, url, data }) {
         hasEnglishTranslation,
         englishShortName,
         germanShortName,
+        strippedName,
+        strippedDescription,
+        isOffline: isOfflineMode,
     };
 }

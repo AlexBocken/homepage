@@ -87,6 +87,19 @@ export type TranslatedRecipeType = {
   note?: string;
   category: string;
   tags?: string[];
+  portions?: string;
+  preparation?: string;
+  cooking?: string;
+  total_time?: string;
+  baking?: {
+    temperature?: string;
+    length?: string;
+    mode?: string;
+  };
+  fermentation?: {
+    bulk?: string;
+    final?: string;
+  };
   ingredients?: IngredientItem[];
   instructions?: InstructionItem[];
   images?: [{
