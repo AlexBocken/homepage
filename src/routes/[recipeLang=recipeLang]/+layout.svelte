@@ -3,6 +3,7 @@ import { page } from '$app/stores';
 import Header from '$lib/components/Header.svelte'
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
+import OfflineSyncButton from '$lib/components/OfflineSyncButton.svelte';
 let { data, children } = $props();
 
 let user = $derived(data.session?.user);
@@ -51,6 +52,7 @@ function isActive(path) {
 	{/snippet}
 
 	{#snippet right_side()}
+		<OfflineSyncButton lang={data.lang} />
 		<UserHeader {user} recipeLang={data.recipeLang} lang={data.lang}></UserHeader>
 	{/snippet}
 

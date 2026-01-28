@@ -51,6 +51,11 @@
 		: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]);
 
 	function season_intervals() {
+		// Guard against missing season data (can happen in offline mode)
+		if (!data.season || !Array.isArray(data.season) || data.season.length === 0) {
+			return [];
+		}
+
 		let interval_arr = []
 
 		let start_i = 0
@@ -299,8 +304,12 @@ h2{
 
 <TitleImgParallax src={hero_img_src} {placeholder_src} alt={img_alt}>
 	<div class=title>
-		<a class="category g-pill g-btn-dark" href='/{data.recipeLang}/category/{data.category}'>{data.category}</a>
-		<a class="icon g-icon-badge" href='/{data.recipeLang}/icon/{data.icon}'>{data.icon}</a>
+		{#if data.category}
+			<a class="category g-pill g-btn-dark" href='/{data.recipeLang}/category/{data.category}'>{data.category}</a>
+		{/if}
+		{#if data.icon}
+			<a class="icon g-icon-badge" href='/{data.recipeLang}/icon/{data.icon}'>{data.icon}</a>
+		{/if}
 		<h1>{@html data.name}</h1>
 		{#if data.description && ! data.preamble}
 			<p class=description>{data.description}</p>
@@ -308,25 +317,29 @@ h2{
 		{#if data.preamble}
 			<p>{@html data.preamble}</p>
 		{/if}
-		<div class=tags>
-			<h2>{labels.season}</h2>
-			{#each season_iv as season}
-				<a class="g-tag" href="/{data.recipeLang}/season/{season[0]}">
-					{#if season[0]}
-						{months[season[0] - 1]}
-					{/if}
-					{#if season[1]}
-						- {months[season[1] - 1]}
-					{/if}
-				</a>
-			{/each}
-		</div>
-		<h2 class="section-label">{labels.keywords}</h2>
-		<div class="tags center">
-			{#each data.tags as tag}
-				<a class="g-tag" href="/{data.recipeLang}/tag/{tag}">{tag}</a>
-			{/each}
-		</div>
+		{#if season_iv.length > 0}
+			<div class=tags>
+				<h2>{labels.season}</h2>
+				{#each season_iv as season}
+					<a class="g-tag" href="/{data.recipeLang}/season/{season[0]}">
+						{#if season[0]}
+							{months[season[0] - 1]}
+						{/if}
+						{#if season[1]}
+							- {months[season[1] - 1]}
+						{/if}
+					</a>
+				{/each}
+			</div>
+		{/if}
+		{#if data.tags && data.tags.length > 0}
+			<h2 class="section-label">{labels.keywords}</h2>
+			<div class="tags center">
+				{#each data.tags as tag}
+					<a class="g-tag" href="/{data.recipeLang}/tag/{tag}">{tag}</a>
+				{/each}
+			</div>
+		{/if}
 
 		<FavoriteButton
 			recipeId={data.germanShortName}
