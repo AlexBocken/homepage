@@ -127,6 +127,41 @@ export async function getBriefRecipesByIcon(icon: string): Promise<BriefRecipeTy
 	return allRecipes.filter(recipe => recipe.icon === icon);
 }
 
+export async function getAllCategories(): Promise<string[]> {
+	const allRecipes = await getAllBriefRecipes();
+	const categories = new Set<string>();
+	for (const recipe of allRecipes) {
+		if (recipe.category) {
+			categories.add(recipe.category);
+		}
+	}
+	return Array.from(categories).sort();
+}
+
+export async function getAllTags(): Promise<string[]> {
+	const allRecipes = await getAllBriefRecipes();
+	const tags = new Set<string>();
+	for (const recipe of allRecipes) {
+		if (recipe.tags) {
+			for (const tag of recipe.tags) {
+				tags.add(tag);
+			}
+		}
+	}
+	return Array.from(tags).sort();
+}
+
+export async function getAllIcons(): Promise<string[]> {
+	const allRecipes = await getAllBriefRecipes();
+	const icons = new Set<string>();
+	for (const recipe of allRecipes) {
+		if (recipe.icon) {
+			icons.add(recipe.icon);
+		}
+	}
+	return Array.from(icons).sort();
+}
+
 export async function saveAllRecipes(
 	briefRecipes: BriefRecipeType[],
 	fullRecipes: RecipeModelType[]

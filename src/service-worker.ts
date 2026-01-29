@@ -70,9 +70,12 @@ sw.addEventListener('fetch', (event) => {
 	// Skip API requests - let them go to network (IndexedDB handles offline)
 	if (url.pathname.startsWith('/api/')) return;
 
-	// Handle SvelteKit __data.json requests for recipe routes
+	// Handle SvelteKit __data.json requests for cacheable routes (recipes, glaube, root)
 	// Cache successful responses, serve from cache when offline
-	if (url.pathname.includes('__data.json') && url.pathname.match(/^\/(rezepte|recipes)/)) {
+	const isCacheableDataRoute = url.pathname.includes('__data.json') &&
+		(url.pathname.match(/^\/(rezepte|recipes|glaube)(\/|$)/) || url.pathname === '/__data.json');
+
+	if (isCacheableDataRoute) {
 		event.respondWith(
 			(async () => {
 				const cache = await caches.open(CACHE_PAGES);
@@ -168,8 +171,12 @@ sw.addEventListener('fetch', (event) => {
 					// Try network first
 					const response = await fetch(event.request);
 
-					// Cache successful HTML responses for recipe pages (using pathname as key)
-					if (response.ok && url.pathname.match(/^\/(rezepte|recipes)(\/|$)/)) {
+					// Cache successful HTML responses for cacheable pages (using pathname as key)
+					const isCacheablePage = response.ok && (
+						url.pathname.match(/^\/(rezepte|recipes|glaube)(\/|$)/) ||
+						url.pathname === '/'
+					);
+					if (isCacheablePage) {
 						cache.put(cacheKey, response.clone());
 					}
 
