@@ -7,9 +7,10 @@ export const GET: RequestHandler = async () => {
 	await dbConnect();
 
 	// Fetch brief recipes (for lists/filtering)
+	// Include images for thumbnail caching during offline sync
 	const briefRecipes = await Recipe.find(
 		{},
-		'name short_name tags category icon description season dateModified'
+		'name short_name tags category icon description season dateModified images translations'
 	).lean() as BriefRecipeType[];
 
 	// Fetch full recipes with populated base recipe references
