@@ -10,7 +10,7 @@ export const GET: RequestHandler = async ({params}) => {
 	// Find all recipes that have approved English translations
 	const recipes = await Recipe.find(
 		{ 'translations.en.translationStatus': 'approved' },
-		'_id translations.en short_name season dateModified icon'
+		'_id translations.en short_name season dateModified icon images'
 	).lean();
 
 	// Map to brief format with English data
@@ -24,7 +24,8 @@ export const GET: RequestHandler = async ({params}) => {
 		description: recipe.translations.en.description,
 		season: recipe.season || [],
 		dateModified: recipe.dateModified,
-		germanShortName: recipe.short_name // For language switcher
+		germanShortName: recipe.short_name, // For language switcher
+		images: recipe.images || []
 	})) as BriefRecipeType[];
 
 	return json(JSON.parse(JSON.stringify(rand_array(found_brief))));
