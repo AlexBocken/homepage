@@ -14,6 +14,7 @@ export const GET: RequestHandler = async ({params}) => {
 	).lean();
 
 	// Map to brief format with English data
+	// Only include first image's alt and mediapath to reduce payload
 	const found_brief = recipes.map((recipe: any) => ({
 		_id: recipe._id,
 		name: recipe.translations.en.name,
@@ -25,7 +26,9 @@ export const GET: RequestHandler = async ({params}) => {
 		season: recipe.season || [],
 		dateModified: recipe.dateModified,
 		germanShortName: recipe.short_name, // For language switcher
-		images: recipe.images || []
+		images: recipe.images?.[0]
+			? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath }]
+			: []
 	})) as BriefRecipeType[];
 
 	return json(JSON.parse(JSON.stringify(rand_array(found_brief))));
