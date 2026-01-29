@@ -1,6 +1,17 @@
 import { saveAllRecipes } from './db';
 import type { BriefRecipeType, RecipeModelType } from '../../types/types';
 
+// Discover glaube routes at build time using Vite's glob import
+const glaubePageModules = import.meta.glob('/src/routes/glaube/**/+page.svelte');
+const glaubeRoutes = Object.keys(glaubePageModules).map(path => {
+	// Convert file path to route path
+	// /src/routes/glaube/+page.svelte -> /glaube
+	// /src/routes/glaube/angelus/+page.svelte -> /glaube/angelus
+	return path
+		.replace('/src/routes', '')
+		.replace('/+page.svelte', '') || '/glaube';
+});
+
 export type SyncResult = {
 	success: boolean;
 	recipeCount: number;
@@ -56,18 +67,53 @@ async function precacheMainPages(_fetchFn: typeof fetch): Promise<void> {
 	const registration = await navigator.serviceWorker.ready;
 	if (!registration.active) return;
 
-	// Send message to service worker to cache main pages, offline shells, and their data
-	// The offline shells are crucial for direct navigation to recipe pages when offline
+	// Build list of pages to cache
+	const pagesToCache: string[] = [
+		// Root page
+		'/',
+		'/__data.json',
+		// Recipe main pages
+		'/rezepte',
+		'/recipes',
+		'/rezepte/offline-shell',
+		'/recipes/offline-shell',
+		// Recipe main page data
+		'/rezepte/__data.json',
+		'/recipes/__data.json',
+		// Recipe list pages
+		'/rezepte/category',
+		'/rezepte/tag',
+		'/rezepte/icon',
+		'/rezepte/season',
+		'/rezepte/favorites',
+		'/recipes/category',
+		'/recipes/tag',
+		'/recipes/icon',
+		'/recipes/season',
+		'/recipes/favorites',
+		// Recipe list page data
+		'/rezepte/category/__data.json',
+		'/rezepte/tag/__data.json',
+		'/rezepte/icon/__data.json',
+		'/rezepte/season/__data.json',
+		'/rezepte/favorites/__data.json',
+		'/recipes/category/__data.json',
+		'/recipes/tag/__data.json',
+		'/recipes/icon/__data.json',
+		'/recipes/season/__data.json',
+		'/recipes/favorites/__data.json'
+	];
+
+	// Add dynamically discovered glaube routes (HTML and __data.json)
+	for (const route of glaubeRoutes) {
+		pagesToCache.push(route);
+		pagesToCache.push(`${route}/__data.json`);
+	}
+
+	// Send message to service worker to cache all pages
 	registration.active.postMessage({
 		type: 'CACHE_PAGES',
-		urls: [
-			'/rezepte',
-			'/recipes',
-			'/rezepte/offline-shell',
-			'/recipes/offline-shell',
-			'/rezepte/__data.json',
-			'/recipes/__data.json'
-		]
+		urls: pagesToCache
 	});
 }
 
@@ -80,6 +126,12 @@ async function precacheRecipeData(recipes: BriefRecipeType[]): Promise<void> {
 
 	// Collect __data.json URLs for all recipes (both German and English if translated)
 	const dataUrls: string[] = [];
+
+	// Collect unique categories, tags, and icons
+	const categories = new Set<string>();
+	const tags = new Set<string>();
+	const icons = new Set<string>();
+
 	for (const recipe of recipes) {
 		// German recipe data
 		dataUrls.push(`/rezepte/${recipe.short_name}/__data.json`);
@@ -88,6 +140,39 @@ async function precacheRecipeData(recipes: BriefRecipeType[]): Promise<void> {
 		if (recipe.translations?.en?.short_name) {
 			dataUrls.push(`/recipes/${recipe.translations.en.short_name}/__data.json`);
 		}
+
+		// Collect metadata for subroute caching
+		if (recipe.category) categories.add(recipe.category);
+		if (recipe.icon) icons.add(recipe.icon);
+		if (recipe.tags) {
+			for (const tag of recipe.tags) {
+				tags.add(tag);
+			}
+		}
+	}
+
+	// Add category subroute data
+	for (const category of categories) {
+		dataUrls.push(`/rezepte/category/${encodeURIComponent(category)}/__data.json`);
+		dataUrls.push(`/recipes/category/${encodeURIComponent(category)}/__data.json`);
+	}
+
+	// Add tag subroute data
+	for (const tag of tags) {
+		dataUrls.push(`/rezepte/tag/${encodeURIComponent(tag)}/__data.json`);
+		dataUrls.push(`/recipes/tag/${encodeURIComponent(tag)}/__data.json`);
+	}
+
+	// Add icon subroute data
+	for (const icon of icons) {
+		dataUrls.push(`/rezepte/icon/${encodeURIComponent(icon)}/__data.json`);
+		dataUrls.push(`/recipes/icon/${encodeURIComponent(icon)}/__data.json`);
+	}
+
+	// Add season subroute data (all 12 months)
+	for (let month = 1; month <= 12; month++) {
+		dataUrls.push(`/rezepte/season/${month}/__data.json`);
+		dataUrls.push(`/recipes/season/${month}/__data.json`);
 	}
 
 	// Send message to service worker to cache these URLs
