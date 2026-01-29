@@ -19,7 +19,8 @@
 
 	onMount(async () => {
 		mounted = true;
-		await pwaStore.checkAvailability();
+		// Initialize PWA store (checks standalone mode, starts auto-sync if needed)
+		await pwaStore.initialize();
 	});
 
 	async function handleSync() {
@@ -147,7 +148,7 @@
 	}
 </style>
 
-{#if mounted}
+{#if mounted && pwaStore.isStandalone}
 	<div class="offline-sync">
 		<button
 			class="sync-button"
