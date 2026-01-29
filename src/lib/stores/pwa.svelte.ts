@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { isOfflineDataAvailable, getLastSync, clearOfflineData } from '$lib/offline/db';
-import { downloadAllRecipes, type SyncResult } from '$lib/offline/sync';
+import { downloadAllRecipes, type SyncResult, type SyncProgress } from '$lib/offline/sync';
 
 const AUTO_SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
 const LAST_SYNC_KEY = 'bocken-last-sync-time';
@@ -13,6 +13,7 @@ type PWAState = {
 	error: string | null;
 	isStandalone: boolean;
 	isInitialized: boolean;
+	syncProgress: SyncProgress | null;
 };
 
 function createPWAStore() {
@@ -23,7 +24,8 @@ function createPWAStore() {
 		recipeCount: 0,
 		error: null,
 		isStandalone: false,
-		isInitialized: false
+		isInitialized: false,
+		syncProgress: null
 	});
 
 	let autoSyncInterval: ReturnType<typeof setInterval> | null = null;
@@ -95,6 +97,9 @@ function createPWAStore() {
 		},
 		get isInitialized() {
 			return state.isInitialized;
+		},
+		get syncProgress() {
+			return state.syncProgress;
 		},
 
 		async initialize() {
@@ -185,9 +190,12 @@ function createPWAStore() {
 
 			state.isSyncing = true;
 			state.error = null;
+			state.syncProgress = null;
 
 			try {
-				const result = await downloadAllRecipes(fetchFn);
+				const result = await downloadAllRecipes(fetchFn, (progress) => {
+					state.syncProgress = progress;
+				});
 
 				if (result.success) {
 					state.isOfflineAvailable = true;
@@ -201,6 +209,7 @@ function createPWAStore() {
 				return result;
 			} finally {
 				state.isSyncing = false;
+				state.syncProgress = null;
 			}
 		},
 

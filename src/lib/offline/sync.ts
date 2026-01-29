@@ -12,16 +12,31 @@ const glaubeRoutes = Object.keys(glaubePageModules).map(path => {
 		.replace('/+page.svelte', '') || '/glaube';
 });
 
+export type SyncProgress = {
+	phase: 'recipes' | 'pages' | 'data' | 'images';
+	message: string;
+	imageProgress?: {
+		completed: number;
+		total: number;
+	};
+};
+
 export type SyncResult = {
 	success: boolean;
 	recipeCount: number;
 	error?: string;
 };
 
+export type SyncProgressCallback = (progress: SyncProgress) => void;
+
 export async function downloadAllRecipes(
-	fetchFn: typeof fetch = fetch
+	fetchFn: typeof fetch = fetch,
+	onProgress?: SyncProgressCallback
 ): Promise<SyncResult> {
 	try {
+		// Phase 1: Download recipe data
+		onProgress?.({ phase: 'recipes', message: 'Downloading recipes...' });
+
 		const response = await fetchFn('/api/rezepte/offline-db');
 
 		if (!response.ok) {
@@ -36,15 +51,29 @@ export async function downloadAllRecipes(
 
 		// Save to IndexedDB
 		await saveAllRecipes(data.brief, data.full);
+		onProgress?.({ phase: 'recipes', message: `Saved ${data.brief.length} recipes` });
 
-		// Pre-cache the main recipe pages HTML (needed for offline shell)
+		// Phase 2: Pre-cache the main pages HTML
+		onProgress?.({ phase: 'pages', message: 'Caching pages...' });
 		await precacheMainPages(fetchFn);
 
-		// Pre-cache __data.json for all recipes (needed for client-side navigation)
+		// Phase 3: Pre-cache __data.json for all recipes
+		onProgress?.({ phase: 'data', message: 'Caching navigation data...' });
 		await precacheRecipeData(data.brief);
 
-		// Pre-cache thumbnail images via service worker
-		await precacheThumbnails(data.brief);
+		// Phase 4: Pre-cache thumbnail images via service worker
+		onProgress?.({ phase: 'images', message: 'Caching images...', imageProgress: { completed: 0, total: data.brief.length } });
+
+		await precacheThumbnails(data.brief, (imgProgress) => {
+			onProgress?.({
+				phase: 'images',
+				message: `Caching images (${imgProgress.completed}/${imgProgress.total})...`,
+				imageProgress: {
+					completed: imgProgress.completed,
+					total: imgProgress.total
+				}
+			});
+		});
 
 		return {
 			success: true,
@@ -184,28 +213,71 @@ async function precacheRecipeData(recipes: BriefRecipeType[]): Promise<void> {
 	}
 }
 
-async function precacheThumbnails(recipes: BriefRecipeType[]): Promise<void> {
+type ImageCacheProgress = {
+	completed: number;
+	total: number;
+	done: boolean;
+};
+
+type ProgressCallback = (progress: ImageCacheProgress) => void;
+
+async function precacheThumbnails(
+	recipes: BriefRecipeType[],
+	onProgress?: ProgressCallback
+): Promise<void> {
 	// Only attempt if service worker is available
 	if (!('serviceWorker' in navigator)) return;
 
 	const registration = await navigator.serviceWorker.ready;
 	if (!registration.active) return;
 
-	// Collect all thumbnail URLs
+	// Collect all thumbnail URLs using mediapath (includes hash for cache busting)
 	const thumbnailUrls: string[] = [];
 	for (const recipe of recipes) {
 		if (recipe.images && recipe.images.length > 0) {
 			const mediapath = recipe.images[0].mediapath;
-			// Thumbnail path format: /static/rezepte/thumb/{short_name}.webp
-			thumbnailUrls.push(`/static/rezepte/thumb/${recipe.short_name}.webp`);
+			// Thumbnail path format: /static/rezepte/thumb/{mediapath}
+			thumbnailUrls.push(`/static/rezepte/thumb/${mediapath}`);
 		}
 	}
 
-	// Send message to service worker to cache these URLs
-	if (thumbnailUrls.length > 0) {
-		registration.active.postMessage({
+	if (thumbnailUrls.length === 0) return;
+
+	// Generate unique request ID
+	const requestId = `img-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+	// Create a promise that resolves when caching is complete
+	return new Promise((resolve) => {
+		function handleMessage(event: MessageEvent) {
+			if (event.data?.type === 'CACHE_IMAGES_PROGRESS' && event.data.requestId === requestId) {
+				if (onProgress) {
+					onProgress({
+						completed: event.data.completed,
+						total: event.data.total,
+						done: event.data.done
+					});
+				}
+
+				if (event.data.done) {
+					navigator.serviceWorker.removeEventListener('message', handleMessage);
+					resolve();
+				}
+			}
+		}
+
+		navigator.serviceWorker.addEventListener('message', handleMessage);
+
+		// Send message to service worker to cache these URLs
+		registration.active!.postMessage({
 			type: 'CACHE_IMAGES',
-			urls: thumbnailUrls
+			urls: thumbnailUrls,
+			requestId
 		});
-	}
+
+		// Timeout fallback in case messages don't arrive
+		setTimeout(() => {
+			navigator.serviceWorker.removeEventListener('message', handleMessage);
+			resolve();
+		}, 5 * 60 * 1000); // 5 minute timeout
+	});
 }

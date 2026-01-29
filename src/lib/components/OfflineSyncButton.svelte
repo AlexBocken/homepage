@@ -146,6 +146,31 @@
 		font-size: 0.75rem;
 		color: var(--nord4);
 	}
+
+	.progress-container {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.progress-text {
+		font-size: 0.75rem;
+		color: var(--nord4);
+	}
+
+	.progress-bar {
+		width: 100%;
+		height: 4px;
+		background: var(--nord3);
+		border-radius: 2px;
+		overflow: hidden;
+	}
+
+	.progress-fill {
+		height: 100%;
+		background: var(--nord14);
+		transition: width 150ms ease-out;
+	}
 </style>
 
 {#if mounted && pwaStore.isStandalone}
@@ -202,6 +227,20 @@
 						>
 							{pwaStore.isSyncing ? labels.syncing : labels.syncForOffline}
 						</button>
+					{/if}
+
+					{#if pwaStore.isSyncing && pwaStore.syncProgress}
+						<div class="progress-container">
+							<div class="progress-text">{pwaStore.syncProgress.message}</div>
+							{#if pwaStore.syncProgress.imageProgress}
+								<div class="progress-bar">
+									<div
+										class="progress-fill"
+										style="width: {(pwaStore.syncProgress.imageProgress.completed / pwaStore.syncProgress.imageProgress.total) * 100}%"
+									></div>
+								</div>
+							{/if}
+						</div>
 					{/if}
 
 					{#if pwaStore.error}
