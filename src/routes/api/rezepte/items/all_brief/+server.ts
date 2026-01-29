@@ -17,7 +17,15 @@ export const GET: RequestHandler = async ({params}) => {
   } else {
     // Cache miss - fetch from DB
     await dbConnect();
-    recipes = await Recipe.find({}, 'name short_name tags category icon description season dateModified images').lean() as BriefRecipeType[];
+    const dbRecipes = await Recipe.find({}, 'name short_name tags category icon description season dateModified images').lean() as BriefRecipeType[];
+
+    // Only include first image's alt and mediapath to reduce payload
+    recipes = dbRecipes.map(recipe => ({
+      ...recipe,
+      images: recipe.images?.[0]
+        ? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath }]
+        : []
+    })) as BriefRecipeType[];
 
     // Store in cache (1 hour TTL)
     await cache.set(cacheKey, JSON.stringify(recipes), 3600);
