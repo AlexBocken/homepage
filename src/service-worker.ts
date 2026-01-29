@@ -113,27 +113,47 @@ sw.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	// Handle recipe images (thumbnails and full images)
+	// Handle recipe images (thumbnails, full images, and placeholders)
 	if (
 		url.pathname.startsWith('/static/rezepte/') &&
-		(url.pathname.includes('/thumb/') || url.pathname.includes('/full/'))
+		(url.pathname.includes('/thumb/') || url.pathname.includes('/full/') || url.pathname.includes('/placeholder/'))
 	) {
 		event.respondWith(
-			caches.open(CACHE_IMAGES).then((cache) =>
-				cache.match(event.request).then((cached) => {
-					if (cached) return cached;
+			(async () => {
+				const cache = await caches.open(CACHE_IMAGES);
 
-					return fetch(event.request).then((response) => {
-						if (response.ok) {
+				// Try exact match first
+				const cached = await cache.match(event.request);
+				if (cached) return cached;
+
+				// Try to fetch from network
+				try {
+					const response = await fetch(event.request);
+					if (response.ok) {
+						// Cache thumbnails for offline use
+						if (url.pathname.includes('/thumb/')) {
 							cache.put(event.request, response.clone());
 						}
-						return response;
-					}).catch(() => {
-						// Return a placeholder or let the browser handle the error
-						return new Response('', { status: 404 });
-					});
-				})
-			)
+					}
+					return response;
+				} catch {
+					// Network failed - try to serve thumbnail as fallback for full/placeholder
+					if (url.pathname.includes('/full/') || url.pathname.includes('/placeholder/')) {
+						// Extract filename and try to find cached thumbnail
+						const filename = url.pathname.split('/').pop();
+						if (filename) {
+							const thumbUrl = `/static/rezepte/thumb/${filename}`;
+							const thumbCached = await cache.match(thumbUrl);
+							if (thumbCached) {
+								return thumbCached;
+							}
+						}
+					}
+
+					// No fallback available
+					return new Response('', { status: 404 });
+				}
+			})()
 		);
 		return;
 	}
@@ -243,16 +263,35 @@ sw.addEventListener('message', (event) => {
 
 	if (event.data?.type === 'CACHE_IMAGES') {
 		const urls: string[] = event.data.urls;
-		caches.open(CACHE_IMAGES).then((cache) => {
+		const requestId = event.data.requestId;
+
+		caches.open(CACHE_IMAGES).then(async (cache) => {
 			// Cache images in batches to avoid overwhelming the network
 			const batchSize = 10;
-			let index = 0;
+			const total = urls.length;
+			let completed = 0;
 
-			function cacheBatch() {
-				const batch = urls.slice(index, index + batchSize);
-				if (batch.length === 0) return;
+			// Report progress to all clients
+			async function reportProgress(done: boolean = false) {
+				const clients = await sw.clients.matchAll();
+				for (const client of clients) {
+					client.postMessage({
+						type: 'CACHE_IMAGES_PROGRESS',
+						requestId,
+						completed,
+						total,
+						done
+					});
+				}
+			}
 
-				Promise.all(
+			// Report initial state
+			await reportProgress();
+
+			for (let i = 0; i < urls.length; i += batchSize) {
+				const batch = urls.slice(i, i + batchSize);
+
+				await Promise.all(
 					batch.map((url) =>
 						fetch(url)
 							.then((response) => {
@@ -263,17 +302,23 @@ sw.addEventListener('message', (event) => {
 							.catch(() => {
 								// Ignore failed image fetches
 							})
+							.finally(() => {
+								completed++;
+							})
 					)
-				).then(() => {
-					index += batchSize;
-					if (index < urls.length) {
-						// Small delay between batches
-						setTimeout(cacheBatch, 100);
-					}
-				});
+				);
+
+				// Report progress after each batch
+				await reportProgress();
+
+				// Small delay between batches
+				if (i + batchSize < urls.length) {
+					await new Promise((resolve) => setTimeout(resolve, 100));
+				}
 			}
 
-			cacheBatch();
+			// Report completion
+			await reportProgress(true);
 		});
 	}
 
