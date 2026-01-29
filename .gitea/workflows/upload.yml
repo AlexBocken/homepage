@@ -33,6 +33,7 @@ jobs:
           git reset --hard origin/master
           pnpm install --frozen-lockfile
           pnpm run build
+          redis-cli KEYS 'recipes:*' | xargs -r redis-cli DEL
           sudo systemctl stop homepage.service
           mkdir -p dist
           rm -rf dist/*
