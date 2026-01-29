@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({params}) => {
   } else {
     // Cache miss - fetch from DB
     await dbConnect();
-    recipes = await Recipe.find({}, 'name short_name tags category icon description season dateModified').lean() as BriefRecipeType[];
+    recipes = await Recipe.find({}, 'name short_name tags category icon description season dateModified images').lean() as BriefRecipeType[];
 
     // Store in cache (1 hour TTL)
     await cache.set(cacheKey, JSON.stringify(recipes), 3600);
