@@ -15,6 +15,7 @@
 	import MichaelGebet from "$lib/components/prayers/MichaelGebet.svelte";
 	import BruderKlausGebet from "$lib/components/prayers/BruderKlausGebet.svelte";
 	import JosephGebet from "$lib/components/prayers/JosephGebet.svelte";
+	import Confiteor from "$lib/components/prayers/Confiteor.svelte";
 
 	// Create language context for prayer components
 	createLanguageContext();
@@ -105,8 +106,11 @@ h1{
 </Gebet>
 
 <Gebet name={"Josephgebet des hl. Papst Pius X"} is_bilingue={false}>
-	<p slot="intro">Wenn man mehr zum hl. Joseph als <q>Patrone Morientium</q> wissen möchte kann man <a href="predigten/20220319-hl._joseph">hier</a> die Predigt zum Festtag des hl. Joseph nachlesen.</p>
 	<JosephGebet />
+</Gebet>
+
+<Gebet name={"Das Confiteor"} is_bilingue={true}>
+	<Confiteor />
 </Gebet>
 </div>
 </div>
