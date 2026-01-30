@@ -1,7 +1,8 @@
 import { mysteryReferences, type MysteryDescription, type VerseData } from '$lib/data/mysteryDescriptions';
 import type { PageServerLoad } from './$types';
 
-export const prerender = true;
+// TODO: allow prerendering/fetching of bible verses at compile time while keeping the rest dynamic.
+// export const prerender = true; # breaks user logged-in state
 
 async function fetchBibleData(reference: string, fetch: typeof globalThis.fetch): Promise<{ text: string; verseData: VerseData | null }> {
   try {
