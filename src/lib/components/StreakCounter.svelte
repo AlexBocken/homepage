@@ -2,7 +2,20 @@
 import { browser } from '$app/environment';
 import { getRosaryStreak } from '$lib/stores/rosaryStreak.svelte';
 
+interface Props {
+	user?: { nickname?: string } | null;
+}
+
+let { user = null }: Props = $props();
+
 const streak = browser ? getRosaryStreak() : null;
+
+// Sync with server when user is logged in
+$effect(() => {
+	if (browser && streak) {
+		streak.setLoggedIn(!!user?.nickname);
+	}
+});
 </script>
 
 <div class="streak-container">

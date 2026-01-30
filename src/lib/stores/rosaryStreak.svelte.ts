@@ -36,14 +36,59 @@ function saveToStorage(data: StreakData): void {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
+async function fetchFromServer(): Promise<StreakData | null> {
+	try {
+		const res = await fetch('/api/glaube/rosary-streak');
+		if (res.ok) {
+			return await res.json();
+		}
+	} catch {
+		// Server unavailable, return null
+	}
+	return null;
+}
+
+async function saveToServer(data: StreakData): Promise<boolean> {
+	try {
+		const res = await fetch('/api/glaube/rosary-streak', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(data)
+		});
+		return res.ok;
+	} catch {
+		return false;
+	}
+}
+
+// Merge local and server data, preferring the more recent/higher streak
+function mergeStreakData(local: StreakData, server: StreakData | null): StreakData {
+	if (!server) return local;
+
+	// If same lastPrayed date, take the higher length
+	if (local.lastPrayed === server.lastPrayed) {
+		return local.length >= server.length ? local : server;
+	}
+
+	// Otherwise take whichever was prayed more recently
+	if (!local.lastPrayed) return server;
+	if (!server.lastPrayed) return local;
+
+	return local.lastPrayed > server.lastPrayed ? local : server;
+}
+
 class RosaryStreakStore {
 	#length = $state(0);
 	#lastPrayed = $state<string | null>(null);
+	#isLoggedIn = $state(false);
 	#initialized = false;
+	#syncing = $state(false);
+	#pendingSync = false; // Track if we have unsynced changes
 
 	constructor() {
 		if (browser) {
 			this.#init();
+			this.#setupOnlineListener();
 		}
 	}
 
@@ -53,6 +98,14 @@ class RosaryStreakStore {
 		this.#length = data.length;
 		this.#lastPrayed = data.lastPrayed;
 		this.#initialized = true;
+	}
+
+	#setupOnlineListener() {
+		window.addEventListener('online', () => {
+			if (this.#isLoggedIn && this.#pendingSync) {
+				this.#syncWithServer();
+			}
+		});
 	}
 
 	get length() {
@@ -67,7 +120,52 @@ class RosaryStreakStore {
 		return this.#lastPrayed === getToday();
 	}
 
-	recordPrayer(): void {
+	get isLoggedIn() {
+		return this.#isLoggedIn;
+	}
+
+	get syncing() {
+		return this.#syncing;
+	}
+
+	// Call this when user session is available
+	async setLoggedIn(loggedIn: boolean): Promise<void> {
+		this.#isLoggedIn = loggedIn;
+
+		if (loggedIn && browser) {
+			await this.#syncWithServer();
+		}
+	}
+
+	async #syncWithServer(): Promise<void> {
+		if (this.#syncing) return;
+		this.#syncing = true;
+
+		try {
+			const serverData = await fetchFromServer();
+			const localData: StreakData = { length: this.#length, lastPrayed: this.#lastPrayed };
+			const merged = mergeStreakData(localData, serverData);
+
+			// Update local state
+			this.#length = merged.length;
+			this.#lastPrayed = merged.lastPrayed;
+			saveToStorage(merged);
+
+			// If local had newer data, push to server
+			if (!serverData || merged.length !== serverData.length || merged.lastPrayed !== serverData.lastPrayed) {
+				const success = await saveToServer(merged);
+				this.#pendingSync = !success;
+			} else {
+				this.#pendingSync = false;
+			}
+		} catch {
+			this.#pendingSync = true;
+		} finally {
+			this.#syncing = false;
+		}
+	}
+
+	async recordPrayer(): Promise<void> {
 		const today = getToday();
 
 		// Already prayed today - no change
@@ -87,7 +185,15 @@ class RosaryStreakStore {
 
 		this.#length = newLength;
 		this.#lastPrayed = today;
-		saveToStorage({ length: newLength, lastPrayed: today });
+
+		const data: StreakData = { length: newLength, lastPrayed: today };
+		saveToStorage(data);
+
+		// Sync to server if logged in
+		if (this.#isLoggedIn) {
+			const success = await saveToServer(data);
+			this.#pendingSync = !success;
+		}
 	}
 }
 
