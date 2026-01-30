@@ -1226,6 +1226,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 
 	<!-- Toggle Controls & Streak Counter -->
 	<div class="controls-row">
+		<StreakCounter user={data.session?.user} />
 		<div class="toggle-controls">
 			<!-- Luminous Mysteries Toggle -->
 			<Toggle
@@ -1237,8 +1238,6 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 			<!-- Language Toggle -->
 			<LanguageToggle />
 		</div>
-
-		<StreakCounter user={data.session?.user} />
 	</div>
 
 	<div class="rosary-layout">
@@ -1483,145 +1482,6 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 		</div>
 	</div>
 
-	<!-- Information Section Below -->
-	<div style="margin-top: 4rem; max-width: 800px; margin-left: auto; margin-right: auto;">
-		<h2>Die verschiedenen Geheimnisse</h2>
-<p>
-Die verschiedenen Geheimnisse werden zu verschiedenen Anlässen gebetet.
-Dabei handelt es sich hier aber um keine strikten Regeln die eingehalten werden müssen.
-Es gibt auch einen Wochenplan welcher je nach Wochentag andere Geheimnisse vorschlägt.
-Dieser Plan ist wie folgt:
-</p>
-<div class=table >
-<table>
-	<tbody>
-	<tr>
-		<td>Mo</td>
-		<td>Di</td>
-		<td>Mi</td>
-		<td>Do</td>
-		<td>Fr</td>
-		<td>Sa</td>
-		<td>So</td>
-	</tr>
-	<tr>
-		<td>freudenreich</td>
-		<td>schmerzhaft</td>
-		<td>glorreich</td>
-		<td>lichtreich</td>
-		<td>schmerzhaft</td>
-		<td>freudenreich</td>
-		<td>glorreich</td>
-	</tr>
-	</tbody>
-</table>
-</div>
-<p>
-Generell überschreiben natürlich wichtige Feiertage diesen Kalender. Zum Beispiel wird regulär während der Fastenzeit stets der Rosenkranz mit den schmerzhaften Geheimnissen gebetet.
-</p>
-
-<p>
-Die Integration der lichtreichen Geheimnisse hat einige Kontroversen um sich.
-Ohne diese 5 Dekaden sind die 150 Gebete der drei Sätzen an Geheimnissen eine direkte Parallele zu den 150 Psalmen der Bibel.
-Die Gottgegebenheit der lichtreichen Geheimnisse ist auch umstritten.
-</p>
-<p>Der Plan ohne lichtreiche Geheimnisse ist wie folgt:</p>
-<div class=table>
-<table>
-	<tbody>
-	<tr>
-		<td>Mo</td>
-		<td>Di</td>
-		<td>Mi</td>
-		<td>Do</td>
-		<td>Fr</td>
-		<td>Sa</td>
-		<td>So</td>
-	</tr>
-	<tr>
-		<td>freudenreich</td>
-		<td>schmerzhaft</td>
-		<td>glorreich</td>
-		<td>freudenreich</td>
-		<td>schmerzhaft</td>
-		<td>glorreich</td>
-		<td>glorreich</td>
-	</tr>
-	</tbody>
-</table>
-</div>
-
-
-
-<h3>Die freudenreichen Geheimnisse <i>(über die Geburt und Kindheit Jesu)</i></h3>
-<ol><!-- gaudiosa -->
-	<li>... Jesus, den du, o Jungfrau, vom Heiligen Geist empfangen hast.</li>
-	<li>... Jesus, den du, o Jungfrau, zu Elisabeth getragen hast.</li>
-	<li>... Jesus, den du, o Jungfrau, in Betlehem geboren hast.</li>
-	<li>... Jesus, den du, o Jungfrau, im Tempel geopfert hast.</li>
-	<li>... Jesus, den du, o Jungfrau, im Tempel wiedergefunden hast.</li>
-</ol>
-
-<h3>Die lichtreichen Geheimnisse <i>(über das Wirken Jesu)</i></h3>
-<ol>
-	<li>... Jesus, der von Johannes getauft worden ist.</li>
-	<li>... Jesus, der sich bei der Hochzeit in Kana geoffenbart hat.</li>
-	<li>... Jesus, der uns das Reich Gottes verkündet hat.</li>
-	<li>... Jesus, der auf dem Berg verklärt worden ist.</li>
-	<li>... Jesus, der uns die Eucharistie geschenkt hat.</li>
-</ol>
-
-<h3>Die schmerzhaften Geheimnisse <i>(über das Leiden und Sterben Jesu)</i></h3>
-<ol><!-- dolorosa -->
-	<li>... Jesus, der für uns Blut geschwitzt hat.</li>
-	<li>... Jesus, der für uns gegeisselt worden ist.</li>
-	<li>... Jesus, der für uns mit Dornen gekrönt worden ist.</li>
-	<li>... Jesus, der für uns das schwere Kreuz getragen hat.</li>
-	<li>... Jesus, der für uns gekreuzigt worden ist.</li>
-</ol>
-
-
-<h3>Die glorreichen Geheimnisse <i>(über die Auferstehung Jesu)</i></h3>
-<ol><!-- gloriosa -->
-	<li>... Jesus, der von den Toten auferstanden ist.</li>
-	<li>... Jesus, der in den Himmel aufgefahren ist.</li>
-	<li>... Jesus, der uns den Heiligen Geist gesandt hat.</li>
-	<li>... Jesus, der dich, o Jungfrau, in den Himmel aufgenommen hat.</li>
-	<li>... Jesus, der dich, o Jungfrau, im Himmel gekrönt hat.</li>
-</ol>
-
-<h2>Lateinische Geheimnisse</h2>
-<p>
-Anders als die Geheimnisse in Deutsch ist es üblich beim beten des Rosenkranzes in Latein die Geheimnisse am Anfang der Dekade einmal zu sagen und dann während den Ave Marias diese nur still zu reflektieren.
-</p>
-
-<h3>Mystéria gaudiósa (freudenreich)</h3>
-<ol lang=la>
-	<li>Mystérium gaudiósum prímum: annúntiátió</li>
-	<li>Mystérium gaudiósum secundum: vísitátió</li>
-	<li>Mystérium gaudiósum tertium: nátívitás Jésú</li>
-	<li>Mystérium gaudiósum quártum: præsentátió ínfantis Jésú in templó</li>
-	<li>Mystérium gaudiósum quíntum: inventió puerí Jésú in templó</li>
-</ol>
-
-<h3>Mystéria dolórósa (schmerzhaft)</h3>
-<ol lang=la>
-	<li>Mystérium dolórósum prímum: agónía in hortó et sūdor sanguinis</li>
-	<li>Mystérium dolórósum secundum: flagellátió</li>
-	<li>Mystérium dolórósum tertium: corónátió spínea</li>
-	<li>Mystérium dolórósum quártum: via crucis</li>
-	<li>Mystérium dolórósum quíntum: mors in cruc</li>
-</ol>
-
-<h3>Mystéria glóriósa (glorreich)</h3>
-<ol lang=la>
-	<li>Mystérium glóriósum prímum: resurréctió</li>
-	<li>Mystérium glóriósum secundum: ascénsió</li>
-	<li>Mystérium glóriósum tertium: déscénsus spíritūs sánctí</li>
-	<li>Mystérium glóriósum quártum: assūmptió beátæ virginis maríæ in cælum</li>
-	<li>Mystérium glóriósum quíntum: mundí régnum beátæ virginí maríæ in cælís délátu</li>
-</ol>
-	</div>
 </div>
 
 <!-- Bible citation modal -->
