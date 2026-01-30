@@ -21,7 +21,7 @@ $effect(() => {
 <div class="streak-container">
 	<div class="streak-display">
 		<span class="streak-number">{streak?.length ?? 0}</span>
-		<span class="streak-label">Tage</span>
+		<span class="streak-label">Tag{#if streak?.length !== 1}e{/if}</span>
 	</div>
 	<button
 		class="streak-button"
