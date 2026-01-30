@@ -16,6 +16,7 @@ import CounterButton from "$lib/components/CounterButton.svelte";
 import BibleModal from "$lib/components/BibleModal.svelte";
 import Toggle from "$lib/components/Toggle.svelte";
 import LanguageToggle from "$lib/components/LanguageToggle.svelte";
+import StreakCounter from "$lib/components/StreakCounter.svelte";
 
 let { data } = $props();
 
@@ -888,14 +889,29 @@ h1 {
 	margin-bottom: 2rem;
 }
 
+/* Controls row: toggles + streak counter */
+.controls-row {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.5rem;
+	margin: 0 auto 2rem auto;
+}
+
+@media (min-width: 700px) {
+	.controls-row {
+		flex-direction: row;
+		justify-content: center;
+		gap: 3rem;
+	}
+}
+
 /* Toggle controls container */
 .toggle-controls {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 0.5rem;
-	max-width: fit-content;
-	margin: 0 auto 2rem auto;
 }
 
 /* Mystery selector grid */
@@ -1208,17 +1224,21 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 		{/if}
 	</div>
 
-	<!-- Toggle Controls -->
-	<div class="toggle-controls">
-		<!-- Luminous Mysteries Toggle -->
-		<Toggle
-			bind:checked={includeLuminous}
-			label="Lichtreiche Geheimnisse einbeziehen"
-			on:change={handleToggleChange}
-		/>
+	<!-- Toggle Controls & Streak Counter -->
+	<div class="controls-row">
+		<div class="toggle-controls">
+			<!-- Luminous Mysteries Toggle -->
+			<Toggle
+				bind:checked={includeLuminous}
+				label="Lichtreiche Geheimnisse einbeziehen"
+				on:change={handleToggleChange}
+			/>
 
-		<!-- Language Toggle -->
-		<LanguageToggle />
+			<!-- Language Toggle -->
+			<LanguageToggle />
+		</div>
+
+		<StreakCounter />
 	</div>
 
 	<div class="rosary-layout">
