@@ -983,14 +983,8 @@ h1 {
 	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
-.mystery-button:nth-child(1):hover,
-.mystery-button:nth-child(1).selected { background: var(--nord15); }
-.mystery-button:nth-child(2):hover,
-.mystery-button:nth-child(2).selected { background: var(--nord13); }
-.mystery-button:nth-child(3):hover,
-.mystery-button:nth-child(3).selected { background: var(--nord14); }
-.mystery-button:nth-child(4):hover,
-.mystery-button:nth-child(4).selected { background: var(--nord12); }
+.mystery-button:hover,
+.mystery-button.selected { background: var(--nord4); }
 
 .mystery-button svg {
 	width: 80px;
@@ -1005,7 +999,9 @@ h1 {
 	}
 }
 
-.mystery-button.selected svg {
+.mystery-button.selected svg,
+.mystery-button:hover svg
+{
 	fill: var(--nord10);
 }
 
@@ -1021,7 +1017,9 @@ h1 {
 	}
 }
 
-.mystery-button.selected h3 {
+.mystery-button.selected h3,
+.mystery-button:hover h3
+{
 	color: var(--nord10);
 	font-weight: 700;
 }
