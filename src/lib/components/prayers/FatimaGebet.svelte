@@ -4,8 +4,8 @@
 
 <Prayer>
 	<p>
-		<v lang="la">Mí Jésú, indúlge peccáta nostra,</v>
-		<v lang="de">O mein Jesus, verzeih' uns unsere Sünden,</v>
+		<v lang="la">Mí <i><sup>⚬</sup></i>Jésú, indúlge peccáta nostra,</v>
+		<v lang="de">O mein <i><sup>⚬</sup></i>Jesus, verzeih' uns unsere Sünden,</v>
 		<v lang="la">præsérva nos ab igne inférni,</v>
 		<v lang="de">bewahre uns vor den Feuern der Hölle</v>
 		<v lang="la">duc omnes ad cæli glóriam, </v>
