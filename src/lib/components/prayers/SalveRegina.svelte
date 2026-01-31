@@ -23,11 +23,11 @@
 		<v lang="de">Wohlan denn, unsre Fürsprecherin,</v>
 		<v lang="la">íllos túos misericórdes óculos ad nos convérte.</v>
 		<v lang="de">deine barmherzigen Augen wende zu uns</v>
-		<v lang="la">Et Jésum, benedíctum frúctum véntris túi,</v>
-		<v lang="de">und nach diesem Elend zeige uns Jesus,</v>
+		<v lang="la">Et <i><sup>⚬</sup></i>Jésum, benedíctum frúctum véntris túi,</v>
+		<v lang="de">und nach diesem Elend zeige uns <i><sup>⚬</sup></i>Jesus,</v>
 		<v lang="la">nóbis post hoc exsílíum osténde.</v>
 		<v lang="de">die gebenedeite Frucht deines Leibes.</v>
-		<v lang="la">O clémens, o pía, o dúlcis Vírgo María.</v>
-		<v lang="de">O gütige, o milde, o süsse Jungfrau Maria.</v>
+		<v lang="la">O clémens, o pía, o dúlcis Vírgo <i><sup>⚬</sup></i>María.</v>
+		<v lang="de">O gütige, o milde, o süsse Jungfrau <i><sup>⚬</sup></i>Maria.</v>
 	</p>
 </Prayer>

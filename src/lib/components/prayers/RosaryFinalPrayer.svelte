@@ -23,7 +23,7 @@
 		<v lang="la">ét quód promíttunt, assequámur.</v>
 		<v lang="de">und dadurch erlangen, was uns in denselben verheissen ist.</v>
 		<v lang="la">Pér eúmdem Chrístum Dóminum nóstrum.</v>
-		<v lang="de">Durch unsern Herrn Jesus Christus.</v>
+		<v lang="de">Durch unsern Herrn <i><sup>⚬</sup></i>Jesus Christus.</v>
 		<v lang="la">Ámen.</v>
 		<v lang="de">Amen.</v>
 	</p>
