@@ -1,6 +1,8 @@
 <script lang="ts">
 import { browser } from '$app/environment';
 import { getRosaryStreak } from '$lib/stores/rosaryStreak.svelte';
+import StreakAura from '$lib/components/StreakAura.svelte';
+
 
 interface Props {
 	user?: { nickname?: string } | null;
@@ -9,6 +11,7 @@ interface Props {
 let { user = null }: Props = $props();
 
 const streak = browser ? getRosaryStreak() : null;
+
 
 // Sync with server when user is logged in
 $effect(() => {
@@ -20,7 +23,7 @@ $effect(() => {
 
 <div class="streak-container">
 	<div class="streak-display">
-		<span class="streak-number">{streak?.length ?? 0}</span>
+		<StreakAura value={streak?.length ?? 0} />
 		<span class="streak-label">Tag{#if streak?.length !== 1}e{/if}</span>
 	</div>
 	<button
@@ -59,14 +62,6 @@ $effect(() => {
 	flex-direction: column;
 	align-items: center;
 }
-
-.streak-number {
-	font-size: 2.5rem;
-	font-weight: 700;
-	color: var(--nord13);
-	line-height: 1;
-}
-
 .streak-label {
 	font-size: 0.85rem;
 	color: var(--nord4);
