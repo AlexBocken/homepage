@@ -2,15 +2,16 @@
 	export let value: number = 0;
 
 	const phase =
-		value >= 365 ? 5 :
-		value >= 180 ? 4 :
-		value >= 90 ? 3 :
-		value >= 30  ? 2 :
-		value >= 7  ? 1 : 0;
+		value >= 365 ? 6 :
+		value >= 180 ? 5 :
+		value >= 90  ? 4 :
+		value >= 30  ? 3 :
+		value >= 14  ? 2 :   // NEW: particles only
+		value >= 7   ? 1 : 0;
 </script>
 
-<div class="aura phase-{phase}" class:holy-fire={phase>=3}>
-	{#if phase >= 5}
+<div class="aura phase-{phase}" class:holy-fire={phase>=4}>
+	{#if phase >= 6}
 		<div class="wing left">
 		<svg viewBox="0 0 91.871681 77.881462" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(-52.477632,-104.97065)">
@@ -27,29 +28,41 @@
 </svg>
 </div>
 {/if}
-	{#if phase >= 4}
+	{#if phase >= 5}
 		<div class="halo" ></div>
 	{/if}
 
-	{#if phase >= 2}
-		<div class="fire">
-			<div class="fire-left">
+
+{#if phase >= 2}
+	<div class="fire">
+		<div class="fire-left">
+			{#if phase >= 3}
 				<div class="main-fire"></div>
-				<div class="particle-fire"></div>
-			</div>
-			<div class="fire-center">
-				<div class="main-fire"></div>
-				<div class="particle-fire"></div>
-			</div>
-			<div class="fire-right">
-				<div class="main-fire"></div>
-				<div class="particle-fire"></div>
-			</div>
-			<div class="fire-bottom">
-				<div class="main-fire"></div>
-			</div>
+			{/if}
+			<div class="particle-fire"></div>
 		</div>
-	{/if}
+
+		<div class="fire-center">
+			{#if phase >= 3}
+				<div class="main-fire"></div>
+			{/if}
+			<div class="particle-fire"></div>
+		</div>
+
+		<div class="fire-right">
+			{#if phase >= 3}
+				<div class="main-fire"></div>
+			{/if}
+			<div class="particle-fire"></div>
+		</div>
+
+		<div class="fire-bottom">
+			{#if phase >= 3}
+				<div class="main-fire"></div>
+			{/if}
+		</div>
+	</div>
+{/if}
 
 	<span class="number">{value}</span>
 </div>
@@ -64,10 +77,10 @@
 	display: grid;
 	place-items: center;
 }
-.aura.phase-2,
 .aura.phase-3,
 .aura.phase-4,
-.aura.phase-5
+.aura.phase-5,
+.aura.phase-6
 {
 	height: 88px;
 }
