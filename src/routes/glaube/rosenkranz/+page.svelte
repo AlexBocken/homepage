@@ -958,6 +958,9 @@ h1 {
 	.mystery-button {
 		background: var(--nord6);
 	}
+	.rosary-visualization :global(.chain) {
+		stroke: var(--nord3);
+	}
 }
 
 .mystery-button:hover {
