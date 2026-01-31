@@ -9,7 +9,7 @@
 		<v lang="la">Ave María, grátia plena. Dóminus tecum,</v>
 		<v lang="de">Gegrüsset seist du Maria, voll der Gnade; der Herr ist mit dir;</v>
 		<v lang="la">benedícta tu in muliéribus,</v>
-		<v lang="de">du bist gebenedeit unter den Weibern,</v>
+		<v lang="de">du bist gebenedeit unter den Frauen,</v>
 		<v lang="la">et benedíctus fructus ventris tui, {#if !mysteryLatin}Jesus.{/if}</v>
 		<v lang="de">und gebenedeit ist die Frucht deines Leibes, {#if !mystery}Jesus.{/if}</v>
 		{#if mysteryLatin}
