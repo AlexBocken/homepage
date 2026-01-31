@@ -711,18 +711,6 @@ onMount(() => {
 	overflow-x: hidden;
 	scrollbar-width: none; /* Firefox */
 	-ms-overflow-style: none; /* IE and Edge */
-	/* Mask to hide portions where curve goes off-screen (left side) */
-	/* Using radial gradient to create smooth fade at both connection points */
-	-webkit-mask-image:
-		linear-gradient(to right, transparent 0%, black 20%, black 100%),
-		radial-gradient(ellipse 200px 150px at 50% 0%, transparent 0%, black 40%),
-		radial-gradient(ellipse 200px 150px at 50% 100%, transparent 0%, black 40%);
-	-webkit-mask-composite: source-in;
-	mask-image:
-		linear-gradient(to right, transparent 0%, black 20%, black 100%),
-		radial-gradient(ellipse 200px 150px at 50% 0%, transparent 0%, black 40%),
-		radial-gradient(ellipse 200px 150px at 50% 100%, transparent 0%, black 40%);
-	mask-composite: intersect;
 }
 
 /* Hide scrollbar completely */
