@@ -8,7 +8,7 @@
 	let { holy = false, burst = false }: Props = $props();
 </script>
 
-<div class="fire {burst ? 'burst' : ''}" class:holy-fire={holy}>
+<div class="fire" class:burst class:holy-fire={holy}>
 	<div class="fire-left">
 		<div class="main-fire"></div>
 		<div class="particle-fire"></div>
@@ -30,47 +30,6 @@
 </div>
 
 <style>
-	/* =====================
-   BASE LAYOUT
-===================== */
-.aura {
-	position: relative;
-	width: 88px;
-	display: grid;
-	place-items: center;
-}
-.aura.phase-3,
-.aura.phase-4,
-.aura.phase-5,
-.aura.phase-6
-{
-	height: 88px;
-}
-
-.number {
-	position: relative;
-	z-index: 5;
-	font-size: 2.5rem;
-	font-weight: 700;
-	color: var(--nord13);
-	--shadow-outline:  0 0 1px rgba(255,255,255,0.9), 0 0 3px rgba(0,0,0,0.4);
-}
-
-/* =====================
-   PHASE 1 – GLOW
-===================== */
-.phase-1 .number {
-	text-shadow:
-		0 0 8px rgba(255,215,100,.5),
-		0 0 16px rgba(255,215,100,.35);
-	animation: glow-pulse 2.5s ease-in-out infinite;
-}
-
-@keyframes glow-pulse {
-	0%,100% { text-shadow: 0 0 8px rgba(255,215,100,.4); }
-	50% { text-shadow: 0 0 16px rgba(255,215,100,.8); }
-}
-
 /* =====================
    PURE CSS FIRE (SCALED + RISING)
 ===================== */
@@ -148,7 +107,6 @@
 	filter: drop-shadow(0 0 6px var(--nord12));
 	transform: scaleX(0.8) rotate(45deg);
 	border-radius: 0 40% 60% 40%;
-	/*filter: drop-shadow(0 0 10px #d43322);*/
 }
 
 .fire-left .main-fire {
@@ -169,7 +127,7 @@
 	position: absolute;
 	width: 10px;
 	height: 10px;
-		background-color: var(--nord13);
+	background-color: var(--nord13);
 	filter: drop-shadow(0 0 4px var(--nord12));
 	border-radius: 50%;
 	animation: particleUp 2.5s ease-out infinite;
@@ -228,121 +186,8 @@
 }
 
 /* =====================
-   PHASE 3 – HALO
+   BURST ANIMATION
 ===================== */
-.halo {
-	position: absolute;
-	top: -6px;
-	width: 70px;
-	height: 20px;
-	border-radius: 50%;
-	border: 4px solid rgba(255,235,180,.9);
-	box-shadow:
-		0 0 12px rgba(255,235,180,.8),
-		0 0 20px rgba(255,235,180,.5);
-	animation: halo-float 3s ease-in-out infinite;
-	z-index: 3;
-}
-
-@keyframes halo-float {
-	0%,100% { transform: translateY(0); }
-	50% { transform: translateY(-4px); }
-}
-
-/* =====================
-   PHASE 4 – WINGS
-===================== */
-.wing {
-  position: absolute;
-  top: 20%;
-  width: 36px;
-  height: 64px;
-  z-index: 0;
-  pointer-events: none;
-  transform-origin: top center;
- 	filter: drop-shadow(0 0 3px white);
-
-}
-
-.wing svg {
-  width: 100%;
-  height: 100%;
-  fill: white;
-}
-.wing.left {
-  left: -18px;
-  transform: rotate(-10deg);
-  animation: wing-slow-fly-left 4s ease-in-out infinite alternate;
-}
-
-.wing.right {
-  right: -18px;
-  transform: scaleX(-1) rotate(-10deg);
-  animation: wing-slow-fly-right 4s ease-in-out infinite alternate;
-}
-
-/* slow back-and-forth rotation for a gentle flight */
-@keyframes wing-slow-fly-left {
-  0%   { transform: rotate(10deg); }
-  50%  { transform: rotate(0deg); }
-  100% { transform: rotate(10deg); }
-}
-
-@keyframes wing-slow-fly-right {
-  0%   { transform: scaleX(-1) rotate(10deg); }
-  50%  { transform: scaleX(-1) rotate(0deg); }
-  100% { transform: scaleX(-1) rotate(10deg); }
-}
-
-/* =====================
-   EMBER TEXT SHADOW
-===================== */
-.phase-2 .number,
-.phase-3 .number,
-.phase-4 .number {
-	animation: ember-pulse 1.4s infinite alternate;
-}
-
-@keyframes ember-pulse {
-	0% {
-		text-shadow:
-			var(--shadow-outline),
-			0 0 6px rgba(255,140,0,.6),
-			0 0 12px rgba(255,90,0,.4),
-			0 0 20px rgba(255,50,0,.2);
-	}
-	100% {
-		text-shadow:
-			var(--shadow-outline),
-			0 0 10px rgba(255,180,0,.9),
-			0 0 18px rgba(255,120,0,.6),
-			0 0 28px rgba(255,70,0,.35);
-	}
-}
-
-.holy-fire .number {
-	animation: holy-ember 1.8s infinite alternate;
-	color: #eaf6ff;
-	--shadow-outline: 0 0 5px rgba(0,0,0,0.7);
-}
-
-@keyframes holy-ember {
-	0% {
-		text-shadow:
-			var(--shadow-outline),
-			0 0 6px rgba(180,220,255,.6),
-			0 0 14px rgba(120,180,255,.45),
-			0 0 24px rgba(80,140,255,.3);
-	}
-	100% {
-		text-shadow:
-			var(--shadow-outline),
-			0 0 12px rgba(220,245,255,.95),
-			0 0 22px rgba(160,210,255,.7),
-			0 0 36px rgba(100,160,255,.45);
-	}
-}
-/* ===== BURST OVERRIDE ===== */
 .fire.burst {
 	animation: flame-burst 600ms ease-out forwards;
 }
