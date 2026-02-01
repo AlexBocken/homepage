@@ -1215,7 +1215,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 
 	<!-- Toggle Controls & Streak Counter -->
 	<div class="controls-row">
-		<StreakCounter user={data.session?.user} />
+		<StreakCounter streakData={data.streakData} />
 		<div class="toggle-controls">
 			<!-- Luminous Mysteries Toggle -->
 			<Toggle
