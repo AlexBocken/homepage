@@ -2,37 +2,47 @@
 import { browser } from '$app/environment';
 import { getRosaryStreak } from '$lib/stores/rosaryStreak.svelte';
 import StreakAura from '$lib/components/StreakAura.svelte';
+import { tick, onMount } from 'svelte';
 
+let burst = $state(false);
+let streak = $state<ReturnType<typeof getRosaryStreak> | null>(null);
 
 interface Props {
-	user?: { nickname?: string } | null;
+	streakData?: { length: number; lastPrayed: string | null } | null;
 }
 
-let { user = null }: Props = $props();
+let { streakData = null }: Props = $props();
 
-const streak = browser ? getRosaryStreak() : null;
+// Derive display values: use store when available, fall back to server data for SSR
+let displayLength = $derived(streak?.length ?? streakData?.length ?? 0);
+let prayedToday = $derived(streak?.prayedToday ?? (streakData?.lastPrayed === new Date().toISOString().split('T')[0]));
 
-
-// Sync with server when user is logged in
-$effect(() => {
-	if (browser && streak) {
-		streak.setLoggedIn(!!user?.nickname);
-	}
+// Initialize store on mount (client-side only)
+onMount(() => {
+	streak = getRosaryStreak();
+	streak.initWithServerData(streakData, streakData !== null);
 });
+
+async function pray() {
+	burst = true;
+	await tick();
+	setTimeout(() => burst = false, 700);
+	streak?.recordPrayer();
+}
 </script>
 
 <div class="streak-container">
 	<div class="streak-display">
-		<StreakAura value={streak?.length ?? 0} />
-		<span class="streak-label">Tag{#if streak?.length !== 1}e{/if}</span>
+		<StreakAura value={displayLength} {burst} />
+		<span class="streak-label">Tag{#if displayLength !== 1}e{/if}</span>
 	</div>
 	<button
 		class="streak-button"
-		onclick={() => streak?.recordPrayer()}
-		disabled={streak?.prayedToday}
+		onclick={pray}
+  		disabled={prayedToday}
 		aria-label="Gebet als gebetet markieren"
 	>
-		{#if streak?.prayedToday}
+		{#if prayedToday}
 			Heute gebetet
 		{:else}
 			Gebetet

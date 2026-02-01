@@ -4,6 +4,11 @@ import type { PageServerLoad } from './$types';
 // TODO: allow prerendering/fetching of bible verses at compile time while keeping the rest dynamic.
 // export const prerender = true; # breaks user logged-in state
 
+interface StreakData {
+  length: number;
+  lastPrayed: string | null;
+}
+
 async function fetchBibleData(reference: string, fetch: typeof globalThis.fetch): Promise<{ text: string; verseData: VerseData | null }> {
   try {
     const response = await fetch(`/api/glaube/bibel/${encodeURIComponent(reference)}`);
@@ -33,7 +38,9 @@ async function fetchBibleData(reference: string, fetch: typeof globalThis.fetch)
   }
 }
 
-export const load: PageServerLoad = async ({ fetch }) => {
+export const load: PageServerLoad = async ({ fetch, locals }) => {
+  const session = await locals.auth();
+
   // Fetch Bible texts for all mysteries at build time
   const mysteryDescriptions: Record<string, MysteryDescription[]> = {
     lichtreichen: [],
@@ -59,7 +66,21 @@ export const load: PageServerLoad = async ({ fetch }) => {
     mysteryDescriptions[mysteryType] = descriptions;
   }
 
+  // Fetch streak data for logged-in users via API route
+  let streakData: StreakData | null = null;
+  if (session?.user?.nickname) {
+    try {
+      const res = await fetch('/api/glaube/rosary-streak');
+      if (res.ok) {
+        streakData = await res.json();
+      }
+    } catch {
+      // Server unavailable, client will use localStorage
+    }
+  }
+
   return {
-    mysteryDescriptions
+    mysteryDescriptions,
+    streakData
   };
 };
