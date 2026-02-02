@@ -198,10 +198,21 @@
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	position: relative;
+	font-size: 1.25em;
+	text-align: center;
 }
-
 .prayers-content {
 	scroll-snap-type: y proximity;
 	max-width: 700px;
 }
+
+v[lang=de] i,
+v[lang=en] i{
+	color: grey;
+}
+:global(.monolingual) v[lang=de] i,
+:global(.monolingual) v[lang=en] i{
+	color: var(--red);
+}
+
 </style>
