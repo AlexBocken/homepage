@@ -30,7 +30,7 @@ div.gebet{
 .gebet_wrapper{
 	padding: 1em;
 	background-color: var(--accent-dark);
-	box-shadow: 0 0 1em black;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	max-width: 600px;
 }
 @media(prefers-color-scheme: light){
