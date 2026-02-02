@@ -83,6 +83,38 @@ const mysteriesLatin = {
 	]
 };
 
+// English mysteries (TODO: translate)
+const mysteriesEnglish = {
+	freudenreich: [
+		"Jesus, whom thou, O Virgin, didst conceive of the Holy Spirit.",
+		"Jesus, whom thou, O Virgin, didst carry to Elizabeth.",
+		"Jesus, whom thou, O Virgin, didst bring forth in Bethlehem.",
+		"Jesus, whom thou, O Virgin, didst present in the Temple.",
+		"Jesus, whom thou, O Virgin, didst find in the Temple."
+	],
+	schmerzhaften: [
+		"Jesus, who sweat blood for us.",
+		"Jesus, who was scourged for us.",
+		"Jesus, who was crowned with thorns for us.",
+		"Jesus, who carried the heavy cross for us.",
+		"Jesus, who was crucified for us."
+	],
+	glorreichen: [
+		"Jesus, who rose from the dead.",
+		"Jesus, who ascended into heaven.",
+		"Jesus, who sent us the Holy Spirit.",
+		"Jesus, who took thee, O Virgin, into heaven.",
+		"Jesus, who crowned thee, O Virgin, in heaven."
+	],
+	lichtreichen: [
+		"Jesus, who was baptized by John.",
+		"Jesus, who revealed Himself at the wedding in Cana.",
+		"Jesus, who proclaimed the Kingdom of God.",
+		"Jesus, who was transfigured on the mountain.",
+		"Jesus, who gave us the Eucharist."
+	]
+};
+
 // Short titles for mysteries (for display in headings)
 const mysteryTitles = {
 	freudenreich: [
@@ -115,6 +147,38 @@ const mysteryTitles = {
 	]
 };
 
+// English short titles for mysteries (TODO: translate)
+const mysteryTitlesEnglish = {
+	freudenreich: [
+		"Annunciation",
+		"Visitation",
+		"Nativity",
+		"Presentation",
+		"Finding in the Temple"
+	],
+	schmerzhaften: [
+		"Agony in the Garden",
+		"Scourging",
+		"Crowning with Thorns",
+		"Carrying of the Cross",
+		"Crucifixion"
+	],
+	glorreichen: [
+		"Resurrection",
+		"Ascension",
+		"Descent of the Holy Spirit",
+		"Assumption of Mary",
+		"Coronation of Mary"
+	],
+	lichtreichen: [
+		"Baptism",
+		"Wedding at Cana",
+		"Proclamation of the Kingdom",
+		"Transfiguration",
+		"Institution of the Eucharist"
+	]
+};
+
 // Toggle for including Luminous mysteries
 let includeLuminous = $state(true);
 
@@ -122,7 +186,47 @@ let includeLuminous = $state(true);
 let hasLoadedFromStorage = false;
 
 // Create language context for prayer components (LanguageToggle will use this)
-createLanguageContext();
+const langContext = createLanguageContext({ urlLang: data.lang });
+
+// Update lang store when data.lang changes (e.g., after navigation)
+$effect(() => {
+	langContext.lang.set(data.lang);
+});
+
+// UI labels based on URL language (reactive)
+const isEnglish = $derived(data.lang === 'en');
+const labels = $derived({
+	pageTitle: isEnglish ? 'Interactive Rosary' : 'Interaktiver Rosenkranz',
+	pageDescription: isEnglish
+		? 'Interactive digital version of the Rosary for praying along. Scroll through the prayers and follow the visualization.'
+		: 'Interaktive digitale Version des Rosenkranzes zum Mitbeten. Scrolle durch die Gebete und folge der Visualisierung.',
+	mysteries: isEnglish ? 'Mysteries' : 'Geheimnisse',
+	today: isEnglish ? 'Today' : 'Heutige',
+	joyful: isEnglish ? 'Joyful' : 'Freudenreiche',
+	sorrowful: isEnglish ? 'Sorrowful' : 'Schmerzhaften',
+	glorious: isEnglish ? 'Glorious' : 'Glorreichen',
+	luminous: isEnglish ? 'Luminous' : 'Lichtreichen',
+	includeLuminous: isEnglish ? 'Include Luminous Mysteries' : 'Lichtreiche Geheimnisse einbeziehen',
+	beginning: isEnglish ? 'Beginning' : 'Anfang',
+	signOfCross: isEnglish ? '♱ Sign of the Cross' : '♱ Das Kreuzzeichen',
+	ourFather: isEnglish ? 'Our Father' : 'Vater unser',
+	hailMary: isEnglish ? 'Hail Mary' : 'Ave Maria',
+	faith: isEnglish ? 'Faith' : 'Glaube',
+	hope: isEnglish ? 'Hope' : 'Hoffnung',
+	love: isEnglish ? 'Love' : 'Liebe',
+	decade: isEnglish ? 'Decade' : 'Gesätz',
+	optional: isEnglish ? 'optional' : 'optional',
+	gloriaPatri: 'Gloria Patri',
+	fatimaPrayer: isEnglish ? 'Fatima Prayer' : 'Das Fatima Gebet',
+	conclusion: isEnglish ? 'Conclusion' : 'Abschluss',
+	finalPrayer: isEnglish ? 'Final Prayer' : 'Schlussgebet',
+	footnoteSign: isEnglish ? 'Make the Sign of the Cross here' : 'Hier das Kreuzzeichen machen',
+	footnoteBow: isEnglish ? 'Bow the head here' : 'Hier den Kopf senken',
+	showBibleVerse: isEnglish ? 'Show Bible verse' : 'Bibelstelle anzeigen',
+	mysteryFaith: isEnglish ? 'Jesus, who may increase our faith' : 'Jesus, der in uns den Glauben vermehre',
+	mysteryHope: isEnglish ? 'Jesus, who may strengthen our hope' : 'Jesus, der in uns die Hoffnung stärke',
+	mysteryLove: isEnglish ? 'Jesus, who may kindle our love' : 'Jesus, der in uns die Liebe entzünde'
+});
 
 // Save luminous toggle state to localStorage whenever it changes (but only after initial load)
 $effect(() => {
@@ -170,7 +274,8 @@ let todaysMystery = $state(initialMystery); // Track today's auto-selected myste
 // Derive these values from selectedMystery so they update automatically
 let currentMysteries = $derived(mysteries[selectedMystery]);
 let currentMysteriesLatin = $derived(mysteriesLatin[selectedMystery]);
-let currentMysteryTitles = $derived(mysteryTitles[selectedMystery]);
+let currentMysteriesEnglish = $derived(mysteriesEnglish[selectedMystery]);
+let currentMysteryTitles = $derived(isEnglish ? mysteryTitlesEnglish[selectedMystery] : mysteryTitles[selectedMystery]);
 let currentMysteryDescriptions = $derived(data.mysteryDescriptions[selectedMystery] || []);
 
 // Function to switch mysteries
@@ -1125,15 +1230,15 @@ h1 {
 }
 </style>
 <svelte:head>
-	<title>Interaktiver Rosenkranz</title>
-	<meta name="description" content="Interaktive digitale Version des Rosenkranzes zum Mitbeten. Scrolle durch die Gebete und folge der Visualisierung.">
+	<title>{labels.pageTitle}</title>
+	<meta name="description" content={labels.pageDescription}>
 </svelte:head>
 
 <div class="page-container">
-	<h1>Interaktiver Rosenkranz</h1>
+	<h1>{labels.pageTitle}</h1>
 
 
-	<h2 style="text-align:center;">Geheimnisse</h2>
+	<h2 style="text-align:center;">{labels.mysteries}</h2>
 	<!-- Mystery Selector -->
 	<div class="mystery-selector" class:four-mysteries={includeLuminous}>
 		<button
@@ -1142,7 +1247,7 @@ h1 {
 			onclick={() => selectMystery('freudenreich')}
 		>
 			{#if todaysMystery === 'freudenreich'}
-				<span class="today-badge">Heutige</span>
+				<span class="today-badge">{labels.today}</span>
 			{/if}
 				<svg viewBox="-10 0 2058 2048">
   <path d="M1935 90q0 32 -38 91q-21 29 -56 90q-20 55 -63 164q-35 86 -95 143q-22 -21 -43 -45q51 -49 85 -139q49 -130 61 -152q-126 48 -152 63q-76 46 -95 128q-27 -18 -58 -25q28 -104 97 -149q31 -20 138 -52q90 -28 137 -74l29 -39q22 -30 32 -30q21 0 21 26zM1714 653 q-90 30 -113 43q-65 36 -65 90q0 19 20 119q23 116 23 247q0 169 -103 299q-111 141 -275 141q-254 0 -283 87q-16 104 -31 207q-27 162 -76 162q-21 0 -41 -20q-16 -19 -32 -37q-10 3 -33 22q-18 15 -39 15q-28 0 -50 -44.5t-30 -44.5q-10 0 -35.5 11.5t-41.5 11.5 q-47 0 -58.5 -45.5t-21.5 -45.5t-29.5 2.5t-29.5 2.5q-46 0 -46 -30q0 -16 14 -44.5t14 -44.5q0 -8 -46.5 -25.5t-46.5 -48.5q0 -34 35.5 -52t99.5 -31q91 -19 103 -22q113 -32 171 -93q37 -39 105 -165q34 -64 43 -82q26 -53 31 -85q-129 -67 -224 -76q-33 0 -96 -11 q-36 -13 -36 -41q0 -7 2 -19.5t2 -19.5q0 -20 -67.5 -42t-67.5 -64q0 -11 8.5 -30t8.5 -30q0 -15 -79 -39t-79 -63q0 -16 9 -45t9 -45q0 -20 -29 -43q-23 -17 -46 -33q-49 -44 -49 -215q0 -8 1 -15q91 53 194 68l282 16q202 12 304 59q143 65 143 210q0 15 -2 44t-2 44 q0 122 78 122q73 0 108 -133q16 -70 32 -139q21 -81 57 -119q46 -51 130 -51q71 0 122 61q90 107 154 149zM1597 636q-25 -22 -77 -91q-30 -40 -75 -40q-91 0 -131 115q-30 106 -59 213q-44 115 -144 115q-146 0 -146 -180q0 -16 2.5 -46.5t2.5 -46.5q0 -62 -19 -87 q-70 -92 -303 -115q-173 -9 -347 -18q-55 -6 -116 -30v34q0 27 57.5 73.5t57.5 91.5q0 16 -10.5 45t-10.5 44q1 1 7 1q3 0 7 1q146 36 146 105q0 13 -8.5 32.5t-8.5 27.5h10q5 0 9 1q61 15 86 36q32 28 28 85q173 15 372 107q-7 77 -80 215q-67 128 -127 195 q-67 74 -169 104q-96 24 -193 47q-10 3 -29 13q86 18 86 70q0 19 -19 62q15 -5 33 -5q42 0 59 26q8 11 22 61l-1 3q10 0 34.5 -11.5t42.5 -11.5q55 0 88 84q38 -32 64 -32q37 0 66 41q25 -53 33 -151q10 -112 23 -154q43 -136 337 -136q116 0 215 -108q105 -114 105 -277 q0 -23 -12 -112l-28 -207q-4 -30 -4 -42q0 -97 124 -147zM1506 605q0 38 -38 38q-39 0 -39 -38t39 -38q38 0 38 38z" />
@@ -1152,7 +1257,7 @@ h1 {
   <path d="m 1184.6228,1956.284 c -4.807,-8.0003 -6.8298,-42.7561 -6.0684,-104.2674 0.7614,-61.5113 2.7093,-100.0139 5.8437,-115.508 3.1343,-15.4941 11.8445,-27.5329 26.1306,-36.117 30.2866,-18.198 54.7006,-11.868 73.242,18.99 5.4937,9.1432 8.145,43.3269 7.9537,102.5512 -0.081,52.9359 -1.4296,89.5231 -4.0464,109.7617 -2.276,16.9226 -11.1284,30.0192 -26.5575,39.29 -33.1439,19.9148 -58.643,15.0146 -76.4977,-14.7005 z" />
   <path d="m 1773.3127,1737.6952 c -9.0153,-2.4157 -34.6139,-26.0118 -76.7955,-70.7882 -42.1816,-44.7764 -67.5266,-73.826 -76.035,-87.1489 -8.5084,-13.3228 -10.6057,-28.0334 -6.2922,-44.1323 9.145,-34.1293 31.1041,-46.5353 65.8774,-37.2179 10.3033,2.7609 35.9565,25.5088 76.9595,68.2441 36.7142,38.1352 61.1596,65.3907 73.3362,81.7668 10.1182,13.7541 12.8479,29.3245 8.1892,46.7113 -10.0077,37.3492 -31.7542,51.5375 -65.2396,42.5651 z" />
 			</svg>
-			<h3>Freudenreiche</h3>
+			<h3>{labels.joyful}</h3>
 		</button>
 
 		<button
@@ -1161,12 +1266,12 @@ h1 {
 			onclick={() => selectMystery('schmerzhaften')}
 		>
 			{#if todaysMystery === 'schmerzhaften'}
-				<span class="today-badge">Heutige</span>
+				<span class="today-badge">{labels.today}</span>
 			{/if}
 			<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 				<svg  viewBox="0 0 512 512" ><path d="M255.094 24.875c-16.73 9.388-34.47 42.043-41.688 59.47-14.608-2.407-28.87-3.664-42.562-3.75-11.446-.074-22.49.68-33.03 2.218-16.34-8.284-34.766-29.065-42.626-50-9.324 15.704-9.558 42.313-5.782 64.593-19.443 9.72-35.107 23.633-45.53 41.688-7.262 12.577-11.5 26.34-12.97 40.875 13.294-25.904 35-46.957 65.656-54.345-34.99 31.783-59.85 87.186-51.5 129.406-1.2 22.87-9.48 37.647-24.75 44.595 16.335 4.59 35.497 3.343 49.438-1.28 24.94 34.82 60.818 67.882 105.063 94.342-6.952 17.613-16.677 49.21-16.47 66.032 10.846-13.178 37.433-40.585 61.72-42.783 23.656 10.27 47.35 17.698 70.312 22.313 12.423 17.25 12.895 38.867 7.375 53.594 16.402-9.2 33.82-33.187 39.938-48 47.1 1.423 88.046-10.534 114.718-35.563 17.536 5.52 30.744 15.707 39.813 30.5.243-19.578-8.05-44.353-18-60.31 13.42-28.268 12.786-61.81.5-96.158l.405.47c9.976-11.804 18.304-33.19 18.063-52.907-8.535 10.373-20.727 15.14-36.75 14.188-13.56-22.597-31.81-44.812-54.032-65.375 10.56-19.27 30.402-36.43 44.156-47.97-18.985-5.337-67.794 5.2-80.78 17.782l5.906 8.5c5.637 11.99 9.503 24.423 11.093 37.063-26.323-37.275-70.72-74.72-114.905-95.625-15.894-25.424-19.322-56.118-12.78-73.563zm-82.875 97.063c1.13-.015 2.258-.008 3.405 0 31.56.2 68.888 8.842 107 25.656-8.8 20.095-14.74 44.482-10 61.344 13.33-18.637 37.313-34.22 55.406-37.5 55.904 34.315 96.215 78.718 111.658 118.718l.093.22c16.088 37.88 13.36 85.186-26.56 117.312 4.79-11.41 7.986-23.828 9.5-36.438-14.078 10.012-33.524 15.304-56.314 15.97-1.954-17.242-9.117-52.874-22.28-65.72 1.565 16.122-8.11 46.272-26.22 61.063-31.916-6.495-66.794-19.67-101.03-39.438-9.538-5.506-18.65-11.307-27.314-17.344-3.444-23.614 7.842-53.562 20.563-64.03-18.967-.234-46.71 22.156-59.313 32.75-40.974-38.47-64.14-81.11-61.25-115 16.275-1.708 36.144.927 51.72 8-3.92-15.382-18.553-31.733-34.407-44.344 14.757-13.826 37.7-20.852 65.344-21.22z"/></svg>
 			</svg>
-			<h3>Schmerzhaften</h3>
+			<h3>{labels.sorrowful}</h3>
 		</button>
 
 		<button
@@ -1175,7 +1280,7 @@ h1 {
 			onclick={() => selectMystery('glorreichen')}
 		>
 			{#if todaysMystery === 'glorreichen'}
-				<span class="today-badge">Heutige</span>
+				<span class="today-badge">{labels.today}</span>
 			{/if}
 		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="-10 0 2060 2048">
    <path
@@ -1188,7 +1293,7 @@ q-32 -54 -32 -124q0 -121 75 -121q19 0 77 36v-20q0 -27 -31 -151q-27 43 -59 43q-19
 q0 141 342 175q132 13 150 13h726q-9 0 55 -5q437 -34 437 -183q0 -88 -105 -111l40 -215q-2 0 -5 1q-31 0 -31 -51q0 -32 16 -62q19 -34 48 -39zM1518 888q0 34 -30 34q-34 0 -34 -34t32 -34t32 34zM1099 880q0 30 -22 51t-52 21q-29 0 -51.5 -21.5t-22.5 -50.5
 q0 -31 22 -54.5t52 -23.5q31 0 52.5 23.5t21.5 54.5zM596 888q0 34 -34 34q-30 0 -30 -34t32 -34t32 34z" />
 </svg>
-			<h3>Glorreichen</h3>
+			<h3>{labels.glorious}</h3>
 		</button>
 
 		{#if includeLuminous}
@@ -1198,7 +1303,7 @@ q0 -31 22 -54.5t52 -23.5q31 0 52.5 23.5t21.5 54.5zM596 888q0 34 -34 34q-30 0 -30
 			onclick={() => selectMystery('lichtreichen')}
 		>
 			{#if todaysMystery === 'lichtreichen'}
-				<span class="today-badge">Heutige</span>
+				<span class="today-badge">{labels.today}</span>
 			{/if}
 					<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="-10 0 2156 2048">
    <path
@@ -1208,19 +1313,19 @@ t64.5 -39.5h604q33 -94 126 -375q19 -62 61 -184q29 -73 108 -73t110 83q4 11 58 177
 l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10 -41 28 -62q46 -53 144 -120q80 -53 159 -106l296 210l-112 -344l299 -213h140z" />
 </svg>
 
-			<h3>Lichtreichen</h3>
+			<h3>{labels.luminous}</h3>
 		</button>
 		{/if}
 	</div>
 
 	<!-- Toggle Controls & Streak Counter -->
 	<div class="controls-row">
-		<StreakCounter streakData={data.streakData} />
+		<StreakCounter streakData={data.streakData} lang={data.lang} />
 		<div class="toggle-controls">
 			<!-- Luminous Mysteries Toggle -->
 			<Toggle
 				bind:checked={includeLuminous}
-				label="Lichtreiche Geheimnisse einbeziehen"
+				label={labels.includeLuminous}
 				on:change={handleToggleChange}
 			/>
 
@@ -1318,14 +1423,14 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.cross}
 				data-section="cross"
 			>
-				<h2>Anfang</h2>
-				<h3>♱ Das Kreuzzeichen</h3>
+				<h2>{labels.beginning}</h2>
+				<h3>{labels.signOfCross}</h3>
 				<Kreuzzeichen />
 				<h3>Credo</h3>
 				<Credo />
 				<div class="footnotes-section">
-					<p><span class="symbol">♱</span>Hier das Kreuzzeichen machen</p>
-					<p><span class="symbol">⚬</span>Hier den Kopf senken</p>
+					<p><span class="symbol">♱</span>{labels.footnoteSign}</p>
+					<p><span class="symbol">⚬</span>{labels.footnoteBow}</p>
 				</div>
 			</div>
 
@@ -1335,7 +1440,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.lbead1}
 				data-section="lbead1"
 			>
-				<h3>Vater unser</h3>
+				<h3>{labels.ourFather}</h3>
 				<Paternoster />
 			</div>
 
@@ -1345,10 +1450,11 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.start1}
 				data-section="start1"
 			>
-				<h3>Ave Maria: Glaube</h3>
+				<h3>{labels.hailMary}: {labels.faith}</h3>
 				<AveMaria
 					mysteryLatin="Jesus, qui adáugeat nobis fidem"
 					mystery="Jesus, der in uns den Glauben vermehre"
+					mysteryEnglish="Jesus, who may increase our faith"
 				/>
 			</div>
 
@@ -1358,10 +1464,11 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.start2}
 				data-section="start2"
 			>
-				<h3>Ave Maria: Hoffnung</h3>
+				<h3>{labels.hailMary}: {labels.hope}</h3>
 				<AveMaria
 					mysteryLatin="Jesus, qui corróboret nobis spem"
 					mystery="Jesus, der in uns die Hoffnung stärke"
+					mysteryEnglish="Jesus, who may strengthen our hope"
 				/>
 			</div>
 
@@ -1371,10 +1478,11 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.start3}
 				data-section="start3"
 			>
-				<h3>Ave Maria: Liebe</h3>
+				<h3>{labels.hailMary}: {labels.love}</h3>
 				<AveMaria
 					mysteryLatin="Jesus, qui perficiat in nobis caritátem"
 					mystery="Jesus, der in uns die Liebe entzünde"
+					mysteryEnglish="Jesus, who may kindle our love"
 				/>
 			</div>
 
@@ -1384,9 +1492,9 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.lbead2}
 				data-section="lbead2"
 			>
-				<h3>Gloria Patri</h3>
+				<h3>{labels.gloriaPatri}</h3>
 				<GloriaPatri />
-				<h3>Vater unser</h3>
+				<h3>{labels.ourFather}</h3>
 				<Paternoster />
 			</div>
 
@@ -1398,13 +1506,14 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 					bind:this={sectionElements[`secret${decadeNum}`]}
 					data-section={`secret${decadeNum}`}
 				>
-					<h2>{decadeNum}. Gesätz: {currentMysteryTitles[decadeNum - 1]}</h2>
+					<h2>{decadeNum}. {labels.decade}: {currentMysteryTitles[decadeNum - 1]}</h2>
 
 					<!-- Mystery description with Bible reference button -->
-					<h3>Ave Maria <span class="repeat-count">(10×)</span></h3>
+					<h3>{labels.hailMary} <span class="repeat-count">(10×)</span></h3>
 					<AveMaria
 						mysteryLatin={currentMysteriesLatin[decadeNum - 1]}
 						mystery={currentMysteries[decadeNum - 1]}
+						mysteryEnglish={currentMysteriesEnglish[decadeNum - 1]}
 					/>
 
 					<!-- Bible reference and counter buttons -->
@@ -1415,7 +1524,7 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 							<button
 								class="bible-reference-button"
 								onclick={() => handleCitationClick(description.reference, description.title, description.verseData)}
-								aria-label="Bibelstelle anzeigen"
+								aria-label={labels.showBibleVerse}
 							>
 								📖
 							</button>
@@ -1431,13 +1540,13 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 						bind:this={sectionElements[`secret${decadeNum}_transition`]}
 						data-section={`secret${decadeNum}_transition`}
 					>
-						<h3>Gloria Patri</h3>
+						<h3>{labels.gloriaPatri}</h3>
 						<GloriaPatri />
 
-						<h3>Das Fatima Gebet <span class="repeat-count">(optional)</span></h3>
+						<h3>{labels.fatimaPrayer} <span class="repeat-count">({labels.optional})</span></h3>
 						<FatimaGebet />
 
-						<h3>Vater unser</h3>
+						<h3>{labels.ourFather}</h3>
 						<Paternoster />
 					</div>
 				{/if}
@@ -1449,23 +1558,23 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 				bind:this={sectionElements.final_transition}
 				data-section="final_transition"
 			>
-				<h2>Abschluss</h2>
+				<h2>{labels.conclusion}</h2>
 
-				<h3>Gloria Patri</h3>
+				<h3>{labels.gloriaPatri}</h3>
 				<GloriaPatri />
 
-				<h3>Das Fatima Gebet <span class="repeat-count">(optional)</span></h3>
+				<h3>{labels.fatimaPrayer} <span class="repeat-count">({labels.optional})</span></h3>
 				<FatimaGebet />
 
 				<h3>Salve Regina</h3>
 				<SalveRegina />
 
-				<h3>Schlussgebet</h3>
+				<h3>{labels.finalPrayer}</h3>
 				<RosaryFinalPrayer />
 
 				<h3 style="text-align: center; font-size: 2.5rem; margin-top: 2rem;">♱</h3>
 				<div class="footnotes-section">
-					<p><span class="symbol">♱</span>Hier das Kreuzzeichen machen</p>
+					<p><span class="symbol">♱</span>{labels.footnoteSign}</p>
 				</div>
 			</div>
 		</div>
