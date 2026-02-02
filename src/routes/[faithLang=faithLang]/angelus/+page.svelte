@@ -23,11 +23,9 @@
 </svelte:head>
 
 <div class="angelus-page">
-	<div class="header">
-		<h1>Angelus</h1>
-		<div class="controls">
-			<LanguageToggle />
-		</div>
+	<h1>Angelus</h1>
+	<div class="toggle-controls">
+	<LanguageToggle />
 	</div>
 
 <div class="prayers-content">
@@ -35,7 +33,7 @@
 <Prayer>
 	<!-- First Versicle and Response -->
 	<p>
-		<v lang="la"><i>℣.</i> Angelus Domini nuntiavit Mariae.</v>
+		<v lang="la"><i>℣.</i> Angelus Domini nuntiavit Mariæ.</v>
 		<v lang="de"><i>℣.</i> Der Engel des Herrn brachte Maria die Botschaft</v>
 		<v lang="en"><i>℣.</i> The Angel of the Lord declared unto Mary.</v>
 		<v lang="la"><i>℟.</i> Et concepit de Spiritu Sancto.</v>
@@ -215,4 +213,14 @@ v[lang=en] i{
 	color: var(--red);
 }
 
+h1 {
+	text-align: center;
+	font-size: 2.5rem;
+	margin-bottom: 0.5em;
+}
+.toggle-controls {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 2rem;
+}
 </style>
