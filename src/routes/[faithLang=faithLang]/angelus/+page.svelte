@@ -82,6 +82,10 @@
 </div>
 
 <div class="prayer-section">
+	<AveMaria />
+</div>
+
+<div class="prayer-section">
 <Prayer>
 	<!-- Fourth Versicle and Response -->
 	<p>
