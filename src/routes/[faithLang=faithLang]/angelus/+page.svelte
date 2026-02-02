@@ -185,10 +185,6 @@
 			flex-direction: column;
 			align-items: flex-start;
 		}
-
-		.prayer-content {
-			padding: 1rem;
-		}
 	}
 .prayer-section {
 	scroll-snap-align: start;
