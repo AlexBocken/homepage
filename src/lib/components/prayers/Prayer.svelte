@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { getLanguageContext } from '$lib/contexts/languageContext.js';
 
-	let { latinPrimary = true, children } = $props<{ latinPrimary?: boolean, children?: Snippet }>();
+	let { latinPrimary = true, hasLatin = true, children } = $props<{ latinPrimary?: boolean, hasLatin?: boolean, children?: Snippet }>();
 
 	// Get context if available (graceful fallback for standalone usage)
 	let showLatinStore;
@@ -47,6 +47,12 @@
 .prayer-wrapper :global(v:lang(de)),
 .prayer-wrapper :global(v:lang(en)) { color: grey; }
 
+/* No-Latin prayers: vernacular gets primary color */
+.prayer-wrapper.no-latin :global(v:lang(de)),
+.prayer-wrapper.no-latin :global(v:lang(en)) {
+	color: var(--nord6);
+}
+
 /* Vernacular primary overrides */
 .prayer-wrapper.vernacular-primary :global(v:lang(de)),
 .prayer-wrapper.vernacular-primary :global(v:lang(en)) {
@@ -67,7 +73,9 @@
 	.prayer-wrapper :global(v:lang(la)),
 	.prayer-wrapper.vernacular-primary :global(v:lang(de)),
 	.prayer-wrapper.vernacular-primary :global(v:lang(en)),
-	.prayer-wrapper.monolingual :global(v:not(:lang(la))) {
+	.prayer-wrapper.monolingual :global(v:not(:lang(la))),
+	.prayer-wrapper.no-latin :global(v:lang(de)),
+	.prayer-wrapper.no-latin :global(v:lang(en)) {
 		color: black;
 	}
 }
@@ -145,6 +153,7 @@
 	class="prayer-wrapper"
 	class:vernacular-primary={!latinPrimary}
 	class:monolingual={!showLatin}
+	class:no-latin={!hasLatin}
 	class:lang-de={urlLang === 'de'}
 	class:lang-en={urlLang === 'en'}
 >
