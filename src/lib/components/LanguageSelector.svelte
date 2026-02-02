@@ -9,14 +9,20 @@
 	let langButton: HTMLButtonElement;
 	let langOptions: HTMLDivElement;
 
+	// Faith subroute mappings
+	const faithSubroutes: Record<string, Record<string, string>> = {
+		en: { gebete: 'prayers', rosenkranz: 'rosary', angelus: 'angelus' },
+		de: { prayers: 'gebete', rosary: 'rosenkranz', angelus: 'angelus' }
+	};
+
 	$effect(() => {
 		// Update current language and path when page changes (reactive to browser navigation)
 		const path = $page.url.pathname;
 		currentPath = path;
 
-		if (path.startsWith('/recipes')) {
+		if (path.startsWith('/recipes') || path.startsWith('/faith')) {
 			languageStore.set('en');
-		} else if (path.startsWith('/rezepte')) {
+		} else if (path.startsWith('/rezepte') || path.startsWith('/glaube')) {
 			languageStore.set('de');
 		} else if (path === '/') {
 			// On main page, read from localStorage
@@ -31,6 +37,24 @@
 		if (langOptions) {
 			langOptions.hidden = !langOptions.hidden;
 		}
+	}
+
+	function convertFaithPath(path: string, targetLang: 'de' | 'en'): string {
+		// Extract the current base and subroute
+		const faithMatch = path.match(/^\/(glaube|faith)(\/(.+))?$/);
+		if (!faithMatch) return path;
+
+		const targetBase = targetLang === 'en' ? 'faith' : 'glaube';
+		const subroute = faithMatch[3]; // e.g., "gebete", "rosenkranz", "angelus"
+
+		if (!subroute) {
+			// Main faith page
+			return `/${targetBase}`;
+		}
+
+		// Convert subroute
+		const convertedSubroute = faithSubroutes[targetLang][subroute] || subroute;
+		return `/${targetBase}/${convertedSubroute}`;
 	}
 
 	async function switchLanguage(lang: 'de' | 'en') {
@@ -48,6 +72,13 @@
 		// If on main page, dispatch event instead of reloading
 		if (path === '/') {
 			window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
+			return;
+		}
+
+		// Handle faith pages
+		if (path.startsWith('/glaube') || path.startsWith('/faith')) {
+			const newPath = convertFaithPath(path, lang);
+			await goto(newPath);
 			return;
 		}
 
@@ -76,7 +107,7 @@
 		} else if (lang === 'de' && path.startsWith('/recipes')) {
 			newPath = path.replace('/recipes', '/rezepte');
 		} else if (!path.startsWith('/rezepte') && !path.startsWith('/recipes')) {
-			// On other pages (glaube, cospend, etc), go to recipe home
+			// On other pages (cospend, etc), go to recipe home
 			newPath = lang === 'en' ? '/recipes' : '/rezepte';
 		}
 
