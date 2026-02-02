@@ -44,12 +44,12 @@
 	</p>
 </Prayer>
 	</div>
-	</div>
-<div class="prayer-content">
+	<div class="prayer-section">
 	<AveMaria />
+	</div>
 </div>
 
-<div class="prayer-content">
+<div class="prayer-section">
 <Prayer>
 	<!-- Second Versicle and Response -->
 	<p>
@@ -63,11 +63,11 @@
 </Prayer>
 </div>
 
-<div class="prayer-content">
+<div class="prayer-section">
 	<AveMaria />
 </div>
 
-<div class="prayer-content">
+<div class="prayer-section">
 <Prayer>
 	<!-- Third Versicle and Response -->
 	<p>
@@ -81,7 +81,7 @@
 </Prayer>
 </div>
 
-<div class="prayer-content">
+<div class="prayer-section">
 <Prayer>
 	<!-- Fourth Versicle and Response -->
 	<p>
@@ -94,7 +94,7 @@
 	</p>
 </Prayer>
 </div>
-<div class="prayer-content">
+<div class="prayer-section">
 <Prayer>
 	<!-- Closing Prayer -->
 	<p>
@@ -105,21 +105,40 @@
 
 	<p>
 		<v lang="la">
-			Gratiam tuam, quaesumus, Domine, mentibus nostris infunde; ut qui, Angelo nuntiante,
-			Christi Filii tui incarnationem cognovimus, per passionem eius et crucem ad
-			resurrectionis gloriam perducamur. Per eumdem Christum Dominum nostrum. Amen.
+		   Gratiam tuam, quaesumus, Domine, mentibus nostris infunde;
 		</v>
 		<v lang="de">
-			Allmächtiger Gott, gieße deine Gnade in unsere Herzen ein. Durch die Botschaft des
-			Engels haben wir die Menschwerdung Christi, deines Sohnes, erkannt. Lass uns durch
-			sein Leiden und Kreuz zur Herrlichkeit der Auferstehung gelangen. Darum bitten wir
-			durch Christus, unseren Herrn. Amen.
+		   Allmächtiger Gott, gieße deine Gnade in unsere Herzen ein.
 		</v>
 		<v lang="en">
-			Pour forth, we beseech Thee, O Lord, Thy grace into our hearts, that we to whom the
-			Incarnation of Christ Thy Son was made known by the message of an angel, may by His
-			Passion and Cross be brought to the glory of His Resurrection. Through the same Christ
-			Our Lord. Amen.
+		   Pour forth, we beseech Thee, O Lord, Thy grace into our hearts,
+		</v>
+		<v lang="la">
+		   ut qui, Angelo nuntiante, Christi Filii tui incarnationem cognovimus,
+		</v>
+		<v lang="de">
+	           Durch die Botschaft des Engels haben wir die Menschwerdung Christi, deines Sohnes, erkannt.
+		</v>
+		<v lang="en">
+		   that we to whom the Incarnation of Christ Thy Son was made known by the message of an angel,
+		</v>
+		<v lang="la">
+		   per passionem eius et crucem ad resurrectionis gloriam perducamur.
+		</v>
+		<v lang="de">
+		   Lass uns durch sein Leiden und Kreuz zur Herrlichkeit der Auferstehung gelangen.
+		</v>
+		<v lang="en">
+		    may by His Passion and Cross be brought to the glory of His Resurrection.
+		</v>
+		<v lang="la">
+		    Per eumdem Christum Dominum nostrum. Amen.
+		</v>
+		<v lang="de">
+		    Darum bitten wir durch Christus, unseren Herrn. Amen.
+		</v>
+		<v lang="en">
+	            Through the same Christ Our Lord. Amen.
 		</v>
 	</p>
 </Prayer>
