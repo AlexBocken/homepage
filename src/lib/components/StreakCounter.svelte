@@ -9,13 +9,24 @@ let streak = $state<ReturnType<typeof getRosaryStreak> | null>(null);
 
 interface Props {
 	streakData?: { length: number; lastPrayed: string | null } | null;
+	lang?: 'de' | 'en';
 }
 
-let { streakData = null }: Props = $props();
+let { streakData = null, lang = 'de' }: Props = $props();
+
+const isEnglish = $derived(lang === 'en');
 
 // Derive display values: use store when available, fall back to server data for SSR
 let displayLength = $derived(streak?.length ?? streakData?.length ?? 0);
 let prayedToday = $derived(streak?.prayedToday ?? (streakData?.lastPrayed === new Date().toISOString().split('T')[0]));
+
+// Labels need to come after displayLength since they depend on it
+const labels = $derived({
+	days: isEnglish ? (displayLength === 1 ? 'Day' : 'Days') : (displayLength === 1 ? 'Tag' : 'Tage'),
+	prayed: isEnglish ? 'Prayed' : 'Gebetet',
+	prayedToday: isEnglish ? 'Prayed today' : 'Heute gebetet',
+	ariaLabel: isEnglish ? 'Mark prayer as prayed' : 'Gebet als gebetet markieren'
+});
 
 // Initialize store on mount (client-side only)
 onMount(() => {
@@ -34,18 +45,18 @@ async function pray() {
 <div class="streak-container">
 	<div class="streak-display">
 		<StreakAura value={displayLength} {burst} />
-		<span class="streak-label">Tag{#if displayLength !== 1}e{/if}</span>
+		<span class="streak-label">{labels.days}</span>
 	</div>
 	<button
 		class="streak-button"
 		onclick={pray}
   		disabled={prayedToday}
-		aria-label="Gebet als gebetet markieren"
+		aria-label={labels.ariaLabel}
 	>
 		{#if prayedToday}
-			Heute gebetet
+			{labels.prayedToday}
 		{:else}
-			Gebetet
+			{labels.prayed}
 		{/if}
 	</button>
 </div>

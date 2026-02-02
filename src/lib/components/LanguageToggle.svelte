@@ -4,7 +4,7 @@
 	import Toggle from './Toggle.svelte';
 
 	// Get the language context (must be created by parent page)
-	const { showLatin } = getLanguageContext();
+	const { showLatin, lang } = getLanguageContext();
 
 	// Local state for the checkbox
 	let showBilingual = true;
@@ -20,6 +20,11 @@
 		localStorage.setItem('rosary_showBilingual', showBilingual.toString());
 	}
 
+	// Dynamic label based on URL language
+	$: label = $lang === 'en'
+		? 'Show Latin and English'
+		: 'Lateinisch und Deutsch anzeigen';
+
 	onMount(() => {
 		// Load from localStorage
 		const saved = localStorage.getItem('rosary_showBilingual');
@@ -34,6 +39,6 @@
 
 <Toggle
 	bind:checked={showBilingual}
-	label="Lateinisch und Deutsch anzeigen"
+	{label}
 	accentColor="var(--nord14)"
 />
