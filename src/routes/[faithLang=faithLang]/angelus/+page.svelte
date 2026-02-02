@@ -2,13 +2,19 @@
 	import { createLanguageContext } from "$lib/contexts/languageContext.js";
 	import LanguageToggle from "$lib/components/LanguageToggle.svelte";
 	import Prayer from '$lib/components/prayers/Prayer.svelte';
-	import Angelus from "$lib/components/prayers/Angelus.svelte";
 	import AveMaria from '$lib/components/prayers/AveMaria.svelte';
-import "$lib/css/christ.css";
-import "$lib/css/rosenkranz.css";
+	import "$lib/css/christ.css";
+	import "$lib/css/rosenkranz.css";
+
+	let { data } = $props();
 
 	// Create language context for prayer components
-	createLanguageContext();
+	const langContext = createLanguageContext({ urlLang: data.lang });
+
+	// Update lang store when data.lang changes (e.g., after navigation)
+	$effect(() => {
+		langContext.lang.set(data.lang);
+	});
 </script>
 
 <svelte:head>
