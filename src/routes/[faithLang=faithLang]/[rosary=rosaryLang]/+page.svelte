@@ -11,6 +11,7 @@ import GloriaPatri from "$lib/components/prayers/GloriaPatri.svelte";
 import FatimaGebet from "$lib/components/prayers/FatimaGebet.svelte";
 import SalveRegina from "$lib/components/prayers/SalveRegina.svelte";
 import RosaryFinalPrayer from "$lib/components/prayers/RosaryFinalPrayer.svelte";
+import MichaelGebet from "$lib/components/prayers/MichaelGebet.svelte";
 import BenedictusMedal from "$lib/components/BenedictusMedal.svelte";
 import CounterButton from "$lib/components/CounterButton.svelte";
 import BibleModal from "$lib/components/BibleModal.svelte";
@@ -220,6 +221,7 @@ const labels = $derived({
 	fatimaPrayer: isEnglish ? 'Fatima Prayer' : 'Das Fatima Gebet',
 	conclusion: isEnglish ? 'Conclusion' : 'Abschluss',
 	finalPrayer: isEnglish ? 'Final Prayer' : 'Schlussgebet',
+	saintMichael: isEnglish ? 'Prayer to St. Michael the Archangel' : 'Gebet zum hl. Erzengel Michael',
 	footnoteSign: isEnglish ? 'Make the Sign of the Cross here' : 'Hier das Kreuzzeichen machen',
 	footnoteBow: isEnglish ? 'Bow the head here' : 'Hier den Kopf senken',
 	showBibleVerse: isEnglish ? 'Show Bible verse' : 'Bibelstelle anzeigen',
@@ -1571,6 +1573,9 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 
 				<h3>{labels.finalPrayer}</h3>
 				<RosaryFinalPrayer />
+
+				<h3>{labels.saintMichael}</h3>
+				<MichaelGebet />
 
 				<h3 style="text-align: center; font-size: 2.5rem; margin-top: 2rem;">♱</h3>
 				<div class="footnotes-section">
