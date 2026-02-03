@@ -122,6 +122,9 @@
 div:has(.placeholder){
 	position: absolute;
 	top: 0;
+	left: 0;
+	right: 0;
+	margin-inline: auto;
         width: min(1000px, 100dvw);
   	height: max(60dvh,600px);
 	overflow: hidden;
@@ -129,12 +132,6 @@ div:has(.placeholder){
 .unblur.image{
 	filter: blur(0px) !important;
 	opacity: 1;
-}
-
-@supports (-moz-appearance:none) {
-	.placeholder{
-		translate: -50% -50%;
-	}
 }
 
 /* DIALOG */
