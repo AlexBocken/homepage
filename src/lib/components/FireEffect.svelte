@@ -6,9 +6,51 @@
 	}
 
 	let { holy = false, burst = false }: Props = $props();
+
+	const burstParticles = [
+		{ x: 10, y: 0,  size: 8,  delay: 0,    dur: 1.6 },
+		{ x: 25, y: 5,  size: 10, delay: 0.05, dur: 1.8 },
+		{ x: 40, y: 10, size: 12, delay: 0.02, dur: 2.0 },
+		{ x: 55, y: 3,  size: 7,  delay: 0.1,  dur: 1.7 },
+		{ x: 70, y: 8,  size: 9,  delay: 0.08, dur: 1.9 },
+		{ x: 85, y: 2,  size: 11, delay: 0.12, dur: 1.6 },
+		{ x: 15, y: 15, size: 6,  delay: 0.15, dur: 1.5 },
+		{ x: 35, y: 20, size: 10, delay: 0.18, dur: 1.8 },
+		{ x: 50, y: 12, size: 8,  delay: 0.07, dur: 2.0 },
+		{ x: 65, y: 18, size: 7,  delay: 0.22, dur: 1.7 },
+		{ x: 80, y: 25, size: 9,  delay: 0.1,  dur: 1.9 },
+		{ x: 20, y: 30, size: 11, delay: 0.25, dur: 1.6 },
+		{ x: 45, y: 22, size: 6,  delay: 0.03, dur: 1.8 },
+		{ x: 60, y: 28, size: 10, delay: 0.2,  dur: 2.0 },
+		{ x: 75, y: 15, size: 8,  delay: 0.14, dur: 1.5 },
+		{ x: 30, y: 35, size: 12, delay: 0.28, dur: 1.7 },
+		{ x: 5,  y: 10, size: 7,  delay: 0.06, dur: 1.9 },
+		{ x: 90, y: 20, size: 9,  delay: 0.16, dur: 1.6 },
+		{ x: 48, y: 32, size: 8,  delay: 0.3,  dur: 2.0 },
+		{ x: 22, y: 8,  size: 10, delay: 0.11, dur: 1.8 },
+		{ x: 68, y: 35, size: 6,  delay: 0.23, dur: 1.5 },
+		{ x: 38, y: 5,  size: 11, delay: 0.04, dur: 1.7 },
+		{ x: 82, y: 30, size: 7,  delay: 0.26, dur: 1.9 },
+		{ x: 52, y: 18, size: 9,  delay: 0.09, dur: 1.6 },
+	];
 </script>
 
-<div class="fire" class:burst class:holy-fire={holy}>
+{#if burst}
+<div class="burst-particles" class:holy-fire={holy}>
+	{#each burstParticles as p}
+		<div
+			class="bp"
+			style:left="{p.x}%"
+			style:bottom="{p.y}%"
+			style:width="{p.size}px"
+			style:height="{p.size}px"
+			style:animation-delay="{p.delay}s"
+			style:animation-duration="{p.dur}s"
+		></div>
+	{/each}
+</div>
+{:else}
+<div class="fire" class:holy-fire={holy}>
 	<div class="fire-left">
 		<div class="main-fire"></div>
 		<div class="particle-fire"></div>
@@ -28,6 +70,7 @@
 		<div class="main-fire"></div>
 	</div>
 </div>
+{/if}
 
 <style>
 /* =====================
@@ -186,35 +229,46 @@
 }
 
 /* =====================
-   BURST ANIMATION
+   BURST – particles only
 ===================== */
-.fire.burst {
-	animation: flame-burst 600ms ease-out forwards;
+.burst-particles {
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 60px;
+	height: 80px;
+	pointer-events: none;
+	z-index: 6;
 }
 
-.fire.burst .particle-fire {
-	animation: particleBurst 600ms ease-out forwards;
+.burst-particles .bp {
+	position: absolute;
+	background-color: var(--nord13);
+	filter: drop-shadow(0 0 4px var(--nord12));
+	border-radius: 50%;
+	opacity: 0;
+	animation: burstParticleUp 2s ease-out forwards;
 }
 
-@keyframes flame-burst {
+.burst-particles.holy-fire .bp {
+	background-color: #eaf6ff;
+	filter: drop-shadow(0 0 12px rgba(180,220,255,.9));
+}
+
+@keyframes burstParticleUp {
 	0% {
-		transform: translateX(-50%) scale(0.1) translateY(0%);
+		transform: translateY(0) scale(1);
 		opacity: 0;
 	}
-	30% {
+	10% {
 		opacity: 1;
 	}
-	100% {
-		transform: translateX(-50%) scale(2) translateY(-10%);
-		opacity: 0;
+	60% {
+		opacity: 0.8;
 	}
-}
-
-@keyframes particleBurst {
-	0% { opacity: 0; }
-	30% { opacity: 1; }
 	100% {
-		transform: translateY(-120px) scale(0.3);
+		transform: translateY(-80px) scale(0.3);
 		opacity: 0;
 	}
 }
