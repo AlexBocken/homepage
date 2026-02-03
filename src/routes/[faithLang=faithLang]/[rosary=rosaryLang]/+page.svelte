@@ -1122,7 +1122,6 @@ h1 {
 	font-size: 0.85rem;
 	font-weight: 600;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-	z-index: 10;
 }
 
 /* Highlighted bead (orange for counting) */
