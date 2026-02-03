@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { getLanguageContext } from '$lib/contexts/languageContext.js';
 
-	let { latinPrimary = true, hasLatin = true, children } = $props<{ latinPrimary?: boolean, hasLatin?: boolean, children?: Snippet }>();
+	let { latinPrimary = true, hasLatin = true, children } = $props<{ latinPrimary?: boolean, hasLatin?: boolean, children?: Snippet<[boolean, string]> }>();
 
 	// Get context if available (graceful fallback for standalone usage)
 	let showLatinStore;
@@ -157,5 +157,5 @@
 	class:lang-de={urlLang === 'de'}
 	class:lang-en={urlLang === 'en'}
 >
-	{@render children?.()}
+	{@render children?.(showLatin, urlLang)}
 </div>
