@@ -2,7 +2,6 @@
 import { onMount } from "svelte";
 import { createLanguageContext } from "$lib/contexts/languageContext.js";
 import "$lib/css/christ.css";
-import "$lib/css/rosenkranz.css";
 import Kreuzzeichen from "$lib/components/prayers/Kreuzzeichen.svelte";
 import Credo from "$lib/components/prayers/Credo.svelte";
 import Paternoster from "$lib/components/prayers/Paternoster.svelte";
@@ -12,7 +11,6 @@ import FatimaGebet from "$lib/components/prayers/FatimaGebet.svelte";
 import SalveRegina from "$lib/components/prayers/SalveRegina.svelte";
 import RosaryFinalPrayer from "$lib/components/prayers/RosaryFinalPrayer.svelte";
 import MichaelGebet from "$lib/components/prayers/MichaelGebet.svelte";
-import BenedictusMedal from "$lib/components/BenedictusMedal.svelte";
 import CounterButton from "$lib/components/CounterButton.svelte";
 import BibleModal from "$lib/components/BibleModal.svelte";
 import Toggle from "$lib/components/Toggle.svelte";
@@ -753,9 +751,9 @@ onMount(() => {
 	gap: 2rem;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
 	.rosary-layout {
-		grid-template-columns: 400px 1fr;
+		grid-template-columns: clamp(250px, 30vw, 400px) 1fr;
 		gap: 3rem;
 	}
 }
@@ -766,7 +764,7 @@ onMount(() => {
 }
 
 /* Mobile layout: fixed left sidebar for visualization */
-@media (max-width: 1023px) {
+@media (max-width: 900px) {
 	.rosary-layout {
 		grid-template-columns: clamp(20px, 10vw, 80px) 1fr;
 		gap: 0;
@@ -866,7 +864,7 @@ onMount(() => {
 	min-height: 30vh;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 900px) {
 	.prayer-section.decade {
 		padding-bottom: 1.5rem;
 	}
@@ -897,42 +895,6 @@ onMount(() => {
 	font-size: 1.25em;
 }
 
-.prayer-section :global(v) {
-	margin: 0;
-	display: block;
-}
-
-.prayer-section :global(v:lang(la)) {
-	color: var(--nord6);
-}
-
-.prayer-section :global(v:lang(de)) {
-	color: grey;
-}
-
-.prayer-section :global(i) {
-	font-style: normal;
-	color: var(--nord11);
-	font-weight: 900;
-}
-
-@media(prefers-color-scheme: light) {
-	.prayer-section :global(v:lang(la)) {
-		color: black;
-	}
-}
-
-.prayer-section :global(v.mystery-text:lang(la)) {
-	color: var(--nord11) !important;
-	font-weight: 700;
-	font-size: 1.1em;
-}
-
-.prayer-section :global(v.mystery-text:lang(de)) {
-	color: var(--nord12) !important;
-	font-weight: 700;
-	font-size: 0.95em;
-}
 
 .repeat-count {
 	color: var(--nord9);
@@ -999,7 +961,7 @@ h1 {
 	margin: 0 auto 2rem auto;
 }
 
-@media (min-width: 700px) {
+@media (min-width: 900px) {
 	.controls-row {
 		flex-direction: row;
 		justify-content: center;
@@ -1031,21 +993,21 @@ h1 {
 	max-width: 500px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 800px) {
 	.mystery-selector.four-mysteries {
 		grid-template-columns: repeat(4, 1fr);
 		max-width: 900px;
 	}
 }
 
-@media (max-width: 768px) {
+@media (max-width: 560px) {
 	.mystery-selector:not(.four-mysteries) {
 		grid-template-columns: 1fr;
 		max-width: 400px;
 	}
 }
 
-@media (max-width: 500px) {
+@media (max-width: 410px) {
 	.mystery-selector.four-mysteries {
 		grid-template-columns: 1fr;
 		max-width: 400px;
@@ -1323,7 +1285,7 @@ h1 {
 					<circle cx="25" cy="200" r="15" class="large-bead" class:active-large-bead={activeSection === 'lbead2'} data-section="lbead2" />
 
 					<!-- Benedictus Medal -->
-					<BenedictusMedal x={5} y={220} size={40} />
+					<image href="/glaube/benedictus.svg" x="5" y="220" width="40" height="40" />
 
 					<!-- Decade 1: Ave Maria (10 beads) -->
 					{#each Array(10) as _, i}
