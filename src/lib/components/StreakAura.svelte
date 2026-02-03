@@ -8,6 +8,18 @@
 
 	let { value = 0, burst = false }: Props = $props();
 
+	// Latch burst so the FireEffect stays mounted for the full animation
+	let showBurst = $state(false);
+	let burstTimer: ReturnType<typeof setTimeout> | undefined;
+
+	$effect(() => {
+		if (burst) {
+			clearTimeout(burstTimer);
+			showBurst = true;
+			burstTimer = setTimeout(() => showBurst = false, 2000);
+		}
+	});
+
 	const phase = $derived(
 		value >= 365 ? 6 :
 		value >= 180 ? 5 :
@@ -45,7 +57,7 @@
 		<FireEffect holy={phase>=4} />
 	{/if}
 
-	{#if burst}
+	{#if showBurst}
 		<FireEffect holy={phase>=4} burst />
 	{/if}
 
