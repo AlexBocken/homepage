@@ -76,6 +76,7 @@
   top: 0;
   height: max(50dvh, 500px);
   z-index: -10;
+  margin: 0;
 }
 
 
