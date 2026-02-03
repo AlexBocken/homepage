@@ -93,6 +93,8 @@ const img_alt = $derived(
 	height: 255px;
 	object-fit: cover;
 	transition: var(--transition-normal);
+	border-top-left-radius: inherit;
+	border-top-right-radius: inherit;
 }
 .blur{
 	filter: blur(10px);
