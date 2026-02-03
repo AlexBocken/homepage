@@ -829,6 +829,7 @@ onMount(() => {
 	width: 100%;
 	height: auto;
 	display: block;
+	-webkit-tap-highlight-color: transparent;
 }
 
 /* Main content area with prayers */
@@ -960,6 +961,10 @@ onMount(() => {
 	fill: var(--nord4);
 	transition: all 0.3s ease;
 	font-family: crosses;
+}
+
+.rosary-visualization :global(.hitboxes) {
+	fill: transparent;
 }
 
 /* Active states */
@@ -1413,6 +1418,33 @@ l536 389l-209 -629zM1671 934l-370 267l150 436l-378 -271l-371 271q8 -34 15 -68q10
 					{/each}
 					<!-- Final transition: Gloria + Fatima -->
 					<circle cx="25" cy="1640" r="15" class="large-bead" class:active-large-bead={activeSection === 'final_transition'} data-section="final_transition" />
+
+					<!-- Invisible hitboxes for larger tap targets -->
+					<g class="hitboxes">
+						<!-- Cross hitbox -->
+						<rect x="-15" y="-30" width="80" height="80" data-section="cross" />
+
+						<!-- Individual bead hitboxes -->
+						<circle cx="25" cy="80" r="25" data-section="lbead1" />
+						<circle cx="25" cy="110" r="20" data-section="start1" />
+						<circle cx="25" cy="135" r="20" data-section="start2" />
+						<circle cx="25" cy="160" r="20" data-section="start3" />
+						<circle cx="25" cy="200" r="25" data-section="lbead2" />
+
+						<!-- Decade hitboxes (rectangles covering 10 beads each) -->
+						<rect x="-15" y="268" width="80" height="222" data-section="secret1" />
+						<rect x="-15" y="548" width="80" height="222" data-section="secret2" />
+						<rect x="-15" y="828" width="80" height="222" data-section="secret3" />
+						<rect x="-15" y="1108" width="80" height="222" data-section="secret4" />
+						<rect x="-15" y="1388" width="80" height="222" data-section="secret5" />
+
+						<!-- Transition bead hitboxes -->
+						<circle cx="25" cy="520" r="25" data-section="secret1_transition" />
+						<circle cx="25" cy="800" r="25" data-section="secret2_transition" />
+						<circle cx="25" cy="1080" r="25" data-section="secret3_transition" />
+						<circle cx="25" cy="1360" r="25" data-section="secret4_transition" />
+						<circle cx="25" cy="1640" r="25" data-section="final_transition" />
+					</g>
 				</svg>
 			</div>
 		</div>
