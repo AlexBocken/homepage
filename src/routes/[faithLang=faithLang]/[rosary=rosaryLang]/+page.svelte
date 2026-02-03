@@ -286,13 +286,13 @@ function selectMystery(mysteryType) {
 	selectedMystery = mysteryType;
 }
 
-// Function to handle toggle change
-function handleToggleChange() {
-	// Recalculate the default mystery for today
+// When luminous toggle changes, update today's mystery and fix invalid selection
+$effect(() => {
 	todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
-	// Update to today's mystery
-	selectMystery(todaysMystery);
-}
+	if (!includeLuminous && selectedMystery === 'lichtreichen') {
+		selectedMystery = todaysMystery;
+	}
+});
 
 // Active section tracking
 let activeSection = $state("cross");
@@ -1290,7 +1290,6 @@ h1 {
 			<Toggle
 				bind:checked={includeLuminous}
 				label={labels.includeLuminous}
-				on:change={handleToggleChange}
 			/>
 
 			<!-- Language Toggle -->
