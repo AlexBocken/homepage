@@ -355,29 +355,34 @@ function handleCitationClick(reference, title = '', verseData = null) {
 }
 
 // Map sections to their vertical positions in the SVG
+const BEAD_SPACING = 22;
+const DECADE_OFFSET = 10;
 const sectionPositions = {
 	cross: 35,
-	lbead1: 80,
+	lbead1: 75,
 	start1: 110,
 	start2: 135,
 	start3: 160,
-	lbead2: 200,
+	lbead2: 195,
 	secret1: 270,
-	secret1_transition: 520,
 	secret2: 560,
-	secret2_transition: 800,
 	secret3: 840,
-	secret3_transition: 1080,
 	secret4: 1120,
-	secret4_transition: 1360,
 	secret5: 1400,
-	final_transition: 1690,
-	final_salve: 1730,
-	final_schlussgebet: 1760,
-	final_michael: 1790,
-	final_paternoster: 1830,
-	final_cross: 1920
+	final_transition: 1685,
+	final_salve: 1720,
+	final_schlussgebet: 1745,
+	final_michael: 1770,
+	final_paternoster: 1805,
+	final_cross: 1900
 };
+// Center transition beads between last bead of decade d and first bead of decade d+1
+for (let d = 1; d < 5; d++) {
+	const lastBead = sectionPositions[`secret${d}`] + DECADE_OFFSET + 9 * BEAD_SPACING;
+	const nextFirst = sectionPositions[`secret${d + 1}`] + DECADE_OFFSET;
+	sectionPositions[`secret${d}_transition`] = Math.round((lastBead + nextFirst) / 2);
+}
+const pos = sectionPositions;
 
 onMount(() => {
 	// Load toggle state from localStorage
@@ -1331,87 +1336,56 @@ h1 {
 			<div class="rosary-visualization" bind:this={svgContainer}>
 				<svg class="linear-rosary" viewBox="-100 -100 250 2200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">
 					<!-- Vertical chain -->
-					<line x1="25" y1="35" x2="25" y2="1865" class="chain" />
+					<line x1="25" y1={pos.cross} x2="25" y2={pos.final_paternoster + 40} class="chain" />
 
 					<!-- Cross (at top) -->
 					<g id="cross-section" data-section="cross">
-						<text x="25" y="35" text-anchor="middle" font-size="80"
+						<text x="25" y={pos.cross} text-anchor="middle" font-size="80"
 							class="cross-symbol" class:active-cross={activeSection === 'cross'}>♱</text>
 					</g>
 
 					<!-- First large bead (Paternoster) -->
-					<circle cx="25" cy="80" r="15" class="large-bead" class:active-large-bead={activeSection === 'lbead1'} data-section="lbead1" />
+					<circle cx="25" cy={pos.lbead1} r="15" class="large-bead" class:active-large-bead={activeSection === 'lbead1'} data-section="lbead1" />
 
 					<!-- Three small beads -->
-					<circle cx="25" cy="110" r="10" class="bead" class:active-bead={activeSection === 'start1'} data-section="start1" />
-					<circle cx="25" cy="135" r="10" class="bead" class:active-bead={activeSection === 'start2'} data-section="start2" />
-					<circle cx="25" cy="160" r="10" class="bead" class:active-bead={activeSection === 'start3'} data-section="start3" />
+					<circle cx="25" cy={pos.start1} r="10" class="bead" class:active-bead={activeSection === 'start1'} data-section="start1" />
+					<circle cx="25" cy={pos.start2} r="10" class="bead" class:active-bead={activeSection === 'start2'} data-section="start2" />
+					<circle cx="25" cy={pos.start3} r="10" class="bead" class:active-bead={activeSection === 'start3'} data-section="start3" />
 
 					<!-- Large bead before decades -->
-					<circle cx="25" cy="200" r="15" class="large-bead" class:active-large-bead={activeSection === 'lbead2'} data-section="lbead2" />
+					<circle cx="25" cy={pos.lbead2} r="15" class="large-bead" class:active-large-bead={activeSection === 'lbead2'} data-section="lbead2" />
 
 					<!-- Benedictus Medal -->
-					<image href="/glaube/benedictus.svg" x="5" y="220" width="40" height="40" />
+					<image href="/glaube/benedictus.svg" x="5" y={pos.lbead2 + 25} width="40" height="40" />
 
-					<!-- Decade 1: Ave Maria (10 beads) -->
-					{#each Array(10) as _, i}
-						<circle cx="25" cy={280 + i * 22} r="10" class="bead"
-							class:active-bead={activeSection === 'secret1'}
-							class:counted-bead={i < decadeCounters.secret1}
-							data-section="secret1" />
-					{/each}
-					<!-- Transition 1: Gloria + Fatima + Paternoster (large bead) -->
-					<circle cx="25" cy="520" r="15" class="large-bead" class:active-large-bead={activeSection === 'secret1_transition'} data-section="secret1_transition" />
-
-					<!-- Decade 2: Ave Maria (10 beads) -->
-					{#each Array(10) as _, i}
-						<circle cx="25" cy={560 + i * 22} r="10" class="bead"
-							class:active-bead={activeSection === 'secret2'}
-							class:counted-bead={i < decadeCounters.secret2}
-							data-section="secret2" />
-					{/each}
-					<!-- Transition 2: Gloria + Fatima + Paternoster (large bead) -->
-					<circle cx="25" cy="800" r="15" class="large-bead" class:active-large-bead={activeSection === 'secret2_transition'} data-section="secret2_transition" />
-
-					<!-- Decade 3: Ave Maria (10 beads) -->
-					{#each Array(10) as _, i}
-						<circle cx="25" cy={840 + i * 22} r="10" class="bead"
-							class:active-bead={activeSection === 'secret3'}
-							class:counted-bead={i < decadeCounters.secret3}
-							data-section="secret3" />
-					{/each}
-					<!-- Transition 3: Gloria + Fatima + Paternoster (large bead) -->
-					<circle cx="25" cy="1080" r="15" class="large-bead" class:active-large-bead={activeSection === 'secret3_transition'} data-section="secret3_transition" />
-
-					<!-- Decade 4: Ave Maria (10 beads) -->
-					{#each Array(10) as _, i}
-						<circle cx="25" cy={1120 + i * 22} r="10" class="bead"
-							class:active-bead={activeSection === 'secret4'}
-							class:counted-bead={i < decadeCounters.secret4}
-							data-section="secret4" />
-					{/each}
-					<!-- Transition 4: Gloria + Fatima + Paternoster (large bead) -->
-					<circle cx="25" cy="1360" r="15" class="large-bead" class:active-large-bead={activeSection === 'secret4_transition'} data-section="secret4_transition" />
-
-					<!-- Decade 5: Ave Maria (10 beads) -->
-					{#each Array(10) as _, i}
-						<circle cx="25" cy={1400 + i * 22} r="10" class="bead"
-							class:active-bead={activeSection === 'secret5'}
-							class:counted-bead={i < decadeCounters.secret5}
-							data-section="secret5" />
+					<!-- 5 Decades -->
+					{#each [1, 2, 3, 4, 5] as d}
+						{@const decadePos = pos[`secret${d}`]}
+						{@const transPos = pos[`secret${d}_transition`]}
+						<!-- Decade {d}: Ave Maria (10 beads) -->
+						{#each Array(10) as _, i}
+							<circle cx="25" cy={decadePos + DECADE_OFFSET + i * BEAD_SPACING} r="10" class="bead"
+								class:active-bead={activeSection === `secret${d}`}
+								class:counted-bead={i < decadeCounters[`secret${d}`]}
+								data-section={`secret${d}`} />
+						{/each}
+						<!-- Transition: Gloria + Fatima + Paternoster (large bead) -->
+						{#if d < 5}
+							<circle cx="25" cy={transPos} r="15" class="large-bead" class:active-large-bead={activeSection === `secret${d}_transition`} data-section={`secret${d}_transition`} />
+						{/if}
 					{/each}
 
-					<image href="/glaube/benedictus.svg" x="5" y="1620" width="40" height="40" />
+					<image href="/glaube/benedictus.svg" x="5" y={pos.secret5 + DECADE_OFFSET + 9 * BEAD_SPACING + 15} width="40" height="40" />
 					<!-- Final transition: Gloria + Fatima -->
-					<circle cx="25" cy="1690" r="15" class="large-bead" class:active-large-bead={activeSection === 'final_transition'} data-section="final_transition" />
+					<circle cx="25" cy={pos.final_transition} r="15" class="large-bead" class:active-large-bead={activeSection === 'final_transition'} data-section="final_transition" />
 
-					<circle cx="25" cy="1730" r="10" class="bead" class:active-bead={activeSection === 'final_salve'} data-section="final_salve" />
-					<circle cx="25" cy="1760" r="10" class="bead" class:active-bead={activeSection === 'final_schlussgebet'} data-section="final_schlussgebet" />
-					<circle cx="25" cy="1790" r="10" class="bead" class:active-bead={activeSection === 'final_michael'} data-section="final_michael" />
+					<circle cx="25" cy={pos.final_salve} r="10" class="bead" class:active-bead={activeSection === 'final_salve'} data-section="final_salve" />
+					<circle cx="25" cy={pos.final_schlussgebet} r="10" class="bead" class:active-bead={activeSection === 'final_schlussgebet'} data-section="final_schlussgebet" />
+					<circle cx="25" cy={pos.final_michael} r="10" class="bead" class:active-bead={activeSection === 'final_michael'} data-section="final_michael" />
 
-					<circle cx="25" cy="1830" r="15" class="large-bead" class:active-large-bead={activeSection === 'final_paternoster'} data-section="final_paternoster" />
+					<circle cx="25" cy={pos.final_paternoster} r="15" class="large-bead" class:active-large-bead={activeSection === 'final_paternoster'} data-section="final_paternoster" />
 					<g data-section="final_cross">
-						<text x="25" y="1920" text-anchor="middle" font-size="80"
+						<text x="25" y={pos.final_cross} text-anchor="middle" font-size="80"
 							class="cross-symbol" class:active-cross={activeSection === 'final_cross'}>♱</text>
 					</g>
 
@@ -1421,30 +1395,28 @@ h1 {
 						<rect x="-15" y="-30" width="80" height="80" data-section="cross" />
 
 						<!-- Individual bead hitboxes -->
-						<circle cx="25" cy="80" r="25" data-section="lbead1" />
-						<circle cx="25" cy="110" r="20" data-section="start1" />
-						<circle cx="25" cy="135" r="20" data-section="start2" />
-						<circle cx="25" cy="160" r="20" data-section="start3" />
-						<circle cx="25" cy="200" r="25" data-section="lbead2" />
+						<circle cx="25" cy={pos.lbead1} r="25" data-section="lbead1" />
+						<circle cx="25" cy={pos.start1} r="20" data-section="start1" />
+						<circle cx="25" cy={pos.start2} r="20" data-section="start2" />
+						<circle cx="25" cy={pos.start3} r="20" data-section="start3" />
+						<circle cx="25" cy={pos.lbead2} r="25" data-section="lbead2" />
 
-						<!-- Decade hitboxes (rectangles covering 10 beads each) -->
-						<rect x="-15" y="268" width="80" height="222" data-section="secret1" />
-						<rect x="-15" y="548" width="80" height="222" data-section="secret2" />
-						<rect x="-15" y="828" width="80" height="222" data-section="secret3" />
-						<rect x="-15" y="1108" width="80" height="222" data-section="secret4" />
-						<rect x="-15" y="1388" width="80" height="222" data-section="secret5" />
+						<!-- Decade hitboxes -->
+						{#each [1, 2, 3, 4, 5] as d}
+							{@const decadePos = pos[`secret${d}`]}
+							<rect x="-15" y={decadePos - 2} width="80" height={DECADE_OFFSET + 9 * BEAD_SPACING + 12} data-section={`secret${d}`} />
+						{/each}
 
 						<!-- Transition bead hitboxes -->
-						<circle cx="25" cy="520" r="25" data-section="secret1_transition" />
-						<circle cx="25" cy="800" r="25" data-section="secret2_transition" />
-						<circle cx="25" cy="1080" r="25" data-section="secret3_transition" />
-						<circle cx="25" cy="1360" r="25" data-section="secret4_transition" />
-						<circle cx="25" cy="1690" r="25" data-section="final_transition" />
-						<circle cx="25" cy="1730" r="20" data-section="final_salve" />
-						<circle cx="25" cy="1760" r="20" data-section="final_schlussgebet" />
-						<circle cx="25" cy="1790" r="20" data-section="final_michael" />
-						<circle cx="25" cy="1830" r="25" data-section="final_paternoster" />
-						<rect x="-15" y="1870" width="80" height="80" data-section="final_cross" />
+						{#each [1, 2, 3, 4] as d}
+							<circle cx="25" cy={pos[`secret${d}_transition`]} r="25" data-section={`secret${d}_transition`} />
+						{/each}
+						<circle cx="25" cy={pos.final_transition} r="25" data-section="final_transition" />
+						<circle cx="25" cy={pos.final_salve} r="20" data-section="final_salve" />
+						<circle cx="25" cy={pos.final_schlussgebet} r="20" data-section="final_schlussgebet" />
+						<circle cx="25" cy={pos.final_michael} r="20" data-section="final_michael" />
+						<circle cx="25" cy={pos.final_paternoster} r="25" data-section="final_paternoster" />
+						<rect x="-15" y={pos.final_cross - 50} width="80" height="80" data-section="final_cross" />
 					</g>
 
 				</svg>
