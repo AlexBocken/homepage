@@ -938,7 +938,6 @@ onMount(() => {
 .rosary-visualization :global(.cross-symbol) {
 	fill: var(--nord4);
 	transition: all 0.3s ease;
-	font-family: crosses;
 }
 
 .rosary-visualization :global(.hitboxes) {
@@ -1335,13 +1334,19 @@ h1 {
 		<div class="rosary-sidebar">
 			<div class="rosary-visualization" bind:this={svgContainer}>
 				<svg class="linear-rosary" viewBox="-100 -100 250 2200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">
+					<defs>
+						<symbol id="cross-glyph" viewBox="0 0 1304 1497">
+							<path transform="translate(-132, 1497) scale(1, -1)" d="M315 948Q293 903 245 857Q292 813 315 768L410 835V881ZM1159 880V834L1253 767Q1276 813 1323 857Q1276 903 1253 948ZM875 1314Q831 1337 784 1384Q740 1337 695 1314L763 1219H808ZM807 277H762L695 182Q740 159 784 112Q830 159 875 182ZM868 941H1096L1304 1067Q1314 962 1436 856Q1314 752 1304 648L1096 774H868V340L994 132Q888 121 783 0Q679 121 575 132L701 340V774H473L265 648Q254 752 132 857Q254 962 265 1067L473 941H701V1155L575 1364Q679 1375 784 1497Q888 1375 994 1364L868 1155ZM758 1040V881H642V835H758V451H812V835H928V881H812V1040Z" />
+						</symbol>
+					</defs>
+
 					<!-- Vertical chain -->
 					<line x1="25" y1={pos.cross} x2="25" y2={pos.final_paternoster + 40} class="chain" />
 
 					<!-- Cross (at top) -->
 					<g id="cross-section" data-section="cross">
-						<text x="25" y={pos.cross} text-anchor="middle" font-size="80"
-							class="cross-symbol" class:active-cross={activeSection === 'cross'}>♱</text>
+						<use href="#cross-glyph" x={25 - 25} y={pos.cross - 58} width="50" height="58"
+							class="cross-symbol" class:active-cross={activeSection === 'cross'} />
 					</g>
 
 					<!-- First large bead (Paternoster) -->
@@ -1385,8 +1390,8 @@ h1 {
 
 					<circle cx="25" cy={pos.final_paternoster} r="15" class="large-bead" class:active-large-bead={activeSection === 'final_paternoster'} data-section="final_paternoster" />
 					<g data-section="final_cross">
-						<text x="25" y={pos.final_cross} text-anchor="middle" font-size="80"
-							class="cross-symbol" class:active-cross={activeSection === 'final_cross'}>♱</text>
+						<use href="#cross-glyph" x={25 - 25} y={pos.final_cross - 58} width="50" height="58"
+							class="cross-symbol" class:active-cross={activeSection === 'final_cross'} />
 					</g>
 
 					<!-- Invisible hitboxes for larger tap targets -->
