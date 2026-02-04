@@ -24,6 +24,13 @@
   let error = $state(null);
   let monthlyExpensesData = $state(data.monthlyExpensesData || { labels: [], datasets: [] });
   let expensesLoading = $state(false);
+  let categoryFilter = $state(null);
+
+  let filteredSplits = $derived(
+    categoryFilter
+      ? (balance.recentSplits || []).filter(split => categoryFilter.includes(split.paymentId?.category))
+      : balance.recentSplits || []
+  );
 
   // Component references for refreshing
   let enhancedBalanceComponent;
@@ -177,6 +184,7 @@
           data={monthlyExpensesData}
           title="Monthly Expenses by Category"
           height="400px"
+          onFilterChange={(categories) => categoryFilter = categories}
         />
       {:else}
         <div class="loading">
@@ -194,9 +202,17 @@
     <div class="error">Error: {error}</div>
   {:else if balance.recentSplits && balance.recentSplits.length > 0}
     <div class="recent-activity">
-      <h2>Recent Activity</h2>
+      <div class="recent-activity-header">
+        <h2>Recent Activity{#if categoryFilter} <span class="filter-label">— {categoryFilter.map(c => getCategoryName(c)).join(', ')}</span>{/if}</h2>
+        {#if categoryFilter}
+          <button class="clear-filter" onclick={() => categoryFilter = null}>Clear filter</button>
+        {/if}
+      </div>
+      {#if filteredSplits.length === 0}
+        <p class="no-results">No recent activity in {categoryFilter.map(c => getCategoryName(c)).join(', ')}.</p>
+      {/if}
       <div class="activity-dialog">
-        {#each balance.recentSplits as split}
+        {#each filteredSplits as split}
           {#if isSettlementPayment(split.paymentId)}
             <!-- Settlement Payment Display - User -> User Flow -->
             <a
@@ -363,9 +379,47 @@
     margin-right: auto;
   }
 
-  .recent-activity h2 {
+  .recent-activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
     margin-bottom: 1rem;
+  }
+
+  .recent-activity h2 {
+    margin: 0;
     color: var(--nord0);
+  }
+
+  .filter-label {
+    font-weight: 400;
+    font-size: 1rem;
+    color: var(--nord3);
+  }
+
+  .clear-filter {
+    background: none;
+    border: 1px solid var(--nord4);
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    color: var(--nord3);
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .clear-filter:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .no-results {
+    text-align: center;
+    color: var(--nord3);
+    font-style: italic;
+    padding: 1rem 0;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -376,6 +430,24 @@
 
     .recent-activity h2 {
       color: var(--font-default-dark);
+    }
+
+    .filter-label {
+      color: var(--nord4);
+    }
+
+    .clear-filter {
+      border-color: var(--nord3);
+      color: var(--nord4);
+    }
+
+    .clear-filter:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .no-results {
+      color: var(--nord4);
     }
   }
 

@@ -89,7 +89,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         },
         { $unwind: '$paymentId' },
         { $sort: { 'paymentId.date': -1, 'paymentId.createdAt': -1 } },
-        { $limit: 10 }
+        { $limit: 30 }
       ]);
 
       // For settlements, fetch the other user's split info
