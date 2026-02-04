@@ -180,14 +180,14 @@ const mysteryTitlesEnglish = {
 	]
 };
 
-// Toggle for including Luminous mysteries
-let includeLuminous = $state(true);
+// Toggle for including Luminous mysteries (initialized from URL param or default)
+let includeLuminous = $state(data.initialLuminous);
 
 // Flag to prevent saving before we've loaded from localStorage
 let hasLoadedFromStorage = false;
 
 // Create language context for prayer components (LanguageToggle will use this)
-const langContext = createLanguageContext({ urlLang: data.lang });
+const langContext = createLanguageContext({ urlLang: data.lang, initialLatin: data.initialLatin });
 
 // Update lang store when data.lang changes (e.g., after navigation)
 $effect(() => {
@@ -268,10 +268,9 @@ function getMysteryForWeekday(date, includeLuminous) {
 	}
 }
 
-// Determine which mystery to use based on current weekday
-const initialMystery = getMysteryForWeekday(new Date(), true); // Use literal true to avoid capturing reactive state
-let selectedMystery = $state(initialMystery);
-let todaysMystery = $state(initialMystery); // Track today's auto-selected mystery
+// Use server-computed initial values (supports no-JS via URL params)
+let selectedMystery = $state(data.initialMystery);
+let todaysMystery = $state(data.todaysMystery);
 
 // Derive these values from selectedMystery so they update automatically
 let currentMysteries = $derived(mysteries[selectedMystery]);
@@ -284,6 +283,23 @@ let currentMysteryDescriptions = $derived(data.mysteryDescriptions[selectedMyste
 function selectMystery(mysteryType) {
 	selectedMystery = mysteryType;
 }
+
+// Build URLs preserving full state (for no-JS fallback)
+function buildHref({ mystery = selectedMystery, luminous = includeLuminous, latin = data.initialLatin } = {}) {
+	const params = new URLSearchParams();
+	params.set('mystery', mystery);
+	if (!luminous) params.set('luminous', '0');
+	if (!latin) params.set('latin', '0');
+	return `?${params.toString()}`;
+}
+
+function mysteryHref(mystery) {
+	return buildHref({ mystery });
+}
+
+// Toggle hrefs navigate to opposite state (for no-JS self-submit)
+let luminousToggleHref = $derived(buildHref({ luminous: !includeLuminous }));
+let latinToggleHref = $derived(buildHref({ latin: !data.initialLatin }));
 
 // When luminous toggle changes, update today's mystery and fix invalid selection
 $effect(() => {
@@ -385,16 +401,24 @@ for (let d = 1; d < 5; d++) {
 const pos = sectionPositions;
 
 onMount(() => {
-	// Load toggle state from localStorage
-	const savedIncludeLuminous = localStorage.getItem('rosary_includeLuminous');
-
-	if (savedIncludeLuminous !== null) {
-		includeLuminous = savedIncludeLuminous === 'true';
+	// Load toggle state from localStorage only if not overridden by URL params
+	if (!data.hasUrlLuminous) {
+		const savedIncludeLuminous = localStorage.getItem('rosary_includeLuminous');
+		if (savedIncludeLuminous !== null) {
+			includeLuminous = savedIncludeLuminous === 'true';
+		}
 	}
 
-	// Recalculate mystery based on loaded includeLuminous value
-	todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
-	selectMystery(todaysMystery);
+	// If no mystery was specified in URL, recompute based on loaded preferences
+	if (!data.hasUrlMystery) {
+		todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
+		selectMystery(todaysMystery);
+	}
+
+	// Clean up URL params after hydration (state is now in component state)
+	if (window.location.search) {
+		history.replaceState({}, '', window.location.pathname);
+	}
 
 	// Now allow saving to localStorage
 	hasLoadedFromStorage = true;
@@ -1095,6 +1119,8 @@ h1 {
 	align-items: center;
 	gap: 1rem;
 	position: relative;
+	text-decoration: none;
+	color: inherit;
 }
 
 @media(prefers-color-scheme: light) {
@@ -1266,49 +1292,53 @@ h1 {
 
 
 	<h2 style="text-align:center;">{labels.mysteries}</h2>
-	<!-- Mystery Selector -->
+	<!-- Mystery Selector (links for no-JS, enhanced with onclick for JS) -->
 	<div class="mystery-selector" class:four-mysteries={includeLuminous}>
-		<button
+		<a
 			class="mystery-button"
 			class:selected={selectedMystery === 'freudenreich'}
-			onclick={() => selectMystery('freudenreich')}
+			href={mysteryHref('freudenreich')}
+			onclick={(e) => { e.preventDefault(); selectMystery('freudenreich'); }}
 		>
 			{#if todaysMystery === 'freudenreich'}
 				<span class="today-badge">{labels.today}</span>
 			{/if}
 				<MysteryIcon type="joyful" />
 			<h3>{labels.joyful}</h3>
-		</button>
+		</a>
 
-		<button
+		<a
 			class="mystery-button"
 			class:selected={selectedMystery === 'schmerzhaften'}
-			onclick={() => selectMystery('schmerzhaften')}
+			href={mysteryHref('schmerzhaften')}
+			onclick={(e) => { e.preventDefault(); selectMystery('schmerzhaften'); }}
 		>
 			{#if todaysMystery === 'schmerzhaften'}
 				<span class="today-badge">{labels.today}</span>
 			{/if}
 			<MysteryIcon type="sorrowful" />
 			<h3>{labels.sorrowful}</h3>
-		</button>
+		</a>
 
-		<button
+		<a
 			class="mystery-button"
 			class:selected={selectedMystery === 'glorreichen'}
-			onclick={() => selectMystery('glorreichen')}
+			href={mysteryHref('glorreichen')}
+			onclick={(e) => { e.preventDefault(); selectMystery('glorreichen'); }}
 		>
 			{#if todaysMystery === 'glorreichen'}
 				<span class="today-badge">{labels.today}</span>
 			{/if}
 		<MysteryIcon type="glorious" />
 			<h3>{labels.glorious}</h3>
-		</button>
+		</a>
 
 		{#if includeLuminous}
-		<button
+		<a
 			class="mystery-button"
 			class:selected={selectedMystery === 'lichtreichen'}
-			onclick={() => selectMystery('lichtreichen')}
+			href={mysteryHref('lichtreichen')}
+			onclick={(e) => { e.preventDefault(); selectMystery('lichtreichen'); }}
 		>
 			{#if todaysMystery === 'lichtreichen'}
 				<span class="today-badge">{labels.today}</span>
@@ -1316,7 +1346,7 @@ h1 {
 					<MysteryIcon type="luminous" />
 
 			<h3>{labels.luminous}</h3>
-		</button>
+		</a>
 		{/if}
 	</div>
 
@@ -1324,14 +1354,19 @@ h1 {
 	<div class="controls-row">
 		<StreakCounter streakData={data.streakData} lang={data.lang} />
 		<div class="toggle-controls">
-			<!-- Luminous Mysteries Toggle -->
+			<!-- Luminous Mysteries Toggle (link for no-JS, enhanced with onclick for JS) -->
 			<Toggle
 				bind:checked={includeLuminous}
 				label={labels.includeLuminous}
+				href={luminousToggleHref}
 			/>
 
-			<!-- Language Toggle -->
-			<LanguageToggle />
+			<!-- Language Toggle (link for no-JS, enhanced with onclick for JS) -->
+			<LanguageToggle
+				initialLatin={data.initialLatin}
+				hasUrlLatin={data.hasUrlLatin}
+				href={latinToggleHref}
+			/>
 		</div>
 	</div>
 

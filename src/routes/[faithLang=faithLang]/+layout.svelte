@@ -33,11 +33,11 @@ function isActive(path) {
 	{/snippet}
 
 	{#snippet language_selector_mobile()}
-		<LanguageSelector />
+		<LanguageSelector lang={data.lang} />
 	{/snippet}
 
 	{#snippet language_selector_desktop()}
-		<LanguageSelector />
+		<LanguageSelector lang={data.lang} />
 	{/snippet}
 
 	{#snippet right_side()}

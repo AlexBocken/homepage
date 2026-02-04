@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { checked = $bindable(false), label = "", accentColor = "var(--nord14)" } = $props<{ checked?: boolean, label?: string, accentColor?: string }>();
+	let { checked = $bindable(false), label = "", accentColor = "var(--nord14)", href = undefined as string | undefined } = $props<{ checked?: boolean, label?: string, accentColor?: string, href?: string }>();
 </script>
 
 <style>
@@ -7,17 +7,20 @@
 	display: inline-flex;
 }
 
-.toggle-wrapper label {
+.toggle-wrapper label,
+.toggle-wrapper a {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
 	cursor: pointer;
 	font-size: 0.95rem;
 	color: var(--nord4);
+	text-decoration: none;
 }
 
 @media(prefers-color-scheme: light) {
-	.toggle-wrapper label {
+	.toggle-wrapper label,
+	.toggle-wrapper a {
 		color: var(--nord2);
 	}
 }
@@ -26,7 +29,8 @@
 	user-select: none;
 }
 
-/* iOS-style toggle switch */
+/* iOS-style toggle switch — shared by checkbox and link variants */
+.toggle-track,
 .toggle-wrapper input[type="checkbox"] {
 	appearance: none;
 	-webkit-appearance: none;
@@ -40,18 +44,22 @@
 	outline: none;
 	border: none;
 	flex-shrink: 0;
+	display: inline-block;
 }
 
 @media(prefers-color-scheme: light) {
+	.toggle-track,
 	.toggle-wrapper input[type="checkbox"] {
 		background: var(--nord4);
 	}
 }
 
+.toggle-track.checked,
 .toggle-wrapper input[type="checkbox"]:checked {
 	background: var(--accent-color);
 }
 
+.toggle-track::before,
 .toggle-wrapper input[type="checkbox"]::before {
 	content: '';
 	position: absolute;
@@ -65,14 +73,22 @@
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.toggle-track.checked::before,
 .toggle-wrapper input[type="checkbox"]:checked::before {
 	transform: translateX(20px);
 }
 </style>
 
 <div class="toggle-wrapper" style="--accent-color: {accentColor}">
-	<label>
-		<input type="checkbox" bind:checked />
-		<span>{label}</span>
-	</label>
+	{#if href}
+		<a {href} onclick={(e) => { e.preventDefault(); checked = !checked; }}>
+			<span class="toggle-track" class:checked></span>
+			<span>{label}</span>
+		</a>
+	{:else}
+		<label>
+			<input type="checkbox" bind:checked />
+			<span>{label}</span>
+		</label>
+	{/if}
 </div>

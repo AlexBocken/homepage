@@ -1,4 +1,5 @@
 <script>
+	import { onMount } from 'svelte';
 	import { createLanguageContext } from "$lib/contexts/languageContext.js";
 	import "$lib/css/christ.css";
 	import "$lib/css/nordtheme.css";
@@ -18,7 +19,7 @@
 
 	let { data } = $props();
 
-	const langContext = createLanguageContext({ urlLang: data.lang });
+	const langContext = createLanguageContext({ urlLang: data.lang, initialLatin: data.initialLatin });
 
 	$effect(() => {
 		langContext.lang.set(data.lang);
@@ -59,6 +60,16 @@
 	const gloriaIntro = $derived(isEnglish
 		? 'This ancient hymn begins with the words the angels used to celebrate the newborn Savior. It first praises God the Father, then God the Son; it concludes with homage to the Most Holy Trinity, during which one makes the sign of the cross.'
 		: 'Der uralte Gesang beginnt mit den Worten, mit denen die Engelscharen den neugeborenen Welterlöser feierten. Er preist zunächst Gott Vater, dann Gott Sohn; er schliesst mit einer Huldigung an die Heiligste Dreifaltigkeit, wobei man sich mit dem grossen Kreuze bezeichnet.');
+
+	// Toggle href for no-JS fallback (navigates to opposite latin state)
+	const latinToggleHref = $derived(data.initialLatin ? '?latin=0' : '?');
+
+	onMount(() => {
+		// Clean up URL params after hydration (state is now in component state)
+		if (window.location.search) {
+			history.replaceState({}, '', window.location.pathname);
+		}
+	});
 </script>
 
 <svelte:head>
@@ -121,7 +132,11 @@ h1 {
 	<h1>{prayerName}</h1>
 
 	<div class="toggle-controls">
-		<LanguageToggle />
+		<LanguageToggle
+			initialLatin={data.initialLatin}
+			hasUrlLatin={data.hasUrlLatin}
+			href={latinToggleHref}
+		/>
 	</div>
 
 	<div class="gebet-wrapper">

@@ -5,9 +5,14 @@
 	import { languageStore } from '$lib/stores/language';
 	import { onMount } from 'svelte';
 
+	let { lang = undefined }: { lang?: 'de' | 'en' } = $props();
+
+	// Use prop for display if provided (SSR-safe), otherwise fall back to store
+	const displayLang = $derived(lang ?? $languageStore);
+
 	let currentPath = $state('');
 	let langButton: HTMLButtonElement;
-	let langOptions: HTMLDivElement;
+	let isOpen = $state(false);
 
 	// Faith subroute mappings
 	const faithSubroutes: Record<string, Record<string, string>> = {
@@ -34,30 +39,58 @@
 	});
 
 	function toggle_language_options(){
-		if (langOptions) {
-			langOptions.hidden = !langOptions.hidden;
-		}
+		isOpen = !isOpen;
 	}
 
 	function convertFaithPath(path: string, targetLang: 'de' | 'en'): string {
-		// Extract the current base and subroute
 		const faithMatch = path.match(/^\/(glaube|faith)(\/(.+))?$/);
 		if (!faithMatch) return path;
 
 		const targetBase = targetLang === 'en' ? 'faith' : 'glaube';
-		const subroute = faithMatch[3]; // e.g., "gebete", "rosenkranz", "angelus"
+		const rest = faithMatch[3]; // e.g., "gebete", "rosenkranz/sub", "angelus"
 
-		if (!subroute) {
-			// Main faith page
+		if (!rest) {
 			return `/${targetBase}`;
 		}
 
-		// Convert subroute
-		const convertedSubroute = faithSubroutes[targetLang][subroute] || subroute;
-		return `/${targetBase}/${convertedSubroute}`;
+		// Split on / to convert just the first segment (gebete→prayers, etc.)
+		const parts = rest.split('/');
+		parts[0] = faithSubroutes[targetLang][parts[0]] || parts[0];
+		return `/${targetBase}/${parts.join('/')}`;
 	}
 
+	// Compute target paths for each language (used as href for no-JS)
+	function computeTargetPath(targetLang: 'de' | 'en'): string {
+		const path = currentPath || $page.url.pathname;
+
+		if (path.startsWith('/glaube') || path.startsWith('/faith')) {
+			return convertFaithPath(path, targetLang);
+		}
+
+		// Use translated recipe slugs from page data when available (works during SSR)
+		const pageData = $page.data;
+		if (targetLang === 'en' && path.startsWith('/rezepte')) {
+			if (pageData?.englishShortName) {
+				return `/recipes/${pageData.englishShortName}`;
+			}
+			return path.replace('/rezepte', '/recipes');
+		}
+		if (targetLang === 'de' && path.startsWith('/recipes')) {
+			if (pageData?.germanShortName) {
+				return `/rezepte/${pageData.germanShortName}`;
+			}
+			return path.replace('/recipes', '/rezepte');
+		}
+
+		return path;
+	}
+
+	const dePath = $derived(computeTargetPath('de'));
+	const enPath = $derived(computeTargetPath('en'));
+
 	async function switchLanguage(lang: 'de' | 'en') {
+		isOpen = false;
+
 		// Update the shared language store immediately
 		languageStore.set(lang);
 
@@ -117,7 +150,7 @@
 	onMount(() => {
 		const handleClick = (e: MouseEvent) => {
 			if(langButton && !langButton.contains(e.target as Node)){
-				if (langOptions) langOptions.hidden = true;
+				isOpen = false;
 			}
 		};
 
@@ -159,8 +192,18 @@
 		width: 10ch;
 		padding: 0.5rem;
 		z-index: 1000;
+		display: none;
 	}
-	.language-options button{
+	/* Show via JS toggle */
+	.language-options.open {
+		display: block;
+	}
+	/* Show via CSS focus-within (no-JS fallback) */
+	.language-selector:focus-within .language-options {
+		display: block;
+	}
+	.language-options a{
+		display: block;
 		width: 100%;
 		background-color: transparent;
 		color: white;
@@ -171,32 +214,36 @@
 		cursor: pointer;
 		font-size: 1rem;
 		text-align: left;
+		text-decoration: none;
 		transition: background-color 100ms;
+		box-sizing: border-box;
 	}
-	.language-options button:hover{
+	.language-options a:hover{
 		background-color: var(--nord2);
 	}
-	.language-options button.active{
+	.language-options a.active{
 		background-color: var(--nord14);
 	}
 </style>
 
 <div class="language-selector">
 	<button bind:this={langButton} onclick={toggle_language_options} class="language-button">
-		{$languageStore.toUpperCase()}
+		{displayLang.toUpperCase()}
 	</button>
-	<div bind:this={langOptions} class="language-options" hidden>
-		<button
-			class:active={$languageStore === 'de'}
-			onclick={() => switchLanguage('de')}
+	<div class="language-options" class:open={isOpen}>
+		<a
+			href={dePath}
+			class:active={displayLang === 'de'}
+			onclick={(e) => { e.preventDefault(); switchLanguage('de'); }}
 		>
 			DE
-		</button>
-		<button
-			class:active={$languageStore === 'en'}
-			onclick={() => switchLanguage('en')}
+		</a>
+		<a
+			href={enPath}
+			class:active={displayLang === 'en'}
+			onclick={(e) => { e.preventDefault(); switchLanguage('en'); }}
 		>
 			EN
-		</button>
+		</a>
 	</div>
 </div>
