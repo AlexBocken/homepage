@@ -1001,16 +1001,64 @@ h1 {
 }
 
 @media (max-width: 560px) {
-	.mystery-selector:not(.four-mysteries) {
-		grid-template-columns: 1fr;
-		max-width: 400px;
+	.mystery-selector,
+	.mystery-selector.four-mysteries {
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+		margin-inline: 0;
+		max-width: none;
+	}
+	.mystery-selector :global(svg) {
+		width: 48px;
+		height: 48px;
+	}
+	.mystery-button {
+		padding: 1rem 0.75rem;
+		gap: 0.5rem;
+	}
+	.mystery-button h3 {
+		font-size: 0.95rem;
+	}
+	.today-badge {
+		font-size: 0.7rem;
+		padding: 0.25rem 0.5rem;
+		top: 0.5rem;
+		right: 0.5rem;
 	}
 }
 
 @media (max-width: 410px) {
+	.mystery-selector,
+	.mystery-selector.four-mysteries {
+		gap: 0.375rem;
+		margin-bottom: 0.75rem;
+		margin-inline: 0;
+		max-width: none;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.mystery-selector:not(.four-mysteries) {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	.mystery-button {
+		padding: 0.25rem 0.15rem;
+		gap: 0.15rem;
+		border-radius: 6px;
+	}
+	.mystery-button h3 {
+		font-size: 0.55rem;
+	}
+	.today-badge {
+		font-size: 0.6rem;
+		padding: 0.15rem 0.35rem;
+		top: 0.25rem;
+		right: 0.25rem;
+	}
+}
+
+@media (max-width: 350px) {
+	.mystery-selector,
 	.mystery-selector.four-mysteries {
 		grid-template-columns: 1fr;
-		max-width: 400px;
 	}
 }
 
