@@ -180,13 +180,20 @@
 	scroll-snap-align: start;
 	padding: 2rem;
 	margin-bottom: 2rem;
-	background: var(--color-bg-secondary);
+	background: var(--accent-dark);
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	position: relative;
 	font-size: 1.25em;
 	text-align: center;
 }
+
+@media (prefers-color-scheme: light) {
+	.prayer-section {
+		background: var(--nord5);
+	}
+}
+
 .prayers-content {
 	scroll-snap-type: y proximity;
 	max-width: 700px;
