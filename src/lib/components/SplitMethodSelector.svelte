@@ -58,7 +58,6 @@
         splitAmounts[user] = splitAmount;
       }
     });
-    splitAmounts = { ...splitAmounts };
   }
 
   function calculateFullPayment() {
@@ -75,7 +74,6 @@
         splitAmounts[user] = amountPerOtherUser;
       }
     });
-    splitAmounts = { ...splitAmounts };
   }
 
   function calculatePersonalEqualSplit() {
@@ -100,7 +98,6 @@
         splitAmounts[user] = totalOwed;
       }
     });
-    splitAmounts = { ...splitAmounts };
   }
 
   function handleSplitMethodChange() {
@@ -116,7 +113,6 @@
           splitAmounts[user] = 0;
         }
       });
-      splitAmounts = { ...splitAmounts };
     }
   }
 
