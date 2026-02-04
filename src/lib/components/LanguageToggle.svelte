@@ -3,11 +3,15 @@
 	import { getLanguageContext } from '$lib/contexts/languageContext.js';
 	import Toggle from './Toggle.svelte';
 
+	export let initialLatin = undefined;
+	export let hasUrlLatin = false;
+	export let href = undefined;
+
 	// Get the language context (must be created by parent page)
 	const { showLatin, lang } = getLanguageContext();
 
 	// Local state for the checkbox
-	let showBilingual = true;
+	let showBilingual = initialLatin !== undefined ? initialLatin : true;
 
 	// Flag to prevent saving before we've loaded from localStorage
 	let hasLoadedFromStorage = false;
@@ -26,10 +30,12 @@
 		: 'Lateinisch und Deutsch anzeigen';
 
 	onMount(() => {
-		// Load from localStorage
-		const saved = localStorage.getItem('rosary_showBilingual');
-		if (saved !== null) {
-			showBilingual = saved === 'true';
+		// Only load from localStorage if no URL param was set
+		if (!hasUrlLatin) {
+			const saved = localStorage.getItem('rosary_showBilingual');
+			if (saved !== null) {
+				showBilingual = saved === 'true';
+			}
 		}
 
 		// Now allow saving
@@ -40,5 +46,6 @@
 <Toggle
 	bind:checked={showBilingual}
 	{label}
+	{href}
 	accentColor="var(--nord14)"
 />

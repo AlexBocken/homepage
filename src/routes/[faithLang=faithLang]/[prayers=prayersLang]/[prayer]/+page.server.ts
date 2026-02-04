@@ -17,12 +17,18 @@ const validSlugs = new Set([
 	'das-confiteor', 'the-confiteor'
 ]);
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, url }) => {
 	if (!validSlugs.has(params.prayer)) {
 		throw error(404, 'Prayer not found');
 	}
 
+	const latinParam = url.searchParams.get('latin');
+	const hasUrlLatin = latinParam !== null;
+	const initialLatin = hasUrlLatin ? latinParam !== '0' : true;
+
 	return {
-		prayer: params.prayer
+		prayer: params.prayer,
+		initialLatin,
+		hasUrlLatin
 	};
 };
