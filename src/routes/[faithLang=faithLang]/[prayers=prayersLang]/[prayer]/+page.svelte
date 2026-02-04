@@ -102,21 +102,13 @@ h1 {
 }
 .gebet-wrapper {
 	padding: 1.5em;
-	background-color: var(--accent-dark);
+	background-color: var(--color-bg-secondary);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 .intro {
 	margin-bottom: 1em;
 	font-style: italic;
 	text-align: center;
-}
-@media(prefers-color-scheme: light) {
-	.gebet-wrapper {
-		background-color: var(--accent-light);
-	}
-	:global(.gebet v:lang(la)) {
-		color: black;
-	}
 }
 </style>
 

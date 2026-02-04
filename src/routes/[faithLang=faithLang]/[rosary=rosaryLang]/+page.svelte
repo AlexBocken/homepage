@@ -856,16 +856,10 @@ onMount(() => {
 	scroll-snap-align: start;
 	padding: 2rem;
 	margin-bottom: 2rem;
-	background: var(--accent-dark);
+	background: var(--color-bg-secondary);
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	position: relative;
-}
-
-@media(prefers-color-scheme: light) {
-	.prayer-section {
-		background: var(--accent-light);
-	}
 }
 
 .prayer-section.decade {
@@ -938,6 +932,12 @@ onMount(() => {
 .rosary-visualization :global(.cross-symbol) {
 	fill: var(--nord4);
 	transition: all 0.3s ease;
+}
+
+@media (prefers-color-scheme: light) {
+	.rosary-visualization :global(.cross-symbol) {
+		fill: var(--nord3);
+	}
 }
 
 .rosary-visualization :global(.hitboxes) {
