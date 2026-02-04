@@ -2,6 +2,7 @@
 import { onMount } from "svelte";
 import { createLanguageContext } from "$lib/contexts/languageContext.js";
 import "$lib/css/christ.css";
+import "$lib/css/action_button.css";
 import Kreuzzeichen from "$lib/components/prayers/Kreuzzeichen.svelte";
 import Credo from "$lib/components/prayers/Credo.svelte";
 import Paternoster from "$lib/components/prayers/Paternoster.svelte";
@@ -370,7 +371,12 @@ const sectionPositions = {
 	secret4: 1120,
 	secret4_transition: 1360,
 	secret5: 1400,
-	final_transition: 1640
+	final_transition: 1690,
+	final_salve: 1730,
+	final_schlussgebet: 1760,
+	final_michael: 1790,
+	final_paternoster: 1830,
+	final_cross: 1920
 };
 
 onMount(() => {
@@ -569,7 +575,7 @@ onMount(() => {
 
 		// Get the first and final prayer sections
 		const firstSection = sectionElements.cross;
-		const finalSection = sectionElements.final_transition;
+		const finalSection = sectionElements.final_cross;
 		if (!firstSection || !finalSection) return;
 
 		const firstSectionRect = firstSection.getBoundingClientRect();
@@ -579,6 +585,7 @@ onMount(() => {
 		if (scrollY < 50) {
 			// Scroll SVG to top
 			if (svgContainer.scrollTop > 10) { // Only if not already at top
+				setScrollLock('prayer');
 				smoothScrollElement(svgContainer, 0);
 			}
 		}
@@ -587,6 +594,7 @@ onMount(() => {
 			// Scroll SVG to bottom
 			const maxScroll = svgContainer.scrollHeight - svgContainer.clientHeight;
 			if (svgContainer.scrollTop < maxScroll - 10) { // Only if not already at bottom
+				setScrollLock('prayer');
 				smoothScrollElement(svgContainer, maxScroll);
 			}
 		}
@@ -594,6 +602,7 @@ onMount(() => {
 		else if (firstSectionRect.top > viewportHeight * 0.6) {
 			// Scroll SVG to top
 			if (svgContainer.scrollTop > 10) { // Only if not already at top
+				setScrollLock('prayer');
 				smoothScrollElement(svgContainer, 0);
 			}
 		}
@@ -602,6 +611,7 @@ onMount(() => {
 			// Scroll SVG to bottom
 			const maxScroll = svgContainer.scrollHeight - svgContainer.clientHeight;
 			if (svgContainer.scrollTop < maxScroll - 10) { // Only if not already at bottom
+				setScrollLock('prayer');
 				smoothScrollElement(svgContainer, maxScroll);
 			}
 		}
@@ -1227,6 +1237,14 @@ h1 {
 	margin-right: 0.5em;
 	color: var(--nord11);
 }
+
+.scroll-top-button {
+	margin: 2rem auto 0;
+}
+
+.scroll-padding {
+	height: 50vh;
+}
 </style>
 <svelte:head>
 	<title>{labels.pageTitle}</title>
@@ -1313,7 +1331,7 @@ h1 {
 			<div class="rosary-visualization" bind:this={svgContainer}>
 				<svg class="linear-rosary" viewBox="-100 -100 250 2200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">
 					<!-- Vertical chain -->
-					<line x1="25" y1="35" x2="25" y2="1655" class="chain" />
+					<line x1="25" y1="35" x2="25" y2="1865" class="chain" />
 
 					<!-- Cross (at top) -->
 					<g id="cross-section" data-section="cross">
@@ -1382,8 +1400,20 @@ h1 {
 							class:counted-bead={i < decadeCounters.secret5}
 							data-section="secret5" />
 					{/each}
+
+					<image href="/glaube/benedictus.svg" x="5" y="1620" width="40" height="40" />
 					<!-- Final transition: Gloria + Fatima -->
-					<circle cx="25" cy="1640" r="15" class="large-bead" class:active-large-bead={activeSection === 'final_transition'} data-section="final_transition" />
+					<circle cx="25" cy="1690" r="15" class="large-bead" class:active-large-bead={activeSection === 'final_transition'} data-section="final_transition" />
+
+					<circle cx="25" cy="1730" r="10" class="bead" class:active-bead={activeSection === 'final_salve'} data-section="final_salve" />
+					<circle cx="25" cy="1760" r="10" class="bead" class:active-bead={activeSection === 'final_schlussgebet'} data-section="final_schlussgebet" />
+					<circle cx="25" cy="1790" r="10" class="bead" class:active-bead={activeSection === 'final_michael'} data-section="final_michael" />
+
+					<circle cx="25" cy="1830" r="15" class="large-bead" class:active-large-bead={activeSection === 'final_paternoster'} data-section="final_paternoster" />
+					<g data-section="final_cross">
+						<text x="25" y="1920" text-anchor="middle" font-size="80"
+							class="cross-symbol" class:active-cross={activeSection === 'final_cross'}>♱</text>
+					</g>
 
 					<!-- Invisible hitboxes for larger tap targets -->
 					<g class="hitboxes">
@@ -1409,8 +1439,14 @@ h1 {
 						<circle cx="25" cy="800" r="25" data-section="secret2_transition" />
 						<circle cx="25" cy="1080" r="25" data-section="secret3_transition" />
 						<circle cx="25" cy="1360" r="25" data-section="secret4_transition" />
-						<circle cx="25" cy="1640" r="25" data-section="final_transition" />
+						<circle cx="25" cy="1690" r="25" data-section="final_transition" />
+						<circle cx="25" cy="1730" r="20" data-section="final_salve" />
+						<circle cx="25" cy="1760" r="20" data-section="final_schlussgebet" />
+						<circle cx="25" cy="1790" r="20" data-section="final_michael" />
+						<circle cx="25" cy="1830" r="25" data-section="final_paternoster" />
+						<rect x="-15" y="1870" width="80" height="80" data-section="final_cross" />
 					</g>
+
 				</svg>
 			</div>
 		</div>
@@ -1565,21 +1601,59 @@ h1 {
 
 				<h3>{labels.fatimaPrayer} <span class="repeat-count">({labels.optional})</span></h3>
 				<FatimaGebet />
+			</div>
 
+			<div
+				class="prayer-section"
+				bind:this={sectionElements.final_salve}
+				data-section="final_salve"
+			>
 				<h3>Salve Regina</h3>
 				<SalveRegina />
+			</div>
 
+			<div
+				class="prayer-section"
+				bind:this={sectionElements.final_schlussgebet}
+				data-section="final_schlussgebet"
+			>
 				<h3>{labels.finalPrayer}</h3>
 				<RosaryFinalPrayer />
+			</div>
 
+			<div
+				class="prayer-section"
+				bind:this={sectionElements.final_michael}
+				data-section="final_michael"
+			>
 				<h3>{labels.saintMichael}</h3>
 				<MichaelGebet />
+			</div>
 
-				<h3 style="text-align: center; font-size: 2.5rem; margin-top: 2rem;">♱</h3>
+			<div
+				class="prayer-section"
+				bind:this={sectionElements.final_paternoster}
+				data-section="final_paternoster"
+			>
+				<h3>{labels.ourFather}</h3>
+				<Paternoster />
+			</div>
+
+			<div
+				class="prayer-section"
+				bind:this={sectionElements.final_cross}
+				data-section="final_cross"
+			>
+				<h3>{labels.signOfCross}</h3>
+				<Kreuzzeichen />
 				<div class="footnotes-section">
 					<p><span class="symbol">♱</span>{labels.footnoteSign}</p>
 				</div>
 			</div>
+			<button class="scroll-top-button action_button" onclick={() => window.scrollTo({ top: 0 })} aria-label="Scroll to top">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+			</button>
+			<div class="scroll-padding"></div>
 		</div>
 	</div>
 
