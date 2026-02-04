@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { Chart, registerables } from 'chart.js';
 
-  let { data = { labels: [], datasets: [] }, title = '', height = '400px' } = $props<{ data?: any, title?: string, height?: string }>();
+  let { data = { labels: [], datasets: [] }, title = '', height = '400px', onFilterChange = null } = $props<{ data?: any, title?: string, height?: string, onFilterChange?: ((categories: string[] | null) => void) | null }>();
 
   let canvas = $state();
   let chart = $state();
@@ -40,6 +40,19 @@
     };
 
     return categoryColorMap[category] || nordColors[index % nordColors.length];
+  }
+
+  function emitFilter() {
+    if (!onFilterChange || !chart) return;
+    const allVisible = chart.data.datasets.every((_, idx) => !chart.getDatasetMeta(idx).hidden);
+    if (allVisible) {
+      onFilterChange(null);
+    } else {
+      const visible = chart.data.datasets
+        .filter((_, idx) => !chart.getDatasetMeta(idx).hidden)
+        .map(ds => ds.label.toLowerCase());
+      onFilterChange(visible);
+    }
   }
 
   function createChart() {
@@ -135,7 +148,6 @@
             },
             onClick: (event, legendItem, legend) => {
               const datasetIndex = legendItem.datasetIndex;
-              const clickedMeta = chart.getDatasetMeta(datasetIndex);
 
               // Check if only this dataset is currently visible
               const onlyThisVisible = chart.data.datasets.every((dataset, idx) => {
@@ -156,6 +168,7 @@
               }
 
               chart.update();
+              emitFilter();
             }
           },
           title: {
@@ -229,6 +242,7 @@
             }
 
             chart.update();
+            emitFilter();
           }
         }
       },
