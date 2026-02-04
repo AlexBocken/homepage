@@ -1,4 +1,5 @@
 <script>
+	import { onMount } from 'svelte';
 	import { createLanguageContext } from "$lib/contexts/languageContext.js";
 	import LanguageToggle from "$lib/components/LanguageToggle.svelte";
 	import Prayer from '$lib/components/prayers/Prayer.svelte';
@@ -9,11 +10,21 @@
 	let { data } = $props();
 
 	// Create language context for prayer components
-	const langContext = createLanguageContext({ urlLang: data.lang });
+	const langContext = createLanguageContext({ urlLang: data.lang, initialLatin: data.initialLatin });
+
+	// Toggle href for no-JS fallback (navigates to opposite latin state)
+	const latinToggleHref = $derived(data.initialLatin ? '?latin=0' : '?');
 
 	// Update lang store when data.lang changes (e.g., after navigation)
 	$effect(() => {
 		langContext.lang.set(data.lang);
+	});
+
+	onMount(() => {
+		// Clean up URL params after hydration (state is now in component state)
+		if (window.location.search) {
+			history.replaceState({}, '', window.location.pathname);
+		}
 	});
 </script>
 
@@ -25,7 +36,11 @@
 <div class="angelus-page">
 	<h1>Angelus</h1>
 	<div class="toggle-controls">
-	<LanguageToggle />
+	<LanguageToggle
+		initialLatin={data.initialLatin}
+		hasUrlLatin={data.hasUrlLatin}
+		href={latinToggleHref}
+	/>
 	</div>
 
 <div class="prayers-content">
