@@ -142,6 +142,9 @@ class RosaryStreakStore {
 	}
 
 	get length() {
+		if (this.#lastPrayed && this.#lastPrayed !== getToday() && !isYesterday(this.#lastPrayed)) {
+			return 0;
+		}
 		return this.#length;
 	}
 
