@@ -19,6 +19,8 @@
 	import BruderKlausGebet from "$lib/components/prayers/BruderKlausGebet.svelte";
 	import JosephGebet from "$lib/components/prayers/JosephGebet.svelte";
 	import Confiteor from "$lib/components/prayers/Confiteor.svelte";
+	import AblassGebete from "$lib/components/prayers/AblassGebete.svelte";
+	import Prayer from "$lib/components/prayers/Prayer.svelte";
 
 	let { data } = $props();
 
@@ -55,7 +57,8 @@
 		confiteor: isEnglish ? 'The Confiteor' : 'Das Confiteor',
 		searchPlaceholder: isEnglish ? 'Search prayers...' : 'Gebete suchen...',
 		clearSearch: isEnglish ? 'Clear search' : 'Suche löschen',
-		textMatch: isEnglish ? 'Match in prayer text' : 'Treffer im Gebetstext'
+		textMatch: isEnglish ? 'Match in prayer text' : 'Treffer im Gebetstext',
+		ablassgebete: 'Ablassgebete'
 	});
 
 	// JS-only search (hidden without JS)
@@ -88,7 +91,8 @@
 		{ id: 'michael', searchTerms: ['michael', 'archangel', 'erzengel', 'satan', 'devil', 'teufel'], slug: isEnglish ? 'prayer-to-st-michael-the-archangel' : 'gebet-zum-hl-erzengel-michael' },
 		{ id: 'bruderKlaus', searchTerms: ['bruder klaus', 'nicholas', 'niklaus', 'flüe'], slug: isEnglish ? 'prayer-of-st-nicholas-of-flue' : 'bruder-klaus-gebet' },
 		{ id: 'joseph', searchTerms: ['joseph', 'josef', 'pius'], slug: isEnglish ? 'prayer-to-st-joseph-by-pope-st-pius-x' : 'josephgebet-des-hl-papst-pius-x' },
-		{ id: 'confiteor', searchTerms: ['confiteor', 'i confess', 'ich bekenne', 'mea culpa'], slug: isEnglish ? 'the-confiteor' : 'das-confiteor' }
+		{ id: 'confiteor', searchTerms: ['confiteor', 'i confess', 'ich bekenne', 'mea culpa'], slug: isEnglish ? 'the-confiteor' : 'das-confiteor' },
+		{ id: 'ablassgebete', searchTerms: ['ablass', 'kommunion'], slug: 'ablassgebete' }
 	]);
 
 	// Base URL for prayer links
@@ -108,7 +112,8 @@
 			michael: labels.michael,
 			bruderKlaus: labels.bruderKlaus,
 			joseph: labels.joseph,
-			confiteor: labels.confiteor
+			confiteor: labels.confiteor,
+			ablassgebete: labels.ablassgebete
 		};
 		return nameMap[id] || id;
 	}
@@ -316,6 +321,12 @@ h1{
 			<p slot="intro">{labels.gloriaIntro}</p>
 			<Gloria />
 		</Gebet>
+	{:else if prayer.id === 'ablassgebete'}
+		{#if data.lang === 'de'}
+		<Gebet name={getPrayerName(prayer.id)} is_bilingue={false} id={prayer.id} href="{baseUrl}/{prayer.slug}">
+			<AblassGebete />
+		</Gebet>
+		{/if}
 	{:else}
 		<Gebet name={getPrayerName(prayer.id)} is_bilingue={prayerMeta[prayer.id]?.bilingue ?? true} id={prayer.id} href="{baseUrl}/{prayer.slug}">
 			{#if prayer.id === 'signOfCross'}
