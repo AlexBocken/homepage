@@ -14,11 +14,16 @@ const validSlugs = new Set([
 	'gebet-zum-hl-erzengel-michael', 'prayer-to-st-michael-the-archangel',
 	'bruder-klaus-gebet', 'prayer-of-st-nicholas-of-flue',
 	'josephgebet-des-hl-papst-pius-x', 'prayer-to-st-joseph-by-pope-st-pius-x',
-	'das-confiteor', 'the-confiteor'
+	'das-confiteor', 'the-confiteor',
+	'ablassgebete',
 ]);
 
 export const load: PageServerLoad = async ({ params, url }) => {
 	if (!validSlugs.has(params.prayer)) {
+		throw error(404, 'Prayer not found');
+	}
+
+	if (params.faithLang === 'faith' && params.prayer === 'ablassgebete') {
 		throw error(404, 'Prayer not found');
 	}
 

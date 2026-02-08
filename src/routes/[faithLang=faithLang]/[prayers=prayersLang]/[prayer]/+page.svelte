@@ -16,6 +16,7 @@
 	import BruderKlausGebet from "$lib/components/prayers/BruderKlausGebet.svelte";
 	import JosephGebet from "$lib/components/prayers/JosephGebet.svelte";
 	import Confiteor from "$lib/components/prayers/Confiteor.svelte";
+	import AblassGebete from "$lib/components/prayers/AblassGebete.svelte";
 
 	let { data } = $props();
 
@@ -49,7 +50,8 @@
 		'josephgebet-des-hl-papst-pius-x': { id: 'joseph', name: isEnglish ? 'Prayer to St. Joseph by Pope St. Pius X' : 'Josephgebet des hl. Papst Pius X', bilingue: false },
 		'prayer-to-st-joseph-by-pope-st-pius-x': { id: 'joseph', name: isEnglish ? 'Prayer to St. Joseph by Pope St. Pius X' : 'Josephgebet des hl. Papst Pius X', bilingue: false },
 		'das-confiteor': { id: 'confiteor', name: isEnglish ? 'The Confiteor' : 'Das Confiteor', bilingue: true },
-		'the-confiteor': { id: 'confiteor', name: isEnglish ? 'The Confiteor' : 'Das Confiteor', bilingue: true }
+		'the-confiteor': { id: 'confiteor', name: isEnglish ? 'The Confiteor' : 'Das Confiteor', bilingue: true },
+		'ablassgebete': { id: 'ablassgebete', name: 'Ablassgebete', bilingue: true }
 	});
 
 	const prayer = $derived(prayerDefs[data.prayer]);
@@ -64,11 +66,150 @@
 	// Toggle href for no-JS fallback (navigates to opposite latin state)
 	const latinToggleHref = $derived(data.initialLatin ? '?latin=0' : '?');
 
+	// PiP drag-to-corner logic
+	let pipEl = $state(null);
+	let corner = $state('bottom-right');
+	let dragging = $state(false);
+	let enlarged = $state(false);
+	let dragOffset = { x: 0, y: 0 };
+	let dragPos = $state({ x: 0, y: 0 });
+	let dragMoved = false;
+	let lastTapTime = 0;
+	const MARGIN = 16;
+	const TAP_THRESHOLD = 10; // px movement to distinguish tap from drag
+	const DOUBLE_TAP_MS = 400;
+
+	function getCornerPos(c, el) {
+		const vw = window.innerWidth;
+		const vh = window.innerHeight;
+		const r = el.getBoundingClientRect();
+		const positions = {
+			'top-left': { x: MARGIN, y: MARGIN },
+			'top-right': { x: vw - r.width - MARGIN, y: MARGIN },
+			'bottom-left': { x: MARGIN, y: vh - r.height - MARGIN },
+			'bottom-right': { x: vw - r.width - MARGIN, y: vh - r.height - MARGIN },
+		};
+		return positions[c];
+	}
+
+	function snapToCorner(el, c) {
+		const pos = getCornerPos(c, el);
+		corner = c;
+		dragPos = pos;
+		el.style.transition = 'transform 0.25s ease';
+		el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+		el.addEventListener('transitionend', () => { el.style.transition = ''; }, { once: true });
+	}
+
+	function nearestCorner(x, y, el) {
+		const vw = window.innerWidth;
+		const vh = window.innerHeight;
+		const r = el.getBoundingClientRect();
+		const cx = x + r.width / 2;
+		const cy = y + r.height / 2;
+		const left = cx < vw / 2;
+		const top = cy < vh / 2;
+		return `${top ? 'top' : 'bottom'}-${left ? 'left' : 'right'}`;
+	}
+
+	function onPointerDown(e) {
+		if (!pipEl || window.matchMedia('(min-width: 1024px)').matches) return;
+		dragging = true;
+		dragMoved = false;
+		const r = pipEl.getBoundingClientRect();
+		dragOffset = { x: e.clientX - r.left, y: e.clientY - r.top };
+		pipEl.setPointerCapture(e.pointerId);
+		pipEl.style.transition = '';
+		e.preventDefault();
+	}
+
+	function onPointerMove(e) {
+		if (!dragging || !pipEl) return;
+		const x = e.clientX - dragOffset.x;
+		const y = e.clientY - dragOffset.y;
+		if (!dragMoved) {
+			const dx = Math.abs(x - dragPos.x);
+			const dy = Math.abs(y - dragPos.y);
+			if (dx > TAP_THRESHOLD || dy > TAP_THRESHOLD) dragMoved = true;
+		}
+		dragPos = { x, y };
+		pipEl.style.transform = `translate(${x}px, ${y}px)`;
+	}
+
+	function toggleEnlarged() {
+		if (!pipEl) return;
+		const rect = pipEl.getBoundingClientRect();
+		const vh = window.innerHeight / 100;
+		const currentH = enlarged ? 37.5 * vh : 25 * vh;
+		const targetH = enlarged ? 25 * vh : 37.5 * vh;
+		const ratio = targetH / currentH;
+
+		enlarged = !enlarged;
+
+		// Calculate new size and keep the anchored corner fixed
+		const newW = rect.width * ratio;
+		const newH = rect.height * ratio;
+		let newX = rect.left;
+		let newY = rect.top;
+		if (corner.includes('right')) newX = rect.right - newW;
+		if (corner.includes('bottom')) newY = rect.bottom - newH;
+
+		dragPos = { x: newX, y: newY };
+		pipEl.style.transition = 'transform 0.25s ease';
+		pipEl.style.transform = `translate(${newX}px, ${newY}px)`;
+		pipEl.addEventListener('transitionend', () => {
+			pipEl.style.transition = '';
+		}, { once: true });
+	}
+
+	function onPointerUp(e) {
+		if (!dragging || !pipEl) return;
+		dragging = false;
+
+		if (!dragMoved) {
+			// It was a tap, check for double-tap
+			const now = Date.now();
+			if (now - lastTapTime < DOUBLE_TAP_MS) {
+				lastTapTime = 0;
+				toggleEnlarged();
+				return;
+			}
+			lastTapTime = now;
+		}
+
+		const r = pipEl.getBoundingClientRect();
+		snapToCorner(pipEl, nearestCorner(r.left, r.top, pipEl));
+	}
+
+	function onResize() {
+		if (!pipEl) return;
+		const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+		if (isDesktop) {
+			pipEl.style.opacity = '';
+			return;
+		}
+		const pos = getCornerPos(corner, pipEl);
+		dragPos = pos;
+		pipEl.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+		pipEl.style.opacity = '1';
+	}
+
 	onMount(() => {
 		// Clean up URL params after hydration (state is now in component state)
 		if (window.location.search) {
 			history.replaceState({}, '', window.location.pathname);
 		}
+
+		// Initial position for PiP
+		if (pipEl && !window.matchMedia('(min-width: 1024px)').matches) {
+			const pos = getCornerPos(corner, pipEl);
+			dragPos = pos;
+			pipEl.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+			pipEl.style.opacity = '1';
+		}
+
+		window.addEventListener('resize', onResize);
+		return () => window.removeEventListener('resize', onResize);
 	});
 </script>
 
@@ -106,6 +247,12 @@ h1 {
 :global(.bilingue v:lang(de)) {
 	color: grey;
 }
+:global(.bilingue .monolingual v:lang(de)) {
+	color: inherit;
+}
+:global(.bilingue .monolingual v:lang(de) i) {
+	color: var(--nord11);
+}
 :global(.gebet i) {
 	font-style: normal;
 	color: var(--nord11);
@@ -126,8 +273,126 @@ h1 {
 		background-color: var(--nord5);
 	}
 }
+.crucifix-layout {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin: auto;
+	padding: 0 1em;
+}
+.crucifix-layout .crucifix-wrap {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 10000;
+	width: auto;
+	opacity: 0;
+	touch-action: none;
+	cursor: grab;
+	user-select: none;
+}
+.crucifix-layout .crucifix-wrap:active {
+	cursor: grabbing;
+}
+.crucifix-layout .crucifix-wrap img {
+	height: 25vh;
+	width: auto;
+	object-fit: contain;
+	border-radius: 6px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	pointer-events: none;
+	transition: height 0.25s ease;
+}
+.crucifix-layout .crucifix-wrap.enlarged img {
+	height: 37.5vh;
+}
+.crucifix-layout .prayer-scroll {
+	width: 100%;
+	max-width: 700px;
+}
+@media (min-width: 1024px) {
+	.crucifix-layout {
+		flex-direction: row;
+		align-items: flex-start;
+		gap: 2em;
+	}
+	.crucifix-layout .prayer-scroll {
+		flex: 0 1 700px;
+	}
+	.crucifix-layout .crucifix-wrap {
+		position: sticky;
+		top: 4rem;
+		left: auto;
+		transform: none !important;
+		opacity: 1;
+		flex: 1;
+		background-color: transparent;
+		padding: 0;
+		order: 1;
+		cursor: default;
+		touch-action: auto;
+		user-select: auto;
+	}
+	.crucifix-layout .crucifix-wrap img {
+		max-height: calc(100vh - 4rem);
+		height: auto;
+		width: 100%;
+		object-fit: contain;
+		border-radius: 0;
+		box-shadow: none;
+	}
+}
+@media (prefers-color-scheme: light) {
+	.crucifix-layout .crucifix-wrap {
+		background-color: var(--nord5);
+	}
+}
+@media (prefers-color-scheme: light) and (min-width: 1024px) {
+	.crucifix-layout .crucifix-wrap {
+		background-color: transparent;
+	}
+}
+@media (min-width: 1400px) {
+	.crucifix-layout::before {
+		content: '';
+		flex: 1;
+		order: -1;
+	}
+}
 </style>
+	{#if prayerId === 'ablassgebete'}
 
+<h1>{prayerName}</h1>
+
+	<div class="toggle-controls">
+		<LanguageToggle
+			initialLatin={data.initialLatin}
+			hasUrlLatin={data.hasUrlLatin}
+			href={latinToggleHref}
+		/>
+	</div>
+
+	<div class="crucifix-layout">
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="crucifix-wrap"
+			class:enlarged
+			bind:this={pipEl}
+			onpointerdown={onPointerDown}
+			onpointermove={onPointerMove}
+			onpointerup={onPointerUp}
+		>
+			<img src="/glaube/crucifix.webp" alt="Crucifix">
+		</div>
+		<div class="prayer-scroll">
+			<div class="gebet-wrapper">
+				<div class="gebet" class:bilingue={isBilingue}>
+					<AblassGebete verbose={true} />
+				</div>
+			</div>
+		</div>
+	</div>
+	{:else}
 <div class="container">
 	<h1>{prayerName}</h1>
 
@@ -138,6 +403,7 @@ h1 {
 			href={latinToggleHref}
 		/>
 	</div>
+
 
 	<div class="gebet-wrapper">
 		{#if prayerId === 'gloria'}
@@ -172,3 +438,4 @@ h1 {
 		</div>
 	</div>
 </div>
+{/if}
