@@ -18,7 +18,6 @@ import Toggle from "$lib/components/Toggle.svelte";
 import LanguageToggle from "$lib/components/LanguageToggle.svelte";
 import StreakCounter from "$lib/components/StreakCounter.svelte";
 import MysteryIcon from "$lib/components/MysteryIcon.svelte";
-
 let { data } = $props();
 
 // Mystery variations for each type of rosary
@@ -313,6 +312,75 @@ $effect(() => {
 let activeSection = $state("cross");
 let sectionElements = {};
 let svgContainer;
+
+// Whether the rosary has mystery images (stable, doesn't change during scroll)
+const hasMysteryImages = $derived(selectedMystery === 'schmerzhaften');
+
+// Mystery image scroll target based on active section
+function getMysteryScrollTarget(section) {
+	switch (section) {
+		case 'secret1_transition':
+		case 'secret2':
+		case 'secret2_transition':
+		case 'secret3':
+			return 'mocking';
+		case 'secret3_transition':
+		case 'secret4':
+			return 'between';
+		case 'secret4_transition':
+		case 'secret5':
+			return 'crucifixion';
+		case 'final_transition':
+		case 'final_salve':
+		case 'final_schlussgebet':
+		case 'final_michael':
+		case 'final_paternoster':
+		case 'final_cross':
+			return 'after';
+		default:
+			return 'before';
+	}
+}
+
+// Mobile PiP: which image to show (null = hide)
+function getMysteryImage(mystery, section) {
+	if (mystery !== 'schmerzhaften') return null;
+	const target = getMysteryScrollTarget(section);
+	if (target === 'mocking') return '/glaube/sorrowful/2-3.mocking.webp';
+	if (target === 'crucifixion') return '/glaube/sorrowful/5.crucification.webp';
+	return null;
+}
+const mysteryPipSrc = $derived(getMysteryImage(selectedMystery, activeSection));
+
+let mysteryImageContainer;
+let mysteryScrollRaf = null;
+
+function scrollMysteryImage(targetY, duration = 1200) {
+	if (!mysteryImageContainer) return;
+	if (mysteryScrollRaf) cancelAnimationFrame(mysteryScrollRaf);
+	const startY = mysteryImageContainer.scrollTop;
+	const distance = targetY - startY;
+	if (Math.abs(distance) < 1) return;
+	const startTime = performance.now();
+	const ease = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+	const step = (now) => {
+		const progress = Math.min((now - startTime) / duration, 1);
+		mysteryImageContainer.scrollTop = startY + distance * ease(progress);
+		if (progress < 1) mysteryScrollRaf = requestAnimationFrame(step);
+		else mysteryScrollRaf = null;
+	};
+	mysteryScrollRaf = requestAnimationFrame(step);
+}
+
+// Scroll the mystery image column to the relevant image
+$effect(() => {
+	if (!mysteryImageContainer || !hasMysteryImages) return;
+	const targetName = getMysteryScrollTarget(activeSection);
+	const targetEl = mysteryImageContainer.querySelector(`[data-target="${targetName}"]`);
+	if (targetEl) {
+		scrollMysteryImage(targetEl.offsetTop);
+	}
+});
 
 // Counter for tracking Ave Maria progress in each decade (0-10 for each)
 let decadeCounters = $state({
@@ -781,6 +849,9 @@ onMount(() => {
 	max-width: 1400px;
 	margin: 0 auto;
 	padding: 2rem 1rem;
+}
+.page-container:has(.has-mystery-image) {
+	max-width: calc(1400px + 25vw + 3rem);
 }
 
 .rosary-layout {
@@ -1281,6 +1352,68 @@ h1 {
 .scroll-padding {
 	height: 50vh;
 }
+
+/* Mystery images: third grid column (desktop), PiP (mobile) */
+.mystery-image-column {
+	display: none;
+}
+
+@media (min-width: 900px) {
+	.rosary-layout.has-mystery-image {
+		grid-template-columns: clamp(250px, 30vw, 400px) 1fr auto;
+	}
+	.mystery-image-column {
+		display: block;
+		position: sticky;
+		top: 6rem;
+		align-self: start;
+		max-height: calc(100vh - 7rem);
+		overflow-y: auto;
+		overflow-x: hidden;
+		scrollbar-width: none;
+	}
+	.mystery-image-column::-webkit-scrollbar {
+		display: none;
+	}
+	.mystery-image-pad {
+		height: calc(100vh - 5rem);
+	}
+	.mystery-image-column img {
+		max-height: calc(100vh - 5rem);
+		width: auto;
+		max-width: 25vw;
+		object-fit: contain;
+		border-radius: 6px;
+		margin-right: 2rem;
+		display: block;
+	}
+}
+
+/* Mobile PiP for mystery images */
+.mystery-pip {
+	position: fixed;
+	bottom: 16px;
+	right: 16px;
+	z-index: 10000;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+.mystery-pip.visible {
+	opacity: 1;
+}
+.mystery-pip img {
+	height: 25vh;
+	width: auto;
+	object-fit: contain;
+	border-radius: 6px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+@media (min-width: 900px) {
+	.mystery-pip {
+		display: none;
+	}
+}
 </style>
 <svelte:head>
 	<title>{labels.pageTitle}</title>
@@ -1370,7 +1503,7 @@ h1 {
 		</div>
 	</div>
 
-	<div class="rosary-layout">
+	<div class="rosary-layout" class:has-mystery-image={hasMysteryImages}>
 		<!-- Sidebar: Rosary Visualization -->
 		<div class="rosary-sidebar">
 			<div class="rosary-visualization" bind:this={svgContainer}>
@@ -1562,7 +1695,6 @@ h1 {
 				>
 					<h2>{decadeNum}. {labels.decade}: {currentMysteryTitles[decadeNum - 1]}</h2>
 
-					<!-- Mystery description with Bible reference button -->
 					<h3>{labels.hailMary} <span class="repeat-count">(10×)</span></h3>
 					<AveMaria
 						mysteryLatin={currentMysteriesLatin[decadeNum - 1]}
@@ -1570,7 +1702,6 @@ h1 {
 						mysteryEnglish={currentMysteriesEnglish[decadeNum - 1]}
 					/>
 
-					<!-- Bible reference and counter buttons -->
 					<div class="decade-buttons">
 						{#if currentMysteryDescriptions[decadeNum - 1]}
 							{@const description = currentMysteryDescriptions[decadeNum - 1]}
@@ -1673,8 +1804,27 @@ h1 {
 			</button>
 			<div class="scroll-padding"></div>
 		</div>
+
+		<!-- Third column: Mystery images (desktop scrollable sticky) -->
+		<div class="mystery-image-column" bind:this={mysteryImageContainer}>
+			{#if hasMysteryImages}
+				<div class="mystery-image-pad" data-target="before"></div>
+				<img src="/glaube/sorrowful/2-3.mocking.webp" alt={isEnglish ? 'Mocking of Christ' : 'Verspottung Christi'} data-target="mocking">
+				<div class="mystery-image-pad" data-target="between"></div>
+				<img src="/glaube/sorrowful/5.crucification.webp" alt={isEnglish ? 'Crucifixion of Christ' : 'Kreuzigung Christi'} data-target="crucifixion">
+				<div class="mystery-image-pad" data-target="after"></div>
+			{/if}
+		</div>
 	</div>
 
+	<!-- Mobile PiP for mystery images -->
+	{#if hasMysteryImages}
+		<div class="mystery-pip" class:visible={!!mysteryPipSrc}>
+			{#if mysteryPipSrc}
+				<img src={mysteryPipSrc} alt="">
+			{/if}
+		</div>
+	{/if}
 </div>
 
 <!-- Bible citation modal -->
