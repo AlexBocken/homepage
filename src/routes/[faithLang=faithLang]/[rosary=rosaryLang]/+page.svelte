@@ -547,10 +547,13 @@ onMount(() => {
 	// Now allow saving to localStorage
 	hasLoadedFromStorage = true;
 
-	// PiP resize handler
+	// PiP resize handler — show/hide when crossing the breakpoint
 	const onPipResize = () => {
-		if (rosaryPipEl && isMobilePip() && mysteryPipSrc) {
-			pip.reposition();
+		if (!rosaryPipEl) return;
+		if (isMobilePip() && mysteryPipSrc) {
+			pip.show(rosaryPipEl);
+		} else if (!isMobilePip()) {
+			pip.hide();
 		}
 	};
 	window.addEventListener('resize', onPipResize);
@@ -658,39 +661,12 @@ onMount(() => {
 	const observer = new IntersectionObserver((entries) => {
 		entries.forEach((entry) => {
 			if (entry.isIntersecting && scrollLock !== 'svg' && scrollLock !== 'click') {
+				// Skip observer updates when at the top — handleWindowScroll handles this
+				const scrollY = window.scrollY || window.pageYOffset;
+				if (scrollY < 50) return;
+
 				const section = entry.target.dataset.section;
 				activeSection = section;
-
-				// Don't auto-scroll if we're at the absolute top of the page and viewing the first section
-				const scrollY = window.scrollY || window.pageYOffset;
-				if (scrollY < 50 && section === 'cross') {
-					// User is at the very top - don't trigger auto-scroll, just update SVG
-					if (svgContainer && sectionPositions[activeSection] !== undefined) {
-						const svg = svgContainer.querySelector('svg');
-						if (!svg) return;
-
-						const svgYPosition = sectionPositions[activeSection];
-						const viewBox = svg.viewBox.baseVal;
-						const svgHeight = svg.clientHeight;
-						const viewBoxHeight = viewBox.height;
-
-						// Get CSS transform scale (3.5 on mobile, 1 on desktop)
-						const computedStyle = window.getComputedStyle(svg);
-						const matrix = new DOMMatrix(computedStyle.transform);
-						const cssScale = matrix.a || 1;
-
-						// Convert SVG coordinates to pixel coordinates
-						const scale = (svgHeight / viewBoxHeight) * cssScale;
-						const pixelPosition = svgYPosition * scale;
-
-						// Position with some padding to show context above
-						const targetScroll = pixelPosition - 100;
-
-						setScrollLock('prayer');
-						smoothScrollElement(svgContainer, Math.max(0, targetScroll));
-					}
-					return; // Skip the page scroll
-				}
 
 				// Scroll SVG to keep active section visible at top
 				if (svgContainer && sectionPositions[activeSection] !== undefined) {
