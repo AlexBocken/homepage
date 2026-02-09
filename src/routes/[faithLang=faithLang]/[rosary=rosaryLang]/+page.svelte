@@ -323,63 +323,65 @@ let activeSection = $state("cross");
 let sectionElements = {};
 let svgContainer;
 
-// Whether the rosary has mystery images (stable, doesn't change during scroll)
-const hasMysteryImages = $derived(showImages && selectedMystery === 'schmerzhaften');
+// Mystery images with captions (per mystery type, keyed by decade number 1-5)
+const allMysteryImages = {
+	freudenreich: new Map([
+		[1, { src: "/glaube/joyful/1-murilllo-annunciation.webp", artist: "Bartolomé Esteban Murillo", title: "The Annunciation", titleDe: "Die Verkündigung" }],
+		[2, { src: "/glaube/joyful/2-carl-bloch.the-visitation.1866.webp", artist: "Carl Bloch", title: "The Visitation", titleDe: "Die Heimsuchung", year: 1866 }],
+		[3, { src: "/glaube/joyful/3-adoration-of-the-shepards.webp", title: "Adoration of the Shepherds", titleDe: "Die Anbetung der Hirten" }],
+		[4, { src: "/glaube/joyful/4-vouet.presentation-in-the-temple.webp", artist: "Simon Vouet", title: "The Presentation in the Temple", titleDe: "Die Darstellung im Tempel" }],
+		[5, { src: "/glaube/joyful/5-carl-bloch.the-twelve-year-old-jesus-in-the-temple.1869.webp", artist: "Carl Bloch", title: "The Twelve-Year-Old Jesus in the Temple", titleDe: "Der zwölfjährige Jesus im Tempel", year: 1869 }],
+	]),
+	schmerzhaften: new Map([
+		[1, { src: "/glaube/sorrowful/1.carl-bloch.gethsemane.webp", artist: "Carl Bloch", title: "Gethsemane", titleDe: "Gethsemane", year: 1873 }],
+		[2, { src: "/glaube/sorrowful/2.wiliam-bouguereau.flagellation.webp", artist: "William-Adolphe Bouguereau", title: "The Flagellation of Our Lord Jesus Christ", titleDe: "Die Geisselung unseres Herrn Jesus Christus", year: 1880 }],
+		[3, { src: "/glaube/sorrowful/3.carl-bloch.mocking.webp", artist: "Carl Bloch", title: "The Mocking of Christ", titleDe: "Die Verspottung Christi", year: 1880 }],
+		[4, { src: "/glaube/sorrowful/4.lorenzo-lotto.carrying-the-cross.webp", artist: "Lorenzo Lotto", title: "Carrying the Cross", titleDe: "Die Kreuztragung", year: 1526 }],
+		[5, { src: "/glaube/sorrowful/5.alonso-cano.the-crucifixion.webp", artist: "Diego Velázquez", title: "Christ Crucified", titleDe: "Der gekreuzigte Christus", year: 1632 }],
+	]),
+	glorreichen: new Map([
+		[1, { src: "/glaube/glorious/1-carl-bloch.resurrection.webp", artist: "Carl Bloch", title: "The Resurrection", titleDe: "Die Auferstehung" }],
+		[2, { src: "/glaube/glorious/2-ascension.webp", title: "The Ascension", titleDe: "Die Himmelfahrt" }],
+		[3, { src: "/glaube/glorious/3-pentecost.webp", title: "Pentecost", titleDe: "Die Geistsendung" }],
+		[4, { src: "/glaube/glorious/4-giovanni-tiepolo.the-immaculate-conception.webp", artist: "Giovanni Battista Tiepolo", title: "The Immaculate Conception", titleDe: "Die Aufnahme Mariens in den Himmel" }],
+		[5, { src: "/glaube/glorious/5-diego-veazquez.coronation-mary.webp", artist: "Diego Velázquez", title: "Coronation of the Virgin", titleDe: "Die Krönung der Jungfrau", year: 1641 }],
+	]),
+	lichtreichen: new Map([
+		[1, { src: "/glaube/luminous/1-carl-bloch.the-baptism-of-christ.1870.webp", artist: "Carl Bloch", title: "The Baptism of Christ", titleDe: "Die Taufe Christi", year: 1870 }],
+		[2, { src: "/glaube/luminous/2-carl-bloch.the-wedding-at-cana.1870.webp", artist: "Carl Bloch", title: "The Wedding at Cana", titleDe: "Die Hochzeit zu Kana", year: 1870 }],
+		[3, { src: "/glaube/luminous/3-carl-bloch.the-sermon-on-the-mount.1877.jpg", artist: "Carl Bloch", title: "The Sermon on the Mount", titleDe: "Die Bergpredigt", year: 1877 }],
+		[4, { src: "/glaube/luminous/4-carl-bloch.transfiguration-of-christ.webp", artist: "Carl Bloch", title: "Transfiguration of Christ", titleDe: "Die Verklärung Christi" }],
+		[5, { src: "/glaube/luminous/5-carl-bloch.the-last-supper.webp", artist: "Carl Bloch", title: "The Last Supper", titleDe: "Das letzte Abendmahl" }],
+	]),
+};
 
-// Mystery image scroll target based on active section
+// Whether the rosary has mystery images (stable, doesn't change during scroll)
+const hasMysteryImages = $derived(showImages && (allMysteryImages[selectedMystery]?.size ?? 0) > 0);
+
+// Mystery image scroll target based on active section (returns decade number 1-5, or 'before'/'after')
 function getMysteryScrollTarget(section) {
-	switch (section) {
-		case 'cross':
-			return 'before';
-		case 'lbead2':
-			return 'garden';
-		case 'secret1':
-			return 'garden';
-		case 'secret1_transition':
-			return 'flagellation';
-		case 'secret2':
-			return 'flagellation';
-		case 'secret2_transition':
-			return 'mocking';
-		case 'secret3':
-			return 'mocking';
-		case 'secret3_transition':
-			return 'carry';
-		case 'secret4':
-			return 'carry';
-		case 'secret4_transition':
-		case 'secret5':
-			return 'crucifixion';
-		case 'final_transition':
-		case 'final_salve':
-		case 'final_schlussgebet':
-		case 'final_michael':
-		case 'final_paternoster':
-		case 'final_cross':
-			return 'after';
-		default:
-			return 'before';
+	if (section === 'lbead2') return 1;
+	const secretMatch = section.match(/^secret(\d)/);
+	if (secretMatch) {
+		const num = parseInt(secretMatch[1]);
+		return section.includes('_transition') ? num + 1 : num;
 	}
+	if (section.startsWith('final_')) return 'after';
+	return 'before';
 }
 
-// Mystery images with captions
-const mysteryImages = new Map([
-	["garden", { src: "/glaube/sorrowful/1.carl-bloch.gethsemane.webp", artist: "Carl Bloch", title: "Gethsemane", titleDe: "Gethsemane", year: 1873 }],
-	["flagellation", { src: "/glaube/sorrowful/2.wiliam-bouguereau.flagellation.webp", artist: "William-Adolphe Bouguereau", title: "The Flagellation of Our Lord Jesus Christ", titleDe: "Die Geisselung unseres Herrn Jesus Christus", year: 1880 }],
-	["mocking", { src: "/glaube/sorrowful/3.carl-bloch.mocking.webp", artist: "Carl Bloch", title: "The Mocking of Christ", titleDe: "Die Verspottung Christi", year: 1880 }],
-	["carry", { src: "/glaube/sorrowful/4.lorenzo-lotto.carrying-the-cross.webp", artist: "Lorenzo Lotto", title: "Carrying the Cross", titleDe: "Die Kreuztragung", year: 1526 }],
-	["crucifixion", { src: "/glaube/sorrowful/5.alonso-cano.the-crucifixion.webp", artist: "Diego Velázquez", title: "Christ Crucified", titleDe: "Der gekreuzigte Christus", year: 1632 }]
-]);
 // Mobile PiP: which image src to show (null = hide)
 function getMysteryImage(mystery, section) {
-	if (mystery !== 'schmerzhaften') return null;
+	const images = allMysteryImages[mystery];
+	if (!images || images.size === 0) return null;
 	const target = getMysteryScrollTarget(section);
-	return mysteryImages.get(target)?.src ?? null;
+	if (target === 'before' || target === 'after') return null;
+	return images.get(target)?.src ?? null;
 }
 const mysteryPipSrc = $derived(getMysteryImage(selectedMystery, activeSection));
 
 // Mobile PiP drag/enlarge
-const pip = createPip();
+const pip = createPip({ fullscreenEnabled: true });
 let rosaryPipEl = $state(null);
 let lastPipSrc = $state(null);
 
@@ -1487,6 +1489,54 @@ h1 {
 .mystery-pip.enlarged img {
 	height: 37.5vh;
 }
+.mystery-pip.fullscreen {
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.95);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: default;
+}
+.mystery-pip.fullscreen img {
+	border-radius: 0;
+	box-shadow: none;
+}
+.pip-fullscreen-btn {
+	all: unset;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: transparent;
+	filter: drop-shadow(0 0 1px black);
+	width: 48px;
+	height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	padding: 0;
+	z-index: 1;
+	pointer-events: auto;
+	outline: none;
+	transition: transform 0.15s ease;
+}
+.pip-fullscreen-btn:hover,
+.pip-fullscreen-btn:active {
+	transform: translate(-50%, -50%) scale(1.2);
+}
+.mystery-pip.fullscreen .pip-fullscreen-btn {
+	top: auto;
+	left: auto;
+	bottom: 10vw;
+	right: 10vw;
+	transform: none;
+}
+.mystery-pip.fullscreen .pip-fullscreen-btn:hover,
+.mystery-pip.fullscreen .pip-fullscreen-btn:active {
+	transform: scale(0.85);
+}
 @media (min-width: 1200px) {
 	.mystery-pip {
 		display: none;
@@ -1891,13 +1941,13 @@ h1 {
 		<!-- Third column: Mystery images (desktop scrollable sticky) -->
 		<div class="mystery-image-column" bind:this={mysteryImageContainer}>
 			{#if hasMysteryImages}
+				{@const images = allMysteryImages[selectedMystery]}
 				<div class="mystery-image-pad" data-target="before"></div>
-				{#each ["garden", "flagellation", "mocking", "carry", "crucifixion"] as target, i}
-					{@const img = mysteryImages.get(target)}
+				{#each [...images.entries()] as [num, img], i}
 					{#if i > 0}<div class="mystery-image-pad" data-target="between{i}"></div>{/if}
-					<figure data-target={target}>
-						<img src={img.src} alt="{img.artist} — {isEnglish ? img.title : img.titleDe}">
-						<figcaption>{img.artist}, <em>{isEnglish ? img.title : img.titleDe}</em>, {img.year}</figcaption>
+					<figure data-target={num}>
+						<img src={img.src} alt="{img.artist ? `${img.artist} — ` : ''}{isEnglish ? img.title : img.titleDe}">
+						<figcaption>{#if img.artist}{img.artist}, {/if}<em>{isEnglish ? img.title : img.titleDe}</em>{#if img.year}, {img.year}{/if}</figcaption>
 					</figure>
 				{/each}
 				<div class="mystery-image-pad" data-target="after"></div>
@@ -1912,6 +1962,7 @@ h1 {
 			class="mystery-pip"
 			class:visible={!!mysteryPipSrc}
 			class:enlarged={pip.enlarged}
+			class:fullscreen={pip.fullscreen}
 			bind:this={rosaryPipEl}
 			onpointerdown={pip.onpointerdown}
 			onpointermove={pip.onpointermove}
@@ -1919,6 +1970,20 @@ h1 {
 		>
 			{#if lastPipSrc}
 				<img src={lastPipSrc} alt="" onload={() => pip.reposition()}>
+			{/if}
+			{#if pip.showControls}
+				<button
+					class="pip-fullscreen-btn"
+					onpointerdown={(e) => e.stopPropagation()}
+					onclick={(e) => { e.stopPropagation(); pip.toggleFullscreen(); }}
+				>
+					<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="8 3 3 3 3 8"/>
+						<polyline points="16 3 21 3 21 8"/>
+						<polyline points="8 21 3 21 3 16"/>
+						<polyline points="16 21 21 21 21 16"/>
+					</svg>
+				</button>
 			{/if}
 		</div>
 	{/if}
