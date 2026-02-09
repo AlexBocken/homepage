@@ -424,13 +424,18 @@ function scrollMysteryImage(targetY, duration = 1200) {
 }
 
 // Scroll the mystery image column to the relevant image
+const IMAGE_COL_HEADER_OFFSET = 6; // rem — keep images below the sticky header
 $effect(() => {
 	if (!mysteryImageContainer || !hasMysteryImages) return;
 	const targetName = getMysteryScrollTarget(activeSection);
 	const targetEl = mysteryImageContainer.querySelector(`[data-target="${targetName}"]`);
 	if (targetEl) {
-		const padding = parseFloat(getComputedStyle(mysteryImageContainer).paddingTop) || 0;
-		scrollMysteryImage(Math.max(0, targetEl.offsetTop - padding));
+		const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+		// Edge pads (before/after): scroll flush so previous image hides behind the header
+		const offset = targetName === 'before' || targetName === 'after'
+			? 0
+			: rem * IMAGE_COL_HEADER_OFFSET;
+		scrollMysteryImage(Math.max(0, targetEl.offsetTop - offset));
 	}
 });
 
@@ -1414,7 +1419,6 @@ h1 {
 		display: block;
 		position: sticky;
 		top: 0;
-		padding-top: 6rem;
 		align-self: start;
 		max-height: 100vh;
 		overflow-y: auto;
@@ -1426,6 +1430,10 @@ h1 {
 	}
 	.mystery-image-pad {
 		height: calc(100vh - 5rem);
+	}
+	.mystery-image-pad[data-target="before"],
+	.mystery-image-pad[data-target="after"] {
+		height: 100vh;
 	}
 	.mystery-image-column figure {
 		margin: 0;
