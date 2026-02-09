@@ -1,6 +1,7 @@
 <script>
 import { onMount } from "svelte";
 import { createLanguageContext } from "$lib/contexts/languageContext.js";
+import { createPip } from "$lib/js/pip.svelte";
 import "$lib/css/christ.css";
 import "$lib/css/action_button.css";
 import Kreuzzeichen from "$lib/components/prayers/Kreuzzeichen.svelte";
@@ -352,6 +353,25 @@ function getMysteryImage(mystery, section) {
 }
 const mysteryPipSrc = $derived(getMysteryImage(selectedMystery, activeSection));
 
+// Mobile PiP drag/enlarge
+const pip = createPip();
+let rosaryPipEl = $state(null);
+let lastPipSrc = $state(null);
+
+function isMobilePip() {
+	return !window.matchMedia('(min-width: 900px)').matches;
+}
+
+$effect(() => {
+	if (mysteryPipSrc) lastPipSrc = mysteryPipSrc;
+	if (!rosaryPipEl || !isMobilePip()) return;
+	if (mysteryPipSrc) {
+		pip.show(rosaryPipEl);
+	} else {
+		pip.hide();
+	}
+});
+
 let mysteryImageContainer;
 let mysteryScrollRaf = null;
 
@@ -490,6 +510,14 @@ onMount(() => {
 
 	// Now allow saving to localStorage
 	hasLoadedFromStorage = true;
+
+	// PiP resize handler
+	const onPipResize = () => {
+		if (rosaryPipEl && isMobilePip() && mysteryPipSrc) {
+			pip.reposition();
+		}
+	};
+	window.addEventListener('resize', onPipResize);
 
 	let scrollLock = null; // Track which side initiated the scroll: 'prayer', 'svg', or 'click'
 	let scrollLockTimeout = null;
@@ -835,6 +863,7 @@ onMount(() => {
 		clearTimeout(scrollLockTimeout);
 		clearTimeout(svgScrollTimeout);
 		window.removeEventListener('scroll', handleWindowScroll);
+		window.removeEventListener('resize', onPipResize);
 		if (svgContainer) {
 			svgContainer.removeEventListener('scroll', handleSvgScroll);
 		}
@@ -1392,15 +1421,17 @@ h1 {
 /* Mobile PiP for mystery images */
 .mystery-pip {
 	position: fixed;
-	bottom: 16px;
-	right: 16px;
+	top: 0;
+	left: 0;
 	z-index: 10000;
-	pointer-events: none;
 	opacity: 0;
-	transition: opacity 0.3s ease;
+	touch-action: none;
+	cursor: grab;
+	user-select: none;
+	transition: opacity 0.25s ease;
 }
-.mystery-pip.visible {
-	opacity: 1;
+.mystery-pip:active {
+	cursor: grabbing;
 }
 .mystery-pip img {
 	height: 25vh;
@@ -1408,6 +1439,11 @@ h1 {
 	object-fit: contain;
 	border-radius: 6px;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	pointer-events: none;
+	transition: height 0.25s ease;
+}
+.mystery-pip.enlarged img {
+	height: 37.5vh;
 }
 @media (min-width: 900px) {
 	.mystery-pip {
@@ -1819,9 +1855,18 @@ h1 {
 
 	<!-- Mobile PiP for mystery images -->
 	{#if hasMysteryImages}
-		<div class="mystery-pip" class:visible={!!mysteryPipSrc}>
-			{#if mysteryPipSrc}
-				<img src={mysteryPipSrc} alt="">
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="mystery-pip"
+			class:visible={!!mysteryPipSrc}
+			class:enlarged={pip.enlarged}
+			bind:this={rosaryPipEl}
+			onpointerdown={pip.onpointerdown}
+			onpointermove={pip.onpointermove}
+			onpointerup={pip.onpointerup}
+		>
+			{#if lastPipSrc}
+				<img src={lastPipSrc} alt="">
 			{/if}
 		</div>
 	{/if}
