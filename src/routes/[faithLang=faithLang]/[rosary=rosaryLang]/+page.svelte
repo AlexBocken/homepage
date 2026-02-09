@@ -329,14 +329,24 @@ const hasMysteryImages = $derived(showImages && selectedMystery === 'schmerzhaft
 // Mystery image scroll target based on active section
 function getMysteryScrollTarget(section) {
 	switch (section) {
+		case 'cross':
+			return 'before';
+		case 'lbead2':
+			return 'garden';
+		case 'secret1':
+			return 'garden';
 		case 'secret1_transition':
+			return 'flagellation';
 		case 'secret2':
+			return 'flagellation';
 		case 'secret2_transition':
+			return 'mocking';
 		case 'secret3':
 			return 'mocking';
 		case 'secret3_transition':
+			return 'carry';
 		case 'secret4':
-			return 'between';
+			return 'carry';
 		case 'secret4_transition':
 		case 'secret5':
 			return 'crucifixion';
@@ -352,13 +362,19 @@ function getMysteryScrollTarget(section) {
 	}
 }
 
-// Mobile PiP: which image to show (null = hide)
+// Mystery images with captions
+const mysteryImages = new Map([
+	["garden", { src: "/glaube/sorrowful/1.carl-bloch.gethsemane.webp", artist: "Carl Bloch", title: "Gethsemane", titleDe: "Gethsemane", year: 1873 }],
+	["flagellation", { src: "/glaube/sorrowful/2.wiliam-bouguereau.flagellation.webp", artist: "William-Adolphe Bouguereau", title: "The Flagellation of Our Lord Jesus Christ", titleDe: "Die Geisselung unseres Herrn Jesus Christus", year: 1880 }],
+	["mocking", { src: "/glaube/sorrowful/3.carl-bloch.mocking.webp", artist: "Carl Bloch", title: "The Mocking of Christ", titleDe: "Die Verspottung Christi", year: 1880 }],
+	["carry", { src: "/glaube/sorrowful/4.lorenzo-lotto.carrying-the-cross.webp", artist: "Lorenzo Lotto", title: "Carrying the Cross", titleDe: "Die Kreuztragung", year: 1526 }],
+	["crucifixion", { src: "/glaube/sorrowful/5.alonso-cano.the-crucifixion.webp", artist: "Diego Velázquez", title: "Christ Crucified", titleDe: "Der gekreuzigte Christus", year: 1632 }]
+]);
+// Mobile PiP: which image src to show (null = hide)
 function getMysteryImage(mystery, section) {
 	if (mystery !== 'schmerzhaften') return null;
 	const target = getMysteryScrollTarget(section);
-	if (target === 'mocking') return '/glaube/sorrowful/2-3.mocking.webp';
-	if (target === 'crucifixion') return '/glaube/sorrowful/5.crucification.webp';
-	return null;
+	return mysteryImages.get(target)?.src ?? null;
 }
 const mysteryPipSrc = $derived(getMysteryImage(selectedMystery, activeSection));
 
@@ -413,7 +429,8 @@ $effect(() => {
 	const targetName = getMysteryScrollTarget(activeSection);
 	const targetEl = mysteryImageContainer.querySelector(`[data-target="${targetName}"]`);
 	if (targetEl) {
-		scrollMysteryImage(targetEl.offsetTop);
+		const padding = parseFloat(getComputedStyle(mysteryImageContainer).paddingTop) || 0;
+		scrollMysteryImage(Math.max(0, targetEl.offsetTop - padding));
 	}
 });
 
@@ -727,10 +744,14 @@ onMount(() => {
 
 		// Check if we're at the absolute top of the page
 		if (scrollY < 50) {
-			// Scroll SVG to top
-			if (svgContainer.scrollTop > 10) { // Only if not already at top
+			activeSection = 'cross';
+			// Snap SVG and images to top instantly
+			if (svgContainer.scrollTop > 10) {
 				setScrollLock('prayer');
-				smoothScrollElement(svgContainer, 0);
+				svgContainer.scrollTop = 0;
+			}
+			if (mysteryImageContainer && mysteryImageContainer.scrollTop > 10) {
+				mysteryImageContainer.scrollTop = 0;
 			}
 		}
 		// Check if we're at the absolute bottom of the page
@@ -748,6 +769,9 @@ onMount(() => {
 			if (svgContainer.scrollTop > 10) { // Only if not already at top
 				setScrollLock('prayer');
 				smoothScrollElement(svgContainer, 0);
+			}
+			if (mysteryImageContainer && mysteryImageContainer.scrollTop > 10) {
+				smoothScrollElement(mysteryImageContainer, 0);
 			}
 		}
 		// Check if we've scrolled past the final section (it's completely above viewport)
@@ -1413,9 +1437,10 @@ h1 {
 	.mystery-image-column {
 		display: block;
 		position: sticky;
-		top: 6rem;
+		top: 0;
+		padding-top: 6rem;
 		align-self: start;
-		max-height: calc(100vh - 7rem);
+		max-height: 100vh;
 		overflow-y: auto;
 		overflow-x: hidden;
 		scrollbar-width: none;
@@ -1426,14 +1451,28 @@ h1 {
 	.mystery-image-pad {
 		height: calc(100vh - 5rem);
 	}
+	.mystery-image-column figure {
+		margin: 0;
+		margin-right: 2rem;
+	}
 	.mystery-image-column img {
 		max-height: calc(100vh - 5rem);
 		width: auto;
 		max-width: 25vw;
 		object-fit: contain;
 		border-radius: 6px;
-		margin-right: 2rem;
 		display: block;
+	}
+	.mystery-image-column figcaption {
+		font-size: 0.8rem;
+		color: var(--nord4);
+		margin-top: 0.4rem;
+		max-width: 25vw;
+	}
+}
+@media (min-width: 1200px) and (prefers-color-scheme: light) {
+	.mystery-image-column figcaption {
+		color: var(--nord2);
 	}
 }
 
@@ -1869,9 +1908,14 @@ h1 {
 		<div class="mystery-image-column" bind:this={mysteryImageContainer}>
 			{#if hasMysteryImages}
 				<div class="mystery-image-pad" data-target="before"></div>
-				<img src="/glaube/sorrowful/2-3.mocking.webp" alt={isEnglish ? 'Mocking of Christ' : 'Verspottung Christi'} data-target="mocking">
-				<div class="mystery-image-pad" data-target="between"></div>
-				<img src="/glaube/sorrowful/5.crucification.webp" alt={isEnglish ? 'Crucifixion of Christ' : 'Kreuzigung Christi'} data-target="crucifixion">
+				{#each ["garden", "flagellation", "mocking", "carry", "crucifixion"] as target, i}
+					{@const img = mysteryImages.get(target)}
+					{#if i > 0}<div class="mystery-image-pad" data-target="between{i}"></div>{/if}
+					<figure data-target={target}>
+						<img src={img.src} alt="{img.artist} — {isEnglish ? img.title : img.titleDe}">
+						<figcaption>{img.artist}, <em>{isEnglish ? img.title : img.titleDe}</em>, {img.year}</figcaption>
+					</figure>
+				{/each}
 				<div class="mystery-image-pad" data-target="after"></div>
 			{/if}
 		</div>
@@ -1890,7 +1934,7 @@ h1 {
 			onpointerup={pip.onpointerup}
 		>
 			{#if lastPipSrc}
-				<img src={lastPipSrc} alt="">
+				<img src={lastPipSrc} alt="" onload={() => pip.reposition()}>
 			{/if}
 		</div>
 	{/if}
