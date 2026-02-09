@@ -34,6 +34,7 @@
 .toggle-wrapper input[type="checkbox"] {
 	appearance: none;
 	-webkit-appearance: none;
+	margin: 0;
 	width: 44px;
 	height: 24px;
 	background: var(--nord2);

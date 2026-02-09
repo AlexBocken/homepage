@@ -1,5 +1,5 @@
 <script>
-import { onMount } from "svelte";
+import { onMount, tick } from "svelte";
 import { createLanguageContext } from "$lib/contexts/languageContext.js";
 import { createPip } from "$lib/js/pip.svelte";
 import "$lib/css/christ.css";
@@ -183,6 +183,9 @@ const mysteryTitlesEnglish = {
 // Toggle for including Luminous mysteries (initialized from URL param or default)
 let includeLuminous = $state(data.initialLuminous);
 
+// Toggle for showing mystery images
+let showImages = $state(true);
+
 // Flag to prevent saving before we've loaded from localStorage
 let hasLoadedFromStorage = false;
 
@@ -208,6 +211,7 @@ const labels = $derived({
 	glorious: isEnglish ? 'Glorious' : 'Glorreichen',
 	luminous: isEnglish ? 'Luminous' : 'Lichtreichen',
 	includeLuminous: isEnglish ? 'Include Luminous Mysteries' : 'Lichtreiche Geheimnisse einbeziehen',
+	showImages: isEnglish ? 'Show Images' : 'Bilder anzeigen',
 	beginning: isEnglish ? 'Beginning' : 'Anfang',
 	signOfCross: isEnglish ? '♱ Sign of the Cross' : '♱ Das Kreuzzeichen',
 	ourFather: isEnglish ? 'Our Father' : 'Vater unser',
@@ -230,10 +234,15 @@ const labels = $derived({
 	mysteryLove: isEnglish ? 'Jesus, who may kindle our love' : 'Jesus, der in uns die Liebe entzünde'
 });
 
-// Save luminous toggle state to localStorage whenever it changes (but only after initial load)
+// Save toggle states to localStorage whenever they change (but only after initial load)
 $effect(() => {
 	if (typeof localStorage !== 'undefined' && hasLoadedFromStorage) {
 		localStorage.setItem('rosary_includeLuminous', includeLuminous.toString());
+	}
+});
+$effect(() => {
+	if (typeof localStorage !== 'undefined' && hasLoadedFromStorage) {
+		localStorage.setItem('rosary_showImages', showImages.toString());
 	}
 });
 
@@ -315,7 +324,7 @@ let sectionElements = {};
 let svgContainer;
 
 // Whether the rosary has mystery images (stable, doesn't change during scroll)
-const hasMysteryImages = $derived(selectedMystery === 'schmerzhaften');
+const hasMysteryImages = $derived(showImages && selectedMystery === 'schmerzhaften');
 
 // Mystery image scroll target based on active section
 function getMysteryScrollTarget(section) {
@@ -359,14 +368,20 @@ let rosaryPipEl = $state(null);
 let lastPipSrc = $state(null);
 
 function isMobilePip() {
-	return !window.matchMedia('(min-width: 900px)').matches;
+	return !window.matchMedia('(min-width: 1200px)').matches;
 }
 
 $effect(() => {
 	if (mysteryPipSrc) lastPipSrc = mysteryPipSrc;
+});
+
+$effect(() => {
 	if (!rosaryPipEl || !isMobilePip()) return;
 	if (mysteryPipSrc) {
-		pip.show(rosaryPipEl);
+		// Wait for DOM update so the <img> has rendered with dimensions
+		tick().then(() => {
+			if (rosaryPipEl) pip.show(rosaryPipEl);
+		});
 	} else {
 		pip.hide();
 	}
@@ -489,12 +504,16 @@ for (let d = 1; d < 5; d++) {
 const pos = sectionPositions;
 
 onMount(() => {
-	// Load toggle state from localStorage only if not overridden by URL params
+	// Load toggle states from localStorage only if not overridden by URL params
 	if (!data.hasUrlLuminous) {
 		const savedIncludeLuminous = localStorage.getItem('rosary_includeLuminous');
 		if (savedIncludeLuminous !== null) {
 			includeLuminous = savedIncludeLuminous === 'true';
 		}
+	}
+	const savedShowImages = localStorage.getItem('rosary_showImages');
+	if (savedShowImages !== null) {
+		showImages = savedShowImages === 'true';
 	}
 
 	// If no mystery was specified in URL, recompute based on loaded preferences
@@ -1387,7 +1406,7 @@ h1 {
 	display: none;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
 	.rosary-layout.has-mystery-image {
 		grid-template-columns: clamp(250px, 30vw, 400px) 1fr auto;
 	}
@@ -1445,7 +1464,7 @@ h1 {
 .mystery-pip.enlarged img {
 	height: 37.5vh;
 }
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
 	.mystery-pip {
 		display: none;
 	}
@@ -1528,6 +1547,11 @@ h1 {
 				bind:checked={includeLuminous}
 				label={labels.includeLuminous}
 				href={luminousToggleHref}
+			/>
+
+			<Toggle
+				bind:checked={showImages}
+				label={labels.showImages}
 			/>
 
 			<!-- Language Toggle (link for no-JS, enhanced with onclick for JS) -->
