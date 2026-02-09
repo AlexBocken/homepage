@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { createPip } from '$lib/js/pip.svelte';
 
 	/**
 	 * @param {'layout' | 'overlay'} mode
@@ -10,17 +11,9 @@
 
 	let pipEl = $state(null);
 	let contentEl = $state(null);
-	let corner = $state('bottom-right');
-	let dragging = $state(false);
-	let enlarged = $state(false);
 	let inView = $state(false);
-	let dragOffset = { x: 0, y: 0 };
-	let dragPos = $state({ x: 0, y: 0 });
-	let dragMoved = false;
-	let lastTapTime = 0;
-	const MARGIN = 16;
-	const TAP_THRESHOLD = 10;
-	const DOUBLE_TAP_MS = 400;
+
+	const pip = createPip();
 
 	function isMobile() {
 		return !window.matchMedia('(min-width: 1024px)').matches;
@@ -31,121 +24,14 @@
 		return isMobile();
 	}
 
-	// Whether the image visibility is controlled by IntersectionObserver
-	function isObserverControlled() {
-		return mode === 'overlay';
-	}
-
-	function getCornerPos(c, el) {
-		const vw = window.innerWidth;
-		const vh = window.innerHeight;
-		const r = el.getBoundingClientRect();
-		return {
-			'top-left': { x: MARGIN, y: MARGIN },
-			'top-right': { x: vw - r.width - MARGIN, y: MARGIN },
-			'bottom-left': { x: MARGIN, y: vh - r.height - MARGIN },
-			'bottom-right': { x: vw - r.width - MARGIN, y: vh - r.height - MARGIN },
-		}[c];
-	}
-
-	function snapToCorner(el, c) {
-		const pos = getCornerPos(c, el);
-		corner = c;
-		dragPos = pos;
-		el.style.transition = 'transform 0.25s ease';
-		el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
-		el.addEventListener('transitionend', () => { el.style.transition = ''; }, { once: true });
-	}
-
-	function nearestCorner(x, y, el) {
-		const vw = window.innerWidth;
-		const vh = window.innerHeight;
-		const r = el.getBoundingClientRect();
-		const cx = x + r.width / 2;
-		const cy = y + r.height / 2;
-		const left = cx < vw / 2;
-		const top = cy < vh / 2;
-		return `${top ? 'top' : 'bottom'}-${left ? 'left' : 'right'}`;
-	}
-
-	function onPointerDown(e) {
-		if (!pipEl || !isPipActive()) return;
-		dragging = true;
-		dragMoved = false;
-		const r = pipEl.getBoundingClientRect();
-		dragOffset = { x: e.clientX - r.left, y: e.clientY - r.top };
-		pipEl.setPointerCapture(e.pointerId);
-		pipEl.style.transition = '';
-		e.preventDefault();
-	}
-
-	function onPointerMove(e) {
-		if (!dragging || !pipEl) return;
-		const x = e.clientX - dragOffset.x;
-		const y = e.clientY - dragOffset.y;
-		if (!dragMoved) {
-			const dx = Math.abs(x - dragPos.x);
-			const dy = Math.abs(y - dragPos.y);
-			if (dx > TAP_THRESHOLD || dy > TAP_THRESHOLD) dragMoved = true;
-		}
-		dragPos = { x, y };
-		pipEl.style.transform = `translate(${x}px, ${y}px)`;
-	}
-
-	function toggleEnlarged() {
-		if (!pipEl) return;
-		const rect = pipEl.getBoundingClientRect();
-		const vh = window.innerHeight / 100;
-		const currentH = enlarged ? 37.5 * vh : 25 * vh;
-		const targetH = enlarged ? 25 * vh : 37.5 * vh;
-		const ratio = targetH / currentH;
-
-		enlarged = !enlarged;
-
-		const newW = rect.width * ratio;
-		const newH = rect.height * ratio;
-		let newX = rect.left;
-		let newY = rect.top;
-		if (corner.includes('right')) newX = rect.right - newW;
-		if (corner.includes('bottom')) newY = rect.bottom - newH;
-
-		dragPos = { x: newX, y: newY };
-		pipEl.style.transition = 'transform 0.25s ease';
-		pipEl.style.transform = `translate(${newX}px, ${newY}px)`;
-		pipEl.addEventListener('transitionend', () => {
-			pipEl.style.transition = '';
-		}, { once: true });
-	}
-
-	function onPointerUp(e) {
-		if (!dragging || !pipEl) return;
-		dragging = false;
-
-		if (!dragMoved) {
-			const now = Date.now();
-			if (now - lastTapTime < DOUBLE_TAP_MS) {
-				lastTapTime = 0;
-				toggleEnlarged();
-				return;
-			}
-			lastTapTime = now;
-		}
-
-		const r = pipEl.getBoundingClientRect();
-		snapToCorner(pipEl, nearestCorner(r.left, r.top, pipEl));
-	}
-
 	function updateVisibility() {
 		if (!pipEl) return;
 		if (isPipActive()) {
 			// Mobile PiP mode
 			if (inView) {
-				const pos = getCornerPos(corner, pipEl);
-				dragPos = pos;
-				pipEl.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
-				pipEl.style.opacity = '1';
+				pip.show(pipEl);
 			} else {
-				pipEl.style.opacity = '0';
+				pip.hide();
 			}
 		} else {
 			// Desktop (both modes): CSS handles everything
@@ -161,7 +47,11 @@
 
 	function onResize() {
 		if (!pipEl) return;
-		updateVisibility();
+		if (isPipActive() && inView) {
+			pip.reposition();
+		} else {
+			updateVisibility();
+		}
 	}
 
 	onMount(() => {
@@ -193,11 +83,11 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="image-wrap"
-		class:enlarged
+		class:enlarged={pip.enlarged}
 		bind:this={pipEl}
-		onpointerdown={onPointerDown}
-		onpointermove={onPointerMove}
-		onpointerup={onPointerUp}
+		onpointerdown={pip.onpointerdown}
+		onpointermove={pip.onpointermove}
+		onpointerup={pip.onpointerup}
 	>
 		<img {src} {alt}>
 	</div>
