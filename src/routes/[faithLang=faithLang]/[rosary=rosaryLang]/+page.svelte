@@ -187,7 +187,7 @@ let includeLuminous = $state(data.initialLuminous);
 let showImages = $state(true);
 
 // Flag to prevent saving before we've loaded from localStorage
-let hasLoadedFromStorage = false;
+let hasLoadedFromStorage = $state(false);
 
 // Create language context for prayer components (LanguageToggle will use this)
 const langContext = createLanguageContext({ urlLang: data.lang, initialLatin: data.initialLatin });
