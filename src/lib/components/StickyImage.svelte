@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { createPip } from '$lib/js/pip.svelte';
+	import PipImage from '$lib/components/PipImage.svelte';
 
 	/**
 	 * @param {'layout' | 'overlay'} mode
@@ -13,7 +14,7 @@
 	let contentEl = $state(null);
 	let inView = $state(false);
 
-	const pip = createPip();
+	const pip = createPip({ fullscreenEnabled: true });
 
 	function isMobile() {
 		return !window.matchMedia('(min-width: 1024px)').matches;
@@ -80,17 +81,10 @@
 </script>
 
 <div class="sticky-image-layout" class:overlay={mode === 'overlay'}>
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		class="image-wrap"
-		class:enlarged={pip.enlarged}
-		bind:this={pipEl}
-		onpointerdown={pip.onpointerdown}
-		onpointermove={pip.onpointermove}
-		onpointerup={pip.onpointerup}
-	>
+	<div class="image-wrap-desktop">
 		<img {src} {alt}>
 	</div>
+	<PipImage {pip} {src} {alt} visible={inView} bind:el={pipEl} />
 	<div class="content-scroll" bind:this={contentEl}>
 		{@render children()}
 	</div>
@@ -107,32 +101,8 @@
 .sticky-image-layout.overlay {
 	display: contents;
 }
-.image-wrap {
-	position: fixed;
-	top: 0;
-	left: 0;
-	z-index: 10000;
-	width: auto;
-	opacity: 0;
-	touch-action: none;
-	cursor: grab;
-	user-select: none;
-	transition: opacity 0.25s ease;
-}
-.image-wrap:active {
-	cursor: grabbing;
-}
-.image-wrap img {
-	height: 25vh;
-	width: auto;
-	object-fit: contain;
-	border-radius: 6px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-	pointer-events: none;
-	transition: height 0.25s ease;
-}
-.image-wrap.enlarged img {
-	height: 37.5vh;
+.image-wrap-desktop {
+	display: none;
 }
 .content-scroll {
 	width: 100%;
@@ -148,29 +118,18 @@
 		gap: 2rem;
 		width: calc(100% + 25vw + 2rem);
 	}
-	.overlay .image-wrap {
+	.image-wrap-desktop {
+		display: block;
 		position: sticky;
 		top: 4rem;
-		left: auto;
-		transform: none !important;
-		width: auto;
 		align-self: start;
 		order: 1;
-		opacity: 1;
-		z-index: auto;
-		cursor: default;
-		touch-action: auto;
-		user-select: auto;
-		transition: none;
 	}
-	.overlay .image-wrap img {
+	.overlay .image-wrap-desktop img {
 		height: auto;
 		max-height: calc(100vh - 5rem);
 		width: auto;
 		max-width: 25vw;
-		border-radius: 0;
-		box-shadow: none;
-		pointer-events: auto;
 	}
 	.sticky-image-layout:not(.overlay) {
 		flex-direction: row;
@@ -180,37 +139,27 @@
 	.sticky-image-layout:not(.overlay) .content-scroll {
 		flex: 0 1 700px;
 	}
-	.sticky-image-layout:not(.overlay) .image-wrap {
+	.sticky-image-layout:not(.overlay) .image-wrap-desktop {
+		display: block;
 		position: sticky;
 		top: 4rem;
-		left: auto;
-		transform: none !important;
-		opacity: 1;
 		flex: 1;
-		background-color: transparent;
-		padding: 0;
 		order: 1;
-		cursor: default;
-		touch-action: auto;
-		user-select: auto;
-		transition: none;
 	}
-	.sticky-image-layout:not(.overlay) .image-wrap img {
+	.sticky-image-layout:not(.overlay) .image-wrap-desktop img {
 		max-height: calc(100vh - 4rem);
 		height: auto;
 		width: 100%;
 		object-fit: contain;
-		border-radius: 0;
-		box-shadow: none;
 	}
 }
 @media (prefers-color-scheme: light) {
-	.sticky-image-layout:not(.overlay) .image-wrap {
+	.sticky-image-layout:not(.overlay) .image-wrap-desktop {
 		background-color: var(--nord5);
 	}
 }
 @media (prefers-color-scheme: light) and (min-width: 1024px) {
-	.sticky-image-layout:not(.overlay) .image-wrap {
+	.sticky-image-layout:not(.overlay) .image-wrap-desktop {
 		background-color: transparent;
 	}
 }
