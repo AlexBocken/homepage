@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { Recipe } from '../../../../models/Recipe';
-import { dbConnect } from '../../../../utils/db';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
 import { json } from '@sveltejs/kit';
 
 // GET: List all base recipes for selector UI

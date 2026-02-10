@@ -1,41 +1,36 @@
 <script>
 	import "$lib/css/nordtheme.css";
-	import TagChip from './TagChip.svelte';
+	import TagChip from '$lib/components/recipes/TagChip.svelte';
 
 	let {
-		selectedSeasons = [],
+		categories = [],
+		selected = null,
 		onChange = () => {},
 		lang = 'de',
-		months = []
+		useAndLogic = true
 	} = $props();
 
 	const isEnglish = $derived(lang === 'en');
-	const label = $derived(isEnglish ? 'Season' : 'Saison');
-	const selectLabel = $derived(isEnglish ? 'Select season...' : 'Saison auswählen...');
+	const label = $derived(isEnglish ? 'Category' : 'Kategorie');
+	const selectLabel = $derived(isEnglish ? 'Select category...' : 'Kategorie auswählen...');
+
+	// Convert selected to array for OR mode, keep as single value for AND mode
+	const selectedArray = $derived(
+		useAndLogic
+			? (selected ? [selected] : [])
+			: (Array.isArray(selected) ? selected : (selected ? [selected] : []))
+	);
 
 	let inputValue = $state('');
 	let dropdownOpen = $state(false);
 
-	// Available month options (not yet selected)
-	const availableMonths = $derived(
-		months.map((month, i) => ({ name: month, number: i + 1 }))
-			.filter(m => !selectedSeasons.includes(m.number))
-	);
-
-	// Filter months based on input
-	const filteredMonths = $derived(
+	// Filter categories based on input
+	const filteredCategories = $derived(
 		inputValue.trim() === ''
-			? availableMonths
-			: availableMonths.filter(m =>
-				m.name.toLowerCase().includes(inputValue.toLowerCase())
+			? categories
+			: categories.filter(cat =>
+				cat.toLowerCase().includes(inputValue.toLowerCase())
 			)
-	);
-
-	// Selected months for display
-	const selectedMonthNames = $derived(
-		selectedSeasons
-			.map(num => ({ name: months[num - 1], number: num }))
-			.filter(m => m.name) // Filter out invalid months
 	);
 
 	function handleInputFocus() {
@@ -49,28 +44,47 @@
 		}, 200);
 	}
 
-	function handleMonthSelect(monthNumber) {
-		onChange([...selectedSeasons, monthNumber]);
-		inputValue = '';
-	}
-
-	function handleMonthRemove(monthNumber) {
-		onChange(selectedSeasons.filter(m => m !== monthNumber));
+	function handleCategorySelect(category) {
+		if (useAndLogic) {
+			// AND mode: single select
+			onChange(category);
+			inputValue = '';
+			dropdownOpen = false;
+		} else {
+			// OR mode: multi-select toggle
+			const currentSelected = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+			if (currentSelected.includes(category)) {
+				const newSelected = currentSelected.filter(c => c !== category);
+				onChange(newSelected.length > 0 ? newSelected : null);
+			} else {
+				onChange([...currentSelected, category]);
+			}
+			inputValue = '';
+		}
 	}
 
 	function handleKeyDown(event) {
 		if (event.key === 'Enter') {
 			event.preventDefault();
 			const value = inputValue.trim();
-			const matchedMonth = availableMonths.find(m =>
-				m.name.toLowerCase() === value.toLowerCase()
-			) || filteredMonths[0];
-			if (matchedMonth) {
-				handleMonthSelect(matchedMonth.number);
+			const matchedCat = categories.find(c => c.toLowerCase() === value.toLowerCase())
+				|| filteredCategories[0];
+			if (matchedCat) {
+				handleCategorySelect(matchedCat);
 			}
 		} else if (event.key === 'Escape') {
 			dropdownOpen = false;
 			inputValue = '';
+		}
+	}
+
+	function handleRemove(category) {
+		if (useAndLogic) {
+			onChange(null);
+		} else {
+			const currentSelected = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+			const newSelected = currentSelected.filter(c => c !== category);
+			onChange(newSelected.length > 0 ? newSelected : null);
 		}
 	}
 </script>
@@ -171,7 +185,7 @@
 		gap: 0.3rem;
 	}
 
-	.selected-seasons {
+	.selected-category {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.3rem;
@@ -194,30 +208,30 @@
 			autocomplete="off"
 		/>
 
-		<!-- Custom dropdown with month chips -->
-		{#if dropdownOpen && filteredMonths.length > 0}
+		<!-- Custom dropdown with category chips -->
+		{#if dropdownOpen && filteredCategories.length > 0}
 			<div class="dropdown">
-				{#each filteredMonths as month}
+				{#each filteredCategories as category}
 					<TagChip
-						tag={month.name}
-						selected={false}
+						tag={category}
+						selected={selectedArray.includes(category)}
 						removable={false}
-						onToggle={() => handleMonthSelect(month.number)}
+						onToggle={() => handleCategorySelect(category)}
 					/>
 				{/each}
 			</div>
 		{/if}
 	</div>
 
-	<!-- Selected seasons display below -->
-	{#if selectedMonthNames.length > 0}
-		<div class="selected-seasons">
-			{#each selectedMonthNames as month}
+	<!-- Selected categories display below -->
+	{#if selectedArray.length > 0}
+		<div class="selected-category">
+			{#each selectedArray as category}
 				<TagChip
-					tag={month.name}
+					tag={category}
 					selected={true}
 					removable={true}
-					onToggle={() => handleMonthRemove(month.number)}
+					onToggle={() => handleRemove(category)}
 				/>
 			{/each}
 		</div>

@@ -1,6 +1,6 @@
 import { json, type RequestHandler, error } from '@sveltejs/kit';
-import { Recipe } from '../../../../../models/Recipe';
-import { dbConnect } from '../../../../../utils/db';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const session = await locals.auth();

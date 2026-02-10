@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-    	import MediaScroller from '$lib/components/MediaScroller.svelte';
+    	import MediaScroller from '$lib/components/recipes/MediaScroller.svelte';
     	import AddButton from '$lib/components/AddButton.svelte';
-    	import Card from '$lib/components/Card.svelte';
-    	import Search from '$lib/components/Search.svelte';
+    	import Card from '$lib/components/recipes/Card.svelte';
+    	import Search from '$lib/components/recipes/Search.svelte';
 	import LazyCategory from '$lib/components/LazyCategory.svelte';
 	import { getCategories } from '$lib/js/categories';
     	let { data } = $props<{ data: PageData }>();

@@ -1,8 +1,8 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { Recipe } from '../../../../models/Recipe';
-import { UserFavorites } from '../../../../models/UserFavorites';
-import { dbConnect } from '../../../../utils/db';
-import type {RecipeModelType} from '../../../../types/types';
+import { Recipe } from '$models/Recipe';
+import { UserFavorites } from '$models/UserFavorites';
+import { dbConnect } from '$utils/db';
+import type {RecipeModelType} from '$types/types';
 import { error } from '@sveltejs/kit';
 import { invalidateRecipeCaches } from '$lib/server/cache';
 // header: use for bearer token for now

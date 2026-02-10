@@ -1,8 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
-import { WorkoutSession } from '../../../../models/WorkoutSession';
-import { WorkoutTemplate } from '../../../../models/WorkoutTemplate';
+import { WorkoutSession } from '$models/WorkoutSession';
+import { WorkoutTemplate } from '$models/WorkoutTemplate';
 
 // GET /api/fitness/sessions - Get all workout sessions for the user
 export const GET: RequestHandler = async ({ url, locals }) => {

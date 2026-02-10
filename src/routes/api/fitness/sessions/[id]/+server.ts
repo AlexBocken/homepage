@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
-import { WorkoutSession } from '../../../../../models/WorkoutSession';
+import { WorkoutSession } from '$models/WorkoutSession';
 import mongoose from 'mongoose';
 
 // GET /api/fitness/sessions/[id] - Get a specific workout session

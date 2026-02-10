@@ -1,5 +1,5 @@
 import { saveAllRecipes } from './db';
-import type { BriefRecipeType, RecipeModelType } from '../../types/types';
+import type { BriefRecipeType, RecipeModelType } from '$types/types';
 
 // Discover glaube routes at build time using Vite's glob import
 const glaubePageModules = import.meta.glob('/src/routes/glaube/**/+page.svelte');

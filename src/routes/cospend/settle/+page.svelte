@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { enhance } from '$app/forms';
-  import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
 
 

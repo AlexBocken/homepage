@@ -1,8 +1,8 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { UserFavorites } from '../../../../../models/UserFavorites';
-import { Recipe } from '../../../../../models/Recipe';
-import { dbConnect } from '../../../../../utils/db';
-import type { RecipeModelType } from '../../../../../types/types';
+import { UserFavorites } from '$models/UserFavorites';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
+import type { RecipeModelType } from '$types/types';
 import { error } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals }) => {

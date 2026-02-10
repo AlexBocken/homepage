@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { ExchangeRate } from '../../../../models/ExchangeRate';
-import { dbConnect } from '../../../../utils/db';
+import { ExchangeRate } from '$models/ExchangeRate';
+import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals, url }) => {

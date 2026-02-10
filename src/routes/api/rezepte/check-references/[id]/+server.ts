@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { Recipe } from '../../../../../models/Recipe';
-import { dbConnect } from '../../../../../utils/db';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
 import { json } from '@sveltejs/kit';
 
 // GET: Check which recipes reference this recipe

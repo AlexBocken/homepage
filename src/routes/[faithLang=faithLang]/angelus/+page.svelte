@@ -1,9 +1,9 @@
 <script>
 	import { onMount } from 'svelte';
 	import { createLanguageContext } from "$lib/contexts/languageContext.js";
-	import LanguageToggle from "$lib/components/LanguageToggle.svelte";
-	import Prayer from '$lib/components/prayers/Prayer.svelte';
-	import AveMaria from '$lib/components/prayers/AveMaria.svelte';
+	import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
+	import Prayer from '$lib/components/faith/prayers/Prayer.svelte';
+	import AveMaria from '$lib/components/faith/prayers/AveMaria.svelte';
 	import "$lib/css/christ.css";
 	import "$lib/css/rosenkranz.css";
 

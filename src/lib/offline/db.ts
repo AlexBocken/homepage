@@ -1,4 +1,4 @@
-import type { BriefRecipeType, RecipeModelType } from '../../types/types';
+import type { BriefRecipeType, RecipeModelType } from '$types/types';
 
 const DB_NAME = 'bocken-recipes';
 const DB_VERSION = 2; // Bumped to force recreation of stores

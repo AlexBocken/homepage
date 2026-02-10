@@ -3,11 +3,11 @@
 	import { tick } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import Check from '$lib/assets/icons/Check.svelte';
-	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
-	import TranslationApproval from '$lib/components/TranslationApproval.svelte';
-	import CardAdd from '$lib/components/CardAdd.svelte';
-	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
-	import CreateStepList from '$lib/components/CreateStepList.svelte';
+	import SeasonSelect from '$lib/components/recipes/SeasonSelect.svelte';
+	import TranslationApproval from '$lib/components/recipes/TranslationApproval.svelte';
+	import CardAdd from '$lib/components/recipes/CardAdd.svelte';
+	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
+	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import '$lib/css/action_button.css';
 	import '$lib/css/nordtheme.css';

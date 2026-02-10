@@ -1,35 +1,31 @@
 <script>
 	import "$lib/css/nordtheme.css";
-	import TagChip from './TagChip.svelte';
+	import TagChip from '$lib/components/recipes/TagChip.svelte';
 
 	let {
-		availableIcons = [],
-		selected = null,
-		onChange = () => {},
-		lang = 'de',
-		useAndLogic = true
+		availableTags = [],
+		selectedTags = [],
+		onToggle = () => {},
+		lang = 'de'
 	} = $props();
 
 	const isEnglish = $derived(lang === 'en');
-	const label = 'Icon';
-	const selectLabel = $derived(isEnglish ? 'Select icon...' : 'Icon auswählen...');
+	const label = 'Tags';
+	const addTagLabel = $derived(isEnglish ? 'Type or select tag...' : 'Tag eingeben oder auswählen...');
 
-	// Convert selected to array for OR mode, keep as single value for AND mode
-	const selectedArray = $derived(
-		useAndLogic
-			? (selected ? [selected] : [])
-			: (Array.isArray(selected) ? selected : (selected ? [selected] : []))
-	);
+	// Filter out already selected tags
+	const unselectedTags = $derived(availableTags.filter(t => !selectedTags.includes(t)));
 
 	let inputValue = $state('');
 	let dropdownOpen = $state(false);
+	let dropdownElement = $state(null);
 
-	// Filter icons based on input (though input for emoji is uncommon)
-	const filteredIcons = $derived(
+	// Filter tags based on input
+	const filteredTags = $derived(
 		inputValue.trim() === ''
-			? availableIcons
-			: availableIcons.filter(icon =>
-				icon.includes(inputValue.trim())
+			? unselectedTags
+			: unselectedTags.filter(tag =>
+				tag.toLowerCase().includes(inputValue.toLowerCase())
 			)
 	);
 
@@ -37,46 +33,34 @@
 		dropdownOpen = true;
 	}
 
-	function handleInputBlur() {
+	function handleInputBlur(event) {
+		// Delay to allow click events on dropdown items
 		setTimeout(() => {
 			dropdownOpen = false;
 			inputValue = '';
 		}, 200);
 	}
 
-	function handleIconSelect(icon) {
-		if (useAndLogic) {
-			// AND mode: single select
-			onChange(icon);
-			inputValue = '';
-			dropdownOpen = false;
-		} else {
-			// OR mode: multi-select toggle
-			const currentSelected = Array.isArray(selected) ? selected : (selected ? [selected] : []);
-			if (currentSelected.includes(icon)) {
-				const newSelected = currentSelected.filter(i => i !== icon);
-				onChange(newSelected.length > 0 ? newSelected : null);
-			} else {
-				onChange([...currentSelected, icon]);
-			}
-			inputValue = '';
-		}
+	function handleTagSelect(tag) {
+		onToggle(tag);
+		inputValue = '';
+		dropdownOpen = false;
 	}
 
 	function handleKeyDown(event) {
-		if (event.key === 'Escape') {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			const value = inputValue.trim();
+			// Try to find exact match or first filtered result
+			const matchedTag = availableTags.find(t => t.toLowerCase() === value.toLowerCase())
+				|| filteredTags[0];
+			if (matchedTag && !selectedTags.includes(matchedTag)) {
+				onToggle(matchedTag);
+				inputValue = '';
+			}
+		} else if (event.key === 'Escape') {
 			dropdownOpen = false;
 			inputValue = '';
-		}
-	}
-
-	function handleRemove(icon) {
-		if (useAndLogic) {
-			onChange(null);
-		} else {
-			const currentSelected = Array.isArray(selected) ? selected : (selected ? [selected] : []);
-			const newSelected = currentSelected.filter(i => i !== icon);
-			onChange(newSelected.length > 0 ? newSelected : null);
 		}
 	}
 </script>
@@ -120,6 +104,13 @@
 		}
 	}
 
+	.selected-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+		margin-top: 0.3rem;
+	}
+
 	.input-wrapper {
 		position: relative;
 	}
@@ -127,7 +118,7 @@
 	input {
 		all: unset;
 		box-sizing: border-box;
-		font-family: "Noto Color Emoji", emoji, sans-serif;
+		font-family: sans-serif;
 		background: var(--nord0);
 		color: var(--nord6);
 		padding: 0.5rem 0.7rem;
@@ -147,7 +138,6 @@
 
 	input::placeholder {
 		color: var(--nord4);
-		font-family: sans-serif;
 	}
 
 	input:hover {
@@ -178,11 +168,12 @@
 		gap: 0.3rem;
 	}
 
-	.selected-icon {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.3rem;
-		margin-top: 0.3rem;
+	.dropdown:empty::after {
+		content: 'No tags found';
+		color: var(--nord3);
+		font-size: 0.85rem;
+		font-style: italic;
+		padding: 0.5rem;
 	}
 </style>
 
@@ -197,34 +188,34 @@
 			onfocus={handleInputFocus}
 			onblur={handleInputBlur}
 			onkeydown={handleKeyDown}
-			placeholder={selectLabel}
+			placeholder={addTagLabel}
 			autocomplete="off"
 		/>
 
-		<!-- Custom dropdown with icon chips -->
-		{#if dropdownOpen && filteredIcons.length > 0}
-			<div class="dropdown">
-				{#each filteredIcons as icon}
+		<!-- Custom dropdown with tag chips -->
+		{#if dropdownOpen && filteredTags.length > 0}
+			<div class="dropdown" bind:this={dropdownElement}>
+				{#each filteredTags as tag}
 					<TagChip
-						tag={icon}
-						selected={selectedArray.includes(icon)}
+						{tag}
+						selected={false}
 						removable={false}
-						onToggle={() => handleIconSelect(icon)}
+						onToggle={() => handleTagSelect(tag)}
 					/>
 				{/each}
 			</div>
 		{/if}
 	</div>
 
-	<!-- Selected icons display below -->
-	{#if selectedArray.length > 0}
-		<div class="selected-icon">
-			{#each selectedArray as icon}
+	<!-- Selected tags display below -->
+	{#if selectedTags.length > 0}
+		<div class="selected-tags">
+			{#each selectedTags as tag}
 				<TagChip
-					tag={icon}
+					{tag}
 					selected={true}
 					removable={true}
-					onToggle={() => handleRemove(icon)}
+					onToggle={onToggle}
 				/>
 			{/each}
 		</div>

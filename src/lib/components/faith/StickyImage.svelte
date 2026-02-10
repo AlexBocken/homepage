@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { createPip } from '$lib/js/pip.svelte';
-	import PipImage from '$lib/components/PipImage.svelte';
+	import PipImage from '$lib/components/faith/PipImage.svelte';
 
 	/**
 	 * @param {'layout' | 'overlay'} mode

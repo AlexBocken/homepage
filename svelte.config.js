@@ -15,7 +15,8 @@ const config = {
 		}),
 		alias: {
 			$models: 'src/models',
-			$utils: 'src/utils'
+			$utils: 'src/utils',
+			$types: 'src/types'
 		}
 	}
 };

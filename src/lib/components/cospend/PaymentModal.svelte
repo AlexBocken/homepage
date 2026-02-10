@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import ProfilePicture from './ProfilePicture.svelte';
-  import EditButton from './EditButton.svelte';
+  import EditButton from '$lib/components/EditButton.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
 

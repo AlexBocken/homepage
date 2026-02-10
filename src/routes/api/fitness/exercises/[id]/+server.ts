@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
-import { Exercise } from '../../../../../models/Exercise';
+import { Exercise } from '$models/Exercise';
 
 // GET /api/fitness/exercises/[id] - Get detailed exercise information
 export const GET: RequestHandler = async ({ params, locals }) => {

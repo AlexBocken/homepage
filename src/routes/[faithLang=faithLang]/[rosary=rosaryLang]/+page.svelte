@@ -2,24 +2,24 @@
 import { onMount, tick } from "svelte";
 import { createLanguageContext } from "$lib/contexts/languageContext.js";
 import { createPip } from "$lib/js/pip.svelte";
-import PipImage from "$lib/components/PipImage.svelte";
+import PipImage from "$lib/components/faith/PipImage.svelte";
 import "$lib/css/christ.css";
 import "$lib/css/action_button.css";
-import Kreuzzeichen from "$lib/components/prayers/Kreuzzeichen.svelte";
-import Credo from "$lib/components/prayers/Credo.svelte";
-import Paternoster from "$lib/components/prayers/Paternoster.svelte";
-import AveMaria from "$lib/components/prayers/AveMaria.svelte";
-import GloriaPatri from "$lib/components/prayers/GloriaPatri.svelte";
-import FatimaGebet from "$lib/components/prayers/FatimaGebet.svelte";
-import SalveRegina from "$lib/components/prayers/SalveRegina.svelte";
-import RosaryFinalPrayer from "$lib/components/prayers/RosaryFinalPrayer.svelte";
-import MichaelGebet from "$lib/components/prayers/MichaelGebet.svelte";
+import Kreuzzeichen from "$lib/components/faith/prayers/Kreuzzeichen.svelte";
+import Credo from "$lib/components/faith/prayers/Credo.svelte";
+import Paternoster from "$lib/components/faith/prayers/Paternoster.svelte";
+import AveMaria from "$lib/components/faith/prayers/AveMaria.svelte";
+import GloriaPatri from "$lib/components/faith/prayers/GloriaPatri.svelte";
+import FatimaGebet from "$lib/components/faith/prayers/FatimaGebet.svelte";
+import SalveRegina from "$lib/components/faith/prayers/SalveRegina.svelte";
+import RosaryFinalPrayer from "$lib/components/faith/prayers/RosaryFinalPrayer.svelte";
+import MichaelGebet from "$lib/components/faith/prayers/MichaelGebet.svelte";
 import CounterButton from "$lib/components/CounterButton.svelte";
-import BibleModal from "$lib/components/BibleModal.svelte";
+import BibleModal from "$lib/components/faith/BibleModal.svelte";
 import Toggle from "$lib/components/Toggle.svelte";
-import LanguageToggle from "$lib/components/LanguageToggle.svelte";
-import StreakCounter from "$lib/components/StreakCounter.svelte";
-import MysteryIcon from "$lib/components/MysteryIcon.svelte";
+import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
+import StreakCounter from "$lib/components/faith/StreakCounter.svelte";
+import MysteryIcon from "$lib/components/faith/MysteryIcon.svelte";
 let { data } = $props();
 
 // Mystery variations for each type of rosary

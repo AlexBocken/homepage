@@ -1,5 +1,5 @@
-import { ExchangeRate } from '../../models/ExchangeRate';
-import { dbConnect, dbDisconnect } from '../../utils/db';
+import { ExchangeRate } from '$models/ExchangeRate';
+import { dbConnect, dbDisconnect } from '$utils/db';
 
 /**
  * Convert amount from foreign currency to CHF using direct database/API access

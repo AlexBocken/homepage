@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
-import { WorkoutTemplate } from '../../../../models/WorkoutTemplate';
+import { WorkoutTemplate } from '$models/WorkoutTemplate';
 
 // GET /api/fitness/templates - Get all workout templates for the user
 export const GET: RequestHandler = async ({ url, locals }) => {

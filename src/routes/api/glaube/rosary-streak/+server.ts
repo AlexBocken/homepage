@@ -1,6 +1,6 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
-import { RosaryStreak } from '../../../../models/RosaryStreak';
-import { dbConnect } from '../../../../utils/db';
+import { RosaryStreak } from '$models/RosaryStreak';
+import { dbConnect } from '$utils/db';
 
 export const GET: RequestHandler = async ({ locals }) => {
   const session = await locals.auth();

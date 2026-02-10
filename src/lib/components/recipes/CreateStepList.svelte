@@ -8,8 +8,8 @@ import Check from '$lib/assets/icons/Check.svelte'
 import '$lib/css/nordtheme.css'
 import "$lib/css/action_button.css"
 
-import { do_on_key } from '$lib/components/do_on_key.js'
-import BaseRecipeSelector from '$lib/components/BaseRecipeSelector.svelte'
+import { do_on_key } from '$lib/components/recipes/do_on_key.js'
+import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
 
 let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() } = $props<{ lang?: 'de' | 'en', instructions: any, add_info: any }>();
 
