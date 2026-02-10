@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Recipes from '$lib/components/Recipes.svelte';
-    import Search from '$lib/components/Search.svelte';
-    import Card from '$lib/components/Card.svelte';
+    import Recipes from '$lib/components/recipes/Recipes.svelte';
+    import Search from '$lib/components/recipes/Search.svelte';
+    import Card from '$lib/components/recipes/Card.svelte';
     import { rand_array } from '$lib/js/randomize';
     import { createSearchFilter } from '$lib/js/searchFilter.svelte';
 

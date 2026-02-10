@@ -1,8 +1,8 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { RecurringPayment } from '../../../../../models/RecurringPayment';
-import { dbConnect } from '../../../../../utils/db';
+import { RecurringPayment } from '$models/RecurringPayment';
+import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
-import { calculateNextExecutionDate, validateCronExpression } from '../../../../../lib/utils/recurring';
+import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
 import mongoose from 'mongoose';
 
 export const GET: RequestHandler = async ({ params, locals }) => {

@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import type { BriefRecipeType } from '../../../../types/types';
-import { Recipe } from '../../../../models/Recipe';
-import { dbConnect } from '../../../../utils/db';
+import type { BriefRecipeType } from '$types/types';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   await dbConnect();

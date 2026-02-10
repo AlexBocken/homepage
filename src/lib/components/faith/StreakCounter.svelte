@@ -1,7 +1,7 @@
 <script lang="ts">
 import { browser } from '$app/environment';
 import { getRosaryStreak } from '$lib/stores/rosaryStreak.svelte';
-import StreakAura from '$lib/components/StreakAura.svelte';
+import StreakAura from '$lib/components/faith/StreakAura.svelte';
 import { tick, onMount } from 'svelte';
 
 let burst = $state(false);

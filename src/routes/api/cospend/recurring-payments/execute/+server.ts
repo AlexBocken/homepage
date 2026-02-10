@@ -1,11 +1,11 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { RecurringPayment } from '../../../../../models/RecurringPayment';
-import { Payment } from '../../../../../models/Payment';
-import { PaymentSplit } from '../../../../../models/PaymentSplit';
-import { dbConnect } from '../../../../../utils/db';
+import { RecurringPayment } from '$models/RecurringPayment';
+import { Payment } from '$models/Payment';
+import { PaymentSplit } from '$models/PaymentSplit';
+import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
-import { calculateNextExecutionDate } from '../../../../../lib/utils/recurring';
-import { convertToCHF } from '../../../../../lib/utils/currency';
+import { calculateNextExecutionDate } from '$lib/utils/recurring';
+import { convertToCHF } from '$lib/utils/currency';
 import { invalidateCospendCaches } from '$lib/server/cache';
 
 export const POST: RequestHandler = async ({ locals }) => {

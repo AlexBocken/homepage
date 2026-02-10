@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { Recipe } from '../../../../../models/Recipe';
-import { dbConnect } from '../../../../../utils/db';
-import type {RecipeModelType} from '../../../../../types/types';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
+import type {RecipeModelType} from '$types/types';
 import { error } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({params}) => {

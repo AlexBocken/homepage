@@ -1,10 +1,10 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Recipes from '$lib/components/Recipes.svelte';
-    import SeasonLayout from '$lib/components/SeasonLayout.svelte';
-    import MediaScroller from '$lib/components/MediaScroller.svelte';
-    import Card from '$lib/components/Card.svelte';
-    import Search from '$lib/components/Search.svelte';
+    import Recipes from '$lib/components/recipes/Recipes.svelte';
+    import SeasonLayout from '$lib/components/recipes/SeasonLayout.svelte';
+    import MediaScroller from '$lib/components/recipes/MediaScroller.svelte';
+    import Card from '$lib/components/recipes/Card.svelte';
+    import Search from '$lib/components/recipes/Search.svelte';
     let { data } = $props<{ data: PageData }>();
 
     const isEnglish = $derived(data.lang === 'en');

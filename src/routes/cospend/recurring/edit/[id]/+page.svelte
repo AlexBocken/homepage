@@ -4,9 +4,9 @@
   import { getCategoryOptions } from '$lib/utils/categories';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { validateCronExpression, getFrequencyDescription, calculateNextExecutionDate } from '$lib/utils/recurring';
-  import ProfilePicture from '$lib/components/ProfilePicture.svelte';
-  import SplitMethodSelector from '$lib/components/SplitMethodSelector.svelte';
-  import UsersList from '$lib/components/UsersList.svelte';
+  import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import SplitMethodSelector from '$lib/components/cospend/SplitMethodSelector.svelte';
+  import UsersList from '$lib/components/cospend/UsersList.svelte';
 
   let { data } = $props();
 

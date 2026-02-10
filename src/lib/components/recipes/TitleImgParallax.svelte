@@ -31,7 +31,7 @@
 	import Cross from "$lib/assets/icons/Cross.svelte";
 	import "$lib/css/action_button.css";
 	import "$lib/css/shake.css";
-	import { do_on_key } from "./do_on_key";
+	import { do_on_key } from "$lib/components/recipes/do_on_key";
 </script>
 <style>
 :root {

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import { browser } from '$app/environment';
-import { do_on_key } from '$lib/components/do_on_key.js'
+import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import Check from '$lib/assets/icons/Check.svelte'
 
 let {

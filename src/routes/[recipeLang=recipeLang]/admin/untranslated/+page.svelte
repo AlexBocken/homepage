@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import '$lib/css/nordtheme.css';
-	import Recipes from '$lib/components/Recipes.svelte';
-	import Card from '$lib/components/Card.svelte';
+	import Recipes from '$lib/components/recipes/Recipes.svelte';
+	import Card from '$lib/components/recipes/Card.svelte';
 
 	let { data } = $props<{ data: PageData }>();
 	let current_month = new Date().getMonth() + 1;

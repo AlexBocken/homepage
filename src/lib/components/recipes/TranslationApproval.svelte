@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { TranslatedRecipeType } from '$types/types';
 	import TranslationFieldComparison from './TranslationFieldComparison.svelte';
-	import CreateIngredientList from './CreateIngredientList.svelte';
-	import CreateStepList from './CreateStepList.svelte';
+	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
+	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 	import GenerateAltTextButton from './GenerateAltTextButton.svelte';
 
 	interface Props {

@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
-import { recurringPaymentScheduler } from '../../../../../lib/server/scheduler';
+import { recurringPaymentScheduler } from '$lib/server/scheduler';
 
 export const GET: RequestHandler = async ({ locals }) => {
   const auth = await locals.auth();

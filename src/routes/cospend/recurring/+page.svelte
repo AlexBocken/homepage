@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { getFrequencyDescription, formatNextExecution } from '$lib/utils/recurring';
-  import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+  import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import AddButton from '$lib/components/AddButton.svelte';
   import { formatCurrency } from '$lib/utils/formatters';
 
