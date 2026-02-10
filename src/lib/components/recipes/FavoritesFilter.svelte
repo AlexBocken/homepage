@@ -1,6 +1,6 @@
 <script>
 	import "$lib/css/nordtheme.css";
-	import Toggle from './Toggle.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 
 	let {
 		enabled = false,

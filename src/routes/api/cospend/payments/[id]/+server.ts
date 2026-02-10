@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { Payment } from '../../../../../models/Payment';
-import { PaymentSplit } from '../../../../../models/PaymentSplit';
-import { dbConnect } from '../../../../../utils/db';
+import { Payment } from '$models/Payment';
+import { PaymentSplit } from '$models/PaymentSplit';
+import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import cache, { invalidateCospendCaches } from '$lib/server/cache';
 

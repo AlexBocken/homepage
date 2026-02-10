@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
-import { WorkoutTemplate } from '../../../../../models/WorkoutTemplate';
+import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import mongoose from 'mongoose';
 
 // GET /api/fitness/templates/[id] - Get a specific workout template

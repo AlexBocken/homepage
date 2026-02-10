@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { Recipe } from '../../../../../models/Recipe';
-import { dbConnect } from '../../../../../utils/db';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
 
 /**

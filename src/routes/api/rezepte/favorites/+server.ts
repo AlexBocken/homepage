@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { UserFavorites } from '../../../../models/UserFavorites';
-import { Recipe } from '../../../../models/Recipe';
-import { dbConnect } from '../../../../utils/db';
+import { UserFavorites } from '$models/UserFavorites';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
 import mongoose from 'mongoose';
 

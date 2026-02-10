@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { Recipe } from '../../../../../../models/Recipe';
-import { dbConnect } from '../../../../../../utils/db';
-import type {BriefRecipeType} from '../../../../../../types/types';
+import { Recipe } from '$models/Recipe';
+import { dbConnect } from '$utils/db';
+import type {BriefRecipeType} from '$types/types';
 import { rand_array } from '$lib/js/randomize';
 import cache from '$lib/server/cache';
 

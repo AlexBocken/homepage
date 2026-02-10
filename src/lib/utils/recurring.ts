@@ -1,4 +1,4 @@
-import type { IRecurringPayment } from '../../models/RecurringPayment';
+import type { IRecurringPayment } from '$models/RecurringPayment';
 
 export interface CronJobFields {
   minute: string;

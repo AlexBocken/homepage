@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { fly } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
-  import PaymentModal from '$lib/components/PaymentModal.svelte';
+  import PaymentModal from '$lib/components/cospend/PaymentModal.svelte';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
 

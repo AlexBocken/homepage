@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
-import { WorkoutTemplate } from '../../../../models/WorkoutTemplate';
+import { WorkoutTemplate } from '$models/WorkoutTemplate';
 
 // POST /api/fitness/seed-example - Create the example workout template
 export const POST: RequestHandler = async ({ locals }) => {

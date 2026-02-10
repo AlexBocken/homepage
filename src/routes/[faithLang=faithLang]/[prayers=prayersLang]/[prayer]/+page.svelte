@@ -3,21 +3,21 @@
 	import { createLanguageContext } from "$lib/contexts/languageContext.js";
 	import "$lib/css/christ.css";
 	import "$lib/css/nordtheme.css";
-	import LanguageToggle from "$lib/components/LanguageToggle.svelte";
-	import Kreuzzeichen from "$lib/components/prayers/Kreuzzeichen.svelte";
-	import GloriaPatri from "$lib/components/prayers/GloriaPatri.svelte";
-	import Paternoster from "$lib/components/prayers/Paternoster.svelte";
-	import Credo from "$lib/components/prayers/Credo.svelte";
-	import AveMaria from "$lib/components/prayers/AveMaria.svelte";
-	import SalveRegina from "$lib/components/prayers/SalveRegina.svelte";
-	import FatimaGebet from "$lib/components/prayers/FatimaGebet.svelte";
-	import Gloria from "$lib/components/prayers/Gloria.svelte";
-	import MichaelGebet from "$lib/components/prayers/MichaelGebet.svelte";
-	import BruderKlausGebet from "$lib/components/prayers/BruderKlausGebet.svelte";
-	import JosephGebet from "$lib/components/prayers/JosephGebet.svelte";
-	import Confiteor from "$lib/components/prayers/Confiteor.svelte";
-	import AblassGebete from "$lib/components/prayers/AblassGebete.svelte";
-	import StickyImage from "$lib/components/StickyImage.svelte";
+	import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
+	import Kreuzzeichen from "$lib/components/faith/prayers/Kreuzzeichen.svelte";
+	import GloriaPatri from "$lib/components/faith/prayers/GloriaPatri.svelte";
+	import Paternoster from "$lib/components/faith/prayers/Paternoster.svelte";
+	import Credo from "$lib/components/faith/prayers/Credo.svelte";
+	import AveMaria from "$lib/components/faith/prayers/AveMaria.svelte";
+	import SalveRegina from "$lib/components/faith/prayers/SalveRegina.svelte";
+	import FatimaGebet from "$lib/components/faith/prayers/FatimaGebet.svelte";
+	import Gloria from "$lib/components/faith/prayers/Gloria.svelte";
+	import MichaelGebet from "$lib/components/faith/prayers/MichaelGebet.svelte";
+	import BruderKlausGebet from "$lib/components/faith/prayers/BruderKlausGebet.svelte";
+	import JosephGebet from "$lib/components/faith/prayers/JosephGebet.svelte";
+	import Confiteor from "$lib/components/faith/prayers/Confiteor.svelte";
+	import AblassGebete from "$lib/components/faith/prayers/AblassGebete.svelte";
+	import StickyImage from "$lib/components/faith/StickyImage.svelte";
 
 	let { data } = $props();
 

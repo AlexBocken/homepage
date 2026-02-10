@@ -1,8 +1,8 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { Payment } from '../../../../models/Payment';
-import { PaymentSplit } from '../../../../models/PaymentSplit';
-import { dbConnect } from '../../../../utils/db';
-import { convertToCHF, isValidCurrencyCode } from '../../../../lib/utils/currency';
+import { Payment } from '$models/Payment';
+import { PaymentSplit } from '$models/PaymentSplit';
+import { dbConnect } from '$utils/db';
+import { convertToCHF, isValidCurrencyCode } from '$lib/utils/currency';
 import { error, json } from '@sveltejs/kit';
 import cache, { invalidateCospendCaches } from '$lib/server/cache';
 

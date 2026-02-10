@@ -1,11 +1,11 @@
 <script lang="ts">
-	import CardAdd from '$lib/components/CardAdd.svelte';
-    	import MediaScroller from '$lib/components/MediaScroller.svelte';
-    	import Card from '$lib/components/Card.svelte';
-    	import Search from '$lib/components/Search.svelte';
-	import SeasonSelect from '$lib/components/SeasonSelect.svelte';
-	import CreateIngredientList from '$lib/components/CreateIngredientList.svelte';
-	import CreateStepList from '$lib/components/CreateStepList.svelte';
+	import CardAdd from '$lib/components/recipes/CardAdd.svelte';
+    	import MediaScroller from '$lib/components/recipes/MediaScroller.svelte';
+    	import Card from '$lib/components/recipes/Card.svelte';
+    	import Search from '$lib/components/recipes/Search.svelte';
+	import SeasonSelect from '$lib/components/recipes/SeasonSelect.svelte';
+	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
+	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 
 	let {
 		card_data = $bindable({}),

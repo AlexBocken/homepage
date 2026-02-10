@@ -1,10 +1,10 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { RecurringPayment } from '../../../../../models/RecurringPayment';
-import { Payment } from '../../../../../models/Payment';
-import { PaymentSplit } from '../../../../../models/PaymentSplit';
-import { dbConnect } from '../../../../../utils/db';
+import { RecurringPayment } from '$models/RecurringPayment';
+import { Payment } from '$models/Payment';
+import { PaymentSplit } from '$models/PaymentSplit';
+import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
-import { calculateNextExecutionDate } from '../../../../../lib/utils/recurring';
+import { calculateNextExecutionDate } from '$lib/utils/recurring';
 import { invalidateCospendCaches } from '$lib/server/cache';
 
 // This endpoint is designed to be called by a cron job or external scheduler

@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { Payment } from '../../../../models/Payment';
-import { dbConnect } from '../../../../utils/db';
+import { Payment } from '$models/Payment';
+import { dbConnect } from '$utils/db';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   const session = await locals.auth();

@@ -5,12 +5,12 @@
 	import type { PageData } from './$types';
     	import "$lib/css/nordtheme.css"
 	import EditButton from '$lib/components/EditButton.svelte';
-	import InstructionsPage from '$lib/components/InstructionsPage.svelte';
-	import IngredientsPage from '$lib/components/IngredientsPage.svelte';
-	import TitleImgParallax from '$lib/components/TitleImgParallax.svelte';
+	import InstructionsPage from '$lib/components/recipes/InstructionsPage.svelte';
+	import IngredientsPage from '$lib/components/recipes/IngredientsPage.svelte';
+	import TitleImgParallax from '$lib/components/recipes/TitleImgParallax.svelte';
 	import { afterNavigate } from '$app/navigation';
     	import {season} from '$lib/js/season_store';
-	import RecipeNote from '$lib/components/RecipeNote.svelte';
+	import RecipeNote from '$lib/components/recipes/RecipeNote.svelte';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { onDestroy } from 'svelte';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';

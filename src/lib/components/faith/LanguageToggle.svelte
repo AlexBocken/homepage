@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { getLanguageContext } from '$lib/contexts/languageContext.js';
-	import Toggle from './Toggle.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 
 	export let initialLatin = undefined;
 	export let hasUrlLatin = false;

@@ -2,10 +2,10 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { pushState } from '$app/navigation';
-  import ProfilePicture from '$lib/components/ProfilePicture.svelte';
-  import EnhancedBalance from '$lib/components/EnhancedBalance.svelte';
-  import DebtBreakdown from '$lib/components/DebtBreakdown.svelte';
-  import BarChart from '$lib/components/BarChart.svelte';
+  import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import EnhancedBalance from '$lib/components/cospend/EnhancedBalance.svelte';
+  import DebtBreakdown from '$lib/components/cospend/DebtBreakdown.svelte';
+  import BarChart from '$lib/components/cospend/BarChart.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { isSettlementPayment, getSettlementIcon, getSettlementClasses, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';

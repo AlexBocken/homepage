@@ -8,9 +8,9 @@ import Check from '$lib/assets/icons/Check.svelte'
 
 import "$lib/css/action_button.css"
 
-import { do_on_key } from '$lib/components/do_on_key.js'
+import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import { portions } from '$lib/js/portions_store.js'
-import BaseRecipeSelector from '$lib/components/BaseRecipeSelector.svelte'
+import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
 
 let portions_local = $state()
 portions.subscribe((p) => {
