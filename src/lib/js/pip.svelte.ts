@@ -155,12 +155,14 @@ export function createPip(opts: PipOptions = {}) {
 		showControls = false;
 		if (fullscreen) {
 			target.style.opacity = '1';
+			target.style.pointerEvents = 'auto';
 			return;
 		}
 		const pos = getCornerPos(corner, target);
 		dragPos = pos;
 		target.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
 		target.style.opacity = '1';
+		target.style.pointerEvents = 'auto';
 	}
 
 	function hide() {
@@ -178,7 +180,10 @@ export function createPip(opts: PipOptions = {}) {
 				el.style.transition = '';
 			}
 		}
-		if (el) el.style.opacity = '0';
+		if (el) {
+			el.style.opacity = '0';
+			el.style.pointerEvents = 'none';
+		}
 	}
 
 	function reposition() {
