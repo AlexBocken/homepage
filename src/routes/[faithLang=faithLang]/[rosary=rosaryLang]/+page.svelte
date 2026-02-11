@@ -1884,5 +1884,5 @@ h1 {
 
 <!-- Bible citation modal -->
 {#if showModal}
-	<BibleModal reference={selectedReference} title={selectedTitle} verseData={selectedVerseData} onClose={() => showModal = false} />
+	<BibleModal reference={selectedReference} title={selectedTitle} verseData={selectedVerseData} lang={data.lang} onClose={() => showModal = false} />
 {/if}
