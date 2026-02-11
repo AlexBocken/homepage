@@ -1,4 +1,4 @@
-import { mysteryVerseData } from '$lib/data/mysteryVerseData';
+import { mysteryVerseDataDe, mysteryVerseDataEn } from '$lib/data/mysteryVerseData';
 import type { PageServerLoad } from './$types';
 
 interface StreakData {
@@ -36,7 +36,7 @@ function getMysteryForWeekday(date: Date, includeLuminous: boolean): string {
   }
 }
 
-export const load: PageServerLoad = async ({ url, fetch, locals }) => {
+export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
   const session = await locals.auth();
 
   // Read toggle/mystery state from URL search params (for no-JS progressive enhancement)
@@ -76,7 +76,7 @@ export const load: PageServerLoad = async ({ url, fetch, locals }) => {
   }
 
   return {
-    mysteryDescriptions: mysteryVerseData,
+    mysteryDescriptions: params.faithLang === 'faith' ? mysteryVerseDataEn : mysteryVerseDataDe,
     streakData,
     initialMystery,
     todaysMystery,

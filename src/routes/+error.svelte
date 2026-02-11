@@ -10,36 +10,45 @@
   let session = $derived($page.data?.session);
   let user = $derived(session?.user);
 
-  // Get Bible quote from SSR via handleError hook
+  // Get Bible quote and language from SSR via handleError hook
   let bibleQuote = $derived($page.error?.bibleQuote);
+  let isEnglish = $derived($page.error?.lang === 'en');
 
   function getErrorTitle(status) {
+    if (isEnglish) {
+      switch (status) {
+        case 401: return 'Login Required';
+        case 403: return 'Access Denied';
+        case 404: return 'Page Not Found';
+        case 500: return 'Server Error';
+        default: return 'Error';
+      }
+    }
     switch (status) {
-      case 401:
-        return 'Anmeldung erforderlich';
-      case 403:
-        return 'Zugriff verweigert';
-      case 404:
-        return 'Seite nicht gefunden';
-      case 500:
-        return 'Serverfehler';
-      default:
-        return 'Fehler';
+      case 401: return 'Anmeldung erforderlich';
+      case 403: return 'Zugriff verweigert';
+      case 404: return 'Seite nicht gefunden';
+      case 500: return 'Serverfehler';
+      default: return 'Fehler';
     }
   }
 
   function getErrorDescription(status) {
+    if (isEnglish) {
+      switch (status) {
+        case 401: return 'You must be logged in to access this page.';
+        case 403: return 'You do not have permission for this area.';
+        case 404: return 'The requested page could not be found.';
+        case 500: return 'An unexpected error occurred. Please try again later.';
+        default: return 'An unexpected error occurred.';
+      }
+    }
     switch (status) {
-      case 401:
-        return 'Du musst angemeldet sein, um auf diese Seite zugreifen zu können.';
-      case 403:
-        return 'Du hast keine Berechtigung für diesen Bereich.';
-      case 404:
-        return 'Die angeforderte Seite konnte nicht gefunden werden.';
-      case 500:
-        return 'Es ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.';
-      default:
-        return 'Es ist ein unerwarteter Fehler aufgetreten.';
+      case 401: return 'Du musst angemeldet sein, um auf diese Seite zugreifen zu können.';
+      case 403: return 'Du hast keine Berechtigung für diesen Bereich.';
+      case 404: return 'Die angeforderte Seite konnte nicht gefunden werden.';
+      case 500: return 'Es ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.';
+      default: return 'Es ist ein unerwarteter Fehler aufgetreten.';
     }
   }
 
@@ -96,7 +105,7 @@
       </h1>
 
       <div class="error-code">
-        Fehler {status}
+        {isEnglish ? 'Error' : 'Fehler'} {status}
       </div>
 
       <p class="error-description">
@@ -112,38 +121,24 @@
       <div class="error-actions">
         {#if status === 401}
           <button class="btn btn-primary" onclick={login}>
-            Anmelden
+            {isEnglish ? 'Log In' : 'Anmelden'}
           </button>
           <button class="btn btn-secondary" onclick={goHome}>
-            Zur Startseite
-          </button>
-        {:else if status === 403}
-          <button class="btn btn-primary" onclick={goHome}>
-            Zur Startseite
-          </button>
-          <button class="btn btn-secondary" onclick={goBack}>
-            Zurück
-          </button>
-        {:else if status === 404}
-          <button class="btn btn-primary" onclick={goHome}>
-            Zur Startseite
-          </button>
-          <button class="btn btn-secondary" onclick={goBack}>
-            Zurück
+            {isEnglish ? 'Go to Homepage' : 'Zur Startseite'}
           </button>
         {:else if status === 500}
           <button class="btn btn-primary" onclick={goHome}>
-            Zur Startseite
+            {isEnglish ? 'Go to Homepage' : 'Zur Startseite'}
           </button>
           <button class="btn btn-secondary" onclick={goBack}>
-            Erneut versuchen
+            {isEnglish ? 'Try Again' : 'Erneut versuchen'}
           </button>
         {:else}
           <button class="btn btn-primary" onclick={goHome}>
-            Zur Startseite
+            {isEnglish ? 'Go to Homepage' : 'Zur Startseite'}
           </button>
           <button class="btn btn-secondary" onclick={goBack}>
-            Zurück
+            {isEnglish ? 'Go Back' : 'Zurück'}
           </button>
         {/if}
       </div>
@@ -152,7 +147,7 @@
       {#if bibleQuote}
         <div class="bible-quote">
           <div class="quote-text">
-            „{bibleQuote.text}"
+            {isEnglish ? '"' : '„'}{bibleQuote.text}{isEnglish ? '"' : '"'}
           </div>
           <div class="quote-reference">
             — {bibleQuote.reference}
