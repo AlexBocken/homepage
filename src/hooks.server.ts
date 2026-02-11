@@ -63,9 +63,11 @@ async function authorization({ event, resolve }) {
 }
 
 // Bible verse functionality for error pages
-async function getRandomVerse(fetch: typeof globalThis.fetch): Promise<any> {
+async function getRandomVerse(fetch: typeof globalThis.fetch, pathname: string): Promise<any> {
+  const isEnglish = pathname.startsWith('/faith/') || pathname.startsWith('/recipes/');
+  const endpoint = isEnglish ? '/api/faith/bibel/zufallszitat' : '/api/glaube/bibel/zufallszitat';
   try {
-    const response = await fetch('/api/glaube/bibel/zufallszitat');
+    const response = await fetch(endpoint);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -80,11 +82,14 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
   console.error('Error occurred:', { error, status, message, url: event.url.pathname });
   
   // Add Bible verse to error context
-  const bibleQuote = await getRandomVerse(event.fetch);
+  const bibleQuote = await getRandomVerse(event.fetch, event.url.pathname);
+
+  const isEnglish = event.url.pathname.startsWith('/faith/') || event.url.pathname.startsWith('/recipes/');
 
   return {
     message: message,
-    bibleQuote
+    bibleQuote,
+    lang: isEnglish ? 'en' : 'de'
   };
 };
 

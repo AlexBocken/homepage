@@ -105,3 +105,94 @@ export const mysteryReferences = {
     }
   ]
 } as const;
+
+export const mysteryReferencesEnglish = {
+  lichtreichen: [
+    {
+      title: "The first Luminous Mystery: The Baptism in the Jordan.",
+      reference: "Mt 3:16-17"
+    },
+    {
+      title: "The second Luminous Mystery: The Wedding at Cana.",
+      reference: "Jn 2:1-5"
+    },
+    {
+      title: "The third Luminous Mystery: The Proclamation of the Kingdom of God.",
+      reference: "Mk 1:15"
+    },
+    {
+      title: "The fourth Luminous Mystery: The Transfiguration.",
+      reference: "Mt 17:1-2"
+    },
+    {
+      title: "The fifth Luminous Mystery: The Institution of the Holy Eucharist.",
+      reference: "Mt 26:26"
+    }
+  ],
+  freudenreich: [
+    {
+      title: "The first Joyful Mystery: The Annunciation of the Archangel Gabriel to the Virgin Mary.",
+      reference: "Lk 1:26-27"
+    },
+    {
+      title: "The second Joyful Mystery: The Visitation of Mary to Elizabeth.",
+      reference: "Lk 1:39-42"
+    },
+    {
+      title: "The third Joyful Mystery: The Nativity of Jesus in the Stable at Bethlehem.",
+      reference: "Lk 2:1-7"
+    },
+    {
+      title: "The fourth Joyful Mystery: The Presentation of Jesus in the Temple.",
+      reference: "Lk 2:21-24"
+    },
+    {
+      title: "The fifth Joyful Mystery: The Finding of Jesus in the Temple.",
+      reference: "Lk 2:41-47"
+    }
+  ],
+  schmerzhaften: [
+    {
+      title: "The first Sorrowful Mystery: The Agony of Jesus in the Garden.",
+      reference: "Mt 26:36-39"
+    },
+    {
+      title: "The second Sorrowful Mystery: The Scourging at the Pillar.",
+      reference: "Mt 27:26"
+    },
+    {
+      title: "The third Sorrowful Mystery: The Crowning with Thorns.",
+      reference: "Mt 27:27-29"
+    },
+    {
+      title: "The fourth Sorrowful Mystery: Jesus Carries the Heavy Cross.",
+      reference: "Mk 15:21-22"
+    },
+    {
+      title: "The fifth Sorrowful Mystery: The Crucifixion of Jesus.",
+      reference: "Lk 23:33-46"
+    }
+  ],
+  glorreichen: [
+    {
+      title: "The first Glorious Mystery: The Resurrection of Jesus.",
+      reference: "Lk 24:1-6"
+    },
+    {
+      title: "The second Glorious Mystery: The Ascension of Jesus.",
+      reference: "Mk 16:19"
+    },
+    {
+      title: "The third Glorious Mystery: The Descent of the Holy Spirit.",
+      reference: "Acts 2:1-4"
+    },
+    {
+      title: "The fourth Glorious Mystery: The Assumption of Mary into Heaven.",
+      reference: "Lk 1:48-49"
+    },
+    {
+      title: "The fifth Glorious Mystery: The Coronation of Mary as Queen of Heaven and Earth.",
+      reference: "Apo 12:1"
+    }
+  ]
+} as const;
