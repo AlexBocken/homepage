@@ -2,8 +2,7 @@ import type { PageServerLoad } from "./$types";
 import { getUserFavorites, addFavoriteStatusToRecipes } from "$lib/server/favorites";
 
 export const load: PageServerLoad = async ({ fetch, locals, params }) => {
-    const isEnglish = params.recipeLang === 'recipes';
-    const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
+    const apiBase = `/api/${params.recipeLang}`;
 
     const res_season = await fetch(`${apiBase}/items/icon/` + params.icon);
     const res_icons = await fetch(`/api/rezepte/items/icon`); // Icons are shared across languages

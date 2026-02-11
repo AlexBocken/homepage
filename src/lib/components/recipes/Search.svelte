@@ -264,7 +264,7 @@
     $effect(() => {
         const loadFilterData = async () => {
             try {
-                const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
+                const apiBase = `/api/${isEnglish ? 'recipes' : 'rezepte'}`;
                 const [tagsRes, iconsRes] = await Promise.all([
                     fetch(`${apiBase}/items/tag`),
                     fetch('/api/rezepte/items/icon')
