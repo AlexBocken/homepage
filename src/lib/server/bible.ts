@@ -10,16 +10,17 @@ export interface BibleVerse {
 	text: string;
 }
 
-let cachedVerses: BibleVerse[] | null = null;
+const versesCache = new Map<string, BibleVerse[]>();
 
 export function loadVersesFromFile(tsvPath?: string): BibleVerse[] {
-	if (cachedVerses) return cachedVerses;
-
 	const filePath = tsvPath ?? resolve('static/allioli.tsv');
+	const cached = versesCache.get(filePath);
+	if (cached) return cached;
+
 	const content = readFileSync(filePath, 'utf-8');
 	const lines = content.trim().split('\n');
 
-	cachedVerses = lines.map((line) => {
+	const verses = lines.map((line) => {
 		const [bookName, abbreviation, bookNumber, chapter, verseNumber, text] = line.split('\t');
 		return {
 			bookName,
@@ -31,7 +32,8 @@ export function loadVersesFromFile(tsvPath?: string): BibleVerse[] {
 		};
 	});
 
-	return cachedVerses;
+	versesCache.set(filePath, verses);
+	return verses;
 }
 
 function parseReference(reference: string) {
