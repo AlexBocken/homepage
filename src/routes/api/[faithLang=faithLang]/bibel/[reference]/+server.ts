@@ -1,6 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { lookupReference } from '$lib/server/bible';
+import { resolve } from 'path';
+
+const tsvFiles: Record<string, string> = {
+  glaube: 'static/allioli.tsv',
+  faith: 'static/drb.tsv'
+};
 
 export const GET: RequestHandler = async ({ params }) => {
   const reference = params.reference;
@@ -9,8 +15,10 @@ export const GET: RequestHandler = async ({ params }) => {
     return error(400, 'Missing reference parameter');
   }
 
+  const tsvPath = resolve(tsvFiles[params.faithLang]);
+
   try {
-    const result = lookupReference(reference);
+    const result = lookupReference(reference, tsvPath);
 
     if (!result) {
       return error(404, 'No verses found for the given reference');
