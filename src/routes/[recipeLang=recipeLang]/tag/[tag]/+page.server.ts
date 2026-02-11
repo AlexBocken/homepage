@@ -2,8 +2,7 @@ import type { PageServerLoad} from "./$types";
 import { getUserFavorites, addFavoriteStatusToRecipes } from "$lib/server/favorites";
 
 export const load: PageServerLoad = async ({ fetch, locals, params }) => {
-    const isEnglish = params.recipeLang === 'recipes';
-    const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
+    const apiBase = `/api/${params.recipeLang}`;
 
     const res_tag = await fetch(`${apiBase}/items/tag/${params.tag}`);
     const items_tag = await res_tag.json();

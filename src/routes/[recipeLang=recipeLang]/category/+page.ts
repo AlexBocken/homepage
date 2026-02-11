@@ -5,7 +5,7 @@ import { getAllCategories, isOfflineDataAvailable } from '$lib/offline/db';
 
 export const load: PageLoad = async ({ fetch, params }) => {
     const isEnglish = params.recipeLang === 'recipes';
-    const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
+    const apiBase = `/api/${params.recipeLang}`;
 
     // Check if we should use offline data
     if (browser && isOffline() && canUseOfflineData()) {
