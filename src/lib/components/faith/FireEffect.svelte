@@ -3,9 +3,10 @@
 	interface Props {
 		holy?: boolean;
 		burst?: boolean;
+		fire ?: boolean;
 	}
 
-	let { holy = false, burst = false }: Props = $props();
+	let { holy = false, burst = false, fire = false}: Props = $props();
 
 	const burstParticles = [
 		{ x: 10, y: 0,  size: 8,  delay: 0,    dur: 1.6 },
@@ -52,22 +53,22 @@
 {:else}
 <div class="fire" class:holy-fire={holy}>
 	<div class="fire-left">
-		<div class="main-fire"></div>
+		{#if fire}<div class="main-fire"></div>{/if}
 		<div class="particle-fire"></div>
 	</div>
 
 	<div class="fire-center">
-		<div class="main-fire"></div>
+		{#if fire}<div class="main-fire"></div>{/if}
 		<div class="particle-fire"></div>
 	</div>
 
 	<div class="fire-right">
-		<div class="main-fire"></div>
+		{#if fire}<div class="main-fire"></div>{/if}
 		<div class="particle-fire"></div>
 	</div>
 
 	<div class="fire-bottom">
-		<div class="main-fire"></div>
+		{#if fire}<div class="main-fire"></div>{/if}
 	</div>
 </div>
 {/if}
