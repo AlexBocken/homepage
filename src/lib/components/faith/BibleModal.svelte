@@ -5,19 +5,23 @@
     reference = '',
     title = '',
     verseData = null,
+    lang = 'de',
     onClose
   }: {
     reference?: string,
     title?: string,
     verseData?: VerseData | null,
+    lang?: string,
     onClose: () => void
   } = $props();
+
+  const isEnglish = $derived(lang === 'en');
 
   let book: string = $state(verseData?.book || '');
   let chapter: number = $state(verseData?.chapter || 0);
   let verses: Array<{ verse: number; text: string }> = $state(verseData?.verses || []);
   let loading = $state(false);
-  let error = $state(verseData ? '' : 'Keine Versdaten verfügbar');
+  let error = $state(verseData ? '' : (lang === 'en' ? 'No verse data available' : 'Keine Versdaten verfügbar'));
 
   function handleBackdropClick(event: MouseEvent) {
     if (event.target === event.currentTarget) {
@@ -49,7 +53,7 @@
         {/if}
         <p class="modal-reference">{reference}</p>
       </div>
-      <button class="close-button" onclick={onClose} aria-label="Schließen">
+      <button class="close-button" onclick={onClose} aria-label={isEnglish ? 'Close' : 'Schließen'}>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -59,7 +63,7 @@
 
     <div class="modal-body">
       {#if loading}
-        <p class="loading">Lädt...</p>
+        <p class="loading">{isEnglish ? 'Loading...' : 'Lädt...'}</p>
       {:else if error}
         <p class="error">{error}</p>
       {:else if verses.length > 0}
@@ -72,7 +76,7 @@
           {/each}
         </div>
       {:else}
-        <p class="error">Keine Verse gefunden</p>
+        <p class="error">{isEnglish ? 'No verses found' : 'Keine Verse gefunden'}</p>
       {/if}
     </div>
   </div>
