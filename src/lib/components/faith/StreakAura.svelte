@@ -54,11 +54,11 @@
 
 
 	{#if phase >= 2}
-		<FireEffect holy={phase>=4} />
+		<FireEffect holy={phase>=4} fire={phase>=3}/>
 	{/if}
 
 	{#if showBurst}
-		<FireEffect holy={phase>=4} burst />
+		<FireEffect holy={phase>=4} burst fire={phase>=3}/>
 	{/if}
 
 	<span class="number">{value}</span>
