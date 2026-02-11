@@ -4,7 +4,7 @@ import { stripHtmlTags } from '$lib/js/stripHtmlTags';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
     const isEnglish = params.recipeLang === 'recipes';
-    const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
+    const apiBase = `/api/${params.recipeLang}`;
 
     const res = await fetch(`${apiBase}/items/${params.name}`);
 

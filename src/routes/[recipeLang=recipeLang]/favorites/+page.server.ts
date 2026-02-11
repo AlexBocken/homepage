@@ -2,8 +2,7 @@ import type { PageServerLoad } from "./$types";
 import { redirect } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ fetch, locals, params }) => {
-    const isEnglish = params.recipeLang === 'recipes';
-    const apiBase = isEnglish ? '/api/recipes' : '/api/rezepte';
+    const apiBase = `/api/${params.recipeLang}`;
     const session = await locals.auth();
 
     if (!session?.user?.nickname) {

@@ -294,13 +294,10 @@ process.on('SIGINT', () => {
  */
 export async function invalidateRecipeCaches(): Promise<void> {
 	try {
-		// Clear all recipe-related caches in parallel
+		// Clear all recipe-related caches for both languages in parallel
 		await Promise.all([
-			cache.del('recipes:all_brief'),
-			cache.delPattern('recipes:tag:*'),
-			cache.delPattern('recipes:in_season:*'),
-			cache.delPattern('recipes:category:*'),
-			cache.delPattern('recipes:icon:*'),
+			cache.delPattern('recipes:rezepte:*'),
+			cache.delPattern('recipes:recipes:*'),
 		]);
 	} catch (err) {
 		console.error('[Cache] Error invalidating recipe caches:', err);
