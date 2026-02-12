@@ -30,86 +30,6 @@ export function setupScrollSync({
 		}, duration);
 	};
 
-	// Check if browser supports smooth scrolling
-	const supportsNativeSmoothScroll = (() => {
-		if (!('scrollBehavior' in document.documentElement.style)) {
-			return false;
-		}
-		try {
-			const testElement = document.createElement('div');
-			testElement.scrollTo({ top: 0, behavior: 'smooth' });
-			return true;
-		} catch (e) {
-			return false;
-		}
-	})();
-
-	// Smooth scroll polyfill for window scrolling
-	const smoothScrollTo = (targetY, duration = 500) => {
-		if (supportsNativeSmoothScroll) {
-			try {
-				window.scrollTo({ top: targetY, behavior: 'smooth' });
-				return;
-			} catch (e) {
-				// Fall through to polyfill
-			}
-		}
-
-		const startY = window.scrollY || window.pageYOffset;
-		const distance = targetY - startY;
-		const startTime = performance.now();
-
-		const easeInOutQuad = (t) => {
-			return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-		};
-
-		const scroll = (currentTime) => {
-			const elapsed = currentTime - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-			const ease = easeInOutQuad(progress);
-			window.scrollTo(0, startY + distance * ease);
-
-			if (progress < 1) {
-				requestAnimationFrame(scroll);
-			}
-		};
-
-		requestAnimationFrame(scroll);
-	};
-
-	// Smooth scroll polyfill for element scrolling (for SVG container)
-	const smoothScrollElement = (element, targetY, duration = 500) => {
-		if (supportsNativeSmoothScroll) {
-			try {
-				element.scrollTo({ top: targetY, behavior: 'smooth' });
-				return;
-			} catch (e) {
-				// Fall through to polyfill
-			}
-		}
-
-		const startY = element.scrollTop;
-		const distance = targetY - startY;
-		const startTime = performance.now();
-
-		const easeInOutQuad = (t) => {
-			return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-		};
-
-		const scroll = (currentTime) => {
-			const elapsed = currentTime - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-			const ease = easeInOutQuad(progress);
-			element.scrollTop = startY + distance * ease;
-
-			if (progress < 1) {
-				requestAnimationFrame(scroll);
-			}
-		};
-
-		requestAnimationFrame(scroll);
-	};
-
 	// Helper: convert SVG section position to pixel scroll target
 	function svgSectionToPixel(svg, section) {
 		const svgYPosition = sectionPositions[section];
@@ -134,8 +54,7 @@ export function setupScrollSync({
 		entries.forEach((entry) => {
 			if (entry.isIntersecting && scrollLock !== 'svg' && scrollLock !== 'click') {
 				// Skip observer updates when at the top — handleWindowScroll handles this
-				const scrollY = window.scrollY || window.pageYOffset;
-				if (scrollY < 50) return;
+				if (window.scrollY < 50) return;
 
 				const section = entry.target.dataset.section;
 				setActiveSection(section);
@@ -150,7 +69,7 @@ export function setupScrollSync({
 					const targetScroll = pixelPosition - 100;
 
 					setScrollLock('prayer');
-					smoothScrollElement(svgContainer, Math.max(0, targetScroll));
+					svgContainer.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
 				}
 			}
 		});
@@ -174,7 +93,7 @@ export function setupScrollSync({
 		if (scrollLock === 'svg' || scrollLock === 'click' || !svgContainer) return;
 
 		const viewportHeight = window.innerHeight;
-		const scrollY = window.scrollY || window.pageYOffset;
+		const scrollY = window.scrollY;
 		const documentHeight = document.documentElement.scrollHeight;
 
 		const firstSection = sectionElements.cross;
@@ -198,23 +117,23 @@ export function setupScrollSync({
 			const maxScroll = svgContainer.scrollHeight - svgContainer.clientHeight;
 			if (svgContainer.scrollTop < maxScroll - 10) {
 				setScrollLock('prayer');
-				smoothScrollElement(svgContainer, maxScroll);
+				svgContainer.scrollTo({ top: maxScroll, behavior: 'smooth' });
 			}
 		}
 		else if (firstSectionRect.top > viewportHeight * 0.6) {
 			if (svgContainer.scrollTop > 10) {
 				setScrollLock('prayer');
-				smoothScrollElement(svgContainer, 0);
+				svgContainer.scrollTo({ top: 0, behavior: 'smooth' });
 			}
 			if (mysteryImageContainer && mysteryImageContainer.scrollTop > 10) {
-				smoothScrollElement(mysteryImageContainer, 0);
+				mysteryImageContainer.scrollTo({ top: 0, behavior: 'smooth' });
 			}
 		}
 		else if (finalSectionRect.bottom < viewportHeight * 0.4) {
 			const maxScroll = svgContainer.scrollHeight - svgContainer.clientHeight;
 			if (svgContainer.scrollTop < maxScroll - 10) {
 				setScrollLock('prayer');
-				smoothScrollElement(svgContainer, maxScroll);
+				svgContainer.scrollTo({ top: maxScroll, behavior: 'smooth' });
 			}
 		}
 	};
@@ -264,7 +183,7 @@ export function setupScrollSync({
 				const elementTop = element.getBoundingClientRect().top + window.scrollY;
 				const offset = parseFloat(getComputedStyle(document.documentElement).fontSize) * 3;
 
-				smoothScrollTo(elementTop - offset);
+				window.scrollTo({ top: elementTop - offset, behavior: 'smooth' });
 			}
 		}, 150);
 	};
@@ -292,7 +211,7 @@ export function setupScrollSync({
 						const pixelPosition = svgSectionToPixel(svg, section);
 						if (pixelPosition !== null) {
 							const targetScroll = pixelPosition - 100;
-							smoothScrollElement(svgContainer, Math.max(0, targetScroll));
+							svgContainer.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
 						}
 					}
 				}
@@ -302,7 +221,7 @@ export function setupScrollSync({
 				const elementTop = element.getBoundingClientRect().top + window.scrollY;
 				const offset = parseFloat(getComputedStyle(document.documentElement).fontSize) * 3;
 
-				smoothScrollTo(elementTop - offset);
+				window.scrollTo({ top: elementTop - offset, behavior: 'smooth' });
 
 				break;
 			}
