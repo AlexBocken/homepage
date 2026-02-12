@@ -182,12 +182,19 @@ $effect(() => {
 	const targetName = getMysteryScrollTarget(activeSection);
 	const targetEl = mysteryImageContainer.querySelector(`[data-target="${targetName}"]`);
 	if (targetEl) {
+		const isEdge = targetName === 'before' || targetName === 'after';
 		const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
 		// Edge pads (before/after): scroll flush so previous image hides behind the header
-		const offset = targetName === 'before' || targetName === 'after'
-			? 0
-			: rem * IMAGE_COL_HEADER_OFFSET;
-		scrollMysteryImage(Math.max(0, targetEl.offsetTop - offset));
+		const offset = isEdge ? 0 : rem * IMAGE_COL_HEADER_OFFSET;
+		const target = Math.max(0, targetEl.offsetTop - offset);
+		if (isEdge) {
+			// Snap instantly when jumping to top/bottom
+			if (mysteryScrollRaf) cancelAnimationFrame(mysteryScrollRaf);
+			mysteryScrollRaf = null;
+			mysteryImageContainer.scrollTop = target;
+		} else {
+			scrollMysteryImage(target);
+		}
 	}
 });
 
