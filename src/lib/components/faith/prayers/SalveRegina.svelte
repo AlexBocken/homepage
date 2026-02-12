@@ -38,9 +38,9 @@
 		{#if showLatin}<v lang="la">nóbis post hoc exsílíum osténde.</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">die gebenedeite Frucht deines Leibes.</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">the blessed fruit of thy womb, <i><sup>⚬</sup></i>Jesus.</v>{/if}
-		{#if showLatin}<v lang="la">O clémens, o pía, o dúlcis Vírgo <i><sup>⚬</sup></i>María.</v>{/if}
-		{#if urlLang === 'de'}<v lang="de">O gütige, o milde, o süsse Jungfrau <i><sup>⚬</sup></i>Maria.</v>{/if}
-		{#if urlLang === 'en'}<v lang="en">O clement, O loving, O sweet Virgin <i><sup>⚬</sup></i>Mary.</v>{/if}
+		{#if showLatin}<v lang="la">O clémens, o pía, o dúlcis Vírgo <i><sup>⚬</sup></i>María. Amen.</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">O gütige, o milde, o süsse Jungfrau <i><sup>⚬</sup></i>Maria. Amen.</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">O clement, O loving, O sweet Virgin <i><sup>⚬</sup></i>Mary. Amen.</v>{/if}
 	</p>
 	{/snippet}
 </Prayer>
