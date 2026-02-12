@@ -19,6 +19,14 @@
   let limit = $state(data.limit || 20);
   let hasMore = $state(data.hasMore || false);
 
+  // Re-sync local state when server data changes (e.g. URL param navigation)
+  $effect(() => {
+    payments = data.payments || [];
+    currentPage = Math.floor(data.currentOffset / data.limit);
+    limit = data.limit || 20;
+    hasMore = data.hasMore || false;
+  });
+
   // Progressive enhancement: only load if JavaScript is available
   onMount(async () => {
     // Mark that JavaScript is loaded for CSS
