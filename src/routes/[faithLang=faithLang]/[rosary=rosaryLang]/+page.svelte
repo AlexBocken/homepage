@@ -605,12 +605,8 @@ h1 {
 		top: 0;
 		align-self: start;
 		max-height: 100vh;
-		overflow-y: auto;
+		overflow-y: hidden;
 		overflow-x: hidden;
-		scrollbar-width: none;
-	}
-	.mystery-image-column::-webkit-scrollbar {
-		display: none;
 	}
 }
 
