@@ -29,8 +29,8 @@ let { data } = $props();
 // Toggle for including Luminous mysteries (initialized from URL param or default)
 let includeLuminous = $state(data.initialLuminous);
 
-// Toggle for showing mystery images
-let showImages = $state(true);
+// Toggle for showing mystery images (initialized from URL param or default)
+let showImages = $state(data.initialShowImages);
 
 // Flag to prevent saving before we've loaded from localStorage
 let hasLoadedFromStorage = $state(false);
@@ -76,11 +76,12 @@ function selectMystery(mysteryType) {
 }
 
 // Build URLs preserving full state (for no-JS fallback)
-function buildHref({ mystery = selectedMystery, luminous = includeLuminous, latin = data.initialLatin } = {}) {
+function buildHref({ mystery = selectedMystery, luminous = includeLuminous, latin = data.initialLatin, images = showImages } = {}) {
 	const params = new URLSearchParams();
 	params.set('mystery', mystery);
 	if (!luminous) params.set('luminous', '0');
 	if (!latin) params.set('latin', '0');
+	if (!images) params.set('images', '0');
 	return `?${params.toString()}`;
 }
 
@@ -91,6 +92,7 @@ function mysteryHref(mystery) {
 // Toggle hrefs navigate to opposite state (for no-JS self-submit)
 let luminousToggleHref = $derived(buildHref({ luminous: !includeLuminous }));
 let latinToggleHref = $derived(buildHref({ latin: !data.initialLatin }));
+let imagesToggleHref = $derived(buildHref({ images: !showImages }));
 
 // When luminous toggle changes, update today's mystery and fix invalid selection
 $effect(() => {
@@ -264,9 +266,11 @@ onMount(() => {
 			includeLuminous = savedIncludeLuminous === 'true';
 		}
 	}
-	const savedShowImages = localStorage.getItem('rosary_showImages');
-	if (savedShowImages !== null) {
-		showImages = savedShowImages === 'true';
+	if (!data.hasUrlImages) {
+		const savedShowImages = localStorage.getItem('rosary_showImages');
+		if (savedShowImages !== null) {
+			showImages = savedShowImages === 'true';
+		}
 	}
 
 	// If no mystery was specified in URL, recompute based on loaded preferences
@@ -282,6 +286,9 @@ onMount(() => {
 
 	// Now allow saving to localStorage
 	hasLoadedFromStorage = true;
+
+	// Mark JS as active so no-JS fallback images hide
+	document.documentElement.classList.add('js-enabled');
 
 	// PiP resize handler — show/hide when crossing the breakpoint
 	const onPipResize = () => {
@@ -306,6 +313,7 @@ onMount(() => {
 	return () => {
 		cleanupScrollSync();
 		window.removeEventListener('resize', onPipResize);
+		document.documentElement.classList.remove('js-enabled');
 	};
 });
 </script>
@@ -407,12 +415,47 @@ onMount(() => {
 
 .prayer-section {
 	scroll-snap-align: start;
+	scroll-margin-top: 3rem;
 	padding: 2rem;
 	margin-bottom: 2rem;
 	background: var(--accent-dark);
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	position: relative;
+}
+
+/* No-JS: highlight SVG beads when a prayer section is :target */
+.rosary-layout:has(#start1:target) :global(.bead[data-section="start1"]),
+.rosary-layout:has(#start2:target) :global(.bead[data-section="start2"]),
+.rosary-layout:has(#start3:target) :global(.bead[data-section="start3"]),
+.rosary-layout:has(#secret1:target) :global(.bead[data-section="secret1"]),
+.rosary-layout:has(#secret2:target) :global(.bead[data-section="secret2"]),
+.rosary-layout:has(#secret3:target) :global(.bead[data-section="secret3"]),
+.rosary-layout:has(#secret4:target) :global(.bead[data-section="secret4"]),
+.rosary-layout:has(#secret5:target) :global(.bead[data-section="secret5"]),
+.rosary-layout:has(#final_salve:target) :global(.bead[data-section="final_salve"]),
+.rosary-layout:has(#final_schlussgebet:target) :global(.bead[data-section="final_schlussgebet"]),
+.rosary-layout:has(#final_michael:target) :global(.bead[data-section="final_michael"]) {
+	fill: var(--nord11) !important;
+	filter: drop-shadow(0 0 8px var(--nord11));
+}
+
+.rosary-layout:has(#lbead1:target) :global(.large-bead[data-section="lbead1"]),
+.rosary-layout:has(#lbead2:target) :global(.large-bead[data-section="lbead2"]),
+.rosary-layout:has(#secret1_transition:target) :global(.large-bead[data-section="secret1_transition"]),
+.rosary-layout:has(#secret2_transition:target) :global(.large-bead[data-section="secret2_transition"]),
+.rosary-layout:has(#secret3_transition:target) :global(.large-bead[data-section="secret3_transition"]),
+.rosary-layout:has(#secret4_transition:target) :global(.large-bead[data-section="secret4_transition"]),
+.rosary-layout:has(#final_transition:target) :global(.large-bead[data-section="final_transition"]),
+.rosary-layout:has(#final_paternoster:target) :global(.large-bead[data-section="final_paternoster"]) {
+	fill: var(--nord13) !important;
+	filter: drop-shadow(0 0 10px var(--nord13));
+}
+
+.rosary-layout:has(#cross:target) :global([data-section="cross"] .cross-symbol),
+.rosary-layout:has(#final_cross:target) :global([data-section="final_cross"] .cross-symbol) {
+	fill: var(--nord11) !important;
+	filter: drop-shadow(0 0 10px var(--nord11));
 }
 
 @media (prefers-color-scheme: light) {
@@ -597,6 +640,28 @@ h1 {
 	height: 50vh;
 }
 
+/* Inline mystery images: visible without JS, hidden when JS takes over */
+.decade-inline-image {
+	margin: 1rem auto;
+	text-align: center;
+}
+
+.decade-inline-image img {
+	max-width: 100%;
+	max-height: 40vh;
+	border-radius: 8px;
+}
+
+.decade-inline-image figcaption {
+	font-size: 0.85rem;
+	color: var(--nord4);
+	margin-top: 0.5rem;
+}
+
+:global(html.js-enabled) .decade-inline-image {
+	display: none;
+}
+
 /* Mystery images: third grid column (desktop), PiP (mobile) */
 .mystery-image-column {
 	display: none;
@@ -633,7 +698,7 @@ h1 {
 
 	<!-- Toggle Controls & Streak Counter -->
 	<div class="controls-row">
-		<StreakCounter streakData={data.streakData} lang={data.lang} />
+		<StreakCounter streakData={data.streakData} lang={data.lang} isLoggedIn={data.isLoggedIn} />
 		<div class="toggle-controls">
 			<!-- Luminous Mysteries Toggle (link for no-JS, enhanced with onclick for JS) -->
 			<Toggle
@@ -645,6 +710,7 @@ h1 {
 			<Toggle
 				bind:checked={showImages}
 				label={labels.showImages}
+				href={imagesToggleHref}
 			/>
 
 			<!-- Language Toggle (link for no-JS, enhanced with onclick for JS) -->
@@ -669,6 +735,7 @@ h1 {
 			<!-- Cross & Credo -->
 			<div
 				class="prayer-section"
+				id="cross"
 				bind:this={sectionElements.cross}
 				data-section="cross"
 			>
@@ -686,6 +753,7 @@ h1 {
 			<!-- First Large Bead -->
 			<div
 				class="prayer-section"
+				id="lbead1"
 				bind:this={sectionElements.lbead1}
 				data-section="lbead1"
 			>
@@ -696,6 +764,7 @@ h1 {
 			<!-- First Ave Maria (Faith) -->
 			<div
 				class="prayer-section"
+				id="start1"
 				bind:this={sectionElements.start1}
 				data-section="start1"
 			>
@@ -710,6 +779,7 @@ h1 {
 			<!-- Second Ave Maria (Hope) -->
 			<div
 				class="prayer-section"
+				id="start2"
 				bind:this={sectionElements.start2}
 				data-section="start2"
 			>
@@ -724,6 +794,7 @@ h1 {
 			<!-- Third Ave Maria (Love) -->
 			<div
 				class="prayer-section"
+				id="start3"
 				bind:this={sectionElements.start3}
 				data-section="start3"
 			>
@@ -738,6 +809,7 @@ h1 {
 			<!-- Gloria Patri before decades -->
 			<div
 				class="prayer-section"
+				id="lbead2"
 				bind:this={sectionElements.lbead2}
 				data-section="lbead2"
 			>
@@ -752,10 +824,19 @@ h1 {
 				<!-- Ave Maria decade (Gesätz) -->
 				<div
 					class="prayer-section decade"
+					id={`secret${decadeNum}`}
 					bind:this={sectionElements[`secret${decadeNum}`]}
 					data-section={`secret${decadeNum}`}
 				>
 					<h2>{decadeNum}. {labels.decade}: {currentMysteryTitles[decadeNum - 1]}</h2>
+
+					{#if showImages && allMysteryImages[selectedMystery]?.get(decadeNum)}
+						{@const img = allMysteryImages[selectedMystery].get(decadeNum)}
+						<figure class="decade-inline-image">
+							<img src={img.src} alt={isEnglish ? img.title : img.titleDe} loading="lazy" />
+							<figcaption>{img.artist ? `${img.artist}, ` : ''}<em>{isEnglish ? img.title : img.titleDe}</em>{img.year ? `, ${img.year}` : ''}</figcaption>
+						</figure>
+					{/if}
 
 					<h3>{labels.hailMary} <span class="repeat-count">(10×)</span></h3>
 					<AveMaria
@@ -784,6 +865,7 @@ h1 {
 				{#if decadeNum < 5}
 					<div
 						class="prayer-section"
+						id={`secret${decadeNum}_transition`}
 						bind:this={sectionElements[`secret${decadeNum}_transition`]}
 						data-section={`secret${decadeNum}_transition`}
 					>
@@ -802,6 +884,7 @@ h1 {
 			<!-- Final prayers after 5th decade -->
 			<div
 				class="prayer-section"
+				id="final_transition"
 				bind:this={sectionElements.final_transition}
 				data-section="final_transition"
 			>
@@ -816,6 +899,7 @@ h1 {
 
 			<div
 				class="prayer-section"
+				id="final_salve"
 				bind:this={sectionElements.final_salve}
 				data-section="final_salve"
 			>
@@ -825,6 +909,7 @@ h1 {
 
 			<div
 				class="prayer-section"
+				id="final_schlussgebet"
 				bind:this={sectionElements.final_schlussgebet}
 				data-section="final_schlussgebet"
 			>
@@ -834,6 +919,7 @@ h1 {
 
 			<div
 				class="prayer-section"
+				id="final_michael"
 				bind:this={sectionElements.final_michael}
 				data-section="final_michael"
 			>
@@ -843,6 +929,7 @@ h1 {
 
 			<div
 				class="prayer-section"
+				id="final_paternoster"
 				bind:this={sectionElements.final_paternoster}
 				data-section="final_paternoster"
 			>
@@ -852,6 +939,7 @@ h1 {
 
 			<div
 				class="prayer-section"
+				id="final_cross"
 				bind:this={sectionElements.final_cross}
 				data-section="final_cross"
 			>

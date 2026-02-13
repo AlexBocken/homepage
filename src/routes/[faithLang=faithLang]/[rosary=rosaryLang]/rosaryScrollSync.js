@@ -194,6 +194,7 @@ export function setupScrollSync({
 	}
 
 	// Handle clicks on SVG elements to jump to prayers
+	// preventDefault() overrides the anchor-link fallback when JS is enabled
 	const handleSvgClick = (e) => {
 		const svgContainer = getSvgContainer();
 		const sectionElements = getSectionElements();
@@ -201,6 +202,7 @@ export function setupScrollSync({
 		while (target && target !== svgContainer) {
 			const section = target.dataset.section;
 			if (section && sectionElements[section]) {
+				e.preventDefault();
 				setActiveSection(section);
 				setScrollLock('click', 1500);
 

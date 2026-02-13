@@ -128,34 +128,34 @@
 			class="cross-symbol" class:active-cross={activeSection === 'final_cross'} />
 	</g>
 
-	<!-- Invisible hitboxes for larger tap targets -->
+	<!-- Invisible hitboxes for larger tap targets (anchor links for no-JS fallback) -->
 	<g class="hitboxes">
 		<!-- Cross hitbox -->
-		<rect x="-15" y="-30" width="80" height="80" data-section="cross" />
+		<a href="#cross"><rect x="-15" y="-30" width="80" height="80" data-section="cross" /></a>
 
 		<!-- Individual bead hitboxes -->
-		<circle cx="25" cy={pos.lbead1} r="25" data-section="lbead1" />
-		<circle cx="25" cy={pos.start1} r="20" data-section="start1" />
-		<circle cx="25" cy={pos.start2} r="20" data-section="start2" />
-		<circle cx="25" cy={pos.start3} r="20" data-section="start3" />
-		<circle cx="25" cy={pos.lbead2} r="25" data-section="lbead2" />
+		<a href="#lbead1"><circle cx="25" cy={pos.lbead1} r="25" data-section="lbead1" /></a>
+		<a href="#start1"><circle cx="25" cy={pos.start1} r="20" data-section="start1" /></a>
+		<a href="#start2"><circle cx="25" cy={pos.start2} r="20" data-section="start2" /></a>
+		<a href="#start3"><circle cx="25" cy={pos.start3} r="20" data-section="start3" /></a>
+		<a href="#lbead2"><circle cx="25" cy={pos.lbead2} r="25" data-section="lbead2" /></a>
 
 		<!-- Decade hitboxes -->
 		{#each [1, 2, 3, 4, 5] as d (d)}
 			{@const decadePos = pos[`secret${d}`]}
-			<rect x="-15" y={decadePos - 2} width="80" height={DECADE_OFFSET + 9 * BEAD_SPACING + 12} data-section={`secret${d}`} />
+			<a href={`#secret${d}`}><rect x="-15" y={decadePos - 2} width="80" height={DECADE_OFFSET + 9 * BEAD_SPACING + 12} data-section={`secret${d}`} /></a>
 		{/each}
 
 		<!-- Transition bead hitboxes -->
 		{#each [1, 2, 3, 4] as d (d)}
-			<circle cx="25" cy={pos[`secret${d}_transition`]} r="25" data-section={`secret${d}_transition`} />
+			<a href={`#secret${d}_transition`}><circle cx="25" cy={pos[`secret${d}_transition`]} r="25" data-section={`secret${d}_transition`} /></a>
 		{/each}
-		<circle cx="25" cy={pos.final_transition} r="25" data-section="final_transition" />
-		<circle cx="25" cy={pos.final_salve} r="20" data-section="final_salve" />
-		<circle cx="25" cy={pos.final_schlussgebet} r="20" data-section="final_schlussgebet" />
-		<circle cx="25" cy={pos.final_michael} r="20" data-section="final_michael" />
-		<circle cx="25" cy={pos.final_paternoster} r="25" data-section="final_paternoster" />
-		<rect x="-15" y={pos.final_cross - 50} width="80" height="80" data-section="final_cross" />
+		<a href="#final_transition"><circle cx="25" cy={pos.final_transition} r="25" data-section="final_transition" /></a>
+		<a href="#final_salve"><circle cx="25" cy={pos.final_salve} r="20" data-section="final_salve" /></a>
+		<a href="#final_schlussgebet"><circle cx="25" cy={pos.final_schlussgebet} r="20" data-section="final_schlussgebet" /></a>
+		<a href="#final_michael"><circle cx="25" cy={pos.final_michael} r="20" data-section="final_michael" /></a>
+		<a href="#final_paternoster"><circle cx="25" cy={pos.final_paternoster} r="25" data-section="final_paternoster" /></a>
+		<a href="#final_cross"><rect x="-15" y={pos.final_cross - 50} width="80" height="80" data-section="final_cross" /></a>
 	</g>
 
 </svg>
