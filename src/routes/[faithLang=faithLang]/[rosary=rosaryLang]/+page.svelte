@@ -12,6 +12,7 @@ import AveMaria from "$lib/components/faith/prayers/AveMaria.svelte";
 import GloriaPatri from "$lib/components/faith/prayers/GloriaPatri.svelte";
 import FatimaGebet from "$lib/components/faith/prayers/FatimaGebet.svelte";
 import SalveRegina from "$lib/components/faith/prayers/SalveRegina.svelte";
+import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
 import RosaryFinalPrayer from "$lib/components/faith/prayers/RosaryFinalPrayer.svelte";
 import MichaelGebet from "$lib/components/faith/prayers/MichaelGebet.svelte";
 import CounterButton from "$lib/components/CounterButton.svelte";
@@ -23,6 +24,7 @@ import RosarySvg from "./RosarySvg.svelte";
 import MysterySelector from "./MysterySelector.svelte";
 import MysteryImageColumn from "./MysteryImageColumn.svelte";
 import { mysteries, mysteriesLatin, mysteriesEnglish, mysteryTitles, mysteryTitlesEnglish, allMysteryImages, getLabels, getMysteryForWeekday, BEAD_SPACING, DECADE_OFFSET, sectionPositions } from "./rosaryData.js";
+import { isEastertide, getLiturgicalSeason } from "$lib/js/easter.svelte";
 import { setupScrollSync } from "./rosaryScrollSync.js";
 let { data } = $props();
 
@@ -98,7 +100,9 @@ let imagesToggleHref = $derived(buildHref({ images: !showImages }));
 $effect(() => {
 	todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
 	if (!includeLuminous && selectedMystery === 'lichtreichen') {
-		selectedMystery = todaysMystery;
+		const season = getLiturgicalSeason();
+		const seasonalMap = { eastertide: 'glorreichen', lent: 'schmerzhaften' };
+		selectedMystery = (season ? seasonalMap[season] : null) ?? todaysMystery;
 	}
 });
 
@@ -276,7 +280,9 @@ onMount(() => {
 	// If no mystery was specified in URL, recompute based on loaded preferences
 	if (!data.hasUrlMystery) {
 		todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
-		selectMystery(todaysMystery);
+		const season = getLiturgicalSeason();
+		const seasonalMap = { eastertide: 'glorreichen', lent: 'schmerzhaften' };
+		selectMystery(season ? seasonalMap[season] ?? todaysMystery : todaysMystery);
 	}
 
 	// Clean up URL params after hydration (state is now in component state)
@@ -493,6 +499,19 @@ onMount(() => {
 	font-size: 1.8rem;
 }
 
+.eastertide-badge {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	padding: 0.25em 0.6em;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 999px;
+	background-color: var(--nord14);
+	color: var(--nord0);
+	z-index: 1;
+}
+
 .prayer-section h3 {
 	color: var(--nord11);
 	margin-top: 1.5rem;
@@ -696,7 +715,7 @@ h1 {
 
 	<h2 style="text-align:center;">{labels.mysteries}</h2>
 	<!-- Mystery Selector (links for no-JS, enhanced with onclick for JS) -->
-	<MysterySelector {selectedMystery} {todaysMystery} {includeLuminous} {labels} {mysteryHref} {selectMystery} />
+	<MysterySelector {selectedMystery} {todaysMystery} {includeLuminous} {labels} {mysteryHref} {selectMystery} season={getLiturgicalSeason()} />
 
 	<!-- Toggle Controls & Streak Counter -->
 	<div class="controls-row">
@@ -905,8 +924,14 @@ h1 {
 				bind:this={sectionElements.final_salve}
 				data-section="final_salve"
 			>
-				<h3>Salve Regina</h3>
-				<SalveRegina />
+				{#if isEastertide()}
+					<span class="eastertide-badge">{labels.eastertide}</span>
+					<h3>Regína Cæli</h3>
+					<ReginaCaeli />
+				{:else}
+					<h3>Salve Regina</h3>
+					<SalveRegina />
+				{/if}
 			</div>
 
 			<div

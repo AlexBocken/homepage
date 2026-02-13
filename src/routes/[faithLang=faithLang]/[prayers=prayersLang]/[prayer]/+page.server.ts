@@ -15,15 +15,18 @@ const validSlugs = new Set([
 	'bruder-klaus-gebet', 'prayer-of-st-nicholas-of-flue',
 	'josephgebet-des-hl-papst-pius-x', 'prayer-to-st-joseph-by-pope-st-pius-x',
 	'das-confiteor', 'the-confiteor',
-	'ablassgebete',
+	'postcommunio',
+	'anima-christi',
+	'prayer-before-a-crucifix', 'gebet-vor-einem-kruzifix',
+	'schutzengel-gebet', 'guardian-angel-prayer',
+	'apostolisches-glaubensbekenntnis', 'apostles-creed',
+	'tantum-ergo',
+	'angelus',
+	'regina-caeli',
 ]);
 
 export const load: PageServerLoad = async ({ params, url }) => {
 	if (!validSlugs.has(params.prayer)) {
-		throw error(404, 'Prayer not found');
-	}
-
-	if (params.faithLang === 'faith' && params.prayer === 'ablassgebete') {
 		throw error(404, 'Prayer not found');
 	}
 

@@ -1,4 +1,5 @@
 import { mysteryVerseDataDe, mysteryVerseDataEn } from '$lib/data/mysteryVerseData';
+import { getLiturgicalSeason } from '$lib/js/easter.svelte';
 import type { PageServerLoad, Actions } from './$types';
 
 interface StreakData {
@@ -7,6 +8,11 @@ interface StreakData {
 }
 
 const validMysteries = ['freudenreich', 'schmerzhaften', 'glorreichen', 'lichtreichen'] as const;
+
+const seasonalMysteryMap: Record<string, string> = {
+  eastertide: 'glorreichen',
+  lent: 'schmerzhaften',
+};
 
 function getMysteryForWeekday(date: Date, includeLuminous: boolean): string {
   const dayOfWeek = date.getDay();
@@ -55,14 +61,17 @@ export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
   const initialShowImages = hasUrlImages ? imagesParam !== '0' : true;
 
   const todaysMystery = getMysteryForWeekday(new Date(), initialLuminous);
+  const season = getLiturgicalSeason();
+  const seasonalMystery = season ? seasonalMysteryMap[season] ?? null : null;
+  const defaultMystery = seasonalMystery ?? todaysMystery;
 
   let initialMystery = (validMysteries as readonly string[]).includes(mysteryParam ?? '')
     ? mysteryParam!
-    : todaysMystery;
+    : defaultMystery;
 
   // If luminous is off and luminous mystery was selected, fall back
   if (!initialLuminous && initialMystery === 'lichtreichen') {
-    initialMystery = todaysMystery;
+    initialMystery = defaultMystery;
   }
 
   // Fetch streak data for logged-in users via API route
