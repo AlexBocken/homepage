@@ -1,6 +1,8 @@
 <script>
 	import Prayer from './Prayer.svelte';
 	import AveMaria from './AveMaria.svelte';
+
+	let { verbose = false } = $props();
 </script>
 
 <Prayer>
@@ -16,7 +18,11 @@
 	{/snippet}
 </Prayer>
 
-<AveMaria />
+{#if verbose}
+	<AveMaria />
+{:else}
+	<p class="ave-indicator"><i>— Ave Maria —</i></p>
+{/if}
 
 <Prayer>
 	{#snippet children(showLatin, urlLang)}
@@ -31,7 +37,11 @@
 	{/snippet}
 </Prayer>
 
-<AveMaria />
+{#if verbose}
+	<AveMaria />
+{:else}
+	<p class="ave-indicator"><i>— Ave Maria —</i></p>
+{/if}
 
 <Prayer>
 	{#snippet children(showLatin, urlLang)}
@@ -46,7 +56,11 @@
 	{/snippet}
 </Prayer>
 
-<AveMaria />
+{#if verbose}
+	<AveMaria />
+{:else}
+	<p class="ave-indicator"><i>— Ave Maria —</i></p>
+{/if}
 
 <Prayer>
 	{#snippet children(showLatin, urlLang)}
@@ -84,3 +98,11 @@
 	</p>
 	{/snippet}
 </Prayer>
+
+<style>
+.ave-indicator {
+	text-align: center;
+	color: grey;
+	margin: 0.5em 0;
+}
+</style>

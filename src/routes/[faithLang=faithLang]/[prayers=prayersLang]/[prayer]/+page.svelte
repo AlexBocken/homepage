@@ -169,7 +169,7 @@ h1 {
 		<div class="gebet-wrapper">
 			<div class="gebet" class:bilingue={isBilingue}>
 				{#if prayerId === 'postcommunio'}
-					<Postcommunio verbose={true} />
+					<Postcommunio onlyIntro={false} />
 				{:else}
 					<PrayerBeforeACrucifix verbose={true} />
 				{/if}
@@ -229,7 +229,7 @@ h1 {
 			{:else if prayerId === 'tantumErgo'}
 				<TantumErgo />
 			{:else if prayerId === 'angelus'}
-				<AngelusComponent />
+				<AngelusComponent verbose={true} />
 			{:else if prayerId === 'reginaCaeli'}
 				<ReginaCaeli />
 			{/if}

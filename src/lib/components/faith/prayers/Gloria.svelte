@@ -1,6 +1,19 @@
 <script>
 	import Prayer from './Prayer.svelte';
+
+	let { intro = false } = $props();
 </script>
+
+{#if intro}
+<Prayer hasLatin={false}>
+	{#snippet children(showLatin, urlLang)}
+	<p class="intro">
+		{#if urlLang === 'en'}This ancient hymn begins with the words the angels used to celebrate the newborn Savior. It first praises God the Father, then God the Son; it concludes with homage to the Most Holy Trinity, during which one makes the sign of the cross.{/if}
+		{#if urlLang === 'de'}Der uralte Gesang beginnt mit den Worten, mit denen die Engelscharen den neugeborenen Welterlöser feierten. Er preist zunächst Gott Vater, dann Gott Sohn; er schliesst mit einer Huldigung an die Heiligste Dreifaltigkeit, wobei man sich mit dem grossen Kreuze bezeichnet.{/if}
+	</p>
+	{/snippet}
+</Prayer>
+{/if}
 
 <Prayer>
 	{#snippet children(showLatin, urlLang)}
