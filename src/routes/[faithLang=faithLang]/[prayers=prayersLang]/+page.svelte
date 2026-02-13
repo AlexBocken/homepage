@@ -19,8 +19,13 @@
 	import BruderKlausGebet from "$lib/components/faith/prayers/BruderKlausGebet.svelte";
 	import JosephGebet from "$lib/components/faith/prayers/JosephGebet.svelte";
 	import Confiteor from "$lib/components/faith/prayers/Confiteor.svelte";
-	import AblassGebete from "$lib/components/faith/prayers/AblassGebete.svelte";
+	import GuardianAngel from "$lib/components/faith/prayers/GuardianAngel.svelte";
+	import ApostlesCreed from "$lib/components/faith/prayers/ApostlesCreed.svelte";
+	import TantumErgo from "$lib/components/faith/prayers/TantumErgo.svelte";
+	import Angelus from "$lib/components/faith/prayers/Angelus.svelte";
+	import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
 	import Prayer from "$lib/components/faith/prayers/Prayer.svelte";
+	import { isEastertide as checkEastertide } from "$lib/js/easter.svelte";
 
 	let { data } = $props();
 
@@ -58,12 +63,65 @@
 		searchPlaceholder: isEnglish ? 'Search prayers...' : 'Gebete suchen...',
 		clearSearch: isEnglish ? 'Clear search' : 'Suche löschen',
 		textMatch: isEnglish ? 'Match in prayer text' : 'Treffer im Gebetstext',
-		ablassgebete: 'Ablassgebete'
+		postcommunio: isEnglish ? 'Postcommunio Prayers' : 'Nachkommuniongebete',
+		animachristi: 'Ánima Christi',
+		prayerbeforeacrucifix: isEnglish ? 'Prayer Before a Crucifix' : 'Gebet vor einem Kruzifix',
+		guardianAngel: isEnglish ? 'Guardian Angel Prayer' : 'Schutzengel-Gebet',
+		apostlesCreed: isEnglish ? "Apostles' Creed" : 'Apostolisches Glaubensbekenntnis',
+		tantumErgo: 'Tantum Ergo',
+		angelus: 'Angelus',
+		reginaCaeli: 'Regína Cæli'
 	});
+
+	// TODO: Add categories: 'meal' (Tischgebete/Meal) and 'morning_evening' (Morgen-/Abendgebete/Morning & Evening)
+	// when corresponding prayers are added to the collection
+
+	const categories = [
+		{ id: 'essential', de: 'Grundgebete', en: 'Essential' },
+		{ id: 'marian', de: 'Marianisch', en: 'Marian' },
+		{ id: 'saints', de: 'Heilige', en: 'Saints' },
+		{ id: 'eucharistic', de: 'Eucharistie', en: 'Eucharistic' },
+		{ id: 'praise', de: 'Lobpreis', en: 'Praise' },
+		{ id: 'penitential', de: 'Busse', en: 'Penitential' },
+	];
+
+	const prayerCategories = {
+		signOfCross: ['essential'],
+		gloriaPatri: ['essential', 'praise'],
+		paternoster: ['essential'],
+		credo: ['essential'],
+		aveMaria: ['essential', 'marian'],
+		salveRegina: ['marian'],
+		fatima: ['marian', 'penitential'],
+		gloria: ['praise'],
+		michael: ['saints'],
+		bruderKlaus: ['saints'],
+		joseph: ['saints'],
+		confiteor: ['penitential'],
+		guardianAngel: ['essential'],
+		apostlesCreed: ['essential'],
+		tantumErgo: ['eucharistic', 'praise'],
+		angelus: ['marian'],
+		reginaCaeli: ['marian'],
+	};
+
+	let selectedCategory = $state(data.initialCategory);
 
 	// JS-only search (hidden without JS)
 	let jsEnabled = $state(false);
 	let searchQuery = $state('');
+
+	/**
+	 * Build href for category filter, preserving latin param state
+	 * @param {string|null} categoryId
+	 */
+	function buildFilterHref(categoryId) {
+		const params = new URLSearchParams();
+		if (categoryId) params.set('category', categoryId);
+		if (!data.initialLatin) params.set('latin', '0');
+		const qs = params.toString();
+		return qs ? `?${qs}` : '?';
+	}
 
 	onMount(() => {
 		jsEnabled = true;
@@ -92,7 +150,11 @@
 		{ id: 'bruderKlaus', searchTerms: ['bruder klaus', 'nicholas', 'niklaus', 'flüe'], slug: isEnglish ? 'prayer-of-st-nicholas-of-flue' : 'bruder-klaus-gebet' },
 		{ id: 'joseph', searchTerms: ['joseph', 'josef', 'pius'], slug: isEnglish ? 'prayer-to-st-joseph-by-pope-st-pius-x' : 'josephgebet-des-hl-papst-pius-x' },
 		{ id: 'confiteor', searchTerms: ['confiteor', 'i confess', 'ich bekenne', 'mea culpa'], slug: isEnglish ? 'the-confiteor' : 'das-confiteor' },
-		{ id: 'ablassgebete', searchTerms: ['ablass', 'kommunion'], slug: 'ablassgebete' }
+		{ id: 'guardianAngel', searchTerms: ['schutzengel', 'guardian angel', 'angele dei', 'engel gottes'], slug: isEnglish ? 'guardian-angel-prayer' : 'schutzengel-gebet' },
+		{ id: 'apostlesCreed', searchTerms: ['apostolisches glaubensbekenntnis', "apostles' creed", 'symbolum apostolorum', 'ich glaube an gott'], slug: isEnglish ? 'apostles-creed' : 'apostolisches-glaubensbekenntnis' },
+		{ id: 'tantumErgo', searchTerms: ['tantum ergo', 'genitori', 'sakrament', 'sacrament'], slug: 'tantum-ergo' },
+		{ id: 'angelus', searchTerms: ['angelus', 'engel des herrn', 'angel of the lord'], slug: 'angelus' },
+		{ id: 'reginaCaeli', searchTerms: ['regina caeli', 'regina coeli', 'himmelskönigin', 'queen of heaven'], slug: 'regina-caeli' }
 	]);
 
 	// Base URL for prayer links
@@ -113,7 +175,11 @@
 			bruderKlaus: labels.bruderKlaus,
 			joseph: labels.joseph,
 			confiteor: labels.confiteor,
-			ablassgebete: labels.ablassgebete
+			guardianAngel: labels.guardianAngel,
+			apostlesCreed: labels.apostlesCreed,
+			tantumErgo: labels.tantumErgo,
+			angelus: labels.angelus,
+			reginaCaeli: labels.reginaCaeli
 		};
 		return nameMap[id] || id;
 	}
@@ -189,11 +255,15 @@
 		return 'no-match';
 	}
 
-	// Sorted prayers array - primary matches first, then secondary, then hidden
-	const sortedPrayers = $derived.by(() => {
-		if (!searchQuery.trim()) return prayers;
+	// Filtered by category, then sorted by search match
+	const filteredPrayers = $derived.by(() => {
+		let result = prayers;
+		if (selectedCategory) {
+			result = result.filter(p => prayerCategories[p.id]?.includes(selectedCategory));
+		}
+		if (!searchQuery.trim()) return result;
 
-		return [...prayers].sort((a, b) => {
+		return [...result].sort((a, b) => {
 			const matchA = matchResults.get(a.id);
 			const matchB = matchResults.get(b.id);
 
@@ -203,6 +273,8 @@
 			return orderA - orderB;
 		});
 	});
+
+	const showPostcommunio = $derived(!selectedCategory || selectedCategory === 'eucharistic');
 
 	// Prayer metadata (bilingue status)
 	const prayerMeta = {
@@ -217,8 +289,15 @@
 		michael: { bilingue: true },
 		bruderKlaus: { bilingue: false },
 		joseph: { bilingue: false },
-		confiteor: { bilingue: true }
+		confiteor: { bilingue: true },
+		guardianAngel: { bilingue: true },
+		apostlesCreed: { bilingue: true },
+		tantumErgo: { bilingue: true },
+		angelus: { bilingue: true },
+		reginaCaeli: { bilingue: true }
 	};
+
+	const isEastertide = $derived(checkEastertide());
 
 	// Toggle href for no-JS fallback (navigates to opposite latin state)
 	const latinToggleHref = $derived(data.initialLatin ? '?latin=0' : '?');
@@ -254,6 +333,49 @@ h1{
 	margin-bottom: 2rem;
 }
 
+/* Category filters */
+.category-filters {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5em;
+	margin-bottom: 1.5rem;
+	padding: 0 1em;
+}
+.category-pill {
+	padding: 0.35em 0.9em;
+	border: 1.5px solid var(--nord3);
+	border-radius: 999px;
+	color: var(--nord4);
+	text-decoration: none;
+	font-size: 0.9em;
+	transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+}
+.category-pill:hover {
+	border-color: var(--nord8);
+	color: var(--nord8);
+}
+.category-pill.selected {
+	border-color: var(--nord8);
+	background-color: var(--nord8);
+	color: var(--nord0);
+}
+@media(prefers-color-scheme: light) {
+	.category-pill {
+		border-color: var(--nord4);
+		color: var(--nord3);
+	}
+	.category-pill:hover {
+		border-color: var(--nord10);
+		color: var(--nord10);
+	}
+	.category-pill.selected {
+		border-color: var(--nord10);
+		background-color: var(--nord10);
+		color: var(--nord6);
+	}
+}
+
 /* Search result styling */
 .prayer-wrapper {
 	position: relative;
@@ -285,6 +407,57 @@ h1{
 	}
 }
 
+/* Postcommunio section */
+.postcommunio-section {
+	max-width: 600px;
+	margin: 2rem auto;
+	padding: 1.5em;
+	background-color: var(--accent-dark);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+@media(prefers-color-scheme: light) {
+	.postcommunio-section {
+		background-color: var(--nord5);
+	}
+}
+.postcommunio-section h2 {
+	text-align: center;
+	padding-bottom: 0.5em;
+}
+.postcommunio-links {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	text-align: center;
+}
+.postcommunio-links li {
+	margin: 0.75em 0;
+}
+.postcommunio-links a {
+	color: var(--nord8);
+	text-decoration: none;
+	font-size: 1.15em;
+}
+.postcommunio-links a:hover {
+	text-decoration: underline;
+}
+@media(prefers-color-scheme: light) {
+	.postcommunio-links a {
+		color: var(--nord10);
+	}
+}
+
+/* Seasonal badge */
+.seasonal-badge {
+	display: inline-block;
+	margin-top: 0.5em;
+	padding: 0.2em 0.7em;
+	font-size: 0.75em;
+	border-radius: 999px;
+	background-color: var(--nord14);
+	color: var(--nord0);
+}
+
 /* Search is hidden without JS */
 .js-only {
 	display: none;
@@ -304,6 +477,23 @@ h1{
 	/>
 </div>
 
+<nav class="category-filters" aria-label={isEnglish ? 'Filter by category' : 'Nach Kategorie filtern'}>
+	<a
+		href={buildFilterHref(null)}
+		class="category-pill"
+		class:selected={!selectedCategory}
+		onclick={(e) => { e.preventDefault(); selectedCategory = null; }}
+	>{isEnglish ? 'All' : 'Alle'}</a>
+	{#each categories as cat (cat.id)}
+		<a
+			href={buildFilterHref(cat.id)}
+			class="category-pill"
+			class:selected={selectedCategory === cat.id}
+			onclick={(e) => { e.preventDefault(); selectedCategory = cat.id; }}
+		>{isEnglish ? cat.en : cat.de}</a>
+	{/each}
+</nav>
+
 <div class="js-only">
 	<SearchInput
 		bind:value={searchQuery}
@@ -314,19 +504,13 @@ h1{
 
 <div class="ccontainer">
 <div class=container>
-{#each sortedPrayers as prayer (prayer.id)}
+{#each filteredPrayers as prayer (prayer.id)}
 	<div class="prayer-wrapper {getMatchClass(prayer.id)}" data-match-label={labels.textMatch}>
 	{#if prayer.id === 'gloria'}
 		<Gebet name={getPrayerName(prayer.id)} is_bilingue={true} id={prayer.id} href="{baseUrl}/{prayer.slug}">
 			<p slot="intro">{labels.gloriaIntro}</p>
 			<Gloria />
 		</Gebet>
-	{:else if prayer.id === 'ablassgebete'}
-		{#if data.lang === 'de'}
-		<Gebet name={getPrayerName(prayer.id)} is_bilingue={false} id={prayer.id} href="{baseUrl}/{prayer.slug}">
-			<AblassGebete />
-		</Gebet>
-		{/if}
 	{:else}
 		<Gebet name={getPrayerName(prayer.id)} is_bilingue={prayerMeta[prayer.id]?.bilingue ?? true} id={prayer.id} href="{baseUrl}/{prayer.slug}">
 			{#if prayer.id === 'signOfCross'}
@@ -351,11 +535,35 @@ h1{
 				<JosephGebet />
 			{:else if prayer.id === 'confiteor'}
 				<Confiteor />
+			{:else if prayer.id === 'guardianAngel'}
+				<GuardianAngel />
+			{:else if prayer.id === 'apostlesCreed'}
+				<ApostlesCreed />
+			{:else if prayer.id === 'tantumErgo'}
+				<TantumErgo />
+			{:else if prayer.id === 'angelus'}
+				<Angelus />
+			{:else if prayer.id === 'reginaCaeli'}
+				<ReginaCaeli />
+			{/if}
+			{#if prayer.id === 'reginaCaeli' && isEastertide}
+				<span class="seasonal-badge">{isEnglish ? 'Eastertide' : 'Osterzeit'}</span>
 			{/if}
 		</Gebet>
 	{/if}
 	</div>
 {/each}
 </div>
+
+{#if showPostcommunio}
+<section class="postcommunio-section">
+	<h2>{labels.postcommunio}</h2>
+	<ul class="postcommunio-links">
+		<li><a href="{baseUrl}/anima-christi">{labels.animachristi}</a></li>
+		<li><a href="{baseUrl}/{isEnglish ? 'prayer-before-a-crucifix' : 'gebet-vor-einem-kruzifix'}">{labels.prayerbeforeacrucifix}</a></li>
+		<li><a href="{baseUrl}/postcommunio">{labels.postcommunio}</a></li>
+	</ul>
+</section>
+{/if}
 </div>
 </div>

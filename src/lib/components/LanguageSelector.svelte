@@ -16,8 +16,8 @@
 
 	// Faith subroute mappings
 	const faithSubroutes: Record<string, Record<string, string>> = {
-		en: { gebete: 'prayers', rosenkranz: 'rosary', angelus: 'angelus' },
-		de: { prayers: 'gebete', rosary: 'rosenkranz', angelus: 'angelus' }
+		en: { gebete: 'prayers', rosenkranz: 'rosary' },
+		de: { prayers: 'gebete', rosary: 'rosenkranz' }
 	};
 
 	$effect(() => {

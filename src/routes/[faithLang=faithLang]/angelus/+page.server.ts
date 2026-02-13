@@ -1,12 +1,7 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ url }) => {
-  const latinParam = url.searchParams.get('latin');
-  const hasUrlLatin = latinParam !== null;
-  const initialLatin = hasUrlLatin ? latinParam !== '0' : true;
-
-  return {
-    initialLatin,
-    hasUrlLatin
-  };
+export const load: PageServerLoad = async ({ params }) => {
+  const prayersPath = params.faithLang === 'faith' ? 'prayers' : 'gebete';
+  redirect(301, `/${params.faithLang}/${prayersPath}/angelus`);
 };
