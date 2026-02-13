@@ -1,7 +1,19 @@
 <script>
 	import MysteryIcon from "$lib/components/faith/MysteryIcon.svelte";
 
-	let { selectedMystery, todaysMystery, includeLuminous, labels, mysteryHref, selectMystery } = $props();
+	let { selectedMystery, todaysMystery, includeLuminous, labels, mysteryHref, selectMystery, season = null } = $props();
+
+	const seasonalMystery = $derived(
+		season === 'eastertide' ? 'glorreichen'
+		: season === 'lent' ? 'schmerzhaften'
+		: null
+	);
+
+	const seasonLabel = $derived(
+		season === 'eastertide' ? labels.eastertide
+		: season === 'lent' ? labels.lent
+		: ''
+	);
 </script>
 <style>
 /* Mystery selector grid */
@@ -159,6 +171,24 @@
 	font-weight: 600;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+
+.season-badge {
+	background: var(--nord14);
+}
+
+.badge-stack {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.3rem;
+}
+
+.badge-stack .today-badge {
+	position: static;
+}
 </style>
 
 <div class="mystery-selector" class:four-mysteries={includeLuminous}>
@@ -168,10 +198,13 @@
 		href={mysteryHref('freudenreich')}
 		onclick={(e) => { e.preventDefault(); selectMystery('freudenreich'); }}
 	>
-		{#if todaysMystery === 'freudenreich'}
-			<span class="today-badge">{labels.today}</span>
+		{#if seasonalMystery === 'freudenreich' || todaysMystery === 'freudenreich'}
+			<div class="badge-stack">
+				{#if seasonalMystery === 'freudenreich'}<span class="today-badge season-badge">{seasonLabel}</span>{/if}
+				{#if todaysMystery === 'freudenreich'}<span class="today-badge">{labels.today}</span>{/if}
+			</div>
 		{/if}
-			<MysteryIcon type="joyful" />
+		<MysteryIcon type="joyful" />
 		<h3>{labels.joyful}</h3>
 	</a>
 
@@ -181,8 +214,11 @@
 		href={mysteryHref('schmerzhaften')}
 		onclick={(e) => { e.preventDefault(); selectMystery('schmerzhaften'); }}
 	>
-		{#if todaysMystery === 'schmerzhaften'}
-			<span class="today-badge">{labels.today}</span>
+		{#if seasonalMystery === 'schmerzhaften' || todaysMystery === 'schmerzhaften'}
+			<div class="badge-stack">
+				{#if seasonalMystery === 'schmerzhaften'}<span class="today-badge season-badge">{seasonLabel}</span>{/if}
+				{#if todaysMystery === 'schmerzhaften'}<span class="today-badge">{labels.today}</span>{/if}
+			</div>
 		{/if}
 		<MysteryIcon type="sorrowful" />
 		<h3>{labels.sorrowful}</h3>
@@ -194,10 +230,13 @@
 		href={mysteryHref('glorreichen')}
 		onclick={(e) => { e.preventDefault(); selectMystery('glorreichen'); }}
 	>
-		{#if todaysMystery === 'glorreichen'}
-			<span class="today-badge">{labels.today}</span>
+		{#if seasonalMystery === 'glorreichen' || todaysMystery === 'glorreichen'}
+			<div class="badge-stack">
+				{#if seasonalMystery === 'glorreichen'}<span class="today-badge season-badge">{seasonLabel}</span>{/if}
+				{#if todaysMystery === 'glorreichen'}<span class="today-badge">{labels.today}</span>{/if}
+			</div>
 		{/if}
-	<MysteryIcon type="glorious" />
+		<MysteryIcon type="glorious" />
 		<h3>{labels.glorious}</h3>
 	</a>
 
@@ -209,10 +248,11 @@
 		onclick={(e) => { e.preventDefault(); selectMystery('lichtreichen'); }}
 	>
 		{#if todaysMystery === 'lichtreichen'}
-			<span class="today-badge">{labels.today}</span>
+			<div class="badge-stack">
+				<span class="today-badge">{labels.today}</span>
+			</div>
 		{/if}
-				<MysteryIcon type="luminous" />
-
+		<MysteryIcon type="luminous" />
 		<h3>{labels.luminous}</h3>
 	</a>
 	{/if}

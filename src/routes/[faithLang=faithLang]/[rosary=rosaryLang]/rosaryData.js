@@ -191,7 +191,9 @@ export function getLabels(isEnglish) {
 		showBibleVerse: isEnglish ? 'Show Bible verse' : 'Bibelstelle anzeigen',
 		mysteryFaith: isEnglish ? 'Jesus, who may increase our faith' : 'Jesus, der in uns den Glauben vermehre',
 		mysteryHope: isEnglish ? 'Jesus, who may strengthen our hope' : 'Jesus, der in uns die Hoffnung stärke',
-		mysteryLove: isEnglish ? 'Jesus, who may kindle our love' : 'Jesus, der in uns die Liebe entzünde'
+		mysteryLove: isEnglish ? 'Jesus, who may kindle our love' : 'Jesus, der in uns die Liebe entzünde',
+		eastertide: isEnglish ? 'Eastertide' : 'Osterzeit',
+		lent: isEnglish ? 'Lent' : 'Fastenzeit'
 	};
 }
 

@@ -16,7 +16,14 @@
 	import BruderKlausGebet from "$lib/components/faith/prayers/BruderKlausGebet.svelte";
 	import JosephGebet from "$lib/components/faith/prayers/JosephGebet.svelte";
 	import Confiteor from "$lib/components/faith/prayers/Confiteor.svelte";
-	import AblassGebete from "$lib/components/faith/prayers/AblassGebete.svelte";
+	import Postcommunio from "$lib/components/faith/prayers/Postcommunio.svelte";
+	import AnimaChristi from "$lib/components/faith/prayers/AnimaChristi.svelte";
+	import PrayerBeforeACrucifix from "$lib/components/faith/prayers/PrayerBeforeACrucifix.svelte";
+	import GuardianAngel from "$lib/components/faith/prayers/GuardianAngel.svelte";
+	import ApostlesCreed from "$lib/components/faith/prayers/ApostlesCreed.svelte";
+	import TantumErgo from "$lib/components/faith/prayers/TantumErgo.svelte";
+	import AngelusComponent from "$lib/components/faith/prayers/Angelus.svelte";
+	import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
 	import StickyImage from "$lib/components/faith/StickyImage.svelte";
 
 	let { data } = $props();
@@ -52,7 +59,17 @@
 		'prayer-to-st-joseph-by-pope-st-pius-x': { id: 'joseph', name: isEnglish ? 'Prayer to St. Joseph by Pope St. Pius X' : 'Josephgebet des hl. Papst Pius X', bilingue: false },
 		'das-confiteor': { id: 'confiteor', name: isEnglish ? 'The Confiteor' : 'Das Confiteor', bilingue: true },
 		'the-confiteor': { id: 'confiteor', name: isEnglish ? 'The Confiteor' : 'Das Confiteor', bilingue: true },
-		'ablassgebete': { id: 'ablassgebete', name: 'Ablassgebete', bilingue: true }
+		'postcommunio': { id: 'postcommunio', name: isEnglish ? 'Postcommunio Prayers' : 'Nachkommuniongebete', bilingue: true },
+		'anima-christi': { id: 'animachristi', name: 'Ánima Christi', bilingue: true },
+		'prayer-before-a-crucifix': { id: 'prayerbeforeacrucifix', name: isEnglish ? 'Prayer Before a Crucifix' : 'Gebet vor einem Kruzifix', bilingue: true },
+		'gebet-vor-einem-kruzifix': { id: 'prayerbeforeacrucifix', name: isEnglish ? 'Prayer Before a Crucifix' : 'Gebet vor einem Kruzifix', bilingue: true },
+		'schutzengel-gebet': { id: 'guardianAngel', name: isEnglish ? 'Guardian Angel Prayer' : 'Schutzengel-Gebet', bilingue: true },
+		'guardian-angel-prayer': { id: 'guardianAngel', name: isEnglish ? 'Guardian Angel Prayer' : 'Schutzengel-Gebet', bilingue: true },
+		'apostolisches-glaubensbekenntnis': { id: 'apostlesCreed', name: isEnglish ? "Apostles' Creed" : 'Apostolisches Glaubensbekenntnis', bilingue: true },
+		'apostles-creed': { id: 'apostlesCreed', name: isEnglish ? "Apostles' Creed" : 'Apostolisches Glaubensbekenntnis', bilingue: true },
+		'tantum-ergo': { id: 'tantumErgo', name: 'Tantum Ergo', bilingue: true },
+		'angelus': { id: 'angelus', name: 'Angelus', bilingue: true },
+		'regina-caeli': { id: 'reginaCaeli', name: 'Regína Cæli', bilingue: true }
 	});
 
 	const prayer = $derived(prayerDefs[data.prayer]);
@@ -136,7 +153,7 @@ h1 {
 	}
 }
 </style>
-	{#if prayerId === 'ablassgebete'}
+	{#if prayerId === 'postcommunio' || prayerId === 'prayerbeforeacrucifix'}
 
 <h1>{prayerName}</h1>
 
@@ -151,7 +168,11 @@ h1 {
 	<StickyImage src="/glaube/crucifix.webp" alt="Crucifix">
 		<div class="gebet-wrapper">
 			<div class="gebet" class:bilingue={isBilingue}>
-				<AblassGebete verbose={true} />
+				{#if prayerId === 'postcommunio'}
+					<Postcommunio verbose={true} />
+				{:else}
+					<PrayerBeforeACrucifix verbose={true} />
+				{/if}
 			</div>
 		</div>
 	</StickyImage>
@@ -197,6 +218,20 @@ h1 {
 				<JosephGebet />
 			{:else if prayerId === 'confiteor'}
 				<Confiteor />
+			{:else if prayerId === 'animachristi'}
+				<AnimaChristi />
+			{:else if prayerId === 'prayerbeforeacrucifix'}
+				<PrayerBeforeACrucifix />
+			{:else if prayerId === 'guardianAngel'}
+				<GuardianAngel />
+			{:else if prayerId === 'apostlesCreed'}
+				<ApostlesCreed />
+			{:else if prayerId === 'tantumErgo'}
+				<TantumErgo />
+			{:else if prayerId === 'angelus'}
+				<AngelusComponent />
+			{:else if prayerId === 'reginaCaeli'}
+				<ReginaCaeli />
 			{/if}
 		</div>
 	</div>
