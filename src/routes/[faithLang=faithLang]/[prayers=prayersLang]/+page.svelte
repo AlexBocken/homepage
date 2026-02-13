@@ -24,6 +24,9 @@
 	import TantumErgo from "$lib/components/faith/prayers/TantumErgo.svelte";
 	import Angelus from "$lib/components/faith/prayers/Angelus.svelte";
 	import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
+	import AnimaChristi from "$lib/components/faith/prayers/AnimaChristi.svelte";
+	import PrayerBeforeACrucifix from "$lib/components/faith/prayers/PrayerBeforeACrucifix.svelte";
+	import Postcommunio from "$lib/components/faith/prayers/Postcommunio.svelte";
 	import Prayer from "$lib/components/faith/prayers/Prayer.svelte";
 	import { isEastertide as checkEastertide } from "$lib/js/easter.svelte";
 
@@ -53,9 +56,6 @@
 		salveRegina: 'Salve Regina',
 		fatima: isEnglish ? 'Fatima Prayer' : 'Das Fatimagebet',
 		gloria: 'Glória',
-		gloriaIntro: isEnglish
-			? 'This ancient hymn begins with the words the angels used to celebrate the newborn Savior. It first praises God the Father, then God the Son; it concludes with homage to the Most Holy Trinity, during which one makes the sign of the cross.'
-			: 'Der uralte Gesang beginnt mit den Worten, mit denen die Engelscharen den neugeborenen Welterlöser feierten. Er preist zunächst Gott Vater, dann Gott Sohn; er schliesst mit einer Huldigung an die Heiligste Dreifaltigkeit, wobei man sich mit dem grossen Kreuze bezeichnet.',
 		michael: isEnglish ? 'Prayer to St. Michael the Archangel' : 'Gebet zum hl. Erzengel Michael',
 		bruderKlaus: isEnglish ? 'Prayer of St. Nicholas of Flüe' : 'Bruder Klaus Gebet',
 		joseph: isEnglish ? 'Prayer to St. Joseph by Pope St. Pius X' : 'Josephgebet des hl. Papst Pius X',
@@ -103,6 +103,9 @@
 		tantumErgo: ['eucharistic', 'praise'],
 		angelus: ['marian'],
 		reginaCaeli: ['marian'],
+		animachristi: ['eucharistic'],
+		prayerbeforeacrucifix: ['eucharistic', 'penitential'],
+		postcommunio: ['eucharistic'],
 	};
 
 	let selectedCategory = $state(data.initialCategory);
@@ -154,7 +157,10 @@
 		{ id: 'apostlesCreed', searchTerms: ['apostolisches glaubensbekenntnis', "apostles' creed", 'symbolum apostolorum', 'ich glaube an gott'], slug: isEnglish ? 'apostles-creed' : 'apostolisches-glaubensbekenntnis' },
 		{ id: 'tantumErgo', searchTerms: ['tantum ergo', 'genitori', 'sakrament', 'sacrament'], slug: 'tantum-ergo' },
 		{ id: 'angelus', searchTerms: ['angelus', 'engel des herrn', 'angel of the lord'], slug: 'angelus' },
-		{ id: 'reginaCaeli', searchTerms: ['regina caeli', 'regina coeli', 'himmelskönigin', 'queen of heaven'], slug: 'regina-caeli' }
+		{ id: 'reginaCaeli', searchTerms: ['regina caeli', 'regina coeli', 'himmelskönigin', 'queen of heaven'], slug: 'regina-caeli' },
+		{ id: 'animachristi', searchTerms: ['anima christi', 'seele christi', 'soul of christ'], slug: 'anima-christi' },
+		{ id: 'prayerbeforeacrucifix', searchTerms: ['kruzifix', 'crucifix', 'kreuz', 'cross', 'en ego'], slug: isEnglish ? 'prayer-before-a-crucifix' : 'gebet-vor-einem-kruzifix' },
+		{ id: 'postcommunio', searchTerms: ['postcommunio', 'nachkommunion', 'kommunion', 'communion'], slug: 'postcommunio' }
 	]);
 
 	// Base URL for prayer links
@@ -179,7 +185,10 @@
 			apostlesCreed: labels.apostlesCreed,
 			tantumErgo: labels.tantumErgo,
 			angelus: labels.angelus,
-			reginaCaeli: labels.reginaCaeli
+			reginaCaeli: labels.reginaCaeli,
+			animachristi: labels.animachristi,
+			prayerbeforeacrucifix: labels.prayerbeforeacrucifix,
+			postcommunio: labels.postcommunio
 		};
 		return nameMap[id] || id;
 	}
@@ -274,8 +283,6 @@
 		});
 	});
 
-	const showPostcommunio = $derived(!selectedCategory || selectedCategory === 'eucharistic');
-
 	// Prayer metadata (bilingue status)
 	const prayerMeta = {
 		signOfCross: { bilingue: true },
@@ -294,7 +301,10 @@
 		apostlesCreed: { bilingue: true },
 		tantumErgo: { bilingue: true },
 		angelus: { bilingue: true },
-		reginaCaeli: { bilingue: true }
+		reginaCaeli: { bilingue: true },
+		animachristi: { bilingue: true },
+		prayerbeforeacrucifix: { bilingue: true },
+		postcommunio: { bilingue: true }
 	};
 
 	const isEastertide = $derived(checkEastertide());
@@ -506,13 +516,7 @@ h1{
 <div class=container>
 {#each filteredPrayers as prayer (prayer.id)}
 	<div class="prayer-wrapper {getMatchClass(prayer.id)}" data-match-label={labels.textMatch}>
-	{#if prayer.id === 'gloria'}
-		<Gebet name={getPrayerName(prayer.id)} is_bilingue={true} id={prayer.id} href="{baseUrl}/{prayer.slug}">
-			<p slot="intro">{labels.gloriaIntro}</p>
-			<Gloria />
-		</Gebet>
-	{:else}
-		<Gebet name={getPrayerName(prayer.id)} is_bilingue={prayerMeta[prayer.id]?.bilingue ?? true} id={prayer.id} href="{baseUrl}/{prayer.slug}">
+	<Gebet name={getPrayerName(prayer.id)} is_bilingue={prayerMeta[prayer.id]?.bilingue ?? true} id={prayer.id} href="{baseUrl}/{prayer.slug}">
 			{#if prayer.id === 'signOfCross'}
 				<Kreuzzeichen />
 			{:else if prayer.id === 'gloriaPatri'}
@@ -545,25 +549,22 @@ h1{
 				<Angelus />
 			{:else if prayer.id === 'reginaCaeli'}
 				<ReginaCaeli />
+			{:else if prayer.id === 'animachristi'}
+				<AnimaChristi />
+			{:else if prayer.id === 'prayerbeforeacrucifix'}
+				<PrayerBeforeACrucifix />
+			{:else if prayer.id === 'gloria'}
+				<Gloria intro={true} />
+			{:else if prayer.id === 'postcommunio'}
+				<Postcommunio onlyIntro={true} />
 			{/if}
 			{#if prayer.id === 'reginaCaeli' && isEastertide}
 				<span class="seasonal-badge">{isEnglish ? 'Eastertide' : 'Osterzeit'}</span>
 			{/if}
 		</Gebet>
-	{/if}
 	</div>
 {/each}
 </div>
 
-{#if showPostcommunio}
-<section class="postcommunio-section">
-	<h2>{labels.postcommunio}</h2>
-	<ul class="postcommunio-links">
-		<li><a href="{baseUrl}/anima-christi">{labels.animachristi}</a></li>
-		<li><a href="{baseUrl}/{isEnglish ? 'prayer-before-a-crucifix' : 'gebet-vor-einem-kruzifix'}">{labels.prayerbeforeacrucifix}</a></li>
-		<li><a href="{baseUrl}/postcommunio">{labels.postcommunio}</a></li>
-	</ul>
-</section>
-{/if}
 </div>
 </div>
