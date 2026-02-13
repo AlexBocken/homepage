@@ -10,9 +10,10 @@ let streak = $state<ReturnType<typeof getRosaryStreak> | null>(null);
 interface Props {
 	streakData?: { length: number; lastPrayed: string | null } | null;
 	lang?: 'de' | 'en';
+	isLoggedIn?: boolean;
 }
 
-let { streakData = null, lang = 'de' }: Props = $props();
+let { streakData = null, lang = 'de', isLoggedIn = false }: Props = $props();
 
 const isEnglish = $derived(lang === 'en');
 
@@ -42,23 +43,25 @@ async function pray() {
 }
 </script>
 
-<div class="streak-container">
+<div class="streak-container" class:no-js-hidden={!isLoggedIn}>
 	<div class="streak-display">
 		<StreakAura value={displayLength} {burst} />
 		<span class="streak-label">{labels.days}</span>
 	</div>
-	<button
-		class="streak-button"
-		onclick={pray}
-  		disabled={prayedToday}
-		aria-label={labels.ariaLabel}
-	>
-		{#if prayedToday}
-			{labels.prayedToday}
-		{:else}
-			{labels.prayed}
-		{/if}
-	</button>
+	<form method="POST" action="?/pray" onsubmit={(e) => { e.preventDefault(); pray(); }}>
+		<button
+			class="streak-button"
+			type="submit"
+			disabled={prayedToday}
+			aria-label={labels.ariaLabel}
+		>
+			{#if prayedToday}
+				{labels.prayedToday}
+			{:else}
+				{labels.prayed}
+			{/if}
+		</button>
+	</form>
 </div>
 
 <style>
@@ -117,6 +120,15 @@ async function pray() {
 	background: var(--nord3);
 	cursor: default;
 	opacity: 0.7;
+}
+
+/* Hide for non-logged-in users without JS (no form action available) */
+.no-js-hidden {
+	display: none;
+}
+
+:global(html.js-enabled) .no-js-hidden {
+	display: flex;
 }
 
 @media (prefers-color-scheme: light) {

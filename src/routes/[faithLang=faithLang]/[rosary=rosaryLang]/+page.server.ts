@@ -1,5 +1,5 @@
 import { mysteryVerseDataDe, mysteryVerseDataEn } from '$lib/data/mysteryVerseData';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 
 interface StreakData {
   length: number;
@@ -43,13 +43,16 @@ export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
   const luminousParam = url.searchParams.get('luminous');
   const latinParam = url.searchParams.get('latin');
   const mysteryParam = url.searchParams.get('mystery');
+  const imagesParam = url.searchParams.get('images');
 
   const hasUrlLuminous = luminousParam !== null;
   const hasUrlLatin = latinParam !== null;
   const hasUrlMystery = mysteryParam !== null;
+  const hasUrlImages = imagesParam !== null;
 
   const initialLuminous = hasUrlLuminous ? luminousParam !== '0' : true;
   const initialLatin = hasUrlLatin ? latinParam !== '0' : true;
+  const initialShowImages = hasUrlImages ? imagesParam !== '0' : true;
 
   const todaysMystery = getMysteryForWeekday(new Date(), initialLuminous);
 
@@ -78,12 +81,46 @@ export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
   return {
     mysteryDescriptions: params.faithLang === 'faith' ? mysteryVerseDataEn : mysteryVerseDataDe,
     streakData,
+    isLoggedIn: !!session?.user?.nickname,
     initialMystery,
     todaysMystery,
     initialLuminous,
     initialLatin,
     hasUrlMystery,
     hasUrlLuminous,
-    hasUrlLatin
+    hasUrlLatin,
+    initialShowImages,
+    hasUrlImages
   };
+};
+
+export const actions: Actions = {
+  pray: async ({ locals, fetch }) => {
+    const session = await locals.auth();
+    if (!session?.user?.nickname) {
+      return { success: false };
+    }
+
+    const res = await fetch('/api/glaube/rosary-streak');
+    const current = res.ok ? await res.json() : { length: 0, lastPrayed: null };
+
+    const today = new Date().toISOString().split('T')[0];
+    if (current.lastPrayed === today) {
+      return { success: true, alreadyPrayed: true };
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    const newLength = current.lastPrayed === yesterdayStr ? current.length + 1 : 1;
+
+    await fetch('/api/glaube/rosary-streak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ length: newLength, lastPrayed: today })
+    });
+
+    return { success: true };
+  }
 };
