@@ -165,7 +165,7 @@ export function getLabels(isEnglish) {
 			? 'Interactive digital version of the Rosary for praying along. Scroll through the prayers and follow the visualization.'
 			: 'Interaktive digitale Version des Rosenkranzes zum Mitbeten. Scrolle durch die Gebete und folge der Visualisierung.',
 		mysteries: isEnglish ? 'Mysteries' : 'Geheimnisse',
-		today: isEnglish ? 'Today' : 'Heutige',
+		today: isEnglish ? 'Weekday' : 'Wochentag',
 		joyful: isEnglish ? 'Joyful' : 'Freudenreiche',
 		sorrowful: isEnglish ? 'Sorrowful' : 'Schmerzhaften',
 		glorious: isEnglish ? 'Glorious' : 'Glorreichen',
