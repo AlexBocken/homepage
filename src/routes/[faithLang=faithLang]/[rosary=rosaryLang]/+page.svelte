@@ -634,6 +634,8 @@ h1 {
 
 .scroll-top-button {
 	margin: 2rem auto 0;
+	width: fit-content;
+	text-decoration: none;
 }
 
 .scroll-padding {
@@ -688,7 +690,7 @@ h1 {
 	<meta name="description" content={labels.pageDescription}>
 </svelte:head>
 
-<div class="page-container">
+<div class="page-container" id="top">
 	<h1>{labels.pageTitle}</h1>
 
 
@@ -949,9 +951,9 @@ h1 {
 					<p><span class="symbol">♱</span>{labels.footnoteSign}</p>
 				</div>
 			</div>
-			<button class="scroll-top-button action_button" onclick={() => window.scrollTo({ top: 0 })} aria-label="Scroll to top">
+			<a class="scroll-top-button action_button" href="#top" onclick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Scroll to top">
 				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-			</button>
+			</a>
 			<div class="scroll-padding"></div>
 		</div>
 
