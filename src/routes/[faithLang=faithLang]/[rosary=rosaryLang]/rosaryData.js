@@ -268,7 +268,7 @@ export const allMysteryImages = {
 	]),
 	schmerzhaften: new Map([
 		[1, { src: "/glaube/sorrowful/1.carl-bloch.gethsemane.webp", artist: "Carl Bloch", title: "Gethsemane", titleDe: "Gethsemane", year: 1873 }],
-		[2, { src: "/glaube/sorrowful/2.wiliam-bouguereau.flagellation.webp", artist: "William-Adolphe Bouguereau", title: "The Flagellation of Our Lord Jesus Christ", titleDe: "Die Geisselung unseres Herrn Jesus Christus", year: 1880 }],
+		[2, { src: "/glaube/sorrowful/2.rubens.flagellation-of-christ.webp", artist: "Rubens", title: "The Flagellation of Christ", titleDe: "Die Geisselung Christus"}],
 		[3, { src: "/glaube/sorrowful/3.carl-bloch.mocking.webp", artist: "Carl Bloch", title: "The Mocking of Christ", titleDe: "Die Verspottung Christi", year: 1880 }],
 		[4, { src: "/glaube/sorrowful/4.lorenzo-lotto.carrying-the-cross.webp", artist: "Lorenzo Lotto", title: "Carrying the Cross", titleDe: "Die Kreuztragung", year: 1526 }],
 		[5, { src: "/glaube/sorrowful/5.alonso-cano.the-crucifixion.webp", artist: "Diego Velázquez", title: "Christ Crucified", titleDe: "Der gekreuzigte Christus", year: 1632 }],
