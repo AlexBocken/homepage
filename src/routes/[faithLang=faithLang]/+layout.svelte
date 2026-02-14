@@ -28,7 +28,6 @@ function isActive(path) {
 		<ul class=site_header>
 		<li><a href="/{data.faithLang}/{prayersPath}" class:active={isActive(`/${data.faithLang}/${prayersPath}`)}>{labels.prayers}</a></li>
 		<li><a href="/{data.faithLang}/{rosaryPath}" class:active={isActive(`/${data.faithLang}/${rosaryPath}`)}>{labels.rosary}</a></li>
-		<li><a href="/{data.faithLang}/{prayersPath}/angelus" class:active={isActive(`/${data.faithLang}/${prayersPath}/angelus`)}>Angelus</a></li>
 		</ul>
 	{/snippet}
 
