@@ -79,7 +79,6 @@ class RosaryStreakStore {
 	#initialized = false;
 	#syncing = $state(false);
 	#pendingSync = false; // Track if we have unsynced changes
-	#hasSyncedOnce = false; // Track if initial sync has completed
 	#isOffline = $state(false);
 	#reconnectInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -164,14 +163,11 @@ class RosaryStreakStore {
 		return this.#syncing;
 	}
 
-	// Initialize with server data (called once on page load)
+	// Initialize with server data (called on each component mount)
 	initWithServerData(serverData: StreakData | null, isLoggedIn: boolean): void {
-		if (this.#hasSyncedOnce) return; // Only sync once
-
 		this.#isLoggedIn = isLoggedIn;
 
 		if (!isLoggedIn || !serverData) {
-			this.#hasSyncedOnce = true;
 			return;
 		}
 
@@ -187,8 +183,6 @@ class RosaryStreakStore {
 		if (merged.length !== serverData.length || merged.lastPrayed !== serverData.lastPrayed) {
 			this.#pushToServer();
 		}
-
-		this.#hasSyncedOnce = true;
 	}
 
 	async #pushToServer(): Promise<void> {
