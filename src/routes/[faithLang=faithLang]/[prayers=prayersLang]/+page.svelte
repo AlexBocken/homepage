@@ -2,8 +2,6 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { createLanguageContext } from "$lib/contexts/languageContext.js";
-	import "$lib/css/christ.css";
-	import "$lib/css/nordtheme.css";
 	import Gebet from "./Gebet.svelte";
 	import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
 	import SearchInput from "$lib/components/SearchInput.svelte";

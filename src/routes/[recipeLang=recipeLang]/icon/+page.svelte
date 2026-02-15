@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import '$lib/css/nordtheme.css';
     import Recipes from '$lib/components/recipes/Recipes.svelte';
     import MediaScroller from '$lib/components/recipes/MediaScroller.svelte';
     import SeasonLayout from '$lib/components/recipes/SeasonLayout.svelte'

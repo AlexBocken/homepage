@@ -3,7 +3,6 @@ import { onMount, tick } from "svelte";
 import { createLanguageContext } from "$lib/contexts/languageContext.js";
 import { createPip } from "$lib/js/pip.svelte";
 import PipImage from "$lib/components/faith/PipImage.svelte";
-import "$lib/css/christ.css";
 import "$lib/css/action_button.css";
 import Kreuzzeichen from "$lib/components/faith/prayers/Kreuzzeichen.svelte";
 import Credo from "$lib/components/faith/prayers/Credo.svelte";
@@ -75,6 +74,7 @@ let currentMysteryDescriptions = $derived(data.mysteryDescriptions[selectedMyste
 // Function to switch mysteries
 function selectMystery(mysteryType) {
 	selectedMystery = mysteryType;
+	lastMysteryTarget = 'before';
 }
 
 // Build URLs preserving full state (for no-JS fallback)
@@ -163,6 +163,7 @@ $effect(() => {
 
 let mysteryImageContainer;
 let mysteryScrollRaf = null;
+let lastMysteryTarget = 'before';
 
 function scrollMysteryImage(targetY, duration = 1200) {
 	if (!mysteryImageContainer) return;
@@ -193,14 +194,17 @@ $effect(() => {
 		// Edge pads (before/after): scroll flush so previous image hides behind the header
 		const offset = isEdge ? 0 : rem * IMAGE_COL_HEADER_OFFSET;
 		const target = Math.max(0, targetEl.offsetTop - offset);
-		if (isEdge) {
-			// Snap instantly when jumping to top/bottom
+		// Smooth-scroll the last image away when naturally transitioning from decade 5 to 'after'
+		const isNaturalEnd = targetName === 'after' && lastMysteryTarget === 5;
+		if (isEdge && !isNaturalEnd) {
+			// Snap instantly when jumping to top/bottom (not a natural scroll)
 			if (mysteryScrollRaf) cancelAnimationFrame(mysteryScrollRaf);
 			mysteryScrollRaf = null;
 			mysteryImageContainer.scrollTop = target;
 		} else {
 			scrollMysteryImage(target);
 		}
+		lastMysteryTarget = targetName;
 	}
 });
 

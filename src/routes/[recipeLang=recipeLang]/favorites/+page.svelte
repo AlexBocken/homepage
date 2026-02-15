@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import '$lib/css/nordtheme.css';
     import Recipes from '$lib/components/recipes/Recipes.svelte';
     import Card from '$lib/components/recipes/Card.svelte';
     import Search from '$lib/components/recipes/Search.svelte';

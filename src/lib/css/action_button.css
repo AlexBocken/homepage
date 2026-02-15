@@ -1,3 +1,5 @@
+@import "./shake.css";
+
 :root{
 	--angle: 15deg;
 }
@@ -26,33 +28,3 @@
 	transition: 50ms;
 	scale: 0.8 0.8;
 }
-
-
-@keyframes shake{
-    0%{
-      transform: rotate(0)
-		scale(1,1);
-    }
-    25%{
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-      	transform: rotate(--angle)
-      		scale(1.2,1.2)
-      ;
-    }
-    50%{
-
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-      	transform: rotate(calc(-1 * --angle))
-      		scale(1.2,1.2);
-    }
-    74%{
-
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-  	transform: rotate(--angle)
-  		scale(1.2, 1.2);
-	}
-	100%{
-      transform: rotate(0)
-  		scale(1.2, 1.2);
-    }
-  }

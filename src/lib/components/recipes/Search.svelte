@@ -1,7 +1,6 @@
 <script>
     import {onMount} from "svelte";
     import { browser } from '$app/environment';
-    import "$lib/css/nordtheme.css";
     import FilterPanel from './FilterPanel.svelte';
     import { getCategories } from '$lib/js/categories';
 
