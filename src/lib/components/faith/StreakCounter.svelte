@@ -30,9 +30,12 @@ const labels = $derived({
 });
 
 // Initialize store on mount (client-side only)
+// Init with server data BEFORE assigning to streak, so displayLength
+// never sees stale localStorage data from the singleton
 onMount(() => {
-	streak = getRosaryStreak();
-	streak.initWithServerData(streakData, streakData !== null);
+	const s = getRosaryStreak();
+	s.initWithServerData(streakData, isLoggedIn);
+	streak = s;
 });
 
 async function pray() {
