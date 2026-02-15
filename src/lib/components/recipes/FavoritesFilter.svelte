@@ -1,5 +1,4 @@
 <script>
-	import "$lib/css/nordtheme.css";
 	import Toggle from '$lib/components/Toggle.svelte';
 
 	let {

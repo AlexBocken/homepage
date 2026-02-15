@@ -2,7 +2,6 @@
 import type { Snippet } from 'svelte';
 
 let { href, ariaLabel = undefined, children } = $props<{ href: string, ariaLabel?: string, children?: Snippet }>();
-import "$lib/css/nordtheme.css"
 import "$lib/css/action_button.css"
 </script>
 

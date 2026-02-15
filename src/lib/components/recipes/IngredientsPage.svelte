@@ -4,8 +4,6 @@ import { onNavigate } from "$app/navigation";
 import { browser } from '$app/environment';
 import { page } from '$app/stores';
 import HefeSwapper from './HefeSwapper.svelte';
-import '$lib/css/recipe-links.css';
-
 let { data } = $props();
 
 // Helper function to multiply numbers in ingredient amounts

@@ -109,6 +109,35 @@
 	--color-warning: var(--nord13);
 	--color-error: var(--nord11);
 	--color-info: var(--nord10);
+
+	/* Shared transitions & shadows */
+	--transition-fast: 100ms;
+	--transition-normal: 200ms;
+	--shadow-sm: 0 0 0.4em 0.05em rgba(0,0,0,0.2);
+	--shadow-md: 0 0 0.5em 0.1em rgba(0,0,0,0.3);
+	--shadow-lg: 0 0 1em 0.1em rgba(0,0,0,0.4);
+	--shadow-hover: 0.1em 0.1em 0.5em 0.1em rgba(0,0,0,0.3);
+	--radius-pill: 1000px;
+	--radius-card: 20px;
+	--radius-sm: 0.3rem;
+	--radius-md: 0.5rem;
+	--radius-lg: 0.75rem;
+
+	/* Spacing scale */
+	--space-xs: 0.25rem;
+	--space-sm: 0.5rem;
+	--space-md: 1rem;
+	--space-lg: 1.5rem;
+	--space-xl: 2rem;
+	--space-2xl: 3rem;
+
+	/* Font size scale */
+	--text-sm: 0.85rem;
+	--text-base: 1rem;
+	--text-lg: 1.1rem;
+	--text-xl: 1.5rem;
+	--text-2xl: 2rem;
+	--text-3xl: 3rem;
 }
 
 /* ============================================
@@ -208,65 +237,110 @@ a:focus-visible {
 	color: var(--color-link-hover);
 }
 
+
 /* ============================================
-   FORM STYLES
+   GLOBAL UTILITY CLASSES
    ============================================ */
 
-form {
-	background-color: var(--color-bg-secondary);
-	display: flex;
-	flex-direction: column;
-	max-width: 600px;
-	gap: 0.5em;
-	margin-inline: auto;
-	justify-content: center;
-	align-items: center;
-	padding-block: 2rem;
-	margin-block: 2rem;
-}
-
-form label {
-	font-size: 1.2em;
-}
-
-form input {
-	display: block;
-	font-size: 1.2rem;
-}
-
-form:not(.search) button {
-	background-color: var(--color-accent);
-	color: var(--color-text-on-accent);
+/* Pill-shaped element base */
+.g-pill {
+	border-radius: var(--radius-pill);
 	border: none;
-	padding: 0.5em 1em;
-	font-size: 1.3em;
-	border-radius: 1000px;
-	margin-top: 1em;
-	transition: 100ms;
 	cursor: pointer;
+	display: inline-block;
+	text-decoration: none;
+	transition: var(--transition-fast);
 }
 
-form:not(.search) button:hover,
-form:not(.search) button:focus-visible {
-	background-color: var(--color-accent-hover);
-	scale: 1.1;
+/* Interactive hover/focus effects */
+.g-interactive {
+	transition: var(--transition-fast);
+}
+.g-interactive:hover,
+.g-interactive:focus-visible {
+	transform: scale(1.05);
+	box-shadow: var(--shadow-hover);
+}
+.g-interactive:focus {
+	scale: 0.9;
 }
 
-form:not(.search) button:active {
-	background-color: var(--color-accent-active);
+/* Light background button (with dark mode) */
+.g-btn-light {
+	background-color: var(--nord5);
+	color: var(--nord0);
+	box-shadow: var(--shadow-sm);
+}
+@media (prefers-color-scheme: dark) {
+	.g-btn-light {
+		background-color: var(--nord0);
+		color: white;
+	}
 }
 
-form p {
-	max-width: 400px;
-	margin-top: 0;
+/* Dark background button */
+.g-btn-dark,
+.g-btn-dark:visited,
+.g-btn-dark:link {
+	background-color: var(--nord0);
+	color: var(--nord6);
+	box-shadow: var(--shadow-lg);
+}
+.g-btn-dark:hover,
+.g-btn-dark:focus-visible {
+	background-color: var(--nord1);
+	color: var(--nord6);
 }
 
-form h4 {
-	margin-bottom: 0;
+/* Icon badge (circular icon container) */
+.g-icon-badge {
+	font-family: "Noto Color Emoji", emoji, sans-serif;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	text-decoration: none;
+	transition: var(--transition-fast);
+	box-shadow: var(--shadow-lg);
+}
+.g-icon-badge:hover,
+.g-icon-badge:focus-visible {
+	transform: scale(1.1);
+	box-shadow: var(--shadow-hover);
 }
 
-@media screen and (max-width: 600px) {
-	form {
-		margin-top: 0;
+/* Tag/chip styling */
+.g-tag,
+.g-tag:visited,
+.g-tag:link {
+	font-size: 1.1rem;
+	padding: 0.25em 1em;
+	border-radius: var(--radius-pill);
+	background-color: var(--nord5);
+	color: var(--nord0);
+	text-decoration: none;
+	cursor: pointer;
+	transition: var(--transition-fast);
+	box-shadow: var(--shadow-sm);
+	border: none;
+	display: inline-block;
+}
+.g-tag:hover,
+.g-tag:focus-visible {
+	transform: scale(1.05);
+	background-color: var(--nord8);
+	box-shadow: var(--shadow-hover);
+	color: var(--nord0);
+}
+@media (prefers-color-scheme: dark) {
+	.g-tag,
+	.g-tag:visited,
+	.g-tag:link {
+		background-color: var(--nord0);
+		color: white;
+	}
+	.g-tag:hover,
+	.g-tag:focus-visible {
+		color: var(--nord0);
 	}
 }

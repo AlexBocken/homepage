@@ -1,5 +1,4 @@
 <script lang=ts>
-import "$lib/css/nordtheme.css"
 import { season } from '$lib/js/season_store.js'
 import {onMount} from "svelte";
     import {do_on_key} from "./do_on_key";

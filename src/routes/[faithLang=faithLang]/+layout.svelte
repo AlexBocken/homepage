@@ -1,4 +1,5 @@
 <script>
+import '$lib/css/christ.css';
 import { page } from '$app/stores';
 import Header from '$lib/components/Header.svelte'
 import UserHeader from '$lib/components/UserHeader.svelte';

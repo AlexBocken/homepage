@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { Snippet } from 'svelte';
-    import '$lib/css/nordtheme.css';
     import Recipes from '$lib/components/recipes/Recipes.svelte';
     import Search from './Search.svelte';
 

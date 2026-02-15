@@ -1,5 +1,4 @@
 <script lang="ts">
-import "$lib/css/nordtheme.css"
 import { onMount } from "svelte";
 import { page } from '$app/stores';
 import Symbol from "./Symbol.svelte"
