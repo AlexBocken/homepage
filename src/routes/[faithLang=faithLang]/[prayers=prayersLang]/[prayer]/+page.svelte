@@ -1,8 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import { createLanguageContext } from "$lib/contexts/languageContext.js";
-	import "$lib/css/christ.css";
-	import "$lib/css/nordtheme.css";
 	import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
 	import Kreuzzeichen from "$lib/components/faith/prayers/Kreuzzeichen.svelte";
 	import GloriaPatri from "$lib/components/faith/prayers/GloriaPatri.svelte";

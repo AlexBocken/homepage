@@ -1,5 +1,4 @@
 <script>
-	import "$lib/css/nordtheme.css";
 	import CategoryFilter from './CategoryFilter.svelte';
 	import TagFilter from './TagFilter.svelte';
 	import IconFilter from './IconFilter.svelte';

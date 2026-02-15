@@ -1,5 +1,4 @@
 <script>
-	import "$lib/css/nordtheme.css";
 	import TagChip from '$lib/components/recipes/TagChip.svelte';
 
 	let {

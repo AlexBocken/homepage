@@ -1,5 +1,4 @@
 <script>
-import '$lib/css/recipe-links.css';
 let { data } = $props();
 
 let multiplier = $state(data.multiplier || 1);

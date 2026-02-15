@@ -1,5 +1,4 @@
 <script lang="ts">
-	import '$lib/css/nordtheme.css';
 	import "$lib/css/shake.css"
 	let { icon, ...restProps } = $props<{ icon: string, [key: string]: any }>();
 </script>

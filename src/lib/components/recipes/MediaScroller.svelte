@@ -1,6 +1,5 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
-import "$lib/css/nordtheme.css"
 let { title = '', children } = $props<{ title?: string, children?: Snippet }>();
 </script>
 <style>

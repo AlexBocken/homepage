@@ -1,5 +1,4 @@
 <script lang="ts">
-	import "$lib/css/nordtheme.css";
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
 	import { onMount } from 'svelte';
 	let { data } = $props();

@@ -10,7 +10,6 @@
 	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import '$lib/css/action_button.css';
-	import '$lib/css/nordtheme.css';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

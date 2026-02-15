@@ -1,5 +1,4 @@
 <script>
-	import "$lib/css/nordtheme.css";
 
 	let {
 		value = $bindable(''),

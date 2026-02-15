@@ -1,6 +1,5 @@
 <script lang="ts">
 let { tag, ref } = $props<{ tag: string, ref: string }>();
-import '$lib/css/nordtheme.css'
 </script>
 <style>
 a{

@@ -15,7 +15,6 @@
 	import { season } from '$lib/js/season_store';
 	import { portions } from '$lib/js/portions_store';
 	import '$lib/css/action_button.css';
-	import '$lib/css/nordtheme.css';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
