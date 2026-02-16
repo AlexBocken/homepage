@@ -26,7 +26,7 @@
 
 <style>
 	a{
-		font-family: "Noto Color Emoji", emoji, sans-serif;
+		font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji, sans-serif;
 		font-size: 2rem;
 		text-decoration: none;
 		padding: 0.5em;

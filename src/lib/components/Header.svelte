@@ -116,7 +116,6 @@ nav[hidden]{
 :global(.site_header li>a)
 {
 	text-decoration: none;
-	font-family: sans-serif;
 	font-size: 1.2rem;
 	color: inherit;
 	border-radius: var(--radius-pill);
@@ -127,7 +126,6 @@ nav[hidden]{
 :global(a.entry:visited)
 {
 	text-decoration: none;
-	font-family: sans-serif;
 	font-size: 1.2rem;
 	color: white !important;
 	border-radius: var(--radius-pill);

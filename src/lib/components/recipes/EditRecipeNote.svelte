@@ -25,7 +25,6 @@ textarea {
 	font-size: 1rem;
 	resize: vertical;
 	margin-top: 0.5em;
-	font-family: sans-serif;
 	background-color: transparent;
 }
 textarea::placeholder {

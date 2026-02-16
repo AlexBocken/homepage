@@ -16,7 +16,6 @@
 input {
 	all: unset;
 	box-sizing: border-box;
-	font-family: sans-serif;
 	background: var(--nord0);
 	color: #fff;
 	padding: 0.7rem 2rem;

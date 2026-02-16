@@ -108,7 +108,6 @@ dialog[open]::backdrop {
 
 dialog h2 {
 	font-size: 3rem;
-	font-family: sans-serif;
 	color: white;
 	text-align: center;
 	margin-top: 30vh;

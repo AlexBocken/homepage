@@ -7,7 +7,6 @@ div{
 	margin-inline:auto;
 	gap: 1rem;
 	justify-content: space-evenly;
-	font-family: sans-serif;
 }
 </style>
 
