@@ -123,7 +123,7 @@ dialog h2 {
 	margin-top: 2rem;
 	max-width: 600px;
 	padding: 2rem;
-	border-radius: 20px;
+	border-radius: var(--radius-card);
 	background-color: var(--blue);
 	color: white;
 	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
@@ -141,12 +141,12 @@ dialog h2 {
 	width: 100%;
 	padding: 0.5em 1em;
 	margin-top: 0.5em;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	border: 2px solid var(--nord4);
 	background-color: white;
 	color: var(--nord0);
 	font-size: 1rem;
-	transition: 100ms;
+	transition: var(--transition-fast);
 }
 
 .selector-content select:hover,
@@ -176,10 +176,10 @@ dialog h2 {
 .button-group button {
 	padding: 0.75em 2em;
 	font-size: 1.1rem;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	border: none;
 	cursor: pointer;
-	transition: 200ms;
+	transition: var(--transition-normal);
 	font-weight: bold;
 }
 

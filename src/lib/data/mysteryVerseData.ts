@@ -1046,3 +1046,131 @@ export const mysteryVerseDataEn: Record<string, MysteryDescription[]> = {
 		}
 	]
 };
+
+export const theologicalVirtueVerseDataDe: MysteryDescription = {
+	"title": "Das Hohelied der Liebe",
+	"reference": "1 Kor 13, 1-13",
+	"text": "«Wenn ich mit den Zungen der Menschen und Engel rede, aber die Liebe nicht habe, so bin ich wie ein tönendes Erz oder eine klingende Schelle geworden. Und wenn ich die Gabe der Weissagung habe, und kenne alle Geheimnisse und alle Wissenschaft, und wenn ich allen Glauben habe, so dass ich Berge versetzen könnte, die Liebe aber nicht habe, so bin ich nichts. Und wenn ich alle meine Habe zur Speisung der Armen austeile, und wenn ich meinen Leib dahingebe, dass ich verbrannt werde, die Liebe aber nicht habe, so nützt es mir nichts. Die Liebe ist langmütig, ist gütig; die Liebe eifert nicht, sie handelt nicht unbescheiden, sie bläht sich nicht auf; sie ist nicht ehrsüchtig, sucht nicht das ihre, sie lässt sich nicht erbittern, sie rechnet das Böse nicht an; sie freut sich nicht der Ungerechtigkeit, sie freut sich aber mit der Wahrheit; alles erträgt sie, alles glaubt sie, alles hofft sie, alles übersteht sie. Die Liebe hört nie auf, wenn auch die Weissagungen abgetan werden oder die Sprachen ein Ende nehmen, und die Erkenntnis vergehen wird. Denn unser Erkennen ist Stückwerk, und unser Weissagen ist Stückwerk. Wenn aber das Vollkommene kommt, dann wird das, was Stückwerk ist, abgetan werden. Als ich ein Kind war, redete ich wie ein Kind, dachte wie ein Kind, urteilte wie ein Kind; als ich aber Mann ward, legte ich ab, was des Kindes war. Jetzt sehen wir durch einen Spiegel im Rätsel, alsdann aber von Angesicht zu Angesicht. Jetzt ist mein Erkennen Stückwerk, dann aber werde ich erkennen, so wie auch ich erkannt bin. Nun aber bleiben Glaube, Hoffnung Liebe, diese drei; das größte aber unter diesen ist die Liebe.»",
+	"verseData": {
+		"book": "1 Korinther",
+		"chapter": 13,
+		"verses": [
+			{
+				"verse": 1,
+				"text": "Wenn ich mit den Zungen der Menschen und Engel rede, aber die Liebe nicht habe, so bin ich wie ein tönendes Erz oder eine klingende Schelle geworden."
+			},
+			{
+				"verse": 2,
+				"text": "Und wenn ich die Gabe der Weissagung habe, und kenne alle Geheimnisse und alle Wissenschaft, und wenn ich allen Glauben habe, so dass ich Berge versetzen könnte, die Liebe aber nicht habe, so bin ich nichts."
+			},
+			{
+				"verse": 3,
+				"text": "Und wenn ich alle meine Habe zur Speisung der Armen austeile, und wenn ich meinen Leib dahingebe, dass ich verbrannt werde, die Liebe aber nicht habe, so nützt es mir nichts."
+			},
+			{
+				"verse": 4,
+				"text": "Die Liebe ist langmütig, ist gütig; die Liebe eifert nicht, sie handelt nicht unbescheiden, sie bläht sich nicht auf;"
+			},
+			{
+				"verse": 5,
+				"text": "sie ist nicht ehrsüchtig, sucht nicht das ihre, sie lässt sich nicht erbittern, sie rechnet das Böse nicht an;"
+			},
+			{
+				"verse": 6,
+				"text": "sie freut sich nicht der Ungerechtigkeit, sie freut sich aber mit der Wahrheit;"
+			},
+			{
+				"verse": 7,
+				"text": "alles erträgt sie, alles glaubt sie, alles hofft sie, alles übersteht sie."
+			},
+			{
+				"verse": 8,
+				"text": "Die Liebe hört nie auf, wenn auch die Weissagungen abgetan werden oder die Sprachen ein Ende nehmen, und die Erkenntnis vergehen wird."
+			},
+			{
+				"verse": 9,
+				"text": "Denn unser Erkennen ist Stückwerk, und unser Weissagen ist Stückwerk."
+			},
+			{
+				"verse": 10,
+				"text": "Wenn aber das Vollkommene kommt, dann wird das, was Stückwerk ist, abgetan werden."
+			},
+			{
+				"verse": 11,
+				"text": "Als ich ein Kind war, redete ich wie ein Kind, dachte wie ein Kind, urteilte wie ein Kind; als ich aber Mann ward, legte ich ab, was des Kindes war."
+			},
+			{
+				"verse": 12,
+				"text": "Jetzt sehen wir durch einen Spiegel im Rätsel, alsdann aber von Angesicht zu Angesicht. Jetzt ist mein Erkennen Stückwerk, dann aber werde ich erkennen, so wie auch ich erkannt bin."
+			},
+			{
+				"verse": 13,
+				"text": "Nun aber bleiben Glaube, Hoffnung Liebe, diese drei; das größte aber unter diesen ist die Liebe."
+			}
+		]
+	}
+};
+
+export const theologicalVirtueVerseDataEn: MysteryDescription = {
+	"title": "The Hymn to Love",
+	"reference": "1 Cor 13:1-13",
+	"text": "«If I speak with the tongues of men and of angels, and have not charity, I am become as sounding brass, or a tinkling cymbal. And if I should have prophecy and should know all mysteries and all knowledge, and if I should have all faith, so that I could remove mountains, and have not charity, I am nothing. And if I should distribute all my goods to feed the poor, and if I should deliver my body to be burned, and have not charity, it profiteth me nothing. Charity is patient, is kind: charity envieth not, dealeth not perversely, is not puffed up, Is not ambitious, seeketh not her own, is not provoked to anger, thinketh no evil: Rejoiceth not in iniquity, but rejoiceth with the truth: Beareth all things, believeth all things, hopeth all things, endureth all things. Charity never falleth away: whether prophecies shall be made void or tongues shall cease or knowledge shall be destroyed. For we know in part: and we prophesy in part. But when that which is perfect is come, that which is in part shall be done away. When I was a child, I spoke as a child, I understood as a child, I thought as a child. But, when I became a man, I put away the things of a child. We see now through a glass in a dark manner: but then face to face. Now I know in part: but then I shall know even as I am known. And now there remain faith, hope, and charity, these three: but the greatest of these is charity.»",
+	"verseData": {
+		"book": "1 Corinthians",
+		"chapter": 13,
+		"verses": [
+			{
+				"verse": 1,
+				"text": "If I speak with the tongues of men and of angels, and have not charity, I am become as sounding brass, or a tinkling cymbal."
+			},
+			{
+				"verse": 2,
+				"text": "And if I should have prophecy and should know all mysteries and all knowledge, and if I should have all faith, so that I could remove mountains, and have not charity, I am nothing."
+			},
+			{
+				"verse": 3,
+				"text": "And if I should distribute all my goods to feed the poor, and if I should deliver my body to be burned, and have not charity, it profiteth me nothing."
+			},
+			{
+				"verse": 4,
+				"text": "Charity is patient, is kind: charity envieth not, dealeth not perversely, is not puffed up,"
+			},
+			{
+				"verse": 5,
+				"text": "Is not ambitious, seeketh not her own, is not provoked to anger, thinketh no evil:"
+			},
+			{
+				"verse": 6,
+				"text": "Rejoiceth not in iniquity, but rejoiceth with the truth:"
+			},
+			{
+				"verse": 7,
+				"text": "Beareth all things, believeth all things, hopeth all things, endureth all things."
+			},
+			{
+				"verse": 8,
+				"text": "Charity never falleth away: whether prophecies shall be made void or tongues shall cease or knowledge shall be destroyed."
+			},
+			{
+				"verse": 9,
+				"text": "For we know in part: and we prophesy in part."
+			},
+			{
+				"verse": 10,
+				"text": "But when that which is perfect is come, that which is in part shall be done away."
+			},
+			{
+				"verse": 11,
+				"text": "When I was a child, I spoke as a child, I understood as a child, I thought as a child. But, when I became a man, I put away the things of a child."
+			},
+			{
+				"verse": 12,
+				"text": "We see now through a glass in a dark manner: but then face to face. Now I know in part: but then I shall know even as I am known."
+			},
+			{
+				"verse": 13,
+				"text": "And now there remain faith, hope, and charity, these three: but the greatest of these is charity."
+			}
+		]
+	}
+};

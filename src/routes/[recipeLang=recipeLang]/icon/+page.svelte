@@ -25,7 +25,7 @@
 		text-decoration: none;
 		padding: var(--padding);
 		background-color: var(--nord4);
-		border-radius: 1000px;
+		border-radius: var(--radius-pill);
     		box-shadow: 0em 0em 0.5em 0.2em rgba(0, 0, 0, 0.2);
 		text-align: center;
 		--width: calc(1.2em + var(--padding) * 2);

@@ -59,7 +59,7 @@ input.temp{
 	display: block;
 	margin: 1rem auto;
 	padding: 0.2em 1em;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	background-color: var(--nord4);
 
 }

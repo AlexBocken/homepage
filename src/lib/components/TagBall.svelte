@@ -7,7 +7,7 @@ a{
 	text-decoration: none;
 	padding: 2rem;
 	border-radius: 1000000px;
-	transition: 100ms;
+	transition: var(--transition-fast);
 	font-size: 2rem;
 	color: white;
 }

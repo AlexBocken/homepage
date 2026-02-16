@@ -119,7 +119,7 @@ nav[hidden]{
 	font-family: sans-serif;
 	font-size: 1.2rem;
 	color: inherit;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	padding: 0.5rem 0.75rem;
 }
 :global(a.entry),
@@ -130,7 +130,7 @@ nav[hidden]{
 	font-family: sans-serif;
 	font-size: 1.2rem;
 	color: white !important;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	padding: 0.5rem 0.75rem;
 }
 
@@ -235,7 +235,7 @@ footer{
 	.nav_button svg{
 		width: 100%;
 		height: 100%;
-		transition: 100ms;
+		transition: var(--transition-fast);
 	}
 	.nav_button:focus{
 		fill: var(--red);

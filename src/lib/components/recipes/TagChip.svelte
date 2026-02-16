@@ -16,7 +16,7 @@
 	.tag-chip {
 		all: unset;
 		padding: 0.4rem 0.8rem;
-		border-radius: 1000px;
+		border-radius: var(--radius-pill);
 		font-size: 0.9rem;
 		cursor: pointer;
 		transition: all 100ms ease;
