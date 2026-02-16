@@ -139,6 +139,7 @@ h1{
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 1em;
+	font-size: 1.1rem;
 }
 .tags h2,
 h2.section-label{

@@ -361,6 +361,20 @@ scale: 0.8 0.8;
   width: 100%;
   height: 100%;
 }
+/* Reserves space for FilterPanel before JS hydrates, preventing layout shift. */
+.filter-placeholder {
+  display: block;
+  width: 900px;
+  max-width: 95vw;
+  margin: 1rem auto 2rem;
+  height: 3.85rem;
+}
+@media (max-width: 968px) {
+  .filter-placeholder {
+    width: auto;
+    height: calc(2.05rem + 2px);
+  }
+}
 </style>
 <form class="search" method="get" action={buildSearchUrl('')} onsubmit={(e) => { e.preventDefault(); handleSubmit(e); }}>
   {#if selectedCategory}<input type="hidden" name="category" value={selectedCategory} />{/if}
@@ -407,4 +421,6 @@ scale: 0.8 0.8;
     onFavoritesToggle={handleFavoritesToggle}
     onLogicModeToggle={handleLogicModeToggle}
   />
+{:else}
+  <div class="filter-placeholder"></div>
 {/if}

@@ -67,7 +67,7 @@
 	flex: 1;
 }
 .name {
-	font-size: 0.95rem;
+	font-size: 1.1rem;
 	font-weight: 600;
 	line-height: 1.3;
 	margin: 0;
@@ -81,8 +81,37 @@
 	z-index: 2;
 }
 .tag {
-	font-size: 0.7rem;
-	padding: 0.15em 0.6em;
+	font-size: 0.9rem;
+	padding: 0.15rem 0.55rem;
+	border-radius: var(--radius-pill);
+	background-color: var(--nord5);
+	color: var(--nord3);
+	text-decoration: none;
+	cursor: pointer;
+	transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
+	box-shadow: var(--shadow-sm);
+	border: none;
+	display: inline-block;
+}
+.tag:hover,
+.tag:focus-visible {
+	transform: scale(1.05);
+	background-color: var(--nord8);
+	box-shadow: var(--shadow-hover);
+	color: var(--nord0);
+}
+@media (prefers-color-scheme: dark) {
+	.tag,
+	.tag:visited,
+	.tag:link {
+		background-color: var(--nord0);
+		color: var(--nord4);
+	}
+	.tag:hover,
+	.tag:focus-visible {
+		background-color: var(--nord8);
+		color: var(--nord0);
+	}
 }
 .icon {
 	position: absolute;
@@ -126,7 +155,7 @@
 		{#if recipe.tags?.length}
 			<div class="tags">
 				{#each recipe.tags as tag (tag)}
-					<a href="{routePrefix}/tag/{tag}" class="tag g-tag">{tag}</a>
+					<a href="{routePrefix}/tag/{tag}" class="tag">{tag}</a>
 				{/each}
 			</div>
 		{/if}
