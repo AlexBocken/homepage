@@ -126,7 +126,7 @@
 	input {
 		all: unset;
 		box-sizing: border-box;
-		font-family: "Noto Color Emoji", emoji, sans-serif;
+		font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji, sans-serif;
 		background: var(--nord0);
 		color: var(--nord6);
 		padding: 0.5rem 0.7rem;
@@ -146,7 +146,6 @@
 
 	input::placeholder {
 		color: var(--nord4);
-		font-family: sans-serif;
 	}
 
 	input:hover {

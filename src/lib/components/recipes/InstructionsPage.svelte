@@ -100,9 +100,6 @@ const labels = $derived({
 });
 </script>
 <style>
-*{
-font-family: sans-serif;
-}
 ol li::marker{
 	font-weight: bold;
 	color: var(--blue);

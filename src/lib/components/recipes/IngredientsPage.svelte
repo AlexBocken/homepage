@@ -308,9 +308,6 @@ function adjust_amount(string, multiplier){
 // No need for complex yeast toggle handling - everything is calculated server-side now
 </script>
 <style>
-*{
-font-family: sans-serif;
-}
 .ingredients{
 	flex-basis: 0;
 	flex-grow: 1;

@@ -130,7 +130,6 @@ function remove_on_enter(event: KeyboardEvent, tag: string) {
 	text-decoration: none;
 	position: relative;
 	box-sizing: border-box;
-	font-family: sans-serif;
 	width: var(--card-width);
 	aspect-ratio: 4/7;
 	border-radius: var(--radius-card);

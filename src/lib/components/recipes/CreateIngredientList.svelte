@@ -450,7 +450,6 @@ input.heading:hover{
 	--font_size: 1.5rem;
 	top: -1em;
 	left: -1em;
-	font-family: sans-serif;
 	font-size: 1.5rem;
 	background-color: var(--nord0);
 	color: var(--nord4);
@@ -471,7 +470,6 @@ input.heading:hover{
 }
 
 .add_ingredient{
-	font-family: sans-serif;
 	width: 100%;
 	display: flex;
 	flex-direction: row;
@@ -537,7 +535,6 @@ dialog .adder{
 }
 dialog h2{
 	font-size: 3rem;
-	font-family: sans-serif;
 	color: white;
 	text-align: center;
 	margin-top: 30vh;

@@ -106,9 +106,6 @@
 	});
 </script>
 <style>
-*{
-font-family: sans-serif;
-}
 h1{
 	text-align: center;
 	padding-block: 0.5em;
