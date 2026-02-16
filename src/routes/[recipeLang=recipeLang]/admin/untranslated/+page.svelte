@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import Recipes from '$lib/components/recipes/Recipes.svelte';
-	import Card from '$lib/components/recipes/Card.svelte';
+	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
 
 	let { data } = $props<{ data: PageData }>();
 	let current_month = new Date().getMonth() + 1;
@@ -79,6 +78,31 @@ h1 {
 		color: var(--nord2);
 	}
 }
+.card-wrapper {
+	position: relative;
+}
+.translation-badge {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	padding: 0.4rem 0.8rem;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	z-index: 3;
+	color: var(--nord0);
+	pointer-events: none;
+}
+.translation-badge.none {
+	background-color: var(--nord14);
+}
+.translation-badge.pending {
+	background-color: var(--nord13);
+}
+.translation-badge.needs_update {
+	background-color: var(--nord12);
+}
 .empty-state {
 	text-align: center;
 	margin-top: 3rem;
@@ -121,16 +145,26 @@ h1 {
 		</div>
 	</div>
 
-	<Recipes>
-		{#each data.untranslated as recipe}
-			<Card
-				{recipe}
-				{current_month}
-				routePrefix="/{data.recipeLang}"
-				translationStatus={recipe.translationStatus}
-			></Card>
+	<div class="recipe-grid">
+		{#each data.untranslated as recipe (recipe._id)}
+			<div class="card-wrapper">
+				<CompactCard
+					{recipe}
+					{current_month}
+					routePrefix="/{data.recipeLang}"
+				/>
+				<div class="translation-badge {recipe.translationStatus || 'none'}">
+					{#if recipe.translationStatus === 'pending'}
+						Freigabe ausstehend
+					{:else if recipe.translationStatus === 'needs_update'}
+						Aktualisierung erforderlich
+					{:else}
+						Keine Übersetzung
+					{/if}
+				</div>
+			</div>
 		{/each}
-	</Recipes>
+	</div>
 {:else}
 	<div class="empty-state">
 		<p>Alle Rezepte sind übersetzt!</p>

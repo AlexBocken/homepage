@@ -4,6 +4,7 @@
 	let {
 		recipe,
 		current_month = 0,
+		icon_override = false,
 		isFavorite = false,
 		showFavoriteIndicator = false,
 		loading_strat = "lazy",
@@ -19,7 +20,7 @@
 		recipe.images?.[0]?.alt || recipe.name
 	);
 
-	const isInSeason = $derived(recipe.season?.includes(current_month));
+	const isInSeason = $derived(icon_override || recipe.season?.includes(current_month));
 </script>
 <style>
 .compact-card {

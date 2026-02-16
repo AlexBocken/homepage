@@ -1,10 +1,5 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Recipes from '$lib/components/recipes/Recipes.svelte';
-    import MediaScroller from '$lib/components/recipes/MediaScroller.svelte';
-    import SeasonLayout from '$lib/components/recipes/SeasonLayout.svelte'
-    import Card from '$lib/components/recipes/Card.svelte';
-    import Search from '$lib/components/recipes/Search.svelte';
     let { data } = $props<{ data: PageData }>();
 
     const isEnglish = $derived(data.lang === 'en');

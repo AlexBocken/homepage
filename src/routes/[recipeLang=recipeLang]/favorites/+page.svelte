@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Recipes from '$lib/components/recipes/Recipes.svelte';
-    import Card from '$lib/components/recipes/Card.svelte';
+    import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     import Search from '$lib/components/recipes/Search.svelte';
     import { createSearchFilter } from '$lib/js/searchFilter.svelte';
 
@@ -69,11 +68,11 @@ h1{
 {#if data.error}
     <p class="empty-state">{labels.errorLoading} {data.error}</p>
 {:else if filteredFavorites.length > 0}
-    <Recipes>
-        {#each filteredFavorites as recipe}
-            <Card {recipe} {current_month} isFavorite={true} showFavoriteIndicator={true} routePrefix="/{data.recipeLang}"></Card>
+    <div class="recipe-grid">
+        {#each filteredFavorites as recipe (recipe._id)}
+            <CompactCard {recipe} {current_month} isFavorite={true} showFavoriteIndicator={true} routePrefix="/{data.recipeLang}" />
         {/each}
-    </Recipes>
+    </div>
 {:else if data.favorites.length > 0}
     <div class="empty-state">
         <p>{isEnglish ? 'No matching favorites found.' : 'Keine passenden Favoriten gefunden.'}</p>
