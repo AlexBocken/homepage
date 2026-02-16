@@ -1,7 +1,6 @@
 <script lang="ts">
 	import CardAdd from '$lib/components/recipes/CardAdd.svelte';
     	import MediaScroller from '$lib/components/recipes/MediaScroller.svelte';
-    	import Card from '$lib/components/recipes/Card.svelte';
     	import Search from '$lib/components/recipes/Search.svelte';
 	import SeasonSelect from '$lib/components/recipes/SeasonSelect.svelte';
 	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';

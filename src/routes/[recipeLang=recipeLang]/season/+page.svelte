@@ -1,10 +1,7 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Recipes from '$lib/components/recipes/Recipes.svelte';
-    import MediaScroller from '$lib/components/recipes/MediaScroller.svelte';
     import SeasonLayout from '$lib/components/recipes/SeasonLayout.svelte'
-    import Card from '$lib/components/recipes/Card.svelte';
-    import Search from '$lib/components/recipes/Search.svelte';
+    import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1
     import { rand_array } from '$lib/js/randomize';
@@ -43,10 +40,10 @@
 
 <SeasonLayout active_index={current_month-1} {months} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}
-		<Recipes>
-			{#each rand_array(filteredRecipes) as recipe}
-				<Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+		<div class="recipe-grid">
+			{#each rand_array(filteredRecipes) as recipe (recipe._id)}
+				<CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}" />
 			{/each}
-		</Recipes>
+		</div>
 	{/snippet}
 </SeasonLayout>

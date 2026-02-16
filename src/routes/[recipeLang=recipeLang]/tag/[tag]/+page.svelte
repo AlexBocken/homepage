@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Recipes from '$lib/components/recipes/Recipes.svelte';
-    import Card from '$lib/components/recipes/Card.svelte';
+    import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     import Search from '$lib/components/recipes/Search.svelte';
     import { rand_array } from '$lib/js/randomize';
     import { createSearchFilter } from '$lib/js/searchFilter.svelte';
@@ -28,10 +27,8 @@
 
 <h1>{label} <q>{data.tag}</q>:</h1>
 <Search tag={data.tag} lang={data.lang} recipes={data.recipes} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
-<section>
-<Recipes>
-	{#each rand_array(filteredRecipes) as recipe}
-		<Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+<div class="recipe-grid">
+	{#each rand_array(filteredRecipes) as recipe (recipe._id)}
+		<CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}" />
 	{/each}
-	</Recipes>
-</section>
+</div>
