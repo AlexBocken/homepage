@@ -313,14 +313,13 @@ a:focus-visible {
 .g-tag,
 .g-tag:visited,
 .g-tag:link {
-	font-size: 1.1rem;
 	padding: 0.25em 1em;
 	border-radius: var(--radius-pill);
 	background-color: var(--nord5);
 	color: var(--nord0);
 	text-decoration: none;
 	cursor: pointer;
-	transition: var(--transition-fast);
+	transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
 	box-shadow: var(--shadow-sm);
 	border: none;
 	display: inline-block;
@@ -341,6 +340,7 @@ a:focus-visible {
 	}
 	.g-tag:hover,
 	.g-tag:focus-visible {
+		background-color: var(--nord8);
 		color: var(--nord0);
 	}
 }
