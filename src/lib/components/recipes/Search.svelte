@@ -319,15 +319,15 @@ input::placeholder{
 }
 
 .search {
-  width: 500px;
-  max-width: 85vw;
+  width: 560px;
+  max-width: 88vw;
   position: relative;
-  margin: 2.5rem auto 1.2rem;
+  margin: 0 auto;
   font-size: 1.6rem;
   display: flex;
   align-items: center;
   transition: var(--transition-fast);
-  filter: drop-shadow(0.4em  0.5em 0.4em rgba(0,0,0,0.4))
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
 }
 
 .search:hover,
