@@ -36,8 +36,6 @@ form button:hover, form button:focus-visible {
 	scale: 1.1;
 }
 form button:active { background-color: var(--color-accent-active); }
-form p { max-width: 400px; margin-top: 0; }
-form h4 { margin-bottom: 0; }
 @media screen and (max-width: 600px) {
 	form { margin-top: 0; }
 }

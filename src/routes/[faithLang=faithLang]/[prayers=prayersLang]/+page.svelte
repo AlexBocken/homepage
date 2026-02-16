@@ -428,33 +428,6 @@ h1{
 		background-color: var(--nord5);
 	}
 }
-.postcommunio-section h2 {
-	text-align: center;
-	padding-bottom: 0.5em;
-}
-.postcommunio-links {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-	text-align: center;
-}
-.postcommunio-links li {
-	margin: 0.75em 0;
-}
-.postcommunio-links a {
-	color: var(--nord8);
-	text-decoration: none;
-	font-size: 1.15em;
-}
-.postcommunio-links a:hover {
-	text-decoration: underline;
-}
-@media(prefers-color-scheme: light) {
-	.postcommunio-links a {
-		color: var(--nord10);
-	}
-}
-
 /* Seasonal badge */
 .seasonal-badge {
 	display: inline-block;
