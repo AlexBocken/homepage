@@ -1,10 +1,7 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Recipes from '$lib/components/recipes/Recipes.svelte';
     import IconLayout from '$lib/components/recipes/IconLayout.svelte';
-    import MediaScroller from '$lib/components/recipes/MediaScroller.svelte';
-    import Card from '$lib/components/recipes/Card.svelte';
-    import Search from '$lib/components/recipes/Search.svelte';
+    import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     let { data } = $props<{ data: PageData }>();
     import { rand_array } from '$lib/js/randomize';
 
@@ -36,10 +33,10 @@
 
 <IconLayout icons={data.icons} active_icon={data.icon} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}
-		<Recipes>
-			{#each rand_array(filteredRecipes) as recipe}
-				<Card {recipe} icon_override=true isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}"></Card>
+		<div class="recipe-grid">
+			{#each rand_array(filteredRecipes) as recipe (recipe._id)}
+				<CompactCard {recipe} icon_override={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}" />
 			{/each}
-		</Recipes>
+		</div>
 	{/snippet}
 </IconLayout>

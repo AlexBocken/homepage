@@ -306,27 +306,6 @@
 	z-index: 10;
 }
 
-/* ─── Recipe grid ─── */
-.recipe-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-	gap: 1.5em;
-	padding: 0 1.5em;
-	max-width: 1400px;
-	margin: 0 auto 2em;
-}
-@media (min-width: 600px) {
-	.recipe-grid {
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-	}
-}
-@media (min-width: 1024px) {
-	.recipe-grid {
-		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-		gap: 1.8em;
-	}
-}
-
 .sentinel {
 	height: 1px;
 }

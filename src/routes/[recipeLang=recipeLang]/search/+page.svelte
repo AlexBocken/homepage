@@ -1,8 +1,7 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Recipes from '$lib/components/recipes/Recipes.svelte';
     import Search from '$lib/components/recipes/Search.svelte';
-    import Card from '$lib/components/recipes/Card.svelte';
+    import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1;
 
@@ -115,11 +114,11 @@
 {/if}
 
 {#if displayedRecipes.length > 0}
-    <Recipes>
-        {#each displayedRecipes as recipe}
-            <Card {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={true} routePrefix="/{data.recipeLang}"></Card>
+    <div class="recipe-grid">
+        {#each displayedRecipes as recipe (recipe._id)}
+            <CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={true} routePrefix="/{data.recipeLang}" />
         {/each}
-    </Recipes>
+    </div>
 {:else if (data.query || hasActiveSearch) && !data.error}
     <div class="search-info">
         <p>{labels.noResults}</p>
