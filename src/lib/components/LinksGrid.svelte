@@ -20,7 +20,7 @@
 :global(a){
 	text-decoration: unset;
 	color: var(--nord0);
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 :global(.links_grid a:hover){
 	box-shadow: 1em 1em 2em 1em rgba(0,0,0, 0.3);
@@ -43,7 +43,7 @@
 	justify-content: center;
 	text-decoration: unset;
 	color: var(--nord0);
-	transition: 200ms;
+	transition: var(--transition-normal);
 	width: 100%;
 	padding: 1rem;
 	position: relative;

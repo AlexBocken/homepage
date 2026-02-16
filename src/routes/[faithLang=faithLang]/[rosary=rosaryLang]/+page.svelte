@@ -16,6 +16,7 @@ import RosaryFinalPrayer from "$lib/components/faith/prayers/RosaryFinalPrayer.s
 import MichaelGebet from "$lib/components/faith/prayers/MichaelGebet.svelte";
 import CounterButton from "$lib/components/CounterButton.svelte";
 import BibleModal from "$lib/components/faith/BibleModal.svelte";
+import { theologicalVirtueVerseDataDe, theologicalVirtueVerseDataEn } from "$lib/data/mysteryVerseData";
 import Toggle from "$lib/components/Toggle.svelte";
 import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
 import StreakCounter from "$lib/components/faith/StreakCounter.svelte";
@@ -263,6 +264,9 @@ function handleCitationClick(reference, title = '', verseData = null) {
 	selectedVerseData = verseData;
 	showModal = true;
 }
+
+// 1 Cor 13 reference for the three theological virtue Ave Marias
+const theologicalVirtueData = $derived(isEnglish ? theologicalVirtueVerseDataEn : theologicalVirtueVerseDataDe);
 
 const pos = sectionPositions;
 
@@ -799,6 +803,14 @@ h1 {
 					mystery="Jesus, der in uns den Glauben vermehre"
 					mysteryEnglish="Jesus, who may increase our faith"
 				/>
+				<div class="decade-buttons">
+					<span class="bible-reference-text">{theologicalVirtueData.reference}</span>
+					<button
+						class="bible-reference-button"
+						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
+						aria-label={labels.showBibleVerse}
+					>📖</button>
+				</div>
 			</div>
 
 			<!-- Second Ave Maria (Hope) -->
@@ -814,6 +826,14 @@ h1 {
 					mystery="Jesus, der in uns die Hoffnung stärke"
 					mysteryEnglish="Jesus, who may strengthen our hope"
 				/>
+				<div class="decade-buttons">
+					<span class="bible-reference-text">{theologicalVirtueData.reference}</span>
+					<button
+						class="bible-reference-button"
+						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
+						aria-label={labels.showBibleVerse}
+					>📖</button>
+				</div>
 			</div>
 
 			<!-- Third Ave Maria (Love) -->
@@ -829,6 +849,14 @@ h1 {
 					mystery="Jesus, der in uns die Liebe entzünde"
 					mysteryEnglish="Jesus, who may kindle our love"
 				/>
+				<div class="decade-buttons">
+					<span class="bible-reference-text">{theologicalVirtueData.reference}</span>
+					<button
+						class="bible-reference-button"
+						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
+						aria-label={labels.showBibleVerse}
+					>📖</button>
+				</div>
 			</div>
 
 			<!-- Gloria Patri before decades -->

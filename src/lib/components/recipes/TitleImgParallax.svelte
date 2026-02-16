@@ -87,7 +87,7 @@
   width: min(1000px, 100dvw);
   z-index: -1;
   opacity: 0;
-  transition: 200ms;
+  transition: var(--transition-normal);
   height: max(60dvh,600px);
   object-fit: cover;
   object-position: 50% 20%;

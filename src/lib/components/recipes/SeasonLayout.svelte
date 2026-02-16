@@ -29,11 +29,11 @@
 a.month{
 	text-decoration: unset;
 	font-family: sans-serif;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	background-color: var(--blue);
 	color: var(--nord5);
 	padding: 0.5em;
-	transition: 100ms;
+	transition: var(--transition-fast);
 	min-width: 4em;
 	text-align: center;
 }

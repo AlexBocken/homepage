@@ -398,11 +398,11 @@ input.heading{
 	padding-inline: 2rem;
 	font-size: 1.5rem;
 	width: 100%;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	color: white;
 	justify-content: center;
 	align-items: center;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 input.heading:hover{
 	background-color: var(--nord1);
@@ -412,7 +412,7 @@ input.heading:hover{
 	position: relative;
 	width: 300px;
 	margin-inline: auto;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .heading_wrapper:hover
 {
@@ -430,8 +430,8 @@ input.heading:hover{
 	position: relative;
 	margin-block: 3rem;
 	width: 90%;
-	border-radius: 20px;
-	transition: 200ms;
+	border-radius: var(--radius-card);
+	transition: var(--transition-normal);
 }
 .shadow{
 	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
@@ -457,7 +457,7 @@ input.heading:hover{
 	border-radius: 1000000px;
 	width: 23ch;
 	padding: 0.5em 1em;
-	transition: 100ms;
+	transition: var(--transition-fast);
 	box-shadow: 0.5em 0.5em 1em 0.4em rgba(0,0,0,0.3);
 }
 .category:hover{
@@ -481,18 +481,18 @@ input.heading:hover{
 	font-size: 1.2rem;
 	padding: 2rem;
 	padding-top: 2.5rem;
-	border-radius: 20px;
+	border-radius: var(--radius-card);
 	background-color: var(--blue);
 	color: #bbb;
-	transition: 200ms;
+	transition: var(--transition-normal);
 	gap: 0.5rem;
 }
 .add_ingredient input{
 	border: 2px solid var(--nord4);
 	color: var(--nord4);
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	padding: 0.5em 1em;
-	transition: 100ms;
+	transition: var(--transition-fast);
 }
 .add_ingredient input:hover,
 .add_ingredient input:focus-visible
@@ -569,7 +569,7 @@ dialog h2{
 	border: none;
 	padding: 0;
 	margin: 0;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .move_buttons_container button:hover{
 	scale: 1.4;
@@ -611,10 +611,10 @@ h3{
 }
 .list_wrapper p[contenteditable]{
 	border: 2px solid grey;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	padding: 0.25em 1em;
 	background-color: white;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .list_wrapper p[contenteditable]:hover,
 .list_wrapper p[contenteditable]:focus-within{
@@ -703,12 +703,12 @@ h3{
 	margin-block: 1rem;
 	padding: 1em 2em;
 	font-size: 1.1rem;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	background-color: var(--nord9);
 	color: white;
 	border: none;
 	cursor: pointer;
-	transition: 200ms;
+	transition: var(--transition-normal);
 	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
 }
 

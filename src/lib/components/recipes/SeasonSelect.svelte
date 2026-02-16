@@ -45,15 +45,15 @@ label{
 	padding: 0.25em 1em;
 	margin-inline: 0.1em;
 	line-height: 2em;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	cursor: pointer;
 	position: relative;
-	transition: 100ms;
+	transition: var(--transition-fast);
 	user-select: none;
 }
 
 .checkbox_container{
-	transition: 100ms;
+	transition: var(--transition-fast);
 }
 .checkbox_container:hover,
 .checkbox_container:focus-within

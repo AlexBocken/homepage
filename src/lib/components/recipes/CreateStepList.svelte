@@ -401,7 +401,7 @@ export function update_step_position(list_index, step_index, direction){
 	border: none;
 	padding: 0;
 	margin: 0;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .move_buttons_container button:hover{
 	scale: 1.4;
@@ -440,11 +440,11 @@ input.heading{
 	padding-inline: 2rem;
 	font-size: 1.5rem;
 	width: 100%;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	color: white;
 	justify-content: center;
 	align-items: center;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 input.heading:hover,
 input.heading:focus-visible
@@ -456,7 +456,7 @@ input.heading:focus-visible
 	position: relative;
 	width: min(300px, 95dvw);
 	margin-inline: auto;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .heading_wrapper:hover,
 .heading_wrapper:focus-visible
@@ -474,8 +474,8 @@ input.heading:focus-visible
 	position: relative;
 	margin-block: 3rem;
 	width: 90%;
-	border-radius: 20px;
-	transition: 200ms;
+	border-radius: var(--radius-card);
+	transition: var(--transition-normal);
 	background-color: var(--blue);
 	padding: 1.5rem 2rem;
 }
@@ -503,7 +503,7 @@ dialog .adder{
 	border-radius: 1000000px;
 	width: 23ch;
 	padding: 0.5em 1em;
-	transition: 100ms;
+	transition: var(--transition-fast);
 	box-shadow: 0.5em 0.5em 1em 0.4em rgba(0,0,0,0.3);
 }
 .category:hover,
@@ -522,12 +522,12 @@ dialog .adder{
 	font-family: sans-serif;
 	width: 100%;
 	font-size: 1.2rem;
-	border-radius: 20px;
+	border-radius: var(--radius-card);
 	border: 2px solid var(--nord4);
 	border-radius: 30px;
 	padding: 0.5em 1em;
 	color: var(--nord4);
-	transition: 100ms;
+	transition: var(--transition-fast);
 }
 .add_step p:hover,
 .add_step p:focus-visible
@@ -543,7 +543,7 @@ dialog{
 	background-color: rgba(255,255,255, 0.001);
 	border: unset;
 	margin: 0;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 dialog .adder{
 	margin-top: 5rem;
@@ -647,10 +647,10 @@ h3{
 	display: inline;
 	padding: 0.25em 1em;
 	border: 2px solid grey;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 }
 .additional_info div:has(p[contenteditable]){
-	transition: 200ms;
+	transition: var(--transition-normal);
 	display: inline;
 }
 .additional_info div:has(p[contenteditable]):hover,
@@ -730,12 +730,12 @@ h3{
 	margin-block: 1rem;
 	padding: 1em 2em;
 	font-size: 1.1rem;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	background-color: var(--nord9);
 	color: white;
 	border: none;
 	cursor: pointer;
-	transition: 200ms;
+	transition: var(--transition-normal);
 	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
 }
 

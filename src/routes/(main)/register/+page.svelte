@@ -19,9 +19,9 @@ form button {
 	border: none;
 	padding: 0.5em 1em;
 	font-size: 1.3em;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	margin-top: 1em;
-	transition: 100ms;
+	transition: var(--transition-fast);
 	cursor: pointer;
 }
 form button:hover, form button:focus-visible {

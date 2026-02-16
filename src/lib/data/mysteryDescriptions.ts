@@ -106,6 +106,17 @@ export const mysteryReferences = {
   ]
 } as const;
 
+// Reference for the three opening Ave Marias (Faith, Hope, Love)
+export const theologicalVirtueReference = {
+  title: "Das Hohelied der Liebe",
+  reference: "1 Kor 13, 1-13"
+} as const;
+
+export const theologicalVirtueReferenceEnglish = {
+  title: "The Hymn to Love",
+  reference: "1 Cor 13:1-13"
+} as const;
+
 export const mysteryReferencesEnglish = {
   lichtreichen: [
     {
