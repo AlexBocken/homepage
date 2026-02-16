@@ -26,8 +26,8 @@
 	// Only recipes with hashed images (e.g. myrecipe.a1b2c3d4.webp)
 	const hasHashedImage = (r) => r.images?.length > 0 && /\.\w+\.\w+$/.test(r.images[0].mediapath);
 
-	// Pick once on mount — not reactive, so image and link always match
-	const heroIndex = Math.random();
+	// Server-generated random index ensures SSR and client pick the same hero
+	const heroIndex = data.heroIndex;
 	const heroRecipe = $derived.by(() => {
 		const seasonPool = data.season.filter(hasHashedImage);
 		const pool = seasonPool.length > 0 ? seasonPool : data.all_brief.filter(hasHashedImage);

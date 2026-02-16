@@ -34,6 +34,7 @@ export async function load({ data }) {
 					...data,
 					all_brief: rand_array(allBrief),
 					season: rand_array(seasonRecipes),
+					heroIndex: Math.random(),
 					isOffline: true
 				};
 			}

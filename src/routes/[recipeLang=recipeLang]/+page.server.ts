@@ -19,6 +19,7 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
     return {
         season: addFavoriteStatusToRecipes(item_season, userFavorites),
         all_brief: addFavoriteStatusToRecipes(item_all_brief, userFavorites),
-        session
+        session,
+        heroIndex: Math.random()
     };
 };
