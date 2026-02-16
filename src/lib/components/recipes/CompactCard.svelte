@@ -115,12 +115,12 @@
 }
 .icon {
 	position: absolute;
-	top: -0.75em;
+	top: -1.2em;
 	right: 0.6em;
 	width: 2em;
 	height: 2em;
-	font-size: 1rem;
-	background-color: var(--color-primary);
+	font-size: 1.2rem;
+	background-color: var(--nord0);
 	color: white;
 	z-index: 3;
 }
@@ -149,7 +149,7 @@
 	</div>
 	<div class="info">
 		{#if isInSeason}
-			<span class="icon g-icon-badge">{recipe.icon}</span>
+			<a href="{routePrefix}/icon/{recipe.icon}" class="icon g-icon-badge">{recipe.icon}</a>
 		{/if}
 		<p class="name">{@html recipe.name}</p>
 		{#if recipe.tags?.length}
