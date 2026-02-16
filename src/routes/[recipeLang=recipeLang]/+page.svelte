@@ -219,9 +219,6 @@
 .hero-featured:hover {
 	opacity: 1;
 }
-.hero-featured .icon {
-	font-family: "Noto Color Emoji", emoji, sans-serif;
-}
 .hero-featured .recipe-name {
 	font-weight: 600;
 }
@@ -379,8 +376,7 @@
 				<h1>{labels.title}</h1>
 				<p class="subheading">{labels.subheading}</p>
 				<a href="/{data.recipeLang}/{heroRecipe.short_name}" class="hero-featured">
-					<span class="icon">{heroRecipe.icon}</span>
-					<span class="recipe-name">{@html heroRecipe.name}</span>
+					<span class="recipe-name">{heroRecipe.icon} {@html heroRecipe.name}</span>
 					<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -197 535 410"><path d="M503 31c12-13 12-33 0-46L343-175c-13-12-33-12-46 0-12 13-12 33 0 46L403-24H32C14-24 0-10 0 8s14 32 32 32h371L297 145c-12 13-12 33 0 46 13 12 33 12 46 0L503 31z"/></svg>
 				</a>
 
@@ -452,12 +448,12 @@
 					<div class="sentinel" bind:this={sentinel}></div>
 				{/if}
 
-				{#if !isEnglish}
-					<AddButton href="/rezepte/add"></AddButton>
-				{/if}
 			</div>
 		</div>
 	</section>
+	{#if !isEnglish}
+		<AddButton href="/rezepte/add"></AddButton>
+	{/if}
 {:else}
 	<div class="hero-fallback">
 		<h1>{labels.title}</h1>

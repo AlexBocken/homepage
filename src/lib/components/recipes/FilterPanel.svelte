@@ -43,7 +43,7 @@
 <style>
 	.filter-wrapper {
 		width: 900px;
-		max-width: 95vw;
+		max-width: 80vw;
 		margin: 1rem auto 2rem;
 	}
 
