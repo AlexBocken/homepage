@@ -41,7 +41,7 @@
 
 	.filter-label {
 		font-size: 0.9rem;
-		color: var(--nord2);
+		color: var(--nord1);
 		font-weight: 600;
 		margin-bottom: 0.25rem;
 		text-align: center;
@@ -65,7 +65,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		font-size: 0.85rem;
-		color: var(--nord4);
+		color: var(--nord3);
 		font-weight: 600;
 	}
 
