@@ -131,31 +131,31 @@
 	<!-- Invisible hitboxes for larger tap targets (anchor links for no-JS fallback) -->
 	<g class="hitboxes">
 		<!-- Cross hitbox -->
-		<a href="#cross"><rect x="-15" y="-30" width="80" height="80" data-section="cross" /></a>
+		<a href="#cross" aria-label="Cross"><rect x="-15" y="-30" width="80" height="80" data-section="cross" /></a>
 
 		<!-- Individual bead hitboxes -->
-		<a href="#lbead1"><circle cx="25" cy={pos.lbead1} r="25" data-section="lbead1" /></a>
-		<a href="#start1"><circle cx="25" cy={pos.start1} r="20" data-section="start1" /></a>
-		<a href="#start2"><circle cx="25" cy={pos.start2} r="20" data-section="start2" /></a>
-		<a href="#start3"><circle cx="25" cy={pos.start3} r="20" data-section="start3" /></a>
-		<a href="#lbead2"><circle cx="25" cy={pos.lbead2} r="25" data-section="lbead2" /></a>
+		<a href="#lbead1" aria-label="First large bead"><circle cx="25" cy={pos.lbead1} r="25" data-section="lbead1" /></a>
+		<a href="#start1" aria-label="First small bead"><circle cx="25" cy={pos.start1} r="20" data-section="start1" /></a>
+		<a href="#start2" aria-label="Second small bead"><circle cx="25" cy={pos.start2} r="20" data-section="start2" /></a>
+		<a href="#start3" aria-label="Third small bead"><circle cx="25" cy={pos.start3} r="20" data-section="start3" /></a>
+		<a href="#lbead2" aria-label="Second large bead"><circle cx="25" cy={pos.lbead2} r="25" data-section="lbead2" /></a>
 
 		<!-- Decade hitboxes -->
 		{#each [1, 2, 3, 4, 5] as d (d)}
 			{@const decadePos = pos[`secret${d}`]}
-			<a href={`#secret${d}`}><rect x="-15" y={decadePos - 2} width="80" height={DECADE_OFFSET + 9 * BEAD_SPACING + 12} data-section={`secret${d}`} /></a>
+			<a href={`#secret${d}`} aria-label={`Decade ${d}`}><rect x="-15" y={decadePos - 2} width="80" height={DECADE_OFFSET + 9 * BEAD_SPACING + 12} data-section={`secret${d}`} /></a>
 		{/each}
 
 		<!-- Transition bead hitboxes -->
 		{#each [1, 2, 3, 4] as d (d)}
-			<a href={`#secret${d}_transition`}><circle cx="25" cy={pos[`secret${d}_transition`]} r="25" data-section={`secret${d}_transition`} /></a>
+			<a href={`#secret${d}_transition`} aria-label={`Transition after decade ${d}`}><circle cx="25" cy={pos[`secret${d}_transition`]} r="25" data-section={`secret${d}_transition`} /></a>
 		{/each}
-		<a href="#final_transition"><circle cx="25" cy={pos.final_transition} r="25" data-section="final_transition" /></a>
-		<a href="#final_salve"><circle cx="25" cy={pos.final_salve} r="20" data-section="final_salve" /></a>
-		<a href="#final_schlussgebet"><circle cx="25" cy={pos.final_schlussgebet} r="20" data-section="final_schlussgebet" /></a>
-		<a href="#final_michael"><circle cx="25" cy={pos.final_michael} r="20" data-section="final_michael" /></a>
-		<a href="#final_paternoster"><circle cx="25" cy={pos.final_paternoster} r="25" data-section="final_paternoster" /></a>
-		<a href="#final_cross"><rect x="-15" y={pos.final_cross - 50} width="80" height="80" data-section="final_cross" /></a>
+		<a href="#final_transition" aria-label="Final transition"><circle cx="25" cy={pos.final_transition} r="25" data-section="final_transition" /></a>
+		<a href="#final_salve" aria-label="Salve Regina"><circle cx="25" cy={pos.final_salve} r="20" data-section="final_salve" /></a>
+		<a href="#final_schlussgebet" aria-label="Closing prayer"><circle cx="25" cy={pos.final_schlussgebet} r="20" data-section="final_schlussgebet" /></a>
+		<a href="#final_michael" aria-label="St. Michael prayer"><circle cx="25" cy={pos.final_michael} r="20" data-section="final_michael" /></a>
+		<a href="#final_paternoster" aria-label="Final Our Father"><circle cx="25" cy={pos.final_paternoster} r="25" data-section="final_paternoster" /></a>
+		<a href="#final_cross" aria-label="Final cross"><rect x="-15" y={pos.final_cross - 50} width="80" height="80" data-section="final_cross" /></a>
 	</g>
 
 </svg>
