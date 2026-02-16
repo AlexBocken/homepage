@@ -67,7 +67,7 @@
 	gap: 2rem;
 }
 .hero img{
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	margin: 1rem;
 	width: clamp(100px, 300px, 50vw);
 	object-fit: cover;

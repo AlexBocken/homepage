@@ -168,10 +168,10 @@ input {
 	border: unset;
 	margin: 1rem auto;
 	padding: 0.5em 1em;
-	border-radius: 1000px;
+	border-radius: var(--radius-pill);
 	background-color: var(--nord4);
 	font-size: 1.1rem;
-	transition: 100ms;
+	transition: var(--transition-fast);
 }
 input:hover,
 input:focus-visible {
@@ -213,7 +213,7 @@ h1 {
 	border-radius: 10000px;
 	padding: 0.5em 1em;
 	font-size: 1.1rem;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .title p:hover,
 .title p:focus-within {
@@ -226,7 +226,7 @@ h1 {
 	border: 2px solid var(--nord1);
 	border-radius: 45px;
 	padding: 1em 1em;
-	transition: 100ms;
+	transition: var(--transition-fast);
 }
 .addendum:hover,
 .addendum:focus-within {

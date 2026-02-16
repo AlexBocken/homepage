@@ -311,7 +311,7 @@ input#search {
   background: var(--nord0);
   color: #fff;
   padding: 0.7rem 2rem;
-  border-radius: 1000px;
+  border-radius: var(--radius-pill);
   width: 100%;
 }
 input::placeholder{
@@ -326,7 +326,7 @@ input::placeholder{
   font-size: 1.6rem;
   display: flex;
   align-items: center;
-  transition: 100ms;
+  transition: var(--transition-fast);
   filter: drop-shadow(0.4em  0.5em 0.4em rgba(0,0,0,0.4))
 }
 

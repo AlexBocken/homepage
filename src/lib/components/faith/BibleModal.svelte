@@ -188,9 +188,9 @@
     border: none;
     cursor: pointer;
     padding: 1rem;
-    border-radius: 1000px;
+    border-radius: var(--radius-pill);
     color: white;
-    transition: 200ms;
+    transition: var(--transition-normal);
     box-shadow: 0 0 1em 0.2em rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
@@ -248,6 +248,7 @@
     gap: 0.75rem;
     line-height: 1.6;
     color: var(--nord4);
+    margin: 0;
   }
 
   @media(prefers-color-scheme: light) {

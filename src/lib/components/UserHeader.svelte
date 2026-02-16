@@ -97,7 +97,7 @@
 		text-decoration: none;
 		color: white;
 		text-align: left;
-		transition: 100ms;
+		transition: var(--transition-fast);
 	}
 	#options li:hover a{
 		color: var(--red);

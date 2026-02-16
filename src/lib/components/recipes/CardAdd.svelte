@@ -133,12 +133,12 @@ function remove_on_enter(event: KeyboardEvent, tag: string) {
 	font-family: sans-serif;
 	width: var(--card-width);
 	aspect-ratio: 4/7;
-	border-radius: 20px;
+	border-radius: var(--radius-card);
 	background-size: contain;
 	display: flex;
 	flex-direction: column;
 	justify-content: end;
-	transition: 200ms;
+	transition: var(--transition-normal);
 	background-color:  var(--blue);
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.3);
 	z-index: 0;
@@ -155,7 +155,7 @@ function remove_on_enter(event: KeyboardEvent, tag: string) {
 	justify-content: center;
 	align-items: center;
 	border-radius: 20px 20px 0 0 ;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .img_label_wrapper:hover{
 	background-color: var(--red);
@@ -169,7 +169,7 @@ function remove_on_enter(event: KeyboardEvent, tag: string) {
 	top:0;
 	left: 0;
 	border-radius: 20px 20px 0 0;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .img_label_wrapper:hover .delete{
 	opacity: 100%;
@@ -178,7 +178,7 @@ function remove_on_enter(event: KeyboardEvent, tag: string) {
 	width: 100px;
 	height: 100px;
 	fill: white;
-	transition: 200ms;
+	transition: var(--transition-normal);
 }
 .delete{
 	cursor: pointer;
@@ -188,7 +188,7 @@ function remove_on_enter(event: KeyboardEvent, tag: string) {
 	left: 2rem;
 	opacity: 0%;
 	z-index: 4;
-	transition:200ms;
+	transition: var(--transition-normal);
 }
 .delete:hover{
 	transform: scale(1.2, 1.2);
@@ -220,14 +220,14 @@ input::placeholder{
 	text-align:center;
 	width: 2.6rem;
 	aspect-ratio: 1/1;
-	transition: 100ms;
+	transition: var(--transition-fast);
 	position: absolute;
 	font-size: 1.5rem;
 	top:-0.5em;
 	right:-0.5em;
 	padding: 0.25em;
 	background-color: var(--nord6);
-	border-radius:1000px;
+	border-radius: var(--radius-pill);
 	box-shadow: 0em 0em 2em 0.1em rgba(0, 0, 0, 0.6);
 }
 .card .icon:hover,
@@ -259,7 +259,7 @@ input::placeholder{
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
-	transition: 100ms;
+	transition: var(--transition-fast);
 }
 .card .name{
 	all: unset;
@@ -306,7 +306,7 @@ input::placeholder{
 	padding-inline: 1em;
 	line-height: 1.5em;
 	margin-bottom: 0.5em;
-	transition: 100ms;
+	transition: var(--transition-fast);
 	box-shadow: 0.2em 0.2em 0.2em 0.05em rgba(0, 0, 0, 0.3);
 }
 .card .tag:hover,
@@ -330,8 +330,8 @@ input::placeholder{
 	width: 10rem;
 	background-color: var(--nord0);
 	padding-inline: 1em;
-	border-radius: 1000px;
-	transition: 100ms;
+	border-radius: var(--radius-pill);
+	transition: var(--transition-fast);
 
 }
 .card .title .category:hover,

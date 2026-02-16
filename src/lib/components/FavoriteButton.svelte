@@ -43,7 +43,7 @@
     all: unset;
     font-size: 1.5rem;
     cursor: pointer;
-    transition: 100ms;
+    transition: var(--transition-fast);
     filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
     position: absolute;
     bottom: 0.5em;

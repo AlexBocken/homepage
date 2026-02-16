@@ -5,7 +5,7 @@
 		--icon_fill: var(--nord4);
 	}
 	svg{
-		transition: 100ms;
+		transition: var(--transition-fast);
 		height: 3em;
 	}
 	svg:hover,
