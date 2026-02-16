@@ -496,7 +496,6 @@ dialog .adder{
 	--font_size: 1.5rem;
 	top: -1em;
 	left: -1em;
-	font-family: sans-serif;
 	font-size: 1.5rem;
 	background-color: var(--nord0);
 	color: var(--nord4);
@@ -519,7 +518,6 @@ dialog .adder{
 }
 
 .add_step p{
-	font-family: sans-serif;
 	width: 100%;
 	font-size: 1.2rem;
 	border-radius: var(--radius-card);
@@ -550,7 +548,6 @@ dialog .adder{
 }
 dialog h2{
 	font-size: 3rem;
-	font-family: sans-serif;
 	color: white;
 	text-align: center;
 	margin-top: 30vh;

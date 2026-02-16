@@ -134,7 +134,6 @@
 	input {
 		all: unset;
 		box-sizing: border-box;
-		font-family: sans-serif;
 		background: var(--nord0);
 		color: var(--nord6);
 		padding: 0.5rem 0.7rem;

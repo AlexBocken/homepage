@@ -62,7 +62,6 @@ const img_alt = $derived(
 	transition: var(--transition-normal);
 	text-decoration: none;
 	box-sizing: border-box;
-	font-family: sans-serif;
 	cursor: pointer;
 	height: 525px;
 	width: 300px;

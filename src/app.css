@@ -15,6 +15,15 @@
 	     url(/fonts/crosses.ttf) format('truetype');
 }
 
+@font-face {
+	font-family: 'Noto Color Emoji Subset';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(/fonts/NotoColorEmoji.woff2) format('woff2'),
+	     url(/fonts/NotoColorEmoji.ttf) format('truetype');
+}
+
 /* ============================================
    COLOR SYSTEM
    Based on Nord Theme with semantic naming
@@ -294,7 +303,7 @@ a:focus-visible {
 
 /* Icon badge (circular icon container) */
 .g-icon-badge {
-	font-family: "Noto Color Emoji", emoji, sans-serif;
+	font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji, sans-serif;
 	display: flex;
 	align-items: center;
 	justify-content: center;

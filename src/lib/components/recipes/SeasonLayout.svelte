@@ -28,7 +28,6 @@
 <style>
 a.month{
 	text-decoration: unset;
-	font-family: sans-serif;
 	border-radius: var(--radius-pill);
 	background-color: var(--blue);
 	color: var(--nord5);

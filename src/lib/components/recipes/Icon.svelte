@@ -4,7 +4,7 @@
 </script>
 <style>
 	a{
-		font-family: "Noto Color Emoji", emoji;
+		font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji;
 		font-size: 2rem;
 		text-decoration: none;
 		padding: 0.5em;
