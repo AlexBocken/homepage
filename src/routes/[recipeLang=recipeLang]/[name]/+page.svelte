@@ -282,6 +282,20 @@ h2{
 	margin-bottom: 0;
 }
 
+/* View transition: slide title block up from bottom */
+:global(::view-transition-new(recipe-title)) {
+	animation: slide-up 0.35s ease both;
+}
+:global(::view-transition-old(recipe-title)) {
+	animation: slide-down 0.25s ease both;
+}
+@keyframes slide-up {
+	from { transform: translateY(var(--title-slide, 100vh)); }
+}
+@keyframes slide-down {
+	to { transform: translateY(var(--title-slide, 100vh)); }
+}
+
 </style>
 <svelte:head>
 	<title>{data.strippedName} - {labels.title}</title>
@@ -299,8 +313,8 @@ h2{
 	<link rel="alternate" hreflang="x-default" href="https://bocken.org/rezepte/{data.germanShortName}" />
 </svelte:head>
 
-<TitleImgParallax src={hero_img_src} color={img_color} alt={img_alt}>
-	<div class=title>
+<TitleImgParallax src={hero_img_src} color={img_color} alt={img_alt} transitionName="recipe-{data.short_name}-img">
+	<div class=title style="view-transition-name: recipe-title">
 		{#if data.category}
 			<a class="category g-pill g-btn-dark" href='/{data.recipeLang}/category/{data.category}'>{data.category}</a>
 		{/if}

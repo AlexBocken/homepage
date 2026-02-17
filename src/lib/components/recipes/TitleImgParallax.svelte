@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from "svelte";
 
-	let { src, color = '', alt = "", children } = $props();
+	let { src, color = '', alt = "", transitionName = '', children } = $props();
 
 	let isredirected = $state(false);
 
@@ -145,7 +145,7 @@ dialog button{
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
     	<div class:zoom-in={!isredirected} onclick={show_dialog_img}>
 		<div class="image-wrap" style:background-color={color}>
-			<img class="image" {src} {alt}/>
+			<img class="image" {src} {alt} style:view-transition-name={transitionName || null}/>
 		</div>
 		<noscript>
 			<div class="image-wrap" style:background-color={color}>

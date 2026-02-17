@@ -99,6 +99,7 @@ nav{
 	box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
 	height: var(--header-h);
 	padding-left: 0.5rem;
+	view-transition-name: site-header;
 }
 .nav-toggle{
 	display: none;
