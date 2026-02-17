@@ -3,14 +3,9 @@
 
 	let { src, color = '', alt = "", children } = $props();
 
-	let isloaded = $state(false);
 	let isredirected = $state(false);
 
 	onMount(() => {
-		const el = document.querySelector("img")
-		if(el?.complete){
-			isloaded = true
-		}
 		fetch(src, { method: 'HEAD' })
 		  .then(response => {
 			isredirected = response.redirected
@@ -21,9 +16,7 @@
 		if(isredirected){
 			return
 		}
-		if(document.querySelector("img").complete){
-			document.querySelector("#img_carousel").showModal();
-		}
+		document.querySelector("#img_carousel").showModal();
 	}
 	function close_dialog_img(){
 		document.querySelector("#img_carousel").close();
@@ -95,8 +88,6 @@
   position: absolute;
   top: 0;
   width: min(1000px, 100dvw);
-  opacity: 0;
-  transition: var(--transition-normal);
   height: max(60dvh,600px);
   object-fit: cover;
   object-position: 50% 20%;
@@ -111,9 +102,6 @@
 }
 :global(h1){
 	width: 100%;
-}
-.unblur.image{
-	opacity: 1;
 }
 
 /* DIALOG */
@@ -155,13 +143,13 @@ dialog button{
     <figure class="image-container">
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-    	<div class:zoom-in={isloaded && !isredirected} onclick={show_dialog_img}>
+    	<div class:zoom-in={!isredirected} onclick={show_dialog_img}>
 		<div class="image-wrap" style:background-color={color}>
-			<img class="image" class:unblur={isloaded} {src} onload={() => {isloaded=true}}  {alt}/>
+			<img class="image" {src} {alt}/>
 		</div>
 		<noscript>
 			<div class="image-wrap" style:background-color={color}>
-				<img class="image unblur" {src} onload={() => {isloaded=true}}  {alt}/>
+				<img class="image" {src} {alt}/>
 			</div>
 		</noscript>
 	</div>
@@ -170,7 +158,7 @@ dialog button{
 </section>
 
 <dialog id=img_carousel>
-	<img class:unblur={isloaded} {src} {alt}>
+	<img {src} {alt}>
 	<button class=action_button onkeydown={(event) => do_on_key(event, 'Enter', false, close_dialog_img)} onclick={close_dialog_img}>
 		<Cross fill=white width=2rem height=2rem></Cross>
 	</button>
