@@ -23,6 +23,11 @@
 	const img_color = $derived(recipe.images?.[0]?.color || '');
 
 	const isInSeason = $derived(icon_override || recipe.season?.includes(current_month));
+
+	function activateTransitions(event) {
+		const img = event.currentTarget.querySelector('.img-wrap img');
+		if (img) img.style.viewTransitionName = `recipe-${recipe.short_name}-img`;
+	}
 </script>
 <style>
 .compact-card {
@@ -63,6 +68,7 @@
 	height: 100%;
 	object-fit: cover;
 	transition: transform 0.4s ease;
+	border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
 .info {
 	position: relative;
@@ -157,7 +163,9 @@
 }
 </style>
 
-<div class="compact-card">
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="compact-card" onclick={activateTransitions}>
 	<a href="{routePrefix}/{recipe.short_name}" class="card-link" aria-label={recipe.name}></a>
 	{#if showFavoriteIndicator && isFavorite}
 		<span class="favorite">❤️</span>
@@ -167,6 +175,7 @@
 			src="https://bocken.org/static/rezepte/thumb/{img_name}"
 			alt={img_alt}
 			loading={loading_strat}
+			data-recipe={recipe.short_name}
 		/>
 	</div>
 	<div class="info">
