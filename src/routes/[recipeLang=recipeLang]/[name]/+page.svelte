@@ -40,7 +40,7 @@
 		`${data.germanShortName || data.short_name}.webp`
 	);
 	const hero_img_src = $derived("https://bocken.org/static/rezepte/full/" + img_filename);
-	const placeholder_src = $derived("https://bocken.org/static/rezepte/placeholder/" + img_filename);
+	const img_color = $derived(data.images?.[0]?.color || '');
 
 	// Get alt text from images array
 	const img_alt = $derived(data.images?.[0]?.alt || '');
@@ -299,7 +299,7 @@ h2{
 	<link rel="alternate" hreflang="x-default" href="https://bocken.org/rezepte/{data.germanShortName}" />
 </svelte:head>
 
-<TitleImgParallax src={hero_img_src} {placeholder_src} alt={img_alt}>
+<TitleImgParallax src={hero_img_src} color={img_color} alt={img_alt}>
 	<div class=title>
 		{#if data.category}
 			<a class="category g-pill g-btn-dark" href='/{data.recipeLang}/category/{data.category}'>{data.category}</a>

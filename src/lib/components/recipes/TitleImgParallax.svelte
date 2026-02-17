@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from "svelte";
 
-	let { src, placeholder_src, alt = "", children } = $props();
+	let { src, color = '', alt = "", children } = $props();
 
 	let isloaded = $state(false);
 	let isredirected = $state(false);
@@ -79,21 +79,27 @@
   margin: 0;
 }
 
+.image-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: min(1000px, 100dvw);
+  height: max(60dvh,600px);
+  overflow: hidden;
+}
 
 .image{
   display: block;
   position: absolute;
   top: 0;
   width: min(1000px, 100dvw);
-  z-index: -1;
   opacity: 0;
   transition: var(--transition-normal);
   height: max(60dvh,600px);
   object-fit: cover;
   object-position: 50% 20%;
-  backdrop-filter: blur(20px);
-  filter: blur(20px);
-  z-index: -10;
 }
 
 .image-container::after {
@@ -106,32 +112,7 @@
 :global(h1){
 	width: 100%;
 }
-.placeholder{
-	background-repeat: no-repeat;
-	background-size: cover;
-	background-position: 50% 20%;
-	position: absolute;
-	width: min(1000px, 100dvw);
-	height: max(60dvh,600px);
-	z-index: -2;
-}
-.placeholder_blur{
-	width: inherit;
-	height: inherit;
-	backdrop-filter: blur(20px);
-}
-div:has(.placeholder){
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	margin-inline: auto;
-        width: min(1000px, 100dvw);
-  	height: max(60dvh,600px);
-	overflow: hidden;
-}
 .unblur.image{
-	filter: blur(0px) !important;
 	opacity: 1;
 }
 
@@ -175,13 +156,11 @@ dialog button{
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
     	<div class:zoom-in={isloaded && !isredirected} onclick={show_dialog_img}>
-		<div class=placeholder style="background-image:url({placeholder_src})" >
-			<div class=placeholder_blur>
+		<div class="image-wrap" style:background-color={color}>
 			<img class="image" class:unblur={isloaded} {src} onload={() => {isloaded=true}}  {alt}/>
-			</div>
 		</div>
 		<noscript>
-			<div class=placeholder style="background-image:url({placeholder_src})" >
+			<div class="image-wrap" style:background-color={color}>
 				<img class="image unblur" {src} onload={() => {isloaded=true}}  {alt}/>
 			</div>
 		</noscript>

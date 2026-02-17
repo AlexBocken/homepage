@@ -22,7 +22,7 @@ import {
 async function deleteRecipeImage(filename: string): Promise<void> {
 	if (!filename) return;
 
-	const imageDirectories = ['full', 'thumb', 'placeholder'];
+	const imageDirectories = ['full', 'thumb'];
 
 	// Extract basename to handle both hashed and unhashed versions
 	const basename = filename
@@ -119,7 +119,7 @@ export const actions = {
 			if (recipeImage && recipeImage.size > 0) {
 				try {
 					// Process and save the new image
-					const { filename } = await processAndSaveRecipeImage(
+					const { filename, color } = await processAndSaveRecipeImage(
 						recipeImage,
 						recipeData.short_name,
 						IMAGE_DIR
@@ -133,7 +133,8 @@ export const actions = {
 					recipeData.images = [{
 						mediapath: filename,
 						alt: existingImagePath ? (recipeData.images?.[0]?.alt || '') : '',
-						caption: existingImagePath ? (recipeData.images?.[0]?.caption || '') : ''
+						caption: existingImagePath ? (recipeData.images?.[0]?.caption || '') : '',
+						color
 					}];
 				} catch (imageError: any) {
 					console.error('Image processing error:', imageError);
@@ -161,7 +162,7 @@ export const actions = {
 
 			// Handle short_name change (rename images)
 			if (originalShortName !== recipeData.short_name) {
-				const imageDirectories = ['full', 'thumb', 'placeholder'];
+				const imageDirectories = ['full', 'thumb'];
 
 				for (const dir of imageDirectories) {
 					const oldPath = join(IMAGE_DIR, 'rezepte', dir, `${originalShortName}.webp`);

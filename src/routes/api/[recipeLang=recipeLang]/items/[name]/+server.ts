@@ -142,6 +142,7 @@ export const GET: RequestHandler = async ({ params }) => {
         mediapath: img.mediapath,
         alt: translatedImages[index]?.alt || img.alt || '',
         caption: translatedImages[index]?.caption || img.caption || '',
+        color: img.color || '',
       }));
     }
 

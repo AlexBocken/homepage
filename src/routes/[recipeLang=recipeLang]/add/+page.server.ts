@@ -69,7 +69,7 @@ export const actions = {
 				try {
 					console.log('[RecipeAdd] Starting image processing...');
 					// Process and save the image
-					const { filename } = await processAndSaveRecipeImage(
+					const { filename, color } = await processAndSaveRecipeImage(
 						recipeImage,
 						recipeData.short_name,
 						IMAGE_DIR
@@ -79,7 +79,8 @@ export const actions = {
 					recipeData.images = [{
 						mediapath: filename,
 						alt: '',
-						caption: ''
+						caption: '',
+						color
 					}];
 				} catch (imageError: any) {
 					console.error('[RecipeAdd] Image processing error:', imageError);
