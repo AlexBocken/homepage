@@ -17,7 +17,7 @@
 <style>
 	h1 {
 		text-align: center;
-		font-size: 3rem;
+		font-size: 1.5rem;
 	}
 </style>
 <h1>{labels.title}</h1>
