@@ -1,7 +1,37 @@
 <script>
 import '$lib/css/recipe-links.css';
 import { page } from '$app/stores';
+import { onNavigate } from '$app/navigation';
 import Header from '$lib/components/Header.svelte'
+
+onNavigate((navigation) => {
+	if (!document.startViewTransition) return;
+
+	// Only use view transitions when navigating to/from a recipe detail page
+	const toRecipe = navigation.to?.params?.name;
+	const fromRecipe = navigation.from?.params?.name;
+	if (!toRecipe && !fromRecipe) return;
+
+	// Measure title block position so the slide animation covers exactly the right distance
+	const title = document.querySelector('[style*="view-transition-name: recipe-title"]');
+	if (title) {
+		const dist = window.innerHeight - title.getBoundingClientRect().top;
+		document.documentElement.style.setProperty('--title-slide', `${dist}px`);
+	}
+
+	return new Promise((resolve) => {
+		document.startViewTransition(async () => {
+			resolve();
+			await navigation.complete;
+
+			// Set view-transition-name on the matching CompactCard image for reverse morph
+			if (fromRecipe) {
+				const card = document.querySelector(`img[data-recipe="${fromRecipe}"]`);
+				if (card) card.style.viewTransitionName = `recipe-${fromRecipe}-img`;
+			}
+		});
+	});
+});
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
 import OfflineSyncButton from '$lib/components/OfflineSyncButton.svelte';
