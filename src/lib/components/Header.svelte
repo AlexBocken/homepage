@@ -183,14 +183,6 @@ nav{
 	align-items: center;
 	gap: 0.5rem;
 }
-.right-buttons :global(button){
-	margin-bottom: 0 !important;
-}
-.right-buttons :global(#options){
-	top: calc(100% + 10px) !important;
-	bottom: unset !important;
-	right: 0 !important;
-}
 .header-right{
 	display: flex;
 	align-items: center;
@@ -266,7 +258,7 @@ footer{
 		fill: var(--nord8);
 		scale: 0.9;
 	}
-	.nav_site{
+	.nav_site:not(.no-links){
 		position: fixed;
 		top: 0;
 		right: 0;
@@ -277,28 +269,28 @@ footer{
 		flex-direction: column;
 		padding-inline: 0.5rem;
 	}
-	.nav_site::before{
+	.nav_site:not(.no-links)::before{
 		content: '';
 		flex: 1;
 	}
-	:global(.nav_site ul){
+	:global(.nav_site:not(.no-links) ul){
 		width: 100% ;
 	}
-	.nav_site :first-child{
+	.nav_site:not(.no-links) :first-child{
 		display:none;
 	}
-	.nav_site{
+	.nav_site:not(.no-links){
 		transform: translateX(100%);
 	}
-	.wrapper:has(.nav-toggle:checked) .nav_site{
+	.wrapper:has(.nav-toggle:checked) .nav_site:not(.no-links){
 		transform: translateX(0);
 		transition: transform 100ms;
 	}
-	:global(.nav_site a:last-child){
+	:global(.nav_site:not(.no-links) a:last-child){
 		margin-bottom: 2rem;
 	}
 
-	.nav_site .links-wrapper {
+	.nav_site:not(.no-links) .links-wrapper {
 		width: 100%;
 		padding: 0 2rem;
 	}
@@ -316,14 +308,14 @@ footer{
 	:global(.site_header li:focus-within){
 	transform: unset;
 	}
-	.nav_site .header-right{
+	.nav_site:not(.no-links) .header-right{
 		flex-direction: column;
 		position: absolute;
 		bottom: 2rem;
 		left: 50%;
 		transform: translateX(-50%);
 	}
-	.language-selector-desktop{
+	.nav_site:not(.no-links) .language-selector-desktop{
 		display: none;
 	}
 	.active-underline {
@@ -336,23 +328,44 @@ footer{
 		text-underline-offset: 0.3rem;
 	}
 }
+.no-links :global(button) {
+	margin-bottom: 0 !important;
+}
+.no-links :global(#options) {
+	top: calc(100% + 10px) !important;
+	bottom: unset !important;
+	right: 0 !important;
+	left: unset !important;
+	transform: none !important;
+}
+.no-links :global(.top.speech::after) {
+	border: 20px solid transparent !important;
+	border-bottom-color: var(--nord3) !important;
+	border-top: 0 !important;
+	top: -10px !important;
+	bottom: unset !important;
+	left: unset !important;
+	right: 0.25rem !important;
+	margin-left: 0 !important;
+}
+.no-links :global(button::before) {
+	display: none;
+}
 </style>
 <div class=wrapper lang=de>
 <div>
+{#if links}
 <div class=button_wrapper>
 <a href="/" aria-label="Home"><Symbol></Symbol></a>
 <div class="right-buttons">
 	{@render language_selector_mobile?.()}
-	{#if links}
-		<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" />
-		<label for="nav-toggle" class=nav_button aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="0.5em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></label>
-	{:else}
-		{@render right_side?.()}
-	{/if}
+	<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" />
+	<label for="nav-toggle" class=nav_button aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="0.5em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></label>
 </div>
 </div>
 <div class="header-shadow"></div>
-<nav class=nav_site>
+{/if}
+<nav class=nav_site class:no-links={!links}>
 	<a href="/" aria-label="Home"><Symbol></Symbol></a>
 	<div class="links-wrapper">
 		{@render links?.()}
