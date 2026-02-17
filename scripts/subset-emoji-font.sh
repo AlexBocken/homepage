@@ -29,18 +29,11 @@ fi
 EMOJIS="☀✝❄🌷🍂🎄🐇🍽🥫🛒🛍🚆⚡🎉🤝💸❤🖤✅❌🚀⚠✨🔄📋🖼📖🤖🌐🔐🔍🚫"
 # ────────────────────────────────────────────────────────────────────
 
-# Build Unicode codepoint list from the emoji string
-UNICODES=""
-for char in $(echo "$EMOJIS" | grep -oP '.'); do
-	code=$(printf 'U+%04X' "'$char")
-	if [ -n "$UNICODES" ]; then
-		UNICODES="$UNICODES,$code"
-	else
-		UNICODES="$code"
-	fi
-done
+# Build Unicode codepoint list from the emoji string (Python for reliable Unicode handling)
+UNICODES=$(python3 -c "print(','.join(f'U+{ord(c):04X}' for c in '$EMOJIS'))")
+GLYPH_COUNT=$(python3 -c "print(len('$EMOJIS'))")
 
-echo "Subsetting NotoColorEmoji with $(echo "$EMOJIS" | grep -oP '.' | wc -l) glyphs..."
+echo "Subsetting NotoColorEmoji with $GLYPH_COUNT glyphs..."
 
 # Subset to TTF
 pyftsubset "$SRC_FONT" \
