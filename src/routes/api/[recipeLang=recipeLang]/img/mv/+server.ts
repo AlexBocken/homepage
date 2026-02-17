@@ -26,7 +26,7 @@ export const POST =  (async ({ request, locals})  => {
 		newFilename = data.new_name + ".webp";
 	}
 
-	[ "full", "thumb", "placeholder"].forEach((folder) => {
+	[ "full", "thumb"].forEach((folder) => {
 		const old_path = path.join(IMAGE_DIR, "rezepte", folder, oldFilename)
 		rename(old_path, path.join(IMAGE_DIR, "rezepte", folder, newFilename), (e) => {
 		console.log(e)

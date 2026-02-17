@@ -123,7 +123,8 @@ export type RecipeModelType = {
   images?: [{
 	  mediapath: string;
 	  alt: string;
-	  caption?: string
+	  caption?: string;
+	  color?: string;
   }];
   description: string;
   tags: [string];
@@ -164,6 +165,7 @@ export type BriefRecipeType = {
 		mediapath: string;
 		alt: string;
 		caption?: string;
+		color?: string;
 	}]
 	description: string;
 	tags: [string];

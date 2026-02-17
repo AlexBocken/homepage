@@ -5,6 +5,7 @@ import { IMAGE_DIR } from '$env/static/private';
 import sharp from 'sharp';
 import { generateImageHashFromBuffer, getHashedFilename } from '$utils/imageHash';
 import { validateImageFile } from '$utils/imageValidation';
+import { extractDominantColor } from '$utils/imageProcessing';
 
 /**
  * Secure image upload endpoint for recipe images
@@ -13,7 +14,7 @@ import { validateImageFile } from '$utils/imageValidation';
  * - Requires authentication
  * - 5-layer validation (size, magic bytes, MIME, extension, Sharp)
  * - Uses FormData instead of base64 JSON (more efficient, more secure)
- * - Generates full/thumb/placeholder versions
+ * - Generates full/thumb versions + dominant color extraction
  * - Content hash for cache busting
  *
  * @route POST /api/rezepte/img/add
@@ -109,31 +110,20 @@ export const POST = (async ({ request, locals }) => {
 
 		await sharp(thumbBuffer).toFile(thumbHashedPath);
 		await sharp(thumbBuffer).toFile(thumbUnhashedPath);
-		console.log('[API:ImgAdd] Thumbnail images saved ✓');
+		console.log('[API:ImgAdd] Thumbnail images saved');
 
-		// Save placeholder (20px width) - both hashed and unhashed versions
-		console.log('[API:ImgAdd] Processing placeholder...');
-		const placeholderBuffer = await sharp(buffer)
-			.resize({ width: 20 })
-			.toFormat('webp')
-			.webp({ quality: 60 })
-			.toBuffer();
-		console.log('[API:ImgAdd] Placeholder buffer created, size:', placeholderBuffer.length, 'bytes');
+		// Extract dominant color
+		console.log('[API:ImgAdd] Extracting dominant color...');
+		const color = await extractDominantColor(buffer);
+		console.log('[API:ImgAdd] Dominant color:', color);
 
-		const placeholderHashedPath = path.join(IMAGE_DIR, 'rezepte', 'placeholder', hashedFilename);
-		const placeholderUnhashedPath = path.join(IMAGE_DIR, 'rezepte', 'placeholder', unhashedFilename);
-		console.log('[API:ImgAdd] Saving placeholder to:', { placeholderHashedPath, placeholderUnhashedPath });
-
-		await sharp(placeholderBuffer).toFile(placeholderHashedPath);
-		await sharp(placeholderBuffer).toFile(placeholderUnhashedPath);
-		console.log('[API:ImgAdd] Placeholder images saved ✓');
-
-		console.log('[API:ImgAdd] Upload completed successfully ✓');
+		console.log('[API:ImgAdd] Upload completed successfully');
 		return json({
 			success: true,
 			msg: 'Image uploaded successfully',
 			filename: hashedFilename,
-			unhashedFilename: unhashedFilename
+			unhashedFilename: unhashedFilename,
+			color
 		});
 	} catch (err: any) {
 		// Re-throw errors that already have status codes

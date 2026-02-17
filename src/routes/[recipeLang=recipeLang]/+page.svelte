@@ -37,6 +37,9 @@
 	const heroImg = $derived(
 		heroRecipe ? heroRecipe.images[0].mediapath : ''
 	);
+	const heroColor = $derived(
+		heroRecipe ? (heroRecipe.images[0].color || '') : ''
+	);
 
 	// Category chip state: 'all', 'season', or a category name
 	let activeChip = $state('all');
@@ -343,7 +346,7 @@
 
 {#if heroRecipe}
 	<section class="hero-section">
-		<figure class="hero">
+		<figure class="hero" style:background-color={heroColor}>
 			<img
 				class="hero-img"
 				src="https://bocken.org/static/rezepte/full/{heroImg}"

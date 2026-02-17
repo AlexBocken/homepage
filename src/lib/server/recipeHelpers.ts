@@ -37,7 +37,7 @@ export function toBrief(recipe: any, recipeLang: string): BriefRecipeType {
 			name: recipe.translations.en.name,
 			short_name: recipe.translations.en.short_name,
 			images: recipe.images?.[0]
-				? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath }]
+				? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath, color: recipe.images[0].color }]
 				: [],
 			tags: recipe.translations.en.tags || [],
 			category: recipe.translations.en.category,
@@ -51,7 +51,7 @@ export function toBrief(recipe: any, recipeLang: string): BriefRecipeType {
 	return {
 		...recipe,
 		images: recipe.images?.[0]
-			? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath }]
+			? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath, color: recipe.images[0].color }]
 			: [],
 	} as BriefRecipeType;
 }
