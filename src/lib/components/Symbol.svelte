@@ -6,7 +6,7 @@
 	}
 	svg{
 		transition: var(--transition-fast);
-		height: 3em;
+		height: var(--symbol-size, 3em);
 	}
 	svg:hover,
 	svg:focus-visible
