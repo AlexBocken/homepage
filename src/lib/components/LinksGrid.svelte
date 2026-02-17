@@ -1,12 +1,12 @@
 <style>
 
 :global(.links_grid a:nth-child(4n)),
-:global(.links_grid a:nth-child(4n) svg){
+:global(.links_grid a:nth-child(4n) svg:not(.lock-icon)){
 	background-color: var(--nord4);
 	fill: var(--nord11);
 }
 :global(.links_grid a:nth-child(4n+1)),
-:global(.links_grid a:nth-child(4n+1) svg){
+:global(.links_grid a:nth-child(4n+1) svg:not(.lock-icon)){
 	background-color: var(--nord6);
 	fill: var(--nord10);
 }
@@ -64,8 +64,8 @@
 	right: 0.5rem;
 	width: 1.5rem;
 	height: 1.5rem;
-	fill: var(--nord0);
-	opacity: 0.6;
+	fill: var(--nord3);
+	opacity: 0.5;
 }
 
 @media (max-width: 560px) {
@@ -74,13 +74,17 @@
 		padding: 1.5rem 0.75rem;
 	}
 	:global(.links_grid a :is(svg, img)) {
-		height: 72px;
+		height: 90px;
 	}
 	:global(.links_grid h3) {
 		font-size: 1.2rem;
 	}
 	:global(.links_grid a) {
 		padding: 0.75rem;
+	}
+	:global(.links_grid a .lock-icon) {
+		width: 1.2rem;
+		height: 1.2rem;
 	}
 }
 
@@ -90,13 +94,19 @@
 		padding: 1rem 0.5rem;
 	}
 	:global(.links_grid a :is(svg, img)) {
-		height: 48px;
+		height: 64px;
 	}
 	:global(.links_grid h3) {
 		font-size: 0.95rem;
 	}
 	:global(.links_grid a) {
 		padding: 0.5rem;
+	}
+	:global(.links_grid a .lock-icon) {
+		width: 1rem;
+		height: 1rem;
+		top: 0.3rem;
+		right: 0.3rem;
 	}
 }
 
@@ -105,26 +115,25 @@
 		color: white;
 	}
 	:global(.links_grid a .lock-icon){
-		fill: white;
+		fill: var(--nord3);
 	}
 	:global(.links_grid a:nth-child(4n)),
-	:global(.links_grid a:nth-child(4n) svg){
+	:global(.links_grid a:nth-child(4n) svg:not(.lock-icon)){
 		background-color: var(--nord6-dark);
 		fill: var(--nord11);
 	}
 	:global(.links_grid a:nth-child(4n+1)),
-	:global(.links_grid a:nth-child(4n+1) svg){
+	:global(.links_grid a:nth-child(4n+1) svg:not(.lock-icon)){
 		background-color: var(--accent-dark);
 		fill: var(--nord9);
 	}
 	:global(.links_grid a:nth-child(4n+2)),
-	:global(.links_grid a:nth-child(4n+2) svg){
+	:global(.links_grid a:nth-child(4n+2) svg:not(.lock-icon)){
 		background-color: var(--nord1);
 		fill: var(--nord8);
-
 	}
 	:global(.links_grid a:nth-child(4n+3)),
-	:global(.links_grid a:nth-child(4n+3) svg){
+	:global(.links_grid a:nth-child(4n+3) svg:not(.lock-icon)){
 		background-color: var(--background-dark);
 		fill: var(--nord7);
 	}
