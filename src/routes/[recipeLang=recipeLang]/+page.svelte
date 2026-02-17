@@ -130,7 +130,7 @@
 /* ─── Hero parallax (same scaleY technique as TitleImgParallax) ─── */
 .hero-section {
 	--parallax-scale: 0.3;
-	margin-bottom: -20vh;
+	margin-bottom: calc(var(--parallax-scale) * (20vh - min(60vh, 520px)));
 	transform-origin: center top;
 	transform: translateY(-1rem) scaleY(calc(1 - var(--parallax-scale)));
 }
