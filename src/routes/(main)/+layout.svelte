@@ -8,11 +8,6 @@ let user = $derived(data.session?.user);
 </script>
 
 <Header>
-	{#snippet links()}
-		<ul class=site_header>
-		</ul>
-	{/snippet}
-
 	{#snippet language_selector_mobile()}
 		<LanguageSelector />
 	{/snippet}

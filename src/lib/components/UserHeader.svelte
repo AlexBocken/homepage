@@ -81,6 +81,7 @@
 		background-color: var(--bg_color);
 		width: 30ch;
 		padding: 1rem;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 	}
 	#options ul{
 		color: white;
@@ -116,21 +117,30 @@ h2 + p{
 	#options{
 		top: unset;
 		bottom: calc(100% + 15px);
-		right: -200%;
-		z-index: 99999999999999999999;
+		left: 50%;
+		right: unset;
+		transform: translateX(-50%);
+		z-index: 10;
 	}
 	.top.speech::after {
-	  /* (B2-1) DOWN TRIANGLE */
-	  border-top-color: #a53d38;
-	  border-bottom: 0;
-		z-index: 99999999999999999999;
-
-	  /* (B2-2) POSITION AT BOTTOM */
-	  bottom: -20px; left: 50%;
+	  border: 20px solid transparent;
+	  border-top-color: var(--bg_color);
+	  border-bottom-width: 0;
+	  top: unset;
+	  bottom: -20px;
+	  left: 50%;
 	  margin-left: -20px;
 	}
 	button{
 		margin-bottom: 2rem;
+	}
+	button::before{
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		background: inherit;
+		z-index: 20;
 	}
 }
 </style>
