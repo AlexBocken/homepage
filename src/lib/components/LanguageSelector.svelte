@@ -194,6 +194,15 @@
 		z-index: 1000;
 		display: none;
 	}
+	.language-options::after {
+		content: "";
+		border: 10px solid transparent;
+		border-bottom-color: var(--bg_color);
+		border-top: 0;
+		position: absolute;
+		top: -10px;
+		right: 1rem;
+	}
 	/* Show via JS toggle */
 	.language-options.open {
 		display: block;
@@ -222,7 +231,9 @@
 		background-color: var(--nord2);
 	}
 	.language-options a.active{
-		background-color: var(--nord14);
+		background-color: var(--nord8);
+		color: var(--nord0);
+		font-weight: 700;
 	}
 </style>
 
