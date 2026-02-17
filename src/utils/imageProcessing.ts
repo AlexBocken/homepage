@@ -56,8 +56,8 @@ export async function extractDominantColor(input: Buffer | string): Promise<stri
 	const { width, height } = info;
 	const cx = (width - 1) / 2;
 	const cy = (height - 1) / 2;
-	const sigmaX = 0.3 * width;
-	const sigmaY = 0.3 * height;
+	const sigmaX = 0.15 * width;
+	const sigmaY = 0.15 * height;
 
 	let wL = 0, wa = 0, wb = 0, wSum = 0;
 
