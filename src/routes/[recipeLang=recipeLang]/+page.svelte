@@ -222,6 +222,9 @@
 .hero-featured .recipe-name {
 	font-weight: 600;
 }
+.hero-featured .recipe-icon {
+	font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji, sans-serif;
+}
 .hero-featured .arrow-icon {
 	width: 0.7em;
 	height: 0.7em;
@@ -355,7 +358,7 @@
 				<h1>{labels.title}</h1>
 				<p class="subheading">{labels.subheading}</p>
 				<a href="/{data.recipeLang}/{heroRecipe.short_name}" class="hero-featured">
-					<span class="recipe-name">{heroRecipe.icon} {@html heroRecipe.name}</span>
+					<span class="recipe-name"><span class="recipe-icon">{heroRecipe.icon}</span> {@html heroRecipe.name}</span>
 					<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -197 535 410"><path d="M503 31c12-13 12-33 0-46L343-175c-13-12-33-12-46 0-12 13-12 33 0 46L403-24H32C14-24 0-10 0 8s14 32 32 32h371L297 145c-12 13-12 33 0 46 13 12 33 12 46 0L503 31z"/></svg>
 				</a>
 

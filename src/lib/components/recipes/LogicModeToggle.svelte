@@ -86,7 +86,7 @@
 	}
 
 	.toggle-switch.or-mode {
-		background: var(--nord13);
+		background: var(--nord12);
 	}
 
 	.toggle-knob {
@@ -121,7 +121,7 @@
 	}
 
 	.toggle-switch.or-mode + .mode-label.or {
-		color: var(--nord13);
+		color: var(--nord12);
 	}
 </style>
 
