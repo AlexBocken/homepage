@@ -5,10 +5,10 @@ let { tag, ref } = $props<{ tag: string, ref: string }>();
 a{
 	background-color: var(--blue);
 	text-decoration: none;
-	padding: 2rem;
+	padding: clamp(0.4rem, 0.8vw, 0.8rem) clamp(0.8rem, 1.5vw, 1.5rem);
 	border-radius: 1000000px;
 	transition: var(--transition-fast);
-	font-size: 2rem;
+	font-size: clamp(0.85rem, 1.8vw, 1.5rem);
 	color: white;
 }
 a:hover{

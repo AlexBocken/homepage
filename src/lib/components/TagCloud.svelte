@@ -5,7 +5,7 @@ div{
 	flex-direction: row;
 	flex-wrap: wrap;
 	margin-inline:auto;
-	gap: 1rem;
+	gap: clamp(0.4rem, 1vw, 1rem);
 	justify-content: space-evenly;
 }
 </style>
