@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({request, locals}) => {
 
 	if (oldShortName !== newShortName) {
 		// Rename image files in all three directories
-		const imageDirectories = ['full', 'thumb', 'placeholder'];
+		const imageDirectories = ['full', 'thumb'];
 		const staticPath = join(process.cwd(), 'static', 'rezepte');
 
 		for (const dir of imageDirectories) {

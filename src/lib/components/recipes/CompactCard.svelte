@@ -20,6 +20,8 @@
 		recipe.images?.[0]?.alt || recipe.name
 	);
 
+	const img_color = $derived(recipe.images?.[0]?.color || '');
+
 	const isInSeason = $derived(icon_override || recipe.season?.includes(current_month));
 </script>
 <style>
@@ -160,7 +162,7 @@
 	{#if showFavoriteIndicator && isFavorite}
 		<span class="favorite">❤️</span>
 	{/if}
-	<div class="img-wrap">
+	<div class="img-wrap" style:background-color={img_color}>
 		<img
 			src="https://bocken.org/static/rezepte/thumb/{img_name}"
 			alt={img_alt}

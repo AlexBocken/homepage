@@ -25,6 +25,14 @@
 				: 'Alternativtext für Rezeptbilder mit KI generieren',
 			href: `/${data.recipeLang}/admin/alt-text-generator`,
 			icon: '🖼️'
+		},
+		{
+			title: isEnglish ? 'Image Colors' : 'Bildfarben',
+			description: isEnglish
+				? 'Extract dominant colors from recipe images for loading placeholders'
+				: 'Dominante Farben aus Rezeptbildern für Ladeplatzhalter extrahieren',
+			href: `/${data.recipeLang}/admin/image-colors`,
+			icon: '🎨'
 		}
 	];
 </script>

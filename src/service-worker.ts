@@ -113,10 +113,10 @@ sw.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	// Handle recipe images (thumbnails, full images, and placeholders)
+	// Handle recipe images (thumbnails and full images)
 	if (
 		url.pathname.startsWith('/static/rezepte/') &&
-		(url.pathname.includes('/thumb/') || url.pathname.includes('/full/') || url.pathname.includes('/placeholder/'))
+		(url.pathname.includes('/thumb/') || url.pathname.includes('/full/'))
 	) {
 		event.respondWith(
 			(async () => {
@@ -137,8 +137,8 @@ sw.addEventListener('fetch', (event) => {
 					}
 					return response;
 				} catch {
-					// Network failed - try to serve thumbnail as fallback for full/placeholder
-					if (url.pathname.includes('/full/') || url.pathname.includes('/placeholder/')) {
+					// Network failed - try to serve thumbnail as fallback for full
+					if (url.pathname.includes('/full/')) {
 						// Extract filename and try to find cached thumbnail
 						const filename = url.pathname.split('/').pop();
 						if (filename) {

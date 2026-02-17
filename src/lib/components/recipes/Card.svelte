@@ -36,6 +36,8 @@ const img_name = $derived(
 const img_alt = $derived(
 	recipe.images?.[0]?.alt || recipe.name
 );
+
+const img_color = $derived(recipe.images?.[0]?.color || '');
 </script>
 <style>
 .card-main-link {
@@ -93,21 +95,16 @@ const img_alt = $derived(
 	transition: var(--transition-normal);
 	border-top-left-radius: inherit;
 	border-top-right-radius: inherit;
+	opacity: 0;
 }
-.blur{
-	filter: blur(10px);
-}
-.backdrop_blur{
-	backdrop-filter: blur(10px);
+.image.loaded{
+	opacity: 1;
 }
 .card-image{
 	width: 300px;
 	height: 255px;
 	position: absolute;
 	top: 0;
-	background-repeat: no-repeat;
-	background-size: cover;
-	background-position: center;
 	overflow: hidden;
 	border-top-left-radius: inherit;
 	border-top-right-radius: inherit;
@@ -232,11 +229,11 @@ const img_alt = $derived(
 	<a href="{routePrefix}/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}">
 		<span class="visually-hidden">View recipe: {recipe.name}</span>
 	</a>
-	<div class="card-image" style="background-image:url(https://bocken.org/static/rezepte/placeholder/{img_name})">
+	<div class="card-image" style:background-color={img_color}>
 		<noscript>
-			<img class="image backdrop_blur" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{img_alt}"/>
+			<img class="image loaded" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{img_alt}"/>
 		</noscript>
-		<img class="image backdrop_blur" class:blur={!isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{img_alt}" onload={() => isloaded=true}/>
+		<img class="image" class:loaded={isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{img_alt}" onload={() => isloaded=true}/>
 	</div>
 	{#if showFavoriteIndicator && isFavorite}
 		<div class="favorite-indicator">❤️</div>

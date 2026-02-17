@@ -17,7 +17,7 @@ export const POST =  (async ({ request, locals})  => {
 	const basename = data.name || hashedFilename.replace(/\.[a-f0-9]{8}\.webp$/, '').replace(/\.webp$/, '');
 	const unhashedFilename = basename + '.webp';
 
-	[ "full", "thumb", "placeholder"].forEach((folder) => {
+	[ "full", "thumb"].forEach((folder) => {
 		// Delete hashed version
 		unlink(path.join(IMAGE_DIR, "rezepte", folder, hashedFilename), (e) => {
 			if(e) console.warn(`Could not delete hashed: ${folder}/${hashedFilename}`, e);
