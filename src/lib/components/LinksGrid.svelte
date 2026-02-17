@@ -30,7 +30,7 @@
 }
 .links_grid{
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(250px, calc(50% - 1rem)), 1fr));
 	gap: 2rem;
 	max-width: 1000px;
 	margin-inline: auto;
@@ -66,6 +66,38 @@
 	height: 1.5rem;
 	fill: var(--nord0);
 	opacity: 0.6;
+}
+
+@media (max-width: 560px) {
+	.links_grid {
+		gap: 1rem;
+		padding: 1.5rem 0.75rem;
+	}
+	:global(.links_grid a :is(svg, img)) {
+		height: 72px;
+	}
+	:global(.links_grid h3) {
+		font-size: 1.2rem;
+	}
+	:global(.links_grid a) {
+		padding: 0.75rem;
+	}
+}
+
+@media (max-width: 410px) {
+	.links_grid {
+		gap: 0.5rem;
+		padding: 1rem 0.5rem;
+	}
+	:global(.links_grid a :is(svg, img)) {
+		height: 48px;
+	}
+	:global(.links_grid h3) {
+		font-size: 0.95rem;
+	}
+	:global(.links_grid a) {
+		padding: 0.5rem;
+	}
 }
 
 @media (prefers-color-scheme: dark){
