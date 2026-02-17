@@ -361,15 +361,22 @@ a:focus-visible {
 
 .recipe-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-	gap: 1.5em;
-	padding: 0 1.5em;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 0.8em;
+	padding: 0 0.8em;
 	max-width: 1400px;
 	margin: 0 auto 2em;
 }
+@media (max-width: 250px) {
+	.recipe-grid {
+		grid-template-columns: 1fr;
+	}
+}
 @media (min-width: 600px) {
 	.recipe-grid {
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 1.5em;
+		padding: 0 1.5em;
 	}
 }
 @media (min-width: 1024px) {

@@ -64,14 +64,22 @@
 }
 .info {
 	position: relative;
-	padding: 0.8em 0.9em 0.7em;
+	padding: 0.5em 0.6em 0.5em;
 	flex: 1;
 }
 .name {
-	font-size: 1.1rem;
+	font-size: 0.85rem;
 	font-weight: 600;
 	line-height: 1.3;
 	margin: 0;
+}
+@media (min-width: 600px) {
+	.info {
+		padding: 0.8em 0.9em 0.7em;
+	}
+	.name {
+		font-size: 1.1rem;
+	}
 }
 .tags {
 	display: flex;
@@ -82,8 +90,8 @@
 	z-index: 2;
 }
 .tag {
-	font-size: 0.9rem;
-	padding: 0.15rem 0.55rem;
+	font-size: 0.7rem;
+	padding: 0.1rem 0.4rem;
 	border-radius: var(--radius-pill);
 	background-color: var(--nord5);
 	color: var(--nord3);
@@ -100,6 +108,12 @@
 	background-color: var(--nord8);
 	box-shadow: var(--shadow-hover);
 	color: var(--nord0);
+}
+@media (min-width: 600px) {
+	.tag {
+		font-size: 0.9rem;
+		padding: 0.15rem 0.55rem;
+	}
 }
 @media (prefers-color-scheme: dark) {
 	.tag,
@@ -120,10 +134,15 @@
 	right: 0.6em;
 	width: 2em;
 	height: 2em;
-	font-size: 1.2rem;
+	font-size: 1rem;
 	background-color: var(--nord0);
 	color: white;
 	z-index: 3;
+}
+@media (min-width: 600px) {
+	.icon {
+		font-size: 1.2rem;
+	}
 }
 .favorite {
 	position: absolute;
