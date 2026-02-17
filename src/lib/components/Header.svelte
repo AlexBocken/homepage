@@ -206,6 +206,7 @@ footer{
 	padding-block: 1rem;
 	text-align: center;
 	margin-top: auto;
+	position: relative;
 }
 
 @media screen and (max-width: 800px) {
