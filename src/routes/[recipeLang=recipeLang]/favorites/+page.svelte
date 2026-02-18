@@ -25,7 +25,8 @@
         emptyState2: isEnglish
             ? 'Visit a recipe and click the heart icon to add it to your favorites.'
             : 'Besuche ein Rezept und klicke auf das Herz-Symbol, um es zu deinen Favoriten hinzuzufügen.',
-        recipesLink: isEnglish ? 'recipe' : 'Rezept'
+        recipesLink: isEnglish ? 'recipe' : 'Rezept',
+        toTry: isEnglish ? 'Recipes to try' : 'Zum Ausprobieren'
     });
 
     const { filtered: filteredFavorites, handleSearchResults } = createSearchFilter(() => data.favorites);
@@ -47,6 +48,28 @@ h1{
     margin-top: 3rem;
     color: var(--nord3);
 }
+.to-try-link{
+    text-align: center;
+    margin-bottom: 1.5em;
+}
+.to-try-link a{
+    display: inline-block;
+    padding: 0.4em 1.2em;
+    border-radius: var(--radius-pill);
+    background: var(--nord10);
+    color: var(--nord6);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.to-try-link a:hover,
+.to-try-link a:focus-visible{
+    transform: scale(1.05);
+    background: var(--nord9);
+    box-shadow: var(--shadow-hover);
+}
 </style>
 
 <svelte:head>
@@ -62,6 +85,8 @@ h1{
         {labels.noFavorites}
     {/if}
 </p>
+
+<p class="to-try-link"><a href="/{data.recipeLang}/to-try">{labels.toTry} &rarr;</a></p>
 
 <Search favoritesOnly={true} lang={data.lang} recipes={data.favorites} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 
