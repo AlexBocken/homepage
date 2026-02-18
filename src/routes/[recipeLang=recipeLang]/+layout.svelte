@@ -11,6 +11,7 @@ onNavigate((navigation) => {
 	const toRecipe = navigation.to?.params?.name;
 	const fromRecipe = navigation.from?.params?.name;
 	if (!toRecipe && !fromRecipe) return;
+	if (fromRecipe && toRecipe) return; // recipe-to-recipe: no view transition
 
 	// Measure title block position so the slide animation covers exactly the right distance
 	const title = document.querySelector('[style*="view-transition-name: recipe-title"]');
@@ -24,7 +25,7 @@ onNavigate((navigation) => {
 			resolve();
 			await navigation.complete;
 
-			// Set view-transition-name on the matching CompactCard image for reverse morph
+			// Set view-transition-name on the matching CompactCard/hero image for reverse morph
 			if (fromRecipe) {
 				const card = document.querySelector(`img[data-recipe="${fromRecipe}"]`);
 				if (card) card.style.viewTransitionName = `recipe-${fromRecipe}-img`;

@@ -352,6 +352,7 @@
 				src="https://bocken.org/static/rezepte/full/{heroImg}"
 				alt=""
 				loading="eager"
+				data-recipe={heroRecipe.short_name}
 			/>
 			<div class="hero-overlay"></div>
 		</figure>
@@ -360,7 +361,11 @@
 			<div class="hero-text">
 				<h1>{labels.title}</h1>
 				<p class="subheading">{labels.subheading}</p>
-				<a href="/{data.recipeLang}/{heroRecipe.short_name}" class="hero-featured">
+				<a href="/{data.recipeLang}/{heroRecipe.short_name}" class="hero-featured"
+				onclick={() => {
+					const img = document.querySelector('.hero-img');
+					if (img) img.style.viewTransitionName = `recipe-${heroRecipe.short_name}-img`;
+				}}>
 					<span class="recipe-name"><span class="recipe-icon">{heroRecipe.icon}</span> {@html heroRecipe.name}</span>
 					<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -197 535 410"><path d="M503 31c12-13 12-33 0-46L343-175c-13-12-33-12-46 0-12 13-12 33 0 46L403-24H32C14-24 0-10 0 8s14 32 32 32h371L297 145c-12 13-12 33 0 46 13 12 33 12 46 0L503 31z"/></svg>
 				</a>
