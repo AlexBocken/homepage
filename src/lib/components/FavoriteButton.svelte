@@ -41,6 +41,7 @@
 <style>
   .favorite-button {
     all: unset;
+    font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji, sans-serif;
     font-size: 1.5rem;
     cursor: pointer;
     transition: var(--transition-fast);
