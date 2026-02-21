@@ -189,12 +189,25 @@
 .badge-stack .today-badge {
 	position: static;
 }
+
+/* Season badge uses liturgical colors */
+.season-lent .season-badge {
+	background: var(--purple);
+	color: white;
+}
+
+.season-eastertide .season-badge {
+	background: var(--nord6);
+	color: var(--nord0);
+}
 </style>
 
 <div class="mystery-selector" class:four-mysteries={includeLuminous}>
 	<a
 		class="mystery-button"
 		class:selected={selectedMystery === 'freudenreich'}
+		class:season-lent={season === 'lent' && seasonalMystery === 'freudenreich'}
+		class:season-eastertide={season === 'eastertide' && seasonalMystery === 'freudenreich'}
 		href={mysteryHref('freudenreich')}
 		onclick={(e) => { e.preventDefault(); selectMystery('freudenreich'); }}
 	>
@@ -211,6 +224,8 @@
 	<a
 		class="mystery-button"
 		class:selected={selectedMystery === 'schmerzhaften'}
+		class:season-lent={season === 'lent' && seasonalMystery === 'schmerzhaften'}
+		class:season-eastertide={season === 'eastertide' && seasonalMystery === 'schmerzhaften'}
 		href={mysteryHref('schmerzhaften')}
 		onclick={(e) => { e.preventDefault(); selectMystery('schmerzhaften'); }}
 	>
@@ -227,6 +242,8 @@
 	<a
 		class="mystery-button"
 		class:selected={selectedMystery === 'glorreichen'}
+		class:season-lent={season === 'lent' && seasonalMystery === 'glorreichen'}
+		class:season-eastertide={season === 'eastertide' && seasonalMystery === 'glorreichen'}
 		href={mysteryHref('glorreichen')}
 		onclick={(e) => { e.preventDefault(); selectMystery('glorreichen'); }}
 	>
@@ -244,6 +261,8 @@
 	<a
 		class="mystery-button"
 		class:selected={selectedMystery === 'lichtreichen'}
+		class:season-lent={season === 'lent' && seasonalMystery === 'lichtreichen'}
+		class:season-eastertide={season === 'eastertide' && seasonalMystery === 'lichtreichen'}
 		href={mysteryHref('lichtreichen')}
 		onclick={(e) => { e.preventDefault(); selectMystery('lichtreichen'); }}
 	>
