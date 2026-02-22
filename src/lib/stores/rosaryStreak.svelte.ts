@@ -174,13 +174,21 @@ class RosaryStreakStore {
 		const localData = loadFromStorage();
 		const merged = mergeStreakData(localData, serverData);
 
-		// Update local state
-		this.#length = merged.length;
-		this.#lastPrayed = merged.lastPrayed;
-		saveToStorage(merged);
+		// If the best data we have is still expired, reset to zero so the next
+		// SSR load won't flash a stale streak count.
+		const isExpired =
+			merged.lastPrayed !== null &&
+			merged.lastPrayed !== getToday() &&
+			!isYesterday(merged.lastPrayed);
+		const effective: StreakData = isExpired ? { length: 0, lastPrayed: null } : merged;
 
-		// If local had newer data, push to server
-		if (merged.length !== serverData.length || merged.lastPrayed !== serverData.lastPrayed) {
+		// Update local state
+		this.#length = effective.length;
+		this.#lastPrayed = effective.lastPrayed;
+		saveToStorage(effective);
+
+		// Push to server if anything changed (newer local data, or expired streak reset)
+		if (effective.length !== serverData.length || effective.lastPrayed !== serverData.lastPrayed) {
 			this.#pushToServer();
 		}
 	}
