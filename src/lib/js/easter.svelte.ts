@@ -51,6 +51,7 @@ export type LiturgicalSeason = 'eastertide' | 'lent' | null;
  */
 export function getLiturgicalSeason(date: Date = new Date()): LiturgicalSeason {
 	if (isEastertide(date)) return 'eastertide';
-	if (isLent(date)) return 'lent';
+	// Sundays during Lent are "little Easters" — recommend Glorious mysteries, no Lent tag
+	if (isLent(date) && date.getDay() !== 0) return 'lent';
 	return null;
 }
