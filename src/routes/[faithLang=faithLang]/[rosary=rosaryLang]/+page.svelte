@@ -112,6 +112,13 @@ let activeSection = $state("cross");
 let sectionElements = {};
 let svgContainer;
 
+// Map pater sections to the large bead they share (so SVG highlights correctly)
+const svgActiveSection = $derived(
+	activeSection === 'secret1_pater' ? 'lbead2' :
+	activeSection.endsWith('_pater') ? `secret${parseInt(activeSection[6]) - 1}_transition` :
+	activeSection
+);
+
 // Whether the rosary has mystery images (stable, doesn't change during scroll)
 const hasMysteryImages = $derived(showImages && (allMysteryImages[selectedMystery]?.size ?? 0) > 0);
 
@@ -121,8 +128,11 @@ function getMysteryScrollTarget(section) {
 	const secretMatch = section.match(/^secret(\d)/);
 	if (secretMatch) {
 		const num = parseInt(secretMatch[1]);
-		return section.includes('_transition') ? num + 1 : num;
+		// _transition (Gloria + Fatima) stays on the current mystery image;
+		// _pater and plain decade both show the mystery they belong to
+		return num;
 	}
+	if (section === 'final_transition') return 5;
 	if (section.startsWith('final_')) return 'after';
 	return 'before';
 }
@@ -456,10 +466,15 @@ onMount(() => {
 
 .rosary-layout:has(#lbead1:target) :global(.large-bead[data-section="lbead1"]),
 .rosary-layout:has(#lbead2:target) :global(.large-bead[data-section="lbead2"]),
+.rosary-layout:has(#secret1_pater:target) :global(.large-bead[data-section="lbead2"]),
 .rosary-layout:has(#secret1_transition:target) :global(.large-bead[data-section="secret1_transition"]),
+.rosary-layout:has(#secret2_pater:target) :global(.large-bead[data-section="secret1_transition"]),
 .rosary-layout:has(#secret2_transition:target) :global(.large-bead[data-section="secret2_transition"]),
+.rosary-layout:has(#secret3_pater:target) :global(.large-bead[data-section="secret2_transition"]),
 .rosary-layout:has(#secret3_transition:target) :global(.large-bead[data-section="secret3_transition"]),
+.rosary-layout:has(#secret4_pater:target) :global(.large-bead[data-section="secret3_transition"]),
 .rosary-layout:has(#secret4_transition:target) :global(.large-bead[data-section="secret4_transition"]),
+.rosary-layout:has(#secret5_pater:target) :global(.large-bead[data-section="secret4_transition"]),
 .rosary-layout:has(#final_transition:target) :global(.large-bead[data-section="final_transition"]),
 .rosary-layout:has(#final_paternoster:target) :global(.large-bead[data-section="final_paternoster"]) {
 	fill: var(--nord13) !important;
@@ -755,7 +770,7 @@ h1 {
 		<!-- Sidebar: Rosary Visualization -->
 		<div class="rosary-sidebar">
 			<div class="rosary-visualization" bind:this={svgContainer}>
-				<RosarySvg {pos} {BEAD_SPACING} {DECADE_OFFSET} {activeSection} {decadeCounters} />
+				<RosarySvg {pos} {BEAD_SPACING} {DECADE_OFFSET} activeSection={svgActiveSection} {decadeCounters} />
 			</div>
 		</div>
 
@@ -868,12 +883,22 @@ h1 {
 			>
 				<h3>{labels.gloriaPatri}</h3>
 				<GloriaPatri />
-				<h3>{labels.ourFather}</h3>
-				<Paternoster />
 			</div>
 
 			<!-- 5 Decades -->
 			{#each [1, 2, 3, 4, 5] as decadeNum}
+				<!-- Mystery title + Pater Noster (start of decade) -->
+				<div
+					class="prayer-section"
+					id={`secret${decadeNum}_pater`}
+					bind:this={sectionElements[`secret${decadeNum}_pater`]}
+					data-section={`secret${decadeNum}_pater`}
+				>
+					<h2>{decadeNum}. {labels.decade}: {currentMysteryTitles[decadeNum - 1]}</h2>
+					<h3>{labels.ourFather}</h3>
+					<Paternoster />
+				</div>
+
 				<!-- Ave Maria decade (Gesätz) -->
 				<div
 					class="prayer-section decade"
@@ -881,8 +906,6 @@ h1 {
 					bind:this={sectionElements[`secret${decadeNum}`]}
 					data-section={`secret${decadeNum}`}
 				>
-					<h2>{decadeNum}. {labels.decade}: {currentMysteryTitles[decadeNum - 1]}</h2>
-
 					{#if showImages && allMysteryImages[selectedMystery]?.get(decadeNum)}
 						{@const img = allMysteryImages[selectedMystery].get(decadeNum)}
 						<figure class="decade-inline-image">
@@ -914,7 +937,7 @@ h1 {
 					</div>
 				</div>
 
-				<!-- Transition prayers (Gloria, Fatima, Paternoster) -->
+				<!-- Transition prayers (Gloria, Fatima) -->
 				{#if decadeNum < 5}
 					<div
 						class="prayer-section"
@@ -927,9 +950,6 @@ h1 {
 
 						<h3>{labels.fatimaPrayer} <span class="repeat-count">({labels.optional})</span></h3>
 						<FatimaGebet />
-
-						<h3>{labels.ourFather}</h3>
-						<Paternoster />
 					</div>
 				{/if}
 			{/each}
