@@ -300,6 +300,7 @@ h2{
 <svelte:head>
 	<title>{data.strippedName} - {labels.title}</title>
 	<meta name="description" content="{data.strippedDescription}" />
+	<link rel="preload" as="image" href={hero_img_src} fetchpriority="high" />
 	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/{img_filename}" />
 	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/{img_filename}" />
 	<meta property="og:image:type" content="image/webp" />
