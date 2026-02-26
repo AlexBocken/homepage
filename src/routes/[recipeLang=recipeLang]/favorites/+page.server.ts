@@ -6,7 +6,8 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
     const session = await locals.auth();
 
     if (!session?.user?.nickname) {
-        throw redirect(302, `/${params.recipeLang}`);
+        const callbackUrl = encodeURIComponent(`/${params.recipeLang}/favorites`);
+        throw redirect(302, `/login?callbackUrl=${callbackUrl}`);
     }
 
     try {
