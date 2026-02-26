@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { page } from '$app/stores';
 
 	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
 
@@ -18,6 +19,29 @@
 			}
 		})
 	})
+
+	function getLogoutCallbackUrl(pathname: string): string {
+		// Cospend has no public equivalent
+		if (pathname.startsWith('/cospend')) return '/';
+
+		// Match /rezepte or /recipes prefix
+		const m = pathname.match(/^\/(rezepte|recipes)(\/.*)?$/);
+		if (m) {
+			const base = `/${m[1]}`;
+			const rest = m[2] ?? '';
+
+			// /edit/[name] → the recipe detail page
+			const editMatch = rest.match(/^\/edit\/(.+)$/);
+			if (editMatch) return `${base}/${editMatch[1]}`;
+
+			// Auth-only sub-routes → recipe root
+			if (/^\/(add|favorites|to-try|admin|administration)(\/|$)/.test(rest))
+				return base;
+		}
+
+		// Public page: stay here
+		return pathname;
+	}
 </script>
 <style>
 	/* (A) SPEECH BOX */
@@ -155,10 +179,10 @@ h2 + p{
 					<li><a href="/{recipeLang}/administration">Administration</a></li>
 				{/if}
 				<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
-				<li><a href="/logout" >Log Out</a></li>
+				<li><a href="/logout?callbackUrl={encodeURIComponent(getLogoutCallbackUrl($page.url.pathname))}">Log Out</a></li>
 			</ul>
 		</div>
 	</button>
 {:else}
-	<a class=entry href=/login>Login</a>
+	<a class=entry href="/login?callbackUrl={encodeURIComponent($page.url.pathname + $page.url.search)}">Login</a>
 {/if}
