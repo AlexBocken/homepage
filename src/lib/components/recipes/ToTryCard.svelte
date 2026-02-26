@@ -90,17 +90,6 @@
 		color: var(--nord4);
 	}
 }
-.footer {
-	font-size: 0.72rem;
-	color: var(--nord3);
-	margin-top: auto;
-	padding-top: 0.3em;
-}
-@media (prefers-color-scheme: dark) {
-	.footer {
-		color: var(--nord4);
-	}
-}
 .card-btn {
 	position: absolute;
 	top: 0.5em;
@@ -155,8 +144,5 @@
 		{#if item.notes}
 			<p class="notes">{item.notes}</p>
 		{/if}
-		<div class="footer">
-			{isEnglish ? 'Added by' : 'Hinzugefügt von'} {item.addedBy}
-		</div>
 	</div>
 </div>

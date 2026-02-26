@@ -9,8 +9,7 @@ const ToTryRecipeSchema = new mongoose.Schema(
         label: { type: String, default: '' }
       }
     ],
-    notes: { type: String, default: '' },
-    addedBy: { type: String, required: true }
+    notes: { type: String, default: '' }
   },
   { timestamps: true }
 );
