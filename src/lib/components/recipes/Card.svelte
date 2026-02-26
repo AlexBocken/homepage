@@ -38,6 +38,10 @@ const img_alt = $derived(
 );
 
 const img_color = $derived(recipe.images?.[0]?.color || '');
+
+function preloadHeroImage() {
+	new Image().src = `https://bocken.org/static/rezepte/full/${img_name}`;
+}
 </script>
 <style>
 .card-main-link {
@@ -226,7 +230,7 @@ const img_color = $derived(recipe.images?.[0]?.color || '');
 </style>
 
 <div class="card" class:search_me={search} class:margin_right={do_margin_right} data-tags="[{recipe.tags}]">
-	<a href="{routePrefix}/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}">
+	<a href="{routePrefix}/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}" onpointerenter={preloadHeroImage}>
 		<span class="visually-hidden">View recipe: {recipe.name}</span>
 	</a>
 	<div class="card-image" style:background-color={img_color}>

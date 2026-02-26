@@ -338,6 +338,9 @@
 <svelte:head>
 	<title>{labels.metaTitle}</title>
 	<meta name="description" content="{labels.metaDescription}" />
+	{#if heroRecipe}
+		<link rel="preload" as="image" href="https://bocken.org/static/rezepte/full/{heroImg}" fetchpriority="high" />
+	{/if}
 	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" />
 	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" />
 	<meta property="og:image:type" content="image/webp" />
@@ -352,6 +355,7 @@
 				src="https://bocken.org/static/rezepte/full/{heroImg}"
 				alt=""
 				loading="eager"
+				fetchpriority="high"
 				data-recipe={heroRecipe.short_name}
 			/>
 			<div class="hero-overlay"></div>
