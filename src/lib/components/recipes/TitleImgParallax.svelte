@@ -145,7 +145,7 @@ dialog button{
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
     	<div class:zoom-in={!isredirected} onclick={show_dialog_img}>
 		<div class="image-wrap" style:background-color={color}>
-			<img class="image" {src} {alt} style:view-transition-name={transitionName || null}/>
+			<img class="image" {src} {alt} style:view-transition-name={transitionName || null} fetchpriority="high"/>
 		</div>
 		<noscript>
 			<div class="image-wrap" style:background-color={color}>
