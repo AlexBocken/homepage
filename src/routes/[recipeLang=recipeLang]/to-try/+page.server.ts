@@ -6,7 +6,12 @@ import { dbConnect } from '$utils/db';
 export const load: PageServerLoad = async ({ locals, params }) => {
     const session = await locals.auth();
 
-    if (!session?.user?.groups?.includes('rezepte_users')) {
+    if (!session?.user) {
+        const callbackUrl = encodeURIComponent(`/${params.recipeLang}/to-try`);
+        throw redirect(302, `/login?callbackUrl=${callbackUrl}`);
+    }
+
+    if (!session.user.groups?.includes('rezepte_users')) {
         throw redirect(302, `/${params.recipeLang}`);
     }
 
