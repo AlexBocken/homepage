@@ -5,8 +5,8 @@ import { dbConnect } from '$utils/db';
 export const GET: RequestHandler = async ({ locals }) => {
   const session = await locals.auth();
 
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
+  if (!session?.user?.groups?.includes('rezepte_users')) {
+    throw error(403, 'Forbidden');
   }
 
   await dbConnect();
@@ -22,8 +22,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 export const POST: RequestHandler = async ({ request, locals }) => {
   const session = await locals.auth();
 
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
+  if (!session?.user?.groups?.includes('rezepte_users')) {
+    throw error(403, 'Forbidden');
   }
 
   const { name, links, notes } = await request.json();
@@ -42,8 +42,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const item = await ToTryRecipe.create({
       name: name.trim(),
       links: links.filter((l: any) => l.url?.trim()),
-      notes: notes?.trim() || '',
-      addedBy: session.user.nickname
+      notes: notes?.trim() || ''
     });
     return json(item, { status: 201 });
   } catch (e) {
@@ -54,8 +53,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 export const PATCH: RequestHandler = async ({ request, locals }) => {
   const session = await locals.auth();
 
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
+  if (!session?.user?.groups?.includes('rezepte_users')) {
+    throw error(403, 'Forbidden');
   }
 
   const { id, name, links, notes } = await request.json();
@@ -99,8 +98,8 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 export const DELETE: RequestHandler = async ({ request, locals }) => {
   const session = await locals.auth();
 
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
+  if (!session?.user?.groups?.includes('rezepte_users')) {
+    throw error(403, 'Forbidden');
   }
 
   const { id } = await request.json();
