@@ -82,6 +82,7 @@
 	let datecreated = $state(data.recipe.datecreated);
 	let datemodified = $state(new Date());
 	let isBaseRecipe = $state(data.recipe.isBaseRecipe || false);
+	let defaultForm = $state(data.recipe.defaultForm ? { ...data.recipe.defaultForm } : null);
 	let ingredients = $state(data.recipe.ingredients || []);
 	let instructions = $state(data.recipe.instructions || []);
 
@@ -142,6 +143,7 @@
 			preamble,
 			note,
 			isBaseRecipe,
+			defaultForm,
 		};
 	});
 
@@ -343,6 +345,29 @@
 			background-color: var(--nord6-dark);
 		}
 	}
+	.form-size-section {
+		max-width: 600px;
+		margin: 1rem auto;
+		text-align: center;
+	}
+	.form-size-controls {
+		display: flex;
+		gap: 1.5rem;
+		justify-content: center;
+		margin-bottom: 0.5rem;
+	}
+	.form-size-inputs {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+	.form-size-inputs input[type="number"] {
+		width: 4em;
+		display: inline;
+		margin: 0 0.3em;
+	}
 	.error-message {
 		background: var(--nord11);
 		color: var(--nord6);
@@ -422,12 +447,51 @@
 	<input type="hidden" name="icon" value={card_data.icon} />
 	<input type="hidden" name="portions" value={portions_local} />
 	<input type="hidden" name="isBaseRecipe" value={isBaseRecipe ? "true" : "false"} />
+	<input type="hidden" name="defaultForm_json" value={defaultForm ? JSON.stringify(defaultForm) : ''} />
 
 	<div style="text-align: center; margin: 1rem;">
 		<Toggle
 			bind:checked={isBaseRecipe}
 			label="Als Basisrezept markieren (kann von anderen Rezepten referenziert werden)"
 		/>
+	</div>
+
+	<!-- Default Form (Cake Pan) -->
+	<div class="form-size-section">
+		<h3>Backform (Standard):</h3>
+		<div class="form-size-controls">
+			<label>
+				<input type="radio" name="formShape" value="none" checked={!defaultForm} onchange={() => { defaultForm = null; }} />
+				Keine
+			</label>
+			<label>
+				<input type="radio" name="formShape" value="round" checked={defaultForm?.shape === 'round'} onchange={() => { defaultForm = { shape: 'round', diameter: defaultForm?.diameter || 26 }; }} />
+				Rund
+			</label>
+			<label>
+				<input type="radio" name="formShape" value="rectangular" checked={defaultForm?.shape === 'rectangular'} onchange={() => { defaultForm = { shape: 'rectangular', width: defaultForm?.width || 20, length: defaultForm?.length || 30 }; }} />
+				Rechteckig
+			</label>
+			<label>
+				<input type="radio" name="formShape" value="gugelhupf" checked={defaultForm?.shape === 'gugelhupf'} onchange={() => { defaultForm = { shape: 'gugelhupf', diameter: defaultForm?.diameter || 24, innerDiameter: defaultForm?.innerDiameter || 8 }; }} />
+				Gugelhupf
+			</label>
+		</div>
+		{#if defaultForm?.shape === 'round'}
+			<div class="form-size-inputs">
+				<label>Durchmesser: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
+			</div>
+		{:else if defaultForm?.shape === 'rectangular'}
+			<div class="form-size-inputs">
+				<label>Breite: <input type="number" min="1" step="1" bind:value={defaultForm.width} /> cm</label>
+				<label>Länge: <input type="number" min="1" step="1" bind:value={defaultForm.length} /> cm</label>
+			</div>
+		{:else if defaultForm?.shape === 'gugelhupf'}
+			<div class="form-size-inputs">
+				<label>Außen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
+				<label>Innen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.innerDiameter} /> cm</label>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Recipe Note Component -->
