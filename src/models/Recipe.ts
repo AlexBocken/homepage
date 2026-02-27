@@ -28,6 +28,13 @@ const RecipeSchema = new mongoose.Schema(
 
 	},
     portions :{type:String, default: ""},
+    defaultForm: {
+      shape: { type: String, enum: ['round', 'rectangular', 'gugelhupf'] },
+      diameter: { type: Number },
+      width: { type: Number },
+      length: { type: Number },
+      innerDiameter: { type: Number },
+    },
     cooking: {type:String, default: ""},
     total_time : {type:String, default: ""},
     ingredients: [{

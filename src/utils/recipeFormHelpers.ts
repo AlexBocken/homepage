@@ -48,6 +48,15 @@ export interface RecipeFormData {
 		caption: string;
 	}>;
 
+	// Cake form
+	defaultForm?: {
+		shape: 'round' | 'rectangular' | 'gugelhupf';
+		diameter?: number;
+		width?: number;
+		length?: number;
+		innerDiameter?: number;
+	};
+
 	// Metadata
 	isBaseRecipe?: boolean;
 	datecreated?: Date;
@@ -144,6 +153,20 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 		}
 	}
 
+	// Default form (cake pan size)
+	let defaultForm: RecipeFormData['defaultForm'] = undefined;
+	const defaultFormData = formData.get('defaultForm_json')?.toString();
+	if (defaultFormData) {
+		try {
+			const parsed = JSON.parse(defaultFormData);
+			if (parsed && parsed.shape) {
+				defaultForm = parsed;
+			}
+		} catch (error) {
+			console.error('Failed to parse defaultForm:', error);
+		}
+	}
+
 	// Metadata
 	const isBaseRecipe = formData.get('isBaseRecipe') === 'true';
 	const datecreated = formData.get('datecreated')
@@ -189,6 +212,7 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 		instructions,
 		add_info,
 		images,
+		defaultForm,
 		isBaseRecipe,
 		datecreated,
 		datemodified,
@@ -343,6 +367,7 @@ export function serializeRecipeForDatabase(data: RecipeFormData): any {
 	if (data.preamble) recipe.preamble = data.preamble;
 	if (data.addendum) recipe.addendum = data.addendum;
 	if (data.note) recipe.note = data.note;
+	if (data.defaultForm) recipe.defaultForm = data.defaultForm;
 
 	// Additional info
 	if (data.add_info && Object.keys(data.add_info).length > 0) {
