@@ -160,8 +160,8 @@ nav{
 }
 .active-underline {
 	position: absolute;
-	bottom: 1.2rem;
-	height: 2px;
+	bottom: 1.4rem;
+	height: 1.25px;
 	background-color: var(--nord8);
 	transition: left 300ms ease-out, width 300ms ease-out;
 	pointer-events: none;
@@ -325,8 +325,8 @@ footer{
 	:global(.nav_site .site_header a.active) {
 		text-decoration: underline;
 		text-decoration-color: var(--nord8);
-		text-decoration-thickness: 2px;
-		text-underline-offset: 0.3rem;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.2rem;
 	}
 }
 .no-links :global(button) {
