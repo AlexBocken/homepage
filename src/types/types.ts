@@ -140,6 +140,13 @@ export type RecipeModelType = {
 	  final: string;
 	}
   portions?: string;
+  defaultForm?: {
+    shape: 'round' | 'rectangular' | 'gugelhupf';
+    diameter?: number;
+    width?: number;
+    length?: number;
+    innerDiameter?: number;
+  };
   cooking?: string;
   total_time?: string;
   ingredients?: IngredientItem[];

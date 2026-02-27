@@ -120,8 +120,70 @@ const isEnglish = $derived(data.lang === 'en');
 const labels = $derived({
 	portions: isEnglish ? 'Portions:' : 'Portionen:',
 	adjustAmount: isEnglish ? 'Adjust Amount:' : 'Menge anpassen:',
-	ingredients: isEnglish ? 'Ingredients' : 'Zutaten'
+	ingredients: isEnglish ? 'Ingredients' : 'Zutaten',
+	cakeForm: isEnglish ? 'Cake form:' : 'Backform:',
+	round: isEnglish ? 'Round' : 'Rund',
+	rectangular: isEnglish ? 'Rectangular' : 'Rechteckig',
+	diameter: isEnglish ? 'Diameter' : 'Durchmesser',
+	width: isEnglish ? 'Width' : 'Breite',
+	length: isEnglish ? 'Length' : 'Länge',
+	factor: isEnglish ? 'Factor' : 'Faktor',
 });
+
+// Cake form scaling
+const hasDefaultForm = $derived(!!data.defaultForm?.shape);
+let userFormShape = $state(data.defaultForm?.shape || 'round');
+let userFormDiameter = $state(data.defaultForm?.diameter || 26);
+let userFormWidth = $state(data.defaultForm?.width || 20);
+let userFormLength = $state(data.defaultForm?.length || 30);
+let userFormInnerDiameter = $state(data.defaultForm?.innerDiameter || 8);
+
+function calcArea(shape, diameter, width, length, innerDiameter) {
+	if (shape === 'round') return Math.PI * (diameter / 2) ** 2;
+	if (shape === 'gugelhupf') return Math.PI * ((diameter / 2) ** 2 - (innerDiameter / 2) ** 2);
+	return width * length;
+}
+
+const defaultFormArea = $derived(
+	hasDefaultForm
+		? calcArea(data.defaultForm.shape, data.defaultForm.diameter, data.defaultForm.width, data.defaultForm.length, data.defaultForm.innerDiameter)
+		: 1
+);
+
+const userFormArea = $derived(
+	calcArea(userFormShape, userFormDiameter, userFormWidth, userFormLength, userFormInnerDiameter)
+);
+
+const formMultiplier = $derived(
+	hasDefaultForm && defaultFormArea > 0 ? userFormArea / defaultFormArea : 1
+);
+
+// Track whether multiplier is driven by form or manual buttons
+let formDriven = $state(false);
+
+function applyFormMultiplier() {
+	formDriven = true;
+}
+
+// Reactively update multiplier when form dimensions change and form is driving
+$effect(() => {
+	if (formDriven) {
+		multiplier = formMultiplier;
+		updateUrl(multiplier);
+	}
+});
+
+function updateUrl(value) {
+	if (browser) {
+		const url = new URL(window.location);
+		if (value === 1) {
+			url.searchParams.delete('multiplier');
+		} else {
+			url.searchParams.set('multiplier', String(value));
+		}
+		window.history.replaceState({}, '', url);
+	}
+}
 
 // Multiplier button options
 const multiplierOptions = [
@@ -176,15 +238,8 @@ function handleMultiplierClick(event, value) {
 	if (browser) {
 		event.preventDefault();
 		multiplier = value;
-		
-		// Update URL without reloading
-		const url = new URL(window.location);
-		if (value === 1) {
-			url.searchParams.delete('multiplier');
-		} else {
-			url.searchParams.set('multiplier', value);
-		}
-		window.history.replaceState({}, '', url);
+		formDriven = false;
+		updateUrl(value);
 	}
 	// If no JS, form will submit normally
 }
@@ -194,15 +249,8 @@ function handleCustomInput(event) {
 		const value = parseFloat(event.target.value);
 		if (!isNaN(value) && value > 0) {
 			multiplier = value;
-			
-			// Update URL without reloading
-			const url = new URL(window.location);
-			if (value === 1) {
-				url.searchParams.delete('multiplier');
-			} else {
-				url.searchParams.set('multiplier', value);
-			}
-			window.history.replaceState({}, '', url);
+			formDriven = false;
+			updateUrl(value);
 		}
 	}
 }
@@ -386,6 +434,53 @@ function adjust_amount(string, multiplier){
 	box-shadow: none;
 }
 
+.cake-form {
+	margin-block: 1rem;
+}
+.cake-form-shape {
+	display: flex;
+	gap: 0.75rem;
+	justify-content: center;
+	margin-bottom: 0.5rem;
+}
+.cake-form-shape label {
+	cursor: pointer;
+	padding: 0.25em 0.6em;
+	border-radius: var(--radius-sm);
+	transition: var(--transition-fast);
+}
+.cake-form-shape input[type="radio"] {
+	display: none;
+}
+.cake-form-selected {
+	background-color: var(--nord9);
+	color: white;
+	font-weight: bold;
+}
+.cake-form-inputs {
+	display: flex;
+	gap: 1rem;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.cake-form-num {
+	width: 3.5em;
+	padding: 0.2em 0.4em;
+	border: 1px solid var(--nord4);
+	border-radius: var(--radius-sm);
+	text-align: center;
+	font-size: inherit;
+	background: transparent;
+	color: inherit;
+}
+.cake-form-factor {
+	text-align: center;
+	margin-top: 0.4rem;
+	font-weight: bold;
+	color: var(--nord10);
+}
+
 </style>
 {#if data.ingredients}
 <div class=ingredients>
@@ -418,6 +513,42 @@ function adjust_amount(string, multiplier){
 		<button type="submit" class="custom-button">x</button>
 	</span>
 </form>
+
+{#if hasDefaultForm}
+<div class="cake-form">
+	<h3>{labels.cakeForm}</h3>
+	<div class="cake-form-shape">
+		<label class:cake-form-selected={userFormShape === 'round'}>
+			<input type="radio" name="userFormShape" value="round" bind:group={userFormShape} onchange={applyFormMultiplier} />
+			{labels.round}
+		</label>
+		<label class:cake-form-selected={userFormShape === 'rectangular'}>
+			<input type="radio" name="userFormShape" value="rectangular" bind:group={userFormShape} onchange={applyFormMultiplier} />
+			{labels.rectangular}
+		</label>
+		{#if data.defaultForm?.shape === 'gugelhupf'}
+		<label class:cake-form-selected={userFormShape === 'gugelhupf'}>
+			<input type="radio" name="userFormShape" value="gugelhupf" bind:group={userFormShape} onchange={applyFormMultiplier} />
+			Gugelhupf
+		</label>
+		{/if}
+	</div>
+	<div class="cake-form-inputs">
+		{#if userFormShape === 'round'}
+			<label>{labels.diameter}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormDiameter} oninput={applyFormMultiplier} /> cm</label>
+		{:else if userFormShape === 'rectangular'}
+			<label>{labels.width}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormWidth} oninput={applyFormMultiplier} /> cm</label>
+			<label>{labels.length}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormLength} oninput={applyFormMultiplier} /> cm</label>
+		{:else if userFormShape === 'gugelhupf'}
+			<label>{isEnglish ? 'Outer Ø' : 'Außen-Ø'}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormDiameter} oninput={applyFormMultiplier} /> cm</label>
+			<label>{isEnglish ? 'Inner Ø' : 'Innen-Ø'}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormInnerDiameter} oninput={applyFormMultiplier} /> cm</label>
+		{/if}
+	</div>
+	{#if formDriven}
+		<div class="cake-form-factor">→ {labels.factor}: {formMultiplier.toFixed(2)}x</div>
+	{/if}
+</div>
+{/if}
 
 <h2>{labels.ingredients}</h2>
 {#each flattenedIngredients as list, listIndex}
