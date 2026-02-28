@@ -97,7 +97,7 @@
       return formatCurrency(payment.amount, 'CHF', 'de-CH');
     }
 
-    return `${formatCurrency(payment.originalAmount, payment.currency, 'CHF', 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
+    return `${formatCurrency(payment.originalAmount, payment.currency, 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
   }
 
   function formatDate(dateString) {
@@ -236,7 +236,7 @@
                         {#if split.amount > 0}
                           owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
                         {:else if split.amount < 0}
-                          owed {formatCurrency(Math.abs(split.amount, 'CHF', 'de-CH'))}
+                          owed {formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
                         {:else}
                           owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
                         {/if}
