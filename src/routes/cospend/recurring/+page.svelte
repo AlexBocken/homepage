@@ -187,7 +187,7 @@
                     {#if split.amount > 0}
                       owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
                     {:else if split.amount < 0}
-                      gets {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                      gets {formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
                     {:else}
                       owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
                     {/if}
