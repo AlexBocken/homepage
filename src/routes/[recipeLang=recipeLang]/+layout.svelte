@@ -74,14 +74,14 @@ function isActive(path) {
 <Header>
 	{#snippet links()}
 		<ul class=site_header>
-		<li><a href="/{data.recipeLang}" class:active={isActive(`/${data.recipeLang}`)} title={labels.allRecipes}><BookOpen size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.allRecipes}</span></a></li>
+		<li style="--active-fill: var(--nord9)"><a href="/{data.recipeLang}" class:active={isActive(`/${data.recipeLang}`)} title={labels.allRecipes}><BookOpen size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.allRecipes}</span></a></li>
 		{#if user}
-			<li><a href="/{data.recipeLang}/favorites" class:active={isActive(`/${data.recipeLang}/favorites`)} title={labels.favorites}><Heart size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.favorites}</span></a></li>
+			<li style="--active-fill: var(--nord11)"><a href="/{data.recipeLang}/favorites" class:active={isActive(`/${data.recipeLang}/favorites`)} title={labels.favorites}><Heart size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.favorites}</span></a></li>
 		{/if}
-		<li><a href="/{data.recipeLang}/season" class:active={isActive(`/${data.recipeLang}/season`)} title={labels.inSeason}><Leaf size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.inSeason}</span></a></li>
-		<li><a href="/{data.recipeLang}/category" class:active={isActive(`/${data.recipeLang}/category`)} title={labels.category}><LayoutGrid size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.category}</span></a></li>
-		<li><a href="/{data.recipeLang}/icon" class:active={isActive(`/${data.recipeLang}/icon`)} title={labels.icon}><Palette size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.icon}</span></a></li>
-		<li><a href="/{data.recipeLang}/tag" class:active={isActive(`/${data.recipeLang}/tag`)} title={labels.keywords}><Tag size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.keywords}</span></a></li>
+		<li style="--active-fill: var(--nord14)"><a href="/{data.recipeLang}/season" class:active={isActive(`/${data.recipeLang}/season`)} title={labels.inSeason}><Leaf size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.inSeason}</span></a></li>
+		<li style="--active-fill: var(--nord9)"><a href="/{data.recipeLang}/category" class:active={isActive(`/${data.recipeLang}/category`)} title={labels.category}><LayoutGrid size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.category}</span></a></li>
+		<li style="--active-fill: var(--nord15)"><a href="/{data.recipeLang}/icon" class:active={isActive(`/${data.recipeLang}/icon`)} title={labels.icon}><Palette size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.icon}</span></a></li>
+		<li style="--active-fill: var(--nord13)"><a href="/{data.recipeLang}/tag" class:active={isActive(`/${data.recipeLang}/tag`)} title={labels.keywords}><Tag size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.keywords}</span></a></li>
 		</ul>
 	{/snippet}
 

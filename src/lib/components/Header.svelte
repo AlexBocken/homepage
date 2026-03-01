@@ -60,7 +60,7 @@ nav {
 	view-transition-name: site-header;
 
 	/* token defaults (dark bar) */
-	--nav-text: rgba(255,255,255,0.65);
+	--nav-text: #999;
 	--nav-text-hover: white;
 	--nav-text-active: white;
 	--nav-hover-bg: rgba(255,255,255,0.1);
@@ -86,7 +86,7 @@ nav {
 	--nav-bg: rgba(255, 255, 255, 0.82);
 	--nav-border: rgba(0,0,0,0.08);
 	--nav-shadow: rgba(0,0,0,0.1);
-	--nav-text: rgba(0,0,0,0.55);
+	--nav-text: #888;
 	--nav-text-hover: var(--nord0);
 	--nav-text-active: var(--nord0);
 	--nav-hover-bg: rgba(0,0,0,0.06);
@@ -101,7 +101,7 @@ nav {
 		--nav-bg: rgba(255, 255, 255, 0.82);
 		--nav-border: rgba(0,0,0,0.08);
 		--nav-shadow: rgba(0,0,0,0.1);
-		--nav-text: rgba(0,0,0,0.55);
+		--nav-text: #888;
 		--nav-text-hover: var(--nord0);
 		--nav-text-active: var(--nord0);
 		--nav-hover-bg: rgba(0,0,0,0.06);
@@ -187,6 +187,40 @@ nav {
 :global(.site_header a.active) {
 	color: var(--nav-text-active) !important;
 	background: var(--nav-active-bg);
+}
+:global(.site_header li:has(a.active) > a > .nav-icon) {
+	fill: var(--active-fill, none);
+}
+/* For stroke-based icons: colored shape behind the icon */
+:global(.site_header li:has(a.active) .nav-icon-wrap) {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+:global(.site_header li:has(a.active) .nav-icon-wrap::before) {
+	content: '';
+	position: absolute;
+	inset: 2px;
+	background: var(--active-fill);
+	clip-path: var(--active-shape, inset(0 round 3px));
+	z-index: -1;
+}
+/* Wallet: two rectangles — main body + top flap */
+:global(.site_header li:has(a.active) .nav-icon-wallet::before) {
+	inset: 4px 2px 2px 2px;
+	clip-path: inset(0 round 2px);
+}
+:global(.site_header li:has(a.active) .nav-icon-wallet::after) {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	right: 18%;
+	height: 3px;
+	background: var(--active-fill);
+	border-radius: 1.5px;
+	z-index: -1;
 }
 
 /* ═══════════════════════════════════════════
