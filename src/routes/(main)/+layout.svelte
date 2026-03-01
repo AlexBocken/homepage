@@ -7,7 +7,7 @@ let { data, children } = $props();
 let user = $derived(data.session?.user);
 </script>
 
-<Header>
+<Header fullSymbol=true>
 	{#snippet language_selector_mobile()}
 		<LanguageSelector />
 	{/snippet}

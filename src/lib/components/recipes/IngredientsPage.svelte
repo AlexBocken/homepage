@@ -386,11 +386,12 @@ function adjust_amount(string, multiplier){
 /* Hover scale override - larger than default */
 .multipliers :is(button, form):is(:hover, :focus-within){
 	scale: 1.2;
-	background-color: var(--nord8);
+	background-color: var(--color-primary);
+	color: var(--color-text-on-primary);
 }
 .selected{
-	background-color: var(--nord9) !important;
-	color: white !important;
+	background-color: var(--color-primary) !important;
+	color: var(--color-text-on-primary) !important;
 	font-weight: bold;
 	scale: 1.2 !important;
 }
@@ -453,8 +454,8 @@ function adjust_amount(string, multiplier){
 	display: none;
 }
 .cake-form-selected {
-	background-color: var(--nord9);
-	color: white;
+	background-color: var(--color-primary);
+	color: var(--color-text-on-primary);
 	font-weight: bold;
 }
 .cake-form-inputs {
@@ -467,7 +468,7 @@ function adjust_amount(string, multiplier){
 .cake-form-num {
 	width: 3.5em;
 	padding: 0.2em 0.4em;
-	border: 1px solid var(--nord4);
+	border: 1px solid var(--color-border);
 	border-radius: var(--radius-sm);
 	text-align: center;
 	font-size: inherit;
@@ -478,7 +479,7 @@ function adjust_amount(string, multiplier){
 	text-align: center;
 	margin-top: 0.4rem;
 	font-weight: bold;
-	color: var(--nord10);
+	color: var(--color-primary);
 }
 
 </style>

@@ -28,13 +28,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .form-section {
+    :global(:root:not([data-theme="light"])) .form-section {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .form-section h2 {
+    :global(:root:not([data-theme="light"])) .form-section h2 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .form-section {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .form-section h2 {
+	color: var(--font-default-dark);
+}
 </style>

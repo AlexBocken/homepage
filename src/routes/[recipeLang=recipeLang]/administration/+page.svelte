@@ -95,21 +95,36 @@ h1 {
 	margin: 0;
 }
 @media(prefers-color-scheme: light) {
-	.admin-card {
+    :global(:root:not([data-theme="dark"])) .admin-card {
 		background: var(--nord6);
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	}
-	.admin-card:hover,
-	.admin-card:focus {
+	:global(:root:not([data-theme="dark"])) .admin-card:hover,
+:global(:root:not([data-theme="dark"])) .admin-card:focus {
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 		background: hsl(from var(--nord6) h calc(s * 1.1) calc(l * 0.98));
 	}
-	.admin-card-description {
+	:global(:root:not([data-theme="dark"])) .admin-card-description {
 		color: var(--nord2);
 	}
-	.subheading {
+	:global(:root:not([data-theme="dark"])) .subheading {
 		color: var(--nord2);
 	}
+  }
+:global(:root[data-theme="light"]) .admin-card {
+	background: var(--nord6);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+:global(:root[data-theme="light"]) .admin-card:hover,
+:global(:root[data-theme="light"]) .admin-card:focus {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		background: hsl(from var(--nord6) h calc(s * 1.1) calc(l * 0.98));
+}
+:global(:root[data-theme="light"]) .admin-card-description {
+	color: var(--nord2);
+}
+:global(:root[data-theme="light"]) .subheading {
+	color: var(--nord2);
 }
 </style>
 

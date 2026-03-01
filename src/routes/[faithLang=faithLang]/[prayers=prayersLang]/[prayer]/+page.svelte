@@ -146,9 +146,12 @@ h1 {
 	text-align: center;
 }
 @media (prefers-color-scheme: light) {
-	.gebet-wrapper {
+    :global(:root:not([data-theme="dark"])) .gebet-wrapper {
 		background-color: var(--nord5);
 	}
+  }
+:global(:root[data-theme="light"]) .gebet-wrapper {
+	background-color: var(--nord5);
 }
 </style>
 	{#if prayerId === 'postcommunio' || prayerId === 'prayerbeforeacrucifix'}

@@ -6,18 +6,12 @@
 	top: -0.5em;
 	right: -0.5em;
 	padding: 0.25em;
-	background-color: var(--nord6);
+	background-color: var(--color-bg-tertiary);
 }
 
 .icon:focus {
 	scale: 0.8;
 	rotate: var(--angle);
-}
-
-@media (prefers-color-scheme: dark) {
-	.icon {
-		background-color: var(--accent-dark);
-	}
 }
 
 /* Input-specific overrides */

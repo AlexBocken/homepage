@@ -148,7 +148,7 @@ h2.section-label{
 }
 
 .wrapper_wrapper{
-	--bg-color: #fbf9f3;
+	--bg-color: var(--color-bg-primary);
 	display: grid;
 	grid-template-columns: 1fr 2fr;
 	max-width: 1000px;
@@ -173,11 +173,7 @@ h2.section-label{
 	grid-column: 1 / -1;
 	justify-self: center;
 }
-@media (prefers-color-scheme: dark) {
-	.wrapper_wrapper{
-		--bg-color: var(--background-dark);
-	}
-}
+/* bg-color is set via var(--color-bg-primary) which auto-switches in dark mode */
 @media screen and (max-width: 700px){
 	.wrapper_wrapper{
 		display: flex;
@@ -193,15 +189,10 @@ h2.section-label{
 	position: relative;
 	width: min(800px, 80vw);
 	margin-inline: auto;
-	background-color: var(--nord6);
+	background-color: var(--color-bg-tertiary);
 	padding: 1rem 2rem;
 	translate: 0 1px; /*bruh*/
 	z-index: 1;
-}
-@media (prefers-color-scheme: dark) {
-	.title{
-		background-color: var(--nord6-dark);
-	}
 }
 
 .icon{
@@ -210,12 +201,7 @@ h2.section-label{
 	right: -0.75em;
 	padding: 0.5em;
 	font-size: 1.5rem;
-	background-color: #FAFAFE;
-}
-@media (prefers-color-scheme: dark) {
-	.icon{
-		background-color: var(--accent-dark);
-	}
+	background-color: var(--color-bg-tertiary);
 }
 .icon:hover,
 .icon:focus-visible{

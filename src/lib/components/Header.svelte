@@ -1,7 +1,6 @@
 <script lang="ts">
-import { onMount } from "svelte";
-import { page } from '$app/stores';
 import Symbol from "./Symbol.svelte"
+import ThemeToggle from "./ThemeToggle.svelte"
 import type { Snippet } from 'svelte';
 
 let {
@@ -9,325 +8,210 @@ let {
 	language_selector_mobile,
 	language_selector_desktop,
 	right_side,
-	children
+	children,
+	fullSymbol = false
 }: {
 	links?: Snippet;
 	language_selector_mobile?: Snippet;
 	language_selector_desktop?: Snippet;
 	right_side?: Snippet;
 	children?: Snippet;
+	fullSymbol?: boolean;
 } = $props();
-
-let underlineLeft = $state(0);
-let underlineWidth = $state(0);
-let disableTransition = $state(false);
-
-function toggle_sidebar(state){
-	const checkbox = document.getElementById('nav-toggle')
-	if(state === undefined) checkbox.checked = !checkbox.checked
-	else checkbox.checked = !state
-}
-
-function updateUnderline() {
-	const activeLink = document.querySelector('.site_header a.active');
-	const linksWrapper = document.querySelector('.links-wrapper');
-
-	if (activeLink && linksWrapper) {
-		const wrapperRect = linksWrapper.getBoundingClientRect();
-		const linkRect = activeLink.getBoundingClientRect();
-
-		// Get computed padding to exclude from width and adjust position
-		const computedStyle = window.getComputedStyle(activeLink);
-		const paddingLeft = parseFloat(computedStyle.paddingLeft);
-		const paddingRight = parseFloat(computedStyle.paddingRight);
-
-		underlineLeft = linkRect.left - wrapperRect.left + paddingLeft;
-		underlineWidth = linkRect.width - paddingLeft - paddingRight;
-	} else {
-		underlineWidth = 0;
-	}
-}
-
-// Update underline when page changes
-$effect(() => {
-	$page.url.pathname; // Subscribe to pathname changes
-	// Use setTimeout to ensure DOM has updated
-	setTimeout(updateUnderline, 0);
-});
-
-onMount( () => {
-	const link_els = document.querySelectorAll("nav a")
-	link_els.forEach((el) => {
-		el.addEventListener("click", () => {toggle_sidebar(true)});
-	})
-
-	// Initialize underline position
-	updateUnderline();
-
-	// Update underline on resize, with transition disabled
-	let resizeTimer;
-	function handleResize() {
-		disableTransition = true;
-		updateUnderline(); // Update immediately to prevent lag
-
-		clearTimeout(resizeTimer);
-		resizeTimer = setTimeout(() => {
-			// Re-enable transition after resize has settled
-			disableTransition = false;
-		}, 150);
-	}
-
-	window.addEventListener('resize', handleResize);
-
-	return () => {
-		window.removeEventListener('resize', handleResize);
-		clearTimeout(resizeTimer);
-	};
-})
-
 </script>
 <style>
-nav{
-	position: sticky;
-	background-color: var(--nord0);
-	top: 0;
-	z-index: 10;
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between !important;
-	align-items: center;
-	box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
-	height: var(--header-h);
-	padding-left: 0.5rem;
-	view-transition-name: site-header;
-}
-.nav-toggle{
-	display: none;
-}
-
-:global(.site_header li),
-:global(a.entry)
-{
-	list-style-type:none;
-	transition: color 100ms;
-	color: white;
-	user-select: none;
-}
-:global(.site_header li>a)
-{
-	text-decoration: none;
-	font-size: 1rem;
-	color: inherit;
-	border-radius: var(--radius-pill);
-	padding: 0.4rem 0.6rem;
-}
-:global(a.entry),
-:global(a.entry:link),
-:global(a.entry:visited)
-{
-	text-decoration: none;
-	font-size: 1rem;
-	color: white !important;
-	border-radius: var(--radius-pill);
-	padding: 0.4rem 0.6rem;
-}
-
-:global(.site_header li:hover),
-:global(.site_header li:focus-within),
-:global(.site_header li:has(a.active)),
-:global(a.entry:hover),
-:global(a.entry:focus-visible),
-:global(a.entry:link:hover),
-:global(a.entry:visited:hover),
-:global(a.entry:visited:focus-visible)
-{
-	cursor: pointer;
-	color: var(--nord8) !important;
-}
-:global(.site_header) {
-	padding-block: 1.5rem;
-	display: flex;
-	flex-direction: row;
-	gap: 0.5rem;
-	justify-content: space-evenly;
-	max-width: 1000px;
-	margin: 0;
-	margin-inline: auto;
-}
-.links-wrapper {
-	position: relative;
-	flex: 1;
-}
-.active-underline {
-	position: absolute;
-	bottom: 1.4rem;
-	height: 1.25px;
-	background-color: var(--nord8);
-	transition: left 300ms ease-out, width 300ms ease-out;
-	pointer-events: none;
-}
-.active-underline.no-transition {
-	transition: none;
-}
-.nav_button{
-	display: none;
-}
-.button_wrapper{
-	display: none;
-	padding-inline: 0.5rem;
-}
-.header-shadow{
-	display: none;
-}
-.right-buttons{
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-.header-right{
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-:global(svg.symbol){
-	--symbol-size: calc(var(--header-h) - 1rem);
-	width: var(--symbol-size);
-	border-radius: 10000px;
-	margin: 0.25rem;
-}
-/*:global(a:has(svg.symbol)){
-	padding: 0 !important;
-	width: 4rem;
-	height: 4rem;
-	margin-left: 1rem;
-}*/
-.wrapper{
+/* ═══════════════════════════════════════════
+   WRAPPER & LAYOUT
+   ═══════════════════════════════════════════ */
+.wrapper {
 	--header-h: 3rem;
-	--symbol-size: calc(var(--header-h) - 1rem);
-	display:flex;
+	display: flex;
 	flex-direction: column;
 	min-height: 100svh;
 }
-footer{
+footer {
 	padding-block: 1rem;
 	text-align: center;
 	margin-top: auto;
 	position: relative;
 }
 
-@media screen and (max-width: 800px) {
-	.button_wrapper{
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		position: sticky;
-		background-color: var(--nord0);
-		width: 100%;
-		height: var(--header-h);
-		top: 0;
-		z-index: 9999;
-	}
-	.header-shadow{
-		display: block;
-		position: sticky;
-		top: 0;
-		width: 100%;
-		height: var(--header-h);
-		margin-top: calc(-1 * var(--header-h));
-		box-shadow: 0 1em 1rem 0rem rgba(0,0,0,0.4);
-		z-index: 9997;
-		pointer-events: none;
-	}
-	.nav_button{
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		fill: white;
-		margin-inline: 0.5rem;
-		width: 1.25rem;
-		height: 1.25rem;
-		cursor: pointer;
-	}
-	.nav_button svg{
-		width: 100%;
-		height: 100%;
-		transition: var(--transition-fast);
-	}
-	.nav_button:hover,
-	.nav_button:active,
-	.nav-toggle:focus-visible + .nav_button{
-		fill: var(--nord8);
-		scale: 0.9;
-	}
-	.nav_site:not(.no-links){
-		position: fixed;
-		top: 0;
-		right: 0;
-		height: 100vh; /* dvh does not work, breaks because of transition and only being applied after scroll ends*/
-		margin-bottom: 50vh;
-		width: min(95svw, 25em);
-		z-index: 9998;
-		flex-direction: column;
-		padding-inline: 0.5rem;
-	}
-	.nav_site:not(.no-links)::before{
-		content: '';
-		flex: 1;
-	}
-	:global(.nav_site:not(.no-links) ul){
-		width: 100% ;
-	}
-	.nav_site:not(.no-links) :first-child{
-		display:none;
-	}
-	.nav_site:not(.no-links){
-		transform: translateX(100%);
-	}
-	.wrapper:has(.nav-toggle:checked) .nav_site:not(.no-links){
-		transform: translateX(0);
-		transition: transform 100ms;
-	}
-	:global(.nav_site:not(.no-links) a:last-child){
-		margin-bottom: 2rem;
-	}
+/* ═══════════════════════════════════════════
+   FLOATING GLASS BAR
+   ═══════════════════════════════════════════ */
+nav {
+	position: sticky;
+	top: 12px;
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	height: var(--header-h);
+	gap: 0.4rem;
+	padding: 0 0.8rem;
+	margin: 12px auto 0;
+	width: fit-content;
+	max-width: calc(100% - 1.5rem);
+	border-radius: 100px;
+	background: var(--nav-bg, rgba(46, 52, 64, 0.82));
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	border: 1px solid var(--nav-border, rgba(255,255,255,0.08));
+	box-shadow: 0 4px 24px var(--nav-shadow, rgba(0,0,0,0.25));
+	view-transition-name: site-header;
 
-	.nav_site:not(.no-links) .links-wrapper {
-		width: 100%;
-		padding: 0 2rem;
+	/* token defaults (dark bar) */
+	--nav-text: rgba(255,255,255,0.65);
+	--nav-text-hover: white;
+	--nav-text-active: white;
+	--nav-hover-bg: rgba(255,255,255,0.1);
+	--nav-active-bg: rgba(136, 192, 208, 0.25);
+	--nav-btn-border: rgba(255,255,255,0.2);
+	--nav-btn-border-hover: rgba(255,255,255,0.4);
+	--nav-divider: rgba(255,255,255,0.15);
+}
+/* Dark system preference */
+@media (prefers-color-scheme: dark) {
+	nav {
+		--nav-bg: rgba(20, 20, 20, 0.78);
+		--nav-border: rgba(255,255,255,0.06);
 	}
-	:global(.site_header){
-		flex-direction: column;
-		align-items: flex-start;
+}
+/* User forced dark */
+:global(:root[data-theme="dark"]) nav {
+	--nav-bg: rgba(20, 20, 20, 0.78);
+	--nav-border: rgba(255,255,255,0.06);
+}
+/* User forced light — OR system light (default, already handled by base values) */
+:global(:root[data-theme="light"]) nav {
+	--nav-bg: rgba(255, 255, 255, 0.82);
+	--nav-border: rgba(0,0,0,0.08);
+	--nav-shadow: rgba(0,0,0,0.1);
+	--nav-text: rgba(0,0,0,0.55);
+	--nav-text-hover: var(--nord0);
+	--nav-text-active: var(--nord0);
+	--nav-hover-bg: rgba(0,0,0,0.06);
+	--nav-active-bg: rgba(94, 129, 172, 0.15);
+	--nav-btn-border: rgba(0,0,0,0.15);
+	--nav-btn-border-hover: rgba(0,0,0,0.3);
+	--nav-divider: rgba(0,0,0,0.12);
+}
+/* System light preference (no data-theme set) */
+@media (prefers-color-scheme: light) {
+	:global(:root:not([data-theme])) nav {
+		--nav-bg: rgba(255, 255, 255, 0.82);
+		--nav-border: rgba(0,0,0,0.08);
+		--nav-shadow: rgba(0,0,0,0.1);
+		--nav-text: rgba(0,0,0,0.55);
+		--nav-text-hover: var(--nord0);
+		--nav-text-active: var(--nord0);
+		--nav-hover-bg: rgba(0,0,0,0.06);
+		--nav-active-bg: rgba(94, 129, 172, 0.15);
+		--nav-btn-border: rgba(0,0,0,0.15);
+		--nav-btn-border-hover: rgba(0,0,0,0.3);
+		--nav-divider: rgba(0,0,0,0.12);
 	}
-	:global(.site_header li, .site_header a){
-		font-size: 1.5rem;
-	}
-	:global(.site_header li > a, .site_header a){
-		font-size: 1.3rem;
-	}
-	:global(.site_header li:hover),
-	:global(.site_header li:focus-within){
-	transform: unset;
-	}
-	.nav_site:not(.no-links) .header-right{
-		flex-direction: column;
-		position: absolute;
-		bottom: 2rem;
-		left: 50%;
-		transform: translateX(-50%);
-	}
-	.nav_site:not(.no-links) .language-selector-desktop{
-		display: none;
-	}
-	.active-underline {
-		display: none;
-	}
-	:global(.nav_site .site_header a.active) {
-		text-decoration: underline;
-		text-decoration-color: var(--nord8);
-		text-decoration-thickness: 1px;
-		text-underline-offset: 0.2rem;
-	}
+}
+
+/* ═══════════════════════════════════════════
+   LOGO
+   ═══════════════════════════════════════════ */
+.home-link {
+	view-transition-name: nav-logo;
+	display: flex;
+	align-items: center;
+	overflow: hidden;
+	flex-shrink: 0;
+	/* icon-only width by default */
+	width: 20px;
+}
+.home-link.full {
+	/* full logo with text */
+	width: 134px;
+}
+.home-link :global(svg) {
+	height: 32px;
+	width: 134px;
+	flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════
+   NAV LINKS (rendered via snippet)
+   ═══════════════════════════════════════════ */
+.links-wrapper {
+	display: contents;
+}
+:global(.site_header) {
+	display: flex;
+	flex-direction: row;
+	gap: 0.15rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+:global(.site_header li) {
+	list-style-type: none;
+}
+:global(.site_header li > a) {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.35rem 0.65rem;
+	font-size: 0.8rem;
+	color: var(--nav-text);
+	text-decoration: none;
+	border-radius: 100px;
+	transition: all 150ms;
+	white-space: nowrap;
+}
+:global(a.entry),
+:global(a.entry:link),
+:global(a.entry:visited) {
+	display: block;
+	padding: 0.35rem 0.65rem;
+	font-size: 0.8rem;
+	color: var(--nav-text) !important;
+	text-decoration: none;
+	border-radius: 100px;
+	transition: all 150ms;
+	white-space: nowrap;
+}
+:global(.site_header li:hover > a),
+:global(.site_header li:focus-within > a),
+:global(a.entry:hover),
+:global(a.entry:focus-visible) {
+	color: var(--nav-text-hover) !important;
+	background: var(--nav-hover-bg);
+	cursor: pointer;
+}
+:global(.site_header li:has(a.active) > a),
+:global(.site_header a.active) {
+	color: var(--nav-text-active) !important;
+	background: var(--nav-active-bg);
+}
+
+/* ═══════════════════════════════════════════
+   DIVIDER & RIGHT SIDE
+   ═══════════════════════════════════════════ */
+.spacer {
+	width: 1px;
+	height: 18px;
+	background: var(--nav-divider);
+	margin: 0 0.2rem;
+	flex-shrink: 0;
+}
+.header-right {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex-shrink: 0;
+	view-transition-name: nav-right;
+}
+
+/* ═══════════════════════════════════════════
+   NO-LINKS VARIANT (pages without nav)
+   ═══════════════════════════════════════════ */
+.no-links {
+	gap: 0.5rem;
 }
 .no-links :global(button) {
 	margin-bottom: 0 !important;
@@ -341,7 +225,7 @@ footer{
 }
 .no-links :global(.top.speech::after) {
 	border: 20px solid transparent !important;
-	border-bottom-color: var(--nord3) !important;
+	border-bottom-color: var(--color-border) !important;
 	border-top: 0 !important;
 	top: -10px !important;
 	bottom: unset !important;
@@ -352,30 +236,73 @@ footer{
 .no-links :global(button::before) {
 	display: none;
 }
+
+/* ═══════════════════════════════════════════
+   VIEW TRANSITIONS
+   ═══════════════════════════════════════════ */
+/* Let the header bar morph its width smoothly */
+:global(::view-transition-group(site-header)),
+:global(::view-transition-group(nav-logo)),
+:global(::view-transition-group(nav-right)) {
+	animation-duration: 300ms;
+	animation-timing-function: ease;
+	overflow: hidden;
+}
+/* Header & right side: standard morph */
+:global(::view-transition-old(site-header)),
+:global(::view-transition-new(site-header)),
+:global(::view-transition-old(nav-right)),
+:global(::view-transition-new(nav-right)) {
+	animation-duration: 300ms;
+	animation-timing-function: ease;
+	height: 100%;
+}
+/* Logo: clip-reveal instead of scale — keep natural size, left-aligned */
+:global(::view-transition-old(nav-logo)),
+:global(::view-transition-new(nav-logo)) {
+	animation: none;
+	object-fit: none;
+	object-position: left center;
+	height: 100%;
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE: compact pill, horizontal scroll
+   ═══════════════════════════════════════════ */
+@media screen and (max-width: 800px) {
+	nav {
+		gap: 0.25rem;
+		padding: 0.4rem 0.6rem;
+		max-width: calc(100% - 1rem);
+	}
+	/* Mobile: hide labels, keep icons */
+	:global(.site_header .nav-label) {
+		display: none;
+	}
+	:global(.site_header li > a) {
+		padding: 0.4rem;
+	}
+	:global(a.entry) {
+		font-size: 0.75rem;
+		padding: 0.3rem 0.5rem;
+	}
+}
 </style>
-<div class=wrapper lang=de>
+
+<div class="wrapper" lang="de">
 <div>
-{#if links}
-<div class=button_wrapper>
-<a href="/" aria-label="Home"><Symbol></Symbol></a>
-<div class="right-buttons">
-	{@render language_selector_mobile?.()}
-	<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" />
-	<label for="nav-toggle" class=nav_button aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="0.5em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></label>
-</div>
-</div>
-<div class="header-shadow"></div>
-{/if}
-<nav class=nav_site class:no-links={!links}>
-	<a href="/" aria-label="Home"><Symbol></Symbol></a>
-	<div class="links-wrapper">
-		{@render links?.()}
-		<div class="active-underline" class:no-transition={disableTransition} style="left: {underlineLeft}px; width: {underlineWidth}px;"></div>
-	</div>
-	<div class="header-right">
-		<div class="language-selector-desktop">
-			{@render language_selector_desktop?.()}
+
+<nav class:no-links={!links}>
+	<a href="/" aria-label="Home" class="home-link" class:full={fullSymbol}><Symbol /></a>
+	{#if links}
+		<div class="links-wrapper">
+			{@render links()}
 		</div>
+		<div class="spacer"></div>
+	{/if}
+	<div class="header-right">
+		<ThemeToggle />
+		{@render language_selector_desktop?.()}
 		{@render right_side?.()}
 	</div>
 </nav>

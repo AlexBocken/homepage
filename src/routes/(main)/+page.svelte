@@ -83,12 +83,12 @@ section h2{
 	text-align: center;
 }
 @media (prefers-color-scheme: dark){
-	*{
-		color: white;
-	}
 	.hero img{
 		box-shadow: 0.1em 0.1em 2em 0.5em rgba(255, 255, 255, 0.1);
 	}
+}
+:global(:root[data-theme="dark"]) .hero img {
+	box-shadow: 0.1em 0.1em 2em 0.5em rgba(255, 255, 255, 0.1);
 }
 @media (max-width: 600px){
 	.hero{

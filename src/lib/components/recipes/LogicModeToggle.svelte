@@ -48,10 +48,13 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.filter-label {
+    :global(:root:not([data-theme="light"])) .filter-label {
 			color: var(--nord6);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) .filter-label {
+	color: var(--nord6);
+}
 
 	@media (max-width: 968px) {
 		.filter-label {
@@ -70,10 +73,13 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.toggle-container {
+    :global(:root:not([data-theme="light"])) .toggle-container {
 			color: var(--nord6);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) .toggle-container {
+	color: var(--nord6);
+}
 
 	.toggle-switch {
 		position: relative;
@@ -115,10 +121,13 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.mode-label.active {
+    :global(:root:not([data-theme="light"])) .mode-label.active {
 			color: var(--nord8);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) .mode-label.active {
+	color: var(--nord8);
+}
 
 	.toggle-switch.or-mode + .mode-label.or {
 		color: var(--nord12);
@@ -135,7 +144,8 @@
 			onclick={() => checked = !checked}
 			role="button"
 			tabindex="0"
-			onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); checked = !checked; } }}
+			onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); checked = !checked; } }
+  }
 		>
 			<div class="toggle-knob"></div>
 		</div>

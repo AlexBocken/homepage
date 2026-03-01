@@ -201,14 +201,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fbf9f3;
+    background: var(--color-bg-primary);
     padding: 2rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .error-page {
-      background: var(--background-dark);
-    }
   }
 
   .error-container {
@@ -223,12 +217,17 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-container {
+    :global(:root:not([data-theme="light"])) .error-container {
       background: var(--nord1);
       border-color: var(--nord2);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
   }
+:global(:root[data-theme="dark"]) .error-container {
+	background: var(--nord1);
+      border-color: var(--nord2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
 
   .error-icon {
     font-size: 4rem;
@@ -244,10 +243,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-title {
+    :global(:root:not([data-theme="light"])) .error-title {
       color: var(--nord6);
     }
   }
+:global(:root[data-theme="dark"]) .error-title {
+	color: var(--nord6);
+}
 
   .error-code {
     font-size: 1.2rem;
@@ -258,10 +260,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-code {
+    :global(:root:not([data-theme="light"])) .error-code {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .error-code {
+	color: var(--nord4);
+}
 
   .error-description {
     font-size: 1.1rem;
@@ -271,10 +276,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-description {
+    :global(:root:not([data-theme="light"])) .error-description {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) .error-description {
+	color: var(--nord5);
+}
 
   .error-details {
     background: var(--nord4);
@@ -287,11 +295,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-details {
+    :global(:root:not([data-theme="light"])) .error-details {
       background: var(--nord2);
       color: var(--nord6);
     }
   }
+:global(:root[data-theme="dark"]) .error-details {
+	background: var(--nord2);
+      color: var(--nord6);
+}
 
   .checking-message {
     background: var(--nord4);
@@ -304,11 +316,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .checking-message {
+    :global(:root:not([data-theme="light"])) .checking-message {
       background: var(--nord2);
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .checking-message {
+	background: var(--nord2);
+      color: var(--nord4);
+}
 
   .error-actions {
     display: flex;
@@ -356,16 +372,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .btn-secondary {
+    :global(:root:not([data-theme="light"])) .btn-secondary {
       background: var(--nord2);
       color: var(--nord6);
       border-color: var(--nord3);
     }
 
-    .btn-secondary:hover {
+    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
       background: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .btn-secondary {
+	background: var(--nord2);
+      color: var(--nord6);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .btn-secondary:hover {
+	background: var(--nord3);
+}
 
   @media (max-width: 600px) {
     .error-container {

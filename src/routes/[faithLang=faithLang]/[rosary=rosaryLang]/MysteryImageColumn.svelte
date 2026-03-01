@@ -30,9 +30,14 @@
 	}
 }
 @media (min-width: 1200px) and (prefers-color-scheme: light) {
-	figcaption {
+	:global(:root:not([data-theme="dark"])) figcaption {
 		color: var(--nord2);
 	}
+}
+@media (min-width: 1200px) {
+	:global(:root[data-theme="light"]) figcaption {
+	color: var(--nord2);
+}
 }
 </style>
 

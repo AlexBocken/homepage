@@ -29,8 +29,8 @@
 a.month{
 	text-decoration: unset;
 	border-radius: var(--radius-pill);
-	background-color: var(--blue);
-	color: var(--nord5);
+	background-color: var(--color-primary);
+	color: var(--color-text-on-primary);
 	padding: 0.5em;
 	transition: var(--transition-fast);
 	min-width: 4em;
@@ -40,7 +40,7 @@ a.month:hover,
 .active
 {
 	transform: scale(1.1,1.1) !important;
-	background-color: var(--red) !important;
+	background-color: var(--color-accent) !important;
 }
 .months{
 	display:flex;

@@ -34,9 +34,12 @@ svg {
 }
 
 @media(prefers-color-scheme: light) {
-	svg {
+    :global(:root:not([data-theme="dark"])) svg {
 		fill: var(--nord0);
 	}
+  }
+:global(:root[data-theme="light"]) svg {
+	fill: var(--nord0);
 }
 
 :global(.mystery-button.selected) svg,

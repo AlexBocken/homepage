@@ -307,14 +307,14 @@
 input#search {
   all: unset;
   box-sizing: border-box;
-  background: var(--nord0);
-  color: #fff;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   padding: 0.7rem 2rem;
   border-radius: var(--radius-pill);
   width: 100%;
 }
 input::placeholder{
-  color: var(--nord6);
+  color: var(--color-text-muted);
 }
 
 .search {
@@ -344,12 +344,12 @@ input::placeholder{
   right: 0.5em;
   width: 1.5em;
   height: 1.5em;
-  color: var(--nord6);
+  color: var(--color-text-tertiary);
   cursor: pointer;
   transition: color 180ms ease-in-out;
 }
 .search-button:hover {
-  color: white;
+  color: var(--color-text-primary);
   scale: 1.1 1.1;
 }
 .search-button:active{

@@ -70,14 +70,22 @@
 
 /* === LIGHT MODE === */
 @media (prefers-color-scheme: light) {
-	.prayer-wrapper :global(v:lang(la)),
-	.prayer-wrapper.vernacular-primary :global(v:lang(de)),
-	.prayer-wrapper.vernacular-primary :global(v:lang(en)),
-	.prayer-wrapper.monolingual :global(v:not(:lang(la))),
-	.prayer-wrapper.no-latin :global(v:lang(de)),
-	.prayer-wrapper.no-latin :global(v:lang(en)) {
+    :global(:root:not([data-theme="dark"])) .prayer-wrapper :global(v:lang(la)),
+:global(:root:not([data-theme="dark"])) .prayer-wrapper.vernacular-primary :global(v:lang(de)),
+:global(:root:not([data-theme="dark"])) .prayer-wrapper.vernacular-primary :global(v:lang(en)),
+:global(:root:not([data-theme="dark"])) .prayer-wrapper.monolingual :global(v:not(:lang(la))),
+:global(:root:not([data-theme="dark"])) .prayer-wrapper.no-latin :global(v:lang(de)),
+:global(:root:not([data-theme="dark"])) .prayer-wrapper.no-latin :global(v:lang(en)) {
 		color: black;
 	}
+  }
+:global(:root[data-theme="light"]) .prayer-wrapper :global(v:lang(la)),
+:global(:root[data-theme="light"]) .prayer-wrapper.vernacular-primary :global(v:lang(de)),
+:global(:root[data-theme="light"]) .prayer-wrapper.vernacular-primary :global(v:lang(en)),
+:global(:root[data-theme="light"]) .prayer-wrapper.monolingual :global(v:not(:lang(la))),
+:global(:root[data-theme="light"]) .prayer-wrapper.no-latin :global(v:lang(de)),
+:global(:root[data-theme="light"]) .prayer-wrapper.no-latin :global(v:lang(en)) {
+	color: black;
 }
 
 /* === INLINE / RUBRIC TEXT === */

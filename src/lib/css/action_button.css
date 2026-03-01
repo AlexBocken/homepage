@@ -6,7 +6,7 @@
 .action_button{
 	border: none;
 	cursor: pointer;
-	background-color: var(--red);
+	background-color: var(--color-accent);
 	transition: var(--transition-normal);
 	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
 	padding: 1rem;

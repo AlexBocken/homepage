@@ -50,10 +50,13 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.filter-label {
+    :global(:root:not([data-theme="light"])) .filter-label {
 			color: var(--nord6);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) .filter-label {
+	color: var(--nord6);
+}
 
 	@media (max-width: 968px) {
 		.filter-label {

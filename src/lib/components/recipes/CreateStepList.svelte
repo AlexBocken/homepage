@@ -664,20 +664,29 @@ h3{
 	}
 }
 @media (prefers-color-scheme: dark){
-	.additional_info div{
+    :global(:root:not([data-theme="light"])) .additional_info div {
 		background-color: var(--accent-dark);
 	}
-	.instructions{
+	:global(:root:not([data-theme="light"])) .instructions {
 		background-color: var(--nord6-dark);
 	}
+  }
+:global(:root[data-theme="dark"]) .additional_info div {
+	background-color: var(--accent-dark);
+}
+:global(:root[data-theme="dark"]) .instructions {
+	background-color: var(--nord6-dark);
 }
 .button_arrow{
 	fill: var(--nord1);
 }
 @media (prefers-color-scheme: dark){
-	.button_arrow{
+    :global(:root:not([data-theme="light"])) .button_arrow {
 		fill: var(--nord4);
 	}
+  }
+:global(:root[data-theme="dark"]) .button_arrow {
+	fill: var(--nord4);
 }
 
 /* Styling for converted div-to-button elements */
@@ -715,12 +724,18 @@ h3{
 }
 
 @media (prefers-color-scheme: dark) {
-	.reference-container {
+    :global(:root:not([data-theme="light"])) .reference-container {
 		background-color: var(--nord1);
 	}
-	.reference-badge {
+	:global(:root:not([data-theme="light"])) .reference-badge {
 		color: var(--nord6);
 	}
+  }
+:global(:root[data-theme="dark"]) .reference-container {
+	background-color: var(--nord1);
+}
+:global(:root[data-theme="dark"]) .reference-badge {
+	color: var(--nord6);
 }
 
 .insert-base-recipe-button {

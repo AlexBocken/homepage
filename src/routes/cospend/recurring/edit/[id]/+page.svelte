@@ -289,7 +289,8 @@
   {:else if error && !formData.title}
     <div class="error">Error: {error}</div>
   {:else}
-    <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="payment-form">
+    <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }
+  } class="payment-form">
       <div class="form-section">
         <h2>Payment Details</h2>
         
@@ -691,75 +692,136 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .header h1 {
+    :global(:root:not([data-theme="light"])) .header h1 {
       color: var(--font-default-dark);
     }
 
-    .form-section {
+    :global(:root:not([data-theme="light"])) .form-section {
       background: var(--accent-dark);
       border-color: var(--nord2);
     }
 
-    .form-section h2 {
+    :global(:root:not([data-theme="light"])) .form-section h2 {
       color: var(--font-default-dark);
     }
 
-    label {
+    :global(:root:not([data-theme="light"])) label {
       color: var(--nord4);
     }
 
-    input, textarea, select {
+    :global(:root:not([data-theme="light"])) input,
+:global(:root:not([data-theme="light"])) textarea,
+:global(:root:not([data-theme="light"])) select {
       background: var(--nord1);
       color: var(--font-default-dark);
       border-color: var(--nord2);
     }
 
-    input:focus, textarea:focus, select:focus {
+    :global(:root:not([data-theme="light"])) input:focus,
+:global(:root:not([data-theme="light"])) textarea:focus,
+:global(:root:not([data-theme="light"])) select:focus {
       box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.2);
     }
 
-    .help-text {
+    :global(:root:not([data-theme="light"])) .help-text {
       color: var(--nord4);
     }
 
-    .help-text code {
+    :global(:root:not([data-theme="light"])) .help-text code {
       background-color: var(--nord1);
       color: var(--font-default-dark);
     }
 
-    .execution-preview {
+    :global(:root:not([data-theme="light"])) .execution-preview {
       background-color: var(--nord2);
       border-color: var(--blue);
     }
 
 
-    .error {
+    :global(:root:not([data-theme="light"])) .error {
       background-color: var(--accent-dark);
     }
 
-    .btn-secondary {
+    :global(:root:not([data-theme="light"])) .btn-secondary {
       background-color: var(--nord1);
       color: var(--font-default-dark);
       border-color: var(--nord2);
     }
 
-    .btn-secondary:hover {
+    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
       background-color: var(--nord2);
     }
 
-    .conversion-preview.loading {
+    :global(:root:not([data-theme="light"])) .conversion-preview.loading {
       background-color: var(--nord2);
     }
 
-    .conversion-preview.error {
+    :global(:root:not([data-theme="light"])) .conversion-preview.error {
       background-color: var(--accent-dark);
     }
 
-    .conversion-preview.success {
+    :global(:root:not([data-theme="light"])) .conversion-preview.success {
       background-color: var(--nord2);
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .header h1 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .form-section {
+	background: var(--accent-dark);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .form-section h2 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) label {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) input,
+:global(:root[data-theme="dark"]) textarea,
+:global(:root[data-theme="dark"]) select {
+	background: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) input:focus,
+:global(:root[data-theme="dark"]) textarea:focus,
+:global(:root[data-theme="dark"]) select:focus {
+	box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.2);
+}
+:global(:root[data-theme="dark"]) .help-text {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .help-text code {
+	background-color: var(--nord1);
+      color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .execution-preview {
+	background-color: var(--nord2);
+      border-color: var(--blue);
+}
+:global(:root[data-theme="dark"]) .error {
+	background-color: var(--accent-dark);
+}
+:global(:root[data-theme="dark"]) .btn-secondary {
+	background-color: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .btn-secondary:hover {
+	background-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .conversion-preview.loading {
+	background-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .conversion-preview.error {
+	background-color: var(--accent-dark);
+}
+:global(:root[data-theme="dark"]) .conversion-preview.success {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+}
 
   /* Amount-currency styling */
   .amount-currency {

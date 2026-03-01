@@ -635,13 +635,19 @@ h3{
 	fill: var(--nord1);
 }
 @media (prefers-color-scheme: dark){
-	.button_arrow{
+    :global(:root:not([data-theme="light"])) .button_arrow {
 		fill: var(--nord4);
 	}
-	.list_wrapper p[contenteditable]{
+	:global(:root:not([data-theme="light"])) .list_wrapper p[contenteditable] {
 		background-color: var(--accent-dark);
 
 	}
+  }
+:global(:root[data-theme="dark"]) .button_arrow {
+	fill: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .list_wrapper p[contenteditable] {
+	background-color: var(--accent-dark);
 }
 
 /* Styling for converted div-to-button elements */
@@ -688,12 +694,18 @@ h3{
 }
 
 @media (prefers-color-scheme: dark) {
-	.reference-container {
+    :global(:root:not([data-theme="light"])) .reference-container {
 		background-color: var(--nord1);
 	}
-	.reference-badge {
+	:global(:root:not([data-theme="light"])) .reference-badge {
 		color: var(--nord6);
 	}
+  }
+:global(:root[data-theme="dark"]) .reference-container {
+	background-color: var(--nord1);
+}
+:global(:root[data-theme="dark"]) .reference-badge {
+	color: var(--nord6);
 }
 
 .insert-base-recipe-button {

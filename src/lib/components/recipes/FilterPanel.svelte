@@ -50,9 +50,9 @@
 	.toggle-button {
 		display: none;
 		background: transparent;
-		color: var(--nord3);
+		color: var(--color-text-secondary);
 		padding: 0.5rem 0.8rem;
-		border: 1px solid var(--nord2);
+		border: 1px solid var(--color-border);
 		border-radius: 6px;
 		cursor: pointer;
 		font-size: 0.85rem;
@@ -66,9 +66,9 @@
 	}
 
 	.toggle-button:hover {
-		background: var(--nord1);
-		color: var(--nord4);
-		border-color: var(--nord3);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		border-color: var(--color-border-hover);
 	}
 
 	.arrow {

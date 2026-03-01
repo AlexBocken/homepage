@@ -198,9 +198,12 @@ dialog h2 {
 }
 
 @media (prefers-color-scheme: dark) {
-	.selector-content {
+    :global(:root:not([data-theme="light"])) .selector-content {
 		background-color: var(--nord1);
 	}
+  }
+:global(:root[data-theme="dark"]) .selector-content {
+	background-color: var(--nord1);
 }
 </style>
 
