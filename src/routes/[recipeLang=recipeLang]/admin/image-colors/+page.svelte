@@ -67,8 +67,11 @@
 		margin-bottom: 2rem;
 	}
 	@media (prefers-color-scheme: dark) {
-		h1 { color: white; }
-	}
+    :global(:root:not([data-theme="light"])) h1 { color: white; }
+  }
+:global(:root[data-theme="dark"]) h1 {
+	color: white;
+}
 	.stats {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -82,8 +85,11 @@
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 	@media (prefers-color-scheme: dark) {
-		.stat-card { background-color: var(--nord0); }
-	}
+    :global(:root:not([data-theme="light"])) .stat-card { background-color: var(--nord0); }
+  }
+:global(:root[data-theme="dark"]) .stat-card {
+	background-color: var(--nord0);
+}
 	.stat-label {
 		font-size: 0.9rem;
 		color: var(--nord3);
@@ -101,8 +107,11 @@
 		margin-bottom: 2rem;
 	}
 	@media (prefers-color-scheme: dark) {
-		.controls { background-color: var(--nord1); }
-	}
+    :global(:root:not([data-theme="light"])) .controls { background-color: var(--nord1); }
+  }
+:global(:root[data-theme="dark"]) .controls {
+	background-color: var(--nord1);
+}
 	.control-group {
 		margin-bottom: 1rem;
 	}
@@ -118,12 +127,19 @@
 		background-color: white;
 	}
 	@media (prefers-color-scheme: dark) {
-		select, input {
+    :global(:root:not([data-theme="light"])) select,
+:global(:root:not([data-theme="light"])) input {
 			background-color: var(--nord0);
 			color: white;
 			border-color: var(--nord2);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) select,
+:global(:root[data-theme="dark"]) input {
+	background-color: var(--nord0);
+			color: white;
+			border-color: var(--nord2);
+}
 	button {
 		padding: 0.75rem 1.5rem;
 		background-color: var(--nord8);
@@ -153,8 +169,11 @@
 		gap: 1rem;
 	}
 	@media (prefers-color-scheme: dark) {
-		.result-item { background-color: var(--nord1); }
-	}
+    :global(:root:not([data-theme="light"])) .result-item { background-color: var(--nord1); }
+  }
+:global(:root[data-theme="dark"]) .result-item {
+	background-color: var(--nord1);
+}
 	.color-swatch {
 		width: 2.5rem;
 		height: 2.5rem;

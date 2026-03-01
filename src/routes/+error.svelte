@@ -169,10 +169,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-page {
+    :global(:root:not([data-theme="light"])) .error-page {
       background: var(--background-dark);
     }
   }
+:global(:root[data-theme="dark"]) .error-page {
+	background: var(--background-dark);
+}
 
   .error-container {
     background: var(--nord5);
@@ -186,12 +189,17 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-container {
+    :global(:root:not([data-theme="light"])) .error-container {
       background: var(--nord1);
       border-color: var(--nord2);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
   }
+:global(:root[data-theme="dark"]) .error-container {
+	background: var(--nord1);
+      border-color: var(--nord2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
 
   .error-icon {
     font-size: 4rem;
@@ -207,10 +215,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-title {
+    :global(:root:not([data-theme="light"])) .error-title {
       color: var(--nord6);
     }
   }
+:global(:root[data-theme="dark"]) .error-title {
+	color: var(--nord6);
+}
 
   .error-code {
     font-size: 1.2rem;
@@ -221,10 +232,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-code {
+    :global(:root:not([data-theme="light"])) .error-code {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .error-code {
+	color: var(--nord4);
+}
 
   .error-description {
     font-size: 1.1rem;
@@ -234,10 +248,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-description {
+    :global(:root:not([data-theme="light"])) .error-description {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) .error-description {
+	color: var(--nord5);
+}
 
   .error-details {
     background: var(--nord4);
@@ -250,11 +267,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error-details {
+    :global(:root:not([data-theme="light"])) .error-details {
       background: var(--nord2);
       color: var(--nord6);
     }
   }
+:global(:root[data-theme="dark"]) .error-details {
+	background: var(--nord2);
+      color: var(--nord6);
+}
 
   .error-actions {
     display: flex;
@@ -302,16 +323,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .btn-secondary {
+    :global(:root:not([data-theme="light"])) .btn-secondary {
       background: var(--nord2);
       color: var(--nord6);
       border-color: var(--nord3);
     }
 
-    .btn-secondary:hover {
+    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
       background: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .btn-secondary {
+	background: var(--nord2);
+      color: var(--nord6);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .btn-secondary:hover {
+	background: var(--nord3);
+}
 
 
   .bible-quote {
@@ -324,10 +353,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .bible-quote {
+    :global(:root:not([data-theme="light"])) .bible-quote {
       background: linear-gradient(135deg, var(--nord2), var(--nord3));
     }
   }
+:global(:root[data-theme="dark"]) .bible-quote {
+	background: linear-gradient(135deg, var(--nord2), var(--nord3));
+}
 
   .quote-text {
     font-size: 1.1rem;
@@ -338,10 +370,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .quote-text {
+    :global(:root:not([data-theme="light"])) .quote-text {
       color: var(--nord6);
     }
   }
+:global(:root[data-theme="dark"]) .quote-text {
+	color: var(--nord6);
+}
 
   .quote-reference {
     font-size: 0.9rem;
@@ -352,10 +387,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .quote-reference {
+    :global(:root:not([data-theme="light"])) .quote-reference {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .quote-reference {
+	color: var(--nord4);
+}
 
 
   @media (max-width: 600px) {

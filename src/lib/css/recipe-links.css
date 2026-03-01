@@ -1,23 +1,11 @@
 /* Shared link styling for recipe reference links in h3 elements */
 h3 a {
-	color: var(--nord10);
+	color: var(--color-link);
 	text-decoration: underline;
-	text-decoration-color: var(--nord10);
+	text-decoration-color: var(--color-link);
 }
 
 h3 a:hover {
-	color: var(--nord9);
-	text-decoration-color: var(--nord9);
-}
-
-@media (prefers-color-scheme: dark) {
-	h3 a {
-		color: var(--nord8);
-		text-decoration-color: var(--nord8);
-	}
-
-	h3 a:hover {
-		color: var(--nord7);
-		text-decoration-color: var(--nord7);
-	}
+	color: var(--color-link-hover);
+	text-decoration-color: var(--color-link-hover);
 }

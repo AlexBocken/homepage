@@ -119,9 +119,12 @@
 }
 
 @media(prefers-color-scheme: light) {
-	.mystery-button {
+    :global(:root:not([data-theme="dark"])) .mystery-button {
 		background: var(--nord6);
 	}
+  }
+:global(:root[data-theme="light"]) .mystery-button {
+	background: var(--nord6);
 }
 
 .mystery-button:hover {
@@ -146,9 +149,12 @@
 }
 
 @media(prefers-color-scheme: light) {
-	.mystery-button h3 {
+    :global(:root:not([data-theme="dark"])) .mystery-button:not(.selected):not(:hover) h3 {
 		color: var(--nord0);
 	}
+  }
+:global(:root[data-theme="light"]) .mystery-button:not(.selected):not(:hover) h3 {
+	color: var(--nord0);
 }
 
 .mystery-button.selected h3,
@@ -209,7 +215,8 @@
 		class:season-lent={season === 'lent' && seasonalMystery === 'freudenreich'}
 		class:season-eastertide={season === 'eastertide' && seasonalMystery === 'freudenreich'}
 		href={mysteryHref('freudenreich')}
-		onclick={(e) => { e.preventDefault(); selectMystery('freudenreich'); }}
+		onclick={(e) => { e.preventDefault(); selectMystery('freudenreich'); }
+  }
 	>
 		{#if seasonalMystery === 'freudenreich' || todaysMystery === 'freudenreich'}
 			<div class="badge-stack">
@@ -227,7 +234,8 @@
 		class:season-lent={season === 'lent' && seasonalMystery === 'schmerzhaften'}
 		class:season-eastertide={season === 'eastertide' && seasonalMystery === 'schmerzhaften'}
 		href={mysteryHref('schmerzhaften')}
-		onclick={(e) => { e.preventDefault(); selectMystery('schmerzhaften'); }}
+		onclick={(e) => { e.preventDefault(); selectMystery('schmerzhaften'); }
+  }
 	>
 		{#if seasonalMystery === 'schmerzhaften' || todaysMystery === 'schmerzhaften'}
 			<div class="badge-stack">
@@ -245,7 +253,8 @@
 		class:season-lent={season === 'lent' && seasonalMystery === 'glorreichen'}
 		class:season-eastertide={season === 'eastertide' && seasonalMystery === 'glorreichen'}
 		href={mysteryHref('glorreichen')}
-		onclick={(e) => { e.preventDefault(); selectMystery('glorreichen'); }}
+		onclick={(e) => { e.preventDefault(); selectMystery('glorreichen'); }
+  }
 	>
 		{#if seasonalMystery === 'glorreichen' || todaysMystery === 'glorreichen'}
 			<div class="badge-stack">
@@ -264,7 +273,8 @@
 		class:season-lent={season === 'lent' && seasonalMystery === 'lichtreichen'}
 		class:season-eastertide={season === 'eastertide' && seasonalMystery === 'lichtreichen'}
 		href={mysteryHref('lichtreichen')}
-		onclick={(e) => { e.preventDefault(); selectMystery('lichtreichen'); }}
+		onclick={(e) => { e.preventDefault(); selectMystery('lichtreichen'); }
+  }
 	>
 		{#if todaysMystery === 'lichtreichen'}
 			<div class="badge-stack">

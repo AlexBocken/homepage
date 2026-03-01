@@ -126,15 +126,22 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .form-section {
+    :global(:root:not([data-theme="light"])) .form-section {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .form-section h2 {
+    :global(:root:not([data-theme="light"])) .form-section h2 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .form-section {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .form-section h2 {
+	color: var(--font-default-dark);
+}
 
   .image-upload {
     border: 2px dashed var(--nord4);
@@ -152,15 +159,22 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .image-upload {
+    :global(:root:not([data-theme="light"])) .image-upload {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
 
-    .image-upload:hover {
+    :global(:root:not([data-theme="light"])) .image-upload:hover {
       background-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .image-upload {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .image-upload:hover {
+	background-color: var(--nord3);
+}
 
   .upload-label {
     cursor: pointer;
@@ -183,18 +197,27 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .upload-content svg {
+    :global(:root:not([data-theme="light"])) .upload-content svg {
       color: var(--nord4);
     }
 
-    .upload-content p {
+    :global(:root:not([data-theme="light"])) .upload-content p {
       color: var(--font-default-dark);
     }
 
-    .upload-content small {
+    :global(:root:not([data-theme="light"])) .upload-content small {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .upload-content svg {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .upload-content p {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .upload-content small {
+	color: var(--nord4);
+}
 
   .image-preview {
     text-align: center;
@@ -240,10 +263,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .receipt-preview {
+    :global(:root:not([data-theme="light"])) .receipt-preview {
       border-color: var(--nord2);
     }
   }
+:global(:root[data-theme="dark"]) .receipt-preview {
+	border-color: var(--nord2);
+}
 
   .image-actions {
     display: flex;

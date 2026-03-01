@@ -638,14 +638,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .header h1 {
+    :global(:root:not([data-theme="light"])) .header h1 {
       color: var(--font-default-dark);
     }
 
-    .header p {
+    :global(:root:not([data-theme="light"])) .header p {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .header h1 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .header p {
+	color: var(--nord4);
+}
 
   .payment-form {
     display: flex;
@@ -669,15 +675,22 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .form-section {
+    :global(:root:not([data-theme="light"])) .form-section {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .form-section h2 {
+    :global(:root:not([data-theme="light"])) .form-section h2 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .form-section {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .form-section h2 {
+	color: var(--font-default-dark);
+}
 
   .form-group {
     margin-bottom: 1rem;
@@ -697,10 +710,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    label {
+    :global(:root:not([data-theme="light"])) label {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) label {
+	color: var(--nord5);
+}
 
   input, textarea, select {
     width: 100%;
@@ -720,12 +736,21 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    input, textarea, select {
+    :global(:root:not([data-theme="light"])) input,
+:global(:root:not([data-theme="light"])) textarea,
+:global(:root:not([data-theme="light"])) select {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) input,
+:global(:root[data-theme="dark"]) textarea,
+:global(:root[data-theme="dark"]) select {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
 
 
 
@@ -741,10 +766,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error {
+    :global(:root:not([data-theme="light"])) .error {
       background-color: var(--accent-dark);
     }
   }
+:global(:root[data-theme="dark"]) .error {
+	background-color: var(--accent-dark);
+}
 
   .form-actions {
     display: flex;
@@ -792,16 +820,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .btn-secondary {
+    :global(:root:not([data-theme="light"])) .btn-secondary {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
 
-    .btn-secondary:hover {
+    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
       background-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .btn-secondary {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .btn-secondary:hover {
+	background-color: var(--nord3);
+}
 
 
   /* Progressive enhancement styles */
@@ -830,10 +866,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .manual-users p {
+    :global(:root:not([data-theme="light"])) .manual-users p {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .manual-users p {
+	color: var(--nord4);
+}
 
   /* Recurring payment styles */
   .checkbox-label {
@@ -857,11 +896,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .recurring-options {
+    :global(:root:not([data-theme="light"])) .recurring-options {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .recurring-options {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .help-text {
     display: block;
@@ -872,10 +915,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .help-text {
+    :global(:root:not([data-theme="light"])) .help-text {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .help-text {
+	color: var(--nord4);
+}
 
   .help-text p {
     margin: 0.5rem 0 0.25rem 0;
@@ -891,11 +937,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .help-text code {
+    :global(:root:not([data-theme="light"])) .help-text code {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .help-text code {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .help-text ul {
     margin: 0.5rem 0;
@@ -947,14 +997,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .execution-preview {
+    :global(:root:not([data-theme="light"])) .execution-preview {
       background-color: var(--nord2);
     }
 
-    .frequency-description {
+    :global(:root:not([data-theme="light"])) .frequency-description {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .execution-preview {
+	background-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .frequency-description {
+	color: var(--nord4);
+}
 
   /* Amount-currency styling */
   .amount-currency {
@@ -1007,19 +1063,29 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .conversion-preview.loading {
+    :global(:root:not([data-theme="light"])) .conversion-preview.loading {
       background-color: var(--nord2);
     }
 
-    .conversion-preview.error {
+    :global(:root:not([data-theme="light"])) .conversion-preview.error {
       background-color: var(--accent-dark);
     }
 
-    .conversion-preview.success {
+    :global(:root:not([data-theme="light"])) .conversion-preview.success {
       background-color: var(--nord2);
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .conversion-preview.loading {
+	background-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .conversion-preview.error {
+	background-color: var(--accent-dark);
+}
+:global(:root[data-theme="dark"]) .conversion-preview.success {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+}
 
   @media (max-width: 600px) {
     .add-payment {

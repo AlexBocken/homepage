@@ -174,7 +174,8 @@
                    tabindex="0"
                    class:selected={selectedSettlement?.type === 'receive' && selectedSettlement?.from === debt.username}
                    onclick={() => selectSettlement('receive', debt.username, debt.netAmount)}
-                   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSettlement('receive', debt.username, debt.netAmount); } }}>
+                   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSettlement('receive', debt.username, debt.netAmount); } }
+  }>
                 <div class="settlement-user">
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
@@ -199,7 +200,8 @@
                    tabindex="0"
                    class:selected={selectedSettlement?.type === 'pay' && selectedSettlement?.to === debt.username}
                    onclick={() => selectSettlement('pay', debt.username, debt.netAmount)}
-                   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSettlement('pay', debt.username, debt.netAmount); } }}>
+                   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSettlement('pay', debt.username, debt.netAmount); } }
+  }>
                 <div class="settlement-user">
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
@@ -679,109 +681,189 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .header-section h1 {
+    :global(:root:not([data-theme="light"])) .header-section h1 {
       color: var(--font-default-dark);
     }
 
-    .header-section p {
+    :global(:root:not([data-theme="light"])) .header-section p {
       color: var(--nord4);
     }
 
-    .error {
+    :global(:root:not([data-theme="light"])) .error {
       background-color: var(--accent-dark);
     }
 
-    .no-debts {
+    :global(:root:not([data-theme="light"])) .no-debts {
       background: var(--accent-dark);
       border-color: var(--nord2);
     }
 
-    .available-settlements {
+    :global(:root:not([data-theme="light"])) .available-settlements {
       background: var(--accent-dark);
       border-color: var(--nord2);
     }
 
-    .settlement-section h3 {
+    :global(:root:not([data-theme="light"])) .settlement-section h3 {
       color: var(--font-default-dark);
     }
 
-    .settlement-option {
+    :global(:root:not([data-theme="light"])) .settlement-option {
       border-color: var(--nord2);
       background: var(--nord1);
     }
 
-    .settlement-option:hover {
+    :global(:root:not([data-theme="light"])) .settlement-option:hover {
       box-shadow: 0 2px 8px rgba(163, 190, 140, 0.2);
     }
 
-    .settlement-option.selected {
+    :global(:root:not([data-theme="light"])) .settlement-option.selected {
       background-color: var(--nord1);
     }
 
-    .username {
+    :global(:root:not([data-theme="light"])) .username {
       color: var(--font-default-dark);
     }
 
-    .debt-amount {
+    :global(:root:not([data-theme="light"])) .debt-amount {
       color: var(--nord4);
     }
 
-    .settlement-details {
+    :global(:root:not([data-theme="light"])) .settlement-details {
       background: var(--accent-dark);
       border-color: var(--nord2);
     }
 
-    .settlement-flow {
+    :global(:root:not([data-theme="light"])) .settlement-flow {
       background-color: var(--nord1);
     }
 
-    .settlement-amount-section label {
+    :global(:root:not([data-theme="light"])) .settlement-amount-section label {
       color: var(--font-default-dark);
     }
 
-    .amount-input {
+    :global(:root:not([data-theme="light"])) .amount-input {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .currency {
+    :global(:root:not([data-theme="light"])) .currency {
       color: var(--nord4);
     }
 
-    .max-amount {
+    :global(:root:not([data-theme="light"])) .max-amount {
       color: var(--nord4);
     }
 
-    .settlement-description {
+    :global(:root:not([data-theme="light"])) .settlement-description {
       color: var(--font-default-dark);
       background-color: var(--nord1);
     }
 
-    .amount-input input {
+    :global(:root:not([data-theme="light"])) .amount-input input {
       color: var(--font-default-dark);
     }
 
-    .btn-secondary {
+    :global(:root:not([data-theme="light"])) .btn-secondary {
       background-color: var(--nord1);
       color: var(--font-default-dark);
       border-color: var(--nord2);
     }
 
-    .btn-secondary:hover {
+    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
       background-color: var(--nord2);
     }
 
-    .form-group label {
+    :global(:root:not([data-theme="light"])) .form-group label {
       color: var(--font-default-dark);
     }
 
-    .form-group select,
-    .form-group input {
+    :global(:root:not([data-theme="light"])) .form-group select,
+:global(:root:not([data-theme="light"])) .form-group input {
       background-color: var(--nord1);
       color: var(--font-default-dark);
       border-color: var(--nord2);
     }
   }
+:global(:root[data-theme="dark"]) .header-section h1 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .header-section p {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .error {
+	background-color: var(--accent-dark);
+}
+:global(:root[data-theme="dark"]) .no-debts {
+	background: var(--accent-dark);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .available-settlements {
+	background: var(--accent-dark);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .settlement-section h3 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .settlement-option {
+	border-color: var(--nord2);
+      background: var(--nord1);
+}
+:global(:root[data-theme="dark"]) .settlement-option:hover {
+	box-shadow: 0 2px 8px rgba(163, 190, 140, 0.2);
+}
+:global(:root[data-theme="dark"]) .settlement-option.selected {
+	background-color: var(--nord1);
+}
+:global(:root[data-theme="dark"]) .username {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .debt-amount {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .settlement-details {
+	background: var(--accent-dark);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .settlement-flow {
+	background-color: var(--nord1);
+}
+:global(:root[data-theme="dark"]) .settlement-amount-section label {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .amount-input {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .currency {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .max-amount {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .settlement-description {
+	color: var(--font-default-dark);
+      background-color: var(--nord1);
+}
+:global(:root[data-theme="dark"]) .amount-input input {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .btn-secondary {
+	background-color: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .btn-secondary:hover {
+	background-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .form-group label {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .form-group select,
+:global(:root[data-theme="dark"]) .form-group input {
+	background-color: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord2);
+}
 
   @media (max-width: 600px) {
     .settle-main {

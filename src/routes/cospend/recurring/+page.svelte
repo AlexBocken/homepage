@@ -249,14 +249,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .header h1 {
+    :global(:root:not([data-theme="light"])) .header h1 {
       color: var(--font-default-dark);
     }
 
-    .header p {
+    :global(:root:not([data-theme="light"])) .header p {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .header h1 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .header p {
+	color: var(--nord4);
+}
 
   .filters {
     margin-bottom: 1.5rem;
@@ -277,15 +283,22 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .filters {
+    :global(:root:not([data-theme="light"])) .filters {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .filters label {
+    :global(:root:not([data-theme="light"])) .filters label {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .filters {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .filters label {
+	color: var(--font-default-dark);
+}
 
   .loading, .error {
     text-align: center;
@@ -301,10 +314,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error {
+    :global(:root:not([data-theme="light"])) .error {
       background-color: var(--accent-dark);
     }
   }
+:global(:root[data-theme="dark"]) .error {
+	background-color: var(--accent-dark);
+}
 
   .empty-state {
     text-align: center;
@@ -329,19 +345,29 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .empty-state {
+    :global(:root:not([data-theme="light"])) .empty-state {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .empty-state h2 {
+    :global(:root:not([data-theme="light"])) .empty-state h2 {
       color: var(--font-default-dark);
     }
 
-    .empty-state p {
+    :global(:root:not([data-theme="light"])) .empty-state p {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .empty-state {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .empty-state h2 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .empty-state p {
+	color: var(--nord4);
+}
 
   .payments-grid {
     display: grid;
@@ -371,20 +397,31 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .payment-card {
+    :global(:root:not([data-theme="light"])) .payment-card {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .payment-card:hover {
+    :global(:root:not([data-theme="light"])) .payment-card:hover {
       border-color: var(--nord3);
     }
 
-    .payment-card.inactive {
+    :global(:root:not([data-theme="light"])) .payment-card.inactive {
       background: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .payment-card {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .payment-card:hover {
+	border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .payment-card.inactive {
+	background: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .card-header {
     display: flex;
@@ -411,10 +448,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .payment-title h3 {
+    :global(:root:not([data-theme="light"])) .payment-title h3 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .payment-title h3 {
+	color: var(--font-default-dark);
+}
 
   .status-badge {
     padding: 0.25rem 0.75rem;
@@ -448,10 +488,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .payment-description {
+    :global(:root:not([data-theme="light"])) .payment-description {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) .payment-description {
+	color: var(--nord5);
+}
 
   .payment-details {
     margin-bottom: 1.5rem;
@@ -482,14 +525,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .label {
+    :global(:root:not([data-theme="light"])) .label {
       color: var(--nord4);
     }
 
-    .value {
+    :global(:root:not([data-theme="light"])) .value {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .label {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .value {
+	color: var(--font-default-dark);
+}
 
   .payer-info {
     display: flex;
@@ -514,15 +563,22 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .splits-preview {
+    :global(:root:not([data-theme="light"])) .splits-preview {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
 
-    .splits-preview h4 {
+    :global(:root:not([data-theme="light"])) .splits-preview h4 {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .splits-preview {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .splits-preview h4 {
+	color: var(--nord4);
+}
 
   .splits-list {
     display: flex;
@@ -556,10 +612,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-item .username {
+    :global(:root:not([data-theme="light"])) .split-item .username {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .split-item .username {
+	color: var(--font-default-dark);
+}
 
   .card-actions {
     display: flex;
@@ -605,16 +664,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .btn-secondary {
+    :global(:root:not([data-theme="light"])) .btn-secondary {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
 
-    .btn-secondary:hover {
+    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
       background-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .btn-secondary {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .btn-secondary:hover {
+	background-color: var(--nord3);
+}
 
   .btn-warning {
     background-color: var(--orange);

@@ -300,7 +300,7 @@
   onMount(() => {
     createChart();
 
-    // Watch for theme changes
+    // Watch for theme changes (both media query and data-theme attribute)
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleThemeChange = () => {
       setTimeout(createChart, 100); // Small delay to let CSS variables update
@@ -308,8 +308,19 @@
 
     mediaQuery.addEventListener('change', handleThemeChange);
 
+    // Also watch for data-theme attribute changes on <html>
+    const themeObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+          handleThemeChange();
+        }
+      }
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
     return () => {
       mediaQuery.removeEventListener('change', handleThemeChange);
+      themeObserver.disconnect();
       if (chart) {
         chart.destroy();
       }
@@ -331,11 +342,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .chart-container {
+    :global(:root:not([data-theme="light"])) .chart-container {
       background: var(--nord1);
       border-color: var(--nord2);
     }
   }
+:global(:root[data-theme="dark"]) .chart-container {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
 
   @media (max-width: 600px) {
     .chart-container {

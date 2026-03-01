@@ -488,9 +488,12 @@ onMount(() => {
 }
 
 @media (prefers-color-scheme: light) {
-	.prayer-section {
+    :global(:root:not([data-theme="dark"])) .prayer-section {
 		background: var(--nord5);
 	}
+  }
+:global(:root[data-theme="light"]) .prayer-section {
+	background: var(--nord5);
 }
 
 .prayer-section.decade {
@@ -603,9 +606,12 @@ h1 {
 }
 
 @media(prefers-color-scheme: light) {
-	.bible-reference-text {
+    :global(:root:not([data-theme="dark"])) .bible-reference-text {
 		color: var(--nord10);
 	}
+  }
+:global(:root[data-theme="light"]) .bible-reference-text {
+	color: var(--nord10);
 }
 
 .bible-reference-button {
@@ -638,16 +644,25 @@ h1 {
 }
 
 @media(prefers-color-scheme: light) {
-	.bible-reference-button {
+    :global(:root:not([data-theme="dark"])) .bible-reference-button {
 		background: var(--nord5);
 		border-color: var(--nord4);
 		color: var(--nord0);
 	}
 
-	.bible-reference-button:hover {
+	:global(:root:not([data-theme="dark"])) .bible-reference-button:hover {
 		background: var(--nord4);
 		border-color: var(--nord3);
 	}
+  }
+:global(:root[data-theme="light"]) .bible-reference-button {
+	background: var(--nord5);
+		border-color: var(--nord4);
+		color: var(--nord0);
+}
+:global(:root[data-theme="light"]) .bible-reference-button:hover {
+	background: var(--nord4);
+		border-color: var(--nord3);
 }
 
 /* Footnote styles */
@@ -658,9 +673,12 @@ h1 {
 }
 
 @media(prefers-color-scheme: light) {
-	.footnotes-section {
+    :global(:root:not([data-theme="dark"])) .footnotes-section {
 		color: var(--nord0);
 	}
+  }
+:global(:root[data-theme="light"]) .footnotes-section {
+	color: var(--nord0);
 }
 
 .footnotes-section p {
@@ -1028,7 +1046,8 @@ h1 {
 					<p><span class="symbol">♱</span>{labels.footnoteSign}</p>
 				</div>
 			</div>
-			<a class="scroll-top-button action_button" href="#top" onclick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Scroll to top">
+			<a class="scroll-top-button action_button" href="#top" onclick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  } aria-label="Scroll to top">
 				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
 			</a>
 			<div class="scroll-padding"></div>

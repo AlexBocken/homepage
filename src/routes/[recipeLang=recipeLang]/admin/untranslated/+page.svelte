@@ -41,10 +41,14 @@ h1 {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 @media(prefers-color-scheme: light) {
-	.stats-container {
+    :global(:root:not([data-theme="dark"])) .stats-container {
 		background: var(--nord6);
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	}
+  }
+:global(:root[data-theme="light"]) .stats-container {
+	background: var(--nord6);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 .stats-grid {
 	display: grid;
@@ -59,9 +63,12 @@ h1 {
 	border-radius: 6px;
 }
 @media(prefers-color-scheme: light) {
-	.stat-item {
+    :global(:root:not([data-theme="dark"])) .stat-item {
 		background: var(--nord5);
 	}
+  }
+:global(:root[data-theme="light"]) .stat-item {
+	background: var(--nord5);
 }
 .stat-value {
 	font-size: 2rem;
@@ -74,9 +81,12 @@ h1 {
 	margin-top: 0.25rem;
 }
 @media(prefers-color-scheme: light) {
-	.stat-label {
+    :global(:root:not([data-theme="dark"])) .stat-label {
 		color: var(--nord2);
 	}
+  }
+:global(:root[data-theme="light"]) .stat-label {
+	color: var(--nord2);
 }
 .card-wrapper {
 	position: relative;

@@ -71,10 +71,13 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		h1 {
+    :global(:root:not([data-theme="light"])) h1 {
 			color: white;
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) h1 {
+	color: white;
+}
 
 	.stats {
 		display: grid;
@@ -91,10 +94,13 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.stat-card {
+    :global(:root:not([data-theme="light"])) .stat-card {
 			background-color: var(--nord0);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) .stat-card {
+	background-color: var(--nord0);
+}
 
 	.stat-label {
 		font-size: 0.9rem;
@@ -132,10 +138,13 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.controls {
+    :global(:root:not([data-theme="light"])) .controls {
 			background-color: var(--nord1);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) .controls {
+	background-color: var(--nord1);
+}
 
 	.control-group {
 		margin-bottom: 1rem;
@@ -156,13 +165,19 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		select,
-		input {
+    :global(:root:not([data-theme="light"])) select,
+:global(:root:not([data-theme="light"])) input {
 			background-color: var(--nord0);
 			color: white;
 			border-color: var(--nord2);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) select,
+:global(:root[data-theme="dark"]) input {
+	background-color: var(--nord0);
+			color: white;
+			border-color: var(--nord2);
+}
 
 	button {
 		padding: 0.75rem 1.5rem;
@@ -197,10 +212,13 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.result-item {
+    :global(:root:not([data-theme="light"])) .result-item {
 			background-color: var(--nord1);
 		}
-	}
+  }
+:global(:root[data-theme="dark"]) .result-item {
+	background-color: var(--nord1);
+}
 
 	.error {
 		padding: 1rem;

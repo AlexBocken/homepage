@@ -32,12 +32,23 @@
 }
 
 @media (prefers-color-scheme: light) {
-	.cross-symbol {
+    :global(:root:not([data-theme="dark"])) .cross-symbol {
 		fill: var(--nord3);
 	}
-	.chain {
+	:global(:root:not([data-theme="dark"])) .chain {
 		stroke: var(--nord3);
 	}
+  }
+:global(:root[data-theme="light"]) .cross-symbol {
+	fill: var(--nord3);
+}
+:global(:root[data-theme="light"]) .chain {
+	stroke: var(--nord3);
+}
+
+/* Medal SVG is external, can't see data-theme — darken for forced light */
+:global(:root[data-theme="light"]) .medal {
+	filter: brightness(0.75);
 }
 
 .hitboxes {
@@ -95,7 +106,7 @@
 	<circle cx="25" cy={pos.lbead2} r="15" class="large-bead" class:active-large-bead={activeSection === 'lbead2'} data-section="lbead2" />
 
 	<!-- Benedictus Medal -->
-	<image href="/glaube/benedictus.svg" x="5" y={pos.lbead2 + 25} width="40" height="40" />
+	<image class="medal" href="/glaube/benedictus.svg" x="5" y={pos.lbead2 + 25} width="40" height="40" />
 
 	<!-- 5 Decades -->
 	{#each [1, 2, 3, 4, 5] as d (d)}
@@ -114,7 +125,7 @@
 		{/if}
 	{/each}
 
-	<image href="/glaube/benedictus.svg" x="5" y={pos.secret5 + DECADE_OFFSET + 9 * BEAD_SPACING + 15} width="40" height="40" />
+	<image class="medal" href="/glaube/benedictus.svg" x="5" y={pos.secret5 + DECADE_OFFSET + 9 * BEAD_SPACING + 15} width="40" height="40" />
 	<!-- Final transition: Gloria + Fatima -->
 	<circle cx="25" cy={pos.final_transition} r="15" class="large-bead" class:active-large-bead={activeSection === 'final_transition'} data-section="final_transition" />
 

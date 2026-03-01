@@ -99,15 +99,22 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .form-section {
+    :global(:root:not([data-theme="light"])) .form-section {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .form-section h2 {
+    :global(:root:not([data-theme="light"])) .form-section h2 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .form-section {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .form-section h2 {
+	color: var(--font-default-dark);
+}
 
   .users-list {
     display: flex;
@@ -127,11 +134,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .user-item {
+    :global(:root:not([data-theme="light"])) .user-item {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .user-item {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .user-item.with-profile {
     gap: 0.75rem;
@@ -143,10 +154,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .user-item .username {
+    :global(:root:not([data-theme="light"])) .user-item .username {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .user-item .username {
+	color: var(--font-default-dark);
+}
 
   .you-badge {
     background-color: var(--blue);
@@ -165,11 +179,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .predefined-users {
+    :global(:root:not([data-theme="light"])) .predefined-users {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .predefined-users {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .predefined-note {
     margin: 0 0 1rem 0;
@@ -179,10 +197,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .predefined-note {
+    :global(:root:not([data-theme="light"])) .predefined-note {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .predefined-note {
+	color: var(--nord4);
+}
 
   .remove-user {
     background-color: var(--red);
@@ -223,12 +244,17 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .add-user input {
+    :global(:root:not([data-theme="light"])) .add-user input {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .add-user input {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
 
   .add-user button {
     background-color: var(--blue);

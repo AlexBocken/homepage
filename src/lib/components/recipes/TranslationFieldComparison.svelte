@@ -40,9 +40,12 @@
 }
 
 @media(prefers-color-scheme: light) {
-	.field-label {
+    :global(:root:not([data-theme="dark"])) .field-label {
 		color: var(--nord2);
 	}
+  }
+:global(:root[data-theme="light"]) .field-label {
+	color: var(--nord2);
 }
 
 .field-value {
@@ -55,11 +58,16 @@
 }
 
 @media(prefers-color-scheme: light) {
-	.field-value {
+    :global(:root:not([data-theme="dark"])) .field-value {
 		background: var(--nord5);
 		color: var(--nord0);
 		border-color: var(--nord3);
 	}
+  }
+:global(:root[data-theme="light"]) .field-value {
+	background: var(--nord5);
+		color: var(--nord0);
+		border-color: var(--nord3);
 }
 
 .field-value.readonly {
@@ -113,13 +121,19 @@ textarea.field-value {
 }
 
 @media(prefers-color-scheme: light) {
-	:global(.readonly-text strong) {
+    :global(:root:not([data-theme="dark"]) .readonly-text strong) {
 		color: var(--nord10);
 	}
 
-	:global(.readonly-text li) {
+	:global(:root:not([data-theme="dark"]) .readonly-text li) {
 		color: var(--nord2);
 	}
+  }
+:global(:root[data-theme="light"]) :global(.readonly-text strong) {
+	color: var(--nord10);
+}
+:global(:root[data-theme="light"]) :global(.readonly-text li) {
+	color: var(--nord2);
 }
 </style>
 

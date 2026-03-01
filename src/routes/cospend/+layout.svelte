@@ -74,7 +74,9 @@
       {#if showModal}
         <div class="modal-content">
           {#key paymentId}
-            <div in:fly={{x: 50, duration: 300, easing: quintOut}} out:fly={{x: -50, duration: 300, easing: quintOut}}>
+            <div in:fly={{x: 50, duration: 300, easing: quintOut}
+  } out:fly={{x: -50, duration: 300, easing: quintOut}
+  }>
               <PaymentModal {paymentId} on:close={() => showModal = false} on:paymentDeleted={handlePaymentDeleted} />
             </div>
           {/key}
@@ -135,11 +137,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .side-panel {
+    :global(:root:not([data-theme="light"])) .side-panel {
       background: var(--background-dark);
       border-left-color: #434C5E;
     }
   }
+:global(:root[data-theme="dark"]) .side-panel {
+	background: var(--background-dark);
+      border-left-color: #434C5E;
+}
 
   @media (max-width: 768px) {
     .layout-container.has-modal .main-content {
@@ -197,4 +203,9 @@
       border-top-color: #434C5E;
     }
   }
+@media (max-width: 768px) {
+	:global(:root[data-theme="dark"]) .side-panel {
+	border-top-color: #434C5E;
+}
+}
 </style>

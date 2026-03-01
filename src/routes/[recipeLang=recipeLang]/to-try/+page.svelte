@@ -166,10 +166,14 @@ h1 {
 	box-sizing: border-box;
 }
 @media (prefers-color-scheme: dark) {
-	.form-card input,
-	.form-card textarea {
+    :global(:root:not([data-theme="light"])) .form-card input,
+:global(:root:not([data-theme="light"])) .form-card textarea {
 		border-color: var(--nord3);
 	}
+  }
+:global(:root[data-theme="dark"]) .form-card input,
+:global(:root[data-theme="dark"]) .form-card textarea {
+	border-color: var(--nord3);
 }
 .form-card textarea {
 	resize: vertical;
