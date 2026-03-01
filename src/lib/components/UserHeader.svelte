@@ -5,16 +5,16 @@
 	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
 
 	function toggle_options(){
-		const el = document.querySelector("#options-wrap")
-		el.hidden = !el.hidden
+		const el = document.querySelector("#options-wrap") as HTMLElement | null;
+		if (el) el.hidden = !el.hidden;
 	}
 
 	onMount( () => {
-		document.addEventListener("click", (e) => {
-			const userButton = document.querySelector("#button")
+		document.addEventListener("click", (e: MouseEvent) => {
+			const userButton = document.querySelector("#button");
 
-			if(userButton && !userButton.contains(e.target)){
-				const wrap = document.querySelector("#options-wrap");
+			if(userButton && !userButton.contains(e.target as Node)){
+				const wrap = document.querySelector("#options-wrap") as HTMLElement | null;
 				if (wrap) wrap.hidden = true;
 			}
 		})
