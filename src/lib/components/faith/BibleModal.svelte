@@ -111,21 +111,13 @@
   }
 
   @media(prefers-color-scheme: light) {
-    .modal-backdrop {
+    :global(:root:not([data-theme="dark"])) .modal-backdrop {
       background: rgba(255, 255, 255, 0.3);
     }
-
-    @keyframes show-backdrop {
-      from {
-        backdrop-filter: blur(0px);
-        background: rgba(255, 255, 255, 0);
-      }
-      to {
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.3);
-      }
-    }
   }
+:global(:root[data-theme="light"]) .modal-backdrop {
+	background: rgba(255, 255, 255, 0.3);
+}
 
   .modal-content {
     background: var(--nord0);
@@ -140,10 +132,13 @@
   }
 
   @media(prefers-color-scheme: light) {
-    .modal-content {
+    :global(:root:not([data-theme="dark"])) .modal-content {
       background: var(--nord6);
     }
   }
+:global(:root[data-theme="light"]) .modal-content {
+	background: var(--nord6);
+}
 
   .modal-header {
     display: flex;
@@ -154,10 +149,13 @@
   }
 
   @media(prefers-color-scheme: light) {
-    .modal-header {
+    :global(:root:not([data-theme="dark"])) .modal-header {
       border-bottom: 1px solid var(--nord4);
     }
   }
+:global(:root[data-theme="light"]) .modal-header {
+	border-bottom: 1px solid var(--nord4);
+}
 
   .header-content {
     flex: 1;
@@ -227,11 +225,15 @@
   }
 
   @media(prefers-color-scheme: light) {
-    .loading,
-    .error {
+    :global(:root:not([data-theme="dark"])) .loading,
+:global(:root:not([data-theme="dark"])) .error {
       color: var(--nord2);
     }
   }
+:global(:root[data-theme="light"]) .loading,
+:global(:root[data-theme="light"]) .error {
+	color: var(--nord2);
+}
 
   .error {
     color: var(--nord11);
@@ -252,10 +254,13 @@
   }
 
   @media(prefers-color-scheme: light) {
-    .verse {
+    :global(:root:not([data-theme="dark"])) .verse {
       color: var(--nord0);
     }
   }
+:global(:root[data-theme="light"]) .verse {
+	color: var(--nord0);
+}
 
   .verse-number {
     color: var(--nord10);

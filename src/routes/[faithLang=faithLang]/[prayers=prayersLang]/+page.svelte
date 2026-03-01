@@ -369,19 +369,32 @@ h1{
 	color: var(--nord0);
 }
 @media(prefers-color-scheme: light) {
-	.category-pill {
+    :global(:root:not([data-theme="dark"])) .category-pill {
 		border-color: var(--nord4);
 		color: var(--nord3);
 	}
-	.category-pill:hover {
+	:global(:root:not([data-theme="dark"])) .category-pill:hover {
 		border-color: var(--nord10);
 		color: var(--nord10);
 	}
-	.category-pill.selected {
+	:global(:root:not([data-theme="dark"])) .category-pill.selected {
 		border-color: var(--nord10);
 		background-color: var(--nord10);
 		color: var(--nord6);
 	}
+  }
+:global(:root[data-theme="light"]) .category-pill {
+	border-color: var(--nord4);
+		color: var(--nord3);
+}
+:global(:root[data-theme="light"]) .category-pill:hover {
+	border-color: var(--nord10);
+		color: var(--nord10);
+}
+:global(:root[data-theme="light"]) .category-pill.selected {
+	border-color: var(--nord10);
+		background-color: var(--nord10);
+		color: var(--nord6);
 }
 
 /* Search result styling */
@@ -409,10 +422,14 @@ h1{
 	z-index: 1;
 }
 @media(prefers-color-scheme: light) {
-	.prayer-wrapper.secondary-match::before {
+    :global(:root:not([data-theme="dark"])) .prayer-wrapper.secondary-match::before {
 		background: var(--nord4);
 		color: var(--nord0);
 	}
+  }
+:global(:root[data-theme="light"]) .prayer-wrapper.secondary-match::before {
+	background: var(--nord4);
+		color: var(--nord0);
 }
 
 /* Postcommunio section */
@@ -424,9 +441,12 @@ h1{
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 @media(prefers-color-scheme: light) {
-	.postcommunio-section {
+    :global(:root:not([data-theme="dark"])) .postcommunio-section {
 		background-color: var(--nord5);
 	}
+  }
+:global(:root[data-theme="light"]) .postcommunio-section {
+	background-color: var(--nord5);
 }
 /* Seasonal badge */
 .seasonal-badge {
@@ -463,14 +483,16 @@ h1{
 		href={buildFilterHref(null)}
 		class="category-pill"
 		class:selected={!selectedCategory}
-		onclick={(e) => { e.preventDefault(); selectedCategory = null; }}
+		onclick={(e) => { e.preventDefault(); selectedCategory = null; }
+  }
 	>{isEnglish ? 'All' : 'Alle'}</a>
 	{#each categories as cat (cat.id)}
 		<a
 			href={buildFilterHref(cat.id)}
 			class="category-pill"
 			class:selected={selectedCategory === cat.id}
-			onclick={(e) => { e.preventDefault(); selectedCategory = cat.id; }}
+			onclick={(e) => { e.preventDefault(); selectedCategory = cat.id; }
+  }
 		>{isEnglish ? cat.en : cat.de}</a>
 	{/each}
 </nav>

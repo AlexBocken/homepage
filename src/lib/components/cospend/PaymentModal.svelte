@@ -481,101 +481,174 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .panel-content {
+    :global(:root:not([data-theme="light"])) .panel-content {
       background: var(--nord1);
     }
 
-    .panel-header {
+    :global(:root:not([data-theme="light"])) .panel-header {
       background: var(--nord2);
       border-bottom-color: var(--nord3);
     }
 
-    .panel-header h2 {
+    :global(:root:not([data-theme="light"])) .panel-header h2 {
       color: var(--font-default-dark);
     }
 
-    .close-button {
+    :global(:root:not([data-theme="light"])) .close-button {
       color: var(--nord4);
     }
 
-    .close-button:hover {
+    :global(:root:not([data-theme="light"])) .close-button:hover {
       background: var(--nord3);
       color: var(--font-default-dark);
     }
 
-    .error {
+    :global(:root:not([data-theme="light"])) .error {
       background-color: var(--accent-dark);
     }
 
-    .payment-header {
+    :global(:root:not([data-theme="light"])) .payment-header {
       background: linear-gradient(135deg, var(--nord2), var(--nord3));
     }
 
-    .title-section h1 {
+    :global(:root:not([data-theme="light"])) .title-section h1 {
       color: var(--font-default-dark);
     }
 
-    .receipt-image img {
+    :global(:root:not([data-theme="light"])) .receipt-image img {
       border-color: var(--nord2);
     }
 
-    .label {
+    :global(:root:not([data-theme="light"])) .label {
       color: var(--nord4);
     }
 
-    .value {
+    :global(:root:not([data-theme="light"])) .value {
       color: var(--font-default-dark);
     }
 
-    .description {
+    :global(:root:not([data-theme="light"])) .description {
       border-top-color: var(--nord2);
     }
 
-    .description h3 {
+    :global(:root:not([data-theme="light"])) .description h3 {
       color: var(--font-default-dark);
     }
 
-    .description p {
+    :global(:root:not([data-theme="light"])) .description p {
       color: var(--nord5);
     }
 
-    .splits-section {
+    :global(:root:not([data-theme="light"])) .splits-section {
       border-top-color: var(--nord2);
     }
 
-    .splits-section h3 {
+    :global(:root:not([data-theme="light"])) .splits-section h3 {
       color: var(--font-default-dark);
     }
 
-    .split-item {
+    :global(:root:not([data-theme="light"])) .split-item {
       background: var(--nord2);
       border-color: var(--nord3);
     }
 
-    .split-item.current-user {
+    :global(:root:not([data-theme="light"])) .split-item.current-user {
       background: var(--nord3);
       border-color: var(--blue);
     }
 
-    .username {
+    :global(:root:not([data-theme="light"])) .username {
       color: var(--font-default-dark);
     }
 
-    .panel-actions {
+    :global(:root:not([data-theme="light"])) .panel-actions {
       background: var(--nord2);
       border-top-color: var(--nord3);
     }
 
-    .btn-secondary {
+    :global(:root:not([data-theme="light"])) .btn-secondary {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
 
-    .btn-secondary:hover {
+    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
       background-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .panel-content {
+	background: var(--nord1);
+}
+:global(:root[data-theme="dark"]) .panel-header {
+	background: var(--nord2);
+      border-bottom-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .panel-header h2 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .close-button {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .close-button:hover {
+	background: var(--nord3);
+      color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .error {
+	background-color: var(--accent-dark);
+}
+:global(:root[data-theme="dark"]) .payment-header {
+	background: linear-gradient(135deg, var(--nord2), var(--nord3));
+}
+:global(:root[data-theme="dark"]) .title-section h1 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .receipt-image img {
+	border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .label {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .value {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .description {
+	border-top-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .description h3 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .description p {
+	color: var(--nord5);
+}
+:global(:root[data-theme="dark"]) .splits-section {
+	border-top-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .splits-section h3 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .split-item {
+	background: var(--nord2);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .split-item.current-user {
+	background: var(--nord3);
+      border-color: var(--blue);
+}
+:global(:root[data-theme="dark"]) .username {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .panel-actions {
+	background: var(--nord2);
+      border-top-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .btn-secondary {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .btn-secondary:hover {
+	background-color: var(--nord3);
+}
 
   @media (max-width: 768px) {
     .panel-content {

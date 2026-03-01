@@ -102,13 +102,13 @@ const labels = $derived({
 <style>
 ol li::marker{
 	font-weight: bold;
-	color: var(--blue);
+	color: var(--color-primary);
 	font-size: 1.2rem;
 }
 .instructions{
 	flex-basis: 0;
 	flex-grow: 2;
-	background-color: var(--nord5);
+	background-color: var(--color-bg-secondary);
 	padding-block: 1rem;
 	padding-inline: 2rem;
 }
@@ -129,17 +129,9 @@ ol li::marker{
 .additional_info > *{
 	flex-grow: 0;
 	padding: 1em;
-	background-color: #FAFAFE;
+	background-color: var(--color-bg-tertiary);
 	box-shadow: var(--shadow-md);
 	max-width: 30%
-}
-@media (prefers-color-scheme: dark){
-	.instructions{
-		background-color: var(--nord6-dark);
-	}
-	.additional_info > *{
-		background-color: var(--accent-dark);
-	}
 }
 @media screen and (max-width: 500px){
 	.additional_info > *{

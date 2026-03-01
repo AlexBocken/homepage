@@ -58,13 +58,13 @@
     .search-info {
         text-align: center;
         margin-bottom: 2rem;
-        color: var(--nord3);
+        color: var(--color-text-secondary);
     }
     .filter-info {
         text-align: center;
         margin-bottom: 1rem;
         font-size: 0.9em;
-        color: var(--nord2);
+        color: var(--color-text-tertiary);
     }
 </style>
 

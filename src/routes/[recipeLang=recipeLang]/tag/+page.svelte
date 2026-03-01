@@ -35,18 +35,11 @@
 	input {
 		width: 100%;
 		padding: 0.5rem 0.75rem;
-		border: 1px solid var(--nord4);
+		border: 1px solid var(--color-border);
 		border-radius: var(--radius-pill, 999px);
 		font-size: 0.9rem;
-		background: var(--nord6, #eceff4);
-		color: var(--nord0);
-	}
-	@media (prefers-color-scheme: dark) {
-		input {
-			background: var(--nord1);
-			border-color: var(--nord3);
-			color: var(--nord6);
-		}
+		background: var(--color-surface);
+		color: var(--color-text-primary);
 	}
 </style>
 <h1>{labels.title}</h1>

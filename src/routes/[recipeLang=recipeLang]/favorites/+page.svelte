@@ -46,7 +46,7 @@ h1{
 .empty-state{
     text-align: center;
     margin-top: 3rem;
-    color: var(--nord3);
+    color: var(--color-text-tertiary);
 }
 .to-try-link{
     text-align: center;
@@ -56,8 +56,8 @@ h1{
     display: inline-block;
     padding: 0.4em 1.2em;
     border-radius: var(--radius-pill);
-    background: var(--nord10);
-    color: var(--nord6);
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
     text-decoration: none;
     font-size: 0.95rem;
     font-weight: 500;
@@ -67,7 +67,7 @@ h1{
 .to-try-link a:hover,
 .to-try-link a:focus-visible{
     transform: scale(1.05);
-    background: var(--nord9);
+    background: var(--color-primary-hover);
     box-shadow: var(--shadow-hover);
 }
 </style>

@@ -261,9 +261,12 @@ button.action_button {
 	margin: 0;
 }
 @media (prefers-color-scheme: dark) {
-	.title {
+    :global(:root:not([data-theme="light"])) .title {
 		background-color: var(--nord6-dark);
 	}
+  }
+:global(:root[data-theme="dark"]) .title {
+	background-color: var(--nord6-dark);
 }
 .form-size-section {
 	max-width: 600px;
@@ -326,7 +329,8 @@ button.action_button {
 			await update();
 			submitting = false;
 		};
-	}}
+	}
+  }
 >
 	<!-- Hidden inputs for complex nested data -->
 	<input type="hidden" name="ingredients_json" value={JSON.stringify(ingredients)} />
@@ -375,19 +379,23 @@ button.action_button {
 		<h3>Backform (Standard):</h3>
 		<div class="form-size-controls">
 			<label>
-				<input type="radio" name="formShape" value="none" checked={!defaultForm} onchange={() => { defaultForm = null; }} />
+				<input type="radio" name="formShape" value="none" checked={!defaultForm} onchange={() => { defaultForm = null; }
+  } />
 				Keine
 			</label>
 			<label>
-				<input type="radio" name="formShape" value="round" checked={defaultForm?.shape === 'round'} onchange={() => { defaultForm = { shape: 'round', diameter: defaultForm?.diameter || 26 }; }} />
+				<input type="radio" name="formShape" value="round" checked={defaultForm?.shape === 'round'} onchange={() => { defaultForm = { shape: 'round', diameter: defaultForm?.diameter || 26 }; }
+  } />
 				Rund
 			</label>
 			<label>
-				<input type="radio" name="formShape" value="rectangular" checked={defaultForm?.shape === 'rectangular'} onchange={() => { defaultForm = { shape: 'rectangular', width: defaultForm?.width || 20, length: defaultForm?.length || 30 }; }} />
+				<input type="radio" name="formShape" value="rectangular" checked={defaultForm?.shape === 'rectangular'} onchange={() => { defaultForm = { shape: 'rectangular', width: defaultForm?.width || 20, length: defaultForm?.length || 30 }; }
+  } />
 				Rechteckig
 			</label>
 			<label>
-				<input type="radio" name="formShape" value="gugelhupf" checked={defaultForm?.shape === 'gugelhupf'} onchange={() => { defaultForm = { shape: 'gugelhupf', diameter: defaultForm?.diameter || 24, innerDiameter: defaultForm?.innerDiameter || 8 }; }} />
+				<input type="radio" name="formShape" value="gugelhupf" checked={defaultForm?.shape === 'gugelhupf'} onchange={() => { defaultForm = { shape: 'gugelhupf', diameter: defaultForm?.diameter || 24, innerDiameter: defaultForm?.innerDiameter || 8 }; }
+  } />
 				Gugelhupf
 			</label>
 		</div>

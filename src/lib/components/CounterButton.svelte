@@ -23,10 +23,14 @@ let { onclick } = $props<{ onclick?: () => void }>();
 }
 
 @media(prefers-color-scheme: light) {
-	.counter-button {
+    :global(:root:not([data-theme="dark"])) .counter-button {
 		background: var(--nord5);
 		border-color: var(--nord10);
 	}
+  }
+:global(:root[data-theme="light"]) .counter-button {
+	background: var(--nord5);
+		border-color: var(--nord10);
 }
 
 .counter-button:hover {
@@ -35,9 +39,12 @@ let { onclick } = $props<{ onclick?: () => void }>();
 }
 
 @media(prefers-color-scheme: light) {
-	.counter-button:hover {
+    :global(:root:not([data-theme="dark"])) .counter-button:hover {
 		background: var(--nord4);
 	}
+  }
+:global(:root[data-theme="light"]) .counter-button:hover {
+	background: var(--nord4);
 }
 
 .counter-button svg {
@@ -48,9 +55,12 @@ let { onclick } = $props<{ onclick?: () => void }>();
 }
 
 @media(prefers-color-scheme: light) {
-	.counter-button svg {
+    :global(:root:not([data-theme="dark"])) .counter-button svg {
 		fill: var(--nord10);
 	}
+  }
+:global(:root[data-theme="light"]) .counter-button svg {
+	fill: var(--nord10);
 }
 
 .counter-button:hover svg {

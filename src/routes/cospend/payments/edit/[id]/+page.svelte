@@ -348,7 +348,8 @@
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if payment}
-    <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="payment-form">
+    <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }
+  } class="payment-form">
       <FormSection title="Payment Details">
         <div class="form-group">
           <label for="title">Title *</label>
@@ -510,7 +511,8 @@
                     value={split.personalAmount || 0}
                     oninput={(e) => {
                       split.personalAmount = parseFloat(e.target.value) || 0;
-                    }}
+                    }
+  }
                     placeholder="0.00"
                   />
                 </div>
@@ -601,14 +603,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .header h1 {
+    :global(:root:not([data-theme="light"])) .header h1 {
       color: var(--font-default-dark);
     }
 
-    .header p {
+    :global(:root:not([data-theme="light"])) .header p {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .header h1 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .header p {
+	color: var(--nord4);
+}
 
   .loading, .error {
     text-align: center;
@@ -624,10 +632,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error {
+    :global(:root:not([data-theme="light"])) .error {
       background-color: var(--accent-dark);
     }
   }
+:global(:root[data-theme="dark"]) .error {
+	background-color: var(--accent-dark);
+}
 
   .payment-form {
     display: flex;
@@ -653,10 +664,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    label {
+    :global(:root:not([data-theme="light"])) label {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) label {
+	color: var(--nord5);
+}
 
   input, textarea, select {
     width: 100%;
@@ -680,12 +694,21 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    input, textarea, select {
+    :global(:root:not([data-theme="light"])) input,
+:global(:root:not([data-theme="light"])) textarea,
+:global(:root:not([data-theme="light"])) select {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) input,
+:global(:root[data-theme="dark"]) textarea,
+:global(:root[data-theme="dark"]) select {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
 
   .split-method-info {
     display: flex;
@@ -699,11 +722,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-method-info {
+    :global(:root:not([data-theme="light"])) .split-method-info {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .split-method-info {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .split-method-info .label {
     font-weight: 600;
@@ -716,10 +743,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-method-info .label {
+    :global(:root:not([data-theme="light"])) .split-method-info .label {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) .split-method-info .label {
+	color: var(--nord5);
+}
 
   .personal-amounts-editor {
     margin-bottom: 1.5rem;
@@ -730,11 +760,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .personal-amounts-editor {
+    :global(:root:not([data-theme="light"])) .personal-amounts-editor {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .personal-amounts-editor {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .personal-amounts-editor h3 {
     margin-top: 0;
@@ -744,10 +778,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .personal-amounts-editor h3 {
+    :global(:root:not([data-theme="light"])) .personal-amounts-editor h3 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .personal-amounts-editor h3 {
+	color: var(--font-default-dark);
+}
 
   .personal-amounts-editor .description {
     color: var(--nord2);
@@ -757,10 +794,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .personal-amounts-editor .description {
+    :global(:root:not([data-theme="light"])) .personal-amounts-editor .description {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .personal-amounts-editor .description {
+	color: var(--nord4);
+}
 
   .personal-input {
     display: flex;
@@ -792,12 +832,17 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .personal-input input {
+    :global(:root:not([data-theme="light"])) .personal-input input {
       background-color: var(--nord1);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .personal-input input {
+	background-color: var(--nord1);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
 
   .remainder-info {
     margin-top: 1rem;
@@ -813,16 +858,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .remainder-info {
+    :global(:root:not([data-theme="light"])) .remainder-info {
       background-color: var(--nord1);
       border-color: var(--nord3);
     }
 
-    .remainder-info.error {
+    :global(:root:not([data-theme="light"])) .remainder-info.error {
       background-color: var(--accent-dark);
       border-color: var(--red);
     }
   }
+:global(:root[data-theme="dark"]) .remainder-info {
+	background-color: var(--nord1);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .remainder-info.error {
+	background-color: var(--accent-dark);
+      border-color: var(--red);
+}
 
   .remainder-info span {
     display: block;
@@ -832,10 +885,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .remainder-info span {
+    :global(:root:not([data-theme="light"])) .remainder-info span {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .remainder-info span {
+	color: var(--font-default-dark);
+}
 
   .error-message {
     color: var(--red);
@@ -859,10 +915,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .splits-display h3 {
+    :global(:root:not([data-theme="light"])) .splits-display h3 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .splits-display h3 {
+	color: var(--font-default-dark);
+}
 
   .split-item {
     display: flex;
@@ -875,11 +934,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-item {
+    :global(:root:not([data-theme="light"])) .split-item {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .split-item {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .split-username {
     font-weight: 500;
@@ -887,10 +950,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-username {
+    :global(:root:not([data-theme="light"])) .split-username {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .split-username {
+	color: var(--font-default-dark);
+}
 
   .split-amount.positive {
     color: var(--green);
@@ -910,10 +976,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .note {
+    :global(:root:not([data-theme="light"])) .note {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .note {
+	color: var(--nord4);
+}
 
   .js-only {
     display: none;
@@ -980,16 +1049,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .btn-secondary {
+    :global(:root:not([data-theme="light"])) .btn-secondary {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
 
-    .btn-secondary:hover {
+    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
       background-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .btn-secondary {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .btn-secondary:hover {
+	background-color: var(--nord3);
+}
 
   .btn-danger {
     background-color: var(--red);
@@ -1066,23 +1143,36 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .conversion-preview.loading {
+    :global(:root:not([data-theme="light"])) .conversion-preview.loading {
       background-color: var(--nord2);
     }
 
-    .conversion-preview.error {
+    :global(:root:not([data-theme="light"])) .conversion-preview.error {
       background-color: var(--accent-dark);
     }
 
-    .conversion-preview.success {
+    :global(:root:not([data-theme="light"])) .conversion-preview.success {
       background-color: var(--nord2);
       color: var(--font-default-dark);
     }
 
-    .help-text {
+    :global(:root:not([data-theme="light"])) .help-text {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .conversion-preview.loading {
+	background-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .conversion-preview.error {
+	background-color: var(--accent-dark);
+}
+:global(:root[data-theme="dark"]) .conversion-preview.success {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .help-text {
+	color: var(--nord4);
+}
 
   @media (max-width: 600px) {
     .edit-payment {

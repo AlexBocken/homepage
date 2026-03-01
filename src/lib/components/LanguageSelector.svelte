@@ -168,40 +168,51 @@
 	}
 	.language-button{
 		width: auto;
-		padding: 0.5rem 1rem;
-		border-radius: 8px;
-		background-color: var(--nord3);
-		color: white;
-		font-size: 0.9rem;
-		font-weight: 600;
+		padding: 0.3em 0.6em;
+		border-radius: 100px;
+		background: transparent;
+		color: var(--nav-text, rgba(255,255,255,0.6));
+		font-size: 0.75rem;
+		font-weight: 700;
 		cursor: pointer;
-		transition: background-color 100ms;
-		border: none;
+		transition: all 150ms;
+		border: 1px solid var(--nav-btn-border, rgba(255,255,255,0.2));
 	}
 	.language-button:hover{
-		background-color: var(--nord2);
+		color: var(--nav-text-hover, white);
+		border-color: var(--nav-btn-border-hover, rgba(255,255,255,0.4));
+		background: var(--nav-hover-bg, rgba(255,255,255,0.1));
 	}
 	.language-options{
-		--bg_color: var(--nord3);
+		--bg_color: rgba(46, 52, 64, 0.95);
+		--opt-text: rgba(255,255,255,0.7);
+		--opt-text-hover: white;
+		--opt-hover-bg: rgba(255,255,255,0.1);
+		--opt-active-bg: rgba(136, 192, 208, 0.25);
+		--opt-border: rgba(255,255,255,0.08);
 		box-sizing: border-box;
-		border-radius: 5px;
+		border-radius: 8px;
 		position: absolute;
 		right: 0;
 		top: calc(100% + 10px);
 		background-color: var(--bg_color);
-		width: 10ch;
-		padding: 0.5rem;
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		width: 8ch;
+		padding: 0.35rem;
 		z-index: 1000;
 		display: none;
+		border: 1px solid var(--opt-border);
+		box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 	}
 	.language-options::after {
 		content: "";
-		border: 10px solid transparent;
+		border: 8px solid transparent;
 		border-bottom-color: var(--bg_color);
 		border-top: 0;
 		position: absolute;
-		top: -10px;
-		right: 1rem;
+		top: -8px;
+		right: 0.8rem;
 	}
 	/* Show via JS toggle */
 	.language-options.open {
@@ -215,25 +226,53 @@
 		display: block;
 		width: 100%;
 		background-color: transparent;
-		color: white;
+		color: var(--opt-text);
 		border: none;
-		padding: 0.5rem;
+		padding: 0.4rem 0.5rem;
 		margin: 0;
-		border-radius: 4px;
+		border-radius: 6px;
 		cursor: pointer;
-		font-size: 1rem;
+		font-size: 0.8rem;
 		text-align: left;
 		text-decoration: none;
-		transition: background-color 100ms;
+		transition: all 100ms;
 		box-sizing: border-box;
 	}
 	.language-options a:hover{
-		background-color: var(--nord2);
+		background: var(--opt-hover-bg);
+		color: var(--opt-text-hover);
 	}
 	.language-options a.active{
-		background-color: var(--nord8);
-		color: var(--nord0);
+		background: var(--opt-active-bg);
+		color: var(--opt-text-hover);
 		font-weight: 700;
+	}
+	@media (prefers-color-scheme: dark) {
+		.language-options {
+			--bg_color: rgba(20, 20, 20, 0.92);
+		}
+	}
+	:global(:root[data-theme="dark"]) .language-options {
+		--bg_color: rgba(20, 20, 20, 0.92);
+	}
+	/* Light mode dropdown */
+	@media (prefers-color-scheme: light) {
+		:global(:root:not([data-theme])) .language-options {
+			--bg_color: rgba(255, 255, 255, 0.95);
+			--opt-text: rgba(0,0,0,0.6);
+			--opt-text-hover: var(--nord0);
+			--opt-hover-bg: rgba(0,0,0,0.06);
+			--opt-active-bg: rgba(94, 129, 172, 0.15);
+			--opt-border: rgba(0,0,0,0.08);
+		}
+	}
+	:global(:root[data-theme="light"]) .language-options {
+		--bg_color: rgba(255, 255, 255, 0.95);
+		--opt-text: rgba(0,0,0,0.6);
+		--opt-text-hover: var(--nord0);
+		--opt-hover-bg: rgba(0,0,0,0.06);
+		--opt-active-bg: rgba(94, 129, 172, 0.15);
+		--opt-border: rgba(0,0,0,0.08);
 	}
 </style>
 

@@ -135,7 +135,8 @@
 	--parallax-scale: 0.3;
 	margin-bottom: calc(var(--parallax-scale) * (20vh - min(60vh, 520px)));
 	transform-origin: center top;
-	transform: translateY(-1rem) scaleY(calc(1 - var(--parallax-scale)));
+	transform: scaleY(calc(1 - var(--parallax-scale)));
+	margin-top: calc(-3.5rem - 12px);
 }
 @media (prefers-reduced-motion) {
 	.hero-section {
@@ -152,9 +153,9 @@
 .hero {
 	position: sticky;
 	top: 0;
-	height: min(60vh, 520px);
+	height: min(65vh, 560px);
 	overflow: hidden;
-	max-width: 1200px;
+	max-width: calc(1200px + 2rem);
 	margin: 0 auto;
 	z-index: -1;
 }
@@ -262,7 +263,7 @@
 	font-size: 0.85rem;
 	font-weight: 500;
 	background: rgba(255,255,255,0.85);
-	color: var(--nord0);
+	color: #2a2a2a;
 	flex-shrink: 0;
 }
 .chip:hover {
@@ -274,8 +275,8 @@
 	color: white;
 }
 .chip.season {
-	background: var(--color-secondary);
-	color: white;
+	background: var(--color-accent);
+	color: var(--color-text-on-accent);
 }
 .chip .count {
 	font-size: 0.8em;

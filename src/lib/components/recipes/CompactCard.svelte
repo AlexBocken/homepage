@@ -101,39 +101,26 @@
 	font-size: 0.7rem;
 	padding: 0.1rem 0.4rem;
 	border-radius: var(--radius-pill);
-	background-color: var(--nord5);
-	color: var(--nord3);
+	background-color: var(--color-bg-elevated);
+	color: var(--color-text-secondary);
 	text-decoration: none;
 	cursor: pointer;
 	transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
-	box-shadow: var(--shadow-sm);
+	box-shadow: none;
 	border: none;
 	display: inline-block;
 }
 .tag:hover,
 .tag:focus-visible {
 	transform: scale(1.05);
-	background-color: var(--nord8);
+	background-color: var(--color-primary);
 	box-shadow: var(--shadow-hover);
-	color: var(--nord0);
+	color: var(--color-text-on-primary);
 }
 @media (min-width: 600px) {
 	.tag {
 		font-size: 0.9rem;
 		padding: 0.15rem 0.55rem;
-	}
-}
-@media (prefers-color-scheme: dark) {
-	.tag,
-	.tag:visited,
-	.tag:link {
-		background-color: var(--nord0);
-		color: var(--nord4);
-	}
-	.tag:hover,
-	.tag:focus-visible {
-		background-color: var(--nord8);
-		color: var(--nord0);
 	}
 }
 .icon {

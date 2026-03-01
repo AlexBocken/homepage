@@ -62,6 +62,8 @@
 
 	/* ============================================
 	   SEMANTIC COLOR SYSTEM - LIGHT MODE
+	   Warm, easy-on-the-eyes palette
+	   Two accents only: blue (interactive) + red (emphasis)
 	   ============================================ */
 
 	/* Primary Color - Main interactive elements */
@@ -74,39 +76,39 @@
 	--color-accent-hover: #d07179;
 	--color-accent-active: #a04e56;
 
-	/* Secondary Accent - Alternative emphasis */
-	--color-secondary: var(--nord12);
-	--color-secondary-hover: #e09880;
-	--color-secondary-active: #b87060;
+	/* Secondary Accent - demoted to match primary for consistency */
+	--color-secondary: var(--nord10);
+	--color-secondary-hover: var(--nord9);
+	--color-secondary-active: var(--nord8);
 
 	/* Background Colors */
-	--color-bg-primary: #fbf9f3;
-	--color-bg-secondary: var(--nord5);
-	--color-bg-tertiary: var(--nord6);
-	--color-bg-elevated: var(--nord4);
+	--color-bg-primary: #f8f6f1;
+	--color-bg-secondary: #efecea;
+	--color-bg-tertiary: #e8e5e1;
+	--color-bg-elevated: #dfdcd8;
 
 	/* Surface Colors (cards, panels, etc.) */
-	--color-surface: var(--nord6);
-	--color-surface-hover: var(--nord5);
+	--color-surface: #efecea;
+	--color-surface-hover: #e8e5e1;
 
 	/* Text Colors */
-	--color-text-primary: var(--nord0);
-	--color-text-secondary: var(--nord3);
-	--color-text-tertiary: var(--nord2);
+	--color-text-primary: #2a2a2a;
+	--color-text-secondary: #555;
+	--color-text-tertiary: #777;
 	--color-text-inverse: white;
 	--color-text-on-primary: white;
 	--color-text-on-accent: white;
-	--color-text-muted: var(--nord4);
+	--color-text-muted: #aaa;
 
 	/* UI Element Colors */
-	--color-ui-dark: var(--nord0);
-	--color-ui-mid: var(--nord3);
-	--color-ui-light: var(--nord4);
-	--color-ui-hover: var(--nord3);
+	--color-ui-dark: #2a2a2a;
+	--color-ui-mid: #777;
+	--color-ui-light: #bbb;
+	--color-ui-hover: #555;
 
 	/* Border Colors */
-	--color-border: var(--nord4);
-	--color-border-hover: var(--nord3);
+	--color-border: #ddd;
+	--color-border-hover: #bbb;
 
 	/* Link Colors */
 	--color-link: var(--nord10);
@@ -153,63 +155,112 @@
    DARK MODE COLOR OVERRIDES
    ============================================ */
 
+/* System prefers dark, but user hasn't forced light */
 @media (prefers-color-scheme: dark) {
-	:root {
-		/* Dark mode custom colors */
-		--nord6-dark: #292c31;
-		--accent-dark: #1f1f21;
-		--background-dark: #21201b;
-		--font-default-dark: #ffffff;
+	:root:not([data-theme="light"]) {
+		/* Dark mode primitives - true black base */
+		--nord6-dark: #1a1a1a;
+		--accent-dark: #1a1a1a;
+		--background-dark: #000;
+		--font-default-dark: #e5e5e5;
 
-		/* Primary Color - Same but adjusted for dark backgrounds */
-		--color-primary: var(--nord9);
-		--color-primary-hover: var(--nord8);
-		--color-primary-active: var(--nord7);
+		/* Primary Color - frost blue, the single interactive accent */
+		--color-primary: var(--nord8);
+		--color-primary-hover: var(--nord7);
+		--color-primary-active: var(--nord9);
 
-		/* Accent Color - Slightly lighter for dark mode */
-		--color-accent: #d07179;
-		--color-accent-hover: #e08189;
-		--color-accent-active: var(--nord11);
+		/* Accent Color - red, for emphasis and actions */
+		--color-accent: var(--nord11);
+		--color-accent-hover: #d07179;
+		--color-accent-active: #a04e56;
 
-		/* Secondary Accent */
-		--color-secondary: #e09880;
-		--color-secondary-hover: #f0a890;
-		--color-secondary-active: var(--nord12);
+		/* Secondary Accent - same as primary for consistency */
+		--color-secondary: var(--nord8);
+		--color-secondary-hover: var(--nord7);
+		--color-secondary-active: var(--nord9);
 
-		/* Background Colors */
-		--color-bg-primary: var(--background-dark);
-		--color-bg-secondary: var(--accent-dark);
-		--color-bg-tertiary: var(--nord6-dark);
-		--color-bg-elevated: var(--nord0);
+		/* Background Colors - true black hierarchy */
+		--color-bg-primary: #000;
+		--color-bg-secondary: #111;
+		--color-bg-tertiary: #1a1a1a;
+		--color-bg-elevated: #222;
 
-		/* Surface Colors */
-		--color-surface: var(--nord0);
-		--color-surface-hover: var(--nord1);
+		/* Surface Colors - subtle lift from black */
+		--color-surface: #1a1a1a;
+		--color-surface-hover: #222;
 
-		/* Text Colors */
-		--color-text-primary: var(--font-default-dark);
-		--color-text-secondary: var(--nord4);
-		--color-text-tertiary: var(--nord5);
-		--color-text-inverse: var(--nord0);
-		--color-text-on-primary: white;
+		/* Text Colors - soft white, not blinding */
+		--color-text-primary: #e5e5e5;
+		--color-text-secondary: #aaa;
+		--color-text-tertiary: #888;
+		--color-text-inverse: #111;
+		--color-text-on-primary: #000;
 		--color-text-on-accent: white;
-		--color-text-muted: var(--nord3);
+		--color-text-muted: #555;
 
 		/* UI Element Colors */
-		--color-ui-dark: var(--nord6);
-		--color-ui-mid: var(--nord4);
-		--color-ui-light: var(--nord3);
-		--color-ui-hover: var(--nord2);
+		--color-ui-dark: #e5e5e5;
+		--color-ui-mid: #888;
+		--color-ui-light: #444;
+		--color-ui-hover: #666;
 
 		/* Border Colors */
-		--color-border: var(--nord2);
-		--color-border-hover: var(--nord3);
+		--color-border: #333;
+		--color-border-hover: #444;
 
-		/* Link Colors */
+		/* Link Colors - frost blue */
 		--color-link: var(--nord8);
 		--color-link-visited: #c89fb6;
 		--color-link-hover: var(--nord7);
 	}
+}
+
+/* User forced dark mode */
+:root[data-theme="dark"] {
+	--nord6-dark: #1a1a1a;
+	--accent-dark: #1a1a1a;
+	--background-dark: #000;
+	--font-default-dark: #e5e5e5;
+
+	--color-primary: var(--nord8);
+	--color-primary-hover: var(--nord7);
+	--color-primary-active: var(--nord9);
+
+	--color-accent: var(--nord11);
+	--color-accent-hover: #d07179;
+	--color-accent-active: #a04e56;
+
+	--color-secondary: var(--nord8);
+	--color-secondary-hover: var(--nord7);
+	--color-secondary-active: var(--nord9);
+
+	--color-bg-primary: #000;
+	--color-bg-secondary: #111;
+	--color-bg-tertiary: #1a1a1a;
+	--color-bg-elevated: #222;
+
+	--color-surface: #1a1a1a;
+	--color-surface-hover: #222;
+
+	--color-text-primary: #e5e5e5;
+	--color-text-secondary: #aaa;
+	--color-text-tertiary: #888;
+	--color-text-inverse: #111;
+	--color-text-on-primary: #000;
+	--color-text-on-accent: white;
+	--color-text-muted: #555;
+
+	--color-ui-dark: #e5e5e5;
+	--color-ui-mid: #888;
+	--color-ui-light: #444;
+	--color-ui-hover: #666;
+
+	--color-border: #333;
+	--color-border-hover: #444;
+
+	--color-link: var(--nord8);
+	--color-link-visited: #c89fb6;
+	--color-link-hover: var(--nord7);
 }
 
 /* ============================================
@@ -276,18 +327,12 @@ a:focus-visible {
 
 /* Light background button (with dark mode) */
 .g-btn-light {
-	background-color: var(--nord5);
-	color: var(--nord0);
+	background-color: var(--color-surface);
+	color: var(--color-text-primary);
 	box-shadow: var(--shadow-sm);
 }
-@media (prefers-color-scheme: dark) {
-	.g-btn-light {
-		background-color: var(--nord0);
-		color: white;
-	}
-}
 
-/* Dark background button */
+/* Dark background button - stays dark in both modes */
 .g-btn-dark,
 .g-btn-dark:visited,
 .g-btn-dark:link {
@@ -324,8 +369,8 @@ a:focus-visible {
 .g-tag:link {
 	padding: 0.25em 1em;
 	border-radius: var(--radius-pill);
-	background-color: var(--nord5);
-	color: var(--nord0);
+	background-color: var(--color-surface);
+	color: var(--color-text-primary);
 	text-decoration: none;
 	cursor: pointer;
 	transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
@@ -336,22 +381,9 @@ a:focus-visible {
 .g-tag:hover,
 .g-tag:focus-visible {
 	transform: scale(1.05);
-	background-color: var(--nord8);
+	background-color: var(--color-primary);
 	box-shadow: var(--shadow-hover);
-	color: var(--nord0);
-}
-@media (prefers-color-scheme: dark) {
-	.g-tag,
-	.g-tag:visited,
-	.g-tag:link {
-		background-color: var(--nord0);
-		color: white;
-	}
-	.g-tag:hover,
-	.g-tag:focus-visible {
-		background-color: var(--nord8);
-		color: var(--nord0);
-	}
+	color: var(--color-text-on-primary);
 }
 
 /* ============================================

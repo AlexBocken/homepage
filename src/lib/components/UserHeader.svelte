@@ -155,17 +155,6 @@ h2 + p{
 	  left: 50%;
 	  margin-left: -20px;
 	}
-	button{
-		margin-bottom: 2rem;
-	}
-	button::before{
-		content: "";
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		background: inherit;
-		z-index: 20;
-	}
 }
 </style>
 

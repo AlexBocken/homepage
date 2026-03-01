@@ -322,14 +322,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    h1 {
+    :global(:root:not([data-theme="light"])) h1 {
       color: var(--font-default-dark);
     }
 
-    .error {
+    :global(:root:not([data-theme="light"])) .error {
       background-color: var(--accent-dark);
     }
   }
+:global(:root[data-theme="dark"]) h1 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .error {
+	background-color: var(--accent-dark);
+}
 
 
   .positive {
@@ -423,33 +429,54 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .recent-activity {
+    :global(:root:not([data-theme="light"])) .recent-activity {
       background: var(--accent-dark);
       border-color: var(--nord2);
     }
 
-    .recent-activity h2 {
+    :global(:root:not([data-theme="light"])) .recent-activity h2 {
       color: var(--font-default-dark);
     }
 
-    .filter-label {
+    :global(:root:not([data-theme="light"])) .filter-label {
       color: var(--nord4);
     }
 
-    .clear-filter {
+    :global(:root:not([data-theme="light"])) .clear-filter {
       border-color: var(--nord3);
       color: var(--nord4);
     }
 
-    .clear-filter:hover {
+    :global(:root:not([data-theme="light"])) .clear-filter:hover {
       border-color: var(--blue);
       color: var(--blue);
     }
 
-    .no-results {
+    :global(:root:not([data-theme="light"])) .no-results {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .recent-activity {
+	background: var(--accent-dark);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .recent-activity h2 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .filter-label {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .clear-filter {
+	border-color: var(--nord3);
+      color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .clear-filter:hover {
+	border-color: var(--blue);
+      color: var(--blue);
+}
+:global(:root[data-theme="dark"]) .no-results {
+	color: var(--nord4);
+}
 
   .activity-dialog {
     display: flex;
@@ -498,16 +525,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .activity-bubble {
+    :global(:root:not([data-theme="light"])) .activity-bubble {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .activity-message.is-me .activity-bubble {
+    :global(:root:not([data-theme="light"])) .activity-message.is-me .activity-bubble {
       background: var(--nord2);
       border-color: var(--blue);
     }
   }
+:global(:root[data-theme="dark"]) .activity-bubble {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .activity-message.is-me .activity-bubble {
+	background: var(--nord2);
+      border-color: var(--blue);
+}
 
   .activity-bubble:hover {
     transform: translateY(-1px);
@@ -536,14 +571,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .activity-bubble::before {
+    :global(:root:not([data-theme="light"])) .activity-bubble::before {
       border-right-color: var(--nord1);
     }
 
-    .activity-message.is-me .activity-bubble::before {
+    :global(:root:not([data-theme="light"])) .activity-message.is-me .activity-bubble::before {
       border-left-color: var(--nord2);
     }
   }
+:global(:root[data-theme="dark"]) .activity-bubble::before {
+	border-right-color: var(--nord1);
+}
+:global(:root[data-theme="dark"]) .activity-message.is-me .activity-bubble::before {
+	border-left-color: var(--nord2);
+}
 
 
   /* New Settlement Flow Activity Styles */
@@ -566,15 +607,22 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .settlement-flow-activity {
+    :global(:root:not([data-theme="light"])) .settlement-flow-activity {
       background: linear-gradient(135deg, var(--nord2), var(--nord1));
       border-color: var(--green);
     }
 
-    .settlement-flow-activity:hover {
+    :global(:root:not([data-theme="light"])) .settlement-flow-activity:hover {
       box-shadow: 0 6px 20px rgba(163, 190, 140, 0.2);
     }
   }
+:global(:root[data-theme="dark"]) .settlement-flow-activity {
+	background: linear-gradient(135deg, var(--nord2), var(--nord1));
+      border-color: var(--green);
+}
+:global(:root[data-theme="dark"]) .settlement-flow-activity:hover {
+	box-shadow: 0 6px 20px rgba(163, 190, 140, 0.2);
+}
 
   .settlement-activity-content {
     width: 100%;
@@ -630,10 +678,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .settlement-date {
+    :global(:root:not([data-theme="light"])) .settlement-date {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .settlement-date {
+	color: var(--nord4);
+}
 
   .activity-header {
     display: flex;
@@ -679,18 +730,27 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .category-name {
+    :global(:root:not([data-theme="light"])) .category-name {
       color: var(--nord4);
     }
 
-    .payment-title {
+    :global(:root:not([data-theme="light"])) .payment-title {
       color: var(--font-default-dark);
     }
 
-    .username {
+    :global(:root:not([data-theme="light"])) .username {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .category-name {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .payment-title {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .username {
+	color: var(--nord4);
+}
 
   .activity-amount {
     font-weight: bold;
@@ -724,14 +784,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .payment-date {
+    :global(:root:not([data-theme="light"])) .payment-date {
       color: var(--nord4);
     }
 
-    .payment-description {
+    :global(:root:not([data-theme="light"])) .payment-description {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) .payment-date {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .payment-description {
+	color: var(--nord5);
+}
 
   @media (max-width: 600px) {
     .cospend-main {
@@ -858,10 +924,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .chart-section .loading {
+    :global(:root:not([data-theme="light"])) .chart-section .loading {
       background: var(--nord1);
       border-color: var(--nord2);
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .chart-section .loading {
+	background: var(--nord1);
+      border-color: var(--nord2);
+      color: var(--nord4);
+}
 </style>

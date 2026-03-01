@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { checked = $bindable(false), label = "", accentColor = "var(--nord14)", href = undefined as string | undefined } = $props<{ checked?: boolean, label?: string, accentColor?: string, href?: string }>();
+	let { checked = $bindable(false), label = "", accentColor = "var(--color-primary)", href = undefined as string | undefined } = $props<{ checked?: boolean, label?: string, accentColor?: string, href?: string }>();
 </script>
 
 <style>
@@ -19,10 +19,14 @@
 }
 
 @media(prefers-color-scheme: light) {
-	.toggle-wrapper label,
-	.toggle-wrapper a {
+    :global(:root:not([data-theme="dark"])) .toggle-wrapper label,
+:global(:root:not([data-theme="dark"])) .toggle-wrapper a {
 		color: var(--nord2);
 	}
+  }
+:global(:root[data-theme="light"]) .toggle-wrapper label,
+:global(:root[data-theme="light"]) .toggle-wrapper a {
+	color: var(--nord2);
 }
 
 .toggle-wrapper span {
@@ -49,10 +53,14 @@
 }
 
 @media(prefers-color-scheme: light) {
-	.toggle-track,
-	.toggle-wrapper input[type="checkbox"] {
+	:global(:root:not([data-theme="dark"])) .toggle-track:not(.checked),
+	:global(:root:not([data-theme="dark"])) .toggle-wrapper input[type="checkbox"]:not(:checked) {
 		background: var(--nord4);
 	}
+}
+:global(:root[data-theme="light"]) .toggle-track:not(.checked),
+:global(:root[data-theme="light"]) .toggle-wrapper input[type="checkbox"]:not(:checked) {
+	background: var(--nord4);
 }
 
 .toggle-track.checked,

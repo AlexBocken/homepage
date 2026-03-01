@@ -51,7 +51,8 @@ async function pray() {
 		<StreakAura value={displayLength} {burst} />
 		<span class="streak-label">{labels.days}</span>
 	</div>
-	<form method="POST" action="?/pray" onsubmit={(e) => { e.preventDefault(); pray(); }}>
+	<form method="POST" action="?/pray" onsubmit={(e) => { e.preventDefault(); pray(); }
+  }>
 		<button
 			class="streak-button"
 			type="submit"
@@ -79,9 +80,12 @@ async function pray() {
 }
 
 @media (prefers-color-scheme: light) {
-	.streak-container {
+    :global(:root:not([data-theme="dark"])) .streak-container {
 		background: var(--nord5);
 	}
+  }
+:global(:root[data-theme="light"]) .streak-container {
+	background: var(--nord5);
 }
 
 .streak-display {
@@ -97,9 +101,12 @@ async function pray() {
 }
 
 @media (prefers-color-scheme: light) {
-	.streak-label {
+    :global(:root:not([data-theme="dark"])) .streak-label {
 		color: var(--nord3);
 	}
+  }
+:global(:root[data-theme="light"]) .streak-label {
+	color: var(--nord3);
 }
 
 .streak-button {
@@ -135,8 +142,11 @@ async function pray() {
 }
 
 @media (prefers-color-scheme: light) {
-	.streak-button:disabled {
+    :global(:root:not([data-theme="dark"])) .streak-button:disabled {
 		background: var(--nord4);
 	}
+  }
+:global(:root[data-theme="light"]) .streak-button:disabled {
+	background: var(--nord4);
 }
 </style>

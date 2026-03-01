@@ -66,15 +66,24 @@
 	color: var(--nord0);
 }
 @media (prefers-color-scheme: dark) {
-	.link-pill {
+    :global(:root:not([data-theme="light"])) .link-pill {
 		background-color: var(--nord0);
 		color: var(--nord4);
 	}
-	.link-pill:hover,
-	.link-pill:focus-visible {
+	:global(:root:not([data-theme="light"])) .link-pill:hover,
+:global(:root:not([data-theme="light"])) .link-pill:focus-visible {
 		background-color: var(--nord8);
 		color: var(--nord0);
 	}
+  }
+:global(:root[data-theme="dark"]) .link-pill {
+	background-color: var(--nord0);
+		color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .link-pill:hover,
+:global(:root[data-theme="dark"]) .link-pill:focus-visible {
+	background-color: var(--nord8);
+		color: var(--nord0);
 }
 .notes {
 	font-size: 0.85rem;
@@ -86,9 +95,12 @@
 	overflow: hidden;
 }
 @media (prefers-color-scheme: dark) {
-	.notes {
+    :global(:root:not([data-theme="light"])) .notes {
 		color: var(--nord4);
 	}
+  }
+:global(:root[data-theme="dark"]) .notes {
+	color: var(--nord4);
 }
 .card-btn {
 	position: absolute;

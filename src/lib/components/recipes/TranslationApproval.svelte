@@ -384,10 +384,14 @@
 }
 
 @media(prefers-color-scheme: light) {
-	.translation-approval {
+    :global(:root:not([data-theme="dark"])) .translation-approval {
 		background: var(--nord6);
 		border-color: var(--nord4);
 	}
+  }
+:global(:root[data-theme="light"]) .translation-approval {
+	background: var(--nord6);
+		border-color: var(--nord4);
 }
 
 .header {
@@ -403,9 +407,12 @@
 }
 
 @media(prefers-color-scheme: light) {
-	.header h3 {
+    :global(:root:not([data-theme="dark"])) .header h3 {
 		color: var(--nord0);
 	}
+  }
+:global(:root[data-theme="light"]) .header h3 {
+	color: var(--nord0);
 }
 
 .status-badge {
@@ -458,12 +465,18 @@
 
 /* Fix button icon visibility in dark mode */
 @media (prefers-color-scheme: dark) {
-	.list-wrapper :global(svg) {
+    :global(:root:not([data-theme="light"])) .list-wrapper :global(svg) {
 		fill: white !important;
 	}
-	.list-wrapper :global(.button_arrow) {
+	:global(:root:not([data-theme="light"])) .list-wrapper :global(.button_arrow) {
 		fill: var(--nord4) !important;
 	}
+  }
+:global(:root[data-theme="dark"]) .list-wrapper :global(svg) {
+	fill: white !important;
+}
+:global(:root[data-theme="dark"]) .list-wrapper :global(.button_arrow) {
+	fill: var(--nord4) !important;
 }
 
 .column-header {
@@ -585,9 +598,12 @@ button:disabled {
 }
 
 @media(prefers-color-scheme: light) {
-	.idle-state {
+    :global(:root:not([data-theme="dark"])) .idle-state {
 		color: var(--nord2);
 	}
+  }
+:global(:root[data-theme="light"]) .idle-state {
+	color: var(--nord2);
 }
 
 .idle-state p {

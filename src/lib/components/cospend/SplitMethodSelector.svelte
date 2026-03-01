@@ -239,15 +239,22 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .form-section {
+    :global(:root:not([data-theme="light"])) .form-section {
       background: var(--nord1);
       border-color: var(--nord2);
     }
 
-    .form-section h2 {
+    :global(:root:not([data-theme="light"])) .form-section h2 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .form-section {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .form-section h2 {
+	color: var(--font-default-dark);
+}
 
   .form-group {
     margin-bottom: 1rem;
@@ -261,10 +268,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    label {
+    :global(:root:not([data-theme="light"])) label {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) label {
+	color: var(--nord5);
+}
 
   select {
     width: 100%;
@@ -284,12 +294,17 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    select {
+    :global(:root:not([data-theme="light"])) select {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) select {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
 
   .proportional-splits, .personal-splits {
     margin-top: 1rem;
@@ -304,11 +319,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .proportional-splits {
+    :global(:root:not([data-theme="light"])) .proportional-splits {
       border-color: var(--nord3);
       background-color: var(--nord2);
     }
   }
+:global(:root[data-theme="dark"]) .proportional-splits {
+	border-color: var(--nord3);
+      background-color: var(--nord2);
+}
 
   .proportional-splits h3, .personal-splits h3 {
     margin-top: 0;
@@ -317,10 +336,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .proportional-splits h3, .personal-splits h3 {
+    :global(:root:not([data-theme="light"])) .proportional-splits h3,
+:global(:root:not([data-theme="light"])) .personal-splits h3 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .proportional-splits h3,
+:global(:root[data-theme="dark"]) .personal-splits h3 {
+	color: var(--font-default-dark);
+}
 
   .personal-splits .description {
     color: var(--nord2);
@@ -330,10 +354,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .personal-splits .description {
+    :global(:root:not([data-theme="light"])) .personal-splits .description {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .personal-splits .description {
+	color: var(--nord4);
+}
 
   .split-input {
     display: flex;
@@ -365,12 +392,17 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-input input {
+    :global(:root:not([data-theme="light"])) .split-input input {
       background-color: var(--nord2);
       color: var(--font-default-dark);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .split-input input {
+	background-color: var(--nord2);
+      color: var(--font-default-dark);
+      border-color: var(--nord3);
+}
 
   .remainder-info {
     margin-top: 1rem;
@@ -386,16 +418,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .remainder-info {
+    :global(:root:not([data-theme="light"])) .remainder-info {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
 
-    .remainder-info.error {
+    :global(:root:not([data-theme="light"])) .remainder-info.error {
       background-color: var(--accent-dark);
       border-color: var(--red);
     }
   }
+:global(:root[data-theme="dark"]) .remainder-info {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .remainder-info.error {
+	background-color: var(--accent-dark);
+      border-color: var(--red);
+}
 
   .remainder-info span {
     display: block;
@@ -418,11 +458,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-preview {
+    :global(:root:not([data-theme="light"])) .split-preview {
       background-color: var(--nord2);
       border-color: var(--nord3);
     }
   }
+:global(:root[data-theme="dark"]) .split-preview {
+	background-color: var(--nord2);
+      border-color: var(--nord3);
+}
 
   .split-preview h3 {
     margin-top: 0;
@@ -431,10 +475,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-preview h3 {
+    :global(:root:not([data-theme="light"])) .split-preview h3 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .split-preview h3 {
+	color: var(--font-default-dark);
+}
 
   .split-item {
     display: flex;
@@ -454,10 +501,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .username {
+    :global(:root:not([data-theme="light"])) .username {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .username {
+	color: var(--font-default-dark);
+}
 
   .amount.positive {
     color: var(--green);

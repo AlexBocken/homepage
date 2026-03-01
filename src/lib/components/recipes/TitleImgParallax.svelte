@@ -46,9 +46,9 @@
 
 .section {
   margin-bottom: -20vh;
+  margin-top: calc(-3.5rem - 12px);
   transform-origin: center top;
-  transform:	translateY(-1rem)
-  	scaleY(calc(1 - var(--scale)));
+  transform: scaleY(calc(1 - var(--scale)));
 }
 
 .section > * {
@@ -67,7 +67,7 @@
   align-items: center;
   justify-content: center;
   top: 0;
-  height: max(50dvh, 500px);
+  height: max(55dvh, 540px);
   z-index: -10;
   margin: 0;
 }
@@ -78,8 +78,8 @@
   left: 0;
   right: 0;
   margin-inline: auto;
-  width: min(1000px, 100dvw);
-  height: max(60dvh,600px);
+  width: min(calc(1000px + 2rem), 100dvw);
+  height: max(65dvh, 640px);
   overflow: hidden;
 }
 
@@ -87,8 +87,8 @@
   display: block;
   position: absolute;
   top: 0;
-  width: min(1000px, 100dvw);
-  height: max(60dvh,600px);
+  width: min(calc(1000px + 2rem), 100dvw);
+  height: max(65dvh, 640px);
   object-fit: cover;
   object-position: 50% 20%;
 }

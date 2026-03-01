@@ -196,10 +196,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .error {
+    :global(:root:not([data-theme="light"])) .error {
       background-color: var(--accent-dark);
     }
   }
+:global(:root[data-theme="dark"]) .error {
+	background-color: var(--accent-dark);
+}
 
   .payment-card {
     background: var(--nord6);
@@ -210,11 +213,15 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .payment-card {
+    :global(:root:not([data-theme="light"])) .payment-card {
       background: var(--nord1);
       border-color: var(--nord2);
     }
   }
+:global(:root[data-theme="dark"]) .payment-card {
+	background: var(--nord1);
+      border-color: var(--nord2);
+}
 
   .payment-header {
     display: flex;
@@ -226,10 +233,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .payment-header {
+    :global(:root:not([data-theme="light"])) .payment-header {
       background: linear-gradient(135deg, var(--nord2), var(--nord3));
     }
   }
+:global(:root[data-theme="dark"]) .payment-header {
+	background: linear-gradient(135deg, var(--nord2), var(--nord3));
+}
 
   .title-with-category {
     display: flex;
@@ -256,10 +266,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .title-section h1 {
+    :global(:root:not([data-theme="light"])) .title-section h1 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .title-section h1 {
+	color: var(--font-default-dark);
+}
 
   .receipt-image {
     flex-shrink: 0;
@@ -275,10 +288,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .receipt-image img {
+    :global(:root:not([data-theme="light"])) .receipt-image img {
       border-color: var(--nord2);
     }
   }
+:global(:root[data-theme="dark"]) .receipt-image img {
+	border-color: var(--nord2);
+}
 
   .payment-info {
     padding: 2rem;
@@ -311,14 +327,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .label {
+    :global(:root:not([data-theme="light"])) .label {
       color: var(--nord4);
     }
 
-    .value {
+    :global(:root:not([data-theme="light"])) .value {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .label {
+	color: var(--nord4);
+}
+:global(:root[data-theme="dark"]) .value {
+	color: var(--font-default-dark);
+}
 
   .description {
     border-top: 1px solid var(--nord4);
@@ -338,18 +360,27 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .description {
+    :global(:root:not([data-theme="light"])) .description {
       border-top-color: var(--nord2);
     }
 
-    .description h3 {
+    :global(:root:not([data-theme="light"])) .description h3 {
       color: var(--font-default-dark);
     }
 
-    .description p {
+    :global(:root:not([data-theme="light"])) .description p {
       color: var(--nord5);
     }
   }
+:global(:root[data-theme="dark"]) .description {
+	border-top-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .description h3 {
+	color: var(--font-default-dark);
+}
+:global(:root[data-theme="dark"]) .description p {
+	color: var(--nord5);
+}
 
   .splits-section {
     border-top: 1px solid var(--nord4);
@@ -363,14 +394,20 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .splits-section {
+    :global(:root:not([data-theme="light"])) .splits-section {
       border-top-color: var(--nord2);
     }
 
-    .splits-section h3 {
+    :global(:root:not([data-theme="light"])) .splits-section h3 {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .splits-section {
+	border-top-color: var(--nord2);
+}
+:global(:root[data-theme="dark"]) .splits-section h3 {
+	color: var(--font-default-dark);
+}
 
   .splits-list {
     display: flex;
@@ -394,16 +431,24 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .split-item {
+    :global(:root:not([data-theme="light"])) .split-item {
       background: var(--nord2);
       border-color: var(--nord3);
     }
 
-    .split-item.current-user {
+    :global(:root:not([data-theme="light"])) .split-item.current-user {
       background: var(--nord3);
       border-color: var(--blue);
     }
   }
+:global(:root[data-theme="dark"]) .split-item {
+	background: var(--nord2);
+      border-color: var(--nord3);
+}
+:global(:root[data-theme="dark"]) .split-item.current-user {
+	background: var(--nord3);
+      border-color: var(--blue);
+}
 
   .split-user {
     display: flex;
@@ -432,10 +477,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .username {
+    :global(:root:not([data-theme="light"])) .username {
       color: var(--font-default-dark);
     }
   }
+:global(:root[data-theme="dark"]) .username {
+	color: var(--font-default-dark);
+}
 
   .split-amount {
     font-weight: 500;
@@ -461,10 +509,13 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .exchange-rate-info {
+    :global(:root:not([data-theme="light"])) .exchange-rate-info {
       color: var(--nord4);
     }
   }
+:global(:root[data-theme="dark"]) .exchange-rate-info {
+	color: var(--nord4);
+}
 
   @media (max-width: 600px) {
     .payment-view {

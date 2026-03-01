@@ -47,5 +47,4 @@
 	bind:checked={showBilingual}
 	{label}
 	{href}
-	accentColor="var(--nord14)"
 />

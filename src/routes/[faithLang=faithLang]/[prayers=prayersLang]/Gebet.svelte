@@ -52,9 +52,12 @@ a.gebet-link {
 	display: block;
 }
 @media (prefers-color-scheme: light) {
-	.gebet_wrapper {
+    :global(:root:not([data-theme="dark"])) .gebet_wrapper {
 		background-color: var(--nord5);
 	}
+  }
+:global(:root[data-theme="light"]) .gebet_wrapper {
+	background-color: var(--nord5);
 }
 </style>
 
