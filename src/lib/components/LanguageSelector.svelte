@@ -183,43 +183,43 @@
 		border-color: var(--nav-btn-border-hover, rgba(255,255,255,0.4));
 		background: var(--nav-hover-bg, rgba(255,255,255,0.1));
 	}
-	.language-options{
+	.options-wrap {
 		--bg_color: rgba(46, 52, 64, 0.95);
 		--opt-text: rgba(255,255,255,0.7);
 		--opt-text-hover: white;
 		--opt-hover-bg: rgba(255,255,255,0.1);
 		--opt-active-bg: rgba(136, 192, 208, 0.25);
 		--opt-border: rgba(255,255,255,0.08);
-		box-sizing: border-box;
-		border-radius: 8px;
 		position: absolute;
 		right: 0;
-		top: calc(100% + 10px);
-		background-color: var(--bg_color);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		width: 8ch;
-		padding: 0.35rem;
+		top: calc(100% + 2px);
 		z-index: 1000;
 		display: none;
-		border: 1px solid var(--opt-border);
-		box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 	}
-	.language-options::after {
-		content: "";
+	.options-wrap::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		right: 0.8rem;
 		border: 8px solid transparent;
 		border-bottom-color: var(--bg_color);
 		border-top: 0;
-		position: absolute;
-		top: -8px;
-		right: 0.8rem;
+	}
+	.language-options {
+		box-sizing: border-box;
+		border-radius: 8px;
+		margin-top: 8px;
+		background-color: var(--bg_color);
+		width: 8ch;
+		padding: 0.35rem;
+		box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 	}
 	/* Show via JS toggle */
-	.language-options.open {
+	.options-wrap.open {
 		display: block;
 	}
 	/* Show via CSS focus-within (no-JS fallback) */
-	.language-selector:focus-within .language-options {
+	.language-selector:focus-within .options-wrap {
 		display: block;
 	}
 	.language-options a{
@@ -248,16 +248,16 @@
 		font-weight: 700;
 	}
 	@media (prefers-color-scheme: dark) {
-		.language-options {
+		.options-wrap {
 			--bg_color: rgba(20, 20, 20, 0.92);
 		}
 	}
-	:global(:root[data-theme="dark"]) .language-options {
+	:global(:root[data-theme="dark"]) .options-wrap {
 		--bg_color: rgba(20, 20, 20, 0.92);
 	}
 	/* Light mode dropdown */
 	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .language-options {
+		:global(:root:not([data-theme])) .options-wrap {
 			--bg_color: rgba(255, 255, 255, 0.95);
 			--opt-text: rgba(0,0,0,0.6);
 			--opt-text-hover: var(--nord0);
@@ -266,7 +266,7 @@
 			--opt-border: rgba(0,0,0,0.08);
 		}
 	}
-	:global(:root[data-theme="light"]) .language-options {
+	:global(:root[data-theme="light"]) .options-wrap {
 		--bg_color: rgba(255, 255, 255, 0.95);
 		--opt-text: rgba(0,0,0,0.6);
 		--opt-text-hover: var(--nord0);
@@ -280,20 +280,22 @@
 	<button bind:this={langButton} onclick={toggle_language_options} class="language-button">
 		{displayLang.toUpperCase()}
 	</button>
-	<div class="language-options" class:open={isOpen}>
-		<a
-			href={dePath}
-			class:active={displayLang === 'de'}
-			onclick={(e) => { e.preventDefault(); switchLanguage('de'); }}
-		>
-			DE
-		</a>
-		<a
-			href={enPath}
-			class:active={displayLang === 'en'}
-			onclick={(e) => { e.preventDefault(); switchLanguage('en'); }}
-		>
-			EN
-		</a>
+	<div class="options-wrap" class:open={isOpen}>
+		<div class="language-options">
+			<a
+				href={dePath}
+				class:active={displayLang === 'de'}
+				onclick={(e) => { e.preventDefault(); switchLanguage('de'); }}
+			>
+				DE
+			</a>
+			<a
+				href={enPath}
+				class:active={displayLang === 'en'}
+				onclick={(e) => { e.preventDefault(); switchLanguage('en'); }}
+			>
+				EN
+			</a>
+		</div>
 	</div>
 </div>
