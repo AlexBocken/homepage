@@ -22,7 +22,7 @@ function createTheme() {
 		if (stored && CYCLE.includes(stored)) {
 			theme = stored;
 		}
-		applyTheme(theme);
+		applyTheme(stored && CYCLE.includes(stored) ? stored : 'system');
 	}
 
 	return {
