@@ -5,7 +5,7 @@
 	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
 
 	function toggle_options(){
-		const el = document.querySelector("#options")
+		const el = document.querySelector("#options-wrap")
 		el.hidden = !el.hidden
 	}
 
@@ -14,8 +14,8 @@
 			const userButton = document.querySelector("#button")
 
 			if(userButton && !userButton.contains(e.target)){
-				const options = document.querySelector("#options");
-				if (options) options.hidden = true;
+				const wrap = document.querySelector("#options-wrap");
+				if (wrap) wrap.hidden = true;
 			}
 		})
 	})
@@ -44,123 +44,104 @@
 	}
 </script>
 <style>
-	/* (A) SPEECH BOX */
-.speech {
-  /* (A1) FONT */
-   font-size: 1.1em;
-
-  /* (A2) COLORS */
-  color: #fff;
-  background: var(--bg_color);
-
-  /* (A3) DIMENSIONS + POSITION */
-  position: relative;
-  border-radius: 10px;
-}
-
-/* (B) ADD SPEECH "CALLOUT TAIL" */
-/* (B1) USE ::AFTER TO CREATE THE "TAIL" */
-.speech::after {
-  /* (B1-1) ATTACH TRANSPARENT BORDERS */
-  content: "";
-  border: 20px solid transparent;
-
-  /* (B1-2) NECESSARY TO POSITION THE "TAIL" */
-  position: absolute;
-}
-
-/* (C) DIFFERENT TAIL POSITIONS */
-/* (C1) TOP */
-.top.speech::after {
-  /* (C1-1) UP TRIANGLE */
-  border-bottom-color: var(--bg_color);
-  border-top: 0;
-
-  /* (C1-2) POSITION AT TOP */
-  top: -10px; left:84.5%;
-  margin-left: -20px;
-}
-
-
-	button{
-		--margin-right: 0;
+	button {
 		position: relative;
 		background-color: transparent;
 		border: none;
 		width: 1.8rem;
 		height: 1.8rem;
 		border-radius: 50%;
-		margin-right: var(--margin-right);
 		background-color: var(--nord4);
 		background-position: center;
 		background-size: contain;
+		cursor: pointer;
 	}
-	#options{
-		--bg_color: var(--nord3);
-		box-sizing: border-box;
-		border-radius: 5px;
+	.options-wrap {
+		--menu-bg: rgba(46, 52, 64, 0.95);
+		--menu-border: rgba(255,255,255,0.08);
+		--menu-text: rgba(255,255,255,0.9);
+		--menu-text-hover: var(--nord11);
 		position: absolute;
-		right: calc( -1*var(--margin-right) + 0.25rem);
-		top: calc(100% + 10px);
-		background-color: var(--bg_color);
+		right: 0;
+		top: calc(100% + 2px);
+		z-index: 10;
+	}
+	.options-wrap::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		right: 0.35rem;
+		border: 8px solid transparent;
+		border-bottom-color: var(--menu-bg);
+		border-top: 0;
+	}
+	#options {
+		box-sizing: border-box;
+		margin-top: 8px;
+		background-color: var(--menu-bg);
+		color: var(--menu-text);
+		border-radius: 8px;
 		width: 30ch;
 		padding: 1rem;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+		box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 	}
-	#options ul{
-		color: white;
-		font-size: 1.2rem;
+	@media (prefers-color-scheme: dark) {
+		.options-wrap {
+			--menu-bg: rgba(20, 20, 20, 0.92);
+		}
+	}
+	:global(:root[data-theme="dark"]) .options-wrap {
+		--menu-bg: rgba(20, 20, 20, 0.92);
+	}
+	@media (prefers-color-scheme: light) {
+		:global(:root:not([data-theme])) .options-wrap {
+			--menu-bg: rgba(255, 255, 255, 0.95);
+			--menu-border: rgba(0,0,0,0.08);
+			--menu-text: var(--color-text-primary);
+			--menu-text-hover: var(--nord11);
+		}
+	}
+	:global(:root[data-theme="light"]) .options-wrap {
+		--menu-bg: rgba(255, 255, 255, 0.95);
+		--menu-border: rgba(0,0,0,0.08);
+		--menu-text: var(--color-text-primary);
+		--menu-text-hover: var(--nord11);
+	}
+	#options ul {
+		font-size: 1rem;
 		width: 100%;
 		list-style-type: none;
 		padding: 0;
+		margin: 0;
 	}
-	#options li{
-		margin-block: 0.5rem;
+	#options li {
+		margin-block: 0.4rem;
 		text-align: left;
 	}
-	#options li a{
+	#options li a {
 		text-decoration: none;
-		color: white;
+		color: var(--menu-text);
 		text-align: left;
 		transition: var(--transition-fast);
 	}
-	#options li:hover a{
-		color: var(--red);
+	#options li:hover a {
+		color: var(--menu-text-hover);
 	}
-	/* (B2) BOTTOM "CALLOUT TAIL" */
-h2{
-	margin-block: 0;
-	font-size: 1.2rem;
-}
-h2 + p{
-	padding-top: 0;
-	margin-top: 0;
-	font-size: 1.2rem;
-}
-@media screen and (max-width: 800px){
-	#options{
-		top: unset;
-		bottom: calc(100% + 15px);
-		left: 50%;
-		right: unset;
-		transform: translateX(-50%);
-		z-index: 10;
+	h2 {
+		margin-block: 0;
+		font-size: 1.1rem;
 	}
-	.top.speech::after {
-	  border: 20px solid transparent;
-	  border-top-color: var(--bg_color);
-	  border-bottom-width: 0;
-	  top: unset;
-	  bottom: -20px;
-	  left: 50%;
-	  margin-left: -20px;
+	h2 + p {
+		padding-top: 0;
+		margin-top: 0;
+		font-size: 1rem;
 	}
-}
 </style>
 
 {#if user}
 	<button onclick={toggle_options} style="background-image: url(https://bocken.org/static/user/thumb/{user.nickname}.webp)" id=button>
-	<div id=options class="speech top" hidden>
+	<div class="options-wrap" hidden id=options-wrap>
+		<div id=options>
 			<h2>{user.name}</h2>
 			<p>({user.nickname})</p>
 			<ul>
@@ -171,6 +152,7 @@ h2 + p{
 				<li><a href="/logout?callbackUrl={encodeURIComponent(getLogoutCallbackUrl($page.url.pathname))}">Log Out</a></li>
 			</ul>
 		</div>
+	</div>
 	</button>
 {:else}
 	<a class=entry href="/login?callbackUrl={encodeURIComponent($page.url.pathname + $page.url.search)}">Login</a>

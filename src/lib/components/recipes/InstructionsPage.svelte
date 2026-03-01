@@ -130,7 +130,7 @@ ol li::marker{
 	flex-grow: 0;
 	padding: 1em;
 	background-color: var(--color-bg-tertiary);
-	box-shadow: var(--shadow-md);
+	box-shadow: var(--shadow-sm);
 	max-width: 30%
 }
 @media screen and (max-width: 500px){
