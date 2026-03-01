@@ -83,12 +83,12 @@
 
 
 	button{
-		--margin-right: 1rem;
+		--margin-right: 0;
 		position: relative;
 		background-color: transparent;
 		border: none;
-		width: 2.5rem;
-		height: 2.5rem;
+		width: 1.8rem;
+		height: 1.8rem;
 		border-radius: 50%;
 		margin-right: var(--margin-right);
 		background-color: var(--nord4);

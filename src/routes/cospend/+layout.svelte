@@ -7,6 +7,7 @@
   import PaymentModal from '$lib/components/cospend/PaymentModal.svelte';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
+  import { LayoutDashboard, Wallet, RefreshCw } from 'lucide-svelte';
 
   let { data, children } = $props();
 
@@ -55,9 +56,9 @@
 <Header>
   {#snippet links()}
     <ul class="site_header">
-      <li><a href="/cospend" class:active={isActive('/cospend')}>Dashboard</a></li>
-      <li><a href="/cospend/payments" class:active={isActive('/cospend/payments')}>All Payments</a></li>
-      <li><a href="/cospend/recurring" class:active={isActive('/cospend/recurring')}>Recurring Payments</a></li>
+      <li style="--active-fill: var(--nord9)"><a href="/cospend" class:active={isActive('/cospend')}><LayoutDashboard size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Dashboard</span></a></li>
+      <li style="--active-fill: var(--nord14)"><a href="/cospend/payments" class:active={isActive('/cospend/payments')}><span class="nav-icon-wrap nav-icon-wallet"><Wallet size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">All Payments</span></a></li>
+      <li style="--active-fill: var(--nord12); --active-shape: circle(50%)"><a href="/cospend/recurring" class:active={isActive('/cospend/recurring')}><span class="nav-icon-wrap"><RefreshCw size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">Recurring</span></a></li>
     </ul>
   {/snippet}
 
