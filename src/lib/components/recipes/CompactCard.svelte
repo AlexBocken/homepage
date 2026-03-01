@@ -144,6 +144,7 @@
 	top: 0.5em;
 	left: 0.5em;
 	font-size: 1.1rem;
+	font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji, sans-serif;
 	filter: drop-shadow(0 0 3px rgba(0,0,0,0.8));
 	z-index: 2;
 	pointer-events: none;
