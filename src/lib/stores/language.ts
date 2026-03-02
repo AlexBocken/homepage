@@ -11,12 +11,11 @@ function createLanguageStore() {
 		init: () => {
 			if (typeof window !== 'undefined') {
 				const path = window.location.pathname;
-				if (path.startsWith('/recipes')) {
+				if (path.startsWith('/recipes') || path.startsWith('/faith')) {
 					set('en');
-				} else if (path.startsWith('/rezepte')) {
+				} else if (path.startsWith('/rezepte') || path.startsWith('/glaube')) {
 					set('de');
-				} else if (path === '/') {
-					// On main page, read from localStorage
+				} else {
 					const preferredLanguage = localStorage.getItem('preferredLanguage');
 					set(preferredLanguage === 'en' ? 'en' : 'de');
 				}
