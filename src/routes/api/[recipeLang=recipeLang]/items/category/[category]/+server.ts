@@ -5,14 +5,14 @@ import { rand_array } from '$lib/js/randomize';
 import { briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
 
 export const GET: RequestHandler = async ({ params }) => {
-  const { approvalFilter, prefix, projection } = briefQueryConfig(params.recipeLang);
+  const { approvalFilter, prefix, projection } = briefQueryConfig(params.recipeLang!);
   await dbConnect();
 
-  const dbRecipes = await Recipe.find(
+  const dbRecipes: any[] = await Recipe.find(
     { [`${prefix}category`]: params.category, ...approvalFilter },
     projection
   ).lean();
 
-  const recipes = rand_array(dbRecipes.map(r => toBrief(r, params.recipeLang)));
+  const recipes = rand_array(dbRecipes.map(r => toBrief(r, params.recipeLang!)));
   return json(JSON.parse(JSON.stringify(recipes)));
 };

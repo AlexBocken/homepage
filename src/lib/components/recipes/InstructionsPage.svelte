@@ -4,6 +4,11 @@ let { data } = $props();
 let multiplier = $state(data.multiplier || 1);
 
 // Recursively flatten nested instruction references
+/**
+ * @param {any[]} items
+ * @param {string} lang
+ * @param {Set<string>} visited
+ */
 function flattenInstructionReferences(items, lang, visited = new Set()) {
 	const result = [];
 

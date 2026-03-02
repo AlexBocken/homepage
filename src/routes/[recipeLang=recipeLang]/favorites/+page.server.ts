@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
         const favorites = await res.json();
 
         // Mark all favorites with isFavorite flag for filter compatibility
-        const favoritesWithFlag = favorites.map(recipe => ({
+        const favoritesWithFlag = favorites.map((recipe: any) => ({
             ...recipe,
             isFavorite: true
         }));

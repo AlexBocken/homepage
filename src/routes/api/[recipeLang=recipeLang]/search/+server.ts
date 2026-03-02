@@ -7,8 +7,8 @@ import { isEnglish, briefQueryConfig, toBrief } from '$lib/server/recipeHelpers'
 export const GET: RequestHandler = async ({ url, params, locals }) => {
   await dbConnect();
 
-  const { approvalFilter, prefix, projection } = briefQueryConfig(params.recipeLang);
-  const en = isEnglish(params.recipeLang);
+  const { approvalFilter, prefix, projection } = briefQueryConfig(params.recipeLang!);
+  const en = isEnglish(params.recipeLang!);
 
   const query = url.searchParams.get('q')?.toLowerCase().trim() || '';
   const category = url.searchParams.get('category');
@@ -46,12 +46,12 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
     }
 
     const dbRecipes = await Recipe.find(dbQuery, projection).lean();
-    let recipes: BriefRecipeType[] = dbRecipes.map(r => toBrief(r, params.recipeLang));
+    let recipes: BriefRecipeType[] = dbRecipes.map(r => toBrief(r, params.recipeLang!));
 
     // Handle favorites filter
-    if (favoritesOnly && locals.session?.user) {
+    if (favoritesOnly && (locals as any).session?.user) {
       const { UserFavorites } = await import('$models/UserFavorites');
-      const userFavorites = await UserFavorites.findOne({ username: locals.session.user.username });
+      const userFavorites = await UserFavorites.findOne({ username: (locals as any).session.user.username });
       if (userFavorites?.favorites) {
         const favoriteIds = userFavorites.favorites;
         recipes = recipes.filter(recipe => favoriteIds.some(id => id.toString() === recipe._id?.toString()));

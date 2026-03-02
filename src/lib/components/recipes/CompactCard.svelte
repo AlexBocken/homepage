@@ -7,7 +7,7 @@
 		icon_override = false,
 		isFavorite = false,
 		showFavoriteIndicator = false,
-		loading_strat = "lazy",
+		loading_strat = "lazy" as "lazy" | "eager",
 		routePrefix = '/rezepte'
 	} = $props();
 
@@ -24,9 +24,9 @@
 
 	const isInSeason = $derived(icon_override || recipe.season?.includes(current_month));
 
-	function activateTransitions(event) {
-		const img = event.currentTarget.querySelector('.img-wrap img');
-		if (img) img.style.viewTransitionName = `recipe-${recipe.short_name}-img`;
+	function activateTransitions(event: MouseEvent) {
+		const img = (event.currentTarget as HTMLElement)?.querySelector('.img-wrap img') as HTMLElement | null;
+		if (img) (img.style as any).viewTransitionName = `recipe-${recipe.short_name}-img`;
 	}
 </script>
 <style>

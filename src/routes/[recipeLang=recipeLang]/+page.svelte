@@ -13,7 +13,7 @@
 	let matchedCategories = $state(new Set());
 	let hasActiveSearch = $state(false);
 
-	function handleSearchResults(ids, categories) {
+	function handleSearchResults(ids: Set<string>, categories: Set<string>) {
 		matchedRecipeIds = ids;
 		matchedCategories = categories || new Set();
 		hasActiveSearch = ids.size < data.all_brief.length;
@@ -24,7 +24,7 @@
 
 	// Pick a seasonal hero recipe (changes daily) — only recipes with hashed images
 	// Only recipes with hashed images (e.g. myrecipe.a1b2c3d4.webp)
-	const hasHashedImage = (r) => r.images?.length > 0 && /\.\w+\.\w+$/.test(r.images[0].mediapath);
+	const hasHashedImage = (r: any) => r.images?.length > 0 && /\.\w+\.\w+$/.test(r.images[0].mediapath);
 
 	// Server-generated random index ensures SSR and client pick the same hero
 	const heroIndex = data.heroIndex;
@@ -105,7 +105,7 @@
 		}
 
 		if (hasActiveSearch) {
-			pool = pool.filter(r => matchedRecipeIds.has(r._id));
+			pool = pool.filter((r: any) => matchedRecipeIds.has(r._id));
 		}
 
 		return pool;
@@ -368,8 +368,8 @@
 				<p class="subheading">{labels.subheading}</p>
 				<a href="/{data.recipeLang}/{heroRecipe.short_name}" class="hero-featured"
 				onclick={() => {
-					const img = document.querySelector('.hero-img');
-					if (img) img.style.viewTransitionName = `recipe-${heroRecipe.short_name}-img`;
+					const img = document.querySelector('.hero-img') as HTMLElement | null;
+					if (img) (img.style as any).viewTransitionName = `recipe-${heroRecipe.short_name}-img`;
 				}}>
 					<span class="recipe-name"><span class="recipe-icon">{heroRecipe.icon}</span> {@html heroRecipe.name}</span>
 					<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -197 535 410"><path d="M503 31c12-13 12-33 0-46L343-175c-13-12-33-12-46 0-12 13-12 33 0 46L403-24H32C14-24 0-10 0 8s14 32 32 32h371L297 145c-12 13-12 33 0 46 13 12 33 12 46 0L503 31z"/></svg>

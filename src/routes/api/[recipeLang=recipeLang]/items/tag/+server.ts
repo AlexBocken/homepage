@@ -4,10 +4,10 @@ import { dbConnect } from '$utils/db';
 import { isEnglish, briefQueryConfig } from '$lib/server/recipeHelpers';
 
 export const GET: RequestHandler = async ({ params }) => {
-  const { approvalFilter } = briefQueryConfig(params.recipeLang);
+  const { approvalFilter } = briefQueryConfig(params.recipeLang!);
   await dbConnect();
 
-  if (isEnglish(params.recipeLang)) {
+  if (isEnglish(params.recipeLang!)) {
     const recipes = await Recipe.find(approvalFilter, 'translations.en.tags').lean();
     const tagsSet = new Set<string>();
     recipes.forEach(recipe => {

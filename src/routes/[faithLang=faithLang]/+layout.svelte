@@ -15,6 +15,10 @@ const labels = $derived({
 	rosary: isEnglish ? 'Rosary' : 'Rosenkranz'
 });
 
+/** @type {'de' | 'en'} */
+const typedLang = /** @type {'de' | 'en'} */ (data.lang);
+
+/** @param {string} path */
 function isActive(path) {
 	const currentPath = $page.url.pathname;
 	// Check if current path starts with the link path
@@ -22,7 +26,7 @@ function isActive(path) {
 }
 </script>
 <svelte:head>
-	<link rel="preload" href="/fonts/crosses.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="/fonts/crosses.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 </svelte:head>
 <Header>
 	{#snippet links()}
@@ -33,11 +37,11 @@ function isActive(path) {
 	{/snippet}
 
 	{#snippet language_selector_mobile()}
-		<LanguageSelector lang={data.lang} />
+		<LanguageSelector lang={typedLang} />
 	{/snippet}
 
 	{#snippet language_selector_desktop()}
-		<LanguageSelector lang={data.lang} />
+		<LanguageSelector lang={typedLang} />
 	{/snippet}
 
 	{#snippet right_side()}

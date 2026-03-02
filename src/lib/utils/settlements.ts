@@ -48,13 +48,13 @@ export function getSettlementReceiver(payment: any): string {
   }
   
   // Find the user who has a positive amount (the receiver)
-  const receiver = payment.splits.find(split => split.amount > 0);
+  const receiver = payment.splits.find((split: any) => split.amount > 0);
   if (receiver && receiver.username) {
     return receiver.username;
   }
   
   // Fallback: find the user who is not the payer
-  const otherUser = payment.splits.find(split => split.username !== payment.paidBy);
+  const otherUser = payment.splits.find((split: any) => split.username !== payment.paidBy);
   if (otherUser && otherUser.username) {
     return otherUser.username;
   }

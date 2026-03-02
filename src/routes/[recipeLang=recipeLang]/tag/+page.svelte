@@ -14,7 +14,7 @@
     let query = $state('');
     const filteredTags = $derived(
         query
-            ? data.tags.filter(t => t.toLowerCase().includes(query.toLowerCase()))
+            ? data.tags.filter((t: string) => t.toLowerCase().includes(query.toLowerCase()))
             : data.tags
     );
 </script>

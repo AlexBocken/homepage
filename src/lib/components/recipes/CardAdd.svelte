@@ -395,7 +395,7 @@ input::placeholder{
 </style>
 
 
-<div class=card href="" >
+<div class=card>
 
 	<input class=icon placeholder=🥫 bind:value={card_data.icon}/>
 	{#if image_preview_url}

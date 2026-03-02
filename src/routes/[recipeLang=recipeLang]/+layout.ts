@@ -12,7 +12,7 @@ export async function load({ params, data }) {
 	// Check if we're offline:
 	// 1. Browser reports offline (navigator.onLine === false)
 	// 2. Service worker returned offline flag (data.isOffline === true)
-	const isClientOffline = browser && (!navigator.onLine || data?.isOffline);
+	const isClientOffline = browser && (!navigator.onLine || (data as any)?.isOffline);
 
 	if (isClientOffline) {
 		// Return minimal data for offline mode

@@ -24,31 +24,33 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       return json([]);
     }
 
-    const { approvalFilter } = briefQueryConfig(params.recipeLang);
-    const en = isEnglish(params.recipeLang);
+    const { approvalFilter } = briefQueryConfig(params.recipeLang!);
+    const en = isEnglish(params.recipeLang!);
 
     let recipes = await Recipe.find({
       _id: { $in: userFavorites.favorites },
       ...approvalFilter
-    }).lean() as RecipeModelType[];
+    }).lean() as unknown as RecipeModelType[];
 
     if (en) {
-      const englishRecipes = recipes.map(recipe => ({
+      const englishRecipes = recipes.map(recipe => {
+        const t = recipe.translations?.en;
+        return {
         _id: recipe._id,
-        short_name: recipe.translations.en.short_name,
-        name: recipe.translations.en.name,
-        category: recipe.translations.en.category,
+        short_name: t?.short_name,
+        name: t?.name,
+        category: t?.category,
         icon: recipe.icon,
         dateCreated: recipe.dateCreated,
         dateModified: recipe.dateModified,
         images: recipe.images?.map((img, idx) => ({
           mediapath: img.mediapath,
-          alt: recipe.translations.en.images?.[idx]?.alt || img.alt,
-          caption: recipe.translations.en.images?.[idx]?.caption || img.caption,
+          alt: t?.images?.[idx]?.alt || img.alt,
+          caption: t?.images?.[idx]?.caption || img.caption,
         })),
-        description: recipe.translations.en.description,
-        note: recipe.translations.en.note,
-        tags: recipe.translations.en.tags || [],
+        description: t?.description,
+        note: t?.note,
+        tags: t?.tags || [],
         season: recipe.season,
         baking: recipe.baking,
         preparation: recipe.preparation,
@@ -56,13 +58,13 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         portions: recipe.portions,
         cooking: recipe.cooking,
         total_time: recipe.total_time,
-        ingredients: recipe.translations.en.ingredients || [],
-        instructions: recipe.translations.en.instructions || [],
-        preamble: recipe.translations.en.preamble,
-        addendum: recipe.translations.en.addendum,
+        ingredients: t?.ingredients || [],
+        instructions: t?.instructions || [],
+        preamble: t?.preamble,
+        addendum: t?.addendum,
         germanShortName: recipe.short_name,
-        translationStatus: recipe.translations.en.translationStatus
-      }));
+        translationStatus: t?.translationStatus
+      }});
       return json(JSON.parse(JSON.stringify(englishRecipes)));
     }
 

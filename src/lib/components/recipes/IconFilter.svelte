@@ -43,6 +43,7 @@
 		}, 200);
 	}
 
+	/** @param {string} icon */
 	function handleIconSelect(icon) {
 		if (useAndLogic) {
 			// AND mode: single select
@@ -62,6 +63,7 @@
 		}
 	}
 
+	/** @param {KeyboardEvent} event */
 	function handleKeyDown(event) {
 		if (event.key === 'Escape') {
 			dropdownOpen = false;
@@ -69,6 +71,7 @@
 		}
 	}
 
+	/** @param {string} icon */
 	function handleRemove(icon) {
 		if (useAndLogic) {
 			onChange(null);

@@ -4,11 +4,19 @@ import type { Session } from "@auth/sveltekit";
 
 declare global {
 	namespace App {
-		// interface Error {}
+		interface Error {
+			message: string;
+			details?: string;
+			bibleQuote?: any;
+			lang?: string;
+		}
 		interface Locals {
 			auth(): Promise<Session | null>;
 		}
 		// interface PageData {}
+		interface PageState {
+			paymentId?: string | null;
+		}
 		// interface Platform {}
 	}
 }

@@ -1,8 +1,11 @@
 <script>
   import {enhance} from '$app/forms';
 	export let data
+  /** @type {string} */
   let password;
-	const admin = data.user?.access.includes('admin') ?? false
+	/** @type {any} */
+	const user = data.user;
+	const admin = user?.access?.includes('admin') ?? false
 
 </script>
 <style>
@@ -68,7 +71,7 @@ input.hide{
 <section>
   <form action="?/change_password" method=POST use:enhance>
 	<h2>Passwort ändern</h2>
-    <input type="text" bind:value={data.user.username} class=hide name="username" required> 
+    <input type="text" value={user?.username ?? ''} class=hide name="username" required>
 		<label>
 		Altes Passwort:
 			<input type="password" name="old_password" required>

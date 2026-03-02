@@ -10,7 +10,7 @@
 		}
 
 		set trockenhefe(value) {
-			this._trockenhefe = value.replace(/\D/g, '');
+			this._trockenhefe = /** @type {any} */ (value).replace(/\D/g, '');
 			this._frischhefe = this._trockenhefe * 3;
 		}
 
@@ -19,7 +19,7 @@
 		}
 
 		set frischhefe(value) {
-			this._frischhefe = value.replace(/\D/g, '');
+			this._frischhefe = /** @type {any} */ (value).replace(/\D/g, '');
 			this._trockenhefe = this._frischhefe / 3;
 		}
 	}

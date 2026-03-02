@@ -34,7 +34,7 @@ export const POST: RequestHandler = async ({request, locals}) => {
 	for (const depRecipe of referencingRecipes) {
 		// Expand ingredient references
 		if (depRecipe.ingredients) {
-			depRecipe.ingredients = depRecipe.ingredients.flatMap((item: any) => {
+			(depRecipe as any).ingredients = depRecipe.ingredients.flatMap((item: any) => {
 				if (item.type === 'reference' && item.baseRecipeRef && item.baseRecipeRef.equals(recipe._id)) {
 					if (item.includeIngredients && recipe.ingredients) {
 						return recipe.ingredients.filter((i: any) => i.type === 'section' || !i.type);
@@ -47,7 +47,7 @@ export const POST: RequestHandler = async ({request, locals}) => {
 
 		// Expand instruction references
 		if (depRecipe.instructions) {
-			depRecipe.instructions = depRecipe.instructions.flatMap((item: any) => {
+			(depRecipe as any).instructions = depRecipe.instructions.flatMap((item: any) => {
 				if (item.type === 'reference' && item.baseRecipeRef && item.baseRecipeRef.equals(recipe._id)) {
 					if (item.includeInstructions && recipe.instructions) {
 						return recipe.instructions.filter((i: any) => i.type === 'section' || !i.type);

@@ -10,6 +10,7 @@
 	let processing = $state(false);
 	let filter = $state('missing');
 	let limit = $state(50);
+	/** @type {any[]} */
 	let results = $state([]);
 	let errorMsg = $state('');
 

@@ -1,6 +1,7 @@
 <script>
 	let { item, ondelete, onedit, isEnglish = false } = $props();
 
+	/** @param {string} url */
 	function getDomain(url) {
 		try {
 			return new URL(url).hostname.replace(/^www\./, '');
@@ -91,6 +92,7 @@
 	margin: 0;
 	display: -webkit-box;
 	-webkit-line-clamp: 3;
+	line-clamp: 3;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 }

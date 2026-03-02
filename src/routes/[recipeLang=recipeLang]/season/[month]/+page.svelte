@@ -18,17 +18,17 @@
     let hasActiveSearch = $state(false);
 
     // Handle search results from Search component
-    function handleSearchResults(ids, categories) {
+    function handleSearchResults(ids: Set<string>, categories: Set<string>) {
         matchedRecipeIds = ids;
         hasActiveSearch = ids.size < data.season.length;
     }
 
     // Filter recipes based on search
-    const filteredRecipes = $derived.by(() => {
+    const filteredRecipes: any[] = $derived.by(() => {
         if (!hasActiveSearch) {
             return data.season;
         }
-        return data.season.filter(r => matchedRecipeIds.has(r._id));
+        return data.season.filter((r: any) => matchedRecipeIds.has(r._id));
     });
 </script>
 

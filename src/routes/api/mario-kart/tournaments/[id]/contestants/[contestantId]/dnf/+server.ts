@@ -23,7 +23,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 
     // Find the contestant in the contestants array
     const contestant = tournament.contestants.find(
-      c => c._id?.toString() === params.contestantId
+      (c: any) => c._id?.toString() === params.contestantId
     );
 
     if (!contestant) {

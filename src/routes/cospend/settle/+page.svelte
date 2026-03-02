@@ -17,7 +17,9 @@
     totalIOwe: 0
   });
   let loading = $state(false); // Start as false since we have server data
+  /** @type {string | null} */
   let error = $state(data.error || form?.error || null);
+  /** @type {{ type: string; from: string; to: string; amount: number; description: string } | null} */
   let selectedSettlement = $state(null);
   let settlementAmount = $state(form?.values?.amount || '');
   let submitting = $state(false);
@@ -55,7 +57,7 @@
     }
   });
 
-  function selectSettlement(type, user, amount) {
+  function selectSettlement(/** @type {string} */ type, /** @type {string} */ user, /** @type {number} */ amount) {
     const currentUser = data.currentUser;
     if (type === 'receive') {
       selectedSettlement = {
@@ -83,7 +85,7 @@
       return;
     }
 
-    const amount = parseFloat(settlementAmount);
+    const amount = parseFloat(/** @type {string} */ (settlementAmount));
     if (isNaN(amount) || amount <= 0) {
       error = 'Please enter a valid positive amount';
       return;
@@ -130,7 +132,7 @@
       // Redirect back to dashboard on success
       window.location.href = '/cospend';
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
       submitting = false;
     }
   }
@@ -306,7 +308,7 @@
               <label for="fromUser">From User</label>
               <select id="fromUser" name="fromUser" required>
                 <option value="">Select payer</option>
-                {#each [...debtData.whoOwesMe.map(d => d.username), data.currentUser].filter(Boolean) as user}
+                {#each [...debtData.whoOwesMe.map((/** @type {any} */ d) => d.username), data.currentUser].filter(Boolean) as user}
                   <option value="{user}">{user}{user === data.currentUser ? ' (You)' : ''}</option>
                 {/each}
               </select>
@@ -316,7 +318,7 @@
               <label for="toUser">To User</label>
               <select id="toUser" name="toUser" required>
                 <option value="">Select recipient</option>
-                {#each [...debtData.whoIOwe.map(d => d.username), data.currentUser].filter(Boolean) as user}
+                {#each [...debtData.whoIOwe.map((/** @type {any} */ d) => d.username), data.currentUser].filter(Boolean) as user}
                   <option value="{user}">{user}{user === data.currentUser ? ' (You)' : ''}</option>
                 {/each}
               </select>

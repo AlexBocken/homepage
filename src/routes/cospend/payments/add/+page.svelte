@@ -13,34 +13,40 @@
   let { data, form } = $props();
 
   // Initialize form data with server values if available (for error handling)
+  /** @type {Record<string, any>} */
+  const formValues = form?.values || {};
   let formData = $state({
-    title: form?.values?.title || '',
-    description: form?.values?.description || '',
-    amount: form?.values?.amount || '',
-    currency: form?.values?.currency || 'CHF',
-    paidBy: form?.values?.paidBy || data.currentUser || '',
-    date: form?.values?.date || new Date().toISOString().split('T')[0],
-    category: form?.values?.category || 'groceries',
-    splitMethod: form?.values?.splitMethod || 'equal',
-    splits: [],
-    isRecurring: form?.values?.isRecurring === 'true' || false
+    title: /** @type {string} */ (formValues.title || ''),
+    description: /** @type {string} */ (formValues.description || ''),
+    amount: /** @type {string} */ (formValues.amount || ''),
+    currency: /** @type {string} */ (formValues.currency || 'CHF'),
+    paidBy: /** @type {string} */ (formValues.paidBy || data.currentUser || ''),
+    date: /** @type {string} */ (formValues.date || new Date().toISOString().split('T')[0]),
+    category: /** @type {string} */ (formValues.category || 'groceries'),
+    splitMethod: /** @type {string} */ (formValues.splitMethod || 'equal'),
+    splits: /** @type {any[]} */ ([]),
+    isRecurring: formValues.isRecurring === 'true' || false
   });
 
   // Recurring payment settings
   let recurringData = $state({
-    frequency: form?.values?.recurringFrequency || 'monthly',
-    cronExpression: form?.values?.recurringCronExpression || '',
-    startDate: form?.values?.recurringStartDate || new Date().toISOString().split('T')[0],
-    endDate: form?.values?.recurringEndDate || ''
+    frequency: /** @type {string} */ (formValues.recurringFrequency || 'monthly'),
+    cronExpression: /** @type {string} */ (formValues.recurringCronExpression || ''),
+    startDate: /** @type {string} */ (formValues.recurringStartDate || new Date().toISOString().split('T')[0]),
+    endDate: /** @type {string} */ (formValues.recurringEndDate || '')
   });
 
+  /** @type {File | null} */
   let imageFile = $state(null);
   let imagePreview = $state('');
   let uploading = $state(false);
   let newUser = $state('');
+  /** @type {Record<string, number>} */
   let splitAmounts = $state({});
+  /** @type {Record<string, number>} */
   let personalAmounts = $state({});
   let loading = $state(false);
+  /** @type {string | null} */
   let error = $state(form?.error || null);
   let predefinedMode = $state(data.predefinedUsers.length > 0);
   let jsEnhanced = $state(false);
@@ -48,10 +54,14 @@
   let nextExecutionPreview = $state('');
   let supportedCurrencies = $state(['CHF']);
   let loadingCurrencies = $state(false);
+  /** @type {number | null} */
   let currentExchangeRate = $state(null);
+  /** @type {number | null} */
   let convertedAmount = $state(null);
   let loadingExchangeRate = $state(false);
+  /** @type {string | null} */
   let exchangeRateError = $state(null);
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let exchangeRateTimeout = $state();
 
   // Initialize users from server data for no-JS support (use data directly to avoid reactivity warning)
@@ -129,7 +139,7 @@
       const response = await fetch('/api/cospend/exchange-rates?action=currencies');
       if (response.ok) {
         const data = await response.json();
-        supportedCurrencies = ['CHF', ...data.currencies.filter(c => c !== 'CHF')];
+        supportedCurrencies = ['CHF', ...data.currencies.filter((/** @type {string} */ c) => c !== 'CHF')];
       }
     } catch (e) {
       console.warn('Could not load supported currencies:', e);
@@ -169,7 +179,7 @@
       convertedAmount = parseFloat(formData.amount) * data.rate;
     } catch (e) {
       console.warn('Could not fetch exchange rate:', e);
-      exchangeRateError = e.message;
+      exchangeRateError = e instanceof Error ? e.message : String(e);
       currentExchangeRate = null;
       convertedAmount = null;
     } finally {
@@ -177,11 +187,11 @@
     }
   }
 
-  function handleImageSelected(event) {
+  function handleImageSelected(/** @type {CustomEvent} */ event) {
     imageFile = event.detail;
   }
 
-  function handleImageError(event) {
+  function handleImageError(/** @type {CustomEvent} */ event) {
     error = event.detail;
   }
 
@@ -190,7 +200,7 @@
     imagePreview = '';
   }
 
-  function addSplitForUser(username) {
+  function addSplitForUser(/** @type {string} */ username) {
     if (!splitAmounts[username]) {
       splitAmounts[username] = 0;
       splitAmounts = { ...splitAmounts };
@@ -249,7 +259,7 @@
         username: user,
         amount: splitAmounts[user] || 0,
         proportion: formData.splitMethod === 'proportional' ? (splitAmounts[user] || 0) / parseFloat(formData.amount) : undefined,
-        personalAmount: formData.splitMethod === 'personal_equal' ? (parseFloat(personalAmounts[user]) || 0) : undefined
+        personalAmount: formData.splitMethod === 'personal_equal' ? (personalAmounts[user] || 0) : undefined
       }));
 
       const payload = {
@@ -277,7 +287,7 @@
       await goto('/cospend');
 
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
@@ -295,10 +305,10 @@
   function updateNextExecutionPreview() {
     try {
       if (recurringData.frequency && recurringData.startDate && formData.isRecurring) {
-        const recurringPayment = {
+        const recurringPayment = /** @type {any} */ ({
           ...recurringData,
           startDate: new Date(recurringData.startDate)
-        };
+        });
         const nextDate = calculateNextExecutionDate(recurringPayment, new Date(recurringData.startDate));
         nextExecutionPreview = nextDate.toLocaleString('de-CH', {
           weekday: 'long',
@@ -541,7 +551,7 @@
             <div class="execution-preview">
               <h3>Next Execution</h3>
               <p class="next-execution">{nextExecutionPreview}</p>
-              <p class="frequency-description">{getFrequencyDescription(recurringData)}</p>
+              <p class="frequency-description">{getFrequencyDescription(/** @type {any} */ (recurringData))}</p>
             </div>
           {/if}
         </div>
@@ -552,9 +562,9 @@
       bind:imagePreview={imagePreview}
       bind:imageFile={imageFile}
       bind:uploading={uploading}
-      on:imageSelected={handleImageSelected}
-      on:imageRemoved={handleImageRemoved}
-      on:error={handleImageError}
+      onimageSelected={(file) => { imageFile = file; }}
+      onimageRemoved={handleImageRemoved}
+      onerror={(message) => { error = message; }}
     />
 
     <UsersList 

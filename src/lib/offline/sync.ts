@@ -166,8 +166,8 @@ async function precacheRecipeData(recipes: BriefRecipeType[]): Promise<void> {
 		dataUrls.push(`/rezepte/${recipe.short_name}/__data.json`);
 
 		// English recipe data (if translation exists)
-		if (recipe.translations?.en?.short_name) {
-			dataUrls.push(`/recipes/${recipe.translations.en.short_name}/__data.json`);
+		if ((recipe as any).translations?.en?.short_name) {
+			dataUrls.push(`/recipes/${(recipe as any).translations.en.short_name}/__data.json`);
 		}
 
 		// Collect metadata for subroute caching

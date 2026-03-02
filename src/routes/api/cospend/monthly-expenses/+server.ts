@@ -76,7 +76,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       }
     ];
 
-    const results = await Payment.aggregate(pipeline);
+    const results = await Payment.aggregate(pipeline as any);
 
     // Transform data into chart-friendly format
     const monthsMap = new Map();
@@ -106,13 +106,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
     // Convert to arrays for Chart.js
     const allMonths = Array.from(monthsMap.keys()).sort();
-    const categoryList = Array.from(categories).sort();
+    const categoryList = Array.from(categories).sort() as string[];
 
     // Find the first month with any data and trim empty months from the start
     let firstMonthWithData = 0;
     for (let i = 0; i < allMonths.length; i++) {
       const monthData = monthsMap.get(allMonths[i]);
-      const hasData = Object.values(monthData).some(value => value > 0);
+      const hasData = Object.values(monthData).some((value: any) => value > 0);
       if (hasData) {
         firstMonthWithData = i;
         break;

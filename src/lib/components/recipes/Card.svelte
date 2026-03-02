@@ -11,7 +11,7 @@ let {
 	do_margin_right = false,
 	isFavorite = false,
 	showFavoriteIndicator = false,
-	loading_strat = "lazy",
+	loading_strat = "lazy" as "lazy" | "eager",
 	routePrefix = '/rezepte',
 	translationStatus = undefined
 } = $props();

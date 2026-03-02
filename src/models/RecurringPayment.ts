@@ -93,7 +93,7 @@ const RecurringPaymentSchema = new mongoose.Schema(
     cronExpression: {
       type: String,
       validate: {
-        validator: function(value: string) {
+        validator: function(this: any, value: string) {
           // Only validate if frequency is custom
           if (this.frequency === 'custom') {
             return value != null && value.trim().length > 0;

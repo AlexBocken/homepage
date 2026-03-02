@@ -21,18 +21,18 @@ export const POST: RequestHandler = async ({ params, request }) => {
       return json({ error: 'Tournament not found' }, { status: 404 });
     }
 
-    const group = tournament.groups.find(g => g._id?.toString() === params.groupId);
+    const group = tournament.groups.find((g: any) => g._id?.toString() === params.groupId);
     if (!group) {
       return json({ error: 'Group not found' }, { status: 404 });
     }
 
-    const match = group.matches.find(m => m._id?.toString() === matchId);
+    const match = group.matches.find((m: any) => m._id?.toString() === matchId);
     if (!match) {
       return json({ error: 'Match not found' }, { status: 404 });
     }
 
     // Add or update round
-    const existingRoundIndex = match.rounds.findIndex(r => r.roundNumber === roundNumber);
+    const existingRoundIndex = match.rounds.findIndex((r: any) => r.roundNumber === roundNumber);
     const scoresMap = new Map(Object.entries(scores));
 
     if (existingRoundIndex >= 0) {

@@ -26,7 +26,7 @@
 
 	let { data } = $props();
 
-	const langContext = createLanguageContext({ urlLang: data.lang, initialLatin: data.initialLatin });
+	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.initialLatin });
 
 	$effect(() => {
 		langContext.lang.set(data.lang);
@@ -70,7 +70,7 @@
 		'regina-caeli': { id: 'reginaCaeli', name: 'Regína Cæli', bilingue: true }
 	});
 
-	const prayer = $derived(prayerDefs[data.prayer]);
+	const prayer = $derived(/** @type {Record<string, {id: string, name: string, bilingue: boolean}>} */(prayerDefs)[data.prayer]);
 	const prayerName = $derived(prayer?.name || data.prayer);
 	const isBilingue = $derived(prayer?.bilingue ?? true);
 	const prayerId = $derived(prayer?.id);
@@ -172,7 +172,7 @@ h1 {
 				{#if prayerId === 'postcommunio'}
 					<Postcommunio onlyIntro={false} />
 				{:else}
-					<PrayerBeforeACrucifix verbose={true} />
+					<PrayerBeforeACrucifix />
 				{/if}
 			</div>
 		</div>

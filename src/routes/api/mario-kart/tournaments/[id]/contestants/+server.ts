@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
     }
 
     // Check for duplicate names
-    if (tournament.contestants.some(c => c.name === name)) {
+    if (tournament.contestants.some((c: any) => c.name === name)) {
       return json({ error: 'Contestant with this name already exists' }, { status: 400 });
     }
 
@@ -94,7 +94,7 @@ export const DELETE: RequestHandler = async ({ params, url }) => {
     }
 
     tournament.contestants = tournament.contestants.filter(
-      c => c._id?.toString() !== contestantId
+      (c: any) => c._id?.toString() !== contestantId
     );
 
     await tournament.save();

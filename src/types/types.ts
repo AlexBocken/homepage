@@ -11,11 +11,11 @@ export type TranslationMetadata = {
 export type IngredientSection = {
   name?: string;
   type: 'section';
-  list: [{
+  list: {
     name: string;
     unit: string;
     amount: string;
-  }];
+  }[];
 };
 
 export type IngredientReference = {
@@ -26,16 +26,16 @@ export type IngredientReference = {
   showLabel: boolean;
   labelOverride?: string;
   baseMultiplier?: number;
-  itemsBefore?: [{
+  itemsBefore?: {
     name: string;
     unit: string;
     amount: string;
-  }];
-  itemsAfter?: [{
+  }[];
+  itemsAfter?: {
     name: string;
     unit: string;
     amount: string;
-  }];
+  }[];
   // Populated after server-side resolution
   resolvedRecipe?: {
     _id: string;
@@ -52,7 +52,7 @@ export type IngredientItem = IngredientSection | IngredientReference;
 export type InstructionSection = {
   name?: string;
   type: 'section';
-  steps: [string];
+  steps: string[];
 };
 
 export type InstructionReference = {
@@ -63,8 +63,8 @@ export type InstructionReference = {
   showLabel: boolean;
   labelOverride?: string;
   baseMultiplier?: number;
-  stepsBefore?: [string];
-  stepsAfter?: [string];
+  stepsBefore?: string[];
+  stepsAfter?: string[];
   // Populated after server-side resolution
   resolvedRecipe?: {
     _id: string;
@@ -153,6 +153,7 @@ export type RecipeModelType = {
   instructions?: InstructionItem[];
   preamble?: String
   addendum?: string
+  note?: string;
   isBaseRecipe?: boolean;
   translations?: {
     en?: TranslatedRecipeType;

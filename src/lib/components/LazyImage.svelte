@@ -12,8 +12,10 @@
 	} = $props();
 
 	let shouldLoad = $state(eager);
+	/** @type {HTMLImageElement | null} */
 	let imgElement = $state(null);
 	let isLoaded = $state(false);
+	/** @type {IntersectionObserver | null} */
 	let observer = $state(null);
 
 	// React to eager prop changes
@@ -33,6 +35,7 @@
 		}
 
 		// Helper to check if element is actually visible (both horizontal and vertical)
+		/** @param {HTMLElement} el */
 		function isElementInViewport(el) {
 			const rect = el.getBoundingClientRect();
 			const windowHeight = window.innerHeight || document.documentElement.clientHeight;
@@ -58,6 +61,7 @@
 		}
 
 		// Listen to both scroll events and intersection
+		/** @type {HTMLElement[]} */
 		let scrollContainers = [];
 
 		// Find parent scroll containers

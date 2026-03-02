@@ -7,7 +7,7 @@ import { error } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ params, setHeaders }) => {
   await dbConnect();
-  let recipe = (await Recipe.findOne({ short_name: params.name }).lean()) as RecipeModelType;
+  let recipe = (await Recipe.findOne({ short_name: params.name }).lean()) as unknown as RecipeModelType;
 
   recipe = JSON.parse(JSON.stringify(recipe));
   if (recipe == null) {

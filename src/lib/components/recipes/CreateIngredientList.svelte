@@ -12,19 +12,19 @@ import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import { portions } from '$lib/js/portions_store.js'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
 
-let portions_local = $state()
-portions.subscribe((p) => {
+let portions_local = $state<string | undefined>()
+portions.subscribe((p: any) => {
 	portions_local = p
 });
 
 export function set_portions(){
-	portions.update((p) => portions_local)
+	portions.update((_p: any) => portions_local)
 }
 
 let { lang = 'de' as 'de' | 'en', ingredients = $bindable() } = $props<{ lang?: 'de' | 'en', ingredients: any }>();
 
 // Translation strings
-const t = {
+const t: Record<string, Record<string, string>> = {
 	de: {
 		portions: 'Portionen:',
 		ingredients: 'Zutaten',
@@ -219,7 +219,7 @@ function openAddToReferenceModal(list_index: number, position: 'before' | 'after
 	}
 }
 
-function get_sublist_index(sublist_name, list){
+function get_sublist_index(sublist_name: string, list: any[]){
 	for(var i =0; i < list.length; i++){
 		if(list[i].name == sublist_name){
 			return i
@@ -227,16 +227,16 @@ function get_sublist_index(sublist_name, list){
 	}
 	return -1
 }
-export function show_modal_edit_subheading_ingredient(list_index){
+export function show_modal_edit_subheading_ingredient(list_index: number){
 	edit_heading.name = ingredients[list_index].name
-	edit_heading.list_index = list_index
-	const el = document.querySelector(`#edit_subheading_ingredient_modal-${lang}`)
-	el.showModal()
+	edit_heading.list_index = String(list_index)
+	const el = document.querySelector(`#edit_subheading_ingredient_modal-${lang}`) as HTMLDialogElement | null;
+	if (el) el.showModal()
 }
 export function edit_subheading_and_close_modal(){
-	ingredients[edit_heading.list_index].name = edit_heading.name
-	const el = document.querySelector(`#edit_subheading_ingredient_modal-${lang}`)
-	el.close()
+	ingredients[Number(edit_heading.list_index)].name = edit_heading.name
+	const el = document.querySelector(`#edit_subheading_ingredient_modal-${lang}`) as HTMLDialogElement | null;
+	if (el) el.close()
 }
 
 function handleIngredientModalCancel() {
@@ -265,7 +265,7 @@ export function add_new_ingredient(){
 	ingredients[list_index].list.push({ ...new_ingredient})
 	ingredients = ingredients //tells svelte to update dom
 }
-export function remove_list(list_index){
+export function remove_list(list_index: number){
 	if(ingredients[list_index].list.length > 1){
 		const response = confirm(t[lang].confirmDeleteList);
 		if(!response){
@@ -275,18 +275,18 @@ export function remove_list(list_index){
 	ingredients.splice(list_index, 1);
 	ingredients = ingredients //tells svelte to update dom
 }
-export function remove_ingredient(list_index, ingredient_index){
+export function remove_ingredient(list_index: number, ingredient_index: number){
 	ingredients[list_index].list.splice(ingredient_index, 1)
 	ingredients = ingredients //tells svelte to update dom
 }
 
-export function show_modal_edit_ingredient(list_index, ingredient_index){
+export function show_modal_edit_ingredient(list_index: number, ingredient_index: number){
 	edit_ingredient = {...ingredients[list_index].list[ingredient_index]}
-	edit_ingredient.list_index = list_index
-	edit_ingredient.ingredient_index = ingredient_index
+	edit_ingredient.list_index = String(list_index)
+	edit_ingredient.ingredient_index = String(ingredient_index)
 	edit_ingredient.sublist = ingredients[list_index].name
-	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`);
-	modal_el.showModal();
+	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement | null;
+	if (modal_el) modal_el.showModal();
 }
 export function edit_ingredient_and_close_modal(){
 	// Check if we're adding to or editing a reference
@@ -333,12 +333,12 @@ export function edit_ingredient_and_close_modal(){
 		};
 	} else {
 		// Normal edit behavior
-		ingredients[edit_ingredient.list_index].list[edit_ingredient.ingredient_index] = {
+		ingredients[Number(edit_ingredient.list_index)].list[Number(edit_ingredient.ingredient_index)] = {
 			amount: edit_ingredient.amount,
 			unit: edit_ingredient.unit,
 			name: edit_ingredient.name,
 		}
-		ingredients[edit_ingredient.list_index].name = edit_ingredient.sublist
+		ingredients[Number(edit_ingredient.list_index)].name = edit_ingredient.sublist
 	}
 	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
 	if (modal_el) {
@@ -346,7 +346,7 @@ export function edit_ingredient_and_close_modal(){
 		setTimeout(() => modal_el.close(), 0);
 	}
 }
-export function update_list_position(list_index, direction){
+export function update_list_position(list_index: number, direction: number){
 	if(direction == 1){
 		if(list_index == 0){
 			return
@@ -361,7 +361,7 @@ export function update_list_position(list_index, direction){
 	}
 	ingredients = ingredients //tells svelte to update dom
 }
-export function update_ingredient_position(list_index, ingredient_index, direction){
+export function update_ingredient_position(list_index: number, ingredient_index: number, direction: number){
 	if(direction == 1){
 		if(ingredient_index == 0){
 			return
@@ -738,7 +738,7 @@ h3{
 
 <div class=list_wrapper >
 <h4>{t[lang].portions}</h4>
-<p contenteditable type="text" bind:innerText={portions_local} onblur={set_portions}></p>
+<p contenteditable bind:innerText={portions_local} onblur={set_portions}></p>
 
 <h2>{t[lang].ingredients}</h2>
 {#each ingredients as list, list_index}

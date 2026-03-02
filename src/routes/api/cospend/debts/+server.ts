@@ -42,7 +42,7 @@ export const GET: RequestHandler = async ({ locals }) => {
       .lean();
 
     // Get all other users who have splits with payments involving the current user
-    const paymentIds = userSplits.map(split => split.paymentId._id);
+    const paymentIds = userSplits.map(split => (split.paymentId as any)._id);
     const allRelatedSplits = await PaymentSplit.find({
       paymentId: { $in: paymentIds },
       username: { $ne: currentUser }
@@ -60,7 +60,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
       // Find other participants in this payment
       const otherSplits = allRelatedSplits.filter(s =>
-        s.paymentId._id.toString() === split.paymentId._id.toString()
+        (s.paymentId as any)._id.toString() === (split.paymentId as any)._id.toString()
       );
 
       for (const otherSplit of otherSplits) {

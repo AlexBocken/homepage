@@ -6,32 +6,36 @@ let months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "Aug
 
 
 
-let season_local
+let season_local: number[] = [];
 
-season.subscribe((s) => {
-	season_local = s
+season.subscribe((s: number[]) => {
+	season_local = s;
 });
 
 export function set_season(){
-	let temp = []
+	let temp: number[] = [];
 	const el = document.getElementById("labels");
+	if (!el) return;
 	for(var i = 0; i < el.children.length; i++){
-		if(el.children[i].children[0].children[0].checked){
+		if((el.children[i].children[0].children[0] as HTMLInputElement).checked){
 			temp.push(i+1)
 		}
 	}
-	season.update((s) => temp)
+	season.update(() => temp)
 }
 
-function write_season(season){
+function write_season(season: number[]){
 	const el = document.getElementById("labels");
+	if (!el) return;
 	for(var i = 0; i < season.length; i++){
-		el.children[season[i]-1].children[0].children[0].checked = true
+		(el.children[season[i]-1].children[0].children[0] as HTMLInputElement).checked = true;
 	}
 }
 
-function toggle_checkbox_on_key(event){
-	event.path[0].children[0].checked = !event.path[0].children[0].checked
+function toggle_checkbox_on_key(event: Event){
+	const target = event.target as HTMLElement;
+	const checkbox = target.querySelector('input[type="checkbox"]') as HTMLInputElement;
+	if (checkbox) checkbox.checked = !checkbox.checked;
 }
 onMount(() => {
 	write_season(season_local)

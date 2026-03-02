@@ -44,9 +44,10 @@ export function toBrief(recipe: any, recipeLang: string): BriefRecipeType {
 			icon: recipe.icon,
 			description: recipe.translations.en.description,
 			season: recipe.season || [],
+			dateCreated: recipe.dateCreated,
 			dateModified: recipe.dateModified,
 			germanShortName: recipe.short_name,
-		} as BriefRecipeType;
+		} as unknown as BriefRecipeType;
 	}
 	return {
 		...recipe,

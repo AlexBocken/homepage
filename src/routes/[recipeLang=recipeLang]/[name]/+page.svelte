@@ -68,7 +68,7 @@
 		}
 
 		var start = data.season[start_i]
-		var end_i
+		var end_i: number = start_i
 		const len = data.season.length
 		for(var i = 0; i < len -1; i++){
 			if(data.season.includes((start + i) %12 + 1)){
@@ -89,7 +89,7 @@
 	const season_iv = $derived(season_intervals());
 
 	const display_date = $derived(data.updatedAt ? new Date(data.updatedAt) : new Date(data.dateCreated));
-	const options = {
+	const options: Intl.DateTimeFormatOptions = {
  	 day: '2-digit',
  	 month: 'short',
  	 year: 'numeric',

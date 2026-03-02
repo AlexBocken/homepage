@@ -26,22 +26,30 @@
     isActive: true
   });
 
+  /** @type {string[]} */
   let users = $state([]);
   let newUser = $state('');
+  /** @type {Record<string, number>} */
   let splitAmounts = $state({});
+  /** @type {Record<string, number>} */
   let personalAmounts = $state({});
   let loading = $state(false);
   let loadingPayment = $state(true);
+  /** @type {string | null} */
   let error = $state(null);
   let predefinedMode = $state(isPredefinedUsersMode());
   let cronError = $state(false);
   let nextExecutionPreview = $state('');
   let supportedCurrencies = $state(['CHF']);
   let loadingCurrencies = $state(false);
+  /** @type {number | null} */
   let currentExchangeRate = $state(null);
+  /** @type {number | null} */
   let convertedAmount = $state(null);
   let loadingExchangeRate = $state(false);
+  /** @type {string | null} */
   let exchangeRateError = $state(null);
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let exchangeRateTimeout = $state();
   let jsEnhanced = $state(false);
 
@@ -74,6 +82,7 @@
         paidBy: payment.paidBy,
         category: payment.category,
         splitMethod: payment.splitMethod,
+        splits: [],
         frequency: payment.frequency,
         cronExpression: payment.cronExpression || '',
         startDate: new Date(payment.startDate).toISOString().split('T')[0],
@@ -82,9 +91,9 @@
       };
 
       // Set up users and splits
-      users = payment.splits.map(split => split.username);
+      users = payment.splits.map((/** @type {any} */ split) => split.username);
       users.forEach(user => {
-        const split = payment.splits.find(s => s.username === user);
+        const split = payment.splits.find((/** @type {any} */ s) => s.username === user);
         splitAmounts[user] = split.amount;
         if (split.personalAmount !== undefined) {
           personalAmounts[user] = split.personalAmount;
@@ -94,13 +103,13 @@
       updateNextExecutionPreview();
 
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loadingPayment = false;
     }
   }
 
-  function addSplitForUser(username) {
+  function addSplitForUser(/** @type {string} */ username) {
     if (!splitAmounts[username]) {
       splitAmounts[username] = 0;
       splitAmounts = { ...splitAmounts };
@@ -118,10 +127,10 @@
   function updateNextExecutionPreview() {
     try {
       if (formData.frequency && formData.startDate) {
-        const recurringPayment = {
+        const recurringPayment = /** @type {any} */ ({
           ...formData,
           startDate: new Date(formData.startDate)
-        };
+        });
         const nextDate = calculateNextExecutionDate(recurringPayment, new Date(formData.startDate));
         nextExecutionPreview = nextDate.toLocaleString('de-CH', {
           weekday: 'long',
@@ -162,7 +171,7 @@
         username: user,
         amount: splitAmounts[user] || 0,
         proportion: formData.splitMethod === 'proportional' ? (splitAmounts[user] || 0) / parseFloat(formData.amount) : undefined,
-        personalAmount: formData.splitMethod === 'personal_equal' ? (parseFloat(personalAmounts[user]) || 0) : undefined
+        personalAmount: formData.splitMethod === 'personal_equal' ? (personalAmounts[user] || 0) : undefined
       }));
 
       const payload = {
@@ -191,7 +200,7 @@
       await goto('/cospend/recurring');
 
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
@@ -216,7 +225,7 @@
       const response = await fetch('/api/cospend/exchange-rates?action=currencies');
       if (response.ok) {
         const data = await response.json();
-        supportedCurrencies = ['CHF', ...data.currencies.filter(c => c !== 'CHF')];
+        supportedCurrencies = ['CHF', ...data.currencies.filter((/** @type {string} */ c) => c !== 'CHF')];
       }
     } catch (e) {
       console.warn('Could not load supported currencies:', e);
@@ -255,7 +264,7 @@
       convertedAmount = parseFloat(formData.amount) * data.rate;
     } catch (e) {
       console.warn('Could not fetch exchange rate:', e);
-      exchangeRateError = e.message;
+      exchangeRateError = e instanceof Error ? e.message : String(e);
       currentExchangeRate = null;
       convertedAmount = null;
     } finally {
@@ -453,12 +462,12 @@
           <div class="execution-preview">
             <h3>Next Execution</h3>
             <p class="next-execution">{nextExecutionPreview}</p>
-            <p class="frequency-description">{getFrequencyDescription(formData)}</p>
+            <p class="frequency-description">{getFrequencyDescription(/** @type {any} */ (formData))}</p>
           </div>
         {/if}
       </div>
 
-      <UsersList 
+      <UsersList
         bind:users={users}
         bind:newUser={newUser}
         currentUser={data.session?.user?.nickname}

@@ -18,10 +18,13 @@
 		instructions?: any[]
 	} = $props();
 
-	let short_name = $state();
-	let password = $state();
+	let short_name = $state('');
+	let password = $state('');
 	let datecreated = $state(new Date());
 	let datemodified = $state(datecreated);
+	let result = $state('');
+	let image_preview_url = $state('');
+	let selected_image_file = $state<File | null>(null);
 
 	async function doPost () {
 		const res = await fetch('/api/add', {
@@ -64,15 +67,15 @@ input.temp{
 }
 </style>
 
-<CardAdd bind:card_data={card_data}></CardAdd>
+<CardAdd bind:card_data={card_data} bind:image_preview_url={image_preview_url} bind:selected_image_file={selected_image_file} {short_name}></CardAdd>
 
 <input class=temp bind:value={short_name} placeholder="Kurzname"/>
 
-<SeasonSelect bind:season={season}></SeasonSelect>
+<SeasonSelect></SeasonSelect>
 <button onclick={() => console.log(season)}>PRINTOUT season</button>
 
 <h2>Zutaten</h2>
 <CreateIngredientList bind:ingredients={ingredients}></CreateIngredientList>
 <h2>Zubereitung</h2>
-<CreateStepList bind:instructions={instructions} ></CreateStepList>
+<CreateStepList bind:instructions={instructions} add_info={{}}></CreateStepList>
 <input class=temp type="password" placeholder=Passwort bind:value={password}>

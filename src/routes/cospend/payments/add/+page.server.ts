@@ -111,7 +111,7 @@ export const actions: Actions = {
         }));
       } else if (splitMethod === 'personal_equal') {
         // Get personal amounts from form
-        const personalAmounts = {};
+        const personalAmounts: Record<string, number> = {};
         let totalPersonal = 0;
         
         for (const user of users) {
@@ -219,7 +219,7 @@ export const actions: Actions = {
       // Success - redirect to dashboard
       throw redirect(303, '/cospend');
 
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 303) throw error; // Re-throw redirect
       
       console.error('Error creating payment:', error);

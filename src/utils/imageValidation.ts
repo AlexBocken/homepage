@@ -121,7 +121,7 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
 		console.error('[ImageValidation] Magic bytes validation error:', error);
 		return {
 			valid: false,
-			error: `Failed to validate file headers: ${error.message}`
+			error: `Failed to validate file headers: ${error instanceof Error ? error.message : String(error)}`
 		};
 	}
 
@@ -158,7 +158,7 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
 		console.error('[ImageValidation] Sharp validation error:', error);
 		return {
 			valid: false,
-			error: `Invalid or corrupted image file: ${error.message}`
+			error: `Invalid or corrupted image file: ${error instanceof Error ? error.message : String(error)}`
 		};
 	}
 
@@ -217,7 +217,7 @@ export async function validateImageBuffer(buffer: Buffer, filename: string): Pro
 	} catch (error) {
 		return {
 			valid: false,
-			error: `Failed to validate buffer headers: ${error.message}`
+			error: `Failed to validate buffer headers: ${error instanceof Error ? error.message : String(error)}`
 		};
 	}
 
@@ -241,7 +241,7 @@ export async function validateImageBuffer(buffer: Buffer, filename: string): Pro
 	} catch (error) {
 		return {
 			valid: false,
-			error: `Invalid or corrupted image buffer: ${error.message}`
+			error: `Invalid or corrupted image buffer: ${error instanceof Error ? error.message : String(error)}`
 		};
 	}
 

@@ -18,7 +18,7 @@ await dbConnect().then(() => {
   // Don't crash the server - API routes will attempt reconnection
 });
 
-async function authorization({ event, resolve }) {
+async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	const session = await event.locals.auth();
 	
 	// Protect rezepte routes
@@ -28,11 +28,10 @@ async function authorization({ event, resolve }) {
 			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
-		else if (!session.user.groups.includes('rezepte_users')) {
+		else if (!session.user?.groups?.includes('rezepte_users')) {
 			error(403, {
-				message: 'Zugriff verweigert',
-				details: 'Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
-			});
+				message: 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
+			} as any);
 		}
 	}
 
@@ -42,19 +41,17 @@ async function authorization({ event, resolve }) {
 			// For API routes, return 401 instead of redirecting
 			if (event.url.pathname.startsWith('/api/cospend')) {
 				error(401, {
-					message: 'Anmeldung erforderlich',
-					details: 'Du musst angemeldet sein, um auf diesen Bereich zugreifen zu können.'
-				});
+					message: 'Anmeldung erforderlich. Du musst angemeldet sein, um auf diesen Bereich zugreifen zu können.'
+				} as any);
 			}
 			// For page routes, redirect to login
 			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
-		else if (!session.user.groups.includes('cospend')) {
+		else if (!session.user?.groups?.includes('cospend')) {
 			error(403, {
-				message: 'Zugriff verweigert',
-				details: 'Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
-			});
+				message: 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
+			} as any);
 		}
 	}
 

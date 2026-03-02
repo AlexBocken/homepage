@@ -13,7 +13,7 @@ export async function load({ fetch, params, url, data }) {
     let isOfflineMode = false;
 
     // On the client, check if we need to load from IndexedDB
-    const shouldUseOfflineData = browser && (isOffline() || data?.isOffline || !data?.item) && canUseOfflineData();
+    const shouldUseOfflineData = browser && (isOffline() || (data as any)?.isOffline || !data?.item) && canUseOfflineData();
 
     if (shouldUseOfflineData) {
         try {

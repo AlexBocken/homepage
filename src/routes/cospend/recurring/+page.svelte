@@ -8,8 +8,10 @@
 
   let { data } = $props();
 
+  /** @type {any[]} */
   let recurringPayments = $state([]);
   let loading = $state(true);
+  /** @type {string | null} */
   let error = $state(null);
   let showActiveOnly = $state(true);
 
@@ -28,13 +30,13 @@
       const result = await response.json();
       recurringPayments = result.recurringPayments;
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
   }
 
-  async function toggleActiveStatus(paymentId, currentStatus) {
+  async function toggleActiveStatus(/** @type {string} */ paymentId, /** @type {boolean} */ currentStatus) {
     try {
       const response = await fetch(`/api/cospend/recurring-payments/${paymentId}`, {
         method: 'PUT',
@@ -51,11 +53,11 @@
       // Refresh the list
       await fetchRecurringPayments();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
-  async function deleteRecurringPayment(paymentId, title) {
+  async function deleteRecurringPayment(/** @type {string} */ paymentId, /** @type {string} */ title) {
     if (!confirm(`Are you sure you want to delete the recurring payment "${title}"?`)) {
       return;
     }
@@ -72,11 +74,11 @@
       // Refresh the list
       await fetchRecurringPayments();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
-  function formatDate(dateString) {
+  function formatDate(/** @type {string} */ dateString) {
     return new Date(dateString).toLocaleDateString('de-CH');
   }
 

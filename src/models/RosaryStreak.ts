@@ -9,4 +9,7 @@ const RosaryStreakSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const RosaryStreak = mongoose.models.RosaryStreak || mongoose.model("RosaryStreak", RosaryStreakSchema);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _model: any;
+try { _model = mongoose.model("RosaryStreak"); } catch { _model = mongoose.model("RosaryStreak", RosaryStreakSchema); }
+export const RosaryStreak = _model as mongoose.Model<any>;

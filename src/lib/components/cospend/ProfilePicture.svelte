@@ -10,10 +10,10 @@
     imageError = true;
   }
 
-  function getInitials(name) {
+  function getInitials(name: string) {
     if (!name) return '?';
     return name.split(' ')
-      .map(word => word.charAt(0))
+      .map((word: string) => word.charAt(0))
       .join('')
       .toUpperCase()
       .substring(0, 2);

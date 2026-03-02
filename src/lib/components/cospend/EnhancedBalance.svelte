@@ -16,7 +16,7 @@
     totalIOwe: 0
   });
   let loading = $state(!initialBalance || !initialDebtData);
-  let error = $state(null);
+  let error = $state<string | null>(null);
 
   // Use $derived instead of $effect for computed values
   let singleDebtUser = $derived.by(() => {
@@ -69,7 +69,7 @@
         recentSplits: [...(newBalance.recentSplits || [])]
       };
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     }
   }
 
@@ -88,13 +88,13 @@
         totalIOwe: newDebtData.totalIOwe || 0
       };
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
   }
 
-  function formatCurrency(amount) {
+  function formatCurrency(amount: number) {
     return formatCurrencyUtil(Math.abs(amount), 'CHF', 'de-CH');
   }
 

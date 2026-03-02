@@ -6,9 +6,6 @@
     let current_month = new Date().getMonth() + 1;
 
     const isEnglish = $derived(data.lang === 'en');
-    const categories = $derived(isEnglish
-        ? ["Main course", "Noodle", "Bread", "Dessert", "Soup", "Side dish", "Salad", "Cake", "Breakfast", "Sauce", "Ingredient", "Drink", "Spread", "Biscuits", "Snack"]
-        : ["Hauptspeise", "Nudel", "Brot", "Dessert", "Suppe", "Beilage", "Salat", "Kuchen", "Frühstück", "Sauce", "Zutat", "Getränk", "Aufstrich", "Guetzli", "Snack"]);
     const labels = $derived({
         title: isEnglish ? 'Search Results' : 'Suchergebnisse',
         pageTitle: isEnglish
@@ -34,7 +31,7 @@
     let hasActiveSearch = $state(false);
 
     // Handle search results from Search component
-    function handleSearchResults(ids, categories) {
+    function handleSearchResults(ids: Set<string>, categories: Set<string>) {
         matchedRecipeIds = ids;
         hasActiveSearch = ids.size < data.allRecipes.length;
     }
@@ -46,7 +43,7 @@
             return data.results;
         }
         // Active search - show client-side filtered results
-        return data.allRecipes.filter(r => matchedRecipeIds.has(r._id));
+        return data.allRecipes.filter((r: any) => matchedRecipeIds.has(r._id));
     });
 </script>
 
@@ -94,7 +91,6 @@
     favoritesOnly={data.filters.favoritesOnly}
     lang={data.lang}
     recipes={data.allRecipes}
-    categories={categories}
     isLoggedIn={!!data.session?.user}
     onSearchResults={handleSearchResults}
 />

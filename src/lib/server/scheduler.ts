@@ -7,7 +7,7 @@ import { calculateNextExecutionDate } from '$lib/utils/recurring';
 
 class RecurringPaymentScheduler {
   private isRunning = false;
-  private task: cron.ScheduledTask | null = null;
+  private task: ReturnType<typeof cron.schedule> | null = null;
 
   // Start the scheduler - runs every minute to check for due payments
   start() {
@@ -27,9 +27,8 @@ class RecurringPaymentScheduler {
       
       await this.processRecurringPayments();
     }, {
-      scheduled: true,
       timezone: 'Europe/Zurich' // Adjust timezone as needed
-    });
+    } as any);
 
     console.log('[Scheduler] Recurring payments scheduler started (runs every minute)');
   }
@@ -155,7 +154,7 @@ class RecurringPaymentScheduler {
     return {
       isRunning: this.isRunning,
       isScheduled: this.task !== null,
-      nextRun: this.task?.nextDate()?.toISOString()
+      nextRun: (this.task as any)?.nextDate?.()?.toISOString?.()
     };
   }
 }

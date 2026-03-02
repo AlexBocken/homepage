@@ -1,3 +1,3 @@
 import { writable } from 'svelte/store';
 
-export const season = writable([]);
+export const season = writable(/** @type {number[]} */ ([]));

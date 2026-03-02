@@ -4,24 +4,36 @@
   import { getCategoryOptions } from '$lib/utils/categories';
   import FormSection from '$lib/components/FormSection.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
-  
+
+  /**
+   * @typedef {import('$models/Payment').IPayment & {splits?: import('$models/PaymentSplit').IPaymentSplit[]}} PaymentWithSplits
+   */
+
   let { data } = $props();
 
+  /** @type {PaymentWithSplits | null} */
   let payment = $state(null);
   let loading = $state(true);
   let saving = $state(false);
   let uploading = $state(false);
+  /** @type {string | null} */
   let error = $state(null);
+  /** @type {File | null} */
   let imageFile = $state(null);
   let imagePreview = $state('');
   let supportedCurrencies = $state(['CHF']);
   let loadingCurrencies = $state(false);
+  /** @type {number | null} */
   let currentExchangeRate = $state(null);
+  /** @type {number | null} */
   let convertedAmount = $state(null);
   let loadingExchangeRate = $state(false);
+  /** @type {string | null} */
   let exchangeRateError = $state(null);
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let exchangeRateTimeout;
   let jsEnhanced = $state(false);
+  /** @type {number | null} */
   let originalAmount = $state(null);
 
   let categoryOptions = $derived(getCategoryOptions());
@@ -32,11 +44,12 @@
       if (!payment || !payment.splits || payment.splits.length === 0) return;
 
       // For foreign currency, use converted amount if available, otherwise use CHF amount
+      /** @type {number} */
       let amountNum;
       if (payment.currency !== 'CHF' && payment.originalAmount && convertedAmount) {
         amountNum = convertedAmount;
       } else {
-        amountNum = parseFloat(payment.amount);
+        amountNum = typeof payment.amount === 'string' ? parseFloat(payment.amount) : payment.amount;
       }
 
       if (isNaN(amountNum) || amountNum <= 0) return;
@@ -92,7 +105,9 @@
   }
 
   // Watch for amount changes and recalculate splits
+  /** @type {number | string | null} */
   let lastCalculatedAmount = $state(null);
+  /** @type {string | null} */
   let lastPersonalAmounts = $state(null);
 
   $effect(() => {
@@ -135,38 +150,40 @@
         throw new Error('Failed to load payment');
       }
       const result = await response.json();
-      payment = result.payment;
+      /** @type {PaymentWithSplits} */
+      const loaded = result.payment;
+      payment = loaded;
 
       // Initialize personal amounts if undefined (for personal_equal split method)
-      if (payment.splitMethod === 'personal_equal' && payment.splits) {
-        payment.splits = payment.splits.map(split => ({
+      if (loaded.splitMethod === 'personal_equal' && loaded.splits) {
+        loaded.splits = loaded.splits.map(split => ({
           ...split,
           personalAmount: split.personalAmount || 0
         }));
       }
 
       // Store original amount for comparison to prevent infinite recalculation
-      originalAmount = payment.amount;
+      originalAmount = loaded.amount;
       // Set initial lastCalculatedAmount to prevent immediate recalculation on load
-      lastCalculatedAmount = payment.amount;
+      lastCalculatedAmount = loaded.amount;
       // Store initial personal amounts to prevent immediate recalculation
-      if (payment.splitMethod === 'personal_equal') {
-        lastPersonalAmounts = payment.splits.map(s => s.personalAmount || 0).join(',');
+      if (loaded.splitMethod === 'personal_equal' && loaded.splits) {
+        lastPersonalAmounts = loaded.splits.map(s => s.personalAmount || 0).join(',');
       }
     } catch (err) {
       console.error('Error loading payment:', err);
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
   }
 
-  function handleImageSelected(event) {
+  function handleImageSelected(/** @type {CustomEvent} */ event) {
     imageFile = event.detail;
     handleImageUpload();
   }
 
-  function handleImageError(event) {
+  function handleImageError(/** @type {CustomEvent} */ event) {
     error = event.detail;
   }
 
@@ -176,7 +193,7 @@
   }
 
   function handleCurrentImageRemoved() {
-    payment.image = null;
+    if (payment) payment.image = undefined;
   }
 
   async function handleImageUpload() {
@@ -197,11 +214,11 @@
       }
 
       const result = await response.json();
-      payment.image = result.imageUrl;
+      if (payment) payment.image = result.imageUrl;
       imageFile = null;
       imagePreview = '';
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       uploading = false;
     }
@@ -228,13 +245,13 @@
 
       await goto('/cospend/payments');
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       saving = false;
     }
   }
 
-  function formatDate(dateString) {
+  function formatDate(/** @type {string} */ dateString) {
     return new Date(dateString).toISOString().split('T')[0];
   }
 
@@ -259,7 +276,7 @@
       goto('/cospend/payments');
       
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       deleting = false;
     }
@@ -270,8 +287,8 @@
       loadingCurrencies = true;
       const response = await fetch('/api/cospend/exchange-rates?action=currencies');
       if (response.ok) {
-        const data = await response.json();
-        supportedCurrencies = ['CHF', ...data.currencies.filter(c => c !== 'CHF')];
+        const result = await response.json();
+        supportedCurrencies = ['CHF', ...result.currencies.filter(/** @type {(c: string) => boolean} */ (c) => c !== 'CHF')];
       }
     } catch (e) {
       console.warn('Could not load supported currencies:', e);
@@ -306,12 +323,12 @@
         throw new Error('Failed to fetch exchange rate');
       }
 
-      const data = await response.json();
-      currentExchangeRate = data.rate;
-      convertedAmount = payment.originalAmount * data.rate;
+      const result = await response.json();
+      currentExchangeRate = result.rate;
+      convertedAmount = payment.originalAmount * result.rate;
     } catch (e) {
       console.warn('Could not fetch exchange rate:', e);
-      exchangeRateError = e.message;
+      exchangeRateError = e instanceof Error ? e.message : String(e);
       currentExchangeRate = null;
       convertedAmount = null;
     } finally {
@@ -327,7 +344,7 @@
     }
   });
 
-  function formatDateForInput(dateString) {
+  function formatDateForInput(/** @type {string | Date} */ dateString) {
     if (!dateString) return '';
     return new Date(dateString).toISOString().split('T')[0];
   }
@@ -449,7 +466,7 @@
               type="date"
               id="date"
               value={formatDateForInput(payment.date)}
-              onchange={(e) => payment.date = new Date(e.target.value).toISOString()}
+              onchange={(e) => { if (payment) payment.date = /** @type {Date} */ (new Date(/** @type {HTMLInputElement} */ (e.target).value)); }}
               required
             />
           </div>
@@ -471,10 +488,10 @@
         bind:imageFile={imageFile}
         bind:uploading={uploading}
         currentImage={payment.image}
-        on:imageSelected={handleImageSelected}
-        on:imageRemoved={handleImageRemoved}
-        on:currentImageRemoved={handleCurrentImageRemoved}
-        on:error={handleImageError}
+        onimageSelected={handleImageUpload}
+        onimageRemoved={handleImageRemoved}
+        oncurrentImageRemoved={handleCurrentImageRemoved}
+        onerror={(msg) => { error = msg; }}
       />
 
       {#if payment.splits && payment.splits.length > 0}
@@ -510,7 +527,7 @@
                     min="0"
                     value={split.personalAmount || 0}
                     oninput={(e) => {
-                      split.personalAmount = parseFloat(e.target.value) || 0;
+                      split.personalAmount = parseFloat(/** @type {HTMLInputElement} */ (e.target).value) || 0;
                     }
   }
                     placeholder="0.00"
@@ -519,8 +536,8 @@
               {/each}
               {#if payment.amount}
                 {@const totalPersonal = payment.splits.reduce((sum, s) => sum + (s.personalAmount || 0), 0)}
-                {@const remainder = Math.max(0, parseFloat(payment.amount) - totalPersonal)}
-                {@const hasError = totalPersonal > parseFloat(payment.amount)}
+                {@const remainder = Math.max(0, Number(payment.amount) - totalPersonal)}
+                {@const hasError = totalPersonal > Number(payment.amount)}
                 <div class="remainder-info" class:error={hasError}>
                   <span>Total Personal: CHF {totalPersonal.toFixed(2)}</span>
                   <span>Remainder to Split: CHF {remainder.toFixed(2)}</span>

@@ -57,22 +57,22 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		// Ensure translations.en.images array exists and has the right length
 		if (!recipe.translations) {
-			recipe.translations = { en: { images: [] } };
+			(recipe as any).translations = { en: { images: [] } };
 		}
-		if (!recipe.translations.en) {
-			recipe.translations.en = { images: [] };
+		if (!recipe.translations!.en) {
+			(recipe.translations as any).en = { images: [] };
 		}
-		if (!recipe.translations.en.images) {
-			recipe.translations.en.images = [];
+		if (!recipe.translations!.en!.images) {
+			(recipe.translations!.en as any).images = [];
 		}
 
 		// Ensure the en.images array has entries for all images
-		while (recipe.translations.en.images.length <= imageIndex) {
-			recipe.translations.en.images.push({ alt: '', caption: '' });
+		while (recipe.translations!.en!.images!.length <= imageIndex) {
+			recipe.translations!.en!.images!.push({ alt: '', caption: '' } as any);
 		}
 
 		// Update English alt text
-		recipe.translations.en.images[imageIndex].alt = altTextResult.en;
+		recipe.translations!.en!.images![imageIndex].alt = altTextResult.en;
 
 		// Save to database
 		await recipe.save();

@@ -90,22 +90,22 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 					// Ensure translations.en.images array exists
 					if (!recipe.translations) {
-						recipe.translations = { en: { images: [] } };
+						(recipe as any).translations = { en: { images: [] } };
 					}
-					if (!recipe.translations.en) {
-						recipe.translations.en = { images: [] };
+					if (!recipe.translations!.en) {
+						(recipe.translations as any).en = { images: [] };
 					}
-					if (!recipe.translations.en.images) {
-						recipe.translations.en.images = [];
+					if (!recipe.translations!.en!.images) {
+						(recipe.translations!.en as any).images = [];
 					}
 
 					// Ensure array has enough entries
-					while (recipe.translations.en.images.length <= i) {
-						recipe.translations.en.images.push({ alt: '', caption: '' });
+					while (recipe.translations!.en!.images!.length <= i) {
+						recipe.translations!.en!.images!.push({ alt: '', caption: '' } as any);
 					}
 
 					// Update English alt text
-					recipe.translations.en.images[i].alt = altTextResult.en;
+					recipe.translations!.en!.images![i].alt = altTextResult.en;
 
 					processed++;
 				} catch (err) {

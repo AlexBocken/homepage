@@ -16,10 +16,10 @@
 		if(isredirected){
 			return
 		}
-		document.querySelector("#img_carousel").showModal();
+		/** @type {HTMLDialogElement} */(document.querySelector("#img_carousel")).showModal();
 	}
 	function close_dialog_img(){
-		document.querySelector("#img_carousel").close();
+		/** @type {HTMLDialogElement} */(document.querySelector("#img_carousel")).close();
 	}
 	import Cross from "$lib/assets/icons/Cross.svelte";
 	import "$lib/css/action_button.css";

@@ -48,15 +48,18 @@
 		}, 200);
 	}
 
+	/** @param {number} monthNumber */
 	function handleMonthSelect(monthNumber) {
 		onChange([...selectedSeasons, monthNumber]);
 		inputValue = '';
 	}
 
+	/** @param {number} monthNumber */
 	function handleMonthRemove(monthNumber) {
 		onChange(selectedSeasons.filter(m => m !== monthNumber));
 	}
 
+	/** @param {KeyboardEvent} event */
 	function handleKeyDown(event) {
 		if (event.key === 'Enter') {
 			event.preventDefault();

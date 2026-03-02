@@ -663,7 +663,7 @@ button:disabled {
 				{#each untranslatedBaseRecipes as baseRecipe}
 					<li>
 						<strong>{baseRecipe.name}</strong>
-						<a href="/de/edit/{baseRecipe.id}" target="_blank" rel="noopener noreferrer" style="margin-left: 0.5rem; color: var(--nord10);">
+						<a href="/de/edit/{baseRecipe.shortName}" target="_blank" rel="noopener noreferrer" style="margin-left: 0.5rem; color: var(--nord10);">
 							Open in new tab →
 						</a>
 					</li>

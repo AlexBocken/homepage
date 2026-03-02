@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({request, cookies, locals}) => {
 		// Invalidate recipe caches after successful creation
 		await invalidateRecipeCaches();
 	} catch(e){
-      		throw error(400, e)
+      		throw error(400, e instanceof Error ? e.message : String(e))
       	}
       	return new Response(JSON.stringify({msg: "Added recipe successfully"}),{
       		    status: 200,

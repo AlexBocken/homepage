@@ -1,5 +1,7 @@
 <script>
+	/** @type {boolean} */
 	export let is_bilingue;
+	/** @type {string} */
 	export let name;
 	export let id = '';
 	export let href = '';

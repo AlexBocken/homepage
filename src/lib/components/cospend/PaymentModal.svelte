@@ -4,7 +4,7 @@
   import { page } from '$app/stores';
   import ProfilePicture from './ProfilePicture.svelte';
   import EditButton from '$lib/components/EditButton.svelte';
-  import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
+  import { getCategoryEmoji, getCategoryName, PAYMENT_CATEGORIES } from '$lib/utils/categories';
   import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
 
   let { paymentId, onclose, onpaymentDeleted } = $props();
@@ -12,23 +12,48 @@
   // Get session from page store
   let session = $derived($page.data?.session);
 
+  /**
+   * @typedef {{
+   *   _id?: string,
+   *   title: string,
+   *   description?: string,
+   *   amount: number,
+   *   currency: string,
+   *   originalAmount?: number,
+   *   exchangeRate?: number,
+   *   paidBy: string,
+   *   date: string,
+   *   image?: string,
+   *   category: import('$lib/utils/categories').PaymentCategory,
+   *   splitMethod: string,
+   *   createdBy: string,
+   *   splits?: Array<{ username: string, amount: number, settled: boolean }>,
+   *   createdAt?: string,
+   *   updatedAt?: string
+   * }} PaymentData
+   */
+
+  /** @type {PaymentData | null} */
   let payment = $state(null);
   let loading = $state(true);
+  /** @type {string | null} */
   let error = $state(null);
-  let modal = $state();
+  /** @type {HTMLDivElement | undefined} */
+  let modal = $state(undefined);
 
-  onMount(async () => {
-    await loadPayment();
-    
+  onMount(() => {
+    loadPayment();
+
     // Handle escape key to close modal
+    /** @param {KeyboardEvent} event */
     function handleKeydown(event) {
       if (event.key === 'Escape') {
         closeModal();
       }
     }
-    
+
     document.addEventListener('keydown', handleKeydown);
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeydown);
     };
@@ -43,7 +68,7 @@
       const result = await response.json();
       payment = result.payment;
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
@@ -55,23 +80,27 @@
     onclose?.();
   }
 
+  /** @param {MouseEvent} event */
   function handleBackdropClick(event) {
     if (event.target === event.currentTarget) {
       closeModal();
     }
   }
 
+  /** @param {number} amount */
   function formatCurrency(amount) {
     return formatCurrencyUtil(Math.abs(amount), 'CHF', 'de-CH');
   }
 
+  /** @param {string} dateString */
   function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('de-CH');
   }
 
+  /** @param {PaymentData} payment */
   function getSplitDescription(payment) {
     if (!payment.splits || payment.splits.length === 0) return 'No splits';
-    
+
     if (payment.splitMethod === 'equal') {
       return `Split equally among ${payment.splits.length} people`;
     } else if (payment.splitMethod === 'full') {
@@ -103,9 +132,9 @@
       // Close modal and dispatch event to refresh data
       onpaymentDeleted?.(paymentId);
       closeModal();
-      
+
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       deleting = false;
     }
@@ -654,7 +683,7 @@
     .panel-content {
       height: 100vh;
     }
-    
+
     .panel-header {
       padding: 1rem;
       position: sticky;

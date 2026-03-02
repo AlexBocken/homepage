@@ -11,8 +11,10 @@
   let { data } = $props();
 
   // Use server-side data with progressive enhancement
+  /** @type {any | null} */
   let payment = $state(data.payment || null);
   let loading = $state(false); // Start as false since we have server data
+  /** @type {string | null} */
   let error = $state(null);
 
   // Progressive enhancement: refresh data if JavaScript is available
@@ -36,25 +38,25 @@
       const result = await response.json();
       payment = result.payment;
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
   }
 
-  function formatAmountWithCurrency(payment) {
+  function formatAmountWithCurrency(/** @type {any} */ payment) {
     if (payment.currency === 'CHF' || !payment.originalAmount) {
       return formatCurrency(payment.amount, 'CHF', 'de-CH');
     }
     
-    return `${formatCurrency(payment.originalAmount, payment.currency, 'CHF', 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
+    return `${formatCurrency(payment.originalAmount, payment.currency, 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
   }
 
-  function formatDate(dateString) {
+  function formatDate(/** @type {string} */ dateString) {
     return new Date(dateString).toLocaleDateString('de-CH');
   }
 
-  function getSplitDescription(payment) {
+  function getSplitDescription(/** @type {any} */ payment) {
     if (!payment.splits || payment.splits.length === 0) return 'No splits';
     
     if (payment.splitMethod === 'equal') {
@@ -141,12 +143,12 @@
           <h3>Split Details</h3>
           <div class="splits-list">
             {#each payment.splits as split}
-              <div class="split-item" class:current-user={split.username === data.session.user.nickname}>
+              <div class="split-item" class:current-user={split.username === data.session?.user?.nickname}>
                 <div class="split-user">
                   <ProfilePicture username={split.username} size={24} />
                   <div class="user-info">
                     <span class="username">{split.username}</span>
-                    {#if split.username === data.session.user.nickname}
+                    {#if split.username === data.session?.user?.nickname}
                       <span class="you-badge">You</span>
                     {/if}
                   </div>
