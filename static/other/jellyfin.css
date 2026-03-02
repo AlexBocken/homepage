@@ -2,6 +2,9 @@
 This file styles jellyfin and can be imported by adding:
 @import url("https://bocken.org/other/jellyfin.css");
 under Server -> General -> Custom CSS Code
+
+Also requires jellyfin.js loaded via the Custom CSS/JS Injector plugin:
+https://bocken.org/other/jellyfin.js
 */
 :root{
 --nord0: #2E3440;
@@ -104,21 +107,117 @@ progress[value]::-moz-progress-bar {
    background-color: var(--blue);
 }
 
-.skinHeader,
-.mainDrawer{
-  background: var(--nord0);
-}
-.card{
-transition: 200ms;
-}
-.card:hover{
-scale: 1.05;
+/* ═══════════════════════════════════════════
+   FLOATING GLASS PILL HEADER
+   Matches bocken.org homepage header style
+   ═══════════════════════════════════════════ */
+
+/* Base glass effect for all header states */
+.skinHeader {
+  background: rgba(20, 20, 20, 0.78) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25) !important;
 }
 
-.listItem{
+/* Float as a pill (non-OSD) */
+.skinHeader:not(.osdHeader) {
+  position: fixed !important;
+  top: 12px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: fit-content !important;
+  min-width: min(600px, calc(100% - 1.5rem));
+  max-width: calc(100% - 1.5rem);
+  border-radius: 100px !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  z-index: 999;
+  padding: 0 0.4rem !important;
+  overflow: visible !important;
+}
+
+/* Push page content below the floating header */
+.skinBody {
+  padding-top: 5rem !important;
+}
+
+/* Compact the top bar row */
+.skinHeader:not(.osdHeader) .headerTop {
+  padding: 0 0.2rem !important;
+  min-height: 3rem !important;
+}
+
+/* ── Header buttons ─────────────────────── */
+.skinHeader:not(.osdHeader) .headerButton {
+  color: #999 !important;
+  transition: all 150ms;
+  border-radius: 100px;
+}
+.skinHeader:not(.osdHeader) .headerButton:hover {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Hide the tab bar — replaced by icon buttons via JS ── */
+.skinHeader:not(.osdHeader) .headerTabs {
+  display: none !important;
+}
+
+/* ── Active state for injected nav buttons (home/favorites) ── */
+.bocken-nav-active {
+  color: white !important;
+  background: rgba(136, 192, 208, 0.25) !important;
+}
+
+/* Hide the original home button — replaced by our injected one */
+.headerHomeButton {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════
+   SIDEBAR DRAWER
+   ═══════════════════════════════════════════ */
+.mainDrawer {
+  background: rgba(20, 20, 20, 0.95) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ═══════════════════════════════════════════
+   CARDS & LIST ITEMS
+   ═══════════════════════════════════════════ */
+.card {
+  transition: 200ms;
+}
+.card:hover {
+  scale: 1.05;
+}
+
+/* Play overlay on card thumbnails */
+.bocken-play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 200ms;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.bocken-play-overlay .material-icons {
+  font-size: 3rem;
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+.cardImageContainer:hover .bocken-play-overlay {
+  opacity: 1;
+}
+
+.listItem {
    transition: 200ms;
 }
-.listItme
 .listItem:hover {
     scale: 1.02;
 }
@@ -127,9 +226,36 @@ scale: 1.05;
     font-size: initial !important;
 }
 }
-.backgroundContainer{
+.backgroundContainer {
     background-color: #000;
 }
 .pageTitleWithDefaultLogo {
     background-image: url(https://bocken.org/static/css/logos/logo_text_light.png);
+}
+
+/* ═══════════════════════════════════════════
+   VIDEO DETAIL PAGE
+   ═══════════════════════════════════════════ */
+.detailPagePrimaryContainer,
+.detailPageSecondaryContainer,
+.detailRibbon {
+  background-color: #000 !important;
+}
+
+/* Always show the detail logo, not just on large screens */
+.detailLogo {
+  display: block !important;
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE ADJUSTMENTS
+   ═══════════════════════════════════════════ */
+@media (max-width: 800px) {
+  .skinHeader:not(.osdHeader) {
+    min-width: unset;
+    width: calc(100% - 1rem);
+    top: 8px !important;
+    border-radius: 20px !important;
+    padding: 0 0.2rem !important;
+  }
 }
