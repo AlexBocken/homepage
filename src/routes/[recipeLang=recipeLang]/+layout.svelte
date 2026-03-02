@@ -5,7 +5,7 @@ import { onNavigate } from '$app/navigation';
 import Header from '$lib/components/Header.svelte'
 
 onNavigate((navigation) => {
-	if (!document.startViewTransition) return;
+	if (!(/** @type {any} */ (document)).startViewTransition) return;
 
 	// Only use view transitions when navigating to/from a recipe detail page
 	const toRecipe = navigation.to?.params?.name;
@@ -21,23 +21,23 @@ onNavigate((navigation) => {
 	}
 
 	return new Promise((resolve) => {
-		const vt = document.startViewTransition(async () => {
+		const vt = (/** @type {any} */ (document)).startViewTransition(async () => {
 			resolve();
 			await navigation.complete;
 
 			// Hide .image-wrap background so the color box doesn't show behind the morphing image
-			const wrap = document.querySelector('.image-wrap');
+			const wrap = /** @type {HTMLElement | null} */ (document.querySelector('.image-wrap'));
 			if (wrap) wrap.style.backgroundColor = 'transparent';
 
 			// Set view-transition-name on the matching CompactCard/hero image for reverse morph
 			if (fromRecipe) {
-				const card = document.querySelector(`img[data-recipe="${fromRecipe}"]`);
-				if (card) card.style.viewTransitionName = `recipe-${fromRecipe}-img`;
+				const card = /** @type {HTMLElement | null} */ (document.querySelector(`img[data-recipe="${fromRecipe}"]`));
+				if (card) /** @type {any} */ (card.style).viewTransitionName = `recipe-${fromRecipe}-img`;
 			}
 		});
 		// Restore background color once transition finishes
 		vt.finished.then(() => {
-			const wrap = document.querySelector('.image-wrap');
+			const wrap = /** @type {HTMLElement | null} */ (document.querySelector('.image-wrap'));
 			if (wrap) wrap.style.backgroundColor = '';
 		});
 	});
@@ -60,6 +60,7 @@ const labels = $derived({
 	keywords: 'Tags'
 });
 
+/** @param {string} path */
 function isActive(path) {
 	const currentPath = $page.url.pathname;
 	// Exact match for recipe lang root

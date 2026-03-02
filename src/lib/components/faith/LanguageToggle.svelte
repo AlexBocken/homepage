@@ -5,6 +5,7 @@
 
 	export let initialLatin = undefined;
 	export let hasUrlLatin = false;
+	/** @type {string | undefined} */
 	export let href = undefined;
 
 	// Get the language context (must be created by parent page)

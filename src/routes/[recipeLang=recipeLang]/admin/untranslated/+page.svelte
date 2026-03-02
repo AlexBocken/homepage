@@ -7,9 +7,9 @@
 
 	// Calculate statistics
 	const stats = $derived.by(() => {
-		const noTranslation = data.untranslated.filter(r => !r.translationStatus).length;
-		const pending = data.untranslated.filter(r => r.translationStatus === 'pending').length;
-		const needsUpdate = data.untranslated.filter(r => r.translationStatus === 'needs_update').length;
+		const noTranslation = data.untranslated.filter((r: any) => !r.translationStatus).length;
+		const pending = data.untranslated.filter((r: any) => r.translationStatus === 'pending').length;
+		const needsUpdate = data.untranslated.filter((r: any) => r.translationStatus === 'needs_update').length;
 
 		return {
 			total: data.untranslated.length,

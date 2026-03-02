@@ -12,6 +12,7 @@
   let { data, children } = $props();
 
   let showModal = $state(false);
+  /** @type {string | null} */
   let paymentId = $state(null);
   let user = $state(data.session?.user);
 
@@ -24,7 +25,7 @@
     // Only show modal if we're on the dashboard AND have a payment to show
     if (isOnDashboard && (match || statePaymentId)) {
       showModal = true;
-      paymentId = match ? match[1] : statePaymentId;
+      paymentId = match ? match[1] : statePaymentId ?? null;
     } else {
       showModal = false;
       paymentId = null;
@@ -42,6 +43,7 @@
     }
   }
 
+  /** @param {string} path */
   function isActive(path) {
     const currentPath = $page.url.pathname;
     // Exact match for cospend root
@@ -78,7 +80,7 @@
             <div in:fly={{x: 50, duration: 300, easing: quintOut}
   } out:fly={{x: -50, duration: 300, easing: quintOut}
   }>
-              <PaymentModal {paymentId} on:close={() => showModal = false} on:paymentDeleted={handlePaymentDeleted} />
+              <PaymentModal {paymentId} onclose={() => showModal = false} onpaymentDeleted={handlePaymentDeleted} />
             </div>
           {/key}
         </div>

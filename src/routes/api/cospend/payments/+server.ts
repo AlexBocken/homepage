@@ -102,7 +102,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       exchangeRate = conversion.exchangeRate;
     } catch (e) {
       console.error('Currency conversion error:', e);
-      throw error(400, `Failed to convert ${inputCurrency} to CHF: ${e.message}`);
+      throw error(400, `Failed to convert ${inputCurrency} to CHF: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
@@ -146,7 +146,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       };
     });
 
-    const splitPromises = convertedSplits.map((split) => {
+    const splitPromises = convertedSplits.map((split: any) => {
       return PaymentSplit.create(split);
     });
 

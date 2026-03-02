@@ -182,8 +182,8 @@ export const actions = {
 				}
 
 				// Update image mediapath if it was using the old short_name
-				if (recipeData.images[0].mediapath === `${originalShortName}.webp`) {
-					recipeData.images[0].mediapath = `${recipeData.short_name}.webp`;
+				if (recipeData.images?.[0]?.mediapath === `${originalShortName}.webp`) {
+					recipeData.images![0].mediapath = `${recipeData.short_name}.webp`;
 				}
 			}
 
@@ -246,8 +246,7 @@ export const actions = {
 
 			return fail(500, {
 				error: `Failed to process recipe update: ${error.message || 'Unknown error'}`,
-				errors: [error.message],
-				values: Object.fromEntries(formData)
+				errors: [error.message]
 			});
 		}
 	}

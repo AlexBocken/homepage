@@ -10,7 +10,9 @@
 	 */
 	let { src, alt = '', mode = 'layout', children } = $props();
 
+	/** @type {HTMLDivElement | null} */
 	let pipEl = $state(null);
+	/** @type {HTMLDivElement | null} */
 	let contentEl = $state(null);
 	let inView = $state(false);
 
@@ -34,7 +36,7 @@
 			} else {
 				pip.hide();
 			}
-		} else {
+		} else if (pipEl) {
 			// Desktop (both modes): CSS handles everything
 			pipEl.style.opacity = '';
 			pipEl.style.transform = '';
@@ -60,6 +62,7 @@
 
 		window.addEventListener('resize', onResize);
 
+		/** @type {IntersectionObserver | undefined} */
 		let observer;
 		if (contentEl) {
 			observer = new IntersectionObserver(

@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
         console.error(`Round ${i} has no matches array:`, round);
         continue;
       }
-      const foundMatch = round.matches.find(m => m._id?.toString() === params.matchId);
+      const foundMatch = round.matches.find((m: any) => m._id?.toString() === params.matchId);
       if (foundMatch) {
         match = foundMatch;
         matchRound = round;
@@ -59,7 +59,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
       isRunnersUp = true;
       for (let i = 0; i < bracket.rounds.length; i++) {
         const round = bracket.rounds[i];
-        const foundMatch = round.matches.find(m => m._id?.toString() === params.matchId);
+        const foundMatch = round.matches.find((m: any) => m._id?.toString() === params.matchId);
         if (foundMatch) {
           match = foundMatch;
           matchRound = round;

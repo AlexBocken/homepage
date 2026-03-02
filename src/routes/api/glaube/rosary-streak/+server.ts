@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   try {
     const streak = await RosaryStreak.findOne({
       username: session.user.nickname
-    }).lean();
+    }).lean() as any;
 
     return json({
       length: streak?.length ?? 0,
@@ -49,11 +49,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       { username: session.user.nickname },
       { length, lastPrayed },
       { upsert: true, new: true }
-    ).lean();
+    ).lean() as any;
 
     return json({
-      length: updated.length,
-      lastPrayed: updated.lastPrayed
+      length: updated?.length ?? 0,
+      lastPrayed: updated?.lastPrayed ?? null
     });
   } catch (e) {
     throw error(500, 'Failed to update rosary streak');

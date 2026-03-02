@@ -43,6 +43,7 @@
 		}, 200);
 	}
 
+	/** @param {string} category */
 	function handleCategorySelect(category) {
 		if (useAndLogic) {
 			// AND mode: single select
@@ -62,6 +63,7 @@
 		}
 	}
 
+	/** @param {KeyboardEvent} event */
 	function handleKeyDown(event) {
 		if (event.key === 'Enter') {
 			event.preventDefault();
@@ -77,6 +79,7 @@
 		}
 	}
 
+	/** @param {string} category */
 	function handleRemove(category) {
 		if (useAndLogic) {
 			onChange(null);

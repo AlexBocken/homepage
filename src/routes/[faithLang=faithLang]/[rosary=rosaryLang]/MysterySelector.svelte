@@ -3,6 +3,7 @@
 
 	let { selectedMystery, todaysMystery, includeLuminous, labels, mysteryHref, selectMystery, season = null } = $props();
 
+	/** @type {string | null} */
 	const seasonalMystery = $derived(
 		season === 'eastertide' ? 'glorreichen'
 		: season === 'lent' ? 'schmerzhaften'

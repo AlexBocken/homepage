@@ -39,9 +39,9 @@ export async function requireAuth(
 
 	return {
 		nickname: session.user.nickname,
-		name: session.user.name,
-		email: session.user.email,
-		image: session.user.image
+		name: session.user.name ?? undefined,
+		email: session.user.email ?? undefined,
+		image: session.user.image ?? undefined
 	};
 }
 
@@ -74,8 +74,8 @@ export async function optionalAuth(
 
 	return {
 		nickname: session.user.nickname,
-		name: session.user.name,
-		email: session.user.email,
-		image: session.user.image
+		name: session.user.name ?? undefined,
+		email: session.user.email ?? undefined,
+		image: session.user.image ?? undefined
 	};
 }

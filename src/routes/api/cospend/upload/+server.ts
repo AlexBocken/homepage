@@ -55,7 +55,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       path: publicPath
     });
 
-  } catch (err) {
+  } catch (err: any) {
     if (err.status) throw err;
     console.error('Upload error:', err);
     throw error(500, 'Failed to upload file');

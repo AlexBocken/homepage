@@ -23,6 +23,7 @@ import StreakCounter from "$lib/components/faith/StreakCounter.svelte";
 import RosarySvg from "./RosarySvg.svelte";
 import MysterySelector from "./MysterySelector.svelte";
 import MysteryImageColumn from "./MysteryImageColumn.svelte";
+/** @typedef {import('./rosaryData.js').MysteryType} MysteryType */
 import { mysteries, mysteriesLatin, mysteriesEnglish, mysteryTitles, mysteryTitlesEnglish, allMysteryImages, getLabels, getMysteryForWeekday, BEAD_SPACING, DECADE_OFFSET, sectionPositions } from "./rosaryData.js";
 import { isEastertide, getLiturgicalSeason } from "$lib/js/easter.svelte";
 import { setupScrollSync } from "./rosaryScrollSync.js";
@@ -38,7 +39,7 @@ let showImages = $state(data.initialShowImages);
 let hasLoadedFromStorage = $state(false);
 
 // Create language context for prayer components (LanguageToggle will use this)
-const langContext = createLanguageContext({ urlLang: data.lang, initialLatin: data.initialLatin });
+const langContext = createLanguageContext({ urlLang: /** @type {'en'|'de'} */ (data.lang), initialLatin: data.initialLatin });
 
 // Update lang store when data.lang changes (e.g., after navigation)
 $effect(() => {
@@ -47,6 +48,8 @@ $effect(() => {
 
 // UI labels based on URL language (reactive)
 const isEnglish = $derived(data.lang === 'en');
+/** @type {'en'|'de'} */
+const lang = $derived(isEnglish ? 'en' : 'de');
 const labels = $derived(getLabels(isEnglish));
 
 // Save toggle states to localStorage whenever they change (but only after initial load)
@@ -62,8 +65,8 @@ $effect(() => {
 });
 
 // Use server-computed initial values (supports no-JS via URL params)
-let selectedMystery = $state(data.initialMystery);
-let todaysMystery = $state(data.todaysMystery);
+let selectedMystery = $state(/** @type {MysteryType} */ (data.initialMystery));
+let todaysMystery = $state(/** @type {MysteryType} */ (data.todaysMystery));
 
 // Derive these values from selectedMystery so they update automatically
 let currentMysteries = $derived(mysteries[selectedMystery]);
@@ -73,12 +76,14 @@ let currentMysteryTitles = $derived(isEnglish ? mysteryTitlesEnglish[selectedMys
 let currentMysteryDescriptions = $derived(data.mysteryDescriptions[selectedMystery] || []);
 
 // Function to switch mysteries
+/** @param {MysteryType} mysteryType */
 function selectMystery(mysteryType) {
 	selectedMystery = mysteryType;
 	lastMysteryTarget = 'before';
 }
 
 // Build URLs preserving full state (for no-JS fallback)
+/** @param {{ mystery?: string, luminous?: boolean, latin?: boolean, images?: boolean }} [opts] */
 function buildHref({ mystery = selectedMystery, luminous = includeLuminous, latin = data.initialLatin, images = showImages } = {}) {
 	const params = new URLSearchParams();
 	params.set('mystery', mystery);
@@ -88,6 +93,7 @@ function buildHref({ mystery = selectedMystery, luminous = includeLuminous, lati
 	return `?${params.toString()}`;
 }
 
+/** @param {string} mystery */
 function mysteryHref(mystery) {
 	return buildHref({ mystery });
 }
@@ -102,6 +108,7 @@ $effect(() => {
 	todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
 	if (!includeLuminous && selectedMystery === 'lichtreichen') {
 		const season = getLiturgicalSeason();
+		/** @type {Record<string, MysteryType>} */
 		const seasonalMap = { eastertide: 'glorreichen', lent: 'schmerzhaften' };
 		selectedMystery = (season ? seasonalMap[season] : null) ?? todaysMystery;
 	}
@@ -109,7 +116,9 @@ $effect(() => {
 
 // Active section tracking
 let activeSection = $state("cross");
+/** @type {Record<string, HTMLElement>} */
 let sectionElements = {};
+/** @type {HTMLElement | undefined} */
 let svgContainer;
 
 // Map pater sections to the large bead they share (so SVG highlights correctly)
@@ -123,6 +132,10 @@ const svgActiveSection = $derived(
 const hasMysteryImages = $derived(showImages && (allMysteryImages[selectedMystery]?.size ?? 0) > 0);
 
 // Mystery image scroll target based on active section (returns decade number 1-5, or 'before'/'after')
+/**
+ * @param {string} section
+ * @returns {number | 'before' | 'after'}
+ */
 function getMysteryScrollTarget(section) {
 	if (section === 'lbead2') return 1;
 	const secretMatch = section.match(/^secret(\d)/);
@@ -138,6 +151,10 @@ function getMysteryScrollTarget(section) {
 }
 
 // Mobile PiP: which image src to show (null = hide)
+/**
+ * @param {MysteryType} mystery
+ * @param {string} section
+ */
 function getMysteryImage(mystery, section) {
 	const images = allMysteryImages[mystery];
 	if (!images || images.size === 0) return null;
@@ -149,7 +166,9 @@ const mysteryPipSrc = $derived(getMysteryImage(selectedMystery, activeSection));
 
 // Mobile PiP drag/enlarge
 const pip = createPip({ fullscreenEnabled: true });
+/** @type {HTMLElement | null} */
 let rosaryPipEl = $state(null);
+/** @type {string | null} */
 let lastPipSrc = $state(null);
 
 function isMobilePip() {
@@ -172,21 +191,26 @@ $effect(() => {
 	}
 });
 
+/** @type {HTMLElement | undefined} */
 let mysteryImageContainer;
+/** @type {number | null} */
 let mysteryScrollRaf = null;
+/** @type {number | string} */
 let lastMysteryTarget = 'before';
 
+/** @param {number} targetY @param {number} [duration] */
 function scrollMysteryImage(targetY, duration = 1200) {
-	if (!mysteryImageContainer) return;
+	const container = mysteryImageContainer;
+	if (!container) return;
 	if (mysteryScrollRaf) cancelAnimationFrame(mysteryScrollRaf);
-	const startY = mysteryImageContainer.scrollTop;
+	const startY = container.scrollTop;
 	const distance = targetY - startY;
 	if (Math.abs(distance) < 1) return;
 	const startTime = performance.now();
-	const ease = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-	const step = (now) => {
+	const ease = (/** @type {number} */ t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+	const step = (/** @type {number} */ now) => {
 		const progress = Math.min((now - startTime) / duration, 1);
-		mysteryImageContainer.scrollTop = startY + distance * ease(progress);
+		container.scrollTop = startY + distance * ease(progress);
 		if (progress < 1) mysteryScrollRaf = requestAnimationFrame(step);
 		else mysteryScrollRaf = null;
 	};
@@ -198,7 +222,7 @@ const IMAGE_COL_HEADER_OFFSET = 6; // rem — keep images below the sticky heade
 $effect(() => {
 	if (!mysteryImageContainer || !hasMysteryImages) return;
 	const targetName = getMysteryScrollTarget(activeSection);
-	const targetEl = mysteryImageContainer.querySelector(`[data-target="${targetName}"]`);
+	const targetEl = /** @type {HTMLElement | null} */ (mysteryImageContainer.querySelector(`[data-target="${targetName}"]`));
 	if (targetEl) {
 		const isEdge = targetName === 'before' || targetName === 'after';
 		const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -232,11 +256,13 @@ let decadeCounters = $state({
 let showModal = $state(false);
 let selectedReference = $state('');
 let selectedTitle = $state('');
+/** @type {any} */
 let selectedVerseData = $state(null);
 
 // Function to advance the counter for a specific decade
+/** @param {number} decadeNum */
 function advanceDecade(decadeNum) {
-	const key = `secret${decadeNum}`;
+	const key = /** @type {'secret1'|'secret2'|'secret3'|'secret4'|'secret5'} */ (`secret${decadeNum}`);
 	if (decadeCounters[key] < 10) {
 		decadeCounters[key] += 1;
 
@@ -268,6 +294,7 @@ function advanceDecade(decadeNum) {
 }
 
 // Function to handle citation click
+/** @param {string} reference @param {string} [title] @param {any} [verseData] */
 function handleCitationClick(reference, title = '', verseData = null) {
 	selectedReference = reference;
 	selectedTitle = title;
@@ -299,6 +326,7 @@ onMount(() => {
 	if (!data.hasUrlMystery) {
 		todaysMystery = getMysteryForWeekday(new Date(), includeLuminous);
 		const season = getLiturgicalSeason();
+		/** @type {Record<string, MysteryType>} */
 		const seasonalMap = { eastertide: 'glorreichen', lent: 'schmerzhaften' };
 		selectMystery(season ? seasonalMap[season] ?? todaysMystery : todaysMystery);
 	}
@@ -760,7 +788,7 @@ h1 {
 
 	<!-- Toggle Controls & Streak Counter -->
 	<div class="controls-row">
-		<StreakCounter streakData={data.streakData} lang={data.lang} isLoggedIn={data.isLoggedIn} />
+		<StreakCounter streakData={data.streakData} {lang} isLoggedIn={data.isLoggedIn} />
 		<div class="toggle-controls">
 			<!-- Luminous Mysteries Toggle (link for no-JS, enhanced with onclick for JS) -->
 			<Toggle
@@ -925,7 +953,7 @@ h1 {
 					data-section={`secret${decadeNum}`}
 				>
 					{#if showImages && allMysteryImages[selectedMystery]?.get(decadeNum)}
-						{@const img = allMysteryImages[selectedMystery].get(decadeNum)}
+						{@const img = /** @type {NonNullable<ReturnType<(typeof allMysteryImages)[MysteryType]['get']>>} */ (allMysteryImages[selectedMystery].get(decadeNum))}
 						<figure class="decade-inline-image">
 							<img src={img.src} alt={isEnglish ? img.title : img.titleDe} loading="lazy" />
 							<figcaption>{img.artist ? `${img.artist}, ` : ''}<em>{isEnglish ? img.title : img.titleDe}</em>{img.year ? `, ${img.year}` : ''}</figcaption>

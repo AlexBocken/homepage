@@ -21,8 +21,8 @@
     oncurrentImageRemoved?: () => void
   }>();
 
-  function handleImageChange(event) {
-    const file = event.target.files[0];
+  function handleImageChange(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         onerror?.('File size must be less than 5MB');
@@ -38,7 +38,7 @@
       imageFile = file;
       const reader = new FileReader();
       reader.onload = (e) => {
-        imagePreview = e.target.result;
+        imagePreview = e.target?.result as string;
       };
       reader.readAsDataURL(file);
 

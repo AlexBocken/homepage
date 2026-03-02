@@ -11,7 +11,7 @@ export const GET: RequestHandler = async () => {
 	const briefRecipes = await Recipe.find(
 		{},
 		'name short_name tags category icon description season dateModified images translations'
-	).lean() as BriefRecipeType[];
+	).lean() as unknown as BriefRecipeType[];
 
 	// Fetch full recipes with populated base recipe references
 	const fullRecipes = await Recipe.find({})
@@ -39,7 +39,7 @@ export const GET: RequestHandler = async () => {
 				}
 			}
 		})
-		.lean() as RecipeModelType[];
+		.lean() as unknown as RecipeModelType[];
 
 	// Map populated refs to resolvedRecipe field (same as individual item endpoint)
 	function mapBaseRecipeRefs(items: any[]): any[] {

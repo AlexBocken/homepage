@@ -13,7 +13,7 @@ export async function load({ data, params }) {
 	}
 
 	// On the client, check if we need to load from IndexedDB
-	const shouldUseOfflineData = (isOffline() || data?.isOffline || !data?.recipes?.length) && canUseOfflineData();
+	const shouldUseOfflineData = (isOffline() || (data as any)?.isOffline || !data?.recipes?.length) && canUseOfflineData();
 
 	if (shouldUseOfflineData) {
 		try {

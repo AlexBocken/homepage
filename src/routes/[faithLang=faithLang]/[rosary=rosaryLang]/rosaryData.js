@@ -1,3 +1,5 @@
+/** @typedef {'freudenreich' | 'schmerzhaften' | 'glorreichen' | 'lichtreichen'} MysteryType */
+
 // Mystery variations for each type of rosary
 export const mysteries = {
 	freudenreich: [
@@ -158,6 +160,7 @@ export const mysteryTitlesEnglish = {
 };
 
 // UI labels based on language
+/** @param {boolean} isEnglish */
 export function getLabels(isEnglish) {
 	return {
 		pageTitle: isEnglish ? 'Interactive Rosary' : 'Interaktiver Rosenkranz',
@@ -198,10 +201,16 @@ export function getLabels(isEnglish) {
 }
 
 // Get the appropriate mystery for a given weekday
+/**
+ * @param {Date} date
+ * @param {boolean} includeLuminous
+ * @returns {MysteryType}
+ */
 export function getMysteryForWeekday(date, includeLuminous) {
-	const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+	const dayOfWeek = /** @type {0|1|2|3|4|5|6} */ (date.getDay()); // 0 = Sunday, 1 = Monday, etc.
 
 	if (includeLuminous) {
+		/** @type {Record<number, MysteryType>} */
 		const schedule = {
 			0: 'glorreichen',    // Sunday
 			1: 'freudenreich',   // Monday
@@ -213,6 +222,7 @@ export function getMysteryForWeekday(date, includeLuminous) {
 		};
 		return schedule[dayOfWeek];
 	} else {
+		/** @type {Record<number, MysteryType>} */
 		const schedule = {
 			0: 'glorreichen',    // Sunday
 			1: 'freudenreich',   // Monday
@@ -231,6 +241,7 @@ export const BEAD_SPACING = 22;
 export const DECADE_OFFSET = 10;
 
 // Map sections to their vertical positions in the SVG
+/** @type {Record<string, number>} */
 export const sectionPositions = {
 	cross: 35,
 	lbead1: 75,

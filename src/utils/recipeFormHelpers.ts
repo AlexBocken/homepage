@@ -46,6 +46,7 @@ export interface RecipeFormData {
 		mediapath: string;
 		alt: string;
 		caption: string;
+		color?: string;
 	}>;
 
 	// Cake form

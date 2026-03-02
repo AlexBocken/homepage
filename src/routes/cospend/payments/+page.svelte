@@ -14,6 +14,7 @@
   // Use server-side data with progressive enhancement
   let payments = $state(data.payments || []);
   let loading = $state(false); // Start as false since we have server data
+  /** @type {string | null} */
   let error = $state(null);
   let currentPage = $state(Math.floor(data.currentOffset / data.limit));
   let limit = $state(data.limit || 20);
@@ -59,7 +60,7 @@
       currentPage = page;
 
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
@@ -71,7 +72,7 @@
     }
   }
 
-  async function deletePayment(paymentId) {
+  async function deletePayment(/** @type {string} */ paymentId) {
     if (!confirm('Are you sure you want to delete this payment?')) {
       return;
     }
@@ -85,14 +86,14 @@
         throw new Error('Failed to delete payment');
       }
 
-      payments = payments.filter(p => p._id !== paymentId);
+      payments = payments.filter((/** @type {any} */ p) => p._id !== paymentId);
     } catch (err) {
-      alert('Error: ' + err.message);
+      alert('Error: ' + (err instanceof Error ? err.message : String(err)));
     }
   }
 
 
-  function formatAmountWithCurrency(payment) {
+  function formatAmountWithCurrency(/** @type {any} */ payment) {
     if (payment.currency === 'CHF' || !payment.originalAmount) {
       return formatCurrency(payment.amount, 'CHF', 'de-CH');
     }
@@ -100,16 +101,16 @@
     return `${formatCurrency(payment.originalAmount, payment.currency, 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
   }
 
-  function formatDate(dateString) {
+  function formatDate(/** @type {string} */ dateString) {
     return new Date(dateString).toLocaleDateString('de-CH');
   }
 
-  function getUserSplitAmount(payment, username) {
-    const split = payment.splits?.find(s => s.username === username);
+  function getUserSplitAmount(/** @type {any} */ payment, /** @type {string} */ username) {
+    const split = payment.splits?.find((/** @type {any} */ s) => s.username === username);
     return split ? split.amount : 0;
   }
 
-  function getSplitDescription(payment) {
+  function getSplitDescription(/** @type {any} */ payment) {
     if (!payment.splits || payment.splits.length === 0) return 'No splits';
 
     if (payment.splitMethod === 'equal') {

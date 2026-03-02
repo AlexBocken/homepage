@@ -4,7 +4,7 @@ import { dbConnect } from '$utils/db';
 import { isEnglish, briefQueryConfig } from '$lib/server/recipeHelpers';
 
 export const GET: RequestHandler = async ({ params }) => {
-  const { approvalFilter, prefix } = briefQueryConfig(params.recipeLang);
+  const { approvalFilter, prefix } = briefQueryConfig(params.recipeLang!);
   await dbConnect();
 
   const field = `${prefix}category`;

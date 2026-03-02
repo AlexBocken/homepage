@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     await cache.set(cacheKey, JSON.stringify(result), 1800);
 
     return json(result);
-  } catch (e) {
+  } catch (e: any) {
     if (e.status === 404) throw e;
     throw error(500, 'Failed to fetch payment');
   } finally {
@@ -108,7 +108,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     await invalidateCospendCaches(allAffectedUsers, id);
 
     return json({ success: true, payment: updatedPayment });
-  } catch (e) {
+  } catch (e: any) {
     if (e.status) throw e;
     throw error(500, 'Failed to update payment');
   } finally {
@@ -148,7 +148,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     await invalidateCospendCaches(affectedUsernames, id);
 
     return json({ success: true });
-  } catch (e) {
+  } catch (e: any) {
     if (e.status) throw e;
     throw error(500, 'Failed to delete payment');
   } finally {

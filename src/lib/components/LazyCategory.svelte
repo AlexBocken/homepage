@@ -11,7 +11,9 @@
 	} = $props();
 
 	let isVisible = $state(eager); // If eager=true, render immediately
+	/** @type {HTMLDivElement | null} */
 	let containerRef = $state(null);
+	/** @type {IntersectionObserver | null} */
 	let observer = $state(null);
 
 	onMount(() => {

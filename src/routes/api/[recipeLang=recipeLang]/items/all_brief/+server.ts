@@ -7,7 +7,7 @@ import cache from '$lib/server/cache';
 import { briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
 
 export const GET: RequestHandler = async ({ params }) => {
-  const { approvalFilter, projection } = briefQueryConfig(params.recipeLang);
+  const { approvalFilter, projection } = briefQueryConfig(params.recipeLang!);
   const cacheKey = `recipes:${params.recipeLang}:all_brief`;
 
   let recipes: BriefRecipeType[] | null = null;
@@ -17,10 +17,10 @@ export const GET: RequestHandler = async ({ params }) => {
     recipes = JSON.parse(cached);
   } else {
     await dbConnect();
-    const dbRecipes = await Recipe.find(approvalFilter, projection).lean();
-    recipes = dbRecipes.map(r => toBrief(r, params.recipeLang));
+    const dbRecipes: any[] = await Recipe.find(approvalFilter, projection).lean();
+    recipes = dbRecipes.map(r => toBrief(r, params.recipeLang!));
     await cache.set(cacheKey, JSON.stringify(recipes), 3600);
   }
 
-  return json(JSON.parse(JSON.stringify(rand_array(recipes))));
+  return json(JSON.parse(JSON.stringify(rand_array(recipes!))));
 };

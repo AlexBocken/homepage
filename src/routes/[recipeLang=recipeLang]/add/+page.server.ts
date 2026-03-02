@@ -42,7 +42,7 @@ export const actions = {
 			const recipeData = extractRecipeFromFormData(formData);
 			console.log('[RecipeAdd] Recipe data extracted:', {
 				short_name: recipeData.short_name,
-				title: recipeData.title
+				name: recipeData.name
 			});
 
 			// Validate required fields
@@ -147,8 +147,7 @@ export const actions = {
 
 			return fail(500, {
 				error: `Failed to process recipe: ${error.message || 'Unknown error'}`,
-				errors: [error.message],
-				values: Object.fromEntries(formData)
+				errors: [error.message]
 			});
 		}
 	}

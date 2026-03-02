@@ -175,4 +175,6 @@ const RecipeSchema = new mongoose.Schema(
 RecipeSchema.index({ "translations.en.short_name": 1 });
 RecipeSchema.index({ "translations.en.translationStatus": 1 });
 
-export const Recipe = mongoose.model("Recipe", RecipeSchema);
+let _recipeModel: any;
+try { _recipeModel = mongoose.model("Recipe"); } catch { _recipeModel = mongoose.model("Recipe", RecipeSchema); }
+export const Recipe = _recipeModel as mongoose.Model<any>;

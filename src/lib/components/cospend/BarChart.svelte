@@ -1,12 +1,21 @@
-<script lang="ts">
+<script>
   import { onMount } from 'svelte';
   import { Chart, registerables } from 'chart.js';
 
-  let { data = { labels: [], datasets: [] }, title = '', height = '400px', onFilterChange = null } = $props<{ data?: any, title?: string, height?: string, onFilterChange?: ((categories: string[] | null) => void) | null }>();
+  /**
+   * @type {{
+   *   data?: { labels: string[], datasets: Array<{ label: string, data: number[] }> },
+   *   title?: string,
+   *   height?: string,
+   *   onFilterChange?: ((categories: string[] | null) => void) | null
+   * }}
+   */
+  let { data = { labels: [], datasets: [] }, title = '', height = '400px', onFilterChange = null } = $props();
 
-  let canvas = $state();
-  let chart = $state();
-  let hiddenCategories = $state(new Set()); // Track which categories are hidden
+  /** @type {HTMLCanvasElement | undefined} */
+  let canvas = $state(undefined);
+  /** @type {Chart | null} */
+  let chart = $state(null);
 
   // Register Chart.js components
   Chart.register(...registerables);
@@ -25,32 +34,39 @@
     '#ECEFF4', // Nord Light Gray
   ];
 
-  function getCategoryColor(category, index) {
-    const categoryColorMap = {
-      'groceries': '#A3BE8C',      // Green
-      'restaurant': '#D08770',     // Orange
-      'transport': '#5E81AC',      // Blue
-      'entertainment': '#B48EAD',  // Purple
-      'shopping': '#EBCB8B',       // Yellow
-      'utilities': '#81A1C1',      // Light Blue
-      'healthcare': '#BF616A',     // Red
-      'education': '#88C0D0',      // Cyan
-      'travel': '#8FBCBB',         // Light Cyan
-      'other': '#4C566A'           // Dark Gray
-    };
+  /** @type {Record<string, string>} */
+  const categoryColorMap = {
+    'groceries': '#A3BE8C',      // Green
+    'restaurant': '#D08770',     // Orange
+    'transport': '#5E81AC',      // Blue
+    'entertainment': '#B48EAD',  // Purple
+    'shopping': '#EBCB8B',       // Yellow
+    'utilities': '#81A1C1',      // Light Blue
+    'healthcare': '#BF616A',     // Red
+    'education': '#88C0D0',      // Cyan
+    'travel': '#8FBCBB',         // Light Cyan
+    'other': '#4C566A'           // Dark Gray
+  };
 
+  /**
+   * @param {string} category
+   * @param {number} index
+   * @returns {string}
+   */
+  function getCategoryColor(category, index) {
     return categoryColorMap[category] || nordColors[index % nordColors.length];
   }
 
   function emitFilter() {
     if (!onFilterChange || !chart) return;
-    const allVisible = chart.data.datasets.every((_, idx) => !chart.getDatasetMeta(idx).hidden);
+    const c = chart;
+    const allVisible = c.data.datasets.every((/** @type {any} */ _, /** @type {number} */ idx) => !c.getDatasetMeta(idx).hidden);
     if (allVisible) {
       onFilterChange(null);
     } else {
-      const visible = chart.data.datasets
-        .filter((_, idx) => !chart.getDatasetMeta(idx).hidden)
-        .map(ds => ds.label.toLowerCase());
+      const visible = c.data.datasets
+        .filter((/** @type {any} */ _, /** @type {number} */ idx) => !c.getDatasetMeta(idx).hidden)
+        .map((/** @type {any} */ ds) => /** @type {string} */ (ds.label ?? '').toLowerCase());
       onFilterChange(visible);
     }
   }
@@ -64,16 +80,17 @@
     }
 
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     // Convert $state proxy to plain arrays to avoid Chart.js property descriptor issues
     const plainLabels = [...(data.labels || [])];
-    const plainDatasets = (data.datasets || []).map(ds => ({
+    const plainDatasets = (data.datasets || []).map((/** @type {{ label: string, data: number[] }} */ ds) => ({
       label: ds.label,
       data: [...(ds.data || [])]
     }));
 
     // Process datasets with colors and capitalize labels
-    const processedDatasets = plainDatasets.map((dataset, index) => ({
+    const processedDatasets = plainDatasets.map((/** @type {{ label: string, data: number[] }} */ dataset, /** @type {number} */ index) => ({
       label: dataset.label.charAt(0).toUpperCase() + dataset.label.slice(1),
       data: dataset.data,
       backgroundColor: getCategoryColor(dataset.label, index),
@@ -130,7 +147,7 @@
             }
           }
         },
-        plugins: {
+        plugins: /** @type {any} */ ({
           datalabels: {
             display: false
           },
@@ -146,28 +163,30 @@
                 weight: 'bold'
               }
             },
-            onClick: (event, legendItem, legend) => {
+            onClick: (/** @type {any} */ event, /** @type {{ datasetIndex?: number }} */ legendItem, /** @type {any} */ legend) => {
               const datasetIndex = legendItem.datasetIndex;
+              if (datasetIndex == null || !chart) return;
+              const c = chart;
 
               // Check if only this dataset is currently visible
-              const onlyThisVisible = chart.data.datasets.every((dataset, idx) => {
-                const meta = chart.getDatasetMeta(idx);
+              const onlyThisVisible = c.data.datasets.every((/** @type {any} */ dataset, /** @type {number} */ idx) => {
+                const meta = c.getDatasetMeta(idx);
                 return idx === datasetIndex ? !meta.hidden : meta.hidden;
               });
 
               if (onlyThisVisible) {
                 // Show all categories
-                chart.data.datasets.forEach((dataset, idx) => {
-                  chart.getDatasetMeta(idx).hidden = false;
+                c.data.datasets.forEach((/** @type {any} */ dataset, /** @type {number} */ idx) => {
+                  c.getDatasetMeta(idx).hidden = false;
                 });
               } else {
                 // Hide all except the clicked one
-                chart.data.datasets.forEach((dataset, idx) => {
-                  chart.getDatasetMeta(idx).hidden = idx !== datasetIndex;
+                c.data.datasets.forEach((/** @type {any} */ dataset, /** @type {number} */ idx) => {
+                  c.getDatasetMeta(idx).hidden = idx !== datasetIndex;
                 });
               }
 
-              chart.update();
+              c.update();
               emitFilter();
             }
           },
@@ -200,57 +219,58 @@
             bodyFont: {
               family: 'Inter, system-ui, sans-serif',
               size: 14,
-              weight: '500'
+              weight: 500
             },
             titleMarginBottom: 8,
             usePointStyle: true,
             boxPadding: 6,
             callbacks: {
-              title: function(context) {
+              title: function(/** @type {any} */ context) {
                 return '';
               },
-              label: function(context) {
+              label: function(/** @type {any} */ context) {
                 return context.dataset.label + ': CHF ' + context.parsed.y.toFixed(2);
               }
             }
           }
-        },
+        }),
         interaction: {
           intersect: true,
           mode: 'point'
         },
-        onClick: (event, activeElements) => {
-          if (activeElements.length > 0) {
+        onClick: (/** @type {any} */ event, /** @type {Array<{ datasetIndex: number }>} */ activeElements) => {
+          if (activeElements.length > 0 && chart) {
+            const c = chart;
             const datasetIndex = activeElements[0].datasetIndex;
 
             // Check if only this dataset is currently visible
-            const onlyThisVisible = chart.data.datasets.every((dataset, idx) => {
-              const meta = chart.getDatasetMeta(idx);
+            const onlyThisVisible = c.data.datasets.every((/** @type {any} */ dataset, /** @type {number} */ idx) => {
+              const meta = c.getDatasetMeta(idx);
               return idx === datasetIndex ? !meta.hidden : meta.hidden;
             });
 
             if (onlyThisVisible) {
               // Show all categories
-              chart.data.datasets.forEach((dataset, idx) => {
-                chart.getDatasetMeta(idx).hidden = false;
+              c.data.datasets.forEach((/** @type {any} */ dataset, /** @type {number} */ idx) => {
+                c.getDatasetMeta(idx).hidden = false;
               });
             } else {
               // Hide all except the clicked one
-              chart.data.datasets.forEach((dataset, idx) => {
-                chart.getDatasetMeta(idx).hidden = idx !== datasetIndex;
+              c.data.datasets.forEach((/** @type {any} */ dataset, /** @type {number} */ idx) => {
+                c.getDatasetMeta(idx).hidden = idx !== datasetIndex;
               });
             }
 
-            chart.update();
+            c.update();
             emitFilter();
           }
         }
       },
       plugins: [{
         id: 'monthlyTotals',
-        afterDatasetsDraw: function(chart) {
-          const ctx = chart.ctx;
-          const chartArea = chart.chartArea;
+        afterDatasetsDraw: function(/** @type {Chart} */ chartInstance) {
+          const ctx = chartInstance.ctx;
+          const chartArea = chartInstance.chartArea;
 
           ctx.save();
           ctx.font = 'bold 14px Inter, system-ui, sans-serif';
@@ -259,23 +279,26 @@
           ctx.textBaseline = 'bottom';
 
           // Calculate and display monthly totals (only for visible categories)
-          chart.data.labels.forEach((label, index) => {
+          const labels = chartInstance.data.labels || [];
+          labels.forEach((/** @type {any} */ label, /** @type {number} */ index) => {
             let total = 0;
-            chart.data.datasets.forEach((dataset, datasetIndex) => {
+            chartInstance.data.datasets.forEach((/** @type {any} */ dataset, /** @type {number} */ datasetIndex) => {
               // Only add to total if the dataset is visible
-              const meta = chart.getDatasetMeta(datasetIndex);
+              const meta = chartInstance.getDatasetMeta(datasetIndex);
               if (meta && !meta.hidden) {
-                total += dataset.data[index] || 0;
+                const val = dataset.data[index];
+                total += (typeof val === 'number' ? val : 0);
               }
             });
 
             if (total > 0) {
               // Get the x position for this month from any visible dataset
+              /** @type {number | null} */
               let x = null;
               let maxY = chartArea.bottom;
 
-              for (let datasetIndex = 0; datasetIndex < chart.data.datasets.length; datasetIndex++) {
-                const datasetMeta = chart.getDatasetMeta(datasetIndex);
+              for (let datasetIndex = 0; datasetIndex < chartInstance.data.datasets.length; datasetIndex++) {
+                const datasetMeta = chartInstance.getDatasetMeta(datasetIndex);
                 if (datasetMeta && !datasetMeta.hidden && datasetMeta.data[index]) {
                   if (x === null) {
                     x = datasetMeta.data[index].x;
@@ -309,7 +332,7 @@
     mediaQuery.addEventListener('change', handleThemeChange);
 
     // Also watch for data-theme attribute changes on <html>
-    const themeObserver = new MutationObserver((mutations) => {
+    const themeObserver = new MutationObserver((/** @type {MutationRecord[]} */ mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
           handleThemeChange();
