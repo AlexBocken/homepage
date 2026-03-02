@@ -69,7 +69,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       throw error(404, 'Recurring payment not found');
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
@@ -113,7 +113,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
     // Validate personal + equal split method
     if (splitMethod === 'personal_equal' && splits && amount) {
-      const totalPersonal = splits.reduce((sum: number, split: any) => {
+      const totalPersonal = splits.reduce((sum: number, split: { personalAmount?: number }) => {
         return sum + (parseFloat(split.personalAmount) || 0);
       }, 0);
       

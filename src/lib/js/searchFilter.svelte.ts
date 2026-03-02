@@ -3,7 +3,7 @@
  * Extracts duplicated search state logic from multiple pages.
  */
 
-type Recipe = { _id: string; [key: string]: any };
+type Recipe = { _id: string; [key: string]: unknown };
 
 export function createSearchFilter<T extends Recipe>(getRecipes: () => T[]) {
 	let matchedRecipeIds = $state(new Set<string>());

@@ -82,10 +82,11 @@ export const actions = {
 						caption: '',
 						color
 					}];
-				} catch (imageError: any) {
+				} catch (imageError: unknown) {
 					console.error('[RecipeAdd] Image processing error:', imageError);
+					const message = imageError instanceof Error ? imageError.message : String(imageError);
 					return fail(400, {
-						error: `Failed to process image: ${imageError.message}`,
+						error: `Failed to process image: ${message}`,
 						errors: ['Image processing failed'],
 						values: Object.fromEntries(formData)
 					});
@@ -114,16 +115,19 @@ export const actions = {
 
 				// Redirect to the new recipe page
 				throw redirect(303, `/${params.recipeLang}/${recipeData.short_name}`);
-			} catch (dbError: any) {
+			} catch (dbError: unknown) {
 				// Re-throw redirects (they're not errors)
-				if (dbError?.status >= 300 && dbError?.status < 400) {
-					throw dbError;
+				if (dbError && typeof dbError === 'object' && 'status' in dbError) {
+					const status = (dbError as { status: number }).status;
+					if (status >= 300 && status < 400) {
+						throw dbError;
+					}
 				}
 
 				console.error('Database error creating recipe:', dbError);
 
 				// Check for duplicate key error
-				if (dbError.code === 11000) {
+				if (dbError && typeof dbError === 'object' && 'code' in dbError && (dbError as { code: number }).code === 11000) {
 					return fail(400, {
 						error: `A recipe with the short name "${recipeData.short_name}" already exists. Please choose a different short name.`,
 						errors: ['Duplicate short_name'],
@@ -131,23 +135,28 @@ export const actions = {
 					});
 				}
 
+				const dbMessage = dbError instanceof Error ? dbError.message : String(dbError);
 				return fail(500, {
-					error: `Failed to create recipe: ${dbError.message || 'Unknown database error'}`,
-					errors: [dbError.message],
+					error: `Failed to create recipe: ${dbMessage || 'Unknown database error'}`,
+					errors: [dbMessage],
 					values: Object.fromEntries(formData)
 				});
 			}
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Re-throw redirects (they're not errors)
-			if (error?.status >= 300 && error?.status < 400) {
-				throw error;
+			if (error && typeof error === 'object' && 'status' in error) {
+				const status = (error as { status: number }).status;
+				if (status >= 300 && status < 400) {
+					throw error;
+				}
 			}
 
 			console.error('Error processing recipe submission:', error);
 
+			const message = error instanceof Error ? error.message : String(error);
 			return fail(500, {
-				error: `Failed to process recipe: ${error.message || 'Unknown error'}`,
-				errors: [error.message]
+				error: `Failed to process recipe: ${message || 'Unknown error'}`,
+				errors: [message]
 			});
 		}
 	}

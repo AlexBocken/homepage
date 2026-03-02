@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     
     const includePublic = url.searchParams.get('include_public') === 'true';
     
-    let query: any = {
+    let query: Record<string, unknown> = {
       $or: [
         { createdBy: session.user.nickname }
       ]

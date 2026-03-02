@@ -76,7 +76,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       }
     ];
 
-    const results = await Payment.aggregate(pipeline as any);
+    const results = await Payment.aggregate(pipeline);
 
     // Transform data into chart-friendly format
     const monthsMap = new Map();
@@ -91,7 +91,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     }
 
     // Populate data
-    results.forEach((result: any) => {
+    results.forEach((result: { _id: { yearMonth: string; category: string }; totalAmount: number }) => {
       const { yearMonth, category } = result._id;
       const amount = result.totalAmount;
 
@@ -112,7 +112,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     let firstMonthWithData = 0;
     for (let i = 0; i < allMonths.length; i++) {
       const monthData = monthsMap.get(allMonths[i]);
-      const hasData = Object.values(monthData).some((value: any) => value > 0);
+      const hasData = Object.values(monthData).some((value) => (value as number) > 0);
       if (hasData) {
         firstMonthWithData = i;
         break;

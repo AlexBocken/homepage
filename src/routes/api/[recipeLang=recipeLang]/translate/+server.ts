@@ -52,25 +52,27 @@ export const POST: RequestHandler = async ({ request }) => {
 			translationMetadata,
 		});
 
-	} catch (err: any) {
+	} catch (err: unknown) {
 		console.error('Translation API error:', err);
 
+		const message = err instanceof Error ? err.message : String(err);
+
 		// Handle specific error cases
-		if (err.message?.includes('DeepL API')) {
-			throw error(503, `Translation service error: ${err.message}`);
+		if (message?.includes('DeepL API')) {
+			throw error(503, `Translation service error: ${message}`);
 		}
 
-		if (err.message?.includes('API key not configured')) {
+		if (message?.includes('API key not configured')) {
 			throw error(500, 'Translation service is not configured. Please add DEEPL_API_KEY to environment variables.');
 		}
 
 		// Re-throw SvelteKit errors
-		if (err.status) {
+		if (err && typeof err === 'object' && 'status' in err) {
 			throw err;
 		}
 
 		// Generic error
-		throw error(500, `Translation failed: ${err.message || 'Unknown error'}`);
+		throw error(500, `Translation failed: ${message || 'Unknown error'}`);
 	}
 };
 
@@ -88,11 +90,12 @@ export const GET: RequestHandler = async () => {
 			service: 'DeepL Translation API',
 			status: isConfigured ? 'ready' : 'not configured',
 		});
-	} catch (err: any) {
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : String(err);
 		return json({
 			configured: false,
 			status: 'error',
-			error: err.message,
+			error: message,
 		}, { status: 500 });
 	}
 };

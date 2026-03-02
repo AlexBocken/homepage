@@ -55,7 +55,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       return json({ error: 'At least one exercise is required' }, { status: 400 });
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name;
     if (exercises) updateData.exercises = exercises;
     if (startTime) updateData.startTime = new Date(startTime);

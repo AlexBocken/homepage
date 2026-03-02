@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
   const favoritesOnly = url.searchParams.get('favorites') === 'true';
 
   try {
-    let dbQuery: any = { ...approvalFilter };
+    let dbQuery: Record<string, unknown> = { ...approvalFilter };
 
     if (category) {
       dbQuery[`${prefix}category`] = category;
@@ -49,9 +49,10 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
     let recipes: BriefRecipeType[] = dbRecipes.map(r => toBrief(r, params.recipeLang!));
 
     // Handle favorites filter
-    if (favoritesOnly && (locals as any).session?.user) {
+    const session = await locals.auth();
+    if (favoritesOnly && session?.user) {
       const { UserFavorites } = await import('$models/UserFavorites');
-      const userFavorites = await UserFavorites.findOne({ username: (locals as any).session.user.username });
+      const userFavorites = await UserFavorites.findOne({ username: session.user.nickname });
       if (userFavorites?.favorites) {
         const favoriteIds = userFavorites.favorites;
         recipes = recipes.filter(recipe => favoriteIds.some(id => id.toString() === recipe._id?.toString()));
