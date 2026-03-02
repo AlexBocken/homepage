@@ -1,5 +1,5 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { RecurringPayment } from '$models/RecurringPayment';
+import { RecurringPayment, type IRecurringPayment } from '$models/RecurringPayment';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   await dbConnect();
   
   try {
-    const query: any = {};
+    const query: Record<string, unknown> = {};
     if (activeOnly) {
       query.isActive = true;
     }
@@ -86,7 +86,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Validate personal + equal split method
   if (splitMethod === 'personal_equal' && splits) {
-    const totalPersonal = splits.reduce((sum: number, split: any) => {
+    const totalPersonal = splits.reduce((sum: number, split: { personalAmount?: number }) => {
       return sum + (parseFloat(split.personalAmount) || 0);
     }, 0);
     
@@ -121,7 +121,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       ...recurringPaymentData,
       frequency,
       cronExpression
-    } as any, recurringPaymentData.startDate);
+    } as IRecurringPayment, recurringPaymentData.startDate);
 
     const recurringPayment = await RecurringPayment.create(recurringPaymentData);
 

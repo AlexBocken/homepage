@@ -5,6 +5,8 @@
  * for SvelteKit form actions with progressive enhancement support.
  */
 
+import type { IngredientItem, InstructionItem, TranslatedRecipeType, TranslationMetadata } from '$types/types';
+
 export interface RecipeFormData {
 	// Basic fields
 	name: string;
@@ -22,8 +24,8 @@ export interface RecipeFormData {
 	note?: string;
 
 	// Complex nested structures
-	ingredients: any[];
-	instructions: any[];
+	ingredients: IngredientItem[];
+	instructions: InstructionItem[];
 
 	// Additional info
 	add_info: {
@@ -65,9 +67,9 @@ export interface RecipeFormData {
 
 	// Translation data (optional)
 	translations?: {
-		en?: any;
+		en?: TranslatedRecipeType;
 	};
-	translationMetadata?: any;
+	translationMetadata?: TranslationMetadata;
 }
 
 /**
@@ -112,7 +114,7 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 	const note = formData.get('note')?.toString();
 
 	// Complex nested structures (JSON-encoded)
-	let ingredients: any[] = [];
+	let ingredients: IngredientItem[] = [];
 	const ingredientsData = formData.get('ingredients_json')?.toString();
 	if (ingredientsData) {
 		try {
@@ -122,7 +124,7 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 		}
 	}
 
-	let instructions: any[] = [];
+	let instructions: InstructionItem[] = [];
 	const instructionsData = formData.get('instructions_json')?.toString();
 	if (instructionsData) {
 		try {
@@ -265,7 +267,7 @@ export function validateRecipeData(data: RecipeFormData): string[] {
  * Detects which fields have changed between two recipe objects
  * Used for edit forms to enable partial translation updates
  */
-export function detectChangedFields(original: any, current: any): string[] {
+export function detectChangedFields(original: Record<string, unknown>, current: Record<string, unknown>): string[] {
 	const changedFields: string[] = [];
 
 	// Simple field comparison
@@ -347,8 +349,8 @@ export function parseSeasonData(formData: FormData): number[] {
  * Serializes complex recipe data for storage
  * Ensures all required fields are present and properly typed
  */
-export function serializeRecipeForDatabase(data: RecipeFormData): any {
-	const recipe: any = {
+export function serializeRecipeForDatabase(data: RecipeFormData): Record<string, unknown> {
+	const recipe: Record<string, unknown> = {
 		name: data.name,
 		short_name: data.short_name,
 		description: data.description,

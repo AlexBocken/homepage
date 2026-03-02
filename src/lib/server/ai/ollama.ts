@@ -96,7 +96,7 @@ export async function listOllamaModels(): Promise<string[]> {
 		}
 
 		const data = await response.json();
-		return data.models?.map((m: any) => m.name) || [];
+		return data.models?.map((m: { name: string }) => m.name) || [];
 	} catch (error) {
 		console.error('Failed to list Ollama models:', error);
 		return [];

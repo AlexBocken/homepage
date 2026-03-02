@@ -125,12 +125,13 @@ export const POST = (async ({ request, locals }) => {
 			unhashedFilename: unhashedFilename,
 			color
 		});
-	} catch (err: any) {
+	} catch (err: unknown) {
 		// Re-throw errors that already have status codes
-		if (err.status) throw err;
+		if (err && typeof err === 'object' && 'status' in err) throw err;
 
 		// Log and throw generic error for unexpected failures
 		console.error('[API:ImgAdd] Upload error:', err);
-		throw error(500, `Failed to upload image: ${err.message || 'Unknown error'}`);
+		const message = err instanceof Error ? err.message : String(err);
+		throw error(500, `Failed to upload image: ${message || 'Unknown error'}`);
 	}
 }) satisfies RequestHandler;

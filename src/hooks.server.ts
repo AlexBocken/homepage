@@ -31,7 +31,7 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		else if (!session.user?.groups?.includes('rezepte_users')) {
 			error(403, {
 				message: 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
-			} as any);
+			});
 		}
 	}
 
@@ -42,7 +42,7 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 			if (event.url.pathname.startsWith('/api/cospend')) {
 				error(401, {
 					message: 'Anmeldung erforderlich. Du musst angemeldet sein, um auf diesen Bereich zugreifen zu können.'
-				} as any);
+				});
 			}
 			// For page routes, redirect to login
 			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
@@ -51,7 +51,7 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		else if (!session.user?.groups?.includes('cospend')) {
 			error(403, {
 				message: 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
-			} as any);
+			});
 		}
 	}
 
@@ -60,7 +60,7 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 }
 
 // Bible verse functionality for error pages
-async function getRandomVerse(fetch: typeof globalThis.fetch, pathname: string): Promise<any> {
+async function getRandomVerse(fetch: typeof globalThis.fetch, pathname: string): Promise<{ text: string; reference: string } | null> {
   const isEnglish = pathname.startsWith('/faith/') || pathname.startsWith('/recipes/');
   const endpoint = isEnglish ? '/api/faith/bibel/zufallszitat' : '/api/glaube/bibel/zufallszitat';
   try {

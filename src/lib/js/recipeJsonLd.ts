@@ -26,8 +26,37 @@ function parseTimeToISO8601(timeString: string): string | undefined {
   return undefined;
 }
 
-export function generateRecipeJsonLd(data: any) {
-  const jsonLd: any = {
+import type { RecipeModelType } from '$types/types';
+
+interface HowToStep {
+  "@type": "HowToStep";
+  name: string;
+  text: string;
+}
+
+interface RecipeJsonLd {
+  "@context": string;
+  "@type": string;
+  name: string;
+  description: string;
+  author: { "@type": string; name: string };
+  datePublished?: string;
+  dateModified?: string;
+  recipeCategory: string;
+  keywords?: string;
+  image: { "@type": string; url: string; width: number; height: number };
+  recipeIngredient: string[];
+  recipeInstructions: HowToStep[];
+  url: string;
+  recipeYield?: string;
+  prepTime?: string;
+  cookTime?: string;
+  totalTime?: string;
+  [key: string]: unknown;
+}
+
+export function generateRecipeJsonLd(data: RecipeModelType) {
+  const jsonLd: RecipeJsonLd = {
     "@context": "https://schema.org",
     "@type": "Recipe",
     "name": data.name?.replace(/<[^>]*>/g, ''), // Strip HTML tags
@@ -47,7 +76,7 @@ export function generateRecipeJsonLd(data: any) {
       "height": 800
     },
     "recipeIngredient": [] as string[],
-    "recipeInstructions": [] as any[],
+    "recipeInstructions": [] as HowToStep[],
     "url": `https://bocken.org/rezepte/${data.short_name}`
   };
 

@@ -6,6 +6,13 @@ import { convertToCHF, isValidCurrencyCode } from '$lib/utils/currency';
 import { error, json } from '@sveltejs/kit';
 import cache, { invalidateCospendCaches } from '$lib/server/cache';
 
+interface SplitInput {
+  username: string;
+  amount: number;
+  proportion?: number;
+  personalAmount?: number;
+}
+
 export const GET: RequestHandler = async ({ locals, url }) => {
   const auth = await locals.auth();
   if (!auth || !auth.user?.nickname) {
@@ -79,7 +86,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Validate personal + equal split method
   if (splitMethod === 'personal_equal' && splits) {
-    const totalPersonal = splits.reduce((sum: number, split: any) => {
+    const totalPersonal = splits.reduce((sum: number, split: SplitInput) => {
       return sum + (parseFloat(split.personalAmount) || 0);
     }, 0);
     
@@ -125,7 +132,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     });
 
     // Convert split amounts to CHF if needed
-    const convertedSplits = splits.map((split: any) => {
+    const convertedSplits = splits.map((split: SplitInput) => {
       let convertedAmount = split.amount;
       let convertedPersonalAmount = split.personalAmount;
       
@@ -146,14 +153,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       };
     });
 
-    const splitPromises = convertedSplits.map((split: any) => {
+    const splitPromises = convertedSplits.map((split: { paymentId: unknown; username: string; amount: number; proportion?: number; personalAmount?: number }) => {
       return PaymentSplit.create(split);
     });
 
     await Promise.all(splitPromises);
 
     // Invalidate caches for all affected users
-    const affectedUsernames = splits.map((split: any) => split.username);
+    const affectedUsernames = splits.map((split: SplitInput) => split.username);
     await invalidateCospendCaches(affectedUsernames, payment._id.toString());
 
     return json({

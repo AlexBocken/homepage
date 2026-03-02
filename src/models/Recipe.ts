@@ -175,6 +175,8 @@ const RecipeSchema = new mongoose.Schema(
 RecipeSchema.index({ "translations.en.short_name": 1 });
 RecipeSchema.index({ "translations.en.translationStatus": 1 });
 
-let _recipeModel: any;
-try { _recipeModel = mongoose.model("Recipe"); } catch { _recipeModel = mongoose.model("Recipe", RecipeSchema); }
-export const Recipe = _recipeModel as mongoose.Model<any>;
+import type { RecipeModelType } from '$types/types';
+
+let _recipeModel: mongoose.Model<RecipeModelType>;
+try { _recipeModel = mongoose.model<RecipeModelType>("Recipe"); } catch { _recipeModel = mongoose.model<RecipeModelType>("Recipe", RecipeSchema); }
+export const Recipe = _recipeModel;

@@ -27,8 +27,8 @@ class RecurringPaymentScheduler {
       
       await this.processRecurringPayments();
     }, {
-      timezone: 'Europe/Zurich' // Adjust timezone as needed
-    } as any);
+      timezone: 'Europe/Zurich'
+    });
 
     console.log('[Scheduler] Recurring payments scheduler started (runs every minute)');
   }
@@ -154,7 +154,8 @@ class RecurringPaymentScheduler {
     return {
       isRunning: this.isRunning,
       isScheduled: this.task !== null,
-      nextRun: (this.task as any)?.nextDate?.()?.toISOString?.()
+      // node-cron's ScheduledTask type doesn't expose nextDate, but it exists at runtime
+      nextRun: (this.task as unknown as { nextDate?: () => { toISOString: () => string } })?.nextDate?.()?.toISOString?.()
     };
   }
 }

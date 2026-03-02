@@ -114,13 +114,14 @@ export const actions: Actions = {
 
       // Redirect back to dashboard on success
       throw redirect(303, '/cospend');
-    } catch (error: any) {
-      if (error.status === 303) {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'status' in error && (error as { status: number }).status === 303) {
         throw error; // Re-throw redirect
       }
 
+      const message = error instanceof Error ? error.message : String(error);
       return fail(500, {
-        error: error.message,
+        error: message,
         values: {
           settlementType,
           fromUser,

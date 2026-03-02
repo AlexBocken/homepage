@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ params }) => {
     recipes = JSON.parse(cached);
   } else {
     await dbConnect();
-    const dbRecipes: any[] = await Recipe.find(approvalFilter, projection).lean();
+    const dbRecipes = await Recipe.find(approvalFilter, projection).lean();
     recipes = dbRecipes.map(r => toBrief(r, params.recipeLang!));
     await cache.set(cacheKey, JSON.stringify(recipes), 3600);
   }

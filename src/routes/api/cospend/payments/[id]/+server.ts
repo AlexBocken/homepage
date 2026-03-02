@@ -36,8 +36,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     await cache.set(cacheKey, JSON.stringify(result), 1800);
 
     return json(result);
-  } catch (e: any) {
-    if (e.status === 404) throw e;
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'status' in e && (e as { status: number }).status === 404) throw e;
     throw error(500, 'Failed to fetch payment');
   } finally {
     // Connection will be reused
@@ -89,7 +89,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     if (data.splits) {
       await PaymentSplit.deleteMany({ paymentId: id });
 
-      const splitPromises = data.splits.map((split: any) => {
+      const splitPromises = data.splits.map((split: { username: string; amount: number; proportion?: number; personalAmount?: number }) => {
         return PaymentSplit.create({
           paymentId: id,
           username: split.username,
@@ -100,7 +100,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       });
 
       await Promise.all(splitPromises);
-      newUsernames = data.splits.map((split: any) => split.username);
+      newUsernames = data.splits.map((split: { username: string }) => split.username);
     }
 
     // Invalidate caches for all users (old and new)
@@ -108,8 +108,8 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     await invalidateCospendCaches(allAffectedUsers, id);
 
     return json({ success: true, payment: updatedPayment });
-  } catch (e: any) {
-    if (e.status) throw e;
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'status' in e) throw e;
     throw error(500, 'Failed to update payment');
   } finally {
     // Connection will be reused
@@ -148,8 +148,8 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     await invalidateCospendCaches(affectedUsernames, id);
 
     return json({ success: true });
-  } catch (e: any) {
-    if (e.status) throw e;
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'status' in e) throw e;
     throw error(500, 'Failed to delete payment');
   } finally {
     // Connection will be reused

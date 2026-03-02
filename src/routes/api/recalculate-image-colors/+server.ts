@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const body = await request.json();
 		const { filter = 'missing', limit = 50 } = body;
 
-		let query: any = { images: { $exists: true, $ne: [] } };
+		let query: Record<string, unknown> = { images: { $exists: true, $ne: [] } };
 
 		if (filter === 'missing') {
 			query = {

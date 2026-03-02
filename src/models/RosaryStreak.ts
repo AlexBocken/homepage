@@ -9,7 +9,12 @@ const RosaryStreakSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _model: any;
-try { _model = mongoose.model("RosaryStreak"); } catch { _model = mongoose.model("RosaryStreak", RosaryStreakSchema); }
-export const RosaryStreak = _model as mongoose.Model<any>;
+interface IRosaryStreak {
+  username: string;
+  length: number;
+  lastPrayed: string | null;
+}
+
+let _model: mongoose.Model<IRosaryStreak>;
+try { _model = mongoose.model<IRosaryStreak>("RosaryStreak"); } catch { _model = mongoose.model<IRosaryStreak>("RosaryStreak", RosaryStreakSchema); }
+export const RosaryStreak = _model;
