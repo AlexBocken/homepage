@@ -128,7 +128,7 @@ scale: 1.05;
 }
 }
 .backgroundContainer{
-    background-color:  #21201b;
+    background-color: #000;
 }
 .pageTitleWithDefaultLogo {
     background-image: url(https://bocken.org/static/css/logos/logo_text_light.png);
