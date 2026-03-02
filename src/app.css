@@ -387,6 +387,17 @@ a:focus-visible {
 }
 
 /* ============================================
+   VIEW TRANSITIONS
+   Disable default crossfade on page content;
+   only named elements (header, logo, etc.) animate.
+   ============================================ */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+}
+
+/* ============================================
    RECIPE GRID
    Responsive card grid used across recipe pages
    ============================================ */
