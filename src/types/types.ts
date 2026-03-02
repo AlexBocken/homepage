@@ -42,7 +42,11 @@ export type IngredientReference = {
     name: string;
     short_name: string;
     ingredients?: IngredientSection[];
-    translations?: any;
+    translations?: {
+      en?: {
+        ingredients?: IngredientItem[];
+      };
+    };
   };
 };
 
@@ -71,7 +75,11 @@ export type InstructionReference = {
     name: string;
     short_name: string;
     instructions?: InstructionSection[];
-    translations?: any;
+    translations?: {
+      en?: {
+        instructions?: InstructionItem[];
+      };
+    };
   };
 };
 

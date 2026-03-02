@@ -219,8 +219,8 @@ export const actions: Actions = {
       // Success - redirect to dashboard
       throw redirect(303, '/cospend');
 
-    } catch (error: any) {
-      if (error.status === 303) throw error; // Re-throw redirect
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'status' in error && (error as { status: number }).status === 303) throw error; // Re-throw redirect
       
       console.error('Error creating payment:', error);
       return fail(500, {

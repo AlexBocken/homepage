@@ -22,7 +22,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		// Build query based on filter
-		let query: any = { images: { $exists: true, $ne: [] } };
+		let query: Record<string, unknown> = { images: { $exists: true, $ne: [] } };
 
 		if (filter === 'missing') {
 			// Find recipes with images but missing alt text

@@ -1,9 +1,11 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { PaymentSplit } from '$models/PaymentSplit';
-import { Payment } from '$models/Payment';
+import type { IPayment } from '$models/Payment';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import cache from '$lib/server/cache';
+
+type PopulatedPayment = IPayment & { _id: import('mongoose').Types.ObjectId };
 
 interface DebtSummary {
   username: string;
@@ -42,7 +44,7 @@ export const GET: RequestHandler = async ({ locals }) => {
       .lean();
 
     // Get all other users who have splits with payments involving the current user
-    const paymentIds = userSplits.map(split => (split.paymentId as any)._id);
+    const paymentIds = userSplits.map(split => (split.paymentId as unknown as PopulatedPayment)._id);
     const allRelatedSplits = await PaymentSplit.find({
       paymentId: { $in: paymentIds },
       username: { $ne: currentUser }
@@ -55,12 +57,12 @@ export const GET: RequestHandler = async ({ locals }) => {
 
     // Process current user's splits to understand what they owe/are owed
     for (const split of userSplits) {
-      const payment = split.paymentId as any;
+      const payment = split.paymentId as unknown as PopulatedPayment;
       if (!payment) continue;
 
       // Find other participants in this payment
       const otherSplits = allRelatedSplits.filter(s =>
-        (s.paymentId as any)._id.toString() === (split.paymentId as any)._id.toString()
+        (s.paymentId as unknown as PopulatedPayment)._id.toString() === payment._id.toString()
       );
 
       for (const otherSplit of otherSplits) {

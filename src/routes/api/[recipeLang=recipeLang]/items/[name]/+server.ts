@@ -2,12 +2,14 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
-import type { RecipeModelType } from '$types/types';
+import type { RecipeModelType, IngredientItem, InstructionItem } from '$types/types';
 import { isEnglish } from '$lib/server/recipeHelpers';
 
+type RecipeItem = (IngredientItem | InstructionItem) & { baseRecipeRef?: Record<string, unknown>; resolvedRecipe?: Record<string, unknown> };
+
 /** Recursively map populated baseRecipeRef to resolvedRecipe field */
-function mapBaseRecipeRefs(items: any[]): any[] {
-  return items.map((item: any) => {
+function mapBaseRecipeRefs(items: RecipeItem[]): RecipeItem[] {
+  return items.map((item) => {
     if (item.type === 'reference' && item.baseRecipeRef) {
       const resolvedRecipe = { ...item.baseRecipeRef };
       if (resolvedRecipe.ingredients) {
@@ -84,6 +86,7 @@ export const GET: RequestHandler = async ({ params }) => {
         }
       ];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mongoose query builder requires chained .populate() calls
   let dbQuery: any = Recipe.findOne(query);
   for (const p of populatePaths) {
     dbQuery = dbQuery.populate(p);
@@ -100,7 +103,7 @@ export const GET: RequestHandler = async ({ params }) => {
     }
 
     const t = rawRecipe.translations.en;
-    let recipe: any = {
+    let recipe: Record<string, unknown> = {
       _id: rawRecipe._id,
       short_name: t.short_name,
       name: t.name,
@@ -128,17 +131,17 @@ export const GET: RequestHandler = async ({ params }) => {
     };
 
     if (recipe.ingredients) {
-      recipe.ingredients = mapBaseRecipeRefs(recipe.ingredients);
+      recipe.ingredients = mapBaseRecipeRefs(recipe.ingredients as RecipeItem[]);
     }
     if (recipe.instructions) {
-      recipe.instructions = mapBaseRecipeRefs(recipe.instructions);
+      recipe.instructions = mapBaseRecipeRefs(recipe.instructions as RecipeItem[]);
     }
 
     // Merge English alt/caption with original image paths
     const imagesArray = Array.isArray(rawRecipe.images) ? rawRecipe.images : (rawRecipe.images ? [rawRecipe.images] : []);
     if (imagesArray.length > 0) {
       const translatedImages = t.images || [];
-      recipe.images = imagesArray.map((img: any, index: number) => ({
+      recipe.images = imagesArray.map((img: { mediapath: string; alt?: string; caption?: string; color?: string }, index: number) => ({
         mediapath: img.mediapath,
         alt: translatedImages[index]?.alt || img.alt || '',
         caption: translatedImages[index]?.caption || img.caption || '',

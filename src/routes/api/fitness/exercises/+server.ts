@@ -23,7 +23,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
     // Build query
-    let query: any = { isActive: true };
+    let query: Record<string, unknown> = { isActive: true };
     
     // Text search
     if (search) {

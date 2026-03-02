@@ -1,4 +1,4 @@
-import type { BriefRecipeType } from '$types/types';
+import type { BriefRecipeType, RecipeModelType } from '$types/types';
 
 /**
  * Check whether a recipeLang param refers to the English version.
@@ -30,7 +30,7 @@ export function briefQueryConfig(recipeLang: string) {
  * For English, extracts from translations.en and adds germanShortName.
  * For German, passes through root-level fields.
  */
-export function toBrief(recipe: any, recipeLang: string): BriefRecipeType {
+export function toBrief(recipe: RecipeModelType, recipeLang: string): BriefRecipeType {
 	if (isEnglish(recipeLang)) {
 		return {
 			_id: recipe._id,
