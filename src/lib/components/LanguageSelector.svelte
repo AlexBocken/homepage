@@ -29,8 +29,8 @@
 			languageStore.set('en');
 		} else if (path.startsWith('/rezepte') || path.startsWith('/glaube')) {
 			languageStore.set('de');
-		} else if (path === '/') {
-			// On main page, read from localStorage
+		} else {
+			// On other pages, read from localStorage
 			if (typeof localStorage !== 'undefined') {
 				const preferredLanguage = localStorage.getItem('preferredLanguage');
 				languageStore.set(preferredLanguage === 'en' ? 'en' : 'de');
@@ -102,8 +102,10 @@
 		// Get the current path directly from window
 		const path = typeof window !== 'undefined' ? window.location.pathname : currentPath;
 
-		// If on main page, dispatch event instead of reloading
-		if (path === '/') {
+		// For pages that handle their own translations inline (not recipe/faith routes),
+		// dispatch event and stay on the page
+		if (!path.startsWith('/rezepte') && !path.startsWith('/recipes')
+			&& !path.startsWith('/glaube') && !path.startsWith('/faith')) {
 			window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
 			return;
 		}
