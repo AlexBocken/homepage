@@ -17,6 +17,7 @@
 
 	let inputValue = $state('');
 	let dropdownOpen = $state(false);
+	/** @type {HTMLDivElement | null} */
 	let dropdownElement = $state(null);
 
 	// Filter tags based on input
@@ -32,6 +33,7 @@
 		dropdownOpen = true;
 	}
 
+	/** @param {FocusEvent} event */
 	function handleInputBlur(event) {
 		// Delay to allow click events on dropdown items
 		setTimeout(() => {
@@ -40,12 +42,14 @@
 		}, 200);
 	}
 
+	/** @param {string} tag */
 	function handleTagSelect(tag) {
 		onToggle(tag);
 		inputValue = '';
 		dropdownOpen = false;
 	}
 
+	/** @param {KeyboardEvent} event */
 	function handleKeyDown(event) {
 		if (event.key === 'Enter') {
 			event.preventDefault();

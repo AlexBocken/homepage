@@ -24,12 +24,12 @@
     }
   }
 
-  function removeUser(userToRemove) {
+  function removeUser(userToRemove: string) {
     if (predefinedMode) return;
     if (!canRemoveUsers) return;
-    
+
     if (users.length > 1 && userToRemove !== currentUser) {
-      users = users.filter(u => u !== userToRemove);
+      users = users.filter((u: string) => u !== userToRemove);
     }
   }
 </script>

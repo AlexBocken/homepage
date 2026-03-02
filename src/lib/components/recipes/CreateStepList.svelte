@@ -13,7 +13,7 @@ import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelt
 let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() } = $props<{ lang?: 'de' | 'en', instructions: any, add_info: any }>();
 
 // Translation strings
-const t = {
+const t: Record<string, Record<string, string>> = {
 	de: {
 		preparation: 'Vorbereitung:',
 		bulkFermentation: 'Stockgare:',
@@ -211,7 +211,7 @@ function openAddToReferenceModal(list_index: number, position: 'before' | 'after
 	}
 }
 
-function get_sublist_index(sublist_name, list){
+function get_sublist_index(sublist_name: string, list: any[]){
 	for(var i =0; i < list.length; i++){
 		if(list[i].name == sublist_name){
 			return i
@@ -219,7 +219,7 @@ function get_sublist_index(sublist_name, list){
 	}
 	return -1
 }
-export function remove_list(list_index){
+export function remove_list(list_index: number){
 	if(instructions[list_index].steps.length > 1){
 		const response = confirm(t[lang].confirmDeleteList);
 		if(!response){
@@ -245,13 +245,13 @@ export function add_new_step(){
 	else{
 		instructions[list_index].steps.push(new_step.step)
 	}
-	const el = document.querySelector("#step")
-	el.innerHTML = ""
+	const el = document.querySelector("#step") as HTMLElement | null;
+	if (el) el.innerHTML = ""
 	new_step.step = ""
 	instructions = instructions //tells svelte to update dom
 }
 
-export function remove_step(list_index, step_index){
+export function remove_step(list_index: number, step_index: number){
 	instructions[list_index].steps.splice(step_index, 1)
 	instructions = instructions //tells svelte to update dom
 }
@@ -262,15 +262,15 @@ let edit_step = $state({
 	list_index: 0,
 	step_index: 0,
 });
-export function show_modal_edit_step(list_index, step_index){
+export function show_modal_edit_step(list_index: number, step_index: number){
 	edit_step = {
 		step: instructions[list_index].steps[step_index],
 		name: instructions[list_index].name,
+		list_index,
+		step_index,
 	}
-	edit_step.list_index = list_index
-	edit_step.step_index = step_index
-	const modal_el = document.querySelector(`#edit_step_modal-${lang}`);
-	modal_el.showModal();
+	const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement | null;
+	if (modal_el) modal_el.showModal();
 }
 
 export function edit_step_and_close_modal(){
@@ -321,17 +321,17 @@ export function edit_step_and_close_modal(){
 	}
 }
 
-export function show_modal_edit_subheading_step(list_index){
+export function show_modal_edit_subheading_step(list_index: number){
 	edit_heading.name = instructions[list_index].name
-	edit_heading.list_index = list_index
-	const el = document.querySelector(`#edit_subheading_steps_modal-${lang}`)
-	el.showModal()
+	edit_heading.list_index = String(list_index)
+	const el = document.querySelector(`#edit_subheading_steps_modal-${lang}`) as HTMLDialogElement | null;
+	if (el) el.showModal()
 }
 
 export function edit_subheading_steps_and_close_modal(){
-	instructions[edit_heading.list_index].name = edit_heading.name
-	const modal_el = document.querySelector("#edit_subheading_steps_modal");
-	modal_el.close();
+	instructions[Number(edit_heading.list_index)].name = edit_heading.name
+	const modal_el = document.querySelector(`#edit_subheading_steps_modal-${lang}`) as HTMLDialogElement | null;
+	if (modal_el) modal_el.close();
 }
 
 function handleStepModalCancel() {
@@ -347,19 +347,19 @@ function handleStepModalCancel() {
 
 
 export function clear_step(){
-	const el = document.querySelector("#step")
-	if(el.innerHTML == step_placeholder){
+	const el = document.querySelector("#step") as HTMLElement | null;
+	if(el && el.innerHTML == step_placeholder){
 		el.innerHTML = ""
 	}
 }
 export function add_placeholder(){
-	const el = document.querySelector("#step")
-	if(el.innerHTML == ""){
+	const el = document.querySelector("#step") as HTMLElement | null;
+	if(el && el.innerHTML == ""){
 		el.innerHTML = step_placeholder
 	}
 }
 
-export function update_list_position(list_index, direction){
+export function update_list_position(list_index: number, direction: number){
 	if(direction == 1){
 		if(list_index == 0){
 			return
@@ -374,7 +374,7 @@ export function update_list_position(list_index, direction){
 	}
 	instructions = instructions //tells svelte to update dom
 }
-export function update_step_position(list_index, step_index, direction){
+export function update_step_position(list_index: number, step_index: number, direction: number){
 	if(direction == 1){
 		if(step_index == 0){
 			return
@@ -770,27 +770,27 @@ h3{
 <div class=additional_info>
 
 	<div><h4>{t[lang].preparation}</h4>
-		<p contenteditable type="text" bind:innerText={add_info.preparation}></p>
+		<p contenteditable bind:innerText={add_info.preparation}></p>
 	</div>
 
 
 	<div><h4>{t[lang].bulkFermentation}</h4>
-		<p contenteditable type="text" bind:innerText={add_info.fermentation.bulk}></p>
+		<p contenteditable bind:innerText={add_info.fermentation.bulk}></p>
 	</div>
 
 	<div><h4>{t[lang].finalFermentation}</h4>
-		<p contenteditable type="text" bind:innerText={add_info.fermentation.final}></p>
+		<p contenteditable bind:innerText={add_info.fermentation.final}></p>
 	</div>
 
 	<div><h4>{t[lang].baking}</h4>
-		<div><p type="text" bind:innerText={add_info.baking.length} contenteditable placeholder="40 min..."></p></div> bei <div><p type="text" bind:innerText={add_info.baking.temperature} contenteditable placeholder=200...></p></div> °C <div><p type="text" bind:innerText={add_info.baking.mode} contenteditable placeholder="Ober-/Unterhitze..."></p></div></div>
+		<div><p bind:innerText={add_info.baking.length} contenteditable placeholder="40 min..."></p></div> bei <div><p bind:innerText={add_info.baking.temperature} contenteditable placeholder=200...></p></div> °C <div><p bind:innerText={add_info.baking.mode} contenteditable placeholder="Ober-/Unterhitze..."></p></div></div>
 
 	<div><h4>{t[lang].cooking}</h4>
-		<p contenteditable type="text" bind:innerText={add_info.cooking}></p>
+		<p contenteditable bind:innerText={add_info.cooking}></p>
 	</div>
 
 	<div><h4>{t[lang].totalTime}</h4>
-		<p contenteditable type="text" bind:innerText={add_info.total_time}></p>
+		<p contenteditable bind:innerText={add_info.total_time}></p>
 	</div>
 </div>
 

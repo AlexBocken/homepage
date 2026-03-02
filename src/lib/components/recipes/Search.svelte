@@ -13,7 +13,7 @@
         favoritesOnly = false,
         lang = 'de',
         recipes = [],
-        onSearchResults = (matchedIds, matchedCategories) => {},
+        onSearchResults = (/** @type {Set<any>} */ matchedIds, /** @type {Set<any>} */ matchedCategories) => {},
         isLoggedIn = false
     } = $props();
 
@@ -32,13 +32,19 @@
     let showFilters = $state(false);
 
     // Filter data loaded from APIs
+    /** @type {any[]} */
     let availableTags = $state([]);
+    /** @type {any[]} */
     let availableIcons = $state([]);
 
     // Selected filters (internal state)
+    /** @type {any} */
     let selectedCategory = $state(null);
+    /** @type {any[]} */
     let selectedTags = $state([]);
+    /** @type {any} */
     let selectedIcon = $state(null);
+    /** @type {number[]} */
     let selectedSeasons = $state([]);
     let selectedFavoritesOnly = $state(false);
     let useAndLogic = $state(true);
@@ -53,8 +59,9 @@
     });
 
     // Apply non-text filters (category, tags, icon, season)
+    /** @param {any[]} recipeList */
     function applyNonTextFilters(recipeList) {
-        return recipeList.filter(recipe => {
+        return recipeList.filter((/** @type {any} */ recipe) => {
             if (useAndLogic) {
                 // AND mode: recipe must satisfy ALL active filters
                 // Category filter (single value in AND mode)
@@ -91,7 +98,9 @@
                 return true;
             } else {
                 // OR mode: recipe must satisfy AT LEAST ONE active filter
+                /** @type {any[]} */
                 const categoryArray = Array.isArray(selectedCategory) ? selectedCategory : (selectedCategory ? [selectedCategory] : []);
+                /** @type {any[]} */
                 const iconArray = Array.isArray(selectedIcon) ? selectedIcon : (selectedIcon ? [selectedIcon] : []);
 
                 const hasActiveFilters = categoryArray.length > 0 || selectedTags.length > 0 || iconArray.length > 0 || selectedSeasons.length > 0 || selectedFavoritesOnly;
@@ -114,6 +123,7 @@
     }
 
     // Perform search directly (no worker)
+    /** @param {string} query */
     function performSearch(query) {
         // Apply non-text filters first
         const filteredByNonText = applyNonTextFilters(recipes);
@@ -121,8 +131,8 @@
         // Empty query = show all (filtered) recipes
         if (!query || query.trim().length === 0) {
             onSearchResults(
-                new Set(filteredByNonText.map(r => r._id)),
-                new Set(filteredByNonText.map(r => r.category))
+                new Set(filteredByNonText.map((/** @type {any} */ r) => r._id)),
+                new Set(filteredByNonText.map((/** @type {any} */ r) => r.category))
             );
             return;
         }
@@ -131,10 +141,10 @@
         const searchText = query.toLowerCase().trim()
             .normalize('NFD')
             .replace(/\p{Diacritic}/gu, "");
-        const searchTerms = searchText.split(" ").filter(term => term.length > 0);
+        const searchTerms = searchText.split(" ").filter((/** @type {string} */ term) => term.length > 0);
 
         // Filter recipes by text
-        const matched = filteredByNonText.filter(recipe => {
+        const matched = filteredByNonText.filter((/** @type {any} */ recipe) => {
             // Build searchable string from recipe data
             const searchString = [
                 recipe.name || '',
@@ -147,17 +157,18 @@
                 .replace(/&shy;|­/g, ''); // Remove soft hyphens
 
             // All search terms must match
-            return searchTerms.every(term => searchString.includes(term));
+            return searchTerms.every((/** @type {string} */ term) => searchString.includes(term));
         });
 
         // Return matched recipe IDs and categories
         onSearchResults(
-            new Set(matched.map(r => r._id)),
-            new Set(matched.map(r => r.category))
+            new Set(matched.map((/** @type {any} */ r) => r._id)),
+            new Set(matched.map((/** @type {any} */ r) => r.category))
         );
     }
 
     // Build search URL with current filters
+    /** @param {string} query */
     function buildSearchUrl(query) {
         if (browser) {
             const url = new URL(searchResultsUrl, window.location.origin);
@@ -185,10 +196,12 @@
     }
 
     // Filter change handlers - the effect will automatically trigger search
+    /** @param {any} newCategory */
     function handleCategoryChange(newCategory) {
         selectedCategory = newCategory;
     }
 
+    /** @param {any} tag */
     function handleTagToggle(tag) {
         if (selectedTags.includes(tag)) {
             selectedTags = selectedTags.filter(t => t !== tag);
@@ -197,18 +210,22 @@
         }
     }
 
+    /** @param {any} newIcon */
     function handleIconChange(newIcon) {
         selectedIcon = newIcon;
     }
 
+    /** @param {number[]} newSeasons */
     function handleSeasonChange(newSeasons) {
         selectedSeasons = newSeasons;
     }
 
+    /** @param {boolean} enabled */
     function handleFavoritesToggle(enabled) {
         selectedFavoritesOnly = enabled;
     }
 
+    /** @param {boolean} useAnd */
     function handleLogicModeToggle(useAnd) {
         useAndLogic = useAnd;
 
@@ -223,6 +240,7 @@
         }
     }
 
+    /** @param {Event} event */
     function handleSubmit(event) {
         if (browser) {
             // For JS-enabled browsers, prevent default and navigate programmatically

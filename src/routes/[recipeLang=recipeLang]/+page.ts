@@ -17,7 +17,7 @@ export async function load({ data }) {
 	// 1. We're offline (navigator.onLine is false)
 	// 2. Service worker returned offline flag
 	// 3. Server data is missing (e.g., client-side navigation while offline)
-	const shouldUseOfflineData = (isOffline() || data?.isOffline || !data?.all_brief?.length) && canUseOfflineData();
+	const shouldUseOfflineData = (isOffline() || (data as any)?.isOffline || !data?.all_brief?.length) && canUseOfflineData();
 
 	if (shouldUseOfflineData) {
 		try {

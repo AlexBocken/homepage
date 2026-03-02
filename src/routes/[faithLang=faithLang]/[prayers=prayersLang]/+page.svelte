@@ -31,7 +31,7 @@
 	let { data } = $props();
 
 	// Create language context for prayer components
-	const langContext = createLanguageContext({ urlLang: data.lang, initialLatin: data.initialLatin });
+	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.initialLatin });
 
 	// Update lang store when data.lang changes (e.g., after navigation)
 	$effect(() => {
@@ -165,6 +165,7 @@
 	const baseUrl = $derived(isEnglish ? '/faith/prayers' : '/glaube/gebete');
 
 	// Get prayer name by ID (reactive based on language)
+	/** @param {string} id */
 	function getPrayerName(id) {
 		const nameMap = {
 			signOfCross: labels.signOfCross,
@@ -188,7 +189,7 @@
 			prayerbeforeacrucifix: labels.prayerbeforeacrucifix,
 			postcommunio: labels.postcommunio
 		};
-		return nameMap[id] || id;
+		return /** @type {Record<string, string>} */(nameMap)[id] || id;
 	}
 
 	/**
@@ -253,6 +254,7 @@
 	});
 
 	// Helper to get match class for a prayer
+	/** @param {string} id */
 	function getMatchClass(id) {
 		if (!jsEnabled) return '';
 		const match = matchResults.get(id);
@@ -266,7 +268,8 @@
 	const filteredPrayers = $derived.by(() => {
 		let result = prayers;
 		if (selectedCategory) {
-			result = result.filter(p => prayerCategories[p.id]?.includes(selectedCategory));
+			const cat = selectedCategory;
+			result = result.filter(p => /** @type {Record<string, string[]>} */(prayerCategories)[p.id]?.includes(cat));
 		}
 		if (!searchQuery.trim()) return result;
 
@@ -282,6 +285,7 @@
 	});
 
 	// Prayer metadata (bilingue status)
+	/** @type {Record<string, {bilingue: boolean}>} */
 	const prayerMeta = {
 		signOfCross: { bilingue: true },
 		gloriaPatri: { bilingue: true },

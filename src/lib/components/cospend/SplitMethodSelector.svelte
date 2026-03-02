@@ -1,27 +1,17 @@
-<script lang="ts">
+<script>
   import ProfilePicture from './ProfilePicture.svelte';
 
   let {
     splitMethod = $bindable('equal'),
-    users = $bindable([]),
-    amount = $bindable(0),
+    users = $bindable(/** @type {string[]} */ ([])),
+    amount = $bindable(/** @type {number} */ (0)),
     paidBy = $bindable(''),
-    splitAmounts = $bindable({}),
-    personalAmounts = $bindable({}),
+    splitAmounts = $bindable(/** @type {Record<string, number>} */ ({})),
+    personalAmounts = $bindable(/** @type {Record<string, number>} */ ({})),
     currentUser = $bindable(''),
     predefinedMode = $bindable(false),
     currency = $bindable('CHF')
-  } = $props<{
-    splitMethod?: string,
-    users?: string[],
-    amount?: number,
-    paidBy?: string,
-    splitAmounts?: Record<string, number>,
-    personalAmounts?: Record<string, number>,
-    currentUser?: string,
-    predefinedMode?: boolean,
-    currency?: string
-  }>();
+  } = $props();
 
   let personalTotalError = $state(false);
 
@@ -30,13 +20,13 @@
     if (!paidBy) {
       return 'Paid in Full';
     }
-    
+
     // Special handling for 2-user predefined setup
     if (predefinedMode && users.length === 2) {
-      const otherUser = users.find(user => user !== paidBy);
+      const otherUser = users.find((/** @type {string} */ user) => user !== paidBy);
       return otherUser ? `Paid in Full for ${otherUser}` : 'Paid in Full';
     }
-    
+
     // General case
     if (paidBy === currentUser) {
       return 'Paid in Full by You';
@@ -44,14 +34,14 @@
       return `Paid in Full by ${paidBy}`;
     }
   })());
-  
+
   function calculateEqualSplits() {
     if (!amount || users.length === 0) return;
-    
-    const amountNum = parseFloat(amount);
+
+    const amountNum = Number(amount);
     const splitAmount = amountNum / users.length;
-    
-    users.forEach(user => {
+
+    users.forEach((/** @type {string} */ user) => {
       if (user === paidBy) {
         splitAmounts[user] = splitAmount - amountNum;
       } else {
@@ -62,12 +52,12 @@
 
   function calculateFullPayment() {
     if (!amount) return;
-    
-    const amountNum = parseFloat(amount);
-    const otherUsers = users.filter(user => user !== paidBy);
+
+    const amountNum = Number(amount);
+    const otherUsers = users.filter((/** @type {string} */ user) => user !== paidBy);
     const amountPerOtherUser = otherUsers.length > 0 ? amountNum / otherUsers.length : 0;
-    
-    users.forEach(user => {
+
+    users.forEach((/** @type {string} */ user) => {
       if (user === paidBy) {
         splitAmounts[user] = -amountNum;
       } else {
@@ -78,20 +68,20 @@
 
   function calculatePersonalEqualSplit() {
     if (!amount || users.length === 0) return;
-    
-    const totalAmount = parseFloat(amount);
-    
-    const totalPersonal = users.reduce((sum, user) => {
-      return sum + (parseFloat(personalAmounts[user]) || 0);
+
+    const totalAmount = Number(amount);
+
+    const totalPersonal = users.reduce((/** @type {number} */ sum, /** @type {string} */ user) => {
+      return sum + (Number(personalAmounts[user]) || 0);
     }, 0);
-    
+
     const remainder = Math.max(0, totalAmount - totalPersonal);
     const equalShare = remainder / users.length;
-    
-    users.forEach(user => {
-      const personalAmount = parseFloat(personalAmounts[user]) || 0;
+
+    users.forEach((/** @type {string} */ user) => {
+      const personalAmount = Number(personalAmounts[user]) || 0;
       const totalOwed = personalAmount + equalShare;
-      
+
       if (user === paidBy) {
         splitAmounts[user] = totalOwed - totalAmount;
       } else {
@@ -108,7 +98,7 @@
     } else if (splitMethod === 'personal_equal') {
       calculatePersonalEqualSplit();
     } else if (splitMethod === 'proportional') {
-      users.forEach(user => {
+      users.forEach((/** @type {string} */ user) => {
         if (!(user in splitAmounts)) {
           splitAmounts[user] = 0;
         }
@@ -119,8 +109,9 @@
   // Validate and recalculate when personal amounts change
   $effect(() => {
     if (splitMethod === 'personal_equal' && personalAmounts && amount) {
-      const totalPersonal = Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-      const totalAmount = parseFloat(amount);
+      /** @type {number} */
+      const totalPersonal = Object.values(personalAmounts).reduce((/** @type {number} */ sum, /** @type {number} */ val) => sum + (Number(val) || 0), 0);
+      const totalAmount = Number(amount);
       personalTotalError = totalPersonal > totalAmount;
 
       if (!personalTotalError) {
@@ -138,7 +129,7 @@
 
 <div class="form-section">
   <h2>Split Method</h2>
-  
+
   <div class="form-group">
     <label for="splitMethod">How should this payment be split?</label>
     <select id="splitMethod" name="splitMethod" bind:value={splitMethod} required>
@@ -187,11 +178,12 @@
         </div>
       {/each}
       {#if amount}
+        {@const personalTotal = Object.values(personalAmounts).reduce((/** @type {number} */ sum, /** @type {number} */ val) => sum + (Number(val) || 0), 0)}
         <div class="remainder-info" class:error={personalTotalError}>
-          <span>Total Personal: {currency} {Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0).toFixed(2)}</span>
-          <span>Remainder to Split: {currency} {Math.max(0, parseFloat(amount) - Object.values(personalAmounts).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)).toFixed(2)}</span>
+          <span>Total Personal: {currency} {personalTotal.toFixed(2)}</span>
+          <span>Remainder to Split: {currency} {Math.max(0, Number(amount) - personalTotal).toFixed(2)}</span>
           {#if personalTotalError}
-            <div class="error-message">⚠️ Personal amounts exceed total payment amount!</div>
+            <div class="error-message">Warning: Personal amounts exceed total payment amount!</div>
           {/if}
         </div>
       {/if}

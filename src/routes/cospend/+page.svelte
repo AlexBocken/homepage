@@ -21,33 +21,37 @@
     recentSplits: []
   });
   let loading = $state(false); // Start as false since we have server data
+  /** @type {string | null} */
   let error = $state(null);
-  let monthlyExpensesData = $state(data.monthlyExpensesData || { labels: [], datasets: [] });
+  let monthlyExpensesData = $state(/** @type {any} */ (data).monthlyExpensesData || { labels: [], datasets: [] });
   let expensesLoading = $state(false);
+  /** @type {string[] | null} */
   let categoryFilter = $state(null);
 
   let filteredSplits = $derived(
     categoryFilter
-      ? (balance.recentSplits || []).filter(split => categoryFilter.includes(split.paymentId?.category))
+      ? (balance.recentSplits || []).filter((/** @type {any} */ split) => /** @type {string[]} */ (categoryFilter).includes(split.paymentId?.category))
       : balance.recentSplits || []
   );
 
   // Component references for refreshing
+  /** @type {any} */
   let enhancedBalanceComponent;
+  /** @type {any} */
   let debtBreakdownComponent;
 
   // Progressive enhancement: refresh data if JavaScript is available
-  onMount(async () => {
+  onMount(() => {
     // Mark that JavaScript is loaded for progressive enhancement
     document.body.classList.add('js-loaded');
 
     // Only fetch if we don't have server-side data
     if (!balance.recentSplits || balance.recentSplits.length === 0) {
-      await fetchBalance();
+      fetchBalance();
     }
 
     if (!monthlyExpensesData.datasets || monthlyExpensesData.datasets.length === 0) {
-      await fetchMonthlyExpenses();
+      fetchMonthlyExpenses();
     }
 
     // Listen for dashboard refresh events from the layout
@@ -72,7 +76,7 @@
       }
       balance = await response.json();
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
@@ -113,17 +117,17 @@
     }
   }
 
-  function formatDate(dateString) {
+  function formatDate(/** @type {string} */ dateString) {
     return new Date(dateString).toLocaleDateString('de-CH');
   }
 
-  function truncateDescription(description, maxLength = 100) {
+  function truncateDescription(/** @type {string} */ description, maxLength = 100) {
     if (!description) return '';
     if (description.length <= maxLength) return description;
     return description.substring(0, maxLength).trim() + '...';
   }
 
-  function handlePaymentClick(paymentId, event) {
+  function handlePaymentClick(/** @type {string} */ paymentId, /** @type {Event} */ event) {
     // Progressive enhancement: if JavaScript is available, use pushState for modal behavior
     if (typeof pushState !== 'undefined') {
       event.preventDefault();
@@ -132,7 +136,7 @@
     // Otherwise, let the regular link navigation happen (no preventDefault)
   }
 
-  function getSettlementReceiverFromSplit(split) {
+  function getSettlementReceiverFromSplit(/** @type {any} */ split) {
     if (!isSettlementPayment(split.paymentId)) {
       return '';
     }
@@ -184,7 +188,7 @@
           data={monthlyExpensesData}
           title="Monthly Expenses by Category"
           height="400px"
-          onFilterChange={(categories) => categoryFilter = categories}
+          onFilterChange={(/** @type {string[] | null} */ categories) => categoryFilter = categories}
         />
       {:else}
         <div class="loading">
@@ -203,13 +207,13 @@
   {:else if balance.recentSplits && balance.recentSplits.length > 0}
     <div class="recent-activity">
       <div class="recent-activity-header">
-        <h2>Recent Activity{#if categoryFilter} <span class="filter-label">— {categoryFilter.map(c => getCategoryName(c)).join(', ')}</span>{/if}</h2>
+        <h2>Recent Activity{#if categoryFilter} <span class="filter-label">— {categoryFilter.map((/** @type {any} */ c) => getCategoryName(c)).join(', ')}</span>{/if}</h2>
         {#if categoryFilter}
           <button class="clear-filter" onclick={() => categoryFilter = null}>Clear filter</button>
         {/if}
       </div>
       {#if filteredSplits.length === 0}
-        <p class="no-results">No recent activity in {categoryFilter.map(c => getCategoryName(c)).join(', ')}.</p>
+        <p class="no-results">No recent activity in {categoryFilter ? categoryFilter.map((/** @type {any} */ c) => getCategoryName(c)).join(', ') : ''}.</p>
       {/if}
       <div class="activity-dialog">
         {#each filteredSplits as split}

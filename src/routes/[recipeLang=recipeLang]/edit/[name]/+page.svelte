@@ -159,8 +159,8 @@
 		];
 
 		for (const field of fieldsToCheck) {
-			const oldValue = JSON.stringify(originalRecipe[field] || '');
-			const newValue = JSON.stringify(current[field] || '');
+			const oldValue = JSON.stringify((originalRecipe as Record<string, any>)[field] || '');
+			const newValue = JSON.stringify((current as Record<string, any>)[field] || '');
 			if (oldValue !== newValue) {
 				changed.push(field);
 			}

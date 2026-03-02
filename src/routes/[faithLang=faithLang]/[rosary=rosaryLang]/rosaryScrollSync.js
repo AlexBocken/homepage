@@ -5,9 +5,9 @@ import { sectionPositions } from './rosaryData.js';
  * the SVG rosary visualization, and the mystery image column.
  *
  * @param {object} opts
- * @param {() => HTMLElement} opts.getSvgContainer - getter for the SVG scroll container
- * @param {() => object} opts.getSectionElements - getter for the section-name → DOM element map
- * @param {() => HTMLElement} opts.getMysteryImageContainer - getter for the image column container
+ * @param {() => HTMLElement | undefined} opts.getSvgContainer - getter for the SVG scroll container
+ * @param {() => Record<string, HTMLElement>} opts.getSectionElements - getter for the section-name → DOM element map
+ * @param {() => HTMLElement | undefined} opts.getMysteryImageContainer - getter for the image column container
  * @param {() => string} opts.getActiveSection - getter for current active section
  * @param {(s: string) => void} opts.setActiveSection - setter for active section
  * @returns {() => void} cleanup function
@@ -19,9 +19,12 @@ export function setupScrollSync({
 	getActiveSection,
 	setActiveSection,
 }) {
+	/** @type {string | null} */
 	let scrollLock = null; // 'prayer', 'svg', or 'click'
-	let scrollLockTimeout = null;
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let scrollLockTimeout;
 
+	/** @param {string} source @param {number} [duration] */
 	const setScrollLock = (source, duration = 1000) => {
 		scrollLock = source;
 		clearTimeout(scrollLockTimeout);
@@ -31,6 +34,11 @@ export function setupScrollSync({
 	};
 
 	// Helper: convert SVG section position to pixel scroll target
+	/**
+	 * @param {SVGSVGElement} svg
+	 * @param {string} section
+	 * @returns {number | null}
+	 */
 	function svgSectionToPixel(svg, section) {
 		const svgYPosition = sectionPositions[section];
 		if (svgYPosition === undefined) return null;
@@ -56,12 +64,13 @@ export function setupScrollSync({
 				// Skip observer updates when at the top — handleWindowScroll handles this
 				if (window.scrollY < 50) return;
 
-				const section = entry.target.dataset.section;
+				const section = /** @type {HTMLElement} */ (entry.target).dataset.section;
+				if (!section) return;
 				setActiveSection(section);
 
 				// Scroll SVG to keep active section visible at top
 				if (svgContainer && sectionPositions[section] !== undefined) {
-					const svg = svgContainer.querySelector('svg');
+					const svg = /** @type {SVGSVGElement | null} */ (svgContainer.querySelector('svg'));
 					if (!svg) return;
 
 					const pixelPosition = svgSectionToPixel(svg, section);
@@ -141,7 +150,8 @@ export function setupScrollSync({
 	window.addEventListener('scroll', handleWindowScroll, { passive: true });
 
 	// Debounce SVG scroll handler to avoid excessive updates
-	let svgScrollTimeout = null;
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let svgScrollTimeout;
 	const handleSvgScroll = () => {
 		const svgContainer = getSvgContainer();
 		const sectionElements = getSectionElements();
@@ -149,7 +159,7 @@ export function setupScrollSync({
 
 		clearTimeout(svgScrollTimeout);
 		svgScrollTimeout = setTimeout(() => {
-			const svg = svgContainer.querySelector('svg');
+			const svg = /** @type {SVGSVGElement | null} */ (svgContainer.querySelector('svg'));
 			if (!svg) return;
 
 			const scrollTop = svgContainer.scrollTop;
@@ -195,10 +205,11 @@ export function setupScrollSync({
 
 	// Handle clicks on SVG elements to jump to prayers
 	// preventDefault() overrides the anchor-link fallback when JS is enabled
+	/** @param {MouseEvent} e */
 	const handleSvgClick = (e) => {
 		const svgContainer = getSvgContainer();
 		const sectionElements = getSectionElements();
-		let target = e.target;
+		let target = /** @type {HTMLElement | null} */ (e.target);
 		while (target && target !== svgContainer) {
 			const section = target.dataset.section;
 			if (section && sectionElements[section]) {
@@ -207,8 +218,8 @@ export function setupScrollSync({
 				setScrollLock('click', 1500);
 
 				// Scroll the SVG visualization to the clicked section
-				if (sectionPositions[section] !== undefined) {
-					const svg = svgContainer.querySelector('svg');
+				if (svgContainer && sectionPositions[section] !== undefined) {
+					const svg = /** @type {SVGSVGElement | null} */ (svgContainer.querySelector('svg'));
 					if (svg) {
 						const pixelPosition = svgSectionToPixel(svg, section);
 						if (pixelPosition !== null) {
@@ -231,7 +242,7 @@ export function setupScrollSync({
 		}
 	};
 
-	const svg = svgContainer?.querySelector('svg');
+	const svg = /** @type {SVGSVGElement | null} */ (svgContainer?.querySelector('svg') ?? null);
 	if (svg) {
 		svg.addEventListener('click', handleSvgClick);
 		svg.style.cursor = 'pointer';

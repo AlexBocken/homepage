@@ -64,7 +64,7 @@
 
 	let short_name = $state("");
 	let isBaseRecipe = $state(false);
-	let defaultForm = $state(null);
+	let defaultForm = $state<{ shape: string; diameter?: number; width?: number; length?: number; innerDiameter?: number } | null>(null);
 	let ingredients = $state<any[]>([]);
 	let instructions = $state<any[]>([]);
 

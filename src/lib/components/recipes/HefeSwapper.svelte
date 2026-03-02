@@ -13,13 +13,14 @@
 	// Get all current URL parameters to preserve state
 	const currentParams = $derived(browser ? new URLSearchParams(window.location.search) : $page.url.searchParams);
 	
+	/** @param {Event} event */
 	function toggleHefe(event) {
 		// If JavaScript is available, prevent form submission and handle client-side
 		if (browser) {
 			event.preventDefault();
 			
 			// Simply toggle the yeast flag in the URL
-			const url = new URL(window.location);
+			const url = new URL(window.location.href);
 			const yeastParam = `y${yeastId}`;
 			
 			if (url.searchParams.has(yeastParam)) {

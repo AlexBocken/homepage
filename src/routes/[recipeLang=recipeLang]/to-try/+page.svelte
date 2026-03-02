@@ -42,6 +42,7 @@
 		links.push({ url: '', label: '' });
 	}
 
+	/** @param {number} index */
 	function removeLinkRow(index) {
 		links.splice(index, 1);
 	}
@@ -54,9 +55,10 @@
 		showForm = false;
 	}
 
+	/** @param {any} item */
 	function handleEdit(item) {
 		name = item.name;
-		links = item.links.map(l => ({ url: l.url, label: l.label || '' }));
+		links = item.links.map((/** @type {any} */ l) => ({ url: l.url, label: l.label || '' }));
 		notes = item.notes || '';
 		editingId = item._id;
 		showForm = true;
@@ -76,7 +78,7 @@
 				});
 				if (res.ok) {
 					const updated = await res.json();
-					items = items.map(i => i._id === editingId ? updated : i);
+					items = items.map((/** @type {any} */ i) => i._id === editingId ? updated : i);
 					resetForm();
 				}
 			} else {
@@ -96,6 +98,7 @@
 		}
 	}
 
+	/** @param {any} id */
 	async function handleDelete(id) {
 		const msg = isEnglish ? 'Delete this recipe?' : 'Dieses Rezept löschen?';
 		if (!confirm(msg)) return;
@@ -106,7 +109,7 @@
 			body: JSON.stringify({ id })
 		});
 		if (res.ok) {
-			items = items.filter(i => i._id !== id);
+			items = items.filter((/** @type {any} */ i) => i._id !== id);
 			if (editingId === id) resetForm();
 		}
 	}

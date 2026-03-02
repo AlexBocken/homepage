@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ fetch, locals, request }) => {
         totalOwedToMe: 0,
         totalIOwe: 0
       },
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       session,
       currentUser: session.user?.nickname || ''
     };
@@ -49,7 +49,7 @@ export const actions: Actions = {
     const settlementType = data.get('settlementType');
     const fromUser = data.get('fromUser');
     const toUser = data.get('toUser');
-    const amount = parseFloat(data.get('amount'));
+    const amount = parseFloat(data.get('amount') as string);
     
     // Validation
     if (!settlementType || !fromUser || !toUser || !amount) {
@@ -114,11 +114,11 @@ export const actions: Actions = {
 
       // Redirect back to dashboard on success
       throw redirect(303, '/cospend');
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 303) {
         throw error; // Re-throw redirect
       }
-      
+
       return fail(500, {
         error: error.message,
         values: {

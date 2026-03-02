@@ -19,7 +19,7 @@
         lang?: string,
         recipes?: any[],
         isLoggedIn?: boolean,
-        onSearchResults?: (ids: any[], categories: any[]) => void,
+        onSearchResults?: (ids: Set<string>, categories: Set<string>) => void,
         recipesSlot?: Snippet
     } = $props();
 </script>

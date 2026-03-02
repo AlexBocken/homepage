@@ -459,8 +459,8 @@ class DeepLTranslationService {
 		const changed: string[] = [];
 
 		for (const field of fieldsToCheck) {
-			const oldValue = JSON.stringify(oldRecipe[field] || '');
-			const newValue = JSON.stringify(newRecipe[field] || '');
+			const oldValue = JSON.stringify((oldRecipe as any)[field] || '');
+			const newValue = JSON.stringify((newRecipe as any)[field] || '');
 			if (oldValue !== newValue) {
 				changed.push(field);
 			}

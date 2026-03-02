@@ -7,9 +7,10 @@ import HefeSwapper from './HefeSwapper.svelte';
 let { data } = $props();
 
 // Helper function to multiply numbers in ingredient amounts
+/** @param {string} amount @param {number} multiplier */
 function multiplyIngredientAmount(amount, multiplier) {
 	if (!amount || multiplier === 1) return amount;
-	return amount.replace(/(\d+(?:[\.,]\d+)?)/g, match => {
+	return amount.replace(/(\d+(?:[\.,]\d+)?)/g, (/** @type {string} */ match) => {
 		const number = match.includes(',') ? match.replace(/\./g, '').replace(',', '.') : match;
 		const multiplied = (parseFloat(number) * multiplier).toString();
 		const rounded = parseFloat(multiplied).toFixed(3);
@@ -19,6 +20,7 @@ function multiplyIngredientAmount(amount, multiplier) {
 }
 
 // Recursively flatten nested ingredient references
+/** @param {any[]} items @param {string} lang @param {Set<string>} [visited] @param {number} [baseMultiplier] */
 function flattenIngredientReferences(items, lang, visited = new Set(), baseMultiplier = 1) {
 	const result = [];
 
@@ -91,7 +93,7 @@ function flattenIngredientReferences(items, lang, visited = new Set(), baseMulti
 		} else if (item.type === 'section' || !item.type) {
 			// Regular section - pass through with multiplier applied to amounts
 			if (baseMultiplier !== 1 && item.list) {
-				const adjustedList = item.list.map(ingredient => ({
+				const adjustedList = item.list.map((/** @type {any} */ ingredient) => ({
 					...ingredient,
 					amount: multiplyIngredientAmount(ingredient.amount, baseMultiplier)
 				}));
@@ -138,6 +140,7 @@ let userFormWidth = $state(data.defaultForm?.width || 20);
 let userFormLength = $state(data.defaultForm?.length || 30);
 let userFormInnerDiameter = $state(data.defaultForm?.innerDiameter || 8);
 
+/** @param {string} shape @param {number} diameter @param {number} width @param {number} length @param {number} innerDiameter */
 function calcArea(shape, diameter, width, length, innerDiameter) {
 	if (shape === 'round') return Math.PI * (diameter / 2) ** 2;
 	if (shape === 'gugelhupf') return Math.PI * ((diameter / 2) ** 2 - (innerDiameter / 2) ** 2);
@@ -173,9 +176,10 @@ $effect(() => {
 	}
 });
 
+/** @param {number} value */
 function updateUrl(value) {
 	if (browser) {
-		const url = new URL(window.location);
+		const url = new URL(window.location.href);
 		if (value === 1) {
 			url.searchParams.delete('multiplier');
 		} else {
@@ -196,6 +200,7 @@ const multiplierOptions = [
 
 // Calculate yeast IDs for each yeast ingredient
 const yeastIds = $derived.by(() => {
+	/** @type {Record<string, number>} */
 	const ids = {};
 	let yeastCounter = 0;
 	if (data.ingredients) {
@@ -223,17 +228,18 @@ const currentParams = $derived(browser ? new URLSearchParams(window.location.sea
 onMount(() => {
 	if (browser) {
 		const urlParams = new URLSearchParams(window.location.search);
-		multiplier = parseFloat(urlParams.get('multiplier')) || 1;
+		multiplier = parseFloat(urlParams.get('multiplier') || '1') || 1;
 	}
 })
 
 onNavigate(() => {
 	if (browser) {
 		const urlParams = new URLSearchParams(window.location.search);
-		multiplier = parseFloat(urlParams.get('multiplier')) || 1;
+		multiplier = parseFloat(urlParams.get('multiplier') || '1') || 1;
 	}
 })
 
+/** @param {Event} event @param {number} value */
 function handleMultiplierClick(event, value) {
 	if (browser) {
 		event.preventDefault();
@@ -244,9 +250,10 @@ function handleMultiplierClick(event, value) {
 	// If no JS, form will submit normally
 }
 
+/** @param {Event} event */
 function handleCustomInput(event) {
 	if (browser) {
-		const value = parseFloat(event.target.value);
+		const value = parseFloat(/** @type {HTMLInputElement} */ (event.target).value);
 		if (!isNaN(value) && value > 0) {
 			multiplier = value;
 			formDriven = false;
@@ -255,6 +262,7 @@ function handleCustomInput(event) {
 	}
 }
 
+/** @param {Event} event */
 function handleCustomSubmit(event) {
 	if (browser) {
 		event.preventDefault();
@@ -264,15 +272,16 @@ function handleCustomSubmit(event) {
 }
 
 
+/** @param {string} inputString */
 function convertFloatsToFractions(inputString) {
   // Split the input string into individual words
   const words = inputString.split(' ');
 
   // Define a helper function to check if a number is close to an integer
-  const isCloseToInt = (num) => Math.abs(num - Math.round(num)) < 0.001;
+  const isCloseToInt = (/** @type {number} */ num) => Math.abs(num - Math.round(num)) < 0.001;
 
   // Function to convert a float to a fraction
-  const floatToFraction = (number) => {
+  const floatToFraction = (/** @type {number} */ number) => {
     let bestNumerator = 0;
     let bestDenominator = 1;
     let minDifference = Math.abs(number);
@@ -298,11 +307,11 @@ function convertFloatsToFractions(inputString) {
   };
 
   // Iterate through the words and convert floats to fractions
-  const result = words.map((word) => {
+  const result = words.map((/** @type {string} */ word) => {
     // Check if the word contains a range (e.g., "300-400")
     if (word.includes('-')) {
       const rangeNumbers = word.split('-');
-      const rangeFractions = rangeNumbers.map((num) => {
+      const rangeFractions = rangeNumbers.map((/** @type {string} */ num) => {
         const number = parseFloat(num);
         return !isNaN(number) ? floatToFraction(number) : num;
       });
@@ -317,8 +326,9 @@ function convertFloatsToFractions(inputString) {
   return result.join(' ');
 }
 
+/** @param {string} inputString @param {number} constant */
 function multiplyNumbersInString(inputString, constant) {
-  return inputString.replace(/(\d+(?:[\.,]\d+)?)/g, match => {
+  return inputString.replace(/(\d+(?:[\.,]\d+)?)/g, (/** @type {string} */ match) => {
     const number = match.includes(',') ? match.replace(/\./g, '').replace(',', '.') : match;
     const multiplied = (parseFloat(number) * constant).toString();
     const rounded = parseFloat(multiplied).toFixed(3);
@@ -328,9 +338,10 @@ function multiplyNumbersInString(inputString, constant) {
 }
 
 // "1-2 Kuchen (Durchmesser: 26cm", constant=2 ->  "2-4 Kuchen (Durchmesser: 26cm)"
+/** @param {string} inputString @param {number} constant */
 function multiplyFirstAndSecondNumbers(inputString, constant) {
   const regex = /(\d+(?:[\.,]\d+)?)(\s*-\s*\d+(?:[\.,]\d+)?)?/;
-  return inputString.replace(regex, (match, firstNumber, secondNumber) => {
+  return inputString.replace(regex, (/** @type {string} */ match, /** @type {string} */ firstNumber, /** @type {string} */ secondNumber) => {
     const numbersToMultiply = [firstNumber];
     if (secondNumber) {
       numbersToMultiply.push(secondNumber.replace(/-\s*/, ''));
@@ -346,6 +357,7 @@ function multiplyFirstAndSecondNumbers(inputString, constant) {
 }
 
 
+/** @param {string} string @param {number} multiplier */
 function adjust_amount(string, multiplier){
 	let temp = multiplyNumbersInString(string, multiplier)
 	temp = convertFloatsToFractions(temp)

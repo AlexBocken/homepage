@@ -11,9 +11,10 @@
   let user = $derived(session?.user);
 
   // Get Bible quote and language from SSR via handleError hook
-  let bibleQuote = $derived($page.error?.bibleQuote);
-  let isEnglish = $derived($page.error?.lang === 'en');
+  let bibleQuote = $derived(/** @type {any} */ ($page.error)?.bibleQuote);
+  let isEnglish = $derived(/** @type {any} */ ($page.error)?.lang === 'en');
 
+  /** @param {number} status */
   function getErrorTitle(status) {
     if (isEnglish) {
       switch (status) {
@@ -33,6 +34,7 @@
     }
   }
 
+  /** @param {number} status */
   function getErrorDescription(status) {
     if (isEnglish) {
       switch (status) {
@@ -52,6 +54,7 @@
     }
   }
 
+  /** @param {number} status */
   function getErrorIcon(status) {
     switch (status) {
       case 401:
@@ -112,9 +115,9 @@
         {getErrorDescription(status)}
       </p>
 
-      {#if error?.details}
+      {#if /** @type {any} */ (error)?.details}
         <div class="error-details">
-          {error.details}
+          {/** @type {any} */ (error).details}
         </div>
       {/if}
 

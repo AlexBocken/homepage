@@ -24,7 +24,7 @@ function mapBaseRecipeRefs(items: any[]): any[] {
 
 export const GET: RequestHandler = async ({ params }) => {
   await dbConnect();
-  const en = isEnglish(params.recipeLang);
+  const en = isEnglish(params.recipeLang!);
 
   const query = en
     ? { 'translations.en.short_name': params.name }
@@ -84,7 +84,7 @@ export const GET: RequestHandler = async ({ params }) => {
         }
       ];
 
-  let dbQuery = Recipe.findOne(query);
+  let dbQuery: any = Recipe.findOne(query);
   for (const p of populatePaths) {
     dbQuery = dbQuery.populate(p);
   }

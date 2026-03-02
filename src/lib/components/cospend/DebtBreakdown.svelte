@@ -3,16 +3,31 @@
   import ProfilePicture from './ProfilePicture.svelte';
   import { formatCurrency } from '$lib/utils/formatters';
 
-  let debtData = {
+  /**
+   * @typedef {{ username: string, netAmount: number, transactions: Array<any> }} DebtEntry
+   */
+
+  /**
+   * @typedef {{
+   *   whoOwesMe: DebtEntry[],
+   *   whoIOwe: DebtEntry[],
+   *   totalOwedToMe: number,
+   *   totalIOwe: number
+   * }} DebtData
+   */
+
+  /** @type {DebtData} */
+  let debtData = $state({
     whoOwesMe: [],
     whoIOwe: [],
     totalOwedToMe: 0,
     totalIOwe: 0
-  };
-  let loading = true;
-  let error = null;
+  });
+  let loading = $state(true);
+  /** @type {string | null} */
+  let error = $state(null);
 
-  $: shouldHide = getShouldHide();
+  let shouldHide = $derived(getShouldHide());
 
   function getShouldHide() {
     const totalUsers = debtData.whoOwesMe.length + debtData.whoIOwe.length;
@@ -32,7 +47,7 @@
       }
       debtData = await response.json();
     } catch (err) {
-      error = err.message;
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
@@ -47,7 +62,7 @@
 {#if !shouldHide}
 <div class="debt-breakdown">
   <h2>Debt Overview</h2>
-  
+
   {#if loading}
     <div class="loading">Loading debt breakdown...</div>
   {:else if error}
@@ -60,7 +75,7 @@
           <div class="total-amount positive">
             Total: {formatCurrency(debtData.totalOwedToMe, 'CHF', 'de-CH')}
           </div>
-          
+
           <div class="debt-list">
             {#each debtData.whoOwesMe as debt}
               <div class="debt-item">
@@ -86,7 +101,7 @@
           <div class="total-amount negative">
             Total: {formatCurrency(debtData.totalIOwe, 'CHF', 'de-CH')}
           </div>
-          
+
           <div class="debt-list">
             {#each debtData.whoIOwe as debt}
               <div class="debt-item">

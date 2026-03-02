@@ -2,8 +2,9 @@ import { redirect } from "@sveltejs/kit"
 import type { Actions, PageServerLoad } from "./$types"
 import { error } from "@sveltejs/kit"
 
-export const load: PageServerLoad = async ({ cookies }) => {
-  const user = await authenticateUser(cookies)
+export const load: PageServerLoad = async ({ locals }) => {
+  const session = await locals.auth();
+  const user = session?.user ?? null;
 	return {user}
 }
 

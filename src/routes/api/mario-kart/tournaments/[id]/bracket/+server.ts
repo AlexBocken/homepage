@@ -4,6 +4,20 @@ import { dbConnect } from '$utils/db';
 import { MarioKartTournament } from '$models/MarioKartTournament';
 import mongoose from 'mongoose';
 
+interface BracketMatch {
+  _id: string;
+  contestantIds: string[];
+  rounds: any[];
+  completed: boolean;
+  winnerId?: string;
+}
+
+interface BracketRound {
+  roundNumber: number;
+  name: string;
+  matches: BracketMatch[];
+}
+
 // POST /api/mario-kart/tournaments/[id]/bracket - Generate tournament bracket
 export const POST: RequestHandler = async ({ params, request }) => {
   try {
@@ -31,18 +45,18 @@ export const POST: RequestHandler = async ({ params, request }) => {
         return json({ error: `Group ${group.name} has no standings yet` }, { status: 400 });
       }
 
-      const sortedStandings = group.standings.sort((a, b) => a.position - b.position);
+      const sortedStandings = group.standings.sort((a: any, b: any) => a.position - b.position);
 
       // Top N qualify for main bracket
       const topContestants = sortedStandings
         .slice(0, topNFromEachGroup)
-        .map(s => s.contestantId);
+        .map((s: any) => s.contestantId);
       qualifiedContestants.push(...topContestants);
 
       // Remaining contestants go to consolation bracket
       const remainingContestants = sortedStandings
         .slice(topNFromEachGroup)
-        .map(s => s.contestantId);
+        .map((s: any) => s.contestantId);
       nonQualifiedContestants.push(...remainingContestants);
     }
 
@@ -57,7 +71,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
     const bracketSize = Math.pow(matchSize, Math.ceil(Math.log(qualifiedContestants.length) / Math.log(matchSize)));
 
     // Generate bracket rounds
-    const rounds = [];
+    const rounds: BracketRound[] = [];
     let currentContestants = bracketSize;
     let roundNumber = 1;
 
@@ -141,7 +155,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
     };
 
     // Create consolation bracket for non-qualifiers
-    const runnersUpRounds = [];
+    const runnersUpRounds: BracketRound[] = [];
     if (nonQualifiedContestants.length >= matchSize) {
       // Calculate consolation bracket size
       const consolationBracketSize = Math.pow(matchSize, Math.ceil(Math.log(nonQualifiedContestants.length) / Math.log(matchSize)));

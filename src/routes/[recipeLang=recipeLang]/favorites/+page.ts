@@ -35,7 +35,7 @@ export const load: PageLoad = async ({ data, params }) => {
     }
 
     // Check if we should use offline data
-    const shouldUseOffline = browser && (isOffline() || data?.isOffline) && canUseOfflineData();
+    const shouldUseOffline = browser && (isOffline() || (data as any)?.isOffline) && canUseOfflineData();
 
     if (shouldUseOffline) {
         try {
