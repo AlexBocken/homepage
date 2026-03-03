@@ -244,6 +244,27 @@ progress[value]::-moz-progress-bar {
   filter: brightness(0) saturate(100%) invert(61%) sepia(52%) saturate(212%) hue-rotate(169deg) brightness(92%) contrast(94%);
 }
 
+/* Toast notification */
+.bocken-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 20, 0.9);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  z-index: 9999;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  opacity: 1;
+  transition: opacity 400ms;
+}
+.bocken-toast-hide {
+  opacity: 0;
+}
+
 /* ═══════════════════════════════════════════
    VIDEO DETAIL PAGE
    ═══════════════════════════════════════════ */
