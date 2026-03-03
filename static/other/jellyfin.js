@@ -135,7 +135,45 @@
 })();
 
 /* ═══════════════════════════════════════════
-   2. Click card thumbnail to play video
+   2. Make Bocken logo link to bocken.org
+   ═══════════════════════════════════════════ */
+(function () {
+  function wrapLogo() {
+    var logo = document.querySelector('.pageTitleWithDefaultLogo');
+    if (!logo || logo.dataset.bockenLinked) return;
+    logo.dataset.bockenLinked = '1';
+
+    var link = document.createElement('a');
+    link.href = 'https://bocken.org';
+    link.className = 'bocken-logo-link';
+    link.title = 'bocken.org';
+    logo.parentNode.insertBefore(link, logo);
+    link.appendChild(logo);
+  }
+
+  var pending = null;
+  function schedule() {
+    if (pending) return;
+    pending = setTimeout(function () {
+      pending = null;
+      wrapLogo();
+    }, 300);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', schedule);
+  } else {
+    schedule();
+  }
+
+  new MutationObserver(schedule).observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+})();
+
+/* ═══════════════════════════════════════════
+   3. Click card thumbnail to play video
       + play triangle overlay on cards
    ═══════════════════════════════════════════ */
 (function () {
