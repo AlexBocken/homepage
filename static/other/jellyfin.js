@@ -143,10 +143,25 @@
     if (!logo || logo.dataset.bockenLinked) return;
     logo.dataset.bockenLinked = '1';
 
+    var isMobileApp = /wv\)|Jellyfin Mobile/.test(navigator.userAgent);
+
     var link = document.createElement('a');
     link.href = 'https://bocken.org';
     link.className = 'bocken-logo-link';
     link.title = 'bocken.org';
+    if (isMobileApp) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        navigator.clipboard.writeText('https://bocken.org').then(function () {
+          var toast = document.createElement('div');
+          toast.className = 'bocken-toast';
+          toast.textContent = 'Link copied — open in browser';
+          document.body.appendChild(toast);
+          setTimeout(function () { toast.classList.add('bocken-toast-hide'); }, 2000);
+          setTimeout(function () { toast.remove(); }, 2500);
+        });
+      });
+    }
     logo.parentNode.insertBefore(link, logo);
     link.appendChild(logo);
   }
