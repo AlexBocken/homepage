@@ -559,12 +559,12 @@
    Matches bocken.org homepage header style
    ═══════════════════════════════════════════ */
 
-/* Full black background */
+/* Full black background (dark mode default) */
 body {
-	background-color: #000 !important;
+	background-color: var(--color-body, #000) !important;
 }
 .full.height {
-	background-color: #000;
+	background-color: var(--color-body, #000);
 }
 
 /* Navbar as floating glass pill */
@@ -576,7 +576,7 @@ body {
 	flex-direction: row !important;
 	flex-wrap: nowrap !important;
 	align-items: center !important;
-	height: 3rem !important;
+	height: 3.5rem !important;
 	gap: 0.4rem !important;
 	padding: 0 0.8rem !important;
 	margin: 12px auto 0 !important;
@@ -675,10 +675,10 @@ body {
 
 /* Dropdown menus in navbar */
 #navbar .ui.dropdown .menu {
-	background: #0d1117;
-	border: 1px solid rgba(255,255,255,0.08);
+	background: var(--color-menu);
+	border: 1px solid var(--color-light-border);
 	border-radius: 12px;
-	box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+	box-shadow: 0 8px 32px var(--color-shadow);
 }
 
 
@@ -694,14 +694,14 @@ body {
    PAGE CONTENT SPACING
    ═══════════════════════════════════════════ */
 .page-content {
-	background: #000;
+	background: var(--color-body, #000);
 }
 
 /* ═══════════════════════════════════════════
    FOOTER
    ═══════════════════════════════════════════ */
 .page-footer {
-	background: #000 !important;
+	background: var(--color-footer, #000) !important;
 }
 
 /* ═══════════════════════════════════════════
@@ -745,4 +745,219 @@ html body #navbar .navbar-mobile-right {
 	#navbar .nav-label {
 		display: none;
 	}
+}
+
+/* ═══════════════════════════════════════════
+   THEME TOGGLE BUTTON
+   ═══════════════════════════════════════════ */
+#theme-toggle {
+	background: transparent !important;
+	border: none !important;
+	cursor: pointer;
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	padding: 0.35rem 0.65rem !important;
+	flex-shrink: 0;
+}
+html body #theme-toggle:hover {
+	background: rgba(255,255,255,0.1) !important;
+}
+:root[data-bocken-theme="light"] #theme-toggle:hover {
+	background: rgba(0,0,0,0.06) !important;
+}
+@media (prefers-color-scheme: light) {
+	:root:not([data-bocken-theme]) #theme-toggle:hover {
+		background: rgba(0,0,0,0.06) !important;
+	}
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT MODE
+   Activated by data-bocken-theme="light" or
+   system preference when no attribute is set
+   ═══════════════════════════════════════════ */
+
+/* System light preference (no explicit theme set) */
+@media (prefers-color-scheme: light) {
+	:root:not([data-bocken-theme]) {
+		--is-dark-theme: false;
+		--color-primary: #5E81AC;
+		--color-primary-contrast: #2E3440;
+		--color-body: #f8f6f1;
+		--color-box-header: #efecea;
+		--color-box-body: #efecea;
+		--color-box-body-highlight: #e8e5e1;
+		--color-text-dark: #2a2a2a;
+		--color-text: #3a3a3a;
+		--color-text-light: #555;
+		--color-text-light-1: #666;
+		--color-text-light-2: #777;
+		--color-text-light-3: #888;
+		--color-footer: #efecea;
+		--color-input-text: #2E3440;
+		--color-input-background: #efecea;
+		--color-input-toggle-background: #dfdcd8;
+		--color-input-border: #d0cdc8;
+		--color-input-border-hover: #5E81AC;
+		--color-header-wrapper: transparent;
+		--color-light: #00000010;
+		--color-light-border: #00000015;
+		--color-hover: #00000008;
+		--color-active: #00000012;
+		--color-menu: #efecea;
+		--color-card: #f8f6f1;
+		--color-button: #efecea;
+		--color-code-bg: #efecea;
+		--color-code-sidebar-bg: #e8e5e1;
+		--color-shadow: #00000015;
+		--color-secondary-bg: #efecea;
+		--color-secondary: #d0cdc8;
+		--color-text-focus: #2E3440;
+		--color-expand-button: #dfdcd8;
+		--color-placeholder-text: #999;
+		--color-console-bg: #efecea;
+		--color-nav-bg: transparent;
+		--color-nav-hover-bg: rgba(0,0,0,0.06);
+		--color-tooltip-text: #fff;
+		--color-tooltip-bg: #2E3440f0;
+		--color-label-text: #2E3440;
+		--color-label-bg: #d0cdc84b;
+		--color-label-hover-bg: #d0cdc8a0;
+		--color-label-active-bg: #d0cdc8;
+		--color-timeline: #d0cdc8;
+		--color-reaction-bg: #00000008;
+		--color-reaction-hover-bg: #5E81AC20;
+		--color-reaction-active-bg: #5E81AC30;
+		color-scheme: light;
+	}
+	/* Light mode header overrides */
+	:root:not([data-bocken-theme]) #navbar {
+		background: rgba(255, 255, 255, 0.82) !important;
+		border-color: rgba(0,0,0,0.08) !important;
+		box-shadow: 0 4px 24px rgba(0,0,0,0.1) !important;
+	}
+	:root:not([data-bocken-theme]) #navbar-logo img {
+		filter: brightness(0.2);
+	}
+	:root:not([data-bocken-theme]) #navbar .item {
+		color: #666 !important;
+	}
+	:root:not([data-bocken-theme]) #navbar .item:hover {
+		color: #2E3440 !important;
+		background: rgba(0,0,0,0.06) !important;
+	}
+	:root:not([data-bocken-theme]) #navbar .item.active {
+		color: #2E3440 !important;
+		background: rgba(94, 129, 172, 0.15) !important;
+	}
+	:root:not([data-bocken-theme]) #navbar .navbar-right::before {
+		background: rgba(0,0,0,0.12);
+	}
+	:root:not([data-bocken-theme]) .full.height,
+	:root:not([data-bocken-theme]) .page-content {
+		background: #f8f6f1;
+	}
+	:root:not([data-bocken-theme]) .page-footer {
+		background: #efecea !important;
+	}
+	:root:not([data-bocken-theme]) .secondary-nav {
+		border-bottom-color: rgba(0,0,0,0.08) !important;
+	}
+	:root:not([data-bocken-theme]) #navbar .ui.dropdown .menu {
+		background: #efecea;
+		border-color: rgba(0,0,0,0.1);
+	}
+}
+
+/* Forced light mode */
+:root[data-bocken-theme="light"] {
+	--is-dark-theme: false;
+	--color-primary: #5E81AC;
+	--color-primary-contrast: #2E3440;
+	--color-body: #f8f6f1;
+	--color-box-header: #efecea;
+	--color-box-body: #efecea;
+	--color-box-body-highlight: #e8e5e1;
+	--color-text-dark: #2a2a2a;
+	--color-text: #3a3a3a;
+	--color-text-light: #555;
+	--color-text-light-1: #666;
+	--color-text-light-2: #777;
+	--color-text-light-3: #888;
+	--color-footer: #efecea;
+	--color-input-text: #2E3440;
+	--color-input-background: #efecea;
+	--color-input-toggle-background: #dfdcd8;
+	--color-input-border: #d0cdc8;
+	--color-input-border-hover: #5E81AC;
+	--color-header-wrapper: transparent;
+	--color-light: #00000010;
+	--color-light-border: #00000015;
+	--color-hover: #00000008;
+	--color-active: #00000012;
+	--color-menu: #fff;
+	--color-card: #f8f6f1;
+	--color-button: #efecea;
+	--color-code-bg: #efecea;
+	--color-code-sidebar-bg: #e8e5e1;
+	--color-shadow: #00000015;
+	--color-secondary-bg: #efecea;
+	--color-secondary: #d0cdc8;
+	--color-text-focus: #2E3440;
+	--color-expand-button: #dfdcd8;
+	--color-placeholder-text: #999;
+	--color-console-bg: #efecea;
+	--color-nav-bg: transparent;
+	--color-nav-hover-bg: rgba(0,0,0,0.06);
+	--color-tooltip-text: #fff;
+	--color-tooltip-bg: #2E3440f0;
+	--color-label-text: #2E3440;
+	--color-label-bg: #d0cdc84b;
+	--color-label-hover-bg: #d0cdc8a0;
+	--color-label-active-bg: #d0cdc8;
+	--color-timeline: #d0cdc8;
+	--color-reaction-bg: #00000008;
+	--color-reaction-hover-bg: #5E81AC20;
+	--color-reaction-active-bg: #5E81AC30;
+	color-scheme: light;
+}
+:root[data-bocken-theme="light"] #navbar {
+	background: rgba(255, 255, 255, 0.82) !important;
+	border-color: rgba(0,0,0,0.08) !important;
+	box-shadow: 0 4px 24px rgba(0,0,0,0.1) !important;
+}
+:root[data-bocken-theme="light"] #navbar-logo img {
+	filter: brightness(0.2);
+}
+:root[data-bocken-theme="light"] #navbar .item {
+	color: #666 !important;
+}
+:root[data-bocken-theme="light"] #navbar .item:hover {
+	color: #2E3440 !important;
+	background: rgba(0,0,0,0.06) !important;
+}
+:root[data-bocken-theme="light"] #navbar .item.active {
+	color: #2E3440 !important;
+	background: rgba(94, 129, 172, 0.15) !important;
+}
+:root[data-bocken-theme="light"] #navbar .navbar-right::before {
+	background: rgba(0,0,0,0.12);
+}
+:root[data-bocken-theme="light"] .full.height,
+:root[data-bocken-theme="light"] .page-content {
+	background: #f8f6f1;
+}
+:root[data-bocken-theme="light"] .page-footer {
+	background: #efecea !important;
+}
+:root[data-bocken-theme="light"] .secondary-nav {
+	border-bottom-color: rgba(0,0,0,0.08) !important;
+}
+:root[data-bocken-theme="light"] #navbar .ui.dropdown .menu {
+	background: #fff;
+	border-color: rgba(0,0,0,0.1);
+}
+:root[data-bocken-theme="light"] body {
+	background-color: #f8f6f1 !important;
 }

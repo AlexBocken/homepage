@@ -38,6 +38,37 @@
 
 	<!-- the full dropdown menus -->
 	<div class="navbar-right">
+		<!-- theme toggle (before other right-side items) -->
+		<button class="item" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+			<svg id="theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+			<svg id="theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+			<svg id="theme-icon-system" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M12 2v2"></path><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"></path><path d="M16 12a4 4 0 0 0-4-4"></path><path d="m19 5-1.256 1.256"></path><path d="M20 12h2"></path></svg>
+		</button>
+		<script>
+		(function() {
+			var modes = ['system', 'light', 'dark'];
+			var current = localStorage.getItem('bocken-theme') || 'system';
+			function apply(theme) {
+				current = theme;
+				localStorage.setItem('bocken-theme', theme);
+				if (theme === 'system') {
+					document.documentElement.removeAttribute('data-bocken-theme');
+				} else {
+					document.documentElement.setAttribute('data-bocken-theme', theme);
+				}
+				document.getElementById('theme-icon-sun').style.display = theme === 'light' ? '' : 'none';
+				document.getElementById('theme-icon-moon').style.display = theme === 'dark' ? '' : 'none';
+				document.getElementById('theme-icon-system').style.display = theme === 'system' ? '' : 'none';
+				var btn = document.getElementById('theme-toggle');
+				if (btn) btn.title = 'Theme: ' + theme;
+			}
+			apply(current);
+			document.getElementById('theme-toggle').addEventListener('click', function() {
+				var i = (modes.indexOf(current) + 1) % modes.length;
+				apply(modes[i]);
+			});
+		})();
+		</script>
 		{{if and .IsSigned .MustChangePassword}}
 			<div class="ui dropdown jump item" data-tooltip-content="{{ctx.Locale.Tr "user_profile_and_more"}}">
 				<span class="text">
