@@ -650,9 +650,13 @@ body {
 	height: 30px;
 }
 
-/* Avatar — round */
-#navbar .ui.avatar {
-	border-radius: 50%;
+/* Avatar — fully round everywhere */
+.ui.avatar,
+img.avatar,
+.avatar img,
+.collaborator-avatar,
+.participant-avatar {
+	border-radius: 50% !important;
 }
 
 /* Nav item icon + text spacing */
