@@ -17,7 +17,7 @@
 			{#if showLatin}<v lang=la>ac máximo ánimi ardóre te oro atque obtéstor, </v>{/if}
 			{#if urlLang=='de'}<v lang=de>Inbrünstig bitte und beschwöre ich Dich:</v>{/if}
 			{#if urlLang=='en'}<v lang=en>and with the most fervent desire of my soul I pray and beseech Thee</v>{/if}
-			{#if showLatin}<v lang=la> ut meum in in cor vívidos fídei, spei et caritátis sensus, atque veram peccatórum meórum pœniténtiam,</v>{/if}
+			{#if showLatin}<v lang=la> ut meum in cor vívidos fídei, spei et caritátis sensus, atque veram peccatórum meórum pœniténtiam,</v>{/if}
 			{#if urlLang=='de'}<v lang=de>Präge meinem Herzen lebendige Gefühle des Glaubens, der Hoffung und der Liebe ein</v>{/if}
 			{#if urlLang=='en'}<v lang=en>to impress upon my heart lively sentiments of faith, hope and charity,</v>{/if}
 			{#if showLatin}	<v lang=la>éaque emendándi firmíssimam voluntátem velis</v>{/if}
