@@ -1,0 +1,276 @@
+/*
+  SearXNG custom theme for searx.bocken.org
+  Overrides SearXNG's native CSS variables with Nord palette
+  Deployed via deploy-searxng.sh
+*/
+
+/* ============================================
+   LIGHT MODE — cream white base
+   ============================================ */
+:root {
+  --color-base-font: #2a2a2a;
+  --color-base-font-rgb: 42, 42, 42;
+  --color-base-background: #f8f6f1;
+  --color-base-background-mobile: #efecea;
+  --color-url-font: #5E81AC;
+  --color-url-visited-font: #B48EAD;
+  --color-header-background: #f8f6f1;
+  --color-header-border: #dfdcd8;
+  --color-footer-background: #f8f6f1;
+  --color-footer-border: #dfdcd8;
+  --color-sidebar-border: #dfdcd8;
+  --color-sidebar-font: #2a2a2a;
+  --color-sidebar-background: #efecea;
+  --color-backtotop-font: #555;
+  --color-backtotop-border: #dfdcd8;
+  --color-backtotop-background: #efecea;
+  --color-btn-background: #5E81AC;
+  --color-btn-font: #fff;
+  --color-show-btn-background: #dfdcd8;
+  --color-show-btn-font: #2a2a2a;
+  --color-search-border: #dfdcd8;
+  --color-search-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --color-search-background: #efecea;
+  --color-search-font: #2a2a2a;
+  --color-search-background-hover: #5E81AC;
+  --color-error: #BF616A;
+  --color-error-background: #f5e1e3;
+  --color-warning: #EBCB8B;
+  --color-warning-background: #faf5e1;
+  --color-success: #A3BE8C;
+  --color-success-background: #e8f2e1;
+  --color-categories-item-selected-font: #5E81AC;
+  --color-categories-item-border-selected: #5E81AC;
+  --color-autocomplete-font: #2a2a2a;
+  --color-autocomplete-border: #dfdcd8;
+  --color-autocomplete-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --color-autocomplete-background: #efecea;
+  --color-autocomplete-background-hover: #e8e5e1;
+  --color-answer-font: #2a2a2a;
+  --color-answer-background: #efecea;
+  --color-result-keyvalue-col-table: #f8f6f1;
+  --color-result-keyvalue-odd: #f8f6f1;
+  --color-result-keyvalue-even: #efecea;
+  --color-result-background: #efecea;
+  --color-result-border: #dfdcd8;
+  --color-result-url-font: #555;
+  --color-result-vim-selected: #e8e5e1cc;
+  --color-result-vim-arrow: #5E81AC;
+  --color-result-description-highlight-font: #2a2a2a;
+  --color-result-link-font: #5E81AC;
+  --color-result-link-font-highlight: #5E81AC;
+  --color-result-link-visited-font: #B48EAD;
+  --color-result-publishdate-font: #777;
+  --color-result-engines-font: #777;
+  --color-result-search-url-border: #dfdcd8;
+  --color-result-search-url-font: #555;
+  --color-result-image-span-font: #555;
+  --color-result-image-span-font-selected: #fff;
+  --color-result-image-background: #efecea;
+  --color-settings-tr-hover: #e8e5e1;
+  --color-settings-engine-description-font: #777;
+  --color-settings-table-group-background: rgba(0,0,0,0.03);
+  --color-result-detail-font: #fff;
+  --color-result-detail-label-font: #D8DEE9;
+  --color-result-detail-background: #2E3440;
+  --color-result-detail-hr: #4C566A;
+  --color-result-detail-link: #88C0D0;
+  --color-result-detail-loader-border: rgba(255,255,255,0.2);
+  --color-result-detail-loader-borderleft: transparent;
+  --color-toolkit-badge-font: #fff;
+  --color-toolkit-badge-background: #4C566A;
+  --color-toolkit-kbd-font: #fff;
+  --color-toolkit-kbd-background: #2E3440;
+  --color-toolkit-dialog-border: #dfdcd8;
+  --color-toolkit-dialog-background: #f8f6f1;
+  --color-toolkit-tabs-label-border: #f8f6f1;
+  --color-toolkit-tabs-section-border: #dfdcd8;
+  --color-toolkit-select-background: #e8e5e1;
+  --color-toolkit-select-border: #dfdcd8;
+  --color-toolkit-select-background-hover: #dfdcd8;
+  --color-toolkit-input-text-font: #2a2a2a;
+  --color-toolkit-checkbox-onoff-off-background: #dfdcd8;
+  --color-toolkit-checkbox-onoff-on-background: #dfdcd8;
+  --color-toolkit-checkbox-onoff-on-mark-background: #5E81AC;
+  --color-toolkit-checkbox-onoff-on-mark-color: #fff;
+  --color-toolkit-checkbox-onoff-off-mark-background: #aaa;
+  --color-toolkit-checkbox-onoff-off-mark-color: #fff;
+  --color-toolkit-checkbox-label-background: #dfdcd8;
+  --color-toolkit-checkbox-label-border: #dfdcd8;
+  --color-toolkit-checkbox-input-border: #5E81AC;
+  --color-toolkit-engine-tooltip-border: #dfdcd8;
+  --color-toolkit-engine-tooltip-background: #f8f6f1;
+  --color-toolkit-loader-border: rgba(0,0,0,0.1);
+  --color-toolkit-loader-borderleft: transparent;
+  --color-doc-code: #2E3440;
+  --color-doc-code-background: #e8e5e1;
+  --color-bar-chart-primary: #5E81AC;
+  --color-bar-chart-secondary: #D08770;
+  --color-image-resolution-background: rgba(0,0,0,0.5);
+  --color-image-resolution-font: #fff;
+  --color-loading-indicator: rgba(255,255,255,0.2);
+  --color-loading-indicator-gap: #f8f6f1;
+  --color-line-number: #4C566A;
+  --color-favicon-background-color: #e8e5e1;
+  --color-favicon-border-color: #dfdcd8;
+}
+
+/* ============================================
+   DARK MODE — true black base
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  :root.theme-auto {
+    --color-base-font: #e5e5e5;
+    --color-base-font-rgb: 229, 229, 229;
+    --color-base-background: #000;
+    --color-base-background-mobile: #000;
+    --color-url-font: #88C0D0;
+    --color-url-visited-font: #c89fb6;
+    --color-header-background: #000;
+    --color-header-border: #222;
+    --color-footer-background: #000;
+    --color-footer-border: #222;
+    --color-sidebar-border: #333;
+    --color-sidebar-font: #e5e5e5;
+    --color-sidebar-background: #1a1a1a;
+    --color-backtotop-font: #aaa;
+    --color-backtotop-border: #333;
+    --color-backtotop-background: #1a1a1a;
+    --color-btn-background: #88C0D0;
+    --color-btn-font: #000;
+    --color-show-btn-background: #333;
+    --color-show-btn-font: #e5e5e5;
+    --color-search-border: #333;
+    --color-search-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    --color-search-background: #1a1a1a;
+    --color-search-font: #e5e5e5;
+    --color-search-background-hover: #88C0D0;
+    --color-error: #BF616A;
+    --color-error-background: #2a0f0f;
+    --color-warning: #EBCB8B;
+    --color-warning-background: #2a2008;
+    --color-success: #A3BE8C;
+    --color-success-background: #0e2a0a;
+    --color-categories-item-selected-font: #88C0D0;
+    --color-categories-item-border-selected: #88C0D0;
+    --color-autocomplete-font: #e5e5e5;
+    --color-autocomplete-border: #333;
+    --color-autocomplete-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    --color-autocomplete-background: #1a1a1a;
+    --color-autocomplete-background-hover: #111;
+    --color-answer-font: #e5e5e5;
+    --color-answer-background: #1a1a1a;
+    --color-result-keyvalue-col-table: #111;
+    --color-result-keyvalue-odd: #111;
+    --color-result-keyvalue-even: #1a1a1a;
+    --color-result-background: #1a1a1a;
+    --color-result-border: #222;
+    --color-result-url-font: #888;
+    --color-result-vim-selected: #111c;
+    --color-result-vim-arrow: #88C0D0;
+    --color-result-description-highlight-font: #fff;
+    --color-result-link-font: #88C0D0;
+    --color-result-link-font-highlight: #88C0D0;
+    --color-result-link-visited-font: #c89fb6;
+    --color-result-publishdate-font: #888;
+    --color-result-engines-font: #888;
+    --color-result-search-url-border: #333;
+    --color-result-search-url-font: #aaa;
+    --color-result-image-span-font: #aaa;
+    --color-result-image-span-font-selected: #fff;
+    --color-result-image-background: #1a1a1a;
+    --color-settings-tr-hover: #222;
+    --color-settings-engine-description-font: #888;
+    --color-settings-table-group-background: rgba(255,255,255,0.03);
+    --color-result-detail-font: #e5e5e5;
+    --color-result-detail-label-font: #aaa;
+    --color-result-detail-background: #111;
+    --color-result-detail-hr: #333;
+    --color-result-detail-link: #88C0D0;
+    --color-result-detail-loader-border: rgba(255,255,255,0.2);
+    --color-result-detail-loader-borderleft: transparent;
+    --color-toolkit-badge-font: #e5e5e5;
+    --color-toolkit-badge-background: #4C566A;
+    --color-toolkit-kbd-font: #e5e5e5;
+    --color-toolkit-kbd-background: #000;
+    --color-toolkit-dialog-border: #333;
+    --color-toolkit-dialog-background: #111;
+    --color-toolkit-tabs-label-border: #111;
+    --color-toolkit-tabs-section-border: #333;
+    --color-toolkit-select-background: #222;
+    --color-toolkit-select-border: #333;
+    --color-toolkit-select-background-hover: #333;
+    --color-toolkit-input-text-font: #e5e5e5;
+    --color-toolkit-checkbox-onoff-off-background: #333;
+    --color-toolkit-checkbox-onoff-on-background: #333;
+    --color-toolkit-checkbox-onoff-on-mark-background: #88C0D0;
+    --color-toolkit-checkbox-onoff-on-mark-color: #000;
+    --color-toolkit-checkbox-onoff-off-mark-background: #555;
+    --color-toolkit-checkbox-onoff-off-mark-color: #e5e5e5;
+    --color-toolkit-checkbox-label-background: #333;
+    --color-toolkit-checkbox-label-border: #333;
+    --color-toolkit-checkbox-input-border: #88C0D0;
+    --color-toolkit-engine-tooltip-border: #333;
+    --color-toolkit-engine-tooltip-background: #111;
+    --color-toolkit-loader-border: rgba(255,255,255,0.1);
+    --color-toolkit-loader-borderleft: transparent;
+    --color-doc-code: #e5e5e5;
+    --color-doc-code-background: #1a1a1a;
+    --color-bar-chart-primary: #88C0D0;
+    --color-bar-chart-secondary: #D08770;
+    --color-image-resolution-background: rgba(0,0,0,0.7);
+    --color-image-resolution-font: #e5e5e5;
+    --color-loading-indicator: rgba(255,255,255,0.2);
+    --color-loading-indicator-gap: #000;
+    --color-line-number: #4C566A;
+    --color-favicon-background-color: #222;
+    --color-favicon-border-color: #333;
+  }
+}
+
+/* ============================================
+   FONT
+   ============================================ */
+* {
+  font-family: Helvetica, Arial, "Noto Sans", sans-serif !important;
+}
+
+/* ============================================
+   INDEX PAGE — LOGO
+   Replace SearXNG logo with Bocken logo
+   ============================================ */
+.index .title {
+  background-image: url("https://bocken.org/static/css/logos/logo_text_smart.svg") !important;
+}
+
+/* Results page logo */
+#search_logo svg,
+#search_logo img {
+  display: none !important;
+}
+
+#search_logo span {
+  display: none !important;
+}
+
+#search_logo::after {
+  content: "";
+  display: block;
+  width: 100px;
+  height: 30px;
+  background: url("https://bocken.org/static/css/logos/logo_full_light.svg") no-repeat center / contain;
+}
+
+@media (prefers-color-scheme: light) {
+  #search_logo::after {
+    background-image: url("https://bocken.org/static/css/logos/logo_full_dark.svg");
+  }
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-header-border) var(--color-base-background);
+}
