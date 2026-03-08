@@ -59,29 +59,37 @@ export function setupScrollSync({
 		const svgContainer = getSvgContainer();
 		const sectionElements = getSectionElements();
 
-		entries.forEach((entry) => {
-			if (entry.isIntersecting && scrollLock !== 'svg' && scrollLock !== 'click') {
-				// Skip observer updates when at the top — handleWindowScroll handles this
-				if (window.scrollY < 50) return;
+		if (scrollLock === 'svg' || scrollLock === 'click') return;
+		if (window.scrollY < 50) return;
 
-				const section = /** @type {HTMLElement} */ (entry.target).dataset.section;
-				if (!section) return;
-				setActiveSection(section);
-
-				// Scroll SVG to keep active section visible at top
-				if (svgContainer && sectionPositions[section] !== undefined) {
-					const svg = /** @type {SVGSVGElement | null} */ (svgContainer.querySelector('svg'));
-					if (!svg) return;
-
-					const pixelPosition = svgSectionToPixel(svg, section);
-					if (pixelPosition === null) return;
-					const targetScroll = pixelPosition - 100;
-
-					setScrollLock('prayer');
-					svgContainer.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
-				}
+		// Pick the topmost intersecting entry so short sections (e.g. _pater) aren't
+		// immediately overridden by the taller section below them
+		let bestEntry = null;
+		for (const entry of entries) {
+			if (!entry.isIntersecting) continue;
+			if (!bestEntry || entry.boundingClientRect.top < bestEntry.boundingClientRect.top) {
+				bestEntry = entry;
 			}
-		});
+		}
+
+		if (bestEntry) {
+			const section = /** @type {HTMLElement} */ (bestEntry.target).dataset.section;
+			if (!section) return;
+			setActiveSection(section);
+
+			// Scroll SVG to keep active section visible at top
+			if (svgContainer && sectionPositions[section] !== undefined) {
+				const svg = /** @type {SVGSVGElement | null} */ (svgContainer.querySelector('svg'));
+				if (!svg) return;
+
+				const pixelPosition = svgSectionToPixel(svg, section);
+				if (pixelPosition === null) return;
+				const targetScroll = pixelPosition - 100;
+
+				setScrollLock('prayer');
+				svgContainer.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+			}
+		}
 	}, {
 		root: null,
 		rootMargin: "-20% 0px -60% 0px",
