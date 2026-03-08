@@ -137,7 +137,6 @@ const hasMysteryImages = $derived(showImages && (allMysteryImages[selectedMyster
  * @returns {number | 'before' | 'after'}
  */
 function getMysteryScrollTarget(section) {
-	if (section === 'lbead2') return 1;
 	const secretMatch = section.match(/^secret(\d)/);
 	if (secretMatch) {
 		const num = parseInt(secretMatch[1]);
@@ -446,8 +445,8 @@ onMount(() => {
 .rosary-visualization {
 	padding: 2rem 0;
 	position: sticky;
-	top: 2rem;
-	max-height: calc(100vh - 2rem);
+	top: 0;
+	max-height: 100dvh;
 	overflow-y: auto;
 	overflow-x: hidden;
 	scrollbar-width: none; /* Firefox */
