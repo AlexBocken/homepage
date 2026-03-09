@@ -1,16 +1,55 @@
 import { saveAllRecipes } from './db';
 import type { BriefRecipeType, RecipeModelType } from '$types/types';
+import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 
-// Discover glaube routes at build time using Vite's glob import
-const glaubePageModules = import.meta.glob('/src/routes/glaube/**/+page.svelte');
-const glaubeRoutes = Object.keys(glaubePageModules).map(path => {
-	// Convert file path to route path
-	// /src/routes/glaube/+page.svelte -> /glaube
-	// /src/routes/glaube/angelus/+page.svelte -> /glaube/angelus
-	return path
-		.replace('/src/routes', '')
-		.replace('/+page.svelte', '') || '/glaube';
-});
+// Discover faith routes at build time using Vite's glob import
+// The actual directory is [faithLang=faithLang] with parameterized sub-dirs
+const faithPageModules = import.meta.glob('/src/routes/\\[faithLang=faithLang\\]/**/+page.svelte');
+
+// Convert file paths to actual route URLs for both language variants
+// e.g. /src/routes/[faithLang=faithLang]/[prayers=prayersLang]/+page.svelte
+//   -> /glaube/gebete, /faith/prayers
+const paramMap: Record<string, [string, string]> = {
+	'[faithLang=faithLang]': ['glaube', 'faith'],
+	'[prayers=prayersLang]': ['gebete', 'prayers'],
+	'[rosary=rosaryLang]': ['rosenkranz', 'rosary'],
+};
+
+function expandFaithRoutes(): string[] {
+	const routes: string[] = [];
+	for (const filePath of Object.keys(faithPageModules)) {
+		// Strip prefix and suffix: /src/routes/[faithLang=faithLang]/angelus/+page.svelte -> [faithLang=faithLang]/angelus
+		let route = filePath.replace('/src/routes/', '').replace('/+page.svelte', '');
+
+		// Skip routes with dynamic [prayer] segment — those need explicit slug enumeration
+		if (route.includes('[prayer]')) continue;
+
+		// Generate both language variants by replacing all param segments
+		const segments = route.split('/');
+		const deSegments: string[] = [];
+		const enSegments: string[] = [];
+		for (const seg of segments) {
+			if (paramMap[seg]) {
+				deSegments.push(paramMap[seg][0]);
+				enSegments.push(paramMap[seg][1]);
+			} else {
+				deSegments.push(seg);
+				enSegments.push(seg);
+			}
+		}
+		routes.push('/' + deSegments.join('/'));
+		routes.push('/' + enSegments.join('/'));
+	}
+	return routes;
+}
+
+const faithRoutes = expandFaithRoutes();
+
+// Add individual prayer pages (dynamic [prayer] slug, resolved at build time)
+for (const slug of validPrayerSlugs) {
+	faithRoutes.push(`/glaube/gebete/${slug}`);
+	faithRoutes.push(`/faith/prayers/${slug}`);
+}
 
 export type SyncProgress = {
 	phase: 'recipes' | 'pages' | 'data' | 'images';
@@ -133,8 +172,8 @@ async function precacheMainPages(_fetchFn: typeof fetch): Promise<void> {
 		'/recipes/favorites/__data.json'
 	];
 
-	// Add dynamically discovered glaube routes (HTML and __data.json)
-	for (const route of glaubeRoutes) {
+	// Add dynamically discovered faith routes (HTML and __data.json)
+	for (const route of faithRoutes) {
 		pagesToCache.push(route);
 		pagesToCache.push(`${route}/__data.json`);
 	}
