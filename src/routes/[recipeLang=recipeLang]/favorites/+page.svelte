@@ -2,7 +2,6 @@
     import type { PageData } from './$types';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     import Search from '$lib/components/recipes/Search.svelte';
-    import { createSearchFilter } from '$lib/js/searchFilter.svelte';
 
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1;
@@ -29,7 +28,18 @@
         toTry: isEnglish ? 'Recipes to try' : 'Zum Ausprobieren'
     });
 
-    const { filtered: filteredFavorites, handleSearchResults } = createSearchFilter(() => data.favorites);
+    let matchedRecipeIds = $state(new Set());
+    let hasActiveSearch = $state(false);
+
+    function handleSearchResults(ids: Set<string>, categories: Set<string>) {
+        matchedRecipeIds = ids;
+        hasActiveSearch = ids.size < (data.allRecipes?.length || data.favorites.length);
+    }
+
+    const filteredFavorites = $derived.by(() => {
+        if (!hasActiveSearch) return data.favorites;
+        return data.allRecipes.filter((r: any) => matchedRecipeIds.has(r._id));
+    });
 </script>
 
 <style>
@@ -88,7 +98,7 @@ h1{
 
 <p class="to-try-link"><a href="/{data.recipeLang}/to-try">{labels.toTry} &rarr;</a></p>
 
-<Search favoritesOnly={true} lang={data.lang} recipes={data.favorites} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
+<Search favoritesOnly={true} lang={data.lang} recipes={data.allRecipes || data.favorites} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 
 {#if data.error}
     <p class="empty-state">{labels.errorLoading} {data.error}</p>
