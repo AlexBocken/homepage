@@ -46,7 +46,7 @@
 	{#if i > 0}<div class="mystery-image-pad" data-target="between{i}"></div>{/if}
 	<figure data-target={num}>
 		<img src={img.src} alt="{img.artist ? `${img.artist} — ` : ''}{isEnglish ? img.title : img.titleDe}">
-		<figcaption>{#if img.artist}{img.artist}, {/if}<em>{isEnglish ? img.title : img.titleDe}</em>{#if img.year}, {img.year}{/if}</figcaption>
+		<figcaption>{#if img.artist}{img.artist + ', '}{/if}<em>{isEnglish ? img.title : img.titleDe}</em>{#if img.year}, {img.year}{/if}</figcaption>
 	</figure>
 {/each}
 <div class="mystery-image-pad" data-target="after"></div>
