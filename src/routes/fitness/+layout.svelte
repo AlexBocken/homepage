@@ -1,19 +1,27 @@
 <script>
 	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import UserHeader from '$lib/components/UserHeader.svelte';
 	import { User, Clock, Dumbbell, ListChecks, Ruler } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
+	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';
 
 	let { data, children } = $props();
 	let user = $derived(data.session?.user);
 
 	const workout = getWorkout();
+	const sync = getWorkoutSync();
 
-	onMount(() => {
+	onMount(async () => {
 		workout.restore();
+		workout.onChange(() => sync.notifyChange());
+		await sync.init();
+	});
+
+	onDestroy(() => {
+		sync.destroy();
 	});
 
 	/** @param {string} path */
