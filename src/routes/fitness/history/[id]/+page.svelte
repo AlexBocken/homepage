@@ -9,10 +9,10 @@
 	const session = $derived(data.session);
 	let deleting = $state(false);
 
-	/** @param {number} secs */
-	function formatDuration(secs) {
-		const h = Math.floor(secs / 3600);
-		const m = Math.floor((secs % 3600) / 60);
+	/** @param {number} mins */
+	function formatDuration(mins) {
+		const h = Math.floor(mins / 60);
+		const m = mins % 60;
 		if (h > 0) return `${h}h ${m}m`;
 		return `${m}m`;
 	}
