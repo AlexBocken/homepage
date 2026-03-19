@@ -3,7 +3,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import UserHeader from '$lib/components/UserHeader.svelte';
-	import { User, Clock, Dumbbell, ListChecks, Ruler } from 'lucide-svelte';
+	import { BarChart3, Clock, Dumbbell, ListChecks, Ruler } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';
@@ -43,7 +43,7 @@
 <Header>
 	{#snippet links()}
 		<ul class="site_header">
-			<li style="--active-fill: var(--nord15)"><a href="/fitness/profile" class:active={isActive('/fitness/profile')}><User size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Profile</span></a></li>
+			<li><a href="/fitness/stats" class:active={isActive('/fitness/stats')}><BarChart3 size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Stats</span></a></li>
 			<li style="--active-fill: var(--nord13)"><a href="/fitness/history" class:active={isActive('/fitness/history')}><Clock size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">History</span></a></li>
 			<li style="--active-fill: var(--nord8)"><a href="/fitness/workout" class:active={isActive('/fitness/workout')}><Dumbbell size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Workout</span></a></li>
 			<li style="--active-fill: var(--nord14)"><a href="/fitness/exercises" class:active={isActive('/fitness/exercises')}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Exercises</span></a></li>

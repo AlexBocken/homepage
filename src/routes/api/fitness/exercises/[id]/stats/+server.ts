@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
-import { getExerciseById } from '$lib/data/exercises';
+import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 
@@ -31,12 +31,50 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.sort({ startTime: 1 })
 		.lean();
 
-	// Build time-series and records data
+	const metrics = getExerciseMetrics(exercise);
+	const isCardio = metrics.includes('distance');
+
+	if (isCardio) {
+		// Cardio stats: distance and duration over time
+		const distanceOverTime: { date: Date; value: number }[] = [];
+		const durationOverTime: { date: Date; value: number }[] = [];
+		let bestDistance = 0;
+		let bestDuration = 0;
+
+		for (const session of sessions) {
+			const exerciseData = session.exercises.find((e) => e.exerciseId === params.id);
+			if (!exerciseData) continue;
+
+			const completedSets = exerciseData.sets.filter((s) => s.completed);
+			if (completedSets.length === 0) continue;
+
+			let sessionDistance = 0;
+			let sessionDuration = 0;
+			for (const set of completedSets) {
+				sessionDistance += set.distance ?? 0;
+				sessionDuration += set.duration ?? 0;
+			}
+
+			if (sessionDistance > 0) distanceOverTime.push({ date: session.startTime, value: sessionDistance });
+			if (sessionDuration > 0) durationOverTime.push({ date: session.startTime, value: sessionDuration });
+
+			bestDistance = Math.max(bestDistance, sessionDistance);
+			bestDuration = Math.max(bestDuration, sessionDuration);
+		}
+
+		return json({
+			charts: { distanceOverTime, durationOverTime },
+			personalRecords: { bestDistance, bestDuration },
+			records: [],
+			totalSessions: sessions.length
+		});
+	}
+
+	// Strength stats
 	const est1rmOverTime: { date: Date; value: number }[] = [];
 	const maxWeightOverTime: { date: Date; value: number }[] = [];
 	const totalVolumeOverTime: { date: Date; value: number }[] = [];
 
-	// Track best performance at each rep count: { reps -> { weight, date, estimated1rm } }
 	const repRecords = new Map<
 		number,
 		{ weight: number; reps: number; date: Date; estimated1rm: number }
@@ -49,24 +87,22 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		const exerciseData = session.exercises.find((e) => e.exerciseId === params.id);
 		if (!exerciseData) continue;
 
-		const completedSets = exerciseData.sets.filter((s) => s.completed && s.weight && s.reps > 0);
+		const completedSets = exerciseData.sets.filter((s) => s.completed && s.weight && s.reps && s.reps > 0);
 		if (completedSets.length === 0) continue;
 
-		// Best set est. 1RM for this session
 		let sessionBestEst1rm = 0;
 		let sessionMaxWeight = 0;
 		let sessionVolume = 0;
 
 		for (const set of completedSets) {
 			const weight = set.weight!;
-			const reps = set.reps;
+			const reps = set.reps!;
 			const est1rm = estimatedOneRepMax(weight, reps);
 
 			sessionBestEst1rm = Math.max(sessionBestEst1rm, est1rm);
 			sessionMaxWeight = Math.max(sessionMaxWeight, weight);
 			sessionVolume += weight * reps;
 
-			// Update rep records
 			const existing = repRecords.get(reps);
 			if (!existing || weight > existing.weight) {
 				repRecords.set(reps, {
@@ -87,7 +123,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		bestMaxVolume = Math.max(bestMaxVolume, sessionVolume);
 	}
 
-	// Convert rep records to sorted array
 	const records = [...repRecords.entries()]
 		.sort((a, b) => a[0] - b[0])
 		.map(([reps, data]) => ({

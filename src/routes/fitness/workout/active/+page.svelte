@@ -3,6 +3,7 @@
 	import { Plus, Trash2, Play, Pause } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
+	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import RestTimer from '$lib/components/fitness/RestTimer.svelte';
@@ -14,7 +15,7 @@
 	const sync = getWorkoutSync();
 	let showPicker = $state(false);
 
-	/** @type {Record<string, Array<{ reps: number, weight: number }>>} */
+	/** @type {Record<string, Array<Record<string, any>>>} */
 	let previousData = $state({});
 
 	onMount(() => {
@@ -137,6 +138,7 @@
 				<SetTable
 					sets={ex.sets}
 					previousSets={previousData[ex.exerciseId] ?? null}
+					metrics={getExerciseMetrics(getExerciseById(ex.exerciseId))}
 					editable={true}
 					onUpdate={(setIdx, d) => workout.updateSet(exIdx, setIdx, d)}
 					onToggleComplete={(setIdx) => {

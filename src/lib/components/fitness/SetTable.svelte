@@ -1,12 +1,14 @@
 <script>
 	import { Check } from 'lucide-svelte';
+	import { METRIC_LABELS } from '$lib/data/exercises';
 
 	/**
 	 * @type {{
-	 *   sets: Array<{ reps: number | null, weight: number | null, rpe?: number | null, completed?: boolean }>,
-	 *   previousSets?: Array<{ reps: number, weight: number }> | null,
+	 *   sets: Array<{ reps?: number | null, weight?: number | null, rpe?: number | null, distance?: number | null, duration?: number | null, completed?: boolean }>,
+	 *   previousSets?: Array<Record<string, any>> | null,
+	 *   metrics?: Array<'weight' | 'reps' | 'rpe' | 'distance' | 'duration'>,
 	 *   editable?: boolean,
-	 *   onUpdate?: ((setIndex: number, data: { reps?: number | null, weight?: number | null, rpe?: number | null }) => void) | null,
+	 *   onUpdate?: ((setIndex: number, data: Record<string, number | null>) => void) | null,
 	 *   onToggleComplete?: ((setIndex: number) => void) | null,
 	 *   onRemove?: ((setIndex: number) => void) | null
 	 * }}
@@ -14,11 +16,16 @@
 	let {
 		sets,
 		previousSets = null,
+		metrics = ['weight', 'reps', 'rpe'],
 		editable = false,
 		onUpdate = null,
 		onToggleComplete = null,
 		onRemove = null
 	} = $props();
+
+	/** Metrics to show in the main columns (not RPE, which is edit-only) */
+	const mainMetrics = $derived(metrics.filter((m) => m !== 'rpe'));
+	const hasRpe = $derived(metrics.includes('rpe'));
 
 	/**
 	 * @param {number} index
@@ -30,6 +37,20 @@
 		const val = target.value === '' ? null : Number(target.value);
 		onUpdate?.(index, { [field]: val });
 	}
+
+	/** Format a previous set for display */
+	function formatPrev(/** @type {Record<string, any>} */ prev) {
+		const parts = [];
+		for (const m of mainMetrics) {
+			if (prev[m] != null) parts.push(`${prev[m]}`);
+		}
+		return parts.join(' × ');
+	}
+
+	/** @param {string} metric */
+	function inputMode(metric) {
+		return metric === 'reps' ? 'numeric' : 'decimal';
+	}
 </script>
 
 <table class="set-table">
@@ -39,10 +60,13 @@
 			{#if previousSets}
 				<th class="col-prev">PREVIOUS</th>
 			{/if}
-			<th class="col-weight">KG</th>
-			<th class="col-reps">REPS</th>
-			{#if editable}
+			{#each mainMetrics as metric (metric)}
+				<th class="col-metric">{METRIC_LABELS[metric]}</th>
+			{/each}
+			{#if editable && hasRpe}
 				<th class="col-rpe">RPE</th>
+			{/if}
+			{#if editable}
 				<th class="col-check"></th>
 			{/if}
 		</tr>
@@ -54,39 +78,28 @@
 				{#if previousSets}
 					<td class="col-prev">
 						{#if previousSets[i]}
-							{previousSets[i].weight} × {previousSets[i].reps}
+							{formatPrev(previousSets[i])}
 						{:else}
 							—
 						{/if}
 					</td>
 				{/if}
-				<td class="col-weight">
-					{#if editable}
-						<input
-							type="number"
-							inputmode="decimal"
-							value={set.weight ?? ''}
-							placeholder="0"
-							oninput={(e) => handleInput(i, 'weight', e)}
-						/>
-					{:else}
-						{set.weight ?? '—'}
-					{/if}
-				</td>
-				<td class="col-reps">
-					{#if editable}
-						<input
-							type="number"
-							inputmode="numeric"
-							value={set.reps ?? ''}
-							placeholder="0"
-							oninput={(e) => handleInput(i, 'reps', e)}
-						/>
-					{:else}
-						{set.reps ?? '—'}
-					{/if}
-				</td>
-				{#if editable}
+				{#each mainMetrics as metric (metric)}
+					<td class="col-metric">
+						{#if editable}
+							<input
+								type="number"
+								inputmode={inputMode(metric)}
+								value={set[metric] ?? ''}
+								placeholder="0"
+								oninput={(e) => handleInput(i, metric, e)}
+							/>
+						{:else}
+							{set[metric] ?? '—'}
+						{/if}
+					</td>
+				{/each}
+				{#if editable && hasRpe}
 					<td class="col-rpe">
 						<input
 							type="number"
@@ -98,6 +111,8 @@
 							oninput={(e) => handleInput(i, 'rpe', e)}
 						/>
 					</td>
+				{/if}
+				{#if editable}
 					<td class="col-check">
 						<button
 							class="check-btn"
@@ -143,7 +158,7 @@
 		color: var(--color-text-secondary);
 		font-size: 0.8rem;
 	}
-	.col-weight, .col-reps {
+	.col-metric {
 		width: 4rem;
 	}
 	.col-rpe {
