@@ -16,8 +16,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 	await dbConnect();
 	console.timeEnd('[stats/profile] dbConnect');
 
-	const twelveWeeksAgo = new Date();
-	twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+	const tenWeeksAgo = new Date();
+	tenWeeksAgo.setDate(tenWeeksAgo.getDate() - 70);
 
 	console.time('[stats/profile] countDocuments');
 	const totalWorkouts = await WorkoutSession.countDocuments({ createdBy: user.nickname });
@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		{
 			$match: {
 				createdBy: user.nickname,
-				startTime: { $gte: twelveWeeksAgo }
+				startTime: { $gte: tenWeeksAgo }
 			}
 		},
 		{
@@ -62,17 +62,26 @@ export const GET: RequestHandler = async ({ locals }) => {
 		weekMap.set(`${item._id.year}-${item._id.week}`, item.count);
 	}
 
-	const workoutsChart: { labels: string[]; data: number[] } = { labels: [], data: [] };
+	const allLabels: string[] = [];
+	const allData: number[] = [];
 	const now = new Date();
-	for (let i = 11; i >= 0; i--) {
+	for (let i = 9; i >= 0; i--) {
 		const d = new Date(now);
 		d.setDate(d.getDate() - i * 7);
 		const year = getISOWeekYear(d);
 		const week = getISOWeek(d);
 		const key = `${year}-${week}`;
-		workoutsChart.labels.push(`W${week}`);
-		workoutsChart.data.push(weekMap.get(key) ?? 0);
+		allLabels.push(`W${week}`);
+		allData.push(weekMap.get(key) ?? 0);
 	}
+
+	// Trim leading empty weeks, but always keep from first week with data
+	let firstNonZero = allData.findIndex((v) => v > 0);
+	if (firstNonZero === -1) firstNonZero = allData.length - 1; // show at least current week
+	const workoutsChart = {
+		labels: allLabels.slice(firstNonZero),
+		data: allData.slice(firstNonZero)
+	};
 
 	// Build chart-ready weight data with SMA ± 1 std dev confidence band
 	const weightChart: {
