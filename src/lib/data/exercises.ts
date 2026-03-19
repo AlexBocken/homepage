@@ -257,6 +257,20 @@ export const exercises: Exercise[] = [
 		]
 	},
 	{
+		id: 'incline-row-dumbbell',
+		name: 'Incline Row (Dumbbell)',
+		bodyPart: 'back',
+		equipment: 'dumbbell',
+		target: 'lats',
+		secondaryMuscles: ['rhomboids', 'biceps', 'rear deltoids'],
+		instructions: [
+			'Lie face down on an incline bench set to about 30-45 degrees.',
+			'Hold a dumbbell in each hand with arms hanging straight down.',
+			'Row the dumbbells up to your sides, squeezing your shoulder blades together.',
+			'Lower with control.'
+		]
+	},
+	{
 		id: 'face-pull-cable',
 		name: 'Face Pull (Cable)',
 		bodyPart: 'back',
@@ -714,6 +728,20 @@ export const exercises: Exercise[] = [
 		]
 	},
 	{
+		id: 'nordic-hamstring-curl',
+		name: 'Nordic Hamstring Curl',
+		bodyPart: 'legs',
+		equipment: 'body weight',
+		target: 'hamstrings',
+		secondaryMuscles: ['glutes', 'calves'],
+		instructions: [
+			'Kneel on a pad with your ankles secured under a sturdy object or by a partner.',
+			'Keep your body straight from knees to head.',
+			'Slowly lower yourself forward by extending at the knees, resisting with your hamstrings.',
+			'Lower as far as you can control, then push off the ground lightly to return to the start.'
+		]
+	},
+	{
 		id: 'goblet-squat-dumbbell',
 		name: 'Goblet Squat (Dumbbell)',
 		bodyPart: 'legs',
@@ -752,6 +780,34 @@ export const exercises: Exercise[] = [
 			'Start in a forearm plank position with elbows under shoulders.',
 			'Keep your body in a straight line from head to heels.',
 			'Hold the position for the desired duration.'
+		]
+	},
+	{
+		id: 'decline-crunch',
+		name: 'Decline Crunch',
+		bodyPart: 'core',
+		equipment: 'body weight',
+		target: 'abdominals',
+		secondaryMuscles: ['hip flexors'],
+		instructions: [
+			'Lie on a decline bench with your feet secured under the pads.',
+			'Place hands behind your head or across your chest.',
+			'Curl your upper body up towards your knees.',
+			'Lower with control.'
+		]
+	},
+	{
+		id: 'flat-leg-raise',
+		name: 'Flat Leg Raise',
+		bodyPart: 'core',
+		equipment: 'body weight',
+		target: 'abdominals',
+		secondaryMuscles: ['hip flexors'],
+		instructions: [
+			'Lie flat on a bench or the floor with legs extended.',
+			'Place hands at your sides or under your hips for support.',
+			'Raise your legs until they are perpendicular to the floor.',
+			'Lower with control without letting your feet touch the floor.'
 		]
 	},
 	{
