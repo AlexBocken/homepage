@@ -9,6 +9,7 @@ export interface ICompletedSet {
 }
 
 export interface ICompletedExercise {
+  exerciseId: string;
   name: string;
   sets: ICompletedSet[];
   restTime?: number;
@@ -59,6 +60,11 @@ const CompletedSetSchema = new mongoose.Schema({
 });
 
 const CompletedExerciseSchema = new mongoose.Schema({
+  exerciseId: {
+    type: String,
+    required: true,
+    trim: true
+  },
   name: {
     type: String,
     required: true,

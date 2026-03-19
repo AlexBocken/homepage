@@ -25,7 +25,7 @@
 	}
 </script>
 
-<button class="template-card" onclick={() => onStart?.()}>
+<div class="template-card" role="button" tabindex="0" onclick={() => onStart?.()} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStart?.(); }}}>
 	<div class="card-header">
 		<h3 class="card-title">{template.name}</h3>
 		{#if onMenu}
@@ -50,7 +50,7 @@
 	{#if lastUsed}
 		<p class="last-used">Last performed: {formatDate(lastUsed)}</p>
 	{/if}
-</button>
+</div>
 
 <style>
 	.template-card {
