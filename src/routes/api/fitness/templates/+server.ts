@@ -53,8 +53,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     // Validate exercises structure
     for (const exercise of exercises) {
-      if (!exercise.name || !exercise.sets || !Array.isArray(exercise.sets) || exercise.sets.length === 0) {
-        return json({ error: 'Each exercise must have a name and at least one set' }, { status: 400 });
+      if (!exercise.exerciseId || !exercise.sets || !Array.isArray(exercise.sets) || exercise.sets.length === 0) {
+        return json({ error: 'Each exercise must have an exerciseId and at least one set' }, { status: 400 });
       }
       
       for (const set of exercise.sets) {

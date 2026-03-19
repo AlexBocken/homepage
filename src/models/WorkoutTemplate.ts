@@ -7,7 +7,8 @@ export interface ISet {
 }
 
 export interface IExercise {
-  name: string;
+  exerciseId: string;
+  name?: string;
   sets: ISet[];
   restTime?: number; // Rest time in seconds, defaults to 120 (2 minutes)
 }
@@ -43,9 +44,13 @@ const SetSchema = new mongoose.Schema({
 });
 
 const ExerciseSchema = new mongoose.Schema({
-  name: {
+  exerciseId: {
     type: String,
     required: true,
+    trim: true
+  },
+  name: {
+    type: String,
     trim: true
   },
   sets: {
