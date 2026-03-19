@@ -88,8 +88,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		weightChart.labels.push(
 			d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
 		);
-		weightChart.data.push(m.weight);
-		weights.push(m.weight);
+		weightChart.data.push(m.weight!);
+		weights.push(m.weight!);
 	}
 
 	// Adaptive window: 7 if enough data, otherwise half the data (min 2)

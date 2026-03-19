@@ -15,15 +15,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     
     const includePublic = url.searchParams.get('include_public') === 'true';
     
-    let query: Record<string, unknown> = {
-      $or: [
-        { createdBy: session.user.nickname }
-      ]
-    };
+    const orConditions: Record<string, unknown>[] = [
+      { createdBy: session.user.nickname }
+    ];
 
     if (includePublic) {
-      query.$or.push({ isPublic: true });
+      orConditions.push({ isPublic: true });
     }
+
+    const query = { $or: orConditions };
 
     const templates = await WorkoutTemplate.find(query).sort({ updatedAt: -1 });
     
