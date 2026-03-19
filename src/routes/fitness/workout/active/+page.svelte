@@ -179,10 +179,10 @@
 		justify-content: space-between;
 		position: sticky;
 		top: 3.5rem;
-		background: var(--nord0, #2e3440);
+		background: var(--color-bg-primary);
 		z-index: 10;
 		padding: 0.5rem 0;
-		border-bottom: 1px solid var(--nord3);
+		border-bottom: 1px solid var(--color-border);
 	}
 	.topbar-left {
 		display: flex;
@@ -191,29 +191,29 @@
 	}
 	.pause-btn {
 		background: none;
-		border: 1px solid var(--nord3);
+		border: 1px solid var(--color-border);
 		border-radius: 6px;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		cursor: pointer;
 		padding: 0.3rem;
 		display: flex;
 		align-items: center;
 	}
 	.pause-btn:hover {
-		border-color: var(--nord8);
-		color: var(--nord8);
+		border-color: var(--color-primary);
+		color: var(--color-primary);
 	}
 	.elapsed {
 		font-variant-numeric: tabular-nums;
 		font-weight: 600;
 		font-size: 1.1rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.elapsed.paused {
 		color: var(--nord13);
 	}
 	.finish-btn {
-		background: var(--nord8);
+		background: var(--color-primary);
 		color: white;
 		border: none;
 		border-radius: 8px;
@@ -226,7 +226,7 @@
 	.workout-name-input {
 		background: transparent;
 		border: none;
-		border-bottom: 1px solid var(--nord3);
+		border-bottom: 1px solid var(--color-border);
 		color: inherit;
 		font-size: 1.2rem;
 		font-weight: 700;
@@ -235,7 +235,7 @@
 		outline: none;
 	}
 	.workout-name-input:focus {
-		border-bottom-color: var(--nord8);
+		border-bottom-color: var(--color-primary);
 	}
 
 	.rest-timer-section {
@@ -248,16 +248,16 @@
 	.skip-rest {
 		background: none;
 		border: none;
-		color: var(--nord8);
+		color: var(--color-primary);
 		cursor: pointer;
 		font-size: 0.8rem;
 		font-weight: 600;
 	}
 
 	.exercise-block {
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 		padding: 1rem;
 	}
 	.exercise-header {
@@ -283,16 +283,16 @@
 		margin-top: 0.5rem;
 		padding: 0.4rem;
 		background: transparent;
-		border: 1px dashed var(--nord3);
+		border: 1px dashed var(--color-border);
 		border-radius: 8px;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-size: 0.8rem;
 		font-weight: 600;
 		cursor: pointer;
 	}
 	.add-set-btn:hover {
-		border-color: var(--nord8);
-		color: var(--nord8);
+		border-color: var(--color-primary);
+		color: var(--color-primary);
 	}
 
 	.workout-actions {
@@ -308,7 +308,7 @@
 		gap: 0.4rem;
 		width: 100%;
 		padding: 0.75rem;
-		background: var(--nord8);
+		background: var(--color-primary);
 		color: white;
 		border: none;
 		border-radius: 10px;
@@ -333,20 +333,4 @@
 		background: rgba(191, 97, 106, 0.1);
 	}
 
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .workout-topbar {
-			background: white;
-		}
-		:global(:root:not([data-theme])) .exercise-block {
-			background: var(--nord5);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-		}
-	}
-	:global(:root[data-theme="light"]) .workout-topbar {
-		background: white;
-	}
-	:global(:root[data-theme="light"]) .exercise-block {
-		background: var(--nord5);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-	}
 </style>

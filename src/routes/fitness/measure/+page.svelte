@@ -230,19 +230,20 @@
 	h3 {
 		margin: 0.75rem 0 0.25rem;
 		font-size: 0.85rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 
 	/* Form */
 	.measure-form {
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 		padding: 1rem;
 	}
 	.form-row {
 		display: flex;
 		gap: 0.5rem;
+		flex-wrap: wrap;
 	}
 	.form-group {
 		flex: 1;
@@ -254,27 +255,27 @@
 	.form-group label {
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
 	.form-group input {
 		padding: 0.4rem 0.5rem;
-		border: 1px solid var(--nord3);
+		border: 1px solid var(--color-border);
 		border-radius: 6px;
-		background: var(--nord0, white);
+		background: var(--color-bg-elevated);
 		color: inherit;
 		font-size: 0.85rem;
 	}
 	.form-group input:focus {
 		outline: none;
-		border-color: var(--nord8);
+		border-color: var(--color-primary);
 	}
 	.save-btn {
 		width: 100%;
 		margin-top: 0.75rem;
 		padding: 0.7rem;
-		background: var(--nord8);
+		background: var(--color-primary);
 		color: white;
 		border: none;
 		border-radius: 8px;
@@ -298,13 +299,13 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 0.75rem;
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 	}
 	.stat-label {
 		font-size: 0.7rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
@@ -315,7 +316,7 @@
 	.stat-value small {
 		font-size: 0.7rem;
 		font-weight: 400;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 
 	/* Body parts */
@@ -327,11 +328,11 @@
 		display: flex;
 		justify-content: space-between;
 		padding: 0.5rem 0;
-		border-bottom: 1px solid var(--nord3, rgba(0,0,0,0.05));
+		border-bottom: 1px solid var(--color-border);
 		font-size: 0.85rem;
 	}
 	.body-label {
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.body-value {
 		font-weight: 600;
@@ -341,24 +342,8 @@
 		.stat-grid {
 			grid-template-columns: 1fr;
 		}
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .measure-form,
-		:global(:root:not([data-theme])) .stat-card {
-			background: var(--nord5);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+		.form-row {
+			flex-direction: column;
 		}
-		:global(:root:not([data-theme])) .form-group input {
-			background: var(--nord6, #eceff4);
-		}
-	}
-	:global(:root[data-theme="light"]) .measure-form,
-	:global(:root[data-theme="light"]) .stat-card {
-		background: var(--nord5);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-	}
-	:global(:root[data-theme="light"]) .form-group input {
-		background: var(--nord6, #eceff4);
 	}
 </style>
