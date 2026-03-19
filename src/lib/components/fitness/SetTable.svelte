@@ -124,7 +124,7 @@
 		text-transform: uppercase;
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 0.4rem 0.5rem;
 		text-align: center;
 		letter-spacing: 0.05em;
@@ -132,15 +132,15 @@
 	tbody td {
 		padding: 0.35rem 0.5rem;
 		text-align: center;
-		border-top: 1px solid var(--nord3, rgba(0,0,0,0.1));
+		border-top: 1px solid var(--color-border);
 	}
 	.col-set {
 		width: 2.5rem;
 		font-weight: 700;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.col-prev {
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-size: 0.8rem;
 	}
 	.col-weight, .col-reps {
@@ -153,14 +153,14 @@
 		width: 2.5rem;
 	}
 	tr.completed {
-		background: rgba(163, 190, 140, 0.1);
+		background: color-mix(in srgb, var(--nord14) 10%, transparent);
 	}
 	input {
 		width: 100%;
 		max-width: 4rem;
 		text-align: center;
-		background: var(--nord1, #f0f0f0);
-		border: 1px solid var(--nord3, #ddd);
+		background: var(--color-bg-elevated);
+		border: 1px solid var(--color-border);
 		border-radius: 6px;
 		padding: 0.3rem 0.25rem;
 		font-size: 0.875rem;
@@ -171,7 +171,7 @@
 	}
 	input:focus {
 		outline: none;
-		border-color: var(--nord8);
+		border-color: var(--color-primary);
 	}
 	.check-btn {
 		display: flex;
@@ -180,9 +180,9 @@
 		width: 2rem;
 		height: 2rem;
 		border-radius: 50%;
-		border: 2px solid var(--nord3);
+		border: 2px solid var(--color-border);
 		background: transparent;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		cursor: pointer;
 		transition: all 150ms;
 		margin: 0 auto;
@@ -191,16 +191,5 @@
 		background: var(--nord14);
 		border-color: var(--nord14);
 		color: white;
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) input {
-			background: var(--nord6, #eceff4);
-			border-color: var(--nord4);
-		}
-	}
-	:global(:root[data-theme="light"]) input {
-		background: var(--nord6, #eceff4);
-		border-color: var(--nord4);
 	}
 </style>

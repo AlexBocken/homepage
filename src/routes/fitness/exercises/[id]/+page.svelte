@@ -185,7 +185,7 @@
 	.tabs {
 		display: flex;
 		gap: 0;
-		border-bottom: 2px solid var(--nord3, #ddd);
+		border-bottom: 2px solid var(--color-border);
 	}
 	.tab {
 		flex: 1;
@@ -194,7 +194,7 @@
 		border: none;
 		border-bottom: 2px solid transparent;
 		margin-bottom: -2px;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-size: 0.75rem;
 		font-weight: 700;
 		cursor: pointer;
@@ -202,8 +202,8 @@
 		text-align: center;
 	}
 	.tab.active {
-		color: var(--nord8);
-		border-bottom-color: var(--nord8);
+		color: var(--color-primary);
+		border-bottom-color: var(--color-primary);
 	}
 	.tab-content {
 		padding: 0.5rem 0;
@@ -235,7 +235,7 @@
 	.target { background: rgba(208, 135, 112, 0.2); color: var(--nord12); }
 	.secondary {
 		font-size: 0.8rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		text-transform: capitalize;
 	}
 	h3 {
@@ -254,13 +254,13 @@
 	/* History */
 	.empty {
 		text-align: center;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 2rem 0;
 	}
 	.history-session {
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 		padding: 0.75rem;
 		margin-bottom: 0.6rem;
 	}
@@ -271,7 +271,7 @@
 		font-size: 0.85rem;
 	}
 	.history-date {
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-size: 0.8rem;
 	}
 	.history-sets {
@@ -282,7 +282,7 @@
 	.history-sets th {
 		text-align: center;
 		font-size: 0.7rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 0.25rem;
 		letter-spacing: 0.05em;
 	}
@@ -291,7 +291,7 @@
 		padding: 0.25rem;
 	}
 	.rpe {
-		color: var(--nord13);
+		color: var(--nord12);
 		font-size: 0.75rem;
 	}
 
@@ -314,13 +314,13 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 1rem;
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 	}
 	.record-label {
 		font-size: 0.7rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		margin-bottom: 0.25rem;
@@ -328,7 +328,7 @@
 	.record-value {
 		font-size: 1.3rem;
 		font-weight: 700;
-		color: var(--nord8);
+		color: var(--color-primary);
 	}
 	.records-table {
 		width: 100%;
@@ -338,30 +338,17 @@
 	.records-table th {
 		text-align: left;
 		font-size: 0.7rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 0.4rem 0.5rem;
 		letter-spacing: 0.05em;
-		border-bottom: 1px solid var(--nord3);
+		border-bottom: 1px solid var(--color-border);
 	}
 	.records-table td {
 		padding: 0.4rem 0.5rem;
-		border-bottom: 1px solid var(--nord3, rgba(0,0,0,0.05));
+		border-bottom: 1px solid var(--color-border);
 	}
 	.rec-date {
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-size: 0.75rem;
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .history-session,
-		:global(:root:not([data-theme])) .record-card {
-			background: var(--nord5);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-		}
-	}
-	:global(:root[data-theme="light"]) .history-session,
-	:global(:root[data-theme="light"]) .record-card {
-		background: var(--nord5);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 	}
 </style>

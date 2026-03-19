@@ -57,10 +57,10 @@
 		display: flex;
 		flex-direction: column;
 		text-align: left;
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border: none;
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 		padding: 1rem;
 		cursor: pointer;
 		transition: transform 150ms ease, box-shadow 150ms ease;
@@ -70,7 +70,7 @@
 	}
 	.template-card:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+		box-shadow: var(--shadow-md);
 	}
 	.template-card:active {
 		transform: translateY(0);
@@ -89,42 +89,31 @@
 	.menu-btn {
 		background: none;
 		border: none;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		cursor: pointer;
 		padding: 0.15rem;
 		border-radius: 4px;
 	}
 	.menu-btn:hover {
-		color: var(--nord8);
+		color: var(--color-primary);
 	}
 	.exercise-preview {
 		list-style: none;
 		padding: 0;
 		margin: 0;
 		font-size: 0.8rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.exercise-preview li {
 		padding: 0.1rem 0;
 	}
 	.exercise-preview .more {
-		color: var(--nord8);
+		color: var(--color-primary);
 		font-style: italic;
 	}
 	.last-used {
 		margin: 0.5rem 0 0;
 		font-size: 0.75rem;
-		color: var(--nord4);
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .template-card {
-			background: var(--nord5);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-		}
-	}
-	:global(:root[data-theme="light"]) .template-card {
-		background: var(--nord5);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+		color: var(--color-text-secondary);
 	}
 </style>

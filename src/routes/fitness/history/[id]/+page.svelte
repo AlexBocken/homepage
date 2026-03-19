@@ -159,7 +159,7 @@
 	.session-date {
 		margin: 0.2rem 0 0;
 		font-size: 0.8rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.delete-btn {
 		background: none;
@@ -189,22 +189,22 @@
 		align-items: center;
 		gap: 0.3rem;
 		padding: 0.35rem 0.7rem;
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 20px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+		box-shadow: var(--shadow-sm);
 		font-size: 0.8rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.stat-pill.pr {
 		color: var(--nord13);
 		border-color: var(--nord13);
-		background: rgba(235, 203, 139, 0.1);
+		background: color-mix(in srgb, var(--nord13) 10%, transparent);
 	}
 
 	.exercise-block {
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 		padding: 1rem;
 	}
 	.exercise-title {
@@ -219,7 +219,7 @@
 	.sets-table th {
 		text-align: center;
 		font-size: 0.7rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 0.3rem 0.4rem;
 		letter-spacing: 0.05em;
 		font-weight: 600;
@@ -227,23 +227,23 @@
 	.sets-table td {
 		text-align: center;
 		padding: 0.35rem 0.4rem;
-		border-top: 1px solid var(--nord3, rgba(0,0,0,0.08));
+		border-top: 1px solid var(--color-border);
 	}
 	.set-num {
 		font-weight: 700;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.rpe {
-		color: var(--nord13);
+		color: var(--nord12);
 	}
 	.est1rm {
-		color: var(--nord8);
+		color: var(--color-primary);
 		font-weight: 600;
 	}
 
 	.prs-section {
-		background: rgba(235, 203, 139, 0.08);
-		border: 1px solid rgba(235, 203, 139, 0.3);
+		background: color-mix(in srgb, var(--nord13) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--nord13) 30%, transparent);
 		border-radius: 12px;
 		padding: 1rem;
 	}
@@ -271,7 +271,7 @@
 		font-weight: 600;
 	}
 	.pr-type {
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-size: 0.75rem;
 	}
 	.pr-value {
@@ -281,9 +281,9 @@
 	}
 
 	.notes-section {
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 		padding: 1rem;
 	}
 	.notes-section h2 {
@@ -293,21 +293,6 @@
 	.notes-section p {
 		margin: 0;
 		font-size: 0.85rem;
-		color: var(--nord4);
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .exercise-block,
-		:global(:root:not([data-theme])) .notes-section,
-		:global(:root:not([data-theme])) .stat-pill {
-			background: var(--nord5);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-		}
-	}
-	:global(:root[data-theme="light"]) .exercise-block,
-	:global(:root[data-theme="light"]) .notes-section,
-	:global(:root[data-theme="light"]) .stat-pill {
-		background: var(--nord5);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+		color: var(--color-text-secondary);
 	}
 </style>

@@ -145,24 +145,13 @@
 
 <style>
 	.chart-container {
-		background: var(--nord1, #f8f8f8);
+		background: var(--color-surface);
 		border-radius: 12px;
 		padding: 1rem;
-		border: 1px solid var(--nord3, #ddd);
+		border: 1px solid var(--color-border);
 	}
 	canvas {
 		max-width: 100%;
 		height: 100% !important;
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .chart-container {
-			background: white;
-			border-color: var(--nord4);
-		}
-	}
-	:global(:root[data-theme="light"]) .chart-container {
-		background: white;
-		border-color: var(--nord4);
 	}
 </style>

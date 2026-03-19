@@ -100,7 +100,7 @@
 		width: 100%;
 		max-width: 500px;
 		max-height: 85vh;
-		background: var(--nord0, #2e3440);
+		background: var(--color-bg-secondary);
 		border-radius: 16px 16px 0 0;
 		display: flex;
 		flex-direction: column;
@@ -111,7 +111,7 @@
 		justify-content: space-between;
 		align-items: center;
 		padding: 1rem;
-		border-bottom: 1px solid var(--nord3);
+		border-bottom: 1px solid var(--color-border);
 	}
 	.picker-header h2 {
 		margin: 0;
@@ -120,7 +120,7 @@
 	.close-btn {
 		background: none;
 		border: none;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		cursor: pointer;
 		padding: 0.25rem;
 	}
@@ -129,31 +129,31 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.75rem 1rem;
-		border-bottom: 1px solid var(--nord3);
-		color: var(--nord4);
+		border-bottom: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
 	}
 	.picker-search input {
 		flex: 1;
 		background: transparent;
 		border: none;
-		color: inherit;
+		color: var(--color-text-primary);
 		font-size: 0.9rem;
 		outline: none;
 	}
 	.picker-search input::placeholder {
-		color: var(--nord3);
+		color: var(--color-text-muted);
 	}
 	.picker-filters {
 		display: flex;
 		gap: 0.5rem;
 		padding: 0.5rem 1rem;
-		border-bottom: 1px solid var(--nord3);
+		border-bottom: 1px solid var(--color-border);
 	}
 	.picker-filters select {
 		flex: 1;
-		background: var(--nord1);
+		background: var(--color-bg-elevated);
 		color: inherit;
-		border: 1px solid var(--nord3);
+		border: 1px solid var(--color-border);
 		border-radius: 6px;
 		padding: 0.35rem 0.5rem;
 		font-size: 0.8rem;
@@ -172,14 +172,14 @@
 		padding: 0.75rem 1rem;
 		background: none;
 		border: none;
-		border-bottom: 1px solid var(--nord3, rgba(0,0,0,0.05));
+		border-bottom: 1px solid var(--color-border);
 		color: inherit;
 		text-align: left;
 		cursor: pointer;
 		font: inherit;
 	}
 	.exercise-item:hover {
-		background: var(--nord1, rgba(0,0,0,0.05));
+		background: var(--color-surface-hover);
 	}
 	.ex-name {
 		font-weight: 600;
@@ -187,22 +187,13 @@
 	}
 	.ex-meta {
 		font-size: 0.75rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		text-transform: capitalize;
 	}
 	.no-results {
 		padding: 2rem;
 		text-align: center;
-		color: var(--nord4);
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .picker-panel {
-			background: white;
-		}
-	}
-	:global(:root[data-theme="light"]) .picker-panel {
-		background: white;
+		color: var(--color-text-secondary);
 	}
 
 	@media (min-width: 600px) {
