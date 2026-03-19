@@ -5,6 +5,7 @@
 	import Gebet from "./Gebet.svelte";
 	import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
 	import SearchInput from "$lib/components/SearchInput.svelte";
+	import { fuzzyScore } from '$lib/js/fuzzy';
 	import Kreuzzeichen from "$lib/components/faith/prayers/Kreuzzeichen.svelte";
 	import GloriaPatri from "$lib/components/faith/prayers/GloriaPatri.svelte";
 	import Paternoster from "$lib/components/faith/prayers/Paternoster.svelte";
@@ -218,23 +219,23 @@
 			prayers.forEach(prayer => {
 				const name = getPrayerName(prayer.id);
 
-				// Check name match
-				if (normalize(name).includes(normalizedQuery)) {
+				// Check name match (fuzzy)
+				if (fuzzyScore(normalizedQuery, normalize(name)) > 0) {
 					newResults.set(prayer.id, 'primary');
 					return;
 				}
 
-				// Check search terms match
-				if (prayer.searchTerms.some(term => normalize(term).includes(normalizedQuery))) {
+				// Check search terms match (fuzzy)
+				if (prayer.searchTerms.some(term => fuzzyScore(normalizedQuery, normalize(term)) > 0)) {
 					newResults.set(prayer.id, 'primary');
 					return;
 				}
 
-				// Check DOM text content
+				// Check DOM text content (fuzzy)
 				const element = document.querySelector(`[data-prayer-id="${prayer.id}"]`);
 				if (element) {
 					const textContent = normalize(element.textContent || '');
-					if (textContent.includes(normalizedQuery)) {
+					if (fuzzyScore(normalizedQuery, textContent) > 0) {
 						newResults.set(prayer.id, 'secondary');
 					}
 				}

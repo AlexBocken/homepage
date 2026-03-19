@@ -970,6 +970,8 @@ export function getFilterOptions(): {
 	};
 }
 
+import { fuzzyScore } from '$lib/js/fuzzy';
+
 export function searchExercises(opts: {
 	search?: string;
 	bodyPart?: string;
@@ -989,14 +991,14 @@ export function searchExercises(opts: {
 	}
 	if (opts.search) {
 		const query = opts.search.toLowerCase();
-		results = results.filter(
-			(e) =>
-				e.name.toLowerCase().includes(query) ||
-				e.target.toLowerCase().includes(query) ||
-				e.bodyPart.toLowerCase().includes(query) ||
-				e.equipment.toLowerCase().includes(query) ||
-				e.secondaryMuscles.some((m) => m.toLowerCase().includes(query))
-		);
+		const scored: { exercise: Exercise; score: number }[] = [];
+		for (const e of results) {
+			const text = `${e.name} ${e.target} ${e.bodyPart} ${e.equipment} ${e.secondaryMuscles.join(' ')}`.toLowerCase();
+			const score = fuzzyScore(query, text);
+			if (score > 0) scored.push({ exercise: e, score });
+		}
+		scored.sort((a, b) => b.score - a.score);
+		results = scored.map((s) => s.exercise);
 	}
 
 	return results;
