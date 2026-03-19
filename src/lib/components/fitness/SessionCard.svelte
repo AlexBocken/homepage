@@ -1,5 +1,5 @@
 <script>
-	import { getExerciseById } from '$lib/data/exercises';
+	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { Clock, Weight, Trophy } from 'lucide-svelte';
 
 	/**
@@ -13,7 +13,7 @@
 	 *     prs?: Array<any>,
 	 *     exercises: Array<{
 	 *       exerciseId: string,
-	 *       sets: Array<{ reps: number, weight: number, rpe?: number }>
+	 *       sets: Array<{ reps?: number, weight?: number, rpe?: number, distance?: number, duration?: number }>
 	 *     }>
 	 *   }
 	 * }}
@@ -41,16 +41,35 @@
 	}
 
 	/**
-	 * @param {Array<{ reps: number, weight: number, rpe?: number }>} sets
+	 * @param {Array<Record<string, any>>} sets
+	 * @param {string} exerciseId
 	 */
-	function bestSet(sets) {
+	function bestSetLabel(sets, exerciseId) {
+		const exercise = getExerciseById(exerciseId);
+		const metrics = getExerciseMetrics(exercise);
+		const isCardio = metrics.includes('distance');
+
+		if (isCardio) {
+			let best = sets[0];
+			for (const s of sets) {
+				if ((s.distance ?? 0) > (best.distance ?? 0)) best = s;
+			}
+			const parts = [];
+			if (best.distance) parts.push(`${best.distance} km`);
+			if (best.duration) parts.push(`${best.duration} min`);
+			if (best.rpe) parts.push(`@ ${best.rpe}`);
+			return parts.join(' · ') || null;
+		}
+
 		let best = sets[0];
 		for (const s of sets) {
-			if (s.weight > best.weight || (s.weight === best.weight && s.reps > best.reps)) {
+			if ((s.weight ?? 0) > (best.weight ?? 0) || ((s.weight ?? 0) === (best.weight ?? 0) && (s.reps ?? 0) > (best.reps ?? 0))) {
 				best = s;
 			}
 		}
-		return best;
+		let label = `${best.weight ?? 0} kg × ${best.reps ?? 0}`;
+		if (best.rpe) label += ` @ ${best.rpe}`;
+		return label;
 	}
 </script>
 
@@ -63,11 +82,11 @@
 	<div class="exercise-list">
 		{#each session.exercises.slice(0, 4) as ex (ex.exerciseId)}
 			{@const exercise = getExerciseById(ex.exerciseId)}
-			{@const best = bestSet(ex.sets)}
+			{@const label = bestSetLabel(ex.sets, ex.exerciseId)}
 			<div class="exercise-row">
 				<span class="ex-sets">{ex.sets.length} &times; {exercise?.name ?? ex.exerciseId}</span>
-				{#if best}
-					<span class="ex-best">{best.weight} kg &times; {best.reps}{#if best.rpe} @ {best.rpe}{/if}</span>
+				{#if label}
+					<span class="ex-best">{label}</span>
 				{/if}
 			</div>
 		{/each}

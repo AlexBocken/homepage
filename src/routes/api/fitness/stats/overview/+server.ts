@@ -4,26 +4,17 @@ import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { BodyMeasurement } from '$models/BodyMeasurement';
+import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 
 export const GET: RequestHandler = async ({ locals }) => {
-	console.time('[stats/profile] total');
-
-	console.time('[stats/profile] auth');
 	const user = await requireAuth(locals);
-	console.timeEnd('[stats/profile] auth');
-
-	console.time('[stats/profile] dbConnect');
 	await dbConnect();
-	console.timeEnd('[stats/profile] dbConnect');
 
 	const tenWeeksAgo = new Date();
 	tenWeeksAgo.setDate(tenWeeksAgo.getDate() - 70);
 
-	console.time('[stats/profile] countDocuments');
 	const totalWorkouts = await WorkoutSession.countDocuments({ createdBy: user.nickname });
-	console.timeEnd('[stats/profile] countDocuments');
 
-	console.time('[stats/profile] aggregate');
 	const weeklyAgg = await WorkoutSession.aggregate([
 		{
 			$match: {
@@ -44,9 +35,32 @@ export const GET: RequestHandler = async ({ locals }) => {
 			$sort: { '_id.year': 1, '_id.week': 1 }
 		}
 	]);
-	console.timeEnd('[stats/profile] aggregate');
 
-	console.time('[stats/profile] measurements');
+	// Lifetime totals: tonnage lifted + cardio km
+	const allSessions = await WorkoutSession.find(
+		{ createdBy: user.nickname },
+		{ 'exercises.exerciseId': 1, 'exercises.sets': 1 }
+	).lean();
+
+	let totalTonnage = 0;
+	let totalCardioKm = 0;
+	for (const s of allSessions) {
+		for (const ex of s.exercises) {
+			const exercise = getExerciseById(ex.exerciseId);
+			const metrics = getExerciseMetrics(exercise);
+			const isCardio = metrics.includes('distance');
+			const weightMultiplier = exercise?.bilateral ? 2 : 1;
+			for (const set of ex.sets) {
+				if (!set.completed) continue;
+				if (isCardio) {
+					totalCardioKm += set.distance ?? 0;
+				} else {
+					totalTonnage += (set.weight ?? 0) * weightMultiplier * (set.reps ?? 0);
+				}
+			}
+		}
+	}
+
 	const weightMeasurements = await BodyMeasurement.find(
 		{ createdBy: user.nickname, weight: { $ne: null } },
 		{ date: 1, weight: 1, _id: 0 }
@@ -54,7 +68,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.sort({ date: 1 })
 		.limit(30)
 		.lean();
-	console.timeEnd('[stats/profile] measurements');
 
 	// Build chart-ready workouts-per-week with filled gaps
 	const weekMap = new Map<string, number>();
@@ -124,9 +137,10 @@ export const GET: RequestHandler = async ({ locals }) => {
 		}
 	}
 
-	console.timeEnd('[stats/profile] total');
 	return json({
 		totalWorkouts,
+		totalTonnage: Math.round(totalTonnage / 1000 * 10) / 10,
+		totalCardioKm: Math.round(totalCardioKm * 10) / 10,
 		workoutsChart,
 		weightChart
 	});

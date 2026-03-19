@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
 
 export interface ISet {
-  reps: number;
+  reps?: number;
   weight?: number;
   rpe?: number; // Rate of Perceived Exertion (1-10)
+  distance?: number; // km
+  duration?: number; // minutes
 }
 
 export interface IExercise {
@@ -27,8 +29,7 @@ export interface IWorkoutTemplate {
 const SetSchema = new mongoose.Schema({
   reps: {
     type: Number,
-    required: true,
-    min: 1,
+    min: 0,
     max: 1000
   },
   weight: {
@@ -40,6 +41,16 @@ const SetSchema = new mongoose.Schema({
     type: Number,
     min: 1,
     max: 10
+  },
+  distance: {
+    type: Number,
+    min: 0,
+    max: 1000 // km
+  },
+  duration: {
+    type: Number,
+    min: 0,
+    max: 6000 // minutes
   }
 });
 

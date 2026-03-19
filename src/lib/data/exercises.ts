@@ -1,3 +1,19 @@
+export type MetricField = 'weight' | 'reps' | 'rpe' | 'distance' | 'duration';
+
+export const METRIC_LABELS: Record<MetricField, string> = {
+	weight: 'KG',
+	reps: 'REPS',
+	rpe: 'RPE',
+	distance: 'KM',
+	duration: 'MIN'
+};
+
+export const METRIC_PRESETS = {
+	strength: ['weight', 'reps', 'rpe'] as MetricField[],
+	cardio: ['distance', 'duration', 'rpe'] as MetricField[],
+	timed: ['duration', 'reps'] as MetricField[]
+};
+
 export interface Exercise {
 	id: string;
 	name: string;
@@ -6,7 +22,15 @@ export interface Exercise {
 	target: string;
 	secondaryMuscles: string[];
 	instructions: string[];
+	metrics?: MetricField[];
+	bilateral?: boolean; // true = weight entered is per hand, actual load is 2×
 	imageUrl?: string;
+}
+
+export function getExerciseMetrics(exercise: Exercise | undefined): MetricField[] {
+	if (exercise?.metrics) return exercise.metrics;
+	if (exercise?.bodyPart === 'cardio') return METRIC_PRESETS.cardio;
+	return METRIC_PRESETS.strength;
 }
 
 export const exercises: Exercise[] = [
@@ -71,6 +95,7 @@ export const exercises: Exercise[] = [
 		name: 'Bench Press (Dumbbell)',
 		bodyPart: 'chest',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'pectorals',
 		secondaryMuscles: ['triceps', 'anterior deltoids'],
 		instructions: [
@@ -84,6 +109,7 @@ export const exercises: Exercise[] = [
 		name: 'Incline Bench Press (Dumbbell)',
 		bodyPart: 'chest',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'pectorals',
 		secondaryMuscles: ['triceps', 'anterior deltoids'],
 		instructions: [
@@ -98,6 +124,7 @@ export const exercises: Exercise[] = [
 		name: 'Chest Fly (Dumbbell)',
 		bodyPart: 'chest',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'pectorals',
 		secondaryMuscles: ['anterior deltoids'],
 		instructions: [
@@ -261,6 +288,7 @@ export const exercises: Exercise[] = [
 		name: 'Incline Row (Dumbbell)',
 		bodyPart: 'back',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'lats',
 		secondaryMuscles: ['rhomboids', 'biceps', 'rear deltoids'],
 		instructions: [
@@ -304,6 +332,7 @@ export const exercises: Exercise[] = [
 		name: 'Overhead Press (Dumbbell)',
 		bodyPart: 'shoulders',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'anterior deltoids',
 		secondaryMuscles: ['triceps', 'lateral deltoids', 'traps'],
 		instructions: [
@@ -317,6 +346,7 @@ export const exercises: Exercise[] = [
 		name: 'Lateral Raise (Dumbbell)',
 		bodyPart: 'shoulders',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'lateral deltoids',
 		secondaryMuscles: ['traps'],
 		instructions: [
@@ -343,6 +373,7 @@ export const exercises: Exercise[] = [
 		name: 'Front Raise (Dumbbell)',
 		bodyPart: 'shoulders',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'anterior deltoids',
 		secondaryMuscles: ['lateral deltoids'],
 		instructions: [
@@ -356,6 +387,7 @@ export const exercises: Exercise[] = [
 		name: 'Reverse Fly (Dumbbell)',
 		bodyPart: 'shoulders',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'rear deltoids',
 		secondaryMuscles: ['rhomboids', 'traps'],
 		instructions: [
@@ -395,6 +427,7 @@ export const exercises: Exercise[] = [
 		name: 'Shrug (Dumbbell)',
 		bodyPart: 'shoulders',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'traps',
 		secondaryMuscles: [],
 		instructions: [
@@ -423,6 +456,7 @@ export const exercises: Exercise[] = [
 		name: 'Bicep Curl (Dumbbell)',
 		bodyPart: 'arms',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'biceps',
 		secondaryMuscles: ['forearms'],
 		instructions: [
@@ -436,6 +470,7 @@ export const exercises: Exercise[] = [
 		name: 'Hammer Curl (Dumbbell)',
 		bodyPart: 'arms',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'biceps',
 		secondaryMuscles: ['brachioradialis', 'forearms'],
 		instructions: [
@@ -503,6 +538,7 @@ export const exercises: Exercise[] = [
 		name: 'Skullcrusher (Dumbbell)',
 		bodyPart: 'arms',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'triceps',
 		secondaryMuscles: [],
 		instructions: [
@@ -610,6 +646,7 @@ export const exercises: Exercise[] = [
 		name: 'Lunge (Dumbbell)',
 		bodyPart: 'legs',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'quadriceps',
 		secondaryMuscles: ['glutes', 'hamstrings'],
 		instructions: [
@@ -623,6 +660,7 @@ export const exercises: Exercise[] = [
 		name: 'Bulgarian Split Squat (Dumbbell)',
 		bodyPart: 'legs',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'quadriceps',
 		secondaryMuscles: ['glutes', 'hamstrings'],
 		instructions: [
@@ -676,6 +714,7 @@ export const exercises: Exercise[] = [
 		name: 'Romanian Deadlift (Dumbbell)',
 		bodyPart: 'legs',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'hamstrings',
 		secondaryMuscles: ['glutes', 'erector spinae'],
 		instructions: [
@@ -775,6 +814,7 @@ export const exercises: Exercise[] = [
 		bodyPart: 'core',
 		equipment: 'body weight',
 		target: 'abdominals',
+		metrics: ['duration'],
 		secondaryMuscles: ['obliques', 'erector spinae'],
 		instructions: [
 			'Start in a forearm plank position with elbows under shoulders.',
@@ -889,6 +929,15 @@ export const exercises: Exercise[] = [
 		instructions: ['Run at a steady pace for the desired duration or distance.']
 	},
 	{
+		id: 'walking',
+		name: 'Walking',
+		bodyPart: 'cardio',
+		equipment: 'body weight',
+		target: 'cardiovascular system',
+		secondaryMuscles: ['quadriceps', 'hamstrings', 'calves', 'glutes'],
+		instructions: ['Walk at a brisk pace for the desired duration or distance.']
+	},
+	{
 		id: 'cycling-indoor',
 		name: 'Cycling (Indoor)',
 		bodyPart: 'cardio',
@@ -896,6 +945,24 @@ export const exercises: Exercise[] = [
 		target: 'cardiovascular system',
 		secondaryMuscles: ['quadriceps', 'hamstrings', 'calves'],
 		instructions: ['Cycle at a steady pace on a stationary bike for the desired duration.']
+	},
+	{
+		id: 'cycling-outdoor',
+		name: 'Cycling (Outdoor)',
+		bodyPart: 'cardio',
+		equipment: 'body weight',
+		target: 'cardiovascular system',
+		secondaryMuscles: ['quadriceps', 'hamstrings', 'calves', 'glutes'],
+		instructions: ['Cycle outdoors at a steady pace for the desired duration or distance.']
+	},
+	{
+		id: 'swimming',
+		name: 'Swimming',
+		bodyPart: 'cardio',
+		equipment: 'body weight',
+		target: 'cardiovascular system',
+		secondaryMuscles: ['lats', 'shoulders', 'core', 'quadriceps'],
+		instructions: ['Swim laps at a steady pace using your preferred stroke.']
 	},
 	{
 		id: 'rowing-machine',
@@ -909,6 +976,52 @@ export const exercises: Exercise[] = [
 			'Drive with your legs first, then pull the handle to your lower chest.',
 			'Return to the starting position by extending arms, then bending knees.'
 		]
+	},
+	{
+		id: 'rowing-outdoor',
+		name: 'Rowing (Outdoor)',
+		bodyPart: 'cardio',
+		equipment: 'body weight',
+		target: 'cardiovascular system',
+		secondaryMuscles: ['lats', 'biceps', 'quadriceps', 'core', 'shoulders'],
+		instructions: ['Row on water at a steady pace for the desired duration or distance.']
+	},
+	{
+		id: 'hiking',
+		name: 'Hiking',
+		bodyPart: 'cardio',
+		equipment: 'body weight',
+		target: 'cardiovascular system',
+		secondaryMuscles: ['quadriceps', 'hamstrings', 'calves', 'glutes', 'core'],
+		instructions: ['Hike at a steady pace on trails or uneven terrain.']
+	},
+	{
+		id: 'elliptical',
+		name: 'Elliptical',
+		bodyPart: 'cardio',
+		equipment: 'machine',
+		target: 'cardiovascular system',
+		secondaryMuscles: ['quadriceps', 'hamstrings', 'glutes', 'calves'],
+		instructions: ['Use the elliptical machine at a steady pace for the desired duration.']
+	},
+	{
+		id: 'stair-climber',
+		name: 'Stair Climber',
+		bodyPart: 'cardio',
+		equipment: 'machine',
+		target: 'cardiovascular system',
+		secondaryMuscles: ['quadriceps', 'hamstrings', 'glutes', 'calves'],
+		instructions: ['Climb at a steady pace on the stair climber for the desired duration.']
+	},
+	{
+		id: 'jump-rope',
+		name: 'Jump Rope',
+		bodyPart: 'cardio',
+		equipment: 'body weight',
+		metrics: ['duration', 'reps', 'rpe'],
+		target: 'cardiovascular system',
+		secondaryMuscles: ['calves', 'shoulders', 'forearms', 'core'],
+		instructions: ['Jump rope at a steady pace, landing lightly on the balls of your feet.']
 	},
 
 	// === ADDITIONAL COMPOUND MOVEMENTS ===
@@ -931,6 +1044,7 @@ export const exercises: Exercise[] = [
 		name: "Farmer's Walk",
 		bodyPart: 'core',
 		equipment: 'dumbbell',
+		bilateral: true,
 		target: 'forearms',
 		secondaryMuscles: ['traps', 'core', 'grip'],
 		instructions: [
