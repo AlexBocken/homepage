@@ -5,7 +5,7 @@
 	/**
 	 * @type {{
 	 *   type?: 'line' | 'bar',
-	 *   data: { labels: string[], datasets: Array<{ label: string, data: number[], borderColor?: string, backgroundColor?: string }> },
+	 *   data: { labels: string[], datasets: Array<{ label: string, data: (number|null)[], borderColor?: string, backgroundColor?: string, borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number }> },
 	 *   title?: string,
 	 *   height?: string,
 	 *   yUnit?: string

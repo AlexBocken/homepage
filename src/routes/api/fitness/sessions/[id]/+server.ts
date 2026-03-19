@@ -64,7 +64,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
     // Calculate duration if both times are provided
     if (updateData.startTime && updateData.endTime) {
-      updateData.duration = Math.round((updateData.endTime.getTime() - updateData.startTime.getTime()) / (1000 * 60));
+      updateData.duration = Math.round(((updateData.endTime as Date).getTime() - (updateData.startTime as Date).getTime()) / (1000 * 60));
     }
 
     const workoutSession = await WorkoutSession.findOneAndUpdate(
