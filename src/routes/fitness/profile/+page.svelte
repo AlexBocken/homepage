@@ -120,9 +120,9 @@
 		align-items: center;
 		gap: 1rem;
 		padding: 1rem;
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 	}
 	.avatar {
 		width: 56px;
@@ -137,7 +137,7 @@
 	.subtitle {
 		margin: 0.15rem 0 0;
 		font-size: 0.85rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.section-heading {
 		font-size: 1.1rem;
@@ -145,18 +145,7 @@
 	}
 	.empty-chart {
 		text-align: center;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 2rem 0;
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .user-section {
-			background: var(--nord5);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-		}
-	}
-	:global(:root[data-theme="light"]) .user-section {
-		background: var(--nord5);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 	}
 </style>

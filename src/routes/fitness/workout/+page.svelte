@@ -324,7 +324,7 @@
 	.start-empty-btn {
 		width: 100%;
 		padding: 0.9rem;
-		background: var(--nord8);
+		background: var(--color-primary);
 		color: white;
 		border: none;
 		border-radius: 10px;
@@ -342,7 +342,7 @@
 	}
 	.template-count {
 		font-size: 0.8rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		margin: 0.25rem 0 0.75rem;
 	}
 	.template-grid {
@@ -352,7 +352,7 @@
 	}
 	.no-templates {
 		text-align: center;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 2rem 0;
 	}
 
@@ -376,9 +376,9 @@
 		max-width: 420px;
 		max-height: 85vh;
 		overflow-y: auto;
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 		display: flex;
 		flex-direction: column;
 	}
@@ -390,7 +390,7 @@
 		justify-content: space-between;
 		align-items: center;
 		padding: 1rem;
-		border-bottom: 1px solid var(--nord3);
+		border-bottom: 1px solid var(--color-border);
 	}
 	.modal-header h2 {
 		margin: 0;
@@ -399,7 +399,7 @@
 	.close-btn {
 		background: none;
 		border: none;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		cursor: pointer;
 		padding: 0.25rem;
 	}
@@ -417,18 +417,18 @@
 		display: flex;
 		justify-content: space-between;
 		padding: 0.5rem 0;
-		border-bottom: 1px solid var(--nord3, rgba(0,0,0,0.05));
+		border-bottom: 1px solid var(--color-border);
 		font-size: 0.85rem;
 	}
 	.tex-name {
 		font-weight: 600;
 	}
 	.tex-sets {
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.modal-meta {
 		font-size: 0.75rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		margin-top: 0.75rem;
 	}
 	.modal-actions {
@@ -436,7 +436,7 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		padding: 1rem;
-		border-top: 1px solid var(--nord3);
+		border-top: 1px solid var(--color-border);
 	}
 	.modal-start {
 		display: flex;
@@ -444,7 +444,7 @@
 		justify-content: center;
 		gap: 0.4rem;
 		padding: 0.65rem;
-		background: var(--nord8);
+		background: var(--color-primary);
 		color: white;
 		border: none;
 		border-radius: 8px;
@@ -463,7 +463,7 @@
 		gap: 0.4rem;
 		padding: 0.65rem;
 		background: transparent;
-		border: 1px solid var(--nord3);
+		border: 1px solid var(--color-border);
 		border-radius: 8px;
 		color: inherit;
 		font-weight: 600;
@@ -471,7 +471,7 @@
 		cursor: pointer;
 	}
 	.modal-edit:hover {
-		border-color: var(--nord8);
+		border-color: var(--color-primary);
 	}
 	.modal-delete {
 		display: flex;
@@ -495,8 +495,8 @@
 	.editor-name {
 		width: 100%;
 		padding: 0.5rem;
-		background: var(--nord1);
-		border: 1px solid var(--nord3);
+		background: var(--color-bg-elevated);
+		border: 1px solid var(--color-border);
 		border-radius: 8px;
 		color: inherit;
 		font-size: 1rem;
@@ -505,11 +505,11 @@
 	}
 	.editor-name:focus {
 		outline: none;
-		border-color: var(--nord8);
+		border-color: var(--color-primary);
 	}
 	.editor-exercise {
-		background: var(--nord1, #f8f8f8);
-		border: 1px solid var(--nord3, #ddd);
+		background: var(--color-bg-elevated);
+		border: 1px solid var(--color-border);
 		border-radius: 10px;
 		padding: 0.75rem;
 		margin-bottom: 0.5rem;
@@ -549,25 +549,25 @@
 		width: 1.5rem;
 		text-align: center;
 		font-size: 0.75rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-weight: 700;
 	}
 	.editor-set-row input {
 		width: 4rem;
 		text-align: center;
 		padding: 0.3rem;
-		background: var(--nord0);
-		border: 1px solid var(--nord3);
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
 		border-radius: 6px;
 		color: inherit;
 		font-size: 0.8rem;
 	}
 	.editor-set-row input:focus {
 		outline: none;
-		border-color: var(--nord8);
+		border-color: var(--color-primary);
 	}
 	.set-x {
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-size: 0.8rem;
 	}
 	.set-remove {
@@ -584,7 +584,7 @@
 	.editor-add-set {
 		background: none;
 		border: none;
-		color: var(--nord8);
+		color: var(--color-primary);
 		cursor: pointer;
 		font-size: 0.75rem;
 		font-weight: 600;
@@ -598,43 +598,17 @@
 		width: 100%;
 		padding: 0.6rem;
 		background: transparent;
-		border: 1px dashed var(--nord3);
+		border: 1px dashed var(--color-border);
 		border-radius: 8px;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		font-size: 0.8rem;
 		font-weight: 600;
 		cursor: pointer;
 		margin-top: 0.5rem;
 	}
 	.editor-add-exercise:hover {
-		border-color: var(--nord8);
-		color: var(--nord8);
+		border-color: var(--color-primary);
+		color: var(--color-primary);
 	}
 
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .modal-panel {
-			background: var(--nord5);
-		}
-		:global(:root:not([data-theme])) .editor-exercise {
-			background: var(--nord6);
-		}
-		:global(:root:not([data-theme])) .editor-name {
-			background: var(--nord6);
-		}
-		:global(:root:not([data-theme])) .editor-set-row input {
-			background: white;
-		}
-	}
-	:global(:root[data-theme="light"]) .modal-panel {
-		background: var(--nord5);
-	}
-	:global(:root[data-theme="light"]) .editor-exercise {
-		background: var(--nord6);
-	}
-	:global(:root[data-theme="light"]) .editor-name {
-		background: var(--nord6);
-	}
-	:global(:root[data-theme="light"]) .editor-set-row input {
-		background: white;
-	}
 </style>

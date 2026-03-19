@@ -73,10 +73,10 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.6rem 0.75rem;
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-		color: var(--nord4);
+		box-shadow: var(--shadow-sm);
+		color: var(--color-text-secondary);
 	}
 	.search-bar input {
 		flex: 1;
@@ -87,7 +87,7 @@
 		outline: none;
 	}
 	.search-bar input::placeholder {
-		color: var(--nord3);
+		color: var(--color-text-muted);
 	}
 	.filters {
 		display: flex;
@@ -96,8 +96,8 @@
 	.filters select {
 		flex: 1;
 		padding: 0.4rem 0.5rem;
-		background: var(--accent-dark);
-		border: 1px solid var(--nord3, #ddd);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
 		border-radius: 8px;
 		color: inherit;
 		font-size: 0.8rem;
@@ -113,10 +113,10 @@
 		padding: 0.75rem 0;
 		text-decoration: none;
 		color: inherit;
-		border-bottom: 1px solid var(--nord3, rgba(0,0,0,0.08));
+		border-bottom: 1px solid var(--color-border);
 	}
 	.exercise-row:hover {
-		background: rgba(136, 192, 208, 0.05);
+		background: var(--color-surface-hover);
 	}
 	.exercise-info {
 		display: flex;
@@ -128,25 +128,12 @@
 	}
 	.exercise-meta {
 		font-size: 0.75rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		text-transform: capitalize;
 	}
 	.no-results {
 		text-align: center;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 2rem 0;
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .search-bar,
-		:global(:root:not([data-theme])) .filters select {
-			background: var(--nord5);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-		}
-	}
-	:global(:root[data-theme="light"]) .search-bar,
-	:global(:root[data-theme="light"]) .filters select {
-		background: var(--nord5);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 	}
 </style>

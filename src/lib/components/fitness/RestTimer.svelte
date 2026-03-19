@@ -56,12 +56,12 @@
 	}
 	.bg-ring {
 		fill: none;
-		stroke: var(--nord3, #ddd);
+		stroke: var(--color-border);
 		stroke-width: 4;
 	}
 	.progress-ring {
 		fill: none;
-		stroke: var(--nord8);
+		stroke: var(--color-primary);
 		stroke-width: 4;
 		stroke-linecap: round;
 		transition: stroke-dashoffset 1s linear;
@@ -70,7 +70,7 @@
 		font-size: 1.25rem;
 		font-weight: 700;
 		font-variant-numeric: tabular-nums;
-		color: var(--nord8);
+		color: var(--color-primary);
 		z-index: 1;
 	}
 </style>

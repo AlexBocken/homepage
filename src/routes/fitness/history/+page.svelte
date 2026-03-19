@@ -72,7 +72,7 @@
 	}
 	.empty {
 		text-align: center;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		padding: 3rem 0;
 	}
 	.month-group {
@@ -81,7 +81,7 @@
 	.month-header {
 		font-size: 0.85rem;
 		font-weight: 600;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 		margin: 0 0 0.5rem;
@@ -95,14 +95,14 @@
 		align-self: center;
 		padding: 0.6rem 2rem;
 		background: transparent;
-		border: 1px solid var(--nord3);
+		border: 1px solid var(--color-border);
 		border-radius: 8px;
-		color: var(--nord8);
+		color: var(--color-primary);
 		font-weight: 600;
 		cursor: pointer;
 	}
 	.load-more:hover {
-		border-color: var(--nord8);
+		border-color: var(--color-accent);
 	}
 	.load-more:disabled {
 		opacity: 0.6;

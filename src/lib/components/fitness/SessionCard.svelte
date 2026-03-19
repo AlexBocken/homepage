@@ -94,16 +94,16 @@
 		display: block;
 		text-decoration: none;
 		color: inherit;
-		background: var(--accent-dark);
+		background: var(--color-surface);
 		border: none;
 		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		box-shadow: var(--shadow-sm);
 		padding: 1rem;
 		transition: transform 150ms ease, box-shadow 150ms ease;
 	}
 	.session-card:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+		box-shadow: var(--shadow-md);
 	}
 	.session-card:active {
 		transform: translateY(0);
@@ -118,7 +118,7 @@
 	}
 	.session-date {
 		font-size: 0.75rem;
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.exercise-list {
 		font-size: 0.8rem;
@@ -130,22 +130,22 @@
 		padding: 0.15rem 0;
 	}
 	.ex-sets {
-		color: var(--nord4);
+		color: var(--color-text-secondary);
 	}
 	.ex-best {
 		font-weight: 600;
 		font-size: 0.78rem;
 	}
 	.more {
-		color: var(--nord8);
+		color: var(--color-primary);
 		font-style: italic;
 	}
 	.card-footer {
 		display: flex;
 		gap: 1rem;
 		font-size: 0.75rem;
-		color: var(--nord4);
-		border-top: 1px solid var(--nord3, rgba(0,0,0,0.1));
+		color: var(--color-text-secondary);
+		border-top: 1px solid var(--color-border);
 		padding-top: 0.5rem;
 	}
 	.stat {
@@ -155,16 +155,5 @@
 	}
 	.stat.pr {
 		color: var(--nord13);
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .session-card {
-			background: var(--nord5);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-		}
-	}
-	:global(:root[data-theme="light"]) .session-card {
-		background: var(--nord5);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 	}
 </style>

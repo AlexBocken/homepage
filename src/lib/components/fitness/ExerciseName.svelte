@@ -14,7 +14,7 @@
 
 <style>
 	.exercise-link {
-		color: var(--nord8);
+		color: var(--color-primary);
 		text-decoration: none;
 		font-weight: 600;
 	}
