@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { Plus, Trash2, Play, Pencil, X, Save } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
+	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById } from '$lib/data/exercises';
 	import TemplateCard from '$lib/components/fitness/TemplateCard.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -11,6 +12,7 @@
 	let { data } = $props();
 
 	const workout = getWorkout();
+	const sync = getWorkoutSync();
 	let templates = $state(data.templates?.templates ? [...data.templates.templates] : []);
 	let seeded = $state(false);
 
@@ -62,11 +64,13 @@
 	async function startFromTemplate(template) {
 		selectedTemplate = null;
 		workout.startFromTemplate(template);
+		await sync.onWorkoutStart();
 		goto('/fitness/workout/active');
 	}
 
-	function startEmpty() {
+	async function startEmpty() {
 		workout.startEmpty();
+		await sync.onWorkoutStart();
 		goto('/fitness/workout/active');
 	}
 

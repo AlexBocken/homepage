@@ -31,7 +31,7 @@ export interface TemplateData {
 
 const STORAGE_KEY = 'fitness-active-workout';
 
-interface StoredState {
+export interface StoredState {
 	active: boolean;
 	paused: boolean;
 	name: string;
@@ -39,6 +39,19 @@ interface StoredState {
 	exercises: WorkoutExercise[];
 	elapsed: number; // total elapsed seconds at time of save
 	savedAt: number; // Date.now() at time of save
+	restStartedAt: number | null; // Date.now() when rest timer started
+	restTotal: number; // total rest duration in seconds
+}
+
+export interface RemoteState {
+	name: string;
+	templateId: string | null;
+	exercises: WorkoutExercise[];
+	paused: boolean;
+	elapsed: number;
+	savedAt: number;
+	restStartedAt: number | null;
+	restTotal: number;
 }
 
 function createEmptySet(): WorkoutSet {
@@ -79,9 +92,11 @@ export function createWorkout() {
 	let _restSeconds = $state(0);
 	let _restTotal = $state(0);
 	let _restActive = $state(false);
+	let _restStartedAt: number | null = null; // absolute timestamp
 
 	let _timerInterval: ReturnType<typeof setInterval> | null = null;
 	let _restInterval: ReturnType<typeof setInterval> | null = null;
+	let _onChangeCallback: (() => void) | null = null;
 
 	function _persist() {
 		if (!active) return;
@@ -96,8 +111,11 @@ export function createWorkout() {
 			templateId,
 			exercises: JSON.parse(JSON.stringify(exercises)),
 			elapsed: _elapsed,
-			savedAt: Date.now()
+			savedAt: Date.now(),
+			restStartedAt: _restActive ? _restStartedAt : null,
+			restTotal: _restTotal
 		});
+		_onChangeCallback?.();
 	}
 
 	function _computeElapsed() {
@@ -119,6 +137,21 @@ export function createWorkout() {
 		}
 	}
 
+	function _computeRestSeconds() {
+		if (!_restActive || !_restStartedAt) return;
+		const elapsed = Math.floor((Date.now() - _restStartedAt) / 1000);
+		_restSeconds = Math.max(0, _restTotal - elapsed);
+		if (_restSeconds <= 0) {
+			_stopRestTimer();
+			_persist();
+		}
+	}
+
+	function _startRestInterval() {
+		if (_restInterval) clearInterval(_restInterval);
+		_restInterval = setInterval(() => _computeRestSeconds(), 1000);
+	}
+
 	function _stopRestTimer() {
 		if (_restInterval) {
 			clearInterval(_restInterval);
@@ -127,6 +160,7 @@ export function createWorkout() {
 		_restActive = false;
 		_restSeconds = 0;
 		_restTotal = 0;
+		_restStartedAt = null;
 	}
 
 	// Restore from localStorage on creation
@@ -153,6 +187,19 @@ export function createWorkout() {
 			_elapsed = totalElapsed;
 			startTime = new Date(); // start counting from now
 			_startTimer();
+		}
+
+		// Restore rest timer if it was active
+		if (stored.restStartedAt && stored.restTotal > 0) {
+			const elapsed = Math.floor((Date.now() - stored.restStartedAt) / 1000);
+			const remaining = stored.restTotal - elapsed;
+			if (remaining > 0) {
+				_restStartedAt = stored.restStartedAt;
+				_restTotal = stored.restTotal;
+				_restSeconds = remaining;
+				_restActive = true;
+				_startRestInterval();
+			}
 		}
 	}
 
@@ -266,19 +313,28 @@ export function createWorkout() {
 
 	function startRestTimer(seconds: number) {
 		_stopRestTimer();
+		_restStartedAt = Date.now();
 		_restSeconds = seconds;
 		_restTotal = seconds;
 		_restActive = true;
-		_restInterval = setInterval(() => {
-			_restSeconds--;
-			if (_restSeconds <= 0) {
-				_stopRestTimer();
-			}
-		}, 1000);
+		_startRestInterval();
+		_persist();
 	}
 
 	function cancelRestTimer() {
 		_stopRestTimer();
+		_persist();
+	}
+
+	function adjustRestTimer(delta: number) {
+		if (!_restActive) return;
+		_restTotal = Math.max(1, _restTotal + delta);
+		// Recompute remaining from the absolute timestamp
+		_computeRestSeconds();
+		if (_restSeconds <= 0) {
+			_stopRestTimer();
+		}
+		_persist();
 	}
 
 	function finish() {
@@ -340,6 +396,71 @@ export function createWorkout() {
 		_reset();
 	}
 
+	/** Apply state from another device (merge strategy: incoming wins) */
+	function applyRemoteState(remote: RemoteState) {
+		name = remote.name;
+		templateId = remote.templateId;
+		exercises = remote.exercises;
+
+		if (remote.paused) {
+			_stopTimer();
+			paused = true;
+			_pausedElapsed = remote.elapsed;
+			_elapsed = remote.elapsed;
+			startTime = null;
+		} else {
+			paused = false;
+			// Account for time elapsed since the remote saved
+			const secondsSinceSave = Math.floor((Date.now() - remote.savedAt) / 1000);
+			const totalElapsed = remote.elapsed + secondsSinceSave;
+			_pausedElapsed = totalElapsed;
+			_elapsed = totalElapsed;
+			startTime = new Date();
+			_startTimer();
+		}
+
+		// Apply rest timer state — skip if already running with same parameters
+		const restChanged = remote.restStartedAt !== _restStartedAt || remote.restTotal !== _restTotal;
+		if (restChanged) {
+			_stopRestTimer();
+			if (remote.restStartedAt && remote.restTotal > 0) {
+				const elapsed = Math.floor((Date.now() - remote.restStartedAt) / 1000);
+				const remaining = remote.restTotal - elapsed;
+				if (remaining > 0) {
+					_restStartedAt = remote.restStartedAt;
+					_restTotal = remote.restTotal;
+					_restSeconds = remaining;
+					_restActive = true;
+					_startRestInterval();
+				}
+			}
+		}
+
+		// Persist locally but don't trigger onChange (to avoid re-push loop)
+		saveToStorage({
+			active: true,
+			paused,
+			name,
+			templateId,
+			exercises: JSON.parse(JSON.stringify(exercises)),
+			elapsed: _elapsed,
+			savedAt: Date.now(),
+			restStartedAt: _restActive ? _restStartedAt : null,
+			restTotal: _restTotal
+		});
+	}
+
+	/** Restore a workout from server when local has no active workout */
+	function restoreFromRemote(remote: RemoteState) {
+		active = true;
+		applyRemoteState(remote);
+	}
+
+	/** Register callback for state changes (used by sync layer) */
+	function onChange(cb: () => void) {
+		_onChangeCallback = cb;
+	}
+
 	return {
 		get active() { return active; },
 		get paused() { return paused; },
@@ -352,6 +473,7 @@ export function createWorkout() {
 		get restTimerSeconds() { return _restSeconds; },
 		get restTimerTotal() { return _restTotal; },
 		get restTimerActive() { return _restActive; },
+		get restStartedAt() { return _restStartedAt; },
 		restore,
 		startFromTemplate,
 		startEmpty,
@@ -365,8 +487,12 @@ export function createWorkout() {
 		toggleSetComplete,
 		startRestTimer,
 		cancelRestTimer,
+		adjustRestTimer,
 		finish,
-		cancel
+		cancel,
+		applyRemoteState,
+		restoreFromRemote,
+		onChange
 	};
 }
 

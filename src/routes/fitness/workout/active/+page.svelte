@@ -2,13 +2,16 @@
 	import { goto } from '$app/navigation';
 	import { Plus, Trash2, Play, Pause } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
+	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import RestTimer from '$lib/components/fitness/RestTimer.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
+	import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
 	import { onMount } from 'svelte';
 
 	const workout = getWorkout();
+	const sync = getWorkoutSync();
 	let showPicker = $state(false);
 
 	/** @type {Record<string, Array<{ reps: number, weight: number }>>} */
@@ -45,9 +48,8 @@
 
 	async function finishWorkout() {
 		const sessionData = workout.finish();
-		console.log('[finish] sessionData:', JSON.stringify(sessionData, null, 2));
 		if (sessionData.exercises.length === 0) {
-			console.warn('[finish] No completed exercises, aborting save');
+			await sync.onWorkoutEnd();
 			return;
 		}
 
@@ -57,16 +59,13 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(sessionData)
 			});
-			console.log('[finish] POST response:', res.status, res.statusText);
-			if (!res.ok) {
-				const body = await res.text();
-				console.error('[finish] POST error body:', body);
-			}
+			await sync.onWorkoutEnd();
 			if (res.ok) {
 				goto('/fitness/history');
 			}
 		} catch (err) {
 			console.error('[finish] fetch error:', err);
+			await sync.onWorkoutEnd();
 		}
 	}
 
@@ -95,6 +94,7 @@
 					{#if workout.paused}<Play size={16} />{:else}<Pause size={16} />{/if}
 				</button>
 				<span class="elapsed" class:paused={workout.paused}>{formatElapsed(workout.elapsedSeconds)}</span>
+				<SyncIndicator status={sync.status} />
 			</div>
 			<button class="finish-btn" onclick={finishWorkout}>FINISH</button>
 		</div>
@@ -113,7 +113,11 @@
 					total={workout.restTimerTotal}
 					onComplete={() => workout.cancelRestTimer()}
 				/>
-				<button class="skip-rest" onclick={() => workout.cancelRestTimer()}>Skip</button>
+				<div class="rest-controls">
+					<button class="rest-adjust" onclick={() => workout.adjustRestTimer(-30)}>-30s</button>
+					<button class="skip-rest" onclick={() => workout.cancelRestTimer()}>Skip</button>
+					<button class="rest-adjust" onclick={() => workout.adjustRestTimer(30)}>+30s</button>
+				</div>
 			</div>
 		{/if}
 
@@ -153,7 +157,7 @@
 			<button class="add-exercise-btn" onclick={() => showPicker = true}>
 				<Plus size={18} /> ADD EXERCISE
 			</button>
-			<button class="cancel-btn" onclick={() => { workout.cancel(); goto('/fitness/workout'); }}>
+			<button class="cancel-btn" onclick={async () => { workout.cancel(); await sync.onWorkoutEnd(); goto('/fitness/workout'); }}>
 				CANCEL WORKOUT
 			</button>
 		</div>
@@ -244,6 +248,25 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 1rem 0;
+	}
+	.rest-controls {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+	.rest-adjust {
+		background: none;
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		font-size: 0.75rem;
+		font-weight: 600;
+		padding: 0.25rem 0.5rem;
+	}
+	.rest-adjust:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
 	}
 	.skip-rest {
 		background: none;
