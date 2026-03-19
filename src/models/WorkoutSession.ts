@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
 
 export interface ICompletedSet {
-  reps: number;
+  reps?: number;
   weight?: number;
   rpe?: number; // Rate of Perceived Exertion (1-10)
+  distance?: number; // km
+  duration?: number; // minutes
   completed: boolean;
   notes?: string;
 }
@@ -34,7 +36,6 @@ export interface IWorkoutSession {
 const CompletedSetSchema = new mongoose.Schema({
   reps: {
     type: Number,
-    required: true,
     min: 0,
     max: 1000
   },
@@ -47,6 +48,16 @@ const CompletedSetSchema = new mongoose.Schema({
     type: Number,
     min: 1,
     max: 10
+  },
+  distance: {
+    type: Number,
+    min: 0,
+    max: 1000 // km
+  },
+  duration: {
+    type: Number,
+    min: 0,
+    max: 6000 // minutes
   },
   completed: {
     type: Boolean,

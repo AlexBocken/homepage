@@ -10,6 +10,8 @@ export interface WorkoutSet {
 	reps: number | null;
 	weight: number | null;
 	rpe: number | null;
+	distance: number | null;
+	duration: number | null;
 	completed: boolean;
 }
 
@@ -24,7 +26,7 @@ export interface TemplateData {
 	name: string;
 	exercises: Array<{
 		exerciseId: string;
-		sets: Array<{ reps?: number; weight?: number; rpe?: number }>;
+		sets: Array<{ reps?: number; weight?: number; rpe?: number; distance?: number; duration?: number }>;
 		restTime?: number;
 	}>;
 }
@@ -55,7 +57,7 @@ export interface RemoteState {
 }
 
 function createEmptySet(): WorkoutSet {
-	return { reps: null, weight: null, rpe: null, completed: false };
+	return { reps: null, weight: null, rpe: null, distance: null, duration: null, completed: false };
 }
 
 function saveToStorage(state: StoredState) {
@@ -213,6 +215,8 @@ export function createWorkout() {
 						reps: s.reps ?? null,
 						weight: s.weight ?? null,
 						rpe: s.rpe ?? null,
+						distance: s.distance ?? null,
+						duration: s.duration ?? null,
 						completed: false
 					}))
 				: [createEmptySet()],
@@ -356,9 +360,11 @@ export function createWorkout() {
 					sets: e.sets
 						.filter((s) => s.completed)
 						.map((s) => ({
-							reps: s.reps ?? 0,
-							weight: s.weight ?? 0,
+							reps: s.reps ?? undefined,
+							weight: s.weight ?? undefined,
 							rpe: s.rpe ?? undefined,
+							distance: s.distance ?? undefined,
+							duration: s.duration ?? undefined,
 							completed: true
 						}))
 				})),

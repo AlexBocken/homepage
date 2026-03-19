@@ -4,7 +4,7 @@
 	import { Plus, Trash2, Play, Pencil, X, Save } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
-	import { getExerciseById } from '$lib/data/exercises';
+	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import TemplateCard from '$lib/components/fitness/TemplateCard.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import AddActionButton from '$lib/components/AddActionButton.svelte';
@@ -25,7 +25,7 @@
 	/** @type {any} */
 	let editingTemplate = $state(null);
 	let editorName = $state('');
-	/** @type {Array<{ exerciseId: string, sets: Array<{ reps: number | null, weight: number | null }>, restTime: number }>} */
+	/** @type {Array<{ exerciseId: string, sets: Array<Record<string, any>>, restTime: number }>} */
 	let editorExercises = $state([]);
 	let editorPicker = $state(false);
 	let editorSaving = $state(false);
@@ -88,7 +88,7 @@
 		editorName = template.name;
 		editorExercises = template.exercises.map((/** @type {any} */ ex) => ({
 			exerciseId: ex.exerciseId,
-			sets: ex.sets.map((/** @type {any} */ s) => ({ reps: s.reps ?? null, weight: s.weight ?? null })),
+			sets: ex.sets.map((/** @type {any} */ s) => ({ ...s })),
 			restTime: ex.restTime ?? 120
 		}));
 		showTemplateEditor = true;
@@ -101,9 +101,13 @@
 
 	/** @param {string} exerciseId */
 	function editorAddExercise(exerciseId) {
+		const metrics = getExerciseMetrics(getExerciseById(exerciseId));
+		/** @type {Record<string, any>} */
+		const emptySet = {};
+		for (const m of metrics) emptySet[m] = null;
 		editorExercises = [...editorExercises, {
 			exerciseId,
-			sets: [{ reps: null, weight: null }],
+			sets: [emptySet],
 			restTime: 120
 		}];
 	}
@@ -115,7 +119,11 @@
 
 	/** @param {number} exIdx */
 	function editorAddSet(exIdx) {
-		editorExercises[exIdx].sets = [...editorExercises[exIdx].sets, { reps: null, weight: null }];
+		const metrics = getExerciseMetrics(getExerciseById(editorExercises[exIdx].exerciseId));
+		/** @type {Record<string, any>} */
+		const emptySet = {};
+		for (const m of metrics) emptySet[m] = null;
+		editorExercises[exIdx].sets = [...editorExercises[exIdx].sets, emptySet];
 	}
 
 	/** @param {number} exIdx @param {number} setIdx */
@@ -131,14 +139,21 @@
 
 		const body = {
 			name: editorName.trim(),
-			exercises: editorExercises.map((ex) => ({
-				exerciseId: ex.exerciseId,
-				sets: ex.sets.map((s) => ({
-					reps: s.reps ?? 1,
-					weight: s.weight ?? undefined
-				})),
-				restTime: ex.restTime
-			}))
+			exercises: editorExercises.map((ex) => {
+				const metrics = getExerciseMetrics(getExerciseById(ex.exerciseId));
+				return {
+					exerciseId: ex.exerciseId,
+					sets: ex.sets.map((s) => {
+						/** @type {Record<string, any>} */
+						const set = {};
+						for (const m of metrics) {
+							if (s[m] != null) set[m] = s[m];
+						}
+						return set;
+					}),
+					restTime: ex.restTime
+				};
+			})
 		};
 
 		try {
@@ -267,6 +282,7 @@
 
 				{#each editorExercises as ex, exIdx (exIdx)}
 					{@const exercise = getExerciseById(ex.exerciseId)}
+					{@const exMetrics = getExerciseMetrics(exercise).filter((/** @type {string} */ m) => m !== 'rpe')}
 					<div class="editor-exercise">
 						<div class="editor-ex-header">
 							<span class="editor-ex-name">{exercise?.name ?? ex.exerciseId}</span>
@@ -278,9 +294,10 @@
 							{#each ex.sets as set, setIdx (setIdx)}
 								<div class="editor-set-row">
 									<span class="set-num">{setIdx + 1}</span>
-									<input type="number" inputmode="numeric" placeholder="reps" bind:value={set.reps} />
-									<span class="set-x">&times;</span>
-									<input type="number" inputmode="decimal" placeholder="kg" bind:value={set.weight} />
+									{#each exMetrics as metric, mIdx (metric)}
+										{#if mIdx > 0}<span class="set-x">&times;</span>{/if}
+										<input type="number" inputmode={metric === 'reps' ? 'numeric' : 'decimal'} placeholder={METRIC_LABELS[metric].toLowerCase()} bind:value={set[metric]} />
+									{/each}
 									{#if ex.sets.length > 1}
 										<button class="set-remove" onclick={() => editorRemoveSet(exIdx, setIdx)} aria-label="Remove set"><X size={14} /></button>
 									{/if}

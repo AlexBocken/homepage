@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { Clock, Weight, Trophy, Trash2 } from 'lucide-svelte';
-	import { getExerciseById } from '$lib/data/exercises';
+	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 
 	let { data } = $props();
@@ -47,6 +47,13 @@
 		} catch {}
 		deleting = false;
 	}
+
+	/** @param {string} exerciseId */
+	function isStrength(exerciseId) {
+		const exercise = getExerciseById(exerciseId);
+		const metrics = getExerciseMetrics(exercise);
+		return metrics.includes('weight') && metrics.includes('reps');
+	}
 </script>
 
 <div class="session-detail">
@@ -82,6 +89,10 @@
 	</div>
 
 	{#each session.exercises as ex, exIdx (ex.exerciseId + '-' + exIdx)}
+		{@const exercise = getExerciseById(ex.exerciseId)}
+		{@const metrics = getExerciseMetrics(exercise)}
+		{@const mainMetrics = metrics.filter((/** @type {string} */ m) => m !== 'rpe')}
+		{@const showEst1rm = isStrength(ex.exerciseId)}
 		<div class="exercise-block">
 			<h3 class="exercise-title">
 				<ExerciseName exerciseId={ex.exerciseId} />
@@ -90,20 +101,26 @@
 				<thead>
 					<tr>
 						<th>SET</th>
-						<th>KG</th>
-						<th>REPS</th>
+						{#each mainMetrics as metric (metric)}
+							<th>{METRIC_LABELS[metric]}</th>
+						{/each}
 						<th>RPE</th>
-						<th>EST. 1RM</th>
+						{#if showEst1rm}
+							<th>EST. 1RM</th>
+						{/if}
 					</tr>
 				</thead>
 				<tbody>
 					{#each ex.sets as set, i (i)}
 						<tr>
 							<td class="set-num">{i + 1}</td>
-							<td>{set.weight ?? '—'}</td>
-							<td>{set.reps ?? '—'}</td>
+							{#each mainMetrics as metric (metric)}
+								<td>{set[metric] ?? '—'}</td>
+							{/each}
 							<td class="rpe">{set.rpe ?? '—'}</td>
-							<td class="est1rm">{set.weight && set.reps ? epley1rm(set.weight, set.reps) : '—'}</td>
+							{#if showEst1rm}
+								<td class="est1rm">{set.weight && set.reps ? epley1rm(set.weight, set.reps) : '—'}</td>
+							{/if}
 						</tr>
 					{/each}
 				</tbody>
