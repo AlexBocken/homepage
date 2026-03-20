@@ -54,7 +54,7 @@
 			backgroundColor: ds.backgroundColor ?? (type === 'bar'
 				? (nordColors[i % nordColors.length])
 				: 'transparent'),
-			borderWidth: ds.borderWidth ?? (type === 'line' ? 2 : 1),
+			borderWidth: ds.borderWidth ?? (type === 'line' ? 2 : 0),
 			pointRadius: ds.pointRadius ?? (type === 'line' ? 3 : 0),
 			pointBackgroundColor: ds.pointBackgroundColor || ds.borderColor || nordColors[i % nordColors.length],
 			tension: ds.tension ?? 0.3,
