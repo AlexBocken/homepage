@@ -41,14 +41,14 @@ footer {
    ═══════════════════════════════════════════ */
 nav {
 	position: sticky;
-	top: 12px;
+	top: calc(12px + env(safe-area-inset-top, 0px));
 	z-index: 100;
 	display: flex;
 	align-items: center;
 	height: var(--header-h);
 	gap: 0.4rem;
 	padding: 0 0.8rem;
-	margin: 12px auto 0;
+	margin: calc(12px + env(safe-area-inset-top, 0px)) auto 0;
 	width: fit-content;
 	max-width: calc(100% - 1.5rem);
 	border-radius: 100px;
