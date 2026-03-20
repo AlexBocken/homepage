@@ -1,0 +1,14 @@
+{
+  "identifier": "bocken-remote",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["https://bocken.org/*", "http://192.168.1.4:5173/*"]
+  },
+  "permissions": [
+    "geolocation:allow-check-permissions",
+    "geolocation:allow-request-permissions",
+    "geolocation:allow-get-current-position",
+    "geolocation:allow-watch-position",
+    "geolocation:allow-clear-watch"
+  ]
+}
