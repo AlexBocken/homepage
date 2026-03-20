@@ -55,6 +55,19 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		}
 	}
 
+	// Protect fitness routes and API endpoints
+	if (event.url.pathname.startsWith('/fitness') || event.url.pathname.startsWith('/api/fitness')) {
+		if (!session) {
+			if (event.url.pathname.startsWith('/api/fitness')) {
+				error(401, {
+					message: 'Authentication required.'
+				});
+			}
+			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
+			redirect(303, `/login?callbackUrl=${callbackUrl}`);
+		}
+	}
+
 	// If the request is still here, just proceed as normally
 	return resolve(event);
 }
