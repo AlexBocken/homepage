@@ -3,15 +3,14 @@
 	 * @type {{
 	 *   seconds: number,
 	 *   total: number,
-	 *   onComplete?: (() => void) | null
+	 *   onComplete?: (() => void) | null,
+	 *   onAdjust?: ((delta: number) => void) | null,
+	 *   onSkip?: (() => void) | null
 	 * }}
 	 */
-	let { seconds, total, onComplete = null } = $props();
+	let { seconds, total, onComplete = null, onAdjust = null, onSkip = null } = $props();
 
-	const radius = 40;
-	const circumference = 2 * Math.PI * radius;
-	const progress = $derived(total > 0 ? (total - seconds) / total : 0);
-	const offset = $derived(circumference * (1 - progress));
+	const progress = $derived(total > 0 ? seconds / total : 0);
 
 	/** @param {number} secs */
 	function formatTime(secs) {
@@ -27,50 +26,62 @@
 	});
 </script>
 
-<div class="rest-timer">
-	<svg viewBox="0 0 100 100" class="timer-ring">
-		<circle cx="50" cy="50" r={radius} class="bg-ring" />
-		<circle
-			cx="50" cy="50" r={radius}
-			class="progress-ring"
-			stroke-dasharray={circumference}
-			stroke-dashoffset={offset}
-			transform="rotate(-90 50 50)"
-		/>
-	</svg>
-	<span class="timer-text">{formatTime(seconds)}</span>
+<div class="rest-bar">
+	<div class="bar-fill" style:width="{progress * 100}%"></div>
+	<div class="bar-controls">
+		<button class="adjust-btn" onclick={() => onAdjust?.(-30)}>-30s</button>
+		<button class="time-btn" onclick={() => onSkip?.()}>{formatTime(seconds)}</button>
+		<button class="adjust-btn" onclick={() => onAdjust?.(30)}>+30s</button>
+	</div>
 </div>
 
 <style>
-	.rest-timer {
+	.rest-bar {
+		border-radius: 8px;
+		overflow: hidden;
 		position: relative;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 100px;
-		height: 100px;
+		height: 2.2rem;
+		background: var(--color-bg-elevated);
 	}
-	.timer-ring {
+	.bar-fill {
 		position: absolute;
 		inset: 0;
+		width: 100%;
+		background: var(--color-primary);
+		border-radius: 8px;
+		transition: width 1s linear;
 	}
-	.bg-ring {
-		fill: none;
-		stroke: var(--color-border);
-		stroke-width: 4;
+	.bar-controls {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		z-index: 1;
 	}
-	.progress-ring {
-		fill: none;
-		stroke: var(--color-primary);
-		stroke-width: 4;
-		stroke-linecap: round;
-		transition: stroke-dashoffset 1s linear;
-	}
-	.timer-text {
-		font-size: 1.25rem;
+	.time-btn {
+		background: none;
+		border: none;
+		font-size: 0.9rem;
 		font-weight: 700;
 		font-variant-numeric: tabular-nums;
-		color: var(--color-primary);
-		z-index: 1;
+		color: var(--color-text-primary, inherit);
+		cursor: pointer;
+		padding: 0.2rem 0.5rem;
+	}
+	.adjust-btn {
+		background: none;
+		border: none;
+		color: var(--color-text-primary, inherit);
+		cursor: pointer;
+		font-size: 0.7rem;
+		font-weight: 600;
+		padding: 0.2rem 0.4rem;
+		border-radius: 4px;
+		opacity: 0.7;
+	}
+	.adjust-btn:hover {
+		opacity: 1;
 	}
 </style>

@@ -49,7 +49,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     }
 
     const data = await request.json();
-    const { name, exercises, startTime, endTime, notes } = data;
+    const { name, exercises, startTime, endTime, duration, notes } = data;
 
     if (exercises && (!Array.isArray(exercises) || exercises.length === 0)) {
       return json({ error: 'At least one exercise is required' }, { status: 400 });
@@ -60,10 +60,11 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     if (exercises) updateData.exercises = exercises;
     if (startTime) updateData.startTime = new Date(startTime);
     if (endTime) updateData.endTime = new Date(endTime);
+    if (duration !== undefined) updateData.duration = duration;
     if (notes !== undefined) updateData.notes = notes;
 
-    // Calculate duration if both times are provided
-    if (updateData.startTime && updateData.endTime) {
+    // Calculate duration from times if both provided but duration wasn't explicit
+    if (updateData.startTime && updateData.endTime && duration === undefined) {
       updateData.duration = Math.round(((updateData.endTime as Date).getTime() - (updateData.startTime as Date).getTime()) / (1000 * 60));
     }
 
