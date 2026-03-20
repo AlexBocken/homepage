@@ -12,6 +12,7 @@ declare global {
 		}
 		interface Locals {
 			auth(): Promise<Session | null>;
+			session?: Session | null;
 		}
 		// interface PageData {}
 		interface PageState {

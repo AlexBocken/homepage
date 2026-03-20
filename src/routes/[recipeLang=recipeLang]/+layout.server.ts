@@ -10,7 +10,7 @@ export const load : LayoutServerLoad = async ({locals, params}) => {
 	const lang = params.recipeLang === 'recipes' ? 'en' : 'de';
 
 	return {
-		session: await locals.auth(),
+		session: locals.session ?? await locals.auth(),
 		lang,
 		recipeLang: params.recipeLang
 	}

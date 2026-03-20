@@ -20,7 +20,8 @@ await dbConnect().then(() => {
 
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	const session = await event.locals.auth();
-	
+	event.locals.session = session;
+
 	// Protect rezepte routes
 	if (event.url.pathname.startsWith('/rezepte/edit') || event.url.pathname.startsWith('/rezepte/add')) {
 		if (!session) {
