@@ -372,7 +372,7 @@ onMount(() => {
 .page-container {
 	max-width: 1400px;
 	margin: 0 auto;
-	padding: 2rem 1rem;
+	padding: 0 1rem 2rem 1rem;
 }
 .page-container:has(.has-mystery-image) {
 	max-width: calc(1400px + 25vw + 3rem);

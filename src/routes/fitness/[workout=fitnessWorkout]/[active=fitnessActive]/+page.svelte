@@ -1,13 +1,14 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
+	import { getGpsTracker, trackDistance } from '$lib/js/gps.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
 	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
@@ -19,6 +20,7 @@
 
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
+	const gps = getGpsTracker();
 	let nameInput = $state(workout.name);
 	let nameEditing = $state(false);
 	$effect(() => { if (!nameEditing) nameInput = workout.name; });
@@ -33,6 +35,109 @@
 	/** @type {any[]} */
 	let templateDiffs = $state([]);
 	let templateUpdateStatus = $state('idle'); // 'idle' | 'updating' | 'done'
+
+	let useGps = $state(gps.isTracking);
+
+	/** @type {any} */
+	let liveMap = null;
+	/** @type {any} */
+	let livePolyline = null;
+	/** @type {any} */
+	let liveMarker = null;
+	/** @type {any} */
+	let leafletLib = null;
+	let prevTrackLen = 0;
+
+	/** Svelte use:action — called when the map div enters the DOM */
+	function mountMap(/** @type {HTMLElement} */ node) {
+		initMap(node);
+		return {
+			destroy() {
+				if (liveMap) {
+					liveMap.remove();
+					liveMap = null;
+					livePolyline = null;
+					liveMarker = null;
+					leafletLib = null;
+					prevTrackLen = 0;
+				}
+			}
+		};
+	}
+
+	/** @param {HTMLElement} node */
+	async function initMap(node) {
+		leafletLib = await import('leaflet');
+		if (!node.isConnected) return;
+		liveMap = leafletLib.map(node, {
+			attributionControl: false,
+			zoomControl: false
+		});
+		leafletLib.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			maxZoom: 19
+		}).addTo(liveMap);
+		livePolyline = leafletLib.polyline([], { color: '#88c0d0', weight: 3 }).addTo(liveMap);
+		liveMarker = leafletLib.circleMarker([0, 0], {
+			radius: 6, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2
+		}).addTo(liveMap);
+
+		if (gps.track.length > 0) {
+			const pts = gps.track.map((/** @type {any} */ p) => [p.lat, p.lng]);
+			livePolyline.setLatLngs(pts);
+			liveMarker.setLatLng(pts[pts.length - 1]);
+			liveMap.setView(pts[pts.length - 1], 16);
+			prevTrackLen = gps.track.length;
+		}
+	}
+
+	let gpsToggling = false;
+	async function toggleGps() {
+		if (gpsToggling) return;
+		gpsToggling = true;
+		try {
+			if (!useGps) {
+				if (gps.isTracking) {
+					useGps = true;
+				} else {
+					useGps = await gps.start();
+				}
+			} else {
+				await gps.stop();
+				useGps = false;
+				if (liveMap) {
+					liveMap.remove();
+					liveMap = null;
+					livePolyline = null;
+					liveMarker = null;
+				}
+			}
+		} finally {
+			gpsToggling = false;
+		}
+	}
+
+	$effect(() => {
+		const len = gps.track.length;
+		if (len > prevTrackLen && liveMap && gps.latestPoint) {
+			for (let i = prevTrackLen; i < len; i++) {
+				const p = gps.track[i];
+				livePolyline.addLatLng([p.lat, p.lng]);
+			}
+			const pt = [gps.latestPoint.lat, gps.latestPoint.lng];
+			liveMarker.setLatLng(pt);
+			const zoom = liveMap.getZoom() || 16;
+			liveMap.setView(pt, zoom);
+			prevTrackLen = len;
+		}
+	});
+
+	/** Check if any exercise in the workout is cardio */
+	function hasCardioExercise() {
+		return workout.exercises.some((/** @type {any} */ e) => {
+			const exercise = getExerciseById(e.exerciseId);
+			return exercise?.bodyPart === 'cardio';
+		});
+	}
 
 	onMount(() => {
 		if (!workout.active && !completionData) {
@@ -58,18 +163,44 @@
 	}
 
 	/** @param {string} exerciseId */
-	function addExerciseFromPicker(exerciseId) {
+	async function addExerciseFromPicker(exerciseId) {
 		workout.addExercise(exerciseId);
 		fetchPreviousData([exerciseId]);
+
+		// Auto-start GPS when adding a cardio exercise
+		const exercise = getExerciseById(exerciseId);
+		if (exercise?.bodyPart === 'cardio' && gps.available && !useGps && !gps.isTracking) {
+			useGps = await gps.start();
+		}
 	}
 
 	async function finishWorkout() {
+		// Stop GPS tracking and collect track data
+		const gpsTrack = gps.isTracking ? await gps.stop() : [];
+
 		const sessionData = workout.finish();
 		if (sessionData.exercises.length === 0) {
+			gps.reset();
 			await sync.onWorkoutEnd();
 			await goto(`/fitness/${sl.workout}`);
 			return;
 		}
+
+		// Only save GPS points recorded while the workout timer was running
+		const workoutStart = new Date(sessionData.startTime).getTime();
+		const filteredTrack = gpsTrack.filter((/** @type {any} */ p) => p.timestamp >= workoutStart);
+		const filteredDistance = trackDistance(filteredTrack);
+
+		if (filteredTrack.length > 0) {
+			for (const ex of sessionData.exercises) {
+				const exercise = getExerciseById(ex.exerciseId);
+				if (exercise?.bodyPart === 'cardio') {
+					ex.gpsTrack = filteredTrack;
+					ex.totalDistance = filteredDistance;
+				}
+			}
+		}
+		gps.reset();
 
 		try {
 			const res = await fetch('/api/fitness/sessions', {
@@ -378,7 +509,10 @@
 	});
 </script>
 
-<svelte:head><title>{workout.name || (lang === 'en' ? 'Workout' : 'Training')} - Fitness</title></svelte:head>
+<svelte:head>
+	<title>{workout.name || (lang === 'en' ? 'Workout' : 'Training')} - Fitness</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</svelte:head>
 
 {#if completionData}
 	<div class="completion">
@@ -532,6 +666,31 @@
 			onkeydown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
 			placeholder={t('workout_name_placeholder', lang)}
 		/>
+
+		{#if gps.available && hasCardioExercise()}
+			<div class="gps-section">
+				<button class="gps-toggle-row" onclick={toggleGps} type="button">
+					<MapPin size={14} />
+					<span class="gps-toggle-track" class:checked={useGps}></span>
+					<span>GPS Tracking</span>
+				</button>
+				{#if gpsToggling}
+					<div class="gps-initializing">
+						<span class="gps-spinner"></span> {t('initializing_gps', lang) ?? 'Initializing GPS…'}
+					</div>
+				{/if}
+				{#if useGps}
+					<div class="gps-bar active">
+						<span class="gps-distance">{gps.distance.toFixed(2)} km</span>
+						{#if gps.currentPace > 0}
+							<span class="gps-pace">{Math.floor(gps.currentPace)}:{Math.round((gps.currentPace % 1) * 60).toString().padStart(2, '0')} /km</span>
+						{/if}
+						<span class="gps-label">{gps.track.length} pts</span>
+					</div>
+					<div class="live-map" use:mountMap></div>
+				{/if}
+			</div>
+		{/if}
 
 		{#each workout.exercises as ex, exIdx (exIdx)}
 			<div class="exercise-block">
@@ -993,5 +1152,104 @@
 	}
 	.cancel-btn:hover {
 		background: rgba(191, 97, 106, 0.1);
+	}
+
+	/* GPS section */
+	.gps-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		background: var(--color-surface);
+		border-radius: 8px;
+		box-shadow: var(--shadow-sm);
+		padding: 0.75rem;
+	}
+	.gps-toggle-row {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		color: var(--color-text-primary);
+		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		font-size: 0.9rem;
+	}
+	.gps-toggle-track {
+		width: 44px;
+		height: 24px;
+		background: var(--nord3);
+		border-radius: 24px;
+		position: relative;
+		transition: background 0.3s ease;
+		flex-shrink: 0;
+	}
+	.gps-toggle-track::before {
+		content: '';
+		position: absolute;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		top: 2px;
+		left: 2px;
+		background: white;
+		transition: transform 0.3s ease;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	}
+	.gps-toggle-track.checked {
+		background: var(--nord14);
+	}
+	.gps-toggle-track.checked::before {
+		transform: translateX(20px);
+	}
+	.gps-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+	.gps-bar.active {
+		color: var(--nord14);
+	}
+	.gps-distance {
+		font-weight: 700;
+		font-size: 1.1rem;
+		font-variant-numeric: tabular-nums;
+	}
+	.gps-pace {
+		font-variant-numeric: tabular-nums;
+	}
+	.gps-label {
+		margin-left: auto;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.7;
+	}
+	.live-map {
+		height: 200px;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.gps-initializing {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		padding: 0.25rem 0;
+	}
+	.gps-spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid var(--color-border);
+		border-top-color: var(--nord8);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 </style>
