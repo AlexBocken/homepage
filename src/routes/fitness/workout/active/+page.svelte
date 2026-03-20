@@ -1,6 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { Plus, Trash2, Play, Pause } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
@@ -19,8 +19,11 @@
 	/** @type {Record<string, Array<Record<string, any>>>} */
 	let previousData = $state({});
 
+	/** @type {any} */
+	let completionData = $state(null);
+
 	onMount(() => {
-		if (!workout.active) {
+		if (!workout.active && !completionData) {
 			goto('/fitness/workout');
 		}
 	});
@@ -52,6 +55,7 @@
 		const sessionData = workout.finish();
 		if (sessionData.exercises.length === 0) {
 			await sync.onWorkoutEnd();
+			await goto('/fitness/workout');
 			return;
 		}
 
@@ -63,12 +67,129 @@
 			});
 			await sync.onWorkoutEnd();
 			if (res.ok) {
-				goto('/fitness/history');
+				const d = await res.json();
+				completionData = buildCompletion(sessionData, d.session);
 			}
 		} catch (err) {
 			console.error('[finish] fetch error:', err);
 			await sync.onWorkoutEnd();
 		}
+	}
+
+	/**
+	 * Build the completion summary from local session data + server response
+	 * @param {any} local
+	 * @param {any} saved
+	 */
+	function buildCompletion(local, saved) {
+		const startTime = new Date(local.startTime);
+		const endTime = new Date(local.endTime);
+		const durationMin = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+
+		let totalTonnage = 0;
+		let totalDistance = 0;
+		/** @type {any[]} */
+		const prs = [];
+
+		const exerciseSummaries = local.exercises.map((/** @type {any} */ ex) => {
+			const exercise = getExerciseById(ex.exerciseId);
+			const metrics = getExerciseMetrics(exercise);
+			const isCardio = metrics.includes('distance');
+			const isBilateral = exercise?.bilateral ?? false;
+			const weightMul = isBilateral ? 2 : 1;
+			const prev = previousData[ex.exerciseId] ?? [];
+
+			let exTonnage = 0;
+			let exDistance = 0;
+			let exDuration = 0;
+			let bestWeight = 0;
+			let bestEst1rm = 0;
+			let bestVolume = 0;
+			let sets = 0;
+
+			for (const s of ex.sets) {
+				if (!s.completed) continue;
+				sets++;
+				if (isCardio) {
+					exDistance += s.distance ?? 0;
+					exDuration += s.duration ?? 0;
+				} else {
+					const w = (s.weight ?? 0) * weightMul;
+					const r = s.reps ?? 0;
+					const vol = w * r;
+					exTonnage += vol;
+					if (s.weight > bestWeight) bestWeight = s.weight;
+					const e1rm = r > 0 && s.weight > 0 ? (r === 1 ? s.weight : Math.round(s.weight * (1 + r / 30))) : 0;
+					if (e1rm > bestEst1rm) bestEst1rm = e1rm;
+					if (vol > bestVolume) bestVolume = vol;
+				}
+			}
+
+			totalTonnage += exTonnage;
+			totalDistance += exDistance;
+
+			// Detect PRs by comparing against previous session
+			if (prev.length > 0) {
+				let prevBestWeight = 0;
+				let prevBestEst1rm = 0;
+				let prevBestVolume = 0;
+				let prevBestDistance = 0;
+
+				for (const ps of prev) {
+					if (isCardio) {
+						prevBestDistance += ps.distance ?? 0;
+					} else {
+						const pw = ps.weight ?? 0;
+						const pr = ps.reps ?? 0;
+						if (pw > prevBestWeight) prevBestWeight = pw;
+						const pe = pr > 0 && pw > 0 ? (pr === 1 ? pw : Math.round(pw * (1 + pr / 30))) : 0;
+						if (pe > prevBestEst1rm) prevBestEst1rm = pe;
+						const pv = pw * pr * (isBilateral ? 2 : 1);
+						if (pv > prevBestVolume) prevBestVolume = pv;
+					}
+				}
+
+				if (!isCardio) {
+					if (bestWeight > prevBestWeight && prevBestWeight > 0) {
+						prs.push({ exerciseId: ex.exerciseId, type: 'Max Weight', value: `${bestWeight} kg` });
+					}
+					if (bestEst1rm > prevBestEst1rm && prevBestEst1rm > 0) {
+						prs.push({ exerciseId: ex.exerciseId, type: 'Est. 1RM', value: `${bestEst1rm} kg` });
+					}
+					if (bestVolume > prevBestVolume && prevBestVolume > 0) {
+						prs.push({ exerciseId: ex.exerciseId, type: 'Best Set Volume', value: `${Math.round(bestVolume)} kg` });
+					}
+				} else {
+					if (exDistance > prevBestDistance && prevBestDistance > 0) {
+						prs.push({ exerciseId: ex.exerciseId, type: 'Distance', value: `${exDistance.toFixed(1)} km` });
+					}
+				}
+			}
+
+			const pace = isCardio && exDistance > 0 && exDuration > 0 ? exDuration / exDistance : 0;
+
+			return {
+				exerciseId: ex.exerciseId,
+				sets,
+				isCardio,
+				tonnage: exTonnage,
+				distance: exDistance,
+				duration: exDuration,
+				pace,
+				bestWeight,
+				bestEst1rm
+			};
+		});
+
+		return {
+			sessionId: saved._id,
+			name: local.name,
+			durationMin,
+			totalTonnage,
+			totalDistance,
+			exerciseSummaries,
+			prs
+		};
 	}
 
 	/** @param {number} secs */
@@ -78,6 +199,21 @@
 		const s = secs % 60;
 		if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 		return `${m}:${s.toString().padStart(2, '0')}`;
+	}
+
+	/** @param {number} mins */
+	function formatDuration(mins) {
+		const h = Math.floor(mins / 60);
+		const m = mins % 60;
+		if (h > 0) return `${h}h ${m}m`;
+		return `${m}m`;
+	}
+
+	/** @param {number} minPerKm */
+	function formatPace(minPerKm) {
+		const m = Math.floor(minPerKm);
+		const s = Math.round((minPerKm - m) * 60);
+		return `${m}:${s.toString().padStart(2, '0')} /km`;
 	}
 
 	function cancelRest() {
@@ -94,7 +230,100 @@
 	});
 </script>
 
-{#if workout.active}
+{#if completionData}
+	<div class="completion">
+		<div class="completion-header">
+			<h1>Workout Complete</h1>
+			{#if completionData.prs.length > 0}
+				<div class="pr-badge">
+					<span class="pr-badge-count">{completionData.prs.length}</span>
+					<Trophy size={20} />
+				</div>
+			{/if}
+			<p class="completion-name">{completionData.name}</p>
+		</div>
+
+		<div class="completion-stats">
+			<div class="comp-stat">
+				<Clock size={18} />
+				<span class="comp-stat-value">{formatDuration(completionData.durationMin)}</span>
+				<span class="comp-stat-label">Duration</span>
+			</div>
+			{#if completionData.totalTonnage > 0}
+				<div class="comp-stat">
+					<Dumbbell size={18} />
+					<span class="comp-stat-value">
+						{completionData.totalTonnage >= 1000
+							? `${(completionData.totalTonnage / 1000).toFixed(1)}t`
+							: `${Math.round(completionData.totalTonnage)} kg`}
+					</span>
+					<span class="comp-stat-label">Tonnage</span>
+				</div>
+			{/if}
+			{#if completionData.totalDistance > 0}
+				<div class="comp-stat">
+					<Route size={18} />
+					<span class="comp-stat-value">{completionData.totalDistance.toFixed(1)} km</span>
+					<span class="comp-stat-label">Distance</span>
+				</div>
+			{/if}
+		</div>
+
+		{#if completionData.prs.length > 0}
+			<div class="prs-section">
+				<h2><Trophy size={16} /> Personal Records</h2>
+				<div class="pr-list">
+					{#each completionData.prs as pr}
+						<div class="pr-item">
+							<span class="pr-exercise">{getExerciseById(pr.exerciseId)?.name ?? pr.exerciseId}</span>
+							<span class="pr-detail">{pr.type}: <strong>{pr.value}</strong></span>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<div class="exercise-summaries">
+			<h2>Exercises</h2>
+			{#each completionData.exerciseSummaries as ex}
+				<div class="ex-summary">
+					<div class="ex-summary-header">
+						<span class="ex-summary-name">{getExerciseById(ex.exerciseId)?.name ?? ex.exerciseId}</span>
+						<span class="ex-summary-sets">{ex.sets} set{ex.sets !== 1 ? 's' : ''}</span>
+					</div>
+					<div class="ex-summary-stats">
+						{#if ex.isCardio}
+							{#if ex.distance > 0}
+								<span>{ex.distance.toFixed(1)} km</span>
+							{/if}
+							{#if ex.duration > 0}
+								<span>{ex.duration} min</span>
+							{/if}
+							{#if ex.pace > 0}
+								<span>{formatPace(ex.pace)} avg</span>
+							{/if}
+						{:else}
+							{#if ex.tonnage > 0}
+								<span>{ex.tonnage >= 1000 ? `${(ex.tonnage / 1000).toFixed(1)}t` : `${Math.round(ex.tonnage)} kg`} volume</span>
+							{/if}
+							{#if ex.bestWeight > 0}
+								<span>Top: {ex.bestWeight} kg</span>
+							{/if}
+							{#if ex.bestEst1rm > 0}
+								<span>e1RM: {ex.bestEst1rm} kg</span>
+							{/if}
+						{/if}
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<button class="done-btn" onclick={() => goto(`/fitness/history/${completionData.sessionId}`)}>
+			VIEW WORKOUT
+		</button>
+	</div>
+
+{:else if workout.active}
 	<div class="active-workout">
 		<div class="workout-topbar">
 			<div class="topbar-left">
@@ -159,7 +388,7 @@
 			<button class="add-exercise-btn" onclick={() => showPicker = true}>
 				<Plus size={18} /> ADD EXERCISE
 			</button>
-			<button class="cancel-btn" onclick={async () => { workout.cancel(); await sync.onWorkoutEnd(); goto('/fitness/workout'); }}>
+			<button class="cancel-btn" onclick={async () => { workout.cancel(); await sync.onWorkoutEnd(); await goto('/fitness/workout'); }}>
 				CANCEL WORKOUT
 			</button>
 		</div>
@@ -174,6 +403,142 @@
 {/if}
 
 <style>
+	/* Completion screen */
+	.completion {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+	}
+	.completion-header {
+		text-align: center;
+		padding: 1rem 0 0;
+	}
+	.completion-header h1 {
+		margin: 0;
+		font-size: 1.5rem;
+	}
+	.completion-name {
+		margin: 0.25rem 0 0;
+		font-size: 0.9rem;
+		color: var(--color-text-secondary);
+	}
+	.pr-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		color: var(--nord13);
+		margin-top: 0.4rem;
+	}
+	.pr-badge-count {
+		font-size: 1.5rem;
+		font-weight: 800;
+	}
+	.completion-stats {
+		display: flex;
+		justify-content: center;
+		gap: 1.5rem;
+		flex-wrap: wrap;
+	}
+	.comp-stat {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.15rem;
+		color: var(--color-text-secondary);
+	}
+	.comp-stat-value {
+		font-size: 1.3rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+	}
+	.comp-stat-label {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.prs-section {
+		background: color-mix(in srgb, var(--nord13) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--nord13) 30%, transparent);
+		border-radius: 12px;
+		padding: 1rem;
+	}
+	.prs-section h2 {
+		margin: 0 0 0.6rem;
+		font-size: 1rem;
+		color: var(--nord13);
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.pr-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.pr-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 0.85rem;
+	}
+	.pr-exercise {
+		font-weight: 600;
+	}
+	.pr-detail {
+		color: var(--color-text-secondary);
+		font-size: 0.8rem;
+	}
+	.pr-detail strong {
+		color: var(--nord13);
+	}
+
+	.exercise-summaries h2 {
+		margin: 0 0 0.5rem;
+		font-size: 1rem;
+	}
+	.ex-summary {
+		background: var(--color-surface);
+		border-radius: 8px;
+		box-shadow: var(--shadow-sm);
+		padding: 0.75rem 1rem;
+		margin-bottom: 0.5rem;
+	}
+	.ex-summary-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.ex-summary-name {
+		font-weight: 600;
+		font-size: 0.9rem;
+	}
+	.ex-summary-sets {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+	.ex-summary-stats {
+		display: flex;
+		gap: 1rem;
+		margin-top: 0.3rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+
+	.done-btn {
+		width: 100%;
+		padding: 0.85rem;
+		background: var(--color-primary);
+		color: white;
+		border: none;
+		border-radius: 10px;
+		font-weight: 700;
+		font-size: 0.9rem;
+		cursor: pointer;
+		letter-spacing: 0.03em;
+	}
+
+	/* Active workout */
 	.active-workout {
 		display: flex;
 		flex-direction: column;
