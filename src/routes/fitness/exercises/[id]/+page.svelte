@@ -1,8 +1,29 @@
 <script>
 	import { getExerciseById } from '$lib/data/exercises';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	function checkDark() {
+		if (typeof document === 'undefined') return false;
+		const t = document.documentElement.dataset.theme;
+		if (t === 'dark') return true;
+		if (t === 'light') return false;
+		return window.matchMedia('(prefers-color-scheme: dark)').matches;
+	}
+
+	let dark = $state(checkDark());
+	onMount(() => {
+		const mql = window.matchMedia('(prefers-color-scheme: dark)');
+		const onMql = () => { dark = checkDark(); };
+		mql.addEventListener('change', onMql);
+		const obs = new MutationObserver(() => { dark = checkDark(); });
+		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
+	});
+
+	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
 
 	let activeTab = $state('about');
 
@@ -21,7 +42,7 @@
 		const points = charts.est1rmOverTime ?? [];
 		return withTrend({
 			labels: points.map((/** @type {any} */ p) => new Date(p.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
-			datasets: [{ label: 'Est. 1RM (kg)', data: points.map((/** @type {any} */ p) => p.value), borderColor: '#88C0D0' }]
+			datasets: [{ label: 'Est. 1RM (kg)', data: points.map((/** @type {any} */ p) => p.value), borderColor: primary }]
 		});
 	});
 
@@ -79,7 +100,7 @@
 	 * @param {{ labels: string[], datasets: Array<any> }} chartData
 	 * @param {string} trendColor
 	 */
-	function withTrend(chartData, trendColor = '#5E81AC') {
+	function withTrend(chartData, trendColor = primary) {
 		const values = chartData.datasets[0]?.data;
 		if (!values || values.length < 3) return chartData;
 
