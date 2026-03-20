@@ -69,7 +69,7 @@
 			options: {
 				responsive: true,
 				maintainAspectRatio: false,
-				animation: false,
+				animation: { duration: 0 },
 				scales: {
 					x: {
 						grid: { display: false },
@@ -120,6 +120,14 @@
 
 	onMount(() => {
 		createChart();
+		requestAnimationFrame(() => {
+			if (chart) {
+				chart.options.animation = { duration: 300 };
+				chart.options.transitions = {
+					active: { animation: { duration: 200 } }
+				};
+			}
+		});
 
 		const mq = window.matchMedia('(prefers-color-scheme: dark)');
 		const onTheme = () => setTimeout(createChart, 100);

@@ -19,27 +19,115 @@
 
 	const est1rmChartData = $derived.by(() => {
 		const points = charts.est1rmOverTime ?? [];
-		return {
+		return withTrend({
 			labels: points.map((/** @type {any} */ p) => new Date(p.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
-			datasets: [{ label: 'Est. 1RM (kg)', data: points.map((/** @type {any} */ p) => p.value) }]
-		};
+			datasets: [{ label: 'Est. 1RM (kg)', data: points.map((/** @type {any} */ p) => p.value), borderColor: '#88C0D0' }]
+		});
 	});
 
 	const maxWeightChartData = $derived.by(() => {
 		const points = charts.maxWeightOverTime ?? [];
-		return {
+		return withTrend({
 			labels: points.map((/** @type {any} */ p) => new Date(p.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
 			datasets: [{ label: 'Max Weight (kg)', data: points.map((/** @type {any} */ p) => p.value), borderColor: '#A3BE8C' }]
-		};
+		}, '#A3BE8C');
 	});
 
 	const volumeChartData = $derived.by(() => {
 		const points = charts.totalVolumeOverTime ?? [];
-		return {
+		return withTrend({
 			labels: points.map((/** @type {any} */ p) => new Date(p.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
 			datasets: [{ label: 'Total Volume (kg)', data: points.map((/** @type {any} */ p) => p.value), borderColor: '#EBCB8B' }]
-		};
+		}, '#EBCB8B');
 	});
+
+	/**
+	 * Compute linear regression trendline + ±1σ bands for a data array.
+	 * Returns { trend, upper, lower } arrays of same length.
+	 * @param {number[]} data
+	 */
+	function trendWithBands(data) {
+		const n = data.length;
+		if (n < 3) return null;
+
+		// Linear regression
+		let sx = 0, sy = 0, sxx = 0, sxy = 0;
+		for (let i = 0; i < n; i++) {
+			sx += i; sy += data[i]; sxx += i * i; sxy += i * data[i];
+		}
+		const slope = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+		const intercept = (sy - slope * sx) / n;
+
+		const trend = data.map((_, i) => Math.round((intercept + slope * i) * 10) / 10);
+
+		// Residual standard deviation
+		let ssRes = 0;
+		for (let i = 0; i < n; i++) {
+			const r = data[i] - trend[i];
+			ssRes += r * r;
+		}
+		const sigma = Math.sqrt(ssRes / (n - 2));
+
+		const upper = trend.map(v => Math.round((v + sigma) * 10) / 10);
+		const lower = trend.map(v => Math.round((v - sigma) * 10) / 10);
+
+		return { trend, upper, lower };
+	}
+
+	/**
+	 * Add trendline + uncertainty datasets to a chart data object.
+	 * @param {{ labels: string[], datasets: Array<any> }} chartData
+	 * @param {string} trendColor
+	 */
+	function withTrend(chartData, trendColor = '#5E81AC') {
+		const values = chartData.datasets[0]?.data;
+		if (!values || values.length < 3) return chartData;
+
+		const bands = trendWithBands(values);
+		if (!bands) return chartData;
+
+		return {
+			labels: chartData.labels,
+			datasets: [
+				{
+					label: '± 1σ',
+					data: bands.upper,
+					borderColor: 'transparent',
+					backgroundColor: `${trendColor}26`,
+					fill: '+1',
+					pointRadius: 0,
+					borderWidth: 0,
+					tension: 0.3,
+					order: 2
+				},
+				{
+					label: '± 1σ (lower)',
+					data: bands.lower,
+					borderColor: 'transparent',
+					backgroundColor: 'transparent',
+					fill: false,
+					pointRadius: 0,
+					borderWidth: 0,
+					tension: 0.3,
+					order: 2
+				},
+				{
+					label: 'Trend',
+					data: bands.trend,
+					borderColor: trendColor,
+					pointRadius: 0,
+					borderWidth: 2,
+					tension: 0.3,
+					order: 1
+				},
+				{
+					...chartData.datasets[0],
+					borderWidth: 1,
+					order: 0
+				}
+			]
+		};
+	}
 
 	/** @param {number} weight @param {number} reps */
 	function epley1rm(weight, reps) {
