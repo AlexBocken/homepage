@@ -6,7 +6,6 @@
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
-	import RestTimer from '$lib/components/fitness/RestTimer.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
 	import { onMount } from 'svelte';
@@ -14,6 +13,8 @@
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
 	let showPicker = $state(false);
+	let restExerciseIdx = $state(-1);
+	let restSetIdx = $state(-1);
 
 	/** @type {Record<string, Array<Record<string, any>>>} */
 	let previousData = $state({});
@@ -79,6 +80,12 @@
 		return `${m}:${s.toString().padStart(2, '0')}`;
 	}
 
+	function cancelRest() {
+		workout.cancelRestTimer();
+		restExerciseIdx = -1;
+		restSetIdx = -1;
+	}
+
 	// Fetch previous data for existing exercises on mount
 	onMount(() => {
 		if (workout.active && workout.exercises.length > 0) {
@@ -107,21 +114,6 @@
 			placeholder="Workout name"
 		/>
 
-		{#if workout.restTimerActive}
-			<div class="rest-timer-section">
-				<RestTimer
-					seconds={workout.restTimerSeconds}
-					total={workout.restTimerTotal}
-					onComplete={() => workout.cancelRestTimer()}
-				/>
-				<div class="rest-controls">
-					<button class="rest-adjust" onclick={() => workout.adjustRestTimer(-30)}>-30s</button>
-					<button class="skip-rest" onclick={() => workout.cancelRestTimer()}>Skip</button>
-					<button class="rest-adjust" onclick={() => workout.adjustRestTimer(30)}>+30s</button>
-				</div>
-			</div>
-		{/if}
-
 		{#each workout.exercises as ex, exIdx (exIdx)}
 			<div class="exercise-block">
 				<div class="exercise-header">
@@ -137,16 +129,24 @@
 
 				<SetTable
 					sets={ex.sets}
-					previousSets={previousData[ex.exerciseId] ?? null}
+					previousSets={previousData[ex.exerciseId] ?? []}
 					metrics={getExerciseMetrics(getExerciseById(ex.exerciseId))}
 					editable={true}
+					restAfterSet={workout.restTimerActive && restExerciseIdx === exIdx ? restSetIdx : -1}
+					restSeconds={workout.restTimerSeconds}
+					restTotal={workout.restTimerTotal}
+					onRestAdjust={(delta) => workout.adjustRestTimer(delta)}
+					onRestSkip={cancelRest}
 					onUpdate={(setIdx, d) => workout.updateSet(exIdx, setIdx, d)}
 					onToggleComplete={(setIdx) => {
 						workout.toggleSetComplete(exIdx, setIdx);
 						if (ex.sets[setIdx]?.completed && !workout.restTimerActive) {
+							restExerciseIdx = exIdx;
+							restSetIdx = setIdx;
 							workout.startRestTimer(ex.restTime);
 						}
 					}}
+					onRemove={(setIdx) => workout.removeSet(exIdx, setIdx)}
 				/>
 
 				<button class="add-set-btn" onclick={() => workout.addSet(exIdx)}>
@@ -244,41 +244,6 @@
 		border-bottom-color: var(--color-primary);
 	}
 
-	.rest-timer-section {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 1rem 0;
-	}
-	.rest-controls {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-	.rest-adjust {
-		background: none;
-		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		font-size: 0.75rem;
-		font-weight: 600;
-		padding: 0.25rem 0.5rem;
-	}
-	.rest-adjust:hover {
-		border-color: var(--color-primary);
-		color: var(--color-primary);
-	}
-	.skip-rest {
-		background: none;
-		border: none;
-		color: var(--color-primary);
-		cursor: pointer;
-		font-size: 0.8rem;
-		font-weight: 600;
-	}
-
 	.exercise-block {
 		background: var(--color-surface);
 		border-radius: 8px;
@@ -357,5 +322,4 @@
 	.cancel-btn:hover {
 		background: rgba(191, 97, 106, 0.1);
 	}
-
 </style>
