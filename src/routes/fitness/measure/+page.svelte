@@ -1,5 +1,5 @@
 <script>
-	import { X } from 'lucide-svelte';
+	import { Pencil, Trash2 } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import AddActionButton from '$lib/components/AddActionButton.svelte';
 
@@ -10,9 +10,11 @@
 	let measurements = $state(data.measurements?.measurements ? [...data.measurements.measurements] : []);
 	let showForm = $state(false);
 	let saving = $state(false);
+	/** @type {string | null} */
+	let editingId = $state(null);
 
 	// Form fields
-	let formDate = $state(new Date().toISOString().slice(0, 10));
+	let formDate = $state('');
 	let formWeight = $state('');
 	let formBodyFat = $state('');
 	let formCalories = $state('');
@@ -64,16 +66,61 @@
 		formThighsR = '';
 		formCalvesL = '';
 		formCalvesR = '';
+		editingId = null;
 	}
 
-	async function saveMeasurement() {
-		saving = true;
+	/** @param {any} m */
+	function populateForm(m) {
+		formDate = new Date(m.date).toISOString().slice(0, 10);
+		formWeight = m.weight != null ? String(m.weight) : '';
+		formBodyFat = m.bodyFatPercent != null ? String(m.bodyFatPercent) : '';
+		formCalories = m.caloricIntake != null ? String(m.caloricIntake) : '';
+		const bp = m.measurements ?? {};
+		formNeck = bp.neck != null ? String(bp.neck) : '';
+		formShoulders = bp.shoulders != null ? String(bp.shoulders) : '';
+		formChest = bp.chest != null ? String(bp.chest) : '';
+		const bl = bp.biceps?.left ?? bp.leftBicep;
+		const br = bp.biceps?.right ?? bp.rightBicep;
+		formBicepsL = bl != null ? String(bl) : '';
+		formBicepsR = br != null ? String(br) : '';
+		const fl = bp.forearms?.left ?? bp.leftForearm;
+		const fr = bp.forearms?.right ?? bp.rightForearm;
+		formForearmsL = fl != null ? String(fl) : '';
+		formForearmsR = fr != null ? String(fr) : '';
+		formWaist = bp.waist != null ? String(bp.waist) : '';
+		formHips = bp.hips != null ? String(bp.hips) : '';
+		const tl = bp.thighs?.left ?? bp.leftThigh;
+		const tr = bp.thighs?.right ?? bp.rightThigh;
+		formThighsL = tl != null ? String(tl) : '';
+		formThighsR = tr != null ? String(tr) : '';
+		const cl = bp.calves?.left ?? bp.leftCalf;
+		const cr = bp.calves?.right ?? bp.rightCalf;
+		formCalvesL = cl != null ? String(cl) : '';
+		formCalvesR = cr != null ? String(cr) : '';
+	}
 
+	/** @param {any} m */
+	function startEdit(m) {
+		populateForm(m);
+		editingId = m._id;
+		showForm = true;
+	}
+
+	function startAdd() {
+		resetForm();
+		editingId = null;
+		showForm = true;
+	}
+
+	function buildBody() {
 		/** @type {any} */
 		const body = { date: formDate };
 		if (formWeight) body.weight = Number(formWeight);
+		else body.weight = null;
 		if (formBodyFat) body.bodyFatPercent = Number(formBodyFat);
+		else body.bodyFatPercent = null;
 		if (formCalories) body.caloricIntake = Number(formCalories);
+		else body.caloricIntake = null;
 
 		/** @type {any} */
 		const m = {};
@@ -95,25 +142,83 @@
 		if (formCalvesL) m.calves.left = Number(formCalvesL);
 		if (formCalvesR) m.calves.right = Number(formCalvesR);
 
-		if (Object.keys(m).length > 0) body.measurements = m;
+		body.measurements = Object.keys(m).length > 0 ? m : null;
+		return body;
+	}
+
+	async function refreshLatest() {
+		try {
+			const latestRes = await fetch('/api/fitness/measurements/latest');
+			latest = await latestRes.json();
+		} catch {}
+	}
+
+	async function saveMeasurement() {
+		saving = true;
+		const body = buildBody();
 
 		try {
-			const res = await fetch('/api/fitness/measurements', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body)
-			});
-			if (res.ok) {
-				const newEntry = await res.json();
-				measurements = [newEntry, ...measurements];
-				// Refresh latest
-				const latestRes = await fetch('/api/fitness/measurements/latest');
-				latest = await latestRes.json();
-				showForm = false;
-				resetForm();
+			if (editingId) {
+				const res = await fetch(`/api/fitness/measurements/${editingId}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(body)
+				});
+				if (res.ok) {
+					const d = await res.json();
+					measurements = measurements.map((m) => m._id === editingId ? d.measurement : m);
+					await refreshLatest();
+					showForm = false;
+					resetForm();
+				}
+			} else {
+				const res = await fetch('/api/fitness/measurements', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(body)
+				});
+				if (res.ok) {
+					const d = await res.json();
+					measurements = [d.measurement, ...measurements];
+					await refreshLatest();
+					showForm = false;
+					resetForm();
+				}
 			}
 		} catch {}
 		saving = false;
+	}
+
+	/** @param {string} id */
+	async function deleteMeasurement(id) {
+		if (!confirm('Delete this measurement?')) return;
+		try {
+			const res = await fetch(`/api/fitness/measurements/${id}`, { method: 'DELETE' });
+			if (res.ok) {
+				measurements = measurements.filter((m) => m._id !== id);
+				await refreshLatest();
+				if (editingId === id) {
+					showForm = false;
+					resetForm();
+				}
+			}
+		} catch {}
+	}
+
+	/** @param {string} dateStr */
+	function formatDate(dateStr) {
+		const d = new Date(dateStr);
+		return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+	}
+
+	/** @param {any} m */
+	function summaryParts(m) {
+		/** @type {string[]} */
+		const parts = [];
+		if (m.weight != null) parts.push(`${m.weight} kg`);
+		if (m.bodyFatPercent != null) parts.push(`${m.bodyFatPercent}% bf`);
+		if (m.caloricIntake != null) parts.push(`${m.caloricIntake} kcal`);
+		return parts.join(' · ') || 'Body measurements only';
 	}
 </script>
 
@@ -122,6 +227,11 @@
 
 	{#if showForm}
 		<form class="measure-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
+			<div class="form-header">
+				<h2>{editingId ? 'Edit' : 'New'} Measurement</h2>
+				<button type="button" class="cancel-form-btn" onclick={() => { showForm = false; resetForm(); }}>CANCEL</button>
+			</div>
+
 			<div class="form-group">
 				<label for="m-date">Date</label>
 				<input id="m-date" type="date" bind:value={formDate} />
@@ -171,7 +281,7 @@
 			</div>
 
 			<button type="submit" class="save-btn" disabled={saving}>
-				{saving ? 'Saving…' : 'Save Measurement'}
+				{saving ? 'Saving…' : editingId ? 'Update Measurement' : 'Save Measurement'}
 			</button>
 		</form>
 	{/if}
@@ -207,10 +317,36 @@
 			</div>
 		</section>
 	{/if}
+
+	{#if measurements.length > 0}
+		<section class="history-section">
+			<h2>History</h2>
+			<div class="history-list">
+				{#each measurements as m (m._id)}
+					<div class="history-item" class:editing={editingId === m._id}>
+						<div class="history-main">
+							<div class="history-info">
+								<span class="history-date">{formatDate(m.date)}</span>
+								<span class="history-summary">{summaryParts(m)}</span>
+							</div>
+							<div class="history-actions">
+								<button class="icon-btn edit" onclick={() => startEdit(m)} aria-label="Edit measurement">
+									<Pencil size={14} />
+								</button>
+								<button class="icon-btn delete" onclick={() => deleteMeasurement(m._id)} aria-label="Delete measurement">
+									<Trash2 size={14} />
+								</button>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
 </div>
 
 {#if !workout.active}
-	<AddActionButton onclick={() => showForm = !showForm} ariaLabel="Add measurement" />
+	<AddActionButton onclick={startAdd} ariaLabel="Add measurement" />
 {/if}
 
 <style>
@@ -239,6 +375,31 @@
 		border-radius: 8px;
 		box-shadow: var(--shadow-sm);
 		padding: 1rem;
+	}
+	.form-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.5rem;
+	}
+	.form-header h2 {
+		margin: 0;
+		font-size: 1rem;
+	}
+	.cancel-form-btn {
+		background: none;
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		color: var(--color-text-secondary);
+		padding: 0.3rem 0.75rem;
+		font-weight: 700;
+		font-size: 0.75rem;
+		cursor: pointer;
+		letter-spacing: 0.03em;
+	}
+	.cancel-form-btn:hover {
+		border-color: var(--color-text-primary);
+		color: var(--color-text-primary);
 	}
 	.form-row {
 		display: flex;
@@ -336,6 +497,72 @@
 	}
 	.body-value {
 		font-weight: 600;
+	}
+
+	/* History */
+	.history-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.history-item {
+		background: var(--color-surface);
+		border-radius: 8px;
+		box-shadow: var(--shadow-sm);
+		padding: 0.6rem 0.75rem;
+	}
+	.history-item.editing {
+		border: 1px solid var(--color-primary);
+	}
+	.history-main {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.history-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		min-width: 0;
+	}
+	.history-date {
+		font-size: 0.8rem;
+		font-weight: 600;
+	}
+	.history-summary {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.history-actions {
+		display: flex;
+		gap: 0.3rem;
+		flex-shrink: 0;
+	}
+	.icon-btn {
+		background: none;
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.3rem;
+		display: flex;
+	}
+	.icon-btn.edit:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+	.icon-btn.delete {
+		border-color: transparent;
+		opacity: 0.5;
+	}
+	.icon-btn.delete:hover {
+		border-color: var(--nord11);
+		color: var(--nord11);
+		opacity: 1;
 	}
 
 	@media (max-width: 480px) {
