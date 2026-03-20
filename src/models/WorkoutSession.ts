@@ -10,12 +10,22 @@ export interface ICompletedSet {
   notes?: string;
 }
 
+export interface IGpsPoint {
+  lat: number;
+  lng: number;
+  altitude?: number;
+  speed?: number;
+  timestamp: number;
+}
+
 export interface ICompletedExercise {
   exerciseId: string;
   name: string;
   sets: ICompletedSet[];
   restTime?: number;
   notes?: string;
+  gpsTrack?: IGpsPoint[];
+  totalDistance?: number; // km
 }
 
 export interface IWorkoutSession {
@@ -70,6 +80,14 @@ const CompletedSetSchema = new mongoose.Schema({
   }
 });
 
+const GpsPointSchema = new mongoose.Schema({
+  lat: { type: Number, required: true },
+  lng: { type: Number, required: true },
+  altitude: Number,
+  speed: Number,
+  timestamp: { type: Number, required: true }
+}, { _id: false });
+
 const CompletedExerciseSchema = new mongoose.Schema({
   exerciseId: {
     type: String,
@@ -95,6 +113,14 @@ const CompletedExerciseSchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxlength: 500
+  },
+  gpsTrack: {
+    type: [GpsPointSchema],
+    default: undefined
+  },
+  totalDistance: {
+    type: Number,
+    min: 0
   }
 });
 
@@ -157,4 +183,4 @@ const WorkoutSessionSchema = new mongoose.Schema(
 WorkoutSessionSchema.index({ createdBy: 1, startTime: -1 });
 WorkoutSessionSchema.index({ templateId: 1 });
 
-export const WorkoutSession = mongoose.model<IWorkoutSession>("WorkoutSession", WorkoutSessionSchema);
+export const WorkoutSession = mongoose.models.WorkoutSession as mongoose.Model<IWorkoutSession> ?? mongoose.model<IWorkoutSession>("WorkoutSession", WorkoutSessionSchema);
