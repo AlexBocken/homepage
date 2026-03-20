@@ -69,6 +69,7 @@
 			options: {
 				responsive: true,
 				maintainAspectRatio: false,
+				animation: false,
 				scales: {
 					x: {
 						grid: { display: false },
