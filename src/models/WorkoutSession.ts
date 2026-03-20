@@ -25,7 +25,15 @@ export interface ICompletedExercise {
   restTime?: number;
   notes?: string;
   gpsTrack?: IGpsPoint[];
+  gpsPreview?: number[][]; // downsampled [[lat,lng], ...] for card preview
   totalDistance?: number; // km
+}
+
+export interface IPr {
+  exerciseId: string;
+  type: string; // 'est1rm' | 'maxWeight' | 'repMax'
+  value: number;
+  reps?: number;
 }
 
 export interface IWorkoutSession {
@@ -37,6 +45,9 @@ export interface IWorkoutSession {
   startTime: Date;
   endTime?: Date;
   duration?: number; // Duration in minutes
+  totalVolume?: number; // Total weight × reps across all exercises
+  totalDistance?: number; // Total distance across all cardio exercises
+  prs?: IPr[];
   notes?: string;
   createdBy: string; // username/nickname of the person who performed the workout
   createdAt?: Date;
@@ -118,6 +129,10 @@ const CompletedExerciseSchema = new mongoose.Schema({
     type: [GpsPointSchema],
     default: undefined
   },
+  gpsPreview: {
+    type: [[Number]],
+    default: undefined
+  },
   totalDistance: {
     type: Number,
     min: 0
@@ -162,6 +177,21 @@ const WorkoutSessionSchema = new mongoose.Schema(
       type: Number, // in minutes
       min: 0
     },
+    totalVolume: {
+      type: Number,
+      min: 0
+    },
+    totalDistance: {
+      type: Number,
+      min: 0
+    },
+    prs: [{
+      exerciseId: { type: String, required: true },
+      type: { type: String, required: true },
+      value: { type: Number, required: true },
+      reps: Number,
+      _id: false
+    }],
     notes: {
       type: String,
       trim: true,

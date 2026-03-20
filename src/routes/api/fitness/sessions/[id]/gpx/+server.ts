@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import type { IGpsPoint } from '$models/WorkoutSession';
+import { simplifyTrack } from '$lib/server/simplifyTrack';
 import mongoose from 'mongoose';
 
 /** Haversine distance in km between two points */
@@ -103,6 +104,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		const durationMin = Math.round((track[track.length - 1].timestamp - track[0].timestamp) / 60000);
 
 		workoutSession.exercises[exerciseIdx].gpsTrack = track;
+		workoutSession.exercises[exerciseIdx].gpsPreview = simplifyTrack(track);
 		workoutSession.exercises[exerciseIdx].totalDistance = Math.round(distance * 1000) / 1000;
 
 		// Auto-fill distance and duration on a single set
@@ -154,6 +156,7 @@ export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 		}
 
 		workoutSession.exercises[exerciseIdx].gpsTrack = undefined;
+		workoutSession.exercises[exerciseIdx].gpsPreview = undefined;
 		workoutSession.exercises[exerciseIdx].totalDistance = undefined;
 		await workoutSession.save();
 
