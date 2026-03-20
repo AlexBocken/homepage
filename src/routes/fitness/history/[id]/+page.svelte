@@ -1,6 +1,6 @@
 <script>
 	import { goto, invalidateAll } from '$app/navigation';
-	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X } from 'lucide-svelte';
+	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge } from 'lucide-svelte';
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
@@ -11,9 +11,29 @@
 	let { data } = $props();
 
 	const session = $derived(data.session);
+
+	function checkDark() {
+		if (typeof document === 'undefined') return false;
+		const t = document.documentElement.dataset.theme;
+		if (t === 'dark') return true;
+		if (t === 'light') return false;
+		return window.matchMedia('(prefers-color-scheme: dark)').matches;
+	}
+
+	let dark = $state(checkDark());
+	onMount(() => {
+		const mql = window.matchMedia('(prefers-color-scheme: dark)');
+		const onMql = () => { dark = checkDark(); };
+		mql.addEventListener('change', onMql);
+		const obs = new MutationObserver(() => { dark = checkDark(); });
+		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
+	});
+
 	let deleting = $state(false);
 	let editing = $state(false);
 	let saving = $state(false);
+	let recalculating = $state(false);
 	let showPicker = $state(false);
 
 	/** @type {any} */
@@ -157,6 +177,17 @@
 		return Math.round(weight * (1 + reps / 30));
 	}
 
+	async function recalculate() {
+		recalculating = true;
+		try {
+			const res = await fetch(`/api/fitness/sessions/${session._id}/recalculate`, { method: 'POST' });
+			if (res.ok) {
+				await invalidateAll();
+			}
+		} catch {}
+		recalculating = false;
+	}
+
 	async function deleteSession() {
 		if (!confirm('Delete this workout session?')) return;
 		deleting = true;
@@ -238,7 +269,7 @@
 		const map = L.map(node, { attributionControl: false, zoomControl: false });
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 		const pts = track.map((/** @type {any} */ p) => /** @type {[number, number]} */ ([p.lat, p.lng]));
-		const polyline = L.polyline(pts, { color: '#88c0d0', weight: 3 }).addTo(map);
+		const polyline = L.polyline(pts, { color: '#5e81ac', weight: 3 }).addTo(map);
 		// Start/end markers
 		L.circleMarker(pts[0], { radius: 5, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
 		L.circleMarker(pts[pts.length - 1], { radius: 5, fillColor: '#bf616a', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
@@ -337,13 +368,15 @@
 		// Downsample to ~50 points for readability
 		const step = Math.max(1, Math.floor(samples.length / 50));
 		const filtered = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
+		const primary = dark ? '#88C0D0' : '#5E81AC';
+		const fill = dark ? 'rgba(136, 192, 208, 0.12)' : 'rgba(94, 129, 172, 0.12)';
 		return {
 			labels: filtered.map(s => s.dist.toFixed(2)),
 			datasets: [{
 				label: 'Pace',
 				data: filtered.map(s => s.pace),
-				borderColor: '#88C0D0',
-				backgroundColor: 'rgba(136, 192, 208, 0.12)',
+				borderColor: primary,
+				backgroundColor: fill,
 				borderWidth: 1.5,
 				pointRadius: 0,
 				tension: 0.3,
@@ -406,6 +439,9 @@
 		</div>
 		<div class="header-actions">
 			{#if editing}
+				<button class="recalc-btn" onclick={recalculate} disabled={recalculating} title="Recalculate volume, PRs, and GPS previews">
+					<RefreshCw size={14} class={recalculating ? 'spinning' : ''} />
+				</button>
 				<button class="save-btn" onclick={saveEdit} disabled={saving}>
 					{saving ? 'SAVING...' : 'SAVE'}
 				</button>
@@ -477,6 +513,20 @@
 					</button>
 				</div>
 
+				{#if session.exercises[exIdx]?.gpsTrack?.length || session.exercises[exIdx]?.gpsPreview?.length}
+					{@const exData = session.exercises[exIdx]}
+					<div class="gps-indicator">
+						<Route size={14} />
+						<span>GPS track stored{exData.totalDistance ? ` · ${exData.totalDistance.toFixed(2)} km` : ''}</span>
+						<button class="gpx-remove-btn" onclick={() => removeGpx(exIdx)} aria-label="Remove GPS track">
+							<X size={14} />
+						</button>
+					</div>
+					{#if exData.gpsTrack?.length >= 2}
+						<div class="track-map" use:renderMap={{ track: exData.gpsTrack, idx: exIdx }}></div>
+					{/if}
+				{/if}
+
 				<SetTable
 					sets={ex.sets}
 					metrics={getExerciseMetrics(getExerciseById(ex.exerciseId))}
@@ -542,14 +592,10 @@
 					{@const pace = dist > 0 && elapsed > 0 ? elapsed / dist : 0}
 					<div class="gps-track-section">
 						<div class="gps-stats">
-							<span class="gps-stat"><Route size={14} /> {dist.toFixed(2)} km</span>
+							<span class="gps-stat accent"><Route size={14} /> {dist.toFixed(2)} km</span>
 							{#if pace > 0}
-								<span class="gps-stat">{formatPace(pace)} avg</span>
+								<span class="gps-stat accent"><Gauge size={14} /> {formatPace(pace)}</span>
 							{/if}
-							<span class="gps-stat">{ex.gpsTrack.length} pts</span>
-							<button class="gpx-remove-btn" onclick={() => removeGpx(exIdx)} aria-label="Remove GPS track">
-								<X size={14} />
-							</button>
 						</div>
 						<div class="track-map" use:renderMap={{ track: ex.gpsTrack, idx: exIdx }}></div>
 
@@ -683,6 +729,30 @@
 	.edit-btn:hover {
 		border-color: var(--color-primary);
 		color: var(--color-primary);
+	}
+	.recalc-btn {
+		background: none;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.4rem;
+		display: flex;
+		align-items: center;
+	}
+	.recalc-btn:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+	.recalc-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	:global(.spinning) {
+		animation: spin 0.6s linear infinite;
+	}
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 	.delete-btn {
 		background: none;
@@ -835,6 +905,17 @@
 	.remove-exercise:hover {
 		opacity: 1;
 	}
+	.gps-indicator {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.78rem;
+		color: var(--color-primary);
+		padding: 0.3rem 0.5rem;
+		margin-bottom: 0.3rem;
+		background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+		border-radius: 6px;
+	}
 	.add-set-btn {
 		display: block;
 		width: 100%;
@@ -974,9 +1055,9 @@
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
 	}
-	.gps-stat:first-child {
-		font-weight: 600;
-		color: var(--nord8);
+	.gps-stat.accent {
+		font-weight: 700;
+		color: var(--color-primary);
 	}
 	.gpx-remove-btn {
 		margin-left: auto;

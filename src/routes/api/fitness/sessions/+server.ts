@@ -2,7 +2,15 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
+import type { IPr } from '$models/WorkoutSession';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
+import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+
+function estimatedOneRepMax(weight: number, reps: number): number {
+  if (reps <= 0 || weight <= 0) return 0;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
 
 // GET /api/fitness/sessions - Get all workout sessions for the user
 export const GET: RequestHandler = async ({ url, locals }) => {
@@ -18,6 +26,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const offset = parseInt(url.searchParams.get('offset') || '0');
     
     const sessions = await WorkoutSession.find({ createdBy: session.user.nickname })
+      .select('-exercises.gpsTrack')
       .sort({ startTime: -1 })
       .limit(limit)
       .skip(offset);
@@ -56,6 +65,69 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       }
     }
 
+    // Compute totalVolume and totalDistance
+    let totalVolume = 0;
+    let totalDistance = 0;
+    for (const ex of exercises) {
+      const exercise = getExerciseById(ex.exerciseId);
+      const metrics = getExerciseMetrics(exercise);
+      const isCardio = metrics.includes('distance');
+      const isBilateral = exercise?.bilateral ?? false;
+      for (const s of (ex.sets ?? [])) {
+        if (!s.completed) continue;
+        if (isCardio) {
+          totalDistance += s.distance ?? 0;
+        } else {
+          totalVolume += (s.weight ?? 0) * (s.reps ?? 0) * (isBilateral ? 2 : 1);
+        }
+      }
+    }
+
+    // Detect PRs by comparing against previous best for each exercise
+    const prs: IPr[] = [];
+    for (const ex of exercises) {
+      const exercise = getExerciseById(ex.exerciseId);
+      const metrics = getExerciseMetrics(exercise);
+      const isCardio = metrics.includes('distance');
+      if (isCardio) continue;
+
+      const completedSets = (ex.sets ?? []).filter((s: { completed: boolean }) => s.completed);
+      if (completedSets.length === 0) continue;
+
+      // Find previous best for this exercise
+      const prevSessions = await WorkoutSession.find({
+        createdBy: session.user!.nickname,
+        'exercises.exerciseId': ex.exerciseId,
+      }).sort({ startTime: -1 }).limit(50).lean();
+
+      let prevBestWeight = 0;
+      let prevBestEst1rm = 0;
+      for (const ps of prevSessions) {
+        const pe = ps.exercises.find((e) => e.exerciseId === ex.exerciseId);
+        if (!pe) continue;
+        for (const s of pe.sets) {
+          if (!s.completed || !s.weight || !s.reps) continue;
+          prevBestWeight = Math.max(prevBestWeight, s.weight);
+          prevBestEst1rm = Math.max(prevBestEst1rm, estimatedOneRepMax(s.weight, s.reps));
+        }
+      }
+
+      let bestWeight = 0;
+      let bestEst1rm = 0;
+      for (const s of completedSets) {
+        if (!s.weight || !s.reps) continue;
+        bestWeight = Math.max(bestWeight, s.weight);
+        bestEst1rm = Math.max(bestEst1rm, estimatedOneRepMax(s.weight, s.reps));
+      }
+
+      if (bestWeight > prevBestWeight && prevBestWeight > 0) {
+        prs.push({ exerciseId: ex.exerciseId, type: 'maxWeight', value: bestWeight });
+      }
+      if (bestEst1rm > prevBestEst1rm && prevBestEst1rm > 0) {
+        prs.push({ exerciseId: ex.exerciseId, type: 'est1rm', value: bestEst1rm });
+      }
+    }
+
     const workoutSession = new WorkoutSession({
       templateId,
       templateName,
@@ -64,6 +136,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       startTime: startTime ? new Date(startTime) : new Date(),
       endTime: endTime ? new Date(endTime) : undefined,
       duration: endTime && startTime ? Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / (1000 * 60)) : undefined,
+      totalVolume: totalVolume > 0 ? totalVolume : undefined,
+      totalDistance: totalDistance > 0 ? totalDistance : undefined,
+      prs: prs.length > 0 ? prs : undefined,
       notes,
       createdBy: session.user.nickname
     });

@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
+import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import mongoose from 'mongoose';
 
 // GET /api/fitness/sessions/[id] - Get a specific workout session
@@ -57,7 +58,28 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
     const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name;
-    if (exercises) updateData.exercises = exercises;
+    if (exercises) {
+      updateData.exercises = exercises;
+      // Recompute totalVolume
+      let totalVolume = 0;
+      let totalDistance = 0;
+      for (const ex of exercises) {
+        const exercise = getExerciseById(ex.exerciseId);
+        const metrics = getExerciseMetrics(exercise);
+        const isCardio = metrics.includes('distance');
+        const isBilateral = exercise?.bilateral ?? false;
+        for (const s of (ex.sets ?? [])) {
+          if (!s.completed) continue;
+          if (isCardio) {
+            totalDistance += s.distance ?? 0;
+          } else {
+            totalVolume += (s.weight ?? 0) * (s.reps ?? 0) * (isBilateral ? 2 : 1);
+          }
+        }
+      }
+      updateData.totalVolume = totalVolume > 0 ? totalVolume : undefined;
+      updateData.totalDistance = totalDistance > 0 ? totalDistance : undefined;
+    }
     if (startTime) updateData.startTime = new Date(startTime);
     if (endTime) updateData.endTime = new Date(endTime);
     if (duration !== undefined) updateData.duration = duration;
