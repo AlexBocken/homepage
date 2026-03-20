@@ -1,10 +1,12 @@
 <script>
 	import { goto, invalidateAll } from '$app/navigation';
-	import { Clock, Weight, Trophy, Trash2, Pencil, Plus } from 'lucide-svelte';
+	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X } from 'lucide-svelte';
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
+	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 
@@ -173,6 +175,223 @@
 		const metrics = getExerciseMetrics(exercise);
 		return metrics.includes('weight') && metrics.includes('reps');
 	}
+
+	/** @param {string} exerciseId */
+	function isCardio(exerciseId) {
+		const exercise = getExerciseById(exerciseId);
+		return exercise?.bodyPart === 'cardio';
+	}
+
+	/** @type {Record<number, any>} */
+	let maps = {};
+	let uploading = $state(-1);
+
+	/** Haversine distance in km */
+	function haversine(/** @type {any} */ a, /** @type {any} */ b) {
+		const R = 6371;
+		const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+		const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+		const sinLat = Math.sin(dLat / 2);
+		const sinLng = Math.sin(dLng / 2);
+		const h = sinLat * sinLat +
+			Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) *
+			sinLng * sinLng;
+		return 2 * R * Math.asin(Math.sqrt(h));
+	}
+
+	/** @param {any[]} track */
+	function trackDistance(track) {
+		let total = 0;
+		for (let i = 1; i < track.length; i++) total += haversine(track[i - 1], track[i]);
+		return total;
+	}
+
+	/** @param {number} minPerKm */
+	function formatPace(minPerKm) {
+		const m = Math.floor(minPerKm);
+		const s = Math.round((minPerKm - m) * 60);
+		return `${m}:${s.toString().padStart(2, '0')} /km`;
+	}
+
+	/**
+	 * Svelte use:action — renders a Leaflet map for a GPS track
+	 * @param {HTMLElement} node
+	 * @param {any} params
+	 */
+	function renderMap(node, params) {
+		const { track, idx } = params;
+		initMapForTrack(node, track, idx);
+		return {
+			destroy() {
+				if (maps[idx]) {
+					maps[idx].remove();
+					delete maps[idx];
+				}
+			}
+		};
+	}
+
+	/** @param {HTMLElement} node @param {any[]} track @param {number} idx */
+	async function initMapForTrack(node, track, idx) {
+		const L = await import('leaflet');
+		if (!node.isConnected) return;
+		const map = L.map(node, { attributionControl: false, zoomControl: false });
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+		const pts = track.map((/** @type {any} */ p) => /** @type {[number, number]} */ ([p.lat, p.lng]));
+		const polyline = L.polyline(pts, { color: '#88c0d0', weight: 3 }).addTo(map);
+		// Start/end markers
+		L.circleMarker(pts[0], { radius: 5, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
+		L.circleMarker(pts[pts.length - 1], { radius: 5, fillColor: '#bf616a', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
+		map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
+		maps[idx] = map;
+	}
+
+	/**
+	 * Compute km splits from a GPS track.
+	 * Returns array of { km, pace (min/km), elapsed (min) }
+	 * @param {any[]} track
+	 */
+	function computeSplits(track) {
+		if (track.length < 2) return [];
+		/** @type {Array<{km: number, pace: number, elapsed: number}>} */
+		const splits = [];
+		let cumDist = 0;
+		let splitStart = 0; // index where current km started
+		let splitStartTime = track[0].timestamp;
+
+		for (let i = 1; i < track.length; i++) {
+			cumDist += haversine(track[i - 1], track[i]);
+			const currentKm = Math.floor(cumDist);
+			const prevKm = splits.length;
+
+			if (currentKm > prevKm) {
+				// We crossed a km boundary
+				const elapsedMin = (track[i].timestamp - splitStartTime) / 60000;
+				// Distance covered in this segment (might be slightly over 1km)
+				const segDist = cumDist - prevKm;
+				const pace = segDist > 0 ? elapsedMin / segDist : 0;
+				splits.push({
+					km: currentKm,
+					pace,
+					elapsed: (track[i].timestamp - track[0].timestamp) / 60000
+				});
+				splitStart = i;
+				splitStartTime = track[i].timestamp;
+			}
+		}
+
+		// Final partial km
+		const lastKm = splits.length;
+		const partialDist = cumDist - lastKm;
+		if (partialDist > 0.05) { // only show if > 50m
+			const elapsedMin = (track[track.length - 1].timestamp - splitStartTime) / 60000;
+			const pace = elapsedMin / partialDist;
+			splits.push({
+				km: cumDist,
+				pace,
+				elapsed: (track[track.length - 1].timestamp - track[0].timestamp) / 60000
+			});
+		}
+
+		return splits;
+	}
+
+	/**
+	 * Compute rolling pace samples for the pace graph.
+	 * Returns array of { dist (km), pace (min/km) } sampled every ~100m.
+	 * @param {any[]} track
+	 */
+	function computePaceSamples(track) {
+		if (track.length < 2) return [];
+		/** @type {Array<{dist: number, pace: number}>} */
+		const samples = [];
+		let cumDist = 0;
+		const windowDist = 0.2; // 200m rolling window
+
+		for (let i = 1; i < track.length; i++) {
+			cumDist += haversine(track[i - 1], track[i]);
+
+			// Find point ~windowDist km back
+			let backDist = 0;
+			let j = i;
+			while (j > 0 && backDist < windowDist) {
+				backDist += haversine(track[j - 1], track[j]);
+				j--;
+			}
+			if (backDist < 0.05) continue; // too little distance
+
+			const dt = (track[i].timestamp - track[j].timestamp) / 60000;
+			const pace = dt / backDist;
+			if (pace > 0 && pace < 30) { // sanity: max 30 min/km
+				samples.push({ dist: cumDist, pace });
+			}
+		}
+		return samples;
+	}
+
+	/**
+	 * Build Chart.js data for pace over distance
+	 * @param {Array<{dist: number, pace: number}>} samples
+	 */
+	function buildPaceChartData(samples) {
+		// Downsample to ~50 points for readability
+		const step = Math.max(1, Math.floor(samples.length / 50));
+		const filtered = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
+		return {
+			labels: filtered.map(s => s.dist.toFixed(2)),
+			datasets: [{
+				label: 'Pace',
+				data: filtered.map(s => s.pace),
+				borderColor: '#88C0D0',
+				backgroundColor: 'rgba(136, 192, 208, 0.12)',
+				borderWidth: 1.5,
+				pointRadius: 0,
+				tension: 0.3,
+				fill: true
+			}]
+		};
+	}
+
+	/** @param {number} exIdx */
+	async function uploadGpx(exIdx) {
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = '.gpx';
+		input.onchange = async () => {
+			const file = input.files?.[0];
+			if (!file) return;
+			uploading = exIdx;
+			const fd = new FormData();
+			fd.append('gpx', file);
+			fd.append('exerciseIdx', String(exIdx));
+			try {
+				const res = await fetch(`/api/fitness/sessions/${session._id}/gpx`, {
+					method: 'POST',
+					body: fd
+				});
+				if (res.ok) {
+					await invalidateAll();
+				}
+			} catch {}
+			uploading = -1;
+		};
+		input.click();
+	}
+
+	/** @param {number} exIdx */
+	async function removeGpx(exIdx) {
+		if (!confirm('Remove GPS track from this exercise?')) return;
+		try {
+			const res = await fetch(`/api/fitness/sessions/${session._id}/gpx`, {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ exerciseIdx: exIdx })
+			});
+			if (res.ok) {
+				await invalidateAll();
+			}
+		} catch {}
+	}
 </script>
 
 <div class="session-detail">
@@ -316,6 +535,72 @@
 						{/each}
 					</tbody>
 				</table>
+
+				{#if ex.gpsTrack?.length > 0}
+					{@const dist = ex.totalDistance ?? trackDistance(ex.gpsTrack)}
+					{@const elapsed = (ex.gpsTrack[ex.gpsTrack.length - 1].timestamp - ex.gpsTrack[0].timestamp) / 60000}
+					{@const pace = dist > 0 && elapsed > 0 ? elapsed / dist : 0}
+					<div class="gps-track-section">
+						<div class="gps-stats">
+							<span class="gps-stat"><Route size={14} /> {dist.toFixed(2)} km</span>
+							{#if pace > 0}
+								<span class="gps-stat">{formatPace(pace)} avg</span>
+							{/if}
+							<span class="gps-stat">{ex.gpsTrack.length} pts</span>
+							<button class="gpx-remove-btn" onclick={() => removeGpx(exIdx)} aria-label="Remove GPS track">
+								<X size={14} />
+							</button>
+						</div>
+						<div class="track-map" use:renderMap={{ track: ex.gpsTrack, idx: exIdx }}></div>
+
+						{#if ex.gpsTrack.length >= 2}
+						{@const samples = computePaceSamples(ex.gpsTrack)}
+						{@const splits = computeSplits(ex.gpsTrack)}
+						{#if samples.length > 0}
+							<div class="pace-chart-section">
+								<FitnessChart
+									data={buildPaceChartData(samples)}
+									title="Pace (min/km)"
+									height="180px"
+								/>
+							</div>
+						{/if}
+
+						{#if splits.length > 1}
+							{@const avgPace = splits.reduce((a, s) => a + s.pace, 0) / splits.length}
+							<div class="splits-section">
+								<h4>Splits</h4>
+								<table class="splits-table">
+									<thead>
+										<tr>
+											<th>KM</th>
+											<th>PACE</th>
+											<th>TIME</th>
+										</tr>
+									</thead>
+									<tbody>
+										{#each splits as split, i (i)}
+											{@const isFull = split.km === Math.floor(split.km)}
+											<tr class:partial={!isFull}>
+												<td class="split-km">{isFull ? split.km : split.km.toFixed(2)}</td>
+												<td class="split-pace" class:fast={split.pace < avgPace * 0.97} class:slow={split.pace > avgPace * 1.03}>
+													{formatPace(split.pace)}
+												</td>
+												<td class="split-elapsed">{Math.floor(split.elapsed)}:{Math.round((split.elapsed % 1) * 60).toString().padStart(2, '0')}</td>
+											</tr>
+										{/each}
+									</tbody>
+								</table>
+							</div>
+						{/if}
+						{/if}
+					</div>
+				{:else if isCardio(ex.exerciseId)}
+					<button class="gpx-upload-btn" onclick={() => uploadGpx(exIdx)} disabled={uploading === exIdx}>
+						<Upload size={14} />
+						{uploading === exIdx ? 'Uploading...' : 'Upload GPX'}
+					</button>
+				{/if}
 			</div>
 		{/each}
 	{/if}
@@ -349,6 +634,10 @@
 		</div>
 	{/if}
 </div>
+
+<svelte:head>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</svelte:head>
 
 {#if showPicker}
 	<ExercisePicker
@@ -663,5 +952,124 @@
 		margin: 0;
 		font-size: 0.85rem;
 		color: var(--color-text-secondary);
+	}
+
+	/* GPS track section */
+	.gps-track-section {
+		margin-top: 0.75rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.gps-stats {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+	.gps-stat {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+	.gps-stat:first-child {
+		font-weight: 600;
+		color: var(--nord8);
+	}
+	.gpx-remove-btn {
+		margin-left: auto;
+		background: none;
+		border: none;
+		color: var(--nord11);
+		cursor: pointer;
+		padding: 0.2rem;
+		opacity: 0.5;
+		display: flex;
+	}
+	.gpx-remove-btn:hover {
+		opacity: 1;
+	}
+	.track-map {
+		height: 200px;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.gpx-upload-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		width: 100%;
+		margin-top: 0.5rem;
+		padding: 0.5rem;
+		background: transparent;
+		border: 1px dashed var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text-secondary);
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+	.gpx-upload-btn:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+	.gpx-upload-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	/* Pace chart */
+	.pace-chart-section {
+		margin-top: 0.25rem;
+	}
+	.splits-section h4 {
+		margin: 0 0 0.4rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		font-weight: 600;
+	}
+
+	/* Splits table */
+	.splits-section {
+		margin-top: 0.25rem;
+	}
+	.splits-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.8rem;
+	}
+	.splits-table th {
+		text-align: center;
+		font-size: 0.7rem;
+		color: var(--color-text-secondary);
+		padding: 0.3rem 0.4rem;
+		letter-spacing: 0.05em;
+		font-weight: 600;
+	}
+	.splits-table td {
+		text-align: center;
+		padding: 0.3rem 0.4rem;
+		border-top: 1px solid var(--color-border);
+		font-variant-numeric: tabular-nums;
+	}
+	.split-km {
+		font-weight: 600;
+		color: var(--color-text-secondary);
+	}
+	.split-pace.fast {
+		color: var(--nord14);
+	}
+	.split-pace.slow {
+		color: var(--nord12);
+	}
+	tr.partial .split-km {
+		font-style: italic;
+		opacity: 0.7;
+	}
+	.split-elapsed {
+		color: var(--color-text-secondary);
+		font-size: 0.75rem;
 	}
 </style>
