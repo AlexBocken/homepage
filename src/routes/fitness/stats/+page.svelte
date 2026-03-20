@@ -1,8 +1,30 @@
 <script>
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { Dumbbell, Route, Flame } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	function checkDark() {
+		if (typeof document === 'undefined') return false;
+		const t = document.documentElement.dataset.theme;
+		if (t === 'dark') return true;
+		if (t === 'light') return false;
+		return window.matchMedia('(prefers-color-scheme: dark)').matches;
+	}
+
+	let dark = $state(checkDark());
+	onMount(() => {
+		const mql = window.matchMedia('(prefers-color-scheme: dark)');
+		const onMql = () => { dark = checkDark(); };
+		mql.addEventListener('change', onMql);
+		const obs = new MutationObserver(() => { dark = checkDark(); });
+		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
+	});
+
+	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
+	const primaryFill = $derived(dark ? 'rgba(136, 192, 208, 0.15)' : 'rgba(94, 129, 172, 0.15)');
 
 	const stats = $derived(data.stats ?? {});
 
@@ -11,7 +33,7 @@
 		datasets: [{
 			label: 'Workouts',
 			data: stats.workoutsChart?.data ?? [],
-			backgroundColor: '#88C0D0'
+			backgroundColor: primary
 		}]
 	});
 
@@ -25,7 +47,7 @@
 					label: '± 1σ',
 					data: stats.weightChart.upper,
 					borderColor: 'transparent',
-					backgroundColor: 'rgba(94, 129, 172, 0.15)',
+					backgroundColor: primaryFill,
 					fill: '+1',
 					pointRadius: 0,
 					borderWidth: 0,
@@ -46,7 +68,7 @@
 				{
 					label: 'Trend',
 					data: stats.weightChart.sma,
-					borderColor: '#5E81AC',
+					borderColor: primary,
 					pointRadius: 0,
 					borderWidth: 3,
 					tension: 0.3,
@@ -73,17 +95,17 @@
 		<div class="lifetime-card workouts">
 			<div class="card-icon"><Dumbbell size={24} /></div>
 			<div class="card-value">{stats.totalWorkouts ?? 0}</div>
-			<div class="card-label">Workouts</div>
+			<div class="card-label">{(stats.totalWorkouts ?? 0) === 1 ? 'Workout' : 'Workouts'}</div>
 		</div>
 		<div class="lifetime-card tonnage">
 			<div class="card-icon"><Flame size={24} /></div>
 			<div class="card-value">{stats.totalTonnage ?? 0}<span class="card-unit">t</span></div>
-			<div class="card-label">Tonnage Lifted</div>
+			<div class="card-label">Lifted</div>
 		</div>
 		<div class="lifetime-card cardio">
 			<div class="card-icon"><Route size={24} /></div>
 			<div class="card-value">{stats.totalCardioKm ?? 0}<span class="card-unit">km</span></div>
-			<div class="card-label">Cardio Distance</div>
+			<div class="card-label">Distance Covered</div>
 		</div>
 	</div>
 
@@ -145,7 +167,7 @@
 		opacity: 0.08;
 	}
 	.lifetime-card.workouts::before {
-		background: var(--nord8);
+		background: var(--color-primary);
 	}
 	.lifetime-card.tonnage::before {
 		background: var(--nord12);
@@ -163,8 +185,8 @@
 		margin-bottom: 0.15rem;
 	}
 	.workouts .card-icon {
-		color: var(--nord8);
-		background: color-mix(in srgb, var(--nord8) 15%, transparent);
+		color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 15%, transparent);
 	}
 	.tonnage .card-icon {
 		color: var(--nord12);
@@ -187,10 +209,10 @@
 		margin-left: 0.15rem;
 	}
 	.card-label {
-		font-size: 0.65rem;
+		font-size: 0.7rem;
 		font-weight: 600;
-		text-transform: uppercase;
 		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		color: var(--color-text-secondary);
 	}
 
