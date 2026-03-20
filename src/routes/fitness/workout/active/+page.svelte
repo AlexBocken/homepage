@@ -12,6 +12,9 @@
 
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
+	let nameInput = $state(workout.name);
+	let nameEditing = $state(false);
+	$effect(() => { if (!nameEditing) nameInput = workout.name; });
 	let showPicker = $state(false);
 	let restExerciseIdx = $state(-1);
 	let restSetIdx = $state(-1);
@@ -339,7 +342,10 @@
 		<input
 			class="workout-name-input"
 			type="text"
-			bind:value={workout.name}
+			bind:value={nameInput}
+			onfocus={() => { nameEditing = true; }}
+			onblur={() => { nameEditing = false; workout.name = nameInput; }}
+			onkeydown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
 			placeholder="Workout name"
 		/>
 
