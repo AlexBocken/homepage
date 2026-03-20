@@ -107,6 +107,7 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: { duration: 0 },
         layout: {
           padding: {
             top: 40
@@ -322,6 +323,15 @@
 
   onMount(() => {
     createChart();
+    // Enable animations for subsequent updates (legend toggles, etc.)
+    requestAnimationFrame(() => {
+      if (chart) {
+        chart.options.animation = { duration: 300 };
+        chart.options.transitions = {
+          active: { animation: { duration: 200 } }
+        };
+      }
+    });
 
     // Watch for theme changes (both media query and data-theme attribute)
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
