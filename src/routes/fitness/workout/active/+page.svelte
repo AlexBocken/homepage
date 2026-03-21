@@ -1,6 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
@@ -24,6 +24,10 @@
 
 	/** @type {any} */
 	let completionData = $state(null);
+
+	/** @type {any[]} */
+	let templateDiffs = $state([]);
+	let templateUpdateStatus = $state('idle'); // 'idle' | 'updating' | 'done'
 
 	onMount(() => {
 		if (!workout.active && !completionData) {
@@ -72,6 +76,7 @@
 			if (res.ok) {
 				const d = await res.json();
 				completionData = buildCompletion(sessionData, d.session);
+				computeTemplateDiff(completionData);
 			}
 		} catch (err) {
 			console.error('[finish] fetch error:', err);
@@ -187,12 +192,100 @@
 		return {
 			sessionId: saved._id,
 			name: local.name,
+			templateId: local.templateId,
+			exercises: local.exercises,
 			durationMin,
 			totalTonnage,
 			totalDistance,
 			exerciseSummaries,
 			prs
 		};
+	}
+
+	/**
+	 * Compare completed workout exercises against the source template
+	 * and compute diffs for weight/reps changes.
+	 * @param {any} completion
+	 */
+	async function computeTemplateDiff(completion) {
+		if (!completion.templateId) return;
+		try {
+			const res = await fetch(`/api/fitness/templates/${completion.templateId}`);
+			if (!res.ok) return;
+			const { template } = await res.json();
+
+			/** @type {any[]} */
+			const diffs = [];
+			for (const actual of completion.exercises) {
+				const tmplEx = template.exercises?.find((/** @type {any} */ e) => e.exerciseId === actual.exerciseId);
+				if (!tmplEx) continue;
+
+				const exercise = getExerciseById(actual.exerciseId);
+				const metrics = getExerciseMetrics(exercise);
+				if (metrics.includes('distance')) continue; // skip cardio
+
+				const completedSets = actual.sets.filter((/** @type {any} */ s) => s.completed);
+				if (completedSets.length === 0) continue;
+
+				// Check if sets differ in count, reps, or weight
+				const tmplSets = tmplEx.sets ?? [];
+				let changed = completedSets.length !== tmplSets.length;
+				if (!changed) {
+					for (let i = 0; i < completedSets.length; i++) {
+						const a = completedSets[i];
+						const t = tmplSets[i];
+						if ((a.reps ?? 0) !== (t.reps ?? 0) || (a.weight ?? 0) !== (t.weight ?? 0)) {
+							changed = true;
+							break;
+						}
+					}
+				}
+
+				if (changed) {
+					diffs.push({
+						exerciseId: actual.exerciseId,
+						name: exercise?.name ?? actual.exerciseId,
+						oldSets: tmplSets,
+						newSets: completedSets.map((/** @type {any} */ s) => ({
+							reps: s.reps ?? undefined,
+							weight: s.weight ?? undefined,
+							rpe: s.rpe ?? undefined
+						}))
+					});
+				}
+			}
+			templateDiffs = diffs;
+		} catch {}
+	}
+
+	async function updateTemplate() {
+		if (!completionData?.templateId || templateDiffs.length === 0) return;
+		templateUpdateStatus = 'updating';
+		try {
+			// Fetch current template to get full data
+			const res = await fetch(`/api/fitness/templates/${completionData.templateId}`);
+			if (!res.ok) { templateUpdateStatus = 'idle'; return; }
+			const { template } = await res.json();
+
+			// Apply diffs to template exercises
+			const updatedExercises = template.exercises.map((/** @type {any} */ ex) => {
+				const diff = templateDiffs.find((/** @type {any} */ d) => d.exerciseId === ex.exerciseId);
+				if (diff) {
+					return { ...ex, sets: diff.newSets };
+				}
+				return ex;
+			});
+
+			const putRes = await fetch(`/api/fitness/templates/${completionData.templateId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name: template.name, exercises: updatedExercises })
+			});
+
+			templateUpdateStatus = putRes.ok ? 'done' : 'idle';
+		} catch {
+			templateUpdateStatus = 'idle';
+		}
 	}
 
 	/** @param {number} secs */
@@ -320,6 +413,47 @@
 				</div>
 			{/each}
 		</div>
+
+		{#if templateDiffs.length > 0}
+			<div class="template-update-section">
+				{#if templateUpdateStatus === 'done'}
+					<div class="template-updated">
+						<Check size={16} />
+						<span>Template updated</span>
+					</div>
+				{:else}
+					<h2><RefreshCw size={16} /> Update Template</h2>
+					<p class="template-update-desc">Your weights or reps differ from the template:</p>
+					<div class="template-diff-list">
+						{#each templateDiffs as diff}
+							<div class="diff-item">
+								<span class="diff-name">{diff.name}</span>
+								<div class="diff-sets">
+									{#each diff.newSets as set, i}
+										{@const old = diff.oldSets[i]}
+										<div class="diff-set-row">
+											{#if old}
+												<span class="diff-old">{old.weight ?? '—'} kg × {old.reps ?? '—'}</span>
+												<span class="diff-arrow">→</span>
+											{/if}
+											<span class="diff-new">{set.weight ?? '—'} kg × {set.reps ?? '—'}</span>
+										</div>
+									{/each}
+									{#if diff.newSets.length > diff.oldSets.length}
+										<div class="diff-set-row">
+											<span class="diff-new">+{diff.newSets.length - diff.oldSets.length} new set{diff.newSets.length - diff.oldSets.length > 1 ? 's' : ''}</span>
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+					<button class="update-template-btn" onclick={updateTemplate} disabled={templateUpdateStatus === 'updating'}>
+						{templateUpdateStatus === 'updating' ? 'Updating...' : 'Update Template'}
+					</button>
+				{/if}
+			</div>
+		{/if}
 
 		<button class="done-btn" onclick={() => goto(`/fitness/history/${completionData.sessionId}`)}>
 			VIEW WORKOUT
@@ -531,6 +665,82 @@
 		color: var(--color-text-secondary);
 	}
 
+	.template-update-section {
+		background: var(--color-surface);
+		border-radius: 12px;
+		padding: 1rem;
+		margin-bottom: 1rem;
+	}
+	.template-update-section h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.95rem;
+		margin: 0 0 0.3rem;
+	}
+	.template-update-desc {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin: 0 0 0.75rem;
+	}
+	.template-diff-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		margin-bottom: 0.75rem;
+	}
+	.diff-name {
+		font-weight: 600;
+		font-size: 0.85rem;
+	}
+	.diff-sets {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		margin-top: 0.25rem;
+	}
+	.diff-set-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.8rem;
+	}
+	.diff-old {
+		color: var(--color-text-secondary);
+		text-decoration: line-through;
+	}
+	.diff-arrow {
+		color: var(--color-text-secondary);
+	}
+	.diff-new {
+		color: var(--color-primary);
+		font-weight: 600;
+	}
+	.update-template-btn {
+		width: 100%;
+		padding: 0.6rem;
+		background: transparent;
+		border: 1.5px solid var(--color-primary);
+		border-radius: 10px;
+		color: var(--color-primary);
+		font-weight: 700;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.update-template-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.template-updated {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		color: var(--nord14);
+		font-weight: 600;
+		font-size: 0.9rem;
+		padding: 0.4rem;
+	}
 	.done-btn {
 		width: 100%;
 		padding: 0.85rem;
