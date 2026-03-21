@@ -1,13 +1,12 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, GripVertical, ChevronUp, ChevronDown, ArrowRight } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import TemplateCard from '$lib/components/fitness/TemplateCard.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
-	import AddActionButton from '$lib/components/AddActionButton.svelte';
 
 	let { data } = $props();
 
@@ -313,10 +312,15 @@
 	<section class="templates-section">
 		<div class="templates-header">
 			<h2>Templates</h2>
-			<button class="schedule-btn" onclick={openScheduleEditor} aria-label="Edit workout schedule">
-				<CalendarClock size={16} />
-				Schedule
-			</button>
+			<div class="templates-header-actions">
+				<button class="header-icon-btn" onclick={openCreateTemplate} aria-label="Create template">
+					<Plus size={18} />
+				</button>
+				<button class="schedule-btn" onclick={openScheduleEditor} aria-label="Edit workout schedule">
+					<CalendarClock size={16} />
+					Schedule
+				</button>
+			</div>
 		</div>
 		{#if templates.length > 0}
 			<p class="template-count">My Templates ({templates.length})</p>
@@ -500,15 +504,14 @@
 	</div>
 {/if}
 
-{#if !workout.active}
-	{#if hasSchedule && nextTemplate}
-		<AddActionButton onclick={startNextScheduled} ariaLabel="Start next scheduled workout: {nextTemplate.name}" />
-	{:else}
-		<AddActionButton onclick={openCreateTemplate} ariaLabel="Create template" />
-	{/if}
-{/if}
-
 <style>
+	/* Primary contrast: white in light mode, nord0 in dark mode */
+	:global(:root) { --primary-contrast: white; }
+	@media (prefers-color-scheme: dark) {
+		:global(:root:not([data-theme="light"])) { --primary-contrast: var(--nord0); }
+	}
+	:global(:root[data-theme="dark"]) { --primary-contrast: var(--nord0); }
+
 	/* Template View */
 	.template-view {
 		display: flex;
@@ -538,7 +541,7 @@
 		justify-content: space-between;
 		padding: 1rem;
 		background: var(--color-primary);
-		color: white;
+		color: var(--primary-contrast);
 		border: none;
 		border-radius: 10px;
 		cursor: pointer;
@@ -567,7 +570,7 @@
 		justify-content: center;
 		width: 2.5rem;
 		height: 2.5rem;
-		background: rgba(255, 255, 255, 0.2);
+		background: color-mix(in srgb, var(--primary-contrast) 20%, transparent);
 		border-radius: 50%;
 	}
 	.schedule-preview {
@@ -586,7 +589,7 @@
 	}
 	.schedule-dot.active {
 		background: var(--color-primary);
-		color: white;
+		color: var(--primary-contrast);
 		font-weight: 600;
 	}
 
@@ -597,7 +600,7 @@
 		width: 100%;
 		padding: 0.9rem;
 		background: var(--color-primary);
-		color: white;
+		color: var(--primary-contrast);
 		border: none;
 		border-radius: 10px;
 		font-weight: 700;
@@ -612,6 +615,26 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+	}
+	.templates-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.header-icon-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.35rem;
+		background: none;
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+	}
+	.header-icon-btn:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
 	}
 	.templates-section h2 {
 		margin: 0;
@@ -739,7 +762,7 @@
 		gap: 0.4rem;
 		padding: 0.65rem;
 		background: var(--color-primary);
-		color: white;
+		color: var(--primary-contrast);
 		border: none;
 		border-radius: 8px;
 		font-weight: 700;
@@ -934,7 +957,7 @@
 		align-items: center;
 		justify-content: center;
 		background: var(--color-primary);
-		color: white;
+		color: var(--primary-contrast);
 		border-radius: 50%;
 		font-size: 0.7rem;
 		font-weight: 700;
