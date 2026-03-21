@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { Plus, Trash2, Play, Pencil, X, Save } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, GripVertical, ChevronUp, ChevronDown, ArrowRight } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
@@ -16,6 +16,16 @@
 	let templates = $state(data.templates?.templates ? [...data.templates.templates] : []);
 	let seeded = $state(false);
 
+	// Schedule state
+	/** @type {string[]} */
+	let scheduleOrder = $state(data.schedule?.schedule?.templateOrder ?? []);
+	/** @type {string | null} */
+	let nextTemplateId = $state(data.schedule?.nextTemplateId ?? null);
+	let showScheduleEditor = $state(false);
+	/** @type {string[]} */
+	let editorScheduleOrder = $state([]);
+	let scheduleSaving = $state(false);
+
 	// Template detail modal
 	/** @type {any} */
 	let selectedTemplate = $state(null);
@@ -29,6 +39,10 @@
 	let editorExercises = $state([]);
 	let editorPicker = $state(false);
 	let editorSaving = $state(false);
+
+	/** @type {any} */
+	let nextTemplate = $derived(nextTemplateId ? templates.find((t) => t._id === nextTemplateId) : null);
+	let hasSchedule = $derived(scheduleOrder.length > 0);
 
 	onMount(() => {
 		workout.restore();
@@ -72,6 +86,11 @@
 		workout.startEmpty();
 		await sync.onWorkoutStart();
 		goto('/fitness/workout/active');
+	}
+
+	async function startNextScheduled() {
+		if (!nextTemplate) return;
+		await startFromTemplate(nextTemplate);
 	}
 
 	function openCreateTemplate() {
@@ -190,12 +209,101 @@
 			const res = await fetch(`/api/fitness/templates/${template._id}`, { method: 'DELETE' });
 			if (res.ok) {
 				templates = templates.filter((t) => t._id !== template._id);
+				// Also remove from schedule if present
+				if (scheduleOrder.includes(template._id)) {
+					scheduleOrder = scheduleOrder.filter((id) => id !== template._id);
+					saveSchedule(scheduleOrder);
+				}
 			}
 		} catch {}
+	}
+
+	// Schedule editor functions
+	function openScheduleEditor() {
+		editorScheduleOrder = [...scheduleOrder];
+		showScheduleEditor = true;
+	}
+
+	function closeScheduleEditor() {
+		showScheduleEditor = false;
+	}
+
+	/** @param {number} idx @param {number} dir */
+	function moveScheduleItem(idx, dir) {
+		const newIdx = idx + dir;
+		if (newIdx < 0 || newIdx >= editorScheduleOrder.length) return;
+		const copy = [...editorScheduleOrder];
+		[copy[idx], copy[newIdx]] = [copy[newIdx], copy[idx]];
+		editorScheduleOrder = copy;
+	}
+
+	/** @param {string} templateId */
+	function toggleScheduleTemplate(templateId) {
+		if (editorScheduleOrder.includes(templateId)) {
+			editorScheduleOrder = editorScheduleOrder.filter((id) => id !== templateId);
+		} else {
+			editorScheduleOrder = [...editorScheduleOrder, templateId];
+		}
+	}
+
+	/** @param {string[]} order */
+	async function saveSchedule(order) {
+		try {
+			const res = await fetch('/api/fitness/schedule', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ templateOrder: order })
+			});
+			if (res.ok) {
+				scheduleOrder = order;
+				// Refresh next template
+				const schedRes = await fetch('/api/fitness/schedule');
+				const schedData = await schedRes.json();
+				nextTemplateId = schedData.nextTemplateId ?? null;
+			}
+		} catch {}
+	}
+
+	async function saveAndCloseSchedule() {
+		scheduleSaving = true;
+		await saveSchedule(editorScheduleOrder);
+		scheduleSaving = false;
+		showScheduleEditor = false;
+	}
+
+	/** @param {string} id */
+	function getTemplateName(id) {
+		return templates.find((t) => t._id === id)?.name ?? 'Unknown';
 	}
 </script>
 
 <div class="template-view">
+	{#if hasSchedule && nextTemplate}
+		<section class="next-workout">
+			<div class="next-label">
+				<CalendarClock size={16} />
+				<span>Next in schedule</span>
+			</div>
+			<button class="next-workout-btn" onclick={startNextScheduled}>
+				<div class="next-info">
+					<span class="next-name">{nextTemplate.name}</span>
+					<span class="next-exercises">{nextTemplate.exercises.length} exercise{nextTemplate.exercises.length !== 1 ? 's' : ''}</span>
+				</div>
+				<div class="next-go">
+					<Play size={18} />
+				</div>
+			</button>
+			<div class="schedule-preview">
+				{#each scheduleOrder as id, i}
+					<span class="schedule-dot" class:active={id === nextTemplateId}>{getTemplateName(id)}</span>
+					{#if i < scheduleOrder.length - 1}
+						<ArrowRight size={12} />
+					{/if}
+				{/each}
+			</div>
+		</section>
+	{/if}
+
 	<section class="quick-start">
 		<button class="start-empty-btn" onclick={startEmpty}>
 			START AN EMPTY WORKOUT
@@ -203,7 +311,13 @@
 	</section>
 
 	<section class="templates-section">
-		<h2>Templates</h2>
+		<div class="templates-header">
+			<h2>Templates</h2>
+			<button class="schedule-btn" onclick={openScheduleEditor} aria-label="Edit workout schedule">
+				<CalendarClock size={16} />
+				Schedule
+			</button>
+		</div>
 		{#if templates.length > 0}
 			<p class="template-count">My Templates ({templates.length})</p>
 			<div class="template-grid">
@@ -328,8 +442,70 @@
 	{/if}
 {/if}
 
+<!-- Schedule Editor Modal -->
+{#if showScheduleEditor}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="modal-overlay" onkeydown={(e) => e.key === 'Escape' && closeScheduleEditor()}>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<div class="modal-backdrop" onclick={closeScheduleEditor}></div>
+		<div class="modal-panel editor-panel">
+			<div class="modal-header">
+				<h2>Workout Schedule</h2>
+				<button class="close-btn" onclick={closeScheduleEditor} aria-label="Close"><X size={20} /></button>
+			</div>
+			<div class="modal-body">
+				<p class="schedule-hint">Select templates and arrange their order. After completing a workout, the next one in the rotation will be suggested.</p>
+
+				{#if editorScheduleOrder.length > 0}
+					<div class="schedule-order">
+						{#each editorScheduleOrder as id, idx (id)}
+							<div class="schedule-item">
+								<span class="schedule-pos">{idx + 1}</span>
+								<span class="schedule-item-name">{getTemplateName(id)}</span>
+								<div class="schedule-item-actions">
+									<button disabled={idx === 0} onclick={() => moveScheduleItem(idx, -1)} aria-label="Move up">
+										<ChevronUp size={16} />
+									</button>
+									<button disabled={idx === editorScheduleOrder.length - 1} onclick={() => moveScheduleItem(idx, 1)} aria-label="Move down">
+										<ChevronDown size={16} />
+									</button>
+									<button onclick={() => toggleScheduleTemplate(id)} aria-label="Remove from schedule" class="schedule-remove">
+										<X size={16} />
+									</button>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<div class="schedule-available">
+					<p class="schedule-available-label">Available templates</p>
+					{#each templates.filter((t) => !editorScheduleOrder.includes(t._id)) as template (template._id)}
+						<button class="schedule-add-item" onclick={() => toggleScheduleTemplate(template._id)}>
+							<Plus size={14} />
+							<span>{template.name}</span>
+						</button>
+					{/each}
+					{#if templates.filter((t) => !editorScheduleOrder.includes(t._id)).length === 0}
+						<p class="schedule-all-added">All templates are in the schedule</p>
+					{/if}
+				</div>
+			</div>
+			<div class="modal-actions">
+				<button class="modal-start" onclick={saveAndCloseSchedule} disabled={scheduleSaving}>
+					<Save size={16} /> {scheduleSaving ? 'Saving…' : 'Save Schedule'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
 {#if !workout.active}
-	<AddActionButton onclick={openCreateTemplate} ariaLabel="Create template" />
+	{#if hasSchedule && nextTemplate}
+		<AddActionButton onclick={startNextScheduled} ariaLabel="Start next scheduled workout: {nextTemplate.name}" />
+	{:else}
+		<AddActionButton onclick={openCreateTemplate} ariaLabel="Create template" />
+	{/if}
 {/if}
 
 <style>
@@ -339,6 +515,81 @@
 		flex-direction: column;
 		gap: 1.5rem;
 	}
+
+	/* Next Workout Banner */
+	.next-workout {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.next-label {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-secondary);
+	}
+	.next-workout-btn {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem;
+		background: var(--color-primary);
+		color: white;
+		border: none;
+		border-radius: 10px;
+		cursor: pointer;
+		text-align: left;
+		transition: opacity 150ms ease;
+	}
+	.next-workout-btn:hover {
+		opacity: 0.9;
+	}
+	.next-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+	.next-name {
+		font-weight: 700;
+		font-size: 1rem;
+	}
+	.next-exercises {
+		font-size: 0.8rem;
+		opacity: 0.85;
+	}
+	.next-go {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 50%;
+	}
+	.schedule-preview {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		flex-wrap: wrap;
+		font-size: 0.7rem;
+		color: var(--color-text-secondary);
+	}
+	.schedule-dot {
+		padding: 0.15rem 0.4rem;
+		background: var(--color-bg-elevated);
+		border-radius: 4px;
+		white-space: nowrap;
+	}
+	.schedule-dot.active {
+		background: var(--color-primary);
+		color: white;
+		font-weight: 600;
+	}
+
 	.quick-start {
 		text-align: center;
 	}
@@ -357,9 +608,31 @@
 	.start-empty-btn:hover {
 		opacity: 0.9;
 	}
+	.templates-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
 	.templates-section h2 {
 		margin: 0;
 		font-size: 1.2rem;
+	}
+	.schedule-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.35rem 0.65rem;
+		background: var(--color-bg-elevated);
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		color: var(--color-text-secondary);
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.schedule-btn:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
 	}
 	.template-count {
 		font-size: 0.8rem;
@@ -632,4 +905,105 @@
 		color: var(--color-primary);
 	}
 
+	/* Schedule Editor */
+	.schedule-hint {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin: 0 0 1rem;
+		line-height: 1.4;
+	}
+	.schedule-order {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		margin-bottom: 1rem;
+	}
+	.schedule-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.65rem;
+		background: var(--color-bg-elevated);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+	}
+	.schedule-pos {
+		width: 1.3rem;
+		height: 1.3rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--color-primary);
+		color: white;
+		border-radius: 50%;
+		font-size: 0.7rem;
+		font-weight: 700;
+		flex-shrink: 0;
+	}
+	.schedule-item-name {
+		flex: 1;
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+	.schedule-item-actions {
+		display: flex;
+		gap: 0.15rem;
+	}
+	.schedule-item-actions button {
+		background: none;
+		border: none;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.2rem;
+		border-radius: 4px;
+	}
+	.schedule-item-actions button:hover:not(:disabled) {
+		color: var(--color-primary);
+	}
+	.schedule-item-actions button:disabled {
+		opacity: 0.3;
+		cursor: not-allowed;
+	}
+	.schedule-remove:hover:not(:disabled) {
+		color: var(--nord11) !important;
+	}
+	.schedule-available {
+		border-top: 1px solid var(--color-border);
+		padding-top: 0.75rem;
+	}
+	.schedule-available-label {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-secondary);
+		margin: 0 0 0.5rem;
+	}
+	.schedule-add-item {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		width: 100%;
+		padding: 0.5rem 0.65rem;
+		background: transparent;
+		border: 1px dashed var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text-secondary);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		margin-bottom: 0.35rem;
+		text-align: left;
+	}
+	.schedule-add-item:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+	.schedule-all-added {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		text-align: center;
+		padding: 0.5rem 0;
+		margin: 0;
+	}
 </style>
