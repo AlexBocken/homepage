@@ -1,6 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
@@ -487,13 +487,21 @@
 			<div class="exercise-block">
 				<div class="exercise-header">
 					<ExerciseName exerciseId={ex.exerciseId} />
-					<button
-						class="remove-exercise"
-						onclick={() => workout.removeExercise(exIdx)}
-						aria-label="Remove exercise"
-					>
-						<Trash2 size={16} />
-					</button>
+					<div class="exercise-header-actions">
+						<button class="move-exercise" disabled={exIdx === 0} onclick={() => workout.moveExercise(exIdx, -1)} aria-label="Move up">
+							<ChevronUp size={16} />
+						</button>
+						<button class="move-exercise" disabled={exIdx === workout.exercises.length - 1} onclick={() => workout.moveExercise(exIdx, 1)} aria-label="Move down">
+							<ChevronDown size={16} />
+						</button>
+						<button
+							class="remove-exercise"
+							onclick={() => workout.removeExercise(exIdx)}
+							aria-label="Remove exercise"
+						>
+							<Trash2 size={16} />
+						</button>
+					</div>
 				</div>
 
 				<SetTable
@@ -836,6 +844,27 @@
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 0.5rem;
+	}
+	.exercise-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.15rem;
+	}
+	.move-exercise {
+		background: none;
+		border: none;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.25rem;
+		opacity: 0.6;
+	}
+	.move-exercise:hover:not(:disabled) {
+		opacity: 1;
+		color: var(--color-primary);
+	}
+	.move-exercise:disabled {
+		opacity: 0.2;
+		cursor: not-allowed;
 	}
 	.remove-exercise {
 		background: none;

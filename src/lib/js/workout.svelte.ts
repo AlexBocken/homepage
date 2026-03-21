@@ -276,6 +276,14 @@ export function createWorkout() {
 		_persist();
 	}
 
+	function moveExercise(index: number, direction: number) {
+		const newIndex = index + direction;
+		if (newIndex < 0 || newIndex >= exercises.length) return;
+		const [item] = exercises.splice(index, 1);
+		exercises.splice(newIndex, 0, item);
+		_persist();
+	}
+
 	function addSet(exerciseIndex: number) {
 		const ex = exercises[exerciseIndex];
 		if (ex) {
@@ -487,6 +495,7 @@ export function createWorkout() {
 		resumeTimer,
 		addExercise,
 		removeExercise,
+		moveExercise,
 		addSet,
 		removeSet,
 		updateSet,
