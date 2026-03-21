@@ -223,7 +223,7 @@
 		color: var(--color-text-secondary);
 	}
 	.map-preview {
-		height: 80px;
+		height: 150px;
 		margin-bottom: 0.5rem;
 		background: color-mix(in srgb, var(--color-primary) 6%, transparent);
 		border-radius: 6px;
