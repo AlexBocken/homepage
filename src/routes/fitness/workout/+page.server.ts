@@ -1,8 +1,13 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch }) => {
-	const res = await fetch('/api/fitness/templates');
+	const [templatesRes, scheduleRes] = await Promise.all([
+		fetch('/api/fitness/templates'),
+		fetch('/api/fitness/schedule')
+	]);
+
 	return {
-		templates: await res.json()
+		templates: await templatesRes.json(),
+		schedule: await scheduleRes.json()
 	};
 };
