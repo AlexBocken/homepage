@@ -60,14 +60,8 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
     // Validate exercises structure
     for (const exercise of exercises) {
-      if (!exercise.name || !exercise.sets || !Array.isArray(exercise.sets) || exercise.sets.length === 0) {
-        return json({ error: 'Each exercise must have a name and at least one set' }, { status: 400 });
-      }
-      
-      for (const set of exercise.sets) {
-        if (!set.reps || typeof set.reps !== 'number' || set.reps < 1) {
-          return json({ error: 'Each set must have valid reps (minimum 1)' }, { status: 400 });
-        }
+      if (!exercise.exerciseId) {
+        return json({ error: 'Each exercise must have an exerciseId' }, { status: 400 });
       }
     }
 

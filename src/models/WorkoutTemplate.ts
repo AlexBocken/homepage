@@ -66,13 +66,7 @@ const ExerciseSchema = new mongoose.Schema({
   },
   sets: {
     type: [SetSchema],
-    required: true,
-    validate: {
-      validator: function(sets: ISet[]) {
-        return sets.length > 0;
-      },
-      message: 'An exercise must have at least one set'
-    }
+    default: []
   },
   restTime: {
     type: Number,
