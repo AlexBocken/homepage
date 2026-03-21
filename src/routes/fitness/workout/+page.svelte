@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight, GripVertical } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
@@ -133,6 +133,15 @@
 	/** @param {number} idx */
 	function editorRemoveExercise(idx) {
 		editorExercises = editorExercises.filter((_, i) => i !== idx);
+	}
+
+	/** @param {number} idx @param {number} dir */
+	function editorMoveExercise(idx, dir) {
+		const newIdx = idx + dir;
+		if (newIdx < 0 || newIdx >= editorExercises.length) return;
+		const copy = [...editorExercises];
+		[copy[idx], copy[newIdx]] = [copy[newIdx], copy[idx]];
+		editorExercises = copy;
 	}
 
 	/** @param {number} exIdx */
@@ -404,9 +413,17 @@
 					<div class="editor-exercise">
 						<div class="editor-ex-header">
 							<span class="editor-ex-name">{exercise?.name ?? ex.exerciseId}</span>
-							<button class="remove-exercise" onclick={() => editorRemoveExercise(exIdx)} aria-label="Remove">
-								<Trash2 size={14} />
-							</button>
+							<div class="editor-ex-actions">
+								<button class="move-exercise" disabled={exIdx === 0} onclick={() => editorMoveExercise(exIdx, -1)} aria-label="Move up">
+									<ChevronUp size={14} />
+								</button>
+								<button class="move-exercise" disabled={exIdx === editorExercises.length - 1} onclick={() => editorMoveExercise(exIdx, 1)} aria-label="Move down">
+									<ChevronDown size={14} />
+								</button>
+								<button class="remove-exercise" onclick={() => editorRemoveExercise(exIdx)} aria-label="Remove">
+									<Trash2 size={14} />
+								</button>
+							</div>
 						</div>
 						<div class="editor-sets">
 							{#each ex.sets as set, setIdx (setIdx)}
@@ -840,6 +857,27 @@
 	.editor-ex-name {
 		font-weight: 600;
 		font-size: 0.85rem;
+	}
+	.editor-ex-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.15rem;
+	}
+	.move-exercise {
+		background: none;
+		border: none;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.25rem;
+		opacity: 0.6;
+	}
+	.move-exercise:hover:not(:disabled) {
+		opacity: 1;
+		color: var(--color-primary);
+	}
+	.move-exercise:disabled {
+		opacity: 0.2;
+		cursor: not-allowed;
 	}
 	.remove-exercise {
 		background: none;
