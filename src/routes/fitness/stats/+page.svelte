@@ -88,6 +88,8 @@
 
 </script>
 
+<svelte:head><title>Stats - Fitness</title></svelte:head>
+
 <div class="stats-page">
 	<h1>Stats</h1>
 

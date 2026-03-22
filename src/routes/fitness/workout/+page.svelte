@@ -285,6 +285,8 @@
 	}
 </script>
 
+<svelte:head><title>Workout - Fitness</title></svelte:head>
+
 <div class="template-view">
 	{#if hasSchedule && nextTemplate}
 		<section class="next-workout">

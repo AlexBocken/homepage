@@ -18,6 +18,8 @@
 	}));
 </script>
 
+<svelte:head><title>Exercises - Fitness</title></svelte:head>
+
 <div class="exercises-page">
 	<h1>Exercises</h1>
 
