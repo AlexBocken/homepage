@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
 	import { languageStore } from '$lib/stores/language';
+	import { convertFitnessPath } from '$lib/js/fitnessI18n';
 	import { onMount } from 'svelte';
 
 	let { lang = undefined }: { lang?: 'de' | 'en' } = $props();
@@ -29,6 +30,8 @@
 			languageStore.set('en');
 		} else if (path.startsWith('/rezepte') || path.startsWith('/glaube')) {
 			languageStore.set('de');
+		} else if (path.startsWith('/fitness')) {
+			// Language is determined by sub-route slugs; don't override store
 		} else {
 			// On other pages, read from localStorage
 			if (typeof localStorage !== 'undefined') {
@@ -65,6 +68,10 @@
 
 		if (path.startsWith('/glaube') || path.startsWith('/faith')) {
 			return convertFaithPath(path, targetLang);
+		}
+
+		if (path.startsWith('/fitness')) {
+			return convertFitnessPath(path, targetLang);
 		}
 
 		// Use translated recipe slugs from page data when available (works during SSR)
@@ -105,7 +112,8 @@
 		// For pages that handle their own translations inline (not recipe/faith routes),
 		// dispatch event and stay on the page
 		if (!path.startsWith('/rezepte') && !path.startsWith('/recipes')
-			&& !path.startsWith('/glaube') && !path.startsWith('/faith')) {
+			&& !path.startsWith('/glaube') && !path.startsWith('/faith')
+			&& !path.startsWith('/fitness')) {
 			window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
 			return;
 		}
@@ -113,6 +121,13 @@
 		// Handle faith pages
 		if (path.startsWith('/glaube') || path.startsWith('/faith')) {
 			const newPath = convertFaithPath(path, lang);
+			await goto(newPath);
+			return;
+		}
+
+		// Handle fitness pages
+		if (path.startsWith('/fitness')) {
+			const newPath = convertFitnessPath(path, lang);
 			await goto(newPath);
 			return;
 		}

@@ -1,5 +1,9 @@
 <script>
+	import { page } from '$app/stores';
 	import { Pencil, Trash2 } from 'lucide-svelte';
+	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import AddActionButton from '$lib/components/AddActionButton.svelte';
 
@@ -33,19 +37,19 @@
 	let formCalvesR = $state('');
 
 	const bodyPartFields = $derived([
-		{ label: 'Neck', key: 'neck', value: latest.measurements?.neck },
-		{ label: 'Shoulders', key: 'shoulders', value: latest.measurements?.shoulders },
-		{ label: 'Chest', key: 'chest', value: latest.measurements?.chest },
-		{ label: 'Left Bicep', key: 'bicepsLeft', value: latest.measurements?.biceps?.left },
-		{ label: 'Right Bicep', key: 'bicepsRight', value: latest.measurements?.biceps?.right },
-		{ label: 'Left Forearm', key: 'forearmsLeft', value: latest.measurements?.forearms?.left },
-		{ label: 'Right Forearm', key: 'forearmsRight', value: latest.measurements?.forearms?.right },
-		{ label: 'Waist', key: 'waist', value: latest.measurements?.waist },
-		{ label: 'Hips', key: 'hips', value: latest.measurements?.hips },
-		{ label: 'Left Thigh', key: 'thighsLeft', value: latest.measurements?.thighs?.left },
-		{ label: 'Right Thigh', key: 'thighsRight', value: latest.measurements?.thighs?.right },
-		{ label: 'Left Calf', key: 'calvesLeft', value: latest.measurements?.calves?.left },
-		{ label: 'Right Calf', key: 'calvesRight', value: latest.measurements?.calves?.right }
+		{ label: t('neck', lang), key: 'neck', value: latest.measurements?.neck },
+		{ label: t('shoulders', lang), key: 'shoulders', value: latest.measurements?.shoulders },
+		{ label: t('chest', lang), key: 'chest', value: latest.measurements?.chest },
+		{ label: t('l_bicep', lang), key: 'bicepsLeft', value: latest.measurements?.biceps?.left },
+		{ label: t('r_bicep', lang), key: 'bicepsRight', value: latest.measurements?.biceps?.right },
+		{ label: t('l_forearm', lang), key: 'forearmsLeft', value: latest.measurements?.forearms?.left },
+		{ label: t('r_forearm', lang), key: 'forearmsRight', value: latest.measurements?.forearms?.right },
+		{ label: t('waist', lang), key: 'waist', value: latest.measurements?.waist },
+		{ label: t('hips', lang), key: 'hips', value: latest.measurements?.hips },
+		{ label: t('l_thigh', lang), key: 'thighsLeft', value: latest.measurements?.thighs?.left },
+		{ label: t('r_thigh', lang), key: 'thighsRight', value: latest.measurements?.thighs?.right },
+		{ label: t('l_calf', lang), key: 'calvesLeft', value: latest.measurements?.calves?.left },
+		{ label: t('r_calf', lang), key: 'calvesRight', value: latest.measurements?.calves?.right }
 	]);
 
 	function resetForm() {
@@ -191,7 +195,7 @@
 
 	/** @param {string} id */
 	async function deleteMeasurement(id) {
-		if (!confirm('Delete this measurement?')) return;
+		if (!confirm(t('delete_measurement_confirm', lang))) return;
 		try {
 			const res = await fetch(`/api/fitness/measurements/${id}`, { method: 'DELETE' });
 			if (res.ok) {
@@ -218,89 +222,89 @@
 		if (m.weight != null) parts.push(`${m.weight} kg`);
 		if (m.bodyFatPercent != null) parts.push(`${m.bodyFatPercent}% bf`);
 		if (m.caloricIntake != null) parts.push(`${m.caloricIntake} kcal`);
-		return parts.join(' · ') || 'Body measurements only';
+		return parts.join(' · ') || t('body_measurements_only', lang);
 	}
 </script>
 
-<svelte:head><title>Measure - Fitness</title></svelte:head>
+<svelte:head><title>{lang === 'en' ? 'Measure' : 'Messen'} - Fitness</title></svelte:head>
 
 <div class="measure-page">
-	<h1>Measure</h1>
+	<h1>{t('measure_title', lang)}</h1>
 
 	{#if showForm}
 		<form class="measure-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
 			<div class="form-header">
-				<h2>{editingId ? 'Edit' : 'New'} Measurement</h2>
-				<button type="button" class="cancel-form-btn" onclick={() => { showForm = false; resetForm(); }}>CANCEL</button>
+				<h2>{editingId ? t('edit_measurement', lang) : t('new_measurement', lang)}</h2>
+				<button type="button" class="cancel-form-btn" onclick={() => { showForm = false; resetForm(); }}>{t('cancel', lang)}</button>
 			</div>
 
 			<div class="form-group">
-				<label for="m-date">Date</label>
+				<label for="m-date">{t('date', lang)}</label>
 				<input id="m-date" type="date" bind:value={formDate} />
 			</div>
 
-			<h3>General</h3>
+			<h3>{t('general', lang)}</h3>
 			<div class="form-row">
 				<div class="form-group">
-					<label for="m-weight">Weight (kg)</label>
+					<label for="m-weight">{t('weight_kg', lang)}</label>
 					<input id="m-weight" type="number" step="0.1" bind:value={formWeight} placeholder="—" />
 				</div>
 				<div class="form-group">
-					<label for="m-bf">Body Fat %</label>
+					<label for="m-bf">{t('body_fat_pct', lang)}</label>
 					<input id="m-bf" type="number" step="0.1" bind:value={formBodyFat} placeholder="—" />
 				</div>
 				<div class="form-group">
-					<label for="m-cal">Calories (kcal)</label>
+					<label for="m-cal">{t('calories_kcal', lang)}</label>
 					<input id="m-cal" type="number" bind:value={formCalories} placeholder="—" />
 				</div>
 			</div>
 
-			<h3>Body Parts (cm)</h3>
+			<h3>{t('body_parts_cm', lang)}</h3>
 			<div class="form-row">
-				<div class="form-group"><label for="m-neck">Neck</label><input id="m-neck" type="number" step="0.1" bind:value={formNeck} placeholder="—" /></div>
-				<div class="form-group"><label for="m-shoulders">Shoulders</label><input id="m-shoulders" type="number" step="0.1" bind:value={formShoulders} placeholder="—" /></div>
-				<div class="form-group"><label for="m-chest">Chest</label><input id="m-chest" type="number" step="0.1" bind:value={formChest} placeholder="—" /></div>
+				<div class="form-group"><label for="m-neck">{t('neck', lang)}</label><input id="m-neck" type="number" step="0.1" bind:value={formNeck} placeholder="—" /></div>
+				<div class="form-group"><label for="m-shoulders">{t('shoulders', lang)}</label><input id="m-shoulders" type="number" step="0.1" bind:value={formShoulders} placeholder="—" /></div>
+				<div class="form-group"><label for="m-chest">{t('chest', lang)}</label><input id="m-chest" type="number" step="0.1" bind:value={formChest} placeholder="—" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-bl">L Bicep</label><input id="m-bl" type="number" step="0.1" bind:value={formBicepsL} placeholder="—" /></div>
-				<div class="form-group"><label for="m-br">R Bicep</label><input id="m-br" type="number" step="0.1" bind:value={formBicepsR} placeholder="—" /></div>
+				<div class="form-group"><label for="m-bl">{t('l_bicep', lang)}</label><input id="m-bl" type="number" step="0.1" bind:value={formBicepsL} placeholder="—" /></div>
+				<div class="form-group"><label for="m-br">{t('r_bicep', lang)}</label><input id="m-br" type="number" step="0.1" bind:value={formBicepsR} placeholder="—" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-fl">L Forearm</label><input id="m-fl" type="number" step="0.1" bind:value={formForearmsL} placeholder="—" /></div>
-				<div class="form-group"><label for="m-fr">R Forearm</label><input id="m-fr" type="number" step="0.1" bind:value={formForearmsR} placeholder="—" /></div>
+				<div class="form-group"><label for="m-fl">{t('l_forearm', lang)}</label><input id="m-fl" type="number" step="0.1" bind:value={formForearmsL} placeholder="—" /></div>
+				<div class="form-group"><label for="m-fr">{t('r_forearm', lang)}</label><input id="m-fr" type="number" step="0.1" bind:value={formForearmsR} placeholder="—" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-waist">Waist</label><input id="m-waist" type="number" step="0.1" bind:value={formWaist} placeholder="—" /></div>
-				<div class="form-group"><label for="m-hips">Hips</label><input id="m-hips" type="number" step="0.1" bind:value={formHips} placeholder="—" /></div>
+				<div class="form-group"><label for="m-waist">{t('waist', lang)}</label><input id="m-waist" type="number" step="0.1" bind:value={formWaist} placeholder="—" /></div>
+				<div class="form-group"><label for="m-hips">{t('hips', lang)}</label><input id="m-hips" type="number" step="0.1" bind:value={formHips} placeholder="—" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-tl">L Thigh</label><input id="m-tl" type="number" step="0.1" bind:value={formThighsL} placeholder="—" /></div>
-				<div class="form-group"><label for="m-tr">R Thigh</label><input id="m-tr" type="number" step="0.1" bind:value={formThighsR} placeholder="—" /></div>
+				<div class="form-group"><label for="m-tl">{t('l_thigh', lang)}</label><input id="m-tl" type="number" step="0.1" bind:value={formThighsL} placeholder="—" /></div>
+				<div class="form-group"><label for="m-tr">{t('r_thigh', lang)}</label><input id="m-tr" type="number" step="0.1" bind:value={formThighsR} placeholder="—" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-cl">L Calf</label><input id="m-cl" type="number" step="0.1" bind:value={formCalvesL} placeholder="—" /></div>
-				<div class="form-group"><label for="m-cr">R Calf</label><input id="m-cr" type="number" step="0.1" bind:value={formCalvesR} placeholder="—" /></div>
+				<div class="form-group"><label for="m-cl">{t('l_calf', lang)}</label><input id="m-cl" type="number" step="0.1" bind:value={formCalvesL} placeholder="—" /></div>
+				<div class="form-group"><label for="m-cr">{t('r_calf', lang)}</label><input id="m-cr" type="number" step="0.1" bind:value={formCalvesR} placeholder="—" /></div>
 			</div>
 
 			<button type="submit" class="save-btn" disabled={saving}>
-				{saving ? 'Saving…' : editingId ? 'Update Measurement' : 'Save Measurement'}
+				{saving ? t('saving', lang) : editingId ? t('update_measurement', lang) : t('save_measurement', lang)}
 			</button>
 		</form>
 	{/if}
 
 	<section class="latest-section">
-		<h2>Latest</h2>
+		<h2>{t('latest', lang)}</h2>
 		<div class="stat-grid">
 			<div class="stat-card">
-				<span class="stat-label">Weight</span>
+				<span class="stat-label">{t('weight', lang)}</span>
 				<span class="stat-value">{latest.weight?.value ?? '—'} <small>kg</small></span>
 			</div>
 			<div class="stat-card">
-				<span class="stat-label">Body Fat</span>
+				<span class="stat-label">{t('body_fat', lang)}</span>
 				<span class="stat-value">{latest.bodyFatPercent?.value ?? '—'}<small>%</small></span>
 			</div>
 			<div class="stat-card">
-				<span class="stat-label">Calories</span>
+				<span class="stat-label">{t('calories', lang)}</span>
 				<span class="stat-value">{latest.caloricIntake?.value ?? '—'} <small>kcal</small></span>
 			</div>
 		</div>
@@ -308,7 +312,7 @@
 
 	{#if bodyPartFields.some(f => f.value != null)}
 		<section class="body-parts-section">
-			<h2>Body Parts</h2>
+			<h2>{t('body_parts', lang)}</h2>
 			<div class="body-grid">
 				{#each bodyPartFields.filter(f => f.value != null) as field}
 					<div class="body-row">
@@ -322,7 +326,7 @@
 
 	{#if measurements.length > 0}
 		<section class="history-section">
-			<h2>History</h2>
+			<h2>{t('history', lang)}</h2>
 			<div class="history-list">
 				{#each measurements as m (m._id)}
 					<div class="history-item" class:editing={editingId === m._id}>

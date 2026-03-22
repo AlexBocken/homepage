@@ -1,5 +1,9 @@
 <script>
+	import { page as appPage } from '$app/stores';
 	import SessionCard from '$lib/components/fitness/SessionCard.svelte';
+	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($appPage.url.pathname));
 
 	let { data } = $props();
 
@@ -35,17 +39,17 @@
 	}
 </script>
 
-<svelte:head><title>History - Fitness</title></svelte:head>
+<svelte:head><title>{t('history_title', lang)} - Fitness</title></svelte:head>
 
 <div class="history-page">
-	<h1>History</h1>
+	<h1>{t('history_title', lang)}</h1>
 
 	{#if sessions.length === 0}
-		<p class="empty">No workouts yet. Start your first workout!</p>
+		<p class="empty">{t('no_workouts_yet', lang)}</p>
 	{:else}
 		{#each Object.entries(grouped) as [month, monthSessions] (month)}
 			<section class="month-group">
-				<h2 class="month-header">{month} — {monthSessions.length} workout{monthSessions.length !== 1 ? 's' : ''}</h2>
+				<h2 class="month-header">{month} — {monthSessions.length} {monthSessions.length !== 1 ? t('workouts_plural', lang) : t('workout_singular', lang)}</h2>
 				<div class="session-list">
 					{#each monthSessions as session (session._id)}
 						<SessionCard {session} />
@@ -56,7 +60,7 @@
 
 		{#if sessions.length < total}
 			<button class="load-more" onclick={loadMore} disabled={loading}>
-				{loading ? 'Loading…' : 'Load more'}
+				{loading ? t('loading', lang) : t('load_more', lang)}
 			</button>
 		{/if}
 	{/if}

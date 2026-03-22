@@ -1,5 +1,9 @@
 <script>
+	import { page } from '$app/stores';
 	import { getExerciseById } from '$lib/data/exercises';
+	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { onMount } from 'svelte';
 
@@ -158,7 +162,7 @@
 	}
 </script>
 
-<svelte:head><title>{exercise?.name ?? 'Exercise'} - Fitness</title></svelte:head>
+<svelte:head><title>{exercise?.name ?? (lang === 'en' ? 'Exercise' : 'Übung')} - Fitness</title></svelte:head>
 
 <div class="exercise-detail">
 	<h1>{exercise?.name ?? 'Exercise'}</h1>
@@ -170,7 +174,7 @@
 				class:active={activeTab === tab}
 				onclick={() => activeTab = tab}
 			>
-				{tab.toUpperCase()}
+				{{ about: t('about', lang), history: t('history_tab', lang), charts: t('charts', lang), records: t('records', lang) }[tab]}
 			</button>
 		{/each}
 	</div>
@@ -189,7 +193,7 @@
 				<p class="secondary">Also works: {exercise.secondaryMuscles.join(', ')}</p>
 			{/if}
 			{#if exercise?.instructions?.length}
-				<h3>Instructions</h3>
+				<h3>{t('instructions', lang)}</h3>
 				<ol class="instructions">
 					{#each exercise.instructions as step}
 						<li>{step}</li>
@@ -200,7 +204,7 @@
 	{:else if activeTab === 'history'}
 		<div class="tab-content">
 			{#if history.length === 0}
-				<p class="empty">No history for this exercise yet.</p>
+				<p class="empty">{t('no_history_yet', lang)}</p>
 			{:else}
 				{#each history as entry (entry.sessionId)}
 					<div class="history-session">
@@ -210,7 +214,7 @@
 						</div>
 						<table class="history-sets">
 							<thead>
-								<tr><th>SET</th><th>KG</th><th>REPS</th><th>EST. 1RM</th></tr>
+								<tr><th>{t('set', lang)}</th><th>{t('kg', lang)}</th><th>{t('reps', lang)}</th><th>{t('est_1rm', lang)}</th></tr>
 							</thead>
 							<tbody>
 								{#each entry.sets as set, i (i)}
@@ -230,11 +234,11 @@
 	{:else if activeTab === 'charts'}
 		<div class="tab-content charts-grid">
 			{#if (charts.est1rmOverTime?.length ?? 0) > 0}
-				<FitnessChart data={est1rmChartData} title="Best Set (Est. 1RM)" yUnit=" kg" />
-				<FitnessChart data={maxWeightChartData} title="Best Set (Max Weight)" yUnit=" kg" />
-				<FitnessChart data={volumeChartData} title="Total Volume" yUnit=" kg" />
+				<FitnessChart data={est1rmChartData} title={t('best_set_1rm', lang)} yUnit=" kg" />
+				<FitnessChart data={maxWeightChartData} title={t('best_set_max', lang)} yUnit=" kg" />
+				<FitnessChart data={volumeChartData} title={t('total_volume', lang)} yUnit=" kg" />
 			{:else}
-				<p class="empty">Not enough data to display charts yet.</p>
+				<p class="empty">{t('not_enough_data', lang)}</p>
 			{/if}
 		</div>
 	{:else if activeTab === 'records'}
@@ -242,29 +246,29 @@
 			<div class="records-summary">
 				{#if prs.estimatedOneRepMax}
 					<div class="record-card">
-						<span class="record-label">Estimated 1RM</span>
+						<span class="record-label">{t('estimated_1rm', lang)}</span>
 						<span class="record-value">{prs.estimatedOneRepMax} kg</span>
 					</div>
 				{/if}
 				{#if prs.maxVolume}
 					<div class="record-card">
-						<span class="record-label">Max Volume</span>
+						<span class="record-label">{t('max_volume', lang)}</span>
 						<span class="record-value">{prs.maxVolume} kg</span>
 					</div>
 				{/if}
 				{#if prs.maxWeight}
 					<div class="record-card">
-						<span class="record-label">Max Weight</span>
+						<span class="record-label">{t('max_weight', lang)}</span>
 						<span class="record-value">{prs.maxWeight} kg</span>
 					</div>
 				{/if}
 			</div>
 
 			{#if records.length}
-				<h3>Rep Records</h3>
+				<h3>{t('rep_records', lang)}</h3>
 				<table class="records-table">
 					<thead>
-						<tr><th>REPS</th><th>BEST PERFORMANCE</th><th>EST. 1RM</th></tr>
+						<tr><th>{t('reps', lang)}</th><th>{t('best_performance', lang)}</th><th>{t('est_1rm', lang)}</th></tr>
 					</thead>
 					<tbody>
 						{#each records as rec (rec.reps)}

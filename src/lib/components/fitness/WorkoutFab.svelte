@@ -2,6 +2,10 @@
 import { goto } from '$app/navigation';
 import { Play, Pause } from 'lucide-svelte';
 import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
+import { page } from '$app/stores';
+import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+
+const lang = $derived(detectFitnessLang($page.url.pathname));
 
 let { href, elapsed = '0:00', paused = false, syncStatus = 'idle', onPauseToggle,
 	restSeconds = 0, restTotal = 0, onRestAdjust = null, onRestSkip = null } = $props();
@@ -35,7 +39,7 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 			</div>
 		</div>
 	{:else}
-		<span class="bar-label">Active Workout</span>
+		<span class="bar-label">{t('active_workout', lang)}</span>
 	{/if}
 </div>
 

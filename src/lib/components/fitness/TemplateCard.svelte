@@ -1,6 +1,10 @@
 <script>
 	import { getExerciseById } from '$lib/data/exercises';
 	import { EllipsisVertical } from 'lucide-svelte';
+	import { page } from '$app/stores';
+	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
 
 	/**
 	 * @type {{
@@ -18,10 +22,10 @@
 		const now = new Date();
 		const diffMs = now.getTime() - d.getTime();
 		const diffDays = Math.floor(diffMs / 86400000);
-		if (diffDays === 0) return 'Today';
-		if (diffDays === 1) return 'Yesterday';
-		if (diffDays < 7) return `${diffDays} days ago`;
-		return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+		if (diffDays === 0) return t('today', lang);
+		if (diffDays === 1) return t('yesterday', lang);
+		if (diffDays < 7) return lang === 'en' ? `${diffDays} days ago` : `vor ${diffDays} Tagen`;
+		return d.toLocaleDateString(lang === 'en' ? 'en' : 'de', { month: 'short', day: 'numeric' });
 	}
 </script>
 
@@ -44,11 +48,11 @@
 			<li>{ex.sets.length} &times; {exercise?.name ?? ex.exerciseId}</li>
 		{/each}
 		{#if template.exercises.length > 4}
-			<li class="more">+{template.exercises.length - 4} more</li>
+			<li class="more">+{template.exercises.length - 4} {t('more', lang)}</li>
 		{/if}
 	</ul>
 	{#if lastUsed}
-		<p class="last-used">Last performed: {formatDate(lastUsed)}</p>
+		<p class="last-used">{t('last_performed', lang)} {formatDate(lastUsed)}</p>
 	{/if}
 </div>
 

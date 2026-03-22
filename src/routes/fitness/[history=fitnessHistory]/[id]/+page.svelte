@@ -1,6 +1,11 @@
 <script>
 	import { goto, invalidateAll } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge } from 'lucide-svelte';
+	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
@@ -189,12 +194,12 @@
 	}
 
 	async function deleteSession() {
-		if (!confirm('Delete this workout session?')) return;
+		if (!confirm(t('delete_session_confirm', lang))) return;
 		deleting = true;
 		try {
 			const res = await fetch(`/api/fitness/sessions/${session._id}`, { method: 'DELETE' });
 			if (res.ok) {
-				await goto('/fitness/history');
+				await goto(`/fitness/${sl.history}`);
 			}
 		} catch {}
 		deleting = false;
@@ -413,7 +418,7 @@
 
 	/** @param {number} exIdx */
 	async function removeGpx(exIdx) {
-		if (!confirm('Remove GPS track from this exercise?')) return;
+		if (!confirm(t('remove_gps_confirm', lang))) return;
 		try {
 			const res = await fetch(`/api/fitness/sessions/${session._id}/gpx`, {
 				method: 'DELETE',
@@ -428,7 +433,7 @@
 </script>
 
 <svelte:head>
-	<title>{session?.name ?? 'Workout'} - Fitness</title>
+	<title>{session?.name ?? (lang === 'en' ? 'Workout' : 'Training')} - Fitness</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
@@ -444,13 +449,13 @@
 		</div>
 		<div class="header-actions">
 			{#if editing}
-				<button class="recalc-btn" onclick={recalculate} disabled={recalculating} title="Recalculate volume, PRs, and GPS previews">
+				<button class="recalc-btn" onclick={recalculate} disabled={recalculating} title={t('recalc_title', lang)}>
 					<RefreshCw size={14} class={recalculating ? 'spinning' : ''} />
 				</button>
 				<button class="save-btn" onclick={saveEdit} disabled={saving}>
-					{saving ? 'SAVING...' : 'SAVE'}
+					{saving ? t('saving', lang).toUpperCase() : t('save', lang).toUpperCase()}
 				</button>
-				<button class="cancel-edit-btn" onclick={cancelEdit}>CANCEL</button>
+				<button class="cancel-edit-btn" onclick={cancelEdit}>{t('cancel', lang)}</button>
 			{:else}
 				<button class="edit-btn" onclick={startEdit} aria-label="Edit session">
 					<Pencil size={16} />
@@ -465,20 +470,20 @@
 	{#if editing}
 		<div class="edit-meta">
 			<div class="meta-row">
-				<label for="edit-date">Date</label>
+				<label for="edit-date">{t('date', lang)}</label>
 				<input id="edit-date" type="date" bind:value={editData.date} />
 			</div>
 			<div class="meta-row">
-				<label for="edit-time">Time</label>
+				<label for="edit-time">{t('time', lang)}</label>
 				<input id="edit-time" type="time" bind:value={editData.time} />
 			</div>
 			<div class="meta-row">
-				<label for="edit-duration">Duration (min)</label>
+				<label for="edit-duration">{t('duration_min', lang)}</label>
 				<input id="edit-duration" type="number" min="0" bind:value={editData.duration} />
 			</div>
 			<div class="meta-row">
-				<label for="edit-notes">Notes</label>
-				<textarea id="edit-notes" bind:value={editData.notes} rows="2" placeholder="Workout notes..."></textarea>
+				<label for="edit-notes">{t('notes', lang)}</label>
+				<textarea id="edit-notes" bind:value={editData.notes} rows="2" placeholder={t('notes_placeholder', lang)}></textarea>
 			</div>
 		</div>
 	{:else}
@@ -522,7 +527,7 @@
 					{@const exData = session.exercises[exIdx]}
 					<div class="gps-indicator">
 						<Route size={14} />
-						<span>GPS track stored{exData.totalDistance ? ` · ${exData.totalDistance.toFixed(2)} km` : ''}</span>
+						<span>{t('gps_track_stored', lang)}{exData.totalDistance ? ` · ${exData.totalDistance.toFixed(2)} km` : ''}</span>
 						<button class="gpx-remove-btn" onclick={() => removeGpx(exIdx)} aria-label="Remove GPS track">
 							<X size={14} />
 						</button>
@@ -544,13 +549,13 @@
 				/>
 
 				<button class="add-set-btn" onclick={() => addSetToEdit(exIdx)}>
-					+ ADD SET
+					{t('add_set', lang)}
 				</button>
 			</div>
 		{/each}
 
 		<button class="add-exercise-btn" onclick={() => showPicker = true}>
-			<Plus size={18} /> ADD EXERCISE
+			<Plus size={18} /> {t('add_exercise', lang)}
 		</button>
 	{:else}
 		{#each session.exercises as ex, exIdx (ex.exerciseId + '-' + exIdx)}
@@ -565,13 +570,13 @@
 				<table class="sets-table">
 					<thead>
 						<tr>
-							<th>SET</th>
+							<th>{t('set_header', lang)}</th>
 							{#each mainMetrics as metric (metric)}
 								<th>{METRIC_LABELS[metric]}</th>
 							{/each}
 							<th>RPE</th>
 							{#if showEst1rm}
-								<th>EST. 1RM</th>
+								<th>{t('est_1rm', lang)}</th>
 							{/if}
 						</tr>
 					</thead>
@@ -620,12 +625,12 @@
 						{#if splits.length > 1}
 							{@const avgPace = splits.reduce((a, s) => a + s.pace, 0) / splits.length}
 							<div class="splits-section">
-								<h4>Splits</h4>
+								<h4>{t('splits', lang)}</h4>
 								<table class="splits-table">
 									<thead>
 										<tr>
 											<th>KM</th>
-											<th>PACE</th>
+											<th>{t('pace', lang)}</th>
 											<th>TIME</th>
 										</tr>
 									</thead>
@@ -649,7 +654,7 @@
 				{:else if isCardio(ex.exerciseId)}
 					<button class="gpx-upload-btn" onclick={() => uploadGpx(exIdx)} disabled={uploading === exIdx}>
 						<Upload size={14} />
-						{uploading === exIdx ? 'Uploading...' : 'Upload GPX'}
+						{uploading === exIdx ? t('uploading', lang) : t('upload_gpx', lang)}
 					</button>
 				{/if}
 			</div>
@@ -658,7 +663,7 @@
 
 	{#if !editing && session.prs?.length > 0}
 		<div class="prs-section">
-			<h2>Personal Records</h2>
+			<h2>{t('personal_records', lang)}</h2>
 			<div class="pr-list">
 				{#each session.prs as pr (pr.exerciseId + pr.type)}
 					{@const exercise = getExerciseById(pr.exerciseId)}
@@ -680,7 +685,7 @@
 
 	{#if !editing && session.notes}
 		<div class="notes-section">
-			<h2>Notes</h2>
+			<h2>{t('notes', lang)}</h2>
 			<p>{session.notes}</p>
 		</div>
 	{/if}
