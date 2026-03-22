@@ -1,88 +1,151 @@
 <script>
-import "$lib/css/action_button.css"
-import { Dumbbell } from 'lucide-svelte';
+import { goto } from '$app/navigation';
+import { Play, Pause } from 'lucide-svelte';
+import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
 
-let { href, elapsed = '0:00', paused = false } = $props();
+let { href, elapsed = '0:00', paused = false, syncStatus = 'idle', onPauseToggle,
+	restSeconds = 0, restTotal = 0, onRestAdjust = null, onRestSkip = null } = $props();
+
+/** @param {number} secs */
+function formatRest(secs) {
+	const m = Math.floor(secs / 60);
+	const s = secs % 60;
+	return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="workout-bar" onclick={() => goto(href)} onkeydown={(e) => { if (e.key === 'Enter') goto(href); }}>
+	<div class="bar-left">
+		<button class="pause-btn" onclick={(e) => { e.stopPropagation(); onPauseToggle?.(); }} aria-label={paused ? 'Resume' : 'Pause'}>
+			{#if paused}<Play size={16} />{:else}<Pause size={16} />{/if}
+		</button>
+		<span class="elapsed" class:paused>{elapsed}</span>
+		<SyncIndicator status={syncStatus} />
+	</div>
+	{#if restTotal > 0 && restSeconds > 0}
+		<div class="rest-pill" onclick={(e) => e.stopPropagation()}>
+			<div class="rest-fill" style:width="{restProgress * 100}%"></div>
+			<div class="rest-controls">
+				<button class="rest-adj" onclick={() => onRestAdjust?.(-30)}>-30s</button>
+				<button class="rest-time" onclick={() => onRestSkip?.()}>{formatRest(restSeconds)}</button>
+				<button class="rest-adj" onclick={() => onRestAdjust?.(30)}>+30s</button>
+			</div>
+		</div>
+	{:else}
+		<span class="bar-label">Active Workout</span>
+	{/if}
+</div>
+
 <style>
-.container{
-position: fixed;
-bottom:0;
-right:0;
-width: 1rem;
-height: 1rem;
-padding: 2rem;
-border-radius: var(--radius-pill);
-margin: 2rem;
-transition: var(--transition-normal);
-background-color: var(--red);
-display: grid;
-justify-content: center;
-align-content: center;
-z-index: 100;
-text-decoration: none;
-}
-@media screen and (max-width: 500px) {
-	.container{
-		margin: 1rem;
+	.workout-bar {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		max-width: 900px;
+		margin: 0 auto;
+		padding: 0.75rem var(--space-md, 1rem);
+		background: var(--color-bg-primary);
+		border-top: 1px solid var(--color-border);
+		z-index: 100;
+		cursor: pointer;
 	}
-}
-
-.timer {
-	font-variant-numeric: tabular-nums;
-	font-weight: 700;
-	font-size: 0.85rem;
-	color: white;
-	line-height: 1;
-	text-align: center;
-}
-.timer.paused {
-	color: var(--nord13);
-}
-
-:root{
-    --angle: 15deg;
-}
-.container:hover,
-.container:focus-within
-{
-	background-color: var(--nord0);
-box-shadow: 0em 0em 0.5em 0.5em rgba(0,0,0,0.2);
-	animation: shake 0.5s;
-	animation-fill-mode: forwards;
-}
-
-@keyframes shake{
-    0%{
-      transform: rotate(0)
-		scale(1,1);
-    }
-    25%{
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-      	transform: rotate(var(--angle))
-      		scale(1.2,1.2)
-      ;
-    }
-    50%{
-
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-      	transform: rotate(calc(-1* var(--angle)))
-      		scale(1.2,1.2);
-    }
-    74%{
-
-    	box-shadow: 0em 0em 1em 0.2em rgba(0, 0, 0, 0.6);
-  	transform: rotate(var(--angle))
-  		scale(1.2, 1.2);
+	.bar-left {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 	}
-	100%{
-      transform: rotate(0)
-      scale(1.2,1.2);
-    }
-  }
+	.pause-btn {
+		background: none;
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.3rem;
+		display: flex;
+		align-items: center;
+	}
+	.pause-btn:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+	.elapsed {
+		font-variant-numeric: tabular-nums;
+		font-weight: 600;
+		font-size: 1.1rem;
+		color: var(--color-text-secondary);
+	}
+	.elapsed.paused {
+		color: var(--nord13);
+	}
+	.bar-label {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+	}
+	.rest-pill {
+		position: relative;
+		height: 2rem;
+		border-radius: 8px;
+		overflow: hidden;
+		background: var(--color-bg-elevated);
+		min-width: 10rem;
+	}
+	.rest-fill {
+		position: absolute;
+		inset: 0;
+		background: var(--color-primary);
+		border-radius: 8px;
+		transition: width 1s linear;
+	}
+	.rest-controls {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		z-index: 1;
+	}
+	.rest-time {
+		background: none;
+		border: none;
+		font-size: 0.85rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-text-primary, inherit);
+		cursor: pointer;
+		padding: 0.2rem 0.4rem;
+	}
+	.rest-adj {
+		background: none;
+		border: none;
+		color: var(--color-text-primary, inherit);
+		cursor: pointer;
+		font-size: 0.7rem;
+		font-weight: 600;
+		padding: 0.2rem 0.3rem;
+		border-radius: 4px;
+		opacity: 0.7;
+	}
+	.rest-adj:hover {
+		opacity: 1;
+	}
+	@media (prefers-color-scheme: dark) {
+		.rest-time, .rest-adj {
+			color: var(--nord10);
+		}
+	}
+	:global(:root[data-theme="dark"]) .rest-time,
+	:global(:root[data-theme="dark"]) .rest-adj {
+		color: var(--nord10);
+	}
 </style>
-<a class="container action_button" {href} aria-label="Return to active workout">
-	<span class="timer" class:paused>{elapsed}</span>
-	<Dumbbell size={26} color="white" />
-</a>

@@ -21,6 +21,8 @@ interface ServerWorkout {
   savedAt: number;
   restStartedAt: number | null;
   restTotal: number;
+  restExerciseIdx: number;
+  restSetIdx: number;
 }
 
 export function createWorkoutSync() {
@@ -46,7 +48,9 @@ export function createWorkoutSync() {
       elapsed,
       savedAt: Date.now(),
       restStartedAt: workout.restStartedAt,
-      restTotal: workout.restTimerTotal
+      restTotal: workout.restTimerTotal,
+      restExerciseIdx: workout.restExerciseIdx,
+      restSetIdx: workout.restSetIdx
     };
   }
 
@@ -109,7 +113,9 @@ export function createWorkoutSync() {
         elapsed: doc.elapsed,
         savedAt: doc.savedAt,
         restStartedAt: doc.restStartedAt ?? null,
-        restTotal: doc.restTotal ?? 0
+        restTotal: doc.restTotal ?? 0,
+        restExerciseIdx: doc.restExerciseIdx ?? -1,
+        restSetIdx: doc.restSetIdx ?? -1
       });
 
       status = 'synced';
@@ -225,7 +231,9 @@ export function createWorkoutSync() {
             elapsed: serverDoc.elapsed,
             savedAt: serverDoc.savedAt,
             restStartedAt: serverDoc.restStartedAt ?? null,
-            restTotal: serverDoc.restTotal ?? 0
+            restTotal: serverDoc.restTotal ?? 0,
+            restExerciseIdx: serverDoc.restExerciseIdx ?? -1,
+            restSetIdx: serverDoc.restSetIdx ?? -1
           });
         }
         connectSSE();

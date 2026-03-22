@@ -43,6 +43,8 @@ export interface StoredState {
 	savedAt: number; // Date.now() at time of save
 	restStartedAt: number | null; // Date.now() when rest timer started
 	restTotal: number; // total rest duration in seconds
+	restExerciseIdx: number; // which exercise the rest timer belongs to
+	restSetIdx: number; // which set the rest timer belongs to
 }
 
 export interface RemoteState {
@@ -54,6 +56,8 @@ export interface RemoteState {
 	savedAt: number;
 	restStartedAt: number | null;
 	restTotal: number;
+	restExerciseIdx: number;
+	restSetIdx: number;
 }
 
 function createEmptySet(): WorkoutSet {
@@ -95,6 +99,8 @@ export function createWorkout() {
 	let _restTotal = $state(0);
 	let _restActive = $state(false);
 	let _restStartedAt: number | null = null; // absolute timestamp
+	let _restExerciseIdx = $state(-1);
+	let _restSetIdx = $state(-1);
 
 	let _timerInterval: ReturnType<typeof setInterval> | null = null;
 	let _restInterval: ReturnType<typeof setInterval> | null = null;
@@ -115,7 +121,9 @@ export function createWorkout() {
 			elapsed: _elapsed,
 			savedAt: Date.now(),
 			restStartedAt: _restActive ? _restStartedAt : null,
-			restTotal: _restTotal
+			restTotal: _restTotal,
+			restExerciseIdx: _restActive ? _restExerciseIdx : -1,
+			restSetIdx: _restActive ? _restSetIdx : -1
 		});
 		_onChangeCallback?.();
 	}
@@ -163,6 +171,8 @@ export function createWorkout() {
 		_restSeconds = 0;
 		_restTotal = 0;
 		_restStartedAt = null;
+		_restExerciseIdx = -1;
+		_restSetIdx = -1;
 	}
 
 	// Restore from localStorage on creation
@@ -200,6 +210,8 @@ export function createWorkout() {
 				_restTotal = stored.restTotal;
 				_restSeconds = remaining;
 				_restActive = true;
+				_restExerciseIdx = stored.restExerciseIdx ?? -1;
+				_restSetIdx = stored.restSetIdx ?? -1;
 				_startRestInterval();
 			}
 		}
@@ -323,12 +335,14 @@ export function createWorkout() {
 		}
 	}
 
-	function startRestTimer(seconds: number) {
+	function startRestTimer(seconds: number, exerciseIdx: number = -1, setIdx: number = -1) {
 		_stopRestTimer();
 		_restStartedAt = Date.now();
 		_restSeconds = seconds;
 		_restTotal = seconds;
 		_restActive = true;
+		_restExerciseIdx = exerciseIdx;
+		_restSetIdx = setIdx;
 		_startRestInterval();
 		_persist();
 	}
@@ -445,6 +459,8 @@ export function createWorkout() {
 					_restTotal = remote.restTotal;
 					_restSeconds = remaining;
 					_restActive = true;
+					_restExerciseIdx = remote.restExerciseIdx ?? -1;
+					_restSetIdx = remote.restSetIdx ?? -1;
 					_startRestInterval();
 				}
 			}
@@ -460,7 +476,9 @@ export function createWorkout() {
 			elapsed: _elapsed,
 			savedAt: Date.now(),
 			restStartedAt: _restActive ? _restStartedAt : null,
-			restTotal: _restTotal
+			restTotal: _restTotal,
+			restExerciseIdx: _restActive ? _restExerciseIdx : -1,
+			restSetIdx: _restActive ? _restSetIdx : -1
 		});
 	}
 
@@ -488,6 +506,8 @@ export function createWorkout() {
 		get restTimerTotal() { return _restTotal; },
 		get restTimerActive() { return _restActive; },
 		get restStartedAt() { return _restStartedAt; },
+		get restExerciseIdx() { return _restExerciseIdx; },
+		get restSetIdx() { return _restSetIdx; },
 		restore,
 		startFromTemplate,
 		startEmpty,

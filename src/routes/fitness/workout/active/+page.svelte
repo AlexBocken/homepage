@@ -16,8 +16,6 @@
 	let nameEditing = $state(false);
 	$effect(() => { if (!nameEditing) nameInput = workout.name; });
 	let showPicker = $state(false);
-	let restExerciseIdx = $state(-1);
-	let restSetIdx = $state(-1);
 
 	/** @type {Record<string, Array<Record<string, any>>>} */
 	let previousData = $state({});
@@ -314,8 +312,6 @@
 
 	function cancelRest() {
 		workout.cancelRestTimer();
-		restExerciseIdx = -1;
-		restSetIdx = -1;
 	}
 
 	// Fetch previous data for existing exercises on mount
@@ -462,17 +458,6 @@
 
 {:else if workout.active}
 	<div class="active-workout">
-		<div class="workout-topbar">
-			<div class="topbar-left">
-				<button class="pause-btn" onclick={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()} aria-label={workout.paused ? 'Resume' : 'Pause'}>
-					{#if workout.paused}<Play size={16} />{:else}<Pause size={16} />{/if}
-				</button>
-				<span class="elapsed" class:paused={workout.paused}>{formatElapsed(workout.elapsedSeconds)}</span>
-				<SyncIndicator status={sync.status} />
-			</div>
-			<button class="finish-btn" onclick={finishWorkout}>FINISH</button>
-		</div>
-
 		<input
 			class="workout-name-input"
 			type="text"
@@ -509,7 +494,7 @@
 					previousSets={previousData[ex.exerciseId] ?? []}
 					metrics={getExerciseMetrics(getExerciseById(ex.exerciseId))}
 					editable={true}
-					restAfterSet={workout.restTimerActive && restExerciseIdx === exIdx ? restSetIdx : -1}
+					restAfterSet={workout.restTimerActive && workout.restExerciseIdx === exIdx ? workout.restSetIdx : -1}
 					restSeconds={workout.restTimerSeconds}
 					restTotal={workout.restTimerTotal}
 					onRestAdjust={(delta) => workout.adjustRestTimer(delta)}
@@ -518,9 +503,7 @@
 					onToggleComplete={(setIdx) => {
 						workout.toggleSetComplete(exIdx, setIdx);
 						if (ex.sets[setIdx]?.completed && !workout.restTimerActive) {
-							restExerciseIdx = exIdx;
-							restSetIdx = setIdx;
-							workout.startRestTimer(ex.restTime);
+							workout.startRestTimer(ex.restTime, exIdx, setIdx);
 						}
 					}}
 					onRemove={(setIdx) => workout.removeSet(exIdx, setIdx)}
@@ -539,6 +522,17 @@
 			<button class="cancel-btn" onclick={async () => { workout.cancel(); await sync.onWorkoutEnd(); await goto('/fitness/workout'); }}>
 				CANCEL WORKOUT
 			</button>
+		</div>
+
+		<div class="workout-bottombar">
+			<div class="topbar-left">
+				<button class="pause-btn" onclick={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()} aria-label={workout.paused ? 'Resume' : 'Pause'}>
+					{#if workout.paused}<Play size={16} />{:else}<Pause size={16} />{/if}
+				</button>
+				<span class="elapsed" class:paused={workout.paused}>{formatElapsed(workout.elapsedSeconds)}</span>
+				<SyncIndicator status={sync.status} />
+			</div>
+			<button class="finish-btn" onclick={finishWorkout}>FINISH</button>
 		</div>
 	</div>
 {/if}
@@ -768,16 +762,16 @@
 		flex-direction: column;
 		gap: 1rem;
 	}
-	.workout-topbar {
+	.workout-bottombar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		position: sticky;
-		top: 3.5rem;
+		bottom: 0;
 		background: var(--color-bg-primary);
 		z-index: 10;
-		padding: 0.5rem 0;
-		border-bottom: 1px solid var(--color-border);
+		padding: 0.75rem 0;
+		border-top: 1px solid var(--color-border);
 	}
 	.topbar-left {
 		display: flex;
