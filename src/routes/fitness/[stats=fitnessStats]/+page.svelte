@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
-	import { Dumbbell, Route, Flame } from 'lucide-svelte';
+	import { Dumbbell, Route, Flame, Zap } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 
@@ -31,6 +31,36 @@
 	const primaryFill = $derived(dark ? 'rgba(136, 192, 208, 0.15)' : 'rgba(94, 129, 172, 0.15)');
 
 	const stats = $derived(data.stats ?? {});
+
+	let goalStreak = $state(data.goal?.streak ?? 0);
+	let goalWeekly = $state(data.goal?.weeklyWorkouts ?? null);
+	let goalEditing = $state(false);
+	let goalInput = $state(4);
+	let goalSaving = $state(false);
+
+	function startGoalEdit() {
+		goalInput = goalWeekly ?? 4;
+		goalEditing = true;
+	}
+
+	async function saveGoal() {
+		goalSaving = true;
+		try {
+			const res = await fetch('/api/fitness/goal', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ weeklyWorkouts: goalInput })
+			});
+			if (res.ok) {
+				const d = await res.json();
+				goalWeekly = d.weeklyWorkouts;
+				goalStreak = d.streak;
+				goalEditing = false;
+			}
+		} finally {
+			goalSaving = false;
+		}
+	}
 
 	const workoutsChartData = $derived({
 		labels: stats.workoutsChart?.labels ?? [],
@@ -113,7 +143,38 @@
 			<div class="card-value">{stats.totalCardioKm ?? 0}<span class="card-unit">km</span></div>
 			<div class="card-label">{t('distance_covered', lang)}</div>
 		</div>
+		<button class="lifetime-card streak" onclick={startGoalEdit}>
+			<div class="card-icon"><Zap size={24} /></div>
+			<div class="card-value">{goalStreak}</div>
+			<div class="card-label">{t('streak', lang)}</div>
+			{#if goalWeekly !== null}
+				<div class="card-goal">{goalWeekly}x / {t('streak_week', lang).toLowerCase()}</div>
+			{:else}
+				<div class="card-goal">{t('set_goal', lang)}</div>
+			{/if}
+		</button>
 	</div>
+
+	{#if goalEditing}
+		<div class="goal-editor-overlay" onkeydown={(e) => { if (e.key === 'Escape') goalEditing = false; }} role="dialog">
+			<div class="goal-editor-backdrop" onclick={() => goalEditing = false}></div>
+			<div class="goal-editor-panel">
+				<h3>{t('weekly_goal', lang)}</h3>
+				<div class="goal-input-row">
+					<button class="adj-btn" onclick={() => { if (goalInput > 1) goalInput--; }} disabled={goalInput <= 1}>-</button>
+					<span class="goal-value">{goalInput}</span>
+					<button class="adj-btn" onclick={() => { if (goalInput < 14) goalInput++; }} disabled={goalInput >= 14}>+</button>
+				</div>
+				<span class="goal-unit">{t('workouts_per_week_goal', lang)}</span>
+				<div class="goal-actions">
+					<button class="goal-save" onclick={saveGoal} disabled={goalSaving}>
+						{goalSaving ? t('saving', lang) : t('save', lang)}
+					</button>
+					<button class="goal-cancel" onclick={() => goalEditing = false}>{t('cancel', lang)}</button>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	{#if (stats.workoutsChart?.data?.length ?? 0) > 0}
 		<FitnessChart
@@ -149,7 +210,7 @@
 
 	.lifetime-cards {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(4, 1fr);
 		gap: 0.6rem;
 	}
 	.lifetime-card {
@@ -164,6 +225,16 @@
 		text-align: center;
 		position: relative;
 		overflow: hidden;
+	}
+	button.lifetime-card {
+		border: none;
+		cursor: pointer;
+		font-family: inherit;
+		color: inherit;
+		transition: box-shadow 0.15s;
+	}
+	button.lifetime-card:hover {
+		box-shadow: var(--shadow-sm), 0 0 0 2px var(--nord13);
 	}
 	.lifetime-card::before {
 		content: '';
@@ -180,6 +251,9 @@
 	}
 	.lifetime-card.cardio::before {
 		background: var(--nord14);
+	}
+	.lifetime-card.streak::before {
+		background: var(--nord13);
 	}
 	.card-icon {
 		display: flex;
@@ -202,6 +276,10 @@
 		color: var(--nord14);
 		background: color-mix(in srgb, var(--nord14) 15%, transparent);
 	}
+	.streak .card-icon {
+		color: var(--nord13);
+		background: color-mix(in srgb, var(--nord13) 15%, transparent);
+	}
 	.card-value {
 		font-size: 1.4rem;
 		font-weight: 800;
@@ -221,7 +299,18 @@
 		text-transform: uppercase;
 		color: var(--color-text-secondary);
 	}
+	.card-goal {
+		font-size: 0.6rem;
+		color: var(--color-text-secondary);
+		opacity: 0.7;
+		margin-top: 0.1rem;
+	}
 
+	@media (max-width: 600px) {
+		.lifetime-cards {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
 	@media (max-width: 400px) {
 		.lifetime-cards {
 			grid-template-columns: 1fr;
@@ -236,6 +325,108 @@
 		.card-icon {
 			margin-bottom: 0;
 		}
+	}
+
+	/* Goal editor overlay */
+	.goal-editor-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 100;
+		display: grid;
+		place-items: center;
+	}
+	.goal-editor-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+	}
+	.goal-editor-panel {
+		position: relative;
+		background: var(--color-surface);
+		border-radius: 16px;
+		padding: 1.5rem 2rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+		min-width: 240px;
+	}
+	.goal-editor-panel h3 {
+		margin: 0;
+		font-size: 1.1rem;
+	}
+	.goal-input-row {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+	.adj-btn {
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		border: 1.5px solid var(--color-border, var(--nord3));
+		background: transparent;
+		color: inherit;
+		font-size: 1.3rem;
+		font-weight: 600;
+		cursor: pointer;
+		display: grid;
+		place-items: center;
+		font-family: inherit;
+		transition: background 0.15s;
+	}
+	.adj-btn:hover:not(:disabled) {
+		background: var(--nord13);
+		color: var(--nord0);
+		border-color: var(--nord13);
+	}
+	.adj-btn:disabled {
+		opacity: 0.3;
+		cursor: default;
+	}
+	.goal-value {
+		font-size: 2rem;
+		font-weight: 700;
+		min-width: 2ch;
+		text-align: center;
+	}
+	.goal-unit {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+	.goal-actions {
+		display: flex;
+		gap: 0.5rem;
+		margin-top: 0.25rem;
+	}
+	.goal-save {
+		padding: 0.4rem 1rem;
+		border: none;
+		border-radius: 8px;
+		background: var(--nord13);
+		color: var(--nord0);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		font-family: inherit;
+	}
+	.goal-save:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+	.goal-cancel {
+		padding: 0.4rem 1rem;
+		border: none;
+		border-radius: 8px;
+		background: transparent;
+		color: var(--color-text-secondary);
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		font-family: inherit;
 	}
 
 	.empty-chart {

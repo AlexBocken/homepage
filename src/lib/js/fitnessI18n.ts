@@ -216,6 +216,15 @@ const translations: Translations = {
 
 	// WorkoutFab
 	active_workout: { en: 'Active Workout', de: 'Aktives Training' },
+
+	// Streak / Goal
+	streak: { en: 'Streak', de: 'Serie' },
+	streak_weeks: { en: 'Weeks', de: 'Wochen' },
+	streak_week: { en: 'Week', de: 'Woche' },
+	weekly_goal: { en: 'Weekly Goal', de: 'Wochenziel' },
+	workouts_per_week_goal: { en: 'workouts / week', de: 'Trainings / Woche' },
+	set_goal: { en: 'Set Goal', de: 'Ziel setzen' },
+	goal_set: { en: 'Goal set', de: 'Ziel gesetzt' },
 };
 
 /** Get a translated string */
