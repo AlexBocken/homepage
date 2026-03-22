@@ -77,7 +77,7 @@
 			{/if}
 			<th class="col-set">SET</th>
 			{#if previousSets}
-				<th class="col-prev">PREVIOUS</th>
+				<th class="col-prev">PREV</th>
 			{/if}
 			{#each mainMetrics as metric (metric)}
 				<th class="col-metric">{METRIC_LABELS[metric]}</th>
@@ -114,7 +114,7 @@
 					</td>
 				{/if}
 				{#each mainMetrics as metric (metric)}
-					<td class="col-metric">
+					<td class="col-metric" class:col-weight={metric === 'weight'}>
 						{#if editable}
 							<input
 								type="number"
@@ -210,6 +210,12 @@
 	.col-metric {
 		width: 4rem;
 	}
+	.col-weight {
+		width: 5.5rem;
+	}
+	.col-weight input {
+		max-width: 5.5rem;
+	}
 	.col-metric:has(+ .col-at) {
 		padding-right: 0;
 	}
@@ -241,6 +247,13 @@
 		padding: 0.3rem 0.25rem;
 		font-size: 0.875rem;
 		color: inherit;
+		-moz-appearance: textfield;
+		appearance: textfield;
+	}
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
 	}
 	.col-rpe input {
 		max-width: 3rem;
