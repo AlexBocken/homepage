@@ -427,6 +427,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{session?.name ?? 'Workout'} - Fitness</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</svelte:head>
+
 <div class="session-detail">
 	<div class="detail-header">
 		<div>
@@ -680,10 +685,6 @@
 		</div>
 	{/if}
 </div>
-
-<svelte:head>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-</svelte:head>
 
 {#if showPicker}
 	<ExercisePicker

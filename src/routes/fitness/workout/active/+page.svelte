@@ -322,6 +322,8 @@
 	});
 </script>
 
+<svelte:head><title>{workout.name || 'Workout'} - Fitness</title></svelte:head>
+
 {#if completionData}
 	<div class="completion">
 		<div class="completion-header">
