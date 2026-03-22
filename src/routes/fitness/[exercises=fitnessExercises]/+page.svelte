@@ -1,7 +1,12 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { Search } from 'lucide-svelte';
 	import { getFilterOptions, searchExercises } from '$lib/data/exercises';
+	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const sl = $derived(fitnessSlugs(lang));
 
 	let { data } = $props();
 
@@ -18,25 +23,25 @@
 	}));
 </script>
 
-<svelte:head><title>Exercises - Fitness</title></svelte:head>
+<svelte:head><title>{lang === 'en' ? 'Exercises' : 'Übungen'} - Fitness</title></svelte:head>
 
 <div class="exercises-page">
-	<h1>Exercises</h1>
+	<h1>{t('exercises_title', lang)}</h1>
 
 	<div class="search-bar">
 		<Search size={16} />
-		<input type="text" placeholder="Search exercises…" bind:value={query} />
+		<input type="text" placeholder={t('search_exercises', lang)} bind:value={query} />
 	</div>
 
 	<div class="filters">
 		<select bind:value={bodyPartFilter}>
-			<option value="">All body parts</option>
+			<option value="">{t('all_body_parts', lang)}</option>
 			{#each filterOptions.bodyParts as bp}
 				<option value={bp}>{bp.charAt(0).toUpperCase() + bp.slice(1)}</option>
 			{/each}
 		</select>
 		<select bind:value={equipmentFilter}>
-			<option value="">All equipment</option>
+			<option value="">{t('all_equipment', lang)}</option>
 			{#each filterOptions.equipment as eq}
 				<option value={eq}>{eq.charAt(0).toUpperCase() + eq.slice(1)}</option>
 			{/each}
@@ -46,7 +51,7 @@
 	<ul class="exercise-list">
 		{#each filtered as exercise (exercise.id)}
 			<li>
-				<a href="/fitness/exercises/{exercise.id}" class="exercise-row">
+				<a href="/fitness/{sl.exercises}/{exercise.id}" class="exercise-row">
 					<div class="exercise-info">
 						<span class="exercise-name">{exercise.name}</span>
 						<span class="exercise-meta">{exercise.bodyPart} · {exercise.equipment}</span>
@@ -55,7 +60,7 @@
 			</li>
 		{/each}
 		{#if filtered.length === 0}
-			<li class="no-results">No exercises match your search.</li>
+			<li class="no-results">{t('no_exercises_match', lang)}</li>
 		{/if}
 	</ul>
 </div>

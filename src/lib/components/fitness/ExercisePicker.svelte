@@ -1,6 +1,10 @@
 <script>
 	import { exercises, getFilterOptions, searchExercises } from '$lib/data/exercises';
 	import { Search, X } from 'lucide-svelte';
+	import { page } from '$app/stores';
+	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
 
 	/**
 	 * @type {{
@@ -35,7 +39,7 @@
 	<div class="picker-backdrop" onclick={onClose}></div>
 	<div class="picker-panel">
 		<div class="picker-header">
-			<h2>Add Exercise</h2>
+			<h2>{t('picker_title', lang)}</h2>
 			<button class="close-btn" onclick={onClose} aria-label="Close">
 				<X size={20} />
 			</button>
@@ -45,20 +49,20 @@
 			<Search size={16} />
 			<input
 				type="text"
-				placeholder="Search exercises…"
+				placeholder={t('search_exercises', lang)}
 				bind:value={query}
 			/>
 		</div>
 
 		<div class="picker-filters">
 			<select bind:value={bodyPartFilter}>
-				<option value="">All body parts</option>
+				<option value="">{t('all_body_parts', lang)}</option>
 				{#each filterOptions.bodyParts as bp (bp)}
 					<option value={bp}>{bp.charAt(0).toUpperCase() + bp.slice(1)}</option>
 				{/each}
 			</select>
 			<select bind:value={equipmentFilter}>
-				<option value="">All equipment</option>
+				<option value="">{t('all_equipment', lang)}</option>
 				{#each filterOptions.equipment as eq (eq)}
 					<option value={eq}>{eq.charAt(0).toUpperCase() + eq.slice(1)}</option>
 				{/each}
@@ -75,7 +79,7 @@
 				</li>
 			{/each}
 			{#if filtered.length === 0}
-				<li class="no-results">No exercises found</li>
+				<li class="no-results">{t('no_exercises_found', lang)}</li>
 			{/if}
 		</ul>
 	</div>

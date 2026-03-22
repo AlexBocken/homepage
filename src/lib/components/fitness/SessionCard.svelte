@@ -1,6 +1,10 @@
 <script>
+	import { page } from '$app/stores';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { Clock, Weight, Trophy, Route, Gauge } from 'lucide-svelte';
+	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
+
+	const sl = $derived(fitnessSlugs(detectFitnessLang($page.url.pathname)));
 
 	/**
 	 * @type {{
@@ -138,7 +142,7 @@
 	});
 </script>
 
-<a href="/fitness/history/{session._id}" class="session-card">
+<a href="/fitness/{sl.history}/{session._id}" class="session-card">
 	<div class="card-top">
 		<h3 class="session-name">{session.name}</h3>
 		<span class="session-date">{formatDate(session.startTime)} &middot; {formatTime(session.startTime)}</span>

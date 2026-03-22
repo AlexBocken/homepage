@@ -1,13 +1,16 @@
 <script>
+	import { page } from '$app/stores';
 	import { getExerciseById } from '$lib/data/exercises';
+	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
 	let { exerciseId } = $props();
 
 	const exercise = $derived(getExerciseById(exerciseId));
+	const sl = $derived(fitnessSlugs(detectFitnessLang($page.url.pathname)));
 </script>
 
 {#if exercise}
-	<a href="/fitness/exercises/{exerciseId}" class="exercise-link">{exercise.name}</a>
+	<a href="/fitness/{sl.exercises}/{exerciseId}" class="exercise-link">{exercise.name}</a>
 {:else}
 	<span class="exercise-unknown">Unknown Exercise</span>
 {/if}
