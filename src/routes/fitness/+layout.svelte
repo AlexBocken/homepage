@@ -65,6 +65,12 @@
 		href="/fitness/workout/active"
 		elapsed={formatElapsed(workout.elapsedSeconds)}
 		paused={workout.paused}
+		syncStatus={sync.status}
+		onPauseToggle={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()}
+		restSeconds={workout.restTimerSeconds}
+		restTotal={workout.restTimerTotal}
+		onRestAdjust={(delta) => workout.adjustRestTimer(delta)}
+		onRestSkip={() => workout.cancelRestTimer()}
 	/>
 {/if}
 
