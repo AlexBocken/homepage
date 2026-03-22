@@ -502,7 +502,7 @@
 					onUpdate={(setIdx, d) => workout.updateSet(exIdx, setIdx, d)}
 					onToggleComplete={(setIdx) => {
 						workout.toggleSetComplete(exIdx, setIdx);
-						if (ex.sets[setIdx]?.completed && !workout.restTimerActive) {
+						if (ex.sets[setIdx]?.completed) {
 							workout.startRestTimer(ex.restTime, exIdx, setIdx);
 						}
 					}}
