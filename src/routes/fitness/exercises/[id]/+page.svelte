@@ -158,6 +158,8 @@
 	}
 </script>
 
+<svelte:head><title>{exercise?.name ?? 'Exercise'} - Fitness</title></svelte:head>
+
 <div class="exercise-detail">
 	<h1>{exercise?.name ?? 'Exercise'}</h1>
 

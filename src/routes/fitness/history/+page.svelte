@@ -35,6 +35,8 @@
 	}
 </script>
 
+<svelte:head><title>History - Fitness</title></svelte:head>
+
 <div class="history-page">
 	<h1>History</h1>
 

@@ -222,6 +222,8 @@
 	}
 </script>
 
+<svelte:head><title>Measure - Fitness</title></svelte:head>
+
 <div class="measure-page">
 	<h1>Measure</h1>
 
