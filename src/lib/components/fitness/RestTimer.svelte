@@ -41,13 +41,13 @@
 		overflow: hidden;
 		position: relative;
 		height: 2.2rem;
-		background: var(--color-bg-elevated);
+		background: var(--nord0);
 	}
 	.bar-fill {
 		position: absolute;
 		inset: 0;
 		width: 100%;
-		background: var(--color-primary);
+		background: var(--blue);
 		border-radius: 8px;
 		transition: width 1s linear;
 	}
@@ -66,14 +66,14 @@
 		font-size: 0.9rem;
 		font-weight: 700;
 		font-variant-numeric: tabular-nums;
-		color: var(--color-text-primary, inherit);
+		color: white;
 		cursor: pointer;
 		padding: 0.2rem 0.5rem;
 	}
 	.adjust-btn {
 		background: none;
 		border: none;
-		color: var(--color-text-primary, inherit);
+		color: white;
 		cursor: pointer;
 		font-size: 0.7rem;
 		font-weight: 600;
