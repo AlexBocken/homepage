@@ -410,6 +410,7 @@
 				{#each editorExercises as ex, exIdx (exIdx)}
 					{@const exercise = getExerciseById(ex.exerciseId)}
 					{@const exMetrics = getExerciseMetrics(exercise).filter((/** @type {string} */ m) => m !== 'rpe')}
+				{@const hasRpe = getExerciseMetrics(exercise).includes('rpe')}
 					<div class="editor-exercise">
 						<div class="editor-ex-header">
 							<span class="editor-ex-name">{exercise?.name ?? ex.exerciseId}</span>
@@ -433,6 +434,10 @@
 										{#if mIdx > 0}<span class="set-x">&times;</span>{/if}
 										<input type="number" inputmode={metric === 'reps' ? 'numeric' : 'decimal'} placeholder={METRIC_LABELS[metric].toLowerCase()} bind:value={set[metric]} />
 									{/each}
+									{#if hasRpe}
+										<span class="set-x">@</span>
+										<input class="rpe-input" type="number" inputmode="numeric" min="1" max="10" placeholder="rpe" bind:value={set.rpe} />
+									{/if}
 									{#if ex.sets.length > 1}
 										<button class="set-remove" onclick={() => editorRemoveSet(exIdx, setIdx)} aria-label="Remove set"><X size={14} /></button>
 									{/if}
@@ -924,6 +929,9 @@
 	.set-x {
 		color: var(--color-text-secondary);
 		font-size: 0.8rem;
+	}
+	.rpe-input {
+		width: 3rem;
 	}
 	.set-remove {
 		background: none;
