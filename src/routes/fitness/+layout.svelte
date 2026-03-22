@@ -3,16 +3,22 @@
 	import { onMount, onDestroy } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import UserHeader from '$lib/components/UserHeader.svelte';
+	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
 	import { BarChart3, Clock, Dumbbell, ListChecks, Ruler } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';
+	import { detectFitnessLang, fitnessSlugs, fitnessLabels } from '$lib/js/fitnessI18n';
 
 	let { data, children } = $props();
 	let user = $derived(data.session?.user);
 
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const s = $derived(fitnessSlugs(lang));
+	const labels = $derived(fitnessLabels(lang));
 
 	onMount(async () => {
 		workout.restore();
@@ -30,25 +36,34 @@
 		return currentPath.startsWith(path);
 	}
 
-	const isOnActivePage = $derived($page.url.pathname === '/fitness/workout/active');
+	const activePath = $derived(`/fitness/${s.workout}/${s.active}`);
+	const isOnActivePage = $derived($page.url.pathname === activePath);
 
 	/** @param {number} secs */
 	function formatElapsed(secs) {
 		const m = Math.floor(secs / 60);
-		const s = secs % 60;
-		return `${m}:${s.toString().padStart(2, '0')}`;
+		const sec = secs % 60;
+		return `${m}:${sec.toString().padStart(2, '0')}`;
 	}
 </script>
 
 <Header>
 	{#snippet links()}
 		<ul class="site_header">
-			<li><a href="/fitness/stats" class:active={isActive('/fitness/stats')}><BarChart3 size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Stats</span></a></li>
-			<li style="--active-fill: var(--nord13)"><a href="/fitness/history" class:active={isActive('/fitness/history')}><Clock size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">History</span></a></li>
-			<li style="--active-fill: var(--nord8)"><a href="/fitness/workout" class:active={isActive('/fitness/workout')}><Dumbbell size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Workout</span></a></li>
-			<li style="--active-fill: var(--nord14)"><a href="/fitness/exercises" class:active={isActive('/fitness/exercises')}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Exercises</span></a></li>
-			<li style="--active-fill: var(--nord12)"><a href="/fitness/measure" class:active={isActive('/fitness/measure')}><Ruler size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Measure</span></a></li>
+			<li><a href="/fitness/{s.stats}" class:active={isActive(`/fitness/${s.stats}`)}><BarChart3 size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.stats}</span></a></li>
+			<li style="--active-fill: var(--nord13)"><a href="/fitness/{s.history}" class:active={isActive(`/fitness/${s.history}`)}><Clock size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.history}</span></a></li>
+			<li style="--active-fill: var(--nord8)"><a href="/fitness/{s.workout}" class:active={isActive(`/fitness/${s.workout}`)}><Dumbbell size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.workout}</span></a></li>
+			<li style="--active-fill: var(--nord14)"><a href="/fitness/{s.exercises}" class:active={isActive(`/fitness/${s.exercises}`)}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.exercises}</span></a></li>
+			<li style="--active-fill: var(--nord12)"><a href="/fitness/{s.measure}" class:active={isActive(`/fitness/${s.measure}`)}><Ruler size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.measure}</span></a></li>
 		</ul>
+	{/snippet}
+
+	{#snippet language_selector_mobile()}
+		<LanguageSelector lang={lang} />
+	{/snippet}
+
+	{#snippet language_selector_desktop()}
+		<LanguageSelector lang={lang} />
 	{/snippet}
 
 	{#snippet right_side()}
@@ -62,7 +77,7 @@
 
 {#if workout.active && !isOnActivePage}
 	<WorkoutFab
-		href="/fitness/workout/active"
+		href={activePath}
 		elapsed={formatElapsed(workout.elapsedSeconds)}
 		paused={workout.paused}
 		syncStatus={sync.status}

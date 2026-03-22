@@ -1,9 +1,14 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
+	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import TemplateCard from '$lib/components/fitness/TemplateCard.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -48,7 +53,7 @@
 
 		// If there's an active workout, redirect to the active page
 		if (workout.active) {
-			goto('/fitness/workout/active');
+			goto(`/fitness/${sl.workout}/${sl.active}`);
 			return;
 		}
 
@@ -78,13 +83,13 @@
 		selectedTemplate = null;
 		workout.startFromTemplate(template);
 		await sync.onWorkoutStart();
-		goto('/fitness/workout/active');
+		goto(`/fitness/${sl.workout}/${sl.active}`);
 	}
 
 	async function startEmpty() {
 		workout.startEmpty();
 		await sync.onWorkoutStart();
-		goto('/fitness/workout/active');
+		goto(`/fitness/${sl.workout}/${sl.active}`);
 	}
 
 	async function startNextScheduled() {
@@ -285,19 +290,19 @@
 	}
 </script>
 
-<svelte:head><title>Workout - Fitness</title></svelte:head>
+<svelte:head><title>{lang === 'en' ? 'Workout' : 'Training'} - Fitness</title></svelte:head>
 
 <div class="template-view">
 	{#if hasSchedule && nextTemplate}
 		<section class="next-workout">
 			<div class="next-label">
 				<CalendarClock size={16} />
-				<span>Next in schedule</span>
+				<span>{t('next_in_schedule', lang)}</span>
 			</div>
 			<button class="next-workout-btn" onclick={startNextScheduled}>
 				<div class="next-info">
 					<span class="next-name">{nextTemplate.name}</span>
-					<span class="next-exercises">{nextTemplate.exercises.length} exercise{nextTemplate.exercises.length !== 1 ? 's' : ''}</span>
+					<span class="next-exercises">{nextTemplate.exercises.length} {nextTemplate.exercises.length !== 1 ? t('exercises_word', lang) : t('exercise', lang)}</span>
 				</div>
 				<div class="next-go">
 					<Play size={18} />
@@ -316,25 +321,25 @@
 
 	<section class="quick-start">
 		<button class="start-empty-btn" onclick={startEmpty}>
-			START AN EMPTY WORKOUT
+			{t('start_empty_workout', lang)}
 		</button>
 	</section>
 
 	<section class="templates-section">
 		<div class="templates-header">
-			<h2>Templates</h2>
+			<h2>{t('templates', lang)}</h2>
 			<div class="templates-header-actions">
 				<button class="header-icon-btn" onclick={openCreateTemplate} aria-label="Create template">
 					<Plus size={18} />
 				</button>
 				<button class="schedule-btn" onclick={openScheduleEditor} aria-label="Edit workout schedule">
 					<CalendarClock size={16} />
-					Schedule
+					{t('schedule', lang)}
 				</button>
 			</div>
 		</div>
 		{#if templates.length > 0}
-			<p class="template-count">My Templates ({templates.length})</p>
+			<p class="template-count">{t('my_templates', lang)} ({templates.length})</p>
 			<div class="template-grid">
 				{#each templates as template (template._id)}
 					<TemplateCard
@@ -345,7 +350,7 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="no-templates">No templates yet. Create one or start an empty workout.</p>
+			<p class="no-templates">{t('no_templates_yet', lang)}</p>
 		{/if}
 	</section>
 </div>
@@ -367,7 +372,7 @@
 						{@const exercise = getExerciseById(ex.exerciseId)}
 						<li>
 							<span class="tex-name">{exercise?.name ?? ex.exerciseId}</span>
-							<span class="tex-sets">{ex.sets.length} set{ex.sets.length !== 1 ? 's' : ''}</span>
+							<span class="tex-sets">{ex.sets.length} {ex.sets.length !== 1 ? t('sets', lang) : t('set', lang)}</span>
 						</li>
 					{/each}
 				</ul>
@@ -377,13 +382,13 @@
 			</div>
 			<div class="modal-actions">
 				<button class="modal-start" onclick={() => startFromTemplate(selectedTemplate)}>
-					<Play size={16} /> Start Workout
+					<Play size={16} /> {t('start_workout', lang)}
 				</button>
 				<button class="modal-edit" onclick={() => openEditTemplate(selectedTemplate)}>
-					<Pencil size={16} /> Edit Template
+					<Pencil size={16} /> {t('edit_template', lang)}
 				</button>
 				<button class="modal-delete" onclick={() => deleteTemplate(selectedTemplate)}>
-					<Trash2 size={16} /> Delete
+					<Trash2 size={16} /> {t('delete_template', lang)}
 				</button>
 			</div>
 		</div>
@@ -398,14 +403,14 @@
 		<div class="modal-backdrop" onclick={closeEditor}></div>
 		<div class="modal-panel editor-panel">
 			<div class="modal-header">
-				<h2>{editingTemplate ? 'Edit Template' : 'New Template'}</h2>
+				<h2>{editingTemplate ? t('edit_template', lang) : t('new_template', lang)}</h2>
 				<button class="close-btn" onclick={closeEditor} aria-label="Close"><X size={20} /></button>
 			</div>
 			<div class="modal-body">
 				<input
 					class="editor-name"
 					type="text"
-					placeholder="Template name"
+					placeholder={t('template_name_placeholder', lang)}
 					bind:value={editorName}
 				/>
 
@@ -445,18 +450,18 @@
 									{/if}
 								</div>
 							{/each}
-							<button class="editor-add-set" onclick={() => editorAddSet(exIdx)}>+ Add set</button>
+							<button class="editor-add-set" onclick={() => editorAddSet(exIdx)}>{t('add_set_lower', lang)}</button>
 						</div>
 					</div>
 				{/each}
 
 				<button class="editor-add-exercise" onclick={() => editorPicker = true}>
-					<Plus size={16} /> Add Exercise
+					<Plus size={16} /> {t('add_exercise_btn', lang)}
 				</button>
 			</div>
 			<div class="modal-actions">
 				<button class="modal-start" onclick={saveTemplate} disabled={editorSaving || !editorName.trim() || editorExercises.length === 0}>
-					<Save size={16} /> {editorSaving ? 'Saving…' : 'Save Template'}
+					<Save size={16} /> {editorSaving ? t('saving', lang) : t('save_template', lang)}
 				</button>
 			</div>
 		</div>
@@ -478,11 +483,11 @@
 		<div class="modal-backdrop" onclick={closeScheduleEditor}></div>
 		<div class="modal-panel editor-panel">
 			<div class="modal-header">
-				<h2>Workout Schedule</h2>
+				<h2>{t('workout_schedule', lang)}</h2>
 				<button class="close-btn" onclick={closeScheduleEditor} aria-label="Close"><X size={20} /></button>
 			</div>
 			<div class="modal-body">
-				<p class="schedule-hint">Select templates and arrange their order. After completing a workout, the next one in the rotation will be suggested.</p>
+				<p class="schedule-hint">{t('schedule_hint', lang)}</p>
 
 				{#if editorScheduleOrder.length > 0}
 					<div class="schedule-order">
@@ -507,7 +512,7 @@
 				{/if}
 
 				<div class="schedule-available">
-					<p class="schedule-available-label">Available templates</p>
+					<p class="schedule-available-label">{t('available_templates', lang)}</p>
 					{#each templates.filter((t) => !editorScheduleOrder.includes(t._id)) as template (template._id)}
 						<button class="schedule-add-item" onclick={() => toggleScheduleTemplate(template._id)}>
 							<Plus size={14} />
@@ -515,13 +520,13 @@
 						</button>
 					{/each}
 					{#if templates.filter((t) => !editorScheduleOrder.includes(t._id)).length === 0}
-						<p class="schedule-all-added">All templates are in the schedule</p>
+						<p class="schedule-all-added">{t('all_templates_scheduled', lang)}</p>
 					{/if}
 				</div>
 			</div>
 			<div class="modal-actions">
 				<button class="modal-start" onclick={saveAndCloseSchedule} disabled={scheduleSaving}>
-					<Save size={16} /> {scheduleSaving ? 'Saving…' : 'Save Schedule'}
+					<Save size={16} /> {scheduleSaving ? t('saving', lang) : t('save_schedule', lang)}
 				</button>
 			</div>
 		</div>

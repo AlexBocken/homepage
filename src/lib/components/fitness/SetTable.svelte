@@ -2,6 +2,10 @@
 	import { Check, X } from 'lucide-svelte';
 	import { METRIC_LABELS } from '$lib/data/exercises';
 	import RestTimer from './RestTimer.svelte';
+	import { page } from '$app/stores';
+	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
 
 	/**
 	 * @type {{
@@ -75,16 +79,16 @@
 			{#if editable && onRemove}
 				<th class="col-remove"></th>
 			{/if}
-			<th class="col-set">SET</th>
+			<th class="col-set">{t('set_header', lang)}</th>
 			{#if previousSets}
-				<th class="col-prev">PREV</th>
+				<th class="col-prev">{t('prev_header', lang)}</th>
 			{/if}
 			{#each mainMetrics as metric (metric)}
 				<th class="col-metric">{METRIC_LABELS[metric]}</th>
 			{/each}
 			{#if editable && hasRpe}
 				<th class="col-at"></th>
-				<th class="col-rpe">RPE</th>
+				<th class="col-rpe">{t('rpe', lang)}</th>
 			{/if}
 			{#if editable}
 				<th class="col-check"></th>

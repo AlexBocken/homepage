@@ -613,7 +613,9 @@ export const exercises: Exercise[] = [
 			'Stand with feet shoulder-width apart.',
 			'Squat down until thighs are at least parallel to the floor.',
 			'Drive through your heels to stand back up.'
-		]
+		],
+		imageUrl: "/fitness/squat-barbell/0.svg"
+
 	},
 	{
 		id: 'front-squat-barbell',

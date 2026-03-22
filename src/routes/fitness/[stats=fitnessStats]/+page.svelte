@@ -1,7 +1,11 @@
 <script>
+	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { Dumbbell, Route, Flame } from 'lucide-svelte';
 	import { onMount } from 'svelte';
+	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
 
 	let { data } = $props();
 
@@ -88,26 +92,26 @@
 
 </script>
 
-<svelte:head><title>Stats - Fitness</title></svelte:head>
+<svelte:head><title>{t('stats_title', lang)} - Fitness</title></svelte:head>
 
 <div class="stats-page">
-	<h1>Stats</h1>
+	<h1>{t('stats_title', lang)}</h1>
 
 	<div class="lifetime-cards">
 		<div class="lifetime-card workouts">
 			<div class="card-icon"><Dumbbell size={24} /></div>
 			<div class="card-value">{stats.totalWorkouts ?? 0}</div>
-			<div class="card-label">{(stats.totalWorkouts ?? 0) === 1 ? 'Workout' : 'Workouts'}</div>
+			<div class="card-label">{(stats.totalWorkouts ?? 0) === 1 ? t('workout_singular', lang) : t('workouts_plural', lang)}</div>
 		</div>
 		<div class="lifetime-card tonnage">
 			<div class="card-icon"><Flame size={24} /></div>
 			<div class="card-value">{stats.totalTonnage ?? 0}<span class="card-unit">t</span></div>
-			<div class="card-label">Lifted</div>
+			<div class="card-label">{t('lifted', lang)}</div>
 		</div>
 		<div class="lifetime-card cardio">
 			<div class="card-icon"><Route size={24} /></div>
 			<div class="card-value">{stats.totalCardioKm ?? 0}<span class="card-unit">km</span></div>
-			<div class="card-label">Distance Covered</div>
+			<div class="card-label">{t('distance_covered', lang)}</div>
 		</div>
 	</div>
 
@@ -115,17 +119,17 @@
 		<FitnessChart
 			type="bar"
 			data={workoutsChartData}
-			title="Workouts per week"
+			title={t('workouts_per_week', lang)}
 			height="220px"
 		/>
 	{:else}
-		<p class="empty-chart">No workout data to display yet.</p>
+		<p class="empty-chart">{t('no_workout_data', lang)}</p>
 	{/if}
 
 	{#if (stats.weightChart?.data?.length ?? 0) > 1}
 		<FitnessChart
 			data={weightChartData}
-			title="Weight"
+			title={t('weight', lang)}
 			yUnit=" kg"
 			height="220px"
 		/>

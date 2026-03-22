@@ -1,6 +1,11 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown } from 'lucide-svelte';
+	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+
+	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const sl = $derived(fitnessSlugs(lang));
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
@@ -29,7 +34,7 @@
 
 	onMount(() => {
 		if (!workout.active && !completionData) {
-			goto('/fitness/workout');
+			goto(`/fitness/${sl.workout}`);
 		}
 	});
 
@@ -60,7 +65,7 @@
 		const sessionData = workout.finish();
 		if (sessionData.exercises.length === 0) {
 			await sync.onWorkoutEnd();
-			await goto('/fitness/workout');
+			await goto(`/fitness/${sl.workout}`);
 			return;
 		}
 
@@ -322,12 +327,12 @@
 	});
 </script>
 
-<svelte:head><title>{workout.name || 'Workout'} - Fitness</title></svelte:head>
+<svelte:head><title>{workout.name || (lang === 'en' ? 'Workout' : 'Training')} - Fitness</title></svelte:head>
 
 {#if completionData}
 	<div class="completion">
 		<div class="completion-header">
-			<h1>Workout Complete</h1>
+			<h1>{t('workout_complete', lang)}</h1>
 			{#if completionData.prs.length > 0}
 				<div class="pr-badge">
 					<span class="pr-badge-count">{completionData.prs.length}</span>
@@ -341,7 +346,7 @@
 			<div class="comp-stat">
 				<Clock size={18} />
 				<span class="comp-stat-value">{formatDuration(completionData.durationMin)}</span>
-				<span class="comp-stat-label">Duration</span>
+				<span class="comp-stat-label">{t('duration', lang)}</span>
 			</div>
 			{#if completionData.totalTonnage > 0}
 				<div class="comp-stat">
@@ -351,21 +356,21 @@
 							? `${(completionData.totalTonnage / 1000).toFixed(1)}t`
 							: `${Math.round(completionData.totalTonnage)} kg`}
 					</span>
-					<span class="comp-stat-label">Tonnage</span>
+					<span class="comp-stat-label">{t('tonnage', lang)}</span>
 				</div>
 			{/if}
 			{#if completionData.totalDistance > 0}
 				<div class="comp-stat">
 					<Route size={18} />
 					<span class="comp-stat-value">{completionData.totalDistance.toFixed(1)} km</span>
-					<span class="comp-stat-label">Distance</span>
+					<span class="comp-stat-label">{t('distance', lang)}</span>
 				</div>
 			{/if}
 		</div>
 
 		{#if completionData.prs.length > 0}
 			<div class="prs-section">
-				<h2><Trophy size={16} /> Personal Records</h2>
+				<h2><Trophy size={16} /> {t('personal_records', lang)}</h2>
 				<div class="pr-list">
 					{#each completionData.prs as pr}
 						<div class="pr-item">
@@ -378,12 +383,12 @@
 		{/if}
 
 		<div class="exercise-summaries">
-			<h2>Exercises</h2>
+			<h2>{t('exercises_heading', lang)}</h2>
 			{#each completionData.exerciseSummaries as ex}
 				<div class="ex-summary">
 					<div class="ex-summary-header">
 						<span class="ex-summary-name">{getExerciseById(ex.exerciseId)?.name ?? ex.exerciseId}</span>
-						<span class="ex-summary-sets">{ex.sets} set{ex.sets !== 1 ? 's' : ''}</span>
+						<span class="ex-summary-sets">{ex.sets} {ex.sets !== 1 ? t('sets', lang) : t('set', lang)}</span>
 					</div>
 					<div class="ex-summary-stats">
 						{#if ex.isCardio}
@@ -394,11 +399,11 @@
 								<span>{ex.duration} min</span>
 							{/if}
 							{#if ex.pace > 0}
-								<span>{formatPace(ex.pace)} avg</span>
+								<span>{formatPace(ex.pace)} {t('avg', lang)}</span>
 							{/if}
 						{:else}
 							{#if ex.tonnage > 0}
-								<span>{ex.tonnage >= 1000 ? `${(ex.tonnage / 1000).toFixed(1)}t` : `${Math.round(ex.tonnage)} kg`} volume</span>
+								<span>{ex.tonnage >= 1000 ? `${(ex.tonnage / 1000).toFixed(1)}t` : `${Math.round(ex.tonnage)} kg`} {t('volume', lang)}</span>
 							{/if}
 							{#if ex.bestWeight > 0}
 								<span>Top: {ex.bestWeight} kg</span>
@@ -417,11 +422,11 @@
 				{#if templateUpdateStatus === 'done'}
 					<div class="template-updated">
 						<Check size={16} />
-						<span>Template updated</span>
+						<span>{t('template_updated', lang)}</span>
 					</div>
 				{:else}
-					<h2><RefreshCw size={16} /> Update Template</h2>
-					<p class="template-update-desc">Your weights or reps differ from the template:</p>
+					<h2><RefreshCw size={16} /> {t('update_template', lang)}</h2>
+					<p class="template-update-desc">{t('template_diff_desc', lang)}</p>
 					<div class="template-diff-list">
 						{#each templateDiffs as diff}
 							<div class="diff-item">
@@ -439,7 +444,7 @@
 									{/each}
 									{#if diff.newSets.length > diff.oldSets.length}
 										<div class="diff-set-row">
-											<span class="diff-new">+{diff.newSets.length - diff.oldSets.length} new set{diff.newSets.length - diff.oldSets.length > 1 ? 's' : ''}</span>
+											<span class="diff-new">+{diff.newSets.length - diff.oldSets.length} {diff.newSets.length - diff.oldSets.length > 1 ? t('new_sets_added', lang) : t('new_set_added', lang)}</span>
 										</div>
 									{/if}
 								</div>
@@ -447,14 +452,14 @@
 						{/each}
 					</div>
 					<button class="update-template-btn" onclick={updateTemplate} disabled={templateUpdateStatus === 'updating'}>
-						{templateUpdateStatus === 'updating' ? 'Updating...' : 'Update Template'}
+						{templateUpdateStatus === 'updating' ? t('updating', lang) : t('update_template', lang)}
 					</button>
 				{/if}
 			</div>
 		{/if}
 
-		<button class="done-btn" onclick={() => goto(`/fitness/history/${completionData.sessionId}`)}>
-			VIEW WORKOUT
+		<button class="done-btn" onclick={() => goto(`/fitness/${sl.history}/${completionData.sessionId}`)}>
+			{t('view_workout', lang)}
 		</button>
 	</div>
 
@@ -467,7 +472,7 @@
 			onfocus={() => { nameEditing = true; }}
 			onblur={() => { nameEditing = false; workout.name = nameInput; }}
 			onkeydown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
-			placeholder="Workout name"
+			placeholder={t('workout_name_placeholder', lang)}
 		/>
 
 		{#each workout.exercises as ex, exIdx (exIdx)}
@@ -512,17 +517,17 @@
 				/>
 
 				<button class="add-set-btn" onclick={() => workout.addSet(exIdx)}>
-					+ ADD SET
+					{t('add_set', lang)}
 				</button>
 			</div>
 		{/each}
 
 		<div class="workout-actions">
 			<button class="add-exercise-btn" onclick={() => showPicker = true}>
-				<Plus size={18} /> ADD EXERCISE
+				<Plus size={18} /> {t('add_exercise', lang)}
 			</button>
-			<button class="cancel-btn" onclick={async () => { workout.cancel(); await sync.onWorkoutEnd(); await goto('/fitness/workout'); }}>
-				CANCEL WORKOUT
+			<button class="cancel-btn" onclick={async () => { workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
+				{t('cancel_workout', lang)}
 			</button>
 		</div>
 
@@ -534,7 +539,7 @@
 				<span class="elapsed" class:paused={workout.paused}>{formatElapsed(workout.elapsedSeconds)}</span>
 				<SyncIndicator status={sync.status} />
 			</div>
-			<button class="finish-btn" onclick={finishWorkout}>FINISH</button>
+			<button class="finish-btn" onclick={finishWorkout}>{t('finish', lang)}</button>
 		</div>
 	</div>
 {/if}
