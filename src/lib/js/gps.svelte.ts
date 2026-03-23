@@ -1,7 +1,8 @@
 /**
  * GPS tracking utility for Tauri Android shell.
- * Uses @tauri-apps/plugin-geolocation when running inside Tauri,
- * falls back to a no-op tracker in the browser.
+ * Uses native Android LocationForegroundService for GPS collection
+ * (survives screen-off), with JS polling to pull points into the UI.
+ * Falls back to a no-op tracker in the browser.
  */
 
 export interface GpsPoint {
@@ -12,8 +13,22 @@ export interface GpsPoint {
 	timestamp: number;
 }
 
+interface AndroidBridge {
+	startLocationService(): void;
+	stopLocationService(): void;
+	getPoints(): string;
+	isTracking(): boolean;
+}
+
 function checkTauri(): boolean {
 	return typeof window !== 'undefined' && '__TAURI__' in window;
+}
+
+function getAndroidBridge(): AndroidBridge | null {
+	if (typeof window !== 'undefined' && 'AndroidBridge' in window) {
+		return (window as any).AndroidBridge;
+	}
+	return null;
 }
 
 
@@ -41,30 +56,47 @@ export function trackDistance(track: GpsPoint[]): number {
 	return total;
 }
 
+const POLL_INTERVAL_MS = 3000;
+
 export function createGpsTracker() {
 	let track = $state<GpsPoint[]>([]);
 	let isTracking = $state(false);
-	let _watchId: number | null = null;
+	let _pollTimer: ReturnType<typeof setInterval> | null = null;
 
 	const distance = $derived(trackDistance(track));
 	const currentSpeed = $derived(
 		track.length > 0 ? (track[track.length - 1].speed ?? 0) : 0
 	);
-	// Pace from track points: use last two points for instantaneous pace
 	const currentPace = $derived.by(() => {
 		if (track.length < 2) return 0;
 		const a = track[track.length - 2];
 		const b = track[track.length - 1];
 		const d = haversine(a, b);
-		const dt = (b.timestamp - a.timestamp) / 60000; // minutes
-		if (d < 0.001) return 0; // too close, skip
-		return dt / d; // min/km
+		const dt = (b.timestamp - a.timestamp) / 60000;
+		if (d < 0.001) return 0;
+		return dt / d;
 	});
 	const latestPoint = $derived(
 		track.length > 0 ? track[track.length - 1] : null
 	);
 
 	let _debugMsg = $state('');
+
+	function pollPoints() {
+		const bridge = getAndroidBridge();
+		if (!bridge) return;
+		try {
+			const json = bridge.getPoints();
+			const points: GpsPoint[] = JSON.parse(json);
+			if (points.length > 0) {
+				track = [...track, ...points];
+				const last = points[points.length - 1];
+				_debugMsg = `pts:${track.length} lat:${last.lat.toFixed(4)} lng:${last.lng.toFixed(4)}`;
+			}
+		} catch (e) {
+			_debugMsg = `poll err: ${(e as Error)?.message ?? e}`;
+		}
+	}
 
 	async function start() {
 		_debugMsg = 'starting...';
@@ -74,6 +106,7 @@ export function createGpsTracker() {
 		}
 
 		try {
+			// Still use the Tauri plugin to request permissions (it has the proper Android permission flow)
 			_debugMsg = 'importing plugin...';
 			const geo = await import('@tauri-apps/plugin-geolocation');
 			_debugMsg = 'checking perms...';
@@ -92,28 +125,20 @@ export function createGpsTracker() {
 
 			track = [];
 			isTracking = true;
-			_debugMsg = 'calling watchPosition...';
 
-			_watchId = await geo.watchPosition(
-				{ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-				(pos, err) => {
-					if (err) {
-						_debugMsg = `watch err: ${JSON.stringify(err)}`;
-						return;
-					}
-					if (!pos) return;
-					track = [...track, {
-						lat: pos.coords.latitude,
-						lng: pos.coords.longitude,
-						altitude: pos.coords.altitude ?? undefined,
-						speed: pos.coords.speed ?? undefined,
-						timestamp: pos.timestamp
-					}];
-					_debugMsg = `pts:${track.length} lat:${pos.coords.latitude.toFixed(4)} lng:${pos.coords.longitude.toFixed(4)}`;
-				}
-			);
-
-			_debugMsg = `watching (id=${_watchId})`;
+			// Start native Android foreground service — it does its own GPS tracking
+			const bridge = getAndroidBridge();
+			if (bridge) {
+				_debugMsg = 'starting native GPS service...';
+				bridge.startLocationService();
+				// Poll the native side for collected points
+				_pollTimer = setInterval(pollPoints, POLL_INTERVAL_MS);
+				_debugMsg = 'native GPS service started, polling...';
+			} else {
+				_debugMsg = 'no AndroidBridge — native tracking unavailable';
+				isTracking = false;
+				return false;
+			}
 
 			return true;
 		} catch (e) {
@@ -126,13 +151,20 @@ export function createGpsTracker() {
 	async function stop(): Promise<GpsPoint[]> {
 		if (!isTracking) return [];
 
-		try {
-			if (_watchId !== null) {
-				const geo = await import('@tauri-apps/plugin-geolocation');
-				await geo.clearWatch(_watchId);
-				_watchId = null;
-			}
-		} catch {}
+		// Stop polling
+		if (_pollTimer !== null) {
+			clearInterval(_pollTimer);
+			_pollTimer = null;
+		}
+
+		// Drain any remaining points from native
+		pollPoints();
+
+		// Stop native service
+		const bridge = getAndroidBridge();
+		if (bridge) {
+			bridge.stopLocationService();
+		}
 
 		isTracking = false;
 		const result = [...track];
