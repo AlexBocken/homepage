@@ -119,6 +119,7 @@
 	$effect(() => {
 		const len = gps.track.length;
 		if (len > prevTrackLen && liveMap && gps.latestPoint) {
+			// Add all new points since last update (native polling delivers batches)
 			for (let i = prevTrackLen; i < len; i++) {
 				const p = gps.track[i];
 				livePolyline.addLatLng([p.lat, p.lng]);
