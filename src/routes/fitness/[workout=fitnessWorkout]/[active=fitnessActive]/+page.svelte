@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -9,6 +9,7 @@
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -192,6 +193,24 @@
 			};
 		});
 
+		// Estimate kcal for strength exercises
+		/** @type {import('$lib/data/kcalEstimate').ExerciseData[]} */
+		const kcalExercises = [];
+		for (const ex of local.exercises) {
+			const exercise = getExerciseById(ex.exerciseId, lang);
+			const metrics = getExerciseMetrics(exercise);
+			if (metrics.includes('distance')) continue;
+			const weightMultiplier = exercise?.bilateral ? 2 : 1;
+			const sets = ex.sets
+				.filter((/** @type {any} */ s) => s.completed && s.reps > 0)
+				.map((/** @type {any} */ s) => ({
+					weight: (s.weight ?? 0) * weightMultiplier,
+					reps: s.reps ?? 0
+				}));
+			if (sets.length > 0) kcalExercises.push({ exerciseId: ex.exerciseId, sets });
+		}
+		const kcalResult = kcalExercises.length > 0 ? estimateWorkoutKcal(kcalExercises) : null;
+
 		return {
 			sessionId: saved._id,
 			name: local.name,
@@ -201,7 +220,8 @@
 			totalTonnage,
 			totalDistance,
 			exerciseSummaries,
-			prs
+			prs,
+			kcalResult
 		};
 	}
 
@@ -364,6 +384,13 @@
 					<Route size={18} />
 					<span class="comp-stat-value">{completionData.totalDistance.toFixed(1)} km</span>
 					<span class="comp-stat-label">{t('distance', lang)}</span>
+				</div>
+			{/if}
+			{#if completionData.kcalResult}
+				<div class="comp-stat kcal">
+					<Flame size={18} />
+					<span class="comp-stat-value">{completionData.kcalResult.kcal} &plusmn; {completionData.kcalResult.kcal - completionData.kcalResult.lower} kcal</span>
+					<span class="comp-stat-label">{t('est_kcal', lang)}</span>
 				</div>
 			{/if}
 		</div>
@@ -604,6 +631,9 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
+	}
+	.comp-stat.kcal {
+		color: var(--nord12);
 	}
 
 	.prs-section {

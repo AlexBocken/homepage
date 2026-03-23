@@ -71,8 +71,14 @@ const translations: Translations = {
 	workout_singular: { en: 'Workout', de: 'Training' },
 	workouts_plural: { en: 'Workouts', de: 'Trainings' },
 	lifted: { en: 'Lifted', de: 'Gehoben' },
+	est_kcal: { en: 'Est. kcal', de: 'Gesch. kcal' },
+	kcal_set_profile: { en: 'Set sex & height in', de: 'Geschlecht & Grösse unter' },
 	distance_covered: { en: 'Distance Covered', de: 'Zurückgelegt' },
 	workouts_per_week: { en: 'Workouts per week', de: 'Trainings pro Woche' },
+	sex: { en: 'Sex', de: 'Geschlecht' },
+	male: { en: 'Male', de: 'Männlich' },
+	female: { en: 'Female', de: 'Weiblich' },
+	height: { en: 'Height (cm)', de: 'Grösse (cm)' },
 	no_workout_data: { en: 'No workout data to display yet.', de: 'Noch keine Trainingsdaten vorhanden.' },
 	weight: { en: 'Weight', de: 'Gewicht' },
 
@@ -167,6 +173,7 @@ const translations: Translations = {
 
 	// Measure page
 	measure_title: { en: 'Measure', de: 'Messen' },
+	profile: { en: 'Profile', de: 'Profil' },
 	new_measurement: { en: 'New Measurement', de: 'Neue Messung' },
 	edit_measurement: { en: 'Edit Measurement', de: 'Messung bearbeiten' },
 	weight_kg: { en: 'Weight (kg)', de: 'Gewicht (kg)' },

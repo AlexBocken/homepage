@@ -14,31 +14,36 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	// If no goal set, return early
 	if (weeklyWorkouts === null) {
-		return json({ weeklyWorkouts: null, streak: 0 });
+		return json({ weeklyWorkouts: null, streak: 0, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null });
 	}
 
 	const streak = await computeStreak(user.nickname, weeklyWorkouts);
-	return json({ weeklyWorkouts, streak });
+	return json({ weeklyWorkouts, streak, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null });
 };
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
 	const user = await requireAuth(locals);
-	const { weeklyWorkouts } = await request.json();
+	const body = await request.json();
+	const { weeklyWorkouts, sex, heightCm } = body;
 
 	if (typeof weeklyWorkouts !== 'number' || weeklyWorkouts < 1 || weeklyWorkouts > 14 || !Number.isInteger(weeklyWorkouts)) {
 		return json({ error: 'weeklyWorkouts must be an integer between 1 and 14' }, { status: 400 });
 	}
 
+	const update: Record<string, unknown> = { weeklyWorkouts };
+	if (sex === 'male' || sex === 'female') update.sex = sex;
+	if (typeof heightCm === 'number' && heightCm >= 100 && heightCm <= 250) update.heightCm = heightCm;
+
 	await dbConnect();
 
-	await FitnessGoal.findOneAndUpdate(
+	const goal = await FitnessGoal.findOneAndUpdate(
 		{ username: user.nickname },
-		{ weeklyWorkouts },
-		{ upsert: true }
-	);
+		update,
+		{ upsert: true, new: true }
+	).lean() as any;
 
 	const streak = await computeStreak(user.nickname, weeklyWorkouts);
-	return json({ weeklyWorkouts, streak });
+	return json({ weeklyWorkouts, streak, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null });
 };
 
 async function computeStreak(username: string, weeklyGoal: number): Promise<number> {

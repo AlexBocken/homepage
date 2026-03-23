@@ -5,6 +5,8 @@ import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+import { estimateWorkoutKcal, estimateCumulativeKcal, type ExerciseData, type Demographics } from '$lib/data/kcalEstimate';
+import { FitnessGoal } from '$models/FitnessGoal';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
@@ -36,7 +38,23 @@ export const GET: RequestHandler = async ({ locals }) => {
 		}
 	]);
 
-	// Lifetime totals: tonnage lifted + cardio km
+	// Fetch user demographics for kcal estimation
+	const [goal, latestMeasurement] = await Promise.all([
+		FitnessGoal.findOne({ username: user.nickname }).lean() as any,
+		BodyMeasurement.findOne(
+			{ createdBy: user.nickname, weight: { $ne: null } },
+			{ weight: 1, bodyFatPercent: 1, _id: 0 }
+		).sort({ date: -1 }).lean() as any
+	]);
+
+	const demographics: Demographics = {
+		heightCm: goal?.heightCm ?? undefined,
+		isMale: (goal?.sex ?? 'male') === 'male',
+		bodyWeightKg: latestMeasurement?.weight ?? undefined,
+		bodyFatPct: latestMeasurement?.bodyFatPercent ?? undefined,
+	};
+
+	// Lifetime totals: tonnage lifted + cardio km + kcal estimate
 	const allSessions = await WorkoutSession.find(
 		{ createdBy: user.nickname },
 		{ 'exercises.exerciseId': 1, 'exercises.sets': 1 }
@@ -44,22 +62,37 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	let totalTonnage = 0;
 	let totalCardioKm = 0;
+	const workoutKcalResults: { kcal: number; see: number }[] = [];
+
 	for (const s of allSessions) {
+		const strengthExercises: ExerciseData[] = [];
 		for (const ex of s.exercises) {
 			const exercise = getExerciseById(ex.exerciseId);
 			const metrics = getExerciseMetrics(exercise);
 			const isCardio = metrics.includes('distance');
 			const weightMultiplier = exercise?.bilateral ? 2 : 1;
+			const completedSets: { weight: number; reps: number }[] = [];
 			for (const set of ex.sets) {
 				if (!set.completed) continue;
 				if (isCardio) {
 					totalCardioKm += set.distance ?? 0;
 				} else {
-					totalTonnage += (set.weight ?? 0) * weightMultiplier * (set.reps ?? 0);
+					const w = (set.weight ?? 0) * weightMultiplier;
+					totalTonnage += w * (set.reps ?? 0);
+					if (set.reps) completedSets.push({ weight: w, reps: set.reps });
 				}
 			}
+			if (completedSets.length > 0) {
+				strengthExercises.push({ exerciseId: ex.exerciseId, sets: completedSets });
+			}
+		}
+		if (strengthExercises.length > 0) {
+			const result = estimateWorkoutKcal(strengthExercises, demographics);
+			workoutKcalResults.push({ kcal: result.kcal, see: result.see });
 		}
 	}
+
+	const kcalEstimate = estimateCumulativeKcal(workoutKcalResults);
 
 	const weightMeasurements = await BodyMeasurement.find(
 		{ createdBy: user.nickname, weight: { $ne: null } },
@@ -141,6 +174,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		totalWorkouts,
 		totalTonnage: Math.round(totalTonnage / 1000 * 10) / 10,
 		totalCardioKm: Math.round(totalCardioKm * 10) / 10,
+		kcalEstimate,
 		workoutsChart,
 		weightChart
 	});
