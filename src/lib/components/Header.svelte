@@ -2,6 +2,9 @@
 import Symbol from "./Symbol.svelte"
 import ThemeToggle from "./ThemeToggle.svelte"
 import type { Snippet } from 'svelte';
+import { browser } from '$app/environment';
+
+const isTauri = browser && '__TAURI__' in window;
 
 let {
 	links,
@@ -335,7 +338,7 @@ nav {
 		<div class="spacer"></div>
 	{/if}
 	<div class="header-right">
-		<ThemeToggle />
+		{#if !isTauri}<ThemeToggle />{/if}
 		{@render language_selector_desktop?.()}
 		{@render right_side?.()}
 	</div>
