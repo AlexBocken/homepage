@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
-	import { Dumbbell, Route, Flame, Weight, Info } from 'lucide-svelte';
+	import { Dumbbell, Route, Flame, Weight } from 'lucide-svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
@@ -143,10 +143,6 @@
 		</div>
 		{#if stats.kcalEstimate}
 			<div class="lifetime-card kcal">
-				<a href="https://doi.org/10.1249/MSS.0000000000001925" target="_blank" rel="noopener" class="info-trigger">
-					<Info size={14} />
-					<span class="info-tooltip">Lytle et al. (2019)<br/>Med. Sci. Sports Exerc.<br/>DOI: 10.1249/MSS.0000000000001925</span>
-				</a>
 				<div class="card-icon"><Flame size={24} /></div>
 				<div class="card-value">~{stats.kcalEstimate.kcal.toLocaleString()}<span class="card-unit">kcal</span></div>
 				<div class="card-label">{t('est_kcal', lang)}</div>
@@ -318,44 +314,6 @@
 		margin-top: 0.1rem;
 		line-height: 1.3;
 	}
-	.info-trigger {
-		position: absolute;
-		top: 0.45rem;
-		right: 0.45rem;
-		color: var(--color-text-secondary);
-		opacity: 0.4;
-		cursor: help;
-		z-index: 2;
-		padding: 0.25rem;
-		text-decoration: none;
-	}
-	.info-trigger:hover {
-		opacity: 0.8;
-	}
-	.info-tooltip {
-		display: none;
-		position: absolute;
-		top: 100%;
-		right: 0;
-		margin-top: 0.25rem;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border, var(--nord3));
-		border-radius: 8px;
-		padding: 0.5rem 0.65rem;
-		font-size: 0.65rem;
-		font-weight: 400;
-		line-height: 1.4;
-		color: var(--color-text-secondary);
-		white-space: nowrap;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-		z-index: 20;
-		text-transform: none;
-		letter-spacing: 0;
-	}
-	.info-trigger:hover .info-tooltip {
-		display: block;
-	}
-
 	.card-hint a {
 		color: var(--nord12);
 		text-decoration: underline;
