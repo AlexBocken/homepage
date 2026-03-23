@@ -159,8 +159,9 @@
 	</div>
 
 	{#if goalEditing}
-		<div class="goal-editor-overlay" onkeydown={(e) => { if (e.key === 'Escape') goalEditing = false; }} role="dialog">
-			<div class="goal-editor-backdrop" onclick={() => goalEditing = false}></div>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="goal-editor-overlay" onkeydown={(e) => { if (e.key === 'Escape') goalEditing = false; }} role="dialog" tabindex="-1">
+			<div class="goal-editor-backdrop" onclick={() => goalEditing = false} onkeydown={(e) => { if (e.key === 'Escape') goalEditing = false; }} role="presentation"></div>
 			<div class="goal-editor-panel">
 				<h3>{t('weekly_goal', lang)}</h3>
 				<div class="goal-input-row">

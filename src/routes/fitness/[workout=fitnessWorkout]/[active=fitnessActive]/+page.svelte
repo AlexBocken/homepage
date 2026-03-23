@@ -90,7 +90,7 @@
 		}
 	}
 
-	let gpsToggling = false;
+	let gpsToggling = $state(false);
 	async function toggleGps() {
 		if (gpsToggling) return;
 		gpsToggling = true;
