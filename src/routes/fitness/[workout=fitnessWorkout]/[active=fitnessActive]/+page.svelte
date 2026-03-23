@@ -13,6 +13,7 @@
 	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
 	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
+	import { queueSession } from '$lib/offline/fitnessQueue';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
@@ -35,6 +36,7 @@
 	/** @type {any[]} */
 	let templateDiffs = $state([]);
 	let templateUpdateStatus = $state('idle'); // 'idle' | 'updating' | 'done'
+	let offlineQueued = $state(false);
 
 	let useGps = $state(gps.isTracking);
 
@@ -214,9 +216,15 @@
 				const d = await res.json();
 				completionData = buildCompletion(sessionData, d.session);
 				computeTemplateDiff(completionData);
+			} else {
+				await queueSession(sessionData);
+				offlineQueued = true;
+				completionData = buildCompletion(sessionData, { _id: null });
 			}
-		} catch (err) {
-			console.error('[finish] fetch error:', err);
+		} catch {
+			await queueSession(sessionData);
+			offlineQueued = true;
+			completionData = buildCompletion(sessionData, { _id: null });
 			await sync.onWorkoutEnd();
 		}
 	}
@@ -526,6 +534,9 @@
 				</div>
 			{/if}
 			<p class="completion-name">{completionData.name}</p>
+			{#if offlineQueued}
+				<p class="offline-banner">{t('workout_saved_offline', lang)}</p>
+			{/if}
 		</div>
 
 		<div class="completion-stats">
@@ -651,8 +662,8 @@
 			</div>
 		{/if}
 
-		<button class="done-btn" onclick={() => goto(`/fitness/${sl.history}/${completionData.sessionId}`)}>
-			{t('view_workout', lang)}
+		<button class="done-btn" onclick={() => goto(offlineQueued ? `/fitness/${sl.workout}` : `/fitness/${sl.history}/${completionData.sessionId}`)}>
+			{offlineQueued ? t('done', lang) : t('view_workout', lang)}
 		</button>
 	</div>
 
@@ -793,6 +804,14 @@
 		margin: 0.25rem 0 0;
 		font-size: 0.9rem;
 		color: var(--color-text-secondary);
+	}
+	.offline-banner {
+		margin: 0.5rem 0 0;
+		padding: 0.4rem 0.8rem;
+		font-size: 0.8rem;
+		color: var(--nord0);
+		background: var(--nord13);
+		border-radius: 0.4rem;
 	}
 	.pr-badge {
 		display: inline-flex;
