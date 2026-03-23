@@ -9,6 +9,7 @@
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';
 	import { detectFitnessLang, fitnessSlugs, fitnessLabels } from '$lib/js/fitnessI18n';
+	import { flushQueue } from '$lib/offline/fitnessQueue';
 
 	let { data, children } = $props();
 	let user = $derived(data.session?.user);
@@ -20,14 +21,34 @@
 	const s = $derived(fitnessSlugs(lang));
 	const labels = $derived(fitnessLabels(lang));
 
+	/** Pre-cache all fitness page shells so they work offline */
+	function precacheFitnessShells() {
+		if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
+		const slugs = [
+			'workout', 'training', 'workout/active', 'training/aktiv',
+			'exercises', 'uebungen', 'stats', 'statistik',
+			'history', 'verlauf', 'measure', 'messen'
+		];
+		const urls = slugs.map((s) => `/fitness/${s}`);
+		navigator.serviceWorker.controller.postMessage({ type: 'CACHE_PAGES', urls });
+	}
+
+	function onOnline() {
+		flushQueue();
+	}
+
 	onMount(async () => {
 		workout.restore();
 		workout.onChange(() => sync.notifyChange());
 		await sync.init();
+		flushQueue();
+		precacheFitnessShells();
+		window.addEventListener('online', onOnline);
 	});
 
 	onDestroy(() => {
 		sync.destroy();
+		if (typeof window !== 'undefined') window.removeEventListener('online', onOnline);
 	});
 
 	/** @param {string} path */
