@@ -30,6 +30,7 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 		<SyncIndicator status={syncStatus} />
 	</div>
 	{#if restTotal > 0 && restSeconds > 0}
+		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 		<div class="rest-pill" onclick={(e) => e.stopPropagation()}>
 			<div class="rest-fill" style:width="{restProgress * 100}%"></div>
 			<div class="rest-controls">
