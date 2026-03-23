@@ -187,6 +187,7 @@
 					data={workoutsChartData}
 					title={t('workouts_per_week', lang)}
 					height="220px"
+					goalLine={goalWeekly ?? undefined}
 				/>
 			{:else}
 				<p class="empty-chart">{t('no_workout_data', lang)}</p>
