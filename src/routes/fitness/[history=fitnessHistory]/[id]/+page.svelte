@@ -99,12 +99,12 @@
 
 	/** @param {string} exerciseId */
 	function addExerciseToEdit(exerciseId) {
-		const exercise = getExerciseById(exerciseId);
+		const exercise = getExerciseById(exerciseId, lang);
 		editData.exercises = [
 			...editData.exercises,
 			{
 				exerciseId,
-				name: exercise?.name ?? exerciseId,
+				name: exercise?.localName ?? exerciseId,
 				restTime: 120,
 				sets: [{ completed: true }]
 			}
@@ -666,10 +666,10 @@
 			<h2>{t('personal_records', lang)}</h2>
 			<div class="pr-list">
 				{#each session.prs as pr (pr.exerciseId + pr.type)}
-					{@const exercise = getExerciseById(pr.exerciseId)}
+					{@const exercise = getExerciseById(pr.exerciseId, lang)}
 					<div class="pr-item">
 						<Trophy size={14} class="pr-icon" />
-						<span class="pr-exercise">{exercise?.name ?? pr.exerciseId}</span>
+						<span class="pr-exercise">{exercise?.localName ?? pr.exerciseId}</span>
 						<span class="pr-type">
 							{#if pr.type === 'est1rm'}Est. 1RM
 							{:else if pr.type === 'maxWeight'}Max Weight

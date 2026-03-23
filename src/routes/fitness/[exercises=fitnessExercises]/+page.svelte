@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { Search } from 'lucide-svelte';
-	import { getFilterOptions, searchExercises } from '$lib/data/exercises';
+	import { getFilterOptions, searchExercises, translateTerm } from '$lib/data/exercises';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -19,7 +19,8 @@
 	const filtered = $derived(searchExercises({
 		search: query || undefined,
 		bodyPart: bodyPartFilter || undefined,
-		equipment: equipmentFilter || undefined
+		equipment: equipmentFilter || undefined,
+		lang
 	}));
 </script>
 
@@ -37,13 +38,13 @@
 		<select bind:value={bodyPartFilter}>
 			<option value="">{t('all_body_parts', lang)}</option>
 			{#each filterOptions.bodyParts as bp}
-				<option value={bp}>{bp.charAt(0).toUpperCase() + bp.slice(1)}</option>
+				{@const label = translateTerm(bp, lang)}<option value={bp}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
 			{/each}
 		</select>
 		<select bind:value={equipmentFilter}>
 			<option value="">{t('all_equipment', lang)}</option>
 			{#each filterOptions.equipment as eq}
-				<option value={eq}>{eq.charAt(0).toUpperCase() + eq.slice(1)}</option>
+				{@const label = translateTerm(eq, lang)}<option value={eq}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
 			{/each}
 		</select>
 	</div>
@@ -53,8 +54,8 @@
 			<li>
 				<a href="/fitness/{sl.exercises}/{exercise.id}" class="exercise-row">
 					<div class="exercise-info">
-						<span class="exercise-name">{exercise.name}</span>
-						<span class="exercise-meta">{exercise.bodyPart} · {exercise.equipment}</span>
+						<span class="exercise-name">{exercise.localName}</span>
+						<span class="exercise-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
 					</div>
 				</a>
 			</li>
