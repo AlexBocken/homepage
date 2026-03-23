@@ -25,6 +25,8 @@ export interface IActiveWorkout {
   savedAt: number;
   restStartedAt: number | null;
   restTotal: number;
+  restExerciseIdx: number;
+  restSetIdx: number;
   updatedAt?: Date;
 }
 
@@ -87,6 +89,14 @@ const ActiveWorkoutSchema = new mongoose.Schema(
     restTotal: {
       type: Number,
       default: 0
+    },
+    restExerciseIdx: {
+      type: Number,
+      default: -1
+    },
+    restSetIdx: {
+      type: Number,
+      default: -1
     }
   },
   {

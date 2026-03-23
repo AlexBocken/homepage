@@ -34,7 +34,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   try {
     await dbConnect();
     const data = await request.json();
-    const { name, templateId, exercises, paused, elapsed, savedAt, expectedVersion, restStartedAt, restTotal } = data;
+    const { name, templateId, exercises, paused, elapsed, savedAt, expectedVersion, restStartedAt, restTotal, restExerciseIdx, restSetIdx } = data;
 
     if (!name) {
       return json({ error: 'Name is required' }, { status: 400 });
@@ -65,6 +65,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
           savedAt: savedAt ?? Date.now(),
           restStartedAt: restStartedAt ?? null,
           restTotal: restTotal ?? 0,
+          restExerciseIdx: restExerciseIdx ?? -1,
+          restSetIdx: restSetIdx ?? -1,
           version: newVersion
         },
         $setOnInsert: { userId }
