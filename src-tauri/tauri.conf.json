@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "build": {
     "devUrl": "http://192.168.1.4:5173",
-    "frontendDist": "http://192.168.1.4:5173"
+    "frontendDist": "https://bocken.org"
   },
   "app": {
     "withGlobalTauri": true,
@@ -13,7 +13,7 @@
         "title": "Bocken Fitness",
         "url": "/fitness",
         "fullscreen": false,
-        "useHttpsScheme": false
+        "useHttpsScheme": true
       }
     ]
   },
