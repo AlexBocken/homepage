@@ -128,6 +128,7 @@ const translations: Translations = {
 
 	// Active workout / completion
 	workout_complete: { en: 'Workout Complete', de: 'Training abgeschlossen' },
+	workout_saved_offline: { en: 'Saved offline — will sync when back online.', de: 'Offline gespeichert — wird bei Verbindung synchronisiert.' },
 	duration: { en: 'Duration', de: 'Dauer' },
 	tonnage: { en: 'Tonnage', de: 'Tonnage' },
 	distance: { en: 'Distance', de: 'Distanz' },
@@ -139,6 +140,7 @@ const translations: Translations = {
 	template_diff_desc: { en: 'Your weights or reps differ from the template:', de: 'Gewichte oder Wiederholungen weichen von der Vorlage ab:' },
 	updating: { en: 'Updating...', de: 'Aktualisieren...' },
 	view_workout: { en: 'VIEW WORKOUT', de: 'TRAINING ANSEHEN' },
+	done: { en: 'DONE', de: 'FERTIG' },
 	workout_name_placeholder: { en: 'Workout name', de: 'Trainingsname' },
 	cancel_workout: { en: 'CANCEL WORKOUT', de: 'TRAINING ABBRECHEN' },
 	finish: { en: 'FINISH', de: 'BEENDEN' },
