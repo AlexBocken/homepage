@@ -5,12 +5,13 @@
 
 	let { exerciseId } = $props();
 
-	const exercise = $derived(getExerciseById(exerciseId));
-	const sl = $derived(fitnessSlugs(detectFitnessLang($page.url.pathname)));
+	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const exercise = $derived(getExerciseById(exerciseId, lang));
+	const sl = $derived(fitnessSlugs(lang));
 </script>
 
 {#if exercise}
-	<a href="/fitness/{sl.exercises}/{exerciseId}" class="exercise-link">{exercise.name}</a>
+	<a href="/fitness/{sl.exercises}/{exerciseId}" class="exercise-link">{exercise.localName}</a>
 {:else}
 	<span class="exercise-unknown">Unknown Exercise</span>
 {/if}

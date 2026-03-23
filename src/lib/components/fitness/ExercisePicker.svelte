@@ -1,5 +1,5 @@
 <script>
-	import { exercises, getFilterOptions, searchExercises } from '$lib/data/exercises';
+	import { getFilterOptions, searchExercises, translateTerm } from '$lib/data/exercises';
 	import { Search, X } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
@@ -23,7 +23,8 @@
 	const filtered = $derived(searchExercises({
 		search: query || undefined,
 		bodyPart: bodyPartFilter || undefined,
-		equipment: equipmentFilter || undefined
+		equipment: equipmentFilter || undefined,
+		lang
 	}));
 
 	/** @param {string} id */
@@ -58,13 +59,13 @@
 			<select bind:value={bodyPartFilter}>
 				<option value="">{t('all_body_parts', lang)}</option>
 				{#each filterOptions.bodyParts as bp (bp)}
-					<option value={bp}>{bp.charAt(0).toUpperCase() + bp.slice(1)}</option>
+					{@const label = translateTerm(bp, lang)}<option value={bp}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
 				{/each}
 			</select>
 			<select bind:value={equipmentFilter}>
 				<option value="">{t('all_equipment', lang)}</option>
 				{#each filterOptions.equipment as eq (eq)}
-					<option value={eq}>{eq.charAt(0).toUpperCase() + eq.slice(1)}</option>
+					{@const label = translateTerm(eq, lang)}<option value={eq}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
 				{/each}
 			</select>
 		</div>
@@ -73,8 +74,8 @@
 			{#each filtered as exercise (exercise.id)}
 				<li>
 					<button class="exercise-item" onclick={() => select(exercise.id)}>
-						<span class="ex-name">{exercise.name}</span>
-						<span class="ex-meta">{exercise.bodyPart} · {exercise.equipment}</span>
+						<span class="ex-name">{exercise.localName}</span>
+						<span class="ex-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
 					</button>
 				</li>
 			{/each}

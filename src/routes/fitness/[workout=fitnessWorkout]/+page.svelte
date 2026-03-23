@@ -369,9 +369,9 @@
 			<div class="modal-body">
 				<ul class="template-exercises">
 					{#each selectedTemplate.exercises as ex (ex.exerciseId)}
-						{@const exercise = getExerciseById(ex.exerciseId)}
+						{@const exercise = getExerciseById(ex.exerciseId, lang)}
 						<li>
-							<span class="tex-name">{exercise?.name ?? ex.exerciseId}</span>
+							<span class="tex-name">{exercise?.localName ?? ex.exerciseId}</span>
 							<span class="tex-sets">{ex.sets.length} {ex.sets.length !== 1 ? t('sets', lang) : t('set', lang)}</span>
 						</li>
 					{/each}
@@ -415,12 +415,12 @@
 				/>
 
 				{#each editorExercises as ex, exIdx (exIdx)}
-					{@const exercise = getExerciseById(ex.exerciseId)}
+					{@const exercise = getExerciseById(ex.exerciseId, lang)}
 					{@const exMetrics = getExerciseMetrics(exercise).filter((/** @type {string} */ m) => m !== 'rpe')}
 				{@const hasRpe = getExerciseMetrics(exercise).includes('rpe')}
 					<div class="editor-exercise">
 						<div class="editor-ex-header">
-							<span class="editor-ex-name">{exercise?.name ?? ex.exerciseId}</span>
+							<span class="editor-ex-name">{exercise?.localName ?? ex.exerciseId}</span>
 							<div class="editor-ex-actions">
 								<button class="move-exercise" disabled={exIdx === 0} onclick={() => editorMoveExercise(exIdx, -1)} aria-label="Move up">
 									<ChevronUp size={14} />
