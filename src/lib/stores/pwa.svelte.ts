@@ -30,9 +30,12 @@ function createPWAStore() {
 
 	let autoSyncInterval: ReturnType<typeof setInterval> | null = null;
 
-	// Check if running as installed PWA (standalone mode)
+	// Check if running as installed PWA or Tauri app
 	function checkStandaloneMode(): boolean {
 		if (!browser) return false;
+
+		// Check Tauri Android shell
+		if ('__TAURI__' in window) return true;
 
 		// Check display-mode media query (works on most browsers)
 		const standaloneQuery = window.matchMedia('(display-mode: standalone)');
