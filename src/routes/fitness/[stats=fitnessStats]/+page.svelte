@@ -1,9 +1,9 @@
 <script>
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
-	import { Dumbbell, Route, Flame, Zap } from 'lucide-svelte';
+	import { Dumbbell, Route, Flame, Zap, Weight, Info } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 
@@ -37,6 +37,8 @@
 	let goalEditing = $state(false);
 	let goalInput = $state(4);
 	let goalSaving = $state(false);
+
+	const hasDemographics = $derived(data.goal?.sex != null && data.goal?.heightCm != null);
 
 	function startGoalEdit() {
 		goalInput = goalWeekly ?? 4;
@@ -134,10 +136,24 @@
 			<div class="card-label">{(stats.totalWorkouts ?? 0) === 1 ? t('workout_singular', lang) : t('workouts_plural', lang)}</div>
 		</div>
 		<div class="lifetime-card tonnage">
-			<div class="card-icon"><Flame size={24} /></div>
+			<div class="card-icon"><Weight size={24} /></div>
 			<div class="card-value">{stats.totalTonnage ?? 0}<span class="card-unit">t</span></div>
 			<div class="card-label">{t('lifted', lang)}</div>
 		</div>
+		{#if stats.kcalEstimate}
+			<div class="lifetime-card kcal">
+				<a href="https://doi.org/10.1249/MSS.0000000000001925" target="_blank" rel="noopener" class="info-trigger">
+					<Info size={14} />
+					<span class="info-tooltip">Lytle et al. (2019)<br/>Med. Sci. Sports Exerc.<br/>DOI: 10.1249/MSS.0000000000001925</span>
+				</a>
+				<div class="card-icon"><Flame size={24} /></div>
+				<div class="card-value">~{stats.kcalEstimate.kcal.toLocaleString()}<span class="card-unit">kcal</span></div>
+				<div class="card-label">{t('est_kcal', lang)}</div>
+				{#if !hasDemographics}
+					<div class="card-hint">{t('kcal_set_profile', lang)} <a href="/fitness/{fitnessSlugs(lang).measure}">{t('measure_title', lang)}</a></div>
+				{/if}
+			</div>
+		{/if}
 		<div class="lifetime-card cardio">
 			<div class="card-icon"><Route size={24} /></div>
 			<div class="card-value">{stats.totalCardioKm ?? 0}<span class="card-unit">km</span></div>
@@ -210,7 +226,7 @@
 
 	.lifetime-cards {
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: repeat(5, 1fr);
 		gap: 0.6rem;
 	}
 	.lifetime-card {
@@ -224,7 +240,6 @@
 		box-shadow: var(--shadow-sm);
 		text-align: center;
 		position: relative;
-		overflow: hidden;
 	}
 	button.lifetime-card {
 		border: none;
@@ -247,6 +262,9 @@
 		background: var(--color-primary);
 	}
 	.lifetime-card.tonnage::before {
+		background: var(--nord10);
+	}
+	.lifetime-card.kcal::before {
 		background: var(--nord12);
 	}
 	.lifetime-card.cardio::before {
@@ -269,6 +287,10 @@
 		background: color-mix(in srgb, var(--color-primary) 15%, transparent);
 	}
 	.tonnage .card-icon {
+		color: var(--nord10);
+		background: color-mix(in srgb, var(--nord10) 15%, transparent);
+	}
+	.kcal .card-icon {
 		color: var(--nord12);
 		background: color-mix(in srgb, var(--nord12) 15%, transparent);
 	}
@@ -305,8 +327,57 @@
 		opacity: 0.7;
 		margin-top: 0.1rem;
 	}
+	.card-hint {
+		font-size: 0.55rem;
+		color: var(--color-text-secondary);
+		opacity: 0.7;
+		margin-top: 0.1rem;
+		line-height: 1.3;
+	}
+	.info-trigger {
+		position: absolute;
+		top: 0.45rem;
+		right: 0.45rem;
+		color: var(--color-text-secondary);
+		opacity: 0.4;
+		cursor: help;
+		z-index: 2;
+		padding: 0.25rem;
+		text-decoration: none;
+	}
+	.info-trigger:hover {
+		opacity: 0.8;
+	}
+	.info-tooltip {
+		display: none;
+		position: absolute;
+		top: 100%;
+		right: 0;
+		margin-top: 0.25rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border, var(--nord3));
+		border-radius: 8px;
+		padding: 0.5rem 0.65rem;
+		font-size: 0.65rem;
+		font-weight: 400;
+		line-height: 1.4;
+		color: var(--color-text-secondary);
+		white-space: nowrap;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		z-index: 20;
+		text-transform: none;
+		letter-spacing: 0;
+	}
+	.info-trigger:hover .info-tooltip {
+		display: block;
+	}
 
-	@media (max-width: 600px) {
+	.card-hint a {
+		color: var(--nord12);
+		text-decoration: underline;
+	}
+
+	@media (max-width: 750px) {
 		.lifetime-cards {
 			grid-template-columns: repeat(2, 1fr);
 		}

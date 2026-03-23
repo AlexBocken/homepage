@@ -14,6 +14,39 @@
 	let measurements = $state(data.measurements?.measurements ? [...data.measurements.measurements] : []);
 	let showForm = $state(false);
 	let saving = $state(false);
+
+	// Profile fields (sex, height) — stored in FitnessGoal
+	let profileSex = $state(data.profile?.sex ?? 'male');
+	let profileHeight = $state(data.profile?.heightCm != null ? String(data.profile.heightCm) : '');
+	let profileSaving = $state(false);
+	let profileDirty = $derived(
+		profileSex !== (data.profile?.sex ?? 'male') ||
+		profileHeight !== (data.profile?.heightCm != null ? String(data.profile.heightCm) : '')
+	);
+
+	async function saveProfile() {
+		profileSaving = true;
+		try {
+			/** @type {Record<string, unknown>} */
+			const body = {
+				weeklyWorkouts: data.profile?.weeklyWorkouts ?? 4,
+				sex: profileSex
+			};
+			const h = Number(profileHeight);
+			if (h >= 100 && h <= 250) body.heightCm = h;
+			const res = await fetch('/api/fitness/goal', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+			if (res.ok) {
+				const d = await res.json();
+				data.profile = d;
+			}
+		} finally {
+			profileSaving = false;
+		}
+	}
 	/** @type {string | null} */
 	let editingId = $state(null);
 
@@ -231,6 +264,28 @@
 <div class="measure-page">
 	<h1>{t('measure_title', lang)}</h1>
 
+	<section class="profile-section">
+		<h2>{t('profile', lang)}</h2>
+		<div class="profile-row">
+			<div class="form-group">
+				<label for="p-sex">{t('sex', lang)}</label>
+				<select id="p-sex" bind:value={profileSex}>
+					<option value="male">{t('male', lang)}</option>
+					<option value="female">{t('female', lang)}</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="p-height">{t('height', lang)}</label>
+				<input id="p-height" type="number" min="100" max="250" placeholder="175" bind:value={profileHeight} />
+			</div>
+			{#if profileDirty}
+				<button class="profile-save-btn" onclick={saveProfile} disabled={profileSaving}>
+					{profileSaving ? t('saving', lang) : t('save', lang)}
+				</button>
+			{/if}
+		</div>
+	</section>
+
 	{#if showForm}
 		<form class="measure-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
 			<div class="form-header">
@@ -373,6 +428,48 @@
 		margin: 0.75rem 0 0.25rem;
 		font-size: 0.85rem;
 		color: var(--color-text-secondary);
+	}
+
+	/* Profile */
+	.profile-section {
+		background: var(--color-surface);
+		border-radius: 8px;
+		box-shadow: var(--shadow-sm);
+		padding: 0.75rem 1rem;
+	}
+	.profile-section h2 {
+		margin: 0 0 0.5rem;
+		font-size: 0.9rem;
+	}
+	.profile-row {
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-end;
+	}
+	.profile-row select {
+		padding: 0.4rem 0.5rem;
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		background: var(--color-bg-elevated);
+		color: inherit;
+		font-size: 0.85rem;
+	}
+	.profile-save-btn {
+		padding: 0.4rem 0.75rem;
+		background: var(--color-primary);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 0.8rem;
+		cursor: pointer;
+		white-space: nowrap;
+		align-self: flex-end;
+		margin-bottom: 0.4rem;
+	}
+	.profile-save-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
 	}
 
 	/* Form */

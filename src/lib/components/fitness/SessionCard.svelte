@@ -1,7 +1,8 @@
 <script>
 	import { page } from '$app/stores';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
-	import { Clock, Weight, Trophy, Route, Gauge } from 'lucide-svelte';
+	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
+	import { Clock, Weight, Trophy, Route, Gauge, Flame } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -115,6 +116,27 @@
 		return { points, viewBox: `0 0 ${vbW} ${vbH}` };
 	});
 
+	/** Estimate kcal for this session */
+	const kcalResult = $derived.by(() => {
+		/** @type {import('$lib/data/kcalEstimate').ExerciseData[]} */
+		const exercises = [];
+		for (const ex of session.exercises) {
+			const exercise = getExerciseById(ex.exerciseId, lang);
+			const metrics = getExerciseMetrics(exercise);
+			if (metrics.includes('distance')) continue; // skip cardio
+			const weightMultiplier = exercise?.bilateral ? 2 : 1;
+			const sets = ex.sets
+				.filter((/** @type {any} */ s) => s.reps > 0)
+				.map((/** @type {any} */ s) => ({
+					weight: (s.weight ?? 0) * weightMultiplier,
+					reps: s.reps ?? 0
+				}));
+			if (sets.length > 0) exercises.push({ exerciseId: ex.exerciseId, sets });
+		}
+		if (exercises.length === 0) return null;
+		return estimateWorkoutKcal(exercises);
+	});
+
 	/** Check if this session has any cardio exercise with GPS data */
 	const hasGpsCardio = $derived(session.exercises.some(ex => {
 		const exercise = getExerciseById(ex.exerciseId, lang);
@@ -189,6 +211,9 @@
 			{/if}
 		{:else if session.totalVolume}
 			<span class="stat"><Weight size={14} /> {session.totalVolume >= 1000 ? `${(session.totalVolume / 1000).toFixed(1)}t` : `${Math.round(session.totalVolume).toLocaleString()} kg`}</span>
+		{/if}
+		{#if kcalResult}
+			<span class="stat kcal"><Flame size={14} /> {kcalResult.kcal} &plusmn; {kcalResult.kcal - kcalResult.lower} kcal</span>
 		{/if}
 		{#if session.prs && session.prs.length > 0}
 			<span class="stat pr"><Trophy size={14} /> {session.prs.length} PR{session.prs.length > 1 ? 's' : ''}</span>
@@ -271,6 +296,9 @@
 	.stat.accent {
 		color: var(--color-primary);
 		font-weight: 700;
+	}
+	.stat.kcal {
+		color: var(--nord12);
 	}
 	.stat.pr {
 		color: var(--nord13);

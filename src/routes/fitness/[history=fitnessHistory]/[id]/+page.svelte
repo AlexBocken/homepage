@@ -1,12 +1,13 @@
 <script>
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge } from 'lucide-svelte';
+	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge, Flame } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
+	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -16,6 +17,27 @@
 	let { data } = $props();
 
 	const session = $derived(data.session);
+
+	const kcalResult = $derived.by(() => {
+		if (!session?.exercises) return null;
+		/** @type {import('$lib/data/kcalEstimate').ExerciseData[]} */
+		const exercises = [];
+		for (const ex of session.exercises) {
+			const exercise = getExerciseById(ex.exerciseId, lang);
+			const metrics = getExerciseMetrics(exercise);
+			if (metrics.includes('distance')) continue;
+			const weightMultiplier = exercise?.bilateral ? 2 : 1;
+			const sets = ex.sets
+				.filter((/** @type {any} */ s) => s.completed && s.reps > 0)
+				.map((/** @type {any} */ s) => ({
+					weight: (s.weight ?? 0) * weightMultiplier,
+					reps: s.reps ?? 0
+				}));
+			if (sets.length > 0) exercises.push({ exerciseId: ex.exerciseId, sets });
+		}
+		if (exercises.length === 0) return null;
+		return estimateWorkoutKcal(exercises);
+	});
 
 	function checkDark() {
 		if (typeof document === 'undefined') return false;
@@ -500,6 +522,12 @@
 					<span>{Math.round(session.totalVolume).toLocaleString()} kg</span>
 				</div>
 			{/if}
+			{#if kcalResult}
+				<div class="stat-pill kcal">
+					<Flame size={14} />
+					<span>{kcalResult.kcal} &plusmn; {kcalResult.kcal - kcalResult.lower} kcal</span>
+				</div>
+			{/if}
 			{#if session.prs?.length > 0}
 				<div class="stat-pill pr">
 					<Trophy size={14} />
@@ -877,6 +905,11 @@
 		box-shadow: var(--shadow-sm);
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
+	}
+	.stat-pill.kcal {
+		color: var(--nord12);
+		border-color: var(--nord12);
+		background: color-mix(in srgb, var(--nord12) 10%, transparent);
 	}
 	.stat-pill.pr {
 		color: var(--nord13);
