@@ -410,7 +410,7 @@ button.action_button {
 			</div>
 		{:else if defaultForm?.shape === 'gugelhupf'}
 			<div class="form-size-inputs">
-				<label>Außen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
+				<label>Aussen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
 				<label>Innen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.innerDiameter} /> cm</label>
 			</div>
 		{/if}

@@ -54,7 +54,7 @@ const termsDe: Record<string, string> = {
 	'cardiovascular system': 'Herz-Kreislauf-System',
 	'erector spinae': 'Rückenstrecker',
 	forearms: 'Unterarme',
-	glutes: 'Gesäß',
+	glutes: 'Gesäss',
 	grip: 'Griffkraft',
 	hamstrings: 'Beinbeuger',
 	'hip flexors': 'Hüftbeuger',
@@ -369,8 +369,8 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Kreuzheben (Langhantel)',
 			instructions: [
-			'Hüftbreit stehen, Langhantel über der Fußmitte.',
-			'In Hüfte und Knien beugen, die Stange knapp außerhalb der Knie greifen.',
+			'Hüftbreit stehen, Langhantel über der Fussmitte.',
+			'In Hüfte und Knien beugen, die Stange knapp ausserhalb der Knie greifen.',
 			'Rücken gerade halten, Brust raus, durch die Fersen nach oben drücken.',
 			'Die Stange kontrolliert zurück zum Boden senken.'
 			]
@@ -455,7 +455,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Sitzendes Rudern (Kabelzug)',
 			instructions: [
-			'An der Kabelruder-Maschine sitzen, Füße auf der Plattform.',
+			'An der Kabelruder-Maschine sitzen, Füsse auf der Plattform.',
 			'Den Griff fassen und zum Bauch ziehen.',
 			'Die Schulterblätter am Ende der Bewegung zusammendrücken.',
 			'Langsam in die Ausgangsposition zurückkehren.'
@@ -548,7 +548,7 @@ export const exercises: Exercise[] = [
 			instructions: [
 			'Den Kabelzug auf obere Brusthöhe mit einem Seilaufsatz einstellen.',
 			'Das Seil zum Gesicht ziehen und die Enden auseinanderführen.',
-			'Die Schulterblätter zusammendrücken und am Ende außenrotieren.',
+			'Die Schulterblätter zusammendrücken und am Ende aussenrotieren.',
 			'Langsam in die Ausgangsposition zurückkehren.'
 			]
 		}},
@@ -1071,7 +1071,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Beinpresse (Maschine)',
 			instructions: [
-			'In der Beinpresse sitzen, Füße schulterbreit auf der Plattform.',
+			'In der Beinpresse sitzen, Füsse schulterbreit auf der Plattform.',
 			'Die Plattform absenken, indem die Knie auf etwa 90 Grad gebeugt werden.',
 			'Die Plattform zurückdrücken, ohne die Knie durchzustrecken.'
 			]
@@ -1115,7 +1115,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Bulgarische Kniebeuge (Kurzhantel)',
 			instructions: [
-			'Mit einem Fuß auf einer Bank hinter sich stehen, Kurzhanteln halten.',
+			'Mit einem Fuss auf einer Bank hinter sich stehen, Kurzhanteln halten.',
 			'Den Körper absenken, bis der vordere Oberschenkel parallel zum Boden ist.',
 			'Durch die vordere Ferse nach oben drücken.'
 			]
@@ -1158,7 +1158,7 @@ export const exercises: Exercise[] = [
 			name: 'Beinbeuger (Maschine)',
 			instructions: [
 			'Bäuchlings auf die Beinbeuger-Maschine legen, Polster gegen die Rückseite der Knöchel.',
-			'Die Beine zum Gesäß beugen.',
+			'Die Beine zum Gesäss beugen.',
 			'Kontrolliert absenken.'
 			]
 		}},
@@ -1180,7 +1180,7 @@ export const exercises: Exercise[] = [
 			name: 'Rumänisches Kreuzheben (Langhantel)',
 			instructions: [
 			'Stehend eine Langhantel im Obergriff halten.',
-			'In der Hüfte beugen, das Gesäß nach hinten schieben, Beine fast gestreckt lassen.',
+			'In der Hüfte beugen, das Gesäss nach hinten schieben, Beine fast gestreckt lassen.',
 			'Die Stange an den Beinen entlang absenken, bis eine Dehnung in den Beinbeugern spürbar ist.',
 			'Die Hüfte nach vorne drücken, um wieder aufzustehen.'
 			]
@@ -1204,7 +1204,7 @@ export const exercises: Exercise[] = [
 			name: 'Rumänisches Kreuzheben (Kurzhantel)',
 			instructions: [
 			'Stehend Kurzhanteln vor den Oberschenkeln halten.',
-			'In der Hüfte beugen, das Gesäß nach hinten schieben, Beine fast gestreckt lassen.',
+			'In der Hüfte beugen, das Gesäss nach hinten schieben, Beine fast gestreckt lassen.',
 			'Die Kurzhanteln an den Beinen entlang absenken, bis eine Dehnung in den Beinbeugern spürbar ist.',
 			'Die Hüfte nach vorne drücken, um wieder aufzustehen.'
 			]
@@ -1228,7 +1228,7 @@ export const exercises: Exercise[] = [
 			instructions: [
 			'Auf dem Boden sitzen, oberer Rücken an einer Bank, Langhantel über der Hüfte.',
 			'Durch die Fersen drücken und die Hüfte anheben, bis der Körper eine gerade Linie bildet.',
-			'Den Gesäßmuskel oben anspannen.',
+			'Den Gesässmuskel oben anspannen.',
 			'Kontrolliert absenken.'
 			]
 		}},
@@ -1249,7 +1249,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Wadenheben (Maschine)',
 			instructions: [
-			'Auf der Maschinenplattform stehen, Fußballen auf der Kante.',
+			'Auf der Maschinenplattform stehen, Fussballen auf der Kante.',
 			'Die Fersen so weit wie möglich absenken.',
 			'Auf die Zehenspitzen drücken, so hoch wie möglich.',
 			'Kontrolliert absenken.'
@@ -1272,7 +1272,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Wadenheben (Stehend)',
 			instructions: [
-			'Auf einer Stufe oder Plattform stehen, Fußballen auf der Kante.',
+			'Auf einer Stufe oder Plattform stehen, Fussballen auf der Kante.',
 			'Die Fersen unter die Plattform absenken.',
 			'Auf die Zehenspitzen drücken, so hoch wie möglich.',
 			'Kontrolliert absenken.'
@@ -1384,7 +1384,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Negativbank-Crunch',
 			instructions: [
-			'Auf einer Negativbank liegen, Füße unter den Polstern gesichert.',
+			'Auf einer Negativbank liegen, Füsse unter den Polstern gesichert.',
 			'Hände hinter den Kopf oder vor die Brust legen.',
 			'Den Oberkörper zu den Knien aufrollen.',
 			'Kontrolliert absenken.'
@@ -1410,7 +1410,7 @@ export const exercises: Exercise[] = [
 			'Flach auf einer Bank oder dem Boden liegen, Beine gestreckt.',
 			'Hände seitlich oder unter die Hüften legen.',
 			'Die Beine anheben, bis sie senkrecht zum Boden stehen.',
-			'Kontrolliert absenken, ohne die Füße den Boden berühren zu lassen.'
+			'Kontrolliert absenken, ohne die Füsse den Boden berühren zu lassen.'
 			]
 		}},
 	{
@@ -1430,7 +1430,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Crunch',
 			instructions: [
-			'Auf dem Rücken liegen, Knie gebeugt, Füße flach auf dem Boden.',
+			'Auf dem Rücken liegen, Knie gebeugt, Füsse flach auf dem Boden.',
 			'Hände hinter den Kopf oder vor die Brust legen.',
 			'Den Oberkörper zu den Knien aufrollen.',
 			'Kontrolliert absenken.'
@@ -1536,7 +1536,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Laufen',
 			instructions: [
-			'In einem gleichmäßigen Tempo für die gewünschte Dauer oder Distanz laufen.'
+			'In einem gleichmässigen Tempo für die gewünschte Dauer oder Distanz laufen.'
 			]
 		}},
 	{
@@ -1566,7 +1566,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Radfahren (Indoor)',
 			instructions: [
-			'In einem gleichmäßigen Tempo auf dem Ergometer für die gewünschte Dauer fahren.'
+			'In einem gleichmässigen Tempo auf dem Ergometer für die gewünschte Dauer fahren.'
 			]
 		}},
 	{
@@ -1581,7 +1581,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Radfahren (Outdoor)',
 			instructions: [
-			'Im Freien in einem gleichmäßigen Tempo für die gewünschte Dauer oder Distanz fahren.'
+			'Im Freien in einem gleichmässigen Tempo für die gewünschte Dauer oder Distanz fahren.'
 			]
 		}},
 	{
@@ -1596,7 +1596,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Schwimmen',
 			instructions: [
-			'Bahnen in einem gleichmäßigen Tempo im bevorzugten Schwimmstil schwimmen.'
+			'Bahnen in einem gleichmässigen Tempo im bevorzugten Schwimmstil schwimmen.'
 			]
 		}},
 	{
@@ -1615,7 +1615,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Rudergerät',
 			instructions: [
-			'Am Rudergerät sitzen und die Füße befestigen.',
+			'Am Rudergerät sitzen und die Füsse befestigen.',
 			'Zuerst mit den Beinen drücken, dann den Griff zur unteren Brust ziehen.',
 			'In die Ausgangsposition zurückkehren: Arme strecken, dann Knie beugen.'
 			]
@@ -1632,7 +1632,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Rudern (Outdoor)',
 			instructions: [
-			'Auf dem Wasser in einem gleichmäßigen Tempo für die gewünschte Dauer oder Distanz rudern.'
+			'Auf dem Wasser in einem gleichmässigen Tempo für die gewünschte Dauer oder Distanz rudern.'
 			]
 		}},
 	{
@@ -1647,7 +1647,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Wandern',
 			instructions: [
-			'In einem gleichmäßigen Tempo auf Wegen oder unebenem Gelände wandern.'
+			'In einem gleichmässigen Tempo auf Wegen oder unebenem Gelände wandern.'
 			]
 		}},
 	{
@@ -1662,7 +1662,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Crosstrainer',
 			instructions: [
-			'Den Crosstrainer in einem gleichmäßigen Tempo für die gewünschte Dauer nutzen.'
+			'Den Crosstrainer in einem gleichmässigen Tempo für die gewünschte Dauer nutzen.'
 			]
 		}},
 	{
@@ -1677,7 +1677,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Treppensteiger',
 			instructions: [
-			'In einem gleichmäßigen Tempo auf dem Treppensteiger für die gewünschte Dauer steigen.'
+			'In einem gleichmässigen Tempo auf dem Treppensteiger für die gewünschte Dauer steigen.'
 			]
 		}},
 	{
@@ -1693,7 +1693,7 @@ export const exercises: Exercise[] = [
 		de: {
 			name: 'Seilspringen',
 			instructions: [
-			'In einem gleichmäßigen Tempo Seil springen, leicht auf den Fußballen landen.'
+			'In einem gleichmässigen Tempo Seil springen, leicht auf den Fussballen landen.'
 			]
 		}},
 

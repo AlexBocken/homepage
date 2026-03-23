@@ -553,7 +553,7 @@ function adjust_amount(string, multiplier){
 			<label>{labels.width}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormWidth} oninput={applyFormMultiplier} /> cm</label>
 			<label>{labels.length}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormLength} oninput={applyFormMultiplier} /> cm</label>
 		{:else if userFormShape === 'gugelhupf'}
-			<label>{isEnglish ? 'Outer Ø' : 'Außen-Ø'}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormDiameter} oninput={applyFormMultiplier} /> cm</label>
+			<label>{isEnglish ? 'Outer Ø' : 'Aussen-Ø'}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormDiameter} oninput={applyFormMultiplier} /> cm</label>
 			<label>{isEnglish ? 'Inner Ø' : 'Innen-Ø'}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormInnerDiameter} oninput={applyFormMultiplier} /> cm</label>
 		{/if}
 	</div>

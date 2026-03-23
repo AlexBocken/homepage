@@ -38,7 +38,7 @@ export function loadVersesFromFile(tsvPath?: string): BibleVerse[] {
 
 function parseReference(reference: string) {
 	const match = reference.match(
-		/^(\d?\s?[A-Za-zäöüÄÖÜß]+)\s*(\d+)[\s,:]+(\d+)(?:[-:](\d+))?$/
+		/^(\d?\s?[A-Za-zäöüÄÖÜss]+)\s*(\d+)[\s,:]+(\d+)(?:[-:](\d+))?$/
 	);
 	if (!match) return null;
 
