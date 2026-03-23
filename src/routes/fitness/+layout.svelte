@@ -31,6 +31,9 @@
 		];
 		const urls = slugs.map((s) => `/fitness/${s}`);
 		navigator.serviceWorker.controller.postMessage({ type: 'CACHE_PAGES', urls });
+		// Also cache __data.json for client-side navigation
+		const dataUrls = slugs.map((s) => `/fitness/${s}/__data.json`);
+		navigator.serviceWorker.controller.postMessage({ type: 'CACHE_DATA', urls: dataUrls });
 	}
 
 	function onOnline() {
