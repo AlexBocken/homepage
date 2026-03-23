@@ -66,7 +66,7 @@ export const mysteryReferences = {
       reference: "Mt 26, 36-39"
     },
     {
-      title: "Das zweite schmerzhafte Geheimnis: Die Geißelung Jesu.",
+      title: "Das zweite schmerzhafte Geheimnis: Die Geisselung Jesu.",
       reference: "Mt 27, 26"
     },
     {
