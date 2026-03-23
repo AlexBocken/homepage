@@ -56,14 +56,14 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das dritte lichtreiche Geheimnis: Die Verkündigung des Reiches Gottes.",
 			"reference": "Mk 1, 15",
-			"text": "«und sprach: Erfüllet ist die Zeit, und das Reich Gottes hat sich genahet; tuet Busse und dem Evangelium!»",
+			"text": "«und sprach: Erfüllet ist die Zeit, und das Reich Gottes hat sich genahet; tuet Buße und dem Evangelium!»",
 			"verseData": {
 				"book": "Markus",
 				"chapter": 1,
 				"verses": [
 					{
 						"verse": 15,
-						"text": "und sprach: Erfüllet ist die Zeit, und das Reich Gottes hat sich genahet; tuet Busse und dem Evangelium!"
+						"text": "und sprach: Erfüllet ist die Zeit, und das Reich Gottes hat sich genahet; tuet Buße und dem Evangelium!"
 					}
 				]
 			}
@@ -71,7 +71,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das vierte lichtreiche Geheimnis: Die Verklärung.",
 			"reference": "Mt 17, 1-2",
-			"text": "«Nach sechs Tagen nahm Jesus den Petrus, Jakobus und Johannes, Bruder desselben, zu sich, und führte sie allein auf einen hohen Berg. Und er ward vor ihnen verklärt; und sein Angesicht leuchtete wie die Sonne, seine Kleider aber wurden weiss wie der Schnee.»",
+			"text": "«Nach sechs Tagen nahm Jesus den Petrus, Jakobus und Johannes, Bruder desselben, zu sich, und führte sie allein auf einen hohen Berg. Und er ward vor ihnen verklärt; und sein Angesicht leuchtete wie die Sonne, seine Kleider aber wurden weiß wie der Schnee.»",
 			"verseData": {
 				"book": "Matthäus",
 				"chapter": 17,
@@ -82,7 +82,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 					},
 					{
 						"verse": 2,
-						"text": "Und er ward vor ihnen verklärt; und sein Angesicht leuchtete wie die Sonne, seine Kleider aber wurden weiss wie der Schnee."
+						"text": "Und er ward vor ihnen verklärt; und sein Angesicht leuchtete wie die Sonne, seine Kleider aber wurden weiß wie der Schnee."
 					}
 				]
 			}
@@ -90,14 +90,14 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das fünfte lichtreiche Geheimnis: Die heiligste Eucharistie (Das Altarssakrament).",
 			"reference": "Mt 26, 26",
-			"text": "«Während sie aber assen, nahm Jesus Brot, segnete und brach es, gab es seinen Jüngern, und sprach: Nehmet hin, und esset, dies ist mein Leib!»",
+			"text": "«Während sie aber aßen, nahm Jesus Brot, segnete und brach es, gab es seinen Jüngern, und sprach: Nehmet hin, und esset, dies ist mein Leib!»",
 			"verseData": {
 				"book": "Matthäus",
 				"chapter": 26,
 				"verses": [
 					{
 						"verse": 26,
-						"text": "Während sie aber assen, nahm Jesus Brot, segnete und brach es, gab es seinen Jüngern, und sprach: Nehmet hin, und esset, dies ist mein Leib!"
+						"text": "Während sie aber aßen, nahm Jesus Brot, segnete und brach es, gab es seinen Jüngern, und sprach: Nehmet hin, und esset, dies ist mein Leib!"
 					}
 				]
 			}
@@ -126,7 +126,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das zweite freudenreiche Geheimnis: Der Besuch Marias bei Elisabeth.",
 			"reference": "Lk 1, 39-42",
-			"text": "«Maria aber machte sich in jenen Tagen auf, und ging eilends auf das Gebirge nach einer Stadt des Stammes Juda. Und sie kam in das Haus des Zacharias, und grüsste Elisabeth. Und es bagab sich, sobald Elisabeth den Gruss Marias hörte, hüpfte das Kind freudig in ihrem Leibe auf, und Elisabeth ward erfüllet von dem heiligen Geiste. Und sie rief mit lauter Stimme, und sprach: Gebenedeit bist du unter den Weibern, und gebenedeiet ist die Frucht deines Leibes!»",
+			"text": "«Maria aber machte sich in jenen Tagen auf, und ging eilends auf das Gebirge nach einer Stadt des Stammes Juda. Und sie kam in das Haus des Zacharias, und grüßte Elisabeth. Und es bagab sich, sobald Elisabeth den Gruß Marias hörte, hüpfte das Kind freudig in ihrem Leibe auf, und Elisabeth ward erfüllet von dem heiligen Geiste. Und sie rief mit lauter Stimme, und sprach: Gebenedeit bist du unter den Weibern, und gebenedeiet ist die Frucht deines Leibes!»",
 			"verseData": {
 				"book": "Lukas",
 				"chapter": 1,
@@ -137,11 +137,11 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 					},
 					{
 						"verse": 40,
-						"text": "Und sie kam in das Haus des Zacharias, und grüsste Elisabeth."
+						"text": "Und sie kam in das Haus des Zacharias, und grüßte Elisabeth."
 					},
 					{
 						"verse": 41,
-						"text": "Und es bagab sich, sobald Elisabeth den Gruss Marias hörte, hüpfte das Kind freudig in ihrem Leibe auf, und Elisabeth ward erfüllet von dem heiligen Geiste."
+						"text": "Und es bagab sich, sobald Elisabeth den Gruß Marias hörte, hüpfte das Kind freudig in ihrem Leibe auf, und Elisabeth ward erfüllet von dem heiligen Geiste."
 					},
 					{
 						"verse": 42,
@@ -153,7 +153,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das dritte freudenreiche Geheimnis: Die Geburt Jesu im Stall von Bethlehem.",
 			"reference": "Lk 2, 1-7",
-			"text": "«Es geschah aber in denselben Tagen, dass vom Kaiser Augustus ein Befehl ausging, dass der ganze Erdkreis aufgeschrieben werde. Diese Aufschreibung war die erste, und geschah durch Cyrinus, den Statthalter von Syrien. Und alle gingen hin, sich aufschreiben zu lassen, ein jeder in seine Stadt. Da zog auch Joseph von Galiläa, aus der Stadt Nazareth, hinauf nach Judäa in die Stadt Davids, welche Bethlehem heisst, weil er aus dem Hause und Geschlechte Davids war, um sich aufschreiben zu lassen mit Maria, seinem verlobten Weibe, welche schwanger war, Es begab sich aber, als sie daselbst waren, erfüllten sich die Tage, dass sie gebären sollte. Und sie gebar ihren erstgeborenen Sohn, und wickelte ihn in Windeln, und legte ihn in eine Krippe, weil für sie kein Platz war in der Herberge.»",
+			"text": "«Es geschah aber in denselben Tagen, dass vom Kaiser Augustus ein Befehl ausging, dass der ganze Erdkreis aufgeschrieben werde. Diese Aufschreibung war die erste, und geschah durch Cyrinus, den Statthalter von Syrien. Und alle gingen hin, sich aufschreiben zu lassen, ein jeder in seine Stadt. Da zog auch Joseph von Galiläa, aus der Stadt Nazareth, hinauf nach Judäa in die Stadt Davids, welche Bethlehem heißt, weil er aus dem Hause und Geschlechte Davids war, um sich aufschreiben zu lassen mit Maria, seinem verlobten Weibe, welche schwanger war, Es begab sich aber, als sie daselbst waren, erfüllten sich die Tage, dass sie gebären sollte. Und sie gebar ihren erstgeborenen Sohn, und wickelte ihn in Windeln, und legte ihn in eine Krippe, weil für sie kein Platz war in der Herberge.»",
 			"verseData": {
 				"book": "Lukas",
 				"chapter": 2,
@@ -172,7 +172,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 					},
 					{
 						"verse": 4,
-						"text": "Da zog auch Joseph von Galiläa, aus der Stadt Nazareth, hinauf nach Judäa in die Stadt Davids, welche Bethlehem heisst, weil er aus dem Hause und Geschlechte Davids war,"
+						"text": "Da zog auch Joseph von Galiläa, aus der Stadt Nazareth, hinauf nach Judäa in die Stadt Davids, welche Bethlehem heißt, weil er aus dem Hause und Geschlechte Davids war,"
 					},
 					{
 						"verse": 5,
@@ -219,7 +219,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das fünfte freudenreiche Geheimnis: Jesus wird im Tempel wiedergefunden.",
 			"reference": "Lk 2, 41-47",
-			"text": "«Und seine Eltern gingen alle Jahre nach Jerusalem am Osterfeste. Als er nun zwölf Jahre alt war, gingen sie nach der Gewohnheit des Festtages nach Jerusalem hinauf. Und da sie am Ende der Festtage wieder zurückkehrten, blieb der Knabe Jesus in Jerusalem, ohne dass es seine Eltern wussten. Da sie aber meinten, er sei bei der Reisegesellschaft, gingen sie eine Tagreise weit, und suchten ihn unter den Verwandten und Bekannten. Und da sie ihn nicht fanden, kehrten sie nach Jerusalem zurück, ihn suchend. Und es geschah, nach drei Tagen fanden sie ihn im Tempel, wie er unter den Lehrern sass und ihnen zuhörte, und sie befragte. Es staunten aber alle, die ihn hörten, über seine Einsicht und seine Antworten.»",
+			"text": "«Und seine Eltern gingen alle Jahre nach Jerusalem am Osterfeste. Als er nun zwölf Jahre alt war, gingen sie nach der Gewohnheit des Festtages nach Jerusalem hinauf. Und da sie am Ende der Festtage wieder zurückkehrten, blieb der Knabe Jesus in Jerusalem, ohne dass es seine Eltern wussten. Da sie aber meinten, er sei bei der Reisegesellschaft, gingen sie eine Tagreise weit, und suchten ihn unter den Verwandten und Bekannten. Und da sie ihn nicht fanden, kehrten sie nach Jerusalem zurück, ihn suchend. Und es geschah, nach drei Tagen fanden sie ihn im Tempel, wie er unter den Lehrern saß und ihnen zuhörte, und sie befragte. Es staunten aber alle, die ihn hörten, über seine Einsicht und seine Antworten.»",
 			"verseData": {
 				"book": "Lukas",
 				"chapter": 2,
@@ -246,7 +246,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 					},
 					{
 						"verse": 46,
-						"text": "Und es geschah, nach drei Tagen fanden sie ihn im Tempel, wie er unter den Lehrern sass und ihnen zuhörte, und sie befragte."
+						"text": "Und es geschah, nach drei Tagen fanden sie ihn im Tempel, wie er unter den Lehrern saß und ihnen zuhörte, und sie befragte."
 					},
 					{
 						"verse": 47,
@@ -287,14 +287,14 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das zweite schmerzhafte Geheimnis: Die Geisselung Jesu.",
 			"reference": "Mt 27, 26",
-			"text": "«Alsdann gab er ihnen den Barabbas frei; Jesus aber liess er geisseln, und überlieferte ihnen denselben, damit er gekreuziget würde.»",
+			"text": "«Alsdann gab er ihnen den Barabbas frei; Jesus aber ließ er geißeln, und überlieferte ihnen denselben, damit er gekreuziget würde.»",
 			"verseData": {
 				"book": "Matthäus",
 				"chapter": 27,
 				"verses": [
 					{
 						"verse": 26,
-						"text": "Alsdann gab er ihnen den Barabbas frei; Jesus aber liess er geisseln, und überlieferte ihnen denselben, damit er gekreuziget würde."
+						"text": "Alsdann gab er ihnen den Barabbas frei; Jesus aber ließ er geißeln, und überlieferte ihnen denselben, damit er gekreuziget würde."
 					}
 				]
 			}
@@ -302,7 +302,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das dritte schmerzhafte Geheimnis: Die Dornenkrönung.",
 			"reference": "Mt 27, 27-29",
-			"text": "«Da nahmen die Soldaten des Landpflegers Jesus zu sich hinein in das Richthaus, und versammelten um ihn die ganze Schar. Und sie zogen ihn aus, und legten ihm einen scharlachroten Mantel um, und flochten eine Krone aus Dornen, setzten sie auf sein Haupt, und gaben ihm ein Rohr in seine rechte Hand. Und sie bogen das Knie vor ihm, verspotteten ihn, und sprachen: Sei gegrüsst, König der Juden!»",
+			"text": "«Da nahmen die Soldaten des Landpflegers Jesus zu sich hinein in das Richthaus, und versammelten um ihn die ganze Schar. Und sie zogen ihn aus, und legten ihm einen scharlachroten Mantel um, und flochten eine Krone aus Dornen, setzten sie auf sein Haupt, und gaben ihm ein Rohr in seine rechte Hand. Und sie bogen das Knie vor ihm, verspotteten ihn, und sprachen: Sei gegrüßt, König der Juden!»",
 			"verseData": {
 				"book": "Matthäus",
 				"chapter": 27,
@@ -317,7 +317,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 					},
 					{
 						"verse": 29,
-						"text": "und flochten eine Krone aus Dornen, setzten sie auf sein Haupt, und gaben ihm ein Rohr in seine rechte Hand. Und sie bogen das Knie vor ihm, verspotteten ihn, und sprachen: Sei gegrüsst, König der Juden!"
+						"text": "und flochten eine Krone aus Dornen, setzten sie auf sein Haupt, und gaben ihm ein Rohr in seine rechte Hand. Und sie bogen das Knie vor ihm, verspotteten ihn, und sprachen: Sei gegrüßt, König der Juden!"
 					}
 				]
 			}
@@ -344,14 +344,14 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das fünfte schmerzhafte Geheimnis: Die Kreuzigung Jesu.",
 			"reference": "Lk 23, 33-46",
-			"text": "«Und als sie an den Ort kamen, den man Schädelstätte heisst, kreuzigten sie ihn daselbst, und die Räuber, den einen zur Rechten, und den andern zur Linken. Jesus aber sprach: Vater! vergib ihnen; denn sie wissen nicht, was sie tun. Und sie teilten seine Kleider unter sich, das Los darüber werfend. Und das Volk stand da und schaute zu. Und die Vorsteher verlachten ihn mit ihnen, und sprachen: Anderen hat er geholfen, er helfe sich selbst, wenn er Christus, der Auserwählte Gottes ist! Es verspotteten ihn aber auch die Soldaten, welche hinzutraten, ihm Essig reichten, und sprachen: Bist du der König der Juden, so hilf dir! Es war aber auch die Aufschrift über ihm geschrieben in griechischer, lateinischer und hebräischer Schrift: Dies ist der König der Juden. Einer aber von den Übeltätern, die am Kreuze hingen, lästerte ihn, und sprach: Wenn du Christus bist, so hilf dir selber und uns! Da antwortete der andere, verwies es ihm, und sprach: Fürchtest auch du Gott nicht, da du doch dieselbe Strafe erleidest? Und wir zwar mit Recht, denn wir empfangen, was unsere Taten verdient haben; dieser aber hat nichts Böses getan. Und er sprach zu Jesus: Herr! gedenke meiner, wenn du in dein Reich kommst. Jesus sprach zu ihm: Wahrlich, ich sage dir, heute wirst du mit mir im Paradiese sein! Es war aber um die sechste Stunde, da ward eine Finsternis über die ganze Erde bis zur neunten Stunde. Die Sonne verfinsterte sich, und der Vorhang des Tempels riss mitten entzwei. Und Jesus rief mit lauter Stimme, und sprach: Vater, in deine Hände empfehle ich meinen Geist. Und indem er dies sagte, verschied er.»",
+			"text": "«Und als sie an den Ort kamen, den man Schädelstätte heißt, kreuzigten sie ihn daselbst, und die Räuber, den einen zur Rechten, und den andern zur Linken. Jesus aber sprach: Vater! vergib ihnen; denn sie wissen nicht, was sie tun. Und sie teilten seine Kleider unter sich, das Los darüber werfend. Und das Volk stand da und schaute zu. Und die Vorsteher verlachten ihn mit ihnen, und sprachen: Anderen hat er geholfen, er helfe sich selbst, wenn er Christus, der Auserwählte Gottes ist! Es verspotteten ihn aber auch die Soldaten, welche hinzutraten, ihm Essig reichten, und sprachen: Bist du der König der Juden, so hilf dir! Es war aber auch die Aufschrift über ihm geschrieben in griechischer, lateinischer und hebräischer Schrift: Dies ist der König der Juden. Einer aber von den Übeltätern, die am Kreuze hingen, lästerte ihn, und sprach: Wenn du Christus bist, so hilf dir selber und uns! Da antwortete der andere, verwies es ihm, und sprach: Fürchtest auch du Gott nicht, da du doch dieselbe Strafe erleidest? Und wir zwar mit Recht, denn wir empfangen, was unsere Taten verdient haben; dieser aber hat nichts Böses getan. Und er sprach zu Jesus: Herr! gedenke meiner, wenn du in dein Reich kommst. Jesus sprach zu ihm: Wahrlich, ich sage dir, heute wirst du mit mir im Paradiese sein! Es war aber um die sechste Stunde, da ward eine Finsternis über die ganze Erde bis zur neunten Stunde. Die Sonne verfinsterte sich, und der Vorhang des Tempels riss mitten entzwei. Und Jesus rief mit lauter Stimme, und sprach: Vater, in deine Hände empfehle ich meinen Geist. Und indem er dies sagte, verschied er.»",
 			"verseData": {
 				"book": "Lukas",
 				"chapter": 23,
 				"verses": [
 					{
 						"verse": 33,
-						"text": "Und als sie an den Ort kamen, den man Schädelstätte heisst, kreuzigten sie ihn daselbst, und die Räuber, den einen zur Rechten, und den andern zur Linken."
+						"text": "Und als sie an den Ort kamen, den man Schädelstätte heißt, kreuzigten sie ihn daselbst, und die Räuber, den einen zur Rechten, und den andern zur Linken."
 					},
 					{
 						"verse": 34,
@@ -463,7 +463,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das dritte glorreiche Geheimnis: Die Herabkunft des Heiligen Geistes im Abendmahlssaal.",
 			"reference": "Apg 2, 1-4",
-			"text": "«Als der Tag des Pfingstfestes gekommen war, waren alle einmütig an demselben Orte. Da entstand plötzlich vom Himmel herab ein Brausen, gleich dem eines daherfahrenden gewaltigen Windes, und erfüllte das ganze Haus, wo sie sassen. Und es erschienen ihnen zerteilte Zungen wie von Feuer, und es liess sich auf einen jeden von ihnen nieder. Und es wurden alle mit dem Heiligen Geiste erfüllet, und fingen an, in verschiedenen Sprachen zu reden, so wie der Heilige Geist ihnen verlieh auszusprechen.»",
+			"text": "«Als der Tag des Pfingstfestes gekommen war, waren alle einmütig an demselben Orte. Da entstand plötzlich vom Himmel herab ein Brausen, gleich dem eines daherfahrenden gewaltigen Windes, und erfüllte das ganze Haus, wo sie saßen. Und es erschienen ihnen zerteilte Zungen wie von Feuer, und es ließ sich auf einen jeden von ihnen nieder. Und es wurden alle mit dem Heiligen Geiste erfüllet, und fingen an, in verschiedenen Sprachen zu reden, so wie der Heilige Geist ihnen verlieh auszusprechen.»",
 			"verseData": {
 				"book": "Apostelgeschichte",
 				"chapter": 2,
@@ -474,11 +474,11 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 					},
 					{
 						"verse": 2,
-						"text": "Da entstand plötzlich vom Himmel herab ein Brausen, gleich dem eines daherfahrenden gewaltigen Windes, und erfüllte das ganze Haus, wo sie sassen."
+						"text": "Da entstand plötzlich vom Himmel herab ein Brausen, gleich dem eines daherfahrenden gewaltigen Windes, und erfüllte das ganze Haus, wo sie saßen."
 					},
 					{
 						"verse": 3,
-						"text": "Und es erschienen ihnen zerteilte Zungen wie von Feuer, und es liess sich auf einen jeden von ihnen nieder."
+						"text": "Und es erschienen ihnen zerteilte Zungen wie von Feuer, und es ließ sich auf einen jeden von ihnen nieder."
 					},
 					{
 						"verse": 4,
@@ -490,7 +490,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das vierte glorreiche Geheimnis: Die Aufnahme Marias in den Himmel.",
 			"reference": "Lk 1, 48-49",
-			"text": "«Weil er die Niedrigkeit seiner Magd angesehen hat; denn siehe, von nun an werden mich selig preisen alle Geschlechter. Denn Grosses hat an mir getan, der mächtig, und dessen Name heilig ist!»",
+			"text": "«Weil er die Niedrigkeit seiner Magd angesehen hat; denn siehe, von nun an werden mich selig preisen alle Geschlechter. Denn Großes hat an mir getan, der mächtig, und dessen Name heilig ist!»",
 			"verseData": {
 				"book": "Lukas",
 				"chapter": 1,
@@ -501,7 +501,7 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 					},
 					{
 						"verse": 49,
-						"text": "Denn Grosses hat an mir getan, der mächtig, und dessen Name heilig ist!"
+						"text": "Denn Großes hat an mir getan, der mächtig, und dessen Name heilig ist!"
 					}
 				]
 			}
@@ -509,14 +509,14 @@ export const mysteryVerseDataDe: Record<string, MysteryDescription[]> = {
 		{
 			"title": "Das fünfte glorreiche Geheimnis: Die Krönung Marias zur Königin des Himmels und der Erde.",
 			"reference": "Offb 12, 1",
-			"text": "«Und es erschien ein grosses Zeichen im Himmel: Ein Weib mit der Sonne bekleidet, den Mond unter ihren Füssen, und auf ihrem Haupte eine Krone von zwölf Sternen.»",
+			"text": "«Und es erschien ein großes Zeichen im Himmel: Ein Weib mit der Sonne bekleidet, den Mond unter ihren Füßen, und auf ihrem Haupte eine Krone von zwölf Sternen.»",
 			"verseData": {
 				"book": "Offenbarung",
 				"chapter": 12,
 				"verses": [
 					{
 						"verse": 1,
-						"text": "Und es erschien ein grosses Zeichen im Himmel: Ein Weib mit der Sonne bekleidet, den Mond unter ihren Füssen, und auf ihrem Haupte eine Krone von zwölf Sternen."
+						"text": "Und es erschien ein großes Zeichen im Himmel: Ein Weib mit der Sonne bekleidet, den Mond unter ihren Füßen, und auf ihrem Haupte eine Krone von zwölf Sternen."
 					}
 				]
 			}
@@ -1050,7 +1050,7 @@ export const mysteryVerseDataEn: Record<string, MysteryDescription[]> = {
 export const theologicalVirtueVerseDataDe: MysteryDescription = {
 	"title": "Das Hohelied der Liebe",
 	"reference": "1 Kor 13, 1-13",
-	"text": "«Wenn ich mit den Zungen der Menschen und Engel rede, aber die Liebe nicht habe, so bin ich wie ein tönendes Erz oder eine klingende Schelle geworden. Und wenn ich die Gabe der Weissagung habe, und kenne alle Geheimnisse und alle Wissenschaft, und wenn ich allen Glauben habe, so dass ich Berge versetzen könnte, die Liebe aber nicht habe, so bin ich nichts. Und wenn ich alle meine Habe zur Speisung der Armen austeile, und wenn ich meinen Leib dahingebe, dass ich verbrannt werde, die Liebe aber nicht habe, so nützt es mir nichts. Die Liebe ist langmütig, ist gütig; die Liebe eifert nicht, sie handelt nicht unbescheiden, sie bläht sich nicht auf; sie ist nicht ehrsüchtig, sucht nicht das ihre, sie lässt sich nicht erbittern, sie rechnet das Böse nicht an; sie freut sich nicht der Ungerechtigkeit, sie freut sich aber mit der Wahrheit; alles erträgt sie, alles glaubt sie, alles hofft sie, alles übersteht sie. Die Liebe hört nie auf, wenn auch die Weissagungen abgetan werden oder die Sprachen ein Ende nehmen, und die Erkenntnis vergehen wird. Denn unser Erkennen ist Stückwerk, und unser Weissagen ist Stückwerk. Wenn aber das Vollkommene kommt, dann wird das, was Stückwerk ist, abgetan werden. Als ich ein Kind war, redete ich wie ein Kind, dachte wie ein Kind, urteilte wie ein Kind; als ich aber Mann ward, legte ich ab, was des Kindes war. Jetzt sehen wir durch einen Spiegel im Rätsel, alsdann aber von Angesicht zu Angesicht. Jetzt ist mein Erkennen Stückwerk, dann aber werde ich erkennen, so wie auch ich erkannt bin. Nun aber bleiben Glaube, Hoffnung Liebe, diese drei; das grösste aber unter diesen ist die Liebe.»",
+	"text": "«Wenn ich mit den Zungen der Menschen und Engel rede, aber die Liebe nicht habe, so bin ich wie ein tönendes Erz oder eine klingende Schelle geworden. Und wenn ich die Gabe der Weissagung habe, und kenne alle Geheimnisse und alle Wissenschaft, und wenn ich allen Glauben habe, so dass ich Berge versetzen könnte, die Liebe aber nicht habe, so bin ich nichts. Und wenn ich alle meine Habe zur Speisung der Armen austeile, und wenn ich meinen Leib dahingebe, dass ich verbrannt werde, die Liebe aber nicht habe, so nützt es mir nichts. Die Liebe ist langmütig, ist gütig; die Liebe eifert nicht, sie handelt nicht unbescheiden, sie bläht sich nicht auf; sie ist nicht ehrsüchtig, sucht nicht das ihre, sie lässt sich nicht erbittern, sie rechnet das Böse nicht an; sie freut sich nicht der Ungerechtigkeit, sie freut sich aber mit der Wahrheit; alles erträgt sie, alles glaubt sie, alles hofft sie, alles übersteht sie. Die Liebe hört nie auf, wenn auch die Weissagungen abgetan werden oder die Sprachen ein Ende nehmen, und die Erkenntnis vergehen wird. Denn unser Erkennen ist Stückwerk, und unser Weissagen ist Stückwerk. Wenn aber das Vollkommene kommt, dann wird das, was Stückwerk ist, abgetan werden. Als ich ein Kind war, redete ich wie ein Kind, dachte wie ein Kind, urteilte wie ein Kind; als ich aber Mann ward, legte ich ab, was des Kindes war. Jetzt sehen wir durch einen Spiegel im Rätsel, alsdann aber von Angesicht zu Angesicht. Jetzt ist mein Erkennen Stückwerk, dann aber werde ich erkennen, so wie auch ich erkannt bin. Nun aber bleiben Glaube, Hoffnung Liebe, diese drei; das größte aber unter diesen ist die Liebe.»",
 	"verseData": {
 		"book": "1 Korinther",
 		"chapter": 13,
@@ -1105,7 +1105,7 @@ export const theologicalVirtueVerseDataDe: MysteryDescription = {
 			},
 			{
 				"verse": 13,
-				"text": "Nun aber bleiben Glaube, Hoffnung Liebe, diese drei; das grösste aber unter diesen ist die Liebe."
+				"text": "Nun aber bleiben Glaube, Hoffnung Liebe, diese drei; das größte aber unter diesen ist die Liebe."
 			}
 		]
 	}
