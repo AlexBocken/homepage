@@ -103,7 +103,7 @@
 		const prs = [];
 
 		const exerciseSummaries = local.exercises.map((/** @type {any} */ ex) => {
-			const exercise = getExerciseById(ex.exerciseId);
+			const exercise = getExerciseById(ex.exerciseId, lang);
 			const metrics = getExerciseMetrics(exercise);
 			const isCardio = metrics.includes('distance');
 			const isBilateral = exercise?.bilateral ?? false;
@@ -223,7 +223,7 @@
 				const tmplEx = template.exercises?.find((/** @type {any} */ e) => e.exerciseId === actual.exerciseId);
 				if (!tmplEx) continue;
 
-				const exercise = getExerciseById(actual.exerciseId);
+				const exercise = getExerciseById(actual.exerciseId, lang);
 				const metrics = getExerciseMetrics(exercise);
 				if (metrics.includes('distance')) continue; // skip cardio
 
@@ -247,7 +247,7 @@
 				if (changed) {
 					diffs.push({
 						exerciseId: actual.exerciseId,
-						name: exercise?.name ?? actual.exerciseId,
+						name: exercise?.localName ?? actual.exerciseId,
 						oldSets: tmplSets,
 						newSets: completedSets.map((/** @type {any} */ s) => ({
 							reps: s.reps ?? undefined,
@@ -374,7 +374,7 @@
 				<div class="pr-list">
 					{#each completionData.prs as pr}
 						<div class="pr-item">
-							<span class="pr-exercise">{getExerciseById(pr.exerciseId)?.name ?? pr.exerciseId}</span>
+							<span class="pr-exercise">{getExerciseById(pr.exerciseId, lang)?.localName ?? pr.exerciseId}</span>
 							<span class="pr-detail">{pr.type}: <strong>{pr.value}</strong></span>
 						</div>
 					{/each}
@@ -387,7 +387,7 @@
 			{#each completionData.exerciseSummaries as ex}
 				<div class="ex-summary">
 					<div class="ex-summary-header">
-						<span class="ex-summary-name">{getExerciseById(ex.exerciseId)?.name ?? ex.exerciseId}</span>
+						<span class="ex-summary-name">{getExerciseById(ex.exerciseId, lang)?.localName ?? ex.exerciseId}</span>
 						<span class="ex-summary-sets">{ex.sets} {ex.sets !== 1 ? t('sets', lang) : t('set', lang)}</span>
 					</div>
 					<div class="ex-summary-stats">

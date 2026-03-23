@@ -4,7 +4,8 @@
 	import { Clock, Weight, Trophy, Route, Gauge } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
-	const sl = $derived(fitnessSlugs(detectFitnessLang($page.url.pathname)));
+	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const sl = $derived(fitnessSlugs(lang));
 
 	/**
 	 * @type {{
@@ -59,7 +60,7 @@
 	 * @param {string} exerciseId
 	 */
 	function bestSetLabel(sets, exerciseId) {
-		const exercise = getExerciseById(exerciseId);
+		const exercise = getExerciseById(exerciseId, lang);
 		const metrics = getExerciseMetrics(exercise);
 		const isCardio = metrics.includes('distance');
 
@@ -116,7 +117,7 @@
 
 	/** Check if this session has any cardio exercise with GPS data */
 	const hasGpsCardio = $derived(session.exercises.some(ex => {
-		const exercise = getExerciseById(ex.exerciseId);
+		const exercise = getExerciseById(ex.exerciseId, lang);
 		return exercise?.bodyPart === 'cardio' && ex.totalDistance;
 	}));
 
@@ -125,7 +126,7 @@
 		let dist = 0;
 		let dur = 0;
 		for (const ex of session.exercises) {
-			const exercise = getExerciseById(ex.exerciseId);
+			const exercise = getExerciseById(ex.exerciseId, lang);
 			if (exercise?.bodyPart !== 'cardio') continue;
 			if (ex.totalDistance) {
 				dist += ex.totalDistance;
@@ -166,10 +167,10 @@
 
 	<div class="exercise-list">
 		{#each session.exercises as ex (ex.exerciseId)}
-			{@const exercise = getExerciseById(ex.exerciseId)}
+			{@const exercise = getExerciseById(ex.exerciseId, lang)}
 			{@const label = bestSetLabel(ex.sets, ex.exerciseId)}
 			<div class="exercise-row">
-				<span class="ex-sets">{ex.sets.length} &times; {exercise?.name ?? ex.exerciseId}</span>
+				<span class="ex-sets">{ex.sets.length} &times; {exercise?.localName ?? ex.exerciseId}</span>
 				{#if label}
 					<span class="ex-best">{label}</span>
 				{/if}

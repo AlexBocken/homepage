@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { getExerciseById } from '$lib/data/exercises';
+	import { getExerciseById, localizeExercise } from '$lib/data/exercises';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -31,7 +31,8 @@
 
 	let activeTab = $state('about');
 
-	const exercise = $derived(data.exercise?.exercise ?? getExerciseById(data.exercise?.id));
+	const rawExercise = $derived(data.exercise?.exercise ?? getExerciseById(data.exercise?.id));
+	const exercise = $derived(rawExercise ? localizeExercise(rawExercise, lang) : undefined);
 	// History API returns { history: [{ sessionId, sessionName, date, sets }], total }
 	const history = $derived(data.history?.history ?? []);
 	// Stats API returns { charts: { est1rmOverTime, ... }, personalRecords: { ... }, records }
@@ -162,10 +163,10 @@
 	}
 </script>
 
-<svelte:head><title>{exercise?.name ?? (lang === 'en' ? 'Exercise' : 'Übung')} - Fitness</title></svelte:head>
+<svelte:head><title>{exercise?.localName ?? (lang === 'en' ? 'Exercise' : 'Übung')} - Fitness</title></svelte:head>
 
 <div class="exercise-detail">
-	<h1>{exercise?.name ?? 'Exercise'}</h1>
+	<h1>{exercise?.localName ?? 'Exercise'}</h1>
 
 	<div class="tabs">
 		{#each tabs as tab}
@@ -182,20 +183,20 @@
 	{#if activeTab === 'about'}
 		<div class="tab-content">
 			{#if exercise?.imageUrl}
-				<img src={exercise.imageUrl} alt={exercise.name} class="exercise-image" />
+				<img src={exercise.imageUrl} alt={exercise.localName} class="exercise-image" />
 			{/if}
 			<div class="tags">
-				<span class="tag body-part">{exercise?.bodyPart}</span>
-				<span class="tag equipment">{exercise?.equipment}</span>
-				<span class="tag target">{exercise?.target}</span>
+				<span class="tag body-part">{exercise?.localBodyPart}</span>
+				<span class="tag equipment">{exercise?.localEquipment}</span>
+				<span class="tag target">{exercise?.localTarget}</span>
 			</div>
-			{#if exercise?.secondaryMuscles?.length}
-				<p class="secondary">Also works: {exercise.secondaryMuscles.join(', ')}</p>
+			{#if exercise?.localSecondaryMuscles?.length}
+				<p class="secondary">{lang === 'en' ? 'Also works' : 'Trainiert auch'}: {exercise.localSecondaryMuscles.join(', ')}</p>
 			{/if}
-			{#if exercise?.instructions?.length}
+			{#if exercise?.localInstructions?.length}
 				<h3>{t('instructions', lang)}</h3>
 				<ol class="instructions">
-					{#each exercise.instructions as step}
+					{#each exercise.localInstructions as step}
 						<li>{step}</li>
 					{/each}
 				</ol>

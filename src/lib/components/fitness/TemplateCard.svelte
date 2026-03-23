@@ -44,8 +44,8 @@
 	</div>
 	<ul class="exercise-preview">
 		{#each template.exercises.slice(0, 4) as ex}
-			{@const exercise = getExerciseById(ex.exerciseId)}
-			<li>{ex.sets.length} &times; {exercise?.name ?? ex.exerciseId}</li>
+			{@const exercise = getExerciseById(ex.exerciseId, lang)}
+			<li>{ex.sets.length} &times; {exercise?.localName ?? ex.exerciseId}</li>
 		{/each}
 		{#if template.exercises.length > 4}
 			<li class="more">+{template.exercises.length - 4} {t('more', lang)}</li>
