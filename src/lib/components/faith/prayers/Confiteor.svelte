@@ -8,7 +8,7 @@
 		{#if showLatin}<v lang="la">Confíteor Deo omnipoténti,</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">Ich bekenne Gott, dem Allmächtigen,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">I confess to almighty God,</v>{/if}
-		{#if showLatin}<v lang="la">beátæ Maríæ semper Vírgini</v>{/if}
+		{#if showLatin}<v lang="la">beátæ Maríæ semper Vírgini,</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">der seligen, allzeit reinen Jungfrau Maria,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">to blessed Mary ever Virgin,</v>{/if}
 		{#if showLatin}<v lang="la">beáto Michaéli Archángelo,</v>{/if}
@@ -29,7 +29,7 @@
 		{#if showLatin}<v lang="la">cogitatióne, verbe et ópere:</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">in Gedanken, Worten und Werken,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">in thought, word, and deed:</v>{/if}
-		{#if showLatin}<v lang="la">mea culpa, mea culpa, mea máxima cupla.</v>{/if}
+		{#if showLatin}<v lang="la">mea culpa, mea culpa, mea máxima culpa.</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">durch meine Schuld, durch meine Schuld, durch meine übergrosse Schuld.</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">through my fault, through my fault, through my most grievous fault.</v>{/if}
 		{#if showLatin}<v lang="la">Ideo precor beátam Maríam semper Vírginem,</v>{/if}
