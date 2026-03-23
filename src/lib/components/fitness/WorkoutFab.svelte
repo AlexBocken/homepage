@@ -98,16 +98,16 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 	}
 	.rest-pill {
 		position: relative;
-		height: 2rem;
+		height: 2.2rem;
 		border-radius: 8px;
 		overflow: hidden;
-		background: var(--color-bg-elevated);
+		background: var(--nord0);
 		min-width: 10rem;
 	}
 	.rest-fill {
 		position: absolute;
 		inset: 0;
-		background: var(--color-primary);
+		background: var(--blue);
 		border-radius: 8px;
 		transition: width 1s linear;
 	}
@@ -117,40 +117,31 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.75rem;
+		gap: 1rem;
 		z-index: 1;
 	}
 	.rest-time {
 		background: none;
 		border: none;
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 		font-weight: 700;
 		font-variant-numeric: tabular-nums;
-		color: var(--color-text-primary, inherit);
+		color: white;
 		cursor: pointer;
-		padding: 0.2rem 0.4rem;
+		padding: 0.2rem 0.5rem;
 	}
 	.rest-adj {
 		background: none;
 		border: none;
-		color: var(--color-text-primary, inherit);
+		color: white;
 		cursor: pointer;
 		font-size: 0.7rem;
 		font-weight: 600;
-		padding: 0.2rem 0.3rem;
+		padding: 0.2rem 0.4rem;
 		border-radius: 4px;
 		opacity: 0.7;
 	}
 	.rest-adj:hover {
 		opacity: 1;
-	}
-	@media (prefers-color-scheme: dark) {
-		.rest-time, .rest-adj {
-			color: var(--nord10);
-		}
-	}
-	:global(:root[data-theme="dark"]) .rest-time,
-	:global(:root[data-theme="dark"]) .rest-adj {
-		color: var(--nord10);
 	}
 </style>
