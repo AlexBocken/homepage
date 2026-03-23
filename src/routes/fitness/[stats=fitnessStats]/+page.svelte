@@ -1,7 +1,8 @@
 <script>
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
-	import { Dumbbell, Route, Flame, Zap, Weight, Info } from 'lucide-svelte';
+	import { Dumbbell, Route, Flame, Weight, Info } from 'lucide-svelte';
+	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
@@ -159,16 +160,6 @@
 			<div class="card-value">{stats.totalCardioKm ?? 0}<span class="card-unit">km</span></div>
 			<div class="card-label">{t('distance_covered', lang)}</div>
 		</div>
-		<button class="lifetime-card streak" onclick={startGoalEdit}>
-			<div class="card-icon"><Zap size={24} /></div>
-			<div class="card-value">{goalStreak}</div>
-			<div class="card-label">{t('streak', lang)}</div>
-			{#if goalWeekly !== null}
-				<div class="card-goal">{goalWeekly}x / {t('streak_week', lang).toLowerCase()}</div>
-			{:else}
-				<div class="card-goal">{t('set_goal', lang)}</div>
-			{/if}
-		</button>
 	</div>
 
 	{#if goalEditing}
@@ -192,16 +183,32 @@
 		</div>
 	{/if}
 
-	{#if (stats.workoutsChart?.data?.length ?? 0) > 0}
-		<FitnessChart
-			type="bar"
-			data={workoutsChartData}
-			title={t('workouts_per_week', lang)}
-			height="220px"
-		/>
-	{:else}
-		<p class="empty-chart">{t('no_workout_data', lang)}</p>
-	{/if}
+	<div class="chart-streak-row">
+		<div class="chart-streak-chart">
+			{#if (stats.workoutsChart?.data?.length ?? 0) > 0}
+				<FitnessChart
+					type="bar"
+					data={workoutsChartData}
+					title={t('workouts_per_week', lang)}
+					height="220px"
+				/>
+			{:else}
+				<p class="empty-chart">{t('no_workout_data', lang)}</p>
+			{/if}
+		</div>
+		<button class="streak-section" onclick={startGoalEdit}>
+			<FitnessStreakAura value={goalStreak} />
+			<div class="streak-meta">
+				<span class="streak-unit">{goalStreak === 1 ? t('streak_week', lang) : t('streak_weeks', lang)}</span>
+				<span class="streak-label">{t('streak', lang)}</span>
+				{#if goalWeekly !== null}
+					<span class="streak-goal">{goalWeekly}x / {t('streak_week', lang).toLowerCase()}</span>
+				{:else}
+					<span class="streak-goal">{t('set_goal', lang)}</span>
+				{/if}
+			</div>
+		</button>
+	</div>
 
 	{#if (stats.weightChart?.data?.length ?? 0) > 1}
 		<FitnessChart
@@ -226,7 +233,7 @@
 
 	.lifetime-cards {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(4, 1fr);
 		gap: 0.6rem;
 	}
 	.lifetime-card {
@@ -240,16 +247,6 @@
 		box-shadow: var(--shadow-sm);
 		text-align: center;
 		position: relative;
-	}
-	button.lifetime-card {
-		border: none;
-		cursor: pointer;
-		font-family: inherit;
-		color: inherit;
-		transition: box-shadow 0.15s;
-	}
-	button.lifetime-card:hover {
-		box-shadow: var(--shadow-sm), 0 0 0 2px var(--nord13);
 	}
 	.lifetime-card::before {
 		content: '';
@@ -269,9 +266,6 @@
 	}
 	.lifetime-card.cardio::before {
 		background: var(--nord14);
-	}
-	.lifetime-card.streak::before {
-		background: var(--nord13);
 	}
 	.card-icon {
 		display: flex;
@@ -298,10 +292,6 @@
 		color: var(--nord14);
 		background: color-mix(in srgb, var(--nord14) 15%, transparent);
 	}
-	.streak .card-icon {
-		color: var(--nord13);
-		background: color-mix(in srgb, var(--nord13) 15%, transparent);
-	}
 	.card-value {
 		font-size: 1.4rem;
 		font-weight: 800;
@@ -320,12 +310,6 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--color-text-secondary);
-	}
-	.card-goal {
-		font-size: 0.6rem;
-		color: var(--color-text-secondary);
-		opacity: 0.7;
-		margin-top: 0.1rem;
 	}
 	.card-hint {
 		font-size: 0.55rem;
@@ -377,9 +361,74 @@
 		text-decoration: underline;
 	}
 
-	@media (max-width: 750px) {
+	/* Chart + Streak row */
+	.chart-streak-row {
+		display: flex;
+		gap: 1rem;
+		align-items: stretch;
+	}
+	.chart-streak-chart {
+		flex: 1;
+		min-width: 0;
+	}
+
+	/* Streak section */
+	.streak-section {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		padding: 1rem 1.5rem;
+		background: var(--color-surface);
+		border: none;
+		border-radius: 12px;
+		box-shadow: var(--shadow-sm);
+		cursor: pointer;
+		font-family: inherit;
+		color: inherit;
+		transition: box-shadow 0.15s;
+	}
+	.streak-section:hover {
+		box-shadow: var(--shadow-sm), 0 0 0 2px var(--nord13);
+	}
+	.streak-meta {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+	}
+	.streak-unit {
+		font-size: 0.8rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--color-text-secondary);
+	}
+	.streak-label {
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--nord13);
+	}
+	.streak-goal {
+		font-size: 0.7rem;
+		color: var(--color-text-secondary);
+		opacity: 0.7;
+	}
+
+	@media (max-width: 600px) {
 		.lifetime-cards {
 			grid-template-columns: repeat(2, 1fr);
+		}
+		.chart-streak-row {
+			flex-direction: column-reverse;
+		}
+		.streak-section {
+			flex-direction: row;
+			gap: 1rem;
+		}
+		.streak-meta {
+			align-items: flex-start;
 		}
 	}
 	@media (max-width: 400px) {
