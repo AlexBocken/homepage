@@ -147,12 +147,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 		allData.push(weekMap.get(key) ?? 0);
 	}
 
-	// Trim leading empty weeks, but always keep from first week with data
-	let firstNonZero = allData.findIndex((v) => v > 0);
-	if (firstNonZero === -1) firstNonZero = allData.length - 1; // show at least current week
 	const workoutsChart = {
-		labels: allLabels.slice(firstNonZero),
-		data: allData.slice(firstNonZero)
+		labels: allLabels,
+		data: allData
 	};
 
 	// Build chart-ready weight data with SMA ± 1 std dev confidence band

@@ -5,13 +5,14 @@
 	/**
 	 * @type {{
 	 *   type?: 'line' | 'bar',
-	 *   data: { labels: string[], datasets: Array<{ label: string, data: (number|null)[], borderColor?: string, backgroundColor?: string, borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number }> },
+	 *   data: { labels: string[], datasets: Array<{ label: string, data: (number|null)[], borderColor?: string, backgroundColor?: string, borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number, type?: string, borderDash?: number[], [key: string]: any }> },
 	 *   title?: string,
 	 *   height?: string,
-	 *   yUnit?: string
+	 *   yUnit?: string,
+	 *   goalLine?: number
 	 * }}
 	 */
-	let { type = 'line', data, title = '', height = '250px', yUnit = '' } = $props();
+	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined } = $props();
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
@@ -47,25 +48,55 @@
 		const gridColor = dark ? 'rgba(216,222,233,0.1)' : 'rgba(46,52,64,0.08)';
 
 		const plainLabels = [...(data.labels || [])];
-		const plainDatasets = (data.datasets || []).map((ds, i) => ({
-			label: ds.label,
-			data: [...(ds.data || [])],
-			borderColor: ds.borderColor || nordColors[i % nordColors.length],
-			backgroundColor: ds.backgroundColor ?? (type === 'bar'
-				? (nordColors[i % nordColors.length])
-				: 'transparent'),
-			borderWidth: ds.borderWidth ?? (type === 'line' ? 2 : 0),
-			pointRadius: ds.pointRadius ?? (type === 'line' ? 3 : 0),
-			pointBackgroundColor: ds.pointBackgroundColor || ds.borderColor || nordColors[i % nordColors.length],
-			tension: ds.tension ?? 0.3,
-			fill: ds.fill ?? false,
-			spanGaps: true,
-			order: ds.order ?? i
-		}));
+		const plainDatasets = (data.datasets || []).map((ds, i) => {
+			const isLine = ds.type === 'line' || (type === 'line' && !ds.type);
+			const isBar = ds.type === 'bar' || (type === 'bar' && !ds.type);
+			return {
+				...ds,
+				data: [...(ds.data || [])],
+				borderColor: ds.borderColor || nordColors[i % nordColors.length],
+				backgroundColor: ds.backgroundColor ?? (isBar
+					? (nordColors[i % nordColors.length])
+					: 'transparent'),
+				borderWidth: ds.borderWidth ?? (isLine ? 2 : 0),
+				pointRadius: ds.pointRadius ?? (isLine ? 3 : 0),
+				pointBackgroundColor: ds.pointBackgroundColor || ds.borderColor || nordColors[i % nordColors.length],
+				tension: ds.tension ?? 0.3,
+				fill: ds.fill ?? false,
+				spanGaps: true,
+				order: ds.order ?? i,
+				...(isBar ? { maxBarThickness: 40 } : {})
+			};
+		});
+
+		/** @type {import('chart.js').Plugin[]} */
+		const plugins = [];
+		if (goalLine != null) {
+			plugins.push({
+				id: 'goalLine',
+				afterDraw(chart) {
+					const yScale = chart.scales.y;
+					const xScale = chart.scales.x;
+					if (!yScale || !xScale) return;
+					const y = yScale.getPixelForValue(goalLine);
+					const ctx = chart.ctx;
+					ctx.save();
+					ctx.beginPath();
+					ctx.setLineDash([]);
+					ctx.strokeStyle = '#EBCB8B';
+					ctx.lineWidth = 2;
+					ctx.moveTo(xScale.left, y);
+					ctx.lineTo(xScale.right, y);
+					ctx.stroke();
+					ctx.restore();
+				}
+			});
+		}
 
 		chart = new Chart(ctx, {
 			type,
 			data: { labels: plainLabels, datasets: plainDatasets },
+			plugins,
 			options: {
 				responsive: true,
 				maintainAspectRatio: false,
