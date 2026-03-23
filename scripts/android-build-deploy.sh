@@ -32,7 +32,7 @@ ensure_keystore() {
 
 build() {
     echo ":: Building Android APK..."
-    npx tauri android build --apk
+    pnpm tauri android build --apk
 
     ensure_keystore
 
