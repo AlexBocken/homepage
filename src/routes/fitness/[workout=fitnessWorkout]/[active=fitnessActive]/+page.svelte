@@ -10,6 +10,7 @@
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
+	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -193,13 +194,32 @@
 			};
 		});
 
-		// Estimate kcal for strength exercises
+		// Estimate kcal for strength + cardio exercises
 		/** @type {import('$lib/data/kcalEstimate').ExerciseData[]} */
 		const kcalExercises = [];
+		let cardioKcal = 0;
+		let cardioMarginSq = 0;
 		for (const ex of local.exercises) {
 			const exercise = getExerciseById(ex.exerciseId, lang);
 			const metrics = getExerciseMetrics(exercise);
-			if (metrics.includes('distance')) continue;
+			if (metrics.includes('distance')) {
+				let dist = 0;
+				let dur = 0;
+				for (const s of ex.sets) {
+					if (!s.completed) continue;
+					dist += s.distance ?? 0;
+					dur += s.duration ?? 0;
+				}
+				if (dist > 0 || dur > 0) {
+					const r = estimateCardioKcal(ex.exerciseId, 80, {
+						distanceKm: dist || undefined,
+						durationMin: dur || undefined,
+					});
+					cardioKcal += r.kcal;
+					cardioMarginSq += (r.kcal - r.lower) ** 2;
+				}
+				continue;
+			}
 			const weightMultiplier = exercise?.bilateral ? 2 : 1;
 			const sets = ex.sets
 				.filter((/** @type {any} */ s) => s.completed && s.reps > 0)
@@ -209,7 +229,18 @@
 				}));
 			if (sets.length > 0) kcalExercises.push({ exerciseId: ex.exerciseId, sets });
 		}
-		const kcalResult = kcalExercises.length > 0 ? estimateWorkoutKcal(kcalExercises) : null;
+		const strengthResult = kcalExercises.length > 0 ? estimateWorkoutKcal(kcalExercises) : null;
+		let kcalResult = null;
+		if (strengthResult || cardioKcal > 0) {
+			const total = (strengthResult?.kcal ?? 0) + cardioKcal;
+			const sMargin = strengthResult ? (strengthResult.kcal - strengthResult.lower) : 0;
+			const margin = Math.round(Math.sqrt(sMargin ** 2 + cardioMarginSq));
+			kcalResult = {
+				kcal: Math.round(total),
+				lower: Math.max(0, Math.round(total) - margin),
+				upper: Math.round(total) + margin,
+			};
+		}
 
 		return {
 			sessionId: saved._id,

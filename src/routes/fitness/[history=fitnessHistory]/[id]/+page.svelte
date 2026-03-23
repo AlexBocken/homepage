@@ -1,13 +1,14 @@
 <script>
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge, Flame } from 'lucide-svelte';
+	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge, Flame, Info } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
+	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -21,11 +22,36 @@
 	const kcalResult = $derived.by(() => {
 		if (!session?.exercises) return null;
 		/** @type {import('$lib/data/kcalEstimate').ExerciseData[]} */
-		const exercises = [];
+		const strengthExercises = [];
+		let cardioKcal = 0;
+		let cardioMarginSq = 0;
+		/** @type {Set<string>} */
+		const methods = new Set();
+
 		for (const ex of session.exercises) {
 			const exercise = getExerciseById(ex.exerciseId, lang);
 			const metrics = getExerciseMetrics(exercise);
-			if (metrics.includes('distance')) continue;
+			if (metrics.includes('distance')) {
+				// Cardio: prefer GPS track, fall back to distance+duration
+				let dist = ex.totalDistance ?? 0;
+				let dur = 0;
+				for (const s of ex.sets) {
+					if (!s.completed) continue;
+					if (!dist) dist += s.distance ?? 0;
+					dur += s.duration ?? 0;
+				}
+				if (dist > 0 || dur > 0 || ex.gpsTrack?.length >= 2) {
+					const r = estimateCardioKcal(ex.exerciseId, 80, {
+						gpsTrack: ex.gpsTrack?.length >= 2 ? ex.gpsTrack : undefined,
+						distanceKm: dist || undefined,
+						durationMin: dur || undefined,
+					});
+					cardioKcal += r.kcal;
+					cardioMarginSq += (r.kcal - r.lower) ** 2;
+					methods.add(r.method);
+				}
+				continue;
+			}
 			const weightMultiplier = exercise?.bilateral ? 2 : 1;
 			const sets = ex.sets
 				.filter((/** @type {any} */ s) => s.completed && s.reps > 0)
@@ -33,11 +59,35 @@
 					weight: (s.weight ?? 0) * weightMultiplier,
 					reps: s.reps ?? 0
 				}));
-			if (sets.length > 0) exercises.push({ exerciseId: ex.exerciseId, sets });
+			if (sets.length > 0) strengthExercises.push({ exerciseId: ex.exerciseId, sets });
 		}
-		if (exercises.length === 0) return null;
-		return estimateWorkoutKcal(exercises);
+
+		const strengthResult = strengthExercises.length > 0 ? estimateWorkoutKcal(strengthExercises) : null;
+		if (!strengthResult && cardioKcal === 0) return null;
+
+		if (strengthResult) methods.add('lytle');
+
+		const total = (strengthResult?.kcal ?? 0) + cardioKcal;
+		const sMargin = strengthResult ? (strengthResult.kcal - strengthResult.lower) : 0;
+		const margin = Math.round(Math.sqrt(sMargin ** 2 + cardioMarginSq));
+
+		return {
+			kcal: Math.round(total),
+			lower: Math.max(0, Math.round(total) - margin),
+			upper: Math.round(total) + margin,
+			methods: [...methods],
+		};
 	});
+
+	/** @type {Record<string, { label: string, doi?: string }>} */
+	const METHOD_CITATIONS = {
+		'lytle':           { label: 'Lytle et al. (2019)', doi: '10.1249/MSS.0000000000001925' },
+		'minetti-gps':     { label: 'Minetti et al. (2002)', doi: '10.1152/japplphysiol.01177.2001' },
+		'cycling-physics': { label: 'Cycling physics model' },
+		'met-speed':       { label: 'Ainsworth et al. (2011)', doi: '10.1249/MSS.0b013e31821ece12' },
+		'met-fixed':       { label: 'Ainsworth et al. (2011)', doi: '10.1249/MSS.0b013e31821ece12' },
+		'flat-rate':       { label: 'Flat-rate estimate' },
+	};
 
 	function checkDark() {
 		if (typeof document === 'undefined') return false;
@@ -48,6 +98,7 @@
 	}
 
 	let dark = $state(checkDark());
+	let showKcalInfo = $state(false);
 	onMount(() => {
 		const mql = window.matchMedia('(prefers-color-scheme: dark)');
 		const onMql = () => { dark = checkDark(); };
@@ -523,9 +574,28 @@
 				</div>
 			{/if}
 			{#if kcalResult}
-				<div class="stat-pill kcal">
+				<div class="stat-pill kcal has-info">
 					<Flame size={14} />
 					<span>{kcalResult.kcal} &plusmn; {kcalResult.kcal - kcalResult.lower} kcal</span>
+					<button class="kcal-info-trigger" onclick={() => showKcalInfo = !showKcalInfo} aria-label="Show estimation sources">
+						<Info size={12} />
+					</button>
+					{#if showKcalInfo}
+						<div class="kcal-info-tooltip">
+							{#each kcalResult.methods as method}
+								{@const cite = METHOD_CITATIONS[method]}
+								{#if cite}
+									<span class="cite-line">
+										{#if cite.doi}
+											<a href="https://doi.org/{cite.doi}" target="_blank" rel="noopener">{cite.label}</a>
+										{:else}
+											{cite.label}
+										{/if}
+									</span>
+								{/if}
+							{/each}
+						</div>
+					{/if}
 				</div>
 			{/if}
 			{#if session.prs?.length > 0}
@@ -910,6 +980,47 @@
 		color: var(--nord12);
 		border-color: var(--nord12);
 		background: color-mix(in srgb, var(--nord12) 10%, transparent);
+	}
+	.stat-pill.has-info {
+		position: relative;
+	}
+	.kcal-info-trigger {
+		display: flex;
+		align-items: center;
+		opacity: 0.5;
+		cursor: pointer;
+		margin-left: 0.15rem;
+		background: none;
+		border: none;
+		padding: 0;
+		color: inherit;
+	}
+	.kcal-info-trigger:hover {
+		opacity: 0.9;
+	}
+	.kcal-info-tooltip {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		margin-top: 0.35rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border, var(--nord3));
+		border-radius: 8px;
+		padding: 0.45rem 0.6rem;
+		font-size: 0.65rem;
+		font-weight: 400;
+		line-height: 1.5;
+		color: var(--color-text-secondary);
+		white-space: nowrap;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+	.kcal-info-tooltip a {
+		color: var(--nord12);
+		text-decoration: underline;
 	}
 	.stat-pill.pr {
 		color: var(--nord13);
