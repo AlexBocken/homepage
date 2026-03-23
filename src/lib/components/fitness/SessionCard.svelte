@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
+	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
 	import { Clock, Weight, Trophy, Route, Gauge, Flame } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
@@ -116,25 +117,56 @@
 		return { points, viewBox: `0 0 ${vbW} ${vbH}` };
 	});
 
-	/** Estimate kcal for this session */
+	/** Estimate kcal for this session (strength + cardio) */
 	const kcalResult = $derived.by(() => {
 		/** @type {import('$lib/data/kcalEstimate').ExerciseData[]} */
-		const exercises = [];
+		const strengthExercises = [];
+		let cardioKcal = 0;
+		let cardioMargin = 0;
+
 		for (const ex of session.exercises) {
 			const exercise = getExerciseById(ex.exerciseId, lang);
 			const metrics = getExerciseMetrics(exercise);
-			if (metrics.includes('distance')) continue; // skip cardio
-			const weightMultiplier = exercise?.bilateral ? 2 : 1;
-			const sets = ex.sets
-				.filter((/** @type {any} */ s) => s.reps > 0)
-				.map((/** @type {any} */ s) => ({
-					weight: (s.weight ?? 0) * weightMultiplier,
-					reps: s.reps ?? 0
-				}));
-			if (sets.length > 0) exercises.push({ exerciseId: ex.exerciseId, sets });
+			if (metrics.includes('distance')) {
+				// Cardio: estimate from distance + duration
+				let dist = ex.totalDistance ?? 0;
+				let dur = 0;
+				for (const s of ex.sets) {
+					if (!dist) dist += s.distance ?? 0;
+					dur += s.duration ?? 0;
+				}
+				if (dist > 0 || dur > 0) {
+					const r = estimateCardioKcal(ex.exerciseId, 80, {
+						distanceKm: dist || undefined,
+						durationMin: dur || undefined,
+					});
+					cardioKcal += r.kcal;
+					cardioMargin += (r.kcal - r.lower) ** 2;
+				}
+			} else {
+				const weightMultiplier = exercise?.bilateral ? 2 : 1;
+				const sets = ex.sets
+					.filter((/** @type {any} */ s) => s.reps > 0)
+					.map((/** @type {any} */ s) => ({
+						weight: (s.weight ?? 0) * weightMultiplier,
+						reps: s.reps ?? 0
+					}));
+				if (sets.length > 0) strengthExercises.push({ exerciseId: ex.exerciseId, sets });
+			}
 		}
-		if (exercises.length === 0) return null;
-		return estimateWorkoutKcal(exercises);
+
+		const strengthResult = strengthExercises.length > 0 ? estimateWorkoutKcal(strengthExercises) : null;
+		if (!strengthResult && cardioKcal === 0) return null;
+
+		const totalKcal = (strengthResult?.kcal ?? 0) + cardioKcal;
+		const strengthMargin = strengthResult ? (strengthResult.kcal - strengthResult.lower) : 0;
+		const combinedMargin = Math.round(Math.sqrt(strengthMargin ** 2 + cardioMargin));
+
+		return {
+			kcal: Math.round(totalKcal),
+			lower: Math.max(0, Math.round(totalKcal) - combinedMargin),
+			upper: Math.round(totalKcal) + combinedMargin,
+		};
 	});
 
 	/** Check if this session has any cardio exercise with GPS data */
