@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Plus, Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin } from 'lucide-svelte';
+	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -742,7 +742,7 @@
 
 		<div class="workout-actions">
 			<button class="add-exercise-btn" onclick={() => showPicker = true}>
-				<Plus size={18} /> {t('add_exercise', lang)}
+				{t('add_exercise', lang)}
 			</button>
 			<button class="cancel-btn" onclick={async () => { workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
 				{t('cancel_workout', lang)}
@@ -770,6 +770,11 @@
 {/if}
 
 <style>
+	:global(:root) { --primary-contrast: white; }
+	@media (prefers-color-scheme: dark) {
+		:global(:root:not([data-theme="light"])) { --primary-contrast: var(--nord0); }
+	}
+	:global(:root[data-theme="dark"]) { --primary-contrast: var(--nord0); }
 	/* Completion screen */
 	.completion {
 		display: flex;
@@ -975,7 +980,7 @@
 		width: 100%;
 		padding: 0.85rem;
 		background: var(--color-primary);
-		color: white;
+		color: var(--primary-contrast);
 		border: none;
 		border-radius: 10px;
 		font-weight: 700;
@@ -1031,7 +1036,7 @@
 	}
 	.finish-btn {
 		background: var(--color-primary);
-		color: white;
+		color: var(--primary-contrast);
 		border: none;
 		border-radius: 8px;
 		padding: 0.5rem 1.25rem;
@@ -1131,7 +1136,7 @@
 		width: 100%;
 		padding: 0.75rem;
 		background: var(--color-primary);
-		color: white;
+		color: var(--primary-contrast);
 		border: none;
 		border-radius: 10px;
 		font-weight: 700;
