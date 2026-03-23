@@ -259,6 +259,25 @@ function interpolateMet(table: [number, number][], speedKmh: number): number {
 	return table[table.length - 1][1];
 }
 
+/** Swimming METs by speed (km/h). From Compendium codes 18xxx. */
+const SWIMMING_METS: [number, number][] = [
+	[1.5,  4.8],  // light effort, treading
+	[2.0,  5.8],  // moderate, leisure
+	[2.5,  8.3],  // moderate-vigorous, laps
+	[3.0,  9.8],  // vigorous, laps
+	[3.5, 10.3],  // fast, competitive training
+];
+
+/** Rowing METs by speed (km/h). From Compendium codes 18xxx / 15xxx. */
+const ROWING_METS: [number, number][] = [
+	[6.0,  3.5],  // very light
+	[8.0,  4.8],  // light
+	[10.0, 5.8],  // moderate
+	[12.0, 7.0],  // vigorous
+	[14.0, 8.5],  // very vigorous
+	[16.0, 12.0], // racing
+];
+
 /** Fixed MET values for activities without speed data */
 const FIXED_METS: Record<string, number> = {
 	'swimming':       5.8,  // Compendium 18310, moderate effort
@@ -268,6 +287,18 @@ const FIXED_METS: Record<string, number> = {
 	'stair-climber':  9.0,  // Compendium 17133
 	'jump-rope':     11.8,  // Compendium 15551, moderate
 	'cycling-indoor': 6.8,  // Compendium 02014, moderate
+};
+
+/** Flat-rate kcal/kg/km for distance-only fallback */
+const FLAT_RATE: Record<string, number> = {
+	'running':         1.0,   // Léger & Mercier
+	'walking':         0.7,
+	'hiking':          0.7,
+	'cycling-outdoor': 0.3,
+	'cycling-indoor':  0.3,
+	'swimming':        1.6,   // ~4× rolling resistance of running in water
+	'rowing-machine':  0.6,
+	'rowing-outdoor':  0.6,
 };
 
 // ── Main cardio estimation interface ─────────────────────────────────────
@@ -305,6 +336,8 @@ export function estimateCardioKcal(
 	const isRunning = exerciseId === 'running';
 	const isWalking = exerciseId === 'walking' || exerciseId === 'hiking';
 	const isCycling = exerciseId === 'cycling-outdoor' || exerciseId === 'cycling-indoor';
+	const isSwimming = exerciseId === 'swimming';
+	const isRowing = exerciseId === 'rowing-machine' || exerciseId === 'rowing-outdoor';
 	const isRunOrWalk = isRunning || isWalking;
 
 	// 1. GPS-based estimation
@@ -324,19 +357,20 @@ export function estimateCardioKcal(
 	if (distanceKm && distanceKm > 0 && durationMin && durationMin > 0) {
 		const speedKmh = distanceKm / (durationMin / 60);
 
-		if (isRunning) {
-			const met = interpolateMet(RUNNING_METS, speedKmh);
+		/** @type {[number, number][] | null} */
+		let metTable: [number, number][] | null = null;
+		if (isRunning) metTable = RUNNING_METS;
+		else if (isCycling) metTable = CYCLING_METS;
+		else if (isSwimming) metTable = SWIMMING_METS;
+		else if (isRowing) metTable = ROWING_METS;
+
+		if (metTable) {
+			const met = interpolateMet(metTable, speedKmh);
 			const kcal = met * bodyWeightKg * (durationMin / 60) * 1.05;
 			return withUncertainty(kcal, 0.20, 'met-speed');
 		}
 		if (isWalking) {
-			// Walking: ~3.5 METs at 5 km/h, scales roughly with speed
 			const met = Math.max(2.0, 0.7 * speedKmh);
-			const kcal = met * bodyWeightKg * (durationMin / 60) * 1.05;
-			return withUncertainty(kcal, 0.20, 'met-speed');
-		}
-		if (isCycling) {
-			const met = interpolateMet(CYCLING_METS, speedKmh);
 			const kcal = met * bodyWeightKg * (durationMin / 60) * 1.05;
 			return withUncertainty(kcal, 0.20, 'met-speed');
 		}
@@ -367,13 +401,8 @@ export function estimateCardioKcal(
 
 	// 4. Distance only → flat-rate kcal/kg/km
 	if (distanceKm && distanceKm > 0) {
-		let kcalPerKgPerKm: number;
-		if (isRunning) kcalPerKgPerKm = 1.0;       // Léger & Mercier
-		else if (isWalking) kcalPerKgPerKm = 0.7;   // walking on flat
-		else if (isCycling) kcalPerKgPerKm = 0.3;   // rough cycling estimate
-		else kcalPerKgPerKm = 0.8;                   // generic cardio
-
-		const kcal = kcalPerKgPerKm * bodyWeightKg * distanceKm;
+		const rate = FLAT_RATE[exerciseId] ?? 0.8;
+		const kcal = rate * bodyWeightKg * distanceKm;
 		return withUncertainty(kcal, 0.30, 'flat-rate');
 	}
 
