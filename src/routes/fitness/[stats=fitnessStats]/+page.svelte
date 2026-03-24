@@ -125,7 +125,7 @@
 
 </script>
 
-<svelte:head><title>{t('stats_title', lang)} - Fitness</title></svelte:head>
+<svelte:head><title>{t('stats_title', lang)} - Bocken</title></svelte:head>
 
 <div class="stats-page">
 	<h1>{t('stats_title', lang)}</h1>

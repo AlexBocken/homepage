@@ -14,12 +14,25 @@ class AndroidBridge(private val context: Context) {
 
     @JavascriptInterface
     fun startLocationService() {
-        // Request background location if not yet granted (Android 10+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                if (context is Activity) {
+        if (context is Activity) {
+            // Request notification permission on Android 13+ (required for foreground service notification)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    ActivityCompat.requestPermissions(
+                        context,
+                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                        1003
+                    )
+                }
+            }
+
+            // Request background location on Android 10+ (required for screen-off GPS)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
                     ActivityCompat.requestPermissions(
                         context,
                         arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),

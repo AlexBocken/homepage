@@ -506,7 +506,7 @@
 </script>
 
 <svelte:head>
-	<title>{session?.name ?? (lang === 'en' ? 'Workout' : 'Training')} - Fitness</title>
+	<title>{session?.name ?? (lang === 'en' ? 'Workout' : 'Training')} - Bocken</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
