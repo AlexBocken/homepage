@@ -100,8 +100,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         'exercises.exerciseId': ex.exerciseId,
       }).sort({ startTime: -1 }).limit(50).lean();
 
+      const isBilateral = exercise?.bilateral ?? false;
+      const weightMul = isBilateral ? 2 : 1;
+
       let prevBestWeight = 0;
       let prevBestEst1rm = 0;
+      let prevBestVolume = 0;
       for (const ps of prevSessions) {
         const pe = ps.exercises.find((e) => e.exerciseId === ex.exerciseId);
         if (!pe) continue;
@@ -109,15 +113,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           if (!s.completed || !s.weight || !s.reps) continue;
           prevBestWeight = Math.max(prevBestWeight, s.weight);
           prevBestEst1rm = Math.max(prevBestEst1rm, estimatedOneRepMax(s.weight, s.reps));
+          prevBestVolume = Math.max(prevBestVolume, s.weight * s.reps * weightMul);
         }
       }
 
       let bestWeight = 0;
       let bestEst1rm = 0;
+      let bestVolume = 0;
       for (const s of completedSets) {
         if (!s.weight || !s.reps) continue;
         bestWeight = Math.max(bestWeight, s.weight);
         bestEst1rm = Math.max(bestEst1rm, estimatedOneRepMax(s.weight, s.reps));
+        bestVolume = Math.max(bestVolume, s.weight * s.reps * weightMul);
       }
 
       if (bestWeight > prevBestWeight && prevBestWeight > 0) {
@@ -125,6 +132,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       }
       if (bestEst1rm > prevBestEst1rm && prevBestEst1rm > 0) {
         prs.push({ exerciseId: ex.exerciseId, type: 'est1rm', value: bestEst1rm });
+      }
+      if (bestVolume > prevBestVolume && prevBestVolume > 0) {
+        prs.push({ exerciseId: ex.exerciseId, type: 'bestSetVolume', value: Math.round(bestVolume) });
       }
     }
 
