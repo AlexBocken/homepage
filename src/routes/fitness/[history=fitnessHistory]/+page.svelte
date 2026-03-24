@@ -39,7 +39,7 @@
 	}
 </script>
 
-<svelte:head><title>{t('history_title', lang)} - Fitness</title></svelte:head>
+<svelte:head><title>{t('history_title', lang)} - Bocken</title></svelte:head>
 
 <div class="history-page">
 	<h1>{t('history_title', lang)}</h1>

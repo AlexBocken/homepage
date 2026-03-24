@@ -259,7 +259,7 @@
 	}
 </script>
 
-<svelte:head><title>{lang === 'en' ? 'Measure' : 'Messen'} - Fitness</title></svelte:head>
+<svelte:head><title>{lang === 'en' ? 'Measure' : 'Messen'} - Bocken</title></svelte:head>
 
 <div class="measure-page">
 	<h1>{t('measure_title', lang)}</h1>

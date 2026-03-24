@@ -163,7 +163,7 @@
 	}
 </script>
 
-<svelte:head><title>{exercise?.localName ?? (lang === 'en' ? 'Exercise' : 'Übung')} - Fitness</title></svelte:head>
+<svelte:head><title>{exercise?.localName ?? (lang === 'en' ? 'Exercise' : 'Übung')} - Bocken</title></svelte:head>
 
 <div class="exercise-detail">
 	<h1>{exercise?.localName ?? 'Exercise'}</h1>
