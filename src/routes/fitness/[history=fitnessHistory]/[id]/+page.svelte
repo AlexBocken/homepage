@@ -7,6 +7,7 @@
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
+	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
 	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
 	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
@@ -773,9 +774,15 @@
 							{:else if pr.type === 'maxWeight'}Max Weight
 							{:else if pr.type === 'bestSetVolume'}Best Set Volume
 							{:else if pr.type === 'repMax'}{pr.reps}-rep max
+							{:else if pr.type === 'longestDistance'}Longest Distance
+							{:else if pr.type.startsWith('fastestPace:')}Fastest Pace ({formatPaceRangeLabel(pr.type)})
 							{:else}{pr.type}{/if}
 						</span>
-						<span class="pr-value">{pr.value} kg</span>
+						<span class="pr-value">
+							{#if pr.type === 'longestDistance'}{pr.value} km
+							{:else if pr.type.startsWith('fastestPace:')}{formatPaceValue(pr.value)}
+							{:else}{pr.value} kg{/if}
+						</span>
 					</div>
 				{/each}
 			</div>
