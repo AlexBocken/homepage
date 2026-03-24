@@ -771,6 +771,7 @@
 						<span class="pr-type">
 							{#if pr.type === 'est1rm'}Est. 1RM
 							{:else if pr.type === 'maxWeight'}Max Weight
+							{:else if pr.type === 'bestSetVolume'}Best Set Volume
 							{:else if pr.type === 'repMax'}{pr.reps}-rep max
 							{:else}{pr.type}{/if}
 						</span>
