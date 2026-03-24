@@ -1,0 +1,52 @@
+FROM rust:1.87-bookworm
+
+# Java 21
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-21-jdk-headless unzip wget curl && \
+    rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
+# Android SDK
+ENV ANDROID_HOME=/opt/android-sdk
+RUN mkdir -p "$ANDROID_HOME/cmdline-tools" && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/tools.zip && \
+    unzip -q /tmp/tools.zip -d "$ANDROID_HOME/cmdline-tools" && \
+    mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest" && \
+    rm /tmp/tools.zip
+ENV PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+RUN yes | sdkmanager --licenses > /dev/null 2>&1 && \
+    sdkmanager "platforms;android-36" "build-tools;35.0.0" "ndk;27.0.12077973"
+ENV NDK_HOME="$ANDROID_HOME/ndk/27.0.12077973"
+
+# Rust Android targets
+RUN rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+
+# Node 22 + pnpm
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g pnpm@latest && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install deps first (cache layer)
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# Copy source
+COPY . .
+
+# Build APK
+RUN pnpm tauri android build --apk
+
+# Sign APK
+RUN keytool -genkey -v -keystore /tmp/debug.keystore \
+    -alias debug -keyalg RSA -keysize 2048 -validity 10000 \
+    -storepass android -keypass android \
+    -dname "CN=Debug,O=Bocken,C=DE" && \
+    "$ANDROID_HOME/build-tools/35.0.0/zipalign" -f -v 4 \
+    src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk \
+    /tmp/Bocken.apk > /dev/null && \
+    "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign \
+    --ks /tmp/debug.keystore --ks-pass pass:android --key-pass pass:android \
+    /tmp/Bocken.apk
