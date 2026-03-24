@@ -10,6 +10,11 @@ Bilingual recipe collection with search, category filtering, and seasonal recomm
 ### Faith (`/glaube` · `/faith`)
 Catholic prayer collection in German, English, and Latin. Includes an interactive Rosary with scroll-synced SVG bead visualization, mystery images (sticky column on desktop, draggable PiP on mobile), decade progress tracking, and a daily streak counter. Adapts prayers for liturgical seasons like Eastertide.
 
+### Fitness (`/fitness`)
+Workout tracker with template-based training plans, set logging with RPE, rest timers synced across devices via SSE, workout history with statistics, and body measurement tracking. Cardio exercises support native GPS tracking via the Android app with background location recording.
+
+**Android app**: [Download APK](https://bocken.org/static/Bocken.apk) — Tauri v2 shell with native GPS foreground service for screen-off tracking, live notification with elapsed time, distance, and pace.
+
 ### Expense Sharing (`/cospend`)
 Shared expense tracker with balance dashboards, debt breakdowns, monthly bar charts with category filtering, and payment management.
 
