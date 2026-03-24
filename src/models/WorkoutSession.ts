@@ -31,7 +31,7 @@ export interface ICompletedExercise {
 
 export interface IPr {
   exerciseId: string;
-  type: string; // 'est1rm' | 'maxWeight' | 'bestSetVolume' | 'repMax'
+  type: string; // 'est1rm' | 'maxWeight' | 'bestSetVolume' | 'repMax' | 'longestDistance' | 'fastestPace:<min>:<max>'
   value: number;
   reps?: number;
 }

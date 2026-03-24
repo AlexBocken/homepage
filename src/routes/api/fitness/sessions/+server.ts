@@ -5,6 +5,7 @@ import { WorkoutSession } from '$models/WorkoutSession';
 import type { IPr } from '$models/WorkoutSession';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
   if (reps <= 0 || weight <= 0) return 0;
@@ -89,7 +90,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       const exercise = getExerciseById(ex.exerciseId);
       const metrics = getExerciseMetrics(exercise);
       const isCardio = metrics.includes('distance');
-      if (isCardio) continue;
 
       const completedSets = (ex.sets ?? []).filter((s: { completed: boolean }) => s.completed);
       if (completedSets.length === 0) continue;
@@ -99,6 +99,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         createdBy: session.user!.nickname,
         'exercises.exerciseId': ex.exerciseId,
       }).sort({ startTime: -1 }).limit(50).lean();
+
+      if (isCardio) {
+        prs.push(...detectCardioPrs(ex.exerciseId, completedSets, prevSessions));
+        continue;
+      }
 
       const isBilateral = exercise?.bilateral ?? false;
       const weightMul = isBilateral ? 2 : 1;

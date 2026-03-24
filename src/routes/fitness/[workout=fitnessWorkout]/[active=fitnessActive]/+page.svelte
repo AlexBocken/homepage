@@ -10,6 +10,7 @@
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getGpsTracker, trackDistance } from '$lib/js/gps.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+	import { getPaceRanges, formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
 	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
 	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
@@ -283,15 +284,12 @@
 
 			// Detect PRs by comparing against previous session
 			if (prev.length > 0) {
-				let prevBestWeight = 0;
-				let prevBestEst1rm = 0;
-				let prevBestVolume = 0;
-				let prevBestDistance = 0;
+				if (!isCardio) {
+					let prevBestWeight = 0;
+					let prevBestEst1rm = 0;
+					let prevBestVolume = 0;
 
-				for (const ps of prev) {
-					if (isCardio) {
-						prevBestDistance += ps.distance ?? 0;
-					} else {
+					for (const ps of prev) {
 						const pw = ps.weight ?? 0;
 						const pr = ps.reps ?? 0;
 						if (pw > prevBestWeight) prevBestWeight = pw;
@@ -300,9 +298,7 @@
 						const pv = pw * pr * (isBilateral ? 2 : 1);
 						if (pv > prevBestVolume) prevBestVolume = pv;
 					}
-				}
 
-				if (!isCardio) {
 					if (bestWeight > prevBestWeight && prevBestWeight > 0) {
 						prs.push({ exerciseId: ex.exerciseId, type: 'Max Weight', value: `${bestWeight} kg` });
 					}
@@ -313,8 +309,50 @@
 						prs.push({ exerciseId: ex.exerciseId, type: 'Best Set Volume', value: `${Math.round(bestVolume)} kg` });
 					}
 				} else {
-					if (exDistance > prevBestDistance && prevBestDistance > 0) {
-						prs.push({ exerciseId: ex.exerciseId, type: 'Distance', value: `${exDistance.toFixed(1)} km` });
+					const ranges = getPaceRanges(ex.exerciseId);
+
+					let curBestDist = 0;
+					/** @type {Map<string, number>} */
+					const curBestPaces = new Map();
+					for (const s of ex.sets) {
+						if (!s.completed || !s.distance || s.distance <= 0) continue;
+						if (s.distance > curBestDist) curBestDist = s.distance;
+						if (s.duration && s.duration > 0) {
+							const p = s.duration / s.distance;
+							const range = ranges.find(r => s.distance >= r.min && s.distance < r.max);
+							if (range) {
+								const key = `${range.min}:${range.max}`;
+								const cur = curBestPaces.get(key);
+								if (!cur || p < cur) curBestPaces.set(key, p);
+							}
+						}
+					}
+
+					let prevBestDist = 0;
+					/** @type {Map<string, number>} */
+					const prevBestPaces = new Map();
+					for (const ps of prev) {
+						if (!ps.distance || ps.distance <= 0) continue;
+						if (ps.distance > prevBestDist) prevBestDist = ps.distance;
+						if (ps.duration && ps.duration > 0) {
+							const p = ps.duration / ps.distance;
+							const range = ranges.find(r => ps.distance >= r.min && ps.distance < r.max);
+							if (range) {
+								const key = `${range.min}:${range.max}`;
+								const cur = prevBestPaces.get(key);
+								if (!cur || p < cur) prevBestPaces.set(key, p);
+							}
+						}
+					}
+
+					if (curBestDist > prevBestDist && prevBestDist > 0) {
+						prs.push({ exerciseId: ex.exerciseId, type: 'Longest Distance', value: `${curBestDist.toFixed(1)} km` });
+					}
+					for (const [key, pace] of curBestPaces) {
+						const prevPace = prevBestPaces.get(key);
+						if (prevPace && pace < prevPace) {
+							prs.push({ exerciseId: ex.exerciseId, type: `Fastest Pace (${formatPaceRangeLabel(`fastestPace:${key}`)})`, value: formatPaceValue(pace) });
+						}
 					}
 				}
 			}
