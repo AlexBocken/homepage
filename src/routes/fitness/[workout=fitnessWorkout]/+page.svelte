@@ -290,7 +290,7 @@
 	}
 </script>
 
-<svelte:head><title>{lang === 'en' ? 'Workout' : 'Training'} - Fitness</title></svelte:head>
+<svelte:head><title>{lang === 'en' ? 'Workout' : 'Training'} - Bocken</title></svelte:head>
 
 <div class="template-view">
 	{#if hasSchedule && nextTemplate}
