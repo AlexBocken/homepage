@@ -4,6 +4,7 @@ import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import type { IPr } from '$models/WorkoutSession';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import mongoose from 'mongoose';
 
@@ -64,7 +65,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		for (const ex of workoutSession.exercises) {
 			const exercise = getExerciseById(ex.exerciseId);
 			const metrics = getExerciseMetrics(exercise);
-			if (metrics.includes('distance')) continue;
+			const isCardio = metrics.includes('distance');
 
 			const completedSets = ex.sets.filter(s => s.completed);
 			if (completedSets.length === 0) continue;
@@ -75,6 +76,11 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 				'exercises.exerciseId': ex.exerciseId,
 				startTime: { $lt: workoutSession.startTime }
 			}).sort({ startTime: -1 }).limit(50).lean();
+
+			if (isCardio) {
+				prs.push(...detectCardioPrs(ex.exerciseId, completedSets, prevSessions));
+				continue;
+			}
 
 			const isBilateral = exercise?.bilateral ?? false;
 			const weightMul = isBilateral ? 2 : 1;
