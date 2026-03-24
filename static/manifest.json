@@ -1,8 +1,8 @@
 {
-  "name": "Bocken Rezepte",
-  "short_name": "Rezepte",
-  "description": "Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche",
-  "start_url": "/rezepte",
+  "name": "Bocken",
+  "short_name": "Bocken",
+  "description": "bocken.org",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "theme_color": "#5E81AC",

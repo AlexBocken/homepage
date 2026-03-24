@@ -10,7 +10,7 @@ APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
 APK_UNSIGNED="$APK_DIR/app-universal-release-unsigned.apk"
 APK_SIGNED="$APK_DIR/app-universal-release-signed.apk"
 KEYSTORE="src-tauri/debug.keystore"
-PACKAGE="org.bocken.fitness"
+PACKAGE="org.bocken.app"
 
 usage() {
     echo "Usage: $0 [build|deploy|run]"
@@ -30,7 +30,19 @@ ensure_keystore() {
     fi
 }
 
+ensure_android_project() {
+    local id_path
+    id_path="src-tauri/gen/android/app/src/main/java/$(echo "$PACKAGE" | tr '.' '/')"
+    if [ ! -d "$id_path" ]; then
+        echo ":: Android project missing or identifier changed, regenerating..."
+        rm -rf src-tauri/gen/android
+        pnpm tauri android init
+    fi
+}
+
 build() {
+    ensure_android_project
+
     echo ":: Building Android APK..."
     pnpm tauri android build --apk
 

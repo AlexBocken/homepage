@@ -10,6 +10,13 @@ node_modules
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-src-tauri/gen/
 src-tauri/target/
 src-tauri/*.keystore
+# Android: ignore build output and caches, track source files
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/buildSrc/.gradle/
+src-tauri/gen/android/buildSrc/build/
+src-tauri/gen/android/gradle/
+src-tauri/gen/android/gradlew
+src-tauri/gen/android/gradlew.bat

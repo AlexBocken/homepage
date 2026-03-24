@@ -1,6 +1,6 @@
 {
-  "productName": "Bocken Fitness",
-  "identifier": "org.bocken.fitness",
+  "productName": "Bocken",
+  "identifier": "org.bocken.app",
   "version": "0.1.0",
   "build": {
     "devUrl": "http://192.168.1.4:5173",
@@ -10,8 +10,8 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Bocken Fitness",
-        "url": "/fitness",
+        "title": "Bocken",
+        "url": "/",
         "fullscreen": false,
         "useHttpsScheme": true
       }
