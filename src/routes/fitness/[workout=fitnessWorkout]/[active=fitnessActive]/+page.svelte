@@ -755,7 +755,7 @@
 			<button class="add-exercise-btn" onclick={() => showPicker = true}>
 				{t('add_exercise', lang)}
 			</button>
-			<button class="cancel-btn" onclick={async () => { workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
+			<button class="cancel-btn" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
 				{t('cancel_workout', lang)}
 			</button>
 		</div>
