@@ -48,6 +48,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}> = [];
 
 		for (const recipe of recipes) {
+			if (!recipe.images?.length) continue;
 			const image = recipe.images[0];
 			if (!image?.mediapath) continue;
 

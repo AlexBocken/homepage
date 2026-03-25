@@ -1,7 +1,8 @@
 import { browser } from '$app/environment';
 import { error } from '@sveltejs/kit';
+import type { LayoutLoad } from './$types';
 
-export async function load({ params, data }) {
+export const load: LayoutLoad = async ({ params, data }) => {
 	// Validate recipeLang parameter
 	if (params.recipeLang !== 'rezepte' && params.recipeLang !== 'recipes') {
 		throw error(404, 'Not found');
@@ -31,4 +32,4 @@ export async function load({ params, data }) {
 		recipeLang: params.recipeLang,
 		isOffline: false
 	};
-}
+};

@@ -76,7 +76,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       }
     ];
 
-    const results = await Payment.aggregate(pipeline);
+    const results = await Payment.aggregate(pipeline as any[]);
 
     // Transform data into chart-friendly format
     const monthsMap = new Map();
