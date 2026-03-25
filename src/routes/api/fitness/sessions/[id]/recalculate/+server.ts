@@ -40,7 +40,9 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		// Recompute totalVolume and totalDistance
 		let totalVolume = 0;
 		let totalDistance = 0;
-		for (const ex of workoutSession.exercises) {
+		const gpsPreviewUpdates: Record<string, number[][]> = {};
+		for (let i = 0; i < workoutSession.exercises.length; i++) {
+			const ex = workoutSession.exercises[i];
 			const exercise = getExerciseById(ex.exerciseId);
 			const metrics = getExerciseMetrics(exercise);
 			const isCardio = metrics.includes('distance');
@@ -56,7 +58,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
 			// Regenerate gpsPreview from gpsTrack if present
 			if (ex.gpsTrack && ex.gpsTrack.length >= 2) {
-				ex.gpsPreview = simplifyTrack(ex.gpsTrack);
+				gpsPreviewUpdates[`exercises.${i}.gpsPreview`] = simplifyTrack(ex.gpsTrack);
 			}
 		}
 
@@ -120,15 +122,20 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 			}
 		}
 
-		workoutSession.totalVolume = totalVolume > 0 ? totalVolume : undefined;
-		workoutSession.totalDistance = totalDistance > 0 ? totalDistance : undefined;
-		workoutSession.prs = prs.length > 0 ? prs : undefined;
-		await workoutSession.save();
+		// Use $set to only update computed fields, preserving gpsTrack data
+		await WorkoutSession.updateOne({ _id: workoutSession._id }, {
+			$set: {
+				totalVolume: totalVolume > 0 ? totalVolume : undefined,
+				totalDistance: totalDistance > 0 ? totalDistance : undefined,
+				prs: prs.length > 0 ? prs : undefined,
+				...gpsPreviewUpdates
+			}
+		});
 
 		return json({
-			totalVolume: workoutSession.totalVolume,
-			totalDistance: workoutSession.totalDistance,
-			prs: workoutSession.prs?.length ?? 0
+			totalVolume: totalVolume > 0 ? totalVolume : undefined,
+			totalDistance: totalDistance > 0 ? totalDistance : undefined,
+			prs: prs.length
 		});
 	} catch (error) {
 		console.error('Error recalculating session:', error);
