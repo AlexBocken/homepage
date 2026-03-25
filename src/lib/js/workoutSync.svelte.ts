@@ -7,13 +7,15 @@
  */
 
 import { getWorkout } from '$lib/js/workout.svelte';
-import type { WorkoutExercise } from '$lib/js/workout.svelte';
+import type { WorkoutExercise, WorkoutMode, GpsActivityType } from '$lib/js/workout.svelte';
 
 type SyncStatus = 'idle' | 'synced' | 'syncing' | 'offline' | 'conflict';
 
 interface ServerWorkout {
   version: number;
   name: string;
+  mode: WorkoutMode;
+  activityType: GpsActivityType | null;
   templateId: string | null;
   exercises: WorkoutExercise[];
   paused: boolean;
@@ -42,6 +44,8 @@ export function createWorkoutSync() {
     return {
       version: serverVersion,
       name: workout.name,
+      mode: workout.mode,
+      activityType: workout.activityType,
       templateId: workout.templateId,
       exercises: JSON.parse(JSON.stringify(workout.exercises)),
       paused: workout.paused,
@@ -107,6 +111,8 @@ export function createWorkoutSync() {
       // but we keep the higher value for completed sets
       workout.applyRemoteState({
         name: doc.name,
+        mode: doc.mode ?? 'manual',
+        activityType: doc.activityType ?? null,
         templateId: doc.templateId,
         exercises: doc.exercises,
         paused: doc.paused,
@@ -225,6 +231,8 @@ export function createWorkoutSync() {
           serverVersion = serverDoc.version;
           workout.restoreFromRemote({
             name: serverDoc.name,
+            mode: serverDoc.mode ?? 'manual',
+            activityType: serverDoc.activityType ?? null,
             templateId: serverDoc.templateId,
             exercises: serverDoc.exercises,
             paused: serverDoc.paused,

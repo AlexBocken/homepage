@@ -6,6 +6,7 @@ import type { IPr } from '$models/WorkoutSession';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { detectCardioPrs } from '$lib/data/cardioPrRanges';
+import { simplifyTrack } from '$lib/server/simplifyTrack';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
   if (reps <= 0 || weight <= 0) return 0;
@@ -27,7 +28,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const offset = parseInt(url.searchParams.get('offset') || '0');
     
     const sessions = await WorkoutSession.find({ createdBy: session.user.nickname })
-      .select('-exercises.gpsTrack')
+      .select('-exercises.gpsTrack -gpsTrack')
       .sort({ startTime: -1 })
       .limit(limit)
       .skip(offset);
@@ -52,10 +53,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     await dbConnect();
     
     const data = await request.json();
-    const { templateId, name, exercises, startTime, endTime, notes } = data;
+    const { templateId, name, mode, activityType, exercises, startTime, endTime, notes, gpsTrack, totalDistance: gpsDistance } = data;
 
-    if (!name || !exercises || !Array.isArray(exercises) || exercises.length === 0) {
-      return json({ error: 'Name and at least one exercise are required' }, { status: 400 });
+    if (!name || (!exercises?.length && !gpsTrack?.length)) {
+      return json({ error: 'Name and at least one exercise or GPS track required' }, { status: 400 });
     }
 
     let templateName;
@@ -68,8 +69,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     // Compute totalVolume and totalDistance
     let totalVolume = 0;
-    let totalDistance = 0;
-    for (const ex of exercises) {
+    let totalDistance = gpsDistance ?? 0;
+    for (const ex of (exercises ?? [])) {
       const exercise = getExerciseById(ex.exerciseId);
       const metrics = getExerciseMetrics(exercise);
       const isCardio = metrics.includes('distance');
@@ -86,7 +87,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     // Detect PRs by comparing against previous best for each exercise
     const prs: IPr[] = [];
-    for (const ex of exercises) {
+    for (const ex of (exercises ?? [])) {
       const exercise = getExerciseById(ex.exerciseId);
       const metrics = getExerciseMetrics(exercise);
       const isCardio = metrics.includes('distance');
@@ -143,16 +144,31 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       }
     }
 
+    // Generate GPS preview for top-level GPS track
+    const gpsPreview = gpsTrack?.length >= 2 ? simplifyTrack(gpsTrack) : undefined;
+
+    // Generate gpsPreview for exercise-level GPS tracks
+    const processedExercises = (exercises ?? []).map((ex: any) => {
+      if (ex.gpsTrack?.length >= 2 && !ex.gpsPreview) {
+        return { ...ex, gpsPreview: simplifyTrack(ex.gpsTrack) };
+      }
+      return ex;
+    });
+
     const workoutSession = new WorkoutSession({
       templateId,
       templateName,
       name,
-      exercises,
+      mode: mode ?? (gpsTrack?.length ? 'gps' : 'manual'),
+      activityType: activityType ?? undefined,
+      exercises: processedExercises,
       startTime: startTime ? new Date(startTime) : new Date(),
       endTime: endTime ? new Date(endTime) : undefined,
       duration: endTime && startTime ? Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / (1000 * 60)) : undefined,
       totalVolume: totalVolume > 0 ? totalVolume : undefined,
       totalDistance: totalDistance > 0 ? totalDistance : undefined,
+      gpsTrack: gpsTrack?.length ? gpsTrack : undefined,
+      gpsPreview,
       prs: prs.length > 0 ? prs : undefined,
       notes,
       createdBy: session.user.nickname

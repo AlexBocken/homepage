@@ -33,9 +33,14 @@ export interface TemplateData {
 
 const STORAGE_KEY = 'fitness-active-workout';
 
+export type WorkoutMode = 'manual' | 'gps';
+export type GpsActivityType = 'running' | 'walking' | 'cycling' | 'hiking';
+
 export interface StoredState {
 	active: boolean;
 	paused: boolean;
+	mode: WorkoutMode;
+	activityType: GpsActivityType | null;
 	name: string;
 	templateId: string | null;
 	exercises: WorkoutExercise[];
@@ -49,6 +54,8 @@ export interface StoredState {
 
 export interface RemoteState {
 	name: string;
+	mode: WorkoutMode;
+	activityType: GpsActivityType | null;
 	templateId: string | null;
 	exercises: WorkoutExercise[];
 	paused: boolean;
@@ -89,6 +96,8 @@ function clearStorage() {
 export function createWorkout() {
 	let active = $state(false);
 	let paused = $state(false);
+	let mode = $state<WorkoutMode>('manual');
+	let activityType = $state<GpsActivityType | null>(null);
 	let name = $state('');
 	let templateId: string | null = $state(null);
 	let exercises = $state<WorkoutExercise[]>([]);
@@ -115,6 +124,8 @@ export function createWorkout() {
 		saveToStorage({
 			active,
 			paused,
+			mode,
+			activityType,
 			name,
 			templateId,
 			exercises: JSON.parse(JSON.stringify(exercises)),
@@ -182,6 +193,8 @@ export function createWorkout() {
 
 		active = true;
 		paused = stored.paused;
+		mode = stored.mode ?? 'manual';
+		activityType = stored.activityType ?? null;
 		name = stored.name;
 		templateId = stored.templateId;
 		exercises = stored.exercises;
@@ -220,6 +233,7 @@ export function createWorkout() {
 	function startFromTemplate(template: TemplateData) {
 		name = template.name;
 		templateId = template._id;
+		mode = 'manual';
 		exercises = template.exercises.map((e) => ({
 			exerciseId: e.exerciseId,
 			sets: e.sets.length > 0
@@ -246,6 +260,7 @@ export function createWorkout() {
 	function startEmpty() {
 		name = 'Quick Workout';
 		templateId = null;
+		mode = 'manual';
 		exercises = [];
 		startTime = new Date();
 		_pausedElapsed = 0;
@@ -253,6 +268,26 @@ export function createWorkout() {
 		paused = false;
 		active = true;
 		_startTimer();
+		_persist();
+	}
+
+	function startGpsWorkout(activity: GpsActivityType = 'running') {
+		const labels: Record<GpsActivityType, string> = {
+			running: 'Running',
+			walking: 'Walking',
+			cycling: 'Cycling',
+			hiking: 'Hiking'
+		};
+		name = labels[activity];
+		templateId = null;
+		mode = 'gps';
+		activityType = activity;
+		exercises = [];
+		startTime = null;
+		_pausedElapsed = 0;
+		_elapsed = 0;
+		paused = true;
+		active = true;
 		_persist();
 	}
 
@@ -374,6 +409,8 @@ export function createWorkout() {
 			templateId,
 			templateName: templateId ? name : undefined,
 			name,
+			mode,
+			activityType,
 			exercises: exercises
 				.filter((e) => e.sets.some((s) => s.completed))
 				.map((e) => ({
@@ -409,6 +446,8 @@ export function createWorkout() {
 	function _reset() {
 		active = false;
 		paused = false;
+		mode = 'manual';
+		activityType = null;
 		name = '';
 		templateId = null;
 		exercises = [];
@@ -427,6 +466,8 @@ export function createWorkout() {
 	/** Apply state from another device (merge strategy: incoming wins) */
 	function applyRemoteState(remote: RemoteState) {
 		name = remote.name;
+		mode = remote.mode ?? 'manual';
+		activityType = remote.activityType ?? null;
 		templateId = remote.templateId;
 		exercises = remote.exercises;
 
@@ -470,6 +511,8 @@ export function createWorkout() {
 		saveToStorage({
 			active: true,
 			paused,
+			mode,
+			activityType,
 			name,
 			templateId,
 			exercises: JSON.parse(JSON.stringify(exercises)),
@@ -496,6 +539,8 @@ export function createWorkout() {
 	return {
 		get active() { return active; },
 		get paused() { return paused; },
+		get mode() { return mode; },
+		get activityType() { return activityType; },
 		get name() { return name; },
 		set name(v: string) { name = v; _persist(); },
 		get templateId() { return templateId; },
@@ -511,6 +556,7 @@ export function createWorkout() {
 		restore,
 		startFromTemplate,
 		startEmpty,
+		startGpsWorkout,
 		pauseTimer,
 		resumeTimer,
 		addExercise,

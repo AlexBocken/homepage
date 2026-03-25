@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2 } from 'lucide-svelte';
+	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2, X } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -48,6 +48,30 @@
 	let vgMetrics = $state(['totalTime', 'totalDistance', 'avgPace']);
 	let vgLanguage = $state('en');
 	let vgShowPanel = $state(false);
+
+	// GPS workout mode state — if we're restoring a GPS workout that was already tracking, it's started
+	let gpsStarted = $state(gps.isTracking && workout.mode === 'gps' && !workout.paused);
+	let gpsStarting = $state(false);
+
+	// Activity type for GPS workouts
+	/** @type {import('$lib/js/workout.svelte').GpsActivityType} */
+	let selectedActivity = $state(workout.activityType ?? 'running');
+	let showActivityPicker = $state(false);
+	let showAudioPanel = $state(false);
+
+	const GPS_ACTIVITIES = [
+		{ id: 'running', label: 'Running', icon: '🏃' },
+		{ id: 'walking', label: 'Walking', icon: '🚶' },
+		{ id: 'cycling', label: 'Cycling', icon: '🚴' },
+		{ id: 'hiking', label: 'Hiking', icon: '🥾' },
+	];
+
+	function selectActivity(/** @type {string} */ id) {
+		selectedActivity = /** @type {import('$lib/js/workout.svelte').GpsActivityType} */ (id);
+		const labels = { running: 'Running', walking: 'Walking', cycling: 'Cycling', hiking: 'Hiking' };
+		workout.name = labels[selectedActivity] ?? 'GPS Workout';
+		showActivityPicker = false;
+	}
 
 	const availableMetrics = [
 		{ id: 'totalTime', label: 'Total Time' },
@@ -125,6 +149,22 @@
 			liveMarker.setLatLng(pts[pts.length - 1]);
 			liveMap.setView(pts[pts.length - 1], 16);
 			prevTrackLen = gps.track.length;
+		} else {
+			// No track yet — show fallback until GPS kicks in
+			liveMap.setView([51.5, 10], 16);
+			if ('geolocation' in navigator) {
+				navigator.geolocation.getCurrentPosition(
+					(pos) => {
+						if (liveMap) {
+							const ll = [pos.coords.latitude, pos.coords.longitude];
+							liveMap.setView(ll, 16);
+							liveMarker.setLatLng(ll);
+						}
+					},
+					() => {},
+					{ enableHighAccuracy: true, timeout: 10000 }
+				);
+			}
 		}
 	}
 
@@ -167,11 +207,14 @@
 	$effect(() => {
 		const len = gps.track.length;
 		if (len > prevTrackLen && liveMap && gps.latestPoint) {
-			// Add all new points since last update (native polling delivers batches)
-			for (let i = prevTrackLen; i < len; i++) {
-				const p = gps.track[i];
-				livePolyline.addLatLng([p.lat, p.lng]);
+			if (gpsStarted) {
+				// Only draw the trail once the workout has actually started
+				for (let i = prevTrackLen; i < len; i++) {
+					const p = gps.track[i];
+					livePolyline.addLatLng([p.lat, p.lng]);
+				}
 			}
+			// Always update the position marker
 			const pt = [gps.latestPoint.lat, gps.latestPoint.lng];
 			liveMarker.setLatLng(pt);
 			const zoom = liveMap.getZoom() || 16;
@@ -188,9 +231,19 @@
 		});
 	}
 
+	let _prestartGps = false;
+
 	onMount(() => {
 		if (!workout.active && !completionData) {
 			goto(`/fitness/${sl.workout}`);
+			return;
+		}
+
+		// For GPS workouts in pre-start: start GPS immediately so the map
+		// shows the user's position while they configure activity/audio.
+		if (workout.mode === 'gps' && !gpsStarted && !gps.isTracking) {
+			_prestartGps = true;
+			gps.start();
 		}
 	});
 
@@ -223,29 +276,82 @@
 		}
 	}
 
+	async function startGpsWorkout() {
+		if (gpsStarting) return;
+		gpsStarting = true;
+		try {
+			if (_prestartGps && gps.isTracking) {
+				// GPS was running for pre-start preview — stop and restart
+				// so the native service resets time/distance to zero
+				await gps.stop();
+				gps.reset();
+			}
+			const started = await gps.start(getVoiceGuidanceConfig());
+			if (started) {
+				gpsStarted = true;
+				useGps = true;
+				workout.resumeTimer();
+			}
+		} finally {
+			gpsStarting = false;
+			_prestartGps = false;
+		}
+	}
+
+	/** Map GPS activity types to exercise IDs */
+	const ACTIVITY_EXERCISE_MAP = /** @type {Record<string, string>} */ ({
+		running: 'running',
+		walking: 'walking',
+		cycling: 'cycling-outdoor',
+		hiking: 'hiking',
+	});
+
 	async function finishWorkout() {
 		// Stop GPS tracking and collect track data
 		const gpsTrack = gps.isTracking ? await gps.stop() : [];
+		const wasGpsMode = workout.mode === 'gps';
+		const actType = workout.activityType;
 
 		const sessionData = workout.finish();
-		if (sessionData.exercises.length === 0) {
+
+		if (wasGpsMode && gpsTrack.length >= 2) {
+			// GPS workout: create a cardio exercise entry with the track attached,
+			// just like a manually-added workout with GPX upload
+			const filteredDistance = trackDistance(gpsTrack);
+			const durationMin = (gpsTrack[gpsTrack.length - 1].timestamp - gpsTrack[0].timestamp) / 60000;
+			const exerciseId = ACTIVITY_EXERCISE_MAP[actType ?? 'running'] ?? 'running';
+			const exerciseName = getExerciseById(exerciseId)?.name ?? exerciseId;
+
+			sessionData.exercises = [{
+				exerciseId,
+				name: exerciseName,
+				sets: [{
+					distance: filteredDistance,
+					duration: Math.round(durationMin * 100) / 100,
+					completed: true,
+				}],
+				gpsTrack,
+				totalDistance: filteredDistance,
+			}];
+		} else if (wasGpsMode && gpsTrack.length === 0) {
+			// GPS workout with no track data — nothing to save
 			gps.reset();
 			await sync.onWorkoutEnd();
 			await goto(`/fitness/${sl.workout}`);
 			return;
-		}
+		} else {
+			// Manual workout: attach GPS to cardio exercises
+			const workoutStart = new Date(sessionData.startTime).getTime();
+			const filteredTrack = gpsTrack.filter((/** @type {any} */ p) => p.timestamp >= workoutStart);
+			const filteredDistance = trackDistance(filteredTrack);
 
-		// Only save GPS points recorded while the workout timer was running
-		const workoutStart = new Date(sessionData.startTime).getTime();
-		const filteredTrack = gpsTrack.filter((/** @type {any} */ p) => p.timestamp >= workoutStart);
-		const filteredDistance = trackDistance(filteredTrack);
-
-		if (filteredTrack.length > 0) {
-			for (const ex of sessionData.exercises) {
-				const exercise = getExerciseById(ex.exerciseId);
-				if (exercise?.bodyPart === 'cardio') {
-					ex.gpsTrack = filteredTrack;
-					ex.totalDistance = filteredDistance;
+			if (filteredTrack.length > 0) {
+				for (const ex of sessionData.exercises) {
+					const exercise = getExerciseById(ex.exerciseId);
+					if (exercise?.bodyPart === 'cardio') {
+						ex.gpsTrack = filteredTrack;
+						ex.totalDistance = filteredDistance;
+					}
 				}
 			}
 		}
@@ -286,7 +392,7 @@
 		const durationMin = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
 
 		let totalTonnage = 0;
-		let totalDistance = 0;
+		let totalDistance = local.totalDistance ?? 0;
 		/** @type {any[]} */
 		const prs = [];
 
@@ -748,6 +854,155 @@
 		<button class="done-btn" onclick={() => goto(offlineQueued ? `/fitness/${sl.workout}` : `/fitness/${sl.history}/${completionData.sessionId}`)}>
 			{offlineQueued ? t('done', lang) : t('view_workout', lang)}
 		</button>
+	</div>
+
+{:else if workout.active && workout.mode === 'gps'}
+	<div class="gps-workout">
+		<div class="gps-workout-map" use:mountMap></div>
+
+		<!-- Overlay: sits on top of the map at the bottom -->
+		<div class="gps-overlay">
+			{#if gpsStarted}
+				<div class="gps-workout-stats">
+					<div class="gps-stat">
+						<span class="gps-stat-value">{gps.distance.toFixed(2)}</span>
+						<span class="gps-stat-unit">km</span>
+					</div>
+					<div class="gps-stat">
+						<span class="gps-stat-value">{formatElapsed(workout.elapsedSeconds)}</span>
+						<span class="gps-stat-unit">time</span>
+					</div>
+					{#if gps.currentPace > 0}
+						<div class="gps-stat">
+							<span class="gps-stat-value">{Math.floor(gps.currentPace)}:{Math.round((gps.currentPace % 1) * 60).toString().padStart(2, '0')}</span>
+							<span class="gps-stat-unit">/km</span>
+						</div>
+					{/if}
+				</div>
+
+				{#if vgEnabled}
+					<div class="vg-active-badge">
+						<Volume2 size={12} />
+						<span>Voice: every {vgTriggerValue} {vgTriggerType === 'distance' ? 'km' : 'min'}</span>
+					</div>
+				{/if}
+
+				<div class="gps-overlay-actions">
+					<button class="gps-overlay-pause" onclick={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()} aria-label={workout.paused ? 'Resume' : 'Pause'}>
+						{#if workout.paused}<Play size={22} />{:else}<Pause size={22} />{/if}
+					</button>
+					{#if workout.paused}
+						<button class="gps-overlay-cancel" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
+							<Trash2 size={18} />
+						</button>
+					{/if}
+					<button class="gps-overlay-finish" onclick={finishWorkout}>Finish</button>
+				</div>
+			{:else}
+				<div class="gps-options-grid">
+					<button class="gps-option-tile" onclick={() => { showActivityPicker = !showActivityPicker; showAudioPanel = false; }} type="button">
+						<span class="gps-option-icon">{GPS_ACTIVITIES.find(a => a.id === selectedActivity)?.icon ?? '🏃'}</span>
+						<span class="gps-option-label">Activity</span>
+						<span class="gps-option-value">{GPS_ACTIVITIES.find(a => a.id === selectedActivity)?.label ?? 'Running'}</span>
+					</button>
+					<button class="gps-option-tile" onclick={() => { showAudioPanel = !showAudioPanel; showActivityPicker = false; }} type="button">
+						<Volume2 size={20} />
+						<span class="gps-option-label">Audio Stats</span>
+						<span class="gps-option-value">{vgEnabled ? `Every ${vgTriggerValue} ${vgTriggerType === 'distance' ? 'km' : 'min'}` : 'Off'}</span>
+					</button>
+				</div>
+
+				{#if showActivityPicker}
+					<div class="gps-activity-picker">
+						{#each GPS_ACTIVITIES as act (act.id)}
+							<button
+								class="gps-activity-choice"
+								class:active={selectedActivity === act.id}
+								onclick={() => selectActivity(act.id)}
+								type="button"
+							>
+								<span class="gps-activity-icon">{act.icon}</span>
+								<span>{act.label}</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+
+				{#if showAudioPanel}
+					<div class="vg-panel">
+						{#if !gps.hasTtsEngine()}
+							<div class="vg-no-engine">
+								<span>No text-to-speech engine installed.</span>
+								<button class="vg-install-btn" onclick={() => gps.installTtsEngine()} type="button">
+									Install TTS Engine
+								</button>
+							</div>
+						{:else}
+						<label class="vg-row">
+							<input type="checkbox" bind:checked={vgEnabled} />
+							<span>Enable voice announcements</span>
+						</label>
+
+						{#if vgEnabled}
+							<div class="vg-group">
+								<span class="vg-label">Announce every</span>
+								<div class="vg-trigger-row">
+									<input
+										class="vg-number"
+										type="number"
+										min="0.1"
+										step="0.5"
+										bind:value={vgTriggerValue}
+									/>
+									<select class="vg-select" bind:value={vgTriggerType}>
+										<option value="distance">km</option>
+										<option value="time">min</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="vg-group">
+								<span class="vg-label">Metrics</span>
+								<div class="vg-metrics">
+									{#each availableMetrics as m (m.id)}
+										<button
+											class="vg-metric-chip"
+											class:selected={vgMetrics.includes(m.id)}
+											onclick={() => toggleMetric(m.id)}
+											type="button"
+										>
+											{m.label}
+										</button>
+									{/each}
+								</div>
+							</div>
+
+							<div class="vg-group">
+								<span class="vg-label">Language</span>
+								<select class="vg-select" bind:value={vgLanguage}>
+									<option value="en">English</option>
+									<option value="de">Deutsch</option>
+								</select>
+							</div>
+						{/if}
+						{/if}
+					</div>
+				{/if}
+
+				<button class="gps-start-btn" onclick={startGpsWorkout} disabled={gpsStarting}>
+					{#if gpsStarting}
+						<span class="gps-spinner"></span> Initializing GPS…
+					{:else}
+						Start
+					{/if}
+				</button>
+
+				<button class="gps-cancel-link" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }} type="button">
+					<X size={14} />
+					{t('cancel_workout', lang)}
+				</button>
+			{/if}
+		</div>
 	</div>
 
 {:else if workout.active}
@@ -1542,5 +1797,268 @@
 		font-size: 0.75rem;
 		color: var(--nord14);
 		opacity: 0.8;
+	}
+	.gps-overlay .vg-active-badge {
+		color: var(--nord7);
+	}
+	.gps-overlay .vg-panel {
+		background: rgba(255,255,255,0.1);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border: 1px solid rgba(255,255,255,0.15);
+		border-radius: 10px;
+		padding: 0.6rem;
+		border-top: none;
+		color: #fff;
+	}
+	.gps-overlay .vg-label {
+		color: rgba(255,255,255,0.6);
+	}
+	.gps-overlay .vg-row {
+		color: #fff;
+	}
+	.gps-overlay .vg-number,
+	.gps-overlay .vg-select {
+		background: rgba(255,255,255,0.1);
+		border-color: rgba(255,255,255,0.2);
+		color: #fff;
+	}
+	.gps-overlay .vg-metric-chip {
+		background: rgba(255,255,255,0.1);
+		border-color: rgba(255,255,255,0.2);
+		color: rgba(255,255,255,0.7);
+	}
+	.gps-overlay .vg-metric-chip.selected {
+		background: var(--nord14);
+		color: var(--nord0);
+		border-color: var(--nord14);
+	}
+
+	/* GPS Workout Mode — full-bleed map with overlay */
+	.gps-workout {
+		position: fixed;
+		inset: 0;
+		z-index: 50;
+	}
+	.gps-workout-map {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+	}
+	/* Dark gradient at top so status bar text stays readable */
+	.gps-workout::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: calc(env(safe-area-inset-top, 0px) + 3rem + 24px);
+		background: linear-gradient(to bottom, rgba(0,0,0,0.45), transparent);
+		z-index: 1;
+		pointer-events: none;
+	}
+	:global(.gps-workout-map .leaflet-control-container) {
+		/* push leaflet's own controls above our overlay */
+		position: relative;
+		z-index: 5;
+	}
+	.gps-overlay {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		z-index: 10;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.75rem;
+		padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+		background: linear-gradient(to top, rgba(0,0,0,0.7) 60%, transparent);
+		color: #fff;
+		pointer-events: none;
+	}
+	.gps-overlay > * {
+		pointer-events: auto;
+	}
+	.gps-workout-stats {
+		display: flex;
+		justify-content: space-around;
+		padding: 0.5rem 0;
+	}
+	.gps-stat {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	.gps-stat-value {
+		font-size: 1.8rem;
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		color: #fff;
+		text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+	}
+	.gps-stat-unit {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: rgba(255,255,255,0.75);
+	}
+	.gps-options-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+	}
+	.gps-option-tile {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.65rem 0.5rem;
+		background: rgba(255,255,255,0.12);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border: 1px solid rgba(255,255,255,0.2);
+		border-radius: 10px;
+		cursor: pointer;
+		font: inherit;
+		color: #fff;
+		transition: border-color 0.15s ease;
+	}
+	.gps-option-tile:hover {
+		border-color: rgba(255,255,255,0.5);
+	}
+	.gps-option-icon {
+		font-size: 1.25rem;
+	}
+	.gps-option-label {
+		font-size: 0.65rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgba(255,255,255,0.6);
+	}
+	.gps-option-value {
+		font-size: 0.85rem;
+		font-weight: 700;
+	}
+	.gps-activity-picker {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.4rem;
+	}
+	.gps-activity-choice {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.55rem 0.75rem;
+		background: rgba(255,255,255,0.1);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border: 1px solid rgba(255,255,255,0.2);
+		border-radius: 8px;
+		cursor: pointer;
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: #fff;
+		transition: all 0.15s ease;
+	}
+	.gps-activity-choice.active {
+		border-color: var(--nord8);
+		background: rgba(136,192,208,0.25);
+		color: var(--nord8);
+	}
+	.gps-activity-choice:hover:not(.active) {
+		border-color: rgba(255,255,255,0.4);
+	}
+	.gps-activity-icon {
+		font-size: 1.1rem;
+	}
+	.gps-start-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem;
+		width: 100%;
+		padding: 1rem;
+		background: var(--color-primary);
+		color: var(--primary-contrast);
+		border: none;
+		border-radius: 50px;
+		font-weight: 800;
+		font-size: 1.2rem;
+		cursor: pointer;
+		letter-spacing: 0.04em;
+	}
+	.gps-start-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+	.gps-cancel-link {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		background: none;
+		border: none;
+		color: rgba(255,255,255,0.5);
+		font: inherit;
+		font-size: 0.8rem;
+		cursor: pointer;
+		padding: 0.25rem;
+	}
+	.gps-cancel-link:hover {
+		color: var(--nord11);
+	}
+	.gps-overlay-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.gps-overlay-pause {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 3rem;
+		height: 3rem;
+		background: rgba(255,255,255,0.15);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border: 1px solid rgba(255,255,255,0.25);
+		border-radius: 50%;
+		color: #fff;
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+	.gps-overlay-pause:hover {
+		background: rgba(255,255,255,0.25);
+	}
+	.gps-overlay-cancel {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 3rem;
+		height: 3rem;
+		background: rgba(191,97,106,0.25);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border: 1px solid var(--nord11);
+		border-radius: 50%;
+		color: var(--nord11);
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+	.gps-overlay-cancel:hover {
+		background: rgba(191,97,106,0.4);
+	}
+	.gps-overlay-finish {
+		flex: 1;
+		padding: 0.85rem;
+		background: var(--nord11);
+		color: #fff;
+		border: none;
+		border-radius: 50px;
+		font-weight: 700;
+		font-size: 1rem;
+		cursor: pointer;
 	}
 </style>
