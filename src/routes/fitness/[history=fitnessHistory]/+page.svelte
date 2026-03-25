@@ -2,6 +2,7 @@
 	import { page as appPage } from '$app/stores';
 	import SessionCard from '$lib/components/fitness/SessionCard.svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($appPage.url.pathname));
 
@@ -31,10 +32,11 @@
 		page++;
 		try {
 			const res = await fetch(`/api/fitness/sessions?limit=50&skip=${sessions.length}`);
+			if (!res.ok) { toast.error('Failed to load sessions'); loading = false; return; }
 			const data = await res.json();
 			sessions = [...sessions, ...(data.sessions ?? [])];
 			total = data.total ?? total;
-		} catch {}
+		} catch { toast.error('Failed to load sessions'); }
 		loading = false;
 	}
 </script>

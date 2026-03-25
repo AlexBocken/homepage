@@ -1,6 +1,7 @@
 <script>
 	import '../app.css';
 	import { onNavigate } from '$app/navigation';
+	import Toast from '$lib/components/Toast.svelte';
 	let { children } = $props();
 
 	onNavigate((navigation) => {
@@ -21,3 +22,4 @@
 </script>
 
 {@render children()}
+<Toast />

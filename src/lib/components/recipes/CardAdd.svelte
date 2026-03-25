@@ -1,6 +1,7 @@
 <script lang="ts">
 
 import Cross from '$lib/assets/icons/Cross.svelte'
+import { toast } from '$lib/js/toast.svelte'
 import "$lib/css/shake.css"
 import "$lib/css/icon.css"
 import { onMount } from 'svelte'
@@ -32,14 +33,14 @@ function handleFileSelect(event: Event) {
 
 	// Validate MIME type
 	if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-		alert('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
+		toast.error('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
 		input.value = '';
 		return;
 	}
 
 	// Validate file size
 	if (file.size > MAX_FILE_SIZE) {
-		alert(`File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
+		toast.error(`File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
 		input.value = '';
 		return;
 	}

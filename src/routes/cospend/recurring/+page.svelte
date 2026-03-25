@@ -3,6 +3,7 @@
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import { getFrequencyDescription, formatNextExecution } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import { toast } from '$lib/js/toast.svelte';
   import AddButton from '$lib/components/AddButton.svelte';
   import { formatCurrency } from '$lib/utils/formatters';
 
@@ -53,7 +54,7 @@
       // Refresh the list
       await fetchRecurringPayments();
     } catch (err) {
-      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -74,7 +75,7 @@
       // Refresh the list
       await fetchRecurringPayments();
     } catch (err) {
-      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error(err instanceof Error ? err.message : String(err));
     }
   }
 
