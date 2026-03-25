@@ -32,17 +32,18 @@ export function briefQueryConfig(recipeLang: string) {
  */
 export function toBrief(recipe: RecipeModelType, recipeLang: string): BriefRecipeType {
 	if (isEnglish(recipeLang)) {
+		const en = recipe.translations?.en;
 		return {
 			_id: recipe._id,
-			name: recipe.translations.en.name,
-			short_name: recipe.translations.en.short_name,
+			name: en?.name ?? '',
+			short_name: en?.short_name ?? '',
 			images: recipe.images?.[0]
 				? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath, color: recipe.images[0].color }]
 				: [],
-			tags: recipe.translations.en.tags || [],
-			category: recipe.translations.en.category,
+			tags: en?.tags || [],
+			category: en?.category ?? '',
 			icon: recipe.icon,
-			description: recipe.translations.en.description,
+			description: en?.description,
 			season: recipe.season || [],
 			dateCreated: recipe.dateCreated,
 			dateModified: recipe.dateModified,

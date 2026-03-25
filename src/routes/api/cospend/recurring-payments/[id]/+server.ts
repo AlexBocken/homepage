@@ -114,7 +114,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     // Validate personal + equal split method
     if (splitMethod === 'personal_equal' && splits && amount) {
       const totalPersonal = splits.reduce((sum: number, split: { personalAmount?: number }) => {
-        return sum + (parseFloat(split.personalAmount) || 0);
+        return sum + (split.personalAmount ?? 0);
       }, 0);
       
       if (totalPersonal > amount) {
@@ -127,7 +127,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       const updatedPayment = { ...existingPayment.toObject(), ...updateData };
       updateData.nextExecutionDate = calculateNextExecutionDate(
         updatedPayment,
-        updateData.startDate || existingPayment.startDate
+        (updateData.startDate || existingPayment.startDate) as Date
       );
     }
 

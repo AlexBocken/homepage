@@ -87,7 +87,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   // Validate personal + equal split method
   if (splitMethod === 'personal_equal' && splits) {
     const totalPersonal = splits.reduce((sum: number, split: { personalAmount?: number }) => {
-      return sum + (parseFloat(split.personalAmount) || 0);
+      return sum + (split.personalAmount ?? 0);
     }, 0);
     
     if (totalPersonal > amount) {

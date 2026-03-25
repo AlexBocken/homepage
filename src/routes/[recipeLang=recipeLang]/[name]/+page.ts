@@ -3,8 +3,9 @@ import { generateRecipeJsonLd } from '$lib/js/recipeJsonLd';
 import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
 import { getFullRecipe, isOfflineDataAvailable } from '$lib/offline/db';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
+import type { PageLoad } from './$types';
 
-export async function load({ fetch, params, url, data }) {
+export const load: PageLoad = async ({ fetch, params, url, data }) => {
     const isEnglish = params.recipeLang === 'recipes';
 
     // Check if we need to load from IndexedDB (offline mode)
@@ -200,4 +201,4 @@ export async function load({ fetch, params, url, data }) {
         strippedDescription,
         isOffline: isOfflineMode,
     };
-}
+};

@@ -1,5 +1,5 @@
 import { redirect, error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
     };
 };
 
-export const actions = {
+export const actions: Actions = {
     toggleFavorite: async ({ request, locals, url, fetch }) => {
         const session = await locals.auth();
         
