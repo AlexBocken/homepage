@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin } from 'lucide-svelte';
+	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2 } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -40,6 +40,41 @@
 	let offlineQueued = $state(false);
 
 	let useGps = $state(gps.isTracking);
+
+	// Voice guidance config
+	let vgEnabled = $state(false);
+	let vgTriggerType = $state('distance');
+	let vgTriggerValue = $state(1);
+	let vgMetrics = $state(['totalTime', 'totalDistance', 'avgPace']);
+	let vgLanguage = $state('en');
+	let vgShowPanel = $state(false);
+
+	const availableMetrics = [
+		{ id: 'totalTime', label: 'Total Time' },
+		{ id: 'totalDistance', label: 'Total Distance' },
+		{ id: 'avgPace', label: 'Average Pace' },
+		{ id: 'splitPace', label: 'Split Pace' },
+		{ id: 'currentPace', label: 'Current Pace' },
+	];
+
+	function getVoiceGuidanceConfig() {
+		if (!vgEnabled) return undefined;
+		return {
+			enabled: true,
+			triggerType: vgTriggerType,
+			triggerValue: vgTriggerValue,
+			metrics: vgMetrics,
+			language: vgLanguage
+		};
+	}
+
+	function toggleMetric(id) {
+		if (vgMetrics.includes(id)) {
+			vgMetrics = vgMetrics.filter(m => m !== id);
+		} else {
+			vgMetrics = [...vgMetrics, id];
+		}
+	}
 
 	/** @type {any} */
 	let liveMap = null;
@@ -102,7 +137,7 @@
 				if (gps.isTracking) {
 					useGps = true;
 				} else {
-					useGps = await gps.start();
+					useGps = await gps.start(getVoiceGuidanceConfig());
 				}
 			} else {
 				await gps.stop();
@@ -118,6 +153,16 @@
 			gpsToggling = false;
 		}
 	}
+
+	// Sync workout pause state to native GPS/TTS service
+	$effect(() => {
+		if (!gps.isTracking) return;
+		if (workout.paused) {
+			gps.pauseTracking();
+		} else {
+			gps.resumeTracking();
+		}
+	});
 
 	$effect(() => {
 		const len = gps.track.length;
@@ -174,7 +219,7 @@
 		// Auto-start GPS when adding a cardio exercise
 		const exercise = getExerciseById(exerciseId);
 		if (exercise?.bodyPart === 'cardio' && gps.available && !useGps && !gps.isTracking) {
-			useGps = await gps.start();
+			useGps = await gps.start(getVoiceGuidanceConfig());
 		}
 	}
 
@@ -729,6 +774,76 @@
 						<span class="gps-spinner"></span> {t('initializing_gps', lang) ?? 'Initializing GPS…'}
 					</div>
 				{/if}
+
+				{#if !useGps}
+					<button class="vg-toggle-row" onclick={() => vgShowPanel = !vgShowPanel} type="button">
+						<Volume2 size={14} />
+						<span class="gps-toggle-track" class:checked={vgEnabled}></span>
+						<span>Voice Guidance</span>
+					</button>
+
+					{#if vgShowPanel}
+						<div class="vg-panel">
+							{#if !gps.hasTtsEngine()}
+								<div class="vg-no-engine">
+									<span>No text-to-speech engine installed.</span>
+									<button class="vg-install-btn" onclick={() => gps.installTtsEngine()} type="button">
+										Install TTS Engine
+									</button>
+								</div>
+							{:else}
+							<label class="vg-row">
+								<input type="checkbox" bind:checked={vgEnabled} />
+								<span>Enable voice announcements</span>
+							</label>
+
+							{#if vgEnabled}
+								<div class="vg-group">
+									<span class="vg-label">Announce every</span>
+									<div class="vg-trigger-row">
+										<input
+											class="vg-number"
+											type="number"
+											min="0.1"
+											step="0.5"
+											bind:value={vgTriggerValue}
+										/>
+										<select class="vg-select" bind:value={vgTriggerType}>
+											<option value="distance">km</option>
+											<option value="time">min</option>
+										</select>
+									</div>
+								</div>
+
+								<div class="vg-group">
+									<span class="vg-label">Metrics</span>
+									<div class="vg-metrics">
+										{#each availableMetrics as m (m.id)}
+											<button
+												class="vg-metric-chip"
+												class:selected={vgMetrics.includes(m.id)}
+												onclick={() => toggleMetric(m.id)}
+												type="button"
+											>
+												{m.label}
+											</button>
+										{/each}
+									</div>
+								</div>
+
+								<div class="vg-group">
+									<span class="vg-label">Language</span>
+									<select class="vg-select" bind:value={vgLanguage}>
+										<option value="en">English</option>
+										<option value="de">Deutsch</option>
+									</select>
+								</div>
+							{/if}
+							{/if}
+						</div>
+					{/if}
+				{/if}
+
 				{#if useGps}
 					<div class="gps-bar active">
 						<span class="gps-distance">{gps.distance.toFixed(2)} km</span>
@@ -737,6 +852,12 @@
 						{/if}
 						<span class="gps-label">{gps.track.length} pts</span>
 					</div>
+					{#if vgEnabled}
+						<div class="vg-active-badge">
+							<Volume2 size={12} />
+							<span>Voice: every {vgTriggerValue} {vgTriggerType === 'distance' ? 'km' : 'min'}</span>
+						</div>
+					{/if}
 					<div class="live-map" use:mountMap></div>
 				{/if}
 			</div>
@@ -1314,5 +1435,112 @@
 	}
 	@keyframes spin {
 		to { transform: rotate(360deg); }
+	}
+
+	/* Voice Guidance */
+	.vg-toggle-row {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		color: var(--color-text-primary);
+		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		font-size: 0.9rem;
+	}
+	.vg-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 0.5rem 0 0;
+		border-top: 1px solid var(--color-border);
+	}
+	.vg-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+	}
+	.vg-row input[type="checkbox"] {
+		accent-color: var(--nord14);
+	}
+	.vg-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+	.vg-label {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-secondary);
+	}
+	.vg-trigger-row {
+		display: flex;
+		gap: 0.4rem;
+	}
+	.vg-number {
+		width: 70px;
+		padding: 0.3rem 0.4rem;
+		border-radius: 6px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+	}
+	.vg-select {
+		padding: 0.3rem 0.4rem;
+		border-radius: 6px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+	}
+	.vg-metrics {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+	}
+	.vg-metric-chip {
+		padding: 0.25rem 0.6rem;
+		border-radius: 20px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-text-secondary);
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.vg-metric-chip.selected {
+		background: var(--nord14);
+		color: var(--nord0);
+		border-color: var(--nord14);
+	}
+	.vg-no-engine {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+	}
+	.vg-install-btn {
+		padding: 0.4rem 0.8rem;
+		border-radius: 6px;
+		border: 1px solid var(--nord14);
+		background: transparent;
+		color: var(--nord14);
+		font-size: 0.85rem;
+		cursor: pointer;
+		align-self: flex-start;
+	}
+	.vg-active-badge {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.75rem;
+		color: var(--nord14);
+		opacity: 0.8;
 	}
 </style>

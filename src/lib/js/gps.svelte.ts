@@ -13,11 +13,25 @@ export interface GpsPoint {
 	timestamp: number;
 }
 
+export interface VoiceGuidanceConfig {
+	enabled: boolean;
+	triggerType: 'distance' | 'time';
+	triggerValue: number;
+	metrics: string[];
+	language: string;
+	voiceId?: string;
+}
+
 interface AndroidBridge {
-	startLocationService(): void;
+	startLocationService(ttsConfigJson: string): void;
 	stopLocationService(): void;
 	getPoints(): string;
 	isTracking(): boolean;
+	getAvailableTtsVoices(): string;
+	hasTtsEngine(): boolean;
+	installTtsEngine(): void;
+	pauseTracking(): void;
+	resumeTracking(): void;
 }
 
 function checkTauri(): boolean {
@@ -98,7 +112,7 @@ export function createGpsTracker() {
 		}
 	}
 
-	async function start() {
+	async function start(voiceGuidance?: VoiceGuidanceConfig) {
 		_debugMsg = 'starting...';
 		if (!checkTauri() || isTracking) {
 			_debugMsg = `bail: tauri=${checkTauri()} tracking=${isTracking}`;
@@ -130,7 +144,8 @@ export function createGpsTracker() {
 			const bridge = getAndroidBridge();
 			if (bridge) {
 				_debugMsg = 'starting native GPS service...';
-				bridge.startLocationService();
+				const ttsConfig = JSON.stringify(voiceGuidance ?? {});
+				bridge.startLocationService(ttsConfig);
 				// Poll the native side for collected points
 				_pollTimer = setInterval(pollPoints, POLL_INTERVAL_MS);
 				_debugMsg = 'native GPS service started, polling...';
@@ -175,6 +190,37 @@ export function createGpsTracker() {
 		track = [];
 	}
 
+	function getAvailableTtsVoices(): Array<{ id: string; name: string; language: string }> {
+		const bridge = getAndroidBridge();
+		if (!bridge) return [];
+		try {
+			return JSON.parse(bridge.getAvailableTtsVoices());
+		} catch {
+			return [];
+		}
+	}
+
+	function hasTtsEngine(): boolean {
+		const bridge = getAndroidBridge();
+		if (!bridge) return false;
+		return bridge.hasTtsEngine();
+	}
+
+	function installTtsEngine(): void {
+		const bridge = getAndroidBridge();
+		bridge?.installTtsEngine();
+	}
+
+	function pauseTracking(): void {
+		const bridge = getAndroidBridge();
+		bridge?.pauseTracking();
+	}
+
+	function resumeTracking(): void {
+		const bridge = getAndroidBridge();
+		bridge?.resumeTracking();
+	}
+
 	return {
 		get track() { return track; },
 		get isTracking() { return isTracking; },
@@ -186,7 +232,12 @@ export function createGpsTracker() {
 		get debug() { return _debugMsg; },
 		start,
 		stop,
-		reset
+		reset,
+		getAvailableTtsVoices,
+		hasTtsEngine,
+		installTtsEngine,
+		pauseTracking,
+		resumeTracking
 	};
 }
 
