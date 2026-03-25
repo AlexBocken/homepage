@@ -61,6 +61,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		for (const recipe of recipes) {
 			let processed = 0;
 			let failed = 0;
+			if (!recipe.images) continue;
 
 			for (let i = 0; i < recipe.images.length; i++) {
 				const image = recipe.images[i];

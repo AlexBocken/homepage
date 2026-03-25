@@ -312,7 +312,7 @@ export async function invalidateRecipeCaches(): Promise<void> {
  */
 export async function invalidateCospendCaches(usernames: string[], paymentId?: string): Promise<void> {
 	try {
-		const invalidations: Promise<void>[] = [];
+		const invalidations: Promise<unknown>[] = [];
 
 		// Invalidate balance and debts caches for all affected users
 		for (const username of usernames) {

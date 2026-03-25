@@ -213,4 +213,5 @@ const WorkoutSessionSchema = new mongoose.Schema(
 WorkoutSessionSchema.index({ createdBy: 1, startTime: -1 });
 WorkoutSessionSchema.index({ templateId: 1 });
 
-export const WorkoutSession = mongoose.models.WorkoutSession as mongoose.Model<IWorkoutSession> ?? mongoose.model<IWorkoutSession>("WorkoutSession", WorkoutSessionSchema);
+// @ts-expect-error Mongoose model() produces a union type too complex for TS
+export const WorkoutSession: mongoose.Model<IWorkoutSession> = mongoose.models.WorkoutSession || mongoose.model("WorkoutSession", WorkoutSessionSchema);

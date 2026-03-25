@@ -1,4 +1,4 @@
-function parseTimeToISO8601(timeString: string): string | undefined {
+function parseTimeToISO8601(timeString: string | undefined): string | undefined {
   if (!timeString) return undefined;
   
   // Handle common German time formats
@@ -66,7 +66,7 @@ export function generateRecipeJsonLd(data: RecipeModelType) {
       "name": "Alexander Bocken"
     },
     "datePublished": data.dateCreated ? new Date(data.dateCreated).toISOString() : undefined,
-    "dateModified": data.dateModified || data.updatedAt ? new Date(data.dateModified || data.updatedAt).toISOString() : undefined,
+    "dateModified": data.dateModified ? new Date(data.dateModified).toISOString() : undefined,
     "recipeCategory": data.category,
     "keywords": data.tags?.join(', '),
     "image": {
@@ -98,7 +98,7 @@ export function generateRecipeJsonLd(data: RecipeModelType) {
   // Extract ingredients
   if (data.ingredients) {
     for (const ingredientGroup of data.ingredients) {
-      if (ingredientGroup.list) {
+      if ('list' in ingredientGroup && ingredientGroup.list) {
         for (const ingredient of ingredientGroup.list) {
           if (ingredient.name) {
             let ingredientText = ingredient.name;
@@ -115,7 +115,7 @@ export function generateRecipeJsonLd(data: RecipeModelType) {
   // Extract instructions
   if (data.instructions) {
     for (const instructionGroup of data.instructions) {
-      if (instructionGroup.steps) {
+      if ('steps' in instructionGroup && instructionGroup.steps) {
         for (let i = 0; i < instructionGroup.steps.length; i++) {
           jsonLd.recipeInstructions.push({
             "@type": "HowToStep",

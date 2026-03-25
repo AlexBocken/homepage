@@ -2,8 +2,9 @@ import { browser } from '$app/environment';
 import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
 import { getAllBriefRecipes, getBriefRecipesBySeason, isOfflineDataAvailable } from '$lib/offline/db';
 import { rand_array } from '$lib/js/randomize';
+import type { PageLoad } from './$types';
 
-export async function load({ data }) {
+export const load: PageLoad = async ({ data }) => {
 	// On the server, just pass through the server data unchanged
 	if (!browser) {
 		return {
@@ -48,4 +49,4 @@ export async function load({ data }) {
 		...data,
 		isOffline: false
 	};
-}
+};

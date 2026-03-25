@@ -5,10 +5,8 @@ import { error } from '@sveltejs/kit';
 import type { RecipeModelType, IngredientItem, InstructionItem } from '$types/types';
 import { isEnglish } from '$lib/server/recipeHelpers';
 
-type RecipeItem = (IngredientItem | InstructionItem) & { baseRecipeRef?: Record<string, unknown>; resolvedRecipe?: Record<string, unknown> };
-
 /** Recursively map populated baseRecipeRef to resolvedRecipe field */
-function mapBaseRecipeRefs(items: RecipeItem[]): RecipeItem[] {
+function mapBaseRecipeRefs(items: any[]): any[] {
   return items.map((item) => {
     if (item.type === 'reference' && item.baseRecipeRef) {
       const resolvedRecipe = { ...item.baseRecipeRef };
@@ -131,10 +129,10 @@ export const GET: RequestHandler = async ({ params }) => {
     };
 
     if (recipe.ingredients) {
-      recipe.ingredients = mapBaseRecipeRefs(recipe.ingredients as RecipeItem[]);
+      recipe.ingredients = mapBaseRecipeRefs(recipe.ingredients as any[]);
     }
     if (recipe.instructions) {
-      recipe.instructions = mapBaseRecipeRefs(recipe.instructions as RecipeItem[]);
+      recipe.instructions = mapBaseRecipeRefs(recipe.instructions as any[]);
     }
 
     // Merge English alt/caption with original image paths
