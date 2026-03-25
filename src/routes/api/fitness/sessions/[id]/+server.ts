@@ -59,7 +59,30 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name;
     if (exercises) {
-      updateData.exercises = exercises;
+      // Preserve gpsTrack/gpsPreview/totalDistance from existing exercises
+      const existing = await WorkoutSession.findOne({
+        _id: params.id,
+        createdBy: session.user.nickname
+      }).select('exercises.exerciseId exercises.gpsTrack exercises.gpsPreview exercises.totalDistance').lean();
+
+      const gpsDataByExercise = new Map<string, { gpsTrack?: unknown; gpsPreview?: unknown; totalDistance?: number }>();
+      if (existing) {
+        for (const ex of existing.exercises) {
+          if (ex.gpsTrack?.length || ex.gpsPreview?.length || ex.totalDistance) {
+            gpsDataByExercise.set(ex.exerciseId, {
+              gpsTrack: ex.gpsTrack,
+              gpsPreview: ex.gpsPreview,
+              totalDistance: ex.totalDistance
+            });
+          }
+        }
+      }
+
+      updateData.exercises = exercises.map((ex: Record<string, unknown>) => {
+        const gps = gpsDataByExercise.get(ex.exerciseId as string);
+        return gps ? { ...ex, ...gps } : ex;
+      });
+
       // Recompute totalVolume
       let totalVolume = 0;
       let totalDistance = 0;
