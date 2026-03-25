@@ -6,6 +6,7 @@
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
@@ -198,6 +199,9 @@
 				if (res.ok) {
 					const { template } = await res.json();
 					templates = templates.map((t) => t._id === template._id ? { ...template, lastUsed: t.lastUsed } : t);
+				} else {
+					const err = await res.json().catch(() => null);
+					toast.error(err?.error ?? 'Failed to save template');
 				}
 			} else {
 				const res = await fetch('/api/fitness/templates', {
@@ -208,10 +212,13 @@
 				if (res.ok) {
 					const { template } = await res.json();
 					templates = [...templates, template];
+				} else {
+					const err = await res.json().catch(() => null);
+					toast.error(err?.error ?? 'Failed to save template');
 				}
 			}
 			closeEditor();
-		} catch {}
+		} catch { toast.error('Failed to save template'); }
 		editorSaving = false;
 	}
 
@@ -227,8 +234,11 @@
 					scheduleOrder = scheduleOrder.filter((id) => id !== template._id);
 					saveSchedule(scheduleOrder);
 				}
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to delete template');
 			}
-		} catch {}
+		} catch { toast.error('Failed to delete template'); }
 	}
 
 	// Schedule editor functions
@@ -273,8 +283,11 @@
 				const schedRes = await fetch('/api/fitness/schedule');
 				const schedData = await schedRes.json();
 				nextTemplateId = schedData.nextTemplateId ?? null;
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to save schedule');
 			}
-		} catch {}
+		} catch { toast.error('Failed to save schedule'); }
 	}
 
 	async function saveAndCloseSchedule() {

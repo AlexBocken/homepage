@@ -15,6 +15,7 @@
 	import { season } from '$lib/js/season_store';
 	import { portions } from '$lib/js/portions_store';
 	import '$lib/css/action_button.css';
+	import { toast } from '$lib/js/toast.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -173,11 +174,11 @@
 	function prepareSubmit() {
 		// Client-side validation
 		if (!short_name.trim()) {
-			alert('Bitte geben Sie einen Kurznamen ein');
+			toast.error('Bitte geben Sie einen Kurznamen ein');
 			return;
 		}
 		if (!card_data.name) {
-			alert('Bitte geben Sie einen Namen ein');
+			toast.error('Bitte geben Sie einen Namen ein');
 			return;
 		}
 
@@ -239,7 +240,7 @@
 	// Display form errors if any
 	$effect(() => {
 		if (form?.error) {
-			alert(`Fehler: ${form.error}`);
+			toast.error(form.error);
 		}
 	});
 </script>

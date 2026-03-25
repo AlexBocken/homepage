@@ -8,6 +8,7 @@
 	import CardAdd from '$lib/components/recipes/CardAdd.svelte';
 	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
 	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
+	import { toast } from '$lib/js/toast.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import '$lib/css/action_button.css';
 
@@ -109,11 +110,11 @@
 	function prepareSubmit() {
 		// Client-side validation
 		if (!short_name.trim()) {
-			alert('Bitte geben Sie einen Kurznamen ein');
+			toast.error('Bitte geben Sie einen Kurznamen ein');
 			return;
 		}
 		if (!card_data.name) {
-			alert('Bitte geben Sie einen Namen ein');
+			toast.error('Bitte geben Sie einen Namen ein');
 			return;
 		}
 
@@ -159,7 +160,7 @@
 	// Display form errors if any
 	$effect(() => {
 		if (form?.error) {
-			alert(`Fehler: ${form.error}`);
+			toast.error(form.error);
 		}
 	});
 </script>

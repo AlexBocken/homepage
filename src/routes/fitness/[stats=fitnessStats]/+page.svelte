@@ -5,6 +5,7 @@
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 
@@ -59,8 +60,11 @@
 				goalWeekly = d.weeklyWorkouts;
 				goalStreak = d.streak;
 				goalEditing = false;
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to save goal');
 			}
-		} finally {
+		} catch { toast.error('Failed to save goal'); } finally {
 			goalSaving = false;
 		}
 	}

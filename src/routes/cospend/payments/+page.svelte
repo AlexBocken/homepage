@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
+  import { toast } from '$lib/js/toast.svelte';
   import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
 
@@ -88,7 +89,7 @@
 
       payments = payments.filter((/** @type {any} */ p) => p._id !== paymentId);
     } catch (err) {
-      alert('Error: ' + (err instanceof Error ? err.message : String(err)));
+      toast.error(err instanceof Error ? err.message : String(err));
     }
   }
 

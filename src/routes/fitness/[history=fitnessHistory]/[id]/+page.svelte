@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge, Flame, Info } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
@@ -166,8 +167,11 @@
 				editing = false;
 				editData = null;
 				await invalidateAll();
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to save session');
 			}
-		} catch {}
+		} catch { toast.error('Failed to save session'); }
 		saving = false;
 	}
 
@@ -262,8 +266,11 @@
 			const res = await fetch(`/api/fitness/sessions/${session._id}/recalculate`, { method: 'POST' });
 			if (res.ok) {
 				await invalidateAll();
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to recalculate');
 			}
-		} catch {}
+		} catch { toast.error('Failed to recalculate'); }
 		recalculating = false;
 	}
 
@@ -274,8 +281,11 @@
 			const res = await fetch(`/api/fitness/sessions/${session._id}`, { method: 'DELETE' });
 			if (res.ok) {
 				await goto(`/fitness/${sl.history}`);
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to delete session');
 			}
-		} catch {}
+		} catch { toast.error('Failed to delete session'); }
 		deleting = false;
 	}
 
@@ -483,8 +493,11 @@
 				});
 				if (res.ok) {
 					await invalidateAll();
+				} else {
+					const err = await res.json().catch(() => null);
+					toast.error(err?.error ?? 'Failed to upload GPX');
 				}
-			} catch {}
+			} catch { toast.error('Failed to upload GPX'); }
 			uploading = -1;
 		};
 		input.click();
@@ -501,8 +514,11 @@
 			});
 			if (res.ok) {
 				await invalidateAll();
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to remove GPX');
 			}
-		} catch {}
+		} catch { toast.error('Failed to remove GPX'); }
 	}
 </script>
 

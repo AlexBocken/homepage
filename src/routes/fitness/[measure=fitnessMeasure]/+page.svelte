@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { Pencil, Trash2 } from 'lucide-svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	import { getWorkout } from '$lib/js/workout.svelte';
@@ -186,7 +187,7 @@
 	async function refreshLatest() {
 		try {
 			const latestRes = await fetch('/api/fitness/measurements/latest');
-			latest = await latestRes.json();
+			if (latestRes.ok) latest = await latestRes.json();
 		} catch {}
 	}
 
@@ -207,6 +208,9 @@
 					await refreshLatest();
 					showForm = false;
 					resetForm();
+				} else {
+					const err = await res.json().catch(() => null);
+					toast.error(err?.error ?? 'Failed to save measurement');
 				}
 			} else {
 				const res = await fetch('/api/fitness/measurements', {
@@ -220,9 +224,12 @@
 					await refreshLatest();
 					showForm = false;
 					resetForm();
+				} else {
+					const err = await res.json().catch(() => null);
+					toast.error(err?.error ?? 'Failed to save measurement');
 				}
 			}
-		} catch {}
+		} catch { toast.error('Failed to save measurement'); }
 		saving = false;
 	}
 
@@ -238,8 +245,11 @@
 					showForm = false;
 					resetForm();
 				}
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to delete measurement');
 			}
-		} catch {}
+		} catch { toast.error('Failed to delete measurement'); }
 	}
 
 	/** @param {string} dateStr */
