@@ -41,12 +41,16 @@ export interface IWorkoutSession {
   templateId?: string; // Reference to WorkoutTemplate if based on template
   templateName?: string; // Snapshot of template name for history
   name: string;
+  mode?: 'manual' | 'gps';
+  activityType?: 'running' | 'walking' | 'cycling' | 'hiking';
   exercises: ICompletedExercise[];
   startTime: Date;
   endTime?: Date;
   duration?: number; // Duration in minutes
   totalVolume?: number; // Total weight × reps across all exercises
   totalDistance?: number; // Total distance across all cardio exercises
+  gpsTrack?: IGpsPoint[]; // Top-level GPS track for GPS-only workouts
+  gpsPreview?: number[][]; // Downsampled [[lat,lng], ...] for card preview
   prs?: IPr[];
   notes?: string;
   createdBy: string; // username/nickname of the person who performed the workout
@@ -155,15 +159,18 @@ const WorkoutSessionSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100
     },
+    mode: {
+      type: String,
+      enum: ['manual', 'gps'],
+      default: 'manual'
+    },
+    activityType: {
+      type: String,
+      enum: ['running', 'walking', 'cycling', 'hiking']
+    },
     exercises: {
       type: [CompletedExerciseSchema],
-      required: true,
-      validate: {
-        validator: function(exercises: ICompletedExercise[]) {
-          return exercises.length > 0;
-        },
-        message: 'A workout session must have at least one exercise'
-      }
+      default: []
     },
     startTime: {
       type: Date,
@@ -184,6 +191,14 @@ const WorkoutSessionSchema = new mongoose.Schema(
     totalDistance: {
       type: Number,
       min: 0
+    },
+    gpsTrack: {
+      type: [GpsPointSchema],
+      default: undefined
+    },
+    gpsPreview: {
+      type: [[Number]],
+      default: undefined
     },
     prs: [{
       exerciseId: { type: String, required: true },

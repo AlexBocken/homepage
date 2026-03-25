@@ -18,6 +18,8 @@ export interface IActiveWorkout {
   userId: string;
   version: number;
   name: string;
+  mode: 'manual' | 'gps';
+  activityType: 'running' | 'walking' | 'cycling' | 'hiking' | null;
   templateId: string | null;
   exercises: IActiveWorkoutExercise[];
   paused: boolean;
@@ -61,6 +63,16 @@ const ActiveWorkoutSchema = new mongoose.Schema(
       required: true,
       trim: true,
       maxlength: 100
+    },
+    mode: {
+      type: String,
+      enum: ['manual', 'gps'],
+      default: 'manual'
+    },
+    activityType: {
+      type: String,
+      enum: ['running', 'walking', 'cycling', 'hiking'],
+      default: null
     },
     templateId: {
       type: String,

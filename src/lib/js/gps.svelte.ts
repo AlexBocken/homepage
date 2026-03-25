@@ -221,6 +221,22 @@ export function createGpsTracker() {
 		bridge?.resumeTracking();
 	}
 
+	/** Request location permissions without starting the tracking service.
+	 *  Returns true if permissions were granted. */
+	async function ensurePermissions(): Promise<boolean> {
+		if (!checkTauri()) return false;
+		try {
+			const geo = await import('@tauri-apps/plugin-geolocation');
+			let perms = await geo.checkPermissions();
+			if (perms.location !== 'granted') {
+				perms = await geo.requestPermissions(['location']);
+			}
+			return perms.location === 'granted';
+		} catch {
+			return false;
+		}
+	}
+
 	return {
 		get track() { return track; },
 		get isTracking() { return isTracking; },
@@ -237,7 +253,8 @@ export function createGpsTracker() {
 		hasTtsEngine,
 		installTtsEngine,
 		pauseTracking,
-		resumeTracking
+		resumeTracking,
+		ensurePermissions
 	};
 }
 

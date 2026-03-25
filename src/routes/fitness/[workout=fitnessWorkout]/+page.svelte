@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight, MapPin, Dumbbell } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
@@ -48,8 +48,10 @@
 	/** @type {any} */
 	let nextTemplate = $derived(nextTemplateId ? templates.find((t) => t._id === nextTemplateId) : null);
 	let hasSchedule = $derived(scheduleOrder.length > 0);
+	let isApp = $state(false);
 
 	onMount(() => {
+		isApp = '__TAURI__' in window;
 		workout.restore();
 
 		// If there's an active workout, redirect to the active page
@@ -89,6 +91,12 @@
 
 	async function startEmpty() {
 		workout.startEmpty();
+		await sync.onWorkoutStart();
+		goto(`/fitness/${sl.workout}/${sl.active}`);
+	}
+
+	async function startGps() {
+		workout.startGpsWorkout('running');
 		await sync.onWorkoutStart();
 		goto(`/fitness/${sl.workout}/${sl.active}`);
 	}
@@ -333,9 +341,18 @@
 	{/if}
 
 	<section class="quick-start">
-		<button class="start-empty-btn" onclick={startEmpty}>
-			{t('start_empty_workout', lang)}
-		</button>
+		<div class="quick-start-row">
+			{#if isApp}
+				<button class="start-choice-btn" onclick={startGps}>
+					<MapPin size={18} />
+					<span>GPS Workout</span>
+				</button>
+			{/if}
+			<button class="start-choice-btn" onclick={startEmpty}>
+				{#if isApp}<Dumbbell size={18} />{/if}
+				<span>{t('start_empty_workout', lang)}</span>
+			</button>
+		</div>
 	</section>
 
 	<section class="templates-section">
@@ -638,19 +655,27 @@
 	.quick-start {
 		text-align: center;
 	}
-	.start-empty-btn {
-		width: 100%;
-		padding: 0.9rem;
+	.quick-start-row {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.start-choice-btn {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 1rem 0.5rem;
 		background: var(--color-primary);
 		color: var(--primary-contrast);
 		border: none;
 		border-radius: 10px;
 		font-weight: 700;
-		font-size: 0.9rem;
+		font-size: 0.85rem;
 		cursor: pointer;
 		letter-spacing: 0.03em;
 	}
-	.start-empty-btn:hover {
+	.start-choice-btn:hover {
 		opacity: 0.9;
 	}
 	.templates-header {
