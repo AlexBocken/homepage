@@ -145,7 +145,7 @@
 			<div class="lifetime-card kcal">
 				<div class="card-icon"><Flame size={24} /></div>
 				<div class="card-value">~{stats.kcalEstimate.kcal.toLocaleString()}<span class="card-unit">kcal</span></div>
-				<div class="card-label">{t('est_kcal', lang)}</div>
+				<div class="card-label">{t('burned', lang)}</div>
 				{#if !hasDemographics}
 					<div class="card-hint">{t('kcal_set_profile', lang)} <a href="/fitness/{fitnessSlugs(lang).measure}">{t('measure_title', lang)}</a></div>
 				{/if}
@@ -154,7 +154,7 @@
 		<div class="lifetime-card cardio">
 			<div class="card-icon"><Route size={24} /></div>
 			<div class="card-value">{stats.totalCardioKm ?? 0}<span class="card-unit">km</span></div>
-			<div class="card-label">{t('distance_covered', lang)}</div>
+			<div class="card-label">{t('covered', lang)}</div>
 		</div>
 	</div>
 
