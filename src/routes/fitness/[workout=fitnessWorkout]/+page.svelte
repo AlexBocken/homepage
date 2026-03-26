@@ -342,16 +342,16 @@
 
 	<section class="quick-start">
 		<div class="quick-start-row">
+			<button class="start-choice-btn" onclick={startEmpty}>
+				{#if isApp}<Dumbbell size={18} />{/if}
+				<span>{t('start_empty_workout', lang)}</span>
+			</button>
 			{#if isApp}
 				<button class="start-choice-btn" onclick={startGps}>
 					<MapPin size={18} />
 					<span>GPS Workout</span>
 				</button>
 			{/if}
-			<button class="start-choice-btn" onclick={startEmpty}>
-				{#if isApp}<Dumbbell size={18} />{/if}
-				<span>{t('start_empty_workout', lang)}</span>
-			</button>
 		</div>
 	</section>
 
