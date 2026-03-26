@@ -127,10 +127,11 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val startPaused = intent?.getBooleanExtra("startPaused", false) ?: false
         startTimeMs = System.currentTimeMillis()
         pausedAccumulatedMs = 0L
-        pausedSinceMs = 0L
-        paused = false
+        pausedSinceMs = if (startPaused) startTimeMs else 0L
+        paused = startPaused
         totalDistanceKm = 0.0
         lastLat = Double.NaN
         lastLng = Double.NaN
@@ -151,7 +152,11 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = buildNotification("0:00", "0.00 km", "")
+        val notification = if (startPaused) {
+            buildNotification("Waiting to start...", "", "")
+        } else {
+            buildNotification("0:00", "0.00 km", "")
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
@@ -488,7 +493,7 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "GPS Tracking",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "Shows while GPS is recording your workout"
             }
