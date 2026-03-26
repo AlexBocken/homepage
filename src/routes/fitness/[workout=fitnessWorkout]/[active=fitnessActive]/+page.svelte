@@ -101,11 +101,11 @@
 	}
 
 	/** @type {any} */
-	let liveMap = null;
+	let liveMap = $state(null);
 	/** @type {any} */
-	let livePolyline = null;
+	let livePolyline = $state(null);
 	/** @type {any} */
-	let liveMarker = null;
+	let liveMarker = $state(null);
 	/** @type {any} */
 	let leafletLib = null;
 	let prevTrackLen = 0;
@@ -117,12 +117,12 @@
 			destroy() {
 				if (liveMap) {
 					liveMap.remove();
-					liveMap = null;
-					livePolyline = null;
-					liveMarker = null;
-					leafletLib = null;
-					prevTrackLen = 0;
 				}
+				liveMap = null;
+				livePolyline = null;
+				liveMarker = null;
+				leafletLib = null;
+				prevTrackLen = 0;
 			}
 		};
 	}
@@ -140,25 +140,28 @@
 		}).addTo(liveMap);
 		livePolyline = leafletLib.polyline([], { color: '#88c0d0', weight: 3 }).addTo(liveMap);
 		liveMarker = leafletLib.circleMarker([0, 0], {
-			radius: 6, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2
+			radius: 6, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2, opacity: 0, fillOpacity: 0
 		}).addTo(liveMap);
 
 		if (gps.track.length > 0) {
-			const pts = gps.track.map((/** @type {any} */ p) => [p.lat, p.lng]);
-			livePolyline.setLatLngs(pts);
-			liveMarker.setLatLng(pts[pts.length - 1]);
-			liveMap.setView(pts[pts.length - 1], 16);
+			// Restore existing trail on the polyline
+			if (gpsStarted) {
+				const pts = gps.track.map((/** @type {any} */ p) => [p.lat, p.lng]);
+				livePolyline.setLatLngs(pts);
+			}
+			// Center on latest point — the marker $effect will also kick in
+			const last = gps.track[gps.track.length - 1];
+			liveMap.setView([last.lat, last.lng], 16);
+			liveMarker.setLatLng([last.lat, last.lng]);
 			prevTrackLen = gps.track.length;
 		} else {
-			// No track yet — show fallback until GPS kicks in
-			liveMap.setView([51.5, 10], 16);
+			// No track yet — get current position to center the map
+			liveMap.setView([51.5, 10], 5);
 			if ('geolocation' in navigator) {
 				navigator.geolocation.getCurrentPosition(
 					(pos) => {
 						if (liveMap) {
-							const ll = [pos.coords.latitude, pos.coords.longitude];
-							liveMap.setView(ll, 16);
-							liveMarker.setLatLng(ll);
+							liveMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
 						}
 					},
 					() => {},
@@ -204,22 +207,30 @@
 		}
 	});
 
+	// Update polyline incrementally when new track points arrive
 	$effect(() => {
 		const len = gps.track.length;
-		if (len > prevTrackLen && liveMap && gps.latestPoint) {
-			if (gpsStarted) {
-				// Only draw the trail once the workout has actually started
-				for (let i = prevTrackLen; i < len; i++) {
-					const p = gps.track[i];
-					livePolyline.addLatLng([p.lat, p.lng]);
-				}
+		if (len > prevTrackLen && liveMap && livePolyline && gpsStarted) {
+			for (let i = prevTrackLen; i < len; i++) {
+				const p = gps.track[i];
+				livePolyline.addLatLng([p.lat, p.lng]);
 			}
-			// Always update the position marker
-			const pt = [gps.latestPoint.lat, gps.latestPoint.lng];
-			liveMarker.setLatLng(pt);
-			const zoom = liveMap.getZoom() || 16;
-			liveMap.setView(pt, zoom);
+		}
+		// Always sync prevTrackLen even if we didn't draw (e.g. pre-start)
+		if (len > prevTrackLen) {
 			prevTrackLen = len;
+		}
+	});
+
+	// Always keep marker and map view centered on the latest GPS position
+	$effect(() => {
+		const pt = gps.latestPoint;
+		if (pt && liveMap && liveMarker) {
+			const ll = [pt.lat, pt.lng];
+			liveMarker.setLatLng(ll);
+			liveMarker.setStyle({ opacity: 1, fillOpacity: 1 });
+			const zoom = liveMap.getZoom() || 16;
+			liveMap.setView(ll, zoom);
 		}
 	});
 
@@ -285,6 +296,7 @@
 				// so the native service resets time/distance to zero
 				await gps.stop();
 				gps.reset();
+				prevTrackLen = 0;
 			}
 			const started = await gps.start(getVoiceGuidanceConfig());
 			if (started) {
@@ -317,7 +329,7 @@
 		if (wasGpsMode && gpsTrack.length >= 2) {
 			// GPS workout: create a cardio exercise entry with the track attached,
 			// just like a manually-added workout with GPX upload
-			const filteredDistance = trackDistance(gpsTrack);
+			const filteredDistance = Math.round(trackDistance(gpsTrack) * 100) / 100;
 			const durationMin = (gpsTrack[gpsTrack.length - 1].timestamp - gpsTrack[0].timestamp) / 60000;
 			const exerciseId = ACTIVITY_EXERCISE_MAP[actType ?? 'running'] ?? 'running';
 			const exerciseName = getExerciseById(exerciseId)?.name ?? exerciseId;
@@ -343,7 +355,7 @@
 			// Manual workout: attach GPS to cardio exercises
 			const workoutStart = new Date(sessionData.startTime).getTime();
 			const filteredTrack = gpsTrack.filter((/** @type {any} */ p) => p.timestamp >= workoutStart);
-			const filteredDistance = trackDistance(filteredTrack);
+			const filteredDistance = Math.round(trackDistance(filteredTrack) * 100) / 100;
 
 			if (filteredTrack.length > 0) {
 				for (const ex of sessionData.exercises) {
