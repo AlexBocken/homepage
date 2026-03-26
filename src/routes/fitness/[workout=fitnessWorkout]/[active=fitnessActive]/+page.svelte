@@ -2297,8 +2297,8 @@
 		gap: 0.6rem;
 		width: 100%;
 		padding: 1rem;
-		background: var(--color-primary);
-		color: var(--primary-contrast);
+		background: var(--blue);
+		color: white;
 		border: none;
 		border-radius: 50px;
 		font-weight: 800;
