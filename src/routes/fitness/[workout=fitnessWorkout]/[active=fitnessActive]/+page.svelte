@@ -229,8 +229,8 @@
 			const ll = [pt.lat, pt.lng];
 			liveMarker.setLatLng(ll);
 			liveMarker.setStyle({ opacity: 1, fillOpacity: 1 });
-			const zoom = liveMap.getZoom() || 16;
-			liveMap.setView(ll, zoom);
+			const zoom = liveMap.getZoom();
+			liveMap.setView(ll, zoom < 14 ? 16 : zoom);
 		}
 	});
 
