@@ -108,7 +108,7 @@ const translations: Translations = {
 
 	// Workout templates page
 	next_in_schedule: { en: 'Next in schedule', de: 'Nächstes im Plan' },
-	start_empty_workout: { en: 'START AN EMPTY WORKOUT', de: 'LEERES TRAINING STARTEN' },
+	start_empty_workout: { en: 'Empty Workout', de: 'leeres Training' },
 	templates: { en: 'Templates', de: 'Vorlagen' },
 	schedule: { en: 'Schedule', de: 'Zeitplan' },
 	my_templates: { en: 'My Templates', de: 'Meine Vorlagen' },
