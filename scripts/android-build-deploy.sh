@@ -12,11 +12,17 @@ APK_SIGNED="$APK_DIR/app-universal-release-signed.apk"
 KEYSTORE="src-tauri/debug.keystore"
 PACKAGE="org.bocken.app"
 
+MANIFEST="src-tauri/gen/android/app/src/main/AndroidManifest.xml"
+TAURI_CONF="src-tauri/tauri.conf.json"
+DEV_SERVER="http://192.168.1.4:5173"
+PROD_DIST="https://bocken.org"
+
 usage() {
-    echo "Usage: $0 [build|deploy|run]"
+    echo "Usage: $0 [build|deploy|run|debug]"
     echo "  build   - Build and sign the APK"
     echo "  deploy  - Build + install on connected device"
     echo "  run     - Build + install + launch on device"
+    echo "  debug   - Deploy pointing at local dev server (cleartext enabled)"
     exit 1
 }
 
@@ -82,9 +88,28 @@ run() {
     echo ":: App launched."
 }
 
+enable_debug() {
+    echo ":: Enabling debug config (cleartext + local dev server)..."
+    sed -i 's|\${usesCleartextTraffic}|true|' "$MANIFEST"
+    sed -i "s|\"frontendDist\": \"$PROD_DIST\"|\"frontendDist\": \"$DEV_SERVER\"|" "$TAURI_CONF"
+}
+
+restore_release() {
+    echo ":: Restoring release config..."
+    sed -i 's|android:usesCleartextTraffic="true"|android:usesCleartextTraffic="${usesCleartextTraffic}"|' "$MANIFEST"
+    sed -i "s|\"frontendDist\": \"$DEV_SERVER\"|\"frontendDist\": \"$PROD_DIST\"|" "$TAURI_CONF"
+}
+
+debug() {
+    enable_debug
+    trap restore_release EXIT
+    deploy
+}
+
 case "${1:-}" in
     build)  build ;;
     deploy) deploy ;;
     run)    run ;;
+    debug)  debug ;;
     *)      usage ;;
 esac
