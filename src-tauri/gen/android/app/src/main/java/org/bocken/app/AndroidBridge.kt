@@ -97,6 +97,11 @@ class AndroidBridge(private val context: Context) {
         LocationForegroundService.instance?.doResume()
     }
 
+    @JavascriptInterface
+    fun getIntervalState(): String {
+        return LocationForegroundService.getIntervalState()
+    }
+
     /** Returns true if at least one TTS engine is installed on the device. */
     @JavascriptInterface
     fun hasTtsEngine(): Boolean {

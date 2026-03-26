@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2, X } from 'lucide-svelte';
+	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2, X, Timer, Plus, GripVertical } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -72,6 +72,98 @@
 	let selectedActivity = $state(workout.activityType ?? 'running');
 	let showActivityPicker = $state(false);
 	let showAudioPanel = $state(false);
+	let showIntervalPanel = $state(false);
+
+	// Interval templates
+	/** @type {any[]} */
+	let intervalTemplates = $state([]);
+	let selectedIntervalId = $state(/** @type {string | null} */ (null));
+	let showIntervalEditor = $state(false);
+	let editingIntervalId = $state(/** @type {string | null} */ (null));
+	let intervalEditorName = $state('');
+	/** @type {Array<{label: string, durationType: 'distance' | 'time', durationValue: number, customLabel: boolean}>} */
+	let intervalEditorSteps = $state([]);
+	let intervalSaving = $state(false);
+
+	const PRESET_LABELS = ['Easy', 'Moderate', 'Hard', 'Sprint', 'Recovery', 'Hill Sprints', 'Tempo', 'Warm Up', 'Cool Down'];
+
+	const selectedInterval = $derived(intervalTemplates.find((/** @type {any} */ t) => t._id === selectedIntervalId) ?? null);
+
+	async function fetchIntervalTemplates() {
+		try {
+			const res = await fetch('/api/fitness/intervals');
+			if (res.ok) {
+				const d = await res.json();
+				intervalTemplates = d.templates ?? [];
+			}
+		} catch {}
+	}
+
+	function openNewInterval() {
+		editingIntervalId = null;
+		intervalEditorName = '';
+		intervalEditorSteps = [{ label: 'Sprint', durationType: 'distance', durationValue: 400, customLabel: false }];
+		showIntervalEditor = true;
+	}
+
+	function openEditInterval(/** @type {any} */ tmpl) {
+		editingIntervalId = tmpl._id;
+		intervalEditorName = tmpl.name;
+		intervalEditorSteps = tmpl.steps.map((/** @type {any} */ s) => ({
+			label: s.label,
+			durationType: s.durationType,
+			durationValue: s.durationValue,
+			customLabel: !PRESET_LABELS.includes(s.label)
+		}));
+		showIntervalEditor = true;
+	}
+
+	function addIntervalStep() {
+		intervalEditorSteps = [...intervalEditorSteps, { label: 'Recovery', durationType: 'time', durationValue: 60, customLabel: false }];
+	}
+
+	function removeIntervalStep(/** @type {number} */ idx) {
+		intervalEditorSteps = intervalEditorSteps.filter((_, i) => i !== idx);
+	}
+
+	function moveIntervalStep(/** @type {number} */ idx, /** @type {number} */ dir) {
+		const target = idx + dir;
+		if (target < 0 || target >= intervalEditorSteps.length) return;
+		const arr = [...intervalEditorSteps];
+		[arr[idx], arr[target]] = [arr[target], arr[idx]];
+		intervalEditorSteps = arr;
+	}
+
+	async function saveInterval() {
+		if (intervalSaving || !intervalEditorName.trim() || intervalEditorSteps.length === 0) return;
+		intervalSaving = true;
+		try {
+			const body = {
+				name: intervalEditorName.trim(),
+				steps: intervalEditorSteps.map(s => ({
+					label: s.label,
+					durationType: s.durationType,
+					durationValue: s.durationValue
+				}))
+			};
+			const url = editingIntervalId ? `/api/fitness/intervals/${editingIntervalId}` : '/api/fitness/intervals';
+			const method = editingIntervalId ? 'PUT' : 'POST';
+			const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+			if (res.ok) {
+				showIntervalEditor = false;
+				await fetchIntervalTemplates();
+			}
+		} finally {
+			intervalSaving = false;
+		}
+	}
+
+	async function deleteInterval(/** @type {string} */ id) {
+		if (!confirm(t('delete_interval_confirm', lang))) return;
+		await fetch(`/api/fitness/intervals/${id}`, { method: 'DELETE' });
+		if (selectedIntervalId === id) selectedIntervalId = null;
+		await fetchIntervalTemplates();
+	}
 
 	const GPS_ACTIVITIES = [
 		{ id: 'running', label: 'Running', icon: '🏃' },
@@ -96,13 +188,15 @@
 	];
 
 	function getVoiceGuidanceConfig() {
-		if (!vgEnabled) return undefined;
+		const hasIntervals = selectedInterval?.steps?.length > 0;
+		if (!vgEnabled && !hasIntervals) return undefined;
 		return {
 			enabled: true,
 			triggerType: vgTriggerType,
 			triggerValue: vgTriggerValue,
-			metrics: vgMetrics,
-			language: vgLanguage
+			metrics: vgEnabled ? vgMetrics : [],
+			language: vgLanguage,
+			...(hasIntervals ? { intervals: selectedInterval.steps } : {})
 		};
 	}
 
@@ -277,11 +371,30 @@
 		} catch {}
 		vgLoaded = true;
 
+		// Restore selected interval from localStorage
+		try {
+			const savedId = localStorage.getItem('selected_interval_id');
+			if (savedId) selectedIntervalId = savedId;
+		} catch {}
+
+		// Fetch interval templates
+		fetchIntervalTemplates();
+
 		// For GPS workouts in pre-start: start GPS immediately so the map
 		// shows the user's position while they configure activity/audio.
 		if (workout.mode === 'gps' && !gpsStarted && !gps.isTracking) {
 			_prestartGps = true;
 			gps.start(undefined, true);
+		}
+	});
+
+	// Persist selected interval ID
+	$effect(() => {
+		if (!vgLoaded) return;
+		if (selectedIntervalId) {
+			localStorage.setItem('selected_interval_id', selectedIntervalId);
+		} else {
+			localStorage.removeItem('selected_interval_id');
 		}
 	});
 
@@ -926,6 +1039,25 @@
 					</div>
 				{/if}
 
+				{#if gps.intervalState}
+					<div class="interval-active-overlay">
+						{#if gps.intervalState.complete}
+							<div class="interval-complete-badge">
+								<Check size={14} />
+								<span>{t('intervals_complete', lang)}</span>
+							</div>
+						{:else}
+							<div class="interval-current-label">{gps.intervalState.currentLabel}</div>
+							<div class="interval-progress-row">
+								<span class="interval-step-count">{gps.intervalState.currentIndex + 1} / {gps.intervalState.totalSteps}</span>
+								<div class="interval-progress-bar">
+									<div class="interval-progress-fill" style="width: {Math.round(gps.intervalState.progress * 100)}%"></div>
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/if}
+
 				<div class="gps-overlay-actions">
 					<button class="gps-overlay-pause" onclick={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()} aria-label={workout.paused ? 'Resume' : 'Pause'}>
 						{#if workout.paused}<Play size={22} />{:else}<Pause size={22} />{/if}
@@ -939,15 +1071,20 @@
 				</div>
 			{:else}
 				<div class="gps-options-grid">
-					<button class="gps-option-tile" onclick={() => { showActivityPicker = !showActivityPicker; showAudioPanel = false; }} type="button">
+					<button class="gps-option-tile" onclick={() => { showActivityPicker = !showActivityPicker; showAudioPanel = false; showIntervalPanel = false; }} type="button">
 						<span class="gps-option-icon">{GPS_ACTIVITIES.find(a => a.id === selectedActivity)?.icon ?? '🏃'}</span>
 						<span class="gps-option-label">Activity</span>
 						<span class="gps-option-value">{GPS_ACTIVITIES.find(a => a.id === selectedActivity)?.label ?? 'Running'}</span>
 					</button>
-					<button class="gps-option-tile" onclick={() => { showAudioPanel = !showAudioPanel; showActivityPicker = false; }} type="button">
+					<button class="gps-option-tile" onclick={() => { showAudioPanel = !showAudioPanel; showActivityPicker = false; showIntervalPanel = false; }} type="button">
 						<Volume2 size={20} />
 						<span class="gps-option-label">Audio Stats</span>
 						<span class="gps-option-value">{vgEnabled ? `Every ${vgTriggerValue} ${vgTriggerType === 'distance' ? 'km' : 'min'}` : 'Off'}</span>
+					</button>
+					<button class="gps-option-tile" onclick={() => { showIntervalPanel = !showIntervalPanel; showActivityPicker = false; showAudioPanel = false; }} type="button">
+						<Timer size={20} />
+						<span class="gps-option-label">{t('intervals', lang)}</span>
+						<span class="gps-option-value">{selectedInterval?.name ?? t('no_intervals', lang)}</span>
 					</button>
 				</div>
 
@@ -1018,6 +1155,33 @@
 					</div>
 				{/if}
 
+				{#if showIntervalPanel}
+					<div class="interval-panel">
+						{#if intervalTemplates.length > 0}
+							<div class="interval-list">
+								{#each intervalTemplates as tmpl (tmpl._id)}
+									<div class="interval-card" class:selected={selectedIntervalId === tmpl._id}>
+										<button class="interval-card-main" type="button" onclick={() => { selectedIntervalId = selectedIntervalId === tmpl._id ? null : tmpl._id; }}>
+											<span class="interval-card-name">{tmpl.name}</span>
+											<span class="interval-card-info">{tmpl.steps.length} {t('steps_count', lang)}</span>
+										</button>
+										<div class="interval-card-actions">
+											<button class="interval-card-edit" type="button" onclick={() => openEditInterval(tmpl)}>{t('edit', lang)}</button>
+											<button class="interval-card-delete" type="button" onclick={() => deleteInterval(tmpl._id)}><Trash2 size={14} /></button>
+										</div>
+									</div>
+								{/each}
+							</div>
+						{:else}
+							<p class="interval-empty">{t('no_intervals', lang)}</p>
+						{/if}
+						<button class="interval-new-btn" type="button" onclick={openNewInterval}>
+							<Plus size={16} />
+							{t('new_interval', lang)}
+						</button>
+					</div>
+				{/if}
+
 				<button class="gps-start-btn" onclick={startGpsWorkout} disabled={gpsStarting}>
 					{#if gpsStarting}
 						<span class="gps-spinner"></span> Initializing GPS…
@@ -1032,6 +1196,106 @@
 				</button>
 			{/if}
 		</div>
+
+		{#if showIntervalEditor}
+			<div class="interval-editor-overlay">
+				<div class="interval-editor">
+					<div class="interval-editor-header">
+						<h2>{editingIntervalId ? t('edit_interval', lang) : t('new_interval', lang)}</h2>
+						<button class="interval-editor-close" type="button" onclick={() => showIntervalEditor = false}>
+							<X size={20} />
+						</button>
+					</div>
+
+					<input
+						class="interval-editor-name"
+						type="text"
+						placeholder={t('interval_name_placeholder', lang)}
+						bind:value={intervalEditorName}
+					/>
+
+					<div class="interval-editor-steps">
+						{#each intervalEditorSteps as step, idx (idx)}
+							<div class="interval-step-card">
+								<div class="interval-step-header">
+									<span class="interval-step-num">{idx + 1}</span>
+									<div class="interval-step-move">
+										<button type="button" onclick={() => moveIntervalStep(idx, -1)} disabled={idx === 0}><ChevronUp size={14} /></button>
+										<button type="button" onclick={() => moveIntervalStep(idx, 1)} disabled={idx === intervalEditorSteps.length - 1}><ChevronDown size={14} /></button>
+									</div>
+									<button class="interval-step-remove" type="button" onclick={() => removeIntervalStep(idx)} disabled={intervalEditorSteps.length <= 1}>
+										<Trash2 size={14} />
+									</button>
+								</div>
+
+								<div class="interval-step-labels">
+									{#each PRESET_LABELS as preset}
+										<button
+											class="interval-label-chip"
+											class:selected={!step.customLabel && step.label === preset}
+											type="button"
+											onclick={() => { intervalEditorSteps[idx].label = preset; intervalEditorSteps[idx].customLabel = false; }}
+										>{preset}</button>
+									{/each}
+									<button
+										class="interval-label-chip"
+										class:selected={step.customLabel}
+										type="button"
+										onclick={() => { intervalEditorSteps[idx].customLabel = true; }}
+									>{t('custom', lang)}</button>
+								</div>
+
+								{#if step.customLabel}
+									<input
+										class="interval-step-custom-input"
+										type="text"
+										placeholder={t('step_label', lang)}
+										bind:value={intervalEditorSteps[idx].label}
+									/>
+								{/if}
+
+								<div class="interval-step-duration">
+									<input
+										class="interval-step-value"
+										type="number"
+										min="1"
+										bind:value={intervalEditorSteps[idx].durationValue}
+									/>
+									<div class="interval-step-type-toggle">
+										<button
+											class="interval-type-btn"
+											class:active={step.durationType === 'distance'}
+											type="button"
+											onclick={() => { intervalEditorSteps[idx].durationType = 'distance'; }}
+										>{t('meters', lang)}</button>
+										<button
+											class="interval-type-btn"
+											class:active={step.durationType === 'time'}
+											type="button"
+											onclick={() => { intervalEditorSteps[idx].durationType = 'time'; }}
+										>{t('seconds', lang)}</button>
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+
+					<button class="interval-add-step-btn" type="button" onclick={addIntervalStep}>
+						<Plus size={16} />
+						{t('add_step', lang)}
+					</button>
+
+					<button
+						class="interval-save-btn"
+						type="button"
+						onclick={saveInterval}
+						disabled={intervalSaving || !intervalEditorName.trim() || intervalEditorSteps.length === 0}
+					>
+						{intervalSaving ? t('saving', lang) : t('save_interval', lang)}
+					</button>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 {:else if workout.active}
@@ -1957,7 +2221,7 @@
 	}
 	.gps-options-grid {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr 1fr 1fr;
 		gap: 0.5rem;
 	}
 	.gps-option-tile {
@@ -2111,5 +2375,368 @@
 		font-weight: 700;
 		font-size: 1rem;
 		cursor: pointer;
+	}
+
+	/* Interval Panel (pre-start selection) */
+	.interval-panel {
+		background: rgba(46, 52, 64, 0.82);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border: 1px solid rgba(255,255,255,0.12);
+		border-radius: 10px;
+		padding: 0.6rem;
+		color: #fff;
+	}
+	.interval-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		margin-bottom: 0.5rem;
+	}
+	.interval-card {
+		display: flex;
+		align-items: center;
+		background: rgba(255,255,255,0.06);
+		border: 1px solid rgba(255,255,255,0.1);
+		border-radius: 8px;
+		overflow: hidden;
+		transition: border-color 0.15s;
+	}
+	.interval-card.selected {
+		border-color: var(--nord8);
+		background: rgba(136,192,208,0.12);
+	}
+	.interval-card-main {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		padding: 0.5rem 0.6rem;
+		background: none;
+		border: none;
+		color: inherit;
+		font: inherit;
+		cursor: pointer;
+		text-align: left;
+	}
+	.interval-card-name {
+		font-weight: 600;
+		font-size: 0.85rem;
+	}
+	.interval-card-info {
+		font-size: 0.7rem;
+		opacity: 0.6;
+	}
+	.interval-card-actions {
+		display: flex;
+		gap: 0.2rem;
+		padding-right: 0.4rem;
+	}
+	.interval-card-edit, .interval-card-delete {
+		background: none;
+		border: none;
+		color: rgba(255,255,255,0.5);
+		font: inherit;
+		font-size: 0.7rem;
+		cursor: pointer;
+		padding: 0.3rem;
+	}
+	.interval-card-edit:hover, .interval-card-delete:hover {
+		color: #fff;
+	}
+	.interval-empty {
+		text-align: center;
+		font-size: 0.8rem;
+		opacity: 0.5;
+		margin: 0.5rem 0;
+	}
+	.interval-new-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		width: 100%;
+		padding: 0.5rem;
+		background: rgba(255,255,255,0.08);
+		border: 1px dashed rgba(255,255,255,0.2);
+		border-radius: 8px;
+		color: var(--nord8);
+		font: inherit;
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.interval-new-btn:hover {
+		background: rgba(255,255,255,0.12);
+	}
+
+	/* Interval Editor (full-screen overlay on map) */
+	.interval-editor-overlay {
+		position: absolute;
+		inset: 0;
+		z-index: 100;
+		background: rgba(46, 52, 64, 0.95);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+	.interval-editor {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1rem;
+		padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+		padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+		color: #fff;
+		max-width: 500px;
+		width: 100%;
+		margin: 0 auto;
+	}
+	.interval-editor-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.interval-editor-header h2 {
+		margin: 0;
+		font-size: 1.2rem;
+	}
+	.interval-editor-close {
+		background: none;
+		border: none;
+		color: rgba(255,255,255,0.6);
+		cursor: pointer;
+		padding: 0.3rem;
+	}
+	.interval-editor-name {
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.15);
+		border-radius: 8px;
+		color: #fff;
+		font: inherit;
+		font-size: 0.95rem;
+	}
+	.interval-editor-name::placeholder {
+		color: rgba(255,255,255,0.35);
+	}
+	.interval-editor-steps {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.interval-step-card {
+		background: rgba(255,255,255,0.06);
+		border: 1px solid rgba(255,255,255,0.1);
+		border-radius: 10px;
+		padding: 0.6rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.interval-step-header {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.interval-step-num {
+		font-weight: 700;
+		font-size: 0.8rem;
+		background: rgba(255,255,255,0.12);
+		border-radius: 50%;
+		width: 1.4rem;
+		height: 1.4rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+	.interval-step-move {
+		display: flex;
+		gap: 0.1rem;
+		margin-left: auto;
+	}
+	.interval-step-move button {
+		background: none;
+		border: none;
+		color: rgba(255,255,255,0.4);
+		cursor: pointer;
+		padding: 0.15rem;
+	}
+	.interval-step-move button:hover:not(:disabled) {
+		color: #fff;
+	}
+	.interval-step-move button:disabled {
+		opacity: 0.2;
+		cursor: not-allowed;
+	}
+	.interval-step-remove {
+		background: none;
+		border: none;
+		color: rgba(255,255,255,0.3);
+		cursor: pointer;
+		padding: 0.15rem;
+	}
+	.interval-step-remove:hover:not(:disabled) {
+		color: var(--nord11);
+	}
+	.interval-step-remove:disabled {
+		opacity: 0.2;
+		cursor: not-allowed;
+	}
+	.interval-step-labels {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+	}
+	.interval-label-chip {
+		padding: 0.25rem 0.55rem;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.15);
+		border-radius: 20px;
+		color: rgba(255,255,255,0.7);
+		font: inherit;
+		font-size: 0.72rem;
+		cursor: pointer;
+		transition: all 0.12s;
+	}
+	.interval-label-chip.selected {
+		background: var(--nord8);
+		border-color: var(--nord8);
+		color: var(--nord0);
+		font-weight: 600;
+	}
+	.interval-step-custom-input {
+		width: 100%;
+		padding: 0.4rem 0.6rem;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.15);
+		border-radius: 6px;
+		color: #fff;
+		font: inherit;
+		font-size: 0.85rem;
+	}
+	.interval-step-duration {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.interval-step-value {
+		width: 5rem;
+		padding: 0.4rem 0.5rem;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.15);
+		border-radius: 6px;
+		color: #fff;
+		font: inherit;
+		font-size: 0.9rem;
+		text-align: center;
+	}
+	.interval-step-type-toggle {
+		display: flex;
+		border: 1px solid rgba(255,255,255,0.15);
+		border-radius: 6px;
+		overflow: hidden;
+	}
+	.interval-type-btn {
+		padding: 0.4rem 0.65rem;
+		background: rgba(255,255,255,0.06);
+		border: none;
+		color: rgba(255,255,255,0.5);
+		font: inherit;
+		font-size: 0.78rem;
+		cursor: pointer;
+		transition: all 0.12s;
+	}
+	.interval-type-btn.active {
+		background: var(--nord8);
+		color: var(--nord0);
+		font-weight: 600;
+	}
+	.interval-add-step-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		width: 100%;
+		padding: 0.55rem;
+		background: rgba(255,255,255,0.06);
+		border: 1px dashed rgba(255,255,255,0.2);
+		border-radius: 8px;
+		color: var(--nord8);
+		font: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.interval-save-btn {
+		width: 100%;
+		padding: 0.8rem;
+		background: var(--nord14);
+		border: none;
+		border-radius: 50px;
+		color: var(--nord0);
+		font: inherit;
+		font-weight: 700;
+		font-size: 1rem;
+		cursor: pointer;
+	}
+	.interval-save-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	/* Active Interval Overlay */
+	.interval-active-overlay {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding: 0.4rem 0.5rem;
+		background: rgba(136,192,208,0.12);
+		border: 1px solid rgba(136,192,208,0.25);
+		border-radius: 8px;
+	}
+	.interval-current-label {
+		font-size: 1.1rem;
+		font-weight: 800;
+		color: var(--nord8);
+		text-align: center;
+	}
+	.interval-progress-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.interval-step-count {
+		font-size: 0.72rem;
+		font-weight: 600;
+		opacity: 0.7;
+		white-space: nowrap;
+	}
+	.interval-progress-bar {
+		flex: 1;
+		height: 4px;
+		background: rgba(255,255,255,0.12);
+		border-radius: 2px;
+		overflow: hidden;
+	}
+	.interval-progress-fill {
+		height: 100%;
+		background: var(--nord8);
+		border-radius: 2px;
+		transition: width 0.5s ease;
+	}
+	.interval-complete-badge {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		padding: 0.3rem;
+		color: var(--nord14);
+		font-size: 0.85rem;
+		font-weight: 600;
 	}
 </style>
