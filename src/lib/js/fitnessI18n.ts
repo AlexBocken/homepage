@@ -235,6 +235,34 @@ const translations: Translations = {
 	workouts_per_week_goal: { en: 'workouts / week', de: 'Trainings / Woche' },
 	set_goal: { en: 'Set Goal', de: 'Ziel setzen' },
 	goal_set: { en: 'Goal set', de: 'Ziel gesetzt' },
+
+	// Intervals
+	intervals: { en: 'Intervals', de: 'Intervalle' },
+	no_intervals: { en: 'None', de: 'Keine' },
+	new_interval: { en: 'New Interval', de: 'Neues Intervall' },
+	edit_interval: { en: 'Edit Interval', de: 'Intervall bearbeiten' },
+	delete_interval: { en: 'Delete', de: 'Löschen' },
+	delete_interval_confirm: { en: 'Delete this interval template?', de: 'Diese Intervallvorlage löschen?' },
+	add_step: { en: '+ Add Step', de: '+ Schritt hinzufügen' },
+	step_label: { en: 'Label', de: 'Bezeichnung' },
+	meters: { en: 'meters', de: 'Meter' },
+	seconds: { en: 'seconds', de: 'Sekunden' },
+	intervals_complete: { en: 'Intervals complete', de: 'Intervalle abgeschlossen' },
+	select_interval: { en: 'Select Interval', de: 'Intervall wählen' },
+	custom: { en: 'Custom', de: 'Eigene' },
+	steps_count: { en: 'steps', de: 'Schritte' },
+	save_interval: { en: 'Save Interval', de: 'Intervall speichern' },
+	interval_name_placeholder: { en: 'Interval name', de: 'Intervallname' },
+	// Preset labels
+	label_easy: { en: 'Easy', de: 'Leicht' },
+	label_moderate: { en: 'Moderate', de: 'Moderat' },
+	label_hard: { en: 'Hard', de: 'Hart' },
+	label_sprint: { en: 'Sprint', de: 'Sprint' },
+	label_recovery: { en: 'Recovery', de: 'Erholung' },
+	label_hill_sprints: { en: 'Hill Sprints', de: 'Bergsprints' },
+	label_tempo: { en: 'Tempo', de: 'Tempo' },
+	label_warm_up: { en: 'Warm Up', de: 'Aufwärmen' },
+	label_cool_down: { en: 'Cool Down', de: 'Abkühlen' },
 };
 
 /** Get a translated string */

@@ -48,13 +48,27 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
     private var splitDistanceAtLastAnnouncement: Double = 0.0
     private var splitTimeAtLastAnnouncement: Long = 0L
 
+    // Interval tracking
+    private var intervalSteps: List<IntervalStep> = emptyList()
+    private var currentIntervalIdx: Int = 0
+    private var intervalAccumulatedDistanceKm: Double = 0.0
+    private var intervalStartTimeMs: Long = 0L
+    private var intervalsComplete: Boolean = false
+
+    data class IntervalStep(
+        val label: String,
+        val durationType: String, // "distance" or "time"
+        val durationValue: Double // meters (distance) or seconds (time)
+    )
+
     data class TtsConfig(
         val enabled: Boolean = false,
         val triggerType: String = "distance", // "distance" or "time"
         val triggerValue: Double = 1.0,        // km or minutes
         val metrics: List<String> = listOf("totalTime", "totalDistance", "avgPace"),
         val language: String = "en",
-        val voiceId: String? = null
+        val voiceId: String? = null,
+        val intervals: List<IntervalStep> = emptyList()
     ) {
         companion object {
             fun fromJson(json: String): TtsConfig {
@@ -66,13 +80,27 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
                     } else {
                         listOf("totalTime", "totalDistance", "avgPace")
                     }
+                    val intervalsArr = obj.optJSONArray("intervals")
+                    val intervals = if (intervalsArr != null) {
+                        (0 until intervalsArr.length()).map { i ->
+                            val step = intervalsArr.getJSONObject(i)
+                            IntervalStep(
+                                label = step.optString("label", ""),
+                                durationType = step.optString("durationType", "time"),
+                                durationValue = step.optDouble("durationValue", 0.0)
+                            )
+                        }
+                    } else {
+                        emptyList()
+                    }
                     TtsConfig(
                         enabled = obj.optBoolean("enabled", false),
                         triggerType = obj.optString("triggerType", "distance"),
                         triggerValue = obj.optDouble("triggerValue", 1.0),
                         metrics = metrics,
                         language = obj.optString("language", "en"),
-                        voiceId = obj.optString("voiceId", null)
+                        voiceId = obj.optString("voiceId", null),
+                        intervals = intervals
                     )
                 } catch (_: Exception) {
                     TtsConfig()
@@ -96,6 +124,35 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
             private set
         var totalDistanceKm: Double = 0.0
             private set
+
+        fun getIntervalState(): String {
+            val svc = instance ?: return "{}"
+            if (svc.intervalSteps.isEmpty()) return "{}"
+            val obj = JSONObject()
+            obj.put("currentIndex", svc.currentIntervalIdx)
+            obj.put("totalSteps", svc.intervalSteps.size)
+            obj.put("complete", svc.intervalsComplete)
+            if (!svc.intervalsComplete && svc.currentIntervalIdx < svc.intervalSteps.size) {
+                val step = svc.intervalSteps[svc.currentIntervalIdx]
+                obj.put("currentLabel", step.label)
+                val progress = when (step.durationType) {
+                    "distance" -> {
+                        val target = step.durationValue / 1000.0
+                        if (target > 0) (svc.intervalAccumulatedDistanceKm / target).coerceIn(0.0, 1.0) else 0.0
+                    }
+                    "time" -> {
+                        val target = step.durationValue * 1000.0
+                        if (target > 0) ((System.currentTimeMillis() - svc.intervalStartTimeMs) / target).coerceIn(0.0, 1.0) else 0.0
+                    }
+                    else -> 0.0
+                }
+                obj.put("progress", progress)
+            } else {
+                obj.put("currentLabel", "")
+                obj.put("progress", 1.0)
+            }
+            return obj.toString()
+        }
 
         fun drainPoints(): String {
             val drained: List<JSONObject>
@@ -143,6 +200,19 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
         Log.d(TAG, "TTS config JSON: $configJson")
         ttsConfig = TtsConfig.fromJson(configJson)
         Log.d(TAG, "TTS enabled=${ttsConfig?.enabled}, trigger=${ttsConfig?.triggerType}/${ttsConfig?.triggerValue}, metrics=${ttsConfig?.metrics}")
+
+        // Initialize interval tracking
+        intervalSteps = ttsConfig?.intervals ?: emptyList()
+        currentIntervalIdx = 0
+        intervalAccumulatedDistanceKm = 0.0
+        intervalStartTimeMs = startTimeMs
+        intervalsComplete = false
+        if (intervalSteps.isNotEmpty()) {
+            Log.d(TAG, "Intervals configured: ${intervalSteps.size} steps")
+            intervalSteps.forEachIndexed { i, step ->
+                Log.d(TAG, "  Step $i: ${step.label} ${step.durationValue} ${step.durationType}")
+            }
+        }
 
         val notifIntent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -216,6 +286,24 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
             ttsReady = true
             Log.d(TAG, "TTS ready! triggerType=${config.triggerType}, triggerValue=${config.triggerValue}")
 
+            // Announce first interval step if intervals are configured
+            if (intervalSteps.isNotEmpty() && !intervalsComplete) {
+                val first = intervalSteps[0]
+                val durationText = if (first.durationType == "distance") {
+                    "${first.durationValue.toInt()} meters"
+                } else {
+                    val secs = first.durationValue.toInt()
+                    if (secs >= 60) {
+                        val m = secs / 60
+                        val s = secs % 60
+                        if (s > 0) "$m minutes $s seconds" else "$m minutes"
+                    } else {
+                        "$secs seconds"
+                    }
+                }
+                announceIntervalTransition("${first.label}. $durationText")
+            }
+
             // Set up time-based trigger if configured
             if (config.triggerType == "time") {
                 startTimeTrigger(config.triggerValue)
@@ -287,6 +375,60 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
             announceMetrics()
             lastAnnouncementDistanceKm = totalDistanceKm
         }
+    }
+
+    private fun checkIntervalProgress(segmentKm: Double) {
+        if (intervalsComplete || intervalSteps.isEmpty()) return
+        if (currentIntervalIdx >= intervalSteps.size) return
+
+        val step = intervalSteps[currentIntervalIdx]
+        val now = System.currentTimeMillis()
+
+        val complete = when (step.durationType) {
+            "distance" -> {
+                intervalAccumulatedDistanceKm += segmentKm
+                intervalAccumulatedDistanceKm >= step.durationValue / 1000.0
+            }
+            "time" -> {
+                (now - intervalStartTimeMs) >= step.durationValue * 1000
+            }
+            else -> false
+        }
+
+        if (complete) {
+            currentIntervalIdx++
+            intervalAccumulatedDistanceKm = 0.0
+            intervalStartTimeMs = now
+
+            if (currentIntervalIdx >= intervalSteps.size) {
+                intervalsComplete = true
+                Log.d(TAG, "All intervals complete!")
+                announceIntervalTransition("Intervals complete")
+            } else {
+                val next = intervalSteps[currentIntervalIdx]
+                val durationText = if (next.durationType == "distance") {
+                    "${next.durationValue.toInt()} meters"
+                } else {
+                    val secs = next.durationValue.toInt()
+                    if (secs >= 60) {
+                        val m = secs / 60
+                        val s = secs % 60
+                        if (s > 0) "$m minutes $s seconds" else "$m minutes"
+                    } else {
+                        "$secs seconds"
+                    }
+                }
+                Log.d(TAG, "Interval transition: step ${currentIntervalIdx}/${intervalSteps.size} — ${next.label} $durationText")
+                announceIntervalTransition("${next.label}. $durationText")
+            }
+            updateNotification()
+        }
+    }
+
+    private fun announceIntervalTransition(text: String) {
+        if (!ttsReady) return
+        Log.d(TAG, "Interval announcement: $text")
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "interval_announcement")
     }
 
     private fun announceMetrics() {
@@ -411,10 +553,18 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
     }
 
     private fun updateNotification() {
+        val paceStr = if (intervalSteps.isNotEmpty() && !intervalsComplete && currentIntervalIdx < intervalSteps.size) {
+            val step = intervalSteps[currentIntervalIdx]
+            "${step.label} (${currentIntervalIdx + 1}/${intervalSteps.size})"
+        } else if (intervalsComplete) {
+            "Intervals done"
+        } else {
+            formatPace(currentPaceMinKm)
+        }
         val notification = buildNotification(
             formatElapsed(),
             "%.2f km".format(totalDistanceKm),
-            formatPace(currentPaceMinKm)
+            paceStr
         )
         notificationManager?.notify(NOTIFICATION_ID, notification)
     }
@@ -449,6 +599,11 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
                     val dtMin = (now - lastTimestamp) / 60000.0
                     currentPaceMinKm = dtMin / segmentKm
                 }
+                // Check interval progress with this segment's distance
+                checkIntervalProgress(segmentKm)
+            } else {
+                // First point — check time-based intervals even with no distance
+                checkIntervalProgress(0.0)
             }
             lastLat = lat
             lastLng = lng

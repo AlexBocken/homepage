@@ -13,6 +13,12 @@ export interface GpsPoint {
 	timestamp: number;
 }
 
+export interface IntervalStep {
+	label: string;
+	durationType: 'distance' | 'time';
+	durationValue: number; // meters (distance) or seconds (time)
+}
+
 export interface VoiceGuidanceConfig {
 	enabled: boolean;
 	triggerType: 'distance' | 'time';
@@ -20,6 +26,15 @@ export interface VoiceGuidanceConfig {
 	metrics: string[];
 	language: string;
 	voiceId?: string;
+	intervals?: IntervalStep[];
+}
+
+export interface IntervalState {
+	currentIndex: number;
+	totalSteps: number;
+	currentLabel: string;
+	progress: number; // 0.0–1.0
+	complete: boolean;
 }
 
 interface AndroidBridge {
@@ -32,6 +47,7 @@ interface AndroidBridge {
 	installTtsEngine(): void;
 	pauseTracking(): void;
 	resumeTracking(): void;
+	getIntervalState(): string;
 }
 
 function checkTauri(): boolean {
@@ -95,6 +111,7 @@ export function createGpsTracker() {
 	);
 
 	let _debugMsg = $state('');
+	let _intervalState = $state<IntervalState | null>(null);
 
 	function pollPoints() {
 		const bridge = getAndroidBridge();
@@ -110,6 +127,13 @@ export function createGpsTracker() {
 		} catch (e) {
 			_debugMsg = `poll err: ${(e as Error)?.message ?? e}`;
 		}
+		// Poll interval state
+		try {
+			const stateJson = bridge.getIntervalState();
+			if (stateJson && stateJson !== '{}') {
+				_intervalState = JSON.parse(stateJson);
+			}
+		} catch { /* no interval active */ }
 	}
 
 	async function start(voiceGuidance?: VoiceGuidanceConfig, startPaused = false) {
@@ -182,12 +206,14 @@ export function createGpsTracker() {
 		}
 
 		isTracking = false;
+		_intervalState = null;
 		const result = [...track];
 		return result;
 	}
 
 	function reset() {
 		track = [];
+		_intervalState = null;
 	}
 
 	function getAvailableTtsVoices(): Array<{ id: string; name: string; language: string }> {
@@ -246,6 +272,7 @@ export function createGpsTracker() {
 		get latestPoint() { return latestPoint; },
 		get available() { return checkTauri(); },
 		get debug() { return _debugMsg; },
+		get intervalState() { return _intervalState; },
 		start,
 		stop,
 		reset,
