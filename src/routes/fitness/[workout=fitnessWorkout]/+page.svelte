@@ -599,8 +599,8 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 1rem;
-		background: var(--color-primary);
-		color: var(--primary-contrast);
+		background: var(--blue);
+		color: white;
 		border: none;
 		border-radius: 10px;
 		cursor: pointer;
@@ -666,8 +666,8 @@
 		align-items: center;
 		gap: 0.4rem;
 		padding: 1rem 0.5rem;
-		background: var(--color-primary);
-		color: var(--primary-contrast);
+		background: var(--blue);
+		color: white;
 		border: none;
 		border-radius: 10px;
 		font-weight: 700;
