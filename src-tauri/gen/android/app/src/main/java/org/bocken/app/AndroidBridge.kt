@@ -19,7 +19,7 @@ class AndroidBridge(private val context: Context) {
     private var ttsForVoices: TextToSpeech? = null
 
     @JavascriptInterface
-    fun startLocationService(ttsConfigJson: String) {
+    fun startLocationService(ttsConfigJson: String, startPaused: Boolean) {
         if (context is Activity) {
             // Request notification permission on Android 13+ (required for foreground service notification)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -50,6 +50,7 @@ class AndroidBridge(private val context: Context) {
 
         val intent = Intent(context, LocationForegroundService::class.java).apply {
             putExtra("ttsConfig", ttsConfigJson)
+            putExtra("startPaused", startPaused)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)
@@ -58,10 +59,16 @@ class AndroidBridge(private val context: Context) {
         }
     }
 
-    /** Backwards-compatible overload for calls without TTS config */
+    /** Overload: TTS config only (not paused) */
+    @JavascriptInterface
+    fun startLocationService(ttsConfigJson: String) {
+        startLocationService(ttsConfigJson, false)
+    }
+
+    /** Overload: no args (not paused, no TTS) */
     @JavascriptInterface
     fun startLocationService() {
-        startLocationService("{}")
+        startLocationService("{}", false)
     }
 
     @JavascriptInterface

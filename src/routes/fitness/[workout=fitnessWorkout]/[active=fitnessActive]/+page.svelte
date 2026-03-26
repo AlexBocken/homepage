@@ -18,6 +18,7 @@
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 	import { onMount } from 'svelte';
 
 	const workout = getWorkout();
@@ -41,13 +42,26 @@
 
 	let useGps = $state(gps.isTracking);
 
-	// Voice guidance config
+	// Voice guidance config (defaults, overridden from localStorage in onMount)
 	let vgEnabled = $state(false);
 	let vgTriggerType = $state('distance');
 	let vgTriggerValue = $state(1);
 	let vgMetrics = $state(['totalTime', 'totalDistance', 'avgPace']);
-	let vgLanguage = $state('en');
+	const vgLanguage = $derived(lang);
 	let vgShowPanel = $state(false);
+	let vgLoaded = $state(false);
+
+	// Persist voice guidance settings to localStorage
+	$effect(() => {
+		const settings = {
+			enabled: vgEnabled,
+			triggerType: vgTriggerType,
+			triggerValue: vgTriggerValue,
+			metrics: vgMetrics,
+		};
+		if (!vgLoaded) return;
+		localStorage.setItem('vg_settings', JSON.stringify(settings));
+	});
 
 	// GPS workout mode state — if we're restoring a GPS workout that was already tracking, it's started
 	let gpsStarted = $state(gps.isTracking && workout.mode === 'gps' && !workout.paused);
@@ -250,11 +264,24 @@
 			return;
 		}
 
+		// Restore voice guidance settings from localStorage
+		try {
+			const saved = localStorage.getItem('vg_settings');
+			if (saved) {
+				const s = JSON.parse(saved);
+				if (typeof s.enabled === 'boolean') vgEnabled = s.enabled;
+				if (s.triggerType === 'distance' || s.triggerType === 'time') vgTriggerType = s.triggerType;
+				if (typeof s.triggerValue === 'number' && s.triggerValue > 0) vgTriggerValue = s.triggerValue;
+				if (Array.isArray(s.metrics)) vgMetrics = s.metrics;
+			}
+		} catch {}
+		vgLoaded = true;
+
 		// For GPS workouts in pre-start: start GPS immediately so the map
 		// shows the user's position while they configure activity/audio.
 		if (workout.mode === 'gps' && !gpsStarted && !gps.isTracking) {
 			_prestartGps = true;
-			gps.start();
+			gps.start(undefined, true);
 		}
 	});
 
@@ -873,7 +900,7 @@
 		<div class="gps-workout-map" use:mountMap></div>
 
 		<!-- Overlay: sits on top of the map at the bottom -->
-		<div class="gps-overlay">
+		<div class="gps-overlay" class:gps-overlay-prestart={!gpsStarted}>
 			{#if gpsStarted}
 				<div class="gps-workout-stats">
 					<div class="gps-stat">
@@ -950,10 +977,7 @@
 								</button>
 							</div>
 						{:else}
-						<label class="vg-row">
-							<input type="checkbox" bind:checked={vgEnabled} />
-							<span>Enable voice announcements</span>
-						</label>
+						<Toggle bind:checked={vgEnabled} label="Enable voice announcements" />
 
 						{#if vgEnabled}
 							<div class="vg-group">
@@ -989,13 +1013,6 @@
 								</div>
 							</div>
 
-							<div class="vg-group">
-								<span class="vg-label">Language</span>
-								<select class="vg-select" bind:value={vgLanguage}>
-									<option value="en">English</option>
-									<option value="de">Deutsch</option>
-								</select>
-							</div>
 						{/if}
 						{/if}
 					</div>
@@ -1059,10 +1076,7 @@
 									</button>
 								</div>
 							{:else}
-							<label class="vg-row">
-								<input type="checkbox" bind:checked={vgEnabled} />
-								<span>Enable voice announcements</span>
-							</label>
+							<Toggle bind:checked={vgEnabled} label="Enable voice announcements" />
 
 							{#if vgEnabled}
 								<div class="vg-group">
@@ -1096,14 +1110,6 @@
 											</button>
 										{/each}
 									</div>
-								</div>
-
-								<div class="vg-group">
-									<span class="vg-label">Language</span>
-									<select class="vg-select" bind:value={vgLanguage}>
-										<option value="en">English</option>
-										<option value="de">Deutsch</option>
-									</select>
 								</div>
 							{/if}
 							{/if}
@@ -1814,10 +1820,10 @@
 		color: var(--nord7);
 	}
 	.gps-overlay .vg-panel {
-		background: rgba(255,255,255,0.1);
+		background: rgba(46, 52, 64, 0.82);
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
-		border: 1px solid rgba(255,255,255,0.15);
+		border: 1px solid rgba(255,255,255,0.12);
 		border-radius: 10px;
 		padding: 0.6rem;
 		border-top: none;
@@ -1885,9 +1891,44 @@
 		gap: 0.5rem;
 		padding: 0.75rem;
 		padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-		background: linear-gradient(to top, rgba(0,0,0,0.7) 60%, transparent);
-		color: #fff;
+		background: var(--nav-bg, rgba(46, 52, 64, 0.82));
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		border-top: 1px solid var(--nav-border, rgba(255,255,255,0.08));
+		box-shadow: 0 -4px 24px var(--nav-shadow, rgba(0,0,0,0.25));
+		color: var(--nav-text-active, #fff);
 		pointer-events: none;
+	}
+	@media (prefers-color-scheme: dark) {
+		.gps-overlay {
+			--nav-bg: rgba(20, 20, 20, 0.78);
+			--nav-border: rgba(255,255,255,0.06);
+		}
+	}
+	:global(:root[data-theme="dark"]) .gps-overlay {
+		--nav-bg: rgba(20, 20, 20, 0.78);
+		--nav-border: rgba(255,255,255,0.06);
+	}
+	:global(:root[data-theme="light"]) .gps-overlay {
+		--nav-bg: rgba(255, 255, 255, 0.82);
+		--nav-border: rgba(0,0,0,0.08);
+		--nav-shadow: rgba(0,0,0,0.1);
+		--nav-text-active: var(--nord0);
+	}
+	@media (prefers-color-scheme: light) {
+		:global(:root:not([data-theme])) .gps-overlay {
+			--nav-bg: rgba(255, 255, 255, 0.82);
+			--nav-border: rgba(0,0,0,0.08);
+			--nav-shadow: rgba(0,0,0,0.1);
+			--nav-text-active: var(--nord0);
+		}
+	}
+	.gps-overlay-prestart {
+		background: none !important;
+		backdrop-filter: none !important;
+		-webkit-backdrop-filter: none !important;
+		border-top: none !important;
+		box-shadow: none !important;
 	}
 	.gps-overlay > * {
 		pointer-events: auto;
@@ -1906,14 +1947,13 @@
 		font-size: 1.8rem;
 		font-weight: 800;
 		font-variant-numeric: tabular-nums;
-		color: #fff;
-		text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+		color: inherit;
 	}
 	.gps-stat-unit {
 		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: rgba(255,255,255,0.75);
+		opacity: 0.65;
 	}
 	.gps-options-grid {
 		display: grid;
@@ -1926,10 +1966,10 @@
 		align-items: center;
 		gap: 0.25rem;
 		padding: 0.65rem 0.5rem;
-		background: rgba(255,255,255,0.12);
+		background: rgba(46, 52, 64, 0.82);
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
-		border: 1px solid rgba(255,255,255,0.2);
+		border: 1px solid rgba(255,255,255,0.12);
 		border-radius: 10px;
 		cursor: pointer;
 		font: inherit;
@@ -1962,10 +2002,10 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.55rem 0.75rem;
-		background: rgba(255,255,255,0.1);
+		background: rgba(46, 52, 64, 0.82);
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
-		border: 1px solid rgba(255,255,255,0.2);
+		border: 1px solid rgba(255,255,255,0.12);
 		border-radius: 8px;
 		cursor: pointer;
 		font: inherit;
@@ -1976,8 +2016,9 @@
 	}
 	.gps-activity-choice.active {
 		border-color: var(--nord8);
-		background: rgba(136,192,208,0.25);
+		background: rgba(46, 52, 64, 0.9);
 		color: var(--nord8);
+		box-shadow: inset 0 0 0 1px rgba(136,192,208,0.25);
 	}
 	.gps-activity-choice:hover:not(.active) {
 		border-color: rgba(255,255,255,0.4);
@@ -2010,13 +2051,15 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.3rem;
-		background: none;
 		border: none;
-		color: rgba(255,255,255,0.5);
+		color: #fff;
+		text-shadow: 0 1px 4px rgba(0,0,0,0.6);
 		font: inherit;
 		font-size: 0.8rem;
 		cursor: pointer;
-		padding: 0.25rem;
+		padding: 1rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+		margin: 0 -0.75rem calc(-0.75rem - env(safe-area-inset-bottom, 0px));
+		background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
 	}
 	.gps-cancel-link:hover {
 		color: var(--nord11);
@@ -2032,17 +2075,15 @@
 		justify-content: center;
 		width: 3rem;
 		height: 3rem;
-		background: rgba(255,255,255,0.15);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		border: 1px solid rgba(255,255,255,0.25);
+		background: rgba(128,128,128,0.12);
+		border: 1px solid var(--nav-border, rgba(255,255,255,0.25));
 		border-radius: 50%;
-		color: #fff;
+		color: inherit;
 		cursor: pointer;
 		flex-shrink: 0;
 	}
 	.gps-overlay-pause:hover {
-		background: rgba(255,255,255,0.25);
+		background: rgba(128,128,128,0.2);
 	}
 	.gps-overlay-cancel {
 		display: flex;
@@ -2051,8 +2092,6 @@
 		width: 3rem;
 		height: 3rem;
 		background: rgba(191,97,106,0.25);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
 		border: 1px solid var(--nord11);
 		border-radius: 50%;
 		color: var(--nord11);

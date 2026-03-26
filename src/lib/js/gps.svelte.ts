@@ -23,7 +23,7 @@ export interface VoiceGuidanceConfig {
 }
 
 interface AndroidBridge {
-	startLocationService(ttsConfigJson: string): void;
+	startLocationService(ttsConfigJson: string, startPaused: boolean): void;
 	stopLocationService(): void;
 	getPoints(): string;
 	isTracking(): boolean;
@@ -112,7 +112,7 @@ export function createGpsTracker() {
 		}
 	}
 
-	async function start(voiceGuidance?: VoiceGuidanceConfig) {
+	async function start(voiceGuidance?: VoiceGuidanceConfig, startPaused = false) {
 		_debugMsg = 'starting...';
 		if (!checkTauri() || isTracking) {
 			_debugMsg = `bail: tauri=${checkTauri()} tracking=${isTracking}`;
@@ -145,7 +145,7 @@ export function createGpsTracker() {
 			if (bridge) {
 				_debugMsg = 'starting native GPS service...';
 				const ttsConfig = JSON.stringify(voiceGuidance ?? {});
-				bridge.startLocationService(ttsConfig);
+				bridge.startLocationService(ttsConfig, startPaused);
 				// Poll the native side for collected points
 				_pollTimer = setInterval(pollPoints, POLL_INTERVAL_MS);
 				_debugMsg = 'native GPS service started, polling...';
