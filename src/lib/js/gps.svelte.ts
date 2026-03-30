@@ -26,6 +26,8 @@ export interface VoiceGuidanceConfig {
 	metrics: string[];
 	language: string;
 	voiceId?: string;
+	ttsVolume?: number; // 0.0–1.0, relative TTS volume
+	audioDuck?: boolean; // duck other audio during TTS
 	intervals?: IntervalStep[];
 }
 
