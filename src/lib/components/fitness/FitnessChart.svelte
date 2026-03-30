@@ -1,11 +1,12 @@
 <script>
 	import { onMount } from 'svelte';
 	import { Chart, registerables } from 'chart.js';
+	import 'chartjs-adapter-date-fns';
 
 	/**
 	 * @type {{
 	 *   type?: 'line' | 'bar',
-	 *   data: { labels: string[], datasets: Array<{ label: string, data: (number|null)[], borderColor?: string, backgroundColor?: string, borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number, type?: string, borderDash?: number[], [key: string]: any }> },
+	 *   data: { labels: string[], dates?: string[], datasets: Array<{ label: string, data: (number|null)[], borderColor?: string, backgroundColor?: string, borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number, type?: string, borderDash?: number[], [key: string]: any }> },
 	 *   title?: string,
 	 *   height?: string,
 	 *   yUnit?: string,
@@ -47,13 +48,20 @@
 		const textColor = dark ? '#D8DEE9' : '#2E3440';
 		const gridColor = dark ? 'rgba(216,222,233,0.1)' : 'rgba(46,52,64,0.08)';
 
-		const plainLabels = [...(data.labels || [])];
+		const useTimeAxis = !!(data.dates && data.dates.length > 0);
+		const dates = data.dates || [];
+		const plainLabels = useTimeAxis ? [] : [...(data.labels || [])];
 		const plainDatasets = (data.datasets || []).map((ds, i) => {
 			const isLine = ds.type === 'line' || (type === 'line' && !ds.type);
 			const isBar = ds.type === 'bar' || (type === 'bar' && !ds.type);
+			const rawData = [...(ds.data || [])];
+			// When using time axis, pair each value with its date
+			const chartData = useTimeAxis
+				? rawData.map((v, j) => ({ x: dates[j], y: v }))
+				: rawData;
 			return {
 				...ds,
-				data: [...(ds.data || [])],
+				data: chartData,
 				borderColor: ds.borderColor || nordColors[i % nordColors.length],
 				backgroundColor: ds.backgroundColor ?? (isBar
 					? (nordColors[i % nordColors.length])
@@ -93,7 +101,7 @@
 			});
 		}
 
-		chart = new Chart(ctx, {
+		chart = new Chart(ctx, /** @type {any} */ ({
 			type,
 			data: { labels: plainLabels, datasets: plainDatasets },
 			plugins,
@@ -102,7 +110,13 @@
 				maintainAspectRatio: false,
 				animation: { duration: 0 },
 				scales: {
-					x: {
+					x: useTimeAxis ? {
+						type: 'time',
+						time: { unit: 'day', tooltipFormat: 'MMM d' },
+						grid: { display: false },
+						border: { display: false },
+						ticks: { color: textColor, font: { size: 11 }, maxTicksLimit: 8 }
+					} : {
 						grid: { display: false },
 						border: { display: false },
 						ticks: { color: textColor, font: { size: 11 }, maxTicksLimit: 8 }
@@ -146,7 +160,7 @@
 					}
 				})
 			}
-		});
+		}));
 	}
 
 	onMount(() => {

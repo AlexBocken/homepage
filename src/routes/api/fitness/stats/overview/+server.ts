@@ -155,17 +155,19 @@ export const GET: RequestHandler = async ({ locals }) => {
 	// Build chart-ready weight data with SMA ± 1 std dev confidence band
 	const weightChart: {
 		labels: string[];
+		dates: string[];
 		data: number[];
 		sma: (number | null)[];
 		upper: (number | null)[];
 		lower: (number | null)[];
-	} = { labels: [], data: [], sma: [], upper: [], lower: [] };
+	} = { labels: [], dates: [], data: [], sma: [], upper: [], lower: [] };
 	const weights: number[] = [];
 	for (const m of weightMeasurements) {
 		const d = new Date(m.date);
 		weightChart.labels.push(
 			d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
 		);
+		weightChart.dates.push(d.toISOString());
 		weightChart.data.push(m.weight!);
 		weights.push(m.weight!);
 	}

@@ -50,6 +50,8 @@
 		"@sveltejs/adapter-node": "^5.0.0",
 		"@tauri-apps/plugin-geolocation": "^2.3.2",
 		"chart.js": "^4.5.0",
+		"chartjs-adapter-date-fns": "^3.0.0",
+		"date-fns": "^4.1.0",
 		"file-type": "^19.0.0",
 		"ioredis": "^5.9.0",
 		"leaflet": "^1.9.4",

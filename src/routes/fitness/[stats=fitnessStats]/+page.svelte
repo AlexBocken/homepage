@@ -82,6 +82,7 @@
 
 	const weightChartData = $derived({
 		labels: stats.weightChart?.labels ?? [],
+		dates: stats.weightChart?.dates,
 		datasets: [
 			...(hasSma ? [
 				{
