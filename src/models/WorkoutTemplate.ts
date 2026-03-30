@@ -19,6 +19,9 @@ export interface IWorkoutTemplate {
   _id?: string;
   name: string;
   description?: string;
+  mode?: 'manual' | 'gps';
+  activityType?: 'running' | 'walking' | 'cycling' | 'hiking';
+  intervalTemplateId?: string; // reference to an IntervalTemplate for GPS workouts
   exercises: IExercise[];
   createdBy: string; // username/nickname of the person who created the template
   isPublic?: boolean; // whether other users can see/use this template
@@ -89,11 +92,27 @@ const WorkoutTemplateSchema = new mongoose.Schema(
       trim: true,
       maxlength: 500
     },
+    mode: {
+      type: String,
+      enum: ['manual', 'gps'],
+      default: 'manual'
+    },
+    activityType: {
+      type: String,
+      enum: ['running', 'walking', 'cycling', 'hiking'],
+      default: undefined
+    },
+    intervalTemplateId: {
+      type: String,
+      default: undefined
+    },
     exercises: {
       type: [ExerciseSchema],
       required: true,
       validate: {
-        validator: function(exercises: IExercise[]) {
+        validator: function(this: any, exercises: IExercise[]) {
+          // GPS templates don't need exercises
+          if (this.mode === 'gps') return true;
           return exercises.length > 0;
         },
         message: 'A workout template must have at least one exercise'
