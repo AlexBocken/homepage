@@ -45,23 +45,33 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     await dbConnect();
     
     const data = await request.json();
-    const { name, description, exercises, isPublic = false } = data;
+    const { name, description, exercises, isPublic = false, mode = 'manual', activityType, intervalTemplateId } = data;
 
-    if (!name || !exercises || !Array.isArray(exercises) || exercises.length === 0) {
-      return json({ error: 'Name and at least one exercise are required' }, { status: 400 });
+    const isGps = mode === 'gps';
+
+    if (!name) {
+      return json({ error: 'Name is required' }, { status: 400 });
+    }
+
+    if (!isGps && (!exercises || !Array.isArray(exercises) || exercises.length === 0)) {
+      return json({ error: 'At least one exercise is required' }, { status: 400 });
     }
 
     // Validate exercises structure
-    for (const exercise of exercises) {
-      if (!exercise.exerciseId) {
-        return json({ error: 'Each exercise must have an exerciseId' }, { status: 400 });
+    if (exercises && Array.isArray(exercises)) {
+      for (const exercise of exercises) {
+        if (!exercise.exerciseId) {
+          return json({ error: 'Each exercise must have an exerciseId' }, { status: 400 });
+        }
       }
     }
 
     const template = new WorkoutTemplate({
       name,
       description,
-      exercises,
+      mode,
+      ...(isGps ? { activityType, intervalTemplateId } : {}),
+      exercises: exercises ?? [],
       isPublic,
       createdBy: session.user.nickname
     });
