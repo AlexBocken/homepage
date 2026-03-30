@@ -16,8 +16,6 @@ import java.util.Locale
 
 class AndroidBridge(private val context: Context) {
 
-    private var ttsForVoices: TextToSpeech? = null
-
     @JavascriptInterface
     fun startLocationService(ttsConfigJson: String, startPaused: Boolean) {
         if (context is Activity) {
@@ -122,8 +120,6 @@ class AndroidBridge(private val context: Context) {
     /**
      * Returns available TTS voices as a JSON array.
      * Each entry: { "id": "...", "name": "...", "language": "en-US" }
-     * This initializes a temporary TTS engine; the result is returned asynchronously
-     * via a callback, but since @JavascriptInterface is synchronous we block briefly.
      */
     @JavascriptInterface
     fun getAvailableTtsVoices(): String {

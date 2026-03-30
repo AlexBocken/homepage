@@ -47,6 +47,8 @@
 	let vgTriggerType = $state('distance');
 	let vgTriggerValue = $state(1);
 	let vgMetrics = $state(['totalTime', 'totalDistance', 'avgPace']);
+	let vgVolume = $state(0.8);
+	let vgAudioDuck = $state(false);
 	const vgLanguage = $derived(lang);
 	let vgShowPanel = $state(false);
 	let vgLoaded = $state(false);
@@ -58,6 +60,8 @@
 			triggerType: vgTriggerType,
 			triggerValue: vgTriggerValue,
 			metrics: vgMetrics,
+			volume: vgVolume,
+			audioDuck: vgAudioDuck,
 		};
 		if (!vgLoaded) return;
 		localStorage.setItem('vg_settings', JSON.stringify(settings));
@@ -196,6 +200,8 @@
 			triggerValue: vgTriggerValue,
 			metrics: vgEnabled ? vgMetrics : [],
 			language: vgLanguage,
+			ttsVolume: vgVolume,
+			audioDuck: vgAudioDuck,
 			...(hasIntervals ? { intervals: selectedInterval.steps } : {})
 		};
 	}
@@ -367,6 +373,8 @@
 				if (s.triggerType === 'distance' || s.triggerType === 'time') vgTriggerType = s.triggerType;
 				if (typeof s.triggerValue === 'number' && s.triggerValue > 0) vgTriggerValue = s.triggerValue;
 				if (Array.isArray(s.metrics)) vgMetrics = s.metrics;
+				if (typeof s.volume === 'number' && s.volume >= 0 && s.volume <= 1) vgVolume = s.volume;
+				if (typeof s.audioDuck === 'boolean') vgAudioDuck = s.audioDuck;
 			}
 		} catch {}
 		vgLoaded = true;
@@ -1150,6 +1158,23 @@
 								</div>
 							</div>
 
+							<div class="vg-group">
+								<label class="vg-label">
+									TTS Volume
+									<span class="vg-volume-value">{Math.round(vgVolume * 100)}%</span>
+								</label>
+								<input
+									class="vg-range"
+									type="range"
+									min="0"
+									max="1"
+									step="0.05"
+									bind:value={vgVolume}
+								/>
+							</div>
+
+							<Toggle bind:checked={vgAudioDuck} label="Duck other audio during TTS" />
+
 						{/if}
 						{/if}
 					</div>
@@ -1375,6 +1400,24 @@
 										{/each}
 									</div>
 								</div>
+
+								<div class="vg-group">
+									<label class="vg-label">
+										TTS Volume
+										<span class="vg-volume-value">{Math.round(vgVolume * 100)}%</span>
+									</label>
+									<input
+										class="vg-range"
+										type="range"
+										min="0"
+										max="1"
+										step="0.05"
+										bind:value={vgVolume}
+									/>
+								</div>
+
+								<Toggle bind:checked={vgAudioDuck} label="Duck other audio during TTS" />
+
 							{/if}
 							{/if}
 						</div>
@@ -2013,6 +2056,16 @@
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--color-text-secondary);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.vg-volume-value {
+		font-variant-numeric: tabular-nums;
+	}
+	.vg-range {
+		width: 100%;
+		accent-color: var(--nord10);
 	}
 	.vg-trigger-row {
 		display: flex;
