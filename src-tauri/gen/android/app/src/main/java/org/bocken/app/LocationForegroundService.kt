@@ -9,11 +9,16 @@ import android.content.Context
 import android.content.Intent
 import android.location.LocationListener
 import android.location.LocationManager
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
@@ -55,6 +60,11 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
     private var intervalStartTimeMs: Long = 0L
     private var intervalsComplete: Boolean = false
 
+    // Audio focus / ducking
+    private var audioManager: AudioManager? = null
+    private var audioFocusRequest: AudioFocusRequest? = null
+    private var hasAudioFocus = false
+
     data class IntervalStep(
         val label: String,
         val durationType: String, // "distance" or "time"
@@ -68,6 +78,8 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
         val metrics: List<String> = listOf("totalTime", "totalDistance", "avgPace"),
         val language: String = "en",
         val voiceId: String? = null,
+        val ttsVolume: Float = 0.8f,           // 0.0–1.0 relative TTS volume
+        val audioDuck: Boolean = false,        // duck other audio during TTS
         val intervals: List<IntervalStep> = emptyList()
     ) {
         companion object {
@@ -100,6 +112,8 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
                         metrics = metrics,
                         language = obj.optString("language", "en"),
                         voiceId = obj.optString("voiceId", null),
+                        ttsVolume = obj.optDouble("ttsVolume", 0.8).toFloat().coerceIn(0f, 1f),
+                        audioDuck = obj.optBoolean("audioDuck", false),
                         intervals = intervals
                     )
                 } catch (_: Exception) {
@@ -246,13 +260,11 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
             splitDistanceAtLastAnnouncement = 0.0
             splitTimeAtLastAnnouncement = startTimeMs
 
-            // Log available TTS engines
             val dummyTts = TextToSpeech(applicationContext, null)
             val engines = dummyTts.engines
             Log.d(TAG, "Available TTS engines: ${engines.map { "${it.label} (${it.name})" }}")
             dummyTts.shutdown()
 
-            // Try with explicit engine if available
             if (engines.isNotEmpty()) {
                 val engineName = engines[0].name
                 Log.d(TAG, "Trying TTS with explicit engine: $engineName")
@@ -268,6 +280,45 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
 
     // --- TTS ---
 
+    /** Called when TTS is ready — either immediately (pre-warmed) or from onInit (cold start). */
+    private fun onTtsReady() {
+        val config = ttsConfig ?: return
+        Log.d(TAG, "TTS ready! triggerType=${config.triggerType}, triggerValue=${config.triggerValue}")
+
+        // Set specific voice if requested
+        if (!config.voiceId.isNullOrEmpty()) {
+            tts?.voices?.find { it.name == config.voiceId }?.let { voice ->
+                tts?.voice = voice
+            }
+        }
+
+        // Announce workout started
+        speakWithConfig("Workout started", "workout_started")
+
+        // Announce first interval step if intervals are configured (queue after "Workout started")
+        if (intervalSteps.isNotEmpty() && !intervalsComplete) {
+            val first = intervalSteps[0]
+            val durationText = if (first.durationType == "distance") {
+                "${first.durationValue.toInt()} meters"
+            } else {
+                val secs = first.durationValue.toInt()
+                if (secs >= 60) {
+                    val m = secs / 60
+                    val s = secs % 60
+                    if (s > 0) "$m minutes $s seconds" else "$m minutes"
+                } else {
+                    "$secs seconds"
+                }
+            }
+            speakWithConfig("${first.label}. $durationText", "interval_announcement", flush = false)
+        }
+
+        // Set up time-based trigger if configured
+        if (config.triggerType == "time") {
+            startTimeTrigger(config.triggerValue)
+        }
+    }
+
     override fun onInit(status: Int) {
         Log.d(TAG, "TTS onInit status=$status (SUCCESS=${TextToSpeech.SUCCESS})")
         if (status == TextToSpeech.SUCCESS) {
@@ -275,42 +326,77 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
             val locale = Locale.forLanguageTag(config.language)
             val langResult = tts?.setLanguage(locale)
             Log.d(TAG, "TTS setLanguage($locale) result=$langResult")
-
-            // Set specific voice if requested
-            if (!config.voiceId.isNullOrEmpty()) {
-                tts?.voices?.find { it.name == config.voiceId }?.let { voice ->
-                    tts?.voice = voice
-                }
-            }
-
             ttsReady = true
-            Log.d(TAG, "TTS ready! triggerType=${config.triggerType}, triggerValue=${config.triggerValue}")
-
-            // Announce first interval step if intervals are configured
-            if (intervalSteps.isNotEmpty() && !intervalsComplete) {
-                val first = intervalSteps[0]
-                val durationText = if (first.durationType == "distance") {
-                    "${first.durationValue.toInt()} meters"
-                } else {
-                    val secs = first.durationValue.toInt()
-                    if (secs >= 60) {
-                        val m = secs / 60
-                        val s = secs % 60
-                        if (s > 0) "$m minutes $s seconds" else "$m minutes"
-                    } else {
-                        "$secs seconds"
-                    }
-                }
-                announceIntervalTransition("${first.label}. $durationText")
-            }
-
-            // Set up time-based trigger if configured
-            if (config.triggerType == "time") {
-                startTimeTrigger(config.triggerValue)
-            }
+            onTtsReady()
         } else {
             Log.e(TAG, "TTS init FAILED with status=$status")
         }
+    }
+
+    private fun requestAudioFocus() {
+        val config = ttsConfig ?: return
+        if (!config.audioDuck) return
+        if (hasAudioFocus) return
+
+        audioManager = audioManager ?: getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val focusReq = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                )
+                .setOnAudioFocusChangeListener { }
+                .build()
+            audioFocusRequest = focusReq
+            val result = audioManager?.requestAudioFocus(focusReq)
+            hasAudioFocus = result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+            Log.d(TAG, "Audio focus request (duck): granted=$hasAudioFocus")
+        } else {
+            @Suppress("DEPRECATION")
+            val result = audioManager?.requestAudioFocus(
+                { },
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+            )
+            hasAudioFocus = result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        }
+    }
+
+    private fun abandonAudioFocus() {
+        if (!hasAudioFocus) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let { audioManager?.abandonAudioFocusRequest(it) }
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager?.abandonAudioFocus { }
+        }
+        hasAudioFocus = false
+    }
+
+    /** Speak text with configured volume; requests/abandons audio focus for ducking. */
+    private fun speakWithConfig(text: String, utteranceId: String, flush: Boolean = true) {
+        if (!ttsReady) return
+        val config = ttsConfig ?: return
+        val queueMode = if (flush) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
+
+        requestAudioFocus()
+
+        val params = Bundle().apply {
+            putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, config.ttsVolume)
+        }
+
+        // Set up listener to abandon audio focus after utterance completes
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(id: String?) {}
+            override fun onDone(id: String?) { abandonAudioFocus() }
+            @Deprecated("Deprecated in Java")
+            override fun onError(id: String?) { abandonAudioFocus() }
+        })
+
+        val result = tts?.speak(text, queueMode, params, utteranceId)
+        Log.d(TAG, "speakWithConfig($utteranceId) result=$result vol=${config.ttsVolume} duck=${config.audioDuck}")
     }
 
     private fun startTimeTrigger(intervalMinutes: Double) {
@@ -428,7 +514,7 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
     private fun announceIntervalTransition(text: String) {
         if (!ttsReady) return
         Log.d(TAG, "Interval announcement: $text")
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "interval_announcement")
+        speakWithConfig(text, "interval_announcement")
     }
 
     private fun announceMetrics() {
@@ -493,8 +579,7 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
         if (parts.isNotEmpty()) {
             val text = parts.joinToString(". ")
             Log.d(TAG, "Announcing: $text")
-            val result = tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "workout_announcement")
-            Log.d(TAG, "TTS speak() result=$result (SUCCESS=${TextToSpeech.SUCCESS})")
+            speakWithConfig(text, "workout_announcement")
         } else {
             Log.d(TAG, "announceMetrics: no parts to announce")
         }
@@ -623,22 +708,105 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
         )
     }
 
+    /**
+     * Build the finish summary text from current stats.
+     * Must be called while service state is still valid (before clearing fields).
+     */
+    private fun buildFinishSummaryText(): String? {
+        val config = ttsConfig ?: return null
+        if (!config.enabled) return null
+
+        val activeSecs = activeElapsedSecs()
+        val h = activeSecs / 3600
+        val m = (activeSecs % 3600) / 60
+        val s = activeSecs % 60
+
+        val parts = mutableListOf<String>()
+        parts.add("Workout finished")
+
+        val timeStr = if (h > 0) "$h hours $m minutes" else "$m minutes $s seconds"
+        parts.add("Total time: $timeStr")
+
+        if (totalDistanceKm > 0.01) {
+            parts.add("Distance: ${"%.2f".format(totalDistanceKm)} kilometers")
+        }
+
+        if (totalDistanceKm > 0.01) {
+            val avgPace = (activeSecs / 60.0) / totalDistanceKm
+            val mins = avgPace.toInt()
+            val secs = ((avgPace - mins) * 60).toInt()
+            parts.add("Average pace: $mins minutes $secs seconds per kilometer")
+        }
+
+        return parts.joinToString(". ")
+    }
+
     override fun onDestroy() {
+        // Snapshot summary text while stats are still valid
+        val summaryText = buildFinishSummaryText()
+        val config = ttsConfig
+
+        // Stop time-based TTS triggers
+        ttsTimeRunnable?.let { ttsTimeHandler?.removeCallbacks(it) }
+        ttsTimeHandler = null
+        ttsTimeRunnable = null
+
+        // Hand off the existing TTS instance for the finish summary.
+        // We do NOT call tts?.stop() or tts?.shutdown() here — the utterance
+        // listener will clean up after the summary finishes speaking.
+        val finishTts = tts
+        tts = null
+        ttsReady = false
+
         tracking = false
         paused = false
         instance = null
         locationListener?.let { locationManager?.removeUpdates(it) }
         locationListener = null
         locationManager = null
+        abandonAudioFocus()
 
-        // Clean up TTS
-        ttsTimeRunnable?.let { ttsTimeHandler?.removeCallbacks(it) }
-        ttsTimeHandler = null
-        ttsTimeRunnable = null
-        tts?.stop()
-        tts?.shutdown()
-        tts = null
-        ttsReady = false
+        // Speak finish summary using the handed-off TTS instance (already initialized)
+        if (summaryText != null && finishTts != null && config != null) {
+            Log.d(TAG, "Finish summary: $summaryText")
+
+            // Audio focus for ducking
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            var focusReq: AudioFocusRequest? = null
+            if (config.audioDuck && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                focusReq = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                    .setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                            .build()
+                    )
+                    .setOnAudioFocusChangeListener { }
+                    .build()
+                am.requestAudioFocus(focusReq)
+            }
+
+            finishTts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(id: String?) {}
+                override fun onDone(id: String?) { cleanup() }
+                @Deprecated("Deprecated in Java")
+                override fun onError(id: String?) { cleanup() }
+
+                private fun cleanup() {
+                    if (focusReq != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        am.abandonAudioFocusRequest(focusReq)
+                    }
+                    finishTts.shutdown()
+                }
+            })
+
+            val params = Bundle().apply {
+                putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, config.ttsVolume)
+            }
+            finishTts.speak(summaryText, TextToSpeech.QUEUE_FLUSH, params, "workout_finished")
+        } else {
+            finishTts?.shutdown()
+        }
 
         super.onDestroy()
     }
