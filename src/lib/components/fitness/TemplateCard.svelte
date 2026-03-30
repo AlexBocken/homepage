@@ -1,6 +1,6 @@
 <script>
 	import { getExerciseById } from '$lib/data/exercises';
-	import { EllipsisVertical } from 'lucide-svelte';
+	import { EllipsisVertical, MapPin } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 
@@ -8,7 +8,7 @@
 
 	/**
 	 * @type {{
-	 *   template: { _id: string, name: string, exercises: Array<{ exerciseId: string, sets: any[] }> },
+	 *   template: { _id: string, name: string, mode?: string, activityType?: string, exercises: Array<{ exerciseId: string, sets: any[] }> },
 	 *   lastUsed?: string | null,
 	 *   onStart?: (() => void) | null,
 	 *   onMenu?: ((e: MouseEvent) => void) | null
@@ -42,15 +42,19 @@
 			</button>
 		{/if}
 	</div>
-	<ul class="exercise-preview">
-		{#each template.exercises.slice(0, 4) as ex}
-			{@const exercise = getExerciseById(ex.exerciseId, lang)}
-			<li>{ex.sets.length} &times; {exercise?.localName ?? ex.exerciseId}</li>
-		{/each}
-		{#if template.exercises.length > 4}
-			<li class="more">+{template.exercises.length - 4} {t('more', lang)}</li>
-		{/if}
-	</ul>
+	{#if template.mode === 'gps'}
+		<div class="gps-badge"><MapPin size={12} /> {template.activityType?.[0]?.toUpperCase()}{template.activityType?.slice(1) ?? 'Running'}</div>
+	{:else}
+		<ul class="exercise-preview">
+			{#each template.exercises.slice(0, 4) as ex}
+				{@const exercise = getExerciseById(ex.exerciseId, lang)}
+				<li>{ex.sets.length} &times; {exercise?.localName ?? ex.exerciseId}</li>
+			{/each}
+			{#if template.exercises.length > 4}
+				<li class="more">+{template.exercises.length - 4} {t('more', lang)}</li>
+			{/if}
+		</ul>
+	{/if}
 	{#if lastUsed}
 		<p class="last-used">{t('last_performed', lang)} {formatDate(lastUsed)}</p>
 	{/if}
@@ -114,6 +118,14 @@
 	.exercise-preview .more {
 		color: var(--color-primary);
 		font-style: italic;
+	}
+	.gps-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.8rem;
+		color: var(--nord10);
+		font-weight: 600;
 	}
 	.last-used {
 		margin: 0.5rem 0 0;

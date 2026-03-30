@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight, MapPin, Dumbbell } from 'lucide-svelte';
+	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight, MapPin, Dumbbell, Timer } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
@@ -45,14 +45,35 @@
 	let editorPicker = $state(false);
 	let editorSaving = $state(false);
 
+	// GPS template editor state
+	/** @type {'manual' | 'gps'} */
+	let editorMode = $state('manual');
+	/** @type {'running' | 'walking' | 'cycling' | 'hiking'} */
+	let editorActivityType = $state('running');
+	/** @type {string | null} */
+	let editorIntervalId = $state(null);
+	/** @type {any[]} */
+	let intervalTemplates = $state([]);
+
 	/** @type {any} */
 	let nextTemplate = $derived(nextTemplateId ? templates.find((t) => t._id === nextTemplateId) : null);
 	let hasSchedule = $derived(scheduleOrder.length > 0);
 	let isApp = $state(false);
 
+	async function fetchIntervalTemplates() {
+		try {
+			const res = await fetch('/api/fitness/intervals');
+			if (res.ok) {
+				const d = await res.json();
+				intervalTemplates = d.templates ?? [];
+			}
+		} catch {}
+	}
+
 	onMount(() => {
 		isApp = '__TAURI__' in window;
 		workout.restore();
+		fetchIntervalTemplates();
 
 		// If there's an active workout, redirect to the active page
 		if (workout.active) {
@@ -84,7 +105,12 @@
 	/** @param {any} template */
 	async function startFromTemplate(template) {
 		selectedTemplate = null;
-		workout.startFromTemplate(template);
+		if (template.mode === 'gps') {
+			if (!isApp) return; // can't start GPS on desktop
+			workout.startFromGpsTemplate(template);
+		} else {
+			workout.startFromTemplate(template);
+		}
 		await sync.onWorkoutStart();
 		goto(`/fitness/${sl.workout}/${sl.active}`);
 	}
@@ -110,6 +136,9 @@
 		editingTemplate = null;
 		editorName = '';
 		editorExercises = [];
+		editorMode = 'manual';
+		editorActivityType = 'running';
+		editorIntervalId = null;
 		showTemplateEditor = true;
 	}
 
@@ -118,7 +147,10 @@
 		selectedTemplate = null;
 		editingTemplate = template;
 		editorName = template.name;
-		editorExercises = template.exercises.map((/** @type {any} */ ex) => ({
+		editorMode = template.mode ?? 'manual';
+		editorActivityType = template.activityType ?? 'running';
+		editorIntervalId = template.intervalTemplateId ?? null;
+		editorExercises = (template.exercises ?? []).map((/** @type {any} */ ex) => ({
 			exerciseId: ex.exerciseId,
 			sets: ex.sets.map((/** @type {any} */ s) => ({ ...s })),
 			restTime: ex.restTime ?? 120
@@ -175,12 +207,19 @@
 	}
 
 	async function saveTemplate() {
-		if (!editorName.trim() || editorExercises.length === 0) return;
+		const isGps = editorMode === 'gps';
+		if (!editorName.trim() || (!isGps && editorExercises.length === 0)) return;
 		editorSaving = true;
 
 		const body = {
 			name: editorName.trim(),
-			exercises: editorExercises.map((ex) => {
+			mode: editorMode,
+			...(isGps ? {
+				activityType: editorActivityType,
+				intervalTemplateId: editorIntervalId || undefined,
+				exercises: []
+			} : {}),
+			...(!isGps ? { exercises: editorExercises.map((ex) => {
 				const metrics = getExerciseMetrics(getExerciseById(ex.exerciseId));
 				return {
 					exerciseId: ex.exerciseId,
@@ -194,7 +233,7 @@
 					}),
 					restTime: ex.restTime
 				};
-			})
+			}) } : {})
 		};
 
 		try {
@@ -323,7 +362,20 @@
 			<button class="next-workout-btn" onclick={startNextScheduled}>
 				<div class="next-info">
 					<span class="next-name">{nextTemplate.name}</span>
-					<span class="next-exercises">{nextTemplate.exercises.length} {nextTemplate.exercises.length !== 1 ? t('exercises_word', lang) : t('exercise', lang)}</span>
+					{#if nextTemplate.mode === 'gps'}
+						<span class="next-exercises next-gps-info">
+							<MapPin size={12} />
+							{nextTemplate.activityType?.[0]?.toUpperCase()}{nextTemplate.activityType?.slice(1) ?? 'Running'}
+							{#if nextTemplate.intervalTemplateId}
+								{@const interval = intervalTemplates.find((/** @type {any} */ t) => t._id === nextTemplate.intervalTemplateId)}
+								{#if interval}
+									· <Timer size={12} /> {interval.name}
+								{/if}
+							{/if}
+						</span>
+					{:else}
+						<span class="next-exercises">{nextTemplate.exercises.length} {nextTemplate.exercises.length !== 1 ? t('exercises_word', lang) : t('exercise', lang)}</span>
+					{/if}
 				</div>
 				<div class="next-go">
 					<Play size={18} />
@@ -397,22 +449,44 @@
 				<button class="close-btn" onclick={closeTemplateDetail} aria-label="Close"><X size={20} /></button>
 			</div>
 			<div class="modal-body">
-				<ul class="template-exercises">
-					{#each selectedTemplate.exercises as ex (ex.exerciseId)}
-						{@const exercise = getExerciseById(ex.exerciseId, lang)}
-						<li>
-							<span class="tex-name">{exercise?.localName ?? ex.exerciseId}</span>
-							<span class="tex-sets">{ex.sets.length} {ex.sets.length !== 1 ? t('sets', lang) : t('set', lang)}</span>
-						</li>
-					{/each}
-				</ul>
+				{#if selectedTemplate.mode === 'gps'}
+					<div class="modal-gps-info">
+						<span class="modal-gps-badge"><MapPin size={14} /> GPS — {selectedTemplate.activityType?.[0]?.toUpperCase()}{selectedTemplate.activityType?.slice(1) ?? 'Running'}</span>
+						{#if selectedTemplate.intervalTemplateId}
+							{@const interval = intervalTemplates.find((/** @type {any} */ t) => t._id === selectedTemplate.intervalTemplateId)}
+							{#if interval}
+								<span class="modal-interval-badge"><Timer size={14} /> {interval.name}</span>
+							{/if}
+						{/if}
+					</div>
+					{#if !isApp}
+						<div class="gps-desktop-notice">
+							<MapPin size={16} />
+							<p>GPS workouts require the app. <a href="https://bocken.org/static/Bocken.apk" target="_blank" rel="noopener">Download APK</a></p>
+						</div>
+					{/if}
+				{:else}
+					<ul class="template-exercises">
+						{#each selectedTemplate.exercises as ex (ex.exerciseId)}
+							{@const exercise = getExerciseById(ex.exerciseId, lang)}
+							<li>
+								<span class="tex-name">{exercise?.localName ?? ex.exerciseId}</span>
+								<span class="tex-sets">{ex.sets.length} {ex.sets.length !== 1 ? t('sets', lang) : t('set', lang)}</span>
+							</li>
+						{/each}
+					</ul>
+				{/if}
 				{#if selectedTemplate.lastUsed}
 					<p class="modal-meta">Last performed: {new Date(selectedTemplate.lastUsed).toLocaleDateString()}</p>
 				{/if}
 			</div>
 			<div class="modal-actions">
-				<button class="modal-start" onclick={() => startFromTemplate(selectedTemplate)}>
-					<Play size={16} /> {t('start_workout', lang)}
+				<button class="modal-start" onclick={() => startFromTemplate(selectedTemplate)} disabled={selectedTemplate.mode === 'gps' && !isApp}>
+					{#if selectedTemplate.mode === 'gps'}
+						<MapPin size={16} /> Start GPS Workout
+					{:else}
+						<Play size={16} /> {t('start_workout', lang)}
+					{/if}
 				</button>
 				<button class="modal-edit" onclick={() => openEditTemplate(selectedTemplate)}>
 					<Pencil size={16} /> {t('edit_template', lang)}
@@ -444,6 +518,56 @@
 					bind:value={editorName}
 				/>
 
+				<div class="editor-mode-toggle">
+					<button class="mode-btn" class:active={editorMode === 'manual'} onclick={() => editorMode = 'manual'} type="button">
+						<Dumbbell size={14} /> Strength
+					</button>
+					<button class="mode-btn" class:active={editorMode === 'gps'} onclick={() => editorMode = 'gps'} type="button">
+						<MapPin size={14} /> GPS
+					</button>
+				</div>
+
+				{#if editorMode === 'gps'}
+					{#if !isApp}
+						<div class="gps-desktop-notice">
+							<MapPin size={16} />
+							<p>GPS workouts require the app. <a href="https://bocken.org/static/Bocken.apk" target="_blank" rel="noopener">Download APK</a></p>
+						</div>
+					{/if}
+					<div class="editor-gps-options">
+						<label class="editor-label">Activity</label>
+						<div class="activity-chips">
+							{#each /** @type {const} */ (['running', 'walking', 'cycling', 'hiking']) as act}
+								<button
+									class="activity-chip"
+									class:selected={editorActivityType === act}
+									onclick={() => editorActivityType = /** @type {typeof editorActivityType} */ (act)}
+									type="button"
+								>{act[0].toUpperCase() + act.slice(1)}</button>
+							{/each}
+						</div>
+
+						<label class="editor-label">Interval Training</label>
+						<div class="interval-select">
+							<button
+								class="interval-option"
+								class:selected={!editorIntervalId}
+								onclick={() => editorIntervalId = null}
+								type="button"
+							>None</button>
+							{#each intervalTemplates as tmpl (tmpl._id)}
+								<button
+									class="interval-option"
+									class:selected={editorIntervalId === tmpl._id}
+									onclick={() => editorIntervalId = editorIntervalId === tmpl._id ? null : tmpl._id}
+									type="button"
+								>{tmpl.name} ({tmpl.steps.length} steps)</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				{#if editorMode === 'manual'}
 				{#each editorExercises as ex, exIdx (exIdx)}
 					{@const exercise = getExerciseById(ex.exerciseId, lang)}
 					{@const exMetrics = getExerciseMetrics(exercise).filter((/** @type {string} */ m) => m !== 'rpe')}
@@ -488,9 +612,10 @@
 				<button class="editor-add-exercise" onclick={() => editorPicker = true}>
 					<Plus size={16} /> {t('add_exercise_btn', lang)}
 				</button>
+				{/if}
 			</div>
 			<div class="modal-actions">
-				<button class="modal-start" onclick={saveTemplate} disabled={editorSaving || !editorName.trim() || editorExercises.length === 0}>
+				<button class="modal-start" onclick={saveTemplate} disabled={editorSaving || !editorName.trim() || (editorMode === 'manual' && editorExercises.length === 0)}>
 					<Save size={16} /> {editorSaving ? t('saving', lang) : t('save_template', lang)}
 				</button>
 			</div>
@@ -622,6 +747,11 @@
 	.next-exercises {
 		font-size: 0.8rem;
 		opacity: 0.85;
+	}
+	.next-gps-info {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 	.next-go {
 		display: flex;
@@ -890,6 +1020,118 @@
 	.editor-name:focus {
 		outline: none;
 		border-color: var(--color-primary);
+	}
+	.editor-mode-toggle {
+		display: flex;
+		gap: 0.4rem;
+		margin-bottom: 0.75rem;
+	}
+	.mode-btn {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		padding: 0.5rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-text-secondary);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.mode-btn.active {
+		background: var(--nord10);
+		color: #fff;
+		border-color: var(--nord10);
+	}
+	.editor-gps-options {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.editor-label {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-secondary);
+		margin-top: 0.25rem;
+	}
+	.activity-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+	.activity-chip {
+		padding: 0.3rem 0.7rem;
+		border-radius: 20px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+	.activity-chip.selected {
+		background: var(--nord10);
+		color: #fff;
+		border-color: var(--nord10);
+	}
+	.interval-select {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+	.interval-option {
+		text-align: left;
+		padding: 0.5rem 0.75rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.interval-option.selected {
+		background: var(--nord10);
+		color: #fff;
+		border-color: var(--nord10);
+	}
+	.gps-desktop-notice {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem;
+		background: var(--color-bg-elevated);
+		border-radius: 8px;
+		color: var(--color-text-secondary);
+		font-size: 0.85rem;
+	}
+	.gps-desktop-notice a {
+		color: var(--nord10);
+	}
+	.modal-gps-info {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+	.modal-gps-badge, .modal-interval-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.3rem 0.6rem;
+		border-radius: 6px;
+		font-size: 0.8rem;
+		font-weight: 600;
+	}
+	.modal-gps-badge {
+		background: rgba(94, 129, 172, 0.15);
+		color: var(--nord10);
+	}
+	.modal-interval-badge {
+		background: rgba(163, 190, 140, 0.15);
+		color: var(--nord14);
 	}
 	.editor-exercise {
 		background: var(--color-bg-elevated);

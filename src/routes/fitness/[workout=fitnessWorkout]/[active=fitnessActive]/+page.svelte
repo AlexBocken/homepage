@@ -254,7 +254,7 @@
 		}).addTo(liveMap);
 		livePolyline = leafletLib.polyline([], { color: '#88c0d0', weight: 3 }).addTo(liveMap);
 		liveMarker = leafletLib.circleMarker([0, 0], {
-			radius: 6, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2, opacity: 0, fillOpacity: 0
+			radius: 6, fillColor: '#a3be8c', color: '#fff', weight: 2, opacity: 0, fillOpacity: 0
 		}).addTo(liveMap);
 
 		if (gps.track.length > 0) {
@@ -379,11 +379,15 @@
 		} catch {}
 		vgLoaded = true;
 
-		// Restore selected interval from localStorage
-		try {
-			const savedId = localStorage.getItem('selected_interval_id');
-			if (savedId) selectedIntervalId = savedId;
-		} catch {}
+		// Pre-select interval from GPS template, or restore from localStorage
+		if (workout.intervalTemplateId) {
+			selectedIntervalId = workout.intervalTemplateId;
+		} else {
+			try {
+				const savedId = localStorage.getItem('selected_interval_id');
+				if (savedId) selectedIntervalId = savedId;
+			} catch {}
+		}
 
 		// Fetch interval templates
 		fetchIntervalTemplates();

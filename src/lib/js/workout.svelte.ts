@@ -43,6 +43,7 @@ export interface StoredState {
 	activityType: GpsActivityType | null;
 	name: string;
 	templateId: string | null;
+	intervalTemplateId: string | null;
 	exercises: WorkoutExercise[];
 	elapsed: number; // total elapsed seconds at time of save
 	savedAt: number; // Date.now() at time of save
@@ -57,6 +58,7 @@ export interface RemoteState {
 	mode: WorkoutMode;
 	activityType: GpsActivityType | null;
 	templateId: string | null;
+	intervalTemplateId: string | null;
 	exercises: WorkoutExercise[];
 	paused: boolean;
 	elapsed: number;
@@ -100,6 +102,7 @@ export function createWorkout() {
 	let activityType = $state<GpsActivityType | null>(null);
 	let name = $state('');
 	let templateId: string | null = $state(null);
+	let intervalTemplateId: string | null = $state(null);
 	let exercises = $state<WorkoutExercise[]>([]);
 	let startTime: Date | null = $state(null);
 	let _pausedElapsed = $state(0); // seconds accumulated before current run
@@ -128,6 +131,7 @@ export function createWorkout() {
 			activityType,
 			name,
 			templateId,
+			intervalTemplateId,
 			exercises: JSON.parse(JSON.stringify(exercises)),
 			elapsed: _elapsed,
 			savedAt: Date.now(),
@@ -197,6 +201,7 @@ export function createWorkout() {
 		activityType = stored.activityType ?? null;
 		name = stored.name;
 		templateId = stored.templateId;
+		intervalTemplateId = stored.intervalTemplateId ?? null;
 		exercises = stored.exercises;
 
 		if (stored.paused) {
@@ -233,6 +238,7 @@ export function createWorkout() {
 	function startFromTemplate(template: TemplateData) {
 		name = template.name;
 		templateId = template._id;
+		intervalTemplateId = null;
 		mode = 'manual';
 		exercises = template.exercises.map((e) => ({
 			exerciseId: e.exerciseId,
@@ -260,6 +266,7 @@ export function createWorkout() {
 	function startEmpty() {
 		name = 'Quick Workout';
 		templateId = null;
+		intervalTemplateId = null;
 		mode = 'manual';
 		exercises = [];
 		startTime = new Date();
@@ -280,8 +287,24 @@ export function createWorkout() {
 		};
 		name = labels[activity];
 		templateId = null;
+		intervalTemplateId = null;
 		mode = 'gps';
 		activityType = activity;
+		exercises = [];
+		startTime = null;
+		_pausedElapsed = 0;
+		_elapsed = 0;
+		paused = true;
+		active = true;
+		_persist();
+	}
+
+	function startFromGpsTemplate(template: { _id: string; name: string; activityType?: string; intervalTemplateId?: string }) {
+		name = template.name;
+		templateId = template._id;
+		intervalTemplateId = template.intervalTemplateId ?? null;
+		mode = 'gps';
+		activityType = (template.activityType as GpsActivityType) ?? 'running';
 		exercises = [];
 		startTime = null;
 		_pausedElapsed = 0;
@@ -450,6 +473,7 @@ export function createWorkout() {
 		activityType = null;
 		name = '';
 		templateId = null;
+		intervalTemplateId = null;
 		exercises = [];
 		startTime = null;
 		_pausedElapsed = 0;
@@ -469,6 +493,7 @@ export function createWorkout() {
 		mode = remote.mode ?? 'manual';
 		activityType = remote.activityType ?? null;
 		templateId = remote.templateId;
+		intervalTemplateId = remote.intervalTemplateId ?? null;
 		exercises = remote.exercises;
 
 		if (remote.paused) {
@@ -515,6 +540,7 @@ export function createWorkout() {
 			activityType,
 			name,
 			templateId,
+			intervalTemplateId,
 			exercises: JSON.parse(JSON.stringify(exercises)),
 			elapsed: _elapsed,
 			savedAt: Date.now(),
@@ -544,6 +570,7 @@ export function createWorkout() {
 		get name() { return name; },
 		set name(v: string) { name = v; _persist(); },
 		get templateId() { return templateId; },
+		get intervalTemplateId() { return intervalTemplateId; },
 		get exercises() { return exercises; },
 		get startTime() { return startTime; },
 		get elapsedSeconds() { return _elapsed; },
@@ -557,6 +584,7 @@ export function createWorkout() {
 		startFromTemplate,
 		startEmpty,
 		startGpsWorkout,
+		startFromGpsTemplate,
 		pauseTimer,
 		resumeTimer,
 		addExercise,

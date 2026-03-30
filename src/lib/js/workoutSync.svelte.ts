@@ -17,6 +17,7 @@ interface ServerWorkout {
   mode: WorkoutMode;
   activityType: GpsActivityType | null;
   templateId: string | null;
+  intervalTemplateId: string | null;
   exercises: WorkoutExercise[];
   paused: boolean;
   elapsed: number;
@@ -47,6 +48,7 @@ export function createWorkoutSync() {
       mode: workout.mode,
       activityType: workout.activityType,
       templateId: workout.templateId,
+      intervalTemplateId: workout.intervalTemplateId,
       exercises: JSON.parse(JSON.stringify(workout.exercises)),
       paused: workout.paused,
       elapsed,
@@ -114,6 +116,7 @@ export function createWorkoutSync() {
         mode: doc.mode ?? 'manual',
         activityType: doc.activityType ?? null,
         templateId: doc.templateId,
+        intervalTemplateId: doc.intervalTemplateId ?? null,
         exercises: doc.exercises,
         paused: doc.paused,
         elapsed: doc.elapsed,
@@ -234,6 +237,7 @@ export function createWorkoutSync() {
             mode: serverDoc.mode ?? 'manual',
             activityType: serverDoc.activityType ?? null,
             templateId: serverDoc.templateId,
+            intervalTemplateId: serverDoc.intervalTemplateId ?? null,
             exercises: serverDoc.exercises,
             paused: serverDoc.paused,
             elapsed: serverDoc.elapsed,
