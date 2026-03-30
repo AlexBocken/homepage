@@ -3,7 +3,6 @@
     import { browser } from '$app/environment';
     import FilterPanel from './FilterPanel.svelte';
     import { getCategories } from '$lib/js/categories';
-    import { fuzzyScore } from '$lib/js/fuzzy';
 
     // Filter props for different contexts
     let {
@@ -138,15 +137,15 @@
             return;
         }
 
-        // Normalize search query
+        // Normalize and split search query
         const searchText = query.toLowerCase().trim()
             .normalize('NFD')
             .replace(/\p{Diacritic}/gu, "");
+        const searchTerms = searchText.split(" ").filter((/** @type {string} */ term) => term.length > 0);
 
-        // Fuzzy match and score recipes
-        /** @type {{ recipe: any, score: number }[]} */
-        const scored = [];
-        for (const recipe of filteredByNonText) {
+        // Filter recipes by text
+        const matched = filteredByNonText.filter((/** @type {any} */ recipe) => {
+            // Build searchable string from recipe data
             const searchString = [
                 recipe.name || '',
                 recipe.description || '',
@@ -155,13 +154,11 @@
                 .toLowerCase()
                 .normalize('NFD')
                 .replace(/\p{Diacritic}/gu, "")
-                .replace(/&shy;|­/g, '');
+                .replace(/&shy;|­/g, ''); // Remove soft hyphens
 
-            const score = fuzzyScore(searchText, searchString);
-            if (score > 0) scored.push({ recipe, score });
-        }
-        scored.sort((a, b) => b.score - a.score);
-        const matched = scored.map(s => s.recipe);
+            // All search terms must match
+            return searchTerms.every((/** @type {string} */ term) => searchString.includes(term));
+        });
 
         // Return matched recipe IDs and categories
         onSearchResults(
