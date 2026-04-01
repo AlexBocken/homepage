@@ -1,3 +1,40 @@
+// Nutrition per-100g data shape (shared by BLS and USDA sources)
+export type NutritionPer100g = {
+  calories: number; protein: number; fat: number; saturatedFat: number;
+  carbs: number; fiber: number; sugars: number;
+  calcium: number; iron: number; magnesium: number; phosphorus: number;
+  potassium: number; sodium: number; zinc: number;
+  vitaminA: number; vitaminC: number; vitaminD: number; vitaminE: number;
+  vitaminK: number; thiamin: number; riboflavin: number; niacin: number;
+  vitaminB6: number; vitaminB12: number; folate: number; cholesterol: number;
+  // Amino acids (g/100g) — available from BLS, partially from USDA
+  isoleucine?: number; leucine?: number; lysine?: number; methionine?: number;
+  phenylalanine?: number; threonine?: number; tryptophan?: number; valine?: number;
+  histidine?: number; alanine?: number; arginine?: number; asparticAcid?: number;
+  cysteine?: number; glutamicAcid?: number; glycine?: number; proline?: number;
+  serine?: number; tyrosine?: number;
+};
+
+// Nutrition mapping for calorie/macro tracking per ingredient
+export type NutritionMapping = {
+  sectionIndex: number;
+  ingredientIndex: number;
+  ingredientName?: string;
+  ingredientNameDe?: string;
+  source?: 'bls' | 'usda' | 'manual';
+  fdcId?: number;
+  blsCode?: string;
+  nutritionDbName?: string;
+  matchConfidence?: number;
+  matchMethod: 'exact' | 'embedding' | 'manual' | 'none';
+  gramsPerUnit?: number;
+  defaultAmountUsed?: boolean;
+  unitConversionSource: 'direct' | 'density' | 'usda_portion' | 'estimate' | 'manual' | 'none';
+  manuallyEdited: boolean;
+  excluded: boolean;
+  per100g?: NutritionPer100g;
+};
+
 // Translation status enum
 export type TranslationStatus = 'pending' | 'approved' | 'needs_update';
 
@@ -163,6 +200,7 @@ export type RecipeModelType = {
   addendum?: string
   note?: string;
   isBaseRecipe?: boolean;
+  nutritionMappings?: NutritionMapping[];
   translations?: {
     en?: TranslatedRecipeType;
   };

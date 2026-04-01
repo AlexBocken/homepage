@@ -163,6 +163,25 @@ const RecipeSchema = new mongoose.Schema(
        }
      },
 
+     // Nutrition calorie/macro mapping for each ingredient
+     nutritionMappings: [{
+       sectionIndex: { type: Number, required: true },
+       ingredientIndex: { type: Number, required: true },
+       ingredientName: { type: String },
+       ingredientNameDe: { type: String },
+       source: { type: String, enum: ['bls', 'usda', 'manual'] },
+       fdcId: { type: Number },
+       blsCode: { type: String },
+       nutritionDbName: { type: String },
+       matchConfidence: { type: Number },
+       matchMethod: { type: String, enum: ['exact', 'embedding', 'manual', 'none'] },
+       gramsPerUnit: { type: Number },
+       defaultAmountUsed: { type: Boolean, default: false },
+       unitConversionSource: { type: String, enum: ['direct', 'density', 'usda_portion', 'estimate', 'manual', 'none'] },
+       manuallyEdited: { type: Boolean, default: false },
+       excluded: { type: Boolean, default: false },
+     }],
+
      // Translation metadata for tracking changes
      translationMetadata: {
        lastModifiedGerman: {type: Date},
@@ -177,6 +196,6 @@ RecipeSchema.index({ "translations.en.translationStatus": 1 });
 
 import type { RecipeModelType } from '$types/types';
 
-let _recipeModel: mongoose.Model<RecipeModelType>;
-try { _recipeModel = mongoose.model<RecipeModelType>("Recipe"); } catch { _recipeModel = mongoose.model<RecipeModelType>("Recipe", RecipeSchema); }
-export const Recipe = _recipeModel;
+// Delete cached model on HMR so schema changes (e.g. new fields) are picked up
+delete mongoose.models.Recipe;
+export const Recipe = mongoose.model<RecipeModelType>("Recipe", RecipeSchema);

@@ -47,6 +47,7 @@
 	},
 	"dependencies": {
 		"@auth/sveltekit": "^1.11.1",
+		"@huggingface/transformers": "^4.0.0",
 		"@sveltejs/adapter-node": "^5.0.0",
 		"@tauri-apps/plugin-geolocation": "^2.3.2",
 		"chart.js": "^4.5.0",
