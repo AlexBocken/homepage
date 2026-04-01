@@ -237,6 +237,167 @@
 		showTranslationWorkflow = false;
 	}
 
+	// Nutrition generation
+	let generatingNutrition = $state(false);
+	let nutritionResult = $state<{ count: number; mappings: any[] } | null>(null);
+
+	async function generateNutrition() {
+		generatingNutrition = true;
+		nutritionResult = null;
+		try {
+			const res = await fetch(`/api/rezepte/nutrition/generate/${encodeURIComponent(short_name.trim())}`, { method: 'POST' });
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({ message: res.statusText }));
+				throw new Error(err.message || `HTTP ${res.status}`);
+			}
+			const result = await res.json();
+			nutritionResult = result;
+			const mapped = result.mappings.filter((/** @type {any} */ m) => m.matchMethod !== 'none').length;
+			toast.success(`Nährwerte generiert: ${mapped}/${result.count} Zutaten zugeordnet`);
+		} catch (e: any) {
+			toast.error(`Fehler: ${e.message}`);
+		} finally {
+			generatingNutrition = false;
+		}
+	}
+
+	// Manual nutrition search
+	let searchQueries = $state<Record<string, string>>({});
+	let searchResults = $state<Record<string, { source: 'bls' | 'usda'; id: string; name: string; category: string; calories: number }[]>>({});
+	let searchTimers = $state<Record<string, ReturnType<typeof setTimeout>>>({});
+	let savingMapping = $state<string | null>(null);
+	let globalToggle = $state<Record<string, boolean>>({});
+
+	function mappingKey(m: any) {
+		return `${m.sectionIndex}-${m.ingredientIndex}`;
+	}
+
+	function handleSearchInput(key: string, value: string) {
+		searchQueries[key] = value;
+		if (searchTimers[key]) clearTimeout(searchTimers[key]);
+		if (value.length < 2) {
+			searchResults[key] = [];
+			return;
+		}
+		searchTimers[key] = setTimeout(async () => {
+			try {
+				const res = await fetch(`/api/nutrition/search?q=${encodeURIComponent(value)}`);
+				if (res.ok) searchResults[key] = await res.json();
+			} catch { /* ignore */ }
+		}, 250);
+	}
+
+	async function assignNutritionEntry(mapping: any, entry: { source: 'bls' | 'usda'; id: string; name: string }) {
+		const key = mappingKey(mapping);
+		const isGlobal = globalToggle[key] || false;
+		savingMapping = key;
+		try {
+			const patchBody: Record<string, any> = {
+				sectionIndex: mapping.sectionIndex,
+				ingredientIndex: mapping.ingredientIndex,
+				ingredientName: mapping.ingredientName,
+				ingredientNameDe: mapping.ingredientNameDe,
+				source: entry.source,
+				nutritionDbName: entry.name,
+				matchMethod: 'manual',
+				matchConfidence: 1,
+				excluded: false,
+				global: isGlobal,
+			};
+			if (entry.source === 'bls') {
+				patchBody.blsCode = entry.id;
+			} else {
+				patchBody.fdcId = parseInt(entry.id);
+			}
+
+			const res = await fetch(`/api/rezepte/nutrition/${encodeURIComponent(short_name.trim())}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify([patchBody]),
+			});
+			if (!res.ok) throw new Error('Failed to save');
+			if (entry.source === 'bls') {
+				mapping.blsCode = entry.id;
+				mapping.source = 'bls';
+			} else {
+				mapping.fdcId = parseInt(entry.id);
+				mapping.source = 'usda';
+			}
+			mapping.nutritionDbName = entry.name;
+			mapping.matchMethod = 'manual';
+			mapping.matchConfidence = 1;
+			mapping.excluded = false;
+			mapping.manuallyEdited = true;
+			searchResults[key] = [];
+			searchQueries[key] = '';
+			toast.success(`${mapping.ingredientName} → ${entry.name}${isGlobal ? ' (global)' : ''}`);
+		} catch (e: any) {
+			toast.error(`Fehler: ${e.message}`);
+		} finally {
+			savingMapping = null;
+		}
+	}
+
+	async function skipIngredient(mapping: any) {
+		const key = mappingKey(mapping);
+		const isGlobal = globalToggle[key] || false;
+		savingMapping = key;
+		try {
+			const res = await fetch(`/api/rezepte/nutrition/${encodeURIComponent(short_name.trim())}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify([{
+					sectionIndex: mapping.sectionIndex,
+					ingredientIndex: mapping.ingredientIndex,
+					ingredientName: mapping.ingredientName,
+					ingredientNameDe: mapping.ingredientNameDe,
+					matchMethod: 'manual',
+					matchConfidence: 1,
+					excluded: true,
+					global: isGlobal,
+				}]),
+			});
+			if (!res.ok) throw new Error('Failed to save');
+			mapping.excluded = true;
+			mapping.matchMethod = 'manual';
+			mapping.manuallyEdited = true;
+			searchResults[key] = [];
+			searchQueries[key] = '';
+			toast.success(`${mapping.ingredientName} übersprungen${isGlobal ? ' (global)' : ''}`);
+		} catch (e: any) {
+			toast.error(`Fehler: ${e.message}`);
+		} finally {
+			savingMapping = null;
+		}
+	}
+
+	async function revertToAuto(mapping: any) {
+		const key = mappingKey(mapping);
+		savingMapping = key;
+		try {
+			const res = await fetch(`/api/rezepte/nutrition/${encodeURIComponent(short_name.trim())}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify([{
+					sectionIndex: mapping.sectionIndex,
+					ingredientIndex: mapping.ingredientIndex,
+					ingredientName: mapping.ingredientName,
+					ingredientNameDe: mapping.ingredientNameDe,
+					manuallyEdited: false,
+					excluded: false,
+				}]),
+			});
+			if (!res.ok) throw new Error('Failed to save');
+			// Re-generate to get the auto match
+			await generateNutrition();
+			toast.success(`${mapping.ingredientName} → automatisch`);
+		} catch (e: any) {
+			toast.error(`Fehler: ${e.message}`);
+		} finally {
+			savingMapping = null;
+		}
+	}
+
 	// Display form errors if any
 	$effect(() => {
 		if (form?.error) {
@@ -380,6 +541,225 @@
 		margin: 1rem auto;
 		max-width: 800px;
 		text-align: center;
+	}
+	.nutrition-generate {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		margin: 1.5rem auto;
+		max-width: 1000px;
+	}
+	.nutrition-result-box {
+		width: 100%;
+		margin-top: 0.5rem;
+		padding: 1rem;
+		border-radius: 6px;
+		background: var(--nord0, #2e3440);
+		color: var(--nord6, #eceff4);
+		font-family: monospace;
+		font-size: 0.85rem;
+		max-height: 400px;
+		overflow-y: auto;
+	}
+	.nutrition-result-summary {
+		margin: 0 0 0.5rem;
+		font-weight: bold;
+	}
+	.nutrition-result-table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+	.nutrition-result-table th,
+	.nutrition-result-table td {
+		text-align: left;
+		padding: 0.3rem 0.6rem;
+		border-bottom: 1px solid var(--nord3, #4c566a);
+	}
+	.nutrition-result-table th {
+		color: var(--nord9, #81a1c1);
+	}
+	.unmapped-row {
+		opacity: 0.7;
+	}
+	.usda-search-cell {
+		position: relative;
+	}
+	.usda-search-input {
+		display: inline !important;
+		width: 100%;
+		padding: 0.2rem 0.4rem !important;
+		margin: 0 !important;
+		border: 1px solid var(--nord3) !important;
+		border-radius: 3px !important;
+		background: var(--nord1, #3b4252) !important;
+		color: inherit !important;
+		font-size: 0.85rem !important;
+		scale: 1 !important;
+	}
+	.usda-search-input:hover,
+	.usda-search-input:focus-visible {
+		scale: 1 !important;
+	}
+	.usda-search-dropdown {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		z-index: 10;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		background: var(--nord1, #3b4252);
+		border: 1px solid var(--nord3);
+		border-radius: 3px;
+		max-height: 200px;
+		overflow-y: auto;
+		min-width: 300px;
+	}
+	.usda-search-dropdown li button {
+		display: block;
+		width: 100%;
+		text-align: left;
+		padding: 0.35rem 0.5rem;
+		border: none;
+		background: none;
+		color: inherit;
+		font-size: 0.8rem;
+		cursor: pointer;
+		font-family: monospace;
+	}
+	.usda-search-dropdown li button:hover {
+		background: var(--nord2, #434c5e);
+	}
+	.usda-cal {
+		color: var(--nord9, #81a1c1);
+		margin-left: 0.5rem;
+		font-size: 0.75rem;
+	}
+	.source-badge {
+		display: inline-block;
+		font-size: 0.6rem;
+		font-weight: 700;
+		padding: 0.1rem 0.3rem;
+		border-radius: 2px;
+		margin-right: 0.3rem;
+		background: var(--nord10, #5e81ac);
+		color: var(--nord6, #eceff4);
+		vertical-align: middle;
+	}
+	.source-badge.bls {
+		background: var(--nord14, #a3be8c);
+		color: var(--nord0, #2e3440);
+	}
+	.source-badge.skip {
+		background: var(--nord11, #bf616a);
+	}
+	.manual-indicator {
+		display: inline-block;
+		font-size: 0.55rem;
+		font-weight: 700;
+		color: var(--nord13, #ebcb8b);
+		margin-left: 0.2rem;
+		vertical-align: super;
+	}
+	.excluded-row {
+		opacity: 0.45;
+	}
+	.excluded-row td {
+		text-decoration: line-through;
+	}
+	.excluded-row td:last-child,
+	.excluded-row td:nth-last-child(2),
+	.excluded-row td:nth-last-child(3) {
+		text-decoration: none;
+	}
+	.manual-row {
+		border-left: 2px solid var(--nord13, #ebcb8b);
+	}
+	.excluded-label {
+		font-style: italic;
+		color: var(--nord11, #bf616a);
+		font-size: 0.8rem;
+	}
+	.de-name {
+		color: var(--nord9, #81a1c1);
+		font-size: 0.75rem;
+	}
+	.current-match {
+		display: block;
+		font-size: 0.8rem;
+		margin-bottom: 0.2rem;
+	}
+	.current-match.manual-match {
+		color: var(--nord13, #ebcb8b);
+	}
+	.usda-search-input.has-match {
+		opacity: 0.5;
+		font-size: 0.75rem !important;
+	}
+	.usda-search-input.has-match:focus {
+		opacity: 1;
+		font-size: 0.85rem !important;
+	}
+	.row-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.25rem;
+	}
+	.global-toggle {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.7rem;
+		color: var(--nord9, #81a1c1);
+		cursor: pointer;
+	}
+	.global-toggle input {
+		display: inline !important;
+		width: auto !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		scale: 1 !important;
+	}
+	.revert-btn {
+		background: none;
+		border: 1px solid var(--nord3, #4c566a);
+		border-radius: 3px;
+		color: var(--nord9, #81a1c1);
+		cursor: pointer;
+		padding: 0.1rem 0.35rem;
+		font-size: 0.65rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+	}
+	.revert-btn:hover {
+		background: var(--nord9, #81a1c1);
+		color: var(--nord0, #2e3440);
+	}
+	.skip-btn {
+		background: none;
+		border: 1px solid var(--nord3, #4c566a);
+		border-radius: 3px;
+		color: var(--nord11, #bf616a);
+		cursor: pointer;
+		padding: 0.15rem 0.4rem;
+		font-size: 0.8rem;
+		line-height: 1;
+	}
+	.skip-btn:hover {
+		background: var(--nord11, #bf616a);
+		color: var(--nord6, #eceff4);
+	}
+	.skip-btn.active {
+		background: var(--nord11, #bf616a);
+		color: var(--nord6, #eceff4);
+	}
+	.skip-btn.active:hover {
+		background: var(--nord14, #a3be8c);
+		color: var(--nord0, #2e3440);
 	}
 </style>
 
@@ -533,6 +913,110 @@
 		<h3>Nachtrag:</h3>
 		<div class="addendum" bind:innerText={addendum} contenteditable></div>
 		<input type="hidden" name="addendum" value={addendum} />
+	</div>
+
+	<!-- Nutrition generation -->
+	<div class="nutrition-generate">
+		<button
+			type="button"
+			class="action_button"
+			onclick={generateNutrition}
+			disabled={generatingNutrition || !short_name.trim()}
+			style="background-color: var(--nord10);"
+		>
+			<p>{generatingNutrition ? 'Generiere…' : 'Nährwerte generieren'}</p>
+		</button>
+		{#if nutritionResult}
+			<div class="nutrition-result-box">
+				<p class="nutrition-result-summary">
+					{nutritionResult.mappings.filter((m) => m.matchMethod !== 'none').length}/{nutritionResult.count} Zutaten zugeordnet
+				</p>
+				<table class="nutrition-result-table">
+					<thead><tr><th>#</th><th>Zutat</th><th>Quelle</th><th>Treffer / Suche</th><th>Konf.</th><th>g/u</th><th></th></tr></thead>
+					<tbody>
+						{#each nutritionResult.mappings as m, i}
+							{@const key = mappingKey(m)}
+							<tr class:unmapped-row={m.matchMethod === 'none' && !m.excluded} class:excluded-row={m.excluded} class:manual-row={m.manuallyEdited && !m.excluded}>
+								<td>{i + 1}</td>
+								<td>
+									{m.ingredientName}
+									{#if m.ingredientNameDe && m.ingredientNameDe !== m.ingredientName}
+										<span class="de-name">({m.ingredientNameDe})</span>
+									{/if}
+								</td>
+								<td>
+									{#if m.excluded}
+										<span class="source-badge skip">SKIP</span>
+									{:else if m.matchMethod !== 'none'}
+										<span class="source-badge" class:bls={m.source === 'bls'}>{(m.source || 'usda').toUpperCase()}</span>
+										{#if m.manuallyEdited}<span class="manual-indicator" title="Manuell zugeordnet">M</span>{/if}
+									{:else}
+										—
+									{/if}
+								</td>
+								<td>
+									<div class="usda-search-cell">
+										{#if m.excluded}
+											<span class="excluded-label">Übersprungen</span>
+										{:else if m.matchMethod !== 'none' && !searchQueries[key]}
+											<span class="current-match" class:manual-match={m.manuallyEdited}>{m.nutritionDbName || '—'}</span>
+										{/if}
+										<input
+											type="text"
+											class="usda-search-input"
+											class:has-match={m.matchMethod !== 'none' && !m.excluded && !searchQueries[key]}
+											placeholder={m.excluded ? 'Suche für neuen Treffer…' : (m.matchMethod !== 'none' ? 'Überschreiben…' : 'BLS/USDA suchen…')}
+											value={searchQueries[key] || ''}
+											oninput={(e) => handleSearchInput(key, e.currentTarget.value)}
+										/>
+										{#if searchResults[key]?.length > 0}
+											<ul class="usda-search-dropdown">
+												{#each searchResults[key] as result}
+													<li>
+														<button
+															type="button"
+															disabled={savingMapping === key}
+															onclick={() => assignNutritionEntry(m, result)}
+														>
+															<span class="source-badge" class:bls={result.source === 'bls'}>{result.source.toUpperCase()}</span>
+															{result.name}
+															<span class="usda-cal">{Math.round(result.calories)} kcal</span>
+														</button>
+													</li>
+												{/each}
+											</ul>
+										{/if}
+										<div class="row-controls">
+											<label class="global-toggle">
+												<input type="checkbox" checked={globalToggle[key] || false} onchange={() => { globalToggle[key] = !globalToggle[key]; }} />
+												global
+											</label>
+											{#if m.manuallyEdited || m.excluded}
+												<button type="button" class="revert-btn" disabled={savingMapping === key} onclick={() => revertToAuto(m)} title="Zurück auf automatisch">auto</button>
+											{/if}
+										</div>
+									</div>
+								</td>
+								<td>{m.matchConfidence ? (m.matchConfidence * 100).toFixed(0) + '%' : '—'}</td>
+								<td>{m.gramsPerUnit || '—'}</td>
+								<td>
+									<button
+										type="button"
+										class="skip-btn"
+										class:active={m.excluded}
+										disabled={savingMapping === key}
+										onclick={() => m.excluded ? revertToAuto(m) : skipIngredient(m)}
+										title={m.excluded ? 'Wieder aktivieren' : 'Überspringen'}
+									>
+										{m.excluded ? '↩' : '✕'}
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	</div>
 
 	{#if !showTranslationWorkflow}
