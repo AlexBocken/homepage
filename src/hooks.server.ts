@@ -56,6 +56,24 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		}
 	}
 
+	// Protect tasks routes and API endpoints
+	if (event.url.pathname.startsWith('/tasks') || event.url.pathname.startsWith('/api/tasks')) {
+		if (!session) {
+			if (event.url.pathname.startsWith('/api/tasks')) {
+				error(401, {
+					message: 'Anmeldung erforderlich.'
+				});
+			}
+			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
+			redirect(303, `/login?callbackUrl=${callbackUrl}`);
+		}
+		else if (!session.user?.groups?.includes('task_users')) {
+			error(403, {
+				message: 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
+			});
+		}
+	}
+
 	// Protect fitness routes and API endpoints
 	if (event.url.pathname.startsWith('/fitness') || event.url.pathname.startsWith('/api/fitness')) {
 		if (!session) {
