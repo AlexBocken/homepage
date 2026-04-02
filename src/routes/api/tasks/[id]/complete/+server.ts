@@ -55,8 +55,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   task.lastCompletedBy = completedFor;
 
   if (task.isRecurring && task.frequency) {
-    // Reset from NOW (completion time), not from the original due date
-    task.nextDueDate = getNextDueDate(now, task.frequency.type, task.frequency.customDays);
+    // 'planned': calculate from the original due date (catches up if overdue)
+    // 'completion' (default): calculate from now
+    const baseDate = task.refreshMode === 'planned' ? task.nextDueDate : now;
+    let next = getNextDueDate(baseDate, task.frequency.type, task.frequency.customDays);
+    // If planned mode produced a date in the past, keep advancing until it's in the future
+    while (task.refreshMode === 'planned' && next <= now) {
+      next = getNextDueDate(next, task.frequency.type, task.frequency.customDays);
+    }
+    task.nextDueDate = next;
   } else {
     // One-off task: deactivate
     task.active = false;
