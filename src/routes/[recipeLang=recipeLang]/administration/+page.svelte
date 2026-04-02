@@ -33,6 +33,14 @@
 				: 'Dominante Farben aus Rezeptbildern für Ladeplatzhalter extrahieren',
 			href: `/${data.recipeLang}/admin/image-colors`,
 			icon: '🎨'
+		},
+		{
+			title: isEnglish ? 'Nutrition Mappings' : 'Nährwert-Zuordnungen',
+			description: isEnglish
+				? 'Generate or regenerate calorie and nutrition data for all recipes'
+				: 'Kalorien- und Nährwertdaten für alle Rezepte generieren oder aktualisieren',
+			href: `/${data.recipeLang}/admin/nutrition`,
+			icon: '🥗'
 		}
 	];
 </script>

@@ -4,6 +4,7 @@ import { onNavigate } from "$app/navigation";
 import { browser } from '$app/environment';
 import { page } from '$app/stores';
 import HefeSwapper from './HefeSwapper.svelte';
+import NutritionSummary from './NutritionSummary.svelte';
 let { data } = $props();
 
 // Helper function to multiply numbers in ingredient amounts
@@ -365,6 +366,44 @@ function adjust_amount(string, multiplier){
 }
 
 
+// Collect section names for nutrition dedup (skip ingredients matching another section's name)
+const nutritionSectionNames = $derived.by(() => {
+	if (!data.ingredients) return new Set();
+	const names = new Set();
+	for (const section of data.ingredients) {
+		if (section.name) {
+			const stripped = section.name.replace(/<[^>]*>/g, '').toLowerCase().trim();
+			if (stripped) names.add(stripped);
+		}
+	}
+	return names;
+});
+
+// Build flat ingredient list with section/ingredient indices for nutrition calculator
+const nutritionFlatIngredients = $derived.by(() => {
+	if (!data.ingredients) return [];
+	/** @type {{ name: string; unit: string; amount: string; sectionIndex: number; ingredientIndex: number; sectionName: string }[]} */
+	const flat = [];
+	for (let si = 0; si < data.ingredients.length; si++) {
+		const section = data.ingredients[si];
+		if (section.type === 'reference') continue;
+		if (!section.list) continue;
+		const sectionName = (section.name || '').replace(/<[^>]*>/g, '').toLowerCase().trim();
+		for (let ii = 0; ii < section.list.length; ii++) {
+			const item = section.list[ii];
+			flat.push({
+				name: item.name,
+				unit: item.unit || '',
+				amount: item.amount || '',
+				sectionIndex: si,
+				ingredientIndex: ii,
+				sectionName,
+			});
+		}
+	}
+	return flat;
+});
+
 // No need for complex yeast toggle handling - everything is calculated server-side now
 </script>
 <style>
@@ -587,5 +626,15 @@ function adjust_amount(string, multiplier){
 </div>
 {/if}
 {/each}
+
+<NutritionSummary
+	flatIngredients={nutritionFlatIngredients}
+	nutritionMappings={data.nutritionMappings}
+	sectionNames={nutritionSectionNames}
+	referencedNutrition={data.referencedNutrition || []}
+	{multiplier}
+	portions={data.portions}
+	isEnglish={isEnglish}
+/>
 </div>
 {/if}

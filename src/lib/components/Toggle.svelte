@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { checked = $bindable(false), label = "", accentColor = "var(--color-primary)", href = undefined as string | undefined } = $props<{ checked?: boolean, label?: string, accentColor?: string, href?: string }>();
+	let { checked = $bindable(false), label = "", accentColor = "var(--color-primary)", href = undefined as string | undefined, onchange = undefined as (() => void) | undefined } = $props<{ checked?: boolean, label?: string, accentColor?: string, href?: string, onchange?: () => void }>();
 </script>
 
 <style>
@@ -96,7 +96,7 @@
 		</a>
 	{:else}
 		<label>
-			<input type="checkbox" bind:checked />
+			<input type="checkbox" bind:checked onchange={onchange} />
 			<span>{label}</span>
 		</label>
 	{/if}

@@ -1,8 +1,10 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { redirect, fail } from "@sveltejs/kit";
 import { Recipe } from '$models/Recipe';
+import { NutritionOverwrite } from '$models/NutritionOverwrite';
 import { dbConnect } from '$utils/db';
 import { invalidateRecipeCaches } from '$lib/server/cache';
+import { invalidateOverwriteCache } from '$lib/server/nutritionMatcher';
 import { IMAGE_DIR } from '$env/static/private';
 import { rename, access, unlink } from 'fs/promises';
 import { join } from 'path';
@@ -207,6 +209,44 @@ export const actions = {
 						errors: ['Recipe not found'],
 						values: Object.fromEntries(formData)
 					});
+				}
+
+				// Save nutrition mappings (deferred from nutrition UI)
+				const nutritionMappingsJson = formData.get('nutritionMappings_json')?.toString();
+				if (nutritionMappingsJson) {
+					try {
+						const mappings = JSON.parse(nutritionMappingsJson);
+						if (mappings.length > 0) {
+							await Recipe.updateOne(
+								{ short_name: recipeData.short_name },
+								{ $set: { nutritionMappings: mappings } }
+							);
+						}
+					} catch (e) {
+						console.error('Failed to save nutrition mappings:', e);
+					}
+				}
+
+				// Save global nutrition overwrites
+				const globalOverwritesJson = formData.get('globalOverwrites_json')?.toString();
+				if (globalOverwritesJson) {
+					try {
+						const overwrites = JSON.parse(globalOverwritesJson);
+						for (const ow of overwrites) {
+							if (ow.ingredientNameDe) {
+								await NutritionOverwrite.findOneAndUpdate(
+									{ ingredientNameDe: ow.ingredientNameDe },
+									ow,
+									{ upsert: true, runValidators: true }
+								);
+							}
+						}
+						if (overwrites.length > 0) {
+							invalidateOverwriteCache();
+						}
+					} catch (e) {
+						console.error('Failed to save global overwrites:', e);
+					}
 				}
 
 				// Invalidate recipe caches after successful update
