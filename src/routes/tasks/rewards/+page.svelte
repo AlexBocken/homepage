@@ -62,6 +62,15 @@
       .slice(0, 20)
   );
 
+  /** @param {string} id */
+  async function deleteCompletion(id) {
+    const res = await fetch(`/api/tasks/completions/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      const statsRes = await fetch('/api/tasks/stats');
+      if (statsRes.ok) stats = await statsRes.json();
+    }
+  }
+
   async function clearHistory() {
     if (!confirm('Deinen gesamten Verlauf und alle Sticker wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return;
     const res = await fetch('/api/tasks/stats', { method: 'DELETE' });
@@ -135,6 +144,11 @@
                   {completion.completedBy} &middot; {formatDistanceToNow(new Date(completion.completedAt), { locale: de, addSuffix: true })}
                 </span>
               </div>
+              {#if completion.completedBy === currentUser}
+                <button class="btn-delete-completion" title="Eintrag löschen" onclick={() => deleteCompletion(completion._id)}>
+                  <Trash2 size={14} />
+                </button>
+              {/if}
             </div>
           {/if}
         {/each}
@@ -305,6 +319,27 @@
     background: var(--color-bg-primary, white);
     border: 1px solid var(--color-border, #e8e4dd);
     border-radius: 10px;
+  }
+  .btn-delete-completion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-left: auto;
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary, #ccc);
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 150ms;
+  }
+  .recent-item:hover .btn-delete-completion { opacity: 1; }
+  .btn-delete-completion:hover {
+    color: var(--nord11);
+    background: rgba(191, 97, 106, 0.08);
   }
   .recent-img {
     width: 36px;
