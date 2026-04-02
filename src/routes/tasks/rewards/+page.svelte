@@ -25,17 +25,8 @@
     common: 3
   });
 
-  let debugShowAll = $state(false);
-
   // Build current user's sticker collection
   let displayedStickers = $derived.by(() => {
-    if (debugShowAll) {
-      /** @type {Map<string, number>} */
-      const all = new Map();
-      for (let i = 0; i < STICKERS.length; i++) all.set(STICKERS[i].id, (i % 5) + 1);
-      return all;
-    }
-
     /** @type {Map<string, number>} */
     const collection = new Map();
     for (const entry of stats.userStickers) {
@@ -80,9 +71,6 @@
       <div class="progress-fill" style="width: {(collectedCount / totalCount) * 100}%"></div>
     </div>
 
-    <button class="debug-btn" onclick={() => debugShowAll = !debugShowAll}>
-      {debugShowAll ? '🐛 Debug an' : '🐛 Debug'}
-    </button>
   </header>
 
   <StickerCalendar completions={stats.recentCompletions} {currentUser} />
@@ -350,22 +338,6 @@
   :global(:root[data-theme="dark"]) .progress-bar {
     background: var(--nord2);
   }
-
-  .debug-btn {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    padding: 0.35rem 0.7rem;
-    font-size: 0.72rem;
-    background: var(--nord1);
-    color: var(--nord4);
-    border: 1px solid var(--nord2);
-    border-radius: 6px;
-    cursor: pointer;
-    opacity: 0.5;
-    z-index: 50;
-  }
-  .debug-btn:hover { opacity: 1; }
 
   @media (max-width: 600px) {
     .sticker-grid {
