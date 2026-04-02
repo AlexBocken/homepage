@@ -14,7 +14,6 @@
 		onapproved?: (event: CustomEvent) => void;
 		onskipped?: () => void;
 		oncancelled?: () => void;
-		onforceFullRetranslation?: () => void;
 	}
 
 	let {
@@ -26,7 +25,6 @@
 		onapproved,
 		onskipped,
 		oncancelled,
-		onforceFullRetranslation
 	}: Props = $props();
 
 	type TranslationState = 'idle' | 'translating' | 'preview' | 'approved' | 'error';
@@ -204,7 +202,7 @@
 	});
 
 	// Handle auto-translate button click
-	async function handleAutoTranslate() {
+	async function handleAutoTranslate(fullRetranslation = false) {
 		translationState = 'translating';
 		errorMessage = '';
 		validationErrors = [];
@@ -217,7 +215,7 @@
 				},
 				body: JSON.stringify({
 					recipe: germanData,
-					fields: isEditMode && changedFields.length > 0 ? changedFields : undefined,
+					fields: isEditMode && !fullRetranslation && changedFields.length > 0 ? changedFields : undefined,
 					oldRecipe: oldRecipeData, // For granular item-level change detection
 					existingTranslation: englishData, // To merge with unchanged items
 				}),
@@ -356,11 +354,6 @@
 			images: initializeImagesArray(germanData.images || [])
 		};
 		oncancelled?.();
-	}
-
-	// Handle force full retranslation
-	function handleForceFullRetranslation() {
-		onforceFullRetranslation?.();
 	}
 
 	// Get status badge color
@@ -921,10 +914,10 @@ button:disabled {
 				<button class="btn-danger" onclick={handleCancel}>
 					Cancel
 				</button>
-				<button class="btn-secondary" onclick={handleForceFullRetranslation}>
+				<button class="btn-secondary" onclick={() => handleAutoTranslate(true)}>
 					Vollständig neu übersetzen
 				</button>
-				<button class="btn-secondary" onclick={handleAutoTranslate}>
+				<button class="btn-secondary" onclick={() => handleAutoTranslate()}>
 					Re-translate
 				</button>
 				<button class="btn-primary" onclick={handleApprove}>
