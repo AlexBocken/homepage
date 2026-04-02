@@ -4,7 +4,7 @@ import { dbConnect } from '$utils/db';
 import { isEnglish } from '$lib/server/recipeHelpers';
 import { generateNutritionMappings } from '$lib/server/nutritionMatcher';
 
-export const POST: RequestHandler = async ({ params, locals }) => {
+export const POST: RequestHandler = async ({ params, locals, url }) => {
 	await locals.auth();
 	await dbConnect();
 
@@ -19,6 +19,14 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 	const ingredients = recipe.ingredients || [];
 	const translatedIngredients = recipe.translations?.en?.ingredients;
 
+	const newMappings = await generateNutritionMappings(ingredients, translatedIngredients);
+	const preview = url.searchParams.get('preview') === 'true';
+
+	// In preview mode, return pure auto-matches without saving (client merges manual edits)
+	if (preview) {
+		return json({ mappings: newMappings, count: newMappings.length });
+	}
+
 	// Preserve manually edited mappings
 	const existingMappings = recipe.nutritionMappings || [];
 	const manualMappings = new Map(
@@ -26,8 +34,6 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 			.filter((m: any) => m.manuallyEdited)
 			.map((m: any) => [`${m.sectionIndex}-${m.ingredientIndex}`, m])
 	);
-
-	const newMappings = await generateNutritionMappings(ingredients, translatedIngredients);
 
 	// Merge: keep manual edits, use new auto-matches for the rest
 	const finalMappings = newMappings.map(m => {
