@@ -4,6 +4,7 @@
   import { de } from 'date-fns/locale';
   import { scale } from 'svelte/transition';
   import { flip } from 'svelte/animate';
+  import { Trash2 } from 'lucide-svelte';
   import StickerCalendar from '$lib/components/tasks/StickerCalendar.svelte';
 
   let { data } = $props();
@@ -60,6 +61,15 @@
       .filter((/** @type {any} */ c) => !currentUser || c.completedBy === currentUser)
       .slice(0, 20)
   );
+
+  async function clearHistory() {
+    if (!confirm('Deinen gesamten Verlauf und alle Sticker wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return;
+    const res = await fetch('/api/tasks/stats', { method: 'DELETE' });
+    if (res.ok) {
+      const [statsRes] = await Promise.all([fetch('/api/tasks/stats')]);
+      if (statsRes.ok) stats = await statsRes.json();
+    }
+  }
 </script>
 
 <div class="rewards-page">
@@ -131,6 +141,13 @@
       </div>
     </section>
   {/if}
+
+  <div class="danger-zone">
+    <button class="btn-clear" onclick={clearHistory}>
+      <Trash2 size={14} />
+      Verlauf löschen
+    </button>
+  </div>
 </div>
 
 <style>
@@ -337,6 +354,32 @@
   }
   :global(:root[data-theme="dark"]) .progress-bar {
     background: var(--nord2);
+  }
+
+  .danger-zone {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border, #e8e4dd);
+    display: flex;
+    justify-content: center;
+  }
+  .btn-clear {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1rem;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary, #999);
+    background: transparent;
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .btn-clear:hover {
+    color: var(--nord11);
+    border-color: var(--nord11);
+    background: rgba(191, 97, 106, 0.06);
   }
 
   @media (max-width: 600px) {

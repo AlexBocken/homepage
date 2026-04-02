@@ -30,3 +30,14 @@ export const GET: RequestHandler = async ({ locals }) => {
 
   return json({ userStats, userStickers, recentCompletions });
 };
+
+export const DELETE: RequestHandler = async ({ locals }) => {
+  const auth = await locals.auth();
+  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+
+  await dbConnect();
+
+  const { deletedCount } = await TaskCompletion.deleteMany({ completedBy: auth.user.nickname });
+
+  return json({ deletedCount });
+};
