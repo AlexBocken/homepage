@@ -14,10 +14,10 @@
     canRemoveUsers?: boolean,
     newUser?: string
   }>();
-  
+
   function addUser() {
     if (predefinedMode) return;
-    
+
     if (newUser.trim() && !users.includes(newUser.trim())) {
       users = [...users, newUser.trim()];
       newUser = '';
@@ -36,7 +36,7 @@
 
 <div class="form-section">
   <h2>Split Between Users</h2>
-  
+
   {#if predefinedMode}
     <div class="predefined-users">
       <p class="predefined-note">Splitting between predefined users:</p>
@@ -84,37 +84,19 @@
 
 <style>
   .form-section {
-    background: var(--nord6);
+    background: var(--color-surface);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .form-section h2 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .form-section {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .form-section h2 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .form-section {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .form-section h2 {
-	color: var(--font-default-dark);
-}
 
   .users-list {
     display: flex;
@@ -127,22 +109,11 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     padding: 0.5rem 0.75rem;
     border-radius: 1rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .user-item {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .user-item {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
 
   .user-item.with-profile {
     gap: 0.75rem;
@@ -150,17 +121,8 @@
 
   .user-item .username {
     font-weight: 500;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .user-item .username {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .user-item .username {
-	color: var(--font-default-dark);
-}
 
   .you-badge {
     background-color: var(--blue);
@@ -172,38 +134,18 @@
   }
 
   .predefined-users {
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     padding: 1rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .predefined-users {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .predefined-users {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
 
   .predefined-note {
     margin: 0 0 1rem 0;
-    color: var(--nord2);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     font-style: italic;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .predefined-note {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .predefined-note {
-	color: var(--nord4);
-}
 
   .remove-user {
     background-color: var(--red);
@@ -229,11 +171,11 @@
   .add-user input {
     flex: 1;
     padding: 0.75rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     font-size: 1rem;
-    background-color: var(--nord6);
-    color: var(--nord0);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
     box-sizing: border-box;
   }
 
@@ -242,19 +184,6 @@
     border-color: var(--blue);
     box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .add-user input {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .add-user input {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
 
   .add-user button {
     background-color: var(--blue);

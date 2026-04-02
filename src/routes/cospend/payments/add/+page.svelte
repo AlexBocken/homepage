@@ -9,6 +9,8 @@
   import SplitMethodSelector from '$lib/components/cospend/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/cospend/UsersList.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
+  import SaveFab from '$lib/components/SaveFab.svelte';
+  import Toggle from '$lib/components/Toggle.svelte';
 
   let { data, form } = $props();
 
@@ -465,13 +467,9 @@
 
       <div class="form-group">
         <label class="checkbox-label">
-          <input 
-            type="checkbox" 
-            name="isRecurring" 
-            bind:checked={formData.isRecurring}
-            value="true"
-          />
-          Make this a recurring payment
+          <Toggle bind:checked={formData.isRecurring} />
+          <span>Make this a recurring payment</span>
+          <input type="hidden" name="isRecurring" value={formData.isRecurring ? 'true' : 'false'} />
         </label>
       </div>
     </div>
@@ -612,14 +610,7 @@
       <div class="error">{error}</div>
     {/if}
 
-    <div class="form-actions">
-      <a href="/cospend" class="btn-secondary">
-        Cancel
-      </a>
-      <button type="submit" class="btn-primary" disabled={loading}>
-        {loading ? 'Creating...' : (formData.isRecurring ? 'Create Recurring Payment' : 'Create Payment')}
-      </button>
-    </div>
+    <SaveFab disabled={loading} label="Create payment" />
   </form>
 </main>
 
@@ -637,31 +628,15 @@
 
   .header h1 {
     margin: 0 0 0.5rem 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 2rem;
   }
 
   .header p {
     margin: 0;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .header h1 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .header p {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .header h1 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .header p {
-	color: var(--nord4);
-}
 
   .payment-form {
     display: flex;
@@ -670,37 +645,19 @@
   }
 
   .form-section {
-    background: var(--nord6);
+    background: var(--color-surface);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .form-section h2 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .form-section {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .form-section h2 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .form-section {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .form-section h2 {
-	color: var(--font-default-dark);
-}
 
   .form-group {
     margin-bottom: 1rem;
@@ -716,27 +673,18 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: var(--nord2);
+    color: var(--color-text-secondary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) label {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) label {
-	color: var(--nord5);
-}
 
   input, textarea, select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     font-size: 1rem;
     box-sizing: border-box;
-    background-color: var(--nord6);
-    color: var(--nord0);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
   }
 
   input:focus, textarea:focus, select:focus {
@@ -745,110 +693,18 @@
     box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) input,
-:global(:root:not([data-theme="light"])) textarea,
-:global(:root:not([data-theme="light"])) select {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) input,
-:global(:root[data-theme="dark"]) textarea,
-:global(:root[data-theme="dark"]) select {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-
 
 
 
 
   .error {
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     color: var(--red);
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
     border: 1px solid var(--red);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
-
-  .form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-  }
-
-  .btn-primary, .btn-secondary {
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--blue);
-    color: white;
-    border: none;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: var(--nord10);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .btn-secondary {
-    background-color: var(--nord5);
-    color: var(--nord0);
-    border: 1px solid var(--nord4);
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--nord4);
-    text-decoration: none;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .btn-secondary {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
-      background-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .btn-secondary {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .btn-secondary:hover {
-	background-color: var(--nord3);
-}
-
 
   /* Progressive enhancement styles */
   .no-js-only {
@@ -862,7 +718,7 @@
   .manual-users textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     font-family: inherit;
     font-size: 0.9rem;
@@ -872,90 +728,45 @@
   .manual-users p {
     margin: 0 0 0.5rem 0;
     font-size: 0.9rem;
-    color: var(--nord2);
+    color: var(--color-text-secondary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .manual-users p {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .manual-users p {
-	color: var(--nord4);
-}
 
   /* Recurring payment styles */
   .checkbox-label {
     display: flex !important;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     cursor: pointer;
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: auto;
-    margin: 0;
   }
 
   .recurring-options {
     margin-top: 1rem;
     padding: 1rem;
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .recurring-options {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .recurring-options {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
 
   .help-text {
     display: block;
     margin-top: 0.25rem;
     font-size: 0.8rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-style: italic;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .help-text {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .help-text {
-	color: var(--nord4);
-}
 
   .help-text p {
     margin: 0.5rem 0 0.25rem 0;
   }
 
   .help-text code {
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     padding: 0.125rem 0.25rem;
     border-radius: 0.25rem;
     font-family: monospace;
     font-size: 0.85em;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .help-text code {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .help-text code {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
 
   .help-text ul {
     margin: 0.5rem 0;
@@ -979,7 +790,7 @@
   }
 
   .execution-preview {
-    background-color: var(--nord8);
+    background-color: var(--color-bg-tertiary);
     border: 1px solid var(--blue);
     border-radius: 0.5rem;
     padding: 1rem;
@@ -1000,27 +811,11 @@
   }
 
   .frequency-description {
-    color: var(--nord2);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin: 0;
     font-style: italic;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .execution-preview {
-      background-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .frequency-description {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .execution-preview {
-	background-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .frequency-description {
-	color: var(--nord4);
-}
 
   /* Amount-currency styling */
   .amount-currency {
@@ -1050,52 +845,27 @@
   }
 
   .conversion-preview.loading {
-    background-color: var(--nord8);
+    background-color: var(--color-bg-tertiary);
     border-color: var(--blue);
     color: var(--blue);
   }
 
   .conversion-preview.error {
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-color: var(--red);
     color: var(--red);
   }
 
   .conversion-preview.success {
-    background-color: var(--nord14);
+    background-color: var(--color-bg-tertiary);
     border-color: var(--green);
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .conversion-preview small {
     font-size: 0.85rem;
     font-weight: 500;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .conversion-preview.loading {
-      background-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .conversion-preview.error {
-      background-color: var(--accent-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .conversion-preview.success {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .conversion-preview.loading {
-	background-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .conversion-preview.error {
-	background-color: var(--accent-dark);
-}
-:global(:root[data-theme="dark"]) .conversion-preview.success {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-}
 
   @media (max-width: 600px) {
     .add-payment {
@@ -1104,10 +874,6 @@
 
     .form-row {
       grid-template-columns: 1fr;
-    }
-
-    .form-actions {
-      flex-direction: column;
     }
 
     .amount-currency {
@@ -1119,4 +885,5 @@
       flex: none;
     }
   }
+
 </style>

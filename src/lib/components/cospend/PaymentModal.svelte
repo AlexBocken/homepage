@@ -255,7 +255,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--nord6);
+    background: var(--color-bg-secondary);
   }
 
   .panel-header {
@@ -263,14 +263,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem;
-    border-bottom: 1px solid var(--nord4);
-    background: var(--nord5);
+    background: var(--color-bg-tertiary);
     flex-shrink: 0;
   }
 
   .panel-header h2 {
     margin: 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
 
@@ -280,13 +279,13 @@
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 0.25rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     transition: all 0.2s;
   }
 
   .close-button:hover {
-    background: var(--nord4);
-    color: var(--nord0);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
   }
 
   .panel-body {
@@ -303,7 +302,7 @@
 
   .error {
     color: var(--red);
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-radius: 0.5rem;
     border: 1px solid var(--red);
   }
@@ -318,8 +317,7 @@
     justify-content: space-between;
     align-items: flex-start;
     padding: 1.5rem;
-    background: linear-gradient(135deg, var(--nord5), var(--nord4));
-    border-bottom: 1px solid var(--nord3);
+    background: var(--color-bg-tertiary);
   }
 
   .title-with-category {
@@ -336,7 +334,7 @@
 
   .title-section h1 {
     margin: 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.5rem;
   }
 
@@ -356,7 +354,7 @@
     max-height: 100px;
     object-fit: cover;
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .payment-info {
@@ -378,43 +376,41 @@
 
   .label {
     font-weight: 600;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
   .value {
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 0.95rem;
   }
 
   .description {
-    border-top: 1px solid var(--nord4);
     padding-top: 1.5rem;
   }
 
   .description h3 {
     margin: 0 0 0.75rem 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1rem;
   }
 
   .description p {
     margin: 0;
-    color: var(--nord2);
+    color: var(--color-text-tertiary);
     line-height: 1.5;
     font-size: 0.95rem;
   }
 
   .splits-section {
-    border-top: 1px solid var(--nord4);
     padding: 1.5rem;
   }
 
   .splits-section h3 {
     margin: 0 0 1rem 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1rem;
   }
 
@@ -429,14 +425,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
-    background: var(--nord5);
+    background: var(--color-bg-primary);
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
   }
 
   .split-item.current-user {
-    background: var(--nord8);
-    border-color: var(--blue);
+    background: var(--color-bg-tertiary);
   }
 
   .split-user {
@@ -453,7 +447,7 @@
 
   .username {
     font-weight: 500;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 0.95rem;
   }
 
@@ -481,8 +475,7 @@
 
   .panel-actions {
     padding: 1.5rem;
-    border-top: 1px solid var(--nord4);
-    background: var(--nord5);
+    background: var(--color-bg-tertiary);
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
@@ -495,189 +488,18 @@
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s;
-    border: none;
     text-decoration: none;
     display: inline-block;
     text-align: center;
-    background-color: var(--nord5);
-    color: var(--nord0);
-    border: 1px solid var(--nord4);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
   }
 
   .btn-secondary:hover {
-    background-color: var(--nord4);
+    background-color: var(--color-bg-elevated);
     transform: translateY(-1px);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .panel-content {
-      background: var(--nord1);
-    }
-
-    :global(:root:not([data-theme="light"])) .panel-header {
-      background: var(--nord2);
-      border-bottom-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .panel-header h2 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .close-button {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .close-button:hover {
-      background: var(--nord3);
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .payment-header {
-      background: linear-gradient(135deg, var(--nord2), var(--nord3));
-    }
-
-    :global(:root:not([data-theme="light"])) .title-section h1 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .receipt-image img {
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .label {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .value {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .description {
-      border-top-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .description h3 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .description p {
-      color: var(--nord5);
-    }
-
-    :global(:root:not([data-theme="light"])) .splits-section {
-      border-top-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .splits-section h3 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .split-item {
-      background: var(--nord2);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .split-item.current-user {
-      background: var(--nord3);
-      border-color: var(--blue);
-    }
-
-    :global(:root:not([data-theme="light"])) .username {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .panel-actions {
-      background: var(--nord2);
-      border-top-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
-      background-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .panel-content {
-	background: var(--nord1);
-}
-:global(:root[data-theme="dark"]) .panel-header {
-	background: var(--nord2);
-      border-bottom-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .panel-header h2 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .close-button {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .close-button:hover {
-	background: var(--nord3);
-      color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
-:global(:root[data-theme="dark"]) .payment-header {
-	background: linear-gradient(135deg, var(--nord2), var(--nord3));
-}
-:global(:root[data-theme="dark"]) .title-section h1 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .receipt-image img {
-	border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .label {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .value {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .description {
-	border-top-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .description h3 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .description p {
-	color: var(--nord5);
-}
-:global(:root[data-theme="dark"]) .splits-section {
-	border-top-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .splits-section h3 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .split-item {
-	background: var(--nord2);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .split-item.current-user {
-	background: var(--nord3);
-      border-color: var(--blue);
-}
-:global(:root[data-theme="dark"]) .username {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .panel-actions {
-	background: var(--nord2);
-      border-top-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .btn-secondary {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .btn-secondary:hover {
-	background-color: var(--nord3);
-}
 
   @media (max-width: 768px) {
     .panel-content {

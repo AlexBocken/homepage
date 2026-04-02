@@ -289,22 +289,12 @@
     padding: 1rem;
   }
 
-
    h1 {
     margin-block: 0 1rem;
     margin-inline: auto;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     text-align: center;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) h1 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) h1 {
-	color: var(--font-default-dark);
-}
 
   .btn {
     padding: 0.75rem 1.5rem;
@@ -328,34 +318,14 @@
   }
 
   .btn-secondary {
-    background-color: var(--nord5);
-    color: var(--nord0);
-    border: 1px solid var(--nord4);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
   }
 
   .btn-secondary:hover {
-    background-color: var(--nord4);
+    background-color: var(--color-bg-elevated);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .btn-secondary {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
-      background-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .btn-secondary {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .btn-secondary:hover {
-	background-color: var(--nord3);
-}
 
   .loading, .error {
     text-align: center;
@@ -365,19 +335,10 @@
 
   .error {
     color: var(--red);
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-radius: 0.5rem;
     border: 1px solid var(--red);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
 
   .empty-state {
     text-align: center;
@@ -385,42 +346,19 @@
   }
 
   .empty-content svg {
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     margin-bottom: 1rem;
   }
 
   .empty-content h2 {
     margin: 0 0 0.5rem 0;
-    color: var(--nord1);
+    color: var(--color-text-primary);
   }
 
   .empty-content p {
     margin: 0 0 2rem 0;
-    color: var(--nord2);
+    color: var(--color-text-secondary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .empty-content svg {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .empty-content h2 {
-      color: var(--nord5);
-    }
-
-    :global(:root:not([data-theme="light"])) .empty-content p {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .empty-content svg {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .empty-content h2 {
-	color: var(--nord5);
-}
-:global(:root[data-theme="dark"]) .empty-content p {
-	color: var(--nord4);
-}
 
   .payments-grid {
     display: grid;
@@ -431,14 +369,14 @@
 
   .payment-card {
     display: block;
-    background: var(--nord6);
+    background: var(--color-surface);
     border-radius: 0.75rem;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.2s;
     text-decoration: none;
     color: inherit;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .payment-card:hover {
@@ -446,26 +384,7 @@
     text-decoration: none;
     color: inherit;
     transform: translateY(-1px);
-    border-color: var(--nord3);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-card {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .payment-card:hover {
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-card {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .payment-card:hover {
-	border-color: var(--nord3);
-}
 
   /* Settlement Card Styles */
   .settlement-card {
@@ -494,17 +413,10 @@
     :global(:root:not([data-theme="light"])) .settlement-card {
       background: linear-gradient(135deg, #1a2e1a, #1e2b1e);
     }
-
-    :global(:root:not([data-theme="light"])) .settlement-card:hover {
-      box-shadow: 0 6px 20px rgba(163, 190, 140, 0.3);
-    }
   }
-:global(:root[data-theme="dark"]) .settlement-card {
-	background: linear-gradient(135deg, #1a2e1a, #1e2b1e);
-}
-:global(:root[data-theme="dark"]) .settlement-card:hover {
-	box-shadow: 0 6px 20px rgba(163, 190, 140, 0.3);
-}
+  :global(:root[data-theme="dark"]) .settlement-card {
+    background: linear-gradient(135deg, #1a2e1a, #1e2b1e);
+  }
 
   .settlement-header {
     display: flex;
@@ -531,19 +443,10 @@
   }
 
   .settlement-date {
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     font-weight: 500;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .settlement-date {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .settlement-date {
-	color: var(--nord4);
-}
 
   .settlement-flow {
     display: flex;
@@ -594,24 +497,13 @@
   }
 
   .settlement-description {
-    color: var(--nord2);
+    color: var(--color-text-tertiary);
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--nord4);
+    border-top: 1px solid var(--color-border);
     font-style: italic;
     font-size: 0.9rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .settlement-description {
-      color: var(--nord5);
-      border-top-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .settlement-description {
-	color: var(--nord5);
-      border-top-color: var(--nord3);
-}
 
   .payment-header {
     display: flex;
@@ -641,29 +533,20 @@
 
   .payment-title h3 {
     margin: 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-title h3 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-title h3 {
-	color: var(--font-default-dark);
-}
 
   .payment-meta {
     display: flex;
     gap: 1rem;
     font-size: 0.9rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     flex-wrap: wrap;
   }
 
   .payment-meta .category-name {
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-style: italic;
     font-size: 0.8rem;
   }
@@ -673,53 +556,19 @@
     color: var(--blue);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-meta {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .payment-meta .category-name {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-meta {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .payment-meta .category-name {
-	color: var(--nord4);
-}
-
   .receipt-thumb {
     width: 60px;
     height: 60px;
     object-fit: cover;
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .receipt-thumb {
-      border-color: var(--nord2);
-    }
-  }
-:global(:root[data-theme="dark"]) .receipt-thumb {
-	border-color: var(--nord2);
-}
 
   .payment-description {
-    color: var(--nord2);
+    color: var(--color-text-tertiary);
     margin-bottom: 1rem;
     font-style: italic;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-description {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-description {
-	color: var(--nord5);
-}
 
   .payment-details {
     margin-bottom: 1rem;
@@ -732,57 +581,25 @@
   }
 
   .detail-row .label {
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-weight: 500;
   }
 
   .detail-row .value {
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .detail-row .label {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .detail-row .value {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .detail-row .label {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .detail-row .value {
-	color: var(--font-default-dark);
-}
 
   .splits-summary {
-    border-top: 1px solid var(--nord4);
+    border-top: 1px solid var(--color-border);
     padding-top: 1rem;
     margin-bottom: 1rem;
   }
 
   .splits-summary h4 {
     margin: 0 0 0.75rem 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .splits-summary {
-      border-top-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .splits-summary h4 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .splits-summary {
-	border-top-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .splits-summary h4 {
-	color: var(--font-default-dark);
-}
 
   .splits-list {
     display: flex;
@@ -797,7 +614,7 @@
   }
 
   .split-user {
-    color: var(--nord2);
+    color: var(--color-text-tertiary);
   }
 
   .split-amount.positive {
@@ -809,16 +626,6 @@
     color: var(--red);
     font-weight: 500;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-user {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-user {
-	color: var(--nord5);
-}
-
 
   .pagination {
     display: flex;

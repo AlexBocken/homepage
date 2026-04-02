@@ -216,37 +216,19 @@
 
 <style>
   .form-section {
-    background: var(--nord6);
+    background: var(--color-surface);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .form-section h2 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .form-section {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .form-section h2 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .form-section {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .form-section h2 {
-	color: var(--font-default-dark);
-}
 
   .form-group {
     margin-bottom: 1rem;
@@ -256,27 +238,18 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: var(--nord2);
+    color: var(--color-text-secondary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) label {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) label {
-	color: var(--nord5);
-}
 
   select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     font-size: 1rem;
     box-sizing: border-box;
-    background-color: var(--nord6);
-    color: var(--nord0);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
   }
 
   select:focus {
@@ -285,74 +258,30 @@
     box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) select {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) select {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-
   .proportional-splits, .personal-splits {
     margin-top: 1rem;
   }
 
   .proportional-splits {
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     padding: 1rem;
     margin-bottom: 1rem;
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .proportional-splits {
-      border-color: var(--nord3);
-      background-color: var(--nord2);
-    }
-  }
-:global(:root[data-theme="dark"]) .proportional-splits {
-	border-color: var(--nord3);
-      background-color: var(--nord2);
-}
 
   .proportional-splits h3, .personal-splits h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .proportional-splits h3,
-:global(:root:not([data-theme="light"])) .personal-splits h3 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .proportional-splits h3,
-:global(:root[data-theme="dark"]) .personal-splits h3 {
-	color: var(--font-default-dark);
-}
 
   .personal-splits .description {
-    color: var(--nord2);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin-bottom: 1rem;
     font-style: italic;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .personal-splits .description {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .personal-splits .description {
-	color: var(--nord4);
-}
 
   .split-input {
     display: flex;
@@ -369,11 +298,11 @@
   .split-input input {
     max-width: 120px;
     padding: 0.75rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     font-size: 1rem;
-    background-color: var(--nord6);
-    color: var(--nord0);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
     box-sizing: border-box;
   }
 
@@ -383,51 +312,18 @@
     box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-input input {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-input input {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-
   .remainder-info {
     margin-top: 1rem;
     padding: 1rem;
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .remainder-info.error {
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-color: var(--red);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .remainder-info {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .remainder-info.error {
-      background-color: var(--accent-dark);
-      border-color: var(--red);
-    }
-  }
-:global(:root[data-theme="dark"]) .remainder-info {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .remainder-info.error {
-	background-color: var(--accent-dark);
-      border-color: var(--red);
-}
 
   .remainder-info span {
     display: block;
@@ -443,37 +339,17 @@
   }
 
   .split-preview {
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     padding: 1rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-preview {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-preview {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
 
   .split-preview h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-preview h3 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-preview h3 {
-	color: var(--font-default-dark);
-}
 
   .split-item {
     display: flex;
@@ -489,17 +365,8 @@
   }
 
   .username {
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .username {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .username {
-	color: var(--font-default-dark);
-}
 
   .amount.positive {
     color: var(--green);
