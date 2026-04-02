@@ -7,6 +7,7 @@ export interface ITask {
   assignees: string[];
   tags: string[];
   difficulty?: 'low' | 'medium' | 'high';
+  refreshMode?: 'completion' | 'planned';
   isRecurring: boolean;
   frequency?: {
     type: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
@@ -44,6 +45,11 @@ const TaskSchema = new mongoose.Schema(
     difficulty: {
       type: String,
       enum: ['low', 'medium', 'high']
+    },
+    refreshMode: {
+      type: String,
+      enum: ['completion', 'planned'],
+      default: 'completion'
     },
     isRecurring: {
       type: Boolean,

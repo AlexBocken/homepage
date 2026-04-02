@@ -21,7 +21,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   const data = await request.json();
-  const { title, description, assignees, tags, difficulty, isRecurring, frequency, nextDueDate } = data;
+  const { title, description, assignees, tags, difficulty, refreshMode, isRecurring, frequency, nextDueDate } = data;
 
   if (!title?.trim()) throw error(400, 'Title is required');
   if (!nextDueDate) throw error(400, 'Due date is required');
@@ -35,6 +35,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     assignees: assignees || [],
     tags: tags || [],
     difficulty: difficulty || undefined,
+    refreshMode: isRecurring ? (refreshMode || 'completion') : undefined,
     isRecurring: !!isRecurring,
     frequency: isRecurring ? frequency : undefined,
     nextDueDate: new Date(nextDueDate),
