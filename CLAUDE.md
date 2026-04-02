@@ -17,6 +17,14 @@ After calling the list-sections tool, you MUST analyze the returned documentatio
 Analyzes Svelte code and returns issues and suggestions.
 You MUST use this tool whenever writing Svelte code before sending it to the user. Keep calling it until no issues or suggestions are returned.
 
+## Common Svelte 5 Pitfalls
+
+### `{@const}` placement
+`{@const}` can ONLY be the immediate child of `{#snippet}`, `{#if}`, `{:else if}`, `{:else}`, `{#each}`, `{:then}`, `{:catch}`, `<svelte:fragment>`, `<svelte:boundary>` or `<Component>`. It CANNOT be used directly inside regular HTML elements like `<div>`, `<header>`, etc. Use `$derived` in the `<script>` block instead.
+
+### Event modifiers removed
+Svelte 5 removed event modifiers like `on:click|preventDefault`. Use inline handlers instead: `onclick={e => { e.preventDefault(); handler(); }}`.
+
 ### 4. playground-link
 
 Generates a Svelte Playground link with the provided code.
