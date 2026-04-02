@@ -20,6 +20,13 @@
   // Register Chart.js components
   Chart.register(...registerables);
 
+  function isDark() {
+    const theme = document.documentElement.getAttribute('data-theme');
+    if (theme === 'dark') return true;
+    if (theme === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
   // Nord theme colors for categories
   const nordColors = [
     '#5E81AC', // Nord Blue
@@ -82,6 +89,12 @@
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const dark = isDark();
+    const textColor = dark ? '#D8DEE9' : '#2E3440';
+    const tooltipBg = dark ? '#2E3440' : '#ECEFF4';
+    const tooltipText = dark ? '#ECEFF4' : '#2E3440';
+    const tooltipBody = dark ? '#D8DEE9' : '#3B4252';
+
     // Convert $state proxy to plain arrays to avoid Chart.js property descriptor issues
     const plainLabels = [...(data.labels || [])];
     const plainDatasets = (data.datasets || []).map((/** @type {{ label: string, data: number[] }} */ ds) => ({
@@ -123,7 +136,7 @@
               display: false
             },
             ticks: {
-              color: '#ffffff',
+              color: textColor,
               font: {
                 family: 'Inter, system-ui, sans-serif',
                 size: 14,
@@ -157,7 +170,7 @@
             labels: {
               padding: 20,
               usePointStyle: true,
-              color: '#ffffff',
+              color: textColor,
               font: {
                 family: 'Inter, system-ui, sans-serif',
                 size: 14,
@@ -194,7 +207,7 @@
           title: {
             display: !!title,
             text: title,
-            color: '#ffffff',
+            color: textColor,
             font: {
               family: 'Inter, system-ui, sans-serif',
               size: 18,
@@ -203,9 +216,9 @@
             padding: 20
           },
           tooltip: {
-            backgroundColor: '#2e3440',
-            titleColor: '#ffffff',
-            bodyColor: '#ffffff',
+            backgroundColor: tooltipBg,
+            titleColor: tooltipText,
+            bodyColor: tooltipBody,
             borderWidth: 0,
             cornerRadius: 12,
             padding: 12,
@@ -275,7 +288,7 @@
 
           ctx.save();
           ctx.font = 'bold 14px Inter, system-ui, sans-serif';
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = isDark() ? '#D8DEE9' : '#2E3440';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
 
@@ -367,23 +380,11 @@
 
 <style>
   .chart-container {
-    background: var(--nord6);
-    border-radius: 0.75rem;
+    background: var(--color-surface);
+    border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .chart-container {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-  }
-:global(:root[data-theme="dark"]) .chart-container {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
 
   @media (max-width: 600px) {
     .chart-container {

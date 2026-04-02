@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import type { ActionData, PageData } from './$types';
-	import Check from '$lib/assets/icons/Check.svelte';
+	import SaveFab from '$lib/components/SaveFab.svelte';
 	import Cross from '$lib/assets/icons/Cross.svelte';
 	import SeasonSelect from '$lib/components/recipes/SeasonSelect.svelte';
 	import TranslationApproval from '$lib/components/recipes/TranslationApproval.svelte';
@@ -478,34 +478,6 @@
 		animation: unset !important;
 		font-size: 1.3rem;
 		color: white;
-	}
-	.fab-save {
-		position: fixed;
-		bottom: 0;
-		right: 0;
-		width: 1rem;
-		height: 1rem;
-		padding: 2rem;
-		margin: 2rem;
-		border-radius: var(--radius-pill);
-		background-color: var(--red);
-		display: grid;
-		justify-content: center;
-		align-content: center;
-		z-index: 100;
-		animation: unset !important;
-	}
-	.fab-save:hover, .fab-save:focus {
-		background-color: var(--nord0) !important;
-	}
-	.fab-save:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-	@media screen and (max-width: 500px) {
-		.fab-save {
-			margin: 1rem;
-		}
 	}
 	.submit_buttons {
 		display: flex;
@@ -1147,13 +1119,4 @@
 	</div>
 {/if}
 
-<!-- FAB save button -->
-<button
-	type="button"
-	class="fab-save action_button"
-	onclick={saveRecipe}
-	disabled={submitting}
-	aria-label="Rezept speichern"
->
-	<Check fill="white" width="2rem" height="2rem" />
-</button>
+<SaveFab type="button" onclick={saveRecipe} disabled={submitting} label="Rezept speichern" />
