@@ -21,7 +21,7 @@ function getNextDueDate(completedAt: Date, frequencyType: string, customDays?: n
   }
 }
 
-export const POST: RequestHandler = async ({ params, locals }) => {
+export const POST: RequestHandler = async ({ params, request, locals }) => {
   const auth = await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
@@ -31,8 +31,11 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   if (!task) throw error(404, 'Task not found');
   if (!task.active) throw error(400, 'Task is archived');
 
+  // Allow completing on behalf of another user
+  const body = await request.json().catch(() => ({}));
+  const completedFor = body.completedFor || auth.user.nickname;
+
   const now = new Date();
-  const nickname = auth.user.nickname;
 
   // Award a sticker based on task tags and difficulty
   const sticker = getStickerForTags(task.tags, task.difficulty || 'medium');
@@ -41,7 +44,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   const completion = await TaskCompletion.create({
     taskId: task._id,
     taskTitle: task.title,
-    completedBy: nickname,
+    completedBy: completedFor,
     completedAt: now,
     stickerId: sticker.id,
     tags: task.tags
@@ -49,7 +52,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
   // Update task
   task.lastCompletedAt = now;
-  task.lastCompletedBy = nickname;
+  task.lastCompletedBy = completedFor;
 
   if (task.isRecurring && task.frequency) {
     // Reset from NOW (completion time), not from the original due date
