@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts",
+		"prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
