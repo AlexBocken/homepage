@@ -37,6 +37,7 @@
   /** @type {string[]} */
   let selectedTags = $state(task?.tags ? [...task.tags] : []);
   let difficulty = $state(task?.difficulty || '');
+  let refreshMode = $state(task?.refreshMode || 'completion');
   let isRecurring = $state(task?.isRecurring || false);
   let frequencyType = $state(task?.frequency?.type || 'weekly');
   let customDays = $state(task?.frequency?.customDays || 7);
@@ -121,6 +122,7 @@
       tags: selectedTags,
       difficulty: difficulty || undefined,
       isRecurring,
+      refreshMode: isRecurring ? refreshMode : undefined,
       frequency: isRecurring ? {
         type: frequencyType,
         customDays: frequencyType === 'custom' ? customDays : undefined
@@ -321,6 +323,33 @@
         <input id="customDays" type="number" bind:value={customDays} min="1" max="365" />
       </div>
     {/if}
+
+    <div class="field">
+      <label>Nächstes Fälligkeitsdatum berechnen ab</label>
+      <div class="refresh-mode-buttons">
+        <button
+          type="button"
+          class="refresh-btn"
+          class:selected={refreshMode === 'completion'}
+          onclick={() => refreshMode = 'completion'}
+        >
+          Erledigung
+        </button>
+        <button
+          type="button"
+          class="refresh-btn"
+          class:selected={refreshMode === 'planned'}
+          onclick={() => refreshMode = 'planned'}
+        >
+          Geplantes Datum
+        </button>
+      </div>
+      <span class="hint">
+        {refreshMode === 'completion'
+          ? 'Intervall startet ab dem Zeitpunkt der Erledigung'
+          : 'Intervall startet ab dem geplanten Fälligkeitsdatum (holt auf bei Verspätung)'}
+      </span>
+    </div>
   {/if}
 
   <div class="form-actions">
@@ -606,6 +635,36 @@
     border-color: var(--nord12);
     background: rgba(208, 135, 112, 0.12);
     color: var(--nord12);
+  }
+
+  /* ── Refresh mode buttons ── */
+  .refresh-mode-buttons {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.3rem;
+  }
+  .refresh-btn {
+    all: unset;
+    flex: 1;
+    text-align: center;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1.5px solid var(--color-border, #ddd);
+    transition: all 120ms;
+    color: var(--color-text-secondary, #777);
+  }
+  .refresh-btn:hover {
+    border-color: var(--nord10);
+    background: rgba(94, 129, 172, 0.06);
+  }
+  .refresh-btn.selected {
+    border-color: var(--nord10);
+    background: rgba(94, 129, 172, 0.1);
+    color: var(--nord10);
+    font-weight: 600;
   }
 
   .field-row {

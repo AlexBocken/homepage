@@ -8,7 +8,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   const data = await request.json();
-  const { title, description, assignees, tags, difficulty, isRecurring, frequency, nextDueDate, active } = data;
+  const { title, description, assignees, tags, difficulty, refreshMode, isRecurring, frequency, nextDueDate, active } = data;
 
   await dbConnect();
 
@@ -20,6 +20,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   if (assignees !== undefined) task.assignees = assignees;
   if (tags !== undefined) task.tags = tags;
   if (difficulty !== undefined) task.difficulty = difficulty || undefined;
+  if (refreshMode !== undefined) task.refreshMode = refreshMode || 'completion';
   if (isRecurring !== undefined) {
     task.isRecurring = isRecurring;
     task.frequency = isRecurring ? frequency : undefined;
