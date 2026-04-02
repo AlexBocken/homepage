@@ -6,7 +6,7 @@
  * USDA uses all-MiniLM-L6-v2 for English ingredient names.
  */
 import { pipeline, type FeatureExtractionPipeline } from '@huggingface/transformers';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { NUTRITION_DB, type NutritionEntry } from '$lib/data/nutritionDb';
 import { BLS_DB, type BlsEntry } from '$lib/data/blsDb';
@@ -18,8 +18,12 @@ import { NutritionOverwrite } from '$models/NutritionOverwrite';
 
 const USDA_MODEL = 'Xenova/all-MiniLM-L6-v2';
 const BLS_MODEL = 'Xenova/multilingual-e5-small';
-const USDA_EMBEDDINGS_PATH = resolve('src/lib/data/nutritionEmbeddings.json');
-const BLS_EMBEDDINGS_PATH = resolve('src/lib/data/blsEmbeddings.json');
+// In dev CWD is project root; in production (adapter-node) CWD is dist/
+const DATA_DIR = existsSync(resolve('src/lib/data/nutritionEmbeddings.json'))
+	? resolve('src/lib/data')
+	: resolve('data');
+const USDA_EMBEDDINGS_PATH = `${DATA_DIR}/nutritionEmbeddings.json`;
+const BLS_EMBEDDINGS_PATH = `${DATA_DIR}/blsEmbeddings.json`;
 const CONFIDENCE_THRESHOLD = 0.45;
 
 // Lazy-loaded singletons — USDA
