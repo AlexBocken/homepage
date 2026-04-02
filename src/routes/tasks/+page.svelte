@@ -25,6 +25,12 @@
   let filterTag = $state('');
   let filterAssignee = $state('');
 
+  const USERS = ['anna', 'alexander'];
+  /** @type {string | null} */
+  let completeForTaskId = $state(null);
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let longPressTimer = $state(null);
+
   // Collect all unique tags from tasks
   let allTags = $derived([...new Set(tasks.flatMap((/** @type {any} */ t) => t.tags))].sort());
   let allAssignees = $derived([...new Set(tasks.flatMap((/** @type {any} */ t) => t.assignees))].sort());
@@ -83,17 +89,37 @@
     return labels[type] || type;
   }
 
-  /** @param {any} task */
-  async function completeTask(task) {
-    const res = await fetch(`/api/tasks/${task._id}/complete`, { method: 'POST' });
+  /**
+   * @param {any} task
+   * @param {string} [forUser]
+   */
+  async function completeTask(task, forUser) {
+    const res = await fetch(`/api/tasks/${task._id}/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(forUser ? { completedFor: forUser } : {})
+    });
     if (!res.ok) return;
     const result = await res.json();
 
-    // Show sticker popup
     awardedSticker = result.sticker;
-
-    // Refresh data
+    completeForTaskId = null;
     await refreshTasks();
+  }
+
+  /** @param {any} task */
+  function startLongPress(task) {
+    longPressTimer = setTimeout(() => {
+      completeForTaskId = task._id;
+      longPressTimer = null;
+    }, 500);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
   }
 
   /** @param {any} task */
@@ -269,9 +295,30 @@
                 </button>
               </div>
             </div>
-            <button class="btn-complete" onclick={() => completeTask(task)} title="Als erledigt markieren">
-              <Check size={22} strokeWidth={2.5} />
-            </button>
+            <div class="complete-wrapper">
+              {#if completeForTaskId === task._id}
+                <div class="complete-for-popover" transition:scale={{ duration: 150, start: 0.9 }}>
+                  <span class="popover-label">Erledigt für:</span>
+                  {#each USERS as user}
+                    <button class="popover-user" onclick={() => completeTask(task, user)}>
+                      <ProfilePicture username={user} size={28} />
+                      <span>{user}</span>
+                    </button>
+                  {/each}
+                  <button class="popover-close" onclick={() => completeForTaskId = null}>&times;</button>
+                </div>
+              {/if}
+              <button
+                class="btn-complete"
+                onclick={() => { cancelLongPress(); if (!completeForTaskId) completeTask(task); }}
+                onpointerdown={() => startLongPress(task)}
+                onpointerup={cancelLongPress}
+                onpointerleave={cancelLongPress}
+                title="Klick = selbst erledigt, gedrückt halten = für andere"
+              >
+                <Check size={22} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -574,6 +621,68 @@
     color: var(--nord11);
   }
 
+  /* Complete button wrapper with popover */
+  .complete-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .complete-for-popover {
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    right: 0;
+    background: var(--color-bg-primary, white);
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: 10px;
+    padding: 0.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    z-index: 20;
+    min-width: 140px;
+  }
+  .popover-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-secondary, #888);
+    padding: 0 0.25rem 0.15rem;
+  }
+  .popover-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    color: var(--color-text-primary, #333);
+    transition: background 120ms;
+  }
+  .popover-user:hover {
+    background: var(--color-bg-secondary, #f0ede6);
+  }
+  .popover-close {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.35rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary, #aaa);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.1rem 0.25rem;
+    border-radius: 4px;
+  }
+  .popover-close:hover {
+    color: var(--color-text-primary, #333);
+  }
+
   /* Round check button — neutral default, green on hover */
   .btn-complete {
     display: flex;
@@ -640,6 +749,13 @@
       border-color: var(--nord3);
       color: var(--nord4);
     }
+    :global(:root:not([data-theme="light"])) .complete-for-popover {
+      background: var(--nord1);
+      border-color: var(--nord3);
+    }
+    :global(:root:not([data-theme="light"])) .popover-user:hover {
+      background: var(--nord2);
+    }
     :global(:root:not([data-theme="light"])) .assignee-extra {
       border-color: var(--nord2);
     }
@@ -669,6 +785,13 @@
   :global(:root[data-theme="dark"]) .btn-complete {
     border-color: var(--nord3);
     color: var(--nord4);
+  }
+  :global(:root[data-theme="dark"]) .complete-for-popover {
+    background: var(--nord1);
+    border-color: var(--nord3);
+  }
+  :global(:root[data-theme="dark"]) .popover-user:hover {
+    background: var(--nord2);
   }
   :global(:root[data-theme="dark"]) .assignee-extra {
     border-color: var(--nord1);
