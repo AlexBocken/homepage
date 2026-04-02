@@ -120,13 +120,20 @@ export const GET: RequestHandler = async ({ locals }) => {
 		upper: totalKcal + combinedMargin,
 	};
 
+	// Fetch extra measurements beyond the display limit to fill the SMA lookback window
+	const DISPLAY_LIMIT = 30;
+	const SMA_LOOKBACK = 6; // w - 1 where w = 7 max
 	const weightMeasurements = await BodyMeasurement.find(
 		{ createdBy: user.nickname, weight: { $ne: null } },
 		{ date: 1, weight: 1, _id: 0 }
 	)
-		.sort({ date: 1 })
-		.limit(30)
+		.sort({ date: -1 })
+		.limit(DISPLAY_LIMIT + SMA_LOOKBACK)
 		.lean();
+	weightMeasurements.reverse(); // back to chronological order
+
+	// Split into lookback-only (not displayed) and display portions
+	const displayStart = Math.max(0, weightMeasurements.length - DISPLAY_LIMIT);
 
 	// Build chart-ready workouts-per-week with filled gaps
 	const weekMap = new Map<string, number>();
@@ -161,38 +168,37 @@ export const GET: RequestHandler = async ({ locals }) => {
 		upper: (number | null)[];
 		lower: (number | null)[];
 	} = { labels: [], dates: [], data: [], sma: [], upper: [], lower: [] };
-	const weights: number[] = [];
-	for (const m of weightMeasurements) {
-		const d = new Date(m.date);
+	const allWeights: number[] = weightMeasurements.map(m => m.weight!);
+	for (let idx = displayStart; idx < weightMeasurements.length; idx++) {
+		const d = new Date(weightMeasurements[idx].date);
 		weightChart.labels.push(
 			d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
 		);
 		weightChart.dates.push(d.toISOString());
-		weightChart.data.push(m.weight!);
-		weights.push(m.weight!);
+		weightChart.data.push(allWeights[idx]);
 	}
 
 	// Adaptive window: 7 if enough data, otherwise half the data (min 2)
-	const w = Math.min(7, Math.max(2, Math.floor(weights.length / 2)));
-	for (let i = 0; i < weights.length; i++) {
-		if (i < w - 1) {
-			weightChart.sma.push(null);
-			weightChart.upper.push(null);
-			weightChart.lower.push(null);
-		} else {
-			let sum = 0;
-			for (let j = i - w + 1; j <= i; j++) sum += weights[j];
-			const mean = sum / w;
+	const w = Math.min(7, Math.max(2, Math.floor(allWeights.length / 2)));
+	for (let idx = displayStart; idx < allWeights.length; idx++) {
+		// Use full window when available, otherwise use all points so far
+		const k = Math.min(w, idx + 1);
+		let sum = 0;
+		for (let j = idx - k + 1; j <= idx; j++) sum += allWeights[j];
+		const mean = sum / k;
 
-			let variance = 0;
-			for (let j = i - w + 1; j <= i; j++) variance += (weights[j] - mean) ** 2;
-			const std = Math.sqrt(variance / w);
+		let variance = 0;
+		for (let j = idx - k + 1; j <= idx; j++) variance += (allWeights[j] - mean) ** 2;
+		// Bessel's correction (k-1) for unbiased sample variance;
+		// scale by sqrt(w/k) so the band widens when k < w
+		const std = k > 1
+			? Math.sqrt(variance / (k - 1)) * Math.sqrt(w / k)
+			: Math.sqrt(variance) * Math.sqrt(w);
 
-			const round = (v: number) => Math.round(v * 100) / 100;
-			weightChart.sma.push(round(mean));
-			weightChart.upper.push(round(mean + std));
-			weightChart.lower.push(round(mean - std));
-		}
+		const round = (v: number) => Math.round(v * 100) / 100;
+		weightChart.sma.push(round(mean));
+		weightChart.upper.push(round(mean + std));
+		weightChart.lower.push(round(mean - std));
 	}
 
 	return json({
