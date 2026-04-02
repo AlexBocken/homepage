@@ -7,6 +7,7 @@
 		"dev": "vite dev",
 		"prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts",
 		"build": "vite build",
+		"postbuild": "mkdir -p dist/data && cp src/lib/data/nutritionEmbeddings.json src/lib/data/blsEmbeddings.json dist/data/",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
