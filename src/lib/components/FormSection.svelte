@@ -13,35 +13,17 @@
 
 <style>
   .form-section {
-    background: var(--nord6);
+    background: var(--color-surface);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .form-section h2 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .form-section {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .form-section h2 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .form-section {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .form-section h2 {
-	color: var(--font-default-dark);
-}
 </style>

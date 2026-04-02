@@ -6,6 +6,7 @@
   import { toast } from '$lib/js/toast.svelte';
   import AddButton from '$lib/components/AddButton.svelte';
   import { formatCurrency } from '$lib/utils/formatters';
+  import Toggle from '$lib/components/Toggle.svelte';
 
   let { data } = $props();
 
@@ -102,8 +103,8 @@
 
   <div class="filters">
     <label>
-      <input type="checkbox" bind:checked={showActiveOnly} />
-      Show active only
+      <Toggle bind:checked={showActiveOnly} />
+      <span>Show active only</span>
     </label>
   </div>
 
@@ -143,7 +144,7 @@
               <span class="label">Category:</span>
               <span class="value">{getCategoryName(payment.category)}</span>
             </div>
-            
+
             <div class="detail-row">
               <span class="label">Frequency:</span>
               <span class="value">{getFrequencyDescription(payment)}</span>
@@ -241,67 +242,32 @@
 
   .header h1 {
     margin: 0 0 0.5rem 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 2rem;
   }
 
   .header p {
     margin: 0;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .header h1 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .header p {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .header h1 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .header p {
-	color: var(--nord4);
-}
 
   .filters {
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background: var(--nord6);
+    background: var(--color-surface);
     border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .filters label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     cursor: pointer;
     font-weight: 500;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .filters {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .filters label {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .filters {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .filters label {
-	color: var(--font-default-dark);
-}
 
   .loading, .error {
     text-align: center;
@@ -311,66 +277,31 @@
 
   .error {
     color: var(--red);
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-radius: 0.5rem;
     border: 1px solid var(--red);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
-
   .empty-state {
     text-align: center;
     padding: 4rem 2rem;
-    background: var(--nord6);
+    background: var(--color-surface);
     border-radius: 0.75rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .empty-state h2 {
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .empty-state p {
-    color: var(--nord2);
+    color: var(--color-text-secondary);
     margin-bottom: 2rem;
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .empty-state {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .empty-state h2 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .empty-state p {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .empty-state {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .empty-state h2 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .empty-state p {
-	color: var(--nord4);
-}
 
   .payments-grid {
     display: grid;
@@ -379,52 +310,23 @@
   }
 
   .payment-card {
-    background: var(--nord6);
+    background: var(--color-surface);
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
     transition: all 0.2s;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .payment-card:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    border-color: var(--nord3);
   }
 
   .payment-card.inactive {
     opacity: 0.7;
-    background: var(--nord5);
-    border-color: var(--nord3);
+    background: var(--color-bg-tertiary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-card {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .payment-card:hover {
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .payment-card.inactive {
-      background: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-card {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .payment-card:hover {
-	border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .payment-card.inactive {
-	background: var(--nord2);
-      border-color: var(--nord3);
-}
 
   .card-header {
     display: flex;
@@ -446,18 +348,9 @@
 
   .payment-title h3 {
     margin: 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-title h3 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-title h3 {
-	color: var(--font-default-dark);
-}
 
   .status-badge {
     padding: 0.25rem 0.75rem;
@@ -485,19 +378,10 @@
   }
 
   .payment-description {
-    color: var(--nord2);
+    color: var(--color-text-tertiary);
     margin-bottom: 1rem;
     font-style: italic;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-description {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-description {
-	color: var(--nord5);
-}
 
   .payment-details {
     margin-bottom: 1.5rem;
@@ -513,12 +397,12 @@
 
   .label {
     font-weight: 500;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
 
   .value {
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-weight: 500;
   }
 
@@ -526,22 +410,6 @@
     color: var(--blue);
     font-weight: 600;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .label {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .value {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .label {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .value {
-	color: var(--font-default-dark);
-}
 
   .payer-info {
     display: flex;
@@ -552,36 +420,18 @@
   .splits-preview {
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .splits-preview h4 {
     margin: 0 0 0.75rem 0;
     font-size: 0.9rem;
-    color: var(--nord2);
+    color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .splits-preview {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .splits-preview h4 {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .splits-preview {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .splits-preview h4 {
-	color: var(--nord4);
-}
 
   .splits-list {
     display: flex;
@@ -598,7 +448,7 @@
   .split-item .username {
     flex: 1;
     font-weight: 500;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .split-amount {
@@ -613,15 +463,6 @@
   .split-amount.negative {
     color: var(--red);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-item .username {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-item .username {
-	color: var(--font-default-dark);
-}
 
   .card-actions {
     display: flex;
@@ -657,34 +498,14 @@
   }
 
   .btn-secondary {
-    background-color: var(--nord5);
-    color: var(--nord0);
-    border: 1px solid var(--nord4);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
   }
 
   .btn-secondary:hover {
-    background-color: var(--nord4);
+    background-color: var(--color-bg-elevated);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .btn-secondary {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
-      background-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .btn-secondary {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .btn-secondary:hover {
-	background-color: var(--nord3);
-}
 
   .btn-warning {
     background-color: var(--orange);

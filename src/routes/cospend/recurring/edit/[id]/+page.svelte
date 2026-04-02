@@ -7,6 +7,7 @@
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import SplitMethodSelector from '$lib/components/cospend/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/cospend/UsersList.svelte';
+  import SaveFab from '$lib/components/SaveFab.svelte';
 
   let { data } = $props();
 
@@ -288,9 +289,6 @@
 <main class="edit-recurring-payment">
   <div class="header">
     <h1>Edit Recurring Payment</h1>
-    <div class="header-actions">
-      <a href="/cospend/recurring" class="back-link">← Back to Recurring Payments</a>
-    </div>
   </div>
 
   {#if loadingPayment}
@@ -491,14 +489,7 @@
         <div class="error">{error}</div>
       {/if}
 
-      <div class="form-actions">
-        <button type="button" class="btn-secondary" onclick={() => goto('/cospend/recurring')}>
-          Cancel
-        </button>
-        <button type="submit" class="btn-primary" disabled={loading || cronError}>
-          {loading ? 'Saving...' : 'Save Changes'}
-        </button>
-      </div>
+      <SaveFab disabled={loading || cronError} label="Save changes" />
     </form>
   {/if}
 </main>
@@ -519,12 +510,7 @@
 
   .header h1 {
     margin: 0;
-    color: var(--nord0);
-  }
-
-  .back-link {
-    color: var(--blue);
-    text-decoration: none;
+    color: var(--color-text-primary);
   }
 
   .loading {
@@ -540,17 +526,17 @@
   }
 
   .form-section {
-    background: var(--nord6);
+    background: var(--color-surface);
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
 
   .form-section h2 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
 
@@ -568,18 +554,18 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
   }
 
   input, textarea, select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     font-size: 1rem;
     box-sizing: border-box;
-    background: var(--nord5);
-    color: var(--nord0);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
   }
 
   input:focus, textarea:focus, select:focus {
@@ -594,16 +580,16 @@
 
   .help-text {
     margin-top: 0.5rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
 
   .help-text code {
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     padding: 0.125rem 0.25rem;
     border-radius: 0.25rem;
     font-family: monospace;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .help-text ul {
@@ -622,7 +608,7 @@
   }
 
   .execution-preview {
-    background-color: var(--nord8);
+    background-color: var(--color-bg-tertiary);
     border: 1px solid var(--blue);
     border-radius: 0.5rem;
     padding: 1rem;
@@ -643,194 +629,20 @@
   }
 
   .frequency-description {
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin: 0;
     font-style: italic;
   }
 
-
-
-
   .error {
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     color: var(--red);
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
     border: 1px solid var(--red);
   }
-
-  .form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-  }
-
-  .btn-primary, .btn-secondary {
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--blue);
-    color: white;
-    border: none;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: var(--lightblue);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .btn-secondary {
-    background-color: var(--nord5);
-    color: var(--nord0);
-    border: 1px solid var(--nord4);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--nord4);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .header h1 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .form-section {
-      background: var(--accent-dark);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .form-section h2 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) label {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) input,
-:global(:root:not([data-theme="light"])) textarea,
-:global(:root:not([data-theme="light"])) select {
-      background: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) input:focus,
-:global(:root:not([data-theme="light"])) textarea:focus,
-:global(:root:not([data-theme="light"])) select:focus {
-      box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.2);
-    }
-
-    :global(:root:not([data-theme="light"])) .help-text {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .help-text code {
-      background-color: var(--nord1);
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .execution-preview {
-      background-color: var(--nord2);
-      border-color: var(--blue);
-    }
-
-
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary {
-      background-color: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
-      background-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .conversion-preview.loading {
-      background-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .conversion-preview.error {
-      background-color: var(--accent-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .conversion-preview.success {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .header h1 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .form-section {
-	background: var(--accent-dark);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .form-section h2 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) label {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) input,
-:global(:root[data-theme="dark"]) textarea,
-:global(:root[data-theme="dark"]) select {
-	background: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) input:focus,
-:global(:root[data-theme="dark"]) textarea:focus,
-:global(:root[data-theme="dark"]) select:focus {
-	box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.2);
-}
-:global(:root[data-theme="dark"]) .help-text {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .help-text code {
-	background-color: var(--nord1);
-      color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .execution-preview {
-	background-color: var(--nord2);
-      border-color: var(--blue);
-}
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
-:global(:root[data-theme="dark"]) .btn-secondary {
-	background-color: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .btn-secondary:hover {
-	background-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .conversion-preview.loading {
-	background-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .conversion-preview.error {
-	background-color: var(--accent-dark);
-}
-:global(:root[data-theme="dark"]) .conversion-preview.success {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-}
 
   /* Amount-currency styling */
   .amount-currency {
@@ -860,21 +672,21 @@
   }
 
   .conversion-preview.loading {
-    background-color: var(--nord8);
+    background-color: var(--color-bg-tertiary);
     border-color: var(--blue);
     color: var(--blue);
   }
 
   .conversion-preview.error {
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-color: var(--red);
     color: var(--red);
   }
 
   .conversion-preview.success {
-    background-color: var(--nord14);
+    background-color: var(--color-bg-tertiary);
     border-color: var(--green);
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .conversion-preview small {
@@ -891,10 +703,6 @@
       grid-template-columns: 1fr;
     }
 
-    .form-actions {
-      flex-direction: column;
-    }
-
     .amount-currency {
       flex-direction: column;
     }
@@ -904,4 +712,5 @@
       flex: none;
     }
   }
+
 </style>

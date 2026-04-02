@@ -310,7 +310,7 @@
     text-align: center;
     font-size: 2.5rem;
     margin-block: 0.5rem 1.5rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .loading, .error {
@@ -321,25 +321,9 @@
 
   .error {
     color: var(--red);
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-radius: 0.5rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) h1 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) h1 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
 
 
   .positive {
@@ -379,11 +363,7 @@
   }
 
   .recent-activity {
-    background: var(--nord6);
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    padding: 1.5rem 0;
     max-width: 800px;
     margin-left: auto;
     margin-right: auto;
@@ -399,21 +379,21 @@
 
   .recent-activity h2 {
     margin: 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .filter-label {
     font-weight: 400;
     font-size: 1rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
   }
 
   .clear-filter {
     background: none;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     padding: 0.25rem 0.75rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     cursor: pointer;
     font-size: 0.85rem;
     white-space: nowrap;
@@ -421,66 +401,16 @@
   }
 
   .clear-filter:hover {
-    border-color: var(--blue);
-    color: var(--blue);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
   }
 
   .no-results {
     text-align: center;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-style: italic;
     padding: 1rem 0;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .recent-activity {
-      background: var(--accent-dark);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .recent-activity h2 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .filter-label {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .clear-filter {
-      border-color: var(--nord3);
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .clear-filter:hover {
-      border-color: var(--blue);
-      color: var(--blue);
-    }
-
-    :global(:root:not([data-theme="light"])) .no-results {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .recent-activity {
-	background: var(--accent-dark);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .recent-activity h2 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .filter-label {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .clear-filter {
-	border-color: var(--nord3);
-      color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .clear-filter:hover {
-	border-color: var(--blue);
-      color: var(--blue);
-}
-:global(:root[data-theme="dark"]) .no-results {
-	color: var(--nord4);
-}
 
   .activity-dialog {
     display: flex;
@@ -511,11 +441,11 @@
   }
 
   .activity-bubble {
-    background: var(--nord5);
+    background: var(--color-bg-secondary);
     border-radius: 1rem;
     padding: 1rem;
     position: relative;
-    border: 1px solid var(--nord4);
+    border: none;
     text-decoration: none;
     color: inherit;
     display: block;
@@ -524,29 +454,8 @@
   }
 
   .activity-message.is-me .activity-bubble {
-    background: var(--nord8);
-    border-color: var(--blue);
+    background: var(--color-bg-tertiary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .activity-bubble {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .activity-message.is-me .activity-bubble {
-      background: var(--nord2);
-      border-color: var(--blue);
-    }
-  }
-:global(:root[data-theme="dark"]) .activity-bubble {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .activity-message.is-me .activity-bubble {
-	background: var(--nord2);
-      border-color: var(--blue);
-}
 
   .activity-bubble:hover {
     transform: translateY(-1px);
@@ -564,39 +473,23 @@
 
   .activity-bubble::before {
     left: -15px;
-    border-right-color: var(--nord5);
+    border-right-color: var(--color-bg-secondary);
   }
 
   .activity-message.is-me .activity-bubble::before {
     left: auto;
     right: -15px;
-    border-left-color: var(--nord8);
+    border-left-color: var(--color-bg-tertiary);
     border-right-color: transparent;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .activity-bubble::before {
-      border-right-color: var(--nord1);
-    }
 
-    :global(:root:not([data-theme="light"])) .activity-message.is-me .activity-bubble::before {
-      border-left-color: var(--nord2);
-    }
-  }
-:global(:root[data-theme="dark"]) .activity-bubble::before {
-	border-right-color: var(--nord1);
-}
-:global(:root[data-theme="dark"]) .activity-message.is-me .activity-bubble::before {
-	border-left-color: var(--nord2);
-}
-
-
-  /* New Settlement Flow Activity Styles */
+  /* Settlement Flow Activity Styles */
   .settlement-flow-activity {
     display: block;
     text-decoration: none;
     color: inherit;
-    background: linear-gradient(135deg, var(--nord6), var(--nord5));
+    background: var(--color-bg-secondary);
     border: 2px solid var(--green);
     border-radius: 1rem;
     padding: 1.5rem;
@@ -609,24 +502,6 @@
     box-shadow: 0 6px 20px rgba(163, 190, 140, 0.3);
     transform: translateY(-2px);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .settlement-flow-activity {
-      background: linear-gradient(135deg, var(--nord2), var(--nord1));
-      border-color: var(--green);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-flow-activity:hover {
-      box-shadow: 0 6px 20px rgba(163, 190, 140, 0.2);
-    }
-  }
-:global(:root[data-theme="dark"]) .settlement-flow-activity {
-	background: linear-gradient(135deg, var(--nord2), var(--nord1));
-      border-color: var(--green);
-}
-:global(:root[data-theme="dark"]) .settlement-flow-activity:hover {
-	box-shadow: 0 6px 20px rgba(163, 190, 140, 0.2);
-}
 
   .settlement-activity-content {
     width: 100%;
@@ -677,18 +552,9 @@
 
   .settlement-date {
     font-size: 0.9rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     text-align: center;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .settlement-date {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .settlement-date {
-	color: var(--nord4);
-}
 
   .activity-header {
     display: flex;
@@ -715,46 +581,23 @@
   }
 
   .category-name {
-    color: var(--nord3);
+    color: var(--color-text-tertiary);
     font-size: 0.8rem;
     font-style: italic;
   }
 
   .payment-title {
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.1rem;
     font-weight: 600;
     margin: 0;
   }
 
   .username {
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     font-weight: 500;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .category-name {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .payment-title {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .username {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .category-name {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .payment-title {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .username {
-	color: var(--nord4);
-}
 
   .activity-amount {
     font-weight: bold;
@@ -775,33 +618,17 @@
   }
 
   .payment-date {
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
 
   .payment-description {
-    color: var(--nord2);
+    color: var(--color-text-tertiary);
     font-size: 0.9rem;
     font-style: italic;
     margin-top: 0.25rem;
     line-height: 1.3;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-date {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .payment-description {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-date {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .payment-description {
-	color: var(--nord5);
-}
 
   @media (max-width: 600px) {
     .cospend-main {
@@ -814,7 +641,7 @@
     }
 
     .recent-activity {
-      padding: 0.75rem;
+      padding: 0.75rem 0;
     }
 
     .actions {
@@ -918,25 +745,10 @@
   }
 
   .chart-section .loading {
-    background: var(--nord6);
+    background: var(--color-bg-secondary);
     border-radius: 0.75rem;
     padding: 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
     text-align: center;
-    color: var(--nord2);
+    color: var(--color-text-secondary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .chart-section .loading {
-      background: var(--nord1);
-      border-color: var(--nord2);
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .chart-section .loading {
-	background: var(--nord1);
-      border-color: var(--nord2);
-      color: var(--nord4);
-}
 </style>

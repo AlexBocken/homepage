@@ -4,6 +4,7 @@
   import { getCategoryOptions } from '$lib/utils/categories';
   import FormSection from '$lib/components/FormSection.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
+  import SaveFab from '$lib/components/SaveFab.svelte';
 
   /**
    * @typedef {import('$models/Payment').IPayment & {splits?: import('$models/PaymentSplit').IPaymentSplit[]}} PaymentWithSplits
@@ -582,15 +583,9 @@
         >
           {deleting ? 'Deleting...' : 'Delete Payment'}
         </button>
-        <div class="main-actions">
-          <button type="button" class="btn-secondary" onclick={() => goto('/cospend/payments')}>
-            Cancel
-          </button>
-          <button type="submit" class="btn-primary" disabled={saving || deleting}>
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
       </div>
+
+      <SaveFab disabled={saving || deleting} label="Save changes" />
     </form>
   {/if}
 </main>
@@ -609,31 +604,15 @@
 
   .header h1 {
     margin: 0 0 0.5rem 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 2rem;
   }
 
   .header p {
     margin: 0;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .header h1 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .header p {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .header h1 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .header p {
-	color: var(--nord4);
-}
 
   .loading, .error {
     text-align: center;
@@ -643,19 +622,10 @@
 
   .error {
     color: var(--red);
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-radius: 0.5rem;
     border: 1px solid var(--red);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
 
   .payment-form {
     display: flex;
@@ -677,27 +647,18 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: var(--nord2);
+    color: var(--color-text-secondary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) label {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) label {
-	color: var(--nord5);
-}
 
   input, textarea, select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     font-size: 1rem;
     box-sizing: border-box;
-    background-color: var(--nord6);
-    color: var(--nord0);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
   }
 
   input:focus, textarea:focus, select:focus {
@@ -710,48 +671,20 @@
     cursor: pointer;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) input,
-:global(:root:not([data-theme="light"])) textarea,
-:global(:root:not([data-theme="light"])) select {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) input,
-:global(:root[data-theme="dark"]) textarea,
-:global(:root[data-theme="dark"]) select {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-
   .split-method-info {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
     padding: 0.75rem;
-    background-color: var(--nord14);
+    background-color: var(--color-bg-tertiary);
     border-radius: 0.5rem;
     border: 1px solid var(--green);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-method-info {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-method-info {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
-
   .split-method-info .label {
     font-weight: 600;
-    color: var(--nord1);
+    color: var(--color-text-secondary);
   }
 
   .split-method-info .value {
@@ -759,65 +692,27 @@
     font-weight: 500;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-method-info .label {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-method-info .label {
-	color: var(--nord5);
-}
-
   .personal-amounts-editor {
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .personal-amounts-editor {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .personal-amounts-editor {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
 
   .personal-amounts-editor h3 {
     margin-top: 0;
     margin-bottom: 0.5rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1rem;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .personal-amounts-editor h3 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .personal-amounts-editor h3 {
-	color: var(--font-default-dark);
-}
-
   .personal-amounts-editor .description {
-    color: var(--nord2);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin-bottom: 1rem;
     font-style: italic;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .personal-amounts-editor .description {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .personal-amounts-editor .description {
-	color: var(--nord4);
-}
 
   .personal-input {
     display: flex;
@@ -835,11 +730,11 @@
   .personal-input input {
     max-width: 150px;
     padding: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     font-size: 1rem;
-    background-color: var(--nord6);
-    color: var(--nord0);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
   }
 
   .personal-input input:focus {
@@ -848,67 +743,25 @@
     box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .personal-input input {
-      background-color: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .personal-input input {
-	background-color: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-
   .remainder-info {
     margin-top: 1rem;
     padding: 0.75rem;
-    background-color: var(--nord14);
+    background-color: var(--color-bg-tertiary);
     border-radius: 0.5rem;
     border: 1px solid var(--green);
   }
 
   .remainder-info.error {
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-color: var(--red);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .remainder-info {
-      background-color: var(--nord1);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .remainder-info.error {
-      background-color: var(--accent-dark);
-      border-color: var(--red);
-    }
-  }
-:global(:root[data-theme="dark"]) .remainder-info {
-	background-color: var(--nord1);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .remainder-info.error {
-	background-color: var(--accent-dark);
-      border-color: var(--red);
-}
 
   .remainder-info span {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .remainder-info span {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .remainder-info span {
-	color: var(--font-default-dark);
-}
 
   .error-message {
     color: var(--red);
@@ -927,53 +780,24 @@
   .splits-display h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .splits-display h3 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .splits-display h3 {
-	color: var(--font-default-dark);
-}
 
   .split-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
-    background-color: var(--nord5);
+    background-color: var(--color-bg-tertiary);
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-item {
-      background-color: var(--nord2);
-      border-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-item {
-	background-color: var(--nord2);
-      border-color: var(--nord3);
-}
 
   .split-username {
     font-weight: 500;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-username {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-username {
-	color: var(--font-default-dark);
-}
 
   .split-amount.positive {
     color: var(--green);
@@ -986,20 +810,11 @@
   }
 
   .note {
-    color: var(--nord2);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     font-style: italic;
     margin: 0;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .note {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .note {
-	color: var(--nord4);
-}
 
   .js-only {
     display: none;
@@ -1024,68 +839,12 @@
     gap: 1rem;
   }
 
-  .main-actions {
-    display: flex;
-    gap: 1rem;
-  }
-
-  .btn-primary, .btn-secondary, .btn-danger {
+  .btn-danger {
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--blue);
-    color: white;
-    border: none;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: var(--nord10);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .btn-secondary {
-    background-color: var(--nord5);
-    color: var(--nord0);
-    border: 1px solid var(--nord4);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--nord4);
-    transform: translateY(-1px);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .btn-secondary {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
-      background-color: var(--nord3);
-    }
-  }
-:global(:root[data-theme="dark"]) .btn-secondary {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .btn-secondary:hover {
-	background-color: var(--nord3);
-}
-
-  .btn-danger {
     background-color: var(--red);
     color: white;
     border: none;
@@ -1129,21 +888,21 @@
   }
 
   .conversion-preview.loading {
-    background-color: var(--nord8);
+    background-color: var(--color-bg-tertiary);
     border-color: var(--blue);
     color: var(--blue);
   }
 
   .conversion-preview.error {
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-color: var(--red);
     color: var(--red);
   }
 
   .conversion-preview.success {
-    background-color: var(--nord14);
+    background-color: var(--color-bg-tertiary);
     border-color: var(--green);
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .conversion-preview small {
@@ -1155,41 +914,9 @@
     display: block;
     margin-top: 0.25rem;
     font-size: 0.8rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-style: italic;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .conversion-preview.loading {
-      background-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .conversion-preview.error {
-      background-color: var(--accent-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .conversion-preview.success {
-      background-color: var(--nord2);
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .help-text {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .conversion-preview.loading {
-	background-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .conversion-preview.error {
-	background-color: var(--accent-dark);
-}
-:global(:root[data-theme="dark"]) .conversion-preview.success {
-	background-color: var(--nord2);
-      color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .help-text {
-	color: var(--nord4);
-}
 
   @media (max-width: 600px) {
     .edit-payment {
@@ -1232,4 +959,5 @@
       max-width: none;
     }
   }
+
 </style>

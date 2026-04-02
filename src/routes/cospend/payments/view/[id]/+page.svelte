@@ -4,7 +4,7 @@
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import EditButton from '$lib/components/EditButton.svelte';
-  
+
 
   import { formatCurrency } from '$lib/utils/formatters';
 
@@ -21,7 +21,7 @@
   onMount(async () => {
     // Mark that JavaScript is loaded
     document.body.classList.add('js-loaded');
-    
+
     // Only refresh if we don't have server data
     if (!payment) {
       await loadPayment();
@@ -48,7 +48,7 @@
     if (payment.currency === 'CHF' || !payment.originalAmount) {
       return formatCurrency(payment.amount, 'CHF', 'de-CH');
     }
-    
+
     return `${formatCurrency(payment.originalAmount, payment.currency, 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
   }
 
@@ -58,7 +58,7 @@
 
   function getSplitDescription(/** @type {any} */ payment) {
     if (!payment.splits || payment.splits.length === 0) return 'No splits';
-    
+
     if (payment.splitMethod === 'equal') {
       return `Split equally among ${payment.splits.length} people`;
     } else if (payment.splitMethod === 'full') {
@@ -182,8 +182,6 @@
     padding: 2rem;
   }
 
-
-
   .loading, .error {
     text-align: center;
     padding: 2rem;
@@ -192,56 +190,26 @@
 
   .error {
     color: var(--red);
-    background-color: var(--nord6);
+    background-color: var(--color-bg-secondary);
     border-radius: 0.5rem;
     border: 1px solid var(--red);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
-
   .payment-card {
-    background: var(--nord6);
+    background: var(--color-surface);
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-card {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-card {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
 
   .payment-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     padding: 2rem;
-    background: linear-gradient(135deg, var(--nord5), var(--nord4));
-    border-bottom: 1px solid var(--nord3);
+    background: var(--color-bg-tertiary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .payment-header {
-      background: linear-gradient(135deg, var(--nord2), var(--nord3));
-    }
-  }
-:global(:root[data-theme="dark"]) .payment-header {
-	background: linear-gradient(135deg, var(--nord2), var(--nord3));
-}
 
   .title-with-category {
     display: flex;
@@ -257,7 +225,7 @@
 
   .title-section h1 {
     margin: 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.75rem;
   }
 
@@ -266,15 +234,6 @@
     font-weight: bold;
     color: var(--blue);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .title-section h1 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .title-section h1 {
-	color: var(--font-default-dark);
-}
 
   .receipt-image {
     flex-shrink: 0;
@@ -286,17 +245,8 @@
     max-height: 150px;
     object-fit: cover;
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid var(--color-border);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .receipt-image img {
-      border-color: var(--nord2);
-    }
-  }
-:global(:root[data-theme="dark"]) .receipt-image img {
-	border-color: var(--nord2);
-}
 
   .payment-info {
     padding: 2rem;
@@ -317,99 +267,42 @@
 
   .label {
     font-weight: 600;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
   .value {
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1rem;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .label {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .value {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .label {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .value {
-	color: var(--font-default-dark);
-}
-
   .description {
-    border-top: 1px solid var(--nord4);
     padding-top: 1.5rem;
   }
 
   .description h3 {
     margin: 0 0 0.75rem 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.1rem;
   }
 
   .description p {
     margin: 0;
-    color: var(--nord2);
+    color: var(--color-text-tertiary);
     line-height: 1.5;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .description {
-      border-top-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .description h3 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .description p {
-      color: var(--nord5);
-    }
-  }
-:global(:root[data-theme="dark"]) .description {
-	border-top-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .description h3 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .description p {
-	color: var(--nord5);
-}
-
   .splits-section {
-    border-top: 1px solid var(--nord4);
     padding: 2rem;
   }
 
   .splits-section h3 {
     margin: 0 0 1rem 0;
-    color: var(--nord0);
+    color: var(--color-text-primary);
     font-size: 1.1rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .splits-section {
-      border-top-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .splits-section h3 {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .splits-section {
-	border-top-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .splits-section h3 {
-	color: var(--font-default-dark);
-}
 
   .splits-list {
     display: flex;
@@ -422,35 +315,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    background: var(--nord5);
+    background: var(--color-bg-primary);
     border-radius: 0.5rem;
-    border: 1px solid var(--nord4);
   }
 
   .split-item.current-user {
-    background: var(--nord8);
-    border-color: var(--blue);
+    background: var(--color-bg-tertiary);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .split-item {
-      background: var(--nord2);
-      border-color: var(--nord3);
-    }
-
-    :global(:root:not([data-theme="light"])) .split-item.current-user {
-      background: var(--nord3);
-      border-color: var(--blue);
-    }
-  }
-:global(:root[data-theme="dark"]) .split-item {
-	background: var(--nord2);
-      border-color: var(--nord3);
-}
-:global(:root[data-theme="dark"]) .split-item.current-user {
-	background: var(--nord3);
-      border-color: var(--blue);
-}
 
   .split-user {
     display: flex;
@@ -466,7 +337,7 @@
 
   .username {
     font-weight: 500;
-    color: var(--nord0);
+    color: var(--color-text-primary);
   }
 
   .you-badge {
@@ -477,15 +348,6 @@
     font-size: 0.75rem;
     font-weight: 500;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .username {
-      color: var(--font-default-dark);
-    }
-  }
-:global(:root[data-theme="dark"]) .username {
-	color: var(--font-default-dark);
-}
 
   .split-amount {
     font-weight: 500;
@@ -502,22 +364,13 @@
 
   .exchange-rate-info {
     margin-top: 0.5rem;
-    color: var(--nord3);
+    color: var(--color-text-secondary);
     font-style: italic;
   }
 
   .exchange-rate-info small {
     font-size: 0.8rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .exchange-rate-info {
-      color: var(--nord4);
-    }
-  }
-:global(:root[data-theme="dark"]) .exchange-rate-info {
-	color: var(--nord4);
-}
 
   @media (max-width: 600px) {
     .payment-view {

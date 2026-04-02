@@ -1,22 +1,22 @@
 <script>
 	import { page } from '$app/stores';
-	import { Pencil, Trash2 } from 'lucide-svelte';
+	import { Pencil, Trash2, ChevronDown } from 'lucide-svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
 	import { getWorkout } from '$lib/js/workout.svelte';
-	import AddActionButton from '$lib/components/AddActionButton.svelte';
+	import AddButton from '$lib/components/AddButton.svelte';
 
 	let { data } = $props();
 	const workout = getWorkout();
 
 	let latest = $state(data.latest ? { ...data.latest } : {});
 	let measurements = $state(data.measurements?.measurements ? [...data.measurements.measurements] : []);
-	let showForm = $state(false);
-	let saving = $state(false);
 
 	// Profile fields (sex, height) — stored in FitnessGoal
+	let showProfile = $state(false);
 	let profileSex = $state(data.profile?.sex ?? 'male');
 	let profileHeight = $state(data.profile?.heightCm != null ? String(data.profile.heightCm) : '');
 	let profileSaving = $state(false);
@@ -48,27 +48,6 @@
 			profileSaving = false;
 		}
 	}
-	/** @type {string | null} */
-	let editingId = $state(null);
-
-	// Form fields
-	let formDate = $state('');
-	let formWeight = $state('');
-	let formBodyFat = $state('');
-	let formCalories = $state('');
-	let formNeck = $state('');
-	let formShoulders = $state('');
-	let formChest = $state('');
-	let formBicepsL = $state('');
-	let formBicepsR = $state('');
-	let formForearmsL = $state('');
-	let formForearmsR = $state('');
-	let formWaist = $state('');
-	let formHips = $state('');
-	let formThighsL = $state('');
-	let formThighsR = $state('');
-	let formCalvesL = $state('');
-	let formCalvesR = $state('');
 
 	const bodyPartFields = $derived([
 		{ label: t('neck', lang), key: 'neck', value: latest.measurements?.neck },
@@ -86,153 +65,6 @@
 		{ label: t('r_calf', lang), key: 'calvesRight', value: latest.measurements?.calves?.right }
 	]);
 
-	function resetForm() {
-		formDate = new Date().toISOString().slice(0, 10);
-		formWeight = '';
-		formBodyFat = '';
-		formCalories = '';
-		formNeck = '';
-		formShoulders = '';
-		formChest = '';
-		formBicepsL = '';
-		formBicepsR = '';
-		formForearmsL = '';
-		formForearmsR = '';
-		formWaist = '';
-		formHips = '';
-		formThighsL = '';
-		formThighsR = '';
-		formCalvesL = '';
-		formCalvesR = '';
-		editingId = null;
-	}
-
-	/** @param {any} m */
-	function populateForm(m) {
-		formDate = new Date(m.date).toISOString().slice(0, 10);
-		formWeight = m.weight != null ? String(m.weight) : '';
-		formBodyFat = m.bodyFatPercent != null ? String(m.bodyFatPercent) : '';
-		formCalories = m.caloricIntake != null ? String(m.caloricIntake) : '';
-		const bp = m.measurements ?? {};
-		formNeck = bp.neck != null ? String(bp.neck) : '';
-		formShoulders = bp.shoulders != null ? String(bp.shoulders) : '';
-		formChest = bp.chest != null ? String(bp.chest) : '';
-		const bl = bp.biceps?.left ?? bp.leftBicep;
-		const br = bp.biceps?.right ?? bp.rightBicep;
-		formBicepsL = bl != null ? String(bl) : '';
-		formBicepsR = br != null ? String(br) : '';
-		const fl = bp.forearms?.left ?? bp.leftForearm;
-		const fr = bp.forearms?.right ?? bp.rightForearm;
-		formForearmsL = fl != null ? String(fl) : '';
-		formForearmsR = fr != null ? String(fr) : '';
-		formWaist = bp.waist != null ? String(bp.waist) : '';
-		formHips = bp.hips != null ? String(bp.hips) : '';
-		const tl = bp.thighs?.left ?? bp.leftThigh;
-		const tr = bp.thighs?.right ?? bp.rightThigh;
-		formThighsL = tl != null ? String(tl) : '';
-		formThighsR = tr != null ? String(tr) : '';
-		const cl = bp.calves?.left ?? bp.leftCalf;
-		const cr = bp.calves?.right ?? bp.rightCalf;
-		formCalvesL = cl != null ? String(cl) : '';
-		formCalvesR = cr != null ? String(cr) : '';
-	}
-
-	/** @param {any} m */
-	function startEdit(m) {
-		populateForm(m);
-		editingId = m._id;
-		showForm = true;
-	}
-
-	function startAdd() {
-		resetForm();
-		editingId = null;
-		showForm = true;
-	}
-
-	function buildBody() {
-		/** @type {any} */
-		const body = { date: formDate };
-		if (formWeight) body.weight = Number(formWeight);
-		else body.weight = null;
-		if (formBodyFat) body.bodyFatPercent = Number(formBodyFat);
-		else body.bodyFatPercent = null;
-		if (formCalories) body.caloricIntake = Number(formCalories);
-		else body.caloricIntake = null;
-
-		/** @type {any} */
-		const m = {};
-		if (formNeck) m.neck = Number(formNeck);
-		if (formShoulders) m.shoulders = Number(formShoulders);
-		if (formChest) m.chest = Number(formChest);
-		if (formBicepsL || formBicepsR) m.biceps = {};
-		if (formBicepsL) m.biceps.left = Number(formBicepsL);
-		if (formBicepsR) m.biceps.right = Number(formBicepsR);
-		if (formForearmsL || formForearmsR) m.forearms = {};
-		if (formForearmsL) m.forearms.left = Number(formForearmsL);
-		if (formForearmsR) m.forearms.right = Number(formForearmsR);
-		if (formWaist) m.waist = Number(formWaist);
-		if (formHips) m.hips = Number(formHips);
-		if (formThighsL || formThighsR) m.thighs = {};
-		if (formThighsL) m.thighs.left = Number(formThighsL);
-		if (formThighsR) m.thighs.right = Number(formThighsR);
-		if (formCalvesL || formCalvesR) m.calves = {};
-		if (formCalvesL) m.calves.left = Number(formCalvesL);
-		if (formCalvesR) m.calves.right = Number(formCalvesR);
-
-		body.measurements = Object.keys(m).length > 0 ? m : null;
-		return body;
-	}
-
-	async function refreshLatest() {
-		try {
-			const latestRes = await fetch('/api/fitness/measurements/latest');
-			if (latestRes.ok) latest = await latestRes.json();
-		} catch {}
-	}
-
-	async function saveMeasurement() {
-		saving = true;
-		const body = buildBody();
-
-		try {
-			if (editingId) {
-				const res = await fetch(`/api/fitness/measurements/${editingId}`, {
-					method: 'PUT',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(body)
-				});
-				if (res.ok) {
-					const d = await res.json();
-					measurements = measurements.map((m) => m._id === editingId ? d.measurement : m);
-					await refreshLatest();
-					showForm = false;
-					resetForm();
-				} else {
-					const err = await res.json().catch(() => null);
-					toast.error(err?.error ?? 'Failed to save measurement');
-				}
-			} else {
-				const res = await fetch('/api/fitness/measurements', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(body)
-				});
-				if (res.ok) {
-					const d = await res.json();
-					measurements = [d.measurement, ...measurements];
-					await refreshLatest();
-					showForm = false;
-					resetForm();
-				} else {
-					const err = await res.json().catch(() => null);
-					toast.error(err?.error ?? 'Failed to save measurement');
-				}
-			}
-		} catch { toast.error('Failed to save measurement'); }
-		saving = false;
-	}
-
 	/** @param {string} id */
 	async function deleteMeasurement(id) {
 		if (!confirm(t('delete_measurement_confirm', lang))) return;
@@ -240,11 +72,10 @@
 			const res = await fetch(`/api/fitness/measurements/${id}`, { method: 'DELETE' });
 			if (res.ok) {
 				measurements = measurements.filter((m) => m._id !== id);
-				await refreshLatest();
-				if (editingId === id) {
-					showForm = false;
-					resetForm();
-				}
+				try {
+					const latestRes = await fetch('/api/fitness/measurements/latest');
+					if (latestRes.ok) latest = await latestRes.json();
+				} catch {}
 			} else {
 				const err = await res.json().catch(() => null);
 				toast.error(err?.error ?? 'Failed to delete measurement');
@@ -275,87 +106,31 @@
 	<h1>{t('measure_title', lang)}</h1>
 
 	<section class="profile-section">
-		<h2>{t('profile', lang)}</h2>
-		<div class="profile-row">
-			<div class="form-group">
-				<label for="p-sex">{t('sex', lang)}</label>
-				<select id="p-sex" bind:value={profileSex}>
-					<option value="male">{t('male', lang)}</option>
-					<option value="female">{t('female', lang)}</option>
-				</select>
+		<button class="profile-toggle" onclick={() => showProfile = !showProfile}>
+			<h2>{t('profile', lang)}</h2>
+			<ChevronDown size={16} class={showProfile ? 'chevron open' : 'chevron'} />
+		</button>
+		{#if showProfile}
+			<div class="profile-row">
+				<div class="form-group">
+					<label for="p-sex">{t('sex', lang)}</label>
+					<select id="p-sex" bind:value={profileSex}>
+						<option value="male">{t('male', lang)}</option>
+						<option value="female">{t('female', lang)}</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="p-height">{t('height', lang)}</label>
+					<input id="p-height" type="number" min="100" max="250" placeholder="175" bind:value={profileHeight} />
+				</div>
+				{#if profileDirty}
+					<button class="profile-save-btn" onclick={saveProfile} disabled={profileSaving}>
+						{profileSaving ? t('saving', lang) : t('save', lang)}
+					</button>
+				{/if}
 			</div>
-			<div class="form-group">
-				<label for="p-height">{t('height', lang)}</label>
-				<input id="p-height" type="number" min="100" max="250" placeholder="175" bind:value={profileHeight} />
-			</div>
-			{#if profileDirty}
-				<button class="profile-save-btn" onclick={saveProfile} disabled={profileSaving}>
-					{profileSaving ? t('saving', lang) : t('save', lang)}
-				</button>
-			{/if}
-		</div>
+		{/if}
 	</section>
-
-	{#if showForm}
-		<form class="measure-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
-			<div class="form-header">
-				<h2>{editingId ? t('edit_measurement', lang) : t('new_measurement', lang)}</h2>
-				<button type="button" class="cancel-form-btn" onclick={() => { showForm = false; resetForm(); }}>{t('cancel', lang)}</button>
-			</div>
-
-			<div class="form-group">
-				<label for="m-date">{t('date', lang)}</label>
-				<input id="m-date" type="date" bind:value={formDate} />
-			</div>
-
-			<h3>{t('general', lang)}</h3>
-			<div class="form-row">
-				<div class="form-group">
-					<label for="m-weight">{t('weight_kg', lang)}</label>
-					<input id="m-weight" type="number" step="0.1" bind:value={formWeight} placeholder="—" />
-				</div>
-				<div class="form-group">
-					<label for="m-bf">{t('body_fat_pct', lang)}</label>
-					<input id="m-bf" type="number" step="0.1" bind:value={formBodyFat} placeholder="—" />
-				</div>
-				<div class="form-group">
-					<label for="m-cal">{t('calories_kcal', lang)}</label>
-					<input id="m-cal" type="number" bind:value={formCalories} placeholder="—" />
-				</div>
-			</div>
-
-			<h3>{t('body_parts_cm', lang)}</h3>
-			<div class="form-row">
-				<div class="form-group"><label for="m-neck">{t('neck', lang)}</label><input id="m-neck" type="number" step="0.1" bind:value={formNeck} placeholder="—" /></div>
-				<div class="form-group"><label for="m-shoulders">{t('shoulders', lang)}</label><input id="m-shoulders" type="number" step="0.1" bind:value={formShoulders} placeholder="—" /></div>
-				<div class="form-group"><label for="m-chest">{t('chest', lang)}</label><input id="m-chest" type="number" step="0.1" bind:value={formChest} placeholder="—" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-bl">{t('l_bicep', lang)}</label><input id="m-bl" type="number" step="0.1" bind:value={formBicepsL} placeholder="—" /></div>
-				<div class="form-group"><label for="m-br">{t('r_bicep', lang)}</label><input id="m-br" type="number" step="0.1" bind:value={formBicepsR} placeholder="—" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-fl">{t('l_forearm', lang)}</label><input id="m-fl" type="number" step="0.1" bind:value={formForearmsL} placeholder="—" /></div>
-				<div class="form-group"><label for="m-fr">{t('r_forearm', lang)}</label><input id="m-fr" type="number" step="0.1" bind:value={formForearmsR} placeholder="—" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-waist">{t('waist', lang)}</label><input id="m-waist" type="number" step="0.1" bind:value={formWaist} placeholder="—" /></div>
-				<div class="form-group"><label for="m-hips">{t('hips', lang)}</label><input id="m-hips" type="number" step="0.1" bind:value={formHips} placeholder="—" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-tl">{t('l_thigh', lang)}</label><input id="m-tl" type="number" step="0.1" bind:value={formThighsL} placeholder="—" /></div>
-				<div class="form-group"><label for="m-tr">{t('r_thigh', lang)}</label><input id="m-tr" type="number" step="0.1" bind:value={formThighsR} placeholder="—" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-cl">{t('l_calf', lang)}</label><input id="m-cl" type="number" step="0.1" bind:value={formCalvesL} placeholder="—" /></div>
-				<div class="form-group"><label for="m-cr">{t('r_calf', lang)}</label><input id="m-cr" type="number" step="0.1" bind:value={formCalvesR} placeholder="—" /></div>
-			</div>
-
-			<button type="submit" class="save-btn" disabled={saving}>
-				{saving ? t('saving', lang) : editingId ? t('update_measurement', lang) : t('save_measurement', lang)}
-			</button>
-		</form>
-	{/if}
 
 	<section class="latest-section">
 		<h2>{t('latest', lang)}</h2>
@@ -394,16 +169,16 @@
 			<h2>{t('history', lang)}</h2>
 			<div class="history-list">
 				{#each measurements as m (m._id)}
-					<div class="history-item" class:editing={editingId === m._id}>
+					<div class="history-item">
 						<div class="history-main">
 							<div class="history-info">
 								<span class="history-date">{formatDate(m.date)}</span>
 								<span class="history-summary">{summaryParts(m)}</span>
 							</div>
 							<div class="history-actions">
-								<button class="icon-btn edit" onclick={() => startEdit(m)} aria-label="Edit measurement">
+								<a class="icon-btn edit" href="/fitness/{measureSlug}/edit/{m._id}" aria-label="Edit measurement">
 									<Pencil size={14} />
-								</button>
+								</a>
 								<button class="icon-btn delete" onclick={() => deleteMeasurement(m._id)} aria-label="Delete measurement">
 									<Trash2 size={14} />
 								</button>
@@ -417,7 +192,7 @@
 </div>
 
 {#if !workout.active}
-	<AddActionButton onclick={startAdd} ariaLabel="Add measurement" />
+	<AddButton href="/fitness/{measureSlug}/add" />
 {/if}
 
 <style>
@@ -434,18 +209,33 @@
 		margin: 0 0 0.5rem;
 		font-size: 1.1rem;
 	}
-	h3 {
-		margin: 0.75rem 0 0.25rem;
-		font-size: 0.85rem;
-		color: var(--color-text-secondary);
-	}
-
 	/* Profile */
 	.profile-section {
 		background: var(--color-surface);
 		border-radius: 8px;
 		box-shadow: var(--shadow-sm);
 		padding: 0.75rem 1rem;
+	}
+	.profile-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		color: inherit;
+	}
+	.profile-toggle h2 {
+		margin: 0;
+		font-size: 0.9rem;
+	}
+	.profile-toggle :global(.chevron) {
+		transition: transform 0.2s;
+	}
+	.profile-toggle :global(.chevron.open) {
+		transform: rotate(180deg);
 	}
 	.profile-section h2 {
 		margin: 0 0 0.5rem;
@@ -455,14 +245,7 @@
 		display: flex;
 		gap: 0.75rem;
 		align-items: flex-end;
-	}
-	.profile-row select {
-		padding: 0.4rem 0.5rem;
-		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		background: var(--color-bg-elevated);
-		color: inherit;
-		font-size: 0.85rem;
+		margin-top: 0.5rem;
 	}
 	.profile-save-btn {
 		padding: 0.4rem 0.75rem;
@@ -482,43 +265,6 @@
 		cursor: not-allowed;
 	}
 
-	/* Form */
-	.measure-form {
-		background: var(--color-surface);
-		border-radius: 8px;
-		box-shadow: var(--shadow-sm);
-		padding: 1rem;
-	}
-	.form-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 0.5rem;
-	}
-	.form-header h2 {
-		margin: 0;
-		font-size: 1rem;
-	}
-	.cancel-form-btn {
-		background: none;
-		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		color: var(--color-text-secondary);
-		padding: 0.3rem 0.75rem;
-		font-weight: 700;
-		font-size: 0.75rem;
-		cursor: pointer;
-		letter-spacing: 0.03em;
-	}
-	.cancel-form-btn:hover {
-		border-color: var(--color-text-primary);
-		color: var(--color-text-primary);
-	}
-	.form-row {
-		display: flex;
-		gap: 0.5rem;
-		flex-wrap: wrap;
-	}
 	.form-group {
 		flex: 1;
 		display: flex;
@@ -533,7 +279,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
-	.form-group input {
+	.form-group input, .form-group select {
 		padding: 0.4rem 0.5rem;
 		border: 1px solid var(--color-border);
 		border-radius: 6px;
@@ -544,22 +290,6 @@
 	.form-group input:focus {
 		outline: none;
 		border-color: var(--color-primary);
-	}
-	.save-btn {
-		width: 100%;
-		margin-top: 0.75rem;
-		padding: 0.7rem;
-		background: var(--color-primary);
-		color: white;
-		border: none;
-		border-radius: 8px;
-		font-weight: 700;
-		font-size: 0.85rem;
-		cursor: pointer;
-	}
-	.save-btn:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
 	}
 
 	/* Latest */
@@ -624,9 +354,6 @@
 		box-shadow: var(--shadow-sm);
 		padding: 0.6rem 0.75rem;
 	}
-	.history-item.editing {
-		border: 1px solid var(--color-primary);
-	}
 	.history-main {
 		display: flex;
 		justify-content: space-between;
@@ -681,9 +408,6 @@
 	@media (max-width: 480px) {
 		.stat-grid {
 			grid-template-columns: 1fr;
-		}
-		.form-row {
-			flex-direction: column;
 		}
 	}
 </style>

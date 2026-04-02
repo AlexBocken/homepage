@@ -108,12 +108,13 @@
 
   .side-panel {
     position: fixed;
-    top: 4rem;
+    top: 0;
     right: 0;
     width: 400px;
-    height: calc(100vh - 4rem);
-    background: #fbf9f3;
-    border-left: 1px solid #dee2e6;
+    height: 100vh;
+    padding-top: var(--header-h, 3rem);
+    background: var(--color-bg-tertiary);
+    border-left: 1px solid var(--color-border);
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     z-index: 100;
     overflow-y: auto;
@@ -139,17 +140,6 @@
     overflow-y: auto;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .side-panel {
-      background: var(--background-dark);
-      border-left-color: #434C5E;
-    }
-  }
-:global(:root[data-theme="dark"]) .side-panel {
-	background: var(--background-dark);
-      border-left-color: #434C5E;
-}
-
   @media (max-width: 768px) {
     .layout-container.has-modal .main-content {
       margin-right: 0;
@@ -157,11 +147,12 @@
 
     .side-panel {
       position: fixed;
-      top: 4rem;
+      top: 0;
       left: 0;
       right: 0;
       width: 100%;
-      height: calc(100vh - 4rem);
+      height: 100vh;
+      padding-top: var(--header-h, 3rem);
       transform: translateY(100%);
     }
 
@@ -188,8 +179,9 @@
       min-width: unset;
       max-width: unset;
       width: 100%;
+      padding-top: 0;
       border-left: none;
-      border-top: 1px solid #dee2e6;
+      border-top: 1px solid var(--color-border);
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
       top: auto;
       bottom: 0;
@@ -200,15 +192,4 @@
       transform: translateY(0);
     }
   }
-
-  @media (max-width: 768px) and (prefers-color-scheme: dark) {
-    .side-panel {
-      border-top-color: #434C5E;
-    }
-  }
-@media (max-width: 768px) {
-	:global(:root[data-theme="dark"]) .side-panel {
-	border-top-color: #434C5E;
-}
-}
 </style>
