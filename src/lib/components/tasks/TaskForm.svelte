@@ -2,6 +2,7 @@
   import { X, Sparkles, Wind, Bath, UtensilsCrossed, CookingPot, WashingMachine,
     Flower2, Droplets, Leaf, ShoppingCart, Trash2, Shirt, Brush } from 'lucide-svelte';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import Toggle from '$lib/components/Toggle.svelte';
 
   const USERS = ['anna', 'alexander'];
 
@@ -299,10 +300,7 @@
   </div>
 
   <div class="field-row">
-    <label class="checkbox-label">
-      <input type="checkbox" bind:checked={isRecurring} />
-      Wiederkehrend
-    </label>
+    <Toggle bind:checked={isRecurring} label="Wiederkehrend" accentColor="var(--nord10)" />
   </div>
 
   {#if isRecurring}
@@ -669,13 +667,6 @@
 
   .field-row {
     margin-bottom: 0.75rem;
-  }
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    cursor: pointer;
   }
 
   .form-actions {
