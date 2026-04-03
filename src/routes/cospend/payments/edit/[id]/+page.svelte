@@ -932,9 +932,6 @@
       align-items: stretch;
     }
 
-    .main-actions {
-      flex-direction: column;
-    }
 
     .amount-currency {
       flex-direction: column;
