@@ -6,6 +6,7 @@ import type { IPr } from '$models/WorkoutSession';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
+import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import mongoose from 'mongoose';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
@@ -122,12 +123,19 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 			}
 		}
 
+		// Recompute kcal estimate using best available method
+		const kcalEstimate = await computeSessionKcal(
+			workoutSession.exercises,
+			session.user.nickname
+		);
+
 		// Use $set to only update computed fields, preserving gpsTrack data
 		await WorkoutSession.updateOne({ _id: workoutSession._id }, {
 			$set: {
 				totalVolume: totalVolume > 0 ? totalVolume : undefined,
 				totalDistance: totalDistance > 0 ? totalDistance : undefined,
 				prs: prs.length > 0 ? prs : undefined,
+				kcalEstimate: kcalEstimate ?? undefined,
 				...gpsPreviewUpdates
 			}
 		});
@@ -135,7 +143,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		return json({
 			totalVolume: totalVolume > 0 ? totalVolume : undefined,
 			totalDistance: totalDistance > 0 ? totalDistance : undefined,
-			prs: prs.length
+			prs: prs.length,
+			kcalEstimate
 		});
 	} catch (error) {
 		console.error('Error recalculating session:', error);

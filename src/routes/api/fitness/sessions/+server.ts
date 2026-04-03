@@ -7,6 +7,7 @@ import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
+import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
   if (reps <= 0 || weight <= 0) return 0;
@@ -155,6 +156,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return ex;
     });
 
+    // Compute kcal estimate using best available method (GPS + demographics)
+    const kcalEstimate = await computeSessionKcal(processedExercises, session.user.nickname);
+
     const workoutSession = new WorkoutSession({
       templateId,
       templateName,
@@ -170,6 +174,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       gpsTrack: gpsTrack?.length ? gpsTrack : undefined,
       gpsPreview,
       prs: prs.length > 0 ? prs : undefined,
+      kcalEstimate,
       notes,
       createdBy: session.user.nickname
     });
