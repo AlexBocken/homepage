@@ -29,6 +29,13 @@ export interface ICompletedExercise {
   totalDistance?: number; // km
 }
 
+export interface IKcalEstimate {
+  kcal: number;
+  lower: number;
+  upper: number;
+  methods: string[];
+}
+
 export interface IPr {
   exerciseId: string;
   type: string; // 'est1rm' | 'maxWeight' | 'bestSetVolume' | 'repMax' | 'longestDistance' | 'fastestPace:<min>:<max>'
@@ -52,6 +59,7 @@ export interface IWorkoutSession {
   gpsTrack?: IGpsPoint[]; // Top-level GPS track for GPS-only workouts
   gpsPreview?: number[][]; // Downsampled [[lat,lng], ...] for card preview
   prs?: IPr[];
+  kcalEstimate?: IKcalEstimate;
   notes?: string;
   createdBy: string; // username/nickname of the person who performed the workout
   createdAt?: Date;
@@ -207,6 +215,16 @@ const WorkoutSessionSchema = new mongoose.Schema(
       reps: Number,
       _id: false
     }],
+    kcalEstimate: {
+      type: {
+        kcal: { type: Number, required: true },
+        lower: { type: Number, required: true },
+        upper: { type: Number, required: true },
+        methods: { type: [String], required: true },
+      },
+      default: undefined,
+      _id: false,
+    },
     notes: {
       type: String,
       trim: true,

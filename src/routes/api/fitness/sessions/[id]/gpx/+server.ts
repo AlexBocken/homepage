@@ -4,6 +4,7 @@ import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import type { IGpsPoint } from '$models/WorkoutSession';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
+import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import mongoose from 'mongoose';
 
 /** Haversine distance in km between two points */
@@ -114,11 +115,18 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			sets[0].duration = durationMin;
 		}
 
+		// Recompute kcal with the new GPS data
+		workoutSession.kcalEstimate = await computeSessionKcal(
+			workoutSession.exercises,
+			session.user.nickname
+		) ?? undefined;
+
 		await workoutSession.save();
 
 		return json({
 			points: track.length,
-			distance: workoutSession.exercises[exerciseIdx].totalDistance
+			distance: workoutSession.exercises[exerciseIdx].totalDistance,
+			kcalEstimate: workoutSession.kcalEstimate
 		});
 	} catch (error) {
 		console.error('Error processing GPX upload:', error);
@@ -158,9 +166,16 @@ export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 		workoutSession.exercises[exerciseIdx].gpsTrack = undefined;
 		workoutSession.exercises[exerciseIdx].gpsPreview = undefined;
 		workoutSession.exercises[exerciseIdx].totalDistance = undefined;
+
+		// Recompute kcal without the GPS data
+		workoutSession.kcalEstimate = await computeSessionKcal(
+			workoutSession.exercises,
+			session.user.nickname
+		) ?? undefined;
+
 		await workoutSession.save();
 
-		return json({ success: true });
+		return json({ success: true, kcalEstimate: workoutSession.kcalEstimate });
 	} catch (error) {
 		console.error('Error removing GPS track:', error);
 		return json({ error: 'Failed to remove GPS track' }, { status: 500 });
