@@ -10,9 +10,7 @@
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getGpsTracker, trackDistance } from '$lib/js/gps.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
-	import { getPaceRanges, formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
-	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
-	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
+	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import { queueSession } from '$lib/offline/fitnessQueue';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
@@ -550,6 +548,28 @@
 	 * @param {any} local
 	 * @param {any} saved
 	 */
+	/** Format a stored PR (machine format) for display */
+	function formatPr(/** @type {any} */ pr) {
+		/** @type {Record<string, string>} */
+		const TYPE_LABELS = {
+			est1rm: 'Est. 1RM',
+			maxWeight: 'Max Weight',
+			bestSetVolume: 'Best Set Volume',
+		};
+		let type = TYPE_LABELS[pr.type] ?? pr.type;
+		let value = `${pr.value} kg`;
+		if (pr.type === 'repMax') {
+			type = `${pr.reps}-rep max`;
+		} else if (pr.type === 'longestDistance') {
+			type = 'Longest Distance';
+			value = `${pr.value} km`;
+		} else if (pr.type.startsWith('fastestPace:')) {
+			type = `Fastest Pace (${formatPaceRangeLabel(pr.type)})`;
+			value = formatPaceValue(pr.value);
+		}
+		return { exerciseId: pr.exerciseId, type, value };
+	}
+
 	function buildCompletion(local, saved) {
 		const startTime = new Date(local.startTime);
 		const endTime = new Date(local.endTime);
@@ -557,8 +577,6 @@
 
 		let totalTonnage = 0;
 		let totalDistance = local.totalDistance ?? 0;
-		/** @type {any[]} */
-		const prs = [];
 
 		const exerciseSummaries = local.exercises.map((/** @type {any} */ ex) => {
 			const exercise = getExerciseById(ex.exerciseId, lang);
@@ -566,14 +584,12 @@
 			const isCardio = metrics.includes('distance');
 			const isBilateral = exercise?.bilateral ?? false;
 			const weightMul = isBilateral ? 2 : 1;
-			const prev = previousData[ex.exerciseId] ?? [];
 
 			let exTonnage = 0;
 			let exDistance = 0;
 			let exDuration = 0;
 			let bestWeight = 0;
 			let bestEst1rm = 0;
-			let bestVolume = 0;
 			let sets = 0;
 
 			for (const s of ex.sets) {
@@ -585,92 +601,15 @@
 				} else {
 					const w = (s.weight ?? 0) * weightMul;
 					const r = s.reps ?? 0;
-					const vol = w * r;
-					exTonnage += vol;
+					exTonnage += w * r;
 					if (s.weight > bestWeight) bestWeight = s.weight;
 					const e1rm = r > 0 && s.weight > 0 ? (r === 1 ? s.weight : Math.round(s.weight * (1 + r / 30))) : 0;
 					if (e1rm > bestEst1rm) bestEst1rm = e1rm;
-					if (vol > bestVolume) bestVolume = vol;
 				}
 			}
 
 			totalTonnage += exTonnage;
 			totalDistance += exDistance;
-
-			// Detect PRs by comparing against previous session
-			if (prev.length > 0) {
-				if (!isCardio) {
-					let prevBestWeight = 0;
-					let prevBestEst1rm = 0;
-					let prevBestVolume = 0;
-
-					for (const ps of prev) {
-						const pw = ps.weight ?? 0;
-						const pr = ps.reps ?? 0;
-						if (pw > prevBestWeight) prevBestWeight = pw;
-						const pe = pr > 0 && pw > 0 ? (pr === 1 ? pw : Math.round(pw * (1 + pr / 30))) : 0;
-						if (pe > prevBestEst1rm) prevBestEst1rm = pe;
-						const pv = pw * pr * (isBilateral ? 2 : 1);
-						if (pv > prevBestVolume) prevBestVolume = pv;
-					}
-
-					if (bestWeight > prevBestWeight && prevBestWeight > 0) {
-						prs.push({ exerciseId: ex.exerciseId, type: 'Max Weight', value: `${bestWeight} kg` });
-					}
-					if (bestEst1rm > prevBestEst1rm && prevBestEst1rm > 0) {
-						prs.push({ exerciseId: ex.exerciseId, type: 'Est. 1RM', value: `${bestEst1rm} kg` });
-					}
-					if (bestVolume > prevBestVolume && prevBestVolume > 0) {
-						prs.push({ exerciseId: ex.exerciseId, type: 'Best Set Volume', value: `${Math.round(bestVolume)} kg` });
-					}
-				} else {
-					const ranges = getPaceRanges(ex.exerciseId);
-
-					let curBestDist = 0;
-					/** @type {Map<string, number>} */
-					const curBestPaces = new Map();
-					for (const s of ex.sets) {
-						if (!s.completed || !s.distance || s.distance <= 0) continue;
-						if (s.distance > curBestDist) curBestDist = s.distance;
-						if (s.duration && s.duration > 0) {
-							const p = s.duration / s.distance;
-							const range = ranges.find(r => s.distance >= r.min && s.distance < r.max);
-							if (range) {
-								const key = `${range.min}:${range.max}`;
-								const cur = curBestPaces.get(key);
-								if (!cur || p < cur) curBestPaces.set(key, p);
-							}
-						}
-					}
-
-					let prevBestDist = 0;
-					/** @type {Map<string, number>} */
-					const prevBestPaces = new Map();
-					for (const ps of prev) {
-						if (!ps.distance || ps.distance <= 0) continue;
-						if (ps.distance > prevBestDist) prevBestDist = ps.distance;
-						if (ps.duration && ps.duration > 0) {
-							const p = ps.duration / ps.distance;
-							const range = ranges.find(r => ps.distance >= r.min && ps.distance < r.max);
-							if (range) {
-								const key = `${range.min}:${range.max}`;
-								const cur = prevBestPaces.get(key);
-								if (!cur || p < cur) prevBestPaces.set(key, p);
-							}
-						}
-					}
-
-					if (curBestDist > prevBestDist && prevBestDist > 0) {
-						prs.push({ exerciseId: ex.exerciseId, type: 'Longest Distance', value: `${curBestDist.toFixed(1)} km` });
-					}
-					for (const [key, pace] of curBestPaces) {
-						const prevPace = prevBestPaces.get(key);
-						if (prevPace && pace < prevPace) {
-							prs.push({ exerciseId: ex.exerciseId, type: `Fastest Pace (${formatPaceRangeLabel(`fastestPace:${key}`)})`, value: formatPaceValue(pace) });
-						}
-					}
-				}
-			}
 
 			const pace = isCardio && exDistance > 0 && exDuration > 0 ? exDuration / exDistance : 0;
 
@@ -687,53 +626,9 @@
 			};
 		});
 
-		// Estimate kcal for strength + cardio exercises
-		/** @type {import('$lib/data/kcalEstimate').ExerciseData[]} */
-		const kcalExercises = [];
-		let cardioKcal = 0;
-		let cardioMarginSq = 0;
-		for (const ex of local.exercises) {
-			const exercise = getExerciseById(ex.exerciseId, lang);
-			const metrics = getExerciseMetrics(exercise);
-			if (metrics.includes('distance')) {
-				let dist = 0;
-				let dur = 0;
-				for (const s of ex.sets) {
-					if (!s.completed) continue;
-					dist += s.distance ?? 0;
-					dur += s.duration ?? 0;
-				}
-				if (dist > 0 || dur > 0) {
-					const r = estimateCardioKcal(ex.exerciseId, 80, {
-						distanceKm: dist || undefined,
-						durationMin: dur || undefined,
-					});
-					cardioKcal += r.kcal;
-					cardioMarginSq += (r.kcal - r.lower) ** 2;
-				}
-				continue;
-			}
-			const weightMultiplier = exercise?.bilateral ? 2 : 1;
-			const sets = ex.sets
-				.filter((/** @type {any} */ s) => s.completed && s.reps > 0)
-				.map((/** @type {any} */ s) => ({
-					weight: (s.weight ?? 0) * weightMultiplier,
-					reps: s.reps ?? 0
-				}));
-			if (sets.length > 0) kcalExercises.push({ exerciseId: ex.exerciseId, sets });
-		}
-		const strengthResult = kcalExercises.length > 0 ? estimateWorkoutKcal(kcalExercises) : null;
-		let kcalResult = null;
-		if (strengthResult || cardioKcal > 0) {
-			const total = (strengthResult?.kcal ?? 0) + cardioKcal;
-			const sMargin = strengthResult ? (strengthResult.kcal - strengthResult.lower) : 0;
-			const margin = Math.round(Math.sqrt(sMargin ** 2 + cardioMarginSq));
-			kcalResult = {
-				kcal: Math.round(total),
-				lower: Math.max(0, Math.round(total) - margin),
-				upper: Math.round(total) + margin,
-			};
-		}
+		// Use server-computed PRs and kcal (accurate, uses all history + GPS + demographics)
+		const prs = (saved.prs ?? []).map(formatPr);
+		const kcalResult = saved.kcalEstimate ?? null;
 
 		return {
 			sessionId: saved._id,
@@ -1163,11 +1058,12 @@
 							</div>
 
 							<div class="vg-group">
-								<label class="vg-label">
+								<label class="vg-label" for="vg-volume">
 									TTS Volume
 									<span class="vg-volume-value">{Math.round(vgVolume * 100)}%</span>
 								</label>
 								<input
+									id="vg-volume"
 									class="vg-range"
 									type="range"
 									min="0"
@@ -1406,11 +1302,12 @@
 								</div>
 
 								<div class="vg-group">
-									<label class="vg-label">
+									<label class="vg-label" for="vg-volume-gps">
 										TTS Volume
 										<span class="vg-volume-value">{Math.round(vgVolume * 100)}%</span>
 									</label>
 									<input
+										id="vg-volume-gps"
 										class="vg-range"
 										type="range"
 										min="0"
@@ -2041,15 +1938,6 @@
 		padding: 0.5rem 0 0;
 		border-top: 1px solid var(--color-border);
 	}
-	.vg-row {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.85rem;
-	}
-	.vg-row input[type="checkbox"] {
-		accent-color: var(--nord14);
-	}
 	.vg-group {
 		display: flex;
 		flex-direction: column;
@@ -2152,9 +2040,6 @@
 	}
 	.gps-overlay .vg-label {
 		color: rgba(255,255,255,0.6);
-	}
-	.gps-overlay .vg-row {
-		color: #fff;
 	}
 	.gps-overlay .vg-number,
 	.gps-overlay .vg-select {
