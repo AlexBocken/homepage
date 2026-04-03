@@ -55,7 +55,14 @@ interface RecipeJsonLd {
   [key: string]: unknown;
 }
 
-export function generateRecipeJsonLd(data: RecipeModelType) {
+type ReferencedNutrition = {
+  shortName: string;
+  name: string;
+  nutrition: Record<string, number>;
+  baseMultiplier: number;
+};
+
+export function generateRecipeJsonLd(data: RecipeModelType, referencedNutrition?: ReferencedNutrition[]) {
   const jsonLd: RecipeJsonLd = {
     "@context": "https://schema.org",
     "@type": "Recipe",
@@ -145,7 +152,7 @@ export function generateRecipeJsonLd(data: RecipeModelType) {
   }
 
   // Add nutrition information from stored mappings
-  const nutritionInfo = computeNutritionInfo(data.ingredients || [], data.nutritionMappings, data.portions);
+  const nutritionInfo = computeNutritionInfo(data.ingredients || [], data.nutritionMappings, data.portions, referencedNutrition);
   if (nutritionInfo) {
     jsonLd.nutrition = nutritionInfo;
   }
@@ -181,8 +188,9 @@ function computeNutritionInfo(
   ingredients: any[],
   mappings: NutritionMapping[] | undefined,
   portions: string | undefined,
+  referencedNutrition?: ReferencedNutrition[],
 ): Record<string, string> | null {
-  if (!mappings || mappings.length === 0) return null;
+  if ((!mappings || mappings.length === 0) && (!referencedNutrition || referencedNutrition.length === 0)) return null;
 
   const index = new Map(
     mappings.map(m => [`${m.sectionIndex}-${m.ingredientIndex}`, m])
@@ -224,6 +232,16 @@ function computeNutritionInfo(
       totals.sugars += factor * m.per100g.sugars;
       totals.sodium += factor * m.per100g.sodium;
       totals.cholesterol += factor * m.per100g.cholesterol;
+    }
+  }
+
+  // Add nutrition from referenced recipes (base refs + anchor-tag refs)
+  if (referencedNutrition) {
+    for (const ref of referencedNutrition) {
+      const scale = ref.baseMultiplier;
+      for (const key of Object.keys(totals) as (keyof typeof totals)[]) {
+        totals[key] += (ref.nutrition[key] || 0) * scale;
+      }
     }
   }
 
