@@ -132,7 +132,7 @@ async function getBlsEmbeddingIndex() {
 
 /** Normalize an ingredient name for matching (English) */
 export function normalizeIngredientName(name: string): string {
-	let normalized = name.toLowerCase().trim();
+	let normalized = name.replace(/<[^>]*>/g, '').toLowerCase().trim();
 	normalized = normalized.replace(/\(.*?\)/g, '').trim();
 	for (const mod of STRIP_MODIFIERS) {
 		normalized = normalized.replace(new RegExp(`\\b${mod}\\b,?\\s*`, 'gi'), '').trim();
@@ -143,7 +143,7 @@ export function normalizeIngredientName(name: string): string {
 
 /** Normalize a German ingredient name for matching */
 export function normalizeIngredientNameDe(name: string): string {
-	let normalized = name.toLowerCase().trim();
+	let normalized = name.replace(/<[^>]*>/g, '').toLowerCase().trim();
 	normalized = normalized.replace(/\(.*?\)/g, '').trim();
 	for (const mod of STRIP_MODIFIERS_DE) {
 		normalized = normalized.replace(new RegExp(`\\b${mod}\\b,?\\s*`, 'gi'), '').trim();
@@ -280,7 +280,8 @@ function substringMatchScore(
 		const pos = nameLower.indexOf(form);
 		if (pos >= 0 && pos < 15) hasEarlyMatch = true;
 		// Word-boundary match
-		const wordBoundary = new RegExp(`(^|[\\s,/])${form}([\\s,/]|$)`);
+		const escaped = form.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const wordBoundary = new RegExp(`(^|[\\s,/])${escaped}([\\s,/]|$)`);
 		if (wordBoundary.test(nameLower)) hasWordBoundaryMatch = true;
 	}
 
@@ -812,4 +813,73 @@ export function computeRecipeNutritionTotals(
 /** Strip HTML tags from a string */
 function stripHtml(html: string): string {
 	return html.replace(/<[^>]*>/g, '');
+}
+
+/** Parse anchor href from ingredient name, return recipe short_name or null */
+export function parseAnchorRecipeRef(ingredientName: string): string | null {
+	const match = ingredientName.match(/<a\s+href=["']?([^"' >]+)["']?[^>]*>/i);
+	if (!match) return null;
+	let href = match[1].trim();
+	href = href.split('?')[0];
+	if (href.startsWith('http') || href.includes('://')) return null;
+	href = href.replace(/^(\.?\/?rezepte\/|\.\/|\/)/, '');
+	if (href.includes('.')) return null;
+	return href || null;
+}
+
+export type ReferencedNutritionResult = {
+	shortName: string;
+	name: string;
+	nutrition: Record<string, number>;
+	baseMultiplier: number;
+};
+
+/**
+ * Build nutrition totals for referenced recipes:
+ * 1. Base recipe references (type='reference' with populated baseRecipeRef)
+ * 2. Anchor-tag references in ingredient names (<a href=...>)
+ */
+export async function resolveReferencedNutrition(
+	ingredients: any[],
+): Promise<ReferencedNutritionResult[]> {
+	const { Recipe } = await import('$models/Recipe');
+	const results: ReferencedNutritionResult[] = [];
+	const processedSlugs = new Set<string>();
+
+	for (const section of ingredients) {
+		// Type 1: Base recipe references
+		if (section.type === 'reference' && section.baseRecipeRef) {
+			const ref = section.baseRecipeRef;
+			const slug = ref.short_name;
+			if (processedSlugs.has(slug)) continue;
+			processedSlugs.add(slug);
+
+			if (ref.nutritionMappings?.length > 0) {
+				const mult = section.baseMultiplier || 1;
+				const nutrition = computeRecipeNutritionTotals(ref.ingredients || [], ref.nutritionMappings, 1);
+				results.push({ shortName: slug, name: ref.name, nutrition, baseMultiplier: mult });
+			}
+		}
+
+		// Type 2: Anchor-tag references in ingredient names
+		if (section.list) {
+			for (const item of section.list) {
+				const refSlug = parseAnchorRecipeRef(item.name || '');
+				if (!refSlug || processedSlugs.has(refSlug)) continue;
+				processedSlugs.add(refSlug);
+
+				const refRecipe = await Recipe.findOne({ short_name: refSlug })
+					.select('short_name name ingredients nutritionMappings portions')
+					.lean();
+				if (!refRecipe?.nutritionMappings?.length) continue;
+
+				const nutrition = computeRecipeNutritionTotals(
+					refRecipe.ingredients || [], refRecipe.nutritionMappings, 1
+				);
+				results.push({ shortName: refSlug, name: refRecipe.name, nutrition, baseMultiplier: 1 });
+			}
+		}
+	}
+
+	return results;
 }

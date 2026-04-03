@@ -4,7 +4,7 @@ import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
 import type { RecipeModelType, IngredientItem, InstructionItem } from '$types/types';
 import { isEnglish } from '$lib/server/recipeHelpers';
-import { getNutritionEntryByFdcId, getBlsEntryByCode, computeRecipeNutritionTotals } from '$lib/server/nutritionMatcher';
+import { getNutritionEntryByFdcId, getBlsEntryByCode, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 
 /** Recursively map populated baseRecipeRef to resolvedRecipe field */
 function mapBaseRecipeRefs(items: any[]): any[] {
@@ -40,72 +40,6 @@ function resolveNutritionData(mappings: any[]): any[] {
     }
     return m;
   });
-}
-
-/** Parse anchor href from ingredient name, return short_name or null */
-function parseAnchorRecipeRef(ingredientName: string): string | null {
-  const match = ingredientName.match(/<a\s+href=["']?([^"' >]+)["']?[^>]*>/i);
-  if (!match) return null;
-  let href = match[1].trim();
-  // Strip query params (e.g., ?multiplier={{multiplier}})
-  href = href.split('?')[0];
-  // Skip external links
-  if (href.startsWith('http') || href.includes('://')) return null;
-  // Strip leading path components like /rezepte/ or ./
-  href = href.replace(/^(\.?\/?rezepte\/|\.\/|\/)/, '');
-  // Skip if contains a dot (file extensions, external domains)
-  if (href.includes('.')) return null;
-  return href || null;
-}
-
-/**
- * Build nutrition totals for referenced recipes:
- * 1. Base recipe references (type='reference' with populated baseRecipeRef)
- * 2. Anchor-tag references in ingredient names (<a href=...>)
- */
-async function resolveReferencedNutrition(
-  ingredients: any[],
-): Promise<{ shortName: string; name: string; nutrition: Record<string, number>; baseMultiplier: number }[]> {
-  const results: { shortName: string; name: string; nutrition: Record<string, number>; baseMultiplier: number }[] = [];
-  const processedSlugs = new Set<string>();
-
-  for (const section of ingredients) {
-    // Type 1: Base recipe references
-    if (section.type === 'reference' && section.baseRecipeRef) {
-      const ref = section.baseRecipeRef;
-      const slug = ref.short_name;
-      if (processedSlugs.has(slug)) continue;
-      processedSlugs.add(slug);
-
-      if (ref.nutritionMappings?.length > 0) {
-        const mult = section.baseMultiplier || 1;
-        const nutrition = computeRecipeNutritionTotals(ref.ingredients || [], ref.nutritionMappings, 1);
-        results.push({ shortName: slug, name: ref.name, nutrition, baseMultiplier: mult });
-      }
-    }
-
-    // Type 2: Anchor-tag references in ingredient names
-    if (section.list) {
-      for (const item of section.list) {
-        const refSlug = parseAnchorRecipeRef(item.name || '');
-        if (!refSlug || processedSlugs.has(refSlug)) continue;
-        processedSlugs.add(refSlug);
-
-        // Look up the referenced recipe
-        const refRecipe = await Recipe.findOne({ short_name: refSlug })
-          .select('short_name name ingredients nutritionMappings portions')
-          .lean();
-        if (!refRecipe?.nutritionMappings?.length) continue;
-
-        const nutrition = computeRecipeNutritionTotals(
-          refRecipe.ingredients || [], refRecipe.nutritionMappings, 1
-        );
-        results.push({ shortName: refSlug, name: refRecipe.name, nutrition, baseMultiplier: 1 });
-      }
-    }
-  }
-
-  return results;
 }
 
 export const GET: RequestHandler = async ({ params }) => {
