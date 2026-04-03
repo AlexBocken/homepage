@@ -171,8 +171,8 @@
   </div>
 
   <div class="field">
-    <label>Zugewiesen an</label>
-    <div class="assignee-buttons">
+    <span class="label">Zugewiesen an</span>
+    <div class="assignee-buttons" role="group" aria-label="Zugewiesen an">
       {#each USERS as user}
         <button
           type="button"
@@ -195,7 +195,7 @@
 
   <!-- Tags: desktop = input + dropdown, mobile = pill buttons -->
   <div class="field">
-    <label>Tags</label>
+    <span class="label">Tags</span>
     <span class="hint">Bestimmen Sticker-Belohnungen</span>
 
     <!-- Desktop: input with dropdown -->
@@ -212,9 +212,9 @@
         />
         {#if tagDropdownOpen && filteredDropdownTags.length > 0}
           <div class="tag-dropdown">
-            {#each filteredDropdownTags as { tag, icon }}
+            {#each filteredDropdownTags as { tag, icon: Icon }}
               <button type="button" class="tag-dropdown-item" onclick={() => selectDropdownTag(tag)}>
-                <svelte:component this={icon} size={14} />
+                <Icon size={14} />
                 {tag}
               </button>
             {/each}
@@ -225,14 +225,14 @@
 
     <!-- Mobile: pill buttons -->
     <div class="tag-pills-mobile">
-      {#each AVAILABLE_TAGS as { tag, icon }}
+      {#each AVAILABLE_TAGS as { tag, icon: Icon }}
         <button
           type="button"
           class="tag-pill"
           class:selected={selectedTags.includes(tag)}
           onclick={() => toggleTag(tag)}
         >
-          <svelte:component this={icon} size={14} />
+          <Icon size={14} />
           {tag}
         </button>
       {/each}
@@ -245,7 +245,7 @@
           {@const Icon = getTagIcon(tag)}
           <button type="button" class="tag-chip selected" onclick={() => toggleTag(tag)}>
             {#if Icon}
-              <svelte:component this={Icon} size={13} />
+              <Icon size={13} />
             {/if}
             {tag}
             <span class="remove-x">&times;</span>
@@ -256,7 +256,7 @@
   </div>
 
   <div class="field">
-    <label>Schwierigkeit</label>
+    <span class="label">Schwierigkeit</span>
     <span class="hint">Schwerere Aufgaben geben seltenere Sticker</span>
     <div class="difficulty-buttons">
       <button
@@ -323,7 +323,7 @@
     {/if}
 
     <div class="field">
-      <label>Nächstes Fälligkeitsdatum berechnen ab</label>
+      <span class="label">Nächstes Fälligkeitsdatum berechnen ab</span>
       <div class="refresh-mode-buttons">
         <button
           type="button"
@@ -404,7 +404,7 @@
   .field {
     margin-bottom: 0.75rem;
   }
-  .field label {
+  .field label, .field .label {
     display: block;
     font-size: 0.78rem;
     font-weight: 600;

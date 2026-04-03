@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import Cross from '$lib/assets/icons/Cross.svelte';
@@ -282,7 +282,7 @@
 
 	// Pre-init all toggles to false (prevents bind:checked={undefined}), then load real state
 	initGlobalToggles();
-	if (nutritionMappings.length > 0) {
+	if (untrack(() => nutritionMappings).length > 0) {
 		loadGlobalOverwrites().then(() => {
 			// Re-init with real overwrite data (overwrite the false defaults)
 			for (const m of nutritionMappings) {
@@ -473,20 +473,6 @@
 	}
 	h3 {
 		text-align: center;
-	}
-	button.action_button {
-		animation: unset !important;
-		font-size: 1.3rem;
-		color: white;
-	}
-	.submit_buttons {
-		display: flex;
-		margin-inline: auto;
-		max-width: 1000px;
-		margin-block: 1rem;
-		justify-content: center;
-		align-items: center;
-		gap: 2rem;
 	}
 	@media (prefers-color-scheme: dark) {
     :global(:root:not([data-theme="light"])) .title {

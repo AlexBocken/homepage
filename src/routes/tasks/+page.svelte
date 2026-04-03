@@ -270,7 +270,8 @@
               {#each task.tags as tag}
                 <span class="tag">
                   {#if TAG_ICONS[tag]}
-                    <svelte:component this={TAG_ICONS[tag]} size={14} />
+                    {@const Icon = TAG_ICONS[tag]}
+                    <Icon size={14} />
                   {/if}
                   {tag}
                 </span>

@@ -3,7 +3,7 @@
   import { getStickerById } from '$lib/utils/stickers';
   import {
     startOfMonth, endOfMonth, startOfWeek, endOfWeek,
-    eachDayOfInterval, isSameMonth, isSameDay, isToday, format, addMonths, subMonths
+    eachDayOfInterval, isSameMonth, isToday, format, addMonths, subMonths
   } from 'date-fns';
   import { de } from 'date-fns/locale';
 
