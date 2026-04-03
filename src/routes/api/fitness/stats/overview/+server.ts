@@ -5,8 +5,8 @@ import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
-import { estimateWorkoutKcal, estimateCumulativeKcal, type ExerciseData, type Demographics } from '$lib/data/kcalEstimate';
-import { estimateCardioKcal, estimateCumulativeCardioKcal, type CardioEstimateResult } from '$lib/data/cardioKcalEstimate';
+import { estimateWorkoutKcal, type ExerciseData, type Demographics } from '$lib/data/kcalEstimate';
+import { estimateCardioKcal, type CardioEstimateResult } from '$lib/data/cardioKcalEstimate';
 import { FitnessGoal } from '$models/FitnessGoal';
 
 export const GET: RequestHandler = async ({ locals }) => {
@@ -56,64 +56,90 @@ export const GET: RequestHandler = async ({ locals }) => {
 	};
 
 	// Lifetime totals: tonnage lifted + cardio km + kcal estimate
+	// Use stored kcalEstimate when available; fall back to on-the-fly for legacy sessions
 	const allSessions = await WorkoutSession.find(
 		{ createdBy: user.nickname },
-		{ 'exercises.exerciseId': 1, 'exercises.sets': 1, 'exercises.totalDistance': 1 }
+		{ 'exercises.exerciseId': 1, 'exercises.sets': 1, 'exercises.totalDistance': 1, kcalEstimate: 1 }
 	).lean();
 
 	let totalTonnage = 0;
 	let totalCardioKm = 0;
-	const workoutKcalResults: { kcal: number; see: number }[] = [];
-	const cardioKcalResults: CardioEstimateResult[] = [];
+	let totalKcal = 0;
+	let totalMarginSq = 0;
 	const bodyWeightKg = demographics.bodyWeightKg ?? 80;
 
 	for (const s of allSessions) {
-		const strengthExercises: ExerciseData[] = [];
+		// Accumulate tonnage and cardio km
 		for (const ex of s.exercises) {
 			const exercise = getExerciseById(ex.exerciseId);
 			const metrics = getExerciseMetrics(exercise);
 			const isCardio = metrics.includes('distance');
 			const weightMultiplier = exercise?.bilateral ? 2 : 1;
-			const completedSets: { weight: number; reps: number }[] = [];
 			if (isCardio) {
-				let dist = (ex as any).totalDistance ?? 0;
-				let dur = 0;
 				for (const set of ex.sets) {
 					if (!set.completed) continue;
-					if (!dist) dist += set.distance ?? 0;
-					dur += set.duration ?? 0;
 					totalCardioKm += set.distance ?? 0;
-				}
-				if (dist > 0 || dur > 0) {
-					cardioKcalResults.push(estimateCardioKcal(ex.exerciseId, bodyWeightKg, {
-						distanceKm: dist || undefined,
-						durationMin: dur || undefined,
-					}));
 				}
 			} else {
 				for (const set of ex.sets) {
 					if (!set.completed) continue;
-					const w = (set.weight ?? 0) * weightMultiplier;
-					totalTonnage += w * (set.reps ?? 0);
-					if (set.reps) completedSets.push({ weight: w, reps: set.reps });
-				}
-				if (completedSets.length > 0) {
-					strengthExercises.push({ exerciseId: ex.exerciseId, sets: completedSets });
+					totalTonnage += (set.weight ?? 0) * (set.reps ?? 0) * weightMultiplier;
 				}
 			}
 		}
-		if (strengthExercises.length > 0) {
-			const result = estimateWorkoutKcal(strengthExercises, demographics);
-			workoutKcalResults.push({ kcal: result.kcal, see: result.see });
+
+		// Use stored kcal or fall back to on-the-fly computation for legacy sessions
+		if (s.kcalEstimate) {
+			totalKcal += s.kcalEstimate.kcal;
+			totalMarginSq += (s.kcalEstimate.kcal - s.kcalEstimate.lower) ** 2;
+		} else {
+			// Legacy session: compute on-the-fly (no GPS, uses current demographics)
+			const strengthExercises: ExerciseData[] = [];
+			const cardioKcalResults: CardioEstimateResult[] = [];
+			for (const ex of s.exercises) {
+				const exercise = getExerciseById(ex.exerciseId);
+				const metrics = getExerciseMetrics(exercise);
+				if (metrics.includes('distance')) {
+					let dist = (ex as any).totalDistance ?? 0;
+					let dur = 0;
+					for (const set of ex.sets) {
+						if (!set.completed) continue;
+						if (!dist) dist += set.distance ?? 0;
+						dur += set.duration ?? 0;
+					}
+					if (dist > 0 || dur > 0) {
+						cardioKcalResults.push(estimateCardioKcal(ex.exerciseId, bodyWeightKg, {
+							distanceKm: dist || undefined,
+							durationMin: dur || undefined,
+						}));
+					}
+				} else {
+					const weightMultiplier = exercise?.bilateral ? 2 : 1;
+					const sets: { weight: number; reps: number }[] = [];
+					for (const set of ex.sets) {
+						if (!set.completed) continue;
+						if (set.reps) sets.push({ weight: (set.weight ?? 0) * weightMultiplier, reps: set.reps });
+					}
+					if (sets.length > 0) strengthExercises.push({ exerciseId: ex.exerciseId, sets });
+				}
+			}
+			let sessionKcal = 0;
+			let sessionMarginSq = 0;
+			if (strengthExercises.length > 0) {
+				const r = estimateWorkoutKcal(strengthExercises, demographics);
+				sessionKcal += r.kcal;
+				sessionMarginSq += (r.kcal - r.lower) ** 2;
+			}
+			for (const r of cardioKcalResults) {
+				sessionKcal += r.kcal;
+				sessionMarginSq += (r.kcal - r.lower) ** 2;
+			}
+			totalKcal += sessionKcal;
+			totalMarginSq += sessionMarginSq;
 		}
 	}
 
-	const strengthKcal = estimateCumulativeKcal(workoutKcalResults);
-	const cardioKcal = estimateCumulativeCardioKcal(cardioKcalResults);
-	const totalKcal = strengthKcal.kcal + cardioKcal.kcal;
-	const sMargin = strengthKcal.kcal - strengthKcal.lower;
-	const cMargin = cardioKcal.kcal - cardioKcal.lower;
-	const combinedMargin = Math.round(Math.sqrt(sMargin ** 2 + cMargin ** 2));
+	const combinedMargin = Math.round(Math.sqrt(totalMarginSq));
 	const kcalEstimate = {
 		kcal: totalKcal,
 		lower: Math.max(0, totalKcal - combinedMargin),

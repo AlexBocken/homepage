@@ -9,8 +9,6 @@
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
-	import { estimateWorkoutKcal } from '$lib/data/kcalEstimate';
-	import { estimateCardioKcal } from '$lib/data/cardioKcalEstimate';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -21,65 +19,8 @@
 
 	const session = $derived(data.session);
 
-	const kcalResult = $derived.by(() => {
-		if (!session?.exercises) return null;
-		/** @type {import('$lib/data/kcalEstimate').ExerciseData[]} */
-		const strengthExercises = [];
-		let cardioKcal = 0;
-		let cardioMarginSq = 0;
-		/** @type {Set<string>} */
-		const methods = new Set();
-
-		for (const ex of session.exercises) {
-			const exercise = getExerciseById(ex.exerciseId, lang);
-			const metrics = getExerciseMetrics(exercise);
-			if (metrics.includes('distance')) {
-				// Cardio: prefer GPS track, fall back to distance+duration
-				let dist = ex.totalDistance ?? 0;
-				let dur = 0;
-				for (const s of ex.sets) {
-					if (!s.completed) continue;
-					if (!dist) dist += s.distance ?? 0;
-					dur += s.duration ?? 0;
-				}
-				if (dist > 0 || dur > 0 || ex.gpsTrack?.length >= 2) {
-					const r = estimateCardioKcal(ex.exerciseId, 80, {
-						gpsTrack: ex.gpsTrack?.length >= 2 ? ex.gpsTrack : undefined,
-						distanceKm: dist || undefined,
-						durationMin: dur || undefined,
-					});
-					cardioKcal += r.kcal;
-					cardioMarginSq += (r.kcal - r.lower) ** 2;
-					methods.add(r.method);
-				}
-				continue;
-			}
-			const weightMultiplier = exercise?.bilateral ? 2 : 1;
-			const sets = ex.sets
-				.filter((/** @type {any} */ s) => s.completed && s.reps > 0)
-				.map((/** @type {any} */ s) => ({
-					weight: (s.weight ?? 0) * weightMultiplier,
-					reps: s.reps ?? 0
-				}));
-			if (sets.length > 0) strengthExercises.push({ exerciseId: ex.exerciseId, sets });
-		}
-
-		const strengthResult = strengthExercises.length > 0 ? estimateWorkoutKcal(strengthExercises) : null;
-		if (!strengthResult && cardioKcal === 0) return null;
-
-		if (strengthResult) methods.add('lytle');
-
-		const total = (strengthResult?.kcal ?? 0) + cardioKcal;
-		const sMargin = strengthResult ? (strengthResult.kcal - strengthResult.lower) : 0;
-		const margin = Math.round(Math.sqrt(sMargin ** 2 + cardioMarginSq));
-
-		return {
-			kcal: Math.round(total),
-			lower: Math.max(0, Math.round(total) - margin),
-			upper: Math.round(total) + margin,
-			methods: [...methods],
-		};
-	});
+	/** Use server-computed kcal estimate (stored at save/recalculate time) */
+	const kcalResult = $derived(session?.kcalEstimate ?? null);
 
 	/** @type {Record<string, { label: string, doi?: string }>} */
 	const METHOD_CITATIONS = {
