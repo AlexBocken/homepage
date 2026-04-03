@@ -26,7 +26,7 @@ function parseTimeToISO8601(timeString: string | undefined): string | undefined 
   return undefined;
 }
 
-import type { RecipeModelType } from '$types/types';
+import type { RecipeModelType, NutritionMapping } from '$types/types';
 
 interface HowToStep {
   "@type": "HowToStep";
@@ -144,6 +144,12 @@ export function generateRecipeJsonLd(data: RecipeModelType) {
     }
   }
 
+  // Add nutrition information from stored mappings
+  const nutritionInfo = computeNutritionInfo(data.ingredients || [], data.nutritionMappings, data.portions);
+  if (nutritionInfo) {
+    jsonLd.nutrition = nutritionInfo;
+  }
+
   // Clean up undefined values
   Object.keys(jsonLd).forEach(key => {
     if (jsonLd[key] === undefined) {
@@ -152,4 +158,100 @@ export function generateRecipeJsonLd(data: RecipeModelType) {
   });
 
   return jsonLd;
+}
+
+function parseAmount(amount: string): number {
+  if (!amount?.trim()) return 0;
+  const s = amount.trim().replace(',', '.');
+  const rangeMatch = s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
+  if (rangeMatch) return (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
+  const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
+  const mixedMatch = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+  if (mixedMatch) return parseInt(mixedMatch[1]) + parseInt(mixedMatch[2]) / parseInt(mixedMatch[3]);
+  const parsed = parseFloat(s);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '');
+}
+
+function computeNutritionInfo(
+  ingredients: any[],
+  mappings: NutritionMapping[] | undefined,
+  portions: string | undefined,
+): Record<string, string> | null {
+  if (!mappings || mappings.length === 0) return null;
+
+  const index = new Map(
+    mappings.map(m => [`${m.sectionIndex}-${m.ingredientIndex}`, m])
+  );
+
+  const totals = { calories: 0, protein: 0, fat: 0, saturatedFat: 0, carbs: 0, fiber: 0, sugars: 0, sodium: 0, cholesterol: 0 };
+
+  // Collect section names for dedup
+  const sectionNames = new Set<string>();
+  for (const section of ingredients) {
+    if (section.name) sectionNames.add(stripHtml(section.name).toLowerCase().trim());
+  }
+
+  for (let si = 0; si < ingredients.length; si++) {
+    const section = ingredients[si];
+    if (section.type === 'reference' || !section.list) continue;
+    const currentSectionName = section.name ? stripHtml(section.name).toLowerCase().trim() : '';
+
+    for (let ii = 0; ii < section.list.length; ii++) {
+      const item = section.list[ii];
+      const rawName = item.name || '';
+      const itemName = stripHtml(rawName).toLowerCase().trim();
+      if (/<a\s/i.test(rawName)) continue;
+      if (itemName && sectionNames.has(itemName) && itemName !== currentSectionName) continue;
+
+      const m = index.get(`${si}-${ii}`);
+      if (!m || m.matchMethod === 'none' || m.excluded || !m.per100g) continue;
+
+      const amount = parseAmount(item.amount || '') || (m.defaultAmountUsed ? 1 : 0);
+      const grams = amount * (m.gramsPerUnit || 0);
+      const factor = grams / 100;
+
+      totals.calories += factor * m.per100g.calories;
+      totals.protein += factor * m.per100g.protein;
+      totals.fat += factor * m.per100g.fat;
+      totals.saturatedFat += factor * m.per100g.saturatedFat;
+      totals.carbs += factor * m.per100g.carbs;
+      totals.fiber += factor * m.per100g.fiber;
+      totals.sugars += factor * m.per100g.sugars;
+      totals.sodium += factor * m.per100g.sodium;
+      totals.cholesterol += factor * m.per100g.cholesterol;
+    }
+  }
+
+  if (totals.calories === 0) return null;
+
+  // Parse portion count for per-serving values
+  const portionMatch = portions?.match(/^(\d+(?:[.,]\d+)?)/);
+  const portionCount = portionMatch ? parseFloat(portionMatch[1].replace(',', '.')) : 0;
+  const div = portionCount > 0 ? portionCount : 1;
+
+  const fmt = (val: number, unit: string) => `${Math.round(val / div)} ${unit}`;
+
+  const info: Record<string, string> = {
+    '@type': 'NutritionInformation',
+    calories: `${Math.round(totals.calories / div)} calories`,
+    proteinContent: fmt(totals.protein, 'g'),
+    fatContent: fmt(totals.fat, 'g'),
+    saturatedFatContent: fmt(totals.saturatedFat, 'g'),
+    carbohydrateContent: fmt(totals.carbs, 'g'),
+    fiberContent: fmt(totals.fiber, 'g'),
+    sugarContent: fmt(totals.sugars, 'g'),
+    sodiumContent: fmt(totals.sodium, 'mg'),
+    cholesterolContent: fmt(totals.cholesterol, 'mg'),
+  };
+
+  if (portionCount > 0) {
+    info.servingSize = `1 portion (${portionCount} total)`;
+  }
+
+  return info;
 }
