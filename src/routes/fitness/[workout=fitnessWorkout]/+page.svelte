@@ -535,8 +535,8 @@
 						</div>
 					{/if}
 					<div class="editor-gps-options">
-						<label class="editor-label">Activity</label>
-						<div class="activity-chips">
+						<span class="editor-label">Activity</span>
+						<div class="activity-chips" role="group" aria-label="Activity">
 							{#each /** @type {const} */ (['running', 'walking', 'cycling', 'hiking']) as act}
 								<button
 									class="activity-chip"
@@ -547,7 +547,7 @@
 							{/each}
 						</div>
 
-						<label class="editor-label">Interval Training</label>
+						<span class="editor-label">Interval Training</span>
 						<div class="interval-select">
 							<button
 								class="interval-option"

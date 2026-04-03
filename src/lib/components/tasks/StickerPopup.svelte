@@ -16,6 +16,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="popup-backdrop" transition:fade={{ duration: 200 }} onclick={onclose} onkeydown={e => e.key === 'Escape' && onclose?.()}>
   <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div class="popup-card" transition:scale={{ start: 0.5, duration: 500, easing: elasticOut }} onclick={e => e.stopPropagation()}>
     <div class="sticker-display" style="--rarity-color: {getRarityColor(sticker.rarity)}">
       <img class="sticker-img" src="/stickers/{sticker.image}" alt={sticker.name} />
