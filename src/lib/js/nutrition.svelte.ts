@@ -274,7 +274,7 @@ export function createNutritionCalculator(
 			total++;
 			const m = mappingIndex.get(`${ing.sectionIndex}-${ing.ingredientIndex}`);
 			// Manually excluded ingredients count as covered
-			if (m?.excluded) { total++; mapped++; continue; }
+			if (m?.excluded) { mapped++; continue; }
 			if (m && m.matchMethod !== 'none') mapped++;
 		}
 		return total > 0 ? mapped / total : 1;
