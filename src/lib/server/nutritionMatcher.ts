@@ -6,8 +6,7 @@
  * USDA uses all-MiniLM-L6-v2 for English ingredient names.
  */
 import { pipeline, type FeatureExtractionPipeline } from '@huggingface/transformers';
-import { readFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { read } from '$app/server';
 import { NUTRITION_DB, type NutritionEntry } from '$lib/data/nutritionDb';
 import { BLS_DB, type BlsEntry } from '$lib/data/blsDb';
 import { lookupAlias } from '$lib/data/ingredientAliases';
@@ -15,15 +14,11 @@ import { canonicalizeUnit, resolveGramsPerUnit } from '$lib/data/unitConversions
 import { resolveDefaultAmount } from '$lib/data/defaultAmounts';
 import type { NutritionMapping, NutritionPer100g } from '$types/types';
 import { NutritionOverwrite } from '$models/NutritionOverwrite';
+import usdaEmbeddingsUrl from '$lib/data/nutritionEmbeddings.json?url';
+import blsEmbeddingsUrl from '$lib/data/blsEmbeddings.json?url';
 
 const USDA_MODEL = 'Xenova/all-MiniLM-L6-v2';
 const BLS_MODEL = 'Xenova/multilingual-e5-small';
-// In dev CWD is project root; in production (adapter-node) CWD is dist/
-const DATA_DIR = existsSync(resolve('src/lib/data/nutritionEmbeddings.json'))
-	? resolve('src/lib/data')
-	: resolve('data');
-const USDA_EMBEDDINGS_PATH = `${DATA_DIR}/nutritionEmbeddings.json`;
-const BLS_EMBEDDINGS_PATH = `${DATA_DIR}/blsEmbeddings.json`;
 const CONFIDENCE_THRESHOLD = 0.45;
 
 // Lazy-loaded singletons — USDA
@@ -95,9 +90,9 @@ async function getUsdaEmbedder(): Promise<FeatureExtractionPipeline> {
 	return usdaEmbedder;
 }
 
-function getUsdaEmbeddingIndex() {
+async function getUsdaEmbeddingIndex() {
 	if (!usdaEmbeddingIndex) {
-		const raw = JSON.parse(readFileSync(USDA_EMBEDDINGS_PATH, 'utf-8'));
+		const raw = await read(usdaEmbeddingsUrl).json();
 		usdaEmbeddingIndex = raw.entries;
 	}
 	return usdaEmbeddingIndex!;
@@ -120,10 +115,10 @@ async function getBlsEmbedder(): Promise<FeatureExtractionPipeline> {
 	return blsEmbedder;
 }
 
-function getBlsEmbeddingIndex() {
+async function getBlsEmbeddingIndex() {
 	if (!blsEmbeddingIndex) {
 		try {
-			const raw = JSON.parse(readFileSync(BLS_EMBEDDINGS_PATH, 'utf-8'));
+			const raw = await read(blsEmbeddingsUrl).json();
 			blsEmbeddingIndex = raw.entries;
 		} catch {
 			// BLS embeddings not yet generated — skip
@@ -317,7 +312,7 @@ function substringMatchScore(
 async function blsEmbeddingMatch(
 	ingredientNameDe: string
 ): Promise<{ entry: BlsEntry; confidence: number } | null> {
-	const index = getBlsEmbeddingIndex();
+	const index = await getBlsEmbeddingIndex();
 	if (index.length === 0) return null;
 
 	const emb = await getBlsEmbedder();
@@ -439,7 +434,7 @@ async function usdaEmbeddingMatch(
 	ingredientNameEn: string
 ): Promise<{ entry: NutritionEntry; confidence: number } | null> {
 	const emb = await getUsdaEmbedder();
-	const index = getUsdaEmbeddingIndex();
+	const index = await getUsdaEmbeddingIndex();
 
 	const result = await emb(ingredientNameEn, { pooling: 'mean', normalize: true });
 	const queryVector = Array.from(result.data as Float32Array);
