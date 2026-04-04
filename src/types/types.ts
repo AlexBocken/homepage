@@ -33,6 +33,8 @@ export type NutritionMapping = {
   manuallyEdited: boolean;
   excluded: boolean;
   per100g?: NutritionPer100g;
+  recipeRef?: string;
+  recipeRefMultiplier?: number;
 };
 
 // Translation status enum
