@@ -12,13 +12,22 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const goal = await FitnessGoal.findOne({ username: user.nickname }).lean() as any;
 	const weeklyWorkouts = goal?.weeklyWorkouts ?? null;
 
+	const nutritionGoals = {
+		activityLevel: goal?.activityLevel ?? 'light',
+		dailyCalories: goal?.dailyCalories ?? null,
+		proteinMode: goal?.proteinMode ?? null,
+		proteinTarget: goal?.proteinTarget ?? null,
+		fatPercent: goal?.fatPercent ?? null,
+		carbPercent: goal?.carbPercent ?? null,
+	};
+
 	// If no goal set, return early
 	if (weeklyWorkouts === null) {
-		return json({ weeklyWorkouts: null, streak: 0, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null });
+		return json({ weeklyWorkouts: null, streak: 0, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals });
 	}
 
 	const streak = await computeStreak(user.nickname, weeklyWorkouts);
-	return json({ weeklyWorkouts, streak, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null });
+	return json({ weeklyWorkouts, streak, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals });
 };
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
@@ -33,6 +42,14 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 	const update: Record<string, unknown> = { weeklyWorkouts };
 	if (sex === 'male' || sex === 'female') update.sex = sex;
 	if (typeof heightCm === 'number' && heightCm >= 100 && heightCm <= 250) update.heightCm = heightCm;
+	if (typeof body.birthYear === 'number' && body.birthYear >= 1900 && body.birthYear <= 2020) update.birthYear = body.birthYear;
+	const validActivity = ['sedentary', 'light', 'moderate', 'very_active'];
+	if (validActivity.includes(body.activityLevel)) update.activityLevel = body.activityLevel;
+	if (typeof body.dailyCalories === 'number' && body.dailyCalories >= 500 && body.dailyCalories <= 10000) update.dailyCalories = body.dailyCalories;
+	if (body.proteinMode === 'fixed' || body.proteinMode === 'per_kg') update.proteinMode = body.proteinMode;
+	if (typeof body.proteinTarget === 'number' && body.proteinTarget >= 0) update.proteinTarget = body.proteinTarget;
+	if (typeof body.fatPercent === 'number' && body.fatPercent >= 0 && body.fatPercent <= 100) update.fatPercent = body.fatPercent;
+	if (typeof body.carbPercent === 'number' && body.carbPercent >= 0 && body.carbPercent <= 100) update.carbPercent = body.carbPercent;
 
 	await dbConnect();
 
@@ -43,7 +60,16 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 	).lean() as any;
 
 	const streak = await computeStreak(user.nickname, weeklyWorkouts);
-	return json({ weeklyWorkouts, streak, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null });
+	return json({
+		weeklyWorkouts, streak,
+		sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null,
+		activityLevel: goal?.activityLevel ?? 'light',
+		dailyCalories: goal?.dailyCalories ?? null,
+		proteinMode: goal?.proteinMode ?? null,
+		proteinTarget: goal?.proteinTarget ?? null,
+		fatPercent: goal?.fatPercent ?? null,
+		carbPercent: goal?.carbPercent ?? null,
+	});
 };
 
 async function computeStreak(username: string, weeklyGoal: number): Promise<number> {

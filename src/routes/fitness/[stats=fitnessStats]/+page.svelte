@@ -40,7 +40,7 @@
 	let goalInput = $state(4);
 	let goalSaving = $state(false);
 
-	const hasDemographics = $derived(data.goal?.sex != null && data.goal?.heightCm != null);
+	const hasDemographics = $derived(data.goal?.sex != null && data.goal?.heightCm != null && data.goal?.birthYear != null);
 
 	function startGoalEdit() {
 		goalInput = goalWeekly ?? 4;

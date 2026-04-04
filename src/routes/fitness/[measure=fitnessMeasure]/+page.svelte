@@ -15,14 +15,16 @@
 	let latest = $state(data.latest ? { ...data.latest } : {});
 	let measurements = $state(data.measurements?.measurements ? [...data.measurements.measurements] : []);
 
-	// Profile fields (sex, height) — stored in FitnessGoal
+	// Profile fields (sex, height, birth year) — stored in FitnessGoal
 	let showProfile = $state(false);
 	let profileSex = $state(data.profile?.sex ?? 'male');
 	let profileHeight = $state(data.profile?.heightCm != null ? String(data.profile.heightCm) : '');
+	let profileBirthYear = $state(data.profile?.birthYear != null ? String(data.profile.birthYear) : '');
 	let profileSaving = $state(false);
 	let profileDirty = $derived(
 		profileSex !== (data.profile?.sex ?? 'male') ||
-		profileHeight !== (data.profile?.heightCm != null ? String(data.profile.heightCm) : '')
+		profileHeight !== (data.profile?.heightCm != null ? String(data.profile.heightCm) : '') ||
+		profileBirthYear !== (data.profile?.birthYear != null ? String(data.profile.birthYear) : '')
 	);
 
 	async function saveProfile() {
@@ -35,6 +37,8 @@
 			};
 			const h = Number(profileHeight);
 			if (h >= 100 && h <= 250) body.heightCm = h;
+			const by = Number(profileBirthYear);
+			if (by >= 1900 && by <= 2020) body.birthYear = by;
 			const res = await fetch('/api/fitness/goal', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
@@ -122,6 +126,10 @@
 				<div class="form-group">
 					<label for="p-height">{t('height', lang)}</label>
 					<input id="p-height" type="number" min="100" max="250" placeholder="175" bind:value={profileHeight} />
+				</div>
+				<div class="form-group">
+					<label for="p-birthyear">{t('birth_year', lang)}</label>
+					<input id="p-birthyear" type="number" min="1900" max="2020" placeholder="1990" bind:value={profileBirthYear} />
 				</div>
 				{#if profileDirty}
 					<button class="profile-save-btn" onclick={saveProfile} disabled={profileSaving}>
