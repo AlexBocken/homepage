@@ -180,6 +180,8 @@ const RecipeSchema = new mongoose.Schema(
        unitConversionSource: { type: String, enum: ['direct', 'density', 'usda_portion', 'estimate', 'manual', 'none'] },
        manuallyEdited: { type: Boolean, default: false },
        excluded: { type: Boolean, default: false },
+       recipeRef: { type: String },
+       recipeRefMultiplier: { type: Number, default: 1 },
      }],
 
      // Translation metadata for tracking changes

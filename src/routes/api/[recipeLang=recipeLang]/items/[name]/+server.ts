@@ -157,7 +157,7 @@ export const GET: RequestHandler = async ({ params }) => {
     }
 
     // Resolve nutrition from referenced recipes (base refs + anchor tags)
-    recipe.referencedNutrition = await resolveReferencedNutrition(rawRecipe.ingredients || []);
+    recipe.referencedNutrition = await resolveReferencedNutrition(rawRecipe.ingredients || [], rawRecipe.nutritionMappings);
 
     // Merge English alt/caption with original image paths
     const imagesArray = Array.isArray(rawRecipe.images) ? rawRecipe.images : (rawRecipe.images ? [rawRecipe.images] : []);
@@ -184,6 +184,6 @@ export const GET: RequestHandler = async ({ params }) => {
     recipe.instructions = mapBaseRecipeRefs(recipe.instructions);
   }
   // Resolve nutrition from referenced recipes (base refs + anchor tags)
-  recipe.referencedNutrition = await resolveReferencedNutrition(rawRecipe.ingredients || []);
+  recipe.referencedNutrition = await resolveReferencedNutrition(rawRecipe.ingredients || [], rawRecipe.nutritionMappings);
   return json(recipe);
 };

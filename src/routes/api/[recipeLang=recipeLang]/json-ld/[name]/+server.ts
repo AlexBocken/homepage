@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
     throw error(404, "Recipe not found");
   }
 
-  const referencedNutrition = await resolveReferencedNutrition(recipe.ingredients || []);
+  const referencedNutrition = await resolveReferencedNutrition(recipe.ingredients || [], recipe.nutritionMappings);
   const jsonLd = generateRecipeJsonLd(recipe, referencedNutrition);
 
   // Set appropriate headers for JSON-LD

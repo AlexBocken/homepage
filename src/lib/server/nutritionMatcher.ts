@@ -706,6 +706,28 @@ export async function generateNutritionMappings(
 			const itemDe = sectionDe.list[itemIdx];
 			const itemEn = sectionEn?.list?.[itemIdx];
 
+			// Anchor-tag references to other recipes — their nutrition
+			// is resolved separately via resolveReferencedNutrition()
+			const refSlug = parseAnchorRecipeRef(itemDe.name || '');
+			if (refSlug) {
+				mappings.push({
+					sectionIndex: sectionIdx,
+					ingredientIndex: itemIdx,
+					ingredientName: itemEn?.name || itemDe.name,
+					ingredientNameDe: itemDe.name,
+					matchMethod: 'none',
+					matchConfidence: 0,
+					gramsPerUnit: 0,
+					defaultAmountUsed: false,
+					unitConversionSource: 'none',
+					manuallyEdited: false,
+					excluded: true,
+					recipeRef: refSlug,
+					recipeRefMultiplier: 1,
+				});
+				continue;
+			}
+
 			const mapping = await matchIngredient(
 				itemDe.name,
 				itemEn?.name || undefined,
@@ -838,13 +860,24 @@ export type ReferencedNutritionResult = {
  * Build nutrition totals for referenced recipes:
  * 1. Base recipe references (type='reference' with populated baseRecipeRef)
  * 2. Anchor-tag references in ingredient names (<a href=...>)
+ *
+ * When nutritionMappings are provided, uses recipeRefMultiplier from the
+ * mapping for anchor-tag refs (allowing user-configured fractions).
  */
 export async function resolveReferencedNutrition(
 	ingredients: any[],
+	nutritionMappings?: any[],
 ): Promise<ReferencedNutritionResult[]> {
 	const { Recipe } = await import('$models/Recipe');
 	const results: ReferencedNutritionResult[] = [];
 	const processedSlugs = new Set<string>();
+
+	// Build mapping index for recipeRefMultiplier lookup
+	const mappingIndex = new Map(
+		(nutritionMappings || [])
+			.filter((m: any) => m.recipeRef)
+			.map((m: any) => [m.recipeRef, m])
+	);
 
 	for (const section of ingredients) {
 		// Type 1: Base recipe references
@@ -873,10 +906,11 @@ export async function resolveReferencedNutrition(
 					.lean();
 				if (!refRecipe?.nutritionMappings?.length) continue;
 
+				const mult = mappingIndex.get(refSlug)?.recipeRefMultiplier ?? 1;
 				const nutrition = computeRecipeNutritionTotals(
 					refRecipe.ingredients || [], refRecipe.nutritionMappings, 1
 				);
-				results.push({ shortName: refSlug, name: refRecipe.name, nutrition, baseMultiplier: 1 });
+				results.push({ shortName: refSlug, name: refRecipe.name, nutrition, baseMultiplier: mult });
 			}
 		}
 	}

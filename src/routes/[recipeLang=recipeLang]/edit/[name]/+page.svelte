@@ -314,7 +314,7 @@
 			});
 			await loadGlobalOverwrites();
 			initGlobalToggles();
-			const mapped = nutritionMappings.filter((m: any) => m.matchMethod !== 'none').length;
+			const mapped = nutritionMappings.filter((m: any) => m.matchMethod !== 'none' || m.recipeRef).length;
 			toast.success(`Nährwerte generiert: ${mapped}/${result.count} Zutaten zugeordnet`);
 		} catch (e: any) {
 			toast.error(`Fehler: ${e.message}`);
@@ -675,6 +675,29 @@
 	.manual-row {
 		border-left: 2px solid var(--nord13);
 	}
+	.recipe-ref-row {
+		border-left: 2px solid var(--nord8);
+	}
+	.source-badge.recipe-ref {
+		background: var(--nord8);
+		color: var(--nord0);
+	}
+	.recipe-ref-label {
+		font-size: 0.85rem;
+		color: var(--nord8);
+		font-weight: 600;
+	}
+	.ref-multiplier {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin-left: 0.5rem;
+	}
+	.ref-multiplier .gpu-input {
+		width: 3.5rem;
+	}
 	.excluded-label {
 		font-style: italic;
 		color: var(--nord11);
@@ -978,14 +1001,14 @@
 			</div>
 			<div class="nutrition-table-wrapper">
 				<p class="nutrition-result-summary">
-					{nutritionMappings.filter((m) => m.matchMethod !== 'none').length}/{nutritionMappings.length} Zutaten zugeordnet
+					{nutritionMappings.filter((m) => m.matchMethod !== 'none' || m.recipeRef).length}/{nutritionMappings.length} Zutaten zugeordnet
 				</p>
 				<table class="nutrition-result-table">
 					<thead><tr><th>#</th><th>Zutat</th><th>Quelle</th><th>Treffer / Suche</th><th>Konf.</th><th>g/u</th><th></th></tr></thead>
 					<tbody>
 						{#each nutritionMappings as m, i (mappingKey(m))}
 							{@const key = mappingKey(m)}
-							<tr class:unmapped-row={m.matchMethod === 'none' && !m.excluded} class:excluded-row={m.excluded} class:manual-row={m.manuallyEdited && !m.excluded}>
+							<tr class:unmapped-row={m.matchMethod === 'none' && !m.excluded && !m.recipeRef} class:excluded-row={m.excluded && !m.recipeRef} class:manual-row={m.manuallyEdited && !m.excluded} class:recipe-ref-row={!!m.recipeRef}>
 								<td>{i + 1}</td>
 								<td>
 									{m.ingredientNameDe || m.ingredientName}
@@ -994,7 +1017,9 @@
 									{/if}
 								</td>
 								<td>
-									{#if m.excluded}
+									{#if m.recipeRef}
+										<span class="source-badge recipe-ref">REF</span>
+									{:else if m.excluded}
 										<span class="source-badge skip">SKIP</span>
 									{:else if m.matchMethod !== 'none'}
 										<span class="source-badge" class:bls={m.source === 'bls'}>{(m.source || 'usda').toUpperCase()}</span>
@@ -1005,61 +1030,73 @@
 								</td>
 								<td>
 									<div class="search-cell">
-										{#if m.excluded}
+										{#if m.recipeRef}
+											<span class="recipe-ref-label">{m.recipeRef}</span>
+											<label class="ref-multiplier">
+												<span>Anteil:</span>
+												<input type="number" class="gpu-input" min="0" max="10" step="0.1" bind:value={m.recipeRefMultiplier} />
+											</label>
+										{:else if m.excluded}
 											<span class="excluded-label">Übersprungen</span>
 										{:else if m.matchMethod !== 'none' && !searchQueries[key]}
 											<span class="current-match" class:manual-match={m.manuallyEdited}>{m.nutritionDbName || '—'}</span>
 										{/if}
-										<input
-											type="text"
-											class="search-input"
-											class:has-match={m.matchMethod !== 'none' && !m.excluded && !searchQueries[key]}
-											placeholder={m.excluded ? 'Suche für neuen Treffer…' : (m.matchMethod !== 'none' ? 'Überschreiben…' : 'BLS/USDA suchen…')}
-											value={searchQueries[key] || ''}
-											oninput={(e) => handleSearchInput(key, e.currentTarget.value)}
-										/>
-										{#if searchResults[key]?.length > 0}
-											<ul class="search-dropdown">
-												{#each searchResults[key] as result (result.id)}
-													<li>
-														<button
-															type="button"
-															onclick={() => assignNutritionEntry(m, result)}
-														>
-															<span class="source-badge" class:bls={result.source === 'bls'}>{result.source.toUpperCase()}</span>
-															{result.name}
-															<span class="search-cal">{Math.round(result.calories)} kcal</span>
-														</button>
-													</li>
-												{/each}
-											</ul>
-										{/if}
-										<div class="row-controls">
-											<Toggle checked={globalToggle[key] ?? false} label="global" onchange={() => { globalToggle[key] = !globalToggle[key]; }} />
-											{#if m.manuallyEdited || m.excluded}
-												<button type="button" class="revert-btn" onclick={() => revertToAuto(m)} title="Zurück auf automatisch">auto</button>
+										{#if !m.recipeRef}
+											<input
+												type="text"
+												class="search-input"
+												class:has-match={m.matchMethod !== 'none' && !m.excluded && !searchQueries[key]}
+												placeholder={m.excluded ? 'Suche für neuen Treffer…' : (m.matchMethod !== 'none' ? 'Überschreiben…' : 'BLS/USDA suchen…')}
+												value={searchQueries[key] || ''}
+												oninput={(e) => handleSearchInput(key, e.currentTarget.value)}
+											/>
+											{#if searchResults[key]?.length > 0}
+												<ul class="search-dropdown">
+													{#each searchResults[key] as result (result.id)}
+														<li>
+															<button
+																type="button"
+																onclick={() => assignNutritionEntry(m, result)}
+															>
+																<span class="source-badge" class:bls={result.source === 'bls'}>{result.source.toUpperCase()}</span>
+																{result.name}
+																<span class="search-cal">{Math.round(result.calories)} kcal</span>
+															</button>
+														</li>
+													{/each}
+												</ul>
 											{/if}
-										</div>
+											<div class="row-controls">
+												<Toggle checked={globalToggle[key] ?? false} label="global" onchange={() => { globalToggle[key] = !globalToggle[key]; }} />
+												{#if m.manuallyEdited || m.excluded}
+													<button type="button" class="revert-btn" onclick={() => revertToAuto(m)} title="Zurück auf automatisch">auto</button>
+												{/if}
+											</div>
+										{/if}
 									</div>
 								</td>
-								<td>{m.matchConfidence ? (m.matchConfidence * 100).toFixed(0) + '%' : '—'}</td>
+								<td>{m.recipeRef ? '—' : (m.matchConfidence ? (m.matchConfidence * 100).toFixed(0) + '%' : '—')}</td>
 								<td>
-									{#if m.manuallyEdited}
+									{#if m.recipeRef}
+										—
+									{:else if m.manuallyEdited}
 										<input type="number" class="gpu-input" min="0" step="0.1" bind:value={m.gramsPerUnit} />
 									{:else}
 										{m.gramsPerUnit || '—'}
 									{/if}
 								</td>
 								<td>
-									<button
-										type="button"
-										class="skip-btn"
-										class:active={m.excluded}
-										onclick={() => m.excluded ? revertToAuto(m) : skipIngredient(m)}
-										title={m.excluded ? 'Wieder aktivieren' : 'Überspringen'}
-									>
-										{m.excluded ? '↩' : '✕'}
-									</button>
+									{#if !m.recipeRef}
+										<button
+											type="button"
+											class="skip-btn"
+											class:active={m.excluded}
+											onclick={() => m.excluded ? revertToAuto(m) : skipIngredient(m)}
+											title={m.excluded ? 'Wieder aktivieren' : 'Überspringen'}
+										>
+											{m.excluded ? '↩' : '✕'}
+										</button>
+									{/if}
 								</td>
 							</tr>
 						{/each}
