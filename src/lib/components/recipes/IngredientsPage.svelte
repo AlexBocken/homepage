@@ -5,7 +5,10 @@ import { browser } from '$app/environment';
 import { page } from '$app/stores';
 import HefeSwapper from './HefeSwapper.svelte';
 import NutritionSummary from './NutritionSummary.svelte';
+import AddToFoodLogButton from './AddToFoodLogButton.svelte';
 let { data } = $props();
+const isLoggedIn = $derived(!!data.session?.user);
+const hasNutrition = $derived(!!data.nutritionMappings?.length);
 
 // Helper function to multiply numbers in ingredient amounts
 /** @param {string} amount @param {number} multiplier */
@@ -635,6 +638,20 @@ const nutritionFlatIngredients = $derived.by(() => {
 	{multiplier}
 	portions={data.portions}
 	isEnglish={isEnglish}
-/>
+>
+	{#snippet actions()}
+		{#if isLoggedIn && hasNutrition}
+			<AddToFoodLogButton
+				recipeName={data.strippedName || data.name}
+				recipeId={data._id}
+				nutritionMappings={data.nutritionMappings}
+				referencedNutrition={data.referencedNutrition || []}
+				ingredients={data.ingredients || []}
+				portions={data.portions || ''}
+				{isEnglish}
+			/>
+		{/if}
+	{/snippet}
+</NutritionSummary>
 </div>
 {/if}

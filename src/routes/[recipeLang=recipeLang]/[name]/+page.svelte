@@ -281,7 +281,6 @@ h2{
 @keyframes slide-down {
 	to { transform: translateY(var(--title-slide, 100vh)); }
 }
-
 </style>
 <svelte:head>
 	<title>{data.strippedName} - {labels.title}</title>

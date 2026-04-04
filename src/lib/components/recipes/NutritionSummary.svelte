@@ -1,7 +1,7 @@
 <script>
 	import { createNutritionCalculator } from '$lib/js/nutrition.svelte';
 
-	let { flatIngredients, nutritionMappings, sectionNames, referencedNutrition, multiplier, portions, isEnglish } = $props();
+	let { flatIngredients, nutritionMappings, sectionNames, referencedNutrition, multiplier, portions, isEnglish, actions } = $props();
 
 	const nutrition = createNutritionCalculator(
 		() => flatIngredients,
@@ -138,7 +138,10 @@
 	}
 
 	.details-toggle-row {
-		text-align: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
 		margin-top: 0.5rem;
 	}
 	.details-toggle {
@@ -290,6 +293,9 @@
 		<button class="details-toggle" onclick={() => showDetails = !showDetails}>
 			{showDetails ? '−' : '+'} {labels.details}
 		</button>
+		{#if actions}
+			{@render actions()}
+		{/if}
 	</div>
 </div>
 {/if}

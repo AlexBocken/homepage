@@ -1,8 +1,8 @@
 /** Fitness route i18n — slug mappings and UI translations */
 
 const slugMap: Record<string, Record<string, string>> = {
-	en: { statistik: 'stats', verlauf: 'history', training: 'workout', aktiv: 'active', uebungen: 'exercises', messen: 'measure' },
-	de: { stats: 'statistik', history: 'verlauf', workout: 'training', active: 'aktiv', exercises: 'uebungen', measure: 'messen' }
+	en: { statistik: 'stats', verlauf: 'history', training: 'workout', aktiv: 'active', uebungen: 'exercises', messen: 'measure', ernaehrung: 'nutrition' },
+	de: { stats: 'statistik', history: 'verlauf', workout: 'training', active: 'aktiv', exercises: 'uebungen', measure: 'messen', nutrition: 'ernaehrung' }
 };
 
 const germanSlugs = new Set(Object.keys(slugMap.en));
@@ -31,7 +31,8 @@ export function fitnessSlugs(lang: 'en' | 'de') {
 		workout: lang === 'en' ? 'workout' : 'training',
 		active: lang === 'en' ? 'active' : 'aktiv',
 		exercises: lang === 'en' ? 'exercises' : 'uebungen',
-		measure: lang === 'en' ? 'measure' : 'messen'
+		measure: lang === 'en' ? 'measure' : 'messen',
+		nutrition: lang === 'en' ? 'nutrition' : 'ernaehrung'
 	};
 }
 
@@ -42,7 +43,8 @@ export function fitnessLabels(lang: 'en' | 'de') {
 		history: lang === 'en' ? 'History' : 'Verlauf',
 		workout: lang === 'en' ? 'Workout' : 'Training',
 		exercises: lang === 'en' ? 'Exercises' : 'Übungen',
-		measure: lang === 'en' ? 'Measure' : 'Messen'
+		measure: lang === 'en' ? 'Measure' : 'Messen',
+		nutrition: lang === 'en' ? 'Nutrition' : 'Ernährung'
 	};
 }
 
@@ -80,6 +82,7 @@ const translations: Translations = {
 	male: { en: 'Male', de: 'Männlich' },
 	female: { en: 'Female', de: 'Weiblich' },
 	height: { en: 'Height (cm)', de: 'Grösse (cm)' },
+	birth_year: { en: 'Birth Year', de: 'Geburtsjahr' },
 	no_workout_data: { en: 'No workout data to display yet.', de: 'Noch keine Trainingsdaten vorhanden.' },
 	weight: { en: 'Weight', de: 'Gewicht' },
 
@@ -263,6 +266,67 @@ const translations: Translations = {
 	label_tempo: { en: 'Tempo', de: 'Tempo' },
 	label_warm_up: { en: 'Warm Up', de: 'Aufwärmen' },
 	label_cool_down: { en: 'Cool Down', de: 'Abkühlen' },
+
+	// Nutrition / Food log
+	nutrition_title: { en: 'Nutrition', de: 'Ernährung' },
+	breakfast: { en: 'Breakfast', de: 'Frühstück' },
+	lunch: { en: 'Lunch', de: 'Mittagessen' },
+	dinner: { en: 'Dinner', de: 'Abendessen' },
+	snack: { en: 'Snack', de: 'Snack' },
+	add_food: { en: 'Add food', de: 'Essen hinzufügen' },
+	search_food: { en: 'Search food…', de: 'Essen suchen…' },
+	amount_grams: { en: 'Amount (g)', de: 'Menge (g)' },
+	meal_type: { en: 'Meal', de: 'Mahlzeit' },
+	daily_goal: { en: 'Daily Goal', de: 'Tagesziel' },
+	calorie_target: { en: 'Calorie target (kcal)', de: 'Kalorienziel (kcal)' },
+	protein_goal: { en: 'Protein goal', de: 'Proteinziel' },
+	protein_fixed: { en: 'Fixed (g/day)', de: 'Fest (g/Tag)' },
+	protein_per_kg: { en: 'Per kg bodyweight', de: 'Pro kg Körpergewicht' },
+	fat_percent: { en: 'Fat (%)', de: 'Fett (%)' },
+	carb_percent: { en: 'Carbs (%)', de: 'Kohlenhydrate (%)' },
+	kcal: { en: 'kcal', de: 'kcal' },
+	protein: { en: 'Protein', de: 'Protein' },
+	fat: { en: 'Fat', de: 'Fett' },
+	carbs: { en: 'Carbs', de: 'Kohlenhydrate' },
+	remaining: { en: 'remaining', de: 'übrig' },
+	over: { en: 'over', de: 'über' },
+	no_entries_yet: { en: 'No entries yet. Add food to start tracking.', de: 'Noch keine Einträge. Füge Essen hinzu, um zu tracken.' },
+	set_goal_prompt: { en: 'Set a daily calorie goal to start tracking.', de: 'Setze ein Kalorienziel, um mit dem Tracking zu beginnen.' },
+	micro_details: { en: 'Micronutrients', de: 'Mikronährstoffe' },
+	of_daily: { en: 'of daily goal', de: 'vom Tagesziel' },
+	per_serving: { en: 'per serving', de: 'pro Portion' },
+	log_food: { en: 'Log', de: 'Eintragen' },
+	delete_entry_confirm: { en: 'Delete this food entry?', de: 'Diesen Eintrag löschen?' },
+
+	// Custom meals
+	custom_meals: { en: 'Custom Meals', de: 'Eigene Mahlzeiten' },
+	custom_meal: { en: 'Custom Meal', de: 'Eigene Mahlzeit' },
+	new_meal: { en: 'New Meal', de: 'Neue Mahlzeit' },
+	meal_name: { en: 'Meal name', de: 'Name der Mahlzeit' },
+	add_ingredient: { en: 'Add ingredient', de: 'Zutat hinzufügen' },
+	no_custom_meals: { en: 'No custom meals yet.', de: 'Noch keine eigenen Mahlzeiten.' },
+	create_meal_hint: { en: 'Create reusable meals for quick logging.', de: 'Erstelle wiederverwendbare Mahlzeiten zum schnellen Eintragen.' },
+	ingredients: { en: 'Ingredients', de: 'Zutaten' },
+	total: { en: 'Total', de: 'Gesamt' },
+	log_meal: { en: 'Log Meal', de: 'Mahlzeit eintragen' },
+	delete_meal_confirm: { en: 'Delete this custom meal?', de: 'Diese Mahlzeit löschen?' },
+	save_meal: { en: 'Save Meal', de: 'Mahlzeit speichern' },
+
+	// Favorites
+	favorites: { en: 'Favorites', de: 'Favoriten' },
+
+	// Ingredient detail
+	per_100g: { en: 'per 100 g', de: 'pro 100 g' },
+	macros: { en: 'Macronutrients', de: 'Makronährstoffe' },
+	minerals: { en: 'Minerals', de: 'Mineralstoffe' },
+	vitamins: { en: 'Vitamins', de: 'Vitamine' },
+	amino_acids: { en: 'Amino Acids', de: 'Aminosäuren' },
+	essential: { en: 'Essential', de: 'Essenziell' },
+	non_essential: { en: 'Non-Essential', de: 'Nicht-essenziell' },
+	saturated_fat: { en: 'Saturated Fat', de: 'Gesättigte Fettsäuren' },
+	fiber: { en: 'Fiber', de: 'Ballaststoffe' },
+	sugars: { en: 'Sugars', de: 'Zucker' },
+	source_db: { en: 'Source', de: 'Quelle' },
 };
 
 /** Get a translated string */

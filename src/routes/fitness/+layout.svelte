@@ -4,7 +4,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import UserHeader from '$lib/components/UserHeader.svelte';
 	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-	import { BarChart3, Clock, Dumbbell, ListChecks, Ruler } from 'lucide-svelte';
+	import { BarChart3, Clock, Dumbbell, ListChecks, Ruler, UtensilsCrossed } from 'lucide-svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';
@@ -27,7 +27,8 @@
 		const slugs = [
 			'workout', 'training', 'workout/active', 'training/aktiv',
 			'exercises', 'uebungen', 'stats', 'statistik',
-			'history', 'verlauf', 'measure', 'messen'
+			'history', 'verlauf', 'measure', 'messen',
+			'nutrition', 'ernaehrung'
 		];
 		const urls = slugs.map((s) => `/fitness/${s}`);
 		navigator.serviceWorker.controller.postMessage({ type: 'CACHE_PAGES', urls });
@@ -79,6 +80,7 @@
 			<li style="--active-fill: var(--nord8)"><a href="/fitness/{s.workout}" class:active={isActive(`/fitness/${s.workout}`)}><Dumbbell size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.workout}</span></a></li>
 			<li style="--active-fill: var(--nord14)"><a href="/fitness/{s.exercises}" class:active={isActive(`/fitness/${s.exercises}`)}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.exercises}</span></a></li>
 			<li style="--active-fill: var(--nord12)"><a href="/fitness/{s.measure}" class:active={isActive(`/fitness/${s.measure}`)}><Ruler size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.measure}</span></a></li>
+			<li style="--active-fill: var(--nord15)"><a href="/fitness/{s.nutrition}" class:active={isActive(`/fitness/${s.nutrition}`)}><UtensilsCrossed size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.nutrition}</span></a></li>
 		</ul>
 	{/snippet}
 
