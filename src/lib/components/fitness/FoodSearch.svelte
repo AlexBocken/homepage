@@ -216,13 +216,11 @@
 				const mod = await import('barcode-detector/ponyfill');
 				BarcodeDetector = mod.BarcodeDetector;
 
-				// Point ZXing WASM to our self-hosted copy via Vite ?url import
-				const { prepareZXingModule } = await import('barcode-detector/ponyfill');
-				const wasmModule = await import('zxing-wasm/reader/zxing_reader.wasm?url');
-				prepareZXingModule({
+				// Point ZXing WASM to our self-hosted copy in /static
+				mod.prepareZXingModule({
 					overrides: {
 						locateFile: (path, prefix) => {
-							if (path.endsWith('.wasm')) return wasmModule.default;
+							if (path.endsWith('.wasm')) return '/fitness/zxing_reader.wasm';
 							return prefix + path;
 						},
 					},
