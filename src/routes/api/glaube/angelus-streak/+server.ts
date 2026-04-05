@@ -19,6 +19,7 @@ export const GET: RequestHandler = async ({ locals }) => {
     return json({
       streak: streak?.streak ?? 0,
       lastComplete: streak?.lastComplete ?? null,
+      lastCompleteTs: streak?.lastCompleteTs ?? null,
       todayPrayed: streak?.todayPrayed ?? 0,
       todayDate: streak?.todayDate ?? null
     });
@@ -34,7 +35,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(401, 'Authentication required');
   }
 
-  const { streak, lastComplete, todayPrayed, todayDate } = await request.json();
+  const { streak, lastComplete, lastCompleteTs, todayPrayed, todayDate } = await request.json();
 
   if (typeof streak !== 'number' || streak < 0) {
     throw error(400, 'Valid streak required');
@@ -55,15 +56,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   await dbConnect();
 
   try {
+    const updateFields: Record<string, unknown> = { streak, lastComplete, todayPrayed, todayDate };
+    if (typeof lastCompleteTs === 'number') {
+      updateFields.lastCompleteTs = lastCompleteTs;
+    }
+
     const updated = await AngelusStreak.findOneAndUpdate(
       { username: session.user.nickname },
-      { streak, lastComplete, todayPrayed, todayDate },
+      updateFields,
       { upsert: true, new: true }
     ).lean() as any;
 
     return json({
       streak: updated?.streak ?? 0,
       lastComplete: updated?.lastComplete ?? null,
+      lastCompleteTs: updated?.lastCompleteTs ?? null,
       todayPrayed: updated?.todayPrayed ?? 0,
       todayDate: updated?.todayDate ?? null
     });
