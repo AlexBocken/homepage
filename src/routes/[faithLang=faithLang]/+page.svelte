@@ -105,7 +105,7 @@
 		</a>
 	{/if}
 	<a href="/{data.faithLang}/katechese" class="katechese-link">
-		{#if isEnglish}<span class="lang-badge">DE</span>{/if}
+		{#if isEnglish || isLatin}<span class="lang-badge">DE</span>{/if}
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -226 532 506"><path d="M256-107v310l1-1c54-22 113-34 172-34h19v-320h-19c-42 0-84 8-123 25-17 7-34 14-50 20zm-25-79 25 10 25-10c47-20 97-30 148-30h35c27 0 48 22 48 48v352c0 27-21 48-48 48h-35c-51 0-101 10-148 30l-13 5c-8 3-16 3-24 0l-13-5c-47-20-97-30-148-30H48c-26 0-48-21-48-48v-352c0-26 22-48 48-48h35c51 0 101 10 148 30z" fill="currentColor"/></svg>
 		<h3>Katechese</h3>
 	</a>
