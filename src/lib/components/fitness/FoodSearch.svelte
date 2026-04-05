@@ -209,30 +209,40 @@
 			await videoEl.play();
 			scanDebug += ` | video: ${videoEl.videoWidth}x${videoEl.videoHeight}`;
 
-			// Import barcode-detector ponyfill with self-hosted WASM
-			scanDebug += ' | importing detector…';
-			let BarcodeDetector;
+			// Use native BarcodeDetector if available, else ponyfill with self-hosted WASM
+			scanDebug += ' | loading detector…';
+			let detector;
+			const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'];
 			try {
-				const mod = await import('barcode-detector/ponyfill');
-				BarcodeDetector = mod.BarcodeDetector;
-
-				// Point ZXing WASM to our self-hosted copy in /static
-				mod.prepareZXingModule({
-					overrides: {
-						locateFile: (path, prefix) => {
-							if (path.endsWith('.wasm')) return '/fitness/zxing_reader.wasm';
-							return prefix + path;
-						},
-					},
-				});
-				scanDebug += ' OK';
-			} catch (importErr) {
-				scanDebug = `IMPORT ERROR: ${importErr?.message ?? importErr}`;
-				stopScan();
-				return;
+				if ('BarcodeDetector' in globalThis) {
+					const supported = await globalThis.BarcodeDetector.getSupportedFormats();
+					if (supported.includes('ean_13')) {
+						detector = new globalThis.BarcodeDetector({ formats });
+						scanDebug += ' native';
+					}
+				}
+			} catch {
+				// native not usable, fall through to ponyfill
 			}
-
-			const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'] });
+			if (!detector) {
+				try {
+					const mod = await import('barcode-detector/ponyfill');
+					mod.prepareZXingModule({
+						overrides: {
+							locateFile: (path, prefix) => {
+								if (path.endsWith('.wasm')) return '/fitness/zxing_reader.wasm';
+								return prefix + path;
+							},
+						},
+					});
+					detector = new mod.BarcodeDetector({ formats });
+					scanDebug += ' ponyfill';
+				} catch (importErr) {
+					scanDebug = `IMPORT ERROR: ${importErr?.message ?? importErr}`;
+					stopScan();
+					return;
+				}
+			}
 			scanDebug += ' | detector created';
 
 			let scanCount = 0;
