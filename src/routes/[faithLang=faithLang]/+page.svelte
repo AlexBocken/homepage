@@ -1,18 +1,23 @@
 <script>
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
+	import { isEastertide } from '$lib/js/easter.svelte';
 	let { data } = $props();
 
 	const isEnglish = $derived(data.lang === 'en');
-	const prayersPath = $derived(isEnglish ? 'prayers' : 'gebete');
-	const rosaryPath = $derived(isEnglish ? 'rosary' : 'rosenkranz');
+	const isLatin = $derived(data.lang === 'la');
+	const prayersPath = $derived(isLatin ? 'orationes' : isEnglish ? 'prayers' : 'gebete');
+	const rosaryPath = $derived(isLatin ? 'rosarium' : isEnglish ? 'rosary' : 'rosenkranz');
+	const eastertide = isEastertide();
 
 	const labels = $derived({
-		title: isEnglish ? 'Faith' : 'Glaube',
-		description: isEnglish
-			? 'Here you will find some prayers and an interactive rosary for the Catholic faith. A focus on Latin and the Tridentine rite will be noticeable.'
-			: 'Hier findet man einige Gebete und einen interaktiven Rosenkranz zum katholischen Glauben. Ein Fokus auf Latein und den tridentinischen Ritus wird zu bemerken sein.',
-		prayers: isEnglish ? 'Prayers' : 'Gebete',
-		rosary: isEnglish ? 'Rosary' : 'Rosenkranz'
+		title: isLatin ? 'Fides' : isEnglish ? 'Faith' : 'Glaube',
+		description: isLatin
+			? 'Hic invenies orationes et rosarium interactivum fidei catholicae.'
+			: isEnglish
+				? 'Here you will find some prayers and an interactive rosary for the Catholic faith. A focus on Latin and the Tridentine rite will be noticeable.'
+				: 'Hier findet man einige Gebete und einen interaktiven Rosenkranz zum katholischen Glauben. Ein Fokus auf Latein und den tridentinischen Ritus wird zu bemerken sein.',
+		prayers: isLatin ? 'Orationes' : isEnglish ? 'Prayers' : 'Gebete',
+		rosary: isLatin ? 'Rosarium Vivum' : isEnglish ? 'Rosary' : 'Rosenkranz'
 	});
 </script>
 
@@ -71,8 +76,15 @@
 </svg>
 		<h3>{labels.rosary}</h3>
 	</a>
-	<a href="/{data.faithLang}/{prayersPath}/angelus">
-		<svg xmlns="http://www.w3.org/2000/svg"viewBox="6 -274 564 548"><path d="M392-162c-4-10-9-18-15-26 5-4 7-8 7-12 0-18-43-32-96-32s-96 14-96 32c0 4 3 8 7 12-6 8-11 16-15 26-15-11-24-24-24-38 0-35 57-64 128-64s128 29 128 64c0 14-9 27-24 38zm-104-22c35 0 64 29 64 64s-29 64-64 64-64-29-64-64 29-64 64-64zM82 159c3-22-3-48-20-64C34 68 16 30 16-12v-64c0-42 34-76 76-76 23 0 44 10 59 27l65 78c-21 16-37 40-43 67l-43 195c-4 17-2 34 5 49h-21c-26 0-46-24-42-50l10-55zm364 56L403 20c-6-27-21-51-42-67l64-77c15-18 36-28 59-28 42 0 76 34 76 76v64c0 42-18 80-46 107-17 16-23 42-20 64l10 56c4 26-16 49-42 49h-20c6-15 8-32 4-49zM220 31c7-32 35-55 68-55s61 23 68 55l43 194c5 20-11 39-31 39H208c-21 0-36-19-31-39l43-194z"/></svg>
-<h3>Angelus</h3>
-	</a>
+	{#if eastertide}
+		<a href="/{data.faithLang}/{prayersPath}/regina-caeli">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -274 532 548"><path d="M256-168c27 0 48-21 48-48s-21-48-48-48-48 21-48 48 21 48 48 48zM6-63l122 199-56 70c-5 7-8 14-8 23 0 19 16 35 36 35h312c20 0 36-16 36-35 0-9-3-16-8-23l-56-70L507-63c3-6 5-13 5-20 0-20-16-37-37-37-7 0-14 2-20 6l-17 12c-13 8-30 6-40-4l-35-35c-7-7-17-11-27-11s-20 4-27 11l-30 30c-13 13-33 13-46 0l-30-30c-7-7-17-11-27-11s-20 4-27 11l-34 34c-11 11-28 13-41 4l-17-11c-6-4-13-6-20-6-20 0-37 17-37 37 0 7 2 14 6 20z"/></svg>
+			<h3>Regína Cæli</h3>
+		</a>
+	{:else}
+		<a href="/{data.faithLang}/{prayersPath}/angelus">
+			<svg xmlns="http://www.w3.org/2000/svg"viewBox="6 -274 564 548"><path d="M392-162c-4-10-9-18-15-26 5-4 7-8 7-12 0-18-43-32-96-32s-96 14-96 32c0 4 3 8 7 12-6 8-11 16-15 26-15-11-24-24-24-38 0-35 57-64 128-64s128 29 128 64c0 14-9 27-24 38zm-104-22c35 0 64 29 64 64s-29 64-64 64-64-29-64-64 29-64 64-64zM82 159c3-22-3-48-20-64C34 68 16 30 16-12v-64c0-42 34-76 76-76 23 0 44 10 59 27l65 78c-21 16-37 40-43 67l-43 195c-4 17-2 34 5 49h-21c-26 0-46-24-42-50l10-55zm364 56L403 20c-6-27-21-51-42-67l64-77c15-18 36-28 59-28 42 0 76 34 76 76v64c0 42-18 80-46 107-17 16-23 42-20 64l10 56c4 26-16 49-42 49h-20c6-15 8-32 4-49zM220 31c7-32 35-55 68-55s61 23 68 55l43 194c5 20-11 39-31 39H208c-21 0-36-19-31-39l43-194z"/></svg>
+			<h3>Angelus</h3>
+		</a>
+	{/if}
 </LinksGrid>

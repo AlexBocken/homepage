@@ -1,12 +1,14 @@
 <script lang="ts">
 	import FireEffect from './FireEffect.svelte';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		value?: number;
 		burst?: boolean;
+		children?: Snippet;
 	}
 
-	let { value = 0, burst = false }: Props = $props();
+	let { value = 0, burst = false, children }: Props = $props();
 
 	// Latch burst so the FireEffect stays mounted for the full animation
 	let showBurst = $state(false);
@@ -61,7 +63,11 @@
 		<FireEffect holy={phase>=4} burst fire={phase>=3}/>
 	{/if}
 
-	<span class="number">{value}</span>
+	{#if children}
+		{@render children()}
+	{:else}
+		<span class="number">{value}</span>
+	{/if}
 </div>
 
 <style>

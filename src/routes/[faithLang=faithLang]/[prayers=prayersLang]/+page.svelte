@@ -32,41 +32,47 @@
 	let { data } = $props();
 
 	// Create language context for prayer components
-	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.initialLatin });
+	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.lang === 'la' ? true : data.initialLatin });
 
 	// Update lang store when data.lang changes (e.g., after navigation)
 	$effect(() => {
 		langContext.lang.set(data.lang);
+		if (data.lang === 'la') {
+			langContext.showLatin.set(true);
+		}
 	});
 
 	// Reactive isEnglish based on data.lang
 	const isEnglish = $derived(data.lang === 'en');
+	const isLatin = $derived(data.lang === 'la');
 
 	const labels = $derived({
-		title: isEnglish ? 'Prayers' : 'Gebete',
-		description: isEnglish
-			? 'Catholic prayers in Latin and English.'
-			: 'Katholische Gebete auf Deutsch und Latein.',
-		signOfCross: isEnglish ? 'The Sign of the Cross' : 'Das heilige Kreuzzeichen',
+		title: isLatin ? 'Orationes' : isEnglish ? 'Prayers' : 'Gebete',
+		description: isLatin
+			? 'Orationes catholicae in lingua Latina.'
+			: isEnglish
+				? 'Catholic prayers in Latin and English.'
+				: 'Katholische Gebete auf Deutsch und Latein.',
+		signOfCross: isLatin ? 'Signum Crucis' : isEnglish ? 'The Sign of the Cross' : 'Das heilige Kreuzzeichen',
 		gloriaPatri: 'Glória Patri',
-		paternoster: isEnglish ? 'Our Father' : 'Paternoster',
-		credo: isEnglish ? 'Nicene Creed' : 'Credo',
-		aveMaria: isEnglish ? 'Hail Mary' : 'Ave Maria',
+		paternoster: isLatin ? 'Pater Noster' : isEnglish ? 'Our Father' : 'Paternoster',
+		credo: 'Credo',
+		aveMaria: 'Ave Maria',
 		salveRegina: 'Salve Regina',
-		fatima: isEnglish ? 'Fatima Prayer' : 'Das Fatimagebet',
+		fatima: isLatin ? 'Oratio Fatimensis' : isEnglish ? 'Fatima Prayer' : 'Das Fatimagebet',
 		gloria: 'Glória',
-		michael: isEnglish ? 'Prayer to St. Michael the Archangel' : 'Gebet zum hl. Erzengel Michael',
+		michael: isLatin ? 'Oratio ad S. Michaëlem Archangelum' : isEnglish ? 'Prayer to St. Michael the Archangel' : 'Gebet zum hl. Erzengel Michael',
 		bruderKlaus: isEnglish ? 'Prayer of St. Nicholas of Flüe' : 'Bruder Klaus Gebet',
 		joseph: isEnglish ? 'Prayer to St. Joseph by Pope St. Pius X' : 'Josephgebet des hl. Papst Pius X',
-		confiteor: isEnglish ? 'The Confiteor' : 'Das Confiteor',
-		searchPlaceholder: isEnglish ? 'Search prayers...' : 'Gebete suchen...',
-		clearSearch: isEnglish ? 'Clear search' : 'Suche löschen',
-		textMatch: isEnglish ? 'Match in prayer text' : 'Treffer im Gebetstext',
-		postcommunio: isEnglish ? 'Postcommunio Prayers' : 'Nachkommuniongebete',
+		confiteor: isLatin ? 'Confiteor' : isEnglish ? 'The Confiteor' : 'Das Confiteor',
+		searchPlaceholder: isLatin ? 'Orationes quaerere...' : isEnglish ? 'Search prayers...' : 'Gebete suchen...',
+		clearSearch: isLatin ? 'Quaestionem delere' : isEnglish ? 'Clear search' : 'Suche löschen',
+		textMatch: isLatin ? 'In textu orationis' : isEnglish ? 'Match in prayer text' : 'Treffer im Gebetstext',
+		postcommunio: isLatin ? 'Orationes post Communionem' : isEnglish ? 'Postcommunio Prayers' : 'Nachkommuniongebete',
 		animachristi: 'Ánima Christi',
-		prayerbeforeacrucifix: isEnglish ? 'Prayer Before a Crucifix' : 'Gebet vor einem Kruzifix',
-		guardianAngel: isEnglish ? 'Guardian Angel Prayer' : 'Schutzengel-Gebet',
-		apostlesCreed: isEnglish ? "Apostles' Creed" : 'Apostolisches Glaubensbekenntnis',
+		prayerbeforeacrucifix: isLatin ? 'Oratio ante Crucifixum' : isEnglish ? 'Prayer Before a Crucifix' : 'Gebet vor einem Kruzifix',
+		guardianAngel: isLatin ? 'Angele Dei' : isEnglish ? 'Guardian Angel Prayer' : 'Schutzengel-Gebet',
+		apostlesCreed: isLatin ? 'Symbolum Apostolorum' : isEnglish ? "Apostles' Creed" : 'Apostolisches Glaubensbekenntnis',
 		tantumErgo: 'Tantum Ergo',
 		angelus: 'Angelus',
 		reginaCaeli: 'Regína Cæli'
@@ -76,12 +82,12 @@
 	// when corresponding prayers are added to the collection
 
 	const categories = [
-		{ id: 'essential', de: 'Grundgebete', en: 'Essential' },
-		{ id: 'marian', de: 'Marianisch', en: 'Marian' },
-		{ id: 'saints', de: 'Heilige', en: 'Saints' },
-		{ id: 'eucharistic', de: 'Eucharistie', en: 'Eucharistic' },
-		{ id: 'praise', de: 'Lobpreis', en: 'Praise' },
-		{ id: 'penitential', de: 'Busse', en: 'Penitential' },
+		{ id: 'essential', de: 'Grundgebete', en: 'Essential', la: 'Fundamentales' },
+		{ id: 'marian', de: 'Marianisch', en: 'Marian', la: 'Mariana' },
+		{ id: 'saints', de: 'Heilige', en: 'Saints', la: 'Sancti' },
+		{ id: 'eucharistic', de: 'Eucharistie', en: 'Eucharistic', la: 'Eucharistica' },
+		{ id: 'praise', de: 'Lobpreis', en: 'Praise', la: 'Laudatio' },
+		{ id: 'penitential', de: 'Busse', en: 'Penitential', la: 'Paenitentialia' },
 	];
 
 	const prayerCategories = {
@@ -163,7 +169,7 @@
 	]);
 
 	// Base URL for prayer links
-	const baseUrl = $derived(isEnglish ? '/faith/prayers' : '/glaube/gebete');
+	const baseUrl = $derived(isLatin ? '/fides/orationes' : isEnglish ? '/faith/prayers' : '/glaube/gebete');
 
 	// Get prayer name by ID (reactive based on language)
 	/** @param {string} id */
@@ -268,6 +274,10 @@
 	// Filtered by category, then sorted by search match
 	const filteredPrayers = $derived.by(() => {
 		let result = prayers;
+		// Latin route: only show prayers that have Latin text
+		if (isLatin) {
+			result = result.filter(p => prayerMeta[p.id]?.bilingue !== false);
+		}
 		if (selectedCategory) {
 			const cat = selectedCategory;
 			result = result.filter(p => /** @type {Record<string, string[]>} */(prayerCategories)[p.id]?.includes(cat));
@@ -475,6 +485,7 @@ h1{
 <div class:js-enabled={jsEnabled}>
 <h1>{labels.title}</h1>
 
+{#if !isLatin}
 <div class="toggle-controls">
 	<LanguageToggle
 		initialLatin={data.initialLatin}
@@ -482,15 +493,16 @@ h1{
 		href={latinToggleHref}
 	/>
 </div>
+{/if}
 
-<nav class="category-filters" aria-label={isEnglish ? 'Filter by category' : 'Nach Kategorie filtern'}>
+<nav class="category-filters" aria-label={isLatin ? 'Filtrare per categoriam' : isEnglish ? 'Filter by category' : 'Nach Kategorie filtern'}>
 	<a
 		href={buildFilterHref(null)}
 		class="category-pill"
 		class:selected={!selectedCategory}
 		onclick={(e) => { e.preventDefault(); selectedCategory = null; }
   }
-	>{isEnglish ? 'All' : 'Alle'}</a>
+	>{isLatin ? 'Omnia' : isEnglish ? 'All' : 'Alle'}</a>
 	{#each categories as cat (cat.id)}
 		<a
 			href={buildFilterHref(cat.id)}
@@ -498,7 +510,7 @@ h1{
 			class:selected={selectedCategory === cat.id}
 			onclick={(e) => { e.preventDefault(); selectedCategory = cat.id; }
   }
-		>{isEnglish ? cat.en : cat.de}</a>
+		>{isLatin ? cat.la : isEnglish ? cat.en : cat.de}</a>
 	{/each}
 </nav>
 
@@ -557,7 +569,7 @@ h1{
 				<Postcommunio onlyIntro={true} />
 			{/if}
 			{#if prayer.id === 'reginaCaeli' && isEastertide}
-				<span class="seasonal-badge">{isEnglish ? 'Eastertide' : 'Osterzeit'}</span>
+				<span class="seasonal-badge">{isLatin ? 'Tempus Paschale' : isEnglish ? 'Eastertide' : 'Osterzeit'}</span>
 			{/if}
 		</Gebet>
 	</div>

@@ -127,6 +127,38 @@ export const mysteryTitles = {
 	]
 };
 
+// Latin short titles for mysteries
+export const mysteryTitlesLatin = {
+	freudenreich: [
+		"Annuntiatio",
+		"Visitatio",
+		"Nativitas",
+		"Præsentatio",
+		"Inventio in Templo"
+	],
+	schmerzhaften: [
+		"Agonia in Horto",
+		"Flagellatio",
+		"Coronatio Spinis",
+		"Baiulatio Crucis",
+		"Crucifixio"
+	],
+	glorreichen: [
+		"Resurrectio",
+		"Ascensio",
+		"Missio Spiritus Sancti",
+		"Assumptio Mariæ",
+		"Coronatio Mariæ"
+	],
+	lichtreichen: [
+		"Baptisma",
+		"Nuptiæ in Cana",
+		"Prædicatio Regni Dei",
+		"Transfiguratio",
+		"Institutio Eucharistiæ"
+	]
+};
+
 // English short titles for mysteries
 export const mysteryTitlesEnglish = {
 	freudenreich: [
@@ -197,6 +229,44 @@ export function getLabels(isEnglish) {
 		mysteryLove: isEnglish ? 'Jesus, who may kindle our love' : 'Jesus, der in uns die Liebe entzünde',
 		eastertide: isEnglish ? 'Eastertide' : 'Osterzeit',
 		lent: isEnglish ? 'Lent' : 'Fastenzeit'
+	};
+}
+
+// Latin UI labels
+export function getLabelsLatin() {
+	return {
+		pageTitle: 'Rosarium Vivum',
+		pageDescription: 'Versio digitalis Rosarii ad precandum.',
+		mysteries: 'Mysteria',
+		today: 'Hodie',
+		joyful: 'Gaudiosa',
+		sorrowful: 'Dolorosa',
+		glorious: 'Gloriosa',
+		luminous: 'Luminosa',
+		includeLuminous: 'Mysteria Luminosa includere',
+		showImages: 'Imagines monstrare',
+		beginning: 'Initium',
+		signOfCross: '♱ Signum Crucis',
+		ourFather: 'Pater Noster',
+		hailMary: 'Ave Maria',
+		faith: 'Fides',
+		hope: 'Spes',
+		love: 'Caritas',
+		decade: 'Decas',
+		optional: 'ad libitum',
+		gloriaPatri: 'Gloria Patri',
+		fatimaPrayer: 'Oratio Fatimensis',
+		conclusion: 'Conclusio',
+		finalPrayer: 'Oratio Finalis',
+		saintMichael: 'Oratio ad Sanctum Michaëlem Archangelum',
+		footnoteSign: 'Hic signum crucis fac',
+		footnoteBow: 'Hic caput inclina',
+		showBibleVerse: 'Versum biblicum monstrare',
+		mysteryFaith: 'Jesus, qui adáugeat nobis fidem',
+		mysteryHope: 'Jesus, qui corróboret nobis spem',
+		mysteryLove: 'Jesus, qui perficiat in nobis caritátem',
+		eastertide: 'Tempus Paschale',
+		lent: 'Quadragesima'
 	};
 }
 
