@@ -209,12 +209,24 @@
 			await videoEl.play();
 			scanDebug += ` | video: ${videoEl.videoWidth}x${videoEl.videoHeight}`;
 
-			// Import barcode-detector/pure — ZXing WASM-based ponyfill
+			// Import barcode-detector ponyfill with self-hosted WASM
 			scanDebug += ' | importing detector…';
 			let BarcodeDetector;
 			try {
-				const mod = await import('barcode-detector/pure');
+				const mod = await import('barcode-detector/ponyfill');
 				BarcodeDetector = mod.BarcodeDetector;
+
+				// Point ZXing WASM to our self-hosted copy via Vite ?url import
+				const { prepareZXingModule } = await import('barcode-detector/ponyfill');
+				const wasmModule = await import('zxing-wasm/reader/zxing_reader.wasm?url');
+				prepareZXingModule({
+					overrides: {
+						locateFile: (path, prefix) => {
+							if (path.endsWith('.wasm')) return wasmModule.default;
+							return prefix + path;
+						},
+					},
+				});
 				scanDebug += ' OK';
 			} catch (importErr) {
 				scanDebug = `IMPORT ERROR: ${importErr?.message ?? importErr}`;
