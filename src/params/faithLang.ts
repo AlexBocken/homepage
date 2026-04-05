@@ -1,5 +1,5 @@
 import type { ParamMatcher } from '@sveltejs/kit';
 
 export const match: ParamMatcher = (param) => {
-	return param === 'faith' || param === 'glaube';
+	return param === 'faith' || param === 'glaube' || param === 'fides';
 };

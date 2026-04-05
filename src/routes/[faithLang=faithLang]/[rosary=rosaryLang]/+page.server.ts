@@ -88,7 +88,7 @@ export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
   }
 
   return {
-    mysteryDescriptions: params.faithLang === 'faith' ? mysteryVerseDataEn : mysteryVerseDataDe,
+    mysteryDescriptions: params.faithLang === 'glaube' ? mysteryVerseDataDe : mysteryVerseDataEn,
     streakData,
     isLoggedIn: !!session?.user?.nickname,
     initialMystery,

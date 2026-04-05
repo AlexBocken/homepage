@@ -23,16 +23,21 @@
 	import AngelusComponent from "$lib/components/faith/prayers/Angelus.svelte";
 	import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
 	import StickyImage from "$lib/components/faith/StickyImage.svelte";
+	import AngelusStreakCounter from "$lib/components/faith/AngelusStreakCounter.svelte";
 
 	let { data } = $props();
 
-	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.initialLatin });
+	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.lang === 'la' ? true : data.initialLatin });
 
 	$effect(() => {
 		langContext.lang.set(data.lang);
+		if (data.lang === 'la') {
+			langContext.showLatin.set(true);
+		}
 	});
 
 	const isEnglish = $derived(data.lang === 'en');
+	const isLatin = $derived(data.lang === 'la');
 
 	// Prayer definitions with slugs
 	const prayerDefs = $derived({
@@ -74,6 +79,12 @@
 	const prayerName = $derived(prayer?.name || data.prayer);
 	const isBilingue = $derived(prayer?.bilingue ?? true);
 	const prayerId = $derived(prayer?.id);
+	const isAngelusPage = $derived(prayerId === 'angelus' || prayerId === 'reginaCaeli');
+
+	const angelusImageCaption = $derived(prayerId === 'reginaCaeli'
+		? { artist: 'Diego Velázquez', title: isEnglish ? 'Coronation of the Virgin' : 'Die Krönung der Jungfrau', year: 1641 }
+		: { artist: 'Bartolomé Esteban Murillo', title: isEnglish ? 'The Annunciation' : 'Die Verkündigung', year: /** @type {number | null} */(null) }
+	);
 
 	const gloriaIntro = $derived(isEnglish
 		? 'This ancient hymn begins with the words the angels used to celebrate the newborn Savior. It first praises God the Father, then God the Son; it concludes with homage to the Most Holy Trinity, during which one makes the sign of the cross.'
@@ -154,10 +165,11 @@ h1 {
 	background-color: var(--nord5);
 }
 </style>
-	{#if prayerId === 'postcommunio' || prayerId === 'prayerbeforeacrucifix'}
+	{#if prayerId === 'postcommunio' || prayerId === 'prayerbeforeacrucifix' || isAngelusPage}
 
 <h1>{prayerName}</h1>
 
+	{#if !isLatin}
 	<div class="toggle-controls">
 		<LanguageToggle
 			initialLatin={data.initialLatin}
@@ -165,14 +177,31 @@ h1 {
 			href={latinToggleHref}
 		/>
 	</div>
+	{/if}
 
-	<StickyImage src="/glaube/crucifix.webp" alt="Crucifix">
+	{#if isAngelusPage}
+		<AngelusStreakCounter
+			streakData={data.angelusStreak}
+			lang={isLatin ? 'la' : isEnglish ? 'en' : 'de'}
+			isLoggedIn={!!data.session?.user}
+		/>
+	{/if}
+
+	<StickyImage
+		src={prayerId === 'reginaCaeli' ? '/glaube/glorious/5-diego-veazquez.coronation-mary.webp' : prayerId === 'angelus' ? '/glaube/joyful/1-murilllo-annunciation.webp' : '/glaube/crucifix.webp'}
+		alt={prayerName}
+		caption={isAngelusPage ? `${angelusImageCaption.artist}, <em>${angelusImageCaption.title}</em>${angelusImageCaption.year ? `, ${angelusImageCaption.year}` : ''}` : ''}
+	>
 		<div class="gebet-wrapper">
 			<div class="gebet" class:bilingue={isBilingue}>
 				{#if prayerId === 'postcommunio'}
 					<Postcommunio onlyIntro={false} />
-				{:else}
+				{:else if prayerId === 'prayerbeforeacrucifix'}
 					<PrayerBeforeACrucifix />
+				{:else if prayerId === 'angelus'}
+					<AngelusComponent verbose={true} />
+				{:else if prayerId === 'reginaCaeli'}
+					<ReginaCaeli />
 				{/if}
 			</div>
 		</div>
@@ -181,6 +210,7 @@ h1 {
 <div class="container">
 	<h1>{prayerName}</h1>
 
+	{#if !isLatin}
 	<div class="toggle-controls">
 		<LanguageToggle
 			initialLatin={data.initialLatin}
@@ -188,6 +218,7 @@ h1 {
 			href={latinToggleHref}
 		/>
 	</div>
+	{/if}
 
 
 	<div class="gebet-wrapper">
