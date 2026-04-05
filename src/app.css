@@ -280,6 +280,19 @@ body {
 	overflow-x: hidden;
 }
 
+/* Status bar drop shadow for edge-to-edge Android/PWA */
+body::before {
+	content: '';
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: env(safe-area-inset-top, 0px);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+	z-index: 9999;
+	pointer-events: none;
+}
+
 /* ============================================
    LINK STYLES
    ============================================ */
