@@ -5,7 +5,7 @@ interface IFoodLogEntry {
   date: Date;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   name: string;
-  source: 'bls' | 'usda' | 'recipe' | 'custom';
+  source: 'bls' | 'usda' | 'recipe' | 'custom' | 'off';
   sourceId?: string;
   amountGrams: number;
   per100g: {
@@ -47,7 +47,7 @@ const FoodLogEntrySchema = new mongoose.Schema(
     date: { type: Date, required: true },
     mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner', 'snack'], required: true },
     name: { type: String, required: true, trim: true },
-    source: { type: String, enum: ['bls', 'usda', 'recipe', 'custom'], required: true },
+    source: { type: String, enum: ['bls', 'usda', 'recipe', 'custom', 'off'], required: true },
     sourceId: { type: String },
     amountGrams: { type: Number, required: true, min: 0 },
     per100g: { type: NutritionSnapshotSchema, required: true },

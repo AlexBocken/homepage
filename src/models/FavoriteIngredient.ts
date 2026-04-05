@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const FavoriteIngredientSchema = new mongoose.Schema(
   {
-    source: { type: String, enum: ['bls', 'usda'], required: true },
+    source: { type: String, enum: ['bls', 'usda', 'off'], required: true },
     sourceId: { type: String, required: true },
     name: { type: String, required: true },
     createdBy: { type: String, required: true },
@@ -13,7 +13,7 @@ const FavoriteIngredientSchema = new mongoose.Schema(
 FavoriteIngredientSchema.index({ createdBy: 1, source: 1, sourceId: 1 }, { unique: true });
 
 interface IFavoriteIngredient {
-  source: 'bls' | 'usda';
+  source: 'bls' | 'usda' | 'off';
   sourceId: string;
   name: string;
   createdBy: string;
