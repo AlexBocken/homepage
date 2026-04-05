@@ -133,13 +133,13 @@
 	.image-wrap-desktop {
 		display: block;
 		position: sticky;
-		top: 4rem;
+		top: calc(4rem + env(safe-area-inset-top, 0px));
 		align-self: start;
 		order: 1;
 	}
 	.overlay .image-wrap-desktop img {
 		height: auto;
-		max-height: calc(100vh - 5rem);
+		max-height: calc(100vh - 5rem - env(safe-area-inset-top, 0px));
 		width: auto;
 		max-width: 25vw;
 	}
@@ -154,12 +154,12 @@
 	.sticky-image-layout:not(.overlay) .image-wrap-desktop {
 		display: block;
 		position: sticky;
-		top: 4rem;
+		top: calc(4rem + env(safe-area-inset-top, 0px));
 		flex: 1;
 		order: 1;
 	}
 	.sticky-image-layout:not(.overlay) .image-wrap-desktop img {
-		max-height: calc(100vh - 4rem);
+		max-height: calc(100vh - 4rem - env(safe-area-inset-top, 0px));
 		height: auto;
 		width: 100%;
 		object-fit: contain;
