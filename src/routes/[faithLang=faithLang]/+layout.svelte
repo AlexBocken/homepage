@@ -19,7 +19,8 @@ const angelusLabel = $derived(eastertide ? 'Regína Cæli' : 'Angelus');
 
 const labels = $derived({
 	prayers: isLatin ? 'Orationes' : isEnglish ? 'Prayers' : 'Gebete',
-	rosary: isLatin ? 'Rosarium' : isEnglish ? 'Rosary' : 'Rosenkranz'
+	rosary: isLatin ? 'Rosarium' : isEnglish ? 'Rosary' : 'Rosenkranz',
+	catechesis: isEnglish ? 'Catechesis' : 'Katechese'
 });
 
 const typedLang = $derived(/** @type {'de' | 'en'} */ (data.lang));
@@ -45,6 +46,7 @@ const prayersActive = $derived(isActive(prayersHref) && !isActive(angelusHref));
 		{:else}
 			<li style="--active-fill: var(--nord14)"><a href={angelusHref} class:active={isActive(angelusHref)} title={angelusLabel}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="6 -274 564 548" fill="currentColor"><path d="M392-162c-4-10-9-18-15-26 5-4 7-8 7-12 0-18-43-32-96-32s-96 14-96 32c0 4 3 8 7 12-6 8-11 16-15 26-15-11-24-24-24-38 0-35 57-64 128-64s128 29 128 64c0 14-9 27-24 38zm-104-22c35 0 64 29 64 64s-29 64-64 64-64-29-64-64 29-64 64-64zM82 159c3-22-3-48-20-64C34 68 16 30 16-12v-64c0-42 34-76 76-76 23 0 44 10 59 27l65 78c-21 16-37 40-43 67l-43 195c-4 17-2 34 5 49h-21c-26 0-46-24-42-50l10-55zm364 56L403 20c-6-27-21-51-42-67l64-77c15-18 36-28 59-28 42 0 76 34 76 76v64c0 42-18 80-46 107-17 16-23 42-20 64l10 56c4 26-16 49-42 49h-20c6-15 8-32 4-49zM220 31c7-32 35-55 68-55s61 23 68 55l43 194c5 20-11 39-31 39H208c-21 0-36-19-31-39l43-194z"/></svg><span class="nav-label">{angelusLabel}</span></a></li>
 		{/if}
+		<li style="--active-fill: var(--nord13)"><a href="/{data.faithLang}/katechese" class:active={isActive(`/${data.faithLang}/katechese`)} title={labels.catechesis}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg><span class="nav-label">{labels.catechesis}</span></a></li>
 		</ul>
 	{/snippet}
 
