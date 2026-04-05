@@ -6,7 +6,7 @@ const LANGUAGE_CONTEXT_KEY = Symbol('language');
 /**
  * Creates or updates a language context for prayer components
  * @param {Object} options
- * @param {'de' | 'en'} [options.urlLang] - The URL language (de for /glaube, en for /faith)
+ * @param {'de' | 'en' | 'la'} [options.urlLang] - The URL language (de for /glaube, en for /faith, la for /fides)
  * @param {boolean} [options.initialLatin] - Initial state for Latin/bilingual display
  */
 export function createLanguageContext({ urlLang = 'de', initialLatin = true } = {}) {

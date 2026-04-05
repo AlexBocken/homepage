@@ -24,7 +24,7 @@ import RosarySvg from "./RosarySvg.svelte";
 import MysterySelector from "./MysterySelector.svelte";
 import MysteryImageColumn from "./MysteryImageColumn.svelte";
 /** @typedef {import('./rosaryData.js').MysteryType} MysteryType */
-import { mysteries, mysteriesLatin, mysteriesEnglish, mysteryTitles, mysteryTitlesEnglish, allMysteryImages, getLabels, getMysteryForWeekday, BEAD_SPACING, DECADE_OFFSET, sectionPositions } from "./rosaryData.js";
+import { mysteries, mysteriesLatin, mysteriesEnglish, mysteryTitles, mysteryTitlesEnglish, mysteryTitlesLatin, allMysteryImages, getLabels, getLabelsLatin, getMysteryForWeekday, BEAD_SPACING, DECADE_OFFSET, sectionPositions } from "./rosaryData.js";
 import { isEastertide, getLiturgicalSeason } from "$lib/js/easter.svelte";
 import { setupScrollSync } from "./rosaryScrollSync.js";
 let { data } = $props();
@@ -39,18 +39,24 @@ let showImages = $state(data.initialShowImages);
 let hasLoadedFromStorage = $state(false);
 
 // Create language context for prayer components (LanguageToggle will use this)
-const langContext = createLanguageContext({ urlLang: /** @type {'en'|'de'} */ (data.lang), initialLatin: data.initialLatin });
+// For Latin route, force showLatin on so only Latin prayers render
+const langContext = createLanguageContext({ urlLang: /** @type {'en'|'de'} */ (data.lang), initialLatin: data.lang === 'la' ? true : data.initialLatin });
 
 // Update lang store when data.lang changes (e.g., after navigation)
+// For Latin route, force showLatin on — Latin text is only rendered when showLatin is true
 $effect(() => {
 	langContext.lang.set(data.lang);
+	if (data.lang === 'la') {
+		langContext.showLatin.set(true);
+	}
 });
 
 // UI labels based on URL language (reactive)
 const isEnglish = $derived(data.lang === 'en');
-/** @type {'en'|'de'} */
-const lang = $derived(isEnglish ? 'en' : 'de');
-const labels = $derived(getLabels(isEnglish));
+const isLatin = $derived(data.lang === 'la');
+/** @type {'en'|'de'|'la'} */
+const lang = $derived(isLatin ? 'la' : isEnglish ? 'en' : 'de');
+const labels = $derived(isLatin ? getLabelsLatin() : getLabels(isEnglish));
 
 // Save toggle states to localStorage whenever they change (but only after initial load)
 $effect(() => {
@@ -72,7 +78,7 @@ let todaysMystery = $state(/** @type {MysteryType} */ (data.todaysMystery));
 let currentMysteries = $derived(mysteries[selectedMystery]);
 let currentMysteriesLatin = $derived(mysteriesLatin[selectedMystery]);
 let currentMysteriesEnglish = $derived(mysteriesEnglish[selectedMystery]);
-let currentMysteryTitles = $derived(isEnglish ? mysteryTitlesEnglish[selectedMystery] : mysteryTitles[selectedMystery]);
+let currentMysteryTitles = $derived(isLatin ? mysteryTitlesLatin[selectedMystery] : isEnglish ? mysteryTitlesEnglish[selectedMystery] : mysteryTitles[selectedMystery]);
 let currentMysteryDescriptions = $derived(data.mysteryDescriptions[selectedMystery] || []);
 
 // Function to switch mysteries
@@ -530,7 +536,8 @@ onMount(() => {
 }
 
 /* Reduce min-height in monolingual mode since content is shorter */
-.prayer-section.decade:has(:global(.prayer-wrapper.monolingual)) {
+.prayer-section.decade:has(:global(.prayer-wrapper.monolingual)),
+.prayer-section.decade:has(:global(.prayer-wrapper.lang-la)) {
 	min-height: 30vh;
 }
 
@@ -538,7 +545,8 @@ onMount(() => {
 	.prayer-section.decade {
 		padding-bottom: 1.5rem;
 	}
-	.prayer-section.decade:has(:global(.prayer-wrapper.monolingual)) {
+	.prayer-section.decade:has(:global(.prayer-wrapper.monolingual)),
+	.prayer-section.decade:has(:global(.prayer-wrapper.lang-la)) {
 		min-height: 20vh;
 	}
 	.prayer-section {
@@ -802,12 +810,14 @@ h1 {
 				href={imagesToggleHref}
 			/>
 
-			<!-- Language Toggle (link for no-JS, enhanced with onclick for JS) -->
-			<LanguageToggle
-				initialLatin={data.initialLatin}
-				hasUrlLatin={data.hasUrlLatin}
-				href={latinToggleHref}
-			/>
+			<!-- Language Toggle (link for no-JS, enhanced with onclick for JS) — hidden on Latin route -->
+			{#if !isLatin}
+				<LanguageToggle
+					initialLatin={data.initialLatin}
+					hasUrlLatin={data.hasUrlLatin}
+					href={latinToggleHref}
+				/>
+			{/if}
 		</div>
 	</div>
 

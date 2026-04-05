@@ -38,6 +38,8 @@
 /* === LANGUAGE VISIBILITY === */
 .prayer-wrapper.lang-de :global(v:lang(en)),
 .prayer-wrapper.lang-en :global(v:lang(de)),
+.prayer-wrapper.lang-la :global(v:lang(de)),
+.prayer-wrapper.lang-la :global(v:lang(en)),
 .prayer-wrapper.monolingual :global(v:lang(la)) {
 	display: none;
 }
@@ -65,6 +67,11 @@
 /* Monolingual spacing */
 .prayer-wrapper.monolingual :global(v:not(:lang(la))) {
 	color: var(--nord6);
+	margin-bottom: 0.5em;
+}
+
+/* Latin-only spacing */
+.prayer-wrapper.lang-la :global(v:lang(la)) {
 	margin-bottom: 0.5em;
 }
 
@@ -164,6 +171,7 @@
 	class:no-latin={!hasLatin}
 	class:lang-de={urlLang === 'de'}
 	class:lang-en={urlLang === 'en'}
+	class:lang-la={urlLang === 'la'}
 >
 	{@render children?.(showLatin, urlLang)}
 </div>

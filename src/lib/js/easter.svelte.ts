@@ -19,15 +19,22 @@ export function computeEaster(year: number): Date {
 	return new Date(year, month - 1, day);
 }
 
+/** Strip time component for date-only comparison. */
+function toMidnight(date: Date): Date {
+	return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 /**
- * Check if a date falls within Eastertide (Easter Sunday to Pentecost Sunday, inclusive).
+ * Check if a date falls within Eastertide (Easter Sunday to Ascension Thursday, inclusive).
+ * Ascension = Easter + 39 days.
  */
 export function isEastertide(date: Date = new Date()): boolean {
 	const year = date.getFullYear();
 	const easter = computeEaster(year);
-	const pentecost = new Date(easter);
-	pentecost.setDate(pentecost.getDate() + 49);
-	return date >= easter && date <= pentecost;
+	const ascension = new Date(easter);
+	ascension.setDate(ascension.getDate() + 39);
+	const d = toMidnight(date);
+	return d >= easter && d <= ascension;
 }
 
 /**
@@ -41,7 +48,8 @@ export function isLent(date: Date = new Date()): boolean {
 	ashWednesday.setDate(ashWednesday.getDate() - 46);
 	const holySaturday = new Date(easter);
 	holySaturday.setDate(holySaturday.getDate() - 1);
-	return date >= ashWednesday && date <= holySaturday;
+	const d = toMidnight(date);
+	return d >= ashWednesday && d <= holySaturday;
 }
 
 export type LiturgicalSeason = 'eastertide' | 'lent' | null;

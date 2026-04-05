@@ -8,7 +8,7 @@
 	 *   - 'layout': flex row on desktop (image sticky right, content left). Use as page-level wrapper.
 	 *   - 'overlay': image floats over the page (fixed position, IntersectionObserver show/hide). Use when nested inside existing layouts.
 	 */
-	let { src, alt = '', mode = 'layout', children } = $props();
+	let { src, alt = '', mode = 'layout', caption = '', children } = $props();
 
 	/** @type {HTMLDivElement | null} */
 	let pipEl = $state(null);
@@ -86,6 +86,9 @@
 <div class="sticky-image-layout" class:overlay={mode === 'overlay'}>
 	<div class="image-wrap-desktop">
 		<img {src} {alt}>
+		{#if caption}
+			<figcaption class="image-caption">{@html caption}</figcaption>
+		{/if}
 	</div>
 	<PipImage {pip} {src} {alt} visible={inView} bind:el={pipEl} />
 	<div class="content-scroll" bind:this={contentEl}>
@@ -106,6 +109,11 @@
 }
 .image-wrap-desktop {
 	display: none;
+}
+.image-caption {
+	font-size: 0.8rem;
+	color: var(--color-text-secondary);
+	margin-top: 0.4rem;
 }
 .content-scroll {
 	width: 100%;

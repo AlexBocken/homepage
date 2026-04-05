@@ -6,7 +6,7 @@
 	import { convertFitnessPath } from '$lib/js/fitnessI18n';
 	import { onMount } from 'svelte';
 
-	let { lang = undefined }: { lang?: 'de' | 'en' } = $props();
+	let { lang = undefined }: { lang?: 'de' | 'en' | 'la' } = $props();
 
 	// Use prop for display if provided (SSR-safe), otherwise fall back to store
 	const displayLang = $derived(lang ?? $languageStore);
@@ -17,9 +17,16 @@
 
 	// Faith subroute mappings
 	const faithSubroutes: Record<string, Record<string, string>> = {
-		en: { gebete: 'prayers', rosenkranz: 'rosary' },
-		de: { prayers: 'gebete', rosary: 'rosenkranz' }
+		en: { gebete: 'prayers', rosenkranz: 'rosary', rosarium: 'rosary', orationes: 'prayers' },
+		de: { prayers: 'gebete', rosary: 'rosenkranz', rosarium: 'rosenkranz', orationes: 'gebete' },
+		la: { prayers: 'orationes', gebete: 'orationes', rosary: 'rosarium', rosenkranz: 'rosarium' }
 	};
+
+	// Whether the current page is a faith route (show LA option)
+	const faithPath = $derived(currentPath || $page.url.pathname);
+	const isFaithRoute = $derived(
+		faithPath.startsWith('/glaube') || faithPath.startsWith('/faith') || faithPath.startsWith('/fides')
+	);
 
 	$effect(() => {
 		// Update current language and path when page changes (reactive to browser navigation)
@@ -30,6 +37,8 @@
 			languageStore.set('en');
 		} else if (path.startsWith('/rezepte') || path.startsWith('/glaube')) {
 			languageStore.set('de');
+		} else if (path.startsWith('/fides')) {
+			// Latin route — no language switching needed
 		} else if (path.startsWith('/fitness')) {
 			// Language is determined by sub-route slugs; don't override store
 		} else {
@@ -45,11 +54,11 @@
 		isOpen = !isOpen;
 	}
 
-	function convertFaithPath(path: string, targetLang: 'de' | 'en'): string {
-		const faithMatch = path.match(/^\/(glaube|faith)(\/(.+))?$/);
+	function convertFaithPath(path: string, targetLang: 'de' | 'en' | 'la'): string {
+		const faithMatch = path.match(/^\/(glaube|faith|fides)(\/(.+))?$/);
 		if (!faithMatch) return path;
 
-		const targetBase = targetLang === 'en' ? 'faith' : 'glaube';
+		const targetBase = targetLang === 'la' ? 'fides' : targetLang === 'en' ? 'faith' : 'glaube';
 		const rest = faithMatch[3]; // e.g., "gebete", "rosenkranz/sub", "angelus"
 
 		if (!rest) {
@@ -63,14 +72,14 @@
 	}
 
 	// Compute target paths for each language (used as href for no-JS)
-	function computeTargetPath(targetLang: 'de' | 'en'): string {
+	function computeTargetPath(targetLang: 'de' | 'en' | 'la'): string {
 		const path = currentPath || $page.url.pathname;
 
-		if (path.startsWith('/glaube') || path.startsWith('/faith')) {
+		if (path.startsWith('/glaube') || path.startsWith('/faith') || path.startsWith('/fides')) {
 			return convertFaithPath(path, targetLang);
 		}
 
-		if (path.startsWith('/fitness')) {
+		if (path.startsWith('/fitness') && targetLang !== 'la') {
 			return convertFitnessPath(path, targetLang);
 		}
 
@@ -94,15 +103,18 @@
 
 	const dePath = $derived(computeTargetPath('de'));
 	const enPath = $derived(computeTargetPath('en'));
+	const laPath = $derived(computeTargetPath('la'));
 
-	async function switchLanguage(lang: 'de' | 'en') {
+	async function switchLanguage(lang: 'de' | 'en' | 'la') {
 		isOpen = false;
 
-		// Update the shared language store immediately
-		languageStore.set(lang);
+		// Update the shared language store immediately (la not tracked in store)
+		if (lang !== 'la') {
+			languageStore.set(lang);
+		}
 
 		// Store preference
-		if (typeof localStorage !== 'undefined') {
+		if (typeof localStorage !== 'undefined' && lang !== 'la') {
 			localStorage.setItem('preferredLanguage', lang);
 		}
 
@@ -112,14 +124,14 @@
 		// For pages that handle their own translations inline (not recipe/faith routes),
 		// dispatch event and stay on the page
 		if (!path.startsWith('/rezepte') && !path.startsWith('/recipes')
-			&& !path.startsWith('/glaube') && !path.startsWith('/faith')
+			&& !path.startsWith('/glaube') && !path.startsWith('/faith') && !path.startsWith('/fides')
 			&& !path.startsWith('/fitness')) {
 			window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
 			return;
 		}
 
 		// Handle faith pages
-		if (path.startsWith('/glaube') || path.startsWith('/faith')) {
+		if (path.startsWith('/glaube') || path.startsWith('/faith') || path.startsWith('/fides')) {
 			const newPath = convertFaithPath(path, lang);
 			await goto(newPath);
 			return;
@@ -313,6 +325,15 @@
 			>
 				EN
 			</a>
+			{#if isFaithRoute}
+				<a
+					href={laPath}
+					class:active={displayLang === 'la'}
+					onclick={(e) => { e.preventDefault(); switchLanguage('la'); }}
+				>
+					LA
+				</a>
+			{/if}
 		</div>
 	</div>
 </div>

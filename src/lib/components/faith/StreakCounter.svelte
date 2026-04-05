@@ -9,7 +9,7 @@ let streak = $state<ReturnType<typeof getRosaryStreak> | null>(null);
 
 interface Props {
 	streakData?: { length: number; lastPrayed: string | null } | null;
-	lang?: 'de' | 'en';
+	lang?: 'de' | 'en' | 'la';
 	isLoggedIn?: boolean;
 }
 
@@ -22,11 +22,12 @@ let displayLength = $derived(streak?.length ?? streakData?.length ?? 0);
 let prayedToday = $derived(streak?.prayedToday ?? (streakData?.lastPrayed === new Date().toISOString().split('T')[0]));
 
 // Labels need to come after displayLength since they depend on it
+const isLatin = $derived(lang === 'la');
 const labels = $derived({
-	days: isEnglish ? (displayLength === 1 ? 'Day' : 'Days') : (displayLength === 1 ? 'Tag' : 'Tage'),
-	prayed: isEnglish ? 'Prayed' : 'Gebetet',
-	prayedToday: isEnglish ? 'Prayed today' : 'Heute gebetet',
-	ariaLabel: isEnglish ? 'Mark prayer as prayed' : 'Gebet als gebetet markieren'
+	days: isLatin ? (displayLength === 1 ? 'Dies' : 'Dies') : isEnglish ? (displayLength === 1 ? 'Day' : 'Days') : (displayLength === 1 ? 'Tag' : 'Tage'),
+	prayed: isLatin ? 'Oravi' : isEnglish ? 'Prayed' : 'Gebetet',
+	prayedToday: isLatin ? 'Hodie oravi' : isEnglish ? 'Prayed today' : 'Heute gebetet',
+	ariaLabel: isLatin ? 'Orationem notatam fac' : isEnglish ? 'Mark prayer as prayed' : 'Gebet als gebetet markieren'
 });
 
 // Initialize store on mount (client-side only)
