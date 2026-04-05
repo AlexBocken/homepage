@@ -228,9 +228,40 @@ sw.addEventListener('fetch', (event) => {
 						}
 					}
 
-					// Last resort - return a basic offline response
+					// Last resort - return a styled offline response
 					return new Response(
-						'<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offline</title></head><body><h1>Offline</h1><p>Please connect to the internet and try again.</p></body></html>',
+						`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Offline</title><style>
+*{box-sizing:border-box;margin:0;font-family:Helvetica,Arial,sans-serif}
+body{background:#f8f6f1;color:#2a2a2a;min-height:100svh;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+nav{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));z-index:100;display:flex;align-items:center;justify-content:center;height:3rem;padding:0 1.2rem;margin:12px auto 0;width:fit-content;max-width:calc(100% - 1.5rem);border-radius:100px;background:rgba(46,52,64,0.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);box-shadow:0 4px 24px rgba(0,0,0,0.25)}
+nav span{color:#999;font-size:0.9rem;letter-spacing:0.02em}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;gap:1rem}
+main svg{opacity:0.4}
+h1{font-size:1.5rem;font-weight:600}
+p{color:#555;max-width:360px;line-height:1.5}
+.hint{font-size:0.85rem;color:#777;max-width:360px;line-height:1.5;margin-top:0.5rem}
+.hint a{color:#5E81AC}
+.hint a:hover{color:#81A1C1}
+button{padding:0.6rem 1.5rem;border:none;border-radius:100px;background:#5E81AC;color:white;font-size:0.9rem;cursor:pointer;box-shadow:0 0 0.4em 0.05em rgba(0,0,0,0.2)}
+button:hover{background:#81A1C1}
+@media(prefers-color-scheme:dark){
+body{background:#000;color:#e5e5e5}
+nav{background:rgba(20,20,20,0.78);border-color:rgba(255,255,255,0.06)}
+p{color:#aaa}
+.hint{color:#888}
+.hint a{color:#88C0D0}
+.hint a:hover{color:#8FBCBB}
+}
+</style></head><body>
+<nav><span>bocken.org</span></nav>
+<main>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+<h1>Offline</h1>
+<p>You're not connected to the internet. Please check your connection and try again.</p>
+<button onclick="location.reload()">Retry</button>
+<p class="hint">Install the <a href="https://bocken.org/static/Bocken.apk">Android app</a> or add this site to your home screen to browse offline.</p>
+</main>
+</body></html>`,
 						{ headers: { 'Content-Type': 'text/html' } }
 					);
 				}
