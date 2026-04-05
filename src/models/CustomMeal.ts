@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 interface ICustomMealIngredient {
   name: string;
-  source: 'bls' | 'usda' | 'custom';
+  source: 'bls' | 'usda' | 'custom' | 'off';
   sourceId?: string;
   amountGrams: number;
   portions?: { description: string; grams: number }[];
@@ -54,7 +54,7 @@ const PortionSchema = new mongoose.Schema({
 
 const IngredientSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
-  source: { type: String, enum: ['bls', 'usda', 'custom'], required: true },
+  source: { type: String, enum: ['bls', 'usda', 'custom', 'off'], required: true },
   sourceId: { type: String },
   amountGrams: { type: Number, required: true, min: 0 },
   portions: { type: [PortionSchema], default: undefined },
