@@ -1,7 +1,8 @@
 <script>
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
 	let { data } = $props();
-	const isEnglish = $derived(data.lang === 'en');
+	const isGerman = $derived(data.lang === 'de');
+	const isLatin = $derived(data.lang === 'la');
 </script>
 
 <svelte:head>
@@ -39,11 +40,15 @@
 		font-size: var(--text-sm);
 		margin-bottom: var(--space-sm);
 	}
+	.lang-notice a {
+		color: var(--nord10);
+		text-decoration: underline;
+	}
 </style>
 
 <h1>Katechese</h1>
-{#if isEnglish}
-	<p class="lang-notice">This catechesis is only available in German.</p>
+{#if !isGerman}
+	<p class="lang-notice">{isLatin ? 'Haec catechesis tantum in ' : 'This catechesis is only available in '}<a href="/glaube/katechese">{isLatin ? 'lingua Germanica' : 'German'}</a>{isLatin ? ' praesto est.' : '.'}</p>
 {/if}
 <p>
 	Aufgearbeitete Lehrinhalte aus dem Glaubenskurs von P. Martin Ramm FSSP.

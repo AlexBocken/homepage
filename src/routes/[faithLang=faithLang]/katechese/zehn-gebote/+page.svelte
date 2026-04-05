@@ -2,7 +2,8 @@
 	import { ArrowDown, ArrowLeft } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	let expanded = $state(null);
-	const isEnglish = $derived($page.url.pathname.startsWith('/faith'));
+	const isGerman = $derived($page.url.pathname.startsWith('/glaube'));
+	const isLatin = $derived($page.url.pathname.startsWith('/fides'));
 
 	function toggle(id) {
 		expanded = expanded === id ? null : id;
@@ -58,8 +59,8 @@
 		<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
 	</header>
 
-	{#if isEnglish}
-		<p class="lang-notice">This catechesis is only available in German.</p>
+	{#if !isGerman}
+		<p class="lang-notice">{isLatin ? 'Haec catechesis tantum in ' : 'This catechesis is only available in '}<a href="/glaube/katechese/zehn-gebote">{isLatin ? 'lingua Germanica' : 'German'}</a>{isLatin ? ' praesto est.' : '.'}</p>
 	{/if}
 
 	<section id="ursprung">
@@ -301,6 +302,10 @@
 		font-style: italic;
 		font-size: 0.85rem;
 		margin-bottom: 1rem;
+	}
+	.lang-notice a {
+		color: var(--nord10);
+		text-decoration: underline;
 	}
 	.disclaimer {
 		text-align: center;
