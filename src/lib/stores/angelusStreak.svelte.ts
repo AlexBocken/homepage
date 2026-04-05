@@ -1,12 +1,14 @@
 import { browser } from '$app/environment';
 
 const STORAGE_KEY = 'angelus_streak';
+const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours — covers dateline crossings
 
 interface AngelusStreakData {
 	streak: number;
-	lastComplete: string | null; // YYYY-MM-DD
+	lastComplete: string | null; // local YYYY-MM-DD
+	lastCompleteTs?: number | null; // epoch ms for timezone-safe streak checks
 	todayPrayed: number; // bitmask: 1=morning, 2=noon, 4=evening
-	todayDate: string | null; // YYYY-MM-DD
+	todayDate: string | null; // local YYYY-MM-DD
 }
 
 export type TimeSlot = 'morning' | 'noon' | 'evening';
@@ -18,13 +20,29 @@ const TIME_BITS: Record<TimeSlot, number> = {
 };
 
 function getToday(): string {
-	return new Date().toISOString().split('T')[0];
+	const d = new Date();
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function isYesterday(dateStr: string): boolean {
+// Legacy fallback for old data without timestamp
+function isYesterdayByDate(dateStr: string): boolean {
 	const yesterday = new Date();
 	yesterday.setDate(yesterday.getDate() - 1);
-	return dateStr === yesterday.toISOString().split('T')[0];
+	const ys = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+	return dateStr === ys;
+}
+
+function isStreakAlive(data: AngelusStreakData): boolean {
+	if (!data.lastComplete) return false;
+	if (data.lastComplete === getToday()) return true;
+
+	// Prefer real elapsed time (handles timezone/dateline changes)
+	if (data.lastCompleteTs) {
+		return (Date.now() - data.lastCompleteTs) < STREAK_WINDOW_MS;
+	}
+
+	// Legacy fallback
+	return isYesterdayByDate(data.lastComplete);
 }
 
 export function getCurrentTimeSlot(): TimeSlot {
@@ -81,30 +99,47 @@ function mergeStreakData(local: AngelusStreakData, server: AngelusStreakData | n
 	// Take the higher streak or more recent lastComplete
 	let bestStreak: number;
 	let bestLastComplete: string | null;
+	let bestLastCompleteTs: number | null;
 
 	if (localEffective.lastComplete === serverEffective.lastComplete) {
 		bestStreak = Math.max(localEffective.streak, serverEffective.streak);
 		bestLastComplete = localEffective.lastComplete;
+		bestLastCompleteTs = localEffective.lastCompleteTs ?? serverEffective.lastCompleteTs ?? null;
 	} else if (!localEffective.lastComplete) {
 		bestStreak = serverEffective.streak;
 		bestLastComplete = serverEffective.lastComplete;
+		bestLastCompleteTs = serverEffective.lastCompleteTs ?? null;
 	} else if (!serverEffective.lastComplete) {
 		bestStreak = localEffective.streak;
 		bestLastComplete = localEffective.lastComplete;
+		bestLastCompleteTs = localEffective.lastCompleteTs ?? null;
 	} else {
-		// Take whichever has more recent lastComplete
-		if (localEffective.lastComplete > serverEffective.lastComplete) {
+		// Prefer timestamp comparison when available
+		if (localEffective.lastCompleteTs && serverEffective.lastCompleteTs) {
+			if (localEffective.lastCompleteTs > serverEffective.lastCompleteTs) {
+				bestStreak = localEffective.streak;
+				bestLastComplete = localEffective.lastComplete;
+				bestLastCompleteTs = localEffective.lastCompleteTs;
+			} else {
+				bestStreak = serverEffective.streak;
+				bestLastComplete = serverEffective.lastComplete;
+				bestLastCompleteTs = serverEffective.lastCompleteTs;
+			}
+		} else if (localEffective.lastComplete > serverEffective.lastComplete) {
 			bestStreak = localEffective.streak;
 			bestLastComplete = localEffective.lastComplete;
+			bestLastCompleteTs = localEffective.lastCompleteTs ?? null;
 		} else {
 			bestStreak = serverEffective.streak;
 			bestLastComplete = serverEffective.lastComplete;
+			bestLastCompleteTs = serverEffective.lastCompleteTs ?? null;
 		}
 	}
 
 	return {
 		streak: bestStreak,
 		lastComplete: bestLastComplete,
+		lastCompleteTs: bestLastCompleteTs,
 		todayPrayed: mergedTodayPrayed,
 		todayDate: mergedTodayPrayed > 0 ? today : null
 	};
@@ -119,6 +154,7 @@ function isPWA(): boolean {
 class AngelusStreakStore {
 	#streak = $state(0);
 	#lastComplete = $state<string | null>(null);
+	#lastCompleteTs = $state<number | null>(null);
 	#todayPrayed = $state(0);
 	#todayDate = $state<string | null>(null);
 	#isLoggedIn = $state(false);
@@ -148,6 +184,7 @@ class AngelusStreakStore {
 
 		this.#streak = data.streak;
 		this.#lastComplete = data.lastComplete;
+		this.#lastCompleteTs = data.lastCompleteTs ?? null;
 		this.#todayPrayed = data.todayPrayed;
 		this.#todayDate = data.todayDate;
 		this.#initialized = true;
@@ -193,9 +230,15 @@ class AngelusStreakStore {
 	}
 
 	get streak() {
-		// If lastComplete is stale (not today, not yesterday), streak is broken
-		if (this.#lastComplete && this.#lastComplete !== getToday() && !isYesterday(this.#lastComplete)) {
-			// But if today has some prayers, streak might still be valid from today's completion
+		const data: AngelusStreakData = {
+			streak: this.#streak,
+			lastComplete: this.#lastComplete,
+			lastCompleteTs: this.#lastCompleteTs,
+			todayPrayed: this.#todayPrayed,
+			todayDate: this.#todayDate
+		};
+		if (!isStreakAlive(data)) {
+			// But if today is complete, streak might still be valid
 			if (this.#todayDate !== getToday() || this.#todayPrayed !== 7) {
 				return 0;
 			}
@@ -239,17 +282,14 @@ class AngelusStreakStore {
 		const merged = mergeStreakData(localData, serverData);
 
 		// Check if streak is expired
-		const isExpired =
-			merged.lastComplete !== null &&
-			merged.lastComplete !== getToday() &&
-			!isYesterday(merged.lastComplete) &&
-			merged.todayPrayed !== 7;
+		const isExpired = !isStreakAlive(merged) && merged.todayPrayed !== 7;
 		const effective: AngelusStreakData = isExpired
-			? { streak: 0, lastComplete: null, todayPrayed: merged.todayPrayed, todayDate: merged.todayDate }
+			? { streak: 0, lastComplete: null, lastCompleteTs: null, todayPrayed: merged.todayPrayed, todayDate: merged.todayDate }
 			: merged;
 
 		this.#streak = effective.streak;
 		this.#lastComplete = effective.lastComplete;
+		this.#lastCompleteTs = effective.lastCompleteTs ?? null;
 		this.#todayPrayed = effective.todayPrayed;
 		this.#todayDate = effective.todayDate;
 		saveToStorage(effective);
@@ -271,6 +311,7 @@ class AngelusStreakStore {
 			const data: AngelusStreakData = {
 				streak: this.#streak,
 				lastComplete: this.#lastComplete,
+				lastCompleteTs: this.#lastCompleteTs,
 				todayPrayed: this.#todayPrayed,
 				todayDate: this.#todayDate
 			};
@@ -306,23 +347,28 @@ class AngelusStreakStore {
 		let dayCompleted = false;
 		if (this.#todayPrayed === 7) {
 			dayCompleted = true;
+			const now = Date.now();
 
 			// Update streak
-			if (this.#lastComplete && (this.#lastComplete === today || isYesterday(this.#lastComplete))) {
-				// lastComplete is today (shouldn't happen) or yesterday → continue streak
-				if (this.#lastComplete !== today) {
-					this.#streak += 1;
-				}
-			} else {
-				// Gap or first time → start new streak
+			const alive = isStreakAlive({
+				streak: this.#streak,
+				lastComplete: this.#lastComplete,
+				lastCompleteTs: this.#lastCompleteTs,
+				todayPrayed: 0, todayDate: null
+			});
+			if (alive && this.#lastComplete !== today) {
+				this.#streak += 1;
+			} else if (!alive) {
 				this.#streak = 1;
 			}
 			this.#lastComplete = today;
+			this.#lastCompleteTs = now;
 		}
 
 		const data: AngelusStreakData = {
 			streak: this.#streak,
 			lastComplete: this.#lastComplete,
+			lastCompleteTs: this.#lastCompleteTs,
 			todayPrayed: this.#todayPrayed,
 			todayDate: this.#todayDate
 		};

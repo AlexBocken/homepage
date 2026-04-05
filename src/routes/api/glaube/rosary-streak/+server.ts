@@ -18,7 +18,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 
     return json({
       length: streak?.length ?? 0,
-      lastPrayed: streak?.lastPrayed ?? null
+      lastPrayed: streak?.lastPrayed ?? null,
+      lastPrayedTs: streak?.lastPrayedTs ?? null
     });
   } catch (e) {
     throw error(500, 'Failed to fetch rosary streak');
@@ -32,7 +33,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(401, 'Authentication required');
   }
 
-  const { length, lastPrayed } = await request.json();
+  const { length, lastPrayed, lastPrayedTs } = await request.json();
 
   if (typeof length !== 'number' || length < 0) {
     throw error(400, 'Valid streak length required');
@@ -45,15 +46,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   await dbConnect();
 
   try {
+    const updateFields: Record<string, unknown> = { length, lastPrayed };
+    if (typeof lastPrayedTs === 'number') {
+      updateFields.lastPrayedTs = lastPrayedTs;
+    }
+
     const updated = await RosaryStreak.findOneAndUpdate(
       { username: session.user.nickname },
-      { length, lastPrayed },
+      updateFields,
       { upsert: true, new: true }
     ).lean() as any;
 
     return json({
       length: updated?.length ?? 0,
-      lastPrayed: updated?.lastPrayed ?? null
+      lastPrayed: updated?.lastPrayed ?? null,
+      lastPrayedTs: updated?.lastPrayedTs ?? null
     });
   } catch (e) {
     throw error(500, 'Failed to update rosary streak');
