@@ -792,7 +792,7 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="fab-overlay" onclick={closeFabModal} onkeydown={(e) => e.key === 'Escape' && closeFabModal()}>
 		<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-		<div class="fab-modal" onclick={(e) => e.stopPropagation()}>
+		<div class="fab-modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
 			<div class="fab-modal-header">
 				<h3>{t('add_food', lang)}</h3>
 				<button class="fab-close" onclick={closeFabModal}><Plus size={18} style="transform: rotate(45deg)" /></button>
@@ -1596,8 +1596,7 @@
 		cursor: not-allowed;
 		transform: none;
 	}
-	.btn-secondary,
-	.btn-cancel {
+	.btn-secondary {
 		padding: 0.5rem 1.1rem;
 		background: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
@@ -1607,9 +1606,6 @@
 		font-size: 0.82rem;
 		font-weight: 500;
 		transition: background 0.15s;
-	}
-	.btn-cancel:hover {
-		background: var(--color-bg-elevated);
 	}
 
 	/* ── Day Total ── */

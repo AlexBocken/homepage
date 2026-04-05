@@ -172,16 +172,18 @@
 		<div class="form-card">
 			<h2 class="form-title">{editingId ? t('edit', lang) : t('new_meal', lang)}</h2>
 
-			<label class="field-label">{t('meal_name', lang)}</label>
-			<input
-				type="text"
-				class="text-input"
-				bind:value={mealName}
-				placeholder={t('meal_name', lang)}
-			/>
+			<label class="field-label">
+				{t('meal_name', lang)}
+				<input
+					type="text"
+					class="text-input"
+					bind:value={mealName}
+					placeholder={t('meal_name', lang)}
+				/>
+			</label>
 
 			<!-- Ingredients list -->
-			<label class="field-label">{t('ingredients', lang)} ({ingredients.length})</label>
+			<span class="field-label">{t('ingredients', lang)} ({ingredients.length})</span>
 			{#if ingredients.length > 0}
 				<div class="ingredients-list">
 					{#each ingredients as ing, i}

@@ -188,8 +188,8 @@
 {#if showDialog}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="dialog-overlay" onclick={() => showDialog = false} onkeydown={(e) => e.key === 'Escape' && (showDialog = false)}>
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="dialog" onclick={(e) => e.stopPropagation()}>
+		<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+		<div class="dialog" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
 			<div class="dialog-header">
 				<h3>{labels.addToLog}</h3>
 				<button class="close-btn" onclick={() => showDialog = false}><X size={18} /></button>
