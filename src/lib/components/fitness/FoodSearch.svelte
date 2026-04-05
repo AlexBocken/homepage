@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/stores';
-	import { Heart, ExternalLink, Search, X } from 'lucide-svelte';
+	import { browser } from '$app/environment';
+	import { Heart, ExternalLink, ScanBarcode, X } from 'lucide-svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	/**
@@ -37,6 +38,14 @@
 	let selected = $state(null);
 	let amountInput = $state('100');
 	let portionIdx = $state(-1); // -1 = grams
+
+	// --- Barcode scanner state ---
+	let scanning = $state(false);
+	let scanError = $state('');
+	let videoEl = $state(null);
+	let scanStream = $state(null);
+	let scanDebug = $state('');
+
 
 	function doSearch() {
 		if (timeout) clearTimeout(timeout);
@@ -142,18 +151,191 @@
 		if (v >= 10) return v.toFixed(1);
 		return v.toFixed(1);
 	}
+
+	function sourceLabel(source) {
+		if (source === 'bls') return 'BLS';
+		if (source === 'usda') return 'USDA';
+		if (source === 'off') return 'OFF';
+		return source?.toUpperCase() ?? '';
+	}
+
+	// --- Barcode scanning ---
+	async function startScan() {
+		scanError = '';
+
+		// Check secure context (getUserMedia requires HTTPS or localhost)
+		if (!globalThis.isSecureContext) {
+			scanError = isEn ? 'Camera requires HTTPS' : 'Kamera benötigt HTTPS';
+			return;
+		}
+		if (!navigator.mediaDevices?.getUserMedia) {
+			scanError = isEn ? 'Camera API not available' : 'Kamera-API nicht verfügbar';
+			return;
+		}
+
+		// Check/request permission via Permissions API if available
+		if (navigator.permissions) {
+			try {
+				const perm = await navigator.permissions.query({ name: /** @type {any} */ ('camera') });
+				if (perm.state === 'denied') {
+					scanError = isEn
+						? 'Camera permission denied — enable it in your browser site settings'
+						: 'Kamerazugriff verweigert — in den Browser-Seiteneinstellungen aktivieren';
+					return;
+				}
+			} catch {
+				// permissions.query('camera') not supported on all browsers — proceed anyway
+			}
+		}
+
+		scanning = true;
+		scanDebug = 'starting…';
+
+		try {
+			scanDebug = 'requesting camera…';
+			const stream = await navigator.mediaDevices.getUserMedia({
+				video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+			});
+			scanStream = stream;
+			const track = stream.getVideoTracks()[0];
+			const settings = track?.getSettings?.() ?? {};
+			scanDebug = `camera: ${settings.width}x${settings.height} ${track?.label ?? '?'}`;
+
+			// Wait for the video element to be mounted
+			await new Promise(r => requestAnimationFrame(r));
+			if (!videoEl) { scanDebug = 'no video element'; stopScan(); return; }
+
+			videoEl.srcObject = stream;
+			await videoEl.play();
+			scanDebug += ` | video: ${videoEl.videoWidth}x${videoEl.videoHeight}`;
+
+			// Import barcode-detector/pure — ZXing WASM-based ponyfill
+			scanDebug += ' | importing detector…';
+			let BarcodeDetector;
+			try {
+				const mod = await import('barcode-detector/pure');
+				BarcodeDetector = mod.BarcodeDetector;
+				scanDebug += ' OK';
+			} catch (importErr) {
+				scanDebug = `IMPORT ERROR: ${importErr?.message ?? importErr}`;
+				stopScan();
+				return;
+			}
+
+			const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'] });
+			scanDebug += ' | detector created';
+
+			let scanCount = 0;
+			const detectLoop = async () => {
+				while (scanning && videoEl) {
+					scanCount++;
+					try {
+						const vw = videoEl.videoWidth;
+						const vh = videoEl.videoHeight;
+						if (vw === 0 || vh === 0) {
+							scanDebug = `scan #${scanCount} | waiting for video…`;
+							await new Promise(r => setTimeout(r, 500));
+							continue;
+						}
+
+						const results = await detector.detect(videoEl);
+						scanDebug = `scan #${scanCount} | ${vw}x${vh} | ${results.length ? `found: ${results[0].rawValue}` : 'none'}`;
+
+						if (results.length > 0) {
+							const code = results[0].rawValue;
+							scanDebug = `DETECTED: ${code} (${results[0].format})`;
+							stopScan();
+							await lookupBarcode(code);
+							return;
+						}
+					} catch (detectErr) {
+						scanDebug = `scan #${scanCount} ERROR: ${detectErr?.name}: ${detectErr?.message}`;
+					}
+					await new Promise(r => setTimeout(r, 300));
+				}
+			};
+			detectLoop();
+		} catch (err) {
+			scanning = false;
+			const name = err?.name;
+			if (name === 'NotAllowedError') {
+				scanError = isEn
+					? 'Camera permission denied — enable it in your browser site settings'
+					: 'Kamerazugriff verweigert — in den Browser-Seiteneinstellungen aktivieren';
+			} else if (name === 'NotFoundError') {
+				scanError = isEn ? 'No camera found' : 'Keine Kamera gefunden';
+			} else if (name === 'NotReadableError') {
+				scanError = isEn ? 'Camera is in use by another app' : 'Kamera wird von einer anderen App verwendet';
+			} else {
+				scanError = isEn ? `Camera error: ${err?.message || name}` : `Kamerafehler: ${err?.message || name}`;
+			}
+		}
+	}
+
+	function stopScan() {
+		scanning = false;
+		if (scanStream) {
+			for (const track of scanStream.getTracks()) track.stop();
+			scanStream = null;
+		}
+		if (videoEl) videoEl.srcObject = null;
+	}
+
+	async function lookupBarcode(code) {
+		loading = true;
+		scanError = '';
+		try {
+			const res = await fetch(`/api/nutrition/barcode?code=${encodeURIComponent(code)}`);
+			if (!res.ok) {
+				scanError = isEn ? `No product found for barcode ${code}` : `Kein Produkt gefunden für Barcode ${code}`;
+				return;
+			}
+			const data = await res.json();
+			// Directly select the scanned item
+			selectItem(data);
+		} catch {
+			scanError = isEn ? 'Lookup failed' : 'Suche fehlgeschlagen';
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
-{#if !selected}
-	<!-- svelte-ignore a11y_autofocus -->
-	<input
-		type="search"
-		class="fs-search-input"
-		placeholder={t('search_food', lang)}
-		bind:value={query}
-		oninput={doSearch}
-		autofocus={autofocus}
-	/>
+{#if scanning}
+	<div class="fs-scanner">
+		<div class="fs-scanner-header">
+			<span class="fs-scanner-title">{isEn ? 'Scan barcode' : 'Barcode scannen'}</span>
+			<button class="fs-scanner-close" onclick={stopScan} aria-label="Close scanner"><X size={18} /></button>
+		</div>
+		<!-- svelte-ignore a11y_media_has_caption -->
+		<video bind:this={videoEl} class="fs-scanner-video" playsinline></video>
+		<div class="fs-scanner-overlay">
+			<div class="fs-scanner-reticle"></div>
+		</div>
+		{#if scanDebug}
+			<div class="fs-scan-debug">{scanDebug}</div>
+		{/if}
+	</div>
+{:else if !selected}
+	<div class="fs-search-row">
+		<!-- svelte-ignore a11y_autofocus -->
+		<input
+			type="search"
+			class="fs-search-input"
+			placeholder={t('search_food', lang)}
+			bind:value={query}
+			oninput={doSearch}
+			autofocus={autofocus}
+		/>
+		{#if browser}
+			<button class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
+				<ScanBarcode size={20} />
+			</button>
+		{/if}
+	</div>
+	{#if scanError}
+		<p class="fs-scan-error">{scanError}</p>
+	{/if}
 	{#if loading}
 		<p class="fs-status">{t('loading', lang)}</p>
 	{/if}
@@ -170,13 +352,14 @@
 						<div class="fs-result-info">
 							<span class="fs-result-name">{item.name}</span>
 							<span class="fs-result-meta">
-								<span class="fs-source-badge" class:usda={item.source === 'usda'}>{item.source === 'bls' ? 'BLS' : 'USDA'}</span>
-								{item.category}
+								<span class="fs-source-badge" class:usda={item.source === 'usda'} class:off={item.source === 'off'}>{sourceLabel(item.source)}</span>
+								{#if item.brands}<span class="fs-result-brands">{item.brands}</span>{/if}
+								{#if item.category}{item.category}{/if}
 							</span>
 						</div>
 						<span class="fs-result-cal">{item.calories}<small> kcal</small></span>
 					</button>
-					{#if showDetailLinks}
+					{#if showDetailLinks && (item.source === 'bls' || item.source === 'usda')}
 						<a class="fs-detail-link" href="/fitness/{s.nutrition}/food/{item.source}/{item.id}" aria-label="View details">
 							<ExternalLink size={13} />
 						</a>
@@ -193,9 +376,12 @@
 	<div class="fs-selected">
 		<div class="fs-selected-header">
 			<span class="fs-selected-name">
-				<span class="fs-source-badge" class:usda={selected.source === 'usda'}>{selected.source === 'bls' ? 'BLS' : 'USDA'}</span>
+				<span class="fs-source-badge" class:usda={selected.source === 'usda'} class:off={selected.source === 'off'}>{sourceLabel(selected.source)}</span>
 				{selected.name}
 			</span>
+			{#if selected.brands}
+				<span class="fs-selected-brands">{selected.brands}</span>
+			{/if}
 		</div>
 		<div class="fs-amount-row">
 			<input
@@ -242,9 +428,14 @@
 {/if}
 
 <style>
-	/* ── Search input ── */
+	/* ── Search row with barcode button ── */
+	.fs-search-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
 	.fs-search-input {
-		width: 100%;
+		flex: 1;
 		padding: 0.55rem 0.65rem;
 		background: var(--color-bg-tertiary);
 		border: 1px solid var(--color-border);
@@ -253,15 +444,111 @@
 		font-size: 0.9rem;
 		box-sizing: border-box;
 		transition: border-color 0.15s;
+		min-width: 0;
 	}
 	.fs-search-input:focus {
 		outline: none;
+		border-color: var(--nord8);
+	}
+	.fs-barcode-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: color 0.15s, border-color 0.15s;
+	}
+	.fs-barcode-btn:hover {
+		color: var(--nord8);
 		border-color: var(--nord8);
 	}
 	.fs-status {
 		font-size: 0.78rem;
 		color: var(--color-text-tertiary);
 		margin: 0.4rem 0;
+	}
+	.fs-scan-error {
+		font-size: 0.78rem;
+		color: var(--nord11);
+		margin: 0.3rem 0;
+	}
+
+	/* ── Barcode scanner ── */
+	.fs-scanner {
+		position: relative;
+		border-radius: 10px;
+		overflow: hidden;
+		background: #000;
+	}
+	.fs-scanner-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0.65rem;
+		background: rgba(0,0,0,0.7);
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 2;
+	}
+	.fs-scanner-title {
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: #fff;
+	}
+	.fs-scanner-close {
+		display: flex;
+		background: none;
+		border: none;
+		color: #fff;
+		cursor: pointer;
+		padding: 0.2rem;
+	}
+	.fs-scanner-video {
+		width: 100%;
+		display: block;
+		max-height: 260px;
+		object-fit: cover;
+	}
+	.fs-scanner-overlay {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+	}
+	.fs-scanner-reticle {
+		width: 70%;
+		height: 40%;
+		border: 2px solid rgba(136, 192, 208, 0.8);
+		border-radius: 8px;
+		box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+		animation: fs-pulse 2s ease-in-out infinite;
+	}
+	@keyframes fs-pulse {
+		0%, 100% { border-color: rgba(136, 192, 208, 0.8); }
+		50% { border-color: rgba(136, 192, 208, 0.3); }
+	}
+
+	.fs-scan-debug {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 0.35rem 0.5rem;
+		background: rgba(0,0,0,0.75);
+		color: #88c0d0;
+		font-size: 0.65rem;
+		font-family: monospace;
+		word-break: break-all;
+		z-index: 3;
 	}
 
 	/* ── Results ── */
@@ -330,6 +617,9 @@
 		align-items: center;
 		gap: 0.25rem;
 	}
+	.fs-result-brands {
+		font-style: italic;
+	}
 	.fs-source-badge {
 		display: inline-block;
 		font-size: 0.55rem;
@@ -344,6 +634,10 @@
 	.fs-source-badge.usda {
 		background: color-mix(in srgb, var(--nord10) 15%, transparent);
 		color: var(--nord10);
+	}
+	.fs-source-badge.off {
+		background: color-mix(in srgb, var(--nord15) 15%, transparent);
+		color: var(--nord15);
 	}
 	.fs-result-cal {
 		font-size: 0.85rem;
@@ -382,6 +676,11 @@
 		display: flex;
 		align-items: center;
 		gap: 0.35rem;
+	}
+	.fs-selected-brands {
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+		font-style: italic;
 	}
 	.fs-amount-row {
 		display: flex;
