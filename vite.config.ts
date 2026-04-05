@@ -6,6 +6,9 @@ export default defineConfig({
 		allowedHosts: ["bocken.org"]
 	},
 	plugins: [sveltekit()],
+	optimizeDeps: {
+		exclude: ['barcode-detector']
+	},
 	build: {
 		minify: 'terser',
 		terserOptions: {
@@ -24,6 +27,9 @@ export default defineConfig({
 						}
 						if (id.includes('@auth/sveltekit')) {
 							return 'auth';
+						}
+						if (id.includes('barcode-detector') || id.includes('zxing-wasm')) {
+							return 'barcode';
 						}
 					}
 				}
