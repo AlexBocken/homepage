@@ -159,6 +159,14 @@
 		return source?.toUpperCase() ?? '';
 	}
 
+	// EAN/UPC check digit validation (works for EAN-8, UPC-A, EAN-13)
+	function validCheckDigit(code) {
+		const digits = code.split('').map(Number);
+		const check = digits.pop();
+		const sum = digits.reduce((s, d, i) => s + d * ((i % 2 === (digits.length % 2 === 0 ? 0 : 1)) ? 1 : 3), 0);
+		return (10 - (sum % 10)) % 10 === check;
+	}
+
 	// --- Barcode scanning ---
 	async function startScan() {
 		scanError = '';
@@ -246,6 +254,10 @@
 			scanDebug += ' | detector created';
 
 			let scanCount = 0;
+			let lastCode = '';
+			let confirmCount = 0;
+			const CONFIRM_THRESHOLD = 2; // require 2 consecutive identical reads
+
 			const detectLoop = async () => {
 				while (scanning && videoEl) {
 					scanCount++;
@@ -258,20 +270,38 @@
 							continue;
 						}
 
-						const results = await detector.detect(videoEl);
-						scanDebug = `scan #${scanCount} | ${vw}x${vh} | ${results.length ? `found: ${results[0].rawValue}` : 'none'}`;
+						// Capture frame off main thread so video stays smooth
+						const bitmap = await createImageBitmap(videoEl);
+						const results = await detector.detect(bitmap);
+						bitmap.close();
 
 						if (results.length > 0) {
 							const code = results[0].rawValue;
-							scanDebug = `DETECTED: ${code} (${results[0].format})`;
-							stopScan();
-							await lookupBarcode(code);
-							return;
+							// Validate: must be digits only, valid EAN/UPC length, valid check digit
+							if (/^\d+$/.test(code) && [8, 12, 13].includes(code.length) && validCheckDigit(code)) {
+								if (code === lastCode) {
+									confirmCount++;
+								} else {
+									lastCode = code;
+									confirmCount = 1;
+								}
+								scanDebug = `scan #${scanCount} | ${code} (${confirmCount}/${CONFIRM_THRESHOLD})`;
+								if (confirmCount >= CONFIRM_THRESHOLD) {
+									scanDebug = `CONFIRMED: ${code}`;
+									stopScan();
+									await lookupBarcode(code);
+									return;
+								}
+							} else {
+								scanDebug = `scan #${scanCount} | rejected: ${code} (invalid)`;
+							}
+						} else {
+							scanDebug = `scan #${scanCount} | ${vw}x${vh} | none`;
 						}
 					} catch (detectErr) {
 						scanDebug = `scan #${scanCount} ERROR: ${detectErr?.name}: ${detectErr?.message}`;
 					}
-					await new Promise(r => setTimeout(r, 300));
+					await new Promise(r => setTimeout(r, 200));
 				}
 			};
 			detectLoop();
