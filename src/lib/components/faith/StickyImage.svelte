@@ -84,12 +84,12 @@
 </script>
 
 <div class="sticky-image-layout" class:overlay={mode === 'overlay'}>
-	<div class="image-wrap-desktop">
+	<figure class="image-wrap-desktop">
 		<img {src} {alt}>
 		{#if caption}
 			<figcaption class="image-caption">{@html caption}</figcaption>
 		{/if}
-	</div>
+	</figure>
 	<PipImage {pip} {src} {alt} visible={inView} bind:el={pipEl} />
 	<div class="content-scroll" bind:this={contentEl}>
 		{@render children()}
@@ -109,6 +109,7 @@
 }
 .image-wrap-desktop {
 	display: none;
+	margin: 0;
 }
 .image-caption {
 	font-size: 0.8rem;
