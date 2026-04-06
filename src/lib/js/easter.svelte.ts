@@ -25,16 +25,17 @@ function toMidnight(date: Date): Date {
 }
 
 /**
- * Check if a date falls within Eastertide (Easter Sunday to Ascension Thursday, inclusive).
- * Ascension = Easter + 39 days.
+ * Check if a date falls within the Regina Caeli period
+ * (Easter Sunday through Saturday after Pentecost, inclusive).
+ * Pentecost = Easter + 49 days; Saturday after = Easter + 55 days.
  */
 export function isEastertide(date: Date = new Date()): boolean {
 	const year = date.getFullYear();
 	const easter = computeEaster(year);
-	const ascension = new Date(easter);
-	ascension.setDate(ascension.getDate() + 39);
+	const satAfterPentecost = new Date(easter);
+	satAfterPentecost.setDate(satAfterPentecost.getDate() + 55);
 	const d = toMidnight(date);
-	return d >= easter && d <= ascension;
+	return d >= easter && d <= satAfterPentecost;
 }
 
 /**
