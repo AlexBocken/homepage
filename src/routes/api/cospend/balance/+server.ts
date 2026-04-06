@@ -52,37 +52,48 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       return json(result);
 
     } else {
-      const userSplits = await PaymentSplit.find({ username }).lean();
-
-      // Calculate net balance: negative = you are owed money, positive = you owe money
-      const netBalance = userSplits.reduce((sum, split) => sum + split.amount, 0);
-
-      const recentSplits = await PaymentSplit.aggregate([
-        { $match: { username } },
-        {
-          $lookup: {
-            from: 'payments',
-            localField: 'paymentId',
-            foreignField: '_id',
-            as: 'paymentId'
-          }
-        },
-        { $unwind: '$paymentId' },
-        { $sort: { 'paymentId.date': -1, 'paymentId.createdAt': -1 } },
-        { $limit: 30 }
+      // Run balance sum and recent splits in parallel
+      const [balanceResult, recentSplits] = await Promise.all([
+        PaymentSplit.aggregate([
+          { $match: { username } },
+          { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]),
+        PaymentSplit.aggregate([
+          { $match: { username } },
+          {
+            $lookup: {
+              from: 'payments',
+              localField: 'paymentId',
+              foreignField: '_id',
+              as: 'paymentId'
+            }
+          },
+          { $unwind: '$paymentId' },
+          { $sort: { 'paymentId.date': -1, 'paymentId.createdAt': -1 } },
+          { $limit: 30 }
+        ])
       ]);
 
-      // For settlements, fetch the other user's split info
-      for (const split of recentSplits) {
-        if (split.paymentId && split.paymentId.category === 'settlement') {
-          // This is a settlement, find the other user
-          const otherSplit = await PaymentSplit.findOne({
-            paymentId: split.paymentId._id,
-            username: { $ne: username }
-          }).lean();
+      const netBalance = balanceResult[0]?.total ?? 0;
 
-          if (otherSplit) {
-            split.otherUser = otherSplit.username;
+      // Batch-fetch other users for settlements (avoids N+1 queries)
+      const settlementIds = recentSplits
+        .filter(s => s.paymentId?.category === 'settlement')
+        .map(s => s.paymentId._id);
+
+      if (settlementIds.length > 0) {
+        const otherSplits = await PaymentSplit.find({
+          paymentId: { $in: settlementIds } as any,
+          username: { $ne: username }
+        }).lean();
+
+        const otherUserByPayment = new Map(
+          otherSplits.map(s => [s.paymentId.toString(), s.username])
+        );
+
+        for (const split of recentSplits) {
+          if (split.paymentId?.category === 'settlement') {
+            split.otherUser = otherUserByPayment.get(split.paymentId._id.toString());
           }
         }
       }
