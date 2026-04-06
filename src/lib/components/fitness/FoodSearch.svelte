@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
-	import { Heart, ExternalLink, ScanBarcode, X } from 'lucide-svelte';
+	import { Heart, ExternalLink, ScanBarcode, X } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
 	/**

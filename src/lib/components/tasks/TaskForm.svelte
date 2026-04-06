@@ -1,6 +1,6 @@
 <script>
   import { X, Sparkles, Wind, Bath, UtensilsCrossed, CookingPot, WashingMachine,
-    Flower2, Droplets, Leaf, ShoppingCart, Trash2, Shirt, Brush } from 'lucide-svelte';
+    Flower2, Droplets, Leaf, ShoppingCart, Trash2, Shirt, Brush } from '@lucide/svelte';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import Toggle from '$lib/components/Toggle.svelte';
 

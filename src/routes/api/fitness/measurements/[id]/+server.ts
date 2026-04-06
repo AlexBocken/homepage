@@ -47,7 +47,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const measurement = await BodyMeasurement.findOneAndUpdate(
 		{ _id: params.id, createdBy: user.nickname },
 		updateData,
-		{ new: true }
+		{ returnDocument: 'after' }
 	);
 
 	if (!measurement) {

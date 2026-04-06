@@ -10,14 +10,7 @@ export default defineConfig({
 		exclude: ['barcode-detector']
 	},
 	build: {
-		minify: 'terser',
-		terserOptions: {
-			compress: {
-				drop_console: ['log', 'debug'],
-				drop_debugger: true
-			}
-		},
-		rollupOptions: {
+		rolldownOptions: {
 			output: {
 				manualChunks: (id) => {
 					// Separate large dependencies into their own chunks

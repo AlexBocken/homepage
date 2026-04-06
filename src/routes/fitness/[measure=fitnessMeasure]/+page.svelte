@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { Pencil, Trash2, ChevronDown } from 'lucide-svelte';
+	import { Pencil, Trash2, ChevronDown } from '@lucide/svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 

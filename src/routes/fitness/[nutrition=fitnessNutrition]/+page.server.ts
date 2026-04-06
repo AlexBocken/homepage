@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 		try {
 			await dbConnect();
 			const recipes = await Recipe.find(
-				{ _id: { $in: [...new Set(recipeIds)] } },
+				{ _id: { $in: [...new Set(recipeIds)] } as any },
 				{ _id: 1, short_name: 1, 'images.mediapath': 1 }
 			).lean();
 			for (const r of recipes as any[]) {

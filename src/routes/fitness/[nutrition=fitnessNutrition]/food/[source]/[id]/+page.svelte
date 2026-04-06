@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { ChevronLeft, ChevronDown } from 'lucide-svelte';
+	import { ChevronLeft, ChevronDown } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 

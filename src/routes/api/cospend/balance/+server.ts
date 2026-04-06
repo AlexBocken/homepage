@@ -3,7 +3,6 @@ import { PaymentSplit } from '$models/PaymentSplit';
 import { Payment } from '$models/Payment'; // Need to import Payment for populate to work
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
-import cache from '$lib/server/cache';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
   const auth = await locals.auth();
@@ -18,14 +17,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   try {
     if (includeAll) {
-      // Try cache first for all balances
-      const cacheKey = 'cospend:balance:all';
-      const cached = await cache.get(cacheKey);
-
-      if (cached) {
-        return json(JSON.parse(cached));
-      }
-
       const allSplits = await PaymentSplit.aggregate([
         {
           $group: {
@@ -58,20 +49,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         allBalances: allSplits
       };
 
-      // Cache for 30 minutes
-      await cache.set(cacheKey, JSON.stringify(result), 1800);
-
       return json(result);
 
     } else {
-      // Try cache first for individual user balance
-      const cacheKey = `cospend:balance:${username}`;
-      const cached = await cache.get(cacheKey);
-
-      if (cached) {
-        return json(JSON.parse(cached));
-      }
-
       const userSplits = await PaymentSplit.find({ username }).lean();
 
       // Calculate net balance: negative = you are owed money, positive = you owe money
@@ -111,9 +91,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         netBalance,
         recentSplits
       };
-
-      // Cache for 30 minutes
-      await cache.set(cacheKey, JSON.stringify(result), 1800);
 
       return json(result);
     }

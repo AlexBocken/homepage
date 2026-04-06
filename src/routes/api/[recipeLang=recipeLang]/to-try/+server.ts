@@ -81,7 +81,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
         links: links.filter((l: any) => l.url?.trim()),
         notes: notes?.trim() || ''
       },
-      { new: true }
+      { returnDocument: 'after' }
     ).lean();
 
     if (!item) {

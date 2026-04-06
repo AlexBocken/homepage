@@ -4,7 +4,7 @@
   import { de } from 'date-fns/locale';
   import { scale } from 'svelte/transition';
   import { flip } from 'svelte/animate';
-  import { Trash2 } from 'lucide-svelte';
+  import { Trash2 } from '@lucide/svelte';
   import StickerCalendar from '$lib/components/tasks/StickerCalendar.svelte';
 
   let { data } = $props();

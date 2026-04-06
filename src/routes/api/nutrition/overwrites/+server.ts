@@ -34,7 +34,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const overwrite = await NutritionOverwrite.findOneAndUpdate(
 		{ ingredientNameDe: data.ingredientNameDe },
 		data,
-		{ upsert: true, new: true, runValidators: true },
+		{ upsert: true, returnDocument: 'after', runValidators: true },
 	).lean();
 
 	invalidateOverwriteCache();

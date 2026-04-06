@@ -4,7 +4,6 @@ import { PaymentSplit } from '$models/PaymentSplit';
 import { dbConnect } from '$utils/db';
 import { convertToCHF, isValidCurrencyCode } from '$lib/utils/currency';
 import { error, json } from '@sveltejs/kit';
-import cache, { invalidateCospendCaches } from '$lib/server/cache';
 
 interface SplitInput {
   username: string;
@@ -25,14 +24,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   await dbConnect();
 
   try {
-    // Try cache first (include pagination params in key)
-    const cacheKey = `cospend:payments:list:${limit}:${offset}`;
-    const cached = await cache.get(cacheKey);
-
-    if (cached) {
-      return json(JSON.parse(cached));
-    }
-
     const payments = await Payment.find()
       .populate('splits')
       .sort({ date: -1, createdAt: -1 })
@@ -40,16 +31,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       .skip(offset)
       .lean();
 
-    const result = { payments };
-
-    // Cache for 10 minutes (shorter TTL since this changes frequently)
-    await cache.set(cacheKey, JSON.stringify(result), 600);
-
-    return json(result);
+    return json({ payments });
   } catch (e) {
     throw error(500, 'Failed to fetch payments');
-  } finally {
-    // Connection will be reused
   }
 };
 
@@ -89,7 +73,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const totalPersonal = splits.reduce((sum: number, split: SplitInput) => {
       return sum + (split.personalAmount ?? 0);
     }, 0);
-    
+
     if (totalPersonal > amount) {
       throw error(400, 'Personal amounts cannot exceed total payment amount');
     }
@@ -114,7 +98,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   await dbConnect();
-  
+
   try {
     const payment = await Payment.create({
       title,
@@ -135,7 +119,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const convertedSplits = splits.map((split: SplitInput) => {
       let convertedAmount = split.amount;
       let convertedPersonalAmount = split.personalAmount;
-      
+
       // Convert amounts if we have a foreign currency
       if (inputCurrency !== 'CHF' && exchangeRate) {
         convertedAmount = split.amount * exchangeRate;
@@ -143,7 +127,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           convertedPersonalAmount = split.personalAmount * exchangeRate;
         }
       }
-      
+
       return {
         paymentId: payment._id,
         username: split.username,
@@ -153,15 +137,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       };
     });
 
-    const splitPromises = convertedSplits.map((split: { paymentId: unknown; username: string; amount: number; proportion?: number; personalAmount?: number }) => {
-      return PaymentSplit.create(split);
+    const splitPromises = convertedSplits.map((split) => {
+      return PaymentSplit.create(split as any);
     });
 
     await Promise.all(splitPromises);
-
-    // Invalidate caches for all affected users
-    const affectedUsernames = splits.map((split: SplitInput) => split.username);
-    await invalidateCospendCaches(affectedUsernames, payment._id.toString());
 
     return json({
       success: true,
@@ -171,7 +151,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   } catch (e) {
     console.error('Error creating payment:', e);
     throw error(500, 'Failed to create payment');
-  } finally {
-    // Connection will be reused
   }
 };

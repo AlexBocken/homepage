@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     const en = isEnglish(params.recipeLang!);
 
     let recipes = await Recipe.find({
-      _id: { $in: userFavorites.favorites },
+      _id: { $in: userFavorites.favorites } as any,
       ...approvalFilter
     }).lean() as unknown as RecipeModelType[];
 

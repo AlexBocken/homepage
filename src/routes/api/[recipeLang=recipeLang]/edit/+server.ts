@@ -6,7 +6,6 @@ import { error } from '@sveltejs/kit';
 import { rename } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { invalidateRecipeCaches } from '$lib/server/cache';
 
 // header: use for bearer token for now
 // recipe json in body
@@ -47,9 +46,6 @@ export const POST: RequestHandler = async ({request, locals}) => {
 	}
 
 	await Recipe.findOneAndUpdate({short_name: message.old_short_name }, recipe_json);
-
-	// Invalidate recipe caches after successful update
-	await invalidateRecipeCaches();
 
 	return new Response(JSON.stringify({msg: "Edited recipe successfully"}),{
 			    status: 200,

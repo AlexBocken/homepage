@@ -1,6 +1,6 @@
 <script>
 	import { themeStore } from '$lib/stores/theme.svelte';
-	import { Sun, Moon, SunMoon } from 'lucide-svelte';
+	import { Sun, Moon, SunMoon } from '@lucide/svelte';
 </script>
 
 <style>

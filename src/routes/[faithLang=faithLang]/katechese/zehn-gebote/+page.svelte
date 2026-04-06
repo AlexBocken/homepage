@@ -1,5 +1,5 @@
 <script>
-	import { ArrowDown, ArrowLeft } from 'lucide-svelte';
+	import { ArrowDown, ArrowLeft } from '@lucide/svelte';
 	import { page } from '$app/stores';
 	let expanded = $state(null);
 	const isGerman = $derived($page.url.pathname.startsWith('/glaube'));

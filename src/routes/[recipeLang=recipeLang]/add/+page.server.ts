@@ -2,7 +2,6 @@ import { redirect, fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from './$types';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
-import { invalidateRecipeCaches } from '$lib/server/cache';
 import { IMAGE_DIR } from '$env/static/private';
 import { processAndSaveRecipeImage } from '$utils/imageProcessing';
 import {
@@ -109,9 +108,6 @@ export const actions = {
 
 			try {
 				await Recipe.create(recipe_json);
-
-				// Invalidate recipe caches after successful creation
-				await invalidateRecipeCaches();
 
 				// Redirect to the new recipe page
 				throw redirect(303, `/${params.recipeLang}/${recipeData.short_name}`);

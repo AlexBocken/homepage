@@ -87,7 +87,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
         exercises: exercises ?? [],
         isPublic
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!template) {
