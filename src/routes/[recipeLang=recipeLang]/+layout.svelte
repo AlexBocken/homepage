@@ -45,7 +45,7 @@ onNavigate((navigation) => {
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
 import OfflineSyncButton from '$lib/components/OfflineSyncButton.svelte';
-import { BookOpen, Heart, Leaf, LayoutGrid, Palette, Tag } from 'lucide-svelte';
+import { BookOpen, Heart, Leaf, LayoutGrid, Palette, Tag } from '@lucide/svelte';
 let { data, children } = $props();
 
 let user = $derived(data.session?.user);

@@ -1,5 +1,5 @@
 <script>
-	import { Cloud, CloudOff, RefreshCw, AlertTriangle } from 'lucide-svelte';
+	import { Cloud, CloudOff, RefreshCw, AlertTriangle } from '@lucide/svelte';
 
 	/** @type {{ status: string }} */
 	let { status } = $props();

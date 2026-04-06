@@ -100,7 +100,7 @@ class RecurringPaymentScheduler {
               amount: split.amount,
               proportion: split.proportion,
               personalAmount: split.personalAmount
-            });
+            } as any);
           });
 
           await Promise.all(splitPromises);

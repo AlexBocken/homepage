@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
-	import { Trash2 } from 'lucide-svelte';
+	import { Trash2 } from '@lucide/svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));

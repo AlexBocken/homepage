@@ -28,7 +28,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	await FavoriteIngredient.findOneAndUpdate(
 		{ createdBy: user.nickname, source, sourceId: String(sourceId) },
 		{ createdBy: user.nickname, source, sourceId: String(sourceId), name },
-		{ upsert: true, new: true }
+		{ upsert: true, returnDocument: 'after' }
 	);
 
 	return json({ ok: true }, { status: 201 });

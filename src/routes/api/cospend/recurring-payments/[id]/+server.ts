@@ -134,7 +134,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     const recurringPayment = await RecurringPayment.findByIdAndUpdate(
       id, 
       updateData, 
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     return json({ 

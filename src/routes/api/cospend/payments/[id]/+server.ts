@@ -3,7 +3,6 @@ import { Payment } from '$models/Payment';
 import { PaymentSplit } from '$models/PaymentSplit';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
-import cache, { invalidateCospendCaches } from '$lib/server/cache';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   const auth = await locals.auth();
@@ -16,31 +15,16 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   await dbConnect();
 
   try {
-    // Try cache first
-    const cacheKey = `cospend:payment:${id}`;
-    const cached = await cache.get(cacheKey);
-
-    if (cached) {
-      return json(JSON.parse(cached));
-    }
-
     const payment = await Payment.findById(id).populate('splits').lean();
 
     if (!payment) {
       throw error(404, 'Payment not found');
     }
 
-    const result = { payment };
-
-    // Cache for 30 minutes
-    await cache.set(cacheKey, JSON.stringify(result), 1800);
-
-    return json(result);
+    return json({ payment });
   } catch (e: unknown) {
     if (e && typeof e === 'object' && 'status' in e && (e as { status: number }).status === 404) throw e;
     throw error(500, 'Failed to fetch payment');
-  } finally {
-    // Connection will be reused
   }
 };
 
@@ -66,10 +50,6 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       throw error(403, 'Not authorized to edit this payment');
     }
 
-    // Get old splits to invalidate caches for users who were in the original payment
-    const oldSplits = await PaymentSplit.find({ paymentId: id }).lean();
-    const oldUsernames = oldSplits.map(split => split.username);
-
     const updatedPayment = await Payment.findByIdAndUpdate(
       id,
       {
@@ -82,12 +62,11 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
         category: data.category || payment.category,
         splitMethod: data.splitMethod
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
-    let newUsernames: string[] = [];
     if (data.splits) {
-      await PaymentSplit.deleteMany({ paymentId: id });
+      await PaymentSplit.deleteMany({ paymentId: id } as any);
 
       const splitPromises = data.splits.map((split: { username: string; amount: number; proportion?: number; personalAmount?: number }) => {
         return PaymentSplit.create({
@@ -96,23 +75,16 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
           amount: split.amount,
           proportion: split.proportion,
           personalAmount: split.personalAmount
-        });
+        } as any);
       });
 
       await Promise.all(splitPromises);
-      newUsernames = data.splits.map((split: { username: string }) => split.username);
     }
-
-    // Invalidate caches for all users (old and new)
-    const allAffectedUsers = [...new Set([...oldUsernames, ...newUsernames])];
-    await invalidateCospendCaches(allAffectedUsers, id);
 
     return json({ success: true, payment: updatedPayment });
   } catch (e: unknown) {
     if (e && typeof e === 'object' && 'status' in e) throw e;
     throw error(500, 'Failed to update payment');
-  } finally {
-    // Connection will be reused
   }
 };
 
@@ -137,21 +109,12 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
       throw error(403, 'Not authorized to delete this payment');
     }
 
-    // Get splits to invalidate caches for affected users
-    const splits = await PaymentSplit.find({ paymentId: id }).lean();
-    const affectedUsernames = splits.map(split => split.username);
-
-    await PaymentSplit.deleteMany({ paymentId: id });
+    await PaymentSplit.deleteMany({ paymentId: id } as any);
     await Payment.findByIdAndDelete(id);
-
-    // Invalidate caches for all affected users
-    await invalidateCospendCaches(affectedUsernames, id);
 
     return json({ success: true });
   } catch (e: unknown) {
     if (e && typeof e === 'object' && 'status' in e) throw e;
     throw error(500, 'Failed to delete payment');
-  } finally {
-    // Connection will be reused
   }
 };

@@ -2,7 +2,7 @@
 import { browser } from '$app/environment';
 import { getAngelusStreak, getCurrentTimeSlot, type TimeSlot } from '$lib/stores/angelusStreak.svelte';
 import StreakAura from '$lib/components/faith/StreakAura.svelte';
-import { Coffee, Sun, Moon } from 'lucide-svelte';
+import { Coffee, Sun, Moon } from '@lucide/svelte';
 import { tick, onMount } from 'svelte';
 
 let burst = $state(false);

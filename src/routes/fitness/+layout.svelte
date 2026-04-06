@@ -4,7 +4,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import UserHeader from '$lib/components/UserHeader.svelte';
 	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-	import { BarChart3, Clock, Dumbbell, ListChecks, Ruler, UtensilsCrossed } from 'lucide-svelte';
+	import { BarChart3, Clock, Dumbbell, ListChecks, Ruler, UtensilsCrossed } from '@lucide/svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';

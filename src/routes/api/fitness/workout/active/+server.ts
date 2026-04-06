@@ -73,7 +73,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
         },
         $setOnInsert: { userId }
       },
-      { upsert: true, new: true, lean: true }
+      { upsert: true, returnDocument: 'after', lean: true }
     );
 
     // Broadcast to all other connected devices

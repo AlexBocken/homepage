@@ -85,7 +85,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     const schedule = await WorkoutSchedule.findOneAndUpdate(
       { userId: user.nickname },
       { templateOrder },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     return json({ schedule: { templateOrder: schedule.templateOrder } });

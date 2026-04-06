@@ -119,7 +119,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
         createdBy: session.user.nickname
       },
       updateData,
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!workoutSession) {

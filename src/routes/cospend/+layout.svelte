@@ -7,7 +7,7 @@
   import PaymentModal from '$lib/components/cospend/PaymentModal.svelte';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
-  import { LayoutDashboard, Wallet, RefreshCw } from 'lucide-svelte';
+  import { LayoutDashboard, Wallet, RefreshCw } from '@lucide/svelte';
 
   let { data, children } = $props();
 

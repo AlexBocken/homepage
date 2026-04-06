@@ -3,7 +3,6 @@ import { redirect, fail } from "@sveltejs/kit";
 import { Recipe } from '$models/Recipe';
 import { NutritionOverwrite } from '$models/NutritionOverwrite';
 import { dbConnect } from '$utils/db';
-import { invalidateRecipeCaches } from '$lib/server/cache';
 import { invalidateOverwriteCache } from '$lib/server/nutritionMatcher';
 import { IMAGE_DIR } from '$env/static/private';
 import { rename, access, unlink } from 'fs/promises';
@@ -200,7 +199,7 @@ export const actions = {
 				const result = await Recipe.findOneAndUpdate(
 					{ short_name: originalShortName },
 					recipe_json,
-					{ new: true }
+					{ returnDocument: 'after' }
 				);
 
 				if (!result) {
@@ -248,9 +247,6 @@ export const actions = {
 						console.error('Failed to save global overwrites:', e);
 					}
 				}
-
-				// Invalidate recipe caches after successful update
-				await invalidateRecipeCaches();
 
 				// Redirect to the updated recipe page (might have new short_name)
 				throw redirect(303, `/${params.recipeLang}/${recipeData.short_name}`);
