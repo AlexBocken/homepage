@@ -120,6 +120,9 @@
 					<span class="pill-remove" aria-hidden="true">×</span>
 				</button>
 			{/each}
+			<button class="clear-filters" onclick={() => { muscleGroups = []; equipmentFilters = []; }}>
+				{isEn ? 'Clear all' : 'Alle löschen'}
+			</button>
 		</div>
 	{/if}
 
@@ -256,6 +259,18 @@
 		font-size: 0.7rem;
 		font-weight: bold;
 		margin-left: 0.1rem;
+	}
+	.clear-filters {
+		all: unset;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.25rem 0.4rem;
+	}
+	.clear-filters:hover {
+		color: var(--color-text-primary);
+		text-decoration: underline;
 	}
 
 	.exercise-list {
