@@ -46,13 +46,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       exerciseQuery = exerciseQuery.sort({ name: 1 });
     }
     
-    const exercises = await exerciseQuery
-      .limit(limit)
-      .skip(offset)
-      .select('exerciseId name gifUrl bodyPart equipment target difficulty');
-    
-    const total = await Exercise.countDocuments(query);
-    
+    const [exercises, total] = await Promise.all([
+      exerciseQuery.limit(limit).skip(offset)
+        .select('exerciseId name gifUrl bodyPart equipment target difficulty'),
+      Exercise.countDocuments(query)
+    ]);
+
     return json({ exercises, total, limit, offset });
   } catch (error) {
     console.error('Error fetching exercises:', error);

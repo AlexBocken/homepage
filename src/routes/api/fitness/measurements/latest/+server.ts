@@ -8,38 +8,16 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
-	// Get latest measurement that has each field
-	const latestWithWeight = await BodyMeasurement.findOne({
-		createdBy: user.nickname,
-		weight: { $exists: true, $ne: null }
-	})
-		.sort({ date: -1 })
-		.select('weight date')
-		.lean();
-
-	const latestWithBodyFat = await BodyMeasurement.findOne({
-		createdBy: user.nickname,
-		bodyFatPercent: { $exists: true, $ne: null }
-	})
-		.sort({ date: -1 })
-		.select('bodyFatPercent date')
-		.lean();
-
-	const latestWithCalories = await BodyMeasurement.findOne({
-		createdBy: user.nickname,
-		caloricIntake: { $exists: true, $ne: null }
-	})
-		.sort({ date: -1 })
-		.select('caloricIntake date')
-		.lean();
-
-	const latestWithMeasurements = await BodyMeasurement.findOne({
-		createdBy: user.nickname,
-		measurements: { $exists: true, $ne: null }
-	})
-		.sort({ date: -1 })
-		.select('measurements date')
-		.lean();
+	// Get latest measurement that has each field (parallel)
+	const base = { createdBy: user.nickname };
+	const [latestWithWeight, latestWithBodyFat, latestWithMeasurements] = await Promise.all([
+		BodyMeasurement.findOne({ ...base, weight: { $exists: true, $ne: null } })
+			.sort({ date: -1 }).select('weight date').lean(),
+		BodyMeasurement.findOne({ ...base, bodyFatPercent: { $exists: true, $ne: null } })
+			.sort({ date: -1 }).select('bodyFatPercent date').lean(),
+		BodyMeasurement.findOne({ ...base, measurements: { $exists: true, $ne: null } })
+			.sort({ date: -1 }).select('measurements date').lean(),
+	]);
 
 	return json({
 		weight: latestWithWeight
@@ -47,9 +25,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 			: null,
 		bodyFatPercent: latestWithBodyFat
 			? { value: latestWithBodyFat.bodyFatPercent, date: latestWithBodyFat.date }
-			: null,
-		caloricIntake: latestWithCalories
-			? { value: latestWithCalories.caloricIntake, date: latestWithCalories.date }
 			: null,
 		measurements: latestWithMeasurements
 			? {

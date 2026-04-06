@@ -6,15 +6,13 @@ import { dbConnect } from '$utils/db';
 export const GET: RequestHandler = async () => {
 	await dbConnect();
 
-	// Fetch brief recipes (for lists/filtering)
-	// Include images for thumbnail caching during offline sync
-	const briefRecipes = await Recipe.find(
-		{},
-		'name short_name tags category icon description season dateModified images translations'
-	).lean() as unknown as BriefRecipeType[];
-
-	// Fetch full recipes with populated base recipe references
-	const fullRecipes = await Recipe.find({})
+	// Fetch brief and full recipes in parallel
+	const [briefRecipes, fullRecipes] = await Promise.all([
+		Recipe.find(
+			{},
+			'name short_name tags category icon description season dateModified images translations'
+		).lean() as unknown as Promise<BriefRecipeType[]>,
+		Recipe.find({})
 		.populate({
 			path: 'ingredients.baseRecipeRef',
 			select: 'short_name name ingredients translations',
@@ -39,7 +37,8 @@ export const GET: RequestHandler = async () => {
 				}
 			}
 		})
-		.lean() as unknown as RecipeModelType[];
+		.lean() as unknown as Promise<RecipeModelType[]>
+	]);
 
 	// Map populated refs to resolvedRecipe field (same as individual item endpoint)
 	function mapBaseRecipeRefs(items: any[]): any[] {

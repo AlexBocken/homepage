@@ -28,14 +28,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = parseInt(url.searchParams.get('offset') || '0');
     
-    const sessions = await WorkoutSession.find({ createdBy: session.user.nickname })
-      .select('-exercises.gpsTrack -gpsTrack')
-      .sort({ startTime: -1 })
-      .limit(limit)
-      .skip(offset);
-    
-    const total = await WorkoutSession.countDocuments({ createdBy: session.user.nickname });
-    
+    const query = { createdBy: session.user.nickname };
+    const [sessions, total] = await Promise.all([
+      WorkoutSession.find(query).select('-exercises.gpsTrack -gpsTrack')
+        .sort({ startTime: -1 }).limit(limit).skip(offset),
+      WorkoutSession.countDocuments(query)
+    ]);
+
     return json({ sessions, total, limit, offset });
   } catch (error) {
     console.error('Error fetching workout sessions:', error);
