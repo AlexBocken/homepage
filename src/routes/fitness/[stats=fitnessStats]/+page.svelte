@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
 	import { Dumbbell, Route, Flame, Weight } from '@lucide/svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import { onMount } from 'svelte';
@@ -221,6 +222,11 @@
 			height="220px"
 		/>
 	{/if}
+
+	<div class="section-block">
+		<h2 class="section-title">{t('muscle_balance', lang)}</h2>
+		<MuscleHeatmap data={data.muscleHeatmap} />
+	</div>
 </div>
 
 <style>
@@ -518,5 +524,17 @@
 		text-align: center;
 		color: var(--color-text-secondary);
 		padding: 2rem 0;
+	}
+
+	.section-block {
+		background: var(--color-surface);
+		border-radius: 12px;
+		padding: 1rem;
+		box-shadow: var(--shadow-sm);
+	}
+	.section-title {
+		margin: 0 0 0.75rem;
+		font-size: 1rem;
+		font-weight: 700;
 	}
 </style>

@@ -1746,7 +1746,7 @@ export const exercises: Exercise[] = [
 ];
 
 // Lookup map for O(1) access by ID
-const exerciseMap = new Map<string, Exercise>(exercises.map((e) => [e.id, e]));
+export const exerciseMap = new Map<string, Exercise>(exercises.map((e) => [e.id, e]));
 
 export function getExerciseById(id: string, lang?: 'en' | 'de'): LocalizedExercise | undefined {
 	const e = exerciseMap.get(id);

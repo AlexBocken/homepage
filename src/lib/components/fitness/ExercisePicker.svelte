@@ -1,5 +1,6 @@
 <script>
-	import { getFilterOptions, searchExercises, translateTerm } from '$lib/data/exercises';
+	import { getFilterOptionsAll, searchAllExercises } from '$lib/data/exercisedb';
+	import { translateTerm } from '$lib/data/exercises';
 	import { Search, X } from '@lucide/svelte';
 	import { page } from '$app/stores';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
@@ -18,9 +19,9 @@
 	let bodyPartFilter = $state('');
 	let equipmentFilter = $state('');
 
-	const filterOptions = getFilterOptions();
+	const filterOptions = getFilterOptionsAll();
 
-	const filtered = $derived(searchExercises({
+	const filtered = $derived(searchAllExercises({
 		search: query || undefined,
 		bodyPart: bodyPartFilter || undefined,
 		equipment: equipmentFilter || undefined,

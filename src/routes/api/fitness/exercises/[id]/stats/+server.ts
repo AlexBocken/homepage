@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
-import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+import { getEnrichedExerciseById, getExerciseMetrics } from '$lib/data/exercisedb';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 
@@ -17,7 +17,7 @@ function estimatedOneRepMax(weight: number, reps: number): number {
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const user = await requireAuth(locals);
 
-	const exercise = getExerciseById(params.id);
+	const exercise = getEnrichedExerciseById(params.id);
 	if (!exercise) {
 		return json({ error: 'Exercise not found' }, { status: 404 });
 	}
