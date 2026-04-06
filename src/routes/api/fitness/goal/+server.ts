@@ -73,62 +73,48 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 };
 
 async function computeStreak(username: string, weeklyGoal: number): Promise<number> {
-	// Get weekly workout counts going back up to 2 years
-	const cutoff = new Date();
-	cutoff.setFullYear(cutoff.getFullYear() - 2);
-
-	const weeklyAgg = await WorkoutSession.aggregate([
-		{
-			$match: {
-				createdBy: username,
-				startTime: { $gte: cutoff }
-			}
-		},
-		{
-			$group: {
-				_id: {
-					year: { $isoWeekYear: '$startTime' },
-					week: { $isoWeek: '$startTime' }
-				},
-				count: { $sum: 1 }
-			}
-		},
-		{
-			$sort: { '_id.year': -1, '_id.week': -1 }
-		}
-	]);
-
-	// Build a set of weeks that met the goal
-	const metGoal = new Set<string>();
-	for (const item of weeklyAgg) {
-		if (item.count >= weeklyGoal) {
-			metGoal.add(`${item._id.year}-${item._id.week}`);
-		}
-	}
-
-	// Walk backwards week-by-week counting consecutive weeks that met the goal.
-	// Current (incomplete) week counts if it already meets the goal, otherwise skip it.
+	// Get weekly workout counts — only scan back enough to find the streak break.
+	// Start with 13 weeks; if the streak fills the entire window, widen the search.
 	const now = new Date();
-	let streak = 0;
 
-	const currentKey = isoWeekKey(now);
-	const currentWeekMet = metGoal.has(currentKey);
+	for (let months = 3; months <= 24; months += 6) {
+		const cutoff = new Date(now);
+		cutoff.setMonth(cutoff.getMonth() - months);
 
-	// If current week already met: count it, then check previous weeks.
-	// If not: start checking from last week (current week still in progress).
-	if (currentWeekMet) streak = 1;
+		const weeklyAgg = await WorkoutSession.aggregate([
+			{ $match: { createdBy: username, startTime: { $gte: cutoff } } },
+			{ $group: { _id: { year: { $isoWeekYear: '$startTime' }, week: { $isoWeek: '$startTime' } }, count: { $sum: 1 } } },
+			{ $sort: { '_id.year': -1, '_id.week': -1 } }
+		]);
 
-	for (let i = 1; i <= 104; i++) {
-		const weekDate = new Date(now);
-		weekDate.setDate(weekDate.getDate() - i * 7);
-		if (metGoal.has(isoWeekKey(weekDate))) {
-			streak++;
-		} else {
-			break;
+		const metGoal = new Set<string>();
+		for (const item of weeklyAgg) {
+			if (item.count >= weeklyGoal) metGoal.add(`${item._id.year}-${item._id.week}`);
 		}
+
+		let streak = 0;
+		const currentKey = isoWeekKey(now);
+		if (metGoal.has(currentKey)) streak = 1;
+
+		const maxWeeks = Math.ceil(months * 4.35);
+		let foundBreak = false;
+		for (let i = 1; i <= maxWeeks; i++) {
+			const weekDate = new Date(now);
+			weekDate.setDate(weekDate.getDate() - i * 7);
+			if (metGoal.has(isoWeekKey(weekDate))) {
+				streak++;
+			} else {
+				foundBreak = true;
+				break;
+			}
+		}
+
+		// If we found where the streak broke, we're done
+		if (foundBreak || streak < maxWeeks) return streak;
+		// Otherwise widen the window and try again
 	}
 
-	return streak;
+	return 104; // Max 2-year streak
 }
 
 function isoWeekKey(date: Date): string {

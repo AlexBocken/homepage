@@ -16,31 +16,13 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const tenWeeksAgo = new Date();
 	tenWeeksAgo.setDate(tenWeeksAgo.getDate() - 70);
 
-	const totalWorkouts = await WorkoutSession.countDocuments({ createdBy: user.nickname });
-
-	const weeklyAgg = await WorkoutSession.aggregate([
-		{
-			$match: {
-				createdBy: user.nickname,
-				startTime: { $gte: tenWeeksAgo }
-			}
-		},
-		{
-			$group: {
-				_id: {
-					year: { $isoWeekYear: '$startTime' },
-					week: { $isoWeek: '$startTime' }
-				},
-				count: { $sum: 1 }
-			}
-		},
-		{
-			$sort: { '_id.year': 1, '_id.week': 1 }
-		}
-	]);
-
-	// Fetch user demographics for kcal estimation
-	const [goal, latestMeasurement] = await Promise.all([
+	const [totalWorkouts, weeklyAgg, goal, latestMeasurement] = await Promise.all([
+		WorkoutSession.countDocuments({ createdBy: user.nickname }),
+		WorkoutSession.aggregate([
+			{ $match: { createdBy: user.nickname, startTime: { $gte: tenWeeksAgo } } },
+			{ $group: { _id: { year: { $isoWeekYear: '$startTime' }, week: { $isoWeek: '$startTime' } }, count: { $sum: 1 } } },
+			{ $sort: { '_id.year': 1, '_id.week': 1 } }
+		]),
 		FitnessGoal.findOne({ username: user.nickname }).lean() as any,
 		BodyMeasurement.findOne(
 			{ createdBy: user.nickname, weight: { $ne: null } },
@@ -57,10 +39,19 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	// Lifetime totals: tonnage lifted + cardio km + kcal estimate
 	// Use stored kcalEstimate when available; fall back to on-the-fly for legacy sessions
-	const allSessions = await WorkoutSession.find(
-		{ createdBy: user.nickname },
-		{ 'exercises.exerciseId': 1, 'exercises.sets': 1, 'exercises.totalDistance': 1, kcalEstimate: 1 }
-	).lean();
+	const DISPLAY_LIMIT = 30;
+	const SMA_LOOKBACK = 6; // w - 1 where w = 7 max
+	const [allSessions, weightMeasurements] = await Promise.all([
+		WorkoutSession.find(
+			{ createdBy: user.nickname },
+			{ 'exercises.exerciseId': 1, 'exercises.sets': 1, 'exercises.totalDistance': 1, kcalEstimate: 1 }
+		).lean(),
+		BodyMeasurement.find(
+			{ createdBy: user.nickname, weight: { $ne: null } },
+			{ date: 1, weight: 1, _id: 0 }
+		).sort({ date: -1 }).limit(DISPLAY_LIMIT + SMA_LOOKBACK).lean()
+	]);
+	weightMeasurements.reverse(); // back to chronological order
 
 	let totalTonnage = 0;
 	let totalCardioKm = 0;
@@ -145,18 +136,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 		lower: Math.max(0, totalKcal - combinedMargin),
 		upper: totalKcal + combinedMargin,
 	};
-
-	// Fetch extra measurements beyond the display limit to fill the SMA lookback window
-	const DISPLAY_LIMIT = 30;
-	const SMA_LOOKBACK = 6; // w - 1 where w = 7 max
-	const weightMeasurements = await BodyMeasurement.find(
-		{ createdBy: user.nickname, weight: { $ne: null } },
-		{ date: 1, weight: 1, _id: 0 }
-	)
-		.sort({ date: -1 })
-		.limit(DISPLAY_LIMIT + SMA_LOOKBACK)
-		.lean();
-	weightMeasurements.reverse(); // back to chronological order
 
 	// Split into lookback-only (not displayed) and display portions
 	const displayStart = Math.max(0, weightMeasurements.length - DISPLAY_LIMIT);

@@ -731,7 +731,7 @@
 		{@const mealCal = mealEntries.reduce((s, e) => s + entryCalories(e), 0)}
 		{@const meta = mealMeta[meal]}
 		{@const MealSectionIcon = meta.icon}
-		<div class="meal-section" style="--meal-color: {meta.color}; animation-delay: {mi * 60}ms">
+		<div class="meal-section" style="--meal-color: {meta.color}">
 			<div class="meal-header">
 				<div class="meal-title">
 					<div class="meal-icon">
@@ -862,11 +862,6 @@
 		gap: 0.75rem;
 	}
 
-	/* ── Entrance animations ── */
-	@keyframes fade-up {
-		from { opacity: 0; transform: translateY(8px); }
-		to { opacity: 1; transform: translateY(0); }
-	}
 
 	/* ── Date Navigator ── */
 	.date-nav {
@@ -874,7 +869,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.25rem;
-		animation: fade-up 0.3s ease both;
+
 	}
 	.date-btn {
 		background: none;
@@ -927,8 +922,8 @@
 		padding: 1.25rem;
 		box-shadow: var(--shadow-sm);
 		position: relative;
-		animation: fade-up 0.35s ease both;
-		animation-delay: 50ms;
+
+
 	}
 	.daily-summary::before {
 		content: '';
@@ -1148,7 +1143,7 @@
 		display: grid;
 		grid-template-columns: 1fr;
 		gap: 1rem;
-		animation: fade-up 0.25s ease both;
+
 	}
 	.micro-section h4 {
 		margin: 0 0 0.4rem;
@@ -1205,7 +1200,7 @@
 		background: var(--color-surface);
 		border-radius: 12px;
 		box-shadow: var(--shadow-sm);
-		animation: fade-up 0.35s ease both;
+
 	}
 	.no-goal-icon {
 		display: flex;
@@ -1247,7 +1242,7 @@
 		border-radius: 12px;
 		padding: 1.25rem;
 		box-shadow: var(--shadow-sm);
-		animation: fade-up 0.25s ease both;
+
 	}
 	.preset-section {
 		margin-bottom: 1rem;
@@ -1370,7 +1365,7 @@
 
 	/* ── Meal Sections ── */
 	.meal-section {
-		animation: fade-up 0.35s ease both;
+
 	}
 	.meal-header {
 		display: flex;
@@ -1568,7 +1563,7 @@
 		border-radius: 10px;
 		padding: 0.85rem;
 		box-shadow: var(--shadow-sm);
-		animation: fade-up 0.2s ease both;
+
 	}
 	/* Search/food selection handled by FoodSearch component */
 

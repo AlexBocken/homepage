@@ -19,8 +19,6 @@
 	let formDate = $state(m ? new Date(m.date).toISOString().slice(0, 10) : '');
 	let formWeight = $state(m?.weight != null ? String(m.weight) : '');
 	let formBodyFat = $state(m?.bodyFatPercent != null ? String(m.bodyFatPercent) : '');
-	let formCalories = $state(m?.caloricIntake != null ? String(m.caloricIntake) : '');
-
 	const bp = m?.measurements ?? {};
 	let formNeck = $state(bp.neck != null ? String(bp.neck) : '');
 	let formShoulders = $state(bp.shoulders != null ? String(bp.shoulders) : '');
@@ -43,9 +41,6 @@
 		else body.weight = null;
 		if (formBodyFat) body.bodyFatPercent = Number(formBodyFat);
 		else body.bodyFatPercent = null;
-		if (formCalories) body.caloricIntake = Number(formCalories);
-		else body.caloricIntake = null;
-
 		/** @type {any} */
 		const ms = {};
 		if (formNeck) ms.neck = Number(formNeck);
@@ -127,10 +122,6 @@
 				<div class="form-group">
 					<label for="m-bf">{t('body_fat_pct', lang)}</label>
 					<input id="m-bf" type="number" step="0.1" bind:value={formBodyFat} placeholder="--" />
-				</div>
-				<div class="form-group">
-					<label for="m-cal">{t('calories_kcal', lang)}</label>
-					<input id="m-cal" type="number" bind:value={formCalories} placeholder="--" />
 				</div>
 			</div>
 

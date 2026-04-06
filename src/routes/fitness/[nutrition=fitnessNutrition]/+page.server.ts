@@ -8,28 +8,32 @@ import mongoose from 'mongoose';
 export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 	const dateParam = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
 
-	const [foodRes, goalRes, weightRes] = await Promise.all([
+	// Run all independent work in parallel: 3 API calls + workout kcal DB query
+	const dayStart = new Date(dateParam + 'T00:00:00.000Z');
+	const dayEnd = new Date(dateParam + 'T23:59:59.999Z');
+
+	const exercisePromise = (async () => {
+		try {
+			const user = await requireAuth(locals);
+			await dbConnect();
+			const sessions = await WorkoutSession.find({
+				createdBy: user.nickname,
+				startTime: { $gte: dayStart, $lte: dayEnd }
+			}).select('kcalEstimate').lean();
+			let kcal = 0;
+			for (const s of sessions) {
+				if (s.kcalEstimate?.kcal) kcal += s.kcalEstimate.kcal;
+			}
+			return kcal;
+		} catch { return 0; }
+	})();
+
+	const [foodRes, goalRes, weightRes, exerciseKcal] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
 		fetch('/api/fitness/goal'),
-		fetch('/api/fitness/measurements/latest')
+		fetch('/api/fitness/measurements/latest'),
+		exercisePromise
 	]);
-
-	// Fetch today's workout kcal burned
-	let exerciseKcal = 0;
-	try {
-		const user = await requireAuth(locals);
-		await dbConnect();
-		const dayStart = new Date(dateParam + 'T00:00:00.000Z');
-		const dayEnd = new Date(dateParam + 'T23:59:59.999Z');
-		const sessions = await WorkoutSession.find({
-			createdBy: user.nickname,
-			startTime: { $gte: dayStart, $lte: dayEnd }
-		}).select('kcalEstimate').lean();
-
-		for (const s of sessions) {
-			if (s.kcalEstimate?.kcal) exerciseKcal += s.kcalEstimate.kcal;
-		}
-	} catch {}
 
 	const foodLog = foodRes.ok ? await foodRes.json() : { entries: [] };
 
