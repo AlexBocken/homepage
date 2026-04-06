@@ -330,6 +330,18 @@ const translations: Translations = {
 	predicted_ovulation: { en: 'Predicted ovulation', de: 'Voraussichtlicher Eisprung' },
 	to: { en: 'to', de: 'bis' },
 
+	// Exercise detail (enriched)
+	overview: { en: 'Overview', de: 'Überblick' },
+	tips: { en: 'Tips', de: 'Tipps' },
+	similar_exercises: { en: 'Similar Exercises', de: 'Ähnliche Übungen' },
+	primary_muscles: { en: 'Primary', de: 'Primär' },
+	secondary_muscles: { en: 'Secondary', de: 'Sekundär' },
+	play_video: { en: 'Play Video', de: 'Video abspielen' },
+
+	// Muscle heatmap
+	muscle_balance: { en: 'Muscle Balance', de: 'Muskelbalance' },
+	weekly_sets: { en: 'Sets per week', de: 'Sätze pro Woche' },
+
 	// Custom meals
 	custom_meals: { en: 'Custom Meals', de: 'Eigene Mahlzeiten' },
 	custom_meal: { en: 'Custom Meal', de: 'Eigene Mahlzeit' },

@@ -1,9 +1,12 @@
 <script>
 	import { page } from '$app/stores';
-	import { getExerciseById, localizeExercise } from '$lib/data/exercises';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { getEnrichedExerciseById } from '$lib/data/exercisedb';
+	import { localizeExercise, translateTerm } from '$lib/data/exercises';
+	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { ChevronRight } from '@lucide/svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const s = $derived(fitnessSlugs(lang));
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { onMount } from 'svelte';
 
@@ -31,11 +34,9 @@
 
 	let activeTab = $state('about');
 
-	const rawExercise = $derived(data.exercise?.exercise ?? getExerciseById(data.exercise?.id));
-	const exercise = $derived(rawExercise ? localizeExercise(rawExercise, lang) : undefined);
-	// History API returns { history: [{ sessionId, sessionName, date, sets }], total }
+	const exercise = $derived(data.exercise ?? getEnrichedExerciseById($page.params.id, lang));
+	const similar = $derived(data.similar ?? []);
 	const history = $derived(data.history?.history ?? []);
-	// Stats API returns { charts: { est1rmOverTime, ... }, personalRecords: { ... }, records }
 	const stats = $derived(data.stats ?? {});
 	const charts = $derived(stats.charts ?? {});
 	const prs = $derived(stats.personalRecords ?? {});
@@ -67,90 +68,36 @@
 		}, '#EBCB8B');
 	});
 
-	/**
-	 * Compute linear regression trendline + ±1σ bands for a data array.
-	 * Returns { trend, upper, lower } arrays of same length.
-	 * @param {number[]} data
-	 */
+	/** @param {number[]} data */
 	function trendWithBands(data) {
 		const n = data.length;
 		if (n < 3) return null;
-
-		// Linear regression
 		let sx = 0, sy = 0, sxx = 0, sxy = 0;
 		for (let i = 0; i < n; i++) {
 			sx += i; sy += data[i]; sxx += i * i; sxy += i * data[i];
 		}
 		const slope = (n * sxy - sx * sy) / (n * sxx - sx * sx);
 		const intercept = (sy - slope * sx) / n;
-
 		const trend = data.map((_, i) => Math.round((intercept + slope * i) * 10) / 10);
-
-		// Residual standard deviation
 		let ssRes = 0;
-		for (let i = 0; i < n; i++) {
-			const r = data[i] - trend[i];
-			ssRes += r * r;
-		}
+		for (let i = 0; i < n; i++) { const r = data[i] - trend[i]; ssRes += r * r; }
 		const sigma = Math.sqrt(ssRes / (n - 2));
-
-		const upper = trend.map(v => Math.round((v + sigma) * 10) / 10);
-		const lower = trend.map(v => Math.round((v - sigma) * 10) / 10);
-
-		return { trend, upper, lower };
+		return { trend, upper: trend.map(v => Math.round((v + sigma) * 10) / 10), lower: trend.map(v => Math.round((v - sigma) * 10) / 10) };
 	}
 
-	/**
-	 * Add trendline + uncertainty datasets to a chart data object.
-	 * @param {{ labels: string[], datasets: Array<any> }} chartData
-	 * @param {string} trendColor
-	 */
+	/** @param {{ labels: string[], datasets: Array<any> }} chartData @param {string} trendColor */
 	function withTrend(chartData, trendColor = primary) {
 		const values = chartData.datasets[0]?.data;
 		if (!values || values.length < 3) return chartData;
-
 		const bands = trendWithBands(values);
 		if (!bands) return chartData;
-
 		return {
 			labels: chartData.labels,
 			datasets: [
-				{
-					label: '± 1σ',
-					data: bands.upper,
-					borderColor: 'transparent',
-					backgroundColor: `${trendColor}26`,
-					fill: '+1',
-					pointRadius: 0,
-					borderWidth: 0,
-					tension: 0.3,
-					order: 2
-				},
-				{
-					label: '± 1σ (lower)',
-					data: bands.lower,
-					borderColor: 'transparent',
-					backgroundColor: 'transparent',
-					fill: false,
-					pointRadius: 0,
-					borderWidth: 0,
-					tension: 0.3,
-					order: 2
-				},
-				{
-					label: 'Trend',
-					data: bands.trend,
-					borderColor: trendColor,
-					pointRadius: 0,
-					borderWidth: 2,
-					tension: 0.3,
-					order: 1
-				},
-				{
-					...chartData.datasets[0],
-					borderWidth: 1,
-					order: 0
-				}
+				{ label: '± 1σ', data: bands.upper, borderColor: 'transparent', backgroundColor: `${trendColor}26`, fill: '+1', pointRadius: 0, borderWidth: 0, tension: 0.3, order: 2 },
+				{ label: '± 1σ (lower)', data: bands.lower, borderColor: 'transparent', backgroundColor: 'transparent', fill: false, pointRadius: 0, borderWidth: 0, tension: 0.3, order: 2 },
+				{ label: 'Trend', data: bands.trend, borderColor: trendColor, pointRadius: 0, borderWidth: 2, tension: 0.3, order: 1 },
+				{ ...chartData.datasets[0], borderWidth: 1, order: 0 }
 			]
 		};
 	}
@@ -182,17 +129,29 @@
 
 	{#if activeTab === 'about'}
 		<div class="tab-content">
-			{#if exercise?.imageUrl}
-				<img src={exercise.imageUrl} alt={exercise.localName} class="exercise-image" />
-			{/if}
+			<!-- Tags -->
 			<div class="tags">
 				<span class="tag body-part">{exercise?.localBodyPart}</span>
 				<span class="tag equipment">{exercise?.localEquipment}</span>
 				<span class="tag target">{exercise?.localTarget}</span>
 			</div>
-			{#if exercise?.localSecondaryMuscles?.length}
-				<p class="secondary">{lang === 'en' ? 'Also works' : 'Trainiert auch'}: {exercise.localSecondaryMuscles.join(', ')}</p>
+
+			<!-- Muscle pills -->
+			{#if exercise?.localSecondaryMuscles?.length || exercise?.localTarget}
+				<div class="muscle-section">
+					<h3>{lang === 'en' ? 'Muscles' : 'Muskeln'}</h3>
+					<div class="muscle-pills">
+						{#if exercise?.localTarget}
+							<span class="muscle-pill primary">{exercise.localTarget}</span>
+						{/if}
+						{#each exercise?.localSecondaryMuscles ?? [] as muscle}
+							<span class="muscle-pill secondary">{muscle}</span>
+						{/each}
+					</div>
+				</div>
 			{/if}
+
+			<!-- Instructions -->
 			{#if exercise?.localInstructions?.length}
 				<h3>{t('instructions', lang)}</h3>
 				<ol class="instructions">
@@ -200,6 +159,24 @@
 						<li>{step}</li>
 					{/each}
 				</ol>
+			{/if}
+
+			<!-- Similar exercises -->
+			{#if similar.length > 0}
+				<div class="similar-section">
+					<h3>{lang === 'en' ? 'Similar Exercises' : 'Ähnliche Übungen'}</h3>
+					<div class="similar-scroll">
+						{#each similar as sim}
+							<a class="similar-card" href="/fitness/{s.exercises}/{sim.id}">
+								<div class="similar-info">
+									<span class="similar-name">{sim.localName}</span>
+									<span class="similar-meta">{sim.localBodyPart} · {sim.localEquipment}</span>
+								</div>
+								<ChevronRight size={14} />
+							</a>
+						{/each}
+					</div>
+				</div>
 			{/if}
 		</div>
 	{:else if activeTab === 'history'}
@@ -325,14 +302,7 @@
 		padding: 0.5rem 0;
 	}
 
-	/* About */
-	.exercise-image {
-		width: 100%;
-		max-height: 300px;
-		object-fit: cover;
-		border-radius: 12px;
-		margin-bottom: 0.75rem;
-	}
+	/* Tags */
 	.tags {
 		display: flex;
 		gap: 0.5rem;
@@ -349,14 +319,39 @@
 	.body-part { background: rgba(94, 129, 172, 0.2); color: var(--nord9); }
 	.equipment { background: rgba(163, 190, 140, 0.2); color: var(--nord14); }
 	.target { background: rgba(208, 135, 112, 0.2); color: var(--nord12); }
-	.secondary {
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
+
+	/* Muscle pills */
+	.muscle-section {
+		margin-bottom: 0.25rem;
+	}
+	.muscle-pills {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+	}
+	.muscle-pill {
+		padding: 0.2rem 0.55rem;
+		border-radius: 16px;
+		font-size: 0.7rem;
+		font-weight: 600;
 		text-transform: capitalize;
 	}
+	.muscle-pill.primary {
+		background: rgba(94, 129, 172, 0.2);
+		color: var(--nord9);
+	}
+	.muscle-pill.secondary {
+		background: transparent;
+		border: 1px solid var(--color-border);
+		color: var(--color-text-tertiary);
+	}
+
 	h3 {
 		font-size: 1rem;
-		margin: 1rem 0 0.5rem;
+		margin: 0.75rem 0 0.4rem;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
 	}
 	.instructions {
 		padding-left: 1.25rem;
@@ -365,6 +360,54 @@
 	}
 	.instructions li {
 		margin-bottom: 0.4rem;
+	}
+
+	/* Similar exercises */
+	.similar-section {
+		margin-top: 0.25rem;
+	}
+	.similar-scroll {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.similar-card {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.5rem;
+		background: var(--color-surface);
+		border-radius: 10px;
+		box-shadow: var(--shadow-sm);
+		text-decoration: none;
+		color: inherit;
+		transition: box-shadow 0.15s;
+	}
+	.similar-card:hover {
+		box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.12));
+	}
+.similar-info {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+	.similar-name {
+		font-size: 0.8rem;
+		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.similar-meta {
+		font-size: 0.65rem;
+		color: var(--color-text-tertiary);
+		text-transform: capitalize;
+	}
+	.similar-card :global(svg) {
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
 	}
 
 	/* History */

@@ -2,24 +2,71 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { Search } from '@lucide/svelte';
-	import { getFilterOptions, searchExercises, translateTerm } from '$lib/data/exercises';
+	import { getFilterOptionsAll, searchAllExercises } from '$lib/data/exercisedb';
+	import { translateTerm } from '$lib/data/exercises';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { MUSCLE_GROUPS, MUSCLE_GROUP_DE } from '$lib/data/muscleMap';
+	import MuscleFilter from '$lib/components/fitness/MuscleFilter.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const isEn = $derived(lang === 'en');
 	const sl = $derived(fitnessSlugs(lang));
 
 	let { data } = $props();
 
 	let query = $state('');
-	let bodyPartFilter = $state('');
-	let equipmentFilter = $state('');
+	let equipmentFilters = $state([]);
+	let muscleGroups = $state([]);
 
-	const filterOptions = getFilterOptions();
+	const filterOptions = getFilterOptionsAll();
 
-	const filtered = $derived(searchExercises({
+	/** All selectable muscle/body-part options for the dropdown */
+	const allMuscleOptions = [...MUSCLE_GROUPS];
+
+	/** Display label for a muscle group */
+	function muscleLabel(group) {
+		const raw = isEn ? group : (MUSCLE_GROUP_DE[group] ?? group);
+		return raw.charAt(0).toUpperCase() + raw.slice(1);
+	}
+
+	/** Options not yet selected, for the dropdown */
+	const availableOptions = $derived(
+		allMuscleOptions.filter(g => !muscleGroups.includes(g))
+	);
+
+	function addMuscle(group) {
+		if (group && !muscleGroups.includes(group)) {
+			muscleGroups = [...muscleGroups, group];
+		}
+	}
+
+	function removeMuscle(group) {
+		muscleGroups = muscleGroups.filter(g => g !== group);
+	}
+
+	const availableEquipment = $derived(
+		filterOptions.equipment.filter(e => !equipmentFilters.includes(e))
+	);
+
+	function addEquipment(eq) {
+		if (eq && !equipmentFilters.includes(eq)) {
+			equipmentFilters = [...equipmentFilters, eq];
+		}
+	}
+
+	function removeEquipment(eq) {
+		equipmentFilters = equipmentFilters.filter(e => e !== eq);
+	}
+
+	function equipmentLabel(eq) {
+		const raw = translateTerm(eq, lang);
+		return raw.charAt(0).toUpperCase() + raw.slice(1);
+	}
+
+	const filtered = $derived(searchAllExercises({
 		search: query || undefined,
-		bodyPart: bodyPartFilter || undefined,
-		equipment: equipmentFilter || undefined,
+		equipment: equipmentFilters.length ? equipmentFilters : undefined,
+		muscleGroups: muscleGroups.length ? muscleGroups : undefined,
 		lang
 	}));
 </script>
@@ -27,7 +74,17 @@
 <svelte:head><title>{lang === 'en' ? 'Exercises' : 'Übungen'} - Bocken</title></svelte:head>
 
 <div class="exercises-page">
+	<!-- Desktop: split front/back absolutely positioned outside content -->
+	<div class="desktop-filter">
+		<MuscleFilter bind:selectedGroups={muscleGroups} {lang} split />
+	</div>
+
 	<h1>{t('exercises_title', lang)}</h1>
+
+	<!-- Mobile: inline, not split -->
+	<div class="mobile-filter">
+		<MuscleFilter bind:selectedGroups={muscleGroups} {lang} />
+	</div>
 
 	<div class="search-bar">
 		<Search size={16} />
@@ -35,19 +92,36 @@
 	</div>
 
 	<div class="filters">
-		<select bind:value={bodyPartFilter}>
-			<option value="">{t('all_body_parts', lang)}</option>
-			{#each filterOptions.bodyParts as bp}
-				{@const label = translateTerm(bp, lang)}<option value={bp}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
+		<select onchange={(e) => { addMuscle(e.target.value); e.target.value = ''; }}>
+			<option value="">{isEn ? 'Muscle group' : 'Muskelgruppe'}</option>
+			{#each availableOptions as group}
+				<option value={group}>{muscleLabel(group)}</option>
 			{/each}
 		</select>
-		<select bind:value={equipmentFilter}>
+		<select onchange={(e) => { addEquipment(e.target.value); e.target.value = ''; }}>
 			<option value="">{t('all_equipment', lang)}</option>
-			{#each filterOptions.equipment as eq}
-				{@const label = translateTerm(eq, lang)}<option value={eq}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
+			{#each availableEquipment as eq}
+				<option value={eq}>{equipmentLabel(eq)}</option>
 			{/each}
 		</select>
 	</div>
+
+	{#if muscleGroups.length > 0 || equipmentFilters.length > 0}
+		<div class="selected-pills">
+			{#each muscleGroups as group}
+				<button class="filter-pill muscle" onclick={() => removeMuscle(group)}>
+					{muscleLabel(group)}
+					<span class="pill-remove" aria-hidden="true">×</span>
+				</button>
+			{/each}
+			{#each equipmentFilters as eq}
+				<button class="filter-pill equipment" onclick={() => removeEquipment(eq)}>
+					{equipmentLabel(eq)}
+					<span class="pill-remove" aria-hidden="true">×</span>
+				</button>
+			{/each}
+		</div>
+	{/if}
 
 	<ul class="exercise-list">
 		{#each filtered as exercise (exercise.id)}
@@ -71,11 +145,46 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+		max-width: 620px;
+		margin: 0 auto;
+		position: relative;
 	}
 	h1 {
 		margin: 0;
 		font-size: 1.4rem;
 	}
+
+	/* Mobile: show inline filter, hide desktop split */
+	.desktop-filter {
+		display: none;
+	}
+
+	/* Desktop: front/back absolutely positioned outside content flow */
+	@media (min-width: 1024px) {
+		.mobile-filter {
+			display: none;
+		}
+
+		.desktop-filter {
+			display: contents;
+		}
+
+		.exercises-page :global(.split-left),
+		.exercises-page :global(.split-right) {
+			position: fixed;
+			top: calc(8.5rem + env(safe-area-inset-top, 0px));
+			width: clamp(140px, 14vw, 200px);
+		}
+
+		.exercises-page :global(.split-left) {
+			right: calc(50% + 310px + 1.5rem);
+		}
+
+		.exercises-page :global(.split-right) {
+			left: calc(50% + 310px + 1.5rem);
+		}
+	}
+
 	.search-bar {
 		display: flex;
 		align-items: center;
@@ -110,6 +219,45 @@
 		color: inherit;
 		font-size: 0.8rem;
 	}
+	.selected-pills {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+	}
+	.filter-pill {
+		all: unset;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.25rem 0.6rem;
+		border-radius: var(--radius-pill, 100px);
+		color: var(--color-primary-contrast);
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: filter 0.1s, transform 0.1s;
+	}
+	.filter-pill:hover {
+		filter: brightness(1.1);
+		transform: scale(1.05);
+	}
+	.filter-pill:active {
+		transform: scale(0.95);
+	}
+	.filter-pill.muscle {
+		background: var(--lightblue);
+		color: black;
+	}
+	.filter-pill.equipment {
+		background: var(--blue);
+		color: white;
+	}
+	.pill-remove {
+		font-size: 0.7rem;
+		font-weight: bold;
+		margin-left: 0.1rem;
+	}
+
 	.exercise-list {
 		list-style: none;
 		padding: 0;
@@ -118,7 +266,8 @@
 	.exercise-row {
 		display: flex;
 		align-items: center;
-		padding: 0.75rem 0;
+		gap: 0.6rem;
+		padding: 0.5rem 0;
 		text-decoration: none;
 		color: inherit;
 		border-bottom: 1px solid var(--color-border);
@@ -126,9 +275,10 @@
 	.exercise-row:hover {
 		background: var(--color-surface-hover);
 	}
-	.exercise-info {
+.exercise-info {
 		display: flex;
 		flex-direction: column;
+		min-width: 0;
 	}
 	.exercise-name {
 		font-weight: 600;

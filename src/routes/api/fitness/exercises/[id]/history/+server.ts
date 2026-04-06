@@ -1,14 +1,14 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
-import { getExerciseById } from '$lib/data/exercises';
+import { getEnrichedExerciseById } from '$lib/data/exercisedb';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const user = await requireAuth(locals);
 
-	const exercise = getExerciseById(params.id);
+	const exercise = getEnrichedExerciseById(params.id);
 	if (!exercise) {
 		return json({ error: 'Exercise not found' }, { status: 404 });
 	}
