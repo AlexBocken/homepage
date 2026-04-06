@@ -47,6 +47,8 @@ const OpenFoodFactSchema = new mongoose.Schema({
   per100g: { type: Per100gSchema, required: true },
 }, { collection: 'openfoodfacts' });
 
+OpenFoodFactSchema.index({ name: 'text', nameDe: 'text', brands: 'text' });
+
 let _model: mongoose.Model<IOpenFoodFact>;
 try { _model = mongoose.model<IOpenFoodFact>('OpenFoodFact'); } catch { _model = mongoose.model<IOpenFoodFact>('OpenFoodFact', OpenFoodFactSchema); }
 export const OpenFoodFact = _model;

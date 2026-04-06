@@ -156,6 +156,7 @@
 		if (source === 'bls') return 'BLS';
 		if (source === 'usda') return 'USDA';
 		if (source === 'off') return 'OFF';
+		if (source === 'recipe') return '🍴';
 		return source?.toUpperCase() ?? '';
 	}
 
@@ -402,7 +403,7 @@
 						<div class="fs-result-info">
 							<span class="fs-result-name">{item.name}</span>
 							<span class="fs-result-meta">
-								<span class="fs-source-badge" class:usda={item.source === 'usda'} class:off={item.source === 'off'}>{sourceLabel(item.source)}</span>
+								<span class="fs-source-badge" class:usda={item.source === 'usda'} class:off={item.source === 'off'} class:recipe={item.source === 'recipe'}>{sourceLabel(item.source)}</span>
 								{#if item.brands}<span class="fs-result-brands">{item.brands}</span>{/if}
 								{#if item.category}{item.category}{/if}
 							</span>
@@ -426,7 +427,7 @@
 	<div class="fs-selected">
 		<div class="fs-selected-header">
 			<span class="fs-selected-name">
-				<span class="fs-source-badge" class:usda={selected.source === 'usda'} class:off={selected.source === 'off'}>{sourceLabel(selected.source)}</span>
+				<span class="fs-source-badge" class:usda={selected.source === 'usda'} class:off={selected.source === 'off'} class:recipe={selected.source === 'recipe'}>{sourceLabel(selected.source)}</span>
 				{selected.name}
 			</span>
 			{#if selected.brands}
@@ -688,6 +689,12 @@
 	.fs-source-badge.off {
 		background: color-mix(in srgb, var(--nord15) 15%, transparent);
 		color: var(--nord15);
+	}
+	.fs-source-badge.recipe {
+		background: color-mix(in srgb, var(--nord14) 15%, transparent);
+		color: var(--nord14);
+		font-size: 0.7rem;
+		padding: 0.02rem 0.15rem;
 	}
 	.fs-result-cal {
 		font-size: 0.85rem;
