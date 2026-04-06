@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { Pencil, Trash2, ChevronDown } from '@lucide/svelte';
+	import { Pencil, Trash2, ChevronRight, Venus, Mars } from '@lucide/svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 
@@ -8,19 +8,32 @@
 	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import AddButton from '$lib/components/AddButton.svelte';
+	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 
 	let { data } = $props();
 	const workout = getWorkout();
 
 	let latest = $state(data.latest ? { ...data.latest } : {});
 	let measurements = $state(data.measurements?.measurements ? [...data.measurements.measurements] : []);
+	let showWeightHistory = $state(false);
 
 	// Profile fields (sex, height, birth year) — stored in FitnessGoal
-	let showProfile = $state(false);
 	let profileSex = $state(data.profile?.sex ?? 'male');
 	let profileHeight = $state(data.profile?.heightCm != null ? String(data.profile.heightCm) : '');
 	let profileBirthYear = $state(data.profile?.birthYear != null ? String(data.profile.birthYear) : '');
 	let profileSaving = $state(false);
+	let profileEditing = $state(false);
+
+	const profileParts = $derived.by(() => {
+		/** @type {string[]} */
+		const parts = [];
+		const h = data.profile?.heightCm;
+		if (h) parts.push(`${h}cm`);
+		const by = data.profile?.birthYear;
+		if (by) parts.push(`*${by}`);
+		return parts;
+	});
+
 	let profileDirty = $derived(
 		profileSex !== (data.profile?.sex ?? 'male') ||
 		profileHeight !== (data.profile?.heightCm != null ? String(data.profile.heightCm) : '') ||
@@ -106,38 +119,51 @@
 <svelte:head><title>{lang === 'en' ? 'Measure' : 'Messen'} - Bocken</title></svelte:head>
 
 <div class="measure-page">
-	<h1>{t('measure_title', lang)}</h1>
+	<div class="page-header">
+		<h1>{t('measure_title', lang)}</h1>
+		<div class="profile-meta">
+			{#if data.profile?.sex}
+				<span class="profile-sex-icon">
+					{#if data.profile.sex === 'female'}
+						<Venus size={16} />
+					{:else}
+						<Mars size={16} />
+					{/if}
+				</span>
+			{/if}
+			{#if profileParts.length > 0}
+				<span class="profile-summary">{profileParts.join(' · ')}</span>
+			{/if}
+			<button class="profile-edit-btn" onclick={() => profileEditing = !profileEditing} aria-label="Edit profile">
+				<Pencil size={12} />
+			</button>
+		</div>
+	</div>
 
-	<section class="profile-section">
-		<button class="profile-toggle" onclick={() => showProfile = !showProfile}>
-			<h2>{t('profile', lang)}</h2>
-			<ChevronDown size={16} class={showProfile ? 'chevron open' : 'chevron'} />
-		</button>
-		{#if showProfile}
-			<div class="profile-row">
-				<div class="form-group">
-					<label for="p-sex">{t('sex', lang)}</label>
-					<select id="p-sex" bind:value={profileSex}>
-						<option value="male">{t('male', lang)}</option>
-						<option value="female">{t('female', lang)}</option>
-					</select>
-				</div>
-				<div class="form-group">
-					<label for="p-height">{t('height', lang)}</label>
-					<input id="p-height" type="number" min="100" max="250" placeholder="175" bind:value={profileHeight} />
-				</div>
-				<div class="form-group">
-					<label for="p-birthyear">{t('birth_year', lang)}</label>
-					<input id="p-birthyear" type="number" min="1900" max="2020" placeholder="1990" bind:value={profileBirthYear} />
-				</div>
-				{#if profileDirty}
-					<button class="profile-save-btn" onclick={saveProfile} disabled={profileSaving}>
-						{profileSaving ? t('saving', lang) : t('save', lang)}
-					</button>
-				{/if}
+	{#if profileEditing}
+		<div class="profile-fields">
+			<div class="form-group">
+				<label for="p-sex">{t('sex', lang)}</label>
+				<select id="p-sex" bind:value={profileSex}>
+					<option value="male">{t('male', lang)}</option>
+					<option value="female">{t('female', lang)}</option>
+				</select>
 			</div>
-		{/if}
-	</section>
+			<div class="form-group">
+				<label for="p-height">{t('height', lang)}</label>
+				<input id="p-height" type="number" min="100" max="250" placeholder="175" bind:value={profileHeight} />
+			</div>
+			<div class="form-group">
+				<label for="p-birthyear">{t('birth_year', lang)}</label>
+				<input id="p-birthyear" type="number" min="1900" max="2020" placeholder="1990" bind:value={profileBirthYear} />
+			</div>
+			{#if profileDirty}
+				<button class="profile-save-btn" onclick={saveProfile} disabled={profileSaving}>
+					{profileSaving ? t('saving', lang) : t('save', lang)}
+				</button>
+			{/if}
+		</div>
+	{/if}
 
 	<section class="latest-section">
 		<h2>{t('latest', lang)}</h2>
@@ -169,29 +195,42 @@
 
 	{#if measurements.length > 0}
 		<section class="history-section">
-			<h2>{t('history', lang)}</h2>
-			<div class="history-list">
-				{#each measurements as m (m._id)}
-					<div class="history-item">
-						<div class="history-main">
-							<div class="history-info">
-								<span class="history-date">{formatDate(m.date)}</span>
-								<span class="history-summary">{summaryParts(m)}</span>
-							</div>
-							<div class="history-actions">
-								<a class="icon-btn edit" href="/fitness/{measureSlug}/edit/{m._id}" aria-label="Edit measurement">
-									<Pencil size={14} />
-								</a>
-								<button class="icon-btn delete" onclick={() => deleteMeasurement(m._id)} aria-label="Delete measurement">
-									<Trash2 size={14} />
-								</button>
+			<button class="history-toggle" onclick={() => showWeightHistory = !showWeightHistory}>
+				<h2>{t('history', lang)}</h2>
+				<ChevronRight size={14} class={showWeightHistory ? 'chevron open' : 'chevron'} />
+			</button>
+			{#if showWeightHistory}
+				<div class="history-list">
+					{#each measurements as m (m._id)}
+						<div class="history-item">
+							<div class="history-main">
+								<div class="history-info">
+									<span class="history-date">{formatDate(m.date)}</span>
+									<span class="history-summary">{summaryParts(m)}</span>
+								</div>
+								<div class="history-actions">
+									<a class="icon-btn edit" href="/fitness/{measureSlug}/edit/{m._id}" aria-label="Edit measurement">
+										<Pencil size={14} />
+									</a>
+									<button class="icon-btn delete" onclick={() => deleteMeasurement(m._id)} aria-label="Delete measurement">
+										<Trash2 size={14} />
+									</button>
+								</div>
 							</div>
 						</div>
-					</div>
-				{/each}
-			</div>
+					{/each}
+				</div>
+			{/if}
 		</section>
 	{/if}
+
+	{#if data.profile?.sex === 'female'}
+		<PeriodTracker periods={data.periods ?? []} {lang} sharedWith={data.periodSharedWith ?? []} />
+	{/if}
+
+	{#each data.sharedPeriods ?? [] as shared (shared.owner)}
+		<PeriodTracker periods={shared.entries} {lang} readOnly ownerName={shared.owner} />
+	{/each}
 </div>
 
 {#if !workout.active}
@@ -212,43 +251,47 @@
 		margin: 0 0 0.5rem;
 		font-size: 1.1rem;
 	}
-	/* Profile */
-	.profile-section {
-		background: var(--color-surface);
-		border-radius: 8px;
-		box-shadow: var(--shadow-sm);
-		padding: 0.75rem 1rem;
+
+	/* Header with inline profile */
+	.page-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
 	}
-	.profile-toggle {
+	.profile-meta {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		width: 100%;
+		gap: 0.4rem;
+	}
+	.profile-sex-icon {
+		display: flex;
+		color: var(--color-text-secondary);
+	}
+	.profile-summary {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		letter-spacing: 0.02em;
+	}
+	.profile-edit-btn {
+		display: flex;
+		align-items: center;
+		padding: 0.25rem;
 		background: none;
 		border: none;
 		cursor: pointer;
-		padding: 0;
-		color: inherit;
+		color: var(--color-text-tertiary);
+		opacity: 0.6;
+		transition: opacity 0.15s;
 	}
-	.profile-toggle h2 {
-		margin: 0;
-		font-size: 0.9rem;
+	.profile-edit-btn:hover {
+		opacity: 1;
+		color: var(--color-text-secondary);
 	}
-	.profile-toggle :global(.chevron) {
-		transition: transform 0.2s;
-	}
-	.profile-toggle :global(.chevron.open) {
-		transform: rotate(180deg);
-	}
-	.profile-section h2 {
-		margin: 0 0 0.5rem;
-		font-size: 0.9rem;
-	}
-	.profile-row {
+	.profile-fields {
 		display: flex;
 		gap: 0.75rem;
 		align-items: flex-end;
-		margin-top: 0.5rem;
 	}
 	.profile-save-btn {
 		padding: 0.4rem 0.75rem;
@@ -346,6 +389,27 @@
 	}
 
 	/* History */
+	.history-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		color: inherit;
+	}
+	.history-toggle h2 {
+		margin: 0;
+		font-size: 1.1rem;
+	}
+	.history-toggle :global(.chevron) {
+		transition: transform 0.2s;
+	}
+	.history-toggle :global(.chevron.open) {
+		transform: rotate(90deg);
+	}
 	.history-list {
 		display: flex;
 		flex-direction: column;
