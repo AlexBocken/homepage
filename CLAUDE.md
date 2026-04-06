@@ -85,7 +85,6 @@ When committing, bump version numbers as appropriate using semver:
 - **minor** (x.Y.0): new features, significant UI changes, new pages/routes
 - **major** (X.0.0): breaking changes, major redesigns, data model changes
 
-Version files to update (keep in sync):
-- `package.json` — site version
-- `src-tauri/tauri.conf.json` — Tauri/Android app version
-- `src-tauri/Cargo.toml` — Rust crate version
+Version files to update:
+- `package.json` — site version (bump on every commit)
+- `src-tauri/tauri.conf.json` + `src-tauri/Cargo.toml` — Tauri/Android app version. Only bump these when the Tauri app codebase itself changes (e.g. `src-tauri/` files), NOT for website-only changes.
