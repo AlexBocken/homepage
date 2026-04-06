@@ -1,47 +1,36 @@
 import mongoose from 'mongoose';
 import { MONGO_URL } from '$env/static/private';
 
-let isConnected = false;
+// Use globalThis to persist connection promise across Vite HMR module reloads
+const g = globalThis as unknown as { __mongoosePromise?: Promise<typeof mongoose> };
 
 export const dbConnect = async () => {
-  // If already connected, return immediately
-  if (isConnected && mongoose.connection.readyState === 1) {
+  // Already connected — return immediately
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
+  // Connection in progress — await the existing promise
+  if (mongoose.connection.readyState === 2 && g.__mongoosePromise) {
+    await g.__mongoosePromise;
     return mongoose.connection;
   }
 
   try {
-    // Configure MongoDB driver options
     const options = {
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     };
 
-    const connection = await mongoose.connect(MONGO_URL ?? '', options);
-    
-    isConnected = true;
+    g.__mongoosePromise = mongoose.connect(MONGO_URL ?? '', options);
+    await g.__mongoosePromise;
+
     console.log('MongoDB connected with persistent connection');
-    
-    // Handle connection events
-    mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
-      isConnected = false;
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      console.log('MongoDB disconnected');
-      isConnected = false;
-    });
-
-    mongoose.connection.on('reconnected', () => {
-      console.log('MongoDB reconnected');
-      isConnected = true;
-    });
-
-    return connection;
+    return mongoose.connection;
   } catch (error) {
     console.error('MongoDB connection failed:', error);
-    isConnected = false;
+    g.__mongoosePromise = undefined;
     throw error;
   }
 };

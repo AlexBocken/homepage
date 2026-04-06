@@ -193,6 +193,8 @@ const RecipeSchema = new mongoose.Schema(
 );
 
 // Indexes for efficient querying
+RecipeSchema.index({ short_name: 1 });
+RecipeSchema.index({ season: 1 });
 RecipeSchema.index({ "translations.en.short_name": 1 });
 RecipeSchema.index({ "translations.en.translationStatus": 1 });
 

@@ -89,6 +89,8 @@ const PaymentSchema = new mongoose.Schema(
   }
 );
 
+PaymentSchema.index({ date: -1, createdAt: -1 });
+
 PaymentSchema.virtual('splits', {
   ref: 'PaymentSplit',
   localField: '_id',
