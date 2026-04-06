@@ -127,10 +127,6 @@
 			</div>
 			{#if hoveredLabel && hoveredSide === 'front'}
 				<div class="hover-label">{hoveredLabel}</div>
-			{:else if selectedGroups.length > 0}
-				<button class="clear-btn" onclick={() => selectedGroups = []}>
-					{isEn ? 'Clear' : 'Zurücksetzen'}
-				</button>
 			{/if}
 		</div>
 		<div class="split-right">
@@ -161,10 +157,6 @@
 
 		{#if hoveredLabel}
 			<div class="hover-label">{hoveredLabel}</div>
-		{:else if selectedGroups.length > 0}
-			<button class="clear-btn" onclick={() => selectedGroups = []}>
-				{isEn ? 'Clear filter' : 'Filter zurücksetzen'}
-			</button>
 		{/if}
 	</div>
 {/if}
@@ -226,20 +218,6 @@
 		font-weight: 600;
 		color: var(--color-text-primary);
 		text-align: center;
-	}
-
-	.clear-btn {
-		background: none;
-		border: none;
-		color: var(--color-primary);
-		font-size: 0.7rem;
-		font-weight: 600;
-		cursor: pointer;
-		padding: 0.2rem 0.5rem;
-	}
-
-	.clear-btn:hover {
-		text-decoration: underline;
 	}
 
 	/* Split mode: two independent columns for parent to position */
