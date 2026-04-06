@@ -99,7 +99,6 @@
 		const parts = [];
 		if (m.weight != null) parts.push(`${m.weight} kg`);
 		if (m.bodyFatPercent != null) parts.push(`${m.bodyFatPercent}% bf`);
-		if (m.caloricIntake != null) parts.push(`${m.caloricIntake} kcal`);
 		return parts.join(' · ') || t('body_measurements_only', lang);
 	}
 </script>
@@ -150,10 +149,6 @@
 			<div class="stat-card">
 				<span class="stat-label">{t('body_fat', lang)}</span>
 				<span class="stat-value">{latest.bodyFatPercent?.value ?? '—'}<small>%</small></span>
-			</div>
-			<div class="stat-card">
-				<span class="stat-label">{t('calories', lang)}</span>
-				<span class="stat-value">{latest.caloricIntake?.value ?? '—'} <small>kcal</small></span>
 			</div>
 		</div>
 	</section>
@@ -303,7 +298,7 @@
 	/* Latest */
 	.stat-grid {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(2, 1fr);
 		gap: 0.6rem;
 	}
 	.stat-card {

@@ -22,13 +22,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		query.date = dateFilter;
 	}
 
-	const measurements = await BodyMeasurement.find(query)
-		.sort({ date: -1 })
-		.skip(offset)
-		.limit(limit)
-		.lean();
-
-	const total = await BodyMeasurement.countDocuments(query);
+	const [measurements, total] = await Promise.all([
+		BodyMeasurement.find(query).sort({ date: -1 }).skip(offset).limit(limit).lean(),
+		BodyMeasurement.countDocuments(query)
+	]);
 
 	return json({ measurements, total, limit, offset });
 };

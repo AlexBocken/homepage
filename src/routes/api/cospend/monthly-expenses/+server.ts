@@ -20,20 +20,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - monthsBack);
 
-    const totalPayments = await Payment.countDocuments();
-    const paymentsInRange = await Payment.countDocuments({
-      date: {
-        $gte: startDate,
-        $lte: endDate
-      }
-    });
-    const expensePayments = await Payment.countDocuments({
-      date: {
-        $gte: startDate,
-        $lte: endDate
-      },
-      category: { $ne: 'settlement' }
-    });
+    const dateRange = { $gte: startDate, $lte: endDate };
+    const [totalPayments, paymentsInRange, expensePayments] = await Promise.all([
+      Payment.countDocuments(),
+      Payment.countDocuments({ date: dateRange }),
+      Payment.countDocuments({ date: dateRange, category: { $ne: 'settlement' } })
+    ]);
 
     // Aggregate payments by month and category
     const pipeline = [
