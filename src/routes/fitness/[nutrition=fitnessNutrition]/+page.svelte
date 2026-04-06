@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed } from '@lucide/svelte';
+	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -74,24 +74,42 @@
 	let editCarbPercent = $state('');
 
 	const dietPresets = [
-		// calories: null = don't change, 'bmr' = use BMR, number = multiplier of BMR
 		{ emoji: '⚖️', en: 'WHO Balanced', de: 'WHO Ausgewogen',
+			descEn: 'Standard WHO guidelines — moderate protein, balanced macros',
+			descDe: 'WHO-Standardempfehlung — moderates Protein, ausgewogene Makros',
 			proteinMode: 'per_kg', proteinTarget: 0.83, fatPercent: 30, carbPercent: 55 },
 		{ emoji: '💪', en: 'Maintain', de: 'Halten',
+			descEn: 'Eat at TDEE with higher protein to preserve muscle',
+			descDe: 'Essen auf TDEE-Niveau mit erhöhtem Protein für Muskelerhalt',
 			proteinMode: 'per_kg', proteinTarget: 1.6, fatPercent: 30, carbPercent: 45, calMult: 1.0 },
 		{ emoji: '🔪', en: 'Cut', de: 'Definieren',
+			descEn: '20% calorie deficit, high protein to minimize muscle loss',
+			descDe: '20% Kaloriendefizit, hohes Protein gegen Muskelverlust',
 			proteinMode: 'per_kg', proteinTarget: 2.2, fatPercent: 25, carbPercent: 40, calMult: 0.8 },
 		{ emoji: '🍖', en: 'Bulk', de: 'Aufbauen',
+			descEn: '15% calorie surplus for muscle growth with moderate protein',
+			descDe: '15% Kalorienüberschuss für Muskelaufbau, moderates Protein',
 			proteinMode: 'per_kg', proteinTarget: 1.8, fatPercent: 30, carbPercent: 50, calMult: 1.15 },
 		{ emoji: '🥑', en: 'Keto', de: 'Keto',
+			descEn: 'Very low carb, high fat — forces ketosis for fat burning',
+			descDe: 'Sehr wenig Kohlenhydrate, viel Fett — erzwingt Ketose',
 			proteinMode: 'per_kg', proteinTarget: 1.5, fatPercent: 70, carbPercent: 5 },
 		{ emoji: '🏋️', en: 'High Protein', de: 'Proteinreich',
+			descEn: 'Maximum protein for strength athletes and bodybuilders',
+			descDe: 'Maximales Protein für Kraftsportler und Bodybuilder',
 			proteinMode: 'per_kg', proteinTarget: 2.5, fatPercent: 30, carbPercent: 30 },
 		{ emoji: '🥩', en: 'Carnivore', de: 'Karnivor',
+			descEn: 'Animal products only — zero carb, high fat and protein',
+			descDe: 'Nur tierische Produkte — null Kohlenhydrate, viel Fett und Protein',
 			proteinMode: 'per_kg', proteinTarget: 2.5, fatPercent: 65, carbPercent: 0 },
 	];
 
-	function applyPreset(preset) {
+	// Wizard step: 1=presets, 2=calories+activity, 3=macros
+	let goalStep = $state(1);
+	let selectedPresetIdx = $state(-1);
+
+	function applyPreset(preset, idx) {
+		selectedPresetIdx = idx;
 		editProteinMode = preset.proteinMode;
 		editProteinTarget = String(preset.proteinTarget);
 		editFatPercent = String(preset.fatPercent);
@@ -99,6 +117,8 @@
 		if (preset.calMult && hasBmrData) {
 			editCalories = String(Math.round(dailyTdee * preset.calMult));
 		}
+		// Auto-advance to step 2
+		goalStep = 2;
 	}
 
 	function openGoalEditor() {
@@ -108,8 +128,41 @@
 		editProteinTarget = String(goalProteinTarget ?? '');
 		editFatPercent = String(goalFatPercent ?? '');
 		editCarbPercent = String(goalCarbPercent ?? '');
+		selectedPresetIdx = -1;
+		goalStep = 1;
 		showGoalEditor = true;
 	}
+
+	// Macro ring preview (derived from edit fields)
+	const RING_R = 48;
+	const RING_C = 2 * Math.PI * RING_R;
+	const RING_GAP = 4;
+	const editMacroRing = $derived.by(() => {
+		const cal = Number(editCalories) || 0;
+		const fat = Number(editFatPercent) || 0;
+		const carb = Number(editCarbPercent) || 0;
+		const prot = Math.max(0, 100 - fat - carb);
+		const fatDeg = (fat / 100) * 360;
+		const carbDeg = (carb / 100) * 360;
+		const fatLen = (fat / 100) * RING_C;
+		const carbLen = (carb / 100) * RING_C;
+		const protLen = (prot / 100) * RING_C;
+		return { cal, fat, carb, prot, fatDeg, carbDeg, fatLen, carbLen, protLen };
+	});
+
+	// Step summary labels
+	const stepPresetSummary = $derived(
+		selectedPresetIdx >= 0 ? (isEn ? dietPresets[selectedPresetIdx].en : dietPresets[selectedPresetIdx].de) : (isEn ? 'Custom' : 'Benutzerdefiniert')
+	);
+	const stepCalSummary = $derived(
+		editCalories ? `${editCalories} kcal` : '—'
+	);
+	const stepMacroSummary = $derived.by(() => {
+		const f = Number(editFatPercent) || 0;
+		const c = Number(editCarbPercent) || 0;
+		const p = Math.max(0, 100 - f - c);
+		return `P${p}% F${f}% C${c}%`;
+	});
 
 	async function saveGoals() {
 		goalSaving = true;
@@ -248,6 +301,23 @@
 	});
 
 	const dailyTdee = $derived(dailyBmr * (ACTIVITY_MULT[activityLevel] ?? 1.3));
+
+	// TDEE comparison bar (for goal editor)
+	const editTdee = $derived(dailyBmr * (ACTIVITY_MULT[editActivityLevel] ?? 1.3));
+	const editCalNum = $derived(Number(editCalories) || 0);
+	const tdeeBarData = $derived.by(() => {
+		const tdee = Math.round(editTdee);
+		const target = editCalNum;
+		if (!tdee || !target) return null;
+		const diff = target - tdee;
+		const pctOfTdee = Math.round((diff / tdee) * 100);
+		let zone = 'maintenance';
+		if (diff < -50) zone = 'deficit';
+		else if (diff > 50) zone = 'surplus';
+		// Target as percentage of TDEE (TDEE = 100% reference)
+		const targetPct = Math.min((target / tdee) * 100, 150);
+		return { tdee, target, diff, pctOfTdee, zone, targetPct };
+	});
 
 	// TDEE (excl. exercise) prorated to current time of day (for today only)
 	const tdeeSoFar = $derived.by(() => {
@@ -575,6 +645,10 @@
 						+{fmtCal(tdeeSoFar)} TDEE<button class="tdee-info-trigger" onclick={() => showTdeeInfo = !showTdeeInfo} aria-label="TDEE info"><Info size={10} /></button>
 						{#if showTdeeInfo}
 							<div class="tdee-info-tooltip">
+								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? 'TDEE = Total Daily Energy Expenditure — calories your body burns per day at rest + daily activity.' : 'TDEE = Gesamtenergieumsatz — Kalorien, die dein Körper pro Tag in Ruhe + Alltagsaktivität verbrennt.'}</span>
+								{#if latestWeight}
+									<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? `Based on your latest logged weight (${latestWeight} kg).` : `Basierend auf deinem letzten Gewicht (${latestWeight} kg).`}</span>
+								{/if}
 								<span class="cite-line"><strong>BMR:</strong> <a href="https://doi.org/10.1093/ajcn/51.2.241" target="_blank" rel="noopener">Mifflin-St Jeor (1990)</a></span>
 								<span class="cite-line"><strong>NEAT:</strong> <a href="https://doi.org/10.1093/ajcn/75.5.914" target="_blank" rel="noopener">Levine (2002)</a></span>
 								<span class="cite-note">{isEn ? 'Multipliers reduced vs. standard Harris-Benedict factors — logged exercise kcal added separately.' : 'Multiplikatoren reduziert ggü. Harris-Benedict — geloggte Trainings-kcal werden separat addiert.'}</span>
@@ -657,71 +731,215 @@
 		</button>
 	{/if}
 
-	<!-- Goal Editor -->
+	<!-- Goal Editor (Stepped Wizard) -->
 	{#if showGoalEditor}
 		<div class="goal-editor">
 			<h3>{t('daily_goal', lang)}</h3>
 
-			<!-- Diet presets -->
-			<div class="preset-section">
-				<span class="preset-label">{isEn ? 'Presets' : 'Vorlagen'}</span>
-				<div class="preset-chips">
-					{#each dietPresets as preset}
-						<button class="preset-chip" type="button" onclick={() => applyPreset(preset)}>
-							<span class="preset-emoji">{preset.emoji}</span>
-							<span>{isEn ? preset.en : preset.de}</span>
-						</button>
-					{/each}
-				</div>
-			</div>
-
-			<div class="goal-field">
-				<label for="goal-calories">{t('calorie_target', lang)}</label>
-				<div class="calorie-input-row">
-					<input id="goal-calories" type="number" bind:value={editCalories} min="500" max="10000" />
-					{#if hasBmrData}
-						<button class="bmr-calc-btn" type="button" onclick={() => editCalories = String(Math.round(dailyTdee))}>
-							TDEE ({Math.round(dailyTdee)})
-						</button>
-					{/if}
-				</div>
-			</div>
-			<div class="goal-field">
-				<label for="goal-activity">{isEn ? 'Activity Level (excl. exercise)' : 'Aktivitätslevel (ohne Training)'}</label>
-				<select id="goal-activity" bind:value={editActivityLevel}>
-					<option value="sedentary">{isEn ? 'Sedentary — desk job' : 'Sitzend — Bürojob'} (×1.2)</option>
-					<option value="light">{isEn ? 'Lightly active — some walking' : 'Leicht aktiv — etwas Gehen'} (×1.3)</option>
-					<option value="moderate">{isEn ? 'Moderately active — on feet' : 'Mäßig aktiv — auf den Beinen'} (×1.4)</option>
-					<option value="very_active">{isEn ? 'Very active — physical job' : 'Sehr aktiv — körperliche Arbeit'} (×1.5)</option>
-				</select>
-			</div>
-			<div class="goal-field">
-				<label for="goal-protein-mode">{t('protein_goal', lang)}</label>
-				<div class="protein-mode">
-					<select id="goal-protein-mode" bind:value={editProteinMode}>
-						<option value="fixed">{t('protein_fixed', lang)}</option>
-						<option value="per_kg">{t('protein_per_kg', lang)}</option>
-					</select>
-					<input id="goal-protein-target" type="number" bind:value={editProteinTarget} min="0" step="0.1"
-						placeholder={editProteinMode === 'per_kg' ? 'g/kg' : 'g'} />
-				</div>
-			</div>
-			<div class="goal-row">
-				<div class="goal-field">
-					<label for="goal-fat">{t('fat_percent', lang)}</label>
-					<input id="goal-fat" type="number" bind:value={editFatPercent} min="0" max="100" />
-				</div>
-				<div class="goal-field">
-					<label for="goal-carbs">{t('carb_percent', lang)}</label>
-					<input id="goal-carbs" type="number" bind:value={editCarbPercent} min="0" max="100" />
-				</div>
-			</div>
-			<div class="goal-actions">
-				<button class="btn-secondary" onclick={() => showGoalEditor = false}>{t('cancel', lang)}</button>
-				<button class="btn-primary" onclick={saveGoals} disabled={goalSaving}>
-					{goalSaving ? t('saving', lang) : t('save', lang)}
+			<!-- Step indicators -->
+			<div class="wizard-steps">
+				<button class="wizard-step" class:active={goalStep === 1} class:done={goalStep > 1} onclick={() => goalStep = 1}>
+					<span class="ws-num">{goalStep > 1 ? '' : '1'}{#if goalStep > 1}<Check size={12} />{/if}</span>
+					<span class="ws-label">{isEn ? 'Plan' : 'Plan'}</span>
+				</button>
+				<div class="ws-line" class:done={goalStep > 1}></div>
+				<button class="wizard-step" class:active={goalStep === 2} class:done={goalStep > 2} onclick={() => goalStep = 2}>
+					<span class="ws-num">{goalStep > 2 ? '' : '2'}{#if goalStep > 2}<Check size={12} />{/if}</span>
+					<span class="ws-label">{isEn ? 'Calories' : 'Kalorien'}</span>
+				</button>
+				<div class="ws-line" class:done={goalStep > 2}></div>
+				<button class="wizard-step" class:active={goalStep === 3} onclick={() => goalStep = 3}>
+					<span class="ws-num">3</span>
+					<span class="ws-label">{isEn ? 'Macros' : 'Makros'}</span>
 				</button>
 			</div>
+
+			<!-- Step 1: Diet Presets -->
+			{#if goalStep === 1}
+				<div class="preset-section">
+					<div class="preset-grid">
+						{#each dietPresets as preset, i}
+							<button
+								class="preset-card"
+								class:selected={selectedPresetIdx === i}
+								type="button"
+								onclick={() => applyPreset(preset, i)}
+							>
+								<span class="preset-card-emoji">{preset.emoji}</span>
+								<div class="preset-card-text">
+									<span class="preset-card-name">{isEn ? preset.en : preset.de}</span>
+									<span class="preset-card-desc">{isEn ? preset.descEn : preset.descDe}</span>
+								</div>
+							</button>
+						{/each}
+					</div>
+					<button class="wizard-skip" type="button" onclick={() => goalStep = 2}>
+						{isEn ? 'Skip — set manually' : 'Überspringen — manuell einstellen'} →
+					</button>
+				</div>
+
+			<!-- Step 2: Calories & Activity -->
+			{:else if goalStep === 2}
+				<div class="step-calories">
+					{#if selectedPresetIdx >= 0}
+						<button class="step-pill" type="button" onclick={() => goalStep = 1}>
+							{dietPresets[selectedPresetIdx].emoji} {stepPresetSummary}
+						</button>
+					{/if}
+
+					{#if !hasBmrData}
+						<div class="tdee-warning">
+							<AlertTriangle size={16} />
+							<div class="tdee-warning-text">
+								<strong>{isEn ? 'TDEE unavailable' : 'TDEE nicht verfügbar'}</strong>
+								<span>{isEn
+									? 'Your TDEE (Total Daily Energy Expenditure) is the calories you burn per day. Set weight, height, and birth year under'
+									: 'Dein TDEE (Gesamtenergieumsatz) sind die Kalorien, die du pro Tag verbrauchst. Gewicht, Größe und Geburtsjahr einstellen unter'}
+									<a href="/fitness/{s.measure}">{t('measure_title', lang)}</a>
+								</span>
+							</div>
+						</div>
+					{/if}
+
+					<div class="goal-field">
+						<label for="goal-calories">{t('calorie_target', lang)}</label>
+						<div class="calorie-input-row">
+							<input id="goal-calories" type="number" bind:value={editCalories} min="500" max="10000" />
+							{#if hasBmrData}
+								<button class="bmr-calc-btn" type="button" onclick={() => editCalories = String(Math.round(editTdee))}>
+									TDEE ({Math.round(editTdee)})
+								</button>
+							{/if}
+						</div>
+						{#if hasBmrData && latestWeight}
+							<span class="tdee-basis">{isEn ? `TDEE based on latest weight: ${latestWeight} kg` : `TDEE basierend auf letztem Gewicht: ${latestWeight} kg`}</span>
+						{/if}
+					</div>
+
+					<!-- TDEE Comparison Bar -->
+					{#if hasBmrData && tdeeBarData}
+						<div class="tdee-compare">
+							<div class="tdee-compare-bar-wrap">
+								<!-- TDEE = full width reference -->
+								<div class="tdee-compare-ref"></div>
+								<!-- Target overlaid -->
+								<div class="tdee-compare-target"
+									class:deficit={tdeeBarData.zone === 'deficit'}
+									class:surplus={tdeeBarData.zone === 'surplus'}
+									class:maintenance={tdeeBarData.zone === 'maintenance'}
+									style="width: {tdeeBarData.targetPct}%"
+								></div>
+							</div>
+							<div class="tdee-compare-labels">
+								<span class="tdee-compare-label">{isEn ? 'Target' : 'Ziel'}: <strong>{tdeeBarData.target}</strong> kcal</span>
+								<span class="tdee-compare-label">TDEE: <strong>{tdeeBarData.tdee}</strong> kcal</span>
+							</div>
+							<span class="tdee-compare-diff"
+								class:deficit={tdeeBarData.zone === 'deficit'}
+								class:surplus={tdeeBarData.zone === 'surplus'}
+								class:maintenance={tdeeBarData.zone === 'maintenance'}>
+								{tdeeBarData.zone === 'deficit' ? (isEn ? 'Deficit' : 'Defizit') : tdeeBarData.zone === 'surplus' ? (isEn ? 'Surplus' : 'Überschuss') : (isEn ? 'Maintenance' : 'Erhaltung')}:
+								{tdeeBarData.diff > 0 ? '+' : ''}{tdeeBarData.diff} kcal ({tdeeBarData.pctOfTdee > 0 ? '+' : ''}{tdeeBarData.pctOfTdee}%)
+							</span>
+						</div>
+					{/if}
+
+					<div class="goal-field">
+						<label for="goal-activity">{isEn ? 'Activity Level (excl. exercise)' : 'Aktivitätslevel (ohne Training)'}</label>
+						<select id="goal-activity" bind:value={editActivityLevel}>
+							<option value="sedentary">{isEn ? 'Sedentary — desk job' : 'Sitzend — Bürojob'} (×1.2)</option>
+							<option value="light">{isEn ? 'Lightly active — some walking' : 'Leicht aktiv — etwas Gehen'} (×1.3)</option>
+							<option value="moderate">{isEn ? 'Moderately active — on feet' : 'Mäßig aktiv — auf den Beinen'} (×1.4)</option>
+							<option value="very_active">{isEn ? 'Very active — physical job' : 'Sehr aktiv — körperliche Arbeit'} (×1.5)</option>
+						</select>
+					</div>
+
+					<div class="wizard-nav">
+						<button class="btn-secondary" type="button" onclick={() => goalStep = 1}>← {isEn ? 'Back' : 'Zurück'}</button>
+						<button class="btn-primary" type="button" onclick={() => goalStep = 3}>{isEn ? 'Next' : 'Weiter'} →</button>
+					</div>
+				</div>
+
+			<!-- Step 3: Macros -->
+			{:else if goalStep === 3}
+				<div class="step-macros">
+					<!-- Summary pills for previous steps -->
+					<div class="step-pills">
+						<button class="step-pill" type="button" onclick={() => goalStep = 1}>
+							{#if selectedPresetIdx >= 0}{dietPresets[selectedPresetIdx].emoji}{/if} {stepPresetSummary}
+						</button>
+						<button class="step-pill" type="button" onclick={() => goalStep = 2}>{stepCalSummary}</button>
+					</div>
+
+					<!-- Macro donut ring -->
+					{#if editCalNum > 0}
+						<div class="macro-ring-wrap">
+							<svg class="macro-ring" width="120" height="120" viewBox="0 0 120 120">
+								<!-- Fat -->
+								<circle cx="60" cy="60" r={RING_R}
+									fill="none" stroke="var(--nord12)" stroke-width="10"
+									stroke-dasharray="{Math.max(0, editMacroRing.fatLen - RING_GAP)} {RING_C - Math.max(0, editMacroRing.fatLen - RING_GAP)}"
+									stroke-linecap="round"
+									transform="rotate(-90 60 60)"
+									opacity={editMacroRing.fat > 0 ? 1 : 0} />
+								<!-- Carbs -->
+								<circle cx="60" cy="60" r={RING_R}
+									fill="none" stroke="var(--nord9)" stroke-width="10"
+									stroke-dasharray="{Math.max(0, editMacroRing.carbLen - RING_GAP)} {RING_C - Math.max(0, editMacroRing.carbLen - RING_GAP)}"
+									stroke-linecap="round"
+									transform="rotate({-90 + editMacroRing.fatDeg} 60 60)"
+									opacity={editMacroRing.carb > 0 ? 1 : 0} />
+								<!-- Protein -->
+								<circle cx="60" cy="60" r={RING_R}
+									fill="none" stroke="var(--nord14)" stroke-width="10"
+									stroke-dasharray="{Math.max(0, editMacroRing.protLen - RING_GAP)} {RING_C - Math.max(0, editMacroRing.protLen - RING_GAP)}"
+									stroke-linecap="round"
+									transform="rotate({-90 + editMacroRing.fatDeg + editMacroRing.carbDeg} 60 60)"
+									opacity={editMacroRing.prot > 0 ? 1 : 0} />
+								<text x="60" y="55" text-anchor="middle" class="ring-cal-main">{editCalNum}</text>
+								<text x="60" y="70" text-anchor="middle" class="ring-cal-sub">kcal</text>
+							</svg>
+							<div class="macro-ring-legend">
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord14)"></span> {t('protein', lang)} {editMacroRing.prot}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord12)"></span> {t('fat', lang)} {editMacroRing.fat}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord9)"></span> {t('carbs', lang)} {editMacroRing.carb}%</span>
+							</div>
+						</div>
+					{/if}
+
+					<div class="goal-field">
+						<label for="goal-protein-mode">{t('protein_goal', lang)}</label>
+						<div class="protein-mode">
+							<select id="goal-protein-mode" bind:value={editProteinMode}>
+								<option value="fixed">{t('protein_fixed', lang)}</option>
+								<option value="per_kg">{t('protein_per_kg', lang)}</option>
+							</select>
+							<input id="goal-protein-target" type="number" bind:value={editProteinTarget} min="0" step="0.1"
+								placeholder={editProteinMode === 'per_kg' ? 'g/kg' : 'g'} />
+						</div>
+					</div>
+					<div class="goal-row">
+						<div class="goal-field">
+							<label for="goal-fat">{t('fat_percent', lang)}</label>
+							<input id="goal-fat" type="number" bind:value={editFatPercent} min="0" max="100" />
+						</div>
+						<div class="goal-field">
+							<label for="goal-carbs">{t('carb_percent', lang)}</label>
+							<input id="goal-carbs" type="number" bind:value={editCarbPercent} min="0" max="100" />
+						</div>
+					</div>
+
+					<div class="wizard-nav">
+						<button class="btn-secondary" type="button" onclick={() => goalStep = 2}>← {isEn ? 'Back' : 'Zurück'}</button>
+						<div class="goal-actions-final">
+							<button class="btn-secondary" onclick={() => showGoalEditor = false}>{t('cancel', lang)}</button>
+							<button class="btn-primary" onclick={saveGoals} disabled={goalSaving}>
+								{goalSaving ? t('saving', lang) : t('save', lang)}
+							</button>
+						</div>
+					</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 
@@ -1242,51 +1460,299 @@
 		border-radius: 12px;
 		padding: 1.25rem;
 		box-shadow: var(--shadow-sm);
-
-	}
-	.preset-section {
-		margin-bottom: 1rem;
-	}
-	.preset-label {
-		display: block;
-		font-size: 0.72rem;
-		font-weight: 600;
-		letter-spacing: 0.03em;
-		text-transform: uppercase;
-		color: var(--color-text-secondary);
-		margin-bottom: 0.4rem;
-	}
-	.preset-chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.35rem;
-	}
-	.preset-chip {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 0.3rem 0.55rem;
-		background: var(--color-bg-tertiary);
-		border: 1px solid var(--color-border);
-		border-radius: 20px;
-		color: var(--color-text-primary);
-		font-size: 0.7rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: border-color 0.15s, background 0.15s;
-	}
-	.preset-chip:hover {
-		border-color: var(--nord10);
-		background: color-mix(in srgb, var(--nord10) 10%, var(--color-bg-tertiary));
-	}
-	.preset-emoji {
-		font-size: 0.8rem;
 	}
 	.goal-editor h3 {
-		margin: 0 0 1rem;
+		margin: 0 0 0.75rem;
 		font-size: 0.95rem;
 		font-weight: 700;
 	}
+
+	/* Wizard steps indicator */
+	.wizard-steps {
+		display: flex;
+		align-items: center;
+		gap: 0;
+		margin-bottom: 1.25rem;
+	}
+	.wizard-step {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		flex-shrink: 0;
+	}
+	.ws-num {
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.7rem;
+		font-weight: 700;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		border: 2px solid var(--color-border);
+		transition: all 0.2s;
+	}
+	.wizard-step.active .ws-num {
+		background: var(--nord10);
+		color: white;
+		border-color: var(--nord10);
+	}
+	.wizard-step.done .ws-num {
+		background: var(--nord14);
+		color: white;
+		border-color: var(--nord14);
+	}
+	.ws-label {
+		font-size: 0.6rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--color-text-tertiary);
+	}
+	.wizard-step.active .ws-label {
+		color: var(--nord10);
+	}
+	.ws-line {
+		flex: 1;
+		height: 2px;
+		background: var(--color-border);
+		margin: 0 0.3rem;
+		margin-bottom: 1rem;
+		transition: background 0.2s;
+	}
+	.ws-line.done {
+		background: var(--nord14);
+	}
+
+	/* Preset cards (Step 1) */
+	.preset-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.preset-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.preset-card {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		padding: 0.65rem 0.75rem;
+		background: var(--color-bg-tertiary);
+		border: 1.5px solid var(--color-border);
+		border-radius: 10px;
+		cursor: pointer;
+		text-align: left;
+		transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+	}
+	.preset-card:hover {
+		border-color: var(--nord10);
+		background: color-mix(in srgb, var(--nord10) 6%, var(--color-bg-tertiary));
+	}
+	.preset-card.selected {
+		border-color: var(--nord10);
+		background: color-mix(in srgb, var(--nord10) 10%, var(--color-bg-tertiary));
+		box-shadow: 0 0 0 1px var(--nord10);
+	}
+	.preset-card-emoji {
+		font-size: 1.3rem;
+		flex-shrink: 0;
+		width: 2rem;
+		text-align: center;
+	}
+	.preset-card-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		min-width: 0;
+	}
+	.preset-card-name {
+		font-size: 0.82rem;
+		font-weight: 650;
+		color: var(--color-text-primary);
+	}
+	.preset-card-desc {
+		font-size: 0.68rem;
+		color: var(--color-text-tertiary);
+		line-height: 1.3;
+	}
+	.wizard-skip {
+		background: none;
+		border: none;
+		color: var(--color-text-tertiary);
+		font-size: 0.72rem;
+		cursor: pointer;
+		padding: 0.3rem 0;
+		text-align: center;
+		transition: color 0.15s;
+	}
+	.wizard-skip:hover {
+		color: var(--color-text-secondary);
+	}
+
+	/* Step summary pills */
+	.step-pills {
+		display: flex;
+		gap: 0.35rem;
+		margin-bottom: 0.75rem;
+		flex-wrap: wrap;
+	}
+	.step-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.6rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: 20px;
+		font-size: 0.7rem;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition: border-color 0.15s;
+	}
+	.step-pill:hover {
+		border-color: var(--nord10);
+		color: var(--nord10);
+	}
+
+	/* TDEE warning */
+	.tdee-warning {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 0.6rem 0.75rem;
+		background: color-mix(in srgb, var(--nord13) 10%, var(--color-bg-tertiary));
+		border: 1px solid color-mix(in srgb, var(--nord13) 30%, var(--color-border));
+		border-radius: 8px;
+		margin-bottom: 0.75rem;
+		color: var(--nord13);
+	}
+	.tdee-warning :global(svg) {
+		flex-shrink: 0;
+		margin-top: 0.1rem;
+	}
+	.tdee-warning-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		font-size: 0.75rem;
+	}
+	.tdee-warning-text strong {
+		font-size: 0.78rem;
+	}
+	.tdee-warning-text span {
+		color: var(--color-text-secondary);
+	}
+	.tdee-warning-text a {
+		color: var(--nord10);
+		text-decoration: underline;
+	}
+
+	/* TDEE comparison */
+	.tdee-compare {
+		margin-bottom: 0.75rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+	.tdee-compare-bar-wrap {
+		position: relative;
+		height: 10px;
+		background: var(--color-bg-tertiary);
+		border-radius: 5px;
+		overflow: hidden;
+	}
+	.tdee-compare-ref {
+		position: absolute;
+		inset: 0;
+		background: var(--color-text-tertiary);
+		opacity: 0.18;
+		border-radius: 5px;
+	}
+	.tdee-compare-target {
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100%;
+		border-radius: 5px;
+		transition: width 0.3s;
+	}
+	.tdee-compare-target.deficit { background: var(--nord9); }
+	.tdee-compare-target.surplus { background: var(--nord12); }
+	.tdee-compare-target.maintenance { background: var(--nord14); }
+	.tdee-compare-labels {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.65rem;
+		color: var(--color-text-tertiary);
+	}
+	.tdee-compare-label strong {
+		color: var(--color-text-secondary);
+	}
+	.tdee-compare-diff {
+		font-size: 0.68rem;
+		font-weight: 600;
+		text-align: center;
+	}
+	.tdee-compare-diff.deficit { color: var(--nord9); }
+	.tdee-compare-diff.surplus { color: var(--nord12); }
+	.tdee-compare-diff.maintenance { color: var(--nord14); }
+
+	/* Macro donut ring */
+	.macro-ring-wrap {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-bottom: 0.75rem;
+		padding: 0.5rem 0;
+	}
+	.macro-ring {
+		flex-shrink: 0;
+	}
+	.ring-cal-main {
+		font-size: 1.1rem;
+		font-weight: 700;
+		fill: var(--color-text-primary);
+	}
+	.ring-cal-sub {
+		font-size: 0.55rem;
+		font-weight: 500;
+		fill: var(--color-text-tertiary);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+	.macro-ring-legend {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+	.mrl-item {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		font-size: 0.72rem;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+	}
+	.mrl-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	/* Goal form fields */
 	.goal-field {
 		margin-bottom: 0.75rem;
 	}
@@ -1312,6 +1778,12 @@
 	.bmr-calc-btn:hover {
 		border-color: var(--nord10);
 		color: var(--nord10);
+	}
+	.tdee-basis {
+		display: block;
+		font-size: 0.62rem;
+		color: var(--color-text-tertiary);
+		margin-top: 0.25rem;
 	}
 	.goal-field label {
 		display: block;
@@ -1356,11 +1828,15 @@
 	.goal-row .goal-field {
 		flex: 1;
 	}
-	.goal-actions {
+	.wizard-nav {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 0.75rem;
+	}
+	.goal-actions-final {
 		display: flex;
 		gap: 0.5rem;
-		justify-content: flex-end;
-		margin-top: 0.75rem;
 	}
 
 	/* ── Meal Sections ── */
