@@ -4,7 +4,7 @@
   import { de } from 'date-fns/locale';
   import { Plus, Check, Pencil, Trash2, Tag, Users, RotateCcw, Calendar,
     Sparkles, Wind, Bath, UtensilsCrossed, CookingPot, WashingMachine,
-    Flower2, Droplets, Leaf, ShoppingCart, Shirt, Brush } from 'lucide-svelte';
+    Flower2, Droplets, Leaf, ShoppingCart, Shirt, Brush } from '@lucide/svelte';
   import { fly, scale } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import TaskForm from '$lib/components/tasks/TaskForm.svelte';

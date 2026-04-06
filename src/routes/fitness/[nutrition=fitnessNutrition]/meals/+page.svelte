@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { untrack } from 'svelte';
-	import { ChevronLeft, Plus, Trash2, Pencil, UtensilsCrossed, X } from 'lucide-svelte';
+	import { ChevronLeft, Plus, Trash2, Pencil, UtensilsCrossed, X } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';

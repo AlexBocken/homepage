@@ -64,7 +64,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const updated = await AngelusStreak.findOneAndUpdate(
       { username: session.user.nickname },
       updateFields,
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     ).lean() as any;
 
     return json({

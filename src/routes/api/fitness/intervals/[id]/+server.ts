@@ -60,7 +60,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     const template = await IntervalTemplate.findOneAndUpdate(
       { _id: params.id, createdBy: session.user.nickname },
       { name, steps },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!template) {

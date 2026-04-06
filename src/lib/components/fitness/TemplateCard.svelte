@@ -1,6 +1,6 @@
 <script>
 	import { getExerciseById } from '$lib/data/exercises';
-	import { EllipsisVertical, MapPin } from 'lucide-svelte';
+	import { EllipsisVertical, MapPin } from '@lucide/svelte';
 	import { page } from '$app/stores';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 

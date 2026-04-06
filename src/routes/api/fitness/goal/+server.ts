@@ -56,7 +56,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 	const goal = await FitnessGoal.findOneAndUpdate(
 		{ username: user.nickname },
 		update,
-		{ upsert: true, new: true }
+		{ upsert: true, returnDocument: 'after' }
 	).lean() as any;
 
 	const streak = await computeStreak(user.nickname, weeklyWorkouts);

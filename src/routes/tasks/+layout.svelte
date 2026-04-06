@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
-  import { ClipboardList, Trophy } from 'lucide-svelte';
+  import { ClipboardList, Trophy } from '@lucide/svelte';
 
   let { data, children } = $props();
   let user = $derived(data.session?.user);

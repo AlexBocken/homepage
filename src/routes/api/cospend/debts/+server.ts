@@ -3,7 +3,6 @@ import { PaymentSplit } from '$models/PaymentSplit';
 import type { IPayment } from '$models/Payment';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
-import cache from '$lib/server/cache';
 
 type PopulatedPayment = IPayment & { _id: import('mongoose').Types.ObjectId };
 
@@ -30,14 +29,6 @@ export const GET: RequestHandler = async ({ locals }) => {
   await dbConnect();
 
   try {
-    // Try cache first
-    const cacheKey = `cospend:debts:${currentUser}`;
-    const cached = await cache.get(cacheKey);
-
-    if (cached) {
-      return json(JSON.parse(cached));
-    }
-
     // Get all splits for the current user
     const userSplits = await PaymentSplit.find({ username: currentUser })
       .populate('paymentId')
@@ -46,7 +37,7 @@ export const GET: RequestHandler = async ({ locals }) => {
     // Get all other users who have splits with payments involving the current user
     const paymentIds = userSplits.map(split => (split.paymentId as unknown as PopulatedPayment)._id);
     const allRelatedSplits = await PaymentSplit.find({
-      paymentId: { $in: paymentIds },
+      paymentId: { $in: paymentIds } as any,
       username: { $ne: currentUser }
     })
       .populate('paymentId')
@@ -115,15 +106,10 @@ export const GET: RequestHandler = async ({ locals }) => {
       totalIOwe: whoIOwe.reduce((sum, debt) => sum + debt.netAmount, 0)
     };
 
-    // Cache for 15 minutes (as suggested in plan for debt breakdown)
-    await cache.set(cacheKey, JSON.stringify(result), 900);
-
     return json(result);
 
   } catch (e) {
     console.error('Error calculating debt breakdown:', e);
     throw error(500, 'Failed to calculate debt breakdown');
-  } finally {
-    // Connection will be reused
   }
 };

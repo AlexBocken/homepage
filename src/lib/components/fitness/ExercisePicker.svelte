@@ -1,6 +1,6 @@
 <script>
 	import { getFilterOptions, searchExercises, translateTerm } from '$lib/data/exercises';
-	import { Search, X } from 'lucide-svelte';
+	import { Search, X } from '@lucide/svelte';
 	import { page } from '$app/stores';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 

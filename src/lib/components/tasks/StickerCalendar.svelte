@@ -1,5 +1,5 @@
 <script>
-  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import { ChevronLeft, ChevronRight } from '@lucide/svelte';
   import { getStickerById } from '$lib/utils/stickers';
   import {
     startOfMonth, endOfMonth, startOfWeek, endOfWeek,

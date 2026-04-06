@@ -53,7 +53,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     await UserFavorites.findOneAndUpdate(
       { username: session.user.nickname },
       { $addToSet: { favorites: recipe._id } },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     
     

@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';

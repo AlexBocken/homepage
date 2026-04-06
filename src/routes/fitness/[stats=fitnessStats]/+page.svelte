@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
-	import { Dumbbell, Route, Flame, Weight } from 'lucide-svelte';
+	import { Dumbbell, Route, Flame, Weight } from '@lucide/svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';

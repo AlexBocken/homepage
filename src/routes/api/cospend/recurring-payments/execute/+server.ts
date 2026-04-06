@@ -6,7 +6,6 @@ import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate } from '$lib/utils/recurring';
 import { convertToCHF } from '$lib/utils/currency';
-import { invalidateCospendCaches } from '$lib/server/cache';
 
 export const POST: RequestHandler = async ({ locals }) => {
   const auth = await locals.auth();
@@ -15,10 +14,10 @@ export const POST: RequestHandler = async ({ locals }) => {
   }
 
   await dbConnect();
-  
+
   try {
     const now = new Date();
-    
+
     // Find all active recurring payments that are due
     const duePayments = await RecurringPayment.find({
       isActive: true,
@@ -42,8 +41,8 @@ export const POST: RequestHandler = async ({ locals }) => {
         if (recurringPayment.currency !== 'CHF') {
           try {
             const conversion = await convertToCHF(
-              recurringPayment.amount, 
-              recurringPayment.currency, 
+              recurringPayment.amount,
+              recurringPayment.currency,
               now.toISOString()
             );
             finalAmount = conversion.convertedAmount;
@@ -74,7 +73,7 @@ export const POST: RequestHandler = async ({ locals }) => {
         const convertedSplits = recurringPayment.splits.map((split) => {
           let convertedAmount = split.amount || 0;
           let convertedPersonalAmount = split.personalAmount;
-          
+
           // Convert amounts if we have a foreign currency and exchange rate
           if (recurringPayment.currency !== 'CHF' && exchangeRate && split.amount) {
             convertedAmount = split.amount * exchangeRate;
@@ -82,7 +81,7 @@ export const POST: RequestHandler = async ({ locals }) => {
               convertedPersonalAmount = split.personalAmount * exchangeRate;
             }
           }
-          
+
           return {
             paymentId: payment._id,
             username: split.username,
@@ -94,14 +93,10 @@ export const POST: RequestHandler = async ({ locals }) => {
 
         // Create payment splits
         const splitPromises = convertedSplits.map((split) => {
-          return PaymentSplit.create(split);
+          return PaymentSplit.create(split as any);
         });
 
         await Promise.all(splitPromises);
-
-        // Invalidate caches for all affected users
-        const affectedUsernames = recurringPayment.splits.map((split) => split.username);
-        await invalidateCospendCaches(affectedUsernames, payment._id.toString());
 
         // Calculate next execution date
         const nextExecutionDate = calculateNextExecutionDate(recurringPayment, now);
@@ -133,7 +128,7 @@ export const POST: RequestHandler = async ({ locals }) => {
       }
     }
 
-    return json({ 
+    return json({
       success: true,
       executed: results.filter(r => r.success).length,
       failed: results.filter(r => !r.success).length,
@@ -143,7 +138,5 @@ export const POST: RequestHandler = async ({ locals }) => {
   } catch (e) {
     console.error('Error executing recurring payments:', e);
     throw error(500, 'Failed to execute recurring payments');
-  } finally {
-    // Connection will be reused
   }
 };

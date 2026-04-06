@@ -1,5 +1,5 @@
 <script>
-	import { Check, X } from 'lucide-svelte';
+	import { Check, X } from '@lucide/svelte';
 	import { METRIC_LABELS } from '$lib/data/exercises';
 	import RestTimer from './RestTimer.svelte';
 	import { page } from '$app/stores';

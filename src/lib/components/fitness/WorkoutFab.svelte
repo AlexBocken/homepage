@@ -1,6 +1,6 @@
 <script>
 import { goto } from '$app/navigation';
-import { Play, Pause } from 'lucide-svelte';
+import { Play, Pause } from '@lucide/svelte';
 import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
 import { page } from '$app/stores';
 import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
