@@ -1,9 +1,10 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch, url }) => {
+	const lang = url.pathname.includes('/uebungen') ? 'de' : 'en';
 	const [exerciseRes, historyRes, statsRes] = await Promise.all([
-		fetch(`/api/fitness/exercises/${params.id}`),
+		fetch(`/api/fitness/exercises/${params.id}?lang=${lang}`),
 		fetch(`/api/fitness/exercises/${params.id}/history?limit=20`),
 		fetch(`/api/fitness/exercises/${params.id}/stats`)
 	]);
@@ -12,8 +13,11 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 		error(404, 'Exercise not found');
 	}
 
+	const exerciseData = await exerciseRes.json();
+
 	return {
-		exercise: await exerciseRes.json(),
+		exercise: exerciseData.exercise,
+		similar: exerciseData.similar ?? [],
 		history: await historyRes.json(),
 		stats: await statsRes.json()
 	};
