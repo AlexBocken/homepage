@@ -162,11 +162,32 @@ export function createWorkout() {
 		}
 	}
 
+	function _playRestDoneSound() {
+		if (typeof window === 'undefined') return;
+		try {
+			const ctx = new AudioContext();
+			// Double beep — sine wave for a clean tone
+			for (let rep = 0; rep < 2; rep++) {
+				const offset = rep * 0.25;
+				const osc = ctx.createOscillator();
+				const gain = ctx.createGain();
+				osc.type = 'sine';
+				osc.frequency.value = 880; // A5
+				gain.gain.setValueAtTime(0.3, ctx.currentTime + offset);
+				gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.3);
+				osc.connect(gain).connect(ctx.destination);
+				osc.start(ctx.currentTime + offset);
+				osc.stop(ctx.currentTime + offset + 0.3);
+			}
+		} catch {}
+	}
+
 	function _computeRestSeconds() {
 		if (!_restActive || !_restStartedAt) return;
 		const elapsed = Math.floor((Date.now() - _restStartedAt) / 1000);
 		_restSeconds = Math.max(0, _restTotal - elapsed);
 		if (_restSeconds <= 0) {
+			_playRestDoneSound();
 			_stopRestTimer();
 			_persist();
 		}
