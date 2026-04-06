@@ -52,5 +52,6 @@ const PaymentSplitSchema = new mongoose.Schema(
 );
 
 PaymentSplitSchema.index({ paymentId: 1, username: 1 }, { unique: true });
+PaymentSplitSchema.index({ username: 1 });
 
 export const PaymentSplit = mongoose.model<IPaymentSplit>("PaymentSplit", PaymentSplitSchema);
