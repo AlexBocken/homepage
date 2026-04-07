@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { getShoppingSync } from '$lib/js/shoppingSync.svelte';
   import { SHOPPING_CATEGORIES } from '$lib/data/shoppingCategoryItems';
-  import { Plus, ListX } from '@lucide/svelte';
+  import { Plus, ListX, Apple, Beef, Milk, Croissant, Wheat, FlameKindling, GlassWater, Candy, Snowflake, SprayCan, Sparkles, Package } from '@lucide/svelte';
   import { flip } from 'svelte/animate';
   import { slide } from 'svelte/transition';
   import { SvelteSet } from 'svelte/reactivity';
@@ -11,13 +11,59 @@
   let user = $derived(data.session?.user?.nickname || '');
   const sync = getShoppingSync();
 
+  /** @type {Record<string, { icon: typeof Plus, color: string }>} */
+  const categoryMeta = {
+    'Obst & Gemüse':          { icon: Apple, color: 'var(--nord14)' },
+    'Fleisch & Fisch':        { icon: Beef, color: 'var(--nord11)' },
+    'Milchprodukte':          { icon: Milk, color: 'var(--nord9)' },
+    'Brot & Backwaren':       { icon: Croissant, color: 'var(--nord12)' },
+    'Pasta, Reis & Getreide': { icon: Wheat, color: 'var(--nord13)' },
+    'Gewürze & Saucen':       { icon: FlameKindling, color: 'var(--nord11)' },
+    'Getränke':               { icon: GlassWater, color: 'var(--nord10)' },
+    'Süßes & Snacks':         { icon: Candy, color: 'var(--nord15)' },
+    'Tiefkühl':               { icon: Snowflake, color: 'var(--nord9)' },
+    'Haushalt':               { icon: SprayCan, color: 'var(--nord8)' },
+    'Hygiene & Körperpflege': { icon: Sparkles, color: 'var(--nord15)' },
+    'Sonstiges':              { icon: Package, color: 'var(--nord4)' },
+  };
+
   let newItemName = $state('');
   /** @type {HTMLInputElement | null} */
   let inputEl = $state(null);
   let categorizing = new SvelteSet();
 
-  /** @type {Record<string, boolean>} */
-  let collapsed = $state({});
+
+  /**
+   * Parse quantity + unit from item name.
+   * "10L Milch" → { qty: "10L", name: "Milch" }
+   * "3x Milch" → { qty: "3x", name: "Milch" }
+   * "3 x Milch" → { qty: "3x", name: "Milch" }
+   * "Milch, 3x" → { qty: "3x", name: "Milch" }
+   * "Milch 3x" → { qty: "3x", name: "Milch" }
+   * "500g Hackfleisch" → { qty: "500g", name: "Hackfleisch" }
+   * "Milch" → { qty: null, name: "Milch" }
+   * @param {string} raw
+   * @returns {{ qty: string | null, name: string }}
+   */
+  function parseQuantity(raw) {
+    // Trailing: "Milch, 3x" or "Milch 3x" or "Milch, 500g"
+    const trailingMatch = raw.match(/^(.+?)[,\s]+(\d+\s*[xX×]|\d+(?:\.\d+)?\s*(?:L|l|kg|g|ml|mL|st|St|Stk|stk|Pkg|pkg))\s*$/);
+    if (trailingMatch) {
+      return { qty: trailingMatch[2].replace(/\s+/g, ''), name: trailingMatch[1].trim() };
+    }
+
+    // Leading: "3x Milch" or "3 x Milch" or "10L Milch" or "500g Hackfleisch"
+    const leadingMatch = raw.match(/^(\d+(?:\.\d+)?\s*[xX×]|\d+(?:\.\d+)?\s*(?:L|l|kg|g|ml|mL|st|St|Stk|stk|Pkg|pkg)?)\s+(.+)$/);
+    if (leadingMatch) {
+      const qtyRaw = leadingMatch[1].replace(/\s+/g, '');
+      // Only treat bare numbers as quantity if followed by text (avoid stripping "7up")
+      if (/[xX×LlgkmsSPp]/.test(qtyRaw) || /^\d+$/.test(qtyRaw)) {
+        return { qty: qtyRaw, name: leadingMatch[2].trim() };
+      }
+    }
+
+    return { qty: null, name: raw };
+  }
 
   /** Get icon URL for an item */
   function iconUrl(item) {
@@ -76,11 +122,12 @@
     categorizing.add(itemId);
 
     try {
-      console.log(`[shopping] Categorizing "${name}" (item ${itemId})...`);
+      const cleanName = parseQuantity(name).name;
+      console.log(`[shopping] Categorizing "${cleanName}" (item ${itemId})...`);
       const res = await fetch('/api/cospend/list/categorize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name: cleanName })
       });
       console.log(`[shopping] Categorize response: ${res.status}`);
       if (res.ok) {
@@ -102,10 +149,6 @@
     if (e.key === 'Enter') { e.preventDefault(); addItem(); }
   }
 
-  /** @param {string} cat */
-  function toggleCollapse(cat) {
-    collapsed = { ...collapsed, [cat]: !collapsed[cat] };
-  }
 </script>
 
 <div class="shopping-page">
@@ -135,17 +178,22 @@
   {:else}
     <div class="item-list">
       {#each groupedItems as group (group.category)}
-        <section class="category-section" transition:slide={{ duration: 200 }}>
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div class="category-header" onclick={() => toggleCollapse(group.category)}>
-            <h2>{group.category}</h2>
+        {@const meta = categoryMeta[group.category] || categoryMeta['Sonstiges']}
+        {@const CategoryIcon = meta.icon}
+        <section class="category-section" style="--cat-color: {meta.color}" transition:slide={{ duration: 200 }}>
+          <div class="category-header">
+            <div class="category-title">
+              <div class="category-icon">
+                <CategoryIcon size={14} />
+              </div>
+              <h2>{group.category}</h2>
+            </div>
             <span class="category-count">{group.items.filter(i => !i.checked).length}</span>
           </div>
 
-          {#if !collapsed[group.category]}
-            <div class="card-grid" transition:slide={{ duration: 150 }}>
+            <div class="card-grid">
               {#each group.items as item (item.id)}
+                {@const parsed = parseQuantity(item.name)}
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <div
@@ -154,18 +202,20 @@
                   animate:flip={{ duration: 200 }}
                   onclick={() => sync.toggleItem(item.id, user)}
                 >
+                  {#if parsed.qty}
+                    <span class="qty-badge">{parsed.qty}</span>
+                  {/if}
                   <div class="card-icon">
                     {#if iconUrl(item)}
                       <img src={iconUrl(item)} alt="" />
                     {:else}
-                      <span class="card-letter">{item.name.charAt(0)}</span>
+                      <span class="card-letter">{parsed.name.charAt(0)}</span>
                     {/if}
                   </div>
-                  <span class="card-name">{item.name}</span>
+                  <span class="card-name">{parsed.name}</span>
                 </div>
               {/each}
             </div>
-          {/if}
         </section>
       {/each}
     </div>
@@ -266,8 +316,22 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.4rem 0.2rem;
-    cursor: pointer;
     user-select: none;
+  }
+  .category-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .category-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 6px;
+    color: var(--cat-color);
+    background: color-mix(in srgb, var(--cat-color) 12%, transparent);
   }
   .category-header h2 {
     font-size: 0.78rem;
@@ -275,13 +339,13 @@
     margin: 0;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: var(--color-text-secondary);
+    color: var(--cat-color);
   }
   .category-count {
     font-size: 0.68rem;
     font-weight: 700;
-    color: var(--color-text-secondary);
-    background: var(--color-bg-tertiary);
+    color: var(--cat-color);
+    background: color-mix(in srgb, var(--cat-color) 10%, var(--color-bg-tertiary));
     padding: 0.1rem 0.45rem;
     border-radius: 100px;
   }
@@ -295,6 +359,7 @@
   }
 
   .item-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -360,6 +425,20 @@
   .item-card.checked .card-name {
     text-decoration: line-through;
     color: var(--color-text-secondary);
+  }
+
+  .qty-badge {
+    position: absolute;
+    top: 0.2rem;
+    left: 0.2rem;
+    background: var(--cat-color);
+    color: var(--nord0);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.35rem;
+    border-radius: 0.5rem;
+    line-height: 1.2;
+    white-space: nowrap;
   }
 
   /* Clear checked */
