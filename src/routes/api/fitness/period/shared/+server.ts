@@ -11,7 +11,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 	await dbConnect();
 
 	// Find all share docs where current user is in the sharedWith list
-	const shares = await PeriodShare.find({ sharedWith: user.nickname }).lean();
+	// sharedWith stores lowercase usernames, so normalize for lookup
+	const shares = await PeriodShare.find({ sharedWith: user.nickname.toLowerCase() }).lean();
 	const owners = shares.map(s => s.owner);
 
 	if (owners.length === 0) return json({ shared: [] });

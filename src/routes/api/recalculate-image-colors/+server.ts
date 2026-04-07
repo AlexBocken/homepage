@@ -5,12 +5,10 @@ import { IMAGE_DIR } from '$env/static/private';
 import { extractDominantColor } from '$utils/imageProcessing';
 import { join } from 'path';
 import { access, constants } from 'fs/promises';
+import { requireGroup } from '$lib/server/middleware/auth';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	const session = await locals.auth();
-	if (!session?.user) {
-		throw error(401, 'Unauthorized');
-	}
+	await requireGroup(locals, 'rezepte_users');
 
 	try {
 		const body = await request.json();

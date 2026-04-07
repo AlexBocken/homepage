@@ -4,33 +4,40 @@ import { IMAGE_DIR } from '$env/static/private'
 import { rename } from 'node:fs';
 import { error } from '@sveltejs/kit';
 import { extractBasename, getHashedFilename } from '$utils/imageHash';
+import { requireGroup } from '$lib/server/middleware/auth';
+
+/** Ensure a resolved path stays within the allowed base directory */
+function assertWithinDir(base: string, resolved: string) {
+	if (!resolved.startsWith(path.resolve(base) + path.sep)) {
+		throw error(400, 'Invalid filename');
+	}
+}
 
 export const POST =  (async ({ request, locals})  => {
+	await requireGroup(locals, 'rezepte_users');
 	const data = await request.json();
-	const auth = await locals.auth();
-	if(!auth ) throw error(401, "need to be logged in")
 
-	// data.old_filename should be the full filename with hash (e.g., "maccaroni.a1b2c3d4.webp")
-	// data.new_name should be the new basename (e.g., "pasta")
-	// Extract hash from old filename and apply to new basename
 	const oldFilename = data.old_filename || (data.old_name + ".webp");
 	const hashMatch = oldFilename.match(/\.([a-f0-9]{8})\.webp$/);
 
 	let newFilename: string;
 	if (hashMatch) {
-		// Old filename has hash, preserve it
 		const hash = hashMatch[1];
 		newFilename = getHashedFilename(data.new_name, hash);
 	} else {
-		// Old filename has no hash (legacy), new one won't either
 		newFilename = data.new_name + ".webp";
 	}
 
+	const recipeImgDir = path.join(IMAGE_DIR, "rezepte");
+
 	[ "full", "thumb"].forEach((folder) => {
-		const old_path = path.join(IMAGE_DIR, "rezepte", folder, oldFilename)
-		rename(old_path, path.join(IMAGE_DIR, "rezepte", folder, newFilename), (e) => {
-		console.log(e)
-		if(e) throw error(500, "could not mv: " + old_path)
+		const oldPath = path.resolve(recipeImgDir, folder, oldFilename);
+		const newPath = path.resolve(recipeImgDir, folder, newFilename);
+		assertWithinDir(recipeImgDir, oldPath);
+		assertWithinDir(recipeImgDir, newPath);
+
+		rename(oldPath, newPath, (e) => {
+		if(e) console.warn(`could not mv: ${oldPath}`, e)
 		})
 	});
 

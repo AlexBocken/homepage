@@ -3,28 +3,35 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { IMAGE_DIR } from '$env/static/private'
 import { unlink } from 'node:fs';
 import { error } from '@sveltejs/kit';
+import { requireGroup } from '$lib/server/middleware/auth';
+
+/** Ensure a resolved path stays within the allowed base directory */
+function assertWithinDir(base: string, resolved: string) {
+	if (!resolved.startsWith(path.resolve(base) + path.sep)) {
+		throw error(400, 'Invalid filename');
+	}
+}
 
 export const POST =  (async ({ request, locals})  => {
+	await requireGroup(locals, 'rezepte_users');
 	const data = await request.json();
-	const auth = await locals.auth()
-    	if(!auth) throw error(401, "You need to be logged in")
 
-	// data.filename should be the full filename with hash (e.g., "maccaroni.a1b2c3d4.webp")
-	// For backward compatibility, also support data.name (will construct filename)
 	const hashedFilename = data.filename || (data.name + ".webp");
-
-	// Also extract basename to delete unhashed version
 	const basename = data.name || hashedFilename.replace(/\.[a-f0-9]{8}\.webp$/, '').replace(/\.webp$/, '');
 	const unhashedFilename = basename + '.webp';
 
+	const recipeImgDir = path.join(IMAGE_DIR, "rezepte");
+
 	[ "full", "thumb"].forEach((folder) => {
-		// Delete hashed version
-		unlink(path.join(IMAGE_DIR, "rezepte", folder, hashedFilename), (e) => {
+		const hashedPath = path.resolve(recipeImgDir, folder, hashedFilename);
+		const unhashedPath = path.resolve(recipeImgDir, folder, unhashedFilename);
+		assertWithinDir(recipeImgDir, hashedPath);
+		assertWithinDir(recipeImgDir, unhashedPath);
+
+		unlink(hashedPath, (e) => {
 			if(e) console.warn(`Could not delete hashed: ${folder}/${hashedFilename}`, e);
 		});
-
-		// Delete unhashed version (for graceful degradation)
-		unlink(path.join(IMAGE_DIR, "rezepte", folder, unhashedFilename), (e) => {
+		unlink(unhashedPath, (e) => {
 			if(e) console.warn(`Could not delete unhashed: ${folder}/${unhashedFilename}`, e);
 		});
 	})

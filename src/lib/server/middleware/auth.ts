@@ -46,6 +46,32 @@ export async function requireAuth(
 }
 
 /**
+ * Require authentication AND membership in a specific group.
+ * Throws 401 if not authenticated, 403 if not in the group.
+ */
+export async function requireGroup(
+	locals: RequestEvent['locals'],
+	group: string
+): Promise<AuthenticatedUser> {
+	const session = await locals.auth();
+
+	if (!session || !session.user?.nickname) {
+		throw json({ error: 'Unauthorized' }, { status: 401 });
+	}
+
+	if (!session.user.groups?.includes(group)) {
+		throw json({ error: 'Forbidden' }, { status: 403 });
+	}
+
+	return {
+		nickname: session.user.nickname,
+		name: session.user.name ?? undefined,
+		email: session.user.email ?? undefined,
+		image: session.user.image ?? undefined
+	};
+}
+
+/**
  * Optional authentication - returns user if authenticated, null otherwise.
  * Useful for routes that have different behavior for authenticated users.
  *

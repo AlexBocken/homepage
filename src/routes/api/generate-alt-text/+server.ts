@@ -3,13 +3,10 @@ import type { RequestHandler } from './$types';
 import { generateAltText, type RecipeContext } from '$lib/server/ai/alttext.js';
 import { checkOllamaHealth } from '$lib/server/ai/ollama.js';
 import { Recipe } from '$models/Recipe.js';
+import { requireGroup } from '$lib/server/middleware/auth';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	// Check authentication
-	const session = await locals.auth();
-	if (!session?.user) {
-		throw error(401, 'Unauthorized');
-	}
+	await requireGroup(locals, 'rezepte_users');
 
 	try {
 		const body = await request.json();

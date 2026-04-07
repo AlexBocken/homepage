@@ -4,13 +4,11 @@ import { UserFavorites } from '$models/UserFavorites';
 import { dbConnect } from '$utils/db';
 import type {RecipeModelType} from '$types/types';
 import { error } from '@sveltejs/kit';
-// header: use for bearer token for now
-// recipe json in body
-export const POST: RequestHandler = async ({request, locals}) => {
-  	let message = await request.json()
+import { requireGroup } from '$lib/server/middleware/auth';
 
-	const auth = await locals.auth();
-  	if(!auth) throw error(401, "Need to be logged in")
+export const POST: RequestHandler = async ({request, locals}) => {
+	await requireGroup(locals, 'rezepte_users');
+  	let message = await request.json()
 
   	const short_name = message.old_short_name
 	await dbConnect();

@@ -1,19 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import { translationService } from '$lib/../utils/translation';
 import type { RequestHandler } from './$types';
+import { requireGroup } from '$lib/server/middleware/auth';
 
-/**
- * POST /api/rezepte/translate
- * Translates recipe data from German to English using DeepL API
- *
- * Request body:
- * - recipe: Recipe object with German content
- * - fields?: Optional array of specific fields to translate (for partial updates)
- *
- * Response:
- * - translatedRecipe: Translated recipe data
- */
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
+	await requireGroup(locals, 'rezepte_users');
 	try {
 		const body = await request.json();
 		const { recipe, fields, oldRecipe, existingTranslation } = body;

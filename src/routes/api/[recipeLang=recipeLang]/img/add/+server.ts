@@ -6,29 +6,10 @@ import sharp from 'sharp';
 import { generateImageHashFromBuffer, getHashedFilename } from '$utils/imageHash';
 import { validateImageFile } from '$utils/imageValidation';
 import { extractDominantColor } from '$utils/imageProcessing';
+import { requireGroup } from '$lib/server/middleware/auth';
 
-/**
- * Secure image upload endpoint for recipe images
- *
- * SECURITY:
- * - Requires authentication
- * - 5-layer validation (size, magic bytes, MIME, extension, Sharp)
- * - Uses FormData instead of base64 JSON (more efficient, more secure)
- * - Generates full/thumb versions + dominant color extraction
- * - Content hash for cache busting
- *
- * @route POST /api/rezepte/img/add
- */
 export const POST = (async ({ request, locals }) => {
-	console.log('[API:ImgAdd] Image upload request received');
-
-	// Check authentication
-	const auth = await locals.auth();
-	if (!auth) {
-		console.error('[API:ImgAdd] Authentication required');
-		throw error(401, 'Authentication required to upload images');
-	}
-	console.log('[API:ImgAdd] Authentication passed');
+	await requireGroup(locals, 'rezepte_users');
 
 	try {
 		const formData = await request.formData();
