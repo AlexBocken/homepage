@@ -444,7 +444,7 @@
 			const res = await fetch(`/api/fitness/period/${ongoing._id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ endDate: new Date().toISOString() })
+				body: JSON.stringify({ endDate: new Date(Date.now() - 86400000).toISOString() })
 			});
 			if (res.ok) {
 				const { entry } = await res.json();
@@ -605,6 +605,10 @@
 							<span class="status-side-label">{t('ovulation', lang)}</span>
 							<span class="status-side-relative">{relativeDate(nextCycle.fertileEnd)}</span>
 							<span class="status-side-date">{formatDate(nextCycle.fertileEnd)}</span>
+						</div>
+						<div class="status-side-item fertile-accent">
+							<span class="status-side-label">{t('fertile', lang)}</span>
+							<span class="status-side-date">{formatDate(nextCycle.fertileStart)} — {formatDate(nextCycle.fertileEnd)}</span>
 						</div>
 					</div>
 				{/if}
