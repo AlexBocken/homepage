@@ -158,7 +158,7 @@
       <h2>🎉 All Settled!</h2>
       <p>No outstanding debts to settle. Everyone is even!</p>
       <div class="actions">
-        <a href="/cospend" class="btn btn-primary">Back to Dashboard</a>
+        <a href="/cospend/dash" class="btn btn-primary">Back to Dashboard</a>
       </div>
     </div>
   {:else}
@@ -342,7 +342,7 @@
               <button type="submit" class="btn btn-settlement">
                 Record Settlement
               </button>
-              <a href="/cospend" class="btn btn-secondary">
+              <a href="/cospend/dash" class="btn btn-secondary">
                 Cancel
               </a>
             </div>

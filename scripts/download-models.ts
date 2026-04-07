@@ -7,6 +7,7 @@ import { pipeline } from '@huggingface/transformers';
 const MODELS = [
 	'Xenova/all-MiniLM-L6-v2',
 	'Xenova/multilingual-e5-small',
+	'Xenova/multilingual-e5-base',
 ];
 
 for (const name of MODELS) {
