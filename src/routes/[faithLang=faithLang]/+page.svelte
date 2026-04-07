@@ -52,6 +52,22 @@
 		letter-spacing: 0.05em;
 		z-index: 1;
 	}
+	.regina-link {
+		position: relative;
+	}
+	.easter-badge {
+		position: absolute;
+		top: 0.75em;
+		right: 0.75em;
+		background: white;
+		color: black;
+		font-size: 0.8rem;
+		font-weight: 700;
+		padding: 0.2em 0.5em;
+		border-radius: 4px;
+		line-height: 1;
+		z-index: 1;
+	}
 
 </style>
 
@@ -94,7 +110,8 @@
 		<h3>{labels.rosary}</h3>
 	</a>
 	{#if eastertide}
-		<a href="/{data.faithLang}/{prayersPath}/regina-caeli">
+		<a href="/{data.faithLang}/{prayersPath}/regina-caeli" class="regina-link">
+			<span class="easter-badge">{isLatin ? 'Tempore' : isEnglish ? 'In season' : 'Zur Zeit'}</span>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -274 532 548"><path d="M256-168c27 0 48-21 48-48s-21-48-48-48-48 21-48 48 21 48 48 48zM6-63l122 199-56 70c-5 7-8 14-8 23 0 19 16 35 36 35h312c20 0 36-16 36-35 0-9-3-16-8-23l-56-70L507-63c3-6 5-13 5-20 0-20-16-37-37-37-7 0-14 2-20 6l-17 12c-13 8-30 6-40-4l-35-35c-7-7-17-11-27-11s-20 4-27 11l-30 30c-13 13-33 13-46 0l-30-30c-7-7-17-11-27-11s-20 4-27 11l-34 34c-11 11-28 13-41 4l-17-11c-6-4-13-6-20-6-20 0-37 17-37 37 0 7 2 14 6 20z"/></svg>
 			<h3>Regína Cæli</h3>
 		</a>
