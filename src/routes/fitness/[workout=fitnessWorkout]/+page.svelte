@@ -374,7 +374,15 @@
 							{/if}
 						</span>
 					{:else}
-						<span class="next-exercises">{nextTemplate.exercises.length} {nextTemplate.exercises.length !== 1 ? t('exercises_word', lang) : t('exercise', lang)}</span>
+						{@const firstEx = nextTemplate.exercises[0]}
+						{@const firstExData = firstEx ? getExerciseById(firstEx.exerciseId, lang) : null}
+						{@const firstExWeight = firstEx?.sets.find((/** @type {any} */ s) => s.weight != null)?.weight}
+						<span class="next-exercises">
+							{nextTemplate.exercises.length} {nextTemplate.exercises.length !== 1 ? t('exercises_word', lang) : t('exercise', lang)}
+							{#if firstExData}
+								 · {lang === 'en' ? 'starts with' : 'beginnt mit'} {firstExData.localName} {#if firstExWeight != null}({firstExWeight} kg){/if}
+							{/if}
+						</span>
 					{/if}
 				</div>
 				<div class="next-go">
@@ -469,9 +477,12 @@
 					<ul class="template-exercises">
 						{#each selectedTemplate.exercises as ex (ex.exerciseId)}
 							{@const exercise = getExerciseById(ex.exerciseId, lang)}
+							{@const firstWeight = ex.sets.find((/** @type {any} */ s) => s.weight != null)?.weight}
 							<li>
 								<span class="tex-name">{exercise?.localName ?? ex.exerciseId}</span>
-								<span class="tex-sets">{ex.sets.length} {ex.sets.length !== 1 ? t('sets', lang) : t('set', lang)}</span>
+								<span class="tex-meta">
+									{ex.sets.length} {ex.sets.length !== 1 ? t('sets', lang) : t('set', lang)}{#if firstWeight != null} · {firstWeight} kg{/if}
+								</span>
 							</li>
 						{/each}
 					</ul>
@@ -937,7 +948,7 @@
 	.tex-name {
 		font-weight: 600;
 	}
-	.tex-sets {
+	.tex-meta {
 		color: var(--color-text-secondary);
 	}
 	.modal-meta {
