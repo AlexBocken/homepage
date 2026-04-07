@@ -2,10 +2,11 @@ import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { dbConnect } from '$utils/db';
 import { NutritionOverwrite } from '$models/NutritionOverwrite';
 import { invalidateOverwriteCache } from '$lib/server/nutritionMatcher';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 /** GET: List all global nutrition overwrites */
 export const GET: RequestHandler = async ({ locals }) => {
-	await locals.auth();
+	await requireAuth(locals);
 	await dbConnect();
 	const overwrites = await NutritionOverwrite.find({}).sort({ ingredientNameDe: 1 }).lean();
 	return json(overwrites);
@@ -13,7 +14,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 /** POST: Create a new global nutrition overwrite */
 export const POST: RequestHandler = async ({ request, locals }) => {
-	await locals.auth();
+	await requireAuth(locals);
 	await dbConnect();
 
 	const body = await request.json();
@@ -43,7 +44,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 /** DELETE: Remove a global nutrition overwrite by ingredientNameDe */
 export const DELETE: RequestHandler = async ({ request, locals }) => {
-	await locals.auth();
+	await requireAuth(locals);
 	await dbConnect();
 
 	const body = await request.json();
