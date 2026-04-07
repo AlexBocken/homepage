@@ -6,8 +6,12 @@
   import { flip } from 'svelte/animate';
   import { Trash2 } from '@lucide/svelte';
   import StickerCalendar from '$lib/components/tasks/StickerCalendar.svelte';
+  import StickerPopup from '$lib/components/tasks/StickerPopup.svelte';
 
   let { data } = $props();
+
+  /** @type {import('$lib/utils/stickers').Sticker | null} */
+  let selectedSticker = $state(null);
 
   let stats = $state(data.stats || { userStats: [], userStickers: [], recentCompletions: [] });
   let currentUser = $derived(data.session?.user?.nickname || '');
@@ -99,12 +103,15 @@
     {#each sortedStickers as sticker (sticker.id)}
       {@const count = displayedStickers.get(sticker.id) || 0}
       {@const owned = count > 0}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
       <div
         class="sticker-card"
         class:owned
         class:locked={!owned}
         animate:flip={{ duration: 300 }}
         style="--rarity-color: {getRarityColor(sticker.rarity)}"
+        onclick={() => owned && (selectedSticker = sticker)}
       >
         <div class="sticker-visual">
           {#if owned}
@@ -154,6 +161,10 @@
         {/each}
       </div>
     </section>
+  {/if}
+
+  {#if selectedSticker}
+    <StickerPopup sticker={selectedSticker} title={selectedSticker.name} buttonText="Schließen" bounce={false} onclose={() => selectedSticker = null} />
   {/if}
 
   <div class="danger-zone">
@@ -229,6 +240,7 @@
   .sticker-card.owned {
     border-color: var(--rarity-color);
     border-width: 1.5px;
+    cursor: pointer;
   }
   .sticker-card.owned:hover {
     transform: translateY(-2px);
@@ -249,13 +261,15 @@
     margin-bottom: 0.4rem;
   }
   .owned .sticker-visual {
-    background: radial-gradient(circle, color-mix(in srgb, var(--rarity-color) 20%, transparent) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--rarity-color) 0%, transparent 70%);
     border-radius: 50%;
+    opacity: 0.95;
   }
   .sticker-img {
     width: 52px;
     height: 52px;
     object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
   }
   .sticker-unknown {
     font-size: 1.6rem;

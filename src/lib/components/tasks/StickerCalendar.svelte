@@ -155,7 +155,6 @@
     border-radius: 8px;
     border: 1px solid transparent;
     transition: background 120ms;
-    overflow: hidden;
   }
   .cal-day.outside {
     opacity: 0.25;
