@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ url, fetch, params, locals }) => {
         const [searchResponse, allRecipesResponse, userFavorites] = await Promise.all([
             fetch(apiUrl.toString()),
             fetch(`${apiBase}/items/all_brief`),
-            getUserFavorites(fetch, locals)
+            getUserFavorites(fetch, locals, params.recipeLang)
         ]);
 
         const results = await searchResponse.json();

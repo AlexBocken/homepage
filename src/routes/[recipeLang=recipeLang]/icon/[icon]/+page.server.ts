@@ -6,8 +6,8 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
 
     const [item_season, icons, userFavorites, session] = await Promise.all([
         fetch(`${apiBase}/items/icon/` + params.icon).then(r => r.json()),
-        fetch(`/api/rezepte/items/icon`).then(r => r.json()),
-        getUserFavorites(fetch, locals),
+        fetch(`${apiBase}/items/icon`).then(r => r.json()),
+        getUserFavorites(fetch, locals, params.recipeLang),
         locals.auth()
     ]);
 

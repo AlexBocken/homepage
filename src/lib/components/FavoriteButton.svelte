@@ -1,8 +1,11 @@
 <script lang="ts">
   import { browser } from '$app/environment';
   import { enhance } from '$app/forms';
+  import { page } from '$app/stores';
 
   let { recipeId, isFavorite = $bindable(false), isLoggedIn = false } = $props<{ recipeId: string, isFavorite?: boolean, isLoggedIn?: boolean }>();
+
+  const recipeLang = $derived($page.url.pathname.split('/')[1] || 'rezepte');
 
   let isLoading = $state(false);
 
@@ -17,7 +20,7 @@
       
       try {
         const method = isFavorite ? 'DELETE' : 'POST';
-        const response = await fetch('/api/rezepte/favorites', {
+        const response = await fetch(`/api/${recipeLang}/favorites`, {
           method,
           headers: {
             'Content-Type': 'application/json',

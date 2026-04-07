@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
 
     // Get user favorites and session
     const [userFavorites, session] = await Promise.all([
-        getUserFavorites(fetch, locals),
+        getUserFavorites(fetch, locals, params.recipeLang),
         locals.auth()
     ]);
 
