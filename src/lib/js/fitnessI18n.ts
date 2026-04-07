@@ -303,7 +303,7 @@ const translations: Translations = {
 	current_period: { en: 'Current Period', de: 'Aktuelle Periode' },
 	no_period_data: { en: 'No period data yet. Log your first period to start tracking.', de: 'Noch keine Periodendaten. Erfasse deine erste Periode.' },
 	start_period: { en: 'Start Period', de: 'Periode starten' },
-	end_period: { en: 'End Period', de: 'Periode beenden' },
+	end_period: { en: 'Period Ended', de: 'Periode vorbei' },
 	period_day: { en: 'Day', de: 'Tag' },
 	predicted_end: { en: 'Predicted end', de: 'Voraussichtliches Ende' },
 	next_period: { en: 'Next period', de: 'Nächste Periode' },
