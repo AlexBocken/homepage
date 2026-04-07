@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
     const [res, allRes, userFavorites, session] = await Promise.all([
         fetch(`${apiBase}/items/category/${params.category}`),
         fetch(`${apiBase}/items/all_brief`),
-        getUserFavorites(fetch, locals),
+        getUserFavorites(fetch, locals, params.recipeLang),
         locals.auth()
     ]);
 

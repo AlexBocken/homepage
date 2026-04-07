@@ -3,7 +3,7 @@ import { browser } from '$app/environment';
 import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
 import { getAllIcons, isOfflineDataAvailable } from '$lib/offline/db';
 
-export const load: PageLoad = async ({ fetch }) => {
+export const load: PageLoad = async ({ fetch, params }) => {
     // Check if we should use offline data
     if (browser && isOffline() && canUseOfflineData()) {
         try {
@@ -19,7 +19,7 @@ export const load: PageLoad = async ({ fetch }) => {
 
     // Online mode - fetch from API
     try {
-        const res_icons = await fetch(`/api/rezepte/items/icon`);
+        const res_icons = await fetch(`/api/${params.recipeLang}/items/icon`);
         const icons = await res_icons.json();
         return { icons, isOffline: false };
     } catch (error) {

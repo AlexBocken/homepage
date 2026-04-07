@@ -77,7 +77,7 @@ export const load: PageLoad = async ({ fetch, params, url, data }) => {
     // Check if this recipe is favorited by the user
     let isFavorite = false;
     try {
-        const favRes = await fetch(`/api/rezepte/favorites/check/${params.name}`);
+        const favRes = await fetch(`/api/${params.recipeLang}/favorites/check/${params.name}`);
         if (favRes.ok) {
             const favData = await favRes.json();
             isFavorite = favData.isFavorite;
