@@ -286,7 +286,7 @@
       }
 
       const result = await response.json();
-      await goto('/cospend');
+      await goto('/cospend/dash');
 
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
