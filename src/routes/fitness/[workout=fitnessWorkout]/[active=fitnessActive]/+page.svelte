@@ -2031,7 +2031,7 @@
 	.gps-overlay .vg-panel {
 		background: rgba(46, 52, 64, 0.82);
 		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+
 		border: 1px solid rgba(255,255,255,0.12);
 		border-radius: 10px;
 		padding: 0.6rem;
@@ -2099,7 +2099,6 @@
 		padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 		background: var(--nav-bg, rgba(46, 52, 64, 0.82));
 		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
 		border-top: 1px solid var(--nav-border, rgba(255,255,255,0.08));
 		box-shadow: 0 -4px 24px var(--nav-shadow, rgba(0,0,0,0.25));
 		color: var(--nav-text-active, #fff);
@@ -2132,7 +2131,6 @@
 	.gps-overlay-prestart {
 		background: none !important;
 		backdrop-filter: none !important;
-		-webkit-backdrop-filter: none !important;
 		border-top: none !important;
 		box-shadow: none !important;
 	}
@@ -2174,7 +2172,7 @@
 		padding: 0.65rem 0.5rem;
 		background: rgba(46, 52, 64, 0.82);
 		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+
 		border: 1px solid rgba(255,255,255,0.12);
 		border-radius: 10px;
 		cursor: pointer;
@@ -2210,7 +2208,7 @@
 		padding: 0.55rem 0.75rem;
 		background: rgba(46, 52, 64, 0.82);
 		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+
 		border: 1px solid rgba(255,255,255,0.12);
 		border-radius: 8px;
 		cursor: pointer;
@@ -2323,7 +2321,7 @@
 	.interval-panel {
 		background: rgba(46, 52, 64, 0.82);
 		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+
 		border: 1px solid rgba(255,255,255,0.12);
 		border-radius: 10px;
 		padding: 0.6rem;
@@ -2419,7 +2417,6 @@
 		z-index: 100;
 		background: rgba(46, 52, 64, 0.95);
 		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
 		display: flex;
 		flex-direction: column;
 		overflow-y: auto;

@@ -2,6 +2,15 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+	css: {
+		lightningcss: {
+			targets: {
+				chrome: (80 << 16),
+				firefox: (80 << 16),
+				safari: (14 << 16),
+			}
+		}
+	},
 	server: {
 		allowedHosts: ["bocken.org"]
 	},
