@@ -76,7 +76,7 @@
 
   function closeModal() {
     // Use shallow routing to go back to dashboard without full navigation
-    goto('/cospend', { replaceState: true, noScroll: true, keepFocus: true });
+    goto('/cospend/dash', { replaceState: true, noScroll: true, keepFocus: true });
     onclose?.();
   }
 
