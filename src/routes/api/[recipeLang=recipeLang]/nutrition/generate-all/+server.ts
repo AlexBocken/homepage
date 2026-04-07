@@ -2,9 +2,10 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { generateNutritionMappings } from '$lib/server/nutritionMatcher';
+import { requireGroup } from '$lib/server/middleware/auth';
 
 export const POST: RequestHandler = async ({ locals }) => {
-	await locals.auth();
+	await requireGroup(locals, 'rezepte_users');
 	await dbConnect();
 
 	const recipes = await Recipe.find({}).lean();
