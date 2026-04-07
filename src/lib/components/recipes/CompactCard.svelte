@@ -173,7 +173,7 @@
 		<p class="name">{@html recipe.name}</p>
 		{#if recipe.tags?.length}
 			<div class="tags">
-				{#each recipe.tags as tag (tag)}
+				{#each recipe.tags as tag}
 					<a href="{routePrefix}/tag/{tag}" class="tag">{tag}</a>
 				{/each}
 			</div>
