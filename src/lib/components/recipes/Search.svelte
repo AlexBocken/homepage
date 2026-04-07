@@ -284,7 +284,7 @@
                 const apiBase = `/api/${isEnglish ? 'recipes' : 'rezepte'}`;
                 const [tagsRes, iconsRes] = await Promise.all([
                     fetch(`${apiBase}/items/tag`),
-                    fetch('/api/rezepte/items/icon')
+                    fetch(`${apiBase}/items/icon`)
                 ]);
                 availableTags = await tagsRes.json();
                 availableIcons = await iconsRes.json();

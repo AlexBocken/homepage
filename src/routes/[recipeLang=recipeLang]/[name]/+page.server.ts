@@ -50,7 +50,7 @@ export const actions: Actions = {
         try {
             // Use the existing API endpoint
             const method = isFavorite ? 'DELETE' : 'POST';
-            const response = await fetch('/api/rezepte/favorites', {
+            const response = await fetch(`/api/${url.pathname.split('/')[1]}/favorites`, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',

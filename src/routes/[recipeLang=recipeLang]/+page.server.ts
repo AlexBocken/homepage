@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
     // Fetch all_brief, favorites, and session in parallel
     const [res_all_brief, userFavorites, session] = await Promise.all([
         fetch(`${apiBase}/items/all_brief`).then(r => r.json()),
-        getUserFavorites(fetch, locals),
+        getUserFavorites(fetch, locals, params.recipeLang),
         locals.auth()
     ]);
 
