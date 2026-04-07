@@ -57,7 +57,7 @@ const slots: { key: TimeSlot; icon: typeof Coffee; color: string }[] = [
 
 const labels = $derived({
 	days: isLatin ? 'Dies' : isEnglish ? (displayStreak === 1 && !showFraction ? 'Day' : 'Days') : (displayStreak === 1 && !showFraction ? 'Tag' : 'Tage'),
-	pray: isLatin ? 'Ora' : isEnglish ? 'Pray' : 'Beten',
+	pray: isLatin ? 'Oravi' : isEnglish ? 'Prayed' : 'Gebetet',
 	done: isLatin ? 'Hodie completa' : isEnglish ? 'Done today' : 'Heute fertig',
 	morning: isLatin ? 'Mane' : isEnglish ? 'Morning' : 'Morgens',
 	noon: isLatin ? 'Meridie' : isEnglish ? 'Noon' : 'Mittags',
