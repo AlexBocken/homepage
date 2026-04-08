@@ -198,28 +198,22 @@
 		}
 
 		scanning = true;
-		scanDebug = 'starting…';
+		scanDebug = '';
 
 		try {
-			scanDebug = 'requesting camera…';
 			const stream = await navigator.mediaDevices.getUserMedia({
 				video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
 			});
 			scanStream = stream;
-			const track = stream.getVideoTracks()[0];
-			const settings = track?.getSettings?.() ?? {};
-			scanDebug = `camera: ${settings.width}x${settings.height} ${track?.label ?? '?'}`;
 
 			// Wait for the video element to be mounted
 			await new Promise(r => requestAnimationFrame(r));
-			if (!videoEl) { scanDebug = 'no video element'; stopScan(); return; }
+			if (!videoEl) { stopScan(); return; }
 
 			videoEl.srcObject = stream;
 			await videoEl.play();
-			scanDebug += ` | video: ${videoEl.videoWidth}x${videoEl.videoHeight}`;
 
 			// Use native BarcodeDetector if available, else ponyfill with self-hosted WASM
-			scanDebug += ' | loading detector…';
 			let detector;
 			const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'];
 			try {
@@ -227,7 +221,6 @@
 					const supported = await globalThis.BarcodeDetector.getSupportedFormats();
 					if (supported.includes('ean_13')) {
 						detector = new globalThis.BarcodeDetector({ formats });
-						scanDebug += ' native';
 					}
 				}
 			} catch {
@@ -236,49 +229,42 @@
 			if (!detector) {
 				try {
 					const mod = await import('barcode-detector/ponyfill');
-					mod.prepareZXingModule({
+					await mod.prepareZXingModule({
 						overrides: {
 							locateFile: (path, prefix) => {
 								if (path.endsWith('.wasm')) return '/fitness/zxing_reader.wasm';
 								return prefix + path;
 							},
 						},
+						fireImmediately: true,
 					});
 					detector = new mod.BarcodeDetector({ formats });
-					scanDebug += ' ponyfill';
 				} catch (importErr) {
-					scanDebug = `IMPORT ERROR: ${importErr?.message ?? importErr}`;
+					scanError = isEn ? 'Barcode library failed to load. Try reloading.' : 'Barcode-Bibliothek konnte nicht geladen werden. Seite neu laden.';
 					stopScan();
 					return;
 				}
 			}
-			scanDebug += ' | detector created';
 
-			let scanCount = 0;
 			let lastCode = '';
 			let confirmCount = 0;
-			const CONFIRM_THRESHOLD = 2; // require 2 consecutive identical reads
+			let errorCount = 0;
+			const CONFIRM_THRESHOLD = 2;
 
 			const detectLoop = async () => {
 				while (scanning && videoEl) {
-					scanCount++;
 					try {
-						const vw = videoEl.videoWidth;
-						const vh = videoEl.videoHeight;
-						if (vw === 0 || vh === 0) {
-							scanDebug = `scan #${scanCount} | waiting for video…`;
+						if (videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
 							await new Promise(r => setTimeout(r, 500));
 							continue;
 						}
 
-						// Capture frame off main thread so video stays smooth
 						const bitmap = await createImageBitmap(videoEl);
 						const results = await detector.detect(bitmap);
 						bitmap.close();
 
 						if (results.length > 0) {
 							const code = results[0].rawValue;
-							// Validate: must be digits only, valid EAN/UPC length, valid check digit
 							if (/^\d+$/.test(code) && [8, 12, 13].includes(code.length) && validCheckDigit(code)) {
 								if (code === lastCode) {
 									confirmCount++;
@@ -286,21 +272,21 @@
 									lastCode = code;
 									confirmCount = 1;
 								}
-								scanDebug = `scan #${scanCount} | ${code} (${confirmCount}/${CONFIRM_THRESHOLD})`;
 								if (confirmCount >= CONFIRM_THRESHOLD) {
-									scanDebug = `CONFIRMED: ${code}`;
 									stopScan();
 									await lookupBarcode(code);
 									return;
 								}
-							} else {
-								scanDebug = `scan #${scanCount} | rejected: ${code} (invalid)`;
 							}
-						} else {
-							scanDebug = `scan #${scanCount} | ${vw}x${vh} | none`;
 						}
 					} catch (detectErr) {
-						scanDebug = `scan #${scanCount} ERROR: ${detectErr?.name}: ${detectErr?.message}`;
+						errorCount++;
+						scanDebug = `ERROR: ${detectErr?.name}: ${detectErr?.message}`;
+						if (errorCount >= 5) {
+							scanError = isEn ? 'Barcode detection failed repeatedly. Try reloading.' : 'Barcode-Erkennung wiederholt fehlgeschlagen. Seite neu laden.';
+							stopScan();
+							return;
+						}
 					}
 					await new Promise(r => setTimeout(r, 200));
 				}
