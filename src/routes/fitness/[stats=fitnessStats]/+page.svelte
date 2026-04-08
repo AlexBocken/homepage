@@ -1,4 +1,5 @@
 <script>
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
@@ -35,8 +36,8 @@
 
 	const stats = $derived(data.stats ?? {});
 
-	let goalStreak = $state(data.goal?.streak ?? 0);
-	let goalWeekly = $state(data.goal?.weeklyWorkouts ?? null);
+	let goalStreak = $derived(data.goal?.streak ?? 0);
+	let goalWeekly = $derived(data.goal?.weeklyWorkouts ?? null);
 	let goalEditing = $state(false);
 	let goalInput = $state(4);
 	let goalSaving = $state(false);
@@ -57,9 +58,7 @@
 				body: JSON.stringify({ weeklyWorkouts: goalInput })
 			});
 			if (res.ok) {
-				const d = await res.json();
-				goalWeekly = d.weeklyWorkouts;
-				goalStreak = d.streak;
+				await invalidateAll();
 				goalEditing = false;
 			} else {
 				const err = await res.json().catch(() => null);

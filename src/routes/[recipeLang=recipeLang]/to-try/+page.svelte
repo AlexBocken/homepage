@@ -3,6 +3,7 @@
 
 	let { data } = $props();
 
+	// svelte-ignore state_referenced_locally
 	let items = $state(data.items ?? []);
 
 	const isEnglish = $derived(data.lang === 'en');

@@ -13,8 +13,8 @@
 
   let { data } = $props();
 
-  let tasks = $state(data.tasks || []);
-  let stats = $state(data.stats || { userStats: [], userStickers: [], recentCompletions: [] });
+  let tasks = $derived(data.tasks || []);
+  let stats = $derived(data.stats || { userStats: [], userStickers: [], recentCompletions: [] });
   let currentUser = $derived(data.session?.user?.nickname || '');
   let myStat = $derived(stats.userStats.find((/** @type {any} */ s) => s._id === currentUser));
   let showForm = $state(false);
@@ -130,12 +130,7 @@
   }
 
   async function refreshTasks() {
-    const [tasksRes, statsRes] = await Promise.all([
-      fetch('/api/tasks'),
-      fetch('/api/tasks/stats')
-    ]);
-    if (tasksRes.ok) tasks = (await tasksRes.json()).tasks;
-    if (statsRes.ok) stats = await statsRes.json();
+    await invalidateAll();
   }
 
   async function handleTaskSaved() {

@@ -13,12 +13,16 @@
   let { data } = $props();
 
   // Use server-side data with progressive enhancement
+  // svelte-ignore state_referenced_locally
   let payments = $state(data.payments || []);
   let loading = $state(false); // Start as false since we have server data
   /** @type {string | null} */
   let error = $state(null);
+  // svelte-ignore state_referenced_locally
   let currentPage = $state(Math.floor(data.currentOffset / data.limit));
+  // svelte-ignore state_referenced_locally
   let limit = $state(data.limit || 20);
+  // svelte-ignore state_referenced_locally
   let hasMore = $state(data.hasMore || false);
 
   // Re-sync local state when server data changes (e.g. URL param navigation)

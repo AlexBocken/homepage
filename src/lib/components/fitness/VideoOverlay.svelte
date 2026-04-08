@@ -14,8 +14,8 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div class="video-overlay" onclick={handleBackdrop}>
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<div class="video-overlay" role="presentation" onclick={handleBackdrop}>
 	<button class="close-btn" onclick={onClose} aria-label="Close video">
 		<X size={24} />
 	</button>

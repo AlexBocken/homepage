@@ -18,13 +18,16 @@
 
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
+	// svelte-ignore state_referenced_locally
 	let templates = $state(data.templates?.templates ? [...data.templates.templates] : []);
 	let seeded = $state(false);
 
 	// Schedule state
 	/** @type {string[]} */
+	// svelte-ignore state_referenced_locally
 	let scheduleOrder = $state(data.schedule?.schedule?.templateOrder ?? []);
 	/** @type {string | null} */
+	// svelte-ignore state_referenced_locally
 	let nextTemplateId = $state(data.schedule?.nextTemplateId ?? null);
 	let showScheduleEditor = $state(false);
 	/** @type {string[]} */

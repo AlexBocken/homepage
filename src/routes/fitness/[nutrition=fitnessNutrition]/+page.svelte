@@ -15,6 +15,7 @@
 	let { data } = $props();
 
 	// --- Date navigation ---
+	// svelte-ignore state_referenced_locally
 	let currentDate = $state(data.date);
 	const todayStr = new Date().toISOString().slice(0, 10);
 	const isToday = $derived(currentDate === todayStr);
@@ -37,7 +38,9 @@
 	}
 
 	// --- Entries ---
+	// svelte-ignore state_referenced_locally
 	let entries = $state(data.foodLog?.entries ?? []);
+	// svelte-ignore state_referenced_locally
 	let recipeImages = $state(data.recipeImages ?? {});
 
 	async function loadEntries() {
@@ -53,13 +56,21 @@
 	});
 
 	// --- Goals ---
+	// svelte-ignore state_referenced_locally
 	let goalCalories = $state(data.goal?.dailyCalories ?? null);
+	// svelte-ignore state_referenced_locally
 	let goalProteinMode = $state(data.goal?.proteinMode ?? 'fixed');
+	// svelte-ignore state_referenced_locally
 	let goalProteinTarget = $state(data.goal?.proteinTarget ?? null);
+	// svelte-ignore state_referenced_locally
 	let goalFatPercent = $state(data.goal?.fatPercent ?? null);
+	// svelte-ignore state_referenced_locally
 	let goalCarbPercent = $state(data.goal?.carbPercent ?? null);
+	// svelte-ignore state_referenced_locally
 	let goalSex = $state(data.goal?.sex ?? 'male');
+	// svelte-ignore state_referenced_locally
 	let activityLevel = $state(data.goal?.activityLevel ?? 'light');
+	// svelte-ignore state_referenced_locally
 	let latestWeight = $state(data.latestWeight?.weight?.value ?? null);
 
 	let showGoalEditor = $state(false);
@@ -395,6 +406,7 @@
 	const carbGoalGrams = $derived(goalCalories && goalCarbPercent ? (goalCalories * goalCarbPercent / 100) / 4 : null);
 
 	// --- Burned kcal ---
+	// svelte-ignore state_referenced_locally
 	let exerciseKcal = $state(Number(data.exerciseKcal) || 0);
 
 	// BMR via Mifflin-St Jeor (doi:10.1093/ajcn/51.2.241)
@@ -2417,9 +2429,6 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	.meal-section {
-
-	}
 	.meal-header {
 		display: flex;
 		align-items: center;
@@ -2505,6 +2514,7 @@
 		text-overflow: ellipsis;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		-webkit-box-orient: vertical;
 	}
 	.food-card-link {

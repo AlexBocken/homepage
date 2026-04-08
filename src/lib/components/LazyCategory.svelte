@@ -10,6 +10,7 @@
 		children
 	} = $props();
 
+	// svelte-ignore state_referenced_locally
 	let isVisible = $state(eager); // If eager=true, render immediately
 	/** @type {HTMLDivElement | null} */
 	let containerRef = $state(null);

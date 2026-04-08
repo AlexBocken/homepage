@@ -120,6 +120,7 @@ const flattenedIngredients = $derived.by(() => {
 	const lang = data.lang || 'de';
 	return flattenIngredientReferences(data.ingredients, lang);
 });
+// svelte-ignore state_referenced_locally
 let multiplier = $state(data.multiplier || 1);
 
 const isEnglish = $derived(data.lang === 'en');
@@ -138,10 +139,15 @@ const labels = $derived({
 
 // Cake form scaling
 const hasDefaultForm = $derived(!!data.defaultForm?.shape);
+// svelte-ignore state_referenced_locally
 let userFormShape = $state(data.defaultForm?.shape || 'round');
+// svelte-ignore state_referenced_locally
 let userFormDiameter = $state(data.defaultForm?.diameter || 26);
+// svelte-ignore state_referenced_locally
 let userFormWidth = $state(data.defaultForm?.width || 20);
+// svelte-ignore state_referenced_locally
 let userFormLength = $state(data.defaultForm?.length || 30);
+// svelte-ignore state_referenced_locally
 let userFormInnerDiameter = $state(data.defaultForm?.innerDiameter || 8);
 
 /** @param {string} shape @param {number} diameter @param {number} width @param {number} length @param {number} innerDiameter */
