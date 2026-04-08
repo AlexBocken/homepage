@@ -242,6 +242,12 @@
 		return DRINK_PATTERNS.test(e.name);
 	}
 
+	/** Detect if a custom meal ingredient is a liquid (for hydration auto-logging) */
+	function isLiquidIngredient(ing) {
+		if (ing.source === 'bls' && ing.sourceId?.startsWith('N')) return true;
+		return DRINK_PATTERNS.test(ing.name) || /^(wasser|water|trinkwasser)/i.test(ing.name);
+	}
+
 	let waterGoalMl = $state(2000);
 	let editingGoal = $state(false);
 	let goalInputL = $state(2);
@@ -265,10 +271,12 @@
 	let beverageEntries = $derived(entries.filter(isBeverage));
 	let waterMl = $derived(waterEntries.reduce((s, e) => s + e.amountGrams, 0));
 	let beverageMl = $derived(beverageEntries.reduce((s, e) => s + e.amountGrams, 0));
-	let totalLiquidMl = $derived(waterMl + beverageMl);
+	let mealLiquidMl = $derived(entries.reduce((s, e) => s + (e.liquidMl ?? 0), 0));
+	let totalLiquidMl = $derived(waterMl + beverageMl + mealLiquidMl);
 	let beverageCups = $derived(Math.round(beverageMl / WATER_CUP_ML));
 	let waterCups = $derived(Math.round(waterMl / WATER_CUP_ML));
-	let totalCups = $derived(beverageCups + waterCups);
+	let mealLiquidCups = $derived(Math.round(mealLiquidMl / WATER_CUP_ML));
+	let totalCups = $derived(beverageCups + waterCups + mealLiquidCups);
 	let goalCups = $derived(Math.round(waterGoalMl / WATER_CUP_ML));
 	let displayCups = $derived(Math.max(goalCups, totalCups + 1));
 
@@ -578,6 +586,10 @@
 			const scale = totalGrams > 0 ? 100 / totalGrams : 0;
 			for (const k of nutrientKeys) per100g[k] = totals[k] * scale;
 
+			const liquidMl = meal.ingredients
+				.filter(isLiquidIngredient)
+				.reduce((sum, ing) => sum + ing.amountGrams, 0);
+
 			await fetch('/api/fitness/food-log', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -589,8 +601,10 @@
 					sourceId: meal._id,
 					amountGrams: totalGrams,
 					per100g,
+					...(liquidMl > 0 && { liquidMl }),
 				})
 			});
+
 			await goto(`/fitness/${s.nutrition}?date=${currentDate}`, { replaceState: true, noScroll: true });
 			closeFabModal();
 			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
@@ -631,6 +645,10 @@
 			const scale = totalGrams > 0 ? 100 / totalGrams : 0;
 			for (const k of nutrientKeys) per100g[k] = totals[k] * scale;
 
+			const liquidMl = meal.ingredients
+				.filter(isLiquidIngredient)
+				.reduce((sum, ing) => sum + ing.amountGrams, 0);
+
 			await fetch('/api/fitness/food-log', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -642,8 +660,10 @@
 					sourceId: meal._id,
 					amountGrams: totalGrams,
 					per100g,
+					...(liquidMl > 0 && { liquidMl }),
 				})
 			});
+
 			await goto(`/fitness/${s.nutrition}?date=${currentDate}`, { replaceState: true, noScroll: true });
 			cancelAdd();
 			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
@@ -1191,6 +1211,8 @@
 		<div class="water-cups">
 			{#each Array(displayCups) as _, i}
 				{@const isBev = i < beverageCups}
+				{@const isMealLiquid = !isBev && i < beverageCups + mealLiquidCups}
+				{@const isAuto = isBev || isMealLiquid}
 				{@const isFilled = i < totalCups}
 				{@const showWater = isFilled || drainingCups.has(i)}
 				{@const isNextEmpty = i === totalCups && !drainingCups.has(i)}
@@ -1198,16 +1220,18 @@
 					class="water-cup"
 					class:filled={isFilled}
 					class:beverage={isBev}
+					class:meal-liquid={isMealLiquid}
 					class:filling={fillingCups.has(i)}
 					class:draining={drainingCups.has(i)}
 					class:next-empty={isNextEmpty}
-					disabled={isBev}
+					disabled={isAuto}
 					onclick={() => {
-						if (isBev) return;
-						const waterTarget = i < totalCups ? i - beverageCups : i - beverageCups + 1;
+						if (isAuto) return;
+						const autoOffset = beverageCups + mealLiquidCups;
+						const waterTarget = i < totalCups ? i - autoOffset : i - autoOffset + 1;
 						setWaterCups(Math.max(0, waterTarget));
 					}}
-					title="{isBev ? (isEn ? 'Beverage' : 'Getränk') : (i + 1) * WATER_CUP_ML + ' ml'}"
+					title="{isAuto ? (isEn ? (isBev ? 'Beverage' : 'From meal') : (isBev ? 'Getränk' : 'Aus Mahlzeit')) : (i + 1) * WATER_CUP_ML + ' ml'}"
 				>
 					<svg viewBox="0 0 24 32" class="cup-svg" overflow="hidden">
 						<defs>
@@ -1218,9 +1242,9 @@
 						<path d="M4 4 L6 28 C6 30 8 30 8 30 L16 30 C16 30 18 30 18 28 L20 4 Z" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" stroke-width="1.2" />
 						{#if showWater}
 							<g clip-path="url(#cup-clip-{i})" class="water-body">
-								<path class="water-wave w1" d="M-8 10 Q-2 6 4 10 T16 10 T28 10 T40 10 V34 H-8 Z" fill={isBev ? 'var(--nord15)' : 'var(--nord10)'} opacity="0.85" />
-								<path class="water-wave w2" d="M-4 12 Q2 8 8 12 T20 12 T32 12 V34 H-4 Z" fill={isBev ? 'var(--nord13)' : 'var(--nord9)'} opacity="0.5" />
-								<path class="water-wave w3" d="M0 11 Q6 7 12 11 T24 11 T36 11 V34 H0 Z" fill={isBev ? 'var(--nord15)' : 'var(--nord10)'} opacity="0.35" />
+								<path class="water-wave w1" d="M-8 10 Q-2 6 4 10 T16 10 T28 10 T40 10 V34 H-8 Z" fill={isAuto ? 'var(--nord7)' : 'var(--nord10)'} opacity="0.85" />
+								<path class="water-wave w2" d="M-4 12 Q2 8 8 12 T20 12 T32 12 V34 H-4 Z" fill={isAuto ? 'var(--nord8)' : 'var(--nord9)'} opacity="0.5" />
+								<path class="water-wave w3" d="M0 11 Q6 7 12 11 T24 11 T36 11 V34 H0 Z" fill={isAuto ? 'var(--nord7)' : 'var(--nord10)'} opacity="0.35" />
 							</g>
 						{/if}
 						{#if isNextEmpty}
@@ -1230,12 +1254,18 @@
 				</button>
 			{/each}
 		</div>
-		{#if beverageEntries.length > 0}
+		{#if beverageEntries.length > 0 || mealLiquidMl > 0}
 			<div class="beverage-list">
 				{#each beverageEntries as bev}
 					<div class="beverage-item">
 						<span class="beverage-name">{bev.name}</span>
 						<span class="beverage-ml">{Math.round(bev.amountGrams)} ml</span>
+					</div>
+				{/each}
+				{#each entries.filter(e => (e.liquidMl ?? 0) > 0) as e}
+					<div class="beverage-item">
+						<span class="beverage-name">{e.name}</span>
+						<span class="beverage-ml">{Math.round(e.liquidMl)} ml</span>
 					</div>
 				{/each}
 			</div>
