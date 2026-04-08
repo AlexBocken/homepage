@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater } from '@lucide/svelte';
+	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater, Pencil } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -619,6 +619,33 @@
 		}
 	}
 
+	/** @type {string|null} */
+	let editingEntryId = $state(null);
+	let editingGrams = $state(0);
+
+	function startEditEntry(entry) {
+		editingEntryId = entry._id;
+		editingGrams = entry.amountGrams;
+	}
+
+	async function saveEditEntry() {
+		if (!editingEntryId || editingGrams <= 0) return;
+		try {
+			const res = await fetch(`/api/fitness/food-log/${editingEntryId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ amountGrams: editingGrams }),
+			});
+			if (res.ok) {
+				const updated = await res.json();
+				entries = entries.map(e => e._id === editingEntryId ? updated : e);
+			}
+		} catch {
+			toast.error(isEn ? 'Failed to update' : 'Fehler beim Aktualisieren');
+		}
+		editingEntryId = null;
+	}
+
 	async function deleteEntry(id) {
 		if (!confirm(t('delete_entry_confirm', lang))) return;
 		try {
@@ -1184,12 +1211,30 @@
 						{:else}
 							<span class="food-card-name">{entry.name}</span>
 						{/if}
-							<span class="food-card-detail">{entry.amountGrams}g · {fmtCal(entryCalories(entry))} kcal</span>
+							{#if editingEntryId === entry._id}
+								<form class="food-card-edit-form" onsubmit={e => { e.preventDefault(); saveEditEntry(); }}>
+									<input type="number" class="food-card-edit-input" bind:value={editingGrams} min="1" step="1" />
+									<span class="food-card-edit-unit">g</span>
+								</form>
+							{:else}
+								<span class="food-card-detail">{entry.amountGrams}g · {fmtCal(entryCalories(entry))} kcal</span>
+							{/if}
 							<span class="food-card-macros">{fmt(entryNutrient(entry, 'protein'))}g P · {fmt(entryNutrient(entry, 'fat'))}g F · {fmt(entryNutrient(entry, 'carbs'))}g C</span>
 						</div>
-						<button class="food-card-delete" onclick={() => deleteEntry(entry._id)} aria-label={t('delete_', lang)}>
-							<Trash2 size={14} />
-						</button>
+						<div class="food-card-actions">
+							<button class="food-card-action edit" class:active={editingEntryId === entry._id} onclick={() => {
+								if (editingEntryId === entry._id) { saveEditEntry(); } else { startEditEntry(entry); }
+							}} aria-label="Edit">
+								{#if editingEntryId === entry._id}
+									<Check size={14} />
+								{:else}
+									<Pencil size={14} />
+								{/if}
+							</button>
+							<button class="food-card-action delete" onclick={() => deleteEntry(entry._id)} aria-label={t('delete_', lang)}>
+								<Trash2 size={14} />
+							</button>
+						</div>
 					</div>
 				{/each}
 			</div>
@@ -2358,24 +2403,63 @@
 		color: var(--color-text-secondary);
 		font-variant-numeric: tabular-nums;
 	}
+	.food-card-edit-form {
+		display: flex;
+		align-items: center;
+		gap: 0.2rem;
+	}
+	.food-card-edit-input {
+		width: 55px;
+		padding: 0.1rem 0.3rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: 4px;
+		color: var(--color-text-primary);
+		font-size: 0.75rem;
+		text-align: right;
+	}
+	.food-card-edit-input:focus {
+		outline: none;
+		border-color: var(--nord10);
+	}
+	.food-card-edit-unit {
+		font-size: 0.7rem;
+		color: var(--color-text-secondary);
+	}
 	.food-card-macros {
 		font-size: 0.65rem;
 		color: var(--color-text-tertiary);
 		font-variant-numeric: tabular-nums;
 	}
-	.food-card-delete {
+	.food-card-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		flex-shrink: 0;
+		align-self: flex-start;
+	}
+	.food-card-action {
 		background: none;
 		border: none;
 		color: var(--color-text-tertiary);
 		cursor: pointer;
 		padding: 0.3rem;
 		border-radius: 6px;
-		flex-shrink: 0;
 		transition: color 0.12s, background 0.12s;
 		display: flex;
-		align-self: flex-start;
 	}
-	.food-card-delete:hover {
+	.food-card-action.edit:hover {
+		color: var(--nord10);
+		background: color-mix(in srgb, var(--nord10) 10%, transparent);
+	}
+	.food-card-action.edit.active {
+		color: var(--nord14);
+	}
+	.food-card-action.edit.active:hover {
+		color: var(--nord14);
+		background: color-mix(in srgb, var(--nord14) 10%, transparent);
+	}
+	.food-card-action.delete:hover {
 		color: var(--nord11);
 		background: color-mix(in srgb, var(--nord11) 10%, transparent);
 	}
@@ -2411,17 +2495,21 @@
 			font-size: 0.8rem;
 			white-space: normal;
 		}
-		.food-card-delete {
+		.food-card-actions {
 			position: absolute;
-			top: 0.3rem;
+			bottom: 0.3rem;
 			right: 0.3rem;
+			flex-direction: row;
+			opacity: 0;
+			transition: opacity 0.15s;
+		}
+		.food-card-action {
 			background: color-mix(in srgb, var(--color-surface) 80%, transparent);
 			border-radius: 50%;
 			padding: 0.25rem;
-			opacity: 0;
-			transition: opacity 0.15s, color 0.12s, background 0.12s;
 		}
-		.food-card:hover .food-card-delete {
+		.food-card:hover .food-card-actions,
+		.food-card-actions:has(.active) {
 			opacity: 1;
 		}
 	}
