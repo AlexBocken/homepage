@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { getShoppingSync } from '$lib/js/shoppingSync.svelte';
   import { SHOPPING_CATEGORIES } from '$lib/data/shoppingCategoryItems';
-  import { Plus, ListX, Apple, Beef, Milk, Croissant, Wheat, FlameKindling, GlassWater, Candy, Snowflake, SprayCan, Sparkles, Package, Search } from '@lucide/svelte';
+  import { Plus, ListX, Apple, Beef, Milk, Croissant, Wheat, FlameKindling, GlassWater, Candy, Snowflake, SprayCan, Sparkles, Package, Search, Store } from '@lucide/svelte';
   import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
   import { flip } from 'svelte/animate';
   import { slide } from 'svelte/transition';
@@ -33,6 +33,31 @@
     'Hygiene & Körperpflege': { icon: Sparkles, color: 'var(--nord15)' },
     'Sonstiges':              { icon: Package, color: 'var(--nord4)' },
   };
+
+  /** @type {Record<string, string[]>} */
+  const STORE_PRESETS = {
+    'Coop Max-Bill Platz': [
+      'Haushalt', 'Hygiene & Körperpflege', 'Gewürze & Saucen', 'Süßes & Snacks',
+      'Getränke', 'Pasta, Reis & Getreide', 'Brot & Backwaren', 'Milchprodukte',
+      'Obst & Gemüse', 'Fleisch & Fisch', 'Tiefkühl', 'Sonstiges',
+    ],
+    'Migros Seebach': [
+      'Obst & Gemüse', 'Fleisch & Fisch', 'Milchprodukte', 'Süßes & Snacks',
+      'Getränke', 'Brot & Backwaren', 'Gewürze & Saucen', 'Haushalt',
+      'Hygiene & Körperpflege', 'Tiefkühl', 'Pasta, Reis & Getreide', 'Sonstiges',
+    ],
+  };
+  const STORE_NAMES = Object.keys(STORE_PRESETS);
+
+  let selectedStore = $state(
+    (typeof localStorage !== 'undefined' && localStorage.getItem('shopping-store')) || STORE_NAMES[0]
+  );
+  let categoryOrder = $derived(STORE_PRESETS[selectedStore] || STORE_PRESETS[STORE_NAMES[0]]);
+
+  function setStore(name) {
+    selectedStore = name;
+    localStorage.setItem('shopping-store', name);
+  }
 
   let newItemName = $state('');
   /** @type {HTMLInputElement | null} */
@@ -95,12 +120,12 @@
       items.sort((a, b) => Number(a.checked) - Number(b.checked));
     }
 
-    const ordered = [...SHOPPING_CATEGORIES]
+    const ordered = categoryOrder
       .filter(cat => groups.has(cat))
       .map(cat => ({ category: cat, items: groups.get(cat) }));
 
     for (const [cat, items] of groups) {
-      if (!SHOPPING_CATEGORIES.includes(/** @type {any} */ (cat))) {
+      if (!categoryOrder.includes(cat)) {
         ordered.push({ category: cat, items });
       }
     }
@@ -354,6 +379,16 @@
     {#if totalCount > 0}
       <p class="subtitle">{checkedCount} / {totalCount} erledigt</p>
     {/if}
+    <div class="store-picker">
+      <Store size={13} />
+      {#each STORE_NAMES as name}
+        <button
+          class="store-btn"
+          class:active={selectedStore === name}
+          onclick={() => setStore(name)}
+        >{name}</button>
+      {/each}
+    </div>
   </header>
 
   <div class="add-bar">
@@ -598,6 +633,33 @@
     margin: 0.25rem 0 0;
     color: var(--color-text-secondary);
     font-size: 0.85rem;
+  }
+  .store-picker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    color: var(--color-text-secondary);
+  }
+  .store-btn {
+    padding: 0.2rem 0.5rem;
+    border-radius: 100px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .store-btn:hover {
+    border-color: var(--nord10);
+    color: var(--color-text-primary);
+  }
+  .store-btn.active {
+    background: var(--nord10);
+    color: white;
+    border-color: var(--nord10);
   }
 
   /* Add bar */
