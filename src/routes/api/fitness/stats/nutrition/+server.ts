@@ -10,23 +10,21 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
+	// Exclude today (incomplete day) — stats cover completed days only
 	const now = new Date();
-	const sevenDaysAgo = new Date(now);
-	sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6);
-	sevenDaysAgo.setUTCHours(0, 0, 0, 0);
+	const todayStart = new Date(now);
+	todayStart.setUTCHours(0, 0, 0, 0);
 
-	const thirtyDaysAgo = new Date(now);
-	thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 29);
-	thirtyDaysAgo.setUTCHours(0, 0, 0, 0);
+	const sevenDaysAgo = new Date(todayStart);
+	sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 7);
 
-	const todayEnd = new Date(now);
-	todayEnd.setUTCDate(todayEnd.getUTCDate() + 1);
-	todayEnd.setUTCHours(0, 0, 0, 0);
+	const thirtyDaysAgo = new Date(todayStart);
+	thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
 
 	const [entries30d, goal, weightMeasurements] = await Promise.all([
 		FoodLogEntry.find({
 			createdBy: user.nickname,
-			date: { $gte: thirtyDaysAgo, $lt: todayEnd },
+			date: { $gte: thirtyDaysAgo, $lt: todayStart },
 			mealType: { $ne: 'water' },
 		}).lean() as any,
 		FitnessGoal.findOne({ username: user.nickname }).lean() as any,
@@ -116,11 +114,11 @@ export const GET: RequestHandler = async ({ locals }) => {
 	if (dailyCalorieGoal && dailyTotals.length > 0) {
 		const sortedDates = dailyTotals.map(d => d.date).sort();
 		const firstTracked = sortedDates[0];
-		const todayStr = now.toISOString().slice(0, 10);
-		// Count calendar days from first tracked day to today (inclusive)
+		// Count calendar days from first tracked day to yesterday (inclusive)
 		const firstDate = new Date(firstTracked + 'T00:00:00Z');
-		const todayDate = new Date(todayStr + 'T00:00:00Z');
-		const totalDays = Math.round((todayDate.getTime() - firstDate.getTime()) / 86400000) + 1;
+		const yesterday = new Date(todayStart);
+		yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+		const totalDays = Math.round((yesterday.getTime() - firstDate.getTime()) / 86400000) + 1;
 
 		const lower = dailyCalorieGoal * 0.9;
 		const upper = dailyCalorieGoal * 1.1;
