@@ -153,6 +153,19 @@ const ICON_ALIASES: Record<string, string> = {
   'bird food': 'vogelfutter', 'cat litter': 'katzenstreu',
   'zürisäcke': 'abfallsäcke', 'zürisack': 'abfallsäcke', 'züribags': 'abfallsäcke',
   'züribag': 'abfallsäcke', 'kehrichtsäcke': 'abfallsäcke', 'kehrichtsack': 'abfallsäcke',
+
+  // Swiss German → High German aliases
+  'rahm': 'sahne', 'schlagrahm': 'schlagsahne', 'halbrahm': 'sahne', 'vollrahm': 'sahne',
+  'rüebli': 'karotten', 'rüebli': 'karotten',
+  'nüsslisalat': 'feldsalat', 'federkohl': 'grünkohl',
+  'peperoni': 'paprika', 'peperoncini': 'chili',
+  'poulet': 'hähnchen', 'pouletbrust': 'hähnchenbrust', 'pouletschenkel': 'hähnchenschenkel',
+  'cervelat': 'bratwurst', 'crevetten': 'garnelen',
+  'weggli': 'brötchen', 'bürli': 'brötchen', 'zopf': 'brot',
+  'ruchmehl': 'mehl', 'halbweissmehl': 'mehl',
+  'konfitüre': 'marmelade', 'konfi': 'marmelade',
+  'glacé': 'eis', 'glace': 'eis',
+
   'tofu': 'tofu', 'olives': 'oliven', 'pickles': 'essiggurken',
   'soup': 'suppe', 'broth': 'brühe', 'bouillon': 'bouillon',
   'pizza': 'pizza', 'pizza dough': 'pizzateig',
