@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { ChevronDown, Heart } from '@lucide/svelte';
+	import { ChevronDown, ExternalLink, Heart } from '@lucide/svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
@@ -163,6 +163,13 @@
 </svelte:head>
 
 <div class="food-detail">
+	<!-- Recipe image -->
+	{#if food.image}
+		<div class="recipe-hero">
+			<img src="https://bocken.org/static/rezepte/full/{food.image}" alt={food.nameDe ?? food.name} />
+		</div>
+	{/if}
+
 	<!-- Header -->
 	<header class="food-header">
 		<div class="food-header-row">
@@ -175,8 +182,13 @@
 			<p class="name-alt">{food.nameEn}</p>
 		{/if}
 		<div class="badges">
-			<span class="badge badge-source">{food.source === 'bls' ? 'BLS' : 'USDA'}</span>
+			<span class="badge badge-source">{food.source === 'bls' ? 'BLS' : food.source === 'usda' ? 'USDA' : isEn ? 'Recipe' : 'Rezept'}</span>
 			<span class="badge badge-category">{food.category}</span>
+			{#if food.recipeSlug}
+				<a class="badge badge-recipe-link" href="/{isEn ? 'recipes' : 'rezepte'}/{isEn && food.recipeSlugEn ? food.recipeSlugEn : food.recipeSlug}">
+					{isEn ? 'View recipe' : 'Zum Rezept'} <ExternalLink size={12} />
+				</a>
+			{/if}
 		</div>
 	</header>
 
@@ -330,6 +342,19 @@
 		padding: 1rem;
 	}
 
+	/* Recipe hero image */
+	.recipe-hero {
+		border-radius: 12px;
+		overflow: hidden;
+		margin-bottom: 1rem;
+	}
+	.recipe-hero img {
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		object-fit: cover;
+		display: block;
+	}
+
 	/* Header */
 	.food-header {
 		margin-bottom: 1rem;
@@ -389,6 +414,19 @@
 		background: var(--color-bg-tertiary);
 		color: var(--color-text-secondary);
 		border: 1px solid var(--color-border);
+	}
+	.badge-recipe-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		background: var(--color-bg-tertiary);
+		color: var(--color-primary);
+		border: 1px solid var(--color-border);
+		text-decoration: none;
+		cursor: pointer;
+	}
+	.badge-recipe-link:hover {
+		background: var(--color-bg-elevated);
 	}
 
 	/* Portion selector */
