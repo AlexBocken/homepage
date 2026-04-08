@@ -338,6 +338,23 @@ const translations: Translations = {
 	secondary_muscles: { en: 'Secondary', de: 'Sekundär' },
 	play_video: { en: 'Play Video', de: 'Video abspielen' },
 
+	// Nutrition stats
+	nutrition_stats: { en: 'Nutrition', de: 'Ernährung' },
+	protein_per_kg: { en: 'Protein', de: 'Protein' },
+	protein_per_kg_unit: { en: 'g/kg', de: 'g/kg' },
+	calorie_balance: { en: 'Calorie Balance', de: 'Kalorienbilanz' },
+	calorie_balance_unit: { en: 'kcal/day', de: 'kcal/Tag' },
+	diet_adherence: { en: 'Adherence', de: 'Einhaltung' },
+	seven_day_avg: { en: '7-day avg', de: '7-Tage-Ø' },
+	thirty_day: { en: '30 days', de: '30 Tage' },
+	macro_split: { en: 'Macro Split', de: 'Makroverteilung' },
+	no_nutrition_data: { en: 'No nutrition data yet. Start logging food to see stats.', de: 'Noch keine Ernährungsdaten. Beginne mit dem Tracking.' },
+	target: { en: 'Target', de: 'Ziel' },
+	days_tracked: { en: 'days tracked', de: 'Tage erfasst' },
+	since_start: { en: 'Since start', de: 'Seit Beginn' },
+	no_weight_data: { en: 'Log weight to enable', de: 'Gewicht eintragen' },
+	no_calorie_goal: { en: 'Set calorie goal', de: 'Kalorienziel setzen' },
+
 	// Muscle heatmap
 	muscle_balance: { en: 'Muscle Balance', de: 'Muskelbalance' },
 	weekly_sets: { en: 'Sets per week', de: 'Sätze pro Woche' },
