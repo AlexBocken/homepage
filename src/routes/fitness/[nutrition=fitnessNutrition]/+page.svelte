@@ -2653,6 +2653,7 @@
 		padding: 0;
 		width: 26px;
 		height: 34px;
+		-webkit-tap-highlight-color: transparent;
 	}
 	@media (min-width: 500px) {
 		.water-cup {

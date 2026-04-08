@@ -214,6 +214,7 @@
 
 	.svg-wrap {
 		width: 100%;
+		-webkit-tap-highlight-color: transparent;
 	}
 
 	.svg-wrap :global(svg) {
