@@ -151,6 +151,11 @@
 				</div>
 			{/if}
 
+			<!-- Overview -->
+			{#if exercise?.overview}
+				<p class="overview">{exercise.overview}</p>
+			{/if}
+
 			<!-- Instructions -->
 			{#if exercise?.localInstructions?.length}
 				<h3>{t('instructions', lang)}</h3>
@@ -346,6 +351,12 @@
 		color: var(--color-text-tertiary);
 	}
 
+	.overview {
+		font-size: 0.85rem;
+		line-height: 1.6;
+		color: var(--color-text-secondary);
+		margin: 0.25rem 0 0.5rem;
+	}
 	h3 {
 		font-size: 1rem;
 		margin: 0.75rem 0 0.4rem;
