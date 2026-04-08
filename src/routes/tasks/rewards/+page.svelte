@@ -1,5 +1,6 @@
 <script>
   import { invalidateAll } from '$app/navigation';
+  import { confirm } from '$lib/js/confirmDialog.svelte';
   import { STICKERS, getStickerById, getRarityColor } from '$lib/utils/stickers';
   import { formatDistanceToNow } from 'date-fns';
   import { de } from 'date-fns/locale';
@@ -74,7 +75,7 @@
   }
 
   async function clearHistory() {
-    if (!confirm('Deinen gesamten Verlauf und alle Sticker wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return;
+    if (!await confirm('Deinen gesamten Verlauf und alle Sticker wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return;
     const res = await fetch('/api/tasks/stats', { method: 'DELETE' });
     if (res.ok) await invalidateAll();
   }

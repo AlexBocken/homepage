@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n } from '$lib/js/cospendI18n';
+  import { confirm } from '$lib/js/confirmDialog.svelte';
   import FormSection from '$lib/components/FormSection.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import SaveFab from '$lib/components/SaveFab.svelte';
@@ -264,7 +265,7 @@
   let deleting = $state(false);
 
   async function deletePayment() {
-    if (!confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
+    if (!await confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
       return;
     }
 

@@ -3,6 +3,7 @@
   import { getCategoryEmoji } from '$lib/utils/categories';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { toast } from '$lib/js/toast.svelte';
+  import { confirm } from '$lib/js/confirmDialog.svelte';
   import AddButton from '$lib/components/AddButton.svelte';
   import { formatCurrency } from '$lib/utils/formatters';
   import Toggle from '$lib/components/Toggle.svelte';
@@ -65,7 +66,7 @@
   }
 
   async function deleteRecurringPayment(/** @type {string} */ paymentId, /** @type {string} */ title) {
-    if (!confirm(`${t('delete_recurring_confirm', lang)} "${title}"?`)) {
+    if (!await confirm(`${t('delete_recurring_confirm', lang)} "${title}"?`)) {
       return;
     }
 

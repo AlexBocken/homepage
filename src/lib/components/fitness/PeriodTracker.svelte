@@ -2,6 +2,7 @@
 	import { t } from '$lib/js/fitnessI18n';
 	import { Trash2, Plus, Pencil, UserPlus, X, ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 
 	/**
@@ -523,7 +524,7 @@
 
 	/** @param {string} id */
 	async function deletePeriod(id) {
-		if (!confirm(t('delete_period_confirm', lang))) return;
+		if (!await confirm(t('delete_period_confirm', lang))) return;
 		try {
 			const res = await fetch(`/api/fitness/period/${id}`, { method: 'DELETE' });
 			if (res.ok) {

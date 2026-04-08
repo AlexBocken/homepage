@@ -1,5 +1,6 @@
 <script>
 	import ToTryCard from '$lib/components/recipes/ToTryCard.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 
 	let { data } = $props();
 
@@ -102,7 +103,7 @@
 	/** @param {any} id */
 	async function handleDelete(id) {
 		const msg = isEnglish ? 'Delete this recipe?' : 'Dieses Rezept löschen?';
-		if (!confirm(msg)) return;
+		if (!await confirm(msg)) return;
 
 		const res = await fetch(`/api/${data.recipeLang}/to-try`, {
 			method: 'DELETE',
