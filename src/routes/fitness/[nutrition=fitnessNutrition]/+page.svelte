@@ -930,6 +930,9 @@
 		<button class="date-btn" onclick={() => navigateDate(1)} aria-label="Next day">
 			<ChevronRight size={20} />
 		</button>
+		{#if !isToday}
+			<button class="go-today-btn" onclick={goToday}>{t('today', lang)}</button>
+		{/if}
 	</div>
 
 	<div class="sidebar-col">
@@ -1677,7 +1680,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.25rem;
-
+		position: relative;
 	}
 	.date-btn {
 		background: none;
@@ -1721,6 +1724,23 @@
 		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 		padding: 0.15rem 0.4rem;
 		border-radius: 4px;
+	}
+	.go-today-btn {
+		position: absolute;
+		right: 0;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+		padding: 0.25rem 0.6rem;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: background 0.15s;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.go-today-btn:hover {
+		background: color-mix(in srgb, var(--color-primary) 20%, transparent);
 	}
 
 	/* ── Daily Summary Card ── */

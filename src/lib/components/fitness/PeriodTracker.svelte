@@ -662,6 +662,9 @@
 			<button class="cal-nav" onclick={() => calendarOffset++} disabled={calendarOffset >= 12}>
 				<ChevronRight size={16} />
 			</button>
+			{#if calendarOffset !== 0}
+				<button class="go-today-btn" onclick={() => calendarOffset = 0}>{lang === 'de' ? 'Heute' : 'Today'}</button>
+			{/if}
 		</div>
 		<div class="cal-weekdays">
 			{#each weekDays as wd}
@@ -1064,9 +1067,28 @@
 	}
 	.cal-header {
 		display: flex;
-		justify-content: space-between;
+		justify-content: center;
 		align-items: center;
+		gap: 0.25rem;
 		margin-bottom: 0.5rem;
+		position: relative;
+	}
+	.go-today-btn {
+		position: absolute;
+		right: 0;
+		font-size: 0.65rem;
+		font-weight: 600;
+		color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+		padding: 0.15rem 0.5rem;
+		border-radius: 5px;
+		cursor: pointer;
+		transition: background 0.15s;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.go-today-btn:hover {
+		background: color-mix(in srgb, var(--color-primary) 20%, transparent);
 	}
 	.cal-title {
 		font-size: 0.85rem;
