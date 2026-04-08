@@ -31,18 +31,25 @@ export function createShoppingSync() {
   let items: ShoppingItem[] = $state([]);
   let status: SyncStatus = $state('idle');
   let version = $state(0);
+  let shareToken: string | null = null;
   let eventSource: EventSource | null = null;
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectDelay = 1000;
   let _applying = false;
 
+  function apiUrl(path: string): string {
+    if (!shareToken) return path;
+    const sep = path.includes('?') ? '&' : '?';
+    return `${path}${sep}token=${encodeURIComponent(shareToken)}`;
+  }
+
   async function pushToServer() {
     if (_applying) return;
 
     status = 'syncing';
     try {
-      const res = await fetch('/api/cospend/list', {
+      const res = await fetch(apiUrl('/api/cospend/list'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -94,7 +101,7 @@ export function createShoppingSync() {
     }
 
     try {
-      eventSource = new EventSource('/api/cospend/list/stream');
+      eventSource = new EventSource(apiUrl('/api/cospend/list/stream'));
 
       eventSource.addEventListener('update', (e) => {
         try {
@@ -141,9 +148,10 @@ export function createShoppingSync() {
     status = 'idle';
   }
 
-  async function init() {
+  async function init(token?: string | null) {
+    if (token) shareToken = token;
     try {
-      const res = await fetch('/api/cospend/list');
+      const res = await fetch(apiUrl('/api/cospend/list'));
       if (!res.ok) {
         status = 'offline';
         return;
@@ -201,6 +209,7 @@ export function createShoppingSync() {
     get items() { return items; },
     get status() { return status; },
     get version() { return version; },
+    apiUrl,
     init,
     addItem,
     toggleItem,
