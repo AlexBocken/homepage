@@ -8,6 +8,7 @@
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
+	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 
@@ -81,45 +82,6 @@
 	});
 
 	const ns = $derived(data.nutritionStats);
-
-	// Macro ring SVG parameters — 300° arc with 60° gap at bottom
-	const RADIUS = 28;
-	const ARC_DEGREES = 300;
-	const ARC_LENGTH = (ARC_DEGREES / 360) * 2 * Math.PI * RADIUS;
-	const ARC_ROTATE = 120; // gap centered at bottom
-
-	/** @param {number} percent */
-	function strokeOffset(percent) {
-		return ARC_LENGTH - (percent / 100) * ARC_LENGTH;
-	}
-
-	/**
-	 * Get SVG coordinates for a triangle marker at a given percentage on the arc.
-	 * @param {number} percent
-	 */
-	function targetMarkerPos(percent) {
-		// Arc starts at ARC_ROTATE degrees (120° = 7 o'clock in SVG coords) and sweeps 300° clockwise
-		const startAngle = ARC_ROTATE;
-		const angleDeg = startAngle + (percent / 100) * ARC_DEGREES;
-		const angleRad = (angleDeg * Math.PI) / 180;
-		const outerR = RADIUS + 7;
-		const cx = 35 + outerR * Math.cos(angleRad);
-		const cy = 35 + outerR * Math.sin(angleRad);
-		// Label: primarily radial (along center→marker line), with tangential
-		// nudge only near 50% where the label would sit right at the top
-		const closeness = 1 - Math.abs(percent - 50) / 50; // 0 at edges, 1 at 50%
-		// Base radial distance: extra +4 for >50% values outside the close-to-50 zone
-		const highBonus = percent > 50 && closeness < 0.4 ? 4 : 0;
-		// Bump for the 30-70% zone (peaks at 40% and 60%)
-		const midBump = Math.max(0, 1 - Math.abs(closeness - 0.2) / 0.3) * 4;
-		const labelR = outerR + 17 + highBonus + midBump - closeness * closeness * 14;
-		const tOff = closeness * closeness * 14; // quadratic: stronger nudge near 50%
-		const dir = percent < 50 ? -1 : 1;
-		const tangentRad = angleRad + dir * Math.PI / 2;
-		const lx = 35 + labelR * Math.cos(angleRad) + tOff * Math.cos(tangentRad);
-		const ly = 35 + labelR * Math.sin(angleRad) + tOff * Math.sin(tangentRad);
-		return { cx, cy, lx, ly, angleDeg };
-	}
 
 	const hasSma = $derived(stats.weightChart?.sma?.some((/** @type {any} */ v) => v !== null));
 
@@ -352,48 +314,18 @@
 					<div class="macro-header">{t('macro_split', lang)} <span class="macro-subtitle">({t('seven_day_avg', lang)})</span></div>
 					<div class="macro-rings">
 						{#each [
-							{ pct: ns.macroSplit.protein, target: ns.macroTargets?.protein, label: t('protein', lang), cls: 'ring-protein', fill: '#a3be8c' },
-							{ pct: ns.macroSplit.fat, target: ns.macroTargets?.fat, label: t('fat', lang), cls: 'ring-fat', fill: '#d08770' },
-							{ pct: ns.macroSplit.carbs, target: ns.macroTargets?.carbs, label: t('carbs', lang), cls: 'ring-carbs', fill: '#81a1c1' },
-						] as macro (macro.cls)}
+							{ pct: ns.macroSplit.protein, target: ns.macroTargets?.protein, label: t('protein', lang), color: 'var(--nord14)', fill: '#a3be8c' },
+							{ pct: ns.macroSplit.fat, target: ns.macroTargets?.fat, label: t('fat', lang), color: 'var(--nord12)', fill: '#d08770' },
+							{ pct: ns.macroSplit.carbs, target: ns.macroTargets?.carbs, label: t('carbs', lang), color: 'var(--nord9)', fill: '#81a1c1' },
+						] as macro (macro.color)}
 							<div class="macro-ring">
-								<svg class="macro-ring-svg" viewBox="0 0 70 70">
-									<circle
-										class="ring-bg"
-										cx="35" cy="35" r={RADIUS}
-										stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-										transform="rotate({ARC_ROTATE} 35 35)"
-									/>
-									<circle
-										class="ring-fill {macro.cls}"
-										cx="35" cy="35" r={RADIUS}
-										stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-										stroke-dashoffset={strokeOffset(macro.pct)}
-										transform="rotate({ARC_ROTATE} 35 35)"
-									/>
-									{#if macro.target != null}
-										{@const pos = targetMarkerPos(macro.target)}
-										<path
-											fill={macro.fill}
-											opacity="0.85"
-											stroke={macro.fill}
-											stroke-width="0.8"
-											stroke-linejoin="round"
-											d="M{pos.cx},{pos.cy - 3.5}L{pos.cx - 3},{pos.cy + 2.5}L{pos.cx + 3},{pos.cy + 2.5}Z"
-											transform="rotate({pos.angleDeg - 90} {pos.cx} {pos.cy})"
-										/>
-										<text
-											class="target-label"
-											fill={macro.fill}
-											x={pos.lx}
-											y={pos.ly}
-											text-anchor="middle"
-											dominant-baseline="central"
-										>{macro.target}%</text>
-									{/if}
-									<text class="ring-text" x="35" y="35">{macro.pct}%</text>
-								</svg>
-								<span class="macro-label">{macro.label}</span>
+								<StatsRingGraph
+									percent={macro.pct}
+									color={macro.color}
+									label={macro.label}
+									target={macro.target}
+									markerColor={macro.fill}
+								/>
 							</div>
 						{/each}
 					<div class="macro-legend">
@@ -860,49 +792,16 @@
 		width: 100%;
 	}
 	.macro-ring {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.2rem;
 		flex: 1;
 		max-width: 130px;
 	}
-	.macro-ring-svg {
+	.macro-ring :global(.ring-svg) {
 		width: 100%;
 		height: auto;
 		max-width: 110px;
-		overflow: visible;
 	}
-	.ring-bg {
-		fill: none;
-		stroke: var(--color-border);
-		stroke-width: 5;
-		stroke-linecap: round;
-	}
-	.ring-fill {
-		fill: none;
-		stroke-width: 5;
-		stroke-linecap: round;
-		transition: stroke-dashoffset 0.4s ease;
-	}
-	.ring-text {
-		font-size: 14px;
-		font-weight: 700;
-		fill: currentColor;
-		text-anchor: middle;
-		dominant-baseline: central;
-	}
-	.ring-protein { stroke: var(--nord14, #a3be8c); }
-	.ring-fat { stroke: var(--nord12, #d08770); }
-	.ring-carbs { stroke: var(--nord9, #81a1c1); }
-	.macro-label {
+	.macro-ring :global(.ring-label) {
 		font-size: 0.85rem;
-		font-weight: 600;
-		text-align: center;
-	}
-	.target-label {
-		font-size: 7px;
-		font-weight: 700;
 	}
 	.macro-legend {
 		display: none;
