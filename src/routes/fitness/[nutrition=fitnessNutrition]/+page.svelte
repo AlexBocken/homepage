@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater, Pencil } from '@lucide/svelte';
+	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater, Pencil, Heart, Clock } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -813,12 +813,127 @@
 		return Math.round(v).toString();
 	}
 
+	// Widen parent .fitness-content for desktop layout
+	$effect(() => {
+		const el = document.querySelector('.fitness-content');
+		if (el) el.classList.add('nutrition-wide');
+		return () => { if (el) el.classList.remove('nutrition-wide'); };
+	});
+
 	const mealMeta = {
 		breakfast: { icon: Coffee, color: 'var(--nord13)' },
 		lunch:     { icon: Sun, color: 'var(--nord12)' },
 		dinner:    { icon: Moon, color: 'var(--nord15)' },
 		snack:     { icon: Cookie, color: 'var(--nord14)' },
 	};
+
+	// --- Quick-log sidebar ---
+	let quickLogMealType = $state(defaultMealType());
+	let quickFavorites = $state([]);
+	let quickFavoritesLoaded = $state(false);
+
+	async function loadQuickFavorites() {
+		if (quickFavoritesLoaded) return;
+		try {
+			const res = await fetch('/api/fitness/favorite-ingredients');
+			if (res.ok) {
+				const data = await res.json();
+				quickFavorites = data.favorites ?? [];
+			}
+		} catch { /* ignore */ }
+		quickFavoritesLoaded = true;
+	}
+
+	let recentFoods = $state([]);
+	let recentFoodsLoaded = $state(false);
+
+	async function loadRecentFoods() {
+		if (recentFoodsLoaded) return;
+		try {
+			const to = new Date();
+			const from = new Date();
+			from.setDate(from.getDate() - 3);
+			const res = await fetch(`/api/fitness/food-log?from=${from.toISOString().slice(0, 10)}&to=${to.toISOString().slice(0, 10)}`);
+			if (res.ok) {
+				const data = await res.json();
+				const seen = new Set();
+				recentFoods = (data.entries ?? [])
+					.filter(e => e.mealType !== 'water' && e.source && e.sourceId)
+					.reverse()
+					.filter(e => {
+						const key = `${e.source}:${e.sourceId}`;
+						if (seen.has(key)) return false;
+						seen.add(key);
+						return true;
+					})
+					.slice(0, 10);
+			}
+		} catch { /* ignore */ }
+		recentFoodsLoaded = true;
+	}
+
+	// Load favorites + recents on mount
+	$effect(() => { loadQuickFavorites(); loadRecentFoods(); });
+
+	/** @type {{ name: string, source: string, sourceId: string, per100g?: any, amountGrams?: number } | null} */
+	let qlSelected = $state(null);
+	let qlGrams = $state(100);
+	let qlLoading = $state(false);
+
+	async function qlSelect(item) {
+		if (qlSelected && qlSelected.source === item.source && qlSelected.sourceId === item.sourceId) {
+			qlSelected = null;
+			return;
+		}
+		qlGrams = item.amountGrams ?? 100;
+		if (item.per100g) {
+			qlSelected = item;
+		} else {
+			// Favorites don't have per100g — fetch by exact source+id
+			qlLoading = true;
+			try {
+				const res = await fetch(`/api/nutrition/lookup?source=${item.source}&id=${encodeURIComponent(item.sourceId)}`);
+				if (res.ok) {
+					const data = await res.json();
+					if (data.per100g) {
+						qlSelected = { ...item, per100g: data.per100g };
+					} else {
+						toast.error(isEn ? 'Could not load food data' : 'Lebensmitteldaten nicht gefunden');
+					}
+				}
+			} catch {
+				toast.error(isEn ? 'Failed to load food data' : 'Fehler beim Laden');
+			}
+			qlLoading = false;
+		}
+	}
+
+	async function qlConfirm() {
+		if (!qlSelected?.per100g) return;
+		try {
+			const res = await fetch('/api/fitness/food-log', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					date: currentDate,
+					mealType: quickLogMealType,
+					name: qlSelected.name,
+					source: qlSelected.source,
+					sourceId: qlSelected.sourceId,
+					amountGrams: qlGrams,
+					per100g: qlSelected.per100g,
+				})
+			});
+			if (res.ok) {
+				const entry = await res.json();
+				entries = [...entries, entry];
+				toast.success(isEn ? `Logged "${qlSelected.name}"` : `"${qlSelected.name}" eingetragen`);
+				qlSelected = null;
+			}
+		} catch {
+			toast.error(isEn ? 'Failed to log food' : 'Fehler beim Eintragen');
+		}
+	}
 </script>
 
 <svelte:head>
@@ -1399,6 +1514,72 @@
 	{/each}
 	</div>
 
+	<!-- Quick-log sidebar (desktop) -->
+	<aside class="quick-log-col">
+		<div class="quick-log-card">
+			<h3 class="quick-log-title">{isEn ? 'Quick Log' : 'Schnell eintragen'}</h3>
+			<div class="quick-log-meal-select">
+				{#each mealTypes as meal}
+					{@const meta = mealMeta[meal]}
+					{@const MealIcon = meta.icon}
+					<button
+						class="ql-meal-btn"
+						class:active={quickLogMealType === meal}
+						style="--mc: {meta.color}"
+						onclick={() => quickLogMealType = meal}
+						title={t(meal, lang)}
+					>
+						<MealIcon size={14} />
+					</button>
+				{/each}
+			</div>
+
+			{#if quickFavorites.length > 0}
+				<div class="ql-section">
+					<h4 class="ql-section-title"><Heart size={12} /> {isEn ? 'Favorites' : 'Favoriten'}</h4>
+					{#each quickFavorites as fav}
+						{@const isActive = qlSelected?.source === fav.source && qlSelected?.sourceId === fav.sourceId}
+						<button class="ql-item" class:active={isActive} onclick={() => qlSelect(fav)}>
+							<span class="ql-item-name">{fav.name}</span>
+							<Plus size={14} class="ql-item-add" />
+						</button>
+						{#if isActive}
+							<form class="ql-amount-row" onsubmit={e => { e.preventDefault(); qlConfirm(); }}>
+								<input type="number" class="ql-amount-input" bind:value={qlGrams} min="1" step="1" />
+								<span class="ql-amount-unit">g</span>
+								<button type="submit" class="ql-amount-confirm"><Check size={14} /></button>
+							</form>
+						{/if}
+					{/each}
+				</div>
+			{/if}
+
+			{#if recentFoods.length > 0}
+				<div class="ql-section">
+					<h4 class="ql-section-title"><Clock size={12} /> {isEn ? 'Recent' : 'Kürzlich'}</h4>
+					{#each recentFoods as item}
+						{@const isActive = qlSelected?.source === item.source && qlSelected?.sourceId === item.sourceId}
+						<button class="ql-item" class:active={isActive} onclick={() => qlSelect(item)}>
+							<span class="ql-item-name">{item.name}</span>
+							<Plus size={14} class="ql-item-add" />
+						</button>
+						{#if isActive}
+							<form class="ql-amount-row" onsubmit={e => { e.preventDefault(); qlConfirm(); }}>
+								<input type="number" class="ql-amount-input" bind:value={qlGrams} min="1" step="1" />
+								<span class="ql-amount-unit">g</span>
+								<button type="submit" class="ql-amount-confirm"><Check size={14} /></button>
+							</form>
+						{/if}
+					{/each}
+				</div>
+			{/if}
+
+			{#if quickFavorites.length === 0 && recentFoods.length === 0}
+				<p class="ql-empty">{isEn ? 'No favorites yet. Star foods in search to see them here.' : 'Noch keine Favoriten. Markiere Lebensmittel in der Suche.'}</p>
+			{/if}
+		</div>
+	</aside>
+
 </div>
 
 <!-- FAB -->
@@ -1471,6 +1652,11 @@
 {/if}
 
 <style>
+	@media (min-width: 1024px) {
+		:global(.fitness-content.nutrition-wide) {
+			max-width: 1400px;
+		}
+	}
 	.nutrition-page {
 		max-width: 600px;
 		margin: 0 auto;
@@ -1478,12 +1664,15 @@
 		flex-direction: column;
 		gap: 0.75rem;
 	}
-	.sidebar-col, .meals-col {
+	.sidebar-col, .meals-col, .quick-log-col {
 		display: contents;
+	}
+	.quick-log-col {
+		display: none;
 	}
 	@media (min-width: 1024px) {
 		.nutrition-page {
-			max-width: 1400px;
+			max-width: none;
 			display: grid;
 			grid-template-columns: minmax(320px, 380px) 1fr;
 			grid-template-rows: auto 1fr;
@@ -1516,6 +1705,16 @@
 		.micro-card .micro-details.micro-hidden {
 			display: grid;
 			grid-template-columns: 1fr;
+		}
+	}
+	@media (min-width: 1600px) {
+		.nutrition-page {
+			grid-template-columns: minmax(320px, 380px) 1fr 260px;
+		}
+		.quick-log-col {
+			display: block;
+			position: sticky;
+			top: 1rem;
 		}
 	}
 
@@ -3010,5 +3209,141 @@
 	}
 	.manage-meals-link:hover {
 		color: var(--color-text-primary);
+	}
+
+	/* ── Quick-log Sidebar ── */
+	.quick-log-card {
+		background: var(--color-surface);
+		border-radius: 14px;
+		padding: 0.75rem;
+	}
+	.quick-log-title {
+		margin: 0 0 0.5rem;
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+	}
+	.quick-log-meal-select {
+		display: flex;
+		gap: 0.25rem;
+		margin-bottom: 0.75rem;
+	}
+	.ql-meal-btn {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.35rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+	.ql-meal-btn.active {
+		background: color-mix(in srgb, var(--mc) 15%, transparent);
+		border-color: var(--mc);
+		color: var(--mc);
+	}
+	.ql-meal-btn:hover:not(.active) {
+		border-color: var(--color-text-tertiary);
+	}
+	.ql-section {
+		margin-bottom: 0.5rem;
+	}
+	.ql-section-title {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		margin: 0 0 0.3rem;
+		font-size: 0.68rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-secondary);
+	}
+	.ql-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		padding: 0.4rem 0.5rem;
+		border-radius: 8px;
+		border: none;
+		background: none;
+		cursor: pointer;
+		color: var(--color-text-primary);
+		font-size: 0.78rem;
+		text-align: left;
+		transition: background 0.12s;
+	}
+	.ql-item:hover {
+		background: var(--color-bg-elevated);
+	}
+	.ql-item-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		min-width: 0;
+		flex: 1;
+	}
+	.ql-item :global(.ql-item-add) {
+		flex-shrink: 0;
+		color: var(--color-text-tertiary);
+		transition: color 0.12s;
+	}
+	.ql-item:hover :global(.ql-item-add) {
+		color: var(--color-primary);
+	}
+	.ql-item.active {
+		background: var(--color-bg-elevated);
+	}
+	.ql-amount-row {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.3rem;
+		padding: 0.25rem 0.5rem 0.4rem;
+	}
+	.ql-amount-input {
+		width: 4rem;
+		padding: 0.3rem 0.4rem;
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font-size: 0.78rem;
+		text-align: right;
+	}
+	.ql-amount-input:focus {
+		border-color: var(--nord8);
+		outline: none;
+	}
+	.ql-amount-unit {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+	.ql-amount-confirm {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.3rem;
+		border: none;
+		border-radius: 6px;
+		background: var(--color-primary);
+		color: white;
+		cursor: pointer;
+		transition: filter 0.12s;
+	}
+	.ql-amount-confirm:hover {
+		filter: brightness(1.1);
+	}
+	.ql-empty {
+		font-size: 0.75rem;
+		color: var(--color-text-tertiary);
+		text-align: center;
+		padding: 1rem 0.5rem;
+		margin: 0;
 	}
 </style>
