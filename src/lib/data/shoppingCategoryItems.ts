@@ -5,17 +5,17 @@
  */
 
 export const SHOPPING_CATEGORIES = [
-  'Obst & Gemüse',
-  'Fleisch & Fisch',
-  'Milchprodukte',
-  'Brot & Backwaren',
-  'Pasta, Reis & Getreide',
-  'Gewürze & Saucen',
-  'Getränke',
-  'Süßes & Snacks',
-  'Tiefkühl',
   'Haushalt',
   'Hygiene & Körperpflege',
+  'Gewürze & Saucen',
+  'Süßes & Snacks',
+  'Getränke',
+  'Pasta, Reis & Getreide',
+  'Brot & Backwaren',
+  'Milchprodukte',
+  'Obst & Gemüse',
+  'Fleisch & Fisch',
+  'Tiefkühl',
   'Sonstiges',
 ] as const;
 
