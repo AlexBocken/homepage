@@ -12,7 +12,7 @@ import { read } from '$app/server';
 import { SHOPPING_CATEGORIES } from '$lib/data/shoppingCategoryItems';
 import { ShoppingItemCategory } from '$models/ShoppingItemCategory';
 import { dbConnect } from '$utils/db';
-import catalog from '../../../static/shopping-icons/catalog.json';
+import catalog from '$lib/data/shoppingCatalog.json';
 import iconCategoriesData from '$lib/data/shoppingIconCategories.json';
 import categoryEmbeddingsUrl from '$lib/data/shoppingCategoryEmbeddings.json?url';
 import iconEmbeddingsUrl from '$lib/data/shoppingIconEmbeddings.json?url';
