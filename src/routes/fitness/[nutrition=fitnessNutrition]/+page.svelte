@@ -444,7 +444,9 @@
 
 	// Net calorie balance: goal + burned - eaten
 	const calorieBalance = $derived(goalCalories ? (goalCalories + (exerciseKcal || 0) - dayTotals.calories) : 0);
-	const calorieProgress = $derived(goalCalories ? Math.min(dayTotals.calories / (goalCalories + (exerciseKcal || 0)) * 100, 100) : 0);
+	const calorieProgressRaw = $derived(goalCalories ? dayTotals.calories / (goalCalories + (exerciseKcal || 0)) * 100 : 0);
+	const calorieProgress = $derived(Math.min(calorieProgressRaw, 100));
+	const calorieOverflow = $derived(Math.max(calorieProgressRaw - 100, 0));
 
 	// DRI for micros
 	const dri = $derived(getDRI(goalSex));
@@ -457,6 +459,11 @@
 
 	function strokeOffset(percent) {
 		return ARC_LENGTH - (Math.min(percent, 100) / 100) * ARC_LENGTH;
+	}
+
+	/** Stroke offset for overflow arc drawn from the end backwards */
+	function overflowOffset(overflowPct) {
+		return ARC_LENGTH - (Math.min(overflowPct, 100) / 100) * ARC_LENGTH;
 	}
 
 	// --- Inline add food ---
@@ -746,6 +753,12 @@
 							stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
 							stroke-dashoffset={strokeOffset(calorieProgress)}
 							transform="rotate({ARC_ROTATE} 35 35)" />
+						{#if calorieOverflow > 0}
+							<circle class="ring-fill ring-overflow" cx="35" cy="35" r={RADIUS}
+								stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
+								stroke-dashoffset={overflowOffset(calorieOverflow)}
+								transform="translate(70, 0) scale(-1, 1) rotate({ARC_ROTATE} 35 35)" />
+						{/if}
 						<text class="ring-text-main" x="35" y="30">{fmtCal(Math.abs(calorieBalance))}</text>
 						<text class="ring-text-sub" x="35" y="42">{calorieBalance >= 0 ? (isEn ? 'KCAL LEFT' : 'KCAL ÜBRIG') : (isEn ? 'KCAL OVER' : 'KCAL ÜBER')}</text>
 					</svg>
@@ -783,11 +796,15 @@
 				] as macro}
 					{@const pct = macro.goal ? macro.value / macro.goal * 100 : 0}
 					{@const over = pct > 100}
+					{@const overPct = Math.min(pct - 100, 100)}
 					{@const remaining = macro.goal ? macro.goal - macro.value : 0}
 					<div class="macro-bar-item">
 						<span class="macro-bar-label">{macro.label}</span>
 						<div class="macro-bar-track">
-							<div class="macro-bar-fill" class:over style="width: {Math.min(pct, 100)}%; {over ? '' : `background: ${macro.color}`}"></div>
+							<div class="macro-bar-fill" style="width: {Math.min(pct, 100)}%; background: {macro.color}"></div>
+							{#if over}
+								<div class="macro-bar-overflow" style="width: {overPct}%"></div>
+							{/if}
 						</div>
 						{#if macro.goal}
 							<span class="macro-bar-info" class:over>
@@ -1473,14 +1490,21 @@
 		border: 1px solid var(--color-border);
 		border-radius: 3px;
 		overflow: hidden;
+		position: relative;
 	}
 	.macro-bar-fill {
 		height: 100%;
 		border-radius: 3px;
 		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 	}
-	.macro-bar-fill.over {
-		background: var(--nord11) !important;
+	.macro-bar-overflow {
+		position: absolute;
+		top: 0;
+		right: 0;
+		height: 100%;
+		background: var(--nord11);
+		border-radius: 0 3px 3px 0;
+		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	.macro-bar-info {
 		font-size: 0.68rem;
@@ -1506,6 +1530,10 @@
 		transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	.ring-calories { stroke: var(--nord8); }
+	.ring-overflow {
+		stroke: var(--nord11);
+		transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+	}
 	.ring-text-main {
 		font-size: 14px;
 		font-weight: 800;
