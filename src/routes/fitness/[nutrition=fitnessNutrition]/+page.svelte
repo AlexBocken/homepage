@@ -3725,7 +3725,7 @@
 		border: none;
 		border-radius: 6px;
 		background: var(--color-primary);
-		color: white;
+		color: var(--color-text-on-primary);
 		cursor: pointer;
 		transition: filter 0.12s;
 	}
