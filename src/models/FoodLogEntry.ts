@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 interface IFoodLogEntry {
   _id?: string;
   date: Date;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'water';
   name: string;
   source: 'bls' | 'usda' | 'recipe' | 'custom' | 'off';
   sourceId?: string;
@@ -45,7 +45,7 @@ const NutritionSnapshotSchema = new mongoose.Schema({
 const FoodLogEntrySchema = new mongoose.Schema(
   {
     date: { type: Date, required: true },
-    mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner', 'snack'], required: true },
+    mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner', 'snack', 'water'], required: true },
     name: { type: String, required: true, trim: true },
     source: { type: String, enum: ['bls', 'usda', 'recipe', 'custom', 'off'], required: true },
     sourceId: { type: String },

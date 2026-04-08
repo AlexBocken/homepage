@@ -4,7 +4,7 @@ import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 
-const VALID_MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
+const VALID_MEALS = ['breakfast', 'lunch', 'dinner', 'snack', 'water'];
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = await requireAuth(locals);
