@@ -30,9 +30,11 @@ import { setupScrollSync } from "./rosaryScrollSync.js";
 let { data } = $props();
 
 // Toggle for including Luminous mysteries (initialized from URL param or default)
+// svelte-ignore state_referenced_locally
 let includeLuminous = $state(data.initialLuminous);
 
 // Toggle for showing mystery images (initialized from URL param or default)
+// svelte-ignore state_referenced_locally
 let showImages = $state(data.initialShowImages);
 
 // Flag to prevent saving before we've loaded from localStorage
@@ -40,6 +42,7 @@ let hasLoadedFromStorage = $state(false);
 
 // Create language context for prayer components (LanguageToggle will use this)
 // For Latin route, force showLatin on so only Latin prayers render
+// svelte-ignore state_referenced_locally
 const langContext = createLanguageContext({ urlLang: /** @type {'en'|'de'} */ (data.lang), initialLatin: data.lang === 'la' ? true : data.initialLatin });
 
 // Update lang store when data.lang changes (e.g., after navigation)
@@ -71,8 +74,9 @@ $effect(() => {
 });
 
 // Use server-computed initial values (supports no-JS via URL params)
+// svelte-ignore state_referenced_locally
 let selectedMystery = $state(/** @type {MysteryType} */ (data.initialMystery));
-let todaysMystery = $state(/** @type {MysteryType} */ (data.todaysMystery));
+let todaysMystery = $derived(/** @type {MysteryType} */ (data.todaysMystery));
 
 // Derive these values from selectedMystery so they update automatically
 let currentMysteries = $derived(mysteries[selectedMystery]);

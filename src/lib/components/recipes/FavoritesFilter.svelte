@@ -11,6 +11,7 @@
 	const isEnglish = $derived(lang === 'en');
 	const label = $derived(isEnglish ? 'Favorites' : 'Favoriten');
 
+	// svelte-ignore state_referenced_locally
 	let checked = $state(enabled);
 
 	// Watch for changes to checked and call onToggle

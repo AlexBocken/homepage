@@ -15,6 +15,7 @@ let {
 } = $props();
 
 // Unique dialog ID based on type to prevent conflicts when both are on the same page
+// svelte-ignore state_referenced_locally
 const dialogId = `base-recipe-selector-modal-${type}`;
 
 let baseRecipes: any[] = $state([]);

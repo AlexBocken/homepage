@@ -1,6 +1,7 @@
 <script>
 let { data } = $props();
 
+// svelte-ignore state_referenced_locally
 let multiplier = $state(data.multiplier || 1);
 
 // Recursively flatten nested instruction references

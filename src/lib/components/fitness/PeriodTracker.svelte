@@ -9,6 +9,7 @@
 	 */
 	let { periods: initialPeriods = [], lang = 'en', sharedWith: initialSharedWith = [], readOnly = false, ownerName = '' } = $props();
 
+	// svelte-ignore state_referenced_locally
 	let periods = $state([...initialPeriods]);
 	let loading = $state(false);
 	let showAddForm = $state(false);
@@ -24,6 +25,7 @@
 	let showHistory = $state(false);
 
 	// Sharing state
+	// svelte-ignore state_referenced_locally
 	let shareList = $state([...initialSharedWith]);
 	let showShare = $state(false);
 	let shareInput = $state('');
@@ -855,10 +857,10 @@
 
 <!-- Share modal -->
 {#if showShare}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
 	<div class="share-overlay" onclick={() => showShare = false} onkeydown={(e) => e.key === 'Escape' && (showShare = false)}>
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="share-modal" onclick={(e) => e.stopPropagation()}>
+		<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+		<div class="share-modal" role="presentation" onclick={(e) => e.stopPropagation()}>
 			<div class="share-modal-header">
 				<h3>{t('share', lang)}</h3>
 				<button class="share-modal-close" onclick={() => showShare = false}>

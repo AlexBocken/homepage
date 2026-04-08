@@ -3,12 +3,14 @@
 
 	let { data } = $props<{ data: PageData }>();
 
+	// svelte-ignore state_referenced_locally
 	const isEnglish = data.lang === 'en';
 	const pageTitle = isEnglish ? 'Administration' : 'Administration';
 	const pageDescription = isEnglish
 		? 'Manage recipes and content'
 		: 'Rezepte und Inhalte verwalten';
 
+	// svelte-ignore state_referenced_locally
 	const links = [
 		{
 			title: isEnglish ? 'Untranslated Recipes' : 'Unübersetzte Rezepte',

@@ -32,6 +32,7 @@
 	let { data } = $props();
 
 	// Create language context for prayer components
+	// svelte-ignore state_referenced_locally
 	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.lang === 'la' ? true : data.initialLatin });
 
 	// Update lang store when data.lang changes (e.g., after navigation)
@@ -113,6 +114,7 @@
 		postcommunio: ['eucharistic'],
 	};
 
+	// svelte-ignore state_referenced_locally
 	let selectedCategory = $state(data.initialCategory);
 
 	// JS-only search (hidden without JS)

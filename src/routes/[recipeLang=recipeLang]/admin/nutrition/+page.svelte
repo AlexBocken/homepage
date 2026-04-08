@@ -1,6 +1,8 @@
 <script>
 	let { data } = $props();
+	// svelte-ignore state_referenced_locally
 	const isEnglish = data.lang === 'en';
+	// svelte-ignore state_referenced_locally
 	const recipeLang = data.recipeLang;
 
 	let processing = $state(false);

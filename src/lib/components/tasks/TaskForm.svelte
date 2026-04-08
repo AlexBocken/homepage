@@ -31,17 +31,27 @@
     { tag: 'müll', icon: Trash2 },
   ];
 
+  // svelte-ignore state_referenced_locally
   let title = $state(task?.title || '');
+  // svelte-ignore state_referenced_locally
   let description = $state(task?.description || '');
   /** @type {string[]} */
+  // svelte-ignore state_referenced_locally
   let selectedAssignees = $state(task?.assignees ? [...task.assignees] : []);
   /** @type {string[]} */
+  // svelte-ignore state_referenced_locally
   let selectedTags = $state(task?.tags ? [...task.tags] : []);
+  // svelte-ignore state_referenced_locally
   let difficulty = $state(task?.difficulty || '');
+  // svelte-ignore state_referenced_locally
   let refreshMode = $state(task?.refreshMode || 'completion');
+  // svelte-ignore state_referenced_locally
   let isRecurring = $state(task?.isRecurring || false);
+  // svelte-ignore state_referenced_locally
   let frequencyType = $state(task?.frequency?.type || 'weekly');
+  // svelte-ignore state_referenced_locally
   let customDays = $state(task?.frequency?.customDays || 7);
+  // svelte-ignore state_referenced_locally
   let nextDueDate = $state(
     task?.nextDueDate
       ? new Date(task.nextDueDate).toISOString().split('T')[0]

@@ -10,6 +10,7 @@
 	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
 
 	let { data } = $props();
+	// svelte-ignore state_referenced_locally
 	const m = data.measurement?.measurement;
 
 	let saving = $state(false);
