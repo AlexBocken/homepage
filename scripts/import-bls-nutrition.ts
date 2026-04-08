@@ -94,15 +94,17 @@ const NUTRIENT_MAP: Record<string, { field: string; divisor?: number }> = {
   TYR: { field: 'tyrosine' },
 };
 
-// BLS code first letter → category (BLS 4.0 Hauptgruppen)
+// BLS 4.0 code first letter → category (Hauptlebensmittelgruppen)
 const CATEGORY_MAP: Record<string, string> = {
-  A: 'Getränke', B: 'Getreideprodukte', C: 'Getreide', D: 'Backwaren',
-  E: 'Gemüse', F: 'Obst', G: 'Hülsenfrüchte',
-  H: 'Gewürze und Kräuter', J: 'Fette und Öle', K: 'Milch und Milchprodukte',
-  L: 'Eier', M: 'Fleisch', N: 'Wurstwaren', O: 'Wild', P: 'Geflügel',
-  Q: 'Fisch und Meeresfrüchte', R: 'Süßwaren', S: 'Zucker und Honig',
-  T: 'Gerichte und Rezepte', U: 'Pilze', V: 'Sonstiges', W: 'Algen',
-  X: 'Fleischersatz', Y: 'Supplemente',
+  B: 'Brot & Backwaren', C: 'Getreide', D: 'Dauerbackwaren & Kekse',
+  E: 'Teigwaren & Nudeln', F: 'Obst & Früchte', G: 'Gemüse',
+  H: 'Hülsenfrüchte & Sojaprodukte', K: 'Kartoffeln & Stärke',
+  M: 'Milch & Milchprodukte', N: 'Getränke (alkoholfrei)',
+  P: 'Alkoholische Getränke', Q: 'Fette & Öle',
+  R: 'Gewürze & Würzmittel', S: 'Zucker & Honig',
+  T: 'Fisch & Meeresfrüchte', U: 'Fleisch',
+  V: 'Wild & Kaninchen', W: 'Wurstwaren',
+  X: 'Brühen & Fertiggerichte', Y: 'Gerichte & Rezepte',
 };
 
 async function main() {
