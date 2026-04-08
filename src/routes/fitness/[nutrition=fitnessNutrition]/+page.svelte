@@ -813,13 +813,6 @@
 		return Math.round(v).toString();
 	}
 
-	// Widen parent .fitness-content for desktop layout
-	$effect(() => {
-		const el = document.querySelector('.fitness-content');
-		if (el) el.classList.add('nutrition-wide');
-		return () => { if (el) el.classList.remove('nutrition-wide'); };
-	});
-
 	const mealMeta = {
 		breakfast: { icon: Coffee, color: 'var(--nord13)' },
 		lunch:     { icon: Sun, color: 'var(--nord12)' },
@@ -829,51 +822,15 @@
 
 	// --- Quick-log sidebar ---
 	let quickLogMealType = $state(defaultMealType());
-	let quickFavorites = $state([]);
-	let quickFavoritesLoaded = $state(false);
+	// svelte-ignore state_referenced_locally
+	let quickFavorites = $state(data.favorites ?? []);
+	// svelte-ignore state_referenced_locally
+	let recentFoods = $state(data.recentFoods ?? []);
 
-	async function loadQuickFavorites() {
-		if (quickFavoritesLoaded) return;
-		try {
-			const res = await fetch('/api/fitness/favorite-ingredients');
-			if (res.ok) {
-				const data = await res.json();
-				quickFavorites = data.favorites ?? [];
-			}
-		} catch { /* ignore */ }
-		quickFavoritesLoaded = true;
-	}
-
-	let recentFoods = $state([]);
-	let recentFoodsLoaded = $state(false);
-
-	async function loadRecentFoods() {
-		if (recentFoodsLoaded) return;
-		try {
-			const to = new Date();
-			const from = new Date();
-			from.setDate(from.getDate() - 3);
-			const res = await fetch(`/api/fitness/food-log?from=${from.toISOString().slice(0, 10)}&to=${to.toISOString().slice(0, 10)}`);
-			if (res.ok) {
-				const data = await res.json();
-				const seen = new Set();
-				recentFoods = (data.entries ?? [])
-					.filter(e => e.mealType !== 'water' && e.source && e.sourceId)
-					.reverse()
-					.filter(e => {
-						const key = `${e.source}:${e.sourceId}`;
-						if (seen.has(key)) return false;
-						seen.add(key);
-						return true;
-					})
-					.slice(0, 10);
-			}
-		} catch { /* ignore */ }
-		recentFoodsLoaded = true;
-	}
-
-	// Load favorites + recents on mount
-	$effect(() => { loadQuickFavorites(); loadRecentFoods(); });
+	$effect(() => {
+		quickFavorites = data.favorites ?? [];
+		recentFoods = data.recentFoods ?? [];
+	});
 
 	/** @type {{ name: string, source: string, sourceId: string, per100g?: any, amountGrams?: number } | null} */
 	let qlSelected = $state(null);
@@ -1652,11 +1609,6 @@
 {/if}
 
 <style>
-	@media (min-width: 1024px) {
-		:global(.fitness-content.nutrition-wide) {
-			max-width: 1400px;
-		}
-	}
 	.nutrition-page {
 		max-width: 600px;
 		margin: 0 auto;

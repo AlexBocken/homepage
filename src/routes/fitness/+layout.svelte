@@ -63,6 +63,9 @@
 
 	const activePath = $derived(`/fitness/${s.workout}/${s.active}`);
 	const isOnActivePage = $derived($page.url.pathname === activePath);
+	const isNutritionPage = $derived(
+		$page.url.pathname === `/fitness/${s.nutrition}` || $page.url.pathname === `/fitness/${s.nutrition}/`
+	);
 
 	/** @param {number} secs */
 	function formatElapsed(secs) {
@@ -96,7 +99,7 @@
 		<UserHeader {user} />
 	{/snippet}
 
-	<div class="fitness-content">
+	<div class="fitness-content" style:--fitness-max-width={isNutritionPage ? '1400px' : null}>
 		{@render children()}
 	</div>
 </Header>
@@ -117,7 +120,7 @@
 
 <style>
 	.fitness-content {
-		max-width: 900px;
+		max-width: var(--fitness-max-width, 900px);
 		margin: 0 auto;
 		padding: var(--space-md, 1rem);
 	}
