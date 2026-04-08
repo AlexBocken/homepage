@@ -22,6 +22,7 @@ interface IFoodLogEntry {
     cysteine?: number; glutamicAcid?: number; glycine?: number; proline?: number;
     serine?: number; tyrosine?: number;
   };
+  liquidMl?: number;
   createdBy: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -51,6 +52,7 @@ const FoodLogEntrySchema = new mongoose.Schema(
     sourceId: { type: String },
     amountGrams: { type: Number, required: true, min: 0 },
     per100g: { type: NutritionSnapshotSchema, required: true },
+    liquidMl: { type: Number, min: 0 },
     createdBy: { type: String, required: true },
   },
   { timestamps: true }
