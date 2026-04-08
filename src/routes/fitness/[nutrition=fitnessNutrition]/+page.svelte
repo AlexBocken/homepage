@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check } from '@lucide/svelte';
+	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -205,10 +205,123 @@
 		/** @type {Record<string, any[]>} */
 		const g = { breakfast: [], lunch: [], dinner: [], snack: [] };
 		for (const e of entries) {
+			if (e.mealType === 'water') continue;
 			if (g[e.mealType]) g[e.mealType].push(e);
 		}
 		return g;
 	});
+
+	// --- Water & liquid tracking ---
+	const WATER_CUP_ML = 250;
+
+	/** BLS Trinkwasser (N110000) per100g */
+	const WATER_PER100G = {
+		calories: 0, protein: 0, fat: 0, saturatedFat: 0, carbs: 0, fiber: 0, sugars: 0,
+		calcium: 5.3, iron: 0, magnesium: 0.9, phosphorus: 0.011, potassium: 0.2,
+		sodium: 2.3, zinc: 0.001, vitaminA: 0, vitaminC: 0, vitaminD: 0, vitaminE: 0,
+		vitaminK: 0, thiamin: 0, riboflavin: 0, niacin: 0, vitaminB6: 0, vitaminB12: 0,
+		folate: 0, cholesterol: 0,
+	};
+
+	/** Detect if a food log entry is a beverage (non-water) */
+	const DRINK_PATTERNS = /^(milch|kaffee|coffee|tee|tea|cola|fanta|sprite|saft|juice|limo|smoothie|kakao|cocoa|bier|beer|wein|wine|eistee|ice tea|energy|redbull|red bull|mate|schorle|sprudel|mineral|orangensaft|apfelsaft|multivitamin|iso|gatorade|powerade)/i;
+	function isBeverage(e) {
+		if (e.mealType === 'water') return false;
+		if (e.source === 'bls' && e.sourceId?.startsWith('N')) return true;
+		return DRINK_PATTERNS.test(e.name);
+	}
+
+	let waterGoalMl = $state(2000);
+	let editingGoal = $state(false);
+	let goalInputL = $state(2);
+
+	$effect(() => {
+		const saved = localStorage.getItem('water_goal_ml');
+		if (saved) {
+			const v = parseInt(saved);
+			if (v > 0) waterGoalMl = v;
+		}
+	});
+
+	function saveGoal() {
+		const ml = Math.max(250, Math.round(goalInputL * 1000));
+		waterGoalMl = ml;
+		localStorage.setItem('water_goal_ml', String(ml));
+		editingGoal = false;
+	}
+
+	let waterEntries = $derived(entries.filter(e => e.mealType === 'water'));
+	let beverageEntries = $derived(entries.filter(isBeverage));
+	let waterMl = $derived(waterEntries.reduce((s, e) => s + e.amountGrams, 0));
+	let beverageMl = $derived(beverageEntries.reduce((s, e) => s + e.amountGrams, 0));
+	let totalLiquidMl = $derived(waterMl + beverageMl);
+	let beverageCups = $derived(Math.round(beverageMl / WATER_CUP_ML));
+	let waterCups = $derived(Math.round(waterMl / WATER_CUP_ML));
+	let totalCups = $derived(beverageCups + waterCups);
+	let goalCups = $derived(Math.round(waterGoalMl / WATER_CUP_ML));
+	let displayCups = $derived(Math.max(goalCups, totalCups + 1));
+
+	/** @type {Set<number>} cups currently animating fill/drain */
+	let fillingCups = $state(new Set());
+	let drainingCups = $state(new Set());
+	let lastTotalCups = $state(-1);
+
+	$effect(() => {
+		const cur = totalCups;
+		if (lastTotalCups === -1) {
+			lastTotalCups = cur;
+			return;
+		}
+		if (cur > lastTotalCups) {
+			const s = new Set(fillingCups);
+			for (let i = lastTotalCups; i < cur; i++) s.add(i);
+			fillingCups = s;
+			setTimeout(() => { fillingCups = new Set(); }, 1500);
+		} else if (cur < lastTotalCups) {
+			const s = new Set(drainingCups);
+			for (let i = cur; i < lastTotalCups; i++) s.add(i);
+			drainingCups = s;
+			setTimeout(() => { drainingCups = new Set(); }, 700);
+		}
+		lastTotalCups = cur;
+	});
+
+	async function setWaterCups(target) {
+		const current = waterCups;
+		if (target === current) return;
+		try {
+			if (target > current) {
+				const toAdd = target - current;
+				const promises = Array.from({ length: toAdd }, () =>
+					fetch('/api/fitness/food-log', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							date: currentDate,
+							mealType: 'water',
+							name: 'Trinkwasser',
+							source: 'bls',
+							sourceId: 'N110000',
+							amountGrams: WATER_CUP_ML,
+							per100g: WATER_PER100G,
+						})
+					}).then(r => r.ok ? r.json() : null)
+				);
+				const results = await Promise.all(promises);
+				const newEntries = results.filter(Boolean);
+				if (newEntries.length) entries = [...entries, ...newEntries];
+			} else {
+				const toRemove = waterEntries.slice(target);
+				const ids = toRemove.map(e => e._id);
+				await Promise.all(ids.map(id =>
+					fetch(`/api/fitness/food-log/${id}`, { method: 'DELETE' })
+				));
+				entries = entries.filter(e => !ids.includes(e._id));
+			}
+		} catch {
+			toast.error(isEn ? 'Failed to update water' : 'Fehler beim Aktualisieren');
+		}
+	}
 
 	function entryCalories(e) {
 		return (e.per100g?.calories ?? 0) * e.amountGrams / 100;
@@ -942,6 +1055,83 @@
 			{/if}
 		</div>
 	{/if}
+
+	<!-- Liquid Tracking Card -->
+	<div class="water-card">
+		<div class="water-header">
+			<div class="water-title">
+				<GlassWater size={16} />
+				<h3>{isEn ? 'Liquids' : 'Flüssigkeit'}</h3>
+			</div>
+			<div class="water-stats">
+				<span class="water-amount">{parseFloat((totalLiquidMl / 1000).toFixed(2))} L</span>
+				{#if editingGoal}
+					<form class="goal-edit-inline" onsubmit={e => { e.preventDefault(); saveGoal(); }}>
+						<span class="goal-slash">/</span>
+						<input type="number" class="goal-input-inline" bind:value={goalInputL} min="0.25" step="0.25" />
+						<span class="goal-unit">L</span>
+						<button type="submit" class="goal-save-inline"><Check size={12} /></button>
+					</form>
+				{:else}
+					<button class="water-goal-btn" onclick={() => { goalInputL = parseFloat((waterGoalMl / 1000).toFixed(2)); editingGoal = true; }}>
+						/ {parseFloat((waterGoalMl / 1000).toFixed(2))} L
+					</button>
+				{/if}
+			</div>
+		</div>
+		<div class="water-cups">
+			{#each Array(displayCups) as _, i}
+				{@const isBev = i < beverageCups}
+				{@const isFilled = i < totalCups}
+				{@const showWater = isFilled || drainingCups.has(i)}
+				{@const isNextEmpty = i === totalCups && !drainingCups.has(i)}
+				<button
+					class="water-cup"
+					class:filled={isFilled}
+					class:beverage={isBev}
+					class:filling={fillingCups.has(i)}
+					class:draining={drainingCups.has(i)}
+					class:next-empty={isNextEmpty}
+					disabled={isBev}
+					onclick={() => {
+						if (isBev) return;
+						const waterTarget = i < totalCups ? i - beverageCups : i - beverageCups + 1;
+						setWaterCups(Math.max(0, waterTarget));
+					}}
+					title="{isBev ? (isEn ? 'Beverage' : 'Getränk') : (i + 1) * WATER_CUP_ML + ' ml'}"
+				>
+					<svg viewBox="0 0 24 32" class="cup-svg" overflow="hidden">
+						<defs>
+							<clipPath id="cup-clip-{i}">
+								<path d="M4 4 L6 28 C6 30 8 30 8 30 L16 30 C16 30 18 30 18 28 L20 4 Z" />
+							</clipPath>
+						</defs>
+						<path d="M4 4 L6 28 C6 30 8 30 8 30 L16 30 C16 30 18 30 18 28 L20 4 Z" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" stroke-width="1.2" />
+						{#if showWater}
+							<g clip-path="url(#cup-clip-{i})" class="water-body">
+								<path class="water-wave w1" d="M-8 10 Q-2 6 4 10 T16 10 T28 10 T40 10 V34 H-8 Z" fill={isBev ? 'var(--nord15)' : 'var(--nord10)'} opacity="0.85" />
+								<path class="water-wave w2" d="M-4 12 Q2 8 8 12 T20 12 T32 12 V34 H-4 Z" fill={isBev ? 'var(--nord13)' : 'var(--nord9)'} opacity="0.5" />
+								<path class="water-wave w3" d="M0 11 Q6 7 12 11 T24 11 T36 11 V34 H0 Z" fill={isBev ? 'var(--nord15)' : 'var(--nord10)'} opacity="0.35" />
+							</g>
+						{/if}
+						{#if isNextEmpty}
+							<text x="12" y="20" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--color-text-secondary)">+</text>
+						{/if}
+					</svg>
+				</button>
+			{/each}
+		</div>
+		{#if beverageEntries.length > 0}
+			<div class="beverage-list">
+				{#each beverageEntries as bev}
+					<div class="beverage-item">
+						<span class="beverage-name">{bev.name}</span>
+						<span class="beverage-ml">{Math.round(bev.amountGrams)} ml</span>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
 
 	<!-- Meal Sections -->
 	{#each mealTypes as meal, mi}
@@ -1840,6 +2030,202 @@
 	}
 
 	/* ── Meal Sections ── */
+	/* Water card */
+	.water-card {
+		background: var(--color-surface);
+		border-radius: 12px;
+		padding: 0.75rem 1rem;
+		margin-bottom: 0.75rem;
+		border: 1px solid var(--color-border);
+	}
+	.water-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 0.5rem;
+	}
+	.water-title {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		color: var(--nord10);
+	}
+	.water-title h3 {
+		margin: 0;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+	.water-stats {
+		display: flex;
+		align-items: center;
+		gap: 0.15rem;
+	}
+	.water-amount {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--nord10);
+	}
+	.water-goal-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		padding: 0;
+	}
+	.goal-edit-inline {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	.goal-slash {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+	.goal-input-inline {
+		width: 48px;
+		padding: 0.15rem 0.3rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: 4px;
+		color: var(--color-text-primary);
+		font-size: 0.8rem;
+		text-align: right;
+	}
+	.goal-input-inline:focus {
+		outline: none;
+		border-color: var(--nord10);
+	}
+	.goal-unit {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+	.goal-save-inline {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		border: 2px solid var(--color-border);
+		background: transparent;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition: all 200ms;
+		padding: 0;
+	}
+	.goal-save-inline:hover {
+		border-color: var(--nord14);
+		background: var(--nord14);
+		color: white;
+		box-shadow: 0 2px 8px rgba(163, 190, 140, 0.35);
+		transform: scale(1.08);
+	}
+	.goal-save-inline:active {
+		transform: scale(0.95);
+		background: #8fad7a;
+		border-color: #8fad7a;
+		color: white;
+	}
+	.water-cups {
+		display: flex;
+		align-items: center;
+		gap: 0.2rem;
+		flex-wrap: wrap;
+	}
+	.water-cup {
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		width: 26px;
+		height: 34px;
+	}
+	@media (min-width: 500px) {
+		.water-cup {
+			width: 34px;
+			height: 44px;
+		}
+	}
+	.cup-svg {
+		width: 100%;
+		height: 100%;
+	}
+	.water-cup:disabled {
+		cursor: default;
+		opacity: 1;
+	}
+	.water-cup.next-empty:hover .cup-svg > path:first-of-type {
+		fill: color-mix(in srgb, var(--nord10) 20%, var(--color-bg-tertiary));
+	}
+
+	/* Water fill animation — only on newly filled cups */
+	.water-cup.filling .water-body {
+		animation: water-rise 800ms ease-out both;
+	}
+	.water-cup.filling .water-wave.w1 {
+		animation: wave-slosh 1.2s ease-in-out both;
+	}
+	.water-cup.filling .water-wave.w2 {
+		animation: wave-slosh 1s ease-in-out 0.1s both reverse;
+	}
+	.water-cup.filling .water-wave.w3 {
+		animation: wave-slosh 1.4s ease-in-out 0.05s both;
+	}
+	.water-cup.draining .water-body {
+		animation: water-drain 400ms ease-in both;
+	}
+	.water-cup.draining .water-wave.w1 {
+		animation: wave-slosh 500ms ease-in-out both;
+	}
+	.water-cup.draining .water-wave.w2 {
+		animation: wave-slosh 400ms ease-in-out both reverse;
+	}
+	.water-cup.draining .water-wave.w3 {
+		animation: wave-slosh 550ms ease-in-out both;
+	}
+	@keyframes water-rise {
+		from { transform: translateY(24px); }
+		to { transform: translateY(0); }
+	}
+	@keyframes water-drain {
+		from { transform: translateY(0); }
+		to { transform: translateY(24px); }
+	}
+	@keyframes wave-slosh {
+		0% { transform: translateX(0); }
+		20% { transform: translateX(-6px); }
+		40% { transform: translateX(5px); }
+		60% { transform: translateX(-3px); }
+		80% { transform: translateX(2px); }
+		100% { transform: translateX(0); }
+	}
+
+	/* Beverage list */
+	.beverage-list {
+		margin-top: 0.5rem;
+		padding-top: 0.5rem;
+		border-top: 1px solid var(--color-border);
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+	.beverage-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 0.8rem;
+	}
+	.beverage-name {
+		color: var(--color-text-secondary);
+	}
+	.beverage-ml {
+		color: var(--nord10);
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+	}
+
 	.meal-section {
 
 	}
