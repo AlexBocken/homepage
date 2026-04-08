@@ -840,6 +840,7 @@
 		</button>
 	</div>
 
+	<div class="sidebar-col">
 	<!-- Daily Summary -->
 	{#if goalCalories}
 		<div class="daily-summary">
@@ -1273,7 +1274,10 @@
 		{/if}
 	</div>
 
+	</div>
+
 	<!-- Meal Sections -->
+	<div class="meals-col">
 	{#each mealTypes as meal, mi}
 		{@const mealEntries = grouped[meal]}
 		{@const mealCal = mealEntries.reduce((s, e) => s + entryCalories(e), 0)}
@@ -1381,6 +1385,7 @@
 			{/if}
 		</div>
 	{/each}
+	</div>
 
 </div>
 
@@ -1460,6 +1465,35 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+	}
+	.sidebar-col, .meals-col {
+		display: contents;
+	}
+	@media (min-width: 1024px) {
+		.nutrition-page {
+			max-width: 1100px;
+			display: grid;
+			grid-template-columns: minmax(320px, 380px) 1fr;
+			grid-template-rows: auto 1fr;
+			column-gap: 1.5rem;
+			align-items: start;
+		}
+		.date-nav {
+			grid-column: 1 / -1;
+		}
+		.sidebar-col {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			position: sticky;
+			top: 1rem;
+		}
+		.meals-col {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			min-width: 0;
+		}
 	}
 
 
