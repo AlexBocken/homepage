@@ -2,10 +2,12 @@
   import { onMount, onDestroy } from 'svelte';
   import { getShoppingSync } from '$lib/js/shoppingSync.svelte';
   import { SHOPPING_CATEGORIES } from '$lib/data/shoppingCategoryItems';
-  import { Plus, ListX, Apple, Beef, Milk, Croissant, Wheat, FlameKindling, GlassWater, Candy, Snowflake, SprayCan, Sparkles, Package } from '@lucide/svelte';
+  import { Plus, ListX, Apple, Beef, Milk, Croissant, Wheat, FlameKindling, GlassWater, Candy, Snowflake, SprayCan, Sparkles, Package, Search } from '@lucide/svelte';
+  import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
   import { flip } from 'svelte/animate';
   import { slide } from 'svelte/transition';
   import { SvelteSet } from 'svelte/reactivity';
+  import catalogData from '$lib/data/shoppingCatalog.json';
 
   let { data } = $props();
   let user = $derived(data.session?.user?.nickname || '');
@@ -149,11 +151,70 @@
     if (e.key === 'Enter') { e.preventDefault(); addItem(); }
   }
 
+  // --- Long press edit ---
+
+  /** @type {number | null} */
+  let longPressTimer = $state(null);
+  /** @type {import('$lib/js/shoppingSync.svelte').ShoppingItem | null} */
+  let editingItem = $state(null);
+  let editCategory = $state('');
+  let editIcon = $state('');
+  let iconSearch = $state('');
+  let editSaving = $state(false);
+
+  const allIcons = Object.entries(/** @type {Record<string, string>} */ (catalogData));
+
+  let filteredIcons = $derived(
+    iconSearch.trim()
+      ? allIcons.filter(([name]) => name.includes(iconSearch.toLowerCase()))
+      : allIcons
+  );
+
+  /** @param {import('$lib/js/shoppingSync.svelte').ShoppingItem} item */
+  function startLongPress(item) {
+    longPressTimer = window.setTimeout(() => {
+      editingItem = item;
+      editCategory = item.category;
+      editIcon = item.icon || '';
+      iconSearch = '';
+    }, 500);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  function closeEdit() {
+    editingItem = null;
+    editSaving = false;
+  }
+
+  async function saveEdit() {
+    if (!editingItem) return;
+    editSaving = true;
+    const cleanName = parseQuantity(editingItem.name).name;
+    try {
+      await fetch('/api/cospend/list/categorize/override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: cleanName, category: editCategory, icon: editIcon || null })
+      });
+      sync.updateItemCategory(editingItem.id, editCategory, editIcon || null);
+      closeEdit();
+    } catch (err) {
+      console.error('[shopping] Save override error:', err);
+      editSaving = false;
+    }
+  }
+
 </script>
 
 <div class="shopping-page">
   <header class="page-header">
-    <h1>Einkaufsliste</h1>
+    <h1>Einkaufsliste <SyncIndicator status={sync.status} /></h1>
     {#if totalCount > 0}
       <p class="subtitle">{checkedCount} / {totalCount} erledigt</p>
     {/if}
@@ -187,8 +248,8 @@
                 <CategoryIcon size={14} />
               </div>
               <h2>{group.category}</h2>
+              <span class="category-count">{group.items.filter(i => !i.checked).length}</span>
             </div>
-            <span class="category-count">{group.items.filter(i => !i.checked).length}</span>
           </div>
 
             <div class="card-grid">
@@ -201,6 +262,10 @@
                   class:checked={item.checked}
                   animate:flip={{ duration: 200 }}
                   onclick={() => sync.toggleItem(item.id, user)}
+                  onpointerdown={() => startLongPress(item)}
+                  onpointerup={cancelLongPress}
+                  onpointerleave={cancelLongPress}
+                  oncontextmenu={(e) => e.preventDefault()}
                 >
                   {#if parsed.qty}
                     <span class="qty-badge">{parsed.qty}</span>
@@ -228,12 +293,61 @@
     {/if}
   {/if}
 
-  {#if sync.status === 'offline'}
-    <div class="status-badge offline">Offline</div>
-  {:else if sync.status === 'syncing'}
-    <div class="status-badge syncing">Synchronisiere...</div>
-  {/if}
 </div>
+
+{#if editingItem}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <div class="edit-backdrop" onclick={closeEdit}>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="edit-modal" onclick={(e) => e.stopPropagation()}>
+      <h3>{parseQuantity(editingItem.name).name}</h3>
+
+      <label class="edit-label">Kategorie</label>
+      <div class="category-picker">
+        {#each SHOPPING_CATEGORIES as cat}
+          {@const meta = categoryMeta[cat] || categoryMeta['Sonstiges']}
+          {@const CatIcon = meta.icon}
+          <button
+            class="cat-option"
+            class:selected={editCategory === cat}
+            style="--cat-color: {meta.color}"
+            onclick={() => { editCategory = cat; }}
+          >
+            <CatIcon size={14} />
+            <span>{cat}</span>
+          </button>
+        {/each}
+      </div>
+
+      <label class="edit-label">Icon</label>
+      <div class="icon-search">
+        <Search size={14} />
+        <input bind:value={iconSearch} type="text" placeholder="Icon suchen..." />
+      </div>
+      <div class="icon-picker">
+        {#each filteredIcons as [name, file]}
+          <button
+            class="icon-option"
+            class:selected={editIcon === file}
+            onclick={() => { editIcon = file; }}
+            title={name}
+          >
+            <img src="https://bocken.org/static/shopping-icons/{file}.png" alt={name} />
+          </button>
+        {/each}
+      </div>
+
+      <div class="edit-actions">
+        <button class="btn-cancel" onclick={closeEdit}>Abbrechen</button>
+        <button class="btn-save" onclick={saveEdit} disabled={editSaving}>
+          {editSaving ? 'Speichern...' : 'Speichern'}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .shopping-page {
@@ -314,7 +428,6 @@
   .category-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 0.4rem 0.2rem;
     user-select: none;
   }
@@ -381,8 +494,23 @@
     transform: scale(0.95);
   }
   .item-card.checked {
-    opacity: 0.45;
+    opacity: 0.35;
     background: color-mix(in srgb, var(--nord14) 8%, var(--color-surface));
+  }
+  .item-card.checked::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top right,
+      transparent calc(50% - 1px),
+      var(--color-text-secondary) calc(50% - 1px),
+      var(--color-text-secondary) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+    border-radius: 12px;
+    pointer-events: none;
+    opacity: 0.5;
   }
 
   .card-icon {
@@ -463,21 +591,6 @@
     background: color-mix(in srgb, var(--nord11) 6%, transparent);
   }
 
-  /* Status */
-  .status-badge {
-    position: fixed;
-    bottom: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.35rem 0.8rem;
-    border-radius: 100px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    z-index: 50;
-  }
-  .status-badge.offline { background: var(--nord11); color: white; }
-  .status-badge.syncing { background: var(--nord13); color: var(--nord0); }
-
   @media (max-width: 500px) {
     .shopping-page { padding: 1rem 0.75rem; }
     h1 { font-size: 1.3rem; }
@@ -487,5 +600,155 @@
     }
     .card-icon { width: 36px; height: 36px; }
     .card-name { font-size: 0.68rem; }
+  }
+
+  /* Edit modal */
+  .edit-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .edit-modal {
+    background: var(--color-bg-secondary);
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  .edit-modal h3 {
+    margin: 0 0 1rem;
+    font-size: 1.2rem;
+    color: var(--color-text-primary);
+  }
+  .edit-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .category-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+  }
+  .cat-option {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .cat-option:hover {
+    border-color: var(--cat-color);
+  }
+  .cat-option.selected {
+    background: var(--cat-color);
+    color: var(--nord0);
+    border-color: var(--cat-color);
+  }
+
+  .icon-search {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    margin-bottom: 0.5rem;
+  }
+  .icon-search input {
+    border: none;
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+    flex: 1;
+    outline: none;
+  }
+
+  .icon-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 0.35rem;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 1.25rem;
+    padding: 0.25rem;
+  }
+  .icon-option {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background: var(--color-bg-tertiary);
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: all 150ms;
+  }
+  .icon-option:hover {
+    border-color: var(--color-border);
+  }
+  .icon-option.selected {
+    border-color: var(--nord10);
+    background: color-mix(in srgb, var(--nord10) 15%, var(--color-bg-tertiary));
+  }
+  .icon-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+  .btn-cancel, .btn-save {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    transition: all 150ms;
+  }
+  .btn-cancel {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+  }
+  .btn-cancel:hover {
+    background: var(--color-bg-elevated);
+  }
+  .btn-save {
+    background: var(--nord10);
+    color: white;
+  }
+  .btn-save:hover {
+    background: var(--nord9);
+  }
+  .btn-save:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 </style>
