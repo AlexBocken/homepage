@@ -1,11 +1,12 @@
 import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
 import { addConnection, removeConnection } from '$lib/server/shoppingSSE';
+import { getShoppingUser } from '$lib/server/shoppingAuth';
 
 // GET /api/cospend/list/stream — SSE endpoint for live shopping list updates
-export const GET: RequestHandler = async ({ locals }) => {
-  const auth = await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+export const GET: RequestHandler = async ({ locals, url }) => {
+  const user = await getShoppingUser(locals, url);
+  if (!user) throw error(401, 'Not logged in');
 
   const encoder = new TextEncoder();
   let controllerRef: ReadableStreamDefaultController<Uint8Array>;
