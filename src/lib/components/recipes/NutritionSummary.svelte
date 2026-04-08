@@ -1,5 +1,6 @@
 <script>
 	import { createNutritionCalculator } from '$lib/js/nutrition.svelte';
+	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 
 	let { flatIngredients, nutritionMappings, sectionNames, referencedNutrition, multiplier, portions, isEnglish, actions } = $props();
 
@@ -70,19 +71,7 @@
 		return value.toFixed(1);
 	}
 
-	// SVG arc parameters — 300° arc with 60° gap at bottom
-	const RADIUS = 28;
-	const ARC_DEGREES = 300;
-	const ARC_LENGTH = (ARC_DEGREES / 360) * 2 * Math.PI * RADIUS;
-	// Arc starts at the left side: rotate so the gap is centered at the bottom
-	// 0° in SVG circle = 3 o'clock. We want the arc to start at ~210° (7 o'clock)
-	// and end at ~150° (5 o'clock), leaving a 60° gap at bottom center.
-	const ARC_ROTATE = 120; // rotate the starting point: -90 (top) + 210 offset → start at left
 
-	/** @param {number} percent */
-	function strokeOffset(percent) {
-		return ARC_LENGTH - (percent / 100) * ARC_LENGTH;
-	}
 </script>
 
 <style>
@@ -101,40 +90,12 @@
 		justify-content: space-around;
 		margin: 0.5rem 0;
 	}
-	.macro-ring {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.25rem;
-		flex: 1;
+	.macro-rings :global(.ring-svg) {
+		width: 90px;
+		height: 90px;
 	}
-	.ring-bg {
-		fill: none;
-		stroke: var(--color-border, #e5e5e5);
-		stroke-width: 5;
-		stroke-linecap: round;
-	}
-	.ring-fill {
-		fill: none;
-		stroke-width: 5;
-		stroke-linecap: round;
-		transition: stroke-dashoffset 0.4s ease;
-	}
-	.ring-text {
-		font-size: 14px;
-		font-weight: 700;
-		fill: currentColor;
-		text-anchor: middle;
-		dominant-baseline: central;
-	}
-	.ring-protein { stroke: var(--nord14, #a3be8c); }
-	.ring-fat { stroke: var(--nord12, #d08770); }
-	.ring-carbs { stroke: var(--nord9, #81a1c1); }
-
-	.macro-label {
+	.macro-rings :global(.ring-label) {
 		font-size: 0.85rem;
-		font-weight: 600;
-		text-align: center;
 	}
 
 	.details-toggle-row {
@@ -194,29 +155,15 @@
 <div class="nutrition-summary">
 	<div class="macro-rings">
 		{#each [
-			{ pct: macroPercent.protein, label: labels.protein, cls: 'ring-protein' },
-			{ pct: macroPercent.fat, label: labels.fat, cls: 'ring-fat' },
-			{ pct: macroPercent.carbs, label: labels.carbs, cls: 'ring-carbs' },
-		] as macro}
-			<div class="macro-ring">
-				<svg width="90" height="90" viewBox="0 0 70 70">
-					<circle
-						class="ring-bg"
-						cx="35" cy="35" r={RADIUS}
-						stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-						transform="rotate({ARC_ROTATE} 35 35)"
-					/>
-					<circle
-						class="ring-fill {macro.cls}"
-						cx="35" cy="35" r={RADIUS}
-						stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-						stroke-dashoffset={strokeOffset(macro.pct)}
-						transform="rotate({ARC_ROTATE} 35 35)"
-					/>
-					<text class="ring-text" x="35" y="35">{macro.pct}%</text>
-				</svg>
-				<span class="macro-label">{macro.label}</span>
-			</div>
+			{ pct: macroPercent.protein, label: labels.protein, color: 'var(--nord14)' },
+			{ pct: macroPercent.fat, label: labels.fat, color: 'var(--nord12)' },
+			{ pct: macroPercent.carbs, label: labels.carbs, color: 'var(--nord9)' },
+		] as macro (macro.color)}
+			<RingGraph
+				percent={macro.pct}
+				color={macro.color}
+				label={macro.label}
+			/>
 		{/each}
 	</div>
 
