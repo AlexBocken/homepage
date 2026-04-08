@@ -28,11 +28,18 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 		} catch { return 0; }
 	})();
 
-	const [foodRes, goalRes, weightRes, exerciseKcal] = await Promise.all([
+	const recentFrom = new Date();
+	recentFrom.setDate(recentFrom.getDate() - 3);
+	const recentFromStr = recentFrom.toISOString().slice(0, 10);
+	const todayStr = new Date().toISOString().slice(0, 10);
+
+	const [foodRes, goalRes, weightRes, exerciseKcal, favRes, recentRes] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
 		fetch('/api/fitness/goal'),
 		fetch('/api/fitness/measurements/latest'),
-		exercisePromise
+		exercisePromise,
+		fetch('/api/fitness/favorite-ingredients'),
+		fetch(`/api/fitness/food-log?from=${recentFromStr}&to=${todayStr}`),
 	]);
 
 	const foodLog = foodRes.ok ? await foodRes.json() : { entries: [] };
@@ -60,6 +67,22 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 		} catch {}
 	}
 
+	const favData = favRes.ok ? await favRes.json() : { favorites: [] };
+	const recentData = recentRes.ok ? await recentRes.json() : { entries: [] };
+
+	// Deduplicate recent foods
+	const seen = new Set<string>();
+	const recentFoods = (recentData.entries ?? [])
+		.filter((e: any) => e.mealType !== 'water' && e.source && e.sourceId)
+		.reverse()
+		.filter((e: any) => {
+			const key = `${e.source}:${e.sourceId}`;
+			if (seen.has(key)) return false;
+			seen.add(key);
+			return true;
+		})
+		.slice(0, 10);
+
 	return {
 		date: dateParam,
 		foodLog,
@@ -67,5 +90,7 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 		latestWeight: weightRes.ok ? await weightRes.json() : {},
 		exerciseKcal: Math.round(exerciseKcal),
 		recipeImages,
+		favorites: favData.favorites ?? [],
+		recentFoods,
 	};
 };
