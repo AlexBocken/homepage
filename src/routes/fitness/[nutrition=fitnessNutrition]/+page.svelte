@@ -825,6 +825,26 @@
 	<title>{t('nutrition_title', lang)} — Fitness</title>
 </svelte:head>
 
+{#snippet microPanel()}
+	<div class="micro-details" class:micro-hidden={!showMicros}>
+		{#each microSections as section}
+			<div class="micro-section">
+				<h4>{section.title}</h4>
+				{#each section.rows as row}
+					<div class="micro-row">
+						<span class="micro-label">{row.label}</span>
+						<div class="micro-bar-wrap">
+							<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.pct, 100)}%"></div>
+						</div>
+						<span class="micro-value">{fmt(row.value)} {row.unit}</span>
+						<span class="micro-pct">{row.pct}%</span>
+					</div>
+				{/each}
+			</div>
+		{/each}
+	</div>
+{/snippet}
+
 <div class="nutrition-page">
 	<!-- Date Navigator -->
 	<div class="date-nav">
@@ -931,33 +951,17 @@
 				{/each}
 			</div>
 
-			<!-- Micro toggle -->
-			<div class="details-toggle-row">
-				<button class="details-toggle" onclick={() => showMicros = !showMicros}>
-					<ChevronDown size={14} style={showMicros ? 'transform: rotate(180deg)' : ''} />
-					{t('micro_details', lang)}
-				</button>
+			<!-- Micros inline (mobile) -->
+			<div class="micro-inline">
+				<div class="details-toggle-row">
+					<button class="details-toggle" onclick={() => showMicros = !showMicros}>
+						<ChevronDown size={14} style={showMicros ? 'transform: rotate(180deg)' : ''} />
+						{t('micro_details', lang)}
+					</button>
+				</div>
+				{@render microPanel()}
 			</div>
 
-			{#if showMicros}
-				<div class="micro-details">
-					{#each microSections as section}
-						<div class="micro-section">
-							<h4>{section.title}</h4>
-							{#each section.rows as row}
-								<div class="micro-row">
-									<span class="micro-label">{row.label}</span>
-									<div class="micro-bar-wrap">
-										<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.pct, 100)}%"></div>
-									</div>
-									<span class="micro-value">{fmt(row.value)} {row.unit}</span>
-									<span class="micro-pct">{row.pct}%</span>
-								</div>
-							{/each}
-						</div>
-					{/each}
-				</div>
-			{/if}
 		</div>
 	{:else}
 		<div class="no-goal">
@@ -1274,6 +1278,14 @@
 		{/if}
 	</div>
 
+	{#if goalCalories}
+		<!-- Micros card (desktop) -->
+		<div class="micro-card">
+			<h3 class="micro-card-title">{t('micro_details', lang)}</h3>
+			{@render microPanel()}
+		</div>
+	{/if}
+
 	</div>
 
 	<!-- Meal Sections -->
@@ -1471,7 +1483,7 @@
 	}
 	@media (min-width: 1024px) {
 		.nutrition-page {
-			max-width: 1100px;
+			max-width: 1400px;
 			display: grid;
 			grid-template-columns: minmax(320px, 380px) 1fr;
 			grid-template-rows: auto 1fr;
@@ -1493,6 +1505,17 @@
 			flex-direction: column;
 			gap: 0.75rem;
 			min-width: 0;
+		}
+		.micro-inline {
+			display: none;
+		}
+		.micro-card {
+			display: block;
+		}
+		.micro-card .micro-details,
+		.micro-card .micro-details.micro-hidden {
+			display: grid;
+			grid-template-columns: 1fr;
 		}
 	}
 
@@ -1791,11 +1814,32 @@
 	/* (macro rings replaced by macro bars) */
 
 	/* ── Micro Details ── */
-	.details-toggle-row {
-		text-align: center;
+	.micro-inline {
 		margin-top: 0.75rem;
 		padding-top: 0.5rem;
 		border-top: 1px solid var(--color-border);
+	}
+	.micro-card {
+		background: var(--color-surface);
+		border-radius: 14px;
+		padding: 1rem;
+	}
+	@media (max-width: 1023px) {
+		.micro-card {
+			display: none;
+		}
+		.micro-inline {
+			display: block;
+		}
+	}
+	.micro-card-title {
+		margin: 0 0 0.75rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+	.details-toggle-row {
+		text-align: center;
 	}
 	.details-toggle {
 		font-size: 0.8rem;
@@ -1815,11 +1859,12 @@
 	}
 
 	.micro-details {
-		margin-top: 0.75rem;
 		display: grid;
 		grid-template-columns: 1fr;
 		gap: 1rem;
-
+	}
+	.micro-details.micro-hidden {
+		display: none;
 	}
 	.micro-section h4 {
 		margin: 0 0 0.4rem;
