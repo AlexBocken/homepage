@@ -229,6 +229,7 @@
 	}
 	.filter-pill {
 		all: unset;
+		-webkit-tap-highlight-color: transparent;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
