@@ -1,7 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { detectCospendLang, cospendRoot } from '$lib/js/cospendI18n';
 
-export const load: PageServerLoad = async ({ fetch, locals, request }) => {
+export const load: PageServerLoad = async ({ fetch, locals, request, url }) => {
   const session = await locals.auth();
   
   if (!session) {
@@ -43,7 +44,7 @@ export const load: PageServerLoad = async ({ fetch, locals, request }) => {
 }
 
 export const actions: Actions = {
-  settle: async ({ request, fetch, locals }) => {
+  settle: async ({ request, fetch, locals, url }) => {
     const data = await request.formData();
     
     const settlementType = data.get('settlementType');
@@ -113,7 +114,8 @@ export const actions: Actions = {
       }
 
       // Redirect back to dashboard on success
-      throw redirect(303, '/cospend');
+      const root = cospendRoot(detectCospendLang(url.pathname));
+      throw redirect(303, `/${root}`);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'status' in error && (error as { status: number }).status === 303) {
         throw error; // Re-throw redirect

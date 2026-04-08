@@ -1,10 +1,11 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { enhance } from '$app/forms';
-  import { getCategoryOptions } from '$lib/utils/categories';
+  import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n, frequencyDescription } from '$lib/js/cospendI18n';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
-  import { validateCronExpression, getFrequencyDescription, calculateNextExecutionDate } from '$lib/utils/recurring';
+  import { validateCronExpression, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import SplitMethodSelector from '$lib/components/cospend/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/cospend/UsersList.svelte';
@@ -13,6 +14,10 @@
   import Toggle from '$lib/components/Toggle.svelte';
 
   let { data, form } = $props();
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const root = $derived(cospendRoot(lang));
+  const loc = $derived(locale(lang));
 
   // Initialize form data with server values if available (for error handling)
   /** @type {Record<string, any>} */
@@ -82,36 +87,36 @@
     personalAmounts[user] = 0;
   });
 
-  let categoryOptions = $derived(getCategoryOptions());
+  let categoryOptions = $derived(getCategoryOptionsI18n(lang));
 
   // Reactive text for "Paid in Full" option
   let paidInFullText = $derived.by(() => {
     // No-JS fallback text - always generic
     if (!jsEnhanced) {
       if (predefinedMode) {
-        return users.length === 2 ? 'Paid in Full for other' : 'Paid in Full for others';
+        return t('paid_in_full', lang);
       } else {
-        return 'Paid in Full for others';
+        return t('paid_in_full', lang);
       }
     }
 
     // JavaScript-enhanced reactive text
     if (!formData.paidBy) {
-      return 'Paid in Full';
+      return t('paid_in_full', lang);
     }
 
     // Special handling for 2-user predefined setup
     if (predefinedMode && users.length === 2) {
       const otherUser = users.find(user => user !== formData.paidBy);
       // Always show "for" the other user (who benefits) regardless of who pays
-      return otherUser ? `Paid in Full for ${otherUser}` : 'Paid in Full';
+      return otherUser ? `${t('paid_in_full_for', lang)} ${otherUser}` : t('paid_in_full', lang);
     }
 
     // General case with JS
     if (formData.paidBy === data.currentUser) {
-      return 'Paid in Full by You';
+      return t('paid_in_full_by_you', lang);
     } else {
-      return `Paid in Full by ${formData.paidBy}`;
+      return `${t('paid_in_full_by', lang)} ${formData.paidBy}`;
     }
   });
 
@@ -292,7 +297,7 @@
       }
 
       const result = await response.json();
-      await goto('/cospend/dash');
+      await goto(`/${root}/dash`);
 
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
@@ -318,7 +323,7 @@
           startDate: new Date(recurringData.startDate)
         });
         const nextDate = calculateNextExecutionDate(recurringPayment, new Date(recurringData.startDate));
-        nextExecutionPreview = nextDate.toLocaleString('de-CH', {
+        nextExecutionPreview = nextDate.toLocaleString(loc, {
           weekday: 'long',
           year: 'numeric',
           month: 'long',
@@ -357,44 +362,44 @@
 </script>
 
 <svelte:head>
-  <title>Add Payment - Cospend</title>
+  <title>{t('add_payment_title', lang)} - {t('cospend', lang)}</title>
 </svelte:head>
 
 <main class="add-payment">
   <div class="header">
-    <h1>Add New Payment</h1>
-    <p>Create a new shared expense or recurring payment</p>
+    <h1>{t('add_payment_title', lang)}</h1>
+    <p>{t('add_payment_subtitle', lang)}</p>
   </div>
 
   <form method="POST" use:enhance class="payment-form">
     <div class="form-section">
-      <h2>Payment Details</h2>
+      <h2>{t('payment_details_section', lang)}</h2>
       
       <div class="form-group">
-        <label for="title">Title *</label>
+        <label for="title">{t('title_label', lang)}</label>
         <input 
           type="text" 
           id="title" 
           name="title"
           value={formData.title}
           required 
-          placeholder="e.g., Dinner at restaurant"
+          placeholder={t('title_placeholder', lang)}
         />
       </div>
 
       <div class="form-group">
-        <label for="description">Description</label>
+        <label for="description">{t('description_label', lang)}</label>
         <textarea 
           id="description" 
           name="description"
           value={formData.description} 
-          placeholder="Additional details..."
+          placeholder={t('description_placeholder', lang)}
           rows="3"
         ></textarea>
       </div>
 
       <div class="form-group">
-        <label for="category">Category *</label>
+        <label for="category">{t('category_star', lang)}</label>
         <select id="category" name="category" value={formData.category} required>
           {#each categoryOptions as option}
             <option value={option.value}>{option.label}</option>
@@ -404,7 +409,7 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="amount">Amount *</label>
+          <label for="amount">{t('amount_label', lang)}</label>
           <div class="amount-currency">
             <input 
               type="number" 
@@ -424,11 +429,11 @@
           </div>
           {#if formData.currency !== 'CHF'}
             <div class="conversion-info">
-              <small class="help-text">Amount will be converted to CHF using exchange rates for the payment date</small>
+              <small class="help-text">{t('conversion_hint', lang)}</small>
               
               {#if loadingExchangeRate}
                 <div class="conversion-preview loading">
-                  <small>🔄 Fetching exchange rate...</small>
+                  <small>🔄 {t('fetching_rate', lang)}</small>
                 </div>
               {:else if exchangeRateError}
                 <div class="conversion-preview error">
@@ -448,7 +453,7 @@
         </div>
 
         <div class="form-group">
-          <label for="date">Payment Date</label>
+          <label for="date">{t('payment_date', lang)}</label>
           <input 
             type="date" 
             id="date" 
@@ -457,13 +462,13 @@
             required
           />
           {#if formData.currency !== 'CHF'}
-            <small class="help-text">Exchange rate will be fetched for this date</small>
+            <small class="help-text">{t('exchange_rate_date', lang)}</small>
           {/if}
         </div>
       </div>
 
       <div class="form-group">
-        <label for="paidBy">Paid by</label>
+        <label for="paidBy">{t('paid_by_form', lang)}</label>
         <select id="paidBy" name="paidBy" bind:value={formData.paidBy} required>
           {#each users as user}
             <option value={user}>{user}</option>
@@ -474,7 +479,7 @@
       <div class="form-group">
         <label class="checkbox-label">
           <Toggle bind:checked={formData.isRecurring} />
-          <span>Make this a recurring payment</span>
+          <span>{t('make_recurring', lang)}</span>
           <input type="hidden" name="isRecurring" value={formData.isRecurring ? 'true' : 'false'} />
         </label>
       </div>
@@ -482,24 +487,24 @@
 
     {#if formData.isRecurring}
       <div class="form-section">
-        <h2>Recurring Payment</h2>
+        <h2>{t('recurring_section', lang)}</h2>
         
         <div class="recurring-options">
           <div class="form-row">
             <div class="form-group">
-              <label for="frequency">Frequency *</label>
+              <label for="frequency">{t('frequency_label', lang)}</label>
               <select id="frequency" name="recurringFrequency" bind:value={recurringData.frequency} required>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="yearly">Yearly</option>
-                <option value="custom">Custom (Cron)</option>
+                <option value="daily">{t('freq_daily', lang)}</option>
+                <option value="weekly">{t('freq_weekly', lang)}</option>
+                <option value="monthly">{t('freq_monthly', lang)}</option>
+                <option value="quarterly">{t('freq_quarterly', lang)}</option>
+                <option value="yearly">{t('freq_yearly', lang)}</option>
+                <option value="custom">{t('freq_custom', lang)}</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="recurringStartDate">Start Date *</label>
+              <label for="recurringStartDate">{t('start_date', lang)}</label>
               <input 
                 type="date" 
                 id="recurringStartDate" 
@@ -539,7 +544,7 @@
           {/if}
 
           <div class="form-group">
-            <label for="recurringEndDate">End Date (optional)</label>
+            <label for="recurringEndDate">{t('end_date_optional', lang)}</label>
             <input 
               type="date" 
               id="recurringEndDate" 
@@ -547,15 +552,15 @@
               bind:value={recurringData.endDate}
               min={recurringData.startDate}
             />
-            <small class="help-text">Leave empty for indefinite recurring</small>
+            <small class="help-text">{t('end_date_hint', lang)}</small>
           </div>
 
 
           {#if nextExecutionPreview}
             <div class="execution-preview">
-              <h3>Next Execution</h3>
+              <h3>{t('next_execution_preview', lang)}</h3>
               <p class="next-execution">{nextExecutionPreview}</p>
-              <p class="frequency-description">{getFrequencyDescription(/** @type {any} */ (recurringData))}</p>
+              <p class="frequency-description">{frequencyDescription(/** @type {any} */ (recurringData), lang)}</p>
             </div>
           {/if}
         </div>
@@ -566,17 +571,19 @@
       bind:imagePreview={imagePreview}
       bind:imageFile={imageFile}
       bind:uploading={uploading}
+      {lang}
       onimageSelected={(file) => { imageFile = file; }}
       onimageRemoved={handleImageRemoved}
       onerror={(message) => { error = message; }}
     />
 
-    <UsersList 
+    <UsersList
       bind:users={users}
       bind:newUser={newUser}
       currentUser={data.session?.user?.nickname || data.currentUser}
       predefinedMode={predefinedMode}
       canRemoveUsers={!predefinedMode}
+      {lang}
     />
 
     <!-- Server-side fallback: simple text inputs for users -->
@@ -616,7 +623,7 @@
       <div class="error">{error}</div>
     {/if}
 
-    <SaveFab disabled={loading} label="Create payment" />
+    <SaveFab disabled={loading} label={t('create_payment', lang)} />
   </form>
 </main>
 

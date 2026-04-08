@@ -1,18 +1,21 @@
 <script lang="ts">
   import ProfilePicture from './ProfilePicture.svelte';
+  import { t } from '$lib/js/cospendI18n';
 
   let {
     users = $bindable([]),
     currentUser = '',
     predefinedMode = false,
     canRemoveUsers = true,
-    newUser = $bindable('')
+    newUser = $bindable(''),
+    lang = 'de' as 'en' | 'de'
   } = $props<{
     users?: string[],
     currentUser?: string,
     predefinedMode?: boolean,
     canRemoveUsers?: boolean,
-    newUser?: string
+    newUser?: string,
+    lang?: 'en' | 'de'
   }>();
 
   function addUser() {
@@ -35,18 +38,18 @@
 </script>
 
 <div class="form-section">
-  <h2>Split Between Users</h2>
+  <h2>{t('split_between_users', lang)}</h2>
 
   {#if predefinedMode}
     <div class="predefined-users">
-      <p class="predefined-note">Splitting between predefined users:</p>
+      <p class="predefined-note">{t('predefined_note', lang)}</p>
       <div class="users-list">
         {#each users as user}
           <div class="user-item with-profile">
             <ProfilePicture username={user} size={32} />
             <span class="username">{user}</span>
             {#if user === currentUser}
-              <span class="you-badge">You</span>
+              <span class="you-badge">{t('you', lang)}</span>
             {/if}
           </div>
         {/each}
@@ -59,11 +62,11 @@
           <ProfilePicture username={user} size={32} />
           <span class="username">{user}</span>
           {#if user === currentUser}
-            <span class="you-badge">You</span>
+            <span class="you-badge">{t('you', lang)}</span>
           {/if}
           {#if canRemoveUsers && user !== currentUser}
             <button type="button" class="remove-user" onclick={() => removeUser(user)}>
-              Remove
+              {t('remove', lang)}
             </button>
           {/if}
         </div>
@@ -74,10 +77,10 @@
       <input
         type="text"
         bind:value={newUser}
-        placeholder="Add user..."
+        placeholder={t('add_user_placeholder', lang)}
         onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addUser())}
       />
-      <button type="button" onclick={addUser}>Add User</button>
+      <button type="button" onclick={addUser}>{t('add_user', lang)}</button>
     </div>
   {/if}
 </div>
