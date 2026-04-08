@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/stores';
-	import { ChevronDown } from '@lucide/svelte';
+	import { ChevronDown, Heart } from '@lucide/svelte';
+	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 
@@ -129,6 +130,41 @@
 	// --- Expand toggles ---
 	let showMicros = $state(true);
 	let showAminos = $state(false);
+
+	// --- Favorite ---
+	let favorited = $state(false);
+	let favLoading = $state(false);
+
+	$effect(() => {
+		fetch('/api/fitness/favorite-ingredients').then(r => r.json()).then(data => {
+			favorited = (data.favorites ?? []).some(f => f.source === food.source && f.sourceId === (food.id ?? food.sourceId));
+		}).catch(() => {});
+	});
+
+	async function toggleFavorite() {
+		favLoading = true;
+		const id = food.id ?? food.sourceId;
+		try {
+			if (favorited) {
+				await fetch('/api/fitness/favorite-ingredients', {
+					method: 'DELETE',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ source: food.source, sourceId: id }),
+				});
+				favorited = false;
+			} else {
+				await fetch('/api/fitness/favorite-ingredients', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ source: food.source, sourceId: id, name: food.name }),
+				});
+				favorited = true;
+			}
+		} catch {
+			toast.error(isEn ? 'Failed to update favorite' : 'Fehler beim Aktualisieren');
+		}
+		favLoading = false;
+	}
 </script>
 
 <svelte:head>
@@ -138,7 +174,12 @@
 <div class="food-detail">
 	<!-- Header -->
 	<header class="food-header">
-		<h1>{food.nameDe ?? food.name}</h1>
+		<div class="food-header-row">
+			<h1>{food.nameDe ?? food.name}</h1>
+			<button class="fav-btn" class:active={favorited} disabled={favLoading} onclick={toggleFavorite} aria-label={favorited ? 'Remove favorite' : 'Add favorite'}>
+				<Heart size={20} fill={favorited ? 'var(--nord11)' : 'none'} color={favorited ? 'var(--nord11)' : 'var(--color-text-tertiary)'} />
+			</button>
+		</div>
 		{#if food.nameEn && food.nameDe}
 			<p class="name-alt">{food.nameEn}</p>
 		{/if}
@@ -316,11 +357,33 @@
 	.food-header {
 		margin-bottom: 1rem;
 	}
+	.food-header-row {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
 	.food-header h1 {
 		font-size: 1.4rem;
 		margin: 0 0 0.25rem;
 		color: var(--color-text-primary);
 		line-height: 1.3;
+	}
+	.fav-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0.3rem;
+		border-radius: 50%;
+		flex-shrink: 0;
+		transition: background 0.15s;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.fav-btn:hover {
+		background: var(--color-bg-elevated);
+	}
+	.fav-btn:disabled {
+		opacity: 0.5;
 	}
 	.name-alt {
 		margin: 0 0 0.5rem;
