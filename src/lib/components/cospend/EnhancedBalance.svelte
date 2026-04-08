@@ -1,7 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import ProfilePicture from './ProfilePicture.svelte';
   import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
+  import { detectCospendLang, locale, t } from '$lib/js/cospendI18n';
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const loc = $derived(locale(lang));
 
   let { initialBalance = null, initialDebtData = null } = $props<{ initialBalance?: any, initialDebtData?: any }>();
 
@@ -98,7 +103,7 @@
   }
 
   function formatCurrency(amount: number) {
-    return formatCurrencyUtil(Math.abs(amount), 'CHF', 'de-CH');
+    return formatCurrencyUtil(Math.abs(amount), 'CHF', loc);
   }
 
   // Export refresh method for parent components to call
@@ -117,29 +122,29 @@
     
     {#if loading}
       <div class="loading-content">
-        <h3>Your Balance</h3>
-        <div class="loading">Loading...</div>
+        <h3>{t('your_balance', lang)}</h3>
+        <div class="loading">{t('loading', lang)}</div>
       </div>
     {:else if error}
-      <h3>Your Balance</h3>
-      <div class="error">Error: {error}</div>
+      <h3>{t('your_balance', lang)}</h3>
+      <div class="error">{t('error_prefix', lang)}: {error}</div>
     {:else if shouldShowIntegratedView}
       <!-- Enhanced view with single user debt -->
-      <h3>Your Balance</h3>
+      <h3>{t('your_balance', lang)}</h3>
       <div class="enhanced-balance">
         <div class="main-amount">
           {#if balance.netBalance < 0}
             <span class="positive">+{formatCurrency(balance.netBalance)}</span>
-            <small>You are owed</small>
+            <small>{t('you_are_owed', lang)}</small>
           {:else if balance.netBalance > 0}
             <span class="negative">-{formatCurrency(balance.netBalance)}</span>
-            <small>You owe</small>
+            <small>{t('you_owe_balance', lang)}</small>
           {:else}
             <span class="even">CHF 0.00</span>
-            <small>You're all even</small>
+            <small>{t('all_even', lang)}</small>
           {/if}
         </div>
-        
+
         <div class="debt-details">
           <div class="debt-user">
             {#if singleDebtUser && singleDebtUser.user}
@@ -149,9 +154,9 @@
                 <span class="username">{singleDebtUser.user.username}</span>
                 <span class="debt-description">
                   {#if singleDebtUser.type === 'owesMe'}
-                    owes you {formatCurrency(singleDebtUser.amount)}
+                    {t('owes_you_balance', lang)} {formatCurrency(singleDebtUser.amount)}
                   {:else}
-                    you owe {formatCurrency(singleDebtUser.amount)}
+                    {t('you_owe_user', lang)} {formatCurrency(singleDebtUser.amount)}
                   {/if}
                 </span>
               </div>
@@ -161,24 +166,24 @@
           </div>
           <div class="transaction-count">
             {#if singleDebtUser && singleDebtUser.user && singleDebtUser.user.transactions}
-              {singleDebtUser.user.transactions.length} transaction{singleDebtUser.user.transactions.length !== 1 ? 's' : ''}
+              {singleDebtUser.user.transactions.length} {singleDebtUser.user.transactions.length !== 1 ? t('transactions', lang) : t('transaction', lang)}
             {/if}
           </div>
         </div>
       </div>
     {:else}
       <!-- Standard balance view -->
-      <h3>Your Balance</h3>
+      <h3>{t('your_balance', lang)}</h3>
       <div class="amount">
         {#if balance.netBalance < 0}
           <span class="positive">+{formatCurrency(balance.netBalance)}</span>
-          <small>You are owed</small>
+          <small>{t('you_are_owed', lang)}</small>
         {:else if balance.netBalance > 0}
           <span class="negative">-{formatCurrency(balance.netBalance)}</span>
-          <small>You owe</small>
+          <small>{t('you_owe_balance', lang)}</small>
         {:else}
           <span class="even">CHF 0.00</span>
-          <small>You're all even</small>
+          <small>{t('all_even', lang)}</small>
         {/if}
       </div>
     {/if}

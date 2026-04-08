@@ -1,6 +1,7 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { Chart, registerables } from 'chart.js';
+  import { paymentCategoryName } from '$lib/js/cospendI18n';
 
   /**
    * @type {{
@@ -10,7 +11,7 @@
    *   onFilterChange?: ((categories: string[] | null) => void) | null
    * }}
    */
-  let { data = { labels: [], datasets: [] }, title = '', height = '400px', onFilterChange = null } = $props();
+  let { data = { labels: [], datasets: [] }, title = '', height = '400px', onFilterChange = null, lang = /** @type {'en' | 'de'} */ ('de') } = $props();
 
   /** @type {HTMLCanvasElement | undefined} */
   let canvas = $state(undefined);
@@ -73,7 +74,7 @@
     } else {
       const visible = c.data.datasets
         .filter((/** @type {any} */ _, /** @type {number} */ idx) => !c.getDatasetMeta(idx).hidden)
-        .map((/** @type {any} */ ds) => /** @type {string} */ (ds.label ?? '').toLowerCase());
+        .map((/** @type {any} */ ds) => /** @type {string} */ (ds._categoryKey ?? ds.label ?? '').toLowerCase());
       onFilterChange(visible);
     }
   }
@@ -104,11 +105,12 @@
 
     // Process datasets with colors and capitalize labels
     const processedDatasets = plainDatasets.map((/** @type {{ label: string, data: number[] }} */ dataset, /** @type {number} */ index) => ({
-      label: dataset.label.charAt(0).toUpperCase() + dataset.label.slice(1),
+      label: paymentCategoryName(dataset.label, lang),
       data: dataset.data,
       backgroundColor: getCategoryColor(dataset.label, index),
       borderColor: getCategoryColor(dataset.label, index),
-      borderWidth: 1
+      borderWidth: 1,
+      _categoryKey: dataset.label
     }));
 
     chart = new Chart(ctx, {
@@ -333,6 +335,16 @@
       }]
     });
   }
+
+  // Recreate chart when lang changes
+  let prevLang = lang;
+  $effect(() => {
+    const currentLang = lang;
+    if (currentLang !== prevLang) {
+      prevLang = currentLang;
+      untrack(() => { if (canvas) createChart(); });
+    }
+  });
 
   onMount(() => {
     createChart();

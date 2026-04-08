@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { t } from '$lib/js/cospendI18n';
+
   let {
     imagePreview = $bindable(''),
     imageFile = $bindable(null),
     uploading = $bindable(false),
     currentImage = $bindable(null),
-    title = 'Receipt Image',
+    title = undefined as string | undefined,
+    lang = 'de' as 'en' | 'de',
     onerror,
     onimageSelected,
     onimageRemoved,
@@ -15,23 +18,26 @@
     uploading?: boolean,
     currentImage?: string | null,
     title?: string,
+    lang?: 'en' | 'de',
     onerror?: (message: string) => void,
     onimageSelected?: (file: File) => void,
     onimageRemoved?: () => void,
     oncurrentImageRemoved?: () => void
   }>();
 
+  const displayTitle = $derived(title ?? t('receipt_image', lang));
+
   function handleImageChange(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        onerror?.('File size must be less than 5MB');
+        onerror?.(t('file_too_large', lang));
         return;
       }
 
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        onerror?.('Please select a valid image file (JPEG, PNG, WebP)');
+        onerror?.(t('invalid_image', lang));
         return;
       }
 
@@ -60,14 +66,14 @@
 </script>
 
 <div class="form-section">
-  <h2>{title}</h2>
+  <h2>{displayTitle}</h2>
 
   {#if currentImage}
     <div class="current-image">
-      <img src={currentImage} alt="Receipt" class="receipt-preview" />
+      <img src={currentImage} alt={t('receipt', lang)} class="receipt-preview" />
       <div class="image-actions">
         <button type="button" class="btn-remove" onclick={removeCurrentImage}>
-          Remove Image
+          {t('remove_image', lang)}
         </button>
       </div>
     </div>
@@ -75,9 +81,9 @@
 
   {#if imagePreview}
     <div class="image-preview">
-      <img src={imagePreview} alt="Receipt preview" />
+      <img src={imagePreview} alt={t('receipt', lang)} />
       <button type="button" class="remove-image" onclick={removeImage}>
-        Remove Image
+        {t('remove_image', lang)}
       </button>
     </div>
   {:else}
@@ -89,7 +95,7 @@
             <line x1="16" y1="5" x2="22" y2="5"/>
             <line x1="19" y1="2" x2="19" y2="8"/>
           </svg>
-          <p>{currentImage ? 'Replace Image' : 'Upload Receipt Image'}</p>
+          <p>{currentImage ? t('replace_image', lang) : t('upload_receipt', lang)}</p>
           <small>JPEG, PNG, WebP (max 5MB)</small>
         </div>
       </label>
@@ -105,7 +111,7 @@
   {/if}
 
   {#if uploading}
-    <div class="upload-status">Uploading image...</div>
+    <div class="upload-status">{t('uploading_image', lang)}</div>
   {/if}
 </div>
 

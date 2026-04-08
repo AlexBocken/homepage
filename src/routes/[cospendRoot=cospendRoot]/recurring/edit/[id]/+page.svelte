@@ -1,15 +1,20 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { getCategoryOptions } from '$lib/utils/categories';
+  import { page } from '$app/stores';
+  import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n, frequencyDescription } from '$lib/js/cospendI18n';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
-  import { validateCronExpression, getFrequencyDescription, calculateNextExecutionDate } from '$lib/utils/recurring';
+  import { validateCronExpression, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import SplitMethodSelector from '$lib/components/cospend/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/cospend/UsersList.svelte';
   import SaveFab from '$lib/components/SaveFab.svelte';
 
   let { data } = $props();
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const root = $derived(cospendRoot(lang));
+  const loc = $derived(locale(lang));
 
   // svelte-ignore state_referenced_locally
   let formData = $state({
@@ -55,7 +60,7 @@
   let exchangeRateTimeout = $state();
   let jsEnhanced = $state(false);
 
-  let categoryOptions = $derived(getCategoryOptions());
+  let categoryOptions = $derived(getCategoryOptionsI18n(lang));
 
   onMount(async () => {
     jsEnhanced = true;
@@ -134,7 +139,7 @@
           startDate: new Date(formData.startDate)
         });
         const nextDate = calculateNextExecutionDate(recurringPayment, new Date(formData.startDate));
-        nextExecutionPreview = nextDate.toLocaleString('de-CH', {
+        nextExecutionPreview = nextDate.toLocaleString(loc, {
           weekday: 'long',
           year: 'numeric',
           month: 'long',
@@ -199,7 +204,7 @@
       }
 
       const result = await response.json();
-      await goto('/cospend/recurring');
+      await goto(`/${root}/recurring`);
 
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
@@ -284,47 +289,47 @@
 </script>
 
 <svelte:head>
-  <title>Edit Recurring Payment - Cospend</title>
+  <title>{t('edit_recurring_title', lang)} - {t('cospend', lang)}</title>
 </svelte:head>
 
 <main class="edit-recurring-payment">
   <div class="header">
-    <h1>Edit Recurring Payment</h1>
+    <h1>{t('edit_recurring_title', lang)}</h1>
   </div>
 
   {#if loadingPayment}
-    <div class="loading">Loading recurring payment...</div>
+    <div class="loading">{t('loading_recurring', lang)}</div>
   {:else if error && !formData.title}
     <div class="error">Error: {error}</div>
   {:else}
     <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }
   } class="payment-form">
       <div class="form-section">
-        <h2>Payment Details</h2>
+        <h2>{t('payment_details_section', lang)}</h2>
         
         <div class="form-group">
-          <label for="title">Title *</label>
+          <label for="title">{t('title_label', lang)}</label>
           <input 
             type="text" 
             id="title" 
             bind:value={formData.title} 
             required 
-            placeholder="e.g., Monthly rent, Weekly groceries"
+            placeholder={t('title_placeholder', lang)}
           />
         </div>
 
         <div class="form-group">
-          <label for="description">Description</label>
+          <label for="description">{t('description_label', lang)}</label>
           <textarea 
             id="description" 
             bind:value={formData.description} 
-            placeholder="Additional details about this recurring payment..."
+            placeholder={t('description_placeholder', lang)}
             rows="3"
           ></textarea>
         </div>
 
         <div class="form-group">
-          <label for="category">Category *</label>
+          <label for="category">{t('category_star', lang)}</label>
           <select id="category" bind:value={formData.category} required>
             {#each categoryOptions as option}
               <option value={option.value}>{option.label}</option>
@@ -334,7 +339,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="amount">Amount *</label>
+            <label for="amount">{t('amount_label', lang)}</label>
             <div class="amount-currency">
               <input 
                 type="number" 
@@ -377,7 +382,7 @@
           </div>
 
           <div class="form-group">
-            <label for="paidBy">Paid by</label>
+            <label for="paidBy">{t('paid_by_form', lang)}</label>
             <select id="paidBy" bind:value={formData.paidBy} required>
               {#each users as user}
                 <option value={user}>{user}</option>
@@ -387,30 +392,30 @@
         </div>
 
         <div class="form-group">
-          <label for="isActive">Status</label>
+          <label for="isActive">{t('status_label', lang)}</label>
           <select id="isActive" bind:value={formData.isActive}>
-            <option value={true}>Active</option>
-            <option value={false}>Inactive</option>
+            <option value={true}>{t('active', lang)}</option>
+            <option value={false}>{t('inactive', lang)}</option>
           </select>
         </div>
       </div>
 
       <div class="form-section">
-        <h2>Recurring Schedule</h2>
+        <h2>{t('recurring_schedule', lang)}</h2>
         
         <div class="form-row">
           <div class="form-group">
-            <label for="frequency">Frequency *</label>
+            <label for="frequency">{t('frequency_label', lang)}</label>
             <select id="frequency" bind:value={formData.frequency} required>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="custom">Custom (Cron)</option>
+              <option value="daily">{t('freq_daily', lang)}</option>
+              <option value="weekly">{t('freq_weekly', lang)}</option>
+              <option value="monthly">{t('freq_monthly', lang)}</option>
+              <option value="custom">{t('freq_custom', lang)}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="startDate">Start Date *</label>
+            <label for="startDate">{t('start_date', lang)}</label>
             <input 
               type="date" 
               id="startDate" 
@@ -448,20 +453,20 @@
         {/if}
 
         <div class="form-group">
-          <label for="endDate">End Date (optional)</label>
+          <label for="endDate">{t('end_date_optional', lang)}</label>
           <input 
             type="date" 
             id="endDate" 
             bind:value={formData.endDate}
           />
-          <div class="help-text">Leave blank for indefinite recurring payments</div>
+          <div class="help-text">{t('end_date_hint', lang)}</div>
         </div>
 
         {#if nextExecutionPreview}
           <div class="execution-preview">
-            <h3>Next Execution</h3>
+            <h3>{t('next_execution_preview', lang)}</h3>
             <p class="next-execution">{nextExecutionPreview}</p>
-            <p class="frequency-description">{getFrequencyDescription(/** @type {any} */ (formData))}</p>
+            <p class="frequency-description">{frequencyDescription(/** @type {any} */ (formData), lang)}</p>
           </div>
         {/if}
       </div>
@@ -472,6 +477,7 @@
         currentUser={data.session?.user?.nickname}
         {predefinedMode}
         canRemoveUsers={!predefinedMode}
+        {lang}
       />
 
       <SplitMethodSelector 
@@ -490,7 +496,7 @@
         <div class="error">{error}</div>
       {/if}
 
-      <SaveFab disabled={loading || cronError} label="Save changes" />
+      <SaveFab disabled={loading || cronError} label={t('save_changes', lang)} />
     </form>
   {/if}
 </main>

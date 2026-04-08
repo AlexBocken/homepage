@@ -4,6 +4,7 @@
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
 	import { languageStore } from '$lib/stores/language';
 	import { convertFitnessPath } from '$lib/js/fitnessI18n';
+	import { convertCospendPath } from '$lib/js/cospendI18n';
 	import { onMount } from 'svelte';
 
 	let { lang = undefined }: { lang?: 'de' | 'en' | 'la' } = $props();
@@ -41,6 +42,10 @@
 			// Latin route — no language switching needed
 		} else if (path.startsWith('/fitness')) {
 			// Language is determined by sub-route slugs; don't override store
+		} else if (path.startsWith('/cospend')) {
+			languageStore.set('de');
+		} else if (path.startsWith('/expenses')) {
+			languageStore.set('en');
 		} else {
 			// On other pages, read from localStorage
 			if (typeof localStorage !== 'undefined') {
@@ -81,6 +86,10 @@
 
 		if (path.startsWith('/fitness') && targetLang !== 'la') {
 			return convertFitnessPath(path, targetLang);
+		}
+
+		if ((path.startsWith('/cospend') || path.startsWith('/expenses')) && targetLang !== 'la') {
+			return convertCospendPath(path, targetLang);
 		}
 
 		// Use translated recipe slugs from page data when available (works during SSR)
@@ -125,7 +134,8 @@
 		// dispatch event and stay on the page
 		if (!path.startsWith('/rezepte') && !path.startsWith('/recipes')
 			&& !path.startsWith('/glaube') && !path.startsWith('/faith') && !path.startsWith('/fides')
-			&& !path.startsWith('/fitness')) {
+			&& !path.startsWith('/fitness')
+			&& !path.startsWith('/cospend') && !path.startsWith('/expenses')) {
 			window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
 			return;
 		}
@@ -133,6 +143,13 @@
 		// Handle faith pages
 		if (path.startsWith('/glaube') || path.startsWith('/faith') || path.startsWith('/fides')) {
 			const newPath = convertFaithPath(path, lang);
+			await goto(newPath);
+			return;
+		}
+
+		// Handle cospend/expenses pages
+		if ((path.startsWith('/cospend') || path.startsWith('/expenses')) && lang !== 'la') {
+			const newPath = convertCospendPath(path, lang);
 			await goto(newPath);
 			return;
 		}
