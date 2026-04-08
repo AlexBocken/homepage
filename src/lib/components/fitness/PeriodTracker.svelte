@@ -246,8 +246,8 @@
 	// Days into current period
 	const ongoingDay = $derived.by(() => {
 		if (!ongoing) return 0;
-		const start = new Date(ongoing.startDate);
-		return Math.floor((today.getTime() - start.getTime()) / 86400000) + 1;
+		const start = parseLocal(ongoing.startDate);
+		return Math.floor((todayMidnight - start) / 86400000) + 1;
 	});
 
 	// Calendar data
