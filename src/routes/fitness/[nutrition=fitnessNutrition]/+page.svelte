@@ -6,6 +6,7 @@
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { getDRI, NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -725,7 +726,7 @@
 	}
 
 	async function deleteEntry(id) {
-		if (!confirm(t('delete_entry_confirm', lang))) return;
+		if (!await confirm(t('delete_entry_confirm', lang))) return;
 		try {
 			const res = await fetch(`/api/fitness/food-log/${id}`, { method: 'DELETE' });
 			if (res.ok) {

@@ -1,5 +1,6 @@
 <script>
   import { invalidateAll } from '$app/navigation';
+  import { confirm } from '$lib/js/confirmDialog.svelte';
   import { formatDistanceToNow, isPast, isToday, differenceInDays, format } from 'date-fns';
   import { de } from 'date-fns/locale';
   import { Plus, Check, Pencil, Trash2, Tag, Users, RotateCcw, Calendar,
@@ -124,7 +125,7 @@
 
   /** @param {any} task */
   async function deleteTask(task) {
-    if (!confirm(`"${task.title}" wirklich löschen?`)) return;
+    if (!await confirm(`"${task.title}" wirklich löschen?`)) return;
     const res = await fetch(`/api/tasks/${task._id}`, { method: 'DELETE' });
     if (res.ok) await refreshTasks();
   }

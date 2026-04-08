@@ -5,6 +5,7 @@
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
   import { toast } from '$lib/js/toast.svelte';
+  import { confirm } from '$lib/js/confirmDialog.svelte';
   import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
   import { detectCospendLang, cospendRoot, t, locale, splitDescription, paymentCategoryName } from '$lib/js/cospendI18n';
@@ -82,7 +83,7 @@
   }
 
   async function deletePayment(/** @type {string} */ paymentId) {
-    if (!confirm(t('delete_payment_confirm', lang))) {
+    if (!await confirm(t('delete_payment_confirm', lang))) {
       return;
     }
 

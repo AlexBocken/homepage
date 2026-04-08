@@ -7,6 +7,7 @@ import Plus from '$lib/assets/icons/Plus.svelte'
 import Check from '$lib/assets/icons/Check.svelte'
 
 import "$lib/css/action_button.css"
+import { confirm } from '$lib/js/confirmDialog.svelte'
 
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import { portions } from '$lib/js/portions_store.js'
@@ -138,8 +139,8 @@ function handleSelect(recipe: any, options: any) {
 	showSelector = false;
 }
 
-export function removeReference(list_index: number) {
-	const confirmed = confirm(t[lang].confirmDeleteReference);
+export async function removeReference(list_index: number) {
+	const confirmed = await confirm(t[lang].confirmDeleteReference);
 	if (confirmed) {
 		ingredients.splice(list_index, 1);
 		ingredients = ingredients;
@@ -265,9 +266,9 @@ export function add_new_ingredient(){
 	ingredients[list_index].list.push({ ...new_ingredient})
 	ingredients = ingredients //tells svelte to update dom
 }
-export function remove_list(list_index: number){
+export async function remove_list(list_index: number){
 	if(ingredients[list_index].list.length > 1){
-		const response = confirm(t[lang].confirmDeleteList);
+		const response = await confirm(t[lang].confirmDeleteList);
 		if(!response){
 			return
 		}

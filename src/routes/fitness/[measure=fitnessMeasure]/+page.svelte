@@ -3,6 +3,7 @@
 	import { Pencil, Trash2, ChevronRight, Venus, Mars } from '@lucide/svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
@@ -93,7 +94,7 @@
 
 	/** @param {string} id */
 	async function deleteMeasurement(id) {
-		if (!confirm(t('delete_measurement_confirm', lang))) return;
+		if (!await confirm(t('delete_measurement_confirm', lang))) return;
 		try {
 			const res = await fetch(`/api/fitness/measurements/${id}`, { method: 'DELETE' });
 			if (res.ok) {
