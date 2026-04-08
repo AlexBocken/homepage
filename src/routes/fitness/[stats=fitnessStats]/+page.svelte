@@ -265,8 +265,8 @@
 		/>
 	{/if}
 
-	{#if ns}
-		<div class="nutrition-grid">
+	<div class="muscle-nutrition-layout">
+		{#if ns}
 			<div class="lifetime-card protein-card">
 				<div class="card-icon"><Beef size={24} /></div>
 				{#if ns.avgProteinPerKg != null}
@@ -391,15 +391,25 @@
 								<span class="macro-label">{macro.label}</span>
 							</div>
 						{/each}
+					<div class="macro-legend">
+							<span class="macro-legend-item">
+								<svg viewBox="0 0 12 12" width="12" height="12"><circle cx="6" cy="6" r="4" fill="none" stroke="var(--color-text-secondary)" stroke-width="2"/></svg>
+								{lang === 'en' ? 'Actual' : 'Ist'}
+							</span>
+							<span class="macro-legend-item">
+								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6,2 L10,10 L2,10 Z" fill="var(--color-text-secondary)"/></svg>
+								{lang === 'en' ? 'Target' : 'Ziel'}
+							</span>
+						</div>
 					</div>
 				</div>
 			{/if}
-		</div>
-	{/if}
+		{/if}
 
-	<div class="section-block">
-		<h2 class="section-title">{t('muscle_balance', lang)}</h2>
-		<MuscleHeatmap data={data.muscleHeatmap} />
+		<div class="section-block muscle-heatmap-block">
+			<h2 class="section-title">{t('muscle_balance', lang)}</h2>
+			<MuscleHeatmap data={data.muscleHeatmap} />
+		</div>
 	</div>
 </div>
 
@@ -695,10 +705,37 @@
 	}
 
 	/* Nutrition masonry grid */
-	.nutrition-grid {
+	.muscle-nutrition-layout {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: 1fr 1fr 1fr;
 		gap: 0.6rem;
+	}
+	.muscle-nutrition-layout .muscle-heatmap-block {
+		grid-column: 1 / -1;
+	}
+	@media (min-width: 1024px) {
+		.muscle-nutrition-layout {
+			grid-template-columns: 1fr 1fr 1fr 1fr;
+			grid-template-rows: auto 1fr;
+		}
+		.muscle-nutrition-layout .macro-card {
+			grid-column: 4;
+			grid-row: 1 / 3;
+			flex-direction: column !important;
+			align-items: center !important;
+		}
+		.muscle-nutrition-layout .macro-card .macro-rings {
+			flex-direction: column;
+			align-items: center;
+			gap: 0.5rem;
+		}
+		.muscle-nutrition-layout .macro-card .macro-header {
+			text-align: center;
+			margin-bottom: 1.25rem;
+		}
+		.muscle-nutrition-layout .muscle-heatmap-block {
+			grid-column: 1 / 4;
+		}
 	}
 	.protein-card::before { background: var(--nord14); }
 	.balance-card::before { background: var(--color-text-secondary); }
@@ -726,10 +763,10 @@
 		color: var(--nord13);
 		background: color-mix(in srgb, var(--nord13) 15%, transparent);
 	}
-	.nutrition-grid .card-icon {
+	.muscle-nutrition-layout .card-icon {
 		flex-shrink: 0;
 	}
-	.nutrition-grid .card-hint {
+	.muscle-nutrition-layout .card-hint {
 		display: block;
 		width: 100%;
 		text-align: center;
@@ -783,13 +820,20 @@
 		opacity: 0.5;
 	}
 
-	/* Macro split card — spans full row, horizontal layout */
+	/* Macro split card — spans full row on mobile, sidebar on desktop */
 	.macro-card {
 		grid-column: 1 / -1;
 		padding: 1rem 1.25rem;
 		flex-direction: row !important;
 		align-items: center !important;
 		gap: 1.25rem !important;
+	}
+	@media (min-width: 1024px) {
+		.macro-card {
+			grid-column: auto;
+			padding: 0.75rem;
+			gap: 0.75rem !important;
+		}
 	}
 	.macro-header {
 		font-size: 1.15rem;
@@ -855,9 +899,27 @@
 		font-size: 7px;
 		font-weight: 700;
 	}
+	.macro-legend {
+		display: none;
+	}
+	@media (min-width: 1024px) {
+		.macro-legend {
+			display: flex;
+			gap: 1rem;
+			justify-content: center;
+			margin-top: 0.75rem;
+			font-size: 0.7rem;
+			color: var(--color-text-secondary);
+		}
+		.macro-legend-item {
+			display: flex;
+			align-items: center;
+			gap: 0.3rem;
+		}
+	}
 
 	@media (max-width: 600px) {
-		.nutrition-grid {
+		.muscle-nutrition-layout {
 			grid-template-columns: repeat(3, 1fr);
 		}
 		.macro-card {
@@ -868,8 +930,11 @@
 		}
 	}
 	@media (max-width: 400px) {
-		.nutrition-grid {
+		.muscle-nutrition-layout {
 			grid-template-columns: 1fr;
+		}
+		.muscle-nutrition-layout .muscle-heatmap-block {
+			grid-column: 1;
 		}
 		.macro-card {
 			grid-column: 1;
