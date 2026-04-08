@@ -149,6 +149,9 @@
 	--text-xl: 1.5rem;
 	--text-2xl: 2rem;
 	--text-3xl: 3rem;
+
+	/* Shopping icon filter — white PNGs need invert in light mode */
+	--shopping-icon-filter: invert(1);
 }
 
 /* ============================================
@@ -212,6 +215,8 @@
 		--color-link: var(--nord8);
 		--color-link-visited: #c89fb6;
 		--color-link-hover: var(--nord7);
+
+		--shopping-icon-filter: none;
 	}
 }
 
@@ -261,6 +266,8 @@
 	--color-link: var(--nord8);
 	--color-link-visited: #c89fb6;
 	--color-link-hover: var(--nord7);
+
+	--shopping-icon-filter: none;
 }
 
 /* ============================================
