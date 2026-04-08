@@ -15,6 +15,7 @@
   /** @type {string | null} */
   let paymentId = $state(null);
   let user = $state(data.session?.user);
+  let isGuest = $derived(!data.session?.user);
 
   $effect(() => {
     // Check if URL contains payment view route OR if we have paymentId in state
@@ -58,10 +59,14 @@
 <Header>
   {#snippet links()}
     <ul class="site_header">
-      <li style="--active-fill: var(--nord9)"><a href="/cospend/dash" class:active={isActive('/cospend/dash')}><LayoutDashboard size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Dashboard</span></a></li>
+      {#if !isGuest}
+        <li style="--active-fill: var(--nord9)"><a href="/cospend/dash" class:active={isActive('/cospend/dash')}><LayoutDashboard size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Dashboard</span></a></li>
+      {/if}
       <li style="--active-fill: var(--nord13)"><a href="/cospend/list" class:active={isActive('/cospend/list')}><ShoppingCart size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Liste</span></a></li>
-      <li style="--active-fill: var(--nord14)"><a href="/cospend/payments" class:active={isActive('/cospend/payments')}><span class="nav-icon-wrap nav-icon-wallet"><Wallet size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">All Payments</span></a></li>
-      <li style="--active-fill: var(--nord12); --active-shape: circle(50%)"><a href="/cospend/recurring" class:active={isActive('/cospend/recurring')}><span class="nav-icon-wrap"><RefreshCw size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">Recurring</span></a></li>
+      {#if !isGuest}
+        <li style="--active-fill: var(--nord14)"><a href="/cospend/payments" class:active={isActive('/cospend/payments')}><span class="nav-icon-wrap nav-icon-wallet"><Wallet size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">All Payments</span></a></li>
+        <li style="--active-fill: var(--nord12); --active-shape: circle(50%)"><a href="/cospend/recurring" class:active={isActive('/cospend/recurring')}><span class="nav-icon-wrap"><RefreshCw size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">Recurring</span></a></li>
+      {/if}
     </ul>
   {/snippet}
 

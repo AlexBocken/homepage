@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { ShoppingList } from '$models/ShoppingList';
 import { broadcast } from '$lib/server/shoppingSSE';
+import { getShoppingUser } from '$lib/server/shoppingAuth';
 
 async function getOrCreateList() {
   let list = await ShoppingList.findOne().lean();
@@ -14,9 +15,9 @@ async function getOrCreateList() {
 }
 
 // GET /api/cospend/list — fetch current shopping list
-export const GET: RequestHandler = async ({ locals }) => {
-  const auth = await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+export const GET: RequestHandler = async ({ locals, url }) => {
+  const user = await getShoppingUser(locals, url);
+  if (!user) throw error(401, 'Not logged in');
 
   await dbConnect();
   const list = await getOrCreateList();
@@ -24,9 +25,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 // PUT /api/cospend/list — update shopping list with version conflict detection
-export const PUT: RequestHandler = async ({ request, locals }) => {
-  const auth = await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+export const PUT: RequestHandler = async ({ request, locals, url }) => {
+  const user = await getShoppingUser(locals, url);
+  if (!user) throw error(401, 'Not logged in');
 
   await dbConnect();
   const data = await request.json();
@@ -59,9 +60,9 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 };
 
 // DELETE /api/cospend/list — clear all items
-export const DELETE: RequestHandler = async ({ locals }) => {
-  const auth = await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+export const DELETE: RequestHandler = async ({ locals, url }) => {
+  const user = await getShoppingUser(locals, url);
+  if (!user) throw error(401, 'Not logged in');
 
   await dbConnect();
   const existing = await getOrCreateList();

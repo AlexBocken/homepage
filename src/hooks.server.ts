@@ -39,6 +39,16 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	// Protect cospend routes and API endpoints
 	if (event.url.pathname.startsWith('/cospend') || event.url.pathname.startsWith('/api/cospend')) {
 		if (!session) {
+			// Allow share-token access to shopping list routes
+			const isShoppingRoute = event.url.pathname.startsWith('/cospend/list') || event.url.pathname.startsWith('/api/cospend/list');
+			const shareToken = event.url.searchParams.get('token');
+			if (isShoppingRoute && shareToken) {
+				const { validateShareToken } = await import('$lib/server/shoppingAuth');
+				if (await validateShareToken(shareToken)) {
+					return resolve(event);
+				}
+			}
+
 			// For API routes, return 401 instead of redirecting
 			if (event.url.pathname.startsWith('/api/cospend')) {
 				error(401, {

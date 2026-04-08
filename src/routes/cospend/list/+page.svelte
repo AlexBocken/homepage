@@ -9,8 +9,12 @@
   import { SvelteSet } from 'svelte/reactivity';
   import catalogData from '$lib/data/shoppingCatalog.json';
 
+  import { Share2, X, Copy, Check } from '@lucide/svelte';
+
   let { data } = $props();
-  let user = $derived(data.session?.user?.nickname || '');
+  let user = $derived(data.session?.user?.nickname || 'guest');
+  let shareToken = $derived(data.shareToken);
+  let isGuest = $derived(!data.session);
   const sync = getShoppingSync();
 
   /** @type {Record<string, { icon: typeof Plus, color: string }>} */
@@ -106,7 +110,7 @@
   let checkedCount = $derived(sync.items.filter(i => i.checked).length);
   let totalCount = $derived(sync.items.length);
 
-  onMount(() => { sync.init(); });
+  onMount(() => { sync.init(shareToken); });
   onDestroy(() => { sync.disconnect(); });
 
   async function addItem() {
@@ -126,7 +130,7 @@
     try {
       const cleanName = parseQuantity(name).name;
       console.log(`[shopping] Categorizing "${cleanName}" (item ${itemId})...`);
-      const res = await fetch('/api/cospend/list/categorize', {
+      const res = await fetch(sync.apiUrl('/api/cospend/list/categorize'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: cleanName })
@@ -192,12 +196,120 @@
     editSaving = false;
   }
 
+  // --- Share links ---
+  let showShareModal = $state(false);
+  /** @type {{ id: string, token: string, expiresAt: string, createdBy: string, createdAt: string }[]} */
+  let shareTokens = $state([]);
+  let shareLoading = $state(false);
+  /** @type {string | null} */
+  let copiedId = $state(null);
+  let showCopyToast = $state(false);
+
+  async function openShareModal() {
+    showShareModal = true;
+    await loadShareTokens();
+  }
+
+  async function loadShareTokens() {
+    shareLoading = true;
+    try {
+      const res = await fetch('/api/cospend/list/share');
+      if (res.ok) shareTokens = await res.json();
+    } catch (err) {
+      console.error('[shopping] Load tokens error:', err);
+    } finally {
+      shareLoading = false;
+    }
+  }
+
+  /** @param {string} expiresAt */
+  function formatTTL(expiresAt) {
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) return 'abgelaufen';
+    const mins = Math.round(diff / 60000);
+    if (mins < 60) return `${mins} Min.`;
+    const hours = Math.round(diff / 3600000);
+    if (hours < 24) return `${hours} Std.`;
+    const days = Math.round(diff / 86400000);
+    return `${days} Tag${days > 1 ? 'e' : ''}`;
+  }
+
+  const TTL_OPTIONS = [
+    { label: '1 Stunde', ms: 1 * 60 * 60 * 1000 },
+    { label: '6 Stunden', ms: 6 * 60 * 60 * 1000 },
+    { label: '24 Stunden', ms: 24 * 60 * 60 * 1000 },
+    { label: '3 Tage', ms: 3 * 24 * 60 * 60 * 1000 },
+    { label: '7 Tage', ms: 7 * 24 * 60 * 60 * 1000 },
+  ];
+
+  /**
+   * @param {string} id
+   * @param {Event} e
+   */
+  function onTTLChange(id, e) {
+    const ms = Number(/** @type {HTMLSelectElement} */ (e.currentTarget).value);
+    const newExpiry = new Date(Date.now() + ms).toISOString();
+    updateTokenExpiry(id, newExpiry);
+  }
+
+  async function createNewToken() {
+    try {
+      const res = await fetch('/api/cospend/list/share', { method: 'POST' });
+      if (res.ok) await loadShareTokens();
+    } catch (err) {
+      console.error('[shopping] Create token error:', err);
+    }
+  }
+
+  /** @param {{ id: string, token: string }} t */
+  async function copyTokenLink(t) {
+    const url = new URL('/cospend/list', window.location.origin);
+    url.searchParams.set('token', t.token);
+    await navigator.clipboard.writeText(url.toString());
+    copiedId = t.id;
+    showCopyToast = true;
+    setTimeout(() => { copiedId = null; showCopyToast = false; }, 2000);
+  }
+
+  /** @param {string} id */
+  async function deleteToken(id) {
+    try {
+      await fetch('/api/cospend/list/share', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      shareTokens = shareTokens.filter(t => t.id !== id);
+    } catch (err) {
+      console.error('[shopping] Delete token error:', err);
+    }
+  }
+
+  /**
+   * @param {string} id
+   * @param {string} newExpiry - ISO date string
+   */
+  async function updateTokenExpiry(id, newExpiry) {
+    try {
+      await fetch('/api/cospend/list/share', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, expiresAt: newExpiry })
+      });
+      shareTokens = shareTokens.map(t =>
+        t.id === id ? { ...t, expiresAt: newExpiry } : t
+      );
+    } catch (err) {
+      console.error('[shopping] Update token error:', err);
+    }
+  }
+
   async function saveEdit() {
     if (!editingItem) return;
     editSaving = true;
     const cleanName = parseQuantity(editingItem.name).name;
     try {
-      await fetch('/api/cospend/list/categorize/override', {
+      await fetch(sync.apiUrl('/api/cospend/list/categorize/override'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: cleanName, category: editCategory, icon: editIcon || null })
@@ -214,7 +326,14 @@
 
 <div class="shopping-page">
   <header class="page-header">
-    <h1>Einkaufsliste <SyncIndicator status={sync.status} /></h1>
+    <div class="header-row">
+      <h1>Einkaufsliste <SyncIndicator status={sync.status} /></h1>
+      {#if !isGuest}
+        <button class="btn-share" onclick={openShareModal} title="Teilen">
+          <Share2 size={16} />
+        </button>
+      {/if}
+    </div>
     {#if totalCount > 0}
       <p class="subtitle">{checkedCount} / {totalCount} erledigt</p>
     {/if}
@@ -349,6 +468,68 @@
   </div>
 {/if}
 
+{#if showShareModal}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <div class="edit-backdrop" onclick={() => { showShareModal = false; }}>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="edit-modal share-modal" onclick={(e) => e.stopPropagation()}>
+      <div class="share-header">
+        <h3>Geteilte Links</h3>
+        <button class="close-button" onclick={() => { showShareModal = false; }}>
+          <X size={18} />
+        </button>
+      </div>
+      <p class="share-desc">Jeder mit einem aktiven Link kann die Einkaufsliste bearbeiten.</p>
+
+      {#if shareLoading}
+        <p class="share-loading">Laden...</p>
+      {:else if shareTokens.length === 0}
+        <p class="share-empty">Keine aktiven Links.</p>
+      {:else}
+        <div class="token-list">
+          {#each shareTokens as t (t.id)}
+            <div class="token-item">
+              <div class="token-info">
+                <span class="token-created-by">{t.createdBy}</span>
+                <div class="token-expiry-row">
+                  <span class="token-ttl">noch {formatTTL(t.expiresAt)}</span>
+                  <select class="token-ttl-select" onchange={(e) => onTTLChange(t.id, e)}>
+                    <option value="" disabled selected>Ändern</option>
+                    {#each TTL_OPTIONS as opt}
+                      <option value={opt.ms}>{opt.label}</option>
+                    {/each}
+                  </select>
+                </div>
+              </div>
+              <div class="token-actions">
+                <button class="btn-token-copy" onclick={() => copyTokenLink(t)} title="Link kopieren">
+                  {#if copiedId === t.id}<Check size={14} />{:else}<Copy size={14} />{/if}
+                </button>
+                <button class="btn-token-delete" onclick={() => deleteToken(t.id)} title="Löschen">
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
+
+      <button class="btn-new-token" onclick={createNewToken}>
+        <Plus size={14} />
+        Neuen Link erstellen
+      </button>
+    </div>
+  </div>
+{/if}
+
+{#if showCopyToast}
+  <div class="copy-toast" transition:slide={{ duration: 150 }}>
+    <Check size={14} /> Kopiert
+  </div>
+{/if}
+
 <style>
   .shopping-page {
     max-width: 700px;
@@ -360,10 +541,33 @@
     text-align: center;
     margin-bottom: 1.5rem;
   }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
   h1 {
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
+  }
+  .btn-share {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .btn-share:hover {
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
   }
   .subtitle {
     margin: 0.25rem 0 0;
@@ -750,5 +954,167 @@
   .btn-save:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  /* Share modal */
+  .share-modal {
+    max-width: 440px;
+  }
+  .share-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  .share-header h3 {
+    margin: 0;
+  }
+  .close-button {
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 6px;
+    display: flex;
+  }
+  .close-button:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-elevated);
+  }
+  .share-desc {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    margin: 0 0 1rem;
+  }
+  .share-loading, .share-empty {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 1rem 0;
+    margin: 0;
+  }
+  .token-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .token-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--color-bg-tertiary);
+    border-radius: 10px;
+  }
+  .token-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .token-created-by {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .token-expiry-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .token-ttl {
+    font-size: 0.72rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+  .token-ttl-select {
+    font-size: 0.68rem;
+    padding: 0.1rem 0.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  .token-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+  }
+  .btn-token-copy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .btn-token-copy:hover {
+    color: var(--nord10);
+    background: color-mix(in srgb, var(--nord10) 10%, transparent);
+  }
+  .btn-token-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .btn-token-delete:hover {
+    color: var(--nord11);
+    background: color-mix(in srgb, var(--nord11) 10%, transparent);
+  }
+  .btn-new-token {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .btn-new-token:hover {
+    color: var(--nord10);
+    border-color: var(--nord10);
+    background: color-mix(in srgb, var(--nord10) 5%, transparent);
+  }
+
+  .copy-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 100px;
+    background: var(--nord14);
+    color: var(--nord0);
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 </style>
