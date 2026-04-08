@@ -8,6 +8,7 @@
   import { slide } from 'svelte/transition';
   import { SvelteSet } from 'svelte/reactivity';
   import catalogData from '$lib/data/shoppingCatalog.json';
+  import iconCategoriesData from '$lib/data/shoppingIconCategories.json';
 
   import { Share2, X, Copy, Check } from '@lucide/svelte';
 
@@ -167,11 +168,27 @@
   let editSaving = $state(false);
 
   const allIcons = Object.entries(/** @type {Record<string, string>} */ (catalogData));
+  const iconCategories = /** @type {Record<string, string>} */ (iconCategoriesData);
 
-  let filteredIcons = $derived(
+  /** Icons grouped by category, ordered by SHOPPING_CATEGORIES */
+  const iconsByCategory = (() => {
+    /** @type {Map<string, [string, string][]>} */
+    const groups = new Map();
+    for (const cat of SHOPPING_CATEGORIES) groups.set(cat, []);
+    for (const [name, file] of allIcons) {
+      const cat = iconCategories[name] || 'Sonstiges';
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat)?.push([name, file]);
+    }
+    return [...groups.entries()].filter(([, icons]) => icons.length > 0);
+  })();
+
+  let filteredIconGroups = $derived(
     iconSearch.trim()
-      ? allIcons.filter(([name]) => name.includes(iconSearch.toLowerCase()))
-      : allIcons
+      ? iconsByCategory
+          .map(([cat, icons]) => /** @type {[string, [string,string][]]} */ ([cat, icons.filter(([name]) => name.includes(iconSearch.toLowerCase()))]))
+          .filter(([, icons]) => icons.length > 0)
+      : iconsByCategory
   );
 
   /** @param {import('$lib/js/shoppingSync.svelte').ShoppingItem} item */
@@ -446,15 +463,23 @@
         <input bind:value={iconSearch} type="text" placeholder="Icon suchen..." />
       </div>
       <div class="icon-picker">
-        {#each filteredIcons as [name, file]}
-          <button
-            class="icon-option"
-            class:selected={editIcon === file}
-            onclick={() => { editIcon = file; }}
-            title={name}
-          >
-            <img src="https://bocken.org/static/shopping-icons/{file}.png" alt={name} />
-          </button>
+        {#each filteredIconGroups as [cat, icons]}
+          {@const meta = categoryMeta[cat] || categoryMeta['Sonstiges']}
+          <div class="icon-group">
+            <span class="icon-group-label" style="color: {meta.color}">{cat}</span>
+            <div class="icon-group-grid">
+              {#each icons as [name, file]}
+                <button
+                  class="icon-option"
+                  class:selected={editIcon === file}
+                  onclick={() => { editIcon = file; }}
+                  title={name}
+                >
+                  <img src="https://bocken.org/static/shopping-icons/{file}.png" alt={name} />
+                </button>
+              {/each}
+            </div>
+          </div>
         {/each}
       </div>
 
@@ -891,13 +916,24 @@
   }
 
   .icon-picker {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-    gap: 0.35rem;
-    max-height: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 250px;
     overflow-y: auto;
     margin-bottom: 1.25rem;
     padding: 0.25rem;
+  }
+  .icon-group-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .icon-group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+    gap: 0.3rem;
   }
   .icon-option {
     aspect-ratio: 1;
@@ -1116,5 +1152,10 @@
     font-weight: 600;
     z-index: 200;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (max-width: 500px) {
+    .edit-backdrop { padding: 0.5rem; }
+    .edit-modal { padding: 1rem 0.75rem; }
   }
 </style>
