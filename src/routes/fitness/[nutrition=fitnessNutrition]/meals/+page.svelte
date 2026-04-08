@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { untrack } from 'svelte';
-	import { ChevronLeft, Plus, Trash2, Pencil, UtensilsCrossed, X } from '@lucide/svelte';
+	import { Plus, Trash2, Pencil, UtensilsCrossed, X } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -152,10 +152,7 @@
 <div class="meals-page">
 	<!-- Header -->
 	<div class="header">
-		<a href="/fitness/{s.nutrition}" class="back-link">
-			<ChevronLeft size={20} />
-			<span>{t('custom_meals', lang)}</span>
-		</a>
+		<h1 class="page-title">{t('custom_meals', lang)}</h1>
 		{#if !editing}
 			<button class="create-btn" onclick={startCreate}>
 				<Plus size={18} />
@@ -351,19 +348,10 @@
 		animation: fade-up 0.3s ease both;
 	}
 
-	.back-link {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		color: var(--color-text-primary);
-		text-decoration: none;
+	.page-title {
 		font-size: 1.1rem;
 		font-weight: 700;
-		padding: 0.35rem 0;
-		transition: color 0.15s;
-	}
-	.back-link:hover {
-		color: var(--nord8);
+		margin: 0;
 	}
 
 	.create-btn {
