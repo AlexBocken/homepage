@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { ChevronLeft, ChevronDown } from '@lucide/svelte';
+	import { ChevronDown } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 
@@ -136,12 +136,6 @@
 </svelte:head>
 
 <div class="food-detail">
-	<!-- Back link -->
-	<a class="back-link" href="/fitness/{s.nutrition}">
-		<ChevronLeft size={16} />
-		{t('nutrition_title', lang)}
-	</a>
-
 	<!-- Header -->
 	<header class="food-header">
 		<h1>{food.nameDe ?? food.name}</h1>
@@ -316,19 +310,6 @@
 		max-width: 600px;
 		margin: 0 auto;
 		padding: 1rem;
-	}
-
-	.back-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		color: var(--color-text-secondary);
-		text-decoration: none;
-		font-size: 0.85rem;
-		margin-bottom: 0.75rem;
-	}
-	.back-link:hover {
-		color: var(--color-text-primary);
 	}
 
 	/* Header */
