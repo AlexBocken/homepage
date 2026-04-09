@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
-	import { Dumbbell, Route, Flame, Weight, Beef, Scale, Target } from '@lucide/svelte';
+	import { Dumbbell, Route, Flame, Weight, Beef, Scale, Target, Info } from '@lucide/svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
@@ -38,6 +38,8 @@
 
 	let goalStreak = $derived(data.goal?.streak ?? 0);
 	let goalWeekly = $derived(data.goal?.weeklyWorkouts ?? null);
+	let showBalanceInfo = $state(false);
+	let showAdherenceInfo = $state(false);
 	let goalEditing = $state(false);
 	let goalInput = $state(4);
 	let goalSaving = $state(false);
@@ -293,7 +295,17 @@
 				{:else}
 					<div class="card-value card-value-na">—</div>
 				{/if}
-				<div class="card-label">{t('calorie_balance', lang)}</div>
+				<div class="card-label card-label-info">
+					{t('calorie_balance', lang)}
+					<button class="card-info-trigger" onclick={() => showBalanceInfo = !showBalanceInfo} aria-label="Info"><Info size={12} /></button>
+					{#if showBalanceInfo}
+						<div class="card-info-tooltip">
+							{lang === 'en'
+								? 'Average daily calories eaten minus your calorie goal over the last 7 days. Negative = deficit, positive = surplus.'
+								: 'Durchschnittlich gegessene Kalorien minus dein Kalorienziel der letzten 7 Tage. Negativ = Defizit, positiv = Überschuss.'}
+						</div>
+					{/if}
+				</div>
 				<div class="card-hint">
 					{#if ns.avgCalorieBalance != null}
 						{t('seven_day_avg', lang)}
@@ -310,7 +322,17 @@
 				{:else}
 					<div class="card-value card-value-na">—</div>
 				{/if}
-				<div class="card-label">{t('diet_adherence', lang)}</div>
+				<div class="card-label card-label-info">
+					{t('diet_adherence', lang)}
+					<button class="card-info-trigger" onclick={() => showAdherenceInfo = !showAdherenceInfo} aria-label="Info"><Info size={12} /></button>
+					{#if showAdherenceInfo}
+						<div class="card-info-tooltip">
+							{lang === 'en'
+								? 'Percentage of days where calories eaten were within ±10% of your goal. Days without tracking count as misses.'
+								: 'Prozent der Tage, an denen die gegessenen Kalorien innerhalb von ±10 % deines Ziels lagen. Nicht erfasste Tage zählen als verfehlt.'}
+						</div>
+					{/if}
+				</div>
 				<div class="card-hint">
 					{#if ns.adherencePercent != null}
 						{t('since_start', lang)} ({ns.adherenceDays} {t('days', lang)})
@@ -712,6 +734,47 @@
 		width: 100%;
 		text-align: center;
 		font-size: 0.7rem;
+	}
+	.card-label-info {
+		position: relative;
+	}
+	.card-info-trigger {
+		display: inline-flex;
+		align-items: center;
+		vertical-align: middle;
+		opacity: 0.4;
+		cursor: pointer;
+		margin-left: 0.15rem;
+		background: none;
+		border: none;
+		padding: 0;
+		color: inherit;
+	}
+	.card-info-trigger:hover {
+		opacity: 0.8;
+	}
+	.card-info-tooltip {
+		position: absolute;
+		bottom: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		margin-bottom: 0.4rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		padding: 0.5rem 0.65rem;
+		font-size: 0.7rem;
+		font-weight: 400;
+		line-height: 1.5;
+		color: var(--color-text-secondary);
+		text-transform: none;
+		letter-spacing: normal;
+		white-space: normal;
+		max-width: 240px;
+		width: max-content;
+		text-align: center;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		z-index: 20;
 	}
 	.card-value.positive { color: var(--nord14); }
 	.card-value.negative { color: var(--nord11); }
