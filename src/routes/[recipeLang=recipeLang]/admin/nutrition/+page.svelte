@@ -14,6 +14,11 @@
 	let errorMsg = $state('');
 	let recipeName = $state('');
 
+	// Cache per100g
+	let cacheProcessing = $state(false);
+	/** @type {any} */
+	let cacheResult = $state(null);
+
 	async function generateAll() {
 		processing = true;
 		errorMsg = '';
@@ -296,6 +301,58 @@
 									</span>
 									{detail.total ? Math.round(detail.mapped / detail.total * 100) : 0}%
 								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	</div>
+
+	<!-- Cache per100g for round-off suggestions -->
+	<div class="section">
+		<h2>{isEnglish ? 'Cache Per-100g Nutrition' : 'Per-100g-Nährwerte cachen'}</h2>
+		<p>{isEnglish
+			? 'Recompute and cache per-100g nutrition on all recipes with nutrition mappings. Required for "Round off this day" suggestions.'
+			: 'Per-100g-Nährwerte für alle Rezepte mit Nährwertzuordnungen neu berechnen und cachen. Notwendig für "Tag abrunden"-Vorschläge.'}
+		</p>
+		<button disabled={cacheProcessing} onclick={async () => {
+			cacheProcessing = true;
+			cacheResult = null;
+			errorMsg = '';
+			try {
+				const res = await fetch(`/api/${recipeLang}/nutrition/cache-per100g`, { method: 'POST' });
+				cacheResult = await res.json();
+				if (!res.ok) throw new Error(cacheResult.message || 'Failed');
+			} catch (err) {
+				errorMsg = err instanceof Error ? err.message : 'An error occurred';
+			}
+			cacheProcessing = false;
+		}}>
+			{cacheProcessing ? (isEnglish ? 'Caching...' : 'Cache wird erstellt...') : (isEnglish ? 'Cache All' : 'Alle cachen')}
+		</button>
+
+		{#if cacheResult}
+			<div class="summary">
+				<div class="summary-stat">
+					<div class="value">{cacheResult.updated}</div>
+					<div class="label">{isEnglish ? 'Cached' : 'Gecacht'}</div>
+				</div>
+				<div class="summary-stat">
+					<div class="value">{cacheResult.skipped}</div>
+					<div class="label">{isEnglish ? 'Skipped' : 'Übersprungen'}</div>
+				</div>
+			</div>
+
+			<div class="result-box">
+				<table class="result-table">
+					<thead><tr><th>{isEnglish ? 'Recipe' : 'Rezept'}</th><th>kcal/100g</th><th>{isEnglish ? 'Total (g)' : 'Gesamt (g)'}</th></tr></thead>
+					<tbody>
+						{#each cacheResult.details as d}
+							<tr>
+								<td>{d.name}</td>
+								<td>{d.calories}</td>
+								<td>{d.totalGrams}</td>
 							</tr>
 						{/each}
 					</tbody>

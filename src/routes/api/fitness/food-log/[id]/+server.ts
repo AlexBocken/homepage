@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
+import { RoundOffCache } from '$models/RoundOffCache';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const user = await requireAuth(locals);
@@ -19,6 +20,8 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	}
 
 	await entry.save();
+	const dateStr = entry.date instanceof Date ? entry.date.toISOString().slice(0, 10) : '';
+	if (dateStr) RoundOffCache.deleteOne({ createdBy: user.nickname, date: dateStr }).catch(() => {});
 	return json(entry.toObject());
 };
 
@@ -31,5 +34,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		createdBy: user.nickname,
 	});
 	if (!deleted) throw error(404, 'Entry not found');
+	const dateStr = deleted.date instanceof Date ? deleted.date.toISOString().slice(0, 10) : '';
+	if (dateStr) RoundOffCache.deleteOne({ createdBy: user.nickname, date: dateStr }).catch(() => {});
 	return json({ ok: true });
 };

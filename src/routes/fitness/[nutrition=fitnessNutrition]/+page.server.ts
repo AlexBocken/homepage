@@ -3,6 +3,7 @@ import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { Recipe } from '$models/Recipe';
+import { RoundOffCache } from '$models/RoundOffCache';
 import mongoose from 'mongoose';
 
 export const load: PageServerLoad = async ({ fetch, url, locals }) => {
@@ -67,6 +68,24 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 		} catch {}
 	}
 
+	// Try to load cached round-off suggestions for SSR (no loading flash)
+	let roundOffSuggestions = null;
+	try {
+		const today = new Date().toISOString().slice(0, 10);
+		if (dateParam === today) {
+			const user = await requireAuth(locals);
+			await dbConnect();
+			const cached = await RoundOffCache.findOne({ createdBy: user.nickname, date: today }).lean();
+			if (cached?.suggestions?.length && cached.suggestions[0]?.items) {
+				roundOffSuggestions = {
+					suggestions: cached.suggestions,
+					foodPoolCount: cached.foodPoolCount,
+					recipeCount: cached.recipeCount,
+				};
+			}
+		}
+	} catch {}
+
 	const favData = favRes.ok ? await favRes.json() : { favorites: [] };
 	const recentData = recentRes.ok ? await recentRes.json() : { entries: [] };
 
@@ -92,5 +111,6 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 		recipeImages,
 		favorites: favData.favorites ?? [],
 		recentFoods,
+		roundOffSuggestions,
 	};
 };

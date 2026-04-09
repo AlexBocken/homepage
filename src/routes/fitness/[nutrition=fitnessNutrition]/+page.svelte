@@ -6,6 +6,8 @@
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
+	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
+	import RoundOffCard from '$lib/components/fitness/RoundOffCard.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { getDRI, NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
@@ -469,6 +471,14 @@
 	const calorieProgressRaw = $derived(goalCalories ? dayTotals.calories / (goalCalories + (exerciseKcal || 0)) * 100 : 0);
 	const calorieProgress = $derived(Math.min(calorieProgressRaw, 100));
 	const calorieOverflow = $derived(Math.max(calorieProgressRaw - 100, 0));
+
+	// Round-off suggestions
+	const remainingProtein = $derived(proteinGoalGrams ? proteinGoalGrams - dayTotals.protein : 0);
+	const remainingFat = $derived(fatGoalGrams ? fatGoalGrams - dayTotals.fat : 0);
+	const remainingCarbs = $derived(carbGoalGrams ? carbGoalGrams - dayTotals.carbs : 0);
+	const showRoundOff = $derived(
+		isToday && goalCalories && calorieBalance > 50 && calorieBalance <= goalCalories * 0.5
+	);
 
 	// DRI for micros
 	const dri = $derived(getDRI(goalSex));
@@ -1069,6 +1079,22 @@
 	{/if}
 {/snippet}
 
+{#snippet roundOffSnippet()}
+	<RoundOffCard
+		remainingKcal={calorieBalance}
+		{remainingProtein}
+		{remainingFat}
+		{remainingCarbs}
+		{currentDate}
+		{lang}
+		nutritionSlug={s.nutrition}
+		initialSuggestions={data.roundOffSuggestions?.suggestions ?? null}
+		onlogged={() => {
+			invalidateAll();
+		}}
+	/>
+{/snippet}
+
 {#snippet microPanel()}
 	<div class="micro-details" class:micro-hidden={!showMicros}>
 		{#each microSections as section}
@@ -1438,6 +1464,13 @@
 		</div>
 	{/if}
 
+	<!-- Round Off This Day (mobile) -->
+	{#if showRoundOff}
+		<div class="round-off-mobile">
+			{@render roundOffSnippet()}
+		</div>
+	{/if}
+
 	<!-- Liquid Tracking Card -->
 	<div class="water-card">
 		<div class="water-header">
@@ -1537,6 +1570,12 @@
 
 	<!-- Meal Sections -->
 	<div class="meals-col">
+	<!-- Round Off This Day (desktop) -->
+	{#if showRoundOff}
+		<div class="round-off-desktop">
+			{@render roundOffSnippet()}
+		</div>
+	{/if}
 	{#each mealTypes as meal, mi}
 		{@const mealEntries = grouped[meal]}
 		{@const mealCal = mealEntries.reduce((s, e) => s + entryCalories(e), 0)}
@@ -1643,19 +1682,7 @@
 		<div class="quick-log-card">
 			<h3 class="quick-log-title">{isEn ? 'Quick Log' : 'Schnell eintragen'}</h3>
 			<div class="quick-log-meal-select">
-				{#each mealTypes as meal}
-					{@const meta = mealMeta[meal]}
-					{@const MealIcon = meta.icon}
-					<button
-						class="ql-meal-btn"
-						class:active={quickLogMealType === meal}
-						style="--mc: {meta.color}"
-						onclick={() => quickLogMealType = meal}
-						title={t(meal, lang)}
-					>
-						<MealIcon size={14} />
-					</button>
-				{/each}
+				<MealTypePicker value={quickLogMealType} {lang} onchange={(m) => quickLogMealType = m} />
 			</div>
 
 			{#if quickFavorites.length > 0}
@@ -1778,7 +1805,16 @@
 	.quick-log-col {
 		display: none;
 	}
+	.round-off-desktop {
+		display: none;
+	}
 	@media (min-width: 1024px) {
+		.round-off-mobile {
+			display: none;
+		}
+		.round-off-desktop {
+			display: block;
+		}
 		.nutrition-page {
 			max-width: none;
 			display: grid;
@@ -3485,30 +3521,7 @@
 		color: var(--color-text-primary);
 	}
 	.quick-log-meal-select {
-		display: flex;
-		gap: 0.25rem;
 		margin-bottom: 0.75rem;
-	}
-	.ql-meal-btn {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.35rem;
-		border-radius: 8px;
-		border: 1px solid var(--color-border);
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-	.ql-meal-btn.active {
-		background: color-mix(in srgb, var(--mc) 15%, transparent);
-		border-color: var(--mc);
-		color: var(--mc);
-	}
-	.ql-meal-btn:hover:not(.active) {
-		border-color: var(--color-text-tertiary);
 	}
 	.ql-section {
 		margin-bottom: 0.5rem;
