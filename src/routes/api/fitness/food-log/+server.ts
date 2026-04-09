@@ -40,7 +40,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	await dbConnect();
 
 	const body = await request.json();
-	const { date, mealType, name, source, sourceId, amountGrams, per100g } = body;
+	const { date, mealType, name, source, sourceId, amountGrams, per100g, liquidMl } = body;
 
 	if (!date || !name?.trim()) throw error(400, 'date and name are required');
 	if (!VALID_MEALS.includes(mealType)) throw error(400, 'Invalid mealType');
@@ -55,6 +55,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		sourceId,
 		amountGrams,
 		per100g,
+		...(liquidMl > 0 && { liquidMl }),
 		createdBy: user.nickname,
 	});
 
