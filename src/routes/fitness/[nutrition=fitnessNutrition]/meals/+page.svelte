@@ -4,6 +4,7 @@
 	import { ChevronLeft, Plus, Trash2, Pencil, UtensilsCrossed, X } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -127,7 +128,7 @@
 	}
 
 	async function deleteMeal(meal) {
-		if (!confirm(t('delete_meal_confirm', lang))) return;
+		if (!await confirm(t('delete_meal_confirm', lang))) return;
 		try {
 			const res = await fetch(`/api/fitness/custom-meals/${meal._id}`, { method: 'DELETE' });
 			if (res.ok) {

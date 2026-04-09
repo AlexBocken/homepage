@@ -7,6 +7,7 @@
   import { getCategoryEmoji } from '$lib/utils/categories';
   import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
   import { detectCospendLang, cospendRoot, t, locale, splitDescription, paymentCategoryName } from '$lib/js/cospendI18n';
+  import { confirm } from '$lib/js/confirmDialog.svelte';
 
   let { paymentId, onclose, onpaymentDeleted } = $props();
 
@@ -110,7 +111,7 @@
   let deleting = $state(false);
 
   async function deletePayment() {
-    if (!confirm(t('delete_payment_confirm', lang))) {
+    if (!await confirm(t('delete_payment_confirm', lang))) {
       return;
     }
 

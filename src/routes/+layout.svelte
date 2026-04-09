@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { onNavigate } from '$app/navigation';
 	import Toast from '$lib/components/Toast.svelte';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	let { children } = $props();
 
 	onNavigate((navigation) => {
@@ -23,3 +24,4 @@
 
 {@render children()}
 <Toast />
+<ConfirmDialog />

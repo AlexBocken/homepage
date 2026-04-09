@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge, Flame, Info } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -216,7 +217,7 @@
 	}
 
 	async function deleteSession() {
-		if (!confirm(t('delete_session_confirm', lang))) return;
+		if (!await confirm(t('delete_session_confirm', lang))) return;
 		deleting = true;
 		try {
 			const res = await fetch(`/api/fitness/sessions/${session._id}`, { method: 'DELETE' });
@@ -446,7 +447,7 @@
 
 	/** @param {number} exIdx */
 	async function removeGpx(exIdx) {
-		if (!confirm(t('remove_gps_confirm', lang))) return;
+		if (!await confirm(t('remove_gps_confirm', lang))) return;
 		try {
 			const res = await fetch(`/api/fitness/sessions/${session._id}/gpx`, {
 				method: 'DELETE',

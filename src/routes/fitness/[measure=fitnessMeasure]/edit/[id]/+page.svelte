@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { Trash2 } from '@lucide/svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 
@@ -85,7 +86,7 @@
 	}
 
 	async function deleteMeasurement() {
-		if (!confirm(t('delete_measurement_confirm', lang))) return;
+		if (!await confirm(t('delete_measurement_confirm', lang))) return;
 		deleting = true;
 		try {
 			const res = await fetch(`/api/fitness/measurements/${m._id}`, { method: 'DELETE' });

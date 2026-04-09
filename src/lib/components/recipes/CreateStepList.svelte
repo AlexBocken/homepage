@@ -8,6 +8,7 @@ import Check from '$lib/assets/icons/Check.svelte'
 import "$lib/css/action_button.css"
 
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'
+import { confirm } from '$lib/js/confirmDialog.svelte'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
 
 let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() } = $props<{ lang?: 'de' | 'en', instructions: any, add_info: any }>();
@@ -134,8 +135,8 @@ function handleSelect(recipe: any, options: any) {
 	showSelector = false;
 }
 
-export function removeReference(list_index: number) {
-	const confirmed = confirm(t[lang].confirmDeleteReference);
+export async function removeReference(list_index: number) {
+	const confirmed = await confirm(t[lang].confirmDeleteReference);
 	if (confirmed) {
 		instructions.splice(list_index, 1);
 		instructions = instructions;
@@ -219,9 +220,9 @@ function get_sublist_index(sublist_name: string, list: any[]){
 	}
 	return -1
 }
-export function remove_list(list_index: number){
+export async function remove_list(list_index: number){
 	if(instructions[list_index].steps.length > 1){
-		const response = confirm(t[lang].confirmDeleteList);
+		const response = await confirm(t[lang].confirmDeleteList);
 		if(!response){
 			return
 		}

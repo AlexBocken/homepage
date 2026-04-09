@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2, X, Timer, Plus, GripVertical } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
@@ -161,7 +162,7 @@
 	}
 
 	async function deleteInterval(/** @type {string} */ id) {
-		if (!confirm(t('delete_interval_confirm', lang))) return;
+		if (!await confirm(t('delete_interval_confirm', lang))) return;
 		await fetch(`/api/fitness/intervals/${id}`, { method: 'DELETE' });
 		if (selectedIntervalId === id) selectedIntervalId = null;
 		await fetchIntervalTemplates();
