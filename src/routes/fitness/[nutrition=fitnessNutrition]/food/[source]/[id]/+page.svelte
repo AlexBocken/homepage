@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { ChevronDown, ExternalLink, Heart } from '@lucide/svelte';
+	import { ChevronDown, ExternalLink, Heart, Beef, Droplet, Wheat } from '@lucide/svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
@@ -221,27 +221,30 @@
 	<!-- Macro rings -->
 	<div class="macro-rings">
 		{#each [
-			{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', color: 'var(--nord14)', grams: scaled(n.protein) },
-			{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: scaled(n.fat) },
-			{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: scaled(n.carbs) },
+			{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', color: 'var(--nord14)', grams: scaled(n.protein), icon: Beef },
+			{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: scaled(n.fat), icon: Droplet },
+			{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: scaled(n.carbs), icon: Wheat },
 		] as macro (macro.color)}
+			{@const MacroIcon = macro.icon}
 			<RingGraph
 				percent={macro.pct}
 				color={macro.color}
 				label={macro.label}
 				sublabel="{fmt(macro.grams)}g"
-			/>
+			>
+				{#snippet labelIcon()}<MacroIcon size={12} />{/snippet}
+			</RingGraph>
 		{/each}
 	</div>
 
 	<!-- Macro detail grid -->
 	<div class="macro-detail-card">
 		<div class="detail-row">
-			<span class="detail-name">{isEn ? 'Protein' : 'Eiweiß'}</span>
+			<span class="detail-name"><Beef size={12} /> {isEn ? 'Protein' : 'Eiweiß'}</span>
 			<span class="detail-val">{fmt(scaled(n.protein))} g</span>
 		</div>
 		<div class="detail-row">
-			<span class="detail-name">{isEn ? 'Fat' : 'Fett'}</span>
+			<span class="detail-name"><Droplet size={12} /> {isEn ? 'Fat' : 'Fett'}</span>
 			<span class="detail-val">{fmt(scaled(n.fat))} g</span>
 		</div>
 		<div class="detail-row sub">
@@ -249,7 +252,7 @@
 			<span class="detail-val">{fmt(scaled(n.saturatedFat))} g</span>
 		</div>
 		<div class="detail-row">
-			<span class="detail-name">{isEn ? 'Carbohydrates' : 'Kohlenhydrate'}</span>
+			<span class="detail-name"><Wheat size={12} /> {isEn ? 'Carbohydrates' : 'Kohlenhydrate'}</span>
 			<span class="detail-val">{fmt(scaled(n.carbs))} g</span>
 		</div>
 		<div class="detail-row sub">
@@ -279,9 +282,9 @@
 						</div>
 						<div class="ingredient-macros">
 							<span>{Math.round(ing.calories)} kcal</span>
-							<span>{fmt(ing.protein)}P</span>
-							<span>{fmt(ing.fat)}F</span>
-							<span>{fmt(ing.carbs)}C</span>
+							<span>{fmt(ing.protein)}<Beef size={10} /></span>
+							<span>{fmt(ing.fat)}<Droplet size={10} /></span>
+							<span>{fmt(ing.carbs)}<Wheat size={10} /></span>
 						</div>
 					</div>
 				{/each}
@@ -349,9 +352,9 @@
 				<div class="portions-header">
 					<span>{isEn ? 'Serving' : 'Portion'}</span>
 					<span>kcal</span>
-					<span>{isEn ? 'Protein' : 'Eiweiß'}</span>
-					<span>{isEn ? 'Fat' : 'Fett'}</span>
-					<span>{isEn ? 'Carbs' : 'KH'}</span>
+					<span><Beef size={12} /></span>
+					<span><Droplet size={12} /></span>
+					<span><Wheat size={12} /></span>
 				</div>
 				{#each portions as portion}
 					{@const m = portion.grams / 100}
@@ -549,6 +552,9 @@
 		font-size: 0.85rem;
 	}
 	.detail-name {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
 		color: var(--color-text-primary);
 		font-weight: 500;
 	}
@@ -758,11 +764,17 @@
 	}
 	.ingredient-macros {
 		display: flex;
+		align-items: center;
 		gap: 0.5rem;
 		font-size: 0.75rem;
 		color: var(--color-text-secondary);
 		font-variant-numeric: tabular-nums;
 		flex-shrink: 0;
+	}
+	.ingredient-macros span {
+		display: flex;
+		align-items: center;
+		gap: 0.1rem;
 	}
 
 	@media (max-width: 500px) {

@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater, Pencil, Heart, Clock, Search } from '@lucide/svelte';
+	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater, Pencil, Heart, Clock, Search, Beef, Droplet, Wheat } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -1197,16 +1197,17 @@
 			<!-- Macro progress bars -->
 			<div class="macro-bars">
 				{#each [
-					{ value: dayTotals.protein, goal: proteinGoalGrams, label: t('protein', lang), color: 'var(--nord14)' },
-					{ value: dayTotals.fat, goal: fatGoalGrams, label: t('fat', lang), color: 'var(--nord12)' },
-					{ value: dayTotals.carbs, goal: carbGoalGrams, label: t('carbs', lang), color: 'var(--nord9)' },
+					{ value: dayTotals.protein, goal: proteinGoalGrams, label: t('protein', lang), color: 'var(--nord14)', icon: Beef },
+					{ value: dayTotals.fat, goal: fatGoalGrams, label: t('fat', lang), color: 'var(--nord12)', icon: Droplet },
+					{ value: dayTotals.carbs, goal: carbGoalGrams, label: t('carbs', lang), color: 'var(--nord9)', icon: Wheat },
 				] as macro}
 					{@const pct = macro.goal ? macro.value / macro.goal * 100 : 0}
 					{@const over = pct > 100}
 					{@const overPct = Math.min(pct - 100, 100)}
 					{@const remaining = macro.goal ? macro.goal - macro.value : 0}
+					{@const MacroBarIcon = macro.icon}
 					<div class="macro-bar-item">
-						<span class="macro-bar-label">{macro.label}</span>
+						<span class="macro-bar-label"><MacroBarIcon size={12} /> {macro.label}</span>
 						<div class="macro-bar-track">
 							<div class="macro-bar-fill" style="width: {Math.min(pct, 100)}%; background: {macro.color}"></div>
 							{#if over}
@@ -1421,9 +1422,9 @@
 								<text x="60" y="70" text-anchor="middle" class="ring-cal-sub">kcal</text>
 							</svg>
 							<div class="macro-ring-legend">
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord14)"></span> {t('protein', lang)} {editMacroRing.prot}%</span>
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord12)"></span> {t('fat', lang)} {editMacroRing.fat}%</span>
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord9)"></span> {t('carbs', lang)} {editMacroRing.carb}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord14)"></span><Beef size={12} /> {t('protein', lang)} {editMacroRing.prot}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord12)"></span><Droplet size={12} /> {t('fat', lang)} {editMacroRing.fat}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord9)"></span><Wheat size={12} /> {t('carbs', lang)} {editMacroRing.carb}%</span>
 							</div>
 						</div>
 					{/if}
@@ -1619,7 +1620,7 @@
 							{:else}
 								<span class="food-card-detail">{entry.amountGrams}g · {fmtCal(entryCalories(entry))} kcal</span>
 							{/if}
-							<span class="food-card-macros">{fmt(entryNutrient(entry, 'protein'))}g P · {fmt(entryNutrient(entry, 'fat'))}g F · {fmt(entryNutrient(entry, 'carbs'))}g C</span>
+							<span class="food-card-macros">{fmt(entryNutrient(entry, 'protein'))}g <Beef size={10} /> · {fmt(entryNutrient(entry, 'fat'))}g <Droplet size={10} /> · {fmt(entryNutrient(entry, 'carbs'))}g <Wheat size={10} /></span>
 						</div>
 						<div class="food-card-actions">
 							<button class="food-card-action edit" class:active={editingEntryId === entry._id} onclick={() => {
@@ -2069,6 +2070,9 @@
 		gap: 0.25rem;
 	}
 	.macro-bar-label {
+		display: flex;
+		align-items: center;
+		gap: 0.2rem;
 		font-size: 0.65rem;
 		font-weight: 700;
 		letter-spacing: 0.06em;
@@ -3033,6 +3037,9 @@
 		color: var(--color-text-secondary);
 	}
 	.food-card-macros {
+		display: flex;
+		align-items: center;
+		gap: 0.15rem;
 		font-size: 0.65rem;
 		color: var(--color-text-tertiary);
 		font-variant-numeric: tabular-nums;

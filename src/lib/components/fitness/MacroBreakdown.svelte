@@ -1,6 +1,7 @@
 <script>
 	import { detectFitnessLang } from '$lib/js/fitnessI18n';
 	import { page } from '$app/stores';
+	import { Beef, Droplet, Wheat } from '@lucide/svelte';
 	import RingGraph from './RingGraph.svelte';
 
 	/**
@@ -51,9 +52,9 @@
 	}
 
 	const macros = $derived([
-		{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', color: 'var(--nord14)', grams: protein },
-		{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: fat },
-		{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: carbs },
+		{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', color: 'var(--nord14)', grams: protein, icon: Beef },
+		{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: fat, icon: Droplet },
+		{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: carbs, icon: Wheat },
 	]);
 </script>
 
@@ -67,23 +68,26 @@
 
 	<div class="mb-rings">
 		{#each macros as macro (macro.color)}
+			{@const MacroIcon = macro.icon}
 			<RingGraph
 				percent={macro.pct}
 				color={macro.color}
 				label={macro.label}
 				sublabel="{fmt(macro.grams)}g"
-			/>
+			>
+				{#snippet labelIcon()}<MacroIcon size={12} />{/snippet}
+			</RingGraph>
 		{/each}
 	</div>
 
 	{#if showDetailRows}
 		<div class="mb-rows">
 			<div class="mb-row">
-				<span>{isEn ? 'Protein' : 'Eiweiß'}</span>
+				<span class="mb-row-label"><Beef size={12} /> {isEn ? 'Protein' : 'Eiweiß'}</span>
 				<span>{fmt(protein)} g</span>
 			</div>
 			<div class="mb-row">
-				<span>{isEn ? 'Fat' : 'Fett'}</span>
+				<span class="mb-row-label"><Droplet size={12} /> {isEn ? 'Fat' : 'Fett'}</span>
 				<span>{fmt(fat)} g</span>
 			</div>
 			<div class="mb-row sub">
@@ -91,7 +95,7 @@
 				<span>{fmt(saturatedFat)} g</span>
 			</div>
 			<div class="mb-row">
-				<span>{isEn ? 'Carbohydrates' : 'Kohlenhydrate'}</span>
+				<span class="mb-row-label"><Wheat size={12} /> {isEn ? 'Carbohydrates' : 'Kohlenhydrate'}</span>
 				<span>{fmt(carbs)} g</span>
 			</div>
 			<div class="mb-row sub">
@@ -148,6 +152,11 @@
 	}
 	.mb-row:last-child {
 		border-bottom: none;
+	}
+	.mb-row-label {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 	.mb-row.sub span:first-child {
 		padding-left: 0.75rem;
