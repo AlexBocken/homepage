@@ -184,6 +184,10 @@ const RecipeSchema = new mongoose.Schema(
        recipeRefMultiplier: { type: Number, default: 1 },
      }],
 
+     // Cached nutrition per 100g (for round-off suggestions & listing)
+     cachedPer100g: { type: mongoose.Schema.Types.Mixed },
+     cachedTotalGrams: { type: Number },
+
      // Translation metadata for tracking changes
      translationMetadata: {
        lastModifiedGerman: {type: Date},
