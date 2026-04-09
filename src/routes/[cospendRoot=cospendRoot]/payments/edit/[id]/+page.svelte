@@ -1,7 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { getCategoryOptions } from '$lib/utils/categories';
+  import { page } from '$app/stores';
+  import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n } from '$lib/js/cospendI18n';
   import FormSection from '$lib/components/FormSection.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import SaveFab from '$lib/components/SaveFab.svelte';
@@ -11,6 +12,10 @@
    */
 
   let { data } = $props();
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const root = $derived(cospendRoot(lang));
+  const loc = $derived(locale(lang));
 
   /** @type {PaymentWithSplits | null} */
   let payment = $state(null);
@@ -37,7 +42,7 @@
   /** @type {number | null} */
   let originalAmount = $state(null);
 
-  let categoryOptions = $derived(getCategoryOptions());
+  let categoryOptions = $derived(getCategoryOptionsI18n(lang));
 
   // Recalculate splits when amount changes
   function recalculateSplits() {
@@ -244,7 +249,7 @@
         throw new Error('Failed to update payment');
       }
 
-      await goto('/cospend/payments');
+      await goto(`/${root}/payments`);
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
     } finally {
@@ -274,7 +279,7 @@
       }
 
       // Redirect to payments list after successful deletion
-      goto('/cospend/payments');
+      goto(`/${root}/payments`);
       
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
@@ -352,25 +357,25 @@
 </script>
 
 <svelte:head>
-  <title>Edit Payment - Cospend</title>
+  <title>{t('edit_payment_title', lang)} - {t('cospend', lang)}</title>
 </svelte:head>
 
 <main class="edit-payment">
   <div class="header">
-    <h1>Edit Payment</h1>
-    <p>Modify payment details and receipt image</p>
+    <h1>{t('edit_payment_title', lang)}</h1>
+    <p>{t('edit_payment_subtitle', lang)}</p>
   </div>
 
   {#if loading}
-    <div class="loading">Loading payment...</div>
+    <div class="loading">{t('loading_payments', lang)}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if payment}
     <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }
   } class="payment-form">
-      <FormSection title="Payment Details">
+      <FormSection title={t('payment_details', lang)}>
         <div class="form-group">
-          <label for="title">Title *</label>
+          <label for="title">{t('title_label', lang)}</label>
           <input 
             type="text" 
             id="title" 
@@ -380,7 +385,7 @@
         </div>
 
         <div class="form-group">
-          <label for="description">Description</label>
+          <label for="description">{t('description_label', lang)}</label>
           <textarea 
             id="description" 
             bind:value={payment.description} 
@@ -389,7 +394,7 @@
         </div>
 
         <div class="form-group">
-          <label for="category">Category</label>
+          <label for="category">{t('category_star', lang)}</label>
           <select id="category" bind:value={payment.category} required>
             {#each categoryOptions as option}
               <option value={option.value}>{option.label}</option>
@@ -399,7 +404,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="amount">Amount *</label>
+            <label for="amount">{t('amount_label', lang)}</label>
             <div class="amount-currency">
               {#if payment.originalAmount && payment.currency !== 'CHF'}
                 <!-- Show original amount for foreign currency -->
@@ -462,7 +467,7 @@
           </div>
 
           <div class="form-group">
-            <label for="date">Date</label>
+            <label for="date">{t('date', lang)}</label>
             <input
               type="date"
               id="date"
@@ -474,7 +479,7 @@
         </div>
 
         <div class="form-group">
-          <label for="paidBy">Paid by</label>
+          <label for="paidBy">{t('paid_by_form', lang)}</label>
           <input 
             type="text" 
             id="paidBy" 
@@ -489,6 +494,7 @@
         bind:imageFile={imageFile}
         bind:uploading={uploading}
         currentImage={payment.image}
+        {lang}
         onimageSelected={handleImageUpload}
         onimageRemoved={handleImageRemoved}
         oncurrentImageRemoved={handleCurrentImageRemoved}
@@ -496,18 +502,18 @@
       />
 
       {#if payment.splits && payment.splits.length > 0}
-        <FormSection title="Split Configuration">
+        <FormSection title={t('split_config', lang)}>
           <div class="split-method-info">
-            <span class="label">Split Method:</span>
+            <span class="label">{t('split_method_form', lang)}</span>
             <span class="value">
               {#if payment.splitMethod === 'equal'}
-                Equal Split
+                {t('equal_split', lang)}
               {:else if payment.splitMethod === 'full'}
-                Paid in Full
+                {t('paid_in_full', lang)}
               {:else if payment.splitMethod === 'personal_equal'}
-                Personal + Equal Split
+                {t('personal_equal_split', lang)}
               {:else if payment.splitMethod === 'proportional'}
-                Custom Proportions
+                {t('custom_proportions', lang)}
               {:else}
                 {payment.splitMethod}
               {/if}
@@ -516,8 +522,8 @@
 
           {#if payment.splitMethod === 'personal_equal'}
             <div class="personal-amounts-editor">
-              <h3>Personal Amounts</h3>
-              <p class="description">Enter personal amounts for each user. The remainder will be split equally.</p>
+              <h3>{t('personal_amounts', lang)}</h3>
+              <p class="description">{t('personal_amounts_desc', lang)}</p>
               {#each payment.splits as split, index}
                 <div class="personal-input">
                   <label for="personal_{split.username}">{split.username}</label>
@@ -540,10 +546,10 @@
                 {@const remainder = Math.max(0, Number(payment.amount) - totalPersonal)}
                 {@const hasError = totalPersonal > Number(payment.amount)}
                 <div class="remainder-info" class:error={hasError}>
-                  <span>Total Personal: CHF {totalPersonal.toFixed(2)}</span>
-                  <span>Remainder to Split: CHF {remainder.toFixed(2)}</span>
+                  <span>{t('total_personal', lang)}: CHF {totalPersonal.toFixed(2)}</span>
+                  <span>{t('remainder_to_split', lang)}: CHF {remainder.toFixed(2)}</span>
                   {#if hasError}
-                    <div class="error-message">⚠️ Personal amounts exceed total payment amount!</div>
+                    <div class="error-message">⚠️ {t('personal_exceeds', lang)}</div>
                   {/if}
                 </div>
               {/if}
@@ -551,17 +557,17 @@
           {/if}
 
           <div class="splits-display">
-            <h3>Split Preview</h3>
+            <h3>{t('split_preview', lang)}</h3>
             {#each payment.splits as split}
               <div class="split-item">
                 <span class="split-username">{split.username}</span>
                 <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                   {#if split.amount > 0}
-                    owes CHF {split.amount.toFixed(2)}
+                    {t('owes', lang)} CHF {split.amount.toFixed(2)}
                   {:else if split.amount < 0}
-                    owed CHF {Math.abs(split.amount).toFixed(2)}
+                    {t('owed', lang)} CHF {Math.abs(split.amount).toFixed(2)}
                   {:else}
-                    owes CHF {split.amount.toFixed(2)}
+                    {t('owes', lang)} CHF {split.amount.toFixed(2)}
                   {/if}
                 </span>
               </div>
@@ -581,11 +587,11 @@
           onclick={deletePayment}
           disabled={deleting || saving}
         >
-          {deleting ? 'Deleting...' : 'Delete Payment'}
+          {deleting ? t('deleting', lang) : t('delete_payment', lang)}
         </button>
       </div>
 
-      <SaveFab disabled={saving || deleting} label="Save changes" />
+      <SaveFab disabled={saving || deleting} label={t('save_changes', lang)} />
     </form>
   {/if}
 </main>

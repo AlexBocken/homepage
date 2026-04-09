@@ -11,12 +11,17 @@
   import iconCategoriesData from '$lib/data/shoppingIconCategories.json';
 
   import { Share2, X, Copy, Check } from '@lucide/svelte';
+  import { page } from '$app/stores';
+  import { detectCospendLang, t, locale, categoryName, formatTTL as formatTTLi18n, ttlOptions } from '$lib/js/cospendI18n';
 
   let { data } = $props();
   let user = $derived(data.session?.user?.nickname || 'guest');
   let shareToken = $derived(data.shareToken);
   let isGuest = $derived(!data.session);
   const sync = getShoppingSync();
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const loc = $derived(locale(lang));
 
   /** @type {Record<string, { icon: typeof Plus, color: string }>} */
   const categoryMeta = {
@@ -266,23 +271,10 @@
 
   /** @param {string} expiresAt */
   function formatTTL(expiresAt) {
-    const diff = new Date(expiresAt).getTime() - Date.now();
-    if (diff <= 0) return 'abgelaufen';
-    const mins = Math.round(diff / 60000);
-    if (mins < 60) return `${mins} Min.`;
-    const hours = Math.round(diff / 3600000);
-    if (hours < 24) return `${hours} Std.`;
-    const days = Math.round(diff / 86400000);
-    return `${days} Tag${days > 1 ? 'e' : ''}`;
+    return formatTTLi18n(expiresAt, lang);
   }
 
-  const TTL_OPTIONS = [
-    { label: '1 Stunde', ms: 1 * 60 * 60 * 1000 },
-    { label: '6 Stunden', ms: 6 * 60 * 60 * 1000 },
-    { label: '24 Stunden', ms: 24 * 60 * 60 * 1000 },
-    { label: '3 Tage', ms: 3 * 24 * 60 * 60 * 1000 },
-    { label: '7 Tage', ms: 7 * 24 * 60 * 60 * 1000 },
-  ];
+  let TTL_OPTIONS = $derived(ttlOptions(lang));
 
   /**
    * @param {string} id
@@ -303,12 +295,13 @@
     }
   }
 
-  /** @param {{ id: string, token: string }} t */
-  async function copyTokenLink(t) {
-    const url = new URL('/cospend/list', window.location.origin);
-    url.searchParams.set('token', t.token);
+  /** @param {{ id: string, token: string }} tok */
+  async function copyTokenLink(tok) {
+    const root = $page.url.pathname.split('/')[1];
+    const url = new URL(`/${root}/list`, window.location.origin);
+    url.searchParams.set('token', tok.token);
     await navigator.clipboard.writeText(url.toString());
-    copiedId = t.id;
+    copiedId = tok.id;
     showCopyToast = true;
     setTimeout(() => { copiedId = null; showCopyToast = false; }, 2000);
   }
@@ -321,7 +314,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
       });
-      shareTokens = shareTokens.filter(t => t.id !== id);
+      shareTokens = shareTokens.filter(tok => tok.id !== id);
     } catch (err) {
       console.error('[shopping] Delete token error:', err);
     }
@@ -338,8 +331,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, expiresAt: newExpiry })
       });
-      shareTokens = shareTokens.map(t =>
-        t.id === id ? { ...t, expiresAt: newExpiry } : t
+      shareTokens = shareTokens.map(tok =>
+        tok.id === id ? { ...tok, expiresAt: newExpiry } : tok
       );
     } catch (err) {
       console.error('[shopping] Update token error:', err);
@@ -369,15 +362,15 @@
 <div class="shopping-page">
   <header class="page-header">
     <div class="header-row">
-      <h1>Einkaufsliste <SyncIndicator status={sync.status} /></h1>
+      <h1>{t('shopping_list_title', lang)} <SyncIndicator status={sync.status} /></h1>
       {#if !isGuest}
-        <button class="btn-share" onclick={openShareModal} title="Teilen">
+        <button class="btn-share" onclick={openShareModal} title={t('share', lang)}>
           <Share2 size={16} />
         </button>
       {/if}
     </div>
     {#if totalCount > 0}
-      <p class="subtitle">{checkedCount} / {totalCount} erledigt</p>
+      <p class="subtitle">{checkedCount} / {totalCount} {t('items_done', lang)}</p>
     {/if}
     <div class="store-picker">
       <Store size={13} />
@@ -397,7 +390,7 @@
       bind:value={newItemName}
       onkeydown={onKeydown}
       type="text"
-      placeholder="Artikel hinzufügen..."
+      placeholder={t('add_item_placeholder', lang)}
       autocomplete="off"
     />
     <button class="btn-add" onclick={addItem} disabled={!newItemName.trim()}>
@@ -406,7 +399,7 @@
   </div>
 
   {#if totalCount === 0}
-    <p class="empty-state">Die Einkaufsliste ist leer</p>
+    <p class="empty-state">{t('empty_list', lang)}</p>
   {:else}
     <div class="item-list">
       {#each groupedItems as group (group.category)}
@@ -418,7 +411,7 @@
               <div class="category-icon">
                 <CategoryIcon size={14} />
               </div>
-              <h2>{group.category}</h2>
+              <h2>{categoryName(group.category, lang)}</h2>
               <span class="category-count">{group.items.filter(i => !i.checked).length}</span>
             </div>
           </div>
@@ -459,7 +452,7 @@
     {#if checkedCount > 0}
       <button class="btn-clear-checked" onclick={() => sync.clearChecked()}>
         <ListX size={16} />
-        Erledigte entfernen ({checkedCount})
+        {t('clear_checked', lang)} ({checkedCount})
       </button>
     {/if}
   {/if}
@@ -476,7 +469,7 @@
       <h3>{parseQuantity(editingItem.name).name}</h3>
 
       <!-- svelte-ignore a11y_label_has_associated_control -->
-      <label class="edit-label">Kategorie</label>
+      <label class="edit-label">{t('kategorie', lang)}</label>
       <div class="category-picker">
         {#each SHOPPING_CATEGORIES as cat}
           {@const meta = categoryMeta[cat] || categoryMeta['Sonstiges']}
@@ -488,22 +481,22 @@
             onclick={() => { editCategory = cat; }}
           >
             <CatIcon size={14} />
-            <span>{cat}</span>
+            <span>{categoryName(cat, lang)}</span>
           </button>
         {/each}
       </div>
 
       <!-- svelte-ignore a11y_label_has_associated_control -->
-      <label class="edit-label">Icon</label>
+      <label class="edit-label">{t('icon', lang)}</label>
       <div class="icon-search">
         <Search size={14} />
-        <input bind:value={iconSearch} type="text" placeholder="Icon suchen..." />
+        <input bind:value={iconSearch} type="text" placeholder={t('search_icon', lang)} />
       </div>
       <div class="icon-picker">
         {#each filteredIconGroups as [cat, icons]}
           {@const meta = categoryMeta[cat] || categoryMeta['Sonstiges']}
           <div class="icon-group">
-            <span class="icon-group-label" style="color: {meta.color}">{cat}</span>
+            <span class="icon-group-label" style="color: {meta.color}">{categoryName(cat, lang)}</span>
             <div class="icon-group-grid">
               {#each icons as [name, file]}
                 <button
@@ -521,9 +514,9 @@
       </div>
 
       <div class="edit-actions">
-        <button class="btn-cancel" onclick={closeEdit}>Abbrechen</button>
+        <button class="btn-cancel" onclick={closeEdit}>{t('cancel', lang)}</button>
         <button class="btn-save" onclick={saveEdit} disabled={editSaving}>
-          {editSaving ? 'Speichern...' : 'Speichern'}
+          {editSaving ? t('saving', lang) : t('save', lang)}
         </button>
       </div>
     </div>
@@ -538,27 +531,27 @@
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="edit-modal share-modal" onclick={(e) => e.stopPropagation()}>
       <div class="share-header">
-        <h3>Geteilte Links</h3>
+        <h3>{t('shared_links', lang)}</h3>
         <button class="close-button" onclick={() => { showShareModal = false; }}>
           <X size={18} />
         </button>
       </div>
-      <p class="share-desc">Jeder mit einem aktiven Link kann die Einkaufsliste bearbeiten.</p>
+      <p class="share-desc">{t('share_desc', lang)}</p>
 
       {#if shareLoading}
-        <p class="share-loading">Laden...</p>
+        <p class="share-loading">{t('loading', lang)}</p>
       {:else if shareTokens.length === 0}
-        <p class="share-empty">Keine aktiven Links.</p>
+        <p class="share-empty">{t('no_active_links', lang)}</p>
       {:else}
         <div class="token-list">
-          {#each shareTokens as t (t.id)}
+          {#each shareTokens as tok (tok.id)}
             <div class="token-item">
               <div class="token-info">
-                <span class="token-created-by">{t.createdBy}</span>
+                <span class="token-created-by">{tok.createdBy}</span>
                 <div class="token-expiry-row">
-                  <span class="token-ttl">noch {formatTTL(t.expiresAt)}</span>
-                  <select class="token-ttl-select" onchange={(e) => onTTLChange(t.id, e)}>
-                    <option value="" disabled selected>Ändern</option>
+                  <span class="token-ttl">{formatTTL(tok.expiresAt)}</span>
+                  <select class="token-ttl-select" onchange={(e) => onTTLChange(tok.id, e)}>
+                    <option value="" disabled selected>{t('change', lang)}</option>
                     {#each TTL_OPTIONS as opt}
                       <option value={opt.ms}>{opt.label}</option>
                     {/each}
@@ -566,10 +559,10 @@
                 </div>
               </div>
               <div class="token-actions">
-                <button class="btn-token-copy" onclick={() => copyTokenLink(t)} title="Link kopieren">
-                  {#if copiedId === t.id}<Check size={14} />{:else}<Copy size={14} />{/if}
+                <button class="btn-token-copy" onclick={() => copyTokenLink(tok)} title={t('copy_link', lang)}>
+                  {#if copiedId === tok.id}<Check size={14} />{:else}<Copy size={14} />{/if}
                 </button>
-                <button class="btn-token-delete" onclick={() => deleteToken(t.id)} title="Löschen">
+                <button class="btn-token-delete" onclick={() => deleteToken(tok.id)} title={t('delete_', lang)}>
                   <X size={14} />
                 </button>
               </div>
@@ -580,7 +573,7 @@
 
       <button class="btn-new-token" onclick={createNewToken}>
         <Plus size={14} />
-        Neuen Link erstellen
+        {t('create_new_link', lang)}
       </button>
     </div>
   </div>
@@ -588,7 +581,7 @@
 
 {#if showCopyToast}
   <div class="copy-toast" transition:slide={{ duration: 150 }}>
-    <Check size={14} /> Kopiert
+    <Check size={14} /> {t('copied', lang)}
   </div>
 {/if}
 

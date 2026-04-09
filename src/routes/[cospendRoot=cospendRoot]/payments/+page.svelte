@@ -1,16 +1,20 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
-  import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
+  import { getCategoryEmoji } from '$lib/utils/categories';
   import { toast } from '$lib/js/toast.svelte';
   import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
-
+  import { detectCospendLang, cospendRoot, t, locale, splitDescription, paymentCategoryName } from '$lib/js/cospendI18n';
 
   import { formatCurrency } from '$lib/utils/formatters';
 
   let { data } = $props();
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const root = $derived(cospendRoot(lang));
+  const loc = $derived(locale(lang));
 
   // Use server-side data with progressive enhancement
   // svelte-ignore state_referenced_locally
@@ -78,7 +82,7 @@
   }
 
   async function deletePayment(/** @type {string} */ paymentId) {
-    if (!confirm('Are you sure you want to delete this payment?')) {
+    if (!confirm(t('delete_payment_confirm', lang))) {
       return;
     }
 
@@ -100,14 +104,14 @@
 
   function formatAmountWithCurrency(/** @type {any} */ payment) {
     if (payment.currency === 'CHF' || !payment.originalAmount) {
-      return formatCurrency(payment.amount, 'CHF', 'de-CH');
+      return formatCurrency(payment.amount, 'CHF', loc);
     }
 
-    return `${formatCurrency(payment.originalAmount, payment.currency, 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
+    return `${formatCurrency(payment.originalAmount, payment.currency, loc)} ≈ ${formatCurrency(payment.amount, 'CHF', loc)}`;
   }
 
   function formatDate(/** @type {string} */ dateString) {
-    return new Date(dateString).toLocaleDateString('de-CH');
+    return new Date(dateString).toLocaleDateString(loc);
   }
 
   function getUserSplitAmount(/** @type {any} */ payment, /** @type {string} */ username) {
@@ -115,34 +119,24 @@
     return split ? split.amount : 0;
   }
 
-  function getSplitDescription(/** @type {any} */ payment) {
-    if (!payment.splits || payment.splits.length === 0) return 'No splits';
-
-    if (payment.splitMethod === 'equal') {
-      return `Split equally among ${payment.splits.length} people`;
-    } else if (payment.splitMethod === 'full') {
-      return `Paid in full by ${payment.paidBy}`;
-    } else if (payment.splitMethod === 'personal_equal') {
-      return `Personal amounts + equal split among ${payment.splits.length} people`;
-    } else {
-      return `Custom split among ${payment.splits.length} people`;
-    }
+  function getSplitDescription(/** @type {any} */ p) {
+    return splitDescription(p, lang);
   }
 </script>
 
 <svelte:head>
-  <title>All Payments - Cospend</title>
+  <title>{t('all_payments_title', lang)} - {t('cospend', lang)}</title>
 </svelte:head>
 
 <main class="payments-list">
   <div class="header">
     <div class="header-content">
-      <h1>All Payments</h1>
+      <h1>{t('all_payments_title', lang)}</h1>
     </div>
   </div>
 
   {#if loading && payments.length === 0}
-    <div class="loading">Loading payments...</div>
+    <div class="loading">{t('loading_payments', lang)}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if payments.length === 0}
@@ -151,9 +145,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
         </svg>
-        <h2>No payments yet</h2>
-        <p>Start by adding your first shared expense</p>
-        <a href="/cospend/payments/add" class="btn btn-primary">Add Your First Payment</a>
+        <h2>{t('no_payments_yet', lang)}</h2>
+        <p>{t('start_first_expense', lang)}</p>
+        <a href="/{root}/payments/add" class="btn btn-primary">{t('add_first_payment', lang)}</a>
       </div>
     </div>
   {:else}
@@ -161,11 +155,11 @@
       {#each payments as payment}
         {#if isSettlementPayment(payment)}
           <!-- Settlement Card - Distinct Layout -->
-          <a href="/cospend/payments/view/{payment._id}" class="payment-card settlement-card">
+          <a href="/{root}/payments/view/{payment._id}" class="payment-card settlement-card">
             <div class="settlement-header">
               <div class="settlement-badge">
                 <span class="settlement-icon">💸</span>
-                <span class="settlement-label">Settlement</span>
+                <span class="settlement-label">{t('settlement', lang)}</span>
               </div>
               <span class="settlement-date">{formatDate(payment.date)}</span>
             </div>
@@ -195,7 +189,7 @@
           </a>
         {:else}
           <!-- Regular Payment Card -->
-          <a href="/cospend/payments/view/{payment._id}" class="payment-card">
+          <a href="/{root}/payments/view/{payment._id}" class="payment-card">
             <div class="payment-header">
               <div class="payment-title-section">
                 <ProfilePicture username={payment.paidBy} size={40} />
@@ -205,7 +199,7 @@
                     <h3>{payment.title}</h3>
                   </div>
                   <div class="payment-meta">
-                    <span class="category-name">{getCategoryName(payment.category || 'groceries')}</span>
+                    <span class="category-name">{paymentCategoryName(payment.category || 'groceries', lang)}</span>
                     <span class="date">{formatDate(payment.date)}</span>
                     <span class="amount">{formatAmountWithCurrency(payment)}</span>
                   </div>
@@ -222,29 +216,29 @@
 
             <div class="payment-details">
               <div class="detail-row">
-                <span class="label">Paid by:</span>
+                <span class="label">{t('paid_by_label', lang)}</span>
                 <span class="value">{payment.paidBy}</span>
               </div>
               <div class="detail-row">
-                <span class="label">Split:</span>
+                <span class="label">{t('split_method_label', lang)}</span>
                 <span class="value">{getSplitDescription(payment)}</span>
               </div>
             </div>
 
             {#if payment.splits && payment.splits.length > 0}
               <div class="splits-summary">
-                <h4>Split Details</h4>
+                <h4>{t('split_details', lang)}</h4>
                 <div class="splits-list">
                   {#each payment.splits as split}
                     <div class="split-item">
                       <span class="split-user">{split.username}</span>
                       <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                         {#if split.amount > 0}
-                          owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                          {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
                         {:else if split.amount < 0}
-                          owed {formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
+                          {t('owed', lang)} {formatCurrency(Math.abs(split.amount), 'CHF', loc)}
                         {:else}
-                          owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                          {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
                         {/if}
                       </span>
                     </div>
@@ -262,14 +256,14 @@
       {#if data.currentOffset > 0}
         <a href="?offset={Math.max(0, data.currentOffset - data.limit)}&limit={data.limit}"
            class="btn btn-secondary">
-          ← Previous
+          {t('previous', lang)}
         </a>
       {/if}
 
       {#if hasMore}
         <a href="?offset={data.currentOffset + data.limit}&limit={data.limit}"
            class="btn btn-secondary">
-          Next →
+          {t('next', lang)}
         </a>
       {/if}
 
@@ -277,14 +271,14 @@
       {#if hasMore}
         <button class="btn btn-secondary js-only" onclick={loadMore} disabled={loading}
                 style="display: none;">
-          {loading ? 'Loading...' : 'Load More (JS)'}
+          {loading ? t('loading_ellipsis', lang) : t('load_more', lang)}
         </button>
       {/if}
     </div>
   {/if}
 </main>
 
-<AddButton href="/cospend/payments/add" />
+<AddButton href="/{root}/payments/add" />
 
 <style>
   .payments-list {

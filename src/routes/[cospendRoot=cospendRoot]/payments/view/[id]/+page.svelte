@@ -1,14 +1,20 @@
 <script>
   import { onMount } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
+  import { page } from '$app/stores';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
-  import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
+  import { getCategoryEmoji } from '$lib/utils/categories';
   import EditButton from '$lib/components/EditButton.svelte';
+  import { detectCospendLang, cospendRoot, t, locale, splitDescription, paymentCategoryName } from '$lib/js/cospendI18n';
 
 
   import { formatCurrency } from '$lib/utils/formatters';
 
   let { data } = $props();
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const root = $derived(cospendRoot(lang));
+  const loc = $derived(locale(lang));
 
   // Use server-side data with progressive enhancement
   /** @type {any | null} */
@@ -30,40 +36,30 @@
 
   function formatAmountWithCurrency(/** @type {any} */ payment) {
     if (payment.currency === 'CHF' || !payment.originalAmount) {
-      return formatCurrency(payment.amount, 'CHF', 'de-CH');
+      return formatCurrency(payment.amount, 'CHF', loc);
     }
 
-    return `${formatCurrency(payment.originalAmount, payment.currency, 'de-CH')} ≈ ${formatCurrency(payment.amount, 'CHF', 'de-CH')}`;
+    return `${formatCurrency(payment.originalAmount, payment.currency, loc)} ≈ ${formatCurrency(payment.amount, 'CHF', loc)}`;
   }
 
   function formatDate(/** @type {string} */ dateString) {
-    return new Date(dateString).toLocaleDateString('de-CH');
+    return new Date(dateString).toLocaleDateString(loc);
   }
 
   function getSplitDescription(/** @type {any} */ payment) {
-    if (!payment.splits || payment.splits.length === 0) return 'No splits';
-
-    if (payment.splitMethod === 'equal') {
-      return `Split equally among ${payment.splits.length} people`;
-    } else if (payment.splitMethod === 'full') {
-      return `Paid in full by ${payment.paidBy}`;
-    } else if (payment.splitMethod === 'personal_equal') {
-      return `Personal amounts + equal split among ${payment.splits.length} people`;
-    } else {
-      return `Custom split among ${payment.splits.length} people`;
-    }
+    return splitDescription(payment, lang);
   }
 
 </script>
 
 <svelte:head>
-  <title>{payment ? payment.title : 'Payment'} - Cospend</title>
+  <title>{payment ? payment.title : 'Payment'} - {t('cospend', lang)}</title>
 </svelte:head>
 
 <main class="payment-view">
 
   {#if loading}
-    <div class="loading">Loading payment...</div>
+    <div class="loading">{t('loading_payments', lang)}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if payment}
@@ -78,7 +74,7 @@
             {formatAmountWithCurrency(payment)}
             {#if payment.currency !== 'CHF' && payment.exchangeRate}
               <div class="exchange-rate-info">
-                <small>Exchange rate: 1 {payment.currency} = {payment.exchangeRate.toFixed(4)} CHF</small>
+                <small>{t('exchange_rate', lang)}: 1 {payment.currency} = {payment.exchangeRate.toFixed(4)} CHF</small>
               </div>
             {/if}
           </div>
@@ -93,30 +89,30 @@
       <div class="payment-info">
         <div class="info-grid">
           <div class="info-item">
-            <span class="label">Date:</span>
+            <span class="label">{t('date', lang)}</span>
             <span class="value">{formatDate(payment.date)}</span>
           </div>
           <div class="info-item">
-            <span class="label">Paid by:</span>
+            <span class="label">{t('paid_by_label', lang)}</span>
             <span class="value">{payment.paidBy}</span>
           </div>
           <div class="info-item">
-            <span class="label">Created by:</span>
+            <span class="label">{t('created_by', lang)}</span>
             <span class="value">{payment.createdBy}</span>
           </div>
           <div class="info-item">
-            <span class="label">Category:</span>
-            <span class="value">{getCategoryName(payment.category || 'groceries')}</span>
+            <span class="label">{t('category_label', lang)}</span>
+            <span class="value">{paymentCategoryName(payment.category || 'groceries', lang)}</span>
           </div>
           <div class="info-item">
-            <span class="label">Split method:</span>
+            <span class="label">{t('split_method_label', lang)}</span>
             <span class="value">{getSplitDescription(payment)}</span>
           </div>
         </div>
 
         {#if payment.description}
           <div class="description">
-            <h3>Description</h3>
+            <h3>{t('description', lang)}</h3>
             <p>{payment.description}</p>
           </div>
         {/if}
@@ -124,7 +120,7 @@
 
       {#if payment.splits && payment.splits.length > 0}
         <div class="splits-section">
-          <h3>Split Details</h3>
+          <h3>{t('split_details', lang)}</h3>
           <div class="splits-list">
             {#each payment.splits as split}
               <div class="split-item" class:current-user={split.username === data.session?.user?.nickname}>
@@ -133,17 +129,17 @@
                   <div class="user-info">
                     <span class="username">{split.username}</span>
                     {#if split.username === data.session?.user?.nickname}
-                      <span class="you-badge">You</span>
+                      <span class="you-badge">{t('you', lang)}</span>
                     {/if}
                   </div>
                 </div>
                 <div class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                   {#if split.amount > 0}
-                    owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                    {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
                   {:else if split.amount < 0}
-                    owed {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                    {t('owed', lang)} {formatCurrency(split.amount, 'CHF', loc)}
                   {:else}
-                    owes {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                    {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
                   {/if}
                 </div>
               </div>
@@ -156,7 +152,7 @@
 </main>
 
 {#if payment}
-  <EditButton href="/cospend/payments/edit/{data.paymentId}" />
+  <EditButton href="/{root}/payments/edit/{data.paymentId}" />
 {/if}
 
 <style>

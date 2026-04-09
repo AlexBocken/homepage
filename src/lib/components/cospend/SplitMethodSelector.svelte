@@ -1,5 +1,9 @@
 <script>
   import ProfilePicture from './ProfilePicture.svelte';
+  import { page } from '$app/stores';
+  import { detectCospendLang, t } from '$lib/js/cospendI18n';
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
 
   let {
     splitMethod = $bindable('equal'),
@@ -18,20 +22,20 @@
   // Reactive text for "Paid in Full" option
   let paidInFullText = $derived((() => {
     if (!paidBy) {
-      return 'Paid in Full';
+      return t('paid_in_full', lang);
     }
 
     // Special handling for 2-user predefined setup
     if (predefinedMode && users.length === 2) {
       const otherUser = users.find((/** @type {string} */ user) => user !== paidBy);
-      return otherUser ? `Paid in Full for ${otherUser}` : 'Paid in Full';
+      return otherUser ? `${t('paid_in_full_for', lang)} ${otherUser}` : t('paid_in_full', lang);
     }
 
     // General case
     if (paidBy === currentUser) {
-      return 'Paid in Full by You';
+      return t('paid_in_full_by_you', lang);
     } else {
-      return `Paid in Full by ${paidBy}`;
+      return `${t('paid_in_full_by', lang)} ${paidBy}`;
     }
   })());
 
@@ -128,21 +132,21 @@
 </script>
 
 <div class="form-section">
-  <h2>Split Method</h2>
+  <h2>{t('split_method', lang)}</h2>
 
   <div class="form-group">
-    <label for="splitMethod">How should this payment be split?</label>
+    <label for="splitMethod">{t('how_split', lang)}</label>
     <select id="splitMethod" name="splitMethod" bind:value={splitMethod} required>
-      <option value="equal">{predefinedMode && users.length === 2 ? 'Split 50/50' : 'Equal Split'}</option>
-      <option value="personal_equal">Personal + Equal Split</option>
+      <option value="equal">{predefinedMode && users.length === 2 ? t('split_5050', lang) : t('equal_split', lang)}</option>
+      <option value="personal_equal">{t('personal_equal_split', lang)}</option>
       <option value="full">{paidInFullText}</option>
-      <option value="proportional">Custom Proportions</option>
+      <option value="proportional">{t('custom_proportions', lang)}</option>
     </select>
   </div>
 
   {#if splitMethod === 'proportional'}
     <div class="proportional-splits">
-      <h3>Custom Split Amounts</h3>
+      <h3>{t('custom_split_amounts', lang)}</h3>
       {#each users as user}
         <div class="split-input">
           <label for="split_{user}">{user}</label>
@@ -161,8 +165,8 @@
 
   {#if splitMethod === 'personal_equal'}
     <div class="personal-splits">
-      <h3>Personal Amounts</h3>
-      <p class="description">Enter personal amounts for each user. The remainder will be split equally.</p>
+      <h3>{t('personal_amounts', lang)}</h3>
+      <p class="description">{t('personal_amounts_desc', lang)}</p>
       {#each users as user}
         <div class="split-input">
           <label for="personal_{user}">{user}</label>
@@ -180,10 +184,10 @@
       {#if amount}
         {@const personalTotal = Object.values(personalAmounts).reduce((/** @type {number} */ sum, /** @type {number} */ val) => sum + (Number(val) || 0), 0)}
         <div class="remainder-info" class:error={personalTotalError}>
-          <span>Total Personal: {currency} {personalTotal.toFixed(2)}</span>
-          <span>Remainder to Split: {currency} {Math.max(0, Number(amount) - personalTotal).toFixed(2)}</span>
+          <span>{t('total_personal', lang)}: {currency} {personalTotal.toFixed(2)}</span>
+          <span>{t('remainder_to_split', lang)}: {currency} {Math.max(0, Number(amount) - personalTotal).toFixed(2)}</span>
           {#if personalTotalError}
-            <div class="error-message">Warning: Personal amounts exceed total payment amount!</div>
+            <div class="error-message">{t('personal_exceeds_total', lang)}</div>
           {/if}
         </div>
       {/if}
@@ -192,7 +196,7 @@
 
   {#if Object.keys(splitAmounts).length > 0}
     <div class="split-preview">
-      <h3>Split Preview</h3>
+      <h3>{t('split_preview', lang)}</h3>
       {#each users as user}
         <div class="split-item">
           <div class="split-user">
@@ -201,11 +205,11 @@
           </div>
           <span class="amount" class:positive={splitAmounts[user] < 0} class:negative={splitAmounts[user] > 0}>
             {#if splitAmounts[user] > 0}
-              owes {currency} {splitAmounts[user].toFixed(2)}
+              {t('owes', lang)} {currency} {splitAmounts[user].toFixed(2)}
             {:else if splitAmounts[user] < 0}
-              is owed {currency} {Math.abs(splitAmounts[user]).toFixed(2)}
+              {t('is_owed', lang)} {currency} {Math.abs(splitAmounts[user]).toFixed(2)}
             {:else}
-              owes {currency} {splitAmounts[user].toFixed(2)}
+              {t('owes', lang)} {currency} {splitAmounts[user].toFixed(2)}
             {/if}
           </span>
         </div>

@@ -7,9 +7,15 @@
   import PaymentModal from '$lib/components/cospend/PaymentModal.svelte';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
+  import LanguageSelector from '$lib/components/LanguageSelector.svelte';
   import { LayoutDashboard, Wallet, RefreshCw, ShoppingCart } from '@lucide/svelte';
+  import { detectCospendLang, cospendRoot, cospendLabels } from '$lib/js/cospendI18n';
 
   let { data, children } = $props();
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const root = $derived(cospendRoot(lang));
+  const labels = $derived(cospendLabels(lang));
 
   let showModal = $state(false);
   /** @type {string | null} */
@@ -19,14 +25,14 @@
 
   $effect(() => {
     // Check if URL contains payment view route OR if we have paymentId in state
-    const match = $page.url.pathname.match(/\/cospend\/payments\/view\/([^\/]+)/);
+    const match = $page.url.pathname.match(/\/(cospend|expenses)\/payments\/view\/([^\/]+)/);
     const statePaymentId = $page.state?.paymentId;
-    const isOnDashboard = $page.route.id === '/cospend/dash';
+    const isOnDashboard = $page.route.id === '/[cospendRoot=cospendRoot]/dash';
 
     // Only show modal if we're on the dashboard AND have a payment to show
     if (isOnDashboard && (match || statePaymentId)) {
       showModal = true;
-      paymentId = match ? match[1] : statePaymentId ?? null;
+      paymentId = match ? match[2] : statePaymentId ?? null;
     } else {
       showModal = false;
       paymentId = null;
@@ -39,7 +45,7 @@
     paymentId = null;
 
     // Dispatch a custom event to trigger dashboard refresh
-    if ($page.route.id === '/cospend/dash') {
+    if ($page.route.id === '/[cospendRoot=cospendRoot]/dash') {
       window.dispatchEvent(new CustomEvent('dashboardRefresh'));
     }
   }
@@ -47,9 +53,9 @@
   /** @param {string} path */
   function isActive(path) {
     const currentPath = $page.url.pathname;
-    // Exact match for cospend root
-    if (path === '/cospend/dash') {
-      return currentPath === '/cospend/dash' || currentPath === '/cospend/dash/';
+    // Exact match for dash
+    if (path.endsWith('/dash')) {
+      return currentPath === path || currentPath === path + '/';
     }
     // For other paths, check if current path starts with the link path
     return currentPath.startsWith(path);
@@ -60,17 +66,18 @@
   {#snippet links()}
     <ul class="site_header">
       {#if !isGuest}
-        <li style="--active-fill: var(--nord9)"><a href="/cospend/dash" class:active={isActive('/cospend/dash')}><LayoutDashboard size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Dashboard</span></a></li>
+        <li style="--active-fill: var(--nord9)"><a href="/{root}/dash" class:active={isActive(`/${root}/dash`)}><LayoutDashboard size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.dash}</span></a></li>
       {/if}
-      <li style="--active-fill: var(--nord13)"><a href="/cospend/list" class:active={isActive('/cospend/list')}><ShoppingCart size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Liste</span></a></li>
+      <li style="--active-fill: var(--nord13)"><a href="/{root}/list" class:active={isActive(`/${root}/list`)}><ShoppingCart size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.list}</span></a></li>
       {#if !isGuest}
-        <li style="--active-fill: var(--nord14)"><a href="/cospend/payments" class:active={isActive('/cospend/payments')}><span class="nav-icon-wrap nav-icon-wallet"><Wallet size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">All Payments</span></a></li>
-        <li style="--active-fill: var(--nord12); --active-shape: circle(50%)"><a href="/cospend/recurring" class:active={isActive('/cospend/recurring')}><span class="nav-icon-wrap"><RefreshCw size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">Recurring</span></a></li>
+        <li style="--active-fill: var(--nord14)"><a href="/{root}/payments" class:active={isActive(`/${root}/payments`)}><span class="nav-icon-wrap nav-icon-wallet"><Wallet size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">{labels.payments}</span></a></li>
+        <li style="--active-fill: var(--nord12); --active-shape: circle(50%)"><a href="/{root}/recurring" class:active={isActive(`/${root}/recurring`)}><span class="nav-icon-wrap"><RefreshCw size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">{labels.recurring}</span></a></li>
       {/if}
     </ul>
   {/snippet}
 
   {#snippet right_side()}
+    <LanguageSelector lang={lang} />
     <UserHeader {user}></UserHeader>
   {/snippet}
 

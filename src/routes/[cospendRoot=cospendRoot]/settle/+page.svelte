@@ -1,13 +1,18 @@
 <script>
   import { onMount } from 'svelte';
   import { enhance } from '$app/forms';
+  import { page } from '$app/stores';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
-
+  import { detectCospendLang, cospendRoot, t, locale } from '$lib/js/cospendI18n';
 
   import { formatCurrency } from '$lib/utils/formatters';
 
   let { data, form } = $props();
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const root = $derived(cospendRoot(lang));
+  const loc = $derived(locale(lang));
 
   // Use server-side data with progressive enhancement
   let debtData = $derived(data.debtData || {
@@ -38,7 +43,7 @@
             from: debtData.whoOwesMe[0].username,
             to: data.currentUser,
             amount: debtData.whoOwesMe[0].netAmount,
-            description: `Settlement: ${debtData.whoOwesMe[0].username} pays ${data.currentUser}`
+            description: `${t('settlement_payment', lang)}: ${debtData.whoOwesMe[0].username} → ${data.currentUser}`
           };
           if (!settlementAmount) {
             settlementAmount = debtData.whoOwesMe[0].netAmount.toString();
@@ -49,7 +54,7 @@
             from: data.currentUser,
             to: debtData.whoIOwe[0].username,
             amount: debtData.whoIOwe[0].netAmount,
-            description: `Settlement: ${data.currentUser} pays ${debtData.whoIOwe[0].username}`
+            description: `${t('settlement_payment', lang)}: ${data.currentUser} → ${debtData.whoIOwe[0].username}`
           };
           if (!settlementAmount) {
             settlementAmount = debtData.whoIOwe[0].netAmount.toString();
@@ -67,7 +72,7 @@
         from: user,
         to: currentUser,
         amount: amount,
-        description: `Settlement: ${user} pays ${currentUser}`
+        description: `${t('settlement_payment', lang)}: ${user} → ${currentUser}`
       };
     } else {
       selectedSettlement = {
@@ -75,7 +80,7 @@
         from: currentUser,
         to: user,
         amount: amount,
-        description: `Settlement: ${currentUser} pays ${user}`
+        description: `${t('settlement_payment', lang)}: ${currentUser} → ${user}`
       };
     }
     settlementAmount = amount.toString();
@@ -83,13 +88,13 @@
 
   async function processSettlement() {
     if (!selectedSettlement || !settlementAmount) {
-      error = 'Please select a settlement and enter an amount';
+      error = t('error_select_settlement', lang);
       return;
     }
 
     const amount = parseFloat(/** @type {string} */ (settlementAmount));
     if (isNaN(amount) || amount <= 0) {
-      error = 'Please enter a valid positive amount';
+      error = t('error_valid_amount', lang);
       return;
     }
 
@@ -132,7 +137,7 @@
       }
 
       // Redirect back to dashboard on success
-      window.location.href = '/cospend';
+      window.location.href = `/${root}`;
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
       submitting = false;
@@ -142,36 +147,36 @@
 </script>
 
 <svelte:head>
-  <title>Settle Debts - Cospend</title>
+  <title>{t('settle_title', lang)} - {t('cospend', lang)}</title>
 </svelte:head>
 
 <main class="settle-main">
   <div class="header-section">
-    <h1>Settle Debts</h1>
-    <p>Record payments to settle outstanding debts between users</p>
+    <h1>{t('settle_title', lang)}</h1>
+    <p>{t('settle_subtitle', lang)}</p>
   </div>
 
   {#if loading}
-    <div class="loading">Loading debt information...</div>
+    <div class="loading">{t('loading_debts', lang)}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if debtData.whoOwesMe.length === 0 && debtData.whoIOwe.length === 0}
     <div class="no-debts">
-      <h2>🎉 All Settled!</h2>
-      <p>No outstanding debts to settle. Everyone is even!</p>
+      <h2>🎉 {t('all_settled', lang)}</h2>
+      <p>{t('no_debts_msg', lang)}</p>
       <div class="actions">
-        <a href="/cospend/dash" class="btn btn-primary">Back to Dashboard</a>
+        <a href="/{root}/dash" class="btn btn-primary">{t('back_to_dashboard', lang)}</a>
       </div>
     </div>
   {:else}
     <div class="settlement-container">
       <!-- Available Settlements -->
       <div class="available-settlements">
-        <h2>Available Settlements</h2>
+        <h2>{t('available_settlements', lang)}</h2>
 
         {#if debtData.whoOwesMe.length > 0}
           <div class="settlement-section">
-            <h3>Money You're Owed</h3>
+            <h3>{t('money_owed_to_you', lang)}</h3>
             {#each debtData.whoOwesMe as debt}
               <div class="settlement-option"
                    role="button"
@@ -184,11 +189,11 @@
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
                     <span class="username">{debt.username}</span>
-                    <span class="debt-amount">owes you {formatCurrency(debt.netAmount, 'CHF', 'de-CH')}</span>
+                    <span class="debt-amount">{t('owes_you', lang)} {formatCurrency(debt.netAmount, 'CHF', loc)}</span>
                   </div>
                 </div>
                 <div class="settlement-action">
-                  <span class="action-text">Receive Payment</span>
+                  <span class="action-text">{t('receive_payment', lang)}</span>
                 </div>
               </div>
             {/each}
@@ -197,7 +202,7 @@
 
         {#if debtData.whoIOwe.length > 0}
           <div class="settlement-section">
-            <h3>Money You Owe</h3>
+            <h3>{t('money_you_owe', lang)}</h3>
             {#each debtData.whoIOwe as debt}
               <div class="settlement-option"
                    role="button"
@@ -210,11 +215,11 @@
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
                     <span class="username">{debt.username}</span>
-                    <span class="debt-amount">you owe {formatCurrency(debt.netAmount, 'CHF', 'de-CH')}</span>
+                    <span class="debt-amount">{t('you_owe', lang)} {formatCurrency(debt.netAmount, 'CHF', loc)}</span>
                   </div>
                 </div>
                 <div class="settlement-action">
-                  <span class="action-text">Make Payment</span>
+                  <span class="action-text">{t('make_payment', lang)}</span>
                 </div>
               </div>
             {/each}
@@ -225,7 +230,7 @@
       <!-- Settlement Details -->
       {#if selectedSettlement}
         <div class="settlement-details">
-          <h2>Settlement Details</h2>
+          <h2>{t('settlement_details', lang)}</h2>
 
           <div class="settlement-summary">
             <div class="settlement-flow">
@@ -233,7 +238,7 @@
                 <ProfilePicture username={selectedSettlement.from} size={48} />
                 <span class="username">{selectedSettlement.from}</span>
                 {#if selectedSettlement.from === data.currentUser}
-                  <span class="you-badge">You</span>
+                  <span class="you-badge">{t('you', lang)}</span>
                 {/if}
               </div>
               <div class="flow-arrow">→</div>
@@ -241,13 +246,13 @@
                 <ProfilePicture username={selectedSettlement.to} size={48} />
                 <span class="username">{selectedSettlement.to}</span>
                 {#if selectedSettlement.to === data.currentUser}
-                  <span class="you-badge">You</span>
+                  <span class="you-badge">{t('you', lang)}</span>
                 {/if}
               </div>
             </div>
 
             <div class="settlement-amount-section">
-              <label for="amount">Settlement Amount</label>
+              <label for="amount">{t('settlement_amount', lang)}</label>
               <div class="amount-input">
                 <span class="currency">CHF</span>
                 <input
@@ -274,60 +279,60 @@
               onclick={processSettlement}
               disabled={submitting || !settlementAmount}>
               {#if submitting}
-                Recording Settlement...
+                {t('recording_settlement', lang)}
               {:else}
-                Record Settlement
+                {t('record_settlement', lang)}
               {/if}
             </button>
             <button class="btn btn-secondary" onclick={() => selectedSettlement = null}>
-              Cancel
+              {t('cancel', lang)}
             </button>
           </div>
         </div>
       {:else}
         <!-- No-JS Fallback Form -->
         <div class="settlement-details no-js-fallback">
-          <h2>Record Settlement</h2>
+          <h2>{t('record_settlement', lang)}</h2>
           <form method="POST" action="?/settle" class="settlement-form">
             <div class="form-group">
-              <label for="settlementType">Settlement Type</label>
+              <label for="settlementType">{t('settlement_type', lang)}</label>
               <select id="settlementType" name="settlementType" required>
-                <option value="">Select settlement type</option>
+                <option value="">{t('select_settlement', lang)}</option>
                 {#each debtData.whoOwesMe as debt}
                   <option value="receive" data-from="{debt.username}" data-to="{data.currentUser}">
-                    Receive {formatCurrency(debt.netAmount, 'CHF', 'de-CH')} from {debt.username}
+                    {t('receive_from', lang)} {formatCurrency(debt.netAmount, 'CHF', loc)} {t('from', lang)} {debt.username}
                   </option>
                 {/each}
                 {#each debtData.whoIOwe as debt}
                   <option value="pay" data-from="{data.currentUser}" data-to="{debt.username}">
-                    Pay {formatCurrency(debt.netAmount, 'CHF', 'de-CH')} to {debt.username}
+                    {t('pay_to', lang)} {formatCurrency(debt.netAmount, 'CHF', loc)} {t('to', lang)} {debt.username}
                   </option>
                 {/each}
               </select>
             </div>
 
             <div class="form-group">
-              <label for="fromUser">From User</label>
+              <label for="fromUser">{t('from_user', lang)}</label>
               <select id="fromUser" name="fromUser" required>
-                <option value="">Select payer</option>
+                <option value="">{t('select_payer', lang)}</option>
                 {#each [...debtData.whoOwesMe.map((/** @type {any} */ d) => d.username), data.currentUser].filter(Boolean) as user}
-                  <option value="{user}">{user}{user === data.currentUser ? ' (You)' : ''}</option>
+                  <option value="{user}">{user}{user === data.currentUser ? ` (${t('you', lang)})` : ''}</option>
                 {/each}
               </select>
             </div>
 
             <div class="form-group">
-              <label for="toUser">To User</label>
+              <label for="toUser">{t('to_user', lang)}</label>
               <select id="toUser" name="toUser" required>
-                <option value="">Select recipient</option>
+                <option value="">{t('select_recipient', lang)}</option>
                 {#each [...debtData.whoIOwe.map((/** @type {any} */ d) => d.username), data.currentUser].filter(Boolean) as user}
-                  <option value="{user}">{user}{user === data.currentUser ? ' (You)' : ''}</option>
+                  <option value="{user}">{user}{user === data.currentUser ? ` (${t('you', lang)})` : ''}</option>
                 {/each}
               </select>
             </div>
 
             <div class="form-group">
-              <label for="fallback-amount">Settlement Amount (CHF)</label>
+              <label for="fallback-amount">{t('settlement_amount_chf', lang)}</label>
               <input
                 id="fallback-amount"
                 name="amount"
@@ -342,10 +347,10 @@
 
             <div class="settlement-actions">
               <button type="submit" class="btn btn-settlement">
-                Record Settlement
+                {t('record_settlement', lang)}
               </button>
-              <a href="/cospend/dash" class="btn btn-secondary">
-                Cancel
+              <a href="/{root}/dash" class="btn btn-secondary">
+                {t('cancel', lang)}
               </a>
             </div>
           </form>

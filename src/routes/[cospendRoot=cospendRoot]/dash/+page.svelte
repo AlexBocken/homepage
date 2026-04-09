@@ -7,14 +7,18 @@
   import EnhancedBalance from '$lib/components/cospend/EnhancedBalance.svelte';
   import DebtBreakdown from '$lib/components/cospend/DebtBreakdown.svelte';
   import BarChart from '$lib/components/cospend/BarChart.svelte';
-  import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
+  import { getCategoryEmoji } from '$lib/utils/categories';
   import { isSettlementPayment, getSettlementIcon, getSettlementClasses, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
 
 
   import { formatCurrency } from '$lib/utils/formatters';
+  import { detectCospendLang, cospendRoot, t, locale, paymentCategoryName } from '$lib/js/cospendI18n';
 
   let { data } = $props(); // Contains session data and balance from server
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const root = $derived(cospendRoot(lang));
+  const loc = $derived(locale(lang));
 
   // Use server-side data, with fallback for progressive enhancement
   let balance = $derived(data.balance || {
@@ -79,7 +83,7 @@
   }
 
   function formatDate(/** @type {string} */ dateString) {
-    return new Date(dateString).toLocaleDateString('de-CH');
+    return new Date(dateString).toLocaleDateString(loc);
   }
 
   function truncateDescription(/** @type {string} */ description, maxLength = 100) {
@@ -92,7 +96,7 @@
     // Progressive enhancement: if JavaScript is available, use pushState for modal behavior
     if (typeof pushState !== 'undefined') {
       event.preventDefault();
-      pushState(`/cospend/payments/view/${paymentId}`, { paymentId });
+      pushState(`/${root}/payments/view/${paymentId}`, { paymentId });
     }
     // Otherwise, let the regular link navigation happen (no preventDefault)
   }
@@ -120,11 +124,11 @@
 </script>
 
 <svelte:head>
-  <title>Cospend - Expense Sharing</title>
+  <title>{t('cospend_title', lang)}</title>
 </svelte:head>
 
 <main class="cospend-main">
-    <h1>Cospend</h1>
+    <h1>{t('cospend', lang)}</h1>
 
   <!-- Responsive layout for balance and chart -->
   <div class="dashboard-layout">
@@ -133,7 +137,7 @@
 
       <div class="actions">
         {#if balance.netBalance !== 0}
-          <a href="/cospend/settle" class="btn btn-settlement">Settle Debts</a>
+          <a href="/{root}/settle" class="btn btn-settlement">{t('settle_debts', lang)}</a>
         {/if}
       </div>
 
@@ -143,12 +147,13 @@
     <!-- Monthly Expenses Chart -->
     <div class="chart-section">
       {#if expensesLoading}
-        <div class="loading">Loading monthly expenses chart...</div>
+        <div class="loading">{t('loading_monthly', lang)}</div>
       {:else if monthlyExpensesData.datasets && monthlyExpensesData.datasets.length > 0}
         <BarChart
           data={monthlyExpensesData}
-          title="Monthly Expenses by Category"
+          title={t('monthly_expenses_chart', lang)}
           height="400px"
+          {lang}
           onFilterChange={(/** @type {string[] | null} */ categories) => categoryFilter = categories}
         />
       {:else}
@@ -162,26 +167,26 @@
   </div>
 
   {#if loading}
-    <div class="loading">Loading recent activity...</div>
+    <div class="loading">{t('loading_recent', lang)}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if balance.recentSplits && balance.recentSplits.length > 0}
     <div class="recent-activity">
       <div class="recent-activity-header">
-        <h2>Recent Activity{#if categoryFilter} <span class="filter-label">— {categoryFilter.map((/** @type {any} */ c) => getCategoryName(c)).join(', ')}</span>{/if}</h2>
+        <h2>{t('recent_activity', lang)}{#if categoryFilter} <span class="filter-label">— {categoryFilter.map((/** @type {any} */ c) => paymentCategoryName(c, lang)).join(', ')}</span>{/if}</h2>
         {#if categoryFilter}
-          <button class="clear-filter" onclick={() => categoryFilter = null}>Clear filter</button>
+          <button class="clear-filter" onclick={() => categoryFilter = null}>{t('clear_filter', lang)}</button>
         {/if}
       </div>
       {#if filteredSplits.length === 0}
-        <p class="no-results">No recent activity in {categoryFilter ? categoryFilter.map((/** @type {any} */ c) => getCategoryName(c)).join(', ') : ''}.</p>
+        <p class="no-results">{t('no_recent_in', lang)} {categoryFilter ? categoryFilter.map((/** @type {any} */ c) => paymentCategoryName(c, lang)).join(', ') : ''}.</p>
       {/if}
       <div class="activity-dialog">
         {#each filteredSplits as split}
           {#if isSettlementPayment(split.paymentId)}
             <!-- Settlement Payment Display - User -> User Flow -->
             <a
-              href="/cospend/payments/view/{split.paymentId?._id}"
+              href="/{root}/payments/view/{split.paymentId?._id}"
               class="settlement-flow-activity"
               onclick={(e) => handlePaymentClick(split.paymentId?._id, e)}
             >
@@ -193,7 +198,7 @@
                   </div>
                   <div class="settlement-arrow-section">
                     <div class="settlement-amount-large">
-                      {formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
+                      {formatCurrency(Math.abs(split.amount), 'CHF', loc)}
                     </div>
                     <div class="settlement-flow-arrow">→</div>
                     <div class="settlement-date">{formatDate(split.paymentId?.date || split.paymentId?.createdAt)}</div>
@@ -212,7 +217,7 @@
               <div class="message-content">
                 <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={36} />
                 <a
-                  href="/cospend/payments/view/{split.paymentId?._id}"
+                  href="/{root}/payments/view/{split.paymentId?._id}"
                   class="activity-bubble"
                   onclick={(e) => handlePaymentClick(split.paymentId?._id, e)}
                 >
@@ -220,20 +225,20 @@
                     <div class="user-info">
                       <div class="payment-title-row">
                         <span class="category-emoji">{getCategoryEmoji(split.paymentId?.category || 'groceries')}</span>
-                        <strong class="payment-title">{split.paymentId?.title || 'Payment'}</strong>
+                        <strong class="payment-title">{split.paymentId?.title || t('payment', lang)}</strong>
                       </div>
-                      <span class="username">Paid by {split.paymentId?.paidBy || 'Unknown'}</span>
-                      <span class="category-name">{getCategoryName(split.paymentId?.category || 'groceries')}</span>
+                      <span class="username">{t('paid_by', lang)} {split.paymentId?.paidBy || 'Unknown'}</span>
+                      <span class="category-name">{paymentCategoryName(split.paymentId?.category || 'groceries', lang)}</span>
                     </div>
                     <div class="activity-amount"
                          class:positive={split.amount < 0}
                          class:negative={split.amount > 0}>
                       {#if split.amount > 0}
-                        -{formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
+                        -{formatCurrency(Math.abs(split.amount), 'CHF', loc)}
                       {:else if split.amount < 0}
-                        +{formatCurrency(Math.abs(split.amount), 'CHF', 'de-CH')}
+                        +{formatCurrency(Math.abs(split.amount), 'CHF', loc)}
                       {:else}
-                        {formatCurrency(split.amount, 'CHF', 'de-CH')}
+                        {formatCurrency(split.amount, 'CHF', loc)}
                       {/if}
                     </div>
                   </div>
@@ -257,7 +262,7 @@
   {/if}
 </main>
 
-<AddButton href="/cospend/payments/add" />
+<AddButton href="/{root}/payments/add" />
 
 <style>
   .cospend-main {

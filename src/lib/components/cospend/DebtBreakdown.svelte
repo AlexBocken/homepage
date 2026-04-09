@@ -1,7 +1,12 @@
 <script>
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import ProfilePicture from './ProfilePicture.svelte';
   import { formatCurrency } from '$lib/utils/formatters';
+  import { detectCospendLang, locale, t } from '$lib/js/cospendI18n';
+
+  const lang = $derived(detectCospendLang($page.url.pathname));
+  const loc = $derived(locale(lang));
 
   /**
    * @typedef {{ username: string, netAmount: number, transactions: Array<any> }} DebtEntry
@@ -61,19 +66,19 @@
 
 {#if !shouldHide}
 <div class="debt-breakdown">
-  <h2>Debt Overview</h2>
+  <h2>{t('debt_overview', lang)}</h2>
 
   {#if loading}
-    <div class="loading">Loading debt breakdown...</div>
+    <div class="loading">{t('loading_debt_breakdown', lang)}</div>
   {:else if error}
-    <div class="error">Error: {error}</div>
+    <div class="error">{t('error_prefix', lang)}: {error}</div>
   {:else}
     <div class="debt-sections">
       {#if debtData.whoOwesMe.length > 0}
         <div class="debt-section owed-to-me">
-          <h3>Who owes you</h3>
+          <h3>{t('who_owes_you', lang)}</h3>
           <div class="total-amount positive">
-            Total: {formatCurrency(debtData.totalOwedToMe, 'CHF', 'de-CH')}
+            {t('total', lang)}: {formatCurrency(debtData.totalOwedToMe, 'CHF', loc)}
           </div>
 
           <div class="debt-list">
@@ -83,11 +88,11 @@
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
                     <span class="username">{debt.username}</span>
-                    <span class="amount positive">{formatCurrency(debt.netAmount, 'CHF', 'de-CH')}</span>
+                    <span class="amount positive">{formatCurrency(debt.netAmount, 'CHF', loc)}</span>
                   </div>
                 </div>
                 <div class="transaction-count">
-                  {debt.transactions.length} transaction{debt.transactions.length !== 1 ? 's' : ''}
+                  {debt.transactions.length} {debt.transactions.length !== 1 ? t('transactions', lang) : t('transaction', lang)}
                 </div>
               </div>
             {/each}
@@ -97,9 +102,9 @@
 
       {#if debtData.whoIOwe.length > 0}
         <div class="debt-section owe-to-others">
-          <h3>You owe</h3>
+          <h3>{t('you_owe_section', lang)}</h3>
           <div class="total-amount negative">
-            Total: {formatCurrency(debtData.totalIOwe, 'CHF', 'de-CH')}
+            {t('total', lang)}: {formatCurrency(debtData.totalIOwe, 'CHF', loc)}
           </div>
 
           <div class="debt-list">
@@ -109,11 +114,11 @@
                   <ProfilePicture username={debt.username} size={40} />
                   <div class="user-details">
                     <span class="username">{debt.username}</span>
-                    <span class="amount negative">{formatCurrency(debt.netAmount, 'CHF', 'de-CH')}</span>
+                    <span class="amount negative">{formatCurrency(debt.netAmount, 'CHF', loc)}</span>
                   </div>
                 </div>
                 <div class="transaction-count">
-                  {debt.transactions.length} transaction{debt.transactions.length !== 1 ? 's' : ''}
+                  {debt.transactions.length} {debt.transactions.length !== 1 ? t('transactions', lang) : t('transaction', lang)}
                 </div>
               </div>
             {/each}
