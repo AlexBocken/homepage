@@ -10,6 +10,7 @@
 	 *   sublabel?: string,
 	 *   target?: number,
 	 *   markerColor?: string,
+	 *   labelIcon?: import('svelte').Snippet,
 	 * }}
 	 */
 	let {
@@ -19,6 +20,7 @@
 		sublabel = '',
 		target = undefined,
 		markerColor = 'var(--color-text-secondary)',
+		labelIcon = undefined,
 	} = $props();
 
 	/**
@@ -45,7 +47,7 @@
 	}
 </script>
 
-<RingGraph {percent} {color} {label} {sublabel}>
+<RingGraph {percent} {color} {label} {sublabel} {labelIcon}>
 	{#snippet extra()}
 		{#if target != null}
 			{@const pos = targetMarkerPos(target)}

@@ -18,6 +18,7 @@
 	 *   label?: string,
 	 *   sublabel?: string,
 	 *   extra?: import('svelte').Snippet,
+	 *   labelIcon?: import('svelte').Snippet,
 	 * }}
 	 */
 	let {
@@ -26,6 +27,7 @@
 		label = '',
 		sublabel = '',
 		extra = undefined,
+		labelIcon = undefined,
 	} = $props();
 </script>
 
@@ -43,7 +45,7 @@
 		<text class="ring-text" x="35" y="35">{percent}%</text>
 	</svg>
 	{#if label}
-		<span class="ring-label">{label}</span>
+		<span class="ring-label">{@render labelIcon?.()}{label}</span>
 	{/if}
 	{#if sublabel}
 		<span class="ring-sublabel">{sublabel}</span>
@@ -83,6 +85,10 @@
 		dominant-baseline: central;
 	}
 	.ring-label {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.2rem;
 		font-size: 0.78rem;
 		font-weight: 600;
 		color: var(--color-text-primary);
