@@ -82,7 +82,6 @@
 	.mystery-button {
 		padding: 0.25rem 0.15rem;
 		gap: 0.15rem;
-		border-radius: 6px;
 	}
 	.mystery-button h3 {
 		font-size: 0.55rem;
@@ -103,12 +102,12 @@
 }
 
 .mystery-button {
-	background: var(--nord1);
+	background: var(--color-surface);
 	border: 2px solid transparent;
-	border-radius: 8px;
+	border-radius: var(--radius-card);
 	padding: 2rem 1.5rem;
 	cursor: pointer;
-	transition: all 0.3s ease;
+	transition: var(--transition-normal);
 	text-align: center;
 	display: flex;
 	flex-direction: column;
@@ -116,52 +115,36 @@
 	gap: 1rem;
 	position: relative;
 	text-decoration: none;
-	color: inherit;
-}
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .mystery-button {
-		background: var(--nord6);
-	}
-  }
-:global(:root[data-theme="light"]) .mystery-button {
-	background: var(--nord6);
+	color: var(--color-text-primary);
+	box-shadow: var(--shadow-sm);
+	overflow: hidden;
 }
 
 .mystery-button:hover {
-	transform: translateY(-4px);
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+	box-shadow: var(--shadow-hover);
+	scale: 1.02;
 }
 
 .mystery-button.selected {
-	border-color: var(--nord10);
-	transform: translateY(-4px);
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+	border-color: var(--color-primary);
+	box-shadow: var(--shadow-hover);
+	scale: 1.02;
 }
 
 .mystery-button:hover,
-.mystery-button.selected { background: var(--nord4); }
-
+.mystery-button.selected {
+	background: var(--color-bg-elevated);
+}
 
 .mystery-button h3 {
 	margin: 0;
 	font-size: 1.2rem;
-	color: var(--nord6);
-}
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .mystery-button:not(.selected):not(:hover) h3 {
-		color: var(--nord0);
-	}
-  }
-:global(:root[data-theme="light"]) .mystery-button:not(.selected):not(:hover) h3 {
-	color: var(--nord0);
+	color: var(--color-text-primary);
 }
 
 .mystery-button.selected h3,
-.mystery-button:hover h3
-{
-	color: var(--nord10);
+.mystery-button:hover h3 {
+	color: var(--color-primary);
 	font-weight: 700;
 }
 
@@ -170,17 +153,17 @@
 	position: absolute;
 	top: 1rem;
 	right: 1rem;
-	background: var(--nord11);
+	background: var(--red);
 	color: white;
 	padding: 0.4rem 0.8rem;
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	font-size: 0.85rem;
 	font-weight: 600;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	box-shadow: var(--shadow-sm);
 }
 
 .season-badge {
-	background: var(--nord14);
+	background: var(--green);
 }
 
 .badge-stack {
@@ -204,8 +187,8 @@
 }
 
 .season-eastertide .season-badge {
-	background: var(--nord6);
-	color: var(--nord0);
+	background: var(--color-bg-elevated);
+	color: var(--color-text-primary);
 }
 </style>
 
