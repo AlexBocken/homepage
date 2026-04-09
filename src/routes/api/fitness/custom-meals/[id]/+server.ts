@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { CustomMeal } from '$models/CustomMeal';
+import { RoundOffCache } from '$models/RoundOffCache';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const user = await requireAuth(locals);
@@ -23,6 +24,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	}
 
 	await meal.save();
+	RoundOffCache.deleteMany({ createdBy: user.nickname }).catch(() => {});
 	return json(meal.toObject());
 };
 
@@ -35,5 +37,6 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		createdBy: user.nickname,
 	});
 	if (!deleted) throw error(404, 'Meal not found');
+	RoundOffCache.deleteMany({ createdBy: user.nickname }).catch(() => {});
 	return json({ ok: true });
 };

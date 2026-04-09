@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
+import { RoundOffCache } from '$models/RoundOffCache';
 
 const VALID_MEALS = ['breakfast', 'lunch', 'dinner', 'snack', 'water'];
 
@@ -58,6 +59,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		...(liquidMl > 0 && { liquidMl }),
 		createdBy: user.nickname,
 	});
+
+	// Invalidate round-off cache for this date
+	RoundOffCache.deleteOne({ createdBy: user.nickname, date: date.slice(0, 10) }).catch(() => {});
 
 	return json(entry.toObject(), { status: 201 });
 };
