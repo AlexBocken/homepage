@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import { BLS_DB } from '$lib/data/blsDb';
 import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutritionMatcher';
 import { Recipe } from '$models/Recipe';
+import { CustomMeal } from '$models/CustomMeal';
 import { FavoriteIngredient } from '$models/FavoriteIngredient';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { OpenFoodFact } from '$models/OpenFoodFact';
@@ -188,10 +189,43 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		allFoods.push(f);
 	}
 
-	// 3. Find best combos (1-3 foods)
+	// 3. Resolve custom meals and add to food pool
+	const customMeals = await CustomMeal.find({ createdBy: user.nickname }).lean();
+	for (const meal of customMeals as any[]) {
+		if (!meal.ingredients?.length) continue;
+		let totalGrams = 0;
+		let totalCal = 0, totalP = 0, totalF = 0, totalC = 0;
+		for (const ing of meal.ingredients) {
+			const g = ing.amountGrams ?? 100;
+			totalGrams += g;
+			const f = g / 100;
+			totalCal += (ing.per100g?.calories ?? 0) * f;
+			totalP += (ing.per100g?.protein ?? 0) * f;
+			totalF += (ing.per100g?.fat ?? 0) * f;
+			totalC += (ing.per100g?.carbs ?? 0) * f;
+		}
+		if (totalGrams <= 0 || totalCal <= 5) continue;
+		const key = `custom:${meal._id}`;
+		if (allFoodsSeen.has(key)) continue;
+		allFoodsSeen.add(key);
+		allFoods.push({
+			source: 'custom',
+			id: String(meal._id),
+			name: meal.name,
+			nameEn: meal.name,
+			per100g: {
+				calories: totalCal / totalGrams * 100,
+				protein: totalP / totalGrams * 100,
+				fat: totalF / totalGrams * 100,
+				carbs: totalC / totalGrams * 100,
+			},
+		});
+	}
+
+	// 4. Find best combos (1-3 foods)
 	const foodCombos = findBestCombos(allFoods, remaining, 'pantry', limit * 2);
 
-	// 4. Find best recipes (single items only, no combos)
+	// 5. Find best recipes (single items only, no combos)
 	const recipes = await Recipe.find(
 		{ cachedPer100g: { $exists: true, $ne: null } },
 		{ name: 1, short_name: 1, cachedPer100g: 1, cachedTotalGrams: 1, portions: 1 }
@@ -217,12 +251,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	const recipeCombos = findBestCombos(resolvedRecipes, remaining, 'recipe', limit, 1);
 
-	// 5. Merge and sort by score (lower = better)
+	// 6. Merge and sort by score (lower = better)
 	const all: ComboSuggestion[] = [...foodCombos, ...recipeCombos];
 	all.sort((a, b) => a.score - b.score);
 	const suggestions = all.slice(0, limit);
 
-	// 6. Store in cache
+	// 7. Store in cache
 	await RoundOffCache.findOneAndUpdate(
 		{ createdBy: user.nickname, date: today },
 		{
