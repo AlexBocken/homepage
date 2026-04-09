@@ -479,9 +479,10 @@
 	// Server computes initial value to avoid flicker; $derived keeps it reactive
 	let hasHydrated = $state(false);
 	$effect(() => { hasHydrated = true; });
+	const isTodayOrFuture = $derived(currentDate >= todayStr);
 	const showRoundOff = $derived(
 		hasHydrated
-			? !!(isToday && goalCalories && calorieBalance > 50 && calorieBalance <= goalCalories * 0.5)
+			? !!(isTodayOrFuture && goalCalories && calorieBalance > 50 && calorieBalance <= goalCalories * 0.5)
 			: data.initialShowRoundOff
 	);
 
