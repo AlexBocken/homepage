@@ -273,7 +273,7 @@
 }
 .chip.active {
 	background: var(--color-primary);
-	color: white;
+	color: var(--color-text-on-primary);
 }
 .chip.season {
 	background: var(--color-accent);

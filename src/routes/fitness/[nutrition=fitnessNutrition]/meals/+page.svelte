@@ -358,8 +358,8 @@
 		display: flex;
 		align-items: center;
 		gap: 0.35rem;
-		background: var(--nord8);
-		color: #fff;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 		border: none;
 		border-radius: 8px;
 		padding: 0.5rem 0.85rem;
@@ -369,7 +369,7 @@
 		transition: background 0.15s;
 	}
 	.create-btn:hover {
-		background: var(--nord10);
+		background: var(--color-primary-hover);
 	}
 
 	/* ── Loading ── */
@@ -700,11 +700,11 @@
 		cursor: default;
 	}
 	.btn.primary {
-		background: var(--nord8);
-		color: #fff;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 	}
 	.btn.primary:hover:not(:disabled) {
-		background: var(--nord10);
+		background: var(--color-primary-hover);
 	}
 	.btn.secondary {
 		background: var(--color-bg-tertiary);

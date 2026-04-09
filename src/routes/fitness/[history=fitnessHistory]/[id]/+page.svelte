@@ -843,7 +843,7 @@
 	}
 	.save-btn {
 		background: var(--color-primary);
-		color: white;
+		color: var(--color-text-on-primary);
 		border: none;
 		border-radius: 8px;
 		padding: 0.4rem 1rem;
@@ -1057,7 +1057,7 @@
 		width: 100%;
 		padding: 0.75rem;
 		background: var(--color-primary);
-		color: white;
+		color: var(--color-text-on-primary);
 		border: none;
 		border-radius: 10px;
 		font-weight: 700;
