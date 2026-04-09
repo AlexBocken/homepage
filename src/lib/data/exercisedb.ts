@@ -8,6 +8,8 @@ import { localizeExercise, translateTerm, getExerciseMetrics, METRIC_PRESETS } f
 import { exerciseDbMap, slugToExerciseDbId } from './exercisedb-map';
 import { edbMuscleToSimple, edbMusclesToGroups, edbBodyPartToSimple, edbEquipmentToSimple } from './muscleMap';
 import rawData from './exercisedb-raw.json';
+import { edbTranslationsDe } from './exercisedb-translations-de';
+import { staticOverviews } from './static-overviews';
 import { fuzzyScore } from '$lib/js/fuzzy';
 
 // Access static exercises via the exported map
@@ -66,6 +68,7 @@ function edbToEnriched(edb: EdbRawExercise, slug: string, staticEx?: Exercise): 
 	const secondaryGroups = edbMusclesToGroups(edb.secondaryMuscles ?? []);
 
 	// Base exercise fields — prefer static data when available
+	const de = edbTranslationsDe[slug];
 	const base: Exercise = staticEx
 		? { ...staticEx }
 		: {
@@ -76,6 +79,7 @@ function edbToEnriched(edb: EdbRawExercise, slug: string, staticEx?: Exercise): 
 			target: targetGroups[0] ?? 'full body',
 			secondaryMuscles: secondaryGroups.filter(g => !targetGroups.includes(g)),
 			instructions: edb.instructions ?? [],
+			...(de ? { de } : {}),
 		};
 
 	// For static exercises, merge in EDB secondary muscles if richer
@@ -113,7 +117,7 @@ for (const ex of staticExercises) {
 		allEnriched.set(ex.id, {
 			...ex,
 			edbId: null,
-			overview: null,
+			overview: staticOverviews[ex.id] ?? null,
 			tips: [],
 			variations: [],
 			targetMusclesDetailed: [],
@@ -129,10 +133,11 @@ const allExercisesArray = [...allEnriched.values()];
 /** Localize an enriched exercise */
 export function localizeEnriched(e: EnrichedExercise, lang: 'en' | 'de'): LocalizedEnrichedExercise {
 	const localized = localizeExercise(e, lang);
+	const de = lang === 'de' ? edbTranslationsDe[e.id] : undefined;
 	return {
 		...localized,
 		edbId: e.edbId,
-		overview: e.overview,
+		overview: (de?.overview) ?? e.overview,
 		tips: e.tips,
 		variations: e.variations,
 		targetMusclesDetailed: e.targetMusclesDetailed,

@@ -91,7 +91,7 @@ export const exerciseDbMap: Record<string, string> = {
 	'exr_41n2hqw5LsDpeE2i': 'elbow-flexor-stretch',                // Elbow Flexor Stretch
 	'exr_41n2hy8pKXtzuBh8': 'elbow-up-and-down-dynamic-plank',     // Elbow Up and Down Dynamic Plank
 	'exr_41n2hKZmyYXB2UL4': 'elbows-back-stretch',                 // Elbows Back Stretch
-	'exr_41n2hNfaYkEKLQHK': 'elevated-push-up',                    // Elevanted Push-Up
+	'exr_41n2hNfaYkEKLQHK': 'elevated-push-up',                    // Elevated Push-Up
 	'exr_41n2hfa11fPnk8y9': 'elliptical-machine-walk',             // Elliptical Machine Walk (MACHINE)
 	'exr_41n2hpTMDhTxYkvi': 'elliptical-machine-walk-alt',         // Elliptical Machine Walk (variant)
 	'exr_41n2hH6VGNz6cNtv': 'extension-inclination-neck-stretch',  // Extension And Inclination Neck Stretch
@@ -172,7 +172,7 @@ export const exerciseDbMap: Record<string, string> = {
 	'exr_41n2hd78zujKUEWK': 'single-leg-squat',                    // Single Leg Squat
 	'exr_41n2hsSnmS946i2k': 'single-leg-squat-with-support',       // Single Leg Squat with Support
 	'exr_41n2hw8nSYiaCXW1': 'sissy-squat',                         // Sissy Squat
-	'exr_41n2hvjrFJ2KjzGm': 'sit',                                 // Sit
+	'exr_41n2hvjrFJ2KjzGm': 'wall-sit',                             // Wall Sit
 	'exr_41n2hnFD2bT6sruf': 'sliding-floor-bridge-curl-towel',     // Sliding Floor Bridge Curl on Towel
 	'exr_41n2hadPLLFRGvFk': 'sliding-floor-pulldown-towel',        // Sliding Floor Pulldown on Towel
 	'exr_41n2hSxsNAV8tGS6': 'split-squat',                         // Split Squat
@@ -183,7 +183,7 @@ export const exerciseDbMap: Record<string, string> = {
 	'exr_41n2hSq88Ni3KCny': 'standing-alternate-arms-circling',    // Standing Alternate Arms Circling
 	'exr_41n2hUBVSgXaKhau': 'standing-arms-circling',              // Standing Arms Circling
 	'exr_41n2hynD9srC1kY7': 'standing-arms-flinging',              // Standing Arms Flinging
-	'exr_41n2hzfRXQDaLYJh': 'standing-calf-raise',                 // Standing Calf Raise (bodyweight)
+	// exr_41n2hzfRXQDaLYJh removed — empty Standing Calf Raise duplicate (no instructions/overview)
 	'exr_41n2hdWu3oaCGdWT': 'standing-calf-raise-dumbbell',        // Standing Calf Raise (DUMBBELL)
 	'exr_41n2hvzxocyjoGgL': 'standing-leg-calf-raise-barbell',     // Standing Leg Calf Raise (BARBELL)
 	'exr_41n2huXeEFSaqo4G': 'standing-one-arm-circling',           // Standing One Arm Circling
