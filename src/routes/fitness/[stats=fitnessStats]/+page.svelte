@@ -393,11 +393,11 @@
 						{/each}
 					<div class="macro-legend">
 							<span class="macro-legend-item">
-								<svg viewBox="0 0 12 12" width="12" height="12"><circle cx="6" cy="6" r="4" fill="none" stroke="var(--color-text-secondary)" stroke-width="2"/></svg>
+								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3,9.5 A4,4 0 1,1 9,9.5" fill="none" stroke="var(--color-text-secondary)" stroke-width="2" stroke-linecap="round"/></svg>
 								{lang === 'en' ? 'Actual' : 'Ist'}
 							</span>
 							<span class="macro-legend-item">
-								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6,2 L10,10 L2,10 Z" fill="var(--color-text-secondary)"/></svg>
+								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6,2 L10,10 L2,10 Z" fill="var(--color-text-secondary)" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linejoin="round"/></svg>
 								{lang === 'en' ? 'Target' : 'Ziel'}
 							</span>
 						</div>
@@ -713,7 +713,7 @@
 	.muscle-nutrition-layout .muscle-heatmap-block {
 		grid-column: 1 / -1;
 	}
-	@media (min-width: 1024px) {
+	@media (min-width: 750px) {
 		.muscle-nutrition-layout {
 			grid-template-columns: 1fr 1fr 1fr 1fr;
 			grid-template-rows: auto 1fr;
@@ -828,7 +828,7 @@
 		align-items: center !important;
 		gap: 1.25rem !important;
 	}
-	@media (min-width: 1024px) {
+	@media (min-width: 750px) {
 		.macro-card {
 			grid-column: auto;
 			padding: 0.75rem;
@@ -902,7 +902,7 @@
 	.macro-legend {
 		display: none;
 	}
-	@media (min-width: 1024px) {
+	@media (min-width: 750px) {
 		.macro-legend {
 			display: flex;
 			gap: 1rem;
