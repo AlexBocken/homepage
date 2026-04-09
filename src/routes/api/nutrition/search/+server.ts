@@ -134,11 +134,44 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			await dbConnect();
 			const favDocs = await FavoriteIngredient.find({ createdBy: user.nickname }).lean();
 
+			// Batch-load favorited recipes
+			const recipeFavIds = favDocs.filter(f => f.source === 'recipe').map(f => f.sourceId);
+			const favRecipes = recipeFavIds.length > 0
+				? await Recipe.find({
+					$or: recipeFavIds.map(id =>
+						id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { short_name: id }
+					)
+				}).select('name short_name icon images ingredients nutritionMappings portions').lean()
+				: [];
+			const favRecipeMap = new Map<string, any>();
+			for (const r of favRecipes) {
+				favRecipeMap.set(String(r._id), r);
+				favRecipeMap.set(r.short_name, r);
+			}
+
 			for (const fav of favDocs) {
 				const key = `${fav.source}:${fav.sourceId}`;
-				const result = fav.source === 'bls'
-					? lookupBls(fav.sourceId, full)
-					: lookupUsda(fav.sourceId, full);
+				let result: SearchResult | null = null;
+				if (fav.source === 'bls') {
+					result = lookupBls(fav.sourceId, full);
+				} else if (fav.source === 'usda') {
+					result = lookupUsda(fav.sourceId, full);
+				} else if (fav.source === 'recipe') {
+					const r = favRecipeMap.get(fav.sourceId);
+					if (r) {
+						const nutrition = computeRecipePer100g(r);
+						const image = r.images?.[0]?.mediapath;
+						result = {
+							source: 'recipe',
+							id: String(r._id),
+							name: r.name.replace(/&shy;|­/g, ''),
+							category: r.icon || '🍽️',
+							calories: Math.round(nutrition?.per100g.calories ?? 0),
+							...(full && nutrition && { per100g: nutrition.per100g }),
+							...(image && { image }),
+						};
+					}
+				}
 				if (result) {
 					result.favorited = true;
 					favResults.push(result);
@@ -191,9 +224,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			portions.push({ description: '1 Portion', grams: gramsPerPortion });
 		}
 
+		const recipeId = String(r._id);
 		scored.push({
 			source: 'recipe',
-			id: String(r._id),
+			id: recipeId,
 			name: r.name.replace(/&shy;|­/g, ''),
 			category: r.icon || '🍽️',
 			calories: Math.round(nutrition?.per100g.calories ?? 0),
@@ -201,6 +235,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			...(full && nutrition && { per100g: nutrition.per100g }),
 			...(portions.length > 0 && { portions }),
 			...(image && { image }),
+			...((favKeys.has(`recipe:${recipeId}`) || favKeys.has(`recipe:${r.short_name}`)) && { favorited: true }),
 		});
 	}
 
