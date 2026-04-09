@@ -83,6 +83,41 @@ Re-create the chart on theme change via `MutationObserver` on `data-theme` + `ma
 ### Toggle component
 Use `Toggle.svelte` (iOS-style) instead of raw `<input type="checkbox">` for user-facing boolean switches.
 
+## Site-Wide Design Language
+
+### Layout & Spacing
+- Max content width: `1000px`–`1200px` with `margin-inline: auto`
+- Card/grid gaps: `2rem` desktop, `1rem` tablet, `0.5rem` mobile
+- Breakpoints: `410px` (small mobile), `560px` (tablet), `900px` (rosary), `1024px` (desktop)
+
+### Border Radius Tokens
+- `--radius-pill: 1000px` — nav bar, pill buttons
+- `--radius-card: 20px` — major cards (recipe cards)
+- `--radius-lg: 0.75rem` — medium rounded elements
+- `--radius-md: 0.5rem` — standard rounding
+- `--radius-sm: 0.3rem` — small elements
+
+### Shadow Tokens
+- `--shadow-sm` / `--shadow-md` / `--shadow-lg` / `--shadow-hover` — use these, don't hardcode
+- Shadows are spread-based (`0 0 Xem Yem`) not offset-based
+
+### Hover & Interaction Patterns
+- Cards/links: `scale: 1.02` + shadow elevation on hover
+- Tags/pills: `scale: 1.05` with `--transition-fast` (100ms)
+- Standard transitions: `--transition-normal` (200ms)
+- Nav bar: glassmorphism (`backdrop-filter: blur(16px)`, semi-transparent bg)
+
+### Typography
+- Font stack: Helvetica, Arial, "Noto Sans", sans-serif
+- Size tokens: `--text-sm` through `--text-3xl`
+- Headings in grids: `1.5rem` desktop → `1.2rem` tablet → `0.95rem` mobile
+
+### Surfaces & Cards
+- Use `--color-surface` / `--color-surface-hover` for card backgrounds
+- Use `--color-bg-elevated` for hover/active states
+- Recipe cards: 300px wide, `--radius-card` corners
+- Global utility classes: `.g-icon-badge` (circular), `.g-pill` (pill-shaped)
+
 ## Versioning
 
 When committing, bump version numbers as appropriate using semver:

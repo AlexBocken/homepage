@@ -152,6 +152,12 @@
 
 	/* Shopping icon filter — white PNGs need invert in light mode */
 	--shopping-icon-filter: invert(1);
+
+	/* LinksGrid icon fills — colorful in light */
+	--grid-fill-base: var(--nord10);
+	--grid-fill-pop-a: var(--nord11);
+	--grid-fill-pop-b: var(--nord12);
+	--grid-fill-pop-c: var(--nord14);
 }
 
 /* ============================================
@@ -217,6 +223,12 @@
 		--color-link-hover: var(--nord7);
 
 		--shopping-icon-filter: none;
+
+		/* LinksGrid icon fills — cool blues/whites in dark */
+		--grid-fill-base: var(--nord8);
+		--grid-fill-pop-a: var(--nord9);
+		--grid-fill-pop-b: var(--nord7);
+		--grid-fill-pop-c: var(--nord4);
 	}
 }
 
@@ -268,6 +280,11 @@
 	--color-link-hover: var(--nord7);
 
 	--shopping-icon-filter: none;
+
+	--grid-fill-base: var(--nord8);
+	--grid-fill-pop-a: var(--nord9);
+	--grid-fill-pop-b: var(--nord7);
+	--grid-fill-pop-c: var(--nord4);
 }
 
 /* ============================================
