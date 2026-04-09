@@ -81,7 +81,7 @@
 			if (diffDays < 7) {
 				return lang === 'de' ? `${dayName} (in ${diffDays} Tagen)` : `${dayName} (in ${diffDays} days)`;
 			}
-			const weeks = Math.floor(diffDays / 7);
+			const weeks = Math.ceil(diffDays / 7);
 			const wLabel = weeks === 1
 				? (lang === 'de' ? '1 Woche' : '1 week')
 				: (lang === 'de' ? `${weeks} Wochen` : `${weeks} weeks`);
@@ -92,7 +92,7 @@
 		if (absDays < 7) {
 			return lang === 'de' ? `${dayName} (vor ${absDays} Tagen)` : `${dayName} (${absDays} days ago)`;
 		}
-		const weeks = Math.floor(absDays / 7);
+		const weeks = Math.ceil(absDays / 7);
 		const wLabel = weeks === 1
 			? (lang === 'de' ? '1 Woche' : '1 week')
 			: (lang === 'de' ? `${weeks} Wochen` : `${weeks} weeks`);
@@ -114,7 +114,7 @@
 				: `${startDay} ${toWord} ${endDay} (in ${diffDays} days)`;
 		}
 		if (diffDays >= 7) {
-			const weeks = Math.floor(diffDays / 7);
+			const weeks = Math.ceil(diffDays / 7);
 			const wLabel = weeks === 1
 				? (lang === 'de' ? '1 Woche' : '1 week')
 				: (lang === 'de' ? `${weeks} Wochen` : `${weeks} weeks`);
