@@ -11,6 +11,7 @@
 		...restProps
 	} = $props();
 
+	// svelte-ignore state_referenced_locally
 	let shouldLoad = $state(eager);
 	/** @type {HTMLImageElement | null} */
 	let imgElement = $state(null);

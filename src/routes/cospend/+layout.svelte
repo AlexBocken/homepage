@@ -14,7 +14,7 @@
   let showModal = $state(false);
   /** @type {string | null} */
   let paymentId = $state(null);
-  let user = $state(data.session?.user);
+  let user = $derived(data.session?.user);
   let isGuest = $derived(!data.session?.user);
 
   $effect(() => {

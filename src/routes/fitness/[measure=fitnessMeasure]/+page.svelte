@@ -13,14 +13,20 @@
 	let { data } = $props();
 	const workout = getWorkout();
 
+	// svelte-ignore state_referenced_locally
 	let latest = $state(data.latest ? { ...data.latest } : {});
+	// svelte-ignore state_referenced_locally
 	let measurements = $state(data.measurements?.measurements ? [...data.measurements.measurements] : []);
 	let showWeightHistory = $state(false);
 
 	// Profile fields (sex, height, birth year) — stored in FitnessGoal
+	// svelte-ignore state_referenced_locally
 	let savedSex = $state(data.profile?.sex ?? 'male');
+	// svelte-ignore state_referenced_locally
 	let profileSex = $state(data.profile?.sex ?? 'male');
+	// svelte-ignore state_referenced_locally
 	let profileHeight = $state(data.profile?.heightCm != null ? String(data.profile.heightCm) : '');
+	// svelte-ignore state_referenced_locally
 	let profileBirthYear = $state(data.profile?.birthYear != null ? String(data.profile.birthYear) : '');
 	let profileSaving = $state(false);
 	let profileEditing = $state(false);
@@ -146,7 +152,8 @@
 	{#if profileEditing}
 		<div class="profile-fields">
 			<div class="form-group">
-				<label>{t('sex', lang)}</label>
+				<!-- svelte-ignore a11y_label_has_associated_control -->
+			<label>{t('sex', lang)}</label>
 				<div class="sex-pills">
 					<button class="sex-pill" class:active={profileSex === 'male'} onclick={() => profileSex = 'male'}>
 						<Mars size={14} /> {t('male', lang)}
@@ -357,7 +364,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
-	.form-group input, .form-group select {
+	.form-group input {
 		padding: 0.4rem 0.5rem;
 		border: 1px solid var(--color-border);
 		border-radius: 6px;

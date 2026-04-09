@@ -475,6 +475,7 @@
     <div class="edit-modal" onclick={(e) => e.stopPropagation()}>
       <h3>{parseQuantity(editingItem.name).name}</h3>
 
+      <!-- svelte-ignore a11y_label_has_associated_control -->
       <label class="edit-label">Kategorie</label>
       <div class="category-picker">
         {#each SHOPPING_CATEGORIES as cat}
@@ -492,6 +493,7 @@
         {/each}
       </div>
 
+      <!-- svelte-ignore a11y_label_has_associated_control -->
       <label class="edit-label">Icon</label>
       <div class="icon-search">
         <Search size={14} />
@@ -838,6 +840,7 @@
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     word-break: break-word;
   }

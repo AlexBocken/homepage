@@ -27,6 +27,7 @@
 	const hasHashedImage = (r: any) => r.images?.length > 0 && /\.\w+\.\w+$/.test(r.images[0].mediapath);
 
 	// Server-generated random index ensures SSR and client pick the same hero
+	// svelte-ignore state_referenced_locally
 	const heroIndex = data.heroIndex;
 	const heroRecipe = $derived.by(() => {
 		const seasonPool = data.season.filter(hasHashedImage);

@@ -16,7 +16,9 @@
 
   // Initialize form data with server values if available (for error handling)
   /** @type {Record<string, any>} */
+  // svelte-ignore state_referenced_locally
   const formValues = form?.values || {};
+  // svelte-ignore state_referenced_locally
   let formData = $state({
     title: /** @type {string} */ (formValues.title || ''),
     description: /** @type {string} */ (formValues.description || ''),
@@ -31,6 +33,7 @@
   });
 
   // Recurring payment settings
+  // svelte-ignore state_referenced_locally
   let recurringData = $state({
     frequency: /** @type {string} */ (formValues.recurringFrequency || 'monthly'),
     cronExpression: /** @type {string} */ (formValues.recurringCronExpression || ''),
@@ -49,7 +52,9 @@
   let personalAmounts = $state({});
   let loading = $state(false);
   /** @type {string | null} */
+  // svelte-ignore state_referenced_locally
   let error = $state(form?.error || null);
+  // svelte-ignore state_referenced_locally
   let predefinedMode = $state(data.predefinedUsers.length > 0);
   let jsEnhanced = $state(false);
   let cronError = $state(false);
@@ -67,6 +72,7 @@
   let exchangeRateTimeout = $state();
 
   // Initialize users from server data for no-JS support (use data directly to avoid reactivity warning)
+  // svelte-ignore state_referenced_locally
   const initialUsers = data.predefinedUsers.length > 0 ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []);
   let users = $state(initialUsers);
 

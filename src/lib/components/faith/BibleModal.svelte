@@ -17,10 +17,14 @@
 
   const isEnglish = $derived(lang === 'en');
 
+  // svelte-ignore state_referenced_locally
   let book: string = $state(verseData?.book || '');
+  // svelte-ignore state_referenced_locally
   let chapter: number = $state(verseData?.chapter || 0);
+  // svelte-ignore state_referenced_locally
   let verses: Array<{ verse: number; text: string }> = $state(verseData?.verses || []);
   let loading = $state(false);
+  // svelte-ignore state_referenced_locally
   let error = $state(verseData ? '' : (lang === 'en' ? 'No verse data available' : 'Keine Versdaten verfügbar'));
 
   function handleBackdropClick(event: MouseEvent) {

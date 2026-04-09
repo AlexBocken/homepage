@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
+  import { invalidateAll } from '$app/navigation';
   import { pushState } from '$app/navigation';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import EnhancedBalance from '$lib/components/cospend/EnhancedBalance.svelte';
@@ -16,14 +17,14 @@
   let { data } = $props(); // Contains session data and balance from server
 
   // Use server-side data, with fallback for progressive enhancement
-  let balance = $state(data.balance || {
+  let balance = $derived(data.balance || {
     netBalance: 0,
     recentSplits: []
   });
-  let loading = $state(false); // Start as false since we have server data
+  let loading = $state(false);
   /** @type {string | null} */
   let error = $state(null);
-  let monthlyExpensesData = $state(/** @type {any} */ (data).monthlyExpensesData || { labels: [], datasets: [] });
+  let monthlyExpensesData = $state(/** @type {any} */ ({ labels: [], datasets: [] }));
   let expensesLoading = $state(false);
   /** @type {string[] | null} */
   let categoryFilter = $state(null);
@@ -40,71 +41,31 @@
   /** @type {any} */
   let debtBreakdownComponent;
 
-  // Progressive enhancement: refresh data if JavaScript is available
-  onMount(() => {
-    // Mark that JavaScript is loaded for progressive enhancement
-    document.body.classList.add('js-loaded');
-
-    // Only fetch if we don't have server-side data
-    if (!balance.recentSplits || balance.recentSplits.length === 0) {
-      fetchBalance();
-    }
-
-    if (!monthlyExpensesData.datasets || monthlyExpensesData.datasets.length === 0) {
-      fetchMonthlyExpenses();
-    }
-
-    // Listen for dashboard refresh events from the layout
-    const handleDashboardRefresh = () => {
-      refreshAllComponents();
-    };
-
-    window.addEventListener('dashboardRefresh', handleDashboardRefresh);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('dashboardRefresh', handleDashboardRefresh);
-    };
-  });
-
-  async function fetchBalance() {
-    try {
-      loading = true;
-      const response = await fetch('/api/cospend/balance');
-      if (!response.ok) {
-        throw new Error('Failed to fetch balance');
-      }
-      balance = await response.json();
-    } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
-      loading = false;
-    }
-  }
-
   async function fetchMonthlyExpenses() {
     try {
       expensesLoading = true;
       const response = await fetch('/api/cospend/monthly-expenses');
-      if (!response.ok) {
-        throw new Error('Failed to fetch monthly expenses');
-      }
-      monthlyExpensesData = await response.json();
+      if (response.ok) monthlyExpensesData = await response.json();
     } catch (err) {
       console.error('Error fetching monthly expenses:', err);
-      // Don't show this error in the main error state
     } finally {
       expensesLoading = false;
     }
   }
 
+  // Progressive enhancement: refresh data if JavaScript is available
+  onMount(() => {
+    document.body.classList.add('js-loaded');
+    fetchMonthlyExpenses();
+
+    const handleDashboardRefresh = () => { refreshAllComponents(); };
+    window.addEventListener('dashboardRefresh', handleDashboardRefresh);
+    return () => { window.removeEventListener('dashboardRefresh', handleDashboardRefresh); };
+  });
+
   // Function to refresh all dashboard components after payment deletion
   async function refreshAllComponents() {
-    // Refresh the main balance and recent activity
-    await Promise.all([
-      fetchBalance(),
-      fetchMonthlyExpenses()
-    ]);
+    await Promise.all([invalidateAll(), fetchMonthlyExpenses()]);
 
     // Refresh the enhanced balance component if it exists and has a refresh method
     if (enhancedBalanceComponent && enhancedBalanceComponent.refresh) {

@@ -27,6 +27,7 @@
 
 	let { data } = $props();
 
+	// svelte-ignore state_referenced_locally
 	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.lang === 'la' ? true : data.initialLatin });
 
 	$effect(() => {

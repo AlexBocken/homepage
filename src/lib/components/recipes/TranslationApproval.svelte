@@ -28,6 +28,7 @@
 	}: Props = $props();
 
 	type TranslationState = 'idle' | 'translating' | 'preview' | 'approved' | 'error';
+	// svelte-ignore state_referenced_locally
 	let translationState = $state<TranslationState>(englishData ? 'preview' : 'idle');
 	let errorMessage = $state('');
 	let validationErrors = $state<string[]>([]);
@@ -43,6 +44,7 @@
 	}
 
 	// Eagerly initialize editableEnglish from germanData if no English translation exists
+	// svelte-ignore state_referenced_locally
 	let editableEnglish = $state<any>(
 		englishData ? {
 			...englishData,

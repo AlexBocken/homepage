@@ -19,10 +19,14 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	// Recipe data state
+	// Recipe data state — all form fields initialized from server data (intentionally local mutable state)
+	// svelte-ignore state_referenced_locally
 	let preamble = $state(data.recipe.preamble || "");
+	// svelte-ignore state_referenced_locally
 	let addendum = $state(data.recipe.addendum || "");
+	// svelte-ignore state_referenced_locally
 	let note = $state(data.recipe.note || "");
+	// svelte-ignore state_referenced_locally
 	let image_preview_url = $state(
 		"https://bocken.org/static/rezepte/thumb/" +
 			(data.recipe.images?.[0]?.mediapath || `${data.recipe.short_name}.webp`)
@@ -31,15 +35,20 @@
 
 	// Translation workflow state
 	let showTranslationWorkflow = $state(false);
+	// svelte-ignore state_referenced_locally
 	let translationData = $state<any>(data.recipe.translations?.en || null);
 	let changedFields = $state<string[]>([]);
 
 	// Store original recipe data for change detection
+	// svelte-ignore state_referenced_locally
 	const originalRecipe = JSON.parse(JSON.stringify(data.recipe));
+	// svelte-ignore state_referenced_locally
 	const old_short_name = data.recipe.short_name;
 
 	// Season and portions stores
+	// svelte-ignore state_referenced_locally
 	portions.update(() => data.recipe.portions || "");
+	// svelte-ignore state_referenced_locally
 	let portions_local = $state<string>(data.recipe.portions || "");
 	$effect(() => {
 		portions.subscribe((p) => {
@@ -47,7 +56,9 @@
 		});
 	});
 
+	// svelte-ignore state_referenced_locally
 	season.update(() => data.recipe.season || []);
+	// svelte-ignore state_referenced_locally
 	let season_local = $state<number[]>(data.recipe.season || []);
 	$effect(() => {
 		season.subscribe((s) => {
@@ -55,6 +66,7 @@
 		});
 	});
 
+	// svelte-ignore state_referenced_locally
 	let card_data = $state({
 		icon: data.recipe.icon || "",
 		category: data.recipe.category || "",
@@ -63,6 +75,7 @@
 		tags: data.recipe.tags || [],
 	});
 
+	// svelte-ignore state_referenced_locally
 	let add_info = $state({
 		preparation: data.recipe.preparation || "",
 		fermentation: {
@@ -78,13 +91,20 @@
 		cooking: data.recipe.cooking || "",
 	});
 
+	// svelte-ignore state_referenced_locally
 	let images = $state(data.recipe.images || []);
+	// svelte-ignore state_referenced_locally
 	let short_name = $state(data.recipe.short_name || "");
+	// svelte-ignore state_referenced_locally
 	let datecreated = $state(data.recipe.datecreated);
 	let datemodified = $state(new Date());
+	// svelte-ignore state_referenced_locally
 	let isBaseRecipe = $state(data.recipe.isBaseRecipe || false);
+	// svelte-ignore state_referenced_locally
 	let defaultForm = $state(data.recipe.defaultForm ? { ...data.recipe.defaultForm } : null);
+	// svelte-ignore state_referenced_locally
 	let ingredients = $state(data.recipe.ingredients || []);
+	// svelte-ignore state_referenced_locally
 	let instructions = $state(data.recipe.instructions || []);
 
 	// Form submission state
@@ -245,6 +265,7 @@
 	}
 
 	// Nutrition state — all edits are local until form save
+	// svelte-ignore state_referenced_locally
 	let nutritionMappings = $state<any[]>(data.recipe.nutritionMappings || []);
 	let generatingNutrition = $state(false);
 	let searchQueries = $state<Record<string, string>>({});

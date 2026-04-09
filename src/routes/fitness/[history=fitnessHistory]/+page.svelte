@@ -8,7 +8,9 @@
 
 	let { data } = $props();
 
+	// svelte-ignore state_referenced_locally
 	let sessions = $state(data.sessions?.sessions ? [...data.sessions.sessions] : []);
+	// svelte-ignore state_referenced_locally
 	let total = $state(data.sessions?.total ? data.sessions.total : 0);
 	let loading = $state(false);
 	let page = $state(1);

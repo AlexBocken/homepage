@@ -1,4 +1,5 @@
 <script>
+  import { invalidateAll } from '$app/navigation';
   import { STICKERS, getStickerById, getRarityColor } from '$lib/utils/stickers';
   import { formatDistanceToNow } from 'date-fns';
   import { de } from 'date-fns/locale';
@@ -13,7 +14,7 @@
   /** @type {import('$lib/utils/stickers').Sticker | null} */
   let selectedSticker = $state(null);
 
-  let stats = $state(data.stats || { userStats: [], userStickers: [], recentCompletions: [] });
+  let stats = $derived(data.stats || { userStats: [], userStickers: [], recentCompletions: [] });
   let currentUser = $derived(data.session?.user?.nickname || '');
 
   const rarityLabels = /** @type {Record<string, string>} */ ({
@@ -69,19 +70,13 @@
   /** @param {string} id */
   async function deleteCompletion(id) {
     const res = await fetch(`/api/tasks/completions/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      const statsRes = await fetch('/api/tasks/stats');
-      if (statsRes.ok) stats = await statsRes.json();
-    }
+    if (res.ok) await invalidateAll();
   }
 
   async function clearHistory() {
     if (!confirm('Deinen gesamten Verlauf und alle Sticker wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return;
     const res = await fetch('/api/tasks/stats', { method: 'DELETE' });
-    if (res.ok) {
-      const [statsRes] = await Promise.all([fetch('/api/tasks/stats')]);
-      if (statsRes.ok) stats = await statsRes.json();
-    }
+    if (res.ok) await invalidateAll();
   }
 </script>
 

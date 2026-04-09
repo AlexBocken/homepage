@@ -11,6 +11,7 @@
 	const andLabel = $derived(isEnglish ? 'AND' : 'UND');
 	const orLabel = $derived(isEnglish ? 'OR' : 'ODER');
 
+	// svelte-ignore state_referenced_locally
 	let checked = $state(useAndLogic);
 
 	// Watch for changes to checked and call onToggle

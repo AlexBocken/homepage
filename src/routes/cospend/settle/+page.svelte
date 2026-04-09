@@ -10,7 +10,7 @@
   let { data, form } = $props();
 
   // Use server-side data with progressive enhancement
-  let debtData = $state(data.debtData || {
+  let debtData = $derived(data.debtData || {
     whoOwesMe: [],
     whoIOwe: [],
     totalOwedToMe: 0,
@@ -18,9 +18,11 @@
   });
   let loading = $state(false); // Start as false since we have server data
   /** @type {string | null} */
+  // svelte-ignore state_referenced_locally
   let error = $state(data.error || form?.error || null);
   /** @type {{ type: string; from: string; to: string; amount: number; description: string } | null} */
   let selectedSettlement = $state(null);
+  // svelte-ignore state_referenced_locally
   let settlementAmount = $state(form?.values?.amount || '');
   let submitting = $state(false);
   let predefinedMode = isPredefinedUsersMode();

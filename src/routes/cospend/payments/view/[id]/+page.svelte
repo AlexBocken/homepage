@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { getCategoryEmoji, getCategoryName } from '$lib/utils/categories';
   import EditButton from '$lib/components/EditButton.svelte';
@@ -12,8 +12,8 @@
 
   // Use server-side data with progressive enhancement
   /** @type {any | null} */
-  let payment = $state(data.payment || null);
-  let loading = $state(false); // Start as false since we have server data
+  let payment = $derived(data.payment || null);
+  let loading = $state(false);
   /** @type {string | null} */
   let error = $state(null);
 
@@ -24,25 +24,9 @@
 
     // Only refresh if we don't have server data
     if (!payment) {
-      await loadPayment();
+      await invalidateAll();
     }
   });
-
-  async function loadPayment() {
-    try {
-      loading = true;
-      const response = await fetch(`/api/cospend/payments/${data.paymentId}`);
-      if (!response.ok) {
-        throw new Error('Failed to load payment');
-      }
-      const result = await response.json();
-      payment = result.payment;
-    } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
-      loading = false;
-    }
-  }
 
   function formatAmountWithCurrency(/** @type {any} */ payment) {
     if (payment.currency === 'CHF' || !payment.originalAmount) {

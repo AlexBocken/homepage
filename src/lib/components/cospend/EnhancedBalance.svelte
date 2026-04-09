@@ -5,16 +5,19 @@
 
   let { initialBalance = null, initialDebtData = null } = $props<{ initialBalance?: any, initialDebtData?: any }>();
 
+  // svelte-ignore state_referenced_locally
   let balance = $state(initialBalance || {
     netBalance: 0,
     recentSplits: []
   });
+  // svelte-ignore state_referenced_locally
   let debtData = $state(initialDebtData || {
     whoOwesMe: [],
     whoIOwe: [],
     totalOwedToMe: 0,
     totalIOwe: 0
   });
+  // svelte-ignore state_referenced_locally
   let loading = $state(!initialBalance || !initialDebtData);
   let error = $state<string | null>(null);
 
