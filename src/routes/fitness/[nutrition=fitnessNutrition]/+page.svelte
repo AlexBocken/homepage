@@ -476,8 +476,13 @@
 	const remainingProtein = $derived(proteinGoalGrams ? proteinGoalGrams - dayTotals.protein : 0);
 	const remainingFat = $derived(fatGoalGrams ? fatGoalGrams - dayTotals.fat : 0);
 	const remainingCarbs = $derived(carbGoalGrams ? carbGoalGrams - dayTotals.carbs : 0);
+	// Server computes initial value to avoid flicker; $derived keeps it reactive
+	let hasHydrated = $state(false);
+	$effect(() => { hasHydrated = true; });
 	const showRoundOff = $derived(
-		isToday && goalCalories && calorieBalance > 50 && calorieBalance <= goalCalories * 0.5
+		hasHydrated
+			? !!(isToday && goalCalories && calorieBalance > 50 && calorieBalance <= goalCalories * 0.5)
+			: data.initialShowRoundOff
 	);
 
 	// DRI for micros
