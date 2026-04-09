@@ -107,9 +107,9 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 
 	// Compute initial showRoundOff server-side to avoid flicker
 	const today = new Date().toISOString().slice(0, 10);
-	const isToday = dateParam === today;
+	const isTodayOrFuture = dateParam >= today;
 	let initialShowRoundOff = false;
-	if (isToday && goal.dailyCalories) {
+	if (isTodayOrFuture && goal.dailyCalories) {
 		const totalCal = (foodLog.entries ?? []).reduce(
 			(sum: number, e: any) => sum + ((e.per100g?.calories ?? 0) * e.amountGrams / 100), 0
 		);
