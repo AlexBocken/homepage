@@ -1,20 +1,6 @@
 <style>
 
 .links_grid {
-	/* Light mode card palette */
-	--card-bg-a: var(--nord6);
-	--card-bg-b: var(--nord5);
-	--card-bg-c: var(--nord6);
-	--card-bg-d: var(--nord5);
-	--card-fill-a: var(--nord11);
-	--card-fill-b: var(--nord10);
-	--card-fill-c: var(--nord0);
-	--card-fill-d: var(--nord0);
-	--card-text: var(--nord0);
-	--card-shadow: rgba(0,0,0,0.04);
-	--card-shadow-hover: rgba(0,0,0,0.1);
-	--card-lock: var(--nord3);
-
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(250px, calc(50% - 1rem)), 1fr));
 	gap: 2rem;
@@ -23,70 +9,19 @@
 	padding: 2rem 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-	.links_grid {
-		--card-bg-a: #1a1a1a;
-		--card-bg-b: #1a1a1a;
-		--card-bg-c: var(--nord1);
-		--card-bg-d: #000;
-		--card-fill-a: var(--nord11);
-		--card-fill-b: var(--nord9);
-		--card-fill-c: var(--nord8);
-		--card-fill-d: var(--nord7);
-		--card-text: white;
-		--card-shadow: rgba(0,0,0,0.08);
-		--card-shadow-hover: rgba(0,0,0,0.15);
-		--card-lock: var(--nord3);
-	}
+/* Base fill for all icons */
+:global(.links_grid a svg:not(.lock-icon)) {
+	fill: var(--grid-fill-base);
 }
-:global(:root[data-theme="dark"]) .links_grid {
-	--card-bg-a: #1a1a1a;
-	--card-bg-b: #1a1a1a;
-	--card-bg-c: var(--nord1);
-	--card-bg-d: #000;
-	--card-fill-a: var(--nord11);
-	--card-fill-b: var(--nord9);
-	--card-fill-c: var(--nord8);
-	--card-fill-d: var(--nord7);
-	--card-text: white;
-	--card-shadow: rgba(0,0,0,0.08);
-	--card-shadow-hover: rgba(0,0,0,0.15);
-	--card-lock: var(--nord3);
+/* Mottled pops — prime-offset selectors for irregular feel */
+:global(.links_grid a:nth-child(3n+1) svg:not(.lock-icon)) {
+	fill: var(--grid-fill-pop-a);
 }
-:global(:root[data-theme="light"]) .links_grid {
-	--card-bg-a: var(--nord6);
-	--card-bg-b: var(--nord5);
-	--card-bg-c: var(--nord6);
-	--card-bg-d: var(--nord5);
-	--card-fill-a: var(--nord11);
-	--card-fill-b: var(--nord10);
-	--card-fill-c: var(--nord0);
-	--card-fill-d: var(--nord0);
-	--card-text: var(--nord0);
-	--card-shadow: rgba(0,0,0,0.04);
-	--card-shadow-hover: rgba(0,0,0,0.1);
-	--card-lock: var(--nord3);
+:global(.links_grid a:nth-child(5n+3) svg:not(.lock-icon)) {
+	fill: var(--grid-fill-pop-b);
 }
-
-:global(.links_grid a:nth-child(4n)),
-:global(.links_grid a:nth-child(4n) svg:not(.lock-icon)){
-	background-color: var(--card-bg-a);
-	fill: var(--card-fill-a);
-}
-:global(.links_grid a:nth-child(4n+1)),
-:global(.links_grid a:nth-child(4n+1) svg:not(.lock-icon)){
-	background-color: var(--card-bg-b);
-	fill: var(--card-fill-b);
-}
-:global(.links_grid a:nth-child(4n+2)),
-:global(.links_grid a:nth-child(4n+2) svg:not(.lock-icon)){
-	background-color: var(--card-bg-c);
-	fill: var(--card-fill-c);
-}
-:global(.links_grid a:nth-child(4n+3)),
-:global(.links_grid a:nth-child(4n+3) svg:not(.lock-icon)){
-	background-color: var(--card-bg-d);
-	fill: var(--card-fill-d);
+:global(.links_grid a:nth-child(7n) svg:not(.lock-icon)) {
+	fill: var(--grid-fill-pop-c);
 }
 
 :global(.links_grid a){
@@ -95,15 +30,18 @@
 	align-items: center;
 	justify-content: center;
 	text-decoration: unset;
-	color: var(--card-text);
+	color: var(--color-text-primary);
+	background-color: var(--color-surface);
+	border-radius: var(--radius-card);
+	overflow: hidden;
 	transition: var(--transition-normal);
 	width: 100%;
 	padding: 1rem;
 	position: relative;
-	box-shadow: 0 0.1em 0.5em 0 var(--card-shadow);
+	box-shadow: var(--shadow-sm);
 }
 :global(.links_grid a:hover){
-	box-shadow: 0 0.2em 1em 0 var(--card-shadow-hover);
+	box-shadow: var(--shadow-hover);
 	scale: 1.02;
 }
 :global(.links_grid a :is(svg, img)){
@@ -111,7 +49,7 @@
 }
 :global(.links_grid h3){
 	font-size: 1.5rem;
-	color: var(--card-text);
+	color: var(--color-text-primary);
 }
 :global(.links_grid a .lock-icon){
 	position: absolute;
@@ -119,7 +57,7 @@
 	right: 0.5rem;
 	width: 1.5rem;
 	height: 1.5rem;
-	fill: var(--card-lock);
+	fill: var(--color-text-secondary);
 	opacity: 0.5;
 }
 
@@ -164,6 +102,7 @@
 		right: 0.3rem;
 	}
 }
+
 </style>
 
 <div class=links_grid>
