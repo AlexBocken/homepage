@@ -299,7 +299,7 @@
 	.profile-save-btn {
 		padding: 0.4rem 0.75rem;
 		background: var(--color-primary);
-		color: white;
+		color: var(--color-text-on-primary);
 		border: none;
 		border-radius: 6px;
 		font-weight: 600;
