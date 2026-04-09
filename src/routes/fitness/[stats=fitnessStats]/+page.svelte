@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
-	import { Dumbbell, Route, Flame, Weight } from '@lucide/svelte';
+	import { Dumbbell, Route, Flame, Weight, Beef, Scale, Target } from '@lucide/svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
@@ -78,6 +78,47 @@
 			backgroundColor: primary
 		}]
 	});
+
+	const ns = $derived(data.nutritionStats);
+
+	// Macro ring SVG parameters — 300° arc with 60° gap at bottom
+	const RADIUS = 28;
+	const ARC_DEGREES = 300;
+	const ARC_LENGTH = (ARC_DEGREES / 360) * 2 * Math.PI * RADIUS;
+	const ARC_ROTATE = 120; // gap centered at bottom
+
+	/** @param {number} percent */
+	function strokeOffset(percent) {
+		return ARC_LENGTH - (percent / 100) * ARC_LENGTH;
+	}
+
+	/**
+	 * Get SVG coordinates for a triangle marker at a given percentage on the arc.
+	 * @param {number} percent
+	 */
+	function targetMarkerPos(percent) {
+		// Arc starts at ARC_ROTATE degrees (120° = 7 o'clock in SVG coords) and sweeps 300° clockwise
+		const startAngle = ARC_ROTATE;
+		const angleDeg = startAngle + (percent / 100) * ARC_DEGREES;
+		const angleRad = (angleDeg * Math.PI) / 180;
+		const outerR = RADIUS + 7;
+		const cx = 35 + outerR * Math.cos(angleRad);
+		const cy = 35 + outerR * Math.sin(angleRad);
+		// Label: primarily radial (along center→marker line), with tangential
+		// nudge only near 50% where the label would sit right at the top
+		const closeness = 1 - Math.abs(percent - 50) / 50; // 0 at edges, 1 at 50%
+		// Base radial distance: extra +4 for >50% values outside the close-to-50 zone
+		const highBonus = percent > 50 && closeness < 0.4 ? 4 : 0;
+		// Bump for the 30-70% zone (peaks at 40% and 60%)
+		const midBump = Math.max(0, 1 - Math.abs(closeness - 0.2) / 0.3) * 4;
+		const labelR = outerR + 17 + highBonus + midBump - closeness * closeness * 14;
+		const tOff = closeness * closeness * 14; // quadratic: stronger nudge near 50%
+		const dir = percent < 50 ? -1 : 1;
+		const tangentRad = angleRad + dir * Math.PI / 2;
+		const lx = 35 + labelR * Math.cos(angleRad) + tOff * Math.cos(tangentRad);
+		const ly = 35 + labelR * Math.sin(angleRad) + tOff * Math.sin(tangentRad);
+		return { cx, cy, lx, ly, angleDeg };
+	}
 
 	const hasSma = $derived(stats.weightChart?.sma?.some((/** @type {any} */ v) => v !== null));
 
@@ -221,6 +262,118 @@
 			yUnit=" kg"
 			height="220px"
 		/>
+	{/if}
+
+	{#if ns}
+		<div class="nutrition-grid">
+			<div class="lifetime-card protein-card">
+				<div class="card-icon"><Beef size={24} /></div>
+				{#if ns.avgProteinPerKg != null}
+					<div class="card-value">{ns.avgProteinPerKg.toFixed(1)}<span class="card-unit">{t('protein_per_kg_unit', lang)}</span></div>
+				{:else}
+					<div class="card-value card-value-na">—</div>
+				{/if}
+				<div class="card-label">{t('protein_per_kg', lang)}</div>
+				<div class="card-hint">
+					{#if ns.avgProteinPerKg != null}
+						{t('seven_day_avg', lang)}
+					{:else if !ns.trendWeight}
+						{t('no_weight_data', lang)}
+					{:else}
+						{t('no_nutrition_data', lang)}
+					{/if}
+				</div>
+			</div>
+
+			<div class="lifetime-card balance-card" class:surplus={ns.avgCalorieBalance > 0} class:deficit={ns.avgCalorieBalance < 0}>
+				<div class="card-icon"><Scale size={24} /></div>
+				{#if ns.avgCalorieBalance != null}
+					<div class="card-value" class:positive={ns.avgCalorieBalance > 0} class:negative={ns.avgCalorieBalance < 0}>
+						{ns.avgCalorieBalance > 0 ? '+' : ''}{ns.avgCalorieBalance}<span class="card-unit">{t('calorie_balance_unit', lang)}</span>
+					</div>
+				{:else}
+					<div class="card-value card-value-na">—</div>
+				{/if}
+				<div class="card-label">{t('calorie_balance', lang)}</div>
+				<div class="card-hint">
+					{#if ns.avgCalorieBalance != null}
+						{t('seven_day_avg', lang)}
+					{:else}
+						{t('no_calorie_goal', lang)}
+					{/if}
+				</div>
+			</div>
+
+			<div class="lifetime-card adherence-card">
+				<div class="card-icon"><Target size={24} /></div>
+				{#if ns.adherencePercent != null}
+					<div class="card-value">{ns.adherencePercent}<span class="card-unit">%</span></div>
+				{:else}
+					<div class="card-value card-value-na">—</div>
+				{/if}
+				<div class="card-label">{t('diet_adherence', lang)}</div>
+				<div class="card-hint">
+					{#if ns.adherencePercent != null}
+						{t('since_start', lang)} ({ns.adherenceDays} {t('days', lang)})
+					{:else}
+						{t('no_calorie_goal', lang)}
+					{/if}
+				</div>
+			</div>
+
+			{#if ns.macroSplit}
+				<div class="lifetime-card macro-card">
+					<div class="macro-header">{t('macro_split', lang)} <span class="macro-subtitle">({t('seven_day_avg', lang)})</span></div>
+					<div class="macro-rings">
+						{#each [
+							{ pct: ns.macroSplit.protein, target: ns.macroTargets?.protein, label: t('protein', lang), cls: 'ring-protein', fill: '#a3be8c' },
+							{ pct: ns.macroSplit.fat, target: ns.macroTargets?.fat, label: t('fat', lang), cls: 'ring-fat', fill: '#d08770' },
+							{ pct: ns.macroSplit.carbs, target: ns.macroTargets?.carbs, label: t('carbs', lang), cls: 'ring-carbs', fill: '#81a1c1' },
+						] as macro (macro.cls)}
+							<div class="macro-ring">
+								<svg class="macro-ring-svg" viewBox="0 0 70 70">
+									<circle
+										class="ring-bg"
+										cx="35" cy="35" r={RADIUS}
+										stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
+										transform="rotate({ARC_ROTATE} 35 35)"
+									/>
+									<circle
+										class="ring-fill {macro.cls}"
+										cx="35" cy="35" r={RADIUS}
+										stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
+										stroke-dashoffset={strokeOffset(macro.pct)}
+										transform="rotate({ARC_ROTATE} 35 35)"
+									/>
+									{#if macro.target != null}
+										{@const pos = targetMarkerPos(macro.target)}
+										<path
+											fill={macro.fill}
+											opacity="0.85"
+											stroke={macro.fill}
+											stroke-width="0.8"
+											stroke-linejoin="round"
+											d="M{pos.cx},{pos.cy - 3.5}L{pos.cx - 3},{pos.cy + 2.5}L{pos.cx + 3},{pos.cy + 2.5}Z"
+											transform="rotate({pos.angleDeg - 90} {pos.cx} {pos.cy})"
+										/>
+										<text
+											class="target-label"
+											fill={macro.fill}
+											x={pos.lx}
+											y={pos.ly}
+											text-anchor="middle"
+											dominant-baseline="central"
+										>{macro.target}%</text>
+									{/if}
+									<text class="ring-text" x="35" y="35">{macro.pct}%</text>
+								</svg>
+								<span class="macro-label">{macro.label}</span>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
 	{/if}
 
 	<div class="section-block">
@@ -518,6 +671,158 @@
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 		font-family: inherit;
+	}
+
+	/* Nutrition masonry grid */
+	.nutrition-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.6rem;
+	}
+	.protein-card::before { background: var(--nord14); }
+	.balance-card::before { background: var(--color-text-secondary); }
+	.balance-card.surplus::before { background: var(--nord14); }
+	.balance-card.deficit::before { background: var(--nord11); }
+	.adherence-card::before { background: var(--nord13); }
+	.macro-card::before { background: var(--color-primary); }
+	.protein-card .card-icon {
+		color: var(--nord14);
+		background: color-mix(in srgb, var(--nord14) 15%, transparent);
+	}
+	.balance-card .card-icon {
+		color: var(--color-text-secondary);
+		background: color-mix(in srgb, var(--color-text-secondary) 15%, transparent);
+	}
+	.balance-card.surplus .card-icon {
+		color: var(--nord14);
+		background: color-mix(in srgb, var(--nord14) 15%, transparent);
+	}
+	.balance-card.deficit .card-icon {
+		color: var(--nord11);
+		background: color-mix(in srgb, var(--nord11) 15%, transparent);
+	}
+	.adherence-card .card-icon {
+		color: var(--nord13);
+		background: color-mix(in srgb, var(--nord13) 15%, transparent);
+	}
+	.nutrition-grid .card-icon {
+		flex-shrink: 0;
+	}
+	.nutrition-grid .card-hint {
+		display: block;
+		width: 100%;
+		text-align: center;
+		font-size: 0.7rem;
+	}
+	.card-value.positive { color: var(--nord14); }
+	.card-value.negative { color: var(--nord11); }
+	.card-value-na {
+		color: var(--color-text-secondary);
+		opacity: 0.5;
+	}
+
+	/* Macro split card — spans full row, horizontal layout */
+	.macro-card {
+		grid-column: 1 / -1;
+		padding: 1rem 1.25rem;
+		flex-direction: row !important;
+		align-items: center !important;
+		gap: 1.25rem !important;
+	}
+	.macro-header {
+		font-size: 1.15rem;
+		font-weight: 700;
+		white-space: nowrap;
+		text-align: left;
+		line-height: 1.3;
+	}
+	.macro-subtitle {
+		display: block;
+		font-weight: 400;
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+	.macro-rings {
+		display: flex;
+		justify-content: space-evenly;
+		flex: 1;
+		width: 100%;
+	}
+	.macro-ring {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		flex: 1;
+		max-width: 130px;
+	}
+	.macro-ring-svg {
+		width: 100%;
+		height: auto;
+		max-width: 110px;
+		overflow: visible;
+	}
+	.ring-bg {
+		fill: none;
+		stroke: var(--color-border);
+		stroke-width: 5;
+		stroke-linecap: round;
+	}
+	.ring-fill {
+		fill: none;
+		stroke-width: 5;
+		stroke-linecap: round;
+		transition: stroke-dashoffset 0.4s ease;
+	}
+	.ring-text {
+		font-size: 14px;
+		font-weight: 700;
+		fill: currentColor;
+		text-anchor: middle;
+		dominant-baseline: central;
+	}
+	.ring-protein { stroke: var(--nord14, #a3be8c); }
+	.ring-fat { stroke: var(--nord12, #d08770); }
+	.ring-carbs { stroke: var(--nord9, #81a1c1); }
+	.macro-label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		text-align: center;
+	}
+	.target-label {
+		font-size: 7px;
+		font-weight: 700;
+	}
+
+	@media (max-width: 600px) {
+		.nutrition-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+		.macro-card {
+			flex-direction: column !important;
+		}
+		.macro-header {
+			text-align: center;
+		}
+	}
+	@media (max-width: 400px) {
+		.nutrition-grid {
+			grid-template-columns: 1fr;
+		}
+		.macro-card {
+			grid-column: 1;
+			flex-direction: column !important;
+		}
+		.macro-header {
+			text-align: center;
+		}
+	}
+	@media (max-width: 357px) {
+		.macro-rings {
+			flex-direction: column;
+			align-items: center;
+			gap: 0.5rem;
+		}
 	}
 
 	.empty-chart {
