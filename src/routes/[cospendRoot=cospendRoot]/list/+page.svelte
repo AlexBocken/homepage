@@ -811,6 +811,7 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    filter: var(--shopping-icon-filter, none);
   }
   .item-card.checked .card-icon {
     filter: grayscale(0.6);
@@ -1016,6 +1017,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+    filter: var(--shopping-icon-filter, none);
   }
 
   .edit-actions {
