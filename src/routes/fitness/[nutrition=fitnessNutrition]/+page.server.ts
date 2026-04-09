@@ -102,15 +102,31 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 		})
 		.slice(0, 10);
 
+	const goal = goalRes.ok ? await goalRes.json() : {};
+	const roundedExerciseKcal = Math.round(exerciseKcal);
+
+	// Compute initial showRoundOff server-side to avoid flicker
+	const today = new Date().toISOString().slice(0, 10);
+	const isToday = dateParam === today;
+	let initialShowRoundOff = false;
+	if (isToday && goal.dailyCalories) {
+		const totalCal = (foodLog.entries ?? []).reduce(
+			(sum: number, e: any) => sum + ((e.per100g?.calories ?? 0) * e.amountGrams / 100), 0
+		);
+		const balance = goal.dailyCalories + (roundedExerciseKcal || 0) - totalCal;
+		initialShowRoundOff = balance > 50 && balance <= goal.dailyCalories * 0.5;
+	}
+
 	return {
 		date: dateParam,
 		foodLog,
-		goal: goalRes.ok ? await goalRes.json() : {},
+		goal,
 		latestWeight: weightRes.ok ? await weightRes.json() : {},
-		exerciseKcal: Math.round(exerciseKcal),
+		exerciseKcal: roundedExerciseKcal,
 		recipeImages,
 		favorites: favData.favorites ?? [],
 		recentFoods,
 		roundOffSuggestions,
+		initialShowRoundOff,
 	};
 };
