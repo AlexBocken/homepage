@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
-	import { Dumbbell, Route, Flame, Weight, Beef, Scale, Target, Info } from '@lucide/svelte';
+	import { Dumbbell, Route, Flame, Weight, Beef, Droplet, Wheat, Scale, Target, Info } from '@lucide/svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
@@ -311,24 +311,9 @@
 
 			{#if ns.macroSplit}
 				<div class="lifetime-card macro-card">
-					<div class="macro-header">{t('macro_split', lang)} <span class="macro-subtitle">({t('seven_day_avg', lang)})</span></div>
-					<div class="macro-rings">
-						{#each [
-							{ pct: ns.macroSplit.protein, target: ns.macroTargets?.protein, label: t('protein', lang), color: 'var(--nord14)', fill: '#a3be8c' },
-							{ pct: ns.macroSplit.fat, target: ns.macroTargets?.fat, label: t('fat', lang), color: 'var(--nord12)', fill: '#d08770' },
-							{ pct: ns.macroSplit.carbs, target: ns.macroTargets?.carbs, label: t('carbs', lang), color: 'var(--nord9)', fill: '#81a1c1' },
-						] as macro (macro.color)}
-							<div class="macro-ring">
-								<StatsRingGraph
-									percent={macro.pct}
-									color={macro.color}
-									label={macro.label}
-									target={macro.target}
-									markerColor={macro.fill}
-								/>
-							</div>
-						{/each}
-					<div class="macro-legend">
+					<div class="macro-left">
+						<div class="macro-header">{t('macro_split', lang)} <span class="macro-subtitle">({t('seven_day_avg', lang)})</span></div>
+						<div class="macro-legend">
 							<span class="macro-legend-item">
 								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3,9.5 A4,4 0 1,1 9,9.5" fill="none" stroke="var(--color-text-secondary)" stroke-width="2" stroke-linecap="round"/></svg>
 								{lang === 'en' ? 'Actual' : 'Ist'}
@@ -338,6 +323,26 @@
 								{lang === 'en' ? 'Target' : 'Ziel'}
 							</span>
 						</div>
+					</div>
+					<div class="macro-rings">
+						{#each [
+							{ pct: ns.macroSplit.protein, target: ns.macroTargets?.protein, label: t('protein', lang), color: 'var(--nord14)', fill: '#a3be8c', icon: Beef },
+							{ pct: ns.macroSplit.fat, target: ns.macroTargets?.fat, label: t('fat', lang), color: 'var(--nord12)', fill: '#d08770', icon: Droplet },
+							{ pct: ns.macroSplit.carbs, target: ns.macroTargets?.carbs, label: t('carbs', lang), color: 'var(--nord9)', fill: '#81a1c1', icon: Wheat },
+						] as macro (macro.color)}
+							{@const MacroIcon = macro.icon}
+							<div class="macro-ring">
+								<StatsRingGraph
+									percent={macro.pct}
+									color={macro.color}
+									label={macro.label}
+									target={macro.target}
+									markerColor={macro.fill}
+								>
+									{#snippet labelIcon()}<MacroIcon size={12} />{/snippet}
+								</StatsRingGraph>
+							</div>
+						{/each}
 					</div>
 				</div>
 			{/if}
@@ -803,23 +808,20 @@
 	.macro-ring :global(.ring-label) {
 		font-size: 0.85rem;
 	}
-	.macro-legend {
-		display: none;
+	.macro-left {
+		flex-shrink: 0;
 	}
-	@media (min-width: 750px) {
-		.macro-legend {
-			display: flex;
-			gap: 1rem;
-			justify-content: center;
-			margin-top: 0.75rem;
-			font-size: 0.7rem;
-			color: var(--color-text-secondary);
-		}
-		.macro-legend-item {
-			display: flex;
-			align-items: center;
-			gap: 0.3rem;
-		}
+	.macro-legend {
+		display: flex;
+		gap: 1rem;
+		margin-top: 0.25rem;
+		font-size: 0.7rem;
+		color: var(--color-text-secondary);
+	}
+	.macro-legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 
 	@media (max-width: 600px) {
@@ -831,6 +833,9 @@
 		}
 		.macro-header {
 			text-align: center;
+		}
+		.macro-legend {
+			justify-content: center;
 		}
 	}
 	@media (max-width: 400px) {
