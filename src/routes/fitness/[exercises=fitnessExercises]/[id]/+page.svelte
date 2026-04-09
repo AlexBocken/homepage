@@ -8,6 +8,7 @@
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import MuscleMap from '$lib/components/fitness/MuscleMap.svelte';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
@@ -128,18 +129,76 @@
 	</div>
 
 	{#if activeTab === 'about'}
-		<div class="tab-content">
-			<!-- Tags -->
-			<div class="tags">
-				<span class="tag body-part">{exercise?.localBodyPart}</span>
-				<span class="tag equipment">{exercise?.localEquipment}</span>
-				<span class="tag target">{exercise?.localTarget}</span>
+		<div class="tab-content about-layout">
+			<div class="about-main">
+				<!-- Tags -->
+				<div class="tags">
+					<span class="tag body-part">{exercise?.localBodyPart}</span>
+					<span class="tag equipment">{exercise?.localEquipment}</span>
+					<span class="tag target">{exercise?.localTarget}</span>
+				</div>
+
+				<!-- Muscle map (mobile only — shown inline) -->
+				{#if exercise?.localSecondaryMuscles?.length || exercise?.localTarget}
+					<div class="muscle-section-mobile">
+						<MuscleMap
+							primaryGroups={[exercise?.target].filter(Boolean)}
+							secondaryGroups={exercise?.secondaryMuscles ?? []}
+							{lang}
+						/>
+						<div class="muscle-pills">
+							{#if exercise?.localTarget}
+								<span class="muscle-pill primary">{exercise.localTarget}</span>
+							{/if}
+							{#each exercise?.localSecondaryMuscles ?? [] as muscle}
+								<span class="muscle-pill secondary">{muscle}</span>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				<!-- Overview -->
+				{#if exercise?.overview}
+					<p class="overview">{exercise.overview}</p>
+				{/if}
+
+				<!-- Instructions -->
+				{#if exercise?.localInstructions?.length}
+					<h3>{t('instructions', lang)}</h3>
+					<ol class="instructions">
+						{#each exercise.localInstructions as step}
+							<li>{step}</li>
+						{/each}
+					</ol>
+				{/if}
+
+				<!-- Similar exercises -->
+				{#if similar.length > 0}
+					<div class="similar-section">
+						<h3>{lang === 'en' ? 'Similar Exercises' : 'Ähnliche Übungen'}</h3>
+						<div class="similar-scroll">
+							{#each similar as sim}
+								<a class="similar-card" href="/fitness/{s.exercises}/{sim.id}">
+									<div class="similar-info">
+										<span class="similar-name">{sim.localName}</span>
+										<span class="similar-meta">{sim.localBodyPart} · {sim.localEquipment}</span>
+									</div>
+									<ChevronRight size={14} />
+								</a>
+							{/each}
+						</div>
+					</div>
+				{/if}
 			</div>
 
-			<!-- Muscle pills -->
+			<!-- Muscle map sidebar (desktop only) -->
 			{#if exercise?.localSecondaryMuscles?.length || exercise?.localTarget}
-				<div class="muscle-section">
-					<h3>{lang === 'en' ? 'Muscles' : 'Muskeln'}</h3>
+				<aside class="muscle-sidebar">
+					<MuscleMap
+						primaryGroups={[exercise?.target].filter(Boolean)}
+						secondaryGroups={exercise?.secondaryMuscles ?? []}
+						{lang}
+					/>
 					<div class="muscle-pills">
 						{#if exercise?.localTarget}
 							<span class="muscle-pill primary">{exercise.localTarget}</span>
@@ -148,40 +207,7 @@
 							<span class="muscle-pill secondary">{muscle}</span>
 						{/each}
 					</div>
-				</div>
-			{/if}
-
-			<!-- Overview -->
-			{#if exercise?.overview}
-				<p class="overview">{exercise.overview}</p>
-			{/if}
-
-			<!-- Instructions -->
-			{#if exercise?.localInstructions?.length}
-				<h3>{t('instructions', lang)}</h3>
-				<ol class="instructions">
-					{#each exercise.localInstructions as step}
-						<li>{step}</li>
-					{/each}
-				</ol>
-			{/if}
-
-			<!-- Similar exercises -->
-			{#if similar.length > 0}
-				<div class="similar-section">
-					<h3>{lang === 'en' ? 'Similar Exercises' : 'Ähnliche Übungen'}</h3>
-					<div class="similar-scroll">
-						{#each similar as sim}
-							<a class="similar-card" href="/fitness/{s.exercises}/{sim.id}">
-								<div class="similar-info">
-									<span class="similar-name">{sim.localName}</span>
-									<span class="similar-meta">{sim.localBodyPart} · {sim.localEquipment}</span>
-								</div>
-								<ChevronRight size={14} />
-							</a>
-						{/each}
-					</div>
-				</div>
+				</aside>
 			{/if}
 		</div>
 	{:else if activeTab === 'history'}
@@ -325,14 +351,53 @@
 	.equipment { background: rgba(163, 190, 140, 0.2); color: var(--nord14); }
 	.target { background: rgba(208, 135, 112, 0.2); color: var(--nord12); }
 
-	/* Muscle pills */
-	.muscle-section {
-		margin-bottom: 0.25rem;
+	/* About layout — two-column on wide screens */
+	.about-layout {
+		display: flex;
+		flex-direction: column;
 	}
+	.about-main {
+		flex: 1;
+		min-width: 0;
+	}
+	.muscle-sidebar {
+		display: none;
+	}
+	.muscle-section-mobile {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	@media (min-width: 600px) {
+		.about-layout {
+			flex-direction: row-reverse;
+			gap: 1.5rem;
+			align-items: flex-start;
+		}
+		.muscle-sidebar {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 0.5rem;
+			position: sticky;
+			top: 1rem;
+			flex-shrink: 0;
+			width: 180px;
+		}
+		.muscle-section-mobile {
+			display: none;
+		}
+	}
+
+	/* Muscle pills */
 	.muscle-pills {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.3rem;
+		justify-content: center;
 	}
 	.muscle-pill {
 		padding: 0.2rem 0.55rem;
