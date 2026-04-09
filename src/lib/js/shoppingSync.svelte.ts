@@ -166,6 +166,20 @@ export function createShoppingSync() {
     }
   }
 
+  /** Seed state from server-loaded data (safe to call during SSR). */
+  function seed(initialList: { version: number; items: ShoppingItem[] }, token?: string | null) {
+    if (token) shareToken = token;
+    version = initialList.version;
+    items = initialList.items || [];
+    status = 'synced';
+  }
+
+  /** Connect SSE for real-time updates (client-only, call in onMount). */
+  function connect(token?: string | null) {
+    if (token) shareToken = token;
+    connectSSE();
+  }
+
   function addItem(name: string, user: string, category = 'Sonstiges') {
     items = [...items, {
       id: generateId(),
@@ -211,6 +225,8 @@ export function createShoppingSync() {
     get version() { return version; },
     apiUrl,
     init,
+    seed,
+    connect,
     addItem,
     toggleItem,
     removeItem,

@@ -20,6 +20,11 @@
   let isGuest = $derived(!data.session);
   const sync = getShoppingSync();
 
+  // Seed sync state immediately so SSR can render the list
+  if (data.initialList) {
+    sync.seed(data.initialList, data.shareToken);
+  }
+
   const lang = $derived(detectCospendLang($page.url.pathname));
   const loc = $derived(locale(lang));
 
@@ -141,7 +146,13 @@
   let checkedCount = $derived(sync.items.filter(i => i.checked).length);
   let totalCount = $derived(sync.items.length);
 
-  onMount(() => { sync.init(shareToken); });
+  onMount(() => {
+    if (data.initialList) {
+      sync.connect(shareToken);
+    } else {
+      sync.init(shareToken);
+    }
+  });
   onDestroy(() => { sync.disconnect(); });
 
   async function addItem() {
