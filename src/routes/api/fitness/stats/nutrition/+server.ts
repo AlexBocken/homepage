@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
+import { WorkoutSession } from '$models/WorkoutSession';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
@@ -21,7 +22,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const thirtyDaysAgo = new Date(todayStart);
 	thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
 
-	const [entries30d, goal, weightMeasurements] = await Promise.all([
+	const [entries30d, goal, weightMeasurements, workoutSessions7d] = await Promise.all([
 		FoodLogEntry.find({
 			createdBy: user.nickname,
 			date: { $gte: thirtyDaysAgo, $lt: todayStart },
@@ -31,19 +32,51 @@ export const GET: RequestHandler = async ({ locals }) => {
 		BodyMeasurement.find(
 			{ createdBy: user.nickname, weight: { $ne: null } },
 			{ date: 1, weight: 1, _id: 0 }
-		).sort({ date: -1 }).limit(14).lean() as any[],
+		).sort({ date: 1 }).lean() as any[],
+		WorkoutSession.find(
+			{ createdBy: user.nickname, startTime: { $gte: sevenDaysAgo, $lt: todayStart }, 'kcalEstimate.kcal': { $gt: 0 } },
+			{ startTime: 1, 'kcalEstimate.kcal': 1, _id: 0 }
+		).lean() as any[],
 	]);
 
 	// Compute trend weight (SMA of last measurements, same algo as overview)
+	// Also build per-date SMA lookup for daily TDEE calculation
 	let trendWeight: number | null = null;
+	const trendWeightByDate = new Map<string, number>();
 	if (weightMeasurements.length > 0) {
-		const weights = weightMeasurements.slice().reverse().map((m: any) => m.weight as number);
-		const w = Math.min(7, Math.max(2, Math.floor(weights.length / 2)));
-		const lastIdx = weights.length - 1;
+		// weightMeasurements sorted chronologically (ascending)
+		const allWeights = weightMeasurements.map((m: any) => ({
+			date: new Date(m.date).toISOString().slice(0, 10),
+			weight: m.weight as number
+		}));
+		const w = Math.min(7, Math.max(2, Math.floor(allWeights.length / 2)));
+
+		// Compute SMA at each measurement point
+		for (let idx = 0; idx < allWeights.length; idx++) {
+			const k = Math.min(w, idx + 1);
+			let sum = 0;
+			for (let j = idx - k + 1; j <= idx; j++) sum += allWeights[j].weight;
+			const sma = Math.round((sum / k) * 100) / 100;
+			trendWeightByDate.set(allWeights[idx].date, sma);
+		}
+
+		// Latest trend weight (for protein/kg and fallback)
+		const lastIdx = allWeights.length - 1;
 		const k = Math.min(w, lastIdx + 1);
 		let sum = 0;
-		for (let j = lastIdx - k + 1; j <= lastIdx; j++) sum += weights[j];
+		for (let j = lastIdx - k + 1; j <= lastIdx; j++) sum += allWeights[j].weight;
 		trendWeight = Math.round((sum / k) * 100) / 100;
+	}
+
+	/** Get trend weight for a date: exact match or most recent prior measurement's SMA */
+	function getTrendWeightForDate(dateStr: string): number | null {
+		if (trendWeightByDate.has(dateStr)) return trendWeightByDate.get(dateStr)!;
+		// Find the latest measurement on or before this date
+		let latest: number | null = null;
+		for (const [d, tw] of trendWeightByDate) {
+			if (d <= dateStr) latest = tw;
+		}
+		return latest;
 	}
 
 	// Group entries by date string
@@ -70,12 +103,38 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	const dailyCalorieGoal = goal?.dailyCalories ?? null;
 
+	// NEAT-only multipliers (lower than standard TDEE multipliers because
+	// we add tracked workout kcal separately to avoid double-counting)
+	const neatMultipliers: Record<string, number> = {
+		sedentary: 1.2, light: 1.3, moderate: 1.4, very_active: 1.5
+	};
+	const neatMult = neatMultipliers[goal?.activityLevel ?? 'light'] ?? 1.3;
+	const canComputeTdee = !!(goal?.heightCm && goal?.birthYear && trendWeight);
+
+	/** Compute daily TDEE using per-day trend weight */
+	function getDailyTdee(dateStr: string): number | null {
+		if (!canComputeTdee) return null;
+		const dayWeight = getTrendWeightForDate(dateStr);
+		if (!dayWeight) return null;
+		const age = now.getFullYear() - goal.birthYear;
+		const bmr = 10 * dayWeight + 6.25 * goal.heightCm - 5 * age + (goal.sex === 'female' ? -161 : 5);
+		return bmr * neatMult;
+	}
+
+	// Group workout kcal by date for the 7-day window
+	const workoutKcalByDate = new Map<string, number>();
+	for (const s of workoutSessions7d) {
+		const key = new Date(s.startTime).toISOString().slice(0, 10);
+		workoutKcalByDate.set(key, (workoutKcalByDate.get(key) ?? 0) + (s.kcalEstimate?.kcal ?? 0));
+	}
+
 	// 7-day averages (only days with logged entries)
 	const sevenDayStr = sevenDaysAgo.toISOString().slice(0, 10);
 	const recent7 = dailyTotals.filter(d => d.date >= sevenDayStr);
 
 	let avgProteinPerKg: number | null = null;
 	let avgCalorieBalance: number | null = null;
+	let avgDailyExpenditure: number | null = null;
 	let macroSplit: { protein: number; fat: number; carbs: number } | null = null;
 
 	if (recent7.length > 0) {
@@ -88,8 +147,25 @@ export const GET: RequestHandler = async ({ locals }) => {
 			avgProteinPerKg = Math.round((avgProtein / trendWeight) * 100) / 100;
 		}
 
-		if (dailyCalorieGoal) {
-			avgCalorieBalance = Math.round(avgCalories - dailyCalorieGoal);
+		// Calorie balance: intake minus estimated expenditure (per-day TDEE + workout kcal)
+		if (canComputeTdee) {
+			// Build all 7 calendar days and compute expenditure for each
+			let totalExpenditure = 0;
+			let expenditureDays = 0;
+			for (let i = 1; i <= 7; i++) {
+				const d = new Date(todayStart);
+				d.setUTCDate(d.getUTCDate() - i);
+				const dateStr = d.toISOString().slice(0, 10);
+				const dayTdee = getDailyTdee(dateStr);
+				if (dayTdee != null) {
+					totalExpenditure += dayTdee + (workoutKcalByDate.get(dateStr) ?? 0);
+					expenditureDays++;
+				}
+			}
+			if (expenditureDays > 0) {
+				avgDailyExpenditure = Math.round(totalExpenditure / expenditureDays);
+				avgCalorieBalance = Math.round(avgCalories - avgDailyExpenditure);
+			}
 		}
 
 		// Macro split by calorie contribution
@@ -147,6 +223,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 	return json({
 		avgProteinPerKg,
 		avgCalorieBalance,
+		avgDailyExpenditure,
 		adherencePercent,
 		adherenceDays,
 		macroSplit,

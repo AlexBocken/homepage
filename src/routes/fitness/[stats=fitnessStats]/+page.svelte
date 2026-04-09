@@ -301,8 +301,13 @@
 					{#if showBalanceInfo}
 						<div class="card-info-tooltip">
 							{lang === 'en'
-								? 'Average daily calories eaten minus your calorie goal over the last 7 days. Negative = deficit, positive = surplus.'
-								: 'Durchschnittlich gegessene Kalorien minus dein Kalorienziel der letzten 7 Tage. Negativ = Defizit, positiv = Überschuss.'}
+								? 'Average daily calories eaten minus estimated expenditure (TDEE + tracked workout calories) over the last 7 days. Negative = deficit, positive = surplus.'
+								: 'Durchschnittlich gegessene Kalorien minus geschätzter Verbrauch (TDEE + erfasste Trainingskilokalorien) der letzten 7 Tage. Negativ = Defizit, positiv = Überschuss.'}
+							{#if ns.avgDailyExpenditure}
+								{lang === 'en'
+									? `Est. daily expenditure: ~${ns.avgDailyExpenditure} kcal`
+									: `Geschätzter Tagesverbrauch: ~${ns.avgDailyExpenditure} kcal`}
+							{/if}
 						</div>
 					{/if}
 				</div>
@@ -310,7 +315,7 @@
 					{#if ns.avgCalorieBalance != null}
 						{t('seven_day_avg', lang)}
 					{:else}
-						{t('no_calorie_goal', lang)}
+						{lang === 'en' ? 'Set height, birth year & weight' : 'Größe, Geburtsjahr & Gewicht eintragen'}
 					{/if}
 				</div>
 			</div>
