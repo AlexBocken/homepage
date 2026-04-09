@@ -51,6 +51,12 @@ After completing the code, ask the user if they want a playground link. Only cal
 - **NEVER** write `@media (prefers-color-scheme: dark)` or `:global(:root[data-theme="dark"])` override blocks — semantic variables handle both themes automatically
 - **NEVER** use `var(--font-default-dark)` or `var(--accent-dark)` — these are legacy
 
+### Primary interactive elements
+- Background: `var(--color-primary)` (nord10 light / nord8 dark)
+- Hover: `var(--color-primary-hover)`
+- Active: `var(--color-primary-active)`
+- Text on primary bg: `var(--color-text-on-primary)`
+
 ### Accent colors (OK to use directly, they work in both themes)
 - `var(--blue)`, `var(--red)`, `var(--green)`, `var(--orange)` — named accent colors
 - `var(--nord10)`, `var(--nord11)`, `var(--nord12)`, `var(--nord14)` — OK for hover states of accent-colored buttons only

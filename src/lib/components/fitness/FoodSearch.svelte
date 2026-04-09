@@ -12,6 +12,7 @@
 	 *   showDetailLinks?: boolean,
 	 *   autofocus?: boolean,
 	 *   confirmLabel?: string,
+	 *   initialResults?: any[],
 	 * }}
 	 */
 	let {
@@ -21,6 +22,7 @@
 		showDetailLinks = true,
 		autofocus = false,
 		confirmLabel = undefined,
+		initialResults = undefined,
 	} = $props();
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
@@ -28,11 +30,27 @@
 	const isEn = $derived(lang === 'en');
 	const btnLabel = $derived(confirmLabel ?? t('log_food', lang));
 
+	// SVG ring constants
+	const RADIUS = 28;
+	const ARC_DEGREES = 300;
+	const ARC_LENGTH = (ARC_DEGREES / 360) * 2 * Math.PI * RADIUS;
+	const ARC_ROTATE = 120;
+	function strokeOffset(percent) {
+		return ARC_LENGTH - (Math.min(percent, 100) / 100) * ARC_LENGTH;
+	}
+
 	// --- Search state ---
 	let query = $state('');
-	let results = $state([]);
+	let results = $state(initialResults ?? []);
 	let loading = $state(false);
 	let timeout = $state(null);
+	const isPrefilledMode = $derived(initialResults != null);
+	let filterQuery = $state('');
+	const displayResults = $derived(
+		isPrefilledMode && filterQuery
+			? results.filter(r => r.name.toLowerCase().includes(filterQuery.toLowerCase()))
+			: results
+	);
 
 	// --- Selection state ---
 	let selected = $state(null);
@@ -90,6 +108,37 @@
 			return Math.round(qty * selected.portions[portionIdx].grams);
 		}
 		return qty;
+	});
+
+	/** Scaled nutrient values for the preview */
+	const previewNutrients = $derived.by(() => {
+		if (!selected?.per100g || !previewGrams) return null;
+		const s = previewGrams / 100;
+		const n = selected.per100g;
+		return {
+			calories: Math.round((n.calories ?? 0) * s),
+			protein: (n.protein ?? 0) * s,
+			fat: (n.fat ?? 0) * s,
+			carbs: (n.carbs ?? 0) * s,
+			saturatedFat: (n.saturatedFat ?? 0) * s,
+			sugars: (n.sugars ?? 0) * s,
+			fiber: (n.fiber ?? 0) * s,
+		};
+	});
+
+	const macroPercent = $derived.by(() => {
+		if (!selected?.per100g) return { protein: 0, fat: 0, carbs: 0 };
+		const n = selected.per100g;
+		const proteinCal = (n.protein ?? 0) * 4;
+		const fatCal = (n.fat ?? 0) * 9;
+		const carbsCal = (n.carbs ?? 0) * 4;
+		const total = proteinCal + fatCal + carbsCal;
+		if (total === 0) return { protein: 0, fat: 0, carbs: 0 };
+		return {
+			protein: Math.round(proteinCal / total * 100),
+			fat: Math.round(fatCal / total * 100),
+			carbs: 100 - Math.round(proteinCal / total * 100) - Math.round(fatCal / total * 100),
+		};
 	});
 
 	function confirm() {
@@ -354,36 +403,47 @@
 		{/if}
 	</div>
 {:else if !selected}
-	<div class="fs-search-row">
-		<!-- svelte-ignore a11y_autofocus -->
-		<input
-			type="text"
-			class="fs-search-input"
-			placeholder={t('search_food', lang)}
-			bind:value={query}
-			oninput={doSearch}
-			autofocus={autofocus}
-		/>
-		{#if query}
-			<button class="fs-clear-btn" onclick={() => { query = ''; results = []; }} aria-label="Clear">
-				<X size={16} />
-			</button>
+	{#if isPrefilledMode}
+		{#if results.length > 3}
+			<input
+				type="text"
+				class="fs-filter-input"
+				placeholder={isEn ? 'Filter…' : 'Filtern…'}
+				bind:value={filterQuery}
+			/>
 		{/if}
-		{#if browser}
-			<button class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
-				<ScanBarcode size={20} />
-			</button>
-		{/if}
-	</div>
+	{:else}
+		<div class="fs-search-row">
+			<!-- svelte-ignore a11y_autofocus -->
+			<input
+				type="text"
+				class="fs-search-input"
+				placeholder={t('search_food', lang)}
+				bind:value={query}
+				oninput={doSearch}
+				autofocus={autofocus}
+			/>
+			{#if query}
+				<button class="fs-clear-btn" onclick={() => { query = ''; results = []; }} aria-label="Clear">
+					<X size={16} />
+				</button>
+			{/if}
+			{#if browser}
+				<button class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
+					<ScanBarcode size={20} />
+				</button>
+			{/if}
+		</div>
+	{/if}
 	{#if scanError}
 		<p class="fs-scan-error">{scanError}</p>
 	{/if}
 	{#if loading}
 		<p class="fs-status">{t('loading', lang)}</p>
 	{/if}
-	{#if results.length > 0}
+	{#if displayResults.length > 0}
 		<div class="fs-results">
-			{#each results as item}
+			{#each displayResults as item}
 				<div class="fs-result-row">
 					{#if showFavorites}
 						<button class="fs-fav" class:is-fav={item.favorited} onclick={() => toggleFavorite(item)} aria-label="Toggle favorite">
@@ -414,7 +474,7 @@
 		<button class="fs-btn-cancel" onclick={oncancel}>{t('cancel', lang)}</button>
 	{/if}
 {:else}
-	<!-- Selected food — amount & portion -->
+	<!-- Selected food — detail & amount -->
 	<div class="fs-selected">
 		<div class="fs-selected-header">
 			<span class="fs-selected-name">
@@ -425,6 +485,8 @@
 				<span class="fs-selected-brands">{selected.brands}</span>
 			{/if}
 		</div>
+
+		<!-- Amount selector -->
 		<div class="fs-amount-row">
 			<input
 				type="number"
@@ -451,17 +513,70 @@
 				<span class="fs-unit-label">g</span>
 			{/if}
 		</div>
-		{#if previewGrams > 0}
-			<div class="fs-preview">
-				{#if portionIdx >= 0}
-					<span class="fs-preview-grams">{previewGrams}g</span>
-				{/if}
-				<span class="fs-preview-cal">{Math.round((selected.per100g?.calories ?? 0) * previewGrams / 100)} <small>kcal</small></span>
-				<span class="fs-preview-p">{fmt((selected.per100g?.protein ?? 0) * previewGrams / 100)}g P</span>
-				<span class="fs-preview-f">{fmt((selected.per100g?.fat ?? 0) * previewGrams / 100)}g F</span>
-				<span class="fs-preview-c">{fmt((selected.per100g?.carbs ?? 0) * previewGrams / 100)}g C</span>
+		{#if portionIdx >= 0 && previewGrams > 0}
+			<span class="fs-detail-hint">= {previewGrams}g</span>
+		{/if}
+
+		{#if previewNutrients}
+			<!-- Calorie headline -->
+			<div class="fs-detail-cal">
+				<span class="fs-detail-cal-num">{previewNutrients.calories}</span>
+				<span class="fs-detail-cal-unit">kcal</span>
+			</div>
+
+			<!-- Macro rings -->
+			<div class="fs-detail-macros">
+				{#each [
+					{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', cls: 'fs-ring-protein', grams: previewNutrients.protein },
+					{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', cls: 'fs-ring-fat', grams: previewNutrients.fat },
+					{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', cls: 'fs-ring-carbs', grams: previewNutrients.carbs },
+				] as macro (macro.cls)}
+					<div class="fs-detail-macro">
+						<svg width="72" height="72" viewBox="0 0 70 70">
+							<circle class="fs-ring-bg" cx="35" cy="35" r={RADIUS}
+								stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
+								transform="rotate({ARC_ROTATE} 35 35)" />
+							<circle class="fs-ring-fill {macro.cls}" cx="35" cy="35" r={RADIUS}
+								stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
+								stroke-dashoffset={strokeOffset(macro.pct)}
+								transform="rotate({ARC_ROTATE} 35 35)" />
+							<text class="fs-ring-text" x="35" y="35">{macro.pct}%</text>
+						</svg>
+						<span class="fs-detail-macro-label">{macro.label}</span>
+						<span class="fs-detail-macro-val">{fmt(macro.grams)}g</span>
+					</div>
+				{/each}
+			</div>
+
+			<!-- Macro detail rows -->
+			<div class="fs-detail-rows">
+				<div class="fs-detail-row">
+					<span>{isEn ? 'Protein' : 'Eiweiß'}</span>
+					<span>{fmt(previewNutrients.protein)} g</span>
+				</div>
+				<div class="fs-detail-row">
+					<span>{isEn ? 'Fat' : 'Fett'}</span>
+					<span>{fmt(previewNutrients.fat)} g</span>
+				</div>
+				<div class="fs-detail-row sub">
+					<span>{isEn ? 'Saturated Fat' : 'Ges. Fettsäuren'}</span>
+					<span>{fmt(previewNutrients.saturatedFat)} g</span>
+				</div>
+				<div class="fs-detail-row">
+					<span>{isEn ? 'Carbohydrates' : 'Kohlenhydrate'}</span>
+					<span>{fmt(previewNutrients.carbs)} g</span>
+				</div>
+				<div class="fs-detail-row sub">
+					<span>{isEn ? 'Sugars' : 'Zucker'}</span>
+					<span>{fmt(previewNutrients.sugars)} g</span>
+				</div>
+				<div class="fs-detail-row">
+					<span>{isEn ? 'Fiber' : 'Ballaststoffe'}</span>
+					<span>{fmt(previewNutrients.fiber)} g</span>
+				</div>
 			</div>
 		{/if}
+
 		<div class="fs-actions">
 			<button class="fs-btn-cancel" onclick={() => { selected = null; }}>{t('cancel', lang)}</button>
 			<button class="fs-btn-confirm" onclick={confirm}>{btnLabel}</button>
@@ -487,6 +602,23 @@
 		box-sizing: border-box;
 		transition: border-color 0.15s;
 		min-width: 0;
+	}
+	.fs-filter-input {
+		display: block;
+		width: 100%;
+		padding: 0.55rem 0.65rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+		box-sizing: border-box;
+		transition: border-color 0.15s;
+		margin-bottom: 0.25rem;
+	}
+	.fs-filter-input:focus {
+		outline: none;
+		border-color: var(--color-primary);
 	}
 	.fs-search-input:focus {
 		outline: none;
@@ -786,24 +918,97 @@
 		color: var(--color-text-secondary);
 	}
 
-	/* ── Preview ── */
-	.fs-preview {
-		display: flex;
-		gap: 0.5rem;
-		font-size: 0.78rem;
-		padding: 0.5rem 0.6rem;
-		background: var(--color-bg-tertiary);
-		border-radius: 8px;
-		font-variant-numeric: tabular-nums;
-	}
-	.fs-preview-grams {
+	/* ── Detail view ── */
+	.fs-detail-hint {
+		font-size: 0.75rem;
 		color: var(--color-text-tertiary);
 	}
-	.fs-preview-cal { font-weight: 700; color: var(--color-text-primary); }
-	.fs-preview-cal small { font-weight: 500; color: var(--color-text-secondary); }
-	.fs-preview-p { color: var(--nord14); font-weight: 600; }
-	.fs-preview-f { color: var(--nord12); font-weight: 600; }
-	.fs-preview-c { color: var(--nord9); font-weight: 600; }
+	.fs-detail-cal {
+		text-align: center;
+		margin: 0.25rem 0 0.25rem;
+	}
+	.fs-detail-cal-num {
+		font-size: 2.2rem;
+		font-weight: 800;
+		color: var(--color-text-primary);
+		line-height: 1;
+	}
+	.fs-detail-cal-unit {
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		margin-left: 0.2rem;
+	}
+	.fs-detail-macros {
+		display: flex;
+		justify-content: space-around;
+		margin: 0.25rem 0 0.5rem;
+	}
+	.fs-detail-macro {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+		flex: 1;
+	}
+	.fs-detail-macro-label {
+		font-size: 0.78rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+		text-align: center;
+	}
+	.fs-detail-macro-val {
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+	}
+	.fs-ring-bg {
+		fill: none;
+		stroke: var(--color-border);
+		stroke-width: 5;
+		stroke-linecap: round;
+	}
+	.fs-ring-fill {
+		fill: none;
+		stroke-width: 5;
+		stroke-linecap: round;
+		transition: stroke-dashoffset 0.4s ease;
+	}
+	.fs-ring-text {
+		font-size: 14px;
+		font-weight: 700;
+		fill: currentColor;
+		text-anchor: middle;
+		dominant-baseline: central;
+	}
+	.fs-ring-protein { stroke: var(--nord14); }
+	.fs-ring-fat { stroke: var(--nord12); }
+	.fs-ring-carbs { stroke: var(--nord9); }
+	.fs-detail-rows {
+		background: var(--color-surface);
+		border-radius: 10px;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--color-border);
+	}
+	.fs-detail-row {
+		display: flex;
+		justify-content: space-between;
+		padding: 0.3rem 0;
+		border-bottom: 1px solid var(--color-border);
+		font-size: 0.85rem;
+		color: var(--color-text-primary);
+	}
+	.fs-detail-row:last-child {
+		border-bottom: none;
+	}
+	.fs-detail-row.sub span:first-child {
+		padding-left: 0.75rem;
+		color: var(--color-text-tertiary);
+		font-size: 0.8rem;
+	}
+	.fs-detail-row span:last-child {
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
 
 	/* ── Buttons ── */
 	.fs-actions {
@@ -814,12 +1019,13 @@
 	.fs-btn-cancel {
 		padding: 0.5rem 1.1rem;
 		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
+		color: var(--color-text-secondary);
 		border: 1px solid var(--color-border);
 		border-radius: 8px;
 		cursor: pointer;
 		font-size: 0.82rem;
 		font-weight: 500;
+		flex: 1;
 		transition: background 0.15s;
 	}
 	.fs-btn-cancel:hover {
@@ -827,17 +1033,18 @@
 	}
 	.fs-btn-confirm {
 		padding: 0.5rem 1.1rem;
-		background: var(--nord8);
-		color: white;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 		border: none;
 		border-radius: 8px;
 		cursor: pointer;
 		font-size: 0.82rem;
 		font-weight: 700;
-		transition: background 0.15s, transform 0.1s;
+		flex: 2;
+		transition: opacity 0.15s, transform 0.1s;
 	}
 	.fs-btn-confirm:hover {
-		background: var(--nord10);
+		opacity: 0.9;
 	}
 	.fs-btn-confirm:active {
 		transform: scale(0.97);

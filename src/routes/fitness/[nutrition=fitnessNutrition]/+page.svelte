@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater, Pencil, Heart, Clock } from '@lucide/svelte';
+	import { ChevronLeft, ChevronRight, Plus, Trash2, ChevronDown, Settings, Coffee, Sun, Moon, Cookie, Utensils, Info, UtensilsCrossed, AlertTriangle, Check, GlassWater, Pencil, Heart, Clock, Search } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -489,7 +489,7 @@
 
 	// --- Inline add food ---
 	let addingMeal = $state(null);
-	let inlineTab = $state('search'); // 'search' | 'meals'
+	let inlineTab = $state('search'); // 'search' | 'favorites' | 'meals'
 
 	// --- FAB modal (route-based via ?add param) ---
 	const showFabModal = $derived($page.url.searchParams.has('add'));
@@ -515,6 +515,7 @@
 	});
 
 	function closeFabModal() {
+		selectedCmMeal = null;
 		goto(`/fitness/${s.nutrition}`, { replaceState: true, keepFocus: true, noScroll: true });
 	}
 
@@ -544,9 +545,106 @@
 	}
 
 	// --- Custom meals in FAB ---
-	let fabTab = $state('search'); // 'search' | 'meals'
+	let fabTab = $state('search'); // 'search' | 'favorites' | 'meals'
+
+	// --- Favorites tab ---
+	let favTabItems = $state([]); // enriched with per100g
+	let favTabLoaded = $state(false);
+
+	async function loadFavTab(force = false) {
+		if (favTabLoaded && !force) return;
+		const favs = quickFavorites;
+		// Fetch per100g for each favorite in parallel
+		const enriched = await Promise.all(favs.map(async (fav) => {
+			try {
+				const res = await fetch(`/api/nutrition/lookup?source=${fav.source}&id=${encodeURIComponent(fav.sourceId)}`);
+				if (res.ok) {
+					const d = await res.json();
+					return {
+						name: fav.name,
+						source: fav.source,
+						id: fav.sourceId,
+						per100g: d.per100g,
+						portions: d.portions,
+						calories: Math.round(d.per100g?.calories ?? 0),
+						favorited: true,
+					};
+				}
+			} catch {}
+			return null;
+		}));
+		favTabItems = enriched.filter(Boolean);
+		favTabLoaded = true;
+	}
 	let customMeals = $state([]);
 	let customMealsLoaded = $state(false);
+
+	// Custom meal filter
+	let cmFilter = $state('');
+	const filteredCustomMeals = $derived(
+		cmFilter
+			? customMeals.filter(cm => cm.name.toLowerCase().includes(cmFilter.toLowerCase()))
+			: customMeals
+	);
+
+	// Custom meal detail screen (replaces meal list when a meal is selected)
+	let selectedCmMeal = $state(null);
+	let cmAmountMode = $state('multiplier'); // 'multiplier' | 'grams'
+	let cmAmountVal = $state(1.0);
+
+	function selectCmMeal(meal) {
+		selectedCmMeal = meal;
+		cmAmountMode = 'multiplier';
+		cmAmountVal = 1.0;
+	}
+
+	function deselectCmMeal() {
+		selectedCmMeal = null;
+	}
+
+	function cmResolvedGrams(meal) {
+		const base = mealTotalGrams(meal);
+		if (cmAmountMode === 'grams') return cmAmountVal;
+		return base * cmAmountVal;
+	}
+
+	/** Preview macros scaled to the selected amount */
+	function cmPreview(meal) {
+		const { per100g, totalGrams } = aggregateMealPer100g(meal);
+		const grams = cmResolvedGrams(meal);
+		const s = grams / 100;
+		return {
+			calories: Math.round(per100g.calories * s),
+			protein: per100g.protein * s,
+			fat: per100g.fat * s,
+			carbs: per100g.carbs * s,
+			fiber: per100g.fiber * s,
+			sugars: per100g.sugars * s,
+			saturatedFat: per100g.saturatedFat * s,
+			grams,
+			totalGrams,
+		};
+	}
+
+	function cmMacroPercent(meal) {
+		const { per100g } = aggregateMealPer100g(meal);
+		const proteinCal = per100g.protein * 4;
+		const fatCal = per100g.fat * 9;
+		const carbsCal = per100g.carbs * 4;
+		const total = proteinCal + fatCal + carbsCal;
+		if (total === 0) return { protein: 0, fat: 0, carbs: 0 };
+		return {
+			protein: Math.round(proteinCal / total * 100),
+			fat: Math.round(fatCal / total * 100),
+			carbs: 100 - Math.round(proteinCal / total * 100) - Math.round(fatCal / total * 100),
+		};
+	}
+
+	function fmtNutrient(v) {
+		if (v == null || isNaN(v)) return '0';
+		if (v >= 100) return Math.round(v).toString();
+		return v.toFixed(1);
+	}
 
 	async function loadCustomMeals() {
 		if (customMealsLoaded) return;
@@ -560,36 +658,45 @@
 		customMealsLoaded = true;
 	}
 
+	const NUTRIENT_KEYS = ['calories', 'protein', 'fat', 'saturatedFat', 'carbs', 'fiber', 'sugars',
+		'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
+		'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
+		'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
+		'isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine', 'threonine',
+		'tryptophan', 'valine', 'histidine', 'alanine', 'arginine', 'asparticAcid',
+		'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
+
+	function mealTotalGrams(meal) {
+		return meal.ingredients.reduce((sum, ing) => sum + ing.amountGrams, 0);
+	}
+
 	function mealTotalCal(meal) {
 		return meal.ingredients.reduce((sum, ing) => sum + (ing.per100g?.calories ?? 0) * ing.amountGrams / 100, 0);
 	}
 
-	async function logCustomMeal(meal) {
-		try {
-			// Aggregate all ingredients into a single per100g snapshot
-			const totals = {};
-			const nutrientKeys = ['calories', 'protein', 'fat', 'saturatedFat', 'carbs', 'fiber', 'sugars',
-				'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
-				'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
-				'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
-				'isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine', 'threonine',
-				'tryptophan', 'valine', 'histidine', 'alanine', 'arginine', 'asparticAcid',
-				'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
-			for (const k of nutrientKeys) totals[k] = 0;
-			let totalGrams = 0;
-			for (const ing of meal.ingredients) {
-				const r = ing.amountGrams / 100;
-				totalGrams += ing.amountGrams;
-				for (const k of nutrientKeys) totals[k] += (ing.per100g?.[k] ?? 0) * r;
-			}
-			// Convert absolute totals back to per-100g
-			const per100g = {};
-			const scale = totalGrams > 0 ? 100 / totalGrams : 0;
-			for (const k of nutrientKeys) per100g[k] = totals[k] * scale;
+	function aggregateMealPer100g(meal) {
+		const totals = {};
+		for (const k of NUTRIENT_KEYS) totals[k] = 0;
+		let totalGrams = 0;
+		for (const ing of meal.ingredients) {
+			const r = ing.amountGrams / 100;
+			totalGrams += ing.amountGrams;
+			for (const k of NUTRIENT_KEYS) totals[k] += (ing.per100g?.[k] ?? 0) * r;
+		}
+		const per100g = {};
+		const scale = totalGrams > 0 ? 100 / totalGrams : 0;
+		for (const k of NUTRIENT_KEYS) per100g[k] = totals[k] * scale;
+		const liquidMl = meal.ingredients
+			.filter(isLiquidIngredient)
+			.reduce((sum, ing) => sum + ing.amountGrams, 0);
+		return { per100g, totalGrams, liquidMl };
+	}
 
-			const liquidMl = meal.ingredients
-				.filter(isLiquidIngredient)
-				.reduce((sum, ing) => sum + ing.amountGrams, 0);
+	async function logCustomMeal(meal, amountGrams = null) {
+		try {
+			const { per100g, totalGrams, liquidMl } = aggregateMealPer100g(meal);
+			const logGrams = amountGrams ?? totalGrams;
+			const liquidScale = totalGrams > 0 ? logGrams / totalGrams : 0;
 
 			await fetch('/api/fitness/food-log', {
 				method: 'POST',
@@ -600,13 +707,14 @@
 					name: meal.name,
 					source: 'custom',
 					sourceId: meal._id,
-					amountGrams: totalGrams,
+					amountGrams: logGrams,
 					per100g,
-					...(liquidMl > 0 && { liquidMl }),
+					...(liquidMl > 0 && { liquidMl: liquidMl * liquidScale }),
 				})
 			});
 
 			await goto(`/fitness/${s.nutrition}?date=${currentDate}`, { replaceState: true, noScroll: true });
+			selectedCmMeal = null;
 			closeFabModal();
 			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
 		} catch {
@@ -617,38 +725,23 @@
 	function startAdd(meal) {
 		addingMeal = meal;
 		inlineTab = 'search';
+		selectedCmMeal = null;
+		cmFilter = '';
 		loadCustomMeals();
 	}
 
 	function cancelAdd() {
 		addingMeal = null;
+		selectedCmMeal = null;
+		cmFilter = '';
 	}
 
-	async function inlineLogCustomMeal(meal) {
+	async function inlineLogCustomMeal(meal, amountGrams = null) {
 		if (!addingMeal) return;
 		try {
-			const totals = {};
-			const nutrientKeys = ['calories', 'protein', 'fat', 'saturatedFat', 'carbs', 'fiber', 'sugars',
-				'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
-				'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
-				'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
-				'isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine', 'threonine',
-				'tryptophan', 'valine', 'histidine', 'alanine', 'arginine', 'asparticAcid',
-				'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
-			for (const k of nutrientKeys) totals[k] = 0;
-			let totalGrams = 0;
-			for (const ing of meal.ingredients) {
-				const r = ing.amountGrams / 100;
-				totalGrams += ing.amountGrams;
-				for (const k of nutrientKeys) totals[k] += (ing.per100g?.[k] ?? 0) * r;
-			}
-			const per100g = {};
-			const scale = totalGrams > 0 ? 100 / totalGrams : 0;
-			for (const k of nutrientKeys) per100g[k] = totals[k] * scale;
-
-			const liquidMl = meal.ingredients
-				.filter(isLiquidIngredient)
-				.reduce((sum, ing) => sum + ing.amountGrams, 0);
+			const { per100g, totalGrams, liquidMl } = aggregateMealPer100g(meal);
+			const logGrams = amountGrams ?? totalGrams;
+			const liquidScale = totalGrams > 0 ? logGrams / totalGrams : 0;
 
 			await fetch('/api/fitness/food-log', {
 				method: 'POST',
@@ -659,13 +752,14 @@
 					name: meal.name,
 					source: 'custom',
 					sourceId: meal._id,
-					amountGrams: totalGrams,
+					amountGrams: logGrams,
 					per100g,
-					...(liquidMl > 0 && { liquidMl }),
+					...(liquidMl > 0 && { liquidMl: liquidMl * liquidScale }),
 				})
 			});
 
 			await goto(`/fitness/${s.nutrition}?date=${currentDate}`, { replaceState: true, noScroll: true });
+			selectedCmMeal = null;
 			cancelAdd();
 			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
 		} catch {
@@ -896,6 +990,150 @@
 <svelte:head>
 	<title>{t('nutrition_title', lang)} — Fitness</title>
 </svelte:head>
+
+{#snippet cmDetailScreen(meal, logFn)}
+	{@const preview = cmPreview(meal)}
+	{@const mp = cmMacroPercent(meal)}
+	<div class="cm-detail">
+		<div class="cm-detail-header">
+			<span class="cm-detail-name">{meal.name}</span>
+			<span class="cm-detail-sub">{meal.ingredients.length} {t('ingredients', lang)} · {Math.round(preview.totalGrams)}g {isEn ? 'base' : 'Basis'}</span>
+		</div>
+
+		<!-- Amount selector -->
+		<div class="cm-detail-amount">
+			<input type="number" class="cm-detail-amount-input"
+				value={cmAmountVal}
+				oninput={e => { cmAmountVal = Number(e.currentTarget.value); }}
+				min={cmAmountMode === 'grams' ? 1 : 0.1}
+				step={cmAmountMode === 'grams' ? 1 : 0.1} />
+			<select class="cm-detail-amount-unit" value={cmAmountMode} onchange={e => {
+				cmAmountMode = e.currentTarget.value;
+				cmAmountVal = cmAmountMode === 'multiplier' ? 1.0 : Math.round(mealTotalGrams(meal));
+			}}>
+				<option value="multiplier">× ({isEn ? 'servings' : 'Portionen'})</option>
+				<option value="grams">g</option>
+			</select>
+		</div>
+		{#if cmAmountMode === 'multiplier'}
+			<span class="cm-detail-hint">= {Math.round(preview.grams)}g</span>
+		{/if}
+
+		<!-- Calorie headline -->
+		<div class="cm-detail-cal">
+			<span class="cm-detail-cal-num">{preview.calories}</span>
+			<span class="cm-detail-cal-unit">kcal</span>
+		</div>
+
+		<!-- Macro rings -->
+		<div class="cm-detail-macros">
+			{#each [
+				{ pct: mp.protein, label: isEn ? 'Protein' : 'Eiweiß', cls: 'ring-protein', grams: preview.protein },
+				{ pct: mp.fat, label: isEn ? 'Fat' : 'Fett', cls: 'ring-fat', grams: preview.fat },
+				{ pct: mp.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', cls: 'ring-carbs', grams: preview.carbs },
+			] as macro}
+				<div class="cm-detail-macro">
+					<svg width="72" height="72" viewBox="0 0 70 70">
+						<circle class="ring-bg" cx="35" cy="35" r={RADIUS}
+							stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
+							transform="rotate({ARC_ROTATE} 35 35)" />
+						<circle class="ring-fill {macro.cls}" cx="35" cy="35" r={RADIUS}
+							stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
+							stroke-dashoffset={strokeOffset(macro.pct)}
+							transform="rotate({ARC_ROTATE} 35 35)" />
+						<text class="ring-text" x="35" y="35">{macro.pct}%</text>
+					</svg>
+					<span class="cm-detail-macro-label">{macro.label}</span>
+					<span class="cm-detail-macro-val">{fmtNutrient(macro.grams)}g</span>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Macro detail rows -->
+		<div class="cm-detail-rows">
+			<div class="cm-detail-row">
+				<span>{isEn ? 'Protein' : 'Eiweiß'}</span>
+				<span>{fmtNutrient(preview.protein)} g</span>
+			</div>
+			<div class="cm-detail-row">
+				<span>{isEn ? 'Fat' : 'Fett'}</span>
+				<span>{fmtNutrient(preview.fat)} g</span>
+			</div>
+			<div class="cm-detail-row sub">
+				<span>{isEn ? 'Saturated Fat' : 'Ges. Fettsäuren'}</span>
+				<span>{fmtNutrient(preview.saturatedFat)} g</span>
+			</div>
+			<div class="cm-detail-row">
+				<span>{isEn ? 'Carbohydrates' : 'Kohlenhydrate'}</span>
+				<span>{fmtNutrient(preview.carbs)} g</span>
+			</div>
+			<div class="cm-detail-row sub">
+				<span>{isEn ? 'Sugars' : 'Zucker'}</span>
+				<span>{fmtNutrient(preview.sugars)} g</span>
+			</div>
+			<div class="cm-detail-row">
+				<span>{isEn ? 'Fiber' : 'Ballaststoffe'}</span>
+				<span>{fmtNutrient(preview.fiber)} g</span>
+			</div>
+		</div>
+
+		<!-- Ingredients list -->
+		<details class="cm-detail-ingredients">
+			<summary>{isEn ? 'Ingredients' : 'Zutaten'} ({meal.ingredients.length})</summary>
+			<ul>
+				{#each meal.ingredients as ing}
+					<li>{ing.name} — {ing.amountGrams}g</li>
+				{/each}
+			</ul>
+		</details>
+
+		<!-- Actions -->
+		<div class="cm-detail-actions">
+			<button class="cm-detail-btn-cancel" onclick={deselectCmMeal}>{t('cancel', lang)}</button>
+			<button class="cm-detail-btn-confirm" onclick={() => logFn(meal, cmResolvedGrams(meal))}>{t('log_meal', lang)}</button>
+		</div>
+	</div>
+{/snippet}
+
+{#snippet favoritesTab(logFn)}
+	<div class="fav-tab-list">
+		{#if !favTabLoaded}
+			<p class="meals-empty">{t('loading', lang)}</p>
+		{:else if favTabItems.length === 0}
+			<p class="meals-empty">{isEn ? 'No favorites yet. Tap the heart on foods to add them here.' : 'Noch keine Favoriten. Tippe auf das Herz bei Lebensmitteln.'}</p>
+		{:else}
+			<FoodSearch onselect={logFn} showDetailLinks={false} showFavorites={false} initialResults={favTabItems} />
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet customMealsTab(logFn)}
+	{#if selectedCmMeal}
+		{@render cmDetailScreen(selectedCmMeal, logFn)}
+	{:else}
+		<div class="custom-meals-list">
+			{#if customMeals.length > 3}
+				<input type="text" class="cm-filter-input" placeholder={isEn ? 'Filter meals…' : 'Mahlzeiten filtern…'}
+					bind:value={cmFilter} />
+			{/if}
+			{#if customMeals.length === 0}
+				<p class="meals-empty">{t('no_custom_meals', lang)}</p>
+			{/if}
+			{#each filteredCustomMeals as cm}
+				<div class="custom-meal-card" role="button" tabindex="0" onclick={() => selectCmMeal(cm)} onkeydown={e => e.key === 'Enter' && selectCmMeal(cm)}>
+					<div class="custom-meal-info">
+						<span class="custom-meal-name">{cm.name}</span>
+						<span class="custom-meal-detail">{cm.ingredients.length} {t('ingredients', lang)} · {fmtCal(mealTotalCal(cm))} kcal · {Math.round(mealTotalGrams(cm))}g</span>
+					</div>
+				</div>
+			{/each}
+			<a class="manage-meals-link" href="/fitness/{s.nutrition}/meals">
+				<Settings size={13} />
+				{isEn ? 'Manage meals' : 'Mahlzeiten verwalten'}
+			</a>
+		</div>
+	{/if}
+{/snippet}
 
 {#snippet microPanel()}
 	<div class="micro-details" class:micro-hidden={!showMicros}>
@@ -1431,7 +1669,12 @@
 					<div class="add-food-form-header">
 						<div class="fab-tabs">
 							<button class="fab-tab" class:active={inlineTab === 'search'} onclick={() => inlineTab = 'search'}>
+								<Search size={13} />
 								{t('search_food', lang).replace('…', '')}
+							</button>
+							<button class="fab-tab" class:active={inlineTab === 'favorites'} onclick={() => { inlineTab = 'favorites'; loadFavTab(); }}>
+								<Heart size={13} />
+								{isEn ? 'Favorites' : 'Favoriten'}
 							</button>
 							<button class="fab-tab" class:active={inlineTab === 'meals'} onclick={() => { inlineTab = 'meals'; loadCustomMeals(); }}>
 								<UtensilsCrossed size={13} />
@@ -1442,26 +1685,11 @@
 					</div>
 
 					{#if inlineTab === 'search'}
-						<FoodSearch onselect={inlineLogFood} showDetailLinks={false} autofocus={true} />
+						<FoodSearch onselect={inlineLogFood} showDetailLinks={false} showFavorites={false} autofocus={true} />
+					{:else if inlineTab === 'favorites'}
+						{@render favoritesTab(inlineLogFood)}
 					{:else}
-						<div class="custom-meals-list">
-							{#if customMeals.length === 0}
-								<p class="meals-empty">{t('no_custom_meals', lang)}</p>
-							{/if}
-							{#each customMeals as cm}
-								<div class="custom-meal-card">
-									<div class="custom-meal-info">
-										<span class="custom-meal-name">{cm.name}</span>
-										<span class="custom-meal-detail">{cm.ingredients.length} {t('ingredients', lang)} · {fmtCal(mealTotalCal(cm))} kcal</span>
-									</div>
-									<button class="btn-primary btn-sm" onclick={() => inlineLogCustomMeal(cm)}>{t('log_meal', lang)}</button>
-								</div>
-							{/each}
-							<a class="manage-meals-link" href="/fitness/{s.nutrition}/meals">
-								<Settings size={13} />
-								{isEn ? 'Manage meals' : 'Mahlzeiten verwalten'}
-							</a>
-						</div>
+						{@render customMealsTab(inlineLogCustomMeal)}
 					{/if}
 				</div>
 			{:else}
@@ -1573,10 +1801,15 @@
 				{/each}
 			</div>
 
-			<!-- Tabs: Search / Custom Meals -->
+			<!-- Tabs: Search / Favorites / Custom Meals -->
 			<div class="fab-tabs">
 				<button class="fab-tab" class:active={fabTab === 'search'} onclick={() => fabTab = 'search'}>
+					<Search size={13} />
 					{t('search_food', lang).replace('…', '')}
+				</button>
+				<button class="fab-tab" class:active={fabTab === 'favorites'} onclick={() => { fabTab = 'favorites'; loadFavTab(); }}>
+					<Heart size={13} />
+					{isEn ? 'Favorites' : 'Favoriten'}
 				</button>
 				<button class="fab-tab" class:active={fabTab === 'meals'} onclick={() => { fabTab = 'meals'; loadCustomMeals(); }}>
 					<UtensilsCrossed size={13} />
@@ -1585,27 +1818,11 @@
 			</div>
 
 			{#if fabTab === 'search'}
-				<FoodSearch onselect={fabLogFood} autofocus={true} />
+				<FoodSearch onselect={fabLogFood} showFavorites={false} autofocus={true} />
+			{:else if fabTab === 'favorites'}
+				{@render favoritesTab(fabLogFood)}
 			{:else}
-				<!-- Custom Meals tab -->
-				<div class="custom-meals-list">
-					{#if customMeals.length === 0}
-						<p class="meals-empty">{t('no_custom_meals', lang)}</p>
-					{/if}
-					{#each customMeals as meal}
-						<div class="custom-meal-card">
-							<div class="custom-meal-info">
-								<span class="custom-meal-name">{meal.name}</span>
-								<span class="custom-meal-detail">{meal.ingredients.length} {t('ingredients', lang)} · {fmtCal(mealTotalCal(meal))} kcal</span>
-							</div>
-							<button class="btn-primary btn-sm" onclick={() => logCustomMeal(meal)}>{t('log_meal', lang)}</button>
-						</div>
-					{/each}
-					<a class="manage-meals-link" href="/fitness/{s.nutrition}/meals">
-						<Settings size={13} />
-						{isEn ? 'Manage meals' : 'Mahlzeiten verwalten'}
-					</a>
-				</div>
+				{@render customMealsTab(logCustomMeal)}
 			{/if}
 		</div>
 	</div>
@@ -1982,7 +2199,17 @@
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
-	/* (macro rings replaced by macro bars) */
+	/* Macro rings (custom meal detail + food detail) */
+	.ring-protein { stroke: var(--nord14); }
+	.ring-fat { stroke: var(--nord12); }
+	.ring-carbs { stroke: var(--nord9); }
+	.ring-text {
+		font-size: 14px;
+		font-weight: 700;
+		fill: currentColor;
+		text-anchor: middle;
+		dominant-baseline: central;
+	}
 
 	/* ── Micro Details ── */
 	.micro-inline {
@@ -3136,12 +3363,29 @@
 		padding: 1rem 0;
 		margin: 0;
 	}
+	.cm-filter-input {
+		width: 100%;
+		padding: 0.55rem 0.65rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+		box-sizing: border-box;
+		transition: border-color 0.15s;
+		margin-bottom: 0.25rem;
+	}
+	.cm-filter-input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
 	.custom-meal-card {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.75rem;
 		padding: 0.6rem 0.75rem;
+		cursor: pointer;
 		background: var(--color-bg-tertiary);
 		border-radius: 10px;
 		border: 1px solid var(--color-border);
@@ -3163,6 +3407,182 @@
 	.custom-meal-detail {
 		font-size: 0.72rem;
 		color: var(--color-text-tertiary);
+	}
+	.custom-meal-info[role="button"] {
+		cursor: pointer;
+		border-radius: 6px;
+		transition: background 0.12s;
+	}
+	.custom-meal-info[role="button"]:hover {
+		background: var(--color-bg-elevated);
+	}
+	/* Custom meal detail screen */
+	.cm-detail {
+		padding: 0.75rem;
+	}
+	.cm-detail-header {
+		margin-bottom: 0.75rem;
+	}
+	.cm-detail-name {
+		display: block;
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+		line-height: 1.3;
+	}
+	.cm-detail-sub {
+		font-size: 0.78rem;
+		color: var(--color-text-tertiary);
+	}
+	.cm-detail-amount {
+		display: flex;
+		gap: 0.4rem;
+		margin-bottom: 0.25rem;
+	}
+	.cm-detail-amount-input {
+		width: 5rem;
+		padding: 0.4rem 0.5rem;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+		text-align: right;
+	}
+	.cm-detail-amount-input:focus {
+		outline: none;
+		border-color: var(--nord8);
+	}
+	.cm-detail-amount-unit {
+		flex: 1;
+		padding: 0.4rem 0.5rem;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+	}
+	.cm-detail-hint {
+		font-size: 0.75rem;
+		color: var(--color-text-tertiary);
+		margin-bottom: 0.5rem;
+	}
+	.cm-detail-cal {
+		text-align: center;
+		margin: 0.75rem 0 0.5rem;
+	}
+	.cm-detail-cal-num {
+		font-size: 2.2rem;
+		font-weight: 800;
+		color: var(--color-text-primary);
+		line-height: 1;
+	}
+	.cm-detail-cal-unit {
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		margin-left: 0.2rem;
+	}
+	.cm-detail-macros {
+		display: flex;
+		justify-content: space-around;
+		margin: 0.5rem 0 0.75rem;
+	}
+	.cm-detail-macro {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+		flex: 1;
+	}
+	.cm-detail-macro-label {
+		font-size: 0.78rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+		text-align: center;
+	}
+	.cm-detail-macro-val {
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+	}
+	.cm-detail-rows {
+		background: var(--color-surface);
+		border-radius: 10px;
+		padding: 0.5rem 0.75rem;
+		margin-bottom: 0.75rem;
+		border: 1px solid var(--color-border);
+	}
+	.cm-detail-row {
+		display: flex;
+		justify-content: space-between;
+		padding: 0.3rem 0;
+		border-bottom: 1px solid var(--color-border);
+		font-size: 0.85rem;
+		color: var(--color-text-primary);
+	}
+	.cm-detail-row:last-child {
+		border-bottom: none;
+	}
+	.cm-detail-row.sub span:first-child {
+		padding-left: 0.75rem;
+		color: var(--color-text-tertiary);
+		font-size: 0.8rem;
+	}
+	.cm-detail-row span:last-child {
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	.cm-detail-ingredients {
+		margin-bottom: 0.75rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+	.cm-detail-ingredients summary {
+		cursor: pointer;
+		font-weight: 600;
+		color: var(--color-text-primary);
+		padding: 0.3rem 0;
+	}
+	.cm-detail-ingredients ul {
+		margin: 0.25rem 0 0;
+		padding-left: 1.2rem;
+		list-style: disc;
+	}
+	.cm-detail-ingredients li {
+		padding: 0.15rem 0;
+	}
+	.cm-detail-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.cm-detail-btn-cancel {
+		flex: 1;
+		padding: 0.5rem;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition: background 0.12s;
+	}
+	.cm-detail-btn-cancel:hover {
+		background: var(--color-bg-elevated);
+	}
+	.cm-detail-btn-confirm {
+		flex: 2;
+		padding: 0.5rem;
+		border: none;
+		border-radius: 8px;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: opacity 0.12s;
+	}
+	.cm-detail-btn-confirm:hover {
+		opacity: 0.9;
 	}
 	.btn-sm {
 		padding: 0.3rem 0.65rem;
