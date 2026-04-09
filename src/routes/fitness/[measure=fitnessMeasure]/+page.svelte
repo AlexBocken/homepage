@@ -18,6 +18,7 @@
 	let showWeightHistory = $state(false);
 
 	// Profile fields (sex, height, birth year) — stored in FitnessGoal
+	let savedSex = $state(data.profile?.sex ?? 'male');
 	let profileSex = $state(data.profile?.sex ?? 'male');
 	let profileHeight = $state(data.profile?.heightCm != null ? String(data.profile.heightCm) : '');
 	let profileBirthYear = $state(data.profile?.birthYear != null ? String(data.profile.birthYear) : '');
@@ -60,6 +61,8 @@
 			if (res.ok) {
 				const d = await res.json();
 				data.profile = d;
+				savedSex = d.sex ?? profileSex;
+				profileEditing = false;
 			}
 		} finally {
 			profileSaving = false;
@@ -224,7 +227,7 @@
 		</section>
 	{/if}
 
-	{#if data.profile?.sex === 'female'}
+	{#if savedSex === 'female'}
 		<PeriodTracker periods={data.periods ?? []} {lang} sharedWith={data.periodSharedWith ?? []} />
 	{/if}
 
