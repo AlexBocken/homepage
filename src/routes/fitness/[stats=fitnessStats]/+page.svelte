@@ -402,7 +402,7 @@
 								{lang === 'en' ? 'Actual' : 'Ist'}
 							</span>
 							<span class="macro-legend-item">
-								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6,2 L10,10 L2,10 Z" fill="var(--color-text-secondary)" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linejoin="round"/></svg>
+								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6,10 L10,2 L2,2 Z" fill="var(--color-text-secondary)" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linejoin="round"/></svg>
 								{lang === 'en' ? 'Target' : 'Ziel'}
 							</span>
 						</div>
