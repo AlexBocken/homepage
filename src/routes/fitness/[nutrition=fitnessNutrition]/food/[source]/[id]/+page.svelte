@@ -182,8 +182,14 @@
 			<p class="name-alt">{food.nameEn}</p>
 		{/if}
 		<div class="badges">
-			<span class="badge badge-source">{food.source === 'bls' ? 'BLS' : food.source === 'usda' ? 'USDA' : isEn ? 'Recipe' : 'Rezept'}</span>
+			<span class="badge badge-source">{food.source === 'bls' ? 'BLS' : food.source === 'usda' ? 'USDA' : food.source === 'off' ? 'OFF' : food.source === 'custom' ? (isEn ? 'Custom Meal' : 'Eigene Mahlzeit') : isEn ? 'Recipe' : 'Rezept'}</span>
 			<span class="badge badge-category">{food.category}</span>
+			{#if food.brands}
+				<span class="badge badge-category">{food.brands}</span>
+			{/if}
+			{#if food.nutriscore}
+				<span class="badge badge-nutriscore" data-score={food.nutriscore.toLowerCase()}>Nutri-Score {food.nutriscore.toUpperCase()}</span>
+			{/if}
 			{#if food.recipeSlug}
 				<a class="badge badge-recipe-link" href="/{isEn ? 'recipes' : 'rezepte'}/{isEn && food.recipeSlugEn ? food.recipeSlugEn : food.recipeSlug}">
 					{isEn ? 'View recipe' : 'Zum Rezept'} <ExternalLink size={12} />
@@ -255,6 +261,33 @@
 			<span class="detail-val">{fmt(scaled(n.fiber))} g</span>
 		</div>
 	</div>
+
+	<!-- Ingredients (custom meals) -->
+	{#if food.ingredients?.length}
+		<div class="section-card">
+			<h2>{isEn ? 'Ingredients' : 'Zutaten'} <small class="ingredient-total">({food.totalGrams}g {isEn ? 'total' : 'gesamt'})</small></h2>
+			<div class="ingredients-list">
+				{#each food.ingredients as ing}
+					<div class="ingredient-row">
+						<div class="ingredient-info">
+							{#if ing.sourceId && (ing.source === 'bls' || ing.source === 'usda' || ing.source === 'off')}
+								<a class="ingredient-name" href="/fitness/{s.nutrition}/food/{ing.source}/{ing.sourceId}">{ing.name}</a>
+							{:else}
+								<span class="ingredient-name">{ing.name}</span>
+							{/if}
+							<span class="ingredient-amount">{ing.amountGrams}g</span>
+						</div>
+						<div class="ingredient-macros">
+							<span>{Math.round(ing.calories)} kcal</span>
+							<span>{fmt(ing.protein)}P</span>
+							<span>{fmt(ing.fat)}F</span>
+							<span>{fmt(ing.carbs)}C</span>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	<!-- Micronutrients -->
 	<div class="section-card">
@@ -415,6 +448,15 @@
 		color: var(--color-text-secondary);
 		border: 1px solid var(--color-border);
 	}
+	.badge-nutriscore {
+		color: #fff;
+		font-weight: 700;
+	}
+	.badge-nutriscore[data-score="a"] { background: #038141; }
+	.badge-nutriscore[data-score="b"] { background: #85bb2f; color: #222; }
+	.badge-nutriscore[data-score="c"] { background: #fecb02; color: #222; }
+	.badge-nutriscore[data-score="d"] { background: #ee8100; }
+	.badge-nutriscore[data-score="e"] { background: #e63e11; }
 	.badge-recipe-link {
 		display: inline-flex;
 		align-items: center;
@@ -665,6 +707,62 @@
 	}
 	.portion-desc small {
 		color: var(--color-text-tertiary);
+	}
+
+	/* Ingredients (custom meals) */
+	.ingredient-total {
+		font-size: 0.8rem;
+		font-weight: 400;
+		color: var(--color-text-tertiary);
+	}
+	.ingredients-list {
+		margin-top: 0.5rem;
+	}
+	.ingredient-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.4rem 0;
+		border-bottom: 1px solid var(--color-border);
+		gap: 0.5rem;
+	}
+	.ingredient-row:last-child {
+		border-bottom: none;
+	}
+	.ingredient-info {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		min-width: 0;
+		flex: 1;
+	}
+	.ingredient-name {
+		color: var(--color-text-primary);
+		font-weight: 500;
+		font-size: 0.85rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	a.ingredient-name {
+		color: var(--color-primary);
+		text-decoration: none;
+	}
+	a.ingredient-name:hover {
+		text-decoration: underline;
+	}
+	.ingredient-amount {
+		font-size: 0.75rem;
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
+	}
+	.ingredient-macros {
+		display: flex;
+		gap: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+		flex-shrink: 0;
 	}
 
 	@media (max-width: 500px) {

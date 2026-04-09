@@ -434,7 +434,7 @@
 						</div>
 						<span class="fs-result-cal">{item.calories}<small> kcal</small></span>
 					</button>
-					{#if showDetailLinks && (item.source === 'bls' || item.source === 'usda')}
+					{#if showDetailLinks && (item.source === 'bls' || item.source === 'usda' || item.source === 'off')}
 						<a class="fs-detail-link" href="/fitness/{s.nutrition}/food/{item.source}/{item.id}" aria-label="View details">
 							<ExternalLink size={13} />
 						</a>

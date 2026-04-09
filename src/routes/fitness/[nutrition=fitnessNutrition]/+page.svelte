@@ -1565,10 +1565,10 @@
 							<div class="food-card-accent" style="background: var(--meal-color)"></div>
 						{/if}
 						<div class="food-card-body">
-						{#if entry.source === 'bls' || entry.source === 'usda'}
+						{#if entry.source === 'bls' || entry.source === 'usda' || entry.source === 'off'}
 							<a class="food-card-name food-card-link" href="/fitness/{s.nutrition}/food/{entry.source}/{entry.sourceId}">{entry.name}</a>
-						{:else if entry.source === 'recipe' && entry.sourceId}
-							<a class="food-card-name food-card-link" href="/fitness/{s.nutrition}/food/recipe/{entry.sourceId}?logEntry={entry._id}">{entry.name}</a>
+						{:else if (entry.source === 'recipe' || entry.source === 'custom') && entry.sourceId}
+							<a class="food-card-name food-card-link" href="/fitness/{s.nutrition}/food/{entry.source}/{entry.sourceId}?logEntry={entry._id}">{entry.name}</a>
 						{:else}
 							<span class="food-card-name">{entry.name}</span>
 						{/if}

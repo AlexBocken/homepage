@@ -4,6 +4,8 @@ import { NUTRITION_DB } from '$lib/data/nutritionDb';
 import { BLS_DB } from '$lib/data/blsDb';
 import { DRI_MALE } from '$lib/data/dailyReferenceIntake';
 import { Recipe } from '$models/Recipe';
+import { OpenFoodFact } from '$models/OpenFoodFact';
+import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, resolvePer100g, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 import { FoodLogEntry } from '$models/FoodLogEntry';
@@ -61,7 +63,7 @@ async function computeRecipePer100g(id: string): Promise<Record<string, number>>
 export const load: PageServerLoad = async ({ params, url }) => {
 	const { source, id } = params;
 
-	if (source !== 'bls' && source !== 'usda' && source !== 'recipe') {
+	if (source !== 'bls' && source !== 'usda' && source !== 'recipe' && source !== 'off' && source !== 'custom') {
 		throw error(404, 'Invalid source');
 	}
 
@@ -121,6 +123,86 @@ export const load: PageServerLoad = async ({ params, url }) => {
 				recipeSlug: recipe.short_name,
 				recipeSlugEn: recipe.translations?.en?.short_name || undefined,
 				image,
+			},
+			dri: DRI_MALE,
+		};
+	}
+
+	if (source === 'off') {
+		await dbConnect();
+		const entry = await OpenFoodFact.findOne({ barcode: id }).lean();
+		if (!entry) throw error(404, 'Food not found');
+		const portions: { description: string; grams: number }[] = [];
+		if (entry.serving?.grams) {
+			portions.push(entry.serving as { description: string; grams: number });
+		}
+		return {
+			food: {
+				source: 'off' as const,
+				id: entry.barcode,
+				name: entry.nameDe || entry.name,
+				nameDe: entry.nameDe,
+				nameEn: entry.nameDe ? entry.name : undefined,
+				category: entry.category || '',
+				per100g: entry.per100g as unknown as Record<string, number>,
+				brands: entry.brands,
+				nutriscore: entry.nutriscore,
+				portions,
+			},
+			dri: DRI_MALE,
+		};
+	}
+
+	if (source === 'custom') {
+		await dbConnect();
+		const meal = await CustomMeal.findById(id).lean();
+		if (!meal) throw error(404, 'Meal not found');
+
+		// Aggregate per100g from ingredients
+		const totals: Record<string, number> = {};
+		let totalGrams = 0;
+		for (const ing of meal.ingredients) {
+			const r = ing.amountGrams / 100;
+			totalGrams += ing.amountGrams;
+			for (const [k, v] of Object.entries(ing.per100g)) {
+				if (typeof v === 'number') {
+					totals[k] = (totals[k] || 0) + v * r;
+				}
+			}
+		}
+		const per100g: Record<string, number> = {};
+		const scale = totalGrams > 0 ? 100 / totalGrams : 0;
+		for (const [k, v] of Object.entries(totals)) {
+			per100g[k] = v * scale;
+		}
+
+		// Use logged per100g snapshot if provided
+		const logEntryId = url.searchParams.get('logEntry');
+		if (logEntryId) {
+			const logEntry = await FoodLogEntry.findById(logEntryId).select('per100g').lean();
+			if (logEntry?.per100g) {
+				Object.assign(per100g, logEntry.per100g);
+			}
+		}
+
+		return {
+			food: {
+				source: 'custom' as const,
+				id: String(meal._id),
+				name: meal.name,
+				category: 'Custom Meal',
+				per100g,
+				totalGrams,
+				ingredients: meal.ingredients.map((ing: any) => ({
+					name: ing.name,
+					source: ing.source,
+					sourceId: ing.sourceId,
+					amountGrams: ing.amountGrams,
+					calories: (ing.per100g?.calories ?? 0) * ing.amountGrams / 100,
+					protein: (ing.per100g?.protein ?? 0) * ing.amountGrams / 100,
+					fat: (ing.per100g?.fat ?? 0) * ing.amountGrams / 100,
+					carbs: (ing.per100g?.carbs ?? 0) * ing.amountGrams / 100,
+				})),
 			},
 			dri: DRI_MALE,
 		};
