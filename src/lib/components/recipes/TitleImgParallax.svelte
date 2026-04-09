@@ -46,7 +46,7 @@
 
 .section {
   margin-bottom: -20vh;
-  margin-top: calc(-3.5rem - 12px);
+  margin-top: calc(-3.5rem - 12px - env(safe-area-inset-top, 0px));
   transform-origin: center top;
   transform: scaleY(calc(1 - var(--scale)));
 }
