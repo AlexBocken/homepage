@@ -6,6 +6,7 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
+	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
@@ -51,14 +52,18 @@
 
 	function ingredientsTotalNutrition(ings) {
 		let calories = 0, protein = 0, fat = 0, carbs = 0;
+		let saturatedFat = 0, sugars = 0, fiber = 0;
 		for (const ing of ings) {
 			const f = ing.amountGrams / 100;
 			calories += (ing.per100g?.calories ?? 0) * f;
 			protein += (ing.per100g?.protein ?? 0) * f;
 			fat += (ing.per100g?.fat ?? 0) * f;
 			carbs += (ing.per100g?.carbs ?? 0) * f;
+			saturatedFat += (ing.per100g?.saturatedFat ?? 0) * f;
+			sugars += (ing.per100g?.sugars ?? 0) * f;
+			fiber += (ing.per100g?.fiber ?? 0) * f;
 		}
-		return { calories, protein, fat, carbs };
+		return { calories, protein, fat, carbs, saturatedFat, sugars, fiber };
 	}
 
 	const formTotals = $derived(ingredientsTotalNutrition(ingredients));
@@ -246,14 +251,18 @@
 				</div>
 			{/if}
 
-			<!-- Totals -->
+			<!-- Nutrition breakdown -->
 			{#if ingredients.length > 0}
-				<div class="totals-bar">
-					<span class="total-label">{t('total', lang)}</span>
-					<span class="total-macro">{Math.round(formTotals.calories)} {t('kcal', lang)}</span>
-					<span class="total-macro protein">{fmt(formTotals.protein)}g P</span>
-					<span class="total-macro fat">{fmt(formTotals.fat)}g F</span>
-					<span class="total-macro carbs">{fmt(formTotals.carbs)}g C</span>
+				<div class="nutrition-breakdown">
+					<MacroBreakdown
+						calories={formTotals.calories}
+						protein={formTotals.protein}
+						fat={formTotals.fat}
+						carbs={formTotals.carbs}
+						saturatedFat={formTotals.saturatedFat}
+						sugars={formTotals.sugars}
+						fiber={formTotals.fiber}
+					/>
 				</div>
 			{/if}
 
@@ -621,29 +630,12 @@
 		margin-left: auto;
 	}
 
-	/* ── Totals bar ── */
-	.totals-bar {
-		display: flex;
-		align-items: center;
-		gap: 0.6rem;
-		background: color-mix(in srgb, var(--nord8) 8%, transparent);
-		padding: 0.55rem 0.75rem;
-		border-radius: 8px;
-		font-size: 0.78rem;
-		font-weight: 600;
+	/* ── Nutrition breakdown ── */
+	.nutrition-breakdown {
+		background: var(--color-bg-tertiary);
+		border-radius: 10px;
+		padding: 0.75rem;
 	}
-
-	.total-label {
-		color: var(--color-text-secondary);
-		margin-right: auto;
-	}
-
-	.total-macro {
-		color: var(--color-text-primary);
-	}
-	.total-macro.protein { color: var(--nord14); }
-	.total-macro.fat { color: var(--nord12); }
-	.total-macro.carbs { color: var(--nord9); }
 
 	/* ── Add ingredient button ── */
 	.add-ingredient-btn {

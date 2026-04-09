@@ -4,6 +4,7 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
+	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 
 	let { data } = $props();
 
@@ -47,16 +48,6 @@
 			carbs: 100 - Math.round(proteinCal / total * 100) - Math.round(fatCal / total * 100),
 		};
 	});
-
-	// --- SVG ring constants (same as NutritionSummary) ---
-	const RADIUS = 28;
-	const ARC_DEGREES = 300;
-	const ARC_LENGTH = (ARC_DEGREES / 360) * 2 * Math.PI * RADIUS;
-	const ARC_ROTATE = 120;
-
-	function strokeOffset(percent) {
-		return ARC_LENGTH - (percent / 100) * ARC_LENGTH;
-	}
 
 	// --- Formatting ---
 	function fmt(v) {
@@ -212,30 +203,16 @@
 	<!-- Macro rings -->
 	<div class="macro-rings">
 		{#each [
-			{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', cls: 'ring-protein', grams: scaled(n.protein) },
-			{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', cls: 'ring-fat', grams: scaled(n.fat) },
-			{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', cls: 'ring-carbs', grams: scaled(n.carbs) },
-		] as macro}
-			<div class="macro-ring">
-				<svg width="90" height="90" viewBox="0 0 70 70">
-					<circle
-						class="ring-bg"
-						cx="35" cy="35" r={RADIUS}
-						stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-						transform="rotate({ARC_ROTATE} 35 35)"
-					/>
-					<circle
-						class="ring-fill {macro.cls}"
-						cx="35" cy="35" r={RADIUS}
-						stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-						stroke-dashoffset={strokeOffset(macro.pct)}
-						transform="rotate({ARC_ROTATE} 35 35)"
-					/>
-					<text class="ring-text" x="35" y="35">{macro.pct}%</text>
-				</svg>
-				<span class="macro-label">{macro.label}</span>
-				<span class="macro-grams">{fmt(macro.grams)}g</span>
-			</div>
+			{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', color: 'var(--nord14)', grams: scaled(n.protein) },
+			{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: scaled(n.fat) },
+			{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: scaled(n.carbs) },
+		] as macro (macro.color)}
+			<RingGraph
+				percent={macro.pct}
+				color={macro.color}
+				label={macro.label}
+				sublabel="{fmt(macro.grams)}g"
+			/>
 		{/each}
 	</div>
 
@@ -464,45 +441,9 @@
 		justify-content: space-around;
 		margin: 0 0 1.25rem;
 	}
-	.macro-ring {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.15rem;
-		flex: 1;
-	}
-	.ring-bg {
-		fill: none;
-		stroke: var(--color-border);
-		stroke-width: 5;
-		stroke-linecap: round;
-	}
-	.ring-fill {
-		fill: none;
-		stroke-width: 5;
-		stroke-linecap: round;
-		transition: stroke-dashoffset 0.4s ease;
-	}
-	.ring-text {
-		font-size: 14px;
-		font-weight: 700;
-		fill: currentColor;
-		text-anchor: middle;
-		dominant-baseline: central;
-	}
-	.ring-protein { stroke: var(--nord14); }
-	.ring-fat { stroke: var(--nord12); }
-	.ring-carbs { stroke: var(--nord9); }
-
-	.macro-label {
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		text-align: center;
-	}
-	.macro-grams {
-		font-size: 0.78rem;
-		color: var(--color-text-tertiary);
+	.macro-rings :global(.ring-svg) {
+		width: 90px;
+		height: 90px;
 	}
 
 	/* Macro detail card */

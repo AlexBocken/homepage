@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import { Heart, ExternalLink, ScanBarcode, X } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import MacroBreakdown from './MacroBreakdown.svelte';
 
 	/**
 	 * @type {{
@@ -29,15 +30,6 @@
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 	const btnLabel = $derived(confirmLabel ?? t('log_food', lang));
-
-	// SVG ring constants
-	const RADIUS = 28;
-	const ARC_DEGREES = 300;
-	const ARC_LENGTH = (ARC_DEGREES / 360) * 2 * Math.PI * RADIUS;
-	const ARC_ROTATE = 120;
-	function strokeOffset(percent) {
-		return ARC_LENGTH - (Math.min(percent, 100) / 100) * ARC_LENGTH;
-	}
 
 	// --- Search state ---
 	let query = $state('');
@@ -126,21 +118,6 @@
 		};
 	});
 
-	const macroPercent = $derived.by(() => {
-		if (!selected?.per100g) return { protein: 0, fat: 0, carbs: 0 };
-		const n = selected.per100g;
-		const proteinCal = (n.protein ?? 0) * 4;
-		const fatCal = (n.fat ?? 0) * 9;
-		const carbsCal = (n.carbs ?? 0) * 4;
-		const total = proteinCal + fatCal + carbsCal;
-		if (total === 0) return { protein: 0, fat: 0, carbs: 0 };
-		return {
-			protein: Math.round(proteinCal / total * 100),
-			fat: Math.round(fatCal / total * 100),
-			carbs: 100 - Math.round(proteinCal / total * 100) - Math.round(fatCal / total * 100),
-		};
-	});
-
 	function confirm() {
 		if (!selected) return;
 		const grams = resolveGrams();
@@ -195,11 +172,7 @@
 		}
 	}
 
-	function fmt(v) {
-		if (v >= 100) return Math.round(v).toString();
-		if (v >= 10) return v.toFixed(1);
-		return v.toFixed(1);
-	}
+
 
 	function sourceLabel(source) {
 		if (source === 'bls') return 'BLS';
@@ -518,63 +491,15 @@
 		{/if}
 
 		{#if previewNutrients}
-			<!-- Calorie headline -->
-			<div class="fs-detail-cal">
-				<span class="fs-detail-cal-num">{previewNutrients.calories}</span>
-				<span class="fs-detail-cal-unit">kcal</span>
-			</div>
-
-			<!-- Macro rings -->
-			<div class="fs-detail-macros">
-				{#each [
-					{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', cls: 'fs-ring-protein', grams: previewNutrients.protein },
-					{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', cls: 'fs-ring-fat', grams: previewNutrients.fat },
-					{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', cls: 'fs-ring-carbs', grams: previewNutrients.carbs },
-				] as macro (macro.cls)}
-					<div class="fs-detail-macro">
-						<svg width="72" height="72" viewBox="0 0 70 70">
-							<circle class="fs-ring-bg" cx="35" cy="35" r={RADIUS}
-								stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-								transform="rotate({ARC_ROTATE} 35 35)" />
-							<circle class="fs-ring-fill {macro.cls}" cx="35" cy="35" r={RADIUS}
-								stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-								stroke-dashoffset={strokeOffset(macro.pct)}
-								transform="rotate({ARC_ROTATE} 35 35)" />
-							<text class="fs-ring-text" x="35" y="35">{macro.pct}%</text>
-						</svg>
-						<span class="fs-detail-macro-label">{macro.label}</span>
-						<span class="fs-detail-macro-val">{fmt(macro.grams)}g</span>
-					</div>
-				{/each}
-			</div>
-
-			<!-- Macro detail rows -->
-			<div class="fs-detail-rows">
-				<div class="fs-detail-row">
-					<span>{isEn ? 'Protein' : 'Eiweiß'}</span>
-					<span>{fmt(previewNutrients.protein)} g</span>
-				</div>
-				<div class="fs-detail-row">
-					<span>{isEn ? 'Fat' : 'Fett'}</span>
-					<span>{fmt(previewNutrients.fat)} g</span>
-				</div>
-				<div class="fs-detail-row sub">
-					<span>{isEn ? 'Saturated Fat' : 'Ges. Fettsäuren'}</span>
-					<span>{fmt(previewNutrients.saturatedFat)} g</span>
-				</div>
-				<div class="fs-detail-row">
-					<span>{isEn ? 'Carbohydrates' : 'Kohlenhydrate'}</span>
-					<span>{fmt(previewNutrients.carbs)} g</span>
-				</div>
-				<div class="fs-detail-row sub">
-					<span>{isEn ? 'Sugars' : 'Zucker'}</span>
-					<span>{fmt(previewNutrients.sugars)} g</span>
-				</div>
-				<div class="fs-detail-row">
-					<span>{isEn ? 'Fiber' : 'Ballaststoffe'}</span>
-					<span>{fmt(previewNutrients.fiber)} g</span>
-				</div>
-			</div>
+			<MacroBreakdown
+				calories={previewNutrients.calories}
+				protein={previewNutrients.protein}
+				fat={previewNutrients.fat}
+				carbs={previewNutrients.carbs}
+				saturatedFat={previewNutrients.saturatedFat}
+				sugars={previewNutrients.sugars}
+				fiber={previewNutrients.fiber}
+			/>
 		{/if}
 
 		<div class="fs-actions">
@@ -922,92 +847,6 @@
 	.fs-detail-hint {
 		font-size: 0.75rem;
 		color: var(--color-text-tertiary);
-	}
-	.fs-detail-cal {
-		text-align: center;
-		margin: 0.25rem 0 0.25rem;
-	}
-	.fs-detail-cal-num {
-		font-size: 2.2rem;
-		font-weight: 800;
-		color: var(--color-text-primary);
-		line-height: 1;
-	}
-	.fs-detail-cal-unit {
-		font-size: 1rem;
-		font-weight: 600;
-		color: var(--color-text-secondary);
-		margin-left: 0.2rem;
-	}
-	.fs-detail-macros {
-		display: flex;
-		justify-content: space-around;
-		margin: 0.25rem 0 0.5rem;
-	}
-	.fs-detail-macro {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.1rem;
-		flex: 1;
-	}
-	.fs-detail-macro-label {
-		font-size: 0.78rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		text-align: center;
-	}
-	.fs-detail-macro-val {
-		font-size: 0.72rem;
-		color: var(--color-text-tertiary);
-	}
-	.fs-ring-bg {
-		fill: none;
-		stroke: var(--color-border);
-		stroke-width: 5;
-		stroke-linecap: round;
-	}
-	.fs-ring-fill {
-		fill: none;
-		stroke-width: 5;
-		stroke-linecap: round;
-		transition: stroke-dashoffset 0.4s ease;
-	}
-	.fs-ring-text {
-		font-size: 14px;
-		font-weight: 700;
-		fill: currentColor;
-		text-anchor: middle;
-		dominant-baseline: central;
-	}
-	.fs-ring-protein { stroke: var(--nord14); }
-	.fs-ring-fat { stroke: var(--nord12); }
-	.fs-ring-carbs { stroke: var(--nord9); }
-	.fs-detail-rows {
-		background: var(--color-surface);
-		border-radius: 10px;
-		padding: 0.5rem 0.75rem;
-		border: 1px solid var(--color-border);
-	}
-	.fs-detail-row {
-		display: flex;
-		justify-content: space-between;
-		padding: 0.3rem 0;
-		border-bottom: 1px solid var(--color-border);
-		font-size: 0.85rem;
-		color: var(--color-text-primary);
-	}
-	.fs-detail-row:last-child {
-		border-bottom: none;
-	}
-	.fs-detail-row.sub span:first-child {
-		padding-left: 0.75rem;
-		color: var(--color-text-tertiary);
-		font-size: 0.8rem;
-	}
-	.fs-detail-row span:last-child {
-		color: var(--color-text-secondary);
-		font-variant-numeric: tabular-nums;
 	}
 
 	/* ── Buttons ── */

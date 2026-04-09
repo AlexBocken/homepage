@@ -5,6 +5,7 @@
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
+	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { getDRI, NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
@@ -626,25 +627,7 @@
 		};
 	}
 
-	function cmMacroPercent(meal) {
-		const { per100g } = aggregateMealPer100g(meal);
-		const proteinCal = per100g.protein * 4;
-		const fatCal = per100g.fat * 9;
-		const carbsCal = per100g.carbs * 4;
-		const total = proteinCal + fatCal + carbsCal;
-		if (total === 0) return { protein: 0, fat: 0, carbs: 0 };
-		return {
-			protein: Math.round(proteinCal / total * 100),
-			fat: Math.round(fatCal / total * 100),
-			carbs: 100 - Math.round(proteinCal / total * 100) - Math.round(fatCal / total * 100),
-		};
-	}
 
-	function fmtNutrient(v) {
-		if (v == null || isNaN(v)) return '0';
-		if (v >= 100) return Math.round(v).toString();
-		return v.toFixed(1);
-	}
 
 	async function loadCustomMeals() {
 		if (customMealsLoaded) return;
@@ -993,7 +976,6 @@
 
 {#snippet cmDetailScreen(meal, logFn)}
 	{@const preview = cmPreview(meal)}
-	{@const mp = cmMacroPercent(meal)}
 	<div class="cm-detail">
 		<div class="cm-detail-header">
 			<span class="cm-detail-name">{meal.name}</span>
@@ -1019,63 +1001,15 @@
 			<span class="cm-detail-hint">= {Math.round(preview.grams)}g</span>
 		{/if}
 
-		<!-- Calorie headline -->
-		<div class="cm-detail-cal">
-			<span class="cm-detail-cal-num">{preview.calories}</span>
-			<span class="cm-detail-cal-unit">kcal</span>
-		</div>
-
-		<!-- Macro rings -->
-		<div class="cm-detail-macros">
-			{#each [
-				{ pct: mp.protein, label: isEn ? 'Protein' : 'Eiweiß', cls: 'ring-protein', grams: preview.protein },
-				{ pct: mp.fat, label: isEn ? 'Fat' : 'Fett', cls: 'ring-fat', grams: preview.fat },
-				{ pct: mp.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', cls: 'ring-carbs', grams: preview.carbs },
-			] as macro}
-				<div class="cm-detail-macro">
-					<svg width="72" height="72" viewBox="0 0 70 70">
-						<circle class="ring-bg" cx="35" cy="35" r={RADIUS}
-							stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-							transform="rotate({ARC_ROTATE} 35 35)" />
-						<circle class="ring-fill {macro.cls}" cx="35" cy="35" r={RADIUS}
-							stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-							stroke-dashoffset={strokeOffset(macro.pct)}
-							transform="rotate({ARC_ROTATE} 35 35)" />
-						<text class="ring-text" x="35" y="35">{macro.pct}%</text>
-					</svg>
-					<span class="cm-detail-macro-label">{macro.label}</span>
-					<span class="cm-detail-macro-val">{fmtNutrient(macro.grams)}g</span>
-				</div>
-			{/each}
-		</div>
-
-		<!-- Macro detail rows -->
-		<div class="cm-detail-rows">
-			<div class="cm-detail-row">
-				<span>{isEn ? 'Protein' : 'Eiweiß'}</span>
-				<span>{fmtNutrient(preview.protein)} g</span>
-			</div>
-			<div class="cm-detail-row">
-				<span>{isEn ? 'Fat' : 'Fett'}</span>
-				<span>{fmtNutrient(preview.fat)} g</span>
-			</div>
-			<div class="cm-detail-row sub">
-				<span>{isEn ? 'Saturated Fat' : 'Ges. Fettsäuren'}</span>
-				<span>{fmtNutrient(preview.saturatedFat)} g</span>
-			</div>
-			<div class="cm-detail-row">
-				<span>{isEn ? 'Carbohydrates' : 'Kohlenhydrate'}</span>
-				<span>{fmtNutrient(preview.carbs)} g</span>
-			</div>
-			<div class="cm-detail-row sub">
-				<span>{isEn ? 'Sugars' : 'Zucker'}</span>
-				<span>{fmtNutrient(preview.sugars)} g</span>
-			</div>
-			<div class="cm-detail-row">
-				<span>{isEn ? 'Fiber' : 'Ballaststoffe'}</span>
-				<span>{fmtNutrient(preview.fiber)} g</span>
-			</div>
-		</div>
+		<MacroBreakdown
+			calories={preview.calories}
+			protein={preview.protein}
+			fat={preview.fat}
+			carbs={preview.carbs}
+			saturatedFat={preview.saturatedFat}
+			sugars={preview.sugars}
+			fiber={preview.fiber}
+		/>
 
 		<!-- Ingredients list -->
 		<details class="cm-detail-ingredients">
@@ -2200,9 +2134,6 @@
 		letter-spacing: 0.04em;
 	}
 	/* Macro rings (custom meal detail + food detail) */
-	.ring-protein { stroke: var(--nord14); }
-	.ring-fat { stroke: var(--nord12); }
-	.ring-carbs { stroke: var(--nord9); }
 	.ring-text {
 		font-size: 14px;
 		font-weight: 700;
@@ -3466,71 +3397,6 @@
 		font-size: 0.75rem;
 		color: var(--color-text-tertiary);
 		margin-bottom: 0.5rem;
-	}
-	.cm-detail-cal {
-		text-align: center;
-		margin: 0.75rem 0 0.5rem;
-	}
-	.cm-detail-cal-num {
-		font-size: 2.2rem;
-		font-weight: 800;
-		color: var(--color-text-primary);
-		line-height: 1;
-	}
-	.cm-detail-cal-unit {
-		font-size: 1rem;
-		font-weight: 600;
-		color: var(--color-text-secondary);
-		margin-left: 0.2rem;
-	}
-	.cm-detail-macros {
-		display: flex;
-		justify-content: space-around;
-		margin: 0.5rem 0 0.75rem;
-	}
-	.cm-detail-macro {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.1rem;
-		flex: 1;
-	}
-	.cm-detail-macro-label {
-		font-size: 0.78rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		text-align: center;
-	}
-	.cm-detail-macro-val {
-		font-size: 0.72rem;
-		color: var(--color-text-tertiary);
-	}
-	.cm-detail-rows {
-		background: var(--color-surface);
-		border-radius: 10px;
-		padding: 0.5rem 0.75rem;
-		margin-bottom: 0.75rem;
-		border: 1px solid var(--color-border);
-	}
-	.cm-detail-row {
-		display: flex;
-		justify-content: space-between;
-		padding: 0.3rem 0;
-		border-bottom: 1px solid var(--color-border);
-		font-size: 0.85rem;
-		color: var(--color-text-primary);
-	}
-	.cm-detail-row:last-child {
-		border-bottom: none;
-	}
-	.cm-detail-row.sub span:first-child {
-		padding-left: 0.75rem;
-		color: var(--color-text-tertiary);
-		font-size: 0.8rem;
-	}
-	.cm-detail-row span:last-child {
-		color: var(--color-text-secondary);
-		font-variant-numeric: tabular-nums;
 	}
 	.cm-detail-ingredients {
 		margin-bottom: 0.75rem;
