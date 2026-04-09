@@ -468,6 +468,7 @@
 
 	// --- Inline add food ---
 	let addingMeal = $state(null);
+	let inlineTab = $state('search'); // 'search' | 'meals'
 
 	// --- FAB modal (route-based via ?add param) ---
 	const showFabModal = $derived($page.url.searchParams.has('add'));
@@ -588,10 +589,55 @@
 
 	function startAdd(meal) {
 		addingMeal = meal;
+		inlineTab = 'search';
+		loadCustomMeals();
 	}
 
 	function cancelAdd() {
 		addingMeal = null;
+	}
+
+	async function inlineLogCustomMeal(meal) {
+		if (!addingMeal) return;
+		try {
+			const totals = {};
+			const nutrientKeys = ['calories', 'protein', 'fat', 'saturatedFat', 'carbs', 'fiber', 'sugars',
+				'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
+				'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
+				'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
+				'isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine', 'threonine',
+				'tryptophan', 'valine', 'histidine', 'alanine', 'arginine', 'asparticAcid',
+				'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
+			for (const k of nutrientKeys) totals[k] = 0;
+			let totalGrams = 0;
+			for (const ing of meal.ingredients) {
+				const r = ing.amountGrams / 100;
+				totalGrams += ing.amountGrams;
+				for (const k of nutrientKeys) totals[k] += (ing.per100g?.[k] ?? 0) * r;
+			}
+			const per100g = {};
+			const scale = totalGrams > 0 ? 100 / totalGrams : 0;
+			for (const k of nutrientKeys) per100g[k] = totals[k] * scale;
+
+			await fetch('/api/fitness/food-log', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					date: currentDate,
+					mealType: addingMeal,
+					name: meal.name,
+					source: 'custom',
+					sourceId: meal._id,
+					amountGrams: totalGrams,
+					per100g,
+				})
+			});
+			await goto(`/fitness/${s.nutrition}?date=${currentDate}`, { replaceState: true, noScroll: true });
+			cancelAdd();
+			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
+		} catch {
+			toast.error(isEn ? 'Failed to log meal' : 'Fehler beim Eintragen');
+		}
 	}
 
 	async function inlineLogFood(food) {
@@ -776,14 +822,21 @@
 						<circle class="ring-bg" cx="35" cy="35" r={RADIUS}
 							stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
 							transform="rotate({ARC_ROTATE} 35 35)" />
-						<circle class="ring-fill ring-calories" cx="35" cy="35" r={RADIUS}
+						{#if calorieOverflow > 0}
+							<circle class="ring-glow ring-calories-glow" cx="35" cy="35" r={RADIUS}
+								stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
+								style="--glow-target: {strokeOffset(Math.max(calorieProgress - calorieOverflow, 0))}; --glow-start: {strokeOffset(100)}"
+								transform="rotate({ARC_ROTATE} 35 35)" />
+						{/if}
+						<circle class="ring-fill ring-calories{calorieOverflow > 0 ? ' no-glow' : ''}" cx="35" cy="35" r={RADIUS}
 							stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
 							stroke-dashoffset={strokeOffset(calorieProgress)}
 							transform="rotate({ARC_ROTATE} 35 35)" />
 						{#if calorieOverflow > 0}
 							<circle class="ring-fill ring-overflow" cx="35" cy="35" r={RADIUS}
 								stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
-								stroke-dashoffset={overflowOffset(calorieOverflow)}
+								style="--overflow-target: {overflowOffset(calorieOverflow)}; --arc-length: {ARC_LENGTH}"
+								stroke-linecap="butt"
 								transform="translate(70, 0) scale(-1, 1) rotate({ARC_ROTATE} 35 35)" />
 						{/if}
 						<text class="ring-text-main" x="35" y="30">{fmtCal(Math.abs(calorieBalance))}</text>
@@ -1241,7 +1294,41 @@
 
 			{#if addingMeal === meal}
 				<div class="add-food-form">
-					<FoodSearch onselect={inlineLogFood} oncancel={cancelAdd} showDetailLinks={false} autofocus={true} />
+					<div class="add-food-form-header">
+						<div class="fab-tabs">
+							<button class="fab-tab" class:active={inlineTab === 'search'} onclick={() => inlineTab = 'search'}>
+								{t('search_food', lang).replace('…', '')}
+							</button>
+							<button class="fab-tab" class:active={inlineTab === 'meals'} onclick={() => { inlineTab = 'meals'; loadCustomMeals(); }}>
+								<UtensilsCrossed size={13} />
+								{t('custom_meals', lang)}
+							</button>
+						</div>
+						<button class="fab-close" onclick={cancelAdd}><Plus size={18} style="transform: rotate(45deg)" /></button>
+					</div>
+
+					{#if inlineTab === 'search'}
+						<FoodSearch onselect={inlineLogFood} showDetailLinks={false} autofocus={true} />
+					{:else}
+						<div class="custom-meals-list">
+							{#if customMeals.length === 0}
+								<p class="meals-empty">{t('no_custom_meals', lang)}</p>
+							{/if}
+							{#each customMeals as cm}
+								<div class="custom-meal-card">
+									<div class="custom-meal-info">
+										<span class="custom-meal-name">{cm.name}</span>
+										<span class="custom-meal-detail">{cm.ingredients.length} {t('ingredients', lang)} · {fmtCal(mealTotalCal(cm))} kcal</span>
+									</div>
+									<button class="btn-primary btn-sm" onclick={() => inlineLogCustomMeal(cm)}>{t('log_meal', lang)}</button>
+								</div>
+							{/each}
+							<a class="manage-meals-link" href="/fitness/{s.nutrition}/meals">
+								<Settings size={13} />
+								{isEn ? 'Manage meals' : 'Mahlzeiten verwalten'}
+							</a>
+						</div>
+					{/if}
 				</div>
 			{:else}
 				<button class="add-food-btn" onclick={() => startAdd(meal)}>
@@ -1379,8 +1466,8 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--nord8);
-		background: color-mix(in srgb, var(--nord8) 12%, transparent);
+		color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 		padding: 0.15rem 0.4rem;
 		border-radius: 4px;
 	}
@@ -1503,7 +1590,7 @@
 		flex-shrink: 0;
 	}
 	.calorie-ring {
-		filter: drop-shadow(0 0 8px color-mix(in srgb, var(--nord8) 20%, transparent));
+		overflow: visible;
 	}
 
 	/* ── Macro Progress Bars ── */
@@ -1549,7 +1636,10 @@
 		height: 100%;
 		background: var(--nord11);
 		border-radius: 0 3px 3px 0;
-		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+		animation: bar-overflow-fill 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s both;
+	}
+	@keyframes bar-overflow-fill {
+		from { width: 0%; }
 	}
 	.macro-bar-info {
 		font-size: 0.68rem;
@@ -1574,10 +1664,38 @@
 		stroke-linecap: round;
 		transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 	}
-	.ring-calories { stroke: var(--nord8); }
+	.ring-calories {
+		stroke: var(--color-primary);
+		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-primary) 25%, transparent));
+	}
+	.ring-calories.no-glow {
+		filter: none;
+	}
+	.ring-glow {
+		fill: none;
+		stroke-width: 5;
+		stroke-linecap: round;
+		pointer-events: none;
+	}
+	.ring-calories-glow {
+		stroke: var(--color-primary);
+		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-primary) 25%, transparent));
+		stroke-dashoffset: var(--glow-target);
+		animation: glow-shrink 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
+	}
+	@keyframes glow-shrink {
+		from { stroke-dashoffset: var(--glow-start); }
+		to { stroke-dashoffset: var(--glow-target); }
+	}
 	.ring-overflow {
 		stroke: var(--nord11);
-		transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--nord11) 25%, transparent));
+		stroke-dashoffset: var(--overflow-target);
+		animation: overflow-fill 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
+	}
+	@keyframes overflow-fill {
+		from { stroke-dashoffset: var(--arc-length); }
+		to { stroke-dashoffset: var(--overflow-target); }
 	}
 	.ring-text-main {
 		font-size: 14px;
@@ -2530,6 +2648,7 @@
 		width: 100%;
 		justify-content: center;
 		transition: color 0.15s, border-color 0.15s;
+		margin-top: 0.5rem;
 	}
 	.add-food-btn:hover {
 		color: var(--meal-color);
@@ -2541,15 +2660,27 @@
 		border-radius: 10px;
 		padding: 0.85rem;
 		box-shadow: var(--shadow-sm);
-
+		margin-top: 0.5rem;
+	}
+	.add-food-form-header {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+	.add-food-form-header .fab-close {
+		margin-top: -0.5rem;
+		margin-right: -0.5rem;
+	}
+	.add-food-form-header .fab-tabs {
+		flex: 1;
 	}
 	/* Search/food selection handled by FoodSearch component */
 
 	/* ── Buttons ── */
 	.btn-primary {
 		padding: 0.5rem 1.1rem;
-		background: var(--nord8);
-		color: white;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 		border: none;
 		border-radius: 8px;
 		cursor: pointer;
@@ -2559,7 +2690,7 @@
 		transition: background 0.15s, transform 0.1s;
 	}
 	.btn-primary:hover {
-		background: var(--nord10);
+		filter: brightness(1.1);
 	}
 	.btn-primary:active {
 		transform: scale(0.97);
@@ -2693,8 +2824,8 @@
 		transition: color 0.15s, border-color 0.15s;
 	}
 	.fab-tab.active {
-		color: var(--nord8);
-		border-bottom-color: var(--nord8);
+		color: var(--color-primary);
+		border-bottom-color: var(--color-primary);
 	}
 	.fab-tab:hover:not(.active) {
 		color: var(--color-text-secondary);

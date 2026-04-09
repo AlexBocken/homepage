@@ -146,11 +146,15 @@
 	{#if profileEditing}
 		<div class="profile-fields">
 			<div class="form-group">
-				<label for="p-sex">{t('sex', lang)}</label>
-				<select id="p-sex" bind:value={profileSex}>
-					<option value="male">{t('male', lang)}</option>
-					<option value="female">{t('female', lang)}</option>
-				</select>
+				<label>{t('sex', lang)}</label>
+				<div class="sex-pills">
+					<button class="sex-pill" class:active={profileSex === 'male'} onclick={() => profileSex = 'male'}>
+						<Mars size={14} /> {t('male', lang)}
+					</button>
+					<button class="sex-pill" class:active={profileSex === 'female'} onclick={() => profileSex = 'female'}>
+						<Venus size={14} /> {t('female', lang)}
+					</button>
+				</div>
 			</div>
 			<div class="form-group">
 				<label for="p-height">{t('height', lang)}</label>
@@ -293,8 +297,33 @@
 	}
 	.profile-fields {
 		display: flex;
-		gap: 0.75rem;
+		gap: 0.5rem;
 		align-items: flex-end;
+		justify-content: flex-end;
+		flex-wrap: wrap;
+	}
+	.sex-pills {
+		display: flex;
+		gap: 0.4rem;
+	}
+	.sex-pill {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.35rem 0.65rem;
+		border: 1px solid var(--color-border);
+		border-radius: 20px;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		font-size: 0.8rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 150ms;
+	}
+	.sex-pill.active {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-text-on-primary);
 	}
 	.profile-save-btn {
 		padding: 0.4rem 0.75rem;
@@ -315,11 +344,11 @@
 	}
 
 	.form-group {
-		flex: 1;
 		display: flex;
 		flex-direction: column;
 		gap: 0.2rem;
 		margin-bottom: 0.4rem;
+		flex-shrink: 0;
 	}
 	.form-group label {
 		font-size: 0.7rem;

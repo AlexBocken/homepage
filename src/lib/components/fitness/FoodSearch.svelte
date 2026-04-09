@@ -357,13 +357,18 @@
 	<div class="fs-search-row">
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
-			type="search"
+			type="text"
 			class="fs-search-input"
 			placeholder={t('search_food', lang)}
 			bind:value={query}
 			oninput={doSearch}
 			autofocus={autofocus}
 		/>
+		{#if query}
+			<button class="fs-clear-btn" onclick={() => { query = ''; results = []; }} aria-label="Clear">
+				<X size={16} />
+			</button>
+		{/if}
 		{#if browser}
 			<button class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
 				<ScanBarcode size={20} />
@@ -485,7 +490,23 @@
 	}
 	.fs-search-input:focus {
 		outline: none;
-		border-color: var(--nord8);
+		border-color: var(--color-primary);
+	}
+	.fs-clear-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: none;
+		border: none;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.3rem;
+		border-radius: 50%;
+		flex-shrink: 0;
+		transition: background 0.12s;
+	}
+	.fs-clear-btn:hover {
+		background: var(--color-bg-elevated);
 	}
 	.fs-barcode-btn {
 		display: flex;
