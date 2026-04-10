@@ -733,7 +733,7 @@
 			const logGrams = amountGrams ?? totalGrams;
 			const liquidScale = totalGrams > 0 ? logGrams / totalGrams : 0;
 
-			await fetch('/api/fitness/food-log', {
+			const res = await fetch('/api/fitness/food-log', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -748,7 +748,10 @@
 				})
 			});
 
-			await goto(`/fitness/${s.nutrition}/${currentDate}`, { replaceState: true, noScroll: true });
+			if (res.ok) {
+				const entry = await res.json();
+				entries = [...entries, entry];
+			}
 			selectedCmMeal = null;
 			closeFabModal();
 			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
@@ -778,7 +781,7 @@
 			const logGrams = amountGrams ?? totalGrams;
 			const liquidScale = totalGrams > 0 ? logGrams / totalGrams : 0;
 
-			await fetch('/api/fitness/food-log', {
+			const res = await fetch('/api/fitness/food-log', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -793,7 +796,10 @@
 				})
 			});
 
-			await goto(`/fitness/${s.nutrition}/${currentDate}`, { replaceState: true, noScroll: true });
+			if (res.ok) {
+				const entry = await res.json();
+				entries = [...entries, entry];
+			}
 			selectedCmMeal = null;
 			cancelAdd();
 			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
