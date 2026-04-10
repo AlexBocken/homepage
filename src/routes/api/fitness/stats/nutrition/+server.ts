@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const thirtyDaysAgo = new Date(todayStart);
 	thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
 
-	const [entries30d, goal, weightMeasurements, workoutSessions7d] = await Promise.all([
+	const [entries30d, goal, weightMeasurements, workoutSessions30d] = await Promise.all([
 		FoodLogEntry.find({
 			createdBy: user.nickname,
 			date: { $gte: thirtyDaysAgo, $lt: todayStart },
@@ -34,7 +34,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			{ date: 1, weight: 1, _id: 0 }
 		).sort({ date: 1 }).lean() as any[],
 		WorkoutSession.find(
-			{ createdBy: user.nickname, startTime: { $gte: sevenDaysAgo, $lt: todayStart }, 'kcalEstimate.kcal': { $gt: 0 } },
+			{ createdBy: user.nickname, startTime: { $gte: thirtyDaysAgo, $lt: todayStart }, 'kcalEstimate.kcal': { $gt: 0 } },
 			{ startTime: 1, 'kcalEstimate.kcal': 1, _id: 0 }
 		).lean() as any[],
 	]);
@@ -121,9 +121,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 		return bmr * neatMult;
 	}
 
-	// Group workout kcal by date for the 7-day window
+	// Group workout kcal by date for the 30-day window
 	const workoutKcalByDate = new Map<string, number>();
-	for (const s of workoutSessions7d) {
+	for (const s of workoutSessions30d) {
 		const key = new Date(s.startTime).toISOString().slice(0, 10);
 		workoutKcalByDate.set(key, (workoutKcalByDate.get(key) ?? 0) + (s.kcalEstimate?.kcal ?? 0));
 	}
@@ -196,9 +196,10 @@ export const GET: RequestHandler = async ({ locals }) => {
 		yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 		const totalDays = Math.round((yesterday.getTime() - firstDate.getTime()) / 86400000) + 1;
 
-		const lower = dailyCalorieGoal * 0.9;
-		const upper = dailyCalorieGoal * 1.1;
-		const withinRange = dailyTotals.filter(d => d.calories >= lower && d.calories <= upper).length;
+		const withinRange = dailyTotals.filter(d => {
+			const dayGoal = dailyCalorieGoal + (workoutKcalByDate.get(d.date) ?? 0);
+			return d.calories >= dayGoal * 0.9 && d.calories <= dayGoal * 1.1;
+		}).length;
 		adherenceDays = totalDays;
 		adherencePercent = Math.round(withinRange / totalDays * 100);
 	}
