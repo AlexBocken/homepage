@@ -29,27 +29,23 @@
 		return d.toLocaleDateString(isEn ? 'en-US' : 'de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
 	});
 
-	async function navigateDate(offset) {
+	function dateOffset(offset) {
 		const d = new Date(currentDate + 'T12:00:00');
 		d.setDate(d.getDate() + offset);
-		currentDate = d.toISOString().slice(0, 10);
-		await loadEntries();
+		return d.toISOString().slice(0, 10);
 	}
 
-	async function goToday() {
-		currentDate = todayStr;
-		await loadEntries();
-	}
+	const prevDate = $derived(dateOffset(-1));
+	const nextDate = $derived(dateOffset(1));
+	const prevHref = $derived(prevDate === todayStr ? `/fitness/${s.nutrition}` : `/fitness/${s.nutrition}/${prevDate}`);
+	const nextHref = $derived(nextDate === todayStr ? `/fitness/${s.nutrition}` : `/fitness/${s.nutrition}/${nextDate}`);
+	const todayHref = $derived(`/fitness/${s.nutrition}`);
 
 	// --- Entries ---
 	// svelte-ignore state_referenced_locally
 	let entries = $state(data.foodLog?.entries ?? []);
 	// svelte-ignore state_referenced_locally
 	let recipeImages = $state(data.recipeImages ?? {});
-
-	async function loadEntries() {
-		await goto(`/fitness/${s.nutrition}?date=${currentDate}`, { replaceState: true, noScroll: true });
-	}
 
 	// Keep reactive with server data when navigating
 	$effect(() => {
@@ -748,7 +744,7 @@
 				})
 			});
 
-			await goto(`/fitness/${s.nutrition}?date=${currentDate}`, { replaceState: true, noScroll: true });
+			await goto(`/fitness/${s.nutrition}/${currentDate}`, { replaceState: true, noScroll: true });
 			selectedCmMeal = null;
 			closeFabModal();
 			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
@@ -793,7 +789,7 @@
 				})
 			});
 
-			await goto(`/fitness/${s.nutrition}?date=${currentDate}`, { replaceState: true, noScroll: true });
+			await goto(`/fitness/${s.nutrition}/${currentDate}`, { replaceState: true, noScroll: true });
 			selectedCmMeal = null;
 			cancelAdd();
 			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
@@ -1160,18 +1156,18 @@
 <div class="nutrition-page">
 	<!-- Date Navigator -->
 	<div class="date-nav">
-		<button class="date-btn" onclick={() => navigateDate(-1)} aria-label="Previous day">
+		<a class="date-btn" href={prevHref} aria-label="Previous day" data-sveltekit-replacestate data-sveltekit-noscroll>
 			<ChevronLeft size={20} />
-		</button>
-		<button class="date-display" onclick={goToday} class:is-today={isToday}>
+		</a>
+		<span class="date-display" class:is-today={isToday}>
 			{displayDate}
 			{#if isToday}<span class="today-badge">{t('today', lang)}</span>{/if}
-		</button>
-		<button class="date-btn" onclick={() => navigateDate(1)} aria-label="Next day">
+		</span>
+		<a class="date-btn" href={nextHref} aria-label="Next day" data-sveltekit-replacestate data-sveltekit-noscroll>
 			<ChevronRight size={20} />
-		</button>
+		</a>
 		{#if !isToday}
-			<button class="go-today-btn" onclick={goToday}>{t('today', lang)}</button>
+			<a class="go-today-btn" href={todayHref} data-sveltekit-replacestate data-sveltekit-noscroll>{t('today', lang)}</a>
 		{/if}
 	</div>
 
@@ -1923,6 +1919,7 @@
 		border-radius: 50%;
 		display: flex;
 		align-items: center;
+		text-decoration: none;
 		transition: color 0.15s, background 0.15s;
 	}
 	.date-btn:hover {
@@ -1935,7 +1932,6 @@
 		color: var(--color-text-primary);
 		font-size: 1.05rem;
 		font-weight: 700;
-		cursor: pointer;
 		padding: 0.35rem 0.75rem;
 		border-radius: 8px;
 		display: flex;
@@ -1943,9 +1939,6 @@
 		gap: 0.5rem;
 		transition: background 0.15s;
 		letter-spacing: -0.01em;
-	}
-	.date-display:hover {
-		background: var(--color-bg-elevated);
 	}
 	.today-badge {
 		font-size: 0.6rem;
@@ -1966,6 +1959,7 @@
 		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 		border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
 		padding: 0.25rem 0.6rem;
+		text-decoration: none;
 		border-radius: 6px;
 		cursor: pointer;
 		transition: background 0.15s;
