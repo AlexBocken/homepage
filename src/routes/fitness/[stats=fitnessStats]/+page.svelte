@@ -295,8 +295,8 @@
 					{#if showAdherenceInfo}
 						<div class="card-info-tooltip">
 							{lang === 'en'
-								? 'Percentage of days where calories eaten were within ±10% of your goal. Days without tracking count as misses.'
-								: 'Prozent der Tage, an denen die gegessenen Kalorien innerhalb von ±10 % deines Ziels lagen. Nicht erfasste Tage zählen als verfehlt.'}
+								? 'Percentage of days where calories eaten were within ±10% of your goal (adjusted for exercise calories burned). Days without tracking count as misses.'
+								: 'Prozent der Tage, an denen die gegessenen Kalorien innerhalb von ±10 % deines Ziels lagen (bereinigt um verbrannte Trainings\u00ADkalorien). Nicht erfasste Tage zählen als verfehlt.'}
 						</div>
 					{/if}
 				</div>
