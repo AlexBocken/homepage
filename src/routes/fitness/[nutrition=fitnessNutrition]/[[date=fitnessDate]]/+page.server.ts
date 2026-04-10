@@ -6,8 +6,8 @@ import { Recipe } from '$models/Recipe';
 import { RoundOffCache } from '$models/RoundOffCache';
 import mongoose from 'mongoose';
 
-export const load: PageServerLoad = async ({ fetch, url, locals }) => {
-	const dateParam = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
+export const load: PageServerLoad = async ({ fetch, params, locals }) => {
+	const dateParam = params.date || new Date().toISOString().slice(0, 10);
 
 	// Run all independent work in parallel: 3 API calls + workout kcal DB query
 	const dayStart = new Date(dateParam + 'T00:00:00.000Z');

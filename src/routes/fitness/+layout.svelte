@@ -64,7 +64,9 @@
 	const activePath = $derived(`/fitness/${s.workout}/${s.active}`);
 	const isOnActivePage = $derived($page.url.pathname === activePath);
 	const isNutritionPage = $derived(
-		$page.url.pathname === `/fitness/${s.nutrition}` || $page.url.pathname === `/fitness/${s.nutrition}/`
+		$page.url.pathname.startsWith(`/fitness/${s.nutrition}`) &&
+		!$page.url.pathname.startsWith(`/fitness/${s.nutrition}/food`) &&
+		!$page.url.pathname.startsWith(`/fitness/${s.nutrition}/meals`)
 	);
 
 	/** @param {number} secs */
