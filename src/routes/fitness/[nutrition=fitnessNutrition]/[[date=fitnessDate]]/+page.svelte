@@ -394,6 +394,9 @@
 		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, micros, aminos };
 	});
 
+	// Atwater-derived calories (consistent with macro goals which use 4/9/4)
+	const atwaterCalories = $derived(dayTotals.protein * 4 + dayTotals.fat * 9 + dayTotals.carbs * 4);
+
 	// Macro percentages by calorie contribution
 	const macroPercent = $derived.by(() => {
 		const proteinCal = dayTotals.protein * 4;
@@ -499,8 +502,9 @@
 
 
 	// Net calorie balance: effective goal (includes exercise) - eaten
-	const calorieBalance = $derived(effectiveCalorieGoal ? (effectiveCalorieGoal - dayTotals.calories) : 0);
-	const calorieProgressRaw = $derived(effectiveCalorieGoal ? dayTotals.calories / effectiveCalorieGoal * 100 : 0);
+	// Use Atwater-derived calories so the ring and macro bars always agree
+	const calorieBalance = $derived(effectiveCalorieGoal ? (effectiveCalorieGoal - atwaterCalories) : 0);
+	const calorieProgressRaw = $derived(effectiveCalorieGoal ? atwaterCalories / effectiveCalorieGoal * 100 : 0);
 	const calorieProgress = $derived(Math.min(calorieProgressRaw, 100));
 	const calorieOverflow = $derived(Math.max(calorieProgressRaw - 100, 0));
 
@@ -1178,7 +1182,7 @@
 			<!-- Eaten / Ring / Burned row -->
 			<div class="calorie-trio">
 				<div class="cal-stat eaten">
-					<span class="cal-stat-value">{fmtCal(dayTotals.calories)}</span>
+					<span class="cal-stat-value">{fmtCal(atwaterCalories)}</span>
 					<span class="cal-stat-label">{isEn ? 'EATEN' : 'GEGESSEN'}</span>
 				</div>
 
@@ -1213,16 +1217,17 @@
 					<span class="cal-stat-value">{fmtCal(exerciseKcal)}</span>
 					<span class="cal-stat-label">{isEn ? 'BURNED' : 'VERBRANNT'}</span>
 					<span class="burned-bmr tdee-info-wrap">
-						+{fmtCal(tdeeSoFar)} TDEE<button class="tdee-info-trigger" onclick={() => showTdeeInfo = !showTdeeInfo} aria-label="TDEE info"><Info size={10} /></button>
+						+{fmtCal(Math.round(dailyTdee))} TDEE<button class="tdee-info-trigger" onclick={() => showTdeeInfo = !showTdeeInfo} aria-label="TDEE info"><Info size={10} /></button>
 						{#if showTdeeInfo}
 							<div class="tdee-info-tooltip">
-								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? 'TDEE = Total Daily Energy Expenditure — calories your body burns per day at rest + daily activity.' : 'TDEE = Gesamtenergieumsatz — Kalorien, die dein Körper pro Tag in Ruhe + Alltagsaktivität verbrennt.'}</span>
+								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? 'TDEE = Total Daily Energy Expenditure — calories your body burns per day at rest + daily activity (excluding tracked exercise).' : 'TDEE = Gesamtenergieumsatz — Kalorien, die dein Körper pro Tag in Ruhe + Alltagsaktivität verbrennt (ohne getracktes Training).'}</span>
+								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? `BMR × ${(ACTIVITY_MULT[activityLevel] ?? 1.3).toFixed(1)} (${activityLevel.replace('_', ' ')}) = ${fmtCal(Math.round(dailyTdee))} kcal` : `BMR × ${(ACTIVITY_MULT[activityLevel] ?? 1.3).toFixed(1)} (${activityLevel.replace('_', ' ')}) = ${fmtCal(Math.round(dailyTdee))} kcal`}</span>
 								{#if latestWeight}
 									<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? `Based on your latest logged weight (${latestWeight} kg).` : `Basierend auf deinem letzten Gewicht (${latestWeight} kg).`}</span>
 								{/if}
-								<span class="cite-line"><strong>BMR:</strong> <a href="https://doi.org/10.1093/ajcn/51.2.241" target="_blank" rel="noopener">Mifflin-St Jeor (1990)</a></span>
-								<span class="cite-line"><strong>NEAT:</strong> <a href="https://doi.org/10.1093/ajcn/75.5.914" target="_blank" rel="noopener">Levine (2002)</a></span>
-								<span class="cite-note">{isEn ? 'Multipliers reduced vs. standard Harris-Benedict factors — logged exercise kcal added separately.' : 'Multiplikatoren reduziert ggü. Harris-Benedict — geloggte Trainings-kcal werden separat addiert.'}</span>
+								<span class="cite-line"><strong>BMR:</strong> {fmtCal(Math.round(dailyBmr))} kcal — <a href="https://doi.org/10.1093/ajcn/51.2.241" target="_blank" rel="noopener">Mifflin-St Jeor (1990)</a></span>
+								<span class="cite-line"><strong>NEAT:</strong> ×{(ACTIVITY_MULT[activityLevel] ?? 1.3).toFixed(1)} — <a href="https://doi.org/10.1093/ajcn/75.5.914" target="_blank" rel="noopener">Levine (2002)</a></span>
+								<span class="cite-note">{isEn ? 'NEAT multiplier accounts for non-exercise activity (walking, fidgeting, daily tasks). Tracked exercise kcal are added separately on top.' : 'NEAT-Multiplikator berücksichtigt Alltagsaktivität (Gehen, Bewegung, tägliche Aufgaben). Getracktes Training wird separat oben drauf addiert.'}</span>
 							</div>
 						{/if}
 					</span>
@@ -1245,7 +1250,7 @@
 					{@const remaining = macro.goal ? macro.goal - macro.value : 0}
 					{@const MacroBarIcon = macro.icon}
 					<div class="macro-bar-item">
-						<span class="macro-bar-label"><MacroBarIcon size={12} /> {macro.label}</span>
+						<span class="macro-bar-label"><MacroBarIcon size={12} /> {macro.label}{#if macro.goal} <span class="macro-bar-goal">{fmt(macro.goal)}g/{isEn ? 'day' : 'Tag'}</span>{/if}</span>
 						<div class="macro-bar-track">
 							<div class="macro-bar-fill" style="width: {Math.min(pct, 100)}%; background: {macro.color}"></div>
 							{#if over}
@@ -1871,6 +1876,7 @@
 			gap: 0.75rem;
 			position: sticky;
 			top: 1rem;
+			z-index: 10;
 		}
 		.meals-col {
 			display: flex;
@@ -1976,8 +1982,7 @@
 		padding: 1.25rem;
 		box-shadow: var(--shadow-sm);
 		position: relative;
-
-
+		z-index: 10;
 	}
 	.daily-summary::before {
 		content: '';
@@ -2024,6 +2029,7 @@
 	}
 	.tdee-info-wrap {
 		position: relative;
+		z-index: 50;
 	}
 	.tdee-info-trigger {
 		display: inline-flex;
@@ -2056,7 +2062,7 @@
 		color: var(--color-text-secondary);
 		white-space: nowrap;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-		z-index: 20;
+		z-index: 100;
 		display: flex;
 		flex-direction: column;
 		gap: 0.15rem;
@@ -2114,6 +2120,11 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--color-text-secondary);
+	}
+	.macro-bar-goal {
+		font-weight: 400;
+		opacity: 0.7;
+		text-transform: none;
 	}
 	.macro-bar-track {
 		width: 100%;
