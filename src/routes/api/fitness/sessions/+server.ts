@@ -27,8 +27,16 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = parseInt(url.searchParams.get('offset') || '0');
-    
-    const query = { createdBy: session.user.nickname };
+    const month = url.searchParams.get('month'); // YYYY-MM
+
+    const query: Record<string, any> = { createdBy: session.user.nickname };
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
+      const start = new Date(month + '-01T00:00:00.000Z');
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      query.startTime = { $gte: start, $lt: end };
+    }
+
     const [sessions, total] = await Promise.all([
       WorkoutSession.find(query).select('-exercises.gpsTrack -gpsTrack')
         .sort({ startTime: -1 }).limit(limit).skip(offset),
