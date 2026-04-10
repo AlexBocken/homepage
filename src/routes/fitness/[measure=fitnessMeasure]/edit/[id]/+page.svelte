@@ -6,6 +6,7 @@
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { Trash2 } from '@lucide/svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
+	import DatePicker from '$lib/components/DatePicker.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
@@ -112,7 +113,7 @@
 		<form onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
 			<div class="form-group">
 				<label for="m-date">{t('date', lang)}</label>
-				<input id="m-date" type="date" bind:value={formDate} />
+				<DatePicker bind:value={formDate} {lang} />
 			</div>
 
 			<h3>{t('general', lang)}</h3>

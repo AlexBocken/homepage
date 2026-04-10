@@ -13,6 +13,7 @@
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
+	import DatePicker from '$lib/components/DatePicker.svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { onMount } from 'svelte';
 
@@ -503,7 +504,7 @@
 		<div class="edit-meta">
 			<div class="meta-row">
 				<label for="edit-date">{t('date', lang)}</label>
-				<input id="edit-date" type="date" bind:value={editData.date} />
+				<DatePicker bind:value={editData.date} {lang} />
 			</div>
 			<div class="meta-row">
 				<label for="edit-time">{t('time', lang)}</label>

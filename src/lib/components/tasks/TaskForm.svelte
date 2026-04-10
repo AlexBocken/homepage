@@ -3,6 +3,7 @@
     Flower2, Droplets, Leaf, ShoppingCart, Trash2, Shirt, Brush } from '@lucide/svelte';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import Toggle from '$lib/components/Toggle.svelte';
+  import DatePicker from '$lib/components/DatePicker.svelte';
 
   const USERS = ['anna', 'alexander'];
 
@@ -306,7 +307,7 @@
 
   <div class="field">
     <label for="dueDate">Fällig am</label>
-    <input id="dueDate" type="date" bind:value={nextDueDate} required />
+    <DatePicker bind:value={nextDueDate} lang="de" />
   </div>
 
   <div class="field-row">

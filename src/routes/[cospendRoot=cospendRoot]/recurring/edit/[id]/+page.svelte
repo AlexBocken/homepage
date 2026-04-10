@@ -9,6 +9,7 @@
   import SplitMethodSelector from '$lib/components/cospend/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/cospend/UsersList.svelte';
   import SaveFab from '$lib/components/SaveFab.svelte';
+  import DatePicker from '$lib/components/DatePicker.svelte';
 
   let { data } = $props();
 
@@ -416,12 +417,7 @@
 
           <div class="form-group">
             <label for="startDate">{t('start_date', lang)}</label>
-            <input 
-              type="date" 
-              id="startDate" 
-              bind:value={formData.startDate} 
-              required
-            />
+            <DatePicker bind:value={formData.startDate} {lang} />
           </div>
         </div>
 
@@ -454,11 +450,7 @@
 
         <div class="form-group">
           <label for="endDate">{t('end_date_optional', lang)}</label>
-          <input 
-            type="date" 
-            id="endDate" 
-            bind:value={formData.endDate}
-          />
+          <DatePicker bind:value={formData.endDate} {lang} />
           <div class="help-text">{t('end_date_hint', lang)}</div>
         </div>
 
