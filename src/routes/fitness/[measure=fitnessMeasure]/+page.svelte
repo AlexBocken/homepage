@@ -5,6 +5,7 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
+	import DatePicker from '$lib/components/DatePicker.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
@@ -289,7 +290,7 @@
 	<!-- New measurement form -->
 	<form class="add-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
 		<div class="date-row">
-			<input type="date" bind:value={formDate} class="date-pill" />
+			<DatePicker bind:value={formDate} {lang} />
 		</div>
 
 		<div class="weight-card">
@@ -587,20 +588,6 @@
 		display: flex;
 		justify-content: center;
 		margin-bottom: 1rem;
-	}
-	.date-pill {
-		background: var(--color-bg-tertiary);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
-		padding: 0.35rem 1rem;
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		text-align: center;
-	}
-	.date-pill:focus {
-		outline: none;
-		border-color: var(--color-primary);
 	}
 
 	.weight-card {
