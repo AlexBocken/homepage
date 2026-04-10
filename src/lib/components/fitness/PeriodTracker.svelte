@@ -1,6 +1,7 @@
 <script>
 	import { t } from '$lib/js/fitnessI18n';
 	import { Trash2, Plus, Pencil, UserPlus, X, ChevronLeft, ChevronRight } from '@lucide/svelte';
+	import DatePicker from '$lib/components/DatePicker.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
@@ -748,11 +749,11 @@
 							<div class="add-row">
 								<label>
 									{t('period_start', lang)}
-									<input type="date" bind:value={addStart} max={todayStr} />
+									<DatePicker bind:value={addStart} max={todayStr} {lang} />
 								</label>
 								<label>
 									{t('period_end', lang)}
-									<input type="date" bind:value={addEnd} min={addStart} max={todayStr} />
+									<DatePicker bind:value={addEnd} min={addStart} max={todayStr} {lang} />
 								</label>
 							</div>
 							<div class="add-actions">
@@ -773,11 +774,11 @@
 								<div class="add-row">
 									<label>
 										{t('period_start', lang)}
-										<input type="date" bind:value={editStart} />
+										<DatePicker bind:value={editStart} {lang} />
 									</label>
 									<label>
 										{t('period_end', lang)}
-										<input type="date" bind:value={editEnd} min={editStart} />
+										<DatePicker bind:value={editEnd} min={editStart} {lang} />
 									</label>
 								</div>
 								<div class="add-actions">
@@ -836,11 +837,11 @@
 						<div class="add-row">
 							<label>
 								{t('period_start', lang)}
-								<input type="date" bind:value={addStart} max={todayStr} />
+								<DatePicker bind:value={addStart} max={todayStr} {lang} />
 							</label>
 							<label>
 								{t('period_end', lang)}
-								<input type="date" bind:value={addEnd} min={addStart} max={todayStr} />
+								<DatePicker bind:value={addEnd} min={addStart} max={todayStr} {lang} />
 							</label>
 						</div>
 						<div class="add-actions">

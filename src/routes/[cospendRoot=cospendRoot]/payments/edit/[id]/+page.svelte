@@ -7,6 +7,7 @@
   import FormSection from '$lib/components/FormSection.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import SaveFab from '$lib/components/SaveFab.svelte';
+  import DatePicker from '$lib/components/DatePicker.svelte';
 
   /**
    * @typedef {import('$models/Payment').IPayment & {splits?: import('$models/PaymentSplit').IPaymentSplit[]}} PaymentWithSplits
@@ -42,6 +43,7 @@
   let jsEnhanced = $state(false);
   /** @type {number | null} */
   let originalAmount = $state(null);
+  let paymentDateStr = $state('');
 
   let categoryOptions = $derived(getCategoryOptionsI18n(lang));
 
@@ -169,6 +171,7 @@
         }));
       }
 
+      paymentDateStr = formatDateForInput(loaded.date);
       // Store original amount for comparison to prevent infinite recalculation
       originalAmount = loaded.amount;
       // Set initial lastCalculatedAmount to prevent immediate recalculation on load
@@ -343,6 +346,13 @@
     }
   }
 
+  // Sync date picker string back to payment object
+  $effect(() => {
+    if (payment && paymentDateStr) {
+      payment.date = /** @type {Date} */ (new Date(paymentDateStr + 'T12:00:00'));
+    }
+  });
+
   // Reactive statement for exchange rate fetching
   $effect(() => {
     if (jsEnhanced && payment && payment.currency && payment.currency !== 'CHF' && payment.date && payment.originalAmount) {
@@ -469,13 +479,7 @@
 
           <div class="form-group">
             <label for="date">{t('date', lang)}</label>
-            <input
-              type="date"
-              id="date"
-              value={formatDateForInput(payment.date)}
-              onchange={(e) => { if (payment) payment.date = /** @type {Date} */ (new Date(/** @type {HTMLInputElement} */ (e.target).value)); }}
-              required
-            />
+            <DatePicker bind:value={paymentDateStr} {lang} />
           </div>
         </div>
 

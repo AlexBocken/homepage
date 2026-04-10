@@ -12,6 +12,7 @@
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import SaveFab from '$lib/components/SaveFab.svelte';
   import Toggle from '$lib/components/Toggle.svelte';
+  import DatePicker from '$lib/components/DatePicker.svelte';
 
   let { data, form } = $props();
 
@@ -454,13 +455,8 @@
 
         <div class="form-group">
           <label for="date">{t('payment_date', lang)}</label>
-          <input 
-            type="date" 
-            id="date" 
-            name="date"
-            bind:value={formData.date} 
-            required
-          />
+          <DatePicker bind:value={formData.date} {lang} />
+          <input type="hidden" name="date" value={formData.date} />
           {#if formData.currency !== 'CHF'}
             <small class="help-text">{t('exchange_rate_date', lang)}</small>
           {/if}
@@ -505,13 +501,8 @@
 
             <div class="form-group">
               <label for="recurringStartDate">{t('start_date', lang)}</label>
-              <input 
-                type="date" 
-                id="recurringStartDate" 
-                name="recurringStartDate"
-                bind:value={recurringData.startDate}
-                required
-              />
+              <DatePicker bind:value={recurringData.startDate} {lang} />
+              <input type="hidden" name="recurringStartDate" value={recurringData.startDate} />
             </div>
           </div>
 
@@ -545,13 +536,8 @@
 
           <div class="form-group">
             <label for="recurringEndDate">{t('end_date_optional', lang)}</label>
-            <input 
-              type="date" 
-              id="recurringEndDate" 
-              name="recurringEndDate"
-              bind:value={recurringData.endDate}
-              min={recurringData.startDate}
-            />
+            <DatePicker bind:value={recurringData.endDate} min={recurringData.startDate} {lang} />
+            <input type="hidden" name="recurringEndDate" value={recurringData.endDate} />
             <small class="help-text">{t('end_date_hint', lang)}</small>
           </div>
 
