@@ -204,21 +204,34 @@ export const GET: RequestHandler = async ({ locals }) => {
 		adherencePercent = Math.round(withinRange / totalDays * 100);
 	}
 
-	// Macro targets from goal
+	// Macro targets from goal — protein gets priority, remaining kcal split
+	// between fat and carbs proportionally to the stored fat:carb ratio.
 	let macroTargets: { protein: number | null; fat: number | null; carbs: number | null } = {
 		protein: null, fat: null, carbs: null
 	};
-	if (goal) {
-		// Compute protein percent of calories
-		if (goal.proteinTarget && dailyCalorieGoal) {
-			let proteinGrams = goal.proteinTarget;
+	if (goal && dailyCalorieGoal) {
+		let proteinGrams: number | null = null;
+		if (goal.proteinTarget) {
+			proteinGrams = goal.proteinTarget;
 			if (goal.proteinMode === 'per_kg' && trendWeight) {
 				proteinGrams = goal.proteinTarget * trendWeight;
 			}
-			macroTargets.protein = Math.round((proteinGrams * 4) / dailyCalorieGoal * 100);
 		}
-		if (goal.fatPercent != null) macroTargets.fat = goal.fatPercent;
-		if (goal.carbPercent != null) macroTargets.carbs = goal.carbPercent;
+		if (proteinGrams != null) {
+			const proteinPct = Math.min(Math.round((proteinGrams * 4) / dailyCalorieGoal * 100), 100);
+			macroTargets.protein = proteinPct;
+			const remainingPct = 100 - proteinPct;
+			const fatRatio = goal.fatPercent ?? 0;
+			const carbRatio = goal.carbPercent ?? 0;
+			const ratioSum = fatRatio + carbRatio;
+			if (ratioSum > 0) {
+				macroTargets.fat = Math.round(remainingPct * fatRatio / ratioSum);
+				macroTargets.carbs = remainingPct - macroTargets.fat;
+			}
+		} else {
+			if (goal.fatPercent != null) macroTargets.fat = goal.fatPercent;
+			if (goal.carbPercent != null) macroTargets.carbs = goal.carbPercent;
+		}
 	}
 
 	return json({

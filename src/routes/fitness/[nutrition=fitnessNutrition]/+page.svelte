@@ -149,14 +149,32 @@
 	}
 
 	// Macro ring preview (derived from edit fields)
+	// Protein gets priority; remaining kcal split between fat:carb by ratio
 	const RING_R = 48;
 	const RING_C = 2 * Math.PI * RING_R;
 	const RING_GAP = 4;
 	const editMacroRing = $derived.by(() => {
 		const cal = Number(editCalories) || 0;
-		const fat = Number(editFatPercent) || 0;
-		const carb = Number(editCarbPercent) || 0;
-		const prot = Math.max(0, 100 - fat - carb);
+		const fatRatio = Number(editFatPercent) || 0;
+		const carbRatio = Number(editCarbPercent) || 0;
+		let prot = 0, fat = 0, carb = 0;
+		if (cal > 0) {
+			// Compute protein % from target
+			let protGrams = Number(editProteinTarget) || 0;
+			if (editProteinMode === 'per_kg' && latestWeight) {
+				protGrams = protGrams * latestWeight;
+			}
+			prot = Math.min(Math.round((protGrams * 4) / cal * 100), 100);
+			const remaining = 100 - prot;
+			const ratioSum = fatRatio + carbRatio;
+			if (ratioSum > 0) {
+				fat = Math.round(remaining * fatRatio / ratioSum);
+				carb = remaining - fat;
+			} else {
+				fat = 0;
+				carb = remaining;
+			}
+		}
 		const fatDeg = (fat / 100) * 360;
 		const carbDeg = (carb / 100) * 360;
 		const fatLen = (fat / 100) * RING_C;
@@ -172,12 +190,9 @@
 	const stepCalSummary = $derived(
 		editCalories ? `${editCalories} kcal` : '—'
 	);
-	const stepMacroSummary = $derived.by(() => {
-		const f = Number(editFatPercent) || 0;
-		const c = Number(editCarbPercent) || 0;
-		const p = Math.max(0, 100 - f - c);
-		return `P${p}% F${f}% C${c}%`;
-	});
+	const stepMacroSummary = $derived(
+		`P${editMacroRing.prot}% F${editMacroRing.fat}% C${editMacroRing.carb}%`
+	);
 
 	async function saveGoals() {
 		goalSaving = true;
@@ -397,7 +412,14 @@
 		};
 	});
 
-	// Protein goal in grams
+	// --- Burned kcal ---
+	// svelte-ignore state_referenced_locally
+	let exerciseKcal = $state(Number(data.exerciseKcal) || 0);
+
+	// Effective daily calorie goal including exercise burned calories
+	const effectiveCalorieGoal = $derived(goalCalories ? goalCalories + (exerciseKcal || 0) : null);
+
+	// Protein goal in grams (fixed by body weight, unaffected by exercise)
 	const proteinGoalGrams = $derived.by(() => {
 		if (goalProteinTarget) {
 			if (goalProteinMode === 'per_kg' && latestWeight) {
@@ -406,20 +428,34 @@
 			if (goalProteinMode === 'fixed') return goalProteinTarget;
 		}
 		// Fallback: derive from remaining calorie % (100 - fat% - carb%)
-		if (goalCalories && goalFatPercent != null && goalCarbPercent != null) {
+		if (effectiveCalorieGoal && goalFatPercent != null && goalCarbPercent != null) {
 			const proteinPct = 100 - (goalFatPercent || 0) - (goalCarbPercent || 0);
-			if (proteinPct > 0) return (goalCalories * proteinPct / 100) / 4;
+			if (proteinPct > 0) return (effectiveCalorieGoal * proteinPct / 100) / 4;
 		}
 		return null;
 	});
 
-	// Fat/carb goals in grams (from calorie %)
-	const fatGoalGrams = $derived(goalCalories && goalFatPercent ? (goalCalories * goalFatPercent / 100) / 9 : null);
-	const carbGoalGrams = $derived(goalCalories && goalCarbPercent ? (goalCalories * goalCarbPercent / 100) / 4 : null);
-
-	// --- Burned kcal ---
-	// svelte-ignore state_referenced_locally
-	let exerciseKcal = $state(Number(data.exerciseKcal) || 0);
+	// Fat/carb goals in grams — protein gets priority, remaining kcal split
+	// between fat and carbs proportionally to the stored fat:carb ratio.
+	// Extra exercise calories flow into fat/carb (protein is body-weight-based).
+	const fatGoalGrams = $derived.by(() => {
+		if (!effectiveCalorieGoal) return null;
+		if (proteinGoalGrams != null && goalFatPercent != null && goalCarbPercent != null) {
+			const remainingCal = Math.max(0, effectiveCalorieGoal - proteinGoalGrams * 4);
+			const ratioSum = (goalFatPercent || 0) + (goalCarbPercent || 0);
+			if (ratioSum > 0) return (remainingCal * goalFatPercent / ratioSum) / 9;
+		}
+		return goalFatPercent ? (effectiveCalorieGoal * goalFatPercent / 100) / 9 : null;
+	});
+	const carbGoalGrams = $derived.by(() => {
+		if (!effectiveCalorieGoal) return null;
+		if (proteinGoalGrams != null && goalFatPercent != null && goalCarbPercent != null) {
+			const remainingCal = Math.max(0, effectiveCalorieGoal - proteinGoalGrams * 4);
+			const ratioSum = (goalFatPercent || 0) + (goalCarbPercent || 0);
+			if (ratioSum > 0) return (remainingCal * goalCarbPercent / ratioSum) / 4;
+		}
+		return goalCarbPercent ? (effectiveCalorieGoal * goalCarbPercent / 100) / 4 : null;
+	});
 
 	// BMR via Mifflin-St Jeor (doi:10.1093/ajcn/51.2.241)
 	const birthYear = $derived(data.goal?.birthYear ?? null);
@@ -466,9 +502,9 @@
 
 
 
-	// Net calorie balance: goal + burned - eaten
-	const calorieBalance = $derived(goalCalories ? (goalCalories + (exerciseKcal || 0) - dayTotals.calories) : 0);
-	const calorieProgressRaw = $derived(goalCalories ? dayTotals.calories / (goalCalories + (exerciseKcal || 0)) * 100 : 0);
+	// Net calorie balance: effective goal (includes exercise) - eaten
+	const calorieBalance = $derived(effectiveCalorieGoal ? (effectiveCalorieGoal - dayTotals.calories) : 0);
+	const calorieProgressRaw = $derived(effectiveCalorieGoal ? dayTotals.calories / effectiveCalorieGoal * 100 : 0);
 	const calorieProgress = $derived(Math.min(calorieProgressRaw, 100));
 	const calorieOverflow = $derived(Math.max(calorieProgressRaw - 100, 0));
 
@@ -1448,11 +1484,11 @@
 					</div>
 					<div class="goal-row">
 						<div class="goal-field">
-							<label for="goal-fat">{t('fat_percent', lang)}</label>
+							<label for="goal-fat">{t('fat_percent', lang)} <span class="macro-actual">→ {editMacroRing.fat}%</span></label>
 							<input id="goal-fat" type="number" bind:value={editFatPercent} min="0" max="100" />
 						</div>
 						<div class="goal-field">
-							<label for="goal-carbs">{t('carb_percent', lang)}</label>
+							<label for="goal-carbs">{t('carb_percent', lang)} <span class="macro-actual">→ {editMacroRing.carb}%</span></label>
 							<input id="goal-carbs" type="number" bind:value={editCarbPercent} min="0" max="100" />
 						</div>
 					</div>
@@ -2673,6 +2709,11 @@
 		text-transform: uppercase;
 		color: var(--color-text-secondary);
 		margin-bottom: 0.3rem;
+	}
+	.macro-actual {
+		font-weight: 700;
+		color: var(--color-text-primary);
+		text-transform: none;
 	}
 	.goal-field input,
 	.goal-field select {
