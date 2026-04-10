@@ -1,4 +1,5 @@
 <script>
+import { Timer, Wheat, Croissant, Flame, CookingPot, UtensilsCrossed } from '@lucide/svelte';
 let { data } = $props();
 
 // svelte-ignore state_referenced_locally
@@ -128,52 +129,55 @@ ol li::marker{
 }
 
 .additional_info{
-	display: flex;
-	flex-wrap: wrap;
-	gap: 1em;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+	gap: 0.75rem;
 }
-.additional_info > *{
-	flex-grow: 0;
-	padding: 1em;
-	background-color: var(--color-bg-tertiary);
+.info-card{
+	padding: 0.75rem 1rem;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-sm);
-	max-width: 30%
 }
-@media screen and (max-width: 500px){
-	.additional_info > *{
-		max-width: 60%;
-	}
+.info-card h3{
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0 0 0.25rem 0;
+	font-size: var(--text-sm);
+	color: var(--color-text-secondary);
 }
-
-h3{
-	margin-block: 0;
+.info-value{
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-text-primary);
 }
 </style>
 <div class=instructions>
-<div class=additional_info>
+<div class="additional_info">
 {#if data.preparation}
-<div><h3>{labels.preparation}</h3>{data.preparation}</div>
+<div class="info-card"><h3><Timer size={16} />{labels.preparation}</h3><span class="info-value">{data.preparation}</span></div>
 {/if}
 
-
 {#if data.fermentation?.bulk}
-	<div><h3>{labels.bulkFermentation}</h3>{data.fermentation.bulk}</div>
+<div class="info-card"><h3><Wheat size={16} />{labels.bulkFermentation}</h3><span class="info-value">{data.fermentation.bulk}</span></div>
 {/if}
 
 {#if data.fermentation?.final}
-	<div><h3>{labels.finalProof}</h3> {data.fermentation.final}</div>
+<div class="info-card"><h3><Croissant size={16} />{labels.finalProof}</h3><span class="info-value">{data.fermentation.final}</span></div>
 {/if}
 
 {#if data.baking?.temperature}
-<div><h3>{labels.baking}</h3> {data.baking.length} {labels.at} {data.baking.temperature} °C {data.baking.mode}</div>
+<div class="info-card"><h3><Flame size={16} />{labels.baking}</h3><span class="info-value">{data.baking.length} {labels.at} {data.baking.temperature} °C {data.baking.mode}</span></div>
 {/if}
 
 {#if data.cooking}
-<div><h3>{labels.cooking}</h3>{data.cooking}</div>
+<div class="info-card"><h3><CookingPot size={16} />{labels.cooking}</h3><span class="info-value">{data.cooking}</span></div>
 {/if}
 
 {#if data.total_time}
-<div><h3>{labels.onThePlate}</h3>{data.total_time}</div>
+<div class="info-card"><h3><UtensilsCrossed size={16} />{labels.onThePlate}</h3><span class="info-value">{data.total_time}</span></div>
 {/if}
 </div>
 
