@@ -10,6 +10,7 @@ export interface GpsPoint {
 	lng: number;
 	altitude?: number;
 	speed?: number;
+	cadence?: number; // steps per minute, from step detector sensor
 	timestamp: number;
 }
 

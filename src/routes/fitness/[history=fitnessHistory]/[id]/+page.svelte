@@ -473,6 +473,47 @@
 		};
 	}
 
+	/**
+	 * Compute cadence samples over distance from GPS track.
+	 * Returns array of { dist (km), cadence (spm) } — only for points with cadence data.
+	 * @param {any[]} track
+	 */
+	function computeCadenceSamples(track) {
+		/** @type {Array<{dist: number, cadence: number}>} */
+		const samples = [];
+		let cumDist = 0;
+		for (let i = 0; i < track.length; i++) {
+			if (track[i].cadence == null) continue;
+			if (i > 0) cumDist += haversine(track[i - 1], track[i]);
+			samples.push({ dist: cumDist, cadence: Math.round(track[i].cadence) });
+		}
+		return samples;
+	}
+
+	/**
+	 * Build Chart.js data for cadence over distance
+	 * @param {Array<{dist: number, cadence: number}>} samples
+	 */
+	function buildCadenceChartData(samples) {
+		const step = Math.max(1, Math.floor(samples.length / 50));
+		const filtered = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
+		const color = dark ? '#B48EAD' : '#5E81AC';
+		const fill = dark ? 'rgba(180, 142, 173, 0.12)' : 'rgba(94, 129, 172, 0.12)';
+		return {
+			labels: filtered.map(s => s.dist.toFixed(2)),
+			datasets: [{
+				label: t('cadence', lang),
+				data: filtered.map(s => s.cadence),
+				borderColor: color,
+				backgroundColor: fill,
+				borderWidth: 1.5,
+				pointRadius: 0,
+				tension: 0.3,
+				fill: true
+			}]
+		};
+	}
+
 	/** @param {number} exIdx */
 	async function uploadGpx(exIdx) {
 		const input = document.createElement('input');
@@ -750,6 +791,19 @@
 									data={buildPaceChartData(samples)}
 									title="Pace (min/km)"
 									height="180px"
+								/>
+							</div>
+						{/if}
+
+						{@const cadenceSamples = computeCadenceSamples(ex.gpsTrack)}
+						{#if cadenceSamples.length > 1}
+							{@const avgCadence = Math.round(cadenceSamples.reduce((a, s) => a + s.cadence, 0) / cadenceSamples.length)}
+							<div class="chart-section">
+								<FitnessChart
+									data={buildCadenceChartData(cadenceSamples)}
+									title="{t('cadence', lang)} ({t('cadence_unit', lang)}) · {t('avg', lang)} {avgCadence}"
+									height="160px"
+									yUnit=" spm"
 								/>
 							</div>
 						{/if}
