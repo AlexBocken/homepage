@@ -2,6 +2,8 @@ import type { PageServerLoad } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
+import { WorkoutSchedule } from '$models/WorkoutSchedule';
+import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { Recipe } from '$models/Recipe';
 import { RoundOffCache } from '$models/RoundOffCache';
 import mongoose from 'mongoose';
@@ -25,8 +27,43 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 			for (const s of sessions) {
 				if (s.kcalEstimate?.kcal) kcal += s.kcalEstimate.kcal;
 			}
-			return kcal;
-		} catch { return 0; }
+
+			// If no exercise done today, project kcal from the next scheduled template
+			let projected = null;
+			if (kcal === 0) {
+				const schedule = await WorkoutSchedule.findOne({ userId: user.nickname });
+				if (schedule?.templateOrder?.length) {
+					const lastScheduled = await WorkoutSession.findOne({
+						createdBy: user.nickname,
+						templateId: { $in: schedule.templateOrder }
+					}).sort({ startTime: -1 });
+
+					let nextId;
+					if (!lastScheduled?.templateId) {
+						nextId = schedule.templateOrder[0];
+					} else {
+						const idx = schedule.templateOrder.indexOf(lastScheduled.templateId.toString());
+						nextId = schedule.templateOrder[(idx === -1 ? 0 : idx + 1) % schedule.templateOrder.length];
+					}
+
+					const prevSession = await WorkoutSession.findOne({
+						createdBy: user.nickname,
+						templateId: nextId,
+						'kcalEstimate.kcal': { $gt: 0 }
+					}).sort({ startTime: -1 }).select('kcalEstimate templateName').lean();
+
+					if (prevSession?.kcalEstimate?.kcal) {
+						const tmpl = await WorkoutTemplate.findById(nextId).select('name').lean();
+						projected = {
+							kcal: Math.round(prevSession.kcalEstimate.kcal),
+							templateName: tmpl?.name || prevSession.templateName || '?',
+						};
+					}
+				}
+			}
+
+			return { kcal, projected };
+		} catch { return { kcal: 0, projected: null }; }
 	})();
 
 	const recentFrom = new Date();
@@ -34,7 +71,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	const recentFromStr = recentFrom.toISOString().slice(0, 10);
 	const todayStr = new Date().toISOString().slice(0, 10);
 
-	const [foodRes, goalRes, weightRes, exerciseKcal, favRes, recentRes] = await Promise.all([
+	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
 		fetch('/api/fitness/goal'),
 		fetch('/api/fitness/measurements/latest'),
@@ -103,7 +140,8 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		.slice(0, 10);
 
 	const goal = goalRes.ok ? await goalRes.json() : {};
-	const roundedExerciseKcal = Math.round(exerciseKcal);
+	const roundedExerciseKcal = Math.round(exerciseData.kcal);
+	const projectedExercise = exerciseData.projected;
 
 	// Compute initial showRoundOff server-side to avoid flicker
 	const today = new Date().toISOString().slice(0, 10);
@@ -123,6 +161,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		goal,
 		latestWeight: weightRes.ok ? await weightRes.json() : {},
 		exerciseKcal: roundedExerciseKcal,
+		projectedExercise,
 		recipeImages,
 		favorites: favData.favorites ?? [],
 		recentFoods,
