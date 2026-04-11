@@ -288,7 +288,7 @@ const translations: Translations = {
 	protein: { en: 'Protein', de: 'Protein' },
 	fat: { en: 'Fat', de: 'Fett' },
 	carbs: { en: 'Carbs', de: 'Kohlenhydrate' },
-	remaining: { en: 'remaining', de: 'übrig' },
+	remaining: { en: 'left', de: 'übrig' },
 	over: { en: 'over', de: 'über' },
 	no_entries_yet: { en: 'No entries yet. Add food to start tracking.', de: 'Noch keine Einträge. Füge Essen hinzu, um zu tracken.' },
 	set_goal_prompt: { en: 'Set a daily calorie goal to start tracking.', de: 'Setze ein Kalorienziel, um mit dem Tracking zu beginnen.' },
