@@ -1256,7 +1256,7 @@
 					{@const remaining = macro.goal ? macro.goal - macro.value : 0}
 					{@const MacroBarIcon = macro.icon}
 					<div class="macro-bar-item">
-						<span class="macro-bar-label"><MacroBarIcon size={12} /> {macro.label}{#if macro.goal} <span class="macro-bar-goal">{fmt(macro.goal)}g/{isEn ? 'day' : 'Tag'}</span>{/if}</span>
+						<span class="macro-bar-label"><MacroBarIcon size={12} /> {macro.label}</span>
 						<div class="macro-bar-track">
 							<div class="macro-bar-fill" style="width: {Math.min(pct, 100)}%; background: {macro.color}"></div>
 							{#if over}
@@ -1265,7 +1265,7 @@
 						</div>
 						{#if macro.goal}
 							<span class="macro-bar-info" class:over>
-								{remaining >= 0 ? `${fmt(remaining)}g ${t('remaining', lang)}` : `${fmt(-remaining)}g ${t('over', lang)}`}
+								{remaining >= 0 ? `${fmt(remaining)}/${fmt(macro.goal)}g ${t('remaining', lang)}` : `${fmt(-remaining)}g ${t('over', lang)} ${fmt(macro.goal)}g`}
 							</span>
 						{:else}
 							<span class="macro-bar-info">{fmt(macro.value)}g</span>
