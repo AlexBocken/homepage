@@ -1742,7 +1742,369 @@ export const exercises: Exercise[] = [
 			'Mit kontrollierten Schritten für die gewünschte Distanz oder Dauer gehen.',
 			'Die Rumpfmuskulatur anspannen und die Schultern zurückziehen.'
 			]
-		}}
+		}},
+
+	// ── Stretching ──────────────────────────────────────────────
+	{
+		id: 'neck-circle-stretch',
+		name: 'Neck Circle Stretch',
+		bodyPart: 'shoulders',
+		equipment: 'body weight',
+		target: 'neck',
+		secondaryMuscles: ['traps'],
+		instructions: [
+			'Tilt your head slowly towards your right shoulder, ear towards shoulder, hold for a few seconds.',
+			'Roll your head forward to your chest and continue to the left shoulder.',
+			'Continue the circular motion, rolling your head back and returning to the right side.',
+			'Repeat in both directions for the desired number of repetitions.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Nackenkreisen',
+			instructions: [
+				'Neige den Kopf langsam zur rechten Schulter, Ohr Richtung Schulter, halte einige Sekunden.',
+				'Rolle den Kopf langsam nach vorn zur Brust und weiter zur linken Schulter.',
+				'Setze die Kreisbewegung fort, indem du den Kopf nach hinten und zurück zur rechten Seite führst.',
+				'Wiederhole in beide Richtungen für die gewünschte Anzahl.'
+			]
+		}
+	},
+	{
+		id: 'side-push-neck-stretch',
+		name: 'Side Push Neck Stretch',
+		bodyPart: 'shoulders',
+		equipment: 'body weight',
+		target: 'neck',
+		secondaryMuscles: ['traps'],
+		instructions: [
+			'Sit or stand with a straight spine.',
+			'Place your right hand on the left side of your head.',
+			'Gently pull your head towards your right shoulder until you feel a stretch on the left side of your neck.',
+			'Hold for 20–30 seconds, then repeat on the other side.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Seitliche Nackendehnung mit Druck',
+			instructions: [
+				'Sitze oder stehe aufrecht.',
+				'Lege die rechte Hand auf die linke Kopfseite.',
+				'Ziehe den Kopf sanft zur rechten Schulter, bis du eine Dehnung auf der linken Nackenseite spürst.',
+				'Halte 20–30 Sekunden, dann wiederhole auf der anderen Seite.'
+			]
+		}
+	},
+	{
+		id: 'seated-shoulder-flexor-stretch-bent-knee',
+		name: 'Seated Shoulder Flexor Stretch (Bent Knee)',
+		bodyPart: 'shoulders',
+		equipment: 'body weight',
+		target: 'deltoids',
+		secondaryMuscles: ['chest', 'biceps'],
+		instructions: [
+			'Sit on the floor with knees bent and feet flat.',
+			'Place your hands behind you, fingers pointing away.',
+			'Slowly slide your hips forward until you feel a stretch in the front of your shoulders.',
+			'Hold for 20–30 seconds.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Sitzende Schulterdehnung (Knie gebeugt)',
+			instructions: [
+				'Setze dich auf den Boden, Knie gebeugt, Füsse flach.',
+				'Hände hinter dem Körper aufsetzen, Finger zeigen weg.',
+				'Schiebe die Hüfte langsam nach vorn, bis du eine Dehnung in den vorderen Schultern spürst.',
+				'Halte 20–30 Sekunden.'
+			]
+		}
+	},
+	{
+		id: 'shoulder-stretch-behind-back',
+		name: 'Shoulder Stretch Behind the Back',
+		bodyPart: 'shoulders',
+		equipment: 'body weight',
+		target: 'deltoids',
+		secondaryMuscles: ['traps', 'triceps'],
+		instructions: [
+			'Stand upright and reach one arm behind your back from below.',
+			'Reach the other arm over your shoulder from above.',
+			'Try to clasp your fingers together behind your back.',
+			'Hold for 20–30 seconds, then switch sides.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Schulterdehnung hinter dem Rücken',
+			instructions: [
+				'Stehe aufrecht und führe einen Arm von unten hinter den Rücken.',
+				'Führe den anderen Arm von oben über die Schulter.',
+				'Versuche, die Finger hinter dem Rücken zu verschränken.',
+				'Halte 20–30 Sekunden, dann wechsle die Seite.'
+			]
+		}
+	},
+	{
+		id: 'elbows-back-stretch',
+		name: 'Elbows Back Stretch',
+		bodyPart: 'chest',
+		equipment: 'body weight',
+		target: 'pectorals',
+		secondaryMuscles: ['deltoids', 'biceps'],
+		instructions: [
+			'Stand upright with arms at your sides.',
+			'Bend your elbows and pull them back behind you, squeezing your shoulder blades together.',
+			'Hold the stretch for 20–30 seconds.',
+			'Release and repeat.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Ellbogen-Rückdehnung',
+			instructions: [
+				'Stehe aufrecht, Arme an den Seiten.',
+				'Beuge die Ellbogen und ziehe sie nach hinten, Schulterblätter zusammendrücken.',
+				'Halte die Dehnung 20–30 Sekunden.',
+				'Lösen und wiederholen.'
+			]
+		}
+	},
+	{
+		id: 'back-pec-stretch',
+		name: 'Back Pec Stretch',
+		bodyPart: 'chest',
+		equipment: 'body weight',
+		target: 'pectorals',
+		secondaryMuscles: ['deltoids'],
+		instructions: [
+			'Extend your arms behind your back and interlace your fingers.',
+			'Slowly raise your arms while pushing your chest out and keeping your chin up, until you feel a stretch in your shoulders and chest.',
+			'Hold this position for about 20–30 seconds, breathing deeply and evenly.',
+			'Slowly lower your arms and relax before repeating.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Rücken-Brust-Dehnung',
+			instructions: [
+				'Strecke die Arme hinter dem Rücken aus und verschränke die Finger.',
+				'Hebe die Arme langsam an, während du die Brust rausstreckst und das Kinn oben hältst.',
+				'Halte diese Position etwa 20–30 Sekunden und atme tief und gleichmässig.',
+				'Senke die Arme langsam wieder ab und entspanne.'
+			]
+		}
+	},
+	{
+		id: 'cow-stretch',
+		name: 'Cow Stretch',
+		bodyPart: 'back',
+		equipment: 'body weight',
+		target: 'spine',
+		secondaryMuscles: ['abdominals', 'hip flexors'],
+		instructions: [
+			'Start on all fours with wrists under shoulders and knees under hips.',
+			'Inhale and drop your belly towards the floor, arching your back and lifting your head.',
+			'Exhale and round your spine towards the ceiling, tucking your chin.',
+			'Alternate between the two positions for the desired duration.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Kuh-Dehnung (Cat-Cow)',
+			instructions: [
+				'Beginne im Vierfüsslerstand, Handgelenke unter den Schultern, Knie unter der Hüfte.',
+				'Einatmen: Bauch Richtung Boden senken, Rücken durchhängen lassen, Kopf heben.',
+				'Ausatmen: Wirbelsäule zur Decke runden, Kinn zur Brust.',
+				'Wechsle zwischen beiden Positionen für die gewünschte Dauer.'
+			]
+		}
+	},
+	{
+		id: 'thoracic-bridge',
+		name: 'Thoracic Bridge',
+		bodyPart: 'back',
+		equipment: 'body weight',
+		target: 'spine',
+		secondaryMuscles: ['deltoids', 'glutes', 'hip flexors'],
+		instructions: [
+			'Sit on the floor with knees bent, feet flat, and hands behind you.',
+			'Lift your hips up and rotate your torso, reaching one arm over and across your body.',
+			'Return to the starting position and repeat on the other side.',
+			'Continue alternating for the desired duration.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Thorakale Brücke',
+			instructions: [
+				'Setze dich auf den Boden, Knie gebeugt, Füsse flach, Hände hinter dem Körper.',
+				'Hebe die Hüfte und rotiere den Oberkörper, strecke einen Arm über den Körper.',
+				'Zurück in die Ausgangsposition und auf der anderen Seite wiederholen.',
+				'Wechsle für die gewünschte Dauer ab.'
+			]
+		}
+	},
+	{
+		id: 'butterfly-yoga-pose',
+		name: 'Butterfly Yoga Pose',
+		bodyPart: 'legs',
+		equipment: 'body weight',
+		target: 'adductors',
+		secondaryMuscles: ['glutes', 'hip flexors'],
+		instructions: [
+			'Sit on the floor with your back straight.',
+			'Bring the soles of your feet together and let your knees fall out to the sides.',
+			'Hold your feet with your hands and gently press your knees towards the floor.',
+			'Hold for 30–60 seconds, breathing deeply.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Schmetterlingssitz (Baddha Konasana)',
+			instructions: [
+				'Setze dich mit geradem Rücken auf den Boden.',
+				'Bringe die Fusssohlen zusammen und lasse die Knie nach aussen fallen.',
+				'Halte die Füsse mit den Händen und drücke die Knie sanft Richtung Boden.',
+				'Halte 30–60 Sekunden und atme tief.'
+			]
+		}
+	},
+	{
+		id: 'seated-single-leg-hamstring-stretch',
+		name: 'Seated Single Leg Hamstring Stretch',
+		bodyPart: 'legs',
+		equipment: 'body weight',
+		target: 'hamstrings',
+		secondaryMuscles: ['calves', 'glutes'],
+		instructions: [
+			'Sit on the floor with one leg extended and the other bent with the sole against your inner thigh.',
+			'Reach forward towards the toes of your extended leg.',
+			'Hold the stretch for 20–30 seconds.',
+			'Switch legs and repeat.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Sitzende einbeinige Hamstring-Dehnung',
+			instructions: [
+				'Setze dich auf den Boden, ein Bein gestreckt, das andere gebeugt mit der Sohle am Innenschenkel.',
+				'Beuge dich nach vorn Richtung Zehen des gestreckten Beins.',
+				'Halte die Dehnung 20–30 Sekunden.',
+				'Beine wechseln und wiederholen.'
+			]
+		}
+	},
+	{
+		id: 'kneeling-toe-up-hamstring-stretch',
+		name: 'Kneeling Toe Up Hamstring Stretch',
+		bodyPart: 'legs',
+		equipment: 'body weight',
+		target: 'hamstrings',
+		secondaryMuscles: ['calves'],
+		instructions: [
+			'Kneel on one knee with the other leg extended in front, toes pointing up.',
+			'Keep your back straight and lean forward from the hips.',
+			'You should feel a stretch along the back of your extended leg.',
+			'Hold for 20–30 seconds, then switch sides.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Kniende Hamstring-Dehnung (Zehen hoch)',
+			instructions: [
+				'Knie auf einem Knie, das andere Bein nach vorn gestreckt, Zehen zeigen nach oben.',
+				'Halte den Rücken gerade und lehne dich aus der Hüfte nach vorn.',
+				'Du solltest eine Dehnung an der Rückseite des gestreckten Beins spüren.',
+				'Halte 20–30 Sekunden, dann Seite wechseln.'
+			]
+		}
+	},
+	{
+		id: 'side-lunge-stretch',
+		name: 'Side Lunge Stretch',
+		bodyPart: 'legs',
+		equipment: 'body weight',
+		target: 'adductors',
+		secondaryMuscles: ['quads', 'glutes', 'hamstrings'],
+		instructions: [
+			'Stand with feet wide apart.',
+			'Shift your weight to one side, bending that knee while keeping the other leg straight.',
+			'Keep your back straight and chest up.',
+			'Hold for 20–30 seconds, then switch sides.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Seitliche Ausfallschritt-Dehnung',
+			instructions: [
+				'Stehe mit weit auseinander stehenden Füssen.',
+				'Verlagere das Gewicht auf eine Seite, beuge das Knie, das andere Bein bleibt gestreckt.',
+				'Halte den Rücken gerade und die Brust oben.',
+				'Halte 20–30 Sekunden, dann Seite wechseln.'
+			]
+		}
+	},
+	{
+		id: 'lying-lower-back-stretch',
+		name: 'Lying Lower Back Stretch',
+		bodyPart: 'back',
+		equipment: 'body weight',
+		target: 'spine',
+		secondaryMuscles: ['glutes', 'abdominals'],
+		instructions: [
+			'Lie on your back with both knees bent.',
+			'Gently pull both knees towards your chest with your hands.',
+			'Hold the position for 20–30 seconds, breathing deeply.',
+			'Release slowly and repeat.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Dehnung unterer Rücken im Liegen',
+			instructions: [
+				'Lege dich auf den Rücken, beide Knie gebeugt.',
+				'Ziehe beide Knie sanft mit den Händen zur Brust.',
+				'Halte die Position 20–30 Sekunden und atme tief.',
+				'Langsam lösen und wiederholen.'
+			]
+		}
+	},
+	{
+		id: 'calf-stretch-wall',
+		name: 'Calf Stretch With Hands Against Wall',
+		bodyPart: 'legs',
+		equipment: 'body weight',
+		target: 'calves',
+		secondaryMuscles: ['achilles tendon'],
+		instructions: [
+			'Stand facing a wall with your hands against it at shoulder height.',
+			'Step one foot back, keeping it straight with the heel on the ground.',
+			'Lean into the wall until you feel a stretch in your back calf.',
+			'Hold for 20–30 seconds, then switch legs.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Wadendehnung an der Wand',
+			instructions: [
+				'Stehe mit Blick zur Wand, Hände auf Schulterhöhe an der Wand.',
+				'Einen Fuss nach hinten stellen, Bein gestreckt, Ferse am Boden.',
+				'Lehne dich zur Wand, bis du eine Dehnung in der hinteren Wade spürst.',
+				'Halte 20–30 Sekunden, dann Bein wechseln.'
+			]
+		}
+	},
+	{
+		id: 'elbow-flexor-stretch',
+		name: 'Elbow Flexor Stretch',
+		bodyPart: 'arms',
+		equipment: 'body weight',
+		target: 'biceps',
+		secondaryMuscles: ['forearms'],
+		instructions: [
+			'Extend one arm in front of you with the palm facing up.',
+			'Use your other hand to gently press the fingers of the extended arm downward.',
+			'Hold for 20–30 seconds until you feel a stretch in your bicep and forearm.',
+			'Switch arms and repeat.'
+		],
+		metrics: ['duration'] as MetricField[],
+		de: {
+			name: 'Ellbogenbeuger-Dehnung',
+			instructions: [
+				'Strecke einen Arm nach vorn, Handfläche nach oben.',
+				'Drücke mit der anderen Hand die Finger des gestreckten Arms sanft nach unten.',
+				'Halte 20–30 Sekunden, bis du eine Dehnung in Bizeps und Unterarm spürst.',
+				'Arm wechseln und wiederholen.'
+			]
+		}
+	},
 ];
 
 // Lookup map for O(1) access by ID
