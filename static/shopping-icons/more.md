@@ -60,47 +60,47 @@ White outline icon of a Sriracha hot sauce bottle on a solid black background. T
 
 ## Produce
 
-### Granatapfel
+### Granatapfel [ DONE ]
 > Reference: mango.png (round fruit with stem nub, cut in half showing interior), kiwi.png (oval fruit cut open showing seeds)
 
 White outline icon of a pomegranate on a solid black background. The fruit is round with a prominent crown (calyx) at the top. It is cut in half, one half showing the interior filled with small round seed clusters (arils) arranged in sections separated by thin membrane lines. The other half sits whole beside it. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Kokosnuss
+### Kokosnuss [ DONE ]
 > Reference: kokosmilch.png (carton with coconut illustration — halved coconut cross-section), ananas.png (tropical fruit with texture)
 
 White outline icon of a coconut on a solid black background. A whole brown coconut sits beside a half coconut showing the white inner flesh as a thick ring and the hollow center. The whole coconut has a rough, slightly fibrous texture indicated by a few short hatch marks. The halved coconut shows the thick shell wall and smooth inner meat. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Lychee
+### Lychee [ DONE ]
 > Reference: erdbeeren.png (small fruit with texture), kirschen.png
 
 White outline icon of 3-4 lychee fruits on a solid black background. The lychees are small, round fruits with a bumpy/textured skin indicated by a pattern of small irregular bumps across the surface. One lychee is peeled open, revealing the smooth round translucent flesh inside with the dark seed visible as a small circle in the center. A small stem and leaf connect two of the fruits. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Pak Choi
+### Pak Choi [ DONE ]
 > Reference: spinat.png (leafy greens with stems), rucola.png (loose leafy herb), lattich.png
 
 White outline icon of a head of pak choi (bok choy) on a solid black background. The vegetable shows 4-5 thick, wide white stalks fanning out from a base, each topped with a broad, rounded dark leaf. The stalks are smooth and bulbous, the leaves have gentle wavy edges. Viewed from a slight 3/4 front isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Mangold
+### Mangold [ DONE ]
 > Reference: spinat.png (leafy stems), rucola.png (leaves with visible veins)
 
 White outline icon of 2-3 Swiss chard (Mangold) leaves on a solid black background. Each leaf has a large, broad, slightly crinkled leaf blade with prominent veins, attached to a thick flat stalk/rib running up the center. The stalks are wide and flat (characteristic of chard). The leaves fan out slightly. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Gruenkohl
+### Gruenkohl [ DONE ]
 > Reference: spinat.png (leafy bunch), kohl.png, brokkoli.png
 
 White outline icon of a bunch of kale (Gruenkohl) on a solid black background. The bunch shows 3-4 kale leaves with their characteristic deeply curled, ruffled, and frilly edges. Each leaf has a thick central stem with the curly leaf tissue branching off to the sides. The leaves are loosely bundled. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Rettich
+### Rettich [ DONE ]
 > Reference: karotten.png (root vegetable with leafy top, horizontal ring texture lines)
 
 White outline icon of a white radish (Rettich/Daikon) on a solid black background. The radish is a long, thick, cylindrical white root tapering to a point at the bottom, with a few small root hairs at the tip. At the top, a small tuft of 2-3 leaves sprouts out. The surface has a few faint horizontal lines. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Pastinaken
+### Pastinaken [ DONE ]
 > Reference: karotten.png (tapered root with leafy top and ring texture)
 
 White outline icon of 2-3 parsnips on a solid black background. The parsnips are long, tapered root vegetables similar to carrots but wider at the shoulder and more gradually tapering. They have a smooth surface with a few faint ring lines and small root dimples. A small tuft of feathery leaves at the top of one. They lie slightly overlapping. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Topinambur
+### Topinambur [ DONE ]
 > Reference: karotten.png (root vegetable), ingwer.png (knobbly rhizome)
 
 White outline icon of 2-3 Jerusalem artichokes (Topinambur) on a solid black background. The tubers are small, knobbly, irregularly shaped — like a cross between a ginger root and a small potato, with bumpy protrusions and an uneven surface. They sit in a small cluster. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
@@ -129,12 +129,12 @@ White outline icon of a pile of quinoa grains on a solid black background. A mou
 
 White outline icon of a pile of bulgur wheat on a solid black background. A mound of small, irregular, angular cracked wheat grains — each grain is a small faceted/angular piece, slightly larger than couscous. The pile is loosely heaped with a few grains scattered around the base. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Glasnudeln
+### Glasnudeln [ DONE ]
 > Reference: nudeln.png (loose pasta shapes scattered), spaghetti.png
 
 White outline icon of a bundle of glass noodles (cellophane noodles) on a solid black background. The noodles are very thin, straight, and bundled together in a tight nest/skein shape — a compact, slightly tangled oval bundle of ultra-fine translucent noodles. The bundle has a band or tie around the middle. A few loose strands trail off to the side. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Reisnudeln
+### Reisnudeln [ DONE ]
 > Reference: spaghetti.png, nudeln.png
 
 White outline icon of a bundle of flat rice noodles on a solid black background. The noodles are flat, wide ribbons (like fettuccine width) bundled together in a loose nest. The bundle is folded over itself. A few individual flat noodle strands hang loosely from the bundle. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
@@ -205,3 +205,12 @@ White outline icon of several prawns/crevettes on a solid black background. 3-4 
 > Reference: rohschinken.png (thin slices of cured meat draped and overlapping, with visible fat marbling lines)
 
 White outline icon of sliced Buendnerfleisch (air-dried beef) on a solid black background. 4-5 very thin, roughly rectangular slices of dark dried meat are loosely arranged, slightly curled at the edges and overlapping. Each slice has a thin rim of fat along one edge and a few subtle grain lines across the surface. The slices have slightly irregular, rough-torn edges characteristic of thinly sliced air-dried meat. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
+
+---
+
+## Spirits
+
+### Stroh 80 DONE
+> Reference: rum.png (rum bottle shape), schnaps.png (spirit bottle), rotwein.png (bottle + glass composition)
+
+White outline icon of a Stroh 80 rum bottle on a solid black background. The bottle has the distinctive Stroh silhouette: a tall, slightly squat rectangular body with rounded shoulders, a short thick neck, and a wide cork/screw cap. The body is wider and more rectangular than a typical rum bottle — characteristic of the Stroh brand. The label area on the front shows a simple rectangular outline with a small oval emblem/medallion in the center. The bottle is about 3/4 full, indicated by a horizontal fill line. Beside the bottle, a small shot glass. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
