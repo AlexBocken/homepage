@@ -265,6 +265,147 @@ const defaultTemplates = [
 				restTime: 60
 			}
 		]
+	},
+	{
+		name: 'Day 6 - Stretching',
+		description: 'Full-body stretching — all muscle groups, no equipment (~30 min)',
+		exercises: [
+			{
+				// Neck: sternocleidomastoid, levator scapulae, trapezius
+				exerciseId: 'neck-circle-stretch',
+				sets: [
+					{ duration: 1.5 },
+					{ duration: 1.5 }
+				],
+				restTime: 15
+			},
+			{
+				// Neck/traps: lateral neck flexion
+				exerciseId: 'side-push-neck-stretch',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Chest & front delts
+				exerciseId: 'seated-shoulder-flexor-stretch-bent-knee',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Rear delts, triceps, traps
+				exerciseId: 'shoulder-stretch-behind-back',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Triceps
+				exerciseId: 'elbows-back-stretch',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Lats & back
+				exerciseId: 'back-pec-stretch',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Spine, erector spinae, levator scapulae
+				exerciseId: 'cow-stretch',
+				sets: [
+					{ duration: 1.5 },
+					{ duration: 1.5 }
+				],
+				restTime: 15
+			},
+			{
+				// Thoracic spine, shoulders, glutes, calves (multi-target bridge)
+				exerciseId: 'thoracic-bridge',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Hip adductors & hip flexors
+				exerciseId: 'butterfly-yoga-pose',
+				sets: [
+					{ duration: 1.5 },
+					{ duration: 1.5 }
+				],
+				restTime: 15
+			},
+			{
+				// Hamstrings
+				exerciseId: 'seated-single-leg-hamstring-stretch',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Hamstrings (toe-up variation)
+				exerciseId: 'kneeling-toe-up-hamstring-stretch',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Quads, glutes, hip flexors, calves
+				exerciseId: 'side-lunge-stretch',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Lower back & glutes
+				exerciseId: 'lying-lower-back-stretch',
+				sets: [
+					{ duration: 1.5 },
+					{ duration: 1.5 }
+				],
+				restTime: 15
+			},
+			{
+				// Calves (soleus & gastrocnemius)
+				exerciseId: 'calf-stretch-wall',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			},
+			{
+				// Biceps & forearm flexors
+				exerciseId: 'elbow-flexor-stretch',
+				sets: [
+					{ duration: 1 },
+					{ duration: 1 }
+				],
+				restTime: 15
+			}
+		]
 	}
 ];
 
