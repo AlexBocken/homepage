@@ -52,6 +52,7 @@
 		entries = data.foodLog?.entries ?? [];
 		recipeImages = data.recipeImages ?? {};
 		exerciseKcal = Number(data.exerciseKcal) || 0;
+		projectedExercise = data.projectedExercise ?? null;
 		currentDate = data.date;
 	});
 
@@ -414,9 +415,14 @@
 	// --- Burned kcal ---
 	// svelte-ignore state_referenced_locally
 	let exerciseKcal = $state(Number(data.exerciseKcal) || 0);
+	// svelte-ignore state_referenced_locally
+	let projectedExercise = $state(data.projectedExercise ?? null);
+	let includeProjection = $state(false);
+
+	const effectiveBurned = $derived(exerciseKcal || (includeProjection && projectedExercise ? projectedExercise.kcal : 0));
 
 	// Effective daily calorie goal including exercise burned calories
-	const effectiveCalorieGoal = $derived(goalCalories ? goalCalories + (exerciseKcal || 0) : null);
+	const effectiveCalorieGoal = $derived(goalCalories ? goalCalories + effectiveBurned : null);
 
 	// Protein goal in grams (fixed by body weight, unaffected by exercise)
 	const proteinGoalGrams = $derived.by(() => {
@@ -1220,8 +1226,19 @@
 				</div>
 
 				<div class="cal-stat burned">
-					<span class="cal-stat-value">{fmtCal(exerciseKcal)}</span>
-					<span class="cal-stat-label">{isEn ? 'BURNED' : 'VERBRANNT'}</span>
+					{#if exerciseKcal > 0}
+						<span class="cal-stat-value">{fmtCal(exerciseKcal)}</span>
+						<span class="cal-stat-label">{isEn ? 'BURNED' : 'VERBRANNT'}</span>
+					{:else if projectedExercise}
+						<button class="projection-toggle" class:active={includeProjection} onclick={() => includeProjection = !includeProjection}>
+							<span class="cal-stat-value projected" class:included={includeProjection}>~{fmtCal(projectedExercise.kcal)}</span>
+							<span class="cal-stat-label projected-label">{isEn ? 'PROJECTED' : 'PROGNOSE'}</span>
+							<span class="projected-template">{projectedExercise.templateName}</span>
+						</button>
+					{:else}
+						<span class="cal-stat-value">{fmtCal(0)}</span>
+						<span class="cal-stat-label">{isEn ? 'BURNED' : 'VERBRANNT'}</span>
+					{/if}
 					<span class="burned-bmr tdee-info-wrap">
 						+{fmtCal(Math.round(dailyTdee))} TDEE<button class="tdee-info-trigger" onclick={() => showTdeeInfo = !showTdeeInfo} aria-label="TDEE info"><Info size={10} /></button>
 						{#if showTdeeInfo}
@@ -2027,6 +2044,36 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-secondary);
+	}
+	.projection-toggle {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.cal-stat-value.projected {
+		opacity: 0.45;
+		font-style: italic;
+	}
+	.cal-stat-value.projected.included {
+		opacity: 0.8;
+		color: var(--nord14);
+	}
+	.projected-label {
+		font-style: italic;
+	}
+	.projected-template {
+		font-size: 0.55rem;
+		color: var(--color-text-tertiary);
+		max-width: 80px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.burned-bmr {
 		margin-top: 0.1rem;
