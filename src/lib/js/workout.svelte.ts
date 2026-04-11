@@ -51,6 +51,10 @@ export interface StoredState {
 	restTotal: number; // total rest duration in seconds
 	restExerciseIdx: number; // which exercise the rest timer belongs to
 	restSetIdx: number; // which set the rest timer belongs to
+	holdStartedAt?: number | null; // Date.now() when hold timer started
+	holdTotal?: number; // total hold duration in seconds
+	holdExerciseIdx?: number;
+	holdSetIdx?: number;
 }
 
 export interface RemoteState {
@@ -67,6 +71,10 @@ export interface RemoteState {
 	restTotal: number;
 	restExerciseIdx: number;
 	restSetIdx: number;
+	holdStartedAt?: number | null;
+	holdTotal?: number;
+	holdExerciseIdx?: number;
+	holdSetIdx?: number;
 }
 
 function createEmptySet(): WorkoutSet {
@@ -114,6 +122,15 @@ export function createWorkout() {
 	let _restExerciseIdx = $state(-1);
 	let _restSetIdx = $state(-1);
 
+	// Hold timer (countdown for timed/duration sets)
+	let _holdSeconds = $state(0);
+	let _holdTotal = $state(0);
+	let _holdActive = $state(false);
+	let _holdStartedAt: number | null = null;
+	let _holdExerciseIdx = $state(-1);
+	let _holdSetIdx = $state(-1);
+	let _holdInterval: ReturnType<typeof setInterval> | null = null;
+
 	let _timerInterval: ReturnType<typeof setInterval> | null = null;
 	let _restInterval: ReturnType<typeof setInterval> | null = null;
 	let _onChangeCallback: (() => void) | null = null;
@@ -138,7 +155,11 @@ export function createWorkout() {
 			restStartedAt: _restActive ? _restStartedAt : null,
 			restTotal: _restTotal,
 			restExerciseIdx: _restActive ? _restExerciseIdx : -1,
-			restSetIdx: _restActive ? _restSetIdx : -1
+			restSetIdx: _restActive ? _restSetIdx : -1,
+			holdStartedAt: _holdActive ? _holdStartedAt : null,
+			holdTotal: _holdTotal,
+			holdExerciseIdx: _holdActive ? _holdExerciseIdx : -1,
+			holdSetIdx: _holdActive ? _holdSetIdx : -1
 		});
 		_onChangeCallback?.();
 	}
@@ -211,6 +232,62 @@ export function createWorkout() {
 		_restSetIdx = -1;
 	}
 
+	// --- Hold timer (timed exercise countdown) ---
+
+	function _computeHoldSeconds() {
+		if (!_holdActive || !_holdStartedAt) return;
+		const elapsed = Math.floor((Date.now() - _holdStartedAt) / 1000);
+		_holdSeconds = Math.max(0, _holdTotal - elapsed);
+		if (_holdSeconds <= 0) {
+			_onHoldComplete();
+		}
+	}
+
+	function _onHoldComplete() {
+		const exIdx = _holdExerciseIdx;
+		const setIdx = _holdSetIdx;
+		_stopHoldTimer();
+		_playRestDoneSound();
+		// Auto-complete the set
+		const ex = exercises[exIdx];
+		if (ex?.sets[setIdx] && !ex.sets[setIdx].completed) {
+			ex.sets[setIdx].completed = true;
+			// Start rest timer
+			startRestTimer(ex.restTime, exIdx, setIdx);
+		}
+		_persist();
+	}
+
+	function startHoldTimer(seconds: number, exerciseIdx: number, setIdx: number) {
+		_stopHoldTimer();
+		_holdStartedAt = Date.now();
+		_holdSeconds = seconds;
+		_holdTotal = seconds;
+		_holdActive = true;
+		_holdExerciseIdx = exerciseIdx;
+		_holdSetIdx = setIdx;
+		_holdInterval = setInterval(() => _computeHoldSeconds(), 1000);
+		_persist();
+	}
+
+	function cancelHoldTimer() {
+		_stopHoldTimer();
+		_persist();
+	}
+
+	function _stopHoldTimer() {
+		if (_holdInterval) {
+			clearInterval(_holdInterval);
+			_holdInterval = null;
+		}
+		_holdActive = false;
+		_holdSeconds = 0;
+		_holdTotal = 0;
+		_holdStartedAt = null;
+		_holdExerciseIdx = -1;
+		_holdSetIdx = -1;
+	}
+
 	// Restore from localStorage on creation
 	function restore() {
 		const stored = loadFromStorage();
@@ -252,6 +329,26 @@ export function createWorkout() {
 				_restExerciseIdx = stored.restExerciseIdx ?? -1;
 				_restSetIdx = stored.restSetIdx ?? -1;
 				_startRestInterval();
+			}
+		}
+
+		// Restore hold timer if it was active
+		if (stored.holdStartedAt && stored.holdTotal && stored.holdTotal > 0) {
+			const elapsed = Math.floor((Date.now() - stored.holdStartedAt) / 1000);
+			const remaining = stored.holdTotal - elapsed;
+			if (remaining > 0) {
+				_holdStartedAt = stored.holdStartedAt;
+				_holdTotal = stored.holdTotal;
+				_holdSeconds = remaining;
+				_holdActive = true;
+				_holdExerciseIdx = stored.holdExerciseIdx ?? -1;
+				_holdSetIdx = stored.holdSetIdx ?? -1;
+				_holdInterval = setInterval(() => _computeHoldSeconds(), 1000);
+			} else {
+				// Timer expired while away — complete it
+				_holdExerciseIdx = stored.holdExerciseIdx ?? -1;
+				_holdSetIdx = stored.holdSetIdx ?? -1;
+				_onHoldComplete();
 			}
 		}
 	}
@@ -445,6 +542,7 @@ export function createWorkout() {
 	function finish() {
 		_stopTimer();
 		_stopRestTimer();
+		_stopHoldTimer();
 
 		const endTime = new Date();
 		_computeElapsed();
@@ -505,6 +603,7 @@ export function createWorkout() {
 	function cancel() {
 		_stopTimer();
 		_stopRestTimer();
+		_stopHoldTimer();
 		_reset();
 	}
 
@@ -553,6 +652,29 @@ export function createWorkout() {
 			}
 		}
 
+		// Apply hold timer state from remote
+		const holdChanged = remote.holdStartedAt !== _holdStartedAt || remote.holdTotal !== _holdTotal;
+		if (holdChanged) {
+			_stopHoldTimer();
+			if (remote.holdStartedAt && remote.holdTotal && remote.holdTotal > 0) {
+				const elapsed = Math.floor((Date.now() - remote.holdStartedAt) / 1000);
+				const remaining = remote.holdTotal - elapsed;
+				if (remaining > 0) {
+					_holdStartedAt = remote.holdStartedAt;
+					_holdTotal = remote.holdTotal;
+					_holdSeconds = remaining;
+					_holdActive = true;
+					_holdExerciseIdx = remote.holdExerciseIdx ?? -1;
+					_holdSetIdx = remote.holdSetIdx ?? -1;
+					_holdInterval = setInterval(() => _computeHoldSeconds(), 1000);
+				} else {
+					_holdExerciseIdx = remote.holdExerciseIdx ?? -1;
+					_holdSetIdx = remote.holdSetIdx ?? -1;
+					_onHoldComplete();
+				}
+			}
+		}
+
 		// Persist locally but don't trigger onChange (to avoid re-push loop)
 		saveToStorage({
 			active: true,
@@ -568,7 +690,11 @@ export function createWorkout() {
 			restStartedAt: _restActive ? _restStartedAt : null,
 			restTotal: _restTotal,
 			restExerciseIdx: _restActive ? _restExerciseIdx : -1,
-			restSetIdx: _restActive ? _restSetIdx : -1
+			restSetIdx: _restActive ? _restSetIdx : -1,
+			holdStartedAt: _holdActive ? _holdStartedAt : null,
+			holdTotal: _holdTotal,
+			holdExerciseIdx: _holdActive ? _holdExerciseIdx : -1,
+			holdSetIdx: _holdActive ? _holdSetIdx : -1
 		});
 	}
 
@@ -601,6 +727,12 @@ export function createWorkout() {
 		get restStartedAt() { return _restStartedAt; },
 		get restExerciseIdx() { return _restExerciseIdx; },
 		get restSetIdx() { return _restSetIdx; },
+		get holdTimerSeconds() { return _holdSeconds; },
+		get holdTimerTotal() { return _holdTotal; },
+		get holdTimerActive() { return _holdActive; },
+		get holdStartedAt() { return _holdStartedAt; },
+		get holdExerciseIdx() { return _holdExerciseIdx; },
+		get holdSetIdx() { return _holdSetIdx; },
 		restore,
 		startFromTemplate,
 		startEmpty,
@@ -618,6 +750,8 @@ export function createWorkout() {
 		startRestTimer,
 		cancelRestTimer,
 		adjustRestTimer,
+		startHoldTimer,
+		cancelHoldTimer,
 		finish,
 		cancel,
 		applyRemoteState,
