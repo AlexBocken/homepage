@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight, MapPin, Dumbbell, Timer } from '@lucide/svelte';
+	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight, MapPin, Dumbbell, Timer, BookOpen, Check } from '@lucide/svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
@@ -20,7 +20,11 @@
 	const sync = getWorkoutSync();
 	// svelte-ignore state_referenced_locally
 	let templates = $state(data.templates?.templates ? [...data.templates.templates] : []);
-	let seeded = $state(false);
+	// Library browser
+	let showLibrary = $state(false);
+	/** @type {any[]} */
+	let libraryTemplates = $state([]);
+	let libraryLoading = $state(false);
 
 	// Schedule state
 	/** @type {string[]} */
@@ -84,15 +88,8 @@
 			return;
 		}
 
-		if (templates.length === 0 && !seeded) {
-			seeded = true;
-			fetch('/api/fitness/templates/seed', { method: 'POST' }).then(async (res) => {
-				if (res.ok) {
-					const refreshRes = await fetch('/api/fitness/templates');
-					const refreshData = await refreshRes.json();
-					templates = refreshData.templates ?? [];
-				}
-			});
+		if (templates.length === 0 && !showLibrary) {
+			openLibrary();
 		}
 	});
 
@@ -133,6 +130,41 @@
 	async function startNextScheduled() {
 		if (!nextTemplate) return;
 		await startFromTemplate(nextTemplate);
+	}
+
+	async function openLibrary() {
+		showLibrary = true;
+		if (libraryTemplates.length > 0) return;
+		libraryLoading = true;
+		try {
+			const res = await fetch('/api/fitness/templates/library');
+			if (res.ok) {
+				const data = await res.json();
+				libraryTemplates = data.templates ?? [];
+			}
+		} catch {}
+		libraryLoading = false;
+	}
+
+	/** @param {any} libTemplate */
+	async function addFromLibrary(libTemplate) {
+		try {
+			const res = await fetch('/api/fitness/templates/library', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id: libTemplate.id })
+			});
+			if (res.ok) {
+				const { template } = await res.json();
+				templates = [...templates, template];
+				libTemplate.added = true;
+				libraryTemplates = [...libraryTemplates];
+				toast.success(t('template_added', lang));
+			} else if (res.status === 409) {
+				libTemplate.added = true;
+				libraryTemplates = [...libraryTemplates];
+			}
+		} catch {}
 	}
 
 	function openCreateTemplate() {
@@ -425,6 +457,9 @@
 				<button class="header-icon-btn" onclick={openCreateTemplate} aria-label="Create template">
 					<Plus size={18} />
 				</button>
+				<button class="header-icon-btn" onclick={openLibrary} aria-label="Browse template library">
+					<BookOpen size={18} />
+				</button>
 				<button class="schedule-btn" onclick={openScheduleEditor} aria-label="Edit workout schedule">
 					<CalendarClock size={16} />
 					{t('schedule', lang)}
@@ -444,6 +479,10 @@
 			</div>
 		{:else}
 			<p class="no-templates">{t('no_templates_yet', lang)}</p>
+				<button class="browse-library-btn" onclick={openLibrary}>
+					<BookOpen size={16} />
+					{t('browse_library', lang)}
+				</button>
 		{/if}
 	</section>
 </div>
@@ -697,6 +736,49 @@
 				<button class="modal-start" onclick={saveAndCloseSchedule} disabled={scheduleSaving}>
 					<Save size={16} /> {scheduleSaving ? t('saving', lang) : t('save_schedule', lang)}
 				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Library Modal -->
+{#if showLibrary}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="modal-overlay" onkeydown={(e) => e.key === 'Escape' && (showLibrary = false)}>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<div class="modal-backdrop" onclick={() => showLibrary = false}></div>
+		<div class="modal-panel library-panel">
+			<div class="modal-header">
+				<h2>{t('template_library', lang)}</h2>
+				<button class="close-btn" onclick={() => showLibrary = false} aria-label="Close"><X size={20} /></button>
+			</div>
+			<div class="modal-body">
+				{#if libraryLoading}
+					<p class="library-loading">{t('loading', lang)}...</p>
+				{:else}
+					<div class="library-grid">
+						{#each libraryTemplates as libTmpl (libTmpl.id)}
+							<div class="library-card" class:added={libTmpl.added}>
+								<div class="library-card-info">
+									<h3>{libTmpl.name}</h3>
+									<p>{libTmpl.description}</p>
+									<span class="library-card-meta">{libTmpl.exercises.length} {t('exercises_heading', lang)}</span>
+								</div>
+								<button
+									class="library-add-btn"
+									disabled={libTmpl.added}
+									onclick={() => addFromLibrary(libTmpl)}
+								>
+									{#if libTmpl.added}
+										<Check size={16} />
+									{:else}
+										<Plus size={16} />
+									{/if}
+								</button>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -1375,5 +1457,84 @@
 		text-align: center;
 		padding: 0.5rem 0;
 		margin: 0;
+	}
+
+	/* Browse library button (empty state) */
+	.browse-library-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0.5rem auto 0;
+		padding: 0.6rem 1.2rem;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		border: none;
+		border-radius: var(--radius-md);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	/* Library modal */
+	.library-panel {
+		max-width: 500px;
+	}
+	.library-loading {
+		text-align: center;
+		color: var(--color-text-secondary);
+		padding: 2rem 0;
+	}
+	.library-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.library-card {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem;
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-md);
+	}
+	.library-card.added {
+		opacity: 0.55;
+	}
+	.library-card-info {
+		flex: 1;
+		min-width: 0;
+	}
+	.library-card-info h3 {
+		margin: 0;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+	.library-card-info p {
+		margin: 0.15rem 0 0;
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+	.library-card-meta {
+		font-size: 0.7rem;
+		color: var(--color-text-tertiary);
+	}
+	.library-add-btn {
+		flex-shrink: 0;
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		border: none;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+	.library-add-btn:disabled {
+		background: var(--color-bg-elevated);
+		color: var(--nord14);
+		cursor: default;
 	}
 </style>
