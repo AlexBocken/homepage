@@ -1,7 +1,7 @@
 <script>
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge, Flame, Info } from '@lucide/svelte';
+	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge, Flame, Info, Mountain } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';
@@ -393,6 +393,38 @@
 	}
 
 	/**
+	 * Compute elevation samples over distance from GPS track.
+	 * Returns array of { dist (km), altitude (m) }.
+	 * @param {any[]} track
+	 */
+	function computeElevationSamples(track) {
+		/** @type {Array<{dist: number, altitude: number}>} */
+		const samples = [];
+		let cumDist = 0;
+		for (let i = 0; i < track.length; i++) {
+			if (track[i].altitude == null) continue;
+			if (i > 0) cumDist += haversine(track[i - 1], track[i]);
+			samples.push({ dist: cumDist, altitude: track[i].altitude });
+		}
+		return samples;
+	}
+
+	/**
+	 * Compute elevation gain and loss from altitude samples.
+	 * Uses a 5m threshold to filter GPS noise.
+	 * @param {Array<{dist: number, altitude: number}>} samples
+	 */
+	function computeElevationStats(samples) {
+		let gain = 0, loss = 0;
+		for (let i = 1; i < samples.length; i++) {
+			const diff = samples[i].altitude - samples[i - 1].altitude;
+			if (diff > 0) gain += diff;
+			else loss -= diff;
+		}
+		return { gain: Math.round(gain), loss: Math.round(loss) };
+	}
+
+	/**
 	 * Build Chart.js data for pace over distance
 	 * @param {Array<{dist: number, pace: number}>} samples
 	 */
@@ -408,6 +440,30 @@
 				label: 'Pace',
 				data: filtered.map(s => s.pace),
 				borderColor: primary,
+				backgroundColor: fill,
+				borderWidth: 1.5,
+				pointRadius: 0,
+				tension: 0.3,
+				fill: true
+			}]
+		};
+	}
+
+	/**
+	 * Build Chart.js data for elevation over distance
+	 * @param {Array<{dist: number, altitude: number}>} samples
+	 */
+	function buildElevationChartData(samples) {
+		const step = Math.max(1, Math.floor(samples.length / 80));
+		const filtered = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
+		const color = dark ? '#A3BE8C' : '#8FBCBB';
+		const fill = dark ? 'rgba(163, 190, 140, 0.18)' : 'rgba(143, 188, 187, 0.18)';
+		return {
+			labels: filtered.map(s => s.dist.toFixed(2)),
+			datasets: [{
+				label: t('elevation', lang),
+				data: filtered.map(s => Math.round(s.altitude)),
+				borderColor: color,
 				backgroundColor: fill,
 				borderWidth: 1.5,
 				pointRadius: 0,
@@ -658,11 +714,17 @@
 					{@const dist = ex.totalDistance ?? trackDistance(ex.gpsTrack)}
 					{@const elapsed = (ex.gpsTrack[ex.gpsTrack.length - 1].timestamp - ex.gpsTrack[0].timestamp) / 60000}
 					{@const pace = dist > 0 && elapsed > 0 ? elapsed / dist : 0}
+					{@const elevSamples = computeElevationSamples(ex.gpsTrack)}
+					{@const elevStats = elevSamples.length > 1 ? computeElevationStats(elevSamples) : null}
 					<div class="gps-track-section">
 						<div class="gps-stats">
 							<span class="gps-stat accent"><Route size={14} /> {dist.toFixed(2)} km</span>
 							{#if pace > 0}
 								<span class="gps-stat accent"><Gauge size={14} /> {formatPace(pace)}</span>
+							{/if}
+							{#if elevStats}
+								<span class="gps-stat elev-gain"><Mountain size={14} /> +{elevStats.gain}{t('elevation_unit', lang)}</span>
+								<span class="gps-stat elev-loss">-{elevStats.loss}{t('elevation_unit', lang)}</span>
 							{/if}
 						</div>
 						<div class="track-map" use:renderMap={{ track: ex.gpsTrack, idx: exIdx }}></div>
@@ -670,8 +732,20 @@
 						{#if ex.gpsTrack.length >= 2}
 						{@const samples = computePaceSamples(ex.gpsTrack)}
 						{@const splits = computeSplits(ex.gpsTrack)}
+
+						{#if elevSamples.length > 1}
+							<div class="chart-section">
+								<FitnessChart
+									data={buildElevationChartData(elevSamples)}
+									title="{t('elevation', lang)} ({t('elevation_unit', lang)})"
+									height="160px"
+									yUnit="m"
+								/>
+							</div>
+						{/if}
+
 						{#if samples.length > 0}
-							<div class="pace-chart-section">
+							<div class="chart-section">
 								<FitnessChart
 									data={buildPaceChartData(samples)}
 									title="Pace (min/km)"
@@ -1218,9 +1292,18 @@
 		cursor: not-allowed;
 	}
 
-	/* Pace chart */
-	.pace-chart-section {
+	/* GPS charts */
+	.chart-section {
 		margin-top: 0.25rem;
+	}
+	.gps-stat.elev-gain {
+		color: var(--nord14);
+		font-weight: 600;
+	}
+	.gps-stat.elev-loss {
+		color: var(--nord11);
+		font-weight: 600;
+		font-size: 0.8rem;
 	}
 	.splits-section h4 {
 		margin: 0 0 0.4rem;
