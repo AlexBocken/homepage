@@ -811,8 +811,8 @@
   }
 
   .card-icon {
-    width: 44px;
-    height: 44px;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -897,7 +897,7 @@
       grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 0.4rem;
     }
-    .card-icon { width: 36px; height: 36px; }
+    .card-icon { width: 48px; height: 48px; }
     .card-name { font-size: 0.68rem; }
   }
 
@@ -1002,8 +1002,8 @@
   }
   .icon-group-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
-    gap: 0.3rem;
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 0.4rem;
   }
   .icon-option {
     aspect-ratio: 1;
