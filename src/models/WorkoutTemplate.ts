@@ -25,6 +25,7 @@ export interface IWorkoutTemplate {
   exercises: IExercise[];
   createdBy: string; // username/nickname of the person who created the template
   isPublic?: boolean; // whether other users can see/use this template
+  libraryId?: string; // tracks which built-in library template this was created from
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -126,6 +127,10 @@ const WorkoutTemplateSchema = new mongoose.Schema(
     isPublic: {
       type: Boolean,
       default: false
+    },
+    libraryId: {
+      type: String,
+      default: undefined
     }
   },
   {
