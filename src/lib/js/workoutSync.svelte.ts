@@ -26,6 +26,10 @@ interface ServerWorkout {
   restTotal: number;
   restExerciseIdx: number;
   restSetIdx: number;
+  holdStartedAt: number | null;
+  holdTotal: number;
+  holdExerciseIdx: number;
+  holdSetIdx: number;
 }
 
 export function createWorkoutSync() {
@@ -56,7 +60,11 @@ export function createWorkoutSync() {
       restStartedAt: workout.restStartedAt,
       restTotal: workout.restTimerTotal,
       restExerciseIdx: workout.restExerciseIdx,
-      restSetIdx: workout.restSetIdx
+      restSetIdx: workout.restSetIdx,
+      holdStartedAt: workout.holdStartedAt,
+      holdTotal: workout.holdTimerTotal,
+      holdExerciseIdx: workout.holdExerciseIdx,
+      holdSetIdx: workout.holdSetIdx
     };
   }
 
@@ -124,7 +132,11 @@ export function createWorkoutSync() {
         restStartedAt: doc.restStartedAt ?? null,
         restTotal: doc.restTotal ?? 0,
         restExerciseIdx: doc.restExerciseIdx ?? -1,
-        restSetIdx: doc.restSetIdx ?? -1
+        restSetIdx: doc.restSetIdx ?? -1,
+        holdStartedAt: doc.holdStartedAt ?? null,
+        holdTotal: doc.holdTotal ?? 0,
+        holdExerciseIdx: doc.holdExerciseIdx ?? -1,
+        holdSetIdx: doc.holdSetIdx ?? -1
       });
 
       status = 'synced';
@@ -245,7 +257,11 @@ export function createWorkoutSync() {
             restStartedAt: serverDoc.restStartedAt ?? null,
             restTotal: serverDoc.restTotal ?? 0,
             restExerciseIdx: serverDoc.restExerciseIdx ?? -1,
-            restSetIdx: serverDoc.restSetIdx ?? -1
+            restSetIdx: serverDoc.restSetIdx ?? -1,
+            holdStartedAt: serverDoc.holdStartedAt ?? null,
+            holdTotal: serverDoc.holdTotal ?? 0,
+            holdExerciseIdx: serverDoc.holdExerciseIdx ?? -1,
+            holdSetIdx: serverDoc.holdSetIdx ?? -1
           });
         }
         connectSSE();

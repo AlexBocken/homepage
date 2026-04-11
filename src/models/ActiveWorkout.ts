@@ -4,6 +4,8 @@ export interface IActiveWorkoutSet {
   reps: number | null;
   weight: number | null;
   rpe: number | null;
+  distance: number | null;
+  duration: number | null;
   completed: boolean;
 }
 
@@ -29,6 +31,10 @@ export interface IActiveWorkout {
   restTotal: number;
   restExerciseIdx: number;
   restSetIdx: number;
+  holdStartedAt: number | null;
+  holdTotal: number;
+  holdExerciseIdx: number;
+  holdSetIdx: number;
   updatedAt?: Date;
 }
 
@@ -36,6 +42,8 @@ const ActiveWorkoutSetSchema = new mongoose.Schema({
   reps: { type: Number, default: null },
   weight: { type: Number, default: null },
   rpe: { type: Number, default: null },
+  distance: { type: Number, default: null },
+  duration: { type: Number, default: null },
   completed: { type: Boolean, default: false }
 }, { _id: false });
 
@@ -107,6 +115,22 @@ const ActiveWorkoutSchema = new mongoose.Schema(
       default: -1
     },
     restSetIdx: {
+      type: Number,
+      default: -1
+    },
+    holdStartedAt: {
+      type: Number,
+      default: null
+    },
+    holdTotal: {
+      type: Number,
+      default: 0
+    },
+    holdExerciseIdx: {
+      type: Number,
+      default: -1
+    },
+    holdSetIdx: {
       type: Number,
       default: -1
     }

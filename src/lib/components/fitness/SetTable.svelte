@@ -1,5 +1,5 @@
 <script>
-	import { Check, X } from '@lucide/svelte';
+	import { Check, X, Play, Square } from '@lucide/svelte';
 	import { METRIC_LABELS } from '$lib/data/exercises';
 	import RestTimer from './RestTimer.svelte';
 	import { page } from '$app/stores';
@@ -16,8 +16,13 @@
 	 *   restAfterSet?: number,
 	 *   restSeconds?: number,
 	 *   restTotal?: number,
+	 *   holdAfterSet?: number,
+	 *   holdSeconds?: number,
+	 *   holdTotal?: number,
 	 *   onRestAdjust?: ((delta: number) => void) | null,
 	 *   onRestSkip?: (() => void) | null,
+	 *   timedHold?: boolean,
+	 *   onHoldSkip?: (() => void) | null,
 	 *   onUpdate?: ((setIndex: number, data: Record<string, number | null>) => void) | null,
 	 *   onToggleComplete?: ((setIndex: number) => void) | null,
 	 *   onRemove?: ((setIndex: number) => void) | null
@@ -31,8 +36,13 @@
 		restAfterSet = -1,
 		restSeconds = 0,
 		restTotal = 0,
+		timedHold = false,
+		holdAfterSet = -1,
+		holdSeconds = 0,
+		holdTotal = 0,
 		onRestAdjust = null,
 		onRestSkip = null,
+		onHoldSkip = null,
 		onUpdate = null,
 		onToggleComplete = null,
 		onRemove = null
@@ -52,7 +62,9 @@
 	 */
 	function handleInput(index, field, e) {
 		const target = /** @type {HTMLInputElement} */ (e.target);
-		const val = target.value === '' ? null : Number(target.value);
+		const raw = target.value === '' ? null : Number(target.value);
+		// For timedHold exercises, duration input is in seconds — convert to minutes for storage
+		const val = (timedHold && field === 'duration' && raw != null) ? raw / 60 : raw;
 		onUpdate?.(index, { [field]: val });
 	}
 
@@ -60,7 +72,10 @@
 	function formatPrev(/** @type {Record<string, any>} */ prev) {
 		const parts = [];
 		for (const m of mainMetrics) {
-			if (prev[m] != null) parts.push(`${prev[m]}`);
+			if (prev[m] != null) {
+				const v = (timedHold && m === 'duration') ? Math.round(prev[m] * 60) : prev[m];
+				parts.push(`${v}`);
+			}
 		}
 		let result = parts.join(' × ');
 		if (prev.rpe != null) result += `@${prev.rpe}`;
@@ -84,7 +99,7 @@
 				<th class="col-prev">{t('prev_header', lang)}</th>
 			{/if}
 			{#each mainMetrics as metric (metric)}
-				<th class="col-metric">{METRIC_LABELS[metric]}</th>
+				<th class="col-metric">{timedHold && metric === 'duration' ? 'SEC' : METRIC_LABELS[metric]}</th>
 			{/each}
 			{#if editable && hasRpe}
 				<th class="col-at"></th>
@@ -118,17 +133,20 @@
 					</td>
 				{/if}
 				{#each mainMetrics as metric (metric)}
+					{@const displayVal = (timedHold && metric === 'duration' && set[metric] != null)
+						? Math.round(set[metric] * 60)
+						: set[metric]}
 					<td class="col-metric" class:col-weight={metric === 'weight'}>
 						{#if editable}
 							<input
 								type="number"
-								inputmode={inputMode(metric)}
-								value={set[metric] ?? ''}
+								inputmode={timedHold && metric === 'duration' ? 'numeric' : inputMode(metric)}
+								value={displayVal ?? ''}
 								placeholder="0"
 								oninput={(e) => handleInput(i, metric, e)}
 							/>
 						{:else}
-							{set[metric] ?? '—'}
+							{displayVal ?? '—'}
 						{/if}
 					</td>
 				{/each}
@@ -148,17 +166,51 @@
 				{/if}
 				{#if editable}
 					<td class="col-check">
-						<button
-							class="check-btn"
-							class:checked={set.completed}
-							onclick={() => onToggleComplete?.(i)}
-							aria-label="Mark set complete"
-						>
-							<Check size={16} />
-						</button>
+						{#if timedHold && !set.completed}
+							{#if holdAfterSet === i}
+								<button
+									class="check-btn hold-stop"
+									onclick={() => onToggleComplete?.(i)}
+									aria-label="Stop timer"
+								>
+									<Square size={14} />
+								</button>
+							{:else}
+								<button
+									class="check-btn hold-play"
+									onclick={() => onToggleComplete?.(i)}
+									aria-label="Start hold timer"
+								>
+									<Play size={16} />
+								</button>
+							{/if}
+						{:else}
+							<button
+								class="check-btn"
+								class:checked={set.completed}
+								onclick={() => onToggleComplete?.(i)}
+								aria-label="Mark set complete"
+							>
+								<Check size={16} />
+							</button>
+						{/if}
 					</td>
 				{/if}
 			</tr>
+			{#if holdAfterSet === i && holdTotal > 0}
+				<tr class="rest-row">
+					<td colspan={totalCols} class="rest-cell">
+						<div class="hold-bar">
+							<div class="hold-fill" style:width="{holdTotal > 0 ? (holdSeconds / holdTotal) * 100 : 0}%"></div>
+							<div class="hold-controls">
+								<button class="hold-skip-btn" onclick={() => onHoldSkip?.()}>
+									{Math.floor(holdSeconds / 60)}:{(holdSeconds % 60).toString().padStart(2, '0')}
+								</button>
+							</div>
+						</div>
+					</td>
+				</tr>
+			{/if}
 			{#if restAfterSet === i && restTotal > 0}
 				<tr class="rest-row">
 					<td colspan={totalCols} class="rest-cell">
@@ -303,11 +355,57 @@
 		border-color: var(--nord14);
 		color: white;
 	}
+	.check-btn.hold-play {
+		border-color: var(--nord14);
+		color: var(--nord14);
+	}
+	.check-btn.hold-play:hover {
+		background: color-mix(in srgb, var(--nord14) 15%, transparent);
+	}
+	.check-btn.hold-stop {
+		border-color: var(--nord11);
+		color: var(--nord11);
+	}
+	.check-btn.hold-stop:hover {
+		background: color-mix(in srgb, var(--nord11) 15%, transparent);
+	}
 	.rest-row td {
 		border-top: none;
 	}
 	.rest-cell {
 		padding: 0.3rem 0.25rem;
+	}
+	.hold-bar {
+		border-radius: 8px;
+		overflow: hidden;
+		position: relative;
+		height: 2.2rem;
+		background: color-mix(in srgb, var(--nord14) 20%, var(--nord0));
+	}
+	.hold-fill {
+		position: absolute;
+		inset: 0;
+		background: var(--nord14);
+		border-radius: 8px;
+		transition: width 1s linear;
+	}
+	.hold-controls {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1;
+	}
+	.hold-skip-btn {
+		background: none;
+		border: none;
+		font-size: 0.9rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--nord0);
+		cursor: pointer;
+		padding: 0.2rem 0.5rem;
 	}
 	.prev-na {
 		opacity: 0.4;
