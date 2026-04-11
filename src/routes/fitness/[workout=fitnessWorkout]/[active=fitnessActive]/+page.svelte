@@ -583,6 +583,7 @@
 			const exercise = getExerciseById(ex.exerciseId, lang);
 			const metrics = getExerciseMetrics(exercise);
 			const isCardio = metrics.includes('distance');
+			const isDurationOnly = metrics.includes('duration') && !metrics.includes('weight') && !metrics.includes('reps');
 			const isBilateral = exercise?.bilateral ?? false;
 			const weightMul = isBilateral ? 2 : 1;
 
@@ -598,6 +599,8 @@
 				sets++;
 				if (isCardio) {
 					exDistance += s.distance ?? 0;
+					exDuration += s.duration ?? 0;
+				} else if (isDurationOnly) {
 					exDuration += s.duration ?? 0;
 				} else {
 					const w = (s.weight ?? 0) * weightMul;
@@ -618,6 +621,7 @@
 				exerciseId: ex.exerciseId,
 				sets,
 				isCardio,
+				isDurationOnly,
 				tonnage: exTonnage,
 				distance: exDistance,
 				duration: exDuration,
@@ -667,19 +671,21 @@
 				const metrics = getExerciseMetrics(exercise);
 				if (metrics.includes('distance')) continue; // skip cardio
 
+				const isDurOnly = metrics.includes('duration') && !metrics.includes('weight') && !metrics.includes('reps');
 				const completedSets = actual.sets.filter((/** @type {any} */ s) => s.completed);
 				if (completedSets.length === 0) continue;
 
-				// Check if sets differ in count, reps, or weight
+				// Check if sets differ
 				const tmplSets = tmplEx.sets ?? [];
 				let changed = completedSets.length !== tmplSets.length;
 				if (!changed) {
 					for (let i = 0; i < completedSets.length; i++) {
 						const a = completedSets[i];
-						const t = tmplSets[i];
-						if ((a.reps ?? 0) !== (t.reps ?? 0) || (a.weight ?? 0) !== (t.weight ?? 0)) {
-							changed = true;
-							break;
+						const tp = tmplSets[i];
+						if (isDurOnly) {
+							if ((a.duration ?? 0) !== (tp.duration ?? 0)) { changed = true; break; }
+						} else {
+							if ((a.reps ?? 0) !== (tp.reps ?? 0) || (a.weight ?? 0) !== (tp.weight ?? 0)) { changed = true; break; }
 						}
 					}
 				}
@@ -688,12 +694,12 @@
 					diffs.push({
 						exerciseId: actual.exerciseId,
 						name: exercise?.localName ?? actual.exerciseId,
+						isDurationOnly: isDurOnly,
 						oldSets: tmplSets,
-						newSets: completedSets.map((/** @type {any} */ s) => ({
-							reps: s.reps ?? undefined,
-							weight: s.weight ?? undefined,
-							rpe: s.rpe ?? undefined
-						}))
+						newSets: completedSets.map((/** @type {any} */ s) => isDurOnly
+							? { duration: s.duration ?? undefined }
+							: { reps: s.reps ?? undefined, weight: s.weight ?? undefined, rpe: s.rpe ?? undefined }
+						)
 					});
 				}
 			}
@@ -844,7 +850,9 @@
 						<span class="ex-summary-sets">{ex.sets} {ex.sets !== 1 ? t('sets', lang) : t('set', lang)}</span>
 					</div>
 					<div class="ex-summary-stats">
-						{#if ex.isCardio}
+						{#if ex.isDurationOnly}
+							<span>{ex.sets > 0 ? Math.round((ex.duration / ex.sets) * 60) : 0}s × {ex.sets}</span>
+						{:else if ex.isCardio}
 							{#if ex.distance > 0}
 								<span>{ex.distance.toFixed(1)} km</span>
 							{/if}
@@ -888,11 +896,19 @@
 									{#each diff.newSets as set, i}
 										{@const old = diff.oldSets[i]}
 										<div class="diff-set-row">
-											{#if old}
-												<span class="diff-old">{old.weight ?? '—'} kg × {old.reps ?? '—'}</span>
-												<span class="diff-arrow">→</span>
+											{#if diff.isDurationOnly}
+												{#if old}
+													<span class="diff-old">{old.duration != null ? Math.round(old.duration * 60) : '—'}s</span>
+													<span class="diff-arrow">→</span>
+												{/if}
+												<span class="diff-new">{set.duration != null ? Math.round(set.duration * 60) : '—'}s</span>
+											{:else}
+												{#if old}
+													<span class="diff-old">{old.weight ?? '—'} kg × {old.reps ?? '—'}</span>
+													<span class="diff-arrow">→</span>
+												{/if}
+												<span class="diff-new">{set.weight ?? '—'} kg × {set.reps ?? '—'}</span>
 											{/if}
-											<span class="diff-new">{set.weight ?? '—'} kg × {set.reps ?? '—'}</span>
 										</div>
 									{/each}
 									{#if diff.newSets.length > diff.oldSets.length}
@@ -1346,6 +1362,8 @@
 		{/if}
 
 		{#each workout.exercises as ex, exIdx (exIdx)}
+			{@const exMetrics = getExerciseMetrics(getExerciseById(ex.exerciseId))}
+			{@const isDurationOnly = exMetrics.includes('duration') && !exMetrics.includes('weight') && !exMetrics.includes('reps')}
 			<div class="exercise-block">
 				<div class="exercise-header">
 					<ExerciseName exerciseId={ex.exerciseId} />
@@ -1369,18 +1387,34 @@
 				<SetTable
 					sets={ex.sets}
 					previousSets={previousData[ex.exerciseId] ?? []}
-					metrics={getExerciseMetrics(getExerciseById(ex.exerciseId))}
+					metrics={exMetrics}
 					editable={true}
+					timedHold={isDurationOnly}
 					restAfterSet={workout.restTimerActive && workout.restExerciseIdx === exIdx ? workout.restSetIdx : -1}
 					restSeconds={workout.restTimerSeconds}
 					restTotal={workout.restTimerTotal}
+					holdAfterSet={workout.holdTimerActive && workout.holdExerciseIdx === exIdx ? workout.holdSetIdx : -1}
+					holdSeconds={workout.holdTimerSeconds}
+					holdTotal={workout.holdTimerTotal}
 					onRestAdjust={(delta) => workout.adjustRestTimer(delta)}
 					onRestSkip={cancelRest}
+					onHoldSkip={() => workout.cancelHoldTimer()}
 					onUpdate={(setIdx, d) => workout.updateSet(exIdx, setIdx, d)}
 					onToggleComplete={(setIdx) => {
-						workout.toggleSetComplete(exIdx, setIdx);
-						if (ex.sets[setIdx]?.completed) {
-							workout.startRestTimer(ex.restTime, exIdx, setIdx);
+						const set = ex.sets[setIdx];
+						// If hold timer is running for this set, cancel it
+						if (workout.holdTimerActive && workout.holdExerciseIdx === exIdx && workout.holdSetIdx === setIdx) {
+							workout.cancelHoldTimer();
+							return;
+						}
+						if (isDurationOnly && set?.duration && !set.completed) {
+							// Start hold countdown — completion happens automatically
+							workout.startHoldTimer(Math.round(set.duration * 60), exIdx, setIdx);
+						} else {
+							workout.toggleSetComplete(exIdx, setIdx);
+							if (ex.sets[setIdx]?.completed) {
+								workout.startRestTimer(ex.restTime, exIdx, setIdx);
+							}
 						}
 					}}
 					onRemove={(setIdx) => workout.removeSet(exIdx, setIdx)}
