@@ -108,6 +108,8 @@ const translations: Translations = {
 	elevation_unit: { en: 'm', de: 'm' },
 	elevation_gain: { en: 'Gain', de: 'Anstieg' },
 	elevation_loss: { en: 'Loss', de: 'Abstieg' },
+	cadence: { en: 'Cadence', de: 'Kadenz' },
+	cadence_unit: { en: 'spm', de: 'spm' },
 	personal_records: { en: 'Personal Records', de: 'Persönliche Rekorde' },
 	delete_session_confirm: { en: 'Delete this workout session?', de: 'Dieses Training löschen?' },
 	remove_gps_confirm: { en: 'Remove GPS track from this exercise?', de: 'GPS-Track von dieser Übung entfernen?' },

@@ -15,6 +15,7 @@ export interface IGpsPoint {
   lng: number;
   altitude?: number;
   speed?: number;
+  cadence?: number; // steps per minute, from step detector sensor
   timestamp: number;
 }
 
@@ -108,6 +109,7 @@ const GpsPointSchema = new mongoose.Schema({
   lng: { type: Number, required: true },
   altitude: Number,
   speed: Number,
+  cadence: Number,
   timestamp: { type: Number, required: true }
 }, { _id: false });
 

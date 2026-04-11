@@ -7,6 +7,10 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.LocationListener
 import android.location.LocationManager
 import android.media.AudioAttributes
@@ -24,15 +28,22 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Collections
 import java.util.Locale
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.math.*
 
 private const val TAG = "BockenTTS"
 
-class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
+class LocationForegroundService : Service(), TextToSpeech.OnInitListener, SensorEventListener {
 
     private var locationManager: LocationManager? = null
     private var locationListener: LocationListener? = null
     private var notificationManager: NotificationManager? = null
+
+    // Step detector for cadence
+    private var sensorManager: SensorManager? = null
+    private var stepDetector: Sensor? = null
+    private val stepTimestamps = ConcurrentLinkedQueue<Long>()
+    private val CADENCE_WINDOW_MS = 15_000L // 15 second rolling window
     private var pendingIntent: PendingIntent? = null
     private var startTimeMs: Long = 0L
     private var pausedAccumulatedMs: Long = 0L  // total time spent paused
@@ -191,6 +202,36 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    // --- Step detector sensor callbacks ---
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type == Sensor.TYPE_STEP_DETECTOR) {
+            if (!paused) {
+                stepTimestamps.add(System.currentTimeMillis())
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    /**
+     * Compute cadence (steps per minute) from recent step detector events.
+     * Returns null if no steps detected in the rolling window.
+     */
+    private fun computeCadence(): Double? {
+        val now = System.currentTimeMillis()
+        val cutoff = now - CADENCE_WINDOW_MS
+        // Prune old timestamps
+        while (stepTimestamps.peek()?.let { it < cutoff } == true) {
+            stepTimestamps.poll()
+        }
+        val count = stepTimestamps.size
+        if (count < 2) return null
+        val windowMs = now - (stepTimestamps.peek() ?: now)
+        if (windowMs < 2000) return null // need at least 2s of data
+        return count.toDouble() / (windowMs / 60000.0)
+    }
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -249,6 +290,7 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
         }
 
         startLocationUpdates()
+        startStepDetector()
         tracking = true
         instance = this
 
@@ -654,6 +696,17 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
         notificationManager?.notify(NOTIFICATION_ID, notification)
     }
 
+    private fun startStepDetector() {
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        stepDetector = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
+        if (stepDetector != null) {
+            sensorManager?.registerListener(this, stepDetector, SensorManager.SENSOR_DELAY_FASTEST)
+            Log.d(TAG, "Step detector sensor registered")
+        } else {
+            Log.d(TAG, "Step detector sensor not available on this device")
+        }
+    }
+
     @Suppress("MissingPermission")
     private fun startLocationUpdates() {
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -664,11 +717,13 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
             val now = location.time
 
             // Always buffer GPS points (for track drawing) even when paused
+            val cadence = computeCadence()
             val point = JSONObject().apply {
                 put("lat", lat)
                 put("lng", lng)
                 if (location.hasAltitude()) put("altitude", location.altitude)
                 if (location.hasSpeed()) put("speed", location.speed.toDouble())
+                if (cadence != null) put("cadence", cadence)
                 put("timestamp", location.time)
             }
             pointBuffer.add(point)
@@ -764,6 +819,10 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener {
         locationListener?.let { locationManager?.removeUpdates(it) }
         locationListener = null
         locationManager = null
+        sensorManager?.unregisterListener(this)
+        sensorManager = null
+        stepDetector = null
+        stepTimestamps.clear()
         abandonAudioFocus()
 
         // Speak finish summary using the handed-off TTS instance (already initialized)
