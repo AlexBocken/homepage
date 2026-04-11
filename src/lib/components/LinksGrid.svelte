@@ -17,10 +17,10 @@
 :global(.links_grid a:nth-child(3n+1) svg:not(.lock-icon)) {
 	fill: var(--grid-fill-pop-a);
 }
-:global(.links_grid a:nth-child(5n+3) svg:not(.lock-icon)) {
+:global(.links_grid a:nth-child(5n+2) svg:not(.lock-icon)) {
 	fill: var(--grid-fill-pop-b);
 }
-:global(.links_grid a:nth-child(7n) svg:not(.lock-icon)) {
+:global(.links_grid a:nth-child(5n+4) svg:not(.lock-icon)) {
 	fill: var(--grid-fill-pop-c);
 }
 
