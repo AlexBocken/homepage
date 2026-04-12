@@ -1,5 +1,6 @@
 <script>
-import { onMount, tick } from "svelte";
+import { onMount, onDestroy, tick } from "svelte";
+import { createHaptics } from "$lib/js/haptics";
 import { createLanguageContext } from "$lib/contexts/languageContext.js";
 import { createPip } from "$lib/js/pip.svelte";
 import PipImage from "$lib/components/faith/PipImage.svelte";
@@ -14,7 +15,6 @@ import SalveRegina from "$lib/components/faith/prayers/SalveRegina.svelte";
 import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
 import RosaryFinalPrayer from "$lib/components/faith/prayers/RosaryFinalPrayer.svelte";
 import MichaelGebet from "$lib/components/faith/prayers/MichaelGebet.svelte";
-import CounterButton from "$lib/components/CounterButton.svelte";
 import BibleModal from "$lib/components/faith/BibleModal.svelte";
 import { theologicalVirtueVerseDataDe, theologicalVirtueVerseDataEn } from "$lib/data/mysteryVerseData";
 import Toggle from "$lib/components/Toggle.svelte";
@@ -27,6 +27,7 @@ import MysteryImageColumn from "./MysteryImageColumn.svelte";
 import { mysteries, mysteriesLatin, mysteriesEnglish, mysteryTitles, mysteryTitlesEnglish, mysteryTitlesLatin, allMysteryImages, getLabels, getLabelsLatin, getMysteryForWeekday, BEAD_SPACING, DECADE_OFFSET, sectionPositions } from "./rosaryData.js";
 import { isEastertide, getLiturgicalSeason } from "$lib/js/easter.svelte";
 import { setupScrollSync } from "./rosaryScrollSync.js";
+import { BookOpen } from "@lucide/svelte";
 let { data } = $props();
 
 // Toggle for including Luminous mysteries (initialized from URL param or default)
@@ -252,6 +253,15 @@ $effect(() => {
 	}
 });
 
+// Haptic feedback. Uses native Android bridge (bypasses silent mode) inside
+// Tauri app, else web-haptics in browser. Two profiles:
+//   - BEAD: soft+crisp for each Ave Maria inside a decade
+//   - CARD: heavier thump for advancing to the next prayer card
+const { trigger: triggerHaptic, destroy: destroyHaptics } = createHaptics();
+onDestroy(destroyHaptics);
+const HAPTIC_BEAD = { duration: 25, intensity: 0.6 };
+const HAPTIC_CARD = { duration: 80, intensity: 1.0 };
+
 // Counter for tracking Ave Maria progress in each decade (0-10 for each)
 let decadeCounters = $state({
 	secret1: 0,
@@ -268,9 +278,79 @@ let selectedTitle = $state('');
 /** @type {any} */
 let selectedVerseData = $state(null);
 
-// Function to advance the counter for a specific decade
+// Ordered list of tappable prayer-section cards (matches DOM render order).
+// Used for card-tap delegation: tap any non-decade card → advance to next.
+const orderedSections = [
+	'cross', 'lbead1', 'start1', 'start2', 'start3', 'lbead2',
+	'secret1_pater', 'secret1', 'secret1_transition',
+	'secret2_pater', 'secret2', 'secret2_transition',
+	'secret3_pater', 'secret3', 'secret3_transition',
+	'secret4_pater', 'secret4', 'secret4_transition',
+	'secret5_pater', 'secret5',
+	'final_transition', 'final_salve', 'final_schlussgebet',
+	'final_michael', 'final_paternoster', 'final_cross'
+];
+
+/** @param {string} name */
+function scrollToSection(name) {
+	const el = sectionElements[name];
+	if (!el) return;
+	const top = el.getBoundingClientRect().top + window.scrollY;
+	const offset = parseFloat(getComputedStyle(document.documentElement).fontSize) * 3;
+	window.scrollTo({ top: top - offset, behavior: 'smooth' });
+}
+
+/** Resolve the target prayer-section for a tap event, applying shared filters. */
+/** @param {Event} e */
+function resolvePrayerTarget(e) {
+	const target = /** @type {HTMLElement | null} */ (e.target);
+	if (!target) return null;
+	if (target.closest('button, a, input, select, textarea, [role="button"]')) return null;
+	const section = /** @type {HTMLElement | null} */ (target.closest('.prayer-section'));
+	if (!section) return null;
+	const name = section.getAttribute('data-section');
+	if (!name) return null;
+	return { section, name };
+}
+
+/** Fire haptic immediately on finger-down — don't wait for click's release+no-movement check.
+ *  Tradeoff: a scroll gesture starting on a card emits one brief haptic. Worth it for snappy tap feel. */
+/** @param {PointerEvent} e */
+function handlePrayerCardPointerDown(e) {
+	if (!e.isPrimary) return;
+	if (e.pointerType === 'mouse' && e.button !== 0) return;
+	const hit = resolvePrayerTarget(e);
+	if (!hit) return;
+	if (hit.section.classList.contains('decade')) {
+		const key = /** @type {'secret1'|'secret2'|'secret3'|'secret4'|'secret5'} */ (`secret${parseInt(hit.name.replace('secret', ''), 10)}`);
+		// Predict post-increment count: the 10th bead fires the heavier card haptic.
+		triggerHaptic(decadeCounters[key] === 9 ? HAPTIC_CARD : HAPTIC_BEAD);
+	} else {
+		triggerHaptic(HAPTIC_CARD);
+	}
+}
+
+/** Click handler performs the state change only (scroll/increment). Haptic already
+ *  fired on pointerdown; click's built-in movement filter prevents scroll-gesture advances. */
+/** @param {MouseEvent} e */
+function handlePrayerCardClick(e) {
+	const hit = resolvePrayerTarget(e);
+	if (!hit) return;
+	if (hit.section.classList.contains('decade')) {
+		const decadeNum = parseInt(hit.name.replace('secret', ''), 10);
+		incrementDecadeCounter(decadeNum);
+	} else {
+		const idx = orderedSections.indexOf(hit.name);
+		if (idx >= 0 && idx < orderedSections.length - 1) {
+			scrollToSection(orderedSections[idx + 1]);
+		}
+	}
+}
+
+/** Increment decade counter; auto-scroll to next section when reaching 10.
+ *  Haptic is fired upstream on pointerdown for lower latency — not here. */
 /** @param {number} decadeNum */
-function advanceDecade(decadeNum) {
+function incrementDecadeCounter(decadeNum) {
 	const key = /** @type {'secret1'|'secret2'|'secret3'|'secret4'|'secret5'} */ (`secret${decadeNum}`);
 	if (decadeCounters[key] < 10) {
 		decadeCounters[key] += 1;
@@ -279,24 +359,9 @@ function advanceDecade(decadeNum) {
 		// and reset the counter
 		if (decadeCounters[key] === 10) {
 			setTimeout(() => {
-				// Reset counter to clear highlighting
 				decadeCounters[key] = 0;
-
-				// Determine next section
-				let nextSection;
-				if (decadeNum < 5) {
-					nextSection = `secret${decadeNum}_transition`;
-				} else {
-					nextSection = 'final_transition';
-				}
-
-				// Scroll to next section
-				const nextElement = sectionElements[nextSection];
-				if (nextElement) {
-					const elementTop = nextElement.getBoundingClientRect().top + window.scrollY;
-					const offset = parseFloat(getComputedStyle(document.documentElement).fontSize) * 3;
-					window.scrollTo({ top: elementTop - offset, behavior: 'smooth' });
-				}
+				const nextSection = decadeNum < 5 ? `secret${decadeNum}_transition` : 'final_transition';
+				scrollToSection(nextSection);
 			}, 500);
 		}
 	}
@@ -483,6 +548,11 @@ onMount(() => {
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	position: relative;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	touch-action: manipulation;
+	user-select: none;
+	transition: transform 0.08s ease;
 }
 
 /* No-JS: highlight SVG beads when a prayer section is :target */
@@ -535,24 +605,13 @@ onMount(() => {
 
 .prayer-section.decade {
 	scroll-snap-align: start;
-	min-height: 50vh; /* Only decades need minimum height for scroll-snap */
-	padding-bottom: 2rem;
 }
 
-/* Reduce min-height in monolingual mode since content is shorter */
-.prayer-section.decade:has(:global(.prayer-wrapper.monolingual)),
-.prayer-section.decade:has(:global(.prayer-wrapper.lang-la)) {
-	min-height: 30vh;
+.prayer-section:active {
+	transform: scale(0.995);
 }
 
 @media (max-width: 900px) {
-	.prayer-section.decade {
-		padding-bottom: 1.5rem;
-	}
-	.prayer-section.decade:has(:global(.prayer-wrapper.monolingual)),
-	.prayer-section.decade:has(:global(.prayer-wrapper.lang-la)) {
-		min-height: 20vh;
-	}
 	.prayer-section {
 		padding: 0.5rem;
 	}
@@ -638,70 +697,48 @@ h1 {
 	margin-top: 1.5rem;
 }
 
-.bible-reference-text {
-	color: var(--nord8);
-	font-size: 0.9rem;
-	font-weight: 600;
-}
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .bible-reference-text {
-		color: var(--nord10);
-	}
-  }
-:global(:root[data-theme="light"]) .bible-reference-text {
-	color: var(--nord10);
-}
-
-.bible-reference-button {
-	background: var(--nord3);
-	border: 2px solid var(--nord2);
-	color: var(--nord6);
-	font-size: 1.2rem;
-	cursor: pointer;
-	padding: 0;
-	width: 3rem;
-	height: 3rem;
-	border-radius: 50%;
-	transition: all 0.2s;
-	display: flex;
+/* Understated citation: icon + reference as an inline typographic link. */
+.bible-reference-link {
+	display: inline-flex;
 	align-items: center;
-	justify-content: center;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	gap: 0.45rem;
+	padding: 0.25rem 0.35rem;
+	margin: 0;
+	background: none;
+	border: 0;
+	border-radius: 3px;
+	color: var(--color-primary);
+	font-family: inherit;
+	font-size: 0.85rem;
+	font-style: italic;
+	font-weight: 400;
+	font-variant-numeric: oldstyle-nums;
+	letter-spacing: 0.01em;
+	cursor: pointer;
+	opacity: 0.78;
+	transition: color 0.15s ease, opacity 0.15s ease;
 }
 
-.bible-reference-button:hover {
-	background: var(--nord8);
-	border-color: var(--nord9);
-	transform: translateY(-2px);
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.bible-reference-link :global(svg) {
+	flex-shrink: 0;
+	opacity: 0.7;
+	transition: opacity 0.15s ease, transform 0.2s ease;
 }
 
-.bible-reference-button:active {
-	transform: translateY(0);
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.bible-reference-link:hover {
+	color: var(--color-primary-hover);
+	opacity: 1;
 }
 
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .bible-reference-button {
-		background: var(--nord5);
-		border-color: var(--nord4);
-		color: var(--nord0);
-	}
-
-	:global(:root:not([data-theme="dark"])) .bible-reference-button:hover {
-		background: var(--nord4);
-		border-color: var(--nord3);
-	}
-  }
-:global(:root[data-theme="light"]) .bible-reference-button {
-	background: var(--nord5);
-		border-color: var(--nord4);
-		color: var(--nord0);
+.bible-reference-link:hover :global(svg) {
+	opacity: 1;
+	transform: rotate(-4deg);
 }
-:global(:root[data-theme="light"]) .bible-reference-button:hover {
-	background: var(--nord4);
-		border-color: var(--nord3);
+
+.bible-reference-link:focus-visible {
+	outline: 1px dotted currentColor;
+	outline-offset: 3px;
+	opacity: 1;
 }
 
 /* Footnote styles */
@@ -834,7 +871,9 @@ h1 {
 		</div>
 
 		<!-- Main Content: Prayer Sections -->
-		<div class="prayers-content">
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="prayers-content" onpointerdown={handlePrayerCardPointerDown} onclick={handlePrayerCardClick}>
 			<!-- Cross & Credo -->
 			<div
 				class="prayer-section"
@@ -878,12 +917,14 @@ h1 {
 					mysteryEnglish="Jesus, who may increase our faith"
 				/>
 				<div class="decade-buttons">
-					<span class="bible-reference-text">{theologicalVirtueData.reference}</span>
 					<button
-						class="bible-reference-button"
+						class="bible-reference-link"
 						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
 						aria-label={labels.showBibleVerse}
-					>📖</button>
+					>
+						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
+						<span>{theologicalVirtueData.reference}</span>
+					</button>
 				</div>
 			</div>
 
@@ -901,12 +942,14 @@ h1 {
 					mysteryEnglish="Jesus, who may strengthen our hope"
 				/>
 				<div class="decade-buttons">
-					<span class="bible-reference-text">{theologicalVirtueData.reference}</span>
 					<button
-						class="bible-reference-button"
+						class="bible-reference-link"
 						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
 						aria-label={labels.showBibleVerse}
-					>📖</button>
+					>
+						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
+						<span>{theologicalVirtueData.reference}</span>
+					</button>
 				</div>
 			</div>
 
@@ -924,12 +967,14 @@ h1 {
 					mysteryEnglish="Jesus, who may kindle our love"
 				/>
 				<div class="decade-buttons">
-					<span class="bible-reference-text">{theologicalVirtueData.reference}</span>
 					<button
-						class="bible-reference-button"
+						class="bible-reference-link"
 						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
 						aria-label={labels.showBibleVerse}
-					>📖</button>
+					>
+						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
+						<span>{theologicalVirtueData.reference}</span>
+					</button>
 				</div>
 			</div>
 
@@ -958,7 +1003,7 @@ h1 {
 					<Paternoster />
 				</div>
 
-				<!-- Ave Maria decade (Gesätz) -->
+				<!-- Ave Maria decade (Gesätz) - whole card tappable via parent delegation -->
 				<div
 					class="prayer-section decade"
 					id={`secret${decadeNum}`}
@@ -983,16 +1028,15 @@ h1 {
 					<div class="decade-buttons">
 						{#if currentMysteryDescriptions[decadeNum - 1]}
 							{@const description = currentMysteryDescriptions[decadeNum - 1]}
-							<span class="bible-reference-text">{description.reference}</span>
 							<button
-								class="bible-reference-button"
+								class="bible-reference-link"
 								onclick={() => handleCitationClick(description.reference, description.title, description.verseData)}
 								aria-label={labels.showBibleVerse}
 							>
-								📖
+								<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
+								<span>{description.reference}</span>
 							</button>
 						{/if}
-						<CounterButton onclick={() => advanceDecade(decadeNum)} />
 					</div>
 				</div>
 
