@@ -571,40 +571,129 @@
 	.form-size-section {
 		max-width: 600px;
 		margin: 2rem auto;
-		text-align: center;
-	}
-	.form-size-section h3 {
-		margin-top: 0;
-	}
-	.form-size-controls {
-		display: flex;
-		gap: 1rem 1.25rem;
-		justify-content: center;
-		flex-wrap: wrap;
-		margin-bottom: 0.75rem;
-	}
-	.form-size-controls label {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4em;
-		color: var(--color-text-primary);
-	}
-	.form-size-inputs {
-		display: flex;
-		gap: 1rem;
-		justify-content: center;
-		align-items: center;
-		flex-wrap: wrap;
-	}
-	.form-size-inputs input[type='number'] {
-		width: 4em;
-		padding: 0.3em 0.5em;
-		margin: 0 0.3em;
+		background: var(--color-surface);
 		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+	}
+	.form-size-head {
+		padding: 0.75rem 1rem;
+	}
+	.form-size-title {
+		font-weight: 600;
+		font-size: var(--text-sm);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--color-text-secondary);
+	}
+	.form-size-body {
+		padding: 0.25rem 1rem 1rem;
+		border-top: 1px solid var(--color-border);
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.form-shape-row {
+		display: flex;
+		gap: 0.4rem;
+		margin-top: 0.75rem;
+	}
+	.form-shape-row .shape-tile {
+		flex: 1 1 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 2.25rem;
+		padding: 0;
 		background: var(--color-bg-tertiary);
+		border: 1.5px solid var(--color-border);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		color: var(--color-text-secondary);
+		transition: all 150ms ease;
+	}
+	.form-shape-row .shape-tile:hover,
+	.form-shape-row .shape-tile:focus-visible {
+		border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
 		color: var(--color-text-primary);
-		border-radius: var(--radius-sm);
+		outline: none;
+	}
+	.form-shape-row .shape-tile[aria-checked="true"] {
+		border-color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-tertiary));
+		color: var(--color-primary);
+	}
+	.form-shape-row .shape-tile svg {
+		width: 1.25rem;
+		height: 1.25rem;
+	}
+
+	.form-size-inputs {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+		gap: 0.75rem;
+	}
+	.form-size-inputs .input-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+	.form-size-inputs .input-label {
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		color: var(--color-text-tertiary);
+		text-transform: uppercase;
+	}
+	.form-size-inputs .input-box {
+		position: relative;
+		display: flex;
+		align-items: center;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		transition: border-color 150ms ease, box-shadow 150ms ease;
+	}
+	.form-size-inputs .input-box:focus-within {
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+	}
+	.form-size-inputs .input-box input {
+		flex: 1;
+		width: 100%;
+		padding: 0.55rem 2.25rem 0.55rem 0.75rem;
+		border: none;
+		background: transparent;
+		color: var(--color-text-primary);
+		font: inherit;
 		font-size: 1rem;
+		outline: none;
+	}
+	.form-size-inputs .input-box input::-webkit-outer-spin-button,
+	.form-size-inputs .input-box input::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+	.form-size-inputs .input-box input[type="number"] {
+		-moz-appearance: textfield;
+		appearance: textfield;
+	}
+	.form-size-inputs .input-suffix {
+		position: absolute;
+		right: 0.75rem;
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--color-text-tertiary);
+		pointer-events: none;
+		letter-spacing: 0.02em;
+	}
+	@media (max-width: 560px) {
+		.form-size-head { padding: 0.65rem 0.75rem; }
+		.form-size-body { padding: 0.25rem 0.75rem 0.85rem; }
+		.form-shape-row .shape-tile { height: 2rem; }
+		.form-shape-row .shape-tile svg { width: 1.1rem; height: 1.1rem; }
+		.form-size-inputs { grid-template-columns: 1fr 1fr; }
 	}
 
 	.error-message {
@@ -1127,40 +1216,113 @@
 			</div>
 
 			<div class="form-size-section">
-				<h3>Backform (Standard)</h3>
-				<div class="form-size-controls">
-					<label>
-						<input type="radio" name="formShape" value="none" checked={!defaultForm} onchange={() => { defaultForm = null; }} />
-						Keine
-					</label>
-					<label>
-						<input type="radio" name="formShape" value="round" checked={defaultForm?.shape === 'round'} onchange={() => { defaultForm = { shape: 'round', diameter: defaultForm?.diameter || 26 }; }} />
-						Rund
-					</label>
-					<label>
-						<input type="radio" name="formShape" value="rectangular" checked={defaultForm?.shape === 'rectangular'} onchange={() => { defaultForm = { shape: 'rectangular', width: defaultForm?.width || 20, length: defaultForm?.length || 30 }; }} />
-						Rechteckig
-					</label>
-					<label>
-						<input type="radio" name="formShape" value="gugelhupf" checked={defaultForm?.shape === 'gugelhupf'} onchange={() => { defaultForm = { shape: 'gugelhupf', diameter: defaultForm?.diameter || 24, innerDiameter: defaultForm?.innerDiameter || 8 }; }} />
-						Gugelhupf
-					</label>
+				<div class="form-size-head">
+					<span class="form-size-title">Backform (Standard)</span>
 				</div>
-				{#if defaultForm?.shape === 'round'}
-					<div class="form-size-inputs">
-						<label>Durchmesser: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
+				<div class="form-size-body">
+					<div class="form-shape-row" role="radiogroup" aria-label="Backform">
+						<button
+							type="button"
+							role="radio"
+							aria-checked={!defaultForm}
+							aria-label="Keine"
+							title="Keine"
+							class="shape-tile"
+							onclick={() => { defaultForm = null; }}
+						>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+								<circle cx="12" cy="12" r="8.5"/>
+								<path d="m6 6 12 12"/>
+							</svg>
+						</button>
+						<button
+							type="button"
+							role="radio"
+							aria-checked={defaultForm?.shape === 'round'}
+							aria-label="Rund"
+							title="Rund"
+							class="shape-tile"
+							onclick={() => { defaultForm = { shape: 'round', diameter: defaultForm?.diameter || 26 }; }}
+						>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+								<circle cx="12" cy="12" r="8.5"/>
+							</svg>
+						</button>
+						<button
+							type="button"
+							role="radio"
+							aria-checked={defaultForm?.shape === 'rectangular'}
+							aria-label="Rechteckig"
+							title="Rechteckig"
+							class="shape-tile"
+							onclick={() => { defaultForm = { shape: 'rectangular', width: defaultForm?.width || 20, length: defaultForm?.length || 30 }; }}
+						>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+								<rect x="3" y="6" width="18" height="12" rx="1.5"/>
+							</svg>
+						</button>
+						<button
+							type="button"
+							role="radio"
+							aria-checked={defaultForm?.shape === 'gugelhupf'}
+							aria-label="Gugelhupf"
+							title="Gugelhupf"
+							class="shape-tile"
+							onclick={() => { defaultForm = { shape: 'gugelhupf', diameter: defaultForm?.diameter || 24, innerDiameter: defaultForm?.innerDiameter || 8 }; }}
+						>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+								<circle cx="12" cy="12" r="8.5"/>
+								<circle cx="12" cy="12" r="3"/>
+							</svg>
+						</button>
 					</div>
-				{:else if defaultForm?.shape === 'rectangular'}
-					<div class="form-size-inputs">
-						<label>Breite: <input type="number" min="1" step="1" bind:value={defaultForm.width} /> cm</label>
-						<label>Länge: <input type="number" min="1" step="1" bind:value={defaultForm.length} /> cm</label>
-					</div>
-				{:else if defaultForm?.shape === 'gugelhupf'}
-					<div class="form-size-inputs">
-						<label>Aussen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
-						<label>Innen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.innerDiameter} /> cm</label>
-					</div>
-				{/if}
+
+					{#if defaultForm?.shape === 'round'}
+						<div class="form-size-inputs">
+							<label class="input-wrap">
+								<span class="input-label">Durchmesser</span>
+								<span class="input-box">
+									<input type="number" min="1" step="1" bind:value={defaultForm.diameter} />
+									<span class="input-suffix">cm</span>
+								</span>
+							</label>
+						</div>
+					{:else if defaultForm?.shape === 'rectangular'}
+						<div class="form-size-inputs">
+							<label class="input-wrap">
+								<span class="input-label">Breite</span>
+								<span class="input-box">
+									<input type="number" min="1" step="1" bind:value={defaultForm.width} />
+									<span class="input-suffix">cm</span>
+								</span>
+							</label>
+							<label class="input-wrap">
+								<span class="input-label">Länge</span>
+								<span class="input-box">
+									<input type="number" min="1" step="1" bind:value={defaultForm.length} />
+									<span class="input-suffix">cm</span>
+								</span>
+							</label>
+						</div>
+					{:else if defaultForm?.shape === 'gugelhupf'}
+						<div class="form-size-inputs">
+							<label class="input-wrap">
+								<span class="input-label">Aussen-Ø</span>
+								<span class="input-box">
+									<input type="number" min="1" step="1" bind:value={defaultForm.diameter} />
+									<span class="input-suffix">cm</span>
+								</span>
+							</label>
+							<label class="input-wrap">
+								<span class="input-label">Innen-Ø</span>
+								<span class="input-box">
+									<input type="number" min="1" step="1" bind:value={defaultForm.innerDiameter} />
+									<span class="input-suffix">cm</span>
+								</span>
+							</label>
+						</div>
+					{/if}
+				</div>
 			</div>
 
 	<div class="list_wrapper">

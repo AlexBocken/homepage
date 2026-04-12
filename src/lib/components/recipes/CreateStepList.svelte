@@ -14,6 +14,27 @@ import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelt
 
 let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() } = $props<{ lang?: 'de' | 'en', instructions: any, add_info: any }>();
 
+const BAKING_MODES: Record<string, string[]> = {
+	de: ['Ober-/Unterhitze', 'Umluft', 'Grill', 'Dampf'],
+	en: ['Conventional', 'Convection', 'Grill', 'Steam'],
+};
+
+// svelte-ignore state_referenced_locally
+let bakingExpanded = $state<boolean>(
+	!(add_info?.baking?.length || add_info?.baking?.temperature || add_info?.baking?.mode)
+);
+let bakingHasData = $derived(
+	!!(add_info?.baking?.length || add_info?.baking?.temperature || add_info?.baking?.mode)
+);
+
+function toggleBaking() {
+	bakingExpanded = !bakingExpanded;
+}
+function pickBakingMode(mode: string) {
+	if (!add_info.baking) add_info.baking = { length: '', temperature: '', mode: '' };
+	add_info.baking.mode = add_info.baking.mode === mode ? '' : mode;
+}
+
 // Translation strings
 const t: Record<string, Record<string, string>> = {
 	de: {
@@ -658,29 +679,191 @@ ol li::marker{
 	font-style: italic;
 	font-weight: 400;
 }
-.baking-row{
+.baking-toggle{
+	all: unset;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	width: 100%;
+	cursor: pointer;
+	min-height: 1.5rem;
+}
+.baking-toggle:focus-visible{
+	outline: 2px solid var(--color-primary);
+	outline-offset: 3px;
+	border-radius: var(--radius-sm);
+}
+.baking-toggle h3{
+	margin: 0;
+	flex-shrink: 0;
+	cursor: pointer;
+}
+.baking-summary{
+	flex: 1;
 	display: flex;
 	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 0.35em;
+	gap: 0.35rem;
+	align-items: center;
+	min-width: 0;
+	font-size: 0.95rem;
 }
-.baking-row > span[contenteditable]{
-	outline: none;
-	padding: 0 0.15em;
-	border-bottom: 1px dashed transparent;
-	transition: border-color 200ms ease;
-	min-width: 2ch;
+.baking-summary .chip{
+	display: inline-flex;
+	align-items: center;
+	padding: 0.1rem 0.55rem;
+	border-radius: var(--radius-pill);
+	background: var(--color-bg-tertiary);
+	color: var(--color-text-primary);
+	font-weight: 600;
+	font-size: 0.85rem;
+	line-height: 1.4;
 }
-.baking-row > span[contenteditable]:hover,
-.baking-row > span[contenteditable]:focus{
-	border-bottom-color: var(--color-border);
+.baking-summary .chip.mode{
+	background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+	color: var(--color-primary);
 }
-.baking-sep{
+.baking-summary.muted{
+	color: var(--color-text-tertiary);
+	font-style: italic;
+	font-size: 0.85rem;
+}
+.chevron{
+	color: var(--color-text-tertiary);
+	flex-shrink: 0;
+	transition: transform 200ms ease;
+}
+.is-expanded .chevron{
+	transform: rotate(180deg);
+	color: var(--color-primary);
+}
+
+.baking-form{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem 1rem;
+	margin-top: 0.85rem;
+	padding-top: 0.85rem;
+	border-top: 1px solid var(--color-border);
+	animation: baking-slide-down 180ms ease-out;
+}
+@keyframes baking-slide-down{
+	from { opacity: 0; transform: translateY(-4px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+.baking-field{
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	min-width: 0;
+}
+.baking-field label,
+.baking-field .mode-label{
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
 	color: var(--color-text-secondary);
+}
+.mode-field{
+	grid-column: span 2;
+}
+
+.input-wrap{
+	position: relative;
+	display: flex;
+	align-items: stretch;
+}
+.input-wrap input{
+	flex: 1;
+	min-width: 0;
+	padding: 0.5rem 2.8rem 0.5rem 0.7rem;
+	font-size: 1rem;
+	font-weight: 600;
+	font-family: inherit;
+	color: var(--color-text-primary);
+	background: var(--color-bg-tertiary);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	outline: none;
+	transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.input-wrap input:focus{
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+.input-wrap input::placeholder{
+	color: var(--color-text-tertiary);
 	font-weight: 400;
 }
+.input-wrap .suffix{
+	position: absolute;
+	right: 0.7rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--color-text-tertiary);
+	font-size: 0.85rem;
+	font-weight: 600;
+	pointer-events: none;
+	letter-spacing: 0.02em;
+}
+
+.mode-chips{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+.mode-chip{
+	all: unset;
+	cursor: pointer;
+	padding: 0.35rem 0.85rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	border-radius: var(--radius-pill);
+	background: var(--color-bg-tertiary);
+	color: var(--color-text-primary);
+	border: 1px solid var(--color-border);
+	transition: var(--transition-fast);
+}
+.mode-chip:hover{
+	border-color: var(--color-primary);
+	transform: scale(1.03);
+}
+.mode-chip.active{
+	background: var(--color-primary);
+	color: var(--color-text-on-primary);
+	border-color: var(--color-primary);
+	box-shadow: var(--shadow-sm);
+}
+.mode-custom{
+	margin-top: 0.1rem;
+	padding: 0.45rem 0.7rem;
+	font-size: 0.9rem;
+	font-family: inherit;
+	color: var(--color-text-primary);
+	background: transparent;
+	border: none;
+	border-bottom: 1px dashed var(--color-border);
+	outline: none;
+	transition: border-color 150ms ease;
+}
+.mode-custom:focus{
+	border-bottom-color: var(--color-primary);
+	border-bottom-style: solid;
+}
+.mode-custom::placeholder{
+	color: var(--color-text-tertiary);
+	font-style: italic;
+}
+
 @media (max-width: 560px){
 	.info-card-baking{
+		grid-column: span 1;
+	}
+	.baking-form{
+		grid-template-columns: 1fr;
+	}
+	.mode-field{
 		grid-column: span 1;
 	}
 }
@@ -815,15 +998,81 @@ h3{
 		<p class="info-value" contenteditable="plaintext-only" bind:innerText={add_info.fermentation.final} data-placeholder="z.B. 1 h"></p>
 	</div>
 
-	<div class="info-card info-card-baking">
-		<h3><Flame size={16} />{t[lang].baking}</h3>
-		<div class="info-value baking-row">
-			<span contenteditable="plaintext-only" bind:innerText={add_info.baking.length} data-placeholder="40 min"></span>
-			<span class="baking-sep">bei</span>
-			<span contenteditable="plaintext-only" bind:innerText={add_info.baking.temperature} data-placeholder="200"></span>
-			<span class="baking-sep">°C</span>
-			<span contenteditable="plaintext-only" bind:innerText={add_info.baking.mode} data-placeholder="Ober-/Unterhitze"></span>
-		</div>
+	<div class="info-card info-card-baking" class:is-expanded={bakingExpanded}>
+		<button
+			type="button"
+			class="baking-toggle"
+			onclick={toggleBaking}
+			aria-expanded={bakingExpanded}
+			aria-controls="baking-fields-{lang}"
+		>
+			<h3><Flame size={16} />{t[lang].baking}</h3>
+			{#if !bakingExpanded && bakingHasData}
+				<span class="baking-summary">
+					{#if add_info.baking.length}<span class="chip">{add_info.baking.length}</span>{/if}
+					{#if add_info.baking.temperature}<span class="chip">{add_info.baking.temperature} °C</span>{/if}
+					{#if add_info.baking.mode}<span class="chip mode">{add_info.baking.mode}</span>{/if}
+				</span>
+			{:else if !bakingExpanded}
+				<span class="baking-summary muted">{lang === 'de' ? 'Nicht gesetzt' : 'Not set'}</span>
+			{/if}
+			<svg class="chevron" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+				<path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+		</button>
+
+		{#if bakingExpanded}
+			<div id="baking-fields-{lang}" class="baking-form">
+				<div class="baking-field">
+					<label for="baking-length-{lang}">{lang === 'de' ? 'Dauer' : 'Duration'}</label>
+					<div class="input-wrap">
+						<input
+							id="baking-length-{lang}"
+							type="text"
+							bind:value={add_info.baking.length}
+							placeholder="40"
+							inputmode="numeric"
+							autocomplete="off"
+						/>
+						<span class="suffix">min</span>
+					</div>
+				</div>
+				<div class="baking-field">
+					<label for="baking-temp-{lang}">{lang === 'de' ? 'Temperatur' : 'Temperature'}</label>
+					<div class="input-wrap">
+						<input
+							id="baking-temp-{lang}"
+							type="text"
+							bind:value={add_info.baking.temperature}
+							placeholder="200"
+							inputmode="numeric"
+							autocomplete="off"
+						/>
+						<span class="suffix">°C</span>
+					</div>
+				</div>
+				<div class="baking-field mode-field">
+					<span class="mode-label">{lang === 'de' ? 'Modus' : 'Mode'}</span>
+					<div class="mode-chips">
+						{#each BAKING_MODES[lang] as mode}
+							<button
+								type="button"
+								class="mode-chip"
+								class:active={add_info.baking.mode === mode}
+								onclick={() => pickBakingMode(mode)}
+							>{mode}</button>
+						{/each}
+					</div>
+					<input
+						type="text"
+						class="mode-custom"
+						bind:value={add_info.baking.mode}
+						placeholder={lang === 'de' ? 'oder eigenen Modus eingeben…' : 'or enter custom mode…'}
+						autocomplete="off"
+					/>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<div class="info-card">

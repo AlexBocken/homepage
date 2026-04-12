@@ -128,13 +128,18 @@ const labels = $derived({
 	portions: isEnglish ? 'Portions:' : 'Portionen:',
 	adjustAmount: isEnglish ? 'Adjust Amount:' : 'Menge anpassen:',
 	ingredients: isEnglish ? 'Ingredients' : 'Zutaten',
-	cakeForm: isEnglish ? 'Cake form:' : 'Backform:',
+	cakeForm: isEnglish ? 'Cake form' : 'Backform',
+	adjustForm: isEnglish ? 'Adjust cake form' : 'Backform anpassen',
 	round: isEnglish ? 'Round' : 'Rund',
 	rectangular: isEnglish ? 'Rectangular' : 'Rechteckig',
+	gugelhupf: 'Gugelhupf',
 	diameter: isEnglish ? 'Diameter' : 'Durchmesser',
+	outerDiameter: isEnglish ? 'Outer Ø' : 'Aussen-Ø',
+	innerDiameter: isEnglish ? 'Inner Ø' : 'Innen-Ø',
 	width: isEnglish ? 'Width' : 'Breite',
 	length: isEnglish ? 'Length' : 'Länge',
 	factor: isEnglish ? 'Factor' : 'Faktor',
+	restoreDefault: isEnglish ? 'Restore default' : 'Standard wiederherstellen',
 });
 
 // Cake form scaling
@@ -173,9 +178,44 @@ const formMultiplier = $derived(
 
 // Track whether multiplier is driven by form or manual buttons
 let formDriven = $state(false);
+let cakeFormExpanded = $state(false);
 
 function applyFormMultiplier() {
 	formDriven = true;
+}
+
+/** @param {string} shape */
+function pickShape(shape) {
+	userFormShape = shape;
+	applyFormMultiplier();
+}
+
+const isDefaultForm = $derived(
+	hasDefaultForm
+	&& userFormShape === data.defaultForm.shape
+	&& userFormDiameter === (data.defaultForm.diameter ?? 26)
+	&& userFormWidth === (data.defaultForm.width ?? 20)
+	&& userFormLength === (data.defaultForm.length ?? 30)
+	&& userFormInnerDiameter === (data.defaultForm.innerDiameter ?? 8)
+);
+
+const cakeSummaryText = $derived.by(() => {
+	if (userFormShape === 'round') return `${userFormDiameter} cm ${isEnglish ? 'round' : 'rund'}`;
+	if (userFormShape === 'rectangular') return `${userFormWidth}×${userFormLength} cm`;
+	if (userFormShape === 'gugelhupf') return `${userFormDiameter}/${userFormInnerDiameter} cm Gugelhupf`;
+	return '';
+});
+
+function resetCakeForm() {
+	if (!data.defaultForm) return;
+	userFormShape = data.defaultForm.shape || 'round';
+	userFormDiameter = data.defaultForm.diameter || 26;
+	userFormWidth = data.defaultForm.width || 20;
+	userFormLength = data.defaultForm.length || 30;
+	userFormInnerDiameter = data.defaultForm.innerDiameter || 8;
+	formDriven = false;
+	multiplier = 1;
+	updateUrl(1);
 }
 
 // Reactively update multiplier when form dimensions change and form is driving
@@ -497,49 +537,215 @@ const nutritionFlatIngredients = $derived.by(() => {
 
 .cake-form {
 	margin-block: 1rem;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	transition: border-color 150ms ease, box-shadow 150ms ease;
 }
+.cake-form:has(.cake-form-toggle[aria-expanded="true"]) {
+	box-shadow: var(--shadow-sm);
+}
+
+.cake-form-toggle {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.75rem 1rem;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	font: inherit;
+	color: inherit;
+	text-align: left;
+	transition: background-color 150ms ease;
+}
+.cake-form-toggle:hover,
+.cake-form-toggle:focus-visible {
+	background: var(--color-bg-elevated);
+	outline: none;
+}
+.cake-form-toggle-label {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-width: 0;
+}
+.cake-form-title {
+	font-weight: 600;
+	font-size: var(--text-sm);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-secondary);
+}
+.cake-form-summary {
+	font-size: 1rem;
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.cake-form-toggle-right {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	flex-shrink: 0;
+}
+.cake-form-factor-badge {
+	padding: 0.2rem 0.55rem;
+	border-radius: var(--radius-pill);
+	background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+	color: var(--color-primary);
+	font-weight: 700;
+	font-size: 0.85rem;
+	letter-spacing: 0.02em;
+}
+.cake-form-chevron {
+	width: 1rem;
+	height: 1rem;
+	color: var(--color-text-tertiary);
+	transition: transform 200ms ease;
+}
+.cake-form-chevron.expanded {
+	transform: rotate(180deg);
+}
+
+.cake-form-body {
+	padding: 0.25rem 1rem 1rem;
+	border-top: 1px solid var(--color-border);
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
 .cake-form-shape {
 	display: flex;
-	gap: 0.75rem;
-	justify-content: center;
-	margin-bottom: 0.5rem;
+	gap: 0.4rem;
+	margin-top: 0.5rem;
 }
-.cake-form-shape label {
-	cursor: pointer;
-	padding: 0.25em 0.6em;
-	border-radius: var(--radius-sm);
-	transition: var(--transition-fast);
-}
-.cake-form-shape input[type="radio"] {
-	display: none;
-}
-.cake-form-selected {
-	background-color: var(--color-primary);
-	color: var(--color-text-on-primary);
-	font-weight: bold;
-}
-.cake-form-inputs {
+.shape-tile {
+	flex: 1 1 0;
 	display: flex;
-	gap: 1rem;
-	justify-content: center;
 	align-items: center;
-	flex-wrap: wrap;
+	justify-content: center;
+	height: 2.25rem;
+	padding: 0;
+	background: var(--color-bg-tertiary);
+	border: 1.5px solid var(--color-border);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	color: var(--color-text-secondary);
+	transition: all 150ms ease;
 }
-.cake-form-num {
-	width: 3.5em;
-	padding: 0.2em 0.4em;
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
-	text-align: center;
-	font-size: inherit;
-	background: transparent;
-	color: inherit;
+.shape-tile:hover,
+.shape-tile:focus-visible {
+	border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
+	color: var(--color-text-primary);
+	outline: none;
 }
-.cake-form-factor {
-	text-align: center;
-	margin-top: 0.4rem;
-	font-weight: bold;
+.shape-tile[aria-checked="true"] {
+	border-color: var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-tertiary));
 	color: var(--color-primary);
+}
+.shape-tile svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	flex-shrink: 0;
+}
+
+.cake-form-inputs {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+	gap: 0.75rem;
+}
+.input-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+}
+.input-label {
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--color-text-tertiary);
+	text-transform: uppercase;
+}
+.input-box {
+	position: relative;
+	display: flex;
+	align-items: center;
+	background: var(--color-bg-tertiary);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.input-box:focus-within {
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+.input-box input {
+	flex: 1;
+	width: 100%;
+	padding: 0.55rem 2.25rem 0.55rem 0.75rem;
+	border: none;
+	background: transparent;
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: 1rem;
+	outline: none;
+}
+.input-box input::-webkit-outer-spin-button,
+.input-box input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+.input-box input[type="number"] {
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+.input-suffix {
+	position: absolute;
+	right: 0.75rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--color-text-tertiary);
+	pointer-events: none;
+	letter-spacing: 0.02em;
+}
+
+.cake-form-footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	padding-top: 0.25rem;
+}
+.reset-link {
+	background: none;
+	border: none;
+	padding: 0.25rem 0.5rem;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--color-text-tertiary);
+	cursor: pointer;
+	border-bottom: 1px dashed currentColor;
+	border-radius: 0;
+	transition: color 150ms ease;
+}
+.reset-link:hover,
+.reset-link:focus-visible {
+	color: var(--color-primary);
+	outline: none;
+}
+
+@media (max-width: 560px) {
+	.cake-form-toggle { padding: 0.65rem 0.75rem; }
+	.cake-form-body { padding: 0.25rem 0.75rem 0.85rem; }
+	.shape-tile { height: 2rem; }
+	.shape-tile svg { width: 1.1rem; height: 1.1rem; }
+	.cake-form-inputs { grid-template-columns: 1fr 1fr; }
 }
 
 </style>
@@ -577,36 +783,122 @@ const nutritionFlatIngredients = $derived.by(() => {
 
 {#if hasDefaultForm}
 <div class="cake-form">
-	<h3>{labels.cakeForm}</h3>
-	<div class="cake-form-shape">
-		<label class:cake-form-selected={userFormShape === 'round'}>
-			<input type="radio" name="userFormShape" value="round" bind:group={userFormShape} onchange={applyFormMultiplier} />
-			{labels.round}
-		</label>
-		<label class:cake-form-selected={userFormShape === 'rectangular'}>
-			<input type="radio" name="userFormShape" value="rectangular" bind:group={userFormShape} onchange={applyFormMultiplier} />
-			{labels.rectangular}
-		</label>
-		{#if data.defaultForm?.shape === 'gugelhupf'}
-		<label class:cake-form-selected={userFormShape === 'gugelhupf'}>
-			<input type="radio" name="userFormShape" value="gugelhupf" bind:group={userFormShape} onchange={applyFormMultiplier} />
-			Gugelhupf
-		</label>
+	<button
+		type="button"
+		class="cake-form-toggle"
+		aria-expanded={cakeFormExpanded}
+		aria-controls="cake-form-body"
+		onclick={() => { cakeFormExpanded = !cakeFormExpanded; }}
+	>
+		<span class="cake-form-toggle-label">
+			<span class="cake-form-title">{labels.adjustForm}</span>
+			<span class="cake-form-summary">{cakeSummaryText}</span>
+		</span>
+		<span class="cake-form-toggle-right">
+			{#if formDriven && Math.abs(formMultiplier - 1) > 0.005}
+				<span class="cake-form-factor-badge">{formMultiplier.toFixed(2)}×</span>
+			{/if}
+			<svg class="cake-form-chevron" class:expanded={cakeFormExpanded} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+		</span>
+	</button>
+
+	{#if cakeFormExpanded}
+	<div id="cake-form-body" class="cake-form-body">
+		<div class="cake-form-shape" role="radiogroup" aria-label={labels.cakeForm}>
+			<button
+				type="button"
+				role="radio"
+				aria-checked={userFormShape === 'round'}
+				aria-label={labels.round}
+				title={labels.round}
+				class="shape-tile"
+				onclick={() => pickShape('round')}
+			>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+					<circle cx="12" cy="12" r="8.5"/>
+				</svg>
+			</button>
+
+			<button
+				type="button"
+				role="radio"
+				aria-checked={userFormShape === 'rectangular'}
+				aria-label={labels.rectangular}
+				title={labels.rectangular}
+				class="shape-tile"
+				onclick={() => pickShape('rectangular')}
+			>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+					<rect x="3" y="6" width="18" height="12" rx="1.5"/>
+				</svg>
+			</button>
+
+			{#if data.defaultForm?.shape === 'gugelhupf'}
+			<button
+				type="button"
+				role="radio"
+				aria-checked={userFormShape === 'gugelhupf'}
+				aria-label={labels.gugelhupf}
+				title={labels.gugelhupf}
+				class="shape-tile"
+				onclick={() => pickShape('gugelhupf')}
+			>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+					<circle cx="12" cy="12" r="8.5"/>
+					<circle cx="12" cy="12" r="3"/>
+				</svg>
+			</button>
+			{/if}
+		</div>
+
+		<div class="cake-form-inputs">
+			{#if userFormShape === 'round'}
+				<label class="input-wrap">
+					<span class="input-label">{labels.diameter}</span>
+					<span class="input-box">
+						<input type="number" min="1" step="1" bind:value={userFormDiameter} oninput={applyFormMultiplier} />
+						<span class="input-suffix">cm</span>
+					</span>
+				</label>
+			{:else if userFormShape === 'rectangular'}
+				<label class="input-wrap">
+					<span class="input-label">{labels.width}</span>
+					<span class="input-box">
+						<input type="number" min="1" step="1" bind:value={userFormWidth} oninput={applyFormMultiplier} />
+						<span class="input-suffix">cm</span>
+					</span>
+				</label>
+				<label class="input-wrap">
+					<span class="input-label">{labels.length}</span>
+					<span class="input-box">
+						<input type="number" min="1" step="1" bind:value={userFormLength} oninput={applyFormMultiplier} />
+						<span class="input-suffix">cm</span>
+					</span>
+				</label>
+			{:else if userFormShape === 'gugelhupf'}
+				<label class="input-wrap">
+					<span class="input-label">{labels.outerDiameter}</span>
+					<span class="input-box">
+						<input type="number" min="1" step="1" bind:value={userFormDiameter} oninput={applyFormMultiplier} />
+						<span class="input-suffix">cm</span>
+					</span>
+				</label>
+				<label class="input-wrap">
+					<span class="input-label">{labels.innerDiameter}</span>
+					<span class="input-box">
+						<input type="number" min="1" step="1" bind:value={userFormInnerDiameter} oninput={applyFormMultiplier} />
+						<span class="input-suffix">cm</span>
+					</span>
+				</label>
+			{/if}
+		</div>
+
+		{#if !isDefaultForm}
+		<div class="cake-form-footer">
+			<button type="button" class="reset-link" onclick={resetCakeForm}>{labels.restoreDefault}</button>
+		</div>
 		{/if}
 	</div>
-	<div class="cake-form-inputs">
-		{#if userFormShape === 'round'}
-			<label>{labels.diameter}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormDiameter} oninput={applyFormMultiplier} /> cm</label>
-		{:else if userFormShape === 'rectangular'}
-			<label>{labels.width}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormWidth} oninput={applyFormMultiplier} /> cm</label>
-			<label>{labels.length}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormLength} oninput={applyFormMultiplier} /> cm</label>
-		{:else if userFormShape === 'gugelhupf'}
-			<label>{isEnglish ? 'Outer Ø' : 'Aussen-Ø'}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormDiameter} oninput={applyFormMultiplier} /> cm</label>
-			<label>{isEnglish ? 'Inner Ø' : 'Innen-Ø'}: <input type="number" min="1" step="1" class="cake-form-num" bind:value={userFormInnerDiameter} oninput={applyFormMultiplier} /> cm</label>
-		{/if}
-	</div>
-	{#if formDriven}
-		<div class="cake-form-factor">→ {labels.factor}: {formMultiplier.toFixed(2)}x</div>
 	{/if}
 </div>
 {/if}
