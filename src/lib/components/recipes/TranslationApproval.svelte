@@ -358,76 +358,79 @@
 		oncancelled?.();
 	}
 
-	// Get status badge color
-	function getStatusColor(status: string): string {
-		switch (status) {
-			case 'approved': return 'var(--nord14)';
-			case 'pending': return 'var(--nord13)';
-			case 'needs_update': return 'var(--nord12)';
-			default: return 'var(--nord9)';
-		}
-	}
 </script>
 
 <style>
 .translation-approval {
-	margin: 2rem 0;
-	padding: 1.5rem;
-	border: 2px solid var(--nord9);
-	border-radius: 8px;
-	background: var(--nord1);
+	margin: 3rem auto 2rem;
+	padding: 2rem clamp(1rem, 3vw, 2.5rem);
+	max-width: 1200px;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-card);
+	box-shadow: var(--shadow-md);
+	position: relative;
 }
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .translation-approval {
-		background: var(--nord6);
-		border-color: var(--nord4);
-	}
-  }
-:global(:root[data-theme="light"]) .translation-approval {
-	background: var(--nord6);
-		border-color: var(--nord4);
+.translation-approval::before{
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: linear-gradient(90deg, var(--color-primary), var(--blue), var(--green));
+	border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
 
 .header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 1.5rem;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-bottom: 1.75rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--color-border);
 }
-
 .header h3 {
 	margin: 0;
-	color: var(--nord6);
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--color-text-primary);
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	letter-spacing: -0.01em;
 }
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .header h3 {
-		color: var(--nord0);
-	}
-  }
-:global(:root[data-theme="light"]) .header h3 {
-	color: var(--nord0);
-}
-
 .status-badge {
-	padding: 0.25rem 0.75rem;
-	border-radius: 16px;
-	font-size: 0.85rem;
-	font-weight: 600;
-	color: var(--nord0);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.35rem 0.9rem;
+	border-radius: var(--radius-pill);
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
 }
-
+.status-badge::before{
+	content: '';
+	width: 0.45rem;
+	height: 0.45rem;
+	border-radius: 50%;
+	background: currentColor;
+}
 .status-pending {
-	background: var(--nord13);
+	background: color-mix(in srgb, var(--orange) 18%, transparent);
+	color: var(--orange);
 }
-
 .status-approved {
-	background: var(--nord14);
+	background: color-mix(in srgb, var(--green) 18%, transparent);
+	color: var(--green);
 }
-
 .status-needs_update {
-	background: var(--nord12);
+	background: color-mix(in srgb, var(--red) 18%, transparent);
+	color: var(--red);
 }
 
 .translation-preview {
@@ -436,10 +439,9 @@
 }
 
 .field-section {
-	margin-bottom: 1.5rem;
-	max-width: 800px;
-	margin-left: auto;
-	margin-right: auto;
+	margin-bottom: 1.25rem;
+	max-width: 900px;
+	margin-inline: auto;
 }
 
 .list-wrapper {
@@ -451,159 +453,250 @@
 	justify-content: center;
 	margin-bottom: 2rem;
 }
-
 @media screen and (max-width: 700px) {
 	.list-wrapper {
 		flex-direction: column;
 	}
 }
 
-/* Fix button icon visibility in dark mode */
-@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .list-wrapper :global(svg) {
-		fill: white !important;
-	}
-	:global(:root:not([data-theme="light"])) .list-wrapper :global(.button_arrow) {
-		fill: var(--nord4) !important;
-	}
-  }
-:global(:root[data-theme="dark"]) .list-wrapper :global(svg) {
-	fill: white !important;
-}
-:global(:root[data-theme="dark"]) .list-wrapper :global(.button_arrow) {
-	fill: var(--nord4) !important;
-}
-
-.column-header {
+.preview-title{
+	margin: 0 0 1.5rem;
+	font-size: 1.15rem;
 	font-weight: 700;
-	font-size: 1.1rem;
-	color: var(--nord8);
-	margin-bottom: 1rem;
+	color: var(--color-primary);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
 	padding-bottom: 0.5rem;
-	border-bottom: 2px solid var(--nord9);
-}
-
-.field-group {
-	margin-bottom: 1.5rem;
+	border-bottom: 2px solid var(--color-primary);
+	max-width: 900px;
+	margin-inline: auto;
 }
 
 .actions {
 	display: flex;
-	gap: 1rem;
+	gap: 0.75rem;
 	justify-content: flex-end;
-	margin-top: 1.5rem;
+	margin-top: 2rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--color-border);
 	flex-wrap: wrap;
 }
 
 button {
-	padding: 0.75rem 1.5rem;
+	padding: 0.65rem 1.25rem;
 	border: none;
-	border-radius: 4px;
-	font-size: 1rem;
+	border-radius: var(--radius-pill);
+	font-size: 0.95rem;
 	font-weight: 600;
 	cursor: pointer;
-	transition: all 0.2s;
+	transition: var(--transition-fast);
+	font-family: inherit;
 }
-
-.btn-primary {
-	background: var(--nord14);
-	color: var(--nord0);
+button:hover:not(:disabled){
+	transform: scale(1.03);
 }
-
-.btn-primary:hover {
-	background: var(--nord15);
+button:active:not(:disabled){
+	transform: scale(0.98);
 }
-
-.btn-secondary {
-	background: var(--nord9);
-	color: var(--nord6);
-}
-
-.btn-secondary:hover {
-	background: var(--nord10);
-}
-
-.btn-danger {
-	background: var(--nord11);
-	color: var(--nord6);
-}
-
-.btn-danger:hover {
-	background: var(--nord12);
-}
-
 button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
 
+.btn-primary {
+	background: var(--color-primary);
+	color: var(--color-text-on-primary);
+	box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover:not(:disabled) {
+	background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+	background: var(--color-bg-elevated);
+	color: var(--color-text-primary);
+	border: 1px solid var(--color-border);
+}
+.btn-secondary:hover:not(:disabled) {
+	background: var(--color-bg-tertiary);
+	border-color: var(--color-primary);
+}
+
+.btn-danger {
+	background: transparent;
+	color: var(--red);
+	border: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
+}
+.btn-danger:hover:not(:disabled) {
+	background: var(--red);
+	color: white;
+	border-color: var(--red);
+}
+
 .loading-spinner {
 	display: inline-block;
-	width: 20px;
-	height: 20px;
-	border: 3px solid var(--nord4);
-	border-top-color: var(--nord14);
+	width: 18px;
+	height: 18px;
+	border: 2px solid var(--color-border);
+	border-top-color: var(--color-primary);
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
 	margin-right: 0.5rem;
+	vertical-align: middle;
 }
-
 @keyframes spin {
 	to { transform: rotate(360deg); }
 }
 
-.error-message {
-	background: var(--nord11);
-	color: var(--nord6);
-	padding: 1rem;
-	border-radius: 4px;
-	margin: 1rem 0;
+.notice {
+	padding: 1rem 1.25rem;
+	border-radius: var(--radius-md);
+	margin-bottom: 1.25rem;
+	font-size: 0.95rem;
+	display: flex;
+	gap: 0.75rem;
+	align-items: flex-start;
+	border: 1px solid;
+}
+.notice-body{ flex: 1; min-width: 0; }
+.notice-body strong{ display: block; margin-bottom: 0.2rem; }
+
+.notice-error {
+	background: color-mix(in srgb, var(--red) 10%, var(--color-surface));
+	color: var(--color-text-primary);
+	border-color: color-mix(in srgb, var(--red) 40%, transparent);
+}
+.notice-warn {
+	background: color-mix(in srgb, var(--orange) 10%, var(--color-surface));
+	color: var(--color-text-primary);
+	border-color: color-mix(in srgb, var(--orange) 40%, transparent);
+}
+.notice-info {
+	background: color-mix(in srgb, var(--blue) 10%, var(--color-surface));
+	color: var(--color-text-primary);
+	border-color: color-mix(in srgb, var(--blue) 40%, transparent);
 }
 
-.validation-errors {
-	background: var(--nord12);
-	color: var(--nord0);
-	padding: 1rem;
-	border-radius: 4px;
-	margin: 1rem 0;
+.notice ul {
+	margin: 0.35rem 0 0;
+	padding-left: 1.25rem;
 }
-
-.validation-errors ul {
-	margin: 0.5rem 0 0 0;
-	padding-left: 1.5rem;
+.notice ul li{
+	margin: 0.2rem 0;
 }
-
-.changed-fields {
-	background: var(--nord13);
-	color: var(--nord0);
-	padding: 0.75rem;
-	border-radius: 4px;
-	margin-bottom: 1rem;
-	font-size: 0.9rem;
-}
-
-.changed-fields strong {
-	font-weight: 700;
+.notice a{
+	color: var(--color-primary);
+	text-decoration: underline;
+	margin-left: 0.4rem;
 }
 
 .idle-state {
 	text-align: center;
 	padding: 2rem;
-	color: var(--nord4);
+	color: var(--color-text-secondary);
 }
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .idle-state {
-		color: var(--nord2);
-	}
-  }
-:global(:root[data-theme="light"]) .idle-state {
-	color: var(--nord2);
-}
-
 .idle-state p {
 	margin-bottom: 1rem;
 	font-size: 1.05rem;
+}
+
+.approved-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	border-radius: var(--radius-pill);
+	background: color-mix(in srgb, var(--green) 18%, transparent);
+	color: var(--green);
+	font-weight: 700;
+}
+
+/* Images section */
+.images-section {
+	margin: 2rem auto;
+	max-width: 900px;
+	padding: 1.25rem;
+	background: var(--color-bg-secondary);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+}
+.images-section h4{
+	margin: 0 0 1rem;
+	font-size: 1rem;
+	color: var(--color-text-primary);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+.image-card{
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	padding: 1rem;
+	margin-bottom: 0.75rem;
+}
+.image-card:last-child{ margin-bottom: 0; }
+.image-card-row{
+	display: flex;
+	gap: 1rem;
+	align-items: flex-start;
+}
+.image-card-row img{
+	width: 96px;
+	height: 96px;
+	object-fit: cover;
+	border-radius: var(--radius-sm);
+	flex-shrink: 0;
+}
+.image-card-body{ flex: 1; min-width: 0; }
+.image-path{
+	margin: 0 0 0.75rem;
+	font-size: 0.8rem;
+	color: var(--color-text-tertiary);
+	font-family: monospace;
+	word-break: break-all;
+}
+.image-grid{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+@media (max-width: 560px){
+	.image-card-row{ flex-direction: column; }
+	.image-card-row img{ width: 100%; height: 140px; }
+	.image-grid{ grid-template-columns: 1fr; gap: 0.5rem; }
+}
+.image-field label{
+	display: block;
+	margin-bottom: 0.25rem;
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: var(--color-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.image-field input{
+	width: 100%;
+	padding: 0.45rem 0.6rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--color-bg-tertiary);
+	color: var(--color-text-primary);
+	font-size: 0.9rem;
+	box-sizing: border-box;
+	font-family: inherit;
+	transition: border-color 150ms ease;
+}
+.image-field input:focus{
+	outline: none;
+	border-color: var(--color-primary);
+}
+.image-field input:disabled{
+	background: var(--color-bg-secondary);
+	color: var(--color-text-tertiary);
+	cursor: default;
 }
 </style>
 
@@ -620,64 +713,73 @@ button:disabled {
 	</div>
 
 	{#if errorMessage}
-		<div class="error-message">
-			<strong>Error:</strong> {errorMessage}
+		<div class="notice notice-error">
+			<div class="notice-body">
+				<strong>Error</strong>
+				{errorMessage}
+			</div>
 		</div>
 	{/if}
 
 	{#if validationErrors.length > 0}
-		<div class="validation-errors">
-			<strong>Please fix the following errors:</strong>
-			<ul>
-				{#each validationErrors as error}
-					<li>{error}</li>
-				{/each}
-			</ul>
+		<div class="notice notice-warn">
+			<div class="notice-body">
+				<strong>Please fix the following errors:</strong>
+				<ul>
+					{#each validationErrors as error}
+						<li>{error}</li>
+					{/each}
+				</ul>
+			</div>
 		</div>
 	{/if}
 
 	{#if isEditMode && changedFields.length > 0}
-		<div class="changed-fields">
-			<strong>Changed fields:</strong> {changedFields.join(', ')}
-			<br>
-			<small>Only these fields will be re-translated if you use auto-translate.</small>
+		<div class="notice notice-info">
+			<div class="notice-body">
+				<strong>Changed fields: {changedFields.join(', ')}</strong>
+				<small>Only these fields will be re-translated if you use auto-translate.</small>
+			</div>
 		</div>
 	{/if}
 
 	{#if checkingBaseRecipes}
-		<div style="background: var(--nord9); color: var(--nord6); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; text-align: center;">
-			<p>Checking if referenced base recipes are translated...</p>
+		<div class="notice notice-info">
+			<div class="notice-body"><span class="loading-spinner"></span>Checking if referenced base recipes are translated…</div>
 		</div>
 	{/if}
 
 	{#if untranslatedBaseRecipes.length > 0}
-		<div style="background: var(--nord12); color: var(--nord0); padding: 1.5rem; border-radius: 4px; margin-bottom: 1.5rem;">
-			<h4 style="margin-top: 0;">⚠️ Base Recipes Need Translation</h4>
-			<p>The following base recipes need to be translated to English before you can translate this recipe:</p>
-			<ul style="margin: 1rem 0;">
-				{#each untranslatedBaseRecipes as baseRecipe}
-					<li>
-						<strong>{baseRecipe.name}</strong>
-						<a href="/de/edit/{baseRecipe.shortName}" target="_blank" rel="noopener noreferrer" style="margin-left: 0.5rem; color: var(--nord10);">
-							Open in new tab →
-						</a>
-					</li>
-				{/each}
-			</ul>
-			<p style="margin-bottom: 0;">
-				<button class="btn-secondary" onclick={syncBaseRecipeReferences}>
-					Re-check Base Recipes
-				</button>
-			</p>
+		<div class="notice notice-warn">
+			<div class="notice-body">
+				<strong>Base recipes need translation</strong>
+				The following base recipes need to be translated to English before you can translate this recipe:
+				<ul>
+					{#each untranslatedBaseRecipes as baseRecipe}
+						<li>
+							<strong>{baseRecipe.name}</strong>
+							<a href="/de/edit/{baseRecipe.shortName}" target="_blank" rel="noopener noreferrer">
+								Open in new tab →
+							</a>
+						</li>
+					{/each}
+				</ul>
+				<div style="margin-top: 0.75rem;">
+					<button class="btn-secondary" onclick={syncBaseRecipeReferences}>
+						Re-check base recipes
+					</button>
+				</div>
+			</div>
 		</div>
 	{/if}
 
 	{#if translationState === 'idle'}
-		<div style="background: var(--nord13); color: var(--nord0); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; text-align: center;">
-			<strong>Preview (Not yet translated)</strong>
-			<p style="margin: 0.5rem 0;">The structure below shows what will be translated. Click "Auto-translate" to generate English translation.</p>
+		<div class="notice notice-info">
+			<div class="notice-body">
+				<strong>Preview — not yet translated</strong>
+				The structure below shows what will be translated. Click “Auto-translate” to generate the English translation.
+			</div>
 		</div>
-
 	{/if}
 
 	{#if translationState === 'translating'}
@@ -691,7 +793,7 @@ button:disabled {
 
 	{#if translationState === 'idle' || translationState === 'preview' || translationState === 'approved'}
 		<div class="translation-preview">
-			<h3 style="margin-bottom: 1.5rem; color: var(--nord8);">🇬🇧 English Translation</h3>
+			<h3 class="preview-title">Side-by-side review</h3>
 
 			<!-- Basic Fields -->
 			<div class="field-section">
@@ -780,77 +882,59 @@ button:disabled {
 				</div>
 			{/if}
 
-			{#if editableEnglish?.portions !== undefined}
-				<div class="field-section">
-					<TranslationFieldComparison
-						label="Portions"
-						germanValue={germanData.portions || ''}
-						englishValue={editableEnglish.portions}
-						fieldName="portions"
-						readonly={false}
-						onchange={(value) => handleFieldChange(value, 'portions')}
-					/>
-				</div>
-			{/if}
-
 			<!-- Images Section -->
 			{#if germanData.images && germanData.images.length > 0}
-				<div class="field-section" style="background-color: var(--nord13); padding: 1rem; border-radius: 5px; margin-top: 1.5rem;">
-					<h4 style="margin-top: 0; color: var(--nord0);">🖼️ Images - English Alt Texts & Captions</h4>
+				<section class="images-section">
+					<h4>Images — Alt texts &amp; captions</h4>
 					{#each germanData.images as germanImage, i}
 						{#if editableEnglish.images && editableEnglish.images[i]}
-							<div style="background-color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 5px; border: 2px solid var(--nord9);">
-								<div style="display: flex; gap: 1rem; align-items: start;">
+							<div class="image-card">
+								<div class="image-card-row">
 									<img
 										src="https://bocken.org/static/rezepte/thumb/{germanImage.mediapath}"
 										alt={germanImage.alt || 'Recipe image'}
-										style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;"
 									/>
-									<div style="flex: 1;">
-										<p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--nord3);"><strong>Image {i + 1}:</strong> {germanImage.mediapath}</p>
+									<div class="image-card-body">
+										<p class="image-path"><strong>Image {i + 1}:</strong> {germanImage.mediapath}</p>
 
-										<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
-											<div>
-												<label for="german-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Alt-Text:</label>
+										<div class="image-grid">
+											<div class="image-field">
+												<label for="german-alt-{i}">German Alt-Text</label>
 												<input
 													id="german-alt-{i}"
 													type="text"
 													value={germanImage.alt || ''}
 													disabled
-													style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord4); border-radius: 3px; background-color: var(--nord5); color: var(--nord2); font-size: 0.85rem;"
 												/>
 											</div>
-											<div>
-												<label for="english-alt-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Alt-Text:</label>
+											<div class="image-field">
+												<label for="english-alt-{i}">English Alt-Text</label>
 												<input
 													id="english-alt-{i}"
 													type="text"
 													bind:value={editableEnglish.images[i].alt}
 													placeholder="English image description for screen readers"
-													style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord8); border-radius: 3px; font-size: 0.85rem;"
 												/>
 											</div>
 										</div>
 
-										<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-											<div>
-												<label for="german-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇩🇪 German Caption:</label>
+										<div class="image-grid">
+											<div class="image-field">
+												<label for="german-caption-{i}">German Caption</label>
 												<input
 													id="german-caption-{i}"
 													type="text"
 													value={germanImage.caption || ''}
 													disabled
-													style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord4); border-radius: 3px; background-color: var(--nord5); color: var(--nord2); font-size: 0.85rem;"
 												/>
 											</div>
-											<div>
-												<label for="english-caption-{i}" style="display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.85rem; color: var(--nord0);">🇬🇧 English Caption:</label>
+											<div class="image-field">
+												<label for="english-caption-{i}">English Caption</label>
 												<input
 													id="english-caption-{i}"
 													type="text"
 													bind:value={editableEnglish.images[i].caption}
 													placeholder="English caption (optional)"
-													style="width: 100%; padding: 0.4rem; border: 1px solid var(--nord8); border-radius: 3px; font-size: 0.85rem;"
 												/>
 											</div>
 										</div>
@@ -863,7 +947,7 @@ button:disabled {
 							</div>
 						{/if}
 					{/each}
-				</div>
+				</section>
 			{/if}
 
 			<!-- Ingredients and Instructions in two-column layout -->
@@ -871,7 +955,12 @@ button:disabled {
 				<div class="list-wrapper">
 					<div>
 						{#if editableEnglish?.ingredients}
-							<CreateIngredientList bind:ingredients={editableEnglish.ingredients} lang="en" />
+							<CreateIngredientList
+								bind:ingredients={editableEnglish.ingredients}
+								bind:portions={editableEnglish.portions}
+								useStore={false}
+								lang="en"
+							/>
 						{/if}
 					</div>
 					<div>
@@ -926,7 +1015,7 @@ button:disabled {
 					Approve Translation
 				</button>
 			{:else}
-				<span style="color: var(--nord14); font-weight: 700;">✓ Translation Approved</span>
+				<span class="approved-pill" aria-live="polite">Translation Approved</span>
 			{/if}
 		</div>
 	{/if}

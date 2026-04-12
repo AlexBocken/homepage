@@ -4,6 +4,7 @@ import Pen from '$lib/assets/icons/Pen.svelte'
 import Cross from '$lib/assets/icons/Cross.svelte'
 import Plus from '$lib/assets/icons/Plus.svelte'
 import Check from '$lib/assets/icons/Check.svelte'
+import { Timer, Wheat, Croissant, Flame, CookingPot, UtensilsCrossed } from '@lucide/svelte';
 
 import "$lib/css/action_button.css"
 
@@ -592,7 +593,7 @@ ol li::marker{
 .instructions{
 	flex-basis: 0;
 	flex-grow: 2;
-	background-color: var(--nord5);
+	background-color: var(--color-bg-secondary);
 	padding-block: 1rem;
 	padding-inline: 2rem;
 }
@@ -605,24 +606,83 @@ ol li::marker{
 }
 
 .additional_info{
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+	gap: 0.75rem;
+	margin-block: 1rem;
+}
+.info-card{
+	padding: 0.75rem 1rem;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-sm);
+	transition: var(--transition-fast);
+}
+.info-card:focus-within{
+	border-color: var(--color-primary);
+	box-shadow: var(--shadow-md);
+}
+.info-card-baking{
+	grid-column: span 2;
+}
+.info-card h3{
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0 0 0.25rem 0;
+	font-size: var(--text-sm);
+	color: var(--color-text-secondary);
+	cursor: default;
+	user-select: auto;
+}
+.info-value{
+	display: block;
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-text-primary);
+	outline: none;
+	min-height: 1.2em;
+	border-bottom: 1px dashed transparent;
+	transition: border-color 200ms ease;
+}
+.info-value:hover,
+.info-value:focus{
+	border-bottom-color: var(--color-border);
+}
+.info-value:empty::before,
+.info-value span:empty::before{
+	content: attr(data-placeholder);
+	color: var(--color-text-tertiary);
+	font-style: italic;
+	font-weight: 400;
+}
+.baking-row{
 	display: flex;
 	flex-wrap: wrap;
-	gap: 1em;
+	align-items: baseline;
+	gap: 0.35em;
 }
-.additional_info > *{
-	flex-grow: 0;
-	overflow: hidden;
-	padding: 1em;
-	background-color: #FAFAFE;
-	box-shadow: 0.3em 0.3em 1em 0.2em rgba(0,0,0,0.3);
-	/*max-width: 30%*/
+.baking-row > span[contenteditable]{
+	outline: none;
+	padding: 0 0.15em;
+	border-bottom: 1px dashed transparent;
+	transition: border-color 200ms ease;
+	min-width: 2ch;
 }
-.additional_info > div > *:not(h4){
-	line-height: 2em;
+.baking-row > span[contenteditable]:hover,
+.baking-row > span[contenteditable]:focus{
+	border-bottom-color: var(--color-border);
 }
-h4{
-	line-height: 1em;
-	margin-block: 0;
+.baking-sep{
+	color: var(--color-text-secondary);
+	font-weight: 400;
+}
+@media (max-width: 560px){
+	.info-card-baking{
+		grid-column: span 1;
+	}
 }
 .button_subtle{
 	padding: 0em;
@@ -641,21 +701,6 @@ h3{
 	cursor: pointer;
 	user-select: none;
 }
-.additional_info p[contenteditable]{
-	display: inline;
-	padding: 0.25em 1em;
-	border: 2px solid grey;
-	border-radius: var(--radius-pill);
-}
-.additional_info div:has(p[contenteditable]){
-	transition: var(--transition-normal);
-	display: inline;
-}
-.additional_info div:has(p[contenteditable]):hover,
-.additional_info div:has(p[contenteditable]):focus-within
-{
-	transform: scale(1.1, 1.1);
-}
 @media screen and (max-width: 500px){
 	dialog h2{
 	margin-top: 2rem;
@@ -663,20 +708,6 @@ h3{
 	dialog .heading_wrapper{
 		width: 80%;
 	}
-}
-@media (prefers-color-scheme: dark){
-    :global(:root:not([data-theme="light"])) .additional_info div {
-		background-color: var(--accent-dark);
-	}
-	:global(:root:not([data-theme="light"])) .instructions {
-		background-color: var(--nord6-dark);
-	}
-  }
-:global(:root[data-theme="dark"]) .additional_info div {
-	background-color: var(--accent-dark);
-}
-:global(:root[data-theme="dark"]) .instructions {
-	background-color: var(--nord6-dark);
 }
 .button_arrow{
 	fill: var(--nord1);
@@ -768,30 +799,41 @@ h3{
 </style>
 
 <div class=instructions>
-<div class=additional_info>
-
-	<div><h4>{t[lang].preparation}</h4>
-		<p contenteditable bind:innerText={add_info.preparation}></p>
+<div class="additional_info">
+	<div class="info-card">
+		<h3><Timer size={16} />{t[lang].preparation}</h3>
+		<p class="info-value" contenteditable="plaintext-only" bind:innerText={add_info.preparation} data-placeholder="z.B. 30 min"></p>
 	</div>
 
-
-	<div><h4>{t[lang].bulkFermentation}</h4>
-		<p contenteditable bind:innerText={add_info.fermentation.bulk}></p>
+	<div class="info-card">
+		<h3><Wheat size={16} />{t[lang].bulkFermentation}</h3>
+		<p class="info-value" contenteditable="plaintext-only" bind:innerText={add_info.fermentation.bulk} data-placeholder="z.B. 4 h"></p>
 	</div>
 
-	<div><h4>{t[lang].finalFermentation}</h4>
-		<p contenteditable bind:innerText={add_info.fermentation.final}></p>
+	<div class="info-card">
+		<h3><Croissant size={16} />{t[lang].finalFermentation}</h3>
+		<p class="info-value" contenteditable="plaintext-only" bind:innerText={add_info.fermentation.final} data-placeholder="z.B. 1 h"></p>
 	</div>
 
-	<div><h4>{t[lang].baking}</h4>
-		<div><p bind:innerText={add_info.baking.length} contenteditable placeholder="40 min..."></p></div> bei <div><p bind:innerText={add_info.baking.temperature} contenteditable placeholder=200...></p></div> °C <div><p bind:innerText={add_info.baking.mode} contenteditable placeholder="Ober-/Unterhitze..."></p></div></div>
-
-	<div><h4>{t[lang].cooking}</h4>
-		<p contenteditable bind:innerText={add_info.cooking}></p>
+	<div class="info-card info-card-baking">
+		<h3><Flame size={16} />{t[lang].baking}</h3>
+		<div class="info-value baking-row">
+			<span contenteditable="plaintext-only" bind:innerText={add_info.baking.length} data-placeholder="40 min"></span>
+			<span class="baking-sep">bei</span>
+			<span contenteditable="plaintext-only" bind:innerText={add_info.baking.temperature} data-placeholder="200"></span>
+			<span class="baking-sep">°C</span>
+			<span contenteditable="plaintext-only" bind:innerText={add_info.baking.mode} data-placeholder="Ober-/Unterhitze"></span>
+		</div>
 	</div>
 
-	<div><h4>{t[lang].totalTime}</h4>
-		<p contenteditable bind:innerText={add_info.total_time}></p>
+	<div class="info-card">
+		<h3><CookingPot size={16} />{t[lang].cooking}</h3>
+		<p class="info-value" contenteditable="plaintext-only" bind:innerText={add_info.cooking} data-placeholder="z.B. 20 min"></p>
+	</div>
+
+	<div class="info-card">
+		<h3><UtensilsCrossed size={16} />{t[lang].totalTime}</h3>
+		<p class="info-value" contenteditable="plaintext-only" bind:innerText={add_info.total_time} data-placeholder="z.B. 1 h"></p>
 	</div>
 </div>
 
