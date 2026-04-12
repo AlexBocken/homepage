@@ -6,6 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.VibrationAttributes
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.speech.tts.TextToSpeech
 import android.webkit.JavascriptInterface
 import androidx.core.app.ActivityCompat
@@ -98,6 +102,36 @@ class AndroidBridge(private val context: Context) {
     @JavascriptInterface
     fun getIntervalState(): String {
         return LocationForegroundService.getIntervalState()
+    }
+
+    /**
+     * Force-vibrate bypassing silent/DND by using USAGE_ACCESSIBILITY attributes.
+     * Why: default web Vibration API uses USAGE_TOUCH which Android silences.
+     */
+    @JavascriptInterface
+    fun forceVibrate(durationMs: Long, intensityPct: Int) {
+        val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+        }
+        if (vibrator?.hasVibrator() != true) return
+
+        val amplitude = (intensityPct.coerceIn(1, 100) * 255 / 100).coerceAtLeast(1)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val effect = VibrationEffect.createOneShot(durationMs, amplitude)
+            val attrs = VibrationAttributes.Builder()
+                .setUsage(VibrationAttributes.USAGE_ACCESSIBILITY)
+                .build()
+            vibrator.vibrate(effect, attrs)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(durationMs, amplitude))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(durationMs)
+        }
     }
 
     /** Returns true if at least one TTS engine is installed on the device. */
