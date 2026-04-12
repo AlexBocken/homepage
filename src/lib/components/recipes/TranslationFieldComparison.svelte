@@ -31,66 +31,86 @@
 }
 
 .field-label {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
 	font-weight: 600;
-	color: var(--nord4);
-	margin-bottom: 0.5rem;
-	font-size: 0.9rem;
+	color: var(--color-text-secondary);
+	margin-bottom: 0.4rem;
+	font-size: var(--text-sm);
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
+	letter-spacing: 0.06em;
+}
+.field-label::before{
+	content: '';
+	width: 0.35rem;
+	height: 0.35rem;
+	border-radius: 50%;
+	background: var(--color-primary);
 }
 
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .field-label {
-		color: var(--nord2);
+.pair {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem;
+	align-items: stretch;
+}
+@media (max-width: 640px) {
+	.pair {
+		grid-template-columns: 1fr;
 	}
-  }
-:global(:root[data-theme="light"]) .field-label {
-	color: var(--nord2);
+}
+
+.lang-column {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	min-width: 0;
+}
+.lang-chip {
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--color-text-tertiary);
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
 }
 
 .field-value {
-	padding: 0.75rem;
-	background: var(--nord0);
-	border-radius: 4px;
-	color: var(--nord6);
-	border: 1px solid var(--nord3);
-	min-height: 3rem;
-}
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .field-value {
-		background: var(--nord5);
-		color: var(--nord0);
-		border-color: var(--nord3);
-	}
-  }
-:global(:root[data-theme="light"]) .field-value {
-	background: var(--nord5);
-		color: var(--nord0);
-		border-color: var(--nord3);
+	padding: 0.6rem 0.75rem;
+	background: var(--color-bg-tertiary);
+	border-radius: var(--radius-md);
+	color: var(--color-text-primary);
+	border: 1px solid var(--color-border);
+	min-height: 2.6rem;
+	font-size: 0.95rem;
+	box-sizing: border-box;
+	width: 100%;
+	font-family: inherit;
+	transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .field-value.readonly {
-	opacity: 0.8;
+	background: var(--color-bg-secondary);
+	color: var(--color-text-secondary);
+	opacity: 0.95;
 }
 
 input.field-value,
 textarea.field-value {
-	width: 100%;
-	font-family: inherit;
-	font-size: 1rem;
-	box-sizing: border-box;
 	resize: vertical;
 }
 
 input.field-value:focus,
 textarea.field-value:focus {
-	outline: 2px solid var(--nord14);
-	border-color: var(--nord14);
+	outline: none;
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 textarea.field-value {
-	min-height: 6rem;
+	min-height: 5rem;
 }
 
 .readonly-text {
@@ -100,63 +120,57 @@ textarea.field-value {
 
 :global(.readonly-text strong) {
 	display: block;
-	margin-top: 1rem;
-	margin-bottom: 0.5rem;
-	color: var(--nord8);
+	margin-top: 0.75rem;
+	margin-bottom: 0.35rem;
+	color: var(--color-primary);
 }
-
 :global(.readonly-text strong:first-child) {
 	margin-top: 0;
 }
 
 :global(.readonly-text ul),
 :global(.readonly-text ol) {
-	margin: 0.5rem 0;
-	padding-left: 1.5rem;
+	margin: 0.4rem 0;
+	padding-left: 1.25rem;
 }
 
 :global(.readonly-text li) {
-	margin: 0.25rem 0;
-	color: var(--nord4);
-}
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"]) .readonly-text strong) {
-		color: var(--nord10);
-	}
-
-	:global(:root:not([data-theme="dark"]) .readonly-text li) {
-		color: var(--nord2);
-	}
-  }
-:global(:root[data-theme="light"]) :global(.readonly-text strong) {
-	color: var(--nord10);
-}
-:global(:root[data-theme="light"]) :global(.readonly-text li) {
-	color: var(--nord2);
+	margin: 0.2rem 0;
+	color: var(--color-text-secondary);
 }
 </style>
 
 <div class="field-comparison">
 	<div class="field-label">{label}</div>
-	{#if readonly}
-		<div class="field-value readonly readonly-text">
-			{germanValue || '(empty)'}
+	<div class="pair">
+		<div class="lang-column">
+			<span class="lang-chip">Deutsch</span>
+			<div class="field-value readonly readonly-text">
+				{germanValue || '—'}
+			</div>
 		</div>
-	{:else if multiline}
-		<textarea
-			class="field-value"
-			value={englishValue}
-			oninput={handleInput}
-			placeholder="Enter {label.toLowerCase()}..."
-		></textarea>
-	{:else}
-		<input
-			type="text"
-			class="field-value"
-			value={englishValue}
-			oninput={handleInput}
-			placeholder="Enter {label.toLowerCase()}..."
-		/>
-	{/if}
+		<div class="lang-column">
+			<span class="lang-chip">English</span>
+			{#if readonly}
+				<div class="field-value readonly readonly-text">
+					{englishValue || '—'}
+				</div>
+			{:else if multiline}
+				<textarea
+					class="field-value"
+					value={englishValue}
+					oninput={handleInput}
+					placeholder="Enter {label.toLowerCase()}…"
+				></textarea>
+			{:else}
+				<input
+					type="text"
+					class="field-value"
+					value={englishValue}
+					oninput={handleInput}
+					placeholder="Enter {label.toLowerCase()}…"
+				/>
+			{/if}
+		</div>
+	</div>
 </div>

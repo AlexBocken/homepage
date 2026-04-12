@@ -13,16 +13,38 @@ import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import { portions } from '$lib/js/portions_store.js'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
 
-let portions_local = $state<string | undefined>()
-portions.subscribe((p: any) => {
-	portions_local = p
+let {
+	lang = 'de' as 'de' | 'en',
+	ingredients = $bindable(),
+	portions: portionsProp = $bindable<string | undefined>(undefined),
+	useStore = true,
+} = $props<{
+	lang?: 'de' | 'en',
+	ingredients: any,
+	portions?: string,
+	useStore?: boolean,
+}>();
+
+let portions_local = $state<string | undefined>(portionsProp)
+
+if (useStore) {
+	portions.subscribe((p: any) => {
+		portions_local = p
+	});
+}
+
+$effect(() => {
+	if (!useStore) {
+		portions_local = portionsProp ?? ''
+	}
 });
 
 export function set_portions(){
-	portions.update((_p: any) => portions_local)
+	if (useStore) {
+		portions.update((_p: any) => portions_local)
+	}
+	portionsProp = portions_local
 }
-
-let { lang = 'de' as 'de' | 'en', ingredients = $bindable() } = $props<{ lang?: 'de' | 'en', ingredients: any }>();
 
 // Translation strings
 const t: Record<string, Record<string, string>> = {

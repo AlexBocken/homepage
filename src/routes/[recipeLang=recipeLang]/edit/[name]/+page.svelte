@@ -8,7 +8,7 @@
 	import TranslationApproval from '$lib/components/recipes/TranslationApproval.svelte';
 	import GenerateAltTextButton from '$lib/components/recipes/GenerateAltTextButton.svelte';
 	import EditRecipeNote from '$lib/components/recipes/EditRecipeNote.svelte';
-	import CardAdd from '$lib/components/recipes/CardAdd.svelte';
+	import EditTitleImgParallax from '$lib/components/recipes/EditTitleImgParallax.svelte';
 	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
 	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
@@ -419,20 +419,116 @@
 </script>
 
 <style>
-	input {
+	/* ===== Below-hero content wrapper mirrors viewer's .wrapper_wrapper trick:
+	   a full-width backdrop behind the editor content hides the sticky hero image. */
+	.below-hero {
+		--bg-color: var(--color-bg-primary);
+		position: relative;
+		max-width: 1000px;
+		margin: 0 auto;
+		padding: 2rem 1rem 4rem;
+	}
+	.below-hero::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 100vw;
+		background-color: var(--bg-color);
+		z-index: -1;
+	}
+
+	h3 {
+		text-align: center;
+		font-size: 1.15rem;
+		letter-spacing: 0.02em;
+		margin-block: 1.25rem 0.75rem;
+		color: var(--color-text-primary);
+	}
+
+	/* ===== Meta row under the hero: URL + base-recipe toggle ===== */
+	.meta-row {
+		display: flex;
+		gap: 1.5rem 2rem;
+		align-items: flex-end;
+		justify-content: center;
+		flex-wrap: wrap;
+		margin-block: 0.5rem 2rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.url-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-text-secondary);
+		font-weight: 700;
+	}
+	.url-field input {
 		display: block;
-		border: unset;
-		margin: 1rem auto;
-		padding: 0.5em 1em;
+		border: 1px solid var(--color-border);
+		margin: 0;
+		padding: 0.55em 1.1em;
 		border-radius: var(--radius-pill);
-		background-color: var(--nord4);
-		font-size: 1.1rem;
+		background-color: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font-size: 1rem;
+		font-weight: 400;
+		letter-spacing: 0;
+		text-transform: none;
+		min-width: 16rem;
 		transition: var(--transition-fast);
 	}
-	input:hover,
-	input:focus-visible {
-		scale: 1.05 1.05;
+	.url-field input:hover,
+	.url-field input:focus-visible {
+		border-color: var(--color-primary);
+		outline: none;
 	}
+	.toggle-field {
+		align-self: center;
+	}
+
+	/* ===== Title-card extras (inside hero card) ===== */
+	.section-label {
+		font-size: 1.1rem;
+		font-weight: 700;
+		text-align: center;
+		margin-block: 1.25rem 0.5rem;
+		color: var(--color-text-primary);
+	}
+	.season-wrapper {
+		margin-block: 0.25rem 0.75rem;
+	}
+	.preamble {
+		margin: 0.5rem 0 0.25rem;
+		padding: 1em 1.25em;
+		background: var(--color-bg-primary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-primary);
+		font-size: 1rem;
+		min-height: 3em;
+		outline: none;
+		transition: border-color 200ms ease;
+	}
+	.preamble:focus,
+	.preamble:hover {
+		border-color: var(--color-primary);
+	}
+	.preamble:empty::before {
+		content: attr(data-placeholder);
+		color: var(--color-text-tertiary);
+		font-style: italic;
+	}
+	.note-slot {
+		margin-top: 1.5rem;
+	}
+
+	/* ===== Ingredients + Instructions two-col ===== */
 	.list_wrapper {
 		margin-inline: auto;
 		display: flex;
@@ -440,79 +536,58 @@
 		max-width: 1000px;
 		gap: 2rem;
 		justify-content: center;
+		margin-block: 2.5rem;
 	}
 	@media screen and (max-width: 700px) {
 		.list_wrapper {
 			flex-direction: column;
+			gap: 1rem;
 		}
 	}
-	h1 {
-		text-align: center;
-		margin-bottom: 2rem;
-	}
-	.title_container {
-		max-width: 1000px;
-		display: flex;
-		flex-direction: column;
-		margin-inline: auto;
-	}
-	.title {
-		position: relative;
-		width: min(800px, 80vw);
-		margin-block: 2rem;
-		margin-inline: auto;
-		background-color: var(--nord6);
-		padding: 1rem 2rem;
-	}
-	.title p {
-		border: 2px solid var(--nord1);
-		border-radius: 10000px;
-		padding: 0.5em 1em;
-		font-size: 1.1rem;
-		transition: var(--transition-normal);
-	}
-	.title p:hover,
-	.title p:focus-within {
-		scale: 1.02 1.02;
-	}
-	.addendum {
-		font-size: 1.1rem;
-		max-width: 90%;
-		margin-inline: auto;
-		border: 2px solid var(--nord1);
-		border-radius: 45px;
-		padding: 1em 1em;
-		transition: var(--transition-fast);
-	}
-	.addendum:hover,
-	.addendum:focus-within {
-		scale: 1.02 1.02;
-	}
+
+	/* ===== Addendum ===== */
 	.addendum_wrapper {
 		max-width: 1000px;
+		margin: 2.5rem auto;
+	}
+	.addendum {
+		font-size: 1.05rem;
+		max-width: min(720px, 100%);
 		margin-inline: auto;
+		padding: 1em 1.25em;
+		background: var(--color-bg-primary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-primary);
+		outline: none;
+		transition: border-color 200ms ease;
 	}
-	h3 {
-		text-align: center;
+	.addendum:hover,
+	.addendum:focus-visible {
+		border-color: var(--color-primary);
 	}
-	@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .title {
-			background-color: var(--nord6-dark);
-		}
-  }
-:global(:root[data-theme="dark"]) .title {
-	background-color: var(--nord6-dark);
-}
+
+	/* ===== Form-size / Backform ===== */
 	.form-size-section {
 		max-width: 600px;
-		margin: 1rem auto;
+		margin: 2rem auto;
 		text-align: center;
+	}
+	.form-size-section h3 {
+		margin-top: 0;
 	}
 	.form-size-controls {
 		display: flex;
-		gap: 1.5rem;
+		gap: 1rem 1.25rem;
 		justify-content: center;
-		margin-bottom: 0.5rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.75rem;
+	}
+	.form-size-controls label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4em;
+		color: var(--color-text-primary);
 	}
 	.form-size-inputs {
 		display: flex;
@@ -521,29 +596,39 @@
 		align-items: center;
 		flex-wrap: wrap;
 	}
-	.form-size-inputs input[type="number"] {
+	.form-size-inputs input[type='number'] {
 		width: 4em;
-		display: inline;
+		padding: 0.3em 0.5em;
 		margin: 0 0.3em;
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		border-radius: var(--radius-sm);
+		font-size: 1rem;
 	}
+
 	.error-message {
-		background: var(--nord11);
-		color: var(--nord6);
+		background: var(--red);
+		color: white;
 		padding: 1rem;
-		border-radius: 4px;
+		border-radius: var(--radius-md);
 		margin: 1rem auto;
 		max-width: 800px;
 		text-align: center;
 	}
+
+	/* ===== Nutrition ===== */
 	.nutrition-section {
 		max-width: 1000px;
-		margin: 1.5rem auto;
+		margin: 2.5rem auto;
 	}
 	.nutrition-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 0.75rem;
+		flex-wrap: wrap;
+		gap: 0.75rem;
 	}
 	.nutrition-header h3 {
 		margin: 0;
@@ -553,7 +638,7 @@
 		color: var(--color-text-on-primary);
 		border: none;
 		border-radius: var(--radius-pill);
-		padding: 0.4rem 1rem;
+		padding: 0.45rem 1.1rem;
 		font-size: 0.85rem;
 		cursor: pointer;
 		transition: opacity var(--transition-fast);
@@ -566,57 +651,74 @@
 		cursor: not-allowed;
 	}
 	.nutrition-table-wrapper {
-		background: var(--color-bg-secondary);
-		border-radius: 12px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
 		padding: 1rem;
-		overflow-x: auto;
 	}
 	.nutrition-result-summary {
 		margin: 0 0 0.75rem;
-		font-weight: 600;
+		font-weight: 700;
 		color: var(--color-text-secondary);
-		font-size: 0.9rem;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
 	}
 	.nutrition-result-table {
 		width: 100%;
 		border-collapse: collapse;
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 	}
 	.nutrition-result-table th,
 	.nutrition-result-table td {
 		text-align: left;
-		padding: 0.4rem 0.6rem;
-		border-bottom: 1px solid var(--color-bg-elevated);
+		padding: 0.55rem 0.6rem;
+		border-bottom: 1px solid var(--color-border);
+		vertical-align: top;
 	}
 	.nutrition-result-table th {
 		color: var(--color-text-secondary);
-		font-weight: 600;
-		font-size: 0.8rem;
+		font-weight: 700;
+		font-size: 0.7rem;
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		letter-spacing: 0.06em;
 	}
-	.unmapped-row {
-		opacity: 0.6;
-	}
+	.unmapped-row { opacity: 0.55; }
+	.manual-row { border-left: 3px solid var(--orange); }
+	.recipe-ref-row { border-left: 3px solid var(--blue); }
+	.excluded-row { opacity: 0.45; }
+	.excluded-row .name-td,
+	.excluded-row .src-td { text-decoration: line-through; }
+
 	.search-cell {
 		position: relative;
 	}
 	.search-input {
-		display: inline !important;
+		display: block !important;
 		width: 100%;
-		padding: 0.3rem 0.5rem !important;
+		padding: 0.4rem 0.6rem !important;
 		margin: 0 !important;
-		border: 1px solid var(--color-bg-elevated) !important;
-		border-radius: 6px !important;
+		border: 1px solid var(--color-border) !important;
+		border-radius: var(--radius-sm) !important;
 		background: var(--color-bg-primary) !important;
 		color: var(--color-text-primary) !important;
-		font-size: 0.85rem !important;
+		font-size: 0.9rem !important;
 		scale: 1 !important;
+		box-sizing: border-box;
 	}
 	.search-input:hover,
 	.search-input:focus-visible {
 		scale: 1 !important;
 		border-color: var(--color-primary) !important;
+		outline: none;
+	}
+	.search-input.has-match {
+		opacity: 0.55;
+		font-size: 0.8rem !important;
+	}
+	.search-input.has-match:focus {
+		opacity: 1;
+		font-size: 0.9rem !important;
 	}
 	.search-dropdown {
 		position: absolute;
@@ -628,26 +730,26 @@
 		margin: 2px 0 0;
 		padding: 0;
 		background: var(--color-bg-primary);
-		border: 1px solid var(--color-bg-elevated);
-		border-radius: 8px;
-		max-height: 240px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		max-height: 260px;
 		overflow-y: auto;
-		min-width: 300px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+		min-width: 260px;
+		box-shadow: var(--shadow-md);
 	}
 	.search-dropdown li button {
 		display: block;
 		width: 100%;
 		text-align: left;
-		padding: 0.4rem 0.6rem;
+		padding: 0.55rem 0.75rem;
 		border: none;
 		background: none;
 		color: var(--color-text-primary);
-		font-size: 0.8rem;
+		font-size: 0.85rem;
 		cursor: pointer;
 	}
 	.search-dropdown li button:hover {
-		background: var(--color-bg-tertiary);
+		background: var(--color-bg-elevated);
 	}
 	.search-cal {
 		color: var(--color-text-secondary);
@@ -658,54 +760,28 @@
 		display: inline-block;
 		font-size: 0.6rem;
 		font-weight: 700;
-		padding: 0.1rem 0.35rem;
-		border-radius: 4px;
+		padding: 0.15rem 0.45rem;
+		border-radius: var(--radius-sm);
 		margin-right: 0.3rem;
-		background: var(--nord10);
-		color: white;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 		vertical-align: middle;
+		letter-spacing: 0.05em;
 	}
-	.source-badge.bls {
-		background: var(--nord14);
-		color: var(--nord0);
-	}
-	.source-badge.skip {
-		background: var(--nord11);
-		color: white;
-	}
+	.source-badge.bls { background: var(--green); color: white; }
+	.source-badge.skip { background: var(--red); color: white; }
+	.source-badge.recipe-ref { background: var(--blue); color: white; }
 	.manual-indicator {
 		display: inline-block;
 		font-size: 0.55rem;
 		font-weight: 700;
-		color: var(--nord13);
+		color: var(--orange);
 		margin-left: 0.2rem;
 		vertical-align: super;
 	}
-	.excluded-row {
-		opacity: 0.4;
-	}
-	.excluded-row td {
-		text-decoration: line-through;
-	}
-	.excluded-row td:last-child,
-	.excluded-row td:nth-last-child(2),
-	.excluded-row td:nth-last-child(3),
-	.excluded-row td:nth-last-child(4) {
-		text-decoration: none;
-	}
-	.manual-row {
-		border-left: 2px solid var(--nord13);
-	}
-	.recipe-ref-row {
-		border-left: 2px solid var(--nord8);
-	}
-	.source-badge.recipe-ref {
-		background: var(--nord8);
-		color: var(--nord0);
-	}
 	.recipe-ref-label {
-		font-size: 0.85rem;
-		color: var(--nord8);
+		font-size: 0.88rem;
+		color: var(--blue);
 		font-weight: 600;
 	}
 	.ref-multiplier {
@@ -716,13 +792,11 @@
 		color: var(--color-text-secondary);
 		margin-left: 0.5rem;
 	}
-	.ref-multiplier .gpu-input {
-		width: 3.5rem;
-	}
+	.ref-multiplier .gpu-input { width: 3.5rem; }
 	.excluded-label {
 		font-style: italic;
-		color: var(--nord11);
-		font-size: 0.8rem;
+		color: var(--red);
+		font-size: 0.85rem;
 	}
 	.en-name {
 		color: var(--color-text-secondary);
@@ -730,26 +804,19 @@
 	}
 	.current-match {
 		display: block;
-		font-size: 0.8rem;
-		margin-bottom: 0.2rem;
+		font-size: 0.85rem;
+		margin-bottom: 0.3rem;
 		color: var(--color-text-primary);
 	}
 	.current-match.manual-match {
-		color: var(--nord13);
-	}
-	.search-input.has-match {
-		opacity: 0.5;
-		font-size: 0.75rem !important;
-	}
-	.search-input.has-match:focus {
-		opacity: 1;
-		font-size: 0.85rem !important;
+		color: var(--orange);
 	}
 	.row-controls {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		margin-top: 0.3rem;
+		gap: 0.75rem;
+		margin-top: 0.45rem;
+		flex-wrap: wrap;
 	}
 	.row-controls :global(.toggle-wrapper) {
 		font-size: 0.75rem;
@@ -758,30 +825,30 @@
 		gap: 0.4rem;
 	}
 	.row-controls :global(.toggle-track),
-	.row-controls :global(input[type="checkbox"]) {
+	.row-controls :global(input[type='checkbox']) {
 		width: 32px !important;
 		height: 18px !important;
 	}
 	.row-controls :global(.toggle-track::before),
-	.row-controls :global(input[type="checkbox"]::before) {
+	.row-controls :global(input[type='checkbox']::before) {
 		width: 14px !important;
 		height: 14px !important;
 	}
 	.row-controls :global(.toggle-track.checked::before),
-	.row-controls :global(input[type="checkbox"]:checked::before) {
+	.row-controls :global(input[type='checkbox']:checked::before) {
 		transform: translateX(14px) !important;
 	}
 	.revert-btn {
 		background: none;
-		border: 1px solid var(--color-bg-elevated);
-		border-radius: 4px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
 		color: var(--color-text-secondary);
 		cursor: pointer;
-		padding: 0.15rem 0.4rem;
-		font-size: 0.65rem;
+		padding: 0.2rem 0.55rem;
+		font-size: 0.7rem;
 		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		letter-spacing: 0.05em;
 		transition: all var(--transition-fast);
 	}
 	.revert-btn:hover {
@@ -791,51 +858,148 @@
 	}
 	.skip-btn {
 		background: none;
-		border: 1px solid var(--color-bg-elevated);
-		border-radius: 4px;
-		color: var(--nord11);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--red);
 		cursor: pointer;
-		padding: 0.15rem 0.4rem;
-		font-size: 0.8rem;
+		padding: 0.3rem 0.55rem;
+		font-size: 0.9rem;
 		line-height: 1;
 		transition: all var(--transition-fast);
 	}
-	.skip-btn:hover {
-		background: var(--nord11);
-		color: white;
-	}
+	.skip-btn:hover,
 	.skip-btn.active {
-		background: var(--nord11);
+		background: var(--red);
 		color: white;
+		border-color: var(--red);
 	}
 	.skip-btn.active:hover {
-		background: var(--nord14);
-		color: var(--nord0);
+		background: var(--green);
+		color: white;
+		border-color: var(--green);
 	}
 	.gpu-input {
 		display: inline !important;
 		width: 4em !important;
-		padding: 0.2rem 0.3rem !important;
+		padding: 0.25rem 0.4rem !important;
 		margin: 0 !important;
-		border: 1px solid var(--color-bg-elevated) !important;
-		border-radius: 4px !important;
+		border: 1px solid var(--color-border) !important;
+		border-radius: var(--radius-sm) !important;
 		background: var(--color-bg-primary) !important;
 		color: var(--color-text-primary) !important;
-		font-size: 0.8rem !important;
+		font-size: 0.85rem !important;
 		scale: 1 !important;
 		text-align: right;
 	}
-	.gpu-input:hover, .gpu-input:focus-visible {
+	.gpu-input:hover,
+	.gpu-input:focus-visible {
 		scale: 1 !important;
 	}
+
+	/* ===== Mobile nutrition: table → card stack ===== */
+	@media (max-width: 700px) {
+		.nutrition-table-wrapper {
+			padding: 0;
+			background: transparent;
+			border: none;
+		}
+		.nutrition-result-table,
+		.nutrition-result-table tbody,
+		.nutrition-result-table tr,
+		.nutrition-result-table td {
+			display: block;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		.nutrition-result-table thead {
+			display: none;
+		}
+		.nutrition-result-table tr {
+			position: relative;
+			background: var(--color-surface);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			padding: 0.85rem 1rem 0.75rem;
+			margin-bottom: 0.85rem;
+			box-shadow: var(--shadow-sm);
+		}
+		.nutrition-result-table td {
+			padding: 0.45rem 0;
+			border-bottom: 1px dashed var(--color-border);
+			display: flex;
+			justify-content: space-between;
+			gap: 0.75rem;
+			align-items: baseline;
+		}
+		.nutrition-result-table td:last-child {
+			border-bottom: none;
+		}
+		.nutrition-result-table td::before {
+			content: attr(data-label);
+			color: var(--color-text-secondary);
+			font-size: 0.66rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			flex-shrink: 0;
+			min-width: 5rem;
+			align-self: center;
+		}
+		.nutrition-result-table td.num-td {
+			position: absolute;
+			top: 0.6rem;
+			right: 0.9rem;
+			padding: 0;
+			border: none;
+			width: auto;
+			opacity: 0.5;
+			font-size: 0.7rem;
+			display: inline-block;
+		}
+		.nutrition-result-table td.num-td::before {
+			display: none;
+		}
+		.nutrition-result-table td.name-td {
+			font-size: 1.05rem;
+			font-weight: 600;
+			padding-right: 2rem;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.15rem;
+		}
+		.nutrition-result-table td.name-td::before {
+			font-size: 0.62rem;
+			opacity: 0.7;
+		}
+		.nutrition-result-table td.search-td {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.4rem;
+		}
+		.nutrition-result-table td.action-td {
+			justify-content: flex-end;
+		}
+		.nutrition-result-table td.action-td::before {
+			display: none;
+		}
+		.search-input {
+			font-size: 1rem !important;
+			padding: 0.6rem 0.75rem !important;
+		}
+		.search-dropdown {
+			min-width: 100%;
+		}
+	}
+
 	.section-actions {
 		display: flex;
 		gap: 0.75rem;
+		justify-content: center;
 	}
 	.section-btn {
 		padding: 0.75rem 1.5rem;
 		border: none;
-		border-radius: 4px;
+		border-radius: var(--radius-pill);
 		font-size: 1rem;
 		font-weight: 600;
 		cursor: pointer;
@@ -852,7 +1016,8 @@
 	}
 	.translation-section-trigger {
 		max-width: 1000px;
-		margin: 1.5rem auto;
+		margin: 2.5rem auto;
+		text-align: center;
 	}
 </style>
 
@@ -860,8 +1025,6 @@
 	<title>Rezept bearbeiten - {data.recipe.name}</title>
 	<meta name="description" content="Bearbeite das Rezept {data.recipe.name}" />
 </svelte:head>
-
-<h1>Rezept bearbeiten</h1>
 
 {#if form?.error}
 	<div class="error-message">
@@ -908,16 +1071,6 @@
 		})} />
 	{/if}
 
-	<CardAdd
-		bind:card_data
-		bind:image_preview_url
-		bind:selected_image_file
-		short_name={short_name}
-	/>
-
-	<h3>Kurzname (für URL):</h3>
-	<input name="short_name" bind:value={short_name} placeholder="Kurzname" required />
-
 	<!-- Hidden inputs for card data -->
 	<input type="hidden" name="name" value={card_data.name} />
 	<input type="hidden" name="description" value={card_data.description} />
@@ -926,72 +1079,89 @@
 	<input type="hidden" name="portions" value={portions_local} />
 	<input type="hidden" name="isBaseRecipe" value={isBaseRecipe ? "true" : "false"} />
 	<input type="hidden" name="defaultForm_json" value={defaultForm ? JSON.stringify(defaultForm) : ''} />
-
-	<div style="text-align: center; margin: 1rem;">
-		<Toggle
-			bind:checked={isBaseRecipe}
-			label="Als Basisrezept markieren (kann von anderen Rezepten referenziert werden)"
-		/>
-	</div>
-
-	<!-- Default Form (Cake Pan) -->
-	<div class="form-size-section">
-		<h3>Backform (Standard):</h3>
-		<div class="form-size-controls">
-			<label>
-				<input type="radio" name="formShape" value="none" checked={!defaultForm} onchange={() => { defaultForm = null; }
-  } />
-				Keine
-			</label>
-			<label>
-				<input type="radio" name="formShape" value="round" checked={defaultForm?.shape === 'round'} onchange={() => { defaultForm = { shape: 'round', diameter: defaultForm?.diameter || 26 }; }
-  } />
-				Rund
-			</label>
-			<label>
-				<input type="radio" name="formShape" value="rectangular" checked={defaultForm?.shape === 'rectangular'} onchange={() => { defaultForm = { shape: 'rectangular', width: defaultForm?.width || 20, length: defaultForm?.length || 30 }; }
-  } />
-				Rechteckig
-			</label>
-			<label>
-				<input type="radio" name="formShape" value="gugelhupf" checked={defaultForm?.shape === 'gugelhupf'} onchange={() => { defaultForm = { shape: 'gugelhupf', diameter: defaultForm?.diameter || 24, innerDiameter: defaultForm?.innerDiameter || 8 }; }
-  } />
-				Gugelhupf
-			</label>
-		</div>
-		{#if defaultForm?.shape === 'round'}
-			<div class="form-size-inputs">
-				<label>Durchmesser: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
-			</div>
-		{:else if defaultForm?.shape === 'rectangular'}
-			<div class="form-size-inputs">
-				<label>Breite: <input type="number" min="1" step="1" bind:value={defaultForm.width} /> cm</label>
-				<label>Länge: <input type="number" min="1" step="1" bind:value={defaultForm.length} /> cm</label>
-			</div>
-		{:else if defaultForm?.shape === 'gugelhupf'}
-			<div class="form-size-inputs">
-				<label>Aussen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
-				<label>Innen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.innerDiameter} /> cm</label>
-			</div>
-		{/if}
-	</div>
-
-	<!-- Recipe Note Component -->
-	<EditRecipeNote bind:note />
+	<input type="hidden" name="preamble" value={preamble} />
 	<input type="hidden" name="note" value={note} />
 
-	<div class="title_container">
-		<div class="title">
-			<h4>Eine etwas längere Beschreibung:</h4>
-			<p bind:innerText={preamble} contenteditable></p>
-			<input type="hidden" name="preamble" value={preamble} />
-
-			<div class="tags">
-				<h4>Saison:</h4>
+	<EditTitleImgParallax
+		bind:card_data
+		bind:image_preview_url
+		bind:selected_image_file
+	>
+		{#snippet titleExtras()}
+			<h2 class="section-label">Saison</h2>
+			<div class="season-wrapper">
 				<SeasonSelect />
 			</div>
-		</div>
-	</div>
+
+			<h2 class="section-label">Einleitung</h2>
+			<p
+				class="preamble"
+				contenteditable="plaintext-only"
+				bind:innerText={preamble}
+				data-placeholder="Eine etwas längere Einleitung für dieses Rezept…"
+				aria-label="Einleitung"
+			></p>
+
+			<div class="note-slot">
+				<EditRecipeNote bind:note />
+			</div>
+		{/snippet}
+
+		<div class="below-hero">
+			<div class="meta-row">
+				<label class="url-field">
+					<span>URL-Kurzname</span>
+					<input
+						name="short_name"
+						bind:value={short_name}
+						placeholder="Kurzname"
+						required
+					/>
+				</label>
+				<div class="toggle-field">
+					<Toggle
+						bind:checked={isBaseRecipe}
+						label="Als Basisrezept markieren"
+					/>
+				</div>
+			</div>
+
+			<div class="form-size-section">
+				<h3>Backform (Standard)</h3>
+				<div class="form-size-controls">
+					<label>
+						<input type="radio" name="formShape" value="none" checked={!defaultForm} onchange={() => { defaultForm = null; }} />
+						Keine
+					</label>
+					<label>
+						<input type="radio" name="formShape" value="round" checked={defaultForm?.shape === 'round'} onchange={() => { defaultForm = { shape: 'round', diameter: defaultForm?.diameter || 26 }; }} />
+						Rund
+					</label>
+					<label>
+						<input type="radio" name="formShape" value="rectangular" checked={defaultForm?.shape === 'rectangular'} onchange={() => { defaultForm = { shape: 'rectangular', width: defaultForm?.width || 20, length: defaultForm?.length || 30 }; }} />
+						Rechteckig
+					</label>
+					<label>
+						<input type="radio" name="formShape" value="gugelhupf" checked={defaultForm?.shape === 'gugelhupf'} onchange={() => { defaultForm = { shape: 'gugelhupf', diameter: defaultForm?.diameter || 24, innerDiameter: defaultForm?.innerDiameter || 8 }; }} />
+						Gugelhupf
+					</label>
+				</div>
+				{#if defaultForm?.shape === 'round'}
+					<div class="form-size-inputs">
+						<label>Durchmesser: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
+					</div>
+				{:else if defaultForm?.shape === 'rectangular'}
+					<div class="form-size-inputs">
+						<label>Breite: <input type="number" min="1" step="1" bind:value={defaultForm.width} /> cm</label>
+						<label>Länge: <input type="number" min="1" step="1" bind:value={defaultForm.length} /> cm</label>
+					</div>
+				{:else if defaultForm?.shape === 'gugelhupf'}
+					<div class="form-size-inputs">
+						<label>Aussen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.diameter} /> cm</label>
+						<label>Innen-Ø: <input type="number" min="1" step="1" bind:value={defaultForm.innerDiameter} /> cm</label>
+					</div>
+				{/if}
+			</div>
 
 	<div class="list_wrapper">
 		<div>
@@ -1030,14 +1200,14 @@
 						{#each nutritionMappings as m, i (mappingKey(m))}
 							{@const key = mappingKey(m)}
 							<tr class:unmapped-row={m.matchMethod === 'none' && !m.excluded && !m.recipeRef} class:excluded-row={m.excluded && !m.recipeRef} class:manual-row={m.manuallyEdited && !m.excluded} class:recipe-ref-row={!!m.recipeRef}>
-								<td>{i + 1}</td>
-								<td>
+								<td data-label="#" class="num-td">{i + 1}</td>
+								<td data-label="Zutat" class="name-td">
 									{m.ingredientNameDe || m.ingredientName}
 									{#if m.ingredientName && m.ingredientName !== m.ingredientNameDe}
 										<span class="en-name">({m.ingredientName})</span>
 									{/if}
 								</td>
-								<td>
+								<td data-label="Quelle" class="src-td">
 									{#if m.recipeRef}
 										<span class="source-badge recipe-ref">REF</span>
 									{:else if m.excluded}
@@ -1049,7 +1219,7 @@
 										—
 									{/if}
 								</td>
-								<td>
+								<td data-label="Treffer / Suche" class="search-td">
 									<div class="search-cell">
 										{#if m.recipeRef}
 											<span class="recipe-ref-label">{m.recipeRef}</span>
@@ -1096,8 +1266,8 @@
 										{/if}
 									</div>
 								</td>
-								<td>{m.recipeRef ? '—' : (m.matchConfidence ? (m.matchConfidence * 100).toFixed(0) + '%' : '—')}</td>
-								<td>
+								<td data-label="Konf." class="conf-td">{m.recipeRef ? '—' : (m.matchConfidence ? (m.matchConfidence * 100).toFixed(0) + '%' : '—')}</td>
+								<td data-label="g/u" class="unit-td">
 									{#if m.recipeRef}
 										—
 									{:else if m.manuallyEdited}
@@ -1106,7 +1276,7 @@
 										{m.gramsPerUnit || '—'}
 									{/if}
 								</td>
-								<td>
+								<td data-label="" class="action-td">
 									{#if !m.recipeRef}
 										<button
 											type="button"
@@ -1146,6 +1316,8 @@
 			</div>
 		</div>
 	{/if}
+		</div>
+	</EditTitleImgParallax>
 </form>
 
 {#if translationData || showTranslationWorkflow}
