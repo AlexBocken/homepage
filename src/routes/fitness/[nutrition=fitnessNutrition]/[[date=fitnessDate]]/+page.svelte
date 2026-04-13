@@ -842,10 +842,13 @@
 	/** @type {string|null} */
 	let editingEntryId = $state(null);
 	let editingGrams = $state(0);
+	/** @type {'breakfast'|'lunch'|'dinner'|'snack'} */
+	let editingMeal = $state('breakfast');
 
 	function startEditEntry(entry) {
 		editingEntryId = entry._id;
 		editingGrams = entry.amountGrams;
+		editingMeal = entry.mealType;
 	}
 
 	async function saveEditEntry() {
@@ -854,7 +857,7 @@
 			const res = await fetch(`/api/fitness/food-log/${editingEntryId}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ amountGrams: editingGrams }),
+				body: JSON.stringify({ amountGrams: editingGrams, mealType: editingMeal }),
 			});
 			if (res.ok) {
 				const updated = await res.json();
@@ -864,6 +867,72 @@
 			toast.error(isEn ? 'Failed to update' : 'Fehler beim Aktualisieren');
 		}
 		editingEntryId = null;
+	}
+
+	/** Move an entry to a different meal via drag-and-drop or direct call. */
+	async function moveEntryToMeal(/** @type {string} */ entryId, /** @type {string} */ newMeal) {
+		const entry = entries.find(e => e._id === entryId);
+		if (!entry || entry.mealType === newMeal) return;
+		// Optimistic update
+		const prev = entry.mealType;
+		entries = entries.map(e => e._id === entryId ? { ...e, mealType: newMeal } : e);
+		try {
+			const res = await fetch(`/api/fitness/food-log/${entryId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ mealType: newMeal }),
+			});
+			if (!res.ok) throw new Error('update failed');
+			const updated = await res.json();
+			entries = entries.map(e => e._id === entryId ? updated : e);
+		} catch {
+			entries = entries.map(e => e._id === entryId ? { ...e, mealType: prev } : e);
+			toast.error(isEn ? 'Failed to move' : 'Verschieben fehlgeschlagen');
+		}
+	}
+
+	// Drag-and-drop state
+	/** @type {string|null} */
+	let draggingEntryId = $state(null);
+	/** @type {string|null} */
+	let dragOverMeal = $state(null);
+
+	function onEntryDragStart(/** @type {DragEvent} */ ev, /** @type {string} */ entryId) {
+		if (!ev.dataTransfer) return;
+		draggingEntryId = entryId;
+		ev.dataTransfer.effectAllowed = 'move';
+		ev.dataTransfer.setData('text/plain', entryId);
+	}
+
+	function onEntryDragEnd() {
+		draggingEntryId = null;
+		dragOverMeal = null;
+	}
+
+	function onMealDragOver(/** @type {DragEvent} */ ev, /** @type {string} */ meal) {
+		if (!draggingEntryId) return;
+		ev.preventDefault();
+		if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+		dragOverMeal = meal;
+	}
+
+	function onMealDragLeave(/** @type {DragEvent} */ ev, /** @type {string} */ meal) {
+		if (dragOverMeal === meal) {
+			// Only clear if leaving the element (not child)
+			const related = /** @type {Element|null} */ (ev.relatedTarget);
+			const target = /** @type {Element} */ (ev.currentTarget);
+			if (!related || !target.contains(related)) {
+				dragOverMeal = null;
+			}
+		}
+	}
+
+	function onMealDrop(/** @type {DragEvent} */ ev, /** @type {string} */ meal) {
+		ev.preventDefault();
+		const id = ev.dataTransfer?.getData('text/plain') || draggingEntryId;
+		dragOverMeal = null;
+		draggingEntryId = null;
+		if (id) moveEntryToMeal(id, meal);
 	}
 
 	async function deleteEntry(id) {
@@ -1648,7 +1717,16 @@
 		{@const mealCal = mealEntries.reduce((s, e) => s + entryCalories(e), 0)}
 		{@const meta = mealMeta[meal]}
 		{@const MealSectionIcon = meta.icon}
-		<div class="meal-section" style="--meal-color: {meta.color}">
+		<div
+			class="meal-section"
+			class:drop-target={dragOverMeal === meal && draggingEntryId}
+			style="--meal-color: {meta.color}"
+			ondragover={(ev) => onMealDragOver(ev, meal)}
+			ondragleave={(ev) => onMealDragLeave(ev, meal)}
+			ondrop={(ev) => onMealDrop(ev, meal)}
+			role="region"
+			aria-label={t(meal, lang)}
+		>
 			<div class="meal-header">
 				<div class="meal-title">
 					<div class="meal-icon">
@@ -1664,17 +1742,24 @@
 			<div class="meal-entries">
 				{#each mealEntries as entry}
 					{@const imgUrl = entry.source === 'recipe' && entry.sourceId ? recipeImages[entry.sourceId] : null}
-					<div class="food-card" class:has-image={!!imgUrl}>
+					<div
+						class="food-card"
+						class:has-image={!!imgUrl}
+						class:dragging={draggingEntryId === entry._id}
+						draggable={editingEntryId !== entry._id}
+						ondragstart={(ev) => onEntryDragStart(ev, entry._id)}
+						ondragend={onEntryDragEnd}
+					>
 						{#if imgUrl}
-							<img class="food-card-img" src={imgUrl} alt={entry.name} loading="lazy" />
+							<img class="food-card-img" src={imgUrl} alt={entry.name} loading="lazy" draggable="false" />
 						{:else}
 							<div class="food-card-accent" style="background: var(--meal-color)"></div>
 						{/if}
 						<div class="food-card-body">
 						{#if entry.source === 'bls' || entry.source === 'usda' || entry.source === 'off'}
-							<a class="food-card-name food-card-link" href="/fitness/{s.nutrition}/food/{entry.source}/{entry.sourceId}">{entry.name}</a>
+							<a class="food-card-name food-card-link" draggable="false" href="/fitness/{s.nutrition}/food/{entry.source}/{entry.sourceId}">{entry.name}</a>
 						{:else if (entry.source === 'recipe' || entry.source === 'custom') && entry.sourceId}
-							<a class="food-card-name food-card-link" href="/fitness/{s.nutrition}/food/{entry.source}/{entry.sourceId}?logEntry={entry._id}">{entry.name}</a>
+							<a class="food-card-name food-card-link" draggable="false" href="/fitness/{s.nutrition}/food/{entry.source}/{entry.sourceId}?logEntry={entry._id}">{entry.name}</a>
 						{:else}
 							<span class="food-card-name">{entry.name}</span>
 						{/if}
@@ -1683,6 +1768,23 @@
 									<input type="number" class="food-card-edit-input" bind:value={editingGrams} min="1" step="1" />
 									<span class="food-card-edit-unit">g</span>
 								</form>
+								<div class="food-card-meal-pills" role="radiogroup" aria-label={isEn ? 'Meal' : 'Mahlzeit'}>
+									{#each mealTypes as m}
+										{@const MPIcon = mealMeta[m].icon}
+										<button
+											type="button"
+											class="meal-pill"
+											class:active={editingMeal === m}
+											style="--pill-color: {mealMeta[m].color}"
+											role="radio"
+											aria-checked={editingMeal === m}
+											onclick={() => { editingMeal = m; }}
+										>
+											<MPIcon size={11} />
+											<span>{t(m, lang)}</span>
+										</button>
+									{/each}
+								</div>
 							{:else}
 								<span class="food-card-detail">{entry.amountGrams}g · {fmtCal(entryCalories(entry))} kcal</span>
 							{/if}
@@ -3066,11 +3168,57 @@
 		background: var(--color-surface);
 		border-radius: 10px;
 		box-shadow: var(--shadow-sm);
-		transition: background 0.12s;
+		transition: background 0.12s, opacity 0.12s, transform 0.12s;
 		position: relative;
+	}
+	.food-card[draggable="true"] {
+		cursor: grab;
+	}
+	.food-card[draggable="true"]:active {
+		cursor: grabbing;
+	}
+	.food-card.dragging {
+		opacity: 0.4;
+		transform: scale(0.98);
 	}
 	.food-card:hover {
 		background: var(--color-bg-elevated);
+	}
+	.meal-section.drop-target {
+		background: color-mix(in srgb, var(--meal-color) 14%, transparent);
+		outline: 2px dashed var(--meal-color);
+		outline-offset: -4px;
+		border-radius: 12px;
+	}
+	.food-card-meal-pills {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+		margin-top: 0.25rem;
+	}
+	.meal-pill {
+		all: unset;
+		-webkit-tap-highlight-color: transparent;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		padding: 0.15rem 0.45rem;
+		border-radius: var(--radius-pill, 1000px);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		font-size: 0.68rem;
+		font-weight: 600;
+		cursor: pointer;
+		border: 1px solid transparent;
+		transition: background 0.1s, color 0.1s, border-color 0.1s;
+	}
+	.meal-pill:hover {
+		color: var(--color-text-primary);
+	}
+	.meal-pill.active {
+		background: var(--pill-color);
+		color: var(--color-text-on-primary, #fff);
+		border-color: var(--pill-color);
 	}
 	.food-card-img {
 		width: 3.2rem;
