@@ -7,6 +7,7 @@
 	const isLatin = $derived(data.lang === 'la');
 	const prayersPath = $derived(isLatin ? 'orationes' : isEnglish ? 'prayers' : 'gebete');
 	const rosaryPath = $derived(isLatin ? 'rosarium' : isEnglish ? 'rosary' : 'rosenkranz');
+	const calendarPath = $derived(isLatin ? 'calendarium' : isEnglish ? 'calendar' : 'kalender');
 	const eastertide = isEastertide();
 
 	const labels = $derived({
@@ -14,10 +15,11 @@
 		description: isLatin
 			? 'Hic invenies orationes et rosarium interactivum fidei catholicae.'
 			: isEnglish
-				? 'Here you will find some prayers and an interactive rosary for the Catholic faith. A focus on Latin and the Tridentine rite will be noticeable.'
-				: 'Hier findet man einige Gebete und einen interaktiven Rosenkranz zum katholischen Glauben. Ein Fokus auf Latein und den tridentinischen Ritus wird zu bemerken sein.',
+				? 'Here you will find some prayers and an interactive rosary for the Catholic faith. A focus on Latin and the older rite will be noticeable.'
+				: 'Hier findet man einige Gebete und einen interaktiven Rosenkranz zum katholischen Glauben. Ein Fokus auf Latein und den alten Ritus wird zu bemerken sein.',
 		prayers: isLatin ? 'Orationes' : isEnglish ? 'Prayers' : 'Gebete',
-		rosary: isLatin ? 'Rosarium Vivum' : isEnglish ? 'Rosary' : 'Rosenkranz'
+		rosary: isLatin ? 'Rosarium Vivum' : isEnglish ? 'Rosary' : 'Rosenkranz',
+		calendar: isLatin ? 'Calendarium' : isEnglish ? 'Calendar' : 'Kalender'
 	});
 </script>
 
@@ -125,5 +127,9 @@
 		{#if isEnglish || isLatin}<span class="lang-badge">DE</span>{/if}
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -226 532 506"><path d="M256-107v310l1-1c54-22 113-34 172-34h19v-320h-19c-42 0-84 8-123 25-17 7-34 14-50 20zm-25-79 25 10 25-10c47-20 97-30 148-30h35c27 0 48 22 48 48v352c0 27-21 48-48 48h-35c-51 0-101 10-148 30l-13 5c-8 3-16 3-24 0l-13-5c-47-20-97-30-148-30H48c-26 0-48-21-48-48v-352c0-26 22-48 48-48h35c51 0 101 10 148 30z"/></svg>
 		<h3>Katechese</h3>
+	</a>
+	<a href="/{data.faithLang}/{calendarPath}">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z"/></svg>
+		<h3>{labels.calendar}</h3>
 	</a>
 </LinksGrid>
