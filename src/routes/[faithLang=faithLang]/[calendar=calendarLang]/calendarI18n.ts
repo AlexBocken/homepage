@@ -111,6 +111,16 @@ export const ui = {
 		en: 'The calendar for the older rite (1962 Missal) is not yet available. Stay tuned.',
 		de: 'Der Kalender für den alten Ritus (Messbuch 1962) ist noch nicht verfügbar. Bleib dran.',
 		la: 'Calendarium ritus antiqui (Missale 1962) nondum paratum est. Exspecta paulisper.'
+	},
+	rite1962DisclaimerTitle: {
+		en: 'Accuracy still being verified',
+		de: 'Genauigkeit wird noch geprüft',
+		la: 'Accuratio adhuc probanda'
+	},
+	rite1962DisclaimerBody: {
+		en: 'The 1962 calendar is derived from divinum-officium data and is still being checked day-by-day against authoritative sources. Local proper calendars (diocese, religious order, national feasts) are not yet applied — only the general Roman calendar is rendered.',
+		de: 'Der Kalender für den Ritus von 1962 stammt aus divinum-officium-Daten und wird noch Tag für Tag mit maßgeblichen Quellen abgeglichen. Eigenkalender (Diözese, Ordensgemeinschaft, Landesfeste) sind noch nicht berücksichtigt — dargestellt wird nur der allgemeine römische Kalender.',
+		la: 'Calendarium anni 1962 ex datis divinum-officium ductum est et adhuc diebus singulis contra fontes fideles examinatur. Calendaria propria localia (dioecesis, ordinis religiosi, festa nationalia) nondum adhibentur — tantum calendarium Romanum generale ostenditur.'
 	}
 };
 
@@ -121,4 +131,101 @@ export function t(key: keyof typeof ui, lang: CalendarLang): string {
 export type Rite = '1969' | '1962';
 export function isValidRite(v: string | null): v is Rite {
 	return v === '1969' || v === '1962';
+}
+
+// --- 1962 localization helpers ---
+// 1962 calendar data is Latin-only at source (feast names stay Latin —
+// they are canonical). UI chrome (rank, season, color) is localized here.
+
+const CLASS_LABEL: Record<string, Record<CalendarLang, string>> = {
+	ClassI: { en: 'Class I', de: 'I. Klasse', la: 'I classis' },
+	ClassII: { en: 'Class II', de: 'II. Klasse', la: 'II classis' },
+	ClassIII: { en: 'Class III', de: 'III. Klasse', la: 'III classis' },
+	ClassIV: { en: 'Class IV', de: 'IV. Klasse', la: 'IV classis' },
+	Ferial: { en: 'Ferial', de: 'Ferialtag', la: 'Feria' }
+};
+
+export function rank1962Label(rank: string, lang: CalendarLang): string {
+	return CLASS_LABEL[rank]?.[lang] ?? rank;
+}
+
+const SEASON_LABEL: Record<string, Record<CalendarLang, string>> = {
+	Advent: { en: 'Advent', de: 'Advent', la: 'Adventus' },
+	ChristmasTide: { en: 'Christmastide', de: 'Weihnachtszeit', la: 'Tempus Nativitatis' },
+	EpiphanyTide: { en: 'Epiphanytide', de: 'Epiphaniaszeit', la: 'Tempus Epiphaniæ' },
+	Septuagesima: { en: 'Septuagesima', de: 'Vorfastenzeit', la: 'Septuagesima' },
+	Lent: { en: 'Lent', de: 'Fastenzeit', la: 'Quadragesima' },
+	Passiontide: { en: 'Passiontide', de: 'Passionszeit', la: 'Tempus Passionis' },
+	HolyWeek: { en: 'Holy Week', de: 'Karwoche', la: 'Hebdomada Sancta' },
+	EasterWeek: { en: 'Easter Week', de: 'Osteroktav', la: 'Hebdomada Paschae' },
+	Paschaltide: { en: 'Eastertide', de: 'Osterzeit', la: 'Tempus Paschale' },
+	TimeAfterPentecost: { en: 'after Pentecost', de: 'nach Pfingsten', la: 'post Pentecosten' }
+};
+
+export function season1962Label(season: string, lang: CalendarLang): string {
+	return SEASON_LABEL[season]?.[lang] ?? season;
+}
+
+const COLOR_LABEL_1962: Record<string, Record<CalendarLang, string>> = {
+	WHITE: { en: 'White', de: 'Weiß', la: 'Albus' },
+	RED: { en: 'Red', de: 'Rot', la: 'Ruber' },
+	GREEN: { en: 'Green', de: 'Grün', la: 'Viridis' },
+	PURPLE: { en: 'Violet', de: 'Violett', la: 'Violaceus' },
+	ROSE: { en: 'Rose', de: 'Rosa', la: 'Rosaceus' },
+	BLACK: { en: 'Black', de: 'Schwarz', la: 'Niger' },
+	GOLD: { en: 'Gold', de: 'Gold', la: 'Aureus' }
+};
+
+export function colorLabel1962(colorKey: string, lang: CalendarLang): string {
+	return COLOR_LABEL_1962[colorKey]?.[lang] ?? colorKey;
+}
+
+export const ui1962 = {
+	commemorations: { en: 'Commemorations', de: 'Kommemorationen', la: 'Commemorationes' },
+	rubrics: { en: 'Rubrics', de: 'Rubriken', la: 'Rubricæ' },
+	gloria: { en: 'Gloria', de: 'Gloria', la: 'Gloria' },
+	credo: { en: 'Credo', de: 'Credo', la: 'Credo' },
+	preface: { en: 'Preface', de: 'Präfation', la: 'Præfatio' },
+	lastGospel: { en: 'Last Gospel', de: 'Letztes Evangelium', la: 'Ultimum Evangelium' },
+	ite: { en: 'Dismissal', de: 'Entlassung', la: 'Dimissio' },
+	octave: { en: 'Octave', de: 'Oktav', la: 'Octava' },
+	octaveDay: { en: 'day', de: 'Tag', la: 'dies' },
+	vigilOf: { en: 'Vigil of', de: 'Vigil von', la: 'Vigilia' },
+	transferredFrom: { en: 'Transferred from', de: 'Übertragen von', la: 'Translatum ex' },
+	source: { en: 'Source', de: 'Quelle', la: 'Fons' },
+	yes: { en: 'yes', de: 'ja', la: 'sic' },
+	no: { en: 'no', de: 'nein', la: 'non' },
+	properRef: { en: 'Proper', de: 'Proprium', la: 'Proprium' },
+	propers: { en: 'Mass propers', de: 'Messproprium', la: 'Propria Missæ' },
+	extraSections: { en: 'Additional readings', de: 'Zusätzliche Lesungen', la: 'Lectiones additae' }
+} as const;
+
+export function t1962(key: keyof typeof ui1962, lang: CalendarLang): string {
+	return ui1962[key][lang] ?? ui1962[key].en;
+}
+
+const PROPER_LABEL: Record<string, Record<CalendarLang, string>> = {
+	introit: { en: 'Introit', de: 'Introitus', la: 'Introitus' },
+	collect: { en: 'Collect', de: 'Kollekte', la: 'Collecta' },
+	epistle: { en: 'Epistle', de: 'Epistel', la: 'Epistola' },
+	gradual: { en: 'Gradual', de: 'Graduale', la: 'Graduale' },
+	alleluia: { en: 'Alleluia', de: 'Alleluja', la: 'Alleluia' },
+	tract: { en: 'Tract', de: 'Tractus', la: 'Tractus' },
+	sequence: { en: 'Sequence', de: 'Sequenz', la: 'Sequentia' },
+	gospel: { en: 'Gospel', de: 'Evangelium', la: 'Evangelium' },
+	offertory: { en: 'Offertory', de: 'Offertorium', la: 'Offertorium' },
+	secret: { en: 'Secret', de: 'Stillgebet', la: 'Secreta' },
+	preface: { en: 'Preface', de: 'Präfation', la: 'Præfatio' },
+	communion: { en: 'Communion', de: 'Kommunion', la: 'Communio' },
+	postcommunion: { en: 'Postcommunion', de: 'Schlussgebet', la: 'Postcommunio' }
+};
+
+export function properLabel(key: string, lang: CalendarLang): string {
+	// Ember-Saturday extra readings like LectioL1..LectioL5
+	const m = /^LectioL(\d+)$/.exec(key);
+	if (m) {
+		const n = m[1];
+		return lang === 'de' ? `Lesung ${n}` : lang === 'la' ? `Lectio ${n}` : `Reading ${n}`;
+	}
+	return PROPER_LABEL[key]?.[lang] ?? key;
 }

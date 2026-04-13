@@ -6,7 +6,16 @@ import {
 	GeneralRoman_En,
 	GeneralRoman_La
 } from '@romcal/calendar.general-roman';
-import { expectedSlug, isValidRite, type CalendarLang, type Rite } from './calendarI18n';
+import { Romcal1962 } from 'romcal/1962';
+import type { Celebration1962, ResolvedDay1962 } from 'romcal/1962';
+import {
+	colorLabel1962,
+	expectedSlug,
+	rank1962Label,
+	season1962Label,
+	type CalendarLang,
+	type Rite
+} from '../calendarI18n';
 
 export interface CalendarDay {
 	iso: string;
@@ -19,6 +28,41 @@ export interface CalendarDay {
 	colorKeys: string[];
 	psalterWeek: string | null;
 	sundayCycle: string | null;
+	rite1962?: Rite1962Detail;
+}
+
+export interface Rite1962Commem {
+	key: string;
+	name: string;
+	rankName: string;
+	kind: 'tempora' | 'sancti';
+	colorNames: string[];
+	colorKeys: string[];
+}
+
+export interface Rite1962Detail {
+	class: 1 | 2 | 3 | 4;
+	kind: 'tempora' | 'sancti';
+	commemorations: Rite1962Commem[];
+	rubrics: {
+		gloria: boolean;
+		credo: boolean;
+		preface?: string;
+		lastGospel?: string;
+		ite?: string;
+	};
+	octave?: {
+		id: string;
+		parentFeastId: string;
+		day: number;
+		rank: string;
+	};
+	vigilOf?: string;
+	transferredFrom?: string;
+	properSource: string;
+	communeSlug?: string;
+	propers: ProperSection[];
+	extraSections: ProperSection[];
 }
 
 const localeBundles = {
@@ -68,6 +112,178 @@ async function getYear(lang: CalendarLang, year: number): Promise<Map<string, Ca
 	return map;
 }
 
+// --- 1962 rite ---
+
+const romcal1962ByLang = new Map<CalendarLang, Romcal1962>();
+function getRomcal1962(lang: CalendarLang): Romcal1962 {
+	let r = romcal1962ByLang.get(lang);
+	if (r) return r;
+	const locales = lang === 'la' ? ['la'] : ['la', lang];
+	r = new Romcal1962({ includePropers: true, propersLocales: locales });
+	romcal1962ByLang.set(lang, r);
+	return r;
+}
+
+const PROPER_ORDER = [
+	'introit',
+	'collect',
+	'epistle',
+	'gradual',
+	'alleluia',
+	'tract',
+	'sequence',
+	'gospel',
+	'offertory',
+	'secret',
+	'preface',
+	'communion',
+	'postcommunion'
+] as const;
+
+type ProperKey = (typeof PROPER_ORDER)[number];
+
+export interface ProperSection {
+	key: string;
+	la: string;
+	local?: string;
+}
+
+const COLOR_KEY_1962: Record<string, string> = {
+	White: 'WHITE',
+	Red: 'RED',
+	Green: 'GREEN',
+	Violet: 'PURPLE',
+	Black: 'BLACK',
+	Rose: 'ROSE'
+};
+
+const RANK_FROM_CLASS_1962: Record<1 | 2 | 3 | 4, string> = {
+	1: 'SOLEMNITY',
+	2: 'FEAST',
+	3: 'MEMORIAL',
+	4: 'WEEKDAY'
+};
+
+function colorKeysFrom(c: Celebration1962): string[] {
+	return c.colors.map((col) => COLOR_KEY_1962[col] ?? col.toUpperCase());
+}
+
+function localizedName(c: Celebration1962, lang: CalendarLang): string {
+	if (lang === 'la') return c.name;
+	return c.names?.[lang] ?? c.name;
+}
+
+function adaptCommem(c: Celebration1962, lang: CalendarLang): Rite1962Commem {
+	const colorKeys = colorKeysFrom(c);
+	return {
+		key: c.key,
+		name: localizedName(c, lang),
+		rankName: rank1962Label(c.rank1962, lang),
+		kind: c.kind,
+		colorKeys,
+		colorNames: colorKeys.map((k) => colorLabel1962(k, lang))
+	};
+}
+
+function textOf(dict: Record<string, string> | undefined, locale: string): string {
+	const v = dict?.[locale];
+	return v && v.trim() ? v : '';
+}
+
+function propersOf(p: Celebration1962, lang: CalendarLang): ProperSection[] {
+	const out: ProperSection[] = [];
+	const m = p.propers;
+	if (!m) return out;
+	for (const key of PROPER_ORDER) {
+		const la = textOf(m[key as ProperKey], 'la');
+		const local = lang === 'la' ? '' : textOf(m[key as ProperKey], lang);
+		if (!la && !local) continue;
+		out.push({ key, la, ...(local ? { local } : {}) });
+	}
+	return out;
+}
+
+function extraSectionsOf(p: Celebration1962, lang: CalendarLang): ProperSection[] {
+	const extras = p.extraSections;
+	if (!extras) return [];
+	const out: ProperSection[] = [];
+	for (const [key, block] of Object.entries(extras)) {
+		const buckets: Record<string, string[]> = {};
+		for (const item of block) {
+			if (item.type !== 'text') continue;
+			(buckets[item.lang] ??= []).push(item.value);
+		}
+		const la = (buckets['la'] ?? []).join('\n\n').trim();
+		const local = lang === 'la' ? '' : (buckets[lang] ?? []).join('\n\n').trim();
+		if (!la && !local) continue;
+		out.push({ key, la, ...(local ? { local } : {}) });
+	}
+	return out;
+}
+
+function adaptDay1962(day: ResolvedDay1962, lang: CalendarLang): CalendarDay {
+	const p: Celebration1962 = day.primary;
+	const colorKeys = colorKeysFrom(p);
+	const colorNames = colorKeys.map((k) => colorLabel1962(k, lang));
+	const detail: Rite1962Detail = {
+		class: p.classOf1962,
+		kind: p.kind,
+		commemorations: day.commemorations.map((c) => adaptCommem(c, lang)),
+		rubrics: {
+			gloria: p.rubrics.gloria,
+			credo: p.rubrics.credo,
+			preface: p.rubrics.preface,
+			lastGospel: p.rubrics.lastGospel,
+			ite: p.rubrics.ite
+		},
+		...(p.octave
+			? {
+					octave: {
+						id: p.octave.id,
+						parentFeastId: p.octave.parentFeastId,
+						day: p.octave.day,
+						rank: p.octave.rank
+					}
+				}
+			: {}),
+		...(p.vigil ? { vigilOf: p.vigil.of } : {}),
+		...(day.transferredFrom ? { transferredFrom: day.transferredFrom } : {}),
+		properSource: p.properRef.source,
+		...(p.properRef.communeSlug ? { communeSlug: p.properRef.communeSlug } : {}),
+		propers: propersOf(p, lang),
+		extraSections: extraSectionsOf(p, lang)
+	};
+	return {
+		iso: day.date,
+		id: p.key,
+		name: localizedName(p, lang),
+		rankName: rank1962Label(p.rank1962, lang),
+		rank: RANK_FROM_CLASS_1962[p.classOf1962],
+		seasonNames: day.season ? [season1962Label(day.season, lang)] : [],
+		colorNames,
+		colorKeys,
+		psalterWeek: null,
+		sundayCycle: null,
+		rite1962: detail
+	};
+}
+
+const yearCache1962 = new Map<string, Map<string, CalendarDay>>();
+
+async function getYear1962(
+	lang: CalendarLang,
+	year: number
+): Promise<Map<string, CalendarDay>> {
+	const cacheKey = `${lang}|${year}`;
+	const cached = yearCache1962.get(cacheKey);
+	if (cached) return cached;
+	const resolved = await getRomcal1962(lang).generateCalendar(year);
+	const map = new Map<string, CalendarDay>();
+	for (const [iso, day] of resolved) map.set(iso, adaptDay1962(day, lang));
+	yearCache1962.set(cacheKey, map);
+	return map;
+}
+
 function isoFor(year: number, month: number, day: number): string {
 	const mm = String(month + 1).padStart(2, '0');
 	const dd = String(day).padStart(2, '0');
@@ -85,36 +301,23 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		params.faithLang === 'faith' ? 'en' : params.faithLang === 'fides' ? 'la' : 'de';
 
 	const today = new Date();
-	const riteParam = url.searchParams.get('rite');
-	const rite: Rite = isValidRite(riteParam) ? riteParam : '1969';
-
-	// 1962 rite is WIP — skip data generation
-	if (rite === '1962') {
-		return {
-			rite,
-			wip: true,
-			year: today.getFullYear(),
-			month: today.getMonth(),
-			monthDays: [],
-			today: null,
-			todayIso: today.toISOString().slice(0, 10),
-			selected: null,
-			selectedIso: '',
-			session: locals.session ?? (await locals.auth())
-		};
-	}
+	// Rite lives in the optional [[year]] route segment (1962 | 1969). When
+	// absent we default to 1962, the new tridentine calendar.
+	const rite: Rite = params.year === '1969' ? '1969' : '1962';
 
 	const yParam = url.searchParams.get('y');
 	const mParam = url.searchParams.get('m');
 	const selectedDateParam = url.searchParams.get('d');
 
+	const minYear = rite === '1962' ? 1900 : 1969;
 	const y = yParam !== null ? Number(yParam) : NaN;
 	const m = mParam !== null ? Number(mParam) : NaN;
 
-	const year = Number.isFinite(y) && y >= 1969 && y <= 2100 ? y : today.getFullYear();
+	const year = Number.isFinite(y) && y >= minYear && y <= 2100 ? y : today.getFullYear();
 	const month = Number.isFinite(m) && m >= 0 && m <= 11 ? m : today.getMonth();
 
-	const yearMap = await getYear(lang, year);
+	const yearMap =
+		rite === '1962' ? await getYear1962(lang, year) : await getYear(lang, year);
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const monthDays: CalendarDay[] = [];
 	for (let d = 1; d <= daysInMonth; d++) {
@@ -138,7 +341,10 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	}
 
 	const todayIso = today.toISOString().slice(0, 10);
-	const todayYearMap = await getYear(lang, today.getFullYear());
+	const todayYearMap =
+		rite === '1962'
+			? await getYear1962(lang, today.getFullYear())
+			: await getYear(lang, today.getFullYear());
 	const todayEntry = todayYearMap.get(todayIso) ?? null;
 
 	let selectedIso: string;
@@ -155,7 +361,9 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			? yearMap
 			: selectedYear === today.getFullYear()
 				? todayYearMap
-				: await getYear(lang, selectedYear);
+				: rite === '1962'
+					? await getYear1962(lang, selectedYear)
+					: await getYear(lang, selectedYear);
 	const selectedEntry = selectedYearMap.get(selectedIso) ?? monthDays[0];
 
 	return {
