@@ -9,6 +9,7 @@
 	 * @type {{
 	 *   onselect: (food: { name: string, source: string, sourceId: string, amountGrams: number, per100g: any, portions?: any[], selectedPortion?: { description: string, grams: number } }) => void,
 	 *   oncancel?: () => void,
+	 *   onfavoritechange?: (payload: { source: string, sourceId: string, name: string, favorited: boolean }) => void,
 	 *   showFavorites?: boolean,
 	 *   showDetailLinks?: boolean,
 	 *   autofocus?: boolean,
@@ -19,6 +20,7 @@
 	let {
 		onselect,
 		oncancel = undefined,
+		onfavoritechange = undefined,
 		showFavorites = true,
 		showDetailLinks = true,
 		autofocus = false,
@@ -166,6 +168,7 @@
 					body: JSON.stringify({ source: item.source, sourceId: item.id, name: item.name })
 				});
 			}
+			onfavoritechange?.({ source: item.source, sourceId: item.id, name: item.name, favorited: !wasFav });
 		} catch {
 			item.favorited = wasFav;
 			results = [...results];

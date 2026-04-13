@@ -1035,12 +1035,44 @@
 	// svelte-ignore state_referenced_locally
 	let quickFavorites = $state(data.favorites ?? []);
 	// svelte-ignore state_referenced_locally
-	let recentFoods = $state(data.recentFoods ?? []);
+	let historicalRecents = $state(data.recentFoods ?? []);
 
 	$effect(() => {
 		quickFavorites = data.favorites ?? [];
-		recentFoods = data.recentFoods ?? [];
+		historicalRecents = data.recentFoods ?? [];
 	});
+
+	/** Recent foods: current-date entries (newest first) merged with historical recents from the server. */
+	const recentFoods = $derived.by(() => {
+		const seen = new Set();
+		const out = [];
+		for (let i = entries.length - 1; i >= 0; i--) {
+			const e = entries[i];
+			if (!e?.source || !e?.sourceId || e.mealType === 'water') continue;
+			const key = `${e.source}:${e.sourceId}`;
+			if (seen.has(key)) continue;
+			seen.add(key);
+			out.push(e);
+			if (out.length >= 10) return out;
+		}
+		for (const e of historicalRecents) {
+			if (!e?.source || !e?.sourceId) continue;
+			const key = `${e.source}:${e.sourceId}`;
+			if (seen.has(key)) continue;
+			seen.add(key);
+			out.push(e);
+			if (out.length >= 10) break;
+		}
+		return out;
+	});
+
+	/** Callback from FoodSearch when a favorite is toggled — keep quick-log favorites in sync. */
+	function handleFavoriteChange(/** @type {{ source: string, sourceId: string, name: string, favorited: boolean }} */ payload) {
+		const { source, sourceId, name, favorited } = payload;
+		const rest = quickFavorites.filter(f => !(f.source === source && f.sourceId === sourceId));
+		quickFavorites = favorited ? [...rest, { source, sourceId, name }] : rest;
+		favTabLoaded = false;
+	}
 
 	/** @type {{ name: string, source: string, sourceId: string, per100g?: any, amountGrams?: number } | null} */
 	let qlSelected = $state(null);
@@ -1169,7 +1201,7 @@
 		{:else if favTabItems.length === 0}
 			<p class="meals-empty">{isEn ? 'No favorites yet. Tap the heart on foods to add them here.' : 'Noch keine Favoriten. Tippe auf das Herz bei Lebensmitteln.'}</p>
 		{:else}
-			<FoodSearch onselect={logFn} showDetailLinks={false} showFavorites={false} initialResults={favTabItems} />
+			<FoodSearch onselect={logFn} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} initialResults={favTabItems} />
 		{/if}
 	</div>
 {/snippet}
@@ -1829,7 +1861,7 @@
 					</div>
 
 					{#if inlineTab === 'search'}
-						<FoodSearch onselect={inlineLogFood} showDetailLinks={false} showFavorites={false} autofocus={true} />
+						<FoodSearch onselect={inlineLogFood} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} autofocus={true} />
 					{:else if inlineTab === 'favorites'}
 						{@render favoritesTab(inlineLogFood)}
 					{:else}
@@ -1950,7 +1982,7 @@
 			</div>
 
 			{#if fabTab === 'search'}
-				<FoodSearch onselect={fabLogFood} showFavorites={false} autofocus={true} />
+				<FoodSearch onselect={fabLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} autofocus={true} />
 			{:else if fabTab === 'favorites'}
 				{@render favoritesTab(fabLogFood)}
 			{:else}
