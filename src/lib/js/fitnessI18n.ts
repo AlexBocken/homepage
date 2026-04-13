@@ -164,8 +164,6 @@ const translations: Translations = {
 	// Exercises page
 	exercises_title: { en: 'Exercises', de: 'Übungen' },
 	search_exercises: { en: 'Search exercises…', de: 'Übungen suchen…' },
-	all_body_parts: { en: 'All body parts', de: 'Alle Körperteile' },
-	all_equipment: { en: 'All equipment', de: 'Alle Geräte' },
 	no_exercises_match: { en: 'No exercises match your search.', de: 'Keine Übungen gefunden.' },
 	type_any: { en: 'Any type', de: 'Alle Arten' },
 	type_weights: { en: 'Strength', de: 'Kraft' },
