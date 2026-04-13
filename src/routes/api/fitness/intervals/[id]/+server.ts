@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
-import { IntervalTemplate } from '$models/IntervalTemplate';
+import { IntervalTemplate, validateIntervalEntries } from '$models/IntervalTemplate';
 import mongoose from 'mongoose';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -47,15 +47,12 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     const data = await request.json();
     const { name, steps } = data;
 
-    if (!name || !steps || !Array.isArray(steps) || steps.length === 0) {
+    if (!name || !steps) {
       return json({ error: 'Name and at least one step are required' }, { status: 400 });
     }
 
-    for (const step of steps) {
-      if (!step.label || !step.durationType || !step.durationValue) {
-        return json({ error: 'Each step must have a label, durationType, and durationValue' }, { status: 400 });
-      }
-    }
+    const validationError = validateIntervalEntries(steps);
+    if (validationError) return json({ error: validationError }, { status: 400 });
 
     const template = await IntervalTemplate.findOneAndUpdate(
       { _id: params.id, createdBy: session.user.nickname },

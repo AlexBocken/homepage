@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2, X, Timer, Plus, GripVertical } from '@lucide/svelte';
+	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2, X, Timer, Plus, GripVertical, Repeat } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 
@@ -9,7 +9,7 @@
 	const sl = $derived(fitnessSlugs(lang));
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
-	import { getGpsTracker, trackDistance } from '$lib/js/gps.svelte';
+	import { getGpsTracker, trackDistance, flattenIntervals } from '$lib/js/gps.svelte';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
@@ -84,13 +84,42 @@
 	let showIntervalEditor = $state(false);
 	let editingIntervalId = $state(/** @type {string | null} */ (null));
 	let intervalEditorName = $state('');
-	/** @type {Array<{label: string, durationType: 'distance' | 'time', durationValue: number, customLabel: boolean}>} */
+	/**
+	 * @typedef {{ type: 'step', label: string, durationType: 'distance' | 'time', durationValue: number, customLabel: boolean }} EditorLeaf
+	 * @typedef {{ type: 'group', repeat: number, steps: EditorLeaf[] }} EditorGroup
+	 * @typedef {EditorLeaf | EditorGroup} EditorEntry
+	 */
+	/** @type {EditorEntry[]} */
 	let intervalEditorSteps = $state([]);
 	let intervalSaving = $state(false);
 
 	const PRESET_LABELS = ['Easy', 'Moderate', 'Hard', 'Sprint', 'Recovery', 'Hill Sprints', 'Tempo', 'Warm Up', 'Cool Down'];
 
 	const selectedInterval = $derived(intervalTemplates.find((/** @type {any} */ t) => t._id === selectedIntervalId) ?? null);
+
+	/** @returns {EditorLeaf} */
+	function makeLeaf(label = 'Sprint', durationType = /** @type {'distance'|'time'} */ ('distance'), durationValue = 400) {
+		return { type: 'step', label, durationType, durationValue, customLabel: !PRESET_LABELS.includes(label) };
+	}
+
+	/** @param {any} s @returns {EditorLeaf} */
+	function leafFromDb(s) {
+		return {
+			type: 'step',
+			label: s.label,
+			durationType: s.durationType,
+			durationValue: s.durationValue,
+			customLabel: !PRESET_LABELS.includes(s.label)
+		};
+	}
+
+	/** @param {any} e @returns {EditorEntry} */
+	function entryFromDb(e) {
+		if (e?.type === 'group') {
+			return { type: 'group', repeat: e.repeat ?? 2, steps: (e.steps ?? []).map(leafFromDb) };
+		}
+		return leafFromDb(e);
+	}
 
 	async function fetchIntervalTemplates() {
 		try {
@@ -105,24 +134,37 @@
 	function openNewInterval() {
 		editingIntervalId = null;
 		intervalEditorName = '';
-		intervalEditorSteps = [{ label: 'Sprint', durationType: 'distance', durationValue: 400, customLabel: false }];
+		intervalEditorSteps = [makeLeaf()];
 		showIntervalEditor = true;
 	}
 
 	function openEditInterval(/** @type {any} */ tmpl) {
 		editingIntervalId = tmpl._id;
 		intervalEditorName = tmpl.name;
-		intervalEditorSteps = tmpl.steps.map((/** @type {any} */ s) => ({
-			label: s.label,
-			durationType: s.durationType,
-			durationValue: s.durationValue,
-			customLabel: !PRESET_LABELS.includes(s.label)
-		}));
+		intervalEditorSteps = (tmpl.steps ?? []).map(entryFromDb);
 		showIntervalEditor = true;
 	}
 
 	function addIntervalStep() {
-		intervalEditorSteps = [...intervalEditorSteps, { label: 'Recovery', durationType: 'time', durationValue: 60, customLabel: false }];
+		intervalEditorSteps = [...intervalEditorSteps, makeLeaf('Recovery', 'time', 60)];
+	}
+
+	function addIntervalGroup() {
+		intervalEditorSteps = [...intervalEditorSteps, {
+			type: 'group',
+			repeat: 5,
+			steps: [makeLeaf('Sprint', 'time', 30), makeLeaf('Recovery', 'time', 60)]
+		}];
+	}
+
+	function ungroupAt(/** @type {number} */ idx) {
+		const g = intervalEditorSteps[idx];
+		if (!g || g.type !== 'group') return;
+		intervalEditorSteps = [
+			...intervalEditorSteps.slice(0, idx),
+			...g.steps,
+			...intervalEditorSteps.slice(idx + 1)
+		];
 	}
 
 	function removeIntervalStep(/** @type {number} */ idx) {
@@ -137,17 +179,49 @@
 		intervalEditorSteps = arr;
 	}
 
+	function addStepToGroup(/** @type {number} */ groupIdx) {
+		const g = intervalEditorSteps[groupIdx];
+		if (!g || g.type !== 'group') return;
+		g.steps = [...g.steps, makeLeaf('Recovery', 'time', 60)];
+	}
+
+	function removeStepFromGroup(/** @type {number} */ groupIdx, /** @type {number} */ stepIdx) {
+		const g = intervalEditorSteps[groupIdx];
+		if (!g || g.type !== 'group') return;
+		if (g.steps.length <= 1) return;
+		g.steps = g.steps.filter((_, i) => i !== stepIdx);
+	}
+
+	function moveStepInGroup(/** @type {number} */ groupIdx, /** @type {number} */ stepIdx, /** @type {number} */ dir) {
+		const g = intervalEditorSteps[groupIdx];
+		if (!g || g.type !== 'group') return;
+		const target = stepIdx + dir;
+		if (target < 0 || target >= g.steps.length) return;
+		const arr = [...g.steps];
+		[arr[stepIdx], arr[target]] = [arr[target], arr[stepIdx]];
+		g.steps = arr;
+	}
+
+	/** @param {EditorLeaf} s */
+	function serializeLeaf(s) {
+		return { type: 'step', label: s.label, durationType: s.durationType, durationValue: s.durationValue };
+	}
+
+	/** @param {EditorEntry} e */
+	function serializeEntry(e) {
+		if (e.type === 'group') {
+			return { type: 'group', repeat: e.repeat, steps: e.steps.map(serializeLeaf) };
+		}
+		return serializeLeaf(e);
+	}
+
 	async function saveInterval() {
 		if (intervalSaving || !intervalEditorName.trim() || intervalEditorSteps.length === 0) return;
 		intervalSaving = true;
 		try {
 			const body = {
 				name: intervalEditorName.trim(),
-				steps: intervalEditorSteps.map(s => ({
-					label: s.label,
-					durationType: s.durationType,
-					durationValue: s.durationValue
-				}))
+				steps: intervalEditorSteps.map(serializeEntry)
 			};
 			const url = editingIntervalId ? `/api/fitness/intervals/${editingIntervalId}` : '/api/fitness/intervals';
 			const method = editingIntervalId ? 'PUT' : 'POST';
@@ -201,7 +275,7 @@
 			language: vgLanguage,
 			ttsVolume: vgVolume,
 			audioDuck: vgAudioDuck,
-			...(hasIntervals ? { intervals: selectedInterval.steps } : {})
+			...(hasIntervals ? { intervals: flattenIntervals(selectedInterval.steps) } : {})
 		};
 	}
 
@@ -1105,7 +1179,7 @@
 									<div class="interval-card" class:selected={selectedIntervalId === tmpl._id}>
 										<button class="interval-card-main" type="button" onclick={() => { selectedIntervalId = selectedIntervalId === tmpl._id ? null : tmpl._id; }}>
 											<span class="interval-card-name">{tmpl.name}</span>
-											<span class="interval-card-info">{tmpl.steps.length} {t('steps_count', lang)}</span>
+											<span class="interval-card-info">{flattenIntervals(tmpl.steps).length} {t('steps_count', lang)}</span>
 										</button>
 										<div class="interval-card-actions">
 											<button class="interval-card-edit" type="button" onclick={() => openEditInterval(tmpl)}>{t('edit', lang)}</button>
@@ -1156,76 +1230,138 @@
 						bind:value={intervalEditorName}
 					/>
 
-					<div class="interval-editor-steps">
-						{#each intervalEditorSteps as step, idx (idx)}
-							<div class="interval-step-card">
-								<div class="interval-step-header">
-									<span class="interval-step-num">{idx + 1}</span>
-									<div class="interval-step-move">
-										<button type="button" onclick={() => moveIntervalStep(idx, -1)} disabled={idx === 0}><ChevronUp size={14} /></button>
-										<button type="button" onclick={() => moveIntervalStep(idx, 1)} disabled={idx === intervalEditorSteps.length - 1}><ChevronDown size={14} /></button>
-									</div>
-									<button class="interval-step-remove" type="button" onclick={() => removeIntervalStep(idx)} disabled={intervalEditorSteps.length <= 1}>
-										<Trash2 size={14} />
-									</button>
+					{#snippet stepCard(step, num, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, canRemove)}
+						<div class="interval-step-card">
+							<div class="interval-step-header">
+								<span class="interval-step-num">{num}</span>
+								<div class="interval-step-move">
+									<button type="button" onclick={onMoveUp} disabled={!canMoveUp}><ChevronUp size={14} /></button>
+									<button type="button" onclick={onMoveDown} disabled={!canMoveDown}><ChevronDown size={14} /></button>
 								</div>
+								<button class="interval-step-remove" type="button" onclick={onRemove} disabled={!canRemove}>
+									<Trash2 size={14} />
+								</button>
+							</div>
 
-								<div class="interval-step-labels">
-									{#each PRESET_LABELS as preset}
-										<button
-											class="interval-label-chip"
-											class:selected={!step.customLabel && step.label === preset}
-											type="button"
-											onclick={() => { intervalEditorSteps[idx].label = preset; intervalEditorSteps[idx].customLabel = false; }}
-										>{preset}</button>
-									{/each}
+							<div class="interval-step-labels">
+								{#each PRESET_LABELS as preset}
 									<button
 										class="interval-label-chip"
-										class:selected={step.customLabel}
+										class:selected={!step.customLabel && step.label === preset}
 										type="button"
-										onclick={() => { intervalEditorSteps[idx].customLabel = true; }}
-									>{t('custom', lang)}</button>
-								</div>
+										onclick={() => { step.label = preset; step.customLabel = false; }}
+									>{preset}</button>
+								{/each}
+								<button
+									class="interval-label-chip"
+									class:selected={step.customLabel}
+									type="button"
+									onclick={() => { step.customLabel = true; }}
+								>{t('custom', lang)}</button>
+							</div>
 
-								{#if step.customLabel}
-									<input
-										class="interval-step-custom-input"
-										type="text"
-										placeholder={t('step_label', lang)}
-										bind:value={intervalEditorSteps[idx].label}
-									/>
-								{/if}
+							{#if step.customLabel}
+								<input
+									class="interval-step-custom-input"
+									type="text"
+									placeholder={t('step_label', lang)}
+									bind:value={step.label}
+								/>
+							{/if}
 
-								<div class="interval-step-duration">
-									<input
-										class="interval-step-value"
-										type="number"
-										min="1"
-										bind:value={intervalEditorSteps[idx].durationValue}
-									/>
-									<div class="interval-step-type-toggle">
-										<button
-											class="interval-type-btn"
-											class:active={step.durationType === 'distance'}
-											type="button"
-											onclick={() => { intervalEditorSteps[idx].durationType = 'distance'; }}
-										>{t('meters', lang)}</button>
-										<button
-											class="interval-type-btn"
-											class:active={step.durationType === 'time'}
-											type="button"
-											onclick={() => { intervalEditorSteps[idx].durationType = 'time'; }}
-										>{t('seconds', lang)}</button>
-									</div>
+							<div class="interval-step-duration">
+								<input
+									class="interval-step-value"
+									type="number"
+									min="1"
+									bind:value={step.durationValue}
+								/>
+								<div class="interval-step-type-toggle">
+									<button
+										class="interval-type-btn"
+										class:active={step.durationType === 'distance'}
+										type="button"
+										onclick={() => { step.durationType = 'distance'; }}
+									>{t('meters', lang)}</button>
+									<button
+										class="interval-type-btn"
+										class:active={step.durationType === 'time'}
+										type="button"
+										onclick={() => { step.durationType = 'time'; }}
+									>{t('seconds', lang)}</button>
 								</div>
 							</div>
+						</div>
+					{/snippet}
+
+					<div class="interval-editor-steps">
+						{#each intervalEditorSteps as entry, idx (idx)}
+							{#if entry.type === 'group'}
+								<div class="interval-group-card">
+									<div class="interval-group-header">
+										<Repeat size={16} />
+										<span class="interval-group-label">{t('group_label', lang)}</span>
+										<input
+											class="interval-group-repeat"
+											type="number"
+											min="1"
+											max="99"
+											bind:value={entry.repeat}
+										/>
+										<span class="interval-group-times">× {t('repeat_times', lang)}</span>
+										<div class="interval-group-actions">
+											<button type="button" onclick={() => moveIntervalStep(idx, -1)} disabled={idx === 0}><ChevronUp size={14} /></button>
+											<button type="button" onclick={() => moveIntervalStep(idx, 1)} disabled={idx === intervalEditorSteps.length - 1}><ChevronDown size={14} /></button>
+											<button class="interval-group-ungroup" type="button" onclick={() => ungroupAt(idx)}>{t('ungroup', lang)}</button>
+											<button class="interval-step-remove" type="button" onclick={() => removeIntervalStep(idx)} disabled={intervalEditorSteps.length <= 1}>
+												<Trash2 size={14} />
+											</button>
+										</div>
+									</div>
+									<div class="interval-group-steps">
+										{#each entry.steps as gStep, gIdx (gIdx)}
+											{@render stepCard(
+												gStep,
+												`${idx + 1}.${gIdx + 1}`,
+												() => moveStepInGroup(idx, gIdx, -1),
+												() => moveStepInGroup(idx, gIdx, 1),
+												() => removeStepFromGroup(idx, gIdx),
+												gIdx > 0,
+												gIdx < entry.steps.length - 1,
+												entry.steps.length > 1
+											)}
+										{/each}
+										<button class="interval-add-step-btn interval-add-step-btn--inner" type="button" onclick={() => addStepToGroup(idx)}>
+											<Plus size={14} />
+											{t('add_step', lang)}
+										</button>
+									</div>
+								</div>
+							{:else}
+								{@render stepCard(
+									entry,
+									`${idx + 1}`,
+									() => moveIntervalStep(idx, -1),
+									() => moveIntervalStep(idx, 1),
+									() => removeIntervalStep(idx),
+									idx > 0,
+									idx < intervalEditorSteps.length - 1,
+									intervalEditorSteps.length > 1
+								)}
+							{/if}
 						{/each}
 					</div>
 
-					<button class="interval-add-step-btn" type="button" onclick={addIntervalStep}>
-						<Plus size={16} />
-						{t('add_step', lang)}
-					</button>
+					<div class="interval-add-row">
+						<button class="interval-add-step-btn" type="button" onclick={addIntervalStep}>
+							<Plus size={16} />
+							{t('add_step', lang)}
+						</button>
+						<button class="interval-add-step-btn" type="button" onclick={addIntervalGroup}>
+							<Repeat size={16} />
+							{t('add_group', lang)}
+						</button>
+					</div>
 
 					<button
 						class="interval-save-btn"
@@ -2631,6 +2767,13 @@
 		color: var(--nord0);
 		font-weight: 600;
 	}
+	.interval-add-row {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.interval-add-row .interval-add-step-btn {
+		flex: 1;
+	}
 	.interval-add-step-btn {
 		display: flex;
 		align-items: center;
@@ -2645,6 +2788,87 @@
 		font: inherit;
 		font-size: 0.85rem;
 		cursor: pointer;
+	}
+	.interval-add-step-btn--inner {
+		padding: 0.4rem;
+		font-size: 0.78rem;
+	}
+	.interval-group-card {
+		background: rgba(136, 192, 208, 0.08);
+		border: 1px solid rgba(136, 192, 208, 0.25);
+		border-radius: 12px;
+		padding: 0.6rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+	}
+	.interval-group-header {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		color: var(--nord8);
+		font-size: 0.8rem;
+	}
+	.interval-group-label {
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		font-size: 0.7rem;
+	}
+	.interval-group-repeat {
+		width: 3rem;
+		padding: 0.25rem 0.4rem;
+		background: rgba(255,255,255,0.1);
+		border: 1px solid rgba(136, 192, 208, 0.4);
+		border-radius: 6px;
+		color: #fff;
+		font: inherit;
+		font-size: 0.9rem;
+		font-weight: 700;
+		text-align: center;
+	}
+	.interval-group-times {
+		color: rgba(255,255,255,0.55);
+		font-size: 0.78rem;
+	}
+	.interval-group-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin-left: auto;
+	}
+	.interval-group-actions button {
+		background: none;
+		border: none;
+		color: rgba(255,255,255,0.4);
+		cursor: pointer;
+		padding: 0.2rem;
+	}
+	.interval-group-actions button:hover:not(:disabled) {
+		color: #fff;
+	}
+	.interval-group-actions button:disabled {
+		opacity: 0.2;
+		cursor: not-allowed;
+	}
+	.interval-group-ungroup {
+		font: inherit;
+		font-size: 0.7rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		font-weight: 600;
+		padding: 0.2rem 0.45rem !important;
+		border-radius: 4px;
+	}
+	.interval-group-ungroup:hover {
+		background: rgba(255,255,255,0.08);
+	}
+	.interval-group-steps {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding-left: 0.6rem;
+		border-left: 2px solid rgba(136, 192, 208, 0.3);
 	}
 	.interval-save-btn {
 		width: 100%;

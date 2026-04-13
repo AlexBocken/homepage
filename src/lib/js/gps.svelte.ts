@@ -15,9 +15,37 @@ export interface GpsPoint {
 }
 
 export interface IntervalStep {
+	type?: 'step';
 	label: string;
 	durationType: 'distance' | 'time';
 	durationValue: number; // meters (distance) or seconds (time)
+}
+
+export interface IntervalGroup {
+	type: 'group';
+	repeat: number;
+	steps: IntervalStep[];
+}
+
+export type IntervalEntry = IntervalStep | IntervalGroup;
+
+/** Expand groups (repeat × steps) into a flat step list for the native bridge. */
+export function flattenIntervals(entries: IntervalEntry[]): IntervalStep[] {
+	const out: IntervalStep[] = [];
+	for (const e of entries) {
+		if ((e as IntervalGroup).type === 'group') {
+			const g = e as IntervalGroup;
+			for (let i = 0; i < g.repeat; i++) {
+				for (const s of g.steps) {
+					out.push({ label: s.label, durationType: s.durationType, durationValue: s.durationValue });
+				}
+			}
+		} else {
+			const s = e as IntervalStep;
+			out.push({ label: s.label, durationType: s.durationType, durationValue: s.durationValue });
+		}
+	}
+	return out;
 }
 
 export interface VoiceGuidanceConfig {

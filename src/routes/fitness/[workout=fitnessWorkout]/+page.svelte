@@ -5,6 +5,7 @@
 	import { Plus, Trash2, Play, Pencil, X, Save, CalendarClock, ChevronUp, ChevronDown, ArrowRight, MapPin, Dumbbell, Timer, BookOpen, Check } from '@lucide/svelte';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
+	import { flattenIntervals } from '$lib/js/gps.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 
@@ -614,7 +615,7 @@
 									class:selected={editorIntervalId === tmpl._id}
 									onclick={() => editorIntervalId = editorIntervalId === tmpl._id ? null : tmpl._id}
 									type="button"
-								>{tmpl.name} ({tmpl.steps.length} steps)</button>
+								>{tmpl.name} ({flattenIntervals(tmpl.steps).length} steps)</button>
 							{/each}
 						</div>
 					</div>
