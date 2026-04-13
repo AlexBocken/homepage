@@ -195,7 +195,7 @@ export function getFilterOptionsAll(): {
 /** Search all exercises with fuzzy matching */
 export function searchAllExercises(opts: {
 	search?: string;
-	bodyPart?: string;
+	bodyPart?: string | string[];
 	equipment?: string | string[];
 	target?: string;
 	muscleGroups?: string[];
@@ -207,7 +207,8 @@ export function searchAllExercises(opts: {
 	let results: LocalizedEnrichedExercise[] = allExercisesArray.map(e => localizeEnriched(e, lang));
 
 	if (opts.bodyPart) {
-		results = results.filter(e => e.bodyPart === opts.bodyPart);
+		const bpSet = Array.isArray(opts.bodyPart) ? new Set(opts.bodyPart) : new Set([opts.bodyPart]);
+		results = results.filter(e => bpSet.has(e.bodyPart));
 	}
 	if (opts.equipment) {
 		const eqSet = Array.isArray(opts.equipment) ? new Set(opts.equipment) : new Set([opts.equipment]);

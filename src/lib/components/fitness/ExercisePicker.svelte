@@ -1,11 +1,12 @@
 <script>
 	import { getFilterOptionsAll, searchAllExercises } from '$lib/data/exercisedb';
 	import { translateTerm } from '$lib/data/exercises';
-	import { Search, X } from '@lucide/svelte';
+	import { Search, X, Cable, Cog, Dumbbell, PersonStanding, Shapes, Weight } from '@lucide/svelte';
 	import { page } from '$app/stores';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const isEn = $derived(lang === 'en');
 
 	/**
 	 * @type {{
@@ -16,17 +17,49 @@
 	let { onSelect, onClose } = $props();
 
 	let query = $state('');
-	let bodyPartFilter = $state('');
-	let equipmentFilter = $state('');
+	let bodyPartFilters = $state(/** @type {string[]} */ ([]));
+	let equipmentFilters = $state(/** @type {string[]} */ ([]));
 
 	const filterOptions = getFilterOptionsAll();
 
 	const filtered = $derived(searchAllExercises({
 		search: query || undefined,
-		bodyPart: bodyPartFilter || undefined,
-		equipment: equipmentFilter || undefined,
+		bodyPart: bodyPartFilters.length ? bodyPartFilters : undefined,
+		equipment: equipmentFilters.length ? equipmentFilters : undefined,
 		lang
 	}));
+
+	/** @param {string} term */
+	function capitalize(term) {
+		const raw = translateTerm(term, lang);
+		return raw.charAt(0).toUpperCase() + raw.slice(1);
+	}
+
+	/** @param {string} eq lucide icon component for equipment type */
+	function equipmentIcon(eq) {
+		switch (eq) {
+			case 'barbell': return Weight;
+			case 'dumbbell': return Dumbbell;
+			case 'body weight': return PersonStanding;
+			case 'cable': return Cable;
+			case 'machine': return Cog;
+			default: return Shapes;
+		}
+	}
+
+	/** @param {string} bp */
+	function toggleBodyPart(bp) {
+		bodyPartFilters = bodyPartFilters.includes(bp)
+			? bodyPartFilters.filter(x => x !== bp)
+			: [...bodyPartFilters, bp];
+	}
+
+	/** @param {string} eq */
+	function toggleEquipment(eq) {
+		equipmentFilters = equipmentFilters.includes(eq)
+			? equipmentFilters.filter(x => x !== eq)
+			: [...equipmentFilters, eq];
+	}
 
 	/** @param {string} id */
 	function select(id) {
@@ -56,20 +89,53 @@
 			/>
 		</div>
 
-		<div class="picker-filters">
-			<select bind:value={bodyPartFilter}>
-				<option value="">{t('all_body_parts', lang)}</option>
+		<section class="pill-group">
+			<div class="pill-group-header">
+				<span class="pill-group-label">{isEn ? 'Body Part' : 'Körperteil'}</span>
+				{#if bodyPartFilters.length > 0}
+					<button class="mini-clear" onclick={() => bodyPartFilters = []}>
+						{isEn ? 'clear' : 'löschen'}
+					</button>
+				{/if}
+			</div>
+			<div class="pill-scroll">
 				{#each filterOptions.bodyParts as bp (bp)}
-					{@const label = translateTerm(bp, lang)}<option value={bp}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
+					{@const active = bodyPartFilters.includes(bp)}
+					<button
+						class="chip"
+						class:active
+						aria-pressed={active}
+						onclick={() => toggleBodyPart(bp)}
+					>{capitalize(bp)}</button>
 				{/each}
-			</select>
-			<select bind:value={equipmentFilter}>
-				<option value="">{t('all_equipment', lang)}</option>
+			</div>
+		</section>
+
+		<section class="pill-group">
+			<div class="pill-group-header">
+				<span class="pill-group-label">{isEn ? 'Equipment' : 'Ausrüstung'}</span>
+				{#if equipmentFilters.length > 0}
+					<button class="mini-clear" onclick={() => equipmentFilters = []}>
+						{isEn ? 'clear' : 'löschen'}
+					</button>
+				{/if}
+			</div>
+			<div class="pill-scroll">
 				{#each filterOptions.equipment as eq (eq)}
-					{@const label = translateTerm(eq, lang)}<option value={eq}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
+					{@const active = equipmentFilters.includes(eq)}
+					{@const Icon = equipmentIcon(eq)}
+					<button
+						class="chip equipment-chip"
+						class:active
+						aria-pressed={active}
+						onclick={() => toggleEquipment(eq)}
+					>
+						<Icon size={14} strokeWidth={2.2} />
+						<span>{capitalize(eq)}</span>
+					</button>
 				{/each}
-			</select>
-		</div>
+			</div>
+		</section>
 
 		<ul class="exercise-list">
 			{#each filtered as exercise (exercise.id)}
@@ -149,20 +215,95 @@
 	.picker-search input::placeholder {
 		color: var(--color-text-muted);
 	}
-	.picker-filters {
+	.pill-group {
 		display: flex;
-		gap: 0.5rem;
-		padding: 0.5rem 1rem;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding: 0.45rem 0 0.15rem;
 		border-bottom: 1px solid var(--color-border);
 	}
-	.picker-filters select {
-		flex: 1;
+	.pill-group:last-of-type {
+		padding-bottom: 0.5rem;
+	}
+	.pill-group-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		padding-inline: 1rem;
+	}
+	.pill-group-label {
+		font-size: 0.6rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
+	}
+	.mini-clear {
+		all: unset;
+		-webkit-tap-highlight-color: transparent;
+		font-size: 0.6rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+	}
+	.mini-clear:hover {
+		color: var(--color-primary);
+	}
+	.pill-scroll {
+		display: flex;
+		gap: 0.4rem;
+		overflow-x: auto;
+		scrollbar-width: none;
+		padding: 0.15rem 1rem 0.35rem;
+		mask-image: linear-gradient(to right, transparent 0, #000 0.6rem, #000 calc(100% - 0.6rem), transparent 100%);
+	}
+	.pill-scroll::-webkit-scrollbar {
+		display: none;
+	}
+	.chip {
+		all: unset;
+		-webkit-tap-highlight-color: transparent;
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.35rem 0.75rem;
+		border-radius: var(--radius-pill, 1000px);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		font-size: 0.78rem;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		text-transform: capitalize;
+		cursor: pointer;
+		white-space: nowrap;
+		border: 1px solid transparent;
+		transition: background var(--transition-fast, 100ms), color var(--transition-fast, 100ms), border-color var(--transition-fast, 100ms), transform var(--transition-fast, 100ms), box-shadow var(--transition-fast, 100ms);
+	}
+	.chip :global(svg) {
+		flex-shrink: 0;
+	}
+	.chip:hover {
 		background: var(--color-bg-elevated);
-		color: inherit;
-		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		padding: 0.35rem 0.5rem;
-		font-size: 0.8rem;
+		color: var(--color-text-primary);
+		transform: scale(1.04);
+	}
+	.chip:active {
+		transform: scale(0.96);
+	}
+	.chip.active {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		border-color: var(--color-primary);
+		box-shadow: var(--shadow-sm);
+	}
+	.chip.equipment-chip :global(svg) {
+		opacity: 0.85;
+	}
+	.chip.equipment-chip.active :global(svg) {
+		opacity: 1;
 	}
 	.exercise-list {
 		list-style: none;
