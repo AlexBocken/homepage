@@ -313,10 +313,12 @@ function resolvePrayerTarget(e) {
 	return { section, name };
 }
 
-/** Fire haptic immediately on finger-down — don't wait for click's release+no-movement check.
- *  Tradeoff: a scroll gesture starting on a card emits one brief haptic. Worth it for snappy tap feel. */
+/** Fire haptic on finger-lift — earlier than click (no movement filter / no 300ms wait), but
+ *  late enough that iOS treats it as tap-completion so the web-haptics switch trick fires.
+ *  Firing on pointerdown doesn't haptic on iOS: WebKit's switch-toggle haptic is gated on
+ *  tap-completion, so the programmatic click() arrives before the gesture qualifies. */
 /** @param {PointerEvent} e */
-function handlePrayerCardPointerDown(e) {
+function handlePrayerCardPointerUp(e) {
 	if (!e.isPrimary) return;
 	if (e.pointerType === 'mouse' && e.button !== 0) return;
 	const hit = resolvePrayerTarget(e);
@@ -331,7 +333,7 @@ function handlePrayerCardPointerDown(e) {
 }
 
 /** Click handler performs the state change only (scroll/increment). Haptic already
- *  fired on pointerdown; click's built-in movement filter prevents scroll-gesture advances. */
+ *  fired on pointerup; click's built-in movement filter prevents scroll-gesture advances. */
 /** @param {MouseEvent} e */
 function handlePrayerCardClick(e) {
 	const hit = resolvePrayerTarget(e);
@@ -873,7 +875,7 @@ h1 {
 		<!-- Main Content: Prayer Sections -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="prayers-content" onpointerdown={handlePrayerCardPointerDown} onclick={handlePrayerCardClick}>
+		<div class="prayers-content" onpointerup={handlePrayerCardPointerUp} onclick={handlePrayerCardClick}>
 			<!-- Cross & Credo -->
 			<div
 				class="prayer-section"
