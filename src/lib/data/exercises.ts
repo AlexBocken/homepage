@@ -14,6 +14,8 @@ export const METRIC_PRESETS = {
 	timed: ['duration', 'reps'] as MetricField[]
 };
 
+export type ExerciseType = 'STRENGTH' | 'CARDIO' | 'PLYOMETRICS' | 'YOGA' | 'STRETCHING' | 'WEIGHTLIFTING';
+
 export interface Exercise {
 	id: string;
 	name: string;
@@ -25,6 +27,7 @@ export interface Exercise {
 	metrics?: MetricField[];
 	bilateral?: boolean; // true = weight entered is per hand, actual load is 2×
 	imageUrl?: string;
+	exerciseType?: ExerciseType;
 	de?: { name: string; instructions: string[] };
 }
 
@@ -2106,6 +2109,32 @@ export const exercises: Exercise[] = [
 		}
 	},
 ];
+
+/** IDs of static exercises classified as stretches (incl. yoga-style flexibility poses) */
+const STATIC_STRETCH_IDS = new Set<string>([
+	'neck-circle-stretch',
+	'side-push-neck-stretch',
+	'seated-shoulder-flexor-stretch-bent-knee',
+	'shoulder-stretch-behind-back',
+	'elbows-back-stretch',
+	'back-pec-stretch',
+	'cow-stretch',
+	'thoracic-bridge',
+	'butterfly-yoga-pose',
+	'seated-single-leg-hamstring-stretch',
+	'kneeling-toe-up-hamstring-stretch',
+	'side-lunge-stretch',
+	'lying-lower-back-stretch',
+	'calf-stretch-wall',
+	'elbow-flexor-stretch',
+]);
+
+// Apply exerciseType classification post-hoc so we don't need to touch each entry
+for (const ex of exercises) {
+	if (!ex.exerciseType && STATIC_STRETCH_IDS.has(ex.id)) {
+		ex.exerciseType = ex.id === 'butterfly-yoga-pose' ? 'YOGA' : 'STRETCHING';
+	}
+}
 
 // Lookup map for O(1) access by ID
 export const exerciseMap = new Map<string, Exercise>(exercises.map((e) => [e.id, e]));

@@ -1,6 +1,25 @@
 <script>
 	import { page } from '$app/stores';
 	import { getEnrichedExerciseById } from '$lib/data/exercisedb';
+
+	/** @param {string | undefined | null} type @param {'en'|'de'} lang */
+	function exerciseTypeInfo(type, lang) {
+		if (!type) return null;
+		switch (type) {
+			case 'STRETCHING':
+			case 'YOGA':
+				return { key: 'stretch', label: t('stretch_pill', lang) };
+			case 'STRENGTH':
+			case 'WEIGHTLIFTING':
+				return { key: 'strength', label: t('strength_pill', lang) };
+			case 'CARDIO':
+				return { key: 'cardio', label: t('cardio_pill', lang) };
+			case 'PLYOMETRICS':
+				return { key: 'plyo', label: t('plyo_pill', lang) };
+			default:
+				return null;
+		}
+	}
 	import { localizeExercise, translateTerm } from '$lib/data/exercises';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { ChevronRight } from '@lucide/svelte';
@@ -36,6 +55,7 @@
 	let activeTab = $state('about');
 
 	const exercise = $derived(data.exercise ?? getEnrichedExerciseById($page.params.id, lang));
+	const typeInfo = $derived(exerciseTypeInfo(exercise?.exerciseType, lang));
 	const similar = $derived(data.similar ?? []);
 	const history = $derived(data.history?.history ?? []);
 	const stats = $derived(data.stats ?? {});
@@ -133,6 +153,9 @@
 			<div class="about-main">
 				<!-- Tags -->
 				<div class="tags">
+					{#if typeInfo}
+						<span class="tag type-{typeInfo.key}">{typeInfo.label}</span>
+					{/if}
 					<span class="tag body-part">{exercise?.localBodyPart}</span>
 					<span class="tag equipment">{exercise?.localEquipment}</span>
 					<span class="tag target">{exercise?.localTarget}</span>
@@ -350,6 +373,17 @@
 	.body-part { background: rgba(94, 129, 172, 0.2); color: var(--nord9); }
 	.equipment { background: rgba(163, 190, 140, 0.2); color: var(--nord14); }
 	.target { background: rgba(208, 135, 112, 0.2); color: var(--nord12); }
+	.tag.type-stretch,
+	.tag.type-strength,
+	.tag.type-cardio,
+	.tag.type-plyo {
+		font-weight: 700;
+		letter-spacing: 0.04em;
+	}
+	.tag.type-stretch { background: rgba(180, 142, 173, 0.2); color: var(--nord15); }
+	.tag.type-strength { background: rgba(94, 129, 172, 0.2); color: var(--nord10); }
+	.tag.type-cardio { background: rgba(191, 97, 106, 0.2); color: var(--nord11); }
+	.tag.type-plyo { background: rgba(235, 203, 139, 0.22); color: var(--nord13); }
 
 	/* About layout — two-column on wide screens */
 	.about-layout {

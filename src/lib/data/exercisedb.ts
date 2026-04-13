@@ -3,7 +3,7 @@
  * Merges the static exercises.ts catalog with ExerciseDB v2 data
  * to provide a unified, enriched exercise set.
  */
-import type { Exercise, LocalizedExercise, MetricField } from './exercises';
+import type { Exercise, ExerciseType, LocalizedExercise, MetricField } from './exercises';
 import { localizeExercise, translateTerm, getExerciseMetrics, METRIC_PRESETS } from './exercises';
 import { exerciseDbMap, slugToExerciseDbId } from './exercisedb-map';
 import { edbMuscleToSimple, edbMusclesToGroups, edbBodyPartToSimple, edbEquipmentToSimple } from './muscleMap';
@@ -39,6 +39,7 @@ export interface EnrichedExercise extends Exercise {
 	secondaryMusclesDetailed: string[];
 	heroImage: string | null;
 	videoUrl: string | null;
+	exerciseType?: ExerciseType;
 }
 
 export interface LocalizedEnrichedExercise extends LocalizedExercise {
@@ -50,6 +51,12 @@ export interface LocalizedEnrichedExercise extends LocalizedExercise {
 	secondaryMusclesDetailed: string[];
 	heroImage: string | null;
 	videoUrl: string | null;
+	exerciseType?: ExerciseType;
+}
+
+/** True if exercise is a stretch or yoga-style flexibility pose */
+export function isStretchType(t: ExerciseType | string | null | undefined): boolean {
+	return t === 'STRETCHING' || t === 'YOGA';
 }
 
 // Build static exercise lookup
@@ -97,6 +104,9 @@ function edbToEnriched(edb: EdbRawExercise, slug: string, staticEx?: Exercise): 
 		secondaryMusclesDetailed: edb.secondaryMuscles ?? [],
 		heroImage: `/fitness/exercises/${edb.exerciseId}/720p.jpg`,
 		videoUrl: `/fitness/exercises/${edb.exerciseId}/video.mp4`,
+		// static classification wins: our curated STATIC_STRETCH_IDS is more accurate than EDB
+		// (EDB often tags hand-curated stretches as "STRENGTH")
+		exerciseType: base.exerciseType ?? (edb.exerciseType as ExerciseType | undefined),
 	};
 }
 
@@ -124,6 +134,7 @@ for (const ex of staticExercises) {
 			secondaryMusclesDetailed: [],
 			heroImage: ex.imageUrl ?? null,
 			videoUrl: null,
+			exerciseType: ex.exerciseType,
 		});
 	}
 }
@@ -144,6 +155,7 @@ export function localizeEnriched(e: EnrichedExercise, lang: 'en' | 'de'): Locali
 		secondaryMusclesDetailed: e.secondaryMusclesDetailed,
 		heroImage: e.heroImage,
 		videoUrl: e.videoUrl,
+		exerciseType: e.exerciseType,
 	};
 }
 
@@ -187,6 +199,8 @@ export function searchAllExercises(opts: {
 	equipment?: string | string[];
 	target?: string;
 	muscleGroups?: string[];
+	/** 'stretch' keeps only stretches/yoga; 'non-stretch' excludes them */
+	stretchFilter?: 'stretch' | 'non-stretch';
 	lang?: 'en' | 'de';
 }): LocalizedEnrichedExercise[] {
 	const lang = opts.lang ?? 'en';
@@ -201,6 +215,11 @@ export function searchAllExercises(opts: {
 	}
 	if (opts.target) {
 		results = results.filter(e => e.target === opts.target);
+	}
+	if (opts.stretchFilter === 'stretch') {
+		results = results.filter(e => isStretchType(e.exerciseType));
+	} else if (opts.stretchFilter === 'non-stretch') {
+		results = results.filter(e => !isStretchType(e.exerciseType));
 	}
 	if (opts.muscleGroups?.length) {
 		const groups = new Set(opts.muscleGroups);

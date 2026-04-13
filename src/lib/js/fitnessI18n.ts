@@ -167,6 +167,13 @@ const translations: Translations = {
 	all_body_parts: { en: 'All body parts', de: 'Alle Körperteile' },
 	all_equipment: { en: 'All equipment', de: 'Alle Geräte' },
 	no_exercises_match: { en: 'No exercises match your search.', de: 'Keine Übungen gefunden.' },
+	type_any: { en: 'Any type', de: 'Alle Arten' },
+	type_weights: { en: 'Strength', de: 'Kraft' },
+	type_stretches: { en: 'Stretches', de: 'Dehnen' },
+	stretch_pill: { en: 'Stretch', de: 'Dehnung' },
+	strength_pill: { en: 'Strength', de: 'Kraft' },
+	cardio_pill: { en: 'Cardio', de: 'Cardio' },
+	plyo_pill: { en: 'Plyo', de: 'Plyo' },
 
 	// Exercise detail
 	about: { en: 'ABOUT', de: 'INFO' },
