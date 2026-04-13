@@ -60,7 +60,7 @@
 		"leaflet": "^1.9.4",
 		"mongoose": "^9.4.1",
 		"node-cron": "^4.2.1",
-		"romcal": "3.0.0-dev.125",
+		"romcal": "github:AlexBocken/romcal1962#e4731a8",
 		"sharp": "^0.34.5",
 		"web-haptics": "^0.0.6"
 	},

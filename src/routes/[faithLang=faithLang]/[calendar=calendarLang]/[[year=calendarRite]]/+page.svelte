@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { page } from '$app/state';
 	import {
 		getMonthName,
 		getWeekdayShort,
@@ -9,8 +10,10 @@
 		humanizePsalterWeek,
 		humanizeSundayCycle,
 		t,
+		t1962,
+		properLabel,
 		type CalendarLang
-	} from './calendarI18n';
+	} from '../calendarI18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -61,8 +64,17 @@
 		return arr && arr.length ? arr[0] : fallback;
 	}
 
+	const calendarBase = $derived(
+		page.url.pathname.replace(/\/(1962|1969)\/?$/, '').replace(/\/$/, '')
+	);
+
 	function riteHref(r: '1969' | '1962') {
-		return r === '1969' ? '?' : '?rite=1962';
+		const seg = r === '1962' ? '' : '/1969';
+		const params = new URLSearchParams();
+		params.set('y', String(year));
+		params.set('m', String(month));
+		if (selectedIso) params.set('d', selectedIso);
+		return `${calendarBase}${seg}?${params.toString()}`;
 	}
 </script>
 
@@ -104,6 +116,15 @@
 			<p>{t('wipBody', lang)}</p>
 		</section>
 	{:else}
+	{#if rite === '1962'}
+		<aside class="disclaimer" role="note">
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+			<div>
+				<strong>{t('rite1962DisclaimerTitle', lang)}</strong>
+				<p>{t('rite1962DisclaimerBody', lang)}</p>
+			</div>
+		</aside>
+	{/if}
 	{#if today}
 		{@const todayHex = hexFor(today.colorKeys)}
 		<section class="today-hero" style="--accent: {todayHex}">
@@ -228,6 +249,96 @@
 					<span class="tag">{t('cycle', lang)}: {humanizeSundayCycle(selected.sundayCycle)}</span>
 				{/if}
 			</div>
+			{#if selected.rite1962}
+				{@const d = selected.rite1962}
+				<dl class="detail-extras">
+					<div>
+						<dt>{t1962('source', lang)}</dt>
+						<dd>{d.kind}{d.properSource ? ` · ${d.properSource}` : ''}{d.communeSlug ? ` (${d.communeSlug})` : ''}</dd>
+					</div>
+					{#if d.vigilOf}
+						<div>
+							<dt>{t1962('vigilOf', lang)}</dt>
+							<dd>{d.vigilOf}</dd>
+						</div>
+					{/if}
+					{#if d.octave}
+						<div>
+							<dt>{t1962('octave', lang)}</dt>
+							<dd>{d.octave.id} · {t1962('octaveDay', lang)} {d.octave.day} · {d.octave.rank}</dd>
+						</div>
+					{/if}
+					{#if d.transferredFrom}
+						<div>
+							<dt>{t1962('transferredFrom', lang)}</dt>
+							<dd>{d.transferredFrom}</dd>
+						</div>
+					{/if}
+				</dl>
+				<div class="rubrics-grid">
+					<h4>{t1962('rubrics', lang)}</h4>
+					<div class="rubric-row">
+						<span class="rubric-chip" class:on={d.rubrics.gloria}>{t1962('gloria', lang)}: {d.rubrics.gloria ? t1962('yes', lang) : t1962('no', lang)}</span>
+						<span class="rubric-chip" class:on={d.rubrics.credo}>{t1962('credo', lang)}: {d.rubrics.credo ? t1962('yes', lang) : t1962('no', lang)}</span>
+						{#if d.rubrics.preface}
+							<span class="rubric-chip on">{t1962('preface', lang)}: {d.rubrics.preface}</span>
+						{/if}
+						{#if d.rubrics.lastGospel}
+							<span class="rubric-chip on">{t1962('lastGospel', lang)}: {d.rubrics.lastGospel}</span>
+						{/if}
+						{#if d.rubrics.ite}
+							<span class="rubric-chip on">{t1962('ite', lang)}: {d.rubrics.ite}</span>
+						{/if}
+					</div>
+				</div>
+				{#if d.commemorations.length}
+					<div class="commems">
+						<h4>{t1962('commemorations', lang)}</h4>
+						<ul>
+							{#each d.commemorations as c (c.key)}
+								{@const cHex = hexFor(c.colorKeys)}
+								<li>
+									<span class="color-swatch" style="background: {cHex}"></span>
+									<span class="commem-name">{c.name}</span>
+									<span class="commem-rank">{c.rankName}</span>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+				{#if d.propers.length}
+					<section class="propers">
+						<h4>{t1962('propers', lang)}</h4>
+						{#each d.propers as section (section.key)}
+							<div class="proper-block">
+								<div class="proper-label">{properLabel(section.key, lang)}</div>
+								<div class="proper-cols" class:single={lang === 'la' || !section.local}>
+									<div class="proper-col proper-col-la" lang="la">{section.la}</div>
+									{#if lang !== 'la' && section.local}
+										<div class="proper-col proper-col-local" lang={lang}>{section.local}</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</section>
+				{/if}
+				{#if d.extraSections.length}
+					<section class="propers">
+						<h4>{t1962('extraSections', lang)}</h4>
+						{#each d.extraSections as section (section.key)}
+							<div class="proper-block">
+								<div class="proper-label">{properLabel(section.key, lang)}</div>
+								<div class="proper-cols" class:single={lang === 'la' || !section.local}>
+									<div class="proper-col proper-col-la" lang="la">{section.la}</div>
+									{#if lang !== 'la' && section.local}
+										<div class="proper-col proper-col-local" lang={lang}>{section.local}</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</section>
+				{/if}
+			{/if}
 		</section>
 	{/if}
 	{/if}
@@ -328,6 +439,36 @@
 		margin: 0;
 		max-width: 36ch;
 		line-height: 1.5;
+	}
+
+	/* --- 1962 accuracy disclaimer --- */
+	.disclaimer {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		margin-bottom: 1.25rem;
+		background: var(--color-surface);
+		border-left: 3px solid var(--color-primary);
+		border-radius: var(--radius-card);
+		box-shadow: var(--shadow-sm, var(--shadow-md));
+		color: var(--color-text-secondary);
+		font-size: 0.9rem;
+		line-height: 1.45;
+	}
+	.disclaimer svg {
+		flex-shrink: 0;
+		margin-top: 0.15rem;
+		color: var(--color-primary);
+	}
+	.disclaimer strong {
+		display: block;
+		color: var(--color-text-primary);
+		font-weight: 600;
+		margin-bottom: 0.2rem;
+	}
+	.disclaimer p {
+		margin: 0;
 	}
 
 	/* --- Today hero --- */
@@ -605,6 +746,139 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
+	}
+
+	.detail-extras {
+		margin: 1rem 0 0.5rem;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 0.5rem 1rem;
+		font-size: var(--text-sm);
+	}
+	.detail-extras div {
+		display: flex;
+		flex-direction: column;
+	}
+	.detail-extras dt {
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+	.detail-extras dd {
+		margin: 0;
+		color: var(--color-text-primary);
+	}
+	.rubrics-grid {
+		margin-top: 0.75rem;
+	}
+	.rubrics-grid h4,
+	.commems h4 {
+		margin: 0.5rem 0 0.4rem;
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-secondary);
+		font-weight: 600;
+	}
+	.rubric-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+	.rubric-chip {
+		padding: 0.25rem 0.6rem;
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		font-size: 0.78rem;
+		border: 1px solid var(--color-border);
+	}
+	.rubric-chip.on {
+		background: color-mix(in srgb, var(--accent) 15%, var(--color-bg-tertiary));
+		color: var(--color-text-primary);
+		border-color: color-mix(in srgb, var(--accent) 30%, var(--color-border));
+	}
+	.commems {
+		margin-top: 0.75rem;
+	}
+	.commems ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+	.commems li {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.6rem;
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-sm, 6px);
+		font-size: 0.85rem;
+	}
+	.commem-name {
+		flex: 1 1 auto;
+		color: var(--color-text-primary);
+	}
+	.commem-rank {
+		font-size: 0.72rem;
+		color: var(--color-text-secondary);
+		white-space: nowrap;
+	}
+
+	.propers {
+		margin-top: 1rem;
+		border-top: 1px solid var(--color-border);
+		padding-top: 0.75rem;
+	}
+	.propers h4 {
+		margin: 0 0 0.6rem;
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-secondary);
+		font-weight: 600;
+	}
+	.proper-block {
+		margin-bottom: 0.75rem;
+	}
+	.proper-label {
+		font-weight: 600;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		margin-bottom: 0.2rem;
+	}
+	.proper-cols {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.75rem;
+	}
+	.proper-cols.single {
+		grid-template-columns: 1fr;
+	}
+	.proper-col {
+		white-space: pre-wrap;
+		font-size: 0.92rem;
+		line-height: 1.5;
+		color: var(--color-text-primary);
+	}
+	.proper-col-la {
+		font-style: italic;
+		color: var(--color-text-primary);
+	}
+	.proper-col-local {
+		color: var(--color-text-primary);
+	}
+	@media (max-width: 640px) {
+		.proper-cols {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	/* --- Responsive --- */
