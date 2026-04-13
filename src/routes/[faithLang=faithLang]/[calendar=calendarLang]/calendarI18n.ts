@@ -99,7 +99,7 @@ export const ui = {
 	},
 	rite1962Long: {
 		en: 'Roman Missal of 1962 (Extraordinary Form)',
-		de: 'Römisches Messbuch 1962 (Außerordentliche Form)',
+		de: 'Römisches Messbuch 1962 (Ausserordentliche Form)',
 		la: 'Missale Romanum 1962 (Forma Extraordinaria)'
 	},
 	wipTitle: {
@@ -108,9 +108,9 @@ export const ui = {
 		la: 'In opere'
 	},
 	wipBody: {
-		en: 'The 1962 (Tridentine) calendar is not yet available. Stay tuned.',
-		de: 'Der tridentinische Kalender von 1962 ist noch nicht verfügbar. Bleib dran.',
-		la: 'Calendarium tridentinum anni 1962 nondum paratum est. Exspecta paulisper.'
+		en: 'The calendar for the older rite (1962 Missal) is not yet available. Stay tuned.',
+		de: 'Der Kalender für den alten Ritus (Messbuch 1962) ist noch nicht verfügbar. Bleib dran.',
+		la: 'Calendarium ritus antiqui (Missale 1962) nondum paratum est. Exspecta paulisper.'
 	}
 };
 
