@@ -15,7 +15,11 @@ import {
 	season1962Label,
 	type CalendarLang,
 	type Rite
-} from '../calendarI18n';
+} from '../../../../calendarI18n';
+import { getProperSegments } from '$lib/server/romcal1962Refs';
+import { lookupReference } from '$lib/server/bible';
+import { translateRefToTarget } from '$lib/server/bibleRefLatin';
+import { resolve as resolvePath } from 'path';
 
 export interface CalendarDay {
 	iso: string;
@@ -71,7 +75,6 @@ const localeBundles = {
 	la: GeneralRoman_La
 };
 
-// Cache: lang -> Romcal instance
 const romcalByLang = new Map<CalendarLang, Romcal>();
 function getRomcal(lang: CalendarLang): Romcal {
 	let r = romcalByLang.get(lang);
@@ -81,7 +84,6 @@ function getRomcal(lang: CalendarLang): Romcal {
 	return r;
 }
 
-// Cache: lang|year -> Map<iso, CalendarDay>
 const yearCache = new Map<string, Map<string, CalendarDay>>();
 
 async function getYear(lang: CalendarLang, year: number): Promise<Map<string, CalendarDay>> {
@@ -142,10 +144,21 @@ const PROPER_ORDER = [
 
 type ProperKey = (typeof PROPER_ORDER)[number];
 
-export interface ProperSection {
-	key: string;
+export interface ProperSegment {
+	refs: string[];
 	la: string;
 	local?: string;
+	// When true, `local` text comes from the Bible translation lookup because
+	// the propers dataset had no localized text for this segment.
+	fromBible?: boolean;
+}
+
+export interface ProperSection {
+	key: string;
+	segments: ProperSegment[];
+	// Aggregate list of refs across segments (for quick checks)
+	refs: string[];
+	fromBible?: boolean;
 }
 
 const COLOR_KEY_1962: Record<string, string> = {
@@ -190,15 +203,93 @@ function textOf(dict: Record<string, string> | undefined, locale: string): strin
 	return v && v.trim() ? v : '';
 }
 
+function bibleTextFor(ref: string, targetLang: 'en' | 'de'): string | null {
+	const tsvPath = resolvePath(targetLang === 'de' ? 'static/allioli.tsv' : 'static/drb.tsv');
+	const segments = ref.split(';').map((s) => s.trim()).filter(Boolean);
+	if (!segments.length) return null;
+
+	let lastBook: string | null = null;
+	let lastChapter: string | null = null;
+	const parts: string[] = [];
+
+	for (const seg of segments) {
+		// Detect optional leading book (letters, optional leading digit like "1 Cor")
+		const bookMatch = seg.match(/^(\d?\s?[A-Za-z]+\.?)\s+(.*)$/);
+		let book: string | null = null;
+		let rest = seg;
+		if (bookMatch) {
+			book = bookMatch[1];
+			rest = bookMatch[2].trim();
+		}
+		if (book) lastBook = book;
+		if (!lastBook) continue;
+
+		let chapter: string;
+		let verseRange: string;
+		// Accept "118:85", "118, 85", "118:85-90", or bare "85" (inherit chapter)
+		const normalized = rest.replace(/\s*,\s*/, ':').replace(/\s+/g, ' ').trim();
+		if (normalized.includes(':')) {
+			const [c, v] = normalized.split(':');
+			chapter = c.trim();
+			verseRange = v.trim();
+			lastChapter = chapter;
+		} else if (lastChapter) {
+			chapter = lastChapter;
+			verseRange = normalized;
+		} else {
+			continue;
+		}
+
+		const fullRef = `${lastBook} ${chapter}:${verseRange}`;
+		const translated = translateRefToTarget(fullRef, targetLang);
+		if (!translated) continue;
+
+		try {
+			const result = lookupReference(translated, tsvPath);
+			if (result && result.verses.length) {
+				parts.push(result.verses.map((v) => `${v.verse}. ${v.text}`).join(' '));
+			}
+		} catch {
+			// skip this segment
+		}
+	}
+
+	return parts.length ? parts.join(' ') : null;
+}
+
 function propersOf(p: Celebration1962, lang: CalendarLang): ProperSection[] {
 	const out: ProperSection[] = [];
-	const m = p.propers;
-	if (!m) return out;
+	const source = p.properRef.source;
 	for (const key of PROPER_ORDER) {
-		const la = textOf(m[key as ProperKey], 'la');
-		const local = lang === 'la' ? '' : textOf(m[key as ProperKey], lang);
-		if (!la && !local) continue;
-		out.push({ key, la, ...(local ? { local } : {}) });
+		const rawSegs = getProperSegments(source, key, lang);
+		if (!rawSegs || !rawSegs.length) continue;
+
+		const segments: ProperSegment[] = [];
+		const allRefs: string[] = [];
+		let sectionFromBible = false;
+
+		for (const raw of rawSegs) {
+			const seg: ProperSegment = { refs: raw.refs, la: raw.la };
+			if (lang !== 'la' && raw.local) seg.local = raw.local;
+
+			// Bible fallback: only for this segment, using only its own refs
+			if (!seg.local && raw.refs.length && lang !== 'la') {
+				const bible = bibleTextFor(raw.refs.join('; '), lang);
+				if (bible) {
+					seg.local = bible;
+					seg.fromBible = true;
+					sectionFromBible = true;
+				}
+			}
+
+			allRefs.push(...raw.refs);
+			if (seg.la || seg.local || seg.refs.length) segments.push(seg);
+		}
+
+		if (!segments.length) continue;
+		const section: ProperSection = { key, segments, refs: allRefs };
+		if (sectionFromBible) section.fromBible = true;
+		out.push(section);
 	}
 	return out;
 }
@@ -209,14 +300,17 @@ function extraSectionsOf(p: Celebration1962, lang: CalendarLang): ProperSection[
 	const out: ProperSection[] = [];
 	for (const [key, block] of Object.entries(extras)) {
 		const buckets: Record<string, string[]> = {};
+		const refs: string[] = [];
 		for (const item of block) {
-			if (item.type !== 'text') continue;
-			(buckets[item.lang] ??= []).push(item.value);
+			if (item.type === 'text') (buckets[item.lang] ??= []).push(item.value);
+			else if (item.type === 'scriptureRef') refs.push(item.ref);
 		}
 		const la = (buckets['la'] ?? []).join('\n\n').trim();
 		const local = lang === 'la' ? '' : (buckets[lang] ?? []).join('\n\n').trim();
-		if (!la && !local) continue;
-		out.push({ key, la, ...(local ? { local } : {}) });
+		if (!la && !local && refs.length === 0) continue;
+		const segment: ProperSegment = { refs, la };
+		if (local) segment.local = local;
+		out.push({ key, segments: [segment], refs });
 	}
 	return out;
 }
@@ -300,21 +394,21 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const lang: CalendarLang =
 		params.faithLang === 'faith' ? 'en' : params.faithLang === 'fides' ? 'la' : 'de';
 
+	const rite: Rite = params.rite === '1969' ? '1969' : '1962';
+
+	// Reject mm without yyyy, dd without yyyy+mm. Sveltekit optional routes let
+	// gaps through so we normalize here.
+	if ((params.mm && !params.yyyy) || (params.dd && !params.mm)) {
+		throw error(404, 'Not found');
+	}
+
 	const today = new Date();
-	// Rite lives in the optional [[year]] route segment (1962 | 1969). When
-	// absent we default to 1962, the new tridentine calendar.
-	const rite: Rite = params.year === '1969' ? '1969' : '1962';
-
-	const yParam = url.searchParams.get('y');
-	const mParam = url.searchParams.get('m');
-	const selectedDateParam = url.searchParams.get('d');
-
 	const minYear = rite === '1962' ? 1900 : 1969;
-	const y = yParam !== null ? Number(yParam) : NaN;
-	const m = mParam !== null ? Number(mParam) : NaN;
+	const yParam = params.yyyy ? Number(params.yyyy) : NaN;
+	const mParam = params.mm ? Number(params.mm) - 1 : NaN;
 
-	const year = Number.isFinite(y) && y >= minYear && y <= 2100 ? y : today.getFullYear();
-	const month = Number.isFinite(m) && m >= 0 && m <= 11 ? m : today.getMonth();
+	const year = Number.isFinite(yParam) && yParam >= minYear && yParam <= 2100 ? yParam : today.getFullYear();
+	const month = Number.isFinite(mParam) && mParam >= 0 && mParam <= 11 ? mParam : today.getMonth();
 
 	const yearMap =
 		rite === '1962' ? await getYear1962(lang, year) : await getYear(lang, year);
@@ -348,8 +442,10 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const todayEntry = todayYearMap.get(todayIso) ?? null;
 
 	let selectedIso: string;
-	if (selectedDateParam && /^\d{4}-\d{2}-\d{2}$/.test(selectedDateParam)) {
-		selectedIso = selectedDateParam;
+	if (params.dd) {
+		const dayNum = Number(params.dd);
+		if (dayNum < 1 || dayNum > daysInMonth) throw error(404, 'Not found');
+		selectedIso = isoFor(year, month, dayNum);
 	} else if (todayEntry && today.getFullYear() === year && today.getMonth() === month) {
 		selectedIso = todayIso;
 	} else {
