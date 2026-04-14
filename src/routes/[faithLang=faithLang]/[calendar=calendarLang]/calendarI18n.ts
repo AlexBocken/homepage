@@ -197,11 +197,16 @@ export const ui1962 = {
 	no: { en: 'no', de: 'nein', la: 'non' },
 	properRef: { en: 'Proper', de: 'Proprium', la: 'Proprium' },
 	propers: { en: 'Mass propers', de: 'Messproprium', la: 'Propria Missæ' },
-	extraSections: { en: 'Additional readings', de: 'Zusätzliche Lesungen', la: 'Lectiones additae' }
+	extraSections: { en: 'Additional readings', de: 'Zusätzliche Lesungen', la: 'Lectiones additae' },
+	bibleFallbackNote: {
+		en: 'Translation taken from the Douay-Rheims Bible, since no translated proper is published for this section. Wording will differ from authoritative missals.',
+		de: 'Übersetzung stammt aus der Allioli-Bibel, da für diesen Abschnitt kein übersetztes Proprium veröffentlicht ist. Wortlaut weicht von maßgeblichen Messbüchern ab.'
+	}
 } as const;
 
 export function t1962(key: keyof typeof ui1962, lang: CalendarLang): string {
-	return ui1962[key][lang] ?? ui1962[key].en;
+	const entry = ui1962[key] as Record<string, string | undefined>;
+	return entry[lang] ?? entry.en ?? '';
 }
 
 const PROPER_LABEL: Record<string, Record<CalendarLang, string>> = {

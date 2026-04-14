@@ -13,7 +13,7 @@
 		t1962,
 		properLabel,
 		type CalendarLang
-	} from '../calendarI18n';
+	} from '../../../../calendarI18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -41,40 +41,42 @@
 		return (firstDow + 6) % 7;
 	});
 
+	const rite = $derived(data.rite);
+	const wip = $derived(data.wip);
+	const riteSubtitle = $derived(t(rite === '1962' ? 'rite1962Long' : 'rite1969Long', lang));
+
+	function pad(n: number) {
+		return String(n).padStart(2, '0');
+	}
+
+	// URL: /{faithLang}/{calendar}/{rite}/{yyyy}/{mm}/{dd} — rite is a required
+	// path segment so day/month nav stays inside the active rite.
+	const riteBase = $derived(`/${page.params.faithLang}/${page.params.calendar}/${rite}`);
+	const calendarBase = $derived(`/${page.params.faithLang}/${page.params.calendar}`);
+
 	function dayHref(iso: string) {
-		return `?y=${year}&m=${month}&d=${iso}`;
+		const [yy, mm, dd] = iso.split('-');
+		return `${riteBase}/${yy}/${mm}/${dd}`;
 	}
 
 	function monthHref(y: number, m: number) {
-		return `?y=${y}&m=${m}`;
+		return `${riteBase}/${y}/${pad(m + 1)}`;
 	}
 
 	const todayHref = $derived.by(() => {
 		const now = new Date();
-		return `?y=${now.getFullYear()}&m=${now.getMonth()}&d=${todayIso}`;
+		return `${riteBase}/${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
 	});
 
 	const pageTitle = $derived(t('calendar', lang));
-
-	const rite = $derived(data.rite);
-	const wip = $derived(data.wip);
-	const riteSubtitle = $derived(t(rite === '1962' ? 'rite1962Long' : 'rite1969Long', lang));
 
 	function firstOr(arr: string[], fallback = ''): string {
 		return arr && arr.length ? arr[0] : fallback;
 	}
 
-	const calendarBase = $derived(
-		page.url.pathname.replace(/\/(1962|1969)\/?$/, '').replace(/\/$/, '')
-	);
-
 	function riteHref(r: '1969' | '1962') {
-		const seg = r === '1962' ? '' : '/1969';
-		const params = new URLSearchParams();
-		params.set('y', String(year));
-		params.set('m', String(month));
-		if (selectedIso) params.set('d', selectedIso);
-		return `${calendarBase}${seg}?${params.toString()}`;
+		const dd = selectedIso.slice(8, 10);
+		return `${calendarBase}/${r}/${year}/${pad(month + 1)}/${dd}`;
 	}
 </script>
 
@@ -311,13 +313,33 @@
 						<h4>{t1962('propers', lang)}</h4>
 						{#each d.propers as section (section.key)}
 							<div class="proper-block">
-								<div class="proper-label">{properLabel(section.key, lang)}</div>
-								<div class="proper-cols" class:single={lang === 'la' || !section.local}>
-									<div class="proper-col proper-col-la" lang="la">{section.la}</div>
-									{#if lang !== 'la' && section.local}
-										<div class="proper-col proper-col-local" lang={lang}>{section.local}</div>
-									{/if}
+								<div class="proper-label-row">
+									<span class="proper-label">{properLabel(section.key, lang)}</span>
 								</div>
+								{#each section.segments as seg, segIdx (segIdx)}
+									<div class="proper-segment">
+										{#if seg.refs && seg.refs.length}
+											<div class="proper-segment-refs">
+												{#each seg.refs as r (r)}
+													<span class="proper-ref">{r}</span>
+												{/each}
+											</div>
+										{/if}
+										{#if seg.la || seg.local}
+											<div class="proper-cols" class:single={lang === 'la' || !seg.local}>
+												{#if lang !== 'la' && seg.local && seg.fromBible}
+													<p class="proper-fallback-note">{t1962('bibleFallbackNote', lang)}</p>
+												{/if}
+												{#if seg.la}
+													<div class="proper-col proper-col-la" lang="la">{seg.la}</div>
+												{/if}
+												{#if lang !== 'la' && seg.local}
+													<div class="proper-col proper-col-local" lang={lang}>{seg.local}</div>
+												{/if}
+											</div>
+										{/if}
+									</div>
+								{/each}
 							</div>
 						{/each}
 					</section>
@@ -327,13 +349,26 @@
 						<h4>{t1962('extraSections', lang)}</h4>
 						{#each d.extraSections as section (section.key)}
 							<div class="proper-block">
-								<div class="proper-label">{properLabel(section.key, lang)}</div>
-								<div class="proper-cols" class:single={lang === 'la' || !section.local}>
-									<div class="proper-col proper-col-la" lang="la">{section.la}</div>
-									{#if lang !== 'la' && section.local}
-										<div class="proper-col proper-col-local" lang={lang}>{section.local}</div>
-									{/if}
+								<div class="proper-label-row">
+									<span class="proper-label">{properLabel(section.key, lang)}</span>
 								</div>
+								{#each section.segments as seg, segIdx (segIdx)}
+									<div class="proper-segment">
+										{#if seg.refs && seg.refs.length}
+											<div class="proper-segment-refs">
+												{#each seg.refs as r (r)}
+													<span class="proper-ref">{r}</span>
+												{/each}
+											</div>
+										{/if}
+										<div class="proper-cols" class:single={lang === 'la' || !seg.local}>
+											<div class="proper-col proper-col-la" lang="la">{seg.la}</div>
+											{#if lang !== 'la' && seg.local}
+												<div class="proper-col proper-col-local" lang={lang}>{seg.local}</div>
+											{/if}
+										</div>
+									</div>
+								{/each}
 							</div>
 						{/each}
 					</section>
@@ -372,7 +407,6 @@
 		font-style: italic;
 	}
 
-	/* --- Rite toggle (segmented pill) --- */
 	.rite-toggle {
 		display: inline-flex;
 		gap: 0.25rem;
@@ -411,7 +445,6 @@
 		outline-offset: 2px;
 	}
 
-	/* --- WIP placeholder --- */
 	.wip {
 		display: flex;
 		flex-direction: column;
@@ -441,7 +474,6 @@
 		line-height: 1.5;
 	}
 
-	/* --- 1962 accuracy disclaimer --- */
 	.disclaimer {
 		display: flex;
 		align-items: flex-start;
@@ -471,7 +503,6 @@
 		margin: 0;
 	}
 
-	/* --- Today hero --- */
 	.today-hero {
 		position: relative;
 		background: var(--color-surface);
@@ -547,7 +578,6 @@
 		display: inline-block;
 	}
 
-	/* --- Month nav --- */
 	.month-nav {
 		display: flex;
 		align-items: center;
@@ -603,7 +633,6 @@
 		transform: scale(1.03);
 	}
 
-	/* --- Grid --- */
 	.grid {
 		background: var(--color-surface);
 		border-radius: var(--radius-card);
@@ -716,7 +745,6 @@
 		z-index: 1;
 	}
 
-	/* --- Detail panel --- */
 	.detail {
 		background: var(--color-surface);
 		border-radius: var(--radius-card);
@@ -846,21 +874,79 @@
 	.proper-block {
 		margin-bottom: 0.75rem;
 	}
+	.proper-label-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+		margin-bottom: 0.25rem;
+	}
 	.proper-label {
 		font-weight: 600;
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
-		margin-bottom: 0.2rem;
+	}
+	.proper-ref {
+		display: inline-block;
+		padding: 0.1rem 0.5rem;
+		border-radius: var(--radius-pill);
+		font-size: 0.72rem;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		border: 1px solid var(--color-border);
+	}
+	.proper-segment {
+		margin-top: 0.5rem;
+	}
+	.proper-segment:first-child {
+		margin-top: 0;
+	}
+	.proper-segment + .proper-segment {
+		padding-top: 0.5rem;
+		border-top: 1px dashed var(--color-border);
+	}
+	.proper-segment-refs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin-bottom: 0.35rem;
+	}
+	.proper-fallback-note {
+		grid-column: 2 / 3;
+		grid-row: 1;
+		margin: 0 0 0.25rem;
+		padding: 0.4rem 0.6rem;
+		border-left: 2px solid color-mix(in srgb, var(--orange) 55%, transparent);
+		background: color-mix(in srgb, var(--orange) 8%, transparent);
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+		font-size: 0.78rem;
+		line-height: 1.4;
+		color: var(--color-text-secondary);
 	}
 	.proper-cols {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 0.75rem;
+		column-gap: 0.75rem;
+		row-gap: 0;
+		align-items: start;
+	}
+	.proper-col-la {
+		grid-column: 1;
+		grid-row: 2;
+	}
+	.proper-col-local {
+		grid-column: 2;
+		grid-row: 2;
 	}
 	.proper-cols.single {
 		grid-template-columns: 1fr;
+	}
+	.proper-cols.single .proper-col-la,
+	.proper-cols.single .proper-col-local {
+		grid-column: 1;
+		grid-row: auto;
 	}
 	.proper-col {
 		white-space: pre-wrap;
@@ -879,9 +965,14 @@
 		.proper-cols {
 			grid-template-columns: 1fr;
 		}
+		.proper-cols .proper-col-la,
+		.proper-cols .proper-col-local,
+		.proper-cols .proper-fallback-note {
+			grid-column: 1;
+			grid-row: auto;
+		}
 	}
 
-	/* --- Responsive --- */
 	@media (max-width: 560px) {
 		.cal-wrap {
 			padding: 0.5rem 0.5rem 3rem;
