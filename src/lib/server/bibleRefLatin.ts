@@ -87,6 +87,19 @@ function normalizeLatinBook(raw: string): string {
 	return raw.toLowerCase().replace(/[.\s]/g, '');
 }
 
+// Longest-prefix lookup: data uses "Joannes", "Matt", "Joann" interchangeably.
+// Pre-sort keys once so fuller forms ("1joan" before "1") don't get shadowed.
+const LATIN_KEYS_BY_LENGTH = Object.keys(LATIN_TO_TARGET).sort((a, b) => b.length - a.length);
+
+function lookupLatinBook(bookNorm: string): { en?: string; de?: string } | undefined {
+	const direct = LATIN_TO_TARGET[bookNorm];
+	if (direct) return direct;
+	for (const key of LATIN_KEYS_BY_LENGTH) {
+		if (bookNorm.startsWith(key)) return LATIN_TO_TARGET[key];
+	}
+	return undefined;
+}
+
 // Allioli (de) TSV uses Hebrew/modern psalm numbering; DRB (en) uses Vulgate.
 // Latin propers are Vulgate, so we shift for de. Only covers the clean +1
 // range — Vulgate 9/10, 113–115, 146/147 involve splits/merges and are
@@ -104,7 +117,7 @@ export function translateRefToTarget(ref: string, lang: TargetLang): string | nu
 	if (!m) return null;
 	const bookNorm = normalizeLatinBook(m[1]);
 	const rest = m[2].trim().replace(/;.*$/, '').trim();
-	const map = LATIN_TO_TARGET[bookNorm];
+	const map = lookupLatinBook(bookNorm);
 	const target = map?.[lang];
 	if (!target) return null;
 	const clean = rest.replace(/\s*,\s*/, ':').replace(/\s+/g, ' ');
