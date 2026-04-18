@@ -35,52 +35,25 @@ export interface SeasonArc {
 }
 
 export interface Rite1962Commem {
-	key: string;
+	id: string;
 	name: string;
-	rankName: string;
-	kind: 'tempora' | 'sancti';
-	colorNames: string[];
-	colorKeys: string[];
 }
 
 export interface Rite1962Detail {
 	class: 1 | 2 | 3 | 4;
 	kind: 'tempora' | 'sancti';
 	commemorations: Rite1962Commem[];
-	rubrics: {
-		gloria: boolean;
-		credo: boolean;
-		preface?: string;
-		lastGospel?: string;
-		ite?: string;
-	};
 	octave?: {
-		id: string;
-		parentFeastId: string;
+		ofId: string;
 		day: number;
-		rank: string;
 	};
 	vigilOf?: string;
 	transferredFrom?: string;
-	properSource: string;
-	communeSlug?: string;
 	propers: ProperSection[];
-	extraSections: ProperSection[];
-}
-
-export interface ProperSegment {
-	refs: string[];
-	la: string;
-	local?: string;
-	// When true, `local` text comes from the Bible translation lookup because
-	// the propers dataset had no localized text for this segment.
-	fromBible?: boolean;
 }
 
 export interface ProperSection {
 	key: string;
-	segments: ProperSegment[];
-	// Aggregate list of refs across segments (for quick checks)
-	refs: string[];
-	fromBible?: boolean;
+	la: string[];
+	local: string[];
 }
