@@ -23,7 +23,6 @@ import type { CalendarDay, SeasonArc, YearDay } from '$lib/calendarTypes';
 export type {
 	CalendarDay,
 	ProperSection,
-	ProperSegment,
 	Rite1962Commem,
 	Rite1962Detail,
 	SeasonArc,

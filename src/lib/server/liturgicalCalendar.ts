@@ -19,14 +19,11 @@ import {
 	Switzerland_Saint_Maurice_Abbey,
 	Switzerland_Sankt_Gallen,
 	Switzerland_Sion,
-	resolvePropersBlocks
+	createI18n1962
 } from 'romcal/1962';
-import type {
-	LiturgicalDay1962,
-	MassPropersBlocks,
-	MassSectionField,
-	PropersBlock
-} from 'romcal/1962';
+import type { LiturgicalDay1962, RomcalBundle1962 } from 'romcal/1962';
+import { pathToFileURL } from 'node:url';
+import { resolve as resolvePath } from 'node:path';
 import {
 	colorLabel1962,
 	rank1962Label,
@@ -38,13 +35,9 @@ import {
 import type {
 	CalendarDay,
 	ProperSection,
-	ProperSegment,
 	Rite1962Commem,
 	Rite1962Detail
 } from '../calendarTypes';
-import { lookupReference } from '$lib/server/bible';
-import { translateRefToTarget } from '$lib/server/bibleRefLatin';
-import { resolve as resolvePath } from 'path';
 
 const bundles1969: Record<Diocese1969, Record<CalendarLang, RomcalBundleObject>> = {
 	general: { en: GeneralRoman_En, de: GeneralRoman_De, la: GeneralRoman_La },
@@ -56,7 +49,7 @@ function getRomcal(lang: CalendarLang, diocese: Diocese1969): Romcal {
 	const key = `${diocese}|${lang}`;
 	let r = romcalByKey.get(key);
 	if (r) return r;
-	r = new Romcal({ localizedCalendar: bundles1969[diocese][lang] });
+	r = new Romcal({ localizedCalendar: bundles1969[diocese][lang], scope: 'liturgical' });
 	romcalByKey.set(key, r);
 	return r;
 }
@@ -111,307 +104,183 @@ const calendars1962 = {
 	sion: Switzerland_Sion
 } as const satisfies Record<Diocese1962, unknown>;
 
-const romcal1962ByKey = new Map<string, Romcal1962>();
-function getRomcal1962(lang: CalendarLang, diocese: Diocese1962): Romcal1962 {
-	const key = `${diocese}|${lang}`;
-	let r = romcal1962ByKey.get(key);
-	if (r) return r;
-	// Package localizes celebration.name via i18next; structured proper
-	// blocks are fetched lazily via resolvePropersBlocks (below), so we
-	// don't ask attachPropers to pre-concatenate locale text.
-	const calendar = calendars1962[diocese];
-	r = calendar
-		? new Romcal1962({ localeId: lang, calendar })
-		: new Romcal1962({ localeId: lang });
-	romcal1962ByKey.set(key, r);
-	return r;
+// Names & propers for the 1962 rite ship as bundled JS files outside the
+// package's `exports` map, so resolve them via an absolute file URL.
+const bundle1962Cache = new Map<CalendarLang, Promise<RomcalBundle1962>>();
+function loadBundle1962(lang: CalendarLang): Promise<RomcalBundle1962> {
+	let p = bundle1962Cache.get(lang);
+	if (p) return p;
+	const abs = resolvePath(
+		`node_modules/romcal/rites/roman1962/dist/bundles/${lang}/esm/index.js`
+	);
+	p = import(/* @vite-ignore */ pathToFileURL(abs).href).then(
+		(m) => m.default as RomcalBundle1962
+	);
+	bundle1962Cache.set(lang, p);
+	return p;
 }
 
-const PROPER_ORDER: MassSectionField[] = [
-	'introit',
-	'collect',
-	'epistle',
-	'gradual',
-	'alleluia',
-	'tract',
-	'sequence',
-	'gospel',
-	'offertory',
-	'secret',
-	'preface',
-	'communion',
-	'postcommunion'
-];
+const romcal1962ByKey = new Map<string, Promise<Romcal1962>>();
+function getRomcal1962(lang: CalendarLang, diocese: Diocese1962): Promise<Romcal1962> {
+	const key = `${diocese}|${lang}`;
+	let p = romcal1962ByKey.get(key);
+	if (p) return p;
+	const calendar = calendars1962[diocese];
+	// `localizedCalendar` must be a 1969-shape bundle; the 1962 names live on
+	// the 1962 propers bundle and are injected via createI18n1962 extraNames.
+	const base1969 = bundles1969.general[lang];
+	p = loadBundle1962(lang).then((b) => {
+		const i18next = createI18n1962(lang, { [lang]: b.i18n.names });
+		// `i18next` is part of Romcal's runtime config but absent from the
+		// published input type. Build via a permissive record so TS accepts it.
+		const base: Record<string, unknown> = {
+			i18next,
+			localizedCalendar: base1969,
+			scope: 'liturgical'
+		};
+		if (calendar) base.particularCalendar = calendar;
+		return new Romcal1962(base as ConstructorParameters<typeof Romcal1962>[0]);
+	});
+	romcal1962ByKey.set(key, p);
+	return p;
+}
 
-const COLOR_KEY_1962: Record<string, string> = {
-	White: 'WHITE',
-	Red: 'RED',
-	Green: 'GREEN',
-	Violet: 'PURPLE',
-	Black: 'BLACK',
-	Rose: 'ROSE'
-};
+// Section order follows the flow of the Mass. The new propers bundles key
+// sections by their Latin section names.
+const PROPER_ORDER = [
+	'Introitus',
+	'Oratio',
+	'Lectio',
+	'Graduale',
+	'GradualeF',
+	'Tractus',
+	'Sequentia',
+	'Evangelium',
+	'Offertorium',
+	'Secreta',
+	'Communio',
+	'Postcommunio'
+] as const;
+const PROPER_ORDER_SET: ReadonlySet<string> = new Set<string>(PROPER_ORDER);
 
 const RANK_FROM_CLASS_1962: Record<1 | 2 | 3 | 4, string> = {
-	1: 'SOLEMNITY',
-	2: 'FEAST',
-	3: 'MEMORIAL',
-	4: 'WEEKDAY'
+	1: 'ClassI',
+	2: 'ClassII',
+	3: 'ClassIII',
+	4: 'ClassIV'
 };
 
 function colorKeysFrom(c: LiturgicalDay1962): string[] {
-	return c.colors.map((col) => COLOR_KEY_1962[col] ?? col.toUpperCase());
+	// romcal 3 returns SCREAMING_SNAKE color keys ("WHITE", "ROSE", ...) which
+	// already match our legend/CSS tokens.
+	return c.colors ? [...c.colors] : [];
 }
 
-function adaptCommem(c: LiturgicalDay1962, lang: CalendarLang): Rite1962Commem {
-	const colorKeys = colorKeysFrom(c);
-	return {
-		key: c.key,
-		name: c.name,
-		rankName: rank1962Label(c.rank1962, lang),
-		kind: c.kind,
-		colorKeys,
-		colorNames: colorKeys.map((k) => colorLabel1962(k, lang))
-	};
+function buildCommemorations(d: LiturgicalDay1962): Rite1962Commem[] {
+	return (d.commemorations ?? []).map((c) => ({ id: c.id, name: c.name }));
 }
 
-function bibleTextFor(ref: string, targetLang: 'en' | 'de'): string | null {
-	const tsvPath = resolvePath(targetLang === 'de' ? 'static/allioli.tsv' : 'static/drb.tsv');
-	const segments = ref.split(';').map((s) => s.trim()).filter(Boolean);
-	if (!segments.length) return null;
-
-	let lastBook: string | null = null;
-	let lastChapter: string | null = null;
-	const parts: string[] = [];
-
-	for (const seg of segments) {
-		// Detect optional leading book (letters, optional leading digit like "1 Cor")
-		const bookMatch = seg.match(/^(\d?\s?[A-Za-z]+\.?)\s+(.*)$/);
-		let book: string | null = null;
-		let rest = seg;
-		if (bookMatch) {
-			book = bookMatch[1];
-			rest = bookMatch[2].trim();
-		}
-		if (book) lastBook = book;
-		if (!lastBook) continue;
-
-		let chapter: string;
-		let verseRange: string;
-		// Accept "118:85", "118, 85", "118:85-90", or bare "85" (inherit chapter)
-		const normalized = rest.replace(/\s*,\s*/, ':').replace(/\s+/g, ' ').trim();
-		if (normalized.includes(':')) {
-			const [c, v] = normalized.split(':');
-			chapter = c.trim();
-			verseRange = v.trim();
-			lastChapter = chapter;
-		} else if (lastChapter) {
-			chapter = lastChapter;
-			verseRange = normalized;
-		} else continue;
-
-		const fullRef = `${lastBook} ${chapter}:${verseRange}`;
-		const translated = translateRefToTarget(fullRef, targetLang);
-		if (!translated) continue;
-
-		try {
-			const result = lookupReference(translated, tsvPath);
-			if (result && result.verses.length) {
-				parts.push(result.verses.map((v) => `${v.verse}. ${v.text}`).join(' '));
-			}
-		} catch {
-			// skip
-		}
-	}
-
-	return parts.length ? parts.join(' ') : null;
-}
-
-interface RawSegment {
-	refs: string[];
-	la: string;
-	local: string;
-}
-
-// Zip la / local text streams by index so la[i] and local[i] land in
-// the same segment. Scripture refs attach to the la block that follows
-// them; trailing refs with no following la block attach to the last
-// segment so they still render.
-function buildSegments(items: PropersBlock, localLang: CalendarLang): RawSegment[] {
-	const la: string[] = [];
-	const local: string[] = [];
-	const refsByIdx = new Map<number, string[]>();
-	let pendingRefs: string[] = [];
-
-	for (const it of items) {
-		if (it.type === 'scriptureRef') {
-			pendingRefs.push(it.ref);
-		} else if (it.type === 'text') {
-			const val = it.value.trim();
-			if (!val) continue;
-			if (it.lang === 'la') {
-				if (pendingRefs.length) {
-					refsByIdx.set(la.length, pendingRefs);
-					pendingRefs = [];
-				}
-				la.push(val);
-			} else if (it.lang === localLang) {
-				local.push(val);
-			}
-		}
-	}
-
-	if (pendingRefs.length && la.length) {
-		const lastIdx = la.length - 1;
-		const existing = refsByIdx.get(lastIdx) ?? [];
-		refsByIdx.set(lastIdx, [...existing, ...pendingRefs]);
-	}
-
-	const count = Math.max(la.length, local.length);
-	const segs: RawSegment[] = [];
-	for (let i = 0; i < count; i++) {
-		segs.push({ refs: refsByIdx.get(i) ?? [], la: la[i] ?? '', local: local[i] ?? '' });
-	}
-	return segs;
-}
-
-function propersOf(sections: MassPropersBlocks, lang: CalendarLang): ProperSection[] {
-	const out: ProperSection[] = [];
-	for (const key of PROPER_ORDER) {
-		const block = sections[key];
-		if (!block || !block.length) continue;
-		const rawSegs = buildSegments(block, lang);
-		if (!rawSegs.length) continue;
-
-		const segments: ProperSegment[] = [];
-		const allRefs: string[] = [];
-		let sectionFromBible = false;
-
-		for (const raw of rawSegs) {
-			const seg: ProperSegment = { refs: raw.refs, la: raw.la };
-			if (lang !== 'la' && raw.local) seg.local = raw.local;
-
-			// Bible fallback: only for this segment, using only its own refs
-			if (!seg.local && raw.refs.length && lang !== 'la') {
-				const bible = bibleTextFor(raw.refs.join('; '), lang);
-				if (bible) {
-					seg.local = bible;
-					seg.fromBible = true;
-					sectionFromBible = true;
-				}
-			}
-
-			allRefs.push(...raw.refs);
-			if (seg.la || seg.local || seg.refs.length) segments.push(seg);
-		}
-
-		if (!segments.length) continue;
-		const section: ProperSection = { key, segments, refs: allRefs };
-		if (sectionFromBible) section.fromBible = true;
-		out.push(section);
-	}
-	return out;
-}
-
-function extraSectionsOf(
-	extras: Record<string, PropersBlock>,
-	lang: CalendarLang
+function sectionsFromBundle(
+	laPropers: Record<string, string[]> | undefined,
+	localPropers: Record<string, string[]> | undefined
 ): ProperSection[] {
-	const out: ProperSection[] = [];
-	for (const [key, block] of Object.entries(extras)) {
-		const buckets: Record<string, string[]> = {};
-		const refs: string[] = [];
-		for (const item of block) {
-			if (item.type === 'text') (buckets[item.lang] ??= []).push(item.value);
-			else if (item.type === 'scriptureRef') refs.push(item.ref);
-		}
-		const la = (buckets['la'] ?? []).join('\n\n').trim();
-		const local = lang === 'la' ? '' : (buckets[lang] ?? []).join('\n\n').trim();
-		if (!la && !local && refs.length === 0) continue;
-		const segment: ProperSegment = { refs, la };
-		if (local) segment.local = local;
-		out.push({ key, segments: [segment], refs });
-	}
-	return out;
-}
-
-// Primary celebration may only carry the sections that override the commune
-// (e.g. only `gospel` for a confessor). Merge commune sections under the
-// primary so every liturgical slot has a text source.
-function mergeCommunePropers(
-	p: LiturgicalDay1962,
-	sections: MassPropersBlocks,
-	extraSections: Record<string, PropersBlock>
-): { sections: MassPropersBlocks; extraSections: Record<string, PropersBlock> } {
-	const slug = p.properRef.communeSlug;
-	if (!slug) return { sections, extraSections };
-	const communeCelebration = {
-		...p,
-		properRef: { source: `commune/${slug}` }
-	} as LiturgicalDay1962;
-	let communeResolved;
-	try {
-		communeResolved = resolvePropersBlocks(communeCelebration);
-	} catch {
-		return { sections, extraSections };
-	}
-	const mergedSections = { ...communeResolved.sections, ...sections } as MassPropersBlocks;
-	const mergedExtras = { ...communeResolved.extraSections, ...extraSections };
-	return { sections: mergedSections, extraSections: mergedExtras };
-}
-
-function adaptDay1962(entries: LiturgicalDay1962[], lang: CalendarLang): CalendarDay {
-	const p = entries[0];
-	const commemorations = entries.slice(1);
-	const colorKeys = colorKeysFrom(p);
-	const colorNames = colorKeys.map((k) => colorLabel1962(k, lang));
-	const resolved = resolvePropersBlocks(p);
-	const { sections, extraSections } = mergeCommunePropers(
-		p,
-		resolved.sections,
-		resolved.extraSections
-	);
-	const detail: Rite1962Detail = {
-		class: p.classOf1962,
-		kind: p.kind,
-		commemorations: commemorations.map((c) => adaptCommem(c, lang)),
-		rubrics: {
-			gloria: p.rubrics.gloria,
-			credo: p.rubrics.credo,
-			preface: p.rubrics.preface,
-			lastGospel: p.rubrics.lastGospel,
-			ite: p.rubrics.ite
-		},
-		...(p.octave
-			? {
-					octave: {
-						id: p.octave.id,
-						parentFeastId: p.octave.parentFeastId,
-						day: p.octave.day,
-						rank: p.octave.rank
-					}
-				}
-			: {}),
-		...(p.vigil ? { vigilOf: p.vigil.of } : {}),
-		...(p.transferredFromDate ? { transferredFrom: p.transferredFromDate } : {}),
-		properSource: p.properRef.source,
-		...(p.properRef.communeSlug ? { communeSlug: p.properRef.communeSlug } : {}),
-		propers: propersOf(sections, lang),
-		extraSections: extraSectionsOf(extraSections, lang)
+	if (!laPropers && !localPropers) return [];
+	const sections: ProperSection[] = [];
+	const seen = new Set<string>();
+	const emit = (key: string) => {
+		if (seen.has(key)) return;
+		seen.add(key);
+		const la = laPropers?.[key];
+		const local = localPropers?.[key];
+		if ((!la || !la.length) && (!local || !local.length)) return;
+		sections.push({ key, la: la ? [...la] : [], local: local ? [...local] : [] });
 	};
-	// Pentecost octave (Pentecost Sunday + 6 days) is carved out of Paschaltide so
-	// it shows as its own arc in the year ring, mirroring the Easter Week octave.
-	const isPentecostWeek = typeof p.key === 'string' && p.key.startsWith('easter_time_7_');
-	const seasonKey = isPentecostWeek ? 'Pentecost' : p.season ?? null;
-	const seasonNames = seasonKey ? [season1962Label(seasonKey, lang)] : [];
+	for (const key of PROPER_ORDER) emit(key);
+	// Emit any remaining sections (ember-day readings, extras) in source order.
+	const extraKeys = new Set<string>();
+	for (const k of Object.keys(laPropers ?? {})) if (!PROPER_ORDER_SET.has(k)) extraKeys.add(k);
+	for (const k of Object.keys(localPropers ?? {})) if (!PROPER_ORDER_SET.has(k)) extraKeys.add(k);
+	for (const k of extraKeys) emit(k);
+	return sections;
+}
+
+function findPropersFor(
+	d: LiturgicalDay1962,
+	bundle: RomcalBundle1962
+): Record<string, string[]> | undefined {
+	const kind = d.kind1962;
+	const key = d.key1962 ?? d.id;
+	if (!kind) return undefined;
+	return bundle.propers[kind]?.[key];
+}
+
+function humanizeId(id: string): string {
+	return id
+		.split(/[_\s]+/)
+		.filter(Boolean)
+		.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+		.join(' ');
+}
+
+// When romcal's own i18next lookup misses (stale bundle, unknown id), it
+// returns the raw key — detect that and fall back to a direct bundle name
+// lookup, then a humanized id.
+function resolveName1962(
+	d: LiturgicalDay1962,
+	localBundle: RomcalBundle1962 | null,
+	laBundle: RomcalBundle1962
+): string {
+	const raw = d.name ?? '';
+	const id = d.id;
+	const key = d.key1962 ?? d.id;
+	const looksUnresolved =
+		!raw || raw === id || raw === key || /^[a-z][a-z0-9_]*\.[a-z_]+$/.test(raw);
+	if (!looksUnresolved) return raw;
+	const bundles = [localBundle, laBundle].filter(
+		(b): b is RomcalBundle1962 => b != null
+	);
+	for (const b of bundles) {
+		const names = b.i18n.names;
+		const v = names?.[key] ?? names?.[id];
+		if (v && v !== key && v !== id) return v;
+	}
+	return humanizeId(id);
+}
+
+function adaptDay1962(
+	d: LiturgicalDay1962,
+	lang: CalendarLang,
+	laBundle: RomcalBundle1962,
+	localBundle: RomcalBundle1962 | null
+): CalendarDay {
+	const colorKeys = colorKeysFrom(d);
+	const colorNames = colorKeys.map((k) => colorLabel1962(k, lang));
+	const classOf = (d.classOf1962 ?? 4) as 1 | 2 | 3 | 4;
+	const classKey = RANK_FROM_CLASS_1962[classOf];
+
+	const laProps = findPropersFor(d, laBundle);
+	const localProps = localBundle ? findPropersFor(d, localBundle) : undefined;
+	const propers = sectionsFromBundle(laProps, localProps);
+
+	const detail: Rite1962Detail = {
+		class: classOf,
+		kind: d.kind1962 ?? 'tempora',
+		commemorations: buildCommemorations(d),
+		propers
+	};
+	if (d.octaveOf) detail.octave = { ofId: d.octaveOf.ofId, day: d.octaveOf.day };
+	if (d.vigilOf) detail.vigilOf = d.vigilOf;
+	if (d.transferredFromDate) detail.transferredFrom = d.transferredFromDate;
+
+	const seasonKey = d.seasons?.[0] ?? null;
 	return {
-		iso: p.date,
-		id: p.key,
-		name: p.name,
-		rankName: rank1962Label(p.rank1962, lang),
-		rank: RANK_FROM_CLASS_1962[p.classOf1962],
+		iso: d.date,
+		id: d.id,
+		name: resolveName1962(d, localBundle, laBundle),
+		rankName: rank1962Label(classKey, lang),
+		rank: classKey,
 		seasonKey,
-		seasonNames,
+		seasonNames: d.seasonNames ? [...d.seasonNames] : [],
 		colorNames,
 		colorKeys,
 		psalterWeek: null,
@@ -430,13 +299,23 @@ export async function getYear1962(
 	const cacheKey = `${diocese}|${lang}|${year}`;
 	const cached = yearCache1962.get(cacheKey);
 	if (cached) return cached;
-	const resolved = await getRomcal1962(lang, diocese).generateCalendar(year);
+
+	const [romcal, laBundle, localBundle] = await Promise.all([
+		getRomcal1962(lang, diocese),
+		loadBundle1962('la'),
+		lang === 'la' ? Promise.resolve<RomcalBundle1962 | null>(null) : loadBundle1962(lang)
+	]);
+	const resolved = await romcal.generateCalendar(year);
 	const map = new Map<string, CalendarDay>();
 	for (const [iso, entries] of Object.entries(resolved)) {
-		if (!entries.length) continue;
-		map.set(iso, adaptDay1962(entries, lang));
+		const principal = entries[0];
+		if (!principal) continue;
+		map.set(iso, adaptDay1962(principal, lang, laBundle, localBundle));
 	}
 	yearCache1962.set(cacheKey, map);
+	// keep season1962Label referenced so tree-shakers don't drop it while the
+	// detail view gradually takes over rendering its own labels.
+	void season1962Label;
 	return map;
 }
 

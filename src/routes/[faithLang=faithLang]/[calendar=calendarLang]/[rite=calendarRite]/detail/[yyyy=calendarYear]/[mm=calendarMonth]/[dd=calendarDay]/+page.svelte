@@ -12,6 +12,12 @@
 		t1962,
 		type CalendarLang
 	} from '../../../../../calendarI18n';
+
+	function kindLabel(kind: 'tempora' | 'sancti', l: CalendarLang): string {
+		if (kind === 'tempora')
+			return l === 'de' ? 'Temporale' : l === 'la' ? 'Temporale' : 'Temporal';
+		return l === 'de' ? 'Sanktorale' : l === 'la' ? 'Sanctorale' : 'Sanctoral';
+	}
 	import { litBg, litInk } from '../../../../../calendarColors';
 
 	let { data }: { data: PageData } = $props();
@@ -115,7 +121,7 @@
 			<dl class="detail-extras">
 				<div>
 					<dt>{t1962('source', lang)}</dt>
-					<dd>{d.kind}{d.properSource ? ` · ${d.properSource}` : ''}{d.communeSlug ? ` (${d.communeSlug})` : ''}</dd>
+					<dd>{kindLabel(d.kind, lang)}</dd>
 				</div>
 				{#if d.vigilOf}
 					<div>
@@ -126,7 +132,7 @@
 				{#if d.octave}
 					<div>
 						<dt>{t1962('octave', lang)}</dt>
-						<dd>{d.octave.id} · {t1962('octaveDay', lang)} {d.octave.day} · {d.octave.rank}</dd>
+						<dd>{d.octave.ofId} · {t1962('octaveDay', lang)} {d.octave.day}</dd>
 					</div>
 				{/if}
 				{#if d.transferredFrom}
@@ -136,32 +142,13 @@
 					</div>
 				{/if}
 			</dl>
-			<div class="rubrics-grid">
-				<h4>{t1962('rubrics', lang)}</h4>
-				<div class="rubric-row">
-					<span class="rubric-chip" class:on={d.rubrics.gloria}>{t1962('gloria', lang)}: {d.rubrics.gloria ? t1962('yes', lang) : t1962('no', lang)}</span>
-					<span class="rubric-chip" class:on={d.rubrics.credo}>{t1962('credo', lang)}: {d.rubrics.credo ? t1962('yes', lang) : t1962('no', lang)}</span>
-					{#if d.rubrics.preface}
-						<span class="rubric-chip on">{t1962('preface', lang)}: {d.rubrics.preface}</span>
-					{/if}
-					{#if d.rubrics.lastGospel}
-						<span class="rubric-chip on">{t1962('lastGospel', lang)}: {d.rubrics.lastGospel}</span>
-					{/if}
-					{#if d.rubrics.ite}
-						<span class="rubric-chip on">{t1962('ite', lang)}: {d.rubrics.ite}</span>
-					{/if}
-				</div>
-			</div>
 			{#if d.commemorations.length}
 				<div class="commems">
 					<h4>{t1962('commemorations', lang)}</h4>
 					<ul>
-						{#each d.commemorations as c (c.key)}
-							{@const cHex = hexFor(c.colorKeys)}
+						{#each d.commemorations as c (c.id)}
 							<li>
-								<span class="color-swatch" style="background: {cHex}"></span>
 								<span class="commem-name">{c.name}</span>
-								<span class="commem-rank">{c.rankName}</span>
 							</li>
 						{/each}
 					</ul>
@@ -171,62 +158,26 @@
 				<section class="propers">
 					<h4>{t1962('propers', lang)}</h4>
 					{#each d.propers as section (section.key)}
+						{@const rows = Math.max(section.la.length, section.local.length)}
 						<div class="proper-block">
 							<div class="proper-label-row">
 								<span class="proper-label">{properLabel(section.key, lang)}</span>
 							</div>
-							{#each section.segments as seg, segIdx (segIdx)}
-								<div class="proper-segment">
-									{#if seg.refs && seg.refs.length}
-										<div class="proper-segment-refs">
-											{#each seg.refs as r (r)}
-												<span class="proper-ref">{r}</span>
-											{/each}
-										</div>
-									{/if}
-									{#if seg.la || seg.local}
-										<div class="proper-cols" class:single={lang === 'la' || !seg.local}>
-											{#if lang !== 'la' && seg.local && seg.fromBible}
-												<p class="proper-fallback-note">{t1962('bibleFallbackNote', lang)}</p>
+							{#each Array(rows) as _, i (i)}
+								{@const la = section.la[i] ?? ''}
+								{@const local = section.local[i] ?? ''}
+								{#if la || local}
+									<div class="proper-segment">
+										<div class="proper-cols" class:single={lang === 'la' || !local}>
+											{#if la}
+												<div class="proper-col proper-col-la" lang="la">{la}</div>
 											{/if}
-											{#if seg.la}
-												<div class="proper-col proper-col-la" lang="la">{seg.la}</div>
-											{/if}
-											{#if lang !== 'la' && seg.local}
-												<div class="proper-col proper-col-local" lang={lang}>{seg.local}</div>
+											{#if lang !== 'la' && local}
+												<div class="proper-col proper-col-local" lang={lang}>{local}</div>
 											{/if}
 										</div>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					{/each}
-				</section>
-			{/if}
-			{#if d.extraSections.length}
-				<section class="propers">
-					<h4>{t1962('extraSections', lang)}</h4>
-					{#each d.extraSections as section (section.key)}
-						<div class="proper-block">
-							<div class="proper-label-row">
-								<span class="proper-label">{properLabel(section.key, lang)}</span>
-							</div>
-							{#each section.segments as seg, segIdx (segIdx)}
-								<div class="proper-segment">
-									{#if seg.refs && seg.refs.length}
-										<div class="proper-segment-refs">
-											{#each seg.refs as r (r)}
-												<span class="proper-ref">{r}</span>
-											{/each}
-										</div>
-									{/if}
-									<div class="proper-cols" class:single={lang === 'la' || !seg.local}>
-										<div class="proper-col proper-col-la" lang="la">{seg.la}</div>
-										{#if lang !== 'la' && seg.local}
-											<div class="proper-col proper-col-local" lang={lang}>{seg.local}</div>
-										{/if}
 									</div>
-								</div>
+								{/if}
 							{/each}
 						</div>
 					{/each}
@@ -399,10 +350,6 @@
 		margin: 0;
 		color: var(--color-text-primary);
 	}
-	.rubrics-grid {
-		margin-top: 0.75rem;
-	}
-	.rubrics-grid h4,
 	.commems h4,
 	.propers h4 {
 		margin: 0.5rem 0 0.4rem;
@@ -411,24 +358,6 @@
 		letter-spacing: 0.05em;
 		color: var(--color-text-secondary);
 		font-weight: 600;
-	}
-	.rubric-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem;
-	}
-	.rubric-chip {
-		padding: 0.25rem 0.6rem;
-		border-radius: var(--radius-pill);
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-secondary);
-		font-size: 0.78rem;
-		border: 1px solid var(--color-border);
-	}
-	.rubric-chip.on {
-		background: color-mix(in srgb, var(--accent) 15%, var(--color-bg-tertiary));
-		color: var(--color-text-primary);
-		border-color: color-mix(in srgb, var(--accent) 30%, var(--color-border));
 	}
 	.commems {
 		margin-top: 0.75rem;
@@ -450,17 +379,9 @@
 		border-radius: var(--radius-sm, 6px);
 		font-size: 0.85rem;
 	}
-	.commems .color-swatch {
-		border-color: var(--color-border);
-	}
 	.commem-name {
 		flex: 1 1 auto;
 		color: var(--color-text-primary);
-	}
-	.commem-rank {
-		font-size: 0.72rem;
-		color: var(--color-text-secondary);
-		white-space: nowrap;
 	}
 
 	.propers {
@@ -485,15 +406,6 @@
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
 	}
-	.proper-ref {
-		display: inline-block;
-		padding: 0.1rem 0.5rem;
-		border-radius: var(--radius-pill);
-		font-size: 0.72rem;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-		border: 1px solid var(--color-border);
-	}
 	.proper-segment {
 		margin-top: 0.5rem;
 	}
@@ -504,24 +416,6 @@
 		padding-top: 0.5rem;
 		border-top: 1px dashed var(--color-border);
 	}
-	.proper-segment-refs {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.35rem;
-		margin-bottom: 0.35rem;
-	}
-	.proper-fallback-note {
-		grid-column: 2 / 3;
-		grid-row: 1;
-		margin: 0 0 0.25rem;
-		padding: 0.4rem 0.6rem;
-		border-left: 2px solid color-mix(in srgb, var(--orange) 55%, transparent);
-		background: color-mix(in srgb, var(--orange) 8%, transparent);
-		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-		font-size: 0.78rem;
-		line-height: 1.4;
-		color: var(--color-text-secondary);
-	}
 	.proper-cols {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
@@ -531,12 +425,10 @@
 	}
 	.proper-col-la {
 		grid-column: 1;
-		grid-row: 2;
 		font-style: italic;
 	}
 	.proper-col-local {
 		grid-column: 2;
-		grid-row: 2;
 	}
 	.proper-cols.single {
 		grid-template-columns: 1fr;
@@ -544,7 +436,6 @@
 	.proper-cols.single .proper-col-la,
 	.proper-cols.single .proper-col-local {
 		grid-column: 1;
-		grid-row: auto;
 	}
 	.proper-col {
 		white-space: pre-wrap;
@@ -564,10 +455,8 @@
 			grid-template-columns: 1fr;
 		}
 		.proper-cols .proper-col-la,
-		.proper-cols .proper-col-local,
-		.proper-cols .proper-fallback-note {
+		.proper-cols .proper-col-local {
 			grid-column: 1;
-			grid-row: auto;
 		}
 	}
 	@media (max-width: 560px) {

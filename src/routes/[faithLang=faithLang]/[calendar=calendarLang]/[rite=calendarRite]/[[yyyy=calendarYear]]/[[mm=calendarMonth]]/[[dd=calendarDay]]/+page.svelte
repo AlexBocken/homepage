@@ -238,22 +238,11 @@
 						<span class="tc-tag">{t('cycle', lang)}: {humanizeSundayCycle(hero.sundayCycle)}</span>
 					{/if}
 				</div>
-				{#if hero.rite1962}
-					{@const r = hero.rite1962.rubrics}
-					<div class="tc-rubrics">
-						<span class="tc-rubric" class:on={r.gloria}>
-							<span class="tc-rubric-dot"></span>
-							<b>{t1962('gloria', lang)}</b>
-							<span class="tc-state">{r.gloria ? t1962('yes', lang) : t1962('no', lang)}</span>
-						</span>
-						<span class="tc-rubric" class:on={r.credo}>
-							<span class="tc-rubric-dot"></span>
-							<b>{t1962('credo', lang)}</b>
-							<span class="tc-state">{r.credo ? t1962('yes', lang) : t1962('no', lang)}</span>
-						</span>
-						{#if r.preface}
-							<span class="tc-preface"><em>{t1962('preface', lang)}:</em> {r.preface}</span>
-						{/if}
+				{#if hero.rite1962 && hero.rite1962.commemorations.length}
+					<div class="tc-commems">
+						{#each hero.rite1962.commemorations as c (c.id)}
+							<span class="tc-commem">{c.name}</span>
+						{/each}
 					</div>
 				{/if}
 				<span class="tc-arrow" aria-hidden="true">→</span>
@@ -281,19 +270,30 @@
 				▦ {lang === 'de' ? 'Monat' : lang === 'la' ? 'Mensis' : 'Month'}
 			</button>
 		</div>
-		<div class="legend" aria-hidden={!Object.keys(LIT_COLOR_VAR).length}>
-			{#each Object.keys(LIT_COLOR_VAR) as key (key)}
-				{@const label =
-					lang === 'de'
-						? { WHITE: 'Weiß', RED: 'Rot', GREEN: 'Grün', PURPLE: 'Violett', ROSE: 'Rosa', BLACK: 'Schwarz', GOLD: 'Gold' }[key]
-						: lang === 'la'
-							? { WHITE: 'Albus', RED: 'Ruber', GREEN: 'Viridis', PURPLE: 'Violaceus', ROSE: 'Rosaceus', BLACK: 'Niger', GOLD: 'Aureus' }[key]
-							: { WHITE: 'White', RED: 'Red', GREEN: 'Green', PURPLE: 'Violet', ROSE: 'Rose', BLACK: 'Black', GOLD: 'Gold' }[key]}
-				<span class="swatch">
-					<span class="sq" style="background: {litBg(key)}"></span>
-					<span>{label}</span>
-				</span>
-			{/each}
+		<div class="overview-right">
+			<div class="legend" aria-hidden={!Object.keys(LIT_COLOR_VAR).length}>
+				{#each Object.keys(LIT_COLOR_VAR) as key (key)}
+					{@const label =
+						lang === 'de'
+							? { WHITE: 'Weiß', RED: 'Rot', GREEN: 'Grün', PURPLE: 'Violett', ROSE: 'Rosa', BLACK: 'Schwarz' }[key]
+							: lang === 'la'
+								? { WHITE: 'Albus', RED: 'Ruber', GREEN: 'Viridis', PURPLE: 'Violaceus', ROSE: 'Rosaceus', BLACK: 'Niger' }[key]
+								: { WHITE: 'White', RED: 'Red', GREEN: 'Green', PURPLE: 'Violet', ROSE: 'Rose', BLACK: 'Black' }[key]}
+					<span class="swatch">
+						<span class="sq" style="background: {litBg(key)}"></span>
+						<span>{label}</span>
+					</span>
+				{/each}
+			</div>
+			<a
+				class="jump-btn jump-btn-gold"
+				href={todayHref}
+				data-sveltekit-noscroll
+				data-sveltekit-replacestate
+			>
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+				{t('jumpToToday', lang)}
+			</a>
 		</div>
 	</div>
 
@@ -332,13 +332,6 @@
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
 		</a>
 	</nav>
-
-	<div class="today-jump-row">
-		<a class="jump-btn" href={todayHref} data-sveltekit-noscroll>
-			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-			{t('jumpToToday', lang)}
-		</a>
-	</div>
 
 	<div class="grid">
 		<div class="grid-header" role="row">
@@ -642,59 +635,20 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}
-	.tc-rubrics {
+	.tc-commems {
 		margin-top: 1.4rem;
 		padding-top: 1.1rem;
 		border-top: 1px solid rgba(255, 255, 255, 0.22);
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.5rem 1.1rem;
-		align-items: center;
+		gap: 0.4rem 0.6rem;
 	}
-	.tc-rubric {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.45rem;
-		padding: 0.35rem 0.75rem 0.35rem 0.6rem;
+	.tc-commem {
+		padding: 0.3rem 0.7rem;
 		border-radius: var(--radius-pill);
 		background: rgba(255, 255, 255, 0.18);
 		border: 1px solid rgba(255, 255, 255, 0.22);
 		font-size: 0.82rem;
-	}
-	.tc-rubric b {
-		font-weight: 700;
-	}
-	.tc-rubric .tc-state {
-		font-size: 0.72rem;
-		opacity: 0.72;
-		font-style: italic;
-	}
-	.tc-rubric-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.55);
-		box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
-	}
-	.tc-rubric.on .tc-rubric-dot {
-		background: #8be78b;
-		box-shadow: 0 0 0 2px rgba(139, 231, 139, 0.22);
-	}
-	.tc-rubric:not(.on) b {
-		opacity: 0.65;
-	}
-	.tc-preface {
-		font-size: 0.85rem;
-		opacity: 0.9;
-	}
-	.tc-preface em {
-		font-style: normal;
-		font-weight: 700;
-		font-size: 0.68rem;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		margin-right: 0.4rem;
-		opacity: 0.72;
 	}
 	.tc-arrow {
 		position: absolute;
@@ -760,10 +714,17 @@
 	.view-switcher button:active {
 		transform: scale(0.95);
 	}
+	.overview-right {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		align-items: flex-end;
+	}
 	.legend {
 		display: flex;
 		gap: 0.4rem;
 		flex-wrap: wrap;
+		justify-content: flex-end;
 	}
 	.legend .swatch {
 		display: inline-flex;
@@ -837,11 +798,6 @@
 		box-shadow: var(--shadow-hover);
 	}
 
-	.today-jump-row {
-		display: flex;
-		justify-content: center;
-		margin-bottom: 1rem;
-	}
 	.jump-btn {
 		display: inline-flex;
 		align-items: center;
@@ -851,12 +807,25 @@
 		color: var(--color-text-secondary);
 		border-radius: var(--radius-pill);
 		font-size: var(--text-sm);
-		transition: background var(--transition-fast), transform var(--transition-fast);
+		box-shadow: var(--shadow-sm);
+		transition: background var(--transition-fast), transform var(--transition-fast),
+			box-shadow var(--transition-fast);
 	}
 	.jump-btn:hover {
 		background: var(--color-bg-elevated);
 		color: var(--color-text-primary);
 		transform: scale(1.03);
+		box-shadow: var(--shadow-hover);
+	}
+	.jump-btn-gold {
+		background: var(--lit-gold);
+		color: var(--lit-gold-ink);
+		font-weight: 600;
+	}
+	.jump-btn-gold:hover {
+		background: var(--lit-gold);
+		color: var(--lit-gold-ink);
+		filter: brightness(1.08);
 	}
 
 	.grid {

@@ -59,11 +59,18 @@ export function hexFor(colorKeys: string[]): string {
 	return colorHex[first] ?? '#27AE60';
 }
 
-// Rank emphasis for visual weighting of cells
+// Rank emphasis for visual weighting of cells. Accepts both 1969 rank keys and
+// 1962 class labels (ClassI..IV), since 1962 days are emphasized similarly.
 export function rankEmphasis(rank: string): number {
-	if (rank === 'SOLEMNITY') return 3;
-	if (rank === 'FEAST' || rank === 'SUNDAY' || rank === 'HOLY_DAY_OF_OBLIGATION') return 2;
-	if (rank === 'MEMORIAL') return 1;
+	if (rank === 'SOLEMNITY' || rank === 'ClassI') return 3;
+	if (
+		rank === 'FEAST' ||
+		rank === 'SUNDAY' ||
+		rank === 'HOLY_DAY_OF_OBLIGATION' ||
+		rank === 'ClassII'
+	)
+		return 2;
+	if (rank === 'MEMORIAL' || rank === 'ClassIII') return 1;
 	return 0;
 }
 
@@ -245,7 +252,14 @@ const SEASON_LABEL: Record<string, Record<CalendarLang, string>> = {
 	EasterWeek: { en: 'Easter Week', de: 'Osteroktav', la: 'Hebdomada Paschae' },
 	Paschaltide: { en: 'Eastertide', de: 'Osterzeit', la: 'Tempus Paschale' },
 	Pentecost: { en: 'Pentecost Week', de: 'Pfingstoktav', la: 'Hebdomada Pentecostes' },
-	TimeAfterPentecost: { en: 'after Pentecost', de: 'nach Pfingsten', la: 'post Pentecosten' }
+	TimeAfterPentecost: { en: 'after Pentecost', de: 'nach Pfingsten', la: 'post Pentecosten' },
+	// romcal 3 emits 1969-style SCREAMING_SNAKE season keys even for the 1962 calendar.
+	ADVENT: { en: 'Advent', de: 'Advent', la: 'Adventus' },
+	CHRISTMAS_TIME: { en: 'Christmastide', de: 'Weihnachtszeit', la: 'Tempus Nativitatis' },
+	LENT: { en: 'Lent', de: 'Fastenzeit', la: 'Quadragesima' },
+	PASCHAL_TRIDUUM: { en: 'Paschal Triduum', de: 'Ostertriduum', la: 'Triduum Paschale' },
+	EASTER_TIME: { en: 'Eastertide', de: 'Osterzeit', la: 'Tempus Paschale' },
+	ORDINARY_TIME: { en: 'after Pentecost', de: 'nach Pfingsten', la: 'post Pentecosten' }
 };
 
 export function season1962Label(season: string, lang: CalendarLang): string {
@@ -268,26 +282,12 @@ export function colorLabel1962(colorKey: string, lang: CalendarLang): string {
 
 export const ui1962 = {
 	commemorations: { en: 'Commemorations', de: 'Kommemorationen', la: 'Commemorationes' },
-	rubrics: { en: 'Rubrics', de: 'Rubriken', la: 'Rubricæ' },
-	gloria: { en: 'Gloria', de: 'Gloria', la: 'Gloria' },
-	credo: { en: 'Credo', de: 'Credo', la: 'Credo' },
-	preface: { en: 'Preface', de: 'Präfation', la: 'Præfatio' },
-	lastGospel: { en: 'Last Gospel', de: 'Letztes Evangelium', la: 'Ultimum Evangelium' },
-	ite: { en: 'Dismissal', de: 'Entlassung', la: 'Dimissio' },
 	octave: { en: 'Octave', de: 'Oktav', la: 'Octava' },
 	octaveDay: { en: 'day', de: 'Tag', la: 'dies' },
 	vigilOf: { en: 'Vigil of', de: 'Vigil von', la: 'Vigilia' },
 	transferredFrom: { en: 'Transferred from', de: 'Übertragen von', la: 'Translatum ex' },
 	source: { en: 'Source', de: 'Quelle', la: 'Fons' },
-	yes: { en: 'yes', de: 'ja', la: 'sic' },
-	no: { en: 'no', de: 'nein', la: 'non' },
-	properRef: { en: 'Proper', de: 'Proprium', la: 'Proprium' },
-	propers: { en: 'Mass propers', de: 'Messproprium', la: 'Propria Missæ' },
-	extraSections: { en: 'Additional readings', de: 'Zusätzliche Lesungen', la: 'Lectiones additae' },
-	bibleFallbackNote: {
-		en: 'Translation taken from the Douay-Rheims Bible, since no translated proper is published for this section. Wording will differ from authoritative missals.',
-		de: 'Übersetzung stammt aus der Allioli-Bibel, da für diesen Abschnitt kein übersetztes Proprium veröffentlicht ist. Wortlaut weicht von maßgeblichen Messbüchern ab.'
-	}
+	propers: { en: 'Mass propers', de: 'Messproprium', la: 'Propria Missæ' }
 } as const;
 
 export function t1962(key: keyof typeof ui1962, lang: CalendarLang): string {
@@ -296,19 +296,18 @@ export function t1962(key: keyof typeof ui1962, lang: CalendarLang): string {
 }
 
 const PROPER_LABEL: Record<string, Record<CalendarLang, string>> = {
-	introit: { en: 'Introit', de: 'Introitus', la: 'Introitus' },
-	collect: { en: 'Collect', de: 'Kollekte', la: 'Collecta' },
-	epistle: { en: 'Epistle', de: 'Epistel', la: 'Epistola' },
-	gradual: { en: 'Gradual', de: 'Graduale', la: 'Graduale' },
-	alleluia: { en: 'Alleluia', de: 'Alleluja', la: 'Alleluia' },
-	tract: { en: 'Tract', de: 'Tractus', la: 'Tractus' },
-	sequence: { en: 'Sequence', de: 'Sequenz', la: 'Sequentia' },
-	gospel: { en: 'Gospel', de: 'Evangelium', la: 'Evangelium' },
-	offertory: { en: 'Offertory', de: 'Offertorium', la: 'Offertorium' },
-	secret: { en: 'Secret', de: 'Stillgebet', la: 'Secreta' },
-	preface: { en: 'Preface', de: 'Präfation', la: 'Præfatio' },
-	communion: { en: 'Communion', de: 'Kommunion', la: 'Communio' },
-	postcommunion: { en: 'Postcommunion', de: 'Schlussgebet', la: 'Postcommunio' }
+	Introitus: { en: 'Introit', de: 'Introitus', la: 'Introitus' },
+	Oratio: { en: 'Collect', de: 'Kollekte', la: 'Oratio' },
+	Lectio: { en: 'Epistle', de: 'Epistel', la: 'Lectio' },
+	Graduale: { en: 'Gradual', de: 'Graduale', la: 'Graduale' },
+	GradualeF: { en: 'Alleluia', de: 'Alleluja', la: 'Alleluia' },
+	Tractus: { en: 'Tract', de: 'Tractus', la: 'Tractus' },
+	Sequentia: { en: 'Sequence', de: 'Sequenz', la: 'Sequentia' },
+	Evangelium: { en: 'Gospel', de: 'Evangelium', la: 'Evangelium' },
+	Offertorium: { en: 'Offertory', de: 'Offertorium', la: 'Offertorium' },
+	Secreta: { en: 'Secret', de: 'Stillgebet', la: 'Secreta' },
+	Communio: { en: 'Communion', de: 'Kommunion', la: 'Communio' },
+	Postcommunio: { en: 'Postcommunion', de: 'Schlussgebet', la: 'Postcommunio' }
 };
 
 export function properLabel(key: string, lang: CalendarLang): string {

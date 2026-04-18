@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.35.0",
+	"version": "1.35.1",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -62,7 +62,7 @@
 		"leaflet": "^1.9.4",
 		"mongoose": "^9.4.1",
 		"node-cron": "^4.2.1",
-		"romcal": "github:AlexBocken/romcal1962#dev",
+		"romcal": "github:AlexBocken/romcal#dev",
 		"sharp": "^0.34.5",
 		"web-haptics": "^0.0.6"
 	},

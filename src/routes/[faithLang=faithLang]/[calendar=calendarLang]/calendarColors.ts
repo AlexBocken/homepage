@@ -1,14 +1,15 @@
 // Liturgical color tokens used by the overview design.
 // Maps romcal color keys to the CSS variables defined on the calendar page.
 
+// Romcal never emits GOLD for either rite, so it is excluded from the legend
+// and lookup here. The --lit-gold token still exists for today-pin styling.
 export const LIT_COLOR_VAR: Record<string, string> = {
 	WHITE: '--lit-white',
 	RED: '--lit-red',
 	GREEN: '--lit-green',
 	PURPLE: '--lit-violet',
 	ROSE: '--lit-rose',
-	BLACK: '--lit-black',
-	GOLD: '--lit-gold'
+	BLACK: '--lit-black'
 };
 
 export const LIT_INK_VAR: Record<string, string> = {
@@ -17,8 +18,7 @@ export const LIT_INK_VAR: Record<string, string> = {
 	GREEN: '--lit-green-ink',
 	PURPLE: '--lit-violet-ink',
 	ROSE: '--lit-rose-ink',
-	BLACK: '--lit-black-ink',
-	GOLD: '--lit-gold-ink'
+	BLACK: '--lit-black-ink'
 };
 
 export function litBg(colorKey: string | undefined): string {
