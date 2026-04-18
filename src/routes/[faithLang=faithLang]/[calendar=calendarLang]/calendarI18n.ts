@@ -118,9 +118,19 @@ export const ui = {
 		la: 'Accuratio adhuc probanda'
 	},
 	rite1962DisclaimerBody: {
-		en: 'The 1962 calendar is derived from divinum-officium data and is still being checked day-by-day against authoritative sources. Local proper calendars (diocese, religious order, national feasts) are not yet applied — only the general Roman calendar is rendered.',
-		de: 'Der Kalender für den Ritus von 1962 stammt aus divinum-officium-Daten und wird noch Tag für Tag mit maßgeblichen Quellen abgeglichen. Eigenkalender (Diözese, Ordensgemeinschaft, Landesfeste) sind noch nicht berücksichtigt — dargestellt wird nur der allgemeine römische Kalender.',
-		la: 'Calendarium anni 1962 ex datis divinum-officium ductum est et adhuc diebus singulis contra fontes fideles examinatur. Calendaria propria localia (dioecesis, ordinis religiosi, festa nationalia) nondum adhibentur — tantum calendarium Romanum generale ostenditur.'
+		en: 'The 1962 calendar is derived from divinum-officium data and is still being checked day-by-day against authoritative sources. Only the Swiss diocesan propers shipped by romcal are applied; other national/local calendars are not yet available.',
+		de: 'Der Kalender für den Ritus von 1962 stammt aus divinum-officium-Daten und wird noch Tag für Tag mit maßgeblichen Quellen abgeglichen. Nur die in romcal enthaltenen Schweizer Diözesankalender werden angewendet; weitere Landes- oder Ortskalender sind noch nicht verfügbar.',
+		la: 'Calendarium anni 1962 ex datis divinum-officium ductum est et adhuc diebus singulis contra fontes fideles examinatur. Tantum calendaria propria dioecesium Helvetiae a romcal provisa adhibentur; cetera calendaria nationalia vel localia nondum praesto sunt.'
+	},
+	calendarVariant: {
+		en: 'Calendar',
+		de: 'Kalender',
+		la: 'Calendarium'
+	},
+	rite1969SwissNote: {
+		en: 'romcal ships only a national Swiss calendar for 1969 — diocesan sub-calendars are not available for this rite.',
+		de: 'romcal liefert für 1969 nur einen nationalen Schweizer Kalender — diözesane Unterkalender sind für diesen Ritus nicht verfügbar.',
+		la: 'Pro anno 1969 romcal solum calendarium Helvetiae nationale praebet — calendaria dioecesana propria pro hoc ritu non adsunt.'
 	}
 };
 
@@ -131,6 +141,81 @@ export function t(key: keyof typeof ui, lang: CalendarLang): string {
 export type Rite = '1969' | '1962';
 export function isValidRite(v: string | null): v is Rite {
 	return v === '1969' || v === '1962';
+}
+
+// --- Diocese selection ---
+// 1962 rite: 7 Swiss dioceses plus the national calendar (all shipped by romcal/1962).
+// 1969 rite: romcal only ships a single national Switzerland bundle, so the dropdown
+// collapses to "General Roman" or "Switzerland" — diocese sub-choices all resolve to
+// the same national bundle and we flag that in the UI.
+export type Diocese1962 =
+	| 'general'
+	| 'switzerland'
+	| 'basel'
+	| 'chur'
+	| 'lausanne-geneva-fribourg'
+	| 'lugano'
+	| 'saint-maurice-abbey'
+	| 'sankt-gallen'
+	| 'sion';
+
+export type Diocese1969 = 'general' | 'switzerland';
+
+export const DIOCESES_1962: Diocese1962[] = [
+	'general',
+	'switzerland',
+	'basel',
+	'chur',
+	'lausanne-geneva-fribourg',
+	'lugano',
+	'saint-maurice-abbey',
+	'sankt-gallen',
+	'sion'
+];
+
+export const DIOCESES_1969: Diocese1969[] = ['general', 'switzerland'];
+
+export const DEFAULT_DIOCESE_1962: Diocese1962 = 'chur';
+export const DEFAULT_DIOCESE_1969: Diocese1969 = 'general';
+
+const DIOCESE_LABEL: Record<string, Record<CalendarLang, string>> = {
+	general: {
+		en: 'General Roman',
+		de: 'Allgemeiner römischer Kalender',
+		la: 'Calendarium Romanum Generale'
+	},
+	switzerland: {
+		en: 'Switzerland (national)',
+		de: 'Schweiz (national)',
+		la: 'Helvetia (nationalis)'
+	},
+	basel: { en: 'Basel', de: 'Basel', la: 'Basilea' },
+	chur: { en: 'Chur', de: 'Chur', la: 'Curia' },
+	'lausanne-geneva-fribourg': {
+		en: 'Lausanne, Geneva and Fribourg',
+		de: 'Lausanne, Genf und Freiburg',
+		la: 'Lausanna, Genavensis et Friburgensis'
+	},
+	lugano: { en: 'Lugano', de: 'Lugano', la: 'Luganensis' },
+	'saint-maurice-abbey': {
+		en: 'Saint-Maurice Abbey',
+		de: 'Abtei Saint-Maurice',
+		la: 'Abbatia S. Mauritii'
+	},
+	'sankt-gallen': { en: 'St. Gallen', de: 'St. Gallen', la: 'Sancti Galli' },
+	sion: { en: 'Sion', de: 'Sitten', la: 'Sedunensis' }
+};
+
+export function dioceseLabel(id: string, lang: CalendarLang): string {
+	return DIOCESE_LABEL[id]?.[lang] ?? id;
+}
+
+export function isDiocese1962(v: string | null | undefined): v is Diocese1962 {
+	return !!v && (DIOCESES_1962 as string[]).includes(v);
+}
+
+export function isDiocese1969(v: string | null | undefined): v is Diocese1969 {
+	return !!v && (DIOCESES_1969 as string[]).includes(v);
 }
 
 // --- 1962 localization helpers ---
@@ -159,6 +244,7 @@ const SEASON_LABEL: Record<string, Record<CalendarLang, string>> = {
 	HolyWeek: { en: 'Holy Week', de: 'Karwoche', la: 'Hebdomada Sancta' },
 	EasterWeek: { en: 'Easter Week', de: 'Osteroktav', la: 'Hebdomada Paschae' },
 	Paschaltide: { en: 'Eastertide', de: 'Osterzeit', la: 'Tempus Paschale' },
+	Pentecost: { en: 'Pentecost Week', de: 'Pfingstoktav', la: 'Hebdomada Pentecostes' },
 	TimeAfterPentecost: { en: 'after Pentecost', de: 'nach Pfingsten', la: 'post Pentecosten' }
 };
 

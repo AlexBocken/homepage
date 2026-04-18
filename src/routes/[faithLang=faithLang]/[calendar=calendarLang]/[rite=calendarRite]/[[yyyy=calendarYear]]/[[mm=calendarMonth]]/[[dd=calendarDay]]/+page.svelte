@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import {
 		getMonthName,
 		getWeekdayShort,
@@ -11,9 +13,15 @@
 		humanizeSundayCycle,
 		t,
 		t1962,
-		properLabel,
+		dioceseLabel,
+		DIOCESES_1962,
+		DIOCESES_1969,
+		DEFAULT_DIOCESE_1962,
+		DEFAULT_DIOCESE_1969,
 		type CalendarLang
 	} from '../../../../calendarI18n';
+	import { litBg, litInk, LIT_COLOR_VAR } from '../../../../calendarColors';
+	import RingView from './RingView.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -22,10 +30,23 @@
 	const year = $derived(data.year);
 	const month = $derived(data.month);
 	const monthDays = $derived(data.monthDays);
+	const yearDays = $derived(data.yearDays);
+	const seasonArcs = $derived(data.seasonArcs);
 	const today = $derived(data.today);
 	const todayIso = $derived(data.todayIso);
 	const selected = $derived(data.selected);
 	const selectedIso = $derived(data.selectedIso);
+	const diocese = $derived(data.diocese);
+
+	type CalView = 'ring' | 'grid';
+	let view = $state<CalView>('ring');
+	onMount(() => {
+		const saved = localStorage.getItem('litcal.view');
+		if (saved === 'ring' || saved === 'grid') view = saved;
+	});
+	$effect(() => {
+		localStorage.setItem('litcal.view', view);
+	});
 
 	const monthTitle = $derived(`${getMonthName(month, lang)} ${year}`);
 
@@ -49,6 +70,35 @@
 		return String(n).padStart(2, '0');
 	}
 
+	function toRoman(n: number): string {
+		const map: [number, string][] = [
+			[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+			[100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+			[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+		];
+		let out = '';
+		let num = n;
+		for (const [v, s] of map) {
+			while (num >= v) {
+				out += s;
+				num -= v;
+			}
+		}
+		return out;
+	}
+	const yearRoman = $derived(toRoman(year));
+	function rankRoman(r: number): string {
+		return r === 3 ? 'I' : r === 2 ? 'II' : r === 1 ? 'III' : '';
+	}
+
+	// Only append ?diocese= when non-default, keeps default URLs clean.
+	const dioceseQuery = $derived.by(() => {
+		const def = rite === '1962' ? DEFAULT_DIOCESE_1962 : DEFAULT_DIOCESE_1969;
+		return diocese && diocese !== def ? `?diocese=${diocese}` : '';
+	});
+
+	const dioceseOptions = $derived(rite === '1962' ? DIOCESES_1962 : DIOCESES_1969);
+
 	// URL: /{faithLang}/{calendar}/{rite}/{yyyy}/{mm}/{dd} — rite is a required
 	// path segment so day/month nav stays inside the active rite.
 	const riteBase = $derived(`/${page.params.faithLang}/${page.params.calendar}/${rite}`);
@@ -56,16 +106,25 @@
 
 	function dayHref(iso: string) {
 		const [yy, mm, dd] = iso.split('-');
-		return `${riteBase}/${yy}/${mm}/${dd}`;
+		return `${riteBase}/${yy}/${mm}/${dd}${dioceseQuery}`;
 	}
 
+	function detailHref(iso: string) {
+		const [yy, mm, dd] = iso.split('-');
+		return `${riteBase}/detail/${yy}/${mm}/${dd}${dioceseQuery}`;
+	}
+
+	// Hero card: prefer the currently-selected day; fall back to today when
+	// nothing is explicitly selected.
+	const hero = $derived(selected ?? today);
+
 	function monthHref(y: number, m: number) {
-		return `${riteBase}/${y}/${pad(m + 1)}`;
+		return `${riteBase}/${y}/${pad(m + 1)}${dioceseQuery}`;
 	}
 
 	const todayHref = $derived.by(() => {
 		const now = new Date();
-		return `${riteBase}/${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
+		return `${riteBase}/${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())}${dioceseQuery}`;
 	});
 
 	const pageTitle = $derived(t('calendar', lang));
@@ -74,9 +133,20 @@
 		return arr && arr.length ? arr[0] : fallback;
 	}
 
+	// When switching rites we drop ?diocese because the ID spaces differ (1962 has
+	// diocesan calendars, 1969 only "general" or "switzerland"). The server
+	// re-applies each rite's default if none is given.
 	function riteHref(r: '1969' | '1962') {
 		const dd = selectedIso.slice(8, 10);
 		return `${calendarBase}/${r}/${year}/${pad(month + 1)}/${dd}`;
+	}
+
+	function onDioceseChange(e: Event) {
+		const next = (e.currentTarget as HTMLSelectElement).value;
+		const def = rite === '1962' ? DEFAULT_DIOCESE_1962 : DEFAULT_DIOCESE_1969;
+		const dd = selectedIso.slice(8, 10);
+		const path = `${riteBase}/${year}/${pad(month + 1)}/${dd}`;
+		goto(next === def ? path : `${path}?diocese=${next}`, { noScroll: true });
 	}
 </script>
 
@@ -109,6 +179,17 @@
 				1962
 			</a>
 		</div>
+		<label class="diocese-picker">
+			<span class="diocese-label">{t('calendarVariant', lang)}</span>
+			<select value={diocese} onchange={onDioceseChange} aria-label={t('calendarVariant', lang)}>
+				{#each dioceseOptions as d (d)}
+					<option value={d}>{dioceseLabel(d, lang)}</option>
+				{/each}
+			</select>
+		</label>
+		{#if rite === '1969'}
+			<p class="diocese-note">{t('rite1969SwissNote', lang)}</p>
+		{/if}
 	</header>
 
 	{#if wip}
@@ -127,37 +208,108 @@
 			</div>
 		</aside>
 	{/if}
-	{#if today}
-		{@const todayHex = hexFor(today.colorKeys)}
-		<section class="today-hero" style="--accent: {todayHex}">
-			<div class="today-meta">
-				<span class="today-label">{t('today', lang)}</span>
-				<span class="today-date">{formatLongDate(today.iso, lang)}</span>
-			</div>
-			<h2 class="today-name">{today.name}</h2>
-			<div class="today-tags">
-				{#if today.seasonNames.length}
-					<span class="tag tag-season">{firstOr(today.seasonNames)}</span>
+	{#if hero}
+		{@const heroColor = hero.colorKeys[0] ?? 'GREEN'}
+		{@const heroIsToday = hero.iso === todayIso}
+		<a class="today-card-link" href={detailHref(hero.iso)} aria-label={hero.name}>
+			<section
+				class="today-banner"
+				style="background: {litBg(heroColor)}; color: {litInk(heroColor)}"
+			>
+				<span class="tc-cross" aria-hidden="true">✝</span>
+				<div class="tc-today">
+					{#if heroIsToday}{t('today', lang)} · {/if}{formatLongDate(hero.iso, lang)}
+				</div>
+				<h2 class="tc-name">{hero.name}</h2>
+				<div class="tc-tags">
+					{#if hero.rankName}
+						<span class="tc-tag">{hero.rankName}</span>
+					{/if}
+					{#if hero.colorNames.length}
+						<span class="tc-tag">{firstOr(hero.colorNames)}</span>
+					{/if}
+					{#if hero.seasonNames.length}
+						<span class="tc-tag">{firstOr(hero.seasonNames)}</span>
+					{/if}
+					{#if hero.psalterWeek}
+						<span class="tc-tag">{t('psalterWeek', lang)}: {humanizePsalterWeek(hero.psalterWeek, lang)}</span>
+					{/if}
+					{#if hero.sundayCycle}
+						<span class="tc-tag">{t('cycle', lang)}: {humanizeSundayCycle(hero.sundayCycle)}</span>
+					{/if}
+				</div>
+				{#if hero.rite1962}
+					{@const r = hero.rite1962.rubrics}
+					<div class="tc-rubrics">
+						<span class="tc-rubric" class:on={r.gloria}>
+							<span class="tc-rubric-dot"></span>
+							<b>{t1962('gloria', lang)}</b>
+							<span class="tc-state">{r.gloria ? t1962('yes', lang) : t1962('no', lang)}</span>
+						</span>
+						<span class="tc-rubric" class:on={r.credo}>
+							<span class="tc-rubric-dot"></span>
+							<b>{t1962('credo', lang)}</b>
+							<span class="tc-state">{r.credo ? t1962('yes', lang) : t1962('no', lang)}</span>
+						</span>
+						{#if r.preface}
+							<span class="tc-preface"><em>{t1962('preface', lang)}:</em> {r.preface}</span>
+						{/if}
+					</div>
 				{/if}
-				{#if today.rankName}
-					<span class="tag tag-rank">{today.rankName}</span>
-				{/if}
-				{#if today.colorNames.length}
-					<span class="tag tag-color">
-						<span class="color-swatch" style="background: {todayHex}"></span>
-						{firstOr(today.colorNames)}
-					</span>
-				{/if}
-				{#if today.psalterWeek}
-					<span class="tag">{t('psalterWeek', lang)}: {humanizePsalterWeek(today.psalterWeek, lang)}</span>
-				{/if}
-				{#if today.sundayCycle}
-					<span class="tag">{t('cycle', lang)}: {humanizeSundayCycle(today.sundayCycle)}</span>
-				{/if}
-			</div>
-		</section>
+				<span class="tc-arrow" aria-hidden="true">→</span>
+			</section>
+		</a>
 	{/if}
 
+	<!-- Color legend + view switcher -->
+	<div class="overview-controls">
+		<div class="view-switcher" role="tablist" aria-label={t('calendar', lang)}>
+			<button
+				class:active={view === 'ring'}
+				role="tab"
+				aria-selected={view === 'ring'}
+				onclick={() => (view = 'ring')}
+			>
+				◯ {lang === 'de' ? 'Jahr' : lang === 'la' ? 'Annus' : 'Year'}
+			</button>
+			<button
+				class:active={view === 'grid'}
+				role="tab"
+				aria-selected={view === 'grid'}
+				onclick={() => (view = 'grid')}
+			>
+				▦ {lang === 'de' ? 'Monat' : lang === 'la' ? 'Mensis' : 'Month'}
+			</button>
+		</div>
+		<div class="legend" aria-hidden={!Object.keys(LIT_COLOR_VAR).length}>
+			{#each Object.keys(LIT_COLOR_VAR) as key (key)}
+				{@const label =
+					lang === 'de'
+						? { WHITE: 'Weiß', RED: 'Rot', GREEN: 'Grün', PURPLE: 'Violett', ROSE: 'Rosa', BLACK: 'Schwarz', GOLD: 'Gold' }[key]
+						: lang === 'la'
+							? { WHITE: 'Albus', RED: 'Ruber', GREEN: 'Viridis', PURPLE: 'Violaceus', ROSE: 'Rosaceus', BLACK: 'Niger', GOLD: 'Aureus' }[key]
+							: { WHITE: 'White', RED: 'Red', GREEN: 'Green', PURPLE: 'Violet', ROSE: 'Rose', BLACK: 'Black', GOLD: 'Gold' }[key]}
+				<span class="swatch">
+					<span class="sq" style="background: {litBg(key)}"></span>
+					<span>{label}</span>
+				</span>
+			{/each}
+		</div>
+	</div>
+
+	{#if view === 'ring'}
+		<section class="ring-stage">
+			<RingView
+				{year}
+				{yearDays}
+				{seasonArcs}
+				{todayIso}
+				{selectedIso}
+				{lang}
+				{dayHref}
+			/>
+		</section>
+	{:else}
 	<nav class="month-nav" aria-label={monthTitle}>
 		<a
 			class="nav-btn"
@@ -165,16 +317,19 @@
 			aria-label={t('prev', lang)}
 			data-sveltekit-noscroll
 		>
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
 		</a>
-		<h2 class="month-title">{monthTitle}</h2>
+		<div class="month-header">
+			<h2 class="month-title">{getMonthName(month, lang)}</h2>
+			<div class="month-sub">{yearRoman} · {pad(month + 1)}</div>
+		</div>
 		<a
 			class="nav-btn"
 			href={monthHref(nextMonth.y, nextMonth.m)}
 			aria-label={t('next', lang)}
 			data-sveltekit-noscroll
 		>
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
 		</a>
 	</nav>
 
@@ -201,21 +356,27 @@
 				{@const isToday = day.iso === todayIso}
 				{@const isSelected = day.iso === selectedIso}
 				{@const rank = rankEmphasis(day.rank)}
-				{@const dayHex = hexFor(day.colorKeys)}
+				{@const hasFeast = rank >= 2 || (rank === 1 && !!day.name)}
+				{@const fillColor = day.colorKeys[0]}
+				{@const rankNum = rankRoman(rank)}
 				<a
 					class="day-cell"
 					class:today={isToday}
 					class:selected={isSelected}
-					class:rank-high={rank === 3}
-					class:rank-mid={rank === 2}
 					class:rank-low={rank === 1}
 					href={dayHref(day.iso)}
-					style="--day-color: {dayHex}"
+					style={hasFeast
+						? `background: ${litBg(fillColor)}; color: ${litInk(fillColor)}`
+						: undefined}
 					data-sveltekit-noscroll
 					data-sveltekit-replacestate
 				>
 					<span class="day-num">{Number(day.iso.slice(8, 10))}</span>
-					<span class="day-color-dot" aria-hidden="true"></span>
+					{#if isToday}
+						<span class="day-today-dot" aria-hidden="true"></span>
+					{:else if rankNum}
+						<span class="day-rank-badge" aria-hidden="true">{rankNum}</span>
+					{/if}
 					{#if day.name}
 						<span class="day-name" title={day.name}>{day.name}</span>
 					{/if}
@@ -223,165 +384,32 @@
 			{/each}
 		</div>
 	</div>
-
-	{#if selected}
-		{@const selectedHex = hexFor(selected.colorKeys)}
-		<section class="detail" style="--accent: {selectedHex}" aria-live="polite">
-			<div class="detail-head">
-				<span class="detail-date">{formatLongDate(selected.iso, lang)}</span>
-				{#if selected.rankName}
-					<span class="tag tag-rank">{selected.rankName}</span>
-				{/if}
-			</div>
-			<h3 class="detail-name">{selected.name}</h3>
-			<div class="detail-tags">
-				{#if selected.seasonNames.length}
-					<span class="tag tag-season">{firstOr(selected.seasonNames)}</span>
-				{/if}
-				{#if selected.colorNames.length}
-					<span class="tag tag-color">
-						<span class="color-swatch" style="background: {selectedHex}"></span>
-						{firstOr(selected.colorNames)}
-					</span>
-				{/if}
-				{#if selected.psalterWeek}
-					<span class="tag">{t('psalterWeek', lang)}: {humanizePsalterWeek(selected.psalterWeek, lang)}</span>
-				{/if}
-				{#if selected.sundayCycle}
-					<span class="tag">{t('cycle', lang)}: {humanizeSundayCycle(selected.sundayCycle)}</span>
-				{/if}
-			</div>
-			{#if selected.rite1962}
-				{@const d = selected.rite1962}
-				<dl class="detail-extras">
-					<div>
-						<dt>{t1962('source', lang)}</dt>
-						<dd>{d.kind}{d.properSource ? ` · ${d.properSource}` : ''}{d.communeSlug ? ` (${d.communeSlug})` : ''}</dd>
-					</div>
-					{#if d.vigilOf}
-						<div>
-							<dt>{t1962('vigilOf', lang)}</dt>
-							<dd>{d.vigilOf}</dd>
-						</div>
-					{/if}
-					{#if d.octave}
-						<div>
-							<dt>{t1962('octave', lang)}</dt>
-							<dd>{d.octave.id} · {t1962('octaveDay', lang)} {d.octave.day} · {d.octave.rank}</dd>
-						</div>
-					{/if}
-					{#if d.transferredFrom}
-						<div>
-							<dt>{t1962('transferredFrom', lang)}</dt>
-							<dd>{d.transferredFrom}</dd>
-						</div>
-					{/if}
-				</dl>
-				<div class="rubrics-grid">
-					<h4>{t1962('rubrics', lang)}</h4>
-					<div class="rubric-row">
-						<span class="rubric-chip" class:on={d.rubrics.gloria}>{t1962('gloria', lang)}: {d.rubrics.gloria ? t1962('yes', lang) : t1962('no', lang)}</span>
-						<span class="rubric-chip" class:on={d.rubrics.credo}>{t1962('credo', lang)}: {d.rubrics.credo ? t1962('yes', lang) : t1962('no', lang)}</span>
-						{#if d.rubrics.preface}
-							<span class="rubric-chip on">{t1962('preface', lang)}: {d.rubrics.preface}</span>
-						{/if}
-						{#if d.rubrics.lastGospel}
-							<span class="rubric-chip on">{t1962('lastGospel', lang)}: {d.rubrics.lastGospel}</span>
-						{/if}
-						{#if d.rubrics.ite}
-							<span class="rubric-chip on">{t1962('ite', lang)}: {d.rubrics.ite}</span>
-						{/if}
-					</div>
-				</div>
-				{#if d.commemorations.length}
-					<div class="commems">
-						<h4>{t1962('commemorations', lang)}</h4>
-						<ul>
-							{#each d.commemorations as c (c.key)}
-								{@const cHex = hexFor(c.colorKeys)}
-								<li>
-									<span class="color-swatch" style="background: {cHex}"></span>
-									<span class="commem-name">{c.name}</span>
-									<span class="commem-rank">{c.rankName}</span>
-								</li>
-							{/each}
-						</ul>
-					</div>
-				{/if}
-				{#if d.propers.length}
-					<section class="propers">
-						<h4>{t1962('propers', lang)}</h4>
-						{#each d.propers as section (section.key)}
-							<div class="proper-block">
-								<div class="proper-label-row">
-									<span class="proper-label">{properLabel(section.key, lang)}</span>
-								</div>
-								{#each section.segments as seg, segIdx (segIdx)}
-									<div class="proper-segment">
-										{#if seg.refs && seg.refs.length}
-											<div class="proper-segment-refs">
-												{#each seg.refs as r (r)}
-													<span class="proper-ref">{r}</span>
-												{/each}
-											</div>
-										{/if}
-										{#if seg.la || seg.local}
-											<div class="proper-cols" class:single={lang === 'la' || !seg.local}>
-												{#if lang !== 'la' && seg.local && seg.fromBible}
-													<p class="proper-fallback-note">{t1962('bibleFallbackNote', lang)}</p>
-												{/if}
-												{#if seg.la}
-													<div class="proper-col proper-col-la" lang="la">{seg.la}</div>
-												{/if}
-												{#if lang !== 'la' && seg.local}
-													<div class="proper-col proper-col-local" lang={lang}>{seg.local}</div>
-												{/if}
-											</div>
-										{/if}
-									</div>
-								{/each}
-							</div>
-						{/each}
-					</section>
-				{/if}
-				{#if d.extraSections.length}
-					<section class="propers">
-						<h4>{t1962('extraSections', lang)}</h4>
-						{#each d.extraSections as section (section.key)}
-							<div class="proper-block">
-								<div class="proper-label-row">
-									<span class="proper-label">{properLabel(section.key, lang)}</span>
-								</div>
-								{#each section.segments as seg, segIdx (segIdx)}
-									<div class="proper-segment">
-										{#if seg.refs && seg.refs.length}
-											<div class="proper-segment-refs">
-												{#each seg.refs as r (r)}
-													<span class="proper-ref">{r}</span>
-												{/each}
-											</div>
-										{/if}
-										<div class="proper-cols" class:single={lang === 'la' || !seg.local}>
-											<div class="proper-col proper-col-la" lang="la">{seg.la}</div>
-											{#if lang !== 'la' && seg.local}
-												<div class="proper-col proper-col-local" lang={lang}>{seg.local}</div>
-											{/if}
-										</div>
-									</div>
-								{/each}
-							</div>
-						{/each}
-					</section>
-				{/if}
-			{/if}
-		</section>
 	{/if}
+
 	{/if}
 </main>
 
 <style>
 	.cal-wrap {
-		max-width: 1000px;
+		/* Liturgical color tokens scoped to the calendar page. */
+		--lit-white: #f3efe6;
+		--lit-white-ink: #7a6a42;
+		--lit-red: #bf616a;
+		--lit-red-ink: #ffffff;
+		--lit-green: #a3be8c;
+		--lit-green-ink: #2f3a20;
+		--lit-violet: #6b5b93;
+		--lit-violet-ink: #ffffff;
+		--lit-black: #2a2a2a;
+		--lit-black-ink: #e5e5e5;
+		--lit-rose: #e0a6b4;
+		--lit-rose-ink: #553240;
+		--lit-gold: #d4af4a;
+		--lit-gold-ink: #3a2a0a;
+		--lit-ferial: #cfc9b9;
+		--lit-ferial-ink: #3a3632;
+
+		max-width: 1120px;
 		margin-inline: auto;
 		padding: 1rem 1rem 4rem;
 	}
@@ -445,6 +473,38 @@
 		outline-offset: 2px;
 	}
 
+	.diocese-picker {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		font-size: var(--text-sm);
+		color: var(--color-text-secondary);
+	}
+	.diocese-label {
+		font-weight: 600;
+	}
+	.diocese-picker select {
+		padding: 0.35rem 0.6rem;
+		border-radius: var(--radius-md);
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-primary);
+		font: inherit;
+		cursor: pointer;
+	}
+	.diocese-picker select:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
+	.diocese-note {
+		margin: 0.25rem 0 0;
+		font-size: var(--text-sm);
+		color: var(--color-text-tertiary);
+		text-align: center;
+		max-width: 38rem;
+	}
+
 	.wip {
 		display: flex;
 		flex-direction: column;
@@ -503,79 +563,228 @@
 		margin: 0;
 	}
 
-	.today-hero {
-		position: relative;
-		background: var(--color-surface);
-		border-radius: var(--radius-card);
-		padding: 1.5rem 1.75rem;
+	/* ====== Today banner (design handoff) ====== */
+	.today-card-link {
+		display: block;
+		text-decoration: none;
+		color: inherit;
 		margin-bottom: 1.5rem;
-		box-shadow: var(--shadow-md);
-		border-left: 6px solid var(--accent);
-		overflow: hidden;
 	}
-	.today-hero::before {
+	.today-banner {
+		position: relative;
+		border-radius: var(--radius-card);
+		padding: 2rem 2.2rem;
+		box-shadow: var(--shadow-md);
+		overflow: hidden;
+		transition: transform var(--transition-normal), box-shadow var(--transition-normal),
+			background 650ms cubic-bezier(0.33, 1, 0.68, 1),
+			color 650ms cubic-bezier(0.33, 1, 0.68, 1);
+	}
+	.today-banner::before {
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(135deg, var(--accent) 0%, transparent 40%);
-		opacity: 0.08;
+		background:
+			radial-gradient(circle at 10% 110%, rgba(255, 255, 255, 0.14), transparent 45%),
+			radial-gradient(circle at 95% -10%, rgba(0, 0, 0, 0.12), transparent 45%);
 		pointer-events: none;
 	}
-	.today-meta {
-		display: flex;
-		align-items: baseline;
-		gap: 1rem;
-		flex-wrap: wrap;
-		margin-bottom: 0.5rem;
+	.today-banner > * {
+		position: relative;
 	}
-	.today-label {
-		font-size: var(--text-sm);
+	.today-card-link:hover .today-banner {
+		transform: translateY(-2px);
+		box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
+	}
+	.today-card-link:active .today-banner {
+		transform: translateY(0);
+	}
+	.today-card-link:focus-visible .today-banner {
+		outline: 3px solid var(--color-primary);
+		outline-offset: 3px;
+	}
+	.tc-cross {
+		position: absolute;
+		top: 1.2rem;
+		right: 1.6rem;
+		font-size: 3.4rem;
+		line-height: 1;
+		opacity: 0.28;
+		font-family: serif;
+	}
+	.tc-today {
+		font-size: 0.74rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
 		font-weight: 700;
-		color: var(--accent);
-		letter-spacing: 0.1em;
+		opacity: 0.88;
+		margin-bottom: 0.6rem;
+	}
+	.tc-name {
+		font-size: clamp(1.4rem, 3vw, 2rem);
+		line-height: 1.12;
+		margin: 0 0 0.3rem;
+		letter-spacing: -0.01em;
+		font-weight: 700;
+	}
+	.tc-tags {
+		margin-top: 0.9rem;
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.tc-tag {
+		padding: 0.3rem 0.75rem;
+		border-radius: var(--radius-pill);
+		background: rgba(255, 255, 255, 0.22);
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}
-	.today-date {
-		font-size: var(--text-sm);
-		color: var(--color-text-secondary);
-	}
-	.today-name {
-		font-size: clamp(1.3rem, 3vw, 1.8rem);
-		margin: 0 0 0.75rem;
-		color: var(--color-text-primary);
-		line-height: 1.2;
-	}
-	.today-tags {
+	.tc-rubrics {
+		margin-top: 1.4rem;
+		padding-top: 1.1rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.22);
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.5rem;
+		gap: 0.5rem 1.1rem;
+		align-items: center;
 	}
-
-	.tag {
+	.tc-rubric {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.4rem;
-		padding: 0.25rem 0.7rem;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-secondary);
+		gap: 0.45rem;
+		padding: 0.35rem 0.75rem 0.35rem 0.6rem;
 		border-radius: var(--radius-pill);
-		font-size: var(--text-sm);
-		font-weight: 500;
+		background: rgba(255, 255, 255, 0.18);
+		border: 1px solid rgba(255, 255, 255, 0.22);
+		font-size: 0.82rem;
 	}
-	.tag-season {
-		background: var(--color-bg-elevated);
+	.tc-rubric b {
+		font-weight: 700;
+	}
+	.tc-rubric .tc-state {
+		font-size: 0.72rem;
+		opacity: 0.72;
+		font-style: italic;
+	}
+	.tc-rubric-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.55);
+		box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+	}
+	.tc-rubric.on .tc-rubric-dot {
+		background: #8be78b;
+		box-shadow: 0 0 0 2px rgba(139, 231, 139, 0.22);
+	}
+	.tc-rubric:not(.on) b {
+		opacity: 0.65;
+	}
+	.tc-preface {
+		font-size: 0.85rem;
+		opacity: 0.9;
+	}
+	.tc-preface em {
+		font-style: normal;
+		font-weight: 700;
+		font-size: 0.68rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		margin-right: 0.4rem;
+		opacity: 0.72;
+	}
+	.tc-arrow {
+		position: absolute;
+		bottom: 1.1rem;
+		right: 1.4rem;
+		font-size: 1.6rem;
+		font-weight: 300;
+		opacity: 0.55;
+		transition: transform var(--transition-normal), opacity var(--transition-normal);
+	}
+	.today-card-link:hover .tc-arrow {
+		opacity: 1;
+		transform: translateX(4px);
+	}
+	@media (max-width: 640px) {
+		.today-banner {
+			padding: 1.5rem 1.4rem;
+		}
+		.tc-cross {
+			font-size: 2.4rem;
+			top: 1rem;
+			right: 1rem;
+		}
+	}
+
+	/* ====== View switcher + color legend ====== */
+	.overview-controls {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1rem;
+	}
+	.view-switcher {
+		display: inline-flex;
+		background: var(--color-surface);
+		border-radius: var(--radius-pill);
+		padding: 0.25rem;
+		box-shadow: var(--shadow-sm);
+	}
+	.view-switcher button {
+		background: none;
+		border: 0;
+		cursor: pointer;
+		font: inherit;
+		font-size: 0.88rem;
+		font-weight: 500;
+		padding: 0.5rem 1rem;
+		border-radius: var(--radius-pill);
+		color: var(--color-text-secondary);
+		transition: background var(--transition-normal), color var(--transition-normal),
+			transform var(--transition-fast);
+	}
+	.view-switcher button:hover {
 		color: var(--color-text-primary);
 	}
-	.tag-rank {
-		background: var(--color-primary);
-		color: var(--color-text-on-primary);
+	.view-switcher button.active {
+		background: var(--color-bg-primary);
+		color: var(--color-text-primary);
+		box-shadow: var(--shadow-sm);
 	}
-	.color-swatch {
+	.view-switcher button:active {
+		transform: scale(0.95);
+	}
+	.legend {
+		display: flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+	.legend .swatch {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.3rem 0.7rem;
+		border-radius: var(--radius-pill);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-sm);
+		font-size: 0.78rem;
+		color: var(--color-text-secondary);
+	}
+	.legend .swatch .sq {
 		width: 12px;
 		height: 12px;
-		border-radius: 50%;
-		border: 1px solid var(--color-border);
-		display: inline-block;
+		border-radius: 4px;
+		border: 1px solid rgba(0, 0, 0, 0.1);
+	}
+
+	.ring-stage {
+		margin-top: 0.5rem;
 	}
 
 	.month-nav {
@@ -583,14 +792,31 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
-		margin-bottom: 0.5rem;
+		margin: 1rem 0 0.5rem;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.month-header {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		flex: 1;
 	}
 	.month-title {
-		font-size: 1.5rem;
+		font-size: 2.25rem;
 		margin: 0;
 		color: var(--color-text-primary);
 		text-align: center;
-		flex: 1;
+		font-weight: 700;
+		line-height: 1.1;
+	}
+	.month-sub {
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+		text-transform: uppercase;
+		letter-spacing: 0.22em;
+		font-weight: 500;
 	}
 	.nav-btn {
 		display: inline-flex;
@@ -634,343 +860,118 @@
 	}
 
 	.grid {
-		background: var(--color-surface);
-		border-radius: var(--radius-card);
-		overflow: hidden;
-		box-shadow: var(--shadow-md);
+		background: transparent;
 	}
 	.grid-header {
 		display: grid;
-		grid-template-columns: repeat(7, 1fr);
-		background: var(--color-bg-elevated);
+		grid-template-columns: repeat(7, minmax(0, 1fr));
+		gap: 0.6rem;
+		background: transparent;
+		border-top: 1px solid var(--color-border);
+		margin-bottom: 0.6rem;
 	}
 	.wd-cell {
-		padding: 0.5rem;
+		padding: 0.7rem 0.3rem 0.3rem;
 		text-align: center;
-		font-size: var(--text-sm);
+		font-size: 0.72rem;
 		font-weight: 600;
-		color: var(--color-text-secondary);
+		color: var(--color-text-tertiary);
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.18em;
+	}
+	.wd-cell:last-child {
+		color: var(--lit-violet);
 	}
 	.grid-body {
 		display: grid;
-		grid-template-columns: repeat(7, 1fr);
-		gap: 1px;
-		background: var(--color-border);
+		grid-template-columns: repeat(7, minmax(0, 1fr));
+		gap: 0.6rem;
+		background: transparent;
 	}
 
 	.day-cell {
 		position: relative;
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
-		min-height: 5.5rem;
-		padding: 0.4rem 0.45rem;
-		background: var(--color-surface);
-		color: var(--color-text-primary);
+		gap: 0.45rem;
+		min-height: 5.8rem;
+		padding: 0.85rem 0.85rem;
+		border-radius: var(--radius-lg);
+		background: var(--lit-ferial);
+		color: var(--lit-ferial-ink);
 		text-decoration: none;
-		transition: background var(--transition-fast);
-		overflow: hidden;
+		box-shadow: var(--shadow-sm);
+		transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 	}
 	.day-cell.blank {
-		background: var(--color-bg-secondary);
+		background: transparent;
+		box-shadow: none;
+		pointer-events: none;
 	}
 	.day-cell:not(.blank):hover {
-		background: var(--color-bg-elevated);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-hover);
 	}
 	.day-num {
-		font-size: 0.95rem;
-		font-weight: 600;
+		font-size: 1.45rem;
+		font-weight: 700;
 		line-height: 1;
-		color: var(--color-text-secondary);
-	}
-	.day-color-dot {
-		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		background: var(--day-color);
-		box-shadow: 0 0 0 1px var(--color-border);
+		letter-spacing: -0.02em;
 	}
 	.day-name {
-		font-size: 0.72rem;
-		line-height: 1.15;
-		color: var(--color-text-tertiary);
+		font-size: 0.8rem;
+		line-height: 1.2;
+		font-weight: 600;
 		overflow: hidden;
 		display: -webkit-box;
 		-webkit-line-clamp: 3;
+		line-clamp: 3;
 		-webkit-box-orient: vertical;
-	}
-
-	.day-cell.rank-high .day-name {
-		font-weight: 700;
-		color: var(--color-text-primary);
-	}
-	.day-cell.rank-mid .day-name {
-		font-weight: 600;
-		color: var(--color-text-primary);
+		margin-top: auto;
 	}
 	.day-cell.rank-low .day-name {
-		color: var(--color-text-secondary);
+		font-weight: 500;
+		opacity: 0.85;
+	}
+
+	.day-today-dot {
+		position: absolute;
+		top: 0.75rem;
+		right: 0.85rem;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: var(--lit-gold);
+		box-shadow: 0 0 0 2px rgba(212, 175, 74, 0.28);
+	}
+	.day-rank-badge {
+		position: absolute;
+		top: 0.65rem;
+		right: 0.7rem;
+		min-width: 20px;
+		height: 20px;
+		padding: 0 5px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-family: Georgia, 'Times New Roman', serif;
+		font-style: italic;
+		font-size: 0.68rem;
+		font-weight: 600;
+		border-radius: 999px;
+		background: rgba(0, 0, 0, 0.12);
+		color: currentColor;
+		opacity: 0.7;
 	}
 
 	.day-cell.today {
-		background: var(--color-bg-elevated);
+		outline: 2px solid var(--lit-gold);
+		outline-offset: -2px;
 	}
-	.day-cell.today .day-num {
-		color: var(--color-primary);
-		font-weight: 800;
-	}
-	.day-cell.today .day-num::before {
-		content: '';
-		display: inline-block;
-		width: 22px;
-		height: 22px;
-		border-radius: 50%;
-		background: var(--color-primary);
-		vertical-align: middle;
-		position: absolute;
-		top: 0.3rem;
-		left: 0.3rem;
-		z-index: 0;
-		opacity: 0.15;
-	}
-
-	.day-cell.selected {
+	.day-cell.selected:not(.today) {
 		outline: 2px solid var(--color-primary);
 		outline-offset: -2px;
 		z-index: 1;
-	}
-
-	.detail {
-		background: var(--color-surface);
-		border-radius: var(--radius-card);
-		padding: 1.25rem 1.5rem;
-		margin-top: 1.5rem;
-		box-shadow: var(--shadow-md);
-		border-left: 4px solid var(--accent);
-	}
-	.detail-head {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		flex-wrap: wrap;
-		margin-bottom: 0.5rem;
-	}
-	.detail-date {
-		font-size: var(--text-sm);
-		color: var(--color-text-secondary);
-	}
-	.detail-name {
-		font-size: 1.3rem;
-		margin: 0 0 0.75rem;
-		color: var(--color-text-primary);
-		line-height: 1.25;
-	}
-	.detail-tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
-
-	.detail-extras {
-		margin: 1rem 0 0.5rem;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-		gap: 0.5rem 1rem;
-		font-size: var(--text-sm);
-	}
-	.detail-extras div {
-		display: flex;
-		flex-direction: column;
-	}
-	.detail-extras dt {
-		font-weight: 600;
-		color: var(--color-text-secondary);
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-	.detail-extras dd {
-		margin: 0;
-		color: var(--color-text-primary);
-	}
-	.rubrics-grid {
-		margin-top: 0.75rem;
-	}
-	.rubrics-grid h4,
-	.commems h4 {
-		margin: 0.5rem 0 0.4rem;
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--color-text-secondary);
-		font-weight: 600;
-	}
-	.rubric-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem;
-	}
-	.rubric-chip {
-		padding: 0.25rem 0.6rem;
-		border-radius: var(--radius-pill);
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-secondary);
-		font-size: 0.78rem;
-		border: 1px solid var(--color-border);
-	}
-	.rubric-chip.on {
-		background: color-mix(in srgb, var(--accent) 15%, var(--color-bg-tertiary));
-		color: var(--color-text-primary);
-		border-color: color-mix(in srgb, var(--accent) 30%, var(--color-border));
-	}
-	.commems {
-		margin-top: 0.75rem;
-	}
-	.commems ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-	}
-	.commems li {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.4rem 0.6rem;
-		background: var(--color-bg-tertiary);
-		border-radius: var(--radius-sm, 6px);
-		font-size: 0.85rem;
-	}
-	.commem-name {
-		flex: 1 1 auto;
-		color: var(--color-text-primary);
-	}
-	.commem-rank {
-		font-size: 0.72rem;
-		color: var(--color-text-secondary);
-		white-space: nowrap;
-	}
-
-	.propers {
-		margin-top: 1rem;
-		border-top: 1px solid var(--color-border);
-		padding-top: 0.75rem;
-	}
-	.propers h4 {
-		margin: 0 0 0.6rem;
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--color-text-secondary);
-		font-weight: 600;
-	}
-	.proper-block {
-		margin-bottom: 0.75rem;
-	}
-	.proper-label-row {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.4rem;
-		margin-bottom: 0.25rem;
-	}
-	.proper-label {
-		font-weight: 600;
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-		text-transform: uppercase;
-		letter-spacing: 0.03em;
-	}
-	.proper-ref {
-		display: inline-block;
-		padding: 0.1rem 0.5rem;
-		border-radius: var(--radius-pill);
-		font-size: 0.72rem;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-		border: 1px solid var(--color-border);
-	}
-	.proper-segment {
-		margin-top: 0.5rem;
-	}
-	.proper-segment:first-child {
-		margin-top: 0;
-	}
-	.proper-segment + .proper-segment {
-		padding-top: 0.5rem;
-		border-top: 1px dashed var(--color-border);
-	}
-	.proper-segment-refs {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.35rem;
-		margin-bottom: 0.35rem;
-	}
-	.proper-fallback-note {
-		grid-column: 2 / 3;
-		grid-row: 1;
-		margin: 0 0 0.25rem;
-		padding: 0.4rem 0.6rem;
-		border-left: 2px solid color-mix(in srgb, var(--orange) 55%, transparent);
-		background: color-mix(in srgb, var(--orange) 8%, transparent);
-		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-		font-size: 0.78rem;
-		line-height: 1.4;
-		color: var(--color-text-secondary);
-	}
-	.proper-cols {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		column-gap: 0.75rem;
-		row-gap: 0;
-		align-items: start;
-	}
-	.proper-col-la {
-		grid-column: 1;
-		grid-row: 2;
-	}
-	.proper-col-local {
-		grid-column: 2;
-		grid-row: 2;
-	}
-	.proper-cols.single {
-		grid-template-columns: 1fr;
-	}
-	.proper-cols.single .proper-col-la,
-	.proper-cols.single .proper-col-local {
-		grid-column: 1;
-		grid-row: auto;
-	}
-	.proper-col {
-		white-space: pre-wrap;
-		font-size: 0.92rem;
-		line-height: 1.5;
-		color: var(--color-text-primary);
-	}
-	.proper-col-la {
-		font-style: italic;
-		color: var(--color-text-primary);
-	}
-	.proper-col-local {
-		color: var(--color-text-primary);
-	}
-	@media (max-width: 640px) {
-		.proper-cols {
-			grid-template-columns: 1fr;
-		}
-		.proper-cols .proper-col-la,
-		.proper-cols .proper-col-local,
-		.proper-cols .proper-fallback-note {
-			grid-column: 1;
-			grid-row: auto;
-		}
 	}
 
 	@media (max-width: 560px) {
@@ -980,36 +981,49 @@
 		.cal-head h1 {
 			font-size: 1.8rem;
 		}
-		.today-hero {
-			padding: 1.1rem 1.1rem;
-		}
 		.month-title {
-			font-size: 1.2rem;
+			font-size: 1.6rem;
 		}
 		.nav-btn {
 			width: 38px;
 			height: 38px;
 		}
+		.grid-header,
+		.grid-body {
+			gap: 0.4rem;
+		}
 		.day-cell {
 			min-height: 4.2rem;
-			padding: 0.3rem 0.3rem;
+			padding: 0.55rem 0.55rem;
+			border-radius: var(--radius-md);
+			gap: 0.3rem;
 		}
 		.day-num {
-			font-size: 0.85rem;
+			font-size: 1.1rem;
 		}
 		.day-name {
-			font-size: 0.6rem;
+			font-size: 0.66rem;
 			-webkit-line-clamp: 2;
+			line-clamp: 2;
 		}
-		.day-color-dot {
-			width: 6px;
-			height: 6px;
-			top: 0.35rem;
-			right: 0.35rem;
+		.day-today-dot {
+			width: 8px;
+			height: 8px;
+			top: 0.5rem;
+			right: 0.55rem;
+		}
+		.day-rank-badge {
+			top: 0.45rem;
+			right: 0.45rem;
+			min-width: 16px;
+			height: 16px;
+			font-size: 0.58rem;
+			padding: 0 3px;
 		}
 		.wd-cell {
-			font-size: 0.7rem;
-			padding: 0.35rem 0.2rem;
+			font-size: 0.64rem;
+			padding: 0.5rem 0.15rem 0.3rem;
+			letter-spacing: 0.12em;
 		}
 	}
 
@@ -1018,12 +1032,11 @@
 			display: none;
 		}
 		.day-cell {
-			min-height: 3.2rem;
-			align-items: center;
-			justify-content: center;
+			min-height: 3.4rem;
+			padding: 0.45rem;
 		}
 		.day-num {
-			font-size: 0.9rem;
+			font-size: 1rem;
 		}
 	}
 </style>
