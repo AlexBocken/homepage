@@ -28,6 +28,7 @@
 	const lang = $derived(data.lang as CalendarLang);
 
 	const year = $derived(data.year);
+	const liturgicalYear = $derived(data.liturgicalYear);
 	const month = $derived(data.month);
 	const monthDays = $derived(data.monthDays);
 	const yearDays = $derived(data.yearDays);
@@ -37,6 +38,10 @@
 	const selected = $derived(data.selected);
 	const selectedIso = $derived(data.selectedIso);
 	const diocese = $derived(data.diocese);
+	const windowStart = $derived(data.windowStart);
+	const windowEnd = $derived(data.windowEnd);
+	const liturgicalYearStart = $derived(data.liturgicalYearStart);
+	const inPostPentecost = $derived(data.inPostPentecost);
 
 	type CalView = 'ring' | 'grid';
 	let view = $state<CalView>('ring');
@@ -301,12 +306,17 @@
 		<section class="ring-stage">
 			<RingView
 				{year}
+				{liturgicalYear}
 				{yearDays}
 				{seasonArcs}
 				{todayIso}
 				{selectedIso}
 				{lang}
 				{dayHref}
+				{windowStart}
+				{windowEnd}
+				{liturgicalYearStart}
+				{inPostPentecost}
 			/>
 		</section>
 	{:else}

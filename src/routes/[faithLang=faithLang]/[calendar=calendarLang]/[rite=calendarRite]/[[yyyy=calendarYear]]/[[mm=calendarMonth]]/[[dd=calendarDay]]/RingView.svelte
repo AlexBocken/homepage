@@ -5,18 +5,25 @@
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { untrack } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	let {
 		year,
+		liturgicalYear,
 		yearDays,
 		seasonArcs,
 		todayIso,
 		selectedIso = null,
 		highlightToday = true,
 		lang,
-		dayHref
+		dayHref,
+		windowStart,
+		windowEnd,
+		liturgicalYearStart,
+		inPostPentecost
 	}: {
 		year: number;
+		liturgicalYear: number;
 		yearDays: YearDay[];
 		seasonArcs: SeasonArc[];
 		todayIso: string;
@@ -24,6 +31,10 @@
 		highlightToday?: boolean;
 		lang: CalendarLang;
 		dayHref: (iso: string) => string;
+		windowStart: string;
+		windowEnd: string;
+		liturgicalYearStart: string;
+		inPostPentecost: boolean;
 	} = $props();
 
 	const size = 560;
@@ -33,27 +44,26 @@
 	const rSeason = 200;
 	const rSeasonInner = 140;
 	const rFeasts = 250;
+	// Gap reserved at the end-of-post-Pentecost seam for the next-year wedge.
+	// Arcs are squeezed into (2π - ringGap) so the wedge gets its own slot.
+	const ringGap = 0.09;
 
-	function isLeap(y: number) {
-		return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
-	}
-	function daysInYear(y: number) {
-		return isLeap(y) ? 366 : 365;
-	}
-	function dayOfYear(iso: string): number {
+	function isoToUTC(iso: string): number {
 		const [yy, mm, dd] = iso.split('-').map(Number);
-		const start = Date.UTC(yy, 0, 1);
-		const cur = Date.UTC(yy, mm - 1, dd);
-		return Math.floor((cur - start) / 86400000);
+		return Date.UTC(yy, mm - 1, dd);
+	}
+	function dayOfWindow(iso: string): number {
+		return Math.floor((isoToUTC(iso) - isoToUTC(windowStart)) / 86400000);
+	}
+	function isoInWindow(iso: string | null | undefined): boolean {
+		return !!iso && iso >= windowStart && iso < windowEnd;
 	}
 
-	const totalDays = $derived(daysInYear(year));
-	const todayDoy = $derived(
-		todayIso && todayIso.startsWith(String(year)) ? dayOfYear(todayIso) : null
+	const totalDays = $derived(
+		Math.floor((isoToUTC(windowEnd) - isoToUTC(windowStart)) / 86400000)
 	);
-	const selectedDoy = $derived(
-		selectedIso && selectedIso.startsWith(String(year)) ? dayOfYear(selectedIso) : null
-	);
+	const todayDoy = $derived(isoInWindow(todayIso) ? dayOfWindow(todayIso) : null);
+	const selectedDoy = $derived(isoInWindow(selectedIso) ? dayOfWindow(selectedIso!) : null);
 	// The pivot doy lands at -90° (top). Prefer the selected day; fall back to
 	// today; fall back to Jan 1 for off-year views.
 	const targetPivot = $derived(selectedDoy ?? todayDoy ?? 0);
@@ -78,16 +88,16 @@
 	});
 	const pivot = $derived(pivotTween.current);
 	function angleFromDoy(doy: number): number {
-		return -Math.PI / 2 + ((doy - pivot) / totalDays) * Math.PI * 2;
+		return -Math.PI / 2 + ((doy - pivot) / totalDays) * (Math.PI * 2 - ringGap);
 	}
 
 	// Build one season-in-view from a raw SeasonArc.
 	type ResolvedArc = SeasonArc & { a0: number; a1: number };
 	const resolvedArcs = $derived<ResolvedArc[]>(
 		seasonArcs.map((s) => {
-			const a0 = angleFromDoy(dayOfYear(s.start));
+			const a0 = angleFromDoy(dayOfWindow(s.start));
 			// include the end day, so add one day before closing the arc
-			const a1 = angleFromDoy(dayOfYear(s.end) + 1);
+			const a1 = angleFromDoy(dayOfWindow(s.end) + 1);
 			return { ...s, a0, a1 };
 		})
 	);
@@ -120,21 +130,36 @@
 		return `M ${ax + r * Math.cos(a1)} ${ay + r * Math.sin(a1)} A ${r} ${r} 0 ${large} 0 ${ax + r * Math.cos(a0)} ${ay + r * Math.sin(a0)}`;
 	}
 
-	const monthLabels = $derived(
-		Array.from({ length: 12 }, (_, i) =>
-			new Date(2000, i, 1).toLocaleDateString(
-				lang === 'de' ? 'de-DE' : 'en-GB',
-				{ month: 'short' }
-			)
-		)
-	);
-	const monthDoys = $derived(
-		Array.from({ length: 12 }, (_, i) => {
-			const start = Date.UTC(year, 0, 1);
-			const cur = Date.UTC(year, i, 1);
-			return Math.floor((cur - start) / 86400000);
-		})
-	);
+	// Enumerate every first-of-month that falls within the window. The window
+	// can span 13 civil-month boundaries (e.g. Advent-cut Dec(Y-1)..Nov(Y) shows
+	// Jan..Nov of year Y + Dec of Y-1). Returns each with its label + day-offset
+	// so month ticks land at the correct ring angle regardless of which year
+	// the month belongs to.
+	type MonthMark = { label: string; doy: number };
+	const monthMarks = $derived.by<MonthMark[]>(() => {
+		const out: MonthMark[] = [];
+		const [wsY, wsM, wsD] = windowStart.split('-').map(Number);
+		let y = wsY;
+		let m = wsM - 1;
+		if (wsD !== 1) {
+			m += 1;
+			if (m > 11) { m = 0; y += 1; }
+		}
+		for (let guard = 0; guard < 14; guard += 1) {
+			const first = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+			if (first >= windowEnd) break;
+			if (first >= windowStart) {
+				const label = new Date(y, m, 1).toLocaleDateString(
+					lang === 'de' ? 'de-DE' : 'en-GB',
+					{ month: 'short' }
+				);
+				out.push({ label, doy: dayOfWindow(first) });
+			}
+			m += 1;
+			if (m > 11) { m = 0; y += 1; }
+		}
+		return out;
+	});
 
 	// Feast dots: keep only the highest-ranking feast per ISO date, skip ferias.
 	// The currently-selected feast is omitted because the static needle pin at
@@ -151,21 +176,32 @@
 		return [...byDate.values()];
 	});
 
-	const currentSeasonKey = $derived(
-		todayIso
-			? seasonArcs.find((s) => todayIso >= s.start && todayIso <= s.end)?.key ?? null
-			: null
+	// A season can split into multiple arcs within one gregorian year (e.g.
+	// ChristmasTide spans both Dec 25–31 and Jan 1–13 of the civil year). Each
+	// arc is identified uniquely by its start ISO; the panel tracks whichever
+	// arc contains `selectedIso` so it stays in sync across SvelteKit
+	// navigation (including the next-year wedge click, which updates the URL
+	// but would otherwise leave stale internal state).
+	const currentArc = $derived(
+		todayIso ? seasonArcs.find((s) => todayIso >= s.start && todayIso <= s.end) ?? null : null
 	);
+	const active = $derived.by(() => {
+		if (selectedIso) {
+			const hit = seasonArcs.find((s) => selectedIso >= s.start && selectedIso <= s.end);
+			if (hit) return hit;
+		}
+		return currentArc ?? seasonArcs[0] ?? null;
+	});
 
-	let activeKey = $state<string | null>(null);
-	const active = $derived(
-		seasonArcs.find((s) => s.key === (activeKey ?? currentSeasonKey ?? seasonArcs[0]?.key)) ??
-			null
-	);
-
-	function pickSeason(key: string) {
-		activeKey = key;
+	function pickSeason(arc: SeasonArc) {
+		goto(dayHref(arc.start), { noScroll: true, replaceState: true, keepFocus: true });
 	}
+
+	let nextYearHovered = $state(false);
+	let hoveredFeastIso = $state<string | null>(null);
+	const hoveredFeast = $derived(
+		hoveredFeastIso ? feastDots.find((f) => f.iso === hoveredFeastIso) ?? null : null
+	);
 
 	const activeFeasts = $derived.by(() => {
 		if (!active) return [] as YearDay[];
@@ -192,11 +228,7 @@
 	// gold when the selection is today). The selected feast's dot is hidden from
 	// the ring since the pin now represents it.
 	const needleIso = $derived(
-		selectedIso && selectedIso.startsWith(String(year))
-			? selectedIso
-			: todayIso && todayIso.startsWith(String(year))
-				? todayIso
-				: null
+		isoInWindow(selectedIso) ? selectedIso : isoInWindow(todayIso) ? todayIso : null
 	);
 	const needleIsToday = $derived(needleIso !== null && needleIso === todayIso);
 	const needleDay = $derived(
@@ -208,9 +240,27 @@
 
 	const T = $derived(
 		{
-			en: { now: 'Now', feastsIn: 'Feasts in this season', centerSub: 'Roman Rite', anno: 'Anno Domini' },
-			de: { now: 'Jetzt', feastsIn: 'Feste in dieser Zeit', centerSub: 'Römischer Ritus', anno: 'Anno Domini' },
-			la: { now: 'Nunc', feastsIn: 'Festa in hoc tempore', centerSub: 'Ritus Romanus', anno: 'Anno Domini' }
+			en: {
+				now: 'Now',
+				feastsIn: 'Feasts in this season',
+				centerSub: 'Roman Rite',
+				anno: 'Anno Domini',
+				nextYear: 'Next liturgical year'
+			},
+			de: {
+				now: 'Jetzt',
+				feastsIn: 'Feste in dieser Zeit',
+				centerSub: 'Römischer Ritus',
+				anno: 'Anno Domini',
+				nextYear: 'Nächstes Kirchenjahr'
+			},
+			la: {
+				now: 'Nunc',
+				feastsIn: 'Festa in hoc tempore',
+				centerSub: 'Ritus Romanus',
+				anno: 'Anno Domini',
+				nextYear: 'Annus liturgicus sequens'
+			}
 		}[lang]
 	);
 
@@ -230,59 +280,76 @@
 		return { path, text };
 	}
 
-	function toRoman(n: number): string {
-		const map: [number, string][] = [
-			[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
-			[100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
-			[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
-		];
-		let out = '';
-		let num = n;
-		for (const [v, s] of map) {
-			while (num >= v) {
-				out += s;
-				num -= v;
-			}
-		}
-		return out;
-	}
-	const yearRoman = $derived(toRoman(year));
 </script>
 
 <div class="ring-wrap">
 	<div class="ring-svg-wrap">
 		<svg class="ring-svg" viewBox="0 0 {size} {size}" role="img" aria-label="Liturgical year ring">
-			{#each resolvedArcs as s (`${s.key}:${s.start}`)}
+			{#if totalDays > 0}
+			{@const aPostEnd =
+				inPostPentecost && isoInWindow(liturgicalYearStart)
+					? angleFromDoy(dayOfWindow(liturgicalYearStart))
+					: angleFromDoy(totalDays)}
+			{@const wedgeSpan = ringGap}
+			{@const rMidWedge = (rSeason + rSeasonInner) / 2}
+			{@const baseOx = cx + rSeason * Math.cos(aPostEnd)}
+			{@const baseOy = cy + rSeason * Math.sin(aPostEnd)}
+			{@const baseIx = cx + rSeasonInner * Math.cos(aPostEnd)}
+			{@const baseIy = cy + rSeasonInner * Math.sin(aPostEnd)}
+			{@const wedgeTipX = cx + rMidWedge * Math.cos(aPostEnd + wedgeSpan)}
+			{@const wedgeTipY = cy + rMidWedge * Math.sin(aPostEnd + wedgeSpan)}
+			{@const nextAdventIso =
+				inPostPentecost ? liturgicalYearStart : windowEnd}
+			<a
+				class="next-year"
+				href={dayHref(nextAdventIso)}
+				aria-label={T.nextYear}
+				data-sveltekit-noscroll
+				data-sveltekit-keepfocus
+				data-sveltekit-replacestate
+				onmouseenter={() => (nextYearHovered = true)}
+				onmouseleave={() => (nextYearHovered = false)}
+				onfocus={() => (nextYearHovered = true)}
+				onblur={() => (nextYearHovered = false)}
+			>
+				<title>{T.nextYear}</title>
+				<polygon
+					class="next-year-wedge"
+					points="{baseOx},{baseOy} {wedgeTipX},{wedgeTipY} {baseIx},{baseIy}"
+				/>
+			</a>
+			{/if}
+
+			{#each [...resolvedArcs].sort((a, b) => Number(active?.start === a.start) - Number(active?.start === b.start)) as s (`${s.key}:${s.start}`)}
 				{@const lbl = labelFor(s)}
-				{@const isCurrent = s.key === currentSeasonKey && highlightToday}
-				{@const isSelected = (activeKey ?? currentSeasonKey) === s.key}
+				{@const isCurrent = s.start === currentArc?.start && highlightToday}
+				{@const isSelected = active?.start === s.start}
 				<g
 					class="season"
 					role="button"
 					tabindex="0"
 					aria-label={s.name}
-					onclick={() => pickSeason(s.key)}
+					onclick={() => pickSeason(s)}
 					onkeydown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							e.preventDefault();
-							pickSeason(s.key);
+							pickSeason(s);
 						}
 					}}
 				>
-					{#if isCurrent}
+					{#if isSelected}
 						<path
 							d={arcPath(cx, cy, rSeasonInner - 6, rSeason + 6, s.a0, s.a1)}
-							fill={litBg(s.color)}
-							opacity="0.22"
-							style="filter: blur(4px)"
+							style="fill: color-mix(in srgb, {litBg(s.color)} 55%, var(--color-text-primary) 45%); filter: blur(4px);"
+							opacity="0.3"
 						/>
 					{/if}
 					<path
 						class="season-path"
 						d={arcPath(cx, cy, rSeasonInner, rSeason, s.a0, s.a1)}
 						fill={litBg(s.color)}
-						stroke={isCurrent ? litInk(s.color) : 'var(--color-bg-primary)'}
-						stroke-width={isCurrent ? 2.5 : isSelected ? 3 : 1.5}
+						stroke={isSelected ? litInk(s.color) : 'var(--color-bg-primary)'}
+						stroke-width={isSelected ? 3 : 1.5}
 						opacity={isSelected ? 1 : 0.9}
 					/>
 					{#if lbl.text}
@@ -296,8 +363,8 @@
 				</g>
 			{/each}
 
-			{#each monthDoys as doy, i (i)}
-				{@const a = angleFromDoy(doy)}
+			{#each monthMarks as mk, i (i)}
+				{@const a = angleFromDoy(mk.doy)}
 				{@const x1 = cx + (rOuter + 4) * Math.cos(a)}
 				{@const y1 = cy + (rOuter + 4) * Math.sin(a)}
 				{@const x2 = cx + (rOuter + 14) * Math.cos(a)}
@@ -307,13 +374,13 @@
 				<g>
 					<line class="month-tick" {x1} {y1} {x2} {y2} />
 					<text class="month-label" x={lx} y={ly} text-anchor="middle" dominant-baseline="middle">
-						{monthLabels[i]}
+						{mk.label}
 					</text>
 				</g>
 			{/each}
 
 			{#each feastDots as f (f.iso + f.name)}
-				{@const a = angleFromDoy(dayOfYear(f.iso))}
+				{@const a = angleFromDoy(dayOfWindow(f.iso))}
 				{@const x = cx + rFeasts * Math.cos(a)}
 				{@const y = cy + rFeasts * Math.sin(a)}
 				<a
@@ -321,6 +388,14 @@
 					aria-label={f.name}
 					data-sveltekit-noscroll
 					data-sveltekit-replacestate
+					onmouseenter={() => (hoveredFeastIso = f.iso)}
+					onmouseleave={() => {
+						if (hoveredFeastIso === f.iso) hoveredFeastIso = null;
+					}}
+					onfocus={() => (hoveredFeastIso = f.iso)}
+					onblur={() => {
+						if (hoveredFeastIso === f.iso) hoveredFeastIso = null;
+					}}
 				>
 					<circle
 						class="feast-dot"
@@ -357,9 +432,38 @@
 				</g>
 			{/if}
 
-			<text class="center-caption" x={cx} y={cy - 18}>{T.anno}</text>
-			<text class="center-year" x={cx} y={cy + 8}>{yearRoman}</text>
-			<text class="center-sub" x={cx} y={cy + 28}>{year} · {T.centerSub}</text>
+			<text class="center-caption" x={cx} y={cy - 26}>{T.anno}</text>
+			<text class="center-year" class:muted={nextYearHovered} x={cx} y={cy + 14}>
+				{nextYearHovered ? liturgicalYear + 1 : liturgicalYear}
+			</text>
+			<text class="center-sub" x={cx} y={cy + 38}>{T.centerSub}</text>
+
+			{#if hoveredFeast}
+				{@const hf = hoveredFeast}
+				{@const aH = angleFromDoy(dayOfWindow(hf.iso))}
+				{@const pillLabel = `${fmtShort(hf.iso)} · ${hf.name}`}
+				{@const pillR = rFeasts + 22}
+				{@const pillW = Math.max(60, pillLabel.length * 7 + 20)}
+				{@const pillH = 22}
+				{@const pcx = cx + pillR * Math.cos(aH)}
+				{@const pcy = cy + pillR * Math.sin(aH)}
+				<g class="feast-pill" pointer-events="none">
+					<rect
+						x={pcx - pillW / 2}
+						y={pcy - pillH / 2}
+						width={pillW}
+						height={pillH}
+						rx={pillH / 2}
+						ry={pillH / 2}
+						fill={litBg(hf.color)}
+						stroke="var(--color-bg-primary)"
+						stroke-width="1.2"
+					/>
+					<text class="feast-pill-text" x={pcx} y={pcy + 4} fill={litInk(hf.color)}>
+						{pillLabel}
+					</text>
+				</g>
+			{/if}
 		</svg>
 	</div>
 
@@ -367,7 +471,7 @@
 		<aside class="season-panel" style="border-top: 6px solid {litBg(active.color)}">
 			<h3>
 				{active.name}
-				{#if active.key === currentSeasonKey && highlightToday}
+				{#if active.start === currentArc?.start && highlightToday}
 					<span
 						class="season-now-chip"
 						style="background: {litBg(active.color)}; color: {litInk(active.color)}"
@@ -422,6 +526,7 @@
 		height: auto;
 		display: block;
 		user-select: none;
+		overflow: visible;
 	}
 	.ring-svg :global(.season-path) {
 		transition: opacity var(--transition-normal);
@@ -445,6 +550,11 @@
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 	}
+	.ring-svg :global(.feast-pill-text) {
+		font-size: 12px;
+		font-weight: 600;
+		text-anchor: middle;
+	}
 	.ring-svg :global(.feast-dot) {
 		transition: r var(--transition-fast);
 	}
@@ -463,10 +573,15 @@
 		transition: fill 650ms cubic-bezier(0.33, 1, 0.68, 1);
 	}
 	.ring-svg :global(.center-year) {
-		font-size: 28px;
+		font-size: 54px;
 		font-weight: 700;
 		fill: var(--color-text-primary);
 		text-anchor: middle;
+		font-variant-numeric: tabular-nums;
+		transition: fill var(--transition-fast);
+	}
+	.ring-svg :global(.center-year.muted) {
+		fill: var(--color-text-tertiary);
 	}
 	.ring-svg :global(.center-caption) {
 		font-size: 11px;
@@ -491,6 +606,22 @@
 	}
 	.ring-svg :global(.season-path) {
 		-webkit-tap-highlight-color: transparent;
+	}
+	.ring-svg :global(.ly-marker) {
+		pointer-events: none;
+	}
+	.ring-svg :global(.next-year) {
+		cursor: pointer;
+		outline: none;
+	}
+	.ring-svg :global(.next-year-wedge) {
+		fill: var(--lit-green);
+		stroke: none;
+		transition: opacity var(--transition-fast);
+	}
+	.ring-svg :global(.next-year:hover .next-year-wedge),
+	.ring-svg :global(.next-year:focus-visible .next-year-wedge) {
+		opacity: 0.75;
 	}
 
 	.season-panel {

@@ -63,11 +63,53 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const year = Number.isFinite(yParam) && yParam >= minYear && yParam <= 2100 ? yParam : today.getFullYear();
 	const month = Number.isFinite(mParam) && mParam >= 0 && mParam <= 11 ? mParam : today.getMonth();
 
-	const yearMap =
+	const fetchLy = async (y: number) =>
 		rite === '1962'
-			? await getYear1962(lang, diocese1962, year)
-			: await getYear(lang, diocese1969, year);
+			? await getYear1962(lang, diocese1962, y)
+			: await getYear(lang, diocese1969, y);
+
+	// Initial candidate LY maps for the URL year. We may swap to LY(year+1)
+	// below if the selected date falls past AdventI of civil year `year`
+	// (dates in Advent..Dec 31 belong to the NEXT liturgical year, not the one
+	// ending at AdventI(year)). Without this shift, clicking e.g. Dec 25 2025
+	// on the LY-2026 ring would route to `/2025/12/25` → LY 2025 ring, which
+	// shows the previous post-Pentecost cycle instead of Christmastide.
+	let yearMap = await fetchLy(year);
+	let lyNextMap = await fetchLy(year + 1);
+
+	const isAdventI1 = (d: CalendarDay) =>
+		d.id === 'advent_1_sunday' || d.id === 'first_sunday_of_advent';
+	const findFirstIso = (
+		m: Map<string, CalendarDay>,
+		predicate: (d: CalendarDay) => boolean
+	): string | null => {
+		for (const [iso, day] of m) if (predicate(day)) return iso;
+		return null;
+	};
+	// AdventI in civil year `year` = start of LY(year+1); rollover point.
+	const adventIOfUrlYear = findFirstIso(lyNextMap, isAdventI1);
+
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
+	if (params.dd) {
+		const ddNum = Number(params.dd);
+		if (ddNum < 1 || ddNum > daysInMonth) throw error(404, 'Not found');
+	}
+	// Tentative selectedIso used only for the LY rollover decision. The real
+	// selectedIso is recomputed after monthDays below (same logic, now on the
+	// possibly-shifted yearMap).
+	const tentativeSelectedIso = params.dd
+		? isoFor(year, month, Number(params.dd))
+		: isoFor(year, month, 1);
+	let liturgicalYear = year;
+	if (
+		adventIOfUrlYear != null &&
+		tentativeSelectedIso >= adventIOfUrlYear
+	) {
+		liturgicalYear = year + 1;
+		yearMap = lyNextMap;
+		lyNextMap = await fetchLy(year + 2);
+	}
+
 	const monthDays: CalendarDay[] = [];
 	for (let d = 1; d <= daysInMonth; d++) {
 		const iso = isoFor(year, month, d);
@@ -99,9 +141,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 
 	let selectedIso: string;
 	if (params.dd) {
-		const dayNum = Number(params.dd);
-		if (dayNum < 1 || dayNum > daysInMonth) throw error(404, 'Not found');
-		selectedIso = isoFor(year, month, dayNum);
+		selectedIso = isoFor(year, month, Number(params.dd));
 	} else if (todayEntry && today.getFullYear() === year && today.getMonth() === month) {
 		selectedIso = todayIso;
 	} else {
@@ -118,22 +158,68 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 					: await getYear(lang, diocese1969, selectedYear);
 	const selectedEntry = selectedYearMap.get(selectedIso) ?? monthDays[0];
 
-	// --- Year overview data for the ring / month-grid views ---
-	const sortedYear = [...yearMap.values()].sort((a, b) => a.iso.localeCompare(b.iso));
+	// --- Year overview data for the ring ---
+	// Romcal (scope: liturgical) emits LY N = Advent I Sunday (year N-1) through
+	// the Saturday before Advent I Sunday of year N+1 — the tail overlaps one
+	// week into LY N+1, so we also fetch LY N+1 and use its Advent I Sunday as
+	// the exclusive cutoff. The ring's window is chosen to avoid splitting the
+	// currently-displayed season: Advent-cut by default ([AdventI N-1, AdventI N));
+	// once today is in TimeAfterPentecost of the current LY we swap to a
+	// Pentecost-cut ([Pentecost N, Pentecost N+1)) so the ongoing post-Pentecost
+	// arc isn't sliced in half by the year boundary. Either way, Advent I Sunday
+	// (= start of a liturgical year) is passed to the ring as an explicit
+	// marker.
+	const isPentecost = (d: CalendarDay) =>
+		d.id === 'pentecost_sunday' || d.id === 'pentecost';
+	const pentecostN = findFirstIso(yearMap, isPentecost);
+	const adventINext = findFirstIso(lyNextMap, isAdventI1);
+	const pentecostNext = findFirstIso(lyNextMap, isPentecost);
 
-	// Romcal leaves `season` undefined on sanctoral-principal days (e.g. Christmas,
-	// Epiphany, Circumcision) even when they fall inside a temporal season, which
-	// would otherwise break the ring arcs with gaps. Fill nulls from the next
-	// non-null day (Christmas Vigil → ChristmasTide, Epiphany → EpiphanyTide, …),
-	// then forward-fill any trailing nulls at end-of-year.
+	const inPostPentecost =
+		pentecostN != null && adventINext != null && todayIso >= pentecostN && todayIso < adventINext;
+
+	let windowStart: string;
+	let windowEnd: string;
+	let liturgicalYearStart: string;
+	const windowMap = new Map<string, CalendarDay>();
+	if (inPostPentecost && pentecostNext != null) {
+		windowStart = pentecostN!;
+		windowEnd = pentecostNext;
+		liturgicalYearStart = adventINext!;
+		for (const [iso, day] of yearMap) {
+			if (iso >= windowStart && iso < adventINext!) windowMap.set(iso, day);
+		}
+		for (const [iso, day] of lyNextMap) {
+			if (iso >= adventINext! && iso < windowEnd) windowMap.set(iso, day);
+		}
+	} else {
+		const cutoff = adventINext ?? null;
+		for (const [iso, day] of yearMap) {
+			if (cutoff == null || iso < cutoff) windowMap.set(iso, day);
+		}
+		const sortedIsos = [...windowMap.keys()].sort();
+		windowStart = sortedIsos[0] ?? todayIso;
+		windowEnd = cutoff ?? sortedIsos[sortedIsos.length - 1] ?? todayIso;
+		liturgicalYearStart = windowStart;
+	}
+
+	const sortedYear = [...windowMap.values()].sort((a, b) => a.iso.localeCompare(b.iso));
+
+	// Romcal leaves `season` undefined on sanctoral-principal days (e.g. a saint
+	// winning over its underlying ferial) even when they fall inside a temporal
+	// season, which would otherwise break the ring arcs with gaps. A sanctoral
+	// day inherits the *preceding* season, not the next one — otherwise a saint
+	// on the Saturday before Septuagesima pulls the Septuagesima arc backward
+	// one day. Forward-fill from previous day first; only backward-fill any
+	// still-null leading days at year start (before Advent I Sunday).
 	const filledSeasons: (string | null)[] = sortedYear.map((d) => d.seasonKey);
+	for (let i = 1; i < filledSeasons.length; i++) {
+		if (filledSeasons[i] == null) filledSeasons[i] = filledSeasons[i - 1];
+	}
 	for (let i = filledSeasons.length - 1; i >= 0; i--) {
 		if (filledSeasons[i] == null && i + 1 < filledSeasons.length) {
 			filledSeasons[i] = filledSeasons[i + 1];
 		}
-	}
-	for (let i = 1; i < filledSeasons.length; i++) {
-		if (filledSeasons[i] == null) filledSeasons[i] = filledSeasons[i - 1];
 	}
 
 	const yearDays: YearDay[] = sortedYear.map((d, i) => ({
@@ -149,10 +235,16 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	for (let i = 0; i < sortedYear.length; i++) {
 		const d = sortedYear[i];
 		const key = filledSeasons[i];
+		// 1962: seasonKey is a 1962-specific label ('Septuagesima', 'TimeAfterPentecost',
+		// etc.) derived from the day id in `adaptDay1962`; the engine's `seasonNames`
+		// are unresolved i18n paths like 'lent.season', so always go through
+		// `season1962Label`. 1969: prefer the engine-resolved localized name.
 		const name =
-			key && key !== d.seasonKey
-				? (rite === '1962' ? season1962Label(key, lang) : key)
-				: d.seasonNames[0] ?? key ?? '';
+			rite === '1962'
+				? (key ? season1962Label(key, lang) : '')
+				: key && key !== d.seasonKey
+					? key
+					: d.seasonNames[0] ?? key ?? '';
 		if (!key) {
 			if (cur) {
 				seasonArcs.push(cur);
@@ -174,10 +266,15 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		diocese: rite === '1962' ? diocese1962 : diocese1969,
 		wip: false,
 		year,
+		liturgicalYear,
 		month,
 		monthDays,
 		yearDays,
 		seasonArcs,
+		windowStart,
+		windowEnd,
+		liturgicalYearStart,
+		inPostPentecost,
 		today: todayEntry,
 		todayIso,
 		selected: selectedEntry,
