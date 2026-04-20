@@ -24,7 +24,7 @@
 		{ key: 'forearms',  labelKey: 'l_forearm', img: null,            paired: true,  tipKey: 'measure_tip_forearms',  dbLeft: 'leftForearm', dbRight: 'rightForearm' },
 		{ key: 'waist',     labelKey: 'waist',     img: 'waist.png',     paired: false, tipKey: 'measure_tip_waist',     dbSingle: 'waist' },
 		{ key: 'hips',      labelKey: 'hips',      img: 'hips.png',      paired: false, tipKey: 'measure_tip_hips',      dbSingle: 'hips' },
-		{ key: 'thighs',    labelKey: 'l_thigh',   img: 'thigh.png',     paired: true,  tipKey: 'measure_tip_thighs',    dbLeft: 'leftThigh',   dbRight: 'rightThigh' },
+		{ key: 'thighs',    labelKey: 'l_thigh',   img: 'thigh.svg',     paired: true,  tipKey: 'measure_tip_thighs',    dbLeft: 'leftThigh',   dbRight: 'rightThigh' },
 		{ key: 'calves',    labelKey: 'calves',    img: 'calves.png',    paired: true,  tipKey: 'measure_tip_calves',    dbLeft: 'leftCalf',    dbRight: 'rightCalf' }
 	];
 
@@ -347,7 +347,16 @@
 				<section class="card" in:fly={flyOpts}>
 					<div class="hero">
 						{#if step.img}
-							<img src="/fitness/measure/{step.img}" alt="" class="hero-pic" />
+							{#if step.img.endsWith('.svg')}
+								<div
+									class="hero-pic hero-svg"
+									style="--hero-svg-src: url(/fitness/measure/{step.img})"
+									role="img"
+									aria-label={stepLabel(step)}
+								></div>
+							{:else}
+								<img src="/fitness/measure/{step.img}" alt="" class="hero-pic" />
+							{/if}
 						{:else}
 							<div class="hero-placeholder" aria-hidden="true">
 								<Ruler size={72} strokeWidth={1.4} />
@@ -578,11 +587,12 @@
 	}
 
 	.shell {
-		min-height: 100vh;
+		--fitness-header-offset: calc(3rem + 12px + env(safe-area-inset-top, 0px));
+		height: calc(100svh - var(--fitness-header-offset));
+		min-height: 0;
 		display: flex;
 		flex-direction: column;
 		background:
-			radial-gradient(1200px 600px at 20% -10%, color-mix(in oklab, var(--color-primary) 10%, transparent), transparent 60%),
 			radial-gradient(800px 400px at 90% 110%, color-mix(in oklab, var(--color-primary) 8%, transparent), transparent 55%),
 			var(--color-bg-primary);
 		color: var(--color-text-primary);
@@ -638,7 +648,8 @@
 		align-items: flex-start;
 		justify-content: center;
 		padding: 0.5rem 1rem 2rem;
-		overflow: hidden;
+		overflow-y: auto;
+		min-height: 0;
 	}
 	.card {
 		width: 100%;
@@ -661,25 +672,27 @@
 		box-shadow: var(--shadow-md);
 		position: relative;
 	}
-	.hero::after {
-		content: '';
-		position: absolute;
-		inset: -2px;
-		border-radius: 50%;
-		border: 1px dashed color-mix(in oklab, var(--color-primary) 45%, transparent);
-		opacity: 0.6;
-		pointer-events: none;
-	}
 	.hero-pic {
 		width: 150px;
 		height: 150px;
 		object-fit: contain;
 	}
-	@media (prefers-color-scheme: dark) {
-		.hero-pic { filter: invert(1); }
+	.hero-svg {
+		mask-image: var(--hero-svg-src);
+		-webkit-mask-image: var(--hero-svg-src);
+		mask-size: contain;
+		-webkit-mask-size: contain;
+		mask-repeat: no-repeat;
+		-webkit-mask-repeat: no-repeat;
+		mask-position: center;
+		-webkit-mask-position: center;
+		background-color: var(--color-text-primary);
 	}
-	:global(:root[data-theme="dark"]) .hero-pic { filter: invert(1); }
-	:global(:root[data-theme="light"]) .hero-pic { filter: none; }
+	@media (prefers-color-scheme: dark) {
+		img.hero-pic { filter: invert(1); }
+	}
+	:global(:root[data-theme="dark"]) img.hero-pic { filter: invert(1); }
+	:global(:root[data-theme="light"]) img.hero-pic { filter: none; }
 
 	.hero-placeholder {
 		display: flex;
@@ -977,15 +990,14 @@
 
 	@media (min-width: 1024px) {
 		.shell {
-			--fitness-header-offset: calc(3rem + 12px + env(safe-area-inset-top, 0px));
 			display: grid;
 			grid-template-columns: 260px minmax(0, 1fr) 360px;
-			grid-template-rows: auto 1fr auto;
+			grid-template-rows: auto minmax(0, 1fr) auto;
 			grid-template-areas:
 				"rail topbar panel"
 				"rail stage  panel"
 				"rail bottom panel";
-			min-height: 100vh;
+			height: 100vh;
 			margin-top: calc(-1 * var(--fitness-header-offset));
 		}
 		.rail   { grid-area: rail; }
