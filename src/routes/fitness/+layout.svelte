@@ -68,7 +68,6 @@
 		!$page.url.pathname.startsWith(`/fitness/${s.nutrition}/food`) &&
 		!$page.url.pathname.startsWith(`/fitness/${s.nutrition}/meals`)
 	);
-
 	/** @param {number} secs */
 	function formatElapsed(secs) {
 		const m = Math.floor(secs / 60);
@@ -125,5 +124,9 @@
 		max-width: var(--fitness-max-width, 900px);
 		margin: 0 auto;
 		padding: var(--space-md, 1rem);
+	}
+	.fitness-content:has(> :global([data-fitness-fullbleed])) {
+		max-width: none;
+		padding: 0;
 	}
 </style>

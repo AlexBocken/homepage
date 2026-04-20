@@ -214,6 +214,10 @@ const translations: Translations = {
 	r_thigh: { en: 'R Thigh', de: 'R Oberschenkel' },
 	l_calf: { en: 'L Calf', de: 'L Wade' },
 	r_calf: { en: 'R Calf', de: 'R Wade' },
+	biceps: { en: 'Biceps', de: 'Bizeps' },
+	forearms: { en: 'Forearms', de: 'Unterarme' },
+	thighs: { en: 'Thighs', de: 'Oberschenkel' },
+	calves: { en: 'Calves', de: 'Waden' },
 	measure_tip_neck: {
 		en: 'Just below the Adam\u2019s apple, tape parallel to the floor.',
 		de: 'Direkt unter dem Adamsapfel, Band parallel zum Boden.'
@@ -252,6 +256,40 @@ const translations: Translations = {
 	},
 	save_measurement: { en: 'Save Measurement', de: 'Messung speichern' },
 	update_measurement: { en: 'Update Measurement', de: 'Messung aktualisieren' },
+	measure_body_parts: { en: 'Measure body parts', de: 'Körpermasse erfassen' },
+	measure_body_parts_sub: {
+		en: 'Guided tape-measure flow \u2014 one part at a time.',
+		de: 'Gef\u00fchrter Ablauf \u2014 ein K\u00f6rperteil nach dem anderen.'
+	},
+	last_measured: { en: 'Last measured', de: 'Zuletzt gemessen' },
+	no_measurements_yet: { en: 'No measurements yet', de: 'Noch keine Messungen' },
+	step_n_of_m: { en: 'Step {n} of {m}', de: 'Schritt {n} von {m}' },
+	over_time: { en: '{label} over time', de: '{label} im Verlauf' },
+	first_measurement_hint: {
+		en: 'First measurement \u2014 your entry will appear here.',
+		de: 'Erste Messung \u2014 dein Wert erscheint hier.'
+	},
+	running_totals: { en: 'Running totals', de: 'Laufende \u00dcbersicht' },
+	review_save: { en: 'Review & save', de: 'Pr\u00fcfen & speichern' },
+	ready_to_save: { en: 'Ready to save', de: 'Bereit zum Speichern' },
+	review_numbers: { en: 'Review your numbers below.', de: 'Pr\u00fcfe deine Werte unten.' },
+	skip: { en: 'Skip', de: 'Auslassen' },
+	next: { en: 'Next', de: 'Weiter' },
+	back: { en: 'Back', de: 'Zur\u00fcck' },
+	review: { en: 'Review', de: 'Pr\u00fcfen' },
+	edit_again: { en: 'Edit again', de: 'Erneut bearbeiten' },
+	exit: { en: 'Exit', de: 'Schlie\u00dfen' },
+	same_both_sides: { en: 'Same on both sides', de: 'Auf beiden Seiten gleich' },
+	copy_l_to_r: { en: 'Copy L \u2192 R', de: 'L \u2192 R \u00fcbernehmen' },
+	kbd_nav: { en: 'nav', de: 'Navigation' },
+	kbd_next: { en: 'next', de: 'weiter' },
+	kbd_skip: { en: 'skip', de: 'auslassen' },
+	kbd_wheel: { en: '\u00b10.1', de: '\u00b10,1' },
+	no_body_parts_selected: {
+		en: 'Enter at least one value before saving.',
+		de: 'Bitte mindestens einen Wert eingeben.'
+	},
+	today_short: { en: 'today', de: 'heute' },
 	latest: { en: 'Latest', de: 'Aktuell' },
 	body_fat_short: { en: 'Body Fat', de: 'Körperfett' },
 	calories: { en: 'Calories', de: 'Kalorien' },

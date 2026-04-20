@@ -134,30 +134,18 @@
 	let formDate = $state(new Date().toISOString().slice(0, 10));
 	let formWeight = $state('');
 	let formBodyFat = $state('');
-	let formNeck = $state('');
-	let formShoulders = $state('');
-	let formChest = $state('');
-	let formBicepsL = $state('');
-	let formBicepsR = $state('');
-	let formForearmsL = $state('');
-	let formForearmsR = $state('');
-	let formWaist = $state('');
-	let formHips = $state('');
-	let formThighsL = $state('');
-	let formThighsR = $state('');
-	let formCalvesL = $state('');
-	let formCalvesR = $state('');
 
 	let showBodyFat = $state(false);
-	let showBodyParts = $state(false);
 
-	const formDirty = $derived(
-		!!formWeight || !!formBodyFat ||
-		!!formNeck || !!formShoulders || !!formChest ||
-		!!formBicepsL || !!formBicepsR || !!formForearmsL || !!formForearmsR ||
-		!!formWaist || !!formHips ||
-		!!formThighsL || !!formThighsR || !!formCalvesL || !!formCalvesR
-	);
+	const formDirty = $derived(!!formWeight || !!formBodyFat);
+
+	const hasAnyBodyPart = $derived(bodyPartFields.some((f) => f.value != null));
+	const latestBpDate = $derived(latest.measurements?.date ?? null);
+	function formatLatestBp() {
+		if (!latestBpDate) return t('no_measurements_yet', lang);
+		const d = new Date(latestBpDate);
+		return `${t('last_measured', lang)} · ${d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+	}
 
 	function stepWeight(delta) {
 		const cur = Number(formWeight) || lastWeight || 0;
@@ -171,36 +159,15 @@
 		else body.weight = null;
 		if (formBodyFat) body.bodyFatPercent = Number(formBodyFat);
 		else body.bodyFatPercent = null;
-		/** @type {any} */
-		const m = {};
-		if (formNeck) m.neck = Number(formNeck);
-		if (formShoulders) m.shoulders = Number(formShoulders);
-		if (formChest) m.chest = Number(formChest);
-		if (formBicepsL) m.leftBicep = Number(formBicepsL);
-		if (formBicepsR) m.rightBicep = Number(formBicepsR);
-		if (formForearmsL) m.leftForearm = Number(formForearmsL);
-		if (formForearmsR) m.rightForearm = Number(formForearmsR);
-		if (formWaist) m.waist = Number(formWaist);
-		if (formHips) m.hips = Number(formHips);
-		if (formThighsL) m.leftThigh = Number(formThighsL);
-		if (formThighsR) m.rightThigh = Number(formThighsR);
-		if (formCalvesL) m.leftCalf = Number(formCalvesL);
-		if (formCalvesR) m.rightCalf = Number(formCalvesR);
-
-		body.measurements = Object.keys(m).length > 0 ? m : null;
+		body.measurements = null;
 		return body;
 	}
 
 	function resetForm() {
 		formWeight = '';
 		formBodyFat = '';
-		formNeck = ''; formShoulders = ''; formChest = '';
-		formBicepsL = ''; formBicepsR = ''; formForearmsL = ''; formForearmsR = '';
-		formWaist = ''; formHips = '';
-		formThighsL = ''; formThighsR = ''; formCalvesL = ''; formCalvesR = '';
 		formDate = new Date().toISOString().slice(0, 10);
 		showBodyFat = false;
-		showBodyParts = false;
 	}
 
 	async function saveMeasurement() {
@@ -337,81 +304,14 @@
 			</div>
 		{/if}
 
-		<button type="button" class="section-toggle" onclick={() => showBodyParts = !showBodyParts}>
-			<span class="section-toggle-left">
-				<Ruler size={16} />
-				{t('body_parts_cm', lang)}
+		<a class="bp-launch" href="/fitness/{measureSlug}/body-parts">
+			<span class="bp-launch-icon"><Ruler size={22} /></span>
+			<span class="bp-launch-text">
+				<span class="bp-launch-title">{t('measure_body_parts', lang)}</span>
+				<span class="bp-launch-sub">{hasAnyBodyPart ? formatLatestBp() : t('measure_body_parts_sub', lang)}</span>
 			</span>
-			<ChevronDown size={16} class="chevron {showBodyParts ? 'open' : ''}" />
-		</button>
-		{#if showBodyParts}
-			<div class="section-body">
-				<div class="bp-group">
-					<span class="bp-group-label">{lang === 'en' ? 'Upper body' : 'Oberkörper'}</span>
-					<div class="bp-row">
-						<div class="bp-field">
-							<label for="m-neck">{t('neck', lang)}</label>
-							<input id="m-neck" type="number" step="0.1" bind:value={formNeck} placeholder="--" inputmode="decimal" />
-							<small class="bp-hint">{t('measure_tip_neck', lang)}</small>
-						</div>
-						<div class="bp-field">
-							<label for="m-shoulders">{t('shoulders', lang)}</label>
-							<input id="m-shoulders" type="number" step="0.1" bind:value={formShoulders} placeholder="--" inputmode="decimal" />
-							<small class="bp-hint">{t('measure_tip_shoulders', lang)}</small>
-						</div>
-						<div class="bp-field">
-							<label for="m-chest">{t('chest', lang)}</label>
-							<input id="m-chest" type="number" step="0.1" bind:value={formChest} placeholder="--" inputmode="decimal" />
-							<small class="bp-hint">{t('measure_tip_chest', lang)}</small>
-						</div>
-					</div>
-				</div>
-
-				<div class="bp-group">
-					<span class="bp-group-label">{lang === 'en' ? 'Arms' : 'Arme'}</span>
-					<div class="bp-row">
-						<div class="bp-field"><label for="m-bl">{t('l_bicep', lang)}</label><input id="m-bl" type="number" step="0.1" bind:value={formBicepsL} placeholder="--" inputmode="decimal" /></div>
-						<div class="bp-field"><label for="m-br">{t('r_bicep', lang)}</label><input id="m-br" type="number" step="0.1" bind:value={formBicepsR} placeholder="--" inputmode="decimal" /></div>
-					</div>
-					<p class="bp-row-hint">{t('measure_tip_biceps', lang)}</p>
-					<div class="bp-row">
-						<div class="bp-field"><label for="m-fl">{t('l_forearm', lang)}</label><input id="m-fl" type="number" step="0.1" bind:value={formForearmsL} placeholder="--" inputmode="decimal" /></div>
-						<div class="bp-field"><label for="m-fr">{t('r_forearm', lang)}</label><input id="m-fr" type="number" step="0.1" bind:value={formForearmsR} placeholder="--" inputmode="decimal" /></div>
-					</div>
-					<p class="bp-row-hint">{t('measure_tip_forearms', lang)}</p>
-				</div>
-
-				<div class="bp-group">
-					<span class="bp-group-label">{lang === 'en' ? 'Core' : 'Rumpf'}</span>
-					<div class="bp-row">
-						<div class="bp-field">
-							<label for="m-waist">{t('waist', lang)}</label>
-							<input id="m-waist" type="number" step="0.1" bind:value={formWaist} placeholder="--" inputmode="decimal" />
-							<small class="bp-hint">{t('measure_tip_waist', lang)}</small>
-						</div>
-						<div class="bp-field">
-							<label for="m-hips">{t('hips', lang)}</label>
-							<input id="m-hips" type="number" step="0.1" bind:value={formHips} placeholder="--" inputmode="decimal" />
-							<small class="bp-hint">{t('measure_tip_hips', lang)}</small>
-						</div>
-					</div>
-				</div>
-
-				<div class="bp-group">
-					<span class="bp-group-label">{lang === 'en' ? 'Legs' : 'Beine'}</span>
-					<div class="bp-row">
-						<div class="bp-field"><label for="m-tl">{t('l_thigh', lang)}</label><input id="m-tl" type="number" step="0.1" bind:value={formThighsL} placeholder="--" inputmode="decimal" /></div>
-						<div class="bp-field"><label for="m-tr">{t('r_thigh', lang)}</label><input id="m-tr" type="number" step="0.1" bind:value={formThighsR} placeholder="--" inputmode="decimal" /></div>
-					</div>
-					<p class="bp-row-hint">{t('measure_tip_thighs', lang)}</p>
-					<div class="bp-row">
-						<div class="bp-field"><label for="m-cl">{t('l_calf', lang)}</label><input id="m-cl" type="number" step="0.1" bind:value={formCalvesL} placeholder="--" inputmode="decimal" /></div>
-						<div class="bp-field"><label for="m-cr">{t('r_calf', lang)}</label><input id="m-cr" type="number" step="0.1" bind:value={formCalvesR} placeholder="--" inputmode="decimal" /></div>
-					</div>
-					<p class="bp-row-hint">{t('measure_tip_calves', lang)}</p>
-				</div>
-			</div>
-		{/if}
+			<ChevronRight size={18} />
+		</a>
 
 		{#if formDirty && !workout.active}
 			<SaveFab disabled={saving} label={t('save_measurement', lang)} />
@@ -800,70 +700,68 @@
 		color: var(--color-text-secondary);
 	}
 
-	.bp-group {
-		margin-bottom: 0.6rem;
-	}
-	.bp-group:last-child {
-		margin-bottom: 0;
-	}
-	.bp-group-label {
-		display: block;
-		font-size: 0.65rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--color-text-tertiary);
-		margin-bottom: 0.35rem;
-	}
-	.bp-row {
+	.bp-launch {
 		display: flex;
-		gap: 0.5rem;
-		margin-bottom: 0.35rem;
+		align-items: center;
+		gap: 0.85rem;
+		width: 100%;
+		padding: 0.9rem 1rem;
+		margin-top: 0.5rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		color: var(--color-text-primary);
+		text-decoration: none;
+		cursor: pointer;
+		transition: all var(--transition-normal);
+		position: relative;
+		overflow: hidden;
 	}
-	.bp-field {
-		flex: 1;
+	.bp-launch::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			135deg,
+			color-mix(in oklab, var(--color-primary) 8%, transparent),
+			transparent 60%
+		);
+		pointer-events: none;
+	}
+	.bp-launch:hover {
+		border-color: var(--color-primary);
+		box-shadow: var(--shadow-md);
+		transform: translateY(-1px);
+	}
+	.bp-launch-icon {
+		display: grid;
+		place-items: center;
+		width: 2.6rem;
+		height: 2.6rem;
+		flex-shrink: 0;
+		border-radius: 50%;
+		background: color-mix(in oklab, var(--color-primary) 14%, transparent);
+		color: var(--color-primary);
+	}
+	.bp-launch-text {
 		display: flex;
 		flex-direction: column;
 		gap: 0.15rem;
+		flex: 1;
+		min-width: 0;
 	}
-	.bp-field label {
-		font-size: 0.65rem;
-		font-weight: 600;
+	.bp-launch-title {
+		font-size: 0.95rem;
+		font-weight: 700;
+		letter-spacing: -0.005em;
+	}
+	.bp-launch-sub {
+		font-size: 0.72rem;
 		color: var(--color-text-secondary);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-	}
-	.bp-field input {
-		padding: 0.4rem 0.5rem;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		background: var(--color-bg-tertiary);
-		color: inherit;
-		font-size: 0.85rem;
-		width: 100%;
-		box-sizing: border-box;
-	}
-	.bp-field input:focus {
-		outline: none;
-		border-color: var(--color-primary);
-	}
-	.bp-hint {
-		display: block;
-		margin-top: 0.3rem;
-		font-size: 0.66rem;
-		font-style: italic;
-		line-height: 1.35;
-		color: var(--color-text-tertiary);
-		letter-spacing: 0.01em;
-	}
-	.bp-row-hint {
-		margin: 0.1rem 0 0.55rem;
-		padding: 0.2rem 0 0.2rem 0.55rem;
-		border-left: 2px solid var(--color-primary);
-		font-size: 0.7rem;
-		font-style: italic;
-		line-height: 1.4;
-		color: var(--color-text-tertiary);
+		line-height: 1.3;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	/* Body parts (latest) */
