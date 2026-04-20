@@ -512,7 +512,7 @@
 										<span class="swatch" style:background={s.color}></span>
 										<span>{s.name}</span>
 										{#if s.pending != null}
-											<span class="legend-val">{s.pending.toFixed(1)}</span>
+											<span class="legend-val">{s.pending.value.toFixed(1)}</span>
 										{/if}
 									</span>
 								{/each}
@@ -521,7 +521,7 @@
 							<div class="legend single">
 								<span class="legend-item">
 									<span class="swatch" style:background={chart.series[0].color}></span>
-									<span class="legend-val">{chart.series[0].pending.toFixed(1)} cm</span>
+									<span class="legend-val">{chart.series[0].pending.value.toFixed(1)} cm</span>
 									<span class="legend-tag">{t('today_short', lang)}</span>
 								</span>
 							</div>
