@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { error } from '@sveltejs/kit';
+import { errorWithVerse } from '$lib/server/errorQuote';
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
 import { BLS_DB } from '$lib/data/blsDb';
 import { DRI_MALE } from '$lib/data/dailyReferenceIntake';
@@ -60,16 +60,16 @@ async function computeRecipePer100g(id: string): Promise<Record<string, number>>
 	return per100g;
 }
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, fetch }) => {
 	const { source, id } = params;
 
 	if (source !== 'bls' && source !== 'usda' && source !== 'recipe' && source !== 'off' && source !== 'custom') {
-		throw error(404, 'Invalid source');
+		await errorWithVerse(fetch, url.pathname, 404, 'Invalid source');
 	}
 
 	if (source === 'bls') {
 		const entry = BLS_DB.find(e => e.blsCode === id);
-		if (!entry) throw error(404, 'Food not found');
+		if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
 		return {
 			food: {
 				source: 'bls' as const,
@@ -91,7 +91,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		const recipe = await Recipe.findOne(recipeQuery)
 			.select('short_name name translations images')
 			.lean();
-		if (!recipe) throw error(404, 'Recipe not found');
+		if (!recipe) await errorWithVerse(fetch, url.pathname, 404, 'Recipe not found');
 
 		// Use logged per100g from food diary entry if provided, otherwise compute from current recipe
 		const logEntryId = url.searchParams.get('logEntry');
@@ -131,7 +131,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	if (source === 'off') {
 		await dbConnect();
 		const entry = await OpenFoodFact.findOne({ barcode: id }).lean();
-		if (!entry) throw error(404, 'Food not found');
+		if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
 		const portions: { description: string; grams: number }[] = [];
 		if (entry.serving?.grams) {
 			portions.push(entry.serving as { description: string; grams: number });
@@ -156,7 +156,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	if (source === 'custom') {
 		await dbConnect();
 		const meal = await CustomMeal.findById(id).lean();
-		if (!meal) throw error(404, 'Meal not found');
+		if (!meal) await errorWithVerse(fetch, url.pathname, 404, 'Meal not found');
 
 		// Aggregate per100g from ingredients
 		const totals: Record<string, number> = {};
@@ -211,7 +211,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	// USDA
 	const fdcId = Number(id);
 	const entry = NUTRITION_DB.find(e => e.fdcId === fdcId);
-	if (!entry) throw error(404, 'Food not found');
+	if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
 	return {
 		food: {
 			source: 'usda' as const,

@@ -1,5 +1,5 @@
-import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { errorWithVerse } from '$lib/server/errorQuote';
 
 export const load: PageServerLoad = async ({ params, fetch, url }) => {
 	const lang = url.pathname.includes('/uebungen') ? 'de' : 'en';
@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
 	]);
 
 	if (!exerciseRes.ok) {
-		error(404, 'Exercise not found');
+		await errorWithVerse(fetch, url.pathname, 404, 'Exercise not found');
 	}
 
 	const exerciseData = await exerciseRes.json();

@@ -1,10 +1,11 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { expectedSlug } from './calendarI18n';
+import { errorWithVerse } from '$lib/server/errorQuote';
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, fetch }) => {
 	const slug = expectedSlug(params.faithLang);
-	if (slug === null) throw error(404, 'Not found');
+	if (slug === null) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	if (params.calendar !== slug) {
 		throw redirect(307, `/${params.faithLang}/${slug}`);
 	}

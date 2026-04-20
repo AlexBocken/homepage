@@ -1,10 +1,10 @@
 import type { LayoutServerLoad } from "./$types"
-import { error } from "@sveltejs/kit";
+import { errorWithVerse } from "$lib/server/errorQuote"
 
-export const load : LayoutServerLoad = async ({locals, params}) => {
+export const load : LayoutServerLoad = async ({locals, params, fetch, url}) => {
 	// Validate faithLang parameter
 	if (params.faithLang !== 'glaube' && params.faithLang !== 'faith' && params.faithLang !== 'fides') {
-		throw error(404, 'Not found');
+		await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	}
 
 	const lang = params.faithLang === 'faith' ? 'en' : params.faithLang === 'fides' ? 'la' : 'de';

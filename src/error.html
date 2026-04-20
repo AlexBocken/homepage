@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="#5E81AC" />
+		<link rel="icon" href="/favicon.svg" />
+		<title>%sveltekit.status% — Error</title>
+		<script>
+			(function () {
+				try {
+					var t = localStorage.getItem('theme');
+					if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+				} catch (_) {}
+			})();
+		</script>
+		<style>
+			:root {
+				--bg: #f8f6f1;
+				--text: #2a2a2a;
+				--text-muted: #555;
+				--text-dim: #777;
+				--border: #ddd;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg: #000;
+					--text: #e5e5e5;
+					--text-muted: #aaa;
+					--text-dim: #888;
+					--border: #333;
+				}
+			}
+			:root[data-theme='light'] {
+				--bg: #f8f6f1;
+				--text: #2a2a2a;
+				--text-muted: #555;
+				--text-dim: #777;
+				--border: #ddd;
+			}
+			:root[data-theme='dark'] {
+				--bg: #000;
+				--text: #e5e5e5;
+				--text-muted: #aaa;
+				--text-dim: #888;
+				--border: #333;
+			}
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: Helvetica, Arial, 'Noto Sans', sans-serif;
+			}
+			main {
+				min-height: 100vh;
+				display: flex;
+				align-items: flex-start;
+				justify-content: center;
+				padding: clamp(3rem, 10vh, 8rem) 1.5rem 4rem;
+			}
+			article {
+				width: 100%;
+				max-width: 640px;
+			}
+			.eyebrow {
+				font-size: 0.75rem;
+				font-weight: 500;
+				letter-spacing: 0.18em;
+				text-transform: uppercase;
+				color: var(--text-dim);
+				margin-bottom: 1rem;
+			}
+			.code {
+				font-size: clamp(7rem, 22vw, 14rem);
+				font-weight: 200;
+				line-height: 0.9;
+				letter-spacing: -0.05em;
+				color: var(--text);
+				margin: 0 0 1.5rem;
+				font-variant-numeric: lining-nums tabular-nums;
+			}
+			.title {
+				font-size: clamp(1.5rem, 3vw, 2rem);
+				font-weight: 500;
+				letter-spacing: -0.01em;
+				margin: 0 0 0.5rem;
+			}
+			.description {
+				font-size: 1.0625rem;
+				line-height: 1.55;
+				color: var(--text-muted);
+				margin: 0;
+				max-width: 44ch;
+			}
+			.actions {
+				display: flex;
+				gap: 1.75rem;
+				margin: 2.25rem 0 0;
+				flex-wrap: wrap;
+			}
+			.link {
+				font-size: 0.95rem;
+				color: var(--text-muted);
+				text-decoration: none;
+				position: relative;
+				transition: color 200ms ease;
+			}
+			.link::after {
+				content: '';
+				position: absolute;
+				left: 0;
+				right: 0;
+				bottom: -2px;
+				height: 1px;
+				background: currentColor;
+				opacity: 0.35;
+				transition: opacity 200ms ease;
+			}
+			.link:hover {
+				color: var(--text);
+			}
+			.link:hover::after {
+				opacity: 1;
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<article>
+				<div class="eyebrow">Error</div>
+				<div class="code" aria-hidden="true">%sveltekit.status%</div>
+				<h1 class="title">%sveltekit.error.message%</h1>
+				<p class="description">
+					An unexpected error occurred while rendering this page.
+				</p>
+				<nav class="actions">
+					<a class="link" href="/">Homepage</a>
+					<a class="link" href="javascript:history.back()">Go back</a>
+				</nav>
+			</article>
+		</main>
+	</body>
+</html>

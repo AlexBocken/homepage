@@ -1,9 +1,10 @@
 import type { PageServerLoad } from './$types';
-import { redirect, error } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
+import { errorWithVerse } from '$lib/server/errorQuote';
 
-export const load: PageServerLoad = async ({ locals, fetch }) => {
+export const load: PageServerLoad = async ({ locals, fetch, url }) => {
   const session = await locals.auth();
-  
+
   if (!session) {
     throw redirect(302, '/login');
   }
@@ -14,11 +15,11 @@ export const load: PageServerLoad = async ({ locals, fetch }) => {
       fetch('/api/cospend/balance'),
       fetch('/api/cospend/debts')
     ]);
-    
+
     if (!balanceResponse.ok) {
       throw new Error('Failed to fetch balance');
     }
-    
+
     if (!debtResponse.ok) {
       throw new Error('Failed to fetch debt data');
     }
@@ -33,6 +34,6 @@ export const load: PageServerLoad = async ({ locals, fetch }) => {
     };
   } catch (e) {
     console.error('Error loading dashboard data:', e);
-    throw error(500, 'Failed to load dashboard data');
+    await errorWithVerse(fetch, url.pathname, 500, 'Failed to load dashboard data');
   }
 };
