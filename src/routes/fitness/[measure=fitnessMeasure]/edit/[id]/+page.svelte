@@ -26,16 +26,16 @@
 	let formNeck = $state(bp.neck != null ? String(bp.neck) : '');
 	let formShoulders = $state(bp.shoulders != null ? String(bp.shoulders) : '');
 	let formChest = $state(bp.chest != null ? String(bp.chest) : '');
-	let formBicepsL = $state((bp.biceps?.left ?? bp.leftBicep) != null ? String(bp.biceps?.left ?? bp.leftBicep) : '');
-	let formBicepsR = $state((bp.biceps?.right ?? bp.rightBicep) != null ? String(bp.biceps?.right ?? bp.rightBicep) : '');
-	let formForearmsL = $state((bp.forearms?.left ?? bp.leftForearm) != null ? String(bp.forearms?.left ?? bp.leftForearm) : '');
-	let formForearmsR = $state((bp.forearms?.right ?? bp.rightForearm) != null ? String(bp.forearms?.right ?? bp.rightForearm) : '');
+	let formBicepsL = $state(bp.leftBicep != null ? String(bp.leftBicep) : '');
+	let formBicepsR = $state(bp.rightBicep != null ? String(bp.rightBicep) : '');
+	let formForearmsL = $state(bp.leftForearm != null ? String(bp.leftForearm) : '');
+	let formForearmsR = $state(bp.rightForearm != null ? String(bp.rightForearm) : '');
 	let formWaist = $state(bp.waist != null ? String(bp.waist) : '');
 	let formHips = $state(bp.hips != null ? String(bp.hips) : '');
-	let formThighsL = $state((bp.thighs?.left ?? bp.leftThigh) != null ? String(bp.thighs?.left ?? bp.leftThigh) : '');
-	let formThighsR = $state((bp.thighs?.right ?? bp.rightThigh) != null ? String(bp.thighs?.right ?? bp.rightThigh) : '');
-	let formCalvesL = $state((bp.calves?.left ?? bp.leftCalf) != null ? String(bp.calves?.left ?? bp.leftCalf) : '');
-	let formCalvesR = $state((bp.calves?.right ?? bp.rightCalf) != null ? String(bp.calves?.right ?? bp.rightCalf) : '');
+	let formThighsL = $state(bp.leftThigh != null ? String(bp.leftThigh) : '');
+	let formThighsR = $state(bp.rightThigh != null ? String(bp.rightThigh) : '');
+	let formCalvesL = $state(bp.leftCalf != null ? String(bp.leftCalf) : '');
+	let formCalvesR = $state(bp.rightCalf != null ? String(bp.rightCalf) : '');
 
 	function buildBody() {
 		/** @type {any} */
@@ -49,20 +49,16 @@
 		if (formNeck) ms.neck = Number(formNeck);
 		if (formShoulders) ms.shoulders = Number(formShoulders);
 		if (formChest) ms.chest = Number(formChest);
-		if (formBicepsL || formBicepsR) ms.biceps = {};
-		if (formBicepsL) ms.biceps.left = Number(formBicepsL);
-		if (formBicepsR) ms.biceps.right = Number(formBicepsR);
-		if (formForearmsL || formForearmsR) ms.forearms = {};
-		if (formForearmsL) ms.forearms.left = Number(formForearmsL);
-		if (formForearmsR) ms.forearms.right = Number(formForearmsR);
+		if (formBicepsL) ms.leftBicep = Number(formBicepsL);
+		if (formBicepsR) ms.rightBicep = Number(formBicepsR);
+		if (formForearmsL) ms.leftForearm = Number(formForearmsL);
+		if (formForearmsR) ms.rightForearm = Number(formForearmsR);
 		if (formWaist) ms.waist = Number(formWaist);
 		if (formHips) ms.hips = Number(formHips);
-		if (formThighsL || formThighsR) ms.thighs = {};
-		if (formThighsL) ms.thighs.left = Number(formThighsL);
-		if (formThighsR) ms.thighs.right = Number(formThighsR);
-		if (formCalvesL || formCalvesR) ms.calves = {};
-		if (formCalvesL) ms.calves.left = Number(formCalvesL);
-		if (formCalvesR) ms.calves.right = Number(formCalvesR);
+		if (formThighsL) ms.leftThigh = Number(formThighsL);
+		if (formThighsR) ms.rightThigh = Number(formThighsR);
+		if (formCalvesL) ms.leftCalf = Number(formCalvesL);
+		if (formCalvesR) ms.rightCalf = Number(formCalvesR);
 
 		body.measurements = Object.keys(ms).length > 0 ? ms : null;
 		return body;
