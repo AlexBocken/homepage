@@ -77,20 +77,21 @@
 		}
 	}
 
+	const latestBp = $derived(latest.measurements?.value ?? {});
 	const bodyPartFields = $derived([
-		{ label: t('neck', lang), key: 'neck', value: latest.measurements?.neck },
-		{ label: t('shoulders', lang), key: 'shoulders', value: latest.measurements?.shoulders },
-		{ label: t('chest', lang), key: 'chest', value: latest.measurements?.chest },
-		{ label: t('l_bicep', lang), key: 'bicepsLeft', value: latest.measurements?.biceps?.left },
-		{ label: t('r_bicep', lang), key: 'bicepsRight', value: latest.measurements?.biceps?.right },
-		{ label: t('l_forearm', lang), key: 'forearmsLeft', value: latest.measurements?.forearms?.left },
-		{ label: t('r_forearm', lang), key: 'forearmsRight', value: latest.measurements?.forearms?.right },
-		{ label: t('waist', lang), key: 'waist', value: latest.measurements?.waist },
-		{ label: t('hips', lang), key: 'hips', value: latest.measurements?.hips },
-		{ label: t('l_thigh', lang), key: 'thighsLeft', value: latest.measurements?.thighs?.left },
-		{ label: t('r_thigh', lang), key: 'thighsRight', value: latest.measurements?.thighs?.right },
-		{ label: t('l_calf', lang), key: 'calvesLeft', value: latest.measurements?.calves?.left },
-		{ label: t('r_calf', lang), key: 'calvesRight', value: latest.measurements?.calves?.right }
+		{ label: t('neck', lang), key: 'neck', value: latestBp.neck },
+		{ label: t('shoulders', lang), key: 'shoulders', value: latestBp.shoulders },
+		{ label: t('chest', lang), key: 'chest', value: latestBp.chest },
+		{ label: t('l_bicep', lang), key: 'leftBicep', value: latestBp.leftBicep },
+		{ label: t('r_bicep', lang), key: 'rightBicep', value: latestBp.rightBicep },
+		{ label: t('l_forearm', lang), key: 'leftForearm', value: latestBp.leftForearm },
+		{ label: t('r_forearm', lang), key: 'rightForearm', value: latestBp.rightForearm },
+		{ label: t('waist', lang), key: 'waist', value: latestBp.waist },
+		{ label: t('hips', lang), key: 'hips', value: latestBp.hips },
+		{ label: t('l_thigh', lang), key: 'leftThigh', value: latestBp.leftThigh },
+		{ label: t('r_thigh', lang), key: 'rightThigh', value: latestBp.rightThigh },
+		{ label: t('l_calf', lang), key: 'leftCalf', value: latestBp.leftCalf },
+		{ label: t('r_calf', lang), key: 'rightCalf', value: latestBp.rightCalf }
 	]);
 
 	/** @param {string} id */
@@ -175,20 +176,16 @@
 		if (formNeck) m.neck = Number(formNeck);
 		if (formShoulders) m.shoulders = Number(formShoulders);
 		if (formChest) m.chest = Number(formChest);
-		if (formBicepsL || formBicepsR) m.biceps = {};
-		if (formBicepsL) m.biceps.left = Number(formBicepsL);
-		if (formBicepsR) m.biceps.right = Number(formBicepsR);
-		if (formForearmsL || formForearmsR) m.forearms = {};
-		if (formForearmsL) m.forearms.left = Number(formForearmsL);
-		if (formForearmsR) m.forearms.right = Number(formForearmsR);
+		if (formBicepsL) m.leftBicep = Number(formBicepsL);
+		if (formBicepsR) m.rightBicep = Number(formBicepsR);
+		if (formForearmsL) m.leftForearm = Number(formForearmsL);
+		if (formForearmsR) m.rightForearm = Number(formForearmsR);
 		if (formWaist) m.waist = Number(formWaist);
 		if (formHips) m.hips = Number(formHips);
-		if (formThighsL || formThighsR) m.thighs = {};
-		if (formThighsL) m.thighs.left = Number(formThighsL);
-		if (formThighsR) m.thighs.right = Number(formThighsR);
-		if (formCalvesL || formCalvesR) m.calves = {};
-		if (formCalvesL) m.calves.left = Number(formCalvesL);
-		if (formCalvesR) m.calves.right = Number(formCalvesR);
+		if (formThighsL) m.leftThigh = Number(formThighsL);
+		if (formThighsR) m.rightThigh = Number(formThighsR);
+		if (formCalvesL) m.leftCalf = Number(formCalvesL);
+		if (formCalvesR) m.rightCalf = Number(formCalvesR);
 
 		body.measurements = Object.keys(m).length > 0 ? m : null;
 		return body;
