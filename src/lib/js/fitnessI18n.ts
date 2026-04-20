@@ -214,6 +214,42 @@ const translations: Translations = {
 	r_thigh: { en: 'R Thigh', de: 'R Oberschenkel' },
 	l_calf: { en: 'L Calf', de: 'L Wade' },
 	r_calf: { en: 'R Calf', de: 'R Wade' },
+	measure_tip_neck: {
+		en: 'Just below the Adam\u2019s apple, tape parallel to the floor.',
+		de: 'Direkt unter dem Adamsapfel, Band parallel zum Boden.'
+	},
+	measure_tip_shoulders: {
+		en: 'Widest point across the deltoids, arms relaxed at your sides.',
+		de: 'Breiteste Stelle \u00fcber die Schultern, Arme entspannt h\u00e4ngend.'
+	},
+	measure_tip_chest: {
+		en: 'At nipple line after a normal exhale, tape horizontal.',
+		de: 'In Brustwarzenh\u00f6he nach normalem Ausatmen, Band waagerecht.'
+	},
+	measure_tip_biceps: {
+		en: 'Arm flexed at the peak; tape around the thickest part.',
+		de: 'Arm angespannt im Peak; um die dickste Stelle messen.'
+	},
+	measure_tip_forearms: {
+		en: 'Widest point below the elbow, arm hanging relaxed.',
+		de: 'Breiteste Stelle unterhalb des Ellenbogens, Arm entspannt.'
+	},
+	measure_tip_waist: {
+		en: 'At the navel, relaxed \u2014 don\u2019t suck in.',
+		de: 'In Nabelh\u00f6he, locker \u2014 nicht einziehen.'
+	},
+	measure_tip_hips: {
+		en: 'Around the widest point of the buttocks.',
+		de: 'Um die breiteste Stelle des Ges\u00e4\u00dfes.'
+	},
+	measure_tip_thighs: {
+		en: 'Midway between hip crease and knee.',
+		de: 'Mittig zwischen Leistenfalte und Knie.'
+	},
+	measure_tip_calves: {
+		en: 'Widest point, standing with weight on both feet.',
+		de: 'Breiteste Stelle, beidseitig belastet stehend.'
+	},
 	save_measurement: { en: 'Save Measurement', de: 'Messung speichern' },
 	update_measurement: { en: 'Update Measurement', de: 'Messung aktualisieren' },
 	latest: { en: 'Latest', de: 'Aktuell' },
