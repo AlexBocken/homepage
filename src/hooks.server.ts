@@ -1,10 +1,10 @@
 import type { Handle, HandleServerError } from "@sveltejs/kit"
 import { redirect } from "@sveltejs/kit"
-import { error } from "@sveltejs/kit"
 import { sequence } from "@sveltejs/kit/hooks"
 import * as auth from "./auth"
 import { initializeScheduler } from "./lib/server/scheduler"
 import { dbConnect } from "./utils/db"
+import { errorWithVerse, getRandomVerse } from "$lib/server/errorQuote"
 
 // Initialize database connection on server startup
 console.log('🚀 Server starting - initializing database connection...');
@@ -21,27 +21,26 @@ await dbConnect().then(() => {
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	const session = await event.locals.auth();
 	event.locals.session = session;
+	const { fetch, url } = event;
 
 	// Protect rezepte routes
-	if (event.url.pathname.startsWith('/rezepte/edit') || event.url.pathname.startsWith('/rezepte/add')) {
+	if (url.pathname.startsWith('/rezepte/edit') || url.pathname.startsWith('/rezepte/add')) {
 		if (!session) {
-			// Preserve the original URL the user was trying to access
-			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
+			const callbackUrl = encodeURIComponent(url.pathname + url.search);
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
 		else if (!session.user?.groups?.includes('rezepte_users')) {
-			error(403, {
-				message: 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
-			});
+			await errorWithVerse(fetch, url.pathname, 403,
+				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
 		}
 	}
 
 	// Protect cospend routes and API endpoints
-	if (event.url.pathname.startsWith('/cospend') || event.url.pathname.startsWith('/expenses') || event.url.pathname.startsWith('/api/cospend')) {
+	if (url.pathname.startsWith('/cospend') || url.pathname.startsWith('/expenses') || url.pathname.startsWith('/api/cospend')) {
 		if (!session) {
 			// Allow share-token access to shopping list routes
-			const isShoppingRoute = event.url.pathname.startsWith('/cospend/list') || event.url.pathname.startsWith('/expenses/list') || event.url.pathname.startsWith('/api/cospend/list');
-			const shareToken = event.url.searchParams.get('token');
+			const isShoppingRoute = url.pathname.startsWith('/cospend/list') || url.pathname.startsWith('/expenses/list') || url.pathname.startsWith('/api/cospend/list');
+			const shareToken = url.searchParams.get('token');
 			if (isShoppingRoute && shareToken) {
 				const { validateShareToken } = await import('$lib/server/shoppingAuth');
 				if (await validateShareToken(shareToken)) {
@@ -50,49 +49,42 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 			}
 
 			// For API routes, return 401 instead of redirecting
-			if (event.url.pathname.startsWith('/api/cospend')) {
-				error(401, {
-					message: 'Anmeldung erforderlich. Du musst angemeldet sein, um auf diesen Bereich zugreifen zu können.'
-				});
+			if (url.pathname.startsWith('/api/cospend')) {
+				await errorWithVerse(fetch, url.pathname, 401,
+					'Anmeldung erforderlich. Du musst angemeldet sein, um auf diesen Bereich zugreifen zu können.');
 			}
 			// For page routes, redirect to login
-			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
+			const callbackUrl = encodeURIComponent(url.pathname + url.search);
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
 		else if (!session.user?.groups?.includes('cospend')) {
-			error(403, {
-				message: 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
-			});
+			await errorWithVerse(fetch, url.pathname, 403,
+				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
 		}
 	}
 
 	// Protect tasks routes and API endpoints
-	if (event.url.pathname.startsWith('/tasks') || event.url.pathname.startsWith('/api/tasks')) {
+	if (url.pathname.startsWith('/tasks') || url.pathname.startsWith('/api/tasks')) {
 		if (!session) {
-			if (event.url.pathname.startsWith('/api/tasks')) {
-				error(401, {
-					message: 'Anmeldung erforderlich.'
-				});
+			if (url.pathname.startsWith('/api/tasks')) {
+				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
 			}
-			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
+			const callbackUrl = encodeURIComponent(url.pathname + url.search);
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
 		else if (!session.user?.groups?.includes('task_users')) {
-			error(403, {
-				message: 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.'
-			});
+			await errorWithVerse(fetch, url.pathname, 403,
+				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
 		}
 	}
 
 	// Protect fitness routes and API endpoints
-	if (event.url.pathname.startsWith('/fitness') || event.url.pathname.startsWith('/api/fitness')) {
+	if (url.pathname.startsWith('/fitness') || url.pathname.startsWith('/api/fitness')) {
 		if (!session) {
-			if (event.url.pathname.startsWith('/api/fitness')) {
-				error(401, {
-					message: 'Authentication required.'
-				});
+			if (url.pathname.startsWith('/api/fitness')) {
+				await errorWithVerse(fetch, url.pathname, 401, 'Authentication required.');
 			}
-			const callbackUrl = encodeURIComponent(event.url.pathname + event.url.search);
+			const callbackUrl = encodeURIComponent(url.pathname + url.search);
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
 	}
@@ -101,32 +93,14 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	return resolve(event);
 }
 
-// Bible verse functionality for error pages
-async function getRandomVerse(fetch: typeof globalThis.fetch, pathname: string): Promise<{ text: string; reference: string } | null> {
-  const isEnglish = pathname.startsWith('/faith/') || pathname.startsWith('/recipes/');
-  const endpoint = isEnglish ? '/api/faith/bibel/zufallszitat' : '/api/glaube/bibel/zufallszitat';
-  try {
-    const response = await fetch(endpoint);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (err) {
-    console.error('Error getting random verse:', err);
-    return null;
-  }
-}
-
 export const handleError: HandleServerError = async ({ error, event, status, message }) => {
   console.error('Error occurred:', { error, status, message, url: event.url.pathname });
-  
-  // Add Bible verse to error context
-  const bibleQuote = await getRandomVerse(event.fetch, event.url.pathname);
 
+  const bibleQuote = await getRandomVerse(event.fetch, event.url.pathname);
   const isEnglish = event.url.pathname.startsWith('/faith/') || event.url.pathname.startsWith('/recipes/');
 
   return {
-    message: message,
+    message,
     bibleQuote,
     lang: isEnglish ? 'en' : 'de'
   };

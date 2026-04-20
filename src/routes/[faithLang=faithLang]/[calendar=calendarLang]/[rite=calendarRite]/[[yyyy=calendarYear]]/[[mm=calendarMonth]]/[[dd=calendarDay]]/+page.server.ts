@@ -1,5 +1,6 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { errorWithVerse } from '$lib/server/errorQuote';
 import {
 	DEFAULT_DIOCESE_1962,
 	DEFAULT_DIOCESE_1969,
@@ -29,9 +30,9 @@ export type {
 	YearDay
 } from '$lib/calendarTypes';
 
-export const load: PageServerLoad = async ({ params, url, locals }) => {
+export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	const slug = expectedSlug(params.faithLang);
-	if (slug === null) throw error(404, 'Not found');
+	if (slug === null) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	if (params.calendar !== slug) {
 		throw redirect(307, `/${params.faithLang}/${slug}`);
 	}
@@ -52,7 +53,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	// Reject mm without yyyy, dd without yyyy+mm. Sveltekit optional routes let
 	// gaps through so we normalize here.
 	if ((params.mm && !params.yyyy) || (params.dd && !params.mm)) {
-		throw error(404, 'Not found');
+		await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	}
 
 	const today = new Date();
@@ -92,7 +93,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	if (params.dd) {
 		const ddNum = Number(params.dd);
-		if (ddNum < 1 || ddNum > daysInMonth) throw error(404, 'Not found');
+		if (ddNum < 1 || ddNum > daysInMonth) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	}
 	// Tentative selectedIso used only for the LY rollover decision. The real
 	// selectedIso is recomputed after monthDays below (same logic, now on the

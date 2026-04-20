@@ -1,5 +1,6 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { errorWithVerse } from '$lib/server/errorQuote';
 import {
 	DEFAULT_DIOCESE_1962,
 	DEFAULT_DIOCESE_1969,
@@ -13,9 +14,9 @@ import {
 } from '../../../../../calendarI18n';
 import { getYear, getYear1962, isoFor } from '$lib/server/liturgicalCalendar';
 
-export const load: PageServerLoad = async ({ params, url, locals }) => {
+export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	const slug = expectedSlug(params.faithLang);
-	if (slug === null) throw error(404, 'Not found');
+	if (slug === null) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	if (params.calendar !== slug) {
 		throw redirect(307, `/${params.faithLang}/${slug}`);
 	}
@@ -38,10 +39,10 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const month = Number(params.mm) - 1;
 	const day = Number(params.dd);
 
-	if (!Number.isFinite(year) || year < minYear || year > 2100) throw error(404, 'Not found');
-	if (!Number.isFinite(month) || month < 0 || month > 11) throw error(404, 'Not found');
+	if (!Number.isFinite(year) || year < minYear || year > 2100) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
+	if (!Number.isFinite(month) || month < 0 || month > 11) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
-	if (!Number.isFinite(day) || day < 1 || day > daysInMonth) throw error(404, 'Not found');
+	if (!Number.isFinite(day) || day < 1 || day > daysInMonth) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 
 	const iso = isoFor(year, month, day);
 	const yearMap =
@@ -49,7 +50,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			? await getYear1962(lang, diocese1962, year)
 			: await getYear(lang, diocese1969, year);
 	const entry = yearMap.get(iso);
-	if (!entry) throw error(404, 'Not found');
+	if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 
 	const today = new Date();
 	const todayIso = today.toISOString().slice(0, 10);

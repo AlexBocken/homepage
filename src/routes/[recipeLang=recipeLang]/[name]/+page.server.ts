@@ -1,15 +1,16 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
+import { errorWithVerse } from '$lib/server/errorQuote';
 
-export const load: PageServerLoad = async ({ fetch, params, locals }) => {
+export const load: PageServerLoad = async ({ fetch, params, locals, url }) => {
     const isEnglish = params.recipeLang === 'recipes';
     const apiBase = `/api/${params.recipeLang}`;
 
     const res = await fetch(`${apiBase}/items/${params.name}`);
 
     if (!res.ok) {
-        throw error(res.status, 'Recipe not found');
+        await errorWithVerse(fetch, url.pathname, res.status, 'Recipe not found');
     }
 
     const item = await res.json();

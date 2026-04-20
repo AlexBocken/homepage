@@ -1,7 +1,8 @@
 import type { PageServerLoad } from './$types';
-import { redirect, error } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
+import { errorWithVerse } from '$lib/server/errorQuote';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	const session = await locals.auth();
 
 	// Redirect to login if not authenticated
@@ -12,7 +13,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	// Check user group permission
 	if (!session.user.groups?.includes('rezepte_users')) {
-		throw error(403, 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich.');
+		await errorWithVerse(fetch, url.pathname, 403, 'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich.');
 	}
 
 	return {

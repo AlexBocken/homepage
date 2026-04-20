@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import SectionError from '$lib/components/SectionError.svelte';
+  import { page } from '$app/stores';
 
   let recipeLang = $derived($page.params.recipeLang);
   let isEnglish = $derived(recipeLang === 'recipes');

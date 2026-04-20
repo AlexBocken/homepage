@@ -1,12 +1,13 @@
 import type { PageServerLoad, Actions } from "./$types";
 import { error } from "@sveltejs/kit";
+import { errorWithVerse } from '$lib/server/errorQuote';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 
 const angelusSlugs = new Set(['angelus', 'regina-caeli']);
 
 export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	if (!validPrayerSlugs.has(params.prayer)) {
-		throw error(404, 'Prayer not found');
+		await errorWithVerse(fetch, url.pathname, 404, 'Prayer not found');
 	}
 
 	const latinParam = url.searchParams.get('latin');

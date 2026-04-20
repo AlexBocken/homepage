@@ -1,7 +1,8 @@
 import type { PageServerLoad } from './$types';
-import { redirect, error } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
+import { errorWithVerse } from '$lib/server/errorQuote';
 
-export const load: PageServerLoad = async ({ locals, params, fetch }) => {
+export const load: PageServerLoad = async ({ locals, params, fetch, url }) => {
   const session = await locals.auth();
   
   if (!session) {
@@ -23,6 +24,6 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
     };
   } catch (e) {
     console.error('Error loading payment data:', e);
-    throw error(500, 'Failed to load payment data');
+    await errorWithVerse(fetch, url.pathname, 500, 'Failed to load payment data');
   }
 };
