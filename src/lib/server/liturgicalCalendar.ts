@@ -23,7 +23,8 @@ import {
 } from 'romcal/1962';
 import type { LiturgicalDay1962, RomcalBundle1962 } from 'romcal/1962';
 import { pathToFileURL } from 'node:url';
-import { resolve as resolvePath } from 'node:path';
+import { dirname, join as joinPath } from 'node:path';
+import { createRequire } from 'node:module';
 import {
 	colorLabel1962,
 	rank1962Label,
@@ -38,6 +39,9 @@ import type {
 	Rite1962Commem,
 	Rite1962Detail
 } from '../calendarTypes';
+
+const requireFromHere = createRequire(import.meta.url);
+const romcalRoot = dirname(requireFromHere.resolve('romcal/package.json'));
 
 const bundles1969: Record<Diocese1969, Record<CalendarLang, RomcalBundleObject>> = {
 	general: { en: GeneralRoman_En, de: GeneralRoman_De, la: GeneralRoman_La },
@@ -110,8 +114,11 @@ const bundle1962Cache = new Map<CalendarLang, Promise<RomcalBundle1962>>();
 function loadBundle1962(lang: CalendarLang): Promise<RomcalBundle1962> {
 	let p = bundle1962Cache.get(lang);
 	if (p) return p;
-	const abs = resolvePath(
-		`node_modules/romcal/rites/roman1962/dist/bundles/${lang}/esm/index.js`
+	const abs = joinPath(
+		romcalRoot,
+		'rites/roman1962/dist/bundles',
+		lang,
+		'esm/index.js'
 	);
 	p = import(/* @vite-ignore */ pathToFileURL(abs).href).then(
 		(m) => m.default as RomcalBundle1962
