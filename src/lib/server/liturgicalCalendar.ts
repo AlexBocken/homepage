@@ -25,6 +25,7 @@ import type { LiturgicalDay1962, RomcalBundle1962 } from 'romcal/1962';
 import { pathToFileURL } from 'node:url';
 import { dirname, join as joinPath } from 'node:path';
 import { createRequire } from 'node:module';
+import { existsSync, readFileSync } from 'node:fs';
 import {
 	colorLabel1962,
 	rank1962Label,
@@ -40,8 +41,27 @@ import type {
 	Rite1962Detail
 } from '../calendarTypes';
 
+// romcal's package.json isn't exposed via its exports map, so resolve the
+// main entry instead and walk up until we hit the package root.
 const requireFromHere = createRequire(import.meta.url);
-const romcalRoot = dirname(requireFromHere.resolve('romcal/package.json'));
+function findRomcalRoot(): string {
+	let dir = dirname(requireFromHere.resolve('romcal'));
+	while (true) {
+		const pkgPath = joinPath(dir, 'package.json');
+		if (existsSync(pkgPath)) {
+			try {
+				const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { name?: string };
+				if (pkg.name === 'romcal') return dir;
+			} catch {
+				// fall through and keep walking
+			}
+		}
+		const parent = dirname(dir);
+		if (parent === dir) throw new Error('Could not locate romcal package root');
+		dir = parent;
+	}
+}
+const romcalRoot = findRomcalRoot();
 
 const bundles1969: Record<Diocese1969, Record<CalendarLang, RomcalBundleObject>> = {
 	general: { en: GeneralRoman_En, de: GeneralRoman_De, la: GeneralRoman_La },
