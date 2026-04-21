@@ -46,10 +46,27 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	if (!Number.isFinite(day) || day < 1 || day > daysInMonth) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 
 	const iso = isoFor(year, month, day);
-	const yearMap =
+
+	// Romcal (scope: liturgical) emits LY N past Saturday-before-Advent-I of
+	// civil year N with a stale tail (still on the previous post-Pentecost
+	// cycle) before going missing. Dates from Advent I of civil year N onward
+	// belong to LY N+1, so fetch both and pick the correct one — mirrors the
+	// rollover logic in the month page.
+	const fetchLy = async (y: number) =>
 		rite === '1962'
-			? await getYear1962(lang, diocese1962, year)
-			: await getYear(lang, diocese1969, year);
+			? await getYear1962(lang, diocese1962, y)
+			: await getYear(lang, diocese1969, y);
+	const yearMapN = await fetchLy(year);
+	const yearMapNext = await fetchLy(year + 1);
+	let adventIOfUrlYear: string | null = null;
+	for (const [i, d] of yearMapNext) {
+		if (d.id === 'advent_1_sunday' || d.id === 'first_sunday_of_advent') {
+			adventIOfUrlYear = i;
+			break;
+		}
+	}
+	const yearMap =
+		adventIOfUrlYear != null && iso >= adventIOfUrlYear ? yearMapNext : yearMapN;
 	const entry = yearMap.get(iso);
 	if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 
