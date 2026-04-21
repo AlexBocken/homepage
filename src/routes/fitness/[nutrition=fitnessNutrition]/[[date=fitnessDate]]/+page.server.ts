@@ -14,6 +14,8 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	// Run all independent work in parallel: 3 API calls + workout kcal DB query
 	const dayStart = new Date(dateParam + 'T00:00:00.000Z');
 	const dayEnd = new Date(dateParam + 'T23:59:59.999Z');
+	const todayStr = new Date().toISOString().slice(0, 10);
+	const isFuture = dateParam > todayStr;
 
 	const exercisePromise = (async () => {
 		try {
@@ -24,16 +26,16 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 					createdBy: user.nickname,
 					startTime: { $gte: dayStart, $lte: dayEnd }
 				}).select('kcalEstimate').lean(),
-				WorkoutSchedule.findOne({ userId: user.nickname }).lean()
+				isFuture ? WorkoutSchedule.findOne({ userId: user.nickname }).lean() : Promise.resolve(null)
 			]);
 			let kcal = 0;
 			for (const s of sessions) {
 				if (s.kcalEstimate?.kcal) kcal += s.kcalEstimate.kcal;
 			}
 
-			// If no exercise done today, project kcal from the next scheduled template
+			// For future days without exercise, project kcal from the next scheduled template
 			let projected = null;
-			if (kcal === 0) {
+			if (kcal === 0 && isFuture) {
 				if (schedule?.templateOrder?.length) {
 					const lastScheduled = await WorkoutSession.findOne({
 						createdBy: user.nickname,
@@ -71,7 +73,6 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	const recentFrom = new Date();
 	recentFrom.setDate(recentFrom.getDate() - 3);
 	const recentFromStr = recentFrom.toISOString().slice(0, 10);
-	const todayStr = new Date().toISOString().slice(0, 10);
 
 	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
