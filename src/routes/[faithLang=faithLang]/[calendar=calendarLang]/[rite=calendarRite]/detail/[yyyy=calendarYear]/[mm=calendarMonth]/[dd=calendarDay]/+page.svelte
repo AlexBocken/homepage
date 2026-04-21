@@ -5,20 +5,12 @@
 		formatLongDate,
 		getMonthName,
 		hexFor,
-		humanizePsalterWeek,
-		humanizeSundayCycle,
 		properLabel,
 		t,
 		t1962,
 		type CalendarLang
 	} from '../../../../../calendarI18n';
-
-	function kindLabel(kind: 'tempora' | 'sancti', l: CalendarLang): string {
-		if (kind === 'tempora')
-			return l === 'de' ? 'Temporale' : l === 'la' ? 'Temporale' : 'Temporal';
-		return l === 'de' ? 'Sanktorale' : l === 'la' ? 'Sanctorale' : 'Sanctoral';
-	}
-	import { litBg, litInk } from '../../../../../calendarColors';
+	import HeroCard from '../../../../../HeroCard.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -57,7 +49,6 @@
 	const prevHref = $derived(shiftDay(-1));
 	const nextHref = $derived(shiftDay(1));
 
-	const isToday = $derived(iso === todayIso);
 	const monthTitle = $derived(`${getMonthName(month, lang)} ${year}`);
 </script>
 
@@ -82,47 +73,12 @@
 		</div>
 	</nav>
 
-	<header
-		class="detail-hero"
-		style="background: {litBg(day.colorKeys[0])}; color: {litInk(day.colorKeys[0])}; --accent: {dayHex}"
-	>
-		<div class="hero-date">
-			{formatLongDate(iso, lang)}
-			{#if isToday}
-				<span class="today-pip">{t('today', lang)}</span>
-			{/if}
-		</div>
-		<h1 class="hero-name">{day.name}</h1>
-		<div class="hero-tags">
-			{#if day.rankName}
-				<span class="tag tag-rank">{day.rankName}</span>
-			{/if}
-			{#if day.seasonNames.length}
-				<span class="tag tag-season">{day.seasonNames[0]}</span>
-			{/if}
-			{#if day.colorNames.length}
-				<span class="tag tag-color">
-					<span class="color-swatch" style="background: {dayHex}"></span>
-					{day.colorNames[0]}
-				</span>
-			{/if}
-			{#if day.psalterWeek}
-				<span class="tag">{t('psalterWeek', lang)}: {humanizePsalterWeek(day.psalterWeek, lang)}</span>
-			{/if}
-			{#if day.sundayCycle}
-				<span class="tag">{t('cycle', lang)}: {humanizeSundayCycle(day.sundayCycle)}</span>
-			{/if}
-		</div>
-	</header>
+	<HeroCard {day} {lang} {todayIso} />
 
 	{#if day.rite1962}
 		{@const d = day.rite1962}
 		<section class="detail" style="--accent: {dayHex}">
 			<dl class="detail-extras">
-				<div>
-					<dt>{t1962('source', lang)}</dt>
-					<dd>{kindLabel(d.kind, lang)}</dd>
-				</div>
 				{#if d.vigilOf}
 					<div>
 						<dt>{t1962('vigilOf', lang)}</dt>
@@ -149,21 +105,6 @@
 						{#each d.commemorations as c (c.id)}
 							<li>
 								<span class="commem-name">{c.name}</span>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/if}
-			{#if d.stationChurches?.length}
-				<div class="stations">
-					<h4>{t1962('stationChurch', lang)}</h4>
-					<ul>
-						{#each d.stationChurches as s (s.key + (s.mass ?? ''))}
-							<li>
-								<span class="station-name">{s.name}</span>
-								{#if s.mass}
-									<span class="station-mass">{s.mass.replace(/_/g, ' ')}</span>
-								{/if}
 							</li>
 						{/each}
 					</ul>
@@ -278,62 +219,6 @@
 		color: var(--color-text-primary);
 	}
 
-	.detail-hero {
-		border-radius: var(--radius-card);
-		padding: 1.5rem 1.75rem;
-		box-shadow: var(--shadow-md);
-	}
-	.hero-date {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-size: var(--text-sm);
-		opacity: 0.85;
-		margin-bottom: 0.25rem;
-	}
-	.today-pip {
-		font-size: 0.62rem;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		font-weight: 700;
-		padding: 3px 8px;
-		border-radius: 100px;
-		background: rgba(0, 0, 0, 0.12);
-	}
-	.hero-name {
-		margin: 0 0 0.75rem;
-		font-size: 2rem;
-		line-height: 1.2;
-	}
-	.hero-tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
-
-	.tag {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		padding: 0.25rem 0.7rem;
-		background: rgba(0, 0, 0, 0.14);
-		color: inherit;
-		border-radius: var(--radius-pill);
-		font-size: var(--text-sm);
-		font-weight: 500;
-	}
-	.tag-rank {
-		background: rgba(0, 0, 0, 0.22);
-		font-weight: 600;
-	}
-	.color-swatch {
-		width: 12px;
-		height: 12px;
-		border-radius: 50%;
-		border: 1px solid rgba(255, 255, 255, 0.4);
-		display: inline-block;
-	}
-
 	.detail {
 		background: var(--color-surface);
 		border-radius: var(--radius-card);
@@ -366,7 +251,6 @@
 		color: var(--color-text-primary);
 	}
 	.commems h4,
-	.stations h4,
 	.propers h4 {
 		margin: 0.5rem 0 0.4rem;
 		font-size: 0.72rem;
@@ -375,12 +259,10 @@
 		color: var(--color-text-secondary);
 		font-weight: 600;
 	}
-	.commems,
-	.stations {
+	.commems {
 		margin-top: 0.75rem;
 	}
-	.commems ul,
-	.stations ul {
+	.commems ul {
 		list-style: none;
 		padding: 0;
 		margin: 0;
@@ -388,8 +270,7 @@
 		flex-direction: column;
 		gap: 0.35rem;
 	}
-	.commems li,
-	.stations li {
+	.commems li {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -398,18 +279,9 @@
 		border-radius: var(--radius-sm, 6px);
 		font-size: 0.85rem;
 	}
-	.commem-name,
-	.station-name {
+	.commem-name {
 		flex: 1 1 auto;
 		color: var(--color-text-primary);
-	}
-	.station-name {
-		font-style: italic;
-	}
-	.station-mass {
-		color: var(--color-text-tertiary);
-		font-size: 0.78rem;
-		text-transform: capitalize;
 	}
 
 	.propers {
