@@ -288,7 +288,16 @@ export const ui1962 = {
 	transferredFrom: { en: 'Transferred from', de: 'Übertragen von', la: 'Translatum ex' },
 	source: { en: 'Source', de: 'Quelle', la: 'Fons' },
 	propers: { en: 'Mass propers', de: 'Messproprium', la: 'Propria Missæ' },
-	stationChurch: { en: 'Station church', de: 'Stationskirche', la: 'Statio' }
+	stationChurch: { en: 'Station church', de: 'Stationskirche', la: 'Statio' },
+	viewLatin: { en: 'Latin', de: 'Latein', la: 'Latine' },
+	viewParallel: { en: 'Parallel', de: 'Parallel', la: 'Parallelum' },
+	viewVernacular: { en: 'English', de: 'Deutsch', la: 'Vernacula' },
+	fallbackBadge: { en: 'Douay-Rheims', de: 'Allioli', la: 'Vulgata' },
+	fallbackHint: {
+		en: 'Translation not provided in the missal. Text taken from the Douay-Rheims Bible at the cited reference.',
+		de: 'Keine Übersetzung im Messbuch vorhanden. Text aus der Allioli-Bibelübersetzung an der angegebenen Stelle.',
+		la: 'Interpretatio localis deest. Textus ex Biblia Sacra locis citatis.'
+	}
 } as const;
 
 export function t1962(key: keyof typeof ui1962, lang: CalendarLang): string {

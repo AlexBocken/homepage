@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { page } from '$app/state';
+	import { browser } from '$app/environment';
 	import {
 		formatLongDate,
 		getMonthName,
-		hexFor,
 		properLabel,
 		t,
 		t1962,
@@ -22,7 +22,16 @@
 	const iso = $derived(data.iso);
 	const todayIso = $derived(data.todayIso);
 
-	const dayHex = $derived(hexFor(day.colorKeys));
+	type PropersView = 'la' | 'parallel' | 'local';
+	const VIEW_KEY = 'litcal.propersView';
+	let propersView = $state<PropersView>('parallel');
+	if (browser) {
+		const saved = localStorage.getItem(VIEW_KEY);
+		if (saved === 'la' || saved === 'parallel' || saved === 'local') propersView = saved;
+	}
+	$effect(() => {
+		if (browser) localStorage.setItem(VIEW_KEY, propersView);
+	});
 
 	function pad(n: number) {
 		return String(n).padStart(2, '0');
@@ -77,7 +86,7 @@
 
 	{#if day.rite1962}
 		{@const d = day.rite1962}
-		<section class="detail" style="--accent: {dayHex}">
+		{#if d.vigilOf || d.octave || d.transferredFrom}
 			<dl class="detail-extras">
 				{#if d.vigilOf}
 					<div>
@@ -98,48 +107,84 @@
 					</div>
 				{/if}
 			</dl>
-			{#if d.commemorations.length}
-				<div class="commems">
-					<h4>{t1962('commemorations', lang)}</h4>
-					<ul>
-						{#each d.commemorations as c (c.id)}
-							<li>
-								<span class="commem-name">{c.name}</span>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/if}
-			{#if d.propers.length}
-				<section class="propers">
+		{/if}
+		{#if d.propers.length}
+			<section class="propers">
+				<div class="propers-head">
 					<h4>{t1962('propers', lang)}</h4>
-					{#each d.propers as section (section.key)}
-						{@const rows = Math.max(section.la.length, section.local.length)}
-						<div class="proper-block">
-							<div class="proper-label-row">
-								<span class="proper-label">{properLabel(section.key, lang)}</span>
-							</div>
+					{#if lang !== 'la'}
+						<div class="view-toggle" role="group" aria-label={t1962('propers', lang)}>
+							<button
+								type="button"
+								class="view-btn"
+								class:active={propersView === 'la'}
+								aria-pressed={propersView === 'la'}
+								onclick={() => (propersView = 'la')}
+							>
+								{t1962('viewLatin', lang)}
+							</button>
+							<button
+								type="button"
+								class="view-btn"
+								class:active={propersView === 'parallel'}
+								aria-pressed={propersView === 'parallel'}
+								onclick={() => (propersView = 'parallel')}
+							>
+								{t1962('viewParallel', lang)}
+							</button>
+							<button
+								type="button"
+								class="view-btn"
+								class:active={propersView === 'local'}
+								aria-pressed={propersView === 'local'}
+								onclick={() => (propersView = 'local')}
+							>
+								{t1962('viewVernacular', lang)}
+							</button>
+						</div>
+					{/if}
+				</div>
+				{#each d.propers as section (section.key)}
+					{@const rows = Math.max(section.la.length, section.local.length)}
+					<article class="proper-card">
+						<header class="proper-card-head">
+							<span class="proper-label">{properLabel(section.key, lang)}</span>
+							{#if section.refLabel}
+								<span class="proper-ref">({section.refLabel})</span>
+							{/if}
+							{#if section.localFromBible && lang !== 'la' && propersView !== 'la'}
+								<span class="proper-fallback" title={t1962('fallbackHint', lang)}>
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+									{t1962('fallbackBadge', lang)}
+								</span>
+							{/if}
+						</header>
+						<div class="proper-content">
 							{#each Array(rows) as _, i (i)}
 								{@const la = section.la[i] ?? ''}
 								{@const local = section.local[i] ?? ''}
-								{#if la || local}
+								{@const isLaOnly = lang === 'la' || propersView === 'la'}
+								{@const isLocalOnly = lang !== 'la' && propersView === 'local'}
+								{@const showLa = isLaOnly || propersView === 'parallel' || (isLocalOnly && !local)}
+								{@const showLocal = !isLaOnly && local && (propersView === 'parallel' || isLocalOnly)}
+								{#if (showLa && la) || (showLocal && local)}
 									<div class="proper-segment">
-										<div class="proper-cols" class:single={lang === 'la' || !local}>
-											{#if la}
+										<div class="proper-cols" class:single={!(showLa && la && showLocal && local)}>
+											{#if showLa && la}
 												<div class="proper-col proper-col-la" lang="la">{la}</div>
 											{/if}
-											{#if lang !== 'la' && local}
-												<div class="proper-col proper-col-local" lang={lang}>{local}</div>
+											{#if showLocal && local}
+												<div class="proper-col proper-col-local" {lang}>{local}</div>
 											{/if}
 										</div>
 									</div>
 								{/if}
 							{/each}
 						</div>
-					{/each}
-				</section>
-			{/if}
-		</section>
+					</article>
+				{/each}
+			</section>
+		{/if}
 	{/if}
 
 	<nav class="back-nav">
@@ -219,17 +264,8 @@
 		color: var(--color-text-primary);
 	}
 
-	.detail {
-		background: var(--color-surface);
-		border-radius: var(--radius-card);
-		padding: 1.25rem 1.5rem;
-		margin-top: 1.25rem;
-		box-shadow: var(--shadow-sm);
-		border-left: 4px solid var(--accent);
-	}
-
 	.detail-extras {
-		margin: 0 0 0.5rem;
+		margin: 1.25rem 0 0.5rem;
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 		gap: 0.5rem 1rem;
@@ -250,7 +286,6 @@
 		margin: 0;
 		color: var(--color-text-primary);
 	}
-	.commems h4,
 	.propers h4 {
 		margin: 0.5rem 0 0.4rem;
 		font-size: 0.72rem;
@@ -259,52 +294,106 @@
 		color: var(--color-text-secondary);
 		font-weight: 600;
 	}
-	.commems {
-		margin-top: 0.75rem;
-	}
-	.commems ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-	}
-	.commems li {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.4rem 0.6rem;
-		background: var(--color-bg-tertiary);
-		border-radius: var(--radius-sm, 6px);
-		font-size: 0.85rem;
-	}
-	.commem-name {
-		flex: 1 1 auto;
-		color: var(--color-text-primary);
-	}
 
 	.propers {
-		margin-top: 1rem;
-		border-top: 1px solid var(--color-border);
-		padding-top: 0.75rem;
+		margin-top: 1.5rem;
 	}
-	.proper-block {
-		margin-bottom: 0.75rem;
-	}
-	.proper-label-row {
+	.propers-head {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 0.4rem;
-		margin-bottom: 0.25rem;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+	}
+	.propers-head h4 {
+		margin: 0;
+	}
+	.view-toggle {
+		display: inline-flex;
+		padding: 3px;
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-pill);
+		gap: 2px;
+	}
+	.view-btn {
+		appearance: none;
+		border: none;
+		background: transparent;
+		color: var(--color-text-secondary);
+		font: inherit;
+		font-size: 0.78rem;
+		font-weight: 600;
+		letter-spacing: 0.03em;
+		padding: 0.35rem 0.85rem;
+		border-radius: var(--radius-pill);
+		cursor: pointer;
+		transition: background var(--transition-fast), color var(--transition-fast);
+	}
+	.view-btn:hover {
+		color: var(--color-text-primary);
+	}
+	.view-btn.active {
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		box-shadow: var(--shadow-sm);
+	}
+	.proper-card {
+		background: var(--color-bg-elevated);
+		border-radius: var(--radius-lg, 12px);
+		padding: 1.1rem 1.35rem 1.25rem;
+		margin-bottom: 0.9rem;
+		box-shadow: var(--shadow-sm);
+	}
+	.proper-card:last-child {
+		margin-bottom: 0;
+	}
+	.proper-card-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.35rem 0.4rem;
+		margin-bottom: 0.6rem;
+		padding-bottom: 0.5rem;
+		border-bottom: 1px solid var(--color-border);
 	}
 	.proper-label {
-		font-weight: 600;
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
+		display: inline-block;
+		font-weight: 700;
+		font-size: 0.78rem;
+		color: var(--nord11);
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		letter-spacing: 0.08em;
+		line-height: 1.2;
+	}
+	.proper-ref {
+		margin-left: 0.4rem;
+		font-size: 0.78rem;
+		font-weight: 500;
+		color: var(--color-text-tertiary);
+		letter-spacing: 0;
+		text-transform: none;
+	}
+	.proper-fallback {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin-left: auto;
+		padding: 0.15rem 0.5rem;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--nord12);
+		background: color-mix(in srgb, var(--nord12) 12%, transparent);
+		border: 1px solid color-mix(in srgb, var(--nord12) 35%, transparent);
+		border-radius: var(--radius-pill);
+		letter-spacing: 0.02em;
+		cursor: help;
+	}
+	.proper-fallback svg {
+		flex-shrink: 0;
+	}
+	.proper-content {
+		min-width: 0;
 	}
 	.proper-segment {
 		margin-top: 0.5rem;
@@ -319,13 +408,12 @@
 	.proper-cols {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		column-gap: 0.75rem;
+		column-gap: 1.25rem;
 		row-gap: 0;
 		align-items: start;
 	}
 	.proper-col-la {
 		grid-column: 1;
-		font-style: italic;
 	}
 	.proper-col-local {
 		grid-column: 2;
@@ -339,9 +427,12 @@
 	}
 	.proper-col {
 		white-space: pre-wrap;
-		font-size: 0.92rem;
-		line-height: 1.5;
+		font-size: 1rem;
+		line-height: 1.6;
 		color: var(--color-text-primary);
+	}
+	.proper-cols:not(.single) .proper-col-local {
+		color: var(--color-text-secondary);
 	}
 
 	.back-nav {
@@ -357,14 +448,6 @@
 		.proper-cols .proper-col-la,
 		.proper-cols .proper-col-local {
 			grid-column: 1;
-		}
-	}
-	@media (max-width: 560px) {
-		.detail-hero {
-			padding: 1.15rem 1.2rem;
-		}
-		.hero-name {
-			font-size: 1.5rem;
 		}
 	}
 </style>

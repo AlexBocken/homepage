@@ -42,6 +42,9 @@ import type {
 	Rite1962Commem,
 	Rite1962Detail
 } from '../calendarTypes';
+import { getProperRefs, getProperRefsPerSlot } from './romcal1962Refs';
+import { fetchLocalFromBible, type FallbackLang } from './properBibleFallback';
+import { translateRefLabel } from './bibleRefLatin';
 
 // romcal's package.json isn't exposed via its exports map, so resolve the
 // main entry instead and walk up until we hit the package root.
@@ -340,6 +343,40 @@ function adaptDay1962(
 	const laProps = findPropersFor(d, laBundle);
 	const localProps = localBundle ? findPropersFor(d, localBundle) : undefined;
 	const propers = sectionsFromBundle(laProps, localProps);
+	const properKey = d.key1962 ?? d.id;
+	const fallbackLang: FallbackLang | null =
+		lang === 'en' ? 'en' : lang === 'de' ? 'de' : null;
+	const labelLang: 'en' | 'de' | 'la' = lang === 'en' ? 'en' : lang === 'de' ? 'de' : 'la';
+	for (const section of propers) {
+		const refs = getProperRefs(d.kind1962, properKey, section.key);
+		if (refs.length) {
+			section.refs = refs;
+			section.refLabel = translateRefLabel(refs[0], labelLang);
+		}
+		if (fallbackLang && section.local.length === 0 && refs.length) {
+			const perSlot = getProperRefsPerSlot(
+				d.kind1962,
+				properKey,
+				section.key,
+				section.la.length
+			);
+			const localArr: string[] = new Array(section.la.length).fill('');
+			let any = false;
+			for (let i = 0; i < section.la.length; i++) {
+				const slotRefs = perSlot[i];
+				if (!slotRefs || slotRefs.length === 0) continue;
+				const text = fetchLocalFromBible(slotRefs, fallbackLang);
+				if (text) {
+					localArr[i] = text;
+					any = true;
+				}
+			}
+			if (any) {
+				section.local = localArr;
+				section.localFromBible = true;
+			}
+		}
+	}
 
 	const detail: Rite1962Detail = {
 		class: classOf,
