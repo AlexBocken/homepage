@@ -68,5 +68,6 @@ export function rankDotSize(rank: string): number {
 	if (rank === 'ClassII' || rank === 'FEAST' || rank === 'SUNDAY' || rank === 'HOLY_DAY_OF_OBLIGATION')
 		return 4;
 	if (rank === 'ClassIII' || rank === 'MEMORIAL') return 3;
-	return 0; // don't render ferias/weekdays as dots
+	if (rank === 'ClassIV') return 2;
+	return 0; // 1969 weekdays/opt-memorials still skipped
 }

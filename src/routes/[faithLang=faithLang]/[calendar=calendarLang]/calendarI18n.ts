@@ -287,7 +287,8 @@ export const ui1962 = {
 	vigilOf: { en: 'Vigil of', de: 'Vigil von', la: 'Vigilia' },
 	transferredFrom: { en: 'Transferred from', de: 'Übertragen von', la: 'Translatum ex' },
 	source: { en: 'Source', de: 'Quelle', la: 'Fons' },
-	propers: { en: 'Mass propers', de: 'Messproprium', la: 'Propria Missæ' }
+	propers: { en: 'Mass propers', de: 'Messproprium', la: 'Propria Missæ' },
+	stationChurch: { en: 'Station church', de: 'Stationskirche', la: 'Statio' }
 } as const;
 
 export function t1962(key: keyof typeof ui1962, lang: CalendarLang): string {
