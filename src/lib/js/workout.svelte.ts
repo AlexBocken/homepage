@@ -714,6 +714,7 @@ export function createWorkout() {
 		get paused() { return paused; },
 		get mode() { return mode; },
 		get activityType() { return activityType; },
+		set activityType(v: GpsActivityType | null) { activityType = v; _persist(); },
 		get name() { return name; },
 		set name(v: string) { name = v; _persist(); },
 		get templateId() { return templateId; },

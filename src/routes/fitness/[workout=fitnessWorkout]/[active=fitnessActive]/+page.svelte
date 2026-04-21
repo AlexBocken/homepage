@@ -252,6 +252,7 @@
 	function selectActivity(/** @type {string} */ id) {
 		selectedActivity = /** @type {import('$lib/js/workout.svelte').GpsActivityType} */ (id);
 		const labels = { running: 'Running', walking: 'Walking', cycling: 'Cycling', hiking: 'Hiking' };
+		workout.activityType = selectedActivity;
 		workout.name = labels[selectedActivity] ?? 'GPS Workout';
 		showActivityPicker = false;
 	}
