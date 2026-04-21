@@ -373,7 +373,8 @@
 <div class="shopping-page">
   <header class="page-header">
     <div class="header-row">
-      <h1>{t('shopping_list_title', lang)} <SyncIndicator status={sync.status} /></h1>
+      <h1 class="sr-only">{t('shopping_list_title', lang)}</h1>
+      <SyncIndicator status={sync.status} />
       {#if !isGuest}
         <button class="btn-share" onclick={openShareModal} title={t('share', lang)}>
           <Share2 size={16} />
@@ -612,11 +613,6 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-  }
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
   }
   .btn-share {
     display: flex;
@@ -892,7 +888,6 @@
 
   @media (max-width: 500px) {
     .shopping-page { padding: 1rem 0.75rem; }
-    h1 { font-size: 1.3rem; }
     .card-grid {
       grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 0.4rem;

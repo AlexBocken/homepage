@@ -195,6 +195,13 @@ const translations: Translations = {
 	// Measure page
 	measure_title: { en: 'Measure', de: 'Messen' },
 	profile: { en: 'Profile', de: 'Profil' },
+	profile_setup_cta: {
+		en: 'Add height & birth year to unlock BMI, TDEE and calorie balance stats.',
+		de: 'Größe & Geburtsjahr eintragen, um BMI, TDEE und Kalorienbilanz freizuschalten.'
+	},
+	set_up_profile: { en: 'Set up', de: 'Einrichten' },
+	edit_profile: { en: 'Edit profile', de: 'Profil bearbeiten' },
+	dismiss: { en: 'Dismiss', de: 'Verwerfen' },
 	new_measurement: { en: 'New Measurement', de: 'Neue Messung' },
 	edit_measurement: { en: 'Edit Measurement', de: 'Messung bearbeiten' },
 	weight_kg: { en: 'Weight (kg)', de: 'Gewicht (kg)' },

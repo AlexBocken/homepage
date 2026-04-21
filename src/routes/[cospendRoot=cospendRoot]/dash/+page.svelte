@@ -128,7 +128,7 @@
 </svelte:head>
 
 <main class="cospend-main">
-    <h1>{t('cospend', lang)}</h1>
+    <h1 class="sr-only">{t('cospend', lang)}</h1>
 
   <!-- Responsive layout for balance and chart -->
   <div class="dashboard-layout">
@@ -270,13 +270,6 @@
     padding: 2rem;
     max-width: 100%;
     overflow-x: hidden;
-  }
-
-  h1 {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-block: 0.5rem 1.5rem;
-    color: var(--color-text-primary);
   }
 
   .loading, .error {

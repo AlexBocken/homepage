@@ -138,7 +138,7 @@
 <svelte:head><title>{t('stats_title', lang)} - Bocken</title></svelte:head>
 
 <div class="stats-page">
-	<h1>{t('stats_title', lang)}</h1>
+	<h1 class="sr-only">{t('stats_title', lang)}</h1>
 
 	<div class="lifetime-cards">
 		<div class="lifetime-card workouts">
@@ -364,11 +364,6 @@
 		flex-direction: column;
 		gap: 1rem;
 	}
-	h1 {
-		margin: 0;
-		font-size: 1.4rem;
-	}
-
 	.lifetime-cards {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);

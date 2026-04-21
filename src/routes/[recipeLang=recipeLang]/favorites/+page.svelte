@@ -43,11 +43,6 @@
 </script>
 
 <style>
-h1{
-    text-align: center;
-    margin-bottom: 0;
-    font-size: 4rem;
-}
 .subheading{
     text-align: center;
     margin-top: 0;
@@ -87,7 +82,7 @@ h1{
     <meta name="description" content={labels.metaDescription} />
 </svelte:head>
 
-<h1>{labels.title}</h1>
+<h1 class="sr-only">{labels.title}</h1>
 <p class=subheading>
     {#if data.favorites.length > 0}
         {labels.count}

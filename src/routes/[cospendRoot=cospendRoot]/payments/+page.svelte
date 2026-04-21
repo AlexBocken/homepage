@@ -132,7 +132,7 @@
 <main class="payments-list">
   <div class="header">
     <div class="header-content">
-      <h1>{t('all_payments_title', lang)}</h1>
+      <h1 class="sr-only">{t('all_payments_title', lang)}</h1>
     </div>
   </div>
 
@@ -286,13 +286,6 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
-  }
-
-   h1 {
-    margin-block: 0 1rem;
-    margin-inline: auto;
-    color: var(--color-text-primary);
-    text-align: center;
   }
 
   .btn {

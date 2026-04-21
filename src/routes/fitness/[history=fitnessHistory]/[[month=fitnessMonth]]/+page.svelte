@@ -55,7 +55,7 @@
 <svelte:head><title>{t('history_title', lang)} - Bocken</title></svelte:head>
 
 <div class="history-page">
-	<h1>{t('history_title', lang)}</h1>
+	<h1 class="sr-only">{t('history_title', lang)}</h1>
 
 	{#if sessions.length === 0}
 		<p class="empty">{t('no_workouts_yet', lang)}</p>
@@ -96,10 +96,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-	}
-	h1 {
-		margin: 0;
-		font-size: 1.4rem;
 	}
 	.empty {
 		text-align: center;

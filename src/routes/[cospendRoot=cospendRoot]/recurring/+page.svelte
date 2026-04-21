@@ -103,7 +103,7 @@
 
 <main class="recurring-payments">
   <div class="header">
-    <h1>{t('recurring_title', lang)}</h1>
+    <h1 class="sr-only">{t('recurring_title', lang)}</h1>
     <p>{t('recurring_subtitle', lang)}</p>
   </div>
 
@@ -244,12 +244,6 @@
   .header {
     margin-bottom: 2rem;
     text-align: center;
-  }
-
-  .header h1 {
-    margin: 0 0 0.5rem 0;
-    color: var(--color-text-primary);
-    font-size: 2rem;
   }
 
   .header p {
