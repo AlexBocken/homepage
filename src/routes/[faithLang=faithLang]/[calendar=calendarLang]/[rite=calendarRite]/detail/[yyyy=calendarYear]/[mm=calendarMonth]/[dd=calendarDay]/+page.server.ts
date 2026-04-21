@@ -25,6 +25,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		params.faithLang === 'faith' ? 'en' : params.faithLang === 'fides' ? 'la' : 'de';
 
 	const rite: Rite = params.rite === '1969' ? '1969' : '1962';
+	if (rite !== '1962') await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 
 	const dioceseParam = url.searchParams.get('diocese');
 	const diocese1962: Diocese1962 = isDiocese1962(dioceseParam)

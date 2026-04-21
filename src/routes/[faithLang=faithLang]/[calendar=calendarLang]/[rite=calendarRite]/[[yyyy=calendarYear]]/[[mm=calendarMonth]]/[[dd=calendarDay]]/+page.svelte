@@ -206,7 +206,12 @@
 		</aside>
 	{/if}
 	{#if hero}
-		<HeroCard day={hero} {lang} {todayIso} href={detailHref(hero.iso)} />
+		<HeroCard
+			day={hero}
+			{lang}
+			{todayIso}
+			href={rite === '1962' ? detailHref(hero.iso) : undefined}
+		/>
 	{/if}
 
 	<!-- Color legend + view switcher -->
