@@ -5,6 +5,7 @@
 	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
 	import { Dumbbell, Route, Flame, Weight, Beef, Droplet, Wheat, Scale, Target, Info, Ruler } from '@lucide/svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
+	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
@@ -429,6 +430,14 @@
 			</div>
 		</section>
 	{/if}
+
+	{#if data.goal?.sex === 'female'}
+		<PeriodTracker periods={data.periods ?? []} {lang} mode="projection" />
+	{/if}
+
+	{#each data.sharedPeriods ?? [] as shared (shared.owner)}
+		<PeriodTracker periods={shared.entries} {lang} readOnly ownerName={shared.owner} mode="projection" />
+	{/each}
 </div>
 
 <style>

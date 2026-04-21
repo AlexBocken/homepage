@@ -353,10 +353,6 @@
 		<PeriodTracker periods={data.periods ?? []} {lang} sharedWith={data.periodSharedWith ?? []} />
 	{/if}
 
-	{#each data.sharedPeriods ?? [] as shared (shared.owner)}
-		<PeriodTracker periods={shared.entries} {lang} readOnly ownerName={shared.owner} />
-	{/each}
-
 	<div class="page-footer-actions">
 		<button type="button" class="edit-profile-link" onclick={openProfileEdit}>
 			<UserCog size={14} />
