@@ -35,19 +35,14 @@ const partialCount = $derived(
 );
 const showFraction = $derived(partialCount > 0 && partialCount < 3);
 
-const autoSlot = $derived(browser ? getCurrentTimeSlot() : 'morning' as TimeSlot);
+const SLOT_ORDER: TimeSlot[] = ['morning', 'noon', 'evening'];
 
-// Auto-select the current time slot initially, and advance to next unprayed slot
-$effect(() => {
-	if (!isSlotPrayed(autoSlot)) {
-		selectedSlot = autoSlot;
-	} else {
-		// Find next unprayed slot
-		const order: TimeSlot[] = ['morning', 'noon', 'evening'];
-		const next = order.find(s => !isSlotPrayed(s));
-		if (next) selectedSlot = next;
-	}
-});
+function pickFirstUnprayed(prayedMask: number): TimeSlot {
+	const current = browser ? getCurrentTimeSlot() : 'morning';
+	const bit = (s: TimeSlot) => ({ morning: 1, noon: 2, evening: 4 }[s]);
+	if ((prayedMask & bit(current)) === 0) return current;
+	return SLOT_ORDER.find(s => (prayedMask & bit(s)) === 0) ?? current;
+}
 
 const slots: { key: TimeSlot; icon: typeof Coffee; color: string }[] = [
 	{ key: 'morning', icon: Coffee, color: 'var(--nord13)' },
@@ -86,11 +81,13 @@ onMount(() => {
 	const s = getAngelusStreak();
 	s.initWithServerData(streakData, isLoggedIn);
 	store = s;
+	selectedSlot = pickFirstUnprayed(s.todayPrayed);
 });
 
 async function pray() {
 	if (!store || isSlotPrayed(selectedSlot)) return;
 	const completed = await store.recordPrayer(selectedSlot);
+	selectedSlot = pickFirstUnprayed(store.todayPrayed);
 	if (completed) {
 		burst = true;
 		await tick();
