@@ -7,6 +7,7 @@
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
+	import SaveFab from '$lib/components/SaveFab.svelte';
 
 	let { data } = $props();
 
@@ -460,9 +461,6 @@
 					<button type="button" class="ghost" onclick={() => { idx = 0; direction = -1; }}>
 						<ArrowLeft size={14} /> {t('edit_again', lang)}
 					</button>
-					<button type="button" class="nav-btn primary" onclick={save} disabled={saving}>
-						<Check size={16} /> {saving ? t('saving', lang) : t('save_measurement', lang)}
-					</button>
 				</div>
 			</section>
 		{/if}
@@ -579,6 +577,10 @@
 			<span class="bottom-spacer"></span>
 		{/if}
 	</footer>
+
+	{#if done}
+		<SaveFab type="button" onclick={save} disabled={saving} label={saving ? t('saving', lang) : t('save_measurement', lang)} />
+	{/if}
 </div>
 
 <style>
