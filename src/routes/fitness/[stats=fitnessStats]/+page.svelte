@@ -9,7 +9,7 @@
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
-	import { BODY_PART_CARDS, bodyPartSlug } from '$lib/js/fitnessBodyParts';
+	import { BODY_PART_CARDS, bodyPartSlug, bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const statsSlug = $derived(lang === 'en' ? 'stats' : 'statistik');
@@ -390,16 +390,15 @@
 					{@const cv = currentValue(card)}
 					<a
 						class="bp-card"
+						style="--accent: {bodyPartAccent(card.key)}"
 						href="/fitness/{statsSlug}/{historySlug}/{bodyPartSlug(card, lang)}"
 					>
 						<div class="bp-img-wrap" aria-hidden="true">
-							{#if card.img && card.img.endsWith('.svg')}
+							{#if card.img}
 								<div
-									class="bp-img bp-img-svg"
-									style="--bp-svg-src: url(/fitness/measure/{card.img})"
+									class="bp-img"
+									style="--bp-src: url(/fitness/measure/{card.img})"
 								></div>
-							{:else if card.img}
-								<img src="/fitness/measure/{card.img}" alt="" class="bp-img" />
 							{:else}
 								<Ruler size={36} strokeWidth={1.5} />
 							{/if}
@@ -989,10 +988,22 @@
 		font: inherit;
 		text-decoration: none;
 		position: relative;
+		overflow: hidden;
+		isolation: isolate;
 		transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal);
 	}
+	.bp-card::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: var(--accent, var(--color-primary));
+		opacity: 0.08;
+		z-index: -1;
+		pointer-events: none;
+	}
 	.bp-card:hover {
-		border-color: var(--color-primary);
+		border-color: var(--accent, var(--color-primary));
 		box-shadow: var(--shadow-sm);
 	}
 	.bp-img-wrap {
@@ -1002,30 +1013,22 @@
 		height: 3.25rem;
 		flex-shrink: 0;
 		border-radius: 50%;
-		background: var(--color-bg-secondary);
-		color: var(--color-text-secondary);
+		background: color-mix(in oklab, var(--accent, var(--color-primary)) 18%, transparent);
+		color: var(--accent, var(--color-primary));
 	}
 	.bp-img {
 		width: 2.4rem;
 		height: 2.4rem;
-		object-fit: contain;
-	}
-	.bp-img-svg {
-		mask-image: var(--bp-svg-src);
-		-webkit-mask-image: var(--bp-svg-src);
+		mask-image: var(--bp-src);
+		-webkit-mask-image: var(--bp-src);
 		mask-size: contain;
 		-webkit-mask-size: contain;
 		mask-repeat: no-repeat;
 		-webkit-mask-repeat: no-repeat;
 		mask-position: center;
 		-webkit-mask-position: center;
-		background-color: var(--color-text-primary);
+		background-color: var(--accent, var(--color-primary));
 	}
-	@media (prefers-color-scheme: dark) {
-		img.bp-img { filter: invert(1); }
-	}
-	:global(:root[data-theme="dark"]) img.bp-img { filter: invert(1); }
-	:global(:root[data-theme="light"]) img.bp-img { filter: none; }
 	.bp-meta {
 		display: flex;
 		flex-direction: column;
