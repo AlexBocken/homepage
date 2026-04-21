@@ -4,6 +4,7 @@
 	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2, X, Timer, Plus, GripVertical, Repeat } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
+	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
@@ -359,6 +360,20 @@
 		}
 	}
 
+	let _cadenceWarned = false;
+	/** After the user resolves the permission dialog, check if cadence will work.
+	 *  We wait a few seconds to let the system dialog settle before toasting. */
+	function maybeWarnCadence() {
+		if (_cadenceWarned) return;
+		setTimeout(() => {
+			if (_cadenceWarned) return;
+			if (!gps.cadenceAvailable()) {
+				_cadenceWarned = true;
+				toast.info(t('cadence_permission_missing', lang));
+			}
+		}, 4000);
+	}
+
 	let gpsToggling = $state(false);
 	async function toggleGps() {
 		if (gpsToggling) return;
@@ -369,6 +384,7 @@
 					useGps = true;
 				} else {
 					useGps = await gps.start(getVoiceGuidanceConfig());
+					if (useGps) maybeWarnCadence();
 				}
 			} else {
 				await gps.stop();
@@ -471,6 +487,7 @@
 		if (workout.mode === 'gps' && !gpsStarted && !gps.isTracking) {
 			_prestartGps = true;
 			gps.start(undefined, true);
+			maybeWarnCadence();
 		}
 	});
 
@@ -510,6 +527,7 @@
 		const exercise = getExerciseById(exerciseId);
 		if (exercise?.bodyPart === 'cardio' && gps.available && !useGps && !gps.isTracking) {
 			useGps = await gps.start(getVoiceGuidanceConfig());
+			if (useGps) maybeWarnCadence();
 		}
 	}
 
@@ -529,6 +547,7 @@
 				gpsStarted = true;
 				useGps = true;
 				workout.resumeTimer();
+				maybeWarnCadence();
 			}
 		} finally {
 			gpsStarting = false;

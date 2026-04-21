@@ -20,6 +20,12 @@ import java.util.Locale
 
 class AndroidBridge(private val context: Context) {
 
+    companion object {
+        const val REQ_BACKGROUND_LOCATION = 1002
+        const val REQ_NOTIFICATIONS = 1003
+        const val REQ_ACTIVITY_RECOGNITION = 1004
+    }
+
     @JavascriptInterface
     fun startLocationService(ttsConfigJson: String, startPaused: Boolean) {
         if (context is Activity) {
@@ -31,7 +37,7 @@ class AndroidBridge(private val context: Context) {
                     ActivityCompat.requestPermissions(
                         context,
                         arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                        1003
+                        REQ_NOTIFICATIONS
                     )
                 }
             }
@@ -44,7 +50,20 @@ class AndroidBridge(private val context: Context) {
                     ActivityCompat.requestPermissions(
                         context,
                         arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-                        1002
+                        REQ_BACKGROUND_LOCATION
+                    )
+                }
+            }
+
+            // Request activity recognition on Android 10+ (required for step detector / cadence)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    ActivityCompat.requestPermissions(
+                        context,
+                        arrayOf(Manifest.permission.ACTIVITY_RECOGNITION),
+                        REQ_ACTIVITY_RECOGNITION
                     )
                 }
             }
@@ -102,6 +121,15 @@ class AndroidBridge(private val context: Context) {
     @JavascriptInterface
     fun getIntervalState(): String {
         return LocationForegroundService.getIntervalState()
+    }
+
+    /** True if cadence (step detector) is usable — permission granted or not required (pre-Q). */
+    @JavascriptInterface
+    fun hasActivityRecognitionPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return true
+        return ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACTIVITY_RECOGNITION
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     /**
