@@ -250,6 +250,17 @@
 						{/each}
 					</div>
 				{/if}
+				{#if hero.rite1962?.stationChurches?.length}
+					<div class="tc-stations">
+						<span class="tc-stations-label" aria-hidden="true">✦</span>
+						<span class="tc-stations-text">
+							<span class="tc-stations-title">{t1962('stationChurch', lang)}:</span>
+							{#each hero.rite1962.stationChurches as s, i (s.key + (s.mass ?? ''))}
+								{#if i > 0}<span class="tc-stations-sep"> · </span>{/if}<span class="tc-station-name">{s.name}</span>{#if s.mass}<span class="tc-station-mass"> ({s.mass.replace(/_/g, ' ')})</span>{/if}
+							{/each}
+						</span>
+					</div>
+				{/if}
 				<span class="tc-arrow" aria-hidden="true">→</span>
 			</section>
 		</a>
@@ -659,6 +670,37 @@
 		background: rgba(255, 255, 255, 0.18);
 		border: 1px solid rgba(255, 255, 255, 0.22);
 		font-size: 0.82rem;
+	}
+	.tc-stations {
+		margin-top: 0.9rem;
+		display: flex;
+		align-items: baseline;
+		gap: 0.55rem;
+		font-size: 0.85rem;
+		line-height: 1.45;
+	}
+	.tc-stations-label {
+		font-size: 0.95rem;
+		opacity: 0.7;
+		flex-shrink: 0;
+	}
+	.tc-stations-title {
+		font-weight: 600;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+		font-size: 0.72rem;
+		opacity: 0.85;
+		margin-right: 0.35rem;
+	}
+	.tc-station-name {
+		font-style: italic;
+	}
+	.tc-station-mass {
+		opacity: 0.75;
+		font-size: 0.78rem;
+	}
+	.tc-stations-sep {
+		opacity: 0.6;
 	}
 	.tc-arrow {
 		position: absolute;

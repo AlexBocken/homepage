@@ -154,6 +154,21 @@
 					</ul>
 				</div>
 			{/if}
+			{#if d.stationChurches?.length}
+				<div class="stations">
+					<h4>{t1962('stationChurch', lang)}</h4>
+					<ul>
+						{#each d.stationChurches as s (s.key + (s.mass ?? ''))}
+							<li>
+								<span class="station-name">{s.name}</span>
+								{#if s.mass}
+									<span class="station-mass">{s.mass.replace(/_/g, ' ')}</span>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
 			{#if d.propers.length}
 				<section class="propers">
 					<h4>{t1962('propers', lang)}</h4>
@@ -351,6 +366,7 @@
 		color: var(--color-text-primary);
 	}
 	.commems h4,
+	.stations h4,
 	.propers h4 {
 		margin: 0.5rem 0 0.4rem;
 		font-size: 0.72rem;
@@ -359,10 +375,12 @@
 		color: var(--color-text-secondary);
 		font-weight: 600;
 	}
-	.commems {
+	.commems,
+	.stations {
 		margin-top: 0.75rem;
 	}
-	.commems ul {
+	.commems ul,
+	.stations ul {
 		list-style: none;
 		padding: 0;
 		margin: 0;
@@ -370,7 +388,8 @@
 		flex-direction: column;
 		gap: 0.35rem;
 	}
-	.commems li {
+	.commems li,
+	.stations li {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -379,9 +398,18 @@
 		border-radius: var(--radius-sm, 6px);
 		font-size: 0.85rem;
 	}
-	.commem-name {
+	.commem-name,
+	.station-name {
 		flex: 1 1 auto;
 		color: var(--color-text-primary);
+	}
+	.station-name {
+		font-style: italic;
+	}
+	.station-mass {
+		color: var(--color-text-tertiary);
+		font-size: 0.78rem;
+		text-transform: capitalize;
 	}
 
 	.propers {

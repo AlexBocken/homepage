@@ -28,6 +28,8 @@ import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import {
 	colorLabel1962,
+	DEFAULT_DIOCESE_1962,
+	DEFAULT_DIOCESE_1969,
 	rank1962Label,
 	season1962Label,
 	type CalendarLang,
@@ -153,16 +155,17 @@ function getRomcal1962(lang: CalendarLang, diocese: Diocese1962): Promise<Romcal
 	let p = romcal1962ByKey.get(key);
 	if (p) return p;
 	const calendar = calendars1962[diocese];
-	// `localizedCalendar` must be a 1969-shape bundle; the 1962 names live on
-	// the 1962 propers bundle and are injected via createI18n1962 extraNames.
-	const base1969 = bundles1969.general[lang];
+	// Do NOT pass `localizedCalendar` here: RomcalConfig's bundle-only branch
+	// (`if (config?.localizedCalendar)` in rites/roman1969/src/models/config.ts)
+	// pushes only the bundle's inputs and skips `particularCalendar` AND the
+	// 1962 sanctoral layering entirely. The 1962 names live on the 1962
+	// propers bundle and are supplied via `createI18n1962` + `resolveName1962`.
 	p = loadBundle1962(lang).then((b) => {
 		const i18next = createI18n1962(lang, { [lang]: b.i18n.names });
 		// `i18next` is part of Romcal's runtime config but absent from the
 		// published input type. Build via a permissive record so TS accepts it.
 		const base: Record<string, unknown> = {
 			i18next,
-			localizedCalendar: base1969,
 			scope: 'liturgical'
 		};
 		if (calendar) base.particularCalendar = calendar;
@@ -203,8 +206,57 @@ function colorKeysFrom(c: LiturgicalDay1962): string[] {
 	return c.colors ? [...c.colors] : [];
 }
 
-function buildCommemorations(d: LiturgicalDay1962): Rite1962Commem[] {
-	return (d.commemorations ?? []).map((c) => ({ id: c.id, name: c.name }));
+function buildCommemorations(
+	d: LiturgicalDay1962,
+	localBundle: RomcalBundle1962 | null,
+	laBundle: RomcalBundle1962
+): Rite1962Commem[] {
+	const out: Rite1962Commem[] = [];
+	for (const c of d.commemorations ?? []) {
+		const resolved = resolveCommemName(c.id, c.name, localBundle, laBundle);
+		// Drop 1969 GRC leaks: the hardcoded `GeneralRoman` import in
+		// RomcalConfig adds 1969-shaped ids (e.g. `andrew_apostle`) that are
+		// not in either 1962 bundle. They show up as losers on the same date
+		// as proper 1962 sancti — filter them out.
+		if (resolved == null) continue;
+		out.push({ id: c.id, name: resolved });
+	}
+	return out;
+}
+
+function resolveCommemName(
+	id: string,
+	raw: string | undefined,
+	localBundle: RomcalBundle1962 | null,
+	laBundle: RomcalBundle1962
+): string | null {
+	const bundles = [localBundle, laBundle].filter(
+		(b): b is RomcalBundle1962 => b != null
+	);
+	for (const b of bundles) {
+		const v = b.i18n.names?.[id];
+		if (v && v !== id) return v;
+	}
+	// Not in any 1962 bundle → treat as 1969 leak and drop.
+	if (!raw || raw === id) return null;
+	// Defensive: raw looks like an i18n key path (namespace/key) — also drop.
+	if (/^[a-z][a-z0-9_]*[/.][a-z_]/.test(raw)) return null;
+	return raw;
+}
+
+function resolveStationName(
+	key: string,
+	localBundle: RomcalBundle1962 | null,
+	laBundle: RomcalBundle1962
+): string {
+	const bundles = [localBundle, laBundle].filter(
+		(b): b is RomcalBundle1962 => b != null
+	);
+	for (const b of bundles) {
+		const v = (b.i18n as { stationChurches?: Record<string, string> }).stationChurches?.[key];
+		if (v && v !== key) return v;
+	}
+	return key;
 }
 
 function sectionsFromBundle(
@@ -292,9 +344,20 @@ function adaptDay1962(
 	const detail: Rite1962Detail = {
 		class: classOf,
 		kind: d.kind1962 ?? 'tempora',
-		commemorations: buildCommemorations(d),
+		commemorations: buildCommemorations(d, localBundle, laBundle),
 		propers
 	};
+	if (d.stationChurches && d.stationChurches.length > 0) {
+		// Romcal's internal i18next has no resource bundles loaded (RomcalConfig
+		// ignores the `i18next` we pass in input), so `s.name` arrives equal to
+		// `s.key`. Resolve from the ships-with-bundle lookup table here, with
+		// Latin as a fallback floor.
+		detail.stationChurches = d.stationChurches.map((s) => ({
+			key: s.key,
+			name: resolveStationName(s.key, localBundle, laBundle),
+			...(s.mass ? { mass: s.mass } : {})
+		}));
+	}
 	if (d.octaveOf) detail.octave = { ofId: d.octaveOf.ofId, day: d.octaveOf.day };
 	if (d.vigilOf) detail.vigilOf = d.vigilOf;
 	if (d.transferredFromDate) detail.transferredFrom = d.transferredFromDate;
@@ -307,7 +370,11 @@ function adaptDay1962(
 		rankName: rank1962Label(classKey, lang),
 		rank: classKey,
 		seasonKey,
-		seasonNames: d.seasonNames ? [...d.seasonNames] : [],
+		// Romcal's own seasonNames come through unresolved ("advent.season") because
+		// RomcalConfig's internal i18next has no resource bundle loaded — we pass
+		// neither `localizedCalendar` nor a positional `locale`. Resolve here via
+		// our own helper, which handles both 1962 CamelCase and 1969 SCREAMING_SNAKE.
+		seasonNames: seasonKey ? [season1962Label(seasonKey, lang)] : [],
 		colorNames,
 		colorKeys,
 		psalterWeek: null,
@@ -340,9 +407,6 @@ export async function getYear1962(
 		map.set(iso, adaptDay1962(principal, lang, laBundle, localBundle));
 	}
 	yearCache1962.set(cacheKey, map);
-	// keep season1962Label referenced so tree-shakers don't drop it while the
-	// detail view gradually takes over rendering its own labels.
-	void season1962Label;
 	return map;
 }
 
@@ -350,4 +414,23 @@ export function isoFor(year: number, month: number, day: number): string {
 	const mm = String(month + 1).padStart(2, '0');
 	const dd = String(day).padStart(2, '0');
 	return `${year}-${mm}-${dd}`;
+}
+
+// Pre-compute liturgical-calendar maps for the current and next civil year
+// across all supported languages for each rite's default diocese. Pages hit
+// year N and N+1 on every request (AdventI-rollover logic), so warming this
+// slice means the hot path — today's view in the default rite/diocese — is
+// cache-hot on the first request after boot. Non-default dioceses stay lazy.
+const WARMUP_LANGS: readonly CalendarLang[] = ['en', 'de', 'la'] as const;
+export async function warmLiturgicalCache(): Promise<void> {
+	const year = new Date().getFullYear();
+	const years = [year, year + 1];
+	const tasks: Promise<unknown>[] = [];
+	for (const y of years) {
+		for (const lang of WARMUP_LANGS) {
+			tasks.push(getYear(lang, DEFAULT_DIOCESE_1969, y));
+			tasks.push(getYear1962(lang, DEFAULT_DIOCESE_1962, y));
+		}
+	}
+	await Promise.all(tasks);
 }

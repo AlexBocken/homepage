@@ -39,10 +39,17 @@ export interface Rite1962Commem {
 	name: string;
 }
 
+export interface Rite1962StationChurch {
+	key: string;
+	name: string;
+	mass?: string;
+}
+
 export interface Rite1962Detail {
 	class: 1 | 2 | 3 | 4;
 	kind: 'tempora' | 'sancti';
 	commemorations: Rite1962Commem[];
+	stationChurches?: Rite1962StationChurch[];
 	octave?: {
 		ofId: string;
 		day: number;

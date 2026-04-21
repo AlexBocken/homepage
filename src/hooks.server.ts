@@ -5,6 +5,7 @@ import * as auth from "./auth"
 import { initializeScheduler } from "./lib/server/scheduler"
 import { dbConnect } from "./utils/db"
 import { errorWithVerse, getRandomVerse } from "$lib/server/errorQuote"
+import { warmLiturgicalCache } from "$lib/server/liturgicalCalendar"
 
 async function timing({ event, resolve }: Parameters<Handle>[0]) {
 	const marks: Record<string, number> = {};
@@ -42,6 +43,16 @@ await dbConnect().then(() => {
   console.error('❌ Failed to connect to database on startup:', error);
   // Don't crash the server - API routes will attempt reconnection
 });
+
+// Warm liturgical calendar cache in the background — non-blocking so the
+// server starts accepting requests immediately; any request arriving before
+// warmup completes falls back to lazy computation (still correct, just cold).
+{
+  const t0 = performance.now();
+  warmLiturgicalCache()
+    .then(() => console.log(`✅ Liturgical calendar cache warmed in ${Math.round(performance.now() - t0)}ms`))
+    .catch((error) => console.error('⚠️ Liturgical calendar warmup failed:', error));
+}
 
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	const session = await event.locals.timing.measure('auth', () => event.locals.auth());
