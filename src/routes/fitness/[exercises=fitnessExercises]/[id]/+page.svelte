@@ -1,6 +1,5 @@
 <script>
 	import { page } from '$app/stores';
-	import { getEnrichedExerciseById } from '$lib/data/exercisedb';
 
 	/** @param {string | undefined | null} type @param {'en'|'de'} lang */
 	function exerciseTypeInfo(type, lang) {
@@ -20,7 +19,6 @@
 				return null;
 		}
 	}
-	import { localizeExercise, translateTerm } from '$lib/data/exercises';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { ChevronRight } from '@lucide/svelte';
 
@@ -54,7 +52,7 @@
 
 	let activeTab = $state('about');
 
-	const exercise = $derived(data.exercise ?? getEnrichedExerciseById($page.params.id, lang));
+	const exercise = $derived(data.exercise);
 	const typeInfo = $derived(exerciseTypeInfo(exercise?.exerciseType, lang));
 	const similar = $derived(data.similar ?? []);
 	const history = $derived(data.history?.history ?? []);

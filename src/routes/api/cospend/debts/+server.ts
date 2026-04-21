@@ -31,7 +31,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   try {
     // Get all splits for the current user
     const userSplits = await PaymentSplit.find({ username: currentUser })
-      .populate('paymentId')
+      .populate('paymentId', 'title date category _id')
       .lean();
 
     // Get all other users who have splits with payments involving the current user
@@ -40,7 +40,7 @@ export const GET: RequestHandler = async ({ locals }) => {
       paymentId: { $in: paymentIds } as any,
       username: { $ne: currentUser }
     })
-      .populate('paymentId')
+      .populate('paymentId', '_id')
       .lean();
 
     // Group debts by user

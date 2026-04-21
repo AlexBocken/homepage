@@ -19,10 +19,13 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		try {
 			const user = await requireAuth(locals);
 			await dbConnect();
-			const sessions = await WorkoutSession.find({
-				createdBy: user.nickname,
-				startTime: { $gte: dayStart, $lte: dayEnd }
-			}).select('kcalEstimate').lean();
+			const [sessions, schedule] = await Promise.all([
+				WorkoutSession.find({
+					createdBy: user.nickname,
+					startTime: { $gte: dayStart, $lte: dayEnd }
+				}).select('kcalEstimate').lean(),
+				WorkoutSchedule.findOne({ userId: user.nickname }).lean()
+			]);
 			let kcal = 0;
 			for (const s of sessions) {
 				if (s.kcalEstimate?.kcal) kcal += s.kcalEstimate.kcal;
@@ -31,12 +34,11 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 			// If no exercise done today, project kcal from the next scheduled template
 			let projected = null;
 			if (kcal === 0) {
-				const schedule = await WorkoutSchedule.findOne({ userId: user.nickname });
 				if (schedule?.templateOrder?.length) {
 					const lastScheduled = await WorkoutSession.findOne({
 						createdBy: user.nickname,
 						templateId: { $in: schedule.templateOrder }
-					}).sort({ startTime: -1 });
+					}).sort({ startTime: -1 }).select('templateId').lean();
 
 					let nextId;
 					if (!lastScheduled?.templateId) {
