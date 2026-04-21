@@ -104,6 +104,7 @@ const translations: Translations = {
 	pace: { en: 'PACE', de: 'TEMPO' },
 	upload_gpx: { en: 'Upload GPX', de: 'GPX hochladen' },
 	uploading: { en: 'Uploading...', de: 'Hochladen...' },
+	download_gpx: { en: 'Download GPX', de: 'GPX herunterladen' },
 	elevation: { en: 'Elevation', de: 'Höhenprofil' },
 	elevation_unit: { en: 'm', de: 'm' },
 	elevation_gain: { en: 'Gain', de: 'Anstieg' },
