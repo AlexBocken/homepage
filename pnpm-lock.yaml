@@ -20,9 +20,6 @@ importers:
       '@nicolo-ribaudo/chokidar-2':
         specifier: 2.1.8-no-fsevents.3
         version: 2.1.8-no-fsevents.3
-      '@romcal/calendar.general-roman':
-        specifier: 3.0.0-dev.125
-        version: 3.0.0-dev.125(romcal@https://codeload.github.com/AlexBocken/romcal/tar.gz/e4530cf926486d229ae4a22c32e7d8b4a56e5077(typescript@6.0.2))
       '@sveltejs/adapter-node':
         specifier: ^5.5.4
         version: 5.5.4(@sveltejs/kit@2.56.1(@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.55.1)(vite@8.0.4(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.1)(@types/node@22.18.0)(esbuild@0.27.3)(terser@5.46.0)))(svelte@5.55.1)(typescript@6.0.2)(vite@8.0.4(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.1)(@types/node@22.18.0)(esbuild@0.27.3)(terser@5.46.0)))
@@ -55,7 +52,7 @@ importers:
         version: 4.2.1
       romcal:
         specifier: github:AlexBocken/romcal#dev
-        version: https://codeload.github.com/AlexBocken/romcal/tar.gz/e4530cf926486d229ae4a22c32e7d8b4a56e5077(typescript@6.0.2)
+        version: https://codeload.github.com/AlexBocken/romcal/tar.gz/b307ca9201fc3a6393982fc2241f1d39a44be8bc(typescript@6.0.2)
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
@@ -894,13 +891,6 @@ packages:
     resolution: {integrity: sha512-lWMnixq/QzxyhTV6NjQJ4SFo1J6PvOX8vUx5Wb4bBPsEb+8xZ89Bz6kOXpfXj9ak9AHTQVQzlgzBEc1SyM27xQ==}
     cpu: [x64]
     os: [win32]
-
-  '@romcal/calendar.general-roman@3.0.0-dev.125':
-    resolution: {integrity: sha512-6E4D9zfGqkz7NlJTv38v8++tZv234F1Z2jXlyzOithy92ZzZJhOMgUcmw0MOLUbn24lqz3477/VlFdLvRtzQBA==}
-    version: 3.0.0-dev.125
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      romcal: 3.0.0-dev.125
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -1782,8 +1772,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  romcal@https://codeload.github.com/AlexBocken/romcal/tar.gz/e4530cf926486d229ae4a22c32e7d8b4a56e5077:
-    resolution: {tarball: https://codeload.github.com/AlexBocken/romcal/tar.gz/e4530cf926486d229ae4a22c32e7d8b4a56e5077}
+  romcal@https://codeload.github.com/AlexBocken/romcal/tar.gz/b307ca9201fc3a6393982fc2241f1d39a44be8bc:
+    resolution: {tarball: https://codeload.github.com/AlexBocken/romcal/tar.gz/b307ca9201fc3a6393982fc2241f1d39a44be8bc}
     version: 3.0.0-dev.125
     engines: {node: '>=18.0.0'}
 
@@ -2683,10 +2673,6 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.1':
     optional: true
 
-  '@romcal/calendar.general-roman@3.0.0-dev.125(romcal@https://codeload.github.com/AlexBocken/romcal/tar.gz/e4530cf926486d229ae4a22c32e7d8b4a56e5077(typescript@6.0.2))':
-    dependencies:
-      romcal: https://codeload.github.com/AlexBocken/romcal/tar.gz/e4530cf926486d229ae4a22c32e7d8b4a56e5077(typescript@6.0.2)
-
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@standard-schema/spec@1.0.0': {}
@@ -3545,7 +3531,7 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.60.1
       fsevents: 2.3.3
 
-  romcal@https://codeload.github.com/AlexBocken/romcal/tar.gz/e4530cf926486d229ae4a22c32e7d8b4a56e5077(typescript@6.0.2):
+  romcal@https://codeload.github.com/AlexBocken/romcal/tar.gz/b307ca9201fc3a6393982fc2241f1d39a44be8bc(typescript@6.0.2):
     dependencies:
       i18next: 26.0.6(typescript@6.0.2)
     transitivePeerDependencies:

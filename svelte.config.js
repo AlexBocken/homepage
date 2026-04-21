@@ -17,10 +17,11 @@ const config = {
 			$models: 'src/models',
 			$utils: 'src/utils',
 			$types: 'src/types',
-			// romcal ships the Swiss 1969 bundle inside its workspace dir but does not
-			// re-export it, so exports-field resolution blocks a direct import. Point
-			// the scoped package name at the bundle directory so both the TS types
-			// (index.d.ts) and the ESM entry (esm/index.js) resolve via its package.json.
+			// romcal ships the 1969 bundles inside its workspace dir but does not
+			// re-export them, so exports-field resolution blocks a direct import. Point
+			// the scoped package names at the bundle directories so both the TS types
+			// (index.d.ts) and the ESM entry (esm/index.js) resolve via their package.json.
+			'@romcal/calendar.general-roman': 'node_modules/romcal/rites/roman1969/dist/bundles/general-roman',
 			'@romcal/calendar.switzerland': 'node_modules/romcal/rites/roman1969/dist/bundles/switzerland'
 		}
 	}
