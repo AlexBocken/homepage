@@ -295,7 +295,7 @@
 
 <main class="edit-recurring-payment">
   <div class="header">
-    <h1>{t('edit_recurring_title', lang)}</h1>
+    <h1 class="sr-only">{t('edit_recurring_title', lang)}</h1>
   </div>
 
   {#if loadingPayment}
@@ -505,11 +505,6 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
-  }
-
-  .header h1 {
-    margin: 0;
-    color: var(--color-text-primary);
   }
 
   .loading {

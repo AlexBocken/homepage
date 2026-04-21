@@ -152,7 +152,7 @@
 
 <main class="settle-main">
   <div class="header-section">
-    <h1>{t('settle_title', lang)}</h1>
+    <h1 class="sr-only">{t('settle_title', lang)}</h1>
     <p>{t('settle_subtitle', lang)}</p>
   </div>
 
@@ -371,11 +371,6 @@
   .header-section {
     text-align: center;
     margin-bottom: 2rem;
-  }
-
-  .header-section h1 {
-    color: var(--nord0);
-    margin-bottom: 0.5rem;
   }
 
   .header-section p {
@@ -690,10 +685,6 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .header-section h1 {
-      color: var(--font-default-dark);
-    }
-
     :global(:root:not([data-theme="light"])) .header-section p {
       color: var(--nord4);
     }
@@ -793,9 +784,6 @@
       border-color: var(--nord2);
     }
   }
-:global(:root[data-theme="dark"]) .header-section h1 {
-	color: var(--font-default-dark);
-}
 :global(:root[data-theme="dark"]) .header-section p {
 	color: var(--nord4);
 }

@@ -101,7 +101,7 @@
 		<MuscleFilter bind:selectedGroups={muscleGroups} {lang} split />
 	</div>
 
-	<h1>{t('exercises_title', lang)}</h1>
+	<h1 class="sr-only">{t('exercises_title', lang)}</h1>
 
 	<!-- Mobile: inline, not split -->
 	<div class="mobile-filter">
@@ -225,11 +225,6 @@
 		margin: 0 auto;
 		position: relative;
 	}
-	h1 {
-		margin: 0;
-		font-size: 1.4rem;
-	}
-
 	/* Mobile: show inline filter, hide desktop split */
 	.desktop-filter {
 		display: none;

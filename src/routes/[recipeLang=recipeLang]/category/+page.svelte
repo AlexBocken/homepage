@@ -14,13 +14,7 @@
 <svelte:head>
     <title>{labels.title} - {labels.siteTitle}</title>
 </svelte:head>
-<style>
-	h1 {
-		text-align: center;
-		font-size: 1.5rem;
-	}
-</style>
-<h1>{labels.title}</h1>
+<h1 class="sr-only">{labels.title}</h1>
 <section>
 <TagCloud>
 {#each data.categories as tag}

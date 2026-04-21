@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { Pencil, Trash2, ChevronRight, ChevronDown, Venus, Mars, Weight, Percent, Ruler, Plus, Minus, X } from '@lucide/svelte';
+	import { Pencil, Trash2, ChevronRight, ChevronDown, Venus, Mars, Weight, Percent, Ruler, Plus, Minus, X, UserCog, Sparkles } from '@lucide/svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -34,16 +34,19 @@
 	let profileBirthYear = $state(data.profile?.birthYear != null ? String(data.profile.birthYear) : '');
 	let profileSaving = $state(false);
 	let profileEditing = $state(false);
+	let bannerDismissed = $state(false);
+	/** @type {HTMLElement | undefined} */
+	let profileFormEl = $state(undefined);
 
-	const profileParts = $derived.by(() => {
-		/** @type {string[]} */
-		const parts = [];
-		const h = data.profile?.heightCm;
-		if (h) parts.push(`${h}cm`);
-		const by = data.profile?.birthYear;
-		if (by) parts.push(`*${by}`);
-		return parts;
-	});
+	const profileComplete = $derived(!!(data.profile?.sex && data.profile?.heightCm && data.profile?.birthYear));
+	const showSetupBanner = $derived(!profileComplete && !bannerDismissed && !profileEditing);
+
+	function openProfileEdit() {
+		profileEditing = true;
+		setTimeout(() => {
+			profileFormEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}, 40);
+	}
 
 	let profileDirty = $derived(
 		profileSex !== (data.profile?.sex ?? 'male') ||
@@ -222,29 +225,26 @@
 <svelte:head><title>{lang === 'en' ? 'Measure' : 'Messen'} - Bocken</title></svelte:head>
 
 <div class="measure-page">
-	<div class="page-header">
-		<h1>{t('measure_title', lang)}</h1>
-		<div class="profile-meta">
-			{#if data.profile?.sex}
-				<span class="profile-sex-icon">
-					{#if data.profile.sex === 'female'}
-						<Venus size={16} />
-					{:else}
-						<Mars size={16} />
-					{/if}
-				</span>
-			{/if}
-			{#if profileParts.length > 0}
-				<span class="profile-summary">{profileParts.join(' · ')}</span>
-			{/if}
-			<button class="profile-edit-btn" onclick={() => profileEditing = !profileEditing} aria-label="Edit profile">
-				<Pencil size={12} />
+	<h1 class="sr-only">{t('measure_title', lang)}</h1>
+
+	{#if showSetupBanner}
+		<div class="setup-banner" role="status">
+			<span class="setup-banner-icon" aria-hidden="true"><Sparkles size={18} /></span>
+			<span class="setup-banner-text">{t('profile_setup_cta', lang)}</span>
+			<button type="button" class="setup-banner-cta" onclick={openProfileEdit}>
+				{t('set_up_profile', lang)}
+			</button>
+			<button type="button" class="setup-banner-dismiss" onclick={() => bannerDismissed = true} aria-label={t('dismiss', lang)}>
+				<X size={14} />
 			</button>
 		</div>
-	</div>
+	{/if}
 
 	{#if profileEditing}
-		<div class="profile-fields">
+		<div class="profile-fields" bind:this={profileFormEl}>
+			<button type="button" class="profile-close-btn" onclick={() => profileEditing = false} aria-label={t('cancel', lang)}>
+				<X size={14} />
+			</button>
 			<div class="form-group">
 				<!-- svelte-ignore a11y_label_has_associated_control -->
 			<label>{t('sex', lang)}</label>
@@ -427,6 +427,13 @@
 	{#each data.sharedPeriods ?? [] as shared (shared.owner)}
 		<PeriodTracker periods={shared.entries} {lang} readOnly ownerName={shared.owner} />
 	{/each}
+
+	<div class="page-footer-actions">
+		<button type="button" class="edit-profile-link" onclick={openProfileEdit}>
+			<UserCog size={14} />
+			<span>{t('edit_profile', lang)}</span>
+		</button>
+	</div>
 </div>
 
 <style>
@@ -435,57 +442,151 @@
 		flex-direction: column;
 		gap: 1rem;
 	}
-	h1 {
-		margin: 0;
-		font-size: 1.4rem;
-	}
 	h2 {
 		margin: 0 0 0.5rem;
 		font-size: 1.1rem;
 	}
 
-	/* Header with inline profile */
-	.page-header {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-	.profile-meta {
+	/* Setup banner — only visible when profile incomplete */
+	.setup-banner {
+		position: relative;
 		display: flex;
 		align-items: center;
-		gap: 0.4rem;
+		gap: 0.75rem;
+		padding: 0.75rem 0.9rem;
+		border-radius: var(--radius-lg);
+		background: color-mix(in oklab, var(--color-primary) 10%, var(--color-surface));
+		border: 1px solid color-mix(in oklab, var(--color-primary) 35%, transparent);
 	}
-	.profile-sex-icon {
-		display: flex;
-		color: var(--color-text-secondary);
+	.setup-banner-icon {
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		flex-shrink: 0;
+		border-radius: 50%;
+		background: color-mix(in oklab, var(--color-primary) 22%, transparent);
+		color: var(--color-primary);
 	}
-	.profile-summary {
+	.setup-banner-text {
+		flex: 1;
+		font-size: 0.85rem;
+		line-height: 1.35;
+		color: var(--color-text-primary);
+	}
+	.setup-banner-cta {
+		flex-shrink: 0;
+		padding: 0.4rem 0.85rem;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		border: none;
+		border-radius: var(--radius-pill);
+		font-weight: 600;
 		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-		letter-spacing: 0.02em;
+		cursor: pointer;
+		transition: background var(--transition-normal);
 	}
-	.profile-edit-btn {
+	.setup-banner-cta:hover {
+		background: var(--color-primary-hover);
+	}
+	.setup-banner-dismiss {
 		display: flex;
 		align-items: center;
-		padding: 0.25rem;
+		justify-content: center;
+		width: 1.6rem;
+		height: 1.6rem;
+		padding: 0;
+		flex-shrink: 0;
 		background: none;
 		border: none;
-		cursor: pointer;
+		border-radius: 50%;
 		color: var(--color-text-tertiary);
+		cursor: pointer;
 		opacity: 0.6;
-		transition: opacity 0.15s;
+		transition: opacity var(--transition-fast, 120ms), background var(--transition-fast, 120ms);
 	}
-	.profile-edit-btn:hover {
+	.setup-banner-dismiss:hover {
 		opacity: 1;
-		color: var(--color-text-secondary);
+		background: color-mix(in oklab, var(--color-text-primary) 8%, transparent);
 	}
+	@media (max-width: 480px) {
+		.setup-banner {
+			flex-wrap: wrap;
+			padding-right: 2.25rem;
+			gap: 0.5rem 0.75rem;
+		}
+		.setup-banner-text {
+			flex-basis: calc(100% - 2.75rem);
+			font-size: 0.8rem;
+		}
+		.setup-banner-cta {
+			margin-left: auto;
+		}
+		.setup-banner-dismiss {
+			position: absolute;
+			top: 0.4rem;
+			right: 0.4rem;
+		}
+	}
+
 	.profile-fields {
+		position: relative;
 		display: flex;
 		gap: 0.5rem;
 		align-items: flex-end;
-		justify-content: flex-end;
 		flex-wrap: wrap;
+		padding: 0.75rem 0.9rem 0.9rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		background: var(--color-surface);
+	}
+	.profile-close-btn {
+		position: absolute;
+		top: 0.35rem;
+		right: 0.35rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.6rem;
+		height: 1.6rem;
+		padding: 0;
+		background: none;
+		border: none;
+		border-radius: 50%;
+		color: var(--color-text-tertiary);
+		cursor: pointer;
+		opacity: 0.7;
+		transition: opacity var(--transition-fast, 120ms), background var(--transition-fast, 120ms);
+	}
+	.profile-close-btn:hover {
+		opacity: 1;
+		background: color-mix(in oklab, var(--color-text-primary) 8%, transparent);
+	}
+
+	/* Footer: slim "Edit profile" link */
+	.page-footer-actions {
+		display: flex;
+		justify-content: center;
+		padding-top: 0.5rem;
+		margin-top: 0.5rem;
+	}
+	.edit-profile-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.4rem 0.75rem;
+		background: none;
+		border: none;
+		color: var(--color-text-tertiary);
+		font-size: 0.8rem;
+		font-weight: 500;
+		cursor: pointer;
+		border-radius: var(--radius-pill);
+		transition: color var(--transition-fast, 120ms), background var(--transition-fast, 120ms);
+	}
+	.edit-profile-link:hover {
+		color: var(--color-text-primary);
+		background: color-mix(in oklab, var(--color-text-primary) 6%, transparent);
 	}
 	.sex-pills {
 		display: flex;

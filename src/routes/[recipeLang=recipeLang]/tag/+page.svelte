@@ -23,10 +23,6 @@
     <title>{labels.title} - {labels.siteTitle}</title>
 </svelte:head>
 <style>
-	h1 {
-		font-size: 1.5rem;
-		text-align: center;
-	}
 	.search-wrap {
 		max-width: 400px;
 		margin: 0 auto 1rem;
@@ -42,7 +38,7 @@
 		color: var(--color-text-primary);
 	}
 </style>
-<h1>{labels.title}</h1>
+<h1 class="sr-only">{labels.title}</h1>
 <div class="search-wrap">
 	<input type="search" placeholder={labels.search} bind:value={query} />
 </div>

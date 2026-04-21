@@ -368,7 +368,7 @@
 
 <main class="add-payment">
   <div class="header">
-    <h1>{t('add_payment_title', lang)}</h1>
+    <h1 class="sr-only">{t('add_payment_title', lang)}</h1>
     <p>{t('add_payment_subtitle', lang)}</p>
   </div>
 
@@ -623,12 +623,6 @@
   .header {
     text-align: center;
     margin-bottom: 2rem;
-  }
-
-  .header h1 {
-    margin: 0 0 0.5rem 0;
-    color: var(--color-text-primary);
-    font-size: 2rem;
   }
 
   .header p {
