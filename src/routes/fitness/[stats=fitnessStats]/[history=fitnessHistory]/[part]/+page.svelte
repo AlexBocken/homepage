@@ -7,6 +7,7 @@
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const statsSlug = $derived(lang === 'en' ? 'stats' : 'statistik');
 	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
 	const card = $derived(data.card);
 
@@ -112,7 +113,7 @@
 
 <div class="detail-page">
 	<header class="detail-header">
-		<a class="back-link" href="/fitness/{measureSlug}" aria-label={t('back', lang)}>
+		<a class="back-link" href="/fitness/{statsSlug}" aria-label={t('back', lang)}>
 			<ArrowLeft size={18} />
 		</a>
 		<div class="head-text">
