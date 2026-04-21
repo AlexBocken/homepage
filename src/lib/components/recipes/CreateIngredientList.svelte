@@ -12,6 +12,7 @@ import { confirm } from '$lib/js/confirmDialog.svelte'
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import { portions } from '$lib/js/portions_store.js'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
+import { untrack } from 'svelte'
 
 let {
 	lang = 'de' as 'de' | 'en',
@@ -25,9 +26,9 @@ let {
 	useStore?: boolean,
 }>();
 
-let portions_local = $state<string | undefined>(portionsProp)
+let portions_local = $state<string | undefined>(untrack(() => portionsProp))
 
-if (useStore) {
+if (untrack(() => useStore)) {
 	portions.subscribe((p: any) => {
 		portions_local = p
 	});

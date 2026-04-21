@@ -1771,7 +1771,7 @@
 				{/if}
 			</div>
 
-			<div class="meal-entries">
+			<div class="meal-entries" role="list">
 				{#each mealEntries as entry}
 					{@const imgUrl = entry.source === 'recipe' && entry.sourceId ? recipeImages[entry.sourceId] : null}
 					<div
@@ -1779,6 +1779,7 @@
 						class:has-image={!!imgUrl}
 						class:dragging={draggingEntryId === entry._id}
 						draggable={editingEntryId !== entry._id}
+						role="listitem"
 						ondragstart={(ev) => onEntryDragStart(ev, entry._id)}
 						ondragend={onEntryDragEnd}
 					>
@@ -2308,11 +2309,6 @@
 		text-transform: uppercase;
 		color: var(--color-text-secondary);
 	}
-	.macro-bar-goal {
-		font-weight: 400;
-		opacity: 0.7;
-		text-transform: none;
-	}
 	.macro-bar-track {
 		width: 100%;
 		height: 6px;
@@ -2409,15 +2405,6 @@
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
-	/* Macro rings (custom meal detail + food detail) */
-	.ring-text {
-		font-size: 14px;
-		font-weight: 700;
-		fill: currentColor;
-		text-anchor: middle;
-		dominant-baseline: central;
-	}
-
 	/* ── Micro Details ── */
 	.micro-inline {
 		margin-top: 0.75rem;
@@ -3669,14 +3656,6 @@
 		font-size: 0.72rem;
 		color: var(--color-text-tertiary);
 	}
-	.custom-meal-info[role="button"] {
-		cursor: pointer;
-		border-radius: 6px;
-		transition: background 0.12s;
-	}
-	.custom-meal-info[role="button"]:hover {
-		background: var(--color-bg-elevated);
-	}
 	/* Custom meal detail screen */
 	.cm-detail {
 		padding: 0.75rem;
@@ -3779,10 +3758,6 @@
 	}
 	.cm-detail-btn-confirm:hover {
 		opacity: 0.9;
-	}
-	.btn-sm {
-		padding: 0.3rem 0.65rem;
-		font-size: 0.72rem;
 	}
 	.manage-meals-link {
 		display: flex;

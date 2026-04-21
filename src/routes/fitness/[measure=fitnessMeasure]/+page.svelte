@@ -789,9 +789,6 @@
 	.section-toggle:hover {
 		background: var(--color-surface-hover, var(--color-bg-elevated));
 	}
-	.section-toggle + .section-toggle {
-		margin-top: 0.5rem;
-	}
 	.section-toggle-left {
 		display: flex;
 		align-items: center;
@@ -1156,9 +1153,4 @@
 		opacity: 1;
 	}
 
-	@media (max-width: 480px) {
-		.stat-grid {
-			grid-template-columns: 1fr;
-		}
-	}
 </style>

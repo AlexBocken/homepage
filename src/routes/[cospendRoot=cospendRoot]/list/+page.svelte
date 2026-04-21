@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, untrack } from 'svelte';
   import { getShoppingSync } from '$lib/js/shoppingSync.svelte';
   import { SHOPPING_CATEGORIES } from '$lib/data/shoppingCategoryItems';
   import { Plus, ListX, Apple, Beef, Milk, Croissant, Wheat, FlameKindling, GlassWater, Candy, Snowflake, SprayCan, Sparkles, Package, Search, Store } from '@lucide/svelte';
@@ -21,9 +21,11 @@
   const sync = getShoppingSync();
 
   // Seed sync state immediately so SSR can render the list
-  if (data.initialList) {
-    sync.seed(data.initialList, data.shareToken);
-  }
+  untrack(() => {
+    if (data.initialList) {
+      sync.seed(data.initialList, data.shareToken);
+    }
+  });
 
   const lang = $derived(detectCospendLang($page.url.pathname));
   const loc = $derived(locale(lang));

@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
+	import { untrack } from 'svelte';
 	import { Heart, ExternalLink, ScanBarcode, X } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import MacroBreakdown from './MacroBreakdown.svelte';
@@ -35,7 +36,7 @@
 
 	// --- Search state ---
 	let query = $state('');
-	let results = $state(initialResults ?? []);
+	let results = $state(untrack(() => initialResults ?? []));
 	let loading = $state(false);
 	let timeout = $state(null);
 	const isPrefilledMode = $derived(initialResults != null);

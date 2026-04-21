@@ -350,10 +350,6 @@
 	.stat-delta.down { color: var(--green); }
 	.stat-delta.flat { color: var(--color-text-tertiary); }
 
-	.chart-wrap {
-		/* FitnessChart has its own card styling */
-	}
-
 	.empty {
 		display: flex;
 		flex-direction: column;
