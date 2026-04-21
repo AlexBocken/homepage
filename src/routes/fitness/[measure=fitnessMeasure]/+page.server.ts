@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ fetch }) => {
 	const [latestRes, listRes, goalRes, periodRes, shareRes, sharedRes] = await Promise.all([
 		fetch('/api/fitness/measurements/latest'),
-		fetch('/api/fitness/measurements?limit=20'),
+		fetch('/api/fitness/measurements?limit=200'),
 		fetch('/api/fitness/goal'),
 		fetch('/api/fitness/period').catch(() => null),
 		fetch('/api/fitness/period/share').catch(() => null),

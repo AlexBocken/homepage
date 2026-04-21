@@ -6,9 +6,11 @@
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
+	import { BODY_PART_CARDS, bodyPartSlug } from '$lib/js/fitnessBodyParts';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
+	const historySlug = $derived(lang === 'en' ? 'history' : 'verlauf');
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 
@@ -93,6 +95,26 @@
 		{ label: t('l_calf', lang), key: 'leftCalf', value: latestBp.leftCalf },
 		{ label: t('r_calf', lang), key: 'rightCalf', value: latestBp.rightCalf }
 	]);
+
+	/** @param {import('$lib/js/fitnessBodyParts').BodyPartCard} c */
+	function currentValue(c) {
+		if (c.paired) {
+			const l = /** @type {number|undefined} */ (latestBp[c.dbLeft]);
+			const r = /** @type {number|undefined} */ (latestBp[c.dbRight]);
+			return { left: l ?? null, right: r ?? null };
+		}
+		const v = /** @type {number|undefined} */ (latestBp[c.db]);
+		return { value: v ?? null };
+	}
+
+	/** @param {import('$lib/js/fitnessBodyParts').BodyPartCard} c */
+	function hasAny(c) {
+		const v = currentValue(c);
+		if (c.paired) return v.left != null || v.right != null;
+		return v.value != null;
+	}
+
+	const cardsWithData = $derived(BODY_PART_CARDS.filter(hasAny));
 
 	/** @param {string} id */
 	async function deleteMeasurement(id) {
@@ -318,15 +340,50 @@
 		{/if}
 	</form>
 
-	{#if bodyPartFields.some(f => f.value != null)}
+	{#if cardsWithData.length > 0}
 		<section class="body-parts-section">
 			<h2>{t('body_parts', lang)}</h2>
-			<div class="body-grid">
-				{#each bodyPartFields.filter(f => f.value != null) as field}
-					<div class="body-row">
-						<span class="body-label">{field.label}</span>
-						<span class="body-value">{field.value} cm</span>
-					</div>
+			<div class="bp-grid">
+				{#each cardsWithData as card (card.key)}
+					{@const cv = currentValue(card)}
+					<a
+						class="bp-card"
+						href="/fitness/{measureSlug}/{historySlug}/{bodyPartSlug(card, lang)}"
+					>
+						<div class="bp-img-wrap" aria-hidden="true">
+							{#if card.img && card.img.endsWith('.svg')}
+								<div
+									class="bp-img bp-img-svg"
+									style="--bp-svg-src: url(/fitness/measure/{card.img})"
+								></div>
+							{:else if card.img}
+								<img src="/fitness/measure/{card.img}" alt="" class="bp-img" />
+							{:else}
+								<Ruler size={36} strokeWidth={1.5} />
+							{/if}
+						</div>
+						<div class="bp-meta">
+							<span class="bp-label">{t(card.labelKey, lang)}</span>
+							{#if card.paired}
+								{#if cv.left != null && cv.right != null && cv.left === cv.right}
+									<span class="bp-value">{cv.left.toFixed(1)}<span class="bp-unit">cm</span></span>
+								{:else if cv.left != null && cv.right != null}
+									<span class="bp-value paired">
+										<span class="bp-side"><em>L</em> {cv.left.toFixed(1)}</span>
+										<span class="bp-side-sep">·</span>
+										<span class="bp-side"><em>R</em> {cv.right.toFixed(1)}</span>
+										<span class="bp-unit">cm</span>
+									</span>
+								{:else if cv.left != null}
+									<span class="bp-value"><em>L</em> {cv.left.toFixed(1)}<span class="bp-unit">cm</span></span>
+								{:else if cv.right != null}
+									<span class="bp-value"><em>R</em> {cv.right.toFixed(1)}<span class="bp-unit">cm</span></span>
+								{/if}
+							{:else if cv.value != null}
+								<span class="bp-value">{cv.value.toFixed(1)}<span class="bp-unit">cm</span></span>
+							{/if}
+						</div>
+					</a>
 				{/each}
 			</div>
 		</section>
@@ -765,22 +822,153 @@
 	}
 
 	/* Body parts (latest) */
-	.body-grid {
+	.bp-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.6rem;
+	}
+	.bp-card {
 		display: flex;
 		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: 0.35rem;
+		padding: 0.7rem 0.5rem 0.6rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		cursor: pointer;
+		color: inherit;
+		font: inherit;
+		text-decoration: none;
+		position: relative;
+		transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal);
 	}
-	.body-row {
-		display: flex;
-		justify-content: space-between;
-		padding: 0.5rem 0;
-		border-bottom: 1px solid var(--color-border);
-		font-size: 0.85rem;
+	.bp-card:hover {
+		border-color: var(--color-primary);
+		box-shadow: var(--shadow-sm);
 	}
-	.body-label {
+	.bp-img-wrap {
+		display: grid;
+		place-items: center;
+		width: 3.25rem;
+		height: 3.25rem;
+		flex-shrink: 0;
+		border-radius: 50%;
+		background: var(--color-bg-secondary);
 		color: var(--color-text-secondary);
 	}
-	.body-value {
+	.bp-img {
+		width: 2.4rem;
+		height: 2.4rem;
+		object-fit: contain;
+	}
+	.bp-img-svg {
+		mask-image: var(--bp-svg-src);
+		-webkit-mask-image: var(--bp-svg-src);
+		mask-size: contain;
+		-webkit-mask-size: contain;
+		mask-repeat: no-repeat;
+		-webkit-mask-repeat: no-repeat;
+		mask-position: center;
+		-webkit-mask-position: center;
+		background-color: var(--color-text-primary);
+	}
+	@media (prefers-color-scheme: dark) {
+		img.bp-img { filter: invert(1); }
+	}
+	:global(:root[data-theme="dark"]) img.bp-img { filter: invert(1); }
+	:global(:root[data-theme="light"]) img.bp-img { filter: none; }
+	.bp-meta {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+		min-width: 0;
+		width: 100%;
+	}
+	.bp-label {
+		font-size: 0.65rem;
 		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--color-text-secondary);
+	}
+	.bp-value {
+		font-size: 1rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-text-primary);
+		letter-spacing: -0.01em;
+	}
+	.bp-value.paired {
+		font-size: 0.78rem;
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: center;
+		gap: 0.2rem;
+	}
+	.bp-value em {
+		font-style: normal;
+		font-weight: 600;
+		font-size: 0.62rem;
+		color: var(--color-text-tertiary);
+		margin-right: 0.15rem;
+		letter-spacing: 0.05em;
+	}
+	.bp-side {
+		white-space: nowrap;
+	}
+	.bp-side-sep {
+		color: var(--color-text-tertiary);
+	}
+	.bp-unit {
+		margin-left: 0.2rem;
+		font-size: 0.65rem;
+		font-weight: 600;
+		color: var(--color-text-tertiary);
+	}
+	@media (max-width: 420px) {
+		.bp-grid { gap: 0.45rem; }
+		.bp-card { padding: 0.55rem 0.35rem; }
+		.bp-img-wrap { width: 2.6rem; height: 2.6rem; }
+		.bp-img { width: 1.9rem; height: 1.9rem; }
+		.bp-label { font-size: 0.58rem; }
+		.bp-value { font-size: 0.88rem; }
+		.bp-value.paired { font-size: 0.7rem; }
+	}
+	@media (min-width: 768px) {
+		.bp-grid { gap: 0.85rem; }
+		.bp-card {
+			flex-direction: row;
+			align-items: center;
+			text-align: left;
+			gap: 0.85rem;
+			padding: 0.9rem 1rem;
+		}
+		.bp-img-wrap {
+			width: 3.75rem;
+			height: 3.75rem;
+		}
+		.bp-img {
+			width: 2.75rem;
+			height: 2.75rem;
+		}
+		.bp-meta {
+			align-items: flex-start;
+			text-align: left;
+			gap: 0.25rem;
+		}
+		.bp-value.paired {
+			justify-content: flex-start;
+		}
+		.bp-label {
+			font-size: 0.68rem;
+		}
+		.bp-value {
+			font-size: 1.15rem;
+		}
 	}
 
 	/* History */
