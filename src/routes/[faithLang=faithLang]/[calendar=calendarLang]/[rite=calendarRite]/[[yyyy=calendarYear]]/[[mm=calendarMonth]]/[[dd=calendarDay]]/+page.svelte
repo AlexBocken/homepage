@@ -6,13 +6,8 @@
 	import {
 		getMonthName,
 		getWeekdayShort,
-		formatLongDate,
-		hexFor,
 		rankEmphasis,
-		humanizePsalterWeek,
-		humanizeSundayCycle,
 		t,
-		t1962,
 		dioceseLabel,
 		DIOCESES_1962,
 		DIOCESES_1969,
@@ -22,6 +17,7 @@
 	} from '../../../../calendarI18n';
 	import { litBg, litInk, LIT_COLOR_VAR } from '../../../../calendarColors';
 	import RingView from './RingView.svelte';
+	import HeroCard from '../../../../HeroCard.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -134,10 +130,6 @@
 
 	const pageTitle = $derived(t('calendar', lang));
 
-	function firstOr(arr: string[], fallback = ''): string {
-		return arr && arr.length ? arr[0] : fallback;
-	}
-
 	// When switching rites we drop ?diocese because the ID spaces differ (1962 has
 	// diocesan calendars, 1969 only "general" or "switzerland"). The server
 	// re-applies each rite's default if none is given.
@@ -214,56 +206,7 @@
 		</aside>
 	{/if}
 	{#if hero}
-		{@const heroColor = hero.colorKeys[0] ?? 'GREEN'}
-		{@const heroIsToday = hero.iso === todayIso}
-		<a class="today-card-link" href={detailHref(hero.iso)} aria-label={hero.name}>
-			<section
-				class="today-banner"
-				style="background: {litBg(heroColor)}; color: {litInk(heroColor)}"
-			>
-				<span class="tc-cross" aria-hidden="true">✝</span>
-				<div class="tc-today">
-					{#if heroIsToday}{t('today', lang)} · {/if}{formatLongDate(hero.iso, lang)}
-				</div>
-				<h2 class="tc-name">{hero.name}</h2>
-				<div class="tc-tags">
-					{#if hero.rankName}
-						<span class="tc-tag">{hero.rankName}</span>
-					{/if}
-					{#if hero.colorNames.length}
-						<span class="tc-tag">{firstOr(hero.colorNames)}</span>
-					{/if}
-					{#if hero.seasonNames.length}
-						<span class="tc-tag">{firstOr(hero.seasonNames)}</span>
-					{/if}
-					{#if hero.psalterWeek}
-						<span class="tc-tag">{t('psalterWeek', lang)}: {humanizePsalterWeek(hero.psalterWeek, lang)}</span>
-					{/if}
-					{#if hero.sundayCycle}
-						<span class="tc-tag">{t('cycle', lang)}: {humanizeSundayCycle(hero.sundayCycle)}</span>
-					{/if}
-				</div>
-				{#if hero.rite1962 && hero.rite1962.commemorations.length}
-					<div class="tc-commems">
-						{#each hero.rite1962.commemorations as c (c.id)}
-							<span class="tc-commem">{c.name}</span>
-						{/each}
-					</div>
-				{/if}
-				{#if hero.rite1962?.stationChurches?.length}
-					<div class="tc-stations">
-						<span class="tc-stations-label" aria-hidden="true">✦</span>
-						<span class="tc-stations-text">
-							<span class="tc-stations-title">{t1962('stationChurch', lang)}:</span>
-							{#each hero.rite1962.stationChurches as s, i (s.key + (s.mass ?? ''))}
-								{#if i > 0}<span class="tc-stations-sep"> · </span>{/if}<span class="tc-station-name">{s.name}</span>{#if s.mass}<span class="tc-station-mass"> ({s.mass.replace(/_/g, ' ')})</span>{/if}
-							{/each}
-						</span>
-					</div>
-				{/if}
-				<span class="tc-arrow" aria-hidden="true">→</span>
-			</section>
-		</a>
+		<HeroCard day={hero} {lang} {todayIso} href={detailHref(hero.iso)} />
 	{/if}
 
 	<!-- Color legend + view switcher -->
@@ -575,155 +518,6 @@
 	}
 	.disclaimer p {
 		margin: 0;
-	}
-
-	/* ====== Today banner (design handoff) ====== */
-	.today-card-link {
-		display: block;
-		text-decoration: none;
-		color: inherit;
-		margin-bottom: 1.5rem;
-	}
-	.today-banner {
-		position: relative;
-		border-radius: var(--radius-card);
-		padding: 2rem 2.2rem;
-		box-shadow: var(--shadow-md);
-		overflow: hidden;
-		transition: transform var(--transition-normal), box-shadow var(--transition-normal),
-			background 650ms cubic-bezier(0.33, 1, 0.68, 1),
-			color 650ms cubic-bezier(0.33, 1, 0.68, 1);
-	}
-	.today-banner::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background:
-			radial-gradient(circle at 10% 110%, rgba(255, 255, 255, 0.14), transparent 45%),
-			radial-gradient(circle at 95% -10%, rgba(0, 0, 0, 0.12), transparent 45%);
-		pointer-events: none;
-	}
-	.today-banner > * {
-		position: relative;
-	}
-	.today-card-link:hover .today-banner {
-		transform: translateY(-2px);
-		box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
-	}
-	.today-card-link:active .today-banner {
-		transform: translateY(0);
-	}
-	.today-card-link:focus-visible .today-banner {
-		outline: 3px solid var(--color-primary);
-		outline-offset: 3px;
-	}
-	.tc-cross {
-		position: absolute;
-		top: 1.2rem;
-		right: 1.6rem;
-		font-size: 3.4rem;
-		line-height: 1;
-		opacity: 0.28;
-		font-family: serif;
-	}
-	.tc-today {
-		font-size: 0.74rem;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-		font-weight: 700;
-		opacity: 0.88;
-		margin-bottom: 0.6rem;
-	}
-	.tc-name {
-		font-size: clamp(1.4rem, 3vw, 2rem);
-		line-height: 1.12;
-		margin: 0 0 0.3rem;
-		letter-spacing: -0.01em;
-		font-weight: 700;
-	}
-	.tc-tags {
-		margin-top: 0.9rem;
-		display: flex;
-		gap: 0.5rem;
-		flex-wrap: wrap;
-	}
-	.tc-tag {
-		padding: 0.3rem 0.75rem;
-		border-radius: var(--radius-pill);
-		background: rgba(255, 255, 255, 0.22);
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-	}
-	.tc-commems {
-		margin-top: 1.4rem;
-		padding-top: 1.1rem;
-		border-top: 1px solid rgba(255, 255, 255, 0.22);
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem 0.6rem;
-	}
-	.tc-commem {
-		padding: 0.3rem 0.7rem;
-		border-radius: var(--radius-pill);
-		background: rgba(255, 255, 255, 0.18);
-		border: 1px solid rgba(255, 255, 255, 0.22);
-		font-size: 0.82rem;
-	}
-	.tc-stations {
-		margin-top: 0.9rem;
-		display: flex;
-		align-items: baseline;
-		gap: 0.55rem;
-		font-size: 0.85rem;
-		line-height: 1.45;
-	}
-	.tc-stations-label {
-		font-size: 0.95rem;
-		opacity: 0.7;
-		flex-shrink: 0;
-	}
-	.tc-stations-title {
-		font-weight: 600;
-		letter-spacing: 0.03em;
-		text-transform: uppercase;
-		font-size: 0.72rem;
-		opacity: 0.85;
-		margin-right: 0.35rem;
-	}
-	.tc-station-name {
-		font-style: italic;
-	}
-	.tc-station-mass {
-		opacity: 0.75;
-		font-size: 0.78rem;
-	}
-	.tc-stations-sep {
-		opacity: 0.6;
-	}
-	.tc-arrow {
-		position: absolute;
-		bottom: 1.1rem;
-		right: 1.4rem;
-		font-size: 1.6rem;
-		font-weight: 300;
-		opacity: 0.55;
-		transition: transform var(--transition-normal), opacity var(--transition-normal);
-	}
-	.today-card-link:hover .tc-arrow {
-		opacity: 1;
-		transform: translateX(4px);
-	}
-	@media (max-width: 640px) {
-		.today-banner {
-			padding: 1.5rem 1.4rem;
-		}
-		.tc-cross {
-			font-size: 2.4rem;
-			top: 1rem;
-			right: 1rem;
-		}
 	}
 
 	/* ====== View switcher + color legend ====== */
