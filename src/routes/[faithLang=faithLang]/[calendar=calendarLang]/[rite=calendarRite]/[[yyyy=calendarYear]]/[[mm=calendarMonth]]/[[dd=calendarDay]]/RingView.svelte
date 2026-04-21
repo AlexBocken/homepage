@@ -199,6 +199,8 @@
 
 	let nextYearHovered = $state(false);
 	let hoveredFeastIso = $state<string | null>(null);
+	let feastListEl = $state<HTMLDivElement | null>(null);
+	let didInitialScroll = false;
 	const hoveredFeast = $derived(
 		hoveredFeastIso ? feastDots.find((f) => f.iso === hoveredFeastIso) ?? null : null
 	);
@@ -209,6 +211,43 @@
 			(d) =>
 				rankDotSize(d.rank) > 0 && d.iso >= active.start && d.iso <= active.end
 		);
+	});
+
+	$effect(() => {
+		activeFeasts;
+		selectedIso;
+		const list = feastListEl;
+		if (!list || list.clientHeight === 0) return;
+		let el = list.querySelector<HTMLElement>('[aria-current="date"]');
+		if (!el && selectedIso) {
+			// Selected day isn't a listed feast (e.g. ferial) — center the
+			// closest feast by date so the user still lands near "today".
+			const items = list.querySelectorAll<HTMLElement>('.feast-item[data-iso]');
+			let best: HTMLElement | null = null;
+			let bestDelta = Infinity;
+			const selTime = Date.parse(selectedIso);
+			for (const item of items) {
+				const iso = item.dataset.iso;
+				if (!iso) continue;
+				const delta = Math.abs(Date.parse(iso) - selTime);
+				if (delta < bestDelta) {
+					bestDelta = delta;
+					best = item;
+				}
+			}
+			el = best;
+		}
+		if (!el) return;
+		const listRect = list.getBoundingClientRect();
+		const elRect = el.getBoundingClientRect();
+		const relTop = elRect.top - listRect.top + list.scrollTop;
+		const target = relTop - (list.clientHeight - elRect.height) / 2;
+		const max = list.scrollHeight - list.clientHeight;
+		list.scrollTo({
+			top: Math.max(0, Math.min(max, target)),
+			behavior: didInitialScroll && !prefersReducedMotion.current ? 'smooth' : 'auto'
+		});
+		didInitialScroll = true;
 	});
 
 	function fmtShort(iso: string): string {
@@ -468,6 +507,7 @@
 	</div>
 
 	{#if active}
+	<div class="aside-slot">
 		<aside class="season-panel" style="border-top: 6px solid {litBg(active.color)}">
 			<h3>
 				{active.name}
@@ -486,10 +526,16 @@
 
 			{#if activeFeasts.length}
 				<h4 class="section-h">{T.feastsIn}</h4>
-				<div class="feast-list">
+				<div class="feast-list" bind:this={feastListEl}>
 					{#each activeFeasts as f (f.iso + f.name)}
+						{@const isSel = f.iso === selectedIso}
+						{@const isToday = f.iso === todayIso}
 						<a
 							class="feast-item"
+							class:selected={isSel}
+							class:today={isSel && isToday}
+							aria-current={isSel ? 'date' : undefined}
+							data-iso={f.iso}
 							href={dayHref(f.iso)}
 							data-sveltekit-noscroll
 							data-sveltekit-replacestate
@@ -503,6 +549,7 @@
 				</div>
 			{/if}
 		</aside>
+	</div>
 	{/if}
 </div>
 
@@ -513,9 +560,22 @@
 		gap: 32px;
 		align-items: start;
 	}
+	/* Ring column's intrinsic height drives the row height. The aside is
+	   positioned absolutely inside `.aside-slot`, so it contributes nothing to
+	   row sizing — the slot stretches to the ring's height, and the aside then
+	   fills the slot. All pure CSS, no ResizeObserver. */
+	.aside-slot {
+		position: relative;
+		align-self: stretch;
+		min-width: 0;
+	}
 	@media (max-width: 900px) {
 		.ring-wrap {
 			grid-template-columns: 1fr;
+		}
+		.aside-slot {
+			position: static;
+			align-self: auto;
 		}
 	}
 	.ring-svg-wrap {
@@ -629,6 +689,16 @@
 		border-radius: var(--radius-card);
 		padding: 22px;
 		box-shadow: var(--shadow-sm);
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+	}
+	@media (min-width: 901px) {
+		.season-panel {
+			position: absolute;
+			inset: 0;
+			overflow: hidden;
+		}
 	}
 	.season-panel h3 {
 		margin: 0 0 8px;
@@ -660,9 +730,33 @@
 		font-weight: 700;
 	}
 	.feast-list {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-border) transparent;
+		padding-right: 4px;
+	}
+	.feast-list::-webkit-scrollbar {
+		width: 6px;
+	}
+	.feast-list::-webkit-scrollbar-thumb {
+		background: var(--color-border);
+		border-radius: 100px;
+	}
+	.feast-list::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	@media (max-width: 900px) {
+		.feast-list {
+			flex: 0 1 auto;
+			max-height: 300px;
+		}
 	}
 	.feast-item {
 		display: grid;
@@ -673,11 +767,26 @@
 		border-radius: var(--radius-md);
 		text-decoration: none;
 		color: inherit;
-		transition: background var(--transition-fast);
+		transition: background var(--transition-fast), box-shadow var(--transition-fast);
 		font-size: 0.9rem;
 	}
 	.feast-item:hover {
 		background: var(--color-surface-hover);
+	}
+	.feast-item.selected {
+		/* Mix text color into surface: darkens in light mode, lightens in dark. */
+		background: color-mix(in srgb, var(--color-text-primary) 16%, var(--color-surface));
+	}
+	.feast-item.selected .n {
+		font-weight: 700;
+		color: var(--color-text-primary);
+	}
+	.feast-item.selected .d,
+	.feast-item.selected .r {
+		color: var(--color-text-primary);
+	}
+	.feast-item.selected.today {
+		background: color-mix(in srgb, var(--lit-gold) 38%, var(--color-surface));
 	}
 	.feast-item .d {
 		color: var(--color-text-tertiary);
