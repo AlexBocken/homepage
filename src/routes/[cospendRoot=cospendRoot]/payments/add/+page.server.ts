@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-  default: async ({ request, locals, fetch }) => {
+  default: async ({ request, locals, fetch, params }) => {
     const session = await locals.auth();
     
     if (!session || !session.user?.nickname) {
@@ -217,7 +217,7 @@ export const actions: Actions = {
       }
 
       // Success - redirect to dashboard
-      throw redirect(303, '/cospend');
+      throw redirect(303, `/${params.cospendRoot}/dash`);
 
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'status' in error && (error as { status: number }).status === 303) throw error; // Re-throw redirect
