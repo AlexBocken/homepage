@@ -273,11 +273,13 @@
 						</div>
 					{/if}
 				</div>
-				<div class="card-hint">
+				<div class="card-hint" class:card-hint-warning={ns.avgCalorieBalance == null && hasDemographics && ns.trendWeight && ns.daysTracked7 === 0}>
 					{#if ns.avgCalorieBalance != null}
 						{t('seven_day_avg', lang)}
-					{:else}
+					{:else if !hasDemographics || !ns.trendWeight}
 						{lang === 'en' ? 'Set height, birth year & weight' : 'Größe, Geburtsjahr & Gewicht eintragen'}
+					{:else}
+						{t('no_nutrition_data', lang)}
 					{/if}
 				</div>
 			</div>
@@ -309,43 +311,44 @@
 				</div>
 			</div>
 
-			{#if ns.macroSplit}
-				<div class="lifetime-card macro-card">
-					<div class="macro-left">
-						<div class="macro-header">{t('macro_split', lang)} <span class="macro-subtitle">({t('seven_day_avg', lang)})</span></div>
-						<div class="macro-legend">
-							<span class="macro-legend-item">
-								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3,9.5 A4,4 0 1,1 9,9.5" fill="none" stroke="var(--color-text-secondary)" stroke-width="2" stroke-linecap="round"/></svg>
-								{lang === 'en' ? 'Actual' : 'Ist'}
-							</span>
-							<span class="macro-legend-item">
-								<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6,10 L10,2 L2,2 Z" fill="var(--color-text-secondary)" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linejoin="round"/></svg>
-								{lang === 'en' ? 'Target' : 'Ziel'}
-							</span>
-						</div>
+			<div class="lifetime-card macro-card" class:macro-card-empty={!ns.macroSplit}>
+				<div class="macro-left">
+					<div class="macro-header">{t('macro_split', lang)} <span class="macro-subtitle">({t('seven_day_avg', lang)})</span></div>
+					<div class="macro-legend">
+						<span class="macro-legend-item">
+							<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3,9.5 A4,4 0 1,1 9,9.5" fill="none" stroke="var(--color-text-secondary)" stroke-width="2" stroke-linecap="round"/></svg>
+							{lang === 'en' ? 'Actual' : 'Ist'}
+						</span>
+						<span class="macro-legend-item">
+							<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6,10 L10,2 L2,2 Z" fill="var(--color-text-secondary)" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linejoin="round"/></svg>
+							{lang === 'en' ? 'Target' : 'Ziel'}
+						</span>
 					</div>
-					<div class="macro-rings">
-						{#each [
-							{ pct: ns.macroSplit.protein, target: ns.macroTargets?.protein, label: t('protein', lang), color: 'var(--nord14)', fill: '#a3be8c', icon: Beef },
-							{ pct: ns.macroSplit.fat, target: ns.macroTargets?.fat, label: t('fat', lang), color: 'var(--nord12)', fill: '#d08770', icon: Droplet },
-							{ pct: ns.macroSplit.carbs, target: ns.macroTargets?.carbs, label: t('carbs', lang), color: 'var(--nord9)', fill: '#81a1c1', icon: Wheat },
-						] as macro (macro.color)}
-							{@const MacroIcon = macro.icon}
-							<div class="macro-ring">
-								<StatsRingGraph
-									percent={macro.pct}
-									color={macro.color}
-									label={macro.label}
-									target={macro.target}
-									markerColor={macro.fill}
-								>
-									{#snippet labelIcon()}<MacroIcon size={12} />{/snippet}
-								</StatsRingGraph>
-							</div>
-						{/each}
-					</div>
+					{#if !ns.macroSplit}
+						<div class="macro-empty-hint">{t('no_nutrition_data', lang)}</div>
+					{/if}
 				</div>
-			{/if}
+				<div class="macro-rings">
+					{#each [
+						{ pct: ns.macroSplit?.protein ?? 0, target: ns.macroTargets?.protein, label: t('protein', lang), color: 'var(--nord14)', fill: '#a3be8c', icon: Beef },
+						{ pct: ns.macroSplit?.fat ?? 0, target: ns.macroTargets?.fat, label: t('fat', lang), color: 'var(--nord12)', fill: '#d08770', icon: Droplet },
+						{ pct: ns.macroSplit?.carbs ?? 0, target: ns.macroTargets?.carbs, label: t('carbs', lang), color: 'var(--nord9)', fill: '#81a1c1', icon: Wheat },
+					] as macro (macro.color)}
+						{@const MacroIcon = macro.icon}
+						<div class="macro-ring">
+							<StatsRingGraph
+								percent={macro.pct}
+								color={macro.color}
+								label={macro.label}
+								target={macro.target}
+								markerColor={macro.fill}
+							>
+								{#snippet labelIcon()}<MacroIcon size={12} />{/snippet}
+							</StatsRingGraph>
+						</div>
+					{/each}
+				</div>
+			</div>
 		{/if}
 
 		<div class="section-block muscle-heatmap-block">
@@ -456,6 +459,20 @@
 	.card-hint a {
 		color: var(--nord12);
 		text-decoration: underline;
+	}
+	.card-hint-warning {
+		color: var(--orange);
+		opacity: 1;
+		font-weight: 600;
+	}
+	.macro-empty-hint {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		margin-top: 0.35rem;
+		line-height: 1.3;
+	}
+	.macro-card-empty .macro-rings {
+		opacity: 0.45;
 	}
 
 	/* Chart + Streak row */
