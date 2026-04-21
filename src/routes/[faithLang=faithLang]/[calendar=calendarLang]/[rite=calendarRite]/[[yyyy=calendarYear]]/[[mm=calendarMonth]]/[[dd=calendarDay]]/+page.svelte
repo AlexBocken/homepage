@@ -65,7 +65,7 @@
 
 	const rite = $derived(data.rite);
 	const wip = $derived(data.wip);
-	const riteSubtitle = $derived(t(rite === '1962' ? 'rite1962Long' : 'rite1969Long', lang));
+	const riteSubtitle = $derived(t(rite === 'vetus' ? 'rite1962Long' : 'rite1969Long', lang));
 
 	function pad(n: number) {
 		return String(n).padStart(2, '0');
@@ -94,11 +94,11 @@
 
 	// Only append ?diocese= when non-default, keeps default URLs clean.
 	const dioceseQuery = $derived.by(() => {
-		const def = rite === '1962' ? DEFAULT_DIOCESE_1962 : DEFAULT_DIOCESE_1969;
+		const def = rite === 'vetus' ? DEFAULT_DIOCESE_1962 : DEFAULT_DIOCESE_1969;
 		return diocese && diocese !== def ? `?diocese=${diocese}` : '';
 	});
 
-	const dioceseOptions = $derived(rite === '1962' ? DIOCESES_1962 : DIOCESES_1969);
+	const dioceseOptions = $derived(rite === 'vetus' ? DIOCESES_1962 : DIOCESES_1969);
 
 	// URL: /{faithLang}/{calendar}/{rite}/{yyyy}/{mm}/{dd} — rite is a required
 	// path segment so day/month nav stays inside the active rite.
@@ -133,14 +133,14 @@
 	// When switching rites we drop ?diocese because the ID spaces differ (1962 has
 	// diocesan calendars, 1969 only "general" or "switzerland"). The server
 	// re-applies each rite's default if none is given.
-	function riteHref(r: '1969' | '1962') {
+	function riteHref(r: 'novus' | 'vetus') {
 		const dd = selectedIso.slice(8, 10);
 		return `${calendarBase}/${r}/${year}/${pad(month + 1)}/${dd}`;
 	}
 
 	function onDioceseChange(e: Event) {
 		const next = (e.currentTarget as HTMLSelectElement).value;
-		const def = rite === '1962' ? DEFAULT_DIOCESE_1962 : DEFAULT_DIOCESE_1969;
+		const def = rite === 'vetus' ? DEFAULT_DIOCESE_1962 : DEFAULT_DIOCESE_1969;
 		const dd = selectedIso.slice(8, 10);
 		const path = `${riteBase}/${year}/${pad(month + 1)}/${dd}`;
 		goto(next === def ? path : `${path}?diocese=${next}`, { noScroll: true });
@@ -159,21 +159,21 @@
 		<div class="rite-toggle" role="tablist" aria-label="Rite">
 			<a
 				role="tab"
-				aria-selected={rite === '1969'}
+				aria-selected={rite === 'novus'}
 				class="rite-pill"
-				class:active={rite === '1969'}
-				href={riteHref('1969')}
+				class:active={rite === 'novus'}
+				href={riteHref('novus')}
 			>
-				1969
+				Novus
 			</a>
 			<a
 				role="tab"
-				aria-selected={rite === '1962'}
+				aria-selected={rite === 'vetus'}
 				class="rite-pill"
-				class:active={rite === '1962'}
-				href={riteHref('1962')}
+				class:active={rite === 'vetus'}
+				href={riteHref('vetus')}
 			>
-				1962
+				Vetus
 			</a>
 		</div>
 		<label class="diocese-picker">
@@ -184,7 +184,7 @@
 				{/each}
 			</select>
 		</label>
-		{#if rite === '1969'}
+		{#if rite === 'novus'}
 			<p class="diocese-note">{t('rite1969SwissNote', lang)}</p>
 		{/if}
 	</header>
@@ -196,7 +196,7 @@
 			<p>{t('wipBody', lang)}</p>
 		</section>
 	{:else}
-	{#if rite === '1962'}
+	{#if rite === 'vetus'}
 		<aside class="disclaimer" role="note">
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
 			<div>
@@ -210,7 +210,7 @@
 			day={hero}
 			{lang}
 			{todayIso}
-			href={rite === '1962' ? detailHref(hero.iso) : undefined}
+			href={rite === 'vetus' ? detailHref(hero.iso) : undefined}
 		/>
 	{/if}
 

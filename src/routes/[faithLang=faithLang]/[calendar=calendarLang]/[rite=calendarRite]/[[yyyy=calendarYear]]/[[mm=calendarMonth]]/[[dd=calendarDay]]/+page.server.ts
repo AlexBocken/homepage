@@ -40,7 +40,18 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	const lang: CalendarLang =
 		params.faithLang === 'faith' ? 'en' : params.faithLang === 'fides' ? 'la' : 'de';
 
-	const rite: Rite = params.rite === '1969' ? '1969' : '1962';
+	// Legacy year-slug links (/.../1962/... or /.../1969/...) forward to the new
+	// Latin slugs so old bookmarks stay alive.
+	if (params.rite === '1962' || params.rite === '1969') {
+		const tail = url.pathname.split('/').slice(4).join('/');
+		const suffix = tail ? `/${tail}` : '';
+		throw redirect(
+			307,
+			`/${params.faithLang}/${params.calendar}/${params.rite === '1962' ? 'vetus' : 'novus'}${suffix}${url.search}`
+		);
+	}
+
+	const rite: Rite = params.rite === 'novus' ? 'novus' : 'vetus';
 
 	const dioceseParam = url.searchParams.get('diocese');
 	const diocese1962: Diocese1962 = isDiocese1962(dioceseParam)
@@ -57,7 +68,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	}
 
 	const today = new Date();
-	const minYear = rite === '1962' ? 1900 : 1969;
+	const minYear = rite === 'vetus' ? 1900 : 1969;
 	const yParam = params.yyyy ? Number(params.yyyy) : NaN;
 	const mParam = params.mm ? Number(params.mm) - 1 : NaN;
 
@@ -65,7 +76,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	const month = Number.isFinite(mParam) && mParam >= 0 && mParam <= 11 ? mParam : today.getMonth();
 
 	const fetchLy = async (y: number) =>
-		rite === '1962'
+		rite === 'vetus'
 			? await getYear1962(lang, diocese1962, y)
 			: await getYear(lang, diocese1969, y);
 
@@ -135,7 +146,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 
 	const todayIso = today.toISOString().slice(0, 10);
 	const todayYearMap =
-		rite === '1962'
+		rite === 'vetus'
 			? await getYear1962(lang, diocese1962, today.getFullYear())
 			: await getYear(lang, diocese1969, today.getFullYear());
 	const todayEntry = todayYearMap.get(todayIso) ?? null;
@@ -154,7 +165,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 			? yearMap
 			: selectedYear === today.getFullYear()
 				? todayYearMap
-				: rite === '1962'
+				: rite === 'vetus'
 					? await getYear1962(lang, diocese1962, selectedYear)
 					: await getYear(lang, diocese1969, selectedYear);
 	const selectedEntry = selectedYearMap.get(selectedIso) ?? monthDays[0];
@@ -241,7 +252,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		// are unresolved i18n paths like 'lent.season', so always go through
 		// `season1962Label`. 1969: prefer the engine-resolved localized name.
 		const name =
-			rite === '1962'
+			rite === 'vetus'
 				? (key ? season1962Label(key, lang) : '')
 				: key && key !== d.seasonKey
 					? key
@@ -264,7 +275,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 
 	return {
 		rite,
-		diocese: rite === '1962' ? diocese1962 : diocese1969,
+		diocese: rite === 'vetus' ? diocese1962 : diocese1969,
 		wip: false,
 		year,
 		liturgicalYear,
