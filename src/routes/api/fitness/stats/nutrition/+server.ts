@@ -128,9 +128,10 @@ export const GET: RequestHandler = async ({ locals }) => {
 		workoutKcalByDate.set(key, (workoutKcalByDate.get(key) ?? 0) + (s.kcalEstimate?.kcal ?? 0));
 	}
 
-	// 7-day averages (only days with logged entries)
+	// 7-day averages — only over days with non-zero logged intake, so untracked
+	// days don't skew the balance toward an artificial deficit.
 	const sevenDayStr = sevenDaysAgo.toISOString().slice(0, 10);
-	const recent7 = dailyTotals.filter(d => d.date >= sevenDayStr);
+	const recent7 = dailyTotals.filter(d => d.date >= sevenDayStr && d.calories > 0);
 
 	let avgProteinPerKg: number | null = null;
 	let avgCalorieBalance: number | null = null;
@@ -147,18 +148,16 @@ export const GET: RequestHandler = async ({ locals }) => {
 			avgProteinPerKg = Math.round((avgProtein / trendWeight) * 100) / 100;
 		}
 
-		// Calorie balance: intake minus estimated expenditure (per-day TDEE + workout kcal)
+		// Calorie balance: intake minus expenditure, averaged over the same
+		// logged days (not all 7 calendar days) so the two sides compare apples
+		// to apples.
 		if (canComputeTdee) {
-			// Build all 7 calendar days and compute expenditure for each
 			let totalExpenditure = 0;
 			let expenditureDays = 0;
-			for (let i = 1; i <= 7; i++) {
-				const d = new Date(todayStart);
-				d.setUTCDate(d.getUTCDate() - i);
-				const dateStr = d.toISOString().slice(0, 10);
-				const dayTdee = getDailyTdee(dateStr);
+			for (const d of recent7) {
+				const dayTdee = getDailyTdee(d.date);
 				if (dayTdee != null) {
-					totalExpenditure += dayTdee + (workoutKcalByDate.get(dateStr) ?? 0);
+					totalExpenditure += dayTdee + (workoutKcalByDate.get(d.date) ?? 0);
 					expenditureDays++;
 				}
 			}
