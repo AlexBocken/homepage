@@ -1,12 +1,12 @@
-import { resolve } from 'path';
 import { translateRefToTarget } from './bibleRefLatin';
 import { lookupReference } from './bible';
+import { resolveStaticAsset } from './staticAsset';
 
 export type FallbackLang = 'en' | 'de';
 
-const TSV_PATH: Record<FallbackLang, string> = {
-	en: 'static/drb.tsv',
-	de: 'static/allioli.tsv'
+const TSV_NAME: Record<FallbackLang, string> = {
+	en: 'drb.tsv',
+	de: 'allioli.tsv'
 };
 
 // Latin propers often cite successive verses in compact form like
@@ -40,7 +40,7 @@ function stripPsalmSuperscription(text: string, lang: FallbackLang): string {
 
 export function fetchLocalFromBible(refs: string[], lang: FallbackLang): string | null {
 	if (!refs || refs.length === 0) return null;
-	const tsvPath = resolve(TSV_PATH[lang]);
+	const tsvPath = resolveStaticAsset(TSV_NAME[lang]);
 	const collected: string[] = [];
 	for (const rawRef of refs) {
 		for (const seg of splitCompoundRef(rawRef)) {

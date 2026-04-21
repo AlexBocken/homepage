@@ -1,11 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { lookupReference } from '$lib/server/bible';
-import { resolve } from 'path';
+import { resolveStaticAsset } from '$lib/server/staticAsset';
 
 const tsvFiles: Record<string, string> = {
-  glaube: 'static/allioli.tsv',
-  faith: 'static/drb.tsv'
+  glaube: 'allioli.tsv',
+  faith: 'drb.tsv'
 };
 
 export const GET: RequestHandler = async ({ params }) => {
@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ params }) => {
     return error(400, 'Missing reference parameter');
   }
 
-  const tsvPath = resolve(tsvFiles[params.faithLang]);
+  const tsvPath = resolveStaticAsset(tsvFiles[params.faithLang]);
 
   try {
     const result = lookupReference(reference, tsvPath);
