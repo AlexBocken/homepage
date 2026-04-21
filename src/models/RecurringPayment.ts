@@ -137,5 +137,6 @@ const RecurringPaymentSchema = new mongoose.Schema(
 
 // Index for efficiently finding payments that need to be executed
 RecurringPaymentSchema.index({ nextExecutionDate: 1, isActive: 1 });
+RecurringPaymentSchema.index({ createdBy: 1, nextExecutionDate: -1 });
 
 export const RecurringPayment = mongoose.model<IRecurringPayment>("RecurringPayment", RecurringPaymentSchema);

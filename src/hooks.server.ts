@@ -6,6 +6,31 @@ import { initializeScheduler } from "./lib/server/scheduler"
 import { dbConnect } from "./utils/db"
 import { errorWithVerse, getRandomVerse } from "$lib/server/errorQuote"
 
+async function timing({ event, resolve }: Parameters<Handle>[0]) {
+	const marks: Record<string, number> = {};
+	event.locals.timing = {
+		mark(name, dur) {
+			marks[name] = (marks[name] ?? 0) + dur;
+		},
+		async measure(name, fn) {
+			const t0 = performance.now();
+			try {
+				return await fn();
+			} finally {
+				this.mark(name, performance.now() - t0);
+			}
+		}
+	};
+	const t0 = performance.now();
+	const response = await resolve(event);
+	marks.total = performance.now() - t0;
+	const header = Object.entries(marks)
+		.map(([k, v]) => `${k};dur=${v.toFixed(1)}`)
+		.join(', ');
+	response.headers.set('Server-Timing', header);
+	return response;
+}
+
 // Initialize database connection on server startup
 console.log('🚀 Server starting - initializing database connection...');
 await dbConnect().then(() => {
@@ -19,7 +44,7 @@ await dbConnect().then(() => {
 });
 
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {
-	const session = await event.locals.auth();
+	const session = await event.locals.timing.measure('auth', () => event.locals.auth());
 	event.locals.session = session;
 	const { fetch, url } = event;
 
@@ -107,6 +132,7 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 };
 
 export const handle: Handle = sequence(
+	timing,
 	auth.handle,
 	authorization
 );
