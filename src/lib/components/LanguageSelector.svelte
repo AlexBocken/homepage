@@ -18,9 +18,18 @@
 
 	// Faith subroute mappings
 	const faithSubroutes: Record<string, Record<string, string>> = {
-		en: { gebete: 'prayers', rosenkranz: 'rosary', rosarium: 'rosary', orationes: 'prayers' },
-		de: { prayers: 'gebete', rosary: 'rosenkranz', rosarium: 'rosenkranz', orationes: 'gebete' },
-		la: { prayers: 'orationes', gebete: 'orationes', rosary: 'rosarium', rosenkranz: 'rosarium' }
+		en: {
+			gebete: 'prayers', rosenkranz: 'rosary', rosarium: 'rosary', orationes: 'prayers',
+			kalender: 'calendar', calendarium: 'calendar'
+		},
+		de: {
+			prayers: 'gebete', rosary: 'rosenkranz', rosarium: 'rosenkranz', orationes: 'gebete',
+			calendar: 'kalender', calendarium: 'kalender'
+		},
+		la: {
+			prayers: 'orationes', gebete: 'orationes', rosary: 'rosarium', rosenkranz: 'rosarium',
+			calendar: 'calendarium', kalender: 'calendarium'
+		}
 	};
 
 	// Whether the current page is a faith route (show LA option)

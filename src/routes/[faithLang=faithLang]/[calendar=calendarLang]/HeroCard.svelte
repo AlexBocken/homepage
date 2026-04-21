@@ -105,12 +105,12 @@
 		display: block;
 		text-decoration: none;
 		color: inherit;
-		margin-bottom: 1.5rem;
 	}
 	.hero-banner {
 		position: relative;
 		border-radius: var(--radius-card);
 		padding: 2rem 2.2rem 3rem;
+		margin-bottom: 1.5rem;
 		box-shadow: var(--shadow-md);
 		overflow: hidden;
 		transition: transform var(--transition-normal), box-shadow var(--transition-normal),
