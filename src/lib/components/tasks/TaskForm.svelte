@@ -423,7 +423,6 @@
     color: var(--color-text-secondary, #666);
   }
   .field input[type="text"],
-  .field input[type="date"],
   .field input[type="number"],
   .field textarea,
   .field select {

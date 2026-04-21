@@ -337,7 +337,7 @@
   }
 
   // Recreate chart when lang changes
-  let prevLang = lang;
+  let prevLang = untrack(() => lang);
   $effect(() => {
     const currentLang = lang;
     if (currentLang !== prevLang) {

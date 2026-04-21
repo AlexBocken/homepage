@@ -14,7 +14,14 @@
 
 {#if dialog.open}
 	<div class="confirm-backdrop" onclick={() => dialog.respond(false)} role="presentation">
-		<div class="confirm-dialog" onclick={(e) => e.stopPropagation()} role="alertdialog" aria-modal="true">
+		<div
+			class="confirm-dialog"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="alertdialog"
+			aria-modal="true"
+			tabindex="-1"
+		>
 			{#if dialog.title}
 				<h3 class="confirm-title">{dialog.title}</h3>
 			{/if}

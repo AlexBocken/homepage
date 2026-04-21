@@ -1372,14 +1372,6 @@
 		font-weight: 600;
 		color: var(--color-text-secondary);
 	}
-	.add-row input {
-		padding: 0.4rem 0.5rem;
-		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-		font-size: 0.8rem;
-	}
 	.add-actions {
 		display: flex;
 		gap: 0.5rem;

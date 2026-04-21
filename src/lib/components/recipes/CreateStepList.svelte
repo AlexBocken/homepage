@@ -672,8 +672,7 @@ ol li::marker{
 .info-value:focus{
 	border-bottom-color: var(--color-border);
 }
-.info-value:empty::before,
-.info-value span:empty::before{
+.info-value:empty::before{
 	content: attr(data-placeholder);
 	color: var(--color-text-tertiary);
 	font-style: italic;
