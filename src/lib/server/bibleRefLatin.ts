@@ -116,7 +116,9 @@ export function translateRefToTarget(ref: string, lang: TargetLang): string | nu
 	const m = ref.trim().match(/^(\d?\s?[A-Za-z]+\.?)\s*(\d.*)$/);
 	if (!m) return null;
 	const bookNorm = normalizeLatinBook(m[1]);
-	const rest = m[2].trim().replace(/;.*$/, '').trim();
+	// Strip trailing punctuation ("Marc 16:1-7." → "16:1-7") — bible.ts's
+	// parseReference regex anchors on digits and refuses trailing periods.
+	const rest = m[2].trim().replace(/;.*$/, '').replace(/[.\s]+$/, '').trim();
 	const map = lookupLatinBook(bookNorm);
 	const target = map?.[lang];
 	if (!target) return null;
@@ -131,4 +133,28 @@ export function translateRefToTarget(ref: string, lang: TargetLang): string | nu
 		}
 	}
 	return `${target} ${clean}`;
+}
+
+// Translate the book name only, preserving the rest of the citation (including
+// compound refs with semicolons, verse ranges, etc.) for display purposes.
+// Strips trailing periods but keeps the structure readable.
+export function translateRefLabel(ref: string, lang: TargetLang | 'la'): string {
+	const trimmed = ref.trim().replace(/[.\s]+$/, '');
+	if (lang === 'la') return trimmed;
+	const m = trimmed.match(/^(\d?\s?[A-Za-z]+\.?)\s*(.*)$/);
+	if (!m) return trimmed;
+	const bookNorm = normalizeLatinBook(m[1]);
+	const map = lookupLatinBook(bookNorm);
+	const target = map?.[lang];
+	if (!target) return trimmed;
+	const rest = m[2].trim();
+	// Psalm numbering differs between Vulgate and Allioli — shift each
+	// chapter reference found in the remainder.
+	if (bookNorm === 'ps' && lang === 'de') {
+		const shifted = rest.replace(/(^|[\s;,])(\d+)(?=[:,\s-])/g, (_, pre, ch) => {
+			return `${pre}${mapPsalmChapter(parseInt(ch, 10), 'de')}`;
+		});
+		return `${target} ${shifted}`;
+	}
+	return `${target} ${rest}`;
 }

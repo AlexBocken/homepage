@@ -63,4 +63,7 @@ export interface ProperSection {
 	key: string;
 	la: string[];
 	local: string[];
+	refs?: string[];
+	refLabel?: string;
+	localFromBible?: boolean;
 }
