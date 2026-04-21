@@ -219,6 +219,11 @@ export function createShoppingSync() {
     debouncedPush();
   }
 
+  function updateItem(id: string, patch: Partial<Omit<ShoppingItem, 'id'>>) {
+    items = items.map(item => item.id === id ? { ...item, ...patch } : item);
+    debouncedPush();
+  }
+
   return {
     get items() { return items; },
     get status() { return status; },
@@ -232,6 +237,7 @@ export function createShoppingSync() {
     removeItem,
     clearChecked,
     updateItemCategory,
+    updateItem,
     disconnect
   };
 }
