@@ -8,6 +8,7 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
+	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
 	let { data } = $props();
 
@@ -360,18 +361,14 @@
 		{#if !done}
 			{#key step.key}
 				<section class="card" in:fly={flyOpts}>
-					<div class="hero">
+					<div class="hero" style="--accent: {bodyPartAccent(step.key)}">
 						{#if step.img}
-							{#if step.img.endsWith('.svg')}
-								<div
-									class="hero-pic hero-svg"
-									style="--hero-svg-src: url(/fitness/measure/{step.img})"
-									role="img"
-									aria-label={stepLabel(step)}
-								></div>
-							{:else}
-								<img src="/fitness/measure/{step.img}" alt="" class="hero-pic" />
-							{/if}
+							<div
+								class="hero-pic"
+								style="--hero-src: url(/fitness/measure/{step.img})"
+								role="img"
+								aria-label={stepLabel(step)}
+							></div>
 						{:else}
 							<div class="hero-placeholder" aria-hidden="true">
 								<Ruler size={72} strokeWidth={1.4} />
@@ -682,33 +679,21 @@
 		display: grid;
 		place-items: center;
 		border-radius: 50%;
-		background:
-			radial-gradient(closest-side, var(--color-surface), transparent 70%),
-			var(--color-bg-secondary);
-		box-shadow: var(--shadow-md);
-		position: relative;
+		background: color-mix(in oklab, var(--accent, var(--color-primary)) 15%, transparent);
 	}
 	.hero-pic {
 		width: 150px;
 		height: 150px;
-		object-fit: contain;
-	}
-	.hero-svg {
-		mask-image: var(--hero-svg-src);
-		-webkit-mask-image: var(--hero-svg-src);
+		mask-image: var(--hero-src);
+		-webkit-mask-image: var(--hero-src);
 		mask-size: contain;
 		-webkit-mask-size: contain;
 		mask-repeat: no-repeat;
 		-webkit-mask-repeat: no-repeat;
 		mask-position: center;
 		-webkit-mask-position: center;
-		background-color: var(--color-text-primary);
+		background-color: var(--accent, var(--color-primary));
 	}
-	@media (prefers-color-scheme: dark) {
-		img.hero-pic { filter: invert(1); }
-	}
-	:global(:root[data-theme="dark"]) img.hero-pic { filter: invert(1); }
-	:global(:root[data-theme="light"]) img.hero-pic { filter: none; }
 
 	.hero-placeholder {
 		display: flex;

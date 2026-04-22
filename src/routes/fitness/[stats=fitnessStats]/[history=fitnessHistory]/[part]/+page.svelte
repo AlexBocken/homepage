@@ -3,6 +3,7 @@
 	import { ArrowLeft, Ruler, TrendingUp, TrendingDown, Minus as MinusIcon } from '@lucide/svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
 	let { data } = $props();
 
@@ -112,7 +113,7 @@
 <svelte:head><title>{t(card.labelKey, lang)} · {lang === 'en' ? 'History' : 'Verlauf'} - Bocken</title></svelte:head>
 
 <div class="detail-page">
-	<header class="detail-header">
+	<header class="detail-header" style="--accent: {bodyPartAccent(card.key)}">
 		<a class="back-link" href="/fitness/{statsSlug}" aria-label={t('back', lang)}>
 			<ArrowLeft size={18} />
 		</a>
@@ -121,13 +122,11 @@
 			<h1>{t(card.labelKey, lang)}</h1>
 		</div>
 		<div class="head-img" aria-hidden="true">
-			{#if card.img && card.img.endsWith('.svg')}
+			{#if card.img}
 				<div
-					class="head-pic head-pic-svg"
-					style="--bp-svg-src: url(/fitness/measure/{card.img})"
+					class="head-pic"
+					style="--bp-src: url(/fitness/measure/{card.img})"
 				></div>
-			{:else if card.img}
-				<img src="/fitness/measure/{card.img}" alt="" class="head-pic" />
 			{:else}
 				<Ruler size={40} strokeWidth={1.5} />
 			{/if}
@@ -274,34 +273,26 @@
 	.head-img {
 		display: grid;
 		place-items: center;
-		width: 3.5rem;
-		height: 3.5rem;
+		width: 5.5rem;
+		height: 5.5rem;
 		flex-shrink: 0;
 		border-radius: 50%;
-		background: var(--color-bg-secondary);
-		color: var(--color-text-secondary);
+		background: color-mix(in oklab, var(--accent, var(--color-primary)) 15%, transparent);
+		color: var(--accent, var(--color-primary));
 	}
 	.head-pic {
-		width: 2.6rem;
-		height: 2.6rem;
-		object-fit: contain;
-	}
-	.head-pic-svg {
-		mask-image: var(--bp-svg-src);
-		-webkit-mask-image: var(--bp-svg-src);
+		width: 4.1rem;
+		height: 4.1rem;
+		mask-image: var(--bp-src);
+		-webkit-mask-image: var(--bp-src);
 		mask-size: contain;
 		-webkit-mask-size: contain;
 		mask-repeat: no-repeat;
 		-webkit-mask-repeat: no-repeat;
 		mask-position: center;
 		-webkit-mask-position: center;
-		background-color: var(--color-text-primary);
+		background-color: var(--accent, var(--color-primary));
 	}
-	@media (prefers-color-scheme: dark) {
-		img.head-pic { filter: invert(1); }
-	}
-	:global(:root[data-theme="dark"]) img.head-pic { filter: invert(1); }
-	:global(:root[data-theme="light"]) img.head-pic { filter: none; }
 
 	.summary .stat-grid {
 		display: grid;

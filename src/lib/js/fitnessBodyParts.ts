@@ -36,3 +36,9 @@ export function findBodyPart(slug: string): BodyPartCard | null {
 export function bodyPartSlug(card: BodyPartCard, lang: string): string {
 	return lang === 'de' ? card.slugDe : card.key;
 }
+
+const PROPORTION_KEYS: ReadonlySet<string> = new Set(['chest', 'shoulders', 'waist', 'hips']);
+
+export function bodyPartAccent(key: string): string {
+	return PROPORTION_KEYS.has(key) ? 'var(--blue)' : 'var(--nord8)';
+}
