@@ -10,5 +10,5 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 		throw redirect(307, `/${params.faithLang}/${slug}`);
 	}
 	const search = url.search ?? '';
-	throw redirect(307, `/${params.faithLang}/${params.calendar}/1962${search}`);
+	throw redirect(307, `/${params.faithLang}/${params.calendar}/vetus${search}`);
 };

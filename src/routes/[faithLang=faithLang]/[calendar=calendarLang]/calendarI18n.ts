@@ -145,9 +145,9 @@ export function t(key: keyof typeof ui, lang: CalendarLang): string {
 	return ui[key][lang] ?? ui[key].en;
 }
 
-export type Rite = '1969' | '1962';
+export type Rite = 'novus' | 'vetus';
 export function isValidRite(v: string | null): v is Rite {
-	return v === '1969' || v === '1962';
+	return v === 'novus' || v === 'vetus';
 }
 
 // --- Diocese selection ---
