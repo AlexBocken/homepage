@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	const dayStart = new Date(dateParam + 'T00:00:00.000Z');
 	const dayEnd = new Date(dateParam + 'T23:59:59.999Z');
 	const todayStr = new Date().toISOString().slice(0, 10);
-	const isFuture = dateParam > todayStr;
+	const isTodayOrFuture = dateParam >= todayStr;
 
 	const exercisePromise = (async () => {
 		try {
@@ -26,16 +26,16 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 					createdBy: user.nickname,
 					startTime: { $gte: dayStart, $lte: dayEnd }
 				}).select('kcalEstimate').lean(),
-				isFuture ? WorkoutSchedule.findOne({ userId: user.nickname }).lean() : Promise.resolve(null)
+				isTodayOrFuture ? WorkoutSchedule.findOne({ userId: user.nickname }).lean() : Promise.resolve(null)
 			]);
 			let kcal = 0;
 			for (const s of sessions) {
 				if (s.kcalEstimate?.kcal) kcal += s.kcalEstimate.kcal;
 			}
 
-			// For future days without exercise, project kcal from the next scheduled template
+			// For today or future days without logged exercise, project kcal from the next scheduled template
 			let projected = null;
-			if (kcal === 0 && isFuture) {
+			if (kcal === 0 && isTodayOrFuture) {
 				if (schedule?.templateOrder?.length) {
 					const lastScheduled = await WorkoutSession.findOne({
 						createdBy: user.nickname,
@@ -147,8 +147,6 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	const projectedExercise = exerciseData.projected;
 
 	// Compute initial showRoundOff server-side to avoid flicker
-	const today = new Date().toISOString().slice(0, 10);
-	const isTodayOrFuture = dateParam >= today;
 	let initialShowRoundOff = false;
 	if (isTodayOrFuture && goal.dailyCalories) {
 		const totalCal = (foodLog.entries ?? []).reduce(
