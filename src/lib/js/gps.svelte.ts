@@ -79,6 +79,7 @@ interface AndroidBridge {
 	pauseTracking(): void;
 	resumeTracking(): void;
 	getIntervalState(): string;
+	hasActivityRecognitionPermission?: () => boolean;
 }
 
 function checkTauri(): boolean {
@@ -294,6 +295,13 @@ export function createGpsTracker() {
 		}
 	}
 
+	function cadenceAvailable(): boolean {
+		const bridge = getAndroidBridge();
+		// No bridge (e.g. browser) or older build lacking the check: assume ok, don't nag.
+		if (!bridge || typeof bridge.hasActivityRecognitionPermission !== 'function') return true;
+		try { return bridge.hasActivityRecognitionPermission(); } catch { return true; }
+	}
+
 	return {
 		get track() { return track; },
 		get isTracking() { return isTracking; },
@@ -304,6 +312,7 @@ export function createGpsTracker() {
 		get available() { return checkTauri(); },
 		get debug() { return _debugMsg; },
 		get intervalState() { return _intervalState; },
+		cadenceAvailable,
 		start,
 		stop,
 		reset,

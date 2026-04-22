@@ -4,9 +4,11 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.Manifest
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -24,6 +26,7 @@ import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
+import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Collections
@@ -696,8 +699,22 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
         notificationManager?.notify(NOTIFICATION_ID, notification)
     }
 
+    private fun hasActivityRecognitionPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return true
+        return ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACTIVITY_RECOGNITION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     private fun startStepDetector() {
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        if (!hasActivityRecognitionPermission()) {
+            Log.d(TAG, "Step detector skipped — ACTIVITY_RECOGNITION not granted")
+            return
+        }
+        if (stepDetector != null) return // already registered
+        if (sensorManager == null) {
+            sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        }
         stepDetector = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
         if (stepDetector != null) {
             sensorManager?.registerListener(this, stepDetector, SensorManager.SENSOR_DELAY_FASTEST)
@@ -705,6 +722,12 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
         } else {
             Log.d(TAG, "Step detector sensor not available on this device")
         }
+    }
+
+    /** Called from MainActivity when ACTIVITY_RECOGNITION is granted mid-session. */
+    fun onActivityRecognitionGranted() {
+        Log.d(TAG, "ACTIVITY_RECOGNITION granted — retrying step detector registration")
+        startStepDetector()
     }
 
     @Suppress("MissingPermission")

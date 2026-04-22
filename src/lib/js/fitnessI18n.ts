@@ -111,6 +111,10 @@ const translations: Translations = {
 	elevation_loss: { en: 'Loss', de: 'Abstieg' },
 	cadence: { en: 'Cadence', de: 'Kadenz' },
 	cadence_unit: { en: 'spm', de: 'spm' },
+	cadence_permission_missing: {
+		en: 'Cadence disabled — grant Activity Recognition in system settings',
+		de: 'Kadenz deaktiviert — Aktivitätserkennung in den Einstellungen erlauben'
+	},
 	personal_records: { en: 'Personal Records', de: 'Persönliche Rekorde' },
 	delete_session_confirm: { en: 'Delete this workout session?', de: 'Dieses Training löschen?' },
 	remove_gps_confirm: { en: 'Remove GPS track from this exercise?', de: 'GPS-Track von dieser Übung entfernen?' },
