@@ -205,6 +205,8 @@
   let longPressTimer = $state(null);
   /** @type {import('$lib/js/shoppingSync.svelte').ShoppingItem | null} */
   let editingItem = $state(null);
+  let editName = $state('');
+  let editQty = $state('');
   let editCategory = $state('');
   let editIcon = $state('');
   let iconSearch = $state('');
@@ -238,6 +240,9 @@
   function startLongPress(item) {
     longPressTimer = window.setTimeout(() => {
       editingItem = item;
+      const parsed = parseQuantity(item.name);
+      editName = parsed.name;
+      editQty = parsed.qty || '';
       editCategory = item.category;
       editIcon = item.icon || '';
       iconSearch = '';
@@ -355,14 +360,21 @@
   async function saveEdit() {
     if (!editingItem) return;
     editSaving = true;
-    const cleanName = parseQuantity(editingItem.name).name;
+    const trimmedName = editName.trim();
+    const trimmedQty = editQty.trim();
+    if (!trimmedName) { editSaving = false; return; }
+    const newRawName = trimmedQty ? `${trimmedQty} ${trimmedName}` : trimmedName;
     try {
       await fetch(sync.apiUrl('/api/cospend/list/categorize/override'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: cleanName, category: editCategory, icon: editIcon || null })
+        body: JSON.stringify({ name: trimmedName, category: editCategory, icon: editIcon || null })
       });
-      sync.updateItemCategory(editingItem.id, editCategory, editIcon || null);
+      sync.updateItem(editingItem.id, {
+        name: newRawName,
+        category: editCategory,
+        icon: editIcon || null
+      });
       closeEdit();
     } catch (err) {
       console.error('[shopping] Save override error:', err);
@@ -481,6 +493,19 @@
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="edit-modal" onclick={(e) => e.stopPropagation()}>
       <h3>{parseQuantity(editingItem.name).name}</h3>
+
+      <div class="name-qty-row">
+        <div class="field name-field">
+          <!-- svelte-ignore a11y_label_has_associated_control -->
+          <label class="edit-label">{t('edit_name', lang)}</label>
+          <input class="edit-input" type="text" bind:value={editName} />
+        </div>
+        <div class="field qty-field">
+          <!-- svelte-ignore a11y_label_has_associated_control -->
+          <label class="edit-label">{t('edit_qty', lang)}</label>
+          <input class="edit-input" type="text" bind:value={editQty} placeholder={t('edit_qty_ph', lang)} />
+        </div>
+      </div>
 
       <!-- svelte-ignore a11y_label_has_associated_control -->
       <label class="edit-label">{t('kategorie', lang)}</label>
@@ -932,6 +957,29 @@
     letter-spacing: 0.03em;
     color: var(--color-text-secondary);
     margin-bottom: 0.5rem;
+  }
+
+  .name-qty-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .field { display: flex; flex-direction: column; }
+  .name-field { flex: 2; }
+  .qty-field { flex: 1; }
+  .edit-input {
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .edit-input:focus {
+    outline: none;
+    border-color: var(--nord10);
   }
 
   .category-picker {

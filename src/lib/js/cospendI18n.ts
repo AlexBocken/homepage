@@ -178,6 +178,9 @@ const translations: Translations = {
 	search_icon: { en: 'Search icon...', de: 'Icon suchen...' },
 	save: { en: 'Save', de: 'Speichern' },
 	saving: { en: 'Saving...', de: 'Speichern...' },
+	edit_name: { en: 'Name', de: 'Name' },
+	edit_qty: { en: 'Amount', de: 'Menge' },
+	edit_qty_ph: { en: 'e.g. 3x, 500g, 1L', de: 'z.B. 3x, 500g, 1L' },
 
 	// EnhancedBalance
 	your_balance: { en: 'Your Balance', de: 'Dein Saldo' },
