@@ -7,9 +7,11 @@
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 
 	/**
-	 * @type {{ periods: any[], lang: 'en' | 'de', sharedWith?: string[], readOnly?: boolean, ownerName?: string }}
+	 * @type {{ periods: any[], lang: 'en' | 'de', sharedWith?: string[], readOnly?: boolean, ownerName?: string, mode?: 'entry' | 'projection' | 'full' }}
 	 */
-	let { periods: initialPeriods = [], lang = 'en', sharedWith: initialSharedWith = [], readOnly = false, ownerName = '' } = $props();
+	let { periods: initialPeriods = [], lang = 'en', sharedWith: initialSharedWith = [], readOnly = false, ownerName = '', mode = 'full' } = $props();
+	const showEntry = $derived(mode !== 'projection');
+	const showProjection = $derived(mode !== 'entry');
 
 	// svelte-ignore state_referenced_locally
 	let periods = $state([...initialPeriods]);
@@ -592,18 +594,18 @@
 				<div class="status-main">
 					<span class="status-pill period-pill">{t('current_period', lang)}</span>
 					<span class="status-hero ongoing-hero">{t('period_day', lang)} {ongoingDay}</span>
-					{#if predictions.predictedEndOfOngoing}
+					{#if showProjection && predictions.predictedEndOfOngoing}
 						<span class="status-detail">{t('predicted_end', lang)}</span>
 						<span class="status-relative">{relativeDate(predictions.predictedEndOfOngoing)}</span>
 						<span class="status-date">{formatDate(predictions.predictedEndOfOngoing)}</span>
 					{/if}
-					{#if !readOnly}
+					{#if showEntry && !readOnly}
 						<button class="end-btn" onclick={endPeriod} disabled={loading}>
 							{t('end_period', lang)}
 						</button>
 					{/if}
 				</div>
-				{#if nextCycle}
+				{#if showProjection && nextCycle}
 					<div class="status-side">
 						<div class="status-side-item ovulation-accent">
 							<span class="status-side-label">{t('ovulation', lang)}</span>
@@ -617,13 +619,13 @@
 					</div>
 				{/if}
 			</div>
-		{:else if nextCycle}
+		{:else if showProjection && nextCycle}
 			<div class="status-split">
 				<div class="status-main">
 					<span class="status-pill period-pill">{t('next_period', lang)}</span>
 					<span class="status-hero">{relativeRange(nextCycle.start, nextCycle.end)}</span>
 					<span class="status-date">{formatDate(nextCycle.start)} — {formatDate(nextCycle.end)}</span>
-					{#if !readOnly}
+					{#if showEntry && !readOnly}
 						<button class="start-btn" onclick={startPeriod} disabled={loading}>
 							{t('start_period', lang)}
 						</button>
@@ -641,9 +643,9 @@
 					</div>
 				</div>
 			</div>
-		{:else}
+		{:else if showEntry}
 			<div class="status-block">
-				<span class="status-empty">{t('no_period_data', lang)}</span>
+				<span class="status-empty">{sorted.length === 0 ? t('no_period_data', lang) : t('no_active_period', lang)}</span>
 				{#if !readOnly}
 					<button class="start-btn" onclick={startPeriod} disabled={loading}>
 						{t('start_period', lang)}
@@ -653,6 +655,7 @@
 		{/if}
 	</div>
 
+	{#if showProjection}
 	<!-- Calendar -->
 	<div class="calendar">
 		<div class="cal-header">
@@ -691,7 +694,9 @@
 		</div>
 	</div>
 
-	{#if completed.length >= 2}
+	{/if}
+
+	{#if showProjection && completed.length >= 2}
 		<div class="cycle-stats">
 			<div class="cycle-stat">
 				<span class="cycle-stat-label">{t('cycle_length', lang)}</span>
@@ -710,7 +715,7 @@
 		</div>
 	{/if}
 
-	{#if !readOnly}
+	{#if showEntry && !readOnly}
 		<!-- History + Share row -->
 		{#if sorted.length > 0}
 			<div class="history">

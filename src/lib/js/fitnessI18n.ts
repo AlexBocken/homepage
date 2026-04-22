@@ -402,6 +402,7 @@ const translations: Translations = {
 	period_tracker: { en: 'Period Tracker', de: 'Periodentracker' },
 	current_period: { en: 'Current Period', de: 'Aktuelle Periode' },
 	no_period_data: { en: 'No period data yet. Log your first period to start tracking.', de: 'Noch keine Periodendaten. Erfasse deine erste Periode.' },
+	no_active_period: { en: 'No active period.', de: 'Keine aktive Periode.' },
 	start_period: { en: 'Start Period', de: 'Periode starten' },
 	end_period: { en: 'Period Ended', de: 'Periode vorbei' },
 	period_day: { en: 'Day', de: 'Tag' },
