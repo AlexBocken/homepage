@@ -61,14 +61,12 @@
   };
   const STORE_NAMES = Object.keys(STORE_PRESETS);
 
-  let selectedStore = $state(
-    (typeof localStorage !== 'undefined' && localStorage.getItem('shopping-store')) || STORE_NAMES[0]
-  );
+  let selectedStore = $state(STORE_NAMES[0]);
   let categoryOrder = $derived(STORE_PRESETS[selectedStore] || STORE_PRESETS[STORE_NAMES[0]]);
 
   function setStore(name) {
     selectedStore = name;
-    localStorage.setItem('shopping-store', name);
+    try { localStorage.setItem('shopping-store', name); } catch { /* ignore */ }
   }
 
   let newItemName = $state('');
@@ -149,6 +147,11 @@
   let totalCount = $derived(sync.items.length);
 
   onMount(() => {
+    try {
+      const saved = localStorage.getItem('shopping-store');
+      if (saved && STORE_PRESETS[saved]) selectedStore = saved;
+    } catch { /* ignore */ }
+
     if (data.initialList) {
       sync.connect(shareToken);
     } else {
