@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { resolveStaticAsset } from './staticAsset';
 
 export interface BibleVerse {
 	bookName: string;
@@ -13,7 +13,7 @@ export interface BibleVerse {
 const versesCache = new Map<string, BibleVerse[]>();
 
 export function loadVersesFromFile(tsvPath?: string): BibleVerse[] {
-	const filePath = tsvPath ?? resolve('static/allioli.tsv');
+	const filePath = tsvPath ?? resolveStaticAsset('allioli.tsv');
 	const cached = versesCache.get(filePath);
 	if (cached) return cached;
 
