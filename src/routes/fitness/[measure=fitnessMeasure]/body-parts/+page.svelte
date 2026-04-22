@@ -72,13 +72,27 @@
 	const step = $derived(steps[idx] ?? steps[0]);
 	const done = $derived(idx >= total);
 
+	const lastForStep = $derived.by(() => {
+		const h = historyFor(step);
+		return h.length > 0 ? h.at(-1) : null;
+	});
+	/** @param {number | null | undefined} n */
+	function ph(n) {
+		return n != null ? String(n) : '—';
+	}
+
 	/** @param {string} key @param {'left'|'right'|null} side @param {number} delta */
 	function bump(key, side, delta) {
+		const s = steps.find((x) => x.key === key);
+		const last = s ? historyFor(s).at(-1) : null;
 		if (side) {
-			const cur = Number(values[key][side]) || 0;
+			const raw = values[key][side];
+			const fallback = side === 'left' ? last?.left : last?.right;
+			const cur = raw !== '' ? Number(raw) : (fallback ?? 0);
 			values[key][side] = String(Math.round((cur + delta) * 10) / 10);
 		} else {
-			const cur = Number(values[key]) || 0;
+			const raw = values[key];
+			const cur = raw !== '' ? Number(raw) : (last?.value ?? 0);
 			values[key] = String(Math.round((cur + delta) * 10) / 10);
 		}
 	}
@@ -376,14 +390,14 @@
 						{@const pv = values[step.key]}
 						{#if pv.same}
 							<div class="stepper" onwheel={(e) => onWheel(e, step.key, 'left')}>
-								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', -0.1)} aria-label="-0.1">
+								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', -0.5)} aria-label="-0.5">
 									<Minus size={20} />
 								</button>
 								<div class="num-wrap">
-									<input type="number" step="0.1" bind:value={pv.left} placeholder="—" inputmode="decimal" />
+									<input type="number" step="0.1" bind:value={pv.left} placeholder={ph(lastForStep?.left)} inputmode="decimal" />
 									<span class="unit">cm</span>
 								</div>
-								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', 0.1)} aria-label="+0.1">
+								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', 0.5)} aria-label="+0.5">
 									<Plus size={20} />
 								</button>
 							</div>
@@ -391,23 +405,23 @@
 							<div class="split">
 								<div class="stepper compact" onwheel={(e) => onWheel(e, step.key, 'left')}>
 									<span class="side-tag" style="--side-color: var(--color-primary)">L</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', -0.1)} aria-label="L -0.1">
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', -0.5)} aria-label="L -0.5">
 										<Minus size={14} />
 									</button>
-									<input type="number" step="0.1" bind:value={pv.left} placeholder="—" inputmode="decimal" />
+									<input type="number" step="0.1" bind:value={pv.left} placeholder={ph(lastForStep?.left)} inputmode="decimal" />
 									<span class="unit-sm">cm</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', 0.1)} aria-label="L +0.1">
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', 0.5)} aria-label="L +0.5">
 										<Plus size={14} />
 									</button>
 								</div>
 								<div class="stepper compact" onwheel={(e) => onWheel(e, step.key, 'right')}>
 									<span class="side-tag" style="--side-color: var(--orange)">R</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', -0.1)} aria-label="R -0.1">
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', -0.5)} aria-label="R -0.5">
 										<Minus size={14} />
 									</button>
-									<input type="number" step="0.1" bind:value={pv.right} placeholder="—" inputmode="decimal" />
+									<input type="number" step="0.1" bind:value={pv.right} placeholder={ph(lastForStep?.right)} inputmode="decimal" />
 									<span class="unit-sm">cm</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', 0.1)} aria-label="R +0.1">
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', 0.5)} aria-label="R +0.5">
 										<Plus size={14} />
 									</button>
 								</div>
@@ -422,14 +436,14 @@
 						</label>
 					{:else}
 						<div class="stepper" onwheel={(e) => onWheel(e, step.key, null)}>
-							<button type="button" class="step-btn" onclick={() => bump(step.key, null, -0.1)} aria-label="-0.1">
+							<button type="button" class="step-btn" onclick={() => bump(step.key, null, -0.5)} aria-label="-0.5">
 								<Minus size={20} />
 							</button>
 							<div class="num-wrap">
-								<input type="number" step="0.1" bind:value={values[step.key]} placeholder="—" inputmode="decimal" />
+								<input type="number" step="0.1" bind:value={values[step.key]} placeholder={ph(lastForStep?.value)} inputmode="decimal" />
 								<span class="unit">cm</span>
 							</div>
-							<button type="button" class="step-btn" onclick={() => bump(step.key, null, 0.1)} aria-label="+0.1">
+							<button type="button" class="step-btn" onclick={() => bump(step.key, null, 0.5)} aria-label="+0.5">
 								<Plus size={20} />
 							</button>
 						</div>
