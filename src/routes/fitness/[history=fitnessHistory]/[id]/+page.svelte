@@ -1,7 +1,7 @@
 <script>
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Route, X, RefreshCw, Gauge, Flame, Info, Mountain } from '@lucide/svelte';
+	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Download, Route, X, RefreshCw, Gauge, Flame, Info, Mountain } from '@lucide/svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';
@@ -544,6 +544,11 @@
 	}
 
 	/** @param {number} exIdx */
+	function downloadGpx(exIdx) {
+		window.location.href = `/api/fitness/sessions/${session._id}/gpx?exerciseIdx=${exIdx}`;
+	}
+
+	/** @param {number} exIdx */
 	async function removeGpx(exIdx) {
 		if (!await confirm(t('remove_gps_confirm', lang))) return;
 		try {
@@ -836,6 +841,10 @@
 							</div>
 						{/if}
 						{/if}
+						<button class="gpx-download-btn" onclick={() => downloadGpx(exIdx)}>
+							<Download size={14} />
+							{t('download_gpx', lang)}
+						</button>
 					</div>
 				{:else if isCardio(ex.exerciseId)}
 					<button class="gpx-upload-btn" onclick={() => uploadGpx(exIdx)} disabled={uploading === exIdx}>
@@ -1344,6 +1353,24 @@
 	.gpx-upload-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+	.gpx-download-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.75rem;
+		padding: 0.4rem 0.75rem;
+		background: transparent;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-secondary);
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition: border-color 0.15s, color 0.15s;
+	}
+	.gpx-download-btn:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
 	}
 
 	/* GPS charts */
