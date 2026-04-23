@@ -994,7 +994,7 @@ button:disabled {
 				<button class="btn-secondary" onclick={handleSkip}>
 					Skip Translation
 				</button>
-				<button class="btn-primary" onclick={handleAutoTranslate} disabled={untranslatedBaseRecipes.length > 0}>
+				<button class="btn-primary" onclick={() => handleAutoTranslate()} disabled={untranslatedBaseRecipes.length > 0}>
 					{#if untranslatedBaseRecipes.length > 0}
 						Translate base recipes first
 					{:else}

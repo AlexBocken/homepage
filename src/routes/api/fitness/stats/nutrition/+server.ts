@@ -32,11 +32,11 @@ export const GET: RequestHandler = async ({ locals }) => {
 		BodyMeasurement.find(
 			{ createdBy: user.nickname, weight: { $ne: null } },
 			{ date: 1, weight: 1, _id: 0 }
-		).sort({ date: 1 }).lean() as any[],
+		).sort({ date: 1 }).lean() as unknown as any[],
 		WorkoutSession.find(
 			{ createdBy: user.nickname, startTime: { $gte: thirtyDaysAgo, $lt: todayStart }, 'kcalEstimate.kcal': { $gt: 0 } },
 			{ startTime: 1, 'kcalEstimate.kcal': 1, _id: 0 }
-		).lean() as any[],
+		).lean() as unknown as any[],
 	]);
 
 	// Compute trend weight (SMA of last measurements, same algo as overview)

@@ -48,7 +48,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const entry = await PeriodEntry.create({
 		startDate: start,
-		endDate: endDate ? new Date(endDate) : null,
+		endDate: endDate ? new Date(endDate) : undefined,
 		createdBy: user.nickname
 	});
 

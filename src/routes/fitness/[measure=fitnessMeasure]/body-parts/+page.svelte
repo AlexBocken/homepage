@@ -47,17 +47,20 @@
 	/** @param {Step} s */
 	function historyFor(s) {
 		if (s.paired) {
+			const left = s.dbLeft ?? '';
+			const right = s.dbRight ?? '';
 			return past
-				.filter((/** @type {any} */ m) => m.measurements?.[s.dbLeft] != null || m.measurements?.[s.dbRight] != null)
+				.filter((/** @type {any} */ m) => m.measurements?.[left] != null || m.measurements?.[right] != null)
 				.map((/** @type {any} */ m) => ({
 					date: m.date,
-					left: m.measurements?.[s.dbLeft] ?? null,
-					right: m.measurements?.[s.dbRight] ?? null
+					left: m.measurements?.[left] ?? null,
+					right: m.measurements?.[right] ?? null
 				}));
 		}
+		const single = s.dbSingle ?? '';
 		return past
-			.filter((/** @type {any} */ m) => m.measurements?.[s.dbSingle] != null)
-			.map((/** @type {any} */ m) => ({ date: m.date, value: m.measurements[s.dbSingle] }));
+			.filter((/** @type {any} */ m) => m.measurements?.[single] != null)
+			.map((/** @type {any} */ m) => ({ date: m.date, value: m.measurements[single] }));
 	}
 
 	/** @type {Record<string, any>} */

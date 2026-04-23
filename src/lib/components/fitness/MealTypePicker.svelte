@@ -2,12 +2,14 @@
 	import { Coffee, Sun, Moon, Cookie } from '@lucide/svelte';
 	import { t } from '$lib/js/fitnessI18n';
 
+	/** @type {{ value?: 'breakfast' | 'lunch' | 'dinner' | 'snack', lang?: 'en' | 'de', onchange?: (meal: 'breakfast' | 'lunch' | 'dinner' | 'snack') => void }} */
 	let {
 		value = 'snack',
 		lang = 'de',
 		onchange = () => {},
 	} = $props();
 
+	/** @type {Array<'breakfast' | 'lunch' | 'dinner' | 'snack'>} */
 	const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 	const mealMeta = {

@@ -3,6 +3,7 @@
 
 	const dialog = getConfirmDialog();
 
+	/** @param {KeyboardEvent} e */
 	function onKeydown(e) {
 		if (!dialog.open) return;
 		if (e.key === 'Escape') dialog.respond(false);

@@ -164,7 +164,7 @@
 		}
 
 		// Handle fitness pages
-		if (path.startsWith('/fitness')) {
+		if (path.startsWith('/fitness') && lang !== 'la') {
 			const newPath = convertFitnessPath(path, lang);
 			await goto(newPath);
 			return;

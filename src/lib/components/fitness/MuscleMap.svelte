@@ -3,10 +3,16 @@
 	import frontSvgRaw from '$lib/assets/muscle-front.svg?raw';
 	import backSvgRaw from '$lib/assets/muscle-back.svg?raw';
 
+	/**
+	 * @typedef {{ groups: string[], label: { en: string, de: string } }} MuscleRegion
+	 */
+
+	/** @type {{ primaryGroups?: string[], secondaryGroups?: string[], lang?: string }} */
 	let { primaryGroups = [], secondaryGroups = [], lang = 'en' } = $props();
 
 	const isEn = $derived(lang === 'en');
 
+	/** @type {Record<string, MuscleRegion>} */
 	const FRONT_MAP = {
 		'traps':            { groups: ['traps'],                                   label: { en: 'Traps', de: 'Trapez' } },
 		'front-shoulders':  { groups: ['anterior deltoids', 'lateral deltoids'],   label: { en: 'Front Delts', de: 'Vord. Schultern' } },
@@ -19,6 +25,7 @@
 		'calves':           { groups: ['calves'],                                  label: { en: 'Calves', de: 'Waden' } },
 	};
 
+	/** @type {Record<string, MuscleRegion>} */
 	const BACK_MAP = {
 		'traps':            { groups: ['traps'],                                   label: { en: 'Traps', de: 'Trapez' } },
 		'traps-middle':     { groups: ['traps'],                                   label: { en: 'Mid Traps', de: 'Mittl. Trapez' } },
@@ -35,12 +42,14 @@
 	const primarySet = $derived(new Set(primaryGroups));
 	const secondarySet = $derived(new Set(secondaryGroups));
 
+	/** @param {string[]} groups */
 	function regionState(groups) {
 		if (groups.some(g => primarySet.has(g))) return 'primary';
 		if (groups.some(g => secondarySet.has(g))) return 'secondary';
 		return 'inactive';
 	}
 
+	/** @param {string[]} groups */
 	function regionFill(groups) {
 		const state = regionState(groups);
 		if (state === 'primary') return 'var(--color-primary)';
@@ -48,6 +57,10 @@
 		return 'var(--color-bg-tertiary)';
 	}
 
+	/**
+	 * @param {string} svgStr
+	 * @param {Record<string, MuscleRegion>} map
+	 */
 	function injectFills(svgStr, map) {
 		let result = svgStr;
 		for (const [svgId, region] of Object.entries(map)) {
@@ -61,6 +74,7 @@
 	const frontSvg = $derived(injectFills(frontSvgRaw, FRONT_MAP));
 	const backSvg = $derived(injectFills(backSvgRaw, BACK_MAP));
 
+	/** @type {MuscleRegion | null} */
 	let hovered = $state(null);
 	let hoveredSide = $state('front');
 	const hoveredLabel = $derived.by(() => {
@@ -71,21 +85,30 @@
 		return label + suffix;
 	});
 
+	/** @type {HTMLDivElement | null} */
 	let frontEl = $state(null);
+	/** @type {HTMLDivElement | null} */
 	let backEl = $state(null);
 
+	/**
+	 * @param {HTMLDivElement | null} container
+	 * @param {Record<string, MuscleRegion>} map
+	 * @param {string} side
+	 */
 	function setupEvents(container, map, side) {
 		if (!container) return;
-		container.addEventListener('mouseover', (e) => {
-			const g = e.target.closest('g[id]');
+		container.addEventListener('mouseover', (/** @type {Event} */ e) => {
+			const target = /** @type {Element | null} */ (e.target);
+			const g = target?.closest('g[id]');
 			if (g && map[g.id]) {
 				hovered = map[g.id];
 				hoveredSide = side;
 				g.classList.add('highlighted');
 			}
 		});
-		container.addEventListener('mouseout', (e) => {
-			const g = e.target.closest('g[id]');
+		container.addEventListener('mouseout', (/** @type {Event} */ e) => {
+			const target = /** @type {Element | null} */ (e.target);
+			const g = target?.closest('g[id]');
 			if (g) g.classList.remove('highlighted');
 		});
 		container.addEventListener('mouseleave', () => { hovered = null; });
@@ -96,7 +119,10 @@
 		setupEvents(backEl, BACK_MAP, 'back');
 	});
 
-	// Check if any muscles are on front/back to decide which to show
+	/**
+	 * Check if any muscles are on front/back to decide which to show
+	 * @param {Record<string, MuscleRegion>} map
+	 */
 	function hasActiveRegions(map) {
 		return Object.values(map).some(r => regionState(r.groups) !== 'inactive');
 	}

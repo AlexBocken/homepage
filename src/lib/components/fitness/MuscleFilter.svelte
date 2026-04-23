@@ -3,10 +3,16 @@
 	import frontSvgRaw from '$lib/assets/muscle-front.svg?raw';
 	import backSvgRaw from '$lib/assets/muscle-back.svg?raw';
 
+	/**
+	 * @typedef {{ groups: string[], label: { en: string, de: string } }} MuscleRegion
+	 */
+
+	/** @type {{ selectedGroups?: string[], lang?: string, split?: boolean }} */
 	let { selectedGroups = $bindable([]), lang = 'en', split = false } = $props();
 
 	const isEn = $derived(lang === 'en');
 
+	/** @type {Record<string, MuscleRegion>} */
 	const FRONT_MAP = {
 		'traps':            { groups: ['traps'],                                   label: { en: 'Traps', de: 'Trapez' } },
 		'front-shoulders':  { groups: ['anterior deltoids', 'lateral deltoids'],   label: { en: 'Front Delts', de: 'Vord. Schultern' } },
@@ -19,6 +25,7 @@
 		'calves':           { groups: ['calves'],                                  label: { en: 'Calves', de: 'Waden' } },
 	};
 
+	/** @type {Record<string, MuscleRegion>} */
 	const BACK_MAP = {
 		'traps':            { groups: ['traps'],                                   label: { en: 'Traps', de: 'Trapez' } },
 		'traps-middle':     { groups: ['traps'],                                   label: { en: 'Mid Traps', de: 'Mittl. Trapez' } },
@@ -32,19 +39,29 @@
 		'calves':           { groups: ['calves'],                                  label: { en: 'Calves', de: 'Waden' } },
 	};
 
-	/** Check if a region's groups overlap with selectedGroups */
+	/**
+	 * Check if a region's groups overlap with selectedGroups
+	 * @param {string[]} groups
+	 */
 	function isRegionSelected(groups) {
 		if (selectedGroups.length === 0) return false;
 		return groups.some(g => selectedGroups.includes(g));
 	}
 
-	/** Compute fill for a region based on selection state */
+	/**
+	 * Compute fill for a region based on selection state
+	 * @param {string[]} groups
+	 */
 	function regionFill(groups) {
 		if (isRegionSelected(groups)) return 'var(--color-primary)';
 		return 'var(--color-bg-tertiary)';
 	}
 
-	/** Inject fill styles into SVG string */
+	/**
+	 * Inject fill styles into SVG string
+	 * @param {string} svgStr
+	 * @param {Record<string, MuscleRegion>} map
+	 */
 	function injectFills(svgStr, map) {
 		let result = svgStr;
 		for (const [svgId, region] of Object.entries(map)) {
@@ -59,6 +76,7 @@
 	const backSvg = $derived(injectFills(backSvgRaw, BACK_MAP));
 
 	/** Currently hovered region for tooltip */
+	/** @type {MuscleRegion | null} */
 	let hovered = $state(null);
 	let hoveredSide = $state('front');
 
@@ -67,10 +85,15 @@
 		return isEn ? hovered.label.en : hovered.label.de;
 	});
 
+	/** @type {HTMLDivElement | null} */
 	let frontEl = $state(null);
+	/** @type {HTMLDivElement | null} */
 	let backEl = $state(null);
 
-	/** Toggle a region's muscle groups in/out of selection */
+	/**
+	 * Toggle a region's muscle groups in/out of selection
+	 * @param {MuscleRegion} region
+	 */
 	function toggleRegion(region) {
 		const groups = region.groups;
 		const allSelected = groups.every(g => selectedGroups.includes(g));
@@ -82,11 +105,17 @@
 		}
 	}
 
+	/**
+	 * @param {HTMLDivElement | null} container
+	 * @param {Record<string, MuscleRegion>} map
+	 * @param {string} side
+	 */
 	function setupEvents(container, map, side) {
 		if (!container) return;
 
-		container.addEventListener('mouseover', (e) => {
-			const g = e.target.closest('g[id]');
+		container.addEventListener('mouseover', (/** @type {Event} */ e) => {
+			const target = /** @type {Element | null} */ (e.target);
+			const g = target?.closest('g[id]');
 			if (g && map[g.id]) {
 				hovered = map[g.id];
 				hoveredSide = side;
@@ -94,8 +123,9 @@
 			}
 		});
 
-		container.addEventListener('mouseout', (e) => {
-			const g = e.target.closest('g[id]');
+		container.addEventListener('mouseout', (/** @type {Event} */ e) => {
+			const target = /** @type {Element | null} */ (e.target);
+			const g = target?.closest('g[id]');
 			if (g) g.classList.remove('highlighted');
 		});
 
@@ -103,8 +133,9 @@
 			hovered = null;
 		});
 
-		container.addEventListener('click', (e) => {
-			const g = e.target.closest('g[id]');
+		container.addEventListener('click', (/** @type {Event} */ e) => {
+			const target = /** @type {Element | null} */ (e.target);
+			const g = target?.closest('g[id]');
 			if (g && map[g.id]) {
 				toggleRegion(map[g.id]);
 			}

@@ -7,19 +7,24 @@
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
+	/** @typedef {import('$models/CustomMeal').ICustomMeal & { _id?: string }} Meal */
+	/** @typedef {import('$models/CustomMeal').ICustomMealIngredient} MealIngredient */
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 
 	// --- Meals state ---
+	/** @type {Meal[]} */
 	let meals = $state([]);
 	let loading = $state(true);
 
 	// --- Form state ---
 	let editing = $state(false);
+	/** @type {string | null} */
 	let editingId = $state(null);
 	let mealName = $state('');
+	/** @type {MealIngredient[]} */
 	let ingredients = $state([]);
 	let saving = $state(false);
 
@@ -46,10 +51,12 @@
 	});
 
 	// --- Computed ---
+	/** @param {Meal} meal */
 	function mealTotalCal(meal) {
-		return meal.ingredients.reduce((sum, ing) => sum + (ing.per100g?.calories ?? 0) * ing.amountGrams / 100, 0);
+		return meal.ingredients.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + (ing.per100g?.calories ?? 0) * ing.amountGrams / 100, 0);
 	}
 
+	/** @param {MealIngredient[]} ings */
 	function ingredientsTotalNutrition(ings) {
 		let calories = 0, protein = 0, fat = 0, carbs = 0;
 		let saturatedFat = 0, sugars = 0, fiber = 0;
@@ -68,11 +75,13 @@
 
 	const formTotals = $derived(ingredientsTotalNutrition(ingredients));
 
+	/** @param {{ name: string, source: string, sourceId: string, amountGrams: number, per100g: any, portions?: { description: string; grams: number }[], selectedPortion?: { description: string; grams: number } }} food */
 	function addIngredient(food) {
-		ingredients = [...ingredients, food];
+		ingredients = [...ingredients, /** @type {MealIngredient} */ (food)];
 		showSearch = false;
 	}
 
+	/** @param {number} index */
 	function removeIngredient(index) {
 		ingredients = ingredients.filter((_, i) => i !== index);
 	}
@@ -86,11 +95,12 @@
 		showSearch = false;
 	}
 
+	/** @param {Meal} meal */
 	function startEdit(meal) {
 		editing = true;
-		editingId = meal._id;
+		editingId = meal._id ?? null;
 		mealName = meal.name;
-		ingredients = meal.ingredients.map(i => ({ ...i }));
+		ingredients = meal.ingredients.map((/** @type {MealIngredient} */ i) => ({ ...i }));
 		showSearch = false;
 	}
 
@@ -132,12 +142,13 @@
 		}
 	}
 
+	/** @param {Meal} meal */
 	async function deleteMeal(meal) {
 		if (!await confirm(t('delete_meal_confirm', lang))) return;
 		try {
 			const res = await fetch(`/api/fitness/custom-meals/${meal._id}`, { method: 'DELETE' });
 			if (res.ok) {
-				meals = meals.filter(m => m._id !== meal._id);
+				meals = meals.filter((/** @type {Meal} */ m) => m._id !== meal._id);
 				toast.success(isEn ? 'Meal deleted' : 'Mahlzeit gelöscht');
 			}
 		} catch {
@@ -145,6 +156,7 @@
 		}
 	}
 
+	/** @param {number} v */
 	function fmt(v) {
 		return v >= 100 ? Math.round(v).toString() : v.toFixed(1);
 	}
@@ -209,17 +221,18 @@
 										min="0.1"
 										step={sp ? '0.5' : '1'}
 										onchange={(e) => {
-											const qty = Number(e.target.value) || 1;
+											const qty = Number(/** @type {HTMLInputElement} */ (e.target).value) || 1;
 											ingredients[i].amountGrams = sp ? Math.round(qty * sp.grams) : qty;
 											ingredients = [...ingredients];
 										}}
 									/>
-									{#if ing.portions?.length > 0}
-										<select class="inline-portion" value={sp ? ing.portions.findIndex(p => p.description === sp.description) : -1} onchange={(e) => {
-											const idx = Number(e.target.value);
+									{#if ing.portions && ing.portions.length > 0}
+										{@const ingPortions = ing.portions}
+										<select class="inline-portion" value={sp ? ingPortions.findIndex((/** @type {{description: string; grams: number}} */ p) => p.description === sp.description) : -1} onchange={(e) => {
+											const idx = Number(/** @type {HTMLSelectElement} */ (e.target).value);
 											const oldGrams = ing.amountGrams;
 											if (idx >= 0) {
-												const portion = ing.portions[idx];
+												const portion = ingPortions[idx];
 												ingredients[i].selectedPortion = portion;
 												// Convert current grams to new unit, round to nearest 0.5
 												const qty = Math.round((oldGrams / portion.grams) * 2) / 2 || 1;
@@ -230,7 +243,7 @@
 											ingredients = [...ingredients];
 										}}>
 											<option value={-1}>g</option>
-											{#each ing.portions as p, pi}
+											{#each ingPortions as p, pi}
 												<option value={pi}>{p.description} ({Math.round(p.grams)}g)</option>
 											{/each}
 										</select>

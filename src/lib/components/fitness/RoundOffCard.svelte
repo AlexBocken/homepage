@@ -4,7 +4,21 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { t } from '$lib/js/fitnessI18n';
 	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
+	/** @typedef {import('$lib/server/roundOffScoring').ComboSuggestion} ComboSuggestion */
 
+	/**
+	 * @type {{
+	 *   remainingKcal: number,
+	 *   remainingProtein: number,
+	 *   remainingFat: number,
+	 *   remainingCarbs: number,
+	 *   currentDate: string,
+	 *   lang?: 'en' | 'de',
+	 *   nutritionSlug?: string,
+	 *   initialSuggestions?: ComboSuggestion[] | null,
+	 *   onlogged?: () => void,
+	 * }}
+	 */
 	let {
 		remainingKcal,
 		remainingProtein,
@@ -20,6 +34,7 @@
 	const isEn = $derived(lang === 'en');
 
 	// svelte-ignore state_referenced_locally
+	/** @type {ComboSuggestion[] | null} */
 	let suggestions = $state(initialSuggestions);
 	// svelte-ignore state_referenced_locally
 	let loading = $state(!initialSuggestions);
@@ -35,6 +50,7 @@
 	}
 
 	let editingComboIdx = $state(-1);
+	/** @type {'breakfast' | 'lunch' | 'dinner' | 'snack'} */
 	let editMealType = $state('snack');
 
 	async function fetchSuggestions() {
@@ -64,6 +80,7 @@
 		}
 	});
 
+	/** @param {number} comboIdx */
 	function startLog(comboIdx) {
 		editingComboIdx = comboIdx;
 		editMealType = defaultMealType();
@@ -73,6 +90,7 @@
 		editingComboIdx = -1;
 	}
 
+	/** @param {ComboSuggestion} combo */
 	async function logCombo(combo) {
 		loggingIdx = editingComboIdx;
 		try {
@@ -113,12 +131,14 @@
 		loggingIdx = -1;
 	}
 
+	/** @param {number | undefined | null} v */
 	function fmt(v) {
 		if (v == null || isNaN(v)) return '0';
 		if (Math.abs(v) >= 100) return Math.round(v).toString();
 		return v.toFixed(1);
 	}
 
+	/** @param {number} v */
 	function fmtSigned(v) {
 		const s = fmt(v);
 		return v > 0 ? '+' + s : s;

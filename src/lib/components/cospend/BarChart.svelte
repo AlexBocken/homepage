@@ -8,10 +8,11 @@
    *   data?: { labels: string[], datasets: Array<{ label: string, data: number[] }> },
    *   title?: string,
    *   height?: string,
-   *   onFilterChange?: ((categories: string[] | null) => void) | null
+   *   onFilterChange?: ((categories: string[] | null) => void) | null,
+   *   lang?: 'en' | 'de'
    * }}
    */
-  let { data = { labels: [], datasets: [] }, title = '', height = '400px', onFilterChange = null, lang = /** @type {'en' | 'de'} */ ('de') } = $props();
+  let { data = { labels: [], datasets: [] }, title = '', height = '400px', onFilterChange = null, lang = 'de' } = $props();
 
   /** @type {HTMLCanvasElement | undefined} */
   let canvas = $state(undefined);

@@ -12,6 +12,41 @@
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { getDRI, NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 
+	/**
+	 * @typedef {{
+	 *   _id: string,
+	 *   mealType: string,
+	 *   name: string,
+	 *   source?: string,
+	 *   sourceId?: string,
+	 *   amountGrams: number,
+	 *   liquidMl?: number,
+	 *   per100g?: Record<string, number>,
+	 * }} FoodLogEntry
+	 *
+	 * @typedef {{
+	 *   name: string,
+	 *   source?: string,
+	 *   sourceId?: string,
+	 *   amountGrams: number,
+	 *   per100g?: Record<string, number>,
+	 * }} MealIngredient
+	 *
+	 * @typedef {{
+	 *   _id: string,
+	 *   name: string,
+	 *   ingredients: MealIngredient[],
+	 * }} CustomMeal
+	 *
+	 * @typedef {{
+	 *   name: string,
+	 *   source: string,
+	 *   sourceId: string,
+	 *   amountGrams: number,
+	 *   per100g: Record<string, number>,
+	 * }} FoodSelection
+	 */
+
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
@@ -29,6 +64,7 @@
 		return d.toLocaleDateString(isEn ? 'en-US' : 'de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
 	});
 
+	/** @param {number} offset */
 	function dateOffset(offset) {
 		const d = new Date(currentDate + 'T12:00:00');
 		d.setDate(d.getDate() + offset);
@@ -43,9 +79,9 @@
 
 	// --- Entries ---
 	// svelte-ignore state_referenced_locally
-	let entries = $state(data.foodLog?.entries ?? []);
+	let entries = $state(/** @type {FoodLogEntry[]} */ (data.foodLog?.entries ?? []));
 	// svelte-ignore state_referenced_locally
-	let recipeImages = $state(data.recipeImages ?? {});
+	let recipeImages = $state(/** @type {Record<string, string>} */ (data.recipeImages ?? {}));
 
 	// Keep reactive with server data when navigating
 	$effect(() => {
@@ -120,6 +156,10 @@
 	let goalStep = $state(1);
 	let selectedPresetIdx = $state(-1);
 
+	/**
+	 * @param {(typeof dietPresets)[number]} preset
+	 * @param {number} idx
+	 */
 	function applyPreset(preset, idx) {
 		selectedPresetIdx = idx;
 		editProteinMode = preset.proteinMode;
@@ -226,6 +266,7 @@
 	}
 
 	// --- Computed daily totals ---
+	/** @type {Array<'breakfast'|'lunch'|'dinner'|'snack'>} */
 	const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 	const grouped = $derived.by(() => {
@@ -252,13 +293,17 @@
 
 	/** Detect if a food log entry is a beverage (non-water) */
 	const DRINK_PATTERNS = /^(milch|kaffee|coffee|tee|tea|cola|fanta|sprite|saft|juice|limo|smoothie|kakao|cocoa|bier|beer|wein|wine|eistee|ice tea|energy|redbull|red bull|mate|schorle|sprudel|mineral|orangensaft|apfelsaft|multivitamin|iso|gatorade|powerade)/i;
+	/** @param {FoodLogEntry} e */
 	function isBeverage(e) {
 		if (e.mealType === 'water') return false;
 		if (e.source === 'bls' && e.sourceId?.startsWith('N')) return true;
 		return DRINK_PATTERNS.test(e.name);
 	}
 
-	/** Detect if a custom meal ingredient is a liquid (for hydration auto-logging) */
+	/**
+	 * Detect if a custom meal ingredient is a liquid (for hydration auto-logging)
+	 * @param {MealIngredient} ing
+	 */
 	function isLiquidIngredient(ing) {
 		if (ing.source === 'bls' && ing.sourceId?.startsWith('N')) return true;
 		return DRINK_PATTERNS.test(ing.name) || /^(wasser|water|trinkwasser)/i.test(ing.name);
@@ -283,11 +328,11 @@
 		editingGoal = false;
 	}
 
-	let waterEntries = $derived(entries.filter(e => e.mealType === 'water'));
+	let waterEntries = $derived(entries.filter((/** @type {FoodLogEntry} */ e) => e.mealType === 'water'));
 	let beverageEntries = $derived(entries.filter(isBeverage));
-	let waterMl = $derived(waterEntries.reduce((s, e) => s + e.amountGrams, 0));
-	let beverageMl = $derived(beverageEntries.reduce((s, e) => s + e.amountGrams, 0));
-	let mealLiquidMl = $derived(entries.reduce((s, e) => s + (e.liquidMl ?? 0), 0));
+	let waterMl = $derived(waterEntries.reduce((/** @type {number} */ s, /** @type {FoodLogEntry} */ e) => s + e.amountGrams, 0));
+	let beverageMl = $derived(beverageEntries.reduce((/** @type {number} */ s, /** @type {FoodLogEntry} */ e) => s + e.amountGrams, 0));
+	let mealLiquidMl = $derived(entries.reduce((/** @type {number} */ s, /** @type {FoodLogEntry} */ e) => s + (e.liquidMl ?? 0), 0));
 	let totalLiquidMl = $derived(waterMl + beverageMl + mealLiquidMl);
 	let beverageCups = $derived(Math.round(beverageMl / WATER_CUP_ML));
 	let waterCups = $derived(Math.round(waterMl / WATER_CUP_ML));
@@ -321,6 +366,7 @@
 		lastTotalCups = cur;
 	});
 
+	/** @param {number} target */
 	async function setWaterCups(target) {
 		const current = waterCups;
 		if (target === current) return;
@@ -347,20 +393,25 @@
 				if (newEntries.length) entries = [...entries, ...newEntries];
 			} else {
 				const toRemove = waterEntries.slice(target);
-				const ids = toRemove.map(e => e._id);
-				await Promise.all(ids.map(id =>
+				const ids = toRemove.map((/** @type {FoodLogEntry} */ e) => e._id);
+				await Promise.all(ids.map((/** @type {string} */ id) =>
 					fetch(`/api/fitness/food-log/${id}`, { method: 'DELETE' })
 				));
-				entries = entries.filter(e => !ids.includes(e._id));
+				entries = entries.filter((/** @type {FoodLogEntry} */ e) => !ids.includes(e._id));
 			}
 		} catch {
 			toast.error(isEn ? 'Failed to update water' : 'Fehler beim Aktualisieren');
 		}
 	}
 
+	/** @param {FoodLogEntry} e */
 	function entryCalories(e) {
 		return (e.per100g?.calories ?? 0) * e.amountGrams / 100;
 	}
+	/**
+	 * @param {FoodLogEntry} e
+	 * @param {string} key
+	 */
 	function entryNutrient(e, key) {
 		return (e.per100g?.[key] ?? 0) * e.amountGrams / 100;
 	}
@@ -374,14 +425,16 @@
 
 	const dayTotals = $derived.by(() => {
 		let calories = 0, protein = 0, fat = 0, carbs = 0, fiber = 0, sugars = 0, saturatedFat = 0;
+		/** @type {Record<string, number>} */
 		const micros = {};
+		/** @type {Record<string, number>} */
 		const aminos = {};
 		for (const k of microKeys) micros[k] = 0;
 		for (const k of aminoKeys) aminos[k] = 0;
 
 		for (const e of entries) {
 			const r = e.amountGrams / 100;
-			const p = e.per100g ?? {};
+			const p = /** @type {Record<string, number>} */ (e.per100g ?? {});
 			calories += (p.calories ?? 0) * r;
 			protein += (p.protein ?? 0) * r;
 			fat += (p.fat ?? 0) * r;
@@ -468,6 +521,7 @@
 	const hasBmrData = $derived(latestWeight != null && data.goal?.heightCm != null && birthYear != null);
 
 	// NEAT-only multipliers (exercise tracked separately)
+	/** @type {Record<string, number>} */
 	const ACTIVITY_MULT = { sedentary: 1.2, light: 1.3, moderate: 1.4, very_active: 1.5 };
 
 	const dailyBmr = $derived.by(() => {
@@ -537,16 +591,21 @@
 	const ARC_LENGTH = (ARC_DEGREES / 360) * 2 * Math.PI * RADIUS;
 	const ARC_ROTATE = 120;
 
+	/** @param {number} percent */
 	function strokeOffset(percent) {
 		return ARC_LENGTH - (Math.min(percent, 100) / 100) * ARC_LENGTH;
 	}
 
-	/** Stroke offset for overflow arc drawn from the end backwards */
+	/**
+	 * Stroke offset for overflow arc drawn from the end backwards
+	 * @param {number} overflowPct
+	 */
 	function overflowOffset(overflowPct) {
 		return ARC_LENGTH - (Math.min(overflowPct, 100) / 100) * ARC_LENGTH;
 	}
 
 	// --- Inline add food ---
+	/** @type {string | null} */
 	let addingMeal = $state(null);
 	let inlineTab = $state('search'); // 'search' | 'favorites' | 'meals'
 
@@ -578,6 +637,7 @@
 		goto(`/fitness/${s.nutrition}`, { replaceState: true, keepFocus: true, noScroll: true });
 	}
 
+	/** @param {FoodSelection} food */
 	async function fabLogFood(food) {
 		try {
 			const res = await fetch('/api/fitness/food-log', {
@@ -606,7 +666,10 @@
 	// --- Custom meals in FAB ---
 	let fabTab = $state('search'); // 'search' | 'favorites' | 'meals'
 
+	/** @typedef {{ name: string, source: string, id: string, per100g: Record<string, number>, portions?: any, calories: number, favorited: boolean }} FavTabItem */
+
 	// --- Favorites tab ---
+	/** @type {FavTabItem[]} */
 	let favTabItems = $state([]); // enriched with per100g
 	let favTabLoaded = $state(false);
 
@@ -614,7 +677,7 @@
 		if (favTabLoaded && !force) return;
 		const favs = quickFavorites;
 		// Fetch per100g for each favorite in parallel
-		const enriched = await Promise.all(favs.map(async (fav) => {
+		const enriched = await Promise.all(favs.map(async (/** @type {{ name: string, source: string, sourceId: string }} */ fav) => {
 			try {
 				const res = await fetch(`/api/nutrition/lookup?source=${fav.source}&id=${encodeURIComponent(fav.sourceId)}`);
 				if (res.ok) {
@@ -632,9 +695,10 @@
 			} catch {}
 			return null;
 		}));
-		favTabItems = enriched.filter(Boolean);
+		favTabItems = /** @type {FavTabItem[]} */ (enriched.filter(Boolean));
 		favTabLoaded = true;
 	}
+	/** @type {CustomMeal[]} */
 	let customMeals = $state([]);
 	let customMealsLoaded = $state(false);
 
@@ -647,10 +711,12 @@
 	);
 
 	// Custom meal detail screen (replaces meal list when a meal is selected)
+	/** @type {CustomMeal | null} */
 	let selectedCmMeal = $state(null);
 	let cmAmountMode = $state('multiplier'); // 'multiplier' | 'grams'
 	let cmAmountVal = $state(1.0);
 
+	/** @param {CustomMeal} meal */
 	function selectCmMeal(meal) {
 		selectedCmMeal = meal;
 		cmAmountMode = 'multiplier';
@@ -661,13 +727,17 @@
 		selectedCmMeal = null;
 	}
 
+	/** @param {CustomMeal} meal */
 	function cmResolvedGrams(meal) {
 		const base = mealTotalGrams(meal);
 		if (cmAmountMode === 'grams') return cmAmountVal;
 		return base * cmAmountVal;
 	}
 
-	/** Preview macros scaled to the selected amount */
+	/**
+	 * Preview macros scaled to the selected amount
+	 * @param {CustomMeal} meal
+	 */
 	function cmPreview(meal) {
 		const { per100g, totalGrams } = aggregateMealPer100g(meal);
 		const grams = cmResolvedGrams(meal);
@@ -707,15 +777,19 @@
 		'tryptophan', 'valine', 'histidine', 'alanine', 'arginine', 'asparticAcid',
 		'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
 
+	/** @param {CustomMeal} meal */
 	function mealTotalGrams(meal) {
-		return meal.ingredients.reduce((sum, ing) => sum + ing.amountGrams, 0);
+		return meal.ingredients.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + ing.amountGrams, 0);
 	}
 
+	/** @param {CustomMeal} meal */
 	function mealTotalCal(meal) {
-		return meal.ingredients.reduce((sum, ing) => sum + (ing.per100g?.calories ?? 0) * ing.amountGrams / 100, 0);
+		return meal.ingredients.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + (ing.per100g?.calories ?? 0) * ing.amountGrams / 100, 0);
 	}
 
+	/** @param {CustomMeal} meal */
 	function aggregateMealPer100g(meal) {
+		/** @type {Record<string, number>} */
 		const totals = {};
 		for (const k of NUTRIENT_KEYS) totals[k] = 0;
 		let totalGrams = 0;
@@ -724,15 +798,20 @@
 			totalGrams += ing.amountGrams;
 			for (const k of NUTRIENT_KEYS) totals[k] += (ing.per100g?.[k] ?? 0) * r;
 		}
+		/** @type {Record<string, number>} */
 		const per100g = {};
 		const scale = totalGrams > 0 ? 100 / totalGrams : 0;
 		for (const k of NUTRIENT_KEYS) per100g[k] = totals[k] * scale;
 		const liquidMl = meal.ingredients
 			.filter(isLiquidIngredient)
-			.reduce((sum, ing) => sum + ing.amountGrams, 0);
+			.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + ing.amountGrams, 0);
 		return { per100g, totalGrams, liquidMl };
 	}
 
+	/**
+	 * @param {CustomMeal} meal
+	 * @param {number | null} [amountGrams]
+	 */
 	async function logCustomMeal(meal, amountGrams = null) {
 		try {
 			const { per100g, totalGrams, liquidMl } = aggregateMealPer100g(meal);
@@ -766,6 +845,7 @@
 		}
 	}
 
+	/** @param {string} meal */
 	function startAdd(meal) {
 		addingMeal = meal;
 		inlineTab = 'search';
@@ -780,6 +860,10 @@
 		cmFilter = '';
 	}
 
+	/**
+	 * @param {CustomMeal} meal
+	 * @param {number | null} [amountGrams]
+	 */
 	async function inlineLogCustomMeal(meal, amountGrams = null) {
 		if (!addingMeal) return;
 		try {
@@ -814,6 +898,7 @@
 		}
 	}
 
+	/** @param {FoodSelection} food */
 	async function inlineLogFood(food) {
 		try {
 			const res = await fetch('/api/fitness/food-log', {
@@ -845,10 +930,11 @@
 	/** @type {'breakfast'|'lunch'|'dinner'|'snack'} */
 	let editingMeal = $state('breakfast');
 
+	/** @param {FoodLogEntry} entry */
 	function startEditEntry(entry) {
 		editingEntryId = entry._id;
 		editingGrams = entry.amountGrams;
-		editingMeal = entry.mealType;
+		editingMeal = /** @type {'breakfast'|'lunch'|'dinner'|'snack'} */ (entry.mealType);
 	}
 
 	async function saveEditEntry() {
@@ -935,6 +1021,7 @@
 		if (id) moveEntryToMeal(id, meal);
 	}
 
+	/** @param {string} id */
 	async function deleteEntry(id) {
 		if (!await confirm(t('delete_entry_confirm', lang))) return;
 		try {
@@ -981,11 +1068,12 @@
 		const vitamins = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
 		const other = ['cholesterol'];
 
+		/** @param {string[]} keys */
 		function mkRows(keys) {
 			return keys.map(k => {
-				const meta = NUTRIENT_META[k];
+				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
 				const value = dayTotals.micros[k] ?? 0;
-				const goal = dri[k] ?? 0;
+				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
 				const pct = goal > 0 ? Math.round(value / goal * 100) : 0;
 				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, isMax: meta.isMax };
 			});
@@ -998,10 +1086,10 @@
 		const aminoRows = [...essentialOrder, ...nonEssentialOrder].map(k => {
 			const value = dayTotals.aminos[k] ?? 0;
 			// WHO DRI is mg/kg/day; value is in grams → convert goal to grams
-			const driPerKg = AMINO_DRI_PER_KG[k];
+			const driPerKg = AMINO_DRI_PER_KG[/** @type {keyof typeof AMINO_DRI_PER_KG} */ (k)];
 			const goal = driPerKg ? (driPerKg * w) / 1000 : 0;
 			const pct = goal > 0 ? Math.round(value / goal * 100) : 0;
-			const meta = AMINO_META[k];
+			const meta = AMINO_META[/** @type {keyof typeof AMINO_META} */ (k)];
 			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal, pct, isMax: false };
 		});
 
@@ -1013,12 +1101,14 @@
 		];
 	});
 
+	/** @param {number} v */
 	function fmt(v) {
 		if (v >= 100) return Math.round(v).toString();
 		if (v >= 10) return v.toFixed(1);
 		return v.toFixed(1);
 	}
 
+	/** @param {number} v */
 	function fmtCal(v) {
 		return Math.round(v).toString();
 	}
@@ -1030,12 +1120,16 @@
 		snack:     { icon: Cookie, color: 'var(--nord14)' },
 	};
 
+	/** @typedef {{ name: string, source: string, sourceId: string }} QuickFavorite */
+	/** @typedef {{ name: string, source: string, sourceId: string, mealType?: string, amountGrams?: number, per100g?: Record<string, number> }} RecentFood */
+
 	// --- Quick-log sidebar ---
+	/** @type {'breakfast' | 'lunch' | 'dinner' | 'snack'} */
 	let quickLogMealType = $state(defaultMealType());
 	// svelte-ignore state_referenced_locally
-	let quickFavorites = $state(data.favorites ?? []);
+	let quickFavorites = $state(/** @type {QuickFavorite[]} */ (data.favorites ?? []));
 	// svelte-ignore state_referenced_locally
-	let historicalRecents = $state(data.recentFoods ?? []);
+	let historicalRecents = $state(/** @type {RecentFood[]} */ (data.recentFoods ?? []));
 
 	$effect(() => {
 		quickFavorites = data.favorites ?? [];
@@ -1074,11 +1168,12 @@
 		favTabLoaded = false;
 	}
 
-	/** @type {{ name: string, source: string, sourceId: string, per100g?: any, amountGrams?: number } | null} */
+	/** @type {{ name: string, source?: string, sourceId?: string, per100g?: any, amountGrams?: number } | null} */
 	let qlSelected = $state(null);
 	let qlGrams = $state(100);
 	let qlLoading = $state(false);
 
+	/** @param {{ name: string, source?: string, sourceId?: string, per100g?: any, amountGrams?: number }} item */
 	async function qlSelect(item) {
 		if (qlSelected && qlSelected.source === item.source && qlSelected.sourceId === item.sourceId) {
 			qlSelected = null;
@@ -1091,7 +1186,7 @@
 			// Favorites don't have per100g — fetch by exact source+id
 			qlLoading = true;
 			try {
-				const res = await fetch(`/api/nutrition/lookup?source=${item.source}&id=${encodeURIComponent(item.sourceId)}`);
+				const res = await fetch(`/api/nutrition/lookup?source=${item.source}&id=${encodeURIComponent(item.sourceId ?? '')}`);
 				if (res.ok) {
 					const data = await res.json();
 					if (data.per100g) {
@@ -1139,7 +1234,7 @@
 	<title>{t('nutrition_title', lang)} — Fitness</title>
 </svelte:head>
 
-{#snippet cmDetailScreen(meal, logFn)}
+{#snippet cmDetailScreen(/** @type {CustomMeal} */ meal, /** @type {(m: CustomMeal, grams?: number | null) => void} */ logFn)}
 	{@const preview = cmPreview(meal)}
 	<div class="cm-detail">
 		<div class="cm-detail-header">
@@ -1194,7 +1289,7 @@
 	</div>
 {/snippet}
 
-{#snippet favoritesTab(logFn)}
+{#snippet favoritesTab(/** @type {(food: FoodSelection) => void} */ logFn)}
 	<div class="fav-tab-list">
 		{#if !favTabLoaded}
 			<p class="meals-empty">{t('loading', lang)}</p>
@@ -1206,7 +1301,7 @@
 	</div>
 {/snippet}
 
-{#snippet customMealsTab(logFn)}
+{#snippet customMealsTab(/** @type {(m: CustomMeal, grams?: number | null) => void} */ logFn)}
 	{#if selectedCmMeal}
 		{@render cmDetailScreen(selectedCmMeal, logFn)}
 	{:else}
@@ -1719,7 +1814,7 @@
 				{#each entries.filter(e => (e.liquidMl ?? 0) > 0) as e}
 					<div class="beverage-item">
 						<span class="beverage-name">{e.name}</span>
-						<span class="beverage-ml">{Math.round(e.liquidMl)} ml</span>
+						<span class="beverage-ml">{Math.round(e.liquidMl ?? 0)} ml</span>
 					</div>
 				{/each}
 			</div>

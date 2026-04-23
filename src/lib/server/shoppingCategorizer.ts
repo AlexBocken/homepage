@@ -156,7 +156,7 @@ const ICON_ALIASES: Record<string, string> = {
 
   // Swiss German → High German aliases
   'rahm': 'sahne', 'schlagrahm': 'schlagsahne', 'halbrahm': 'sahne', 'vollrahm': 'sahne',
-  'rüebli': 'karotten', 'rüebli': 'karotten',
+  'rüebli': 'karotten',
   'nüsslisalat': 'feldsalat', 'federkohl': 'grünkohl',
   'peperoni': 'paprika', 'peperoncini': 'chili',
   'poulet': 'hähnchen', 'pouletbrust': 'hähnchenbrust', 'pouletschenkel': 'hähnchenschenkel',

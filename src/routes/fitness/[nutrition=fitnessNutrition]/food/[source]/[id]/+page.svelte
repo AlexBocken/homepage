@@ -30,7 +30,10 @@
 			: isEn ? 'per 100 g' : 'pro 100 g'
 	);
 
-	/** Scale a nutrient value by the selected portion */
+	/**
+	 * Scale a nutrient value by the selected portion
+	 * @param {number | undefined | null} val
+	 */
 	function scaled(val) {
 		return (val ?? 0) * portionMultiplier;
 	}
@@ -50,6 +53,7 @@
 	});
 
 	// --- Formatting ---
+	/** @param {number | undefined | null} v */
 	function fmt(v) {
 		if (v == null || isNaN(v)) return '0';
 		if (v >= 100) return Math.round(v).toString();
@@ -62,11 +66,12 @@
 	const vitaminKeys = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
 	const otherKeys = ['cholesterol'];
 
+	/** @param {string[]} keys */
 	function mkMicroRows(keys) {
-		return keys.map(k => {
-			const meta = NUTRIENT_META[k];
-			const value = scaled(n[k]);
-			const goal = dri[k] ?? 0;
+		return keys.map((/** @type {string} */ k) => {
+			const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
+			const value = scaled(/** @type {Record<string, number>} */ (n)[k]);
+			const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
 			const pct = goal > 0 ? Math.round(value / goal * 100) : 0;
 			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, isMax: meta.isMax };
 		});
@@ -104,18 +109,22 @@
 	const nonEssentialOrder = ['alanine', 'arginine', 'asparticAcid', 'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
 
 	const hasAminos = $derived.by(() => {
-		return essentialOrder.some(k => (n[k] ?? 0) > 0) || nonEssentialOrder.some(k => (n[k] ?? 0) > 0);
+		const nRec = /** @type {Record<string, number>} */ (n);
+		return essentialOrder.some(k => (nRec[k] ?? 0) > 0) || nonEssentialOrder.some(k => (nRec[k] ?? 0) > 0);
 	});
 
 	const aminoRows = $derived(
 		[...essentialOrder, ...nonEssentialOrder]
-			.filter(k => (n[k] ?? 0) > 0)
-			.map(k => ({
-				key: k,
-				label: isEn ? AMINO_META[k].en : AMINO_META[k].de,
-				value: scaled(n[k]),
-				essential: essentialOrder.includes(k),
-			}))
+			.filter(k => (/** @type {Record<string, number>} */ (n)[k] ?? 0) > 0)
+			.map(k => {
+				const aminoKey = /** @type {keyof typeof AMINO_META} */ (k);
+				return {
+					key: k,
+					label: isEn ? AMINO_META[aminoKey].en : AMINO_META[aminoKey].de,
+					value: scaled(/** @type {Record<string, number>} */ (n)[k]),
+					essential: essentialOrder.includes(k),
+				};
+			})
 	);
 
 	// --- Expand toggles ---
@@ -128,13 +137,14 @@
 
 	$effect(() => {
 		fetch('/api/fitness/favorite-ingredients').then(r => r.json()).then(data => {
-			favorited = (data.favorites ?? []).some(f => f.source === food.source && f.sourceId === (food.id ?? food.sourceId));
+			const foodId = food.id ?? /** @type {any} */ (food).sourceId;
+			favorited = (data.favorites ?? []).some((/** @type {{ source: string; sourceId: string }} */ f) => f.source === food.source && f.sourceId === foodId);
 		}).catch(() => {});
 	});
 
 	async function toggleFavorite() {
 		favLoading = true;
-		const id = food.id ?? food.sourceId;
+		const id = food.id ?? /** @type {any} */ (food).sourceId;
 		try {
 			if (favorited) {
 				await fetch('/api/fitness/favorite-ingredients', {

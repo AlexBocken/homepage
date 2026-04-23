@@ -4,6 +4,7 @@
 	let { value = $bindable(''), lang = 'en', min = '', max = '' } = $props();
 
 	let open = $state(false);
+	/** @type {HTMLDivElement | null} */
 	let pickerRef = $state(null);
 
 	const WEEKDAYS_EN = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -39,12 +40,14 @@
 		return d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 	});
 
+	/** @param {string} dateStr */
 	function isDisabled(dateStr) {
 		if (min && dateStr < min) return true;
 		if (max && dateStr > max) return true;
 		return false;
 	}
 
+	/** @param {number} delta */
 	function navigateDate(delta) {
 		const d = new Date((value || todayStr) + 'T12:00:00');
 		d.setDate(d.getDate() + delta);
@@ -52,12 +55,14 @@
 		if (!isDisabled(next)) value = next;
 	}
 
+	/** @param {number} delta */
 	function navMonth(delta) {
 		viewMonth += delta;
 		if (viewMonth > 11) { viewMonth = 0; viewYear++; }
 		if (viewMonth < 0) { viewMonth = 11; viewYear--; }
 	}
 
+	/** @param {string} dateStr */
 	function selectDay(dateStr) {
 		value = dateStr;
 		open = false;
@@ -77,7 +82,7 @@
 		const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 		const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
 
-		/** @type {{ date: string, day: number, currentMonth: boolean, isToday: boolean, isSelected: boolean }[]} */
+		/** @type {{ date: string, day: number, currentMonth: boolean, isToday: boolean, isSelected: boolean, disabled: boolean }[]} */
 		const days = [];
 
 		// Previous month trailing days
@@ -110,8 +115,9 @@
 	});
 
 	// Close on outside click
+	/** @param {MouseEvent} e */
 	function handleClickOutside(e) {
-		if (pickerRef && !pickerRef.contains(e.target)) {
+		if (pickerRef && e.target instanceof Node && !pickerRef.contains(e.target)) {
 			open = false;
 		}
 	}

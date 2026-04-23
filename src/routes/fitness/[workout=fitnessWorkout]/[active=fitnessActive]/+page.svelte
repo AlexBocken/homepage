@@ -44,8 +44,9 @@
 
 	// Voice guidance config (defaults, overridden from localStorage in onMount)
 	let vgEnabled = $state(false);
-	let vgTriggerType = $state('distance');
+	let vgTriggerType = $state(/** @type {'distance' | 'time'} */ ('distance'));
 	let vgTriggerValue = $state(1);
+	/** @type {string[]} */
 	let vgMetrics = $state(['totalTime', 'totalDistance', 'avgPace']);
 	let vgVolume = $state(0.8);
 	let vgAudioDuck = $state(false);
@@ -281,9 +282,10 @@
 		};
 	}
 
+	/** @param {string} id */
 	function toggleMetric(id) {
 		if (vgMetrics.includes(id)) {
-			vgMetrics = vgMetrics.filter(m => m !== id);
+			vgMetrics = vgMetrics.filter((/** @type {string} */ m) => m !== id);
 		} else {
 			vgMetrics = [...vgMetrics, id];
 		}
@@ -579,17 +581,22 @@
 			const exerciseId = ACTIVITY_EXERCISE_MAP[actType ?? 'running'] ?? 'running';
 			const exerciseName = getExerciseById(exerciseId)?.name ?? exerciseId;
 
-			sessionData.exercises = [{
-				exerciseId,
-				name: exerciseName,
-				sets: [{
-					distance: filteredDistance,
-					duration: Math.round(durationMin * 100) / 100,
-					completed: true,
-				}],
-				gpsTrack,
-				totalDistance: filteredDistance,
-			}];
+			sessionData.exercises = /** @type {typeof sessionData.exercises} */ (
+				/** @type {unknown} */ ([{
+					exerciseId,
+					name: exerciseName,
+					sets: [{
+						reps: undefined,
+						weight: undefined,
+						rpe: undefined,
+						distance: filteredDistance,
+						duration: Math.round(durationMin * 100) / 100,
+						completed: true,
+					}],
+					gpsTrack,
+					totalDistance: filteredDistance,
+				}])
+			);
 		} else if (wasGpsMode && gpsTrack.length === 0) {
 			// GPS workout with no track data — nothing to save
 			gps.reset();
@@ -606,8 +613,8 @@
 				for (const ex of sessionData.exercises) {
 					const exercise = getExerciseById(ex.exerciseId);
 					if (exercise?.bodyPart === 'cardio') {
-						ex.gpsTrack = filteredTrack;
-						ex.totalDistance = filteredDistance;
+						/** @type {any} */ (ex).gpsTrack = filteredTrack;
+						/** @type {any} */ (ex).totalDistance = filteredDistance;
 					}
 				}
 			}
@@ -665,6 +672,10 @@
 		return { exerciseId: pr.exerciseId, type, value };
 	}
 
+	/**
+	 * @param {any} local
+	 * @param {any} saved
+	 */
 	function buildCompletion(local, saved) {
 		const startTime = new Date(local.startTime);
 		const endTime = new Date(local.endTime);
@@ -1250,7 +1261,16 @@
 						bind:value={intervalEditorName}
 					/>
 
-					{#snippet stepCard(step, num, onMoveUp, onMoveDown, onRemove, canMoveUp, canMoveDown, canRemove)}
+					{#snippet stepCard(
+						/** @type {EditorLeaf} */ step,
+						/** @type {string} */ num,
+						/** @type {() => void} */ onMoveUp,
+						/** @type {() => void} */ onMoveDown,
+						/** @type {() => void} */ onRemove,
+						/** @type {boolean} */ canMoveUp,
+						/** @type {boolean} */ canMoveDown,
+						/** @type {boolean} */ canRemove
+					)}
 						<div class="interval-step-card">
 							<div class="interval-step-header">
 								<span class="interval-step-num">{num}</span>
@@ -1404,7 +1424,7 @@
 			bind:value={nameInput}
 			onfocus={() => { nameEditing = true; }}
 			onblur={() => { nameEditing = false; workout.name = nameInput; }}
-			onkeydown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
+			onkeydown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLElement) e.target.blur(); }}
 			placeholder={t('workout_name_placeholder', lang)}
 		/>
 

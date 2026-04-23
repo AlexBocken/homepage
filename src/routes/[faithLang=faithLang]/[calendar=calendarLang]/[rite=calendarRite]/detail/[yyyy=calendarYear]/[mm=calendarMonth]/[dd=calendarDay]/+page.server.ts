@@ -78,7 +78,10 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	const yearMap =
 		adventIOfUrlYear != null && iso >= adventIOfUrlYear ? yearMapNext : yearMapN;
 	const entry = yearMap.get(iso);
-	if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
+	if (!entry) {
+		await errorWithVerse(fetch, url.pathname, 404, 'Not found');
+		throw new Error('unreachable');
+	}
 
 	const today = new Date();
 	const todayIso = today.toISOString().slice(0, 10);

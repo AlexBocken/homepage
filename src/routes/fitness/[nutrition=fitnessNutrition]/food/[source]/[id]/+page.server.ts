@@ -69,7 +69,10 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 
 	if (source === 'bls') {
 		const entry = BLS_DB.find(e => e.blsCode === id);
-		if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
+		if (!entry) {
+			await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
+			throw new Error('unreachable');
+		}
 		return {
 			food: {
 				source: 'bls' as const,
@@ -91,7 +94,10 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 		const recipe = await Recipe.findOne(recipeQuery)
 			.select('short_name name translations images')
 			.lean();
-		if (!recipe) await errorWithVerse(fetch, url.pathname, 404, 'Recipe not found');
+		if (!recipe) {
+			await errorWithVerse(fetch, url.pathname, 404, 'Recipe not found');
+			throw new Error('unreachable');
+		}
 
 		// Use logged per100g from food diary entry if provided, otherwise compute from current recipe
 		const logEntryId = url.searchParams.get('logEntry');
@@ -131,7 +137,10 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 	if (source === 'off') {
 		await dbConnect();
 		const entry = await OpenFoodFact.findOne({ barcode: id }).lean();
-		if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
+		if (!entry) {
+			await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
+			throw new Error('unreachable');
+		}
 		const portions: { description: string; grams: number }[] = [];
 		if (entry.serving?.grams) {
 			portions.push(entry.serving as { description: string; grams: number });
@@ -156,7 +165,10 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 	if (source === 'custom') {
 		await dbConnect();
 		const meal = await CustomMeal.findById(id).lean();
-		if (!meal) await errorWithVerse(fetch, url.pathname, 404, 'Meal not found');
+		if (!meal) {
+			await errorWithVerse(fetch, url.pathname, 404, 'Meal not found');
+			throw new Error('unreachable');
+		}
 
 		// Aggregate per100g from ingredients
 		const totals: Record<string, number> = {};
@@ -211,7 +223,10 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 	// USDA
 	const fdcId = Number(id);
 	const entry = NUTRITION_DB.find(e => e.fdcId === fdcId);
-	if (!entry) await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
+	if (!entry) {
+		await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
+		throw new Error('unreachable');
+	}
 	return {
 		food: {
 			source: 'usda' as const,

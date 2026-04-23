@@ -64,6 +64,7 @@
   let selectedStore = $state(STORE_NAMES[0]);
   let categoryOrder = $derived(STORE_PRESETS[selectedStore] || STORE_PRESETS[STORE_NAMES[0]]);
 
+  /** @param {string} name */
   function setStore(name) {
     selectedStore = name;
     try { localStorage.setItem('shopping-store', name); } catch { /* ignore */ }
@@ -107,7 +108,10 @@
     return { qty: null, name: raw };
   }
 
-  /** Get icon URL for an item */
+  /**
+   * Get icon URL for an item
+   * @param {import('$lib/js/shoppingSync.svelte').ShoppingItem} item
+   */
   function iconUrl(item) {
     if (item.icon) return `https://bocken.org/static/shopping-icons/${item.icon}.png`;
     // Fallback: first letter
@@ -122,8 +126,12 @@
     const groups = new Map();
 
     for (const item of sync.items) {
-      if (!groups.has(item.category)) groups.set(item.category, []);
-      groups.get(item.category).push(item);
+      let arr = groups.get(item.category);
+      if (!arr) {
+        arr = [];
+        groups.set(item.category, arr);
+      }
+      arr.push(item);
     }
 
     for (const [, items] of groups) {
@@ -132,7 +140,7 @@
 
     const ordered = categoryOrder
       .filter(cat => groups.has(cat))
-      .map(cat => ({ category: cat, items: groups.get(cat) }));
+      .map(cat => ({ category: cat, items: groups.get(cat) ?? [] }));
 
     for (const [cat, items] of groups) {
       if (!categoryOrder.includes(cat)) {

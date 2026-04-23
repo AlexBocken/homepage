@@ -1,8 +1,11 @@
 <script lang="ts">
     import type { PageData } from './$types';
+    import type { BriefRecipeType } from '$types/types';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     import Search from '$lib/components/recipes/Search.svelte';
     import { rand_array } from '$lib/js/randomize';
+
+    type RecipeItem = BriefRecipeType & { isFavorite: boolean };
 
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1;
@@ -11,17 +14,19 @@
     const label = $derived(isEnglish ? 'Recipes with Keyword' : 'Rezepte mit Stichwort');
     const siteTitle = $derived(isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte');
 
-    let matchedRecipeIds = $state(new Set());
+    let matchedRecipeIds = $state(new Set<string>());
     let hasActiveSearch = $state(false);
 
     function handleSearchResults(ids: Set<string>, categories: Set<string>) {
         matchedRecipeIds = ids;
-        hasActiveSearch = ids.size < data.allRecipes.length;
+        hasActiveSearch = ids.size < (data.allRecipes as RecipeItem[]).length;
     }
 
-    const displayRecipes = $derived.by(() => {
-        if (!hasActiveSearch) return data.recipes;
-        return data.allRecipes.filter((r: any) => matchedRecipeIds.has(r._id));
+    const displayRecipes = $derived.by((): RecipeItem[] => {
+        const all = data.allRecipes as RecipeItem[];
+        const base = data.recipes as RecipeItem[];
+        if (!hasActiveSearch) return base;
+        return all.filter((r) => matchedRecipeIds.has(r._id));
     });
 </script>
 <style>

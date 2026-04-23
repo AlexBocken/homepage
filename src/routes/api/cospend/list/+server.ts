@@ -1,17 +1,17 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
-import { ShoppingList } from '$models/ShoppingList';
+import { ShoppingList, type IShoppingList } from '$models/ShoppingList';
 import { broadcast } from '$lib/server/shoppingSSE';
 import { getShoppingUser } from '$lib/server/shoppingAuth';
 
-async function getOrCreateList() {
-  let list = await ShoppingList.findOne().lean();
-  if (!list) {
-    list = await ShoppingList.create({ version: 0, items: [] });
-    list = list.toObject();
-  }
-  return list;
+type ShoppingListDoc = IShoppingList & { version: number };
+
+async function getOrCreateList(): Promise<ShoppingListDoc> {
+  const existing = await ShoppingList.findOne().lean<ShoppingListDoc>();
+  if (existing) return existing;
+  const created = await ShoppingList.create({ version: 0, items: [] });
+  return created.toObject() as ShoppingListDoc;
 }
 
 // GET /api/cospend/list — fetch current shopping list
