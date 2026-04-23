@@ -1,7 +1,12 @@
 <script>
 	import { page } from '$app/stores';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
-	import { Clock, Weight, Trophy, Route, Gauge, Flame } from '@lucide/svelte';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Weight from '@lucide/svelte/icons/weight';
+	import Trophy from '@lucide/svelte/icons/trophy';
+	import Route from '@lucide/svelte/icons/route';
+	import Gauge from '@lucide/svelte/icons/gauge';
+	import Flame from '@lucide/svelte/icons/flame';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));

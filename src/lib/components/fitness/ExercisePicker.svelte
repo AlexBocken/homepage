@@ -1,7 +1,14 @@
 <script>
 	import { getFilterOptionsAll, searchAllExercises } from '$lib/data/exercisedb';
 	import { translateTerm } from '$lib/data/exercises';
-	import { Search, X, Cable, Cog, Dumbbell, PersonStanding, Shapes, Weight } from '@lucide/svelte';
+	import Search from '@lucide/svelte/icons/search';
+	import X from '@lucide/svelte/icons/x';
+	import Cable from '@lucide/svelte/icons/cable';
+	import Cog from '@lucide/svelte/icons/cog';
+	import Dumbbell from '@lucide/svelte/icons/dumbbell';
+	import PersonStanding from '@lucide/svelte/icons/person-standing';
+	import Shapes from '@lucide/svelte/icons/shapes';
+	import Weight from '@lucide/svelte/icons/weight';
 	import { page } from '$app/stores';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 

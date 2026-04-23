@@ -1,6 +1,12 @@
 <script>
 	import { t } from '$lib/js/fitnessI18n';
-	import { Trash2, Plus, Pencil, UserPlus, X, ChevronLeft, ChevronRight } from '@lucide/svelte';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import X from '@lucide/svelte/icons/x';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';

@@ -1,6 +1,8 @@
 <script>
 	import { themeStore } from '$lib/stores/theme.svelte';
-	import { Sun, Moon, SunMoon } from '@lucide/svelte';
+	import Sun from '@lucide/svelte/icons/sun';
+	import Moon from '@lucide/svelte/icons/moon';
+	import SunMoon from '@lucide/svelte/icons/sun-moon';
 </script>
 
 <style>

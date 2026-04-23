@@ -1,6 +1,4 @@
 <script>
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 	import Minus from '@lucide/svelte/icons/minus';
 	import Plus from '@lucide/svelte/icons/plus';
 	import X from '@lucide/svelte/icons/x';
@@ -10,104 +8,60 @@
 	import Ruler from '@lucide/svelte/icons/ruler';
 	import CopyPlus from '@lucide/svelte/icons/copy-plus';
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
-	import History from '@lucide/svelte/icons/history';
 	import { fly, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
-	import { toast } from '$lib/js/toast.svelte';
-	import { confirm } from '$lib/js/confirmDialog.svelte';
-	import DatePicker from '$lib/components/DatePicker.svelte';
-	import SaveFab from '$lib/components/SaveFab.svelte';
-	import Toggle from '$lib/components/Toggle.svelte';
-	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
-	let { data } = $props();
-
-	const lang = $derived(detectFitnessLang($page.url.pathname));
-	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
-
-	/** @typedef {{ key: string, labelKey: string, img: string | null, paired: boolean, tipKey: string, dbSingle?: string, dbLeft?: string, dbRight?: string }} Step */
+	/** @typedef {{ key: string, label: string, img: string | null, paired: boolean, tip: string }} Step */
 
 	/** @type {Step[]} */
 	const steps = [
-		{ key: 'neck',      labelKey: 'neck',      img: 'neck.png',      paired: false, tipKey: 'measure_tip_neck',      dbSingle: 'neck' },
-		{ key: 'shoulders', labelKey: 'shoulders', img: 'back.png',      paired: false, tipKey: 'measure_tip_shoulders', dbSingle: 'shoulders' },
-		{ key: 'chest',     labelKey: 'chest',     img: 'shoulders.png', paired: false, tipKey: 'measure_tip_chest',     dbSingle: 'chest' },
-		{ key: 'biceps',    labelKey: 'l_bicep',   img: 'bicep.png',     paired: true,  tipKey: 'measure_tip_biceps',    dbLeft: 'leftBicep',   dbRight: 'rightBicep' },
-		{ key: 'forearms',  labelKey: 'l_forearm', img: 'forearm.svg',   paired: true,  tipKey: 'measure_tip_forearms',  dbLeft: 'leftForearm', dbRight: 'rightForearm' },
-		{ key: 'waist',     labelKey: 'waist',     img: 'waist.png',     paired: false, tipKey: 'measure_tip_waist',     dbSingle: 'waist' },
-		{ key: 'hips',      labelKey: 'hips',      img: 'hips.png',      paired: false, tipKey: 'measure_tip_hips',      dbSingle: 'hips' },
-		{ key: 'thighs',    labelKey: 'l_thigh',   img: 'thigh.svg',     paired: true,  tipKey: 'measure_tip_thighs',    dbLeft: 'leftThigh',   dbRight: 'rightThigh' },
-		{ key: 'calves',    labelKey: 'calves',    img: 'calves.png',    paired: true,  tipKey: 'measure_tip_calves',    dbLeft: 'leftCalf',    dbRight: 'rightCalf' }
+		{ key: 'neck',      label: 'Neck',      img: 'neck.png',      paired: false, tip: 'Just below the Adam\u2019s apple, tape parallel to the floor.' },
+		{ key: 'shoulders', label: 'Shoulders', img: 'shoulders.png', paired: false, tip: 'Widest point across the deltoids, arms relaxed at your sides.' },
+		{ key: 'chest',     label: 'Chest',     img: null,            paired: false, tip: 'At nipple line after a normal exhale, tape horizontal.' },
+		{ key: 'biceps',    label: 'Biceps',    img: 'bicep.png',     paired: true,  tip: 'Arm flexed at the peak; tape around the thickest part.' },
+		{ key: 'forearms',  label: 'Forearms',  img: null,            paired: true,  tip: 'Widest point below the elbow, arm hanging relaxed.' },
+		{ key: 'waist',     label: 'Waist',     img: 'waist.png',     paired: false, tip: 'At the navel, relaxed — don\u2019t suck in.' },
+		{ key: 'hips',      label: 'Hips',      img: null,            paired: false, tip: 'Around the widest point of the buttocks.' },
+		{ key: 'thighs',    label: 'Thighs',    img: 'thigh.png',     paired: true,  tip: 'Midway between hip crease and knee.' },
+		{ key: 'calves',    label: 'Calves',    img: 'calves.png',    paired: true,  tip: 'Widest point, standing with weight on both feet.' }
 	];
 
-	/** @param {Step} s */
-	function stepLabel(s) {
-		if (!s.paired) return t(s.labelKey, lang);
-		return t(s.key, lang);
-	}
-
-	/** Sorted-ascending clean list of past body-part records */
-	const past = $derived(
-		(data.measurements ?? [])
-			.slice()
-			.sort((/** @type {any} */ a, /** @type {any} */ b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-	);
-
-	/** @param {Step} s */
-	function historyFor(s) {
-		if (s.paired) {
-			const left = s.dbLeft ?? '';
-			const right = s.dbRight ?? '';
-			return past
-				.filter((/** @type {any} */ m) => m.measurements?.[left] != null || m.measurements?.[right] != null)
-				.map((/** @type {any} */ m) => ({
-					date: m.date,
-					left: m.measurements?.[left] ?? null,
-					right: m.measurements?.[right] ?? null
-				}));
-		}
-		const single = s.dbSingle ?? '';
-		return past
-			.filter((/** @type {any} */ m) => m.measurements?.[single] != null)
-			.map((/** @type {any} */ m) => ({ date: m.date, value: m.measurements[single] }));
-	}
+	// Seeded fake history to demonstrate the graph. In production this comes from the measurements API.
+	const dates = ['2025-08-12', '2025-09-20', '2025-10-18', '2025-11-14', '2025-12-22', '2026-02-05', '2026-03-17'];
+	/** @type {Record<string, any[]>} */
+	const history = {
+		neck:      dates.slice(2).map((d, i) => ({ date: d, value: 38.6 + i * 0.15 + (i % 2 ? 0.08 : -0.1) })),
+		shoulders: dates.map((d, i) => ({ date: d, value: 117.4 + i * 0.4 })),
+		chest:     [],
+		biceps:    dates.slice(1).map((d, i) => ({ date: d, left: 33.2 + i * 0.25, right: 33.0 + i * 0.22 })),
+		forearms:  dates.slice(3).map((d, i) => ({ date: d, left: 27.8 + i * 0.1, right: 27.6 + i * 0.12 })),
+		waist:     dates.map((d, i) => ({ date: d, value: 83.2 - i * 0.4 + (i % 2 ? 0.1 : -0.2) })),
+		hips:      dates.slice(1).map((d, i) => ({ date: d, value: 96.2 + (i % 2 ? 0.25 : -0.15) })),
+		thighs:    dates.slice(2).map((d, i) => ({ date: d, left: 55.5 + i * 0.2, right: 55.7 + i * 0.2 })),
+		calves:    []
+	};
 
 	/** @type {Record<string, any>} */
 	const initial = {};
-	for (const s of steps) initial[s.key] = s.paired ? { left: '', right: '', same: true } : '';
+	for (const s of steps) {
+		initial[s.key] = s.paired ? { left: '', right: '', same: true } : '';
+	}
 	let values = $state(initial);
 
 	let idx = $state(0);
 	let direction = $state(1);
-	let formDate = $state(new Date().toISOString().slice(0, 10));
-	let saving = $state(false);
 
 	const total = steps.length;
 	const step = $derived(steps[idx] ?? steps[0]);
 	const done = $derived(idx >= total);
 
-	const lastForStep = $derived.by(() => {
-		const h = historyFor(step);
-		return h.length > 0 ? h.at(-1) : null;
-	});
-	/** @param {number | null | undefined} n */
-	function ph(n) {
-		return n != null ? String(n) : '—';
-	}
-
 	/** @param {string} key @param {'left'|'right'|null} side @param {number} delta */
 	function bump(key, side, delta) {
-		const s = steps.find((x) => x.key === key);
-		const last = s ? historyFor(s).at(-1) : null;
 		if (side) {
-			const raw = values[key][side];
-			const fallback = side === 'left' ? last?.left : last?.right;
-			const cur = raw !== '' ? Number(raw) : (fallback ?? 0);
+			const cur = Number(values[key][side]) || 0;
 			values[key][side] = String(Math.round((cur + delta) * 10) / 10);
 		} else {
-			const raw = values[key];
-			const cur = raw !== '' ? Number(raw) : (last?.value ?? 0);
+			const cur = Number(values[key]) || 0;
 			values[key] = String(Math.round((cur + delta) * 10) / 10);
 		}
 	}
@@ -128,20 +82,6 @@
 	}
 	/** @param {string} key */
 	function copyLtoR(key) { values[key].right = values[key].left; }
-
-	/** @param {string} key */
-	function useLastValue(key) {
-		const s = steps.find((x) => x.key === key);
-		if (!s) return;
-		const last = historyFor(s).at(-1);
-		if (!last) return;
-		if (s.paired) {
-			if (last.left != null) values[key].left = String(last.left);
-			if (!values[key].same && last.right != null) values[key].right = String(last.right);
-		} else if (last.value != null) {
-			values[key] = String(last.value);
-		}
-	}
 	/** @param {number} i */
 	function jumpTo(i) {
 		direction = i > idx ? 1 : -1;
@@ -167,18 +107,15 @@
 		return v ? `${v} cm` : '—';
 	}
 
-	let showShortcuts = $state(false);
-
 	/** @param {KeyboardEvent} e */
 	function onkey(e) {
-		const tag = /** @type {HTMLElement|null} */ (e.target)?.tagName;
-		const inInput = tag === 'INPUT';
-		if (e.key === '?' && !inInput) { e.preventDefault(); showShortcuts = !showShortcuts; return; }
-		if (e.key === 'Escape' && showShortcuts) { e.preventDefault(); showShortcuts = false; return; }
 		if (done) {
 			if (e.key === 'ArrowLeft') { e.preventDefault(); idx = total - 1; direction = -1; }
 			return;
 		}
+		// Ignore when typing in an input except for arrow up/down to nudge
+		const tag = /** @type {HTMLElement|null} */ (e.target)?.tagName;
+		const inInput = tag === 'INPUT';
 		if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); next(); }
 		else if (e.key === 'ArrowRight' && !inInput) { e.preventDefault(); next(); }
 		else if (e.key === 'ArrowLeft' && !inInput) { e.preventDefault(); back(); }
@@ -187,102 +124,27 @@
 
 	const flyOpts = $derived({ x: direction * 40, duration: 260, easing: cubicOut });
 
-	async function save() {
-		/** @type {Record<string, number>} */
-		const ms = {};
-		for (const s of steps) {
-			const v = values[s.key];
-			if (s.paired) {
-				const l = Number(v.left);
-				if (v.left !== '' && isFinite(l)) ms[/** @type {string} */ (s.dbLeft)] = l;
-				if (v.same) {
-					if (v.left !== '' && isFinite(l)) ms[/** @type {string} */ (s.dbRight)] = l;
-				} else {
-					const r = Number(v.right);
-					if (v.right !== '' && isFinite(r)) ms[/** @type {string} */ (s.dbRight)] = r;
-				}
-			} else {
-				const n = Number(v);
-				if (v !== '' && isFinite(n)) ms[/** @type {string} */ (s.dbSingle)] = n;
-			}
-		}
-		if (Object.keys(ms).length === 0) {
-			toast.error(t('no_body_parts_selected', lang));
-			return;
-		}
-		saving = true;
-		try {
-			const body = { date: formDate, measurements: ms };
-			/** @param {boolean} overwrite */
-			const doPost = (overwrite) => fetch(`/api/fitness/measurements${overwrite ? '?overwrite=1' : ''}`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body)
-			});
-			let res = await doPost(false);
-			if (res.status === 409) {
-				const { conflicts } = await res.json();
-				/** @type {Record<string, string>} */
-				const partKeyMap = {
-					leftBicep: 'l_bicep', rightBicep: 'r_bicep',
-					leftForearm: 'l_forearm', rightForearm: 'r_forearm',
-					leftThigh: 'l_thigh', rightThigh: 'r_thigh',
-					leftCalf: 'l_calf', rightCalf: 'r_calf'
-				};
-				/** @param {{ key: string, oldVal: unknown, newVal: unknown }} c */
-				const fmtConflict = (c) => {
-					const part = c.key.startsWith('measurements.') ? c.key.slice('measurements.'.length) : c.key;
-					const label = t(partKeyMap[part] ?? part, lang);
-					return `${label} (${c.oldVal} cm → ${c.newVal} cm)`;
-				};
-				const fields = conflicts.map(fmtConflict).join(', ');
-				const ok = await confirm(
-					t('overwrite_message', lang).replace('{fields}', fields),
-					{
-						title: t('overwrite_title', lang),
-						confirmText: t('overwrite_confirm', lang),
-						cancelText: t('cancel', lang),
-						destructive: true
-					}
-				);
-				if (!ok) { saving = false; return; }
-				res = await doPost(true);
-			}
-			if (res.ok) {
-				toast.success(lang === 'en' ? 'Measurement saved' : 'Messung gespeichert');
-				await goto(`/fitness/${checkinSlug}`);
-			} else {
-				const err = await res.json().catch(() => null);
-				toast.error(err?.error ?? 'Failed to save measurement');
-			}
-		} catch { toast.error('Failed to save measurement'); }
-		saving = false;
-	}
-
-	function exit() {
-		goto(`/fitness/${checkinSlug}`);
-	}
-
 	// ----- Chart -----
+
 	const CHART_W = 340;
 	const CHART_H = 120;
 	const CHART_PAD = { t: 12, r: 14, b: 20, l: 10 };
 
 	/** @param {Step} s */
 	function chartSeries(s) {
-		const h = historyFor(s);
+		const h = history[s.key] ?? [];
 		const v = values[s.key];
 		/** @type {Array<{name: string, color: string, points: {date: string, value: number}[], pending: number | null}>} */
 		const series = [];
 		if (s.paired) {
-			const leftPoints = h.filter((/** @type {any} */ r) => r.left != null).map((/** @type {any} */ r) => ({ date: r.date, value: r.left }));
-			const rightPoints = h.filter((/** @type {any} */ r) => r.right != null).map((/** @type {any} */ r) => ({ date: r.date, value: r.right }));
+			const leftPoints = h.map((r) => ({ date: r.date, value: r.left }));
+			const rightPoints = h.map((r) => ({ date: r.date, value: r.right }));
 			const pendL = Number(v.left);
 			const pendR = v.same ? Number(v.left) : Number(v.right);
 			series.push({ name: 'L', color: 'var(--color-primary)', points: leftPoints, pending: isFinite(pendL) && v.left !== '' ? pendL : null });
 			series.push({ name: 'R', color: 'var(--orange)', points: rightPoints, pending: isFinite(pendR) && (v.same ? v.left : v.right) !== '' ? pendR : null });
 		} else {
-			const p = h.map((/** @type {any} */ r) => ({ date: r.date, value: r.value }));
+			const p = h.map((r) => ({ date: r.date, value: r.value }));
 			const pend = Number(v);
 			series.push({ name: '', color: 'var(--color-primary)', points: p, pending: isFinite(pend) && v !== '' ? pend : null });
 		}
@@ -308,8 +170,7 @@
 		const yMin = min - pad;
 		const yMax = max + pad;
 
-		const longestSeriesLen = Math.max(...series.map((s) => s.points.length));
-		const pointCount = longestSeriesLen + (hasPending ? 1 : 0);
+		const pointCount = series[0].points.length + (hasPending ? 1 : 0);
 		const innerW = CHART_W - CHART_PAD.l - CHART_PAD.r;
 		const innerH = CHART_H - CHART_PAD.t - CHART_PAD.b;
 
@@ -321,15 +182,10 @@
 			CHART_PAD.t + (1 - (v - yMin) / (yMax - yMin || 1)) * innerH;
 
 		const rendered = series.map((s) => {
-			const hist = s.points.map((p, i) => ({
-				x: xAt(i, pointCount),
-				y: yAt(p.value),
-				value: p.value,
-				date: p.date
-			}));
+			const hist = s.points.map((p, i) => ({ x: xAt(i, pointCount), y: yAt(p.value), value: p.value, date: p.date }));
 			const pending =
 				s.pending != null
-					? { x: xAt(longestSeriesLen, pointCount), y: yAt(s.pending), value: s.pending }
+					? { x: xAt(s.points.length, pointCount), y: yAt(s.pending), value: s.pending }
 					: null;
 			const all = [...hist, ...(pending ? [pending] : [])];
 			const linePath = all.length > 0 ? 'M' + all.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ') : '';
@@ -345,11 +201,7 @@
 		return {
 			empty: false,
 			series: rendered,
-			axis: {
-				yMin: yMin.toFixed(1),
-				yMax: yMax.toFixed(1),
-				lastDate: series.find((s) => s.points.length > 0)?.points.at(-1)?.date ?? null
-			}
+			axis: { yMin: yMin.toFixed(1), yMax: yMax.toFixed(1), lastDate: series[0].points.at(-1)?.date ?? null }
 		};
 	});
 
@@ -357,22 +209,18 @@
 	function shortDate(d) {
 		if (!d) return '';
 		const dt = new Date(d);
-		return dt.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', { month: 'short', day: 'numeric' });
-	}
-
-	/** @param {string} s @param {Record<string,string|number>} vars */
-	function fmt(s, vars) {
-		return s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ''));
+		return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 	}
 </script>
 
 <svelte:window onkeydown={onkey} />
-<svelte:head><title>{t('body_parts', lang)} - Bocken</title></svelte:head>
+<svelte:head><title>Measure (mockup)</title></svelte:head>
 
-<div class="shell" class:is-done={done} data-fitness-fullbleed>
-	<aside class="rail" aria-label={t('body_parts', lang)}>
+<div class="shell" class:is-done={done}>
+	<!-- Step rail (desktop) -->
+	<aside class="rail" aria-label="Steps">
 		<div class="rail-header">
-			<span class="rail-eyebrow">{t('body_parts', lang)}</span>
+			<span class="rail-eyebrow">Measurements</span>
 			<span class="rail-count">{steps.filter(isFilled).length}/{total}</span>
 		</div>
 		<ol class="rail-list">
@@ -389,7 +237,7 @@
 						<span class="rail-dot" aria-hidden="true">
 							{#if filled}<Check size={11} strokeWidth={3} />{/if}
 						</span>
-						<span class="rail-label">{stepLabel(s)}</span>
+						<span class="rail-label">{s.label}</span>
 						<span class="rail-value">{formatValue(s)}</span>
 					</button>
 				</li>
@@ -402,62 +250,59 @@
 					onclick={() => { direction = 1; idx = total; }}
 				>
 					<span class="rail-dot" aria-hidden="true"><Check size={11} strokeWidth={3} /></span>
-					<span class="rail-label">{t('review_save', lang)}</span>
+					<span class="rail-label">Review &amp; save</span>
 					<span class="rail-value"></span>
 				</button>
 			</li>
 		</ol>
 	</aside>
 
+	<!-- Topbar (mobile progress + exit) -->
 	<header class="topbar">
 		<div class="progress" aria-label="Progress">
 			{#each steps as s, i (s.key)}
 				<span class="dot" class:active={i === idx && !done} class:past={i < idx || done}></span>
 			{/each}
 		</div>
-		<button class="icon-x" aria-label={t('exit', lang)} onclick={exit}>
+		<button class="icon-x" aria-label="Exit">
 			<X size={18} />
 		</button>
 	</header>
 
+	<!-- Main stage -->
 	<main class="stage">
 		{#if !done}
 			{#key step.key}
 				<section class="card" in:fly={flyOpts}>
-					<div class="hero" style="--accent: {bodyPartAccent(step.key)}">
+					<div class="hero">
 						{#if step.img}
-							<div
-								class="hero-pic"
-								style="--hero-src: url(/fitness/measure/{step.img})"
-								role="img"
-								aria-label={stepLabel(step)}
-							></div>
+							<img src="/fitness/measure/{step.img}" alt="" class="hero-pic" />
 						{:else}
 							<div class="hero-placeholder" aria-hidden="true">
 								<Ruler size={72} strokeWidth={1.4} />
-								<span class="placeholder-label">{stepLabel(step)}</span>
+								<span class="placeholder-label">{step.label}</span>
 							</div>
 						{/if}
 					</div>
 
 					<div class="meta">
-						<span class="eyebrow">{fmt(t('step_n_of_m', lang), { n: idx + 1, m: total })}</span>
-						<h1 class="title">{stepLabel(step)}</h1>
-						<p class="tip">{t(step.tipKey, lang)}</p>
+						<span class="eyebrow">Step {idx + 1} of {total}</span>
+						<h1 class="title">{step.label}</h1>
+						<p class="tip">{step.tip}</p>
 					</div>
 
 					{#if step.paired}
 						{@const pv = values[step.key]}
 						{#if pv.same}
 							<div class="stepper" onwheel={(e) => onWheel(e, step.key, 'left')}>
-								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', -0.5)} aria-label="-0.5">
+								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', -0.1)} aria-label="-0.1">
 									<Minus size={20} />
 								</button>
 								<div class="num-wrap">
-									<input type="number" step="0.1" bind:value={pv.left} placeholder={ph(lastForStep?.left)} inputmode="decimal" />
+									<input type="number" step="0.1" bind:value={pv.left} placeholder="—" inputmode="decimal" />
 									<span class="unit">cm</span>
 								</div>
-								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', 0.5)} aria-label="+0.5">
+								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', 0.1)} aria-label="+0.1">
 									<Plus size={20} />
 								</button>
 							</div>
@@ -465,62 +310,48 @@
 							<div class="split">
 								<div class="stepper compact" onwheel={(e) => onWheel(e, step.key, 'left')}>
 									<span class="side-tag" style="--side-color: var(--color-primary)">L</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', -0.5)} aria-label="L -0.5">
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', -0.1)} aria-label="L -0.1">
 										<Minus size={14} />
 									</button>
-									<input type="number" step="0.1" bind:value={pv.left} placeholder={ph(lastForStep?.left)} inputmode="decimal" />
+									<input type="number" step="0.1" bind:value={pv.left} placeholder="—" inputmode="decimal" />
 									<span class="unit-sm">cm</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', 0.5)} aria-label="L +0.5">
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', 0.1)} aria-label="L +0.1">
 										<Plus size={14} />
 									</button>
 								</div>
 								<div class="stepper compact" onwheel={(e) => onWheel(e, step.key, 'right')}>
 									<span class="side-tag" style="--side-color: var(--orange)">R</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', -0.5)} aria-label="R -0.5">
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', -0.1)} aria-label="R -0.1">
 										<Minus size={14} />
 									</button>
-									<input type="number" step="0.1" bind:value={pv.right} placeholder={ph(lastForStep?.right)} inputmode="decimal" />
+									<input type="number" step="0.1" bind:value={pv.right} placeholder="—" inputmode="decimal" />
 									<span class="unit-sm">cm</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', 0.5)} aria-label="R +0.5">
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', 0.1)} aria-label="R +0.1">
 										<Plus size={14} />
 									</button>
 								</div>
 								<button type="button" class="copy-btn" onclick={() => copyLtoR(step.key)} disabled={!pv.left}>
-									<CopyPlus size={15} />
-									<span>{t('copy_l_to_r_before', lang)}</span>
-									<ArrowRight size={14} />
-									<span>{t('copy_l_to_r_after', lang)}</span>
+									<CopyPlus size={13} /> Copy L → R
 								</button>
 							</div>
 						{/if}
-						{#if lastForStep?.left != null || lastForStep?.right != null}
-							<button type="button" class="same-value-btn" onclick={() => { useLastValue(step.key); next(); }}>
-								<History size={15} />
-								<span>{t('same_as_last', lang)}</span>
-							</button>
-						{/if}
-						<div class="same-toggle">
-							<Toggle bind:checked={pv.same} label={t('same_both_sides', lang)} />
-						</div>
+						<label class="same-toggle">
+							<input type="checkbox" bind:checked={pv.same} />
+							<span>Same on both sides</span>
+						</label>
 					{:else}
 						<div class="stepper" onwheel={(e) => onWheel(e, step.key, null)}>
-							<button type="button" class="step-btn" onclick={() => bump(step.key, null, -0.5)} aria-label="-0.5">
+							<button type="button" class="step-btn" onclick={() => bump(step.key, null, -0.1)} aria-label="-0.1">
 								<Minus size={20} />
 							</button>
 							<div class="num-wrap">
-								<input type="number" step="0.1" bind:value={values[step.key]} placeholder={ph(lastForStep?.value)} inputmode="decimal" />
+								<input type="number" step="0.1" bind:value={values[step.key]} placeholder="—" inputmode="decimal" />
 								<span class="unit">cm</span>
 							</div>
-							<button type="button" class="step-btn" onclick={() => bump(step.key, null, 0.5)} aria-label="+0.5">
+							<button type="button" class="step-btn" onclick={() => bump(step.key, null, 0.1)} aria-label="+0.1">
 								<Plus size={20} />
 							</button>
 						</div>
-						{#if lastForStep?.value != null}
-							<button type="button" class="same-value-btn" onclick={() => { useLastValue(step.key); next(); }}>
-								<History size={15} />
-								<span>{t('same_as_last', lang)}</span>
-							</button>
-						{/if}
 					{/if}
 				</section>
 			{/key}
@@ -529,46 +360,46 @@
 				<div class="check-halo">
 					<Check size={42} strokeWidth={2.4} />
 				</div>
-				<h1 class="title">{t('ready_to_save', lang)}</h1>
-				<p class="tip">{t('review_numbers', lang)}</p>
-
-				<div class="date-row">
-					<DatePicker bind:value={formDate} {lang} />
-				</div>
+				<h1 class="title">Ready to save</h1>
+				<p class="tip">Review your numbers below.</p>
 
 				<ul class="summary-list">
 					{#each steps as s (s.key)}
 						<li>
-							<span class="sum-label">{stepLabel(s)}</span>
+							<span class="sum-label">{s.label}</span>
 							<span class="sum-val" class:empty={formatValue(s) === '—'}>{formatValue(s)}</span>
 						</li>
 					{/each}
 				</ul>
 
 				<div class="summary-actions">
-					<button type="button" class="ghost" onclick={() => { idx = 0; direction = -1; }}>
-						<ArrowLeft size={14} /> {t('edit_again', lang)}
+					<button class="ghost" onclick={() => { idx = 0; direction = -1; }}>
+						<ArrowLeft size={14} /> Edit again
+					</button>
+					<button class="nav-btn primary">
+						<Check size={16} /> Save measurement
 					</button>
 				</div>
 			</section>
 		{/if}
 	</main>
 
-	<aside class="panel">
+	<!-- Right panel (desktop) -->
+	<aside class="panel" aria-label="History and totals">
 		{#if !done}
 			{#key step.key}
 				<div class="panel-section chart-section" in:fade={{ duration: 180 }}>
 					<div class="panel-head">
 						<TrendingUp size={14} />
-						<h3 class="panel-title">{fmt(t('over_time', lang), { label: stepLabel(step) })}</h3>
+						<h3 class="panel-title">{step.label} over time</h3>
 					</div>
 					{#if chart.empty}
 						<div class="chart-empty">
 							<span class="chart-empty-dot"></span>
-							{t('first_measurement_hint', lang)}
+							First measurement — your entry will appear here.
 						</div>
 					{:else}
-						<svg class="chart" viewBox="0 0 {CHART_W} {CHART_H}" role="img" aria-label={fmt(t('over_time', lang), { label: stepLabel(step) })}>
+						<svg class="chart" viewBox="0 0 {CHART_W} {CHART_H}" role="img" aria-label="Progress graph">
 							<defs>
 								<linearGradient id="area-grad-primary" x1="0" x2="0" y1="0" y2="1">
 									<stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.25" />
@@ -579,6 +410,7 @@
 									<stop offset="100%" stop-color="var(--orange)" stop-opacity="0" />
 								</linearGradient>
 							</defs>
+							<!-- baseline -->
 							<line x1={CHART_PAD.l} x2={CHART_W - CHART_PAD.r} y1={CHART_H - CHART_PAD.b} y2={CHART_H - CHART_PAD.b} class="axis-line" />
 							{#each chart.series as s, i (s.name || 'single')}
 								<path d={s.areaPath} fill={i === 0 ? 'url(#area-grad-primary)' : 'url(#area-grad-orange)'} />
@@ -591,18 +423,19 @@
 									<circle cx={s.pending.x} cy={s.pending.y} r="4.5" fill={s.color} stroke="var(--color-surface)" stroke-width="2" class="pending-dot" />
 								{/if}
 							{/each}
+							<!-- y labels -->
 							{#if chart.axis}
 								<text x={CHART_W - 2} y={CHART_PAD.t + 4} text-anchor="end" class="axis-label">{chart.axis.yMax}</text>
 								<text x={CHART_W - 2} y={CHART_H - CHART_PAD.b - 2} text-anchor="end" class="axis-label">{chart.axis.yMin}</text>
 								{#if chart.axis.lastDate}
 									<text x={CHART_PAD.l} y={CHART_H - 4} text-anchor="start" class="axis-label">{shortDate(chart.axis.lastDate)}</text>
 								{/if}
-								<text x={CHART_W - CHART_PAD.r} y={CHART_H - 4} text-anchor="end" class="axis-label accent">{t('today_short', lang)}</text>
+								<text x={CHART_W - CHART_PAD.r} y={CHART_H - 4} text-anchor="end" class="axis-label accent">Today</text>
 							{/if}
 						</svg>
 						{#if chart.series.length > 1}
 							<div class="legend">
-								{#each chart.series as s (s.name)}
+								{#each chart.series as s}
 									<span class="legend-item">
 										<span class="swatch" style:background={s.color}></span>
 										<span>{s.name}</span>
@@ -617,7 +450,7 @@
 								<span class="legend-item">
 									<span class="swatch" style:background={chart.series[0].color}></span>
 									<span class="legend-val">{chart.series[0].pending.value.toFixed(1)} cm</span>
-									<span class="legend-tag">{t('today_short', lang)}</span>
+									<span class="legend-tag">today</span>
 								</span>
 							</div>
 						{/if}
@@ -626,35 +459,39 @@
 			{/key}
 		{/if}
 
+		<div class="panel-section totals-section">
+			<div class="panel-head">
+				<h3 class="panel-title">Running totals</h3>
+			</div>
+			<ul class="totals">
+				{#each steps as s, i (s.key)}
+					<li class:dim={!isFilled(s)} class:focused={i === idx && !done}>
+						<button type="button" class="totals-item" onclick={() => jumpTo(i)}>
+							<span class="totals-label">{s.label}</span>
+							<span class="totals-val">{formatValue(s)}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		</div>
 	</aside>
 
+	<!-- Bottom bar -->
 	<footer class="bottombar">
 		{#if !done}
-			<button type="button" class="ghost" onclick={skip}>{t('skip', lang)}</button>
-			{#if showShortcuts}
-				<div class="kbd-legend" aria-hidden="true">
-					<span><kbd>←</kbd><kbd>→</kbd> {t('kbd_nav', lang)}</span>
-					<span><kbd>↵</kbd> {t('kbd_next', lang)}</span>
-					<span><kbd>S</kbd> {t('kbd_skip', lang)}</span>
-					<span><kbd>scroll</kbd> {t('kbd_wheel', lang)}</span>
-				</div>
-			{:else}
-				<button
-					type="button"
-					class="kbd-hint"
-					onclick={() => showShortcuts = true}
-					aria-label={t('kbd_hint', lang)}
-					title={t('kbd_hint', lang)}
-				>
-					<kbd>?</kbd>
-				</button>
-			{/if}
+			<button class="ghost" onclick={skip}>Skip</button>
+			<div class="kbd-legend" aria-hidden="true">
+				<span><kbd>←</kbd><kbd>→</kbd> nav</span>
+				<span><kbd>↵</kbd> next</span>
+				<span><kbd>S</kbd> skip</span>
+				<span><kbd>scroll</kbd> ±0.1</span>
+			</div>
 			<div class="nav-pair">
-				<button type="button" class="nav-btn" onclick={back} disabled={idx === 0} aria-label={t('back', lang)}>
+				<button class="nav-btn" onclick={back} disabled={idx === 0} aria-label="Back">
 					<ArrowLeft size={16} />
 				</button>
-				<button type="button" class="nav-btn primary" onclick={next}>
-					{idx === total - 1 ? t('review', lang) : t('next', lang)}
+				<button class="nav-btn primary" onclick={next}>
+					{idx === total - 1 ? 'Review' : 'Next'}
 					<ArrowRight size={16} />
 				</button>
 			</div>
@@ -662,36 +499,31 @@
 			<span class="bottom-spacer"></span>
 		{/if}
 	</footer>
-
-	{#if done}
-		<SaveFab type="button" onclick={save} disabled={saving} label={saving ? t('saving', lang) : t('save_measurement', lang)} />
-	{/if}
 </div>
 
 <style>
-	:global(.wrapper:has([data-fitness-fullbleed]) > footer) {
-		display: none;
-	}
-
 	.shell {
-		--fitness-header-offset: calc(3rem + 12px + env(safe-area-inset-top, 0px));
-		height: calc(100svh - var(--fitness-header-offset));
-		min-height: 0;
+		min-height: 100vh;
 		display: flex;
 		flex-direction: column;
 		background:
+			radial-gradient(1200px 600px at 20% -10%, color-mix(in oklab, var(--color-primary) 10%, transparent), transparent 60%),
 			radial-gradient(800px 400px at 90% 110%, color-mix(in oklab, var(--color-primary) 8%, transparent), transparent 55%),
 			var(--color-bg-primary);
 		color: var(--color-text-primary);
 	}
 
-	.rail { display: none; }
+	/* ============ Rail (left, desktop only) ============ */
+	.rail {
+		display: none;
+	}
 
+	/* ============ Topbar ============ */
 	.topbar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 1rem 2rem;
+		padding: 1rem 1.25rem;
 	}
 	.progress {
 		display: flex;
@@ -729,14 +561,14 @@
 		border-color: var(--color-text-tertiary);
 	}
 
+	/* ============ Stage ============ */
 	.stage {
 		flex: 1;
 		display: flex;
 		align-items: flex-start;
 		justify-content: center;
 		padding: 0.5rem 1rem 2rem;
-		overflow-y: auto;
-		min-height: 0;
+		overflow: hidden;
 	}
 	.card {
 		width: 100%;
@@ -753,21 +585,31 @@
 		display: grid;
 		place-items: center;
 		border-radius: 50%;
-		background: color-mix(in oklab, var(--accent, var(--color-primary)) 15%, transparent);
+		background:
+			radial-gradient(closest-side, var(--color-surface), transparent 70%),
+			var(--color-bg-secondary);
+		box-shadow: var(--shadow-md);
+		position: relative;
+	}
+	.hero::after {
+		content: '';
+		position: absolute;
+		inset: -2px;
+		border-radius: 50%;
+		border: 1px dashed color-mix(in oklab, var(--color-primary) 45%, transparent);
+		opacity: 0.6;
+		pointer-events: none;
 	}
 	.hero-pic {
 		width: 150px;
 		height: 150px;
-		mask-image: var(--hero-src);
-		-webkit-mask-image: var(--hero-src);
-		mask-size: contain;
-		-webkit-mask-size: contain;
-		mask-repeat: no-repeat;
-		-webkit-mask-repeat: no-repeat;
-		mask-position: center;
-		-webkit-mask-position: center;
-		background-color: var(--accent, var(--color-primary));
+		object-fit: contain;
 	}
+	@media (prefers-color-scheme: dark) {
+		.hero-pic { filter: invert(1); }
+	}
+	:global(:root[data-theme="dark"]) .hero-pic { filter: invert(1); }
+	:global(:root[data-theme="light"]) .hero-pic { filter: none; }
 
 	.hero-placeholder {
 		display: flex;
@@ -914,15 +756,13 @@
 		align-self: center;
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
-		margin-top: 0.5rem;
-		padding: 0.55rem 1.1rem;
+		gap: 0.35rem;
+		padding: 0.25rem 0.7rem;
 		border: 1px dashed var(--color-border);
 		border-radius: var(--radius-pill);
 		background: transparent;
-		font-size: 0.88rem;
-		font-weight: 600;
-		color: var(--color-text-secondary);
+		font-size: 0.7rem;
+		color: var(--color-text-tertiary);
 		cursor: pointer;
 		transition: all 150ms;
 	}
@@ -933,42 +773,36 @@
 	}
 	.copy-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-	.same-value-btn {
-		align-self: center;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.55rem 1.1rem;
-		border: 1px dashed color-mix(in oklab, var(--color-primary) 40%, transparent);
-		border-radius: var(--radius-pill);
-		background: color-mix(in oklab, var(--color-primary) 5%, transparent);
-		font-size: 0.88rem;
-		font-weight: 600;
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		transition: border-color var(--transition-fast, 120ms), background var(--transition-fast, 120ms), color var(--transition-fast, 120ms);
-	}
-	.same-value-btn:hover {
-		border-style: solid;
-		border-color: var(--color-primary);
-		background: color-mix(in oklab, var(--color-primary) 12%, transparent);
-		color: var(--color-primary);
-	}
-
 	.same-toggle {
 		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		font-size: 0.78rem;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		user-select: none;
+	}
+	.same-toggle input {
+		accent-color: var(--color-primary);
+		width: 0.95rem;
+		height: 0.95rem;
 	}
 
-	.panel { display: none; }
+	/* ============ Right panel (hidden on mobile) ============ */
+	.panel {
+		display: none;
+	}
 
+	/* ============ Bottom bar ============ */
 	.bottombar {
-		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 1rem 0.5rem 1.5rem;
+		padding: 1rem 1.25rem 1.5rem;
 		gap: 0.75rem;
+		max-width: 520px;
 		width: 100%;
+		margin-inline: auto;
 	}
 	.ghost {
 		border: none;
@@ -1004,15 +838,17 @@
 		border-color: var(--color-primary);
 		box-shadow: var(--shadow-sm);
 	}
-	.nav-btn.primary:hover:not(:disabled) {
+	.nav-btn.primary:hover {
 		background: var(--color-primary-hover);
 		border-color: var(--color-primary-hover);
 	}
 
-	.kbd-legend { display: none; }
-	.kbd-hint { display: none; }
+	.kbd-legend {
+		display: none;
+	}
 	.bottom-spacer { flex: 1; }
 
+	/* ============ Summary ============ */
 	.summary {
 		flex: 1;
 		width: 100%;
@@ -1037,11 +873,6 @@
 	}
 	.summary .title { font-size: 1.8rem; }
 	.summary .tip { margin-bottom: 0.5rem; }
-	.date-row {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-	}
 	.summary-list {
 		list-style: none;
 		margin: 0;
@@ -1076,26 +907,28 @@
 		margin-top: 0.5rem;
 	}
 
+	/* ======================== Desktop: 3-column grid ======================== */
 	@media (min-width: 1024px) {
 		.shell {
 			display: grid;
 			grid-template-columns: 260px minmax(0, 1fr) 360px;
-			grid-template-rows: auto minmax(0, 1fr) auto;
+			grid-template-rows: auto 1fr auto;
 			grid-template-areas:
 				"rail topbar panel"
 				"rail stage  panel"
 				"rail bottom panel";
-			height: 100vh;
-			margin-top: calc(-1 * var(--fitness-header-offset));
+			min-height: 100vh;
 		}
 		.rail   { grid-area: rail; }
-		.topbar { grid-area: topbar; padding: calc(1.25rem + var(--fitness-header-offset)) 2rem 0; }
+		.topbar { grid-area: topbar; padding: 1.25rem 2rem 0; }
 		.stage  { grid-area: stage; padding: 1.5rem 2rem 2rem; align-items: center; }
 		.panel  { grid-area: panel; }
-		.bottombar { grid-area: bottom; max-width: none; margin-inline: 0; padding: 1rem 0.5rem 1.5rem; }
+		.bottombar { grid-area: bottom; max-width: none; margin-inline: 0; padding: 1rem 2rem 1.5rem; }
 
+		/* Hide mobile progress dots; rail handles it */
 		.topbar .progress { visibility: hidden; }
 
+		/* Rail */
 		.rail {
 			display: flex;
 			flex-direction: column;
@@ -1210,6 +1043,7 @@
 		}
 		.rail-item.filled .rail-value { color: var(--color-text-secondary); }
 
+		/* Panel */
 		.panel {
 			display: flex;
 			flex-direction: column;
@@ -1242,6 +1076,7 @@
 			color: var(--color-text-tertiary);
 		}
 
+		/* Chart */
 		.chart {
 			width: 100%;
 			height: auto;
@@ -1323,12 +1158,51 @@
 			font-weight: 700;
 		}
 
+		/* Totals */
+		.totals {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+		.totals li { border-bottom: 1px dashed var(--color-border); }
+		.totals li:last-child { border-bottom: none; }
+		.totals-item {
+			width: 100%;
+			display: flex;
+			justify-content: space-between;
+			align-items: baseline;
+			padding: 0.42rem 0.2rem;
+			background: transparent;
+			border: none;
+			color: inherit;
+			text-align: left;
+			cursor: pointer;
+			transition: color 150ms;
+		}
+		.totals-item:hover { color: var(--color-text-primary); }
+		.totals-label {
+			font-size: 0.82rem;
+			color: var(--color-text-secondary);
+		}
+		.totals-val {
+			font-size: 0.82rem;
+			font-weight: 700;
+			font-variant-numeric: tabular-nums;
+		}
+		.totals li.dim .totals-val { color: var(--color-text-tertiary); font-weight: 400; }
+		.totals li.focused .totals-label {
+			color: var(--color-primary);
+			font-weight: 700;
+		}
+
+		/* Bigger stage on desktop */
 		.hero { width: 300px; height: 300px; }
 		.hero-pic { width: 200px; height: 200px; }
 		.title { font-size: 3.2rem; }
 		.tip { font-size: 1rem; max-width: 420px; }
 		.num-wrap input { font-size: 3rem; }
 
+		/* Paired split goes horizontal on desktop */
 		.split {
 			flex-direction: row;
 			align-items: center;
@@ -1341,25 +1215,20 @@
 		.stepper.compact { flex: 1 1 180px; min-width: 180px; }
 
 		.kbd-legend {
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			transform: translate(-50%, -50%);
 			display: flex;
 			gap: 1rem;
 			font-size: 0.68rem;
 			color: var(--color-text-tertiary);
+			flex: 1;
 			justify-content: center;
 			align-items: center;
-			pointer-events: none;
 		}
 		.kbd-legend span {
 			display: inline-flex;
 			align-items: center;
 			gap: 0.3rem;
 		}
-		.kbd-legend kbd,
-		.kbd-hint kbd {
+		.kbd-legend kbd {
 			font-family: inherit;
 			display: inline-grid;
 			place-items: center;
@@ -1374,23 +1243,6 @@
 			font-size: 0.65rem;
 			font-weight: 700;
 		}
-		.kbd-hint {
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			transform: translate(-50%, -50%);
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			background: none;
-			border: none;
-			padding: 0.25rem 0.5rem;
-			cursor: pointer;
-			color: var(--color-text-tertiary);
-			opacity: 0.6;
-			transition: opacity 150ms;
-		}
-		.kbd-hint:hover { opacity: 1; }
 	}
 
 	@media (min-width: 1400px) {

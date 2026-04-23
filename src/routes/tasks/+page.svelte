@@ -3,9 +3,26 @@
   import { confirm } from '$lib/js/confirmDialog.svelte';
   import { formatDistanceToNow, isPast, isToday, differenceInDays, format } from 'date-fns';
   import { de } from 'date-fns/locale';
-  import { Plus, Check, Pencil, Trash2, Tag, Users, RotateCcw, Calendar,
-    Sparkles, Wind, Bath, UtensilsCrossed, CookingPot, WashingMachine,
-    Flower2, Droplets, Leaf, ShoppingCart, Shirt, Brush } from '@lucide/svelte';
+  import Plus from '@lucide/svelte/icons/plus';
+  import Check from '@lucide/svelte/icons/check';
+  import Pencil from '@lucide/svelte/icons/pencil';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import Tag from '@lucide/svelte/icons/tag';
+  import Users from '@lucide/svelte/icons/users';
+  import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+  import Calendar from '@lucide/svelte/icons/calendar';
+  import Sparkles from '@lucide/svelte/icons/sparkles';
+  import Wind from '@lucide/svelte/icons/wind';
+  import Bath from '@lucide/svelte/icons/bath';
+  import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
+  import CookingPot from '@lucide/svelte/icons/cooking-pot';
+  import WashingMachine from '@lucide/svelte/icons/washing-machine';
+  import Flower2 from '@lucide/svelte/icons/flower-2';
+  import Droplets from '@lucide/svelte/icons/droplets';
+  import Leaf from '@lucide/svelte/icons/leaf';
+  import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
+  import Shirt from '@lucide/svelte/icons/shirt';
+  import Brush from '@lucide/svelte/icons/brush';
   import { fly, scale } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import TaskForm from '$lib/components/tasks/TaskForm.svelte';

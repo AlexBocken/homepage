@@ -1,5 +1,10 @@
 <script>
-	import { Plus, ChevronDown, Sparkles, Beef, Droplet, Wheat } from '@lucide/svelte';
+	import Plus from '@lucide/svelte/icons/plus';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Beef from '@lucide/svelte/icons/beef';
+	import Droplet from '@lucide/svelte/icons/droplet';
+	import Wheat from '@lucide/svelte/icons/wheat';
 	import { untrack } from 'svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { t } from '$lib/js/fitnessI18n';

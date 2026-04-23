@@ -1,7 +1,21 @@
 <script>
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Clock, Weight, Trophy, Trash2, Pencil, Plus, Upload, Download, Route, X, RefreshCw, Gauge, Flame, Info, Mountain } from '@lucide/svelte';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Weight from '@lucide/svelte/icons/weight';
+	import Trophy from '@lucide/svelte/icons/trophy';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Upload from '@lucide/svelte/icons/upload';
+	import Download from '@lucide/svelte/icons/download';
+	import Route from '@lucide/svelte/icons/route';
+	import X from '@lucide/svelte/icons/x';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Gauge from '@lucide/svelte/icons/gauge';
+	import Flame from '@lucide/svelte/icons/flame';
+	import Info from '@lucide/svelte/icons/info';
+	import Mountain from '@lucide/svelte/icons/mountain';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';

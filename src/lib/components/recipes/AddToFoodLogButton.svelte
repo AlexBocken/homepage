@@ -1,5 +1,6 @@
 <script>
-	import { UtensilsCrossed, X } from '@lucide/svelte';
+	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
+	import X from '@lucide/svelte/icons/x';
 	import { toast } from '$lib/js/toast.svelte';
 
 	let {

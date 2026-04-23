@@ -1,6 +1,14 @@
 <script>
 	import { page } from '$app/stores';
-	import { Search, Cable, Cog, Dumbbell, PersonStanding, Shapes, Weight, BicepsFlexed, Layers } from '@lucide/svelte';
+	import Search from '@lucide/svelte/icons/search';
+	import Cable from '@lucide/svelte/icons/cable';
+	import Cog from '@lucide/svelte/icons/cog';
+	import Dumbbell from '@lucide/svelte/icons/dumbbell';
+	import PersonStanding from '@lucide/svelte/icons/person-standing';
+	import Shapes from '@lucide/svelte/icons/shapes';
+	import Weight from '@lucide/svelte/icons/weight';
+	import BicepsFlexed from '@lucide/svelte/icons/biceps-flexed';
+	import Layers from '@lucide/svelte/icons/layers';
 	import { getFilterOptionsAll, searchAllExercises, isStretchType } from '$lib/data/exercisedb';
 	import { translateTerm } from '$lib/data/exercises';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';

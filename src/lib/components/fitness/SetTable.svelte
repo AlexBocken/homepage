@@ -1,5 +1,8 @@
 <script>
-	import { Check, X, Play, Square } from '@lucide/svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import X from '@lucide/svelte/icons/x';
+	import Play from '@lucide/svelte/icons/play';
+	import Square from '@lucide/svelte/icons/square';
 	import { METRIC_LABELS } from '$lib/data/exercises';
 	import RestTimer from './RestTimer.svelte';
 	import { page } from '$app/stores';

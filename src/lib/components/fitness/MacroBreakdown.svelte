@@ -1,7 +1,9 @@
 <script>
 	import { detectFitnessLang } from '$lib/js/fitnessI18n';
 	import { page } from '$app/stores';
-	import { Beef, Droplet, Wheat } from '@lucide/svelte';
+	import Beef from '@lucide/svelte/icons/beef';
+	import Droplet from '@lucide/svelte/icons/droplet';
+	import Wheat from '@lucide/svelte/icons/wheat';
 	import RingGraph from './RingGraph.svelte';
 
 	/**

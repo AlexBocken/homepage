@@ -2,7 +2,10 @@
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
-	import { Heart, ExternalLink, ScanBarcode, X } from '@lucide/svelte';
+	import Heart from '@lucide/svelte/icons/heart';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import ScanBarcode from '@lucide/svelte/icons/scan-barcode';
+	import X from '@lucide/svelte/icons/x';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import MacroBreakdown from './MacroBreakdown.svelte';
 

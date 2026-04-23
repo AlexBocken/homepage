@@ -1,6 +1,7 @@
 <script>
-	import { ChevronLeft, ChevronRight, Calendar } from '@lucide/svelte';
-
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Calendar from '@lucide/svelte/icons/calendar';
 	let { value = $bindable(''), lang = 'en', min = '', max = '' } = $props();
 
 	let open = $state(false);

@@ -1,6 +1,18 @@
 <script>
 	import { page } from '$app/stores';
-	import { Pencil, Trash2, ChevronRight, Venus, Mars, Weight, Percent, Plus, Minus, X, Check, UserCog, Sparkles } from '@lucide/svelte';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Venus from '@lucide/svelte/icons/venus';
+	import Mars from '@lucide/svelte/icons/mars';
+	import Weight from '@lucide/svelte/icons/weight';
+	import Percent from '@lucide/svelte/icons/percent';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Minus from '@lucide/svelte/icons/minus';
+	import X from '@lucide/svelte/icons/x';
+	import Check from '@lucide/svelte/icons/check';
+	import UserCog from '@lucide/svelte/icons/user-cog';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';

@@ -4,7 +4,7 @@
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
-	import { Trash2 } from '@lucide/svelte';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 
