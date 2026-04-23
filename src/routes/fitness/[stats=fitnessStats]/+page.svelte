@@ -38,6 +38,9 @@
 
 	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
 	const primaryFill = $derived(dark ? 'rgba(136, 192, 208, 0.15)' : 'rgba(94, 129, 172, 0.15)');
+	// Purple trend + orange raw so BF reads differently from weight at a glance
+	const bfAccent = $derived('#B48EAD');
+	const bfAccentFill = $derived(dark ? 'rgba(180, 142, 173, 0.2)' : 'rgba(180, 142, 173, 0.16)');
 
 	const stats = $derived(data.stats ?? {});
 
@@ -110,6 +113,91 @@
 	const ns = $derived(data.nutritionStats);
 
 	const hasSma = $derived(stats.weightChart?.sma?.some((/** @type {any} */ v) => v !== null));
+
+	const hasSmaBf = $derived(stats.bfChart?.sma?.some((/** @type {any} */ v) => v !== null));
+
+	const bfChartData = $derived({
+		labels: stats.bfChart?.labels ?? [],
+		dates: stats.bfChart?.dates,
+		datasets: [
+			...(hasSmaBf ? [
+				{
+					label: '± 1σ',
+					data: stats.bfChart.upper,
+					borderColor: 'transparent',
+					backgroundColor: bfAccentFill,
+					fill: '+1',
+					pointRadius: 0,
+					borderWidth: 0,
+					tension: 0.3,
+					order: 2
+				},
+				{
+					label: '± 1σ (lower)',
+					data: stats.bfChart.lower,
+					borderColor: 'transparent',
+					backgroundColor: 'transparent',
+					fill: false,
+					pointRadius: 0,
+					borderWidth: 0,
+					tension: 0.3,
+					order: 2
+				},
+				{
+					label: 'Trend',
+					data: stats.bfChart.sma,
+					borderColor: bfAccent,
+					pointRadius: 0,
+					borderWidth: 3,
+					tension: 0.3,
+					order: 1
+				}
+			] : []),
+			{
+				label: 'Body fat Δ (pp)',
+				data: stats.bfChart?.data ?? [],
+				borderColor: '#D08770',
+				borderWidth: hasSmaBf ? 1 : 2,
+				pointRadius: 3,
+				order: 0
+			}
+		]
+	});
+
+	/**
+	 * Tooltip: show signed delta + absolute %, and for the trend line the ±1σ range.
+	 * @param {number} v
+	 * @param {number} _datasetIndex
+	 * @param {number} dataIndex
+	 * @param {string} label
+	 */
+	function bfTooltipFormatter(v, _datasetIndex, dataIndex, label) {
+		const baseline = stats.bfChart?.baseline ?? 0;
+		const abs = baseline + v;
+		const sign = v > 0 ? '+' : v < 0 ? '' : '±';
+		const base = `${sign}${v.toFixed(2)} pp · ${abs.toFixed(1)}%`;
+		if (label === 'Trend') {
+			const upper = stats.bfChart?.upper?.[dataIndex];
+			const lower = stats.bfChart?.lower?.[dataIndex];
+			if (upper != null && lower != null) {
+				const sigma = (upper - lower) / 2;
+				const absLower = baseline + lower;
+				const absUpper = baseline + upper;
+				return `${sign}${v.toFixed(2)} ±${sigma.toFixed(2)} pp · ${abs.toFixed(1)}% (${absLower.toFixed(1)}–${absUpper.toFixed(1)}%)`;
+			}
+		}
+		return base;
+	}
+
+	const bfChartTitle = $derived.by(() => {
+		const baseline = stats.bfChart?.baseline;
+		const label = t('body_fat', lang).replace(' %', '').replace(' (%)', '');
+		if (baseline == null) return label;
+		const suffix = lang === 'en'
+			? `Δ from ${baseline.toFixed(1)}%`
+			: `Δ von ${baseline.toFixed(1)}%`;
+		return `${label} · ${suffix}`;
+	});
 
 	const weightChartData = $derived({
 		labels: stats.weightChart?.labels ?? [],
@@ -250,6 +338,16 @@
 			title={t('weight', lang)}
 			yUnit=" kg"
 			height="220px"
+		/>
+	{/if}
+
+	{#if (stats.bfChart?.data?.length ?? 0) > 1}
+		<FitnessChart
+			data={bfChartData}
+			title={bfChartTitle}
+			yUnit=" pp"
+			height="220px"
+			tooltipFormatter={bfTooltipFormatter}
 		/>
 	{/if}
 
