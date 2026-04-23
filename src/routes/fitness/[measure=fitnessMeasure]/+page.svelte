@@ -186,12 +186,12 @@
 
 	function stepWeight(delta) {
 		const cur = Number(formWeight) || lastWeight || 0;
-		formWeight = String(Math.round((cur + delta) * 10) / 10);
+		formWeight = (Math.round((cur + delta) * 10) / 10).toFixed(1);
 	}
 
 	function stepBodyFat(delta) {
 		const cur = Number(formBodyFat) || lastBodyFat || 0;
-		formBodyFat = String(Math.round((cur + delta) * 10) / 10);
+		formBodyFat = (Math.round((cur + delta) * 10) / 10).toFixed(1);
 	}
 
 	/**
@@ -393,7 +393,7 @@
 							type="number"
 							step="0.1"
 							bind:value={formWeight}
-							placeholder={lastWeight != null ? String(lastWeight) : '0.0'}
+							placeholder={lastWeight != null ? Number(lastWeight).toFixed(1) : '0.0'}
 							class="metric-input"
 							inputmode="decimal"
 							onkeydown={(e) => onMetricKey(e, stepWeight)}
@@ -424,7 +424,7 @@
 							type="number"
 							step="0.1"
 							bind:value={formBodyFat}
-							placeholder={lastBodyFat != null ? String(lastBodyFat) : '0.0'}
+							placeholder={lastBodyFat != null ? Number(lastBodyFat).toFixed(1) : '0.0'}
 							class="metric-input"
 							inputmode="decimal"
 							onkeydown={(e) => onMetricKey(e, stepBodyFat)}
@@ -584,6 +584,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		max-width: 480px;
+		margin-inline: auto;
+		width: 100%;
+	}
+	.history-section {
 		max-width: 480px;
 		margin-inline: auto;
 		width: 100%;
@@ -1314,7 +1319,8 @@
 	/* Weight + body fat side-by-side once there's room (tablet and up) */
 	@media (min-width: 560px) {
 		.main-col,
-		.add-form {
+		.add-form,
+		.history-section {
 			max-width: 760px;
 		}
 		.metric-grid {

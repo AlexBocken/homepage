@@ -297,6 +297,7 @@ const translations: Translations = {
 	kbd_next: { en: 'next', de: 'weiter' },
 	kbd_skip: { en: 'skip', de: 'auslassen' },
 	kbd_wheel: { en: '\u00b10.1', de: '\u00b10,1' },
+	kbd_hint: { en: 'Press ? for shortcuts', de: '? dr\u00fccken f\u00fcr Tastenk\u00fcrzel' },
 	no_body_parts_selected: {
 		en: 'Enter at least one value before saving.',
 		de: 'Bitte mindestens einen Wert eingeben.'

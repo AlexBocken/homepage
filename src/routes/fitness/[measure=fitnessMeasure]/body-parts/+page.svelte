@@ -140,14 +140,18 @@
 		return v ? `${v} cm` : '—';
 	}
 
+	let showShortcuts = $state(false);
+
 	/** @param {KeyboardEvent} e */
 	function onkey(e) {
+		const tag = /** @type {HTMLElement|null} */ (e.target)?.tagName;
+		const inInput = tag === 'INPUT';
+		if (e.key === '?' && !inInput) { e.preventDefault(); showShortcuts = !showShortcuts; return; }
+		if (e.key === 'Escape' && showShortcuts) { e.preventDefault(); showShortcuts = false; return; }
 		if (done) {
 			if (e.key === 'ArrowLeft') { e.preventDefault(); idx = total - 1; direction = -1; }
 			return;
 		}
-		const tag = /** @type {HTMLElement|null} */ (e.target)?.tagName;
-		const inInput = tag === 'INPUT';
 		if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); next(); }
 		else if (e.key === 'ArrowRight' && !inInput) { e.preventDefault(); next(); }
 		else if (e.key === 'ArrowLeft' && !inInput) { e.preventDefault(); back(); }
@@ -477,7 +481,7 @@
 		{/if}
 	</main>
 
-	<aside class="panel" aria-label={t('running_totals', lang)}>
+	<aside class="panel">
 		{#if !done}
 			{#key step.key}
 				<div class="panel-section chart-section" in:fade={{ duration: 180 }}>
@@ -549,32 +553,29 @@
 			{/key}
 		{/if}
 
-		<div class="panel-section totals-section">
-			<div class="panel-head">
-				<h3 class="panel-title">{t('running_totals', lang)}</h3>
-			</div>
-			<ul class="totals">
-				{#each steps as s, i (s.key)}
-					<li class:dim={!isFilled(s)} class:focused={i === idx && !done}>
-						<button type="button" class="totals-item" onclick={() => jumpTo(i)}>
-							<span class="totals-label">{stepLabel(s)}</span>
-							<span class="totals-val">{formatValue(s)}</span>
-						</button>
-					</li>
-				{/each}
-			</ul>
-		</div>
 	</aside>
 
 	<footer class="bottombar">
 		{#if !done}
 			<button type="button" class="ghost" onclick={skip}>{t('skip', lang)}</button>
-			<div class="kbd-legend" aria-hidden="true">
-				<span><kbd>←</kbd><kbd>→</kbd> {t('kbd_nav', lang)}</span>
-				<span><kbd>↵</kbd> {t('kbd_next', lang)}</span>
-				<span><kbd>S</kbd> {t('kbd_skip', lang)}</span>
-				<span><kbd>scroll</kbd> {t('kbd_wheel', lang)}</span>
-			</div>
+			{#if showShortcuts}
+				<div class="kbd-legend" aria-hidden="true">
+					<span><kbd>←</kbd><kbd>→</kbd> {t('kbd_nav', lang)}</span>
+					<span><kbd>↵</kbd> {t('kbd_next', lang)}</span>
+					<span><kbd>S</kbd> {t('kbd_skip', lang)}</span>
+					<span><kbd>scroll</kbd> {t('kbd_wheel', lang)}</span>
+				</div>
+			{:else}
+				<button
+					type="button"
+					class="kbd-hint"
+					onclick={() => showShortcuts = true}
+					aria-label={t('kbd_hint', lang)}
+					title={t('kbd_hint', lang)}
+				>
+					<kbd>?</kbd>
+				</button>
+			{/if}
 			<div class="nav-pair">
 				<button type="button" class="nav-btn" onclick={back} disabled={idx === 0} aria-label={t('back', lang)}>
 					<ArrowLeft size={16} />
@@ -617,7 +618,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 1rem 1.25rem;
+		padding: 1rem 2rem;
 	}
 	.progress {
 		display: flex;
@@ -864,14 +865,13 @@
 	.panel { display: none; }
 
 	.bottombar {
+		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 1rem 1.25rem 1.5rem;
+		padding: 1rem 0.5rem 1.5rem;
 		gap: 0.75rem;
-		max-width: 520px;
 		width: 100%;
-		margin-inline: auto;
 	}
 	.ghost {
 		border: none;
@@ -913,6 +913,7 @@
 	}
 
 	.kbd-legend { display: none; }
+	.kbd-hint { display: none; }
 	.bottom-spacer { flex: 1; }
 
 	.summary {
@@ -994,7 +995,7 @@
 		.topbar { grid-area: topbar; padding: calc(1.25rem + var(--fitness-header-offset)) 2rem 0; }
 		.stage  { grid-area: stage; padding: 1.5rem 2rem 2rem; align-items: center; }
 		.panel  { grid-area: panel; }
-		.bottombar { grid-area: bottom; max-width: none; margin-inline: 0; padding: 1rem 2rem 1.5rem; }
+		.bottombar { grid-area: bottom; max-width: none; margin-inline: 0; padding: 1rem 0.5rem 1.5rem; }
 
 		.topbar .progress { visibility: hidden; }
 
@@ -1279,20 +1280,25 @@
 		.stepper.compact { flex: 1 1 180px; min-width: 180px; }
 
 		.kbd-legend {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
 			display: flex;
 			gap: 1rem;
 			font-size: 0.68rem;
 			color: var(--color-text-tertiary);
-			flex: 1;
 			justify-content: center;
 			align-items: center;
+			pointer-events: none;
 		}
 		.kbd-legend span {
 			display: inline-flex;
 			align-items: center;
 			gap: 0.3rem;
 		}
-		.kbd-legend kbd {
+		.kbd-legend kbd,
+		.kbd-hint kbd {
 			font-family: inherit;
 			display: inline-grid;
 			place-items: center;
@@ -1307,6 +1313,23 @@
 			font-size: 0.65rem;
 			font-weight: 700;
 		}
+		.kbd-hint {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			background: none;
+			border: none;
+			padding: 0.25rem 0.5rem;
+			cursor: pointer;
+			color: var(--color-text-tertiary);
+			opacity: 0.6;
+			transition: opacity 150ms;
+		}
+		.kbd-hint:hover { opacity: 1; }
 	}
 
 	@media (min-width: 1400px) {
