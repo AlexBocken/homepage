@@ -1,11 +1,11 @@
 {
 	"name": "homepage",
-	"version": "1.46.28",
+	"version": "1.47.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts",
+		"prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts && pnpm exec vite-node scripts/generate-loyalty-cards.ts",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -37,6 +37,7 @@
 		"@types/node": "^22.12.0",
 		"@types/node-cron": "^3.0.11",
 		"@vitest/ui": "^4.1.2",
+		"bwip-js": "^4.10.1",
 		"jsdom": "^27.2.0",
 		"svelte": "^5.55.1",
 		"svelte-check": "^4.4.6",

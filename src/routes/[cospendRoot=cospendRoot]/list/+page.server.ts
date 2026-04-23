@@ -1,5 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
+import { existsSync } from 'node:fs';
+import { resolveStaticAsset } from '$lib/server/staticAsset';
 import { getShoppingUser } from '$lib/server/shoppingAuth';
 import { dbConnect } from '$utils/db';
 import { ShoppingList, type IShoppingItem } from '$models/ShoppingList';
@@ -10,6 +12,13 @@ function serializeItems(items: IShoppingItem[]): ShoppingItem[] {
     ...it,
     addedAt: it.addedAt instanceof Date ? it.addedAt.toISOString() : String(it.addedAt)
   }));
+}
+
+function loyaltyCards() {
+  return {
+    hasSupercard: existsSync(resolveStaticAsset('shopping/supercard.svg')),
+    hasCumulus: existsSync(resolveStaticAsset('shopping/cumulus.svg'))
+  };
 }
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -25,7 +34,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       return {
         session: null,
         shareToken: token,
-        initialList: list ? { version: list.version, items: serializeItems(list.items) } : { version: 0, items: [] as ShoppingItem[] }
+        initialList: list ? { version: list.version, items: serializeItems(list.items) } : { version: 0, items: [] as ShoppingItem[] },
+        loyalty: loyaltyCards()
       };
     }
   }
@@ -37,6 +47,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   return {
     session,
     shareToken: null,
-    initialList: list ? { version: list.version, items: serializeItems(list.items) } : { version: 0, items: [] as ShoppingItem[] }
+    initialList: list ? { version: list.version, items: serializeItems(list.items) } : { version: 0, items: [] as ShoppingItem[] },
+    loyalty: loyaltyCards()
   };
 };
