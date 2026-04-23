@@ -11,10 +11,12 @@
 	 *   height?: string,
 	 *   yUnit?: string,
 	 *   goalLine?: number,
-	 *   tooltipFormatter?: (value: number, datasetIndex: number, dataIndex: number, label: string) => string
+	 *   tooltipFormatter?: (value: number, datasetIndex: number, dataIndex: number, label: string) => string,
+	 *   yMin?: number,
+	 *   yMax?: number
 	 * }}
 	 */
-	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined } = $props();
+	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined, yMin = undefined, yMax = undefined } = $props();
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
@@ -125,6 +127,8 @@
 					},
 					y: {
 						beginAtZero: type === 'bar',
+						suggestedMin: yMin,
+						suggestedMax: yMax,
 						grid: { color: gridColor },
 						border: { display: false },
 						ticks: {
