@@ -33,12 +33,12 @@
 
     function handleSearchResults(ids: Set<string>, categories: Set<string>) {
         matchedRecipeIds = ids;
-        hasActiveSearch = ids.size < (data.allRecipes?.length || data.favorites.length);
+        hasActiveSearch = ids.size < data.favorites.length;
     }
 
     const filteredFavorites = $derived.by(() => {
         if (!hasActiveSearch) return data.favorites;
-        return data.allRecipes.filter((r: any) => matchedRecipeIds.has(r._id));
+        return data.favorites.filter((r: any) => matchedRecipeIds.has(r._id));
     });
 </script>
 
@@ -93,7 +93,7 @@
 
 <p class="to-try-link"><a href="/{data.recipeLang}/to-try">{labels.toTry} &rarr;</a></p>
 
-<Search favoritesOnly={true} lang={data.lang} recipes={data.allRecipes || data.favorites} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
+<Search favoritesOnly={true} lang={data.lang} recipes={data.favorites} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 
 {#if data.error}
     <p class="empty-state">{labels.errorLoading} {data.error}</p>
