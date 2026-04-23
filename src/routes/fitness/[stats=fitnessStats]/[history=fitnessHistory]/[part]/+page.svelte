@@ -85,6 +85,24 @@
 	});
 
 	/**
+	 * Enforce a minimum y-axis range of 4 cm — prevents tiny variations
+	 * from stretching across the full chart height.
+	 */
+	const Y_MIN_RANGE = 4;
+	const yRange = $derived.by(() => {
+		/** @type {number[]} */
+		const vals = series.paired
+			? [...series.left, ...series.right].filter((/** @type {number|null} */ v) => v != null)
+			: series.values.filter((/** @type {number|null} */ v) => v != null);
+		if (vals.length === 0) return { min: undefined, max: undefined };
+		const dMin = Math.min(...vals);
+		const dMax = Math.max(...vals);
+		if (dMax - dMin >= Y_MIN_RANGE) return { min: dMin, max: dMax };
+		const mid = (dMin + dMax) / 2;
+		return { min: mid - Y_MIN_RANGE / 2, max: mid + Y_MIN_RANGE / 2 };
+	});
+
+	/**
 	 * @typedef {{ paired: true, latest: { left: number|null, right: number|null }, first: { left: number|null, right: number|null }, count: number }} PairedStats
 	 * @typedef {{ paired: false, latest: number|null, first: number|null, count: number, min: number|null, max: number|null }} SingleStats
 	 * @typedef {PairedStats | SingleStats} Stats
@@ -230,7 +248,7 @@
 		</section>
 
 		<section class="chart-wrap">
-			<FitnessChart data={chartData} yUnit=" cm" height="320px" />
+			<FitnessChart data={chartData} yUnit=" cm" height="320px" yMin={yRange.min} yMax={yRange.max} />
 		</section>
 	{/if}
 </div>
