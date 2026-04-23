@@ -116,127 +116,124 @@
 <svelte:head><title>{lang === 'en' ? 'Exercises' : 'Übungen'} - Bocken</title></svelte:head>
 
 <div class="exercises-page">
-	<!-- Desktop: split front/back absolutely positioned outside content -->
-	<div class="desktop-filter">
-		<MuscleFilter bind:selectedGroups={muscleGroups} {lang} split />
-	</div>
-
 	<h1 class="sr-only">{t('exercises_title', lang)}</h1>
 
-	<!-- Mobile: inline, not split -->
-	<div class="mobile-filter">
+	<aside class="muscle-card" aria-label={isEn ? 'Filter by muscle' : 'Nach Muskel filtern'}>
 		<MuscleFilter bind:selectedGroups={muscleGroups} {lang} />
-	</div>
+	</aside>
 
-	<div class="search-bar">
-		<Search size={16} />
-		<input type="text" placeholder={t('search_exercises', lang)} bind:value={query} />
-	</div>
-
-	<div class="type-toggle" role="tablist" aria-label={isEn ? 'Exercise type filter' : 'Filter nach Übungsart'}>
-		<button
-			role="tab"
-			aria-selected={typeFilter === 'all'}
-			class="type-btn"
-			class:active={typeFilter === 'all'}
-			onclick={() => typeFilter = 'all'}
-		>
-			<Layers size={14} strokeWidth={2.2} />
-			<span>{t('type_any', lang)}</span>
-		</button>
-		<button
-			role="tab"
-			aria-selected={typeFilter === 'non-stretch'}
-			class="type-btn"
-			class:active={typeFilter === 'non-stretch'}
-			onclick={() => typeFilter = 'non-stretch'}
-		>
-			<BicepsFlexed size={14} strokeWidth={2.2} />
-			<span>{t('type_weights', lang)}</span>
-		</button>
-		<button
-			role="tab"
-			aria-selected={typeFilter === 'stretch'}
-			class="type-btn"
-			class:active={typeFilter === 'stretch'}
-			onclick={() => typeFilter = 'stretch'}
-		>
-			<PersonStanding size={14} strokeWidth={2.2} />
-			<span>{t('type_stretches', lang)}</span>
-		</button>
-	</div>
-
-	<section class="pill-group">
-		<div class="pill-group-header">
-			<span class="pill-group-label">{isEn ? 'Equipment' : 'Ausrüstung'}</span>
-			{#if equipmentFilters.length > 0}
-				<button class="mini-clear" onclick={() => equipmentFilters = []}>
-					{isEn ? 'clear' : 'löschen'}
-				</button>
-			{/if}
+	<div class="exercises-content">
+		<div class="search-bar">
+			<Search size={16} />
+			<input type="text" placeholder={t('search_exercises', lang)} bind:value={query} />
 		</div>
-		<div class="pill-scroll">
-			{#each filterOptions.equipment as eq (eq)}
-				{@const active = equipmentFilters.includes(eq)}
-				{@const Icon = equipmentIcon(eq)}
-				<button
-					class="chip equipment-chip"
-					class:active
-					aria-pressed={active}
-					onclick={() => toggleEquipment(eq)}
-				>
-					<Icon size={14} strokeWidth={2.2} />
-					<span>{equipmentLabel(eq)}</span>
-				</button>
+
+		<div class="type-toggle" role="tablist" aria-label={isEn ? 'Exercise type filter' : 'Filter nach Übungsart'}>
+			<button
+				role="tab"
+				aria-selected={typeFilter === 'all'}
+				class="type-btn"
+				class:active={typeFilter === 'all'}
+				onclick={() => typeFilter = 'all'}
+			>
+				<Layers size={14} strokeWidth={2.2} />
+				<span>{t('type_any', lang)}</span>
+			</button>
+			<button
+				role="tab"
+				aria-selected={typeFilter === 'non-stretch'}
+				class="type-btn"
+				class:active={typeFilter === 'non-stretch'}
+				onclick={() => typeFilter = 'non-stretch'}
+			>
+				<BicepsFlexed size={14} strokeWidth={2.2} />
+				<span>{t('type_weights', lang)}</span>
+			</button>
+			<button
+				role="tab"
+				aria-selected={typeFilter === 'stretch'}
+				class="type-btn"
+				class:active={typeFilter === 'stretch'}
+				onclick={() => typeFilter = 'stretch'}
+			>
+				<PersonStanding size={14} strokeWidth={2.2} />
+				<span>{t('type_stretches', lang)}</span>
+			</button>
+		</div>
+
+		<section class="pill-group">
+			<div class="pill-group-header">
+				<span class="pill-group-label">{isEn ? 'Equipment' : 'Ausrüstung'}</span>
+				{#if equipmentFilters.length > 0}
+					<button class="mini-clear" onclick={() => equipmentFilters = []}>
+						{isEn ? 'clear' : 'löschen'}
+					</button>
+				{/if}
+			</div>
+			<div class="pill-scroll">
+				{#each filterOptions.equipment as eq (eq)}
+					{@const active = equipmentFilters.includes(eq)}
+					{@const Icon = equipmentIcon(eq)}
+					<button
+						class="chip equipment-chip"
+						class:active
+						aria-pressed={active}
+						onclick={() => toggleEquipment(eq)}
+					>
+						<Icon size={14} strokeWidth={2.2} />
+						<span>{equipmentLabel(eq)}</span>
+					</button>
+				{/each}
+			</div>
+		</section>
+
+		<section class="pill-group">
+			<div class="pill-group-header">
+				<span class="pill-group-label">{isEn ? 'Muscle Group' : 'Muskelgruppe'}</span>
+				{#if muscleGroups.length > 0}
+					<button class="mini-clear" onclick={() => muscleGroups = []}>
+						{isEn ? 'clear' : 'löschen'}
+					</button>
+				{/if}
+			</div>
+			<div class="pill-scroll no-left-fade">
+				{#each orderedMuscleOptions as group (group)}
+					{@const active = muscleGroups.includes(group)}
+					<button
+						class="chip muscle-chip"
+						class:active
+						aria-pressed={active}
+						onclick={() => toggleMuscle(group)}
+					>{muscleLabel(group)}</button>
+				{/each}
+			</div>
+		</section>
+
+		<ul class="exercise-list">
+			{#each filtered as exercise (exercise.id)}
+				<li>
+					<a href="/fitness/{sl.exercises}/{exercise.id}" class="exercise-row">
+						<div class="exercise-info">
+							<span class="exercise-name">
+								{exercise.localName}
+								{#if isStretchType(exercise.exerciseType)}
+									<span class="stretch-badge">{t('stretch_pill', lang)}</span>
+								{/if}
+							</span>
+							<span class="exercise-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
+						</div>
+					</a>
+				</li>
 			{/each}
-		</div>
-	</section>
-
-	<section class="pill-group">
-		<div class="pill-group-header">
-			<span class="pill-group-label">{isEn ? 'Muscle Group' : 'Muskelgruppe'}</span>
-			{#if muscleGroups.length > 0}
-				<button class="mini-clear" onclick={() => muscleGroups = []}>
-					{isEn ? 'clear' : 'löschen'}
-				</button>
+			{#if filtered.length === 0}
+				<li class="no-results">{t('no_exercises_match', lang)}</li>
 			{/if}
-		</div>
-		<div class="pill-scroll no-left-fade">
-			{#each orderedMuscleOptions as group (group)}
-				{@const active = muscleGroups.includes(group)}
-				<button
-					class="chip muscle-chip"
-					class:active
-					aria-pressed={active}
-					onclick={() => toggleMuscle(group)}
-				>{muscleLabel(group)}</button>
-			{/each}
-		</div>
-	</section>
-
-	<ul class="exercise-list">
-		{#each filtered as exercise (exercise.id)}
-			<li>
-				<a href="/fitness/{sl.exercises}/{exercise.id}" class="exercise-row">
-					<div class="exercise-info">
-						<span class="exercise-name">
-							{exercise.localName}
-							{#if isStretchType(exercise.exerciseType)}
-								<span class="stretch-badge">{t('stretch_pill', lang)}</span>
-							{/if}
-						</span>
-						<span class="exercise-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
-					</div>
-				</a>
-			</li>
-		{/each}
-		{#if filtered.length === 0}
-			<li class="no-results">{t('no_exercises_match', lang)}</li>
-		{/if}
-	</ul>
+		</ul>
+	</div>
 </div>
 
 <style>
+	/* Default (mobile + tablet): single column, card on top */
 	.exercises-page {
 		display: flex;
 		flex-direction: column;
@@ -245,34 +242,49 @@
 		margin: 0 auto;
 		position: relative;
 	}
-	/* Mobile: show inline filter, hide desktop split */
-	.desktop-filter {
-		display: none;
+
+	.exercises-content {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		min-width: 0;
 	}
 
-	/* Desktop: front/back absolutely positioned outside content flow */
-	@media (min-width: 1024px) {
-		.mobile-filter {
-			display: none;
+	.muscle-card {
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-card);
+		padding: 0.85rem 1rem 0.75rem;
+	}
+
+	/* Tablet + wide: two-column sidebar layout (card fixed on the left) */
+	@media (min-width: 900px) {
+		.exercises-page {
+			display: grid;
+			grid-template-columns: 200px minmax(0, 620px);
+			gap: 1.5rem;
+			max-width: calc(200px + 1.5rem + 620px);
+			width: 100%;
+			align-items: start;
 		}
 
-		.desktop-filter {
-			display: contents;
-		}
-
-		.exercises-page :global(.split-left),
-		.exercises-page :global(.split-right) {
-			position: fixed;
+		.muscle-card {
+			position: sticky;
 			top: calc(8.5rem + env(safe-area-inset-top, 0px));
-			width: clamp(140px, 14vw, 200px);
+			padding: 1rem 0.9rem 0.85rem;
+		}
+	}
+
+	/* Wide: larger sidebar so the figure pair gets meaningful size */
+	@media (min-width: 1180px) {
+		.exercises-page {
+			grid-template-columns: 460px minmax(0, 720px);
+			gap: 2rem;
+			max-width: calc(460px + 2rem + 720px);
 		}
 
-		.exercises-page :global(.split-left) {
-			right: calc(50% + 310px + 1.5rem);
-		}
-
-		.exercises-page :global(.split-right) {
-			left: calc(50% + 310px + 1.5rem);
+		.muscle-card {
+			padding: 1.1rem 1.2rem 0.95rem;
 		}
 	}
 
@@ -455,7 +467,7 @@
 	.exercise-row:hover {
 		background: var(--color-surface-hover);
 	}
-.exercise-info {
+	.exercise-info {
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
