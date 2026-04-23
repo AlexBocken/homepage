@@ -41,7 +41,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 	// Use stored kcalEstimate when available; fall back to on-the-fly for legacy sessions
 	const DISPLAY_LIMIT = 30;
 	const SMA_LOOKBACK = 6; // w - 1 where w = 7 max
-	const [allSessions, weightMeasurements] = await Promise.all([
+	const [allSessions, weightMeasurements, bfMeasurements] = await Promise.all([
 		WorkoutSession.find(
 			{ createdBy: user.nickname },
 			{ 'exercises.exerciseId': 1, 'exercises.sets': 1, 'exercises.totalDistance': 1, kcalEstimate: 1 }
@@ -49,9 +49,14 @@ export const GET: RequestHandler = async ({ locals }) => {
 		BodyMeasurement.find(
 			{ createdBy: user.nickname, weight: { $ne: null } },
 			{ date: 1, weight: 1, _id: 0 }
+		).sort({ date: -1 }).limit(DISPLAY_LIMIT + SMA_LOOKBACK).lean(),
+		BodyMeasurement.find(
+			{ createdBy: user.nickname, bodyFatPercent: { $ne: null } },
+			{ date: 1, bodyFatPercent: 1, _id: 0 }
 		).sort({ date: -1 }).limit(DISPLAY_LIMIT + SMA_LOOKBACK).lean()
 	]);
 	weightMeasurements.reverse(); // back to chronological order
+	bfMeasurements.reverse();
 
 	let totalTonnage = 0;
 	let totalCardioKm = 0;
@@ -206,13 +211,59 @@ export const GET: RequestHandler = async ({ locals }) => {
 		weightChart.lower.push(round(mean - std));
 	}
 
+	// Build body-fat chart as Δ from the first displayed point — emphasises
+	// relative change over noisy absolute numbers.
+	const bfChart: {
+		labels: string[];
+		dates: string[];
+		data: number[];
+		sma: (number | null)[];
+		upper: (number | null)[];
+		lower: (number | null)[];
+		baseline: number | null;
+	} = { labels: [], dates: [], data: [], sma: [], upper: [], lower: [], baseline: null };
+
+	if (bfMeasurements.length > 0) {
+		const allBf: number[] = bfMeasurements.map((m) => m.bodyFatPercent!);
+		const displayStartBf = Math.max(0, allBf.length - DISPLAY_LIMIT);
+		const baseline = allBf[displayStartBf];
+		bfChart.baseline = Math.round(baseline * 100) / 100;
+
+		for (let idx = displayStartBf; idx < bfMeasurements.length; idx++) {
+			const d = new Date(bfMeasurements[idx].date);
+			bfChart.labels.push(
+				d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
+			);
+			bfChart.dates.push(d.toISOString());
+			bfChart.data.push(Math.round((allBf[idx] - baseline) * 100) / 100);
+		}
+
+		const wBf = Math.min(7, Math.max(2, Math.floor(allBf.length / 2)));
+		for (let idx = displayStartBf; idx < allBf.length; idx++) {
+			const k = Math.min(wBf, idx + 1);
+			let sum = 0;
+			for (let j = idx - k + 1; j <= idx; j++) sum += allBf[j];
+			const mean = sum / k;
+			let variance = 0;
+			for (let j = idx - k + 1; j <= idx; j++) variance += (allBf[j] - mean) ** 2;
+			const std = k > 1
+				? Math.sqrt(variance / (k - 1)) * Math.sqrt(wBf / k)
+				: Math.sqrt(variance) * Math.sqrt(wBf);
+			const round = (v: number) => Math.round(v * 100) / 100;
+			bfChart.sma.push(round(mean - baseline));
+			bfChart.upper.push(round(mean - baseline + std));
+			bfChart.lower.push(round(mean - baseline - std));
+		}
+	}
+
 	return json({
 		totalWorkouts,
 		totalTonnage: Math.round(totalTonnage / 1000 * 10) / 10,
 		totalCardioKm: Math.round(totalCardioKm * 10) / 10,
 		kcalEstimate,
 		workoutsChart,
-		weightChart
+		weightChart,
+		bfChart
 	});
 };
 

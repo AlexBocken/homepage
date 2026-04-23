@@ -10,10 +10,11 @@
 	 *   title?: string,
 	 *   height?: string,
 	 *   yUnit?: string,
-	 *   goalLine?: number
+	 *   goalLine?: number,
+	 *   tooltipFormatter?: (value: number, datasetIndex: number, dataIndex: number, label: string) => string
 	 * }}
 	 */
-	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined } = $props();
+	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined } = $props();
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
@@ -109,6 +110,7 @@
 				responsive: true,
 				maintainAspectRatio: false,
 				animation: { duration: 0 },
+				interaction: type === 'line' ? { mode: 'index', intersect: false } : undefined,
 				scales: {
 					x: useTimeAxis ? {
 						type: 'time',
@@ -156,7 +158,19 @@
 						bodyColor: dark ? '#D8DEE9' : '#3B4252',
 						borderWidth: 0,
 						cornerRadius: 8,
-						padding: 10
+						padding: 10,
+						filter: (/** @type {any} */ ctx) => !(ctx.dataset?.label ?? '').includes('σ'),
+						...(tooltipFormatter ? {
+							callbacks: {
+								label: (/** @type {any} */ ctx) => {
+									const v = ctx.parsed.y;
+									const label = ctx.dataset.label ?? '';
+									if (v == null) return label;
+									const formatted = tooltipFormatter(v, ctx.datasetIndex, ctx.dataIndex, label);
+									return `${label}: ${formatted}`;
+								}
+							}
+						} : {})
 					}
 				})
 			}
