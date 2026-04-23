@@ -4,7 +4,7 @@ import { dbConnect } from '$utils/db';
 import { rand_array } from '$lib/js/randomize';
 import { briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, setHeaders }) => {
   const { approvalFilter, projection } = briefQueryConfig(params.recipeLang!);
   await dbConnect();
 
@@ -14,5 +14,7 @@ export const GET: RequestHandler = async ({ params }) => {
   ).lean();
 
   const recipes = rand_array(dbRecipes.map(r => toBrief(r, params.recipeLang!)));
+  // rand_array is seeded per UTC day, same for every caller → cacheable.
+  setHeaders({ 'Cache-Control': 'public, max-age=28800, s-maxage=28800, stale-while-revalidate=86400' });
   return json(recipes);
 };

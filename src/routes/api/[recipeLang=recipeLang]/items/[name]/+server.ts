@@ -42,9 +42,14 @@ function resolveNutritionData(mappings: any[]): any[] {
   });
 }
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, setHeaders }) => {
   await dbConnect();
   const en = isEnglish(params.recipeLang!);
+
+  // Individual recipes change when the author edits them. 5 min browser + 1 h
+  // edge cache with SWR lets proxies keep hot recipes fresh without blocking
+  // on the DB; stale content beyond max-age is tolerable here.
+  setHeaders({ 'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400' });
 
   const query = en
     ? { 'translations.en.short_name': params.name }

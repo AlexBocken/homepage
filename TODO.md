@@ -13,7 +13,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 - [x] 7. Muscle-heatmap endpoint — add projection + O(1) bucket math. Overview already had a projection; set-subfield narrowing was attempted but reverted (returned malformed sets). Timeseries cap not feasible: totals are lifetime-scoped.
 - [x] 8. Calendar payload trim — `yearDays` narrowed to `{iso, color}` (needle lookup only), new pre-filtered `feastDots` array carries feast-specific metadata. Also fixed a stray double `locals.session ?? (locals.session ?? …)` in both calendar page loaders.
 - [x] 9. History sessions endpoint — projection narrowed to exactly what SessionCard reads (drops notes, templates, mode, endTime, session-level gpsPreview); added `.lean()`.
-- [ ] 10. `Cache-Control` headers on stable API endpoints (all_brief, calendar, exercises metadata)
+- [x] 10. `Cache-Control` headers on stable API endpoints — added to recipe `/items/category`, `/items/tag`, `/items/icon` (public, 1h/1d with SWR), `/items/[name]` (public, 5m/1h with SWR), and fitness `/exercises/filters` (private, 1h). Skipped `all_brief` (per-request shuffle) and calendar page (`data.session` serialised into HTML via layout → would leak across users under public cache).
 - [ ] 11. Search — debounce 100 ms + server-side pre-normalized `_searchKey`
 
 ## Features
