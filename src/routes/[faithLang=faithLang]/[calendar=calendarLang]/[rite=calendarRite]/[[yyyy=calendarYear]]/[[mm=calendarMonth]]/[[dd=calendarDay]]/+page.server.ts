@@ -13,16 +13,17 @@ import {
 	type Diocese1969,
 	type Rite
 } from '../../../../calendarI18n';
-import { seasonColorFor } from '../../../../calendarColors';
+import { rankDotSize, seasonColorFor } from '../../../../calendarColors';
 import {
 	getYear,
 	getYear1962,
 	isoFor
 } from '$lib/server/liturgicalCalendar';
-import type { CalendarDay, SeasonArc, YearDay } from '$lib/calendarTypes';
+import type { CalendarDay, FeastDot, SeasonArc, YearDay } from '$lib/calendarTypes';
 
 export type {
 	CalendarDay,
+	FeastDot,
 	ProperSection,
 	Rite1962Commem,
 	Rite1962Detail,
@@ -234,13 +235,24 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		}
 	}
 
-	const yearDays: YearDay[] = sortedYear.map((d, i) => ({
+	// `yearDays` only carries what the ring's needle-color lookup needs for any
+	// day (feast or ferial). Feast metadata (name, rank) moves into `feastDots`
+	// below so the client can iterate it directly without filtering 365 entries.
+	const yearDays: YearDay[] = sortedYear.map((d) => ({
 		iso: d.iso,
-		name: d.name,
-		rank: d.rank,
-		color: d.colorKeys[0] ?? 'GREEN',
-		seasonKey: filledSeasons[i]
+		color: d.colorKeys[0] ?? 'GREEN'
 	}));
+
+	const feastDots: FeastDot[] = [];
+	for (const d of sortedYear) {
+		if (rankDotSize(d.rank) === 0) continue;
+		feastDots.push({
+			iso: d.iso,
+			name: d.name,
+			rank: d.rank,
+			color: d.colorKeys[0] ?? 'GREEN'
+		});
+	}
 
 	const seasonArcs: SeasonArc[] = [];
 	let cur: SeasonArc | null = null;
@@ -282,6 +294,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		month,
 		monthDays,
 		yearDays,
+		feastDots,
 		seasonArcs,
 		windowStart,
 		windowEnd,
@@ -291,6 +304,6 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		todayIso,
 		selected: selectedEntry,
 		selectedIso,
-		session: locals.session ?? (locals.session ?? await locals.auth())
+		session: locals.session ?? await locals.auth()
 	};
 };

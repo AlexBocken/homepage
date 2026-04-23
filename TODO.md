@@ -11,7 +11,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 - [x] 5. Replace redundant `locals.auth()` with `locals.session` across all routes (68 files, 107 sites — loaders, actions, API endpoints)
 - [x] 6. Stream fitness stats loader — muscleHeatmap, nutritionStats, periods, sharedPeriods now stream via `{#await}`. `stats` still awaited (too many chart $deriveds depend on it)
 - [x] 7. Muscle-heatmap endpoint — add projection + O(1) bucket math. Overview already had a projection; set-subfield narrowing was attempted but reverted (returned malformed sets). Timeseries cap not feasible: totals are lifetime-scoped.
-- [ ] 8. Calendar payload trim — drop `name` from `yearDays`, pre-filter `feastDots` server-side
+- [x] 8. Calendar payload trim — `yearDays` narrowed to `{iso, color}` (needle lookup only), new pre-filtered `feastDots` array carries feast-specific metadata. Also fixed a stray double `locals.session ?? (locals.session ?? …)` in both calendar page loaders.
 - [ ] 9. History sessions endpoint — slim exercise payload for list view
 - [ ] 10. `Cache-Control` headers on stable API endpoints (all_brief, calendar, exercises metadata)
 - [ ] 11. Search — debounce 200 ms + server-side pre-normalized `_searchKey`

@@ -16,14 +16,23 @@ export interface CalendarDay {
 	rite1962?: Rite1962Detail;
 }
 
-// Compact per-day shape returned for the full year so the ring / month-grid
-// overview views can render without refetching. Kept small on purpose.
+// Compact per-day shape returned for the full window of the liturgical year.
+// Kept to the bare minimum needed client-side: the ring needs a color for the
+// needle on the selected day (which may be a ferial with no rank metadata),
+// everything else goes through the separate `feastDots` array.
 export interface YearDay {
+	iso: string;
+	color: string; // primary color key (WHITE/RED/...)
+}
+
+// Pre-filtered list of days that render a feast dot on the ring — rank > feria
+// — with the metadata the ring and side panel need for each. Sent alongside
+// YearDay so clients don't have to filter 365 entries themselves.
+export interface FeastDot {
 	iso: string;
 	name: string;
 	rank: string;
-	color: string; // primary color key (WHITE/RED/...)
-	seasonKey: string | null;
+	color: string;
 }
 
 export interface SeasonArc {

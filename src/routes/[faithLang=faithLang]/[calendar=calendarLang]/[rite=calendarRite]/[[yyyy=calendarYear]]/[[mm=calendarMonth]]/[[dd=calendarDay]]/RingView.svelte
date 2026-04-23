@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { YearDay, SeasonArc } from './+page.server';
+	import type { FeastDot, YearDay, SeasonArc } from './+page.server';
 	import type { CalendarLang } from '../../../../calendarI18n';
 	import { litBg, litInk, rankDotSize } from '../../../../calendarColors';
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
@@ -11,6 +11,7 @@
 		year,
 		liturgicalYear,
 		yearDays,
+		feastDots: feastDotsProp,
 		seasonArcs,
 		todayIso,
 		selectedIso = null,
@@ -25,6 +26,7 @@
 		year: number;
 		liturgicalYear: number;
 		yearDays: YearDay[];
+		feastDots: FeastDot[];
 		seasonArcs: SeasonArc[];
 		todayIso: string;
 		selectedIso?: string | null;
@@ -161,20 +163,10 @@
 		return out;
 	});
 
-	// Feast dots: keep only the highest-ranking feast per ISO date, skip ferias.
-	// The currently-selected feast is omitted because the static needle pin at
-	// the top of the ring represents it.
-	const feastDots = $derived.by(() => {
-		const byDate = new Map<string, YearDay>();
-		for (const d of yearDays) {
-			const size = rankDotSize(d.rank);
-			if (size === 0) continue;
-			if (d.iso === needleIso) continue;
-			const cur = byDate.get(d.iso);
-			if (!cur || rankDotSize(d.rank) > rankDotSize(cur.rank)) byDate.set(d.iso, d);
-		}
-		return [...byDate.values()];
-	});
+	// Feast dots come pre-filtered from the server (rank > ferial, one per ISO).
+	// Only strip the currently-selected day here since the needle pin at the top
+	// already represents it.
+	const feastDots = $derived(feastDotsProp.filter((d) => d.iso !== needleIso));
 
 	// A season can split into multiple arcs within one gregorian year (e.g.
 	// ChristmasTide spans both Dec 25–31 and Jan 1–13 of the civil year). Each
@@ -206,11 +198,8 @@
 	);
 
 	const activeFeasts = $derived.by(() => {
-		if (!active) return [] as YearDay[];
-		return yearDays.filter(
-			(d) =>
-				rankDotSize(d.rank) > 0 && d.iso >= active.start && d.iso <= active.end
-		);
+		if (!active) return [] as FeastDot[];
+		return feastDotsProp.filter((d) => d.iso >= active.start && d.iso <= active.end);
 	});
 
 	$effect(() => {
