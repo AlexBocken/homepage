@@ -27,6 +27,9 @@
 	let latest = $state(data.latest ? { ...data.latest } : {});
 	// svelte-ignore state_referenced_locally
 	let measurements = $state(data.measurements?.measurements ? [...data.measurements.measurements] : []);
+	// svelte-ignore state_referenced_locally
+	let measurementsTotal = $state(/** @type {number} */ (data.measurements?.total ?? measurements.length));
+	let loadingMore = $state(false);
 	let showWeightHistory = $state(false);
 
 	// Profile fields (sex, height, birth year) — stored in FitnessGoal
@@ -105,6 +108,27 @@
 		{ label: t('r_calf', lang), key: 'rightCalf', value: latestBp.rightCalf }
 	]);
 
+	async function loadMore() {
+		if (loadingMore) return;
+		loadingMore = true;
+		try {
+			const res = await fetch(`/api/fitness/measurements?limit=20&offset=${measurements.length}`);
+			if (res.ok) {
+				const body = await res.json();
+				const next = Array.isArray(body?.measurements) ? body.measurements : [];
+				const existing = new Set(measurements.map((/** @type {any} */ m) => m._id));
+				const fresh = next.filter((/** @type {any} */ m) => !existing.has(m._id));
+				measurements = [...measurements, ...fresh];
+				if (typeof body?.total === 'number') measurementsTotal = body.total;
+			} else {
+				toast.error(lang === 'en' ? 'Failed to load more' : 'Laden fehlgeschlagen');
+			}
+		} catch {
+			toast.error(lang === 'en' ? 'Failed to load more' : 'Laden fehlgeschlagen');
+		}
+		loadingMore = false;
+	}
+
 	/** @param {string} id */
 	async function deleteMeasurement(id) {
 		if (!await confirm(t('delete_measurement_confirm', lang))) return;
@@ -112,6 +136,7 @@
 			const res = await fetch(`/api/fitness/measurements/${id}`, { method: 'DELETE' });
 			if (res.ok) {
 				measurements = measurements.filter((m) => m._id !== id);
+				measurementsTotal = Math.max(0, measurementsTotal - 1);
 				try {
 					const latestRes = await fetch('/api/fitness/measurements/latest');
 					if (latestRes.ok) latest = await latestRes.json();
@@ -309,6 +334,7 @@
 					if (latestRes.ok) latest = await latestRes.json();
 				} catch {}
 				measurements = [created.measurement ?? created, ...measurements];
+				measurementsTotal = measurementsTotal + 1;
 				resetForm();
 				toast.success(lang === 'en' ? 'Measurement saved' : 'Messung gespeichert');
 			} else {
@@ -571,6 +597,12 @@
 						</div>
 					{/each}
 			</div>
+			{#if showWeightHistory && measurements.length < measurementsTotal}
+				<button type="button" class="show-more" onclick={loadMore} disabled={loadingMore}>
+					{loadingMore ? t('saving', lang) : t('show_more', lang)}
+					<span class="show-more-count">({measurements.length}/{measurementsTotal})</span>
+				</button>
+			{/if}
 		</section>
 	{/if}
 
@@ -1135,6 +1167,35 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.4rem;
+	}
+	.show-more {
+		align-self: stretch;
+		margin-top: 0.5rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		padding: 0.55rem 1rem;
+		border: 1px dashed var(--color-border);
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--color-text-secondary);
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: border-color var(--transition-fast, 120ms), color var(--transition-fast, 120ms), background var(--transition-fast, 120ms);
+	}
+	.show-more:hover:not(:disabled) {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+		background: color-mix(in oklab, var(--color-primary) 6%, transparent);
+	}
+	.show-more:disabled { opacity: 0.5; cursor: not-allowed; }
+	.show-more-count {
+		font-size: 0.7rem;
+		font-weight: 500;
+		color: var(--color-text-tertiary);
+		font-variant-numeric: tabular-nums;
 	}
 	.history-item {
 		background: var(--color-surface);

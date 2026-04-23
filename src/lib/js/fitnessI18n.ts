@@ -312,6 +312,7 @@ const translations: Translations = {
 	body_fat_pct: { en: 'Body Fat (%)', de: 'Körperfett (%)' },
 	history: { en: 'History', de: 'Verlauf' },
 	past_measurements: { en: 'Past measurements', de: 'Frühere Messungen' },
+	show_more: { en: 'Show more', de: 'Mehr anzeigen' },
 
 	// SetTable
 	set_header: { en: 'SET', de: 'SATZ' },
