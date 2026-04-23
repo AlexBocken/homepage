@@ -1226,42 +1226,6 @@
 			font-weight: 700;
 		}
 
-		.totals {
-			list-style: none;
-			margin: 0;
-			padding: 0;
-		}
-		.totals li { border-bottom: 1px dashed var(--color-border); }
-		.totals li:last-child { border-bottom: none; }
-		.totals-item {
-			width: 100%;
-			display: flex;
-			justify-content: space-between;
-			align-items: baseline;
-			padding: 0.42rem 0.2rem;
-			background: transparent;
-			border: none;
-			color: inherit;
-			text-align: left;
-			cursor: pointer;
-			transition: color 150ms;
-		}
-		.totals-item:hover { color: var(--color-text-primary); }
-		.totals-label {
-			font-size: 0.82rem;
-			color: var(--color-text-secondary);
-		}
-		.totals-val {
-			font-size: 0.82rem;
-			font-weight: 700;
-			font-variant-numeric: tabular-nums;
-		}
-		.totals li.dim .totals-val { color: var(--color-text-tertiary); font-weight: 400; }
-		.totals li.focused .totals-label {
-			color: var(--color-primary);
-			font-weight: 700;
-		}
-
 		.hero { width: 300px; height: 300px; }
 		.hero-pic { width: 200px; height: 200px; }
 		.title { font-size: 3.2rem; }
