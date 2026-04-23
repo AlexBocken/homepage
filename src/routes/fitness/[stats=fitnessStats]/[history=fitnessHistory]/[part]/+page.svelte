@@ -9,7 +9,7 @@
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const statsSlug = $derived(lang === 'en' ? 'stats' : 'statistik');
-	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
+	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	const card = $derived(data.card);
 
 	const historyAsc = $derived(
@@ -169,7 +169,7 @@
 	{#if !hasData}
 		<div class="empty">
 			<p>{t('no_measurements_yet', lang)}</p>
-			<a class="cta" href="/fitness/{measureSlug}/body-parts">
+			<a class="cta" href="/fitness/{checkinSlug}/body-parts">
 				<Ruler size={16} /> {t('measure_body_parts', lang)}
 			</a>
 		</div>
