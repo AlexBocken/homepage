@@ -292,6 +292,8 @@ const translations: Translations = {
 	exit: { en: 'Exit', de: 'Schlie\u00dfen' },
 	same_both_sides: { en: 'Same on both sides', de: 'Auf beiden Seiten gleich' },
 	copy_l_to_r: { en: 'Copy L \u2192 R', de: 'L \u2192 R \u00fcbernehmen' },
+	copy_l_to_r_before: { en: 'Copy L', de: 'L' },
+	copy_l_to_r_after: { en: 'R', de: 'R \u00fcbernehmen' },
 	kbd_nav: { en: 'nav', de: 'Navigation' },
 	kbd_next: { en: 'next', de: 'weiter' },
 	kbd_skip: { en: 'skip', de: 'auslassen' },
@@ -319,6 +321,7 @@ const translations: Translations = {
 		de: 'Für dieses Datum sind bereits Werte erfasst: {fields}. Überschreiben?'
 	},
 	overwrite_confirm: { en: 'Overwrite', de: 'Überschreiben' },
+	same_as_last: { en: 'Same as last', de: 'Wie zuletzt' },
 
 	// SetTable
 	set_header: { en: 'SET', de: 'SATZ' },
