@@ -12,7 +12,7 @@ export async function getShoppingUser(
   url: URL
 ): Promise<string | null> {
   // Check session first
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (auth?.user?.nickname) return auth.user.nickname;
 
   // Check share token

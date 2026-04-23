@@ -5,7 +5,7 @@ import { WorkoutTemplate } from '$models/WorkoutTemplate';
 
 // GET /api/fitness/templates - Get all workout templates for the user
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 // POST /api/fitness/templates - Create a new workout template
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }

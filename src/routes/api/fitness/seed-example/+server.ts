@@ -5,7 +5,7 @@ import { WorkoutTemplate } from '$models/WorkoutTemplate';
 
 // POST /api/fitness/seed-example - Create the example workout template
 export const POST: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }

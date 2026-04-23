@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 
 // GET /api/fitness/sessions/[id] - Get a specific workout session
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -37,7 +37,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 // PUT /api/fitness/sessions/[id] - Update a workout session
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -135,7 +135,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
 // DELETE /api/fitness/sessions/[id] - Delete a workout session
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }

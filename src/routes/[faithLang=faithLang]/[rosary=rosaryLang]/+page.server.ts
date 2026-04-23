@@ -105,7 +105,7 @@ export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
 
 export const actions: Actions = {
   pray: async ({ locals, fetch }) => {
-    const session = await locals.auth();
+    const session = locals.session ?? await locals.auth();
     if (!session?.user?.nickname) {
       return { success: false };
     }

@@ -8,7 +8,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 - [x] 2. Chart.js dynamic import in `FitnessChart.svelte` (drop 244 KB from non-stats fitness routes)
 - [x] 3. Recipe API endpoints — drop `JSON.parse(JSON.stringify(...))` double-serialize (9 endpoints). Client-side shuffle / cache headers deferred (would require rethinking hero preload + hydration)
 - [x] 4. Favorites page — drop unnecessary `all_brief` fetch (verified Search uses `favoritesOnly` so `allRecipes` was redundant)
-- [x] 5. Replace redundant `locals.auth()` with `locals.session` across recipe/calendar/fitness loaders (loaders only; actions + admin/edit/add pages skipped)
+- [x] 5. Replace redundant `locals.auth()` with `locals.session` across all routes (68 files, 107 sites — loaders, actions, API endpoints)
 - [ ] 6. Stream fitness stats loader — return promises for slow panels
 - [ ] 7. Overview endpoint — add `.select(...)` projection, cap timeseries window
 - [ ] 8. Calendar payload trim — drop `name` from `yearDays`, pre-filter `feastDots` server-side
@@ -27,6 +27,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 [ ] Make the Period ended button a lot more prominent
 [ ] swap heart emoji on recipe favorites to lucide icon
 [ ] coop and migros cards on shopping list for scanning
+[ ] login icon from lucide in header
 
 ## Refactor Recipe Search Component
 

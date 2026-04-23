@@ -3,7 +3,7 @@ import { error, json } from '@sveltejs/kit';
 import { recurringPaymentScheduler } from '$lib/server/scheduler';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }
@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }

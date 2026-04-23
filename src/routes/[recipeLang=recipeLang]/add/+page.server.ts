@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({locals, params}) => {
         throw redirect(301, '/rezepte/add');
     }
 
-    const session = await locals.auth();
+    const session = locals.session ?? await locals.auth();
     return {
 		user: session?.user
     };
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({locals, params}) => {
 export const actions = {
 	default: async ({ request, locals, params }) => {
 		// Check authentication
-		const auth = await locals.auth();
+		const auth = locals.session ?? await locals.auth();
 		if (!auth) {
 			return fail(401, {
 				error: 'You must be logged in to add recipes',

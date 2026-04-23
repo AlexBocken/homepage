@@ -49,7 +49,7 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
     let recipes: BriefRecipeType[] = dbRecipes.map(r => toBrief(r, params.recipeLang!));
 
     // Handle favorites filter
-    const session = await locals.auth();
+    const session = locals.session ?? await locals.auth();
     if (favoritesOnly && session?.user) {
       const { UserFavorites } = await import('$models/UserFavorites');
       const userFavorites = await UserFavorites.findOne({ username: session.user.nickname });

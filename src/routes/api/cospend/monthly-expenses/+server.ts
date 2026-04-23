@@ -4,7 +4,7 @@ import { Payment } from '$models/Payment';
 import { dbConnect } from '$utils/db';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });

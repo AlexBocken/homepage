@@ -291,6 +291,6 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		todayIso,
 		selected: selectedEntry,
 		selectedIso,
-		session: locals.session ?? (await locals.auth())
+		session: locals.session ?? (locals.session ?? await locals.auth())
 	};
 };

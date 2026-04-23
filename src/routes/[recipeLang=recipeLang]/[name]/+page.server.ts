@@ -33,7 +33,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals, url }) => {
 
 export const actions: Actions = {
     toggleFavorite: async ({ request, locals, url, fetch }) => {
-        const session = await locals.auth();
+        const session = locals.session ?? await locals.auth();
         
         if (!session?.user?.nickname) {
             throw error(401, 'Authentication required');

@@ -6,7 +6,7 @@ import { randomUUID } from 'crypto';
 import { IMAGE_DIR } from '$env/static/private';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }

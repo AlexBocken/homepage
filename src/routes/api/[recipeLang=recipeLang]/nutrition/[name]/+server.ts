@@ -9,7 +9,7 @@ import type { NutritionMapping } from '$types/types';
 
 /** PATCH: Update individual nutrition mappings (manual edit UI) */
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-	await locals.auth();
+	locals.session ?? await locals.auth();
 	await dbConnect();
 
 	const en = isEnglish(params.recipeLang!);

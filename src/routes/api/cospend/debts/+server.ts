@@ -19,7 +19,7 @@ interface DebtSummary {
 }
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }

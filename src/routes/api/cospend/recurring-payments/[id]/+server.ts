@@ -6,7 +6,7 @@ import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/r
 import mongoose from 'mongoose';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }
@@ -35,7 +35,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }
@@ -154,7 +154,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }

@@ -4,7 +4,7 @@ import { dbConnect } from '$utils/db';
 import { IntervalTemplate, validateIntervalEntries } from '$models/IntervalTemplate';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }

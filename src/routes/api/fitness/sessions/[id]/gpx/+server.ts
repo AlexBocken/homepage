@@ -59,7 +59,7 @@ function parseGpx(xml: string): IGpsPoint[] {
 
 // GET /api/fitness/sessions/[id]/gpx?exerciseIdx=N — download GPX export of the track
 export const GET: RequestHandler = async ({ params, url, locals }) => {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 	if (!session || !session.user?.nickname) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
@@ -115,7 +115,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 
 // POST /api/fitness/sessions/[id]/gpx — upload GPX file for an exercise
 export const POST: RequestHandler = async ({ params, request, locals }) => {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 	if (!session || !session.user?.nickname) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
@@ -193,7 +193,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 // DELETE /api/fitness/sessions/[id]/gpx — remove GPS track from an exercise
 export const DELETE: RequestHandler = async ({ params, request, locals }) => {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 	if (!session || !session.user?.nickname) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}

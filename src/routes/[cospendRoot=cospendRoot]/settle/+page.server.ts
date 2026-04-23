@@ -3,7 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { detectCospendLang, cospendRoot } from '$lib/js/cospendI18n';
 
 export const load: PageServerLoad = async ({ fetch, locals, request, url }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   
   if (!session) {
     throw redirect(302, '/login');

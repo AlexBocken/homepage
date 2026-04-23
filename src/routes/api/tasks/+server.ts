@@ -4,7 +4,7 @@ import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   await dbConnect();
@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   const data = await request.json();

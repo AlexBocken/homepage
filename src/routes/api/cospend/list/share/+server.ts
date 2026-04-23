@@ -6,7 +6,7 @@ import { dbConnect } from '$utils/db';
 
 // GET /api/cospend/list/share — list all active share tokens
 export const GET: RequestHandler = async ({ locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   await dbConnect();
@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 // POST /api/cospend/list/share — create a new share token
 export const POST: RequestHandler = async ({ locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   const { token, expiresAt } = await createShareToken(auth.user.nickname);
@@ -34,7 +34,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 
 // PATCH /api/cospend/list/share — update a token's expiry
 export const PATCH: RequestHandler = async ({ request, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   const { id, expiresAt } = await request.json();
@@ -53,7 +53,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 
 // DELETE /api/cospend/list/share — revoke a token
 export const DELETE: RequestHandler = async ({ request, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   const { id } = await request.json();

@@ -7,7 +7,7 @@ import { error } from '@sveltejs/kit';
 import { isEnglish, briefQueryConfig } from '$lib/server/recipeHelpers';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   if (!session?.user?.nickname) {
     throw error(401, 'Authentication required');

@@ -68,7 +68,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals}) => {
 
     const apiRes = await fetch(`/api/rezepte/items/${params.name}`);
     const recipe = await apiRes.json();
-    const session = await locals.auth();
+    const session = locals.session ?? await locals.auth();
     return {
 		recipe: recipe,
 		user: session?.user
@@ -78,7 +78,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals}) => {
 export const actions = {
 	default: async ({ request, locals, params }) => {
 		// Check authentication
-		const auth = await locals.auth();
+		const auth = locals.session ?? await locals.auth();
 		if (!auth) {
 			return fail(401, {
 				error: 'You must be logged in to edit recipes',

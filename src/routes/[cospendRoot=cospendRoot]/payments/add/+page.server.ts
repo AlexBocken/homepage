@@ -3,7 +3,7 @@ import { redirect, fail } from '@sveltejs/kit';
 import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   
   if (!session) {
     throw redirect(302, '/login');
@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   default: async ({ request, locals, fetch, params }) => {
-    const session = await locals.auth();
+    const session = locals.session ?? await locals.auth();
     
     if (!session || !session.user?.nickname) {
       throw redirect(302, '/login');
