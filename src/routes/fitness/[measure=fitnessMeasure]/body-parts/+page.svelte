@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { Minus, Plus, X, ArrowLeft, ArrowRight, Check, Ruler, CopyPlus, TrendingUp } from '@lucide/svelte';
+	import { Minus, Plus, X, ArrowLeft, ArrowRight, Check, Ruler, CopyPlus, TrendingUp, History } from '@lucide/svelte';
 	import { fly, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
@@ -119,6 +119,20 @@
 	}
 	/** @param {string} key */
 	function copyLtoR(key) { values[key].right = values[key].left; }
+
+	/** @param {string} key */
+	function useLastValue(key) {
+		const s = steps.find((x) => x.key === key);
+		if (!s) return;
+		const last = historyFor(s).at(-1);
+		if (!last) return;
+		if (s.paired) {
+			if (last.left != null) values[key].left = String(last.left);
+			if (!values[key].same && last.right != null) values[key].right = String(last.right);
+		} else if (last.value != null) {
+			values[key] = String(last.value);
+		}
+	}
 	/** @param {number} i */
 	function jumpTo(i) {
 		direction = i > idx ? 1 : -1;
@@ -463,9 +477,18 @@
 									</button>
 								</div>
 								<button type="button" class="copy-btn" onclick={() => copyLtoR(step.key)} disabled={!pv.left}>
-									<CopyPlus size={13} /> {t('copy_l_to_r', lang)}
+									<CopyPlus size={15} />
+									<span>{t('copy_l_to_r_before', lang)}</span>
+									<ArrowRight size={14} />
+									<span>{t('copy_l_to_r_after', lang)}</span>
 								</button>
 							</div>
+						{/if}
+						{#if lastForStep?.left != null || lastForStep?.right != null}
+							<button type="button" class="same-value-btn" onclick={() => { useLastValue(step.key); next(); }}>
+								<History size={15} />
+								<span>{t('same_as_last', lang)}</span>
+							</button>
 						{/if}
 						<div class="same-toggle">
 							<Toggle bind:checked={pv.same} label={t('same_both_sides', lang)} />
@@ -483,6 +506,12 @@
 								<Plus size={20} />
 							</button>
 						</div>
+						{#if lastForStep?.value != null}
+							<button type="button" class="same-value-btn" onclick={() => { useLastValue(step.key); next(); }}>
+								<History size={15} />
+								<span>{t('same_as_last', lang)}</span>
+							</button>
+						{/if}
 					{/if}
 				</section>
 			{/key}
@@ -876,13 +905,15 @@
 		align-self: center;
 		display: inline-flex;
 		align-items: center;
-		gap: 0.35rem;
-		padding: 0.25rem 0.7rem;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		padding: 0.55rem 1.1rem;
 		border: 1px dashed var(--color-border);
 		border-radius: var(--radius-pill);
 		background: transparent;
-		font-size: 0.7rem;
-		color: var(--color-text-tertiary);
+		font-size: 0.88rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
 		cursor: pointer;
 		transition: all 150ms;
 	}
@@ -892,6 +923,28 @@
 		border-style: solid;
 	}
 	.copy-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+	.same-value-btn {
+		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.55rem 1.1rem;
+		border: 1px dashed color-mix(in oklab, var(--color-primary) 40%, transparent);
+		border-radius: var(--radius-pill);
+		background: color-mix(in oklab, var(--color-primary) 5%, transparent);
+		font-size: 0.88rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition: border-color var(--transition-fast, 120ms), background var(--transition-fast, 120ms), color var(--transition-fast, 120ms);
+	}
+	.same-value-btn:hover {
+		border-style: solid;
+		border-color: var(--color-primary);
+		background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+		color: var(--color-primary);
+	}
 
 	.same-toggle {
 		display: inline-flex;
