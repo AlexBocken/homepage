@@ -14,7 +14,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 - [x] 8. Calendar payload trim — `yearDays` narrowed to `{iso, color}` (needle lookup only), new pre-filtered `feastDots` array carries feast-specific metadata. Also fixed a stray double `locals.session ?? (locals.session ?? …)` in both calendar page loaders.
 - [ ] 9. History sessions endpoint — slim exercise payload for list view
 - [ ] 10. `Cache-Control` headers on stable API endpoints (all_brief, calendar, exercises metadata)
-- [ ] 11. Search — debounce 200 ms + server-side pre-normalized `_searchKey`
+- [ ] 11. Search — debounce 100 ms + server-side pre-normalized `_searchKey`
 
 ## Features
 [x] on /fitness/measure, fill "Past measurements" in SSR only for the last 10 measurements. anything further should be fetched client side on mount to decreae initial page load time. use a "show more" button and paginate measurments.
@@ -24,7 +24,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 [x] BF graph (with trend line like weight graph) on /fitness/stats page. Emphasize relative changes, not absolute numbers in design (as we cannot trust those) (e.g., use start day of overview as 0% and then show +/- x % on the graph)
 [x] Workshop better names than "Measure" for the /fitness/measure route. It's about body data points (i.e., non-food related). What's a better, short name than "Measure" to capture the logging of weight, body composition, body part measurements, and period tracking?
 [x] on /fitness/stats/histoy/<part> for body measurement graphs, make the range reasonable. e.g., if we have 1 cm change, do not fill the entire y-height with 1 cm. Use reasonable padding for low ranges (i think we do something like htis already on the weight graph?)
-[ ] Make the Period ended button a lot more prominent
+[ ] on /fitness/check-in, Make the Period ended button a lot more prominent in the period tracker component.
 [ ] swap heart emoji on recipe favorites to lucide icon
 [ ] coop and migros cards on shopping list for scanning
 [ ] login icon from lucide in header

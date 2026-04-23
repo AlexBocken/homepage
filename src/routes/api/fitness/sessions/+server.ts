@@ -37,9 +37,21 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       query.startTime = { $gte: start, $lt: end };
     }
 
+    // Projection matches what SessionCard + the history page actually read.
+    // Drops notes, templateId/Name, mode, activityType, endTime, gpsTrack(s),
+    // and session-level gpsPreview — the list view uses only the per-exercise
+    // gpsPreview for its polyline. Detail view hits a separate endpoint
+    // (/api/fitness/sessions/[id]) which keeps the full document.
     const [sessions, total] = await Promise.all([
-      WorkoutSession.find(query).select('-exercises.gpsTrack -gpsTrack')
-        .sort({ startTime: -1 }).limit(limit).skip(offset),
+      WorkoutSession.find(query)
+        .select(
+          'name startTime duration totalVolume totalDistance prs kcalEstimate ' +
+          'exercises.exerciseId exercises.totalDistance exercises.gpsPreview exercises.sets'
+        )
+        .sort({ startTime: -1 })
+        .limit(limit)
+        .skip(offset)
+        .lean(),
       WorkoutSession.countDocuments(query)
     ]);
 
