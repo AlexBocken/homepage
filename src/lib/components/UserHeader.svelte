@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { page } from '$app/stores';
+	import LogIn from '@lucide/svelte/icons/log-in';
 
 	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
 
@@ -55,6 +56,12 @@
 		background-position: center;
 		background-size: contain;
 		cursor: pointer;
+	}
+	.login-link {
+		display: flex !important;
+		align-items: center;
+		justify-content: center;
+		padding: 0.4rem !important;
 	}
 	.options-wrap {
 		--menu-bg: rgba(46, 52, 64, 0.95);
@@ -155,5 +162,12 @@
 	</div>
 	</button>
 {:else}
-	<a class=entry href="/login?callbackUrl={encodeURIComponent($page.url.pathname + $page.url.search)}">Login</a>
+	<a
+		class="entry login-link"
+		href="/login?callbackUrl={encodeURIComponent($page.url.pathname + $page.url.search)}"
+		aria-label={lang === 'de' ? 'Anmelden' : 'Login'}
+		title={lang === 'de' ? 'Anmelden' : 'Login'}
+	>
+		<LogIn size={18} />
+	</a>
 {/if}
