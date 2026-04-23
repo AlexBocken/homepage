@@ -311,6 +311,7 @@ const translations: Translations = {
 	general: { en: 'General', de: 'Allgemein' },
 	body_fat_pct: { en: 'Body Fat (%)', de: 'Körperfett (%)' },
 	history: { en: 'History', de: 'Verlauf' },
+	past_measurements: { en: 'Past measurements', de: 'Frühere Messungen' },
 
 	// SetTable
 	set_header: { en: 'SET', de: 'SATZ' },

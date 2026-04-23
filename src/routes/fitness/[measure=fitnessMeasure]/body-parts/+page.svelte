@@ -8,6 +8,7 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
 	let { data } = $props();
@@ -427,10 +428,9 @@
 								</button>
 							</div>
 						{/if}
-						<label class="same-toggle">
-							<input type="checkbox" bind:checked={pv.same} />
-							<span>{t('same_both_sides', lang)}</span>
-						</label>
+						<div class="same-toggle">
+							<Toggle bind:checked={pv.same} label={t('same_both_sides', lang)} />
+						</div>
 					{:else}
 						<div class="stepper" onwheel={(e) => onWheel(e, step.key, null)}>
 							<button type="button" class="step-btn" onclick={() => bump(step.key, null, -0.5)} aria-label="-0.5">
@@ -859,17 +859,6 @@
 
 	.same-toggle {
 		display: inline-flex;
-		align-items: center;
-		gap: 0.45rem;
-		font-size: 0.78rem;
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		user-select: none;
-	}
-	.same-toggle input {
-		accent-color: var(--color-primary);
-		width: 0.95rem;
-		height: 0.95rem;
 	}
 
 	.panel { display: none; }
