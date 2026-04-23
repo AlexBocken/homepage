@@ -122,6 +122,32 @@
         });
     }
 
+    /** @param {string} s */
+    function normalizeSearchText(s) {
+        return s.toLowerCase()
+            .normalize('NFD')
+            .replace(/\p{Diacritic}/gu, '')
+            .replace(/&shy;|­/g, '');
+    }
+
+    // Memoised normalized search string per recipe. Building it is the hot
+    // path (NFD + regex replace for every recipe × every keystroke), so we
+    // compute it once per recipe array and reuse across keystrokes. Shipping
+    // a pre-normalized `_searchKey` from the server would duplicate the text
+    // fields over the wire — this keeps the payload small and amortises the
+    // cost on the client instead.
+    /** @type {WeakMap<object, string>} */
+    const searchIndex = new WeakMap();
+    /** @param {any} recipe */
+    function searchStringFor(recipe) {
+        const cached = searchIndex.get(recipe);
+        if (cached !== undefined) return cached;
+        const raw = [recipe.name || '', recipe.description || '', ...(recipe.tags || [])].join(' ');
+        const norm = normalizeSearchText(raw);
+        searchIndex.set(recipe, norm);
+        return norm;
+    }
+
     // Perform search directly (no worker)
     /** @param {string} query */
     function performSearch(query) {
@@ -138,25 +164,11 @@
         }
 
         // Normalize and split search query
-        const searchText = query.toLowerCase().trim()
-            .normalize('NFD')
-            .replace(/\p{Diacritic}/gu, "");
-        const searchTerms = searchText.split(" ").filter((/** @type {string} */ term) => term.length > 0);
+        const searchText = normalizeSearchText(query.trim());
+        const searchTerms = searchText.split(' ').filter((/** @type {string} */ term) => term.length > 0);
 
-        // Filter recipes by text
         const matched = filteredByNonText.filter((/** @type {any} */ recipe) => {
-            // Build searchable string from recipe data
-            const searchString = [
-                recipe.name || '',
-                recipe.description || '',
-                ...(recipe.tags || [])
-            ].join(' ')
-                .toLowerCase()
-                .normalize('NFD')
-                .replace(/\p{Diacritic}/gu, "")
-                .replace(/&shy;|­/g, ''); // Remove soft hyphens
-
-            // All search terms must match
+            const searchString = searchStringFor(recipe);
             return searchTerms.every((/** @type {string} */ term) => searchString.includes(term));
         });
 
