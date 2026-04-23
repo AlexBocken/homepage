@@ -6,7 +6,7 @@
 [x] on /fitness/measure in the past measurments tab, show more than "Body measurements only" if we don't have Bodyweight logged. we can be a bit more elaborate in our syntax here tbh.
 [x] add a button on /fitness/measure/body-parts for each measurement directly below to say "Same value", instead of having to hit +, then - to lock in same number
 [x] BF graph (with trend line like weight graph) on /fitness/stats page. Emphasize relative changes, not absolute numbers in design (as we cannot trust those) (e.g., use start day of overview as 0% and then show +/- x % on the graph)
-[ ] Workshop better names than "Measure" for the /fitness/measure route. It's about body data points (i.e., non-food related). What's a better, short name than "Measure" to capture the logging of weight, body composition, body part measurements, and period tracking?
+[x] Workshop better names than "Measure" for the /fitness/measure route. It's about body data points (i.e., non-food related). What's a better, short name than "Measure" to capture the logging of weight, body composition, body part measurements, and period tracking?
 [ ] on /fitness/stats/histoy/<part> for body measurement graphs, make the range reasonable. e.g., if we have 1 cm change, do not fill the entire y-height with 1 cm. Use reasonable padding for low ranges (i think we do something like htis already on the weight graph?)
 
 ## Refactor Recipe Search Component
