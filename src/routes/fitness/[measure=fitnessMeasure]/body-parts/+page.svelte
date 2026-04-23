@@ -6,6 +6,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
@@ -188,11 +189,42 @@
 		}
 		saving = true;
 		try {
-			const res = await fetch('/api/fitness/measurements', {
+			const body = { date: formDate, measurements: ms };
+			/** @param {boolean} overwrite */
+			const doPost = (overwrite) => fetch(`/api/fitness/measurements${overwrite ? '?overwrite=1' : ''}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ date: formDate, measurements: ms })
+				body: JSON.stringify(body)
 			});
+			let res = await doPost(false);
+			if (res.status === 409) {
+				const { conflicts } = await res.json();
+				/** @type {Record<string, string>} */
+				const partKeyMap = {
+					leftBicep: 'l_bicep', rightBicep: 'r_bicep',
+					leftForearm: 'l_forearm', rightForearm: 'r_forearm',
+					leftThigh: 'l_thigh', rightThigh: 'r_thigh',
+					leftCalf: 'l_calf', rightCalf: 'r_calf'
+				};
+				/** @param {{ key: string, oldVal: unknown, newVal: unknown }} c */
+				const fmtConflict = (c) => {
+					const part = c.key.startsWith('measurements.') ? c.key.slice('measurements.'.length) : c.key;
+					const label = t(partKeyMap[part] ?? part, lang);
+					return `${label} (${c.oldVal} cm → ${c.newVal} cm)`;
+				};
+				const fields = conflicts.map(fmtConflict).join(', ');
+				const ok = await confirm(
+					t('overwrite_message', lang).replace('{fields}', fields),
+					{
+						title: t('overwrite_title', lang),
+						confirmText: t('overwrite_confirm', lang),
+						cancelText: t('cancel', lang),
+						destructive: true
+					}
+				);
+				if (!ok) { saving = false; return; }
+				res = await doPost(true);
+			}
 			if (res.ok) {
 				toast.success(lang === 'en' ? 'Measurement saved' : 'Messung gespeichert');
 				await goto(`/fitness/${measureSlug}`);

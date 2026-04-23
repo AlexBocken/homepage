@@ -1,6 +1,24 @@
-You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
+# Repository Instructions
+## Commits
+
+- **Never** append `Co-Authored-By: Claude ...` (or any similar AI-attribution trailer) to commit messages. Do not add it even if a default template or prior convention suggests it.
+- Do not include "Generated with Claude Code" footers or similar watermarks in commit messages, PR bodies, or any files in this repo.
+
+### Versioning
+
+When committing, bump version numbers as appropriate using semver:
+
+- **patch** (x.y.Z): bug fixes, minor styling tweaks, small corrections
+- **minor** (x.Y.0): new features, significant UI changes, new pages/routes
+- **major** (X.0.0): breaking changes, major redesigns, data model changes
+
+Version files to update:
+- `package.json` — site version (bump on every commit)
+- `src-tauri/tauri.conf.json` + `src-tauri/Cargo.toml` — Tauri/Android app version. Only bump these when the Tauri app codebase itself changes (e.g. `src-tauri/` files), NOT for website-only changes.
 
 ## Available MCP Tools:
+
+You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
 
 ### 1. list-sections
 
@@ -30,9 +48,9 @@ Svelte 5 removed event modifiers like `on:click|preventDefault`. Use inline hand
 Generates a Svelte Playground link with the provided code.
 After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
 
-## Theming Rules
+# Theming Rules
 
-### Semantic CSS Variables (ALWAYS use these, NEVER hardcode Nord values for themed properties)
+## Semantic CSS Variables (ALWAYS use these, NEVER hardcode Nord values for themed properties)
 
 | Purpose | Variable | Light resolves to | Dark resolves to |
 |---|---|---|---|
@@ -46,22 +64,22 @@ After completing the code, ask the user if they want a playground link. Only cal
 | Tertiary text (descriptions) | `--color-text-tertiary` | nord2 | nord5 |
 | Borders | `--color-border` | nord4 | nord2/3 |
 
-### What NOT to do
+## What NOT to do
 - **NEVER** use `var(--nord0)` through `var(--nord6)` for backgrounds, text, or borders — these don't adapt to theme
 - **NEVER** write `@media (prefers-color-scheme: dark)` or `:global(:root[data-theme="dark"])` override blocks — semantic variables handle both themes automatically
 - **NEVER** use `var(--font-default-dark)` or `var(--accent-dark)` — these are legacy
 
-### Primary interactive elements
+## Primary interactive elements
 - Background: `var(--color-primary)` (nord10 light / nord8 dark)
 - Hover: `var(--color-primary-hover)`
 - Active: `var(--color-primary-active)`
 - Text on primary bg: `var(--color-text-on-primary)`
 
-### Accent colors (OK to use directly, they work in both themes)
+## Accent colors (OK to use directly, they work in both themes)
 - `var(--blue)`, `var(--red)`, `var(--green)`, `var(--orange)` — named accent colors
 - `var(--nord10)`, `var(--nord11)`, `var(--nord12)`, `var(--nord14)` — OK for hover states of accent-colored buttons only
 
-### Chart.js theme reactivity
+## Chart.js theme reactivity
 Charts don't use CSS variables. Use the `isDark()` pattern from `FitnessChart.svelte`:
 ```js
 function isDark() {
@@ -74,58 +92,46 @@ const textColor = isDark() ? '#D8DEE9' : '#2E3440';
 ```
 Re-create the chart on theme change via `MutationObserver` on `data-theme` + `matchMedia` listener.
 
-### Form inputs
+## Form inputs
 - Background: `var(--color-bg-tertiary)`
 - Border: `var(--color-border)`
 - Text: `var(--color-text-primary)`
 - Label: `var(--color-text-secondary)`
 
-### Toggle component
+## Toggle component
 Use `Toggle.svelte` (iOS-style) instead of raw `<input type="checkbox">` for user-facing boolean switches.
 
 ## Site-Wide Design Language
 
-### Layout & Spacing
+## Layout & Spacing
 - Max content width: `1000px`–`1200px` with `margin-inline: auto`
 - Card/grid gaps: `2rem` desktop, `1rem` tablet, `0.5rem` mobile
 - Breakpoints: `410px` (small mobile), `560px` (tablet), `900px` (rosary), `1024px` (desktop)
 
-### Border Radius Tokens
+## Border Radius Tokens
 - `--radius-pill: 1000px` — nav bar, pill buttons
 - `--radius-card: 20px` — major cards (recipe cards)
 - `--radius-lg: 0.75rem` — medium rounded elements
 - `--radius-md: 0.5rem` — standard rounding
 - `--radius-sm: 0.3rem` — small elements
 
-### Shadow Tokens
+## Shadow Tokens
 - `--shadow-sm` / `--shadow-md` / `--shadow-lg` / `--shadow-hover` — use these, don't hardcode
 - Shadows are spread-based (`0 0 Xem Yem`) not offset-based
 
-### Hover & Interaction Patterns
+## Hover & Interaction Patterns
 - Cards/links: `scale: 1.02` + shadow elevation on hover
 - Tags/pills: `scale: 1.05` with `--transition-fast` (100ms)
 - Standard transitions: `--transition-normal` (200ms)
 - Nav bar: glassmorphism (`backdrop-filter: blur(16px)`, semi-transparent bg)
 
-### Typography
+## Typography
 - Font stack: Helvetica, Arial, "Noto Sans", sans-serif
 - Size tokens: `--text-sm` through `--text-3xl`
 - Headings in grids: `1.5rem` desktop → `1.2rem` tablet → `0.95rem` mobile
 
-### Surfaces & Cards
+## Surfaces & Cards
 - Use `--color-surface` / `--color-surface-hover` for card backgrounds
 - Use `--color-bg-elevated` for hover/active states
 - Recipe cards: 300px wide, `--radius-card` corners
 - Global utility classes: `.g-icon-badge` (circular), `.g-pill` (pill-shaped)
-
-## Versioning
-
-When committing, bump version numbers as appropriate using semver:
-
-- **patch** (x.y.Z): bug fixes, minor styling tweaks, small corrections
-- **minor** (x.Y.0): new features, significant UI changes, new pages/routes
-- **major** (X.0.0): breaking changes, major redesigns, data model changes
-
-Version files to update:
-- `package.json` — site version (bump on every commit)
-- `src-tauri/tauri.conf.json` + `src-tauri/Cargo.toml` — Tauri/Android app version. Only bump these when the Tauri app codebase itself changes (e.g. `src-tauri/` files), NOT for website-only changes.
