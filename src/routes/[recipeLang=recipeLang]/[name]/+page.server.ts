@@ -19,8 +19,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals, url }) => {
     const strippedName = stripHtmlTags(item.name);
     const strippedDescription = stripHtmlTags(item.description);
 
-    // Get session for user info
-    const session = await locals.auth();
+    const session = locals.session ?? await locals.auth();
 
     return {
         item,

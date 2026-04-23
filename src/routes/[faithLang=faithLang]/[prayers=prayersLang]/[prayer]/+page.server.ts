@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 
 	// Fetch angelus streak data for angelus/regina-caeli pages
 	if (angelusSlugs.has(params.prayer)) {
-		const session = await locals.auth();
+		const session = locals.session ?? await locals.auth();
 		if (session?.user?.nickname) {
 			try {
 				const res = await fetch('/api/glaube/angelus-streak');
