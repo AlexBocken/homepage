@@ -14,5 +14,5 @@ export const GET: RequestHandler = async ({ params }) => {
   ).lean();
 
   const recipes = rand_array(dbRecipes.map(r => toBrief(r, params.recipeLang!)));
-  return json(JSON.parse(JSON.stringify(recipes)));
+  return json(recipes);
 };

@@ -65,10 +65,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         germanShortName: recipe.short_name,
         translationStatus: t?.translationStatus
       }});
-      return json(JSON.parse(JSON.stringify(englishRecipes)));
+      return json(englishRecipes);
     }
 
-    return json(JSON.parse(JSON.stringify(recipes)));
+    return json(recipes);
   } catch (e) {
     throw error(500, 'Failed to fetch favorite recipes');
   }

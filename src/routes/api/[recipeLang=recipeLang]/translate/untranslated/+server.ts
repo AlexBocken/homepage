@@ -40,7 +40,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			translationStatus: recipe.translations?.en?.translationStatus || undefined
 		}));
 
-		return json(JSON.parse(JSON.stringify(result)));
+		return json(result);
 	} catch (e) {
 		console.error('Error fetching untranslated recipes:', e);
 		throw error(500, 'Fehler beim Laden der unübersetzten Rezepte');

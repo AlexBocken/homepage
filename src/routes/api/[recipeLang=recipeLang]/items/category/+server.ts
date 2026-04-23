@@ -10,5 +10,5 @@ export const GET: RequestHandler = async ({ params }) => {
   const field = `${prefix}category`;
   const categories = await Recipe.distinct(field, approvalFilter).lean();
 
-  return json(JSON.parse(JSON.stringify(categories)));
+  return json(categories);
 };

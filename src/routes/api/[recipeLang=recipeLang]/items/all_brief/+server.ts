@@ -11,5 +11,5 @@ export const GET: RequestHandler = async ({ params }) => {
   const dbRecipes = await Recipe.find(approvalFilter, projection).lean();
   const recipes = dbRecipes.map(r => toBrief(r, params.recipeLang!));
 
-  return json(JSON.parse(JSON.stringify(rand_array(recipes))));
+  return json(rand_array(recipes));
 };

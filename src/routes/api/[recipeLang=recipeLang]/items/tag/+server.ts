@@ -15,9 +15,9 @@ export const GET: RequestHandler = async ({ params }) => {
         recipe.translations.en.tags.forEach((tag: string) => tagsSet.add(tag));
       }
     });
-    return json(JSON.parse(JSON.stringify(Array.from(tagsSet).sort())));
+    return json(Array.from(tagsSet).sort());
   }
 
   const tags = await Recipe.distinct('tags').lean();
-  return json(JSON.parse(JSON.stringify(tags)));
+  return json(tags);
 };

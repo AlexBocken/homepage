@@ -71,7 +71,7 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
       });
     }
 
-    return json(JSON.parse(JSON.stringify(recipes)));
+    return json(recipes);
   } catch (e) {
     return json({ error: 'Search failed' }, { status: 500 });
   }
