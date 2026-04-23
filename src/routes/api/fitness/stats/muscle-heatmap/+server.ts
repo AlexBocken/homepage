@@ -21,20 +21,19 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const since = new Date();
 	since.setDate(since.getDate() - weeks * 7);
 
-	const sessions = await WorkoutSession.find({
-		createdBy: user.nickname,
-		startTime: { $gte: since }
-	}).lean();
+	const sessions = await WorkoutSession.find(
+		{ createdBy: user.nickname, startTime: { $gte: since } },
+		{ startTime: 1, 'exercises.exerciseId': 1, 'exercises.sets': 1 }
+	).lean();
 
 	// Build weekly buckets
 	type MuscleData = { primary: number; secondary: number };
 	const weeklyData: { weekStart: string; muscles: Record<string, MuscleData> }[] = [];
 
-	// Initialize week buckets
+	// Initialize week buckets (Monday-aligned)
 	for (let w = 0; w < weeks; w++) {
 		const d = new Date();
 		d.setDate(d.getDate() - (weeks - 1 - w) * 7);
-		// Find Monday of that week
 		const day = d.getDay();
 		const diff = d.getDate() - day + (day === 0 ? -6 : 1);
 		d.setDate(diff);
@@ -47,18 +46,16 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		weeklyData.push({ weekStart, muscles });
 	}
 
+	// Map a session's timestamp straight to a bucket index using the first
+	// bucket's Monday as the epoch, avoiding a linear findIndex per session.
+	const firstWeekStartMs = weeklyData.length > 0 ? new Date(weeklyData[0].weekStart).getTime() : 0;
+	const weekMs = 7 * 86400000;
+
 	// Aggregate muscle usage
 	for (const session of sessions) {
 		const sessionDate = new Date(session.startTime);
-		// Find which week bucket
-		const weekIdx = weeklyData.findIndex((w, i) => {
-			const start = new Date(w.weekStart);
-			const nextStart = i + 1 < weeklyData.length
-				? new Date(weeklyData[i + 1].weekStart)
-				: new Date(start.getTime() + 7 * 86400000);
-			return sessionDate >= start && sessionDate < nextStart;
-		});
-		if (weekIdx === -1) continue;
+		const weekIdx = Math.floor((sessionDate.getTime() - firstWeekStartMs) / weekMs);
+		if (weekIdx < 0 || weekIdx >= weeklyData.length) continue;
 
 		const bucket = weeklyData[weekIdx].muscles;
 
