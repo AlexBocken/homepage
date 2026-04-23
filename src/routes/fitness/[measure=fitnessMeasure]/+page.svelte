@@ -160,7 +160,15 @@
 		const parts = [];
 		if (m.weight != null) parts.push(`${m.weight} kg`);
 		if (m.bodyFatPercent != null) parts.push(`${m.bodyFatPercent}% bf`);
-		return parts.join(' · ') || t('body_measurements_only', lang);
+		const bpCount = m.measurements
+			? Object.values(m.measurements).filter((v) => v != null).length
+			: 0;
+		if (bpCount > 0) {
+			const en = bpCount === 1 ? '1 body part' : `${bpCount} body parts`;
+			const de = bpCount === 1 ? '1 Körperteil' : `${bpCount} Körperteile`;
+			parts.push(lang === 'en' ? en : de);
+		}
+		return parts.join(' · ') || t('no_measurements_yet', lang);
 	}
 
 	// --- New measurement form ---
@@ -318,23 +326,72 @@
 		formDate = new Date().toISOString().slice(0, 10);
 	}
 
+	/**
+	 * Render a conflict list for the overwrite dialog.
+	 * @param {Array<{ key: string, oldVal: unknown, newVal: unknown }>} conflicts
+	 */
+	function formatConflicts(conflicts) {
+		/** @type {Record<string, string>} */
+		const partKeyMap = {
+			leftBicep: 'l_bicep', rightBicep: 'r_bicep',
+			leftForearm: 'l_forearm', rightForearm: 'r_forearm',
+			leftThigh: 'l_thigh', rightThigh: 'r_thigh',
+			leftCalf: 'l_calf', rightCalf: 'r_calf'
+		};
+		return conflicts.map((c) => {
+			let label = c.key;
+			let unit = '';
+			if (c.key === 'weight') { label = lang === 'en' ? 'Weight' : 'Gewicht'; unit = ' kg'; }
+			else if (c.key === 'bodyFatPercent') { label = lang === 'en' ? 'Body Fat' : 'Körperfett'; unit = ' %'; }
+			else if (c.key === 'caloricIntake') { label = lang === 'en' ? 'Calories' : 'Kalorien'; unit = ' kcal'; }
+			else if (c.key === 'notes') { label = lang === 'en' ? 'Notes' : 'Notizen'; }
+			else if (c.key.startsWith('measurements.')) {
+				const part = c.key.slice('measurements.'.length);
+				label = t(partKeyMap[part] ?? part, lang);
+				unit = ' cm';
+			}
+			return `${label} (${c.oldVal}${unit} → ${c.newVal}${unit})`;
+		}).join(', ');
+	}
+
 	async function saveMeasurement() {
 		saving = true;
 		try {
-			const res = await fetch('/api/fitness/measurements', {
+			const body = buildBody();
+			/** @param {boolean} overwrite */
+			const doPost = (overwrite) => fetch(`/api/fitness/measurements${overwrite ? '?overwrite=1' : ''}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(buildBody())
+				body: JSON.stringify(body)
 			});
+			let res = await doPost(false);
+			if (res.status === 409) {
+				const { conflicts } = await res.json();
+				const ok = await confirm(
+					t('overwrite_message', lang).replace('{fields}', formatConflicts(conflicts)),
+					{
+						title: t('overwrite_title', lang),
+						confirmText: t('overwrite_confirm', lang),
+						cancelText: t('cancel', lang),
+						destructive: true
+					}
+				);
+				if (!ok) { saving = false; return; }
+				res = await doPost(true);
+			}
 			if (res.ok) {
-				const created = await res.json();
-				// Refresh latest and prepend to history
+				const payload = await res.json();
+				const saved = payload.measurement ?? payload;
 				try {
 					const latestRes = await fetch('/api/fitness/measurements/latest');
 					if (latestRes.ok) latest = await latestRes.json();
 				} catch {}
-				measurements = [created.measurement ?? created, ...measurements];
-				measurementsTotal = measurementsTotal + 1;
+				if (payload.merged) {
+					measurements = measurements.map((/** @type {any} */ m) => m._id === saved._id ? saved : m);
+				} else {
+					measurements = [saved, ...measurements];
+					measurementsTotal = measurementsTotal + 1;
+				}
 				resetForm();
 				toast.success(lang === 'en' ? 'Measurement saved' : 'Messung gespeichert');
 			} else {
@@ -536,12 +593,9 @@
 						<div class="history-item" class:editing={editingId === m._id}>
 							{#if editingId === m._id}
 								<div class="edit-row">
-									<input
-										type="date"
-										bind:value={editDate}
-										class="edit-input edit-date"
-										onkeydown={(e) => onEditKey(e, m)}
-									/>
+									<div class="edit-date-wrap">
+										<DatePicker bind:value={editDate} {lang} />
+									</div>
 									<div class="edit-num">
 										<input
 											type="number"
@@ -567,6 +621,11 @@
 										<span class="edit-unit">%</span>
 									</div>
 									<div class="edit-actions">
+										<a class="edit-more" href="/fitness/{measureSlug}/edit/{m._id}" aria-label={t('edit_measurement', lang)}>
+											<Pencil size={11} />
+											<span class="edit-more-label">{lang === 'en' ? 'Edit all fields' : 'Alle Felder bearbeiten'}</span>
+											<ChevronRight size={11} />
+										</a>
 										<button type="button" class="edit-btn cancel" onclick={cancelEdit} aria-label={t('cancel', lang)}>
 											<X size={14} />
 										</button>
@@ -574,9 +633,6 @@
 											<Check size={14} />
 										</button>
 									</div>
-									<a class="edit-more" href="/fitness/{measureSlug}/edit/{m._id}" aria-label={t('edit_measurement', lang)}>
-										{lang === 'en' ? 'Full edit →' : 'Alle Felder →'}
-									</a>
 								</div>
 							{:else}
 								<div class="history-main">
@@ -1283,9 +1339,9 @@
 		outline: none;
 		border-color: var(--color-primary);
 	}
-	.edit-input.edit-date {
-		flex: 1 1 120px;
-		min-width: 110px;
+	.edit-date-wrap {
+		flex: 1 1 140px;
+		min-width: 130px;
 	}
 	.edit-num {
 		display: inline-flex;
@@ -1338,13 +1394,29 @@
 		color: var(--color-text-primary);
 	}
 	.edit-more {
-		flex-basis: 100%;
-		font-size: 0.68rem;
-		color: var(--color-text-tertiary);
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.3rem 0.7rem;
+		border: 1px dashed color-mix(in oklab, var(--color-primary) 40%, transparent);
+		border-radius: var(--radius-pill);
+		background: color-mix(in oklab, var(--color-primary) 5%, transparent);
+		color: var(--color-text-secondary);
+		font-size: 0.7rem;
+		font-weight: 600;
 		text-decoration: none;
-		padding-top: 0.1rem;
+		white-space: nowrap;
+		transition: border-color var(--transition-fast, 120ms), background var(--transition-fast, 120ms), color var(--transition-fast, 120ms);
 	}
-	.edit-more:hover { color: var(--color-primary); }
+	.edit-more:hover {
+		border-style: solid;
+		border-color: var(--color-primary);
+		background: color-mix(in oklab, var(--color-primary) 10%, transparent);
+		color: var(--color-primary);
+	}
+	@media (max-width: 480px) {
+		.edit-more-label { display: none; }
+	}
 
 	/* Desktop 2-col layout */
 	@media (min-width: 1024px) {

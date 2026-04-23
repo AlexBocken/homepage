@@ -313,6 +313,12 @@ const translations: Translations = {
 	history: { en: 'History', de: 'Verlauf' },
 	past_measurements: { en: 'Past measurements', de: 'Frühere Messungen' },
 	show_more: { en: 'Show more', de: 'Mehr anzeigen' },
+	overwrite_title: { en: 'Overwrite existing values?', de: 'Bestehende Werte überschreiben?' },
+	overwrite_message: {
+		en: 'You already have values for this date: {fields}. Replace them?',
+		de: 'Für dieses Datum sind bereits Werte erfasst: {fields}. Überschreiben?'
+	},
+	overwrite_confirm: { en: 'Overwrite', de: 'Überschreiben' },
 
 	// SetTable
 	set_header: { en: 'SET', de: 'SATZ' },
