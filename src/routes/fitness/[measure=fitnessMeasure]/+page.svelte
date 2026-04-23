@@ -184,11 +184,13 @@
 	const filledCount = $derived(bpMarkers.filter((m) => m.filled).length);
 	const totalParts = 13;
 
+	/** @param {number} delta */
 	function stepWeight(delta) {
 		const cur = Number(formWeight) || lastWeight || 0;
 		formWeight = (Math.round((cur + delta) * 10) / 10).toFixed(1);
 	}
 
+	/** @param {number} delta */
 	function stepBodyFat(delta) {
 		const cur = Number(formBodyFat) || lastBodyFat || 0;
 		formBodyFat = (Math.round((cur + delta) * 10) / 10).toFixed(1);

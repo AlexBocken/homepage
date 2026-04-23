@@ -8,7 +8,7 @@ export const load: LayoutLoad = async ({ params, data }) => {
 		throw error(404, 'Not found');
 	}
 
-	const lang = params.recipeLang === 'recipes' ? 'en' : 'de';
+	const lang: 'en' | 'de' = params.recipeLang === 'recipes' ? 'en' : 'de';
 
 	// Check if we're offline:
 	// 1. Browser reports offline (navigator.onLine === false)

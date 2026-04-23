@@ -14,7 +14,9 @@
 	let { data } = $props();
 
 	let query = $state('');
+	/** @type {string[]} */
 	let equipmentFilters = $state([]);
+	/** @type {string[]} */
 	let muscleGroups = $state([]);
 	/** @type {'all' | 'stretch' | 'non-stretch'} */
 	let typeFilter = $state('all');
@@ -31,32 +33,40 @@
 		return [...selected, ...rest];
 	});
 
-	/** Display label for a muscle group */
+	/**
+	 * Display label for a muscle group
+	 * @param {string} group
+	 */
 	function muscleLabel(group) {
 		const raw = isEn ? group : (MUSCLE_GROUP_DE[group] ?? group);
 		return raw.charAt(0).toUpperCase() + raw.slice(1);
 	}
 
+	/** @param {string} group */
 	function addMuscle(group) {
 		if (group && !muscleGroups.includes(group)) {
 			muscleGroups = [...muscleGroups, group];
 		}
 	}
 
+	/** @param {string} group */
 	function removeMuscle(group) {
 		muscleGroups = muscleGroups.filter(g => g !== group);
 	}
 
+	/** @param {string} eq */
 	function addEquipment(eq) {
 		if (eq && !equipmentFilters.includes(eq)) {
 			equipmentFilters = [...equipmentFilters, eq];
 		}
 	}
 
+	/** @param {string} eq */
 	function removeEquipment(eq) {
 		equipmentFilters = equipmentFilters.filter(e => e !== eq);
 	}
 
+	/** @param {string} eq */
 	function equipmentLabel(eq) {
 		const raw = translateTerm(eq, lang);
 		return raw.charAt(0).toUpperCase() + raw.slice(1);
@@ -74,11 +84,13 @@
 		}
 	}
 
+	/** @param {string} eq */
 	function toggleEquipment(eq) {
 		if (equipmentFilters.includes(eq)) removeEquipment(eq);
 		else addEquipment(eq);
 	}
 
+	/** @param {string} group */
 	function toggleMuscle(group) {
 		if (muscleGroups.includes(group)) removeMuscle(group);
 		else addMuscle(group);

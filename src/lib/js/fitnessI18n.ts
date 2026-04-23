@@ -130,7 +130,6 @@ const translations: Translations = {
 	template_library: { en: 'Template Library', de: 'Vorlagen-Bibliothek' },
 	browse_library: { en: 'Browse Library', de: 'Bibliothek durchsuchen' },
 	template_added: { en: 'Template added', de: 'Vorlage hinzugefügt' },
-	loading: { en: 'Loading', de: 'Laden' },
 	edit_template: { en: 'Edit Template', de: 'Vorlage bearbeiten' },
 	new_template: { en: 'New Template', de: 'Neue Vorlage' },
 	template_name_placeholder: { en: 'Template name', de: 'Vorlagenname' },
@@ -448,7 +447,6 @@ const translations: Translations = {
 
 	// Nutrition stats
 	nutrition_stats: { en: 'Nutrition', de: 'Ernährung' },
-	protein_per_kg: { en: 'Protein', de: 'Protein' },
 	protein_per_kg_unit: { en: 'g/kg', de: 'g/kg' },
 	calorie_balance: { en: 'Calorie Balance', de: 'Kalorienbilanz' },
 	calorie_balance_unit: { en: 'kcal/day', de: 'kcal/Tag' },

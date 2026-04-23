@@ -5,12 +5,20 @@
 	import frontSvgRaw from '$lib/assets/muscle-front.svg?raw';
 	import backSvgRaw from '$lib/assets/muscle-back.svg?raw';
 
+	/**
+	 * @typedef {{ groups: string[], label: { en: string, de: string } }} MuscleRegion
+	 * @typedef {{ primary?: number, secondary?: number, weeklyAvg?: number }} MuscleTotals
+	 */
+
+	/** @type {{ data?: { totals?: Record<string, MuscleTotals> } | null }} */
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const isEn = $derived(lang === 'en');
+	/** @type {Record<string, MuscleTotals>} */
 	const totals = $derived(data?.totals ?? {});
 
+	/** @type {Record<string, MuscleRegion>} */
 	const FRONT_MAP = {
 		'traps':            { groups: ['traps'],                                   label: { en: 'Traps', de: 'Trapez' } },
 		'front-shoulders':  { groups: ['anterior deltoids', 'lateral deltoids'],   label: { en: 'Front Delts', de: 'Vord. Schultern' } },
@@ -23,6 +31,7 @@
 		'calves':           { groups: ['calves'],                                  label: { en: 'Calves', de: 'Waden' } },
 	};
 
+	/** @type {Record<string, MuscleRegion>} */
 	const BACK_MAP = {
 		'traps':            { groups: ['traps'],                                   label: { en: 'Traps', de: 'Trapez' } },
 		'traps-middle':     { groups: ['traps'],                                   label: { en: 'Mid Traps', de: 'Mittl. Trapez' } },
@@ -36,7 +45,10 @@
 		'calves':           { groups: ['calves'],                                  label: { en: 'Calves', de: 'Waden' } },
 	};
 
-	/** Sum weeklyAvg across all muscle groups for a region */
+	/**
+	 * Sum weeklyAvg across all muscle groups for a region
+	 * @param {string[]} groups
+	 */
 	function regionScore(groups) {
 		let score = 0;
 		for (const g of groups) {
@@ -55,7 +67,10 @@
 		return max;
 	});
 
-	/** Compute fill as a color-mix CSS value — resolved natively by the browser */
+	/**
+	 * Compute fill as a color-mix CSS value — resolved natively by the browser
+	 * @param {number} score
+	 */
 	function scoreFill(score) {
 		if (score === 0) return 'var(--color-bg-tertiary)';
 		const pct = Math.round(Math.min(score / maxScore, 1) * 100);
@@ -65,6 +80,8 @@
 	/**
 	 * Preprocess an SVG string: inject fill styles into each muscle group.
 	 * Replaces `<g id="groupId">` with `<g id="groupId" style="...">`.
+	 * @param {string} svgStr
+	 * @param {Record<string, MuscleRegion>} map
 	 */
 	function injectFills(svgStr, map) {
 		let result = svgStr;
@@ -82,6 +99,7 @@
 	const backSvg = $derived(injectFills(backSvgRaw, BACK_MAP));
 
 	/** Currently selected region info */
+	/** @type {(MuscleRegion & { svgId: string }) | null} */
 	let selected = $state(null);
 
 	const selectedInfo = $derived.by(() => {
@@ -99,22 +117,30 @@
 	const hasData = $derived(Object.keys(totals).length > 0);
 
 	/** DOM refs for event delegation */
+	/** @type {HTMLDivElement | null} */
 	let frontEl = $state(null);
+	/** @type {HTMLDivElement | null} */
 	let backEl = $state(null);
 
+	/**
+	 * @param {HTMLDivElement | null} container
+	 * @param {Record<string, MuscleRegion>} map
+	 */
 	function setupEvents(container, map) {
 		if (!container) return;
 
-		container.addEventListener('mouseover', (e) => {
-			const g = e.target.closest('g[id]');
+		container.addEventListener('mouseover', (/** @type {Event} */ e) => {
+			const target = /** @type {Element | null} */ (e.target);
+			const g = target?.closest('g[id]');
 			if (g && map[g.id]) {
 				selected = { ...map[g.id], svgId: g.id };
 				g.classList.add('highlighted');
 			}
 		});
 
-		container.addEventListener('mouseout', (e) => {
-			const g = e.target.closest('g[id]');
+		container.addEventListener('mouseout', (/** @type {Event} */ e) => {
+			const target = /** @type {Element | null} */ (e.target);
+			const g = target?.closest('g[id]');
 			if (g) g.classList.remove('highlighted');
 		});
 
@@ -122,8 +148,9 @@
 			selected = null;
 		});
 
-		container.addEventListener('click', (e) => {
-			const g = e.target.closest('g[id]');
+		container.addEventListener('click', (/** @type {Event} */ e) => {
+			const target = /** @type {Element | null} */ (e.target);
+			const g = target?.closest('g[id]');
 			if (g && map[g.id]) {
 				selected = { ...map[g.id], svgId: g.id };
 			}

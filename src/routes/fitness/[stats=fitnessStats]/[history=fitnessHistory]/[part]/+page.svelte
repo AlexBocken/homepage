@@ -19,6 +19,13 @@
 		)
 	);
 
+	/**
+	 * @typedef {{ paired: true, dates: string[], left: (number|null)[], right: (number|null)[] }} PairedSeries
+	 * @typedef {{ paired: false, dates: string[], values: number[] }} SingleSeries
+	 * @typedef {PairedSeries | SingleSeries} Series
+	 */
+
+	/** @type {Series} */
 	const series = $derived.by(() => {
 		if (card.paired) {
 			/** @type {string[]} */
@@ -36,7 +43,7 @@
 				left.push(l ?? null);
 				right.push(r ?? null);
 			}
-			return { dates, left, right };
+			return { paired: true, dates, left, right };
 		}
 		/** @type {string[]} */
 		const dates = [];
@@ -49,11 +56,11 @@
 			dates.push(m.date);
 			values.push(v);
 		}
-		return { dates, values };
+		return { paired: false, dates, values };
 	});
 
 	const chartData = $derived.by(() => {
-		if (card.paired) {
+		if (series.paired) {
 			return {
 				dates: series.dates,
 				labels: series.dates,
@@ -77,8 +84,15 @@
 		};
 	});
 
+	/**
+	 * @typedef {{ paired: true, latest: { left: number|null, right: number|null }, first: { left: number|null, right: number|null }, count: number }} PairedStats
+	 * @typedef {{ paired: false, latest: number|null, first: number|null, count: number, min: number|null, max: number|null }} SingleStats
+	 * @typedef {PairedStats | SingleStats} Stats
+	 */
+
+	/** @type {Stats} */
 	const stats = $derived.by(() => {
-		if (card.paired) {
+		if (series.paired) {
 			const l = series.left.filter((/** @type {number|null} */ v) => v != null);
 			const r = series.right.filter((/** @type {number|null} */ v) => v != null);
 			const latest = {
@@ -89,10 +103,11 @@
 				left: l.length ? /** @type {number} */ (l[0]) : null,
 				right: r.length ? /** @type {number} */ (r[0]) : null
 			};
-			return { latest, first, count: series.dates.length };
+			return { paired: true, latest, first, count: series.dates.length };
 		}
 		const v = series.values;
 		return {
+			paired: false,
 			latest: v.length ? v[v.length - 1] : null,
 			first: v.length ? v[0] : null,
 			count: v.length,
@@ -142,7 +157,7 @@
 		</div>
 	{:else}
 		<section class="summary">
-			{#if card.paired}
+			{#if stats.paired}
 				<div class="stat-grid">
 					<div class="stat">
 						<span class="stat-label">L · {t('latest', lang)}</span>

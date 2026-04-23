@@ -45,6 +45,7 @@
 		};
 	});
 
+	/** @param {number | null | undefined} v */
 	function fmt(v) {
 		if (v == null || isNaN(v)) return '0';
 		if (v >= 100) return Math.round(v).toString();

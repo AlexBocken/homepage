@@ -5,6 +5,20 @@ import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 
 const angelusSlugs = new Set(['angelus', 'regina-caeli']);
 
+type AngelusStreak = {
+	streak: number;
+	lastComplete: string | null;
+	todayPrayed: number;
+	todayDate: string | null;
+};
+
+interface PrayerPageData {
+	prayer: string;
+	initialLatin: boolean;
+	hasUrlLatin: boolean;
+	angelusStreak?: AngelusStreak | null;
+}
+
 export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	if (!validPrayerSlugs.has(params.prayer)) {
 		await errorWithVerse(fetch, url.pathname, 404, 'Prayer not found');
@@ -14,7 +28,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 	const hasUrlLatin = latinParam !== null;
 	const initialLatin = hasUrlLatin ? latinParam !== '0' : true;
 
-	const result: Record<string, unknown> = {
+	const result: PrayerPageData = {
 		prayer: params.prayer,
 		initialLatin,
 		hasUrlLatin
@@ -27,7 +41,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 			try {
 				const res = await fetch('/api/glaube/angelus-streak');
 				if (res.ok) {
-					result.angelusStreak = await res.json();
+					result.angelusStreak = (await res.json()) as AngelusStreak;
 				}
 			} catch {
 				// Fail silently — streak will use localStorage

@@ -54,6 +54,7 @@
 	});
 
 	// Parse amount string to number (simplified from nutrition.svelte.ts)
+	/** @param {string | undefined | null} amount */
 	function parseAmount(amount) {
 		if (!amount?.trim()) return 0;
 		let s = amount.trim().replace(',', '.');
@@ -69,6 +70,7 @@
 
 	// Compute total recipe nutrition (all ingredients at multiplier=1)
 	const recipeTotals = $derived.by(() => {
+		/** @type {Record<string, number>} */
 		const result = {};
 		const nutrientKeys = [
 			'calories', 'protein', 'fat', 'saturatedFat', 'carbs', 'fiber', 'sugars',
@@ -120,6 +122,7 @@
 	const per100g = $derived.by(() => {
 		const w = recipeTotals.totalWeightGrams;
 		if (w <= 0) return recipeTotals.totals;
+		/** @type {Record<string, number>} */
 		const result = {};
 		for (const [k, v] of Object.entries(recipeTotals.totals)) {
 			result[k] = v / w * 100;

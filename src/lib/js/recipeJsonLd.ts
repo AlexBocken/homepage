@@ -193,7 +193,7 @@ function computeNutritionInfo(
   if ((!mappings || mappings.length === 0) && (!referencedNutrition || referencedNutrition.length === 0)) return null;
 
   const index = new Map(
-    mappings.map(m => [`${m.sectionIndex}-${m.ingredientIndex}`, m])
+    (mappings ?? []).map(m => [`${m.sectionIndex}-${m.ingredientIndex}`, m])
   );
 
   const totals = { calories: 0, protein: 0, fat: 0, saturatedFat: 0, carbs: 0, fiber: 0, sugars: 0, sodium: 0, cholesterol: 0 };

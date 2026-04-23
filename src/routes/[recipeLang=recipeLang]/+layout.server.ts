@@ -7,7 +7,7 @@ export const load : LayoutServerLoad = async ({locals, params, fetch, url}) => {
 		await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	}
 
-	const lang = params.recipeLang === 'recipes' ? 'en' : 'de';
+	const lang: 'en' | 'de' = params.recipeLang === 'recipes' ? 'en' : 'de';
 
 	return {
 		session: locals.session ?? await locals.auth(),

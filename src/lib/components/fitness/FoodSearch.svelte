@@ -7,15 +7,32 @@
 	import MacroBreakdown from './MacroBreakdown.svelte';
 
 	/**
+	 * @typedef {{ description: string, grams: number }} Portion
+	 */
+	/**
+	 * @typedef {{
+	 *   id: string,
+	 *   name: string,
+	 *   source: string,
+	 *   per100g: any,
+	 *   portions?: Portion[],
+	 *   brands?: string,
+	 *   category?: string,
+	 *   calories?: number,
+	 *   favorited?: boolean,
+	 * }} FoodItem
+	 */
+
+	/**
 	 * @type {{
-	 *   onselect: (food: { name: string, source: string, sourceId: string, amountGrams: number, per100g: any, portions?: any[], selectedPortion?: { description: string, grams: number } }) => void,
+	 *   onselect: (food: { name: string, source: string, sourceId: string, amountGrams: number, per100g: any, portions?: Portion[], selectedPortion?: Portion }) => void,
 	 *   oncancel?: () => void,
 	 *   onfavoritechange?: (payload: { source: string, sourceId: string, name: string, favorited: boolean }) => void,
 	 *   showFavorites?: boolean,
 	 *   showDetailLinks?: boolean,
 	 *   autofocus?: boolean,
 	 *   confirmLabel?: string,
-	 *   initialResults?: any[],
+	 *   initialResults?: FoodItem[],
 	 * }}
 	 */
 	let {
@@ -36,8 +53,10 @@
 
 	// --- Search state ---
 	let query = $state('');
+	/** @type {FoodItem[]} */
 	let results = $state(untrack(() => initialResults ?? []));
 	let loading = $state(false);
+	/** @type {ReturnType<typeof setTimeout> | null} */
 	let timeout = $state(null);
 	const isPrefilledMode = $derived(initialResults != null);
 	let filterQuery = $state('');
@@ -48,6 +67,7 @@
 	);
 
 	// --- Selection state ---
+	/** @type {FoodItem | null} */
 	let selected = $state(null);
 	let amountInput = $state('100');
 	let portionIdx = $state(-1); // -1 = grams
@@ -55,7 +75,9 @@
 	// --- Barcode scanner state ---
 	let scanning = $state(false);
 	let scanError = $state('');
+	/** @type {HTMLVideoElement | null} */
 	let videoEl = $state(null);
+	/** @type {MediaStream | null} */
 	let scanStream = $state(null);
 	let scanDebug = $state('');
 
@@ -78,9 +100,10 @@
 		}, 300);
 	}
 
+	/** @param {FoodItem} item */
 	function selectItem(item) {
 		selected = item;
-		if (item.portions?.length > 0) {
+		if ((item.portions?.length ?? 0) > 0) {
 			portionIdx = 0;
 			amountInput = '1';
 		} else {
@@ -126,6 +149,7 @@
 		const grams = resolveGrams();
 		if (!grams || grams <= 0) return;
 
+		/** @type {{ name: string, source: string, sourceId: string, amountGrams: number, per100g: any, portions?: Portion[], selectedPortion?: Portion }} */
 		const food = {
 			name: selected.name,
 			source: selected.source,
@@ -133,7 +157,7 @@
 			amountGrams: grams,
 			per100g: selected.per100g,
 		};
-		if (selected.portions?.length > 0) {
+		if (selected.portions && selected.portions.length > 0) {
 			food.portions = selected.portions;
 		}
 		if (portionIdx >= 0 && selected.portions?.[portionIdx]) {
@@ -151,6 +175,7 @@
 		portionIdx = -1;
 	}
 
+	/** @param {FoodItem} item */
 	async function toggleFavorite(item) {
 		const wasFav = item.favorited;
 		item.favorited = !wasFav;
@@ -178,6 +203,7 @@
 
 
 
+	/** @param {string | undefined} source */
 	function sourceLabel(source) {
 		if (source === 'bls') return 'BLS';
 		if (source === 'usda') return 'USDA';
@@ -186,11 +212,14 @@
 		return source?.toUpperCase() ?? '';
 	}
 
-	// EAN/UPC check digit validation (works for EAN-8, UPC-A, EAN-13)
+	/**
+	 * EAN/UPC check digit validation (works for EAN-8, UPC-A, EAN-13)
+	 * @param {string} code
+	 */
 	function validCheckDigit(code) {
 		const digits = code.split('').map(Number);
 		const check = digits.pop();
-		const sum = digits.reduce((s, d, i) => s + d * ((i % 2 === (digits.length % 2 === 0 ? 0 : 1)) ? 1 : 3), 0);
+		const sum = digits.reduce((/** @type {number} */ s, /** @type {number} */ d, /** @type {number} */ i) => s + d * ((i % 2 === (digits.length % 2 === 0 ? 0 : 1)) ? 1 : 3), 0);
 		return (10 - (sum % 10)) % 10 === check;
 	}
 
@@ -240,13 +269,16 @@
 			await videoEl.play();
 
 			// Use native BarcodeDetector if available, else ponyfill with self-hosted WASM
+			/** @type {any} */
 			let detector;
+			/** @type {any} */
 			const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'];
 			try {
 				if ('BarcodeDetector' in globalThis) {
-					const supported = await globalThis.BarcodeDetector.getSupportedFormats();
+					const BD = /** @type {any} */ (globalThis).BarcodeDetector;
+					const supported = await BD.getSupportedFormats();
 					if (supported.includes('ean_13')) {
-						detector = new globalThis.BarcodeDetector({ formats });
+						detector = new BD({ formats });
 					}
 				}
 			} catch {
@@ -257,7 +289,7 @@
 					const mod = await import('barcode-detector/ponyfill');
 					await mod.prepareZXingModule({
 						overrides: {
-							locateFile: (path, prefix) => {
+							locateFile: (/** @type {string} */ path, /** @type {string} */ prefix) => {
 								if (path.endsWith('.wasm')) return '/fitness/zxing_reader.wasm';
 								return prefix + path;
 							},
@@ -307,7 +339,8 @@
 						}
 					} catch (detectErr) {
 						errorCount++;
-						scanDebug = `ERROR: ${detectErr?.name}: ${detectErr?.message}`;
+						const e = /** @type {{ name?: string, message?: string }} */ (detectErr);
+						scanDebug = `ERROR: ${e?.name}: ${e?.message}`;
 						if (errorCount >= 5) {
 							scanError = isEn ? 'Barcode detection failed repeatedly. Try reloading.' : 'Barcode-Erkennung wiederholt fehlgeschlagen. Seite neu laden.';
 							stopScan();
@@ -320,7 +353,8 @@
 			detectLoop();
 		} catch (err) {
 			scanning = false;
-			const name = err?.name;
+			const e = /** @type {{ name?: string, message?: string }} */ (err);
+			const name = e?.name;
 			if (name === 'NotAllowedError') {
 				scanError = isEn
 					? 'Camera permission denied — enable it in your browser site settings'
@@ -330,7 +364,7 @@
 			} else if (name === 'NotReadableError') {
 				scanError = isEn ? 'Camera is in use by another app' : 'Kamera wird von einer anderen App verwendet';
 			} else {
-				scanError = isEn ? `Camera error: ${err?.message || name}` : `Kamerafehler: ${err?.message || name}`;
+				scanError = isEn ? `Camera error: ${e?.message || name}` : `Kamerafehler: ${e?.message || name}`;
 			}
 		}
 	}
@@ -344,6 +378,7 @@
 		if (videoEl) videoEl.srcObject = null;
 	}
 
+	/** @param {string} code */
 	async function lookupBarcode(code) {
 		loading = true;
 		scanError = '';
@@ -472,10 +507,10 @@
 				min="0.1"
 				step={portionIdx >= 0 ? '0.5' : '1'}
 			/>
-			{#if selected.portions?.length > 0}
+			{#if (selected.portions?.length ?? 0) > 0}
 				<select class="fs-unit-select" bind:value={portionIdx} onchange={() => {
 					const grams = resolveGrams();
-					if (portionIdx >= 0 && selected.portions[portionIdx]) {
+					if (portionIdx >= 0 && selected?.portions?.[portionIdx]) {
 						amountInput = String(Math.round((grams / selected.portions[portionIdx].grams) * 10) / 10 || 1);
 					} else {
 						amountInput = String(grams || 100);

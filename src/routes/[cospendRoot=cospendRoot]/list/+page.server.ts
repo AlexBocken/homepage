@@ -2,7 +2,15 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { getShoppingUser } from '$lib/server/shoppingAuth';
 import { dbConnect } from '$utils/db';
-import { ShoppingList } from '$models/ShoppingList';
+import { ShoppingList, type IShoppingItem } from '$models/ShoppingList';
+import type { ShoppingItem } from '$lib/js/shoppingSync.svelte';
+
+function serializeItems(items: IShoppingItem[]): ShoppingItem[] {
+  return items.map((it) => ({
+    ...it,
+    addedAt: it.addedAt instanceof Date ? it.addedAt.toISOString() : String(it.addedAt)
+  }));
+}
 
 export const load: PageServerLoad = async ({ locals, url }) => {
   const session = await locals.auth();
@@ -17,7 +25,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       return {
         session: null,
         shareToken: token,
-        initialList: list ? { version: list.version, items: list.items } : { version: 0, items: [] }
+        initialList: list ? { version: list.version, items: serializeItems(list.items) } : { version: 0, items: [] as ShoppingItem[] }
       };
     }
   }
@@ -29,6 +37,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   return {
     session,
     shareToken: null,
-    initialList: list ? { version: list.version, items: list.items } : { version: 0, items: [] }
+    initialList: list ? { version: list.version, items: serializeItems(list.items) } : { version: 0, items: [] as ShoppingItem[] }
   };
 };

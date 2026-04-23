@@ -3,10 +3,12 @@
 
 	let { src, poster = '', onClose } = $props();
 
+	/** @param {KeyboardEvent} e */
 	function handleKeydown(e) {
 		if (e.key === 'Escape') onClose();
 	}
 
+	/** @param {MouseEvent} e */
 	function handleBackdrop(e) {
 		if (e.target === e.currentTarget) onClose();
 	}

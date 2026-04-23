@@ -275,7 +275,7 @@
 		const startDay = (first.getDay() + 6) % 7; // Monday = 0
 
 		// Build raw cells with status, including overflow days from adjacent months
-		/** @type {({ day: number, date: string, status: string, pos: string, edges: string, overflow?: boolean } | null)[]} */
+		/** @type {{ day: number, date: string, status: string, pos: string, edges: string, overflow?: boolean }[]} */
 		const cells = [];
 
 		// Previous month overflow

@@ -262,7 +262,7 @@
 				{:else}
 					<div class="card-value card-value-na">—</div>
 				{/if}
-				<div class="card-label">{t('protein_per_kg', lang)}</div>
+				<div class="card-label">{t('protein', lang)}</div>
 				<div class="card-hint">
 					{#if ns.avgProteinPerKg != null}
 						{t('seven_day_avg', lang)}

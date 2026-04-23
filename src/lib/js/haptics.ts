@@ -1,3 +1,4 @@
+// @ts-expect-error — web-haptics has no bundled .d.ts; shim types as any at boundary
 import { createWebHaptics } from 'web-haptics/svelte';
 
 export type HapticPulse = { duration: number; intensity?: number };

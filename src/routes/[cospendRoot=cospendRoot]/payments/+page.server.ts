@@ -31,5 +31,6 @@ export const load: PageServerLoad = async ({ locals, fetch, url }) => {
   } catch (e) {
     console.error('Error loading payments data:', e);
     await errorWithVerse(fetch, url.pathname, 500, 'Failed to load payments data');
+    throw new Error('unreachable');
   }
 };

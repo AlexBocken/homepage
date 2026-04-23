@@ -135,7 +135,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			const favDocs = await FavoriteIngredient.find({ createdBy: user.nickname }).lean();
 
 			// Batch-load favorited recipes
-			const recipeFavIds = favDocs.filter(f => f.source === 'recipe').map(f => f.sourceId);
+			const recipeFavIds = favDocs.filter(f => (f.source as string) === 'recipe').map(f => f.sourceId);
 			const favRecipes = recipeFavIds.length > 0
 				? await Recipe.find({
 					$or: recipeFavIds.map(id =>
@@ -156,7 +156,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					result = lookupBls(fav.sourceId, full);
 				} else if (fav.source === 'usda') {
 					result = lookupUsda(fav.sourceId, full);
-				} else if (fav.source === 'recipe') {
+				} else if ((fav.source as string) === 'recipe') {
 					const r = favRecipeMap.get(fav.sourceId);
 					if (r) {
 						const nutrition = computeRecipePer100g(r);

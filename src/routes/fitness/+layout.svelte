@@ -117,7 +117,7 @@
 		onPauseToggle={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()}
 		restSeconds={workout.restTimerSeconds}
 		restTotal={workout.restTimerTotal}
-		onRestAdjust={(delta) => workout.adjustRestTimer(delta)}
+		onRestAdjust={(/** @type {number} */ delta) => workout.adjustRestTimer(delta)}
 		onRestSkip={() => workout.cancelRestTimer()}
 	/>
 {/if}

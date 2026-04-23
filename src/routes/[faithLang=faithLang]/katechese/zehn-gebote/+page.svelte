@@ -1,10 +1,12 @@
 <script>
 	import { ArrowDown, ArrowLeft } from '@lucide/svelte';
 	import { page } from '$app/stores';
+	/** @type {number | string | null} */
 	let expanded = $state(null);
 	const isGerman = $derived($page.url.pathname.startsWith('/glaube'));
 	const isLatin = $derived($page.url.pathname.startsWith('/fides'));
 
+	/** @param {number | string} id */
 	function toggle(id) {
 		expanded = expanded === id ? null : id;
 	}

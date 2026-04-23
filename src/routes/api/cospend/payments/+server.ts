@@ -137,7 +137,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       };
     });
 
-    const splitPromises = convertedSplits.map((split) => {
+    const splitPromises = convertedSplits.map((split: (typeof convertedSplits)[number]) => {
       return PaymentSplit.create(split as any);
     });
 
