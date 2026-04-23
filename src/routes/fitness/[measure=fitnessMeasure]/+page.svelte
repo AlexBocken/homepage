@@ -1,11 +1,19 @@
 <script>
 	import { page } from '$app/stores';
-	import { Pencil, Trash2, ChevronRight, ChevronDown, Venus, Mars, Weight, Percent, Ruler, Plus, Minus, X, UserCog, Sparkles } from '@lucide/svelte';
+	import { Pencil, Trash2, ChevronRight, Venus, Mars, Weight, Percent, Plus, Minus, X, Check, UserCog, Sparkles } from '@lucide/svelte';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
+	import frontSvgRaw from '$lib/assets/muscle-front.svg?raw';
+	const BP_VIEW_TOP = 100;
+	const BP_VIEW_BOTTOM = 1060;
+	const BP_VIEW_H = BP_VIEW_BOTTOM - BP_VIEW_TOP;
+	const bpFrontSvg = frontSvgRaw.replace(
+		'viewBox="0 0 660.46 1206.46"',
+		`viewBox="0 ${BP_VIEW_TOP} 660.46 ${BP_VIEW_H}"`
+	);
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
@@ -133,12 +141,11 @@
 	// --- New measurement form ---
 	let saving = $state(false);
 	const lastWeight = $derived(latest.weight?.value ?? null);
+	const lastBodyFat = $derived(latest.bodyFatPercent?.value ?? null);
 
 	let formDate = $state(new Date().toISOString().slice(0, 10));
 	let formWeight = $state('');
 	let formBodyFat = $state('');
-
-	let showBodyFat = $state(false);
 
 	const formDirty = $derived(!!formWeight || !!formBodyFat);
 
@@ -147,12 +154,124 @@
 	function formatLatestBp() {
 		if (!latestBpDate) return t('no_measurements_yet', lang);
 		const d = new Date(latestBpDate);
-		return `${t('last_measured', lang)} · ${d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+		const now = new Date();
+		const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+		const rtf = new Intl.RelativeTimeFormat(lang === 'de' ? 'de-DE' : 'en-US', { numeric: 'auto' });
+		let rel;
+		if (diffDays < 30) rel = rtf.format(-diffDays, 'day');
+		else if (diffDays < 365) rel = rtf.format(-Math.floor(diffDays / 30), 'month');
+		else rel = rtf.format(-Math.floor(diffDays / 365), 'year');
+		return `${t('last_measured', lang)} · ${rel}`;
 	}
+
+	/** @typedef {{ key: string, filled: boolean } & ({ shape: 'dot', x: number, y: number } | { shape: 'band', x1: number, x2: number, y: number })} BpMarker */
+	/** @type {BpMarker[]} */
+	const bpMarkers = $derived([
+		{ key: 'neck',         shape: 'dot',  x: 330, y: 190,               filled: latestBp.neck != null },
+		{ key: 'shoulders',    shape: 'band', x1: 170, x2: 510, y: 245,     filled: latestBp.shoulders != null },
+		{ key: 'chest',        shape: 'band', x1: 200, x2: 470, y: 320,     filled: latestBp.chest != null },
+		{ key: 'leftBicep',    shape: 'dot',  x: 150, y: 360,               filled: latestBp.leftBicep != null },
+		{ key: 'rightBicep',   shape: 'dot',  x: 510, y: 360,               filled: latestBp.rightBicep != null },
+		{ key: 'leftForearm',  shape: 'dot',  x: 95,  y: 450,               filled: latestBp.leftForearm != null },
+		{ key: 'rightForearm', shape: 'dot',  x: 565, y: 450,               filled: latestBp.rightForearm != null },
+		{ key: 'waist',        shape: 'dot',  x: 330, y: 495,               filled: latestBp.waist != null },
+		{ key: 'hips',         shape: 'dot',  x: 330, y: 570,               filled: latestBp.hips != null },
+		{ key: 'leftThigh',    shape: 'dot',  x: 250, y: 720,               filled: latestBp.leftThigh != null },
+		{ key: 'rightThigh',   shape: 'dot',  x: 410, y: 720,               filled: latestBp.rightThigh != null },
+		{ key: 'leftCalf',     shape: 'dot',  x: 230, y: 980,              filled: latestBp.leftCalf != null },
+		{ key: 'rightCalf',    shape: 'dot',  x: 430, y: 980,              filled: latestBp.rightCalf != null }
+	]);
+	const filledCount = $derived(bpMarkers.filter((m) => m.filled).length);
+	const totalParts = 13;
 
 	function stepWeight(delta) {
 		const cur = Number(formWeight) || lastWeight || 0;
 		formWeight = String(Math.round((cur + delta) * 10) / 10);
+	}
+
+	function stepBodyFat(delta) {
+		const cur = Number(formBodyFat) || lastBodyFat || 0;
+		formBodyFat = String(Math.round((cur + delta) * 10) / 10);
+	}
+
+	/**
+	 * @param {WheelEvent} e
+	 * @param {(delta: number) => void} stepFn
+	 */
+	function onMetricWheel(e, stepFn) {
+		if (!e.deltaY) return;
+		e.preventDefault();
+		stepFn(e.deltaY < 0 ? 0.1 : -0.1);
+	}
+
+	// --- Inline history edit ---
+	/** @type {string | null} */
+	let editingId = $state(null);
+	let editDate = $state('');
+	let editWeight = $state('');
+	let editBodyFat = $state('');
+	let editSaving = $state(false);
+
+	/** @param {any} m */
+	function startEdit(m) {
+		editingId = m._id;
+		editDate = new Date(m.date).toISOString().slice(0, 10);
+		editWeight = m.weight != null ? String(m.weight) : '';
+		editBodyFat = m.bodyFatPercent != null ? String(m.bodyFatPercent) : '';
+	}
+	function cancelEdit() {
+		editingId = null;
+	}
+	/** @param {any} m */
+	async function saveEdit(m) {
+		editSaving = true;
+		try {
+			/** @type {Record<string, unknown>} */
+			const body = { date: editDate };
+			body.weight = editWeight ? Number(editWeight) : null;
+			body.bodyFatPercent = editBodyFat ? Number(editBodyFat) : null;
+			const res = await fetch(`/api/fitness/measurements/${m._id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+			if (res.ok) {
+				const updated = await res.json();
+				const next = updated.measurement ?? updated;
+				measurements = measurements.map((x) => (x._id === m._id ? next : x));
+				try {
+					const latestRes = await fetch('/api/fitness/measurements/latest');
+					if (latestRes.ok) latest = await latestRes.json();
+				} catch {}
+				toast.success(lang === 'en' ? 'Updated' : 'Aktualisiert');
+				editingId = null;
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to update');
+			}
+		} catch { toast.error('Failed to update'); }
+		editSaving = false;
+	}
+	/** @param {KeyboardEvent} e @param {any} m */
+	function onEditKey(e, m) {
+		if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+		else if (e.key === 'Enter') { e.preventDefault(); saveEdit(m); }
+	}
+
+
+	/**
+	 * @param {KeyboardEvent} e
+	 * @param {(delta: number) => void} stepFn
+	 */
+	function onMetricKey(e, stepFn) {
+		const size = e.shiftKey ? 1.0 : 0.1;
+		if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			stepFn(size);
+		} else if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			stepFn(-size);
+		}
 	}
 
 	function buildBody() {
@@ -170,7 +289,6 @@
 		formWeight = '';
 		formBodyFat = '';
 		formDate = new Date().toISOString().slice(0, 10);
-		showBodyFat = false;
 	}
 
 	async function saveMeasurement() {
@@ -252,65 +370,119 @@
 	{/if}
 
 	<!-- New measurement form -->
-	<form class="add-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
+	<div class="main-col">
+		<button type="button" class="edit-profile-link top" onclick={openProfileEdit}>
+			<UserCog size={14} />
+			<span>{t('edit_profile', lang)}</span>
+		</button>
+		<form class="add-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
 		<div class="date-row">
 			<DatePicker bind:value={formDate} {lang} />
 		</div>
 
-		<div class="weight-card">
-			<div class="weight-icon"><Weight size={20} /></div>
-			<div class="weight-stepper">
-				<button type="button" class="step-btn" onclick={() => stepWeight(-0.1)} aria-label="-0.1">
-					<Minus size={18} />
-				</button>
-				<div class="weight-input-wrap">
-					<input
-						id="m-weight"
-						type="number"
-						step="0.1"
-						bind:value={formWeight}
-						placeholder={lastWeight != null ? String(lastWeight) : '0.0'}
-						class="weight-input"
-						inputmode="decimal"
-					/>
-					<span class="weight-unit">kg</span>
+		<div class="metric-grid">
+			<div class="metric-card">
+				<div class="metric-icon"><Weight size={22} /></div>
+				<div class="metric-stepper" onwheel={(e) => onMetricWheel(e, stepWeight)}>
+					<button type="button" class="step-btn" onclick={() => stepWeight(-0.1)} aria-label="-0.1">
+						<Minus size={18} />
+					</button>
+					<div class="metric-input-wrap">
+						<input
+							id="m-weight"
+							type="number"
+							step="0.1"
+							bind:value={formWeight}
+							placeholder={lastWeight != null ? String(lastWeight) : '0.0'}
+							class="metric-input"
+							inputmode="decimal"
+							onkeydown={(e) => onMetricKey(e, stepWeight)}
+						/>
+						<span class="metric-unit">kg</span>
+					</div>
+					<button type="button" class="step-btn" onclick={() => stepWeight(0.1)} aria-label="+0.1">
+						<Plus size={18} />
+					</button>
 				</div>
-				<button type="button" class="step-btn" onclick={() => stepWeight(0.1)} aria-label="+0.1">
-					<Plus size={18} />
-				</button>
+				<label for="m-weight" class="metric-label">{lang === 'en' ? 'Weight' : 'Gewicht'}</label>
+				{#if formWeight}
+					<button type="button" class="metric-clear" onclick={() => formWeight = ''}>
+						<X size={12} /> {lang === 'en' ? 'Clear' : 'Leeren'}
+					</button>
+				{/if}
 			</div>
-			<label for="m-weight" class="weight-label">{lang === 'en' ? 'Weight' : 'Gewicht'}</label>
-			{#if formWeight}
-				<button type="button" class="weight-clear" onclick={() => formWeight = ''}>
-					<X size={12} /> {lang === 'en' ? 'Clear' : 'Leeren'}
-				</button>
-			{/if}
+
+			<div class="metric-card bf">
+				<div class="metric-icon"><Percent size={22} /></div>
+				<div class="metric-stepper" onwheel={(e) => onMetricWheel(e, stepBodyFat)}>
+					<button type="button" class="step-btn" onclick={() => stepBodyFat(-0.1)} aria-label="-0.1">
+						<Minus size={18} />
+					</button>
+					<div class="metric-input-wrap">
+						<input
+							id="m-bf"
+							type="number"
+							step="0.1"
+							bind:value={formBodyFat}
+							placeholder={lastBodyFat != null ? String(lastBodyFat) : '0.0'}
+							class="metric-input"
+							inputmode="decimal"
+							onkeydown={(e) => onMetricKey(e, stepBodyFat)}
+						/>
+						<span class="metric-unit">%</span>
+					</div>
+					<button type="button" class="step-btn" onclick={() => stepBodyFat(0.1)} aria-label="+0.1">
+						<Plus size={18} />
+					</button>
+				</div>
+				<label for="m-bf" class="metric-label">{lang === 'en' ? 'Body Fat' : 'Körperfett'}</label>
+				{#if formBodyFat}
+					<button type="button" class="metric-clear" onclick={() => formBodyFat = ''}>
+						<X size={12} /> {lang === 'en' ? 'Clear' : 'Leeren'}
+					</button>
+				{/if}
+			</div>
 		</div>
 
-		<button type="button" class="section-toggle" onclick={() => showBodyFat = !showBodyFat}>
-			<span class="section-toggle-left">
-				<Percent size={16} />
-				{t('body_fat_pct', lang)}
-				{#if formBodyFat}<span class="section-preview">{formBodyFat}%</span>{/if}
-			</span>
-			<ChevronDown size={16} class="chevron {showBodyFat ? 'open' : ''}" />
-		</button>
-		{#if showBodyFat}
-			<div class="section-body">
-				<div class="bf-input-wrap">
-					<input id="m-bf" type="number" step="0.1" bind:value={formBodyFat} placeholder="0.0" class="bf-input" inputmode="decimal" />
-					<span class="bf-unit">%</span>
-				</div>
+		<a class="bp-card" href="/fitness/{measureSlug}/body-parts">
+			<div class="bp-figure" aria-hidden="true">
+				<div class="muscle-base">{@html bpFrontSvg}</div>
+				<svg class="dot-overlay" viewBox="0 {BP_VIEW_TOP} 660.46 {BP_VIEW_H}" preserveAspectRatio="xMidYMid meet">
+					{#each bpMarkers as m, i (m.key)}
+						{#if m.shape === 'band'}
+							<line
+								x1={m.x1}
+								y1={m.y}
+								x2={m.x2}
+								y2={m.y}
+								class="dot band"
+								class:filled={m.filled}
+								stroke-linecap="round"
+								style:animation-delay="{80 + i * 35}ms"
+							/>
+						{:else}
+							<circle
+								cx={m.x}
+								cy={m.y}
+								r="22"
+								class="dot"
+								class:filled={m.filled}
+								style:animation-delay="{80 + i * 35}ms"
+							/>
+						{/if}
+					{/each}
+				</svg>
 			</div>
-		{/if}
-
-		<a class="bp-launch" href="/fitness/{measureSlug}/body-parts">
-			<span class="bp-launch-icon"><Ruler size={22} /></span>
-			<span class="bp-launch-text">
-				<span class="bp-launch-title">{t('measure_body_parts', lang)}</span>
-				<span class="bp-launch-sub">{hasAnyBodyPart ? formatLatestBp() : t('measure_body_parts_sub', lang)}</span>
-			</span>
-			<ChevronRight size={18} />
+			<div class="bp-content">
+				<span class="bp-eyebrow">{t('body_parts', lang)}</span>
+				<span class="bp-title">{t('measure_body_parts', lang)}</span>
+				<span class="bp-meta">
+					<span class="bp-count"><b>{filledCount}</b>/{totalParts}</span>
+					<span class="bp-dot-sep">·</span>
+					<span class="bp-sub">{hasAnyBodyPart ? formatLatestBp() : t('measure_body_parts_sub', lang)}</span>
+				</span>
+			</div>
+			<ChevronRight size={18} class="bp-chevron" />
 		</a>
 
 		{#if formDirty && !workout.active}
@@ -318,47 +490,88 @@
 		{/if}
 	</form>
 
+		{#if savedSex === 'female'}
+			<div class="period-slot">
+				<PeriodTracker periods={data.periods ?? []} {lang} sharedWith={data.periodSharedWith ?? []} />
+			</div>
+		{/if}
+	</div>
+
 	{#if measurements.length > 0}
 		<section class="history-section">
 			<button class="history-toggle" onclick={() => showWeightHistory = !showWeightHistory}>
-				<h2>{t('history', lang)}</h2>
+				<h2>{t('past_measurements', lang)}</h2>
 				<ChevronRight size={14} class={showWeightHistory ? 'chevron open' : 'chevron'} />
 			</button>
-			{#if showWeightHistory}
-				<div class="history-list">
+			<div class="history-list" class:collapsed={!showWeightHistory}>
 					{#each measurements as m (m._id)}
-						<div class="history-item">
-							<div class="history-main">
-								<div class="history-info">
-									<span class="history-date">{formatDate(m.date)}</span>
-									<span class="history-summary">{summaryParts(m)}</span>
-								</div>
-								<div class="history-actions">
-									<a class="icon-btn edit" href="/fitness/{measureSlug}/edit/{m._id}" aria-label="Edit measurement">
-										<Pencil size={14} />
+						<div class="history-item" class:editing={editingId === m._id}>
+							{#if editingId === m._id}
+								<div class="edit-row">
+									<input
+										type="date"
+										bind:value={editDate}
+										class="edit-input edit-date"
+										onkeydown={(e) => onEditKey(e, m)}
+									/>
+									<div class="edit-num">
+										<input
+											type="number"
+											step="0.1"
+											bind:value={editWeight}
+											placeholder="--"
+											class="edit-input"
+											inputmode="decimal"
+											onkeydown={(e) => onEditKey(e, m)}
+										/>
+										<span class="edit-unit">kg</span>
+									</div>
+									<div class="edit-num">
+										<input
+											type="number"
+											step="0.1"
+											bind:value={editBodyFat}
+											placeholder="--"
+											class="edit-input"
+											inputmode="decimal"
+											onkeydown={(e) => onEditKey(e, m)}
+										/>
+										<span class="edit-unit">%</span>
+									</div>
+									<div class="edit-actions">
+										<button type="button" class="edit-btn cancel" onclick={cancelEdit} aria-label={t('cancel', lang)}>
+											<X size={14} />
+										</button>
+										<button type="button" class="edit-btn save" onclick={() => saveEdit(m)} disabled={editSaving} aria-label={t('save', lang)}>
+											<Check size={14} />
+										</button>
+									</div>
+									<a class="edit-more" href="/fitness/{measureSlug}/edit/{m._id}" aria-label={t('edit_measurement', lang)}>
+										{lang === 'en' ? 'Full edit →' : 'Alle Felder →'}
 									</a>
-									<button class="icon-btn delete" onclick={() => deleteMeasurement(m._id)} aria-label="Delete measurement">
-										<Trash2 size={14} />
-									</button>
 								</div>
-							</div>
+							{:else}
+								<div class="history-main">
+									<div class="history-info">
+										<span class="history-date">{formatDate(m.date)}</span>
+										<span class="history-summary">{summaryParts(m)}</span>
+									</div>
+									<div class="history-actions">
+										<button class="icon-btn edit" onclick={() => startEdit(m)} aria-label="Edit measurement">
+											<Pencil size={14} />
+										</button>
+										<button class="icon-btn delete" onclick={() => deleteMeasurement(m._id)} aria-label="Delete measurement">
+											<Trash2 size={14} />
+										</button>
+									</div>
+								</div>
+							{/if}
 						</div>
 					{/each}
-				</div>
-			{/if}
+			</div>
 		</section>
 	{/if}
 
-	{#if savedSex === 'female'}
-		<PeriodTracker periods={data.periods ?? []} {lang} sharedWith={data.periodSharedWith ?? []} />
-	{/if}
-
-	<div class="page-footer-actions">
-		<button type="button" class="edit-profile-link" onclick={openProfileEdit}>
-			<UserCog size={14} />
-			<span>{t('edit_profile', lang)}</span>
-		</button>
-	</div>
 </div>
 
 <style>
@@ -366,6 +579,14 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+	.main-col {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		max-width: 480px;
+		margin-inline: auto;
+		width: 100%;
 	}
 	h2 {
 		margin: 0 0 0.5rem;
@@ -488,13 +709,6 @@
 		background: color-mix(in oklab, var(--color-text-primary) 8%, transparent);
 	}
 
-	/* Footer: slim "Edit profile" link */
-	.page-footer-actions {
-		display: flex;
-		justify-content: center;
-		padding-top: 0.5rem;
-		margin-top: 0.5rem;
-	}
 	.edit-profile-link {
 		display: inline-flex;
 		align-items: center;
@@ -508,6 +722,10 @@
 		cursor: pointer;
 		border-radius: var(--radius-pill);
 		transition: color var(--transition-fast, 120ms), background var(--transition-fast, 120ms);
+	}
+	.edit-profile-link.top {
+		align-self: flex-start;
+		margin-left: -0.5rem;
 	}
 	.edit-profile-link:hover {
 		color: var(--color-text-primary);
@@ -594,22 +812,44 @@
 		margin-bottom: 1rem;
 	}
 
-	.weight-card {
+	.metric-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.metric-card {
+		--accent: var(--color-primary);
 		background: var(--color-surface);
+		border: 1px solid var(--color-border);
 		border-radius: var(--radius-card);
 		box-shadow: var(--shadow-md);
 		padding: 1.5rem 1rem 1.25rem;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.3rem;
-		margin-bottom: 0.75rem;
+		gap: 0.4rem;
+		transition: border-color var(--transition-normal);
 	}
-	.weight-icon {
-		color: var(--color-primary);
-		margin-bottom: 0.25rem;
+	.metric-card:focus-within {
+		border-color: color-mix(in oklab, var(--accent) 50%, var(--color-border));
 	}
-	.weight-stepper {
+	.metric-card.bf {
+		--accent: var(--orange);
+	}
+
+	.metric-icon {
+		display: grid;
+		place-items: center;
+		width: 2.4rem;
+		height: 2.4rem;
+		border-radius: 50%;
+		background: color-mix(in oklab, var(--accent) 14%, transparent);
+		color: var(--accent);
+		margin-bottom: 0.1rem;
+	}
+	.metric-stepper {
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
@@ -625,223 +865,240 @@
 		background: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
 		cursor: pointer;
-		transition: background var(--transition-normal), border-color var(--transition-normal);
+		transition: background var(--transition-normal), border-color var(--transition-normal), transform var(--transition-fast, 120ms);
 	}
 	.step-btn:hover {
 		background: var(--color-bg-elevated);
-		border-color: var(--color-primary);
+		border-color: var(--accent, var(--color-primary));
 	}
 	.step-btn:active {
-		background: var(--color-primary);
+		background: var(--accent, var(--color-primary));
 		color: var(--color-text-on-primary);
-		border-color: var(--color-primary);
+		border-color: var(--accent, var(--color-primary));
+		transform: scale(0.94);
 	}
-	.weight-input-wrap {
+	.metric-input-wrap {
 		display: flex;
 		align-items: baseline;
-		gap: 0.3rem;
+		gap: 0.15rem;
 	}
-	.weight-input {
-		width: 5ch;
+	.metric-input {
+		field-sizing: content;
+		min-width: 2ch;
+		max-width: 6ch;
 		border: none;
 		background: transparent;
-		font-size: 2.4rem;
+		font-size: 2.6rem;
 		font-weight: 700;
+		letter-spacing: -0.02em;
 		color: var(--color-text-primary);
 		text-align: center;
+		font-variant-numeric: tabular-nums;
 		-moz-appearance: textfield;
 		appearance: textfield;
+		padding: 0;
 	}
-	.weight-input::placeholder {
+	.metric-input::placeholder {
 		color: var(--color-text-tertiary);
 	}
-	.weight-input::-webkit-inner-spin-button,
-	.weight-input::-webkit-outer-spin-button {
+	.metric-input::-webkit-inner-spin-button,
+	.metric-input::-webkit-outer-spin-button {
 		-webkit-appearance: none;
 		margin: 0;
 	}
-	.weight-input:focus {
+	.metric-input:focus {
 		outline: none;
 	}
-	.weight-unit {
+	.metric-unit {
 		font-size: 1rem;
 		font-weight: 600;
 		color: var(--color-text-secondary);
 	}
-	.weight-label {
-		font-size: 0.7rem;
-		font-weight: 600;
+	.metric-label {
+		font-size: 0.68rem;
+		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: var(--color-text-secondary);
+		letter-spacing: 0.12em;
+		color: var(--color-text-tertiary);
 	}
-	.weight-clear {
+	.metric-clear {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.25rem;
 		margin-top: 0.25rem;
-		padding: 0.2rem 0.6rem;
+		padding: 0.25rem 0.7rem;
 		border: none;
 		border-radius: var(--radius-pill);
 		background: var(--color-bg-tertiary);
 		color: var(--color-text-secondary);
 		font-size: 0.7rem;
 		cursor: pointer;
-		transition: background var(--transition-normal);
+		transition: background var(--transition-normal), color var(--transition-normal);
 	}
-	.weight-clear:hover {
+	.metric-clear:hover {
 		background: var(--color-bg-elevated);
 		color: var(--color-text-primary);
 	}
 
-	/* Section toggles (accordions) */
-	.section-toggle {
+	.bp-card {
+		display: grid;
+		grid-template-columns: 150px 1fr auto;
+		align-items: center;
+		gap: 1rem;
 		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
-		padding: 0.7rem 0.85rem;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		cursor: pointer;
-		margin-bottom: 0;
-		transition: background var(--transition-normal);
-	}
-	.section-toggle:hover {
-		background: var(--color-surface-hover, var(--color-bg-elevated));
-	}
-	.section-toggle-left {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-	.section-preview {
-		font-weight: 400;
-		color: var(--color-text-secondary);
-		font-size: 0.8rem;
-	}
-	.section-toggle :global(.chevron) {
-		transition: transform var(--transition-normal);
-		color: var(--color-text-secondary);
-	}
-	.section-toggle :global(.chevron.open) {
-		transform: rotate(180deg);
-	}
-
-	.section-body {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-top: none;
-		border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-		padding: 0.75rem 0.85rem;
-		margin-bottom: 0.5rem;
-	}
-	.section-toggle:has(+ .section-body) {
-		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-		margin-bottom: 0;
-	}
-
-	.bf-input-wrap {
-		display: flex;
-		align-items: baseline;
-		justify-content: center;
-		gap: 0.25rem;
-		padding: 0.5rem 0;
-	}
-	.bf-input {
-		width: 4ch;
-		border: none;
-		background: transparent;
-		font-size: 1.6rem;
-		font-weight: 700;
-		color: var(--color-text-primary);
-		text-align: center;
-		-moz-appearance: textfield;
-		appearance: textfield;
-	}
-	.bf-input::placeholder {
-		color: var(--color-text-tertiary);
-	}
-	.bf-input::-webkit-inner-spin-button,
-	.bf-input::-webkit-outer-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
-	}
-	.bf-input:focus {
-		outline: none;
-	}
-	.bf-unit {
-		font-size: 0.9rem;
-		font-weight: 600;
-		color: var(--color-text-secondary);
-	}
-
-	.bp-launch {
-		display: flex;
-		align-items: center;
-		gap: 0.85rem;
-		width: 100%;
-		padding: 0.9rem 1rem;
+		padding: 1rem 1.1rem 1rem 0.6rem;
 		margin-top: 0.5rem;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-card);
 		color: var(--color-text-primary);
 		text-decoration: none;
 		cursor: pointer;
-		transition: all var(--transition-normal);
-		position: relative;
-		overflow: hidden;
+		transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal);
 	}
-	.bp-launch::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(
-			135deg,
-			color-mix(in oklab, var(--color-primary) 8%, transparent),
-			transparent 60%
-		);
-		pointer-events: none;
-	}
-	.bp-launch:hover {
+	.bp-card:hover {
 		border-color: var(--color-primary);
 		box-shadow: var(--shadow-md);
 		transform: translateY(-1px);
 	}
-	.bp-launch-icon {
-		display: grid;
-		place-items: center;
-		width: 2.6rem;
-		height: 2.6rem;
-		flex-shrink: 0;
-		border-radius: 50%;
-		background: color-mix(in oklab, var(--color-primary) 14%, transparent);
-		color: var(--color-primary);
+	.bp-figure {
+		position: relative;
+		height: 200px;
+		aspect-ratio: 660 / 960;
+		margin-inline: auto;
 	}
-	.bp-launch-text {
+	.muscle-base,
+	.dot-overlay {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+	.muscle-base :global(svg) {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+	.muscle-base :global(g:not(#body):not(#head) path) {
+		fill: color-mix(in oklab, var(--color-text-primary) 7%, transparent);
+		stroke: var(--color-text-secondary);
+		stroke-width: 1;
+		stroke-linejoin: round;
+	}
+	.muscle-base :global(#body path),
+	.muscle-base :global(#body line),
+	.muscle-base :global(#head path) {
+		stroke: var(--color-text-secondary) !important;
+		fill: none;
+		stroke-width: 2 !important;
+	}
+	.dot-overlay {
+		pointer-events: none;
+	}
+	.dot {
+		fill: var(--color-surface);
+		stroke: var(--color-text-tertiary);
+		stroke-width: 3;
+		opacity: 0;
+		transform-origin: center;
+		transform-box: fill-box;
+		animation: bp-dot-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+		transition: fill var(--transition-normal), stroke var(--transition-normal);
+	}
+	.dot.filled {
+		fill: var(--color-primary);
+		stroke: var(--color-surface);
+		stroke-width: 3;
+	}
+	.dot.band {
+		fill: none;
+		stroke: var(--color-text-tertiary);
+		stroke-width: 18;
+		stroke-dasharray: 0 32;
+		transform: none;
+		animation: bp-band-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+	}
+	.dot.band.filled {
+		stroke: var(--color-primary);
+	}
+	.bp-card:hover .dot:not(.filled) {
+		stroke: var(--color-primary);
+	}
+	@keyframes bp-dot-in {
+		from { opacity: 0; transform: scale(0.3); }
+		to   { opacity: 1; transform: scale(1); }
+	}
+	@keyframes bp-band-in {
+		from { opacity: 0; }
+		to   { opacity: 1; }
+	}
+	.bp-content {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
-		flex: 1;
+		gap: 0.2rem;
 		min-width: 0;
 	}
-	.bp-launch-title {
-		font-size: 0.95rem;
+	.bp-eyebrow {
+		font-size: 0.62rem;
 		font-weight: 700;
-		letter-spacing: -0.005em;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
 	}
-	.bp-launch-sub {
+	.bp-title {
+		font-size: 1.1rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		line-height: 1.2;
+	}
+	.bp-meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		column-gap: 0.4rem;
+		row-gap: 0.1rem;
+		margin-top: 0.25rem;
 		font-size: 0.72rem;
 		color: var(--color-text-secondary);
 		line-height: 1.3;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		min-width: 0;
+	}
+	.bp-count {
+		font-size: 0.82rem;
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
+	}
+	.bp-count b {
+		color: var(--color-primary);
+		font-weight: 700;
+	}
+	.bp-dot-sep {
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
+	}
+	.bp-sub {
+		min-width: 0;
+	}
+	.bp-card :global(.bp-chevron) {
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
+		transition: transform var(--transition-normal), color var(--transition-normal);
+	}
+	.bp-card:hover :global(.bp-chevron) {
+		color: var(--color-primary);
+		transform: translateX(2px);
+	}
+
+	@media (max-width: 480px) {
+		.bp-card {
+			grid-template-columns: 118px 1fr auto;
+			gap: 0.65rem;
+			padding: 0.85rem 0.85rem 0.85rem 0.5rem;
+		}
+		.bp-figure { height: 160px; }
+		.bp-title { font-size: 1rem; }
 	}
 
 	/* History */
@@ -854,6 +1111,7 @@
 		border: none;
 		cursor: pointer;
 		padding: 0;
+		margin-bottom: 0.75rem;
 		color: inherit;
 	}
 	.history-toggle h2 {
@@ -927,5 +1185,142 @@
 		color: var(--nord11);
 		opacity: 1;
 	}
+
+	/* History collapse (mobile only) */
+	.history-list.collapsed { display: none; }
+
+	/* Inline history edit */
+	.history-item.editing {
+		background: color-mix(in oklab, var(--color-primary) 8%, var(--color-surface));
+		border: 1px solid color-mix(in oklab, var(--color-primary) 40%, transparent);
+		padding: 0.55rem 0.65rem;
+	}
+	.edit-row {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		flex-wrap: wrap;
+	}
+	.edit-input {
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-sm);
+		padding: 0.28rem 0.4rem;
+		font-size: 0.8rem;
+		color: var(--color-text-primary);
+		font-variant-numeric: tabular-nums;
+		min-width: 0;
+	}
+	.edit-input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+	.edit-input.edit-date {
+		flex: 1 1 120px;
+		min-width: 110px;
+	}
+	.edit-num {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.15rem;
+	}
+	.edit-num .edit-input {
+		width: 55px;
+		text-align: right;
+	}
+	.edit-num .edit-input::-webkit-inner-spin-button,
+	.edit-num .edit-input::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+	.edit-unit {
+		font-size: 0.7rem;
+		color: var(--color-text-tertiary);
+		font-weight: 600;
+	}
+	.edit-actions {
+		display: flex;
+		gap: 0.3rem;
+		margin-left: auto;
+	}
+	.edit-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+		transition: background var(--transition-fast, 120ms), color var(--transition-fast, 120ms);
+	}
+	.edit-btn.save {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+	}
+	.edit-btn.save:hover:not(:disabled) { background: var(--color-primary-hover); }
+	.edit-btn.save:disabled { opacity: 0.5; cursor: not-allowed; }
+	.edit-btn.cancel {
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+	}
+	.edit-btn.cancel:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
+	.edit-more {
+		flex-basis: 100%;
+		font-size: 0.68rem;
+		color: var(--color-text-tertiary);
+		text-decoration: none;
+		padding-top: 0.1rem;
+	}
+	.edit-more:hover { color: var(--color-primary); }
+
+	/* Desktop 2-col layout */
+	@media (min-width: 1024px) {
+		.measure-page {
+			display: grid;
+			grid-template-columns: minmax(0, 760px) 340px;
+			grid-auto-flow: dense;
+			gap: 1.25rem 2rem;
+			align-items: start;
+			justify-content: center;
+		}
+		.measure-page > :not(.main-col):not(.history-section) {
+			grid-column: 1 / -1;
+		}
+		.main-col {
+			grid-column: 1;
+			max-width: none;
+			margin-inline: 0;
+			width: auto;
+		}
+		.add-form {
+			max-width: none;
+			margin-inline: 0;
+			width: auto;
+		}
+		.history-section {
+			grid-column: 2;
+			align-self: start;
+		}
+		.history-list.collapsed { display: flex; }
+		.history-toggle { pointer-events: none; }
+		.history-toggle :global(.chevron) { display: none; }
+	}
+
+	/* Weight + body fat side-by-side once there's room (tablet and up) */
+	@media (min-width: 560px) {
+		.main-col,
+		.add-form {
+			max-width: 760px;
+		}
+		.metric-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
 
 </style>

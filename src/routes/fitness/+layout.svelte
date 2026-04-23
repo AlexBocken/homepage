@@ -68,6 +68,9 @@
 		!$page.url.pathname.startsWith(`/fitness/${s.nutrition}/food`) &&
 		!$page.url.pathname.startsWith(`/fitness/${s.nutrition}/meals`)
 	);
+	const isMeasureIndex = $derived(
+		/^\/fitness\/(measure|messen)\/?$/.test($page.url.pathname)
+	);
 	/** @param {number} secs */
 	function formatElapsed(secs) {
 		const m = Math.floor(secs / 60);
@@ -100,7 +103,7 @@
 		<UserHeader {user} />
 	{/snippet}
 
-	<div class="fitness-content" style:--fitness-max-width={isNutritionPage ? '1400px' : null}>
+	<div class="fitness-content" style:--fitness-max-width={isNutritionPage || isMeasureIndex ? '1400px' : null}>
 		{@render children()}
 	</div>
 </Header>
