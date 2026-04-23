@@ -5,7 +5,7 @@
 Order = impact. Font items + app.html preload intentionally skipped.
 
 - [x] 1. Lucide subpath imports — convert `from '@lucide/svelte'` barrel imports to `@lucide/svelte/icons/<kebab-name>` so Vite tree-shakes per-icon (current 748 KB shared chunk)
-- [ ] 2. Chart.js dynamic import in `FitnessChart.svelte` (drop 244 KB from non-stats fitness routes)
+- [x] 2. Chart.js dynamic import in `FitnessChart.svelte` (drop 244 KB from non-stats fitness routes)
 - [ ] 3. Recipe `all_brief` endpoint — drop `JSON.parse(JSON.stringify(...))`, move shuffle client-side, enable caching
 - [ ] 4. Favorites page — drop unnecessary `all_brief` fetch (verify consumer first)
 - [ ] 5. Replace redundant `locals.auth()` with `locals.session` across recipe/calendar/fitness loaders
