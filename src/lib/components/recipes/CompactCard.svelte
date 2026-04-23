@@ -1,5 +1,6 @@
 <script lang="ts">
 	import "$lib/css/shake.css";
+	import Heart from '@lucide/svelte/icons/heart';
 
 	let {
 		recipe,
@@ -143,9 +144,11 @@
 	position: absolute;
 	top: 0.5em;
 	left: 0.5em;
-	font-size: 1.1rem;
-	font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji, sans-serif;
-	filter: drop-shadow(0 0 3px rgba(0,0,0,0.8));
+	display: flex;
+	color: #ff2d55;
+	filter:
+		drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7))
+		drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
 	z-index: 2;
 	pointer-events: none;
 }
@@ -156,7 +159,9 @@
 <div class="compact-card" onclick={activateTransitions}>
 	<a href="{routePrefix}/{recipe.short_name}" class="card-link" aria-label={recipe.name}></a>
 	{#if showFavoriteIndicator && isFavorite}
-		<span class="favorite">❤️</span>
+		<span class="favorite" aria-label="Favorit">
+			<Heart size={18} strokeWidth={2} fill="currentColor" />
+		</span>
 	{/if}
 	<div class="img-wrap" style:background-color={img_color}>
 		<img
