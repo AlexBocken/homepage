@@ -1,8 +1,8 @@
 /** Fitness route i18n — slug mappings and UI translations */
 
 const slugMap: Record<string, Record<string, string>> = {
-	en: { statistik: 'stats', verlauf: 'history', training: 'workout', aktiv: 'active', uebungen: 'exercises', messen: 'measure', ernaehrung: 'nutrition' },
-	de: { stats: 'statistik', history: 'verlauf', workout: 'training', active: 'aktiv', exercises: 'uebungen', measure: 'messen', nutrition: 'ernaehrung' }
+	en: { statistik: 'stats', verlauf: 'history', training: 'workout', aktiv: 'active', uebungen: 'exercises', erfassung: 'check-in', ernaehrung: 'nutrition' },
+	de: { stats: 'statistik', history: 'verlauf', workout: 'training', active: 'aktiv', exercises: 'uebungen', 'check-in': 'erfassung', nutrition: 'ernaehrung' }
 };
 
 const germanSlugs = new Set(Object.keys(slugMap.en));
@@ -31,7 +31,7 @@ export function fitnessSlugs(lang: 'en' | 'de') {
 		workout: lang === 'en' ? 'workout' : 'training',
 		active: lang === 'en' ? 'active' : 'aktiv',
 		exercises: lang === 'en' ? 'exercises' : 'uebungen',
-		measure: lang === 'en' ? 'measure' : 'messen',
+		measure: lang === 'en' ? 'check-in' : 'erfassung',
 		nutrition: lang === 'en' ? 'nutrition' : 'ernaehrung'
 	};
 }
@@ -43,7 +43,7 @@ export function fitnessLabels(lang: 'en' | 'de') {
 		history: lang === 'en' ? 'History' : 'Verlauf',
 		workout: lang === 'en' ? 'Workout' : 'Training',
 		exercises: lang === 'en' ? 'Exercises' : 'Übungen',
-		measure: lang === 'en' ? 'Measure' : 'Messen',
+		measure: lang === 'en' ? 'Check-in' : 'Erfassung',
 		nutrition: lang === 'en' ? 'Nutrition' : 'Ernährung'
 	};
 }
