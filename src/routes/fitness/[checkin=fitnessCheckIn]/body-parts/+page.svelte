@@ -15,7 +15,7 @@
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
-	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
+	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 
 	/** @typedef {{ key: string, labelKey: string, img: string | null, paired: boolean, tipKey: string, dbSingle?: string, dbLeft?: string, dbRight?: string }} Step */
 
@@ -241,7 +241,7 @@
 			}
 			if (res.ok) {
 				toast.success(lang === 'en' ? 'Measurement saved' : 'Messung gespeichert');
-				await goto(`/fitness/${measureSlug}`);
+				await goto(`/fitness/${checkinSlug}`);
 			} else {
 				const err = await res.json().catch(() => null);
 				toast.error(err?.error ?? 'Failed to save measurement');
@@ -251,7 +251,7 @@
 	}
 
 	function exit() {
-		goto(`/fitness/${measureSlug}`);
+		goto(`/fitness/${checkinSlug}`);
 	}
 
 	// ----- Chart -----

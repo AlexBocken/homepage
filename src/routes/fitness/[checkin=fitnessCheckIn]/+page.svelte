@@ -16,7 +16,7 @@
 	);
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
-	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
+	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 
@@ -529,7 +529,7 @@
 			</div>
 		</div>
 
-		<a class="bp-card" href="/fitness/{measureSlug}/body-parts">
+		<a class="bp-card" href="/fitness/{checkinSlug}/body-parts">
 			<div class="bp-figure" aria-hidden="true">
 				<div class="muscle-base">{@html bpFrontSvg}</div>
 				<svg class="dot-overlay" viewBox="0 {BP_VIEW_TOP} 660.46 {BP_VIEW_H}" preserveAspectRatio="xMidYMid meet">
@@ -621,7 +621,7 @@
 										<span class="edit-unit">%</span>
 									</div>
 									<div class="edit-actions">
-										<a class="edit-more" href="/fitness/{measureSlug}/edit/{m._id}" aria-label={t('edit_measurement', lang)}>
+										<a class="edit-more" href="/fitness/{checkinSlug}/edit/{m._id}" aria-label={t('edit_measurement', lang)}>
 											<Pencil size={11} />
 											<span class="edit-more-label">{lang === 'en' ? 'Edit all fields' : 'Alle Felder bearbeiten'}</span>
 											<ChevronRight size={11} />

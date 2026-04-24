@@ -9,7 +9,7 @@
 	import DatePicker from '$lib/components/DatePicker.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
-	const measureSlug = $derived(lang === 'en' ? 'measure' : 'messen');
+	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 
 	let { data } = $props();
 	// svelte-ignore state_referenced_locally
@@ -73,7 +73,7 @@
 				body: JSON.stringify(buildBody())
 			});
 			if (res.ok) {
-				await goto(`/fitness/${measureSlug}`);
+				await goto(`/fitness/${checkinSlug}`);
 			} else {
 				const err = await res.json().catch(() => null);
 				toast.error(err?.error ?? 'Failed to save measurement');
@@ -88,7 +88,7 @@
 		try {
 			const res = await fetch(`/api/fitness/measurements/${m._id}`, { method: 'DELETE' });
 			if (res.ok) {
-				await goto(`/fitness/${measureSlug}`);
+				await goto(`/fitness/${checkinSlug}`);
 			} else {
 				const err = await res.json().catch(() => null);
 				toast.error(err?.error ?? 'Failed to delete measurement');
