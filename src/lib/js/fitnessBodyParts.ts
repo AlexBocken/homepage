@@ -23,7 +23,7 @@ export const BODY_PART_CARDS: BodyPartCard[] = [
 	{ key: 'chest',     slugDe: 'brust',        labelKey: 'chest',     img: 'shoulders.png', paired: false, db: 'chest' },
 	{ key: 'biceps',    slugDe: 'bizeps',       labelKey: 'biceps',    img: 'bicep.png',     paired: true,  dbLeft: 'leftBicep',   dbRight: 'rightBicep' },
 	{ key: 'forearms',  slugDe: 'unterarme',    labelKey: 'forearms',  img: 'forearm.svg',   paired: true,  dbLeft: 'leftForearm', dbRight: 'rightForearm' },
-	{ key: 'waist',     slugDe: 'taille',       labelKey: 'waist',     img: 'waist.png',     paired: false, db: 'waist' },
+	{ key: 'waist',     slugDe: 'taille',       labelKey: 'waist',     img: 'waist.svg',     paired: false, db: 'waist' },
 	{ key: 'hips',      slugDe: 'huefte',       labelKey: 'hips',      img: 'hips.png',      paired: false, db: 'hips' },
 	{ key: 'thighs',    slugDe: 'oberschenkel', labelKey: 'thighs',    img: 'thigh.svg',     paired: true,  dbLeft: 'leftThigh',   dbRight: 'rightThigh' },
 	{ key: 'calves',    slugDe: 'waden',        labelKey: 'calves',    img: 'calves.png',    paired: true,  dbLeft: 'leftCalf',    dbRight: 'rightCalf' }
