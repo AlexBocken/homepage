@@ -28,6 +28,7 @@
 	const month = $derived(data.month);
 	const monthDays = $derived(data.monthDays);
 	const yearDays = $derived(data.yearDays);
+	const feastDots = $derived(data.feastDots);
 	const seasonArcs = $derived(data.seasonArcs);
 	const today = $derived(data.today);
 	const todayIso = $derived(data.todayIso);
@@ -267,6 +268,7 @@
 				{year}
 				{liturgicalYear}
 				{yearDays}
+				{feastDots}
 				{seasonArcs}
 				{todayIso}
 				{selectedIso}
