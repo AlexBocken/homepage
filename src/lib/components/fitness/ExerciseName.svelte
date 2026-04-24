@@ -3,7 +3,7 @@
 	import { getEnrichedExerciseById } from '$lib/data/exercisedb';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
-	let { exerciseId } = $props();
+	let { exerciseId, plain = false } = $props();
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const exercise = $derived(getEnrichedExerciseById(exerciseId, lang));
@@ -11,7 +11,11 @@
 </script>
 
 {#if exercise}
-	<a href="/fitness/{sl.exercises}/{exerciseId}" class="exercise-link">{exercise.localName}</a>
+	{#if plain}
+		<span class="exercise-plain">{exercise.localName}</span>
+	{:else}
+		<a href="/fitness/{sl.exercises}/{exerciseId}" class="exercise-link">{exercise.localName}</a>
+	{/if}
 {:else}
 	<span class="exercise-unknown">Unknown Exercise</span>
 {/if}
@@ -24,6 +28,10 @@
 	}
 	.exercise-link:hover {
 		text-decoration: underline;
+	}
+	.exercise-plain {
+		color: inherit;
+		font: inherit;
 	}
 	.exercise-unknown {
 		color: var(--nord11);

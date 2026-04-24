@@ -25,6 +25,7 @@
 	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const isEn = $derived(lang === 'en');
 	const sl = $derived(fitnessSlugs(lang));
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
@@ -35,7 +36,8 @@
 	import { queueSession } from '$lib/offline/fitnessQueue';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
-	import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
+	import WorkoutRail from '$lib/components/fitness/WorkoutRail.svelte';
+	import WorkoutFocusCard from '$lib/components/fitness/WorkoutFocusCard.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import { onMount } from 'svelte';
 
@@ -49,6 +51,82 @@
 
 	/** @type {Record<string, Array<Record<string, any>>>} */
 	let previousData = $state({});
+
+	/** User-pinned exercise index for the focus pane (null = auto-follow first incomplete) */
+	/** @type {number | null} */
+	let focusedIdx = $state(null);
+
+	const autoCurrentIdx = $derived.by(() => {
+		const exs = workout.exercises;
+		for (let i = 0; i < exs.length; i++) {
+			if (exs[i].sets.some((/** @type {any} */ s) => !s.completed)) return i;
+		}
+		return Math.max(0, exs.length - 1);
+	});
+
+	const activeIdx = $derived.by(() => {
+		const exs = workout.exercises;
+		if (exs.length === 0) return -1;
+		if (focusedIdx != null && focusedIdx >= 0 && focusedIdx < exs.length) return focusedIdx;
+		return autoCurrentIdx;
+	});
+
+	const activeExercise = $derived(activeIdx >= 0 ? workout.exercises[activeIdx] : null);
+	const activeExerciseMeta = $derived(activeExercise ? getExerciseById(activeExercise.exerciseId, lang) : null);
+
+	const activeSetIdx = $derived.by(() => {
+		const ex = activeExercise;
+		if (!ex || !ex.sets.length) return 0;
+		for (let i = 0; i < ex.sets.length; i++) {
+			if (!ex.sets[i].completed) return i;
+		}
+		return ex.sets.length;
+	});
+
+	const activeExDoneCount = $derived(activeExercise ? activeExercise.sets.filter((/** @type {any} */ s) => s.completed).length : 0);
+
+	const workoutSetsDone = $derived(
+		workout.exercises.reduce(
+			(/** @type {number} */ n, /** @type {any} */ ex) => n + ex.sets.filter((/** @type {any} */ s) => s.completed).length,
+			0
+		)
+	);
+	const workoutSetsTotal = $derived(
+		workout.exercises.reduce((/** @type {number} */ n, /** @type {any} */ ex) => n + ex.sets.length, 0)
+	);
+
+	/** @param {number} idx */
+	function setFocus(idx) { focusedIdx = idx; }
+
+	/**
+	 * Reorder an exercise from one index to another, adjusting focus to follow.
+	 * @param {number} fromIdx
+	 * @param {number} toIdx
+	 */
+	function reorderExercise(fromIdx, toIdx) {
+		if (fromIdx === toIdx) return;
+		const dir = fromIdx < toIdx ? 1 : -1;
+		let i = fromIdx;
+		while (i !== toIdx) {
+			workout.moveExercise(i, dir);
+			i += dir;
+		}
+		// Track the moved exercise if it was focused
+		if (focusedIdx === fromIdx) {
+			focusedIdx = toIdx;
+		} else if (focusedIdx != null) {
+			if (fromIdx < focusedIdx && toIdx >= focusedIdx) focusedIdx = focusedIdx - 1;
+			else if (fromIdx > focusedIdx && toIdx <= focusedIdx) focusedIdx = focusedIdx + 1;
+		}
+	}
+
+	/** @param {number} idx */
+	function removeExerciseFromRail(idx) {
+		workout.removeExercise(idx);
+		// Unpin focus so auto-current takes over (handles removing the focused one)
+		if (focusedIdx === idx) focusedIdx = null;
+		else if (focusedIdx != null && idx < focusedIdx) focusedIdx = focusedIdx - 1;
+	}
 
 	/** @type {any} */
 	let completionData = $state(null);
@@ -1436,15 +1514,17 @@
 
 {:else if workout.active}
 	<div class="active-workout">
-		<input
-			class="workout-name-input"
-			type="text"
-			bind:value={nameInput}
-			onfocus={() => { nameEditing = true; }}
-			onblur={() => { nameEditing = false; workout.name = nameInput; }}
-			onkeydown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLElement) e.target.blur(); }}
-			placeholder={t('workout_name_placeholder', lang)}
-		/>
+		{#snippet workoutTitle()}
+			<input
+				class="workout-name-input"
+				type="text"
+				bind:value={nameInput}
+				onfocus={() => { nameEditing = true; }}
+				onblur={() => { nameEditing = false; workout.name = nameInput; }}
+				onkeydown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLElement) e.target.blur(); }}
+				placeholder={t('workout_name_placeholder', lang)}
+			/>
+		{/snippet}
 
 		{#if gps.available && hasCardioExercise()}
 			<div class="gps-section">
@@ -1555,89 +1635,105 @@
 			</div>
 		{/if}
 
-		{#each workout.exercises as ex, exIdx (exIdx)}
-			{@const exMetrics = getExerciseMetrics(getExerciseById(ex.exerciseId))}
-			{@const isDurationOnly = exMetrics.includes('duration') && !exMetrics.includes('weight') && !exMetrics.includes('reps')}
-			<div class="exercise-block">
-				<div class="exercise-header">
-					<ExerciseName exerciseId={ex.exerciseId} />
-					<div class="exercise-header-actions">
-						<button class="move-exercise" disabled={exIdx === 0} onclick={() => workout.moveExercise(exIdx, -1)} aria-label="Move up">
-							<ChevronUp size={16} />
-						</button>
-						<button class="move-exercise" disabled={exIdx === workout.exercises.length - 1} onclick={() => workout.moveExercise(exIdx, 1)} aria-label="Move down">
-							<ChevronDown size={16} />
-						</button>
-						<button
-							class="remove-exercise"
-							onclick={() => workout.removeExercise(exIdx)}
-							aria-label="Remove exercise"
-						>
-							<Trash2 size={16} />
+		<div class="workout-grid">
+			<WorkoutRail
+				title={workoutTitle}
+				exercises={workout.exercises}
+				activeIdx={activeIdx}
+				activeSetIdx={activeSetIdx}
+				elapsedLabel={formatElapsed(workout.elapsedSeconds)}
+				paused={workout.paused}
+				syncStatus={sync.status}
+				setsDone={workoutSetsDone}
+				setsTotal={workoutSetsTotal}
+				addLabel={t('add_exercise', lang)}
+				pauseLabel={isEn ? 'Pause' : 'Pause'}
+				resumeLabel={isEn ? 'Resume' : 'Fortsetzen'}
+				removeLabel={isEn ? 'Remove exercise' : 'Übung entfernen'}
+				previousData={previousData}
+				onPauseToggle={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()}
+				onFocus={setFocus}
+				onAddExercise={() => showPicker = true}
+				onRemove={removeExerciseFromRail}
+				onReorder={reorderExercise}
+			/>
+
+			<main class="workout-stage">
+				{#if activeExercise}
+					{@const exMetrics = getExerciseMetrics(getExerciseById(activeExercise.exerciseId))}
+					{@const isDurationOnly = exMetrics.includes('duration') && !exMetrics.includes('weight') && !exMetrics.includes('reps')}
+
+					<WorkoutFocusCard
+						exerciseId={activeExercise.exerciseId}
+						bodyPart={activeExerciseMeta?.localBodyPart ?? null}
+						equipment={activeExerciseMeta?.localEquipment ?? null}
+						detailsHref={`/fitness/${sl.exercises}/${activeExercise.exerciseId}`}
+						detailsLabel={isEn ? 'Exercise details' : 'Übungsdetails'}
+						exerciseIndex={activeIdx}
+						totalExercises={workout.exercises.length}
+						sets={activeExercise.sets}
+						activeSetIdx={activeSetIdx}
+						labels={{
+							exerciseOf: (i, n) => isEn ? `Exercise ${i} of ${n}` : `Übung ${i} von ${n}`,
+							setOf: (i, n) => isEn ? `Set ${i} of ${n}` : `Satz ${i} von ${n}`,
+							done: (n) => isEn ? `${n}/${n} complete` : `${n}/${n} erledigt`,
+						}}
+					/>
+
+					<div class="exercise-block focused">
+						<SetTable
+							sets={activeExercise.sets}
+							previousSets={previousData[activeExercise.exerciseId] ?? []}
+							metrics={exMetrics}
+							editable={true}
+							timedHold={isDurationOnly}
+							restAfterSet={workout.restTimerActive && workout.restExerciseIdx === activeIdx ? workout.restSetIdx : -1}
+							restSeconds={workout.restTimerSeconds}
+							restTotal={workout.restTimerTotal}
+							holdAfterSet={workout.holdTimerActive && workout.holdExerciseIdx === activeIdx ? workout.holdSetIdx : -1}
+							holdSeconds={workout.holdTimerSeconds}
+							holdTotal={workout.holdTimerTotal}
+							onRestAdjust={(delta) => workout.adjustRestTimer(delta)}
+							onRestSkip={cancelRest}
+							onHoldSkip={() => workout.cancelHoldTimer()}
+							onUpdate={(setIdx, d) => workout.updateSet(activeIdx, setIdx, d)}
+							onToggleComplete={(setIdx) => {
+								const ex = activeExercise;
+								if (!ex) return;
+								const set = ex.sets[setIdx];
+								if (workout.holdTimerActive && workout.holdExerciseIdx === activeIdx && workout.holdSetIdx === setIdx) {
+									workout.cancelHoldTimer();
+									return;
+								}
+								if (isDurationOnly && set?.duration && !set.completed) {
+									workout.startHoldTimer(Math.round(set.duration * 60), activeIdx, setIdx);
+								} else {
+									workout.toggleSetComplete(activeIdx, setIdx);
+									if (ex.sets[setIdx]?.completed) {
+										workout.startRestTimer(ex.restTime, activeIdx, setIdx);
+									}
+								}
+							}}
+							onRemove={(setIdx) => workout.removeSet(activeIdx, setIdx)}
+						/>
+
+						<button class="add-set-btn" onclick={() => workout.addSet(activeIdx)}>
+							{t('add_set', lang)}
 						</button>
 					</div>
+				{:else}
+					<div class="empty-stage">
+						<p>{isEn ? 'Add an exercise to get started.' : 'Füge eine Übung hinzu, um zu starten.'}</p>
+					</div>
+				{/if}
+
+				<div class="workout-actions">
+					<button class="cancel-btn" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
+						{t('cancel_workout', lang)}
+					</button>
+					<button class="finish-btn" onclick={finishWorkout}>{t('finish', lang)}</button>
 				</div>
-
-				<SetTable
-					sets={ex.sets}
-					previousSets={previousData[ex.exerciseId] ?? []}
-					metrics={exMetrics}
-					editable={true}
-					timedHold={isDurationOnly}
-					restAfterSet={workout.restTimerActive && workout.restExerciseIdx === exIdx ? workout.restSetIdx : -1}
-					restSeconds={workout.restTimerSeconds}
-					restTotal={workout.restTimerTotal}
-					holdAfterSet={workout.holdTimerActive && workout.holdExerciseIdx === exIdx ? workout.holdSetIdx : -1}
-					holdSeconds={workout.holdTimerSeconds}
-					holdTotal={workout.holdTimerTotal}
-					onRestAdjust={(delta) => workout.adjustRestTimer(delta)}
-					onRestSkip={cancelRest}
-					onHoldSkip={() => workout.cancelHoldTimer()}
-					onUpdate={(setIdx, d) => workout.updateSet(exIdx, setIdx, d)}
-					onToggleComplete={(setIdx) => {
-						const set = ex.sets[setIdx];
-						// If hold timer is running for this set, cancel it
-						if (workout.holdTimerActive && workout.holdExerciseIdx === exIdx && workout.holdSetIdx === setIdx) {
-							workout.cancelHoldTimer();
-							return;
-						}
-						if (isDurationOnly && set?.duration && !set.completed) {
-							// Start hold countdown — completion happens automatically
-							workout.startHoldTimer(Math.round(set.duration * 60), exIdx, setIdx);
-						} else {
-							workout.toggleSetComplete(exIdx, setIdx);
-							if (ex.sets[setIdx]?.completed) {
-								workout.startRestTimer(ex.restTime, exIdx, setIdx);
-							}
-						}
-					}}
-					onRemove={(setIdx) => workout.removeSet(exIdx, setIdx)}
-				/>
-
-				<button class="add-set-btn" onclick={() => workout.addSet(exIdx)}>
-					{t('add_set', lang)}
-				</button>
-			</div>
-		{/each}
-
-		<div class="workout-actions">
-			<button class="add-exercise-btn" onclick={() => showPicker = true}>
-				{t('add_exercise', lang)}
-			</button>
-			<button class="cancel-btn" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
-				{t('cancel_workout', lang)}
-			</button>
-		</div>
-
-		<div class="workout-bottombar">
-			<div class="topbar-left">
-				<button class="pause-btn" onclick={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()} aria-label={workout.paused ? 'Resume' : 'Pause'}>
-					{#if workout.paused}<Play size={16} />{:else}<Pause size={16} />{/if}
-				</button>
-				<span class="elapsed" class:paused={workout.paused}>{formatElapsed(workout.elapsedSeconds)}</span>
-				<SyncIndicator status={sync.status} />
-			</div>
-			<button class="finish-btn" onclick={finishWorkout}>{t('finish', lang)}</button>
+			</main>
 		</div>
 	</div>
 {/if}
@@ -1883,69 +1979,44 @@
 		flex-direction: column;
 		gap: 1rem;
 	}
-	.workout-bottombar {
+	/* Active workout: sidebar rail + focus stage */
+	.workout-grid {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		position: sticky;
-		bottom: 0;
-		background: var(--color-bg-primary);
-		z-index: 10;
-		padding: 0.75rem 0;
-		border-top: 1px solid var(--color-border);
+		flex-direction: column;
+		gap: 1rem;
 	}
-	.topbar-left {
+	.workout-stage {
 		display: flex;
-		align-items: center;
-		gap: 0.5rem;
+		flex-direction: column;
+		gap: 1rem;
+		min-width: 0;
 	}
-	.pause-btn {
-		background: none;
-		border: 1px solid var(--color-border);
-		border-radius: 6px;
+	@media (min-width: 900px) {
+		.workout-grid {
+			display: grid;
+			grid-template-columns: 280px minmax(0, 1fr);
+			gap: 1.5rem;
+			align-items: start;
+		}
+		.workout-grid :global(.workout-rail) {
+			position: sticky;
+			top: calc(8.5rem + env(safe-area-inset-top, 0px));
+		}
+	}
+	@media (min-width: 1180px) {
+		.workout-grid {
+			grid-template-columns: 360px minmax(0, 1fr);
+			gap: 2rem;
+		}
+	}
+	.empty-stage {
+		padding: 2rem 1rem;
+		text-align: center;
+		background: var(--color-surface);
+		border: 1px dashed var(--color-border);
+		border-radius: var(--radius-card);
 		color: var(--color-text-secondary);
-		cursor: pointer;
-		padding: 0.3rem;
-		display: flex;
-		align-items: center;
-	}
-	.pause-btn:hover {
-		border-color: var(--color-primary);
-		color: var(--color-primary);
-	}
-	.elapsed {
-		font-variant-numeric: tabular-nums;
-		font-weight: 600;
-		font-size: 1.1rem;
-		color: var(--color-text-secondary);
-	}
-	.elapsed.paused {
-		color: var(--nord13);
-	}
-	.finish-btn {
-		background: var(--color-primary);
-		color: var(--primary-contrast);
-		border: none;
-		border-radius: 8px;
-		padding: 0.5rem 1.25rem;
-		font-weight: 700;
-		font-size: 0.85rem;
-		cursor: pointer;
-		letter-spacing: 0.03em;
-	}
-	.workout-name-input {
-		background: transparent;
-		border: none;
-		border-bottom: 1px solid var(--color-border);
-		color: inherit;
-		font-size: 1.2rem;
-		font-weight: 700;
-		padding: 0.5rem 0;
-		width: 100%;
-		outline: none;
-	}
-	.workout-name-input:focus {
-		border-bottom-color: var(--color-primary);
+		font-size: 0.9rem;
 	}
 
 	.exercise-block {
@@ -1953,6 +2024,11 @@
 		border-radius: 8px;
 		box-shadow: var(--shadow-sm);
 		padding: 1rem;
+	}
+	.exercise-block.focused {
+		background: transparent;
+		box-shadow: none;
+		padding: 0.25rem 0 0;
 	}
 	.exercise-header {
 		display: flex;
@@ -2012,9 +2088,9 @@
 
 	.workout-actions {
 		display: flex;
-		flex-direction: column;
+		align-items: center;
 		gap: 0.75rem;
-		padding: 1rem 0;
+		padding: 1rem 0 0;
 	}
 	.add-exercise-btn {
 		display: flex;
@@ -2032,20 +2108,44 @@
 		cursor: pointer;
 		letter-spacing: 0.03em;
 	}
+	/* Cancel: ghost style (less prominent) — matches body-parts .ghost pattern */
 	.cancel-btn {
-		width: 100%;
-		padding: 0.75rem;
 		background: transparent;
-		border: 1px solid var(--nord11);
-		border-radius: 10px;
-		color: var(--nord11);
-		font-weight: 700;
+		border: none;
+		color: var(--color-text-tertiary);
 		font-size: 0.85rem;
-		cursor: pointer;
+		font-weight: 600;
 		letter-spacing: 0.03em;
+		padding: 0.6rem 0.9rem;
+		border-radius: var(--radius-md, 0.5rem);
+		cursor: pointer;
+		transition: color 150ms, background 150ms;
+		flex-shrink: 0;
 	}
 	.cancel-btn:hover {
-		background: rgba(191, 97, 106, 0.1);
+		color: var(--nord11);
+		background: color-mix(in srgb, var(--nord11), transparent 92%);
+	}
+	/* Finish: primary, dominant */
+	.finish-btn {
+		flex: 1;
+		padding: 0.75rem 1.25rem;
+		background: var(--color-primary);
+		color: var(--primary-contrast);
+		border: none;
+		border-radius: 10px;
+		font-weight: 700;
+		font-size: 0.9rem;
+		letter-spacing: 0.03em;
+		cursor: pointer;
+		transition: background 140ms, transform 120ms, box-shadow 140ms;
+	}
+	.finish-btn:hover {
+		background: var(--color-primary-hover, var(--color-primary));
+		box-shadow: var(--shadow-md);
+	}
+	.finish-btn:active {
+		transform: scale(0.98);
 	}
 
 	/* GPS section */

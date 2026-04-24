@@ -111,7 +111,7 @@
 		<UserHeader {user} />
 	{/snippet}
 
-	<div class="fitness-content" style:--fitness-max-width={isNutritionPage || isMeasureIndex || isExercisesIndex ? '1400px' : null}>
+	<div class="fitness-content" style:--fitness-max-width={isNutritionPage || isMeasureIndex || isExercisesIndex || isOnActivePage ? '1400px' : null}>
 		{@render children()}
 	</div>
 </Header>
