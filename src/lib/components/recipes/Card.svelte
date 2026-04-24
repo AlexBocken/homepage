@@ -2,6 +2,7 @@
 import "$lib/css/shake.css";
 import "$lib/css/icon.css";
 import { onMount } from "svelte";
+import Heart from '@lucide/svelte/icons/heart';
 
 let {
 	recipe,
@@ -182,10 +183,13 @@ function preloadHeroImage() {
 
 .favorite-indicator{
 	position: absolute;
-	font-size: 2rem;
-	top: 0.1em;
-	left: 0.1em;
-	filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+	top: 0.4em;
+	left: 0.4em;
+	display: flex;
+	color: #ff2d55;
+	filter:
+		drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7))
+		drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
 }
 
 .translation-badge{
@@ -240,7 +244,9 @@ function preloadHeroImage() {
 		<img class="image" class:loaded={isloaded} src={'https://bocken.org/static/rezepte/thumb/' + img_name} loading={loading_strat} alt="{img_alt}" onload={() => isloaded=true}/>
 	</div>
 	{#if showFavoriteIndicator && isFavorite}
-		<div class="favorite-indicator">❤️</div>
+		<div class="favorite-indicator" aria-label="Favorit">
+			<Heart size={28} strokeWidth={2} fill="currentColor" />
+		</div>
 	{/if}
 	{#if translationStatus !== undefined}
 		<div class="translation-badge {translationStatus || 'none'}">
