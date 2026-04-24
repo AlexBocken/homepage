@@ -653,8 +653,8 @@
 						</div>
 					{/each}
 			</div>
-			{#if showWeightHistory && measurements.length < measurementsTotal}
-				<button type="button" class="show-more" onclick={loadMore} disabled={loadingMore}>
+			{#if measurements.length < measurementsTotal}
+				<button type="button" class="show-more" class:collapsed={!showWeightHistory} onclick={loadMore} disabled={loadingMore}>
 					{loadingMore ? t('saving', lang) : t('show_more', lang)}
 					<span class="show-more-count">({measurements.length}/{measurementsTotal})</span>
 				</button>
@@ -1312,6 +1312,7 @@
 
 	/* History collapse (mobile only) */
 	.history-list.collapsed { display: none; }
+	.show-more.collapsed { display: none; }
 
 	/* Inline history edit */
 	.history-item.editing {
@@ -1447,6 +1448,7 @@
 			align-self: start;
 		}
 		.history-list.collapsed { display: flex; }
+		.show-more.collapsed { display: inline-flex; }
 		.history-toggle { pointer-events: none; }
 		.history-toggle :global(.chevron) { display: none; }
 	}
