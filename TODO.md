@@ -14,7 +14,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 - [x] 8. Calendar payload trim — `yearDays` narrowed to `{iso, color}` (needle lookup only), new pre-filtered `feastDots` array carries feast-specific metadata. Also fixed a stray double `locals.session ?? (locals.session ?? …)` in both calendar page loaders.
 - [x] 9. History sessions endpoint — projection narrowed to exactly what SessionCard reads (drops notes, templates, mode, endTime, session-level gpsPreview); added `.lean()`.
 - [x] 10. `Cache-Control` headers: 8 h public on the shuffled recipe list endpoints (`all_brief`, `category/[c]`, `tag/[t]`, `icon/[i]`, `in_season/[m]`) — rand_array is seeded per UTC day, safe to share. 1 h public on distinct-value lists (`category`, `tag`, `icon`). 5 min public on recipe detail. `private 1h` on fitness `/exercises/filters`. Calendar page skipped (session serialised into layout HTML).
-- [ ] 11. Search — debounce 100 ms + server-side pre-normalized `_searchKey`
+- [x] 11. Search — debounce was already 100 ms. Instead of a server-side `_searchKey` (would duplicate text over the wire), memoise per-recipe normalized string in a `WeakMap` on the client — built lazily, reused across every subsequent keystroke.
 
 ## Features
 [x] on /fitness/measure, fill "Past measurements" in SSR only for the last 10 measurements. anything further should be fetched client side on mount to decreae initial page load time. use a "show more" button and paginate measurments.
