@@ -35,7 +35,7 @@
 		{ key: 'chest',     labelKey: 'chest',     img: 'shoulders.png', paired: false, tipKey: 'measure_tip_chest',     dbSingle: 'chest' },
 		{ key: 'biceps',    labelKey: 'l_bicep',   img: 'bicep.png',     paired: true,  tipKey: 'measure_tip_biceps',    dbLeft: 'leftBicep',   dbRight: 'rightBicep' },
 		{ key: 'forearms',  labelKey: 'l_forearm', img: 'forearm.svg',   paired: true,  tipKey: 'measure_tip_forearms',  dbLeft: 'leftForearm', dbRight: 'rightForearm' },
-		{ key: 'waist',     labelKey: 'waist',     img: 'waist.png',     paired: false, tipKey: 'measure_tip_waist',     dbSingle: 'waist' },
+		{ key: 'waist',     labelKey: 'waist',     img: 'waist.svg',     paired: false, tipKey: 'measure_tip_waist',     dbSingle: 'waist' },
 		{ key: 'hips',      labelKey: 'hips',      img: 'hips.png',      paired: false, tipKey: 'measure_tip_hips',      dbSingle: 'hips' },
 		{ key: 'thighs',    labelKey: 'l_thigh',   img: 'thigh.svg',     paired: true,  tipKey: 'measure_tip_thighs',    dbLeft: 'leftThigh',   dbRight: 'rightThigh' },
 		{ key: 'calves',    labelKey: 'calves',    img: 'calves.png',    paired: true,  tipKey: 'measure_tip_calves',    dbLeft: 'leftCalf',    dbRight: 'rightCalf' }
