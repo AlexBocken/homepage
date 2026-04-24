@@ -7,8 +7,8 @@
 	 * @typedef {{ groups: string[], label: { en: string, de: string } }} MuscleRegion
 	 */
 
-	/** @type {{ selectedGroups?: string[], lang?: string, split?: boolean }} */
-	let { selectedGroups = $bindable([]), lang = 'en', split = false } = $props();
+	/** @type {{ selectedGroups?: string[], lang?: string }} */
+	let { selectedGroups = $bindable([]), lang = 'en' } = $props();
 
 	const isEn = $derived(lang === 'en');
 
@@ -78,7 +78,6 @@
 	/** Currently hovered region for tooltip */
 	/** @type {MuscleRegion | null} */
 	let hovered = $state(null);
-	let hoveredSide = $state('front');
 
 	const hoveredLabel = $derived.by(() => {
 		if (!hovered) return null;
@@ -108,9 +107,8 @@
 	/**
 	 * @param {HTMLDivElement | null} container
 	 * @param {Record<string, MuscleRegion>} map
-	 * @param {string} side
 	 */
-	function setupEvents(container, map, side) {
+	function setupEvents(container, map) {
 		if (!container) return;
 
 		container.addEventListener('mouseover', (/** @type {Event} */ e) => {
@@ -118,7 +116,6 @@
 			const g = target?.closest('g[id]');
 			if (g && map[g.id]) {
 				hovered = map[g.id];
-				hoveredSide = side;
 				g.classList.add('highlighted');
 			}
 		});
@@ -143,66 +140,44 @@
 	}
 
 	onMount(() => {
-		setupEvents(frontEl, FRONT_MAP, 'front');
-		setupEvents(backEl, BACK_MAP, 'back');
+		setupEvents(frontEl, FRONT_MAP);
+		setupEvents(backEl, BACK_MAP);
 	});
 </script>
 
-{#if split}
-	<div class="muscle-filter-split">
-		<div class="split-left">
-			<div class="figure">
-				<div class="svg-wrap" bind:this={frontEl}>
-					{@html frontSvg}
-				</div>
+<div class="muscle-filter">
+	<div class="body-figures">
+		<div class="figure">
+			<span class="figure-label">{isEn ? 'Front' : 'Vorne'}</span>
+			<div class="svg-wrap" bind:this={frontEl}>
+				{@html frontSvg}
 			</div>
-			{#if hoveredLabel && hoveredSide === 'front'}
-				<div class="hover-label">{hoveredLabel}</div>
-			{/if}
 		</div>
-		<div class="split-right">
-			<div class="figure">
-				<div class="svg-wrap" bind:this={backEl}>
-					{@html backSvg}
-				</div>
+		<div class="figure">
+			<span class="figure-label">{isEn ? 'Back' : 'Hinten'}</span>
+			<div class="svg-wrap" bind:this={backEl}>
+				{@html backSvg}
 			</div>
-			{#if hoveredLabel && hoveredSide === 'back'}
-				<div class="hover-label">{hoveredLabel}</div>
-			{/if}
 		</div>
 	</div>
-{:else}
-	<div class="muscle-filter">
-		<div class="body-figures">
-			<div class="figure">
-				<div class="svg-wrap" bind:this={frontEl}>
-					{@html frontSvg}
-				</div>
-			</div>
-			<div class="figure">
-				<div class="svg-wrap" bind:this={backEl}>
-					{@html backSvg}
-				</div>
-			</div>
-		</div>
 
-		{#if hoveredLabel}
-			<div class="hover-label">{hoveredLabel}</div>
-		{/if}
+	<div class="hover-label" aria-live="polite">
+		{hoveredLabel ?? (isEn ? 'Tap a muscle to filter' : 'Muskel antippen zum Filtern')}
 	</div>
-{/if}
+</div>
 
 <style>
 	.muscle-filter {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.35rem;
+		gap: 0.5rem;
+		width: 100%;
 	}
 
 	.body-figures {
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.75rem;
 		justify-content: center;
 		width: 100%;
 	}
@@ -211,12 +186,47 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		gap: 0.3rem;
 		flex: 1;
-		max-width: 150px;
+		min-width: 0;
+		max-width: 180px;
+	}
+
+	/* Tablet sidebar: narrow column, stack figures vertically */
+	@media (min-width: 900px) and (max-width: 1179px) {
+		.body-figures {
+			flex-direction: column;
+			align-items: center;
+			gap: 0.6rem;
+		}
+		.figure {
+			flex: initial;
+			width: 100%;
+			max-width: 170px;
+		}
+	}
+
+	/* Wide sidebar: let figures grow with the card width instead of capping at 180px */
+	@media (min-width: 1180px) {
+		.body-figures {
+			gap: 1rem;
+		}
+		.figure {
+			max-width: none;
+		}
+	}
+
+	.figure-label {
+		font-size: 0.6rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--color-text-tertiary);
 	}
 
 	.svg-wrap {
 		width: 100%;
+		-webkit-tap-highlight-color: transparent;
 	}
 
 	.svg-wrap :global(svg) {
@@ -245,25 +255,10 @@
 	}
 
 	.hover-label {
-		font-size: 0.7rem;
+		min-height: 1.1em;
+		font-size: 0.72rem;
 		font-weight: 600;
-		color: var(--color-text-primary);
+		color: var(--color-text-secondary);
 		text-align: center;
-	}
-
-	/* Split mode: two independent columns for parent to position */
-	.muscle-filter-split {
-		display: contents;
-	}
-
-	.split-left, .split-right {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.35rem;
-	}
-
-	.split-left .figure, .split-right .figure {
-		max-width: none;
 	}
 </style>

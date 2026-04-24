@@ -76,6 +76,9 @@
 	const isMeasureIndex = $derived(
 		/^\/fitness\/(check-in|erfassung)\/?$/.test($page.url.pathname)
 	);
+	const isExercisesIndex = $derived(
+		/^\/fitness\/(exercises|uebungen)\/?$/.test($page.url.pathname)
+	);
 	/** @param {number} secs */
 	function formatElapsed(secs) {
 		const m = Math.floor(secs / 60);
@@ -108,7 +111,7 @@
 		<UserHeader {user} />
 	{/snippet}
 
-	<div class="fitness-content" style:--fitness-max-width={isNutritionPage || isMeasureIndex ? '1400px' : null}>
+	<div class="fitness-content" style:--fitness-max-width={isNutritionPage || isMeasureIndex || isExercisesIndex ? '1400px' : null}>
 		{@render children()}
 	</div>
 </Header>
