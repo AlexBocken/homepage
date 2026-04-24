@@ -3,9 +3,12 @@ import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import type {BriefRecipeType} from '$types/types';
 
-export const GET: RequestHandler = async ({params}) => {
+export const GET: RequestHandler = async ({ params, setHeaders }) => {
   await dbConnect();
   const icons = await Recipe.distinct('icon').lean();
+
+  // Same cache budget as /items/category.
+  setHeaders({ 'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' });
 
   return json(icons);
 };
