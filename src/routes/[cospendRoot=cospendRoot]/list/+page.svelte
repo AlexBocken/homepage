@@ -296,10 +296,10 @@
   }
 
   // --- Loyalty cards ---
-  let showLoyalty = $state(false);
+  /** @type {'supercard' | 'cumulus' | null} */
+  let activeCard = $state(null);
   const hasSupercard = $derived(!!data.loyalty?.hasSupercard);
   const hasCumulus = $derived(!!data.loyalty?.hasCumulus);
-  const hasAnyCard = $derived(hasSupercard || hasCumulus);
 
   // --- Share links ---
   let showShareModal = $state(false);
@@ -429,8 +429,13 @@
     <div class="header-row">
       <h1 class="sr-only">{t('shopping_list_title', lang)}</h1>
       <SyncIndicator status={sync.status} />
-      {#if hasAnyCard}
-        <button class="btn-share" onclick={() => showLoyalty = true} title="Kundenkarten" aria-label="Kundenkarten">
+      {#if hasSupercard}
+        <button class="btn-card btn-card-coop" onclick={() => activeCard = 'supercard'} title="Coop Supercard" aria-label="Coop Supercard">
+          <CreditCard size={16} />
+        </button>
+      {/if}
+      {#if hasCumulus}
+        <button class="btn-card btn-card-migros" onclick={() => activeCard = 'cumulus'} title="Migros Cumulus" aria-label="Migros Cumulus">
           <CreditCard size={16} />
         </button>
       {/if}
@@ -530,7 +535,7 @@
 
 </div>
 
-<LoyaltyCards bind:open={showLoyalty} {hasSupercard} {hasCumulus} />
+<LoyaltyCards bind:card={activeCard} {hasSupercard} {hasCumulus} />
 
 {#if editingItem}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -704,6 +709,31 @@
   .btn-share:hover {
     background: var(--color-bg-elevated);
     color: var(--color-text-primary);
+  }
+  .btn-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  .btn-card:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  .btn-card:active { transform: translateY(0); filter: brightness(0.95); }
+  .btn-card-coop {
+    background: linear-gradient(135deg, #0a6fc2 0%, #055a9e 100%);
+  }
+  .btn-card-migros {
+    background: linear-gradient(135deg, #ff6a00 0%, #e55300 100%);
   }
   .subtitle {
     margin: 0.25rem 0 0;

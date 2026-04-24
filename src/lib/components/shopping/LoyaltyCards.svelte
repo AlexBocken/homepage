@@ -1,56 +1,60 @@
 <script lang="ts">
 	import X from '@lucide/svelte/icons/x';
 
-	let { open = $bindable(false), hasSupercard = false, hasCumulus = false } = $props<{
-		open?: boolean;
+	type CardType = 'supercard' | 'cumulus' | null;
+
+	let { card = $bindable(null), hasSupercard = false, hasCumulus = false } = $props<{
+		card?: CardType;
 		hasSupercard?: boolean;
 		hasCumulus?: boolean;
 	}>();
 
-	function close() { open = false; }
+	function close() { card = null; }
 
 	function onKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') close();
 	}
+
+	const showSupercard = $derived(card === 'supercard' && hasSupercard);
+	const showCumulus = $derived(card === 'cumulus' && hasCumulus);
 </script>
 
 <svelte:window onkeydown={onKeydown} />
 
-{#if open}
+{#if card}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="backdrop" onclick={close}>
-		<div class="modal" role="dialog" aria-modal="true" aria-label="Kundenkarten" tabindex="-1" onclick={(e) => e.stopPropagation()}>
-			<button class="close" onclick={close} aria-label="Schliessen">
-				<X size={18} />
+		<div
+			class="modal"
+			class:is-supercard={showSupercard}
+			class:is-cumulus={showCumulus}
+			role="dialog"
+			aria-modal="true"
+			aria-label={showSupercard ? 'Coop Supercard' : 'Migros Cumulus'}
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+		>
+			<button class="close-button" onclick={close} aria-label="Schliessen">
+				<X />
 			</button>
 
-			{#if hasSupercard}
-				<article class="card supercard">
-					<header>
-						<span class="brand">SUPERCARD</span>
-						<span class="sub">Coop</span>
-					</header>
-					<div class="barcode barcode-square">
-						<img src="/shopping/supercard.svg" alt="Supercard Data Matrix" />
-					</div>
-				</article>
-			{/if}
-
-			{#if hasCumulus}
-				<article class="card cumulus">
-					<header>
-						<span class="brand">CUMULUS</span>
-						<span class="sub">Migros</span>
-					</header>
-					<div class="barcode barcode-linear">
-						<img src="/shopping/cumulus.svg" alt="Cumulus barcode" />
-					</div>
-				</article>
-			{/if}
-
-			{#if !hasSupercard && !hasCumulus}
-				<p class="empty">Keine Karten konfiguriert.</p>
+			{#if showSupercard}
+				<div class="brand-head">
+					<span class="brand">SUPERCARD</span>
+					<span class="sub">Coop</span>
+				</div>
+				<div class="barcode barcode-square">
+					<img src="/shopping/supercard.svg" alt="Supercard Data Matrix" />
+				</div>
+			{:else if showCumulus}
+				<div class="brand-head">
+					<span class="brand">CUMULUS</span>
+					<span class="sub">Migros</span>
+				</div>
+				<div class="barcode barcode-linear">
+					<img src="/shopping/cumulus.svg" alt="Cumulus barcode" />
+				</div>
 			{/if}
 		</div>
 	</div>
@@ -60,103 +64,115 @@
 	.backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.6);
+		background: rgba(0, 0, 0, 0.65);
 		z-index: 200;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		padding: 1rem;
 	}
+
 	.modal {
 		position: relative;
-		background: var(--color-bg-secondary);
-		border-radius: 20px;
-		padding: 1.25rem;
+		border-radius: 24px;
+		padding: 1.5rem 1.25rem 1.25rem;
 		width: 100%;
-		max-width: 420px;
-		max-height: 90vh;
-		overflow-y: auto;
-		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+		max-width: 440px;
+		color: white;
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 	}
-	.close {
-		position: absolute;
-		top: 0.6rem;
-		right: 0.6rem;
-		width: 32px;
-		height: 32px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: none;
-		border-radius: 50%;
-		background: rgba(0, 0, 0, 0.15);
-		color: white;
-		cursor: pointer;
-		z-index: 1;
-	}
-	.close:hover { background: rgba(0, 0, 0, 0.3); }
-
-	.card {
-		border-radius: 16px;
-		padding: 1rem 1.1rem 1.1rem;
-		color: white;
-		display: flex;
-		flex-direction: column;
-		gap: 0.9rem;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-	}
-	.supercard {
+	.modal.is-supercard {
 		background: linear-gradient(135deg, #0a6fc2 0%, #055a9e 100%);
 	}
-	.cumulus {
+	.modal.is-cumulus {
 		background: linear-gradient(135deg, #ff6a00 0%, #e55300 100%);
 	}
 
-	header {
+	/* Red cross button — same pattern as BibleModal */
+	.close-button {
+		position: absolute;
+		top: -1rem;
+		right: -1rem;
+		background-color: var(--nord11);
+		border: none;
+		cursor: pointer;
+		padding: 0.75rem;
+		border-radius: var(--radius-pill);
+		color: white;
+		transition: var(--transition-normal);
+		box-shadow: 0 0 1em 0.2em rgba(0, 0, 0, 0.35);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1;
+	}
+	.close-button :global(svg) {
+		width: 1.5rem;
+		height: 1.5rem;
+	}
+	.close-button:hover {
+		background-color: var(--nord0);
+		transform: scale(1.1);
+		box-shadow: 0 0 1em 0.4em rgba(0, 0, 0, 0.35);
+	}
+	.close-button:active {
+		transition: 50ms;
+		scale: 0.9 0.9;
+	}
+
+	.brand-head {
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
 		gap: 0.5rem;
+		padding: 0 0.25rem;
 	}
 	.brand {
 		font-weight: 800;
-		font-size: 1.25rem;
-		letter-spacing: 0.08em;
+		font-size: 1.4rem;
+		letter-spacing: 0.1em;
 	}
 	.sub {
-		font-size: 0.7rem;
+		font-size: 0.75rem;
 		text-transform: uppercase;
-		letter-spacing: 0.14em;
-		opacity: 0.85;
+		letter-spacing: 0.16em;
+		opacity: 0.9;
 	}
 
 	.barcode {
 		background: white;
-		border-radius: 10px;
-		padding: 0.75rem;
+		border-radius: 14px;
+		padding: 1rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
-	.barcode-square img {
-		width: min(220px, 60%);
-		height: auto;
+	.barcode img {
 		display: block;
+		image-rendering: pixelated; /* crisp barcode modules at any scale */
+	}
+	.barcode-square img {
+		width: 100%;
+		max-width: 360px;
+		height: auto;
+		aspect-ratio: 1 / 1;
 	}
 	.barcode-linear img {
 		width: 100%;
 		height: auto;
-		max-height: 90px;
-		display: block;
+		min-height: 140px;
+		max-height: 30vh;
 	}
 
-	.empty {
-		text-align: center;
-		color: var(--color-text-secondary);
-		margin: 1rem 0;
-		font-size: 0.9rem;
+	@media (max-width: 480px) {
+		.backdrop { padding: 0.5rem; }
+		.modal { padding: 1.25rem 1rem 1rem; border-radius: 20px; }
+		.brand { font-size: 1.25rem; }
+		.barcode { padding: 0.75rem; }
+		.barcode-square img { max-width: none; }
+		.barcode-linear img { min-height: 160px; }
 	}
 </style>
