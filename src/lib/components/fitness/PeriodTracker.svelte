@@ -5,6 +5,7 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import X from '@lucide/svelte/icons/x';
+	import Check from '@lucide/svelte/icons/check';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import DatePicker from '$lib/components/DatePicker.svelte';
@@ -607,7 +608,8 @@
 					{/if}
 					{#if showEntry && !readOnly}
 						<button class="end-btn" onclick={endPeriod} disabled={loading}>
-							{t('end_period', lang)}
+							<span class="end-btn-icon"><Check size={18} strokeWidth={2.5} /></span>
+							<span class="end-btn-label">{t('end_period', lang)}</span>
 						</button>
 					{/if}
 				</div>
@@ -1039,7 +1041,7 @@
 		color: var(--color-text-secondary);
 	}
 
-	.start-btn, .end-btn {
+	.start-btn {
 		padding: 0.45rem 0.9rem;
 		border: none;
 		border-radius: 7px;
@@ -1049,19 +1051,58 @@
 		white-space: nowrap;
 		align-self: flex-start;
 		margin-top: 0.6rem;
-	}
-	.start-btn {
 		background: var(--nord11);
 		color: white;
 	}
-	.end-btn {
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-		border: 1px solid var(--color-border);
-	}
-	.start-btn:disabled, .end-btn:disabled {
+	.start-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	/* Prominent end-period CTA — flat fill, full width */
+	.end-btn {
+		align-self: stretch;
+		margin-top: 0.9rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.55rem;
+		padding: 0.8rem 1.1rem;
+		border: none;
+		border-radius: 10px;
+		cursor: pointer;
+		color: white;
+		background: var(--nord11);
+		box-shadow: var(--shadow-sm);
+		transition: background 140ms ease;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.end-btn:hover {
+		background: color-mix(in srgb, var(--nord11) 88%, black);
+	}
+	.end-btn:active {
+		background: color-mix(in srgb, var(--nord11) 80%, black);
+	}
+	.end-btn:focus-visible {
+		outline: 2px solid var(--nord11);
+		outline-offset: 2px;
+	}
+	.end-btn:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	.end-btn-label {
+		font-weight: 700;
+		font-size: 0.85rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.end-btn-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	@media (max-width: 360px) {
