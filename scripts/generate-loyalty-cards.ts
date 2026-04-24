@@ -23,10 +23,15 @@ type CardSpec = {
 	filename: string;
 	bcid: 'datamatrix' | 'code128';
 	scale: number;
+	parsefnc?: boolean;
 };
 
 const cards: CardSpec[] = [
-	{ envVar: 'SHOPPING_COOP_SUPERCARD_NUMBER', filename: 'supercard.svg', bcid: 'datamatrix', scale: 6 },
+	// Coop Supercard uses GS1 Data Matrix with FNC1 separators between fields.
+	// Put ^FNC1 in the env value wherever the real symbol has a separator
+	// (dmtxread -G prints them as 0x1D); parsefnc: true turns each ^FNC1 into
+	// a genuine FNC1 codeword so the regenerated code matches the card.
+	{ envVar: 'SHOPPING_COOP_SUPERCARD_NUMBER', filename: 'supercard.svg', bcid: 'datamatrix', scale: 6, parsefnc: true },
 	{ envVar: 'SHOPPING_MIGROS_CUMULUS_NUMBER', filename: 'cumulus.svg', bcid: 'code128', scale: 3 }
 ];
 
@@ -48,7 +53,8 @@ for (const card of cards) {
 		scale: card.scale,
 		includetext: false,
 		paddingwidth: 8,
-		paddingheight: 8
+		paddingheight: 8,
+		...(card.parsefnc ? { parsefnc: true } : {})
 	});
 
 	writeFileSync(outPath, svg, 'utf8');
