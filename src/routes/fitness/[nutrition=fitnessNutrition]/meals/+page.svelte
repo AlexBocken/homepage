@@ -1,7 +1,11 @@
 <script>
 	import { page } from '$app/stores';
 	import { untrack } from 'svelte';
-	import { Plus, Trash2, Pencil, UtensilsCrossed, X } from '@lucide/svelte';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
+	import X from '@lucide/svelte/icons/x';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';

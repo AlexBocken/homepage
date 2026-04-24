@@ -1,5 +1,6 @@
 <script>
-	import { ArrowDown, ArrowLeft } from '@lucide/svelte';
+	import ArrowDown from '@lucide/svelte/icons/arrow-down';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import { page } from '$app/stores';
 	/** @type {number | string | null} */
 	let expanded = $state(null);

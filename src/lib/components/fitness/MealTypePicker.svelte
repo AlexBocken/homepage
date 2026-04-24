@@ -1,5 +1,8 @@
 <script>
-	import { Coffee, Sun, Moon, Cookie } from '@lucide/svelte';
+	import Coffee from '@lucide/svelte/icons/coffee';
+	import Sun from '@lucide/svelte/icons/sun';
+	import Moon from '@lucide/svelte/icons/moon';
+	import Cookie from '@lucide/svelte/icons/cookie';
 	import { t } from '$lib/js/fitnessI18n';
 
 	/** @type {{ value?: 'breakfast' | 'lunch' | 'dinner' | 'snack', lang?: 'en' | 'de', onchange?: (meal: 'breakfast' | 'lunch' | 'dinner' | 'snack') => void }} */

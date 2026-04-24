@@ -1,6 +1,18 @@
 <script>
-  import { X, Sparkles, Wind, Bath, UtensilsCrossed, CookingPot, WashingMachine,
-    Flower2, Droplets, Leaf, ShoppingCart, Trash2, Shirt, Brush } from '@lucide/svelte';
+  import X from '@lucide/svelte/icons/x';
+  import Sparkles from '@lucide/svelte/icons/sparkles';
+  import Wind from '@lucide/svelte/icons/wind';
+  import Bath from '@lucide/svelte/icons/bath';
+  import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
+  import CookingPot from '@lucide/svelte/icons/cooking-pot';
+  import WashingMachine from '@lucide/svelte/icons/washing-machine';
+  import Flower2 from '@lucide/svelte/icons/flower-2';
+  import Droplets from '@lucide/svelte/icons/droplets';
+  import Leaf from '@lucide/svelte/icons/leaf';
+  import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import Shirt from '@lucide/svelte/icons/shirt';
+  import Brush from '@lucide/svelte/icons/brush';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import Toggle from '$lib/components/Toggle.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';

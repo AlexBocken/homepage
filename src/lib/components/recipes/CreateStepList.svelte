@@ -4,8 +4,12 @@ import Pen from '$lib/assets/icons/Pen.svelte'
 import Cross from '$lib/assets/icons/Cross.svelte'
 import Plus from '$lib/assets/icons/Plus.svelte'
 import Check from '$lib/assets/icons/Check.svelte'
-import { Timer, Wheat, Croissant, Flame, CookingPot, UtensilsCrossed } from '@lucide/svelte';
-
+import Timer from '@lucide/svelte/icons/timer';
+import Wheat from '@lucide/svelte/icons/wheat';
+import Croissant from '@lucide/svelte/icons/croissant';
+import Flame from '@lucide/svelte/icons/flame';
+import CookingPot from '@lucide/svelte/icons/cooking-pot';
+import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 import "$lib/css/action_button.css"
 
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'

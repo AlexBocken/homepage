@@ -1,6 +1,5 @@
 <script>
-	import { X } from '@lucide/svelte';
-
+	import X from '@lucide/svelte/icons/x';
 	let { src, poster = '', onClose } = $props();
 
 	/** @param {KeyboardEvent} e */

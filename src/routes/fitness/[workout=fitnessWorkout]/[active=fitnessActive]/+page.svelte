@@ -1,7 +1,25 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Trash2, Play, Pause, Trophy, Clock, Dumbbell, Route, RefreshCw, Check, ChevronUp, ChevronDown, Flame, MapPin, Volume2, X, Timer, Plus, GripVertical, Repeat } from '@lucide/svelte';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Play from '@lucide/svelte/icons/play';
+	import Pause from '@lucide/svelte/icons/pause';
+	import Trophy from '@lucide/svelte/icons/trophy';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Dumbbell from '@lucide/svelte/icons/dumbbell';
+	import Route from '@lucide/svelte/icons/route';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronUp from '@lucide/svelte/icons/chevron-up';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Flame from '@lucide/svelte/icons/flame';
+	import MapPin from '@lucide/svelte/icons/map-pin';
+	import Volume2 from '@lucide/svelte/icons/volume-2';
+	import X from '@lucide/svelte/icons/x';
+	import Timer from '@lucide/svelte/icons/timer';
+	import Plus from '@lucide/svelte/icons/plus';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
+	import Repeat from '@lucide/svelte/icons/repeat';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';

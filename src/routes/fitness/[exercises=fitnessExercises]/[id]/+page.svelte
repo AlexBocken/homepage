@@ -20,8 +20,7 @@
 		}
 	}
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
-	import { ChevronRight } from '@lucide/svelte';
-
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	const lang = $derived(detectFitnessLang($page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';

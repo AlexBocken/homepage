@@ -1,6 +1,11 @@
 <script>
 	import { page } from '$app/stores';
-	import { ChevronDown, ExternalLink, Heart, Beef, Droplet, Wheat } from '@lucide/svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import Heart from '@lucide/svelte/icons/heart';
+	import Beef from '@lucide/svelte/icons/beef';
+	import Droplet from '@lucide/svelte/icons/droplet';
+	import Wheat from '@lucide/svelte/icons/wheat';
 	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';

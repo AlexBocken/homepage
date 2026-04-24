@@ -27,7 +27,7 @@ import MysteryImageColumn from "./MysteryImageColumn.svelte";
 import { mysteries, mysteriesLatin, mysteriesEnglish, mysteryTitles, mysteryTitlesEnglish, mysteryTitlesLatin, allMysteryImages, getLabels, getLabelsLatin, getMysteryForWeekday, BEAD_SPACING, DECADE_OFFSET, sectionPositions } from "./rosaryData.js";
 import { isEastertide, getLiturgicalSeason } from "$lib/js/easter.svelte";
 import { setupScrollSync } from "./rosaryScrollSync.js";
-import { BookOpen } from "@lucide/svelte";
+import BookOpen from '@lucide/svelte/icons/book-open';
 let { data } = $props();
 
 // Toggle for including Luminous mysteries (initialized from URL param or default)

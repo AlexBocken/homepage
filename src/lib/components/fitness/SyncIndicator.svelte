@@ -1,6 +1,8 @@
 <script>
-	import { Cloud, CloudOff, RefreshCw, AlertTriangle } from '@lucide/svelte';
-
+	import Cloud from '@lucide/svelte/icons/cloud';
+	import CloudOff from '@lucide/svelte/icons/cloud-off';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 	/** @type {{ status: string }} */
 	let { status } = $props();
 </script>

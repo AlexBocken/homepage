@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { Snippet, Component } from 'svelte';
-  import { Lock, Ban, SearchX, TriangleAlert, CircleAlert } from '@lucide/svelte';
-
+  import Lock from '@lucide/svelte/icons/lock';
+  import Ban from '@lucide/svelte/icons/ban';
+  import SearchX from '@lucide/svelte/icons/search-x';
+  import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+  import CircleAlert from '@lucide/svelte/icons/circle-alert';
   interface BibleQuote {
     text: string;
     reference: string;

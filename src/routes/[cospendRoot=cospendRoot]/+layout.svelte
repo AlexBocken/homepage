@@ -8,7 +8,10 @@
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
   import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-  import { LayoutDashboard, Wallet, RefreshCw, ShoppingCart } from '@lucide/svelte';
+  import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
+  import Wallet from '@lucide/svelte/icons/wallet';
+  import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+  import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
   import { detectCospendLang, cospendRoot, cospendLabels } from '$lib/js/cospendI18n';
 
   let { data, children } = $props();

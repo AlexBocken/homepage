@@ -4,7 +4,12 @@
 	import Header from '$lib/components/Header.svelte';
 	import UserHeader from '$lib/components/UserHeader.svelte';
 	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-	import { BarChart3, Clock, Dumbbell, ListChecks, NotebookPen, UtensilsCrossed } from '@lucide/svelte';
+	import BarChart3 from '@lucide/svelte/icons/bar-chart-3';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Dumbbell from '@lucide/svelte/icons/dumbbell';
+	import ListChecks from '@lucide/svelte/icons/list-checks';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
+	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';

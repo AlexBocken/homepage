@@ -1,6 +1,10 @@
 <script>
 	import { page } from '$app/stores';
-	import { ArrowLeft, Ruler, TrendingUp, TrendingDown, Minus as MinusIcon } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Ruler from '@lucide/svelte/icons/ruler';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import TrendingDown from '@lucide/svelte/icons/trending-down';
+	import MinusIcon from '@lucide/svelte/icons/minus';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';

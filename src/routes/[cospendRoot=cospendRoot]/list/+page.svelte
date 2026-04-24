@@ -2,7 +2,22 @@
   import { onMount, onDestroy, untrack } from 'svelte';
   import { getShoppingSync } from '$lib/js/shoppingSync.svelte';
   import { SHOPPING_CATEGORIES } from '$lib/data/shoppingCategoryItems';
-  import { Plus, ListX, Apple, Beef, Milk, Croissant, Wheat, FlameKindling, GlassWater, Candy, Snowflake, SprayCan, Sparkles, Package, Search, Store } from '@lucide/svelte';
+  import Plus from '@lucide/svelte/icons/plus';
+  import ListX from '@lucide/svelte/icons/list-x';
+  import Apple from '@lucide/svelte/icons/apple';
+  import Beef from '@lucide/svelte/icons/beef';
+  import Milk from '@lucide/svelte/icons/milk';
+  import Croissant from '@lucide/svelte/icons/croissant';
+  import Wheat from '@lucide/svelte/icons/wheat';
+  import FlameKindling from '@lucide/svelte/icons/flame-kindling';
+  import GlassWater from '@lucide/svelte/icons/glass-water';
+  import Candy from '@lucide/svelte/icons/candy';
+  import Snowflake from '@lucide/svelte/icons/snowflake';
+  import SprayCan from '@lucide/svelte/icons/spray-can';
+  import Sparkles from '@lucide/svelte/icons/sparkles';
+  import Package from '@lucide/svelte/icons/package';
+  import Search from '@lucide/svelte/icons/search';
+  import Store from '@lucide/svelte/icons/store';
   import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
   import { flip } from 'svelte/animate';
   import { slide } from 'svelte/transition';
@@ -10,7 +25,13 @@
   import catalogData from '$lib/data/shoppingCatalog.json';
   import iconCategoriesData from '$lib/data/shoppingIconCategories.json';
 
-  import { Share2, X, Copy, Check } from '@lucide/svelte';
+  import Share2 from '@lucide/svelte/icons/share-2';
+
+  import X from '@lucide/svelte/icons/x';
+
+  import Copy from '@lucide/svelte/icons/copy';
+
+  import Check from '@lucide/svelte/icons/check';
   import { page } from '$app/stores';
   import { detectCospendLang, t, locale, categoryName, formatTTL as formatTTLi18n, ttlOptions } from '$lib/js/cospendI18n';
 

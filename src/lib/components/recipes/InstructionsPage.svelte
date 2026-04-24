@@ -1,5 +1,10 @@
 <script>
-import { Timer, Wheat, Croissant, Flame, CookingPot, UtensilsCrossed } from '@lucide/svelte';
+import Timer from '@lucide/svelte/icons/timer';
+import Wheat from '@lucide/svelte/icons/wheat';
+import Croissant from '@lucide/svelte/icons/croissant';
+import Flame from '@lucide/svelte/icons/flame';
+import CookingPot from '@lucide/svelte/icons/cooking-pot';
+import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 let { data } = $props();
 
 // svelte-ignore state_referenced_locally

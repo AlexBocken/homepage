@@ -2,8 +2,8 @@
   import { page } from '$app/stores';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
-  import { ClipboardList, Trophy } from '@lucide/svelte';
-
+  import ClipboardList from '@lucide/svelte/icons/clipboard-list';
+  import Trophy from '@lucide/svelte/icons/trophy';
   let { data, children } = $props();
   let user = $derived(data.session?.user);
 

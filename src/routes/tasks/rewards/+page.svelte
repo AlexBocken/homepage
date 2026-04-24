@@ -6,7 +6,7 @@
   import { de } from 'date-fns/locale';
   import { scale } from 'svelte/transition';
   import { flip } from 'svelte/animate';
-  import { Trash2 } from '@lucide/svelte';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
   import StickerCalendar from '$lib/components/tasks/StickerCalendar.svelte';
   import StickerPopup from '$lib/components/tasks/StickerPopup.svelte';
 

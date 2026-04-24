@@ -3,7 +3,17 @@
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
-	import { Dumbbell, Route, Flame, Weight, Beef, Droplet, Wheat, Scale, Target, Info, Ruler } from '@lucide/svelte';
+	import Dumbbell from '@lucide/svelte/icons/dumbbell';
+	import Route from '@lucide/svelte/icons/route';
+	import Flame from '@lucide/svelte/icons/flame';
+	import Weight from '@lucide/svelte/icons/weight';
+	import Beef from '@lucide/svelte/icons/beef';
+	import Droplet from '@lucide/svelte/icons/droplet';
+	import Wheat from '@lucide/svelte/icons/wheat';
+	import Scale from '@lucide/svelte/icons/scale';
+	import Target from '@lucide/svelte/icons/target';
+	import Info from '@lucide/svelte/icons/info';
+	import Ruler from '@lucide/svelte/icons/ruler';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 	import { onMount } from 'svelte';

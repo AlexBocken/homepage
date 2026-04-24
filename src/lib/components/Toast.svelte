@@ -1,5 +1,5 @@
 <script>
-	import { X } from '@lucide/svelte';
+	import X from '@lucide/svelte/icons/x';
 	import { getToasts } from '$lib/js/toast.svelte';
 
 	const toasts = getToasts();
