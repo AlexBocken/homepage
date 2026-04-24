@@ -120,7 +120,22 @@
 		}]
 	});
 
-	const ns = $derived(data.nutritionStats);
+	// Streamed panels: render empty shells on SSR/initial hydrate, then fill
+	// in once the server-sent promise resolves. Defaults match the previous
+	// error-fallback shapes so the existing `!= null` checks cascade to the
+	// "—" branches while the data is in flight.
+	/** @type {any} */
+	let ns = $state({});
+	/** @type {{ weeks: any[]; totals: any; muscleGroups: any[] }} */
+	let muscleHeatmapData = $state({ weeks: [], totals: {}, muscleGroups: [] });
+	/** @type {any[]} */
+	let periodsData = $state([]);
+	/** @type {any[]} */
+	let sharedPeriodsData = $state([]);
+	$effect(() => { Promise.resolve(data.nutritionStats).then(v => { ns = v ?? {}; }); });
+	$effect(() => { Promise.resolve(data.muscleHeatmap).then(v => { muscleHeatmapData = v ?? { weeks: [], totals: {}, muscleGroups: [] }; }); });
+	$effect(() => { Promise.resolve(data.periods).then(v => { periodsData = v ?? []; }); });
+	$effect(() => { Promise.resolve(data.sharedPeriods).then(v => { sharedPeriodsData = v ?? []; }); });
 
 	const hasSma = $derived(stats.weightChart?.sma?.some((/** @type {any} */ v) => v !== null));
 
@@ -362,7 +377,6 @@
 	{/if}
 
 	<div class="muscle-nutrition-layout">
-		{#if ns}
 			<div class="lifetime-card protein-card">
 				<div class="card-icon"><Beef size={24} /></div>
 				{#if ns.avgProteinPerKg != null}
@@ -483,11 +497,10 @@
 					{/each}
 				</div>
 			</div>
-		{/if}
 
 		<div class="section-block muscle-heatmap-block">
 			<h2 class="section-title">{t('muscle_balance', lang)}</h2>
-			<MuscleHeatmap data={data.muscleHeatmap} />
+			<MuscleHeatmap data={muscleHeatmapData} />
 		</div>
 	</div>
 
@@ -540,10 +553,10 @@
 	{/if}
 
 	{#if data.goal?.sex === 'female'}
-		<PeriodTracker periods={data.periods ?? []} {lang} mode="projection" />
+		<PeriodTracker periods={periodsData} {lang} mode="projection" />
 	{/if}
 
-	{#each data.sharedPeriods ?? [] as shared (shared.owner)}
+	{#each sharedPeriodsData as shared (shared.owner)}
 		<PeriodTracker periods={shared.entries} {lang} readOnly ownerName={shared.owner} mode="projection" />
 	{/each}
 </div>
