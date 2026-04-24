@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch, locals }) => {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 	const [res, goalRes, heatmapRes, nutritionRes, latestRes, periodRes, sharedRes] = await Promise.all([
 		fetch('/api/fitness/stats/overview'),
 		fetch('/api/fitness/goal'),

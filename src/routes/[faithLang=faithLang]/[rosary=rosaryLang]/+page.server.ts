@@ -43,7 +43,7 @@ function getMysteryForWeekday(date: Date, includeLuminous: boolean): string {
 }
 
 export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   // Read toggle/mystery state from URL search params (for no-JS progressive enhancement)
   const luminousParam = url.searchParams.get('luminous');

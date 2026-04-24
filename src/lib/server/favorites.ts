@@ -8,7 +8,7 @@ import type { Session } from '@auth/sveltekit';
 type BriefRecipeWithFavorite = BriefRecipeType & { isFavorite: boolean };
 
 export async function getUserFavorites(fetch: typeof globalThis.fetch, locals: App.Locals, recipeLang = 'rezepte'): Promise<string[]> {
-    const session = await locals.auth();
+    const session = locals.session ?? await locals.auth();
 
     if (!session?.user?.nickname) {
         return [];
@@ -47,10 +47,10 @@ export async function loadRecipesWithFavorites(
     recipeLoader: () => Promise<BriefRecipeType[]>,
     recipeLang = 'rezepte'
 ): Promise<{ recipes: BriefRecipeWithFavorite[], session: Session | null }> {
-    const [recipes, userFavorites, session] = await Promise.all([
+    const session = locals.session ?? await locals.auth();
+    const [recipes, userFavorites] = await Promise.all([
         recipeLoader(),
-        getUserFavorites(fetch, locals, recipeLang),
-        locals.auth()
+        getUserFavorites(fetch, locals, recipeLang)
     ]);
 
     return {

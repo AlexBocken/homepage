@@ -8,7 +8,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 - [x] 2. Chart.js dynamic import in `FitnessChart.svelte` (drop 244 KB from non-stats fitness routes)
 - [x] 3. Recipe API endpoints — drop `JSON.parse(JSON.stringify(...))` double-serialize (9 endpoints). Client-side shuffle / cache headers deferred (would require rethinking hero preload + hydration)
 - [x] 4. Favorites page — drop unnecessary `all_brief` fetch (verified Search uses `favoritesOnly` so `allRecipes` was redundant)
-- [ ] 5. Replace redundant `locals.auth()` with `locals.session` across recipe/calendar/fitness loaders
+- [x] 5. Replace redundant `locals.auth()` with `locals.session` across recipe/calendar/fitness loaders (loaders only; actions + admin/edit/add pages skipped)
 - [ ] 6. Stream fitness stats loader — return promises for slow panels
 - [ ] 7. Overview endpoint — add `.select(...)` projection, cap timeseries window
 - [ ] 8. Calendar payload trim — drop `name` from `yearDays`, pre-filter `feastDots` server-side
@@ -26,6 +26,7 @@ Order = impact. Font items + app.html preload intentionally skipped.
 [x] on /fitness/stats/histoy/<part> for body measurement graphs, make the range reasonable. e.g., if we have 1 cm change, do not fill the entire y-height with 1 cm. Use reasonable padding for low ranges (i think we do something like htis already on the weight graph?)
 [ ] Make the Period ended button a lot more prominent
 [ ] swap heart emoji on recipe favorites to lucide icon
+[ ] coop and migros cards on shopping list for scanning
 
 ## Refactor Recipe Search Component
 

@@ -4,11 +4,11 @@ import { getUserFavorites, addFavoriteStatusToRecipes } from "$lib/server/favori
 export const load: PageServerLoad = async ({ fetch, locals, params }) => {
     const apiBase = `/api/${params.recipeLang}`;
 
-    const [item_season, icons, userFavorites, session] = await Promise.all([
+    const session = locals.session ?? await locals.auth();
+    const [item_season, icons, userFavorites] = await Promise.all([
         fetch(`${apiBase}/items/icon/` + params.icon).then(r => r.json()),
         fetch(`${apiBase}/items/icon`).then(r => r.json()),
-        getUserFavorites(fetch, locals, params.recipeLang),
-        locals.auth()
+        getUserFavorites(fetch, locals, params.recipeLang)
     ]);
 
     return {

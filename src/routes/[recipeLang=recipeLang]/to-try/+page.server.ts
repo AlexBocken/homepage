@@ -4,7 +4,7 @@ import { ToTryRecipe } from '$models/ToTryRecipe';
 import { dbConnect } from '$utils/db';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-    const session = await locals.auth();
+    const session = locals.session ?? await locals.auth();
 
     if (!session?.user) {
         const callbackUrl = encodeURIComponent(`/${params.recipeLang}/to-try`);

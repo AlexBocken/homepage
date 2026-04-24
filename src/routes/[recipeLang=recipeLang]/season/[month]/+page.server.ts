@@ -7,11 +7,8 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
     const res_season = await fetch(`${apiBase}/items/in_season/` + params.month);
     const item_season = await res_season.json();
 
-    // Get user favorites and session
-    const [userFavorites, session] = await Promise.all([
-        getUserFavorites(fetch, locals, params.recipeLang),
-        locals.auth()
-    ]);
+    const session = locals.session ?? await locals.auth();
+    const userFavorites = await getUserFavorites(fetch, locals, params.recipeLang);
 
     return {
         month: params.month,
