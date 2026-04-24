@@ -26,6 +26,8 @@
   import iconCategoriesData from '$lib/data/shoppingIconCategories.json';
 
   import Share2 from '@lucide/svelte/icons/share-2';
+  import CreditCard from '@lucide/svelte/icons/credit-card';
+  import LoyaltyCards from '$lib/components/shopping/LoyaltyCards.svelte';
 
   import X from '@lucide/svelte/icons/x';
 
@@ -293,6 +295,12 @@
     editSaving = false;
   }
 
+  // --- Loyalty cards ---
+  let showLoyalty = $state(false);
+  const hasSupercard = $derived(!!data.loyalty?.hasSupercard);
+  const hasCumulus = $derived(!!data.loyalty?.hasCumulus);
+  const hasAnyCard = $derived(hasSupercard || hasCumulus);
+
   // --- Share links ---
   let showShareModal = $state(false);
   /** @type {{ id: string, token: string, expiresAt: string, createdBy: string, createdAt: string }[]} */
@@ -421,6 +429,11 @@
     <div class="header-row">
       <h1 class="sr-only">{t('shopping_list_title', lang)}</h1>
       <SyncIndicator status={sync.status} />
+      {#if hasAnyCard}
+        <button class="btn-share" onclick={() => showLoyalty = true} title="Kundenkarten" aria-label="Kundenkarten">
+          <CreditCard size={16} />
+        </button>
+      {/if}
       {#if !isGuest}
         <button class="btn-share" onclick={openShareModal} title={t('share', lang)}>
           <Share2 size={16} />
@@ -516,6 +529,8 @@
   {/if}
 
 </div>
+
+<LoyaltyCards bind:open={showLoyalty} {hasSupercard} {hasCumulus} />
 
 {#if editingItem}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
