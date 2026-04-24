@@ -3,7 +3,7 @@ import { ToTryRecipe } from '$models/ToTryRecipe';
 import { dbConnect } from '$utils/db';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   if (!session?.user?.groups?.includes('rezepte_users')) {
     throw error(403, 'Forbidden');
@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   if (!session?.user?.groups?.includes('rezepte_users')) {
     throw error(403, 'Forbidden');
@@ -51,7 +51,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 };
 
 export const PATCH: RequestHandler = async ({ request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   if (!session?.user?.groups?.includes('rezepte_users')) {
     throw error(403, 'Forbidden');
@@ -96,7 +96,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   if (!session?.user?.groups?.includes('rezepte_users')) {
     throw error(403, 'Forbidden');

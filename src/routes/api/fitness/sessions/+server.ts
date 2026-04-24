@@ -17,7 +17,7 @@ function estimatedOneRepMax(weight: number, reps: number): number {
 
 // GET /api/fitness/sessions - Get all workout sessions for the user
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -52,7 +52,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 // POST /api/fitness/sessions - Create a new workout session
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }

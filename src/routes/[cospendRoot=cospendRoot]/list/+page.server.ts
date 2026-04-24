@@ -13,7 +13,7 @@ function serializeItems(items: IShoppingItem[]): ShoppingItem[] {
 }
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   const token = url.searchParams.get('token');
 
   // Allow access with valid share token even without session

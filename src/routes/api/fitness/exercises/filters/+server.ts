@@ -5,7 +5,7 @@ import { Exercise } from '$models/Exercise';
 
 // GET /api/fitness/exercises/filters - Get available filter options
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }

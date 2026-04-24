@@ -5,7 +5,7 @@ import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals, params }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   
   if (!session?.user?.nickname) {
     return json({ isFavorite: false });

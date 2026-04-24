@@ -5,7 +5,7 @@ import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }
@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
     throw error(401, 'Not logged in');
   }

@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from "./$types"
 import { error } from "@sveltejs/kit"
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   const user = session?.user ?? null;
 	return {user}
 }

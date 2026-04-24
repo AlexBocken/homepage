@@ -96,6 +96,6 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		iso,
 		todayIso,
 		day1: entry,
-		session: locals.session ?? (await locals.auth())
+		session: locals.session ?? (locals.session ?? await locals.auth())
 	};
 };

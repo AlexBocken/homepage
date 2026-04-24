@@ -22,7 +22,7 @@ function getNextDueDate(completedAt: Date, frequencyType: string, customDays?: n
 }
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   await dbConnect();

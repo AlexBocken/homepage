@@ -17,7 +17,7 @@ function estimatedOneRepMax(weight: number, reps: number): number {
 
 // POST /api/fitness/sessions/[id]/recalculate — recompute derived fields
 export const POST: RequestHandler = async ({ params, locals }) => {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 	if (!session || !session.user?.nickname) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}

@@ -31,7 +31,7 @@ export interface AuthenticatedUser {
 export async function requireAuth(
 	locals: RequestEvent['locals']
 ): Promise<AuthenticatedUser> {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 
 	if (!session || !session.user?.nickname) {
 		throw json({ error: 'Unauthorized' }, { status: 401 });
@@ -53,7 +53,7 @@ export async function requireGroup(
 	locals: RequestEvent['locals'],
 	group: string
 ): Promise<AuthenticatedUser> {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 
 	if (!session || !session.user?.nickname) {
 		throw json({ error: 'Unauthorized' }, { status: 401 });
@@ -92,7 +92,7 @@ export async function requireGroup(
 export async function optionalAuth(
 	locals: RequestEvent['locals']
 ): Promise<AuthenticatedUser | null> {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 
 	if (!session || !session.user?.nickname) {
 		return null;

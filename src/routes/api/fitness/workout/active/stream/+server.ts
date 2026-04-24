@@ -3,7 +3,7 @@ import { addConnection, removeConnection } from '$lib/server/sseManager';
 
 // GET /api/fitness/workout/active/stream — SSE endpoint
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session?.user?.nickname) {
     return new Response('Unauthorized', { status: 401 });
   }

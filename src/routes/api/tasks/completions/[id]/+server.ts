@@ -4,7 +4,7 @@ import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const auth = await locals.auth();
+  const auth = locals.session ?? await locals.auth();
   if (!auth?.user?.nickname) throw error(401, 'Not logged in');
 
   await dbConnect();

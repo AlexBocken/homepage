@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 import { errorWithVerse } from '$lib/server/errorQuote';
 
 export const load: PageServerLoad = async ({ locals, fetch, url }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   
   if (!session) {
     throw redirect(302, '/login');

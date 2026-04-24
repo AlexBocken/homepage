@@ -5,7 +5,7 @@ import { IntervalTemplate, validateIntervalEntries } from '$models/IntervalTempl
 import mongoose from 'mongoose';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -72,7 +72,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }

@@ -54,7 +54,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 
 export const actions: Actions = {
 	'pray-angelus': async ({ request, locals, fetch }) => {
-		const session = await locals.auth();
+		const session = locals.session ?? await locals.auth();
 		if (!session?.user?.nickname) {
 			throw error(401, 'Authentication required');
 		}

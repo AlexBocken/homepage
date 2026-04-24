@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 import { errorWithVerse } from '$lib/server/errorQuote';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 
 	if (!session?.user?.nickname) {
 		const callbackUrl = encodeURIComponent(url.pathname);

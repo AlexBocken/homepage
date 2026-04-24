@@ -147,7 +147,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
  */
 export const GET: RequestHandler = async ({ locals }) => {
 	// Check authentication
-	const session = await locals.auth();
+	const session = locals.session ?? await locals.auth();
 	if (!session?.user) {
 		throw error(401, 'Unauthorized');
 	}

@@ -3,7 +3,7 @@ import { AngelusStreak } from '$models/AngelusStreak';
 import { dbConnect } from '$utils/db';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   if (!session?.user?.nickname) {
     throw error(401, 'Authentication required');
@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
 
   if (!session?.user?.nickname) {
     throw error(401, 'Authentication required');

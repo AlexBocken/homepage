@@ -5,7 +5,7 @@ import { isEnglish } from '$lib/server/recipeHelpers';
 import { generateNutritionMappings } from '$lib/server/nutritionMatcher';
 
 export const POST: RequestHandler = async ({ params, locals, url }) => {
-	await locals.auth();
+	locals.session ?? await locals.auth();
 	await dbConnect();
 
 	const en = isEnglish(params.recipeLang!);

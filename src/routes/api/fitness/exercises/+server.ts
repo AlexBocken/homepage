@@ -5,7 +5,7 @@ import { Exercise } from '$models/Exercise';
 
 // GET /api/fitness/exercises - Search and filter exercises
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -61,7 +61,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 // GET /api/fitness/exercises/filters - Get available filter options
 export const POST: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session || !session.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }

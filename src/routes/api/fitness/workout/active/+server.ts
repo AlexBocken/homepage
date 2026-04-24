@@ -6,7 +6,7 @@ import { broadcast } from '$lib/server/sseManager';
 
 // GET /api/fitness/workout/active — fetch current active workout
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session?.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -26,7 +26,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 // PUT /api/fitness/workout/active — create or update active workout state
 export const PUT: RequestHandler = async ({ request, locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session?.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -92,7 +92,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
 // DELETE /api/fitness/workout/active — clear active workout (finish/cancel)
 export const DELETE: RequestHandler = async ({ locals }) => {
-  const session = await locals.auth();
+  const session = locals.session ?? await locals.auth();
   if (!session?.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
