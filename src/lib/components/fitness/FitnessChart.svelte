@@ -1,7 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Chart, registerables } from 'chart.js';
-	import 'chartjs-adapter-date-fns';
 
 	/**
 	 * @type {{
@@ -20,9 +18,10 @@
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
-	/** @type {Chart | null} */
+	/** @type {import('chart.js').Chart | null} */
 	let chart = $state(null);
-	let registered = false;
+	/** @type {typeof import('chart.js').Chart | null} */
+	let ChartCtor = null;
 
 	const nordColors = [
 		'#88C0D0', '#A3BE8C', '#EBCB8B', '#D08770', '#BF616A',
@@ -37,11 +36,7 @@
 	}
 
 	function createChart() {
-		if (!canvas || !data?.datasets) return;
-		if (!registered) {
-			Chart.register(...registerables);
-			registered = true;
-		}
+		if (!canvas || !data?.datasets || !ChartCtor) return;
 		if (chart) chart.destroy();
 
 		const ctx = canvas.getContext('2d');
@@ -104,7 +99,7 @@
 			});
 		}
 
-		chart = new Chart(ctx, /** @type {any} */ ({
+		chart = new ChartCtor(ctx, /** @type {any} */ ({
 			type,
 			data: { labels: plainLabels, datasets: plainDatasets },
 			plugins,
@@ -182,30 +177,42 @@
 	}
 
 	onMount(() => {
-		createChart();
-		requestAnimationFrame(() => {
-			if (chart) {
-				chart.options.animation = { duration: 300 };
-				chart.options.transitions = {
-					active: { animation: { duration: 200 } }
-				};
-			}
-		});
-
+		let disposed = false;
 		const mq = window.matchMedia('(prefers-color-scheme: dark)');
 		const onTheme = () => setTimeout(createChart, 100);
-		mq.addEventListener('change', onTheme);
+		/** @type {MutationObserver | undefined} */
+		let obs;
 
-		const obs = new MutationObserver((muts) => {
-			for (const m of muts) {
-				if (m.attributeName === 'data-theme') onTheme();
-			}
-		});
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		(async () => {
+			const [{ Chart, registerables }] = await Promise.all([
+				import('chart.js'),
+				import('chartjs-adapter-date-fns')
+			]);
+			if (disposed) return;
+			Chart.register(...registerables);
+			ChartCtor = Chart;
+			createChart();
+			requestAnimationFrame(() => {
+				if (chart) {
+					chart.options.animation = { duration: 300 };
+					chart.options.transitions = {
+						active: { animation: { duration: 200 } }
+					};
+				}
+			});
+			mq.addEventListener('change', onTheme);
+			obs = new MutationObserver((muts) => {
+				for (const m of muts) {
+					if (m.attributeName === 'data-theme') onTheme();
+				}
+			});
+			obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		})();
 
 		return () => {
+			disposed = true;
 			mq.removeEventListener('change', onTheme);
-			obs.disconnect();
+			obs?.disconnect();
 			if (chart) chart.destroy();
 		};
 	});
