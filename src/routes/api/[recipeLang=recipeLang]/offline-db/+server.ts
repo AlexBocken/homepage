@@ -72,8 +72,8 @@ export const GET: RequestHandler = async () => {
 	});
 
 	return json({
-		brief: JSON.parse(JSON.stringify(briefRecipes)),
-		full: JSON.parse(JSON.stringify(processedFullRecipes)),
+		brief: briefRecipes,
+		full: processedFullRecipes,
 		syncedAt: new Date().toISOString()
 	});
 };
