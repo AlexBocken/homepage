@@ -120,20 +120,17 @@
 		}]
 	});
 
-	// Streamed panels: render empty shells on SSR/initial hydrate, then fill
-	// in once the server-sent promise resolves. Defaults match the previous
-	// error-fallback shapes so the existing `!= null` checks cascade to the
-	// "—" branches while the data is in flight.
+	// Streamed panels. nutrition / periods resolve through $state so the card
+	// shells render immediately with "—" placeholders; muscle heatmap is
+	// wrapped in {#await} below instead because its internal $derived chain
+	// needs the full resolved object in one shot to render correctly.
 	/** @type {any} */
 	let ns = $state({});
-	/** @type {{ weeks: any[]; totals: any; muscleGroups: any[] }} */
-	let muscleHeatmapData = $state({ weeks: [], totals: {}, muscleGroups: [] });
 	/** @type {any[]} */
 	let periodsData = $state([]);
 	/** @type {any[]} */
 	let sharedPeriodsData = $state([]);
 	$effect(() => { Promise.resolve(data.nutritionStats).then(v => { ns = v ?? {}; }); });
-	$effect(() => { Promise.resolve(data.muscleHeatmap).then(v => { muscleHeatmapData = v ?? { weeks: [], totals: {}, muscleGroups: [] }; }); });
 	$effect(() => { Promise.resolve(data.periods).then(v => { periodsData = v ?? []; }); });
 	$effect(() => { Promise.resolve(data.sharedPeriods).then(v => { sharedPeriodsData = v ?? []; }); });
 
@@ -500,7 +497,9 @@
 
 		<div class="section-block muscle-heatmap-block">
 			<h2 class="section-title">{t('muscle_balance', lang)}</h2>
-			<MuscleHeatmap data={muscleHeatmapData} />
+			{#await data.muscleHeatmap then muscleHeatmap}
+				<MuscleHeatmap data={muscleHeatmap} />
+			{/await}
 		</div>
 	</div>
 
