@@ -337,7 +337,7 @@ export const ARGUMENTS_DE: Argument[] = [
         cites: ["Orthodoxy, ch. 2"],
       },
       lewis: {
-        lede: "Sie schauen entlang des Balkens, nicht auf ihn.",
+        lede: "Sie schauen entlang des Strahls, nicht auf ihn.",
         body: [
           "Wenn ein Mann verliebt ist, kann er aus dem Erlebnis heraustreten und es wissenschaftlich betrachten - Hormone, evolutionäre Paarbindung. Der Blick von aussen ist wahr. Aber sie ist auch unsagbar dünn.",
           "Die Wissenschaft ist die Sicht von aussen, die auf den Sonnenstrahl blickt. Religion ist der Blick aus dem Inneren des Strahls, der auf das schaut, was der Strahl enthüllt.",
