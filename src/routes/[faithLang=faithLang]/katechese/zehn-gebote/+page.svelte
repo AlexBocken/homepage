@@ -1,7 +1,9 @@
 <script>
+	import { onMount } from 'svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import { page } from '$app/stores';
+	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 	/** @type {number | string | null} */
 	let expanded = $state(null);
 	const isGerman = $derived($page.url.pathname.startsWith('/glaube'));
@@ -10,6 +12,49 @@
 	/** @param {number | string} id */
 	function toggle(id) {
 		expanded = expanded === id ? null : id;
+	}
+
+	const tocItems = [
+		{ id: 'ursprung', short: 'Ursprung', href: '#ursprung' },
+		{ id: 'warum', short: 'Warum die 10 Gebote?', href: '#warum' },
+		{ id: 'biblischer-text', short: 'Biblischer Text', href: '#biblischer-text' },
+		{ id: 'ueberlieferung', short: 'Katechetische Überlieferung', href: '#ueberlieferung' },
+		{ id: 'erstes-gebot', short: 'Das Erste Gebot', href: '#erstes-gebot' },
+		{ id: 'drei-pflichten', short: 'Drei Pflichten', href: '#drei-pflichten', group: 'Das Erste Gebot' },
+		{ id: 'tugend-der-religion', short: 'Tugend der Religion', href: '#tugend-der-religion', group: 'Das Erste Gebot' },
+		{ id: 'vier-akte', short: 'Vier Akte der religio', href: '#vier-akte', group: 'Das Erste Gebot' },
+		{ id: 'warnung', short: 'Warnung', href: '#warnung', group: 'Das Erste Gebot' }
+	];
+
+	let activeId = $state('');
+
+	onMount(() => {
+		const els = tocItems
+			.map((it) => document.getElementById(it.id))
+			.filter((el) => el !== null);
+		if (!els.length) return;
+		const io = new IntersectionObserver(
+			(entries) => {
+				const visible = entries
+					.filter((e) => e.isIntersecting)
+					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+				if (visible[0]) {
+					activeId = visible[0].target.id;
+				}
+			},
+			{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
+		);
+		els.forEach((el) => io.observe(el));
+		return () => io.disconnect();
+	});
+
+	/** @param {MouseEvent} e @param {string} id */
+	function jumpTo(e, id) {
+		const el = document.getElementById(id);
+		if (!el) return;
+		e.preventDefault();
+		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		history.replaceState(null, '', `#${id}`);
 	}
 
 	const gebote = [
@@ -39,23 +84,7 @@
 </svelte:head>
 
 <div class="page-wrapper">
-<nav class="toc">
-	<ul>
-		<li><a href="#ursprung">Ursprung</a></li>
-		<li><a href="#warum">Warum die 10 Gebote?</a></li>
-		<li><a href="#biblischer-text">Biblischer Text</a></li>
-		<li><a href="#ueberlieferung">Katechetische Überlieferung</a></li>
-		<li>
-			<a href="#erstes-gebot">Das Erste Gebot</a>
-			<ul>
-				<li><a href="#drei-pflichten">Drei Pflichten</a></li>
-				<li><a href="#tugend-der-religion">Tugend der Religion</a></li>
-				<li><a href="#vier-akte">Vier Akte der <i>religio</i></a></li>
-				<li><a href="#warnung">Warnung</a></li>
-			</ul>
-		</li>
-	</ul>
-</nav>
+<ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
 <div class="page">
 	<header class="hero">
 		<h1>Die Zehn Gebote Gottes</h1>
@@ -318,41 +347,6 @@
 		margin-top: 3rem;
 		padding-top: 1.5rem;
 		border-top: 1px solid var(--color-border);
-	}
-	.toc {
-		display: none;
-	}
-	@media (min-width: 1200px) {
-		.toc {
-			display: block;
-			position: fixed;
-			top: 4rem;
-			left: max(1rem, calc((100vw - 700px) / 2 - 220px));
-			width: 190px;
-			font-size: 0.8rem;
-			line-height: 1.4;
-		}
-		.toc ul {
-			list-style: none;
-			padding: 0;
-			margin: 0;
-		}
-		.toc ul ul {
-			padding-left: 0.75em;
-			border-left: 1px solid var(--color-border);
-			margin-top: 0.25em;
-		}
-		.toc li {
-			margin-bottom: 0.3em;
-		}
-		.toc a {
-			color: var(--color-text-tertiary);
-			text-decoration: none;
-			transition: color 0.15s;
-		}
-		.toc a:hover {
-			color: var(--color-text-primary);
-		}
 	}
 	.page {
 		max-width: 700px;

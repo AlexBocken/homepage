@@ -8,6 +8,7 @@
 	const prayersPath = $derived(isLatin ? 'orationes' : isEnglish ? 'prayers' : 'gebete');
 	const rosaryPath = $derived(isLatin ? 'rosarium' : isEnglish ? 'rosary' : 'rosenkranz');
 	const calendarPath = $derived(isLatin ? 'calendarium' : isEnglish ? 'calendar' : 'kalender');
+	const apologetikHref = $derived(isLatin ? '/faith/apologetics' : `/${data.faithLang}/${isEnglish ? 'apologetics' : 'apologetik'}`);
 	const eastertide = isEastertide();
 
 	const labels = $derived({
@@ -19,6 +20,7 @@
 				: 'Hier findet man einige Gebete und einen interaktiven Rosenkranz zum katholischen Glauben. Ein Fokus auf Latein und den alten Ritus wird zu bemerken sein.',
 		prayers: isLatin ? 'Orationes' : isEnglish ? 'Prayers' : 'Gebete',
 		rosary: isLatin ? 'Rosarium Vivum' : isEnglish ? 'Rosary' : 'Rosenkranz',
+		apologetics: isLatin ? 'Apologetica' : isEnglish ? 'Apologetics' : 'Apologetik',
 		calendar: isLatin ? 'Calendarium' : isEnglish ? 'Calendar' : 'Kalender'
 	});
 </script>
@@ -127,6 +129,10 @@
 		{#if isEnglish || isLatin}<span class="lang-badge">DE</span>{/if}
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -226 532 506"><path d="M256-107v310l1-1c54-22 113-34 172-34h19v-320h-19c-42 0-84 8-123 25-17 7-34 14-50 20zm-25-79 25 10 25-10c47-20 97-30 148-30h35c27 0 48 22 48 48v352c0 27-21 48-48 48h-35c-51 0-101 10-148 30l-13 5c-8 3-16 3-24 0l-13-5c-47-20-97-30-148-30H48c-26 0-48-21-48-48v-352c0-26 22-48 48-48h35c51 0 101 10 148 30z"/></svg>
 		<h3>Katechese</h3>
+	</a>
+	<a href={apologetikHref}>
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M384 32H512c17.7 0 32 14.3 32 32s-14.3 32-32 32H398.4c-5.2 25.8-22.9 47.1-46.4 57.3V448H544c17.7 0 32 14.3 32 32s-14.3 32-32 32H320 96c-17.7 0-32-14.3-32-32s14.3-32 32-32H288V153.3c-23.5-10.3-41.2-31.6-46.4-57.3H128c-17.7 0-32-14.3-32-32s14.3-32 32-32H256c14.6-19.4 37.8-32 64-32s49.4 12.6 64 32zm55.6 288H584.4L512 195.8 439.6 320zM512 416c-62.9 0-115.2-34-126-78.9c-2.6-11 1-22.3 6.7-32.1l95.2-163.2c5-8.6 14.2-13.8 24.1-13.8s19.1 5.3 24.1 13.8l95.2 163.2c5.7 9.8 9.3 21.1 6.7 32.1C627.2 382 574.9 416 512 416zM126.8 195.8L54.4 320H199.3L126.8 195.8zM.9 337.1c-2.6-11 1-22.3 6.7-32.1l95.2-163.2c5-8.6 14.2-13.8 24.1-13.8s19.1 5.3 24.1 13.8l95.2 163.2c5.7 9.8 9.3 21.1 6.7 32.1C242 382 189.7 416 126.8 416S11.7 382 .9 337.1z"/></svg>
+		<h3>{labels.apologetics}</h3>
 	</a>
 	<a href="/{data.faithLang}/{calendarPath}">
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z"/></svg>
