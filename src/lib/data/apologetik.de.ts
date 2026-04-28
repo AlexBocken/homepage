@@ -2214,44 +2214,56 @@ export const POS_ARGUMENTS_DE: PosArgument[] = [
     n: 11,
     title: "Die Heilige Schrift ist über ein Jahrtausend hinweg einheitlich",
     claim:
-      "Die Bibel besteht aus sechsundsechzig Büchern, die von vierzig Autoren im Laufe von fünfzehnhundert Jahren auf drei Kontinenten in drei Sprachen geschrieben wurden und die eine Geschichte erzählen, die nach und nach enthüllt wird und in einer Person gipfelt.",
+      "Die Bibel umfasst dreiundsiebzig Bücher, geschrieben von etwa vierzig Autoren über fünfzehnhundert Jahre hinweg, auf drei Kontinenten und in drei Sprachen, und erzählt eine fortschreitend offenbarte Geschichte, die in einer Person gipfelt. Die strukturellen Entsprechungen zwischen Altem und Neuem Testament sind zu spezifisch, zu zahlreich und zu weit über unabhängige Autoren verteilt, als dass sie das Produkt redaktioneller Abstimmung sein könnten.",
     thesis:
-      "Die innere Kohärenz - Typologie, Vorahnung, lehrmässige Entwicklung - ist nicht das, was wir von einer erzwungenen Anthologie erwarten würden. In kanonischer Reihenfolge gelesen, liest sich das Alte Testament wie ein Problem, auf das das Neue Testament die Antwort ist. Das ist die literarische Signatur eines Autors, der hinter den Autoren steht.",
+      "Die Typologie ist der Prüffall. Eine Handvoll loser thematischer Anklänge könnte Zufall oder rückwirkende Lesart sein. Was wir tatsächlich finden, ist etwas anderes: dichte Cluster struktureller Identität — derselbe Berg, dasselbe Holz, derselbe geliebte Sohn, dasselbe Drei-Tage-Muster, derselbe Stellvertreter —, die sich durch Texte ziehen, die ein Jahrtausend auseinander von Autoren verfasst wurden, die das Ganze nicht überblicken konnten. In kanonischer Reihenfolge gelesen, liest sich das Alte Testament wie ein Problem, dessen Lösung bereits im Problem selbst eingeschrieben ist. Das ist die literarische Signatur eines Autors, der hinter den Autoren steht.",
     strength: 4,
     scripture: {
-      text: "Dann öffnete er ihnen das Verständnis, damit sie die Schriften verstehen konnten.",
+      text: "Da öffnete er ihnen den Sinn, damit sie die Schriften verstanden.",
       ref: "Luke 24:45",
     },
     voices: {
       hahn: {
-        lede: "Die Typologie ist der unverwechselbare Fingerabdruck.",
+        lede: "Die Akedah ist der Fingerabdruck, der am tiefsten in die Seite gepresst ist.",
         body: [
-          "Adam fällt in einem Garten durch einen Baum; Christus rettet in einem Garten durch einen Baum. Israel geht durch das Wasser in die Wüste zum verheissenen Land; der Gläubige geht durch die Taufe in die Nachfolge zur Herrlichkeit. Das Passahlamm wird zur gleichen Stunde geschlachtet, in der Christus geschlachtet wird. Die hochgehaltene bronzene Schlange ist ein Vorzeichen für das Kreuz.",
-          "Dies sind keine rückwirkenden Lesarten. Es sind strukturelle Entsprechungen, die sich durch tausend Jahre unabhängiger Texte ziehen, von denen keiner der Autoren das ganze Muster gesehen hat.",
-          "Kohärenz auf dieser Ebene ist die literarische Signatur eines Autors hinter den Autoren.",
+          "Liest man Genesis 22 mit dem Leiden Christi vor Augen, sind die Entsprechungen nicht impressionistisch — sie sind strukturell. Abraham wird geheissen, seinen Sohn zu nehmen, seinen einzigen Sohn, den er liebt, in das Land Morija, und ihn dort zu opfern. 2 Chronik 3,1 identifiziert Morija mit dem Tempelberg. Golgota liegt auf demselben Jerusalemer Bergrücken. Der Vater opfert den Sohn auf demselben Berg.",
+          "Isaak trägt das Holz für sein eigenes Opfer den Berg hinauf. Christus trägt das Holz seines Kreuzes denselben Berg hinauf. Isaak fragt, wo das Lamm sei; Abraham antwortet: 'Gott selbst wird das Lamm bereitstellen.' Tausend Jahre später zeigt Johannes der Täufer auf Jesus und sagt: 'Seht, das Lamm Gottes.' Die Bereitstellung ist geschehen.",
+          "Als der Engel Abrahams Hand zurückhält, wird der Stellvertreter gefunden: ein Widder, in einem Dornengestrüpp gefangen. Das Tier, das an Isaaks Stelle stirbt, trägt eine Dornenkrone, bevor es geschlachtet wird. Christus trägt die Dornenkrone und stirbt als der Stellvertreter. Die Akedah deutet das Kreuz nicht nur abstrakt voraus — sie deutet sein konkretes Bild voraus.",
+          'Hinzu kommt die rabbinische Überlieferung, dass Isaak bei der Bindung ein willentlich zustimmender Erwachsener war, kein Kind, das zum Altar getragen wurde. Hinzu kommt die dreitägige Reise von Beerscheba nach Morija, während derer Isaak aus Abrahams Sicht so gut wie tot ist — eine Reise, die Hebräer 11,19 ausdrücklich als typologische Auferstehung am dritten Tag liest. Hinzu kommt die Stimme des Vaters bei der Taufe Christi — "Dies ist mein geliebter Sohn" —, die die Septuaginta von Genesis 22 wörtlich zitiert.',
+          "Diese Entsprechungen sind nicht lose. Sie sind nicht die Art von Muster, die ein gewitzter Leser in jedem hinreichend langen Text finden kann. Sie sind dicht, spezifisch, sich gegenseitig verstärkend und über Autoren verteilt, die ein Jahrtausend auseinander lebten und sich nicht abstimmen konnten. Die Akedah ist ein Kapitel der Genesis. Die Bibel hat Hunderte solcher Kapitel.",
+          "Und die Akedah leistet mehr als Vorausdeutung. Sie beantwortet im Voraus den tiefsten Einwand gegen das Kreuz. Was für ein Gott verlangt den Tod seines geliebten Sohnes? Derselbe Gott, der ihn — im Bild — zuerst von Abraham verlangte, und ihn dann — in Wirklichkeit — von sich selbst verlangte.",
         ],
         cites: [
-          "Catholic for a Reason (1998)",
-          "A Father Who Keeps His Promises (1998)",
+          "Hahn, A Father Who Keeps His Promises (1998)",
+          "Hahn, Kinship by Covenant (2009)",
+          "Catechism of the Catholic Church, §§128–130",
+        ],
+      },
+      wright: {
+        lede: "Der gesamte Kanon hat dieselbe Gestalt, und die Gestalt ist das Argument.",
+        body: [
+          "Das Alte Testament hat die Gestalt eines Problems. Israel sollte das Licht für die Völker sein und konnte es nicht. Der Bund sollte den adamitischen Fluch aufheben und reproduzierte ihn. Das davidische Königtum sollte der Thron Gottes auf Erden sein und endete im Exil. Jeder aufeinanderfolgende Bogen des Alten Testaments greift weiter und kommt kürzer. Das Buch endet nicht in Auflösung, sondern in Sehnsucht.",
+          "Das Neue Testament ist die überraschende Gestalt der Antwort: der treue Israelit, der von innerhalb Israels die Berufung erfüllt, die Israel nicht erfüllen konnte. Er ist der neue Adam, der nicht fällt, das neue Israel, das treu ist, der wahre Sohn Davids, dessen Thron nicht endet. Er ist auch — skandalös — mehr als jeder von diesen, denn das Problem erwies sich als tiefer als Israels allein, und die Lösung musste von ausserhalb des Systems kommen, das gescheitert war.",
+          "Die Akedah ist das tiefste Beispiel, doch das Muster ist überall. Adam in einem Garten an einem Baum; Christus in einem Garten an einem Baum. Das Passahlamm zur neunten Stunde geschlachtet; Christus zur neunten Stunde geschlachtet. Israel geht durch das Wasser in die Wüste zum verheissenen Land; der Gläubige geht durch die Taufe in die Nachfolge zur Herrlichkeit. Die eherne Schlange erhöht; der Menschensohn erhöht. Jona drei Tage in der Tiefe; der Menschensohn drei Tage in der Erde.",
+          "Kein einzelner Autor hat dies geplant. Der Plot ist die kumulative Gestalt, die sich über das Ganze hinweg ergibt. Im Rückblick ist jeder Schock vorbereitet worden. Vorausblickend von irgendeinem Punkt im Alten Testament aus ist der nächste Zug wirklich überraschend. So verhalten sich Anthologien nicht. So verhalten sich Geschichten mit einem Autor.",
+        ],
+        cites: [
+          "The New Testament and the People of God (1992)",
+          "Jesus and the Victory of God (1996)",
+          "The Day the Revolution Began (2016)",
         ],
       },
       newman: {
-        lede: "Die Lehre entwickelt sich; sie widerspricht nicht.",
+        lede: "Lehre entwickelt sich, weil die Schrift Tiefe hat.",
         body: [
-          "Der Keim jeder späteren Lehre liegt in der ursprünglichen Hinterlegung. Die Dreifaltigkeit ist in der Taufformel enthalten; die Marienlehre ist in der Typologie von Neu-Eva enthalten; die eucharistische Realpräsenz ist in der Rede vom Brot des Lebens enthalten. Die Zeit entfaltet, was bereits gegeben wurde.",
-          "Eine erfundene Religion würde entweder erstarren und brüchig werden oder sich weiterentwickeln und inkohärent werden. Das Christentum hat weder das eine noch das andere getan. Sein Wachstum ist organisch - so wie das Wachstum eines Lebewesens aussieht.",
-          "Eine solche organische Kontinuität ist die Signatur einer echten lebendigen Quelle, nicht eines Ausschusses.",
+          "Der Keim jeder späteren katholischen Lehre liegt in der ursprünglichen Hinterlassenschaft. Die Dreifaltigkeit ist in der Taufformel. Die Marienlehre ist in der Typologie der neuen Eva und im Magnificat. Die eucharistische Realpräsenz ist in der Brot-des-Lebens-Rede und im Brotbrechen von Emmaus. Das Papsttum ist in den Schlüsseln, die in Cäsarea Philippi gegeben werden. Die Zeit entfaltet, was schon gegeben war.",
+          "Diese Entfaltung ist selbst ein Argument für die Einheit der Schrift. Eine erfundene Religion würde entweder erstarren und brüchig werden oder sich weiterentwickeln und inkohärent werden. Die christliche Lehre hat weder das eine noch das andere getan. Sie ist gewachsen, wie ein Lebewesen wächst — indem sie aus einer einzigen Quelle hervorzieht, was schon im Keim immer da war, ohne je das Vorausgegangene zu verwerfen, sich stets in ihren früheren Gestalten wiedererkennend.",
+          "Eine solche organische Kontinuität, durchgehalten über zwei Jahrtausende kultureller Übersetzung und intellektueller Herausforderung, ist die Signatur einer wirklichen lebendigen Quelle. Kein Ausschuss. Kein sich entwickelnder Konsens. Eine gegebene Hinterlassenschaft, mit einer Tiefe, die Jahrhunderte braucht, um ausgelotet zu werden.",
         ],
-        cites: ["An Essay on the Development of Christian Doctrine (1845)"],
-      },
-      wright: {
-        lede: "Die Geschichte hat eine erkennbare Form.",
-        body: [
-          "Die Erzählung des Alten Testaments hat die Form eines Problems: Israel sollte das Licht für die Völker sein und konnte es nicht sein. Die Erzählung des Neuen Testaments ist die überraschende Form der Lösung: der treue Israelit, der die Berufung erfüllt, die Israel nicht erfüllen konnte.",
-          "Dies ist keine glatte Erzählung, die jemand im Voraus geplant haben könnte. Sie ist auf jeder Seite schockierend. Und doch stellt sich im Nachhinein heraus, dass jeder Schock bereits vorbereitet war.",
-          "Die Geschichte funktioniert.",
+        cites: [
+          "An Essay on the Development of Christian Doctrine (1845)",
+          "A Grammar of Assent (1870)",
         ],
-        cites: ["The New Testament and the People of God (1992)"],
       },
     },
     related: ["resurrection", "church-persistence", "transformation"],
