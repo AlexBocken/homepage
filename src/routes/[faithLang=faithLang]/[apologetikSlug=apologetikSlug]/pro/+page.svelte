@@ -93,14 +93,14 @@
 		return POS_ARGUMENTS.filter((a) => a.layer === lid);
 	}
 
-	const W = 700;
-	const H = 240;
-	const targetX = W - 110;
+	const W = 820;
+	const H = 320;
+	const targetX = W - 200;
 	const targetY = H / 2;
 	const bands: Record<string, [number, number]> = {
-		natural: [20, 80],
-		theism: [90, 150],
-		christianity: [160, 220]
+		natural: [25, 105],
+		theism: [120, 200],
+		christianity: [215, 295]
 	};
 
 	type Item = PosArgument & { y: number };
@@ -173,10 +173,10 @@
 			{#each cumulativeItems as it (it.id)}
 				{@const stroke = POS_LAYER_COLORS[it.layer]}
 				{@const opacity = 0.25 + (it.strength / 5) * 0.55}
-				{@const sw = 0.8 + it.strength * 0.6}
+				{@const sw = 1.6 + it.strength * 1.0}
 				<a href="/{faithLang}/{slug}/pro/{it.id}" aria-label={it.title}>
 					<path
-						d="M 8 {it.y} C {W * 0.45} {it.y}, {W * 0.55} {targetY}, {targetX} {targetY}"
+						d="M 38 {it.y} C {W * 0.45} {it.y}, {W * 0.55} {targetY}, {targetX} {targetY}"
 						fill="none"
 						stroke={stroke}
 						stroke-width={sw}
@@ -185,11 +185,12 @@
 					>
 						<title>{String(it.n).padStart(2, '0')} — {it.title}</title>
 					</path>
-					<circle cx="8" cy={it.y} r="3.5" fill={stroke} />
+					<circle cx="38" cy={it.y} r="5" fill={stroke} />
 					<text
-						x="18"
-						y={it.y + 3.5}
-						font-size="9"
+						x="26"
+						y={it.y + 4}
+						font-size="12"
+						text-anchor="end"
 						fill="var(--color-text-secondary)"
 						font-family="ui-monospace, Menlo, monospace"
 					>
@@ -197,33 +198,31 @@
 					</text>
 				</a>
 			{/each}
-			<circle cx={targetX} cy={targetY} r="14" fill="var(--color-text-primary)" />
 			<circle
+				class="pulse pulse-1"
 				cx={targetX}
 				cy={targetY}
-				r="22"
+				r="18"
 				fill="none"
 				stroke="var(--color-text-primary)"
-				stroke-width="0.6"
-				opacity="0.5"
 			/>
 			<circle
+				class="pulse pulse-2"
 				cx={targetX}
 				cy={targetY}
-				r="34"
+				r="18"
 				fill="none"
 				stroke="var(--color-text-primary)"
-				stroke-width="0.4"
-				opacity="0.25"
 			/>
+			<circle cx={targetX} cy={targetY} r="18" fill="var(--color-text-primary)" />
 			<text
-				x={targetX + 44}
+				x={targetX + 56}
 				y={targetY - 4}
-				font-size="13"
+				font-size="17"
 				font-weight="700"
 				fill="var(--color-text-primary)">{labels.convergeLabel}</text
 			>
-			<text x={targetX + 44} y={targetY + 12} font-size="10" fill="var(--color-text-secondary)"
+			<text x={targetX + 56} y={targetY + 16} font-size="13" fill="var(--color-text-secondary)"
 				>{labels.convergeSub}</text
 			>
 		</svg>
@@ -360,6 +359,38 @@
 		width: 100%;
 		height: auto;
 		display: block;
+		overflow: visible;
+	}
+	@keyframes pulse-out {
+		0% {
+			r: 18;
+			opacity: 0.55;
+			stroke-width: 1.2;
+		}
+		100% {
+			r: 64;
+			opacity: 0;
+			stroke-width: 0.3;
+		}
+	}
+	.pulse {
+		animation: pulse-out 4.8s ease-out infinite both;
+	}
+	.pulse-2 {
+		animation-delay: 2.4s;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.pulse {
+			animation: none;
+			r: 28;
+			opacity: 0.4;
+			stroke-width: 0.8;
+		}
+		.pulse-2 {
+			r: 42;
+			opacity: 0.2;
+			stroke-width: 0.5;
+		}
 	}
 	.cum-svg a {
 		cursor: pointer;
