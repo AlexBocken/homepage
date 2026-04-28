@@ -393,10 +393,6 @@
 		line-height: 1.6;
 		margin: 0.75em 0;
 	}
-	ul {
-		padding-left: 1.5em;
-		margin: 0.5em 0;
-	}
 	li {
 		line-height: 1.6;
 		margin-bottom: 0.25em;

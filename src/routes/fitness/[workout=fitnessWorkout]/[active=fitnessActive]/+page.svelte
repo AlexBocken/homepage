@@ -2030,44 +2030,6 @@
 		box-shadow: none;
 		padding: 0.25rem 0 0;
 	}
-	.exercise-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 0.5rem;
-	}
-	.exercise-header-actions {
-		display: flex;
-		align-items: center;
-		gap: 0.15rem;
-	}
-	.move-exercise {
-		background: none;
-		border: none;
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		padding: 0.25rem;
-		opacity: 0.6;
-	}
-	.move-exercise:hover:not(:disabled) {
-		opacity: 1;
-		color: var(--color-primary);
-	}
-	.move-exercise:disabled {
-		opacity: 0.2;
-		cursor: not-allowed;
-	}
-	.remove-exercise {
-		background: none;
-		border: none;
-		color: var(--nord11);
-		cursor: pointer;
-		padding: 0.25rem;
-		opacity: 0.6;
-	}
-	.remove-exercise:hover {
-		opacity: 1;
-	}
 	.add-set-btn {
 		display: block;
 		width: 100%;
@@ -2091,22 +2053,6 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 1rem 0 0;
-	}
-	.add-exercise-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.4rem;
-		width: 100%;
-		padding: 0.75rem;
-		background: var(--color-primary);
-		color: var(--primary-contrast);
-		border: none;
-		border-radius: 10px;
-		font-weight: 700;
-		font-size: 0.85rem;
-		cursor: pointer;
-		letter-spacing: 0.03em;
 	}
 	/* Cancel: ghost style (less prominent) — matches body-parts .ghost pattern */
 	.cancel-btn {
