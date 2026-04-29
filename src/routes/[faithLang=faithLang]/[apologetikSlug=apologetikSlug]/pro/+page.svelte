@@ -286,7 +286,7 @@
 								{@const v = POS_VOICES[vid]}
 								<a
 									class="archetype-badge"
-									href="/{faithLang}/{slug}/pro/{arg.id}#voice-{vid}"
+									href="/{faithLang}/{slug}/pro/{arg.id}/{vid}"
 									title="{v.name} — {v.sub}"
 								>
 									<span class="glyph" aria-hidden="true" style="background:{v.color};"

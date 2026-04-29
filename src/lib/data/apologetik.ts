@@ -1581,6 +1581,32 @@ export function findArgument(id: string): Argument | undefined {
   return ARGUMENTS.find((a) => a.id === id);
 }
 
+// Alex's curated picks per argument (archetype IDs). Same across locales.
+export const ALEX_PICKS: Record<string, string[]> = {
+  evil: ["aquinas"],
+  evidence: ["logician", "pascal"],
+  science: ["logician", "lewis"],
+  morality: ["logician"],
+  "religion-violence": ["logician"],
+  miracles: ["logician", "pascal"],
+  hiddenness: ["pascal"],
+  hell: ["aquinas", "lewis"],
+  birth: ["lewis", "justin"],
+  bible: ["augustine", "newman"],
+  scale: ["chesterton"],
+  "natural-evil": ["lewis", "catechism"],
+  "many-gods": ["newman"],
+  neuroscience: ["mystic"],
+  prayer: ["lewis", "aquinas"],
+  pleasure: ["catechism"],
+  projection: ["lewis", "chesterton"],
+  "faith-reason": ["aquinas", "lewis"],
+  mythicism: ["historian"],
+  corruption: ["pastor", "chesterton"],
+  intelligence: ["logician"],
+  submission: ["lewis"],
+};
+
 // Locale-aware accessors. DE comes from auto-generated apologetik.de.ts;
 // EN is the source of truth. Latin falls back to EN since DeepL doesn't
 // support it — fill in apologetik.la.ts manually if/when desired.

@@ -201,7 +201,7 @@
 							{@const a = ARCHETYPES[archId]}
 							<a
 								class="archetype-badge"
-								href="/{faithLang}/{slug}/contra/{arg.id}#voice-{archId}"
+								href="/{faithLang}/{slug}/contra/{arg.id}/{archId}"
 								title="{a.name} — {a.sub}"
 							>
 								<span class="glyph" aria-hidden="true" style="background:{a.color};">
@@ -496,6 +496,15 @@
 		gap: 8px;
 		align-items: center;
 		margin-top: 12px;
+		width: max-content;
+		max-width: 100%;
+	}
+	@media (min-width: 760px) {
+		.answer-rail {
+			/* Extend past the 760px content column into the right gutter when space allows.
+			   arg-body left = 50vw - 278px; available right width capped 24px from viewport edge. */
+			max-width: min(calc(100vw - 126px), calc(50vw + 254px));
+		}
 	}
 	.answer-rail .label {
 		font-size: 0.72rem;

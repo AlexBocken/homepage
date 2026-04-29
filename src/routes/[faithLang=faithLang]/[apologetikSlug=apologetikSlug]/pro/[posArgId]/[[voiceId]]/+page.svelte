@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
 	let { data } = $props();
@@ -35,10 +34,13 @@
 	);
 
 	const voiceIds = $derived(Object.keys(arg.voices));
-	let userSelected = $state<string | null>(null);
-	const activeId = $derived(
-		userSelected && voiceIds.includes(userSelected) ? userSelected : (voiceIds[0] ?? '')
-	);
+	let selectedByArg = $state<Record<string, string>>({});
+	const activeId = $derived.by(() => {
+		const sel = selectedByArg[arg.id];
+		if (sel && voiceIds.includes(sel)) return sel;
+		if (data.initialVoiceId && voiceIds.includes(data.initialVoiceId)) return data.initialVoiceId;
+		return voiceIds[0] ?? '';
+	});
 	const voice = $derived(POS_VOICES[activeId]);
 	const counter = $derived(arg.voices[activeId]);
 
@@ -83,21 +85,11 @@
 	}
 
 	function selectVoice(id: string) {
-		userSelected = id;
+		selectedByArg = { ...selectedByArg, [arg.id]: id };
 		if (typeof window !== 'undefined') {
-			history.replaceState(null, '', `#voice-${id}`);
+			history.replaceState(null, '', `/${faithLang}/${slug}/pro/${arg.id}/${id}`);
 		}
 	}
-
-	onMount(() => {
-		const hash = window.location.hash;
-		if (hash.startsWith('#voice-')) {
-			const id = hash.slice('#voice-'.length);
-			if (voiceIds.includes(id)) {
-				userSelected = id;
-			}
-		}
-	});
 </script>
 
 <svelte:head>
@@ -150,7 +142,7 @@
 			{@const v = POS_VOICES[id]}
 			{@const isActive = id === activeId}
 			<a
-				href="#voice-{id}"
+				href="/{faithLang}/{slug}/pro/{arg.id}/{id}"
 				role="tab"
 				aria-selected={isActive}
 				class="tab"
