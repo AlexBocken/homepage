@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -14,7 +14,7 @@
 	/** @typedef {import('$models/CustomMeal').ICustomMeal & { _id?: string }} Meal */
 	/** @typedef {import('$models/CustomMeal').ICustomMealIngredient} MealIngredient */
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 

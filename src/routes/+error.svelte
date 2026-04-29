@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import Header from '$lib/components/Header.svelte';
   import ErrorView from '$lib/components/ErrorView.svelte';
   import { getErrorTitle, getErrorDescription, errorLabels, pick } from '$lib/js/errorStrings';
 
-  let status = $derived($page.status);
-  let error = $derived($page.error as any);
+  let status = $derived(page.status);
+  let error = $derived(page.error as any);
 
   let bibleQuote = $derived(error?.bibleQuote);
   let isEnglish = $derived(error?.lang === 'en');

@@ -1,16 +1,16 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import ErrorView from '$lib/components/ErrorView.svelte';
   import { getErrorTitle, getErrorDescription, errorLabels, pick } from '$lib/js/errorStrings';
 
-  let status = $derived($page.status);
-  let error = $derived($page.error as any);
-  let recipeLang = $derived($page.params.recipeLang);
-  let recipeName = $derived($page.params.name);
-  let user = $derived($page.data?.session?.user);
+  let status = $derived(page.status);
+  let error = $derived(page.error as any);
+  let recipeLang = $derived(page.params.recipeLang);
+  let recipeName = $derived(page.params.name);
+  let user = $derived(page.data?.session?.user);
 
   let isEnglishRoute = $derived(recipeLang === 'recipes');
   let isEnglish = $derived(error?.lang === 'en' || isEnglishRoute);

@@ -1,6 +1,6 @@
 <script>
   import { resolve } from '$app/paths';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
   import ClipboardList from '@lucide/svelte/icons/clipboard-list';
@@ -10,7 +10,7 @@
 
   /** @param {string} path */
   function isActive(path) {
-    const currentPath = $page.url.pathname;
+    const currentPath = page.url.pathname;
     if (path === '/tasks') {
       return currentPath === '/tasks' || currentPath === '/tasks/';
     }

@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount, onDestroy } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import UserHeader from '$lib/components/UserHeader.svelte';
@@ -23,7 +23,7 @@
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	const labels = $derived(fitnessLabels(lang));
 
@@ -63,22 +63,22 @@
 
 	/** @param {string} path */
 	function isActive(path) {
-		const currentPath = $page.url.pathname;
+		const currentPath = page.url.pathname;
 		return currentPath.startsWith(path);
 	}
 
 	const activePath = $derived(`/fitness/${s.workout}/${s.active}`);
-	const isOnActivePage = $derived($page.url.pathname === activePath);
+	const isOnActivePage = $derived(page.url.pathname === activePath);
 	const isNutritionPage = $derived(
-		$page.url.pathname.startsWith(`/fitness/${s.nutrition}`) &&
-		!$page.url.pathname.startsWith(`/fitness/${s.nutrition}/food`) &&
-		!$page.url.pathname.startsWith(`/fitness/${s.nutrition}/meals`)
+		page.url.pathname.startsWith(`/fitness/${s.nutrition}`) &&
+		!page.url.pathname.startsWith(`/fitness/${s.nutrition}/food`) &&
+		!page.url.pathname.startsWith(`/fitness/${s.nutrition}/meals`)
 	);
 	const isMeasureIndex = $derived(
-		/^\/fitness\/(check-in|erfassung)\/?$/.test($page.url.pathname)
+		/^\/fitness\/(check-in|erfassung)\/?$/.test(page.url.pathname)
 	);
 	const isExercisesIndex = $derived(
-		/^\/fitness\/(exercises|uebungen)\/?$/.test($page.url.pathname)
+		/^\/fitness\/(exercises|uebungen)\/?$/.test(page.url.pathname)
 	);
 	/** @param {number} secs */
 	function formatElapsed(secs) {

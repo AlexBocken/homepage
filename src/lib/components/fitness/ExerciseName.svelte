@@ -1,12 +1,12 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { getEnrichedExerciseById } from '$lib/data/exercisedb';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
 	let { exerciseId, plain = false } = $props();
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const exercise = $derived(getEnrichedExerciseById(exerciseId, lang));
 	const sl = $derived(fitnessSlugs(lang));
 </script>

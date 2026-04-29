@@ -1,12 +1,12 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page as appPage } from '$app/stores';
+	import { page as appPage } from '$app/state';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import SessionCard from '$lib/components/fitness/SessionCard.svelte';
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 
-	const lang = $derived(detectFitnessLang($appPage.url.pathname));
+	const lang = $derived(detectFitnessLang(appPage.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 
 	let { data } = $props();

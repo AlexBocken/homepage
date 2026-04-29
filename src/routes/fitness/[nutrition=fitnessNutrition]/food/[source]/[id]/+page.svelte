@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import Heart from '@lucide/svelte/icons/heart';
@@ -14,7 +14,7 @@
 
 	let { data } = $props();
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 

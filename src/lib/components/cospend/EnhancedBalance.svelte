@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import ProfilePicture from './ProfilePicture.svelte';
   import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
   import { detectCospendLang, locale, t } from '$lib/js/cospendI18n';
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const loc = $derived(locale(lang));
 
   let { initialBalance = null, initialDebtData = null } = $props<{ initialBalance?: any, initialDebtData?: any }>();

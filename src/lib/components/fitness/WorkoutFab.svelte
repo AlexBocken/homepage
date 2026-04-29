@@ -4,10 +4,10 @@ import Play from '@lucide/svelte/icons/play';
 import Pause from '@lucide/svelte/icons/pause';
 import ChevronRight from '@lucide/svelte/icons/chevron-right';
 import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
-import { page } from '$app/stores';
+import { page } from '$app/state';
 import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 
-const lang = $derived(detectFitnessLang($page.url.pathname));
+const lang = $derived(detectFitnessLang(page.url.pathname));
 
 let { href, elapsed = '0:00', paused = false, syncStatus = 'idle', onPauseToggle,
 	restSeconds = 0, restTotal = 0, onRestAdjust = null, onRestSkip = null } = $props();

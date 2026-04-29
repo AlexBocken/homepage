@@ -1,7 +1,7 @@
 <script>
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { invalidateAll } from '$app/navigation';
   import { pushState } from '$app/navigation';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
@@ -17,7 +17,7 @@
   import { detectCospendLang, cospendRoot, t, locale, paymentCategoryName } from '$lib/js/cospendI18n';
 
   let { data } = $props(); // Contains session data and balance from server
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 

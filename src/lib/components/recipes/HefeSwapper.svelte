@@ -1,7 +1,7 @@
 <script>
 	import { browser } from '$app/environment';
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	let { item, multiplier = 1, yeastId = 0, lang = 'de' } = $props();
 
@@ -11,7 +11,7 @@
 		: 'Zwischen Frischhefe und Trockenhefe wechseln');
 
 	// Get all current URL parameters to preserve state
-	const currentParams = $derived(browser ? new URLSearchParams(window.location.search) : $page.url.searchParams);
+	const currentParams = $derived(browser ? new URLSearchParams(window.location.search) : page.url.searchParams);
 	
 	/** @param {Event} event */
 	function toggleHefe(event) {

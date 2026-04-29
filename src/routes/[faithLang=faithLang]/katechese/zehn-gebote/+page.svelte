@@ -3,12 +3,12 @@
 	import { onMount } from 'svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 	/** @type {number | string | null} */
 	let expanded = $state(null);
-	const isGerman = $derived($page.url.pathname.startsWith('/glaube'));
-	const isLatin = $derived($page.url.pathname.startsWith('/fides'));
+	const isGerman = $derived(page.url.pathname.startsWith('/glaube'));
+	const isLatin = $derived(page.url.pathname.startsWith('/fides'));
 
 	/** @param {number | string} id */
 	function toggle(id) {

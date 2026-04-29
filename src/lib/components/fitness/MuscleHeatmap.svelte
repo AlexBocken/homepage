@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang } from '$lib/js/fitnessI18n';
 	import frontSvgRaw from '$lib/assets/muscle-front.svg?raw';
@@ -13,7 +13,7 @@
 	/** @type {{ data?: { totals?: Record<string, MuscleTotals> } | null }} */
 	let { data } = $props();
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const isEn = $derived(lang === 'en');
 	/** @type {Record<string, MuscleTotals>} */
 	const totals = $derived(data?.totals ?? {});

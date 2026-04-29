@@ -1,9 +1,9 @@
 <script>
   import ProfilePicture from './ProfilePicture.svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { detectCospendLang, t } from '$lib/js/cospendI18n';
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
 
   let {
     splitMethod = $bindable('equal'),

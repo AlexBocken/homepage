@@ -1,12 +1,12 @@
 <script lang="ts">
   import { browser } from '$app/environment';
   import { enhance } from '$app/forms';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import Heart from '@lucide/svelte/icons/heart';
 
   let { recipeId, isFavorite = $bindable(false), isLoggedIn = false } = $props<{ recipeId: string, isFavorite?: boolean, isLoggedIn?: boolean }>();
 
-  const recipeLang = $derived($page.url.pathname.split('/')[1] || 'rezepte');
+  const recipeLang = $derived(page.url.pathname.split('/')[1] || 'rezepte');
 
   let isLoading = $state(false);
 

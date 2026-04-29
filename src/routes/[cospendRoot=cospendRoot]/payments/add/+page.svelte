@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { enhance } from '$app/forms';
   import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n, frequencyDescription } from '$lib/js/cospendI18n';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
@@ -16,7 +16,7 @@
 
   let { data, form } = $props();
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 

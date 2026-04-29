@@ -2,7 +2,7 @@
 import { onMount } from 'svelte';
 import { onNavigate } from "$app/navigation";
 import { browser } from '$app/environment';
-import { page } from '$app/stores';
+import { page } from '$app/state';
 import HefeSwapper from './HefeSwapper.svelte';
 import NutritionSummary from './NutritionSummary.svelte';
 import AddToFoodLogButton from './AddToFoodLogButton.svelte';
@@ -272,7 +272,7 @@ const yeastIds = $derived.by(() => {
 });
 
 // Get all current URL parameters to preserve state in multiplier forms
-const currentParams = $derived(browser ? new URLSearchParams(window.location.search) : $page.url.searchParams);
+const currentParams = $derived(browser ? new URLSearchParams(window.location.search) : page.url.searchParams);
 
 // Progressive enhancement - use JS if available
 onMount(() => {

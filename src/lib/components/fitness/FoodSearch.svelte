@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
 	import Heart from '@lucide/svelte/icons/heart';
@@ -50,7 +50,7 @@
 		initialResults = undefined,
 	} = $props();
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 	const btnLabel = $derived(confirmLabel ?? t('log_food', lang));

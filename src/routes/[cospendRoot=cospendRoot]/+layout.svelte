@@ -1,6 +1,6 @@
 <script>
   import { resolve } from '$app/paths';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { fly } from 'svelte/transition';
@@ -17,7 +17,7 @@
 
   let { data, children } = $props();
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const root = $derived(cospendRoot(lang));
   const labels = $derived(cospendLabels(lang));
 
@@ -29,9 +29,9 @@
 
   $effect(() => {
     // Check if URL contains payment view route OR if we have paymentId in state
-    const match = $page.url.pathname.match(/\/(cospend|expenses)\/payments\/view\/([^\/]+)/);
-    const statePaymentId = $page.state?.paymentId;
-    const isOnDashboard = $page.route.id === '/[cospendRoot=cospendRoot]/dash';
+    const match = page.url.pathname.match(/\/(cospend|expenses)\/payments\/view\/([^\/]+)/);
+    const statePaymentId = page.state?.paymentId;
+    const isOnDashboard = page.route.id === '/[cospendRoot=cospendRoot]/dash';
 
     // Only show modal if we're on the dashboard AND have a payment to show
     if (isOnDashboard && (match || statePaymentId)) {
@@ -49,14 +49,14 @@
     paymentId = null;
 
     // Dispatch a custom event to trigger dashboard refresh
-    if ($page.route.id === '/[cospendRoot=cospendRoot]/dash') {
+    if (page.route.id === '/[cospendRoot=cospendRoot]/dash') {
       window.dispatchEvent(new CustomEvent('dashboardRefresh'));
     }
   }
 
   /** @param {string} path */
   function isActive(path) {
-    const currentPath = $page.url.pathname;
+    const currentPath = page.url.pathname;
     // Exact match for dash
     if (path.endsWith('/dash')) {
       return currentPath === path || currentPath === path + '/';

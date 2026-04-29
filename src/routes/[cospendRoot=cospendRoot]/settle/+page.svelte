@@ -2,7 +2,7 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { enhance } from '$app/forms';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { detectCospendLang, cospendRoot, t, locale } from '$lib/js/cospendI18n';
@@ -11,7 +11,7 @@
 
   let { data, form } = $props();
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 

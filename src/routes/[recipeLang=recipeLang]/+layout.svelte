@@ -1,7 +1,7 @@
 <script>
 import { resolve } from '$app/paths';
 import '$lib/css/recipe-links.css';
-import { page } from '$app/stores';
+import { page } from '$app/state';
 import { onNavigate } from '$app/navigation';
 import Header from '$lib/components/Header.svelte'
 
@@ -68,7 +68,7 @@ const labels = $derived({
 
 /** @param {string} path */
 function isActive(path) {
-	const currentPath = $page.url.pathname;
+	const currentPath = page.url.pathname;
 	// Exact match for recipe lang root
 	if (path === `/${data.recipeLang}`) {
 		return currentPath === `/${data.recipeLang}` || currentPath === `/${data.recipeLang}/`;

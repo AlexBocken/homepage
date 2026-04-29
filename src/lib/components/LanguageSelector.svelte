@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
-	import { languageStore } from '$lib/stores/language';
+	import { page } from '$app/state';
+	import { recipeTranslationStore } from '$lib/stores/recipeTranslation.svelte';
+	import { languageStore } from '$lib/stores/language.svelte';
 	import { convertFitnessPath } from '$lib/js/fitnessI18n';
 	import { convertCospendPath } from '$lib/js/cospendI18n';
 	import { onMount } from 'svelte';
@@ -10,7 +10,7 @@
 	let { lang = undefined }: { lang?: 'de' | 'en' | 'la' } = $props();
 
 	// Use prop for display if provided (SSR-safe), otherwise fall back to store
-	const displayLang = $derived(lang ?? $languageStore);
+	const displayLang = $derived(lang ?? languageStore.value);
 
 	let currentPath = $state('');
 	let langButton: HTMLButtonElement;
@@ -33,14 +33,14 @@
 	};
 
 	// Whether the current page is a faith route (show LA option)
-	const faithPath = $derived(currentPath || $page.url.pathname);
+	const faithPath = $derived(currentPath || page.url.pathname);
 	const isFaithRoute = $derived(
 		faithPath.startsWith('/glaube') || faithPath.startsWith('/faith') || faithPath.startsWith('/fides')
 	);
 
 	$effect(() => {
 		// Update current language and path when page changes (reactive to browser navigation)
-		const path = $page.url.pathname;
+		const path = page.url.pathname;
 		currentPath = path;
 
 		if (path.startsWith('/recipes') || path.startsWith('/faith')) {
@@ -87,7 +87,7 @@
 
 	// Compute target paths for each language (used as href for no-JS)
 	function computeTargetPath(targetLang: 'de' | 'en' | 'la'): string {
-		const path = currentPath || $page.url.pathname;
+		const path = currentPath || page.url.pathname;
 
 		if (path.startsWith('/glaube') || path.startsWith('/faith') || path.startsWith('/fides')) {
 			return convertFaithPath(path, targetLang);
@@ -102,7 +102,7 @@
 		}
 
 		// Use translated recipe slugs from page data when available (works during SSR)
-		const pageData = $page.data;
+		const pageData = page.data;
 		if (targetLang === 'en' && path.startsWith('/rezepte')) {
 			if (pageData?.englishShortName) {
 				return `/recipes/${pageData.englishShortName}`;
@@ -171,7 +171,7 @@
 		}
 
 		// If we have recipe translation data from store, use the correct short names
-		const recipeData = $recipeTranslationStore;
+		const recipeData = recipeTranslationStore.value;
 		if (recipeData) {
 			if (lang === 'en' && recipeData.englishShortName) {
 				await goto(`/recipes/${recipeData.englishShortName}`);

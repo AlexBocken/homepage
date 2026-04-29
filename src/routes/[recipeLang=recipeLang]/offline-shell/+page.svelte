@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount, tick } from 'svelte';
 import { goto } from '$app/navigation';
-import { page } from '$app/stores';
+import { page } from '$app/state';
 
 let { data } = $props();
 
@@ -13,7 +13,7 @@ let { data } = $props();
 onMount(() => {
 	// Only proceed if we're actually offline or have a redirect target
 	// This prevents issues if someone navigates here directly while online
-	const targetUrl = $page.url.searchParams.get('redirect');
+	const targetUrl = page.url.searchParams.get('redirect');
 
 	if (!targetUrl) {
 		// No redirect target - just go to main recipe list

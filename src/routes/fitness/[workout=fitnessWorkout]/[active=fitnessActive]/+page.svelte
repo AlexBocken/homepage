@@ -1,7 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Play from '@lucide/svelte/icons/play';
 	import Pause from '@lucide/svelte/icons/pause';
@@ -25,7 +25,7 @@
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const isEn = $derived(lang === 'en');
 	const sl = $derived(fitnessSlugs(lang));
 	import { getWorkout } from '$lib/js/workout.svelte';

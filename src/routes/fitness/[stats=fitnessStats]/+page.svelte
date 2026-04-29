@@ -1,7 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
 	import Dumbbell from '@lucide/svelte/icons/dumbbell';
@@ -23,7 +23,7 @@
 	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
 	import { BODY_PART_CARDS, bodyPartSlug, bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const statsSlug = $derived(lang === 'en' ? 'stats' : 'statistik');
 	const historySlug = $derived(lang === 'en' ? 'history' : 'verlauf');
 
