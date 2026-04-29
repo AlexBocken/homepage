@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
 	let { data } = $props();
 	const isGerman = $derived(data.lang === 'de');
@@ -48,7 +49,7 @@
 
 <h1>Katechese</h1>
 {#if !isGerman}
-	<p class="lang-notice">{isLatin ? 'Haec catechesis tantum in ' : 'This catechesis is only available in '}<a href="/glaube/katechese">{isLatin ? 'lingua Germanica' : 'German'}</a>{isLatin ? ' praesto est.' : '.'}</p>
+	<p class="lang-notice">{isLatin ? 'Haec catechesis tantum in ' : 'This catechesis is only available in '}<a href={resolve('/glaube/katechese')}>{isLatin ? 'lingua Germanica' : 'German'}</a>{isLatin ? ' praesto est.' : '.'}</p>
 {/if}
 <p>
 	Aufgearbeitete Lehrinhalte aus dem Glaubenskurs von P. Martin Ramm FSSP.
@@ -57,7 +58,7 @@
 <p class="disclaimer">Diese Seiten stellen eine freie Aufbereitung der erhaltenen Unterlagen dar und sind kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seiten anzulasten.</p>
 
 <LinksGrid>
-	<a href="/{data.faithLang}/katechese/zehn-gebote">
+	<a href={resolve('/[faithLang=faithLang]/katechese/zehn-gebote', { faithLang: data.faithLang })}>
 		<svg viewBox="2 14 96 68" xmlns="http://www.w3.org/2000/svg">
 			<rect x="8" y="20" width="38" height="55" rx="12" ry="12" stroke="currentColor" stroke-width="3" fill="none"/>
 			<rect x="54" y="20" width="38" height="55" rx="12" ry="12" stroke="currentColor" stroke-width="3" fill="none"/>

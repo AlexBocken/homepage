@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { resolve } from '$app/paths';
     import type { PageData } from './$types';
     let { data } = $props<{ data: PageData }>();
     import TagCloud from '$lib/components/TagCloud.svelte';
@@ -18,7 +19,7 @@
 <section>
 <TagCloud>
 {#each data.categories as tag}
-	<TagBall {tag} ref="/{data.recipeLang}/category">
+	<TagBall {tag} ref={resolve('/[recipeLang=recipeLang]/category', { recipeLang: data.recipeLang })}>
 	</TagBall>
 {/each}
 </TagCloud>

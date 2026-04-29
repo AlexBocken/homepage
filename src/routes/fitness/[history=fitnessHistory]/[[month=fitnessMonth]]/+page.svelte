@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page as appPage } from '$app/stores';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -48,9 +49,15 @@
 		return d.toLocaleString(lang === 'de' ? 'de-DE' : 'en-US', { month: 'long', year: 'numeric' });
 	}
 
-	const prevHref = $derived(`/fitness/${s.history}/${prevMonth}`);
-	const nextHref = $derived(nextMonth && nextMonth === currentYM ? `/fitness/${s.history}` : nextMonth ? `/fitness/${s.history}/${nextMonth}` : null);
-	const recentHref = $derived(`/fitness/${s.history}`);
+	const prevHref = $derived(resolve('/fitness/[history=fitnessHistory]/[[month=fitnessMonth]]', { history: s.history, month: prevMonth }));
+	const nextHref = $derived(
+		nextMonth && nextMonth === currentYM
+			? resolve('/fitness/[history=fitnessHistory]', { history: s.history })
+			: nextMonth
+				? resolve('/fitness/[history=fitnessHistory]/[[month=fitnessMonth]]', { history: s.history, month: nextMonth })
+				: null
+	);
+	const recentHref = $derived(resolve('/fitness/[history=fitnessHistory]', { history: s.history }));
 </script>
 
 <svelte:head><title>{t('history_title', lang)} - Bocken</title></svelte:head>

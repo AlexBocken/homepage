@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
 	let { data } = $props();
@@ -106,7 +107,7 @@
 <ApologetikToc title={tocLabel} items={tocItems} activeId={arg.id} />
 
 <main class="detail">
-	<a class="back-link" href="/{faithLang}/{slug}/pro">{labels.back}</a>
+	<a class="back-link" href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/pro', { faithLang, apologetikSlug: slug })}>{labels.back}</a>
 
 	{#if layer}
 		<div class="layer-tag">{layer.sub}</div>
@@ -142,7 +143,7 @@
 			{@const v = POS_VOICES[id]}
 			{@const isActive = id === activeId}
 			<a
-				href="/{faithLang}/{slug}/pro/{arg.id}/{id}"
+				href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/pro/[posArgId]/[[voiceId]]', { faithLang, apologetikSlug: slug, posArgId: arg.id, voiceId: id })}
 				role="tab"
 				aria-selected={isActive}
 				class="tab"
@@ -203,7 +204,7 @@
 				{#each arg.related as rid (rid)}
 					{@const r = POS_ARGUMENTS.find((x) => x.id === rid)}
 					{#if r}
-						<a class="related-item" href="/{faithLang}/{slug}/pro/{r.id}">
+						<a class="related-item" href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/pro/[posArgId]', { faithLang, apologetikSlug: slug, posArgId: r.id })}>
 							<span class="num">{String(r.n).padStart(2, '0')}</span>
 							{r.title}
 						</a>

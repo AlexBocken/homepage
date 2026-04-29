@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -69,12 +70,12 @@
   {#snippet links()}
     <ul class="site_header">
       {#if !isGuest}
-        <li style="--active-fill: var(--nord9)"><a href="/{root}/dash" class:active={isActive(`/${root}/dash`)}><LayoutDashboard size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.dash}</span></a></li>
+        <li style="--active-fill: var(--nord9)"><a href={resolve('/[cospendRoot=cospendRoot]/dash', { cospendRoot: root })} class:active={isActive(`/${root}/dash`)}><LayoutDashboard size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.dash}</span></a></li>
       {/if}
-      <li style="--active-fill: var(--nord13)"><a href="/{root}/list" class:active={isActive(`/${root}/list`)}><ShoppingCart size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.list}</span></a></li>
+      <li style="--active-fill: var(--nord13)"><a href={resolve('/[cospendRoot=cospendRoot]/list', { cospendRoot: root })} class:active={isActive(`/${root}/list`)}><ShoppingCart size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.list}</span></a></li>
       {#if !isGuest}
-        <li style="--active-fill: var(--nord14)"><a href="/{root}/payments" class:active={isActive(`/${root}/payments`)}><span class="nav-icon-wrap nav-icon-wallet"><Wallet size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">{labels.payments}</span></a></li>
-        <li style="--active-fill: var(--nord12); --active-shape: circle(50%)"><a href="/{root}/recurring" class:active={isActive(`/${root}/recurring`)}><span class="nav-icon-wrap"><RefreshCw size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">{labels.recurring}</span></a></li>
+        <li style="--active-fill: var(--nord14)"><a href={resolve('/[cospendRoot=cospendRoot]/payments', { cospendRoot: root })} class:active={isActive(`/${root}/payments`)}><span class="nav-icon-wrap nav-icon-wallet"><Wallet size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">{labels.payments}</span></a></li>
+        <li style="--active-fill: var(--nord12); --active-shape: circle(50%)"><a href={resolve('/[cospendRoot=cospendRoot]/recurring', { cospendRoot: root })} class:active={isActive(`/${root}/recurring`)}><span class="nav-icon-wrap"><RefreshCw size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">{labels.recurring}</span></a></li>
       {/if}
     </ul>
   {/snippet}

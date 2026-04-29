@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { createLanguageContext } from "$lib/contexts/languageContext.js";
@@ -171,7 +172,10 @@
 	]);
 
 	// Base URL for prayer links
-	const baseUrl = $derived(isLatin ? '/fides/orationes' : isEnglish ? '/faith/prayers' : '/glaube/gebete');
+	const baseUrl = $derived(resolve('/[faithLang=faithLang]/[prayers=prayersLang]', {
+		faithLang: isLatin ? 'fides' : isEnglish ? 'faith' : 'glaube',
+		prayers: isLatin ? 'orationes' : isEnglish ? 'prayers' : 'gebete'
+	}));
 
 	// Get prayer name by ID (reactive based on language)
 	/** @param {string} id */

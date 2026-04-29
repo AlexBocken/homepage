@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -103,17 +104,24 @@
 
 	// URL: /{faithLang}/{calendar}/{rite}/{yyyy}/{mm}/{dd} — rite is a required
 	// path segment so day/month nav stays inside the active rite.
-	const riteBase = $derived(`/${page.params.faithLang}/${page.params.calendar}/${rite}`);
-	const calendarBase = $derived(`/${page.params.faithLang}/${page.params.calendar}`);
+	const riteParams = $derived({
+		faithLang: page.params.faithLang!,
+		calendar: page.params.calendar!,
+		rite
+	});
 
 	function dayHref(iso: string) {
 		const [yy, mm, dd] = iso.split('-');
-		return `${riteBase}/${yy}/${mm}/${dd}${dioceseQuery}`;
+		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]/[[dd=calendarDay]]', {
+			...riteParams, yyyy: yy, mm, dd
+		}) + dioceseQuery;
 	}
 
 	function detailHref(iso: string) {
 		const [yy, mm, dd] = iso.split('-');
-		return `${riteBase}/detail/${yy}/${mm}/${dd}${dioceseQuery}`;
+		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/detail/[yyyy=calendarYear]/[mm=calendarMonth]/[dd=calendarDay]', {
+			...riteParams, yyyy: yy, mm, dd
+		}) + dioceseQuery;
 	}
 
 	// Hero card: prefer the currently-selected day; fall back to today when
@@ -121,12 +129,19 @@
 	const hero = $derived(selected ?? today);
 
 	function monthHref(y: number, m: number) {
-		return `${riteBase}/${y}/${pad(m + 1)}${dioceseQuery}`;
+		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]', {
+			...riteParams, yyyy: String(y), mm: pad(m + 1)
+		}) + dioceseQuery;
 	}
 
 	const todayHref = $derived.by(() => {
 		const now = new Date();
-		return `${riteBase}/${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())}${dioceseQuery}`;
+		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]/[[dd=calendarDay]]', {
+			...riteParams,
+			yyyy: String(now.getFullYear()),
+			mm: pad(now.getMonth() + 1),
+			dd: pad(now.getDate())
+		}) + dioceseQuery;
 	});
 
 	const pageTitle = $derived(t('calendar', lang));
@@ -136,14 +151,23 @@
 	// re-applies each rite's default if none is given.
 	function riteHref(r: 'novus' | 'vetus') {
 		const dd = selectedIso.slice(8, 10);
-		return `${calendarBase}/${r}/${year}/${pad(month + 1)}/${dd}`;
+		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]/[[dd=calendarDay]]', {
+			faithLang: page.params.faithLang!,
+			calendar: page.params.calendar!,
+			rite: r,
+			yyyy: String(year),
+			mm: pad(month + 1),
+			dd
+		});
 	}
 
 	function onDioceseChange(e: Event) {
 		const next = (e.currentTarget as HTMLSelectElement).value;
 		const def = rite === 'vetus' ? DEFAULT_DIOCESE_1962 : DEFAULT_DIOCESE_1969;
 		const dd = selectedIso.slice(8, 10);
-		const path = `${riteBase}/${year}/${pad(month + 1)}/${dd}`;
+		const path = resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]/[[dd=calendarDay]]', {
+			...riteParams, yyyy: String(year), mm: pad(month + 1), dd
+		});
 		goto(next === def ? path : `${path}?diocese=${next}`, { noScroll: true });
 	}
 </script>

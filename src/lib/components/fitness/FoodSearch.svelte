@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
@@ -477,7 +478,7 @@
 						<span class="fs-result-cal">{item.calories}<small> kcal</small></span>
 					</button>
 					{#if showDetailLinks && (item.source === 'bls' || item.source === 'usda' || item.source === 'off')}
-						<a class="fs-detail-link" href="/fitness/{s.nutrition}/food/{item.source}/{item.id}" aria-label="View details">
+						<a class="fs-detail-link" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: item.source, id: item.id })} aria-label="View details">
 							<ExternalLink size={13} />
 						</a>
 					{/if}

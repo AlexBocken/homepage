@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
     	import AddButton from '$lib/components/AddButton.svelte';
 	import Converter from './Converter.svelte';
@@ -64,4 +65,4 @@ h1{
 </p>
 </div>
 
-<AddButton href="/rezepte/add"></AddButton>
+<AddButton href={resolve('/rezepte/add')}></AddButton>

@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { getEnrichedExerciseById } from '$lib/data/exercisedb';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
@@ -14,7 +15,7 @@
 	{#if plain}
 		<span class="exercise-plain">{exercise.localName}</span>
 	{:else}
-		<a href="/fitness/{sl.exercises}/{exerciseId}" class="exercise-link">{exercise.localName}</a>
+		<a href={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: sl.exercises, id: exerciseId })} class="exercise-link">{exercise.localName}</a>
 	{/if}
 {:else}
 	<span class="exercise-unknown">Unknown Exercise</span>

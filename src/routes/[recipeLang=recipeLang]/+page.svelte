@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
@@ -367,7 +368,7 @@
 			<div class="hero-text">
 				<h1>{labels.title}</h1>
 				<p class="subheading">{labels.subheading}</p>
-				<a href="/{data.recipeLang}/{heroRecipe.short_name}" class="hero-featured"
+				<a href={resolve('/[recipeLang=recipeLang]/[name]', { recipeLang: data.recipeLang, name: heroRecipe.short_name })} class="hero-featured"
 				onclick={() => {
 					const img = document.querySelector('.hero-img') as HTMLElement | null;
 					if (img) (img.style as any).viewTransitionName = `recipe-${heroRecipe.short_name}-img`;
@@ -435,7 +436,7 @@
 							isFavorite={recipe.isFavorite}
 							showFavoriteIndicator={!!data.session?.user}
 							loading_strat={i < 12 ? "eager" : "lazy"}
-							routePrefix="/{data.recipeLang}"
+							routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}
 						/>
 					{/each}
 				</div>
@@ -448,7 +449,7 @@
 		</div>
 	</section>
 	{#if !isEnglish}
-		<AddButton href="/rezepte/add"></AddButton>
+		<AddButton href={resolve('/rezepte/add')}></AddButton>
 	{/if}
 {:else}
 	<div class="hero-fallback">
@@ -465,7 +466,7 @@
 				isFavorite={recipe.isFavorite}
 				showFavoriteIndicator={!!data.session?.user}
 				loading_strat={i < 12 ? "eager" : "lazy"}
-				routePrefix="/{data.recipeLang}"
+				routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}
 			/>
 		{/each}
 	</div>
@@ -475,6 +476,6 @@
 	{/if}
 
 	{#if !isEnglish}
-		<AddButton href="/rezepte/add"></AddButton>
+		<AddButton href={resolve('/rezepte/add')}></AddButton>
 	{/if}
 {/if}

@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 
 	/** @param {string | undefined | null} type @param {'en'|'de'} lang */
@@ -198,7 +199,7 @@
 						<h3>{lang === 'en' ? 'Similar Exercises' : 'Ähnliche Übungen'}</h3>
 						<div class="similar-scroll">
 							{#each similar as sim}
-								<a class="similar-card" href="/fitness/{s.exercises}/{sim.id}">
+								<a class="similar-card" href={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: s.exercises, id: sim.id })}>
 									<div class="similar-info">
 										<span class="similar-name">{sim.localName}</span>
 										<span class="similar-meta">{sim.localBodyPart} · {sim.localEquipment}</span>

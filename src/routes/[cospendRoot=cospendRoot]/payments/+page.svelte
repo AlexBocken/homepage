@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
@@ -148,7 +149,7 @@
         </svg>
         <h2>{t('no_payments_yet', lang)}</h2>
         <p>{t('start_first_expense', lang)}</p>
-        <a href="/{root}/payments/add" class="btn btn-primary">{t('add_first_payment', lang)}</a>
+        <a href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} class="btn btn-primary">{t('add_first_payment', lang)}</a>
       </div>
     </div>
   {:else}
@@ -156,7 +157,7 @@
       {#each payments as payment}
         {#if isSettlementPayment(payment)}
           <!-- Settlement Card - Distinct Layout -->
-          <a href="/{root}/payments/view/{payment._id}" class="payment-card settlement-card">
+          <a href={resolve('/[cospendRoot=cospendRoot]/payments/view/[id]', { cospendRoot: root, id: payment._id })} class="payment-card settlement-card">
             <div class="settlement-header">
               <div class="settlement-badge">
                 <span class="settlement-icon">💸</span>
@@ -190,7 +191,7 @@
           </a>
         {:else}
           <!-- Regular Payment Card -->
-          <a href="/{root}/payments/view/{payment._id}" class="payment-card">
+          <a href={resolve('/[cospendRoot=cospendRoot]/payments/view/[id]', { cospendRoot: root, id: payment._id })} class="payment-card">
             <div class="payment-header">
               <div class="payment-title-section">
                 <ProfilePicture username={payment.paidBy} size={40} />
@@ -279,7 +280,7 @@
   {/if}
 </main>
 
-<AddButton href="/{root}/payments/add" />
+<AddButton href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} />
 
 <style>
   .payments-list {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { POS_LAYER_COLORS, type PosArgument } from '$lib/data/apologetik';
 	import CaseTabs from '$lib/components/faith/CaseTabs.svelte';
@@ -174,7 +175,7 @@
 				{@const stroke = POS_LAYER_COLORS[it.layer]}
 				{@const opacity = 0.25 + (it.strength / 5) * 0.55}
 				{@const sw = 1.6 + it.strength * 1.0}
-				<a href="/{faithLang}/{slug}/pro/{it.id}" aria-label={it.title}>
+				<a href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/pro/[posArgId]', { faithLang, apologetikSlug: slug, posArgId: it.id })} aria-label={it.title}>
 					<path
 						d="M 38 {it.y} C {W * 0.45} {it.y}, {W * 0.55} {targetY}, {targetX} {targetY}"
 						fill="none"
@@ -253,7 +254,7 @@
 				<article class="pos-row" id="pos-{arg.id}">
 					<a
 						class="card-link"
-						href="/{faithLang}/{slug}/pro/{arg.id}"
+						href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/pro/[posArgId]', { faithLang, apologetikSlug: slug, posArgId: arg.id })}
 						aria-label={arg.title}
 					></a>
 					<div class="pos-num">
@@ -286,7 +287,7 @@
 								{@const v = POS_VOICES[vid]}
 								<a
 									class="archetype-badge"
-									href="/{faithLang}/{slug}/pro/{arg.id}/{vid}"
+									href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/pro/[posArgId]/[[voiceId]]', { faithLang, apologetikSlug: slug, posArgId: arg.id, voiceId: vid })}
 									title="{v.name} — {v.sub}"
 								>
 									<span class="glyph" aria-hidden="true" style="background:{v.color};"

@@ -1,30 +1,31 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
 	import { onMount } from 'svelte';
 	let { data } = $props();
 
 	let lang = $state<'de' | 'en'>('de');
-	let recipesUrl = $state('/rezepte');
-	let faithUrl = $state('/glaube');
+	let recipesUrl = $state(resolve('/[recipeLang=recipeLang]', { recipeLang: 'rezepte' }));
+	let faithUrl = $state(resolve('/[faithLang=faithLang]', { faithLang: 'glaube' }));
 
 	onMount(() => {
 		// Check localStorage for preferred language
 		const preferredLanguage = localStorage.getItem('preferredLanguage');
 		if (preferredLanguage === 'en') {
 			lang = 'en';
-			recipesUrl = '/recipes';
-			faithUrl = '/faith';
+			recipesUrl = resolve('/[recipeLang=recipeLang]', { recipeLang: 'recipes' });
+			faithUrl = resolve('/[faithLang=faithLang]', { faithLang: 'faith' });
 		} else {
 			lang = 'de';
-			recipesUrl = '/rezepte';
-			faithUrl = '/glaube';
+			recipesUrl = resolve('/[recipeLang=recipeLang]', { recipeLang: 'rezepte' });
+			faithUrl = resolve('/[faithLang=faithLang]', { faithLang: 'glaube' });
 		}
 
 		// Listen for language changes from UserHeader
 		const handleLanguageChange = (e: CustomEvent) => {
 			lang = e.detail.lang;
-			recipesUrl = lang === 'en' ? '/recipes' : '/rezepte';
-			faithUrl = lang === 'en' ? '/faith' : '/glaube';
+			recipesUrl = resolve('/[recipeLang=recipeLang]', { recipeLang: lang === 'en' ? 'recipes' : 'rezepte' });
+			faithUrl = resolve('/[faithLang=faithLang]', { faithLang: lang === 'en' ? 'faith' : 'glaube' });
 		};
 		window.addEventListener('languagechange', handleLanguageChange as EventListener);
 
@@ -151,13 +152,13 @@ section h2{
 		<h3>{labels.shopping}</h3>
 	</a>
 
-	<a href="/fitness">
+	<a href={resolve('/fitness')}>
 		<svg class="lock-icon"><use href="#lock-icon"/></svg>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M96 64c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32l0 160 0 64 0 160c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-64-32 0c-17.7 0-32-14.3-32-32l0-64c-17.7 0-32-14.3-32-32s14.3-32 32-32l0-64c0-17.7 14.3-32 32-32l32 0 0-64zm448 0l0 64 32 0c17.7 0 32 14.3 32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 64c0 17.7-14.3 32-32 32l-32 0 0 64c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-160 0-64 0-160c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32zM416 224l0 64-192 0 0-64 192 0z"/></svg>
 		<h3>{labels.fitness}</h3>
 	</a>
 
-	<a href="/tasks">
+	<a href={resolve('/tasks')}>
 		<svg class="lock-icon"><use href="#lock-icon"/></svg>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M152.1 38.2c9.9 8.9 10.7 24 1.8 33.9l-72 80c-4.4 4.9-10.6 7.8-17.2 7.9s-12.9-2.4-17.6-7L7 113c-9.3-9.4-9.3-24.6 0-34C16.3 69.5 31.5 69.5 40.7 79l21.9 22.3 53.5-59.4c8.9-9.9 24-10.7 33.9-1.8zm0 160c9.9 8.9 10.7 24 1.8 33.9l-72 80c-4.4 4.9-10.6 7.8-17.2 7.9s-12.9-2.4-17.6-7L7 273c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l22 22.3 53.5-59.4c8.9-9.9 24-10.7 33.9-1.8zM224 96c0-17.7 14.3-32 32-32H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H256c-17.7 0-32-14.3-32-32zm0 160c0-17.7 14.3-32 32-32H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H256c-17.7 0-32-14.3-32-32zM160 416c0-17.7 14.3-32 32-32H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32-14.3-32-32zM48 368a48 48 0 1 1 0 96 48 48 0 1 1 0-96z"/></svg>
 		<h3>{labels.tasks}</h3>
@@ -169,7 +170,7 @@ section h2{
 	</a>
 
 
-	<a href="/fitness/nutrition">
+	<a href={resolve('/fitness/nutrition')}>
 		<svg class="lock-icon"><use href="#lock-icon"/></svg>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -226 532 468"><path d="m256-140-15-21c-25-34-65-55-108-55C60-216 0-156 0-83v3C0-57 6-32 17-8h106c3 0 6-2 7-5l32-76c4-9 12-15 22-15 9 0 18 5 22 14l51 114 42-83c4-8 12-13 21-13s17 5 22 13l23 47c1 2 4 4 7 4h124c10-24 16-49 16-72v-3c0-73-60-133-133-133-43 0-83 21-108 55l-15 21zM470 40h-98c-21 0-41-12-50-31l-2-3-42 85c-5 8-13 13-22 13-10 0-18-6-22-14L185-20 174 6c-8 21-29 34-51 34H42c48 74 123 142 171 178 12 9 27 14 43 14 15 0 31-4 43-14 48-36 123-104 171-178z"/></svg>
 		<h3>{labels.nutrition}</h3>
@@ -222,7 +223,7 @@ section h2{
 
 	<!-- instead of redirect_to_docs(), use a normal link with internal checks for data.session -->
 	{#if !data.session}
-		<a href="/auth/signin">
+		<a href={resolve('/auth/signin')}>
 			<svg class="lock-icon"><use href="#lock-icon"/></svg>
 			<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m106 512h300c24.814 0 45-20.186 45-45v-317h-105c-24.814 0-45-20.186-45-45v-105h-195c-24.814 0-45 20.186-45 45v422c0 24.814 20.186 45 45 45zm60-301h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h180c8.291 0 15 6.709 15 15s-6.709 15-15 15h-180c-8.291 0-15-6.709-15-15s6.709-15 15-15zm0 60h120c8.291 0 15 6.709 15 15s-6.709 15-15 15h-120c-8.291 0-15-6.709-15-15s6.709-15 15-15z"/><path d="m346 120h96.211l-111.211-111.211v96.211c0 8.276 6.724 15 15 15z"/></svg>
 			<h3>{labels.documents}</h3>

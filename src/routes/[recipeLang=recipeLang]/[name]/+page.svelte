@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { writable } from 'svelte/store';
 	export const multiplier = writable(0);
 
@@ -318,7 +319,7 @@ h2{
 			<div class=tags>
 				<h2>{labels.season}</h2>
 				{#each season_iv as season}
-					<a class="g-tag" href="/{data.recipeLang}/season/{season[0]}">
+					<a class="g-tag" href={resolve('/[recipeLang=recipeLang]/season/[month]', { recipeLang: data.recipeLang, month: season[0] })}>
 						{#if season[0]}
 							{months[season[0] - 1]}
 						{/if}
@@ -333,7 +334,7 @@ h2{
 			<h2 class="section-label">{labels.keywords}</h2>
 			<div class="tags center">
 				{#each data.tags as tag}
-					<a class="g-tag" href="/{data.recipeLang}/tag/{tag}">{tag}</a>
+					<a class="g-tag" href={resolve('/[recipeLang=recipeLang]/tag/[tag]', { recipeLang: data.recipeLang, tag })}>{tag}</a>
 				{/each}
 			</div>
 		{/if}
@@ -361,4 +362,4 @@ h2{
 </div>
 </TitleImgParallax>
 
-<EditButton href="/rezepte/edit/{data.germanShortName}"></EditButton>
+<EditButton href={resolve('/[recipeLang=recipeLang]/edit/[name]', { recipeLang: 'rezepte', name: data.germanShortName })}></EditButton>

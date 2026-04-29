@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
@@ -243,7 +244,7 @@
 </div>
 
 {#if payment}
-  <EditButton href="/{root}/payments/edit/{paymentId}" />
+  <EditButton href={resolve('/[cospendRoot=cospendRoot]/payments/edit/[id]', { cospendRoot: root, id: paymentId })} />
 {/if}
 
 <style>

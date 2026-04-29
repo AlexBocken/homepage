@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { enhance } from '$app/forms';
   import { page } from '$app/stores';
@@ -165,7 +166,7 @@
       <h2>🎉 {t('all_settled', lang)}</h2>
       <p>{t('no_debts_msg', lang)}</p>
       <div class="actions">
-        <a href="/{root}/dash" class="btn btn-primary">{t('back_to_dashboard', lang)}</a>
+        <a href={resolve('/[cospendRoot=cospendRoot]/dash', { cospendRoot: root })} class="btn btn-primary">{t('back_to_dashboard', lang)}</a>
       </div>
     </div>
   {:else}
@@ -349,7 +350,7 @@
               <button type="submit" class="btn btn-settlement">
                 {t('record_settlement', lang)}
               </button>
-              <a href="/{root}/dash" class="btn btn-secondary">
+              <a href={resolve('/[cospendRoot=cospendRoot]/dash', { cospendRoot: root })} class="btn btn-secondary">
                 {t('cancel', lang)}
               </a>
             </div>

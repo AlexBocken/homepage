@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { page } from '$app/stores';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
@@ -20,8 +21,8 @@
 <Header>
   {#snippet links()}
     <ul class="site_header">
-      <li style="--active-fill: var(--nord10)"><a href="/tasks" class:active={isActive('/tasks')}><ClipboardList size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Aufgaben</span></a></li>
-      <li style="--active-fill: var(--nord13)"><a href="/tasks/rewards" class:active={isActive('/tasks/rewards')}><Trophy size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Sticker</span></a></li>
+      <li style="--active-fill: var(--nord10)"><a href={resolve('/tasks')} class:active={isActive('/tasks')}><ClipboardList size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Aufgaben</span></a></li>
+      <li style="--active-fill: var(--nord13)"><a href={resolve('/tasks/rewards')} class:active={isActive('/tasks/rewards')}><Trophy size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Sticker</span></a></li>
     </ul>
   {/snippet}
 

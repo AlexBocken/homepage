@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Ruler from '@lucide/svelte/icons/ruler';
@@ -151,7 +152,7 @@
 
 <div class="detail-page">
 	<header class="detail-header" style="--accent: {bodyPartAccent(card.key)}">
-		<a class="back-link" href="/fitness/{statsSlug}" aria-label={t('back', lang)}>
+		<a class="back-link" href={resolve('/fitness/[stats=fitnessStats]', { stats: statsSlug })} aria-label={t('back', lang)}>
 			<ArrowLeft size={18} />
 		</a>
 		<div class="head-text">
@@ -173,7 +174,7 @@
 	{#if !hasData}
 		<div class="empty">
 			<p>{t('no_measurements_yet', lang)}</p>
-			<a class="cta" href="/fitness/{checkinSlug}/body-parts">
+			<a class="cta" href={resolve('/fitness/[checkin=fitnessCheckIn]/body-parts', { checkin: checkinSlug })}>
 				<Ruler size={16} /> {t('measure_body_parts', lang)}
 			</a>
 		</div>

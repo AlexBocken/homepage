@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
@@ -37,23 +38,46 @@
 		return String(n).padStart(2, '0');
 	}
 
-	const riteBase = $derived(`/${page.params.faithLang}/${page.params.calendar}/${rite}`);
 	const dioceseQuery = $derived.by(() => {
 		const q = page.url.searchParams.get('diocese');
 		return q ? `?diocese=${q}` : '';
 	});
 
+	const riteParams = $derived({
+		faithLang: page.params.faithLang!,
+		calendar: page.params.calendar!,
+		rite
+	});
+
 	// Back link: return to the month view for the day's month
-	const backHref = $derived(`${riteBase}/${year}/${pad(month + 1)}${dioceseQuery}`);
+	const backHref = $derived(
+		resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]', {
+			...riteParams,
+			yyyy: String(year),
+			mm: pad(month + 1)
+		}) + dioceseQuery
+	);
 	// Day cell in the month grid is the same URL, kept the selection by including dd
-	const dayInMonthHref = $derived(`${riteBase}/${year}/${pad(month + 1)}/${pad(data.day)}${dioceseQuery}`);
+	const dayInMonthHref = $derived(
+		resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]/[[dd=calendarDay]]', {
+			...riteParams,
+			yyyy: String(year),
+			mm: pad(month + 1),
+			dd: pad(data.day)
+		}) + dioceseQuery
+	);
 
 	// Next/prev day navigation inside the detail view
 	function shiftDay(days: number): string {
 		const [y, m, d] = iso.split('-').map(Number);
 		const next = new Date(y, m - 1, d);
 		next.setDate(next.getDate() + days);
-		return `${riteBase}/detail/${next.getFullYear()}/${pad(next.getMonth() + 1)}/${pad(next.getDate())}${dioceseQuery}`;
+		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/detail/[yyyy=calendarYear]/[mm=calendarMonth]/[dd=calendarDay]', {
+			...riteParams,
+			yyyy: String(next.getFullYear()),
+			mm: pad(next.getMonth() + 1),
+			dd: pad(next.getDate())
+		}) + dioceseQuery;
 	}
 	const prevHref = $derived(shiftDay(-1));
 	const nextHref = $derived(shiftDay(1));

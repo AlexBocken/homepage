@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { invalidateAll } from '$app/navigation';
@@ -137,7 +138,7 @@
 
       <div class="actions">
         {#if balance.netBalance !== 0}
-          <a href="/{root}/settle" class="btn btn-settlement">{t('settle_debts', lang)}</a>
+          <a href={resolve('/[cospendRoot=cospendRoot]/settle', { cospendRoot: root })} class="btn btn-settlement">{t('settle_debts', lang)}</a>
         {/if}
       </div>
 
@@ -186,7 +187,7 @@
           {#if isSettlementPayment(split.paymentId)}
             <!-- Settlement Payment Display - User -> User Flow -->
             <a
-              href="/{root}/payments/view/{split.paymentId?._id}"
+              href={resolve('/[cospendRoot=cospendRoot]/payments/view/[id]', { cospendRoot: root, id: split.paymentId?._id })}
               class="settlement-flow-activity"
               onclick={(e) => handlePaymentClick(split.paymentId?._id, e)}
             >
@@ -217,7 +218,7 @@
               <div class="message-content">
                 <ProfilePicture username={split.paymentId?.paidBy || 'Unknown'} size={36} />
                 <a
-                  href="/{root}/payments/view/{split.paymentId?._id}"
+                  href={resolve('/[cospendRoot=cospendRoot]/payments/view/[id]', { cospendRoot: root, id: split.paymentId?._id })}
                   class="activity-bubble"
                   onclick={(e) => handlePaymentClick(split.paymentId?._id, e)}
                 >
@@ -262,7 +263,7 @@
   {/if}
 </main>
 
-<AddButton href="/{root}/payments/add" />
+<AddButton href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} />
 
 <style>
   .cospend-main {

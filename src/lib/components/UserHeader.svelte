@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { onMount } from "svelte";
 	import { page } from '$app/stores';
 	import LogIn from '@lucide/svelte/icons/log-in';
@@ -153,10 +154,10 @@
 			<p>({user.nickname})</p>
 			<ul>
 				{#if user.groups?.includes('rezepte_users')}
-					<li><a href="/{recipeLang}/administration">Administration</a></li>
+					<li><a href={resolve('/[recipeLang=recipeLang]/administration', { recipeLang })}>Administration</a></li>
 				{/if}
 				<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
-				<li><a href="/logout?callbackUrl={encodeURIComponent(getLogoutCallbackUrl($page.url.pathname))}">Log Out</a></li>
+				<li><a href={`${resolve('/logout')}?callbackUrl=${encodeURIComponent(getLogoutCallbackUrl($page.url.pathname))}`}>Log Out</a></li>
 			</ul>
 		</div>
 	</div>
@@ -164,7 +165,7 @@
 {:else}
 	<a
 		class="entry login-link"
-		href="/login?callbackUrl={encodeURIComponent($page.url.pathname + $page.url.search)}"
+		href={`${resolve('/login')}?callbackUrl=${encodeURIComponent($page.url.pathname + $page.url.search)}`}
 		aria-label={lang === 'de' ? 'Anmelden' : 'Login'}
 		title={lang === 'de' ? 'Anmelden' : 'Login'}
 	>

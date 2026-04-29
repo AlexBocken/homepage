@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import Search from '@lucide/svelte/icons/search';
 	import Cable from '@lucide/svelte/icons/cable';
@@ -212,7 +213,7 @@
 		<ul class="exercise-list">
 			{#each filtered as exercise (exercise.id)}
 				<li>
-					<a href="/fitness/{sl.exercises}/{exercise.id}" class="exercise-row">
+					<a href={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: sl.exercises, id: exercise.id })} class="exercise-row">
 						<div class="exercise-info">
 							<span class="exercise-name">
 								{exercise.localName}

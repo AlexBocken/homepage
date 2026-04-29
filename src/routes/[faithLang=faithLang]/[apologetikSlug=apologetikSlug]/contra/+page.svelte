@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { onMount, tick } from 'svelte';
 	import CaseTabs from '$lib/components/faith/CaseTabs.svelte';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
@@ -181,7 +182,7 @@
 			<article class="arg-row" id="arg-{arg.id}">
 				<a
 					class="card-link"
-					href="/{faithLang}/{slug}/contra/{arg.id}"
+					href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/contra/[argId]', { faithLang, apologetikSlug: slug, argId: arg.id })}
 					aria-label={arg.title}
 				></a>
 				<div class="arg-num">
@@ -201,7 +202,7 @@
 							{@const a = ARCHETYPES[archId]}
 							<a
 								class="archetype-badge"
-								href="/{faithLang}/{slug}/contra/{arg.id}/{archId}"
+								href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/contra/[argId]/[[archId]]', { faithLang, apologetikSlug: slug, argId: arg.id, archId })}
 								title="{a.name} — {a.sub}"
 							>
 								<span class="glyph" aria-hidden="true" style="background:{a.color};">

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { resolve } from '$app/paths';
 import Symbol from "./Symbol.svelte"
 import ThemeToggle from "./ThemeToggle.svelte"
 import type { Snippet } from 'svelte';
@@ -329,7 +330,7 @@ nav {
 <div>
 
 <nav class:no-links={!links}>
-	<a href="/" aria-label="Home" class="home-link" class:full={fullSymbol}><Symbol /></a>
+	<a href={resolve('/')} aria-label="Home" class="home-link" class:full={fullSymbol}><Symbol /></a>
 	{#if links}
 		<div class="links-wrapper">
 			{@render links()}

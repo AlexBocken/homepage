@@ -1,4 +1,5 @@
 <script>
+import { asset, resolve } from '$app/paths';
 import '$lib/css/christ.css';
 import { page } from '$app/stores';
 import Header from '$lib/components/Header.svelte'
@@ -10,13 +11,20 @@ let { data, children } = $props();
 const isEnglish = $derived(data.lang === 'en');
 const isLatin = $derived(data.lang === 'la');
 const eastertide = isEastertide();
-const prayersHref = $derived(isLatin ? '/fides/orationes' : `/${data.faithLang}/${isEnglish ? 'prayers' : 'gebete'}`);
-const rosaryHref = $derived(`/${data.faithLang}/${isLatin ? 'rosarium' : isEnglish ? 'rosary' : 'rosenkranz'}`);
-const calendarHref = $derived(`/${data.faithLang}/${isLatin ? 'calendarium' : isEnglish ? 'calendar' : 'kalender'}`);
-const apologetikHref = $derived(isLatin ? '/faith/apologetics' : `/${data.faithLang}/${isEnglish ? 'apologetics' : 'apologetik'}`);
-const angelusHref = $derived(eastertide
-	? `${prayersHref}/regina-caeli`
-	: `${prayersHref}/angelus`);
+const prayersSlug = $derived(isLatin ? 'orationes' : isEnglish ? 'prayers' : 'gebete');
+const prayersHref = $derived(resolve('/[faithLang=faithLang]/[prayers=prayersLang]', { faithLang: data.faithLang, prayers: prayersSlug }));
+const rosaryHref = $derived(resolve('/[faithLang=faithLang]/[rosary=rosaryLang]', { faithLang: data.faithLang, rosary: isLatin ? 'rosarium' : isEnglish ? 'rosary' : 'rosenkranz' }));
+const calendarHref = $derived(resolve('/[faithLang=faithLang]/[calendar=calendarLang]', { faithLang: data.faithLang, calendar: isLatin ? 'calendarium' : isEnglish ? 'calendar' : 'kalender' }));
+const apologetikHref = $derived(
+	isLatin
+		? resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]', { faithLang: 'faith', apologetikSlug: 'apologetics' })
+		: resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]', { faithLang: data.faithLang, apologetikSlug: isEnglish ? 'apologetics' : 'apologetik' })
+);
+const angelusHref = $derived(resolve('/[faithLang=faithLang]/[prayers=prayersLang]/[prayer]', {
+	faithLang: data.faithLang,
+	prayers: prayersSlug,
+	prayer: eastertide ? 'regina-caeli' : 'angelus'
+}));
 const angelusLabel = $derived(eastertide ? 'Regína Cæli' : 'Angelus');
 
 const labels = $derived({
@@ -38,7 +46,7 @@ function isActive(path) {
 const prayersActive = $derived(isActive(prayersHref) && !isActive(angelusHref));
 </script>
 <svelte:head>
-	<link rel="preload" href="/fonts/crosses.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+	<link rel="preload" href={asset('/fonts/crosses.woff2')} as="font" type="font/woff2" crossorigin="anonymous">
 </svelte:head>
 <Header>
 	{#snippet links()}
@@ -50,7 +58,7 @@ const prayersActive = $derived(isActive(prayersHref) && !isActive(angelusHref));
 		{:else}
 			<li style="--active-fill: var(--nord14)"><a href={angelusHref} class:active={isActive(angelusHref)} title={angelusLabel}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="6 -274 564 548" fill="currentColor"><path d="M392-162c-4-10-9-18-15-26 5-4 7-8 7-12 0-18-43-32-96-32s-96 14-96 32c0 4 3 8 7 12-6 8-11 16-15 26-15-11-24-24-24-38 0-35 57-64 128-64s128 29 128 64c0 14-9 27-24 38zm-104-22c35 0 64 29 64 64s-29 64-64 64-64-29-64-64 29-64 64-64zM82 159c3-22-3-48-20-64C34 68 16 30 16-12v-64c0-42 34-76 76-76 23 0 44 10 59 27l65 78c-21 16-37 40-43 67l-43 195c-4 17-2 34 5 49h-21c-26 0-46-24-42-50l10-55zm364 56L403 20c-6-27-21-51-42-67l64-77c15-18 36-28 59-28 42 0 76 34 76 76v64c0 42-18 80-46 107-17 16-23 42-20 64l10 56c4 26-16 49-42 49h-20c6-15 8-32 4-49zM220 31c7-32 35-55 68-55s61 23 68 55l43 194c5 20-11 39-31 39H208c-21 0-36-19-31-39l43-194z"/></svg><span class="nav-label">{angelusLabel}</span></a></li>
 		{/if}
-		<li style="--active-fill: var(--nord13)"><a href="/{data.faithLang}/katechese" class:active={isActive(`/${data.faithLang}/katechese`)} title={labels.catechesis}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg><span class="nav-label">{labels.catechesis}</span></a></li>
+		<li style="--active-fill: var(--nord13)"><a href={resolve('/[faithLang=faithLang]/katechese', { faithLang: data.faithLang })} class:active={isActive(`/${data.faithLang}/katechese`)} title={labels.catechesis}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg><span class="nav-label">{labels.catechesis}</span></a></li>
 		<li style="--active-fill: var(--nord10)"><a href={apologetikHref} class:active={isActive(apologetikHref)} title={labels.apologetics}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg><span class="nav-label">{labels.apologetics}</span></a></li>
 		<li style="--active-fill: var(--nord15)"><a href={calendarHref} class:active={isActive(calendarHref)} title={labels.calendar}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg><span class="nav-label">{labels.calendar}</span></a></li>
 		</ul>

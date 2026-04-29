@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { page } from '$app/stores';
   import SectionError from '$lib/components/SectionError.svelte';
   import { detectFitnessLang } from '$lib/js/fitnessI18n';
@@ -8,7 +9,7 @@
 </script>
 
 <SectionError
-  sectionHref={isEnglish ? '/fitness/workout' : '/fitness/training'}
+  sectionHref={resolve('/fitness/[workout=fitnessWorkout]', { workout: isEnglish ? 'workout' : 'training' })}
   sectionLabel={{ en: 'Fitness', de: 'Fitness' }}
   {isEnglish}
 />
