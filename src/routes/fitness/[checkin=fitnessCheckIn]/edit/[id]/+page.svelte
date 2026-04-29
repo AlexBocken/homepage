@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
@@ -8,7 +8,7 @@
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 
 	let { data } = $props();

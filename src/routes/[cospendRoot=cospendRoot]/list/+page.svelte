@@ -34,7 +34,7 @@
   import Copy from '@lucide/svelte/icons/copy';
 
   import Check from '@lucide/svelte/icons/check';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { detectCospendLang, t, locale, categoryName, formatTTL as formatTTLi18n, ttlOptions } from '$lib/js/cospendI18n';
 
   let { data } = $props();
@@ -50,7 +50,7 @@
     }
   });
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const loc = $derived(locale(lang));
 
   /** @type {Record<string, { icon: typeof Plus, color: string }>} */
@@ -355,7 +355,7 @@
 
   /** @param {{ id: string, token: string }} tok */
   async function copyTokenLink(tok) {
-    const root = $page.url.pathname.split('/')[1];
+    const root = page.url.pathname.split('/')[1];
     const url = new URL(`/${root}/list`, window.location.origin);
     url.searchParams.set('token', tok.token);
     await navigator.clipboard.writeText(url.toString());

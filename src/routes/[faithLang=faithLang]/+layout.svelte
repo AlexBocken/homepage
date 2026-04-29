@@ -1,7 +1,7 @@
 <script>
 import { asset, resolve } from '$app/paths';
 import '$lib/css/christ.css';
-import { page } from '$app/stores';
+import { page } from '$app/state';
 import Header from '$lib/components/Header.svelte'
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
@@ -39,7 +39,7 @@ const typedLang = $derived(/** @type {'de' | 'en'} */ (data.lang));
 
 /** @param {string} path */
 function isActive(path) {
-	const currentPath = $page.url.pathname;
+	const currentPath = page.url.pathname;
 	return currentPath.startsWith(path);
 }
 

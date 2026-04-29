@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -70,7 +70,7 @@
 	 * }} FoodSelection
 	 */
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 
@@ -641,7 +641,7 @@
 	let inlineTab = $state('search'); // 'search' | 'favorites' | 'meals'
 
 	// --- FAB modal (route-based via ?add param) ---
-	const showFabModal = $derived($page.url.searchParams.has('add'));
+	const showFabModal = $derived(page.url.searchParams.has('add'));
 	let fabMealType = $state('lunch');
 
 	const fabHref = $derived(`${resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })}?add`);

@@ -1,6 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -23,7 +23,7 @@
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import TemplateCard from '$lib/components/fitness/TemplateCard.svelte';

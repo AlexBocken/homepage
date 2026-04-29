@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -28,7 +28,7 @@
 		`viewBox="0 ${BP_VIEW_TOP} 660.46 ${BP_VIEW_H}"`
 	);
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';

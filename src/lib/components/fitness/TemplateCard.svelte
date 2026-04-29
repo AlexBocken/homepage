@@ -2,10 +2,10 @@
 	import { getExerciseById } from '$lib/data/exercises';
 	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import MapPin from '@lucide/svelte/icons/map-pin';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 
 	/**
 	 * @type {{

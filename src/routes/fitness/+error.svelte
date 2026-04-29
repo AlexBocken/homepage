@@ -1,10 +1,10 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import SectionError from '$lib/components/SectionError.svelte';
   import { detectFitnessLang } from '$lib/js/fitnessI18n';
 
-  let lang = $derived(detectFitnessLang($page.url.pathname));
+  let lang = $derived(detectFitnessLang(page.url.pathname));
   let isEnglish = $derived(lang === 'en');
 </script>
 

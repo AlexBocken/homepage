@@ -5,10 +5,10 @@
 	import Square from '@lucide/svelte/icons/square';
 	import { METRIC_LABELS } from '$lib/data/exercises';
 	import RestTimer from './RestTimer.svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 
 	/**
 	 * @type {{

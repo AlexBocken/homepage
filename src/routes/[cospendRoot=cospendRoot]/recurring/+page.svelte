@@ -8,12 +8,12 @@
   import AddButton from '$lib/components/AddButton.svelte';
   import { formatCurrency } from '$lib/utils/formatters';
   import Toggle from '$lib/components/Toggle.svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { detectCospendLang, cospendRoot, t, locale, paymentCategoryName, frequencyDescription, formatNextExecutionI18n } from '$lib/js/cospendI18n';
 
   let { data } = $props();
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 

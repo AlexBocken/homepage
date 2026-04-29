@@ -1,9 +1,9 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import SectionError from '$lib/components/SectionError.svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
 
-  let recipeLang = $derived($page.params.recipeLang!);
+  let recipeLang = $derived(page.params.recipeLang!);
   let isEnglish = $derived(recipeLang === 'recipes');
 </script>
 

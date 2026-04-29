@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import ErrorView from './ErrorView.svelte';
   import { getErrorTitle, getErrorDescription, errorLabels, pick } from '$lib/js/errorStrings';
@@ -18,8 +18,8 @@
 
   let { sectionHref, sectionLabel, isEnglish: isEnglishProp, extraActions }: Props = $props();
 
-  let status = $derived($page.status);
-  let error = $derived($page.error as any);
+  let status = $derived(page.status);
+  let error = $derived(page.error as any);
   let bibleQuote = $derived(error?.bibleQuote);
   let detectedEnglish = $derived(error?.lang === 'en');
   let isEnglish = $derived(isEnglishProp ?? detectedEnglish);

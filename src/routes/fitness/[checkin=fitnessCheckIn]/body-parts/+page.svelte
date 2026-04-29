@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import Minus from '@lucide/svelte/icons/minus';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -23,7 +23,7 @@
 
 	let { data } = $props();
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 
 	/** @typedef {{ key: string, labelKey: string, img: string | null, paired: boolean, tipKey: string, dbSingle?: string, dbLeft?: string, dbRight?: string }} Step */

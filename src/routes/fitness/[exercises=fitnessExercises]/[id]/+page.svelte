@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	/** @param {string | undefined | null} type @param {'en'|'de'} lang */
 	function exerciseTypeInfo(type, lang) {
@@ -22,7 +22,7 @@
 	}
 	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const s = $derived(fitnessSlugs(lang));
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleMap from '$lib/components/fitness/MuscleMap.svelte';

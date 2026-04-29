@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Weight from '@lucide/svelte/icons/weight';
@@ -10,7 +10,7 @@
 	import Flame from '@lucide/svelte/icons/flame';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
 
 	/**

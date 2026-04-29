@@ -9,10 +9,10 @@
 	import PersonStanding from '@lucide/svelte/icons/person-standing';
 	import Shapes from '@lucide/svelte/icons/shapes';
 	import Weight from '@lucide/svelte/icons/weight';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const isEn = $derived(lang === 'en');
 
 	/**

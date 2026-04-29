@@ -2,7 +2,7 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import ProfilePicture from './ProfilePicture.svelte';
   import EditButton from '$lib/components/EditButton.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
@@ -13,9 +13,9 @@
   let { paymentId, onclose, onpaymentDeleted } = $props();
 
   // Get session from page store
-  let session = $derived($page.data?.session);
+  let session = $derived(page.data?.session);
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 

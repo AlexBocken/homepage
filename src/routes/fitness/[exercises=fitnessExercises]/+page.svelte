@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Search from '@lucide/svelte/icons/search';
 	import Cable from '@lucide/svelte/icons/cable';
 	import Cog from '@lucide/svelte/icons/cog';
@@ -16,7 +16,7 @@
 	import { MUSCLE_GROUPS, MUSCLE_GROUP_DE } from '$lib/data/muscleMap';
 	import MuscleFilter from '$lib/components/fitness/MuscleFilter.svelte';
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const isEn = $derived(lang === 'en');
 	const sl = $derived(fitnessSlugs(lang));
 

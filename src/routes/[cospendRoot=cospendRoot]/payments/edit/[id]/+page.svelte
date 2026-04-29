@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n } from '$lib/js/cospendI18n';
   import { confirm } from '$lib/js/confirmDialog.svelte';
   import FormSection from '$lib/components/FormSection.svelte';
@@ -15,7 +15,7 @@
 
   let { data } = $props();
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 

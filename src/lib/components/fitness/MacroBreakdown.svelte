@@ -1,6 +1,6 @@
 <script>
 	import { detectFitnessLang } from '$lib/js/fitnessI18n';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Beef from '@lucide/svelte/icons/beef';
 	import Droplet from '@lucide/svelte/icons/droplet';
 	import Wheat from '@lucide/svelte/icons/wheat';
@@ -31,7 +31,7 @@
 		showDetailRows = true,
 	} = $props();
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const isEn = $derived(lang === 'en');
 
 	const macroPercent = $derived.by(() => {

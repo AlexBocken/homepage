@@ -13,7 +13,7 @@
 	import RecipeNote from '$lib/components/recipes/RecipeNote.svelte';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { onDestroy } from 'svelte';
-	import { recipeTranslationStore } from '$lib/stores/recipeTranslation';
+	import { recipeTranslationStore } from '$lib/stores/recipeTranslation.svelte';
 
     	let { data } = $props<{ data: PageData }>();
 

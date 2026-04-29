@@ -1,9 +1,9 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import SectionError from '$lib/components/SectionError.svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
 
-  let faithLang = $derived($page.params.faithLang!);
+  let faithLang = $derived(page.params.faithLang!);
   let isEnglish = $derived(faithLang === 'faith');
   let sectionLabel = $derived(
     faithLang === 'fides'

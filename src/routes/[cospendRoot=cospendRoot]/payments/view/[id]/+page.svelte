@@ -2,7 +2,7 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
   import EditButton from '$lib/components/EditButton.svelte';
@@ -13,7 +13,7 @@
 
   let { data } = $props();
 
-  const lang = $derived(detectCospendLang($page.url.pathname));
+  const lang = $derived(detectCospendLang(page.url.pathname));
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 

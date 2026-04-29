@@ -1,6 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Ruler from '@lucide/svelte/icons/ruler';
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
@@ -12,7 +12,7 @@
 
 	let { data } = $props();
 
-	const lang = $derived(detectFitnessLang($page.url.pathname));
+	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const statsSlug = $derived(lang === 'en' ? 'stats' : 'statistik');
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	const card = $derived(data.card);
