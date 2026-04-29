@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
 	let { data } = $props();
@@ -9,6 +8,10 @@
 	const isGerman = $derived(data?.lang === 'de');
 	const arg = $derived(data.argument);
 	const ARCHETYPES = $derived(data.archetypes);
+	const alexPicks = $derived<string[]>(data.alexPicks ?? []);
+	const alexChoiceLabel = $derived(
+		isLatin ? 'Alexandri electio' : isGerman ? "Alex' Wahl" : "Alex's choice"
+	);
 
 	const tocLabel = $derived(
 		isLatin ? 'Obiectiones' : isGerman ? 'Einwände' : 'Objections'
@@ -24,10 +27,13 @@
 	);
 
 	const archIds = $derived(Object.keys(arg.counters));
-	let userSelected = $state<string | null>(null);
-	const activeId = $derived(
-		userSelected && archIds.includes(userSelected) ? userSelected : (archIds[0] ?? '')
-	);
+	let selectedByArg = $state<Record<string, string>>({});
+	const activeId = $derived.by(() => {
+		const sel = selectedByArg[arg.id];
+		if (sel && archIds.includes(sel)) return sel;
+		if (data.initialArchId && archIds.includes(data.initialArchId)) return data.initialArchId;
+		return archIds[0] ?? '';
+	});
 	const arch = $derived(ARCHETYPES[activeId]);
 	const counter = $derived(arg.counters[activeId]);
 
@@ -72,21 +78,12 @@
 	}
 
 	function selectArch(id: string) {
-		userSelected = id;
+		selectedByArg = { ...selectedByArg, [arg.id]: id };
 		if (typeof window !== 'undefined') {
-			history.replaceState(null, '', `#voice-${id}`);
+			history.replaceState(null, '', `/${faithLang}/${slug}/contra/${arg.id}/${id}`);
 		}
 	}
 
-	onMount(() => {
-		const hash = window.location.hash;
-		if (hash.startsWith('#voice-')) {
-			const id = hash.slice('#voice-'.length);
-			if (archIds.includes(id)) {
-				userSelected = id;
-			}
-		}
-	});
 </script>
 
 <svelte:head>
@@ -123,12 +120,14 @@
 		{#each archIds as id (id)}
 			{@const a = ARCHETYPES[id]}
 			{@const isActive = id === activeId}
+			{@const isPick = alexPicks.includes(id)}
 			<a
-				href="#voice-{id}"
+				href="/{faithLang}/{slug}/contra/{arg.id}/{id}"
 				role="tab"
 				aria-selected={isActive}
 				class="tab"
 				class:active={isActive}
+				class:has-pick={isPick}
 				style:border-bottom-color={isActive ? a.colorHex : 'transparent'}
 				onclick={(e) => {
 					e.preventDefault();
@@ -137,6 +136,20 @@
 			>
 				<span class="glyph" aria-hidden="true" style="background:{a.color};">{a.glyph}</span>
 				<span>{a.name}</span>
+				{#if isPick}
+					<span class="alex-mark" aria-label={alexChoiceLabel}>
+						<img
+							class="alex-pfp"
+							src="https://bocken.org/static/user/thumb/alexander.webp"
+							alt=""
+							loading="lazy"
+							decoding="async"
+							width="14"
+							height="14"
+						/>
+						<span class="alex-label">{alexChoiceLabel}</span>
+					</span>
+				{/if}
 			</a>
 		{/each}
 	</div>
@@ -343,6 +356,59 @@
 	.tab.active,
 	.tab.active:visited {
 		color: var(--color-text-primary);
+	}
+
+	.alex-mark {
+		position: absolute;
+		top: -4px;
+		right: -6px;
+		z-index: 2;
+		display: inline-flex;
+		align-items: center;
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-elevated);
+		border: 1px solid var(--color-border);
+		padding: 1px;
+		box-shadow: var(--shadow-sm);
+		pointer-events: none;
+		transform: translateY(0);
+		transition:
+			padding var(--transition-normal),
+			transform var(--transition-normal);
+	}
+	.alex-pfp {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		object-fit: cover;
+		display: block;
+		flex: none;
+	}
+	.alex-label {
+		display: inline-block;
+		white-space: nowrap;
+		font-size: 0.62rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		max-width: 0;
+		opacity: 0;
+		margin-left: 0;
+		overflow: hidden;
+		color: var(--color-text-primary);
+		transition:
+			max-width var(--transition-normal),
+			opacity var(--transition-fast),
+			margin-left var(--transition-normal);
+	}
+	.tab.active.has-pick .alex-mark {
+		padding: 1px 8px 1px 1px;
+		transform: translateY(-8px);
+	}
+	.tab.active.has-pick .alex-label {
+		max-width: 140px;
+		opacity: 1;
+		margin-left: 5px;
 	}
 
 	.glyph {

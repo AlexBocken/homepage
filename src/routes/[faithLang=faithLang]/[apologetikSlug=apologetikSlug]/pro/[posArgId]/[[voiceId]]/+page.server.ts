@@ -21,6 +21,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		error(404, 'Argument not found');
 	}
 
+	const voiceIds = Object.keys(arg.voices);
+	if (params.voiceId && !voiceIds.includes(params.voiceId)) {
+		error(404, 'Voice not found');
+	}
+	const initialVoiceId = params.voiceId ?? null;
+
 	const lng: 'en' | 'de' = lang === 'de' ? 'de' : 'en';
 	const enArg = EN_POS_ARGUMENTS.find((x) => x.id === arg.id);
 	const argument = enArg
@@ -40,5 +46,5 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		return { ...a, scripture: resolved.text ? resolved : a.scripture };
 	});
 
-	return { argument, voices, layers, args: argsWithScripture };
+	return { argument, voices, layers, args: argsWithScripture, initialVoiceId };
 };
