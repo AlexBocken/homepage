@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { TranslatedRecipeType } from '$types/types';
 	import TranslationFieldComparison from './TranslationFieldComparison.svelte';
 	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
@@ -758,7 +759,7 @@ button:disabled {
 					{#each untranslatedBaseRecipes as baseRecipe}
 						<li>
 							<strong>{baseRecipe.name}</strong>
-							<a href="/de/edit/{baseRecipe.shortName}" target="_blank" rel="noopener noreferrer">
+							<a href={resolve('/[recipeLang=recipeLang]/edit/[name]', { recipeLang: 'de', name: baseRecipe.shortName })} target="_blank" rel="noopener noreferrer">
 								Open in new tab →
 							</a>
 						</li>

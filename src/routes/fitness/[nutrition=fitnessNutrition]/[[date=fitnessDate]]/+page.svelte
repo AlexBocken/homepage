@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -95,9 +96,17 @@
 
 	const prevDate = $derived(dateOffset(-1));
 	const nextDate = $derived(dateOffset(1));
-	const prevHref = $derived(prevDate === todayStr ? `/fitness/${s.nutrition}` : `/fitness/${s.nutrition}/${prevDate}`);
-	const nextHref = $derived(nextDate === todayStr ? `/fitness/${s.nutrition}` : `/fitness/${s.nutrition}/${nextDate}`);
-	const todayHref = $derived(`/fitness/${s.nutrition}`);
+	const prevHref = $derived(
+		prevDate === todayStr
+			? resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })
+			: resolve('/fitness/[nutrition=fitnessNutrition]/[[date=fitnessDate]]', { nutrition: s.nutrition, date: prevDate })
+	);
+	const nextHref = $derived(
+		nextDate === todayStr
+			? resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })
+			: resolve('/fitness/[nutrition=fitnessNutrition]/[[date=fitnessDate]]', { nutrition: s.nutrition, date: nextDate })
+	);
+	const todayHref = $derived(resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition }));
 
 	// --- Entries ---
 	// svelte-ignore state_referenced_locally
@@ -635,7 +644,7 @@
 	const showFabModal = $derived($page.url.searchParams.has('add'));
 	let fabMealType = $state('lunch');
 
-	const fabHref = $derived(`/fitness/${s.nutrition}?add`);
+	const fabHref = $derived(`${resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })}?add`);
 
 	function defaultMealType() {
 		const h = new Date().getHours();
@@ -1343,7 +1352,7 @@
 					</div>
 				</div>
 			{/each}
-			<a class="manage-meals-link" href="/fitness/{s.nutrition}/meals">
+			<a class="manage-meals-link" href={resolve('/fitness/[nutrition=fitnessNutrition]/meals', { nutrition: s.nutrition })}>
 				<Settings size={13} />
 				{isEn ? 'Manage meals' : 'Mahlzeiten verwalten'}
 			</a>
@@ -1473,7 +1482,7 @@
 						{/if}
 					</span>
 					{#if !hasBmrData}
-						<div class="bmr-hint">{isEn ? 'Set profile in' : 'Profil unter'} <a href="/fitness/{s.measure}">{t('measure_title', lang)}</a></div>
+						<div class="bmr-hint">{isEn ? 'Set profile in' : 'Profil unter'} <a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })}>{t('measure_title', lang)}</a></div>
 					{/if}
 				</div>
 			</div>
@@ -1601,7 +1610,7 @@
 								<span>{isEn
 									? 'Your TDEE (Total Daily Energy Expenditure) is the calories you burn per day. Set weight, height, and birth year under'
 									: 'Dein TDEE (Gesamtenergieumsatz) sind die Kalorien, die du pro Tag verbrauchst. Gewicht, Größe und Geburtsjahr einstellen unter'}
-									<a href="/fitness/{s.measure}">{t('measure_title', lang)}</a>
+									<a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })}>{t('measure_title', lang)}</a>
 								</span>
 							</div>
 						</div>
@@ -1907,9 +1916,9 @@
 						{/if}
 						<div class="food-card-body">
 						{#if entry.source === 'bls' || entry.source === 'usda' || entry.source === 'off'}
-							<a class="food-card-name food-card-link" draggable="false" href="/fitness/{s.nutrition}/food/{entry.source}/{entry.sourceId}">{entry.name}</a>
+							<a class="food-card-name food-card-link" draggable="false" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: entry.source, id: entry.sourceId })}>{entry.name}</a>
 						{:else if (entry.source === 'recipe' || entry.source === 'custom') && entry.sourceId}
-							<a class="food-card-name food-card-link" draggable="false" href="/fitness/{s.nutrition}/food/{entry.source}/{entry.sourceId}?logEntry={entry._id}">{entry.name}</a>
+							<a class="food-card-name food-card-link" draggable="false" href={`${resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: entry.source, id: entry.sourceId })}?logEntry=${entry._id}`}>{entry.name}</a>
 						{:else}
 							<span class="food-card-name">{entry.name}</span>
 						{/if}

@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
@@ -293,7 +294,7 @@
 				<div class="card-value">~{stats.kcalEstimate.kcal.toLocaleString()}<span class="card-unit">kcal</span></div>
 				<div class="card-label">{t('burned', lang)}</div>
 				{#if !hasDemographics}
-					<div class="card-hint">{t('kcal_set_profile', lang)} <a href="/fitness/{fitnessSlugs(lang).measure}">{t('measure_title', lang)}</a></div>
+					<div class="card-hint">{t('kcal_set_profile', lang)} <a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: fitnessSlugs(lang).measure })}>{t('measure_title', lang)}</a></div>
 				{/if}
 			</div>
 		{/if}
@@ -512,7 +513,7 @@
 					<a
 						class="bp-card"
 						style="--accent: {bodyPartAccent(card.key)}"
-						href="/fitness/{statsSlug}/{historySlug}/{bodyPartSlug(card, lang)}"
+						href={resolve('/fitness/[stats=fitnessStats]/[history=fitnessHistory]/[part]', { stats: statsSlug, history: historySlug, part: bodyPartSlug(card, lang) })}
 					>
 						<div class="bp-img-wrap" aria-hidden="true">
 							{#if card.img}

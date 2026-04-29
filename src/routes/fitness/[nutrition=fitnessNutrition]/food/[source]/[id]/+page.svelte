@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
@@ -206,7 +207,7 @@
 				<span class="badge badge-nutriscore" data-score={food.nutriscore.toLowerCase()}>Nutri-Score {food.nutriscore.toUpperCase()}</span>
 			{/if}
 			{#if food.recipeSlug}
-				<a class="badge badge-recipe-link" href="/{isEn ? 'recipes' : 'rezepte'}/{isEn && food.recipeSlugEn ? food.recipeSlugEn : food.recipeSlug}">
+				<a class="badge badge-recipe-link" href={resolve('/[recipeLang=recipeLang]/[name]', { recipeLang: isEn ? 'recipes' : 'rezepte', name: isEn && food.recipeSlugEn ? food.recipeSlugEn : food.recipeSlug })}>
 					{isEn ? 'View recipe' : 'Zum Rezept'} <ExternalLink size={12} />
 				</a>
 			{/if}
@@ -289,7 +290,7 @@
 					<div class="ingredient-row">
 						<div class="ingredient-info">
 							{#if ing.sourceId && (ing.source === 'bls' || ing.source === 'usda' || ing.source === 'off')}
-								<a class="ingredient-name" href="/fitness/{s.nutrition}/food/{ing.source}/{ing.sourceId}">{ing.name}</a>
+								<a class="ingredient-name" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: ing.source, id: ing.sourceId })}>{ing.name}</a>
 							{:else}
 								<span class="ingredient-name">{ing.name}</span>
 							{/if}

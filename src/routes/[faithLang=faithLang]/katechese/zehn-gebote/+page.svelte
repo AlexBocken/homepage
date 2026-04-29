@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -92,7 +93,7 @@
 	</header>
 
 	{#if !isGerman}
-		<p class="lang-notice">{isLatin ? 'Haec catechesis tantum in ' : 'This catechesis is only available in '}<a href="/glaube/katechese/zehn-gebote">{isLatin ? 'lingua Germanica' : 'German'}</a>{isLatin ? ' praesto est.' : '.'}</p>
+		<p class="lang-notice">{isLatin ? 'Haec catechesis tantum in ' : 'This catechesis is only available in '}<a href={resolve('/glaube/katechese/zehn-gebote')}>{isLatin ? 'lingua Germanica' : 'German'}</a>{isLatin ? ' praesto est.' : '.'}</p>
 	{/if}
 
 	<section id="ursprung">

@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
@@ -122,7 +123,7 @@
     <div class="empty-state">
       <h2>{t('no_recurring', lang)}</h2>
       <p>{t('no_recurring_desc', lang)}</p>
-      <a href="/{root}/payments/add" class="btn btn-primary">{t('add_first_payment', lang)}</a>
+      <a href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} class="btn btn-primary">{t('add_first_payment', lang)}</a>
     </div>
   {:else}
     <div class="payments-grid">
@@ -208,7 +209,7 @@
           </div>
 
           <div class="card-actions">
-            <a href="/{root}/recurring/edit/{payment._id}" class="btn btn-secondary btn-small">
+            <a href={resolve('/[cospendRoot=cospendRoot]/recurring/edit/[id]', { cospendRoot: root, id: payment._id })} class="btn btn-secondary btn-small">
               {t('edit', lang)}
             </a>
             <button
@@ -232,7 +233,7 @@
   {/if}
 </main>
 
-<AddButton href="/{root}/payments/add" />
+<AddButton href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} />
 
 <style>
   .recurring-payments {

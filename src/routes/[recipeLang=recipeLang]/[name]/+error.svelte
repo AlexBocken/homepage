@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -55,7 +56,7 @@
       : error?.details
   );
 
-  let recipesHref = $derived(isEnglishRoute ? '/recipes' : '/rezepte');
+  let recipesHref = $derived(resolve('/[recipeLang=recipeLang]', { recipeLang: isEnglishRoute ? 'recipes' : 'rezepte' }));
 
   function viewGermanRecipe() { goto(`/rezepte/${recipeName}`); }
   function editToTranslate() { goto(`/rezepte/edit/${recipeName}`); }

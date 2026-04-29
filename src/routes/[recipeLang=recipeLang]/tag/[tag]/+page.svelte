@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { resolve } from '$app/paths';
     import type { PageData } from './$types';
     import type { BriefRecipeType } from '$types/types';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
@@ -44,6 +45,6 @@
 <Search tag={data.tag} lang={data.lang} recipes={data.allRecipes} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 <div class="recipe-grid">
 	{#each rand_array(displayRecipes) as recipe (recipe._id)}
-		<CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}" />
+		<CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
 	{/each}
 </div>

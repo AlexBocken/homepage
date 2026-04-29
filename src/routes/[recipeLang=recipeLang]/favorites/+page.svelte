@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { resolve } from '$app/paths';
     import type { PageData } from './$types';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     import Search from '$lib/components/recipes/Search.svelte';
@@ -91,7 +92,7 @@
     {/if}
 </p>
 
-<p class="to-try-link"><a href="/{data.recipeLang}/to-try">{labels.toTry} &rarr;</a></p>
+<p class="to-try-link"><a href={resolve('/[recipeLang=recipeLang]/to-try', { recipeLang: data.recipeLang })}>{labels.toTry} &rarr;</a></p>
 
 <Search favoritesOnly={true} lang={data.lang} recipes={data.favorites} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 
@@ -100,7 +101,7 @@
 {:else if filteredFavorites.length > 0}
     <div class="recipe-grid">
         {#each filteredFavorites as recipe (recipe._id)}
-            <CompactCard {recipe} {current_month} isFavorite={true} showFavoriteIndicator={true} routePrefix="/{data.recipeLang}" />
+            <CompactCard {recipe} {current_month} isFavorite={true} showFavoriteIndicator={true} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
         {/each}
     </div>
 {:else if data.favorites.length > 0}
@@ -110,6 +111,6 @@
 {:else}
     <div class="empty-state">
         <p>{labels.emptyState1}</p>
-        <p><a href="/{data.recipeLang}">{labels.emptyState2}</a></p>
+        <p><a href={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}>{labels.emptyState2}</a></p>
     </div>
 {/if}

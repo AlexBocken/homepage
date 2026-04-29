@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { resolve } from '$app/paths';
     import type { PageData } from './$types';
     let { data } = $props<{ data: PageData }>();
 
@@ -79,6 +80,6 @@
 </style>
 <div class=flex>
 {#each data.icons as icon}
-	<a href="/{data.recipeLang}/icon/{icon}">{icon}</a>
+	<a href={resolve('/[recipeLang=recipeLang]/icon/[icon]', { recipeLang: data.recipeLang, icon })}>{icon}</a>
 {/each}
 </div>

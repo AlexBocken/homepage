@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { resolve } from '$app/paths';
     import type { PageData } from './$types';
     import SeasonLayout from '$lib/components/recipes/SeasonLayout.svelte';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
@@ -36,11 +37,11 @@
     <title>{currentMonth} - {siteTitle}</title>
 </svelte:head>
 
-<SeasonLayout active_index={data.month -1} {months} routePrefix="/{data.recipeLang}" lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
+<SeasonLayout active_index={data.month -1} {months} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}
 		<div class="recipe-grid">
 			{#each rand_array(filteredRecipes) as recipe (recipe._id)}
-				<CompactCard {recipe} icon_override={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix="/{data.recipeLang}" />
+				<CompactCard {recipe} icon_override={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
 			{/each}
 		</div>
 	{/snippet}

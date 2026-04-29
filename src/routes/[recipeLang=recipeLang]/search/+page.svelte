@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { resolve } from '$app/paths';
     import type { PageData } from './$types';
     import Search from '$lib/components/recipes/Search.svelte';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
@@ -112,7 +113,7 @@
 {#if displayedRecipes.length > 0}
     <div class="recipe-grid">
         {#each displayedRecipes as recipe (recipe._id)}
-            <CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={true} routePrefix="/{data.recipeLang}" />
+            <CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={true} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
         {/each}
     </div>
 {:else if (data.query || hasActiveSearch) && !data.error}

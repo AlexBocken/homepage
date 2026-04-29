@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { onMount, onDestroy } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
@@ -90,12 +91,12 @@
 <Header>
 	{#snippet links()}
 		<ul class="site_header">
-			<li><a href="/fitness/{s.stats}" class:active={isActive(`/fitness/${s.stats}`)}><BarChart3 size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.stats}</span></a></li>
-			<li style="--active-fill: var(--nord13)"><a href="/fitness/{s.history}" class:active={isActive(`/fitness/${s.history}`)}><Clock size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.history}</span></a></li>
-			<li style="--active-fill: var(--nord8)"><a href="/fitness/{s.workout}" class:active={isActive(`/fitness/${s.workout}`)}><Dumbbell size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.workout}</span></a></li>
-			<li style="--active-fill: var(--nord14)"><a href="/fitness/{s.exercises}" class:active={isActive(`/fitness/${s.exercises}`)}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.exercises}</span></a></li>
-			<li style="--active-fill: var(--nord12)"><a href="/fitness/{s.measure}" class:active={isActive(`/fitness/${s.measure}`)}><NotebookPen size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.measure}</span></a></li>
-			<li style="--active-fill: var(--nord15)"><a href="/fitness/{s.nutrition}" class:active={isActive(`/fitness/${s.nutrition}`)}><UtensilsCrossed size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.nutrition}</span></a></li>
+			<li><a href={resolve('/fitness/[stats=fitnessStats]', { stats: s.stats })} class:active={isActive(`/fitness/${s.stats}`)}><BarChart3 size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.stats}</span></a></li>
+			<li style="--active-fill: var(--nord13)"><a href={resolve('/fitness/[history=fitnessHistory]', { history: s.history })} class:active={isActive(`/fitness/${s.history}`)}><Clock size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.history}</span></a></li>
+			<li style="--active-fill: var(--nord8)"><a href={resolve('/fitness/[workout=fitnessWorkout]', { workout: s.workout })} class:active={isActive(`/fitness/${s.workout}`)}><Dumbbell size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.workout}</span></a></li>
+			<li style="--active-fill: var(--nord14)"><a href={resolve('/fitness/[exercises=fitnessExercises]', { exercises: s.exercises })} class:active={isActive(`/fitness/${s.exercises}`)}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.exercises}</span></a></li>
+			<li style="--active-fill: var(--nord12)"><a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })} class:active={isActive(`/fitness/${s.measure}`)}><NotebookPen size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.measure}</span></a></li>
+			<li style="--active-fill: var(--nord15)"><a href={resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })} class:active={isActive(`/fitness/${s.nutrition}`)}><UtensilsCrossed size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.nutrition}</span></a></li>
 		</ul>
 	{/snippet}
 

@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -1667,7 +1668,7 @@
 						exerciseId={activeExercise.exerciseId}
 						bodyPart={activeExerciseMeta?.localBodyPart ?? null}
 						equipment={activeExerciseMeta?.localEquipment ?? null}
-						detailsHref={`/fitness/${sl.exercises}/${activeExercise.exerciseId}`}
+						detailsHref={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: sl.exercises, id: activeExercise.exerciseId })}
 						detailsLabel={isEn ? 'Exercise details' : 'Übungsdetails'}
 						exerciseIndex={activeIdx}
 						totalExercises={workout.exercises.length}

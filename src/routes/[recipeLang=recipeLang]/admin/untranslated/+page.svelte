@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
 
@@ -161,7 +162,7 @@ h1 {
 				<CompactCard
 					{recipe}
 					{current_month}
-					routePrefix="/{data.recipeLang}"
+					routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}
 				/>
 				<div class="translation-badge {recipe.translationStatus || 'none'}">
 					{#if recipe.translationStatus === 'pending'}
@@ -179,7 +180,7 @@ h1 {
 	<div class="empty-state">
 		<p>Alle Rezepte sind übersetzt!</p>
 		<p style="font-size: 1rem; margin-top: 1rem;">
-			<a href="/{data.recipeLang}">Zurück zu den Rezepten</a>
+			<a href={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}>Zurück zu den Rezepten</a>
 		</p>
 	</div>
 {/if}

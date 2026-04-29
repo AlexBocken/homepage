@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Shield from '@lucide/svelte/icons/shield';
 	import Flame from '@lucide/svelte/icons/flame';
 
@@ -55,7 +56,7 @@
 	</section>
 
 	<section class="cards" aria-label={t.title}>
-		<a class="case-card contra" href="/{faithLang}/{slug}/contra">
+		<a class="case-card contra" href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/contra', { faithLang, apologetikSlug: slug })}>
 			<div class="card-glyph" aria-hidden="true"><Shield size={28} strokeWidth={2} /></div>
 			<div class="card-body">
 				<div class="card-sub">{t.contraSub}</div>
@@ -65,7 +66,7 @@
 			</div>
 		</a>
 
-		<a class="case-card pro" href="/{faithLang}/{slug}/pro">
+		<a class="case-card pro" href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/pro', { faithLang, apologetikSlug: slug })}>
 			<div class="card-glyph" aria-hidden="true"><Flame size={28} strokeWidth={2} /></div>
 			<div class="card-body">
 				<div class="card-sub">{t.proSub}</div>

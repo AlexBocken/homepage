@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -541,7 +542,7 @@
 			</div>
 		</div>
 
-		<a class="bp-card" href="/fitness/{checkinSlug}/body-parts">
+		<a class="bp-card" href={resolve('/fitness/[checkin=fitnessCheckIn]/body-parts', { checkin: checkinSlug })}>
 			<div class="bp-figure" aria-hidden="true">
 				<div class="muscle-base">{@html bpFrontSvg}</div>
 				<svg class="dot-overlay" viewBox="0 {BP_VIEW_TOP} 660.46 {BP_VIEW_H}" preserveAspectRatio="xMidYMid meet">
@@ -633,7 +634,7 @@
 										<span class="edit-unit">%</span>
 									</div>
 									<div class="edit-actions">
-										<a class="edit-more" href="/fitness/{checkinSlug}/edit/{m._id}" aria-label={t('edit_measurement', lang)}>
+										<a class="edit-more" href={resolve('/fitness/[checkin=fitnessCheckIn]/edit/[id]', { checkin: checkinSlug, id: m._id })} aria-label={t('edit_measurement', lang)}>
 											<Pencil size={11} />
 											<span class="edit-more-label">{lang === 'en' ? 'Edit all fields' : 'Alle Felder bearbeiten'}</span>
 											<ChevronRight size={11} />

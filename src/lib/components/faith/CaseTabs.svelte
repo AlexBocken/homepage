@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Shield from '@lucide/svelte/icons/shield';
 	import Flame from '@lucide/svelte/icons/flame';
 
@@ -18,7 +19,7 @@
 	<a
 		class="case-tab"
 		class:active={active === 'contra'}
-		href="/{faithLang}/{slug}/contra"
+		href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/contra', { faithLang, apologetikSlug: slug })}
 	>
 		<Shield class="ct-glyph" size={14} strokeWidth={2} aria-hidden="true" />
 		<span>{l.contra}</span>
@@ -26,7 +27,7 @@
 	<a
 		class="case-tab"
 		class:active={active === 'pro'}
-		href="/{faithLang}/{slug}/pro"
+		href={resolve('/[faithLang=faithLang]/[apologetikSlug=apologetikSlug]/pro', { faithLang, apologetikSlug: slug })}
 	>
 		<Flame class="ct-glyph" size={14} strokeWidth={2} aria-hidden="true" />
 		<span>{l.pro}</span>
