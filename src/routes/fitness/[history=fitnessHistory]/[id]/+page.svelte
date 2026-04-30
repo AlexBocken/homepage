@@ -291,20 +291,20 @@
 	}
 
 	/**
-	 * Svelte use:action — renders a Leaflet map for a GPS track
-	 * @param {HTMLElement} node
-	 * @param {any} params
+	 * Attachment factory — renders a Leaflet map for a GPS track.
+	 * @param {any[]} track
+	 * @param {number} idx
+	 * @returns {import('svelte/attachments').Attachment<HTMLElement>}
 	 */
-	function renderMap(node, params) {
-		const { track, idx } = params;
-		initMapForTrack(node, track, idx);
-		return {
-			destroy() {
+	function renderMap(track, idx) {
+		return (node) => {
+			initMapForTrack(node, track, idx);
+			return () => {
 				if (maps[idx]) {
 					maps[idx].remove();
 					delete maps[idx];
 				}
-			}
+			};
 		};
 	}
 
@@ -707,7 +707,7 @@
 						</button>
 					</div>
 					{#if exData.gpsTrack?.length >= 2}
-						<div class="track-map" use:renderMap={{ track: exData.gpsTrack, idx: exIdx }}></div>
+						<div class="track-map" {@attach renderMap(exData.gpsTrack, exIdx)}></div>
 					{/if}
 				{/if}
 
@@ -787,7 +787,7 @@
 								<span class="gps-stat elev-loss">-{elevStats.loss}{t('elevation_unit', lang)}</span>
 							{/if}
 						</div>
-						<div class="track-map" use:renderMap={{ track: ex.gpsTrack, idx: exIdx }}></div>
+						<div class="track-map" {@attach renderMap(ex.gpsTrack, exIdx)}></div>
 
 						{#if ex.gpsTrack.length >= 2}
 						{@const samples = computePaceSamples(ex.gpsTrack)}
