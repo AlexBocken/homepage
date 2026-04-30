@@ -10,8 +10,8 @@
 	const arg = $derived(data.argument);
 	const ARCHETYPES = $derived(data.archetypes);
 	const alexPicks = $derived<string[]>(data.alexPicks ?? []);
-	const alexChoiceLabel = $derived(
-		isLatin ? 'Alexandri electio' : isGerman ? "Alex' Wahl" : "Alex's choice"
+	const alexPickLabel = $derived(
+		isLatin ? 'Alexandri delectus' : isGerman ? "Alex' Wahl" : "Alex's pick"
 	);
 
 	const tocLabel = $derived(
@@ -138,7 +138,7 @@
 				<span class="glyph" aria-hidden="true" style="background:{a.color};">{a.glyph}</span>
 				<span>{a.name}</span>
 				{#if isPick}
-					<span class="alex-mark" aria-label={alexChoiceLabel}>
+					<span class="alex-mark" aria-label={alexPickLabel}>
 						<img
 							class="alex-pfp"
 							src="https://bocken.org/static/user/thumb/alexander.webp"
@@ -148,7 +148,7 @@
 							width="14"
 							height="14"
 						/>
-						<span class="alex-label">{alexChoiceLabel}</span>
+						<span class="alex-label">{alexPickLabel}</span>
 					</span>
 				{/if}
 			</a>
