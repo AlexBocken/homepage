@@ -1,4 +1,4 @@
-import type { Handle, HandleServerError } from "@sveltejs/kit"
+import type { Handle, HandleServerError, ServerInit } from "@sveltejs/kit"
 import { redirect } from "@sveltejs/kit"
 import { sequence } from "@sveltejs/kit/hooks"
 import * as auth from "./auth"
@@ -32,27 +32,26 @@ async function timing({ event, resolve }: Parameters<Handle>[0]) {
 	return response;
 }
 
-// Initialize database connection on server startup
-console.log('🚀 Server starting - initializing database connection...');
-await dbConnect().then(() => {
-  console.log('✅ Database connected successfully');
-  // Initialize the recurring payment scheduler after DB is ready
-  initializeScheduler();
-  console.log('✅ Recurring payment scheduler initialized');
-}).catch((error) => {
-  console.error('❌ Failed to connect to database on startup:', error);
-  // Don't crash the server - API routes will attempt reconnection
-});
+export const init: ServerInit = async () => {
+  console.log('🚀 Server starting - initializing database connection...');
+  try {
+    await dbConnect();
+    console.log('✅ Database connected successfully');
+    initializeScheduler();
+    console.log('✅ Recurring payment scheduler initialized');
+  } catch (error) {
+    console.error('❌ Failed to connect to database on startup:', error);
+    // Don't crash the server - API routes will attempt reconnection
+  }
 
-// Warm liturgical calendar cache in the background — non-blocking so the
-// server starts accepting requests immediately; any request arriving before
-// warmup completes falls back to lazy computation (still correct, just cold).
-{
+  // Warm liturgical calendar cache in the background — non-blocking so the
+  // server starts accepting requests immediately; any request arriving before
+  // warmup completes falls back to lazy computation (still correct, just cold).
   const t0 = performance.now();
   warmLiturgicalCache()
     .then(() => console.log(`✅ Liturgical calendar cache warmed in ${Math.round(performance.now() - t0)}ms`))
     .catch((error) => console.error('⚠️ Liturgical calendar warmup failed:', error));
-}
+};
 
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	const session = await event.locals.timing.measure('auth', () => event.locals.auth());
