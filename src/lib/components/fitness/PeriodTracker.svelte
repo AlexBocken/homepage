@@ -450,6 +450,125 @@
 		finally { loading = false; }
 	}
 
+	/** @param {string} dateStr — YYYY-MM-DD from a calendar cell */
+	async function promptStartPeriodOn(dateStr) {
+		const d = new Date(parseLocal(dateStr));
+		const ok = await confirm(
+			lang === 'de'
+				? `Periode am ${formatDate(d)} starten?`
+				: `Start period on ${formatDate(d)}?`,
+			{
+				title: lang === 'de' ? 'Periode starten' : 'Start period',
+				confirmText: lang === 'de' ? 'Starten' : 'Start',
+				cancelText: lang === 'de' ? 'Abbrechen' : 'Cancel',
+				destructive: false
+			}
+		);
+		if (!ok) return;
+		loading = true;
+		try {
+			const res = await fetch('/api/fitness/period', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ startDate: d.toISOString() })
+			});
+			if (res.ok) {
+				const { entry } = await res.json();
+				periods = [entry, ...periods];
+			} else {
+				const err = await res.json().catch(() => null);
+				toast.error(err?.error ?? 'Failed to start period');
+			}
+		} catch { toast.error('Failed to start period'); }
+		finally { loading = false; }
+	}
+
+	/**
+	 * Long-press attachment. Fires `handler` after THRESHOLD ms of unmoving
+	 * pointer contact. Cancels on movement > MOVE_TOL, pointer leave/cancel,
+	 * or release before threshold. Suppresses the browser context menu when
+	 * the gesture fires (iOS otherwise pops a callout on touch hold).
+	 *
+	 * @param {() => void} handler
+	 * @returns {import('svelte/attachments').Attachment<HTMLElement>}
+	 */
+	function longPress(handler) {
+		const THRESHOLD = 600;
+		const MOVE_TOL = 8;
+		return (node) => {
+			/** @type {number | null} */
+			let timer = null;
+			let startX = 0;
+			let startY = 0;
+			let firing = false;
+
+			function clear() {
+				if (timer !== null) {
+					clearTimeout(timer);
+					timer = null;
+				}
+				node.classList.remove('long-pressing');
+			}
+
+			/** @param {PointerEvent} e */
+			function onPointerDown(e) {
+				if (e.button !== undefined && e.button !== 0) return;
+				startX = e.clientX;
+				startY = e.clientY;
+				firing = false;
+				node.classList.add('long-pressing');
+				timer = window.setTimeout(() => {
+					firing = true;
+					node.classList.remove('long-pressing');
+					timer = null;
+					handler();
+				}, THRESHOLD);
+			}
+
+			/** @param {PointerEvent} e */
+			function onPointerMove(e) {
+				if (timer === null) return;
+				if (Math.abs(e.clientX - startX) > MOVE_TOL || Math.abs(e.clientY - startY) > MOVE_TOL) {
+					clear();
+				}
+			}
+
+			/** @param {Event} e */
+			function onContextMenu(e) {
+				if (firing) {
+					e.preventDefault();
+					firing = false;
+				}
+			}
+
+			node.addEventListener('pointerdown', onPointerDown);
+			node.addEventListener('pointermove', onPointerMove);
+			node.addEventListener('pointerup', clear);
+			node.addEventListener('pointerleave', clear);
+			node.addEventListener('pointercancel', clear);
+			node.addEventListener('contextmenu', onContextMenu);
+
+			return () => {
+				clear();
+				node.removeEventListener('pointerdown', onPointerDown);
+				node.removeEventListener('pointermove', onPointerMove);
+				node.removeEventListener('pointerup', clear);
+				node.removeEventListener('pointerleave', clear);
+				node.removeEventListener('pointercancel', clear);
+				node.removeEventListener('contextmenu', onContextMenu);
+			};
+		};
+	}
+
+	/** Whether long-pressing the given calendar cell can start a period. */
+	/** @param {{ date: string, status: string }} cell */
+	function canStartOn(cell) {
+		if (readOnly || !showEntry) return false;
+		if (ongoing) return false;
+		if (cell.status === 'period') return false;
+		return parseLocal(cell.date) <= todayMidnight;
+	}
+
 	async function endPeriod() {
 		if (!ongoing) return;
 		loading = true;
@@ -685,10 +804,13 @@
 		</div>
 		<div class="cal-grid">
 			{#each calendarDays as cell}
+				{@const startable = canStartOn(cell)}
 				<span
 					class="cal-day {cell.status ? `s-${cell.status}` : ''} {cell.pos ? `p-${cell.pos}` : ''} {cell.edges}"
 					class:today={cell.date === todayStr}
 					class:overflow={cell.overflow}
+					class:startable
+					{@attach startable && longPress(() => promptStartPeriodOn(cell.date))}
 				>{cell.day}</span>
 			{/each}
 		</div>
@@ -1188,6 +1310,37 @@
 		box-sizing: border-box;
 	}
 	.cal-day.overflow { color: var(--color-text-tertiary); }
+
+	/* Long-press affordance: scale + colored ring grows during the hold. */
+	.cal-day.startable {
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+		-webkit-touch-callout: none;
+		user-select: none;
+		transition: transform 100ms ease-out, box-shadow 100ms ease-out;
+	}
+	.cal-day.startable.long-pressing {
+		z-index: 2;
+		border-radius: 999px;
+		animation: longPressRing 600ms ease-out forwards;
+	}
+	@keyframes longPressRing {
+		from {
+			transform: scale(1);
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--nord11) 70%, transparent);
+		}
+		to {
+			transform: scale(1.18);
+			box-shadow: 0 0 0 4px color-mix(in srgb, var(--nord11) 70%, transparent);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.cal-day.startable.long-pressing {
+			animation: none;
+			transform: scale(1.1);
+			box-shadow: 0 0 0 3px color-mix(in srgb, var(--nord11) 70%, transparent);
+		}
+	}
 
 	/* --- Range shape: border-radius per position --- */
 	.cal-day.p-solo { border-radius: 16px; }
