@@ -131,9 +131,21 @@
 	let periodsData = $state([]);
 	/** @type {any[]} */
 	let sharedPeriodsData = $state([]);
-	$effect(() => { Promise.resolve(data.nutritionStats).then(v => { ns = v ?? {}; }); });
-	$effect(() => { Promise.resolve(data.periods).then(v => { periodsData = v ?? []; }); });
-	$effect(() => { Promise.resolve(data.sharedPeriods).then(v => { sharedPeriodsData = v ?? []; }); });
+	$effect(() => {
+		Promise.resolve(data.nutritionStats)
+			.then(v => { ns = v ?? {}; })
+			.catch(err => console.error('nutritionStats stream failed:', err));
+	});
+	$effect(() => {
+		Promise.resolve(data.periods)
+			.then(v => { periodsData = v ?? []; })
+			.catch(err => console.error('periods stream failed:', err));
+	});
+	$effect(() => {
+		Promise.resolve(data.sharedPeriods)
+			.then(v => { sharedPeriodsData = v ?? []; })
+			.catch(err => console.error('sharedPeriods stream failed:', err));
+	});
 
 	const hasSma = $derived(stats.weightChart?.sma?.some((/** @type {any} */ v) => v !== null));
 
@@ -498,8 +510,12 @@
 
 		<div class="section-block muscle-heatmap-block">
 			<h2 class="section-title">{t('muscle_balance', lang)}</h2>
-			{#await data.muscleHeatmap then muscleHeatmap}
+			{#await data.muscleHeatmap}
+				<div class="muscle-heatmap-pending" aria-hidden="true"></div>
+			{:then muscleHeatmap}
 				<MuscleHeatmap data={muscleHeatmap} />
+			{:catch}
+				<div class="muscle-heatmap-failed">{lang === 'de' ? 'Fehler beim Laden' : 'Failed to load'}</div>
 			{/await}
 		</div>
 	</div>

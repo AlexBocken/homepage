@@ -398,20 +398,19 @@
 	let leafletLib = null;
 	let prevTrackLen = 0;
 
-	/** Svelte use:action — called when the map div enters the DOM */
-	function mountMap(/** @type {HTMLElement} */ node) {
+	/** Attachment — initialises the Leaflet map when the div mounts. */
+	/** @type {import('svelte/attachments').Attachment<HTMLElement>} */
+	function mountMap(node) {
 		initMap(node);
-		return {
-			destroy() {
-				if (liveMap) {
-					liveMap.remove();
-				}
-				liveMap = null;
-				livePolyline = null;
-				liveMarker = null;
-				leafletLib = null;
-				prevTrackLen = 0;
+		return () => {
+			if (liveMap) {
+				liveMap.remove();
 			}
+			liveMap = null;
+			livePolyline = null;
+			liveMarker = null;
+			leafletLib = null;
+			prevTrackLen = 0;
 		};
 	}
 
@@ -1136,7 +1135,7 @@
 
 {:else if workout.active && workout.mode === 'gps'}
 	<div class="gps-workout">
-		<div class="gps-workout-map" use:mountMap></div>
+		<div class="gps-workout-map" {@attach mountMap}></div>
 
 		<!-- Overlay: sits on top of the map at the bottom -->
 		<div class="gps-overlay" class:gps-overlay-prestart={!gpsStarted}>
@@ -1631,7 +1630,7 @@
 							<span>Voice: every {vgTriggerValue} {vgTriggerType === 'distance' ? 'km' : 'min'}</span>
 						</div>
 					{/if}
-					<div class="live-map" use:mountMap></div>
+					<div class="live-map" {@attach mountMap}></div>
 				{/if}
 			</div>
 		{/if}
