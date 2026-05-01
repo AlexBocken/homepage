@@ -4,18 +4,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import {
-		getMonthName,
-		getWeekdayShort,
-		rankEmphasis,
-		t,
-		dioceseLabel,
-		DIOCESES_1962,
-		DIOCESES_1969,
-		DEFAULT_DIOCESE_1962,
-		DEFAULT_DIOCESE_1969,
-		type CalendarLang
-	} from '../../../../calendarI18n';
+	import { getMonthName, getWeekdayShort, rankEmphasis, dioceseLabel, DIOCESES_1962, DIOCESES_1969, DEFAULT_DIOCESE_1962, DEFAULT_DIOCESE_1969, type CalendarLang, m } from '../../../../calendarI18n';
 	import { litBg, litInk, LIT_COLOR_VAR } from '../../../../calendarColors';
 	import RingView from './RingView.svelte';
 	import HeroCard from '../../../../HeroCard.svelte';
@@ -23,6 +12,7 @@
 	let { data }: { data: PageData } = $props();
 
 	const lang = $derived(data.lang as CalendarLang);
+	const t = $derived(m[lang]);
 
 	const year = $derived(data.year);
 	const liturgicalYear = $derived(data.liturgicalYear);
@@ -67,7 +57,7 @@
 
 	const rite = $derived(data.rite);
 	const wip = $derived(data.wip);
-	const riteSubtitle = $derived(t(rite === 'vetus' ? 'rite1962Long' : 'rite1969Long', lang));
+	const riteSubtitle = $derived(t[rite === 'vetus' ? 'rite1962Long' : 'rite1969Long']);
 
 	function pad(n: number) {
 		return String(n).padStart(2, '0');
@@ -144,7 +134,7 @@
 		}) + dioceseQuery;
 	});
 
-	const pageTitle = $derived(t('calendar', lang));
+	const pageTitle = $derived(t.calendar);
 
 	// When switching rites we drop ?diocese because the ID spaces differ (1962 has
 	// diocesan calendars, 1969 only "general" or "switzerland"). The server
@@ -202,31 +192,31 @@
 			</a>
 		</div>
 		<label class="diocese-picker">
-			<span class="diocese-label">{t('calendarVariant', lang)}</span>
-			<select value={diocese} onchange={onDioceseChange} aria-label={t('calendarVariant', lang)}>
+			<span class="diocese-label">{t.calendarVariant}</span>
+			<select value={diocese} onchange={onDioceseChange} aria-label={t.calendarVariant}>
 				{#each dioceseOptions as d (d)}
 					<option value={d}>{dioceseLabel(d, lang)}</option>
 				{/each}
 			</select>
 		</label>
 		{#if rite === 'novus'}
-			<p class="diocese-note">{t('rite1969SwissNote', lang)}</p>
+			<p class="diocese-note">{t.rite1969SwissNote}</p>
 		{/if}
 	</header>
 
 	{#if wip}
 		<section class="wip">
 			<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v4"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="10"/></svg>
-			<h2>{t('wipTitle', lang)}</h2>
-			<p>{t('wipBody', lang)}</p>
+			<h2>{t.wipTitle}</h2>
+			<p>{t.wipBody}</p>
 		</section>
 	{:else}
 	{#if rite === 'vetus'}
 		<aside class="disclaimer" role="note">
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
 			<div>
-				<strong>{t('rite1962DisclaimerTitle', lang)}</strong>
-				<p>{t('rite1962DisclaimerBody', lang)}</p>
+				<strong>{t.rite1962DisclaimerTitle}</strong>
+				<p>{t.rite1962DisclaimerBody}</p>
 			</div>
 		</aside>
 	{/if}
@@ -241,7 +231,7 @@
 
 	<!-- Color legend + view switcher -->
 	<div class="overview-controls">
-		<div class="view-switcher" role="tablist" aria-label={t('calendar', lang)}>
+		<div class="view-switcher" role="tablist" aria-label={t.calendar}>
 			<button
 				class:active={view === 'ring'}
 				role="tab"
@@ -281,7 +271,7 @@
 				data-sveltekit-replacestate
 			>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-				{t('jumpToToday', lang)}
+				{t.jumpToToday}
 			</a>
 		</div>
 	</div>
@@ -309,7 +299,7 @@
 		<a
 			class="nav-btn"
 			href={monthHref(prevMonth.y, prevMonth.m)}
-			aria-label={t('prev', lang)}
+			aria-label={t.prev}
 			data-sveltekit-noscroll
 		>
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
@@ -321,7 +311,7 @@
 		<a
 			class="nav-btn"
 			href={monthHref(nextMonth.y, nextMonth.m)}
-			aria-label={t('next', lang)}
+			aria-label={t.next}
 			data-sveltekit-noscroll
 		>
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>

@@ -9,12 +9,13 @@
   import { confirm } from '$lib/js/confirmDialog.svelte';
   import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
-  import { detectCospendLang, cospendRoot, t, locale, splitDescription, paymentCategoryName } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, splitDescription, paymentCategoryName, m } from '$lib/js/cospendI18n';
 
   import { formatCurrency } from '$lib/utils/formatters';
 
   let { data } = $props();
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 
@@ -84,7 +85,7 @@
   }
 
   async function deletePayment(/** @type {string} */ paymentId) {
-    if (!await confirm(t('delete_payment_confirm', lang))) {
+    if (!await confirm(t.delete_payment_confirm)) {
       return;
     }
 
@@ -127,18 +128,18 @@
 </script>
 
 <svelte:head>
-  <title>{t('all_payments_title', lang)} - {t('cospend', lang)}</title>
+  <title>{t.all_payments_title} - {t.cospend}</title>
 </svelte:head>
 
 <main class="payments-list">
   <div class="header">
     <div class="header-content">
-      <h1 class="sr-only">{t('all_payments_title', lang)}</h1>
+      <h1 class="sr-only">{t.all_payments_title}</h1>
     </div>
   </div>
 
   {#if loading && payments.length === 0}
-    <div class="loading">{t('loading_payments', lang)}</div>
+    <div class="loading">{t.loading_payments}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if payments.length === 0}
@@ -147,9 +148,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
         </svg>
-        <h2>{t('no_payments_yet', lang)}</h2>
-        <p>{t('start_first_expense', lang)}</p>
-        <a href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} class="btn btn-primary">{t('add_first_payment', lang)}</a>
+        <h2>{t.no_payments_yet}</h2>
+        <p>{t.start_first_expense}</p>
+        <a href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} class="btn btn-primary">{t.add_first_payment}</a>
       </div>
     </div>
   {:else}
@@ -161,7 +162,7 @@
             <div class="settlement-header">
               <div class="settlement-badge">
                 <span class="settlement-icon">💸</span>
-                <span class="settlement-label">{t('settlement', lang)}</span>
+                <span class="settlement-label">{t.settlement}</span>
               </div>
               <span class="settlement-date">{formatDate(payment.date)}</span>
             </div>
@@ -218,29 +219,29 @@
 
             <div class="payment-details">
               <div class="detail-row">
-                <span class="label">{t('paid_by_label', lang)}</span>
+                <span class="label">{t.paid_by_label}</span>
                 <span class="value">{payment.paidBy}</span>
               </div>
               <div class="detail-row">
-                <span class="label">{t('split_method_label', lang)}</span>
+                <span class="label">{t.split_method_label}</span>
                 <span class="value">{getSplitDescription(payment)}</span>
               </div>
             </div>
 
             {#if payment.splits && payment.splits.length > 0}
               <div class="splits-summary">
-                <h4>{t('split_details', lang)}</h4>
+                <h4>{t.split_details}</h4>
                 <div class="splits-list">
                   {#each payment.splits as split}
                     <div class="split-item">
                       <span class="split-user">{split.username}</span>
                       <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                         {#if split.amount > 0}
-                          {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
+                          {t.owes} {formatCurrency(split.amount, 'CHF', loc)}
                         {:else if split.amount < 0}
-                          {t('owed', lang)} {formatCurrency(Math.abs(split.amount), 'CHF', loc)}
+                          {t.owed} {formatCurrency(Math.abs(split.amount), 'CHF', loc)}
                         {:else}
-                          {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
+                          {t.owes} {formatCurrency(split.amount, 'CHF', loc)}
                         {/if}
                       </span>
                     </div>
@@ -258,14 +259,14 @@
       {#if data.currentOffset > 0}
         <a href="?offset={Math.max(0, data.currentOffset - data.limit)}&limit={data.limit}"
            class="btn btn-secondary">
-          {t('previous', lang)}
+          {t.previous}
         </a>
       {/if}
 
       {#if hasMore}
         <a href="?offset={data.currentOffset + data.limit}&limit={data.limit}"
            class="btn btn-secondary">
-          {t('next', lang)}
+          {t.next}
         </a>
       {/if}
 
@@ -273,7 +274,7 @@
       {#if hasMore}
         <button class="btn btn-secondary js-only" onclick={loadMore} disabled={loading}
                 style="display: none;">
-          {loading ? t('loading_ellipsis', lang) : t('load_more', lang)}
+          {loading ? t.loading_ellipsis : t.load_more}
         </button>
       {/if}
     </div>

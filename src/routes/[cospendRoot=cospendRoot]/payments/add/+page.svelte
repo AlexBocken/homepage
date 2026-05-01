@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
-  import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n, frequencyDescription } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, getCategoryOptionsI18n, frequencyDescription, m } from '$lib/js/cospendI18n';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { validateCronExpression, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
@@ -17,6 +17,7 @@
   let { data, form } = $props();
 
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 
@@ -95,29 +96,29 @@
     // No-JS fallback text - always generic
     if (!jsEnhanced) {
       if (predefinedMode) {
-        return t('paid_in_full', lang);
+        return t.paid_in_full;
       } else {
-        return t('paid_in_full', lang);
+        return t.paid_in_full;
       }
     }
 
     // JavaScript-enhanced reactive text
     if (!formData.paidBy) {
-      return t('paid_in_full', lang);
+      return t.paid_in_full;
     }
 
     // Special handling for 2-user predefined setup
     if (predefinedMode && users.length === 2) {
       const otherUser = users.find(user => user !== formData.paidBy);
       // Always show "for" the other user (who benefits) regardless of who pays
-      return otherUser ? `${t('paid_in_full_for', lang)} ${otherUser}` : t('paid_in_full', lang);
+      return otherUser ? `${t.paid_in_full_for} ${otherUser}` : t.paid_in_full;
     }
 
     // General case with JS
     if (formData.paidBy === data.currentUser) {
-      return t('paid_in_full_by_you', lang);
+      return t.paid_in_full_by_you;
     } else {
-      return `${t('paid_in_full_by', lang)} ${formData.paidBy}`;
+      return `${t.paid_in_full_by} ${formData.paidBy}`;
     }
   });
 
@@ -363,44 +364,44 @@
 </script>
 
 <svelte:head>
-  <title>{t('add_payment_title', lang)} - {t('cospend', lang)}</title>
+  <title>{t.add_payment_title} - {t.cospend}</title>
 </svelte:head>
 
 <main class="add-payment">
   <div class="header">
-    <h1 class="sr-only">{t('add_payment_title', lang)}</h1>
-    <p>{t('add_payment_subtitle', lang)}</p>
+    <h1 class="sr-only">{t.add_payment_title}</h1>
+    <p>{t.add_payment_subtitle}</p>
   </div>
 
   <form method="POST" use:enhance class="payment-form">
     <div class="form-section">
-      <h2>{t('payment_details_section', lang)}</h2>
+      <h2>{t.payment_details_section}</h2>
       
       <div class="form-group">
-        <label for="title">{t('title_label', lang)}</label>
+        <label for="title">{t.title_label}</label>
         <input 
           type="text" 
           id="title" 
           name="title"
           value={formData.title}
           required 
-          placeholder={t('title_placeholder', lang)}
+          placeholder={t.title_placeholder}
         />
       </div>
 
       <div class="form-group">
-        <label for="description">{t('description_label', lang)}</label>
+        <label for="description">{t.description_label}</label>
         <textarea 
           id="description" 
           name="description"
           value={formData.description} 
-          placeholder={t('description_placeholder', lang)}
+          placeholder={t.description_placeholder}
           rows="3"
         ></textarea>
       </div>
 
       <div class="form-group">
-        <label for="category">{t('category_star', lang)}</label>
+        <label for="category">{t.category_star}</label>
         <select id="category" name="category" value={formData.category} required>
           {#each categoryOptions as option}
             <option value={option.value}>{option.label}</option>
@@ -410,7 +411,7 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="amount">{t('amount_label', lang)}</label>
+          <label for="amount">{t.amount_label}</label>
           <div class="amount-currency">
             <input 
               type="number" 
@@ -430,11 +431,11 @@
           </div>
           {#if formData.currency !== 'CHF'}
             <div class="conversion-info">
-              <small class="help-text">{t('conversion_hint', lang)}</small>
+              <small class="help-text">{t.conversion_hint}</small>
               
               {#if loadingExchangeRate}
                 <div class="conversion-preview loading">
-                  <small>🔄 {t('fetching_rate', lang)}</small>
+                  <small>🔄 {t.fetching_rate}</small>
                 </div>
               {:else if exchangeRateError}
                 <div class="conversion-preview error">
@@ -454,17 +455,17 @@
         </div>
 
         <div class="form-group">
-          <label for="date">{t('payment_date', lang)}</label>
+          <label for="date">{t.payment_date}</label>
           <DatePicker bind:value={formData.date} {lang} />
           <input type="hidden" name="date" value={formData.date} />
           {#if formData.currency !== 'CHF'}
-            <small class="help-text">{t('exchange_rate_date', lang)}</small>
+            <small class="help-text">{t.exchange_rate_date}</small>
           {/if}
         </div>
       </div>
 
       <div class="form-group">
-        <label for="paidBy">{t('paid_by_form', lang)}</label>
+        <label for="paidBy">{t.paid_by_form}</label>
         <select id="paidBy" name="paidBy" bind:value={formData.paidBy} required>
           {#each users as user}
             <option value={user}>{user}</option>
@@ -475,7 +476,7 @@
       <div class="form-group">
         <label class="checkbox-label">
           <Toggle bind:checked={formData.isRecurring} />
-          <span>{t('make_recurring', lang)}</span>
+          <span>{t.make_recurring}</span>
           <input type="hidden" name="isRecurring" value={formData.isRecurring ? 'true' : 'false'} />
         </label>
       </div>
@@ -483,24 +484,24 @@
 
     {#if formData.isRecurring}
       <div class="form-section">
-        <h2>{t('recurring_section', lang)}</h2>
+        <h2>{t.recurring_section}</h2>
         
         <div class="recurring-options">
           <div class="form-row">
             <div class="form-group">
-              <label for="frequency">{t('frequency_label', lang)}</label>
+              <label for="frequency">{t.frequency_label}</label>
               <select id="frequency" name="recurringFrequency" bind:value={recurringData.frequency} required>
-                <option value="daily">{t('freq_daily', lang)}</option>
-                <option value="weekly">{t('freq_weekly', lang)}</option>
-                <option value="monthly">{t('freq_monthly', lang)}</option>
-                <option value="quarterly">{t('freq_quarterly', lang)}</option>
-                <option value="yearly">{t('freq_yearly', lang)}</option>
-                <option value="custom">{t('freq_custom', lang)}</option>
+                <option value="daily">{t.freq_daily}</option>
+                <option value="weekly">{t.freq_weekly}</option>
+                <option value="monthly">{t.freq_monthly}</option>
+                <option value="quarterly">{t.freq_quarterly}</option>
+                <option value="yearly">{t.freq_yearly}</option>
+                <option value="custom">{t.freq_custom}</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="recurringStartDate">{t('start_date', lang)}</label>
+              <label for="recurringStartDate">{t.start_date}</label>
               <DatePicker bind:value={recurringData.startDate} {lang} />
               <input type="hidden" name="recurringStartDate" value={recurringData.startDate} />
             </div>
@@ -535,16 +536,16 @@
           {/if}
 
           <div class="form-group">
-            <label for="recurringEndDate">{t('end_date_optional', lang)}</label>
+            <label for="recurringEndDate">{t.end_date_optional}</label>
             <DatePicker bind:value={recurringData.endDate} min={recurringData.startDate} {lang} />
             <input type="hidden" name="recurringEndDate" value={recurringData.endDate} />
-            <small class="help-text">{t('end_date_hint', lang)}</small>
+            <small class="help-text">{t.end_date_hint}</small>
           </div>
 
 
           {#if nextExecutionPreview}
             <div class="execution-preview">
-              <h3>{t('next_execution_preview', lang)}</h3>
+              <h3>{t.next_execution_preview}</h3>
               <p class="next-execution">{nextExecutionPreview}</p>
               <p class="frequency-description">{frequencyDescription(/** @type {any} */ (recurringData), lang)}</p>
             </div>
@@ -609,7 +610,7 @@
       <div class="error">{error}</div>
     {/if}
 
-    <SaveFab disabled={loading} label={t('create_payment', lang)} />
+    <SaveFab disabled={loading} label={t.create_payment} />
   </form>
 </main>
 

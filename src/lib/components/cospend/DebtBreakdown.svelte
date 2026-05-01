@@ -3,9 +3,10 @@
   import { page } from '$app/state';
   import ProfilePicture from './ProfilePicture.svelte';
   import { formatCurrency } from '$lib/utils/formatters';
-  import { detectCospendLang, locale, t } from '$lib/js/cospendI18n';
+  import { detectCospendLang, locale, m } from '$lib/js/cospendI18n';
 
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const loc = $derived(locale(lang));
 
   /**
@@ -66,19 +67,19 @@
 
 {#if !shouldHide}
 <div class="debt-breakdown">
-  <h2>{t('debt_overview', lang)}</h2>
+  <h2>{t.debt_overview}</h2>
 
   {#if loading}
-    <div class="loading">{t('loading_debt_breakdown', lang)}</div>
+    <div class="loading">{t.loading_debt_breakdown}</div>
   {:else if error}
-    <div class="error">{t('error_prefix', lang)}: {error}</div>
+    <div class="error">{t.error_prefix}: {error}</div>
   {:else}
     <div class="debt-sections">
       {#if debtData.whoOwesMe.length > 0}
         <div class="debt-section owed-to-me">
-          <h3>{t('who_owes_you', lang)}</h3>
+          <h3>{t.who_owes_you}</h3>
           <div class="total-amount positive">
-            {t('total', lang)}: {formatCurrency(debtData.totalOwedToMe, 'CHF', loc)}
+            {t.total}: {formatCurrency(debtData.totalOwedToMe, 'CHF', loc)}
           </div>
 
           <div class="debt-list">
@@ -92,7 +93,7 @@
                   </div>
                 </div>
                 <div class="transaction-count">
-                  {debt.transactions.length} {debt.transactions.length !== 1 ? t('transactions', lang) : t('transaction', lang)}
+                  {debt.transactions.length} {debt.transactions.length !== 1 ? t.transactions : t.transaction}
                 </div>
               </div>
             {/each}
@@ -102,9 +103,9 @@
 
       {#if debtData.whoIOwe.length > 0}
         <div class="debt-section owe-to-others">
-          <h3>{t('you_owe_section', lang)}</h3>
+          <h3>{t.you_owe_section}</h3>
           <div class="total-amount negative">
-            {t('total', lang)}: {formatCurrency(debtData.totalIOwe, 'CHF', loc)}
+            {t.total}: {formatCurrency(debtData.totalIOwe, 'CHF', loc)}
           </div>
 
           <div class="debt-list">
@@ -118,7 +119,7 @@
                   </div>
                 </div>
                 <div class="transaction-count">
-                  {debt.transactions.length} {debt.transactions.length !== 1 ? t('transactions', lang) : t('transaction', lang)}
+                  {debt.transactions.length} {debt.transactions.length !== 1 ? t.transactions : t.transaction}
                 </div>
               </div>
             {/each}

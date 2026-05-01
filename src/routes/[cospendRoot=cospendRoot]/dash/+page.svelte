@@ -14,10 +14,11 @@
 
 
   import { formatCurrency } from '$lib/utils/formatters';
-  import { detectCospendLang, cospendRoot, t, locale, paymentCategoryName } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, paymentCategoryName, m } from '$lib/js/cospendI18n';
 
   let { data } = $props(); // Contains session data and balance from server
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 
@@ -125,11 +126,11 @@
 </script>
 
 <svelte:head>
-  <title>{t('cospend_title', lang)}</title>
+  <title>{t.cospend_title}</title>
 </svelte:head>
 
 <main class="cospend-main">
-    <h1 class="sr-only">{t('cospend', lang)}</h1>
+    <h1 class="sr-only">{t.cospend}</h1>
 
   <!-- Responsive layout for balance and chart -->
   <div class="dashboard-layout">
@@ -138,7 +139,7 @@
 
       <div class="actions">
         {#if balance.netBalance !== 0}
-          <a href={resolve('/[cospendRoot=cospendRoot]/settle', { cospendRoot: root })} class="btn btn-settlement">{t('settle_debts', lang)}</a>
+          <a href={resolve('/[cospendRoot=cospendRoot]/settle', { cospendRoot: root })} class="btn btn-settlement">{t.settle_debts}</a>
         {/if}
       </div>
 
@@ -148,11 +149,11 @@
     <!-- Monthly Expenses Chart -->
     <div class="chart-section">
       {#if expensesLoading}
-        <div class="loading">{t('loading_monthly', lang)}</div>
+        <div class="loading">{t.loading_monthly}</div>
       {:else if monthlyExpensesData.datasets && monthlyExpensesData.datasets.length > 0}
         <BarChart
           data={monthlyExpensesData}
-          title={t('monthly_expenses_chart', lang)}
+          title={t.monthly_expenses_chart}
           height="400px"
           {lang}
           onFilterChange={(/** @type {string[] | null} */ categories) => categoryFilter = categories}
@@ -168,19 +169,19 @@
   </div>
 
   {#if loading}
-    <div class="loading">{t('loading_recent', lang)}</div>
+    <div class="loading">{t.loading_recent}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if balance.recentSplits && balance.recentSplits.length > 0}
     <div class="recent-activity">
       <div class="recent-activity-header">
-        <h2>{t('recent_activity', lang)}{#if categoryFilter} <span class="filter-label">— {categoryFilter.map((/** @type {any} */ c) => paymentCategoryName(c, lang)).join(', ')}</span>{/if}</h2>
+        <h2>{t.recent_activity}{#if categoryFilter} <span class="filter-label">— {categoryFilter.map((/** @type {any} */ c) => paymentCategoryName(c, lang)).join(', ')}</span>{/if}</h2>
         {#if categoryFilter}
-          <button class="clear-filter" onclick={() => categoryFilter = null}>{t('clear_filter', lang)}</button>
+          <button class="clear-filter" onclick={() => categoryFilter = null}>{t.clear_filter}</button>
         {/if}
       </div>
       {#if filteredSplits.length === 0}
-        <p class="no-results">{t('no_recent_in', lang)} {categoryFilter ? categoryFilter.map((/** @type {any} */ c) => paymentCategoryName(c, lang)).join(', ') : ''}.</p>
+        <p class="no-results">{t.no_recent_in} {categoryFilter ? categoryFilter.map((/** @type {any} */ c) => paymentCategoryName(c, lang)).join(', ') : ''}.</p>
       {/if}
       <div class="activity-dialog">
         {#each filteredSplits as split}
@@ -226,9 +227,9 @@
                     <div class="user-info">
                       <div class="payment-title-row">
                         <span class="category-emoji">{getCategoryEmoji(split.paymentId?.category || 'groceries')}</span>
-                        <strong class="payment-title">{split.paymentId?.title || t('payment', lang)}</strong>
+                        <strong class="payment-title">{split.paymentId?.title || t.payment}</strong>
                       </div>
-                      <span class="username">{t('paid_by', lang)} {split.paymentId?.paidBy || 'Unknown'}</span>
+                      <span class="username">{t.paid_by} {split.paymentId?.paidBy || 'Unknown'}</span>
                       <span class="category-name">{paymentCategoryName(split.paymentId?.category || 'groceries', lang)}</span>
                     </div>
                     <div class="activity-amount"

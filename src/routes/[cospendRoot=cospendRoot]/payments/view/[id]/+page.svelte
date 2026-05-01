@@ -6,7 +6,7 @@
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
   import EditButton from '$lib/components/EditButton.svelte';
-  import { detectCospendLang, cospendRoot, t, locale, splitDescription, paymentCategoryName } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, splitDescription, paymentCategoryName, m } from '$lib/js/cospendI18n';
 
 
   import { formatCurrency } from '$lib/utils/formatters';
@@ -14,6 +14,7 @@
   let { data } = $props();
 
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 
@@ -54,13 +55,13 @@
 </script>
 
 <svelte:head>
-  <title>{payment ? payment.title : 'Payment'} - {t('cospend', lang)}</title>
+  <title>{payment ? payment.title : 'Payment'} - {t.cospend}</title>
 </svelte:head>
 
 <main class="payment-view">
 
   {#if loading}
-    <div class="loading">{t('loading_payments', lang)}</div>
+    <div class="loading">{t.loading_payments}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if payment}
@@ -75,7 +76,7 @@
             {formatAmountWithCurrency(payment)}
             {#if payment.currency !== 'CHF' && payment.exchangeRate}
               <div class="exchange-rate-info">
-                <small>{t('exchange_rate', lang)}: 1 {payment.currency} = {payment.exchangeRate.toFixed(4)} CHF</small>
+                <small>{t.exchange_rate}: 1 {payment.currency} = {payment.exchangeRate.toFixed(4)} CHF</small>
               </div>
             {/if}
           </div>
@@ -90,30 +91,30 @@
       <div class="payment-info">
         <div class="info-grid">
           <div class="info-item">
-            <span class="label">{t('date', lang)}</span>
+            <span class="label">{t.date}</span>
             <span class="value">{formatDate(payment.date)}</span>
           </div>
           <div class="info-item">
-            <span class="label">{t('paid_by_label', lang)}</span>
+            <span class="label">{t.paid_by_label}</span>
             <span class="value">{payment.paidBy}</span>
           </div>
           <div class="info-item">
-            <span class="label">{t('created_by', lang)}</span>
+            <span class="label">{t.created_by}</span>
             <span class="value">{payment.createdBy}</span>
           </div>
           <div class="info-item">
-            <span class="label">{t('category_label', lang)}</span>
+            <span class="label">{t.category_label}</span>
             <span class="value">{paymentCategoryName(payment.category || 'groceries', lang)}</span>
           </div>
           <div class="info-item">
-            <span class="label">{t('split_method_label', lang)}</span>
+            <span class="label">{t.split_method_label}</span>
             <span class="value">{getSplitDescription(payment)}</span>
           </div>
         </div>
 
         {#if payment.description}
           <div class="description">
-            <h3>{t('description', lang)}</h3>
+            <h3>{t.description}</h3>
             <p>{payment.description}</p>
           </div>
         {/if}
@@ -121,7 +122,7 @@
 
       {#if payment.splits && payment.splits.length > 0}
         <div class="splits-section">
-          <h3>{t('split_details', lang)}</h3>
+          <h3>{t.split_details}</h3>
           <div class="splits-list">
             {#each payment.splits as split}
               <div class="split-item" class:current-user={split.username === data.session?.user?.nickname}>
@@ -130,17 +131,17 @@
                   <div class="user-info">
                     <span class="username">{split.username}</span>
                     {#if split.username === data.session?.user?.nickname}
-                      <span class="you-badge">{t('you', lang)}</span>
+                      <span class="you-badge">{t.you}</span>
                     {/if}
                   </div>
                 </div>
                 <div class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                   {#if split.amount > 0}
-                    {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
+                    {t.owes} {formatCurrency(split.amount, 'CHF', loc)}
                   {:else if split.amount < 0}
-                    {t('owed', lang)} {formatCurrency(split.amount, 'CHF', loc)}
+                    {t.owed} {formatCurrency(split.amount, 'CHF', loc)}
                   {:else}
-                    {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
+                    {t.owes} {formatCurrency(split.amount, 'CHF', loc)}
                   {/if}
                 </div>
               </div>
