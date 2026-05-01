@@ -56,14 +56,18 @@ let { data, children } = $props();
 
 let user = $derived(data.session?.user);
 
-const isEnglish = $derived(data.lang === 'en');
+import { m } from '$lib/js/recipesI18n';
+/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
+const lang = $derived(/** @type {RecipesLang} */ (data.lang));
+const t = $derived(m[lang]);
+const isEnglish = $derived(lang === 'en');
 const labels = $derived({
-	allRecipes: isEnglish ? 'All Recipes' : 'Alle Rezepte',
-	favorites: isEnglish ? 'Favorites' : 'Favoriten',
-	inSeason: isEnglish ? 'Season' : 'Saison',
-	category: isEnglish ? 'Category' : 'Kategorie',
-	icon: 'Icon',
-	keywords: 'Tags'
+	allRecipes: t.all_recipes,
+	favorites: t.favorites,
+	inSeason: t.season_nav,
+	category: t.category_nav,
+	icon: t.icon_nav,
+	keywords: t.tags_nav
 });
 
 /** @param {string} path */
