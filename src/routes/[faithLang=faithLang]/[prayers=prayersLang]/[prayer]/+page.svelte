@@ -24,6 +24,8 @@
 	import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
 	import StickyImage from "$lib/components/faith/StickyImage.svelte";
 	import AngelusStreakCounter from "$lib/components/faith/AngelusStreakCounter.svelte";
+	import { m } from '$lib/js/faithI18n';
+	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 
 	let { data } = $props();
 
@@ -37,40 +39,43 @@
 		}
 	});
 
-	const isEnglish = $derived(data.lang === 'en');
-	const isLatin = $derived(data.lang === 'la');
+	const lang = $derived(/** @type {FaithLang} */ (data.lang));
+	const t = $derived(m[lang]);
+	const isEnglish = $derived(lang === 'en');
+	const isLatin = $derived(lang === 'la');
 
-	// Prayer definitions with slugs
+	// Prayer definitions with slugs. Names come from the dictionary; slugs and
+	// bilingue flags stay inline since they're prayer-route metadata.
 	const prayerDefs = $derived({
-		'das-heilige-kreuzzeichen': { id: 'signOfCross', name: isEnglish ? 'The Sign of the Cross' : 'Das heilige Kreuzzeichen', bilingue: true },
-		'the-sign-of-the-cross': { id: 'signOfCross', name: isEnglish ? 'The Sign of the Cross' : 'Das heilige Kreuzzeichen', bilingue: true },
+		'das-heilige-kreuzzeichen': { id: 'signOfCross', name: t.sign_of_cross, bilingue: true },
+		'the-sign-of-the-cross': { id: 'signOfCross', name: t.sign_of_cross, bilingue: true },
 		'gloria-patri': { id: 'gloriaPatri', name: 'Glória Patri', bilingue: true },
-		'paternoster': { id: 'paternoster', name: isEnglish ? 'Our Father' : 'Paternoster', bilingue: true },
-		'our-father': { id: 'paternoster', name: isEnglish ? 'Our Father' : 'Paternoster', bilingue: true },
-		'credo': { id: 'credo', name: isEnglish ? 'Nicene Creed' : 'Credo', bilingue: true },
-		'nicene-creed': { id: 'credo', name: isEnglish ? 'Nicene Creed' : 'Credo', bilingue: true },
-		'ave-maria': { id: 'aveMaria', name: isEnglish ? 'Hail Mary' : 'Ave Maria', bilingue: true },
-		'hail-mary': { id: 'aveMaria', name: isEnglish ? 'Hail Mary' : 'Ave Maria', bilingue: true },
+		'paternoster': { id: 'paternoster', name: t.pater_noster, bilingue: true },
+		'our-father': { id: 'paternoster', name: t.pater_noster, bilingue: true },
+		'credo': { id: 'credo', name: t.nicene_creed, bilingue: true },
+		'nicene-creed': { id: 'credo', name: t.nicene_creed, bilingue: true },
+		'ave-maria': { id: 'aveMaria', name: t.hail_mary, bilingue: true },
+		'hail-mary': { id: 'aveMaria', name: t.hail_mary, bilingue: true },
 		'salve-regina': { id: 'salveRegina', name: 'Salve Regina', bilingue: true },
-		'das-fatimagebet': { id: 'fatima', name: isEnglish ? 'Fatima Prayer' : 'Das Fatimagebet', bilingue: true },
-		'fatima-prayer': { id: 'fatima', name: isEnglish ? 'Fatima Prayer' : 'Das Fatimagebet', bilingue: true },
+		'das-fatimagebet': { id: 'fatima', name: t.fatima_prayer, bilingue: true },
+		'fatima-prayer': { id: 'fatima', name: t.fatima_prayer, bilingue: true },
 		'gloria': { id: 'gloria', name: 'Glória', bilingue: true },
-		'gebet-zum-hl-erzengel-michael': { id: 'michael', name: isEnglish ? 'Prayer to St. Michael the Archangel' : 'Gebet zum hl. Erzengel Michael', bilingue: true },
-		'prayer-to-st-michael-the-archangel': { id: 'michael', name: isEnglish ? 'Prayer to St. Michael the Archangel' : 'Gebet zum hl. Erzengel Michael', bilingue: true },
-		'bruder-klaus-gebet': { id: 'bruderKlaus', name: isEnglish ? 'Prayer of St. Nicholas of Flüe' : 'Bruder Klaus Gebet', bilingue: false },
-		'prayer-of-st-nicholas-of-flue': { id: 'bruderKlaus', name: isEnglish ? 'Prayer of St. Nicholas of Flüe' : 'Bruder Klaus Gebet', bilingue: false },
-		'josephgebet-des-hl-papst-pius-x': { id: 'joseph', name: isEnglish ? 'Prayer to St. Joseph by Pope St. Pius X' : 'Josephgebet des hl. Papst Pius X', bilingue: false },
-		'prayer-to-st-joseph-by-pope-st-pius-x': { id: 'joseph', name: isEnglish ? 'Prayer to St. Joseph by Pope St. Pius X' : 'Josephgebet des hl. Papst Pius X', bilingue: false },
-		'das-confiteor': { id: 'confiteor', name: isEnglish ? 'The Confiteor' : 'Das Confiteor', bilingue: true },
-		'the-confiteor': { id: 'confiteor', name: isEnglish ? 'The Confiteor' : 'Das Confiteor', bilingue: true },
-		'postcommunio': { id: 'postcommunio', name: isEnglish ? 'Postcommunio Prayers' : 'Nachkommuniongebete', bilingue: true },
+		'gebet-zum-hl-erzengel-michael': { id: 'michael', name: t.st_michael_prayer, bilingue: true },
+		'prayer-to-st-michael-the-archangel': { id: 'michael', name: t.st_michael_prayer, bilingue: true },
+		'bruder-klaus-gebet': { id: 'bruderKlaus', name: t.bruder_klaus_prayer, bilingue: false },
+		'prayer-of-st-nicholas-of-flue': { id: 'bruderKlaus', name: t.bruder_klaus_prayer, bilingue: false },
+		'josephgebet-des-hl-papst-pius-x': { id: 'joseph', name: t.st_joseph_prayer, bilingue: false },
+		'prayer-to-st-joseph-by-pope-st-pius-x': { id: 'joseph', name: t.st_joseph_prayer, bilingue: false },
+		'das-confiteor': { id: 'confiteor', name: t.the_confiteor, bilingue: true },
+		'the-confiteor': { id: 'confiteor', name: t.the_confiteor, bilingue: true },
+		'postcommunio': { id: 'postcommunio', name: t.postcommunio_prayers, bilingue: true },
 		'anima-christi': { id: 'animachristi', name: 'Ánima Christi', bilingue: true },
-		'prayer-before-a-crucifix': { id: 'prayerbeforeacrucifix', name: isEnglish ? 'Prayer Before a Crucifix' : 'Gebet vor einem Kruzifix', bilingue: true },
-		'gebet-vor-einem-kruzifix': { id: 'prayerbeforeacrucifix', name: isEnglish ? 'Prayer Before a Crucifix' : 'Gebet vor einem Kruzifix', bilingue: true },
-		'schutzengel-gebet': { id: 'guardianAngel', name: isEnglish ? 'Guardian Angel Prayer' : 'Schutzengel-Gebet', bilingue: true },
-		'guardian-angel-prayer': { id: 'guardianAngel', name: isEnglish ? 'Guardian Angel Prayer' : 'Schutzengel-Gebet', bilingue: true },
-		'apostolisches-glaubensbekenntnis': { id: 'apostlesCreed', name: isEnglish ? "Apostles' Creed" : 'Apostolisches Glaubensbekenntnis', bilingue: true },
-		'apostles-creed': { id: 'apostlesCreed', name: isEnglish ? "Apostles' Creed" : 'Apostolisches Glaubensbekenntnis', bilingue: true },
+		'prayer-before-a-crucifix': { id: 'prayerbeforeacrucifix', name: t.prayer_before_crucifix, bilingue: true },
+		'gebet-vor-einem-kruzifix': { id: 'prayerbeforeacrucifix', name: t.prayer_before_crucifix, bilingue: true },
+		'schutzengel-gebet': { id: 'guardianAngel', name: t.guardian_angel_prayer, bilingue: true },
+		'guardian-angel-prayer': { id: 'guardianAngel', name: t.guardian_angel_prayer, bilingue: true },
+		'apostolisches-glaubensbekenntnis': { id: 'apostlesCreed', name: t.apostles_creed, bilingue: true },
+		'apostles-creed': { id: 'apostlesCreed', name: t.apostles_creed, bilingue: true },
 		'tantum-ergo': { id: 'tantumErgo', name: 'Tantum Ergo', bilingue: true },
 		'angelus': { id: 'angelus', name: 'Angelus', bilingue: true },
 		'regina-caeli': { id: 'reginaCaeli', name: 'Regína Cæli', bilingue: true }
@@ -83,8 +88,8 @@
 	const isAngelusPage = $derived(prayerId === 'angelus' || prayerId === 'reginaCaeli');
 
 	const angelusImageCaption = $derived(prayerId === 'reginaCaeli'
-		? { artist: 'Diego Velázquez', title: isEnglish ? 'Coronation of the Virgin' : 'Die Krönung der Jungfrau', year: 1641 }
-		: { artist: 'Bartolomé Esteban Murillo', title: isEnglish ? 'The Annunciation' : 'Die Verkündigung', year: /** @type {number | null} */(null) }
+		? { artist: 'Diego Velázquez', title: t.painting_coronation_virgin, year: 1641 }
+		: { artist: 'Bartolomé Esteban Murillo', title: t.painting_annunciation, year: /** @type {number | null} */(null) }
 	);
 
 	const gloriaIntro = $derived(isEnglish
@@ -183,7 +188,7 @@ h1 {
 	{#if isAngelusPage}
 		<AngelusStreakCounter
 			streakData={data.angelusStreak}
-			lang={isLatin ? 'la' : isEnglish ? 'en' : 'de'}
+			{lang}
 			isLoggedIn={!!data.session?.user}
 		/>
 	{/if}
