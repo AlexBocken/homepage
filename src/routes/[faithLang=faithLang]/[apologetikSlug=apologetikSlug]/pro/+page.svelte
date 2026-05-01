@@ -5,11 +5,15 @@
 	import CaseTabs from '$lib/components/faith/CaseTabs.svelte';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
+	import { m, type FaithLang } from '$lib/js/faithI18n';
+
 	let { data } = $props();
 	const faithLang = $derived(data?.faithLang ?? 'faith');
 	const slug = $derived(faithLang === 'faith' ? 'apologetics' : 'apologetik');
-	const isLatin = $derived(data?.lang === 'la');
-	const isGerman = $derived(data?.lang === 'de');
+	const lang = $derived((data?.lang ?? 'en') as FaithLang);
+	const t = $derived(m[lang]);
+	const isLatin = $derived(lang === 'la');
+	const isGerman = $derived(lang === 'de');
 
 	const POS_VOICES = $derived(data.voices);
 	const POS_LAYERS = $derived(data.layers);
@@ -129,7 +133,7 @@
 		})
 	);
 	const tocLabel = $derived(
-		isLatin ? 'Argumenta' : isGerman ? 'Belege' : 'Evidences'
+		t.evidences
 	);
 </script>
 

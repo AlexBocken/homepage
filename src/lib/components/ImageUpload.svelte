@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '$lib/js/cospendI18n';
+  import { m, type CospendLang } from '$lib/js/cospendI18n';
 
   let {
     imagePreview = $bindable(''),
@@ -24,20 +24,21 @@
     onimageRemoved?: () => void,
     oncurrentImageRemoved?: () => void
   }>();
+  const t = $derived(m[lang as CospendLang]);
 
-  const displayTitle = $derived(title ?? t('receipt_image', lang));
+  const displayTitle = $derived(title ?? t.receipt_image);
 
   function handleImageChange(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        onerror?.(t('file_too_large', lang));
+        onerror?.(t.file_too_large);
         return;
       }
 
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        onerror?.(t('invalid_image', lang));
+        onerror?.(t.invalid_image);
         return;
       }
 
@@ -70,10 +71,10 @@
 
   {#if currentImage}
     <div class="current-image">
-      <img src={currentImage} alt={t('receipt', lang)} class="receipt-preview" />
+      <img src={currentImage} alt={t.receipt} class="receipt-preview" />
       <div class="image-actions">
         <button type="button" class="btn-remove" onclick={removeCurrentImage}>
-          {t('remove_image', lang)}
+          {t.remove_image}
         </button>
       </div>
     </div>
@@ -81,9 +82,9 @@
 
   {#if imagePreview}
     <div class="image-preview">
-      <img src={imagePreview} alt={t('receipt', lang)} />
+      <img src={imagePreview} alt={t.receipt} />
       <button type="button" class="remove-image" onclick={removeImage}>
-        {t('remove_image', lang)}
+        {t.remove_image}
       </button>
     </div>
   {:else}
@@ -95,7 +96,7 @@
             <line x1="16" y1="5" x2="22" y2="5"/>
             <line x1="19" y1="2" x2="19" y2="8"/>
           </svg>
-          <p>{currentImage ? t('replace_image', lang) : t('upload_receipt', lang)}</p>
+          <p>{currentImage ? t.replace_image : t.upload_receipt}</p>
           <small>JPEG, PNG, WebP (max 5MB)</small>
         </div>
       </label>
@@ -111,7 +112,7 @@
   {/if}
 
   {#if uploading}
-    <div class="upload-status">{t('uploading_image', lang)}</div>
+    <div class="upload-status">{t.uploading_image}</div>
   {/if}
 </div>
 

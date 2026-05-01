@@ -2,11 +2,15 @@
 	import { resolve } from '$app/paths';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
+	import { m, type FaithLang } from '$lib/js/faithI18n';
+
 	let { data } = $props();
 	const faithLang = $derived(data?.faithLang ?? 'faith');
 	const slug = $derived(faithLang === 'faith' ? 'apologetics' : 'apologetik');
-	const isLatin = $derived(data?.lang === 'la');
-	const isGerman = $derived(data?.lang === 'de');
+	const lang = $derived((data?.lang ?? 'en') as FaithLang);
+	const t = $derived(m[lang]);
+	const isLatin = $derived(lang === 'la');
+	const isGerman = $derived(lang === 'de');
 	const arg = $derived(data.argument);
 	const POS_VOICES = $derived(data.voices);
 	const POS_LAYERS = $derived(data.layers);
@@ -20,9 +24,7 @@
 				? { natural: 'Übernatürlich', theism: 'Theismus', christianity: 'Christentum' }
 				: { natural: 'Supernatural', theism: 'Theism', christianity: 'Christianity' }
 	);
-	const tocLabel = $derived(
-		isLatin ? 'Argumenta' : isGerman ? 'Belege' : 'Evidences'
-	);
+	const tocLabel = $derived(t.evidences);
 	const tocItems = $derived(
 		POS_ARGUMENTS.map((a) => ({
 			id: a.id,
@@ -94,7 +96,7 @@
 </script>
 
 <svelte:head>
-	<title>{arg.title} · {isLatin ? 'Argumenta pro' : isGerman ? 'Positives' : 'Positive case'} · bocken.org</title>
+	<title>{arg.title} · {t.positive_case} · bocken.org</title>
 	<meta name="description" content={arg.claim} />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />

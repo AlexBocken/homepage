@@ -4,11 +4,15 @@
 	import CaseTabs from '$lib/components/faith/CaseTabs.svelte';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
+	import { m, type FaithLang } from '$lib/js/faithI18n';
+
 	let { data } = $props();
 	const faithLang = $derived(data?.faithLang ?? 'faith');
 	const slug = $derived(faithLang === 'faith' ? 'apologetics' : 'apologetik');
-	const isLatin = $derived(data?.lang === 'la');
-	const isGerman = $derived(data?.lang === 'de');
+	const lang = $derived((data?.lang ?? 'en') as FaithLang);
+	const t = $derived(m[lang]);
+	const isLatin = $derived(lang === 'la');
+	const isGerman = $derived(lang === 'de');
 
 	const ARCHETYPES = $derived(data.archetypes);
 	const ARGUMENTS = $derived(data.args);
@@ -79,18 +83,10 @@
 				? 'Dreiundzwanzig Einwände, wie sie ein Atheist erheben mag, je in mehreren Stimmen beantwortet.'
 				: 'Twenty-three objections an atheist might raise, each answered in several voices.'
 	);
-	const tocLabel = $derived(
-		isLatin ? 'Obiectiones' : isGerman ? 'Einwände' : 'Objections'
-	);
-	const legendTitle = $derived(
-		isLatin ? 'Voces respondentes' : isGerman ? 'Die antwortenden Stimmen' : 'The voices that answer'
-	);
-	const objectionLabel = $derived(
-		isLatin ? 'OBIECTIO' : isGerman ? 'EINWAND' : 'OBJECTION'
-	);
-	const answeredByLabel = $derived(
-		isLatin ? 'Respondetur a' : isGerman ? 'Beantwortet von' : 'Answered by'
-	);
+	const tocLabel = $derived(t.objections);
+	const legendTitle = $derived(t.voices_answering);
+	const objectionLabel = $derived(t.objection_label);
+	const answeredByLabel = $derived(t.answered_by);
 	const filterLabels = $derived(
 		isLatin
 			? { filteringBy: 'Filtrum:', showAll: 'omnia ostendere' }
