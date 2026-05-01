@@ -3,28 +3,29 @@
     import type { PageData } from './$types';
     import Search from '$lib/components/recipes/Search.svelte';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
+    import { m, type RecipesLang } from '$lib/js/recipesI18n';
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1;
 
-    const isEnglish = $derived(data.lang === 'en');
+    const lang = $derived(data.lang as RecipesLang);
+    const t = $derived(m[lang]);
+    const isEnglish = $derived(lang === 'en');
     const labels = $derived({
-        title: isEnglish ? 'Search Results' : 'Suchergebnisse',
+        title: t.search_results_title,
         pageTitle: isEnglish
             ? `Search Results${data.query ? ` for "${data.query}"` : ''} - Bocken Recipes`
             : `Suchergebnisse${data.query ? ` für "${data.query}"` : ''} - Bocken Rezepte`,
-        metaDescription: isEnglish
-            ? 'Search results in Bocken\'s recipes.'
-            : 'Suchergebnisse in den Bockenschen Rezepten.',
-        filteredBy: isEnglish ? 'Filtered by:' : 'Gefiltert nach:',
-        category: isEnglish ? 'Category' : 'Kategorie',
-        keywords: isEnglish ? 'Keywords' : 'Stichwörter',
-        icon: 'Icon',
-        seasons: isEnglish ? 'Seasons' : 'Monate',
-        favoritesOnly: isEnglish ? 'Favorites only' : 'Nur Favoriten',
-        searchError: isEnglish ? 'Search error:' : 'Fehler bei der Suche:',
-        resultsFor: isEnglish ? 'results for' : 'Ergebnisse für',
-        noResults: isEnglish ? 'No recipes found.' : 'Keine Rezepte gefunden.',
-        tryOther: isEnglish ? 'Try different search terms.' : 'Versuche es mit anderen Suchbegriffen.'
+        metaDescription: t.search_meta_description,
+        filteredBy: t.filtered_by,
+        category: t.category_nav,
+        keywords: t.keywords_label,
+        icon: t.icon_nav,
+        seasons: t.seasons_label,
+        favoritesOnly: t.favorites_only,
+        searchError: t.search_error,
+        resultsFor: t.results_for,
+        noResults: t.no_recipes_found,
+        tryOther: t.try_other_search
     });
 
     // Search state for live filtering

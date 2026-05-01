@@ -1,35 +1,35 @@
 <script>
 	import ToTryCard from '$lib/components/recipes/ToTryCard.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let { data } = $props();
 
 	// svelte-ignore state_referenced_locally
 	let items = $state(data.items ?? []);
 
-	const isEnglish = $derived(data.lang === 'en');
+	const lang = $derived(/** @type {RecipesLang} */ (data.lang));
+	const t = $derived(m[lang]);
+	const isEnglish = $derived(lang === 'en');
 	const labels = $derived({
-		title: isEnglish ? 'To Try' : 'Zum Ausprobieren',
-		pageTitle: isEnglish ? 'Recipes To Try - Bocken Recipes' : 'Zum Ausprobieren - Bocken Rezepte',
-		metaDescription: isEnglish
-			? 'Recipes we want to try from around the web.'
-			: 'Rezepte, die wir ausprobieren wollen.',
+		title: t.to_try_title,
+		pageTitle: t.to_try_page_title,
+		metaDescription: t.to_try_meta_description,
 		count: isEnglish
 			? `${items.length} recipe${items.length !== 1 ? 's' : ''} to try`
 			: `${items.length} Rezept${items.length !== 1 ? 'e' : ''} zum Ausprobieren`,
-		noItems: isEnglish ? 'Nothing here yet' : 'Noch nichts vorhanden',
-		emptyState: isEnglish
-			? 'Add a recipe you want to try using the form below.'
-			: 'Füge ein Rezept hinzu, das du ausprobieren möchtest.',
-		name: isEnglish ? 'Recipe name' : 'Rezeptname',
+		noItems: t.to_try_nothing,
+		emptyState: t.to_try_empty_state,
+		name: t.recipe_name,
 		url: 'URL',
-		label: isEnglish ? 'Label (optional)' : 'Bezeichnung (optional)',
-		notes: isEnglish ? 'Notes (optional)' : 'Notizen (optional)',
-		addLink: isEnglish ? 'Add link' : 'Link hinzufügen',
-		save: isEnglish ? 'Save' : 'Speichern',
-		cancel: isEnglish ? 'Cancel' : 'Abbrechen',
-		add: isEnglish ? 'Add recipe to try' : 'Rezept hinzufügen',
-		editHeading: isEnglish ? 'Edit recipe' : 'Rezept bearbeiten'
+		label: t.label_optional,
+		notes: t.notes_optional,
+		addLink: t.add_link,
+		save: t.save,
+		cancel: t.cancel,
+		add: t.add_recipe_to_try,
+		editHeading: t.edit_recipe
 	});
 	let showForm = $state(false);
 	let saving = $state(false);
@@ -102,7 +102,7 @@
 
 	/** @param {any} id */
 	async function handleDelete(id) {
-		const msg = isEnglish ? 'Delete this recipe?' : 'Dieses Rezept löschen?';
+		const msg = t.delete_recipe_confirm;
 		if (!await confirm(msg)) return;
 
 		const res = await fetch(`/api/${data.recipeLang}/to-try`, {

@@ -7,13 +7,16 @@
     let current_month = new Date().getMonth() + 1
     import { rand_array } from '$lib/js/randomize';
 
-    const isEnglish = $derived(data.lang === 'en');
+    import { m, type RecipesLang } from '$lib/js/recipesI18n';
+    const lang = $derived(data.lang as RecipesLang);
+    const t = $derived(m[lang]);
+    const isEnglish = $derived(lang === 'en');
     const months = $derived(isEnglish
         ? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
         : ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]);
     const labels = $derived({
-        title: isEnglish ? 'In Season' : 'Saisonal',
-        siteTitle: isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte'
+        title: t.in_season_title,
+        siteTitle: t.site_title
     });
 
     // Search state

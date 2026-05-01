@@ -5,11 +5,14 @@
     import TagCloud from '$lib/components/TagCloud.svelte';
     import TagBall from '$lib/components/TagBall.svelte';
 
-    const isEnglish = $derived(data.lang === 'en');
+    import { m, type RecipesLang } from '$lib/js/recipesI18n';
+    const lang = $derived(data.lang as RecipesLang);
+    const t = $derived(m[lang]);
+    const isEnglish = $derived(lang === 'en');
     const labels = $derived({
-        title: isEnglish ? 'Keywords' : 'Stichwörter',
-        siteTitle: isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte',
-        search: isEnglish ? 'Search tags...' : 'Tags suchen...'
+        title: t.keywords_title,
+        siteTitle: t.site_title,
+        search: t.search_tags
     });
 
     let query = $state('');

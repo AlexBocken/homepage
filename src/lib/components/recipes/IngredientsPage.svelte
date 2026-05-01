@@ -6,6 +6,8 @@ import { page } from '$app/state';
 import HefeSwapper from './HefeSwapper.svelte';
 import NutritionSummary from './NutritionSummary.svelte';
 import AddToFoodLogButton from './AddToFoodLogButton.svelte';
+import { m } from '$lib/js/recipesI18n';
+/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 let { data } = $props();
 const isLoggedIn = $derived(!!data.session?.user);
 const hasNutrition = $derived(!!data.nutritionMappings?.length);
@@ -123,23 +125,25 @@ const flattenedIngredients = $derived.by(() => {
 // svelte-ignore state_referenced_locally
 let multiplier = $state(data.multiplier || 1);
 
-const isEnglish = $derived(data.lang === 'en');
+const lang = $derived(/** @type {RecipesLang} */ (data.lang));
+const t = $derived(m[lang]);
+const isEnglish = $derived(lang === 'en');
 const labels = $derived({
-	portions: isEnglish ? 'Portions:' : 'Portionen:',
-	adjustAmount: isEnglish ? 'Adjust Amount:' : 'Menge anpassen:',
-	ingredients: isEnglish ? 'Ingredients' : 'Zutaten',
-	cakeForm: isEnglish ? 'Cake form' : 'Backform',
-	adjustForm: isEnglish ? 'Adjust cake form' : 'Backform anpassen',
-	round: isEnglish ? 'Round' : 'Rund',
-	rectangular: isEnglish ? 'Rectangular' : 'Rechteckig',
+	portions: t.portions,
+	adjustAmount: t.adjust_amount,
+	ingredients: t.ingredients,
+	cakeForm: t.cake_form,
+	adjustForm: t.adjust_cake_form,
+	round: t.round_form,
+	rectangular: t.rectangular_form,
 	gugelhupf: 'Gugelhupf',
-	diameter: isEnglish ? 'Diameter' : 'Durchmesser',
-	outerDiameter: isEnglish ? 'Outer Ø' : 'Aussen-Ø',
-	innerDiameter: isEnglish ? 'Inner Ø' : 'Innen-Ø',
-	width: isEnglish ? 'Width' : 'Breite',
-	length: isEnglish ? 'Length' : 'Länge',
-	factor: isEnglish ? 'Factor' : 'Faktor',
-	restoreDefault: isEnglish ? 'Restore default' : 'Standard wiederherstellen',
+	diameter: t.diameter,
+	outerDiameter: t.outer_diameter,
+	innerDiameter: t.inner_diameter,
+	width: t.width,
+	length: t.length,
+	factor: t.factor,
+	restoreDefault: t.restore_default
 });
 
 // Cake form scaling
@@ -200,7 +204,7 @@ const isDefaultForm = $derived(
 );
 
 const cakeSummaryText = $derived.by(() => {
-	if (userFormShape === 'round') return `${userFormDiameter} cm ${isEnglish ? 'round' : 'rund'}`;
+	if (userFormShape === 'round') return `${userFormDiameter} cm ${t.round_lowercase}`;
 	if (userFormShape === 'rectangular') return `${userFormWidth}×${userFormLength} cm`;
 	if (userFormShape === 'gugelhupf') return `${userFormDiameter}/${userFormInnerDiameter} cm Gugelhupf`;
 	return '';
