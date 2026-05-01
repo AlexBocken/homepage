@@ -34,33 +34,35 @@
 		};
 	});
 
+	import { m } from '$lib/js/commonI18n';
+	const t = $derived(m[lang]);
 	const isEnglish = $derived(lang === 'en');
 	const labels = $derived({
-		welcome: isEnglish ? 'Welcome to bocken.org' : 'Willkommen auf bocken.org',
+		welcome: t.welcome,
 		intro1: isEnglish
 			? 'Hello, I\'m Alexander Bocken. On this website you\'ll find some software projects for friends, family, and myself. Everything is self-hosted at my home on a small mini-server (Arch, btw).'
 			: 'Hallo, ich bin Alexander Bocken. Auf dieser Seite findest du einige Softwareprojekte für Freunde, Familie und mich. Alles ist selbst gehostet bei mir daheim auf einem kleinen Mini-Server (Arch, btw).',
 		intro2: isEnglish
 			? 'I recommend my continuously growing recipe collection. There you\'ll find many delicious recipes that I\'ve tried myself and constantly refine. You\'re also welcome to use my search engine or Jitsi instance for video conferences. Some things are hidden behind a login, others are publicly accessible. If you know a bit about programming, feel free to browse my Git repositories.'
 			: 'Zu empfehlen ist meine stetig wachsende Rezeptsammlung. Dort findest du viele leckere Rezepte, die ich selbst ausprobiert habe und ständig weiterfeilsche. Zudem kannst du gerne meine Suchmaschine oder auch Jitsi-instanz für Videokonferenzen nutzen. Einiges ist hinter einem Login versteckt, anderes ist öffentlich zugänglich. Wer sich ein bisschen mit Programmieren auskennt, kann auch gerne in meinen Git-Repositories stöbern.',
-		pages: isEnglish ? 'Pages' : 'Seiten',
-		recipes: isEnglish ? 'Recipes' : 'Rezepte',
+		pages: t.pages,
+		recipes: t.recipes,
 		git: 'Git',
 		streaming: 'Streaming',
-		familyPhotos: isEnglish ? 'Family Photos' : 'Familienbilder',
+		familyPhotos: t.family_photos,
 		cloud: 'Cloud',
-		videoConferences: isEnglish ? 'Video Conferences' : 'Videokonferenzen',
-		searchEngine: isEnglish ? 'Search Engine' : 'Suchmaschine',
-		shopping: isEnglish ? 'Shopping' : 'Einkauf',
-		familyTree: isEnglish ? 'Family Tree' : 'Stammbaum',
-		faith: isEnglish ? 'Faith' : 'Glaube',
+		videoConferences: t.video_conferences,
+		searchEngine: t.search_engine,
+		shopping: t.shopping,
+		familyTree: t.family_tree,
+		faith: t.faith,
 		chat: 'Chat',
 		transmission: 'Transmission',
-		documents: isEnglish ? 'Documents' : 'Dokumente',
-		audiobooksPodcasts: isEnglish ? 'Audiobooks & Podcasts' : 'Hörbücher & Podcasts',
+		documents: t.documents,
+		audiobooksPodcasts: t.audiobooks_podcasts,
 		fitness: 'Fitness',
-		nutrition: isEnglish ? 'Nutrition' : 'Ernährung',
-		tasks: isEnglish ? 'Tasks' : 'Aufgaben'
+		nutrition: t.nutrition,
+		tasks: t.tasks
 	});
 </script>
 <style>

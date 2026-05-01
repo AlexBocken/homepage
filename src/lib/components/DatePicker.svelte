@@ -2,7 +2,10 @@
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Calendar from '@lucide/svelte/icons/calendar';
+	import { m } from '$lib/js/commonI18n';
+	/** @typedef {import('$lib/js/commonI18n').CommonLang} CommonLang */
 	let { value = $bindable(''), lang = 'en', min = '', max = '' } = $props();
+	const t = $derived(m[/** @type {CommonLang} */ (lang)]);
 
 	let open = $state(false);
 	/** @type {HTMLDivElement | null} */
@@ -35,8 +38,8 @@
 	const todayStr = new Date().toISOString().slice(0, 10);
 
 	const displayDate = $derived.by(() => {
-		if (!value) return lang === 'en' ? 'Select date' : 'Datum wählen';
-		if (value === todayStr) return lang === 'en' ? 'Today' : 'Heute';
+		if (!value) return t.select_date;
+		if (value === todayStr) return t.today;
 		const d = new Date(value + 'T12:00:00');
 		return d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 	});
@@ -182,7 +185,7 @@
 
 			{#if value !== todayStr}
 				<button type="button" class="dp-today-btn" onclick={goToday}>
-					{lang === 'en' ? 'Today' : 'Heute'}
+					{t.today}
 				</button>
 			{/if}
 		</div>
