@@ -2,21 +2,21 @@
 	import { resolve } from '$app/paths';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
+	import { m, type FaithLang } from '$lib/js/faithI18n';
+
 	let { data } = $props();
 	const faithLang = $derived(data?.faithLang ?? 'faith');
 	const slug = $derived(faithLang === 'faith' ? 'apologetics' : 'apologetik');
-	const isLatin = $derived(data?.lang === 'la');
-	const isGerman = $derived(data?.lang === 'de');
+	const lang = $derived((data?.lang ?? 'en') as FaithLang);
+	const t = $derived(m[lang]);
+	const isLatin = $derived(lang === 'la');
+	const isGerman = $derived(lang === 'de');
 	const arg = $derived(data.argument);
 	const ARCHETYPES = $derived(data.archetypes);
 	const alexPicks = $derived<string[]>(data.alexPicks ?? []);
-	const alexPickLabel = $derived(
-		isLatin ? 'Alexandri delectus' : isGerman ? "Alex' Wahl" : "Alex's pick"
-	);
+	const alexPickLabel = $derived(t.alex_pick);
 
-	const tocLabel = $derived(
-		isLatin ? 'Obiectiones' : isGerman ? 'Einwände' : 'Objections'
-	);
+	const tocLabel = $derived(t.objections);
 	const tocItems = $derived(
 		data.args.map((a) => ({
 			id: a.id,
@@ -88,7 +88,7 @@
 </script>
 
 <svelte:head>
-	<title>{arg.title} · {isLatin ? 'Apologia' : isGerman ? 'Apologetik' : 'Arguments'} · bocken.org</title>
+	<title>{arg.title} · {t.arguments_title} · bocken.org</title>
 	<meta name="description" content={arg.steel} />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
