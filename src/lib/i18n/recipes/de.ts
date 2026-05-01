@@ -139,5 +139,80 @@ export const de = {
 	tips_title: 'Tipps & Tricks',
 	favorites_meta_description: 'Meine favorisierten Rezepte aus der Bockenschen Küche.',
 	empty_favorites_1: 'Du hast noch keine Rezepte als Favoriten gespeichert.',
-	empty_favorites_2: 'Besuche ein Rezept und klicke auf das Herz-Symbol, um es zu deinen Favoriten hinzuzufügen.'
+	empty_favorites_2: 'Besuche ein Rezept und klicke auf das Herz-Symbol, um es zu deinen Favoriten hinzuzufügen.',
+
+	// Filters
+	filter_mode: 'Filter-Modus',
+	and_label: 'UND',
+	or_label: 'ODER',
+	select_category_placeholder: 'Kategorie auswählen…',
+	select_season_placeholder: 'Saison auswählen…',
+
+	// Search component
+	search_placeholder_short: 'Suche…',
+	search_title: 'Suchen',
+	clear_search_title: 'Sucheintrag löschen',
+
+	// Tag / Category landing
+	recipes_with_keyword: 'Rezepte mit Stichwort',
+	recipes_in_category: 'Rezepte in Kategorie',
+
+	// Card actions
+	edit: 'Bearbeiten',
+	delete: 'Löschen',
+
+	// Administration page
+	administration_title: 'Administration',
+	untranslated_recipes: 'Unübersetzte Rezepte',
+	alt_text_generator: 'Alt-Text Generator',
+	image_colors: 'Bildfarben',
+	nutrition_mappings: 'Nährwert-Zuordnungen',
+
+	// Recipe detail page (long site title variant)
+	site_title_long: "Bocken'sche Rezepte",
+
+	// InstructionsPage section labels
+	preparation_section: 'Vorbereitung:',
+	bulk_fermentation: 'Stockgare:',
+	final_proof: 'Stückgare:',
+	baking_section: 'Backen:',
+	cooking_section: 'Kochen:',
+	on_the_plate: 'Auf dem Teller:',
+	instructions_label: 'Zubereitung',
+	at_temp: 'bei',
+
+	// CreateStepList baking
+	not_set: 'Nicht gesetzt',
+	duration: 'Dauer',
+	temperature: 'Temperatur',
+	mode_label: 'Modus',
+	custom_mode_placeholder: 'oder eigenen Modus eingeben…',
+
+	// Administration page descriptions
+	administration_description: 'Rezepte und Inhalte verwalten',
+	untranslated_description: 'Rezepte ansehen und verwalten, die übersetzt werden müssen',
+	alt_text_description: 'Alternativtext für Rezeptbilder mit KI generieren',
+	image_colors_description: 'Dominante Farben aus Rezeptbildern für Ladeplatzhalter extrahieren',
+	nutrition_mappings_description: 'Kalorien- und Nährwertdaten für alle Rezepte generieren oder aktualisieren',
+
+	// Smaller filters / pages
+	loading_offline: 'Lade Offline-Inhalte…',
+	hide_filters: 'Filter ausblenden',
+	show_filters: 'Filter einblenden',
+	select_icon_placeholder: 'Icon auswählen…',
+	add_tag_placeholder: 'Tag eingeben oder auswählen…',
+
+	// Index / tips / yeast
+	recipes_growing_suffix: 'Rezepte und stetig wachsend…',
+	recipes_collection_meta: 'Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche.',
+	tips_description: "Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche.",
+	yeast_toggle_title: 'Zwischen Frischhefe und Trockenhefe wechseln',
+
+	// Search results pageTitle
+	search_results_for_word: 'für',
+
+	// Favorites count label
+	favorites_count_label: 'favorisierte Rezepte',
+	favorite_recipe_singular: 'favorite recipe',
+	favorite_recipes_plural: 'favorite recipes'
 } as const;

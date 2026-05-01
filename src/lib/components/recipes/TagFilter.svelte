@@ -1,5 +1,7 @@
 <script>
 	import TagChip from '$lib/components/recipes/TagChip.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
 		availableTags = [],
@@ -8,9 +10,9 @@
 		lang = 'de'
 	} = $props();
 
-	const isEnglish = $derived(lang === 'en');
+	const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
 	const label = 'Tags';
-	const addTagLabel = $derived(isEnglish ? 'Type or select tag...' : 'Tag eingeben oder auswählen...');
+	const addTagLabel = $derived(t.add_tag_placeholder);
 
 	// Filter out already selected tags
 	const unselectedTags = $derived(availableTags.filter(t => !selectedTags.includes(t)));

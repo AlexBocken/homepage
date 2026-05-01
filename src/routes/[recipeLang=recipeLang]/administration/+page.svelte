@@ -1,50 +1,39 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
 	let { data } = $props<{ data: PageData }>();
+	const t = $derived(m[data.lang as RecipesLang]);
 
-	// svelte-ignore state_referenced_locally
-	const isEnglish = data.lang === 'en';
-	const pageTitle = isEnglish ? 'Administration' : 'Administration';
-	const pageDescription = isEnglish
-		? 'Manage recipes and content'
-		: 'Rezepte und Inhalte verwalten';
+	const pageTitle = $derived(t.administration_title);
+	const pageDescription = $derived(t.administration_description);
 
-	// svelte-ignore state_referenced_locally
-	const links = [
+	const links = $derived([
 		{
-			title: isEnglish ? 'Untranslated Recipes' : 'Unübersetzte Rezepte',
-			description: isEnglish
-				? 'View and manage recipes that need translation'
-				: 'Rezepte ansehen und verwalten, die übersetzt werden müssen',
+			title: t.untranslated_recipes,
+			description: t.untranslated_description,
 			href: `/${data.recipeLang}/admin/untranslated`,
 			icon: '🌐'
 		},
 		{
-			title: isEnglish ? 'Alt-Text Generator' : 'Alt-Text Generator',
-			description: isEnglish
-				? 'Generate alternative text for recipe images using AI'
-				: 'Alternativtext für Rezeptbilder mit KI generieren',
+			title: t.alt_text_generator,
+			description: t.alt_text_description,
 			href: `/${data.recipeLang}/admin/alt-text-generator`,
 			icon: '🖼️'
 		},
 		{
-			title: isEnglish ? 'Image Colors' : 'Bildfarben',
-			description: isEnglish
-				? 'Extract dominant colors from recipe images for loading placeholders'
-				: 'Dominante Farben aus Rezeptbildern für Ladeplatzhalter extrahieren',
+			title: t.image_colors,
+			description: t.image_colors_description,
 			href: `/${data.recipeLang}/admin/image-colors`,
 			icon: '🎨'
 		},
 		{
-			title: isEnglish ? 'Nutrition Mappings' : 'Nährwert-Zuordnungen',
-			description: isEnglish
-				? 'Generate or regenerate calorie and nutrition data for all recipes'
-				: 'Kalorien- und Nährwertdaten für alle Rezepte generieren oder aktualisieren',
+			title: t.nutrition_mappings,
+			description: t.nutrition_mappings_description,
 			href: `/${data.recipeLang}/admin/nutrition`,
 			icon: '🥗'
 		}
-	];
+	]);
 </script>
 
 <style>

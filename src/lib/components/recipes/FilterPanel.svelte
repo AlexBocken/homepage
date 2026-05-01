@@ -5,6 +5,8 @@
 	import SeasonFilter from './SeasonFilter.svelte';
 	import FavoritesFilter from './FavoritesFilter.svelte';
 	import LogicModeToggle from './LogicModeToggle.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
 		availableCategories = [],
@@ -27,6 +29,7 @@
 		onLogicModeToggle = () => {}
 	} = $props();
 
+	const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
 	const isEnglish = $derived(lang === 'en');
 	const months = $derived(isEnglish
 		? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -132,7 +135,7 @@
 
 <div class="filter-wrapper">
 	<button class="toggle-button" onclick={toggleFilters} type="button">
-		<span>{filtersOpen ? (isEnglish ? 'Hide Filters' : 'Filter ausblenden') : (isEnglish ? 'Show Filters' : 'Filter einblenden')}</span>
+		<span>{filtersOpen ? t.hide_filters : t.show_filters}</span>
 		<span class="arrow" class:open={filtersOpen}>▼</span>
 	</button>
 

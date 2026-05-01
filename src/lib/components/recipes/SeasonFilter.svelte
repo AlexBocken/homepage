@@ -1,5 +1,7 @@
 <script>
 	import TagChip from '$lib/components/recipes/TagChip.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
 		selectedSeasons = [],
@@ -8,9 +10,9 @@
 		months = []
 	} = $props();
 
-	const isEnglish = $derived(lang === 'en');
-	const label = $derived(isEnglish ? 'Season' : 'Saison');
-	const selectLabel = $derived(isEnglish ? 'Select season...' : 'Saison auswählen...');
+	const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
+	const label = $derived(t.season_nav);
+	const selectLabel = $derived(t.select_season_placeholder);
 
 	let inputValue = $state('');
 	let dropdownOpen = $state(false);

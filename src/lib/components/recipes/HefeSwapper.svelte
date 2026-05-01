@@ -3,12 +3,13 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
+
 	let { item, multiplier = 1, yeastId = 0, lang = 'de' } = $props();
 
-	const isEnglish = $derived(lang === 'en');
-	const toggleTitle = $derived(isEnglish
-		? 'Switch between fresh yeast and dry yeast'
-		: 'Zwischen Frischhefe und Trockenhefe wechseln');
+	const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
+	const toggleTitle = $derived(t.yeast_toggle_title);
 
 	// Get all current URL parameters to preserve state
 	const currentParams = $derived(browser ? new URLSearchParams(window.location.search) : page.url.searchParams);

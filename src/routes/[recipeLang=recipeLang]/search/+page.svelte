@@ -9,12 +9,9 @@
 
     const lang = $derived(data.lang as RecipesLang);
     const t = $derived(m[lang]);
-    const isEnglish = $derived(lang === 'en');
     const labels = $derived({
         title: t.search_results_title,
-        pageTitle: isEnglish
-            ? `Search Results${data.query ? ` for "${data.query}"` : ''} - Bocken Recipes`
-            : `Suchergebnisse${data.query ? ` für "${data.query}"` : ''} - Bocken Rezepte`,
+        pageTitle: `${t.search_results_title}${data.query ? ` ${t.search_results_for_word} "${data.query}"` : ''} - ${t.site_title}`,
         metaDescription: t.search_meta_description,
         filteredBy: t.filtered_by,
         category: t.category_nav,

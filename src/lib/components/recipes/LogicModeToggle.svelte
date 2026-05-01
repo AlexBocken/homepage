@@ -1,4 +1,6 @@
 <script>
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
 		useAndLogic = true,
@@ -6,10 +8,10 @@
 		lang = 'de'
 	} = $props();
 
-	const isEnglish = $derived(lang === 'en');
-	const label = $derived(isEnglish ? 'Filter Mode' : 'Filter-Modus');
-	const andLabel = $derived(isEnglish ? 'AND' : 'UND');
-	const orLabel = $derived(isEnglish ? 'OR' : 'ODER');
+	const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
+	const label = $derived(t.filter_mode);
+	const andLabel = $derived(t.and_label);
+	const orLabel = $derived(t.or_label);
 
 	// svelte-ignore state_referenced_locally
 	let checked = $state(useAndLogic);

@@ -8,7 +8,6 @@
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
     const lang = $derived(data.lang as RecipesLang);
     const t = $derived(m[lang]);
-    const isEnglish = $derived(lang === 'en');
     const labels = $derived({
         title: t.categories_title,
         siteTitle: t.site_title

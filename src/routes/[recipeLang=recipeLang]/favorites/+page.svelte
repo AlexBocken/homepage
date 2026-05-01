@@ -10,14 +10,16 @@
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
     const lang = $derived(data.lang as RecipesLang);
     const t = $derived(m[lang]);
-    const isEnglish = $derived(lang === 'en');
+    const countLabel = $derived(
+        lang === 'en'
+            ? (data.favorites.length === 1 ? t.favorite_recipe_singular : t.favorite_recipes_plural)
+            : t.favorites_count_label
+    );
     const labels = $derived({
         title: t.favorites,
         pageTitle: t.favorites_page_title,
         metaDescription: t.favorites_meta_description,
-        count: isEnglish
-            ? `${data.favorites.length} favorite recipe${data.favorites.length !== 1 ? 's' : ''}`
-            : `${data.favorites.length} favorisierte Rezepte`,
+        count: `${data.favorites.length} ${countLabel}`,
         noFavorites: t.no_favorites_yet,
         errorLoading: t.error_loading_favorites,
         emptyState1: t.empty_favorites_1,
@@ -103,7 +105,7 @@
     </div>
 {:else if data.favorites.length > 0}
     <div class="empty-state">
-        <p>{isEnglish ? 'No matching favorites found.' : 'Keine passenden Favoriten gefunden.'}</p>
+        <p>{t.no_matching_favorites}</p>
     </div>
 {:else}
     <div class="empty-state">

@@ -3,6 +3,8 @@
     import { browser } from '$app/environment';
     import FilterPanel from './FilterPanel.svelte';
     import { getCategories } from '$lib/js/categories';
+    import { m } from '$lib/js/recipesI18n';
+    /** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
     // Filter props for different contexts
     let {
@@ -20,12 +22,13 @@
     // Generate categories internally based on language
     const categories = $derived(getCategories(lang));
 
+    const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
     const isEnglish = $derived(lang === 'en');
     const searchResultsUrl = $derived(isEnglish ? '/recipes/search' : '/rezepte/search');
     const labels = $derived({
-        placeholder: isEnglish ? 'Search...' : 'Suche...',
-        searchTitle: isEnglish ? 'Search' : 'Suchen',
-        clearTitle: isEnglish ? 'Clear search' : 'Sucheintrag löschen'
+        placeholder: t.search_placeholder_short,
+        searchTitle: t.search_title,
+        clearTitle: t.clear_search_title
     });
 
     let searchQuery = $state('');

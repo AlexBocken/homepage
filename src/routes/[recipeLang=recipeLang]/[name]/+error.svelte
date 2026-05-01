@@ -5,6 +5,7 @@
   import { onMount } from 'svelte';
   import ErrorView from '$lib/components/ErrorView.svelte';
   import { getErrorTitle, getErrorDescription, errorLabels, pick } from '$lib/js/errorStrings';
+  import { m } from '$lib/js/recipesI18n';
 
   let status = $derived(page.status);
   let error = $derived(page.error as any);
@@ -37,23 +38,22 @@
     status === 404 && isEnglishRoute && germanRecipeExists && !checkingGermanRecipe
   );
 
+  const t = $derived(m[isEnglish ? 'en' : 'de']);
+
   let title = $derived(
-    status === 404 ? (isEnglish ? 'Recipe Not Found' : 'Rezept nicht gefunden')
-                   : getErrorTitle(status, isEnglish)
+    status === 404 ? t.recipe_not_found : getErrorTitle(status, isEnglish)
   );
 
   let description = $derived(
     showGermanFallback
       ? 'This recipe has not been translated to English yet, but the German version is available.'
       : status === 404
-        ? (isEnglish ? 'The requested recipe could not be found.' : 'Das angeforderte Rezept konnte nicht gefunden werden.')
+        ? t.recipe_not_found_desc
         : getErrorDescription(status, isEnglish)
   );
 
   let details = $derived(
-    checkingGermanRecipe
-      ? (isEnglish ? 'Checking for German version…' : 'Suche nach deutscher Version…')
-      : error?.details
+    checkingGermanRecipe ? t.checking_german_version : error?.details
   );
 
   let recipesHref = $derived(resolve('/[recipeLang=recipeLang]', { recipeLang: isEnglishRoute ? 'recipes' : 'rezepte' }));
@@ -75,7 +75,7 @@
   {#snippet actions()}
     {#if status === 401}
       <button class="link link-primary" onclick={login}>{pick(errorLabels.login, isEnglish)}</button>
-      <a class="link" href={recipesHref}>{isEnglish ? 'Recipes' : 'Rezepte'}</a>
+      <a class="link" href={recipesHref}>{t.recipes_link}</a>
     {:else if showGermanFallback}
       <button class="link link-primary" onclick={viewGermanRecipe}>View German recipe</button>
       {#if user}
@@ -84,9 +84,9 @@
       <a class="link" href={recipesHref}>Recipes</a>
     {:else if status === 500}
       <button class="link link-primary" onclick={goBack}>{pick(errorLabels.tryAgain, isEnglish)}</button>
-      <a class="link" href={recipesHref}>{isEnglish ? 'Recipes' : 'Rezepte'}</a>
+      <a class="link" href={recipesHref}>{t.recipes_link}</a>
     {:else}
-      <a class="link link-primary" href={recipesHref}>{isEnglish ? 'Recipes' : 'Rezepte'}</a>
+      <a class="link link-primary" href={recipesHref}>{t.recipes_link}</a>
       <button class="link" onclick={goBack}>{pick(errorLabels.goBack, isEnglish)}</button>
     {/if}
   {/snippet}

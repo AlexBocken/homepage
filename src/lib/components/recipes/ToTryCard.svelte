@@ -1,5 +1,7 @@
 <script>
+	import { m } from '$lib/js/recipesI18n';
 	let { item, ondelete, onedit, isEnglish = false } = $props();
+	const t = $derived(isEnglish ? m.en : m.de);
 
 	/** @param {string} url */
 	function getDomain(url) {
@@ -142,8 +144,8 @@
 
 <div class="card">
 	<div class="accent"></div>
-	<button class="card-btn edit-btn" onclick={() => onedit(item)} aria-label={isEnglish ? 'Edit' : 'Bearbeiten'}>✎</button>
-	<button class="card-btn delete-btn" onclick={() => ondelete(item._id)} aria-label={isEnglish ? 'Delete' : 'Löschen'}>✕</button>
+	<button class="card-btn edit-btn" onclick={() => onedit(item)} aria-label={t.edit}>✎</button>
+	<button class="card-btn delete-btn" onclick={() => ondelete(item._id)} aria-label={t.delete}>✕</button>
 	<div class="body">
 		<p class="name">{item.name}</p>
 		{#if item.links?.length}
