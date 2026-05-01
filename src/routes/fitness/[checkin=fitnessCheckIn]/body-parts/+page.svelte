@@ -14,6 +14,7 @@
 	import { fly, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	/** @typedef {import('$lib/js/fitnessI18n').FitnessKey} FitnessKey */
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
@@ -26,7 +27,7 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 
-	/** @typedef {{ key: string, labelKey: string, img: string | null, paired: boolean, tipKey: string, dbSingle?: string, dbLeft?: string, dbRight?: string }} Step */
+	/** @typedef {{ key: FitnessKey, labelKey: FitnessKey, img: string | null, paired: boolean, tipKey: FitnessKey, dbSingle?: string, dbLeft?: string, dbRight?: string }} Step */
 
 	/** @type {Step[]} */
 	const steps = [
@@ -232,7 +233,7 @@
 				/** @param {{ key: string, oldVal: unknown, newVal: unknown }} c */
 				const fmtConflict = (c) => {
 					const part = c.key.startsWith('measurements.') ? c.key.slice('measurements.'.length) : c.key;
-					const label = t(partKeyMap[part] ?? part, lang);
+					const label = t(/** @type {FitnessKey} */ (partKeyMap[part] ?? part), lang);
 					return `${label} (${c.oldVal} cm → ${c.newVal} cm)`;
 				};
 				const fields = conflicts.map(fmtConflict).join(', ');

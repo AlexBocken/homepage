@@ -1,7 +1,9 @@
+import type { FitnessKey } from './fitnessI18n';
+
 export type SingleBodyPartCard = {
 	key: string;
 	slugDe: string;
-	labelKey: string;
+	labelKey: FitnessKey;
 	img: string | null;
 	paired: false;
 	db: string;
@@ -9,7 +11,7 @@ export type SingleBodyPartCard = {
 export type PairedBodyPartCard = {
 	key: string;
 	slugDe: string;
-	labelKey: string;
+	labelKey: FitnessKey;
 	img: string | null;
 	paired: true;
 	dbLeft: string;
