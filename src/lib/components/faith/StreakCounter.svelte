@@ -2,6 +2,7 @@
 import { browser } from '$app/environment';
 import { getRosaryStreak } from '$lib/stores/rosaryStreak.svelte';
 import StreakAura from '$lib/components/faith/StreakAura.svelte';
+import { m, type FaithLang } from '$lib/js/faithI18n';
 import { tick, onMount } from 'svelte';
 
 let burst = $state(false);
@@ -9,26 +10,19 @@ let streak = $state<ReturnType<typeof getRosaryStreak> | null>(null);
 
 interface Props {
 	streakData?: { length: number; lastPrayed: string | null } | null;
-	lang?: 'de' | 'en' | 'la';
+	lang?: FaithLang;
 	isLoggedIn?: boolean;
 }
 
 let { streakData = null, lang = 'de', isLoggedIn = false }: Props = $props();
 
-const isEnglish = $derived(lang === 'en');
+const t = $derived(m[lang]);
 
 // Derive display values: use store when available, fall back to server data for SSR
 let displayLength = $derived(streak?.length ?? streakData?.length ?? 0);
 let prayedToday = $derived(streak?.prayedToday ?? (streakData?.lastPrayed === new Date().toISOString().split('T')[0]));
 
-// Labels need to come after displayLength since they depend on it
-const isLatin = $derived(lang === 'la');
-const labels = $derived({
-	days: isLatin ? (displayLength === 1 ? 'Dies' : 'Dies') : isEnglish ? (displayLength === 1 ? 'Day' : 'Days') : (displayLength === 1 ? 'Tag' : 'Tage'),
-	prayed: isLatin ? 'Oravi' : isEnglish ? 'Prayed' : 'Gebetet',
-	prayedToday: isLatin ? 'Hodie oravi' : isEnglish ? 'Prayed today' : 'Heute gebetet',
-	ariaLabel: isLatin ? 'Orationem notatam fac' : isEnglish ? 'Mark prayer as prayed' : 'Gebet als gebetet markieren'
-});
+const dayLabel = $derived(displayLength === 1 ? t.day_singular : t.day_plural);
 
 // Initialize store on mount (client-side only)
 // Init with server data BEFORE assigning to streak, so displayLength
@@ -50,7 +44,7 @@ async function pray() {
 <div class="streak-container" class:no-js-hidden={!isLoggedIn}>
 	<div class="streak-display">
 		<StreakAura value={displayLength} {burst} />
-		<span class="streak-label">{labels.days}</span>
+		<span class="streak-label">{dayLabel}</span>
 	</div>
 	<form method="POST" action="?/pray" onsubmit={(e) => { e.preventDefault(); pray(); }
   }>
@@ -58,12 +52,12 @@ async function pray() {
 			class="streak-button"
 			type="submit"
 			disabled={prayedToday}
-			aria-label={labels.ariaLabel}
+			aria-label={t.mark_prayer}
 		>
 			{#if prayedToday}
-				{labels.prayedToday}
+				{t.prayed_today}
 			{:else}
-				{labels.prayed}
+				{t.prayed}
 			{/if}
 		</button>
 	</form>

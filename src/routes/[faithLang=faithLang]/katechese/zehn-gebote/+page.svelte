@@ -5,10 +5,12 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import { page } from '$app/state';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
+	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
 	/** @type {number | string | null} */
 	let expanded = $state(null);
-	const isGerman = $derived(page.url.pathname.startsWith('/glaube'));
-	const isLatin = $derived(page.url.pathname.startsWith('/fides'));
+	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
+	const t = $derived(m[lang]);
+	const isGerman = $derived(lang === 'de');
 
 	/** @param {number | string} id */
 	function toggle(id) {
@@ -93,7 +95,7 @@
 	</header>
 
 	{#if !isGerman}
-		<p class="lang-notice">{isLatin ? 'Haec catechesis tantum in ' : 'This catechesis is only available in '}<a href={resolve('/glaube/katechese/zehn-gebote')}>{isLatin ? 'lingua Germanica' : 'German'}</a>{isLatin ? ' praesto est.' : '.'}</p>
+		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/zehn-gebote')}>{t.only_german_link}</a>{t.only_german_post}</p>
 	{/if}
 
 	<section id="ursprung">

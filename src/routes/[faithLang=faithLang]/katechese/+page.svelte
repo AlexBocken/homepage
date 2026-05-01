@@ -1,9 +1,12 @@
 <script>
 	import { resolve } from '$app/paths';
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
+	import { m } from '$lib/js/faithI18n';
+	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 	let { data } = $props();
-	const isGerman = $derived(data.lang === 'de');
-	const isLatin = $derived(data.lang === 'la');
+	const lang = $derived(/** @type {FaithLang} */ (data.lang));
+	const t = $derived(m[lang]);
+	const isGerman = $derived(lang === 'de');
 </script>
 
 <svelte:head>
@@ -49,7 +52,7 @@
 
 <h1>Katechese</h1>
 {#if !isGerman}
-	<p class="lang-notice">{isLatin ? 'Haec catechesis tantum in ' : 'This catechesis is only available in '}<a href={resolve('/glaube/katechese')}>{isLatin ? 'lingua Germanica' : 'German'}</a>{isLatin ? ' praesto est.' : '.'}</p>
+	<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese')}>{t.only_german_link}</a>{t.only_german_post}</p>
 {/if}
 <p>
 	Aufgearbeitete Lehrinhalte aus dem Glaubenskurs von P. Martin Ramm FSSP.
