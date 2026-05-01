@@ -1,6 +1,6 @@
 <script lang="ts">
   import ProfilePicture from './ProfilePicture.svelte';
-  import { t } from '$lib/js/cospendI18n';
+  import { m, type CospendLang } from '$lib/js/cospendI18n';
 
   let {
     users = $bindable([]),
@@ -17,6 +17,7 @@
     newUser?: string,
     lang?: 'en' | 'de'
   }>();
+  const t = $derived(m[lang as CospendLang]);
 
   function addUser() {
     if (predefinedMode) return;
@@ -38,18 +39,18 @@
 </script>
 
 <div class="form-section">
-  <h2>{t('split_between_users', lang)}</h2>
+  <h2>{t.split_between_users}</h2>
 
   {#if predefinedMode}
     <div class="predefined-users">
-      <p class="predefined-note">{t('predefined_note', lang)}</p>
+      <p class="predefined-note">{t.predefined_note}</p>
       <div class="users-list">
         {#each users as user}
           <div class="user-item with-profile">
             <ProfilePicture username={user} size={32} />
             <span class="username">{user}</span>
             {#if user === currentUser}
-              <span class="you-badge">{t('you', lang)}</span>
+              <span class="you-badge">{t.you}</span>
             {/if}
           </div>
         {/each}
@@ -62,11 +63,11 @@
           <ProfilePicture username={user} size={32} />
           <span class="username">{user}</span>
           {#if user === currentUser}
-            <span class="you-badge">{t('you', lang)}</span>
+            <span class="you-badge">{t.you}</span>
           {/if}
           {#if canRemoveUsers && user !== currentUser}
             <button type="button" class="remove-user" onclick={() => removeUser(user)}>
-              {t('remove', lang)}
+              {t.remove}
             </button>
           {/if}
         </div>
@@ -77,10 +78,10 @@
       <input
         type="text"
         bind:value={newUser}
-        placeholder={t('add_user_placeholder', lang)}
+        placeholder={t.add_user_placeholder}
         onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addUser())}
       />
-      <button type="button" onclick={addUser}>{t('add_user', lang)}</button>
+      <button type="button" onclick={addUser}>{t.add_user}</button>
     </div>
   {/if}
 </div>

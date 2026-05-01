@@ -3,19 +3,14 @@
 	import type { PageData } from './$types';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
-	import {
-		formatLongDate,
-		getMonthName,
-		properLabel,
-		t,
-		t1962,
-		type CalendarLang
-	} from '../../../../../calendarI18n';
+	import { formatLongDate, getMonthName, properLabel, type CalendarLang, m, m1962 } from '../../../../../calendarI18n';
 	import HeroCard from '../../../../../HeroCard.svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	const lang = $derived(data.lang as CalendarLang);
+	const t1962 = $derived(m1962[lang]);
+	const t = $derived(m[lang]);
 	const rite = $derived(data.rite);
 	const day = $derived(data.day1);
 	const year = $derived(data.year);
@@ -97,10 +92,10 @@
 			<span>{monthTitle}</span>
 		</a>
 		<div class="day-nav">
-			<a class="nav-btn" href={prevHref} aria-label={t('prev', lang)} data-sveltekit-noscroll>
+			<a class="nav-btn" href={prevHref} aria-label={t.prev} data-sveltekit-noscroll>
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
 			</a>
-			<a class="nav-btn" href={nextHref} aria-label={t('next', lang)} data-sveltekit-noscroll>
+			<a class="nav-btn" href={nextHref} aria-label={t.next} data-sveltekit-noscroll>
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
 			</a>
 		</div>
@@ -114,19 +109,19 @@
 			<dl class="detail-extras">
 				{#if d.vigilOf}
 					<div>
-						<dt>{t1962('vigilOf', lang)}</dt>
+						<dt>{t1962['vigilOf']}</dt>
 						<dd>{d.vigilOf}</dd>
 					</div>
 				{/if}
 				{#if d.octave}
 					<div>
-						<dt>{t1962('octave', lang)}</dt>
-						<dd>{d.octave.ofId} · {t1962('octaveDay', lang)} {d.octave.day}</dd>
+						<dt>{t1962.octave}</dt>
+						<dd>{d.octave.ofId} · {t1962['octaveDay']} {d.octave.day}</dd>
 					</div>
 				{/if}
 				{#if d.transferredFrom}
 					<div>
-						<dt>{t1962('transferredFrom', lang)}</dt>
+						<dt>{t1962['transferredFrom']}</dt>
 						<dd>{d.transferredFrom}</dd>
 					</div>
 				{/if}
@@ -135,9 +130,9 @@
 		{#if d.propers.length}
 			<section class="propers">
 				<div class="propers-head">
-					<h4>{t1962('propers', lang)}</h4>
+					<h4>{t1962.propers}</h4>
 					{#if lang !== 'la'}
-						<div class="view-toggle" role="group" aria-label={t1962('propers', lang)}>
+						<div class="view-toggle" role="group" aria-label={t1962.propers}>
 							<button
 								type="button"
 								class="view-btn"
@@ -145,7 +140,7 @@
 								aria-pressed={propersView === 'la'}
 								onclick={() => (propersView = 'la')}
 							>
-								{t1962('viewLatin', lang)}
+								{t1962['viewLatin']}
 							</button>
 							<button
 								type="button"
@@ -154,7 +149,7 @@
 								aria-pressed={propersView === 'parallel'}
 								onclick={() => (propersView = 'parallel')}
 							>
-								{t1962('viewParallel', lang)}
+								{t1962['viewParallel']}
 							</button>
 							<button
 								type="button"
@@ -163,7 +158,7 @@
 								aria-pressed={propersView === 'local'}
 								onclick={() => (propersView = 'local')}
 							>
-								{t1962('viewVernacular', lang)}
+								{t1962['viewVernacular']}
 							</button>
 						</div>
 					{/if}
@@ -177,9 +172,9 @@
 								<span class="proper-ref">({section.refLabel})</span>
 							{/if}
 							{#if section.localFromBible && lang !== 'la' && propersView !== 'la'}
-								<span class="proper-fallback" title={t1962('fallbackHint', lang)}>
+								<span class="proper-fallback" title={t1962['fallbackHint']}>
 									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
-									{t1962('fallbackBadge', lang)}
+									{t1962['fallbackBadge']}
 								</span>
 							{/if}
 						</header>

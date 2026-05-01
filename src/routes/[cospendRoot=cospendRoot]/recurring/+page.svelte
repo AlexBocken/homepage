@@ -9,11 +9,12 @@
   import { formatCurrency } from '$lib/utils/formatters';
   import Toggle from '$lib/components/Toggle.svelte';
   import { page } from '$app/state';
-  import { detectCospendLang, cospendRoot, t, locale, paymentCategoryName, frequencyDescription, formatNextExecutionI18n } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, paymentCategoryName, frequencyDescription, formatNextExecutionI18n, m } from '$lib/js/cospendI18n';
 
   let { data } = $props();
 
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 
@@ -67,7 +68,7 @@
   }
 
   async function deleteRecurringPayment(/** @type {string} */ paymentId, /** @type {string} */ title) {
-    if (!await confirm(`${t('delete_recurring_confirm', lang)} "${title}"?`)) {
+    if (!await confirm(`${t.delete_recurring_confirm} "${title}"?`)) {
       return;
     }
 
@@ -99,31 +100,31 @@
 </script>
 
 <svelte:head>
-  <title>{t('recurring_title', lang)} - {t('cospend', lang)}</title>
+  <title>{t.recurring_title} - {t.cospend}</title>
 </svelte:head>
 
 <main class="recurring-payments">
   <div class="header">
-    <h1 class="sr-only">{t('recurring_title', lang)}</h1>
-    <p>{t('recurring_subtitle', lang)}</p>
+    <h1 class="sr-only">{t.recurring_title}</h1>
+    <p>{t.recurring_subtitle}</p>
   </div>
 
   <div class="filters">
     <label>
       <Toggle bind:checked={showActiveOnly} />
-      <span>{t('show_active_only', lang)}</span>
+      <span>{t.show_active_only}</span>
     </label>
   </div>
 
   {#if loading}
-    <div class="loading">{t('loading_recurring', lang)}</div>
+    <div class="loading">{t.loading_recurring}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if recurringPayments.length === 0}
     <div class="empty-state">
-      <h2>{t('no_recurring', lang)}</h2>
-      <p>{t('no_recurring_desc', lang)}</p>
-      <a href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} class="btn btn-primary">{t('add_first_payment', lang)}</a>
+      <h2>{t.no_recurring}</h2>
+      <p>{t.no_recurring_desc}</p>
+      <a href={resolve('/[cospendRoot=cospendRoot]/payments/add', { cospendRoot: root })} class="btn btn-primary">{t.add_first_payment}</a>
     </div>
   {:else}
     <div class="payments-grid">
@@ -134,7 +135,7 @@
               <span class="category-emoji">{getCategoryEmoji(payment.category)}</span>
               <h3>{payment.title}</h3>
               <span class="status-badge" class:active={payment.isActive} class:inactive={!payment.isActive}>
-                {payment.isActive ? t('active', lang) : t('inactive', lang)}
+                {payment.isActive ? t.active : t.inactive}
               </span>
             </div>
             <div class="payment-amount">
@@ -148,17 +149,17 @@
 
           <div class="payment-details">
             <div class="detail-row">
-              <span class="label">{t('category_label', lang)}</span>
+              <span class="label">{t.category_label}</span>
               <span class="value">{paymentCategoryName(payment.category, lang)}</span>
             </div>
 
             <div class="detail-row">
-              <span class="label">{t('frequency', lang)}</span>
+              <span class="label">{t.frequency}</span>
               <span class="value">{frequencyDescription(payment, lang)}</span>
             </div>
 
             <div class="detail-row">
-              <span class="label">{t('paid_by_label', lang)}</span>
+              <span class="label">{t.paid_by_label}</span>
               <div class="payer-info">
                 <ProfilePicture username={payment.paidBy} size={20} />
                 <span class="value">{payment.paidBy}</span>
@@ -166,7 +167,7 @@
             </div>
 
             <div class="detail-row">
-              <span class="label">{t('next_execution', lang)}</span>
+              <span class="label">{t.next_execution}</span>
               <span class="value next-execution">
                 {formatNextExecutionI18n(new Date(payment.nextExecutionDate), lang)}
               </span>
@@ -174,21 +175,21 @@
 
             {#if payment.lastExecutionDate}
               <div class="detail-row">
-                <span class="label">{t('last_executed', lang)}</span>
+                <span class="label">{t.last_executed}</span>
                 <span class="value">{formatDate(payment.lastExecutionDate)}</span>
               </div>
             {/if}
 
             {#if payment.endDate}
               <div class="detail-row">
-                <span class="label">{t('ends', lang)}</span>
+                <span class="label">{t.ends}</span>
                 <span class="value">{formatDate(payment.endDate)}</span>
               </div>
             {/if}
           </div>
 
           <div class="splits-preview">
-            <h4>{t('split_between', lang)}</h4>
+            <h4>{t.split_between}</h4>
             <div class="splits-list">
               {#each payment.splits as split}
                 <div class="split-item">
@@ -196,11 +197,11 @@
                   <span class="username">{split.username}</span>
                   <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                     {#if split.amount > 0}
-                      {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
+                      {t.owes} {formatCurrency(split.amount, 'CHF', loc)}
                     {:else if split.amount < 0}
-                      {t('gets', lang)} {formatCurrency(Math.abs(split.amount), 'CHF', loc)}
+                      {t.gets} {formatCurrency(Math.abs(split.amount), 'CHF', loc)}
                     {:else}
-                      {t('owes', lang)} {formatCurrency(split.amount, 'CHF', loc)}
+                      {t.owes} {formatCurrency(split.amount, 'CHF', loc)}
                     {/if}
                   </span>
                 </div>
@@ -210,7 +211,7 @@
 
           <div class="card-actions">
             <a href={resolve('/[cospendRoot=cospendRoot]/recurring/edit/[id]', { cospendRoot: root, id: payment._id })} class="btn btn-secondary btn-small">
-              {t('edit', lang)}
+              {t.edit}
             </a>
             <button
               class="btn btn-small"
@@ -218,13 +219,13 @@
               class:btn-success={!payment.isActive}
               onclick={() => toggleActiveStatus(payment._id, payment.isActive)}
             >
-              {payment.isActive ? t('pause', lang) : t('activate', lang)}
+              {payment.isActive ? t.pause : t.activate}
             </button>
             <button
               class="btn btn-danger btn-small"
               onclick={() => deleteRecurringPayment(payment._id, payment.title)}
             >
-              {t('delete_', lang)}
+              {t.delete_}
             </button>
           </div>
         </div>

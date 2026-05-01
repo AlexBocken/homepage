@@ -1,14 +1,6 @@
 <script lang="ts">
 	import type { CalendarDay } from '$lib/calendarTypes';
-	import {
-		formatLongDate,
-		rankEmphasis,
-		humanizePsalterWeek,
-		humanizeSundayCycle,
-		t,
-		t1962,
-		type CalendarLang
-	} from './calendarI18n';
+	import { formatLongDate, rankEmphasis, humanizePsalterWeek, humanizeSundayCycle, type CalendarLang, m, m1962 } from './calendarI18n';
 	import { litBg, litInk } from './calendarColors';
 
 	let {
@@ -22,6 +14,8 @@
 		todayIso: string;
 		href?: string;
 	} = $props();
+	const t1962 = $derived(m1962[lang]);
+	const t = $derived(m[lang]);
 
 	const color = $derived(day.colorKeys[0] ?? 'GREEN');
 	const isToday = $derived(day.iso === todayIso);
@@ -42,7 +36,7 @@
 	>
 		<span class="hc-rank" aria-hidden="true">{rankNum}</span>
 		<div class="hc-date">
-			{#if isToday}{t('today', lang)} · {/if}{formatLongDate(day.iso, lang)}
+			{#if isToday}{t.today} · {/if}{formatLongDate(day.iso, lang)}
 		</div>
 		<h2 class="hc-name">{day.name}</h2>
 		<div class="hc-tags">
@@ -56,17 +50,17 @@
 				<span class="hc-tag">{firstOr(day.seasonNames)}</span>
 			{/if}
 			{#if day.psalterWeek}
-				<span class="hc-tag">{t('psalterWeek', lang)}: {humanizePsalterWeek(day.psalterWeek, lang)}</span>
+				<span class="hc-tag">{t.psalterWeek}: {humanizePsalterWeek(day.psalterWeek, lang)}</span>
 			{/if}
 			{#if day.sundayCycle}
-				<span class="hc-tag">{t('cycle', lang)}: {humanizeSundayCycle(day.sundayCycle)}</span>
+				<span class="hc-tag">{t.cycle}: {humanizeSundayCycle(day.sundayCycle)}</span>
 			{/if}
 		</div>
 		{#if day.rite1962 && day.rite1962.commemorations.length}
 			<div class="hc-commems">
 				<div class="hc-commems-head">
 					<svg class="hc-commems-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-					<span class="hc-commems-title">{t1962('commemorations', lang)}</span>
+					<span class="hc-commems-title">{t1962.commemorations}</span>
 				</div>
 				<div class="hc-commems-list">
 					{#each day.rite1962.commemorations as c (c.id)}
@@ -79,7 +73,7 @@
 			<div class="hc-stations">
 				<svg class="hc-stations-label" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 9h4"/><path d="M12 7v5"/><path d="M14 22v-4a2 2 0 0 0-4 0v4"/><path d="M18 22V5l-6-3-6 3v17"/><path d="M4 10.5V22"/><path d="M20 10.5V22"/><path d="M22 22H2"/></svg>
 				<span class="hc-stations-text">
-					<span class="hc-stations-title">{t1962('stationChurch', lang)}:</span>
+					<span class="hc-stations-title">{t1962.stationChurch}:</span>
 					{#each day.rite1962.stationChurches as s, i (s.key + (s.mass ?? ''))}
 						{#if i > 0}<span class="hc-stations-sep"> · </span>{/if}<span class="hc-station-name">{s.name}</span>{#if s.mass}<span class="hc-station-mass"> ({s.mass.replace(/_/g, ' ')})</span>{/if}
 					{/each}

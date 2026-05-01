@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, getCategoryOptionsI18n, m } from '$lib/js/cospendI18n';
   import { confirm } from '$lib/js/confirmDialog.svelte';
   import FormSection from '$lib/components/FormSection.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
@@ -16,6 +16,7 @@
   let { data } = $props();
 
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 
@@ -368,25 +369,25 @@
 </script>
 
 <svelte:head>
-  <title>{t('edit_payment_title', lang)} - {t('cospend', lang)}</title>
+  <title>{t.edit_payment_title} - {t.cospend}</title>
 </svelte:head>
 
 <main class="edit-payment">
   <div class="header">
-    <h1 class="sr-only">{t('edit_payment_title', lang)}</h1>
-    <p>{t('edit_payment_subtitle', lang)}</p>
+    <h1 class="sr-only">{t.edit_payment_title}</h1>
+    <p>{t.edit_payment_subtitle}</p>
   </div>
 
   {#if loading}
-    <div class="loading">{t('loading_payments', lang)}</div>
+    <div class="loading">{t.loading_payments}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
   {:else if payment}
     <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }
   } class="payment-form">
-      <FormSection title={t('payment_details', lang)}>
+      <FormSection title={t.payment_details}>
         <div class="form-group">
-          <label for="title">{t('title_label', lang)}</label>
+          <label for="title">{t.title_label}</label>
           <input 
             type="text" 
             id="title" 
@@ -396,7 +397,7 @@
         </div>
 
         <div class="form-group">
-          <label for="description">{t('description_label', lang)}</label>
+          <label for="description">{t.description_label}</label>
           <textarea 
             id="description" 
             bind:value={payment.description} 
@@ -405,7 +406,7 @@
         </div>
 
         <div class="form-group">
-          <label for="category">{t('category_star', lang)}</label>
+          <label for="category">{t.category_star}</label>
           <select id="category" bind:value={payment.category} required>
             {#each categoryOptions as option}
               <option value={option.value}>{option.label}</option>
@@ -415,7 +416,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="amount">{t('amount_label', lang)}</label>
+            <label for="amount">{t.amount_label}</label>
             <div class="amount-currency">
               {#if payment.originalAmount && payment.currency !== 'CHF'}
                 <!-- Show original amount for foreign currency -->
@@ -478,13 +479,13 @@
           </div>
 
           <div class="form-group">
-            <label for="date">{t('date', lang)}</label>
+            <label for="date">{t.date}</label>
             <DatePicker bind:value={paymentDateStr} {lang} />
           </div>
         </div>
 
         <div class="form-group">
-          <label for="paidBy">{t('paid_by_form', lang)}</label>
+          <label for="paidBy">{t.paid_by_form}</label>
           <input 
             type="text" 
             id="paidBy" 
@@ -507,18 +508,18 @@
       />
 
       {#if payment.splits && payment.splits.length > 0}
-        <FormSection title={t('split_config', lang)}>
+        <FormSection title={t.split_config}>
           <div class="split-method-info">
-            <span class="label">{t('split_method_form', lang)}</span>
+            <span class="label">{t.split_method_form}</span>
             <span class="value">
               {#if payment.splitMethod === 'equal'}
-                {t('equal_split', lang)}
+                {t.equal_split}
               {:else if payment.splitMethod === 'full'}
-                {t('paid_in_full', lang)}
+                {t.paid_in_full}
               {:else if payment.splitMethod === 'personal_equal'}
-                {t('personal_equal_split', lang)}
+                {t.personal_equal_split}
               {:else if payment.splitMethod === 'proportional'}
-                {t('custom_proportions', lang)}
+                {t.custom_proportions}
               {:else}
                 {payment.splitMethod}
               {/if}
@@ -527,8 +528,8 @@
 
           {#if payment.splitMethod === 'personal_equal'}
             <div class="personal-amounts-editor">
-              <h3>{t('personal_amounts', lang)}</h3>
-              <p class="description">{t('personal_amounts_desc', lang)}</p>
+              <h3>{t.personal_amounts}</h3>
+              <p class="description">{t.personal_amounts_desc}</p>
               {#each payment.splits as split, index}
                 <div class="personal-input">
                   <label for="personal_{split.username}">{split.username}</label>
@@ -551,10 +552,10 @@
                 {@const remainder = Math.max(0, Number(payment.amount) - totalPersonal)}
                 {@const hasError = totalPersonal > Number(payment.amount)}
                 <div class="remainder-info" class:error={hasError}>
-                  <span>{t('total_personal', lang)}: CHF {totalPersonal.toFixed(2)}</span>
-                  <span>{t('remainder_to_split', lang)}: CHF {remainder.toFixed(2)}</span>
+                  <span>{t.total_personal}: CHF {totalPersonal.toFixed(2)}</span>
+                  <span>{t.remainder_to_split}: CHF {remainder.toFixed(2)}</span>
                   {#if hasError}
-                    <div class="error-message">⚠️ {t('personal_exceeds', lang)}</div>
+                    <div class="error-message">⚠️ {t.personal_exceeds}</div>
                   {/if}
                 </div>
               {/if}
@@ -562,17 +563,17 @@
           {/if}
 
           <div class="splits-display">
-            <h3>{t('split_preview', lang)}</h3>
+            <h3>{t.split_preview}</h3>
             {#each payment.splits as split}
               <div class="split-item">
                 <span class="split-username">{split.username}</span>
                 <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
                   {#if split.amount > 0}
-                    {t('owes', lang)} CHF {split.amount.toFixed(2)}
+                    {t.owes} CHF {split.amount.toFixed(2)}
                   {:else if split.amount < 0}
-                    {t('owed', lang)} CHF {Math.abs(split.amount).toFixed(2)}
+                    {t.owed} CHF {Math.abs(split.amount).toFixed(2)}
                   {:else}
-                    {t('owes', lang)} CHF {split.amount.toFixed(2)}
+                    {t.owes} CHF {split.amount.toFixed(2)}
                   {/if}
                 </span>
               </div>
@@ -592,11 +593,11 @@
           onclick={deletePayment}
           disabled={deleting || saving}
         >
-          {deleting ? t('deleting', lang) : t('delete_payment', lang)}
+          {deleting ? t.deleting : t.delete_payment}
         </button>
       </div>
 
-      <SaveFab disabled={saving || deleting} label={t('save_changes', lang)} />
+      <SaveFab disabled={saving || deleting} label={t.save_changes} />
     </form>
   {/if}
 </main>

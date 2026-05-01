@@ -35,7 +35,7 @@
 
   import Check from '@lucide/svelte/icons/check';
   import { page } from '$app/state';
-  import { detectCospendLang, t, locale, categoryName, formatTTL as formatTTLi18n, ttlOptions } from '$lib/js/cospendI18n';
+  import { detectCospendLang, locale, categoryName, formatTTL as formatTTLi18n, ttlOptions, m } from '$lib/js/cospendI18n';
 
   let { data } = $props();
   let user = $derived(data.session?.user?.nickname || 'guest');
@@ -51,6 +51,7 @@
   });
 
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const loc = $derived(locale(lang));
 
   /** @type {Record<string, { icon: typeof Plus, color: string }>} */
@@ -427,7 +428,7 @@
 <div class="shopping-page">
   <header class="page-header">
     <div class="header-row">
-      <h1 class="sr-only">{t('shopping_list_title', lang)}</h1>
+      <h1 class="sr-only">{t.shopping_list_title}</h1>
       <SyncIndicator status={sync.status} />
       {#if hasSupercard}
         <button class="btn-card btn-card-coop" onclick={() => activeCard = 'supercard'} title="Coop Supercard" aria-label="Coop Supercard">
@@ -440,13 +441,13 @@
         </button>
       {/if}
       {#if !isGuest}
-        <button class="btn-share" onclick={openShareModal} title={t('share', lang)}>
+        <button class="btn-share" onclick={openShareModal} title={t.share}>
           <Share2 size={16} />
         </button>
       {/if}
     </div>
     {#if totalCount > 0}
-      <p class="subtitle">{checkedCount} / {totalCount} {t('items_done', lang)}</p>
+      <p class="subtitle">{checkedCount} / {totalCount} {t.items_done}</p>
     {/if}
     <div class="store-picker">
       <Store size={13} />
@@ -466,7 +467,7 @@
       bind:value={newItemName}
       onkeydown={onKeydown}
       type="text"
-      placeholder={t('add_item_placeholder', lang)}
+      placeholder={t.add_item_placeholder}
       autocomplete="off"
     />
     <button class="btn-add" onclick={addItem} disabled={!newItemName.trim()}>
@@ -475,7 +476,7 @@
   </div>
 
   {#if totalCount === 0}
-    <p class="empty-state">{t('empty_list', lang)}</p>
+    <p class="empty-state">{t.empty_list}</p>
   {:else}
     <div class="item-list">
       {#each groupedItems as group (group.category)}
@@ -528,7 +529,7 @@
     {#if checkedCount > 0}
       <button class="btn-clear-checked" onclick={() => sync.clearChecked()}>
         <ListX size={16} />
-        {t('clear_checked', lang)} ({checkedCount})
+        {t.clear_checked} ({checkedCount})
       </button>
     {/if}
   {/if}
@@ -549,18 +550,18 @@
       <div class="name-qty-row">
         <div class="field name-field">
           <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="edit-label">{t('edit_name', lang)}</label>
+          <label class="edit-label">{t.edit_name}</label>
           <input class="edit-input" type="text" bind:value={editName} />
         </div>
         <div class="field qty-field">
           <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="edit-label">{t('edit_qty', lang)}</label>
-          <input class="edit-input" type="text" bind:value={editQty} placeholder={t('edit_qty_ph', lang)} />
+          <label class="edit-label">{t.edit_qty}</label>
+          <input class="edit-input" type="text" bind:value={editQty} placeholder={t.edit_qty_ph} />
         </div>
       </div>
 
       <!-- svelte-ignore a11y_label_has_associated_control -->
-      <label class="edit-label">{t('kategorie', lang)}</label>
+      <label class="edit-label">{t.kategorie}</label>
       <div class="category-picker">
         {#each SHOPPING_CATEGORIES as cat}
           {@const meta = categoryMeta[cat] || categoryMeta['Sonstiges']}
@@ -578,10 +579,10 @@
       </div>
 
       <!-- svelte-ignore a11y_label_has_associated_control -->
-      <label class="edit-label">{t('icon', lang)}</label>
+      <label class="edit-label">{t.icon}</label>
       <div class="icon-search">
         <Search size={14} />
-        <input bind:value={iconSearch} type="text" placeholder={t('search_icon', lang)} />
+        <input bind:value={iconSearch} type="text" placeholder={t.search_icon} />
       </div>
       <div class="icon-picker">
         {#each filteredIconGroups as [cat, icons]}
@@ -605,9 +606,9 @@
       </div>
 
       <div class="edit-actions">
-        <button class="btn-cancel" onclick={closeEdit}>{t('cancel', lang)}</button>
+        <button class="btn-cancel" onclick={closeEdit}>{t.cancel}</button>
         <button class="btn-save" onclick={saveEdit} disabled={editSaving}>
-          {editSaving ? t('saving', lang) : t('save', lang)}
+          {editSaving ? t.saving : t.save}
         </button>
       </div>
     </div>
@@ -622,17 +623,17 @@
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="edit-modal share-modal" onclick={(e) => e.stopPropagation()}>
       <div class="share-header">
-        <h3>{t('shared_links', lang)}</h3>
+        <h3>{t.shared_links}</h3>
         <button class="close-button" onclick={() => { showShareModal = false; }}>
           <X size={18} />
         </button>
       </div>
-      <p class="share-desc">{t('share_desc', lang)}</p>
+      <p class="share-desc">{t.share_desc}</p>
 
       {#if shareLoading}
-        <p class="share-loading">{t('loading', lang)}</p>
+        <p class="share-loading">{t.loading}</p>
       {:else if shareTokens.length === 0}
-        <p class="share-empty">{t('no_active_links', lang)}</p>
+        <p class="share-empty">{t.no_active_links}</p>
       {:else}
         <div class="token-list">
           {#each shareTokens as tok (tok.id)}
@@ -642,7 +643,7 @@
                 <div class="token-expiry-row">
                   <span class="token-ttl">{formatTTL(tok.expiresAt)}</span>
                   <select class="token-ttl-select" onchange={(e) => onTTLChange(tok.id, e)}>
-                    <option value="" disabled selected>{t('change', lang)}</option>
+                    <option value="" disabled selected>{t.change}</option>
                     {#each TTL_OPTIONS as opt}
                       <option value={opt.ms}>{opt.label}</option>
                     {/each}
@@ -650,10 +651,10 @@
                 </div>
               </div>
               <div class="token-actions">
-                <button class="btn-token-copy" onclick={() => copyTokenLink(tok)} title={t('copy_link', lang)}>
+                <button class="btn-token-copy" onclick={() => copyTokenLink(tok)} title={t.copy_link}>
                   {#if copiedId === tok.id}<Check size={14} />{:else}<Copy size={14} />{/if}
                 </button>
-                <button class="btn-token-delete" onclick={() => deleteToken(tok.id)} title={t('delete_', lang)}>
+                <button class="btn-token-delete" onclick={() => deleteToken(tok.id)} title={t.delete_}>
                   <X size={14} />
                 </button>
               </div>
@@ -664,7 +665,7 @@
 
       <button class="btn-new-token" onclick={createNewToken}>
         <Plus size={14} />
-        {t('create_new_link', lang)}
+        {t.create_new_link}
       </button>
     </div>
   </div>
@@ -672,7 +673,7 @@
 
 {#if showCopyToast}
   <div class="copy-toast" transition:slide={{ duration: 150 }}>
-    <Check size={14} /> {t('copied', lang)}
+    <Check size={14} /> {t.copied}
   </div>
 {/if}
 

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { detectCospendLang, cospendRoot, locale, t, getCategoryOptionsI18n, frequencyDescription } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, getCategoryOptionsI18n, frequencyDescription, m } from '$lib/js/cospendI18n';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { validateCronExpression, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
@@ -14,6 +14,7 @@
   let { data } = $props();
 
   const lang = $derived(detectCospendLang(page.url.pathname));
+  const t = $derived(m[lang]);
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 
@@ -290,47 +291,47 @@
 </script>
 
 <svelte:head>
-  <title>{t('edit_recurring_title', lang)} - {t('cospend', lang)}</title>
+  <title>{t.edit_recurring_title} - {t.cospend}</title>
 </svelte:head>
 
 <main class="edit-recurring-payment">
   <div class="header">
-    <h1 class="sr-only">{t('edit_recurring_title', lang)}</h1>
+    <h1 class="sr-only">{t.edit_recurring_title}</h1>
   </div>
 
   {#if loadingPayment}
-    <div class="loading">{t('loading_recurring', lang)}</div>
+    <div class="loading">{t.loading_recurring}</div>
   {:else if error && !formData.title}
     <div class="error">Error: {error}</div>
   {:else}
     <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }
   } class="payment-form">
       <div class="form-section">
-        <h2>{t('payment_details_section', lang)}</h2>
+        <h2>{t.payment_details_section}</h2>
         
         <div class="form-group">
-          <label for="title">{t('title_label', lang)}</label>
+          <label for="title">{t.title_label}</label>
           <input 
             type="text" 
             id="title" 
             bind:value={formData.title} 
             required 
-            placeholder={t('title_placeholder', lang)}
+            placeholder={t.title_placeholder}
           />
         </div>
 
         <div class="form-group">
-          <label for="description">{t('description_label', lang)}</label>
+          <label for="description">{t.description_label}</label>
           <textarea 
             id="description" 
             bind:value={formData.description} 
-            placeholder={t('description_placeholder', lang)}
+            placeholder={t.description_placeholder}
             rows="3"
           ></textarea>
         </div>
 
         <div class="form-group">
-          <label for="category">{t('category_star', lang)}</label>
+          <label for="category">{t.category_star}</label>
           <select id="category" bind:value={formData.category} required>
             {#each categoryOptions as option}
               <option value={option.value}>{option.label}</option>
@@ -340,7 +341,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="amount">{t('amount_label', lang)}</label>
+            <label for="amount">{t.amount_label}</label>
             <div class="amount-currency">
               <input 
                 type="number" 
@@ -383,7 +384,7 @@
           </div>
 
           <div class="form-group">
-            <label for="paidBy">{t('paid_by_form', lang)}</label>
+            <label for="paidBy">{t.paid_by_form}</label>
             <select id="paidBy" bind:value={formData.paidBy} required>
               {#each users as user}
                 <option value={user}>{user}</option>
@@ -393,30 +394,30 @@
         </div>
 
         <div class="form-group">
-          <label for="isActive">{t('status_label', lang)}</label>
+          <label for="isActive">{t.status_label}</label>
           <select id="isActive" bind:value={formData.isActive}>
-            <option value={true}>{t('active', lang)}</option>
-            <option value={false}>{t('inactive', lang)}</option>
+            <option value={true}>{t.active}</option>
+            <option value={false}>{t.inactive}</option>
           </select>
         </div>
       </div>
 
       <div class="form-section">
-        <h2>{t('recurring_schedule', lang)}</h2>
+        <h2>{t.recurring_schedule}</h2>
         
         <div class="form-row">
           <div class="form-group">
-            <label for="frequency">{t('frequency_label', lang)}</label>
+            <label for="frequency">{t.frequency_label}</label>
             <select id="frequency" bind:value={formData.frequency} required>
-              <option value="daily">{t('freq_daily', lang)}</option>
-              <option value="weekly">{t('freq_weekly', lang)}</option>
-              <option value="monthly">{t('freq_monthly', lang)}</option>
-              <option value="custom">{t('freq_custom', lang)}</option>
+              <option value="daily">{t.freq_daily}</option>
+              <option value="weekly">{t.freq_weekly}</option>
+              <option value="monthly">{t.freq_monthly}</option>
+              <option value="custom">{t.freq_custom}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="startDate">{t('start_date', lang)}</label>
+            <label for="startDate">{t.start_date}</label>
             <DatePicker bind:value={formData.startDate} {lang} />
           </div>
         </div>
@@ -449,14 +450,14 @@
         {/if}
 
         <div class="form-group">
-          <label for="endDate">{t('end_date_optional', lang)}</label>
+          <label for="endDate">{t.end_date_optional}</label>
           <DatePicker bind:value={formData.endDate} {lang} />
-          <div class="help-text">{t('end_date_hint', lang)}</div>
+          <div class="help-text">{t.end_date_hint}</div>
         </div>
 
         {#if nextExecutionPreview}
           <div class="execution-preview">
-            <h3>{t('next_execution_preview', lang)}</h3>
+            <h3>{t.next_execution_preview}</h3>
             <p class="next-execution">{nextExecutionPreview}</p>
             <p class="frequency-description">{frequencyDescription(/** @type {any} */ (formData), lang)}</p>
           </div>
@@ -488,7 +489,7 @@
         <div class="error">{error}</div>
       {/if}
 
-      <SaveFab disabled={loading || cronError} label={t('save_changes', lang)} />
+      <SaveFab disabled={loading || cronError} label={t.save_changes} />
     </form>
   {/if}
 </main>

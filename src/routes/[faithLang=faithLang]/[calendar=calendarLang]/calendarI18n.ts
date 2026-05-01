@@ -91,58 +91,22 @@ export function humanizeSundayCycle(raw: string | null): string | null {
 	return m ? m[1] : raw;
 }
 
-export const ui = {
-	today: { en: 'Today', de: 'Heute', la: 'Hodie' },
-	calendar: { en: 'Liturgical Calendar', de: 'Liturgischer Kalender', la: 'Calendarium Liturgicum' },
-	jumpToToday: { en: 'Jump to today', de: 'Zu heute', la: 'Ad hodiernum' },
-	prev: { en: 'Previous month', de: 'Vorheriger Monat', la: 'Mensis praecedens' },
-	next: { en: 'Next month', de: 'Nächster Monat', la: 'Mensis sequens' },
-	psalterWeek: { en: 'Psalter week', de: 'Psalterwoche', la: 'Hebdomada psalterii' },
-	cycle: { en: 'Sunday cycle', de: 'Lesejahr', la: 'Cyclus dominicalis' },
-	rite1969Long: {
-		en: 'Roman Missal of 1969 (Ordinary Form)',
-		de: 'Römisches Messbuch 1969 (Ordentliche Form)',
-		la: 'Missale Romanum 1969 (Forma Ordinaria)'
-	},
-	rite1962Long: {
-		en: 'Roman Missal of 1962 (Extraordinary Form)',
-		de: 'Römisches Messbuch 1962 (Ausserordentliche Form)',
-		la: 'Missale Romanum 1962 (Forma Extraordinaria)'
-	},
-	wipTitle: {
-		en: 'Work in progress',
-		de: 'In Arbeit',
-		la: 'In opere'
-	},
-	wipBody: {
-		en: 'The calendar for the older rite (1962 Missal) is not yet available. Stay tuned.',
-		de: 'Der Kalender für den alten Ritus (Messbuch 1962) ist noch nicht verfügbar. Bleib dran.',
-		la: 'Calendarium ritus antiqui (Missale 1962) nondum paratum est. Exspecta paulisper.'
-	},
-	rite1962DisclaimerTitle: {
-		en: 'Accuracy still being verified',
-		de: 'Genauigkeit wird noch geprüft',
-		la: 'Accuratio adhuc probanda'
-	},
-	rite1962DisclaimerBody: {
-		en: 'The 1962 calendar is derived from divinum-officium data and is still being checked day-by-day against authoritative sources. Only the Swiss diocesan propers shipped by romcal are applied; other national/local calendars are not yet available.',
-		de: 'Der Kalender für den Ritus von 1962 stammt aus divinum-officium-Daten und wird noch Tag für Tag mit maßgeblichen Quellen abgeglichen. Nur die in romcal enthaltenen Schweizer Diözesankalender werden angewendet; weitere Landes- oder Ortskalender sind noch nicht verfügbar.',
-		la: 'Calendarium anni 1962 ex datis divinum-officium ductum est et adhuc diebus singulis contra fontes fideles examinatur. Tantum calendaria propria dioecesium Helvetiae a romcal provisa adhibentur; cetera calendaria nationalia vel localia nondum praesto sunt.'
-	},
-	calendarVariant: {
-		en: 'Calendar',
-		de: 'Kalender',
-		la: 'Calendarium'
-	},
-	rite1969SwissNote: {
-		en: 'romcal ships only a national Swiss calendar for 1969 — diocesan sub-calendars are not available for this rite.',
-		de: 'romcal liefert für 1969 nur einen nationalen Schweizer Kalender — diözesane Unterkalender sind für diesen Ritus nicht verfügbar.',
-		la: 'Pro anno 1969 romcal solum calendarium Helvetiae nationale praebet — calendaria dioecesana propria pro hoc ritu non adsunt.'
-	}
-};
+import { de as ui_de } from '$lib/i18n/calendar/de';
+import { en as ui_en } from '$lib/i18n/calendar/en';
+import { la as ui_la } from '$lib/i18n/calendar/la';
 
-export function t(key: keyof typeof ui, lang: CalendarLang): string {
-	return ui[key][lang] ?? ui[key].en;
+/** Calendar UI translations keyed by locale. de.ts is the source of truth. */
+export const m = { de: ui_de, en: ui_en, la: ui_la } as const;
+
+export type CalendarKey = keyof typeof ui_de;
+
+/**
+ * Get a translated UI string. Prefer `m[lang].key` directly in new code —
+ * this helper is kept for the existing call sites and falls back to English
+ * if the requested locale is missing.
+ */
+export function t(key: CalendarKey, lang: CalendarLang): string {
+	return m[lang][key] ?? m.en[key];
 }
 
 export type Rite = 'novus' | 'vetus';
@@ -280,29 +244,21 @@ export function colorLabel1962(colorKey: string, lang: CalendarLang): string {
 	return COLOR_LABEL_1962[colorKey]?.[lang] ?? colorKey;
 }
 
-export const ui1962 = {
-	commemorations: { en: 'Commemorations', de: 'Kommemorationen', la: 'Commemorationes' },
-	octave: { en: 'Octave', de: 'Oktav', la: 'Octava' },
-	octaveDay: { en: 'day', de: 'Tag', la: 'dies' },
-	vigilOf: { en: 'Vigil of', de: 'Vigil von', la: 'Vigilia' },
-	transferredFrom: { en: 'Transferred from', de: 'Übertragen von', la: 'Translatum ex' },
-	source: { en: 'Source', de: 'Quelle', la: 'Fons' },
-	propers: { en: 'Mass propers', de: 'Messproprium', la: 'Propria Missæ' },
-	stationChurch: { en: 'Station church', de: 'Stationskirche', la: 'Statio' },
-	viewLatin: { en: 'Latin', de: 'Latein', la: 'Latine' },
-	viewParallel: { en: 'Parallel', de: 'Parallel', la: 'Parallelum' },
-	viewVernacular: { en: 'English', de: 'Deutsch', la: 'Vernacula' },
-	fallbackBadge: { en: 'Douay-Rheims', de: 'Allioli', la: 'Vulgata' },
-	fallbackHint: {
-		en: 'Translation not provided in the missal. Text taken from the Douay-Rheims Bible at the cited reference.',
-		de: 'Keine Übersetzung im Messbuch vorhanden. Text aus der Allioli-Bibelübersetzung an der angegebenen Stelle.',
-		la: 'Interpretatio localis deest. Textus ex Biblia Sacra locis citatis.'
-	}
-} as const;
+import { de as ui1962_de } from '$lib/i18n/calendar/de_1962';
+import { en as ui1962_en } from '$lib/i18n/calendar/en_1962';
+import { la as ui1962_la } from '$lib/i18n/calendar/la_1962';
 
-export function t1962(key: keyof typeof ui1962, lang: CalendarLang): string {
-	const entry = ui1962[key] as Record<string, string | undefined>;
-	return entry[lang] ?? entry.en ?? '';
+/** 1962-rite-only UI translations keyed by locale. de_1962.ts is the source of truth. */
+export const m1962 = { de: ui1962_de, en: ui1962_en, la: ui1962_la } as const;
+
+export type Calendar1962Key = keyof typeof ui1962_de;
+
+/**
+ * Get a translated 1962-rite UI string. Prefer `m1962[lang].key` directly
+ * in new code — this helper is kept for the existing call sites.
+ */
+export function t1962(key: Calendar1962Key, lang: CalendarLang): string {
+	return m1962[lang][key] ?? m1962.en[key] ?? '';
 }
 
 const PROPER_LABEL: Record<string, Record<CalendarLang, string>> = {
