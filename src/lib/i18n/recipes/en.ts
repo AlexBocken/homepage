@@ -1,0 +1,46 @@
+import type { de } from './de';
+
+export const en = {
+	// Layout / nav
+	all_recipes: 'All Recipes',
+	favorites: 'Favorites',
+	season_nav: 'Season',
+	category_nav: 'Category',
+	icon_nav: 'Icon',
+	tags_nav: 'Tags',
+
+	// Nutrition summary
+	nutrition: 'Nutrition',
+	per_portion: 'per portion',
+	protein: 'Protein',
+	fat: 'Fat',
+	carbs: 'Carbs',
+	fiber: 'Fiber',
+	sugars: 'Sugars',
+	saturated_fat: 'Sat. Fat',
+	details: 'Details',
+	vitamins: 'Vitamins',
+	minerals: 'Minerals',
+	coverage: 'coverage',
+	not_tracked: 'Not tracked',
+	amino_acids: 'Amino Acids',
+	iron: 'Iron',
+	zinc: 'Zinc',
+	leucine: 'Leucine',
+	isoleucine: 'Isoleucine',
+	valine: 'Valine',
+	lysine: 'Lysine',
+	methionine: 'Methionine',
+	phenylalanine: 'Phenylalanine',
+	threonine: 'Threonine',
+	histidine: 'Histidine',
+	arginine: 'Arginine',
+	alanine: 'Alanine',
+	aspartic_acid: 'Aspartic Acid',
+	cysteine: 'Cysteine',
+	glutamic_acid: 'Glutamic Acid',
+	glycine: 'Glycine',
+	proline: 'Proline',
+	serine: 'Serine',
+	tyrosine: 'Tyrosine'
+} as const satisfies Record<keyof typeof de, string>;

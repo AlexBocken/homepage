@@ -1,0 +1,46 @@
+/** German recipes UI strings — source of truth for the key set. */
+
+export const de = {
+	// Layout / nav
+	all_recipes: 'Alle Rezepte',
+	favorites: 'Favoriten',
+	season_nav: 'Saison',
+	category_nav: 'Kategorie',
+	icon_nav: 'Icon',
+	tags_nav: 'Tags',
+
+	// Nutrition summary
+	nutrition: 'Nährwerte',
+	per_portion: 'pro Portion',
+	protein: 'Eiweiß',
+	fat: 'Fett',
+	carbs: 'Kohlenh.',
+	fiber: 'Ballaststoffe',
+	sugars: 'Zucker',
+	saturated_fat: 'Ges. Fett',
+	details: 'Details',
+	vitamins: 'Vitamine',
+	minerals: 'Mineralstoffe',
+	coverage: 'Abdeckung',
+	not_tracked: 'Nicht erfasst',
+	amino_acids: 'Aminosäuren',
+	iron: 'Eisen',
+	zinc: 'Zink',
+	leucine: 'Leucin',
+	isoleucine: 'Isoleucin',
+	valine: 'Valin',
+	lysine: 'Lysin',
+	methionine: 'Methionin',
+	phenylalanine: 'Phenylalanin',
+	threonine: 'Threonin',
+	histidine: 'Histidin',
+	arginine: 'Arginin',
+	alanine: 'Alanin',
+	aspartic_acid: 'Asparaginsäure',
+	cysteine: 'Cystein',
+	glutamic_acid: 'Glutaminsäure',
+	glycine: 'Glycin',
+	proline: 'Prolin',
+	serine: 'Serin',
+	tyrosine: 'Tyrosin'
+} as const;

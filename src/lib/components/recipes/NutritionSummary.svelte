@@ -1,8 +1,12 @@
 <script>
 	import { createNutritionCalculator } from '$lib/js/nutrition.svelte';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let { flatIngredients, nutritionMappings, sectionNames, referencedNutrition, multiplier, portions, isEnglish, actions } = $props();
+	const lang = $derived(/** @type {RecipesLang} */ (isEnglish ? 'en' : 'de'));
+	const t = $derived(m[lang]);
 
 	const nutrition = createNutritionCalculator(
 		() => flatIngredients,
@@ -43,20 +47,20 @@
 	});
 
 	const labels = $derived({
-		title: isEnglish ? 'Nutrition' : 'Nährwerte',
-		perPortion: isEnglish ? 'per portion' : 'pro Portion',
-		protein: isEnglish ? 'Protein' : 'Eiweiß',
-		fat: isEnglish ? 'Fat' : 'Fett',
-		carbs: isEnglish ? 'Carbs' : 'Kohlenh.',
-		fiber: isEnglish ? 'Fiber' : 'Ballaststoffe',
-		sugars: isEnglish ? 'Sugars' : 'Zucker',
-		saturatedFat: isEnglish ? 'Sat. Fat' : 'Ges. Fett',
-		details: isEnglish ? 'Details' : 'Details',
-		vitamins: isEnglish ? 'Vitamins' : 'Vitamine',
-		minerals: isEnglish ? 'Minerals' : 'Mineralstoffe',
-		coverage: isEnglish ? 'coverage' : 'Abdeckung',
-		unmapped: isEnglish ? 'Not tracked' : 'Nicht erfasst',
-		aminoAcids: isEnglish ? 'Amino Acids' : 'Aminosäuren',
+		title: t.nutrition,
+		perPortion: t.per_portion,
+		protein: t.protein,
+		fat: t.fat,
+		carbs: t.carbs,
+		fiber: t.fiber,
+		sugars: t.sugars,
+		saturatedFat: t.saturated_fat,
+		details: t.details,
+		vitamins: t.vitamins,
+		minerals: t.minerals,
+		coverage: t.coverage,
+		unmapped: t.not_tracked,
+		aminoAcids: t.amino_acids
 	});
 
 	const hasAminoAcids = $derived.by(() => {
@@ -195,33 +199,33 @@
 			<div class="detail-section">
 				<h4>{labels.minerals}</h4>
 				<div class="detail-row"><span>Calcium</span><span>{fmt(nutrition.totalMicros.calcium / div)} mg</span></div>
-				<div class="detail-row"><span>{isEnglish ? 'Iron' : 'Eisen'}</span><span>{fmt(nutrition.totalMicros.iron / div)} mg</span></div>
+				<div class="detail-row"><span>{t.iron}</span><span>{fmt(nutrition.totalMicros.iron / div)} mg</span></div>
 				<div class="detail-row"><span>Magnesium</span><span>{fmt(nutrition.totalMicros.magnesium / div)} mg</span></div>
 				<div class="detail-row"><span>Potassium</span><span>{fmt(nutrition.totalMicros.potassium / div)} mg</span></div>
 				<div class="detail-row"><span>Sodium</span><span>{fmt(nutrition.totalMicros.sodium / div)} mg</span></div>
-				<div class="detail-row"><span>{isEnglish ? 'Zinc' : 'Zink'}</span><span>{fmt(nutrition.totalMicros.zinc / div)} mg</span></div>
+				<div class="detail-row"><span>{t.zinc}</span><span>{fmt(nutrition.totalMicros.zinc / div)} mg</span></div>
 			</div>
 			{#if hasAminoAcids}
 			<div class="detail-section">
 				<h4>{labels.aminoAcids}</h4>
-				<div class="detail-row"><span>{isEnglish ? 'Leucine' : 'Leucin'}</span><span>{fmt(nutrition.totalAminoAcids.leucine / div)} g</span></div>
-				<div class="detail-row"><span>{isEnglish ? 'Isoleucine' : 'Isoleucin'}</span><span>{fmt(nutrition.totalAminoAcids.isoleucine / div)} g</span></div>
-				<div class="detail-row"><span>Valin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.valine / div)} g</span></div>
-				<div class="detail-row"><span>Lysin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.lysine / div)} g</span></div>
-				<div class="detail-row"><span>Methionin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.methionine / div)} g</span></div>
-				<div class="detail-row"><span>Phenylalanin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.phenylalanine / div)} g</span></div>
-				<div class="detail-row"><span>Threonin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.threonine / div)} g</span></div>
+				<div class="detail-row"><span>{t.leucine}</span><span>{fmt(nutrition.totalAminoAcids.leucine / div)} g</span></div>
+				<div class="detail-row"><span>{t.isoleucine}</span><span>{fmt(nutrition.totalAminoAcids.isoleucine / div)} g</span></div>
+				<div class="detail-row"><span>{t.valine}</span><span>{fmt(nutrition.totalAminoAcids.valine / div)} g</span></div>
+				<div class="detail-row"><span>{t.lysine}</span><span>{fmt(nutrition.totalAminoAcids.lysine / div)} g</span></div>
+				<div class="detail-row"><span>{t.methionine}</span><span>{fmt(nutrition.totalAminoAcids.methionine / div)} g</span></div>
+				<div class="detail-row"><span>{t.phenylalanine}</span><span>{fmt(nutrition.totalAminoAcids.phenylalanine / div)} g</span></div>
+				<div class="detail-row"><span>{t.threonine}</span><span>{fmt(nutrition.totalAminoAcids.threonine / div)} g</span></div>
 				<div class="detail-row"><span>Tryptophan</span><span>{fmt(nutrition.totalAminoAcids.tryptophan / div)} g</span></div>
-				<div class="detail-row"><span>Histidin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.histidine / div)} g</span></div>
-				<div class="detail-row"><span>Arginin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.arginine / div)} g</span></div>
-				<div class="detail-row"><span>Alanin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.alanine / div)} g</span></div>
-				<div class="detail-row"><span>{isEnglish ? 'Aspartic Acid' : 'Asparaginsäure'}</span><span>{fmt(nutrition.totalAminoAcids.asparticAcid / div)} g</span></div>
-				<div class="detail-row"><span>{isEnglish ? 'Cysteine' : 'Cystein'}</span><span>{fmt(nutrition.totalAminoAcids.cysteine / div)} g</span></div>
-				<div class="detail-row"><span>{isEnglish ? 'Glutamic Acid' : 'Glutaminsäure'}</span><span>{fmt(nutrition.totalAminoAcids.glutamicAcid / div)} g</span></div>
-				<div class="detail-row"><span>Glycin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.glycine / div)} g</span></div>
-				<div class="detail-row"><span>Prolin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.proline / div)} g</span></div>
-				<div class="detail-row"><span>Serin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.serine / div)} g</span></div>
-				<div class="detail-row"><span>Tyrosin{isEnglish ? 'e' : ''}</span><span>{fmt(nutrition.totalAminoAcids.tyrosine / div)} g</span></div>
+				<div class="detail-row"><span>{t.histidine}</span><span>{fmt(nutrition.totalAminoAcids.histidine / div)} g</span></div>
+				<div class="detail-row"><span>{t.arginine}</span><span>{fmt(nutrition.totalAminoAcids.arginine / div)} g</span></div>
+				<div class="detail-row"><span>{t.alanine}</span><span>{fmt(nutrition.totalAminoAcids.alanine / div)} g</span></div>
+				<div class="detail-row"><span>{t.aspartic_acid}</span><span>{fmt(nutrition.totalAminoAcids.asparticAcid / div)} g</span></div>
+				<div class="detail-row"><span>{t.cysteine}</span><span>{fmt(nutrition.totalAminoAcids.cysteine / div)} g</span></div>
+				<div class="detail-row"><span>{t.glutamic_acid}</span><span>{fmt(nutrition.totalAminoAcids.glutamicAcid / div)} g</span></div>
+				<div class="detail-row"><span>{t.glycine}</span><span>{fmt(nutrition.totalAminoAcids.glycine / div)} g</span></div>
+				<div class="detail-row"><span>{t.proline}</span><span>{fmt(nutrition.totalAminoAcids.proline / div)} g</span></div>
+				<div class="detail-row"><span>{t.serine}</span><span>{fmt(nutrition.totalAminoAcids.serine / div)} g</span></div>
+				<div class="detail-row"><span>{t.tyrosine}</span><span>{fmt(nutrition.totalAminoAcids.tyrosine / div)} g</span></div>
 			</div>
 			{/if}
 		</div>
