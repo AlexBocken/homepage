@@ -7,7 +7,7 @@
 	import Wheat from '@lucide/svelte/icons/wheat';
 	import { untrack } from 'svelte';
 	import { toast } from '$lib/js/toast.svelte';
-	import { t } from '$lib/js/fitnessI18n';
+	import { m } from '$lib/js/fitnessI18n';
 	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
 	/** @typedef {import('$lib/server/roundOffScoring').ComboSuggestion} ComboSuggestion */
 
@@ -35,6 +35,7 @@
 		initialSuggestions = null,
 		onlogged = () => {},
 	} = $props();
+	const t = $derived(m[lang]);
 
 	const isEn = $derived(lang === 'en');
 
@@ -157,7 +158,7 @@
 		<div class="round-off-header">
 			<Sparkles size={16} />
 			<h3>{isEn ? 'Round off this day' : 'Tag abrunden'}</h3>
-			<span class="round-off-remaining">{Math.round(remainingKcal)} kcal {t('remaining', lang)}</span>
+			<span class="round-off-remaining">{Math.round(remainingKcal)} kcal {t.remaining}</span>
 		</div>
 
 		{#if loading}

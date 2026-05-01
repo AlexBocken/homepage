@@ -18,12 +18,13 @@
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 	import { onMount } from 'svelte';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
 	import { BODY_PART_CARDS, bodyPartSlug, bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const statsSlug = $derived(lang === 'en' ? 'stats' : 'statistik');
 	const historySlug = $derived(lang === 'en' ? 'history' : 'verlauf');
 
@@ -226,7 +227,7 @@
 
 	const bfChartTitle = $derived.by(() => {
 		const baseline = stats.bfChart?.baseline;
-		const label = t('body_fat', lang).replace(' %', '').replace(' (%)', '');
+		const label = t.body_fat.replace(' %', '').replace(' (%)', '');
 		if (baseline == null) return label;
 		const suffix = lang === 'en'
 			? `Δ from ${baseline.toFixed(1)}%`
@@ -284,36 +285,36 @@
 
 </script>
 
-<svelte:head><title>{t('stats_title', lang)} - Bocken</title></svelte:head>
+<svelte:head><title>{t.stats_title} - Bocken</title></svelte:head>
 
 <div class="stats-page">
-	<h1 class="sr-only">{t('stats_title', lang)}</h1>
+	<h1 class="sr-only">{t.stats_title}</h1>
 
 	<div class="lifetime-cards">
 		<div class="lifetime-card workouts">
 			<div class="card-icon"><Dumbbell size={24} /></div>
 			<div class="card-value">{stats.totalWorkouts ?? 0}</div>
-			<div class="card-label">{(stats.totalWorkouts ?? 0) === 1 ? t('workout_singular', lang) : t('workouts_plural', lang)}</div>
+			<div class="card-label">{(stats.totalWorkouts ?? 0) === 1 ? t.workout_singular : t.workouts_plural}</div>
 		</div>
 		<div class="lifetime-card tonnage">
 			<div class="card-icon"><Weight size={24} /></div>
 			<div class="card-value">{stats.totalTonnage ?? 0}<span class="card-unit">t</span></div>
-			<div class="card-label">{t('lifted', lang)}</div>
+			<div class="card-label">{t.lifted}</div>
 		</div>
 		{#if stats.kcalEstimate}
 			<div class="lifetime-card kcal">
 				<div class="card-icon"><Flame size={24} /></div>
 				<div class="card-value">~{stats.kcalEstimate.kcal.toLocaleString()}<span class="card-unit">kcal</span></div>
-				<div class="card-label">{t('burned', lang)}</div>
+				<div class="card-label">{t.burned}</div>
 				{#if !hasDemographics}
-					<div class="card-hint">{t('kcal_set_profile', lang)} <a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: fitnessSlugs(lang).measure })}>{t('measure_title', lang)}</a></div>
+					<div class="card-hint">{t.kcal_set_profile} <a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: fitnessSlugs(lang).measure })}>{t.measure_title}</a></div>
 				{/if}
 			</div>
 		{/if}
 		<div class="lifetime-card cardio">
 			<div class="card-icon"><Route size={24} /></div>
 			<div class="card-value">{stats.totalCardioKm ?? 0}<span class="card-unit">km</span></div>
-			<div class="card-label">{t('covered', lang)}</div>
+			<div class="card-label">{t.covered}</div>
 		</div>
 	</div>
 
@@ -322,18 +323,18 @@
 		<div class="goal-editor-overlay" onkeydown={(e) => { if (e.key === 'Escape') goalEditing = false; }} role="dialog" tabindex="-1">
 			<div class="goal-editor-backdrop" onclick={() => goalEditing = false} onkeydown={(e) => { if (e.key === 'Escape') goalEditing = false; }} role="presentation"></div>
 			<div class="goal-editor-panel">
-				<h3>{t('weekly_goal', lang)}</h3>
+				<h3>{t.weekly_goal}</h3>
 				<div class="goal-input-row">
 					<button class="adj-btn" onclick={() => { if (goalInput > 1) goalInput--; }} disabled={goalInput <= 1}>-</button>
 					<span class="goal-value">{goalInput}</span>
 					<button class="adj-btn" onclick={() => { if (goalInput < 14) goalInput++; }} disabled={goalInput >= 14}>+</button>
 				</div>
-				<span class="goal-unit">{t('workouts_per_week_goal', lang)}</span>
+				<span class="goal-unit">{t.workouts_per_week_goal}</span>
 				<div class="goal-actions">
 					<button class="goal-save" onclick={saveGoal} disabled={goalSaving}>
-						{goalSaving ? t('saving', lang) : t('save', lang)}
+						{goalSaving ? t.saving : t.save}
 					</button>
-					<button class="goal-cancel" onclick={() => goalEditing = false}>{t('cancel', lang)}</button>
+					<button class="goal-cancel" onclick={() => goalEditing = false}>{t.cancel}</button>
 				</div>
 			</div>
 		</div>
@@ -345,23 +346,23 @@
 				<FitnessChart
 					type="bar"
 					data={workoutsChartData}
-					title={t('workouts_per_week', lang)}
+					title={t.workouts_per_week}
 					height="220px"
 					goalLine={goalWeekly ?? undefined}
 				/>
 			{:else}
-				<p class="empty-chart">{t('no_workout_data', lang)}</p>
+				<p class="empty-chart">{t.no_workout_data}</p>
 			{/if}
 		</div>
 		<button class="streak-section" onclick={startGoalEdit}>
 			<FitnessStreakAura value={goalStreak} />
 			<div class="streak-meta">
-				<span class="streak-unit">{goalStreak === 1 ? t('streak_week', lang) : t('streak_weeks', lang)}</span>
-				<span class="streak-label">{t('streak', lang)}</span>
+				<span class="streak-unit">{goalStreak === 1 ? t.streak_week : t.streak_weeks}</span>
+				<span class="streak-label">{t.streak}</span>
 				{#if goalWeekly !== null}
-					<span class="streak-goal">{goalWeekly}x / {t('streak_week', lang).toLowerCase()}</span>
+					<span class="streak-goal">{goalWeekly}x / {t.streak_week.toLowerCase()}</span>
 				{:else}
-					<span class="streak-goal">{t('set_goal', lang)}</span>
+					<span class="streak-goal">{t.set_goal}</span>
 				{/if}
 			</div>
 		</button>
@@ -370,7 +371,7 @@
 	{#if (stats.weightChart?.data?.length ?? 0) > 1}
 		<FitnessChart
 			data={weightChartData}
-			title={t('weight', lang)}
+			title={t.weight}
 			yUnit=" kg"
 			height="220px"
 		/>
@@ -390,18 +391,18 @@
 			<div class="lifetime-card protein-card">
 				<div class="card-icon"><Beef size={24} /></div>
 				{#if ns.avgProteinPerKg != null}
-					<div class="card-value">{ns.avgProteinPerKg.toFixed(1)}<span class="card-unit">{t('protein_per_kg_unit', lang)}</span></div>
+					<div class="card-value">{ns.avgProteinPerKg.toFixed(1)}<span class="card-unit">{t.protein_per_kg_unit}</span></div>
 				{:else}
 					<div class="card-value card-value-na">—</div>
 				{/if}
-				<div class="card-label">{t('protein', lang)}</div>
+				<div class="card-label">{t.protein}</div>
 				<div class="card-hint">
 					{#if ns.avgProteinPerKg != null}
-						{t('seven_day_avg', lang)}
+						{t.seven_day_avg}
 					{:else if !ns.trendWeight}
-						{t('no_weight_data', lang)}
+						{t.no_weight_data}
 					{:else}
-						{t('no_nutrition_data', lang)}
+						{t.no_nutrition_data}
 					{/if}
 				</div>
 			</div>
@@ -410,13 +411,13 @@
 				<div class="card-icon"><Scale size={24} /></div>
 				{#if ns.avgCalorieBalance != null}
 					<div class="card-value" class:positive={ns.avgCalorieBalance > 0} class:negative={ns.avgCalorieBalance < 0}>
-						{ns.avgCalorieBalance > 0 ? '+' : ''}{ns.avgCalorieBalance}<span class="card-unit">{t('calorie_balance_unit', lang)}</span>
+						{ns.avgCalorieBalance > 0 ? '+' : ''}{ns.avgCalorieBalance}<span class="card-unit">{t.calorie_balance_unit}</span>
 					</div>
 				{:else}
 					<div class="card-value card-value-na">—</div>
 				{/if}
 				<div class="card-label card-label-info">
-					{t('calorie_balance', lang)}
+					{t.calorie_balance}
 					<button class="card-info-trigger" onclick={() => showBalanceInfo = !showBalanceInfo} aria-label="Info"><Info size={12} /></button>
 					{#if showBalanceInfo}
 						<div class="card-info-tooltip">
@@ -433,11 +434,11 @@
 				</div>
 				<div class="card-hint" class:card-hint-warning={ns.avgCalorieBalance == null && hasDemographics && ns.trendWeight && ns.daysTracked7 === 0}>
 					{#if ns.avgCalorieBalance != null}
-						{t('seven_day_avg', lang)}
+						{t.seven_day_avg}
 					{:else if !hasDemographics || !ns.trendWeight}
 						{lang === 'en' ? 'Set height, birth year & weight' : 'Größe, Geburtsjahr & Gewicht eintragen'}
 					{:else}
-						{t('no_nutrition_data', lang)}
+						{t.no_nutrition_data}
 					{/if}
 				</div>
 			</div>
@@ -450,7 +451,7 @@
 					<div class="card-value card-value-na">—</div>
 				{/if}
 				<div class="card-label card-label-info">
-					{t('diet_adherence', lang)}
+					{t.diet_adherence}
 					<button class="card-info-trigger" onclick={() => showAdherenceInfo = !showAdherenceInfo} aria-label="Info"><Info size={12} /></button>
 					{#if showAdherenceInfo}
 						<div class="card-info-tooltip">
@@ -462,16 +463,16 @@
 				</div>
 				<div class="card-hint">
 					{#if ns.adherencePercent != null}
-						{t('since_start', lang)} ({ns.adherenceDays} {t('days', lang)})
+						{t.since_start} ({ns.adherenceDays} {t.days})
 					{:else}
-						{t('no_calorie_goal', lang)}
+						{t.no_calorie_goal}
 					{/if}
 				</div>
 			</div>
 
 			<div class="lifetime-card macro-card" class:macro-card-empty={!ns.macroSplit}>
 				<div class="macro-left">
-					<div class="macro-header">{t('macro_split', lang)} <span class="macro-subtitle">({t('seven_day_avg', lang)})</span></div>
+					<div class="macro-header">{t.macro_split} <span class="macro-subtitle">({t.seven_day_avg})</span></div>
 					<div class="macro-legend">
 						<span class="macro-legend-item">
 							<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3,9.5 A4,4 0 1,1 9,9.5" fill="none" stroke="var(--color-text-secondary)" stroke-width="2" stroke-linecap="round"/></svg>
@@ -483,14 +484,14 @@
 						</span>
 					</div>
 					{#if !ns.macroSplit}
-						<div class="macro-empty-hint">{t('no_nutrition_data', lang)}</div>
+						<div class="macro-empty-hint">{t.no_nutrition_data}</div>
 					{/if}
 				</div>
 				<div class="macro-rings">
 					{#each [
-						{ pct: ns.macroSplit?.protein ?? 0, target: ns.macroTargets?.protein, label: t('protein', lang), color: 'var(--nord14)', fill: '#a3be8c', icon: Beef },
-						{ pct: ns.macroSplit?.fat ?? 0, target: ns.macroTargets?.fat, label: t('fat', lang), color: 'var(--nord12)', fill: '#d08770', icon: Droplet },
-						{ pct: ns.macroSplit?.carbs ?? 0, target: ns.macroTargets?.carbs, label: t('carbs', lang), color: 'var(--nord9)', fill: '#81a1c1', icon: Wheat },
+						{ pct: ns.macroSplit?.protein ?? 0, target: ns.macroTargets?.protein, label: t.protein, color: 'var(--nord14)', fill: '#a3be8c', icon: Beef },
+						{ pct: ns.macroSplit?.fat ?? 0, target: ns.macroTargets?.fat, label: t.fat, color: 'var(--nord12)', fill: '#d08770', icon: Droplet },
+						{ pct: ns.macroSplit?.carbs ?? 0, target: ns.macroTargets?.carbs, label: t.carbs, color: 'var(--nord9)', fill: '#81a1c1', icon: Wheat },
 					] as macro (macro.color)}
 						{@const MacroIcon = macro.icon}
 						<div class="macro-ring">
@@ -509,7 +510,7 @@
 			</div>
 
 		<div class="section-block muscle-heatmap-block">
-			<h2 class="section-title">{t('muscle_balance', lang)}</h2>
+			<h2 class="section-title">{t.muscle_balance}</h2>
 			{#await data.muscleHeatmap}
 				<div class="muscle-heatmap-pending" aria-hidden="true"></div>
 			{:then muscleHeatmap}
@@ -522,7 +523,7 @@
 
 	{#if cardsWithData.length > 0}
 		<section class="body-parts-section">
-			<h2>{t('body_parts', lang)}</h2>
+			<h2>{t.body_parts}</h2>
 			<div class="bp-grid">
 				{#each cardsWithData as card (card.key)}
 					{@const cv = currentValue(card)}
@@ -542,7 +543,7 @@
 							{/if}
 						</div>
 						<div class="bp-meta">
-							<span class="bp-label">{t(card.labelKey, lang)}</span>
+							<span class="bp-label">{t[card.labelKey]}</span>
 							{#if card.paired}
 								{#if cv.left != null && cv.right != null && cv.left === cv.right}
 									<span class="bp-value">{cv.left.toFixed(1)}<span class="bp-unit">cm</span></span>

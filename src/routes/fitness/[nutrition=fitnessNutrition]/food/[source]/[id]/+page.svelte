@@ -8,13 +8,14 @@
 	import Droplet from '@lucide/svelte/icons/droplet';
 	import Wheat from '@lucide/svelte/icons/wheat';
 	import { toast } from '$lib/js/toast.svelte';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 

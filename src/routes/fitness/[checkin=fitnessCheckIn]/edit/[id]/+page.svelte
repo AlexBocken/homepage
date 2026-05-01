@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m as messages } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -9,6 +9,7 @@
 	import DatePicker from '$lib/components/DatePicker.svelte';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(messages[lang]);
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 
 	let { data } = $props();
@@ -83,7 +84,7 @@
 	}
 
 	async function deleteMeasurement() {
-		if (!await confirm(t('delete_measurement_confirm', lang))) return;
+		if (!await confirm(t.delete_measurement_confirm)) return;
 		deleting = true;
 		try {
 			const res = await fetch(`/api/fitness/measurements/${m._id}`, { method: 'DELETE' });
@@ -98,67 +99,67 @@
 	}
 </script>
 
-<svelte:head><title>{t('edit_measurement', lang)} - Bocken</title></svelte:head>
+<svelte:head><title>{t.edit_measurement} - Bocken</title></svelte:head>
 
 <div class="measure-edit">
-	<h1>{t('edit_measurement', lang)}</h1>
+	<h1>{t.edit_measurement}</h1>
 
 	{#if !m}
 		<p>Measurement not found.</p>
 	{:else}
 		<form onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
 			<div class="form-group">
-				<label for="m-date">{t('date', lang)}</label>
+				<label for="m-date">{t.date}</label>
 				<DatePicker bind:value={formDate} {lang} />
 			</div>
 
-			<h3>{t('general', lang)}</h3>
+			<h3>{t.general}</h3>
 			<div class="form-row">
 				<div class="form-group">
-					<label for="m-weight">{t('weight_kg', lang)}</label>
+					<label for="m-weight">{t.weight_kg}</label>
 					<input id="m-weight" type="number" step="0.1" bind:value={formWeight} placeholder="--" />
 				</div>
 				<div class="form-group">
-					<label for="m-bf">{t('body_fat_pct', lang)}</label>
+					<label for="m-bf">{t.body_fat_pct}</label>
 					<input id="m-bf" type="number" step="0.1" bind:value={formBodyFat} placeholder="--" />
 				</div>
 			</div>
 
-			<h3>{t('body_parts_cm', lang)}</h3>
+			<h3>{t.body_parts_cm}</h3>
 			<div class="form-row">
-				<div class="form-group"><label for="m-neck">{t('neck', lang)}</label><input id="m-neck" type="number" step="0.1" bind:value={formNeck} placeholder="--" /></div>
-				<div class="form-group"><label for="m-shoulders">{t('shoulders', lang)}</label><input id="m-shoulders" type="number" step="0.1" bind:value={formShoulders} placeholder="--" /></div>
-				<div class="form-group"><label for="m-chest">{t('chest', lang)}</label><input id="m-chest" type="number" step="0.1" bind:value={formChest} placeholder="--" /></div>
+				<div class="form-group"><label for="m-neck">{t.neck}</label><input id="m-neck" type="number" step="0.1" bind:value={formNeck} placeholder="--" /></div>
+				<div class="form-group"><label for="m-shoulders">{t.shoulders}</label><input id="m-shoulders" type="number" step="0.1" bind:value={formShoulders} placeholder="--" /></div>
+				<div class="form-group"><label for="m-chest">{t.chest}</label><input id="m-chest" type="number" step="0.1" bind:value={formChest} placeholder="--" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-bl">{t('l_bicep', lang)}</label><input id="m-bl" type="number" step="0.1" bind:value={formBicepsL} placeholder="--" /></div>
-				<div class="form-group"><label for="m-br">{t('r_bicep', lang)}</label><input id="m-br" type="number" step="0.1" bind:value={formBicepsR} placeholder="--" /></div>
+				<div class="form-group"><label for="m-bl">{t.l_bicep}</label><input id="m-bl" type="number" step="0.1" bind:value={formBicepsL} placeholder="--" /></div>
+				<div class="form-group"><label for="m-br">{t.r_bicep}</label><input id="m-br" type="number" step="0.1" bind:value={formBicepsR} placeholder="--" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-fl">{t('l_forearm', lang)}</label><input id="m-fl" type="number" step="0.1" bind:value={formForearmsL} placeholder="--" /></div>
-				<div class="form-group"><label for="m-fr">{t('r_forearm', lang)}</label><input id="m-fr" type="number" step="0.1" bind:value={formForearmsR} placeholder="--" /></div>
+				<div class="form-group"><label for="m-fl">{t.l_forearm}</label><input id="m-fl" type="number" step="0.1" bind:value={formForearmsL} placeholder="--" /></div>
+				<div class="form-group"><label for="m-fr">{t.r_forearm}</label><input id="m-fr" type="number" step="0.1" bind:value={formForearmsR} placeholder="--" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-waist">{t('waist', lang)}</label><input id="m-waist" type="number" step="0.1" bind:value={formWaist} placeholder="--" /></div>
-				<div class="form-group"><label for="m-hips">{t('hips', lang)}</label><input id="m-hips" type="number" step="0.1" bind:value={formHips} placeholder="--" /></div>
+				<div class="form-group"><label for="m-waist">{t.waist}</label><input id="m-waist" type="number" step="0.1" bind:value={formWaist} placeholder="--" /></div>
+				<div class="form-group"><label for="m-hips">{t.hips}</label><input id="m-hips" type="number" step="0.1" bind:value={formHips} placeholder="--" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-tl">{t('l_thigh', lang)}</label><input id="m-tl" type="number" step="0.1" bind:value={formThighsL} placeholder="--" /></div>
-				<div class="form-group"><label for="m-tr">{t('r_thigh', lang)}</label><input id="m-tr" type="number" step="0.1" bind:value={formThighsR} placeholder="--" /></div>
+				<div class="form-group"><label for="m-tl">{t.l_thigh}</label><input id="m-tl" type="number" step="0.1" bind:value={formThighsL} placeholder="--" /></div>
+				<div class="form-group"><label for="m-tr">{t.r_thigh}</label><input id="m-tr" type="number" step="0.1" bind:value={formThighsR} placeholder="--" /></div>
 			</div>
 			<div class="form-row">
-				<div class="form-group"><label for="m-cl">{t('l_calf', lang)}</label><input id="m-cl" type="number" step="0.1" bind:value={formCalvesL} placeholder="--" /></div>
-				<div class="form-group"><label for="m-cr">{t('r_calf', lang)}</label><input id="m-cr" type="number" step="0.1" bind:value={formCalvesR} placeholder="--" /></div>
+				<div class="form-group"><label for="m-cl">{t.l_calf}</label><input id="m-cl" type="number" step="0.1" bind:value={formCalvesL} placeholder="--" /></div>
+				<div class="form-group"><label for="m-cr">{t.r_calf}</label><input id="m-cr" type="number" step="0.1" bind:value={formCalvesR} placeholder="--" /></div>
 			</div>
 
 			<div class="delete-actions">
 				<button type="button" class="btn-danger" onclick={deleteMeasurement} disabled={deleting || saving}>
 					<Trash2 size={14} />
-					{deleting ? t('saving', lang) : t('delete_', lang)}
+					{deleting ? t.saving : t.delete_}
 				</button>
 			</div>
 
-			<SaveFab disabled={saving || deleting} label={t('update_measurement', lang)} />
+			<SaveFab disabled={saving || deleting} label={t.update_measurement} />
 		</form>
 	{/if}
 </div>

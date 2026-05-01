@@ -6,9 +6,10 @@
 	import { METRIC_LABELS } from '$lib/data/exercises';
 	import RestTimer from './RestTimer.svelte';
 	import { page } from '$app/state';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 
 	/**
 	 * @type {{
@@ -97,16 +98,16 @@
 			{#if editable && onRemove}
 				<th class="col-remove"></th>
 			{/if}
-			<th class="col-set">{t('set_header', lang)}</th>
+			<th class="col-set">{t.set_header}</th>
 			{#if previousSets}
-				<th class="col-prev">{t('prev_header', lang)}</th>
+				<th class="col-prev">{t.prev_header}</th>
 			{/if}
 			{#each mainMetrics as metric (metric)}
 				<th class="col-metric">{timedHold && metric === 'duration' ? 'SEC' : METRIC_LABELS[metric]}</th>
 			{/each}
 			{#if editable && hasRpe}
 				<th class="col-at"></th>
-				<th class="col-rpe">{t('rpe', lang)}</th>
+				<th class="col-rpe">{t.rpe}</th>
 			{/if}
 			{#if editable}
 				<th class="col-check"></th>

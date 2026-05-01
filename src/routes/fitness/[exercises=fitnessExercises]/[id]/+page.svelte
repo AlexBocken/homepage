@@ -8,21 +8,22 @@
 		switch (type) {
 			case 'STRETCHING':
 			case 'YOGA':
-				return { key: 'stretch', label: t('stretch_pill', lang) };
+				return { key: 'stretch', label: t.stretch_pill };
 			case 'STRENGTH':
 			case 'WEIGHTLIFTING':
-				return { key: 'strength', label: t('strength_pill', lang) };
+				return { key: 'strength', label: t.strength_pill };
 			case 'CARDIO':
-				return { key: 'cardio', label: t('cardio_pill', lang) };
+				return { key: 'cardio', label: t.cardio_pill };
 			case 'PLYOMETRICS':
-				return { key: 'plyo', label: t('plyo_pill', lang) };
+				return { key: 'plyo', label: t.plyo_pill };
 			default:
 				return null;
 		}
 	}
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleMap from '$lib/components/fitness/MuscleMap.svelte';
@@ -141,7 +142,7 @@
 				class:active={activeTab === tab}
 				onclick={() => activeTab = tab}
 			>
-				{{ about: t('about', lang), history: t('history_tab', lang), charts: t('charts', lang), records: t('records', lang) }[tab]}
+				{{ about: t.about, history: t.history_tab, charts: t.charts, records: t.records }[tab]}
 			</button>
 		{/each}
 	</div>
@@ -185,7 +186,7 @@
 
 				<!-- Instructions -->
 				{#if exercise?.localInstructions?.length}
-					<h3>{t('instructions', lang)}</h3>
+					<h3>{t.instructions}</h3>
 					<ol class="instructions">
 						{#each exercise.localInstructions as step}
 							<li>{step}</li>
@@ -234,7 +235,7 @@
 	{:else if activeTab === 'history'}
 		<div class="tab-content">
 			{#if history.length === 0}
-				<p class="empty">{t('no_history_yet', lang)}</p>
+				<p class="empty">{t.no_history_yet}</p>
 			{:else}
 				{#each history as entry (entry.sessionId)}
 					<div class="history-session">
@@ -244,7 +245,7 @@
 						</div>
 						<table class="history-sets">
 							<thead>
-								<tr><th>{t('set', lang)}</th><th>{t('kg', lang)}</th><th>{t('reps', lang)}</th><th>{t('est_1rm', lang)}</th></tr>
+								<tr><th>{t.set}</th><th>{t.kg}</th><th>{t.reps}</th><th>{t.est_1rm}</th></tr>
 							</thead>
 							<tbody>
 								{#each entry.sets as set, i (i)}
@@ -264,11 +265,11 @@
 	{:else if activeTab === 'charts'}
 		<div class="tab-content charts-grid">
 			{#if (charts.est1rmOverTime?.length ?? 0) > 0}
-				<FitnessChart data={est1rmChartData} title={t('best_set_1rm', lang)} yUnit=" kg" />
-				<FitnessChart data={maxWeightChartData} title={t('best_set_max', lang)} yUnit=" kg" />
-				<FitnessChart data={volumeChartData} title={t('total_volume', lang)} yUnit=" kg" />
+				<FitnessChart data={est1rmChartData} title={t.best_set_1rm} yUnit=" kg" />
+				<FitnessChart data={maxWeightChartData} title={t.best_set_max} yUnit=" kg" />
+				<FitnessChart data={volumeChartData} title={t.total_volume} yUnit=" kg" />
 			{:else}
-				<p class="empty">{t('not_enough_data', lang)}</p>
+				<p class="empty">{t.not_enough_data}</p>
 			{/if}
 		</div>
 	{:else if activeTab === 'records'}
@@ -276,29 +277,29 @@
 			<div class="records-summary">
 				{#if prs.estimatedOneRepMax}
 					<div class="record-card">
-						<span class="record-label">{t('estimated_1rm', lang)}</span>
+						<span class="record-label">{t.estimated_1rm}</span>
 						<span class="record-value">{prs.estimatedOneRepMax} kg</span>
 					</div>
 				{/if}
 				{#if prs.maxVolume}
 					<div class="record-card">
-						<span class="record-label">{t('max_volume', lang)}</span>
+						<span class="record-label">{t.max_volume}</span>
 						<span class="record-value">{prs.maxVolume} kg</span>
 					</div>
 				{/if}
 				{#if prs.maxWeight}
 					<div class="record-card">
-						<span class="record-label">{t('max_weight', lang)}</span>
+						<span class="record-label">{t.max_weight}</span>
 						<span class="record-value">{prs.maxWeight} kg</span>
 					</div>
 				{/if}
 			</div>
 
 			{#if records.length}
-				<h3>{t('rep_records', lang)}</h3>
+				<h3>{t.rep_records}</h3>
 				<table class="records-table">
 					<thead>
-						<tr><th>{t('reps', lang)}</th><th>{t('best_performance', lang)}</th><th>{t('est_1rm', lang)}</th></tr>
+						<tr><th>{t.reps}</th><th>{t.best_performance}</th><th>{t.est_1rm}</th></tr>
 					</thead>
 					<tbody>
 						{#each records as rec (rec.reps)}

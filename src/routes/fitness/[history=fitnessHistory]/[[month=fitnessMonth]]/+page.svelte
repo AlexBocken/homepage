@@ -4,9 +4,10 @@
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import SessionCard from '$lib/components/fitness/SessionCard.svelte';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang(appPage.url.pathname));
+	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
 
 	let { data } = $props();
@@ -60,17 +61,17 @@
 	const recentHref = $derived(resolve('/fitness/[history=fitnessHistory]', { history: s.history }));
 </script>
 
-<svelte:head><title>{t('history_title', lang)} - Bocken</title></svelte:head>
+<svelte:head><title>{t.history_title} - Bocken</title></svelte:head>
 
 <div class="history-page">
-	<h1 class="sr-only">{t('history_title', lang)}</h1>
+	<h1 class="sr-only">{t.history_title}</h1>
 
 	{#if sessions.length === 0}
-		<p class="empty">{t('no_workouts_yet', lang)}</p>
+		<p class="empty">{t.no_workouts_yet}</p>
 	{:else}
 		{#each Object.entries(grouped) as [month, monthSessions] (month)}
 			<section class="month-group">
-				<h2 class="month-header">{month} — {monthSessions.length} {monthSessions.length !== 1 ? t('workouts_plural', lang) : t('workout_singular', lang)}</h2>
+				<h2 class="month-header">{month} — {monthSessions.length} {monthSessions.length !== 1 ? t.workouts_plural : t.workout_singular}</h2>
 				<div class="session-list">
 					{#each monthSessions as session (session._id)}
 						<SessionCard {session} />

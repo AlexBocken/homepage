@@ -13,7 +13,7 @@
 	import History from '@lucide/svelte/icons/history';
 	import { fly, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	/** @typedef {import('$lib/js/fitnessI18n').FitnessKey} FitnessKey */
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -25,6 +25,7 @@
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 
 	/** @typedef {{ key: FitnessKey, labelKey: FitnessKey, img: string | null, paired: boolean, tipKey: FitnessKey, dbSingle?: string, dbLeft?: string, dbRight?: string }} Step */
@@ -44,8 +45,8 @@
 
 	/** @param {Step} s */
 	function stepLabel(s) {
-		if (!s.paired) return t(s.labelKey, lang);
-		return t(s.key, lang);
+		if (!s.paired) return t[s.labelKey];
+		return t[s.key];
 	}
 
 	/** Sorted-ascending clean list of past body-part records */
@@ -208,7 +209,7 @@
 			}
 		}
 		if (Object.keys(ms).length === 0) {
-			toast.error(t('no_body_parts_selected', lang));
+			toast.error(t.no_body_parts_selected);
 			return;
 		}
 		saving = true;
@@ -233,16 +234,16 @@
 				/** @param {{ key: string, oldVal: unknown, newVal: unknown }} c */
 				const fmtConflict = (c) => {
 					const part = c.key.startsWith('measurements.') ? c.key.slice('measurements.'.length) : c.key;
-					const label = t(/** @type {FitnessKey} */ (partKeyMap[part] ?? part), lang);
+					const label = t[/** @type {FitnessKey} */ (partKeyMap[part] ?? part)];
 					return `${label} (${c.oldVal} cm → ${c.newVal} cm)`;
 				};
 				const fields = conflicts.map(fmtConflict).join(', ');
 				const ok = await confirm(
-					t('overwrite_message', lang).replace('{fields}', fields),
+					t.overwrite_message.replace('{fields}', fields),
 					{
-						title: t('overwrite_title', lang),
-						confirmText: t('overwrite_confirm', lang),
-						cancelText: t('cancel', lang),
+						title: t.overwrite_title,
+						confirmText: t.overwrite_confirm,
+						cancelText: t.cancel,
 						destructive: true
 					}
 				);
@@ -368,12 +369,12 @@
 </script>
 
 <svelte:window onkeydown={onkey} />
-<svelte:head><title>{t('body_parts', lang)} - Bocken</title></svelte:head>
+<svelte:head><title>{t.body_parts} - Bocken</title></svelte:head>
 
 <div class="shell" class:is-done={done} data-fitness-fullbleed>
-	<aside class="rail" aria-label={t('body_parts', lang)}>
+	<aside class="rail" aria-label={t.body_parts}>
 		<div class="rail-header">
-			<span class="rail-eyebrow">{t('body_parts', lang)}</span>
+			<span class="rail-eyebrow">{t.body_parts}</span>
 			<span class="rail-count">{steps.filter(isFilled).length}/{total}</span>
 		</div>
 		<ol class="rail-list">
@@ -403,7 +404,7 @@
 					onclick={() => { direction = 1; idx = total; }}
 				>
 					<span class="rail-dot" aria-hidden="true"><Check size={11} strokeWidth={3} /></span>
-					<span class="rail-label">{t('review_save', lang)}</span>
+					<span class="rail-label">{t.review_save}</span>
 					<span class="rail-value"></span>
 				</button>
 			</li>
@@ -416,7 +417,7 @@
 				<span class="dot" class:active={i === idx && !done} class:past={i < idx || done}></span>
 			{/each}
 		</div>
-		<button class="icon-x" aria-label={t('exit', lang)} onclick={exit}>
+		<button class="icon-x" aria-label={t.exit} onclick={exit}>
 			<X size={18} />
 		</button>
 	</header>
@@ -442,9 +443,9 @@
 					</div>
 
 					<div class="meta">
-						<span class="eyebrow">{fmt(t('step_n_of_m', lang), { n: idx + 1, m: total })}</span>
+						<span class="eyebrow">{fmt(t.step_n_of_m, { n: idx + 1, m: total })}</span>
 						<h1 class="title">{stepLabel(step)}</h1>
-						<p class="tip">{t(step.tipKey, lang)}</p>
+						<p class="tip">{t[step.tipKey]}</p>
 					</div>
 
 					{#if step.paired}
@@ -488,20 +489,20 @@
 								</div>
 								<button type="button" class="copy-btn" onclick={() => copyLtoR(step.key)} disabled={!pv.left}>
 									<CopyPlus size={15} />
-									<span>{t('copy_l_to_r_before', lang)}</span>
+									<span>{t.copy_l_to_r_before}</span>
 									<ArrowRight size={14} />
-									<span>{t('copy_l_to_r_after', lang)}</span>
+									<span>{t.copy_l_to_r_after}</span>
 								</button>
 							</div>
 						{/if}
 						{#if lastForStep?.left != null || lastForStep?.right != null}
 							<button type="button" class="same-value-btn" onclick={() => { useLastValue(step.key); next(); }}>
 								<History size={15} />
-								<span>{t('same_as_last', lang)}</span>
+								<span>{t.same_as_last}</span>
 							</button>
 						{/if}
 						<div class="same-toggle">
-							<Toggle bind:checked={pv.same} label={t('same_both_sides', lang)} />
+							<Toggle bind:checked={pv.same} label={t.same_both_sides} />
 						</div>
 					{:else}
 						<div class="stepper" onwheel={(e) => onWheel(e, step.key, null)}>
@@ -519,7 +520,7 @@
 						{#if lastForStep?.value != null}
 							<button type="button" class="same-value-btn" onclick={() => { useLastValue(step.key); next(); }}>
 								<History size={15} />
-								<span>{t('same_as_last', lang)}</span>
+								<span>{t.same_as_last}</span>
 							</button>
 						{/if}
 					{/if}
@@ -530,8 +531,8 @@
 				<div class="check-halo">
 					<Check size={42} strokeWidth={2.4} />
 				</div>
-				<h1 class="title">{t('ready_to_save', lang)}</h1>
-				<p class="tip">{t('review_numbers', lang)}</p>
+				<h1 class="title">{t.ready_to_save}</h1>
+				<p class="tip">{t.review_numbers}</p>
 
 				<div class="date-row">
 					<DatePicker bind:value={formDate} {lang} />
@@ -548,7 +549,7 @@
 
 				<div class="summary-actions">
 					<button type="button" class="ghost" onclick={() => { idx = 0; direction = -1; }}>
-						<ArrowLeft size={14} /> {t('edit_again', lang)}
+						<ArrowLeft size={14} /> {t.edit_again}
 					</button>
 				</div>
 			</section>
@@ -561,15 +562,15 @@
 				<div class="panel-section chart-section" in:fade={{ duration: 180 }}>
 					<div class="panel-head">
 						<TrendingUp size={14} />
-						<h3 class="panel-title">{fmt(t('over_time', lang), { label: stepLabel(step) })}</h3>
+						<h3 class="panel-title">{fmt(t.over_time, { label: stepLabel(step) })}</h3>
 					</div>
 					{#if chart.empty}
 						<div class="chart-empty">
 							<span class="chart-empty-dot"></span>
-							{t('first_measurement_hint', lang)}
+							{t.first_measurement_hint}
 						</div>
 					{:else}
-						<svg class="chart" viewBox="0 0 {CHART_W} {CHART_H}" role="img" aria-label={fmt(t('over_time', lang), { label: stepLabel(step) })}>
+						<svg class="chart" viewBox="0 0 {CHART_W} {CHART_H}" role="img" aria-label={fmt(t.over_time, { label: stepLabel(step) })}>
 							<defs>
 								<linearGradient id="area-grad-primary" x1="0" x2="0" y1="0" y2="1">
 									<stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.25" />
@@ -598,7 +599,7 @@
 								{#if chart.axis.lastDate}
 									<text x={CHART_PAD.l} y={CHART_H - 4} text-anchor="start" class="axis-label">{shortDate(chart.axis.lastDate)}</text>
 								{/if}
-								<text x={CHART_W - CHART_PAD.r} y={CHART_H - 4} text-anchor="end" class="axis-label accent">{t('today_short', lang)}</text>
+								<text x={CHART_W - CHART_PAD.r} y={CHART_H - 4} text-anchor="end" class="axis-label accent">{t.today_short}</text>
 							{/if}
 						</svg>
 						{#if chart.series.length > 1}
@@ -618,7 +619,7 @@
 								<span class="legend-item">
 									<span class="swatch" style:background={chart.series[0].color}></span>
 									<span class="legend-val">{chart.series[0].pending.value.toFixed(1)} cm</span>
-									<span class="legend-tag">{t('today_short', lang)}</span>
+									<span class="legend-tag">{t.today_short}</span>
 								</span>
 							</div>
 						{/if}
@@ -631,31 +632,31 @@
 
 	<footer class="bottombar">
 		{#if !done}
-			<button type="button" class="ghost" onclick={skip}>{t('skip', lang)}</button>
+			<button type="button" class="ghost" onclick={skip}>{t.skip}</button>
 			{#if showShortcuts}
 				<div class="kbd-legend" aria-hidden="true">
-					<span><kbd>←</kbd><kbd>→</kbd> {t('kbd_nav', lang)}</span>
-					<span><kbd>↵</kbd> {t('kbd_next', lang)}</span>
-					<span><kbd>S</kbd> {t('kbd_skip', lang)}</span>
-					<span><kbd>scroll</kbd> {t('kbd_wheel', lang)}</span>
+					<span><kbd>←</kbd><kbd>→</kbd> {t.kbd_nav}</span>
+					<span><kbd>↵</kbd> {t.kbd_next}</span>
+					<span><kbd>S</kbd> {t.kbd_skip}</span>
+					<span><kbd>scroll</kbd> {t.kbd_wheel}</span>
 				</div>
 			{:else}
 				<button
 					type="button"
 					class="kbd-hint"
 					onclick={() => showShortcuts = true}
-					aria-label={t('kbd_hint', lang)}
-					title={t('kbd_hint', lang)}
+					aria-label={t.kbd_hint}
+					title={t.kbd_hint}
 				>
 					<kbd>?</kbd>
 				</button>
 			{/if}
 			<div class="nav-pair">
-				<button type="button" class="nav-btn" onclick={back} disabled={idx === 0} aria-label={t('back', lang)}>
+				<button type="button" class="nav-btn" onclick={back} disabled={idx === 0} aria-label={t.back}>
 					<ArrowLeft size={16} />
 				</button>
 				<button type="button" class="nav-btn primary" onclick={next}>
-					{idx === total - 1 ? t('review', lang) : t('next', lang)}
+					{idx === total - 1 ? t.review : t.next}
 					<ArrowRight size={16} />
 				</button>
 			</div>
@@ -665,7 +666,7 @@
 	</footer>
 
 	{#if done}
-		<SaveFab type="button" onclick={save} disabled={saving} label={saving ? t('saving', lang) : t('save_measurement', lang)} />
+		<SaveFab type="button" onclick={save} disabled={saving} label={saving ? t.saving : t.save_measurement} />
 	{/if}
 </div>
 

@@ -20,10 +20,11 @@
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { flattenIntervals } from '$lib/js/gps.svelte';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import TemplateCard from '$lib/components/fitness/TemplateCard.svelte';
@@ -174,7 +175,7 @@
 				templates = [...templates, template];
 				libTemplate.added = true;
 				libraryTemplates = [...libraryTemplates];
-				toast.success(t('template_added', lang));
+				toast.success(t.template_added);
 			} else if (res.status === 409) {
 				libTemplate.added = true;
 				libraryTemplates = [...libraryTemplates];
@@ -407,7 +408,7 @@
 		<section class="next-workout">
 			<div class="next-label">
 				<CalendarClock size={16} />
-				<span>{t('next_in_schedule', lang)}</span>
+				<span>{t.next_in_schedule}</span>
 			</div>
 			<button class="next-workout-btn" onclick={startNextScheduled}>
 				<div class="next-info">
@@ -428,7 +429,7 @@
 						{@const firstExData = firstEx ? getExerciseById(firstEx.exerciseId, lang) : null}
 						{@const firstExWeight = firstEx?.sets.find((/** @type {any} */ s) => s.weight != null)?.weight}
 						<span class="next-exercises">
-							{nextTemplate.exercises.length} {nextTemplate.exercises.length !== 1 ? t('exercises_word', lang) : t('exercise', lang)}
+							{nextTemplate.exercises.length} {nextTemplate.exercises.length !== 1 ? t.exercises_word : t.exercise}
 							{#if firstExData}
 								 · {lang === 'en' ? 'starts with' : 'beginnt mit'} {firstExData.localName} {#if firstExWeight != null}({firstExWeight} kg){/if}
 							{/if}
@@ -454,7 +455,7 @@
 		<div class="quick-start-row">
 			<button class="start-choice-btn" onclick={startEmpty}>
 				{#if isApp}<Dumbbell size={18} />{/if}
-				<span>{t('start_empty_workout', lang)}</span>
+				<span>{t.start_empty_workout}</span>
 			</button>
 			{#if isApp}
 				<button class="start-choice-btn" onclick={startGps}>
@@ -467,7 +468,7 @@
 
 	<section class="templates-section">
 		<div class="templates-header">
-			<h2>{t('templates', lang)}</h2>
+			<h2>{t.templates}</h2>
 			<div class="templates-header-actions">
 				<button class="header-icon-btn" onclick={openCreateTemplate} aria-label="Create template">
 					<Plus size={18} />
@@ -477,12 +478,12 @@
 				</button>
 				<button class="schedule-btn" onclick={openScheduleEditor} aria-label="Edit workout schedule">
 					<CalendarClock size={16} />
-					{t('schedule', lang)}
+					{t.schedule}
 				</button>
 			</div>
 		</div>
 		{#if templates.length > 0}
-			<p class="template-count">{t('my_templates', lang)} ({templates.length})</p>
+			<p class="template-count">{t.my_templates} ({templates.length})</p>
 			<div class="template-grid">
 				{#each templates as template (template._id)}
 					<TemplateCard
@@ -493,10 +494,10 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="no-templates">{t('no_templates_yet', lang)}</p>
+			<p class="no-templates">{t.no_templates_yet}</p>
 				<button class="browse-library-btn" onclick={openLibrary}>
 					<BookOpen size={16} />
-					{t('browse_library', lang)}
+					{t.browse_library}
 				</button>
 		{/if}
 	</section>
@@ -538,7 +539,7 @@
 							<li>
 								<span class="tex-name">{exercise?.localName ?? ex.exerciseId}</span>
 								<span class="tex-meta">
-									{ex.sets.length} {ex.sets.length !== 1 ? t('sets', lang) : t('set', lang)}{#if firstWeight != null} · {firstWeight} kg{/if}
+									{ex.sets.length} {ex.sets.length !== 1 ? t.sets : t.set}{#if firstWeight != null} · {firstWeight} kg{/if}
 								</span>
 							</li>
 						{/each}
@@ -553,14 +554,14 @@
 					{#if selectedTemplate.mode === 'gps'}
 						<MapPin size={16} /> Start GPS Workout
 					{:else}
-						<Play size={16} /> {t('start_workout', lang)}
+						<Play size={16} /> {t.start_workout}
 					{/if}
 				</button>
 				<button class="modal-edit" onclick={() => openEditTemplate(selectedTemplate)}>
-					<Pencil size={16} /> {t('edit_template', lang)}
+					<Pencil size={16} /> {t.edit_template}
 				</button>
 				<button class="modal-delete" onclick={() => deleteTemplate(selectedTemplate)}>
-					<Trash2 size={16} /> {t('delete_template', lang)}
+					<Trash2 size={16} /> {t.delete_template}
 				</button>
 			</div>
 		</div>
@@ -575,14 +576,14 @@
 		<div class="modal-backdrop" onclick={closeEditor}></div>
 		<div class="modal-panel editor-panel">
 			<div class="modal-header">
-				<h2>{editingTemplate ? t('edit_template', lang) : t('new_template', lang)}</h2>
+				<h2>{editingTemplate ? t.edit_template : t.new_template}</h2>
 				<button class="close-btn" onclick={closeEditor} aria-label="Close"><X size={20} /></button>
 			</div>
 			<div class="modal-body">
 				<input
 					class="editor-name"
 					type="text"
-					placeholder={t('template_name_placeholder', lang)}
+					placeholder={t.template_name_placeholder}
 					bind:value={editorName}
 				/>
 
@@ -672,19 +673,19 @@
 									{/if}
 								</div>
 							{/each}
-							<button class="editor-add-set" onclick={() => editorAddSet(exIdx)}>{t('add_set_lower', lang)}</button>
+							<button class="editor-add-set" onclick={() => editorAddSet(exIdx)}>{t.add_set_lower}</button>
 						</div>
 					</div>
 				{/each}
 
 				<button class="editor-add-exercise" onclick={() => editorPicker = true}>
-					<Plus size={16} /> {t('add_exercise_btn', lang)}
+					<Plus size={16} /> {t.add_exercise_btn}
 				</button>
 				{/if}
 			</div>
 			<div class="modal-actions">
 				<button class="modal-start" onclick={saveTemplate} disabled={editorSaving || !editorName.trim() || (editorMode === 'manual' && editorExercises.length === 0)}>
-					<Save size={16} /> {editorSaving ? t('saving', lang) : t('save_template', lang)}
+					<Save size={16} /> {editorSaving ? t.saving : t.save_template}
 				</button>
 			</div>
 		</div>
@@ -706,11 +707,11 @@
 		<div class="modal-backdrop" onclick={closeScheduleEditor}></div>
 		<div class="modal-panel editor-panel">
 			<div class="modal-header">
-				<h2>{t('workout_schedule', lang)}</h2>
+				<h2>{t.workout_schedule}</h2>
 				<button class="close-btn" onclick={closeScheduleEditor} aria-label="Close"><X size={20} /></button>
 			</div>
 			<div class="modal-body">
-				<p class="schedule-hint">{t('schedule_hint', lang)}</p>
+				<p class="schedule-hint">{t.schedule_hint}</p>
 
 				{#if editorScheduleOrder.length > 0}
 					<div class="schedule-order">
@@ -735,7 +736,7 @@
 				{/if}
 
 				<div class="schedule-available">
-					<p class="schedule-available-label">{t('available_templates', lang)}</p>
+					<p class="schedule-available-label">{t.available_templates}</p>
 					{#each templates.filter((t) => !editorScheduleOrder.includes(t._id)) as template (template._id)}
 						<button class="schedule-add-item" onclick={() => toggleScheduleTemplate(template._id)}>
 							<Plus size={14} />
@@ -743,13 +744,13 @@
 						</button>
 					{/each}
 					{#if templates.filter((t) => !editorScheduleOrder.includes(t._id)).length === 0}
-						<p class="schedule-all-added">{t('all_templates_scheduled', lang)}</p>
+						<p class="schedule-all-added">{t.all_templates_scheduled}</p>
 					{/if}
 				</div>
 			</div>
 			<div class="modal-actions">
 				<button class="modal-start" onclick={saveAndCloseSchedule} disabled={scheduleSaving}>
-					<Save size={16} /> {scheduleSaving ? t('saving', lang) : t('save_schedule', lang)}
+					<Save size={16} /> {scheduleSaving ? t.saving : t.save_schedule}
 				</button>
 			</div>
 		</div>
@@ -764,12 +765,12 @@
 		<div class="modal-backdrop" onclick={() => showLibrary = false}></div>
 		<div class="modal-panel library-panel">
 			<div class="modal-header">
-				<h2>{t('template_library', lang)}</h2>
+				<h2>{t.template_library}</h2>
 				<button class="close-btn" onclick={() => showLibrary = false} aria-label="Close"><X size={20} /></button>
 			</div>
 			<div class="modal-body">
 				{#if libraryLoading}
-					<p class="library-loading">{t('loading', lang)}...</p>
+					<p class="library-loading">{t.loading}...</p>
 				{:else}
 					<div class="library-grid">
 						{#each libraryTemplates as libTmpl (libTmpl.id)}
@@ -777,7 +778,7 @@
 								<div class="library-card-info">
 									<h3>{libTmpl.name}</h3>
 									<p>{libTmpl.description}</p>
-									<span class="library-card-meta">{libTmpl.exercises.length} {t('exercises_heading', lang)}</span>
+									<span class="library-card-meta">{libTmpl.exercises.length} {t.exercises_heading}</span>
 								</div>
 								<button
 									class="library-add-btn"

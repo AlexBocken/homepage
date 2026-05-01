@@ -14,7 +14,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import UserCog from '@lucide/svelte/icons/user-cog';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	/** @typedef {import('$lib/js/fitnessI18n').FitnessKey} FitnessKey */
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -30,6 +30,7 @@
 	);
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
@@ -107,19 +108,19 @@
 
 	const latestBp = $derived(latest.measurements?.value ?? {});
 	const bodyPartFields = $derived([
-		{ label: t('neck', lang), key: 'neck', value: latestBp.neck },
-		{ label: t('shoulders', lang), key: 'shoulders', value: latestBp.shoulders },
-		{ label: t('chest', lang), key: 'chest', value: latestBp.chest },
-		{ label: t('l_bicep', lang), key: 'leftBicep', value: latestBp.leftBicep },
-		{ label: t('r_bicep', lang), key: 'rightBicep', value: latestBp.rightBicep },
-		{ label: t('l_forearm', lang), key: 'leftForearm', value: latestBp.leftForearm },
-		{ label: t('r_forearm', lang), key: 'rightForearm', value: latestBp.rightForearm },
-		{ label: t('waist', lang), key: 'waist', value: latestBp.waist },
-		{ label: t('hips', lang), key: 'hips', value: latestBp.hips },
-		{ label: t('l_thigh', lang), key: 'leftThigh', value: latestBp.leftThigh },
-		{ label: t('r_thigh', lang), key: 'rightThigh', value: latestBp.rightThigh },
-		{ label: t('l_calf', lang), key: 'leftCalf', value: latestBp.leftCalf },
-		{ label: t('r_calf', lang), key: 'rightCalf', value: latestBp.rightCalf }
+		{ label: t.neck, key: 'neck', value: latestBp.neck },
+		{ label: t.shoulders, key: 'shoulders', value: latestBp.shoulders },
+		{ label: t.chest, key: 'chest', value: latestBp.chest },
+		{ label: t.l_bicep, key: 'leftBicep', value: latestBp.leftBicep },
+		{ label: t.r_bicep, key: 'rightBicep', value: latestBp.rightBicep },
+		{ label: t.l_forearm, key: 'leftForearm', value: latestBp.leftForearm },
+		{ label: t.r_forearm, key: 'rightForearm', value: latestBp.rightForearm },
+		{ label: t.waist, key: 'waist', value: latestBp.waist },
+		{ label: t.hips, key: 'hips', value: latestBp.hips },
+		{ label: t.l_thigh, key: 'leftThigh', value: latestBp.leftThigh },
+		{ label: t.r_thigh, key: 'rightThigh', value: latestBp.rightThigh },
+		{ label: t.l_calf, key: 'leftCalf', value: latestBp.leftCalf },
+		{ label: t.r_calf, key: 'rightCalf', value: latestBp.rightCalf }
 	]);
 
 	async function loadMore() {
@@ -145,7 +146,7 @@
 
 	/** @param {string} id */
 	async function deleteMeasurement(id) {
-		if (!await confirm(t('delete_measurement_confirm', lang))) return;
+		if (!await confirm(t.delete_measurement_confirm)) return;
 		try {
 			const res = await fetch(`/api/fitness/measurements/${id}`, { method: 'DELETE' });
 			if (res.ok) {
@@ -182,7 +183,7 @@
 			const de = bpCount === 1 ? '1 Körperteil' : `${bpCount} Körperteile`;
 			parts.push(lang === 'en' ? en : de);
 		}
-		return parts.join(' · ') || t('no_measurements_yet', lang);
+		return parts.join(' · ') || t.no_measurements_yet;
 	}
 
 	// --- New measurement form ---
@@ -199,7 +200,7 @@
 	const hasAnyBodyPart = $derived(bodyPartFields.some((f) => f.value != null));
 	const latestBpDate = $derived(latest.measurements?.date ?? null);
 	function formatLatestBp() {
-		if (!latestBpDate) return t('no_measurements_yet', lang);
+		if (!latestBpDate) return t.no_measurements_yet;
 		const d = new Date(latestBpDate);
 		const now = new Date();
 		const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
@@ -208,7 +209,7 @@
 		if (diffDays < 30) rel = rtf.format(-diffDays, 'day');
 		else if (diffDays < 365) rel = rtf.format(-Math.floor(diffDays / 30), 'month');
 		else rel = rtf.format(-Math.floor(diffDays / 365), 'year');
-		return `${t('last_measured', lang)} · ${rel}`;
+		return `${t.last_measured} · ${rel}`;
 	}
 
 	/** @typedef {{ key: string, filled: boolean } & ({ shape: 'dot', x: number, y: number } | { shape: 'band', x1: number, x2: number, y: number })} BpMarker */
@@ -361,7 +362,7 @@
 			else if (c.key === 'notes') { label = lang === 'en' ? 'Notes' : 'Notizen'; }
 			else if (c.key.startsWith('measurements.')) {
 				const part = c.key.slice('measurements.'.length);
-				label = t(/** @type {FitnessKey} */ (partKeyMap[part] ?? part), lang);
+				label = t[/** @type {FitnessKey} */ (partKeyMap[part] ?? part)];
 				unit = ' cm';
 			}
 			return `${label} (${c.oldVal}${unit} → ${c.newVal}${unit})`;
@@ -382,11 +383,11 @@
 			if (res.status === 409) {
 				const { conflicts } = await res.json();
 				const ok = await confirm(
-					t('overwrite_message', lang).replace('{fields}', formatConflicts(conflicts)),
+					t.overwrite_message.replace('{fields}', formatConflicts(conflicts)),
 					{
-						title: t('overwrite_title', lang),
-						confirmText: t('overwrite_confirm', lang),
-						cancelText: t('cancel', lang),
+						title: t.overwrite_title,
+						confirmText: t.overwrite_confirm,
+						cancelText: t.cancel,
 						destructive: true
 					}
 				);
@@ -420,16 +421,16 @@
 <svelte:head><title>{lang === 'en' ? 'Measure' : 'Messen'} - Bocken</title></svelte:head>
 
 <div class="measure-page">
-	<h1 class="sr-only">{t('measure_title', lang)}</h1>
+	<h1 class="sr-only">{t.measure_title}</h1>
 
 	{#if showSetupBanner}
 		<div class="setup-banner" role="status">
 			<span class="setup-banner-icon" aria-hidden="true"><Sparkles size={18} /></span>
-			<span class="setup-banner-text">{t('profile_setup_cta', lang)}</span>
+			<span class="setup-banner-text">{t.profile_setup_cta}</span>
 			<button type="button" class="setup-banner-cta" onclick={openProfileEdit}>
-				{t('set_up_profile', lang)}
+				{t.set_up_profile}
 			</button>
-			<button type="button" class="setup-banner-dismiss" onclick={() => bannerDismissed = true} aria-label={t('dismiss', lang)}>
+			<button type="button" class="setup-banner-dismiss" onclick={() => bannerDismissed = true} aria-label={t.dismiss}>
 				<X size={14} />
 			</button>
 		</div>
@@ -437,32 +438,32 @@
 
 	{#if profileEditing}
 		<div class="profile-fields" bind:this={profileFormEl}>
-			<button type="button" class="profile-close-btn" onclick={() => profileEditing = false} aria-label={t('cancel', lang)}>
+			<button type="button" class="profile-close-btn" onclick={() => profileEditing = false} aria-label={t.cancel}>
 				<X size={14} />
 			</button>
 			<div class="form-group">
 				<!-- svelte-ignore a11y_label_has_associated_control -->
-			<label>{t('sex', lang)}</label>
+			<label>{t.sex}</label>
 				<div class="sex-pills">
 					<button class="sex-pill" class:active={profileSex === 'male'} onclick={() => profileSex = 'male'}>
-						<Mars size={14} /> {t('male', lang)}
+						<Mars size={14} /> {t.male}
 					</button>
 					<button class="sex-pill" class:active={profileSex === 'female'} onclick={() => profileSex = 'female'}>
-						<Venus size={14} /> {t('female', lang)}
+						<Venus size={14} /> {t.female}
 					</button>
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="p-height">{t('height', lang)}</label>
+				<label for="p-height">{t.height}</label>
 				<input id="p-height" type="number" min="100" max="250" placeholder="175" bind:value={profileHeight} />
 			</div>
 			<div class="form-group">
-				<label for="p-birthyear">{t('birth_year', lang)}</label>
+				<label for="p-birthyear">{t.birth_year}</label>
 				<input id="p-birthyear" type="number" min="1900" max="2020" placeholder="1990" bind:value={profileBirthYear} />
 			</div>
 			{#if profileDirty}
 				<button class="profile-save-btn" onclick={saveProfile} disabled={profileSaving}>
-					{profileSaving ? t('saving', lang) : t('save', lang)}
+					{profileSaving ? t.saving : t.save}
 				</button>
 			{/if}
 		</div>
@@ -472,7 +473,7 @@
 	<div class="main-col">
 		<button type="button" class="edit-profile-link top" onclick={openProfileEdit}>
 			<UserCog size={14} />
-			<span>{t('edit_profile', lang)}</span>
+			<span>{t.edit_profile}</span>
 		</button>
 		<form class="add-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
 		<div class="date-row">
@@ -573,19 +574,19 @@
 				</svg>
 			</div>
 			<div class="bp-content">
-				<span class="bp-eyebrow">{t('body_parts', lang)}</span>
-				<span class="bp-title">{t('measure_body_parts', lang)}</span>
+				<span class="bp-eyebrow">{t.body_parts}</span>
+				<span class="bp-title">{t.measure_body_parts}</span>
 				<span class="bp-meta">
 					<span class="bp-count"><b>{filledCount}</b>/{totalParts}</span>
 					<span class="bp-dot-sep">·</span>
-					<span class="bp-sub">{hasAnyBodyPart ? formatLatestBp() : t('measure_body_parts_sub', lang)}</span>
+					<span class="bp-sub">{hasAnyBodyPart ? formatLatestBp() : t.measure_body_parts_sub}</span>
 				</span>
 			</div>
 			<ChevronRight size={18} class="bp-chevron" />
 		</a>
 
 		{#if formDirty && !workout.active}
-			<SaveFab disabled={saving} label={t('save_measurement', lang)} />
+			<SaveFab disabled={saving} label={t.save_measurement} />
 		{/if}
 	</form>
 
@@ -599,7 +600,7 @@
 	{#if measurements.length > 0}
 		<section class="history-section">
 			<button class="history-toggle" onclick={() => showWeightHistory = !showWeightHistory}>
-				<h2>{t('past_measurements', lang)}</h2>
+				<h2>{t.past_measurements}</h2>
 				<ChevronRight size={14} class={showWeightHistory ? 'chevron open' : 'chevron'} />
 			</button>
 			<div class="history-list" class:collapsed={!showWeightHistory}>
@@ -635,15 +636,15 @@
 										<span class="edit-unit">%</span>
 									</div>
 									<div class="edit-actions">
-										<a class="edit-more" href={resolve('/fitness/[checkin=fitnessCheckIn]/edit/[id]', { checkin: checkinSlug, id: m._id })} aria-label={t('edit_measurement', lang)}>
+										<a class="edit-more" href={resolve('/fitness/[checkin=fitnessCheckIn]/edit/[id]', { checkin: checkinSlug, id: m._id })} aria-label={t.edit_measurement}>
 											<Pencil size={11} />
 											<span class="edit-more-label">{lang === 'en' ? 'Edit all fields' : 'Alle Felder bearbeiten'}</span>
 											<ChevronRight size={11} />
 										</a>
-										<button type="button" class="edit-btn cancel" onclick={cancelEdit} aria-label={t('cancel', lang)}>
+										<button type="button" class="edit-btn cancel" onclick={cancelEdit} aria-label={t.cancel}>
 											<X size={14} />
 										</button>
-										<button type="button" class="edit-btn save" onclick={() => saveEdit(m)} disabled={editSaving} aria-label={t('save', lang)}>
+										<button type="button" class="edit-btn save" onclick={() => saveEdit(m)} disabled={editSaving} aria-label={t.save}>
 											<Check size={14} />
 										</button>
 									</div>
@@ -669,7 +670,7 @@
 			</div>
 			{#if measurements.length < measurementsTotal}
 				<button type="button" class="show-more" class:collapsed={!showWeightHistory} onclick={loadMore} disabled={loadingMore}>
-					{loadingMore ? t('saving', lang) : t('show_more', lang)}
+					{loadingMore ? t.saving : t.show_more}
 					<span class="show-more-count">({measurements.length}/{measurementsTotal})</span>
 				</button>
 			{/if}

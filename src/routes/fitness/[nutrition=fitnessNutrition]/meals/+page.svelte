@@ -6,7 +6,7 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import X from '@lucide/svelte/icons/x';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -15,6 +15,7 @@
 	/** @typedef {import('$models/CustomMeal').ICustomMealIngredient} MealIngredient */
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 
@@ -148,7 +149,7 @@
 
 	/** @param {Meal} meal */
 	async function deleteMeal(meal) {
-		if (!await confirm(t('delete_meal_confirm', lang))) return;
+		if (!await confirm(t.delete_meal_confirm)) return;
 		try {
 			const res = await fetch(`/api/fitness/custom-meals/${meal._id}`, { method: 'DELETE' });
 			if (res.ok) {
@@ -167,42 +168,42 @@
 </script>
 
 <svelte:head>
-	<title>{t('custom_meals', lang)} — Fitness</title>
+	<title>{t.custom_meals} — Fitness</title>
 </svelte:head>
 
 <div class="meals-page">
 	<!-- Header -->
 	<div class="header">
-		<h1 class="page-title">{t('custom_meals', lang)}</h1>
+		<h1 class="page-title">{t.custom_meals}</h1>
 		{#if !editing}
 			<button class="create-btn" onclick={startCreate}>
 				<Plus size={18} />
-				<span>{t('new_meal', lang)}</span>
+				<span>{t.new_meal}</span>
 			</button>
 		{/if}
 	</div>
 
 	{#if loading}
 		<div class="loading-state">
-			<p>{t('loading', lang)}</p>
+			<p>{t.loading}</p>
 		</div>
 	{:else if editing}
 		<!-- Create/Edit Form -->
 		<div class="form-card">
-			<h2 class="form-title">{editingId ? t('edit', lang) : t('new_meal', lang)}</h2>
+			<h2 class="form-title">{editingId ? t.edit : t.new_meal}</h2>
 
 			<label class="field-label">
-				{t('meal_name', lang)}
+				{t.meal_name}
 				<input
 					type="text"
 					class="text-input"
 					bind:value={mealName}
-					placeholder={t('meal_name', lang)}
+					placeholder={t.meal_name}
 				/>
 			</label>
 
 			<!-- Ingredients list -->
-			<span class="field-label">{t('ingredients', lang)} ({ingredients.length})</span>
+			<span class="field-label">{t.ingredients} ({ingredients.length})</span>
 			{#if ingredients.length > 0}
 				<div class="ingredients-list">
 					{#each ingredients as ing, i}
@@ -256,7 +257,7 @@
 									{/if}
 									<span class="ingredient-cal">
 										{#if sp}<span class="ingredient-grams">{ing.amountGrams}g ·</span>{/if}
-										{fmt((ing.per100g?.calories ?? 0) * ing.amountGrams / 100)} {t('kcal', lang)}
+										{fmt((ing.per100g?.calories ?? 0) * ing.amountGrams / 100)} {t.kcal}
 									</span>
 								</div>
 							</div>
@@ -287,7 +288,7 @@
 			{#if !showSearch}
 				<button class="add-ingredient-btn" onclick={() => { showSearch = true; }}>
 					<Plus size={16} />
-					<span>{t('add_ingredient', lang)}</span>
+					<span>{t.add_ingredient}</span>
 				</button>
 			{:else}
 				<div class="search-section">
@@ -295,20 +296,20 @@
 						onselect={addIngredient}
 						oncancel={() => { showSearch = false; }}
 						showDetailLinks={false}
-						confirmLabel={t('add_ingredient', lang)}
+						confirmLabel={t.add_ingredient}
 					/>
 				</div>
 			{/if}
 
 			<!-- Actions -->
 			<div class="form-actions">
-				<button class="btn secondary" onclick={cancelEdit}>{t('cancel', lang)}</button>
+				<button class="btn secondary" onclick={cancelEdit}>{t.cancel}</button>
 				<button
 					class="btn primary"
 					onclick={saveMeal}
 					disabled={saving || !mealName.trim() || ingredients.length === 0}
 				>
-					{saving ? t('loading', lang) : t('save_meal', lang)}
+					{saving ? t.loading : t.save_meal}
 				</button>
 			</div>
 		</div>
@@ -316,8 +317,8 @@
 		<!-- Empty state -->
 		<div class="empty-state">
 			<UtensilsCrossed size={48} strokeWidth={1.2} />
-			<p class="empty-title">{t('no_custom_meals', lang)}</p>
-			<p class="empty-hint">{t('create_meal_hint', lang)}</p>
+			<p class="empty-title">{t.no_custom_meals}</p>
+			<p class="empty-hint">{t.create_meal_hint}</p>
 		</div>
 	{:else}
 		<!-- Meal cards -->
@@ -328,14 +329,14 @@
 						<div class="meal-info">
 							<h3 class="meal-name">{meal.name}</h3>
 							<span class="meal-meta">
-								{meal.ingredients.length} {t('ingredients', lang)} — {Math.round(mealTotalCal(meal))} {t('kcal', lang)}
+								{meal.ingredients.length} {t.ingredients} — {Math.round(mealTotalCal(meal))} {t.kcal}
 							</span>
 						</div>
 						<div class="meal-actions">
-							<button class="icon-btn" onclick={() => startEdit(meal)} aria-label={t('edit', lang)}>
+							<button class="icon-btn" onclick={() => startEdit(meal)} aria-label={t.edit}>
 								<Pencil size={16} />
 							</button>
-							<button class="icon-btn danger" onclick={() => deleteMeal(meal)} aria-label={t('delete_', lang)}>
+							<button class="icon-btn danger" onclick={() => deleteMeal(meal)} aria-label={t.delete_}>
 								<Trash2 size={16} />
 							</button>
 						</div>

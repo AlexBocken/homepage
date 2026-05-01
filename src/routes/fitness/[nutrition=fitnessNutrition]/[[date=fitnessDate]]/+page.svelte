@@ -25,7 +25,7 @@
 	import Beef from '@lucide/svelte/icons/beef';
 	import Droplet from '@lucide/svelte/icons/droplet';
 	import Wheat from '@lucide/svelte/icons/wheat';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
@@ -71,6 +71,7 @@
 	 */
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
 
@@ -1054,7 +1055,7 @@
 
 	/** @param {string} id */
 	async function deleteEntry(id) {
-		if (!await confirm(t('delete_entry_confirm', lang))) return;
+		if (!await confirm(t.delete_entry_confirm)) return;
 		try {
 			const res = await fetch(`/api/fitness/food-log/${id}`, { method: 'DELETE' });
 			if (res.ok) {
@@ -1262,7 +1263,7 @@
 </script>
 
 <svelte:head>
-	<title>{t('nutrition_title', lang)} — Fitness</title>
+	<title>{t.nutrition_title} — Fitness</title>
 </svelte:head>
 
 {#snippet cmDetailScreen(/** @type {CustomMeal} */ meal, /** @type {(m: CustomMeal, grams?: number | null) => void} */ logFn)}
@@ -1270,7 +1271,7 @@
 	<div class="cm-detail">
 		<div class="cm-detail-header">
 			<span class="cm-detail-name">{meal.name}</span>
-			<span class="cm-detail-sub">{meal.ingredients.length} {t('ingredients', lang)} · {Math.round(preview.totalGrams)}g {isEn ? 'base' : 'Basis'}</span>
+			<span class="cm-detail-sub">{meal.ingredients.length} {t.ingredients} · {Math.round(preview.totalGrams)}g {isEn ? 'base' : 'Basis'}</span>
 		</div>
 
 		<!-- Amount selector -->
@@ -1314,8 +1315,8 @@
 
 		<!-- Actions -->
 		<div class="cm-detail-actions">
-			<button class="cm-detail-btn-cancel" onclick={deselectCmMeal}>{t('cancel', lang)}</button>
-			<button class="cm-detail-btn-confirm" onclick={() => logFn(meal, cmResolvedGrams(meal))}>{t('log_meal', lang)}</button>
+			<button class="cm-detail-btn-cancel" onclick={deselectCmMeal}>{t.cancel}</button>
+			<button class="cm-detail-btn-confirm" onclick={() => logFn(meal, cmResolvedGrams(meal))}>{t.log_meal}</button>
 		</div>
 	</div>
 {/snippet}
@@ -1323,7 +1324,7 @@
 {#snippet favoritesTab(/** @type {(food: FoodSelection) => void} */ logFn)}
 	<div class="fav-tab-list">
 		{#if !favTabLoaded}
-			<p class="meals-empty">{t('loading', lang)}</p>
+			<p class="meals-empty">{t.loading}</p>
 		{:else if favTabItems.length === 0}
 			<p class="meals-empty">{isEn ? 'No favorites yet. Tap the heart on foods to add them here.' : 'Noch keine Favoriten. Tippe auf das Herz bei Lebensmitteln.'}</p>
 		{:else}
@@ -1342,13 +1343,13 @@
 					bind:value={cmFilter} />
 			{/if}
 			{#if customMeals.length === 0}
-				<p class="meals-empty">{t('no_custom_meals', lang)}</p>
+				<p class="meals-empty">{t.no_custom_meals}</p>
 			{/if}
 			{#each filteredCustomMeals as cm}
 				<div class="custom-meal-card" role="button" tabindex="0" onclick={() => selectCmMeal(cm)} onkeydown={e => e.key === 'Enter' && selectCmMeal(cm)}>
 					<div class="custom-meal-info">
 						<span class="custom-meal-name">{cm.name}</span>
-						<span class="custom-meal-detail">{cm.ingredients.length} {t('ingredients', lang)} · {fmtCal(mealTotalCal(cm))} kcal · {Math.round(mealTotalGrams(cm))}g</span>
+						<span class="custom-meal-detail">{cm.ingredients.length} {t.ingredients} · {fmtCal(mealTotalCal(cm))} kcal · {Math.round(mealTotalGrams(cm))}g</span>
 					</div>
 				</div>
 			{/each}
@@ -1404,13 +1405,13 @@
 		</a>
 		<span class="date-display" class:is-today={isToday}>
 			{displayDate}
-			{#if isToday}<span class="today-badge">{t('today', lang)}</span>{/if}
+			{#if isToday}<span class="today-badge">{t.today}</span>{/if}
 		</span>
 		<a class="date-btn" href={nextHref} aria-label="Next day" data-sveltekit-replacestate data-sveltekit-noscroll>
 			<ChevronRight size={20} />
 		</a>
 		{#if !isToday}
-			<a class="go-today-btn" href={todayHref} data-sveltekit-replacestate data-sveltekit-noscroll>{t('today', lang)}</a>
+			<a class="go-today-btn" href={todayHref} data-sveltekit-replacestate data-sveltekit-noscroll>{t.today}</a>
 		{/if}
 	</div>
 
@@ -1482,7 +1483,7 @@
 						{/if}
 					</span>
 					{#if !hasBmrData}
-						<div class="bmr-hint">{isEn ? 'Set profile in' : 'Profil unter'} <a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })}>{t('measure_title', lang)}</a></div>
+						<div class="bmr-hint">{isEn ? 'Set profile in' : 'Profil unter'} <a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })}>{t.measure_title}</a></div>
 					{/if}
 				</div>
 			</div>
@@ -1490,9 +1491,9 @@
 			<!-- Macro progress bars -->
 			<div class="macro-bars">
 				{#each [
-					{ value: dayTotals.protein, goal: proteinGoalGrams, label: t('protein', lang), color: 'var(--nord14)', icon: Beef },
-					{ value: dayTotals.fat, goal: fatGoalGrams, label: t('fat', lang), color: 'var(--nord12)', icon: Droplet },
-					{ value: dayTotals.carbs, goal: carbGoalGrams, label: t('carbs', lang), color: 'var(--nord9)', icon: Wheat },
+					{ value: dayTotals.protein, goal: proteinGoalGrams, label: t.protein, color: 'var(--nord14)', icon: Beef },
+					{ value: dayTotals.fat, goal: fatGoalGrams, label: t.fat, color: 'var(--nord12)', icon: Droplet },
+					{ value: dayTotals.carbs, goal: carbGoalGrams, label: t.carbs, color: 'var(--nord9)', icon: Wheat },
 				] as macro}
 					{@const pct = macro.goal ? macro.value / macro.goal * 100 : 0}
 					{@const over = pct > 100}
@@ -1509,7 +1510,7 @@
 						</div>
 						{#if macro.goal}
 							<span class="macro-bar-info" class:over>
-								{remaining >= 0 ? `${fmt(remaining)}/${fmt(macro.goal)}g ${t('remaining', lang)}` : `${fmt(-remaining)}g ${t('over', lang)} ${fmt(macro.goal)}g`}
+								{remaining >= 0 ? `${fmt(remaining)}/${fmt(macro.goal)}g ${t.remaining}` : `${fmt(-remaining)}g ${t.over} ${fmt(macro.goal)}g`}
 							</span>
 						{:else}
 							<span class="macro-bar-info">{fmt(macro.value)}g</span>
@@ -1523,7 +1524,7 @@
 				<div class="details-toggle-row">
 					<button class="details-toggle" onclick={() => showMicros = !showMicros}>
 						<ChevronDown size={14} style={showMicros ? 'transform: rotate(180deg)' : ''} />
-						{t('micro_details', lang)}
+						{t.micro_details}
 					</button>
 				</div>
 				{@render microPanel()}
@@ -1533,8 +1534,8 @@
 	{:else}
 		<div class="no-goal">
 			<div class="no-goal-icon"><Utensils size={32} /></div>
-			<p>{t('set_goal_prompt', lang)}</p>
-			<button class="btn-primary" onclick={openGoalEditor}>{t('set_goal', lang)}</button>
+			<p>{t.set_goal_prompt}</p>
+			<button class="btn-primary" onclick={openGoalEditor}>{t.set_goal}</button>
 		</div>
 	{/if}
 
@@ -1542,14 +1543,14 @@
 	{#if goalCalories && !showGoalEditor}
 		<button class="goal-edit-btn" onclick={openGoalEditor}>
 			<Settings size={14} />
-			{t('daily_goal', lang)}
+			{t.daily_goal}
 		</button>
 	{/if}
 
 	<!-- Goal Editor (Stepped Wizard) -->
 	{#if showGoalEditor}
 		<div class="goal-editor">
-			<h3>{t('daily_goal', lang)}</h3>
+			<h3>{t.daily_goal}</h3>
 
 			<!-- Step indicators -->
 			<div class="wizard-steps">
@@ -1610,14 +1611,14 @@
 								<span>{isEn
 									? 'Your TDEE (Total Daily Energy Expenditure) is the calories you burn per day. Set weight, height, and birth year under'
 									: 'Dein TDEE (Gesamtenergieumsatz) sind die Kalorien, die du pro Tag verbrauchst. Gewicht, Größe und Geburtsjahr einstellen unter'}
-									<a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })}>{t('measure_title', lang)}</a>
+									<a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })}>{t.measure_title}</a>
 								</span>
 							</div>
 						</div>
 					{/if}
 
 					<div class="goal-field">
-						<label for="goal-calories">{t('calorie_target', lang)}</label>
+						<label for="goal-calories">{t.calorie_target}</label>
 						<div class="calorie-input-row">
 							<input id="goal-calories" type="number" bind:value={editCalories} min="500" max="10000" />
 							{#if hasBmrData}
@@ -1715,19 +1716,19 @@
 								<text x="60" y="70" text-anchor="middle" class="ring-cal-sub">kcal</text>
 							</svg>
 							<div class="macro-ring-legend">
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord14)"></span><Beef size={12} /> {t('protein', lang)} {editMacroRing.prot}%</span>
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord12)"></span><Droplet size={12} /> {t('fat', lang)} {editMacroRing.fat}%</span>
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord9)"></span><Wheat size={12} /> {t('carbs', lang)} {editMacroRing.carb}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord14)"></span><Beef size={12} /> {t.protein} {editMacroRing.prot}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord12)"></span><Droplet size={12} /> {t.fat} {editMacroRing.fat}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord9)"></span><Wheat size={12} /> {t.carbs} {editMacroRing.carb}%</span>
 							</div>
 						</div>
 					{/if}
 
 					<div class="goal-field">
-						<label for="goal-protein-mode">{t('protein_goal', lang)}</label>
+						<label for="goal-protein-mode">{t.protein_goal}</label>
 						<div class="protein-mode">
 							<select id="goal-protein-mode" bind:value={editProteinMode}>
-								<option value="fixed">{t('protein_fixed', lang)}</option>
-								<option value="per_kg">{t('protein_per_kg', lang)}</option>
+								<option value="fixed">{t.protein_fixed}</option>
+								<option value="per_kg">{t.protein_per_kg}</option>
 							</select>
 							<input id="goal-protein-target" type="number" bind:value={editProteinTarget} min="0" step="0.1"
 								placeholder={editProteinMode === 'per_kg' ? 'g/kg' : 'g'} />
@@ -1735,11 +1736,11 @@
 					</div>
 					<div class="goal-row">
 						<div class="goal-field">
-							<label for="goal-fat">{t('fat_percent', lang)} <span class="macro-actual">→ {editMacroRing.fat}%</span></label>
+							<label for="goal-fat">{t.fat_percent} <span class="macro-actual">→ {editMacroRing.fat}%</span></label>
 							<input id="goal-fat" type="number" bind:value={editFatPercent} min="0" max="100" />
 						</div>
 						<div class="goal-field">
-							<label for="goal-carbs">{t('carb_percent', lang)} <span class="macro-actual">→ {editMacroRing.carb}%</span></label>
+							<label for="goal-carbs">{t.carb_percent} <span class="macro-actual">→ {editMacroRing.carb}%</span></label>
 							<input id="goal-carbs" type="number" bind:value={editCarbPercent} min="0" max="100" />
 						</div>
 					</div>
@@ -1747,9 +1748,9 @@
 					<div class="wizard-nav">
 						<button class="btn-secondary" type="button" onclick={() => goalStep = 2}>← {isEn ? 'Back' : 'Zurück'}</button>
 						<div class="goal-actions-final">
-							<button class="btn-secondary" onclick={() => showGoalEditor = false}>{t('cancel', lang)}</button>
+							<button class="btn-secondary" onclick={() => showGoalEditor = false}>{t.cancel}</button>
 							<button class="btn-primary" onclick={saveGoals} disabled={goalSaving}>
-								{goalSaving ? t('saving', lang) : t('save', lang)}
+								{goalSaving ? t.saving : t.save}
 							</button>
 						</div>
 					</div>
@@ -1855,7 +1856,7 @@
 	{#if goalCalories}
 		<!-- Micros card (desktop) -->
 		<div class="micro-card">
-			<h3 class="micro-card-title">{t('micro_details', lang)}</h3>
+			<h3 class="micro-card-title">{t.micro_details}</h3>
 			{@render microPanel()}
 		</div>
 	{/if}
@@ -1883,17 +1884,17 @@
 			ondragleave={(ev) => onMealDragLeave(ev, meal)}
 			ondrop={(ev) => onMealDrop(ev, meal)}
 			role="region"
-			aria-label={t(meal, lang)}
+			aria-label={t[meal]}
 		>
 			<div class="meal-header">
 				<div class="meal-title">
 					<div class="meal-icon">
 						<MealSectionIcon size={15} />
 					</div>
-					<h3>{t(meal, lang)}</h3>
+					<h3>{t[meal]}</h3>
 				</div>
 				{#if mealEntries.length > 0}
-					<span class="meal-cal">{fmtCal(mealCal)} {t('kcal', lang)}</span>
+					<span class="meal-cal">{fmtCal(mealCal)} {t.kcal}</span>
 				{/if}
 			</div>
 
@@ -1940,7 +1941,7 @@
 											onclick={() => { editingMeal = m; }}
 										>
 											<MPIcon size={11} />
-											<span>{t(m, lang)}</span>
+											<span>{t[m]}</span>
 										</button>
 									{/each}
 								</div>
@@ -1959,7 +1960,7 @@
 									<Pencil size={14} />
 								{/if}
 							</button>
-							<button class="food-card-action delete" onclick={() => deleteEntry(entry._id)} aria-label={t('delete_', lang)}>
+							<button class="food-card-action delete" onclick={() => deleteEntry(entry._id)} aria-label={t.delete_}>
 								<Trash2 size={14} />
 							</button>
 						</div>
@@ -1973,7 +1974,7 @@
 						<div class="fab-tabs">
 							<button class="fab-tab" class:active={inlineTab === 'search'} onclick={() => inlineTab = 'search'}>
 								<Search size={13} />
-								{t('search_food', lang).replace('…', '')}
+								{t.search_food.replace('…', '')}
 							</button>
 							<button class="fab-tab" class:active={inlineTab === 'favorites'} onclick={() => { inlineTab = 'favorites'; loadFavTab(); }}>
 								<Heart size={13} />
@@ -1981,7 +1982,7 @@
 							</button>
 							<button class="fab-tab" class:active={inlineTab === 'meals'} onclick={() => { inlineTab = 'meals'; loadCustomMeals(); }}>
 								<UtensilsCrossed size={13} />
-								{t('custom_meals', lang)}
+								{t.custom_meals}
 							</button>
 						</div>
 						<button class="fab-close" onclick={cancelAdd}><Plus size={18} style="transform: rotate(45deg)" /></button>
@@ -1998,7 +1999,7 @@
 			{:else}
 				<button class="add-food-btn" onclick={() => startAdd(meal)}>
 					<Plus size={14} />
-					{t('add_food', lang)}
+					{t.add_food}
 				</button>
 			{/if}
 		</div>
@@ -2071,7 +2072,7 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
 		<div class="fab-modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
 			<div class="fab-modal-header">
-				<h3>{t('add_food', lang)}</h3>
+				<h3>{t.add_food}</h3>
 				<button class="fab-close" onclick={closeFabModal}><Plus size={18} style="transform: rotate(45deg)" /></button>
 			</div>
 
@@ -2087,7 +2088,7 @@
 						onclick={() => fabMealType = meal}
 					>
 						<MealIcon size={14} />
-						<span>{t(meal, lang)}</span>
+						<span>{t[meal]}</span>
 					</button>
 				{/each}
 			</div>
@@ -2096,7 +2097,7 @@
 			<div class="fab-tabs">
 				<button class="fab-tab" class:active={fabTab === 'search'} onclick={() => fabTab = 'search'}>
 					<Search size={13} />
-					{t('search_food', lang).replace('…', '')}
+					{t.search_food.replace('…', '')}
 				</button>
 				<button class="fab-tab" class:active={fabTab === 'favorites'} onclick={() => { fabTab = 'favorites'; loadFavTab(); }}>
 					<Heart size={13} />
@@ -2104,7 +2105,7 @@
 				</button>
 				<button class="fab-tab" class:active={fabTab === 'meals'} onclick={() => { fabTab = 'meals'; loadCustomMeals(); }}>
 					<UtensilsCrossed size={13} />
-					{t('custom_meals', lang)}
+					{t.custom_meals}
 				</button>
 			</div>
 

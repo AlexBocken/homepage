@@ -21,11 +21,12 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Repeat from '@lucide/svelte/icons/repeat';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const isEn = $derived(lang === 'en');
 	const sl = $derived(fitnessSlugs(lang));
 	import { getWorkout } from '$lib/js/workout.svelte';
@@ -335,7 +336,7 @@
 	}
 
 	async function deleteInterval(/** @type {string} */ id) {
-		if (!await confirm(t('delete_interval_confirm', lang))) return;
+		if (!await confirm(t.delete_interval_confirm)) return;
 		await fetch(`/api/fitness/intervals/${id}`, { method: 'DELETE' });
 		if (selectedIntervalId === id) selectedIntervalId = null;
 		await fetchIntervalTemplates();
@@ -467,7 +468,7 @@
 			if (_cadenceWarned) return;
 			if (!gps.cadenceAvailable()) {
 				_cadenceWarned = true;
-				toast.info(t('cadence_permission_missing', lang));
+				toast.info(t.cadence_permission_missing);
 			}
 		}, 4000);
 	}
@@ -982,7 +983,7 @@
 {#if completionData}
 	<div class="completion">
 		<div class="completion-header">
-			<h1>{t('workout_complete', lang)}</h1>
+			<h1>{t.workout_complete}</h1>
 			{#if completionData.prs.length > 0}
 				<div class="pr-badge">
 					<span class="pr-badge-count">{completionData.prs.length}</span>
@@ -991,7 +992,7 @@
 			{/if}
 			<p class="completion-name">{completionData.name}</p>
 			{#if offlineQueued}
-				<p class="offline-banner">{t('workout_saved_offline', lang)}</p>
+				<p class="offline-banner">{t.workout_saved_offline}</p>
 			{/if}
 		</div>
 
@@ -999,7 +1000,7 @@
 			<div class="comp-stat">
 				<Clock size={18} />
 				<span class="comp-stat-value">{formatDuration(completionData.durationMin)}</span>
-				<span class="comp-stat-label">{t('duration', lang)}</span>
+				<span class="comp-stat-label">{t.duration}</span>
 			</div>
 			{#if completionData.totalTonnage > 0}
 				<div class="comp-stat">
@@ -1009,28 +1010,28 @@
 							? `${(completionData.totalTonnage / 1000).toFixed(1)}t`
 							: `${Math.round(completionData.totalTonnage)} kg`}
 					</span>
-					<span class="comp-stat-label">{t('tonnage', lang)}</span>
+					<span class="comp-stat-label">{t.tonnage}</span>
 				</div>
 			{/if}
 			{#if completionData.totalDistance > 0}
 				<div class="comp-stat">
 					<Route size={18} />
 					<span class="comp-stat-value">{completionData.totalDistance.toFixed(1)} km</span>
-					<span class="comp-stat-label">{t('distance', lang)}</span>
+					<span class="comp-stat-label">{t.distance}</span>
 				</div>
 			{/if}
 			{#if completionData.kcalResult}
 				<div class="comp-stat kcal">
 					<Flame size={18} />
 					<span class="comp-stat-value">{completionData.kcalResult.kcal} &plusmn; {completionData.kcalResult.kcal - completionData.kcalResult.lower} kcal</span>
-					<span class="comp-stat-label">{t('est_kcal', lang)}</span>
+					<span class="comp-stat-label">{t.est_kcal}</span>
 				</div>
 			{/if}
 		</div>
 
 		{#if completionData.prs.length > 0}
 			<div class="prs-section">
-				<h2><Trophy size={16} /> {t('personal_records', lang)}</h2>
+				<h2><Trophy size={16} /> {t.personal_records}</h2>
 				<div class="pr-list">
 					{#each completionData.prs as pr}
 						<div class="pr-item">
@@ -1043,12 +1044,12 @@
 		{/if}
 
 		<div class="exercise-summaries">
-			<h2>{t('exercises_heading', lang)}</h2>
+			<h2>{t.exercises_heading}</h2>
 			{#each completionData.exerciseSummaries as ex}
 				<div class="ex-summary">
 					<div class="ex-summary-header">
 						<span class="ex-summary-name">{getExerciseById(ex.exerciseId, lang)?.localName ?? ex.exerciseId}</span>
-						<span class="ex-summary-sets">{ex.sets} {ex.sets !== 1 ? t('sets', lang) : t('set', lang)}</span>
+						<span class="ex-summary-sets">{ex.sets} {ex.sets !== 1 ? t.sets : t.set}</span>
 					</div>
 					<div class="ex-summary-stats">
 						{#if ex.isDurationOnly}
@@ -1061,11 +1062,11 @@
 								<span>{ex.duration} min</span>
 							{/if}
 							{#if ex.pace > 0}
-								<span>{formatPace(ex.pace)} {t('avg', lang)}</span>
+								<span>{formatPace(ex.pace)} {t.avg}</span>
 							{/if}
 						{:else}
 							{#if ex.tonnage > 0}
-								<span>{ex.tonnage >= 1000 ? `${(ex.tonnage / 1000).toFixed(1)}t` : `${Math.round(ex.tonnage)} kg`} {t('volume', lang)}</span>
+								<span>{ex.tonnage >= 1000 ? `${(ex.tonnage / 1000).toFixed(1)}t` : `${Math.round(ex.tonnage)} kg`} {t.volume}</span>
 							{/if}
 							{#if ex.bestWeight > 0}
 								<span>Top: {ex.bestWeight} kg</span>
@@ -1084,11 +1085,11 @@
 				{#if templateUpdateStatus === 'done'}
 					<div class="template-updated">
 						<Check size={16} />
-						<span>{t('template_updated', lang)}</span>
+						<span>{t.template_updated}</span>
 					</div>
 				{:else}
-					<h2><RefreshCw size={16} /> {t('update_template', lang)}</h2>
-					<p class="template-update-desc">{t('template_diff_desc', lang)}</p>
+					<h2><RefreshCw size={16} /> {t.update_template}</h2>
+					<p class="template-update-desc">{t.template_diff_desc}</p>
 					<div class="template-diff-list">
 						{#each templateDiffs as diff}
 							<div class="diff-item">
@@ -1114,7 +1115,7 @@
 									{/each}
 									{#if diff.newSets.length > diff.oldSets.length}
 										<div class="diff-set-row">
-											<span class="diff-new">+{diff.newSets.length - diff.oldSets.length} {diff.newSets.length - diff.oldSets.length > 1 ? t('new_sets_added', lang) : t('new_set_added', lang)}</span>
+											<span class="diff-new">+{diff.newSets.length - diff.oldSets.length} {diff.newSets.length - diff.oldSets.length > 1 ? t.new_sets_added : t.new_set_added}</span>
 										</div>
 									{/if}
 								</div>
@@ -1122,14 +1123,14 @@
 						{/each}
 					</div>
 					<button class="update-template-btn" onclick={updateTemplate} disabled={templateUpdateStatus === 'updating'}>
-						{templateUpdateStatus === 'updating' ? t('updating', lang) : t('update_template', lang)}
+						{templateUpdateStatus === 'updating' ? t.updating : t.update_template}
 					</button>
 				{/if}
 			</div>
 		{/if}
 
 		<button class="done-btn" onclick={() => goto(offlineQueued ? `/fitness/${sl.workout}` : `/fitness/${sl.history}/${completionData.sessionId}`)}>
-			{offlineQueued ? t('done', lang) : t('view_workout', lang)}
+			{offlineQueued ? t.done : t.view_workout}
 		</button>
 	</div>
 
@@ -1169,7 +1170,7 @@
 						{#if gps.intervalState.complete}
 							<div class="interval-complete-badge">
 								<Check size={14} />
-								<span>{t('intervals_complete', lang)}</span>
+								<span>{t.intervals_complete}</span>
 							</div>
 						{:else}
 							<div class="interval-current-label">{gps.intervalState.currentLabel}</div>
@@ -1208,8 +1209,8 @@
 					</button>
 					<button class="gps-option-tile" onclick={() => { showIntervalPanel = !showIntervalPanel; showActivityPicker = false; showAudioPanel = false; }} type="button">
 						<Timer size={20} />
-						<span class="gps-option-label">{t('intervals', lang)}</span>
-						<span class="gps-option-value">{selectedInterval?.name ?? t('no_intervals', lang)}</span>
+						<span class="gps-option-label">{t.intervals}</span>
+						<span class="gps-option-value">{selectedInterval?.name ?? t.no_intervals}</span>
 					</button>
 				</div>
 
@@ -1306,21 +1307,21 @@
 									<div class="interval-card" class:selected={selectedIntervalId === tmpl._id}>
 										<button class="interval-card-main" type="button" onclick={() => { selectedIntervalId = selectedIntervalId === tmpl._id ? null : tmpl._id; }}>
 											<span class="interval-card-name">{tmpl.name}</span>
-											<span class="interval-card-info">{flattenIntervals(tmpl.steps).length} {t('steps_count', lang)}</span>
+											<span class="interval-card-info">{flattenIntervals(tmpl.steps).length} {t.steps_count}</span>
 										</button>
 										<div class="interval-card-actions">
-											<button class="interval-card-edit" type="button" onclick={() => openEditInterval(tmpl)}>{t('edit', lang)}</button>
+											<button class="interval-card-edit" type="button" onclick={() => openEditInterval(tmpl)}>{t.edit}</button>
 											<button class="interval-card-delete" type="button" onclick={() => deleteInterval(tmpl._id)}><Trash2 size={14} /></button>
 										</div>
 									</div>
 								{/each}
 							</div>
 						{:else}
-							<p class="interval-empty">{t('no_intervals', lang)}</p>
+							<p class="interval-empty">{t.no_intervals}</p>
 						{/if}
 						<button class="interval-new-btn" type="button" onclick={openNewInterval}>
 							<Plus size={16} />
-							{t('new_interval', lang)}
+							{t.new_interval}
 						</button>
 					</div>
 				{/if}
@@ -1335,7 +1336,7 @@
 
 				<button class="gps-cancel-link" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }} type="button">
 					<X size={14} />
-					{t('cancel_workout', lang)}
+					{t.cancel_workout}
 				</button>
 			{/if}
 		</div>
@@ -1344,7 +1345,7 @@
 			<div class="interval-editor-overlay">
 				<div class="interval-editor">
 					<div class="interval-editor-header">
-						<h2>{editingIntervalId ? t('edit_interval', lang) : t('new_interval', lang)}</h2>
+						<h2>{editingIntervalId ? t.edit_interval : t.new_interval}</h2>
 						<button class="interval-editor-close" type="button" onclick={() => showIntervalEditor = false}>
 							<X size={20} />
 						</button>
@@ -1353,7 +1354,7 @@
 					<input
 						class="interval-editor-name"
 						type="text"
-						placeholder={t('interval_name_placeholder', lang)}
+						placeholder={t.interval_name_placeholder}
 						bind:value={intervalEditorName}
 					/>
 
@@ -1393,14 +1394,14 @@
 									class:selected={step.customLabel}
 									type="button"
 									onclick={() => { step.customLabel = true; }}
-								>{t('custom', lang)}</button>
+								>{t.custom}</button>
 							</div>
 
 							{#if step.customLabel}
 								<input
 									class="interval-step-custom-input"
 									type="text"
-									placeholder={t('step_label', lang)}
+									placeholder={t.step_label}
 									bind:value={step.label}
 								/>
 							{/if}
@@ -1418,13 +1419,13 @@
 										class:active={step.durationType === 'distance'}
 										type="button"
 										onclick={() => { step.durationType = 'distance'; }}
-									>{t('meters', lang)}</button>
+									>{t.meters}</button>
 									<button
 										class="interval-type-btn"
 										class:active={step.durationType === 'time'}
 										type="button"
 										onclick={() => { step.durationType = 'time'; }}
-									>{t('seconds', lang)}</button>
+									>{t.seconds}</button>
 								</div>
 							</div>
 						</div>
@@ -1436,7 +1437,7 @@
 								<div class="interval-group-card">
 									<div class="interval-group-header">
 										<Repeat size={16} />
-										<span class="interval-group-label">{t('group_label', lang)}</span>
+										<span class="interval-group-label">{t.group_label}</span>
 										<input
 											class="interval-group-repeat"
 											type="number"
@@ -1444,11 +1445,11 @@
 											max="99"
 											bind:value={entry.repeat}
 										/>
-										<span class="interval-group-times">× {t('repeat_times', lang)}</span>
+										<span class="interval-group-times">× {t.repeat_times}</span>
 										<div class="interval-group-actions">
 											<button type="button" onclick={() => moveIntervalStep(idx, -1)} disabled={idx === 0}><ChevronUp size={14} /></button>
 											<button type="button" onclick={() => moveIntervalStep(idx, 1)} disabled={idx === intervalEditorSteps.length - 1}><ChevronDown size={14} /></button>
-											<button class="interval-group-ungroup" type="button" onclick={() => ungroupAt(idx)}>{t('ungroup', lang)}</button>
+											<button class="interval-group-ungroup" type="button" onclick={() => ungroupAt(idx)}>{t.ungroup}</button>
 											<button class="interval-step-remove" type="button" onclick={() => removeIntervalStep(idx)} disabled={intervalEditorSteps.length <= 1}>
 												<Trash2 size={14} />
 											</button>
@@ -1469,7 +1470,7 @@
 										{/each}
 										<button class="interval-add-step-btn interval-add-step-btn--inner" type="button" onclick={() => addStepToGroup(idx)}>
 											<Plus size={14} />
-											{t('add_step', lang)}
+											{t.add_step}
 										</button>
 									</div>
 								</div>
@@ -1491,11 +1492,11 @@
 					<div class="interval-add-row">
 						<button class="interval-add-step-btn" type="button" onclick={addIntervalStep}>
 							<Plus size={16} />
-							{t('add_step', lang)}
+							{t.add_step}
 						</button>
 						<button class="interval-add-step-btn" type="button" onclick={addIntervalGroup}>
 							<Repeat size={16} />
-							{t('add_group', lang)}
+							{t.add_group}
 						</button>
 					</div>
 
@@ -1505,7 +1506,7 @@
 						onclick={saveInterval}
 						disabled={intervalSaving || !intervalEditorName.trim() || intervalEditorSteps.length === 0}
 					>
-						{intervalSaving ? t('saving', lang) : t('save_interval', lang)}
+						{intervalSaving ? t.saving : t.save_interval}
 					</button>
 				</div>
 			</div>
@@ -1522,7 +1523,7 @@
 				onfocus={() => { nameEditing = true; }}
 				onblur={() => { nameEditing = false; workout.name = nameInput; }}
 				onkeydown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLElement) e.target.blur(); }}
-				placeholder={t('workout_name_placeholder', lang)}
+				placeholder={t.workout_name_placeholder}
 			/>
 		{/snippet}
 
@@ -1535,7 +1536,7 @@
 				</button>
 				{#if gpsToggling}
 					<div class="gps-initializing">
-						<span class="gps-spinner"></span> {t('initializing_gps', lang)}
+						<span class="gps-spinner"></span> {t.initializing_gps}
 					</div>
 				{/if}
 
@@ -1646,7 +1647,7 @@
 				syncStatus={sync.status}
 				setsDone={workoutSetsDone}
 				setsTotal={workoutSetsTotal}
-				addLabel={t('add_exercise', lang)}
+				addLabel={t.add_exercise}
 				pauseLabel={isEn ? 'Pause' : 'Pause'}
 				resumeLabel={isEn ? 'Resume' : 'Fortsetzen'}
 				removeLabel={isEn ? 'Remove exercise' : 'Übung entfernen'}
@@ -1718,7 +1719,7 @@
 						/>
 
 						<button class="add-set-btn" onclick={() => workout.addSet(activeIdx)}>
-							{t('add_set', lang)}
+							{t.add_set}
 						</button>
 					</div>
 				{:else}
@@ -1729,9 +1730,9 @@
 
 				<div class="workout-actions">
 					<button class="cancel-btn" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
-						{t('cancel_workout', lang)}
+						{t.cancel_workout}
 					</button>
-					<button class="finish-btn" onclick={finishWorkout}>{t('finish', lang)}</button>
+					<button class="finish-btn" onclick={finishWorkout}>{t.finish}</button>
 				</div>
 			</main>
 		</div>

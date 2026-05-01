@@ -7,7 +7,7 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import ScanBarcode from '@lucide/svelte/icons/scan-barcode';
 	import X from '@lucide/svelte/icons/x';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import MacroBreakdown from './MacroBreakdown.svelte';
 
 	/**
@@ -51,9 +51,10 @@
 	} = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
-	const btnLabel = $derived(confirmLabel ?? t('log_food', lang));
+	const btnLabel = $derived(confirmLabel ?? t.log_food);
 
 	// --- Search state ---
 	let query = $state('');
@@ -434,7 +435,7 @@
 			<input
 				type="text"
 				class="fs-search-input"
-				placeholder={t('search_food', lang)}
+				placeholder={t.search_food}
 				bind:value={query}
 				oninput={doSearch}
 				autofocus={autofocus}
@@ -455,7 +456,7 @@
 		<p class="fs-scan-error">{scanError}</p>
 	{/if}
 	{#if loading}
-		<p class="fs-status">{t('loading', lang)}</p>
+		<p class="fs-status">{t.loading}</p>
 	{/if}
 	{#if displayResults.length > 0}
 		<div class="fs-results">
@@ -487,7 +488,7 @@
 		</div>
 	{/if}
 	{#if oncancel}
-		<button class="fs-btn-cancel" onclick={oncancel}>{t('cancel', lang)}</button>
+		<button class="fs-btn-cancel" onclick={oncancel}>{t.cancel}</button>
 	{/if}
 {:else}
 	<!-- Selected food — detail & amount -->
@@ -546,7 +547,7 @@
 		{/if}
 
 		<div class="fs-actions">
-			<button class="fs-btn-cancel" onclick={() => { selected = null; }}>{t('cancel', lang)}</button>
+			<button class="fs-btn-cancel" onclick={() => { selected = null; }}>{t.cancel}</button>
 			<button class="fs-btn-confirm" onclick={confirm}>{btnLabel}</button>
 		</div>
 	</div>
