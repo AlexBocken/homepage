@@ -115,7 +115,7 @@
 	}));
 </script>
 
-<svelte:head><title>{lang === 'en' ? 'Exercises' : 'Übungen'} - Bocken</title></svelte:head>
+<svelte:head><title>{t.exercises_title} - Bocken</title></svelte:head>
 
 <div class="exercises-page">
 	<h1 class="sr-only">{t.exercises_title}</h1>

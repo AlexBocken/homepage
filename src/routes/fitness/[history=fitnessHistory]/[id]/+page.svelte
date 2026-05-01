@@ -583,7 +583,7 @@
 </script>
 
 <svelte:head>
-	<title>{session?.name ?? (lang === 'en' ? 'Workout' : 'Training')} - Bocken</title>
+	<title>{session?.name ?? t.workout_singular} - Bocken</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 

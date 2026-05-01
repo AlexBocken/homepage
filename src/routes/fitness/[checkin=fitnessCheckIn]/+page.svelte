@@ -136,10 +136,10 @@
 				measurements = [...measurements, ...fresh];
 				if (typeof body?.total === 'number') measurementsTotal = body.total;
 			} else {
-				toast.error(lang === 'en' ? 'Failed to load more' : 'Laden fehlgeschlagen');
+				toast.error(t.failed_to_load_more);
 			}
 		} catch {
-			toast.error(lang === 'en' ? 'Failed to load more' : 'Laden fehlgeschlagen');
+			toast.error(t.failed_to_load_more);
 		}
 		loadingMore = false;
 	}
@@ -179,9 +179,7 @@
 			? Object.values(m.measurements).filter((v) => v != null).length
 			: 0;
 		if (bpCount > 0) {
-			const en = bpCount === 1 ? '1 body part' : `${bpCount} body parts`;
-			const de = bpCount === 1 ? '1 Körperteil' : `${bpCount} Körperteile`;
-			parts.push(lang === 'en' ? en : de);
+			parts.push(bpCount === 1 ? t.body_part_count_one : `${bpCount} ${t.body_parts_count_other}`);
 		}
 		return parts.join(' · ') || t.no_measurements_yet;
 	}
@@ -293,7 +291,7 @@
 					const latestRes = await fetch('/api/fitness/measurements/latest');
 					if (latestRes.ok) latest = await latestRes.json();
 				} catch {}
-				toast.success(lang === 'en' ? 'Updated' : 'Aktualisiert');
+				toast.success(t.updated_toast);
 				editingId = null;
 			} else {
 				const err = await res.json().catch(() => null);
@@ -356,10 +354,10 @@
 		return conflicts.map((c) => {
 			let label = c.key;
 			let unit = '';
-			if (c.key === 'weight') { label = lang === 'en' ? 'Weight' : 'Gewicht'; unit = ' kg'; }
-			else if (c.key === 'bodyFatPercent') { label = lang === 'en' ? 'Body Fat' : 'Körperfett'; unit = ' %'; }
-			else if (c.key === 'caloricIntake') { label = lang === 'en' ? 'Calories' : 'Kalorien'; unit = ' kcal'; }
-			else if (c.key === 'notes') { label = lang === 'en' ? 'Notes' : 'Notizen'; }
+			if (c.key === 'weight') { label = t.weight; unit = ' kg'; }
+			else if (c.key === 'bodyFatPercent') { label = t.body_fat_label; unit = ' %'; }
+			else if (c.key === 'caloricIntake') { label = t.calories; unit = ' kcal'; }
+			else if (c.key === 'notes') { label = t.notes; }
 			else if (c.key.startsWith('measurements.')) {
 				const part = c.key.slice('measurements.'.length);
 				label = t[/** @type {FitnessKey} */ (partKeyMap[part] ?? part)];
@@ -408,7 +406,7 @@
 					measurementsTotal = measurementsTotal + 1;
 				}
 				resetForm();
-				toast.success(lang === 'en' ? 'Measurement saved' : 'Messung gespeichert');
+				toast.success(t.measurement_saved);
 			} else {
 				const err = await res.json().catch(() => null);
 				toast.error(err?.error ?? 'Failed to save measurement');
@@ -418,7 +416,7 @@
 	}
 </script>
 
-<svelte:head><title>{lang === 'en' ? 'Measure' : 'Messen'} - Bocken</title></svelte:head>
+<svelte:head><title>{t.measure_short} - Bocken</title></svelte:head>
 
 <div class="measure-page">
 	<h1 class="sr-only">{t.measure_title}</h1>
@@ -504,10 +502,10 @@
 						<Plus size={18} />
 					</button>
 				</div>
-				<label for="m-weight" class="metric-label">{lang === 'en' ? 'Weight' : 'Gewicht'}</label>
+				<label for="m-weight" class="metric-label">{t.weight}</label>
 				{#if formWeight}
 					<button type="button" class="metric-clear" onclick={() => formWeight = ''}>
-						<X size={12} /> {lang === 'en' ? 'Clear' : 'Leeren'}
+						<X size={12} /> {t.clear_action}
 					</button>
 				{/if}
 			</div>
@@ -535,10 +533,10 @@
 						<Plus size={18} />
 					</button>
 				</div>
-				<label for="m-bf" class="metric-label">{lang === 'en' ? 'Body Fat' : 'Körperfett'}</label>
+				<label for="m-bf" class="metric-label">{t.body_fat_label}</label>
 				{#if formBodyFat}
 					<button type="button" class="metric-clear" onclick={() => formBodyFat = ''}>
-						<X size={12} /> {lang === 'en' ? 'Clear' : 'Leeren'}
+						<X size={12} /> {t.clear_action}
 					</button>
 				{/if}
 			</div>
@@ -638,7 +636,7 @@
 									<div class="edit-actions">
 										<a class="edit-more" href={resolve('/fitness/[checkin=fitnessCheckIn]/edit/[id]', { checkin: checkinSlug, id: m._id })} aria-label={t.edit_measurement}>
 											<Pencil size={11} />
-											<span class="edit-more-label">{lang === 'en' ? 'Edit all fields' : 'Alle Felder bearbeiten'}</span>
+											<span class="edit-more-label">{t.edit_all_fields}</span>
 											<ChevronRight size={11} />
 										</a>
 										<button type="button" class="edit-btn cancel" onclick={cancelEdit} aria-label={t.cancel}>

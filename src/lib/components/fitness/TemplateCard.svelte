@@ -26,8 +26,8 @@
 		const diffDays = Math.floor(diffMs / 86400000);
 		if (diffDays === 0) return t.today;
 		if (diffDays === 1) return t.yesterday;
-		if (diffDays < 7) return lang === 'en' ? `${diffDays} days ago` : `vor ${diffDays} Tagen`;
-		return d.toLocaleDateString(lang === 'en' ? 'en' : 'de', { month: 'short', day: 'numeric' });
+		if (diffDays < 7) return t.days_ago_template.replace('{n}', String(diffDays));
+		return d.toLocaleDateString(lang, { month: 'short', day: 'numeric' });
 	}
 </script>
 

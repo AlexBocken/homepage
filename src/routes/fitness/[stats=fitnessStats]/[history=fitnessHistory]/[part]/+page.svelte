@@ -149,7 +149,7 @@
 	const hasData = $derived(series.dates.length > 0);
 </script>
 
-<svelte:head><title>{t[card.labelKey]} · {lang === 'en' ? 'History' : 'Verlauf'} - Bocken</title></svelte:head>
+<svelte:head><title>{t[card.labelKey]} · {t.history_title} - Bocken</title></svelte:head>
 
 <div class="detail-page">
 	<header class="detail-header" style="--accent: {bodyPartAccent(card.key)}">

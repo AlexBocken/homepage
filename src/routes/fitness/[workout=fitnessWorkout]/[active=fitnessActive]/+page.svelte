@@ -976,7 +976,7 @@
 </script>
 
 <svelte:head>
-	<title>{workout.name || (lang === 'en' ? 'Workout' : 'Training')} - Bocken</title>
+	<title>{workout.name || t.workout_singular} - Bocken</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 

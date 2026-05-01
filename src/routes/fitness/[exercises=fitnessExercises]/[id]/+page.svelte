@@ -130,10 +130,10 @@
 	}
 </script>
 
-<svelte:head><title>{exercise?.localName ?? (lang === 'en' ? 'Exercise' : 'Übung')} - Bocken</title></svelte:head>
+<svelte:head><title>{exercise?.localName ?? t.exercise_title} - Bocken</title></svelte:head>
 
 <div class="exercise-detail">
-	<h1>{exercise?.localName ?? 'Exercise'}</h1>
+	<h1>{exercise?.localName ?? t.exercise_title}</h1>
 
 	<div class="tabs">
 		{#each tabs as tab}
@@ -197,7 +197,7 @@
 				<!-- Similar exercises -->
 				{#if similar.length > 0}
 					<div class="similar-section">
-						<h3>{lang === 'en' ? 'Similar Exercises' : 'Ähnliche Übungen'}</h3>
+						<h3>{t.similar_exercises}</h3>
 						<div class="similar-scroll">
 							{#each similar as sim}
 								<a class="similar-card" href={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: s.exercises, id: sim.id })}>

@@ -229,9 +229,7 @@
 		const baseline = stats.bfChart?.baseline;
 		const label = t.body_fat.replace(' %', '').replace(' (%)', '');
 		if (baseline == null) return label;
-		const suffix = lang === 'en'
-			? `Δ from ${baseline.toFixed(1)}%`
-			: `Δ von ${baseline.toFixed(1)}%`;
+		const suffix = `${t.bf_delta_from_prefix} ${baseline.toFixed(1)}%`;
 		return `${label} · ${suffix}`;
 	});
 
@@ -421,13 +419,9 @@
 					<button class="card-info-trigger" onclick={() => showBalanceInfo = !showBalanceInfo} aria-label="Info"><Info size={12} /></button>
 					{#if showBalanceInfo}
 						<div class="card-info-tooltip">
-							{lang === 'en'
-								? 'Average daily calories eaten minus estimated expenditure (TDEE + tracked workout calories) over the last 7 days. Negative = deficit, positive = surplus.'
-								: 'Durchschnittlich gegessene Kalorien minus geschätzter Verbrauch (TDEE + erfasste Trainingskilokalorien) der letzten 7 Tage. Negativ = Defizit, positiv = Überschuss.'}
+							{t.calorie_balance_tooltip}
 							{#if ns.avgDailyExpenditure}
-								{lang === 'en'
-									? `Est. daily expenditure: ~${ns.avgDailyExpenditure} kcal`
-									: `Geschätzter Tagesverbrauch: ~${ns.avgDailyExpenditure} kcal`}
+								{t.daily_expenditure_estimate_prefix} ~{ns.avgDailyExpenditure} kcal
 							{/if}
 						</div>
 					{/if}
@@ -436,7 +430,7 @@
 					{#if ns.avgCalorieBalance != null}
 						{t.seven_day_avg}
 					{:else if !hasDemographics || !ns.trendWeight}
-						{lang === 'en' ? 'Set height, birth year & weight' : 'Größe, Geburtsjahr & Gewicht eintragen'}
+						{t.set_height_birthyear_weight}
 					{:else}
 						{t.no_nutrition_data}
 					{/if}
@@ -455,9 +449,7 @@
 					<button class="card-info-trigger" onclick={() => showAdherenceInfo = !showAdherenceInfo} aria-label="Info"><Info size={12} /></button>
 					{#if showAdherenceInfo}
 						<div class="card-info-tooltip">
-							{lang === 'en'
-								? 'Percentage of days where calories eaten were within ±10% of your goal (adjusted for exercise calories burned). Days without tracking count as misses.'
-								: 'Prozent der Tage, an denen die gegessenen Kalorien innerhalb von ±10 % deines Ziels lagen (bereinigt um verbrannte Trainings\u00ADkalorien). Nicht erfasste Tage zählen als verfehlt.'}
+							{t.diet_adherence_tooltip}
 						</div>
 					{/if}
 				</div>
@@ -476,11 +468,11 @@
 					<div class="macro-legend">
 						<span class="macro-legend-item">
 							<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3,9.5 A4,4 0 1,1 9,9.5" fill="none" stroke="var(--color-text-secondary)" stroke-width="2" stroke-linecap="round"/></svg>
-							{lang === 'en' ? 'Actual' : 'Ist'}
+							{t.actual_label}
 						</span>
 						<span class="macro-legend-item">
 							<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6,10 L10,2 L2,2 Z" fill="var(--color-text-secondary)" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linejoin="round"/></svg>
-							{lang === 'en' ? 'Target' : 'Ziel'}
+							{t.target_label}
 						</span>
 					</div>
 					{#if !ns.macroSplit}
