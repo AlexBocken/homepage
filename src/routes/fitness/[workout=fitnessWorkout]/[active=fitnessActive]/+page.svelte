@@ -1535,7 +1535,7 @@
 				</button>
 				{#if gpsToggling}
 					<div class="gps-initializing">
-						<span class="gps-spinner"></span> {t('initializing_gps', lang) ?? 'Initializing GPS…'}
+						<span class="gps-spinner"></span> {t('initializing_gps', lang)}
 					</div>
 				{/if}
 

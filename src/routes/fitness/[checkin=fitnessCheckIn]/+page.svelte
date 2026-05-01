@@ -15,6 +15,7 @@
 	import UserCog from '@lucide/svelte/icons/user-cog';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	/** @typedef {import('$lib/js/fitnessI18n').FitnessKey} FitnessKey */
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
@@ -360,7 +361,7 @@
 			else if (c.key === 'notes') { label = lang === 'en' ? 'Notes' : 'Notizen'; }
 			else if (c.key.startsWith('measurements.')) {
 				const part = c.key.slice('measurements.'.length);
-				label = t(partKeyMap[part] ?? part, lang);
+				label = t(/** @type {FitnessKey} */ (partKeyMap[part] ?? part), lang);
 				unit = ' cm';
 			}
 			return `${label} (${c.oldVal}${unit} → ${c.newVal}${unit})`;
