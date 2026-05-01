@@ -5,8 +5,11 @@
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
 	import Search from '$lib/components/recipes/Search.svelte';
 	import { getCategories } from '$lib/js/categories';
+	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
 	let { data } = $props<{ data: PageData }>();
+	const lang = $derived(data.lang as RecipesLang);
+	const t = $derived(m[lang]);
 	let current_month = new Date().getMonth() + 1;
 
 	// Search state
@@ -118,17 +121,17 @@
 	const hasMore = $derived(visibleCount < displayRecipes.length);
 
 	const labels = $derived({
-		title: isEnglish ? 'Recipes' : 'Rezepte',
+		title: t.index_title,
 		subheading: isEnglish
 			? `${data.all_brief.length} recipes and constantly growing...`
 			: `${data.all_brief.length} Rezepte und stetig wachsend...`,
-		all: isEnglish ? 'All' : 'Alle',
-		inSeason: isEnglish ? 'In Season' : 'In Saison',
-		metaTitle: isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte',
+		all: t.all,
+		inSeason: t.in_season_now,
+		metaTitle: t.site_title,
 		metaDescription: isEnglish
 			? "A constantly growing collection of recipes from Bocken's kitchen."
 			: "Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche.",
-		metaAlt: isEnglish ? 'Pasta al Ragu with Linguine' : 'Pasta al Ragu mit Linguine'
+		metaAlt: t.meta_alt_hero
 	});
 </script>
 <style>

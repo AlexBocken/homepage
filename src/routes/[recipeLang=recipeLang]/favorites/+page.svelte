@@ -7,26 +7,23 @@
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1;
 
-    const isEnglish = $derived(data.lang === 'en');
+    import { m, type RecipesLang } from '$lib/js/recipesI18n';
+    const lang = $derived(data.lang as RecipesLang);
+    const t = $derived(m[lang]);
+    const isEnglish = $derived(lang === 'en');
     const labels = $derived({
-        title: isEnglish ? 'Favorites' : 'Favoriten',
-        pageTitle: isEnglish ? 'My Favorites - Bocken Recipes' : 'Meine Favoriten - Bocken Rezepte',
-        metaDescription: isEnglish
-            ? 'My favorite recipes from Bocken\'s kitchen.'
-            : 'Meine favorisierten Rezepte aus der Bockenschen Küche.',
+        title: t.favorites,
+        pageTitle: t.favorites_page_title,
+        metaDescription: t.favorites_meta_description,
         count: isEnglish
             ? `${data.favorites.length} favorite recipe${data.favorites.length !== 1 ? 's' : ''}`
             : `${data.favorites.length} favorisierte Rezepte`,
-        noFavorites: isEnglish ? 'No favorites saved yet' : 'Noch keine Favoriten gespeichert',
-        errorLoading: isEnglish ? 'Error loading favorites:' : 'Fehler beim Laden der Favoriten:',
-        emptyState1: isEnglish
-            ? 'You haven\'t saved any recipes as favorites yet.'
-            : 'Du hast noch keine Rezepte als Favoriten gespeichert.',
-        emptyState2: isEnglish
-            ? 'Visit a recipe and click the heart icon to add it to your favorites.'
-            : 'Besuche ein Rezept und klicke auf das Herz-Symbol, um es zu deinen Favoriten hinzuzufügen.',
-        recipesLink: isEnglish ? 'recipe' : 'Rezept',
-        toTry: isEnglish ? 'Recipes to try' : 'Zum Ausprobieren'
+        noFavorites: t.no_favorites_yet,
+        errorLoading: t.error_loading_favorites,
+        emptyState1: t.empty_favorites_1,
+        emptyState2: t.empty_favorites_2,
+        recipesLink: t.recipe_singular_link,
+        toTry: t.recipes_to_try_link
     });
 
     let matchedRecipeIds = $state(new Set());

@@ -2,6 +2,8 @@
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import X from '@lucide/svelte/icons/x';
 	import { toast } from '$lib/js/toast.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
 		recipeName,
@@ -12,6 +14,8 @@
 		portions = '',
 		isEnglish = true,
 	} = $props();
+	const lang = $derived(/** @type {RecipesLang} */ (isEnglish ? 'en' : 'de'));
+	const t = $derived(m[lang]);
 
 	// Flatten ingredient sections into a flat array with indices
 	const flatIngredients = $derived.by(() => {
@@ -35,16 +39,16 @@
 	let useGrams = $state(false);
 
 	const labels = $derived({
-		addToLog: isEnglish ? 'Add to food log' : 'Zum Ernährungstagebuch',
-		portions: isEnglish ? 'Portions' : 'Portionen',
-		grams: isEnglish ? 'Grams' : 'Gramm',
-		meal: isEnglish ? 'Meal' : 'Mahlzeit',
-		breakfast: isEnglish ? 'Breakfast' : 'Frühstück',
-		lunch: isEnglish ? 'Lunch' : 'Mittagessen',
-		dinner: isEnglish ? 'Dinner' : 'Abendessen',
-		snack: isEnglish ? 'Snack' : 'Snack',
-		log: isEnglish ? 'Log' : 'Eintragen',
-		cancel: isEnglish ? 'Cancel' : 'Abbrechen',
+		addToLog: t.add_to_food_log,
+		portions: t.portions_label,
+		grams: t.grams_label,
+		meal: t.meal_label,
+		breakfast: t.breakfast,
+		lunch: t.lunch,
+		dinner: t.dinner,
+		snack: t.snack,
+		log: t.log_action,
+		cancel: t.cancel
 	});
 
 	// Parse portion count from recipe's portions string (e.g. "4 Portionen")
@@ -171,13 +175,13 @@
 				})
 			});
 			if (res.ok) {
-				toast.success(isEnglish ? 'Added to food log' : 'Zum Ernährungstagebuch hinzugefügt');
+				toast.success(t.added_to_food_log);
 				showDialog = false;
 			} else {
-				toast.error(isEnglish ? 'Failed to add' : 'Fehler beim Hinzufügen');
+				toast.error(t.add_failed);
 			}
 		} catch {
-			toast.error(isEnglish ? 'Failed to add' : 'Fehler beim Hinzufügen');
+			toast.error(t.add_failed);
 		} finally {
 			saving = false;
 		}

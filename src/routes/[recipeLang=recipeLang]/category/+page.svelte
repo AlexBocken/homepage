@@ -5,10 +5,13 @@
     import TagCloud from '$lib/components/TagCloud.svelte';
     import TagBall from '$lib/components/TagBall.svelte';
 
-    const isEnglish = $derived(data.lang === 'en');
+    import { m, type RecipesLang } from '$lib/js/recipesI18n';
+    const lang = $derived(data.lang as RecipesLang);
+    const t = $derived(m[lang]);
+    const isEnglish = $derived(lang === 'en');
     const labels = $derived({
-        title: isEnglish ? 'Categories' : 'Kategorien',
-        siteTitle: isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte'
+        title: t.categories_title,
+        siteTitle: t.site_title
     });
 </script>
 
