@@ -1,5 +1,7 @@
 <script>
 	import TagChip from '$lib/components/recipes/TagChip.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
 		categories = [],
@@ -9,9 +11,9 @@
 		useAndLogic = true
 	} = $props();
 
-	const isEnglish = $derived(lang === 'en');
-	const label = $derived(isEnglish ? 'Category' : 'Kategorie');
-	const selectLabel = $derived(isEnglish ? 'Select category...' : 'Kategorie auswählen...');
+	const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
+	const label = $derived(t.category_nav);
+	const selectLabel = $derived(t.select_category_placeholder);
 
 	// Convert selected to array for OR mode, keep as single value for AND mode
 	const selectedArray = $derived(

@@ -2,8 +2,10 @@
 import { onMount, tick } from 'svelte';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
+import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
 let { data } = $props();
+const t = $derived(m[data.lang as RecipesLang]);
 
 // This page serves as an "app shell" that gets cached by the service worker.
 // When a user directly navigates to a recipe page while offline and that exact
@@ -36,7 +38,7 @@ onMount(() => {
 
 <div class="offline-shell">
 	<div class="loading-spinner"></div>
-	<p>{data.lang === 'en' ? 'Loading offline content...' : 'Lade Offline-Inhalte...'}</p>
+	<p>{t.loading_offline}</p>
 </div>
 
 <style>

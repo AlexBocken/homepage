@@ -139,5 +139,80 @@ export const en = {
 	tips_title: 'Tips & Tricks',
 	favorites_meta_description: "My favorite recipes from Bocken's kitchen.",
 	empty_favorites_1: "You haven't saved any recipes as favorites yet.",
-	empty_favorites_2: 'Visit a recipe and click the heart icon to add it to your favorites.'
+	empty_favorites_2: 'Visit a recipe and click the heart icon to add it to your favorites.',
+
+	// Filters
+	filter_mode: 'Filter Mode',
+	and_label: 'AND',
+	or_label: 'OR',
+	select_category_placeholder: 'Select category…',
+	select_season_placeholder: 'Select season…',
+
+	// Search component
+	search_placeholder_short: 'Search…',
+	search_title: 'Search',
+	clear_search_title: 'Clear search',
+
+	// Tag / Category landing
+	recipes_with_keyword: 'Recipes with Keyword',
+	recipes_in_category: 'Recipes in Category',
+
+	// Card actions
+	edit: 'Edit',
+	delete: 'Delete',
+
+	// Administration page
+	administration_title: 'Administration',
+	untranslated_recipes: 'Untranslated Recipes',
+	alt_text_generator: 'Alt-Text Generator',
+	image_colors: 'Image Colors',
+	nutrition_mappings: 'Nutrition Mappings',
+
+	// Recipe detail page
+	site_title_long: 'Bocken Recipes',
+
+	// InstructionsPage section labels
+	preparation_section: 'Preparation:',
+	bulk_fermentation: 'Bulk Fermentation:',
+	final_proof: 'Final Proof:',
+	baking_section: 'Baking:',
+	cooking_section: 'Cooking:',
+	on_the_plate: 'On the Plate:',
+	instructions_label: 'Instructions',
+	at_temp: 'at',
+
+	// CreateStepList baking
+	not_set: 'Not set',
+	duration: 'Duration',
+	temperature: 'Temperature',
+	mode_label: 'Mode',
+	custom_mode_placeholder: 'or enter custom mode…',
+
+	// Administration page descriptions
+	administration_description: 'Manage recipes and content',
+	untranslated_description: 'View and manage recipes that need translation',
+	alt_text_description: 'Generate alternative text for recipe images using AI',
+	image_colors_description: 'Extract dominant colors from recipe images for loading placeholders',
+	nutrition_mappings_description: 'Generate or regenerate calorie and nutrition data for all recipes',
+
+	// Smaller filters / pages
+	loading_offline: 'Loading offline content…',
+	hide_filters: 'Hide Filters',
+	show_filters: 'Show Filters',
+	select_icon_placeholder: 'Select icon…',
+	add_tag_placeholder: 'Type or select tag…',
+
+	// Index / tips / yeast
+	recipes_growing_suffix: 'recipes and constantly growing…',
+	recipes_collection_meta: "A constantly growing collection of recipes from Bocken's kitchen.",
+	tips_description: "A constantly growing collection of recipes from Bocken's kitchen.",
+	yeast_toggle_title: 'Switch between fresh yeast and dry yeast',
+
+	// Search results pageTitle
+	search_results_for_word: 'for',
+
+	// Favorites count label
+	favorites_count_label: 'favorite recipes',
+	favorite_recipe_singular: 'favorite recipe',
+	favorite_recipes_plural: 'favorite recipes'
 } as const satisfies Record<keyof typeof de, string>;

@@ -6,8 +6,10 @@
     let { data } = $props<{ data: PageData }>();
     import { rand_array } from '$lib/js/randomize';
 
-    const isEnglish = $derived(data.lang === 'en');
-    const siteTitle = $derived(isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte');
+    import { m, type RecipesLang } from '$lib/js/recipesI18n';
+    const lang = $derived(data.lang as RecipesLang);
+    const t = $derived(m[lang]);
+    const siteTitle = $derived(t.site_title);
 
     // Search state
     let matchedRecipeIds = $state(new Set());

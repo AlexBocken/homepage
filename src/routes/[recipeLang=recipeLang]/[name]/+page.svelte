@@ -14,6 +14,7 @@
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { onDestroy } from 'svelte';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation.svelte';
+	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
     	let { data } = $props<{ data: PageData }>();
 
@@ -32,7 +33,9 @@
 		recipeTranslationStore.set(null);
 	});
 
-	const isEnglish = $derived(data.lang === 'en');
+	const lang = $derived(data.lang as RecipesLang);
+	const t = $derived(m[lang]);
+	const isEnglish = $derived(lang === 'en');
 
 	// Use mediapath from images array (includes hash for cache busting)
 	// Fallback to short_name.webp for backward compatibility
@@ -100,10 +103,10 @@
 	const formatted_display_date = $derived(display_date.toLocaleDateString(isEnglish ? 'en-US' : 'de-DE', options));
 
 	const labels = $derived({
-		season: isEnglish ? 'Season:' : 'Saison:',
-		keywords: isEnglish ? 'Keywords:' : 'Stichwörter:',
-		lastModified: isEnglish ? 'Last modified:' : 'Letzte Änderung:',
-		title: isEnglish ? "Bocken Recipes" : "Bocken'sche Rezepte"
+		season: t.season_label,
+		keywords: t.keywords_colon,
+		lastModified: t.last_modified,
+		title: t.site_title_long
 	});
 </script>
 <style>

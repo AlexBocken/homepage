@@ -60,7 +60,6 @@ import { m } from '$lib/js/recipesI18n';
 /** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 const lang = $derived(/** @type {RecipesLang} */ (data.lang));
 const t = $derived(m[lang]);
-const isEnglish = $derived(lang === 'en');
 const labels = $derived({
 	allRecipes: t.all_recipes,
 	favorites: t.favorites,

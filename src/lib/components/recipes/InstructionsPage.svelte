@@ -5,6 +5,8 @@ import Croissant from '@lucide/svelte/icons/croissant';
 import Flame from '@lucide/svelte/icons/flame';
 import CookingPot from '@lucide/svelte/icons/cooking-pot';
 import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
+import { m } from '$lib/js/recipesI18n';
+/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 let { data } = $props();
 
 // svelte-ignore state_referenced_locally
@@ -99,16 +101,18 @@ const flattenedInstructions = $derived.by(() => {
 	return flattenInstructionReferences(data.instructions, lang);
 });
 
-const isEnglish = $derived(data.lang === 'en');
+const lang = $derived(/** @type {RecipesLang} */ (data.lang));
+const t = $derived(m[lang]);
+const isEnglish = $derived(lang === 'en');
 const labels = $derived({
-	preparation: isEnglish ? 'Preparation:' : 'Vorbereitung:',
-	bulkFermentation: isEnglish ? 'Bulk Fermentation:' : 'Stockgare:',
-	finalProof: isEnglish ? 'Final Proof:' : 'Stückgare:',
-	baking: isEnglish ? 'Baking:' : 'Backen:',
-	cooking: isEnglish ? 'Cooking:' : 'Kochen:',
-	onThePlate: isEnglish ? 'On the Plate:' : 'Auf dem Teller:',
-	instructions: isEnglish ? 'Instructions' : 'Zubereitung',
-	at: isEnglish ? 'at' : 'bei'
+	preparation: t.preparation_section,
+	bulkFermentation: t.bulk_fermentation,
+	finalProof: t.final_proof,
+	baking: t.baking_section,
+	cooking: t.cooking_section,
+	onThePlate: t.on_the_plate,
+	instructions: t.instructions_label,
+	at: t.at_temp
 });
 </script>
 <style>

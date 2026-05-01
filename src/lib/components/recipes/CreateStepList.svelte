@@ -74,7 +74,12 @@ const t: Record<string, Record<string, string>> = {
 		moveReferenceDownAria: 'Referenz nach unten verschieben',
 		removeReferenceAria: 'Referenz entfernen',
 		moveListUpAria: 'Liste nach oben verschieben',
-		moveListDownAria: 'Liste nach unten verschieben'
+		moveListDownAria: 'Liste nach unten verschieben',
+		notSet: 'Nicht gesetzt',
+		duration: 'Dauer',
+		temperature: 'Temperatur',
+		mode: 'Modus',
+		customModePlaceholder: 'oder eigenen Modus eingeben…'
 	},
 	en: {
 		preparation: 'Preparation:',
@@ -109,7 +114,12 @@ const t: Record<string, Record<string, string>> = {
 		moveReferenceDownAria: 'Move reference down',
 		removeReferenceAria: 'Remove reference',
 		moveListUpAria: 'Move list up',
-		moveListDownAria: 'Move list down'
+		moveListDownAria: 'Move list down',
+		notSet: 'Not set',
+		duration: 'Duration',
+		temperature: 'Temperature',
+		mode: 'Mode',
+		customModePlaceholder: 'or enter custom mode…'
 	}
 };
 
@@ -1017,7 +1027,7 @@ h3{
 					{#if add_info.baking.mode}<span class="chip mode">{add_info.baking.mode}</span>{/if}
 				</span>
 			{:else if !bakingExpanded}
-				<span class="baking-summary muted">{lang === 'de' ? 'Nicht gesetzt' : 'Not set'}</span>
+				<span class="baking-summary muted">{t[lang].notSet}</span>
 			{/if}
 			<svg class="chevron" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
 				<path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1027,7 +1037,7 @@ h3{
 		{#if bakingExpanded}
 			<div id="baking-fields-{lang}" class="baking-form">
 				<div class="baking-field">
-					<label for="baking-length-{lang}">{lang === 'de' ? 'Dauer' : 'Duration'}</label>
+					<label for="baking-length-{lang}">{t[lang].duration}</label>
 					<div class="input-wrap">
 						<input
 							id="baking-length-{lang}"
@@ -1041,7 +1051,7 @@ h3{
 					</div>
 				</div>
 				<div class="baking-field">
-					<label for="baking-temp-{lang}">{lang === 'de' ? 'Temperatur' : 'Temperature'}</label>
+					<label for="baking-temp-{lang}">{t[lang].temperature}</label>
 					<div class="input-wrap">
 						<input
 							id="baking-temp-{lang}"
@@ -1055,7 +1065,7 @@ h3{
 					</div>
 				</div>
 				<div class="baking-field mode-field">
-					<span class="mode-label">{lang === 'de' ? 'Modus' : 'Mode'}</span>
+					<span class="mode-label">{t[lang].mode}</span>
 					<div class="mode-chips">
 						{#each BAKING_MODES[lang] as mode}
 							<button
@@ -1070,7 +1080,7 @@ h3{
 						type="text"
 						class="mode-custom"
 						bind:value={add_info.baking.mode}
-						placeholder={lang === 'de' ? 'oder eigenen Modus eingeben…' : 'or enter custom mode…'}
+						placeholder={t[lang].customModePlaceholder}
 						autocomplete="off"
 					/>
 				</div>

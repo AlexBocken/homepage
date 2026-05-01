@@ -8,13 +8,10 @@
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 	const lang = $derived(data.lang as RecipesLang);
 	const t = $derived(m[lang]);
-	const isEnglish = $derived(lang === 'en');
 	const labels = $derived({
 		title: t.tips_title,
 		siteTitle: t.site_title,
-		description: isEnglish
-			? "A constantly growing collection of recipes from Bocken's kitchen."
-			: 'Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche.'
+		description: t.tips_description
 	});
 </script>
 <style>

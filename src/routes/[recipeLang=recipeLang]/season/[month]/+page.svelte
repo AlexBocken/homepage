@@ -5,11 +5,14 @@
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     let { data } = $props<{ data: PageData }>();
 
-    const isEnglish = $derived(data.lang === 'en');
+    import { m, type RecipesLang } from '$lib/js/recipesI18n';
+    const lang = $derived(data.lang as RecipesLang);
+    const t = $derived(m[lang]);
+    const isEnglish = $derived(lang === 'en');
     const months = $derived(isEnglish
         ? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
         : ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]);
-    const siteTitle = $derived(isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte');
+    const siteTitle = $derived(t.site_title);
     const currentMonth = $derived(months[data.month - 1]);
 
     import { rand_array } from '$lib/js/randomize';

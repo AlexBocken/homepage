@@ -23,7 +23,7 @@
 		hasActiveSearch = ids.size < data.all_brief.length;
 	}
 
-	const isEnglish = $derived(data.lang === 'en');
+	const isEnglish = $derived(lang === 'en');
 	const categories = $derived(getCategories(data.lang));
 
 	// Pick a seasonal hero recipe (changes daily) — only recipes with hashed images
@@ -122,15 +122,11 @@
 
 	const labels = $derived({
 		title: t.index_title,
-		subheading: isEnglish
-			? `${data.all_brief.length} recipes and constantly growing...`
-			: `${data.all_brief.length} Rezepte und stetig wachsend...`,
+		subheading: `${data.all_brief.length} ${t.recipes_growing_suffix}`,
 		all: t.all,
 		inSeason: t.in_season_now,
 		metaTitle: t.site_title,
-		metaDescription: isEnglish
-			? "A constantly growing collection of recipes from Bocken's kitchen."
-			: "Eine stetig wachsende Ansammlung an Rezepten aus der Bockenschen Küche.",
+		metaDescription: t.recipes_collection_meta,
 		metaAlt: t.meta_alt_hero
 	});
 </script>

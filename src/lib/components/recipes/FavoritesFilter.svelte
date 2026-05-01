@@ -1,5 +1,7 @@
 <script>
 	import Toggle from '$lib/components/Toggle.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
 		enabled = false,
@@ -8,8 +10,8 @@
 		lang = 'de'
 	} = $props();
 
-	const isEnglish = $derived(lang === 'en');
-	const label = $derived(isEnglish ? 'Favorites' : 'Favoriten');
+	const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
+	const label = $derived(t.favorites);
 
 	// svelte-ignore state_referenced_locally
 	let checked = $state(enabled);

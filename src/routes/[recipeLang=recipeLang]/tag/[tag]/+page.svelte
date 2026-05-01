@@ -11,9 +11,11 @@
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1;
 
-    const isEnglish = $derived(data.lang === 'en');
-    const label = $derived(isEnglish ? 'Recipes with Keyword' : 'Rezepte mit Stichwort');
-    const siteTitle = $derived(isEnglish ? 'Bocken Recipes' : 'Bocken Rezepte');
+    import { m, type RecipesLang } from '$lib/js/recipesI18n';
+    const lang = $derived(data.lang as RecipesLang);
+    const t = $derived(m[lang]);
+    const label = $derived(t.recipes_with_keyword);
+    const siteTitle = $derived(t.site_title);
 
     let matchedRecipeIds = $state(new Set<string>());
     let hasActiveSearch = $state(false);

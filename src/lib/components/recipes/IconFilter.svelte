@@ -1,5 +1,7 @@
 <script>
 	import TagChip from '$lib/components/recipes/TagChip.svelte';
+	import { m } from '$lib/js/recipesI18n';
+	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
 		availableIcons = [],
@@ -9,9 +11,9 @@
 		useAndLogic = true
 	} = $props();
 
-	const isEnglish = $derived(lang === 'en');
+	const t = $derived(m[/** @type {RecipesLang} */ (lang)]);
 	const label = 'Icon';
-	const selectLabel = $derived(isEnglish ? 'Select icon...' : 'Icon auswählen...');
+	const selectLabel = $derived(t.select_icon_placeholder);
 
 	// Convert selected to array for OR mode, keep as single value for AND mode
 	const selectedArray = $derived(
