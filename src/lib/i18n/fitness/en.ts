@@ -363,4 +363,30 @@ export const en = {
 	sugars: "Sugars",
 	source_db: "Source",
 	initializing_gps: "Initializing GPS…",
+
+	// Check-in page
+	failed_to_load_more: "Failed to load more",
+	body_part_count_one: "1 body part",
+	body_parts_count_other: "body parts",
+	updated_toast: "Updated",
+	body_fat_label: "Body Fat",
+	clear_action: "Clear",
+	measure_short: "Measure",
+	edit_all_fields: "Edit all fields",
+	measurement_saved: "Measurement saved",
+
+	// Stats page
+	bf_delta_from_prefix: "Δ from",
+	set_height_birthyear_weight: "Set height, birth year & weight",
+	actual_label: "Actual",
+	target_label: "Target",
+	calorie_balance_tooltip: "Average daily calories eaten minus estimated expenditure (TDEE + tracked workout calories) over the last 7 days. Negative = deficit, positive = surplus.",
+	daily_expenditure_estimate_prefix: "Est. daily expenditure:",
+	diet_adherence_tooltip: "Percentage of days where calories eaten were within ±10% of your goal (adjusted for exercise calories burned). Days without tracking count as misses.",
+
+	// Misc page titles / labels
+	exercise_title: "Exercise",
+	recent_label: "Recent",
+	starts_with: "starts with",
+	days_ago_template: "{n} days ago"
 } as const satisfies Record<keyof typeof de, string>;

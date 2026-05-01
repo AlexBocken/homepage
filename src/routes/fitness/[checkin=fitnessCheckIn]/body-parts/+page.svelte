@@ -251,7 +251,7 @@
 				res = await doPost(true);
 			}
 			if (res.ok) {
-				toast.success(lang === 'en' ? 'Measurement saved' : 'Messung gespeichert');
+				toast.success(t.measurement_saved);
 				await goto(`/fitness/${checkinSlug}`);
 			} else {
 				const err = await res.json().catch(() => null);

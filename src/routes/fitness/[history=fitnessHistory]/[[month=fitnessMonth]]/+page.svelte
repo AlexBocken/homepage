@@ -90,7 +90,7 @@
 		{/if}
 		{#if viewMonth}
 			<a class="month-link" href={recentHref}>
-				{lang === 'en' ? 'Recent' : 'Aktuell'}
+				{t.recent_label}
 			</a>
 		{/if}
 		<a class="month-link" href={prevHref}>

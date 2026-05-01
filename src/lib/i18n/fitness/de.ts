@@ -363,4 +363,30 @@ export const de = {
 	sugars: "Zucker",
 	source_db: "Quelle",
 	initializing_gps: "GPS wird initialisiert…",
+
+	// Check-in page
+	failed_to_load_more: "Laden fehlgeschlagen",
+	body_part_count_one: "1 Körperteil",
+	body_parts_count_other: "Körperteile",
+	updated_toast: "Aktualisiert",
+	body_fat_label: "Körperfett",
+	clear_action: "Leeren",
+	measure_short: "Messen",
+	edit_all_fields: "Alle Felder bearbeiten",
+	measurement_saved: "Messung gespeichert",
+
+	// Stats page
+	bf_delta_from_prefix: "Δ von",
+	set_height_birthyear_weight: "Größe, Geburtsjahr & Gewicht eintragen",
+	actual_label: "Ist",
+	target_label: "Ziel",
+	calorie_balance_tooltip: "Durchschnittlich gegessene Kalorien minus geschätzter Verbrauch (TDEE + erfasste Trainingskilokalorien) der letzten 7 Tage. Negativ = Defizit, positiv = Überschuss.",
+	daily_expenditure_estimate_prefix: "Geschätzter Tagesverbrauch:",
+	diet_adherence_tooltip: "Prozent der Tage, an denen die gegessenen Kalorien innerhalb von ±10 % deines Ziels lagen (bereinigt um verbrannte Trainings­kalorien). Nicht erfasste Tage zählen als verfehlt.",
+
+	// Misc page titles / labels
+	exercise_title: "Übung",
+	recent_label: "Aktuell",
+	starts_with: "beginnt mit",
+	days_ago_template: "vor {n} Tagen"
 } as const;

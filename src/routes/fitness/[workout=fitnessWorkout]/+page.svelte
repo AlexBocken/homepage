@@ -401,7 +401,7 @@
 	}
 </script>
 
-<svelte:head><title>{lang === 'en' ? 'Workout' : 'Training'} - Bocken</title></svelte:head>
+<svelte:head><title>{t.workout_singular} - Bocken</title></svelte:head>
 
 <div class="template-view">
 	{#if hasSchedule && nextTemplate}
@@ -431,7 +431,7 @@
 						<span class="next-exercises">
 							{nextTemplate.exercises.length} {nextTemplate.exercises.length !== 1 ? t.exercises_word : t.exercise}
 							{#if firstExData}
-								 · {lang === 'en' ? 'starts with' : 'beginnt mit'} {firstExData.localName} {#if firstExWeight != null}({firstExWeight} kg){/if}
+								 · {t.starts_with} {firstExData.localName} {#if firstExWeight != null}({firstExWeight} kg){/if}
 							{/if}
 						</span>
 					{/if}
