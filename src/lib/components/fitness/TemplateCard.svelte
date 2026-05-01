@@ -3,9 +3,10 @@
 	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import { page } from '$app/state';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 
 	/**
 	 * @type {{
@@ -23,8 +24,8 @@
 		const now = new Date();
 		const diffMs = now.getTime() - d.getTime();
 		const diffDays = Math.floor(diffMs / 86400000);
-		if (diffDays === 0) return t('today', lang);
-		if (diffDays === 1) return t('yesterday', lang);
+		if (diffDays === 0) return t.today;
+		if (diffDays === 1) return t.yesterday;
 		if (diffDays < 7) return lang === 'en' ? `${diffDays} days ago` : `vor ${diffDays} Tagen`;
 		return d.toLocaleDateString(lang === 'en' ? 'en' : 'de', { month: 'short', day: 'numeric' });
 	}
@@ -52,12 +53,12 @@
 				<li>{ex.sets.length} &times; {exercise?.localName ?? ex.exerciseId}</li>
 			{/each}
 			{#if template.exercises.length > 4}
-				<li class="more">+{template.exercises.length - 4} {t('more', lang)}</li>
+				<li class="more">+{template.exercises.length - 4} {t.more}</li>
 			{/if}
 		</ul>
 	{/if}
 	{#if lastUsed}
-		<p class="last-used">{t('last_performed', lang)} {formatDate(lastUsed)}</p>
+		<p class="last-used">{t.last_performed} {formatDate(lastUsed)}</p>
 	{/if}
 </div>
 

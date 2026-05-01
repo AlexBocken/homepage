@@ -10,9 +10,10 @@
 	import Shapes from '@lucide/svelte/icons/shapes';
 	import Weight from '@lucide/svelte/icons/weight';
 	import { page } from '$app/state';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const isEn = $derived(lang === 'en');
 
 	/**
@@ -81,7 +82,7 @@
 	<div class="picker-backdrop" onclick={onClose}></div>
 	<div class="picker-panel">
 		<div class="picker-header">
-			<h2>{t('picker_title', lang)}</h2>
+			<h2>{t.picker_title}</h2>
 			<button class="close-btn" onclick={onClose} aria-label="Close">
 				<X size={20} />
 			</button>
@@ -91,7 +92,7 @@
 			<Search size={16} />
 			<input
 				type="text"
-				placeholder={t('search_exercises', lang)}
+				placeholder={t.search_exercises}
 				bind:value={query}
 			/>
 		</div>
@@ -154,7 +155,7 @@
 				</li>
 			{/each}
 			{#if filtered.length === 0}
-				<li class="no-results">{t('no_exercises_found', lang)}</li>
+				<li class="no-results">{t.no_exercises_found}</li>
 			{/if}
 		</ul>
 	</div>

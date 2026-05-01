@@ -12,11 +12,12 @@
 	import Layers from '@lucide/svelte/icons/layers';
 	import { getFilterOptionsAll, searchAllExercises, isStretchType } from '$lib/data/exercisedb';
 	import { translateTerm } from '$lib/data/exercises';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { MUSCLE_GROUPS, MUSCLE_GROUP_DE } from '$lib/data/muscleMap';
 	import MuscleFilter from '$lib/components/fitness/MuscleFilter.svelte';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const isEn = $derived(lang === 'en');
 	const sl = $derived(fitnessSlugs(lang));
 
@@ -117,7 +118,7 @@
 <svelte:head><title>{lang === 'en' ? 'Exercises' : 'Übungen'} - Bocken</title></svelte:head>
 
 <div class="exercises-page">
-	<h1 class="sr-only">{t('exercises_title', lang)}</h1>
+	<h1 class="sr-only">{t.exercises_title}</h1>
 
 	<aside class="muscle-card" aria-label={isEn ? 'Filter by muscle' : 'Nach Muskel filtern'}>
 		<MuscleFilter bind:selectedGroups={muscleGroups} {lang} />
@@ -126,7 +127,7 @@
 	<div class="exercises-content">
 		<div class="search-bar">
 			<Search size={16} />
-			<input type="text" placeholder={t('search_exercises', lang)} bind:value={query} />
+			<input type="text" placeholder={t.search_exercises} bind:value={query} />
 		</div>
 
 		<div class="type-toggle" role="tablist" aria-label={isEn ? 'Exercise type filter' : 'Filter nach Übungsart'}>
@@ -138,7 +139,7 @@
 				onclick={() => typeFilter = 'all'}
 			>
 				<Layers size={14} strokeWidth={2.2} />
-				<span>{t('type_any', lang)}</span>
+				<span>{t.type_any}</span>
 			</button>
 			<button
 				role="tab"
@@ -148,7 +149,7 @@
 				onclick={() => typeFilter = 'non-stretch'}
 			>
 				<BicepsFlexed size={14} strokeWidth={2.2} />
-				<span>{t('type_weights', lang)}</span>
+				<span>{t.type_weights}</span>
 			</button>
 			<button
 				role="tab"
@@ -158,7 +159,7 @@
 				onclick={() => typeFilter = 'stretch'}
 			>
 				<PersonStanding size={14} strokeWidth={2.2} />
-				<span>{t('type_stretches', lang)}</span>
+				<span>{t.type_stretches}</span>
 			</button>
 		</div>
 
@@ -218,7 +219,7 @@
 							<span class="exercise-name">
 								{exercise.localName}
 								{#if isStretchType(exercise.exerciseType)}
-									<span class="stretch-badge">{t('stretch_pill', lang)}</span>
+									<span class="stretch-badge">{t.stretch_pill}</span>
 								{/if}
 							</span>
 							<span class="exercise-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
@@ -227,7 +228,7 @@
 				</li>
 			{/each}
 			{#if filtered.length === 0}
-				<li class="no-results">{t('no_exercises_match', lang)}</li>
+				<li class="no-results">{t.no_exercises_match}</li>
 			{/if}
 		</ul>
 	</div>

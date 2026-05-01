@@ -16,11 +16,12 @@
 	import Flame from '@lucide/svelte/icons/flame';
 	import Info from '@lucide/svelte/icons/info';
 	import Mountain from '@lucide/svelte/icons/mountain';
-	import { detectFitnessLang, fitnessSlugs, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
@@ -232,7 +233,7 @@
 	}
 
 	async function deleteSession() {
-		if (!await confirm(t('delete_session_confirm', lang))) return;
+		if (!await confirm(t.delete_session_confirm)) return;
 		deleting = true;
 		try {
 			const res = await fetch(`/api/fitness/sessions/${session._id}`, { method: 'DELETE' });
@@ -475,7 +476,7 @@
 		return {
 			labels: filtered.map(s => s.dist.toFixed(2)),
 			datasets: [{
-				label: t('elevation', lang),
+				label: t.elevation,
 				data: filtered.map(s => Math.round(s.altitude)),
 				borderColor: color,
 				backgroundColor: fill,
@@ -516,7 +517,7 @@
 		return {
 			labels: filtered.map(s => s.dist.toFixed(2)),
 			datasets: [{
-				label: t('cadence', lang),
+				label: t.cadence,
 				data: filtered.map(s => s.cadence),
 				borderColor: color,
 				backgroundColor: fill,
@@ -564,7 +565,7 @@
 
 	/** @param {number} exIdx */
 	async function removeGpx(exIdx) {
-		if (!await confirm(t('remove_gps_confirm', lang))) return;
+		if (!await confirm(t.remove_gps_confirm)) return;
 		try {
 			const res = await fetch(`/api/fitness/sessions/${session._id}/gpx`, {
 				method: 'DELETE',
@@ -598,13 +599,13 @@
 		</div>
 		<div class="header-actions">
 			{#if editing}
-				<button class="recalc-btn" onclick={recalculate} disabled={recalculating} title={t('recalc_title', lang)}>
+				<button class="recalc-btn" onclick={recalculate} disabled={recalculating} title={t.recalc_title}>
 					<RefreshCw size={14} class={recalculating ? 'spinning' : ''} />
 				</button>
 				<button class="save-btn" onclick={saveEdit} disabled={saving}>
-					{saving ? t('saving', lang).toUpperCase() : t('save', lang).toUpperCase()}
+					{saving ? t.saving.toUpperCase() : t.save.toUpperCase()}
 				</button>
-				<button class="cancel-edit-btn" onclick={cancelEdit}>{t('cancel', lang)}</button>
+				<button class="cancel-edit-btn" onclick={cancelEdit}>{t.cancel}</button>
 			{:else}
 				<button class="edit-btn" onclick={startEdit} aria-label="Edit session">
 					<Pencil size={16} />
@@ -619,20 +620,20 @@
 	{#if editing}
 		<div class="edit-meta">
 			<div class="meta-row">
-				<label for="edit-date">{t('date', lang)}</label>
+				<label for="edit-date">{t.date}</label>
 				<DatePicker bind:value={editData.date} {lang} />
 			</div>
 			<div class="meta-row">
-				<label for="edit-time">{t('time', lang)}</label>
+				<label for="edit-time">{t.time}</label>
 				<input id="edit-time" type="time" bind:value={editData.time} />
 			</div>
 			<div class="meta-row">
-				<label for="edit-duration">{t('duration_min', lang)}</label>
+				<label for="edit-duration">{t.duration_min}</label>
 				<input id="edit-duration" type="number" min="0" bind:value={editData.duration} />
 			</div>
 			<div class="meta-row">
-				<label for="edit-notes">{t('notes', lang)}</label>
-				<textarea id="edit-notes" bind:value={editData.notes} rows="2" placeholder={t('notes_placeholder', lang)}></textarea>
+				<label for="edit-notes">{t.notes}</label>
+				<textarea id="edit-notes" bind:value={editData.notes} rows="2" placeholder={t.notes_placeholder}></textarea>
 			</div>
 		</div>
 	{:else}
@@ -701,7 +702,7 @@
 					{@const exData = session.exercises[exIdx]}
 					<div class="gps-indicator">
 						<Route size={14} />
-						<span>{t('gps_track_stored', lang)}{exData.totalDistance ? ` · ${exData.totalDistance.toFixed(2)} km` : ''}</span>
+						<span>{t.gps_track_stored}{exData.totalDistance ? ` · ${exData.totalDistance.toFixed(2)} km` : ''}</span>
 						<button class="gpx-remove-btn" onclick={() => removeGpx(exIdx)} aria-label="Remove GPS track">
 							<X size={14} />
 						</button>
@@ -723,13 +724,13 @@
 				/>
 
 				<button class="add-set-btn" onclick={() => addSetToEdit(exIdx)}>
-					{t('add_set', lang)}
+					{t.add_set}
 				</button>
 			</div>
 		{/each}
 
 		<button class="add-exercise-btn" onclick={() => showPicker = true}>
-			<Plus size={18} /> {t('add_exercise', lang)}
+			<Plus size={18} /> {t.add_exercise}
 		</button>
 	{:else}
 		{#each session.exercises as ex, exIdx (ex.exerciseId + '-' + exIdx)}
@@ -744,13 +745,13 @@
 				<table class="sets-table">
 					<thead>
 						<tr>
-							<th>{t('set_header', lang)}</th>
+							<th>{t.set_header}</th>
 							{#each mainMetrics as metric (metric)}
 								<th>{METRIC_LABELS[metric]}</th>
 							{/each}
 							<th>RPE</th>
 							{#if showEst1rm}
-								<th>{t('est_1rm', lang)}</th>
+								<th>{t.est_1rm}</th>
 							{/if}
 						</tr>
 					</thead>
@@ -783,8 +784,8 @@
 								<span class="gps-stat accent"><Gauge size={14} /> {formatPace(pace)}</span>
 							{/if}
 							{#if elevStats}
-								<span class="gps-stat elev-gain"><Mountain size={14} /> +{elevStats.gain}{t('elevation_unit', lang)}</span>
-								<span class="gps-stat elev-loss">-{elevStats.loss}{t('elevation_unit', lang)}</span>
+								<span class="gps-stat elev-gain"><Mountain size={14} /> +{elevStats.gain}{t.elevation_unit}</span>
+								<span class="gps-stat elev-loss">-{elevStats.loss}{t.elevation_unit}</span>
 							{/if}
 						</div>
 						<div class="track-map" {@attach renderMap(ex.gpsTrack, exIdx)}></div>
@@ -797,7 +798,7 @@
 							<div class="chart-section">
 								<FitnessChart
 									data={buildElevationChartData(elevSamples)}
-									title="{t('elevation', lang)} ({t('elevation_unit', lang)})"
+									title="{t.elevation} ({t.elevation_unit})"
 									height="160px"
 									yUnit="m"
 								/>
@@ -820,7 +821,7 @@
 							<div class="chart-section">
 								<FitnessChart
 									data={buildCadenceChartData(cadenceSamples)}
-									title="{t('cadence', lang)} ({t('cadence_unit', lang)}) · {t('avg', lang)} {avgCadence}"
+									title="{t.cadence} ({t.cadence_unit}) · {t.avg} {avgCadence}"
 									height="160px"
 									yUnit=" spm"
 								/>
@@ -830,12 +831,12 @@
 						{#if splits.length > 1}
 							{@const avgPace = splits.reduce((a, s) => a + s.pace, 0) / splits.length}
 							<div class="splits-section">
-								<h4>{t('splits', lang)}</h4>
+								<h4>{t.splits}</h4>
 								<table class="splits-table">
 									<thead>
 										<tr>
 											<th>KM</th>
-											<th>{t('pace', lang)}</th>
+											<th>{t.pace}</th>
 											<th>TIME</th>
 										</tr>
 									</thead>
@@ -857,13 +858,13 @@
 						{/if}
 						<button class="gpx-download-btn" onclick={() => downloadGpx(exIdx)}>
 							<Download size={14} />
-							{t('download_gpx', lang)}
+							{t.download_gpx}
 						</button>
 					</div>
 				{:else if isCardio(ex.exerciseId)}
 					<button class="gpx-upload-btn" onclick={() => uploadGpx(exIdx)} disabled={uploading === exIdx}>
 						<Upload size={14} />
-						{uploading === exIdx ? t('uploading', lang) : t('upload_gpx', lang)}
+						{uploading === exIdx ? t.uploading : t.upload_gpx}
 					</button>
 				{/if}
 			</div>
@@ -872,7 +873,7 @@
 
 	{#if !editing && session.prs?.length > 0}
 		<div class="prs-section">
-			<h2>{t('personal_records', lang)}</h2>
+			<h2>{t.personal_records}</h2>
 			<div class="pr-list">
 				{#each session.prs as pr (pr.exerciseId + pr.type)}
 					{@const exercise = getExerciseById(pr.exerciseId, lang)}
@@ -901,7 +902,7 @@
 
 	{#if !editing && session.notes}
 		<div class="notes-section">
-			<h2>{t('notes', lang)}</h2>
+			<h2>{t.notes}</h2>
 			<p>{session.notes}</p>
 		</div>
 	{/if}

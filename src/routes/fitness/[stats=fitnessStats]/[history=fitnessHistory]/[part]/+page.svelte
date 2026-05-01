@@ -6,13 +6,14 @@
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import MinusIcon from '@lucide/svelte/icons/minus';
-	import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
+	const t = $derived(m[lang]);
 	const statsSlug = $derived(lang === 'en' ? 'stats' : 'statistik');
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	const card = $derived(data.card);
@@ -80,7 +81,7 @@
 			labels: series.dates,
 			datasets: [
 				{
-					label: t(card.labelKey, lang),
+					label: t[card.labelKey],
 					data: series.values,
 					borderColor: '#88C0D0',
 					pointBackgroundColor: '#88C0D0'
@@ -148,16 +149,16 @@
 	const hasData = $derived(series.dates.length > 0);
 </script>
 
-<svelte:head><title>{t(card.labelKey, lang)} · {lang === 'en' ? 'History' : 'Verlauf'} - Bocken</title></svelte:head>
+<svelte:head><title>{t[card.labelKey]} · {lang === 'en' ? 'History' : 'Verlauf'} - Bocken</title></svelte:head>
 
 <div class="detail-page">
 	<header class="detail-header" style="--accent: {bodyPartAccent(card.key)}">
-		<a class="back-link" href={resolve('/fitness/[stats=fitnessStats]', { stats: statsSlug })} aria-label={t('back', lang)}>
+		<a class="back-link" href={resolve('/fitness/[stats=fitnessStats]', { stats: statsSlug })} aria-label={t.back}>
 			<ArrowLeft size={18} />
 		</a>
 		<div class="head-text">
-			<span class="eyebrow">{t('body_parts', lang)}</span>
-			<h1>{t(card.labelKey, lang)}</h1>
+			<span class="eyebrow">{t.body_parts}</span>
+			<h1>{t[card.labelKey]}</h1>
 		</div>
 		<div class="head-img" aria-hidden="true">
 			{#if card.img}
@@ -173,9 +174,9 @@
 
 	{#if !hasData}
 		<div class="empty">
-			<p>{t('no_measurements_yet', lang)}</p>
+			<p>{t.no_measurements_yet}</p>
 			<a class="cta" href={resolve('/fitness/[checkin=fitnessCheckIn]/body-parts', { checkin: checkinSlug })}>
-				<Ruler size={16} /> {t('measure_body_parts', lang)}
+				<Ruler size={16} /> {t.measure_body_parts}
 			</a>
 		</div>
 	{:else}
@@ -183,7 +184,7 @@
 			{#if stats.paired}
 				<div class="stat-grid">
 					<div class="stat">
-						<span class="stat-label">L · {t('latest', lang)}</span>
+						<span class="stat-label">L · {t.latest}</span>
 						<span class="stat-value">
 							{stats.latest.left != null ? stats.latest.left.toFixed(1) : '—'}
 							<span class="stat-unit">cm</span>
@@ -201,7 +202,7 @@
 						{/if}
 					</div>
 					<div class="stat">
-						<span class="stat-label">R · {t('latest', lang)}</span>
+						<span class="stat-label">R · {t.latest}</span>
 						<span class="stat-value">
 							{stats.latest.right != null ? stats.latest.right.toFixed(1) : '—'}
 							<span class="stat-unit">cm</span>
@@ -222,7 +223,7 @@
 			{:else}
 				<div class="stat-grid">
 					<div class="stat">
-						<span class="stat-label">{t('latest', lang)}</span>
+						<span class="stat-label">{t.latest}</span>
 						<span class="stat-value">
 							{stats.latest != null ? stats.latest.toFixed(1) : '—'}
 							<span class="stat-unit">cm</span>

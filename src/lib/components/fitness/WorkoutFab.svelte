@@ -5,9 +5,10 @@ import Pause from '@lucide/svelte/icons/pause';
 import ChevronRight from '@lucide/svelte/icons/chevron-right';
 import SyncIndicator from '$lib/components/fitness/SyncIndicator.svelte';
 import { page } from '$app/state';
-import { detectFitnessLang, t } from '$lib/js/fitnessI18n';
+import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
 const lang = $derived(detectFitnessLang(page.url.pathname));
+const t = $derived(m[lang]);
 
 let { href, elapsed = '0:00', paused = false, syncStatus = 'idle', onPauseToggle,
 	restSeconds = 0, restTotal = 0, onRestAdjust = null, onRestSkip = null } = $props();
@@ -28,7 +29,7 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 	class:rest-active={restActive}
 	role="button"
 	tabindex="0"
-	aria-label={t('active_workout', lang)}
+	aria-label={t.active_workout}
 	onclick={() => goto(href)}
 	onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goto(href); } }}
 >
@@ -54,7 +55,7 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 			<button class="rest-adj" onclick={(e) => { e.stopPropagation(); onRestAdjust?.(30); }} aria-label="Add 30 seconds">+30s</button>
 		</div>
 	{:else}
-		<span class="fab-label">{t('active_workout', lang)}</span>
+		<span class="fab-label">{t.active_workout}</span>
 		<ChevronRight size={14} strokeWidth={2.4} class="fab-chevron" />
 	{/if}
 </div>

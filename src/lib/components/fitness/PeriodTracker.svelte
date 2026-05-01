@@ -1,5 +1,5 @@
 <script>
-	import { t } from '$lib/js/fitnessI18n';
+	import { m } from '$lib/js/fitnessI18n';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -17,6 +17,7 @@
 	 * @type {{ periods: any[], lang: 'en' | 'de', sharedWith?: string[], readOnly?: boolean, ownerName?: string, mode?: 'entry' | 'projection' | 'full' }}
 	 */
 	let { periods: initialPeriods = [], lang = 'en', sharedWith: initialSharedWith = [], readOnly = false, ownerName = '', mode = 'full' } = $props();
+	const t = $derived(m[lang]);
 	const showEntry = $derived(mode !== 'projection');
 	const showProjection = $derived(mode !== 'entry');
 
@@ -116,7 +117,7 @@
 		const startDay = start.toLocaleDateString(locale, { weekday: 'long' });
 		const endDay = end.toLocaleDateString(locale, { weekday: 'long' });
 		const diffDays = Math.round((midnight(start) - todayMidnight) / 86400000);
-		const toWord = t('to', lang);
+		const toWord = t.to;
 
 		if (diffDays >= 0 && diffDays < 7) {
 			return lang === 'de'
@@ -653,7 +654,7 @@
 
 	/** @param {string} id */
 	async function deletePeriod(id) {
-		if (!await confirm(t('delete_period_confirm', lang))) return;
+		if (!await confirm(t.delete_period_confirm)) return;
 		try {
 			const res = await fetch(`/api/fitness/period/${id}`, { method: 'DELETE' });
 			if (res.ok) {
@@ -709,7 +710,7 @@
 				{ownerName}
 			</span>
 		{:else}
-			{t('period_tracker', lang)}
+			{t.period_tracker}
 		{/if}
 	</h2>
 
@@ -718,29 +719,29 @@
 		{#if ongoing}
 			<div class="status-split">
 				<div class="status-main">
-					<span class="status-pill period-pill">{t('current_period', lang)}</span>
-					<span class="status-hero ongoing-hero">{t('period_day', lang)} {ongoingDay}</span>
+					<span class="status-pill period-pill">{t.current_period}</span>
+					<span class="status-hero ongoing-hero">{t.period_day} {ongoingDay}</span>
 					{#if showProjection && predictions.predictedEndOfOngoing}
-						<span class="status-detail">{t('predicted_end', lang)}</span>
+						<span class="status-detail">{t.predicted_end}</span>
 						<span class="status-relative">{relativeDate(predictions.predictedEndOfOngoing)}</span>
 						<span class="status-date">{formatDate(predictions.predictedEndOfOngoing)}</span>
 					{/if}
 					{#if showEntry && !readOnly}
 						<button class="end-btn" onclick={endPeriod} disabled={loading}>
 							<span class="end-btn-icon"><Check size={18} strokeWidth={2.5} /></span>
-							<span class="end-btn-label">{t('end_period', lang)}</span>
+							<span class="end-btn-label">{t.end_period}</span>
 						</button>
 					{/if}
 				</div>
 				{#if showProjection && nextCycle}
 					<div class="status-side">
 						<div class="status-side-item ovulation-accent">
-							<span class="status-side-label">{t('ovulation', lang)}</span>
+							<span class="status-side-label">{t.ovulation}</span>
 							<span class="status-side-relative">{relativeDate(nextCycle.fertileEnd)}</span>
 							<span class="status-side-date">{formatDate(nextCycle.fertileEnd)}</span>
 						</div>
 						<div class="status-side-item fertile-accent">
-							<span class="status-side-label">{t('fertile', lang)}</span>
+							<span class="status-side-label">{t.fertile}</span>
 							<span class="status-side-date">{formatDate(nextCycle.fertileStart)} — {formatDate(nextCycle.fertileEnd)}</span>
 						</div>
 					</div>
@@ -749,33 +750,33 @@
 		{:else if showProjection && nextCycle}
 			<div class="status-split">
 				<div class="status-main">
-					<span class="status-pill period-pill">{t('next_period', lang)}</span>
+					<span class="status-pill period-pill">{t.next_period}</span>
 					<span class="status-hero">{relativeRange(nextCycle.start, nextCycle.end)}</span>
 					<span class="status-date">{formatDate(nextCycle.start)} — {formatDate(nextCycle.end)}</span>
 					{#if showEntry && !readOnly}
 						<button class="start-btn" onclick={startPeriod} disabled={loading}>
-							{t('start_period', lang)}
+							{t.start_period}
 						</button>
 					{/if}
 				</div>
 				<div class="status-side">
 					<div class="status-side-item ovulation-accent">
-						<span class="status-side-label">{t('ovulation', lang)}</span>
+						<span class="status-side-label">{t.ovulation}</span>
 						<span class="status-side-relative">{relativeDate(nextCycle.fertileEnd)}</span>
 						<span class="status-side-date">{formatDate(nextCycle.fertileEnd)}</span>
 					</div>
 					<div class="status-side-item fertile-accent">
-						<span class="status-side-label">{t('fertile', lang)}</span>
+						<span class="status-side-label">{t.fertile}</span>
 						<span class="status-side-date">{formatDate(nextCycle.fertileStart)} — {formatDate(nextCycle.fertileEnd)}</span>
 					</div>
 				</div>
 			</div>
 		{:else if showEntry}
 			<div class="status-block">
-				<span class="status-empty">{sorted.length === 0 ? t('no_period_data', lang) : t('no_active_period', lang)}</span>
+				<span class="status-empty">{sorted.length === 0 ? t.no_period_data : t.no_active_period}</span>
 				{#if !readOnly}
 					<button class="start-btn" onclick={startPeriod} disabled={loading}>
-						{t('start_period', lang)}
+						{t.start_period}
 					</button>
 				{/if}
 			</div>
@@ -817,10 +818,10 @@
 		<div class="cal-legend">
 			<span class="legend-item"><span class="legend-dot period"></span> {lang === 'de' ? 'Periode' : 'Period'}</span>
 			<span class="legend-item"><span class="legend-dot predicted"></span> {lang === 'de' ? 'Prognose' : 'Predicted'}</span>
-			<span class="legend-item"><span class="legend-dot fertile"></span> {t('fertile', lang)}</span>
-			<span class="legend-item"><span class="legend-dot peak-fertile"></span> {t('peak_fertility', lang)}</span>
-			<span class="legend-item"><span class="legend-dot ovulation"></span> {t('ovulation', lang)}</span>
-			<span class="legend-item"><span class="legend-dot luteal"></span> {t('luteal_phase', lang)}</span>
+			<span class="legend-item"><span class="legend-dot fertile"></span> {t.fertile}</span>
+			<span class="legend-item"><span class="legend-dot peak-fertile"></span> {t.peak_fertility}</span>
+			<span class="legend-item"><span class="legend-dot ovulation"></span> {t.ovulation}</span>
+			<span class="legend-item"><span class="legend-dot luteal"></span> {t.luteal_phase}</span>
 		</div>
 	</div>
 
@@ -829,17 +830,17 @@
 	{#if showProjection && completed.length >= 2}
 		<div class="cycle-stats">
 			<div class="cycle-stat">
-				<span class="cycle-stat-label">{t('cycle_length', lang)}</span>
-				<span class="cycle-stat-value">{Math.round(predictions.avgCycle)} {t('days', lang)}</span>
+				<span class="cycle-stat-label">{t.cycle_length}</span>
+				<span class="cycle-stat-value">{Math.round(predictions.avgCycle)} {t.days}</span>
 				{#if predictions.cycleVariance > 0}
-					<span class="cycle-stat-variance">± {predictions.cycleVariance} {t('days', lang)} (95% CI)</span>
+					<span class="cycle-stat-variance">± {predictions.cycleVariance} {t.days} (95% CI)</span>
 				{/if}
 			</div>
 			<div class="cycle-stat">
-				<span class="cycle-stat-label">{t('period_length', lang)}</span>
-				<span class="cycle-stat-value">{Math.round(predictions.avgPeriod)} {t('days', lang)}</span>
+				<span class="cycle-stat-label">{t.period_length}</span>
+				<span class="cycle-stat-value">{Math.round(predictions.avgPeriod)} {t.days}</span>
 				{#if predictions.periodVariance > 0}
-					<span class="cycle-stat-variance">± {predictions.periodVariance} {t('days', lang)} (95% CI)</span>
+					<span class="cycle-stat-variance">± {predictions.periodVariance} {t.days} (95% CI)</span>
 				{/if}
 			</div>
 		</div>
@@ -851,13 +852,13 @@
 			<div class="history">
 				<div class="history-share-row">
 					<button class="history-toggle" onclick={() => showHistory = !showHistory}>
-						<h3>{t('history', lang)}</h3>
+						<h3>{t.history}</h3>
 						<ChevronRight size={14} class={showHistory ? 'chevron open' : 'chevron'} />
 					</button>
 					<div class="share-bar">
 						{#if shareList.length > 0}
 							<div class="shared-avatars">
-								<span class="shared-label">{t('shared_with', lang)}</span>
+								<span class="shared-label">{t.shared_with}</span>
 								{#each shareList as user}
 									<div class="shared-avatar" title={user}>
 										<ProfilePicture username={user} size={28} />
@@ -865,7 +866,7 @@
 								{/each}
 							</div>
 						{/if}
-						<button class="share-btn" onclick={() => showShare = true} aria-label={t('share', lang)}>
+						<button class="share-btn" onclick={() => showShare = true} aria-label={t.share}>
 							<UserPlus size={16} />
 						</button>
 					</div>
@@ -875,7 +876,7 @@
 					<div class="history-header">
 						<button class="add-past-btn" onclick={() => showAddForm = !showAddForm}>
 							<Plus size={14} />
-							{t('add_past_period', lang)}
+							{t.add_past_period}
 						</button>
 					</div>
 
@@ -883,20 +884,20 @@
 						<div class="add-form">
 							<div class="add-row">
 								<label>
-									{t('period_start', lang)}
+									{t.period_start}
 									<DatePicker bind:value={addStart} max={todayStr} {lang} />
 								</label>
 								<label>
-									{t('period_end', lang)}
+									{t.period_end}
 									<DatePicker bind:value={addEnd} min={addStart} max={todayStr} {lang} />
 								</label>
 							</div>
 							<div class="add-actions">
 								<button class="save-btn" onclick={addPastPeriod} disabled={!addStart || loading}>
-									{t('save', lang)}
+									{t.save}
 								</button>
 								<button class="cancel-btn" onclick={() => { showAddForm = false; addStart = ''; addEnd = ''; }}>
-									{t('cancel', lang)}
+									{t.cancel}
 								</button>
 							</div>
 						</div>
@@ -908,20 +909,20 @@
 							<div class="history-item editing">
 								<div class="add-row">
 									<label>
-										{t('period_start', lang)}
+										{t.period_start}
 										<DatePicker bind:value={editStart} {lang} />
 									</label>
 									<label>
-										{t('period_end', lang)}
+										{t.period_end}
 										<DatePicker bind:value={editEnd} min={editStart} {lang} />
 									</label>
 								</div>
 								<div class="add-actions">
 									<button class="save-btn" onclick={saveEdit} disabled={!editStart || loading}>
-										{t('save', lang)}
+										{t.save}
 									</button>
 									<button class="cancel-btn" onclick={cancelEdit}>
-										{t('cancel', lang)}
+										{t.cancel}
 									</button>
 								</div>
 							</div>
@@ -933,12 +934,12 @@
 										{#if p.endDate}
 											— {formatDate(p.endDate)}
 										{:else}
-											<span class="ongoing-badge">{t('ongoing', lang)}</span>
+											<span class="ongoing-badge">{t.ongoing}</span>
 										{/if}
 									</span>
 									{#if p.endDate}
 										{@const dur = Math.round((new Date(p.endDate).getTime() - new Date(p.startDate).getTime()) / 86400000) + 1}
-										<span class="history-dur">{dur} {t('days', lang)}</span>
+										<span class="history-dur">{dur} {t.days}</span>
 									{/if}
 								</div>
 								<div class="history-actions">
@@ -958,33 +959,33 @@
 		{:else}
 			<div class="empty-state">
 				<div class="share-bar">
-					<p>{t('no_period_data', lang)}</p>
-					<button class="share-btn" onclick={() => showShare = true} aria-label={t('share', lang)}>
+					<p>{t.no_period_data}</p>
+					<button class="share-btn" onclick={() => showShare = true} aria-label={t.share}>
 						<UserPlus size={16} />
 					</button>
 				</div>
 				<button class="add-past-btn" onclick={() => showAddForm = !showAddForm}>
 					<Plus size={14} />
-					{t('add_past_period', lang)}
+					{t.add_past_period}
 				</button>
 				{#if showAddForm}
 					<div class="add-form">
 						<div class="add-row">
 							<label>
-								{t('period_start', lang)}
+								{t.period_start}
 								<DatePicker bind:value={addStart} max={todayStr} {lang} />
 							</label>
 							<label>
-								{t('period_end', lang)}
+								{t.period_end}
 								<DatePicker bind:value={addEnd} min={addStart} max={todayStr} {lang} />
 							</label>
 						</div>
 						<div class="add-actions">
 							<button class="save-btn" onclick={addPastPeriod} disabled={!addStart || loading}>
-								{t('save', lang)}
+								{t.save}
 							</button>
 							<button class="cancel-btn" onclick={() => { showAddForm = false; addStart = ''; addEnd = ''; }}>
-								{t('cancel', lang)}
+								{t.cancel}
 							</button>
 						</div>
 					</div>
@@ -1002,7 +1003,7 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
 		<div class="share-modal" role="presentation" onclick={(e) => e.stopPropagation()}>
 			<div class="share-modal-header">
-				<h3>{t('share', lang)}</h3>
+				<h3>{t.share}</h3>
 				<button class="share-modal-close" onclick={() => showShare = false}>
 					<X size={16} />
 				</button>
@@ -1020,13 +1021,13 @@
 					{/each}
 				</div>
 			{:else}
-				<span class="share-empty">{t('no_shared', lang)}</span>
+				<span class="share-empty">{t.no_shared}</span>
 			{/if}
 			<form class="share-add" onsubmit={(e) => { e.preventDefault(); addShareUser(); }}>
 				<input
 					type="text"
 					bind:value={shareInput}
-					placeholder={t('add_user', lang)}
+					placeholder={t.add_user}
 					disabled={shareSaving}
 				/>
 				<button type="submit" class="share-add-btn" disabled={!shareInput.trim() || shareSaving}>

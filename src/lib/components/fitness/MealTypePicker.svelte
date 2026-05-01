@@ -3,7 +3,7 @@
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
 	import Cookie from '@lucide/svelte/icons/cookie';
-	import { t } from '$lib/js/fitnessI18n';
+	import { m } from '$lib/js/fitnessI18n';
 
 	/** @type {{ value?: 'breakfast' | 'lunch' | 'dinner' | 'snack', lang?: 'en' | 'de', onchange?: (meal: 'breakfast' | 'lunch' | 'dinner' | 'snack') => void }} */
 	let {
@@ -11,6 +11,7 @@
 		lang = 'de',
 		onchange = () => {},
 	} = $props();
+	const t = $derived(m[lang]);
 
 	/** @type {Array<'breakfast' | 'lunch' | 'dinner' | 'snack'>} */
 	const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -32,7 +33,7 @@
 			class:active={value === meal}
 			style="--mc: {meta.color}"
 			onclick={() => { onchange(meal); }}
-			title={t(meal, lang)}
+			title={t[meal]}
 		>
 			<MealIcon size={14} />
 		</button>
