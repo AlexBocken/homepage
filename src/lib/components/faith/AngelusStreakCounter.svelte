@@ -5,6 +5,7 @@ import StreakAura from '$lib/components/faith/StreakAura.svelte';
 import Coffee from '@lucide/svelte/icons/coffee';
 import Sun from '@lucide/svelte/icons/sun';
 import Moon from '@lucide/svelte/icons/moon';
+import { m, type FaithLang } from '$lib/js/faithI18n';
 import { tick, onMount } from 'svelte';
 
 let burst = $state(false);
@@ -13,14 +14,13 @@ let selectedSlot = $state<TimeSlot>('morning');
 
 interface Props {
 	streakData?: { streak: number; lastComplete: string | null; todayPrayed: number; todayDate: string | null } | null;
-	lang?: 'de' | 'en' | 'la';
+	lang?: FaithLang;
 	isLoggedIn?: boolean;
 }
 
 let { streakData = null, lang = 'de', isLoggedIn = false }: Props = $props();
 
-const isEnglish = $derived(lang === 'en');
-const isLatin = $derived(lang === 'la');
+const t = $derived(m[lang]);
 
 // Display values: store when available, SSR fallback
 const displayStreak = $derived(store?.streak ?? streakData?.streak ?? 0);
@@ -52,20 +52,12 @@ const slots: { key: TimeSlot; icon: typeof Coffee; color: string }[] = [
 	{ key: 'evening', icon: Moon, color: 'var(--nord15)' }
 ];
 
-const labels = $derived({
-	days: isLatin ? 'Dies' : isEnglish ? (displayStreak === 1 && !showFraction ? 'Day' : 'Days') : (displayStreak === 1 && !showFraction ? 'Tag' : 'Tage'),
-	pray: isLatin ? 'Oravi' : isEnglish ? 'Prayed' : 'Gebetet',
-	done: isLatin ? 'Hodie completa' : isEnglish ? 'Done today' : 'Heute fertig',
-	morning: isLatin ? 'Mane' : isEnglish ? 'Morning' : 'Morgens',
-	noon: isLatin ? 'Meridie' : isEnglish ? 'Noon' : 'Mittags',
-	evening: isLatin ? 'Vespere' : isEnglish ? 'Evening' : 'Abends',
-	ariaLabel: isLatin ? 'Orationem notatam fac' : isEnglish ? 'Mark prayer as prayed' : 'Gebet als gebetet markieren'
-});
+const dayLabel = $derived(displayStreak === 1 && !showFraction ? t.day_singular : t.day_plural);
 
 const slotLabels: Record<TimeSlot, string> = $derived({
-	morning: labels.morning,
-	noon: labels.noon,
-	evening: labels.evening
+	morning: t.morning,
+	noon: t.noon,
+	evening: t.evening
 });
 
 function isSlotPrayed(slot: TimeSlot): boolean {
@@ -105,7 +97,7 @@ async function pray() {
 				{displayStreak}{#if showFraction}<span class="fraction"><span class="num">{partialCount}</span><span class="slash">/</span><span class="den">3</span></span>{/if}
 			</span>
 		</StreakAura>
-		<span class="streak-label">{labels.days}</span>
+		<span class="streak-label">{dayLabel}</span>
 	</div>
 
 	<div class="prayer-controls">
@@ -132,12 +124,12 @@ async function pray() {
 				class="pray-button"
 				type="submit"
 				disabled={todayComplete || selectedSlotPrayed}
-				aria-label={labels.ariaLabel}
+				aria-label={t.mark_prayer}
 			>
 				{#if todayComplete}
-					{labels.done}
+					{t.done_today}
 				{:else}
-					{labels.pray}
+					{t.prayed}
 				{/if}
 			</button>
 		</form>

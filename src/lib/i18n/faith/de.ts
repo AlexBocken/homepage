@@ -19,5 +19,27 @@ export const de = {
 	alex_pick: "Alex' Wahl",
 	arguments_title: 'Apologetik',
 	evidences: 'Belege',
-	positive_case: 'Positives'
+	positive_case: 'Positives',
+
+	// Streak counters (rosary, angelus)
+	day_singular: 'Tag',
+	day_plural: 'Tage',
+	prayed: 'Gebetet',
+	prayed_today: 'Heute gebetet',
+	mark_prayer: 'Gebet als gebetet markieren',
+	done_today: 'Heute fertig',
+	morning: 'Morgens',
+	noon: 'Mittags',
+	evening: 'Abends',
+
+	// Bible modal
+	close: 'Schliessen',
+	loading: 'Lädt…',
+	no_verses_found: 'Keine Verse gefunden',
+	no_verse_data: 'Keine Versdaten verfügbar',
+
+	// Language-availability notice (catechesis is German-only)
+	only_german_pre: 'Diese Katechese ist nur auf ',
+	only_german_link: 'Deutsch',
+	only_german_post: ' verfügbar.'
 } as const;
