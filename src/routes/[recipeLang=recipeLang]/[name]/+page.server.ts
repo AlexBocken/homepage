@@ -3,9 +3,14 @@ import type { PageServerLoad, Actions } from './$types';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
 import { errorWithVerse } from '$lib/server/errorQuote';
 
-export const load: PageServerLoad = async ({ fetch, params, locals, url }) => {
+export const load: PageServerLoad = async ({ fetch, params, locals, url, setHeaders }) => {
     const isEnglish = params.recipeLang === 'recipes';
     const apiBase = `/api/${params.recipeLang}`;
+
+    // Recipe detail rarely changes — cache 5min in browser, 30min at edge,
+    // serve stale up to 24h while revalidating. Logged-in viewers see fresh
+    // content because cookies typically bust the shared cache.
+    setHeaders({ 'Cache-Control': 'public, max-age=300, s-maxage=1800, stale-while-revalidate=86400' });
 
     const res = await fetch(`${apiBase}/items/${params.name}`);
 

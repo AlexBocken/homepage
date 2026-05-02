@@ -8,9 +8,18 @@ import {
 	POS_ARGUMENTS as EN_POS_ARGUMENTS
 } from '$lib/data/apologetik';
 import { resolveScriptureForLang } from '$lib/server/scriptureLookup';
+import { generateProArgArticleJsonLd } from '$lib/js/apologetikJsonLd';
+import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
+import { m as faithM, faithSlugFromLang, apologetikSlug, type FaithLang } from '$lib/js/faithI18n';
 
-export const load: PageServerLoad = async ({ params, parent }) => {
-	const { lang } = await parent();
+export const load: PageServerLoad = async ({ params, parent, setHeaders }) => {
+	// Pure static content — long-form prose with no per-user state. Cache aggressively
+	// at the edge so crawlers (and casual readers) get sub-50ms TTFB. Logged-in users
+	// still get fresh server-rendered pages because most reverse proxies vary on cookies.
+	setHeaders({ 'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400' });
+
+	const parentData = await parent();
+	const lang = parentData.lang as FaithLang;
 	const [arg, voices, layers, args] = await Promise.all([
 		findPositiveArgumentLang(params.posArgId, lang),
 		getPosVoices(lang),
@@ -46,5 +55,17 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		return { ...a, scripture: resolved.text ? resolved : a.scripture };
 	});
 
-	return { argument, voices, layers, args: argsWithScripture, initialVoiceId };
+	const articleJsonLd = generateProArgArticleJsonLd(argument, voices, lang);
+	const tFaith = faithM[lang];
+	const faithSeg = faithSlugFromLang(lang);
+	const apolSeg = apologetikSlug(lang === 'la' ? 'en' : lang);
+	const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+		{ name: 'Bocken', path: '/' },
+		{ name: tFaith.title, path: `/${faithSeg}` },
+		{ name: tFaith.apologetics, path: `/${faithSeg}/${apolSeg}` },
+		{ name: tFaith.evidences, path: `/${faithSeg}/${apolSeg}/pro` },
+		{ name: argument.title, path: `/${faithSeg}/${apolSeg}/pro/${argument.id}` }
+	]);
+
+	return { argument, voices, layers, args: argsWithScripture, initialVoiceId, articleJsonLd, breadcrumbJsonLd };
 };

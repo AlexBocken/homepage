@@ -3,7 +3,8 @@ import type { LayoutServerLoad } from './$types';
 
 const expectedSlug = { de: 'apologetik', en: 'apologetics' } as const;
 
-export const load: LayoutServerLoad = async ({ params, parent, url }) => {
+export const load: LayoutServerLoad = async ({ params, parent, url, setHeaders }) => {
+	setHeaders({ 'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400' });
 	const { lang, faithLang } = await parent();
 
 	const prefix = `/${faithLang}/${params.apologetikSlug}`;
