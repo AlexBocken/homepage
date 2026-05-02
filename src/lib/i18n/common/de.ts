@@ -27,6 +27,11 @@ export const de = {
 	recipes_word: 'Rezepte',
 	sync_now: 'Jetzt synchronisieren',
 	clear_offline_data: 'Offline-Daten löschen',
+	offline_banner_title: 'Rezepte für die Küche speichern',
+	offline_banner_body: 'Lade alle Rezepte auf dein Gerät, damit sie auch ohne Internet verfügbar sind — ideal beim Kochen.',
+	offline_banner_action: 'Rezepte herunterladen',
+	dismiss: 'Ausblenden',
+	offline_data: 'Offline-Daten',
 
 	// Date picker
 	select_date: 'Datum wählen',

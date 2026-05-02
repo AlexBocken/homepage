@@ -45,7 +45,7 @@ onNavigate((navigation) => {
 });
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-import OfflineSyncButton from '$lib/components/OfflineSyncButton.svelte';
+import OfflineSyncIndicator from '$lib/components/OfflineSyncIndicator.svelte';
 import BookOpen from '@lucide/svelte/icons/book-open';
 import Heart from '@lucide/svelte/icons/heart';
 import Leaf from '@lucide/svelte/icons/leaf';
@@ -103,10 +103,25 @@ function isActive(path) {
 		<LanguageSelector lang={data.lang} />
 	{/snippet}
 
+	{#snippet logo_overlay()}
+		<div class="logo-pip">
+			<OfflineSyncIndicator lang={data.lang} />
+		</div>
+	{/snippet}
+
 	{#snippet right_side()}
-		<OfflineSyncButton lang={data.lang} />
 		<UserHeader {user} recipeLang={data.recipeLang} lang={data.lang}></UserHeader>
 	{/snippet}
 
 	{@render children()}
 </Header>
+
+<style>
+	:global(.logo-pip) {
+		position: absolute;
+		top: -8px;
+		right: -7px;
+		z-index: 2;
+		pointer-events: auto;
+	}
+</style>

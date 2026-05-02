@@ -5,9 +5,17 @@
 	import { browser } from '$app/environment';
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import { m, type CommonLang } from '$lib/js/commonI18n';
+	import { pwaStore } from '$lib/stores/pwa.svelte';
 
 	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
 	const t = $derived(m[lang as CommonLang]);
+
+	async function handleSync() {
+		await pwaStore.syncForOffline();
+	}
+	async function handleClear() {
+		await pwaStore.clearOfflineData();
+	}
 
 	function toggle_options(){
 		const el = document.querySelector("#options-wrap") as HTMLElement | null;
@@ -16,9 +24,9 @@
 
 	onMount( () => {
 		document.addEventListener("click", (e: MouseEvent) => {
-			const userButton = document.querySelector("#button");
+			const userWrap = document.querySelector("#user-wrap");
 
-			if(userButton && !userButton.contains(e.target as Node)){
+			if(userWrap && !userWrap.contains(e.target as Node)){
 				const wrap = document.querySelector("#options-wrap") as HTMLElement | null;
 				if (wrap) wrap.hidden = true;
 			}
@@ -49,8 +57,11 @@
 	}
 </script>
 <style>
-	button {
+	.user-wrap {
 		position: relative;
+		display: inline-flex;
+	}
+	button.avatar {
 		background-color: transparent;
 		border: none;
 		width: 1.8rem;
@@ -138,6 +149,39 @@
 	#options li:hover a {
 		color: var(--menu-text-hover);
 	}
+	#options li button.menu-action {
+		appearance: none;
+		background: transparent;
+		border: none;
+		padding: 0;
+		margin: 0;
+		font: inherit;
+		color: var(--menu-text);
+		text-align: left;
+		cursor: pointer;
+		transition: var(--transition-fast);
+		width: auto;
+	}
+	#options li:hover button.menu-action:not(:disabled) {
+		color: var(--menu-text-hover);
+	}
+	#options li button.menu-action:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.menu-section-label {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.55;
+		margin-top: 0.6rem;
+		margin-bottom: 0.15rem;
+	}
+	.menu-divider {
+		height: 1px;
+		background: var(--menu-border, rgba(255,255,255,0.08));
+		margin: 0.5rem 0;
+	}
 	h2 {
 		margin-block: 0;
 		font-size: 1.1rem;
@@ -150,21 +194,60 @@
 </style>
 
 {#if user}
-	<button onclick={toggle_options} style="background-image: url(https://bocken.org/static/user/thumb/{user.nickname}.webp)" id=button>
-	<div class="options-wrap" hidden id=options-wrap>
-		<div id=options>
-			<h2>{user.name}</h2>
-			<p>({user.nickname})</p>
-			<ul>
-				{#if user.groups?.includes('rezepte_users')}
-					<li><a href={resolve('/[recipeLang=recipeLang]/administration', { recipeLang })}>Administration</a></li>
-				{/if}
-				<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
-				<li><a href={`${resolve('/logout')}?callbackUrl=${encodeURIComponent(getLogoutCallbackUrl(page.url.pathname))}`}>Log Out</a></li>
-			</ul>
+	<div class="user-wrap" id=user-wrap>
+		<button
+			class="avatar"
+			onclick={toggle_options}
+			style="background-image: url(https://bocken.org/static/user/thumb/{user.nickname}.webp)"
+			id=button
+			aria-label={user.name}
+		></button>
+		<div class="options-wrap" hidden id=options-wrap>
+			<div id=options>
+				<h2>{user.name}</h2>
+				<p>({user.nickname})</p>
+				<ul>
+					{#if user.groups?.includes('rezepte_users')}
+						<li><a href={resolve('/[recipeLang=recipeLang]/administration', { recipeLang })}>Administration</a></li>
+					{/if}
+					<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
+					{#if pwaStore.isStandalone}
+						<li class="menu-divider" aria-hidden="true"></li>
+						<li class="menu-section-label">{t.offline_data}</li>
+						{#if pwaStore.isOfflineAvailable}
+							<li>
+								<button
+									class="menu-action"
+									type="button"
+									onclick={handleSync}
+									disabled={pwaStore.isSyncing}
+								>{pwaStore.isSyncing ? t.syncing : t.sync_now}</button>
+							</li>
+							<li>
+								<button
+									class="menu-action"
+									type="button"
+									onclick={handleClear}
+									disabled={pwaStore.isSyncing}
+								>{t.clear_offline_data}</button>
+							</li>
+						{:else}
+							<li>
+								<button
+									class="menu-action"
+									type="button"
+									onclick={handleSync}
+									disabled={pwaStore.isSyncing}
+								>{pwaStore.isSyncing ? t.syncing : t.sync_for_offline}</button>
+							</li>
+						{/if}
+						<li class="menu-divider" aria-hidden="true"></li>
+					{/if}
+					<li><a href={`${resolve('/logout')}?callbackUrl=${encodeURIComponent(getLogoutCallbackUrl(page.url.pathname))}`}>Log Out</a></li>
+				</ul>
+			</div>
 		</div>
 	</div>
-	</button>
 {:else}
 	<a
 		class="entry login-link"

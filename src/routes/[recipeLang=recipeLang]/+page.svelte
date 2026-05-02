@@ -3,6 +3,7 @@
 	import type { PageData } from './$types';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
+	import OfflineSyncBanner from '$lib/components/OfflineSyncBanner.svelte';
 	import Search from '$lib/components/recipes/Search.svelte';
 	import { getCategories } from '$lib/js/categories';
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
@@ -314,6 +315,19 @@
 	z-index: 10;
 }
 
+/* ─── Offline sync banner — between search and recipe grid ─── */
+.banner-wrap {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 2em;
+	position: relative;
+	z-index: 9;
+}
+.banner-wrap.fallback {
+	padding: 0 2em;
+	margin: 0 auto;
+}
+
 .sentinel {
 	height: 1px;
 }
@@ -427,6 +441,9 @@
 				<div class="hero-search-wrap">
 					<Search lang={data.lang} recipes={data.all_brief} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 				</div>
+				<div class="banner-wrap">
+					<OfflineSyncBanner lang={data.lang} />
+				</div>
 				<div class="recipe-grid">
 					{#each visibleRecipes as recipe, i (recipe._id)}
 						<CompactCard
@@ -454,6 +471,9 @@
 	<div class="hero-fallback">
 		<h1>{labels.title}</h1>
 		<p class="subheading">{labels.subheading}</p>
+	</div>
+	<div class="banner-wrap fallback">
+		<OfflineSyncBanner lang={data.lang} />
 	</div>
 	<Search lang={data.lang} recipes={data.all_brief} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
 
