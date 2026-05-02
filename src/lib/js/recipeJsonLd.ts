@@ -27,6 +27,7 @@ function parseTimeToISO8601(timeString: string | undefined): string | undefined 
 }
 
 import type { RecipeModelType, NutritionMapping } from '$types/types';
+import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
 interface HowToStep {
   "@type": "HowToStep";
@@ -62,7 +63,8 @@ type ReferencedNutrition = {
   baseMultiplier: number;
 };
 
-export function generateRecipeJsonLd(data: RecipeModelType, referencedNutrition?: ReferencedNutrition[]) {
+export function generateRecipeJsonLd(data: RecipeModelType, referencedNutrition?: ReferencedNutrition[], lang: RecipesLang = 'de') {
+  const t = m[lang];
   const jsonLd: RecipeJsonLd = {
     "@context": "https://schema.org",
     "@type": "Recipe",
@@ -126,7 +128,7 @@ export function generateRecipeJsonLd(data: RecipeModelType, referencedNutrition?
         for (let i = 0; i < instructionGroup.steps.length; i++) {
           jsonLd.recipeInstructions.push({
             "@type": "HowToStep",
-            "name": `Schritt ${i + 1}`,
+            "name": `${t.jsonld_step} ${i + 1}`,
             "text": instructionGroup.steps[i]
           });
         }
@@ -137,16 +139,16 @@ export function generateRecipeJsonLd(data: RecipeModelType, referencedNutrition?
   // Add baking instructions if available
   if (data.baking?.temperature || data.baking?.length) {
     const bakingText = [
-      data.baking.temperature ? `bei ${data.baking.temperature}` : '',
-      data.baking.length ? `für ${data.baking.length}` : '',
+      data.baking.temperature ? `${t.at_temp} ${data.baking.temperature}` : '',
+      data.baking.length ? `${t.jsonld_for_duration} ${data.baking.length}` : '',
       data.baking.mode || ''
     ].filter(Boolean).join(' ');
-    
+
     if (bakingText) {
       jsonLd.recipeInstructions.push({
         "@type": "HowToStep",
-        "name": "Backen",
-        "text": `Backen ${bakingText}`
+        "name": t.jsonld_bake,
+        "text": `${t.jsonld_bake} ${bakingText}`
       });
     }
   }

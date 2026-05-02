@@ -173,7 +173,7 @@ export const load: PageLoad = async ({ fetch, params, url, data }) => {
     }
     
     // Generate JSON-LD server-side
-    const recipeJsonLd = generateRecipeJsonLd(item);
+    const recipeJsonLd = generateRecipeJsonLd(item, undefined, isEnglish ? 'en' : 'de');
 
     // For German page: check if English translation exists
     // For English page: germanShortName is already in item (from API)

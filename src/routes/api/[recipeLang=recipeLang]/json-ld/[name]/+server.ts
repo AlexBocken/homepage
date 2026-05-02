@@ -18,7 +18,8 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
   }
 
   const referencedNutrition = await resolveReferencedNutrition(recipe.ingredients || [], recipe.nutritionMappings);
-  const jsonLd = generateRecipeJsonLd(recipe, referencedNutrition);
+  const lang = params.recipeLang === 'recipes' ? 'en' : 'de';
+  const jsonLd = generateRecipeJsonLd(recipe, referencedNutrition, lang);
 
   // Set appropriate headers for JSON-LD
   setHeaders({

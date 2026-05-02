@@ -10,6 +10,43 @@ import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikS
 /** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 let { data, children } = $props();
 
+const SITE = 'https://bocken.org';
+
+/** Build the alternate URL for `targetLang`, swapping the lang segment + known
+ *  container slugs. Returns null when the route has no equivalent (e.g. katechese
+ *  doesn't exist outside DE; apologetik has no Latin variant). For paths deeper
+ *  than two segments we skip — inner slugs (prayer names, arg ids) aren't
+ *  translated by this generic mapper. Per-page Seo can opt in instead.
+ *  @param {string} currentPath
+ *  @param {FaithLang} targetLang
+ *  @returns {string | null}
+ */
+function alternatePath(currentPath, targetLang) {
+	const segs = currentPath.split('/').filter(Boolean);
+	if (segs.length === 0) return null;
+	if (segs.length > 2) return null;
+	segs[0] = faithSlugFromLang(targetLang);
+	if (segs.length === 2) {
+		const sec = segs[1];
+		if (['prayers', 'gebete', 'orationes'].includes(sec)) segs[1] = prayersSlugFor(targetLang);
+		else if (['rosary', 'rosenkranz', 'rosarium'].includes(sec)) segs[1] = rosarySlug(targetLang);
+		else if (['calendar', 'kalender', 'calendarium'].includes(sec)) segs[1] = calendarSlug(targetLang);
+		else if (['apologetik', 'apologetics'].includes(sec)) {
+			if (targetLang === 'la') return null;
+			segs[1] = apologetikSlug(targetLang);
+		} else if (sec === 'katechese') {
+			if (targetLang !== 'de') return null;
+		}
+		// 'angelus' and unknown second segments pass through unchanged.
+	}
+	return '/' + segs.join('/');
+}
+
+const altDe = $derived(alternatePath(page.url.pathname, 'de'));
+const altEn = $derived(alternatePath(page.url.pathname, 'en'));
+const altLa = $derived(alternatePath(page.url.pathname, 'la'));
+const canonicalPath = $derived(alternatePath(page.url.pathname, /** @type {FaithLang} */ (data.lang)) ?? page.url.pathname);
+
 const lang = $derived(/** @type {FaithLang} */ (data.lang));
 const t = $derived(m[lang]);
 const eastertide = isEastertide();
@@ -42,6 +79,11 @@ const prayersActive = $derived(isActive(prayersHref) && !isActive(angelusHref));
 </script>
 <svelte:head>
 	<link rel="preload" href={asset('/fonts/crosses.woff2')} as="font" type="font/woff2" crossorigin="anonymous">
+	<link rel="canonical" href={`${SITE}${canonicalPath}`} />
+	{#if altDe}<link rel="alternate" hreflang="de" href={`${SITE}${altDe}`} />{/if}
+	{#if altEn}<link rel="alternate" hreflang="en" href={`${SITE}${altEn}`} />{/if}
+	{#if altLa}<link rel="alternate" hreflang="la" href={`${SITE}${altLa}`} />{/if}
+	{#if altEn}<link rel="alternate" hreflang="x-default" href={`${SITE}${altEn}`} />{/if}
 </svelte:head>
 <Header>
 	{#snippet links()}

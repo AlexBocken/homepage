@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
+	import Seo from '$lib/components/Seo.svelte';
 	import { onMount } from 'svelte';
 	let { data } = $props();
 
@@ -110,14 +111,17 @@ section h2{
 	}
 }
 </style>
-<svelte:head>
-	<title>Bocken</title>
-	<meta name="description" content="Die persönliche Website von Alexander Bocken" />
-	<meta property="og:image" content="https://bocken.org/static/favicon.png" />
-	<meta property="og:image:secure_url" content="https://bocken.org/favicon.png" />
-	<meta property="og:image:type" content="image/png" />
-	<meta property="og:image:alt" content="Das Familienwappen simplifiziert" />
-</svelte:head>
+<Seo
+	title={isEnglish ? "Alexander Bocken — personal site" : "Alexander Bocken — Persönliche Website"}
+	description={isEnglish
+		? "Self-hosted recipe collection, Catholic faith resources, apologetics, prayers, and personal projects by Alexander Bocken."
+		: "Selbstgehostete Rezeptsammlung, katholische Glaubensinhalte, Apologetik, Gebete und persönliche Projekte von Alexander Bocken."}
+	canonical="https://bocken.org/"
+	ogImage="https://bocken.org/static/user/full/alexander.webp"
+	ogImageAlt={isEnglish ? "Smiling Alexander Bocken" : "Lächelnder Alexander Bocken"}
+	siteName="Bocken"
+	lang={isEnglish ? 'en' : 'de'}
+/>
 
 <!-- SVG Definitions -->
 <svg style="display: none;">

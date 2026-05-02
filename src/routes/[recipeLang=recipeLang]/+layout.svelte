@@ -79,7 +79,38 @@ function isActive(path) {
 	// For other paths, check if current path starts with the link path
 	return currentPath.startsWith(path);
 }
+
+const SITE = 'https://bocken.org';
+
+// Language-neutral nav slugs — same path works in both langs.
+const NEUTRAL_SLUGS = new Set(['category', 'season', 'tag', 'icon', 'favorites', 'search', 'to-try', 'tips-and-tricks', 'add', 'edit', 'admin', 'administration', 'offline-shell']);
+
+/** Build de/en alternates by swapping the lang segment. Returns null when the
+ *  shape isn't safely translatable (recipe detail [name] differs across langs).
+ *  Recipe detail pages already emit their own hreflang via per-page Seo.
+ *  @param {string} currentPath
+ *  @param {'de' | 'en'} targetLang
+ *  @returns {string | null}
+ */
+function recipeAltPath(currentPath, targetLang) {
+	const segs = currentPath.split('/').filter(Boolean);
+	if (segs.length === 0) return null;
+	if (segs.length >= 2 && !NEUTRAL_SLUGS.has(segs[1])) return null;
+	segs[0] = targetLang === 'en' ? 'recipes' : 'rezepte';
+	return '/' + segs.join('/');
+}
+
+const altRecipeDe = $derived(recipeAltPath(page.url.pathname, 'de'));
+const altRecipeEn = $derived(recipeAltPath(page.url.pathname, 'en'));
+const recipeCanonicalPath = $derived(recipeAltPath(page.url.pathname, /** @type {'de' | 'en'} */ (data.lang)));
 </script>
+
+<svelte:head>
+	{#if recipeCanonicalPath}<link rel="canonical" href={`${SITE}${recipeCanonicalPath}`} />{/if}
+	{#if altRecipeDe}<link rel="alternate" hreflang="de" href={`${SITE}${altRecipeDe}`} />{/if}
+	{#if altRecipeEn}<link rel="alternate" hreflang="en" href={`${SITE}${altRecipeEn}`} />{/if}
+	{#if altRecipeDe}<link rel="alternate" hreflang="x-default" href={`${SITE}${altRecipeDe}`} />{/if}
+</svelte:head>
 
 <Header>
 	{#snippet links()}

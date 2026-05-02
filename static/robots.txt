@@ -2,4 +2,11 @@ User-agent: GPTBot
 Disallow: /
 
 User-agent: *
-Disallow: /static/
+Disallow: /api/
+Disallow: /login
+Disallow: /logout
+Disallow: /tasks
+Disallow: /settings
+Disallow: /register
+
+Sitemap: https://bocken.org/sitemap.xml

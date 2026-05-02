@@ -181,6 +181,11 @@ export const en = {
 	instructions_label: 'Instructions',
 	at_temp: 'at',
 
+	// JSON-LD recipe schema labels (HowToStep names, baking instruction text)
+	jsonld_step: 'Step',
+	jsonld_bake: 'Bake',
+	jsonld_for_duration: 'for',
+
 	// CreateStepList baking
 	not_set: 'Not set',
 	duration: 'Duration',
