@@ -322,7 +322,7 @@ h2{
 			<div class=tags>
 				<h2>{labels.season}</h2>
 				{#each season_iv as season}
-					<a class="g-tag" href={resolve('/[recipeLang=recipeLang]/season/[month]', { recipeLang: data.recipeLang, month: season[0] })}>
+					<a class="g-tag" href={resolve('/[recipeLang=recipeLang]/season/[month]', { recipeLang: data.recipeLang, month: String(season[0]) })}>
 						{#if season[0]}
 							{months[season[0] - 1]}
 						{/if}
