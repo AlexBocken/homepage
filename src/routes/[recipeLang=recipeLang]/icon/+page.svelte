@@ -2,6 +2,7 @@
     import { resolve } from '$app/paths';
     import type { PageData } from './$types';
     let { data } = $props<{ data: PageData }>();
+    import Seo from '$lib/components/Seo.svelte';
 
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
     const lang = $derived(data.lang as RecipesLang);
@@ -13,9 +14,11 @@
     });
 </script>
 
-<svelte:head>
-    <title>{labels.title} - {labels.siteTitle}</title>
-</svelte:head>
+<Seo
+    title={`${labels.title} — ${labels.siteTitle}`}
+    description={t.icons_meta_description}
+    lang={lang}
+/>
 <style>
 	a{
 		font-family: "Noto Color Emoji", "Noto Color Emoji Subset", emoji, sans-serif;

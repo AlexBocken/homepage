@@ -5,6 +5,7 @@
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
 	import { m, type FaithLang } from '$lib/js/faithI18n';
+	import Seo from '$lib/components/Seo.svelte';
 
 	let { data } = $props();
 	const faithLang = $derived(data?.faithLang ?? 'faith');
@@ -98,12 +99,12 @@
 	const archetypes = $derived(Object.values(ARCHETYPES));
 </script>
 
+<Seo
+	title={`${heading} · bocken.org`}
+	description={lede}
+	lang={lang}
+/>
 <svelte:head>
-	<title>{heading} · bocken.org</title>
-	<meta
-		name="description"
-		content="Common objections to Christianity, each answered in several historical voices: Aquinas, Pascal, Augustine, Francis, Lewis, Chesterton, the Logician, the Mystic, the Scientist, the Pastor."
-	/>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link

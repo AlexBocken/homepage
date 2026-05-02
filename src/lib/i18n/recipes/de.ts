@@ -138,6 +138,16 @@ export const de = {
 	icons_title: 'Icons',
 	tips_title: 'Tipps & Tricks',
 	favorites_meta_description: 'Meine favorisierten Rezepte aus der Bockenschen Küche.',
+
+	// Browse-page meta descriptions (for SEO discovery via category-level queries)
+	categories_meta_description: 'Rezepte nach Kategorie durchstöbern — Hauptspeisen, Vorspeisen, Desserts, Brot, Suppen und mehr aus der Bockenschen Sammlung.',
+	keywords_meta_description: 'Rezepte nach Stichwort filtern — von Hefeteig bis zu Italien, von Käse bis zu Kürbis.',
+	in_season_meta_description: 'Saisonal passende Rezepte — was gerade Saison hat, vom Frühling bis zum Winter.',
+	icons_meta_description: 'Rezepte nach Symbol durchstöbern — eine visuelle Übersicht der Bockenschen Sammlung.',
+	category_meta_prefix: 'Rezepte in der Kategorie',
+	tag_meta_prefix: 'Rezepte mit dem Stichwort',
+	icon_meta_prefix: 'Rezepte mit dem Symbol',
+	season_meta_prefix: 'Rezepte für',
 	empty_favorites_1: 'Du hast noch keine Rezepte als Favoriten gespeichert.',
 	empty_favorites_2: 'Besuche ein Rezept und klicke auf das Herz-Symbol, um es zu deinen Favoriten hinzuzufügen.',
 

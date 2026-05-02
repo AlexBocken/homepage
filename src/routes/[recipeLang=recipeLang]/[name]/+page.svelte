@@ -267,6 +267,8 @@ h2{
 	<meta property="og:image:alt" content="{data.strippedName}" />
 	{@html `<script type="application/ld+json">${JSON.stringify(data.recipeJsonLd)}</script>`}
 	{@html `<script type="application/ld+json">${JSON.stringify(data.breadcrumbJsonLd)}</script>`}
+	<!-- Self-canonical: collapse query-param variants (?multiplier=2, ?utm=...) to the bare slug -->
+	<link rel="canonical" href="https://bocken.org/{data.recipeLang}/{data.short_name}" />
 	<!-- SEO: hreflang tags -->
 	<link rel="alternate" hreflang="de" href="https://bocken.org/rezepte/{data.germanShortName}" />
 	{#if isEnglish || data.hasEnglishTranslation}

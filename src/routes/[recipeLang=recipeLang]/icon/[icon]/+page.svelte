@@ -3,6 +3,7 @@
     import type { PageData } from './$types';
     import IconLayout from '$lib/components/recipes/IconLayout.svelte';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
+    import Seo from '$lib/components/Seo.svelte';
     let { data } = $props<{ data: PageData }>();
     import { rand_array } from '$lib/js/randomize';
 
@@ -30,9 +31,11 @@
     });
 </script>
 
-<svelte:head>
-    <title>{data.icon} - {siteTitle}</title>
-</svelte:head>
+<Seo
+    title={`${data.icon} — ${siteTitle}`}
+    description={`${t.icon_meta_prefix} ${data.icon}.`}
+    lang={lang}
+/>
 
 <IconLayout icons={data.icons} active_icon={data.icon} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} lang={data.lang} recipes={data.season} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}

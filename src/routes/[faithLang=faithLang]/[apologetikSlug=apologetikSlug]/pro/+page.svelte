@@ -6,6 +6,7 @@
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
 	import { m, type FaithLang } from '$lib/js/faithI18n';
+	import Seo from '$lib/components/Seo.svelte';
 
 	let { data } = $props();
 	const faithLang = $derived(data?.faithLang ?? 'faith');
@@ -137,12 +138,12 @@
 	);
 </script>
 
+<Seo
+	title={`${labels.heading} · bocken.org`}
+	description={labels.lede}
+	lang={lang}
+/>
 <svelte:head>
-	<title>{labels.heading} · bocken.org</title>
-	<meta
-		name="description"
-		content="A positive case for Christianity in twelve threads, organized in three layers: the supernatural is real, there is one God, Christianity is that revelation. Voices: Habermas, Polkinghorne, Newman, Hart, Lewis, Wright, Hahn, Plantinga, Eliade, the Perennialist."
-	/>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
