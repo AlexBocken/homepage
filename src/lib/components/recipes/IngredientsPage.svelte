@@ -180,18 +180,16 @@ const formMultiplier = $derived(
 	hasDefaultForm && defaultFormArea > 0 ? userFormArea / defaultFormArea : 1
 );
 
-// Track whether multiplier is driven by form or manual buttons
-let formDriven = $state(false);
-let cakeFormExpanded = $state(false);
+// Effective multiplier consumed by ingredient/portion calculations.
+// Base multiplier (pill buttons / custom input) stays independent of the
+// cake-form scaling so the two factors are visually distinct.
+const effectiveMultiplier = $derived(multiplier * formMultiplier);
 
-function applyFormMultiplier() {
-	formDriven = true;
-}
+let cakeFormExpanded = $state(false);
 
 /** @param {string} shape */
 function pickShape(shape) {
 	userFormShape = shape;
-	applyFormMultiplier();
 }
 
 const isDefaultForm = $derived(
@@ -217,18 +215,7 @@ function resetCakeForm() {
 	userFormWidth = data.defaultForm.width || 20;
 	userFormLength = data.defaultForm.length || 30;
 	userFormInnerDiameter = data.defaultForm.innerDiameter || 8;
-	formDriven = false;
-	multiplier = 1;
-	updateUrl(1);
 }
-
-// Reactively update multiplier when form dimensions change and form is driving
-$effect(() => {
-	if (formDriven) {
-		multiplier = formMultiplier;
-		updateUrl(multiplier);
-	}
-});
 
 /** @param {number} value */
 function updateUrl(value) {
@@ -298,7 +285,6 @@ function handleMultiplierClick(event, value) {
 	if (browser) {
 		event.preventDefault();
 		multiplier = value;
-		formDriven = false;
 		updateUrl(value);
 	}
 	// If no JS, form will submit normally
@@ -310,7 +296,6 @@ function handleCustomInput(event) {
 		const value = parseFloat(/** @type {HTMLInputElement} */ (event.target).value);
 		if (!isNaN(value) && value > 0) {
 			multiplier = value;
-			formDriven = false;
 			updateUrl(value);
 		}
 	}
@@ -757,7 +742,7 @@ const nutritionFlatIngredients = $derived.by(() => {
 <div class=ingredients>
 {#if data.portions}
 	<h3>{labels.portions}</h3>
-	{@html convertFloatsToFractions(multiplyFirstAndSecondNumbers(data.portions, multiplier))}
+	{@html convertFloatsToFractions(multiplyFirstAndSecondNumbers(data.portions, effectiveMultiplier))}
 {/if}
 
 <h3>{labels.adjustAmount}</h3>
@@ -799,7 +784,7 @@ const nutritionFlatIngredients = $derived.by(() => {
 			<span class="cake-form-summary">{cakeSummaryText}</span>
 		</span>
 		<span class="cake-form-toggle-right">
-			{#if formDriven && Math.abs(formMultiplier - 1) > 0.005}
+			{#if Math.abs(formMultiplier - 1) > 0.005}
 				<span class="cake-form-factor-badge">{formMultiplier.toFixed(2)}×</span>
 			{/if}
 			<svg class="cake-form-chevron" class:expanded={cakeFormExpanded} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
@@ -860,7 +845,7 @@ const nutritionFlatIngredients = $derived.by(() => {
 				<label class="input-wrap">
 					<span class="input-label">{labels.diameter}</span>
 					<span class="input-box">
-						<input type="number" min="1" step="1" bind:value={userFormDiameter} oninput={applyFormMultiplier} />
+						<input type="number" min="1" step="1" bind:value={userFormDiameter} />
 						<span class="input-suffix">cm</span>
 					</span>
 				</label>
@@ -868,14 +853,14 @@ const nutritionFlatIngredients = $derived.by(() => {
 				<label class="input-wrap">
 					<span class="input-label">{labels.width}</span>
 					<span class="input-box">
-						<input type="number" min="1" step="1" bind:value={userFormWidth} oninput={applyFormMultiplier} />
+						<input type="number" min="1" step="1" bind:value={userFormWidth} />
 						<span class="input-suffix">cm</span>
 					</span>
 				</label>
 				<label class="input-wrap">
 					<span class="input-label">{labels.length}</span>
 					<span class="input-box">
-						<input type="number" min="1" step="1" bind:value={userFormLength} oninput={applyFormMultiplier} />
+						<input type="number" min="1" step="1" bind:value={userFormLength} />
 						<span class="input-suffix">cm</span>
 					</span>
 				</label>
@@ -883,14 +868,14 @@ const nutritionFlatIngredients = $derived.by(() => {
 				<label class="input-wrap">
 					<span class="input-label">{labels.outerDiameter}</span>
 					<span class="input-box">
-						<input type="number" min="1" step="1" bind:value={userFormDiameter} oninput={applyFormMultiplier} />
+						<input type="number" min="1" step="1" bind:value={userFormDiameter} />
 						<span class="input-suffix">cm</span>
 					</span>
 				</label>
 				<label class="input-wrap">
 					<span class="input-label">{labels.innerDiameter}</span>
 					<span class="input-box">
-						<input type="number" min="1" step="1" bind:value={userFormInnerDiameter} oninput={applyFormMultiplier} />
+						<input type="number" min="1" step="1" bind:value={userFormInnerDiameter} />
 						<span class="input-suffix">cm</span>
 					</span>
 				</label>
@@ -911,7 +896,7 @@ const nutritionFlatIngredients = $derived.by(() => {
 {#each flattenedIngredients as list, listIndex}
 {#if list.name}
 	{#if list.isReference}
-		<h3><a href="{list.short_name}?multiplier={multiplier * (list.baseMultiplier || 1)}">{@html list.name}</a></h3>
+		<h3><a href="{list.short_name}?multiplier={effectiveMultiplier * (list.baseMultiplier || 1)}">{@html list.name}</a></h3>
 	{:else}
 		<h3>{@html list.name}</h3>
 	{/if}
@@ -919,12 +904,12 @@ const nutritionFlatIngredients = $derived.by(() => {
 {#if list.list}
 <div class=ingredients_grid>
 	{#each list.list as item, ingredientIndex}
-		<div class=amount>{@html adjust_amount(item.amount, multiplier)} {item.unit}</div>
+		<div class=amount>{@html adjust_amount(item.amount, effectiveMultiplier)} {item.unit}</div>
 		<div class=name>
-			{@html item.name.replace("{{multiplier}}", isNaN(parseFloat(item.amount)) ? multiplier : multiplier * parseFloat(item.amount))}
+			{@html item.name.replace("{{multiplier}}", isNaN(parseFloat(item.amount)) ? effectiveMultiplier : effectiveMultiplier * parseFloat(item.amount))}
 			{#if item.name.toLowerCase() === "frischhefe" || item.name.toLowerCase() === "trockenhefe" || item.name.toLowerCase() === "fresh yeast" || item.name.toLowerCase() === "dry yeast"}
 				{@const yeastId = yeastIds[`${listIndex}-${ingredientIndex}`] ?? 0}
-				<HefeSwapper {item} {multiplier} {yeastId} lang={data.lang} />
+				<HefeSwapper {item} multiplier={effectiveMultiplier} {yeastId} lang={data.lang} />
 			{/if}
 		</div>
 	{/each}
@@ -937,7 +922,7 @@ const nutritionFlatIngredients = $derived.by(() => {
 	nutritionMappings={data.nutritionMappings}
 	sectionNames={nutritionSectionNames}
 	referencedNutrition={data.referencedNutrition || []}
-	{multiplier}
+	multiplier={effectiveMultiplier}
 	portions={data.portions}
 	isEnglish={isEnglish}
 >
