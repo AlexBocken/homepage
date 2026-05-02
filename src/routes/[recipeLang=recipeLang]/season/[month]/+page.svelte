@@ -3,6 +3,7 @@
     import type { PageData } from './$types';
     import SeasonLayout from '$lib/components/recipes/SeasonLayout.svelte';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
+    import Seo from '$lib/components/Seo.svelte';
     let { data } = $props<{ data: PageData }>();
 
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
@@ -36,9 +37,11 @@
     });
 </script>
 
-<svelte:head>
-    <title>{currentMonth} - {siteTitle}</title>
-</svelte:head>
+<Seo
+    title={`${currentMonth} — ${siteTitle}`}
+    description={`${t.season_meta_prefix} ${currentMonth}.`}
+    lang={lang}
+/>
 
 <SeasonLayout active_index={data.month -1} {months} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} lang={data.lang} recipes={data.season} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}

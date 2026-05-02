@@ -138,6 +138,16 @@ export const en = {
 	icons_title: 'Icons',
 	tips_title: 'Tips & Tricks',
 	favorites_meta_description: "My favorite recipes from Bocken's kitchen.",
+
+	// Browse-page meta descriptions (for SEO discovery via category-level queries)
+	categories_meta_description: "Browse recipes by category — mains, starters, desserts, breads, soups and more from Bocken's collection.",
+	keywords_meta_description: 'Filter recipes by keyword — from yeast doughs to Italian, from cheese to pumpkin.',
+	in_season_meta_description: 'Seasonal recipes for what is in season right now, from spring to winter.',
+	icons_meta_description: "Browse recipes by symbol — a visual overview of Bocken's collection.",
+	category_meta_prefix: 'Recipes in category',
+	tag_meta_prefix: 'Recipes tagged',
+	icon_meta_prefix: 'Recipes with symbol',
+	season_meta_prefix: 'Recipes for',
 	empty_favorites_1: "You haven't saved any recipes as favorites yet.",
 	empty_favorites_2: 'Visit a recipe and click the heart icon to add it to your favorites.',
 

@@ -3,6 +3,7 @@
     import type { PageData } from './$types';
     import SeasonLayout from '$lib/components/recipes/SeasonLayout.svelte'
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
+    import Seo from '$lib/components/Seo.svelte';
     let { data } = $props<{ data: PageData }>();
     let current_month = new Date().getMonth() + 1
     import { rand_array } from '$lib/js/randomize';
@@ -38,9 +39,11 @@
     });
 </script>
 
-<svelte:head>
-    <title>{labels.title} - {labels.siteTitle}</title>
-</svelte:head>
+<Seo
+    title={`${labels.title} — ${labels.siteTitle}`}
+    description={t.in_season_meta_description}
+    lang={lang}
+/>
 
 <SeasonLayout active_index={current_month-1} {months} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} lang={data.lang} recipes={data.season} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}>
 	{#snippet recipesSlot()}

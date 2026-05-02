@@ -163,8 +163,8 @@
 </script>
 
 <svelte:head>
-	<title>{pageTitle} — Bocken</title>
-	<meta name="description" content={pageTitle} />
+	<title>{monthTitle} · {pageTitle} ({riteSubtitle}) — Bocken</title>
+	<meta name="description" content={`${pageTitle} ${monthTitle} — ${riteSubtitle}.`} />
 </svelte:head>
 
 <main class="cal-wrap">

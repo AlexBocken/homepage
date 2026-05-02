@@ -4,6 +4,7 @@
     import type { BriefRecipeType } from '$types/types';
     import Search from '$lib/components/recipes/Search.svelte';
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
+    import Seo from '$lib/components/Seo.svelte';
     import { rand_array } from '$lib/js/randomize';
 
     type RecipeItem = BriefRecipeType & { isFavorite: boolean };
@@ -38,9 +39,11 @@
 	}
 </style>
 
-<svelte:head>
-    <title>{data.category} - {siteTitle}</title>
-</svelte:head>
+<Seo
+    title={`${data.category} — ${siteTitle}`}
+    description={`${t.category_meta_prefix} ${data.category}.`}
+    lang={lang}
+/>
 
 <h1>{label} <q>{data.category}</q>:</h1>
 <Search category={data.category} lang={data.lang} recipes={data.allRecipes} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>

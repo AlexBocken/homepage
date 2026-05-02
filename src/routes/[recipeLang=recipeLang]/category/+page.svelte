@@ -4,6 +4,7 @@
     let { data } = $props<{ data: PageData }>();
     import TagCloud from '$lib/components/TagCloud.svelte';
     import TagBall from '$lib/components/TagBall.svelte';
+    import Seo from '$lib/components/Seo.svelte';
 
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
     const lang = $derived(data.lang as RecipesLang);
@@ -14,9 +15,11 @@
     });
 </script>
 
-<svelte:head>
-    <title>{labels.title} - {labels.siteTitle}</title>
-</svelte:head>
+<Seo
+    title={`${labels.title} — ${labels.siteTitle}`}
+    description={t.categories_meta_description}
+    lang={lang}
+/>
 <h1 class="sr-only">{labels.title}</h1>
 <section>
 <TagCloud>

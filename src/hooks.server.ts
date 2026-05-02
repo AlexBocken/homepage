@@ -25,6 +25,32 @@ async function htmlLang({ event, resolve }: Parameters<Handle>[0]) {
 	});
 }
 
+/** Routes that must never appear in search-engine indexes. Search-results pages
+ *  are thin/duplicate content; admin/edit/auth-walled pages have no public value
+ *  and shouldn't burn crawl budget. Sets X-Robots-Tag rather than per-page meta
+ *  so the rule lives in one place and also covers JSON/API responses.
+ */
+const NOINDEX_PATTERNS: RegExp[] = [
+	/^\/api(\/|$)/,
+	/^\/(rezepte|recipes)\/(search|admin|administration|add|edit|favorites|to-try)(\/|$)/,
+	/^\/login$/,
+	/^\/logout$/,
+	/^\/register(\/|$)/,
+	/^\/settings(\/|$)/,
+	/^\/tasks(\/|$)/,
+	/^\/fitness(\/|$)/,
+	/^\/cospend(\/|$)/,
+	/^\/expenses(\/|$)/,
+];
+
+async function noindex({ event, resolve }: Parameters<Handle>[0]) {
+	const response = await resolve(event);
+	if (NOINDEX_PATTERNS.some((p) => p.test(event.url.pathname))) {
+		response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+	}
+	return response;
+}
+
 async function timing({ event, resolve }: Parameters<Handle>[0]) {
 	const marks: Record<string, number> = {};
 	event.locals.timing = {
@@ -162,6 +188,7 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 export const handle: Handle = sequence(
 	timing,
 	htmlLang,
+	noindex,
 	auth.handle,
 	authorization
 );
