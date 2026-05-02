@@ -233,15 +233,14 @@ progress[value]::-moz-progress-bar {
     background-image: url(https://bocken.org/static/css/logos/logo_full_light.png);
 }
 
-/* Bocken logo link */
-.bocken-logo-link {
-  display: flex;
-  text-decoration: none;
+/* Bocken logo (clickable via JS click delegation) */
+.skinHeader:not(.osdHeader) .pageTitleWithDefaultLogo {
+  cursor: pointer !important;
   transition: filter 150ms;
 }
-.bocken-logo-link:hover .pageTitleWithDefaultLogo {
+.skinHeader:not(.osdHeader) .pageTitleWithDefaultLogo:hover {
   /* Tint white logo to Nord lightblue (#81A1C1) */
-  filter: brightness(0) saturate(100%) invert(61%) sepia(52%) saturate(212%) hue-rotate(169deg) brightness(92%) contrast(94%);
+  filter: brightness(0) saturate(100%) invert(61%) sepia(52%) saturate(212%) hue-rotate(169deg) brightness(92%) contrast(94%) !important;
 }
 
 /* Toast notification */

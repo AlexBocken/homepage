@@ -136,52 +136,61 @@
 
 /* ═══════════════════════════════════════════
    2. Make Bocken logo link to bocken.org
+   Uses click delegation so we don't wrap the
+   DOM — Jellyfin reuses the same <h3> across
+   navigations and swaps its class between
+   .pageTitleWithDefaultLogo (home) and
+   .pageTitle (collection pages), which would
+   leak the wrapper onto unrelated titles.
    ═══════════════════════════════════════════ */
 (function () {
-  function wrapLogo() {
-    var logo = document.querySelector('.pageTitleWithDefaultLogo');
-    if (!logo || logo.dataset.bockenLinked) return;
-    logo.dataset.bockenLinked = '1';
+  var isMobileApp = /wv\)|Jellyfin Mobile/.test(navigator.userAgent);
 
-    var isMobileApp = /wv\)|Jellyfin Mobile/.test(navigator.userAgent);
+  /* One-time cleanup of legacy <a.bocken-logo-link> wrappers
+     left behind by older versions of this script. */
+  function unwrapLegacy() {
+    document.querySelectorAll('a.bocken-logo-link').forEach(function (a) {
+      while (a.firstChild) a.parentNode.insertBefore(a.firstChild, a);
+      a.remove();
+    });
+    document.querySelectorAll('[data-bocken-linked]').forEach(function (el) {
+      delete el.dataset.bockenLinked;
+    });
+  }
 
-    var link = document.createElement('a');
-    link.href = 'https://bocken.org';
-    link.className = 'bocken-logo-link';
-    link.title = 'bocken.org';
+  function openBocken() {
     if (isMobileApp) {
-      link.addEventListener('click', function (e) {
-        e.preventDefault();
-        navigator.clipboard.writeText('https://bocken.org').then(function () {
-          var toast = document.createElement('div');
-          toast.className = 'bocken-toast';
-          toast.textContent = 'Link copied — open in browser';
-          document.body.appendChild(toast);
-          setTimeout(function () { toast.classList.add('bocken-toast-hide'); }, 2000);
-          setTimeout(function () { toast.remove(); }, 2500);
-        });
+      navigator.clipboard.writeText('https://bocken.org').then(function () {
+        var toast = document.createElement('div');
+        toast.className = 'bocken-toast';
+        toast.textContent = 'Link copied — open in browser';
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.classList.add('bocken-toast-hide'); }, 2000);
+        setTimeout(function () { toast.remove(); }, 2500);
       });
+    } else {
+      window.location.href = 'https://bocken.org';
     }
-    logo.parentNode.insertBefore(link, logo);
-    link.appendChild(logo);
   }
 
-  var pending = null;
-  function schedule() {
-    if (pending) return;
-    pending = setTimeout(function () {
-      pending = null;
-      wrapLogo();
-    }, 300);
-  }
+  document.addEventListener('click', function (e) {
+    var logo = e.target.closest(
+      '.skinHeader:not(.osdHeader) .pageTitleWithDefaultLogo'
+    );
+    if (!logo) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openBocken();
+  }, true);
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', schedule);
+    document.addEventListener('DOMContentLoaded', unwrapLegacy);
   } else {
-    schedule();
+    unwrapLegacy();
   }
 
-  new MutationObserver(schedule).observe(document.body, {
+  /* Catch wrappers that re-appear from cached SPA state */
+  new MutationObserver(unwrapLegacy).observe(document.body, {
     childList: true,
     subtree: true,
   });
