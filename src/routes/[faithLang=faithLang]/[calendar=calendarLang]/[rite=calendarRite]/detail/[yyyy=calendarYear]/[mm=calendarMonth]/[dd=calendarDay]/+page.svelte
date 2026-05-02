@@ -5,6 +5,8 @@
 	import { browser } from '$app/environment';
 	import { formatLongDate, getMonthName, properLabel, type CalendarLang, m, m1962 } from '../../../../../calendarI18n';
 	import HeroCard from '../../../../../HeroCard.svelte';
+	import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
+	import { m as faithM, faithSlugFromLang, calendarSlug } from '$lib/js/faithI18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -78,11 +80,41 @@
 	const nextHref = $derived(shiftDay(1));
 
 	const monthTitle = $derived(`${getMonthName(month, lang)} ${year}`);
+
+	const breadcrumbJsonLd = $derived.by(() => {
+		// faith calendar i18n only has 'de' | 'en' | 'la'; CalendarLang has the same keys.
+		const fLang = lang as 'de' | 'en' | 'la';
+		const tFaith = faithM[fLang];
+		const faithSeg = faithSlugFromLang(fLang);
+		const calSeg = calendarSlug(fLang);
+		return generateBreadcrumbJsonLd([
+			{ name: 'Bocken', path: '/' },
+			{ name: tFaith.title, path: `/${faithSeg}` },
+			{ name: tFaith.calendar, path: `/${faithSeg}/${calSeg}` },
+			{ name: monthTitle, path: backHref.split('?')[0] },
+			{ name: `${day.name} — ${formatLongDate(iso, lang)}`, path: page.url.pathname }
+		]);
+	});
+
+	const eventJsonLd = $derived({
+		'@context': 'https://schema.org',
+		'@type': 'Event',
+		name: day.name,
+		startDate: iso,
+		endDate: iso,
+		eventAttendanceMode: 'https://schema.org/MixedEventAttendanceMode',
+		eventStatus: 'https://schema.org/EventScheduled',
+		location: { '@type': 'VirtualLocation', url: `https://bocken.org${page.url.pathname}` },
+		organizer: { '@type': 'Person', name: 'Alexander Bocken' },
+		description: day.name
+	});
 </script>
 
 <svelte:head>
 	<title>{day.name} — {formatLongDate(iso, lang)}</title>
 	<meta name="description" content={day.name} />
+	{@html `<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</script>`}
+	{@html `<script type="application/ld+json">${JSON.stringify(eventJsonLd)}</script>`}
 </svelte:head>
 
 <main class="detail-wrap">

@@ -96,6 +96,8 @@
 		rel="stylesheet"
 		href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap"
 	/>
+	{@html `<script type="application/ld+json">${JSON.stringify(data.qaJsonLd)}</script>`}
+	{@html `<script type="application/ld+json">${JSON.stringify(data.breadcrumbJsonLd)}</script>`}
 </svelte:head>
 
 <ApologetikToc title={tocLabel} items={tocItems} activeId={arg.id} />

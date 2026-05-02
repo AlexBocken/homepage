@@ -6,6 +6,33 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	let { children } = $props();
 
+	const websiteJsonLd = {
+		'@context': 'https://schema.org',
+		'@graph': [
+			{
+				'@type': 'WebSite',
+				'@id': 'https://bocken.org/#website',
+				url: 'https://bocken.org/',
+				name: 'Bocken',
+				inLanguage: ['de', 'en', 'la'],
+				publisher: { '@id': 'https://bocken.org/#person' },
+				potentialAction: {
+					'@type': 'SearchAction',
+					target: { '@type': 'EntryPoint', urlTemplate: 'https://bocken.org/rezepte/search?q={search_term_string}' },
+					'query-input': 'required name=search_term_string'
+				}
+			},
+			{
+				'@type': 'Person',
+				'@id': 'https://bocken.org/#person',
+				name: 'Alexander Bocken',
+				url: 'https://bocken.org/',
+				image: 'https://bocken.org/static/user/full/alexander.webp',
+				sameAs: ['https://git.bocken.org', 'https://github.com/AlexBocken']
+			}
+		]
+	};
+
 	/** Refresh server data on resume — Tauri WebView and backgrounded browser tabs
 	 *  don't re-run SvelteKit load() otherwise. Throttled: at most once per 5 min. */
 	const REFRESH_MIN_GAP_MS = 5 * 60 * 1000;
@@ -42,6 +69,10 @@
 		});
 	});
 </script>
+
+<svelte:head>
+	{@html `<script type="application/ld+json">${JSON.stringify(websiteJsonLd)}</script>`}
+</svelte:head>
 
 {@render children()}
 <Toast />
