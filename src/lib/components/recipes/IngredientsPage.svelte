@@ -239,6 +239,8 @@ const multiplierOptions = [
 	{ value: 3, label: '3x' }
 ];
 
+const isCustomMultiplier = $derived(!multiplierOptions.some(o => o.value === multiplier));
+
 // Calculate yeast IDs for each yeast ingredient
 const yeastIds = $derived.by(() => {
 	/** @type {Record<string, number>} */
@@ -449,7 +451,7 @@ const nutritionFlatIngredients = $derived.by(() => {
 	flex-basis: 0;
 	flex-grow: 1;
 	padding-block: 1rem;
-	padding-inline: 2rem;
+	padding-inline: 1.25rem;
 }
 .ingredients_grid{
 	display: grid;
@@ -462,18 +464,21 @@ const nutritionFlatIngredients = $derived.by(() => {
 }
 .multipliers{
 	display: flex;
-	gap: 0.5rem;
+	gap: 0.3rem;
 	justify-content: center;
 	flex-wrap: wrap;
 }
 /* Size overrides for multiplier buttons */
 .multipliers button{
-	min-width: 2em;
+	min-width: 1.8em;
 	font-size: 1.1rem;
 	border-radius: var(--radius-sm);
+	padding-inline: 0.35em;
 }
-/* Hover scale override - larger than default */
-.multipliers :is(button, form):is(:hover, :focus-within){
+/* Hover/focus on a whole pill (number button or custom-multiplier wrapper)
+   flips its background to primary; :focus-within covers focus on the
+   nested <input> / <button> inside the custom-multiplier pill. */
+.multipliers :is(button, .custom-multiplier):is(:hover, :focus-within){
 	scale: 1.2;
 	background-color: var(--color-primary);
 	color: var(--color-text-on-primary);
@@ -485,15 +490,24 @@ const nutritionFlatIngredients = $derived.by(() => {
 	scale: 1.2 !important;
 }
 .custom-multiplier {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	min-width: 2em;
+	min-width: 1.8em;
 	font-size: 1.1rem;
 	border-radius: var(--radius-sm);
+	padding: 1px 0.35em;
+	/* Whole pill behaves like one input zone — no cursor flicker between the
+	   typing area and the trailing "x" suffix. */
+	cursor: text;
 }
 
 .custom-input {
-	width: 3em;
+	/* Grow with the typed value (Chromium 123+, Safari 18.4+); falls back to
+	   the fixed width on older browsers. min/max keep the wrap-around tame. */
+	field-sizing: content;
+	width: 1.4em;
+	min-width: 1ch;
+	max-width: 4em;
 	padding: 0;
 	margin: 0;
 	border: none;
@@ -504,6 +518,10 @@ const nutritionFlatIngredients = $derived.by(() => {
 	outline: none;
 	box-shadow: none;
 }
+.custom-input::placeholder {
+	color: currentColor;
+	opacity: 0.55;
+}
 
 /* Remove number input arrows */
 .custom-input::-webkit-outer-spin-button,
@@ -512,16 +530,24 @@ const nutritionFlatIngredients = $derived.by(() => {
 	margin: 0;
 }
 
-
-.custom-button {
-	padding: 0;
-	margin: 0;
-	border: none;
-	background: transparent;
-	color: inherit;
+.custom-suffix {
+	margin-left: 0.05em;
 	font-size: inherit;
-	cursor: pointer;
-	box-shadow: none;
+	color: inherit;
+	user-select: none;
+}
+
+/* Off-screen submit button used as the form's implicit submitter when the
+   user presses Enter inside the custom-multiplier input (no-JS path). */
+.implicit-submit {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	border: 0;
 }
 
 .cake-form {
@@ -752,10 +778,14 @@ const nutritionFlatIngredients = $derived.by(() => {
 			<input type="hidden" name={key} {value} />
 		{/if}
 	{/each}
+	<!-- Implicit submitter for no-JS Enter on the custom input. Must be the
+	     first submit in tree order so it wins over the pill buttons. Has no
+	     name/value, so the form submits with only the input's typed value. -->
+	<button type="submit" class="implicit-submit" tabindex="-1" aria-hidden="true"></button>
 	{#each multiplierOptions as opt}
 		<button type="submit" name="multiplier" value={opt.value} class="g-pill g-btn-light g-interactive" class:selected={multiplier === opt.value} onclick={(e) => handleMultiplierClick(e, opt.value)}>{@html opt.label}</button>
 	{/each}
-	<span class="custom-multiplier g-pill g-btn-light g-interactive">
+	<label class="custom-multiplier g-pill g-btn-light g-interactive" class:selected={isCustomMultiplier}>
 		<input
 			type="text"
 			name="multiplier"
@@ -763,11 +793,11 @@ const nutritionFlatIngredients = $derived.by(() => {
 			title="Enter a positive number (e.g., 2.5, 0.75, 3.14)"
 			placeholder="…"
 			class="custom-input"
-			value={!multiplierOptions.some(o => o.value === multiplier) ? multiplier : ''}
+			value={isCustomMultiplier ? multiplier : ''}
 			oninput={handleCustomInput}
 		/>
-		<button type="submit" class="custom-button">x</button>
-	</span>
+		<span class="custom-suffix" aria-hidden="true">x</span>
+	</label>
 </form>
 
 {#if hasDefaultForm}
