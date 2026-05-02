@@ -12,6 +12,7 @@ let {
 	language_selector_mobile,
 	language_selector_desktop,
 	right_side,
+	logo_overlay,
 	children,
 	fullSymbol = false
 }: {
@@ -19,6 +20,7 @@ let {
 	language_selector_mobile?: Snippet;
 	language_selector_desktop?: Snippet;
 	right_side?: Snippet;
+	logo_overlay?: Snippet;
 	children?: Snippet;
 	fullSymbol?: boolean;
 } = $props();
@@ -118,6 +120,12 @@ nav {
 /* ═══════════════════════════════════════════
    LOGO
    ═══════════════════════════════════════════ */
+.logo-slot {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	flex-shrink: 0;
+}
 .home-link {
 	view-transition-name: nav-logo;
 	display: flex;
@@ -330,7 +338,10 @@ nav {
 <div>
 
 <nav class:no-links={!links}>
-	<a href={resolve('/')} aria-label="Home" class="home-link" class:full={fullSymbol}><Symbol /></a>
+	<div class="logo-slot">
+		<a href={resolve('/')} aria-label="Home" class="home-link" class:full={fullSymbol}><Symbol /></a>
+		{@render logo_overlay?.()}
+	</div>
 	{#if links}
 		<div class="links-wrapper">
 			{@render links()}

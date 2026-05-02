@@ -27,6 +27,11 @@ export const en = {
 	recipes_word: 'recipes',
 	sync_now: 'Sync now',
 	clear_offline_data: 'Clear offline data',
+	offline_banner_title: 'Save recipes for the kitchen',
+	offline_banner_body: 'Download every recipe to your device so they stay available without internet — ideal while cooking.',
+	offline_banner_action: 'Download recipes',
+	dismiss: 'Dismiss',
+	offline_data: 'Offline data',
 
 	// Date picker
 	select_date: 'Select date',
