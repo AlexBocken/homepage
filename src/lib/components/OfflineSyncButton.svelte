@@ -1,20 +1,22 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { pwaStore } from '$lib/stores/pwa.svelte';
+	import { m, type CommonLang } from '$lib/js/commonI18n';
 
 	let { lang = 'de' }: { lang?: string } = $props();
 
 	let showTooltip = $state(false);
 	let mounted = $state(false);
 
+	const t = $derived(m[lang as CommonLang]);
 	const labels = $derived({
-		syncForOffline: lang === 'en' ? 'Save for offline' : 'Offline speichern',
-		syncing: lang === 'en' ? 'Syncing...' : 'Synchronisiere...',
-		offlineReady: lang === 'en' ? 'Offline ready' : 'Offline bereit',
-		lastSync: lang === 'en' ? 'Last sync' : 'Letzte Sync',
-		recipes: lang === 'en' ? 'recipes' : 'Rezepte',
-		syncNow: lang === 'en' ? 'Sync now' : 'Jetzt synchronisieren',
-		clearData: lang === 'en' ? 'Clear offline data' : 'Offline-Daten löschen'
+		syncForOffline: t.sync_for_offline,
+		syncing: t.syncing,
+		offlineReady: t.offline_ready,
+		lastSync: t.last_sync,
+		recipes: t.recipes_word,
+		syncNow: t.sync_now,
+		clearData: t.clear_offline_data
 	});
 
 	onMount(async () => {

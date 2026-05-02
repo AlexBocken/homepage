@@ -4,8 +4,10 @@
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import LogIn from '@lucide/svelte/icons/log-in';
+	import { m, type CommonLang } from '$lib/js/commonI18n';
 
 	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
+	const t = $derived(m[lang as CommonLang]);
 
 	function toggle_options(){
 		const el = document.querySelector("#options-wrap") as HTMLElement | null;
@@ -167,8 +169,8 @@
 	<a
 		class="entry login-link"
 		href={`${resolve('/login')}?callbackUrl=${encodeURIComponent(page.url.pathname + (browser ? page.url.search : ''))}`}
-		aria-label={lang === 'de' ? 'Anmelden' : 'Login'}
-		title={lang === 'de' ? 'Anmelden' : 'Login'}
+		aria-label={t.login}
+		title={t.login}
 	>
 		<LogIn size={18} />
 	</a>

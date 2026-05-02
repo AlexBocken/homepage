@@ -5,6 +5,7 @@
   import SearchX from '@lucide/svelte/icons/search-x';
   import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
   import CircleAlert from '@lucide/svelte/icons/circle-alert';
+  import { m } from '$lib/js/commonI18n';
   interface BibleQuote {
     text: string;
     reference: string;
@@ -43,6 +44,7 @@
   }
 
   let Icon = $derived(icon ?? defaultIcon(status));
+  const t = $derived(m[isEnglish ? 'en' : 'de']);
   let openQuote = $derived(isEnglish ? '\u201C' : '\u201E');
   let closeQuote = $derived(isEnglish ? '\u201D' : '\u201C');
 </script>
@@ -52,7 +54,7 @@
     <header class="eyebrow">
       <Icon size={14} strokeWidth={1.5} aria-hidden="true" />
       <span class="eyebrow-label">
-        {isEnglish ? 'Error' : 'Fehler'}
+        {t.error_label}
       </span>
     </header>
 
