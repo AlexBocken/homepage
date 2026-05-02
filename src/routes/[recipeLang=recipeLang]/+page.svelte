@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 	import AddButton from '$lib/components/AddButton.svelte';
+	import Seo from '$lib/components/Seo.svelte';
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
 	import OfflineSyncBanner from '$lib/components/OfflineSyncBanner.svelte';
 	import Search from '$lib/components/recipes/Search.svelte';
@@ -350,16 +351,17 @@
 }
 </style>
 
+<Seo
+	title={labels.metaTitle}
+	description={labels.metaDescription}
+	ogImage="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp"
+	ogImageAlt={labels.metaAlt}
+	lang={isEnglish ? 'en' : 'de'}
+/>
 <svelte:head>
-	<title>{labels.metaTitle}</title>
-	<meta name="description" content="{labels.metaDescription}" />
 	{#if heroRecipe}
 		<link rel="preload" as="image" href="https://bocken.org/static/rezepte/full/{heroImg}" fetchpriority="high" />
 	{/if}
-	<meta property="og:image" content="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" />
-	<meta property="og:image:secure_url" content="https://bocken.org/static/rezepte/thumb/ragu_aus_rindsrippen.webp" />
-	<meta property="og:image:type" content="image/webp" />
-	<meta property="og:image:alt" content="{labels.metaAlt}" />
 </svelte:head>
 
 {#if heroRecipe}

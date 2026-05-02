@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import Shield from '@lucide/svelte/icons/shield';
 	import Flame from '@lucide/svelte/icons/flame';
+	import Seo from '$lib/components/Seo.svelte';
 
 	let { data } = $props();
 	const faithLang = $derived(data?.faithLang ?? 'faith');
@@ -44,10 +45,11 @@
 	);
 </script>
 
-<svelte:head>
-	<title>{t.title} · bocken.org</title>
-	<meta name="description" content={t.lede} />
-</svelte:head>
+<Seo
+	title={`${t.title} · bocken.org`}
+	description={t.lede}
+	lang={isGerman ? 'de' : 'en'}
+/>
 
 <div class="apologetik-landing">
 	<section class="page-head">

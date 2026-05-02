@@ -1,6 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
+	import Seo from '$lib/components/Seo.svelte';
 	import { isEastertide } from '$lib/js/easter.svelte';
 	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, faithSlugFromLang } from '$lib/js/faithI18n';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
@@ -20,10 +21,11 @@
 	const eastertide = isEastertide();
 </script>
 
-<svelte:head>
-	<title>{t.title} - Bocken</title>
-	<meta name="description" content={t.description} />
-</svelte:head>
+<Seo
+	title={`${t.title} — Bocken`}
+	description={t.description}
+	lang={lang}
+/>
 <style>
 	h1{
 		text-align: center;
