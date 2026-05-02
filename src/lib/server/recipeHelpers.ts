@@ -20,8 +20,8 @@ export function briefQueryConfig(recipeLang: string) {
 		prefix: en ? 'translations.en.' : '',
 		/** Projection for brief list queries */
 		projection: en
-			? '_id translations.en short_name images season icon'
-			: 'name short_name images tags category icon description season',
+			? '_id translations.en short_name images seasonRanges icon'
+			: 'name short_name images tags category icon description seasonRanges',
 	};
 }
 
@@ -44,7 +44,7 @@ export function toBrief(recipe: RecipeModelType, recipeLang: string): BriefRecip
 			category: en?.category ?? '',
 			icon: recipe.icon,
 			description: en?.description,
-			season: recipe.season || [],
+			seasonRanges: recipe.seasonRanges || [],
 			germanShortName: recipe.short_name,
 		} as unknown as BriefRecipeType;
 	}

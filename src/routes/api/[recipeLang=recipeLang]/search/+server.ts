@@ -3,6 +3,7 @@ import type { BriefRecipeType } from '$types/types';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { isEnglish, briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
+import { recipeOverlapsMonth } from '$lib/js/seasonRange';
 
 export const GET: RequestHandler = async ({ url, params, locals }) => {
   await dbConnect();
@@ -41,12 +42,17 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
     if (icon) {
       dbQuery.icon = icon;
     }
-    if (seasons.length > 0) {
-      dbQuery.season = { $in: seasons };
-    }
 
     const dbRecipes = await Recipe.find(dbQuery, projection).lean();
     let recipes: BriefRecipeType[] = dbRecipes.map(r => toBrief(r, params.recipeLang!));
+
+    // Season filter: ranges with movable anchors can't be expressed in Mongo,
+    // so filter in-app. Range-based recipes resolve to concrete intervals via
+    // the shared evaluator; the recipe matches if any selected month overlaps
+    // any of its ranges in the current civil year (with year-wrap handling).
+    if (seasons.length > 0) {
+      recipes = recipes.filter(r => seasons.some(m => recipeOverlapsMonth(r as any, m)));
+    }
 
     // Handle favorites filter
     const session = locals.session ?? await locals.auth();

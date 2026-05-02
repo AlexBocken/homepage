@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 				{ 'translations.en': { $exists: false } },
 				{ 'translations.en.translationStatus': { $ne: 'approved' } }
 			]
-		}, 'name short_name category icon description tags season dateModified translations.en.translationStatus')
+		}, 'name short_name category icon description tags seasonRanges dateModified translations.en.translationStatus')
 		.sort({ dateModified: 1 }) // Oldest first - highest priority
 		.lean();
 
@@ -35,7 +35,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			icon: recipe.icon,
 			description: recipe.description,
 			tags: recipe.tags || [],
-			season: recipe.season || [],
+			seasonRanges: recipe.seasonRanges || [],
 			dateModified: recipe.dateModified,
 			translationStatus: recipe.translations?.en?.translationStatus || undefined
 		}));

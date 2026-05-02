@@ -5,7 +5,6 @@
     import Search from '$lib/components/recipes/Search.svelte';
 
     let { data } = $props<{ data: PageData }>();
-    let current_month = new Date().getMonth() + 1;
 
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
     const lang = $derived(data.lang as RecipesLang);
@@ -100,7 +99,7 @@
 {:else if filteredFavorites.length > 0}
     <div class="recipe-grid">
         {#each filteredFavorites as recipe (recipe._id)}
-            <CompactCard {recipe} {current_month} isFavorite={true} showFavoriteIndicator={true} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
+            <CompactCard {recipe} isFavorite={true} showFavoriteIndicator={true} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
         {/each}
     </div>
 {:else if data.favorites.length > 0}

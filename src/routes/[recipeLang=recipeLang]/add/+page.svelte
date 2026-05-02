@@ -24,15 +24,11 @@
 	let showTranslationWorkflow = $state(false);
 	let translationData: any = $state(null);
 
-	// Season store
-	import { season } from '$lib/js/season_store';
+	// Season ranges (controlled by SeasonSelect via bind:ranges)
+	import type { SeasonRange } from '$types/types';
 	import { portions } from '$lib/js/portions_store';
 
-	season.update(() => []);
-	let season_local = $state<number[]>([]);
-	season.subscribe((s) => {
-		season_local = s;
-	});
+	let season_local = $state<SeasonRange[]>([]);
 
 	let portions_local = $state("");
 	portions.update(() => "");
@@ -73,27 +69,12 @@
 	let submitting = $state(false);
 	let formElement: HTMLFormElement;
 
-	// Get season data from checkboxes
-	function get_season(): number[] {
-		const season: number[] = [];
-		const el = document.getElementById("labels");
-		if (!el) return season;
-
-		for (let i = 0; i < el.children.length; i++) {
-			const checkbox = el.children[i].children[0].children[0] as HTMLInputElement;
-			if (checkbox?.checked) {
-				season.push(i + 1);
-			}
-		}
-		return season;
-	}
-
 	// Prepare German recipe data - use $derived to prevent infinite effect loops
 	let germanRecipeData = $derived({
 		...card_data,
 		...add_info,
 		images: selected_image_file ? [{ mediapath: 'pending', alt: "", caption: "" }] : [],
-		season: season_local,
+		seasonRanges: season_local,
 		short_name: short_name.trim(),
 		portions: portions_local,
 		datecreated: new Date(),
@@ -337,7 +318,7 @@ button.action_button {
 	<input type="hidden" name="ingredients_json" value={JSON.stringify(ingredients)} />
 	<input type="hidden" name="instructions_json" value={JSON.stringify(instructions)} />
 	<input type="hidden" name="add_info_json" value={JSON.stringify(add_info)} />
-	<input type="hidden" name="season" value={JSON.stringify(season_local)} />
+	<input type="hidden" name="seasonRanges" value={JSON.stringify(season_local)} />
 	<input type="hidden" name="tags" value={JSON.stringify(card_data.tags)} />
 
 	<!-- Translation data (added after approval) -->
@@ -425,7 +406,7 @@ button.action_button {
 
 			<div class="tags">
 				<h4>Saison:</h4>
-				<SeasonSelect />
+				<SeasonSelect bind:ranges={season_local} />
 			</div>
 		</div>
 	</div>

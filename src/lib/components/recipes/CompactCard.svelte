@@ -1,10 +1,10 @@
 <script lang="ts">
 	import "$lib/css/shake.css";
 	import Heart from '@lucide/svelte/icons/heart';
+	import { isRecipeInSeason } from '$lib/js/seasonRange';
 
 	let {
 		recipe,
-		current_month = 0,
 		icon_override = false,
 		isFavorite = false,
 		showFavoriteIndicator = false,
@@ -23,7 +23,7 @@
 
 	const img_color = $derived(recipe.images?.[0]?.color || '');
 
-	const isInSeason = $derived(icon_override || recipe.season?.includes(current_month));
+	const isInSeason = $derived(icon_override || isRecipeInSeason(recipe));
 
 	function activateTransitions(event: MouseEvent) {
 		const img = (event.currentTarget as HTMLElement)?.querySelector('.img-wrap img') as HTMLElement | null;

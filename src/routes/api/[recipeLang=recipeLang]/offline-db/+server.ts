@@ -10,7 +10,7 @@ export const GET: RequestHandler = async () => {
 	const [briefRecipes, fullRecipes] = await Promise.all([
 		Recipe.find(
 			{},
-			'name short_name tags category icon description season dateModified images translations'
+			'name short_name tags category icon description seasonRanges dateModified images translations'
 		).lean() as unknown as Promise<BriefRecipeType[]>,
 		Recipe.find({})
 		.populate({

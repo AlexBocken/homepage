@@ -4,6 +4,7 @@
     import FilterPanel from './FilterPanel.svelte';
     import { getCategories } from '$lib/js/categories';
     import { m } from '$lib/js/recipesI18n';
+    import { recipeOverlapsMonth } from '$lib/js/seasonRange';
     /** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
     // Filter props for different contexts
@@ -85,10 +86,9 @@
                     return false;
                 }
 
-                // Season filter: recipe in any selected season
+                // Season filter: recipe overlaps any selected month
                 if (selectedSeasons.length > 0) {
-                    const recipeSeasons = recipe.season || [];
-                    if (!selectedSeasons.some(s => recipeSeasons.includes(s))) {
+                    if (!selectedSeasons.some(m => recipeOverlapsMonth(recipe, m))) {
                         return false;
                     }
                 }
@@ -117,7 +117,7 @@
                 const matchesCategory = categoryArray.length > 0 ? categoryArray.includes(recipe.category) : false;
                 const matchesTags = selectedTags.length > 0 ? selectedTags.some(tag => (recipe.tags || []).includes(tag)) : false;
                 const matchesIcon = iconArray.length > 0 ? iconArray.includes(recipe.icon) : false;
-                const matchesSeasons = selectedSeasons.length > 0 ? selectedSeasons.some(s => (recipe.season || []).includes(s)) : false;
+                const matchesSeasons = selectedSeasons.length > 0 ? selectedSeasons.some(m => recipeOverlapsMonth(recipe, m)) : false;
                 const matchesFavorites = selectedFavoritesOnly ? recipe.isFavorite : false;
 
                 return matchesCategory || matchesTags || matchesIcon || matchesSeasons || matchesFavorites;

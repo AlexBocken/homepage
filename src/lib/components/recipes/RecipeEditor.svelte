@@ -8,12 +8,12 @@
 
 	let {
 		card_data = $bindable({}),
-		season = $bindable([]),
+		seasonRanges = $bindable([]),
 		ingredients = $bindable([]),
 		instructions = $bindable([])
 	}: {
 		card_data?: any,
-		season?: any[],
+		seasonRanges?: any[],
 		ingredients?: any[],
 		instructions?: any[]
 	} = $props();
@@ -31,7 +31,7 @@
 			method: 'POST',
 			body: JSON.stringify({
 				recipe: {
-					season: season,
+					seasonRanges: seasonRanges,
 					...card_data,
 					images: [{
 						mediapath: short_name + '.webp',
@@ -71,8 +71,8 @@ input.temp{
 
 <input class=temp bind:value={short_name} placeholder="Kurzname"/>
 
-<SeasonSelect></SeasonSelect>
-<button onclick={() => console.log(season)}>PRINTOUT season</button>
+<SeasonSelect bind:ranges={seasonRanges} />
+<button onclick={() => console.log(seasonRanges)}>PRINTOUT season</button>
 
 <h2>Zutaten</h2>
 <CreateIngredientList bind:ingredients={ingredients}></CreateIngredientList>

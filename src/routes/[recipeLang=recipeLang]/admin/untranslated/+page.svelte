@@ -4,7 +4,6 @@
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
 
 	let { data } = $props<{ data: PageData }>();
-	let current_month = new Date().getMonth() + 1;
 
 	// Calculate statistics
 	const stats = $derived.by(() => {
@@ -161,7 +160,6 @@ h1 {
 			<div class="card-wrapper">
 				<CompactCard
 					{recipe}
-					{current_month}
 					routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}
 				/>
 				<div class="translation-badge {recipe.translationStatus || 'none'}">

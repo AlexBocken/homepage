@@ -142,7 +142,7 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
       icon: rawRecipe.icon || '',
       dateCreated: rawRecipe.dateCreated,
       dateModified: rawRecipe.dateModified,
-      season: rawRecipe.season || [],
+      seasonRanges: rawRecipe.seasonRanges || [],
       baking: t.baking || rawRecipe.baking || { temperature: '', length: '', mode: '' },
       preparation: t.preparation || rawRecipe.preparation || '',
       fermentation: t.fermentation || rawRecipe.fermentation || { bulk: '', final: '' },

@@ -5,7 +5,6 @@
     import CompactCard from '$lib/components/recipes/CompactCard.svelte';
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
     let { data } = $props<{ data: PageData }>();
-    let current_month = new Date().getMonth() + 1;
 
     const lang = $derived(data.lang as RecipesLang);
     const t = $derived(m[lang]);
@@ -111,7 +110,7 @@
 {#if displayedRecipes.length > 0}
     <div class="recipe-grid">
         {#each displayedRecipes as recipe (recipe._id)}
-            <CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={true} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
+            <CompactCard {recipe} isFavorite={recipe.isFavorite} showFavoriteIndicator={true} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
         {/each}
     </div>
 {:else if (data.query || hasActiveSearch) && !data.error}

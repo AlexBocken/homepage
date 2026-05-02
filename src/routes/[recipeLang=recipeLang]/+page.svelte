@@ -11,7 +11,6 @@
 	let { data } = $props<{ data: PageData }>();
 	const lang = $derived(data.lang as RecipesLang);
 	const t = $derived(m[lang]);
-	let current_month = new Date().getMonth() + 1;
 
 	// Search state
 	let matchedRecipeIds = $state(new Set());
@@ -448,7 +447,6 @@
 					{#each visibleRecipes as recipe, i (recipe._id)}
 						<CompactCard
 							{recipe}
-							{current_month}
 							isFavorite={recipe.isFavorite}
 							showFavoriteIndicator={!!data.session?.user}
 							loading_strat={i < 12 ? "eager" : "lazy"}
@@ -481,7 +479,6 @@
 		{#each visibleRecipes as recipe, i (recipe._id)}
 			<CompactCard
 				{recipe}
-				{current_month}
 				isFavorite={recipe.isFavorite}
 				showFavoriteIndicator={!!data.session?.user}
 				loading_strat={i < 12 ? "eager" : "lazy"}

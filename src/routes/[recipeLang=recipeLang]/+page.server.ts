@@ -1,9 +1,9 @@
 import type { PageServerLoad } from "./$types";
 import { getUserFavorites, addFavoriteStatusToRecipes } from "$lib/server/favorites";
+import { isRecipeInSeason } from "$lib/js/seasonRange";
 
 export const load: PageServerLoad = async ({ fetch, locals, params }) => {
     const apiBase = `/api/${params.recipeLang}`;
-    const currentMonth = new Date().getMonth() + 1;
     const session = locals.session ?? await locals.auth();
 
     const [res_all_brief, userFavorites] = await Promise.all([
@@ -12,8 +12,8 @@ export const load: PageServerLoad = async ({ fetch, locals, params }) => {
     ]);
 
     const all_brief = addFavoriteStatusToRecipes(res_all_brief, userFavorites);
-    // Derive seasonal subset from all_brief instead of a separate DB query
-    const season = all_brief.filter((r: any) => r.season?.includes(currentMonth) && r.icon !== '🍽️');
+    const today = new Date();
+    const season = all_brief.filter((r: any) => r.icon !== '🍽️' && isRecipeInSeason(r, today));
 
     return {
         season,

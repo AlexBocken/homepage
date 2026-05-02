@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
-import { getAllBriefRecipes, getBriefRecipesBySeason, isOfflineDataAvailable } from '$lib/offline/db';
+import { getAllBriefRecipes, getBriefRecipesInSeasonOn, isOfflineDataAvailable } from '$lib/offline/db';
 import { rand_array } from '$lib/js/randomize';
 import type { PageLoad } from './$types';
 
@@ -24,11 +24,9 @@ export const load: PageLoad = async ({ data }) => {
 		try {
 			const hasOfflineData = await isOfflineDataAvailable();
 			if (hasOfflineData) {
-				const currentMonth = new Date().getMonth() + 1;
-
 				const [allBrief, seasonRecipes] = await Promise.all([
 					getAllBriefRecipes(),
-					getBriefRecipesBySeason(currentMonth)
+					getBriefRecipesInSeasonOn(new Date())
 				]);
 
 				return {
