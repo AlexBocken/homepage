@@ -241,11 +241,13 @@ async function precacheRecipeData(recipes: BriefRecipeType[]): Promise<void> {
 		dataUrls.push(`/recipes/icon/${encodeURIComponent(icon)}/__data.json`);
 	}
 
-	// Add season subroute data (all 12 months)
+	// Add season subroute data (all 12 months + today's liturgical-aware view)
 	for (let month = 1; month <= 12; month++) {
 		dataUrls.push(`/rezepte/season/${month}/__data.json`);
 		dataUrls.push(`/recipes/season/${month}/__data.json`);
 	}
+	dataUrls.push(`/rezepte/season/__data.json`);
+	dataUrls.push(`/recipes/season/__data.json`);
 
 	// Send message to service worker to cache these URLs
 	if (dataUrls.length > 0) {

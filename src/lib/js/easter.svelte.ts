@@ -64,3 +64,53 @@ export function getLiturgicalSeason(date: Date = new Date()): LiturgicalSeason {
 	if (isLent(date) && date.getDay() !== 0) return 'lent';
 	return null;
 }
+
+import type { SeasonAnchorKey } from '$types/types';
+
+function addDays(d: Date, days: number): Date {
+	const out = new Date(d);
+	out.setDate(out.getDate() + days);
+	return out;
+}
+
+export function computeAshWednesday(year: number): Date {
+	return addDays(computeEaster(year), -46);
+}
+
+export function computePalmSunday(year: number): Date {
+	return addDays(computeEaster(year), -7);
+}
+
+export function computePentecost(year: number): Date {
+	return addDays(computeEaster(year), 49);
+}
+
+/**
+ * First Sunday of Advent: the Sunday on or before December 24, minus 21 days
+ * (i.e. the 4th Sunday before Christmas Day).
+ */
+export function computeAdventI(year: number): Date {
+	const dec24 = new Date(year, 11, 24);
+	const adventIV = addDays(dec24, -dec24.getDay()); // Sunday on or before Dec 24
+	return addDays(adventIV, -21);
+}
+
+const anchorCache = new Map<number, Record<SeasonAnchorKey, Date>>();
+
+/**
+ * Resolved anchor dates for a given civil year. Memoized — the work is cheap
+ * but the season evaluator hits this on every range × every recipe.
+ */
+export function getLiturgicalAnchors(year: number): Record<SeasonAnchorKey, Date> {
+	const cached = anchorCache.get(year);
+	if (cached) return cached;
+	const anchors: Record<SeasonAnchorKey, Date> = {
+		easter: computeEaster(year),
+		'ash-wednesday': computeAshWednesday(year),
+		'palm-sunday': computePalmSunday(year),
+		pentecost: computePentecost(year),
+		'advent-i': computeAdventI(year)
+	};
+	anchorCache.set(year, anchors);
+	return anchors;
+}

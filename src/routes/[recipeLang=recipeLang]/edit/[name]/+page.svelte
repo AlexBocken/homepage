@@ -12,7 +12,7 @@
 	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
 	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
-	import { season } from '$lib/js/season_store';
+	import type { SeasonRange } from '$types/types';
 	import { portions } from '$lib/js/portions_store';
 	import '$lib/css/action_button.css';
 	import { toast } from '$lib/js/toast.svelte';
@@ -57,14 +57,7 @@
 	});
 
 	// svelte-ignore state_referenced_locally
-	season.update(() => data.recipe.season || []);
-	// svelte-ignore state_referenced_locally
-	let season_local = $state<number[]>(data.recipe.season || []);
-	$effect(() => {
-		season.subscribe((s) => {
-			season_local = s;
-		});
-	});
+	let season_local = $state<SeasonRange[]>(data.recipe.seasonRanges || []);
 
 	// svelte-ignore state_referenced_locally
 	let card_data = $state({
@@ -111,21 +104,6 @@
 	let submitting = $state(false);
 	let formElement: HTMLFormElement;
 
-	// Get season data from checkboxes
-	function get_season(): number[] {
-		const season: number[] = [];
-		const el = document.getElementById("labels");
-		if (!el) return season;
-
-		for (let i = 0; i < el.children.length; i++) {
-			const checkbox = el.children[i].children[0].children[0] as HTMLInputElement;
-			if (checkbox?.checked) {
-				season.push(i + 1);
-			}
-		}
-		return season;
-	}
-
 	// Get current German recipe data - use $derived to prevent infinite effect loops
 	let currentRecipeData = $derived.by(() => {
 		// Ensure we always have a valid images array with at least one item
@@ -153,7 +131,7 @@
 			...card_data,
 			...add_info,
 			images: recipeImages,
-			season: season_local,
+			seasonRanges: season_local,
 			short_name: short_name.trim(),
 			datecreated,
 			portions: portions_local,
@@ -1147,7 +1125,7 @@
 	<input type="hidden" name="ingredients_json" value={JSON.stringify(ingredients)} />
 	<input type="hidden" name="instructions_json" value={JSON.stringify(instructions)} />
 	<input type="hidden" name="add_info_json" value={JSON.stringify(add_info)} />
-	<input type="hidden" name="season" value={JSON.stringify(season_local)} />
+	<input type="hidden" name="seasonRanges" value={JSON.stringify(season_local)} />
 	<input type="hidden" name="tags" value={JSON.stringify(card_data.tags)} />
 	<input type="hidden" name="datecreated" value={datecreated?.toString()} />
 
@@ -1179,7 +1157,7 @@
 		{#snippet titleExtras()}
 			<h2 class="section-label">Saison</h2>
 			<div class="season-wrapper">
-				<SeasonSelect />
+				<SeasonSelect bind:ranges={season_local} />
 			</div>
 
 			<h2 class="section-label">Einleitung</h2>

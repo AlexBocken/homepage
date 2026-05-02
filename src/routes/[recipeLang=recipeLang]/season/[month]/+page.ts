@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
-import { getBriefRecipesBySeason, isOfflineDataAvailable } from '$lib/offline/db';
+import { getBriefRecipesOverlappingMonth, isOfflineDataAvailable } from '$lib/offline/db';
 import { rand_array } from '$lib/js/randomize';
 import type { PageLoad } from './$types';
 
@@ -21,7 +21,7 @@ export const load: PageLoad = async ({ data, params }) => {
 			const hasOfflineData = await isOfflineDataAvailable();
 			if (hasOfflineData) {
 				const month = parseInt(params.month);
-				const recipes = await getBriefRecipesBySeason(month);
+				const recipes = await getBriefRecipesOverlappingMonth(month);
 
 				return {
 					...data,

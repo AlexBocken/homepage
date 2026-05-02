@@ -37,6 +37,24 @@ export type NutritionMapping = {
   recipeRefMultiplier?: number;
 };
 
+// Movable liturgical anchors usable as range endpoints. Fixed feasts
+// (Christmas, Epiphany, etc.) are expressed as `{kind:'fixed', m, d}`.
+export type SeasonAnchorKey =
+  | 'easter'
+  | 'ash-wednesday'
+  | 'palm-sunday'
+  | 'pentecost'
+  | 'advent-i';
+
+export type SeasonEndpoint =
+  | { kind: 'fixed'; m: number; d: number }
+  | { kind: 'liturgical'; anchor: SeasonAnchorKey; offsetDays: number };
+
+export type SeasonRange = {
+  start: SeasonEndpoint;
+  end: SeasonEndpoint;
+};
+
 // Translation status enum
 export type TranslationStatus = 'pending' | 'approved' | 'needs_update';
 
@@ -175,7 +193,7 @@ export type RecipeModelType = {
   }];
   description: string;
   tags: [string];
-  season: [number];
+  seasonRanges?: SeasonRange[];
   baking?: {
 	  temperature: string;
 	  length: string;
@@ -225,5 +243,5 @@ export type BriefRecipeType = {
 	}]
 	description: string;
 	tags: [string];
-	season: [number];
+	seasonRanges?: SeasonRange[];
 }

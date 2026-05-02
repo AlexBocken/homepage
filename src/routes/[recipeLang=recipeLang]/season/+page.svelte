@@ -46,7 +46,7 @@
 	{#snippet recipesSlot()}
 		<div class="recipe-grid">
 			{#each rand_array(filteredRecipes) as recipe (recipe._id)}
-				<CompactCard {recipe} {current_month} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
+				<CompactCard {recipe} icon_override={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
 			{/each}
 		</div>
 	{/snippet}

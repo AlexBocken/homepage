@@ -9,7 +9,7 @@
 	import IngredientsPage from '$lib/components/recipes/IngredientsPage.svelte';
 	import TitleImgParallax from '$lib/components/recipes/TitleImgParallax.svelte';
 	import { afterNavigate } from '$app/navigation';
-    	import {season} from '$lib/js/season_store';
+	import { formatRangePreview, resolveEndpoint } from '$lib/js/seasonRange';
 	import RecipeNote from '$lib/components/recipes/RecipeNote.svelte';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { onDestroy } from 'svelte';
@@ -53,44 +53,15 @@
 		? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 		: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]);
 
-	function season_intervals() {
-		// Guard against missing season data (can happen in offline mode)
-		if (!data.season || !Array.isArray(data.season) || data.season.length === 0) {
-			return [];
-		}
-
-		let interval_arr = []
-
-		let start_i = 0
-		for(var i = 12; i > 0; i--){
-			if(data.season.includes(i)){
-				start_i = data.season.indexOf(i);
-			}
-			else{
-				break
-			}
-		}
-
-		var start = data.season[start_i]
-		var end_i: number = start_i
-		const len = data.season.length
-		for(var i = 0; i < len -1; i++){
-			if(data.season.includes((start + i) %12 + 1)){
-				end_i = (start_i + i + 1) % len
-			}
-			else{
-	  			interval_arr.push([start, data.season[end_i]])
-				start = data.season[(start + i + 1) % len]
-			}
-
-		}
-		if(interval_arr.length == 0){
-	  		interval_arr.push([start, data.season[end_i]])
-		}
-
-		return interval_arr
-	}
-	const season_iv = $derived(season_intervals());
+	const seasonRangeChips = $derived.by(() => {
+		const ranges = data.seasonRanges;
+		if (!ranges || !Array.isArray(ranges) || ranges.length === 0) return [];
+		const year = new Date().getFullYear();
+		return ranges.map((r: any) => ({
+			label: formatRangePreview(r, year, isEnglish ? 'en' : 'de'),
+			month: resolveEndpoint(r.start, year).getMonth() + 1
+		}));
+	});
 
 	const display_date = $derived(data.updatedAt ? new Date(data.updatedAt) : new Date(data.dateCreated));
 	const options: Intl.DateTimeFormatOptions = {
@@ -318,17 +289,12 @@ h2{
 		{#if data.preamble}
 			<p>{@html data.preamble}</p>
 		{/if}
-		{#if season_iv.length > 0}
+		{#if seasonRangeChips.length > 0}
 			<div class=tags>
 				<h2>{labels.season}</h2>
-				{#each season_iv as season}
-					<a class="g-tag" href={resolve('/[recipeLang=recipeLang]/season/[month]', { recipeLang: data.recipeLang, month: String(season[0]) })}>
-						{#if season[0]}
-							{months[season[0] - 1]}
-						{/if}
-						{#if season[1]}
-							- {months[season[1] - 1]}
-						{/if}
+				{#each seasonRangeChips as chip}
+					<a class="g-tag" href={resolve('/[recipeLang=recipeLang]/season/[month]', { recipeLang: data.recipeLang, month: String(chip.month) })}>
+						{chip.label}
 					</a>
 				{/each}
 			</div>

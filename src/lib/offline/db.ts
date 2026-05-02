@@ -1,7 +1,8 @@
 import type { BriefRecipeType, RecipeModelType } from '$types/types';
+import { isRecipeInSeason, recipeOverlapsMonth } from '$lib/js/seasonRange';
 
 const DB_NAME = 'bocken-recipes';
-const DB_VERSION = 2; // Bumped to force recreation of stores
+const DB_VERSION = 3; // v3: dropped multi-entry season index after migration to seasonRanges
 
 const STORE_BRIEF = 'recipes_brief';
 const STORE_FULL = 'recipes_full';
@@ -51,10 +52,12 @@ function openDB(): Promise<IDBDatabase> {
 				db.deleteObjectStore(STORE_META);
 			}
 
-			// Brief recipes store - keyed by short_name for quick lookups
+			// Brief recipes store - keyed by short_name for quick lookups.
+			// Season membership is now driven by date ranges with movable
+			// liturgical anchors that can't be expressed as a static index, so
+			// season filtering loads all rows and runs the shared evaluator.
 			const briefStore = db.createObjectStore(STORE_BRIEF, { keyPath: 'short_name' });
 			briefStore.createIndex('category', 'category', { unique: false });
-			briefStore.createIndex('season', 'season', { unique: false, multiEntry: true });
 
 			// Full recipes store - keyed by short_name
 			db.createObjectStore(STORE_FULL, { keyPath: 'short_name' });
@@ -104,17 +107,14 @@ export async function getBriefRecipesByCategory(category: string): Promise<Brief
 	});
 }
 
-export async function getBriefRecipesBySeason(month: number): Promise<BriefRecipeType[]> {
-	const db = await openDB();
-	return new Promise((resolve, reject) => {
-		const tx = db.transaction(STORE_BRIEF, 'readonly');
-		const store = tx.objectStore(STORE_BRIEF);
-		const index = store.index('season');
-		const request = index.getAll(month);
+export async function getBriefRecipesInSeasonOn(date: Date = new Date()): Promise<BriefRecipeType[]> {
+	const all = await getAllBriefRecipes();
+	return all.filter(r => isRecipeInSeason(r as any, date));
+}
 
-		request.onerror = () => reject(request.error);
-		request.onsuccess = () => resolve(request.result);
-	});
+export async function getBriefRecipesOverlappingMonth(month: number, year: number = new Date().getFullYear()): Promise<BriefRecipeType[]> {
+	const all = await getAllBriefRecipes();
+	return all.filter(r => recipeOverlapsMonth(r as any, month, year));
 }
 
 export async function getBriefRecipesByTag(tag: string): Promise<BriefRecipeType[]> {

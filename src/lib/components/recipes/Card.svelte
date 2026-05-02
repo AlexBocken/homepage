@@ -3,10 +3,10 @@ import "$lib/css/shake.css";
 import "$lib/css/icon.css";
 import { onMount } from "svelte";
 import Heart from '@lucide/svelte/icons/heart';
+import { isRecipeInSeason } from '$lib/js/seasonRange';
 
 let {
 	recipe,
-	current_month: currentMonthProp = 0,
 	icon_override = false,
 	search = true,
 	do_margin_right = false,
@@ -17,8 +17,7 @@ let {
 	translationStatus = undefined
 } = $props();
 
-// Make current_month reactive based on icon_override
-let current_month = $derived(icon_override ? recipe.season[0] : currentMonthProp);
+const isInSeason = $derived(icon_override || isRecipeInSeason(recipe));
 
 let isloaded = $state(false);
 
@@ -259,7 +258,7 @@ function preloadHeroImage() {
 			{/if}
 		</div>
 	{/if}
-	{#if icon_override || recipe.season.includes(current_month)}
+	{#if isInSeason}
 		<a href="{routePrefix}/icon/{recipe.icon}" class="icon g-icon-badge">{recipe.icon}</a>
 	{/if}
 	<div class="card_title">

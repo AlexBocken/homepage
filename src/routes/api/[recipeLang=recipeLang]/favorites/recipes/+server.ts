@@ -51,7 +51,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         description: t?.description,
         note: t?.note,
         tags: t?.tags || [],
-        season: recipe.season,
+        seasonRanges: recipe.seasonRanges,
         baking: recipe.baking,
         preparation: recipe.preparation,
         fermentation: recipe.fermentation,

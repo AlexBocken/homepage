@@ -17,7 +17,25 @@ const RecipeSchema = new mongoose.Schema(
     description: {type: String, required: true},
     note: {type: String},
     tags : [String],
-    season : [Number],
+    seasonRanges: [{
+      _id: false,
+      start: {
+        _id: false,
+        kind: { type: String, enum: ['fixed', 'liturgical'], required: true },
+        m: { type: Number },
+        d: { type: Number },
+        anchor: { type: String, enum: ['easter', 'ash-wednesday', 'palm-sunday', 'pentecost', 'advent-i'] },
+        offsetDays: { type: Number, default: 0 },
+      },
+      end: {
+        _id: false,
+        kind: { type: String, enum: ['fixed', 'liturgical'], required: true },
+        m: { type: Number },
+        d: { type: Number },
+        anchor: { type: String, enum: ['easter', 'ash-wednesday', 'palm-sunday', 'pentecost', 'advent-i'] },
+        offsetDays: { type: Number, default: 0 },
+      },
+    }],
     baking: { temperature: {type:String, default: ""},
 	      length: {type:String, default: ""},
 	      mode: {type:String, default: ""},
@@ -198,7 +216,7 @@ const RecipeSchema = new mongoose.Schema(
 
 // Indexes for efficient querying
 RecipeSchema.index({ short_name: 1 });
-RecipeSchema.index({ season: 1 });
+RecipeSchema.index({ 'seasonRanges.start.anchor': 1 });
 RecipeSchema.index({ "translations.en.short_name": 1 });
 RecipeSchema.index({ "translations.en.translationStatus": 1 });
 

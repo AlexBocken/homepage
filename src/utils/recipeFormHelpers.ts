@@ -5,7 +5,7 @@
  * for SvelteKit form actions with progressive enhancement support.
  */
 
-import type { IngredientItem, InstructionItem, TranslatedRecipeType, TranslationMetadata } from '$types/types';
+import type { IngredientItem, InstructionItem, SeasonRange, TranslatedRecipeType, TranslationMetadata } from '$types/types';
 
 export interface RecipeFormData {
 	// Basic fields
@@ -16,7 +16,7 @@ export interface RecipeFormData {
 	icon: string;
 	tags: string[];
 	portions: string;
-	season: number[];
+	seasonRanges: SeasonRange[];
 
 	// Optional text fields
 	preamble?: string;
@@ -97,14 +97,14 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 		}
 	}
 
-	// Season (JSON array of month numbers)
-	let season: number[] = [];
-	const seasonData = formData.get('season')?.toString();
-	if (seasonData) {
+	// Season ranges (JSON array of {start, end} endpoints)
+	let seasonRanges: SeasonRange[] = [];
+	const seasonRangesData = formData.get('seasonRanges')?.toString();
+	if (seasonRangesData) {
 		try {
-			season = JSON.parse(seasonData);
+			seasonRanges = JSON.parse(seasonRangesData);
 		} catch {
-			// Ignore invalid season data
+			// Ignore invalid range data
 		}
 	}
 
@@ -207,7 +207,7 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 		icon,
 		tags,
 		portions,
-		season,
+		seasonRanges,
 		preamble,
 		addendum,
 		note,
@@ -294,8 +294,8 @@ export function detectChangedFields(original: Record<string, unknown>, current: 
 		changedFields.push('tags');
 	}
 
-	if (JSON.stringify(original.season) !== JSON.stringify(current.season)) {
-		changedFields.push('season');
+	if (JSON.stringify(original.seasonRanges) !== JSON.stringify(current.seasonRanges)) {
+		changedFields.push('seasonRanges');
 	}
 
 	if (JSON.stringify(original.ingredients) !== JSON.stringify(current.ingredients)) {
@@ -319,30 +319,16 @@ export function detectChangedFields(original: Record<string, unknown>, current: 
 }
 
 /**
- * Parses season data from form input
- * Handles both checkbox-based input and JSON arrays
+ * Parses season-range data from form input (JSON-encoded SeasonRange[]).
  */
-export function parseSeasonData(formData: FormData): number[] {
-	const season: number[] = [];
-
-	// Try JSON format first
-	const seasonJson = formData.get('season')?.toString();
-	if (seasonJson) {
-		try {
-			return JSON.parse(seasonJson);
-		} catch {
-			// Fall through to checkbox parsing
-		}
+export function parseSeasonRangesData(formData: FormData): SeasonRange[] {
+	const seasonJson = formData.get('seasonRanges')?.toString();
+	if (!seasonJson) return [];
+	try {
+		return JSON.parse(seasonJson);
+	} catch {
+		return [];
 	}
-
-	// Parse individual checkbox inputs (season_1, season_2, etc.)
-	for (let month = 1; month <= 12; month++) {
-		if (formData.get(`season_${month}`) === 'true') {
-			season.push(month);
-		}
-	}
-
-	return season;
 }
 
 /**
@@ -358,7 +344,7 @@ export function serializeRecipeForDatabase(data: RecipeFormData): Record<string,
 		icon: data.icon || '',
 		tags: data.tags || [],
 		portions: data.portions || '',
-		season: data.season || [],
+		seasonRanges: data.seasonRanges || [],
 		ingredients: data.ingredients || [],
 		instructions: data.instructions || [],
 		isBaseRecipe: data.isBaseRecipe || false,
