@@ -129,8 +129,10 @@ export async function downloadAllRecipes(
 }
 
 async function precacheMainPages(_fetchFn: typeof fetch): Promise<void> {
-	// Only attempt if service worker is available
-	if (!('serviceWorker' in navigator)) return;
+	// Only attempt if service worker is available and controlling the page.
+	// `serviceWorker.ready` would hang forever in environments where no SW is
+	// registered (e.g. `vite dev`), so gate on `controller` first.
+	if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
 
 	const registration = await navigator.serviceWorker.ready;
 	if (!registration.active) return;
@@ -186,8 +188,10 @@ async function precacheMainPages(_fetchFn: typeof fetch): Promise<void> {
 }
 
 async function precacheRecipeData(recipes: BriefRecipeType[]): Promise<void> {
-	// Only attempt if service worker is available
-	if (!('serviceWorker' in navigator)) return;
+	// Only attempt if service worker is available and controlling the page.
+	// `serviceWorker.ready` would hang forever in environments where no SW is
+	// registered (e.g. `vite dev`), so gate on `controller` first.
+	if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
 
 	const registration = await navigator.serviceWorker.ready;
 	if (!registration.active) return;
@@ -264,8 +268,10 @@ async function precacheThumbnails(
 	recipes: BriefRecipeType[],
 	onProgress?: ProgressCallback
 ): Promise<void> {
-	// Only attempt if service worker is available
-	if (!('serviceWorker' in navigator)) return;
+	// Only attempt if service worker is available and controlling the page.
+	// `serviceWorker.ready` would hang forever in environments where no SW is
+	// registered (e.g. `vite dev`), so gate on `controller` first.
+	if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
 
 	const registration = await navigator.serviceWorker.ready;
 	if (!registration.active) return;
