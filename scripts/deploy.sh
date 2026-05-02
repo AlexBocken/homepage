@@ -15,6 +15,8 @@ REMOTE="${REMOTE:-root@bocken.org}"
 REMOTE_DIR="${REMOTE_DIR:-/usr/share/webapps/homepage}"
 REMOTE_USER_GROUP="${REMOTE_USER_GROUP:-homepage:homepage}"
 SERVICE="${SERVICE:-homepage.service}"
+ERROR_PAGES_DIR="${ERROR_PAGES_DIR:-/var/www/errors}"
+ERROR_PAGES_OWNER="${ERROR_PAGES_OWNER:-http:http}"
 
 DRY=""
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -62,13 +64,23 @@ echo ":: Syncing package.json + pnpm-lock.yaml"
 rsync -az $DRY \
     package.json pnpm-lock.yaml "$REMOTE:$REMOTE_DIR/"
 
+if [[ ! -d build/client/errors ]]; then
+    echo "!! build/client/errors not produced — postbuild error-page step did not run"
+    exit 1
+fi
+
+echo ":: Syncing error pages → $REMOTE:$ERROR_PAGES_DIR/"
+ssh "$REMOTE" "mkdir -p $ERROR_PAGES_DIR"
+rsync -az --delete $DRY --info=progress2 \
+    build/client/errors/ "$REMOTE:$ERROR_PAGES_DIR/"
+
 if [[ -n "$DRY" ]]; then
     echo ":: Dry run complete — no service restart"
     exit 0
 fi
 
 echo ":: Fixing ownership on server"
-ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml"
+ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR"
 
 echo ":: Restarting $SERVICE"
 ssh "$REMOTE" "systemctl restart $SERVICE"
