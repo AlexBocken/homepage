@@ -7,16 +7,36 @@ import { dbConnect } from '$utils/db';
 const SITE = 'https://bocken.org';
 const BUILD_LASTMOD = new Date().toISOString().slice(0, 10);
 
-type Url = { loc: string; lastmod?: string; changefreq?: string; priority?: number; alternates?: { hreflang: string; href: string }[] };
+type ImageEntry = { loc: string; title?: string; caption?: string };
+type Url = {
+	loc: string;
+	lastmod?: string;
+	changefreq?: string;
+	priority?: number;
+	alternates?: { hreflang: string; href: string }[];
+	images?: ImageEntry[];
+};
 
 function xmlEscape(s: string): string {
 	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+function renderImage(img: ImageEntry): string {
+	const parts = [
+		`    <image:image>`,
+		`      <image:loc>${xmlEscape(img.loc)}</image:loc>`,
+		img.title ? `      <image:title>${xmlEscape(img.title)}</image:title>` : '',
+		img.caption ? `      <image:caption>${xmlEscape(img.caption)}</image:caption>` : '',
+		`    </image:image>`,
+	].filter(Boolean);
+	return parts.join('\n');
 }
 
 function renderUrl(u: Url): string {
 	const alt = (u.alternates ?? [])
 		.map(a => `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${xmlEscape(a.href)}" />`)
 		.join('\n');
+	const imgs = (u.images ?? []).map(renderImage).join('\n');
 	const parts = [
 		`  <url>`,
 		`    <loc>${xmlEscape(u.loc)}</loc>`,
@@ -24,6 +44,7 @@ function renderUrl(u: Url): string {
 		u.changefreq ? `    <changefreq>${u.changefreq}</changefreq>` : '',
 		u.priority !== undefined ? `    <priority>${u.priority.toFixed(1)}</priority>` : '',
 		alt,
+		imgs,
 		`  </url>`,
 	].filter(Boolean);
 	return parts.join('\n');
@@ -183,25 +204,35 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 		urls.push({ loc: `${SITE}/faith/prayers/${slug}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.5 });
 	}
 
-	// Recipes — direct DB read so we get dateModified for <lastmod>. Tolerate
-	// failure so sitemap still ships the static URLs above.
+	// Recipes — direct DB read so we get dateModified for <lastmod> and image
+	// paths for <image:image>. Tolerate failure so sitemap still ships the
+	// static URLs above.
 	try {
 		await dbConnect();
 		const recipes = await Recipe.find(
 			{},
-			'short_name dateModified translations.en.short_name translations.en.translationStatus'
+			'short_name name dateModified images translations.en.short_name translations.en.name translations.en.translationStatus'
 		).lean();
 		for (const r of recipes) {
 			const lastmod = r.dateModified ? new Date(r.dateModified).toISOString().slice(0, 10) : BUILD_LASTMOD;
+			const images: ImageEntry[] = (r.images ?? [])
+				.filter((img) => img?.mediapath)
+				.map((img) => ({
+					loc: `${SITE}/static/rezepte/full/${img.mediapath}`,
+					title: r.name,
+					caption: img.caption || img.alt,
+				}));
 			if (r.short_name) {
 				urls.push({
 					loc: `${SITE}/rezepte/${encodeURIComponent(r.short_name)}`,
 					lastmod,
 					changefreq: 'monthly',
 					priority: 0.7,
+					images,
 				});
 			}
 			const enShort = r.translations?.en?.short_name;
+			const enName = r.translations?.en?.name;
 			const approved = r.translations?.en?.translationStatus === 'approved';
 			if (enShort && approved) {
 				urls.push({
@@ -209,6 +240,7 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 					lastmod,
 					changefreq: 'monthly',
 					priority: 0.7,
+					images: images.map((img) => ({ ...img, title: enName ?? img.title })),
 				});
 			}
 		}
@@ -217,7 +249,7 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 	}
 
 	const body = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${urls.map(renderUrl).join('\n')}
 </urlset>
 `;

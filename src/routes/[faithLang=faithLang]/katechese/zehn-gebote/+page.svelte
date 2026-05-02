@@ -84,6 +84,33 @@
 <svelte:head>
 	<title>Die 10 Gebote Gottes - Bocken</title>
 	<meta name="description" content="Die Zehn Gebote Gottes - Katechese nach P. Martin Ramm FSSP" />
+	{@html `<script type="application/ld+json">${JSON.stringify({
+		'@context': 'https://schema.org',
+		'@type': 'Article',
+		headline: 'Die Zehn Gebote Gottes',
+		description: 'Katechese zu den Zehn Geboten Gottes — Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
+		inLanguage: 'de',
+		url: 'https://bocken.org/glaube/katechese/zehn-gebote',
+		mainEntityOfPage: 'https://bocken.org/glaube/katechese/zehn-gebote',
+		isAccessibleForFree: true,
+		articleSection: 'Katechese',
+		about: { '@type': 'Thing', name: 'Dekalog' },
+		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
+		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
+		citation: [
+			{ '@type': 'CreativeWork', name: 'Glaubenskurs, 3. Hauptteil', author: { '@type': 'Person', name: 'P. Martin Ramm FSSP' } }
+		]
+	})}</script>`}
+	{@html `<script type="application/ld+json">${JSON.stringify({
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
+			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
+			{ '@type': 'ListItem', position: 3, name: 'Katechese', item: 'https://bocken.org/glaube/katechese' },
+			{ '@type': 'ListItem', position: 4, name: 'Die Zehn Gebote Gottes', item: 'https://bocken.org/glaube/katechese/zehn-gebote' }
+		]
+	})}</script>`}
 </svelte:head>
 
 <div class="page-wrapper">

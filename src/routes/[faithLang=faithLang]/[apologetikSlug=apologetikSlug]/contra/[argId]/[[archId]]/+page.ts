@@ -5,7 +5,8 @@ import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
 import { m as faithM, faithSlugFromLang, apologetikSlug, type FaithLang } from '$lib/js/faithI18n';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ params, parent }) => {
+export const load: PageLoad = async ({ params, parent, setHeaders }) => {
+	setHeaders({ 'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400' });
 	const parentData = await parent();
 	const lang = parentData.lang as FaithLang;
 	const [arg, archetypes, args] = await Promise.all([
