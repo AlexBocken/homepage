@@ -2,15 +2,15 @@
  * Build-time generation of loyalty-card barcode SVGs.
  *
  * Reads card numbers from env vars and writes static/shopping/supercard.svg
- * + static/shopping/cumulus.svg. Skips cards whose env var is unset so the
- * site still builds in environments without secrets.
+ * + static/shopping/cumulus.svg. Fails the build if any required env is
+ * unset so deploys can't silently ship a broken UI.
  *
  *   SHOPPING_COOP_SUPERCARD_NUMBER  → Data Matrix (Coop Supercard)
  *   SHOPPING_MIGROS_CUMULUS_NUMBER  → Code 128 (Migros Cumulus)
  *
  * Run: pnpm exec vite-node scripts/generate-loyalty-cards.ts
  */
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { toSVG } from 'bwip-js/node';
@@ -37,15 +37,15 @@ const cards: CardSpec[] = [
 
 mkdirSync(OUT_DIR, { recursive: true });
 
-for (const card of cards) {
-	const value = process.env[card.envVar]?.trim();
-	const outPath = resolve(OUT_DIR, card.filename);
+const missing = cards.filter((c) => !process.env[c.envVar]?.trim()).map((c) => c.envVar);
+if (missing.length) {
+	console.error(`[loyalty-cards] missing required env: ${missing.join(', ')}`);
+	process.exit(1);
+}
 
-	if (!value) {
-		try { rmSync(outPath); } catch { /* not present */ }
-		console.log(`[loyalty-cards] ${card.envVar} not set — skipped ${card.filename}`);
-		continue;
-	}
+for (const card of cards) {
+	const value = process.env[card.envVar]!.trim();
+	const outPath = resolve(OUT_DIR, card.filename);
 
 	const svg = toSVG({
 		bcid: card.bcid,
