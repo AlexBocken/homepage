@@ -493,13 +493,14 @@
 		gap: 8px;
 		align-items: center;
 		margin-top: 12px;
-		width: max-content;
-		max-width: 100%;
 	}
 	@media (min-width: 760px) {
 		.answer-rail {
 			/* Extend past the 760px content column into the right gutter when space allows.
-			   arg-body left = 50vw - 278px; available right width capped 24px from viewport edge. */
+			   arg-body left = 50vw - 278px; available right width capped 24px from viewport edge.
+			   width:max-content lets the rail visually exceed its grid column up to max-width;
+			   keep this scoped to >=760px so it doesn't inflate the column's intrinsic size on mobile. */
+			width: max-content;
 			max-width: min(calc(100vw - 126px), calc(50vw + 254px));
 		}
 	}
