@@ -7,6 +7,24 @@ import { dbConnect } from "./utils/db"
 import { errorWithVerse, getRandomVerse } from "$lib/server/errorQuote"
 import { warmLiturgicalCache } from "$lib/server/liturgicalCalendar"
 
+/** Map URL path to BCP 47 lang tag. Mirrors the [recipeLang] / [faithLang]
+ *  param matchers — keep in sync if new locale slugs are added.
+ *  @returns 'de' | 'en' | 'la'
+ */
+function langFromPath(pathname: string): 'de' | 'en' | 'la' {
+	const first = pathname.split('/').filter(Boolean)[0] ?? '';
+	if (first === 'recipes' || first === 'faith') return 'en';
+	if (first === 'fides') return 'la';
+	return 'de';
+}
+
+async function htmlLang({ event, resolve }: Parameters<Handle>[0]) {
+	const lang = langFromPath(event.url.pathname);
+	return resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('%lang%', lang),
+	});
+}
+
 async function timing({ event, resolve }: Parameters<Handle>[0]) {
 	const marks: Record<string, number> = {};
 	event.locals.timing = {
@@ -143,6 +161,7 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 
 export const handle: Handle = sequence(
 	timing,
+	htmlLang,
 	auth.handle,
 	authorization
 );

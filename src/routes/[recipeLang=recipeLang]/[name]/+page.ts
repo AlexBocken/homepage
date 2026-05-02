@@ -1,5 +1,7 @@
 import { browser } from '$app/environment';
 import { generateRecipeJsonLd } from '$lib/js/recipeJsonLd';
+import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
+import { m as recipesM } from '$lib/js/recipesI18n';
 import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
 import { getFullRecipe, isOfflineDataAvailable } from '$lib/offline/db';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
@@ -174,6 +176,13 @@ export const load: PageLoad = async ({ fetch, params, url, data }) => {
     
     // Generate JSON-LD server-side
     const recipeJsonLd = generateRecipeJsonLd(item, undefined, isEnglish ? 'en' : 'de');
+    const tRecipes = recipesM[isEnglish ? 'en' : 'de'];
+    const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+        { name: 'Bocken', path: '/' },
+        { name: tRecipes.all_recipes, path: `/${params.recipeLang}` },
+        ...(item.category ? [{ name: item.category, path: `/${params.recipeLang}/category/${item.category}` }] : []),
+        { name: stripHtmlTags(item.name || ''), path: `/${params.recipeLang}/${item.short_name}` },
+    ]);
 
     // For German page: check if English translation exists
     // For English page: germanShortName is already in item (from API)
@@ -194,6 +203,7 @@ export const load: PageLoad = async ({ fetch, params, url, data }) => {
         isFavorite,
         multiplier,
         recipeJsonLd,
+        breadcrumbJsonLd,
         hasEnglishTranslation,
         englishShortName,
         germanShortName,

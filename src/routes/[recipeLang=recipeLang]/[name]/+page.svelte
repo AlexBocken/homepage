@@ -266,6 +266,7 @@ h2{
 	<meta property="og:image:type" content="image/webp" />
 	<meta property="og:image:alt" content="{data.strippedName}" />
 	{@html `<script type="application/ld+json">${JSON.stringify(data.recipeJsonLd)}</script>`}
+	{@html `<script type="application/ld+json">${JSON.stringify(data.breadcrumbJsonLd)}</script>`}
 	<!-- SEO: hreflang tags -->
 	<link rel="alternate" hreflang="de" href="https://bocken.org/rezepte/{data.germanShortName}" />
 	{#if isEnglish || data.hasEnglishTranslation}

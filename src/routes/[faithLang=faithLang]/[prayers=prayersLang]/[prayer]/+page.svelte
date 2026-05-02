@@ -24,7 +24,8 @@
 	import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
 	import StickyImage from "$lib/components/faith/StickyImage.svelte";
 	import AngelusStreakCounter from "$lib/components/faith/AngelusStreakCounter.svelte";
-	import { m } from '$lib/js/faithI18n';
+	import { m, faithSlugFromLang, prayersSlug } from '$lib/js/faithI18n';
+	import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 
 	let { data } = $props();
@@ -99,6 +100,13 @@
 	// Toggle href for no-JS fallback (navigates to opposite latin state)
 	const latinToggleHref = $derived(data.initialLatin ? '?latin=0' : '?');
 
+	const breadcrumbJsonLd = $derived(generateBreadcrumbJsonLd([
+		{ name: 'Bocken', path: '/' },
+		{ name: t.title, path: `/${faithSlugFromLang(lang)}` },
+		{ name: t.prayers, path: `/${faithSlugFromLang(lang)}/${prayersSlug(lang)}` },
+		{ name: prayerName, path: `/${faithSlugFromLang(lang)}/${prayersSlug(lang)}/${data.prayer}` }
+	]));
+
 	onMount(() => {
 		// Clean up URL params after hydration (state is now in component state)
 		if (window.location.search) {
@@ -109,6 +117,7 @@
 
 <svelte:head>
 	<title>{prayerName} - Bocken</title>
+	{@html `<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</script>`}
 </svelte:head>
 
 <style>
