@@ -7,8 +7,7 @@ import {
 } from '$lib/data/apologetik';
 import { resolveScriptureForLang } from '$lib/server/scriptureLookup';
 
-export const load: PageServerLoad = async ({ parent, setHeaders }) => {
-	setHeaders({ 'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400' });
+export const load: PageServerLoad = async ({ parent }) => {
 	const { lang } = await parent();
 	const [voices, layers, args] = await Promise.all([
 		getPosVoices(lang),

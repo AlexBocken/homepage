@@ -12,12 +12,7 @@ import { generateProArgArticleJsonLd } from '$lib/js/apologetikJsonLd';
 import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
 import { m as faithM, faithSlugFromLang, apologetikSlug, type FaithLang } from '$lib/js/faithI18n';
 
-export const load: PageServerLoad = async ({ params, parent, setHeaders }) => {
-	// Pure static content — long-form prose with no per-user state. Cache aggressively
-	// at the edge so crawlers (and casual readers) get sub-50ms TTFB. Logged-in users
-	// still get fresh server-rendered pages because most reverse proxies vary on cookies.
-	setHeaders({ 'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400' });
-
+export const load: PageServerLoad = async ({ params, parent }) => {
 	const parentData = await parent();
 	const lang = parentData.lang as FaithLang;
 	const [arg, voices, layers, args] = await Promise.all([
