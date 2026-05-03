@@ -26,6 +26,62 @@ const OUT_DIR = join(CLIENT, 'errors');
 // the logo always lands on the real site.
 const CANONICAL_HOME = 'https://bocken.org/';
 
+// Marker for idempotent script injection (so re-runs don't stack copies).
+const LANG_SCRIPT_MARKER = 'data-error-toggles';
+// Wires up language + theme toggles without Svelte hydration. Runs early
+// so <html data-lang="…"> is set before paint (avoids flash of both langs).
+// The icon inside the theme button is Svelte-reactive and stays at the
+// SSR-rendered shape; the actual theme cycle + persistence still works.
+const LANG_SCRIPT = `
+<script ${LANG_SCRIPT_MARKER}>
+(function(){try{
+  var html=document.documentElement;
+  var pref=localStorage.getItem('preferredLanguage');
+  var lang=(pref==='en'||pref==='de')?pref:'de';
+  html.setAttribute('data-lang',lang);
+  var wire=function(){
+    var langBtn=document.getElementById('lang-toggle');
+    if(langBtn){
+      var refresh=function(){
+        var cur=html.getAttribute('data-lang')||'de';
+        var next=cur==='de'?'en':'de';
+        langBtn.textContent=next.toUpperCase();
+        langBtn.setAttribute('aria-label',next==='en'?'Switch to English':'Auf Deutsch wechseln');
+      };
+      refresh();
+      langBtn.addEventListener('click',function(){
+        var cur=html.getAttribute('data-lang')||'de';
+        var next=cur==='de'?'en':'de';
+        html.setAttribute('data-lang',next);
+        try{localStorage.setItem('preferredLanguage',next);}catch(_){}
+        refresh();
+      });
+    }
+    var themeBtn=document.querySelector('button[aria-label^="Toggle theme"]');
+    if(themeBtn){
+      var CYCLE=['system','light','dark'];
+      var getTheme=function(){
+        var s=localStorage.getItem('theme');
+        return (s==='light'||s==='dark')?s:'system';
+      };
+      var applyTheme=function(t){
+        if(t==='system'){delete html.dataset.theme;try{localStorage.removeItem('theme');}catch(_){}}
+        else{html.dataset.theme=t;try{localStorage.setItem('theme',t);}catch(_){}}
+        themeBtn.setAttribute('aria-label','Toggle theme ('+t+')');
+        themeBtn.setAttribute('title','Theme: '+t);
+      };
+      themeBtn.addEventListener('click',function(){
+        var cur=getTheme();
+        var next=CYCLE[(CYCLE.indexOf(cur)+1)%CYCLE.length];
+        applyTheme(next);
+      });
+    }
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);
+  else wire();
+}catch(_){}})();
+</script>`;
+
 if (!existsSync(PRERENDER_DIR)) {
   console.error(`[error-page] missing prerender dir: ${PRERENDER_DIR}`);
   console.error('[error-page] is /errors/[status=httpStatus]/+page.ts setting `prerender = true` with `entries()`?');
@@ -82,6 +138,13 @@ function inline(html: string, pagePath: string): string {
   html = html.replace(/<a\b[^>]*\bclass="[^"]*\bhome-link\b[^"]*"[^>]*>/g, (tag) =>
     tag.replace(/\bhref="[^"]*"/, `href="${CANONICAL_HOME}"`)
   );
+
+  // Inject the language-toggle bootstrap script just before </head> so
+  // <html data-lang="…"> is set before the body paints (avoids flash of
+  // both languages). Idempotent — if the marker is already present, skip.
+  if (!html.includes(LANG_SCRIPT_MARKER)) {
+    html = html.replace('</head>', `${LANG_SCRIPT}</head>`);
+  }
   return html;
 }
 
