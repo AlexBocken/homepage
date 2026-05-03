@@ -20,17 +20,17 @@
     }
   })();
 
-  const title = getErrorTitle(status, false);
-  const description = getErrorDescription(status, false);
-  const quote = getErrorBibleQuote(status, false);
-  const otherLangHref = `https://bocken.org/errors/en/${status}.html`;
+  const titleDe = getErrorTitle(status, false);
+  const titleEn = getErrorTitle(status, true);
+  const descDe = getErrorDescription(status, false);
+  const descEn = getErrorDescription(status, true);
+  const quoteDe = getErrorBibleQuote(status, false);
+  const quoteEn = getErrorBibleQuote(status, true);
 </script>
 
 <svelte:head>
-  <title>{title} — Alexander's Website</title>
+  <title>{titleDe} — Alexander's Website</title>
   <meta name="robots" content="noindex" />
-  <link rel="alternate" hreflang="en" href={otherLangHref} />
-  <link rel="alternate" hreflang="de" href={`https://bocken.org/errors/${status}.html`} />
 </svelte:head>
 
 <Header>
@@ -39,32 +39,52 @@
   {/snippet}
 
   {#snippet language_selector_desktop()}
-    <a class="lang-toggle" href={otherLangHref} hreflang="en" aria-label="Switch to English">EN</a>
+    <button id="lang-toggle" type="button" class="lang-toggle" aria-label="Switch language">EN</button>
   {/snippet}
 
-  <main class="error-page" lang="de">
+  <main class="error-page">
     <article class="error-article">
       <header class="eyebrow">
         <Icon size={14} strokeWidth={1.5} aria-hidden="true" />
-        <span class="eyebrow-label">Fehler</span>
+        <span class="eyebrow-label" data-lang="de">Fehler</span>
+        <span class="eyebrow-label" data-lang="en">Error</span>
       </header>
 
       <div class="code" aria-hidden="true">{status}</div>
 
-      <h1 class="title">{title}</h1>
-      <p class="description">{description}</p>
+      <section data-lang="de" lang="de">
+        <h1 class="title">{titleDe}</h1>
+        <p class="description">{descDe}</p>
+        {#if quoteDe}
+          <figure class="quote">
+            <blockquote class="quote-text">„{quoteDe.text}“</blockquote>
+            <figcaption class="quote-reference">{quoteDe.reference}</figcaption>
+          </figure>
+        {/if}
+      </section>
 
-      {#if quote}
-        <figure class="quote">
-          <blockquote class="quote-text">„{quote.text}“</blockquote>
-          <figcaption class="quote-reference">{quote.reference}</figcaption>
-        </figure>
-      {/if}
+      <section data-lang="en" lang="en">
+        <h1 class="title">{titleEn}</h1>
+        <p class="description">{descEn}</p>
+        {#if quoteEn}
+          <figure class="quote">
+            <blockquote class="quote-text">“{quoteEn.text}”</blockquote>
+            <figcaption class="quote-reference">{quoteEn.reference}</figcaption>
+          </figure>
+        {/if}
+      </section>
     </article>
   </main>
 </Header>
 
 <style>
+  /* Visibility driven by <html data-lang="…">, set by an inline script
+     injected by scripts/build-error-page.ts. Default-language fallback
+     (no JS / no localStorage) shows German. */
+  :global(html[data-lang="de"]) [data-lang="en"] { display: none; }
+  :global(html[data-lang="en"]) [data-lang="de"] { display: none; }
+  :global(html:not([data-lang])) [data-lang="en"] { display: none; }
+
   .error-page {
     min-height: calc(100vh - 6rem);
     display: flex;
@@ -155,11 +175,13 @@
     padding: 0 0.6rem;
     border-radius: 100px;
     border: 1px solid var(--nav-btn-border, rgba(255,255,255,0.2));
+    background: transparent;
     color: var(--nav-text, #999);
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.05em;
     text-decoration: none;
+    cursor: pointer;
     transition: all 0.15s;
   }
   .lang-toggle:hover,
