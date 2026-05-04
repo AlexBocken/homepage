@@ -2,7 +2,7 @@ import { browser } from '$app/environment';
 import { isOfflineDataAvailable, getLastSync, clearOfflineData } from '$lib/offline/db';
 import { downloadAllRecipes, type SyncResult, type SyncProgress } from '$lib/offline/sync';
 
-const AUTO_SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+const AUTO_SYNC_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 1 week
 const LAST_SYNC_KEY = 'bocken-last-sync-time';
 
 type PWAState = {
@@ -152,12 +152,13 @@ function createPWAStore() {
 		startAutoSync() {
 			if (autoSyncInterval) return; // Already running
 
-			// Check every 5 minutes if we should sync
+			// Check hourly if we should sync — actual sync only fires once
+			// AUTO_SYNC_INTERVAL has elapsed since the last sync.
 			autoSyncInterval = setInterval(() => {
 				autoSync();
-			}, 5 * 60 * 1000); // Check every 5 minutes
+			}, 60 * 60 * 1000);
 
-			console.log('[PWA] Auto-sync enabled (every 30 minutes)');
+			console.log('[PWA] Auto-sync enabled (weekly)');
 		},
 
 		stopAutoSync() {

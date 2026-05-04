@@ -45,7 +45,6 @@ onNavigate((navigation) => {
 });
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-import OfflineSyncIndicator from '$lib/components/OfflineSyncIndicator.svelte';
 import BookOpen from '@lucide/svelte/icons/book-open';
 import Heart from '@lucide/svelte/icons/heart';
 import Leaf from '@lucide/svelte/icons/leaf';
@@ -134,12 +133,6 @@ const recipeCanonicalPath = $derived(recipeAltPath(page.url.pathname, /** @type 
 		<LanguageSelector lang={data.lang} />
 	{/snippet}
 
-	{#snippet logo_overlay()}
-		<div class="logo-pip">
-			<OfflineSyncIndicator lang={data.lang} />
-		</div>
-	{/snippet}
-
 	{#snippet right_side()}
 		<UserHeader {user} recipeLang={data.recipeLang} lang={data.lang}></UserHeader>
 	{/snippet}
@@ -147,12 +140,3 @@ const recipeCanonicalPath = $derived(recipeAltPath(page.url.pathname, /** @type 
 	{@render children()}
 </Header>
 
-<style>
-	:global(.logo-pip) {
-		position: absolute;
-		top: -8px;
-		right: -7px;
-		z-index: 2;
-		pointer-events: auto;
-	}
-</style>
