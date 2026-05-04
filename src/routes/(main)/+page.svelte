@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
 	import Seo from '$lib/components/Seo.svelte';
+	import OfflineSyncBanner from '$lib/components/OfflineSyncBanner.svelte';
 	import { onMount } from 'svelte';
 	let { data } = $props();
 
@@ -142,6 +143,8 @@ section h2{
 </div>
 </section>
 {/if}
+
+<OfflineSyncBanner {lang} />
 
 <section>
 
