@@ -1,35 +1,34 @@
 import { browser } from '$app/environment';
-import { error } from '@sveltejs/kit';
 import type { LayoutLoad } from './$types';
 
-export const load: LayoutLoad = async ({ params, data }) => {
-	// Validate recipeLang parameter
-	if (params.recipeLang !== 'rezepte' && params.recipeLang !== 'recipes') {
-		throw error(404, 'Not found');
-	}
-
+/** Universal load. Lives outside `+layout.server.ts` so the entire `[recipeLang]`
+ *  group can render without a `__data.json` round-trip — critical for offline:
+ *  if SvelteKit can't reach the network for the layout's server data, it errors
+ *  before the page-level offline fallback ever runs. Session is fetched from
+ *  the Auth.js `/auth/session` endpoint and gracefully nulled when offline.
+ */
+export const load: LayoutLoad = async ({ params, fetch }) => {
+	// recipeLang param matcher already restricts to 'rezepte'/'recipes'
 	const lang: 'en' | 'de' = params.recipeLang === 'recipes' ? 'en' : 'de';
+	const isClientOffline = browser && !navigator.onLine;
 
-	// Check if we're offline:
-	// 1. Browser reports offline (navigator.onLine === false)
-	// 2. Service worker returned offline flag (data.isOffline === true)
-	const isClientOffline = browser && (!navigator.onLine || (data as any)?.isOffline);
-
-	if (isClientOffline) {
-		// Return minimal data for offline mode
-		return {
-			session: null,
-			lang,
-			recipeLang: params.recipeLang,
-			isOffline: true
-		};
+	let session: { user?: unknown; expires?: string } | null = null;
+	if (!isClientOffline) {
+		try {
+			const res = await fetch('/auth/session');
+			if (res.ok) {
+				const body = await res.json();
+				session = body && (body.user || body.expires) ? body : null;
+			}
+		} catch {
+			// Auth endpoint unreachable — proceed as logged out
+		}
 	}
 
-	// Use server data when available (online mode)
 	return {
-		...data,
+		session,
 		lang,
 		recipeLang: params.recipeLang,
-		isOffline: false
+		isOffline: isClientOffline
 	};
 };

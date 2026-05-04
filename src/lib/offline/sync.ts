@@ -278,13 +278,14 @@ async function precacheThumbnails(
 	const registration = await navigator.serviceWorker.ready;
 	if (!registration.active) return;
 
-	// Collect all thumbnail URLs using mediapath (includes hash for cache busting)
+	// Collect all thumbnail URLs using mediapath (includes hash for cache busting).
+	// Absolute origin so dev/preview servers — which don't host /static/rezepte —
+	// fetch directly from production instead of 404ing on themselves.
 	const thumbnailUrls: string[] = [];
 	for (const recipe of recipes) {
 		if (recipe.images && recipe.images.length > 0) {
 			const mediapath = recipe.images[0].mediapath;
-			// Thumbnail path format: /static/rezepte/thumb/{mediapath}
-			thumbnailUrls.push(`/static/rezepte/thumb/${mediapath}`);
+			thumbnailUrls.push(`https://bocken.org/static/rezepte/thumb/${mediapath}`);
 		}
 	}
 

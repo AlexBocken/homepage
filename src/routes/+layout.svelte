@@ -40,6 +40,10 @@
 	onMount(() => {
 		const refresh = () => {
 			if (document.hidden) return;
+			// Skip when offline — invalidateAll() forces every load() to refetch,
+			// and a failed __data.json on a still-cached route renders the error
+			// page instead of the perfectly viewable cached content.
+			if (typeof navigator !== 'undefined' && !navigator.onLine) return;
 			const now = Date.now();
 			if (now - lastRefreshAt < REFRESH_MIN_GAP_MS) return;
 			lastRefreshAt = now;
