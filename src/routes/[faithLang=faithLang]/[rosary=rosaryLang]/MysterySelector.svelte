@@ -187,8 +187,11 @@
 }
 
 .season-eastertide .season-badge {
-	background: var(--color-bg-elevated);
-	color: var(--color-text-primary);
+	/* Liturgical white — fixed across themes so the badge stays white in
+	   dark mode (was rendering as muted grey via --color-bg-elevated).
+	   Pure #ffffff also pops harder against the off-white page bg in light. */
+	background: #ffffff;
+	color: var(--nord0);
 }
 </style>
 
