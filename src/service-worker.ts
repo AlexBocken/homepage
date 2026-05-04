@@ -7,11 +7,29 @@ import { build, files, version } from '$service-worker';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
-// Unique cache names
+// Build/static caches are version-suffixed because their entries are
+// hash-fingerprinted — old entries become dead weight after a deploy.
+// Pages/images caches use stable names so user-visible content survives
+// SW updates; otherwise every deploy wipes the offline shell and forces a
+// re-sync before the user can open the app offline again.
 const CACHE_BUILD = `cache-build-${version}`;
 const CACHE_STATIC = `cache-static-${version}`;
-const CACHE_IMAGES = `cache-images-${version}`;
-const CACHE_PAGES = `cache-pages-${version}`;
+const CACHE_IMAGES = `cache-images-v1`;
+const CACHE_PAGES = `cache-pages-v1`;
+
+// Shells precached on install so a fresh user (or one whose pages cache was
+// just wiped pre-stabilization) can open the app offline at start_url and
+// reach the recipe shell without a prior online visit.
+const PRECACHE_SHELLS = [
+	'/',
+	'/rezepte',
+	'/recipes',
+	'/rezepte/offline-shell',
+	'/recipes/offline-shell',
+	'/glaube',
+	'/faith',
+	'/fitness'
+];
 
 // Assets to precache
 const buildAssets = new Set(build);
@@ -30,6 +48,21 @@ sw.addEventListener('install', (event) => {
 						file === '/manifest.json'
 				);
 				return cache.addAll(smallStaticFiles);
+			}),
+			// Best-effort precache of shell pages — individual failures are
+			// non-fatal so a single 5xx can't break SW install.
+			caches.open(CACHE_PAGES).then(async (cache) => {
+				await Promise.allSettled(
+					PRECACHE_SHELLS.map(async (path) => {
+						try {
+							const res = await fetch(path, { credentials: 'same-origin' });
+							if (res.ok) await cache.put(path, res);
+						} catch {
+							// Network unavailable during install — shell will be cached
+							// on first online visit instead.
+						}
+					})
+				);
 			})
 		]).then(() => {
 			// Skip waiting to activate immediately
@@ -44,13 +77,13 @@ sw.addEventListener('activate', (event) => {
 			return Promise.all(
 				keys
 					.filter((key) => {
-						// Delete old caches
-						return (
-							key !== CACHE_BUILD &&
-							key !== CACHE_STATIC &&
-							key !== CACHE_IMAGES &&
-							key !== CACHE_PAGES
-						);
+						// Delete only stale build/static caches from prior versions.
+						// Stable pages/images caches are kept so offline data persists.
+						if (key === CACHE_BUILD || key === CACHE_STATIC) return false;
+						if (key === CACHE_IMAGES || key === CACHE_PAGES) return false;
+						return key.startsWith('cache-build-') || key.startsWith('cache-static-') ||
+							// Old per-version pages/images caches from before stabilization
+							key.startsWith('cache-pages-') || key.startsWith('cache-images-');
 					})
 					.map((key) => caches.delete(key))
 			);
@@ -142,7 +175,9 @@ sw.addEventListener('fetch', (event) => {
 						// Extract filename and try to find cached thumbnail
 						const filename = url.pathname.split('/').pop();
 						if (filename) {
-							const thumbUrl = `/static/rezepte/thumb/${filename}`;
+							// Match the absolute origin used by sync.ts — keys are stored
+							// as the full URL so cross-origin requests in dev resolve too.
+							const thumbUrl = `https://bocken.org/static/rezepte/thumb/${filename}`;
 							const thumbCached = await cache.match(thumbUrl);
 							if (thumbCached) {
 								return thumbCached;
@@ -323,20 +358,22 @@ sw.addEventListener('message', (event) => {
 				const batch = urls.slice(i, i + batchSize);
 
 				await Promise.all(
-					batch.map((url) =>
-						fetch(url)
-							.then((response) => {
-								if (response.ok) {
-									return cache.put(url, response);
-								}
-							})
-							.catch(() => {
-								// Ignore failed image fetches
-							})
-							.finally(() => {
-								completed++;
-							})
-					)
+					batch.map(async (url) => {
+						try {
+							// Recipe image URLs embed a content hash
+							// (e.g. /static/rezepte/thumb/<slug>.<hash>.webp), so a cache
+							// hit on the exact URL guarantees the bytes haven't changed.
+							// Skip the network round-trip when already cached.
+							const cached = await cache.match(url);
+							if (cached) return;
+							const response = await fetch(url);
+							if (response.ok) await cache.put(url, response);
+						} catch {
+							// Ignore failed image fetches
+						} finally {
+							completed++;
+						}
+					})
 				);
 
 				// Report progress after each batch

@@ -4,39 +4,58 @@ import { getBriefRecipesOverlappingMonth, isOfflineDataAvailable } from '$lib/of
 import { rand_array } from '$lib/js/randomize';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ data, params }) => {
-	// On the server, just pass through the server data unchanged
-	if (!browser) {
-		return {
-			...data,
-			isOffline: false
-		};
-	}
+function addFavoriteStatus<T extends { _id: unknown }>(
+	recipes: T[],
+	favorites: string[]
+): Array<T & { isFavorite: boolean }> {
+	if (!Array.isArray(recipes)) return [];
+	return recipes.map((r) => ({
+		...r,
+		isFavorite: favorites.some((id) => id.toString() === (r._id as { toString(): string }).toString())
+	}));
+}
 
-	// On the client, check if we need to load from IndexedDB
-	const shouldUseOfflineData = (isOffline() || (data as any)?.isOffline || !data?.season?.length) && canUseOfflineData();
+export const load: PageLoad = async ({ params, fetch, parent }) => {
+	const parentData = await parent();
+	const month = parseInt(params.month, 10);
+	const apiBase = `/api/${params.recipeLang}`;
+	const useOfflineData =
+		browser && (isOffline() || parentData.isOffline) && canUseOfflineData();
 
-	if (shouldUseOfflineData) {
+	if (useOfflineData) {
 		try {
-			const hasOfflineData = await isOfflineDataAvailable();
-			if (hasOfflineData) {
-				const month = parseInt(params.month);
+			if (await isOfflineDataAvailable()) {
 				const recipes = await getBriefRecipesOverlappingMonth(month);
-
 				return {
-					...data,
+					month,
 					season: rand_array(recipes),
 					isOffline: true
 				};
 			}
-		} catch (error) {
-			console.error('Failed to load offline data:', error);
+		} catch (e) {
+			console.error('Failed to load offline season data:', e);
 		}
 	}
 
-	// Return server data as-is
+	let item_season: Array<{ _id: unknown }> = [];
+	let favorites: string[] = [];
+	try {
+		const [seasonRes, favRes] = await Promise.all([
+			fetch(`${apiBase}/items/in_season/${month}`),
+			fetch(`${apiBase}/favorites`).catch(() => null)
+		]);
+		if (seasonRes.ok) item_season = await seasonRes.json();
+		if (favRes && favRes.ok) {
+			const body = await favRes.json();
+			favorites = body.favorites ?? [];
+		}
+	} catch {
+		// Empty arrays — page will render with no recipes
+	}
+
 	return {
-		...data,
+		month,
+		season: addFavoriteStatus(item_season, favorites),
 		isOffline: false
 	};
 };

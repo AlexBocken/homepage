@@ -2,49 +2,71 @@ import { browser } from '$app/environment';
 import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
 import { getAllBriefRecipes, getBriefRecipesInSeasonOn, isOfflineDataAvailable } from '$lib/offline/db';
 import { rand_array } from '$lib/js/randomize';
+import { isRecipeInSeason } from '$lib/js/seasonRange';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ data }) => {
-	// On the server, just pass through the server data unchanged
-	if (!browser) {
-		return {
-			...data,
-			isOffline: false
-		};
-	}
+function addFavoriteStatus<T extends { _id: unknown }>(
+	recipes: T[],
+	favorites: string[]
+): Array<T & { isFavorite: boolean }> {
+	if (!Array.isArray(recipes)) return [];
+	return recipes.map((r) => ({
+		...r,
+		isFavorite: favorites.some((id) => id.toString() === (r._id as { toString(): string }).toString())
+	}));
+}
 
-	// On the client, check if we need to load from IndexedDB
-	// This happens when:
-	// 1. We're offline (navigator.onLine is false)
-	// 2. Service worker returned offline flag
-	// 3. Server data is missing (e.g., client-side navigation while offline)
-	const shouldUseOfflineData = (isOffline() || (data as any)?.isOffline || !data?.all_brief?.length) && canUseOfflineData();
+export const load: PageLoad = async ({ params, fetch, parent }) => {
+	const parentData = await parent();
+	const apiBase = `/api/${params.recipeLang}`;
+	const useOfflineData =
+		browser && (isOffline() || parentData.isOffline) && canUseOfflineData();
 
-	if (shouldUseOfflineData) {
+	if (useOfflineData) {
 		try {
-			const hasOfflineData = await isOfflineDataAvailable();
-			if (hasOfflineData) {
+			if (await isOfflineDataAvailable()) {
 				const [allBrief, seasonRecipes] = await Promise.all([
 					getAllBriefRecipes(),
 					getBriefRecipesInSeasonOn(new Date())
 				]);
-
 				return {
-					...data,
 					all_brief: rand_array(allBrief),
 					season: rand_array(seasonRecipes),
 					heroIndex: Math.random(),
 					isOffline: true
 				};
 			}
-		} catch (error) {
-			console.error('Failed to load offline data:', error);
+		} catch (e) {
+			console.error('Failed to load offline data:', e);
 		}
 	}
 
-	// Return server data as-is
+	let all_brief: Array<{ _id: unknown; icon?: string }> = [];
+	let favorites: string[] = [];
+	try {
+		const [briefRes, favRes] = await Promise.all([
+			fetch(`${apiBase}/items/all_brief`),
+			fetch(`${apiBase}/favorites`).catch(() => null)
+		]);
+		if (briefRes.ok) all_brief = await briefRes.json();
+		if (favRes && favRes.ok) {
+			const body = await favRes.json();
+			favorites = body.favorites ?? [];
+		}
+	} catch {
+		// Network unreachable — empty data; +page.svelte renders fallback layout.
+	}
+
+	const marked = addFavoriteStatus(all_brief, favorites);
+	const today = new Date();
+	const season = marked.filter(
+		(r) => r.icon !== '🍽️' && isRecipeInSeason(r as Parameters<typeof isRecipeInSeason>[0], today)
+	);
+
 	return {
-		...data,
+		all_brief: marked,
+		season,
+		heroIndex: Math.random(),
 		isOffline: false
 	};
 };
