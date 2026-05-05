@@ -2,6 +2,7 @@
 import { browser } from '$app/environment';
 import { getAngelusStreak, getCurrentTimeSlot, type TimeSlot } from '$lib/stores/angelusStreak.svelte';
 import StreakAura from '$lib/components/faith/StreakAura.svelte';
+import StreakInfoButton from '$lib/components/faith/StreakInfoButton.svelte';
 import Coffee from '@lucide/svelte/icons/coffee';
 import Sun from '@lucide/svelte/icons/sun';
 import Moon from '@lucide/svelte/icons/moon';
@@ -91,6 +92,7 @@ async function pray() {
 </script>
 
 <div class="angelus-streak">
+	<StreakInfoButton {lang} />
 	<div class="streak-display">
 		<StreakAura value={displayStreak} {burst}>
 			<span class="number">
@@ -146,6 +148,8 @@ async function pray() {
 	border-radius: 12px;
 	width: fit-content;
 	margin: 1.5rem auto;
+	/* Anchor for the absolute-positioned StreakInfoButton pip */
+	position: relative;
 }
 
 .streak-display {

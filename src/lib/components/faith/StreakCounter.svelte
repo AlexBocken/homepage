@@ -2,6 +2,7 @@
 import { browser } from '$app/environment';
 import { getRosaryStreak } from '$lib/stores/rosaryStreak.svelte';
 import StreakAura from '$lib/components/faith/StreakAura.svelte';
+import StreakInfoButton from '$lib/components/faith/StreakInfoButton.svelte';
 import { m, type FaithLang } from '$lib/js/faithI18n';
 import { tick, onMount } from 'svelte';
 
@@ -42,6 +43,7 @@ async function pray() {
 </script>
 
 <div class="streak-container" class:no-js-hidden={!isLoggedIn}>
+	<StreakInfoButton {lang} />
 	<div class="streak-display">
 		<StreakAura value={displayLength} {burst} />
 		<span class="streak-label">{dayLabel}</span>
@@ -72,6 +74,8 @@ async function pray() {
 	background: var(--nord1);
 	border-radius: 12px;
 	width: fit-content;
+	/* Anchor for the absolute-positioned StreakInfoButton pip */
+	position: relative;
 }
 
 @media (prefers-color-scheme: light) {
