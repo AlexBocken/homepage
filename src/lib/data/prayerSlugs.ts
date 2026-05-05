@@ -21,4 +21,10 @@ export const validPrayerSlugs = new Set([
 	'tantum-ergo',
 	'angelus',
 	'regina-caeli',
+	'jungfrau-mutter-gottes-mein', 'virgin-mother-of-god',
+	'o-meine-gebieterin', 'o-my-queen',
+	'gedenke-o-guetigste-jungfrau-maria', 'memorare',
+	'hilf-maria-es-ist-zeit', 'help-mary',
+	'tischgebet-vor-dem-essen', 'grace-before-meals',
+	'tischgebet-nach-dem-essen', 'grace-after-meals',
 ]);

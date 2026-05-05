@@ -28,6 +28,12 @@
 	import AnimaChristi from "$lib/components/faith/prayers/AnimaChristi.svelte";
 	import PrayerBeforeACrucifix from "$lib/components/faith/prayers/PrayerBeforeACrucifix.svelte";
 	import Postcommunio from "$lib/components/faith/prayers/Postcommunio.svelte";
+	import JungfrauMutterGottes from "$lib/components/faith/prayers/JungfrauMutterGottes.svelte";
+	import ODominaMea from "$lib/components/faith/prayers/ODominaMea.svelte";
+	import Memorare from "$lib/components/faith/prayers/Memorare.svelte";
+	import HilfMaria from "$lib/components/faith/prayers/HilfMaria.svelte";
+	import TischgebetVor from "$lib/components/faith/prayers/TischgebetVor.svelte";
+	import TischgebetNach from "$lib/components/faith/prayers/TischgebetNach.svelte";
 	import Prayer from "$lib/components/faith/prayers/Prayer.svelte";
 	import { isEastertide as checkEastertide } from "$lib/js/easter.svelte";
 
@@ -79,17 +85,24 @@
 		apostlesCreed: t.apostles_creed,
 		tantumErgo: 'Tantum Ergo',
 		angelus: 'Angelus',
-		reginaCaeli: 'Regína Cæli'
+		reginaCaeli: 'Regína Cæli',
+		jungfrauMutter: t.jungfrau_mutter_prayer,
+		oMyQueen: t.o_my_queen_prayer,
+		memorare: t.memorare_prayer,
+		hilfMaria: t.hilf_maria_prayer,
+		tischgebetVor: t.grace_before_meals,
+		tischgebetNach: t.grace_after_meals
 	});
 
-	// TODO: Add categories: 'meal' (Tischgebete/Meal) and 'morning_evening' (Morgen-/Abendgebete/Morning & Evening)
-	// when corresponding prayers are added to the collection
+	// TODO: Add 'morning_evening' (Morgen-/Abendgebete/Morning & Evening)
+	// category when corresponding prayers are added to the collection
 
 	const categories = [
 		{ id: 'essential', de: 'Grundgebete', en: 'Essential', la: 'Fundamentales' },
 		{ id: 'marian', de: 'Marianisch', en: 'Marian', la: 'Mariana' },
 		{ id: 'saints', de: 'Heilige', en: 'Saints', la: 'Sancti' },
 		{ id: 'eucharistic', de: 'Eucharistie', en: 'Eucharistic', la: 'Eucharistica' },
+		{ id: 'meal', de: 'Tischgebete', en: 'Meal', la: 'Mensae' },
 		{ id: 'praise', de: 'Lobpreis', en: 'Praise', la: 'Laudatio' },
 		{ id: 'penitential', de: 'Busse', en: 'Penitential', la: 'Paenitentialia' },
 	];
@@ -115,6 +128,12 @@
 		animachristi: ['eucharistic'],
 		prayerbeforeacrucifix: ['eucharistic', 'penitential'],
 		postcommunio: ['eucharistic'],
+		jungfrauMutter: ['marian'],
+		oMyQueen: ['marian'],
+		memorare: ['marian'],
+		hilfMaria: ['marian'],
+		tischgebetVor: ['meal'],
+		tischgebetNach: ['meal'],
 	};
 
 	// svelte-ignore state_referenced_locally
@@ -170,7 +189,13 @@
 		{ id: 'reginaCaeli', searchTerms: ['regina caeli', 'regina coeli', 'himmelskönigin', 'queen of heaven'], slug: 'regina-caeli' },
 		{ id: 'animachristi', searchTerms: ['anima christi', 'seele christi', 'soul of christ'], slug: 'anima-christi' },
 		{ id: 'prayerbeforeacrucifix', searchTerms: ['kruzifix', 'crucifix', 'kreuz', 'cross', 'en ego'], slug: isEnglish ? 'prayer-before-a-crucifix' : 'gebet-vor-einem-kruzifix' },
-		{ id: 'postcommunio', searchTerms: ['postcommunio', 'nachkommunion', 'kommunion', 'communion'], slug: 'postcommunio' }
+		{ id: 'postcommunio', searchTerms: ['postcommunio', 'nachkommunion', 'kommunion', 'communion'], slug: 'postcommunio' },
+		{ id: 'jungfrauMutter', searchTerms: ['jungfrau mutter gottes', 'maria hilft immer', 'virgin mother of god'], slug: isEnglish ? 'virgin-mother-of-god' : 'jungfrau-mutter-gottes-mein' },
+		{ id: 'oMyQueen', searchTerms: ['o domina mea', 'gebieterin', 'o my queen', 'queen mother'], slug: isEnglish ? 'o-my-queen' : 'o-meine-gebieterin' },
+		{ id: 'memorare', searchTerms: ['memorare', 'gedenke', 'remember o most gracious', 'bernard'], slug: isEnglish ? 'memorare' : 'gedenke-o-guetigste-jungfrau-maria' },
+		{ id: 'hilfMaria', searchTerms: ['hilf maria', 'help mary', 'mutter der barmherzigkeit'], slug: isEnglish ? 'help-mary' : 'hilf-maria-es-ist-zeit' },
+		{ id: 'tischgebetVor', searchTerms: ['tischgebet vor', 'grace before meals', 'benedic domine', 'aller augen', 'komm herr jesus'], slug: isEnglish ? 'grace-before-meals' : 'tischgebet-vor-dem-essen' },
+		{ id: 'tischgebetNach', searchTerms: ['tischgebet nach', 'grace after meals', 'agimus tibi gratias', 'wir danken dir'], slug: isEnglish ? 'grace-after-meals' : 'tischgebet-nach-dem-essen' }
 	]);
 
 	// Base URL for prayer links
@@ -202,7 +227,13 @@
 			reginaCaeli: labels.reginaCaeli,
 			animachristi: labels.animachristi,
 			prayerbeforeacrucifix: labels.prayerbeforeacrucifix,
-			postcommunio: labels.postcommunio
+			postcommunio: labels.postcommunio,
+			jungfrauMutter: labels.jungfrauMutter,
+			oMyQueen: labels.oMyQueen,
+			memorare: labels.memorare,
+			hilfMaria: labels.hilfMaria,
+			tischgebetVor: labels.tischgebetVor,
+			tischgebetNach: labels.tischgebetNach
 		};
 		return /** @type {Record<string, string>} */(nameMap)[id] || id;
 	}
@@ -325,7 +356,13 @@
 		reginaCaeli: { bilingue: true },
 		animachristi: { bilingue: true },
 		prayerbeforeacrucifix: { bilingue: true },
-		postcommunio: { bilingue: true }
+		postcommunio: { bilingue: true },
+		jungfrauMutter: { bilingue: false },
+		oMyQueen: { bilingue: true },
+		memorare: { bilingue: true },
+		hilfMaria: { bilingue: false },
+		tischgebetVor: { bilingue: true },
+		tischgebetNach: { bilingue: true }
 	};
 
 	const isEastertide = $derived(checkEastertide());
@@ -471,15 +508,23 @@ h1{
 :global(:root[data-theme="light"]) .postcommunio-section {
 	background-color: var(--nord5);
 }
-/* Seasonal badge */
+/* Anchor for the absolute-positioned seasonal-badge below */
+:global(.prayer-wrapper .gebet_wrapper) {
+	position: relative;
+}
+/* Seasonal badge — pinned top-right of the prayer card to match the
+   placement of the same badge on the rosary mystery cards */
 .seasonal-badge {
-	display: inline-block;
-	margin-top: 0.5em;
-	padding: 0.2em 0.7em;
+	position: absolute;
+	top: 0.75rem;
+	right: 0.75rem;
+	padding: 0.25em 0.7em;
 	font-size: 0.75em;
-	border-radius: 999px;
+	font-weight: 700;
+	border-radius: var(--radius-sm);
 	background-color: var(--nord14);
 	color: var(--nord0);
+	z-index: 1;
 }
 
 /* Search is hidden without JS */
@@ -575,6 +620,18 @@ h1{
 				<Gloria intro={true} />
 			{:else if prayer.id === 'postcommunio'}
 				<Postcommunio onlyIntro={true} />
+			{:else if prayer.id === 'jungfrauMutter'}
+				<JungfrauMutterGottes />
+			{:else if prayer.id === 'oMyQueen'}
+				<ODominaMea />
+			{:else if prayer.id === 'memorare'}
+				<Memorare />
+			{:else if prayer.id === 'hilfMaria'}
+				<HilfMaria />
+			{:else if prayer.id === 'tischgebetVor'}
+				<TischgebetVor />
+			{:else if prayer.id === 'tischgebetNach'}
+				<TischgebetNach />
 			{/if}
 			{#if prayer.id === 'reginaCaeli' && isEastertide}
 				<span class="seasonal-badge">{t.eastertide_badge}</span>

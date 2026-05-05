@@ -22,6 +22,12 @@
 	import TantumErgo from "$lib/components/faith/prayers/TantumErgo.svelte";
 	import AngelusComponent from "$lib/components/faith/prayers/Angelus.svelte";
 	import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
+	import JungfrauMutterGottes from "$lib/components/faith/prayers/JungfrauMutterGottes.svelte";
+	import ODominaMea from "$lib/components/faith/prayers/ODominaMea.svelte";
+	import Memorare from "$lib/components/faith/prayers/Memorare.svelte";
+	import HilfMaria from "$lib/components/faith/prayers/HilfMaria.svelte";
+	import TischgebetVor from "$lib/components/faith/prayers/TischgebetVor.svelte";
+	import TischgebetNach from "$lib/components/faith/prayers/TischgebetNach.svelte";
 	import StickyImage from "$lib/components/faith/StickyImage.svelte";
 	import AngelusStreakCounter from "$lib/components/faith/AngelusStreakCounter.svelte";
 	import { m, faithSlugFromLang, prayersSlug } from '$lib/js/faithI18n';
@@ -79,7 +85,19 @@
 		'apostles-creed': { id: 'apostlesCreed', name: t.apostles_creed, bilingue: true },
 		'tantum-ergo': { id: 'tantumErgo', name: 'Tantum Ergo', bilingue: true },
 		'angelus': { id: 'angelus', name: 'Angelus', bilingue: true },
-		'regina-caeli': { id: 'reginaCaeli', name: 'Regína Cæli', bilingue: true }
+		'regina-caeli': { id: 'reginaCaeli', name: 'Regína Cæli', bilingue: true },
+		'jungfrau-mutter-gottes-mein': { id: 'jungfrauMutter', name: t.jungfrau_mutter_prayer, bilingue: false },
+		'virgin-mother-of-god': { id: 'jungfrauMutter', name: t.jungfrau_mutter_prayer, bilingue: false },
+		'o-meine-gebieterin': { id: 'oMyQueen', name: t.o_my_queen_prayer, bilingue: true },
+		'o-my-queen': { id: 'oMyQueen', name: t.o_my_queen_prayer, bilingue: true },
+		'gedenke-o-guetigste-jungfrau-maria': { id: 'memorare', name: t.memorare_prayer, bilingue: true },
+		'memorare': { id: 'memorare', name: t.memorare_prayer, bilingue: true },
+		'hilf-maria-es-ist-zeit': { id: 'hilfMaria', name: t.hilf_maria_prayer, bilingue: false },
+		'help-mary': { id: 'hilfMaria', name: t.hilf_maria_prayer, bilingue: false },
+		'tischgebet-vor-dem-essen': { id: 'tischgebetVor', name: t.grace_before_meals, bilingue: true },
+		'grace-before-meals': { id: 'tischgebetVor', name: t.grace_before_meals, bilingue: true },
+		'tischgebet-nach-dem-essen': { id: 'tischgebetNach', name: t.grace_after_meals, bilingue: true },
+		'grace-after-meals': { id: 'tischgebetNach', name: t.grace_after_meals, bilingue: true }
 	});
 
 	const prayer = $derived(/** @type {Record<string, {id: string, name: string, bilingue: boolean}>} */(prayerDefs)[data.prayer]);
@@ -279,6 +297,18 @@ h1 {
 				<AngelusComponent verbose={true} />
 			{:else if prayerId === 'reginaCaeli'}
 				<ReginaCaeli />
+			{:else if prayerId === 'jungfrauMutter'}
+				<JungfrauMutterGottes />
+			{:else if prayerId === 'oMyQueen'}
+				<ODominaMea />
+			{:else if prayerId === 'memorare'}
+				<Memorare />
+			{:else if prayerId === 'hilfMaria'}
+				<HilfMaria />
+			{:else if prayerId === 'tischgebetVor'}
+				<TischgebetVor />
+			{:else if prayerId === 'tischgebetNach'}
+				<TischgebetNach />
 			{/if}
 		</div>
 	</div>
