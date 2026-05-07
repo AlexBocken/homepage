@@ -80,5 +80,23 @@
 		{#if urlLang === 'de'}<v lang="de">„Maria hilft mir in den Himmel hinauf."</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">"Mary helps me up into heaven."</v>{/if}
 	</p>
+	<p>
+		{#if urlLang === 'de'}<v lang="de">Jungfrau, Mutter Gottes mein,</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">Virgin, Mother of God of mine,</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">lass mich ganz dein Eigen sein!</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">let me be wholly thine own!</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">Dein im Leben, dein im Tod,</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">Thine in life, thine in death,</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">dein in Unglück, Angst und Not;</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">thine in misfortune, fear and need;</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">dein in Kreuz und bitt'rem Leid,</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">thine in cross and bitter sorrow,</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">dein für Zeit und Ewigkeit.</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">thine for time and eternity.</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">Jungfrau, Mutter Gottes mein,</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">Virgin, Mother of God of mine,</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">lass mich ganz dein Eigen sein!</v>{/if}
+		{#if urlLang === 'en'}<v lang="en">let me be wholly thine own!</v>{/if}
+	</p>
 	{/snippet}
 </Prayer>
