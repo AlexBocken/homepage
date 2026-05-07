@@ -117,30 +117,34 @@ sw.addEventListener('fetch', (event) => {
 				// SvelteKit adds ?x-sveltekit-invalidated=... which we need to ignore
 				const cacheKey = url.pathname;
 
+				let response: Response | undefined;
 				try {
-					// Try network first
-					const response = await fetch(event.request);
-
-					// Cache successful responses for offline use (using pathname as key)
-					if (response.ok) {
-						cache.put(cacheKey, response.clone());
-					}
-
-					return response;
+					response = await fetch(event.request);
 				} catch {
-					// Network failed - try to serve from cache (ignoring query params)
-					const cached = await cache.match(cacheKey);
-					if (cached) {
-						return cached;
-					}
-
-					// No cached data available - return error response
-					// The page will need to handle this gracefully
-					return new Response(JSON.stringify({ error: 'offline' }), {
-						status: 503,
-						headers: { 'Content-Type': 'application/json' }
-					});
+					// Network unreachable — fall through to cache fallback below.
 				}
+
+				// Cache successful responses for offline use (using pathname as key)
+				if (response?.ok) {
+					cache.put(cacheKey, response.clone());
+					return response;
+				}
+
+				// Network unreachable OR upstream 5xx (502/503/504 etc.) — serve
+				// stale cached data so the PWA stays usable when the origin is down.
+				if (!response || response.status >= 500) {
+					const cached = await cache.match(cacheKey);
+					if (cached) return cached;
+				}
+
+				// Pass through non-5xx errors (404, 401, ...) untouched.
+				if (response) return response;
+
+				// No response and no cache — synthetic offline error.
+				return new Response(JSON.stringify({ error: 'offline' }), {
+					status: 503,
+					headers: { 'Content-Type': 'application/json' }
+				});
 			})()
 		);
 		return;
@@ -222,26 +226,31 @@ sw.addEventListener('fetch', (event) => {
 				// Use pathname only for cache key (ignore query params)
 				const cacheKey = url.pathname;
 
+				let response: Response | undefined;
 				try {
-					// Try network first
-					const response = await fetch(event.request);
+					response = await fetch(event.request);
+				} catch {
+					// Network unreachable — fall through to fallback below.
+				}
 
-					// Cache successful HTML responses for cacheable pages (using pathname as key)
-					const isCacheablePage = response.ok && (
+				// Cache successful HTML responses for cacheable pages (using pathname as key)
+				if (response?.ok) {
+					const isCacheablePage =
 						url.pathname.match(/^\/(rezepte|recipes|glaube|faith|fitness)(\/|$)/) ||
-						url.pathname === '/'
-					);
+						url.pathname === '/';
 					if (isCacheablePage) {
 						cache.put(cacheKey, response.clone());
 					}
-
 					return response;
-				} catch {
-					// Network failed - try to serve from cache (ignoring query params)
+				}
+
+				// Network unreachable OR upstream 5xx (502 Bad Gateway, 503, 504, ...) —
+				// serve stale shell so the PWA stays usable when the origin is down.
+				const upstreamDown = !response || response.status >= 500;
+
+				if (upstreamDown) {
 					const cached = await cache.match(cacheKey);
-					if (cached) {
-						return cached;
-					}
+					if (cached) return cached;
 
 					// For recipe routes, redirect to the offline shell with the target URL
 					// The offline shell will then do client-side navigation to load from IndexedDB
@@ -262,10 +271,14 @@ sw.addEventListener('fetch', (event) => {
 							return Response.redirect(redirectUrl, 302);
 						}
 					}
+				}
 
-					// Last resort - return a styled offline response
-					return new Response(
-						`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Offline</title><style>
+				// Pass through non-5xx errors (404, 401, ...) untouched.
+				if (response && !upstreamDown) return response;
+
+				// Last resort - return a styled offline response
+				return new Response(
+					`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Offline</title><style>
 *{box-sizing:border-box;margin:0;font-family:Helvetica,Arial,sans-serif}
 body{background:#f8f6f1;color:#2a2a2a;min-height:100svh;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
 nav{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));z-index:100;display:flex;align-items:center;justify-content:center;height:3rem;padding:0 1.2rem;margin:12px auto 0;width:fit-content;max-width:calc(100% - 1.5rem);border-radius:100px;background:rgba(46,52,64,0.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);box-shadow:0 4px 24px rgba(0,0,0,0.25)}
@@ -297,9 +310,8 @@ p{color:#aaa}
 <p class="hint">Install the <a href="https://bocken.org/static/Bocken.apk">Android app</a> or add this site to your home screen to browse offline.</p>
 </main>
 </body></html>`,
-						{ headers: { 'Content-Type': 'text/html' } }
-					);
-				}
+					{ headers: { 'Content-Type': 'text/html' } }
+				);
 			})()
 		);
 		return;
