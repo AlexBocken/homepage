@@ -16,7 +16,7 @@
 		langStore = null;
 	}
 
-	let showLatin = $derived(showLatinStore ? $showLatinStore : true);
+	let showLatin = $derived(hasLatin === false ? false : (showLatinStore ? $showLatinStore : true));
 	let urlLang = $derived(langStore ? $langStore : 'de');
 </script>
 

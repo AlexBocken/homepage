@@ -202,7 +202,7 @@ h1 {
 
 <h1>{prayerName}</h1>
 
-	{#if !isLatin}
+	{#if !isLatin && isBilingue}
 	<div class="toggle-controls">
 		<LanguageToggle
 			initialLatin={data.initialLatin}
@@ -243,7 +243,7 @@ h1 {
 <div class="container">
 	<h1>{prayerName}</h1>
 
-	{#if !isLatin}
+	{#if !isLatin && isBilingue}
 	<div class="toggle-controls">
 		<LanguageToggle
 			initialLatin={data.initialLatin}
