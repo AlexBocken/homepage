@@ -33,6 +33,7 @@ export const en = {
 	weight: "Weight",
 	history_title: "History",
 	no_workouts_yet: "No workouts yet. Start your first workout!",
+	unsynced_label: "Unsynced",
 	load_more: "Load more",
 	date: "Date",
 	time: "Time",

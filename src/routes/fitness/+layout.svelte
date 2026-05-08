@@ -34,12 +34,14 @@
 			'workout', 'training', 'workout/active', 'training/aktiv',
 			'exercises', 'uebungen', 'stats', 'statistik',
 			'history', 'verlauf', 'check-in', 'erfassung',
-			'nutrition', 'ernaehrung'
+			'nutrition', 'ernaehrung',
+			'nutrition/meals', 'ernaehrung/meals',
+			'check-in/body-parts', 'erfassung/body-parts'
 		];
-		const urls = slugs.map((s) => `/fitness/${s}`);
+		const urls = ['/fitness', ...slugs.map((s) => `/fitness/${s}`)];
 		navigator.serviceWorker.controller.postMessage({ type: 'CACHE_PAGES', urls });
 		// Also cache __data.json for client-side navigation
-		const dataUrls = slugs.map((s) => `/fitness/${s}/__data.json`);
+		const dataUrls = ['/fitness/__data.json', ...slugs.map((s) => `/fitness/${s}/__data.json`)];
 		navigator.serviceWorker.controller.postMessage({ type: 'CACHE_DATA', urls: dataUrls });
 	}
 
