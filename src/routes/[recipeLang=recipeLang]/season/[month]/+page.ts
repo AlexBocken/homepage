@@ -15,23 +15,28 @@ function addFavoriteStatus<T extends { _id: unknown }>(
 	}));
 }
 
+async function loadFromIndexedDB(month: number) {
+	if (!await isOfflineDataAvailable()) return null;
+	const recipes = await getBriefRecipesOverlappingMonth(month);
+	return {
+		month,
+		season: rand_array(recipes),
+		isOffline: true as const
+	};
+}
+
 export const load: PageLoad = async ({ params, fetch, parent }) => {
 	const parentData = await parent();
 	const month = parseInt(params.month, 10);
 	const apiBase = `/api/${params.recipeLang}`;
-	const useOfflineData =
-		browser && (isOffline() || parentData.isOffline) && canUseOfflineData();
+	const canUseOffline = browser && canUseOfflineData();
+	const knownOffline = browser && (isOffline() || parentData.isOffline);
 
-	if (useOfflineData) {
+	// Skip the network entirely when device is known offline.
+	if (canUseOffline && knownOffline) {
 		try {
-			if (await isOfflineDataAvailable()) {
-				const recipes = await getBriefRecipesOverlappingMonth(month);
-				return {
-					month,
-					season: rand_array(recipes),
-					isOffline: true
-				};
-			}
+			const offline = await loadFromIndexedDB(month);
+			if (offline) return offline;
 		} catch (e) {
 			console.error('Failed to load offline season data:', e);
 		}
@@ -50,7 +55,18 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
 			favorites = body.favorites ?? [];
 		}
 	} catch {
-		// Empty arrays — page will render with no recipes
+		// Network unreachable — IndexedDB fallback below picks up the slack.
+	}
+
+	// API failed or returned empty (502, slow cellular, server hiccup) — fall
+	// back to IndexedDB so the cached PWA shell stays useful.
+	if (canUseOffline && !item_season.length) {
+		try {
+			const offline = await loadFromIndexedDB(month);
+			if (offline) return offline;
+		} catch (e) {
+			console.error('Failed to load offline season data:', e);
+		}
 	}
 
 	return {
