@@ -16,26 +16,31 @@ function addFavoriteStatus<T extends { _id: unknown }>(
 	}));
 }
 
+async function loadFromIndexedDB() {
+	if (!await isOfflineDataAvailable()) return null;
+	const [allBrief, seasonRecipes] = await Promise.all([
+		getAllBriefRecipes(),
+		getBriefRecipesInSeasonOn(new Date())
+	]);
+	return {
+		all_brief: rand_array(allBrief),
+		season: rand_array(seasonRecipes),
+		heroIndex: Math.random(),
+		isOffline: true as const
+	};
+}
+
 export const load: PageLoad = async ({ params, fetch, parent }) => {
 	const parentData = await parent();
 	const apiBase = `/api/${params.recipeLang}`;
-	const useOfflineData =
-		browser && (isOffline() || parentData.isOffline) && canUseOfflineData();
+	const canUseOffline = browser && canUseOfflineData();
+	const knownOffline = browser && (isOffline() || parentData.isOffline);
 
-	if (useOfflineData) {
+	// Skip the network entirely when device is known offline.
+	if (canUseOffline && knownOffline) {
 		try {
-			if (await isOfflineDataAvailable()) {
-				const [allBrief, seasonRecipes] = await Promise.all([
-					getAllBriefRecipes(),
-					getBriefRecipesInSeasonOn(new Date())
-				]);
-				return {
-					all_brief: rand_array(allBrief),
-					season: rand_array(seasonRecipes),
-					heroIndex: Math.random(),
-					isOffline: true
-				};
-			}
+			const offline = await loadFromIndexedDB();
+			if (offline) return offline;
 		} catch (e) {
 			console.error('Failed to load offline data:', e);
 		}
@@ -54,7 +59,18 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
 			favorites = body.favorites ?? [];
 		}
 	} catch {
-		// Network unreachable — empty data; +page.svelte renders fallback layout.
+		// Network unreachable — IndexedDB fallback below picks up the slack.
+	}
+
+	// API failed or returned empty (502, slow cellular, server hiccup) — fall
+	// back to IndexedDB so the cached PWA shell stays useful.
+	if (canUseOffline && !all_brief.length) {
+		try {
+			const offline = await loadFromIndexedDB();
+			if (offline) return offline;
+		} catch (e) {
+			console.error('Failed to load offline data:', e);
+		}
 	}
 
 	const marked = addFavoriteStatus(all_brief, favorites);
