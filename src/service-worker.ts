@@ -28,7 +28,13 @@ const PRECACHE_SHELLS = [
 	'/recipes/offline-shell',
 	'/glaube',
 	'/faith',
-	'/fitness'
+	'/fitness',
+	// Active workout shells precached so a fresh install can log workouts
+	// offline immediately without an online visit to /fitness first.
+	'/fitness/workout',
+	'/fitness/training',
+	'/fitness/workout/active',
+	'/fitness/training/aktiv'
 ];
 
 // Assets to precache

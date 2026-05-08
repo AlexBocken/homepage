@@ -8,10 +8,12 @@
 	import Route from '@lucide/svelte/icons/route';
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import Flame from '@lucide/svelte/icons/flame';
-	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
+	import CloudOff from '@lucide/svelte/icons/cloud-off';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
+	const t = $derived(m[lang]);
 
 	/**
 	 * @type {{
@@ -30,10 +32,11 @@
 	 *       gpsPreview?: number[][],
 	 *       sets: Array<{ reps?: number, weight?: number, rpe?: number, distance?: number, duration?: number }>
 	 *     }>
-	 *   }
+	 *   },
+	 *   unsynced?: boolean
 	 * }}
 	 */
-	let { session } = $props();
+	let { session, unsynced = false } = $props();
 
 	/** @param {number} mins */
 	function formatDuration(mins) {
@@ -153,9 +156,17 @@
 	});
 </script>
 
-<a href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: sl.history, id: session._id })} class="session-card">
+{#snippet cardBody()}
 	<div class="card-top">
-		<h3 class="session-name">{session.name}</h3>
+		<h3 class="session-name">
+			{session.name}
+			{#if unsynced}
+				<span class="unsynced-badge" title={t.unsynced_label}>
+					<CloudOff size={12} strokeWidth={2} />
+					{t.unsynced_label}
+				</span>
+			{/if}
+		</h3>
 		<span class="session-date">{formatDate(session.startTime)} &middot; {formatTime(session.startTime)}</span>
 	</div>
 
@@ -207,7 +218,13 @@
 			<span class="stat pr"><Trophy size={14} /> {session.prs.length} PR{session.prs.length > 1 ? 's' : ''}</span>
 		{/if}
 	</div>
-</a>
+{/snippet}
+
+{#if unsynced}
+	<div class="session-card unsynced">{@render cardBody()}</div>
+{:else}
+	<a href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: sl.history, id: session._id })} class="session-card">{@render cardBody()}</a>
+{/if}
 
 <style>
 	.session-card {
@@ -227,6 +244,30 @@
 	}
 	.session-card:active {
 		transform: translateY(0);
+	}
+	.session-card.unsynced {
+		border-left: 3px solid var(--orange, var(--nord12));
+		opacity: 0.92;
+		cursor: default;
+	}
+	.session-card.unsynced:hover {
+		transform: none;
+		box-shadow: var(--shadow-sm);
+	}
+	.unsynced-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		margin-left: 0.5rem;
+		padding: 0.1rem 0.45rem;
+		font-size: 0.65rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--orange, var(--nord12));
+		background: color-mix(in srgb, var(--orange, var(--nord12)) 12%, transparent);
+		border-radius: 100px;
+		vertical-align: middle;
 	}
 	.card-top {
 		margin-bottom: 0.6rem;

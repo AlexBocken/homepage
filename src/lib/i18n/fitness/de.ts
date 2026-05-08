@@ -33,6 +33,7 @@ export const de = {
 	weight: "Gewicht",
 	history_title: "Verlauf",
 	no_workouts_yet: "Noch keine Trainings. Starte dein erstes Training!",
+	unsynced_label: "Nicht synchronisiert",
 	load_more: "Mehr laden",
 	date: "Datum",
 	time: "Uhrzeit",
