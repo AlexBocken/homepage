@@ -47,14 +47,18 @@ footer {
    ═══════════════════════════════════════════ */
 nav {
 	position: sticky;
-	top: calc(12px + env(safe-area-inset-top, 0px));
+	/* Without a safe-area inset (regular browser tabs), keep the comfortable
+	   12px gap. With an inset present (PWA / Tauri shell with notch / status
+	   bar), drop the extra 12px so the bar sits just 4px below the inset
+	   instead of stacking ~56px down. */
+	top: max(12px, calc(env(safe-area-inset-top, 0px) + 4px));
 	z-index: 100;
 	display: flex;
 	align-items: center;
 	height: var(--header-h);
 	gap: 0.4rem;
 	padding: 0 0.8rem;
-	margin: calc(12px + env(safe-area-inset-top, 0px)) auto 0;
+	margin: max(12px, calc(env(safe-area-inset-top, 0px) + 4px)) auto 0;
 	width: fit-content;
 	max-width: calc(100% - 1.5rem);
 	border-radius: 100px;
