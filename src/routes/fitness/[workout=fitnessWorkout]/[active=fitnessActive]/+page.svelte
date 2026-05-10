@@ -40,6 +40,7 @@
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import WorkoutRail from '$lib/components/fitness/WorkoutRail.svelte';
 	import WorkoutFocusCard from '$lib/components/fitness/WorkoutFocusCard.svelte';
+	import ActiveRestTimer from '$lib/components/fitness/ActiveRestTimer.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import { onMount } from 'svelte';
 
@@ -1681,6 +1682,20 @@
 						}}
 					/>
 
+					<ActiveRestTimer
+						active={workout.restTimerActive}
+						seconds={workout.restTimerSeconds}
+						total={workout.restTimerTotal}
+						exerciseId={workout.restExerciseIdx >= 0 && workout.exercises[workout.restExerciseIdx]
+							? workout.exercises[workout.restExerciseIdx].exerciseId
+							: null}
+						setIdx={workout.restSetIdx}
+						activeExerciseIdx={activeIdx}
+						restExerciseIdx={workout.restExerciseIdx}
+						onAdjust={(delta) => workout.adjustRestTimer(delta)}
+						onSkip={cancelRest}
+					/>
+
 					<div class="exercise-block focused">
 						<SetTable
 							sets={activeExercise.sets}
@@ -1688,14 +1703,9 @@
 							metrics={exMetrics}
 							editable={true}
 							timedHold={isDurationOnly}
-							restAfterSet={workout.restTimerActive && workout.restExerciseIdx === activeIdx ? workout.restSetIdx : -1}
-							restSeconds={workout.restTimerSeconds}
-							restTotal={workout.restTimerTotal}
 							holdAfterSet={workout.holdTimerActive && workout.holdExerciseIdx === activeIdx ? workout.holdSetIdx : -1}
 							holdSeconds={workout.holdTimerSeconds}
 							holdTotal={workout.holdTimerTotal}
-							onRestAdjust={(delta) => workout.adjustRestTimer(delta)}
-							onRestSkip={cancelRest}
 							onHoldSkip={() => workout.cancelHoldTimer()}
 							onUpdate={(setIdx, d) => workout.updateSet(activeIdx, setIdx, d)}
 							onToggleComplete={(setIdx) => {

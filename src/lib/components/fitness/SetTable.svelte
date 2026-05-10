@@ -4,7 +4,6 @@
 	import Play from '@lucide/svelte/icons/play';
 	import Square from '@lucide/svelte/icons/square';
 	import { METRIC_LABELS } from '$lib/data/exercises';
-	import RestTimer from './RestTimer.svelte';
 	import { page } from '$app/state';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
@@ -17,14 +16,9 @@
 	 *   previousSets?: Array<Record<string, any>> | null,
 	 *   metrics?: Array<'weight' | 'reps' | 'rpe' | 'distance' | 'duration'>,
 	 *   editable?: boolean,
-	 *   restAfterSet?: number,
-	 *   restSeconds?: number,
-	 *   restTotal?: number,
 	 *   holdAfterSet?: number,
 	 *   holdSeconds?: number,
 	 *   holdTotal?: number,
-	 *   onRestAdjust?: ((delta: number) => void) | null,
-	 *   onRestSkip?: (() => void) | null,
 	 *   timedHold?: boolean,
 	 *   onHoldSkip?: (() => void) | null,
 	 *   onUpdate?: ((setIndex: number, data: Record<string, number | null>) => void) | null,
@@ -37,15 +31,10 @@
 		previousSets = null,
 		metrics = ['weight', 'reps', 'rpe'],
 		editable = false,
-		restAfterSet = -1,
-		restSeconds = 0,
-		restTotal = 0,
 		timedHold = false,
 		holdAfterSet = -1,
 		holdSeconds = 0,
 		holdTotal = 0,
-		onRestAdjust = null,
-		onRestSkip = null,
 		onHoldSkip = null,
 		onUpdate = null,
 		onToggleComplete = null,
@@ -212,19 +201,6 @@
 								</button>
 							</div>
 						</div>
-					</td>
-				</tr>
-			{/if}
-			{#if restAfterSet === i && restTotal > 0}
-				<tr class="rest-row">
-					<td colspan={totalCols} class="rest-cell">
-						<RestTimer
-							seconds={restSeconds}
-							total={restTotal}
-							onComplete={onRestSkip}
-							onAdjust={onRestAdjust}
-							onSkip={onRestSkip}
-						/>
 					</td>
 				</tr>
 			{/if}
