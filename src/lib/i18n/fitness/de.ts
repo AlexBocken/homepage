@@ -98,6 +98,7 @@ export const de = {
 	workout_name_placeholder: "Trainingsname",
 	cancel_workout: "TRAINING ABBRECHEN",
 	finish: "BEENDEN",
+	finish_early: "VORZEITIG BEENDEN",
 	new_set_added: "neuer Satz",
 	new_sets_added: "neue Sätze",
 	exercises_title: "Übungen",
