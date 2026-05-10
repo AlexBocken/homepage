@@ -7,6 +7,7 @@
 	import { getMonthName, getWeekdayShort, rankEmphasis, dioceseLabel, DIOCESES_1962, DIOCESES_1969, DEFAULT_DIOCESE_1962, DEFAULT_DIOCESE_1969, type CalendarLang, m } from '../../../../calendarI18n';
 	import { litBg, litInk, LIT_COLOR_VAR } from '../../../../calendarColors';
 	import RingView from './RingView.svelte';
+	import HillsView from './HillsView.svelte';
 	import HeroCard from '../../../../HeroCard.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -31,11 +32,11 @@
 	const liturgicalYearStart = $derived(data.liturgicalYearStart);
 	const inPostPentecost = $derived(data.inPostPentecost);
 
-	type CalView = 'ring' | 'grid';
+	type CalView = 'ring' | 'hills' | 'grid';
 	let view = $state<CalView>('ring');
 	onMount(() => {
 		const saved = localStorage.getItem('litcal.view');
-		if (saved === 'ring' || saved === 'grid') view = saved;
+		if (saved === 'ring' || saved === 'hills' || saved === 'grid') view = saved;
 	});
 	$effect(() => {
 		localStorage.setItem('litcal.view', view);
@@ -241,6 +242,14 @@
 				◯ {lang === 'de' ? 'Jahr' : lang === 'la' ? 'Annus' : 'Year'}
 			</button>
 			<button
+				class:active={view === 'hills'}
+				role="tab"
+				aria-selected={view === 'hills'}
+				onclick={() => (view = 'hills')}
+			>
+				∿ {lang === 'de' ? 'Hügel' : lang === 'la' ? 'Colles' : 'Hills'}
+			</button>
+			<button
 				class:active={view === 'grid'}
 				role="tab"
 				aria-selected={view === 'grid'}
@@ -279,6 +288,24 @@
 	{#if view === 'ring'}
 		<section class="ring-stage">
 			<RingView
+				{year}
+				{liturgicalYear}
+				{yearDays}
+				{feastDots}
+				{seasonArcs}
+				{todayIso}
+				{selectedIso}
+				{lang}
+				{dayHref}
+				{windowStart}
+				{windowEnd}
+				{liturgicalYearStart}
+				{inPostPentecost}
+			/>
+		</section>
+	{:else if view === 'hills'}
+		<section class="ring-stage hills-stage">
+			<HillsView
 				{year}
 				{liturgicalYear}
 				{yearDays}
@@ -613,6 +640,16 @@
 
 	.ring-stage {
 		margin-top: 0.5rem;
+	}
+
+	/* Hills view breaks out to the full viewport — no body padding, so the
+	   horizontal scroll's left/right ends meet the screen edge instead of
+	   leaving a gap. Capped on huge displays. */
+	.ring-stage.hills-stage {
+		width: min(100vw, 1800px);
+		max-width: none;
+		margin-left: 50%;
+		transform: translateX(-50%);
 	}
 
 	.month-nav {
