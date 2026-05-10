@@ -137,6 +137,33 @@
 	/** @type {any[]} */
 	let templateDiffs = $state([]);
 	let templateUpdateStatus = $state('idle'); // 'idle' | 'updating' | 'done'
+
+	// Track whether we've ever observed an active workout on this page so the
+	// remote-end redirect doesn't fire during the brief gap before localStorage
+	// + server hydration completes on initial mount.
+	let _everActive = false;
+
+	// Mirror the finish overview when another device finishes the workout.
+	// Sync surfaces the saved session via SSE; treat it like the local finish path.
+	$effect(() => {
+		const remoteSession = sync.lastFinishedSession;
+		if (!remoteSession || completionData) return;
+		completionData = buildCompletion(remoteSession, remoteSession);
+		computeTemplateDiff(completionData);
+		sync.clearFinishedSession();
+	});
+
+	// If the workout ends remotely without a session payload (cancel from another
+	// device, or that device couldn't post the session), exit cleanly instead of
+	// leaving this device on a blank active page.
+	$effect(() => {
+		if (workout.active) {
+			_everActive = true;
+			return;
+		}
+		if (!_everActive || completionData || sync.lastFinishedSession) return;
+		goto(`/fitness/${sl.workout}`);
+	});
 	let offlineQueued = $state(false);
 
 	let useGps = $state(gps.isTracking);
@@ -725,15 +752,16 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(sessionData)
 			});
-			await sync.onWorkoutEnd();
 			if (res.ok) {
 				const d = await res.json();
 				completionData = buildCompletion(sessionData, d.session);
 				computeTemplateDiff(completionData);
+				await sync.onWorkoutEnd(d.session?._id);
 			} else {
 				await queueSession(sessionData);
 				offlineQueued = true;
 				completionData = buildCompletion(sessionData, { _id: null });
+				await sync.onWorkoutEnd();
 			}
 		} catch {
 			await queueSession(sessionData);
