@@ -239,7 +239,7 @@
 				aria-selected={view === 'ring'}
 				onclick={() => (view = 'ring')}
 			>
-				◯ {lang === 'de' ? 'Jahr' : lang === 'la' ? 'Annus' : 'Year'}
+				◯ {lang === 'de' ? 'Jahr · Ring' : lang === 'la' ? 'Annus · Annulus' : 'Year · Ring'}
 			</button>
 			<button
 				class:active={view === 'hills'}
@@ -247,7 +247,7 @@
 				aria-selected={view === 'hills'}
 				onclick={() => (view = 'hills')}
 			>
-				∿ {lang === 'de' ? 'Hügel' : lang === 'la' ? 'Colles' : 'Hills'}
+				∿ {lang === 'de' ? 'Jahr · Hügel' : lang === 'la' ? 'Annus · Colles' : 'Year · Hills'}
 			</button>
 			<button
 				class:active={view === 'grid'}
@@ -255,7 +255,7 @@
 				aria-selected={view === 'grid'}
 				onclick={() => (view = 'grid')}
 			>
-				▦ {lang === 'de' ? 'Monat' : lang === 'la' ? 'Mensis' : 'Month'}
+				▦ {lang === 'de' ? 'Monat · Raster' : lang === 'la' ? 'Mensis · Tabula' : 'Month · Grid'}
 			</button>
 		</div>
 		<div class="overview-right">
