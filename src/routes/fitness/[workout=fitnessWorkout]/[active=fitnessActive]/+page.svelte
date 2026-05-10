@@ -97,6 +97,7 @@
 	const workoutSetsTotal = $derived(
 		workout.exercises.reduce((/** @type {number} */ n, /** @type {any} */ ex) => n + ex.sets.length, 0)
 	);
+	const hasUnfinishedSets = $derived(workoutSetsTotal > 0 && workoutSetsDone < workoutSetsTotal);
 
 	/** @param {number} idx */
 	function setFocus(idx) { focusedIdx = idx; }
@@ -1770,7 +1771,9 @@
 					<button class="cancel-btn" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
 						{t.cancel_workout}
 					</button>
-					<button class="finish-btn" onclick={finishWorkout}>{t.finish}</button>
+					<button class="finish-btn" class:premature={hasUnfinishedSets} onclick={finishWorkout}>
+						{hasUnfinishedSets ? t.finish_early : t.finish}
+					</button>
 				</div>
 			</main>
 		</div>
@@ -2131,6 +2134,13 @@
 	}
 	.finish-btn:active {
 		transform: scale(0.98);
+	}
+	.finish-btn.premature {
+		background: var(--orange);
+		color: var(--nord0);
+	}
+	.finish-btn.premature:hover {
+		background: color-mix(in srgb, var(--orange) 85%, var(--nord0));
 	}
 
 	/* GPS section */

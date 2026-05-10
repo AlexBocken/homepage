@@ -98,6 +98,7 @@ export const en = {
 	workout_name_placeholder: "Workout name",
 	cancel_workout: "CANCEL WORKOUT",
 	finish: "FINISH",
+	finish_early: "FINISH EARLY",
 	new_set_added: "new set",
 	new_sets_added: "new sets",
 	exercises_title: "Exercises",
