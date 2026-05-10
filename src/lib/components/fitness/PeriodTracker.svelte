@@ -200,47 +200,107 @@
 		}
 
 		// Generate future predicted cycles (12 cycles ≈ ~1 year)
-		const cycleMs = Math.round(emaCycle) * 86400000;
+		const meanCycleDays = Math.round(emaCycle);
+		const cycleMs = meanCycleDays * 86400000;
 		const periodMs = (Math.round(emaPeriod) - 1) * 86400000;
 		const lutealLength = 14;
 		const lastStart = sorted[0] ? new Date(sorted[0].startDate) : null;
 
-		/** @type {{ start: Date, end: Date, fertileStart: Date, fertileEnd: Date, peakStart: Date, lutealStart: Date, lutealEnd: Date }[]} */
+		// Cycle range for Ogino-style widening of future fertile windows.
+		// Without ≥2 observed cycles, widening collapses to a point estimate.
+		const shortestCycle = cycleLengths.length >= 2 ? Math.min(...cycleLengths) : meanCycleDays;
+		const longestCycle = cycleLengths.length >= 2 ? Math.max(...cycleLengths) : meanCycleDays;
+
+		/**
+		 * Build a fertility window for one cycle.
+		 *
+		 * Anchor: the next period's start (luteal-back-count). Past cycles know it
+		 * exactly; future cycles use the mean prediction and widen the outer fertile
+		 * range to cover the earliest/latest historically observed ovulation day.
+		 *
+		 * Floor: fertile/peak never overlap the prior bleed. Day-after-period-end
+		 * is the earliest possible fertile day shown — a hard biological floor for
+		 * the user's mental model, even though sperm survival could in theory begin
+		 * earlier in the bleed for very short cycles.
+		 *
+		 * @param {number} cycleStartMs   ms of cycle start (= prior period start)
+		 * @param {number | null} priorPeriodEndMs  ms of prior bleed end, or null if unknown
+		 * @param {number} nextPeriodStartMs  ms of the next period's start
+		 * @param {boolean} widen  true → use shortest/longest cycle bounds; false → point estimate
+		 */
+		function buildWindow(cycleStartMs, priorPeriodEndMs, nextPeriodStartMs, widen) {
+			const ovMs = nextPeriodStartMs - lutealLength * 86400000;
+			const earliestOvMs = widen
+				? cycleStartMs + (shortestCycle - lutealLength) * 86400000
+				: ovMs;
+			let latestOvMs = widen
+				? cycleStartMs + (longestCycle - lutealLength) * 86400000
+				: ovMs;
+			// Cap latest ov before the next bleed starts.
+			if (latestOvMs > nextPeriodStartMs - 86400000) latestOvMs = nextPeriodStartMs - 86400000;
+
+			const floorMs = priorPeriodEndMs !== null ? priorPeriodEndMs + 86400000 : cycleStartMs;
+
+			let fertileStartMs = Math.max(earliestOvMs - 5 * 86400000, floorMs, cycleStartMs);
+			let peakStartMs = Math.max(ovMs - 2 * 86400000, floorMs, cycleStartMs);
+			const peakEndMs = ovMs - 86400000;
+			let fertileEndMs = Math.max(latestOvMs, ovMs);
+
+			// Suppress peak if floor pushed it past ov (e.g. very short cycle + long period).
+			if (peakStartMs > peakEndMs) peakStartMs = peakEndMs + 86400000;
+			// Keep fertile envelope around peak/ov.
+			if (fertileStartMs > peakStartMs && peakStartMs <= peakEndMs) fertileStartMs = peakStartMs;
+
+			return {
+				fertileStart: new Date(fertileStartMs),
+				fertileEnd: new Date(fertileEndMs),
+				peakStart: new Date(peakStartMs),
+				peakEnd: new Date(peakEndMs),
+				ovulation: new Date(ovMs),
+				lutealStart: new Date(latestOvMs + 86400000),
+				lutealEnd: new Date(nextPeriodStartMs - 86400000)
+			};
+		}
+
+		/** @type {{ start: Date, end: Date, fertileStart: Date, fertileEnd: Date, peakStart: Date, peakEnd: Date, ovulation: Date, lutealStart: Date, lutealEnd: Date }[]} */
 		const futureCycles = [];
 		if (lastStart) {
 			let base = lastStart.getTime();
+			// Prior bleed end for the first predicted cycle: actual end if recorded,
+			// predicted end if ongoing, else cycle start.
+			let priorPeriodEndMs;
+			if (sorted[0]?.endDate) {
+				priorPeriodEndMs = midnight(new Date(sorted[0].endDate));
+			} else if (predictedEndOfOngoing) {
+				priorPeriodEndMs = midnight(predictedEndOfOngoing);
+			} else {
+				priorPeriodEndMs = base;
+			}
+
 			for (let i = 0; i < 12; i++) {
-				const start = new Date(base + cycleMs);
-				const end = new Date(start.getTime() + periodMs);
-				const ov = new Date(start.getTime() - lutealLength * 86400000);
-				// Luteal phase: day after ovulation until day before next period
-				const lutealStart = new Date(ov.getTime() + 86400000);
-				const lutealEnd = new Date(start.getTime() - 86400000);
+				const nextPeriodStartMs = base + cycleMs;
+				const periodEndMs = nextPeriodStartMs + periodMs;
+				const w = buildWindow(base, priorPeriodEndMs, nextPeriodStartMs, /* widen */ true);
 				futureCycles.push({
-					start, end,
-					fertileStart: new Date(ov.getTime() - 5 * 86400000),
-					fertileEnd: ov,
-					peakStart: new Date(ov.getTime() - 2 * 86400000),
-					lutealStart,
-					lutealEnd
+					start: new Date(nextPeriodStartMs),
+					end: new Date(periodEndMs),
+					...w
 				});
-				base = start.getTime();
+				base = nextPeriodStartMs;
+				priorPeriodEndMs = periodEndMs;
 			}
 		}
 
 		// Past fertility/luteal windows (from completed cycles)
-		/** @type {{ fertileStart: Date, fertileEnd: Date, peakStart: Date, lutealStart: Date, lutealEnd: Date }[]} */
+		/** @type {{ fertileStart: Date, fertileEnd: Date, peakStart: Date, peakEnd: Date, ovulation: Date, lutealStart: Date, lutealEnd: Date }[]} */
 		const pastFertileWindows = [];
 		for (let i = 1; i < completed.length; i++) {
-			const nextPeriodStart = new Date(completed[i].startDate);
-			const ov = new Date(nextPeriodStart.getTime() - lutealLength * 86400000);
-			pastFertileWindows.push({
-				fertileStart: new Date(ov.getTime() - 5 * 86400000),
-				fertileEnd: ov,
-				peakStart: new Date(ov.getTime() - 2 * 86400000),
-				lutealStart: new Date(ov.getTime() + 86400000),
-				lutealEnd: new Date(nextPeriodStart.getTime() - 86400000)
-			});
+			const cycleStartMs = midnight(new Date(completed[i - 1].startDate));
+			const priorPeriodEndMs = completed[i - 1].endDate
+				? midnight(new Date(completed[i - 1].endDate))
+				: null;
+			const nextPeriodStartMs = midnight(new Date(completed[i].startDate));
+			pastFertileWindows.push(buildWindow(cycleStartMs, priorPeriodEndMs, nextPeriodStartMs, /* widen */ false));
 		}
 
 		return {
@@ -405,12 +465,14 @@
 			const cs = midnight(c.start);
 			const ce = midnight(c.end);
 			if (d >= cs && d <= ce) return 'predicted';
-			const fe = midnight(c.fertileEnd);
-			if (d === fe) return 'ovulation';
+			const ovDay = midnight(c.ovulation);
+			if (d === ovDay) return 'ovulation';
 			const ps = midnight(c.peakStart);
+			const pe = midnight(c.peakEnd);
+			if (d >= ps && d <= pe) return 'peak-fertile';
 			const fs = midnight(c.fertileStart);
-			if (d >= ps && d < fe) return 'peak-fertile';
-			if (d >= fs && d < ps) return 'fertile';
+			const fe = midnight(c.fertileEnd);
+			if (d >= fs && d <= fe) return 'fertile';
 			const ls = midnight(c.lutealStart);
 			const le = midnight(c.lutealEnd);
 			if (d >= ls && d <= le) return 'luteal';
@@ -418,12 +480,14 @@
 
 		// Past fertility/luteal windows
 		for (const w of predictions.pastFertileWindows) {
-			const fe = midnight(w.fertileEnd);
-			if (d === fe) return 'ovulation';
+			const ovDay = midnight(w.ovulation);
+			if (d === ovDay) return 'ovulation';
 			const ps = midnight(w.peakStart);
+			const pe = midnight(w.peakEnd);
+			if (d >= ps && d <= pe) return 'peak-fertile';
 			const fs = midnight(w.fertileStart);
-			if (d >= ps && d < fe) return 'peak-fertile';
-			if (d >= fs && d < ps) return 'fertile';
+			const fe = midnight(w.fertileEnd);
+			if (d >= fs && d <= fe) return 'fertile';
 			const ls = midnight(w.lutealStart);
 			const le = midnight(w.lutealEnd);
 			if (d >= ls && d <= le) return 'luteal';
@@ -737,8 +801,8 @@
 					<div class="status-side">
 						<div class="status-side-item ovulation-accent">
 							<span class="status-side-label">{t.ovulation}</span>
-							<span class="status-side-relative">{relativeDate(nextCycle.fertileEnd)}</span>
-							<span class="status-side-date">{formatDate(nextCycle.fertileEnd)}</span>
+							<span class="status-side-relative">{relativeDate(nextCycle.ovulation)}</span>
+							<span class="status-side-date">{formatDate(nextCycle.ovulation)}</span>
 						</div>
 						<div class="status-side-item fertile-accent">
 							<span class="status-side-label">{t.fertile}</span>
@@ -762,8 +826,8 @@
 				<div class="status-side">
 					<div class="status-side-item ovulation-accent">
 						<span class="status-side-label">{t.ovulation}</span>
-						<span class="status-side-relative">{relativeDate(nextCycle.fertileEnd)}</span>
-						<span class="status-side-date">{formatDate(nextCycle.fertileEnd)}</span>
+						<span class="status-side-relative">{relativeDate(nextCycle.ovulation)}</span>
+						<span class="status-side-date">{formatDate(nextCycle.ovulation)}</span>
 					</div>
 					<div class="status-side-item fertile-accent">
 						<span class="status-side-label">{t.fertile}</span>
