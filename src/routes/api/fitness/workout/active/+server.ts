@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { ActiveWorkout } from '$models/ActiveWorkout';
+import { WorkoutSession } from '$models/WorkoutSession';
 import { broadcast } from '$lib/server/sseManager';
 
 // GET /api/fitness/workout/active — fetch current active workout
@@ -91,7 +92,9 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 };
 
 // DELETE /api/fitness/workout/active — clear active workout (finish/cancel)
-export const DELETE: RequestHandler = async ({ locals }) => {
+// Optional ?sessionId=<id> attaches the just-saved session to the broadcast so
+// other devices can render the finish overview instead of a blank page.
+export const DELETE: RequestHandler = async ({ locals, url }) => {
   const session = locals.session ?? await locals.auth();
   if (!session?.user?.nickname) {
     return json({ error: 'Unauthorized' }, { status: 401 });
@@ -102,8 +105,17 @@ export const DELETE: RequestHandler = async ({ locals }) => {
     const userId = session.user.nickname;
     await ActiveWorkout.deleteOne({ userId });
 
-    // Notify all devices that workout is finished
-    broadcast(userId, 'finished', { active: false });
+    const sessionId = url.searchParams.get('sessionId');
+    let sessionDoc: unknown = null;
+    if (sessionId) {
+      try {
+        sessionDoc = await WorkoutSession.findOne({ _id: sessionId, createdBy: userId }).lean();
+      } catch {
+        sessionDoc = null;
+      }
+    }
+
+    broadcast(userId, 'finished', { active: false, session: sessionDoc });
 
     return json({ ok: true });
   } catch (error) {
