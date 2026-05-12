@@ -37,7 +37,6 @@ export function createWorkoutSync() {
 
   let status: SyncStatus = $state('idle');
   let serverVersion = $state(0);
-  let lastFinishedSession: any = $state(null);
   let eventSource: EventSource | null = null;
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -167,15 +166,8 @@ export function createWorkoutSync() {
         } catch {}
       });
 
-      eventSource.addEventListener('finished', (e) => {
-        // Another device finished the workout. If they passed along the saved
-        // session, expose it so the active page can build the completion overview.
-        try {
-          const data = JSON.parse(e.data);
-          lastFinishedSession = data?.session ?? null;
-        } catch {
-          lastFinishedSession = null;
-        }
+      eventSource.addEventListener('finished', () => {
+        // Another device finished the workout
         workout.cancel();
         disconnectSSE();
       });
@@ -225,20 +217,12 @@ export function createWorkoutSync() {
     connectSSE();
   }
 
-  /** Called when workout finishes or is cancelled — clean up server state.
-   *  Pass the just-saved session id so other devices receive it via SSE
-   *  and can render the finish overview. */
-  async function onWorkoutEnd(sessionId?: string | null) {
+  /** Called when workout finishes or is cancelled — clean up server state */
+  async function onWorkoutEnd() {
     disconnectSSE();
     try {
-      const qs = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
-      await fetch(`/api/fitness/workout/active${qs}`, { method: 'DELETE' });
+      await fetch('/api/fitness/workout/active', { method: 'DELETE' });
     } catch {}
-  }
-
-  /** Clear the finished-session payload after the page has consumed it. */
-  function clearFinishedSession() {
-    lastFinishedSession = null;
   }
 
   /** Called on app load — reconcile local vs server state */
@@ -306,11 +290,9 @@ export function createWorkoutSync() {
   return {
     get status() { return status; },
     get serverVersion() { return serverVersion; },
-    get lastFinishedSession() { return lastFinishedSession; },
     init,
     onWorkoutStart,
     onWorkoutEnd,
-    clearFinishedSession,
     notifyChange,
     destroy
   };
