@@ -22,6 +22,7 @@
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Repeat from '@lucide/svelte/icons/repeat';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { playSetCompleteSound, playExerciseCompleteSound, playWorkoutCompleteSound } from '$lib/js/fitnessSounds';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 
@@ -42,7 +43,7 @@
 	import WorkoutFocusCard from '$lib/components/fitness/WorkoutFocusCard.svelte';
 	import ActiveRestTimer from '$lib/components/fitness/ActiveRestTimer.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
@@ -99,8 +100,29 @@
 	);
 	const hasUnfinishedSets = $derived(workoutSetsTotal > 0 && workoutSetsDone < workoutSetsTotal);
 
+	/**
+	 * Run a state mutation inside a view transition so named regions
+	 * (exercise name, set counter, set table) animate. Falls back to a
+	 * plain call when the View Transitions API is unavailable.
+	 * @param {() => void} mutate
+	 */
+	function runViewTransition(mutate) {
+		const doc = /** @type {any} */ (document);
+		if (typeof doc?.startViewTransition !== 'function') {
+			mutate();
+			return;
+		}
+		doc.startViewTransition(async () => {
+			mutate();
+			await tick();
+		});
+	}
+
 	/** @param {number} idx */
-	function setFocus(idx) { focusedIdx = idx; }
+	function setFocus(idx) {
+		if (idx === activeIdx) return;
+		runViewTransition(() => { focusedIdx = idx; });
+	}
 
 	/**
 	 * Reorder an exercise from one index to another, adjusting focus to follow.
@@ -164,6 +186,17 @@
 		}
 		if (!_everActive || completionData || sync.lastFinishedSession) return;
 		goto(`/fitness/${sl.workout}`);
+	});
+
+	// Celebratory fanfare on workout completion. Fires once, regardless of
+	// whether completionData was populated by the local finish path or by the
+	// remote-finish sync effect above.
+	let _completionSoundPlayed = false;
+	$effect(() => {
+		if (completionData && !_completionSoundPlayed) {
+			_completionSoundPlayed = true;
+			playWorkoutCompleteSound();
+		}
 	});
 	let offlineQueued = $state(false);
 
@@ -1747,12 +1780,39 @@
 								}
 								if (isDurationOnly && set?.duration && !set.completed) {
 									workout.startHoldTimer(Math.round(set.duration * 60), activeIdx, setIdx);
-								} else {
-									workout.toggleSetComplete(activeIdx, setIdx);
-									if (ex.sets[setIdx]?.completed) {
-										workout.startRestTimer(ex.restTime, activeIdx, setIdx);
-									}
+									return;
 								}
+								// Only trigger a view transition when this toggle will finish
+								// the exercise — i.e. the last unfinished set is being checked
+								// and we're about to auto-advance to the next exercise.
+								const willFinishExercise = !set?.completed && ex.sets.every(
+									(/** @type {any} */ s, /** @type {number} */ i) => i === setIdx || s.completed
+								);
+								const idx = activeIdx;
+								const apply = () => {
+									workout.toggleSetComplete(idx, setIdx);
+									const updated = workout.exercises[idx];
+									if (updated?.sets[setIdx]?.completed) {
+										workout.startRestTimer(updated.restTime, idx, setIdx);
+										if (willFinishExercise) {
+											// Only play the exercise-complete cue when there's
+											// another unfinished exercise to advance to. If this
+											// finishes the whole workout, fall back to the regular
+											// tick — the celebratory fanfare fires on Finish.
+											const hasNextUnfinished = workout.exercises.some(
+												(/** @type {any} */ e, /** @type {number} */ i) =>
+													i !== idx && e.sets.some((/** @type {any} */ s) => !s.completed)
+											);
+											if (hasNextUnfinished) playExerciseCompleteSound();
+											else playSetCompleteSound();
+											focusedIdx = null;
+										} else {
+											playSetCompleteSound();
+										}
+									}
+								};
+								if (willFinishExercise) runViewTransition(apply);
+								else apply();
 							}}
 							onRemove={(setIdx) => workout.removeSet(activeIdx, setIdx)}
 						/>
@@ -2071,6 +2131,52 @@
 		background: transparent;
 		box-shadow: none;
 		padding: 0.25rem 0 0;
+		view-transition-name: workout-set-table;
+	}
+
+	/* View transition choreography: vertical for the focus card's name +
+	   set-counter (always), horizontal for the set table on desktop. */
+	:global(::view-transition-old(workout-focus-name)),
+	:global(::view-transition-old(workout-focus-progress)) {
+		animation: workout-slide-out-up 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+	}
+	:global(::view-transition-new(workout-focus-name)),
+	:global(::view-transition-new(workout-focus-progress)) {
+		animation: workout-slide-in-up 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+	}
+	:global(::view-transition-old(workout-set-table)),
+	:global(::view-transition-new(workout-set-table)) {
+		animation: none;
+	}
+	@media (min-width: 900px) {
+		:global(::view-transition-old(workout-set-table)) {
+			animation: workout-slide-out-left 240ms cubic-bezier(0.4, 0, 0.2, 1) both;
+		}
+		:global(::view-transition-new(workout-set-table)) {
+			animation: workout-slide-in-right 280ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+		}
+	}
+	@keyframes workout-slide-out-up {
+		to { opacity: 0; transform: translateY(-28%); }
+	}
+	@keyframes workout-slide-in-up {
+		from { opacity: 0; transform: translateY(28%); }
+	}
+	@keyframes workout-slide-out-left {
+		to { opacity: 0; transform: translateX(-6%); }
+	}
+	@keyframes workout-slide-in-right {
+		from { opacity: 0; transform: translateX(6%); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		:global(::view-transition-old(workout-focus-name)),
+		:global(::view-transition-old(workout-focus-progress)),
+		:global(::view-transition-new(workout-focus-name)),
+		:global(::view-transition-new(workout-focus-progress)),
+		:global(::view-transition-old(workout-set-table)),
+		:global(::view-transition-new(workout-set-table)) {
+			animation: none;
+		}
 	}
 	.add-set-btn {
 		display: block;

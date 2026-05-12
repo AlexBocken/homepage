@@ -120,6 +120,7 @@
 		line-height: 1.15;
 		color: var(--color-text-primary);
 		min-width: 0;
+		view-transition-name: workout-focus-name;
 	}
 	.focus-details {
 		flex-shrink: 0;
@@ -146,6 +147,7 @@
 		justify-content: space-between;
 		gap: 1rem;
 		flex-wrap: wrap;
+		view-transition-name: workout-focus-progress;
 	}
 	.focus-set-label {
 		font-size: 0.78rem;
