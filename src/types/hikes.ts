@@ -74,6 +74,23 @@ export type HikeManifestEntry = {
 	 * to a small WebP. */
 	icon?: string;
 
+	/** Pre-rendered hero map (light theme): Swisstopo tiles composited at
+	 * build time with the trail polyline + photo markers + start/end dots
+	 * burned in. Rendered as `<img>` in the detail page so the user sees
+	 * a real map immediately; Leaflet hydrates on top once the track JSON
+	 * arrives. */
+	heroMapUrlLight?: string;
+	/** Pre-rendered hero map (dark theme). Same pose as
+	 * `heroMapUrlLight` but with the tile composite passed through an
+	 * `invert(1) hue-rotate(180deg)` filter so the map fits the dark UI. */
+	heroMapUrlDark?: string;
+	/** Zoom level the static hero was rendered at. Leaflet uses this with
+	 * `heroMapCenter` to land on the exact same view on first paint, so
+	 * the static→interactive handover doesn't visibly shift the map. */
+	heroMapZoom?: number;
+	/** Map centre `[lat, lng]` the static hero was rendered around. */
+	heroMapCenter?: [number, number];
+
 	// Geo-tagged photos shown as map markers on the detail page:
 	imagePoints: ImagePoint[];
 };

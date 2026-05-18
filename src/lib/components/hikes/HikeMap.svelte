@@ -19,9 +19,26 @@
 		/** When false, private images are hidden — anonymous viewers only see
 		 * public ones. Logged-in users get the full set. */
 		showPrivate?: boolean;
+		/** Initial map centre `[lat, lng]`. When provided alongside
+		 * `initialZoom`, the map opens with `setView(center, zoom)` instead
+		 * of `fitBounds(track)` — used by the detail page to align Leaflet's
+		 * first paint with the SSR-rendered static hero map. */
+		initialCenter?: [number, number];
+		initialZoom?: number;
+		/** Fires once the schematic tile layer's first batch of tiles has
+		 * finished loading — i.e. the map is visually complete. The detail
+		 * page uses this to fade out the SSR-rendered static hero. */
+		onReady?: () => void;
 	}
 
-	const { track, imagePoints = [], showPrivate = false }: Props = $props();
+	const {
+		track,
+		imagePoints = [],
+		showPrivate = false,
+		initialCenter,
+		initialZoom,
+		onReady
+	}: Props = $props();
 
 	// User-location toggle moved inside the map UI. localStorage-persisted so
 	// returning visitors get the same state. Permission errors surface as a
@@ -145,6 +162,53 @@
 			tileLayers.schematic.addTo(map);
 			let currentBase: BaseLayer = 'schematic';
 
+			// First-paint handover: when the schematic tile layer finishes
+			// loading its initial batch, fire `onReady` (so the static hero
+			// can fade out) AND — if we opened with `setView` to match a
+			// pre-rendered hero — animate to Leaflet's natural `fitBounds`
+			// view, which is typically slightly more zoomed out. The fade
+			// (~450 ms) overlaps with the zoom animation (~700 ms) so the
+			// user sees the map ease into its proper framing as the static
+			// dissolves.
+			tileLayers.schematic.once('load', () => {
+				// Initial tiles at the static-hero pose are present. If we
+				// don't need to fly to a different framing, fire `onReady`
+				// straight away — that's the simple path.
+				if (!initialCenter || typeof initialZoom !== 'number') {
+					onReady?.();
+					return;
+				}
+
+				// Otherwise: start the fly-to-bounds animation while the
+				// static stays visible on top. Once the fly settles AND the
+				// new tiles for the final view are in (or a short safety
+				// window elapses), THEN fire `onReady` so the static fades
+				// out over fully-loaded tiles — no grey flash in the gap
+				// between fly-end and tile-load.
+				map.flyToBounds(initialBounds, {
+					padding: [24, 24],
+					duration: 0.9,
+					easeLinearity: 0.3
+				});
+				map.once('moveend', () => {
+					let fired = false;
+					const fire = () => {
+						if (fired) return;
+						fired = true;
+						onReady?.();
+					};
+					// `load` fires when every currently-visible tile has
+					// arrived. Usually that's the trigger.
+					tileLayers.schematic.once('load', fire);
+					// Safety net: if the fly didn't change zoom enough to
+					// require any new tiles, `load` may not re-fire. 350 ms
+					// is short enough to feel responsive, long enough for
+					// the post-fly tile batch to arrive on typical
+					// connections.
+					setTimeout(fire, 350);
+				});
+			});
+
 			// Canvas-rendered polylines can't resolve CSS custom properties, so read
 			// the trail color from the document at mount time. Nord red contrasts
 			// strongly against both the schematic map and the aerial imagery.
@@ -173,7 +237,15 @@
 				weight: 2
 			}).addTo(map);
 			const initialBounds = polyline.getBounds();
-			map.fitBounds(initialBounds, { padding: [24, 24] });
+			// When the caller supplies a specific center+zoom (e.g. the detail
+			// page handing over from a pre-rendered static hero), open with
+			// `setView` so Leaflet lands on the exact same pose the static
+			// image was rendered at. Otherwise fall back to fitBounds.
+			if (initialCenter && typeof initialZoom === 'number') {
+				map.setView(initialCenter, initialZoom, { animate: false });
+			} else {
+				map.fitBounds(initialBounds, { padding: [24, 24] });
+			}
 
 			// Expose a re-focus callback that re-fits the polyline bounds —
 			// the same view the user started with after dragging or zooming

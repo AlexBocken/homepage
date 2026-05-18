@@ -26,6 +26,10 @@
 
 	let track = $state<HikeTrackPoint[] | null>(null);
 	let trackError = $state<string | null>(null);
+	// Toggled true once Leaflet's first tile batch paints. Drives the
+	// fade-out of the SSR-rendered static hero so the static→interactive
+	// handover is a soft cross-fade rather than a swap.
+	let heroMapReady = $state(false);
 
 	$effect(() => {
 		let aborted = false;
@@ -227,11 +231,48 @@
 	     HikeMap further down sticks in the scroll-area; both share state via
 	     the focusedImageStore so they animate together. -->
 	<section class="hero-map" style="view-transition-name: hike-{hike.slug}">
+		{#if hike.heroMapUrlLight}
+			<!-- Build-time static composite of Swisstopo tiles + the trail
+			     polyline + public photo markers. Two variants ship (light
+			     and dark); CSS picks the right one based on `data-theme`
+			     with `prefers-color-scheme` as the fallback. Both are
+			     rendered at the same zoom + centre as the live Leaflet
+			     map, and displayed at native pixel size (object-fit: none)
+			     so they overlay the live tiles exactly. The image fades
+			     out once Leaflet's first tile batch loads. -->
+			<img
+				class="hero-static hero-static-light"
+				class:faded={heroMapReady}
+				src={hike.heroMapUrlLight}
+				alt=""
+				aria-hidden="true"
+				loading="eager"
+				decoding="async"
+			/>
+		{/if}
+		{#if hike.heroMapUrlDark}
+			<img
+				class="hero-static hero-static-dark"
+				class:faded={heroMapReady}
+				src={hike.heroMapUrlDark}
+				alt=""
+				aria-hidden="true"
+				loading="eager"
+				decoding="async"
+			/>
+		{/if}
 		{#if track && track.length > 0}
-			<HikeMap {track} imagePoints={visibleImagePoints} showPrivate />
+			<HikeMap
+				{track}
+				imagePoints={visibleImagePoints}
+				showPrivate
+				initialCenter={hike.heroMapCenter}
+				initialZoom={hike.heroMapZoom}
+				onReady={() => (heroMapReady = true)}
+			/>
 		{:else if trackError}
 			<div class="map-fallback">Track konnte nicht geladen werden: {trackError}</div>
-		{:else}
+		{:else if !hike.heroMapUrl}
 			<div class="map-fallback">Track wird geladen…</div>
 		{/if}
 		<div class="hero-title">
@@ -351,18 +392,74 @@
 	.hero-map {
 		position: relative;
 		width: 100vw;
+		/* Reserve the eventual map height up-front so the page doesn't shift
+		 * once the track JSON arrives and HikeMap mounts. Same clamp as
+		 * `.hero-map :global(.map)` so the container and the leaflet pane
+		 * are always congruent. */
+		min-height: clamp(360px, 60vh, 640px);
 		margin-left: calc(50% - 50vw);
 		margin-right: calc(50% - 50vw);
 		margin-top: calc(-1 * (3rem + max(12px, env(safe-area-inset-top, 0px) + 4px)));
 		margin-bottom: 0;
 		overflow: hidden;
+		/* Transparent so any tile area not yet painted shows the page
+		 * background through — which already adapts to the active theme.
+		 * Leaflet's default `#ddd` container background is overridden in
+		 * the `.map` rule below. */
+		background: transparent;
 	}
 
 	.hero-map :global(.map) {
+		position: relative;
+		z-index: 2;
 		height: clamp(360px, 60vh, 640px);
 		border-radius: 0;
 		box-shadow: none;
+		/* Stay transparent so the SSR-rendered static map underneath shows
+		 * through until Leaflet's tilepane paints over it. */
+		background: transparent;
 	}
+
+	/* Static hero map (pre-rendered Swisstopo composite). Displayed at
+	 * NATIVE pixel size (`object-fit: none`) and centred — `cover` would
+	 * scale the image and break the 1:1 pixel match with Leaflet's tile
+	 * rendering, which is what caused the visible shift during cross-
+	 * fade. Wider viewports just show a slightly-cropped band of the
+	 * full image; the central region (where the trail lives) is always
+	 * pixel-aligned with the live map. */
+	.hero-static {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: none;
+		object-position: center;
+		z-index: 1;
+		opacity: 1;
+		transition: opacity 450ms ease;
+	}
+
+	.hero-static.faded {
+		opacity: 0;
+		/* Once faded the live map is fully in charge; ensure the static
+		 * image doesn't intercept hovers/clicks meant for the leaflet
+		 * panes underneath. */
+		pointer-events: none;
+	}
+
+	/* Theme-aware switch between the two pre-rendered variants. Default
+	 * is light; `prefers-color-scheme: dark` flips it; an explicit
+	 * `data-theme` attribute on `<html>` always wins (higher specificity). */
+	.hero-static-dark { display: none; }
+	@media (prefers-color-scheme: dark) {
+		.hero-static-light { display: none; }
+		.hero-static-dark { display: block; }
+	}
+	:global(:root[data-theme='light']) .hero-static-light { display: block; }
+	:global(:root[data-theme='light']) .hero-static-dark { display: none; }
+	:global(:root[data-theme='dark']) .hero-static-light { display: none; }
+	:global(:root[data-theme='dark']) .hero-static-dark { display: block; }
+
 
 	/* Push Leaflet's top-left controls (zoom +/-) below the sticky nav so
 	 * they aren't covered on narrow viewports where the nav spans the
@@ -626,10 +723,12 @@
 	}
 
 	.map-fallback {
-		padding: 4rem 1rem;
+		display: grid;
+		place-items: center;
+		height: clamp(360px, 60vh, 640px);
+		padding: 1rem;
 		text-align: center;
 		color: var(--color-text-tertiary);
-		background: var(--color-surface);
-		border-radius: var(--radius-card);
+		background: var(--color-bg-elevated);
 	}
 </style>

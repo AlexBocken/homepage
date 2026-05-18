@@ -27,6 +27,7 @@ import {
 	type GpxPoint
 } from '../src/lib/server/gpx.js';
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
+import { computeStaticMapPose, renderStaticMap } from './staticHikeMap.js';
 import type {
 	Difficulty,
 	HikeManifestEntry,
@@ -54,7 +55,7 @@ const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikes.generated.ts')
 
 const ELEV_SMOOTH_WINDOW = 5;       // moving-average window for altitude denoising
 const ELEV_MIN_STEP_M = 3;          // discard altitude deltas below this
-const PREVIEW_POLYLINE_MAX_POINTS = 30;
+const PREVIEW_POLYLINE_MAX_POINTS = 150;
 const IMAGE_WIDTHS = [480, 960, 1600] as const;
 const IMAGE_THUMBNAIL_WIDTH = 240;  // popup thumbnail for map markers
 const MANIFEST_WARN_BYTES = 200_000;
@@ -542,6 +543,155 @@ async function processIcon(slug: string, hikeDir: string): Promise<{ url: string
 }
 
 // ---------------------------------------------------------------------------
+// Pre-rendered hero map (static Swisstopo composite + polyline overlay).
+// See `scripts/staticHikeMap.ts` for the renderer; this helper just hashes
+// inputs, picks an output filename, and skips when the file already exists.
+// ---------------------------------------------------------------------------
+
+// Rendered well beyond any expected viewport width so the image, displayed
+// with `object-fit: none`, covers ultrawide / 4K displays without falling
+// back to upscale. The bigger canvas surrounds the bbox with extra map
+// context — wider viewports just see more of it, narrower viewports see
+// less, and the bbox itself is always pixel-aligned with Leaflet's view.
+const HERO_WIDTH = 3840;
+const HERO_HEIGHT = 2400;
+// Zoom-selection reference. Matches the typical desktop hero display size
+// (max clamp height = 640 px, full-width up to ~1920 on common monitors)
+// so the static image picks the same integer zoom Leaflet's `fitBounds`
+// would pick at the live container — meaning the full route is visible on
+// the static at every common desktop viewport, no zoom-out animation
+// needed once the live map takes over. Narrower viewports still get the
+// fly-to-fit animation on top.
+const HERO_FIT_WIDTH = 1920;
+const HERO_FIT_HEIGHT = 640;
+// Nord red — same accent the live HikeMap uses for its polyline, so the
+// fade-over from static to interactive looks continuous.
+const HERO_TRAIL_COLOR = '#bf616a';
+// Photo-badge fill, border + icon-stroke colours per UI theme. Matches
+// the live HikeMap's `.hike-photo-marker .badge`:
+//   background: var(--color-primary)        → Nord10 light / Nord8 dark
+//   border:     var(--color-surface)        → Nord6 light / Nord1 dark
+//   color:      var(--color-text-on-primary) → white on the light
+//                 theme's mid-blue primary, Nord0 on the dark theme's
+//                 light-blue primary (which has too little contrast
+//                 against pure white).
+const HERO_BADGE_FILL_LIGHT = '#5e81ac';
+const HERO_BADGE_FILL_DARK = '#88c0d0';
+const HERO_BADGE_BORDER_LIGHT = '#eceff4';
+const HERO_BADGE_BORDER_DARK = '#3b4252';
+const HERO_BADGE_ICON_LIGHT = '#ffffff';
+const HERO_BADGE_ICON_DARK = '#2e3440';
+// Bumped whenever the static-map renderer's visual output changes (icons,
+// stroke widths, marker shapes, ...) so the per-hike hash invalidates and
+// existing files get re-rendered on the next build.
+const HERO_RENDER_VERSION = 5;
+
+async function processHero(
+	slug: string,
+	track: GpxPoint[],
+	bbox: [number, number, number, number],
+	imagePoints: ImagePoint[]
+): Promise<
+	| {
+			lightUrl: string;
+			lightOutName: string;
+			darkUrl: string;
+			darkOutName: string;
+			zoom: number;
+			center: [number, number];
+	  }
+	| undefined
+> {
+	if (track.length < 2) return undefined;
+
+	const polyline: Array<[number, number]> = track.map((p) => [p.lat, p.lng]);
+	// Public photo markers only — the hero is rendered once and served to
+	// everyone, including logged-out viewers, so private positions must
+	// not be burned in.
+	const photoMarkers = imagePoints
+		.filter((ip) => ip.visibility !== 'private')
+		.map((ip) => ({ lat: ip.lat, lng: ip.lng }));
+
+	// Pose (zoom + centre + canvas origin) is shared by both theme variants
+	// so they align pixel-perfectly. Computed once up-front; renders below
+	// reuse it. `fitWidth × fitHeight` pin the chosen zoom to what
+	// Leaflet's `fitBounds` picks on a typical desktop hero, so the full
+	// route is visible inside the static image even though the rendered
+	// canvas is much larger.
+	const pose = computeStaticMapPose({
+		bbox,
+		width: HERO_WIDTH,
+		height: HERO_HEIGHT,
+		fitWidth: HERO_FIT_WIDTH,
+		fitHeight: HERO_FIT_HEIGHT
+	});
+	if (!pose) return undefined;
+
+	const outDir = path.join(HIKES_ASSETS_DIR, slug, 'images');
+	await fs.mkdir(outDir, { recursive: true });
+
+	// Per-theme hash + render. Theme is part of the hash so light and dark
+	// produce distinct filenames; both variants regenerate whenever the
+	// route, photo set, or renderer version changes.
+	async function renderVariant(theme: 'light' | 'dark'): Promise<{ url: string; outName: string } | undefined> {
+		const fillColor = theme === 'dark' ? HERO_BADGE_FILL_DARK : HERO_BADGE_FILL_LIGHT;
+		const borderColor = theme === 'dark' ? HERO_BADGE_BORDER_DARK : HERO_BADGE_BORDER_LIGHT;
+		const iconColor = theme === 'dark' ? HERO_BADGE_ICON_DARK : HERO_BADGE_ICON_LIGHT;
+		const hash = crypto
+			.createHash('sha256')
+			.update(
+				JSON.stringify({
+					bbox,
+					w: HERO_WIDTH,
+					h: HERO_HEIGHT,
+					color: HERO_TRAIL_COLOR,
+					poly: polyline,
+					photos: photoMarkers,
+					fill: fillColor,
+					border: borderColor,
+					icon: iconColor,
+					v: HERO_RENDER_VERSION
+				})
+			)
+			.digest('hex')
+			.slice(0, 8);
+
+		const outName = `hero-${theme}.${hash}.webp`;
+		const outPath = path.join(outDir, outName);
+
+		if (!(await pathExists(outPath))) {
+			const ok = await renderStaticMap({
+				pose,
+				polyline,
+				color: HERO_TRAIL_COLOR,
+				outputPath: outPath,
+				width: HERO_WIDTH,
+				height: HERO_HEIGHT,
+				photoMarkers,
+				photoMarkerColor: fillColor,
+				photoMarkerBorderColor: borderColor,
+				photoMarkerIconColor: iconColor
+			});
+			if (!ok) return undefined;
+		}
+
+		return { url: `/hikes/${slug}/images/${outName}`, outName };
+	}
+
+	const [light, dark] = await Promise.all([renderVariant('light'), renderVariant('dark')]);
+	if (!light || !dark) return undefined;
+
+	return {
+		lightUrl: light.url,
+		lightOutName: light.outName,
+		darkUrl: dark.url,
+		darkOutName: dark.outName,
+		zoom: pose.zoom,
+		center: [pose.centerLat, pose.centerLng]
+	};
+}
+
+// ---------------------------------------------------------------------------
 // Image EXIF -> ImagePoint
 // ---------------------------------------------------------------------------
 
@@ -697,11 +847,19 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		if (r.point) imagePoints.push(r.point);
 	}
 
-	// Per-route icon — handled here (before cleanup) so its outName joins
-	// `keepFiles.images` and survives the orphan sweep, while previous-build
-	// `icon.<oldhash>.*` files (different hash, not in keepFiles) get removed.
-	const iconResult = await processIcon(slug, hikeDir);
+	// Per-route icon + pre-rendered hero map — handled here (before cleanup)
+	// so their outNames join `keepFiles.images` and survive the orphan sweep,
+	// while previous-build `icon.<oldhash>.*` / `hero.<oldhash>.*` files
+	// (different hash, not in keepFiles) get removed automatically.
+	const [iconResult, heroResult] = await Promise.all([
+		processIcon(slug, hikeDir),
+		processHero(slug, track, bbox, imagePoints)
+	]);
 	if (iconResult) keepFiles.images.add(iconResult.outName);
+	if (heroResult) {
+		keepFiles.images.add(heroResult.lightOutName);
+		keepFiles.images.add(heroResult.darkOutName);
+	}
 
 	// Cleanup pass: drop any encoded files in either segment dir that don't
 	// belong to a current image. Catches both stale hashes (deleted source
@@ -764,6 +922,10 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	const tags = Array.isArray(fm.tags) ? fm.tags : [];
 
 	const iconUrl = iconResult?.url;
+	const heroMapUrlLight = heroResult?.lightUrl;
+	const heroMapUrlDark = heroResult?.darkUrl;
+	const heroMapZoom = heroResult?.zoom;
+	const heroMapCenter = heroResult?.center;
 
 	const entry: HikeManifestEntry = {
 		slug,
@@ -791,6 +953,10 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		pointCount: track.length,
 		cover,
 		icon: iconUrl,
+		heroMapUrlLight,
+		heroMapUrlDark,
+		heroMapZoom,
+		heroMapCenter,
 		imagePoints
 	};
 
