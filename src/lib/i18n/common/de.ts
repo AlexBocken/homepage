@@ -35,7 +35,11 @@ export const de = {
 
 	// Date picker
 	select_date: 'Datum wählen',
+	select_time: 'Uhrzeit wählen',
 	today: 'Heute',
+	now: 'Jetzt',
+	apply_inherited: 'Übernehmen',
+	clear: 'Entfernen',
 
 	// Error view
 	error_label: 'Fehler'

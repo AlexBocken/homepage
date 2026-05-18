@@ -2,60 +2,11 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
-import type { IGpsPoint } from '$models/WorkoutSession';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { generateGpx, buildGpxFilename } from '$lib/server/gpxExport';
+import { parseGpx, trackDistance } from '$lib/server/gpx';
 import mongoose from 'mongoose';
-
-/** Haversine distance in km between two points */
-function haversine(a: IGpsPoint, b: IGpsPoint): number {
-	const R = 6371;
-	const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-	const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-	const sinLat = Math.sin(dLat / 2);
-	const sinLng = Math.sin(dLng / 2);
-	const h =
-		sinLat * sinLat +
-		Math.cos((a.lat * Math.PI) / 180) *
-			Math.cos((b.lat * Math.PI) / 180) *
-			sinLng * sinLng;
-	return 2 * R * Math.asin(Math.sqrt(h));
-}
-
-function trackDistance(track: IGpsPoint[]): number {
-	let total = 0;
-	for (let i = 1; i < track.length; i++) {
-		total += haversine(track[i - 1], track[i]);
-	}
-	return total;
-}
-
-/** Parse a GPX XML string into an array of GpsPoints */
-function parseGpx(xml: string): IGpsPoint[] {
-	const points: IGpsPoint[] = [];
-	// Match <trkpt> or <rtept> elements
-	const trkptRegex = /<(?:trkpt|rtept)\s+lat="([^"]+)"\s+lon="([^"]+)"[^>]*>([\s\S]*?)<\/(?:trkpt|rtept)>/gi;
-	let match;
-	while ((match = trkptRegex.exec(xml)) !== null) {
-		const lat = parseFloat(match[1]);
-		const lng = parseFloat(match[2]);
-		const body = match[3];
-
-		let altitude: number | undefined;
-		const eleMatch = body.match(/<ele>([^<]+)<\/ele>/);
-		if (eleMatch) altitude = parseFloat(eleMatch[1]);
-
-		let timestamp = Date.now();
-		const timeMatch = body.match(/<time>([^<]+)<\/time>/);
-		if (timeMatch) timestamp = new Date(timeMatch[1]).getTime();
-
-		if (!isNaN(lat) && !isNaN(lng)) {
-			points.push({ lat, lng, altitude, timestamp });
-		}
-	}
-	return points;
-}
 
 // GET /api/fitness/sessions/[id]/gpx?exerciseIdx=N — download GPX export of the track
 export const GET: RequestHandler = async ({ params, url, locals }) => {

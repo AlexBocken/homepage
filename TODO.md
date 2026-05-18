@@ -24,10 +24,18 @@ Order = impact. Font items + app.html preload intentionally skipped.
 [x] BF graph (with trend line like weight graph) on /fitness/stats page. Emphasize relative changes, not absolute numbers in design (as we cannot trust those) (e.g., use start day of overview as 0% and then show +/- x % on the graph)
 [x] Workshop better names than "Measure" for the /fitness/measure route. It's about body data points (i.e., non-food related). What's a better, short name than "Measure" to capture the logging of weight, body composition, body part measurements, and period tracking?
 [x] on /fitness/stats/histoy/<part> for body measurement graphs, make the range reasonable. e.g., if we have 1 cm change, do not fill the entire y-height with 1 cm. Use reasonable padding for low ranges (i think we do something like htis already on the weight graph?)
-[ ] on /fitness/check-in, Make the Period ended button a lot more prominent in the period tracker component.
-[ ] swap heart emoji on recipe favorites to lucide icon
-[ ] coop and migros cards on shopping list for scanning
-[ ] login icon from lucide in header
+[x] on /fitness/check-in, Make the Period ended button a lot more prominent in the period tracker component.
+[x] swap heart emoji on recipe favorites to lucide icon
+[x] coop and migros cards on shopping list for scanning
+[x] login icon from lucide in header
+[ ] Investigate self-hosting BRouter
+[ ] Use the same color swisstopo map both for light and dark mode (currentyl only light mode)
+[ ] pre-compute required map tiles for all tiles on the route (and adjacent enough to be visibile by default on sane screen sizes) and create a fetch instruction for the server. (separate step: create a swiss-topo caching service which smoothly interpolates with non-switzerland service tiles for spots outside of switzerland)
+[ ] expand compatibility outside of switzerland with non-swiss topo map
+[ ] align design better with swizterland mobility
+[ ] allow for difficulty cardio, difficulty technique and T1-T6 labelling
+[ ] allow for Switzerland Mobility like hike icons (with alpine blue white blue, red white red, and yellow hiking shields as a fallback alternative)
+[ ] Add smoothing distance for elevation calculations on GPS-tracled workouts (3 meters? more?)
 
 ## Refactor Recipe Search Component
 
@@ -39,3 +47,45 @@ Refactor `src/lib/components/Search.svelte` to use the new `SearchInput.svelte` 
 Files involved:
 - `src/lib/components/Search.svelte` - refactor to use SearchInput
 - `src/lib/components/SearchInput.svelte` - the reusable input component
+
+
+
+
+
+
+
+
+
+
+
+
+  1. $app/stores → $app/state (biggest, most mechanical)
+  Old: import { page } from '$app/stores' + $page.url.pathname
+  New: import { page } from '$app/state' + page.url.pathname (no $, it's a rune now).
+  Runes-based, smaller bundle (no store wrapper), cleaner SSR. Codebase has dozens of $app/stores imports — same kind
+  of codemod-able migration as hrefs. Available since 2.12. $app/stores is deprecated.
+
+  2. Convert legacy stores to .svelte.ts rune state
+  Files like $lib/stores/recipeTranslation.ts, $lib/stores/language.ts use writable(). Modern pattern: .svelte.ts files
+   with $state() + exported getters/setters. Better TS inference, no $ prefix, no auto-subscription gotchas.
+
+  3. Remote functions for new API code ($app/server, since 2.27)
+  Replaces hand-rolled +server.ts + client fetch with type-safe server functions called like normal funcs. Major
+  refactor for existing /api/** (lots of files), so probably only adopt for new endpoints — not worth churning the
+  existing ~80 API routes.
+
+  4. prerender = true audit
+  Static-ish pages (faith catechesis, latin prayers, apologetics arguments) are great candidates. Skip-SSR for static
+  content = faster cold loads + cheaper hosting. Currently nothing's prerendered — quick win where applicable.
+
+  5. @sveltejs/enhanced-img
+  Transparent image optimization (responsive srcset, AVIF/WebP, blur placeholders) at build time. Recipe hero images
+  and saint-day cards would benefit visibly. Drop-in via <enhanced:img src="...">.
+
+  6. {@attach} over use: (Svelte 5 attachments)
+  Newer API for DOM-lifecycle hooks. Supports spread + library composition use: can't. Low urgency; only matters when
+  writing new lifecycle code.
+
+  7. Shallow routing for modals/galleries
+  pushState + <a> flow lets modals participate in history without full navigation. Useful if you ever add a
+  recipe-image lightbox or apologetics-arg overlay. Net-new feature, not a migration.

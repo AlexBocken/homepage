@@ -35,7 +35,11 @@ export const en = {
 
 	// Date picker
 	select_date: 'Select date',
+	select_time: 'Select time',
 	today: 'Today',
+	now: 'Now',
+	apply_inherited: 'Apply',
+	clear: 'Clear',
 
 	// Error view
 	error_label: 'Error'

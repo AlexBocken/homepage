@@ -1,0 +1,635 @@
+<script lang="ts">
+	import HikeMap from '$lib/components/hikes/HikeMap.svelte';
+	import HikePhotoStrip from '$lib/components/hikes/HikePhotoStrip.svelte';
+	import ElevationProfile from '$lib/components/hikes/ElevationProfile.svelte';
+	import Seo from '$lib/components/Seo.svelte';
+	import { setHikeContext } from '$lib/components/hikes/hikeContext.svelte';
+	import { listScrollAnchors } from '$lib/components/hikes/scrollAnchors';
+	import { setHover, clearHover } from '$lib/components/hikes/hoverStore.svelte';
+	import { focused, setFocused } from '$lib/components/hikes/focusedImageStore.svelte';
+	import Route from '@lucide/svelte/icons/route';
+	import Clock from '@lucide/svelte/icons/clock';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import TrendingDown from '@lucide/svelte/icons/trending-down';
+	import ArrowUpToLine from '@lucide/svelte/icons/arrow-up-to-line';
+	import ArrowDownToLine from '@lucide/svelte/icons/arrow-down-to-line';
+	import CalendarRange from '@lucide/svelte/icons/calendar-range';
+	import Download from '@lucide/svelte/icons/download';
+	import { buildGpx, type GpxWritePoint } from '$lib/gpx';
+	import type { HikeTrackPoint } from '$types/hikes';
+	import type { PageProps } from './$types';
+
+	const { data }: PageProps = $props();
+	const { hike } = data;
+	const MdxComponent = $derived(data.MdxComponent as unknown as typeof import('svelte').SvelteComponent);
+	const showPrivate = $derived(!!data.session?.user);
+
+	let track = $state<HikeTrackPoint[] | null>(null);
+	let trackError = $state<string | null>(null);
+
+	$effect(() => {
+		let aborted = false;
+		fetch(hike.trackUrl)
+			.then((r) => {
+				if (!r.ok) throw new Error(`Track fetch failed: ${r.status}`);
+				return r.json() as Promise<HikeTrackPoint[]>;
+			})
+			.then((data) => {
+				if (!aborted) track = data;
+			})
+			.catch((err: Error) => {
+				if (!aborted) trackError = err.message;
+			});
+		return () => {
+			aborted = true;
+		};
+	});
+
+	const durationLabel = $derived(
+		hike.durationMin !== null && hike.durationMin > 0
+			? `${Math.floor(hike.durationMin / 60)}h ${hike.durationMin % 60}m`
+			: '—'
+	);
+
+	// Map SAC tier to the painted-rectangle trail-marker colour scheme used
+	// in Switzerland: T1 = yellow Wanderweg, T2/T3 = white-red-white
+	// Bergwanderweg, T4–T6 = white-blue-white Alpinwanderweg.
+	const sacBand = $derived.by<'yellow' | 'red' | 'blue'>(() => {
+		if (hike.difficulty === 'T1') return 'yellow';
+		if (hike.difficulty === 'T2' || hike.difficulty === 'T3') return 'red';
+		return 'blue';
+	});
+
+	const MONTHS_DE_SHORT = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+	const seasonLabel = $derived.by(() => {
+		const a = hike.seasonStart;
+		const b = hike.seasonEnd;
+		if (a == null || b == null) return null;
+		if (a < 1 || a > 12 || b < 1 || b > 12) return null;
+		return `${MONTHS_DE_SHORT[a - 1]}–${MONTHS_DE_SHORT[b - 1]}`;
+	});
+
+	// Filter visibility once at the page level so the map and the photo strip
+	// operate on the same index space — focused indexes are positions in this
+	// shared array.
+	const visibleImagePoints = $derived(
+		showPrivate
+			? hike.imagePoints
+			: hike.imagePoints.filter((ip) => ip.visibility !== 'private')
+	);
+
+	// Expose both the full chronological list and the visibility-filtered
+	// list to `<HikeImage>` instances embedded in the MDX body. The track
+	// is exposed too so each HikeImage can resolve its timestamp to a
+	// track index for the scroll-progress pin.
+	setHikeContext(() => ({
+		images: hike.imagePoints,
+		visibleImages: visibleImagePoints,
+		track
+	}));
+
+	// Continuous trail-position tracking. As the reader scrolls through the
+	// content column, we sample every registered `<HikeImage>` anchor's
+	// viewport position and linearly interpolate between adjacent images'
+	// track indices using the viewport's vertical midpoint as the cursor.
+	// The result is pushed into the hover store, so the sticky map's pin
+	// glides along the trail just like it does for chart hovers.
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const mq = window.matchMedia('(min-width: 1024px)');
+		if (!mq.matches) return;
+
+		let frame: number | null = null;
+		let lastHoverIdx = -1;
+		let lastFocusIdx: number | null = null;
+
+		function sample(): void {
+			frame = null;
+			const anchors = listScrollAnchors();
+			if (anchors.length === 0) return;
+			// Sort by current viewport-top — that's the natural reading order
+			// even if a couple of images were rendered out of chronological
+			// sequence in the prose.
+			const sorted = anchors
+				.map((a) => ({
+					top: a.element.getBoundingClientRect().top,
+					trackIdx: a.trackIdx,
+					visibleIdx: a.visibleIdx
+				}))
+				.sort((a, b) => a.top - b.top);
+
+			const anchorY = window.innerHeight / 2;
+			let trackIdx: number;
+			let visibleIdx: number;
+
+			if (anchorY <= sorted[0].top) {
+				trackIdx = sorted[0].trackIdx;
+				visibleIdx = sorted[0].visibleIdx;
+			} else if (anchorY >= sorted[sorted.length - 1].top) {
+				const last = sorted[sorted.length - 1];
+				trackIdx = last.trackIdx;
+				visibleIdx = last.visibleIdx;
+			} else {
+				// Find the bracketing pair and interpolate.
+				let lo = sorted[0];
+				let hi = sorted[sorted.length - 1];
+				for (let i = 0; i < sorted.length - 1; i++) {
+					if (anchorY >= sorted[i].top && anchorY < sorted[i + 1].top) {
+						lo = sorted[i];
+						hi = sorted[i + 1];
+						break;
+					}
+				}
+				const span = hi.top - lo.top || 1;
+				const frac = (anchorY - lo.top) / span;
+				trackIdx = Math.round(lo.trackIdx + frac * (hi.trackIdx - lo.trackIdx));
+				// "Nearest" image — whichever bracket endpoint we're closer to.
+				visibleIdx = frac < 0.5 ? lo.visibleIdx : hi.visibleIdx;
+			}
+
+			if (trackIdx !== lastHoverIdx) {
+				lastHoverIdx = trackIdx;
+				setHover(trackIdx, 'scroll');
+			}
+			if (visibleIdx !== lastFocusIdx && focused.source !== 'strip' && focused.source !== 'map') {
+				lastFocusIdx = visibleIdx;
+				setFocused(visibleIdx, 'inline');
+			}
+		}
+
+		function onScroll(): void {
+			if (frame !== null) return;
+			frame = requestAnimationFrame(sample);
+		}
+
+		window.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('resize', onScroll, { passive: true });
+		// One initial sample so the pin sits at the right place on page load.
+		onScroll();
+
+		return () => {
+			window.removeEventListener('scroll', onScroll);
+			window.removeEventListener('resize', onScroll);
+			if (frame !== null) cancelAnimationFrame(frame);
+			// Clear the scroll-driven hover so the pin disappears if the user
+			// navigates away from the page.
+			clearHover();
+		};
+	});
+
+	// Client-side GPX export of just the track (no image waypoints). Built
+	// from the already-loaded JSON track so we don't hit the network again.
+	function downloadGpx(): void {
+		if (!track || track.length === 0) return;
+		const points: GpxWritePoint[] = track.map(([lng, lat, ele, t]) => ({
+			lat,
+			lng,
+			altitude: typeof ele === 'number' ? ele : undefined,
+			timestamp: typeof t === 'number' ? t : null
+		}));
+		const gpx = buildGpx({ name: hike.title, trackPoints: points });
+		const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${hike.slug}.gpx`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
+</script>
+
+<Seo
+	title={`${hike.title} · Wanderungen`}
+	description={hike.summary}
+	ogType="article"
+	ogImage={hike.cover.src || undefined}
+	ogImageAlt={hike.cover.alt || undefined}
+	lang="de"
+/>
+
+<svelte:head>
+	<link
+		rel="preload"
+		as="fetch"
+		href={hike.trackUrl}
+		type="application/json"
+		crossorigin="anonymous"
+	/>
+	<link rel="preconnect" href="https://wmts.geo.admin.ch" crossorigin="anonymous" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</svelte:head>
+
+<article class="hike-detail">
+	<!-- The map IS the hero: the trail is the most informative thing about a
+	     hike, so we lead with it. Title overlays at the bottom-left. A second
+	     HikeMap further down sticks in the scroll-area; both share state via
+	     the focusedImageStore so they animate together. -->
+	<section class="hero-map" style="view-transition-name: hike-{hike.slug}">
+		{#if track && track.length > 0}
+			<HikeMap {track} imagePoints={visibleImagePoints} showPrivate />
+		{:else if trackError}
+			<div class="map-fallback">Track konnte nicht geladen werden: {trackError}</div>
+		{:else}
+			<div class="map-fallback">Track wird geladen…</div>
+		{/if}
+		<div class="hero-title">
+			<h1>{hike.title}</h1>
+			{#if hike.region}
+				<p class="region">
+					{hike.region}{hike.canton && hike.canton !== hike.region ? `, ${hike.canton}` : ''}
+				</p>
+			{/if}
+		</div>
+	</section>
+
+	<section class="metrics" aria-label="Tourendaten">
+		{#if hike.icon}
+			<img class="route-icon" src={hike.icon} alt="" aria-hidden="true" />
+		{/if}
+		<div class="metric">
+			<Route size={20} strokeWidth={1.75} aria-hidden="true" />
+			<span class="value">{hike.distanceKm.toFixed(1)}<span class="value-unit">km</span></span>
+			<span class="unit">Distanz</span>
+		</div>
+		<div class="metric">
+			<Clock size={20} strokeWidth={1.75} aria-hidden="true" />
+			<span class="value">{durationLabel}</span>
+			<span class="unit">Dauer</span>
+		</div>
+		<div class="metric">
+			<TrendingUp size={20} strokeWidth={1.75} aria-hidden="true" />
+			<span class="value">{hike.elevationGainM}<span class="value-unit">m</span></span>
+			<span class="unit">Aufstieg</span>
+		</div>
+		<div class="metric">
+			<TrendingDown size={20} strokeWidth={1.75} aria-hidden="true" />
+			<span class="value">{hike.elevationLossM}<span class="value-unit">m</span></span>
+			<span class="unit">Abstieg</span>
+		</div>
+		{#if hike.elevationMaxM !== null}
+			<div class="metric">
+				<ArrowUpToLine size={20} strokeWidth={1.75} aria-hidden="true" />
+				<span class="value">{hike.elevationMaxM}<span class="value-unit">m</span></span>
+				<span class="unit">höchster</span>
+			</div>
+		{/if}
+		{#if hike.elevationMinM !== null}
+			<div class="metric">
+				<ArrowDownToLine size={20} strokeWidth={1.75} aria-hidden="true" />
+				<span class="value">{hike.elevationMinM}<span class="value-unit">m</span></span>
+				<span class="unit">tiefster</span>
+			</div>
+		{/if}
+		<div class="metric">
+			<span class="sac-marker sac-marker-{sacBand}" aria-hidden="true"></span>
+			<span class="value">{hike.difficulty}</span>
+			<span class="unit">SAC</span>
+		</div>
+		{#if seasonLabel}
+			<div class="metric">
+				<CalendarRange size={20} strokeWidth={1.75} aria-hidden="true" />
+				<span class="value">{seasonLabel}</span>
+				<span class="unit">Saison</span>
+			</div>
+		{/if}
+	</section>
+
+	{#if track && track.length > 0}
+		<section class="elev-area">
+			<ElevationProfile {track} />
+		</section>
+	{/if}
+
+	<div class="actions">
+		<button
+			type="button"
+			class="download-btn"
+			onclick={downloadGpx}
+			disabled={!track || track.length === 0}
+			title="GPX-Datei mit nur dem Track (ohne Bilder) herunterladen"
+		>
+			<Download size={16} strokeWidth={2} aria-hidden="true" />
+			GPX herunterladen
+		</button>
+	</div>
+
+	{#if track && track.length > 0 && visibleImagePoints.length > 0}
+		<section class="strip-area">
+			<HikePhotoStrip images={visibleImagePoints} {track} />
+		</section>
+	{/if}
+
+	<section class="scroll-area">
+		<aside class="trail-col">
+			{#if track && track.length > 0}
+				<HikeMap {track} imagePoints={visibleImagePoints} showPrivate />
+				<ElevationProfile {track} />
+			{/if}
+		</aside>
+
+		<section class="content-col">
+			<MdxComponent />
+		</section>
+	</section>
+</article>
+
+<style>
+	.hike-detail {
+		max-width: 1400px;
+		margin-inline: auto;
+		padding: 0 0 4rem;
+	}
+
+	/* Hero map is full-bleed: breaks out of the centered `.hike-detail`
+	 * container to span the entire viewport width and extends *under* the
+	 * sticky nav (which is glass-blurred and sits above with z-index). The
+	 * `calc(50% - 50vw)` trick stretches a child of a centered parent
+	 * edge-to-edge; the negative top margin pulls the map back up over
+	 * the gap that the nav's height + top-margin would otherwise leave. */
+	.hero-map {
+		position: relative;
+		width: 100vw;
+		margin-left: calc(50% - 50vw);
+		margin-right: calc(50% - 50vw);
+		margin-top: calc(-1 * (3rem + max(12px, env(safe-area-inset-top, 0px) + 4px)));
+		margin-bottom: 0;
+		overflow: hidden;
+	}
+
+	.hero-map :global(.map) {
+		height: clamp(360px, 60vh, 640px);
+		border-radius: 0;
+		box-shadow: none;
+	}
+
+	/* Push Leaflet's top-left controls (zoom +/-) below the sticky nav so
+	 * they aren't covered on narrow viewports where the nav spans the
+	 * full width. The bottom-right controls (layer toggle, photo toggle,
+	 * GPS) sit clear of the nav already. */
+	.hero-map :global(.leaflet-top) {
+		top: calc(3rem + max(12px, env(safe-area-inset-top, 0px) + 4px) + 0.5rem);
+	}
+
+	.hero-title {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: 1.5rem 1.5rem 1.25rem;
+		background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+		color: white;
+		pointer-events: none;
+		z-index: 400;
+	}
+
+	.hero-title h1 {
+		margin: 0;
+		font-size: clamp(1.5rem, 4vw, 2.2rem);
+		text-shadow: 0 2px 8px rgb(0 0 0 / 0.45);
+	}
+
+	.region {
+		margin: 0.2rem 0 0;
+		opacity: 0.9;
+		text-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+	}
+
+	.metrics {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 1rem 2.25rem;
+		padding: 1.5rem 1rem;
+		color: var(--color-text-secondary);
+		font-size: 0.9rem;
+	}
+
+	.route-icon {
+		width: 96px;
+		height: 96px;
+		object-fit: contain;
+		flex-shrink: 0;
+	}
+
+	.metric {
+		display: grid;
+		grid-template-columns: auto auto;
+		grid-template-rows: auto auto;
+		column-gap: 0.55rem;
+		row-gap: 0.05rem;
+		align-items: center;
+	}
+
+	.metric :global(svg) {
+		grid-row: 1 / span 2;
+		color: var(--color-primary);
+	}
+
+	.metrics .value {
+		font-size: 1.35rem;
+		line-height: 1.1;
+		color: var(--color-text-primary);
+		font-variant-numeric: tabular-nums;
+		font-weight: 600;
+	}
+
+	.value-unit {
+		font-size: 0.7em;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+		margin-left: 0.15em;
+	}
+
+	.metrics .unit {
+		font-size: 0.78rem;
+		color: var(--color-text-tertiary);
+		letter-spacing: 0.02em;
+	}
+
+	/* SAC trail-marker pictograms in landscape orientation.
+	 * T1: yellow Wegweiser-style sign with a right-pointing arrow tip.
+	 * T2/T3: white-red-white painted Bergwanderweg marker.
+	 * T4–T6: white-blue-white painted Alpinwanderweg marker. */
+	.sac-marker {
+		grid-row: 1 / span 2;
+		width: 44px;
+		height: 20px;
+	}
+
+	.sac-marker-yellow {
+		width: 32px;
+		background: #f5a623;
+		/* Pentagon → flat left, arrow point on the right, like a Swiss
+		 * hiking-trail Wegweiser. Clip-path overrides any border so the
+		 * outline is supplied by filter: drop-shadow instead. */
+		clip-path: polygon(0 0, 75% 0, 100% 50%, 75% 100%, 0 100%);
+		filter: drop-shadow(0 0 0.5px rgb(0 0 0 / 0.45));
+	}
+
+	.sac-marker-red {
+		border-radius: 2px;
+		box-shadow: 0 0 0 1px rgb(0 0 0 / 0.18);
+		background: linear-gradient(
+			to bottom,
+			#fff 0 25%,
+			#dc1d2a 25% 75%,
+			#fff 75% 100%
+		);
+	}
+
+	.sac-marker-blue {
+		border-radius: 2px;
+		box-shadow: 0 0 0 1px rgb(0 0 0 / 0.18);
+		background: linear-gradient(
+			to bottom,
+			#fff 0 25%,
+			#2965c8 25% 75%,
+			#fff 75% 100%
+		);
+	}
+
+	.actions {
+		display: flex;
+		justify-content: center;
+		padding: 0 1rem 1rem;
+	}
+
+	.download-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.5rem 1.1rem;
+		font: inherit;
+		font-size: 0.88rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		box-shadow: var(--shadow-sm);
+		cursor: pointer;
+		transition:
+			color var(--transition-fast),
+			border-color var(--transition-fast),
+			transform var(--transition-fast),
+			box-shadow var(--transition-fast);
+	}
+
+	.download-btn:hover:not(:disabled) {
+		color: var(--color-primary);
+		border-color: var(--color-primary);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-md);
+	}
+
+	.download-btn:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	.download-btn :global(svg) {
+		color: var(--color-primary);
+	}
+
+	.elev-area {
+		padding: 0 1rem;
+		margin-top: 0.25rem;
+	}
+
+	.strip-area {
+		padding-inline: 1rem;
+		margin-top: 0.5rem;
+	}
+
+	.scroll-area {
+		padding-inline: 1rem;
+		margin-top: 1.5rem;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1.5rem;
+	}
+
+	/* Mobile: the hero map at the top is the only map; the secondary sticky
+	 * map (and the elevation profile that lived next to it) are redundant
+	 * since there's no scrollytelling without the two-column layout. */
+	.trail-col {
+		display: none;
+	}
+
+	.trail-col,
+	.content-col {
+		min-width: 0;
+	}
+
+	.content-col {
+		font-size: 1rem;
+		line-height: 1.65;
+	}
+
+	.content-col :global(p) {
+		margin: 0 0 1.2rem;
+	}
+
+	.content-col :global(h2) {
+		margin: 2rem 0 0.75rem;
+		font-size: 1.5rem;
+		color: var(--color-text-primary);
+	}
+
+	.content-col :global(blockquote) {
+		margin: 1.5rem 0;
+		padding: 0.6rem 1rem;
+		border-left: 3px solid var(--color-primary);
+		background: var(--color-surface);
+		border-radius: var(--radius-md);
+		color: var(--color-text-secondary);
+		font-style: italic;
+	}
+
+	/* Desktop scrollytelling: a sticky trail column on the left holding a
+	 * smaller copy of the map + elevation profile, with prose + inline
+	 * images flowing on the right. Below 1024 px the columns stack and the
+	 * trail loses its stickiness.
+	 *
+	 * For `position: sticky` to actually engage, the grid item's own height
+	 * must be smaller than the row's resolved height — `align-self: start`
+	 * stops the grid from stretching the cell to the row's full height
+	 * (which would otherwise leave no scroll room for the sticky to move
+	 * against). The trail-col contains only the secondary map + elevation
+	 * here (the strip lives above, the photos inline), so it stays short. */
+	@media (min-width: 1024px) {
+		.scroll-area {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			gap: 2.5rem;
+			align-items: start;
+		}
+
+		.trail-col {
+			display: block;
+			position: sticky;
+			/* The global nav is itself sticky (3 rem tall, ~12 px top offset),
+			 * so anchor the map below it with a small breathing gap. */
+			top: calc(3rem + max(12px, env(safe-area-inset-top, 0px) + 4px) + 0.75rem);
+			align-self: start;
+		}
+
+		.trail-col :global(.map) {
+			height: 400px;
+			border-radius: var(--radius-card);
+		}
+
+		.trail-col :global(.elevation) {
+			height: 180px;
+		}
+	}
+
+	.map-fallback {
+		padding: 4rem 1rem;
+		text-align: center;
+		color: var(--color-text-tertiary);
+		background: var(--color-surface);
+		border-radius: var(--radius-card);
+	}
+</style>

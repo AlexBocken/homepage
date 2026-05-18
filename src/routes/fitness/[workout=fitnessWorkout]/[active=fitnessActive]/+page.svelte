@@ -2142,50 +2142,33 @@
 		background: transparent;
 		box-shadow: none;
 		padding: 0.25rem 0 0;
-		view-transition-name: workout-set-table;
 	}
 
-	/* View transition choreography: vertical for the focus card's name +
-	   set-counter (always), horizontal for the set table on desktop. */
-	:global(::view-transition-old(workout-focus-name)),
-	:global(::view-transition-old(workout-focus-progress)) {
-		animation: workout-slide-out-up 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
-	}
-	:global(::view-transition-new(workout-focus-name)),
-	:global(::view-transition-new(workout-focus-progress)) {
-		animation: workout-slide-in-up 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-	}
-	:global(::view-transition-old(workout-set-table)),
-	:global(::view-transition-new(workout-set-table)) {
+	/* Exercise progression: the focus card swaps as a single unit along two
+	   different axes so the old and new never share visual space — old lifts
+	   up and out of frame (the sky above is empty), new settles in from the
+	   right with a small drift bounded in rem to stay within its column.
+	   The set table is intentionally unnamed so it re-renders in place — the
+	   rest timer reflows the layout, and a named slide would otherwise produce
+	   a diagonal interpolation between the old and new positions. */
+	:global(::view-transition-group(workout-focus-card)) {
 		animation: none;
 	}
-	@media (min-width: 900px) {
-		:global(::view-transition-old(workout-set-table)) {
-			animation: workout-slide-out-left 240ms cubic-bezier(0.4, 0, 0.2, 1) both;
-		}
-		:global(::view-transition-new(workout-set-table)) {
-			animation: workout-slide-in-right 280ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-		}
+	:global(::view-transition-old(workout-focus-card)) {
+		animation: workout-card-out 480ms cubic-bezier(0.4, 0, 1, 1) both;
 	}
-	@keyframes workout-slide-out-up {
-		to { opacity: 0; transform: translateY(-28%); }
+	:global(::view-transition-new(workout-focus-card)) {
+		animation: workout-card-in 380ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
 	}
-	@keyframes workout-slide-in-up {
-		from { opacity: 0; transform: translateY(28%); }
+	@keyframes workout-card-out {
+		to { opacity: 0; transform: translateY(-110%); }
 	}
-	@keyframes workout-slide-out-left {
-		to { opacity: 0; transform: translateX(-6%); }
-	}
-	@keyframes workout-slide-in-right {
-		from { opacity: 0; transform: translateX(6%); }
+	@keyframes workout-card-in {
+		from { opacity: 0; transform: translateX(100%); }
 	}
 	@media (prefers-reduced-motion: reduce) {
-		:global(::view-transition-old(workout-focus-name)),
-		:global(::view-transition-old(workout-focus-progress)),
-		:global(::view-transition-new(workout-focus-name)),
-		:global(::view-transition-new(workout-focus-progress)),
-		:global(::view-transition-old(workout-set-table)),
-		:global(::view-transition-new(workout-set-table)) {
+		:global(::view-transition-old(workout-focus-card)),
+		:global(::view-transition-new(workout-focus-card)) {
 			animation: none;
 		}
 	}

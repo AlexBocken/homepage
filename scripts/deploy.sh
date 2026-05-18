@@ -17,6 +17,12 @@ REMOTE_USER_GROUP="${REMOTE_USER_GROUP:-homepage:homepage}"
 SERVICE="${SERVICE:-homepage.service}"
 ERROR_PAGES_DIR="${ERROR_PAGES_DIR:-/var/www/errors}"
 ERROR_PAGES_OWNER="${ERROR_PAGES_OWNER:-http:http}"
+# Hike images live outside the Node app: nginx serves /hikes/<slug>/images/
+# directly from disk and gates /hikes/<slug>/private/ through Node via
+# X-Accel-Redirect. The build pipeline writes them to ./hikes-assets/ and we
+# rsync that tree to the path nginx serves from.
+HIKES_ASSETS_DIR="${HIKES_ASSETS_DIR:-/var/www/static/hikes}"
+HIKES_ASSETS_OWNER="${HIKES_ASSETS_OWNER:-http:http}"
 
 DRY=""
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -74,13 +80,22 @@ ssh "$REMOTE" "mkdir -p $ERROR_PAGES_DIR"
 rsync -az --delete $DRY --info=progress2 \
     build/client/errors/ "$REMOTE:$ERROR_PAGES_DIR/"
 
+if [[ -d hikes-assets ]]; then
+    echo ":: Syncing hikes-assets/ → $REMOTE:$HIKES_ASSETS_DIR/"
+    ssh "$REMOTE" "mkdir -p $HIKES_ASSETS_DIR"
+    rsync -az --delete $DRY --info=progress2 \
+        hikes-assets/ "$REMOTE:$HIKES_ASSETS_DIR/"
+else
+    echo ":: No hikes-assets/ dir — skipping nginx-served hike images sync"
+fi
+
 if [[ -n "$DRY" ]]; then
     echo ":: Dry run complete — no service restart"
     exit 0
 fi
 
 echo ":: Fixing ownership on server"
-ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR"
+ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi"
 
 echo ":: Restarting $SERVICE"
 ssh "$REMOTE" "systemctl restart $SERVICE"

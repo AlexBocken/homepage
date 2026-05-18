@@ -25,6 +25,29 @@ async function htmlLang({ event, resolve }: Parameters<Handle>[0]) {
 	});
 }
 
+/** Apply headers to a response, transparently cloning it if the original
+ *  has immutable headers. Auth.js (and certain fetch error/redirect responses)
+ *  hand back frozen Headers, and a direct `.set()` on those throws
+ *  `TypeError: immutable` — which would mask the underlying error and 500
+ *  the request. Cloning preserves the body stream and status. */
+function applyHeaders(response: Response, entries: Array<[string, string]>): Response {
+	try {
+		for (const [k, v] of entries) response.headers.set(k, v);
+		return response;
+	} catch (err) {
+		if (err instanceof TypeError) {
+			const headers = new Headers(response.headers);
+			for (const [k, v] of entries) headers.set(k, v);
+			return new Response(response.body, {
+				status: response.status,
+				statusText: response.statusText,
+				headers
+			});
+		}
+		throw err;
+	}
+}
+
 /** Routes that must never appear in search-engine indexes. Search-results pages
  *  are thin/duplicate content; admin/edit/auth-walled pages have no public value
  *  and shouldn't burn crawl budget. Sets X-Robots-Tag rather than per-page meta
@@ -46,9 +69,32 @@ const NOINDEX_PATTERNS: RegExp[] = [
 async function noindex({ event, resolve }: Parameters<Handle>[0]) {
 	const response = await resolve(event);
 	if (NOINDEX_PATTERNS.some((p) => p.test(event.url.pathname))) {
-		response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+		return applyHeaders(response, [['X-Robots-Tag', 'noindex, nofollow']]);
 	}
 	return response;
+}
+
+/** Baseline security headers, set on every response.
+ *
+ *  - X-Frame-Options + CSP frame-ancestors block this site from being
+ *    iframed onto attacker pages (clickjacking on /login, /cospend,
+ *    /fitness, etc.). Both directives are sent: modern browsers honour
+ *    frame-ancestors and ignore the legacy header; older ones (IE11) only
+ *    understand X-Frame-Options.
+ *  - Strict-Transport-Security tells browsers to refuse plain-HTTP for
+ *    bocken.org and any subdomain for one year, preventing protocol
+ *    downgrade. Browsers ignore the header on http:// loads, so dev on
+ *    localhost is unaffected. `preload` deliberately omitted — the HSTS
+ *    preload list is hard to leave; revisit only after a stable production
+ *    deployment.
+ */
+async function securityHeaders({ event, resolve }: Parameters<Handle>[0]) {
+	const response = await resolve(event);
+	return applyHeaders(response, [
+		['X-Frame-Options', 'DENY'],
+		['Content-Security-Policy', "frame-ancestors 'none'"],
+		['Strict-Transport-Security', 'max-age=31536000; includeSubDomains']
+	]);
 }
 
 async function timing({ event, resolve }: Parameters<Handle>[0]) {
@@ -72,8 +118,7 @@ async function timing({ event, resolve }: Parameters<Handle>[0]) {
 	const header = Object.entries(marks)
 		.map(([k, v]) => `${k};dur=${v.toFixed(1)}`)
 		.join(', ');
-	response.headers.set('Server-Timing', header);
-	return response;
+	return applyHeaders(response, [['Server-Timing', header]]);
 }
 
 export const init: ServerInit = async () => {
@@ -172,8 +217,14 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	return resolve(event);
 }
 
+/** Browser/crawler probes for these paths are routine 404s — not bugs.
+ *  Skip the noisy console.error so real errors stay visible. */
+const SILENT_404_PATHS = new Set(['/favicon.ico', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png']);
+
 export const handleError: HandleServerError = async ({ error, event, status, message }) => {
-  console.error('Error occurred:', { error, status, message, url: event.url.pathname });
+  if (!(status === 404 && SILENT_404_PATHS.has(event.url.pathname))) {
+    console.error('Error occurred:', { error, status, message, url: event.url.pathname });
+  }
 
   const bibleQuote = await getRandomVerse(event.fetch, event.url.pathname);
   const isEnglish = event.url.pathname.startsWith('/faith/') || event.url.pathname.startsWith('/recipes/');
@@ -189,6 +240,7 @@ export const handle: Handle = sequence(
 	timing,
 	htmlLang,
 	noindex,
+	securityHeaders,
 	auth.handle,
 	authorization
 );

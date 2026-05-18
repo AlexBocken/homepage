@@ -1,0 +1,846 @@
+/**
+ * Build script for the /hikes route.
+ *
+ * For each directory under `src/content/hikes/<slug>/`:
+ *   1. Parse `index.svx` frontmatter (lightweight in-house parser, schema is small).
+ *   2. Parse `track.gpx` and derive distance / elevation gain / loss / bbox /
+ *      centroid / duration / preview polyline.
+ *   3. Reverse-geocode the centroid via Swisstopo (cached on disk).
+ *   4. Process every image in `images/` with sharp into AVIF + WebP at 3 widths
+ *      and emit srcset strings. Only encode images whose hash is referenced
+ *      and collect them as `imagePoints` for on-map markers.
+ *   5. Write `static/hikes/<slug>/track.<hash>.json` (compact tuple format).
+ * Emits `src/lib/data/hikes.generated.ts` containing the typed manifest used
+ * by the `/hikes` overview page.
+ */
+
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import os from 'node:os';
+import sharp from 'sharp';
+import {
+	parseGpx,
+	parseGpxImageRefs,
+	trackDistance,
+	type GpxImageRef,
+	type GpxPoint
+} from '../src/lib/server/gpx.js';
+import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
+import type {
+	Difficulty,
+	HikeManifestEntry,
+	ImagePoint,
+	ImageVariant
+} from '../src/types/hikes.js';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const ROOT = path.resolve(process.cwd());
+const CONTENT_DIR = path.join(ROOT, 'src', 'content', 'hikes');
+// Track JSON stays under /static — it's public preview data and SvelteKit
+// serves it directly with the rest of the site. URL: /hikes/<slug>/track.*.json
+const STATIC_DIR = path.join(ROOT, 'static', 'hikes');
+// Image binaries live outside /static so they aren't bundled into the Node
+// build or served by SvelteKit. The deploy step rsyncs this tree to
+// /var/www/static/hikes/ on the server, where nginx serves public images
+// directly and gates `/private/` images through Node + X-Accel-Redirect.
+const HIKES_ASSETS_DIR = path.join(ROOT, 'hikes-assets');
+const CACHE_DIR = path.join(ROOT, 'scripts', '.cache');
+const GEOCODE_CACHE_FILE = path.join(CACHE_DIR, 'hikes-geocode.json');
+const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikes.generated.ts');
+
+const ELEV_SMOOTH_WINDOW = 5;       // moving-average window for altitude denoising
+const ELEV_MIN_STEP_M = 3;          // discard altitude deltas below this
+const PREVIEW_POLYLINE_MAX_POINTS = 30;
+const IMAGE_WIDTHS = [480, 960, 1600] as const;
+const IMAGE_THUMBNAIL_WIDTH = 240;  // popup thumbnail for map markers
+const MANIFEST_WARN_BYTES = 200_000;
+
+const VALID_DIFFICULTIES: readonly Difficulty[] = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
+
+// Sharp pipelines are CPU-heavy but release the JS thread while libvips runs,
+// so a small concurrency pool gives a near-linear speed-up. Cap at 4 to avoid
+// thrashing on smaller boxes (a single AVIF encode can saturate one core).
+const IMAGE_CONCURRENCY = Math.max(2, Math.min(os.cpus().length, 4));
+
+async function pathExists(p: string): Promise<boolean> {
+	try {
+		await fs.access(p);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+async function runWithConcurrency<T, R>(
+	items: readonly T[],
+	limit: number,
+	worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+	const results = new Array<R>(items.length);
+	let next = 0;
+	const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+		while (true) {
+			const i = next++;
+			if (i >= items.length) return;
+			results[i] = await worker(items[i], i);
+		}
+	});
+	await Promise.all(runners);
+	return results;
+}
+
+// ---------------------------------------------------------------------------
+// Tiny frontmatter parser (no deps).
+// Supports: strings, numbers, booleans, ISO dates (kept as string),
+// and bracketed arrays of strings: `[a, b, "c d"]`.
+// ---------------------------------------------------------------------------
+
+type Frontmatter = Record<string, string | number | boolean | string[]>;
+
+function parseFrontmatter(source: string): { data: Frontmatter; body: string } {
+	const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+	if (!match) return { data: {}, body: source };
+
+	const data: Frontmatter = {};
+	for (const rawLine of match[1].split(/\r?\n/)) {
+		const line = rawLine.replace(/\s+#.*$/, '').trim();
+		if (!line || line.startsWith('#')) continue;
+		const sep = line.indexOf(':');
+		if (sep < 0) continue;
+		const key = line.slice(0, sep).trim();
+		const raw = line.slice(sep + 1).trim();
+		data[key] = parseScalar(raw);
+	}
+	return { data, body: match[2] };
+}
+
+function parseScalar(raw: string): string | number | boolean | string[] {
+	if (raw === '') return '';
+	if (raw === 'true') return true;
+	if (raw === 'false') return false;
+	if (raw.startsWith('[') && raw.endsWith(']')) {
+		return raw
+			.slice(1, -1)
+			.split(',')
+			.map(s => stripQuotes(s.trim()))
+			.filter(s => s.length > 0);
+	}
+	if (/^-?\d+(\.\d+)?$/.test(raw)) return parseFloat(raw);
+	return stripQuotes(raw);
+}
+
+function stripQuotes(s: string): string {
+	if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+		return s.slice(1, -1);
+	}
+	return s;
+}
+
+/** Parse a `seasons` frontmatter value into `{ seasonStart, seasonEnd }`.
+ *  Accepts:
+ *    - a numeric range string `"4-9"` (April through September)
+ *    - a 3-letter / full English month range `"apr-sep"` or `"april-september"`
+ *    - an array of two numbers `[4, 9]`
+ *  Returns `{ seasonStart: null, seasonEnd: null }` when absent or malformed. */
+function parseSeasonRange(raw: unknown): { seasonStart: number | null; seasonEnd: number | null } {
+	const empty = { seasonStart: null, seasonEnd: null };
+	if (raw == null || raw === '') return empty;
+
+	const MONTHS: Record<string, number> = {
+		jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3,
+		apr: 4, april: 4, may: 5, jun: 6, june: 6, jul: 7, july: 7,
+		aug: 8, august: 8, sep: 9, september: 9, sept: 9, oct: 10, october: 10,
+		nov: 11, november: 11, dec: 12, december: 12
+	};
+	const toMonth = (v: string | number): number | null => {
+		if (typeof v === 'number') return v >= 1 && v <= 12 ? v : null;
+		const s = String(v).trim().toLowerCase();
+		if (/^\d+$/.test(s)) {
+			const n = parseInt(s, 10);
+			return n >= 1 && n <= 12 ? n : null;
+		}
+		return MONTHS[s] ?? null;
+	};
+
+	let parts: Array<string | number> | null = null;
+	if (Array.isArray(raw) && raw.length === 2) {
+		parts = raw as Array<string | number>;
+	} else if (typeof raw === 'string' && raw.includes('-')) {
+		parts = raw.split('-').map((s) => s.trim());
+	}
+	if (!parts) return empty;
+
+	const a = toMonth(parts[0]);
+	const b = toMonth(parts[1]);
+	if (a == null || b == null) return empty;
+	return { seasonStart: a, seasonEnd: b };
+}
+
+// ---------------------------------------------------------------------------
+// Elevation helpers
+// ---------------------------------------------------------------------------
+
+// Returns `null` for indices where no defined altitude exists in the ±half
+// window. The previous behaviour (defaulting to 0) silently turned missing
+// `<ele>` tags into huge synthetic gain spikes against the next real altitude.
+function smoothAltitudes(track: GpxPoint[]): (number | null)[] {
+	const n = track.length;
+	const out = new Array<number | null>(n);
+	const half = Math.floor(ELEV_SMOOTH_WINDOW / 2);
+	for (let i = 0; i < n; i++) {
+		let sum = 0;
+		let count = 0;
+		for (let j = Math.max(0, i - half); j <= Math.min(n - 1, i + half); j++) {
+			const a = track[j].altitude;
+			if (typeof a === 'number') {
+				sum += a;
+				count++;
+			}
+		}
+		out[i] = count > 0 ? sum / count : null;
+	}
+	return out;
+}
+
+function computeElevationStats(track: GpxPoint[]): { gain: number; loss: number } {
+	if (track.length < 2) return { gain: 0, loss: 0 };
+	const altitudes = smoothAltitudes(track);
+	let gain = 0;
+	let loss = 0;
+	let prev: number | null = null;
+	for (const a of altitudes) {
+		if (a === null) continue;
+		if (prev === null) {
+			prev = a;
+			continue;
+		}
+		const diff = a - prev;
+		if (diff >= ELEV_MIN_STEP_M) {
+			gain += diff;
+			prev = a;
+		} else if (diff <= -ELEV_MIN_STEP_M) {
+			loss += -diff;
+			prev = a;
+		}
+	}
+	return { gain: Math.round(gain), loss: Math.round(loss) };
+}
+
+function computeElevationRange(track: GpxPoint[]): { min: number | null; max: number | null } {
+	let min = Infinity;
+	let max = -Infinity;
+	for (const p of track) {
+		if (typeof p.altitude !== 'number') continue;
+		if (p.altitude < min) min = p.altitude;
+		if (p.altitude > max) max = p.altitude;
+	}
+	if (!Number.isFinite(min) || !Number.isFinite(max)) return { min: null, max: null };
+	return { min: Math.round(min), max: Math.round(max) };
+}
+
+function computeBboxAndCentroid(track: GpxPoint[]): {
+	bbox: [number, number, number, number];
+	centroid: [number, number];
+} {
+	let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+	let sumLat = 0, sumLng = 0;
+	for (const p of track) {
+		if (p.lat < minLat) minLat = p.lat;
+		if (p.lat > maxLat) maxLat = p.lat;
+		if (p.lng < minLng) minLng = p.lng;
+		if (p.lng > maxLng) maxLng = p.lng;
+		sumLat += p.lat;
+		sumLng += p.lng;
+	}
+	const n = track.length || 1;
+	return {
+		bbox: [minLat, minLng, maxLat, maxLng],
+		centroid: [sumLat / n, sumLng / n]
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Swisstopo reverse-geocode with disk cache
+// ---------------------------------------------------------------------------
+
+type GeocodeResult = {
+	canton: string | null;
+	municipality: string | null;
+	region: string | null;
+};
+
+type GeocodeCache = Record<string, GeocodeResult>;
+
+async function loadGeocodeCache(): Promise<GeocodeCache> {
+	try {
+		const raw = await fs.readFile(GEOCODE_CACHE_FILE, 'utf-8');
+		return JSON.parse(raw);
+	} catch {
+		return {};
+	}
+}
+
+async function saveGeocodeCache(cache: GeocodeCache): Promise<void> {
+	await fs.mkdir(CACHE_DIR, { recursive: true });
+	await fs.writeFile(GEOCODE_CACHE_FILE, JSON.stringify(cache, null, 2));
+}
+
+const SWISSTOPO_UA = 'bocken-homepage build-hikes';
+
+async function fetchFeatureName(layerBodId: string, featureId: number | string): Promise<string | null> {
+	const url = `https://api3.geo.admin.ch/rest/services/api/MapServer/${layerBodId}/${featureId}/htmlPopup?lang=de`;
+	try {
+		const res = await fetch(url, { headers: { 'User-Agent': SWISSTOPO_UA } });
+		if (!res.ok) return null;
+		const html = await res.text();
+		// htmlPopup label is "Name" for cantons and "Amtlicher Gemeindename" for municipalities.
+		const m =
+			html.match(/<td[^>]*>(?:Amtlicher\s+Gemeindename|Name)<\/td>\s*<td[^>]*>([^<]+)<\/td>/i);
+		return m ? m[1].trim() : null;
+	} catch {
+		return null;
+	}
+}
+
+async function reverseGeocode(
+	lat: number,
+	lng: number,
+	cache: GeocodeCache
+): Promise<GeocodeResult> {
+	const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+	if (cache[key]) return cache[key];
+
+	const layers =
+		'all:ch.swisstopo.swissboundaries3d-kanton-flaeche.fill,' +
+		'ch.swisstopo.swissboundaries3d-gemeinde-flaeche.fill';
+	// Tight 1000x1000 imageDisplay over a 0.0002 deg mapExtent with 1px tolerance
+	// gives ~2 cm of effective tolerance around the centroid — enough to land in
+	// the correct kanton/gemeinde without picking up neighbours.
+	const eps = 0.0001;
+	const url =
+		`https://api3.geo.admin.ch/rest/services/api/MapServer/identify` +
+		`?geometry=${lng},${lat}` +
+		`&geometryType=esriGeometryPoint&geometryFormat=geojson&returnGeometry=false` +
+		`&imageDisplay=1000,1000,96` +
+		`&mapExtent=${lng - eps},${lat - eps},${lng + eps},${lat + eps}` +
+		`&tolerance=1&layers=${layers}&sr=4326`;
+
+	const result: GeocodeResult = { canton: null, municipality: null, region: null };
+	try {
+		const res = await fetch(url, { headers: { 'User-Agent': SWISSTOPO_UA } });
+		if (res.ok) {
+			type IdentifyRow = { layerBodId?: string; layerName?: string; featureId?: number | string; id?: number | string };
+			const json = (await res.json()) as { results?: IdentifyRow[] };
+			// Identify returns historical boundary records too, so we only need the
+			// first hit per layer.
+			for (const r of json.results ?? []) {
+				const layerBodId = r.layerBodId;
+				const featureId = r.featureId ?? r.id;
+				if (!layerBodId || featureId === undefined) continue;
+				if (layerBodId.includes('kanton') && result.canton) continue;
+				if (layerBodId.includes('gemeinde') && result.municipality) continue;
+				const name = await fetchFeatureName(layerBodId, featureId);
+				if (!name) continue;
+				if (layerBodId.includes('kanton')) result.canton = name;
+				else if (layerBodId.includes('gemeinde')) result.municipality = name;
+			}
+			result.region = result.municipality ?? result.canton;
+		} else {
+			console.warn(`[build-hikes] Swisstopo identify failed (${res.status}) for ${key}`);
+		}
+	} catch (err) {
+		console.warn(`[build-hikes] Swisstopo identify error for ${key}:`, err);
+	}
+
+	cache[key] = result;
+	return result;
+}
+
+// ---------------------------------------------------------------------------
+// Image processing (sharp -> AVIF + WebP at multiple widths)
+// ---------------------------------------------------------------------------
+
+function shortHashOfBuffer(buf: Buffer): string {
+	return crypto.createHash('sha256').update(buf).digest('hex').slice(0, 8);
+}
+
+async function processImage(
+	srcPath: string,
+	slug: string,
+	alt: string,
+	gpxImageRefs: Record<string, GpxImageRef>
+): Promise<
+	| { variant: ImageVariant; thumbnailRelUrl: string; largestRelUrl: string; hash: string; visibility: 'public' | 'private'; cached: boolean; outNames: string[] }
+	| { skipped: true; hash: string }
+> {
+	const buffer = await fs.readFile(srcPath);
+	const hash = shortHashOfBuffer(buffer);
+	const ref = gpxImageRefs[hash];
+	if (!ref) {
+		// Not referenced by any waypoint in track.gpx — drop it entirely (no
+		// encode, no manifest entry, no static output). Authors who want an
+		// image published must place it on the route via the route-builder
+		// (which writes a `<bocken:image hash>` waypoint into track.gpx).
+		return { skipped: true, hash };
+	}
+	const visibility: 'public' | 'private' = ref.visibility === 'private' ? 'private' : 'public';
+	// Public images go under `images/` (served directly by nginx).
+	// Private images go under `private/` (proxied through Node for auth check;
+	// nginx hands them off via X-Accel-Redirect once the session is valid).
+	const segment = visibility === 'private' ? 'private' : 'images';
+	// Filenames are content-hash only — the source basename (which usually
+	// encodes a date + camera ID) is intentionally dropped so it doesn't leak
+	// into the published URLs.
+	const outDir = path.join(HIKES_ASSETS_DIR, slug, segment);
+	await fs.mkdir(outDir, { recursive: true });
+
+	const meta = await sharp(buffer).metadata();
+	const intrinsicW = meta.width ?? IMAGE_WIDTHS[IMAGE_WIDTHS.length - 1];
+	const intrinsicH = meta.height ?? 0;
+
+	const widths = IMAGE_WIDTHS.filter(w => w <= intrinsicW);
+	if (widths.length === 0) widths.push(intrinsicW);
+
+	type EncodeJob = {
+		w: number;
+		format: 'avif' | 'webp';
+		filePath: string;
+		quality: number;
+	};
+
+	const jobs: EncodeJob[] = [];
+	const avifEntries: string[] = [];
+	const webpEntries: string[] = [];
+	let largestWebp = '';
+
+	for (const w of widths) {
+		const avifName = `${hash}.${w}.avif`;
+		const webpName = `${hash}.${w}.webp`;
+		jobs.push({ w, format: 'avif', filePath: path.join(outDir, avifName), quality: 55 });
+		jobs.push({ w, format: 'webp', filePath: path.join(outDir, webpName), quality: 82 });
+		const avifUrl = `/hikes/${slug}/${segment}/${avifName}`;
+		const webpUrl = `/hikes/${slug}/${segment}/${webpName}`;
+		avifEntries.push(`${avifUrl} ${w}w`);
+		webpEntries.push(`${webpUrl} ${w}w`);
+		largestWebp = webpUrl;
+	}
+
+	const thumbName = `${hash}.${IMAGE_THUMBNAIL_WIDTH}.webp`;
+	const thumbPath = path.join(outDir, thumbName);
+	const thumbUrl = `/hikes/${slug}/${segment}/${thumbName}`;
+	const thumbJob: EncodeJob = {
+		w: IMAGE_THUMBNAIL_WIDTH,
+		format: 'webp',
+		filePath: thumbPath,
+		quality: 78
+	};
+
+	// Filter out jobs whose output already exists — the hash is in the filename,
+	// so an existing file is guaranteed to be the same encoded bytes.
+	const allJobs = [...jobs, thumbJob];
+	const presence = await Promise.all(allJobs.map(j => pathExists(j.filePath)));
+	const pending = allJobs.filter((_, i) => !presence[i]);
+	const cached = pending.length === 0;
+
+	await Promise.all(
+		pending.map(async (job) => {
+			const pipeline = sharp(buffer).rotate().resize({ width: job.w, withoutEnlargement: true });
+			if (job.format === 'avif') {
+				await pipeline.avif({ quality: job.quality }).toFile(job.filePath);
+			} else {
+				await pipeline.webp({ quality: job.quality }).toFile(job.filePath);
+			}
+		})
+	);
+
+	const largestW = widths[widths.length - 1];
+	const scale = largestW / intrinsicW;
+	const largestH = Math.round((intrinsicH || largestW) * scale);
+
+	// Names of every output file this image owns — used by the per-hike
+	// cleanup pass to drop orphaned encodes from previous builds.
+	const outNames = allJobs.map((j) => path.basename(j.filePath));
+
+	return {
+		variant: {
+			src: largestWebp,
+			srcsetAvif: avifEntries.join(', '),
+			srcsetWebp: webpEntries.join(', '),
+			width: largestW,
+			height: largestH,
+			alt
+		},
+		thumbnailRelUrl: thumbUrl,
+		largestRelUrl: largestWebp,
+		hash,
+		visibility,
+		cached,
+		outNames
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Per-hike icon (icon.svg / icon.png / icon.jpg / icon.jpeg / icon.webp).
+// SVG passes through verbatim; raster sources are re-encoded to a single
+// 256-square WebP so /hikes/<slug>/ stays small. Filenames carry the
+// source content hash so the URL changes when the icon does, side-stepping
+// CDN cache concerns.
+// ---------------------------------------------------------------------------
+
+const ICON_SOURCES: ReadonlyArray<{ filename: string; isSvg: boolean }> = [
+	{ filename: 'icon.svg', isSvg: true },
+	{ filename: 'icon.png', isSvg: false },
+	{ filename: 'icon.jpg', isSvg: false },
+	{ filename: 'icon.jpeg', isSvg: false },
+	{ filename: 'icon.webp', isSvg: false }
+];
+
+const ICON_RASTER_SIZE = 256;
+
+async function processIcon(slug: string, hikeDir: string): Promise<{ url: string; outName: string } | undefined> {
+	let srcPath: string | undefined;
+	let isSvg = false;
+	for (const candidate of ICON_SOURCES) {
+		const p = path.join(hikeDir, candidate.filename);
+		if (await pathExists(p)) {
+			srcPath = p;
+			isSvg = candidate.isSvg;
+			break;
+		}
+	}
+	if (!srcPath) return undefined;
+
+	const buf = await fs.readFile(srcPath);
+	const hash = shortHashOfBuffer(buf);
+	const outExt = isSvg ? 'svg' : 'webp';
+	const outName = `icon.${hash}.${outExt}`;
+	// Icons live under the `images/` namespace (alongside encoded photos) so
+	// they piggy-back on the same dev-server plugin and nginx public-serve
+	// rules. The naming prefix `icon.` keeps them clearly distinct from
+	// hash-named photo outputs.
+	const outDir = path.join(HIKES_ASSETS_DIR, slug, 'images');
+	await fs.mkdir(outDir, { recursive: true });
+	const outPath = path.join(outDir, outName);
+
+	if (!(await pathExists(outPath))) {
+		if (isSvg) {
+			await fs.writeFile(outPath, buf);
+		} else {
+			await sharp(buf)
+				.rotate()
+				.resize({ width: ICON_RASTER_SIZE, height: ICON_RASTER_SIZE, fit: 'inside', withoutEnlargement: true })
+				.webp({ quality: 88 })
+				.toFile(outPath);
+		}
+	}
+
+	return { url: `/hikes/${slug}/images/${outName}`, outName };
+}
+
+// ---------------------------------------------------------------------------
+// Image EXIF -> ImagePoint
+// ---------------------------------------------------------------------------
+
+function extractImagePoint(
+	processed: { thumbnailRelUrl: string; largestRelUrl: string; hash: string },
+	alt: string,
+	gpxImageRef: GpxImageRef
+): ImagePoint {
+	// The GPX `<bocken:image hash>` waypoint is the single source of truth
+	// for an image's position. Authors place images on the route via the
+	// route-builder (or by hand in the GPX); EXIF GPS is no longer trusted
+	// as a fallback because phone GPS noise produced visible spikes and
+	// because users sometimes want to publish an image at a corrected
+	// location.
+	return {
+		src: processed.largestRelUrl,
+		thumbnail: processed.thumbnailRelUrl,
+		lat: gpxImageRef.lat,
+		lng: gpxImageRef.lng,
+		altitude: gpxImageRef.altitude,
+		timestamp: gpxImageRef.timestamp,
+		alt,
+		visibility: gpxImageRef.visibility ?? 'public'
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Per-hike build
+// ---------------------------------------------------------------------------
+
+async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifestEntry | null> {
+	const hikeStart = Date.now();
+	const hikeDir = path.join(CONTENT_DIR, slug);
+	const svxPath = path.join(hikeDir, 'index.svx');
+	const gpxPath = path.join(hikeDir, 'track.gpx');
+	const imagesDir = path.join(hikeDir, 'images');
+
+	let svxSource: string;
+	try {
+		svxSource = await fs.readFile(svxPath, 'utf-8');
+	} catch {
+		console.warn(`[build-hikes] Skipping ${slug}: no index.svx`);
+		return null;
+	}
+
+	let gpxSource: string;
+	try {
+		gpxSource = await fs.readFile(gpxPath, 'utf-8');
+	} catch {
+		console.warn(`[build-hikes] Skipping ${slug}: no track.gpx`);
+		return null;
+	}
+
+	const { data: fm } = parseFrontmatter(svxSource);
+	const track = parseGpx(gpxSource);
+	if (track.length === 0) {
+		console.warn(`[build-hikes] Skipping ${slug}: empty GPX`);
+		return null;
+	}
+	const gpxImageRefs = parseGpxImageRefs(gpxSource);
+	const gpxImageCount = Object.keys(gpxImageRefs).length;
+	console.log(`[build-hikes:${slug}]   parsed GPX (${track.length} track pts, ${gpxImageCount} image refs)`);
+
+	const distanceKm = trackDistance(track);
+	const { gain, loss } = computeElevationStats(track);
+	const { min: elevationMinM, max: elevationMaxM } = computeElevationRange(track);
+	const { bbox, centroid } = computeBboxAndCentroid(track);
+	const previewPolyline = simplifyTrack(track, PREVIEW_POLYLINE_MAX_POINTS) as [number, number][];
+	const dtMs = track[track.length - 1].timestamp - track[0].timestamp;
+	const durationMin = dtMs > 0 ? Math.round(dtMs / 60000) : null;
+	console.log(`[build-hikes:${slug}]   metrics: ${distanceKm.toFixed(2)} km · ↑${gain}m / ↓${loss}m · ${elevationMinM ?? '?'}–${elevationMaxM ?? '?'}m · ${durationMin ?? '?'} min`);
+
+	const geoT0 = Date.now();
+	const geo = await reverseGeocode(centroid[0], centroid[1], cache);
+	console.log(`[build-hikes:${slug}]   geocode: ${geo.municipality ?? '–'}, ${geo.canton ?? '–'} (${Date.now() - geoT0}ms)`);
+
+	// Process images
+	const imageFiles: string[] = [];
+	try {
+		const entries = await fs.readdir(imagesDir);
+		for (const e of entries.sort()) {
+			if (/\.(jpe?g|png|webp|heic|heif)$/i.test(e)) imageFiles.push(path.join(imagesDir, e));
+		}
+	} catch {
+		// no images dir is fine
+	}
+	// Images whose content hash isn't in gpxImageRefs are dropped before
+	// encoding (see processImage). Count for the log line below.
+	if (imageFiles.length > 0) {
+		console.log(
+			`[build-hikes:${slug}]   processing ${imageFiles.length} image(s) — ${Object.keys(gpxImageRefs).length} referenced in track.gpx (concurrency=${IMAGE_CONCURRENCY})…`
+		);
+	}
+
+	let cover: ImageVariant | null = null;
+	const imagePoints: ImagePoint[] = [];
+	// Filenames produced by this build, keyed by segment dir (`images` /
+	// `private`). Used to delete leftover encoded files from previous runs
+	// (images that have since been unreferenced or moved between visibilities).
+	const keepFiles: Record<'images' | 'private', Set<string>> = {
+		images: new Set(),
+		private: new Set()
+	};
+
+	type ImageResult = {
+		variant: ImageVariant | null;
+		point: ImagePoint | null;
+		outNames: string[];
+		visibility: 'public' | 'private';
+	};
+
+	const results = await runWithConcurrency<string, ImageResult>(
+		imageFiles,
+		IMAGE_CONCURRENCY,
+		async (imgPath, i) => {
+			const imgT0 = Date.now();
+			// Hero alt only applies to the first image; later ones get a generic
+			// label (image basenames usually encode date/camera info that we don't
+			// want to leak into alt text or hover tooltips).
+			const alt = i === 0 && typeof fm.heroAlt === 'string'
+				? fm.heroAlt
+				: `Bild ${i + 1}`;
+			const processed = await processImage(imgPath, slug, alt, gpxImageRefs);
+			if ('skipped' in processed) {
+				console.log(
+					`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${path.basename(imgPath)} · ${processed.hash} · skipped (not in track.gpx)`
+				);
+				return { variant: null, point: null, outNames: [], visibility: 'public' as const };
+			}
+			const point = extractImagePoint(processed, alt, gpxImageRefs[processed.hash]);
+			const cacheTag = processed.cached ? ' · cached' : '';
+			console.log(
+				`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${path.basename(imgPath)} · ${processed.hash} · ${processed.visibility}${cacheTag} (${Date.now() - imgT0}ms)`
+			);
+			return {
+				variant: processed.variant,
+				point,
+				outNames: processed.outNames,
+				visibility: processed.visibility
+			};
+		}
+	);
+
+	for (const r of results) {
+		if (r.variant !== null) {
+			// Use the first PUBLIC image as the cover. Private images must not
+			// surface on the listing page (which is prerendered and served to
+			// anonymous viewers).
+			if (cover === null && r.visibility === 'public') cover = r.variant;
+			const segment = r.visibility === 'private' ? 'private' : 'images';
+			for (const name of r.outNames) keepFiles[segment].add(name);
+		}
+		if (r.point) imagePoints.push(r.point);
+	}
+
+	// Per-route icon — handled here (before cleanup) so its outName joins
+	// `keepFiles.images` and survives the orphan sweep, while previous-build
+	// `icon.<oldhash>.*` files (different hash, not in keepFiles) get removed.
+	const iconResult = await processIcon(slug, hikeDir);
+	if (iconResult) keepFiles.images.add(iconResult.outName);
+
+	// Cleanup pass: drop any encoded files in either segment dir that don't
+	// belong to a current image. Catches both stale hashes (deleted source
+	// images) and visibility flips (a hash that's now public still has its
+	// old `private/` encodes lying around, and vice versa).
+	for (const segment of ['images', 'private'] as const) {
+		const dir = path.join(HIKES_ASSETS_DIR, slug, segment);
+		try {
+			const existing = await fs.readdir(dir);
+			const keep = keepFiles[segment];
+			const orphans = existing.filter((f) => !keep.has(f));
+			if (orphans.length > 0) {
+				await Promise.all(
+					orphans.map((f) => fs.unlink(path.join(dir, f)).catch(() => {}))
+				);
+				console.log(
+					`[build-hikes:${slug}]   removed ${orphans.length} orphaned ${segment}/ file(s) from prior builds`
+				);
+			}
+		} catch {
+			// Dir may not exist when a hike has no images of this visibility — nothing to clean.
+		}
+	}
+
+	if (!cover) {
+		// Synthetic 1x1 placeholder so the manifest type stays satisfied even
+		// when a hike directory has no images yet.
+		cover = {
+			src: '',
+			srcsetAvif: '',
+			srcsetWebp: '',
+			width: 0,
+			height: 0,
+			alt: ''
+		};
+	}
+
+	// Per-hike full track JSON in compact tuple format
+	const tuples = track.map(p => [
+		Number(p.lng.toFixed(6)),
+		Number(p.lat.toFixed(6)),
+		typeof p.altitude === 'number' ? Number(p.altitude.toFixed(1)) : null,
+		p.timestamp
+	]);
+	const trackJson = JSON.stringify(tuples);
+	const trackHash = crypto.createHash('sha256').update(trackJson).digest('hex').slice(0, 8);
+	const trackFile = path.join(STATIC_DIR, slug, `track.${trackHash}.json`);
+	await fs.mkdir(path.dirname(trackFile), { recursive: true });
+	await fs.writeFile(trackFile, trackJson);
+	console.log(`[build-hikes:${slug}]   wrote track.${trackHash}.json (${trackJson.length} bytes)`);
+
+	const difficulty = (typeof fm.difficulty === 'string' && VALID_DIFFICULTIES.includes(fm.difficulty as Difficulty))
+		? (fm.difficulty as Difficulty)
+		: 'T1';
+
+	const date = typeof fm.date === 'string'
+		? fm.date
+		: (typeof fm.date === 'number' ? new Date(fm.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
+
+	const tags = Array.isArray(fm.tags) ? fm.tags : [];
+
+	const iconUrl = iconResult?.url;
+
+	const entry: HikeManifestEntry = {
+		slug,
+		title: typeof fm.title === 'string' ? fm.title : slug,
+		date,
+		summary: typeof fm.summary === 'string' ? fm.summary : '',
+		author: typeof fm.author === 'string' ? fm.author : undefined,
+		tags,
+		difficulty,
+		hidden: fm.hidden === true,
+		...parseSeasonRange(fm.seasons),
+		distanceKm: Math.round(distanceKm * 100) / 100,
+		durationMin,
+		elevationGainM: gain,
+		elevationLossM: loss,
+		elevationMaxM,
+		elevationMinM,
+		bbox,
+		centroid,
+		previewPolyline,
+		region: geo.region,
+		canton: geo.canton,
+		municipality: geo.municipality,
+		trackUrl: `/hikes/${slug}/track.${trackHash}.json`,
+		pointCount: track.length,
+		cover,
+		icon: iconUrl,
+		imagePoints
+	};
+
+	console.log(`[build-hikes:${slug}]   done in ${((Date.now() - hikeStart) / 1000).toFixed(1)}s`);
+	return entry;
+}
+
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
+
+async function main() {
+	let slugs: string[] = [];
+	try {
+		const entries = await fs.readdir(CONTENT_DIR, { withFileTypes: true });
+		slugs = entries.filter(e => e.isDirectory()).map(e => e.name).sort();
+	} catch {
+		console.warn(`[build-hikes] No content dir at ${CONTENT_DIR}; emitting empty manifest.`);
+	}
+
+	const cache = await loadGeocodeCache();
+	const hikes: HikeManifestEntry[] = [];
+
+	for (const slug of slugs) {
+		console.log(`[build-hikes] Building ${slug}`);
+		const entry = await buildHike(slug, cache);
+		if (entry) hikes.push(entry);
+	}
+
+	await saveGeocodeCache(cache);
+
+	hikes.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+
+	await fs.mkdir(path.dirname(MANIFEST_OUT), { recursive: true });
+	const banner =
+		'// AUTO-GENERATED by scripts/build-hikes.ts — do not edit by hand.\n' +
+		"import type { HikeManifestEntry } from '$types/hikes';\n\n";
+	const body = `export const HIKES: HikeManifestEntry[] = ${JSON.stringify(hikes, null, 2)} as const;\n`;
+	const manifestSrc = banner + body;
+	await fs.writeFile(MANIFEST_OUT, manifestSrc);
+
+	const bytes = Buffer.byteLength(manifestSrc, 'utf-8');
+	if (bytes > MANIFEST_WARN_BYTES) {
+		console.warn(`[build-hikes] Manifest ${bytes} bytes exceeds soft cap ${MANIFEST_WARN_BYTES} — consider trimming previewPolyline size.`);
+	}
+
+	console.log(`[build-hikes] Wrote ${hikes.length} hikes to ${MANIFEST_OUT} (${bytes} bytes)`);
+}
+
+main().catch(err => {
+	console.error('[build-hikes] Fatal:', err);
+	process.exit(1);
+});

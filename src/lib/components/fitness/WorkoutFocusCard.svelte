@@ -79,6 +79,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-card);
+		view-transition-name: workout-focus-card;
 	}
 
 	/* Eyebrow row: step counter + bodypart + equipment, controls on the right */
@@ -120,7 +121,6 @@
 		line-height: 1.15;
 		color: var(--color-text-primary);
 		min-width: 0;
-		view-transition-name: workout-focus-name;
 	}
 	.focus-details {
 		flex-shrink: 0;
@@ -147,7 +147,6 @@
 		justify-content: space-between;
 		gap: 1rem;
 		flex-wrap: wrap;
-		view-transition-name: workout-focus-progress;
 	}
 	.focus-set-label {
 		font-size: 0.78rem;
