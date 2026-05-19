@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
+	import { page } from '$app/state';
 	import HikeCard from '$lib/components/hikes/HikeCard.svelte';
 	import HikesFilterBar, { type HikesFilter } from '$lib/components/hikes/HikesFilterBar.svelte';
 	import HikesOverviewMap from '$lib/components/hikes/HikesOverviewMap.svelte';
@@ -54,7 +55,19 @@
 		maxGainM: Number.POSITIVE_INFINITY,
 		maxLossM: Number.POSITIVE_INFINITY,
 		difficulties: new SvelteSet<Difficulty>(),
-		regions: new SvelteSet<string>()
+		regions: new SvelteSet<string>(),
+		tags: new SvelteSet<string>()
+	});
+
+	// Tag deep-link: arrival from a detail-page tag chip (`/hikes?tag=winter`)
+	// or any saved URL with `?tag=...` pre-selects those tags. Repeated
+	// params accumulate (`?tag=winter&tag=easy`). Only runs on the client —
+	// SSR has no searchParams to read here.
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const params = page.url.searchParams.getAll('tag');
+		if (params.length === 0) return;
+		for (const t of params) if (t) filter.tags.add(t);
 	});
 
 	// One-shot per mount: set the slider ceilings to the actual data maxes.
@@ -82,6 +95,17 @@
 			if (h.elevationLossM > filter.maxLossM) continue;
 			if (filter.difficulties.size > 0 && !filter.difficulties.has(h.difficulty)) continue;
 			if (filter.regions.size > 0 && (!h.region || !filter.regions.has(h.region))) continue;
+			// Multi-tag = OR (a hike matching ANY selected tag is shown). AND
+			// would shrink the listing to ~zero quickly given how few tags
+			// most hikes have; OR matches how detail-page chips feel like
+			// "show me more like this".
+			if (filter.tags.size > 0) {
+				let any = false;
+				for (const t of h.tags) {
+					if (filter.tags.has(t)) { any = true; break; }
+				}
+				if (!any) continue;
+			}
 			out.push(h);
 		}
 		return out;

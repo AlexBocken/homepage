@@ -9,6 +9,7 @@
 		maxLossM: number;
 		difficulties: SvelteSet<Difficulty>;
 		regions: SvelteSet<string>;
+		tags: SvelteSet<string>;
 	};
 
 	interface Props {
@@ -37,6 +38,22 @@
 		return out.sort((a, b) => a.localeCompare(b));
 	});
 
+	// Tags sorted by usage frequency (most-used first), alphabetical for
+	// ties. Frequency ordering surfaces broadly-applicable filters like
+	// "winter" or "easy" at the head of the list, where they're most
+	// useful for narrowing the listing.
+	const tags = $derived.by(() => {
+		const counts = new Map<string, number>();
+		for (const h of hikes) {
+			for (const t of h.tags ?? []) {
+				counts.set(t, (counts.get(t) ?? 0) + 1);
+			}
+		}
+		return [...counts.entries()]
+			.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+			.map(([t]) => t);
+	});
+
 	function toggleDifficulty(d: Difficulty) {
 		if (filter.difficulties.has(d)) filter.difficulties.delete(d);
 		else filter.difficulties.add(d);
@@ -47,6 +64,11 @@
 		else filter.regions.add(r);
 	}
 
+	function toggleTag(t: string) {
+		if (filter.tags.has(t)) filter.tags.delete(t);
+		else filter.tags.add(t);
+	}
+
 	function resetFilters() {
 		filter.maxDistanceKm = maxDistance;
 		filter.maxDurationMin = maxDuration;
@@ -54,6 +76,7 @@
 		filter.maxLossM = maxLoss;
 		filter.difficulties.clear();
 		filter.regions.clear();
+		filter.tags.clear();
 	}
 </script>
 
@@ -149,6 +172,24 @@
 
 		<button type="button" class="reset" onclick={resetFilters}>Zurücksetzen</button>
 	</div>
+
+	{#if tags.length > 0}
+		<fieldset class="tags-fieldset">
+			<legend>Schlagwörter</legend>
+			<div class="pills">
+				{#each tags as t (t)}
+					<button
+						type="button"
+						class="pill pill-tag"
+						class:active={filter.tags.has(t)}
+						onclick={() => toggleTag(t)}
+					>
+						<span class="pill-tag-hash" aria-hidden="true">#</span>{t}
+					</button>
+				{/each}
+			</div>
+		</fieldset>
+	{/if}
 </aside>
 
 <style>
@@ -253,5 +294,27 @@
 
 	.reset:hover {
 		background: var(--color-bg-elevated);
+	}
+
+	/* Tags fieldset spans the full filter-bar width — there can be many
+	 * (every word an author uses), and forcing it into a column with the
+	 * single-line region/difficulty groups makes them all unreadable. */
+	.tags-fieldset {
+		margin-top: 1rem;
+	}
+
+	.pill-tag {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.2rem;
+	}
+
+	.pill-tag-hash {
+		opacity: 0.55;
+		font-weight: 600;
+	}
+
+	.pill-tag.active .pill-tag-hash {
+		opacity: 0.85;
 	}
 </style>

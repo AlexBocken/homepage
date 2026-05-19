@@ -424,10 +424,14 @@
 	{#if hike.tags.length > 0}
 		<!-- Tag chips sit between the metric tiles (facts) and the
 		     elevation profile (data viz) so they read as framing context —
-		     "what kind of hike is this" — before the data takes over. -->
+		     "what kind of hike is this" — before the data takes over.
+		     Each chip is an anchor link to the /hikes overview with that
+		     tag pre-selected in the filter bar. -->
 		<section class="tags" aria-label="Schlagwörter">
 			{#each hike.tags as tag (tag)}
-				<span class="tag-chip"><span class="tag-hash" aria-hidden="true">#</span>{tag}</span>
+				<a class="tag-chip" href="/hikes?tag={encodeURIComponent(tag)}">
+					<span class="tag-hash" aria-hidden="true">#</span>{tag}
+				</a>
 			{/each}
 		</section>
 	{/if}
@@ -768,11 +772,26 @@
 		background: var(--color-bg-tertiary);
 		border-radius: var(--radius-pill);
 		letter-spacing: 0.005em;
+		text-decoration: none;
+		transition:
+			color var(--transition-fast),
+			background-color var(--transition-fast),
+			scale var(--transition-fast);
+	}
+
+	.tag-chip:hover {
+		color: var(--color-primary);
+		background: var(--color-bg-elevated);
+		scale: 1.05;
 	}
 
 	.tag-hash {
 		color: var(--color-text-tertiary);
 		font-weight: 600;
+	}
+
+	.tag-chip:hover .tag-hash {
+		color: color-mix(in oklab, var(--color-primary) 60%, currentColor);
 	}
 
 	.elev-area {
