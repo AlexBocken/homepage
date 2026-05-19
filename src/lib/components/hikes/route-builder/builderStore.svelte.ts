@@ -231,6 +231,66 @@ export function reconcileSegments(): void {
 	builder.segmentSources.splice(0, builder.segmentSources.length, ...newSources);
 }
 
+/** Haversine distance in metres between two `[lng, lat]` points.
+ *  Inline so this module can stay client-only (the server helpers live in
+ *  `$lib/server/hikesRouting.ts` and aren't importable here). */
+function haversineMeters(lng1: number, lat1: number, lng2: number, lat2: number): number {
+	const R = 6_371_000;
+	const dLat = ((lat2 - lat1) * Math.PI) / 180;
+	const dLng = ((lng2 - lng1) * Math.PI) / 180;
+	const sinLat = Math.sin(dLat / 2);
+	const sinLng = Math.sin(dLng / 2);
+	const h =
+		sinLat * sinLat +
+		Math.cos((lat1 * Math.PI) / 180) *
+			Math.cos((lat2 * Math.PI) / 180) *
+			sinLng * sinLng;
+	return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * Expand every 2-point linear segment into evenly-spaced intermediate
+ * points so an elevation enrichment pass can capture the terrain profile
+ * between the two waypoints. Snapped segments (already many points from
+ * BRouter/OSRM) are left alone.
+ *
+ * `spacingM` defaults to 25 m — matches the coarsest Swisstopo DTM that
+ * we sample against; finer spacing would just sample the same elevation
+ * value twice. Very short segments (< 30 m) skip densification: the two
+ * endpoints already capture every meaningful elevation step within
+ * Swisstopo's DTM resolution at that distance.
+ *
+ * Returns `true` when at least one segment was densified (caller can use
+ * this to decide whether to fire a fresh elevation request).
+ */
+export function densifyLinearSegments(spacingM = 25): boolean {
+	let densifiedAny = false;
+	for (let i = 0; i < builder.routedSegments.length; i++) {
+		const seg = builder.routedSegments[i];
+		if (seg.length !== 2) continue; // already snapped or already densified
+		const [lngA, latA, altA] = seg[0];
+		const [lngB, latB, altB] = seg[1];
+		const dist = haversineMeters(lngA, latA, lngB, latB);
+		if (dist < 30) continue;
+		// At least 4 sub-segments so even a 30-m linear sample gets a usable
+		// elevation profile; longer segments scale up to keep ~25 m spacing.
+		const n = Math.max(4, Math.ceil(dist / spacingM));
+		const out: Array<[number, number, number?]> = new Array(n + 1);
+		for (let j = 0; j <= n; j++) {
+			const f = j / n;
+			// Endpoints keep whatever altitude the caller supplied (typically
+			// `undefined` here — enrichment fills both ends + everything between);
+			// intermediates are seeded as `undefined` so the enrichment step
+			// knows to fill them.
+			const alt = j === 0 ? altA : j === n ? altB : undefined;
+			out[j] = [lngA + (lngB - lngA) * f, latA + (latB - latA) * f, alt];
+		}
+		builder.routedSegments[i] = out;
+		densifiedAny = true;
+	}
+	return densifiedAny;
+}
+
 export function setElevations(elevations: (number | null)[]): void {
 	// elevations are aligned with the flattened routedSegments points; fold them
 	// back into the per-segment arrays.

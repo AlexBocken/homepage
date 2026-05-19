@@ -10,12 +10,38 @@
 		setRoutedSegments,
 		setElevations,
 		clearDraft,
-		reconcileSegments
+		reconcileSegments,
+		densifyLinearSegments
 	} from '$lib/components/hikes/route-builder/builderStore.svelte';
 
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 	let routeRequestId = 0;
+
+	/**
+	 * Pull elevations from Swisstopo for every point of the current
+	 * `routedSegments` that lacks one, then fold the values back into the
+	 * segment arrays. Shared by the snap path (where BRouter sometimes
+	 * doesn't return elevations) and the manual / off-trail path (where
+	 * we densify a straight line then need its profile).
+	 *
+	 * Returns silently if every point already has an altitude — handy when
+	 * BRouter snapped the route and embedded elevations inline.
+	 */
+	async function enrichMissingElevations(reqId: number): Promise<void> {
+		const flat = builder.routedSegments.flat();
+		if (flat.length === 0) return;
+		if (!flat.some((p) => typeof p[2] !== 'number')) return;
+		const elevRes = await fetch('/api/hikes/route-builder/elevation', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ coordinates: flat.map((p) => [p[0], p[1]]) })
+		});
+		if (reqId !== routeRequestId) return;
+		if (!elevRes.ok) return;
+		const { elevations } = (await elevRes.json()) as { elevations: (number | null)[] };
+		setElevations(elevations);
+	}
 
 	async function snapToRoute() {
 		const placed = builder.waypoints.filter((w) => !w.unplaced);
@@ -46,22 +72,9 @@
 			};
 			if (reqId !== routeRequestId) return;
 			setRoutedSegments(data.segments);
-
-			// If routing didn't return elevations, enrich via Swisstopo.
-			const flat = data.segments.flat();
-			const needsElevation = flat.some((p) => typeof p[2] !== 'number');
-			if (needsElevation) {
-				const elevRes = await fetch('/api/hikes/route-builder/elevation', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ coordinates: flat.map((p) => [p[0], p[1]]) })
-				});
-				if (reqId !== routeRequestId) return;
-				if (elevRes.ok) {
-					const elevData = (await elevRes.json()) as { elevations: (number | null)[] };
-					setElevations(elevData.elevations);
-				}
-			}
+			// BRouter usually embeds elevations inline; OSRM / linear
+			// fallbacks don't. Single helper handles both cases.
+			await enrichMissingElevations(reqId);
 		} catch (err) {
 			if (reqId !== routeRequestId) return;
 			error = (err as Error).message;
@@ -95,10 +108,18 @@
 			if (builder.autoSnap) {
 				snapDebounce = setTimeout(() => snapToRoute(), 250);
 			} else {
-				// Keep whatever was already snapped. Cancel any in-flight request so
-				// a late response doesn't overwrite the linear placeholders we just
-				// reconciled.
-				routeRequestId++;
+				// Manual / off-trail mode: keep already-snapped pairs intact
+				// (reconcileSegments preserved them); but for any fresh
+				// two-point linear placeholder, densify to ~25 m spacing and
+				// pull a Swisstopo elevation profile so the GPX carries
+				// per-trkpt `<ele>` even when the user chose not to snap.
+				// Cancel any in-flight snap request so a late response can't
+				// overwrite what we're about to densify.
+				const reqId = ++routeRequestId;
+				snapDebounce = setTimeout(async () => {
+					densifyLinearSegments(25);
+					await enrichMissingElevations(reqId);
+				}, 250);
 			}
 		});
 	});
