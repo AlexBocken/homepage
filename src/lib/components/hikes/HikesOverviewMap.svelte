@@ -185,60 +185,69 @@
 			});
 
 			// One polyline per hike, sourced from the manifest's already-
-			// simplified previewPolyline (≤150 points each).
+			// simplified previewPolyline (≤150 points each). The layer is
+			// re-populated on every `hikes` prop change (see the $effect
+			// below) so toggling filters updates the visible routes — and
+			// re-fits the camera to the new union bounds.
 			const layer = L.layerGroup().addTo(map);
-			const bounds = L.latLngBounds([]);
-			for (const hike of hikes) {
-				if (!hike.previewPolyline || hike.previewPolyline.length < 2) continue;
-				const latLngs = hike.previewPolyline.map(([lat, lng]) => [lat, lng] as [number, number]);
-				const color = SAC_COLOR[hike.difficulty] ?? '#5e81ac';
-				const poly = L.polyline(latLngs, {
-					color,
-					weight: 4,
-					opacity: 0.9,
-					interactive: true
-				}).addTo(layer);
 
-				poly.bindTooltip(
-					`<strong>${hike.title}</strong><br>` +
-						`${hike.distanceKm.toFixed(1)} km · ↑${hike.elevationGainM} m · SAC ${hike.difficulty}`,
-					{ sticky: true, direction: 'top', opacity: 0.95, className: 'hike-overview-tooltip' }
-				);
-				poly.on('mouseover', () => {
-					poly.setStyle({ weight: 7, opacity: 1 });
-					poly.bringToFront();
-				});
-				poly.on('mouseout', () => {
-					poly.setStyle({ weight: 4, opacity: 0.9 });
-				});
-				poly.on('click', () => {
-					goto(resolve('/hikes/[slug]', { slug: hike.slug }));
-				});
+			function renderPolylines(): boolean {
+				layer.clearLayers();
+				const b = L.latLngBounds([]);
+				for (const hike of hikes) {
+					if (!hike.previewPolyline || hike.previewPolyline.length < 2) continue;
+					const latLngs = hike.previewPolyline.map(([lat, lng]) => [lat, lng] as [number, number]);
+					const color = SAC_COLOR[hike.difficulty] ?? '#5e81ac';
+					const poly = L.polyline(latLngs, {
+						color,
+						weight: 4,
+						opacity: 0.9,
+						interactive: true
+					}).addTo(layer);
 
-				for (const [lat, lng] of latLngs) {
-					bounds.extend([lat, lng]);
+					poly.bindTooltip(
+						`<strong>${hike.title}</strong><br>` +
+							`${hike.distanceKm.toFixed(1)} km · ↑${hike.elevationGainM} m · SAC ${hike.difficulty}`,
+						{ sticky: true, direction: 'top', opacity: 0.95, className: 'hike-overview-tooltip' }
+					);
+					poly.on('mouseover', () => {
+						poly.setStyle({ weight: 7, opacity: 1 });
+						poly.bringToFront();
+					});
+					poly.on('mouseout', () => {
+						poly.setStyle({ weight: 4, opacity: 0.9 });
+					});
+					poly.on('click', () => {
+						goto(resolve('/hikes/[slug]', { slug: hike.slug }));
+					});
+
+					for (const [lat, lng] of latLngs) {
+						b.extend([lat, lng]);
+					}
 				}
+				if (b.isValid()) {
+					initialBounds = b;
+					recenterMap = () => {
+						if (!initialBounds) return;
+						map.flyToBounds(initialBounds, {
+							padding: [32, 32],
+							maxZoom: 13,
+							duration: 0.6,
+							easeLinearity: 0.25
+						});
+					};
+					return true;
+				}
+				initialBounds = null;
+				recenterMap = null;
+				return false;
 			}
 
-			if (bounds.isValid()) {
-				initialBounds = bounds;
-				// When the caller handed us a pre-rendered hero pose, we
-				// already called `setView(initialCenter, initialZoom)` above
-				// and rely on the tile-load handler to fly to bounds (so the
-				// static→live cross-fade happens at the matching pose). With
-				// no pre-rendered hero, fitBounds straight away.
-				if (!initialCenter || typeof initialZoom !== 'number') {
-					map.fitBounds(initialBounds, { padding: [32, 32], maxZoom: 13 });
-				}
-				recenterMap = () => {
-					if (!initialBounds) return;
-					map.flyToBounds(initialBounds, {
-						padding: [32, 32],
-						maxZoom: 13,
-						duration: 0.6,
-						easeLinearity: 0.25
-					});
-				};
+			// Initial paint — no animated fit when the caller handed us a
+			// pre-rendered hero pose (the tile-load handover handles the
+			// fly-to), otherwise fit straight to the union bounds.
+			if (renderPolylines() && (!initialCenter || typeof initialZoom !== 'number') && initialBounds) {
+				map.fitBounds(initialBounds, { padding: [32, 32], maxZoom: 13 });
 			}
 
 			// User location (opt-in). Same Tauri-first / Web-Geolocation-fallback
@@ -300,6 +309,26 @@
 
 			// React to control toggles outside the attachment.
 			const stopReactRoot = $effect.root(() => {
+				// Re-render polylines whenever the `hikes` prop changes
+				// (filter bar toggles, tag deep-link). The first $effect
+				// run fires immediately and would re-do the initial paint
+				// for no UX gain — skip it via a tick counter.
+				let rerunTick = 0;
+				$effect(() => {
+					void hikes;
+					if (rerunTick++ === 0) return;
+					if (renderPolylines() && initialBounds) {
+						// Smooth re-fit so the user sees the camera glide
+						// toward whichever subset is now on display.
+						map.flyToBounds(initialBounds, {
+							padding: [32, 32],
+							maxZoom: 13,
+							duration: 0.6,
+							easeLinearity: 0.25
+						});
+					}
+				});
+
 				$effect(() => {
 					if (baseLayer === currentBase) return;
 					tileLayers[currentBase].remove();

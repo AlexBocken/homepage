@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
+	import { replaceState } from '$app/navigation';
 	import HikeCard from '$lib/components/hikes/HikeCard.svelte';
 	import HikesFilterBar, { type HikesFilter } from '$lib/components/hikes/HikesFilterBar.svelte';
 	import HikesOverviewMap from '$lib/components/hikes/HikesOverviewMap.svelte';
@@ -60,14 +61,36 @@
 	});
 
 	// Tag deep-link: arrival from a detail-page tag chip (`/hikes?tag=winter`)
-	// or any saved URL with `?tag=...` pre-selects those tags. Repeated
-	// params accumulate (`?tag=winter&tag=easy`). Only runs on the client —
-	// SSR has no searchParams to read here.
+	// or any saved URL with `?tag=...` pre-selects those tags. Runs once on
+	// mount; thereafter the URL writer below is the source of truth.
+	let initialTagsApplied = false;
 	$effect(() => {
+		if (initialTagsApplied) return;
 		if (typeof window === 'undefined') return;
 		const params = page.url.searchParams.getAll('tag');
-		if (params.length === 0) return;
 		for (const t of params) if (t) filter.tags.add(t);
+		initialTagsApplied = true;
+	});
+
+	// Tag URL sync: every toggle in the filter bar reflects into the URL
+	// so the page is shareable / back-button-restorable. `replaceState`
+	// rather than `goto` keeps history clean — toggling four tags would
+	// otherwise leave four back-button stops.
+	$effect(() => {
+		if (typeof window === 'undefined' || !initialTagsApplied) return;
+		const url = new URL(window.location.href);
+		const wanted = [...filter.tags].sort();
+		const current = url.searchParams.getAll('tag').slice().sort();
+		// Skip the no-op rewrite path — `replaceState` would still touch
+		// history's state object and trigger downstream `page.url` effects
+		// for no UX benefit.
+		if (
+			wanted.length === current.length &&
+			wanted.every((t, i) => t === current[i])
+		) return;
+		url.searchParams.delete('tag');
+		for (const t of wanted) url.searchParams.append('tag', t);
+		replaceState(url, page.state);
 	});
 
 	// One-shot per mount: set the slider ceilings to the actual data maxes.
