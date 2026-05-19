@@ -31,6 +31,38 @@
 	// handover is a soft cross-fade rather than a swap.
 	let heroMapReady = $state(false);
 
+	// Phone vs. desktop viewport — picks which pre-rendered pose we hand
+	// to Leaflet's first `setView` so it lands aligned with the static
+	// `<img>` the CSS is showing. Starts `false` for SSR; the $effect snaps
+	// it to the real value on mount and keeps it in sync across rotate /
+	// resize. See `/hikes/+page.svelte` for the matching overview-side
+	// pattern.
+	let narrowViewport = $state(false);
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const mq = window.matchMedia('(max-width: 560px)');
+		narrowViewport = mq.matches;
+		const onChange = (e: MediaQueryListEvent) => {
+			narrowViewport = e.matches;
+		};
+		mq.addEventListener('change', onChange);
+		return () => mq.removeEventListener('change', onChange);
+	});
+
+	const heroPose = $derived.by(() => {
+		if (
+			narrowViewport &&
+			hike.heroMapCenterNarrow &&
+			typeof hike.heroMapZoomNarrow === 'number'
+		) {
+			return { center: hike.heroMapCenterNarrow, zoom: hike.heroMapZoomNarrow };
+		}
+		if (hike.heroMapCenter && typeof hike.heroMapZoom === 'number') {
+			return { center: hike.heroMapCenter, zoom: hike.heroMapZoom };
+		}
+		return null;
+	});
+
 	$effect(() => {
 		let aborted = false;
 		fetch(hike.trackUrl)
@@ -233,15 +265,16 @@
 	<section class="hero-map" style="view-transition-name: hike-{hike.slug}">
 		{#if hike.heroMapUrlLight}
 			<!-- Build-time static composite of Swisstopo tiles + the trail
-			     polyline + public photo markers. Two variants ship (light
-			     and dark); CSS picks the right one based on `data-theme`
-			     with `prefers-color-scheme` as the fallback. Both are
-			     rendered at the same zoom + centre as the live Leaflet
-			     map, and displayed at native pixel size (object-fit: none)
-			     so they overlay the live tiles exactly. The image fades
-			     out once Leaflet's first tile batch loads. -->
+			     polyline + public photo markers. Four variants ship — theme
+			     (light/dark) × viewport (wide/narrow). Theme is picked by
+			     `data-theme` / `prefers-color-scheme`; viewport by a
+			     `max-width: 560px` media query. Each variant is rendered at
+			     the same pose Leaflet's `fitBounds` picks for its target
+			     container size, so the static→live cross-fade aligns
+			     pixel-perfectly. The image fades out once Leaflet's first
+			     tile batch loads. -->
 			<img
-				class="hero-static hero-static-light"
+				class="hero-static hero-static-light hero-static-wide"
 				class:faded={heroMapReady}
 				src={hike.heroMapUrlLight}
 				alt=""
@@ -252,9 +285,31 @@
 		{/if}
 		{#if hike.heroMapUrlDark}
 			<img
-				class="hero-static hero-static-dark"
+				class="hero-static hero-static-dark hero-static-wide"
 				class:faded={heroMapReady}
 				src={hike.heroMapUrlDark}
+				alt=""
+				aria-hidden="true"
+				loading="eager"
+				decoding="async"
+			/>
+		{/if}
+		{#if hike.heroMapUrlLightNarrow}
+			<img
+				class="hero-static hero-static-light hero-static-narrow"
+				class:faded={heroMapReady}
+				src={hike.heroMapUrlLightNarrow}
+				alt=""
+				aria-hidden="true"
+				loading="eager"
+				decoding="async"
+			/>
+		{/if}
+		{#if hike.heroMapUrlDarkNarrow}
+			<img
+				class="hero-static hero-static-dark hero-static-narrow"
+				class:faded={heroMapReady}
+				src={hike.heroMapUrlDarkNarrow}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -266,13 +321,13 @@
 				{track}
 				imagePoints={visibleImagePoints}
 				showPrivate
-				initialCenter={hike.heroMapCenter}
-				initialZoom={hike.heroMapZoom}
+				initialCenter={heroPose?.center}
+				initialZoom={heroPose?.zoom}
 				onReady={() => (heroMapReady = true)}
 			/>
 		{:else if trackError}
 			<div class="map-fallback">Track konnte nicht geladen werden: {trackError}</div>
-		{:else if !hike.heroMapUrl}
+		{:else if !hike.heroMapUrlLight}
 			<div class="map-fallback">Track wird geladen…</div>
 		{/if}
 		<div class="hero-title">
@@ -447,18 +502,46 @@
 		pointer-events: none;
 	}
 
-	/* Theme-aware switch between the two pre-rendered variants. Default
-	 * is light; `prefers-color-scheme: dark` flips it; an explicit
-	 * `data-theme` attribute on `<html>` always wins (higher specificity). */
-	.hero-static-dark { display: none; }
-	@media (prefers-color-scheme: dark) {
-		.hero-static-light { display: none; }
-		.hero-static-dark { display: block; }
+	/* 2×2 picker: theme (light/dark) × viewport (wide/narrow). Each `<img>`
+	 * has both qualifiers (e.g. `.hero-static-light.hero-static-wide`); we
+	 * hide everything by default and reveal exactly one based on the
+	 * active theme and the `max-width: 560px` media query. The narrow
+	 * variant uses a phone-sized pose so the auto-fit zoom matches what
+	 * Leaflet picks at the same container width. */
+	.hero-static { display: none; }
+
+	/* Default (light theme assumed, no `data-theme` attribute, no
+	 * `prefers-color-scheme: dark`): show the wide-light variant. */
+	.hero-static-light.hero-static-wide { display: block; }
+	@media (max-width: 560px) {
+		.hero-static-light.hero-static-wide { display: none; }
+		.hero-static-light.hero-static-narrow { display: block; }
 	}
-	:global(:root[data-theme='light']) .hero-static-light { display: block; }
-	:global(:root[data-theme='light']) .hero-static-dark { display: none; }
-	:global(:root[data-theme='dark']) .hero-static-light { display: none; }
-	:global(:root[data-theme='dark']) .hero-static-dark { display: block; }
+
+	@media (prefers-color-scheme: dark) {
+		.hero-static-light.hero-static-wide,
+		.hero-static-light.hero-static-narrow { display: none; }
+		.hero-static-dark.hero-static-wide { display: block; }
+		@media (max-width: 560px) {
+			.hero-static-dark.hero-static-wide { display: none; }
+			.hero-static-dark.hero-static-narrow { display: block; }
+		}
+	}
+
+	/* Explicit `data-theme` always wins. */
+	:global(:root[data-theme='light']) .hero-static-dark { display: none !important; }
+	:global(:root[data-theme='light']) .hero-static-light.hero-static-wide { display: block; }
+	@media (max-width: 560px) {
+		:global(:root[data-theme='light']) .hero-static-light.hero-static-wide { display: none; }
+		:global(:root[data-theme='light']) .hero-static-light.hero-static-narrow { display: block; }
+	}
+
+	:global(:root[data-theme='dark']) .hero-static-light { display: none !important; }
+	:global(:root[data-theme='dark']) .hero-static-dark.hero-static-wide { display: block; }
+	@media (max-width: 560px) {
+		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-wide { display: none; }
+		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-narrow { display: block; }
+	}
 
 
 	/* Push Leaflet's top-left controls (zoom +/-) below the sticky nav so

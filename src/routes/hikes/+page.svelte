@@ -15,6 +15,32 @@
 	// page's hero map.
 	let heroMapReady = $state(false);
 
+	// Phone vs. desktop viewport switch — drives which pre-rendered pose
+	// (`HIKES_OVERVIEW.zoom/center` vs. `.zoomNarrow/.centerNarrow`) we
+	// hand to Leaflet's first `setView` so it lands aligned with whichever
+	// static `<img>` the CSS is showing. Starts `false` to match SSR (which
+	// has no window); the $effect snaps it to the real value on mount and
+	// keeps it in sync if the user rotates / resizes across the breakpoint.
+	let narrowViewport = $state(false);
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const mq = window.matchMedia('(max-width: 560px)');
+		narrowViewport = mq.matches;
+		const onChange = (e: MediaQueryListEvent) => {
+			narrowViewport = e.matches;
+		};
+		mq.addEventListener('change', onChange);
+		return () => mq.removeEventListener('change', onChange);
+	});
+
+	const overviewPose = $derived.by(() => {
+		if (!HIKES_OVERVIEW) return null;
+		if (narrowViewport && HIKES_OVERVIEW.urlNarrow && HIKES_OVERVIEW.centerNarrow && typeof HIKES_OVERVIEW.zoomNarrow === 'number') {
+			return { center: HIKES_OVERVIEW.centerNarrow, zoom: HIKES_OVERVIEW.zoomNarrow };
+		}
+		return { center: HIKES_OVERVIEW.center, zoom: HIKES_OVERVIEW.zoom };
+	});
+
 	// Filter ceilings start wide-open so the initial render (SSR + first
 	// hydration pass) shows every hike. `$effect` below clamps them down
 	// to the actual data maxes once `data.hikes` is fully populated —
@@ -91,12 +117,12 @@
 			     visible hike's preview polyline, coloured by SAC tier.
 			     Displayed at native pixel size (`object-fit: none`) so it
 			     overlays Leaflet's live tiles exactly. The image fades out
-			     once Leaflet's first tile batch loads. Unlike the detail
-			     hero, the overview map looks the same in light and dark
-			     mode (only the per-hike camera badges are theme-aware,
-			     and the overview has none) so a single variant ships. -->
+			     once Leaflet's first tile batch loads. Two width variants
+			     ship — desktop (wide pose) and phone (narrow pose, ≤560 CSS
+			     px). CSS chooses which one shows based on a media query so
+			     hydration doesn't need to wait. -->
 			<img
-				class="hero-static"
+				class="hero-static hero-static-wide"
 				class:faded={heroMapReady}
 				src={HIKES_OVERVIEW.url}
 				alt=""
@@ -104,11 +130,22 @@
 				loading="eager"
 				decoding="async"
 			/>
+			{#if HIKES_OVERVIEW.urlNarrow}
+				<img
+					class="hero-static hero-static-narrow"
+					class:faded={heroMapReady}
+					src={HIKES_OVERVIEW.urlNarrow}
+					alt=""
+					aria-hidden="true"
+					loading="eager"
+					decoding="async"
+				/>
+			{/if}
 		{/if}
 		<HikesOverviewMap
 			hikes={visible}
-			initialCenter={HIKES_OVERVIEW?.center}
-			initialZoom={HIKES_OVERVIEW?.zoom}
+			initialCenter={overviewPose?.center}
+			initialZoom={overviewPose?.zoom}
 			onReady={() => (heroMapReady = true)}
 		/>
 	</section>
@@ -196,6 +233,16 @@
 
 	.hero-static.faded {
 		opacity: 0;
+	}
+
+	/* Wide ↔ narrow viewport swap. The narrow variant is rendered at a
+	 * phone-sized fit, so the zoom matches what Leaflet picks at the same
+	 * container width — without this the desktop hero would land too
+	 * zoomed-in on phones (its pose was chosen for ~1920 CSS px). */
+	.hero-static-narrow { display: none; }
+	@media (max-width: 560px) {
+		.hero-static-wide { display: none; }
+		.hero-static-narrow { display: block; }
 	}
 
 	/* Live overview map sits above the static; transparent so the static

@@ -81,8 +81,7 @@ export type HikeManifestEntry = {
 	 * arrives. */
 	heroMapUrlLight?: string;
 	/** Pre-rendered hero map (dark theme). Same pose as
-	 * `heroMapUrlLight` but with the tile composite passed through an
-	 * `invert(1) hue-rotate(180deg)` filter so the map fits the dark UI. */
+	 * `heroMapUrlLight` but with theme-appropriate photo-marker colours. */
 	heroMapUrlDark?: string;
 	/** Zoom level the static hero was rendered at. Leaflet uses this with
 	 * `heroMapCenter` to land on the exact same view on first paint, so
@@ -90,6 +89,17 @@ export type HikeManifestEntry = {
 	heroMapZoom?: number;
 	/** Map centre `[lat, lng]` the static hero was rendered around. */
 	heroMapCenter?: [number, number];
+
+	/** Narrow-viewport variant of the pre-rendered hero (≤ 560 CSS px).
+	 * Rendered with a phone-sized `fitWidth`/`fitHeight`, so the chosen
+	 * integer zoom matches what Leaflet's `fitBounds` picks at the same
+	 * container size. The page shows these instead of the wide variants
+	 * on small screens, otherwise the wide hero would land too zoomed-in
+	 * (its pose was chosen for a 1920×640 desktop hero). */
+	heroMapUrlLightNarrow?: string;
+	heroMapUrlDarkNarrow?: string;
+	heroMapZoomNarrow?: number;
+	heroMapCenterNarrow?: [number, number];
 
 	// Geo-tagged photos shown as map markers on the detail page:
 	imagePoints: ImagePoint[];
@@ -100,11 +110,19 @@ export type HikeManifestEntry = {
  * shows it under the sticky nav until Leaflet's first tile batch loads,
  * then fades it out — same handover pattern as the per-hike detail hero. */
 export type HikesOverview = {
-	/** Absolute URL of the pre-rendered WebP. */
+	/** Absolute URL of the wide (desktop) pre-rendered WebP. */
 	url: string;
-	/** Integer zoom the static was rendered at (matches Leaflet's
-	 * `fitBounds(unionBounds, { padding: 32, maxZoom: 13 })` choice). */
+	/** Integer zoom the wide static was rendered at (matches Leaflet's
+	 * `fitBounds(unionBounds, { padding: 32, maxZoom: 13 })` choice on a
+	 * desktop-sized container). */
 	zoom: number;
-	/** Centre `[lat, lng]` the static was rendered around. */
+	/** Centre `[lat, lng]` the wide static was rendered around. */
 	center: [number, number];
+	/** Narrow-viewport variant for phones (≤ 560 CSS px). Rendered at a
+	 * phone-sized `fitWidth`/`fitHeight`, so the chosen zoom matches what
+	 * Leaflet picks at the same container size. The page shows it instead
+	 * of `url` on small screens. */
+	urlNarrow?: string;
+	zoomNarrow?: number;
+	centerNarrow?: [number, number];
 };

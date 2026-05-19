@@ -587,6 +587,46 @@ const HERO_BADGE_ICON_DARK = '#2e3440';
 // existing files get re-rendered on the next build.
 const HERO_RENDER_VERSION = 5;
 
+// Narrow-viewport variant for phones (≤ 560 px CSS width). Same renderer,
+// but the pose is picked for a phone-sized container so the auto-fit zoom
+// matches what Leaflet computes there. Canvas stays modest (1200²) since
+// the image only needs to cover phone viewports — wider screens fall back
+// to the wide hero. `object-fit: none` again pins the centre to the
+// container midpoint, so any extra image bleed shows on the edges only.
+const HERO_NARROW_WIDTH = 1200;
+const HERO_NARROW_HEIGHT = 1200;
+// Typical phone hero: ~400 CSS px wide (median portrait phone),
+// `clamp(360, 60vh, 640)` ≈ 480 tall on a ~800 px screen. Pick a
+// representative square so both detail (60vh) and overview (50vh) heroes
+// stay correctly framed across the phone breakpoint range.
+const HERO_NARROW_FIT_WIDTH = 400;
+const HERO_NARROW_FIT_HEIGHT = 480;
+
+type HeroVariant = 'wide' | 'narrow';
+
+const HERO_VARIANT_SPECS: ReadonlyArray<{
+	name: HeroVariant;
+	width: number;
+	height: number;
+	fitWidth: number;
+	fitHeight: number;
+}> = [
+	{
+		name: 'wide',
+		width: HERO_WIDTH,
+		height: HERO_HEIGHT,
+		fitWidth: HERO_FIT_WIDTH,
+		fitHeight: HERO_FIT_HEIGHT
+	},
+	{
+		name: 'narrow',
+		width: HERO_NARROW_WIDTH,
+		height: HERO_NARROW_HEIGHT,
+		fitWidth: HERO_NARROW_FIT_WIDTH,
+		fitHeight: HERO_NARROW_FIT_HEIGHT
+	}
+];
+
 // SAC-tier polyline colours for the overview hero. Must stay in sync with
 // the `SAC_COLOR` map in `HikesOverviewMap.svelte` so the static hero's
 // trails look identical to the live ones.
@@ -610,6 +650,29 @@ const OVERVIEW_MAX_ZOOM = 13;
 // Bump alongside `HERO_RENDER_VERSION` (or independently) when the overview
 // renderer's output changes — e.g. stroke widths, palette tweaks.
 const OVERVIEW_RENDER_VERSION = 1;
+
+type OverviewVariantSpec = {
+	name: HeroVariant;
+	width: number;
+	height: number;
+	fitWidth: number;
+	fitHeight: number;
+};
+
+// Overview narrow uses the same canvas dims as the per-hike narrow but
+// fits the union bbox at phone size — same `maxZoom: 13` clamp as the
+// live map's `fitBounds`.
+const OVERVIEW_VARIANT_SPECS: ReadonlyArray<OverviewVariantSpec> = [
+	{ name: 'wide', width: HERO_WIDTH, height: HERO_HEIGHT, fitWidth: OVERVIEW_FIT_WIDTH, fitHeight: OVERVIEW_FIT_HEIGHT },
+	{ name: 'narrow', width: HERO_NARROW_WIDTH, height: HERO_NARROW_HEIGHT, fitWidth: HERO_NARROW_FIT_WIDTH, fitHeight: HERO_NARROW_FIT_HEIGHT }
+];
+
+type OverviewVariantResult = {
+	url: string;
+	zoom: number;
+	center: [number, number];
+	outName: string;
+};
 
 async function processOverview(
 	hikes: HikeManifestEntry[]
@@ -637,68 +700,92 @@ async function processOverview(
 	if (!Number.isFinite(minLat)) return undefined;
 	const bbox: [number, number, number, number] = [minLat, minLng, maxLat, maxLng];
 
-	const pose = computeStaticMapPose({
-		bbox,
-		width: HERO_WIDTH,
-		height: HERO_HEIGHT,
-		paddingPx: OVERVIEW_PADDING_PX,
-		fitWidth: OVERVIEW_FIT_WIDTH,
-		fitHeight: OVERVIEW_FIT_HEIGHT,
-		maxZoom: OVERVIEW_MAX_ZOOM
-	});
-	if (!pose) return undefined;
-
-	const hash = crypto
-		.createHash('sha256')
-		.update(
-			JSON.stringify({
-				bbox,
-				w: HERO_WIDTH,
-				h: HERO_HEIGHT,
-				lines,
-				maxZoom: OVERVIEW_MAX_ZOOM,
-				pad: OVERVIEW_PADDING_PX,
-				v: OVERVIEW_RENDER_VERSION
-			})
-		)
-		.digest('hex')
-		.slice(0, 8);
-
-	// Slug "_overview" picks up the same vite dev-server image plugin and
-	// nginx public-serve rules as per-hike assets, without colliding with
-	// any real hike slug (leading underscore is not a valid slug character).
 	const slug = '_overview';
-	const outName = `overview.${hash}.webp`;
 	const outDir = path.join(HIKES_ASSETS_DIR, slug, 'images');
 	await fs.mkdir(outDir, { recursive: true });
-	const outPath = path.join(outDir, outName);
 
-	const renderT0 = Date.now();
-	console.log(
-		`[build-hikes:_overview]   ${lines.length} polylines · zoom ${pose.zoom} · ` +
-			`${Math.round(HERO_WIDTH / 256)}×${Math.round(HERO_HEIGHT / 256)} tile grid`
-	);
-	if (!(await pathExists(outPath))) {
-		const ok = await renderOverviewMap({
-			pose,
-			polylines: lines,
-			outputPath: outPath,
-			width: HERO_WIDTH,
-			height: HERO_HEIGHT
+	async function renderVariant(spec: OverviewVariantSpec): Promise<OverviewVariantResult | undefined> {
+		const pose = computeStaticMapPose({
+			bbox,
+			width: spec.width,
+			height: spec.height,
+			paddingPx: OVERVIEW_PADDING_PX,
+			fitWidth: spec.fitWidth,
+			fitHeight: spec.fitHeight,
+			maxZoom: OVERVIEW_MAX_ZOOM
 		});
-		if (!ok) {
-			console.warn(`[build-hikes:_overview]   render failed — too few tiles fetched`);
-			return undefined;
+		if (!pose) return undefined;
+
+		const hash = crypto
+			.createHash('sha256')
+			.update(
+				JSON.stringify({
+					bbox,
+					w: spec.width,
+					h: spec.height,
+					fw: spec.fitWidth,
+					fh: spec.fitHeight,
+					lines,
+					maxZoom: OVERVIEW_MAX_ZOOM,
+					pad: OVERVIEW_PADDING_PX,
+					v: OVERVIEW_RENDER_VERSION
+				})
+			)
+			.digest('hex')
+			.slice(0, 8);
+
+		// `wide` keeps the historical `overview.<hash>.webp` filename to
+		// preserve existing caches.
+		const outName = spec.name === 'wide' ? `overview.${hash}.webp` : `overview-${spec.name}.${hash}.webp`;
+		const outPath = path.join(outDir, outName);
+
+		const renderT0 = Date.now();
+		console.log(
+			`[build-hikes:_overview]   ${spec.name}: ${lines.length} polylines · zoom ${pose.zoom} · ` +
+				`${Math.round(spec.width / 256)}×${Math.round(spec.height / 256)} tile grid`
+		);
+		if (!(await pathExists(outPath))) {
+			const ok = await renderOverviewMap({
+				pose,
+				polylines: lines,
+				outputPath: outPath,
+				width: spec.width,
+				height: spec.height
+			});
+			if (!ok) {
+				console.warn(`[build-hikes:_overview]   ${spec.name} render failed — too few tiles fetched`);
+				return undefined;
+			}
+			console.log(`[build-hikes:_overview]   ${spec.name} rendered ${outName} in ${Date.now() - renderT0}ms`);
+		} else {
+			console.log(`[build-hikes:_overview]   ${spec.name} cached (${outName})`);
 		}
-		console.log(`[build-hikes:_overview]   rendered ${outName} in ${Date.now() - renderT0}ms`);
-	} else {
-		console.log(`[build-hikes:_overview]   cached (${outName})`);
+
+		return {
+			url: `/hikes/${slug}/images/${outName}`,
+			zoom: pose.zoom,
+			center: [pose.centerLat, pose.centerLng],
+			outName
+		};
 	}
 
-	// Sweep orphan overview heroes from previous builds.
+	const results = await Promise.all(OVERVIEW_VARIANT_SPECS.map(renderVariant));
+	const byVariant: Partial<Record<HeroVariant, OverviewVariantResult>> = {};
+	for (let i = 0; i < OVERVIEW_VARIANT_SPECS.length; i++) {
+		const r = results[i];
+		if (r) byVariant[OVERVIEW_VARIANT_SPECS[i].name] = r;
+	}
+	if (!byVariant.wide) return undefined;
+
+	// Sweep orphan overview heroes from previous builds. Keep both wide
+	// and narrow outNames if present.
+	const keep = new Set<string>();
+	for (const r of Object.values(byVariant)) {
+		if (r) keep.add(r.outName);
+	}
 	try {
 		const existing = await fs.readdir(outDir);
-		const orphans = existing.filter((f) => f !== outName);
+		const orphans = existing.filter((f) => !keep.has(f));
 		if (orphans.length > 0) {
 			await Promise.all(orphans.map((f) => fs.unlink(path.join(outDir, f)).catch(() => {})));
 			console.log(`[build-hikes:_overview]   removed ${orphans.length} orphaned file(s)`);
@@ -708,28 +795,30 @@ async function processOverview(
 	}
 
 	return {
-		url: `/hikes/${slug}/images/${outName}`,
-		zoom: pose.zoom,
-		center: [pose.centerLat, pose.centerLng]
+		url: byVariant.wide.url,
+		zoom: byVariant.wide.zoom,
+		center: byVariant.wide.center,
+		urlNarrow: byVariant.narrow?.url,
+		zoomNarrow: byVariant.narrow?.zoom,
+		centerNarrow: byVariant.narrow?.center
 	};
 }
+
+type HeroVariantResult = {
+	lightUrl: string;
+	lightOutName: string;
+	darkUrl: string;
+	darkOutName: string;
+	zoom: number;
+	center: [number, number];
+};
 
 async function processHero(
 	slug: string,
 	track: GpxPoint[],
 	bbox: [number, number, number, number],
 	imagePoints: ImagePoint[]
-): Promise<
-	| {
-			lightUrl: string;
-			lightOutName: string;
-			darkUrl: string;
-			darkOutName: string;
-			zoom: number;
-			center: [number, number];
-	  }
-	| undefined
-> {
+): Promise<Partial<Record<HeroVariant, HeroVariantResult>> | undefined> {
 	if (track.length < 2) return undefined;
 
 	const polyline: Array<[number, number]> = track.map((p) => [p.lat, p.lng]);
@@ -740,83 +829,98 @@ async function processHero(
 		.filter((ip) => ip.visibility !== 'private')
 		.map((ip) => ({ lat: ip.lat, lng: ip.lng }));
 
-	// Pose (zoom + centre + canvas origin) is shared by both theme variants
-	// so they align pixel-perfectly. Computed once up-front; renders below
-	// reuse it. `fitWidth × fitHeight` pin the chosen zoom to what
-	// Leaflet's `fitBounds` picks on a typical desktop hero, so the full
-	// route is visible inside the static image even though the rendered
-	// canvas is much larger.
-	const pose = computeStaticMapPose({
-		bbox,
-		width: HERO_WIDTH,
-		height: HERO_HEIGHT,
-		fitWidth: HERO_FIT_WIDTH,
-		fitHeight: HERO_FIT_HEIGHT
-	});
-	if (!pose) return undefined;
-
 	const outDir = path.join(HIKES_ASSETS_DIR, slug, 'images');
 	await fs.mkdir(outDir, { recursive: true });
 
-	// Per-theme hash + render. Theme is part of the hash so light and dark
-	// produce distinct filenames; both variants regenerate whenever the
-	// route, photo set, or renderer version changes.
-	async function renderVariant(theme: 'light' | 'dark'): Promise<{ url: string; outName: string } | undefined> {
-		const fillColor = theme === 'dark' ? HERO_BADGE_FILL_DARK : HERO_BADGE_FILL_LIGHT;
-		const borderColor = theme === 'dark' ? HERO_BADGE_BORDER_DARK : HERO_BADGE_BORDER_LIGHT;
-		const iconColor = theme === 'dark' ? HERO_BADGE_ICON_DARK : HERO_BADGE_ICON_LIGHT;
-		const hash = crypto
-			.createHash('sha256')
-			.update(
-				JSON.stringify({
-					bbox,
-					w: HERO_WIDTH,
-					h: HERO_HEIGHT,
+	// One pose per viewport variant — narrow uses a phone-sized fit so the
+	// chosen integer zoom matches what Leaflet picks at the same container
+	// size, eliminating the visible "the static is too zoomed in" mismatch
+	// the user sees with only a desktop-sized pose.
+	async function renderForViewport(
+		spec: (typeof HERO_VARIANT_SPECS)[number]
+	): Promise<HeroVariantResult | undefined> {
+		const pose = computeStaticMapPose({
+			bbox,
+			width: spec.width,
+			height: spec.height,
+			fitWidth: spec.fitWidth,
+			fitHeight: spec.fitHeight
+		});
+		if (!pose) return undefined;
+
+		async function renderTheme(theme: 'light' | 'dark'): Promise<{ url: string; outName: string } | undefined> {
+			const fillColor = theme === 'dark' ? HERO_BADGE_FILL_DARK : HERO_BADGE_FILL_LIGHT;
+			const borderColor = theme === 'dark' ? HERO_BADGE_BORDER_DARK : HERO_BADGE_BORDER_LIGHT;
+			const iconColor = theme === 'dark' ? HERO_BADGE_ICON_DARK : HERO_BADGE_ICON_LIGHT;
+			const hash = crypto
+				.createHash('sha256')
+				.update(
+					JSON.stringify({
+						bbox,
+						w: spec.width,
+						h: spec.height,
+						fw: spec.fitWidth,
+						fh: spec.fitHeight,
+						color: HERO_TRAIL_COLOR,
+						poly: polyline,
+						photos: photoMarkers,
+						fill: fillColor,
+						border: borderColor,
+						icon: iconColor,
+						v: HERO_RENDER_VERSION
+					})
+				)
+				.digest('hex')
+				.slice(0, 8);
+
+			// `wide` keeps the historical `hero-{theme}.<hash>.webp` filename
+			// so existing on-disk caches survive the variant split.
+			const prefix = spec.name === 'wide' ? `hero-${theme}` : `hero-${spec.name}-${theme}`;
+			const outName = `${prefix}.${hash}.webp`;
+			const outPath = path.join(outDir, outName);
+
+			if (!(await pathExists(outPath))) {
+				const ok = await renderStaticMap({
+					pose,
+					polyline,
 					color: HERO_TRAIL_COLOR,
-					poly: polyline,
-					photos: photoMarkers,
-					fill: fillColor,
-					border: borderColor,
-					icon: iconColor,
-					v: HERO_RENDER_VERSION
-				})
-			)
-			.digest('hex')
-			.slice(0, 8);
+					outputPath: outPath,
+					width: spec.width,
+					height: spec.height,
+					photoMarkers,
+					photoMarkerColor: fillColor,
+					photoMarkerBorderColor: borderColor,
+					photoMarkerIconColor: iconColor
+				});
+				if (!ok) return undefined;
+			}
 
-		const outName = `hero-${theme}.${hash}.webp`;
-		const outPath = path.join(outDir, outName);
-
-		if (!(await pathExists(outPath))) {
-			const ok = await renderStaticMap({
-				pose,
-				polyline,
-				color: HERO_TRAIL_COLOR,
-				outputPath: outPath,
-				width: HERO_WIDTH,
-				height: HERO_HEIGHT,
-				photoMarkers,
-				photoMarkerColor: fillColor,
-				photoMarkerBorderColor: borderColor,
-				photoMarkerIconColor: iconColor
-			});
-			if (!ok) return undefined;
+			return { url: `/hikes/${slug}/images/${outName}`, outName };
 		}
 
-		return { url: `/hikes/${slug}/images/${outName}`, outName };
+		const [light, dark] = await Promise.all([renderTheme('light'), renderTheme('dark')]);
+		if (!light || !dark) return undefined;
+
+		return {
+			lightUrl: light.url,
+			lightOutName: light.outName,
+			darkUrl: dark.url,
+			darkOutName: dark.outName,
+			zoom: pose.zoom,
+			center: [pose.centerLat, pose.centerLng]
+		};
 	}
 
-	const [light, dark] = await Promise.all([renderVariant('light'), renderVariant('dark')]);
-	if (!light || !dark) return undefined;
-
-	return {
-		lightUrl: light.url,
-		lightOutName: light.outName,
-		darkUrl: dark.url,
-		darkOutName: dark.outName,
-		zoom: pose.zoom,
-		center: [pose.centerLat, pose.centerLng]
-	};
+	const variants = await Promise.all(HERO_VARIANT_SPECS.map(renderForViewport));
+	const out: Partial<Record<HeroVariant, HeroVariantResult>> = {};
+	for (let i = 0; i < HERO_VARIANT_SPECS.length; i++) {
+		const v = variants[i];
+		if (v) out[HERO_VARIANT_SPECS[i].name] = v;
+	}
+	// At minimum we need the wide variant — that's what desktop falls back
+	// to, and CLS-reservation on the page expects it. Narrow is best-effort.
+	if (!out.wide) return undefined;
+	return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -985,8 +1089,11 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	]);
 	if (iconResult) keepFiles.images.add(iconResult.outName);
 	if (heroResult) {
-		keepFiles.images.add(heroResult.lightOutName);
-		keepFiles.images.add(heroResult.darkOutName);
+		for (const v of Object.values(heroResult)) {
+			if (!v) continue;
+			keepFiles.images.add(v.lightOutName);
+			keepFiles.images.add(v.darkOutName);
+		}
 	}
 
 	// Cleanup pass: drop any encoded files in either segment dir that don't
@@ -1050,10 +1157,16 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	const tags = Array.isArray(fm.tags) ? fm.tags : [];
 
 	const iconUrl = iconResult?.url;
-	const heroMapUrlLight = heroResult?.lightUrl;
-	const heroMapUrlDark = heroResult?.darkUrl;
-	const heroMapZoom = heroResult?.zoom;
-	const heroMapCenter = heroResult?.center;
+	const heroWide = heroResult?.wide;
+	const heroNarrow = heroResult?.narrow;
+	const heroMapUrlLight = heroWide?.lightUrl;
+	const heroMapUrlDark = heroWide?.darkUrl;
+	const heroMapZoom = heroWide?.zoom;
+	const heroMapCenter = heroWide?.center;
+	const heroMapUrlLightNarrow = heroNarrow?.lightUrl;
+	const heroMapUrlDarkNarrow = heroNarrow?.darkUrl;
+	const heroMapZoomNarrow = heroNarrow?.zoom;
+	const heroMapCenterNarrow = heroNarrow?.center;
 
 	const entry: HikeManifestEntry = {
 		slug,
@@ -1085,6 +1198,10 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		heroMapUrlDark,
 		heroMapZoom,
 		heroMapCenter,
+		heroMapUrlLightNarrow,
+		heroMapUrlDarkNarrow,
+		heroMapZoomNarrow,
+		heroMapCenterNarrow,
 		imagePoints
 	};
 
