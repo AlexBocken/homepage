@@ -634,7 +634,7 @@
 	 * T4–T6: white-blue-white painted Alpinwanderweg marker. */
 	.sac-marker {
 		grid-row: 1 / span 2;
-		width: 44px;
+		width: 28px;
 		height: 20px;
 	}
 

@@ -211,7 +211,7 @@
 
 	.sac-marker-red,
 	.sac-marker-blue {
-		width: 44px;
+		width: 28px;
 		color: #fff;
 		text-shadow: 0 1px 1px rgb(0 0 0 / 0.45);
 		border-radius: 2px;
