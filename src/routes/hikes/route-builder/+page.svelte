@@ -117,8 +117,15 @@
 				// overwrite what we're about to densify.
 				const reqId = ++routeRequestId;
 				snapDebounce = setTimeout(async () => {
-					densifyLinearSegments(25);
-					await enrichMissingElevations(reqId);
+					busy = true;
+					try {
+						densifyLinearSegments(25);
+						await enrichMissingElevations(reqId);
+					} catch (err) {
+						if (reqId === routeRequestId) error = (err as Error).message;
+					} finally {
+						if (reqId === routeRequestId) busy = false;
+					}
 				}, 250);
 			}
 		});
@@ -230,9 +237,22 @@
 			</select>
 			<label class="snap-toggle" class:active={builder.autoSnap}>
 				<input type="checkbox" bind:checked={builder.autoSnap} />
-				<span>Auf Wege snappen{busy ? ' …' : ''}</span>
+				<span>Auf Wege snappen</span>
 			</label>
-			<button type="button" class="primary" onclick={downloadGpx}>
+			<!-- Mode-agnostic busy chip — fires for both the snap-to-route
+			     path and the densify+elevate path so the user always knows
+			     when the GPX is still incomplete. -->
+			<span class="status" class:busy aria-live="polite" aria-atomic="true">
+				<span class="status-dot" aria-hidden="true"></span>
+				{busy ? 'Berechne Route + Höhenprofil…' : 'Bereit'}
+			</span>
+			<button
+				type="button"
+				class="primary"
+				onclick={downloadGpx}
+				disabled={busy}
+				title={busy ? 'Warten bis Route + Höhenprofil berechnet sind' : ''}
+			>
 				GPX herunterladen
 			</button>
 			<button type="button" class="link" onclick={clearDraft}>Zurücksetzen</button>
@@ -357,6 +377,56 @@
 		accent-color: var(--color-primary);
 		width: 1rem;
 		height: 1rem;
+	}
+
+	/* Live busy chip — sits between the snap toggle and the download
+	 * button so the user can't miss it when GPX export would land
+	 * without elevations yet. Quiet green dot when idle, pulsing
+	 * amber dot when fetching. */
+	.status {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+		min-width: 0;
+	}
+
+	.status-dot {
+		width: 0.55rem;
+		height: 0.55rem;
+		border-radius: 50%;
+		background: var(--green);
+		flex: 0 0 auto;
+		box-shadow: 0 0 0 0 color-mix(in oklab, var(--green) 40%, transparent);
+	}
+
+	.status.busy {
+		color: var(--orange);
+	}
+
+	.status.busy .status-dot {
+		background: var(--orange);
+		animation: status-pulse 1.1s ease-out infinite;
+	}
+
+	@keyframes status-pulse {
+		0% {
+			box-shadow: 0 0 0 0 color-mix(in oklab, var(--orange) 70%, transparent);
+		}
+		70% {
+			box-shadow: 0 0 0 0.55rem color-mix(in oklab, var(--orange) 0%, transparent);
+		}
+		100% {
+			box-shadow: 0 0 0 0 color-mix(in oklab, var(--orange) 0%, transparent);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.status.busy .status-dot {
+			animation: none;
+		}
 	}
 
 	.grid {

@@ -229,6 +229,41 @@ const ELEV_CACHE_DIR = path.resolve(process.cwd(), 'scripts', '.cache', 'swissto
 
 type SwisstopoProfile = Array<{ alts: { COMB?: number; DTM2?: number; DTM25?: number } }>;
 
+/**
+ * WGS84 (lng, lat in degrees) → CH1903+ / LV95 (easting, northing in
+ * metres). Swisstopo's elevation services only speak the native Swiss
+ * projections (sr 21781 / 2056); they reject `sr=4326` outright. Their
+ * official "approximation" formulas yield ±1 m positional accuracy
+ * within the Swiss bbox — well below the elevation grid resolution
+ * (DTM25 = 25 m, DTM2 = 2 m), so doing the conversion in-process is
+ * cheap, dependency-free, and avoids a per-coord round-trip to the
+ * reframe service.
+ *
+ * Source: https://www.swisstopo.admin.ch/en/transformation-calculation-services
+ */
+function wgs84ToLv95(lng: number, lat: number): { easting: number; northing: number } {
+	const phi = (lat * 3600 - 169028.66) / 10000;
+	const lam = (lng * 3600 - 26782.5) / 10000;
+	const phi2 = phi * phi;
+	const phi3 = phi2 * phi;
+	const lam2 = lam * lam;
+	const lam3 = lam2 * lam;
+	const easting =
+		2600072.37 +
+		211455.93 * lam -
+		10938.51 * lam * phi -
+		0.36 * lam * phi2 -
+		44.54 * lam3;
+	const northing =
+		1200147.07 +
+		308807.95 * phi +
+		3745.25 * lam2 +
+		76.63 * phi2 -
+		194.56 * lam2 * phi +
+		119.79 * phi3;
+	return { easting, northing };
+}
+
 async function heightAt(lng: number, lat: number): Promise<number | null> {
 	const key = hashKey({ kind: 'height', lng, lat });
 	try {
@@ -237,9 +272,10 @@ async function heightAt(lng: number, lat: number): Promise<number | null> {
 		if (cached) return JSON.parse(cached) as number | null;
 	} catch { /* ignored */ }
 
+	const { easting, northing } = wgs84ToLv95(lng, lat);
 	const url =
 		`https://api3.geo.admin.ch/rest/services/height` +
-		`?easting=${lng}&northing=${lat}&sr=4326`;
+		`?easting=${easting}&northing=${northing}&sr=2056`;
 	let elev: number | null = null;
 	try {
 		const res = await fetch(url, {
@@ -309,19 +345,37 @@ export async function enrichElevations(
 
 	if (!uniqueElev) {
 		uniqueElev = new Array<number | null>(uniqueCoords.length).fill(null);
-		// Swisstopo caps offsets/payload sizes; chunk if needed.
-		const CHUNK = 200;
+		// profile.json must be POSTed: even ~100-point GETs return HTTP 400,
+		// and at our densified-track sizes the URL hits the upstream's
+		// ~8 KB length cap (silent HTTP 414). POST + form-encoded body has
+		// no such limit and accepts at least 500 coords per call, so the
+		// chunking is just for politeness against the public API.
+		const CHUNK = 500;
 		let cursor = 0;
 		while (cursor < uniqueCoords.length) {
 			const slice = uniqueCoords.slice(cursor, Math.min(uniqueCoords.length, cursor + CHUNK));
-			const slicedGeom = { type: 'LineString', coordinates: slice };
-			const url =
-				`https://api3.geo.admin.ch/rest/services/profile.json` +
-				`?geom=${encodeURIComponent(JSON.stringify(slicedGeom))}` +
-				`&nb_points=${slice.length}&offset=0&sr=4326`;
+			// Convert each WGS84 coord to LV95 — the elevation services only
+			// accept the native Swiss projections (`sr=2056`); `sr=4326` is
+			// rejected with HTTP 400.
+			const lv95: number[][] = slice.map(([lng, lat]) => {
+				const p = wgs84ToLv95(lng, lat);
+				return [p.easting, p.northing];
+			});
+			const slicedGeom = { type: 'LineString', coordinates: lv95 };
+			const body = new URLSearchParams({
+				geom: JSON.stringify(slicedGeom),
+				nb_points: String(slice.length),
+				offset: '0',
+				sr: '2056'
+			});
 			try {
-				const res = await fetch(url, {
-					headers: { 'User-Agent': 'bocken-homepage route-builder' }
+				const res = await fetch('https://api3.geo.admin.ch/rest/services/profile.json', {
+					method: 'POST',
+					headers: {
+						'User-Agent': 'bocken-homepage route-builder',
+						'Content-Type': 'application/x-www-form-urlencoded'
+					},
+					body
 				});
 				if (res.ok) {
 					const json = (await res.json()) as SwisstopoProfile;
