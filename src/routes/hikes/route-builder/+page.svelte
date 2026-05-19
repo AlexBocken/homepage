@@ -11,7 +11,8 @@
 		setElevations,
 		clearDraft,
 		reconcileSegments,
-		densifyLinearSegments
+		densifyLinearSegments,
+		importGpx
 	} from '$lib/components/hikes/route-builder/builderStore.svelte';
 
 	let busy = $state(false);
@@ -201,6 +202,46 @@
 		URL.revokeObjectURL(url);
 	}
 
+	// GPX import: file input is hidden; the visible "GPX laden" button
+	// proxies its click. Imported route REPLACES the current draft, so
+	// confirm first when there's existing work to avoid silent data loss.
+	let gpxFileInput: HTMLInputElement | undefined = $state();
+
+	function openGpxPicker() {
+		if (
+			builder.waypoints.length > 0 &&
+			!confirm(
+				'Bestehenden Entwurf durch importierte GPX ersetzen? Aktuelle Wegpunkte gehen verloren.'
+			)
+		) {
+			return;
+		}
+		gpxFileInput?.click();
+	}
+
+	async function onGpxSelected(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		try {
+			const xml = await file.text();
+			const result = importGpx(xml);
+			if (!result.ok) {
+				error = result.error;
+				return;
+			}
+			error = null;
+			// Cancel any in-flight enrichment so it doesn't overwrite the
+			// freshly-imported geometry.
+			routeRequestId++;
+		} catch (err) {
+			error = `GPX-Import fehlgeschlagen: ${(err as Error).message}`;
+		} finally {
+			// Reset so the same file can be re-selected later.
+			input.value = '';
+		}
+	}
+
 	// Placement coordination: which unplaced waypoint is currently waiting for
 	// a click on the map?
 	let pendingPlacementId = $state<string | null>(null);
@@ -255,6 +296,21 @@
 			>
 				GPX herunterladen
 			</button>
+			<button
+				type="button"
+				class="link"
+				onclick={openGpxPicker}
+				title="Eine zuvor exportierte GPX-Datei in den Editor laden"
+			>
+				GPX laden
+			</button>
+			<input
+				bind:this={gpxFileInput}
+				type="file"
+				accept=".gpx,application/gpx+xml,application/xml,text/xml"
+				onchange={onGpxSelected}
+				hidden
+			/>
 			<button type="button" class="link" onclick={clearDraft}>Zurücksetzen</button>
 		</div>
 	</header>
