@@ -52,6 +52,18 @@
 
 	const canton = $derived(resolveCanton(hike.canton));
 
+	// Publish date formatted in long German for the meta footer
+	// (matches the hike's `date: YYYY-MM-DD` frontmatter format).
+	const publishedLabel = $derived.by(() => {
+		const t = Date.parse(hike.date);
+		if (!Number.isFinite(t)) return null;
+		return new Date(t).toLocaleDateString('de-CH', {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		});
+	});
+
 	const heroPose = $derived.by(() => {
 		if (
 			narrowViewport &&
@@ -409,24 +421,22 @@
 		{/if}
 	</section>
 
+	{#if hike.tags.length > 0}
+		<!-- Tag chips sit between the metric tiles (facts) and the
+		     elevation profile (data viz) so they read as framing context —
+		     "what kind of hike is this" — before the data takes over. -->
+		<section class="tags" aria-label="Schlagwörter">
+			{#each hike.tags as tag (tag)}
+				<span class="tag-chip"><span class="tag-hash" aria-hidden="true">#</span>{tag}</span>
+			{/each}
+		</section>
+	{/if}
+
 	{#if track && track.length > 0}
 		<section class="elev-area">
 			<ElevationProfile {track} />
 		</section>
 	{/if}
-
-	<div class="actions">
-		<button
-			type="button"
-			class="download-btn"
-			onclick={downloadGpx}
-			disabled={!track || track.length === 0}
-			title="GPX-Datei mit nur dem Track (ohne Bilder) herunterladen"
-		>
-			<Download size={16} strokeWidth={2} aria-hidden="true" />
-			GPX herunterladen
-		</button>
-	</div>
 
 	{#if track && track.length > 0 && visibleImagePoints.length > 0}
 		<section class="strip-area">
@@ -446,6 +456,36 @@
 			<MdxComponent />
 		</section>
 	</section>
+
+	<!-- Quiet meta footer: route metadata + sources + ancillary actions.
+	     De-emphasises the GPX download (previously a centred primary
+	     button) by grouping it with other "extras" that a small minority
+	     of readers care about. -->
+	<footer class="meta-footer">
+		<button
+			type="button"
+			class="meta-link"
+			onclick={downloadGpx}
+			disabled={!track || track.length === 0}
+			title="GPX-Datei mit nur dem Track (ohne Bilder) herunterladen"
+		>
+			<Download size={13} strokeWidth={2} aria-hidden="true" />
+			<span>GPX-Track herunterladen</span>
+		</button>
+		<span class="meta-dot" aria-hidden="true">·</span>
+		<span>{hike.pointCount.toLocaleString('de-CH')} Wegpunkte</span>
+		{#if publishedLabel}
+			<span class="meta-dot" aria-hidden="true">·</span>
+			<span>Veröffentlicht {publishedLabel}</span>
+		{/if}
+		<span class="meta-dot" aria-hidden="true">·</span>
+		<span>
+			Kartendaten &copy;
+			<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">
+				swisstopo
+			</a>
+		</span>
+	</footer>
 </article>
 
 <style>
@@ -704,52 +744,107 @@
 		);
 	}
 
-	.actions {
+	/* Tag chips: muted pills between the metric block and the elevation
+	 * chart. Quieter than the metric tiles (lighter bg, no border, no
+	 * shadow) so the metric numbers stay the dominant glance-info, and
+	 * the tags read as framing context — "what kind of hike". */
+	.tags {
 		display: flex;
+		flex-wrap: wrap;
 		justify-content: center;
-		padding: 0 1rem 1rem;
+		gap: 0.4rem 0.5rem;
+		padding: 0 1rem 0.25rem;
 	}
 
-	.download-btn {
+	.tag-chip {
 		display: inline-flex;
-		align-items: center;
-		gap: 0.45rem;
-		padding: 0.5rem 1.1rem;
-		font: inherit;
-		font-size: 0.88rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
+		align-items: baseline;
+		gap: 0.15rem;
+		padding: 0.25rem 0.7rem;
+		font-size: 0.78rem;
+		line-height: 1;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+		background: var(--color-bg-tertiary);
 		border-radius: var(--radius-pill);
-		box-shadow: var(--shadow-sm);
-		cursor: pointer;
-		transition:
-			color var(--transition-fast),
-			border-color var(--transition-fast),
-			transform var(--transition-fast),
-			box-shadow var(--transition-fast);
+		letter-spacing: 0.005em;
 	}
 
-	.download-btn:hover:not(:disabled) {
-		color: var(--color-primary);
-		border-color: var(--color-primary);
-		transform: translateY(-1px);
-		box-shadow: var(--shadow-md);
-	}
-
-	.download-btn:disabled {
-		opacity: 0.55;
-		cursor: not-allowed;
-	}
-
-	.download-btn :global(svg) {
-		color: var(--color-primary);
+	.tag-hash {
+		color: var(--color-text-tertiary);
+		font-weight: 600;
 	}
 
 	.elev-area {
 		padding: 0 1rem;
 		margin-top: 0.25rem;
+	}
+
+	/* Meta footer: small, muted, centred, separated by middots. Groups
+	 * the GPX download with other ancillary metadata (waypoint count,
+	 * publish date, swisstopo attribution) so it reads as "extras" rather
+	 * than a primary CTA. */
+	.meta-footer {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: center;
+		gap: 0.35rem 0.6rem;
+		padding: 2rem 1.5rem 0;
+		margin-top: 2rem;
+		border-top: 1px solid var(--color-border);
+		font-size: 0.78rem;
+		color: var(--color-text-tertiary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.meta-footer a {
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+		text-underline-offset: 0.18em;
+		transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+	}
+
+	.meta-footer a:hover {
+		color: var(--color-primary);
+		text-decoration-color: currentColor;
+	}
+
+	.meta-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0;
+		font: inherit;
+		color: inherit;
+		background: none;
+		border: 0;
+		cursor: pointer;
+		text-decoration: underline;
+		text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+		text-underline-offset: 0.18em;
+		transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+	}
+
+	.meta-link:hover:not(:disabled) {
+		color: var(--color-primary);
+		text-decoration-color: currentColor;
+	}
+
+	.meta-link:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+		text-decoration: none;
+	}
+
+	.meta-link :global(svg) {
+		flex: 0 0 auto;
+		opacity: 0.7;
+	}
+
+	.meta-dot {
+		opacity: 0.55;
 	}
 
 	.strip-area {
