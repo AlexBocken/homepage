@@ -4,10 +4,16 @@
 	import HikesFilterBar, { type HikesFilter } from '$lib/components/hikes/HikesFilterBar.svelte';
 	import HikesOverviewMap from '$lib/components/hikes/HikesOverviewMap.svelte';
 	import Seo from '$lib/components/Seo.svelte';
+	import { HIKES_OVERVIEW } from '$lib/data/hikes.generated';
 	import type { Difficulty } from '$types/hikes';
 	import type { PageProps } from './$types';
 
 	const { data }: PageProps = $props();
+
+	// Fades the SSR-rendered static overview hero out once Leaflet's first
+	// schematic-tile batch has loaded. Same handover pattern as the detail
+	// page's hero map.
+	let heroMapReady = $state(false);
 
 	// Filter ceilings start wide-open so the initial render (SSR + first
 	// hydration pass) shows every hike. `$effect` below clamps them down
@@ -80,7 +86,31 @@
 
 <section class="hikes-page">
 	<section class="hero-map" aria-label="Übersicht">
-		<HikesOverviewMap hikes={visible} />
+		{#if HIKES_OVERVIEW}
+			<!-- Build-time static composite of Swisstopo tiles + every
+			     visible hike's preview polyline, coloured by SAC tier.
+			     Displayed at native pixel size (`object-fit: none`) so it
+			     overlays Leaflet's live tiles exactly. The image fades out
+			     once Leaflet's first tile batch loads. Unlike the detail
+			     hero, the overview map looks the same in light and dark
+			     mode (only the per-hike camera badges are theme-aware,
+			     and the overview has none) so a single variant ships. -->
+			<img
+				class="hero-static"
+				class:faded={heroMapReady}
+				src={HIKES_OVERVIEW.url}
+				alt=""
+				aria-hidden="true"
+				loading="eager"
+				decoding="async"
+			/>
+		{/if}
+		<HikesOverviewMap
+			hikes={visible}
+			initialCenter={HIKES_OVERVIEW?.center}
+			initialZoom={HIKES_OVERVIEW?.zoom}
+			onReady={() => (heroMapReady = true)}
+		/>
 	</section>
 
 	<div class="below-hero">
@@ -130,11 +160,50 @@
 		position: relative;
 		isolation: isolate;
 		width: 100vw;
+		/* Reserve the eventual map height up-front so the static image and
+		 * Leaflet's tile pane sit on a stable surface (no scroll-shift when
+		 * either mounts). Same clamp as `:global(.overview-map)` inside
+		 * the HikesOverviewMap component. */
+		min-height: clamp(320px, 50vh, 520px);
 		margin-left: calc(50% - 50vw);
 		margin-right: calc(50% - 50vw);
 		margin-top: calc(-1 * (3rem + max(12px, env(safe-area-inset-top, 0px) + 4px)));
 		margin-bottom: 0;
 		overflow: hidden;
+		/* Transparent so the page background shows through any tile gap
+		 * during the static→live cross-fade rather than Leaflet's grey
+		 * default. */
+		background: transparent;
+	}
+
+	/* Pre-rendered overview hero. Native pixel size + centred so it matches
+	 * Leaflet's tile rendering 1:1; `cover` would scale and break alignment
+	 * during the cross-fade. Wider viewports just reveal more of the
+	 * 3840×2400 canvas; the union bbox (where the trails live) is always
+	 * pixel-aligned with the live map. */
+	.hero-static {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: none;
+		object-position: center;
+		z-index: 1;
+		opacity: 1;
+		transition: opacity 450ms ease;
+		pointer-events: none;
+	}
+
+	.hero-static.faded {
+		opacity: 0;
+	}
+
+	/* Live overview map sits above the static; transparent so the static
+	 * shows through until Leaflet's tile pane paints over it. */
+	.hero-map :global(.overview-map) {
+		position: relative;
+		z-index: 2;
+		background: transparent;
 	}
 
 	/* Push Leaflet's top-left controls below the sticky nav. */

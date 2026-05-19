@@ -27,10 +27,11 @@ import {
 	type GpxPoint
 } from '../src/lib/server/gpx.js';
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
-import { computeStaticMapPose, renderStaticMap } from './staticHikeMap.js';
+import { computeStaticMapPose, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
 import type {
 	Difficulty,
 	HikeManifestEntry,
+	HikesOverview,
 	ImagePoint,
 	ImageVariant
 } from '../src/types/hikes.js';
@@ -586,6 +587,133 @@ const HERO_BADGE_ICON_DARK = '#2e3440';
 // existing files get re-rendered on the next build.
 const HERO_RENDER_VERSION = 5;
 
+// SAC-tier polyline colours for the overview hero. Must stay in sync with
+// the `SAC_COLOR` map in `HikesOverviewMap.svelte` so the static hero's
+// trails look identical to the live ones.
+const OVERVIEW_SAC_COLOR: Record<Difficulty, string> = {
+	T1: '#f5a623',
+	T2: '#dc1d2a',
+	T3: '#dc1d2a',
+	T4: '#2965c8',
+	T5: '#2965c8',
+	T6: '#2965c8'
+};
+
+// Padding + max-zoom match the live overview map's
+// `fitBounds(..., { padding: [32, 32], maxZoom: 13 })` so the static lands
+// at the same pose Leaflet will fit to. fitHeight matches the page's
+// `clamp(320px, 50vh, 520px)` hero at desktop viewports.
+const OVERVIEW_FIT_WIDTH = 1920;
+const OVERVIEW_FIT_HEIGHT = 520;
+const OVERVIEW_PADDING_PX = 32;
+const OVERVIEW_MAX_ZOOM = 13;
+// Bump alongside `HERO_RENDER_VERSION` (or independently) when the overview
+// renderer's output changes — e.g. stroke widths, palette tweaks.
+const OVERVIEW_RENDER_VERSION = 1;
+
+async function processOverview(
+	hikes: HikeManifestEntry[]
+): Promise<HikesOverview | undefined> {
+	const lines = hikes
+		.filter((h) => h.previewPolyline && h.previewPolyline.length >= 2)
+		.map((h) => ({
+			points: h.previewPolyline,
+			color: OVERVIEW_SAC_COLOR[h.difficulty] ?? '#5e81ac'
+		}));
+	if (lines.length === 0) return undefined;
+
+	// Union bbox over every hike's bbox — that's what Leaflet's
+	// `fitBounds(bounds)` operates on with `extend()` per polyline. Using
+	// each hike's bbox rather than every polyline point keeps the math
+	// cheap without losing the framing accuracy.
+	let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+	for (const h of hikes) {
+		const [a, b, c, d] = h.bbox;
+		if (a < minLat) minLat = a;
+		if (c > maxLat) maxLat = c;
+		if (b < minLng) minLng = b;
+		if (d > maxLng) maxLng = d;
+	}
+	if (!Number.isFinite(minLat)) return undefined;
+	const bbox: [number, number, number, number] = [minLat, minLng, maxLat, maxLng];
+
+	const pose = computeStaticMapPose({
+		bbox,
+		width: HERO_WIDTH,
+		height: HERO_HEIGHT,
+		paddingPx: OVERVIEW_PADDING_PX,
+		fitWidth: OVERVIEW_FIT_WIDTH,
+		fitHeight: OVERVIEW_FIT_HEIGHT,
+		maxZoom: OVERVIEW_MAX_ZOOM
+	});
+	if (!pose) return undefined;
+
+	const hash = crypto
+		.createHash('sha256')
+		.update(
+			JSON.stringify({
+				bbox,
+				w: HERO_WIDTH,
+				h: HERO_HEIGHT,
+				lines,
+				maxZoom: OVERVIEW_MAX_ZOOM,
+				pad: OVERVIEW_PADDING_PX,
+				v: OVERVIEW_RENDER_VERSION
+			})
+		)
+		.digest('hex')
+		.slice(0, 8);
+
+	// Slug "_overview" picks up the same vite dev-server image plugin and
+	// nginx public-serve rules as per-hike assets, without colliding with
+	// any real hike slug (leading underscore is not a valid slug character).
+	const slug = '_overview';
+	const outName = `overview.${hash}.webp`;
+	const outDir = path.join(HIKES_ASSETS_DIR, slug, 'images');
+	await fs.mkdir(outDir, { recursive: true });
+	const outPath = path.join(outDir, outName);
+
+	const renderT0 = Date.now();
+	console.log(
+		`[build-hikes:_overview]   ${lines.length} polylines · zoom ${pose.zoom} · ` +
+			`${Math.round(HERO_WIDTH / 256)}×${Math.round(HERO_HEIGHT / 256)} tile grid`
+	);
+	if (!(await pathExists(outPath))) {
+		const ok = await renderOverviewMap({
+			pose,
+			polylines: lines,
+			outputPath: outPath,
+			width: HERO_WIDTH,
+			height: HERO_HEIGHT
+		});
+		if (!ok) {
+			console.warn(`[build-hikes:_overview]   render failed — too few tiles fetched`);
+			return undefined;
+		}
+		console.log(`[build-hikes:_overview]   rendered ${outName} in ${Date.now() - renderT0}ms`);
+	} else {
+		console.log(`[build-hikes:_overview]   cached (${outName})`);
+	}
+
+	// Sweep orphan overview heroes from previous builds.
+	try {
+		const existing = await fs.readdir(outDir);
+		const orphans = existing.filter((f) => f !== outName);
+		if (orphans.length > 0) {
+			await Promise.all(orphans.map((f) => fs.unlink(path.join(outDir, f)).catch(() => {})));
+			console.log(`[build-hikes:_overview]   removed ${orphans.length} orphaned file(s)`);
+		}
+	} catch {
+		// dir didn't exist before this run
+	}
+
+	return {
+		url: `/hikes/${slug}/images/${outName}`,
+		zoom: pose.zoom,
+		center: [pose.centerLat, pose.centerLng]
+	};
+}
+
 async function processHero(
 	slug: string,
 	track: GpxPoint[],
@@ -990,11 +1118,17 @@ async function main() {
 
 	hikes.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
+	// Build the overview hero from the listing-visible set (matches what
+	// `/hikes` shows: hidden hikes are filtered out by the page loader).
+	const overview = await processOverview(hikes.filter((h) => !h.hidden));
+
 	await fs.mkdir(path.dirname(MANIFEST_OUT), { recursive: true });
 	const banner =
 		'// AUTO-GENERATED by scripts/build-hikes.ts — do not edit by hand.\n' +
-		"import type { HikeManifestEntry } from '$types/hikes';\n\n";
-	const body = `export const HIKES: HikeManifestEntry[] = ${JSON.stringify(hikes, null, 2)} as const;\n`;
+		"import type { HikeManifestEntry, HikesOverview } from '$types/hikes';\n\n";
+	const body =
+		`export const HIKES: HikeManifestEntry[] = ${JSON.stringify(hikes, null, 2)} as const;\n\n` +
+		`export const HIKES_OVERVIEW: HikesOverview | null = ${JSON.stringify(overview ?? null, null, 2)};\n`;
 	const manifestSrc = banner + body;
 	await fs.writeFile(MANIFEST_OUT, manifestSrc);
 

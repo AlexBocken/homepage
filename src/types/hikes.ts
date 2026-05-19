@@ -94,3 +94,17 @@ export type HikeManifestEntry = {
 	// Geo-tagged photos shown as map markers on the detail page:
 	imagePoints: ImagePoint[];
 };
+
+/** Pre-rendered hero map for the `/hikes` index page. One image covers
+ * every listed hike's `previewPolyline`, coloured by SAC tier. The page
+ * shows it under the sticky nav until Leaflet's first tile batch loads,
+ * then fades it out — same handover pattern as the per-hike detail hero. */
+export type HikesOverview = {
+	/** Absolute URL of the pre-rendered WebP. */
+	url: string;
+	/** Integer zoom the static was rendered at (matches Leaflet's
+	 * `fitBounds(unionBounds, { padding: 32, maxZoom: 13 })` choice). */
+	zoom: number;
+	/** Centre `[lat, lng]` the static was rendered around. */
+	center: [number, number];
+};

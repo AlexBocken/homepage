@@ -13,9 +13,19 @@
 
 	interface Props {
 		hikes: HikeManifestEntry[];
+		/** Initial map centre `[lat, lng]`. When provided alongside
+		 * `initialZoom`, the map opens with `setView(center, zoom)` instead
+		 * of `fitBounds(union)` — used by the index page to align Leaflet's
+		 * first paint with the SSR-rendered static overview hero. */
+		initialCenter?: [number, number];
+		initialZoom?: number;
+		/** Fires once the schematic tile layer's first batch of tiles has
+		 * finished loading — i.e. the map is visually complete. The page
+		 * uses this to fade out the SSR-rendered static hero. */
+		onReady?: () => void;
 	}
 
-	const { hikes }: Props = $props();
+	const { hikes, initialCenter, initialZoom, onReady }: Props = $props();
 
 	// Per-tier polyline colour, matching the painted-marker scheme on the
 	// SAC badges. Canvas-rendered polylines can't resolve CSS variables,
@@ -103,7 +113,17 @@
 				attributionControl: true,
 				zoomControl: true,
 				preferCanvas: true
-			}).setView([46.8, 8.3], 8);
+			});
+			// Sensible default centre (mid-Switzerland) while the polyline
+			// layer is built up; `fitBounds` below overrides it once the
+			// union bounds are known. If the caller passed a pre-rendered
+			// hero pose, use that instead so Leaflet lands aligned with the
+			// static image on first paint.
+			if (initialCenter && typeof initialZoom === 'number') {
+				map.setView(initialCenter, initialZoom, { animate: false });
+			} else {
+				map.setView([46.8, 8.3], 8);
+			}
 
 			const tileLayers: Record<BaseLayer, ReturnType<typeof L.tileLayer>> = {
 				schematic: L.tileLayer(SWISSTOPO_FARBE, {
@@ -128,8 +148,44 @@
 			tileLayers.schematic.addTo(map);
 			let currentBase: BaseLayer = 'schematic';
 
+			// Forward-declared so the tile-load handover handler below can
+			// close over it; populated once the polyline loop has built the
+			// union bounds.
+			let initialBounds: ReturnType<typeof L.latLngBounds> | null = null;
+
+			// First-paint handover: when the schematic tile layer finishes
+			// loading its initial batch, fire `onReady` (so the static hero
+			// can fade out) and — if we opened with `setView` to match a
+			// pre-rendered hero — animate to Leaflet's natural `fitBounds`
+			// of the union polyline bounds. The fade overlaps with the zoom
+			// animation so the user sees the map ease into its final
+			// framing as the static dissolves. Mirrors the same pattern in
+			// `HikeMap.svelte`.
+			tileLayers.schematic.once('load', () => {
+				if (!initialCenter || typeof initialZoom !== 'number' || !initialBounds) {
+					onReady?.();
+					return;
+				}
+				map.flyToBounds(initialBounds, {
+					padding: [32, 32],
+					maxZoom: 13,
+					duration: 0.9,
+					easeLinearity: 0.3
+				});
+				map.once('moveend', () => {
+					let fired = false;
+					const fire = () => {
+						if (fired) return;
+						fired = true;
+						onReady?.();
+					};
+					tileLayers.schematic.once('load', fire);
+					setTimeout(fire, 350);
+				});
+			});
+
 			// One polyline per hike, sourced from the manifest's already-
-			// simplified previewPolyline (≤30 points each).
+			// simplified previewPolyline (≤150 points each).
 			const layer = L.layerGroup().addTo(map);
 			const bounds = L.latLngBounds([]);
 			for (const hike of hikes) {
@@ -164,10 +220,16 @@
 				}
 			}
 
-			let initialBounds: ReturnType<typeof L.latLngBounds> | null = null;
 			if (bounds.isValid()) {
-				map.fitBounds(bounds, { padding: [32, 32], maxZoom: 13 });
 				initialBounds = bounds;
+				// When the caller handed us a pre-rendered hero pose, we
+				// already called `setView(initialCenter, initialZoom)` above
+				// and rely on the tile-load handler to fly to bounds (so the
+				// static→live cross-fade happens at the matching pose). With
+				// no pre-rendered hero, fitBounds straight away.
+				if (!initialCenter || typeof initialZoom !== 'number') {
+					map.fitBounds(initialBounds, { padding: [32, 32], maxZoom: 13 });
+				}
 				recenterMap = () => {
 					if (!initialBounds) return;
 					map.flyToBounds(initialBounds, {

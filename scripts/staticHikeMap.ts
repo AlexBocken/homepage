@@ -48,12 +48,19 @@ async function pathExists(p: string): Promise<boolean> {
 	}
 }
 
+/** `null` = network failure (we'll count it against the abort threshold).
+ * `'blank'` = HTTP 4xx, i.e. the tile is intentionally not served — for
+ * the Swisstopo Pixelkarte that means we're outside Switzerland's bbox.
+ * The overview hero canvas extends into DE/IT/FR, so we treat blanks as
+ * "OK, just nothing there" rather than failures. */
+type TileResult = Buffer | 'blank' | null;
+
 async function fetchTile(
 	layer: string,
 	z: number,
 	x: number,
 	y: number
-): Promise<Buffer | null> {
+): Promise<TileResult> {
 	const key = `${layer.replace(/[^a-z0-9]/gi, '_')}_${z}_${x}_${y}.jpeg`;
 	const cachePath = path.join(TILE_CACHE_DIR, key);
 	try {
@@ -65,12 +72,23 @@ async function fetchTile(
 		const res = await fetch(tileUrl(sub, layer, z, x, y), {
 			headers: { 'User-Agent': USER_AGENT }
 		});
-		if (!res.ok) return null;
+		if (!res.ok) {
+			// 4xx means "we don't serve this tile" (out-of-bounds for the
+			// Swiss data set). Anything else (5xx) is a real failure.
+			if (res.status >= 400 && res.status < 500) return 'blank';
+			if (process.env.STATIC_MAP_DEBUG) {
+				console.warn(`[staticHikeMap] tile ${z}/${x}/${y} HTTP ${res.status}`);
+			}
+			return null;
+		}
 		const buf = Buffer.from(await res.arrayBuffer());
 		await fs.mkdir(TILE_CACHE_DIR, { recursive: true });
 		await fs.writeFile(cachePath, buf);
 		return buf;
-	} catch {
+	} catch (err) {
+		if (process.env.STATIC_MAP_DEBUG) {
+			console.warn(`[staticHikeMap] tile ${z}/${x}/${y} error:`, err);
+		}
 		return null;
 	}
 }
@@ -111,6 +129,10 @@ export interface ComputeStaticMapPoseOpts {
 	 * smaller ones. */
 	fitWidth?: number;
 	fitHeight?: number;
+	/** Upper bound on the zoom search — mirrors Leaflet's `fitBounds({ maxZoom })`.
+	 * Use this when the live map clamps its zoom so the static hero doesn't
+	 * land at a more detailed level than Leaflet will ever show. */
+	maxZoom?: number;
 }
 
 /** Pure-math pass: pick the zoom + centre + canvas origin that the static
@@ -122,6 +144,7 @@ export function computeStaticMapPose(opts: ComputeStaticMapPoseOpts): StaticMapP
 	const paddingPx = opts.paddingPx ?? 24;
 	const fitWidth = opts.fitWidth ?? width;
 	const fitHeight = opts.fitHeight ?? height;
+	const maxZoom = opts.maxZoom ?? 18;
 
 	const [minLat, minLng, maxLat, maxLng] = opts.bbox;
 	if (
@@ -139,7 +162,7 @@ export function computeStaticMapPose(opts: ComputeStaticMapPoseOpts): StaticMapP
 	// integer-zoom search, so a viewport matching `fitWidth × fitHeight`
 	// will choose the same zoom Leaflet does for the same bbox.
 	let zoom = 7;
-	for (let z = 18; z >= 7; z--) {
+	for (let z = maxZoom; z >= 7; z--) {
 		const tl = lngLatToPx(minLng, maxLat, z);
 		const br = lngLatToPx(maxLng, minLat, z);
 		if (br.x - tl.x <= innerW && br.y - tl.y <= innerH) {
@@ -189,24 +212,28 @@ export interface RenderStaticMapOpts {
 	photoMarkerIconColor?: string;
 }
 
-/** Render and write a single static hero map at the given pose. Returns
- * `false` on failure (zero tiles fetched, degenerate inputs). */
-export async function renderStaticMap(opts: RenderStaticMapOpts): Promise<boolean> {
-	const width = opts.width ?? 1600;
-	const height = opts.height ?? 1000;
-	const layer = opts.layer ?? 'ch.swisstopo.pixelkarte-farbe';
-	const { zoom, originX, originY } = opts.pose;
+/** Fetch every Swisstopo tile covering the canvas at the given pose, then
+ * composite them into a single PNG buffer. Returns `null` when fewer than
+ * half the tiles arrive (a patchy hero is worse than no hero). Shared by
+ * `renderStaticMap` (per-hike hero) and `renderOverviewMap` (the /hikes
+ * landing-page hero) so both pull the same tile cache and use the same
+ * fallback colour. */
+async function composeBaseMap(
+	pose: StaticMapPose,
+	width: number,
+	height: number,
+	layer: string
+): Promise<Buffer | null> {
+	const { zoom, originX, originY } = pose;
 
-	if (opts.polyline.length < 2) return false;
-
-	// Tiles covering [originX, originX+width) × [originY, originY+height).
 	const minTileX = Math.floor(originX / TILE_SIZE);
 	const maxTileX = Math.floor((originX + width - 1) / TILE_SIZE);
 	const minTileY = Math.floor(originY / TILE_SIZE);
 	const maxTileY = Math.floor((originY + height - 1) / TILE_SIZE);
 
 	// Parallel tile fetches — disk cache makes follow-up builds essentially
-	// free, but the first build pulls ~6–20 tiles per hike.
+	// free, but the first build pulls ~6–20 tiles per per-hike hero and
+	// considerably more for the overview hero.
 	const tileJobs: Array<{ tx: number; ty: number; left: number; top: number }> = [];
 	for (let ty = minTileY; ty <= maxTileY; ty++) {
 		for (let tx = minTileX; tx <= maxTileX; tx++) {
@@ -226,29 +253,46 @@ export async function renderStaticMap(opts: RenderStaticMapOpts): Promise<boolea
 	);
 
 	const composites: Array<{ input: Buffer; left: number; top: number }> = [];
-	let fetched = 0;
+	let networkFailures = 0;
 	for (const { job, buf } of tileBufs) {
-		if (!buf) continue;
-		fetched++;
+		if (buf === null) {
+			networkFailures++;
+			continue;
+		}
+		if (buf === 'blank') continue; // out-of-bounds, draw the fallback grey
 		composites.push({ input: buf, left: job.left, top: job.top });
 	}
-	// Abandon when fewer than half the tiles arrived — the result would
-	// be too patchy to ship and we'd rather show no static map than a
-	// confusing one.
-	if (fetched < tileJobs.length / 2) return false;
+	// Network-failure threshold (not "fewer than half present"): blank
+	// out-of-bounds tiles are an expected outcome for the overview hero
+	// that extends past Switzerland's edges, so they don't count against
+	// the abort threshold.
+	if (networkFailures > tileJobs.length / 2) return null;
 
-	// Step 1: build the bare map tile composite. Tile composite is identical
-	// regardless of UI theme — we deliberately don't invert the Pixelkarte
-	// for dark mode (its colour palette doesn't survive a naive invert).
-	// Only the SVG overlay below changes per theme.
-	const mapBuf = await sharp({
+	// Tile composite is identical regardless of UI theme — we deliberately
+	// don't invert the Pixelkarte for dark mode (its colour palette doesn't
+	// survive a naive invert). Only the SVG overlay above changes per theme.
+	return sharp({
 		create: { width, height, channels: 3, background: { r: 235, g: 235, b: 235 } }
 	})
 		.composite(composites)
 		.png()
 		.toBuffer();
+}
 
-	// Step 2: SVG overlay — polyline + photo markers + start/end dots.
+/** Render and write a single static hero map at the given pose. Returns
+ * `false` on failure (zero tiles fetched, degenerate inputs). */
+export async function renderStaticMap(opts: RenderStaticMapOpts): Promise<boolean> {
+	const width = opts.width ?? 1600;
+	const height = opts.height ?? 1000;
+	const layer = opts.layer ?? 'ch.swisstopo.pixelkarte-farbe';
+	const { zoom, originX, originY } = opts.pose;
+
+	if (opts.polyline.length < 2) return false;
+
+	const mapBuf = await composeBaseMap(opts.pose, width, height, layer);
+	if (!mapBuf) return false;
+
+	// SVG overlay — polyline + photo markers + start/end dots.
 	const pathParts: string[] = [];
 	for (let i = 0; i < opts.polyline.length; i++) {
 		const [lat, lng] = opts.polyline[i];
@@ -296,6 +340,72 @@ export async function renderStaticMap(opts: RenderStaticMapOpts): Promise<boolea
 			photoMarkers +
 			`<circle cx="${sx}" cy="${sy}" r="9" fill="#a3be8c" stroke="#fff" stroke-width="3"/>` +
 			`<circle cx="${ex}" cy="${ey}" r="9" fill="#bf616a" stroke="#fff" stroke-width="3"/>` +
+			`</svg>`
+	);
+
+	await sharp(mapBuf)
+		.composite([{ input: overlay, left: 0, top: 0 }])
+		.webp({ quality: 78 })
+		.toFile(opts.outputPath);
+
+	return true;
+}
+
+// ---------------------------------------------------------------------------
+// Overview hero (one image for the whole /hikes index page).
+// Same tile composite as `renderStaticMap`, but the overlay draws many
+// polylines (one per hike, coloured by SAC tier) and no per-route start /
+// end / photo markers — the map is a finder, not a detail view.
+// ---------------------------------------------------------------------------
+
+export interface RenderOverviewPolyline {
+	points: Array<[number, number]>;
+	color: string;
+}
+
+export interface RenderOverviewMapOpts {
+	pose: StaticMapPose;
+	polylines: RenderOverviewPolyline[];
+	outputPath: string;
+	width?: number;
+	height?: number;
+	layer?: string;
+}
+
+export async function renderOverviewMap(opts: RenderOverviewMapOpts): Promise<boolean> {
+	const width = opts.width ?? 1600;
+	const height = opts.height ?? 1000;
+	const layer = opts.layer ?? 'ch.swisstopo.pixelkarte-farbe';
+	const { zoom, originX, originY } = opts.pose;
+
+	const drawable = opts.polylines.filter((p) => p.points.length >= 2);
+	if (drawable.length === 0) return false;
+
+	const mapBuf = await composeBaseMap(opts.pose, width, height, layer);
+	if (!mapBuf) return false;
+
+	// One <path> per hike polyline. The overview map is rendered fairly
+	// zoomed-out, so even ≤150-point preview polylines stay compact.
+	const paths = drawable
+		.map((line) => {
+			const parts: string[] = [];
+			for (let i = 0; i < line.points.length; i++) {
+				const [lat, lng] = line.points[i];
+				const p = lngLatToPx(lng, lat, zoom);
+				const px = p.x - originX;
+				const py = p.y - originY;
+				parts.push((i === 0 ? 'M' : 'L') + escapeSvgNumber(px) + ',' + escapeSvgNumber(py));
+			}
+			return (
+				`<path d="${parts.join(' ')}" fill="none" stroke="${line.color}" ` +
+				`stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>`
+			);
+		})
+		.join('');
+
+	const overlay = Buffer.from(
+		`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
+			paths +
 			`</svg>`
 	);
 
