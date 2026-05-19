@@ -28,6 +28,7 @@ import {
 } from '../src/lib/server/gpx.js';
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
 import { computeStaticMapPose, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
+import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
 import type {
 	Difficulty,
 	HikeManifestEntry,
@@ -565,9 +566,10 @@ const HERO_HEIGHT = 2400;
 // fly-to-fit animation on top.
 const HERO_FIT_WIDTH = 1920;
 const HERO_FIT_HEIGHT = 640;
-// Nord red — same accent the live HikeMap uses for its polyline, so the
-// fade-over from static to interactive looks continuous.
-const HERO_TRAIL_COLOR = '#bf616a';
+// Per-hike trail colour is picked from the SAC-tier palette in
+// `$lib/data/sacColors` at render time — every static hero matches the
+// live polyline colour and the overview-map polyline for the same hike,
+// so the fade-over from static to interactive looks continuous.
 // Photo-badge fill, border + icon-stroke colours per UI theme. Matches
 // the live HikeMap's `.hike-photo-marker .badge`:
 //   background: var(--color-primary)        → Nord10 light / Nord8 dark
@@ -585,7 +587,8 @@ const HERO_BADGE_ICON_DARK = '#2e3440';
 // Bumped whenever the static-map renderer's visual output changes (icons,
 // stroke widths, marker shapes, ...) so the per-hike hash invalidates and
 // existing files get re-rendered on the next build.
-const HERO_RENDER_VERSION = 5;
+//   v6: per-hike trail colour switched from Nord red to SAC-tier palette.
+const HERO_RENDER_VERSION = 6;
 
 // Narrow-viewport variant for phones (≤ 560 px CSS width). Same renderer,
 // but the pose is picked for a phone-sized container so the auto-fit zoom
@@ -626,18 +629,6 @@ const HERO_VARIANT_SPECS: ReadonlyArray<{
 		fitHeight: HERO_NARROW_FIT_HEIGHT
 	}
 ];
-
-// SAC-tier polyline colours for the overview hero. Must stay in sync with
-// the `SAC_COLOR` map in `HikesOverviewMap.svelte` so the static hero's
-// trails look identical to the live ones.
-const OVERVIEW_SAC_COLOR: Record<Difficulty, string> = {
-	T1: '#f5a623',
-	T2: '#dc1d2a',
-	T3: '#dc1d2a',
-	T4: '#2965c8',
-	T5: '#2965c8',
-	T6: '#2965c8'
-};
 
 // Padding + max-zoom match the live overview map's
 // `fitBounds(..., { padding: [32, 32], maxZoom: 13 })` so the static lands
@@ -681,7 +672,7 @@ async function processOverview(
 		.filter((h) => h.previewPolyline && h.previewPolyline.length >= 2)
 		.map((h) => ({
 			points: h.previewPolyline,
-			color: OVERVIEW_SAC_COLOR[h.difficulty] ?? '#5e81ac'
+			color: SAC_TRAIL_COLOR[h.difficulty] ?? '#5e81ac'
 		}));
 	if (lines.length === 0) return undefined;
 
@@ -817,10 +808,12 @@ async function processHero(
 	slug: string,
 	track: GpxPoint[],
 	bbox: [number, number, number, number],
-	imagePoints: ImagePoint[]
+	imagePoints: ImagePoint[],
+	difficulty: Difficulty
 ): Promise<Partial<Record<HeroVariant, HeroVariantResult>> | undefined> {
 	if (track.length < 2) return undefined;
 
+	const trailColor = sacTrailColor(difficulty);
 	const polyline: Array<[number, number]> = track.map((p) => [p.lat, p.lng]);
 	// Public photo markers only — the hero is rendered once and served to
 	// everyone, including logged-out viewers, so private positions must
@@ -861,7 +854,7 @@ async function processHero(
 						h: spec.height,
 						fw: spec.fitWidth,
 						fh: spec.fitHeight,
-						color: HERO_TRAIL_COLOR,
+						color: trailColor,
 						poly: polyline,
 						photos: photoMarkers,
 						fill: fillColor,
@@ -883,7 +876,7 @@ async function processHero(
 				const ok = await renderStaticMap({
 					pose,
 					polyline,
-					color: HERO_TRAIL_COLOR,
+					color: trailColor,
 					outputPath: outPath,
 					width: spec.width,
 					height: spec.height,
@@ -1079,13 +1072,19 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		if (r.point) imagePoints.push(r.point);
 	}
 
+	// Difficulty is hoisted from the manifest assembly below because the
+	// hero renderer needs it to pick the SAC-tier trail colour.
+	const difficulty = (typeof fm.difficulty === 'string' && VALID_DIFFICULTIES.includes(fm.difficulty as Difficulty))
+		? (fm.difficulty as Difficulty)
+		: 'T1';
+
 	// Per-route icon + pre-rendered hero map — handled here (before cleanup)
 	// so their outNames join `keepFiles.images` and survive the orphan sweep,
 	// while previous-build `icon.<oldhash>.*` / `hero.<oldhash>.*` files
 	// (different hash, not in keepFiles) get removed automatically.
 	const [iconResult, heroResult] = await Promise.all([
 		processIcon(slug, hikeDir),
-		processHero(slug, track, bbox, imagePoints)
+		processHero(slug, track, bbox, imagePoints, difficulty)
 	]);
 	if (iconResult) keepFiles.images.add(iconResult.outName);
 	if (heroResult) {
@@ -1145,10 +1144,6 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	await fs.mkdir(path.dirname(trackFile), { recursive: true });
 	await fs.writeFile(trackFile, trackJson);
 	console.log(`[build-hikes:${slug}]   wrote track.${trackHash}.json (${trackJson.length} bytes)`);
-
-	const difficulty = (typeof fm.difficulty === 'string' && VALID_DIFFICULTIES.includes(fm.difficulty as Difficulty))
-		? (fm.difficulty as Difficulty)
-		: 'T1';
 
 	const date = typeof fm.date === 'string'
 		? fm.date

@@ -29,6 +29,11 @@
 		 * finished loading — i.e. the map is visually complete. The detail
 		 * page uses this to fade out the SSR-rendered static hero. */
 		onReady?: () => void;
+		/** Polyline colour. Defaults to Nord red. Callers set this to the
+		 * SAC-tier colour so the live trail matches the colour of the same
+		 * route on the /hikes overview map (orange for T1, red for T2/T3,
+		 * blue for T4–T6). */
+		trackColor?: string;
 	}
 
 	const {
@@ -37,7 +42,8 @@
 		showPrivate = false,
 		initialCenter,
 		initialZoom,
-		onReady
+		onReady,
+		trackColor
 	}: Props = $props();
 
 	// User-location toggle moved inside the map UI. localStorage-persisted so
@@ -209,12 +215,13 @@
 				});
 			});
 
-			// Canvas-rendered polylines can't resolve CSS custom properties, so read
-			// the trail color from the document at mount time. Nord red contrasts
-			// strongly against both the schematic map and the aerial imagery.
+			// Canvas-rendered polylines can't resolve CSS custom properties,
+			// so the caller hands us a literal colour. Falls back to Nord red
+			// for any caller that hasn't been updated yet.
 			const trailColor =
-				getComputedStyle(document.documentElement).getPropertyValue('--red').trim() ||
-				'#bf616a';
+				trackColor ??
+				(getComputedStyle(document.documentElement).getPropertyValue('--red').trim() ||
+					'#bf616a');
 
 			const polyline = L.polyline(latLngs, {
 				color: trailColor,

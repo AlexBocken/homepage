@@ -17,6 +17,7 @@
 	import Download from '@lucide/svelte/icons/download';
 	import { buildGpx, type GpxWritePoint } from '$lib/gpx';
 	import { resolveCanton } from '$lib/data/cantons';
+	import { sacTrailColor } from '$lib/data/sacColors';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import type { PageProps } from './$types';
 
@@ -51,6 +52,7 @@
 	});
 
 	const canton = $derived(resolveCanton(hike.canton));
+	const trackColor = $derived(sacTrailColor(hike.difficulty));
 
 	// Publish date formatted in long German for the meta footer
 	// (matches the hike's `date: YYYY-MM-DD` frontmatter format).
@@ -336,6 +338,7 @@
 				{track}
 				imagePoints={visibleImagePoints}
 				showPrivate
+				{trackColor}
 				initialCenter={heroPose?.center}
 				initialZoom={heroPose?.zoom}
 				onReady={() => (heroMapReady = true)}
@@ -451,7 +454,7 @@
 	<section class="scroll-area">
 		<aside class="trail-col">
 			{#if track && track.length > 0}
-				<HikeMap {track} imagePoints={visibleImagePoints} showPrivate />
+				<HikeMap {track} imagePoints={visibleImagePoints} showPrivate {trackColor} />
 				<ElevationProfile {track} />
 			{/if}
 		</aside>

@@ -2,7 +2,8 @@
 	import type { Attachment } from 'svelte/attachments';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import type { HikeManifestEntry, Difficulty } from '$types/hikes';
+	import { sacTrailColor } from '$lib/data/sacColors';
+	import type { HikeManifestEntry } from '$types/hikes';
 	import Map from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
 	import Landmark from '@lucide/svelte/icons/landmark';
@@ -26,18 +27,6 @@
 	}
 
 	const { hikes, initialCenter, initialZoom, onReady }: Props = $props();
-
-	// Per-tier polyline colour, matching the painted-marker scheme on the
-	// SAC badges. Canvas-rendered polylines can't resolve CSS variables,
-	// so the values are hard-coded — keep in sync with HikeCard.svelte.
-	const SAC_COLOR: Record<Difficulty, string> = {
-		T1: '#f5a623',
-		T2: '#dc1d2a',
-		T3: '#dc1d2a',
-		T4: '#2965c8',
-		T5: '#2965c8',
-		T6: '#2965c8'
-	};
 
 	const SWISSTOPO_FARBE = 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg';
 	const SWISSTOPO_IMAGE = 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg';
@@ -197,7 +186,7 @@
 				for (const hike of hikes) {
 					if (!hike.previewPolyline || hike.previewPolyline.length < 2) continue;
 					const latLngs = hike.previewPolyline.map(([lat, lng]) => [lat, lng] as [number, number]);
-					const color = SAC_COLOR[hike.difficulty] ?? '#5e81ac';
+					const color = sacTrailColor(hike.difficulty);
 					const poly = L.polyline(latLngs, {
 						color,
 						weight: 4,
