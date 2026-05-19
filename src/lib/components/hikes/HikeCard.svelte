@@ -6,6 +6,7 @@
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import Mountain from '@lucide/svelte/icons/mountain';
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
+	import { resolveCanton } from '$lib/data/cantons';
 	import type { HikeManifestEntry } from '$types/hikes';
 
 	interface Props {
@@ -48,6 +49,8 @@
 		const days = (Date.now() - t) / 86_400_000;
 		return days >= 0 && days <= 30;
 	});
+
+	const canton = $derived(resolveCanton(hike.canton));
 </script>
 
 <a class="card" href={resolve('/hikes/[slug]', { slug: hike.slug })} style="view-transition-name: hike-{hike.slug}">
@@ -88,7 +91,22 @@
 		<header class="head">
 			<h2 class="title">{hike.title}</h2>
 			{#if hike.region}
-				<p class="region">{hike.region}{hike.canton && hike.canton !== hike.region ? `, ${hike.canton}` : ''}</p>
+				<p class="region">
+					{#if canton}
+						<img
+							class="canton-emblem"
+							src={canton.emblemUrl}
+							alt=""
+							aria-hidden="true"
+							loading="lazy"
+							decoding="async"
+						/>
+					{/if}<span class="region-text"
+						>{hike.region}{hike.canton && hike.canton !== hike.region
+							? `, ${hike.canton}`
+							: ''}</span
+					>
+				</p>
 			{/if}
 		</header>
 
@@ -275,9 +293,30 @@
 	}
 
 	.region {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 		margin: 0;
 		font-size: 0.85rem;
 		color: var(--color-text-secondary);
+	}
+
+	.canton-emblem {
+		flex: 0 0 auto;
+		width: 18px;
+		height: 22px;
+		object-fit: contain;
+		/* Most cantonal arms are tall-rectangle shields, a couple (Schwyz,
+		 * Solothurn) are squarer — `contain` keeps the proportions correct
+		 * inside the fixed slot so a row of cards stays visually aligned. */
+		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18));
+	}
+
+	.region-text {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.metrics {

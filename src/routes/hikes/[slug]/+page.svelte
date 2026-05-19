@@ -16,6 +16,7 @@
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
 	import Download from '@lucide/svelte/icons/download';
 	import { buildGpx, type GpxWritePoint } from '$lib/gpx';
+	import { resolveCanton } from '$lib/data/cantons';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import type { PageProps } from './$types';
 
@@ -48,6 +49,8 @@
 		mq.addEventListener('change', onChange);
 		return () => mq.removeEventListener('change', onChange);
 	});
+
+	const canton = $derived(resolveCanton(hike.canton));
 
 	const heroPose = $derived.by(() => {
 		if (
@@ -334,7 +337,21 @@
 			<h1>{hike.title}</h1>
 			{#if hike.region}
 				<p class="region">
-					{hike.region}{hike.canton && hike.canton !== hike.region ? `, ${hike.canton}` : ''}
+					{#if canton}
+						<img
+							class="canton-emblem"
+							src={canton.emblemUrl}
+							alt=""
+							aria-hidden="true"
+							loading="eager"
+							decoding="async"
+						/>
+					{/if}
+					<span class="region-text">
+						{hike.region}{hike.canton && hike.canton !== hike.region
+							? `, ${hike.canton}`
+							: ''}
+					</span>
 				</p>
 			{/if}
 		</div>
@@ -571,9 +588,26 @@
 	}
 
 	.region {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		margin: 0.2rem 0 0;
 		opacity: 0.9;
 		text-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+	}
+
+	.canton-emblem {
+		flex: 0 0 auto;
+		width: 24px;
+		height: 30px;
+		object-fit: contain;
+		/* Drop shadow keeps the emblem readable on the gradient overlay
+		 * (which only goes dark from ~50 % down). */
+		filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.5));
+	}
+
+	.region-text {
+		min-width: 0;
 	}
 
 	.metrics {
