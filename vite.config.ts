@@ -27,7 +27,17 @@ function hikeImagesDevPlugin(): Plugin {
 				const url = req.url ?? '';
 				const m = url.match(/^\/hikes\/([^/]+)\/images\/([^/?#]+)(?:[?#].*)?$/);
 				if (!m) return next();
-				const [, slug, file] = m;
+				// Slug and filename ship URL-encoded (e.g. "ü" → "%C3%BC"),
+				// but the on-disk directory uses the raw UTF-8 character.
+				// Decode before joining, else everything under a slug with
+				// non-ASCII characters 404s in dev.
+				let slug: string, file: string;
+				try {
+					slug = decodeURIComponent(m[1]);
+					file = decodeURIComponent(m[2]);
+				} catch {
+					return next();
+				}
 				if (slug.includes('..') || file.includes('..')) return next();
 				const filePath = path.join(ROOT, slug, 'images', file);
 				try {
