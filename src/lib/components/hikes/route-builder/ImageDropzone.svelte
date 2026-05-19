@@ -3,6 +3,7 @@
 		builder,
 		insertWaypointChronologically,
 		nextWaypointId,
+		requestFitBounds,
 		scheduleSave,
 		type Waypoint
 	} from './builderStore.svelte';
@@ -135,15 +136,23 @@
 		// by snap-to-route enrichment) is the only reliable elevation
 		// source against WGS-84 inputs, and its single-point variant kept
 		// returning 0 even with workaround attempts.
+		let placedAny = false;
 		for (const p of prepared) {
 			if (!p.ok) continue;
-			if (p.kind === 'new') insertWaypointChronologically(p.wp);
+			if (p.kind === 'new') {
+				insertWaypointChronologically(p.wp);
+				if (p.hasGps) placedAny = true;
+			}
 			// Cache the original file so the waypoint table can show a
 			// full-resolution preview this session (for both new + matched
 			// waypoints). Persistence to localStorage keeps only the small
 			// thumbnail.
 			setFullImage(p.id, p.file);
 		}
+		// Reframe the map to the new track. Only matters when the batch
+		// added at least one geolocated waypoint — unplaced images don't
+		// affect bounds, and matched-only drops leave coords unchanged.
+		if (placedAny) requestFitBounds();
 	}
 
 	function onDrop(e: DragEvent) {

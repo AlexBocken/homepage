@@ -107,6 +107,17 @@ function defaultState(): BuilderState {
 
 export const builder = $state<BuilderState>(loadDraft());
 
+/**
+ * UI-only signal for the edit map: bumping `fitTick` asks the map to
+ * re-run `fitBounds()` on the current track. Used after batch insertions
+ * (image drops, GPX import) where the user expects the map to reframe to
+ * show every newly-added waypoint. Not persisted.
+ */
+export const mapView = $state({ fitTick: 0 });
+export function requestFitBounds(): void {
+	mapView.fitTick++;
+}
+
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 export function scheduleSave(): void {
 	if (!browser) return;

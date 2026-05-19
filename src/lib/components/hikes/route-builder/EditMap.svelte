@@ -2,9 +2,11 @@
 	import type { Attachment } from 'svelte/attachments';
 	import {
 		builder,
+		mapView,
 		nextWaypointId,
 		scheduleSave
 	} from './builderStore.svelte';
+	import { SAC_TRAIL_COLOR } from '$lib/data/sacColors';
 	// Single-point Swisstopo elevation lookups are intentionally NOT used —
 	// they returned 0 against WGS-84 inputs in practice, and image waypoints
 	// don't need per-point altitudes anyway. Waypoint altitudes flow from
@@ -135,14 +137,14 @@
 				// Lines: per-pair so each can carry a segIdx for inline insertion.
 				// Snapped + linear segments share the same visual styling — there's
 				// no need to call out the difference, the user picked the mode.
-				const primary =
-					getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() ||
-					'#5e81ac';
+				// SAC white-red-white red — matches /hikes overview + detail-page
+				// trail colour so the live preview reads as the final published track.
+				const trackColor = SAC_TRAIL_COLOR.T2;
 				if (builder.routedSegments.length > 0) {
 					builder.routedSegments.forEach((seg, segIdx) => {
 						const latLngs = seg.map((p) => [p[1], p[0]] as [number, number]);
 						const poly = L.polyline(latLngs, {
-							color: primary,
+							color: trackColor,
 							weight: 4,
 							opacity: 0.9
 						}).addTo(lineLayer);
@@ -155,6 +157,23 @@
 				}
 			}
 
+			function fitToTrack() {
+				const points: [number, number][] = [];
+				for (const w of builder.waypoints) {
+					if (w.unplaced) continue;
+					points.push([w.lat, w.lng]);
+				}
+				for (const seg of builder.routedSegments) {
+					for (const p of seg) points.push([p[1], p[0]]);
+				}
+				if (points.length === 0) return;
+				if (points.length === 1) {
+					map.setView(points[0], 13);
+					return;
+				}
+				map.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
+			}
+
 			// React to store changes.
 			const stopRoot = $effect.root(() => {
 				$effect(() => {
@@ -165,6 +184,17 @@
 					}
 					builder.routedSegments.length;
 					render();
+				});
+
+				// External fit-bounds requests (image drops, GPX imports).
+				// The map's own init-time auto-fit covers first-load; this
+				// effect handles every subsequent batch insertion.
+				let lastTick = mapView.fitTick;
+				$effect(() => {
+					const tick = mapView.fitTick;
+					if (tick === lastTick) return;
+					lastTick = tick;
+					fitToTrack();
 				});
 			});
 
