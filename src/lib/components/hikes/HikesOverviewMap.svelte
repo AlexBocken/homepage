@@ -3,6 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { sacTrailColor } from '$lib/data/sacColors';
+	import { TILE_URL, TILE_ATTRIBUTION } from '$lib/data/mapTiles';
+	import { isSwissRegion } from '$lib/hikes/hikeArea';
 	import type { HikeManifestEntry } from '$types/hikes';
 	import Map from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
@@ -28,18 +30,17 @@
 
 	const { hikes, initialCenter, initialZoom, onReady }: Props = $props();
 
-	const SWISSTOPO_FARBE = 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg';
-	const SWISSTOPO_IMAGE = 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg';
-	const SWISSTOPO_DUFOUR = 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.hiks-dufour/default/current/3857/{z}/{x}/{y}.png';
-	const SWISSTOPO_ATTRIBUTION =
-		'&copy; <a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener">swisstopo</a>';
+	// When every displayed hike is in a swisstopo region (CH/LI), the schematic
+	// can use swisstopo's z19; with a hike abroad the global fallback is shallower
+	// so we cap a touch lower (still generous — the overview is a finder).
+	const allSwiss = $derived(hikes.every((h) => isSwissRegion(h.canton, h.country)));
 
 	type BaseLayer = 'schematic' | 'aerial' | 'dufour';
-	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof Map; maxZoom: number }> = {
-		schematic: { label: 'Karte', icon: Map, maxZoom: 19 },
+	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof Map; maxZoom: number }> = $derived({
+		schematic: { label: 'Karte', icon: Map, maxZoom: allSwiss ? 19 : 18 },
 		aerial: { label: 'Luftbild', icon: Satellite, maxZoom: 19 },
 		dufour: { label: 'Dufour (1864)', icon: Landmark, maxZoom: 16 }
-	};
+	});
 
 	const GPS_STORAGE_KEY = 'hikes:gpsEnabled';
 
@@ -123,22 +124,22 @@
 			}
 
 			const tileLayers: Record<BaseLayer, ReturnType<typeof L.tileLayer>> = {
-				schematic: L.tileLayer(SWISSTOPO_FARBE, {
+				schematic: L.tileLayer(TILE_URL.karte, {
 					maxZoom: LAYER_DEFS.schematic.maxZoom,
 					minZoom: 7,
-					attribution: SWISSTOPO_ATTRIBUTION,
+					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
-				aerial: L.tileLayer(SWISSTOPO_IMAGE, {
+				aerial: L.tileLayer(TILE_URL.luftbild, {
 					maxZoom: LAYER_DEFS.aerial.maxZoom,
 					minZoom: 7,
-					attribution: SWISSTOPO_ATTRIBUTION,
+					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
-				dufour: L.tileLayer(SWISSTOPO_DUFOUR, {
+				dufour: L.tileLayer(TILE_URL.dufour, {
 					maxZoom: LAYER_DEFS.dufour.maxZoom,
 					minZoom: 7,
-					attribution: SWISSTOPO_ATTRIBUTION,
+					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				})
 			};
@@ -381,7 +382,7 @@
 
 <svelte:head>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-	<link rel="preconnect" href="https://wmts.geo.admin.ch" crossorigin="anonymous" />
+	<link rel="preconnect" href="https://maps.bocken.org" crossorigin="anonymous" />
 </svelte:head>
 
 <div class="map-wrap">

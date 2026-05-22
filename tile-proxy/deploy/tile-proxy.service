@@ -1,0 +1,29 @@
+# systemd unit for the tile proxy.
+#   install:  cp deploy/tile-proxy.service /etc/systemd/system/
+#             (build first: cargo build --release; adjust paths/user below)
+#   enable:   systemctl daemon-reload && systemctl enable --now tile-proxy
+
+[Unit]
+Description=Region-switching map tile proxy (swisstopo / world)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# The one place the port is configured — nginx must point at the same value.
+Environment=TILE_PROXY_ADDR=127.0.0.1:8765
+ExecStart=/opt/tile-proxy/tile-proxy
+Restart=on-failure
+RestartSec=2
+
+# Hardening — the service only needs outbound network.
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+MemoryMax=128M
+
+[Install]
+WantedBy=multi-user.target

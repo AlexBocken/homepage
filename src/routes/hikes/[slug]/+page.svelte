@@ -4,6 +4,7 @@
 	import HikeStageNav from '$lib/components/hikes/HikeStageNav.svelte';
 	import ElevationProfile from '$lib/components/hikes/ElevationProfile.svelte';
 	import { stage, clearActiveStage } from '$lib/components/hikes/stageStore.svelte';
+	import { isSwissRegion } from '$lib/hikes/hikeArea';
 	import Seo from '$lib/components/Seo.svelte';
 	import { setHikeContext } from '$lib/components/hikes/hikeContext.svelte';
 	import { listScrollAnchors } from '$lib/components/hikes/scrollAnchors';
@@ -55,6 +56,9 @@
 
 	const canton = $derived(resolveCanton(hike.canton));
 	const trackColor = $derived(sacTrailColor(hike.difficulty));
+	// swisstopo covers CH + LI; abroad the schematic caps lower (OpenTopoMap z17)
+	// and the Dufour layer is unavailable.
+	const inSwissRegion = $derived(isSwissRegion(hike.canton, hike.country));
 
 	// Publish date formatted in long German for the meta footer
 	// (matches the hike's `date: YYYY-MM-DD` frontmatter format).
@@ -287,7 +291,7 @@
 		type="application/json"
 		crossorigin="anonymous"
 	/>
-	<link rel="preconnect" href="https://wmts.geo.admin.ch" crossorigin="anonymous" />
+	<link rel="preconnect" href="https://maps.bocken.org" crossorigin="anonymous" />
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
@@ -357,6 +361,7 @@
 				showPrivate
 				{trackColor}
 				{stages}
+				swissRegion={inSwissRegion}
 				initialCenter={heroPose?.center}
 				initialZoom={heroPose?.zoom}
 				onReady={() => (heroMapReady = true)}
@@ -476,7 +481,7 @@
 	<section class="scroll-area">
 		<aside class="trail-col">
 			{#if track && track.length > 0}
-				<HikeMap {track} imagePoints={visibleImagePoints} showPrivate {trackColor} {stages} />
+				<HikeMap {track} imagePoints={visibleImagePoints} showPrivate {trackColor} {stages} swissRegion={inSwissRegion} />
 				<ElevationProfile {track} viewRange={stageViewRange} />
 			{/if}
 		</aside>
@@ -510,9 +515,10 @@
 		<span class="meta-dot" aria-hidden="true">·</span>
 		<span>
 			Kartendaten &copy;
-			<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">
-				swisstopo
-			</a>
+			<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">swisstopo</a>,
+			<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,
+			<a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a>,
+			<a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a>
 		</span>
 	</footer>
 </article>

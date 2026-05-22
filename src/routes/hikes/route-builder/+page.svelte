@@ -335,7 +335,7 @@
 
 <svelte:head>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-	<link rel="preconnect" href="https://wmts.geo.admin.ch" crossorigin="anonymous" />
+	<link rel="preconnect" href="https://maps.bocken.org" crossorigin="anonymous" />
 </svelte:head>
 
 <section class="builder">
@@ -495,9 +495,12 @@
 	     their tile licence still requires the credit to appear on the page. -->
 	<footer class="map-credit">
 		Kartendaten &copy;
-		<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">
-			swisstopo
-		</a>
+		<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">swisstopo</a>
+		·
+		<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,
+		<a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a>
+		·
+		<a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a>
 	</footer>
 </section>
 

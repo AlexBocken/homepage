@@ -3,6 +3,7 @@
 	import type { HikeTrackPoint, ImagePoint, HikeStage } from '$types/hikes';
 	import { hover, setHover, clearHover } from './hoverStore.svelte';
 	import { stage } from './stageStore.svelte';
+	import { TILE_URL, TILE_ATTRIBUTION } from '$lib/data/mapTiles';
 	import { focused, setFocused, clearFocused } from './focusedImageStore.svelte';
 	import Map from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
@@ -39,6 +40,10 @@
 		 * stageStore) the map highlights it, dims the rest, zooms to it, and
 		 * scopes photo markers to that stage. */
 		stages?: HikeStage[] | null;
+		/** Whether the hike lies in a swisstopo-covered region (CH/LI). Drives
+		 * the schematic max zoom (19 in-region vs 17 for OpenTopoMap abroad)
+		 * and whether the CH/LI-only Dufour layer is offered. */
+		swissRegion?: boolean;
 	}
 
 	const {
@@ -49,7 +54,8 @@
 		initialZoom,
 		onReady,
 		trackColor,
-		stages = null
+		stages = null,
+		swissRegion = true
 	}: Props = $props();
 
 	// User-location toggle moved inside the map UI. localStorage-persisted so
@@ -101,19 +107,26 @@
 		enableUserLocation = true;
 	}
 
-	const SWISSTOPO_FARBE = 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg';
-	const SWISSTOPO_IMAGE = 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg';
-	const SWISSTOPO_DUFOUR = 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.hiks-dufour/default/current/3857/{z}/{x}/{y}.png';
-	const SWISSTOPO_ATTRIBUTION = '&copy; <a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener">swisstopo</a>';
 
 	type BaseLayer = 'schematic' | 'aerial' | 'dufour';
-	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof Map; maxZoom: number }> = {
-		schematic: { label: 'Karte', icon: Map, maxZoom: 19 },
+	type LayerDef = { label: string; icon: typeof Map; maxZoom: number };
+	// Schematic max zoom is region-aware: swisstopo reaches z19 over CH/LI,
+	// but the global fallback (OpenTopoMap) only serves to z17.
+	const LAYER_DEFS: Record<BaseLayer, LayerDef> = $derived({
+		schematic: { label: 'Karte', icon: Map, maxZoom: swissRegion ? 19 : 17 },
 		aerial: { label: 'Luftbild', icon: Satellite, maxZoom: 19 },
 		// Dufour Map (1845–1864): swisstopo's historical layer, only goes up
 		// to roughly z16. We cap the map's maxZoom when this layer is active.
 		dufour: { label: 'Dufour (1864)', icon: Landmark, maxZoom: 16 }
-	};
+	});
+
+	// The Dufour historical layer exists only for CH/LI — hide it abroad.
+	const layerOptions = $derived(
+		Object.entries(LAYER_DEFS).filter(([key]) => swissRegion || key !== 'dufour') as [
+			BaseLayer,
+			LayerDef
+		][]
+	);
 
 	let showPhotos = $state(true);
 	let baseLayer = $state<BaseLayer>('schematic');
@@ -155,22 +168,22 @@
 			});
 
 			const tileLayers: Record<BaseLayer, ReturnType<typeof L.tileLayer>> = {
-				schematic: L.tileLayer(SWISSTOPO_FARBE, {
+				schematic: L.tileLayer(TILE_URL.karte, {
 					maxZoom: LAYER_DEFS.schematic.maxZoom,
 					minZoom: 7,
-					attribution: SWISSTOPO_ATTRIBUTION,
+					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
-				aerial: L.tileLayer(SWISSTOPO_IMAGE, {
+				aerial: L.tileLayer(TILE_URL.luftbild, {
 					maxZoom: LAYER_DEFS.aerial.maxZoom,
 					minZoom: 7,
-					attribution: SWISSTOPO_ATTRIBUTION,
+					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
-				dufour: L.tileLayer(SWISSTOPO_DUFOUR, {
+				dufour: L.tileLayer(TILE_URL.dufour, {
 					maxZoom: LAYER_DEFS.dufour.maxZoom,
 					minZoom: 7,
-					attribution: SWISSTOPO_ATTRIBUTION,
+					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				})
 			};
@@ -675,7 +688,7 @@
 			</button>
 			{#if layerMenuOpen}
 				<div class="layer-popover" role="menu">
-					{#each Object.entries(LAYER_DEFS) as [key, def] (key)}
+					{#each layerOptions as [key, def] (key)}
 						{@const Icon = def.icon}
 						<button
 							type="button"

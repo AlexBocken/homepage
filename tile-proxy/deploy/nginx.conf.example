@@ -1,0 +1,72 @@
+# Caching reverse proxy for the tile-proxy service.
+#
+# Install as a site:
+#   cp nginx.conf.example /etc/nginx/sites-available/maps
+#   ln -s ../sites-available/maps /etc/nginx/sites-enabled/maps
+#   nginx -t && systemctl reload nginx
+#
+# The `proxy_cache_path`, `limit_req_zone` and `upstream` directives are
+# http-context. This works because Arch/Debian's `include sites-enabled/*`
+# runs inside `http {}`. If your include lives elsewhere, move those three
+# blocks into your main `http {}` instead.
+#
+# The upstream port (127.0.0.1:8765) must match TILE_PROXY_ADDR in
+# tile-proxy.service. To drive it from the env instead, render with envsubst:
+#   export TILE_PROXY_ADDR=127.0.0.1:8765
+#   envsubst '$TILE_PROXY_ADDR' < nginx.conf.example > /etc/nginx/sites-available/maps
+# (then change `server 127.0.0.1:8765;` below to `server ${TILE_PROXY_ADDR};`)
+
+proxy_cache_path /var/cache/nginx/tiles
+                 levels=1:2 keys_zone=tiles:50m max_size=20g inactive=180d
+                 use_temp_path=off;
+
+limit_req_zone $binary_remote_addr zone=tiles_rl:10m rate=50r/s;
+
+upstream tile_proxy {
+    server 127.0.0.1:8765;     # == TILE_PROXY_ADDR
+    keepalive 16;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;                  # modern form (NOT `listen ... http2`, deprecated)
+    server_name maps.bocken.org;
+
+    ssl_certificate     /etc/letsencrypt/live/maps.bocken.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/maps.bocken.org/privkey.pem;
+
+    # Canonical tile scheme: /{karte|luftbild|dufour}/{z}/{x}/{y}
+    location ~ ^/(?:karte|luftbild|dufour)/\d+/\d+/\d+$ {
+        limit_req zone=tiles_rl burst=200 nodelay;
+
+        proxy_cache tiles;
+        proxy_cache_key $uri;                  # layer/z/x/y — provider-agnostic
+        proxy_cache_valid 200 180d;
+        proxy_cache_valid 404 502 1h;
+        proxy_cache_use_stale error timeout updating;
+        proxy_cache_background_update on;
+        proxy_cache_lock on;
+        proxy_ignore_headers Set-Cookie Vary;  # keep upstream Cache-Control
+        add_header X-Cache-Status $upstream_cache_status always;
+        add_header Access-Control-Allow-Origin "*" always;   # app + build fetch tiles
+
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_pass http://tile_proxy;
+    }
+
+    location = /healthz {
+        proxy_pass http://tile_proxy;
+        access_log off;
+    }
+}
+
+# http → https
+server {
+    listen 80;
+    listen [::]:80;
+    server_name maps.bocken.org;
+    location / { return 301 https://$host$request_uri; }
+}

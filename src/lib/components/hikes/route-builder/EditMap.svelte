@@ -7,6 +7,10 @@
 		scheduleSave
 	} from './builderStore.svelte';
 	import { SAC_TRAIL_COLOR } from '$lib/data/sacColors';
+	import { TILE_URL, TILE_ATTRIBUTION } from '$lib/data/mapTiles';
+	import MapIcon from '@lucide/svelte/icons/map';
+	import Satellite from '@lucide/svelte/icons/satellite';
+	import Layers from '@lucide/svelte/icons/layers';
 	// Single-point Swisstopo elevation lookups are intentionally NOT used —
 	// they returned 0 against WGS-84 inputs in practice, and image waypoints
 	// don't need per-point altitudes anyway. Waypoint altitudes flow from
@@ -28,11 +32,30 @@
 		pendingPlacementId ? builder.waypoints.find((w) => w.id === pendingPlacementId) ?? null : null
 	);
 
+	// Schematic ↔ satellite base layer (satellite helps placing waypoints on
+	// trails/landmarks, esp. off the marked path). Same bottom-right layer
+	// popover as the detail / overview maps.
+	type BaseLayer = 'schematic' | 'aerial';
+	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof MapIcon }> = {
+		schematic: { label: 'Karte', icon: MapIcon },
+		aerial: { label: 'Luftbild', icon: Satellite }
+	};
+	let baseLayer = $state<BaseLayer>('schematic');
+	let layerMenuOpen = $state(false);
 
-	const SWISSTOPO_FARBE =
-		'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg';
-	const SWISSTOPO_ATTRIBUTION =
-		'&copy; <a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener">swisstopo</a>';
+	// Close the layer popover on outside click (the opening click stops
+	// propagation so this never sees it).
+	$effect(() => {
+		if (!layerMenuOpen) return;
+		function onAway(e: MouseEvent) {
+			const target = e.target as HTMLElement | null;
+			if (target && !target.closest('.layer-menu')) layerMenuOpen = false;
+		}
+		window.addEventListener('click', onAway);
+		return () => window.removeEventListener('click', onAway);
+	});
+
+
 	// Default view: Switzerland-wide.
 	const DEFAULT_CENTER: [number, number] = [46.8, 8.3];
 	const DEFAULT_ZOOM = 8;
@@ -101,12 +124,22 @@
 				preferCanvas: false
 			}).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
-			L.tileLayer(SWISSTOPO_FARBE, {
-				maxZoom: 19,
-				minZoom: 7,
-				attribution: SWISSTOPO_ATTRIBUTION,
-				updateWhenZooming: false
-			}).addTo(map);
+			const tileLayers = {
+				schematic: L.tileLayer(TILE_URL.karte, {
+					maxZoom: 19,
+					minZoom: 7,
+					attribution: TILE_ATTRIBUTION,
+					updateWhenZooming: false
+				}),
+				aerial: L.tileLayer(TILE_URL.luftbild, {
+					maxZoom: 19,
+					minZoom: 7,
+					attribution: TILE_ATTRIBUTION,
+					updateWhenZooming: false
+				})
+			};
+			tileLayers.schematic.addTo(map);
+			let currentBase: 'schematic' | 'aerial' = 'schematic';
 
 			const markerLayer = L.layerGroup().addTo(map);
 			const lineLayer = L.layerGroup().addTo(map);
@@ -252,6 +285,14 @@
 
 			// React to store changes.
 			const stopRoot = $effect.root(() => {
+				// Base-layer switch (schematic ↔ satellite).
+				$effect(() => {
+					if (baseLayer === currentBase) return;
+					tileLayers[currentBase].remove();
+					tileLayers[baseLayer].addTo(map);
+					currentBase = baseLayer;
+				});
+
 				$effect(() => {
 					// Touch each reactive field so we re-render on any mutation,
 					// including focus changes (so the active marker re-styles).
@@ -337,6 +378,45 @@
 
 <div class="edit-map-wrap" class:placement-mode={!!pendingWaypoint}>
 	<div class="edit-map" {@attach editAttachment}></div>
+
+	<div class="map-controls">
+		<div class="layer-menu" class:open={layerMenuOpen}>
+			<button
+				type="button"
+				class="round-btn"
+				aria-label="Kartenebene wählen"
+				aria-haspopup="menu"
+				aria-expanded={layerMenuOpen}
+				onclick={(e) => {
+					e.stopPropagation();
+					layerMenuOpen = !layerMenuOpen;
+				}}
+			>
+				<Layers size={20} strokeWidth={2} aria-hidden="true" />
+			</button>
+			{#if layerMenuOpen}
+				<div class="layer-popover" role="menu">
+					{#each Object.entries(LAYER_DEFS) as [key, def] (key)}
+						{@const Icon = def.icon}
+						<button
+							type="button"
+							role="menuitemradio"
+							aria-checked={baseLayer === key}
+							class:active={baseLayer === key}
+							onclick={() => {
+								baseLayer = key as BaseLayer;
+								layerMenuOpen = false;
+							}}
+						>
+							<Icon size={14} strokeWidth={1.75} aria-hidden="true" />
+							{def.label}
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</div>
+
 	{#if pendingWaypoint}
 		<div class="placement-banner" role="status">
 			<span>Klicke auf die Karte, um <strong>das Bild</strong> zu platzieren.</span>
@@ -385,6 +465,97 @@
 	/* Placement mode (dropping an unplaced image) keeps the crosshair. */
 	.edit-map-wrap.placement-mode :global(.leaflet-container) {
 		cursor: crosshair;
+	}
+
+	/* Bottom-right round controls + layer popover — same language as the
+	 * detail / overview maps. */
+	.map-controls {
+		position: absolute;
+		bottom: 1rem;
+		right: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		align-items: flex-end;
+		z-index: 500;
+	}
+
+	.round-btn {
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		background: var(--color-surface);
+		color: var(--color-text-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: 50%;
+		box-shadow: var(--shadow-md);
+		cursor: pointer;
+		transition:
+			color var(--transition-fast),
+			background var(--transition-fast),
+			transform var(--transition-fast),
+			box-shadow var(--transition-fast);
+	}
+
+	.round-btn:hover {
+		color: var(--color-primary);
+		transform: scale(1.05);
+		box-shadow: var(--shadow-hover);
+	}
+
+	.layer-menu {
+		position: relative;
+	}
+
+	.layer-popover {
+		position: absolute;
+		right: calc(100% + 0.5rem);
+		bottom: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding: 0.3rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+		min-width: 9.5rem;
+		white-space: nowrap;
+	}
+
+	.layer-popover button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.45rem 0.7rem;
+		border: 0;
+		background: transparent;
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: 0.85rem;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		text-align: left;
+		transition: background var(--transition-fast), color var(--transition-fast);
+	}
+
+	.layer-popover button :global(svg) {
+		color: var(--color-text-tertiary);
+		flex: 0 0 auto;
+	}
+
+	.layer-popover button:hover {
+		background: var(--color-bg-elevated);
+	}
+
+	.layer-popover button.active {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+	}
+
+	.layer-popover button.active :global(svg) {
+		color: var(--color-text-on-primary);
 	}
 
 	.placement-banner {

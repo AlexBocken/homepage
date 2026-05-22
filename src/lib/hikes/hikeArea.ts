@@ -25,3 +25,15 @@ export function resolveHikeArea(
 	if (k) return { value: `country:${k.code}`, label: k.name, iconUrl: k.flagUrl, kind: 'country' };
 	return null;
 }
+
+/** Whether a hike sits in a swisstopo-covered region (Switzerland or
+ * Liechtenstein). Drives the schematic max-zoom (swisstopo reaches deeper than
+ * the global fallback) and whether the CH/LI-only Dufour layer is offered. */
+export function isSwissRegion(
+	canton: string | null | undefined,
+	country: string | null | undefined
+): boolean {
+	if (resolveCanton(canton)) return true;
+	const c = resolveCountry(country);
+	return c?.code === 'CH' || c?.code === 'LI';
+}
