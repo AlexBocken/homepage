@@ -79,7 +79,13 @@
 <style>
 	.hike-image {
 		position: relative;
-		margin: 2rem 0;
+		/* Cap the width so that in the single-column (mobile/tablet) layout the
+		 * photo doesn't blow up to the full content width on wider screens.
+		 * On the desktop two-column layout the prose column is already narrower
+		 * than this, so it stays full-bleed-in-column there. Centered via
+		 * auto inline margins. */
+		max-width: 680px;
+		margin: 2rem auto;
 		border-radius: var(--radius-card);
 		overflow: hidden;
 		background: #14181f;

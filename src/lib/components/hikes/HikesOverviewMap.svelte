@@ -98,10 +98,15 @@
 			const L = await import('leaflet');
 			if (cancelled || !node.isConnected) return;
 
+			// `tolerance` widens the canvas renderer's hit-test radius around
+			// every polyline (hit = weight/2 + tolerance), so a route can be
+			// hovered/clicked from a comfortable margin instead of demanding a
+			// pixel-perfect click on the 4 px line.
 			const map = L.map(node, {
 				attributionControl: true,
 				zoomControl: true,
-				preferCanvas: true
+				preferCanvas: true,
+				renderer: L.canvas({ tolerance: 12 })
 			});
 			// Sensible default centre (mid-Switzerland) while the polyline
 			// layer is built up; `fitBounds` below overrides it once the

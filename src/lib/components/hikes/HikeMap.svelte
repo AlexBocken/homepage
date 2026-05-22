@@ -223,10 +223,14 @@
 				(getComputedStyle(document.documentElement).getPropertyValue('--red').trim() ||
 					'#bf616a');
 
+			// Non-interactive: hover is driven by the whole-map `mousemove`
+			// handler below (snap-to-nearest), so the line itself needn't grab
+			// the pointer cursor or events.
 			const polyline = L.polyline(latLngs, {
 				color: trailColor,
 				weight: 4,
-				opacity: 0.95
+				opacity: 0.95,
+				interactive: false
 			}).addTo(map);
 
 			L.circleMarker(latLngs[0], {
@@ -373,7 +377,6 @@
 			// before the pin actually hits the edge.
 			const stopHoverEffect = $effect.root(() => {
 				$effect(() => {
-					if (hover.source === 'map') return;
 					if (hover.index === null || hover.index < 0 || hover.index >= latLngs.length) {
 						hoverMarker.remove();
 						return;
@@ -381,6 +384,9 @@
 					const ll = latLngs[hover.index];
 					hoverMarker.setLatLng(ll);
 					hoverMarker.addTo(map);
+					// Only auto-pan for cursors driven from elsewhere (chart /
+					// scroll tracker). A map-sourced hover means the user is
+					// already pointing here, so panning would fight them.
 					if (hover.source === 'chart' || hover.source === 'scroll') {
 						const inner = map.getBounds().pad(-0.12);
 						if (!inner.contains(ll)) {
@@ -435,23 +441,44 @@
 				});
 			});
 
-			// Polyline hover → write to store.
-			polyline.on('mousemove', (e: { latlng: { lat: number; lng: number } }) => {
+			// Elevation tracking: rather than requiring the pointer to be exactly
+			// on the thin trail, snap the chart cursor to the nearest track point
+			// whenever the mouse is anywhere within HOVER_SNAP_PX of the route.
+			// The track is cached in layer-point (pixel) space so each pointer
+			// move is just cheap distance maths; the cache is rebuilt on zoom/
+			// move (layer points are pan-invariant, but rebuilding on moveend
+			// keeps it correct regardless of how the view changed).
+			const HOVER_SNAP_PX = 70;
+			let projected: { x: number; y: number }[] = [];
+			function reproject() {
+				projected = latLngs.map((ll) => map.latLngToLayerPoint(ll));
+			}
+			reproject();
+			map.on('zoomend moveend', reproject);
+
+			map.on('mousemove', (e: { layerPoint: { x: number; y: number } }) => {
+				if (projected.length === 0) return;
+				const { x, y } = e.layerPoint;
 				let bestIdx = 0;
 				let bestSq = Infinity;
-				const { lat, lng } = e.latlng;
-				for (let i = 0; i < latLngs.length; i++) {
-					const dLat = latLngs[i][0] - lat;
-					const dLng = latLngs[i][1] - lng;
-					const sq = dLat * dLat + dLng * dLng;
+				for (let i = 0; i < projected.length; i++) {
+					const dx = projected[i].x - x;
+					const dy = projected[i].y - y;
+					const sq = dx * dx + dy * dy;
 					if (sq < bestSq) {
 						bestSq = sq;
 						bestIdx = i;
 					}
 				}
-				setHover(bestIdx, 'map');
+				if (bestSq <= HOVER_SNAP_PX * HOVER_SNAP_PX) {
+					setHover(bestIdx, 'map');
+				} else if (hover.source === 'map') {
+					clearHover();
+				}
 			});
-			polyline.on('mouseout', () => clearHover());
+			map.on('mouseout', () => {
+				if (hover.source === 'map') clearHover();
+			});
 
 			// User location (opt-in).
 			let userMarker: ReturnType<typeof L.circleMarker> | null = null;
@@ -799,7 +826,10 @@
 	:global(.hike-hover-pin) {
 		background: transparent !important;
 		border: 0 !important;
-		color: var(--color-primary);
+		/* Nord red — deliberately off the primary palette so the cursor pin
+		 * reads as a distinct "you are here" marker against the blue-ish
+		 * trail / UI accents. `currentColor` drives the SVG fill. */
+		color: var(--red);
 		filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.25));
 		pointer-events: none;
 	}

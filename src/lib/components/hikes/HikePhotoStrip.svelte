@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
 	import type { HikeTrackPoint, ImagePoint } from '$types/hikes';
 	import { focused, setFocused } from './focusedImageStore.svelte';
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import Lock from '@lucide/svelte/icons/lock';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Expand from '@lucide/svelte/icons/expand';
+	import X from '@lucide/svelte/icons/x';
 
 	interface Props {
 		images: ImagePoint[];
@@ -29,8 +32,57 @@
 		return m === 0 ? `${h} h` : `${h} h ${m} min`;
 	}
 
-	const cardEls: Array<HTMLButtonElement | null> = $state([]);
+	const cardEls: Array<HTMLElement | null> = $state([]);
 	let scrollEl = $state<HTMLDivElement | undefined>(undefined);
+
+	// Fullscreen lightbox. Independent of `focused` (which drives the map),
+	// but opening / navigating also syncs `focused` so the map + strip follow
+	// whatever is being viewed full-screen.
+	let lightboxIndex = $state<number | null>(null);
+	const lightboxOpen = $derived(lightboxIndex !== null);
+	let closeBtn = $state<HTMLButtonElement | undefined>(undefined);
+
+	function openLightbox(i: number): void {
+		lightboxIndex = i;
+		setFocused(i, 'strip');
+	}
+
+	function closeLightbox(): void {
+		lightboxIndex = null;
+	}
+
+	function lightboxStep(dir: -1 | 1): void {
+		if (lightboxIndex === null) return;
+		const n = lightboxIndex + dir;
+		if (n < 0 || n >= images.length) return;
+		lightboxIndex = n;
+		setFocused(n, 'strip');
+	}
+
+	// While open: Esc closes, arrows navigate, body scroll is locked, and focus
+	// moves into the dialog. Keyed on `lightboxOpen` (not the index) so stepping
+	// between images doesn't re-run the setup or steal focus back to close.
+	$effect(() => {
+		if (!lightboxOpen) return;
+		closeBtn?.focus();
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') closeLightbox();
+			else if (e.key === 'ArrowLeft') {
+				e.preventDefault();
+				lightboxStep(-1);
+			} else if (e.key === 'ArrowRight') {
+				e.preventDefault();
+				lightboxStep(1);
+			}
+		};
+		window.addEventListener('keydown', onKey);
+		const prevOverflow = document.body.style.overflow;
+		document.body.style.overflow = 'hidden';
+		return () => {
+			window.removeEventListener('keydown', onKey);
+			document.body.style.overflow = prevOverflow;
+		};
+	});
 
 	// Recenter the active card horizontally inside the strip on focus change.
 	// We scroll only the strip's own X axis — `scrollIntoView` would also
@@ -122,31 +174,40 @@
 						? formatElapsed(ip.timestamp - startTimestamp)
 						: null}
 				{@const active = focused.index === i}
-				<button
-					type="button"
-					class="card"
-					class:active
-					class:private={ip.visibility === 'private'}
-					bind:this={cardEls[i]}
-					onclick={() => onCardClick(i)}
-					aria-label={`Foto ${i + 1} von ${images.length}${elapsed ? `, nach ${elapsed}` : ''}`}
-					role="option"
-					aria-selected={active}
-				>
-					<img src={ip.thumbnail} alt={ip.alt} loading="lazy" decoding="async" />
-					<div class="overlay">
-						{#if elapsed}
-							<span class="chip-elapsed">nach {elapsed}</span>
+				<div class="card-wrap" class:active bind:this={cardEls[i]}>
+					<button
+						type="button"
+						class="card"
+						class:private={ip.visibility === 'private'}
+						onclick={() => onCardClick(i)}
+						aria-label={`Foto ${i + 1} von ${images.length}${elapsed ? `, nach ${elapsed}` : ''}`}
+						role="option"
+						aria-selected={active}
+					>
+						<img src={ip.thumbnail} alt={ip.alt} loading="lazy" decoding="async" />
+						<div class="overlay">
+							{#if elapsed}
+								<span class="chip-elapsed">nach {elapsed}</span>
+							{/if}
+							<span class="chip-index">{i + 1}/{images.length}</span>
+						</div>
+						{#if ip.visibility === 'private'}
+							<span class="badge-private" aria-label="Privat">
+								<Lock size={11} strokeWidth={2.25} aria-hidden="true" />
+								privat
+							</span>
 						{/if}
-						<span class="chip-index">{i + 1}/{images.length}</span>
-					</div>
-					{#if ip.visibility === 'private'}
-						<span class="badge-private" aria-label="Privat">
-							<Lock size={11} strokeWidth={2.25} aria-hidden="true" />
-							privat
-						</span>
-					{/if}
-				</button>
+					</button>
+					<button
+						type="button"
+						class="expand"
+						aria-label={`Foto ${i + 1} im Vollbild öffnen`}
+						title="Vollbild"
+						onclick={() => openLightbox(i)}
+					>
+						<Expand size={15} strokeWidth={2} aria-hidden="true" />
+					</button>
+				</div>
 			{/each}
 			</div>
 
@@ -161,6 +222,52 @@
 			</button>
 		</div>
 	</section>
+
+	{#if lightboxIndex !== null}
+		{@const ip = images[lightboxIndex]}
+		{@const elapsed =
+			ip.timestamp != null && startTimestamp != null
+				? formatElapsed(ip.timestamp - startTimestamp)
+				: null}
+		<div
+			class="lightbox"
+			role="dialog"
+			aria-modal="true"
+			aria-label={`Foto ${lightboxIndex + 1} von ${images.length}`}
+			transition:fade={{ duration: 150 }}
+		>
+			<button class="lb-backdrop" aria-label="Schließen" onclick={closeLightbox}></button>
+
+			<button
+				class="lb-btn lb-close"
+				aria-label="Schließen"
+				bind:this={closeBtn}
+				onclick={closeLightbox}
+			>
+				<X size={22} strokeWidth={2} aria-hidden="true" />
+			</button>
+
+			{#if lightboxIndex > 0}
+				<button class="lb-btn lb-prev" aria-label="Vorheriges Bild" onclick={() => lightboxStep(-1)}>
+					<ChevronLeft size={26} strokeWidth={2.25} aria-hidden="true" />
+				</button>
+			{/if}
+			{#if lightboxIndex < images.length - 1}
+				<button class="lb-btn lb-next" aria-label="Nächstes Bild" onclick={() => lightboxStep(1)}>
+					<ChevronRight size={26} strokeWidth={2.25} aria-hidden="true" />
+				</button>
+			{/if}
+
+			<figure class="lb-figure">
+				<img src={ip.src} alt={ip.alt} />
+				<figcaption class="lb-caption">
+					<span class="lb-count">{lightboxIndex + 1} / {images.length}</span>
+					{#if elapsed}<span class="lb-elapsed">nach {elapsed}</span>{/if}
+					{#if ip.alt}<span class="lb-alt">{ip.alt}</span>{/if}
+				</figcaption>
+			</figure>
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -228,27 +335,46 @@
 		border-radius: var(--radius-md);
 	}
 
-	.card {
+	/* The wrapper is the flex item: it carries the size, scroll-snap and the
+	 * lift/scale transform. The card button and the expand button live inside
+	 * it as siblings (a button can't be nested in a button). */
+	.card-wrap {
 		position: relative;
 		flex: 0 0 auto;
 		width: 232px;
+		scroll-snap-align: center;
+		border-radius: var(--radius-lg);
+		transform: translateY(0) scale(1);
+		transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.card-wrap:hover,
+	.card-wrap:focus-within {
+		transform: translateY(-2px) scale(1.02);
+	}
+
+	/* Active card stands out via a much heavier, tinted drop shadow rather
+	 * than dimming everything else — keeps every photo legible. */
+	.card-wrap.active {
+		transform: translateY(-6px) scale(1.05);
+	}
+
+	.card {
+		position: relative;
+		display: block;
+		width: 100%;
 		padding: 0;
 		border: 0;
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
 		overflow: hidden;
 		cursor: pointer;
-		scroll-snap-align: center;
 		box-shadow: var(--shadow-sm);
-		transform: translateY(0) scale(1);
-		transition:
-			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-			box-shadow 220ms ease;
+		transition: box-shadow 220ms ease;
 	}
 
-	.card:hover,
-	.card:focus-visible {
-		transform: translateY(-2px) scale(1.02);
+	.card-wrap:hover .card,
+	.card-wrap:focus-within .card {
 		box-shadow: var(--shadow-md);
 	}
 
@@ -257,19 +383,72 @@
 		outline-offset: 2px;
 	}
 
-	/* Active card stands out via a much heavier, tinted drop shadow rather
-	 * than dimming everything else — keeps every photo legible. */
-	.card.active {
-		transform: translateY(-6px) scale(1.05);
+	.card-wrap.active .card {
 		box-shadow:
 			0 18px 32px -8px color-mix(in oklab, var(--color-primary) 55%, transparent),
 			0 6px 14px -6px rgb(0 0 0 / 0.25);
 	}
 
+	/* Fullscreen trigger — a circular badge in the top-right of each card.
+	 * Hidden until the card is hovered/focused/active (always shown on touch
+	 * devices, which have no hover). */
+	.expand {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		z-index: 3;
+		display: grid;
+		place-items: center;
+		width: 30px;
+		height: 30px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: rgb(0 0 0 / 0.5);
+		color: #fff;
+		cursor: pointer;
+		opacity: 0;
+		transform: scale(0.85);
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+		transition:
+			opacity var(--transition-fast),
+			transform var(--transition-fast),
+			background var(--transition-fast);
+	}
+
+	.card-wrap:hover .expand,
+	.card-wrap:focus-within .expand,
+	.card-wrap.active .expand {
+		opacity: 1;
+		transform: scale(1);
+	}
+
+	.expand:hover {
+		background: rgb(0 0 0 / 0.72);
+		transform: scale(1.1);
+	}
+
+	.expand:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+		opacity: 1;
+		transform: scale(1);
+	}
+
+	@media (hover: none) {
+		.expand {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
 	.card img {
 		display: block;
 		width: 100%;
-		aspect-ratio: 4 / 3;
+		/* 3:2 — a touch shorter than the old 4:3 so the strip sits compactly
+		 * above the stats row without dominating the page. */
+		aspect-ratio: 3 / 2;
 		object-fit: cover;
 		background: var(--color-bg-elevated);
 	}
@@ -367,7 +546,7 @@
 	}
 
 	@media (max-width: 560px) {
-		.card {
+		.card-wrap {
 			width: 180px;
 		}
 
@@ -386,11 +565,153 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
+		.card-wrap,
 		.card,
 		.strip-scroll,
-		.chev {
+		.chev,
+		.expand {
 			transition: none;
 			scroll-behavior: auto;
+		}
+	}
+
+	/* ── Fullscreen lightbox ─────────────────────────────────────────────── */
+	.lightbox {
+		position: fixed;
+		inset: 0;
+		z-index: 9000;
+		display: grid;
+		place-items: center;
+		padding: 1.5rem;
+		background: rgb(0 0 0 / 0.92);
+	}
+
+	.lb-backdrop {
+		position: absolute;
+		inset: 0;
+		border: 0;
+		margin: 0;
+		padding: 0;
+		background: transparent;
+		cursor: zoom-out;
+	}
+
+	.lb-figure {
+		position: relative;
+		z-index: 1;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+		max-width: 92vw;
+		max-height: 90vh;
+	}
+
+	.lb-figure img {
+		max-width: 92vw;
+		max-height: 82vh;
+		object-fit: contain;
+		border-radius: var(--radius-md);
+		box-shadow: 0 12px 48px rgb(0 0 0 / 0.55);
+	}
+
+	.lb-caption {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem 0.85rem;
+		max-width: 92vw;
+		color: rgb(255 255 255 / 0.88);
+		font-size: 0.85rem;
+		text-align: center;
+	}
+
+	.lb-count {
+		font-variant-numeric: tabular-nums;
+		font-weight: 600;
+	}
+
+	.lb-elapsed {
+		color: rgb(255 255 255 / 0.7);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.lb-alt {
+		color: rgb(255 255 255 / 0.6);
+		flex-basis: 100%;
+	}
+
+	.lb-btn {
+		position: absolute;
+		z-index: 2;
+		display: grid;
+		place-items: center;
+		width: 46px;
+		height: 46px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: rgb(255 255 255 / 0.12);
+		color: #fff;
+		cursor: pointer;
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+		transition:
+			background var(--transition-fast),
+			transform var(--transition-fast);
+	}
+
+	.lb-btn:hover {
+		background: rgb(255 255 255 / 0.24);
+		transform: scale(1.08);
+	}
+
+	.lb-btn:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+	}
+
+	.lb-close {
+		top: 1rem;
+		right: 1rem;
+	}
+
+	.lb-prev {
+		left: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.lb-next {
+		right: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.lb-prev:hover,
+	.lb-next:hover {
+		transform: translateY(-50%) scale(1.08);
+	}
+
+	@media (max-width: 560px) {
+		.lb-btn {
+			width: 40px;
+			height: 40px;
+		}
+
+		.lb-close {
+			top: 0.6rem;
+			right: 0.6rem;
+		}
+
+		.lb-prev {
+			left: 0.5rem;
+		}
+
+		.lb-next {
+			right: 0.5rem;
 		}
 	}
 </style>

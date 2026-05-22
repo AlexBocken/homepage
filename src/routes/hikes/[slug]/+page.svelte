@@ -372,6 +372,12 @@
 		</div>
 	</section>
 
+	{#if track && track.length > 0 && visibleImagePoints.length > 0}
+		<section class="strip-area">
+			<HikePhotoStrip images={visibleImagePoints} {track} />
+		</section>
+	{/if}
+
 	<section class="metrics" aria-label="Tourendaten">
 		{#if hike.icon}
 			<img class="route-icon" src={hike.icon} alt="" aria-hidden="true" />
@@ -442,12 +448,6 @@
 	{#if track && track.length > 0}
 		<section class="elev-area">
 			<ElevationProfile {track} />
-		</section>
-	{/if}
-
-	{#if track && track.length > 0 && visibleImagePoints.length > 0}
-		<section class="strip-area">
-			<HikePhotoStrip images={visibleImagePoints} {track} />
 		</section>
 	{/if}
 
