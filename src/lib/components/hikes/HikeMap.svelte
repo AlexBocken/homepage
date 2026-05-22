@@ -140,7 +140,10 @@
 			const latLngs: [number, number][] = track.map((p) => [p[1], p[0]]);
 
 			const map = L.map(node, {
-				attributionControl: true,
+				// On-map attribution control removed for a cleaner frame; the
+				// required swisstopo credit is repeated in the page's meta footer
+				// ("Kartendaten © swisstopo").
+				attributionControl: false,
 				zoomControl: true,
 				preferCanvas: true
 			});

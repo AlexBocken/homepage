@@ -229,6 +229,16 @@
 				{/each}
 			</ul>
 		{/if}
+
+		<!-- Tiny swisstopo credit. The map's own attribution control is hidden
+		     for a cleaner frame, but their tile licence still requires the
+		     credit to appear somewhere on the page. -->
+		<footer class="map-credit">
+			Kartendaten &copy;
+			<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">
+				swisstopo
+			</a>
+		</footer>
 	</div>
 </section>
 
@@ -333,6 +343,27 @@
 		text-align: center;
 		color: var(--color-text-secondary);
 		padding: 3rem 1rem;
+	}
+
+	/* Tiny, muted map-licence credit at the very bottom of the listing. */
+	.map-credit {
+		margin-top: 2.5rem;
+		padding: 0 1rem;
+		text-align: center;
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+	}
+
+	.map-credit a {
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+		text-underline-offset: 0.18em;
+		transition: color var(--transition-fast);
+	}
+
+	.map-credit a:hover {
+		color: var(--color-primary);
 	}
 
 	@media (max-width: 560px) {

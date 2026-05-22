@@ -103,7 +103,10 @@
 			// hovered/clicked from a comfortable margin instead of demanding a
 			// pixel-perfect click on the 4 px line.
 			const map = L.map(node, {
-				attributionControl: true,
+				// On-map attribution control removed for a cleaner frame.
+				// NOTE: swisstopo's tile licence requires their credit to appear;
+				// the /hikes page currently shows no other swisstopo attribution.
+				attributionControl: false,
 				zoomControl: true,
 				preferCanvas: true,
 				renderer: L.canvas({ tolerance: 12 })
