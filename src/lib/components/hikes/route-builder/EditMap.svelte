@@ -94,7 +94,9 @@
 			if (cancelled || !node.isConnected) return;
 
 			const map = L.map(node, {
-				attributionControl: true,
+				// On-map attribution removed for a cleaner frame; the required
+				// swisstopo credit is shown in the page footer instead.
+				attributionControl: false,
 				zoomControl: true,
 				preferCanvas: false
 			}).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
@@ -108,6 +110,11 @@
 
 			const markerLayer = L.layerGroup().addTo(map);
 			const lineLayer = L.layerGroup().addTo(map);
+
+			// Route polylines render on a canvas with a hit-test `tolerance`, so a
+			// click *near* the (thin) line still inserts a waypoint into the route
+			// — same trick as the /hikes overview map's broadened hover.
+			const routeRenderer = L.canvas({ tolerance: 12 });
 
 			// Map of waypointId → marker, kept in sync by render(). Used by the
 			// focus effect so it can pan/zoom + style the marker for `mapView.focusId`
@@ -204,7 +211,8 @@
 						const poly = L.polyline(latLngs, {
 							color: TRACK_COLOR,
 							weight: 4,
-							opacity: 0.9
+							opacity: 0.9,
+							renderer: routeRenderer
 						}).addTo(lineLayer);
 						// Routed segments index aligns with placed-only pairs; map back
 						// to the full waypoint-array index so inline insertion still
@@ -357,6 +365,24 @@
 		}
 	}
 
+	/* Default cursor is a pointing hand — a click adds a waypoint (on blank map
+	 * or, with the canvas tolerance, near a route). Leaflet turns the
+	 * `.edit-map` div itself into the container, so the grab cursor lives on
+	 * this element (not a descendant) — target it directly. */
+	.edit-map:global(.leaflet-container) {
+		cursor: pointer;
+	}
+
+	/* Waypoint pins are the only draggable thing — show the drag hand on them. */
+	.edit-map :global(.rb-waypoint) {
+		cursor: grab;
+	}
+
+	.edit-map :global(.rb-waypoint:active) {
+		cursor: grabbing;
+	}
+
+	/* Placement mode (dropping an unplaced image) keeps the crosshair. */
 	.edit-map-wrap.placement-mode :global(.leaflet-container) {
 		cursor: crosshair;
 	}
