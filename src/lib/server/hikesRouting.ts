@@ -217,6 +217,25 @@ export async function routeWaypoints(opts: {
 		clearTimeout(timeout);
 	}
 
+	// Swisstopo is the authoritative elevation source. BRouter ships its own
+	// (coarse, SRTM-based) elevations inline, which made snapped routes carry a
+	// jagged profile that disagreed with the densified off-trail path. Overwrite
+	// every point with the Swiss terrain model; coordinates outside Switzerland
+	// come back `null` and keep the router's elevation as a fallback (hikes
+	// abroad). `enrichElevations` is disk-cached by coordinate list, so repeated
+	// snaps are free.
+	const flat = segments.flat();
+	if (flat.length > 0) {
+		const elevs = await enrichElevations(flat.map((p) => [p[0], p[1]] as [number, number]));
+		let idx = 0;
+		for (const seg of segments) {
+			for (let i = 0; i < seg.length; i++) {
+				const e = elevs[idx++];
+				if (typeof e === 'number') seg[i] = [seg[i][0], seg[i][1], e];
+			}
+		}
+	}
+
 	const source = sources.size === 1 ? [...sources][0] : 'mixed';
 	return { segments, source };
 }
