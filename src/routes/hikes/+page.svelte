@@ -7,6 +7,7 @@
 	import HikesOverviewMap from '$lib/components/hikes/HikesOverviewMap.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import { HIKES_OVERVIEW } from '$lib/data/hikes.generated';
+	import { hikeFilterBounds } from '$lib/hikes/filterBounds';
 	import type { Difficulty } from '$types/hikes';
 	import type { PageProps } from './$types';
 
@@ -51,9 +52,13 @@
 	// subset, which then locked the filter to that one hike until the
 	// next navigation cycle).
 	const filter = $state<HikesFilter>({
+		minDistanceKm: Number.NEGATIVE_INFINITY,
 		maxDistanceKm: Number.POSITIVE_INFINITY,
+		minDurationMin: Number.NEGATIVE_INFINITY,
 		maxDurationMin: Number.POSITIVE_INFINITY,
+		minGainM: Number.NEGATIVE_INFINITY,
 		maxGainM: Number.POSITIVE_INFINITY,
+		minLossM: Number.NEGATIVE_INFINITY,
 		maxLossM: Number.POSITIVE_INFINITY,
 		difficulties: new SvelteSet<Difficulty>(),
 		regions: new SvelteSet<string>(),
@@ -102,20 +107,26 @@
 	$effect(() => {
 		if (filterDefaultsApplied) return;
 		if (data.hikes.length === 0) return;
-		filter.maxDistanceKm = Math.max(1, ...data.hikes.map((h) => Math.ceil(h.distanceKm)));
-		filter.maxDurationMin = Math.max(60, ...data.hikes.map((h) => h.durationMin ?? 0));
-		filter.maxGainM = Math.max(100, ...data.hikes.map((h) => h.elevationGainM));
-		filter.maxLossM = Math.max(100, ...data.hikes.map((h) => h.elevationLossM));
+		const b = hikeFilterBounds(data.hikes);
+		filter.minDistanceKm = b.distance.min;
+		filter.maxDistanceKm = b.distance.max;
+		filter.minDurationMin = b.duration.min;
+		filter.maxDurationMin = b.duration.max;
+		filter.minGainM = b.gain.min;
+		filter.maxGainM = b.gain.max;
+		filter.minLossM = b.loss.min;
+		filter.maxLossM = b.loss.max;
 		filterDefaultsApplied = true;
 	});
 
 	const visible = $derived.by(() => {
 		const out = [];
 		for (const h of data.hikes) {
-			if (h.distanceKm > filter.maxDistanceKm) continue;
-			if ((h.durationMin ?? 0) > filter.maxDurationMin) continue;
-			if (h.elevationGainM > filter.maxGainM) continue;
-			if (h.elevationLossM > filter.maxLossM) continue;
+			if (h.distanceKm < filter.minDistanceKm || h.distanceKm > filter.maxDistanceKm) continue;
+			const dur = h.durationMin ?? 0;
+			if (dur < filter.minDurationMin || dur > filter.maxDurationMin) continue;
+			if (h.elevationGainM < filter.minGainM || h.elevationGainM > filter.maxGainM) continue;
+			if (h.elevationLossM < filter.minLossM || h.elevationLossM > filter.maxLossM) continue;
 			if (filter.difficulties.size > 0 && !filter.difficulties.has(h.difficulty)) continue;
 			if (filter.regions.size > 0 && (!h.region || !filter.regions.has(h.region))) continue;
 			// Multi-tag = OR (a hike matching ANY selected tag is shown). AND
@@ -198,19 +209,14 @@
 	</section>
 
 	<div class="below-hero">
-		<header class="page-header">
-			<p class="subtitle">
-				<strong>{visible.length}</strong> von {data.hikes.length} Touren
-			</p>
-			{#if visible.length > 0}
-				<dl class="totals" aria-label="Gesamtsumme der gefilterten Touren">
-					<div><dt>Distanz</dt><dd>{totals.km} km</dd></div>
-					<div><dt>Aufstieg</dt><dd>{totals.gain.toLocaleString('de-CH')} m</dd></div>
-				</dl>
-			{/if}
-		</header>
-
-		<HikesFilterBar hikes={data.hikes} {filter} />
+		<HikesFilterBar
+			hikes={data.hikes}
+			{filter}
+			resultCount={visible.length}
+			totalCount={data.hikes.length}
+			totalKm={totals.km}
+			totalGain={totals.gain}
+		/>
 
 		{#if visible.length === 0}
 			<p class="empty">Keine Wanderung entspricht den aktuellen Filtern.</p>
@@ -305,54 +311,9 @@
 		top: calc(3rem + max(12px, env(safe-area-inset-top, 0px) + 4px) + 0.5rem);
 	}
 
-	.page-header {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem 1.5rem;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 1.5rem;
-	}
-
-	.subtitle {
-		margin: 0;
-		color: var(--color-text-secondary);
-		font-size: 0.9rem;
-	}
-
-	.subtitle strong {
-		color: var(--color-text-primary);
-		font-weight: 700;
-	}
-
-	.totals {
-		display: flex;
-		gap: 1.25rem;
-		margin: 0;
-		font-size: 0.85rem;
-		color: var(--color-text-secondary);
-	}
-
-	.totals div {
-		display: flex;
-		flex-direction: column;
-		gap: 0.05rem;
-	}
-
-	.totals dt {
-		margin: 0;
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--color-text-tertiary);
-	}
-
-	.totals dd {
-		margin: 0;
-		font-size: 0.95rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		font-variant-numeric: tabular-nums;
+	/* Breathing room between the full-bleed hero map and the filter bar. */
+	.below-hero {
+		margin-top: 2rem;
 	}
 
 	.grid {
