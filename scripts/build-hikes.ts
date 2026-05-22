@@ -29,6 +29,7 @@ import {
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
 import { computeStaticMapPose, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
 import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
+import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/elevation.js';
 import type {
 	Difficulty,
 	HikeManifestEntry,
@@ -55,8 +56,6 @@ const CACHE_DIR = path.join(ROOT, 'scripts', '.cache');
 const GEOCODE_CACHE_FILE = path.join(CACHE_DIR, 'hikes-geocode.json');
 const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikes.generated.ts');
 
-const ELEV_SMOOTH_WINDOW = 5;       // moving-average window for altitude denoising
-const ELEV_MIN_STEP_M = 3;          // discard altitude deltas below this
 const PREVIEW_POLYLINE_MAX_POINTS = 150;
 const IMAGE_WIDTHS = [480, 960, 1600] as const;
 const IMAGE_THUMBNAIL_WIDTH = 240;  // popup thumbnail for map markers
@@ -184,66 +183,8 @@ function parseSeasonRange(raw: unknown): { seasonStart: number | null; seasonEnd
 }
 
 // ---------------------------------------------------------------------------
-// Elevation helpers
+// Bounding box / centroid
 // ---------------------------------------------------------------------------
-
-// Returns `null` for indices where no defined altitude exists in the ±half
-// window. The previous behaviour (defaulting to 0) silently turned missing
-// `<ele>` tags into huge synthetic gain spikes against the next real altitude.
-function smoothAltitudes(track: GpxPoint[]): (number | null)[] {
-	const n = track.length;
-	const out = new Array<number | null>(n);
-	const half = Math.floor(ELEV_SMOOTH_WINDOW / 2);
-	for (let i = 0; i < n; i++) {
-		let sum = 0;
-		let count = 0;
-		for (let j = Math.max(0, i - half); j <= Math.min(n - 1, i + half); j++) {
-			const a = track[j].altitude;
-			if (typeof a === 'number') {
-				sum += a;
-				count++;
-			}
-		}
-		out[i] = count > 0 ? sum / count : null;
-	}
-	return out;
-}
-
-function computeElevationStats(track: GpxPoint[]): { gain: number; loss: number } {
-	if (track.length < 2) return { gain: 0, loss: 0 };
-	const altitudes = smoothAltitudes(track);
-	let gain = 0;
-	let loss = 0;
-	let prev: number | null = null;
-	for (const a of altitudes) {
-		if (a === null) continue;
-		if (prev === null) {
-			prev = a;
-			continue;
-		}
-		const diff = a - prev;
-		if (diff >= ELEV_MIN_STEP_M) {
-			gain += diff;
-			prev = a;
-		} else if (diff <= -ELEV_MIN_STEP_M) {
-			loss += -diff;
-			prev = a;
-		}
-	}
-	return { gain: Math.round(gain), loss: Math.round(loss) };
-}
-
-function computeElevationRange(track: GpxPoint[]): { min: number | null; max: number | null } {
-	let min = Infinity;
-	let max = -Infinity;
-	for (const p of track) {
-		if (typeof p.altitude !== 'number') continue;
-		if (p.altitude < min) min = p.altitude;
-		if (p.altitude > max) max = p.altitude;
-	}
-	if (!Number.isFinite(min) || !Number.isFinite(max)) return { min: null, max: null };
-	return { min: Math.round(min), max: Math.round(max) };
-}
 
 function computeBboxAndCentroid(track: GpxPoint[]): {
 	bbox: [number, number, number, number];
@@ -274,6 +215,9 @@ type GeocodeResult = {
 	canton: string | null;
 	municipality: string | null;
 	region: string | null;
+	/** ISO 3166-1 alpha-2 code. 'CH' whenever a Swiss canton matched;
+	 * otherwise resolved via an OSM/Nominatim country lookup. */
+	country: string | null;
 };
 
 type GeocodeCache = Record<string, GeocodeResult>;
@@ -293,6 +237,31 @@ async function saveGeocodeCache(cache: GeocodeCache): Promise<void> {
 }
 
 const SWISSTOPO_UA = 'bocken-homepage build-hikes';
+const NOMINATIM_UA = 'bocken-homepage build-hikes (https://bocken.org)';
+
+/**
+ * Country detection for hikes outside Switzerland. Swisstopo only covers CH,
+ * so when no canton matched we ask OSM/Nominatim for the country at the
+ * centroid. Returns an uppercase ISO 3166-1 alpha-2 code, or null on failure.
+ */
+async function reverseGeocodeCountry(lat: number, lng: number): Promise<string | null> {
+	const url =
+		`https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
+		`&lat=${lat}&lon=${lng}&zoom=3&addressdetails=1`;
+	try {
+		const res = await fetch(url, { headers: { 'User-Agent': NOMINATIM_UA } });
+		if (!res.ok) {
+			console.warn(`[build-hikes] Nominatim country lookup failed (${res.status})`);
+			return null;
+		}
+		const json = (await res.json()) as { address?: { country_code?: string } };
+		const cc = json.address?.country_code;
+		return typeof cc === 'string' ? cc.toUpperCase() : null;
+	} catch (err) {
+		console.warn('[build-hikes] Nominatim country lookup error:', err);
+		return null;
+	}
+}
 
 async function fetchFeatureName(layerBodId: string, featureId: number | string): Promise<string | null> {
 	const url = `https://api3.geo.admin.ch/rest/services/api/MapServer/${layerBodId}/${featureId}/htmlPopup?lang=de`;
@@ -315,7 +284,8 @@ async function reverseGeocode(
 	cache: GeocodeCache
 ): Promise<GeocodeResult> {
 	const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
-	if (cache[key]) return cache[key];
+	// `country` post-dates the cache format — re-resolve entries that predate it.
+	if (cache[key] && cache[key].country !== undefined) return cache[key];
 
 	const layers =
 		'all:ch.swisstopo.swissboundaries3d-kanton-flaeche.fill,' +
@@ -332,7 +302,7 @@ async function reverseGeocode(
 		`&mapExtent=${lng - eps},${lat - eps},${lng + eps},${lat + eps}` +
 		`&tolerance=1&layers=${layers}&sr=4326`;
 
-	const result: GeocodeResult = { canton: null, municipality: null, region: null };
+	const result: GeocodeResult = { canton: null, municipality: null, region: null, country: null };
 	try {
 		const res = await fetch(url, { headers: { 'User-Agent': SWISSTOPO_UA } });
 		if (res.ok) {
@@ -358,6 +328,10 @@ async function reverseGeocode(
 	} catch (err) {
 		console.warn(`[build-hikes] Swisstopo identify error for ${key}:`, err);
 	}
+
+	// Country: 'CH' when a Swiss canton matched (no extra request needed),
+	// otherwise an OSM/Nominatim lookup for hikes abroad.
+	result.country = result.canton ? 'CH' : await reverseGeocodeCountry(lat, lng);
 
 	cache[key] = result;
 	return result;
@@ -1185,6 +1159,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		region: geo.region,
 		canton: geo.canton,
 		municipality: geo.municipality,
+		country: geo.country,
 		trackUrl: `/hikes/${slug}/track.${trackHash}.json`,
 		pointCount: track.length,
 		cover,

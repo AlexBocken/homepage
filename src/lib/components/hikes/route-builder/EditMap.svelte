@@ -37,6 +37,54 @@
 	const DEFAULT_CENTER: [number, number] = [46.8, 8.3];
 	const DEFAULT_ZOOM = 8;
 
+	const TRACK_COLOR = SAC_TRAIL_COLOR.T2;
+	const ACCENT_COLOR = '#2965c8'; // SAC T4 blue — used for the focused-marker accent ring
+
+	function escapeAttr(s: string): string {
+		return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+	}
+
+	// Pin geometry:
+	//   - Solo pin: 28 wide × 36 tall, head r=10 at (14,14), tip at (14,36).
+	//   - Image pin: 44 wide × 52 tall, head r=15 (clip) inside r=18 (frame)
+	//     at (22,22), tip at (22,52).
+	// Both anchor at the tip so `iconAnchor = [width/2, height]`.
+	function makePinIcon(num: number, opts: { active: boolean }) {
+		const ring = opts.active ? ACCENT_COLOR : 'white';
+		const ringWidth = opts.active ? 3 : 2;
+		const html = `
+			<svg viewBox="0 0 28 36" width="28" height="36" class="rb-pin solo${opts.active ? ' is-active' : ''}" aria-hidden="true">
+				<path d="M14 36 L5.1 18.5 A10 10 0 1 1 22.9 18.5 Z"
+					fill="${TRACK_COLOR}" stroke="${ring}" stroke-width="${ringWidth}" stroke-linejoin="round" />
+				<text x="14" y="17.6" text-anchor="middle" font-size="11" font-weight="700"
+					fill="white" font-family="ui-sans-serif,system-ui,Helvetica,Arial,sans-serif">${num}</text>
+			</svg>`;
+		return { html, size: [28, 36] as [number, number], anchor: [14, 36] as [number, number] };
+	}
+
+	function makeImagePinIcon(num: number, thumb: string, opts: { active: boolean }) {
+		const safeThumb = escapeAttr(thumb);
+		const ring = opts.active ? ACCENT_COLOR : TRACK_COLOR;
+		const ringWidth = opts.active ? 3 : 2.5;
+		const clipId = `rb-pin-head-${Math.random().toString(36).slice(2, 8)}`;
+		const html = `
+			<svg viewBox="0 0 44 52" width="44" height="52" class="rb-pin image${opts.active ? ' is-active' : ''}" aria-hidden="true">
+				<defs>
+					<clipPath id="${clipId}"><circle cx="22" cy="22" r="15" /></clipPath>
+				</defs>
+				<path d="M22 52 L7.6 32.8 A18 18 0 1 1 36.4 32.8 Z"
+					fill="white" stroke="${ring}" stroke-width="${ringWidth}" stroke-linejoin="round" />
+				<image href="${safeThumb}" x="7" y="7" width="30" height="30"
+					clip-path="url(#${clipId})" preserveAspectRatio="xMidYMid slice" />
+				<g transform="translate(34 9)">
+					<circle r="7.5" fill="${ring}" stroke="white" stroke-width="1.5" />
+					<text y="3" text-anchor="middle" font-size="9" font-weight="700" fill="white"
+						font-family="ui-sans-serif,system-ui,Helvetica,Arial,sans-serif">${num}</text>
+				</g>
+			</svg>`;
+		return { html, size: [44, 52] as [number, number], anchor: [22, 52] as [number, number] };
+	}
+
 	const editAttachment: Attachment<HTMLElement> = (node) => {
 		let cancelled = false;
 		let cleanup: (() => void) | undefined;
@@ -61,20 +109,20 @@
 			const markerLayer = L.layerGroup().addTo(map);
 			const lineLayer = L.layerGroup().addTo(map);
 
-			function makeNumberedIcon(num: number, thumbnail?: string) {
-				if (thumbnail) {
-					return L.divIcon({
-						className: 'rb-waypoint with-thumb',
-						html: `<span class="thumb"><img src="${thumbnail}" alt="" /></span><span class="num">${num}</span>`,
-						iconSize: [56, 56],
-						iconAnchor: [28, 28]
-					});
-				}
+			// Map of waypointId → marker, kept in sync by render(). Used by the
+			// focus effect so it can pan/zoom + style the marker for `mapView.focusId`
+			// without forcing a full re-render of every marker.
+			const markerByWp = new Map<string, ReturnType<typeof L.marker>>();
+
+			function buildIcon(num: number, wp: { thumbnail?: string }, active: boolean) {
+				const spec = wp.thumbnail
+					? makeImagePinIcon(num, wp.thumbnail, { active })
+					: makePinIcon(num, { active });
 				return L.divIcon({
 					className: 'rb-waypoint',
-					html: `<span class="num solo">${num}</span>`,
-					iconSize: [28, 28],
-					iconAnchor: [14, 28]
+					html: spec.html,
+					iconSize: spec.size,
+					iconAnchor: spec.anchor
 				});
 			}
 
@@ -104,6 +152,7 @@
 			function render() {
 				markerLayer.clearLayers();
 				lineLayer.clearLayers();
+				markerByWp.clear();
 
 				// Markers per waypoint. Skip unplaced ones — they don't have a
 				// usable lat/lng and live only in the waypoint table.
@@ -112,11 +161,16 @@
 					if (w.unplaced) return;
 					placedIndices.push(idx);
 				});
+				const focusId = mapView.focusId;
 				placedIndices.forEach((idx, displayPos) => {
 					const w = builder.waypoints[idx];
+					const seqNum = displayPos + 1;
 					const marker = L.marker([w.lat, w.lng], {
-						icon: makeNumberedIcon(displayPos + 1, w.thumbnail),
-						draggable: true
+						icon: buildIcon(seqNum, w, w.id === focusId),
+						draggable: true,
+						// Lift the focused marker above its neighbours so its accent
+						// ring isn't covered by an adjacent unfocused pin.
+						zIndexOffset: w.id === focusId ? 1000 : 0
 					}).addTo(markerLayer);
 					marker.on('dragend', () => {
 						const p = marker.getLatLng();
@@ -132,6 +186,11 @@
 						scheduleSave();
 						render();
 					});
+					marker.on('click', () => {
+						mapView.focusId = w.id;
+						mapView.focusTick++;
+					});
+					markerByWp.set(w.id, marker);
 				});
 
 				// Lines: per-pair so each can carry a segIdx for inline insertion.
@@ -139,12 +198,11 @@
 				// no need to call out the difference, the user picked the mode.
 				// SAC white-red-white red — matches /hikes overview + detail-page
 				// trail colour so the live preview reads as the final published track.
-				const trackColor = SAC_TRAIL_COLOR.T2;
 				if (builder.routedSegments.length > 0) {
 					builder.routedSegments.forEach((seg, segIdx) => {
 						const latLngs = seg.map((p) => [p[1], p[0]] as [number, number]);
 						const poly = L.polyline(latLngs, {
-							color: trackColor,
+							color: TRACK_COLOR,
 							weight: 4,
 							opacity: 0.9
 						}).addTo(lineLayer);
@@ -174,27 +232,50 @@
 				map.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
 			}
 
+			function focusOnWaypoint(id: string | null) {
+				if (!id) return;
+				const wp = builder.waypoints.find((w) => w.id === id);
+				if (!wp || wp.unplaced) return;
+				// Zoom in but don't over-zoom — 16 reads as "this trail junction"
+				// without losing surrounding context. flyTo gives smooth motion.
+				const targetZoom = Math.max(map.getZoom(), 16);
+				map.flyTo([wp.lat, wp.lng], targetZoom, { duration: 0.6 });
+			}
+
 			// React to store changes.
 			const stopRoot = $effect.root(() => {
 				$effect(() => {
-					// Touch each reactive field so we re-render on any mutation.
+					// Touch each reactive field so we re-render on any mutation,
+					// including focus changes (so the active marker re-styles).
 					builder.waypoints.length;
 					for (const w of builder.waypoints) {
 						w.lat; w.lng; w.thumbnail;
 					}
 					builder.routedSegments.length;
+					mapView.focusId;
 					render();
 				});
 
 				// External fit-bounds requests (image drops, GPX imports).
 				// The map's own init-time auto-fit covers first-load; this
 				// effect handles every subsequent batch insertion.
-				let lastTick = mapView.fitTick;
+				let lastFitTick = mapView.fitTick;
 				$effect(() => {
 					const tick = mapView.fitTick;
-					if (tick === lastTick) return;
-					lastTick = tick;
+					if (tick === lastFitTick) return;
+					lastFitTick = tick;
 					fitToTrack();
+				});
+
+				// Focus requests (table row "fokussieren", prev/next nav bar).
+				// Tick is bumped on every request even if the id stays the same
+				// so repeated clicks re-center even if the user panned away.
+				let lastFocusTick = mapView.focusTick;
+				$effect(() => {
+					const tick = mapView.focusTick;
+					if (tick === lastFocusTick) return;
+					lastFocusTick = tick;
+					focusOnWaypoint(mapView.focusId);
 				});
 			});
 
@@ -263,7 +344,7 @@
 
 	.edit-map {
 		width: 100%;
-		height: 600px;
+		height: 640px;
 		border-radius: var(--radius-card);
 		overflow: hidden;
 		box-shadow: var(--shadow-md);
@@ -272,7 +353,7 @@
 
 	@media (max-width: 900px) {
 		.edit-map {
-			height: 480px;
+			height: 520px;
 		}
 	}
 
@@ -311,58 +392,40 @@
 		cursor: pointer;
 	}
 
-	/* DON'T override `position` here — Leaflet sets `.leaflet-marker-icon` to
-	 * `position: absolute` for placement, and the inner `.num` badge relies on
-	 * that same ancestor as its abs-positioning context. Reassigning to
-	 * `position: relative` causes markers to fall into normal flow and stack
-	 * vertically instead of sitting at their lat/lng. */
+	/* Leaflet wraps each marker in `.leaflet-marker-icon` with its own
+	 * absolute positioning. We just neutralise its default frame/background
+	 * so the SVG pin shows through cleanly. */
 	:global(.rb-waypoint) {
 		background: transparent !important;
 		border: 0 !important;
 	}
 
-	:global(.rb-waypoint .num) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0 0.4em;
-		background: var(--color-primary);
-		color: var(--color-text-on-primary);
-		font-size: 0.75rem;
-		font-weight: 700;
-		border: 2px solid var(--color-surface);
-		box-shadow: var(--shadow-sm);
-	}
-
-	:global(.rb-waypoint .num.solo) {
-		min-width: 24px;
-		height: 24px;
-		border-radius: 12px;
-	}
-
-	:global(.rb-waypoint.with-thumb .num) {
-		position: absolute;
-		top: -6px;
-		right: -6px;
-		min-width: 20px;
-		height: 20px;
-		border-radius: 10px;
-	}
-
-	:global(.rb-waypoint .thumb) {
+	:global(.rb-pin) {
 		display: block;
-		width: 56px;
-		height: 56px;
-		border-radius: var(--radius-sm);
-		overflow: hidden;
-		border: 2px solid var(--color-surface);
-		box-shadow: var(--shadow-sm);
+		filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+		transition: filter 200ms ease, transform 200ms ease;
+		transform-origin: 50% 100%;
 	}
 
-	:global(.rb-waypoint .thumb img) {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		display: block;
+	:global(.rb-waypoint:hover .rb-pin) {
+		transform: scale(1.08);
+	}
+
+	:global(.rb-pin.is-active) {
+		filter: drop-shadow(0 0 6px color-mix(in oklab, #2965c8 70%, transparent))
+			drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+		animation: rb-pin-bounce 0.55s ease-out;
+	}
+
+	@keyframes rb-pin-bounce {
+		0%   { transform: scale(0.85) translateY(-4px); }
+		60%  { transform: scale(1.12); }
+		100% { transform: scale(1); }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.rb-pin.is-active) {
+			animation: none;
+		}
 	}
 </style>

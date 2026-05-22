@@ -14,6 +14,11 @@
 	import { generateImageHashClient } from '$lib/imageHashClient';
 	import { readThumbnail } from './imageThumbnail';
 	import { setFullImage } from './fullImageCache.svelte';
+	import ImagePlus from '@lucide/svelte/icons/image-plus';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import AlertTriangle from '@lucide/svelte/icons/triangle-alert';
+	import X from '@lucide/svelte/icons/x';
+	import '$lib/css/action_button.css';
 
 	type Status = 'pending' | 'placed' | 'unplaced' | 'matched' | 'error';
 
@@ -24,15 +29,51 @@
 		message?: string;
 	};
 
+	interface Props {
+		/** Called when the user picks/drops a `.gpx` file via the FAB.
+		 * Owning page handles the import + draft-replacement confirm.
+		 * When absent, GPX files are silently ignored. */
+		onGpxImport?: (file: File) => void;
+	}
+
+	const { onGpxImport }: Props = $props();
+
+	function isGpxFile(file: File): boolean {
+		if (file.name.toLowerCase().endsWith('.gpx')) return true;
+		return (
+			file.type === 'application/gpx+xml' ||
+			file.type === 'application/xml' ||
+			file.type === 'text/xml'
+		);
+	}
+
 	let entries = $state<Entry[]>([]);
 	let isDragging = $state(false);
+	let showFailDetails = $state(false);
 
-	// Counts hash-only image waypoints (typically restored from a GPX
-	// import) that don't yet have a thumbnail — surfaces a contextual
-	// hint in the dropzone header so the user knows that dropping the
-	// source JPEGs here will attach previews to those rows in the table.
 	const orphanImageCount = $derived(
 		builder.waypoints.filter((w) => w.imageHash && !w.thumbnail).length
+	);
+	const pendingCount = $derived(entries.filter((e) => e.status === 'pending').length);
+	const failedEntries = $derived(
+		entries.filter((e) => e.status === 'error' || e.status === 'unplaced')
+	);
+	const failCount = $derived(failedEntries.length);
+
+	// Numeric badge on the FAB. Pending wins (in-flight work), then
+	// failures (need attention), then orphan hash-only waypoints from a
+	// GPX import (waiting for their source images).
+	const badge = $derived(
+		pendingCount > 0
+			? pendingCount
+			: failCount > 0
+				? failCount
+				: orphanImageCount > 0
+					? orphanImageCount
+					: 0
+	);
+	const badgeTone = $derived<'pending' | 'fail' | 'info'>(
+		pendingCount > 0 ? 'pending' : failCount > 0 ? 'fail' : 'info'
 	);
 
 	type Prepared =
@@ -40,15 +81,19 @@
 		| { ok: true; kind: 'matched'; id: string; file: File }
 		| { ok: false };
 
+	// Auto-clear successful entries after 4s so the badge counter doesn't
+	// pile up. Failures stay until the user dismisses them.
+	function scheduleAutoDismiss(id: string, ms = 4000) {
+		setTimeout(() => {
+			const e = entries.find((x) => x.id === id);
+			if (!e) return;
+			if (e.status === 'placed' || e.status === 'matched') dismiss(id);
+		}, ms);
+	}
+
 	async function handleFiles(files: File[]) {
 		const exifr = (await import('exifr')).default;
 
-		// Prep every file in parallel (EXIF + hash + thumbnail). The result
-		// is staged in `prepared` rather than pushed into `builder.waypoints`
-		// one at a time — that way the snap-to-route effect (which fires on
-		// every waypoint insertion) sees a single synchronous batch insertion
-		// at the end instead of N consecutive ones. The Brouter / Swisstopo
-		// routing API only gets hit once per bulk upload.
 		const prepared = await Promise.all(
 			files.map(async (file): Promise<Prepared> => {
 				const id = nextWaypointId();
@@ -64,40 +109,32 @@
 					} catch { /* preview is optional */ }
 					const imageHash = await generateImageHashClient(file);
 
-					// Match path: if a previously-imported (or earlier-dropped)
-					// waypoint already carries this content hash, attach the
-					// thumbnail to it instead of creating a duplicate marker.
-					// Covers the GPX-roundtrip flow where the user loads an
-					// existing GPX (image hashes restored as bare waypoints)
-					// and then drops the source images to give them previews.
+					// Match path: re-attach to an existing waypoint with the
+					// same content hash (covers the GPX-roundtrip flow).
 					const existing = untrack(() =>
 						builder.waypoints.find((w) => w.imageHash === imageHash)
 					);
 					if (existing) {
 						if (thumbnail && !existing.thumbnail) existing.thumbnail = thumbnail;
-						// Trust the imported visibility if the existing waypoint
-						// already has one set — re-dropping shouldn't silently
-						// flip a private photo to public.
 						if (!existing.imageVisibility) existing.imageVisibility = 'public';
 						scheduleSave();
 						entries[entryIdx].status = 'matched';
 						entries[entryIdx].message = existing.unplaced
 							? 'noch nicht auf der Karte platziert'
 							: undefined;
+						scheduleAutoDismiss(entries[entryIdx].id);
 						return { ok: true, kind: 'matched', id: existing.id, file };
 					}
 
 					const timestamp =
 						exif?.DateTimeOriginal instanceof Date ? exif.DateTimeOriginal.getTime() : null;
-
 					const hasGps =
 						exif &&
 						typeof exif.latitude === 'number' &&
 						typeof exif.longitude === 'number';
 
-					// Note: we deliberately ignore `exif.GPSAltitude` even when
-					// present. Phone GPS altitude has metre-scale noise; we backfill
-					// the terrain-model altitude from Swisstopo after insertion.
+					// EXIF GPSAltitude is intentionally ignored (too noisy);
+					// terrain-model altitude from Swisstopo is backfilled later.
 					const wp: Waypoint = hasGps
 						? {
 								id,
@@ -120,6 +157,7 @@
 							};
 
 					entries[entryIdx].status = hasGps ? 'placed' : 'unplaced';
+					if (hasGps) scheduleAutoDismiss(entries[entryIdx].id);
 					return { ok: true, kind: 'new', wp, hasGps, id, file };
 				} catch (err) {
 					entries[entryIdx].status = 'error';
@@ -129,13 +167,6 @@
 			})
 		);
 
-		// One synchronous batch of waypoint insertions → one snap-to-route
-		// debounce cycle for the whole upload. No per-image altitude fetch:
-		// image waypoints inherit the elevation of the routed segment they
-		// sit on once the route is snapped — Swisstopo's profile.json (used
-		// by snap-to-route enrichment) is the only reliable elevation
-		// source against WGS-84 inputs, and its single-point variant kept
-		// returning 0 even with workaround attempts.
 		let placedAny = false;
 		for (const p of prepared) {
 			if (!p.ok) continue;
@@ -143,29 +174,36 @@
 				insertWaypointChronologically(p.wp);
 				if (p.hasGps) placedAny = true;
 			}
-			// Cache the original file so the waypoint table can show a
-			// full-resolution preview this session (for both new + matched
-			// waypoints). Persistence to localStorage keeps only the small
-			// thumbnail.
 			setFullImage(p.id, p.file);
 		}
-		// Reframe the map to the new track. Only matters when the batch
-		// added at least one geolocated waypoint — unplaced images don't
-		// affect bounds, and matched-only drops leave coords unchanged.
 		if (placedAny) requestFitBounds();
+	}
+
+	function routeFiles(files: File[]) {
+		const gpx = files.find(isGpxFile);
+		if (gpx && onGpxImport) {
+			// GPX import REPLACES the draft, so we hand off the first one
+			// and ignore everything else in the batch — combining a GPX
+			// import with an image batch would race the snap-to-route
+			// reactor against a draft reset.
+			onGpxImport(gpx);
+			return;
+		}
+		const images = files.filter((f) => f.type.startsWith('image/'));
+		if (images.length > 0) handleFiles(images);
 	}
 
 	function onDrop(e: DragEvent) {
 		e.preventDefault();
 		isDragging = false;
-		const files = [...(e.dataTransfer?.files ?? [])].filter((f) => f.type.startsWith('image/'));
-		if (files.length > 0) handleFiles(files);
+		const files = [...(e.dataTransfer?.files ?? [])];
+		if (files.length > 0) routeFiles(files);
 	}
 
 	function onFileInput(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
 		const files = [...(input.files ?? [])];
-		if (files.length > 0) handleFiles(files);
+		if (files.length > 0) routeFiles(files);
 		input.value = '';
 	}
 
@@ -173,201 +211,328 @@
 		const idx = entries.findIndex((e) => e.id === entryId);
 		if (idx >= 0) entries.splice(idx, 1);
 	}
+
+	function clearFailed() {
+		entries = entries.filter((e) => e.status !== 'error' && e.status !== 'unplaced');
+		showFailDetails = false;
+	}
+
+	let fileInput: HTMLInputElement | undefined = $state();
+	function openPicker() {
+		fileInput?.click();
+	}
 </script>
 
-<section
-	class="dropzone"
-	class:active={isDragging}
-	aria-label="Bild-Drop"
+<div
+	class="bulk-fab-wrap"
+	class:dragging={isDragging}
+	role="region"
+	aria-label="Bilder-Upload"
 	ondragenter={(e) => {
-		e.preventDefault();
-		isDragging = true;
+		const types = e.dataTransfer?.types;
+		if (types && Array.from(types).includes('Files')) {
+			e.preventDefault();
+			isDragging = true;
+		}
 	}}
 	ondragover={(e) => {
-		e.preventDefault();
+		const types = e.dataTransfer?.types;
+		if (types && Array.from(types).includes('Files')) {
+			e.preventDefault();
+		}
 	}}
-	ondragleave={() => {
-		isDragging = false;
+	ondragleave={(e) => {
+		if (e.currentTarget === e.target) isDragging = false;
 	}}
 	ondrop={onDrop}
 >
-	<header>
-		<h2>Bilder</h2>
-		<p class="hint">
-			Bilder mit GPS-EXIF werden chronologisch platziert. Bilder ohne GPS
-			erscheinen in der Wegpunkt-Liste und können dort auf der Karte platziert
-			werden. Die Bilder verlassen dein Gerät nicht.
-		</p>
-		{#if orphanImageCount > 0}
-			<p class="hint import-hint">
-				<strong>{orphanImageCount}</strong>
-				{orphanImageCount === 1 ? 'Bild-Wegpunkt' : 'Bild-Wegpunkte'} aus der
-				geladenen GPX warten auf eine Vorschau — die Original-Bilder hier ablegen,
-				um sie über den Inhalts-Hash automatisch zuzuordnen.
-			</p>
+	<input
+		bind:this={fileInput}
+		type="file"
+		accept="image/*,.gpx,application/gpx+xml,application/xml,text/xml"
+		multiple
+		onchange={onFileInput}
+		hidden
+	/>
+	<button
+		type="button"
+		class="bulk-fab action_button"
+		aria-label="Bilder oder GPX hinzufügen"
+		title="Bilder oder GPX hinzufügen"
+		onclick={openPicker}
+	>
+		{#if pendingCount > 0}
+			<LoaderCircle size={30} strokeWidth={2.2} color="white" class="bulk-fab-icon spin" />
+		{:else}
+			<ImagePlus size={30} strokeWidth={2.2} color="white" class="bulk-fab-icon" />
 		{/if}
-	</header>
+	</button>
+	{#if failCount > 0}
+		<button
+			type="button"
+			class="bulk-fab-badge tone-fail"
+			onclick={() => (showFailDetails = !showFailDetails)}
+			aria-label="{failCount} {failCount === 1 ? 'Hinweis' : 'Hinweise'} anzeigen"
+			aria-expanded={showFailDetails}
+		>
+			{badge}
+		</button>
+	{:else if badge > 0}
+		<span class="bulk-fab-badge tone-{badgeTone}" aria-label="{badge} aktiv">
+			{badge}
+		</span>
+	{/if}
+</div>
 
-	<label class="file-input">
-		<input type="file" accept="image/*" multiple onchange={onFileInput} />
-		<span>Bilder auswählen oder hierher ziehen</span>
-	</label>
-
-	{#if entries.length > 0}
-		<ul class="list">
-			{#each entries as e (e.id)}
-				<li class="entry status-{e.status}">
-					<span class="dot"></span>
+{#if showFailDetails && failedEntries.length > 0}
+	<aside class="bulk-fail-popover" aria-label="Bild-Hinweise">
+		<header>
+			<strong>Bild-Hinweise</strong>
+			<button type="button" class="link" onclick={clearFailed}>Alle ausblenden</button>
+		</header>
+		<ul>
+			{#each failedEntries as e (e.id)}
+				<li class="bulk-fail status-{e.status}">
+					<span class="status-icon" aria-hidden="true">
+						<AlertTriangle size={12} strokeWidth={2} />
+					</span>
 					<span class="name">{e.name}</span>
 					<span class="msg">
-						{#if e.status === 'pending'}wird gelesen…
-						{:else if e.status === 'placed'}✓ chronologisch platziert
-						{:else if e.status === 'matched'}✓ Bildvorschau ergänzt{e.message ? ` (${e.message})` : ''}
-						{:else if e.status === 'unplaced'}⚠ Position fehlt — in Liste platzieren
-						{:else if e.status === 'error'}Fehler: {e.message ?? 'unbekannt'}
+						{#if e.status === 'unplaced'}Position fehlt — Eintrag in der Wegpunktliste auf Karte platzieren.
+						{:else}Fehler: {e.message ?? 'unbekannt'}
 						{/if}
 					</span>
-					<button type="button" class="dismiss" aria-label="Schließen" onclick={() => dismiss(e.id)}>×</button>
+					<button type="button" class="dismiss" aria-label="Schließen" onclick={() => dismiss(e.id)}>
+						<X size={13} strokeWidth={2} />
+					</button>
 				</li>
 			{/each}
 		</ul>
-	{/if}
-</section>
+	</aside>
+{/if}
 
 <style>
-	.dropzone {
-		margin-top: 1rem;
-		padding: 1rem;
-		background: var(--color-surface);
-		border: 2px dashed var(--color-border);
-		border-radius: var(--radius-lg);
-		transition: border-color var(--transition-fast), background-color var(--transition-fast);
+	/* Wrapper holds the FAB + badge in a single positioning context so the
+	 * drag-target (full wrapper bounds) is larger than the button itself —
+	 * helps users dropping a stack of images. */
+	.bulk-fab-wrap {
+		position: fixed;
+		bottom: 2rem;
+		right: 2rem;
+		width: 3.75rem;
+		height: 3.75rem;
+		z-index: 100;
+		transition: transform var(--transition-normal);
 	}
 
-	.dropzone.active {
-		border-color: var(--color-primary);
-		background: var(--color-bg-elevated);
+	.bulk-fab-wrap.dragging {
+		transform: scale(1.08);
 	}
 
-	h2 {
-		margin: 0;
-		font-size: 1rem;
-		color: var(--color-text-primary);
-	}
-
-	.hint {
-		margin: 0.25rem 0 0.75rem;
-		font-size: 0.8rem;
-		color: var(--color-text-tertiary);
-	}
-
-	.import-hint {
-		margin: 0 0 0.75rem;
-		padding: 0.5rem 0.75rem;
-		background: color-mix(in oklab, var(--blue) 12%, var(--color-surface));
-		border-left: 3px solid var(--blue);
-		border-radius: var(--radius-sm);
-		color: var(--color-text-secondary);
-	}
-
-	.import-hint strong {
-		color: var(--blue);
-		font-variant-numeric: tabular-nums;
-	}
-
-	.file-input {
-		display: block;
-		text-align: center;
-		padding: 0.65rem 1rem;
-		background: var(--color-bg-tertiary);
-		border-radius: var(--radius-md);
-		cursor: pointer;
-		font-size: 0.9rem;
-		color: var(--color-text-secondary);
-	}
-
-	.file-input input {
-		display: none;
-	}
-
-	.file-input:hover {
-		background: var(--color-bg-elevated);
-	}
-
-	.list {
-		list-style: none;
+	/* FAB — mirrors the recipes-style ActionButton (same shake + shadow
+	 * via the shared action_button.css). */
+	.bulk-fab {
+		width: 100%;
+		height: 100%;
 		padding: 0;
-		margin: 0.75rem 0 0;
+		border-radius: var(--radius-pill);
+		background-color: var(--red);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: var(--transition-normal);
+	}
+
+	.bulk-fab :global(.bulk-fab-icon) {
+		pointer-events: none;
+	}
+
+	.bulk-fab :global(.bulk-fab-icon.spin) {
+		animation: bulk-fab-spin 0.85s linear infinite;
+	}
+
+	@keyframes bulk-fab-spin {
+		to { transform: rotate(360deg); }
+	}
+
+	.bulk-fab-wrap.dragging .bulk-fab {
+		background-color: var(--nord0);
+		box-shadow: 0 0 0 5px color-mix(in oklab, var(--red) 35%, transparent),
+			0 0 1.6em 0.4em rgba(0, 0, 0, 0.35);
+	}
+
+	@media (max-width: 500px) {
+		.bulk-fab-wrap {
+			bottom: 1rem;
+			right: 1rem;
+			width: 3.25rem;
+			height: 3.25rem;
+		}
+	}
+
+	/* Numeric badge — pinned top-right of the FAB. Pending = primary blue,
+	 * fail = orange, info (orphan hashes) = nord blue. */
+	.bulk-fab-badge {
+		position: absolute;
+		top: -0.25rem;
+		right: -0.25rem;
+		min-width: 1.35rem;
+		height: 1.35rem;
+		padding: 0 0.35rem;
+		border-radius: var(--radius-pill);
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font-size: 0.72rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border: 2px solid var(--color-surface);
+		box-shadow: var(--shadow-sm);
+		appearance: none;
+		font-family: inherit;
+	}
+
+	button.bulk-fab-badge {
+		cursor: pointer;
+	}
+
+	.bulk-fab-badge.tone-fail {
+		background: var(--orange);
+	}
+
+	.bulk-fab-badge.tone-info {
+		background: var(--blue);
+	}
+
+	/* Failure popover anchored above the FAB. Only opens when the user
+	 * clicks the fail-tinted badge, so the FAB itself stays minimal. */
+	.bulk-fail-popover {
+		position: fixed;
+		bottom: 6.5rem;
+		right: 2rem;
+		z-index: 101;
+		max-width: min(360px, calc(100vw - 3rem));
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-left: 3px solid var(--orange);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+		padding: 0.6rem 0.7rem;
+		animation: bulk-fail-in 200ms ease-out;
+	}
+
+	@keyframes bulk-fail-in {
+		from {
+			opacity: 0;
+			transform: translateY(6px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.bulk-fail-popover header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 0.85rem;
+		color: var(--color-text-primary);
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--color-border);
+		margin-bottom: 0.4rem;
+	}
+
+	.bulk-fail-popover .link {
+		appearance: none;
+		background: transparent;
+		border: 0;
+		font: inherit;
+		font-size: 0.75rem;
+		color: var(--color-text-tertiary);
+		cursor: pointer;
+		text-decoration: underline;
+	}
+
+	.bulk-fail-popover ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: 0.3rem;
 	}
 
-	.entry {
+	.bulk-fail {
 		display: grid;
-		grid-template-columns: auto 1fr auto auto;
-		gap: 0.6rem;
+		grid-template-columns: auto 1fr auto;
+		gap: 0.5rem;
 		align-items: center;
-		padding: 0.35rem 0.5rem;
+		padding: 0.35rem 0.4rem;
 		background: var(--color-bg-secondary);
 		border-radius: var(--radius-sm);
 		font-size: 0.78rem;
 		color: var(--color-text-secondary);
 	}
 
-	.dot {
-		width: 0.55rem;
-		height: 0.55rem;
+	.bulk-fail .status-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.1rem;
+		height: 1.1rem;
 		border-radius: 50%;
-		background: var(--color-text-tertiary);
+		background: var(--orange);
+		color: white;
 		flex-shrink: 0;
 	}
 
-	.status-placed .dot { background: var(--green); }
-	.status-matched .dot { background: var(--blue); }
-	.status-unplaced .dot { background: var(--orange); }
-	.status-error .dot { background: var(--red); }
-	.status-pending .dot {
-		background: var(--color-primary);
-		animation: pulse 1.2s ease-in-out infinite;
+	.bulk-fail.status-error .status-icon {
+		background: var(--red);
 	}
 
-	@keyframes pulse {
-		0%, 100% { opacity: 0.4; }
-		50% { opacity: 1; }
-	}
-
-	.name {
+	.bulk-fail .name {
+		grid-column: 2;
+		grid-row: 1;
 		color: var(--color-text-primary);
+		font-weight: 500;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.msg {
-		text-align: right;
-		font-size: 0.75rem;
+	.bulk-fail .msg {
+		grid-column: 2;
+		grid-row: 2;
+		font-size: 0.72rem;
 		color: var(--color-text-tertiary);
-		white-space: nowrap;
+		line-height: 1.35;
 	}
 
-	.status-error .msg { color: var(--red); }
-	.status-unplaced .msg { color: var(--orange); }
-	.status-placed .msg { color: var(--green); }
-	.status-matched .msg { color: var(--blue); }
+	.bulk-fail.status-error .msg {
+		color: var(--red);
+	}
 
-	.dismiss {
+	.bulk-fail .dismiss {
+		grid-column: 3;
+		grid-row: 1 / span 2;
 		appearance: none;
 		background: transparent;
 		border: 0;
 		color: var(--color-text-tertiary);
-		font-size: 1.1rem;
-		line-height: 1;
-		padding: 0 0.2rem;
+		padding: 0.2rem;
+		border-radius: var(--radius-sm);
 		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.dismiss:hover {
+	.bulk-fail .dismiss:hover {
 		color: var(--color-text-primary);
+		background: var(--color-bg-elevated);
 	}
 </style>

@@ -108,14 +108,46 @@ function defaultState(): BuilderState {
 export const builder = $state<BuilderState>(loadDraft());
 
 /**
- * UI-only signal for the edit map: bumping `fitTick` asks the map to
- * re-run `fitBounds()` on the current track. Used after batch insertions
- * (image drops, GPX import) where the user expects the map to reframe to
- * show every newly-added waypoint. Not persisted.
+ * UI-only signals shared between the edit map and the side panels.
+ *
+ * - `fitTick`: bump to re-run `fitBounds()` on the current track. Used
+ *   after batch insertions (image drops, GPX import) where the user
+ *   expects the map to reframe to show every newly-added waypoint.
+ * - `focusId` + `focusTick`: bump to pan/zoom the map onto a specific
+ *   waypoint AND mark it as the "current" one (drives prev/next nav and
+ *   the highlight on the corresponding table row + marker).
+ *
+ * Not persisted — pure session UI.
  */
-export const mapView = $state({ fitTick: 0 });
+export const mapView = $state<{
+	fitTick: number;
+	focusId: string | null;
+	focusTick: number;
+}>({ fitTick: 0, focusId: null, focusTick: 0 });
+
 export function requestFitBounds(): void {
 	mapView.fitTick++;
+}
+
+export function focusWaypoint(id: string | null): void {
+	mapView.focusId = id;
+	mapView.focusTick++;
+}
+
+/**
+ * Sequence number (1-based) of `wp` among placed waypoints only. Unplaced
+ * image entries return `null`. Single source of truth so the table badge,
+ * the map marker number, and the GPX export all agree on what "Wegpunkt 3"
+ * means.
+ */
+export function placedSequence(wpId: string): number | null {
+	let n = 0;
+	for (const w of builder.waypoints) {
+		if (w.unplaced) continue;
+		n++;
+		if (w.id === wpId) return n;
+	}
+	return null;
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;

@@ -1,12 +1,26 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
-	import { builder, scheduleSave } from './builderStore.svelte';
+	import {
+		builder,
+		focusWaypoint,
+		mapView,
+		placedSequence,
+		scheduleSave
+	} from './builderStore.svelte';
 	import { generateImageHashClient } from '$lib/imageHashClient';
 	import { readThumbnail } from './imageThumbnail';
 	import { dropFullImage, getFullImageUrl, setFullImage } from './fullImageCache.svelte';
 	import DateTimePicker from '$lib/components/DateTimePicker.svelte';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import ArrowUp from '@lucide/svelte/icons/arrow-up';
+	import ArrowDown from '@lucide/svelte/icons/arrow-down';
+	import X from '@lucide/svelte/icons/x';
+	import Crosshair from '@lucide/svelte/icons/crosshair';
+	import MapPin from '@lucide/svelte/icons/map-pin';
+	import MapPinOff from '@lucide/svelte/icons/map-pin-off';
+	import Globe from '@lucide/svelte/icons/globe';
+	import Lock from '@lucide/svelte/icons/lock';
 
 	const NUDGE_MINUTES = [-10, -5, 5, 10];
 
@@ -137,10 +151,12 @@
 		<p class="legend">* Erster und letzter platzierter Wegpunkt brauchen einen Zeitstempel.</p>
 		<ol>
 			{#each builder.waypoints as wp, idx (wp.id)}
+				{@const seq = placedSequence(wp.id)}
 				<li
 					class="wp"
 					class:unplaced={wp.unplaced}
 					class:active={wp.id === pendingPlacementId}
+					class:focused={wp.id === mapView.focusId && !wp.unplaced}
 					animate:flip={{ duration: 220 }}
 				>
 					{#if wp.thumbnail || getFullImageUrl(wp.id)}
@@ -151,28 +167,63 @@
 								loading="lazy"
 							/>
 							{#if wp.unplaced}
-								<span class="hero-badge">📍 noch nicht platziert</span>
+								<span class="hero-badge">
+									<MapPinOff size={12} strokeWidth={2} />
+									<span>noch nicht platziert</span>
+								</span>
 							{/if}
 						</div>
 					{/if}
 
 					<div class="row title-row">
 						<span class="idx" class:unplaced-idx={wp.unplaced}>
-							{wp.unplaced ? '?' : idx + 1}
+							{seq ?? '?'}
 						</span>
 						<span class="title">
 							{#if wp.unplaced}
 								Bild ohne Position
 							{:else if wp.imageHash}
-								Bild {idx + 1}
+								Bild {seq}
 							{:else}
-								Wegpunkt {idx + 1}
+								Wegpunkt {seq}
 							{/if}
 						</span>
 						<div class="row-actions">
-							<button type="button" onclick={() => move(idx, -1)} disabled={idx === 0} aria-label="Nach oben">↑</button>
-							<button type="button" onclick={() => move(idx, 1)} disabled={idx === builder.waypoints.length - 1} aria-label="Nach unten">↓</button>
-							<button type="button" class="del" onclick={() => remove(idx)} aria-label="Entfernen">✕</button>
+							{#if !wp.unplaced}
+								<button
+									type="button"
+									class="focus-btn"
+									onclick={() => focusWaypoint(wp.id)}
+									aria-label="Auf Karte fokussieren"
+									title="Auf Karte fokussieren"
+								>
+									<Crosshair size={14} strokeWidth={2} />
+								</button>
+							{/if}
+							<button
+								type="button"
+								onclick={() => move(idx, -1)}
+								disabled={idx === 0}
+								aria-label="Nach oben"
+							>
+								<ArrowUp size={14} strokeWidth={2} />
+							</button>
+							<button
+								type="button"
+								onclick={() => move(idx, 1)}
+								disabled={idx === builder.waypoints.length - 1}
+								aria-label="Nach unten"
+							>
+								<ArrowDown size={14} strokeWidth={2} />
+							</button>
+							<button
+								type="button"
+								class="del"
+								onclick={() => remove(idx)}
+								aria-label="Entfernen"
+							>
+								<X size={14} strokeWidth={2} />
+							</button>
 						</div>
 					</div>
 
@@ -183,7 +234,8 @@
 								<button type="button" class="ghost" onclick={() => onCancelPlacement?.()}>Abbrechen</button>
 							{:else}
 								<button type="button" class="primary" onclick={() => onRequestPlacement?.(wp.id)}>
-									📍 Auf Karte platzieren
+									<MapPin size={14} strokeWidth={2} />
+									<span>Auf Karte platzieren</span>
 								</button>
 							{/if}
 						</div>
@@ -236,13 +288,19 @@
 									class:active={wp.imageVisibility !== 'private'}
 									aria-pressed={wp.imageVisibility !== 'private'}
 									onclick={() => setVisibility(idx, 'public')}
-								>🌐 Öffentlich</button>
+								>
+									<Globe size={12} strokeWidth={2} />
+									<span>Öffentlich</span>
+								</button>
 								<button
 									type="button"
 									class:active={wp.imageVisibility === 'private'}
 									aria-pressed={wp.imageVisibility === 'private'}
 									onclick={() => setVisibility(idx, 'private')}
-								>🔒 Privat</button>
+								>
+									<Lock size={12} strokeWidth={2} />
+									<span>Privat</span>
+								</button>
 							</div>
 						</div>
 					{:else if !wp.unplaced}
@@ -278,8 +336,6 @@
 		border-radius: var(--radius-lg);
 		padding: 1rem;
 		box-shadow: var(--shadow-sm);
-		max-height: 600px;
-		overflow-y: auto;
 	}
 
 	header h2 {
@@ -304,9 +360,9 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.6rem;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 0.75rem;
 	}
 
 	.wp {
@@ -318,6 +374,7 @@
 		display: flex;
 		flex-direction: column;
 		transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+		scroll-margin-top: 1rem;
 	}
 
 	.wp.unplaced {
@@ -328,6 +385,12 @@
 	.wp.active {
 		border-color: var(--color-primary);
 		box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-primary) 30%, transparent);
+	}
+
+	.wp.focused {
+		border-color: var(--blue);
+		box-shadow: 0 0 0 2px color-mix(in oklab, var(--blue) 30%, transparent),
+			var(--shadow-md);
 	}
 
 	.hero {
@@ -349,7 +412,10 @@
 		position: absolute;
 		top: 0.4rem;
 		left: 0.4rem;
-		padding: 0.15rem 0.5rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.2rem 0.55rem;
 		background: var(--orange);
 		color: white;
 		font-size: 0.7rem;
@@ -461,11 +527,13 @@
 		border: 1px solid var(--color-border);
 		color: var(--color-text-secondary);
 		font: inherit;
-		padding: 0.2rem 0.4rem;
+		padding: 0.25rem;
 		border-radius: var(--radius-sm);
 		cursor: pointer;
-		font-size: 0.85rem;
-		line-height: 1;
+		line-height: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.row-actions button:disabled {
@@ -477,6 +545,18 @@
 		color: var(--red);
 	}
 
+	.row-actions button.focus-btn {
+		color: var(--blue);
+		border-color: color-mix(in oklab, var(--blue) 35%, var(--color-border));
+		background: color-mix(in oklab, var(--blue) 8%, var(--color-bg-tertiary));
+	}
+
+	.row-actions button.focus-btn:hover {
+		background: var(--blue);
+		color: white;
+		border-color: var(--blue);
+	}
+
 	.placement-row .primary,
 	.placement-row .ghost {
 		appearance: none;
@@ -485,6 +565,9 @@
 		padding: 0.3rem 0.8rem;
 		border-radius: var(--radius-pill);
 		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
 	}
 
 	.placement-row .primary {
@@ -528,8 +611,11 @@
 		color: var(--color-text-secondary);
 		font: inherit;
 		font-size: 0.78rem;
-		padding: 0.2rem 0.6rem;
+		padding: 0.25rem 0.65rem;
 		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 
 	.segment button + button {
