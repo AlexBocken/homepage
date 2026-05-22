@@ -1,42 +1,63 @@
 <script lang="ts">
-	// Tag selection by typeahead — same interaction as the recipe TagFilter:
-	// a text field that opens a dropdown of matching tags, with the picked
-	// tags shown below as removable chips. Themed with the semantic variables
-	// (the recipe original hardcodes Nord values) so it fits the filter panel
-	// in both colour schemes.
+	// Typeahead chip selector — a text field that opens a dropdown of matching
+	// options, with the picked ones shown below as removable chips. Generic over
+	// the value: used for free-text tags (with a leading "#") and for cantons
+	// (with the coat-of-arms emblem rendered before the name). Themed with the
+	// semantic variables so it fits the filter panel in both colour schemes.
 	import type { SvelteSet } from 'svelte/reactivity';
 	import X from '@lucide/svelte/icons/x';
 
 	interface Props {
-		/** All selectable tags, in display order (frequency-sorted upstream). */
-		tags: string[];
-		/** Currently-selected tags. Mutated via {@link onToggle}. */
+		/** All selectable values, in display order. */
+		options: string[];
+		/** Currently-selected values. Mutated via {@link onToggle}. */
 		selected: SvelteSet<string>;
-		onToggle: (tag: string) => void;
+		onToggle: (value: string) => void;
+		placeholder?: string;
+		/** Prefix each value with a "#" (tag style). */
+		hash?: boolean;
+		/** Optional icon URL rendered before each value (e.g. canton emblem). */
+		iconFor?: (value: string) => string | undefined;
+		/** Display label for a value (defaults to the value itself). */
+		labelFor?: (value: string) => string;
 	}
 
-	const { tags, selected, onToggle }: Props = $props();
+	const {
+		options,
+		selected,
+		onToggle,
+		placeholder = 'Eingeben oder auswählen…',
+		hash = false,
+		iconFor,
+		labelFor = (v) => v
+	}: Props = $props();
+
+	// Unique per instance — two of these live in the panel at once (tags +
+	// cantons), so a shared id would be a duplicate.
+	const dropdownId = `tt-dd-${Math.random().toString(36).slice(2, 9)}`;
 
 	let inputValue = $state('');
 	let open = $state(false);
 	let wrapper = $state<HTMLElement>();
 	let inputEl = $state<HTMLInputElement>();
 
-	const unselected = $derived(tags.filter((t) => !selected.has(t)));
+	const unselected = $derived(options.filter((v) => !selected.has(v)));
 
-	const filtered = $derived(
-		inputValue.trim() === ''
-			? unselected
-			: unselected.filter((t) => t.toLowerCase().includes(inputValue.trim().toLowerCase()))
-	);
+	const filtered = $derived.by(() => {
+		const q = inputValue.trim().toLowerCase();
+		if (q === '') return unselected;
+		return unselected.filter(
+			(v) => labelFor(v).toLowerCase().includes(q) || v.toLowerCase().includes(q)
+		);
+	});
 
-	// Selected tags kept in the canonical display order rather than click order.
-	const selectedList = $derived(tags.filter((t) => selected.has(t)));
+	// Selected values kept in the canonical display order rather than click order.
+	const selectedList = $derived(options.filter((v) => selected.has(v)));
 
-	function pick(tag: string) {
-		onToggle(tag);
+	function pick(value: string) {
+		onToggle(value);
 		inputValue = '';
-		// Keep the field focused so several tags can be added in a row.
+		// Keep the field focused so several can be added in a row.
 		inputEl?.focus();
 		open = true;
 	}
@@ -44,8 +65,10 @@
 	function onKey(e: KeyboardEvent) {
 		if (e.key === 'Enter') {
 			e.preventDefault();
-			const value = inputValue.trim().toLowerCase();
-			const match = filtered.find((t) => t.toLowerCase() === value) ?? filtered[0];
+			const q = inputValue.trim().toLowerCase();
+			const match =
+				filtered.find((v) => labelFor(v).toLowerCase() === q || v.toLowerCase() === q) ??
+				filtered[0];
 			if (match) pick(match);
 		} else if (e.key === 'Escape') {
 			if (inputValue) {
@@ -74,18 +97,21 @@
 			bind:value={inputValue}
 			onfocus={() => (open = true)}
 			onkeydown={onKey}
-			placeholder="Schlagwort eingeben oder auswählen…"
+			{placeholder}
 			autocomplete="off"
 			role="combobox"
 			aria-expanded={open}
-			aria-controls="tt-dropdown"
+			aria-controls={dropdownId}
 		/>
 
 		{#if open && filtered.length > 0}
-			<div class="tt-dropdown" id="tt-dropdown">
-				{#each filtered as tag (tag)}
-					<button type="button" class="tt-option" onclick={() => pick(tag)}>
-						<span class="tt-hash" aria-hidden="true">#</span>{tag}
+			<div class="tt-dropdown" id={dropdownId}>
+				{#each filtered as value (value)}
+					{@const icon = iconFor?.(value)}
+					<button type="button" class="tt-option" onclick={() => pick(value)}>
+						{#if icon}<img class="tt-emblem" src={icon} alt="" aria-hidden="true" />{/if}
+						{#if hash}<span class="tt-hash" aria-hidden="true">#</span>{/if}
+						{labelFor(value)}
 					</button>
 				{/each}
 			</div>
@@ -94,14 +120,17 @@
 
 	{#if selectedList.length > 0}
 		<div class="tt-selected">
-			{#each selectedList as tag (tag)}
+			{#each selectedList as value (value)}
+				{@const icon = iconFor?.(value)}
 				<button
 					type="button"
 					class="tt-chip"
-					onclick={() => onToggle(tag)}
-					aria-label="{tag} entfernen"
+					onclick={() => onToggle(value)}
+					aria-label={`${labelFor(value)} entfernen`}
 				>
-					<span class="tt-hash" aria-hidden="true">#</span>{tag}
+					{#if icon}<img class="tt-emblem" src={icon} alt="" aria-hidden="true" />{/if}
+					{#if hash}<span class="tt-hash" aria-hidden="true">#</span>{/if}
+					{labelFor(value)}
 					<X size={13} strokeWidth={2} aria-hidden="true" />
 				</button>
 			{/each}
@@ -161,6 +190,9 @@
 	}
 
 	.tt-option {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 		appearance: none;
 		font: inherit;
 		font-size: 0.8rem;
@@ -189,7 +221,7 @@
 	.tt-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.25rem;
+		gap: 0.3rem;
 		appearance: none;
 		font: inherit;
 		font-size: 0.8rem;
@@ -210,6 +242,15 @@
 
 	.tt-chip :global(svg) {
 		opacity: 0.85;
+	}
+
+	/* Canton coat-of-arms — tall shield, kept proportional in a fixed slot. */
+	.tt-emblem {
+		width: 13px;
+		height: 16px;
+		object-fit: contain;
+		flex: 0 0 auto;
+		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18));
 	}
 
 	.tt-hash {

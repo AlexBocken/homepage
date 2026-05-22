@@ -54,6 +54,11 @@ export type HikeManifestEntry = {
 	region: string | null;
 	canton: string | null;
 	municipality: string | null;
+	/** ISO 3166-1 alpha-2 country code (e.g. 'CH', 'DE'), detected at build
+	 * time from the centroid. Swiss hikes are grouped by `canton`; hikes
+	 * abroad fall back to this. Optional so pre-existing manifest entries
+	 * (built before the field existed) still type-check. */
+	country?: string | null;
 
 	// Recommended hiking-season window, 1-12 (Jan-Dec). When start > end the
 	// window wraps the new year (e.g. 11–3 for a winter route). Absent /

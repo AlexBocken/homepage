@@ -5,7 +5,9 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import X from '@lucide/svelte/icons/x';
 	import RangeSlider from './RangeSlider.svelte';
-	import TagTypeahead from './TagTypeahead.svelte';
+	import ChipTypeahead from './ChipTypeahead.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
+	import { resolveHikeArea, type HikeArea } from '$lib/hikes/hikeArea';
 	import {
 		hikeFilterBounds,
 		DISTANCE_STEP,
@@ -25,7 +27,12 @@
 		maxLossM: number;
 		difficulties: SvelteSet<Difficulty>;
 		regions: SvelteSet<string>;
+		/** Namespaced area values — canton (CH) or country (abroad). See
+		 * {@link resolveHikeArea}. */
+		areas: SvelteSet<string>;
 		tags: SvelteSet<string>;
+		/** Show only hikes whose recommended season covers the current month. */
+		inSeasonOnly: boolean;
 	};
 
 	interface Props {
@@ -65,6 +72,22 @@
 		}
 		return out.sort((a, b) => a.localeCompare(b));
 	});
+
+	// Geographic areas present in the data: a Swiss hike contributes its canton,
+	// a hike abroad its country. Deduped by namespaced value; cantons listed
+	// first (alphabetical), then countries (alphabetical).
+	const areaList = $derived.by(() => {
+		const map = new Map<string, HikeArea>();
+		for (const h of hikes) {
+			const a = resolveHikeArea(h.canton, h.country);
+			if (a && !map.has(a.value)) map.set(a.value, a);
+		}
+		return [...map.values()].sort((a, b) =>
+			a.kind === b.kind ? a.label.localeCompare(b.label) : a.kind === 'canton' ? -1 : 1
+		);
+	});
+	const areaValues = $derived(areaList.map((a) => a.value));
+	const areaByValue = $derived(new Map(areaList.map((a) => [a.value, a])));
 
 	// Tags sorted by usage frequency (most-used first), alphabetical for
 	// ties. Frequency ordering surfaces broadly-applicable filters like
@@ -114,10 +137,12 @@
 
 	// Active filters, flattened into removable chips for the collapsed bar.
 	// A range counts as "active" only when narrowed below its data ceiling.
-	type Chip = { key: string; label: string; clear: () => void };
+	type Chip = { key: string; label: string; icon?: string; clear: () => void };
 	const chips = $derived.by<Chip[]>(() => {
 		const out: Chip[] = [];
 		const { distance, duration, gain, loss } = bounds;
+		if (filter.inSeasonOnly)
+			out.push({ key: 'season', label: 'In Saison', clear: () => (filter.inSeasonOnly = false) });
 		if (filter.minDistanceKm > distance.min || filter.maxDistanceKm < distance.max)
 			out.push({
 				key: 'dist',
@@ -159,6 +184,15 @@
 				out.push({ key: `d-${d}`, label: d, clear: () => filter.difficulties.delete(d) });
 		for (const r of filter.regions)
 			out.push({ key: `r-${r}`, label: r, clear: () => filter.regions.delete(r) });
+		for (const value of filter.areas) {
+			const a = areaByValue.get(value);
+			out.push({
+				key: `a-${value}`,
+				label: a?.label ?? value,
+				icon: a?.iconUrl,
+				clear: () => filter.areas.delete(value)
+			});
+		}
 		for (const t of filter.tags)
 			out.push({ key: `t-${t}`, label: `#${t}`, clear: () => filter.tags.delete(t) });
 		return out;
@@ -174,6 +208,11 @@
 	function toggleRegion(r: string) {
 		if (filter.regions.has(r)) filter.regions.delete(r);
 		else filter.regions.add(r);
+	}
+
+	function toggleArea(value: string) {
+		if (filter.areas.has(value)) filter.areas.delete(value);
+		else filter.areas.add(value);
 	}
 
 	function toggleTag(t: string) {
@@ -192,7 +231,9 @@
 		filter.maxLossM = bounds.loss.max;
 		filter.difficulties.clear();
 		filter.regions.clear();
+		filter.areas.clear();
 		filter.tags.clear();
+		filter.inSeasonOnly = false;
 	}
 
 	// Light-dismiss: close the panel on outside click or Escape. Only wired
@@ -229,7 +270,8 @@
 		<div class="active-chips" aria-label="Aktive Filter">
 			{#each chips as chip (chip.key)}
 				<button type="button" class="chip" onclick={chip.clear}>
-					<span class="chip-label">{chip.label}</span>
+					{#if chip.icon}<img class="chip-emblem" src={chip.icon} alt="" aria-hidden="true" />{/if}<span
+							class="chip-label">{chip.label}</span>
 					<X size={13} strokeWidth={2} aria-label="entfernen" />
 				</button>
 			{/each}
@@ -253,6 +295,12 @@
 
 	{#if open}
 		<div id="filter-panel" class="panel" transition:slide={{ duration: 200 }}>
+			<div class="season-row">
+				<Toggle bind:checked={filter.inSeasonOnly} label="Nur Touren in der aktuellen Saison" />
+			</div>
+
+			<hr class="divider" />
+
 			<div class="ranges">
 				<RangeSlider
 					label="Distanz"
@@ -328,10 +376,30 @@
 				</fieldset>
 			{/if}
 
+			{#if areaList.length > 0}
+				<fieldset>
+					<legend>Kanton / Land</legend>
+					<ChipTypeahead
+						options={areaValues}
+						selected={filter.areas}
+						onToggle={toggleArea}
+						placeholder="Kanton oder Land eingeben oder auswählen…"
+						iconFor={(value) => areaByValue.get(value)?.iconUrl}
+						labelFor={(value) => areaByValue.get(value)?.label ?? value}
+					/>
+				</fieldset>
+			{/if}
+
 			{#if tags.length > 0}
 				<fieldset>
 					<legend>Schlagwörter</legend>
-					<TagTypeahead {tags} selected={filter.tags} onToggle={toggleTag} />
+					<ChipTypeahead
+						options={tags}
+						selected={filter.tags}
+						onToggle={toggleTag}
+						hash
+						placeholder="Schlagwort eingeben oder auswählen…"
+					/>
 				</fieldset>
 			{/if}
 
@@ -426,6 +494,15 @@
 
 	.chip-label {
 		font-variant-numeric: tabular-nums;
+	}
+
+	/* Canton coat-of-arms inside an active-filter chip. */
+	.chip-emblem {
+		width: 12px;
+		height: 15px;
+		object-fit: contain;
+		flex: 0 0 auto;
+		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18));
 	}
 
 	.clear-all {

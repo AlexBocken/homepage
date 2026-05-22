@@ -8,7 +8,17 @@
 	import Seo from '$lib/components/Seo.svelte';
 	import { HIKES_OVERVIEW } from '$lib/data/hikes.generated';
 	import { hikeFilterBounds } from '$lib/hikes/filterBounds';
+	import { resolveHikeArea } from '$lib/hikes/hikeArea';
 	import type { Difficulty } from '$types/hikes';
+
+	// True when the current month falls inside the hike's recommended season
+	// window. Windows can wrap the new year (start > end, e.g. 11–3 for winter);
+	// a missing/invalid window counts as year-round (always in season).
+	function isInSeason(start: number | null | undefined, end: number | null | undefined, month: number): boolean {
+		if (start == null || end == null) return true;
+		if (start < 1 || start > 12 || end < 1 || end > 12) return true;
+		return start <= end ? month >= start && month <= end : month >= start || month <= end;
+	}
 	import type { PageProps } from './$types';
 
 	const { data }: PageProps = $props();
@@ -62,7 +72,9 @@
 		maxLossM: Number.POSITIVE_INFINITY,
 		difficulties: new SvelteSet<Difficulty>(),
 		regions: new SvelteSet<string>(),
-		tags: new SvelteSet<string>()
+		areas: new SvelteSet<string>(),
+		tags: new SvelteSet<string>(),
+		inSeasonOnly: false
 	});
 
 	// Tag deep-link: arrival from a detail-page tag chip (`/hikes?tag=winter`)
@@ -121,6 +133,7 @@
 
 	const visible = $derived.by(() => {
 		const out = [];
+		const currentMonth = new Date().getMonth() + 1;
 		for (const h of data.hikes) {
 			if (h.distanceKm < filter.minDistanceKm || h.distanceKm > filter.maxDistanceKm) continue;
 			const dur = h.durationMin ?? 0;
@@ -129,6 +142,11 @@
 			if (h.elevationLossM < filter.minLossM || h.elevationLossM > filter.maxLossM) continue;
 			if (filter.difficulties.size > 0 && !filter.difficulties.has(h.difficulty)) continue;
 			if (filter.regions.size > 0 && (!h.region || !filter.regions.has(h.region))) continue;
+			if (filter.areas.size > 0) {
+				const area = resolveHikeArea(h.canton, h.country);
+				if (!area || !filter.areas.has(area.value)) continue;
+			}
+			if (filter.inSeasonOnly && !isInSeason(h.seasonStart, h.seasonEnd, currentMonth)) continue;
 			// Multi-tag = OR (a hike matching ANY selected tag is shown). AND
 			// would shrink the listing to ~zero quickly given how few tags
 			// most hikes have; OR matches how detail-page chips feel like
