@@ -6,7 +6,7 @@
 	import WaypointDetailPanel from '$lib/components/hikes/route-builder/WaypointDetailPanel.svelte';
 	import ImageDropzone from '$lib/components/hikes/route-builder/ImageDropzone.svelte';
 	import RouteStatsBar from '$lib/components/hikes/route-builder/RouteStatsBar.svelte';
-	import { assembleTrackPoints, buildGpx, type GpxImageWaypoint } from '$lib/gpx';
+	import { assembleTrackPoints, buildGpx, type GpxImageWaypoint, type GpxTrack } from '$lib/gpx';
 	import {
 		builder,
 		focusWaypoint,
@@ -16,6 +16,7 @@
 		clearDraft,
 		reconcileSegments,
 		densifyLinearSegments,
+		deriveStageGroups,
 		importGpx
 	} from '$lib/components/hikes/route-builder/builderStore.svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -151,18 +152,28 @@
 			return;
 		}
 		const placed = builder.waypoints.filter((w) => !w.unplaced);
-		const assembled = assembleTrackPoints({
-			waypoints: placed.map((w) => ({
-				lat: w.lat,
-				lng: w.lng,
-				altitude: w.altitude,
-				timestamp: w.timestamp ?? null
-			})),
-			routedSegments: builder.routedSegments
-		});
-		if (!assembled.ok) {
-			error = assembled.error;
-			return;
+		// Assemble each stage independently so timestamps interpolate within a
+		// stage and the overnight gap between stages is never bridged. One
+		// <trk> per stage; a single-stage route yields one track (== before).
+		const groups = deriveStageGroups();
+		const tracks: GpxTrack[] = [];
+		for (const g of groups) {
+			const assembled = assembleTrackPoints({
+				waypoints: placed.slice(g.startIdx, g.endIdx + 1).map((w) => ({
+					lat: w.lat,
+					lng: w.lng,
+					altitude: w.altitude,
+					timestamp: w.timestamp ?? null
+				})),
+				// Only the segments *within* the stage (between its consecutive
+				// waypoints); the boundary segment to the next stage is excluded.
+				routedSegments: builder.routedSegments.slice(g.startIdx, g.endIdx)
+			});
+			if (!assembled.ok) {
+				error = groups.length > 1 ? `Etappe „${g.name}“: ${assembled.error}` : assembled.error;
+				return;
+			}
+			tracks.push({ name: g.name, points: assembled.points });
 		}
 		error = null;
 		// Look up altitude for a placed-waypoint index from the routed segments.
@@ -199,7 +210,7 @@
 			}));
 		const gpx = buildGpx({
 			name: builder.name || 'Neue Wanderung',
-			trackPoints: assembled.points,
+			tracks,
 			imageWaypoints
 		});
 		const blob = new Blob([gpx], { type: 'application/gpx+xml' });

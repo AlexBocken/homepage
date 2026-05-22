@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Attachment } from 'svelte/attachments';
-	import type { HikeTrackPoint, ImagePoint } from '$types/hikes';
+	import type { HikeTrackPoint, ImagePoint, HikeStage } from '$types/hikes';
 	import { hover, setHover, clearHover } from './hoverStore.svelte';
+	import { stage } from './stageStore.svelte';
 	import { focused, setFocused, clearFocused } from './focusedImageStore.svelte';
 	import Map from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
@@ -34,6 +35,10 @@
 		 * route on the /hikes overview map (orange for T1, red for T2/T3,
 		 * blue for T4–T6). */
 		trackColor?: string;
+		/** Stage ranges for a multi-day hike. When a stage is active (shared
+		 * stageStore) the map highlights it, dims the rest, zooms to it, and
+		 * scopes photo markers to that stage. */
+		stages?: HikeStage[] | null;
 	}
 
 	const {
@@ -43,7 +48,8 @@
 		initialCenter,
 		initialZoom,
 		onReady,
-		trackColor
+		trackColor,
+		stages = null
 	}: Props = $props();
 
 	// User-location toggle moved inside the map UI. localStorage-persisted so
@@ -236,6 +242,15 @@
 				interactive: false
 			}).addTo(map);
 
+			// Brighter overlay drawn over the active stage (multi-day hikes); the
+			// base line is dimmed underneath it. Empty until a stage is selected.
+			const stageOverlay = L.polyline([] as [number, number][], {
+				color: trailColor,
+				weight: 6,
+				opacity: 1,
+				interactive: false
+			});
+
 			L.circleMarker(latLngs[0], {
 				radius: 6,
 				fillColor: '#a3be8c',
@@ -313,6 +328,31 @@
 				'<circle cx="12" cy="13" r="3"/>' +
 				'</svg>';
 
+			// Nearest track sample (by time) to a photo — used to test which
+			// stage a photo belongs to when scoping markers to the active stage.
+			function nearestTrackIdx(ts: number): number {
+				let best = -1;
+				let bestD = Infinity;
+				for (let i = 0; i < track.length; i++) {
+					const t = track[i][3];
+					if (typeof t !== 'number') continue;
+					const d = Math.abs(t - ts);
+					if (d < bestD) {
+						bestD = d;
+						best = i;
+					}
+				}
+				return best;
+			}
+			function photoInActiveStage(ip: ImagePoint): boolean {
+				const active = stage.active;
+				if (active === null || !stages || !stages[active]) return true;
+				if (typeof ip.timestamp !== 'number') return false;
+				const s = stages[active];
+				const idx = nearestTrackIdx(ip.timestamp);
+				return idx >= s.startIdx && idx <= s.endIdx;
+			}
+
 			function renderPhotos() {
 				photoLayer.clearLayers();
 				visiblePoints = [];
@@ -322,6 +362,9 @@
 					if (ip.visibility === 'private' && !showPrivate) continue;
 					const visibleIdx = visiblePoints.length;
 					visiblePoints.push(ip);
+					// Keep `visiblePoints` aligned with the strip's index space, but
+					// only draw a marker when the photo is in the active stage.
+					if (!photoInActiveStage(ip)) continue;
 					const altSafe = ip.alt.replace(/"/g, '&quot;');
 					const isPrivate = ip.visibility === 'private';
 					const icon = L.divIcon({
@@ -540,9 +583,33 @@
 
 			// React to user-toggle of photo markers, base-layer choice, and the
 			// enableUserLocation prop.
+			let stageInitialized = false;
 			const stopReactRoot = $effect.root(() => {
 				$effect(() => {
 					renderPhotos();
+				});
+				// Active-stage highlight + zoom. The first run (active === null on
+				// mount) only normalises the base style — it must NOT fly, or it
+				// would clobber the static-hero → live handover above.
+				$effect(() => {
+					const active = stage.active;
+					if (active !== null && stages && stages[active]) {
+						const s = stages[active];
+						stageOverlay.setLatLngs(latLngs.slice(s.startIdx, s.endIdx + 1));
+						if (!map.hasLayer(stageOverlay)) stageOverlay.addTo(map);
+						polyline.setStyle({ opacity: 0.28 });
+						const b = stageOverlay.getBounds();
+						if (b.isValid()) {
+							map.flyToBounds(b, { padding: [40, 40], duration: 0.6, easeLinearity: 0.25 });
+						}
+						stageInitialized = true;
+					} else {
+						if (map.hasLayer(stageOverlay)) stageOverlay.remove();
+						polyline.setStyle({ opacity: 0.95 });
+						if (stageInitialized) {
+							map.flyToBounds(initialBounds, { padding: [24, 24], duration: 0.6, easeLinearity: 0.25 });
+						}
+					}
 				});
 				$effect(() => {
 					if (baseLayer === currentBase) return;

@@ -4,7 +4,9 @@
 		focusWaypoint,
 		mapView,
 		placedSequence,
-		scheduleSave
+		scheduleSave,
+		toggleStageBreak,
+		renameStage
 	} from './builderStore.svelte';
 	import { generateImageHashClient } from '$lib/imageHashClient';
 	import { readThumbnail } from './imageThumbnail';
@@ -16,6 +18,7 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import Lock from '@lucide/svelte/icons/lock';
 	import X from '@lucide/svelte/icons/x';
+	import Flag from '@lucide/svelte/icons/flag';
 
 	interface Props {
 		onCancelPlacement?: () => void;
@@ -44,6 +47,27 @@
 		return -1;
 	});
 	const requiresTime = $derived(wpIdx !== -1 && (wpIdx === firstPlacedIdx || wpIdx === lastPlacedIdx));
+
+	// Stage info for the focused waypoint (multi-day hikes). Mirrors the
+	// per-row control in the waypoint list.
+	const stageInfo = $derived.by(() => {
+		if (!wp) return null;
+		let num = 0;
+		let name = '';
+		for (let i = 0; i < placed.length; i++) {
+			const w = placed[i];
+			const isStart = i === 0 || w.stageStart !== undefined;
+			if (isStart) {
+				num++;
+				name = w.stageStart || `Etappe ${num}`;
+			}
+			if (w.id === wp.id) return { isStart, num, name, isFirst: i === 0 };
+		}
+		return null;
+	});
+	const stageCount = $derived(
+		placed.reduce((n, w, i) => n + (i === 0 || w.stageStart !== undefined ? 1 : 0), 0)
+	);
 
 	function nearestTimestamp(idx: number): number | undefined {
 		const wps = builder.waypoints;
@@ -270,6 +294,31 @@
 			<button type="button" class="ghost" onclick={() => onCancelPlacement?.()}>
 				Platzierung abbrechen
 			</button>
+		{/if}
+
+		{#if !wp.unplaced}
+			{#if stageInfo?.isStart && stageCount > 1}
+				<div class="stage-block">
+					<span class="stage-cap"><Flag size={12} strokeWidth={2.25} />Etappe {stageInfo.num}</span>
+					<input
+						class="stage-name-input"
+						value={wp.stageStart ?? stageInfo.name}
+						placeholder={`Etappe ${stageInfo.num}`}
+						oninput={(e) => renameStage(wp.id, e.currentTarget.value)}
+						aria-label={`Name Etappe ${stageInfo.num}`}
+					/>
+					{#if !stageInfo.isFirst}
+						<button type="button" class="stage-dissolve" onclick={() => toggleStageBreak(wp.id)}>
+							Etappe auflösen
+						</button>
+					{/if}
+				</div>
+			{:else if !stageInfo?.isFirst}
+				<button type="button" class="stage-new" onclick={() => toggleStageBreak(wp.id)}>
+					<Flag size={15} strokeWidth={2} />
+					<span>Neue Etappe ab hier</span>
+				</button>
+			{/if}
 		{/if}
 
 		{#if !wp.unplaced}
@@ -594,6 +643,89 @@
 		background: var(--orange);
 		border-color: var(--orange);
 		box-shadow: 0 0 0 2px color-mix(in oklab, var(--orange) 30%, transparent);
+	}
+
+	/* Stage controls — start a new stage at this waypoint, or name/dissolve an
+	 * existing stage start. Mirrors the waypoint-list affordance. */
+	.stage-new {
+		appearance: none;
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 600;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.45rem;
+		padding: 0.5rem 0.9rem;
+		border-radius: var(--radius-pill);
+		background: transparent;
+		border: 1px dashed color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+		color: var(--color-primary);
+		cursor: pointer;
+		transition: background var(--transition-fast), border-color var(--transition-fast),
+			color var(--transition-fast);
+	}
+
+	.stage-new:hover {
+		background: var(--color-primary);
+		border-style: solid;
+		border-color: var(--color-primary);
+		color: var(--color-text-on-primary);
+	}
+
+	.stage-block {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.6rem 0.7rem;
+		background: color-mix(in oklab, var(--color-primary) 8%, var(--color-bg-secondary));
+		border: 1px solid color-mix(in oklab, var(--color-primary) 25%, var(--color-border));
+		border-left: 3px solid var(--color-primary);
+		border-radius: var(--radius-md);
+	}
+
+	.stage-cap {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		flex: 0 0 auto;
+		font-size: 0.68rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--color-primary);
+	}
+
+	.stage-name-input {
+		flex: 1 1 auto;
+		min-width: 0;
+		padding: 0.35rem 0.5rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	.stage-dissolve {
+		flex: 0 0 auto;
+		appearance: none;
+		font: inherit;
+		font-size: 0.72rem;
+		padding: 0.3rem 0.5rem;
+		background: transparent;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.stage-dissolve:hover {
+		color: var(--red);
+		border-color: color-mix(in oklab, var(--red) 40%, var(--color-border));
 	}
 
 	/* Coords are a power-user adjustment — keep them out of the way unless

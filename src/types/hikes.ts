@@ -27,6 +27,23 @@ export type ImagePoint = {
 // [lng, lat, elevation?, unixMs?]
 export type HikeTrackPoint = [number, number, number?, number?];
 
+/** One stage of a multi-day hike. Index ranges point into the flat track JSON
+ * (`trackUrl`); stats are computed per stage so totals exclude the overnight
+ * gaps between them. Stages are disjoint and contiguous
+ * (`endIdx + 1 === next.startIdx`). */
+export type HikeStage = {
+	name: string;
+	/** Inclusive start/end indices into the flat track. */
+	startIdx: number;
+	endIdx: number;
+	distanceKm: number;
+	durationMin: number | null;
+	elevationGainM: number;
+	elevationLossM: number;
+	elevationMaxM: number | null;
+	elevationMinM: number | null;
+};
+
 export type HikeManifestEntry = {
 	slug: string;
 	title: string;
@@ -49,6 +66,15 @@ export type HikeManifestEntry = {
 	bbox: [number, number, number, number]; // [minLat, minLng, maxLat, maxLng]
 	centroid: [number, number];
 	previewPolyline: [number, number][];
+	/** Indices into `previewPolyline` where a new disconnected run begins —
+	 * set only where the gap between two stages exceeds ~1 km, so the overview
+	 * doesn't draw a straight line across an overnight transfer. Absent/empty
+	 * ⇒ one continuous line. */
+	previewBreaks?: number[];
+
+	/** Present only for multi-day hikes (≥2 GPX `<trk>` elements). Single-stage
+	 * hikes omit it and render exactly as before. */
+	stages?: HikeStage[];
 
 	// Reverse-geocoded from the centroid (Swisstopo):
 	region: string | null;

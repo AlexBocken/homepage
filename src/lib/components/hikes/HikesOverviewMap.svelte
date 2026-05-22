@@ -195,7 +195,22 @@
 					if (!hike.previewPolyline || hike.previewPolyline.length < 2) continue;
 					const latLngs = hike.previewPolyline.map(([lat, lng]) => [lat, lng] as [number, number]);
 					const color = sacTrailColor(hike.difficulty);
-					const poly = L.polyline(latLngs, {
+					// Multi-day hikes with a big inter-stage gap ship `previewBreaks`
+					// (indices where a new run starts); split there so Leaflet draws
+					// disconnected segments instead of a line across the transfer.
+					const breaks = hike.previewBreaks;
+					let coords: [number, number][] | [number, number][][] = latLngs;
+					if (breaks && breaks.length > 0) {
+						const segs: [number, number][][] = [];
+						let start = 0;
+						for (const brk of breaks) {
+							if (brk > start) segs.push(latLngs.slice(start, brk));
+							start = brk;
+						}
+						segs.push(latLngs.slice(start));
+						coords = segs.filter((s) => s.length >= 2);
+					}
+					const poly = L.polyline(coords, {
 						color,
 						weight: 4,
 						opacity: 0.9,

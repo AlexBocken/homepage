@@ -5,7 +5,9 @@
 		focusWaypoint,
 		mapView,
 		placedSequence,
-		scheduleSave
+		scheduleSave,
+		toggleStageBreak,
+		renameStage
 	} from './builderStore.svelte';
 	import { generateImageHashClient } from '$lib/imageHashClient';
 	import { readThumbnail } from './imageThumbnail';
@@ -21,6 +23,7 @@
 	import MapPinOff from '@lucide/svelte/icons/map-pin-off';
 	import Globe from '@lucide/svelte/icons/globe';
 	import Lock from '@lucide/svelte/icons/lock';
+	import Flag from '@lucide/svelte/icons/flag';
 
 	const NUDGE_MINUTES = [-10, -5, 5, 10];
 
@@ -45,6 +48,30 @@
 		}
 		return -1;
 	});
+
+	// Per-waypoint stage metadata (placed waypoints only): whether it begins a
+	// stage, the stage number/name, and whether it's the route start.
+	const stageMeta = $derived.by(() => {
+		const map = new Map<string, { isStart: boolean; num: number; name: string; first: boolean }>();
+		let num = 0;
+		let name = '';
+		let firstSeen = false;
+		for (const w of builder.waypoints) {
+			if (w.unplaced) continue;
+			const first = !firstSeen;
+			firstSeen = true;
+			const isStart = first || w.stageStart !== undefined;
+			if (isStart) {
+				num++;
+				name = w.stageStart || `Etappe ${num}`;
+			}
+			map.set(w.id, { isStart, num, name, first });
+		}
+		return map;
+	});
+	const stageCount = $derived(
+		[...stageMeta.values()].filter((m) => m.isStart).length
+	);
 
 	/** Find the nearest waypoint *by index* that already carries a timestamp.
 	 *  Used as the `inheritedValue` for click waypoints — searching by sequence
@@ -152,13 +179,39 @@
 		<ol>
 			{#each builder.waypoints as wp, idx (wp.id)}
 				{@const seq = placedSequence(wp.id)}
+				{@const sm = stageMeta.get(wp.id)}
 				<li
 					class="wp"
+					class:stage-start={stageCount > 1 && sm?.isStart}
 					class:unplaced={wp.unplaced}
 					class:active={wp.id === pendingPlacementId}
 					class:focused={wp.id === mapView.focusId && !wp.unplaced}
 					animate:flip={{ duration: 220 }}
 				>
+					{#if stageCount > 1 && sm?.isStart}
+						<div class="stage-band">
+							<span class="stage-badge"><Flag size={11} strokeWidth={2.25} />Etappe {sm.num}</span>
+							<input
+								class="stage-name"
+								value={wp.stageStart ?? sm.name}
+								placeholder={`Etappe ${sm.num}`}
+								oninput={(e) => renameStage(wp.id, e.currentTarget.value)}
+								aria-label={`Name Etappe ${sm.num}`}
+							/>
+							{#if !sm.first}
+								<button
+									type="button"
+									class="stage-merge"
+									onclick={() => toggleStageBreak(wp.id)}
+									title="Mit vorheriger Etappe zusammenführen"
+									aria-label="Etappe auflösen"
+								>
+									<X size={13} strokeWidth={2.25} />
+								</button>
+							{/if}
+						</div>
+					{/if}
+
 					{#if wp.thumbnail || getFullImageUrl(wp.id)}
 						<div class="hero">
 							<img
@@ -189,6 +242,19 @@
 							{/if}
 						</span>
 						<div class="row-actions">
+							{#if !wp.unplaced && !sm?.first}
+								<button
+									type="button"
+									class="stage-flag"
+									class:on={sm?.isStart}
+									onclick={() => toggleStageBreak(wp.id)}
+									aria-pressed={sm?.isStart}
+									aria-label={sm?.isStart ? 'Etappenbeginn entfernen' : 'Neue Etappe ab hier'}
+									title={sm?.isStart ? 'Etappenbeginn entfernen' : 'Neue Etappe ab hier'}
+								>
+									<Flag size={14} strokeWidth={2} />
+								</button>
+							{/if}
 							{#if !wp.unplaced}
 								<button
 									type="button"
@@ -365,6 +431,70 @@
 		gap: 0.75rem;
 	}
 
+	/* Stage band at the top of the first card of each stage. */
+	.stage-band {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.45rem 0.55rem;
+		background: color-mix(in oklab, var(--color-primary) 8%, var(--color-bg-secondary));
+		border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 22%, var(--color-border));
+	}
+
+	.stage-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		flex: 0 0 auto;
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--color-primary);
+		padding: 0.22rem 0.55rem;
+		background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+		border-radius: var(--radius-pill);
+	}
+
+	.stage-name {
+		flex: 1 1 auto;
+		min-width: 0;
+		padding: 0.3rem 0.5rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	.stage-merge {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		appearance: none;
+		padding: 0.25rem;
+		line-height: 0;
+		background: transparent;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+	}
+
+	.stage-merge:hover {
+		color: var(--red);
+		border-color: color-mix(in oklab, var(--red) 40%, var(--color-border));
+	}
+
+	.row-actions button.stage-flag.on {
+		color: var(--color-primary);
+		border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+		background: color-mix(in oklab, var(--color-primary) 10%, var(--color-bg-tertiary));
+	}
+
 	.wp {
 		padding: 0;
 		background: var(--color-bg-secondary);
@@ -380,6 +510,11 @@
 	.wp.unplaced {
 		border-color: var(--orange);
 		background: color-mix(in oklab, var(--orange) 6%, var(--color-bg-secondary));
+	}
+
+	/* Mark the first card of each stage with a top accent. */
+	.wp.stage-start {
+		border-top: 2px solid var(--color-primary);
 	}
 
 	.wp.active {

@@ -70,6 +70,38 @@ export function parseGpx(xml: string): GpxPoint[] {
 	return points;
 }
 
+export interface GpxStage {
+	/** `<name>` of the `<trk>`, or null when absent. */
+	name: string | null;
+	points: GpxPoint[];
+}
+
+/**
+ * Parse a GPX into one stage per `<trk>` element (a multi-day route ships its
+ * stages as separate named tracks). Each stage keeps its own ordered points;
+ * concatenating them yields the same flat list `parseGpx` returns.
+ *
+ * Falls back to a single unnamed stage covering the whole document when there
+ * are no `<trk>` wrappers (e.g. an `<rtept>`-only route).
+ */
+export function parseGpxStages(xml: string): GpxStage[] {
+	const stages: GpxStage[] = [];
+	const trkRegex = /<trk>([\s\S]*?)<\/trk>/gi;
+	let match;
+	while ((match = trkRegex.exec(xml)) !== null) {
+		const body = match[1];
+		const nameMatch = body.match(/<name>([^<]*)<\/name>/i);
+		const name = nameMatch ? nameMatch[1].trim() : null;
+		const points = parseGpx(body);
+		if (points.length > 0) stages.push({ name: name || null, points });
+	}
+	if (stages.length === 0) {
+		const points = parseGpx(xml);
+		if (points.length > 0) stages.push({ name: null, points });
+	}
+	return stages;
+}
+
 export interface GpxImageRef {
 	hash: string;
 	name?: string;
@@ -314,12 +346,8 @@ export interface GpxImageWaypoint {
  * the image's EXIF GPS — letting a contributor correct an image's position
  * by simply dragging the matching waypoint in the route-builder.
  */
-export function buildGpx(opts: {
-	name: string;
-	trackPoints: GpxWritePoint[];
-	imageWaypoints?: GpxImageWaypoint[];
-}): string {
-	const trkpts = opts.trackPoints
+function serializeTrkpts(points: GpxWritePoint[]): string {
+	return points
 		.map((p) => {
 			const ele = typeof p.altitude === 'number' ? `        <ele>${p.altitude.toFixed(1)}</ele>\n` : '';
 			const time = typeof p.timestamp === 'number'
@@ -327,6 +355,34 @@ export function buildGpx(opts: {
 				: '';
 			return `      <trkpt lat="${p.lat}" lon="${p.lng}">\n${ele}${time}      </trkpt>`;
 		})
+		.join('\n');
+}
+
+export interface GpxTrack {
+	name: string;
+	points: GpxWritePoint[];
+}
+
+export function buildGpx(opts: {
+	name: string;
+	/** Single-track convenience. Ignored when `tracks` is given. */
+	trackPoints?: GpxWritePoint[];
+	/** One `<trk>` per stage. Each gets its own `<name>`. */
+	tracks?: GpxTrack[];
+	imageWaypoints?: GpxImageWaypoint[];
+}): string {
+	const tracks: GpxTrack[] =
+		opts.tracks && opts.tracks.length > 0
+			? opts.tracks
+			: [{ name: opts.name, points: opts.trackPoints ?? [] }];
+
+	const trksXml = tracks
+		.map(
+			(t) =>
+				`  <trk>\n    <name>${escapeXml(t.name)}</name>\n    <trkseg>\n` +
+				`${serializeTrkpts(t.points)}\n` +
+				`    </trkseg>\n  </trk>`
+		)
 		.join('\n');
 
 	const hasImages = (opts.imageWaypoints?.length ?? 0) > 0;
@@ -352,12 +408,7 @@ export function buildGpx(opts: {
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="Bocken Route Builder" xmlns="http://www.topografix.com/GPX/1/1"${ns}>
-${wpts}  <trk>
-    <name>${escapeXml(opts.name)}</name>
-    <trkseg>
-${trkpts}
-    </trkseg>
-  </trk>
+${wpts}${trksXml}
 </gpx>
 `;
 }

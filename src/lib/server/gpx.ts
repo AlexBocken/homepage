@@ -8,9 +8,11 @@
 
 export {
 	parseGpx,
+	parseGpxStages,
 	parseGpxImageRefs,
 	trackDistance,
 	haversineKm as haversine,
 	type GpxPoint,
+	type GpxStage,
 	type GpxImageRef
 } from '$lib/gpx';

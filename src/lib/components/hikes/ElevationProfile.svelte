@@ -6,9 +6,21 @@
 
 	interface Props {
 		track: HikeTrackPoint[];
+		/** Restrict the x-axis to a stage's index range (multi-day hikes). The
+		 * dataset stays the full track so hover indices remain global. */
+		viewRange?: { startIdx: number; endIdx: number } | null;
 	}
 
-	const { track }: Props = $props();
+	const { track, viewRange = null }: Props = $props();
+
+	// x-axis window in km for the current view (whole track, or a stage slice).
+	function xBounds(): { min: number; max: number } {
+		const last = cumKm[cumKm.length - 1] ?? 0;
+		if (!viewRange) return { min: 0, max: last };
+		const lo = Math.max(0, Math.min(viewRange.startIdx, cumKm.length - 1));
+		const hi = Math.max(0, Math.min(viewRange.endIdx, cumKm.length - 1));
+		return { min: cumKm[lo] ?? 0, max: cumKm[hi] ?? last };
+	}
 
 	let canvas = $state<HTMLCanvasElement | undefined>(undefined);
 	let chart: ChartType | null = null;
@@ -137,9 +149,10 @@
 						type: 'linear',
 						// Pin the axis to the actual data range so Chart.js doesn't
 						// round up to the next nice tick — otherwise a 12.3 km hike
-						// ends up with empty space out to 14 km.
-						min: 0,
-						max: cumKm[cumKm.length - 1] ?? 0,
+						// ends up with empty space out to 14 km. When a stage is
+						// selected, the window narrows to that stage.
+						min: xBounds().min,
+						max: xBounds().max,
 						bounds: 'data',
 						title: { display: true, text: 'Distanz (km)', color: textColor },
 						ticks: { color: textColor },
@@ -217,6 +230,20 @@
 		const anchor = elem ? { x: elem.x, y: elem.y } : { x: 0, y: 0 };
 		chart.setActiveElements([{ datasetIndex, index: idx }]);
 		chart.tooltip?.setActiveElements([{ datasetIndex, index: idx }], anchor);
+		chart.update('none');
+	});
+
+	// Re-window the x-axis when the active stage changes (reads `viewRange`).
+	$effect(() => {
+		const b = (() => {
+			void viewRange;
+			return xBounds();
+		})();
+		if (!chart) return;
+		const xScale = chart.options.scales?.x;
+		if (!xScale) return;
+		xScale.min = b.min;
+		xScale.max = b.max;
 		chart.update('none');
 	});
 

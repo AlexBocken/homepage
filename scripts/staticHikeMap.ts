@@ -361,6 +361,9 @@ export async function renderStaticMap(opts: RenderStaticMapOpts): Promise<boolea
 export interface RenderOverviewPolyline {
 	points: Array<[number, number]>;
 	color: string;
+	/** Indices where a new disconnected sub-path begins (multi-day stage gaps
+	 * >1 km), so the line isn't drawn across an overnight transfer. */
+	breaks?: number[];
 }
 
 export interface RenderOverviewMapOpts {
@@ -388,13 +391,16 @@ export async function renderOverviewMap(opts: RenderOverviewMapOpts): Promise<bo
 	// zoomed-out, so even ≤150-point preview polylines stay compact.
 	const paths = drawable
 		.map((line) => {
+			const breakSet = new Set(line.breaks ?? []);
 			const parts: string[] = [];
 			for (let i = 0; i < line.points.length; i++) {
 				const [lat, lng] = line.points[i];
 				const p = lngLatToPx(lng, lat, zoom);
 				const px = p.x - originX;
 				const py = p.y - originY;
-				parts.push((i === 0 ? 'M' : 'L') + escapeSvgNumber(px) + ',' + escapeSvgNumber(py));
+				// Start a fresh sub-path at index 0 and at every stage break.
+				const cmd = i === 0 || breakSet.has(i) ? 'M' : 'L';
+				parts.push(cmd + escapeSvgNumber(px) + ',' + escapeSvgNumber(py));
 			}
 			return (
 				`<path d="${parts.join(' ')}" fill="none" stroke="${line.color}" ` +

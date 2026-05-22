@@ -1,7 +1,9 @@
 <script lang="ts">
 	import HikeMap from '$lib/components/hikes/HikeMap.svelte';
 	import HikePhotoStrip from '$lib/components/hikes/HikePhotoStrip.svelte';
+	import HikeStageNav from '$lib/components/hikes/HikeStageNav.svelte';
 	import ElevationProfile from '$lib/components/hikes/ElevationProfile.svelte';
+	import { stage, clearActiveStage } from '$lib/components/hikes/stageStore.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import { setHikeContext } from '$lib/components/hikes/hikeContext.svelte';
 	import { listScrollAnchors } from '$lib/components/hikes/scrollAnchors';
@@ -98,9 +100,24 @@
 		};
 	});
 
+	// Active-stage scoping (multi-day hikes). When a stage is selected, the
+	// metrics row + elevation view switch to that stage; "Alle Etappen" (null)
+	// shows the whole route. Single-stage hikes never show the nav.
+	const stages = $derived(hike.stages ?? null);
+	const hasStages = $derived(!!stages && stages.length > 1);
+	const activeStage = $derived(hasStages && stage.active !== null ? stages![stage.active] : null);
+	/** Metric source: the active stage, or the whole hike on "Alle Etappen". */
+	const m = $derived(activeStage ?? hike);
+	const stageViewRange = $derived(
+		activeStage ? { startIdx: activeStage.startIdx, endIdx: activeStage.endIdx } : null
+	);
+
+	// Reset the shared selection when leaving the page.
+	$effect(() => () => clearActiveStage());
+
 	const durationLabel = $derived(
-		hike.durationMin !== null && hike.durationMin > 0
-			? `${Math.floor(hike.durationMin / 60)}h ${hike.durationMin % 60}m`
+		m.durationMin !== null && m.durationMin > 0
+			? `${Math.floor(m.durationMin / 60)}h ${m.durationMin % 60}m`
 			: '—'
 	);
 
@@ -339,6 +356,7 @@
 				imagePoints={visibleImagePoints}
 				showPrivate
 				{trackColor}
+				{stages}
 				initialCenter={heroPose?.center}
 				initialZoom={heroPose?.zoom}
 				onReady={() => (heroMapReady = true)}
@@ -372,9 +390,13 @@
 		</div>
 	</section>
 
+	{#if hasStages && stages}
+		<HikeStageNav {stages} />
+	{/if}
+
 	{#if track && track.length > 0 && visibleImagePoints.length > 0}
 		<section class="strip-area">
-			<HikePhotoStrip images={visibleImagePoints} {track} />
+			<HikePhotoStrip images={visibleImagePoints} {track} {stages} />
 		</section>
 	{/if}
 
@@ -384,7 +406,7 @@
 		{/if}
 		<div class="metric">
 			<Route size={20} strokeWidth={1.75} aria-hidden="true" />
-			<span class="value">{hike.distanceKm.toFixed(1)}<span class="value-unit">km</span></span>
+			<span class="value">{m.distanceKm.toFixed(1)}<span class="value-unit">km</span></span>
 			<span class="unit">Distanz</span>
 		</div>
 		<div class="metric">
@@ -394,25 +416,25 @@
 		</div>
 		<div class="metric">
 			<TrendingUp size={20} strokeWidth={1.75} aria-hidden="true" />
-			<span class="value">{hike.elevationGainM}<span class="value-unit">m</span></span>
+			<span class="value">{m.elevationGainM}<span class="value-unit">m</span></span>
 			<span class="unit">Aufstieg</span>
 		</div>
 		<div class="metric">
 			<TrendingDown size={20} strokeWidth={1.75} aria-hidden="true" />
-			<span class="value">{hike.elevationLossM}<span class="value-unit">m</span></span>
+			<span class="value">{m.elevationLossM}<span class="value-unit">m</span></span>
 			<span class="unit">Abstieg</span>
 		</div>
-		{#if hike.elevationMaxM !== null}
+		{#if m.elevationMaxM !== null}
 			<div class="metric">
 				<ArrowUpToLine size={20} strokeWidth={1.75} aria-hidden="true" />
-				<span class="value">{hike.elevationMaxM}<span class="value-unit">m</span></span>
+				<span class="value">{m.elevationMaxM}<span class="value-unit">m</span></span>
 				<span class="unit">höchster</span>
 			</div>
 		{/if}
-		{#if hike.elevationMinM !== null}
+		{#if m.elevationMinM !== null}
 			<div class="metric">
 				<ArrowDownToLine size={20} strokeWidth={1.75} aria-hidden="true" />
-				<span class="value">{hike.elevationMinM}<span class="value-unit">m</span></span>
+				<span class="value">{m.elevationMinM}<span class="value-unit">m</span></span>
 				<span class="unit">tiefster</span>
 			</div>
 		{/if}
@@ -447,15 +469,15 @@
 
 	{#if track && track.length > 0}
 		<section class="elev-area">
-			<ElevationProfile {track} />
+			<ElevationProfile {track} viewRange={stageViewRange} />
 		</section>
 	{/if}
 
 	<section class="scroll-area">
 		<aside class="trail-col">
 			{#if track && track.length > 0}
-				<HikeMap {track} imagePoints={visibleImagePoints} showPrivate {trackColor} />
-				<ElevationProfile {track} />
+				<HikeMap {track} imagePoints={visibleImagePoints} showPrivate {trackColor} {stages} />
+				<ElevationProfile {track} viewRange={stageViewRange} />
 			{/if}
 		</aside>
 

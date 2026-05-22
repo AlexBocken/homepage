@@ -8,7 +8,7 @@
  */
 
 import { browser } from '$app/environment';
-import { parseGpx, parseGpxImageRefs } from '$lib/gpx';
+import { parseGpx, parseGpxStages, parseGpxImageRefs } from '$lib/gpx';
 
 export type RoutingProfile = 'hiking-mountain' | 'trekking' | 'road';
 
@@ -35,6 +35,11 @@ export type Waypoint = {
 	 * Lat/lng are placeholders (0/0) and the waypoint is hidden from the map
 	 * and excluded from GPX export until placed. */
 	unplaced?: boolean;
+	/** When set, this (placed) waypoint begins a new stage of a multi-day
+	 * hike, with this string as the stage name. The first placed waypoint
+	 * always begins stage 1 implicitly; setting `stageStart` on it just names
+	 * that stage. Exported as separate `<trk>` elements. */
+	stageStart?: string;
 };
 
 export type BuilderState = {
@@ -148,6 +153,59 @@ export function placedSequence(wpId: string): number | null {
 		if (w.id === wpId) return n;
 	}
 	return null;
+}
+
+// ---------------------------------------------------------------------------
+// Stages (multi-day hikes). A new stage begins at the first placed waypoint
+// and at any placed waypoint carrying `stageStart`. Each stage exports as its
+// own named <trk>.
+// ---------------------------------------------------------------------------
+
+/** Placed waypoints split into stages, in placed-index ranges. */
+export function deriveStageGroups(): { name: string; startIdx: number; endIdx: number }[] {
+	const placed = builder.waypoints.filter((w) => !w.unplaced);
+	const groups: { name: string; startIdx: number; endIdx: number }[] = [];
+	for (let i = 0; i < placed.length; i++) {
+		if (groups.length === 0 || placed[i].stageStart !== undefined) {
+			groups.push({
+				name: placed[i].stageStart || `Etappe ${groups.length + 1}`,
+				startIdx: i,
+				endIdx: i
+			});
+		} else {
+			groups[groups.length - 1].endIdx = i;
+		}
+	}
+	return groups;
+}
+
+/** Toggle whether a placed waypoint begins a new stage. The route start can't
+ * be a break (it always begins stage 1). */
+export function toggleStageBreak(wpId: string): void {
+	const placed = builder.waypoints.filter((w) => !w.unplaced);
+	if (placed.length === 0 || placed[0].id === wpId) return;
+	const wp = builder.waypoints.find((w) => w.id === wpId);
+	if (!wp) return;
+	if (wp.stageStart !== undefined) {
+		delete wp.stageStart;
+	} else {
+		const idxInPlaced = placed.findIndex((w) => w.id === wpId);
+		let n = 0;
+		for (let i = 0; i <= idxInPlaced; i++) {
+			if (i === 0 || placed[i].stageStart !== undefined || placed[i].id === wpId) n++;
+		}
+		wp.stageStart = `Etappe ${n}`;
+	}
+	scheduleSave();
+}
+
+/** Name (or rename) the stage that begins at this waypoint. Setting it on the
+ * first placed waypoint names stage 1 without creating an extra break. */
+export function renameStage(firstWpId: string, name: string): void {
+	const wp = builder.waypoints.find((w) => w.id === firstWpId);
+	if (!wp) return;
+	wp.stageStart = name;
+	scheduleSave();
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -387,6 +445,19 @@ export function importGpx(xml: string): ImportGpxResult {
 	if (trk.length < 2) {
 		return { ok: false, error: 'GPX enthält keinen verwertbaren Track (mind. zwei trkpt nötig).' };
 	}
+	// Stage boundaries: a multi-<trk> GPX is a multi-day route. Map each
+	// stage's first flat-track index to its name so we can re-mark the
+	// corresponding waypoint as a stage start.
+	const gpxStages = parseGpxStages(xml);
+	const multiStage = gpxStages.length > 1;
+	const stageNameAt = new Map<number, string>();
+	{
+		let off = 0;
+		for (let k = 0; k < gpxStages.length; k++) {
+			stageNameAt.set(off, gpxStages[k].name ?? `Etappe ${k + 1}`);
+			off += gpxStages[k].points.length;
+		}
+	}
 	const imageRefs = parseGpxImageRefs(xml);
 	const imageList = Object.values(imageRefs);
 
@@ -430,9 +501,11 @@ export function importGpx(xml: string): ImportGpxResult {
 	}
 	imageAnchors.sort((a, b) => a.trkIdx - b.trkIdx);
 
-	// Build the set of anchor trkpt indices: first, last, all image anchors.
+	// Build the set of anchor trkpt indices: first, last, all image anchors,
+	// plus every stage boundary so multi-day breaks survive the round-trip.
 	const anchorIndices = new Set<number>([0, trk.length - 1]);
 	for (const ia of imageAnchors) anchorIndices.add(ia.trkIdx);
+	if (multiStage) for (const idx of stageNameAt.keys()) anchorIndices.add(idx);
 	const sortedAnchorIdx = [...anchorIndices].sort((a, b) => a - b);
 
 	// Assemble waypoints in traversal order.
@@ -449,6 +522,11 @@ export function importGpx(xml: string): ImportGpxResult {
 		if (ia) {
 			wp.imageHash = ia.hash;
 			wp.imageVisibility = ia.visibility;
+		}
+		// Re-mark stage starts (skip index 0 — the route start is stage 1
+		// implicitly; naming it is harmless but unnecessary).
+		if (multiStage && i > 0 && stageNameAt.has(i)) {
+			wp.stageStart = stageNameAt.get(i);
 		}
 		return wp;
 	});

@@ -20,11 +20,13 @@ import crypto from 'node:crypto';
 import os from 'node:os';
 import sharp from 'sharp';
 import {
-	parseGpx,
+	parseGpxStages,
 	parseGpxImageRefs,
 	trackDistance,
+	haversine,
 	type GpxImageRef,
-	type GpxPoint
+	type GpxPoint,
+	type GpxStage
 } from '../src/lib/server/gpx.js';
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
 import { computeStaticMapPose, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
@@ -33,6 +35,7 @@ import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/e
 import type {
 	Difficulty,
 	HikeManifestEntry,
+	HikeStage,
 	HikesOverview,
 	ImagePoint,
 	ImageVariant
@@ -205,6 +208,53 @@ function computeBboxAndCentroid(track: GpxPoint[]): {
 		bbox: [minLat, minLng, maxLat, maxLng],
 		centroid: [sumLat / n, sumLng / n]
 	};
+}
+
+// Overview preview polyline. Stages whose join gap exceeds this are drawn as
+// separate runs (a break) so the overview doesn't connect across an overnight
+// transfer; closer stages stay one continuous line.
+const PREVIEW_GAP_BREAK_KM = 1;
+
+function buildPreview(stages: GpxStage[]): {
+	previewPolyline: [number, number][];
+	previewBreaks: number[];
+} {
+	// Group consecutive stages into runs, splitting only at a significant gap.
+	const runs: GpxPoint[][] = [];
+	let current: GpxPoint[] = [];
+	for (let i = 0; i < stages.length; i++) {
+		if (i > 0 && current.length > 0) {
+			const prevEnd = stages[i - 1].points[stages[i - 1].points.length - 1];
+			const curStart = stages[i].points[0];
+			if (haversine(prevEnd, curStart) > PREVIEW_GAP_BREAK_KM) {
+				runs.push(current);
+				current = [];
+			}
+		}
+		current.push(...stages[i].points);
+	}
+	if (current.length > 0) runs.push(current);
+
+	// One run (every single-stage hike, and multi-stage hikes with only small
+	// gaps): identical to the previous behaviour — one simplified line.
+	if (runs.length <= 1) {
+		return {
+			previewPolyline: simplifyTrack(runs[0] ?? [], PREVIEW_POLYLINE_MAX_POINTS) as [number, number][],
+			previewBreaks: []
+		};
+	}
+
+	// Multiple runs: simplify each within a proportional point budget so the
+	// total stays near PREVIEW_POLYLINE_MAX_POINTS, recording the run starts.
+	const total = runs.reduce((a, r) => a + r.length, 0) || 1;
+	const previewPolyline: [number, number][] = [];
+	const previewBreaks: number[] = [];
+	for (const run of runs) {
+		if (previewPolyline.length > 0) previewBreaks.push(previewPolyline.length);
+		const budget = Math.max(2, Math.round((PREVIEW_POLYLINE_MAX_POINTS * run.length) / total));
+		previewPolyline.push(...(simplifyTrack(run, budget) as [number, number][]));
+	}
+	return { previewPolyline, previewBreaks };
 }
 
 // ---------------------------------------------------------------------------
@@ -646,7 +696,8 @@ async function processOverview(
 		.filter((h) => h.previewPolyline && h.previewPolyline.length >= 2)
 		.map((h) => ({
 			points: h.previewPolyline,
-			color: SAC_TRAIL_COLOR[h.difficulty] ?? '#5e81ac'
+			color: SAC_TRAIL_COLOR[h.difficulty] ?? '#5e81ac',
+			breaks: h.previewBreaks
 		}));
 	if (lines.length === 0) return undefined;
 
@@ -945,22 +996,75 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	}
 
 	const { data: fm } = parseFrontmatter(svxSource);
-	const track = parseGpx(gpxSource);
+	// One stage per <trk>. The flat track is their concatenation — identical to
+	// the old `parseGpx` output for single-track GPX, so everything downstream
+	// (track JSON, hero map, images) is unchanged for normal hikes.
+	const gpxStages = parseGpxStages(gpxSource);
+	const track: GpxPoint[] = gpxStages.flatMap((s) => s.points);
 	if (track.length === 0) {
 		console.warn(`[build-hikes] Skipping ${slug}: empty GPX`);
 		return null;
 	}
 	const gpxImageRefs = parseGpxImageRefs(gpxSource);
 	const gpxImageCount = Object.keys(gpxImageRefs).length;
-	console.log(`[build-hikes:${slug}]   parsed GPX (${track.length} track pts, ${gpxImageCount} image refs)`);
+	console.log(`[build-hikes:${slug}]   parsed GPX (${track.length} track pts, ${gpxStages.length} stage(s), ${gpxImageCount} image refs)`);
 
-	const distanceKm = trackDistance(track);
-	const { gain, loss } = computeElevationStats(track);
-	const { min: elevationMinM, max: elevationMaxM } = computeElevationRange(track);
+	// Per-stage stats + flat-track index ranges. Indices are contiguous and
+	// disjoint (endIdx + 1 === next.startIdx).
+	const stageEntries: HikeStage[] = [];
+	{
+		let offset = 0;
+		for (const s of gpxStages) {
+			const startIdx = offset;
+			const endIdx = offset + s.points.length - 1;
+			offset = endIdx + 1;
+			const range = computeElevationRange(s.points);
+			const { gain: sGain, loss: sLoss } = computeElevationStats(s.points);
+			const sDtMs = s.points[s.points.length - 1].timestamp - s.points[0].timestamp;
+			stageEntries.push({
+				name: s.name ?? `Etappe ${stageEntries.length + 1}`,
+				startIdx,
+				endIdx,
+				distanceKm: trackDistance(s.points),
+				durationMin: sDtMs > 0 ? Math.round(sDtMs / 60000) : null,
+				elevationGainM: sGain,
+				elevationLossM: sLoss,
+				elevationMaxM: range.max,
+				elevationMinM: range.min
+			});
+		}
+	}
+	const multiStage = stageEntries.length >= 2;
+
+	// Totals: summed per-stage when multi-day, so overnight horizontal gaps
+	// (distance) and time gaps (duration) and the altitude jump between a
+	// stage's end and the next stage's start (gain/loss) are all excluded.
+	let distanceKm: number;
+	let gain: number;
+	let loss: number;
+	let durationMin: number | null;
+	let elevationMinM: number | null;
+	let elevationMaxM: number | null;
+	if (multiStage) {
+		distanceKm = stageEntries.reduce((a, s) => a + s.distanceKm, 0);
+		gain = stageEntries.reduce((a, s) => a + s.elevationGainM, 0);
+		loss = stageEntries.reduce((a, s) => a + s.elevationLossM, 0);
+		const durs = stageEntries.map((s) => s.durationMin).filter((d): d is number => d != null);
+		durationMin = durs.length > 0 ? durs.reduce((a, d) => a + d, 0) : null;
+		const mins = stageEntries.map((s) => s.elevationMinM).filter((v): v is number => v != null);
+		const maxs = stageEntries.map((s) => s.elevationMaxM).filter((v): v is number => v != null);
+		elevationMinM = mins.length > 0 ? Math.min(...mins) : null;
+		elevationMaxM = maxs.length > 0 ? Math.max(...maxs) : null;
+	} else {
+		distanceKm = trackDistance(track);
+		({ gain, loss } = computeElevationStats(track));
+		({ min: elevationMinM, max: elevationMaxM } = computeElevationRange(track));
+		const dtMs = track[track.length - 1].timestamp - track[0].timestamp;
+		durationMin = dtMs > 0 ? Math.round(dtMs / 60000) : null;
+	}
+
 	const { bbox, centroid } = computeBboxAndCentroid(track);
-	const previewPolyline = simplifyTrack(track, PREVIEW_POLYLINE_MAX_POINTS) as [number, number][];
-	const dtMs = track[track.length - 1].timestamp - track[0].timestamp;
-	const durationMin = dtMs > 0 ? Math.round(dtMs / 60000) : null;
+	const { previewPolyline, previewBreaks } = buildPreview(gpxStages);
 	console.log(`[build-hikes:${slug}]   metrics: ${distanceKm.toFixed(2)} km · ↑${gain}m / ↓${loss}m · ${elevationMinM ?? '?'}–${elevationMaxM ?? '?'}m · ${durationMin ?? '?'} min`);
 
 	const geoT0 = Date.now();
@@ -1156,6 +1260,8 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		bbox,
 		centroid,
 		previewPolyline,
+		...(previewBreaks.length > 0 ? { previewBreaks } : {}),
+		...(multiStage ? { stages: stageEntries } : {}),
 		region: geo.region,
 		canton: geo.canton,
 		municipality: geo.municipality,

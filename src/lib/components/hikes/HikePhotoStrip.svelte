@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import type { HikeTrackPoint, ImagePoint } from '$types/hikes';
+	import type { HikeTrackPoint, ImagePoint, HikeStage } from '$types/hikes';
 	import { focused, setFocused } from './focusedImageStore.svelte';
+	import { stage } from './stageStore.svelte';
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import Lock from '@lucide/svelte/icons/lock';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -12,9 +13,45 @@
 	interface Props {
 		images: ImagePoint[];
 		track: HikeTrackPoint[];
+		/** Stage ranges (multi-day hikes). When a stage is active, the strip
+		 * shows only that stage's photos. Indices stay aligned with the full
+		 * list so the shared focus store keeps matching the map. */
+		stages?: HikeStage[] | null;
 	}
 
-	const { images, track }: Props = $props();
+	const { images, track, stages = null }: Props = $props();
+
+	// Nearest track index (by time) per image — for testing stage membership.
+	const imageTrackIdx = $derived(
+		images.map((ip) => {
+			if (typeof ip.timestamp !== 'number') return -1;
+			let best = -1;
+			let bestD = Infinity;
+			for (let i = 0; i < track.length; i++) {
+				const t = track[i][3];
+				if (typeof t !== 'number') continue;
+				const d = Math.abs(t - ip.timestamp);
+				if (d < bestD) {
+					bestD = d;
+					best = i;
+				}
+			}
+			return best;
+		})
+	);
+
+	const activeStageRange = $derived.by(() => {
+		if (stage.active === null || !stages || !stages[stage.active]) return null;
+		const s = stages[stage.active];
+		return { startIdx: s.startIdx, endIdx: s.endIdx };
+	});
+
+	function inActiveStage(i: number): boolean {
+		const r = activeStageRange;
+		if (!r) return true;
+		const idx = imageTrackIdx[i];
+		return idx >= r.startIdx && idx <= r.endIdx;
+	}
 
 	const startTimestamp = $derived.by(() => {
 		for (const p of track) {
@@ -109,23 +146,31 @@
 		}
 	}
 
+	// Step to the next/previous photo that's in the active stage (skips photos
+	// hidden by stage scoping).
 	function advance(direction: -1 | 1): void {
 		if (images.length === 0) return;
-		const current = focused.index;
-		let next: number;
-		if (current === null) {
-			next = direction === 1 ? 0 : images.length - 1;
-		} else {
-			next = current + direction;
-			if (next < 0 || next >= images.length) return;
+		let i = focused.index === null ? (direction === 1 ? -1 : images.length) : focused.index;
+		i += direction;
+		while (i >= 0 && i < images.length) {
+			if (inActiveStage(i)) {
+				setFocused(i, 'strip');
+				return;
+			}
+			i += direction;
 		}
-		setFocused(next, 'strip');
 	}
 
-	const canPrev = $derived(focused.index !== null && focused.index > 0);
-	const canNext = $derived(
-		focused.index === null ? images.length > 0 : focused.index < images.length - 1
-	);
+	const canPrev = $derived.by(() => {
+		if (focused.index === null) return false;
+		for (let i = focused.index - 1; i >= 0; i--) if (inActiveStage(i)) return true;
+		return false;
+	});
+	const canNext = $derived.by(() => {
+		const start = focused.index === null ? -1 : focused.index;
+		for (let i = start + 1; i < images.length; i++) if (inActiveStage(i)) return true;
+		return false;
+	});
 
 	function onKey(e: KeyboardEvent): void {
 		if (images.length === 0) return;
@@ -174,6 +219,7 @@
 						? formatElapsed(ip.timestamp - startTimestamp)
 						: null}
 				{@const active = focused.index === i}
+				{#if inActiveStage(i)}
 				<div class="card-wrap" class:active bind:this={cardEls[i]}>
 					<button
 						type="button"
@@ -208,6 +254,7 @@
 						<Expand size={15} strokeWidth={2} aria-hidden="true" />
 					</button>
 				</div>
+				{/if}
 			{/each}
 			</div>
 
