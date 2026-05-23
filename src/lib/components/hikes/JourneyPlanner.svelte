@@ -113,7 +113,15 @@
 		sections: Section[];
 	};
 	let connections = $state<Connection[] | null>(null);
-	let lastQuery = $state<{ from: string; to: string } | null>(null);
+	let lastQuery = $state<{
+		from: string;
+		to: string;
+		fromId: string | null;
+		toId: string | null;
+		date: string;
+		time: string;
+		arrival: boolean;
+	} | null>(null);
 	let expanded = $state<number | null>(null);
 
 	// Map a transport.opendata.ch vehicle category to a coarse type + icon, so a
@@ -240,7 +248,12 @@
 		);
 	}
 
-	async function nearestStation(): Promise<string> {
+	// A resolved stop: canonical name + the station id (didok/UIC) that SBB's
+	// deep link needs in its `stops` parameter. id is null when we couldn't
+	// resolve the typed text to a real station.
+	type Station = { name: string; id: string | null };
+
+	async function nearestStation(): Promise<Station> {
 		const pos = await getPosition();
 		const u = new URL('https://transport.opendata.ch/v1/locations');
 		u.searchParams.set('type', 'station');
@@ -248,10 +261,10 @@
 		u.searchParams.set('y', String(pos.coords.longitude));
 		const res = await fetch(u);
 		if (!res.ok) throw new Error('Haltestellensuche fehlgeschlagen.');
-		const json = (await res.json()) as { stations?: { name?: string }[] };
-		const name = json.stations?.find((s) => s.name)?.name;
-		if (!name) throw new Error('Keine Haltestelle in der Nähe gefunden.');
-		return name;
+		const json = (await res.json()) as { stations?: { name?: string; id?: string | number }[] };
+		const st = json.stations?.find((s) => s.name);
+		if (!st?.name) throw new Error('Keine Haltestelle in der Nähe gefunden.');
+		return { name: st.name, id: st.id != null ? String(st.id) : null };
 	}
 
 	// Station typeahead — the same /locations?type=station endpoint sbb-tui uses,
@@ -261,14 +274,16 @@
 	let suggestions = $state<string[]>([]);
 	let suggestTimer: ReturnType<typeof setTimeout> | null = null;
 
-	async function fetchStations(query: string): Promise<string[]> {
+	async function fetchStations(query: string): Promise<Station[]> {
 		const u = new URL('https://transport.opendata.ch/v1/locations');
 		u.searchParams.set('type', 'station');
 		u.searchParams.set('query', query);
 		const res = await fetch(u);
 		if (!res.ok) return [];
-		const json = (await res.json()) as { stations?: { name?: string }[] };
-		return (json.stations ?? []).map((s) => s.name?.trim()).filter((n): n is string => !!n);
+		const json = (await res.json()) as { stations?: { name?: string; id?: string | number }[] };
+		return (json.stations ?? [])
+			.filter((s): s is { name: string; id?: string | number } => !!s.name?.trim())
+			.map((s) => ({ name: s.name.trim(), id: s.id != null ? String(s.id) : null }));
 	}
 
 	async function refreshSuggestions(query: string) {
@@ -278,7 +293,7 @@
 			return;
 		}
 		try {
-			suggestions = (await fetchStations(q)).slice(0, 6);
+			suggestions = (await fetchStations(q)).map((s) => s.name).slice(0, 6);
 		} catch {
 			suggestions = [];
 		}
@@ -313,13 +328,13 @@
 
 	// Resolve a typed (un-picked) field to its canonical station before the
 	// connections call; fall back to the raw text on miss/error.
-	async function resolveStation(query: string): Promise<string> {
-		if (!query) return query;
+	async function resolveStation(query: string): Promise<Station> {
+		if (!query) return { name: query, id: null };
 		try {
 			const [first] = await fetchStations(query);
-			return first ?? query;
+			return first ?? { name: query, id: null };
 		} catch {
-			return query;
+			return { name: query, id: null };
 		}
 	}
 
@@ -352,20 +367,29 @@
 		}
 		busy = true;
 		try {
-			const fromQ = fromCurrent ? await nearestStation() : await resolveStation(fromText.trim());
-			const toQ = toCurrent ? await nearestStation() : await resolveStation(toText.trim());
+			const fromR = fromCurrent ? await nearestStation() : await resolveStation(fromText.trim());
+			const toR = toCurrent ? await nearestStation() : await resolveStation(toText.trim());
 			const u = new URL('https://transport.opendata.ch/v1/connections');
-			u.searchParams.set('from', fromQ);
-			u.searchParams.set('to', toQ);
+			u.searchParams.set('from', fromR.name);
+			u.searchParams.set('to', toR.name);
 			u.searchParams.set('limit', String(limit));
+			const reqTime = timeStr || '08:00';
 			u.searchParams.set('date', dateStr);
-			u.searchParams.set('time', timeStr || '08:00');
+			u.searchParams.set('time', reqTime);
 			if (timeMode === 'arrival') u.searchParams.set('isArrivalTime', '1');
 			const res = await fetch(u);
 			if (!res.ok) throw new Error('Verbindungsabfrage fehlgeschlagen.');
 			const json = (await res.json()) as { connections?: Connection[] };
 			connections = json.connections ?? [];
-			lastQuery = { from: fromQ, to: toQ };
+			lastQuery = {
+				from: fromR.name,
+				to: toR.name,
+				fromId: fromR.id,
+				toId: toR.id,
+				date: dateStr,
+				time: reqTime,
+				arrival: timeMode === 'arrival'
+			};
 			if (connections.length === 0) error = 'Keine Verbindungen gefunden.';
 		} catch (e) {
 			console.warn('[JourneyPlanner]', e);
@@ -391,11 +415,23 @@
 	function transfersLabel(n: number): string {
 		return n === 0 ? 'direkt' : n === 1 ? '1 Umstieg' : `${n} Umstiege`;
 	}
-	const searchChLink = $derived(
-		lastQuery
-			? `https://fahrplan.search.ch/?from=${encodeURIComponent(lastQuery.from)}&to=${encodeURIComponent(lastQuery.to)}`
-			: null
-	);
+	// Deep link to the full journey on the official SBB timetable. The live site
+	// (2026) uses: stops=<from>~<to> where each stop is `<label>_I<stationId>`
+	// (spaces as "+"), time with an underscore ("09:10" → "09_10"), and a short
+	// lowercase moment token (dep/arr). `day` mirrors `date`. URLSearchParams
+	// can't produce this (it would percent-encode "_"/"~"/":" and use "+" only
+	// for spaces), so the query is assembled by hand.
+	const sbbLink = $derived.by(() => {
+		if (!lastQuery) return null;
+		const stop = (name: string, id: string | null) => {
+			const label = encodeURIComponent(name).replace(/%20/g, '+');
+			return id ? `${label}_I${id}` : label;
+		};
+		const stops = `${stop(lastQuery.from, lastQuery.fromId)}~${stop(lastQuery.to, lastQuery.toId)}`;
+		const time = lastQuery.time.replace(':', '_');
+		const moment = lastQuery.arrival ? 'arr' : 'dep';
+		return `https://www.sbb.ch/de?date=${lastQuery.date}&time=${time}&moment=${moment}&stops=${stops}&day=${lastQuery.date}`;
+	});
 </script>
 
 <section class="jp" aria-label="Anreise mit dem öffentlichen Verkehr">
@@ -569,9 +605,9 @@
 				</li>
 			{/each}
 		</ol>
-		{#if searchChLink}
-			<a class="more" href={searchChLink} target="_blank" rel="external noopener noreferrer">
-				Ganzer Fahrplan <ExternalLink size={13} strokeWidth={2} aria-hidden="true" />
+		{#if sbbLink}
+			<a class="more" href={sbbLink} target="_blank" rel="external noopener noreferrer">
+				Ganzer Fahrplan auf SBB.ch <ExternalLink size={13} strokeWidth={2} aria-hidden="true" />
 			</a>
 		{/if}
 		<p class="credit">Verbindungen: transport.opendata.ch</p>
