@@ -1,0 +1,87 @@
+---
+title: Einsiedeln – Spital – Unteriberg
+date: 2026-03-07
+author: Alexander
+difficulty: T2
+tags: [einsiedeln, schwyz, sommer, mittel]
+seasons: 4-9
+summary: Eine schnelle Gipfelwanderung in den Schwyzer Bergen
+heroAlt: Blick aus dem Sihltal Richtung Unteriberg
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Übersicht
+
+Vom Einsiedler Sihlsee geht es über ein paar Almen auf den Spitalgipfel.
+Man hat eine schöne Aussicht auf das Schweizer Alpenmassiv, den grossen und kleinen Mythen Richtung Westen und natürich den Sihlsee hinter sich.
+Eine nette Wanderung welche man doch frühstens im Mai begehen sollte. März war definitiv zu früh und es lag noch in Teilen knietief Schnee, nicht nur an Nordhängen.
+
+## Anreise
+
+Anreise nach Einsiedeln. Dann 10 Minuten mit Buslinie 555 nach Gross, Ebenau.
+<JourneyPlanner from="<current location>" to="Gross, Ebenau" toFixed target="arrival" time="10:00" />
+
+## Erster Anstieg
+
+Von Gross ging es direkt los mit dem ersten richtigen Anstieg. Eine gute Aufwärmung für die restliche Wanderung.
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+Früh Im Jahr sieht man schöne Almen, wenn auch etwas zu viel Schnee für den guten Geschmack.
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+
+### Erster Hügel
+
+Erster Hügel ist erklummen. Jetzt geht die Route für ein zwei Kilometer recht flach der Almen entlang.
+Derweil hat man einen wunderschöne Aussicht auf das schweizer Alpenmassiv und den Sihlsee.
+
+
+## Zweiter Hügel
+Jetzt geht es durch einen Wald zum zweiten Hügel, dem Spital. Die Bäume stehen hier und da etwas im Weg, es ist aber keine grössere Kraxelei um hoch zu kommen.
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+Jetzt zum schlimmsten Abschnitt, zumindest wenn man zu früh im Jahr unterwegs ist: der letzte Hügel auf den Spital hoch hat noch bis tief ins Jahr Schnee und wer nicht sehr früh am Morgen dort ist droht immer wieder einzubrechen.
+
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+
+## Spital
+
+Am Spital angekommen lohnt sich eine Pause und den Ausblick zu geniessen.
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+
+## Abstieg
+Der Abstieg nach Unteriberg ist recht schnell, jedoch auch nicht schneefrei bis in den Mai.
+
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+
+## Heimreise
+
+Angekommen in Unteriberg — Zeit für eine Pause vor der Rückfahrt.
+
+<HikeImage idx={25} />
+
+Von Unteriberg per Bus zurück nach Einsiedeln (Linie 555 oder 556) und weiter mit der
+S-Bahn ab Einsiedeln.
+<JourneyPlanner from="Unteriberg, Guggelstrasse" to="<current location>" fromFixed target=departure time="14:30" />
