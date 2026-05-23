@@ -3,6 +3,7 @@
 	import { focused } from './focusedImageStore.svelte';
 	import { addScrollAnchor } from './scrollAnchors';
 	import Lock from '@lucide/svelte/icons/lock';
+	import Clock from '@lucide/svelte/icons/clock';
 
 	interface Props {
 		/** Position in the hike's full chronological image list (0-indexed,
@@ -42,6 +43,29 @@
 		return bestDelta === Infinity ? -1 : bestIdx;
 	});
 
+	// Elapsed time since the hike start (first timestamped track point) — same
+	// "nach X" the photo strip shows, not the absolute wall-clock time.
+	const elapsedLabel = $derived.by(() => {
+		const t = ip?.timestamp;
+		const track = ctx().track;
+		if (typeof t !== 'number' || !track) return null;
+		let start: number | null = null;
+		for (const p of track) {
+			if (typeof p[3] === 'number') {
+				start = p[3];
+				break;
+			}
+		}
+		if (start === null) return null;
+		const ms = t - start;
+		if (!Number.isFinite(ms) || ms < 0) return null;
+		const totalMin = Math.round(ms / 60000);
+		if (totalMin < 60) return `${totalMin} min`;
+		const h = Math.floor(totalMin / 60);
+		const m = totalMin % 60;
+		return m === 0 ? `${h} h` : `${h} h ${m} min`;
+	});
+
 	let figure: HTMLElement | undefined = $state();
 
 	// Register this image's DOM element as a scroll anchor. The page reads
@@ -68,6 +92,12 @@
 			<span class="private" title="Privates Bild — nur für eingeloggte Benutzer sichtbar">
 				<Lock size={11} strokeWidth={2.25} aria-hidden="true" />
 				privat
+			</span>
+		{/if}
+		{#if elapsedLabel}
+			<span class="shot-time" title="Zeit seit Start">
+				<Clock size={11} strokeWidth={2.25} aria-hidden="true" />
+				nach {elapsedLabel}
 			</span>
 		{/if}
 		{#if caption}
@@ -133,6 +163,34 @@
 		color: #fff;
 		backdrop-filter: blur(4px);
 		-webkit-backdrop-filter: blur(4px);
+	}
+
+	/* Capture time, bottom-right so it never collides with the private badge. */
+	.shot-time {
+		position: absolute;
+		bottom: 0.6rem;
+		right: 0.6rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.28rem;
+		font-size: 0.7rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		padding: 0.2rem 0.55rem;
+		border-radius: var(--radius-pill);
+		background: rgb(0 0 0 / 0.55);
+		color: #fff;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+	}
+
+	/* Sits within the rounded image; if a caption follows, the figure grows so
+	 * the badge stays over the photo (absolute to the figure, image is the top
+	 * block). */
+	.hike-image:has(figcaption) .shot-time {
+		bottom: auto;
+		top: 0.6rem;
+		right: 0.6rem;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
