@@ -1,0 +1,58 @@
+---
+title: Wallfahrt Rheinau
+date: 2026-05-14
+author: Alexander
+difficulty: T1
+tags: [winterthur, rheinau, wallfahrt, pilgern]
+seasons: 4-9
+summary:
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Von Winterthur über Feld und Wald zur ehemaligen Klosterkirche Rheinau
+
+An Christi Himmelfahrt (14. Mai 2026) ging es auf eine 8-stündige Pilgerung mit anschliessendem Gottesdienst und Apéro riche mit Pater Ramm, organisiert durch die Christkönigjugend [(ckj.ch)](https://ckj.ch).
+Mit einem dann doch nicht so langsamen Tempo wurden die fast 26 km bis 14:30 Uhr zurückgelegt.
+
+### Anreise
+
+Start war direkt beim Bahnhof Winterthur, was die Anreise erleichtert.
+<JourneyPlanner from="<current location>" to="Winterthur, Hauptbahnhof" toFixed time="08:00" target="arrival"/>
+
+### Route
+Kurz nach 8 Uhr ging es in Winterthur los. Nach ca. 30 Minuten durch die Stadt ging es über Feldwege und geteerte Fusswege Richtung Norden.
+Das Wetter hielt leider nicht lange, starker Regen erschwerte das Lesen von Liedtexten für Leute ohne Regenschirm.
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+
+Immer wieder gab es jedoch auch Pausen im Regen und man konnte das vibrante Frühlingsgrün von Feldern und Wald geniessen.
+Der starke Regen hat auch das Aufnehmen weiterer Fotos verhindert, weswegen erst am Ziel wieder viele Bilder zu sehen sind.
+
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+
+
+## Ziel
+
+Nach 8 Stunden war die Klosterkirche Rheinau hinter den Baumzipfeln zu erkennen.
+Der Rhein macht hier eine starke Rechtskurve, wodurch die Klosterinsel genau am Bogen des Rheins Richtung Osten zeigt.
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+## Heimreise
+
+Von der Klosterinsel Rheinau fährt stündlich ein Bus zum Bahnhof Marthalen.
+Dann geht es via Zug mit eventuellem Umsteigen in Winterthur nach Hause.
+
+<JourneyPlanner fromFixed from="Rheinau, Unterstadt" to="<current location>" time="16:00" target="departure"/>

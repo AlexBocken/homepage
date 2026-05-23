@@ -37,3 +37,9 @@ src-tauri/gen/android/.gradle/
 src-tauri/gen/android/app/build/
 src-tauri/gen/android/buildSrc/.gradle/
 src-tauri/gen/android/buildSrc/build/
+
+# Hike content: track the writing (index.svx), route (track.gpx) and icons,
+# but not the source photos (huge; re-encoded into static assets at build time).
+src/content/hikes/*/images/
+src/content/hikes/*/private/
+src/content/hikes/*/cover.*

@@ -1,0 +1,151 @@
+---
+title: Muttertagswanderung Herisau Teufen
+date: 2026-05-09
+author: Alexander
+difficulty: T2
+tags: [appenzell, leicht, hügellandschaft, weiden]
+seasons: 4-9
+summary: Eine angenehme Wanderung über die Hügellandschaft von Appenzell
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+
+### Übersicht
+
+Eine nette Wanderung durch die hübsche Hügellandschaft des Appenzells. Man wandert entlang Feldwegen, Schotterstrassen, Teerstrassen und hier und da kurze Abschnitte auf Waldwegen.
+Auf dem Weg durchquert man zwei kleine Schluchten mit Flüssen.
+Ein netter Spaziergang, der keine besonderen Konditionsanforderungen über ein generelles Fitnessniveau hinaus stellt.
+
+### Anreise
+
+Die Wanderung startet direkt am Bahnhof Herisau und ist somit leicht erreichbar.
+<JourneyPlanner from="<current location>" to="Herisau" toFixed time="10:00" target="arrival"/>
+
+
+### Start
+
+Schon schnell wurde klar, dass es ein wunderschöner Tag wird die grünenden Weiden des Appenzells zu erkunden.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+
+### Schlucht Nummer Eins
+
+Nach circa einer Stunde sieht man prominent den Kirchturm von Hundwil vor sich.
+
+<HikeImage idx={6} />
+
+Davor geht es noch via der Alten Tobelbrücke über die Urnäsch.
+Die überdachte Brücke trägt an ihren Dachbalken christliche Zitate.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+Die Urnäsch ist ein idealer Punkt für eine kurze erste Verpflegungspause.
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+
+### Hundwil
+
+Nach Schlucht Nummer Eins ist man bereits recht schnell in Hundwil und kann die wunderschöne Bauernlandschaft geniessen.
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+Nach 2:30 Stunden geht der Wanderweg direkt geradeaus über eine Wiese, während der Feldweg rechts abbiegt. Hier aufpassen, der Karte zu folgen.
+
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+
+### Appenzeller Volkskundemuseum und Appenzeller Schaukäserei
+
+In Stein angekommen, lohnt sich ein kleiner Abstecher in das Appenzeller Volkskundemuseum. Von Appenzeller Traditionen bis hin zu modernerer Kunst gibt es eine grosse Bandbreite an Appenzeller Kunst und Kultur.
+Im Keller gibt es eine grosse Ausstellung zur traditionellen Stickkunst des Appenzells sowie deren Industrialisierung und Automatisierung.
+
+#### Das Berg-Häämetli fressende Ungeheuer
+
+<HikeImage idx={22} />
+
+Von den modernen Bildern hat mir besonders obiges Gemälde des Künstlers Willy Künzler gefallen.
+Wem die Botschaft der Politikerspinne, welche Hof (die im Appenzell üblichen Höfe werden auch (Berg)-<q>Häämetli</q> genannt) und Tier frisst und Golfplätze baut, noch zu unklar ist, dem hat Künzler auf der Seite des Bildes noch eine Hilfseinschrift hinterlassen:
+
+> Wir wollen Bergbauern bleiben.
+> Nicht Folklore- und Schau-Bauern sein.
+> Nicht Golf-Handlanger werden.
+
+Ein kurzer 30- bis 45-minütiger Abstecher in das Museum ist zu empfehlen.
+Wem das zu langweilig ist, dem kann die Appenzeller Schaukäserei direkt nebenan eventuell gefallen oder als Ort der Stärkung dienen.
+
+
+<HikeImage idx={23} />
+Stein hat auch sonst überzeugt: Es zeigt sich, dass man auch neu bauen kann, ohne <q>markant eckig</q> sein zu müssen. Ein schönes Häämetli, das sehr gut ins Appenzell passt.
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+
+Auch alt kann überzeugen, mit schöner Obstwiese, verwittertem Holz und viel Detail im Holz.
+
+### Schlucht Nummer Zwei
+
+Danach geht es runter in Schlucht Nummer Zwei. Über Weide und Wald gelangt man dorthin, wo der Rotbach in die Sitter fliesst.
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+
+
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+<HikeImage idx={33} />
+
+### Ehemaliges Kloster Wonnenstein
+
+Nach Schlucht Nummer Zwei und einem Gefängnis kommt man an einem ehemaligen Nonnenkloster vorbei.
+Das Kloster wurde erst 2021 wegen fehlendem Nachwuchs aufgelöst.
+
+Man fragt sich vielleicht, wie ein katholisches Kloster ins protestantische Appenzell <em>Ausserrhoden</em> passt — die Halbkantone sind ja historisch aus konfessionellen Gründen gespalten.
+
+Darüber gibt das Kloster via Infotafeln Auskunft:
+Zwar war lange Zeit der Status des Klosters unklar, man hat sich jedoch einige Jahrzehnte nach den ursprünglichen Protestantenaufständen dazu einigen können, dass alles innerhalb der Klostermauern offiziell zu Appenzell <em>Innerrhoden</em> gehört. Somit ist das Kloster eine winzige Enklave Appenzell Innerrhodens innerhalb Appenzell Ausserrhoden.
+
+
+<HikeImage idx={34} />
+
+Die Klosterkirche selbst ist erst vor kurzem restauriert worden, mit einem neuen Altar für <i>ad populum</i> Messen.
+Die drei Altäre dahinter haben alle einen Fokus auf die heilige Familie, ist die Kirche doch der heiligen Maria geweiht.
+Die Marienfigur des linken Altars könnte Schweizer Katholiken bekannt vorkommen.
+Es handelt sich hierbei um eine Replika der schwarzen Madonna aus Einsiedeln.
+Dementsprechend ist die Replika auch nach der fehlgeschlagenen Restauration der Einsiedler Madonna angefertigt worden, ist diese doch ursprünglich farbig bemalt gewesen.
+
+
+Der letzte Abschnitt vor Teufen verläuft teils neben der Autobahn, was nicht optimal ist. Gott sei Dank ist das Ganze aber nach 15 Minuten vorbei.
+<HikeImage idx={35} />
+
+## Ankunft in Teufen
+
+Teufen erreicht man über den treffend genannten Ort <q>Einsamkeit</q>, wo ein einzelnes wunderschönes Bauernhaus einen begrüsst.
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+
+## Heimreise
+
+Von Teufen fährt halbstündlich ein Zug nach St. Gallen. Von dort die jeweilige Verbindung nach Hause.
+
+<JourneyPlanner from="Teufen AR" to="<current location>" fromFixed time="16:30" target="departure"/>
