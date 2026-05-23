@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.85.1",
+	"version": "1.85.2",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -23,6 +23,8 @@
 		"test:e2e:docker:run": "docker run --rm --network host -v $(pwd):/app -w /app -e CI=true mcr.microsoft.com/playwright:v1.56.1-noble /bin/bash -c 'npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile && pnpm run build && pnpm exec playwright test --project=chromium'",
 		"deploy": "bash scripts/deploy.sh",
 		"deploy:dry": "bash scripts/deploy.sh --dry-run",
+		"photos:push": "bash scripts/hike-photos.sh push",
+		"photos:pull": "bash scripts/hike-photos.sh pull",
 		"tauri": "tauri"
 	},
 	"packageManager": "pnpm@9.0.0",
