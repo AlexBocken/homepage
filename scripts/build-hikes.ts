@@ -415,10 +415,33 @@ async function processImage(
 		return { skipped: true, hash };
 	}
 	const visibility: 'public' | 'private' = ref.visibility === 'private' ? 'private' : 'public';
-	// Public images go under `images/` (served directly by nginx).
-	// Private images go under `private/` (proxied through Node for auth check;
-	// nginx hands them off via X-Accel-Redirect once the session is valid).
+	// Public images go under `images/` (served directly by nginx); private ones
+	// under `private/` (proxied through Node for the auth check, then handed off
+	// via X-Accel-Redirect). The encode itself is shared with the cover image.
 	const segment = visibility === 'private' ? 'private' : 'images';
+	const enc = await encodeImageVariant(buffer, hash, slug, segment, alt);
+	return { ...enc, hash, visibility };
+}
+
+/**
+ * Encode one already-loaded image into the responsive AVIF/WebP variant set
+ * (+ a thumbnail) under `<slug>/<segment>/`, named by content hash so existing
+ * encodes are reused and stale ones get swept. Shared by route photos
+ * (`processImage`) and the explicit cover image (`processCover`).
+ */
+async function encodeImageVariant(
+	buffer: Buffer,
+	hash: string,
+	slug: string,
+	segment: 'images' | 'private',
+	alt: string
+): Promise<{
+	variant: ImageVariant;
+	thumbnailRelUrl: string;
+	largestRelUrl: string;
+	cached: boolean;
+	outNames: string[];
+}> {
 	// Filenames are content-hash only — the source basename (which usually
 	// encodes a date + camera ID) is intentionally dropped so it doesn't leak
 	// into the published URLs.
@@ -503,11 +526,43 @@ async function processImage(
 		},
 		thumbnailRelUrl: thumbUrl,
 		largestRelUrl: largestWebp,
-		hash,
-		visibility,
 		cached,
 		outNames
 	};
+}
+
+// ---------------------------------------------------------------------------
+// Explicit card cover (cover.jpg / .jpeg / .png / .webp / .heic / .heif).
+// When present it always wins over the "first public route photo" heuristic,
+// and unlike route photos it needs no track.gpx waypoint — it's a deliberate
+// listing thumbnail. Looked up in `images/` first, then the hike root.
+// ---------------------------------------------------------------------------
+
+const COVER_SOURCES = ['cover.jpg', 'cover.jpeg', 'cover.png', 'cover.webp', 'cover.heic', 'cover.heif'];
+
+async function processCover(
+	slug: string,
+	imagesDir: string,
+	hikeDir: string,
+	alt: string
+): Promise<{ variant: ImageVariant; outNames: string[] } | undefined> {
+	let srcPath: string | undefined;
+	for (const dir of [imagesDir, hikeDir]) {
+		for (const name of COVER_SOURCES) {
+			const p = path.join(dir, name);
+			if (await pathExists(p)) {
+				srcPath = p;
+				break;
+			}
+		}
+		if (srcPath) break;
+	}
+	if (!srcPath) return undefined;
+
+	const buffer = await fs.readFile(srcPath);
+	const hash = shortHashOfBuffer(buffer);
+	const enc = await encodeImageVariant(buffer, hash, slug, 'images', alt);
+	return { variant: enc.variant, outNames: enc.outNames };
 }
 
 // ---------------------------------------------------------------------------
@@ -1076,6 +1131,9 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	try {
 		const entries = await fs.readdir(imagesDir);
 		for (const e of entries.sort()) {
+			// `cover.*` is the explicit listing thumbnail — handled by processCover,
+			// never a route/strip photo (and doesn't need a track.gpx waypoint).
+			if (/^cover\.(jpe?g|png|webp|heic|heif)$/i.test(e)) continue;
 			if (/\.(jpe?g|png|webp|heic|heif)$/i.test(e)) imageFiles.push(path.join(imagesDir, e));
 		}
 	} catch {
@@ -1140,9 +1198,10 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 
 	for (const r of results) {
 		if (r.variant !== null) {
-			// Use the first PUBLIC image as the cover. Private images must not
-			// surface on the listing page (which is prerendered and served to
-			// anonymous viewers).
+			// Fallback cover when there's no explicit `cover.*`: the first PUBLIC
+			// route photo. Private images must not surface on the listing page
+			// (prerendered, served to anonymous viewers). An explicit cover.*
+			// overrides this below.
 			if (cover === null && r.visibility === 'public') cover = r.variant;
 			const segment = r.visibility === 'private' ? 'private' : 'images';
 			for (const name of r.outNames) keepFiles[segment].add(name);
@@ -1156,13 +1215,20 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		? (fm.difficulty as Difficulty)
 		: 'T1';
 
-	// Per-route icon + pre-rendered hero map — handled here (before cleanup)
-	// so their outNames join `keepFiles.images` and survive the orphan sweep,
-	// while previous-build `icon.<oldhash>.*` / `hero.<oldhash>.*` files
-	// (different hash, not in keepFiles) get removed automatically.
-	const [iconResult, heroResult] = await Promise.all([
+	// Per-route icon + pre-rendered hero map + explicit cover — handled here
+	// (before cleanup) so their outNames join `keepFiles.images` and survive the
+	// orphan sweep, while previous-build `icon.<oldhash>.*` / `hero.<oldhash>.*`
+	// files (different hash, not in keepFiles) get removed automatically.
+	const coverAlt =
+		typeof fm.heroAlt === 'string'
+			? fm.heroAlt
+			: typeof fm.title === 'string'
+				? fm.title
+				: 'Titelbild';
+	const [iconResult, heroResult, coverResult] = await Promise.all([
 		processIcon(slug, hikeDir),
-		processHero(slug, track, bbox, imagePoints, difficulty)
+		processHero(slug, track, bbox, imagePoints, difficulty),
+		processCover(slug, imagesDir, hikeDir, coverAlt)
 	]);
 	if (iconResult) keepFiles.images.add(iconResult.outName);
 	if (heroResult) {
@@ -1171,6 +1237,11 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 			keepFiles.images.add(v.lightOutName);
 			keepFiles.images.add(v.darkOutName);
 		}
+	}
+	// An explicit cover.* always wins over the first-public-photo fallback.
+	if (coverResult) {
+		cover = coverResult.variant;
+		for (const name of coverResult.outNames) keepFiles.images.add(name);
 	}
 
 	// Cleanup pass: drop any encoded files in either segment dir that don't
