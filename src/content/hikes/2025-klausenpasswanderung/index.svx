@@ -1,0 +1,73 @@
+---
+title: Klausenpasswanderung
+date: 2025-08-17
+author: Alexander
+difficulty: T2
+tags: [Zentralschweiz, Panorama, family, Spätsommer]
+summary: Eine schöne Aussichtstour durch die Zentralschweiz... wenn das Wetter hält
+heroAlt:
+seasons: 5-8
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Übersicht
+
+Eine wunderschöne Panoramawanderung im Zentralschweizer Gebirge.
+Anspruch nicht sehr hoch, da grösstenteils flach oder gemütlich abwärts.
+Bei unserem Besuch hat das Wetter leider nicht ganz mitgespielt, weswegen grosse Teile voller Nebel waren.
+
+## Anfahrt
+
+Anreise via Altdorf, Uri und dann mit dem Bus auf die Klausen Passhöhe.
+<JourneyPlanner from="<current location>" to="Klausen Passhöhe" toFixed time="09:00" target="arrival" />
+
+Die Wanderung hat wunderschön angefangen mit einer weiten Aussicht über das Tal.
+<HikeImage idx={0} />
+
+Wir haben auch direkt einen Bergsalamander getroffen.
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+Kurz bevor der Nebel aufkam hatten wir noch einen wunderschönen Ausblick auf den Gross Windgällen (rechts) und Gross Ruchen (links)
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+Leider verfolgte uns Nach 1.5 Stunden der Nebel, was die weitere Aussicht erschwerte.
+Nichtsdestotroz hat die Wanderun eine schönen Wanderweg bereitgestellt.
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+Bei Mättental gab es einige Möglichkeiten Bergkäse direkt ab Hof zu kaufen. Ein nettes Mitbringsel von der Wanderung.
+<HikeImage idx={17} />
+Nach ca. 4 Stunden war der Nebel grösstenteils vorbei und wir konnten die schöne Alpenlandschaft geniessen.
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+Ankunft bei der Bergbahn Eggberge nach ca. 5 Stunden.
+<HikeImage idx={29} />
+
+## Abreise
+
+Via Bergbahn und Bus von Eggberge nach Altdorf. Dort via Zug nach Hause.
+<JourneyPlanner from="Bergbahn Eggberge" to="<current location>" fromFixed time="14:00" target="departure" />
