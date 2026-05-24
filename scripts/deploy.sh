@@ -23,6 +23,12 @@ ERROR_PAGES_OWNER="${ERROR_PAGES_OWNER:-http:http}"
 # rsync that tree to the path nginx serves from.
 HIKES_ASSETS_DIR="${HIKES_ASSETS_DIR:-/var/www/static/hikes}"
 HIKES_ASSETS_OWNER="${HIKES_ASSETS_OWNER:-http:http}"
+# Private (auth-gated) images for <Image private>. Built into ./private-assets/
+# and served by nginx ONLY via an `internal` location reached through the
+# endpoint's X-Accel-Redirect — add this once to the server's nginx config:
+#   location /protected-images/ { internal; alias /var/www/static/private-images/; }
+PRIVATE_ASSETS_DIR="${PRIVATE_ASSETS_DIR:-/var/www/static/private-images}"
+PRIVATE_ASSETS_OWNER="${PRIVATE_ASSETS_OWNER:-http:http}"
 
 DRY=""
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -89,13 +95,22 @@ else
     echo ":: No hikes-assets/ dir — skipping nginx-served hike images sync"
 fi
 
+if [[ -d private-assets ]]; then
+    echo ":: Syncing private-assets/ → $REMOTE:$PRIVATE_ASSETS_DIR/"
+    ssh "$REMOTE" "mkdir -p $PRIVATE_ASSETS_DIR"
+    rsync -az --delete $DRY --info=progress2 \
+        private-assets/ "$REMOTE:$PRIVATE_ASSETS_DIR/"
+else
+    echo ":: No private-assets/ dir — skipping auth-gated image sync"
+fi
+
 if [[ -n "$DRY" ]]; then
     echo ":: Dry run complete — no service restart"
     exit 0
 fi
 
 echo ":: Fixing ownership on server"
-ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi"
+ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi && if [[ -d $PRIVATE_ASSETS_DIR ]]; then chown -R $PRIVATE_ASSETS_OWNER $PRIVATE_ASSETS_DIR; fi"
 
 echo ":: Restarting $SERVICE"
 ssh "$REMOTE" "systemctl restart $SERVICE"

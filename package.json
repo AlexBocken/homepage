@@ -1,11 +1,11 @@
 {
 	"name": "homepage",
-	"version": "1.86.2",
+	"version": "1.87.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts && pnpm exec vite-node scripts/generate-loyalty-cards.ts && pnpm exec vite-node scripts/generate-error-quotes.ts && pnpm exec vite-node scripts/build-hikes.ts",
+		"prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts && pnpm exec vite-node scripts/generate-loyalty-cards.ts && pnpm exec vite-node scripts/generate-error-quotes.ts && pnpm exec vite-node scripts/build-hikes.ts && pnpm exec vite-node scripts/build-private-images.ts",
 		"build": "vite build",
 		"postbuild": "pnpm exec vite-node scripts/build-error-page.ts",
 		"preview": "vite preview",
@@ -31,6 +31,7 @@
 	"devDependencies": {
 		"@playwright/test": "1.56.1",
 		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/enhanced-img": "^0.10.4",
 		"@sveltejs/kit": "^2.56.1",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@tauri-apps/cli": "^2.10.1",

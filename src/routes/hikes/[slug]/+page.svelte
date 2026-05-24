@@ -159,7 +159,9 @@
 	setHikeContext(() => ({
 		images: hike.imagePoints,
 		visibleImages: visibleImagePoints,
-		track
+		track,
+		imagesByName: hike.imagesByName ?? {},
+		showPrivate
 	}));
 
 	// Continuous trail-position tracking. As the reader scrolls through the

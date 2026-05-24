@@ -2,24 +2,57 @@
 	import { getHikeContext } from './hikeContext.svelte';
 	import { focused } from './focusedImageStore.svelte';
 	import { addScrollAnchor } from './scrollAnchors';
+	import { dev } from '$app/environment';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Clock from '@lucide/svelte/icons/clock';
 
 	interface Props {
 		/** Position in the hike's full chronological image list (0-indexed,
-		 * stable across viewers because it refers to the unfiltered list). */
-		idx: number;
+		 * stable across viewers because it refers to the unfiltered list).
+		 * Use this for route photos — it carries the map sync + elapsed time. */
+		idx?: number;
+		/** Source filename of an image in the hike's `images/` dir, for an
+		 * inline prose photo that isn't a route waypoint. Mutually exclusive
+		 * with `idx`. A path is accepted; only the basename is used. */
+		src?: string;
+		/** Alt text override for `src` mode. Falls back to the build-time alt. */
+		alt?: string;
+		/** Marks a `src`-mode prose image as private (auth-gated + lock badge).
+		 * Read at BUILD time from the prose by build-hikes — it encodes the image
+		 * into the gated `private/` segment. At runtime the component takes the
+		 * visibility from the manifest, so this prop is declarative only. */
+		private?: boolean;
 		/** Optional caption shown under the image — narrative blurb, not a
-		 * machine-derived label. Elapsed time is shown automatically. */
+		 * machine-derived label. Elapsed time is shown automatically (idx mode). */
 		caption?: string;
 	}
 
-	const { idx, caption }: Props = $props();
+	const { idx, src, alt, caption }: Props = $props();
 	const ctx = getHikeContext();
 
-	const ip = $derived(ctx().images[idx]);
+	// Prose mode: resolve the named image, hiding private ones from viewers who
+	// may not see them (the gated endpoint would 401 anyway).
+	const named = $derived.by(() => {
+		if (!src) return undefined;
+		const name = src.split('/').pop() ?? src;
+		const n = ctx().imagesByName[name];
+		if (!n) return undefined;
+		if (n.visibility === 'private' && !ctx().showPrivate) return undefined;
+		return n;
+	});
+
+	$effect(() => {
+		if (dev && src && !ctx().imagesByName[src.split('/').pop() ?? src]) {
+			console.warn(
+				`[HikeImage] No image named "${src}" in this hike. Put it in the hike's ` +
+					`images/ folder, reference it in the prose, and re-run build-hikes.`
+			);
+		}
+	});
+
+	const ip = $derived(idx === undefined ? undefined : ctx().images[idx]);
 	const visible = $derived(ip ? ctx().visibleImages.includes(ip) : false);
-	const visibleIdx = $derived(visible ? ctx().visibleImages.indexOf(ip) : -1);
+	const visibleIdx = $derived(visible && ip ? ctx().visibleImages.indexOf(ip) : -1);
 	const isActive = $derived(visibleIdx >= 0 && focused.index === visibleIdx);
 
 	// Find the track point closest in time to this image. Used by the
@@ -80,7 +113,33 @@
 	});
 </script>
 
-{#if ip && visible}
+{#if src}
+	{#if named}
+		<figure class="hike-image">
+			<picture>
+				<source type="image/avif" srcset={named.srcsetAvif} sizes="(max-width: 680px) 100vw, 680px" />
+				<source type="image/webp" srcset={named.srcsetWebp} sizes="(max-width: 680px) 100vw, 680px" />
+				<img
+					src={named.src}
+					alt={alt ?? named.alt}
+					width={named.width}
+					height={named.height}
+					loading="lazy"
+					decoding="async"
+				/>
+			</picture>
+			{#if named.visibility === 'private'}
+				<span class="private" title="Privates Bild — nur für eingeloggte Benutzer sichtbar">
+					<Lock size={11} strokeWidth={2.25} aria-hidden="true" />
+					privat
+				</span>
+			{/if}
+			{#if caption}
+				<figcaption>{caption}</figcaption>
+			{/if}
+		</figure>
+	{/if}
+{:else if ip && visible}
 	<figure class="hike-image" class:active={isActive} bind:this={figure}>
 		<img
 			src={ip.src}
@@ -127,6 +186,10 @@
 		box-shadow:
 			0 18px 32px -8px color-mix(in oklab, var(--color-primary) 45%, transparent),
 			0 6px 14px -6px rgb(0 0 0 / 0.25);
+	}
+
+	.hike-image picture {
+		display: block;
 	}
 
 	.hike-image img {

@@ -17,7 +17,7 @@
  */
 
 import { getContext, setContext } from 'svelte';
-import type { HikeTrackPoint, ImagePoint } from '$types/hikes';
+import type { HikeTrackPoint, ImagePoint, NamedHikeImage } from '$types/hikes';
 
 const KEY = Symbol('hike-context');
 
@@ -28,6 +28,12 @@ interface HikeContext {
 	 * inline `<HikeImage>` to compute the nearest-track-index for the
 	 * scroll-progress pin on the map. */
 	readonly track: HikeTrackPoint[] | null;
+	/** Images addressable by source filename for `<HikeImage src="…">`,
+	 * keyed by source basename. */
+	readonly imagesByName: Record<string, NamedHikeImage>;
+	/** Whether the current viewer may see private images. Path-mode
+	 * `<HikeImage src>` hides private images when this is false. */
+	readonly showPrivate: boolean;
 }
 
 export function setHikeContext(ctx: () => HikeContext): void {

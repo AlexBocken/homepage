@@ -38,7 +38,8 @@ import type {
 	HikeStage,
 	HikesOverview,
 	ImagePoint,
-	ImageVariant
+	ImageVariant,
+	NamedHikeImage
 } from '../src/types/hikes.js';
 
 // ---------------------------------------------------------------------------
@@ -399,7 +400,9 @@ async function processImage(
 	srcPath: string,
 	slug: string,
 	alt: string,
-	gpxImageRefs: Record<string, GpxImageRef>
+	gpxImageRefs: Record<string, GpxImageRef>,
+	/** Visibility for a non-waypoint prose image, or null when it isn't one. */
+	forceVisibility: 'public' | 'private' | null
 ): Promise<
 	| { variant: ImageVariant; thumbnailRelUrl: string; largestRelUrl: string; hash: string; visibility: 'public' | 'private'; cached: boolean; outNames: string[] }
 	| { skipped: true; hash: string }
@@ -407,14 +410,19 @@ async function processImage(
 	const buffer = await fs.readFile(srcPath);
 	const hash = shortHashOfBuffer(buffer);
 	const ref = gpxImageRefs[hash];
-	if (!ref) {
-		// Not referenced by any waypoint in track.gpx — drop it entirely (no
-		// encode, no manifest entry, no static output). Authors who want an
-		// image published must place it on the route via the route-builder
-		// (which writes a `<bocken:image hash>` waypoint into track.gpx).
+	if (!ref && forceVisibility === null) {
+		// Not a track.gpx waypoint and not referenced in the prose — drop it
+		// entirely (no encode, no manifest entry, no static output). Authors
+		// publish an image either by placing it on the route via the route-builder
+		// (writes a `<bocken:image hash>` waypoint) or by referencing its filename
+		// inline with `<HikeImage src="…">`.
 		return { skipped: true, hash };
 	}
-	const visibility: 'public' | 'private' = ref.visibility === 'private' ? 'private' : 'public';
+	// Waypoints carry their own visibility; a prose image takes the visibility
+	// requested by its `<HikeImage>` tag (public unless marked `private`).
+	const visibility: 'public' | 'private' = ref
+		? ref.visibility === 'private' ? 'private' : 'public'
+		: (forceVisibility ?? 'public');
 	// Public images go under `images/` (served directly by nginx); private ones
 	// under `private/` (proxied through Node for the auth check, then handed off
 	// via X-Accel-Redirect). The encode itself is shared with the cover image.
@@ -1167,11 +1175,29 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	} catch {
 		// no images dir is fine
 	}
-	// Images whose content hash isn't in gpxImageRefs are dropped before
-	// encoding (see processImage). Count for the log line below.
+	// Images addressed inline with `<HikeImage src="…">` in the prose, keyed by
+	// source basename → requested visibility. These are encoded and exposed via
+	// `imagesByName` even when they aren't track.gpx waypoints; a `private`
+	// attribute on the tag routes the image into the gated `private/` segment.
+	// Everything else that isn't a waypoint is still dropped.
+	const proseImages = new Map<string, 'public' | 'private'>();
+	for (const m of svxSource.matchAll(/<HikeImage\b[^>]*?\/?>/g)) {
+		const tag = m[0];
+		const srcMatch = tag.match(/\bsrc\s*=\s*["']([^"']+)["']/);
+		if (!srcMatch) continue; // idx-mode tag, no filename
+		const name = srcMatch[1].split('/').pop();
+		if (!name) continue;
+		// `private` as a boolean attr (`private` or `private={true}`), excluding
+		// the src value so a "private" substring in a filename doesn't count.
+		const isPrivate = /\bprivate\b/.test(tag.replace(srcMatch[0], ''));
+		proseImages.set(name, isPrivate ? 'private' : 'public');
+	}
+
+	// Non-waypoint, non-prose images are dropped before encoding (see
+	// processImage). Count for the log line below.
 	if (imageFiles.length > 0) {
 		console.log(
-			`[build-hikes:${slug}]   processing ${imageFiles.length} image(s) — ${Object.keys(gpxImageRefs).length} referenced in track.gpx (concurrency=${IMAGE_CONCURRENCY})…`
+			`[build-hikes:${slug}]   processing ${imageFiles.length} image(s) — ${Object.keys(gpxImageRefs).length} on route, ${proseImages.size} named in prose (concurrency=${IMAGE_CONCURRENCY})…`
 		);
 	}
 
@@ -1186,6 +1212,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	};
 
 	type ImageResult = {
+		name: string;
 		variant: ImageVariant | null;
 		point: ImagePoint | null;
 		outNames: string[];
@@ -1197,25 +1224,33 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		IMAGE_CONCURRENCY,
 		async (imgPath, i) => {
 			const imgT0 = Date.now();
+			const name = path.basename(imgPath);
 			// Hero alt only applies to the first image; later ones get a generic
 			// label (image basenames usually encode date/camera info that we don't
 			// want to leak into alt text or hover tooltips).
 			const alt = i === 0 && typeof fm.heroAlt === 'string'
 				? fm.heroAlt
 				: `Bild ${i + 1}`;
-			const processed = await processImage(imgPath, slug, alt, gpxImageRefs);
+			// Encode if it's a route waypoint OR named in the prose (with the
+			// visibility that tag requested).
+			const processed = await processImage(imgPath, slug, alt, gpxImageRefs, proseImages.get(name) ?? null);
 			if ('skipped' in processed) {
 				console.log(
-					`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${path.basename(imgPath)} · ${processed.hash} · skipped (not in track.gpx)`
+					`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${name} · ${processed.hash} · skipped (not on route, not in prose)`
 				);
-				return { variant: null, point: null, outNames: [], visibility: 'public' as const };
+				return { name, variant: null, point: null, outNames: [], visibility: 'public' as const };
 			}
-			const point = extractImagePoint(processed, alt, gpxImageRefs[processed.hash]);
+			// Only waypoint images get a map ImagePoint; prose-only ones have no
+			// position, so they're exposed by name (imagesByName) instead.
+			const ref = gpxImageRefs[processed.hash];
+			const point = ref ? extractImagePoint(processed, alt, ref) : null;
 			const cacheTag = processed.cached ? ' · cached' : '';
+			const kind = ref ? processed.visibility : 'prose';
 			console.log(
-				`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${path.basename(imgPath)} · ${processed.hash} · ${processed.visibility}${cacheTag} (${Date.now() - imgT0}ms)`
+				`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${name} · ${processed.hash} · ${kind}${cacheTag} (${Date.now() - imgT0}ms)`
 			);
 			return {
+				name,
 				variant: processed.variant,
 				point,
 				outNames: processed.outNames,
@@ -1223,6 +1258,10 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 			};
 		}
 	);
+
+	// Images addressable by source filename via `<HikeImage src="…">`. Only the
+	// prose-referenced ones — keyed by basename, carrying the full srcset.
+	const imagesByName: Record<string, NamedHikeImage> = {};
 
 	for (const r of results) {
 		if (r.variant !== null) {
@@ -1233,6 +1272,9 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 			if (cover === null && r.visibility === 'public') cover = r.variant;
 			const segment = r.visibility === 'private' ? 'private' : 'images';
 			for (const name of r.outNames) keepFiles[segment].add(name);
+			if (proseImages.has(r.name)) {
+				imagesByName[r.name] = { ...r.variant, visibility: r.visibility };
+			}
 		}
 		if (r.point) imagePoints.push(r.point);
 	}
@@ -1393,7 +1435,8 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		heroMapUrlDarkNarrow,
 		heroMapZoomNarrow,
 		heroMapCenterNarrow,
-		imagePoints
+		imagePoints,
+		...(Object.keys(imagesByName).length > 0 ? { imagesByName } : {})
 	};
 
 	console.log(`[build-hikes:${slug}]   done in ${((Date.now() - hikeStart) / 1000).toFixed(1)}s`);

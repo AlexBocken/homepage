@@ -24,6 +24,14 @@ export type ImagePoint = {
 	visibility?: 'public' | 'private';
 };
 
+/** A hike image addressable by its source filename, for `<HikeImage src="…">`
+ * used inline in the prose. Unlike `imagePoints` these need not be route
+ * waypoints (so no lat/lng/timestamp), but they carry the full responsive
+ * `srcset` so prose photos still get every quality level. */
+export type NamedHikeImage = ImageVariant & {
+	visibility: 'public' | 'private';
+};
+
 // [lng, lat, elevation?, unixMs?]
 export type HikeTrackPoint = [number, number, number?, number?];
 
@@ -134,6 +142,11 @@ export type HikeManifestEntry = {
 
 	// Geo-tagged photos shown as map markers on the detail page:
 	imagePoints: ImagePoint[];
+
+	/** Images addressable by source filename for inline `<HikeImage src="…">`.
+	 * Contains every encoded route photo plus any non-waypoint image referenced
+	 * by name in the prose (index.svx). Keyed by source basename. */
+	imagesByName?: Record<string, NamedHikeImage>;
 };
 
 /** Pre-rendered hero map for the `/hikes` index page. One image covers
