@@ -4,7 +4,11 @@ import type { PageLoad } from './$types';
 
 // Not prerendered: the page needs the live session so private images can be
 // gated behind login. Performance hit is small — the page is mostly hashed
-// static assets (track JSON, image variants).
+// static assets (track JSON, image variants). Without this flag the prerender
+// crawler still followed the overview's hike links and rendered every detail
+// page at build time, which exhausted the prerender worker's heap
+// (ERR_WORKER_OUT_OF_MEMORY); `false` keeps the crawler from prerendering them.
+export const prerender = false;
 
 // Glob the .svx modules so Vite can pre-bundle them and we can resolve
 // the matching one synchronously at load time.

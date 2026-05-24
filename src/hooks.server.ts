@@ -1,6 +1,7 @@
 import type { Handle, HandleServerError, ServerInit } from "@sveltejs/kit"
 import { redirect } from "@sveltejs/kit"
 import { sequence } from "@sveltejs/kit/hooks"
+import { building } from "$app/environment"
 import * as auth from "./auth"
 import { initializeScheduler } from "./lib/server/scheduler"
 import { dbConnect } from "./utils/db"
@@ -122,6 +123,15 @@ async function timing({ event, resolve }: Parameters<Handle>[0]) {
 }
 
 export const init: ServerInit = async () => {
+  // SvelteKit runs prerendering/analysis inside a worker_threads worker (see
+  // @sveltejs/kit utils/fork.js) whose JS heap is capped well below the main
+  // thread's. `init` fires there too, so warming the romcal cache during a
+  // build exhausts that worker's heap → ERR_WORKER_OUT_OF_MEMORY and a failed
+  // build. None of it is needed at build time: no prerendered route touches the
+  // DB, and connecting to Mongo / starting the payment scheduler from a build
+  // is undesirable regardless. Skip startup work while building.
+  if (building) return;
+
   console.log('🚀 Server starting - initializing database connection...');
   try {
     await dbConnect();

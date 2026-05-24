@@ -21,6 +21,25 @@ const config = {
 		adapter: adapter({
 			precompress: true  // Enable brotli and gzip compression
 		}),
+		prerender: {
+			// The only intentionally-static pages are /hikes (prerender=true) and
+			// the /errors/[status] set (via that route's EntryGenerator). With the
+			// crawler on, it follows the global nav out of /hikes and tries to
+			// prerender the whole dynamic, DB-/ML-backed app — which runs the
+			// forked prerender worker out of heap (ERR_WORKER_OUT_OF_MEMORY) and
+			// fails the build. Disable crawling: the prerendered set is then driven
+			// entirely by `prerender = true` + EntryGenerator.
+			crawl: false,
+			handleHttpError: ({ path, message }) => {
+				// Defensive: hike image binaries live in `hikes-assets/`, outside
+				// `/static` (nginx serves them in prod, a Vite middleware in dev —
+				// see vite.config.ts), so the crawler can't fetch them. Harmless
+				// while crawl is off, but keeps a 404 from failing the build if
+				// crawling is ever re-enabled.
+				if (/^\/hikes\/[^/]+\/images\//.test(path)) return;
+				throw new Error(message);
+			}
+		},
 		alias: {
 			$models: 'src/models',
 			$utils: 'src/utils',
