@@ -1064,6 +1064,34 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	const gpxImageCount = Object.keys(gpxImageRefs).length;
 	console.log(`[build-hikes:${slug}]   parsed GPX (${track.length} track pts, ${gpxStages.length} stage(s), ${gpxImageCount} image refs)`);
 
+	// Privacy: anonymise absolute clock times. Re-base every timestamp so the
+	// hike starts at 08:00 "today" while preserving all relative offsets
+	// (total duration, per-stage gaps, photo "nach X"). This single shift flows
+	// into the published track JSON, the page metrics, and the client-built GPX
+	// download — all of which read these timestamps — so the real recording
+	// times never leave the private source GPX. Track points are shared with
+	// `gpxStages` (flatMap keeps object identity), so stages rebase too.
+	{
+		let firstTs: number | null = null;
+		for (const p of track) {
+			if (typeof p.timestamp === 'number') {
+				firstTs = p.timestamp;
+				break;
+			}
+		}
+		if (firstTs !== null) {
+			const anchor = new Date();
+			anchor.setHours(8, 0, 0, 0);
+			const offset = anchor.getTime() - firstTs;
+			for (const p of track) {
+				if (typeof p.timestamp === 'number') p.timestamp += offset;
+			}
+			for (const ref of Object.values(gpxImageRefs)) {
+				if (typeof ref.timestamp === 'number') ref.timestamp += offset;
+			}
+		}
+	}
+
 	// Per-stage stats + flat-track index ranges. Indices are contiguous and
 	// disjoint (endIdx + 1 === next.startIdx).
 	const stageEntries: HikeStage[] = [];
@@ -1294,6 +1322,22 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	await fs.writeFile(trackFile, trackJson);
 	console.log(`[build-hikes:${slug}]   wrote track.${trackHash}.json (${trackJson.length} bytes)`);
 
+	// Sweep stale track.*.json from earlier builds. Without this the previous
+	// file lingers in static/ and ships on deploy — and since timestamps are
+	// now anonymised, an old file would still expose the real recording times
+	// at its (guessable) URL.
+	{
+		const dir = path.dirname(trackFile);
+		const keep = path.basename(trackFile);
+		const stale = (await fs.readdir(dir)).filter(
+			(f) => /^track\..*\.json$/.test(f) && f !== keep
+		);
+		await Promise.all(stale.map((f) => fs.unlink(path.join(dir, f)).catch(() => {})));
+		if (stale.length > 0) {
+			console.log(`[build-hikes:${slug}]   removed ${stale.length} stale track JSON(s)`);
+		}
+	}
+
 	const date = typeof fm.date === 'string'
 		? fm.date
 		: (typeof fm.date === 'number' ? new Date(fm.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
@@ -1376,6 +1420,31 @@ async function main() {
 		console.log(`[build-hikes] Building ${slug}`);
 		const entry = await buildHike(slug, cache);
 		if (entry) hikes.push(entry);
+	}
+
+	// Sweep whole orphan slug dirs from static/ — e.g. a renamed or deleted
+	// hike. Otherwise its old per-slug track JSON (with the real, un-anonymised
+	// recording times) keeps shipping at a guessable URL. Keep current content
+	// slugs and any special "_*" entry (e.g. the overview hero). Guarded by a
+	// non-empty slug list so a failed content read never wipes everything.
+	if (slugs.length > 0) {
+		try {
+			const keep = new Set(slugs);
+			const present = await fs.readdir(STATIC_DIR, { withFileTypes: true });
+			const orphans = present.filter(
+				(e) => e.isDirectory() && !e.name.startsWith('_') && !keep.has(e.name)
+			);
+			await Promise.all(
+				orphans.map((e) => fs.rm(path.join(STATIC_DIR, e.name), { recursive: true, force: true }))
+			);
+			if (orphans.length > 0) {
+				console.log(
+					`[build-hikes] removed ${orphans.length} orphan slug dir(s) from static/: ${orphans.map((o) => o.name).join(', ')}`
+				);
+			}
+		} catch {
+			// static/hikes may not exist yet on a clean checkout — nothing to sweep.
+		}
 	}
 
 	await saveGeocodeCache(cache);
