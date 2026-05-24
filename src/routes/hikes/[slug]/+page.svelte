@@ -689,6 +689,9 @@
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
+		/* Center, don't stretch: otherwise each tile is pulled to the tall
+		 * route-icon's height and its value/descriptor rows spread apart. */
+		align-items: center;
 		gap: 1rem 2.25rem;
 		padding: 1.5rem 1rem;
 		color: var(--color-text-secondary);
