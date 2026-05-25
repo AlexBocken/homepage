@@ -1,9 +1,10 @@
 {
 	"name": "homepage",
-	"version": "1.87.4",
+	"version": "1.88.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"prepare": "git config core.hooksPath .githooks || true",
 		"dev": "vite dev",
 		"prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts && pnpm exec vite-node scripts/generate-loyalty-cards.ts && pnpm exec vite-node scripts/generate-error-quotes.ts && pnpm exec vite-node scripts/build-hikes.ts && pnpm exec vite-node scripts/build-private-images.ts",
 		"build": "vite build",

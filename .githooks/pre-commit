@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# Pre-commit: normalise hike track altitudes.
+#
+# Any added/modified src/content/hikes/<slug>/track.gpx is run through
+# scripts/fix-altitudes.ts (swisstopo swissALTI3D heights at each exact point)
+# and re-staged, so committed tracks always carry corrected elevation instead of
+# raw phone-GPS noise. Commits that don't touch a track.gpx are a fast no-op.
+#
+# Network failures degrade gracefully: fix-altitudes keeps a point's original
+# elevation when it can't resolve it, exits 0, and the commit proceeds.
+#
+# Caveat: a touched track.gpx is re-staged in full, so partial (`git add -p`)
+# staging of a track.gpx won't survive. These files are generated, so that's fine.
+set -euo pipefail
+
+# Staged Added/Copied/Modified track.gpx paths, NUL-delimited so non-ASCII slug
+# dirs (e.g. "…pfäffikersee") come through as raw bytes, unquoted.
+files=()
+while IFS= read -r -d '' f; do
+	case "$f" in
+		src/content/hikes/*/track.gpx) files+=("$f") ;;
+	esac
+done < <(git diff --cached --name-only -z --diff-filter=ACM -- src/content/hikes)
+
+if [ ${#files[@]} -eq 0 ]; then
+	exit 0
+fi
+
+# Map each path to its <slug> (the directory under src/content/hikes/).
+slugs=()
+for f in "${files[@]}"; do
+	s=${f#src/content/hikes/}
+	slugs+=("${s%/track.gpx}")
+done
+
+echo "[pre-commit] fix-altitudes: ${slugs[*]}"
+pnpm exec vite-node scripts/fix-altitudes.ts "${slugs[@]}"
+
+# Re-stage so the corrected elevations are what actually gets committed.
+git add -- "${files[@]}"
