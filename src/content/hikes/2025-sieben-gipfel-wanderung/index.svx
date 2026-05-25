@@ -96,11 +96,10 @@ Anreise an Bahnhof Unterterzen, dann mit Gondeln hoch nach Flumserberg und via G
 <HikeImage idx={52} />
 <HikeImage idx={53} />
 <HikeImage idx={54} />
-<HikeImage idx={55} />
-<HikeImage idx={56} />
-<HikeImage idx={57} />
+<HikeImage src="PXL_20240414_135254651.jpg" />
+
 
 ## Heimreise
 
 Vom Flumserberg mit der Gondel wieder runter nach Unterterzen. Von Unterterzen via Zug nach Hause.
-<JourneyPlanner fromFixed from="Flumserberg Tannenboden" to="<current location>" time="14:30" target="departure"/>
+<JourneyPlanner fromFixed from="Flumserberg Tannenboden" to="<current location>" time="14:00" target="departure"/>
