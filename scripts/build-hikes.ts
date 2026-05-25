@@ -70,7 +70,7 @@ const VALID_DIFFICULTIES: readonly Difficulty[] = ['T1', 'T2', 'T3', 'T4', 'T5',
 // Sharp pipelines are CPU-heavy but release the JS thread while libvips runs,
 // so a small concurrency pool gives a near-linear speed-up. Cap at 4 to avoid
 // thrashing on smaller boxes (a single AVIF encode can saturate one core).
-const IMAGE_CONCURRENCY = Math.max(2, Math.min(os.cpus().length, 4));
+const IMAGE_CONCURRENCY = Math.max(2, Math.min(os.cpus().length, 10));
 
 async function pathExists(p: string): Promise<boolean> {
 	try {
