@@ -1,0 +1,102 @@
+---
+title: Flims Gletschermühlen
+date: 2024-07-14
+author: Alexander
+difficulty: T2
+tags: [Graubünden, Flims, Sommer]
+seasons: 5-8
+summary:
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+	import Private from '$lib/components/Private.svelte';
+</script>
+
+## Anreise
+
+Start bei Bargis. Anreise am Besten via Bus von Flims.
+<JourneyPlanner from="<current location>" to="Fidaz, Bargis" toFixed time="07:00" target="arrival"/>
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+<HikeImage idx={48} />
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+<HikeImage idx={51} />
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+<HikeImage idx={55} />
+<HikeImage idx={56} />
+<HikeImage idx={57} />
+<HikeImage idx={58} />
+<HikeImage idx={59} />
+<HikeImage idx={60} />
+<HikeImage idx={61} />
+<HikeImage idx={62} />
+<HikeImage idx={63} />
+<HikeImage idx={64} />
+<HikeImage idx={65} />
+<HikeImage idx={66} />
+<HikeImage idx={67} />
+<HikeImage idx={68} />
+<HikeImage idx={69} />
+<HikeImage idx={70} />
+<HikeImage idx={71} />
+<HikeImage idx={72} />
+<HikeImage idx={73} />
+<HikeImage idx={74} />
+<HikeImage idx={75} />
+
+## Abreise
+Via Bus oder Auto wieder nach Hause. Wenn nicht abgeholt wird wie wir muss man noch etwas weiter laufen bis nach Trin.
+<JourneyPlanner from="Trin, Quadris" fromFixed to="<current location>" time="15:30" target="departure"/>
