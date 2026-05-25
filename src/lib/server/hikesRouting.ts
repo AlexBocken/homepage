@@ -57,6 +57,11 @@ const OSRM_PROFILE: Record<RoutingProfile, string> = {
 	road: 'driving'
 };
 
+// Self-hosted BRouter instance (see the `brouter` package + systemd service).
+// Defaults to the localhost server so production needs no extra config; override
+// with the BROUTER_URL env var (e.g. to point at a remote instance in dev).
+const BROUTER_URL = (process.env.BROUTER_URL || 'http://127.0.0.1:17777').replace(/\/+$/, '');
+
 async function fetchJson<T>(url: string, signal: AbortSignal): Promise<T | null> {
 	try {
 		const res = await fetch(url, {
@@ -121,7 +126,7 @@ async function routeBrouter(
 	signal: AbortSignal
 ): Promise<Array<[number, number, number?]> | null> {
 	const url =
-		`https://brouter.de/brouter?lonlats=${a.lng},${a.lat}|${b.lng},${b.lat}` +
+		`${BROUTER_URL}/brouter?lonlats=${a.lng},${a.lat}|${b.lng},${b.lat}` +
 		`&profile=${BROUTER_PROFILE[profile]}&alternativeidx=0&format=geojson`;
 	const json = await fetchJson<BrouterGeoJson>(url, signal);
 	if (!json?.features?.[0]?.geometry?.coordinates) return null;
