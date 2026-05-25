@@ -6,7 +6,9 @@
 	import WaypointDetailPanel from '$lib/components/hikes/route-builder/WaypointDetailPanel.svelte';
 	import ImageDropzone from '$lib/components/hikes/route-builder/ImageDropzone.svelte';
 	import RouteStatsBar from '$lib/components/hikes/route-builder/RouteStatsBar.svelte';
+	import ElevationProfile from '$lib/components/hikes/ElevationProfile.svelte';
 	import { assembleTrackPoints, buildGpx, type GpxImageWaypoint, type GpxTrack } from '$lib/gpx';
+	import type { HikeTrackPoint } from '$types/hikes';
 	import {
 		builder,
 		focusWaypoint,
@@ -271,6 +273,11 @@
 	// chevrons follows the table's numbering.
 	const placedWaypoints = $derived(builder.waypoints.filter((w) => !w.unplaced));
 
+	// Flatten the routed segments ([lng, lat, ele?]) into one track for the
+	// elevation profile below the map. Elevations fill in once the Swisstopo
+	// enrichment resolves; until then those points read as gaps in the chart.
+	const elevationTrack = $derived(builder.routedSegments.flat() as HikeTrackPoint[]);
+
 	const focusedIdx = $derived.by(() => {
 		if (!mapView.focusId) return -1;
 		return placedWaypoints.findIndex((w) => w.id === mapView.focusId);
@@ -476,6 +483,12 @@
 			<WaypointDetailPanel onCancelPlacement={cancelPlacement} />
 		</div>
 	</div>
+
+	{#if elevationTrack.length > 1}
+		<section class="elevation-row" aria-label="Höhenprofil">
+			<ElevationProfile track={elevationTrack} />
+		</section>
+	{/if}
 
 	<WaypointTable
 		{pendingPlacementId}

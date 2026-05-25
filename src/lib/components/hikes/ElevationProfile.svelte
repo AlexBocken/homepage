@@ -247,6 +247,26 @@
 		chart.update('none');
 	});
 
+	// Rebuild the dataset when the track data itself changes — e.g. the route
+	// builder edits the route live. On the static detail page `track` is stable
+	// after its one-time fetch, so this runs once (no-op) and never again.
+	$effect(() => {
+		const pts = track;
+		const ck = cumKm;
+		if (!chart) return;
+		chart.data.datasets[0].data = pts.map((p, i) => ({
+			x: ck[i],
+			y: typeof p[2] === 'number' ? p[2] : null
+		}));
+		const b = xBounds();
+		const xScale = chart.options.scales?.x;
+		if (xScale) {
+			xScale.min = b.min;
+			xScale.max = b.max;
+		}
+		chart.update('none');
+	});
+
 	// Mouse-leave on the canvas clears the shared hover state so the map marker
 	// disappears too.
 	function onCanvasMouseLeave() {
