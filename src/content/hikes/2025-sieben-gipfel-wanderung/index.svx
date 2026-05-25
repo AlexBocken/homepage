@@ -1,0 +1,106 @@
+---
+title: Siebengipfelwanderung
+date: 2025-08-11
+author: Alexander
+difficulty: T2
+tags: [St. Gallen, Walensee, Almwanderung]
+seasons: 5-8
+summary:
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+### Anreise
+
+Anreise an Bahnhof Unterterzen, dann mit Gondeln hoch nach Flumserberg und via Gondel von Flumserberg auf den Maschgenkamm.
+
+<JourneyPlanner from="<current location>" to="Maschgenkamm" toFixed time="08:30" target="arrival"/>
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+## Gipfel 1: Ziger
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+
+## Gipfel 2: Leist
+
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+
+## Gipfel 3: Rainissalts
+
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+## Gipfel 4: Gulmen
+
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+
+## Gipfel 5: Cuncels
+
+<HikeImage idx={38} />
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+<HikeImage idx={41} />
+
+## Gipfel 6: Chli Güslen
+
+<HikeImage idx={42} />
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+
+## Gipfel 7: Gross Güslen
+
+<HikeImage idx={45} />
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+<HikeImage idx={48} />
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+<HikeImage idx={51} />
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+<HikeImage idx={55} />
+<HikeImage idx={56} />
+<HikeImage idx={57} />
+
+## Heimreise
+
+Vom Flumserberg mit der Gondel wieder runter nach Unterterzen. Von Unterterzen via Zug nach Hause.
+<JourneyPlanner fromFixed from="Flumserberg Tannenboden" to="<current location>" time="14:30" target="departure"/>
