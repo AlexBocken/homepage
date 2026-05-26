@@ -25,6 +25,10 @@
 	let canvas = $state<HTMLCanvasElement | undefined>(undefined);
 	let chart: ChartType | null = null;
 	let ChartCtor: typeof import('chart.js').Chart | null = null;
+	// Goes true once Chart.js has painted at least one frame. Drives the
+	// cross-fade from the SSR-rendered static SVG to the interactive canvas.
+	// Stays sticky-true on theme re-creation so the SVG doesn't flash back.
+	let chartReady = $state(false);
 
 	// Cumulative distance (km) per track point — used as x axis.
 	const cumKm = $derived.by(() => {
@@ -45,6 +49,115 @@
 		}
 		return out;
 	});
+
+	// SSR-rendered fallback: a static SVG profile of the whole track so no-JS
+	// (and pre-hydration) users see the elevation graph immediately. Path
+	// coordinates live in an 800×200 viewBox; `preserveAspectRatio="none"`
+	// stretches the path to fill the box on any aspect ratio. Strokes use
+	// `vector-effect: non-scaling-stroke` so the line weight stays at a
+	// constant pixel weight regardless of the stretch. Once Chart.js mounts
+	// and paints, the SVG fades out and the interactive canvas takes over.
+	const FALLBACK_VB_W = 800;
+	const FALLBACK_VB_H = 200;
+	const elevFallback = $derived.by(() => {
+		if (track.length < 2) return { fill: '', line: '' };
+		// Per-track sample cap so a ~5 000-point GPX doesn't produce a 60 KB
+		// SVG path in the HTML. ~600 samples is enough for a smooth profile
+		// at typical display widths and keeps the inline SVG around ~6 KB.
+		const target = 600;
+		const step = Math.max(1, Math.floor(track.length / target));
+
+		let altLo = Infinity;
+		let altHi = -Infinity;
+		for (let i = 0; i < track.length; i++) {
+			const a = track[i][2];
+			if (typeof a === 'number') {
+				if (a < altLo) altLo = a;
+				if (a > altHi) altHi = a;
+			}
+		}
+		if (!Number.isFinite(altLo)) return { fill: '', line: '' };
+
+		const maxKm = cumKm[cumKm.length - 1];
+		if (!maxKm) return { fill: '', line: '' };
+
+		// No vertical pad: the path needs to touch the top/bottom of the
+		// plot exactly, otherwise the HTML axis labels (min/max altitude)
+		// drawn next to the SVG won't line up with the actual peak/trough.
+		const yMin = altLo;
+		const ySpread = altHi - altLo || 1;
+
+		let line = '';
+		let firstX: number | null = null;
+		let lastX: number | null = null;
+		const append = (i: number) => {
+			const a = track[i][2];
+			if (typeof a !== 'number') return;
+			const x = (cumKm[i] / maxKm) * FALLBACK_VB_W;
+			const y = (1 - (a - yMin) / ySpread) * FALLBACK_VB_H;
+			if (firstX === null) {
+				firstX = x;
+				line = `M${x.toFixed(1)} ${y.toFixed(1)}`;
+			} else {
+				line += `L${x.toFixed(1)} ${y.toFixed(1)}`;
+			}
+			lastX = x;
+		};
+		for (let i = 0; i < track.length; i += step) append(i);
+		// Always include the last sample so the trace runs to maxKm.
+		if ((track.length - 1) % step !== 0) append(track.length - 1);
+		if (firstX === null || lastX === null) return { fill: '', line: '' };
+		const fill = `${line}L${lastX.toFixed(1)} ${FALLBACK_VB_H}L${firstX.toFixed(1)} ${FALLBACK_VB_H}Z`;
+		return { fill, line };
+	});
+
+	// Axis ticks for the SSR fallback: five values per axis (start, three
+	// intermediates, end) so each axis reads as a properly-scaled chart,
+	// not just labelled at the bookends. y-ticks are emitted top-to-bottom
+	// so the first label = max altitude, matching the SVG's y=0-at-top
+	// coordinate system. The three intermediate y-tick fractions (0.75,
+	// 0.5, 0.25) double as the soft helpline positions inside the plot,
+	// expressed as `viewBox` y-offsets below.
+	const elevFallbackKm = $derived(cumKm[cumKm.length - 1] ?? 0);
+
+	const elevFallbackYTicks = $derived.by(() => {
+		let lo = Infinity;
+		let hi = -Infinity;
+		for (let i = 0; i < track.length; i++) {
+			const a = track[i][2];
+			if (typeof a === 'number') {
+				if (a < lo) lo = a;
+				if (a > hi) hi = a;
+			}
+		}
+		if (!Number.isFinite(lo)) return null;
+		const min = Math.round(lo);
+		const max = Math.round(hi);
+		const span = max - min;
+		return [
+			max,
+			Math.round(min + span * 0.75),
+			Math.round(min + span * 0.5),
+			Math.round(min + span * 0.25),
+			min
+		];
+	});
+
+	const elevFallbackXTicks = $derived.by(() => {
+		const max = elevFallbackKm;
+		if (!max) return [];
+		return [0, max * 0.25, max * 0.5, max * 0.75, max];
+	});
+
+	// Horizontal helpline positions inside the SVG (viewBox y-coords).
+	// Only the three intermediates — the top and bottom of the plot are
+	// already framed by the filled area's edge, so adding gridlines there
+	// would just be visual noise.
+	const ELEV_FALLBACK_GRID_Y = [
+		FALLBACK_VB_H * 0.25,
+		FALLBACK_VB_H * 0.5,
+		FALLBACK_VB_H * 0.75
+	];
 
 	function isDark(): boolean {
 		const t = document.documentElement.getAttribute('data-theme');
@@ -103,6 +216,11 @@
 			}
 		};
 
+		// Flip the SSR-fallback flag synchronously with chart creation so the
+		// next paint already shows the canvas underneath the fading SVG.
+		// Set inside `createChart` (not only in `onMount`) so theme rebuilds
+		// don't briefly flash the SVG back; the flag is one-way (never reset).
+		chartReady = true;
 		chart = new ChartCtor(canvas, {
 			type: 'line',
 			data: {
@@ -275,6 +393,57 @@
 </script>
 
 <div class="elevation">
+	<!-- Static SVG profile rendered server-side so no-JS readers (and JS
+	     users pre-hydration) see the elevation graph without waiting on
+	     Chart.js. The grid lays out the axis gutters (y-title + y-ticks
+	     on the left, x-ticks + x-title under) so the SVG plot occupies
+	     the same content region Chart.js will use for its chart area.
+	     Once the canvas chart paints, this layer fades out and
+	     `pointer-events: none` cedes hover to the interactive chart. -->
+	<div class="elev-fallback" class:hidden={chartReady} aria-hidden="true">
+		<div class="y-title">Höhe (m)</div>
+		<ol class="y-ticks">
+			{#if elevFallbackYTicks}
+				{#each elevFallbackYTicks as v (v)}
+					<li>{v}</li>
+				{/each}
+			{/if}
+		</ol>
+		<svg
+			class="elev-fallback-svg"
+			viewBox="0 0 {FALLBACK_VB_W} {FALLBACK_VB_H}"
+			preserveAspectRatio="none"
+		>
+			<!-- Soft helplines, one per intermediate y-tick. `non-scaling-
+			     stroke` keeps them at 1 px even when the SVG is stretched
+			     horizontally by `preserveAspectRatio="none"`. -->
+			<g class="elev-fallback-grid">
+				{#each ELEV_FALLBACK_GRID_Y as gy (gy)}
+					<line
+						x1="0"
+						y1={gy}
+						x2={FALLBACK_VB_W}
+						y2={gy}
+						vector-effect="non-scaling-stroke"
+					/>
+				{/each}
+			</g>
+			{#if elevFallback.fill}
+				<path d={elevFallback.fill} class="elev-fallback-fill" />
+				<path
+					d={elevFallback.line}
+					class="elev-fallback-line"
+					vector-effect="non-scaling-stroke"
+				/>
+			{/if}
+		</svg>
+		<ol class="x-ticks">
+			{#each elevFallbackXTicks as v (v)}
+				<li>{v.toFixed(1)}</li>
+			{/each}
+		</ol>
+		<div class="x-title">Distanz (km)</div>
+	</div>
 	<canvas bind:this={canvas} onmouseleave={onCanvasMouseLeave}></canvas>
 </div>
 
@@ -293,5 +462,126 @@
 	canvas {
 		width: 100% !important;
 		height: 100% !important;
+		position: relative;
+		z-index: 2;
+	}
+
+	/* SSR fallback grid: y-title (rotated) + y-ticks form the left gutter,
+	 * x-ticks + x-title form the bottom gutter, the SVG plot fills the
+	 * remaining cell. Sized with `calc(100% - 2*padding)` rather than the
+	 * top/right/bottom/left-inset shortcut, because `<svg>` is a replaced
+	 * element with an intrinsic aspect ratio from `viewBox` that some
+	 * browsers let win over a `bottom` constraint — the full-width 220 px
+	 * chart was spilling past its rounded box at the bottom.
+	 *
+	 * The canvas sits on top (z-index 2) so once Chart.js paints, its
+	 * scene fully covers this fallback; we still fade the fallback out so
+	 * any anti-aliased edge gaps don't leak through. */
+	.elev-fallback {
+		position: absolute;
+		top: 0.75rem;
+		left: 1rem;
+		width: calc(100% - 2rem);
+		height: calc(100% - 1.5rem);
+		z-index: 1;
+		opacity: 1;
+		transition: opacity 250ms ease;
+		pointer-events: none;
+		display: grid;
+		grid-template-columns: 0.85rem 2rem 1fr;
+		grid-template-rows: 1fr 0.9rem 0.9rem;
+		font-size: 0.7rem;
+		color: var(--color-text-tertiary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.elev-fallback.hidden {
+		opacity: 0;
+	}
+
+	.y-title {
+		grid-row: 1;
+		grid-column: 1;
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		text-align: center;
+		align-self: center;
+		justify-self: center;
+		color: var(--color-text-secondary);
+		letter-spacing: 0.01em;
+	}
+
+	/* Y-ticks reset list defaults so they read as plain labels. `space-
+	 * between` aligns the first/last items with the plot's top/bottom
+	 * edges — same Y-range the SVG path uses (no altitude padding), so
+	 * the topmost label sits on the highest peak and the bottom one at
+	 * the lowest trough. */
+	.y-ticks {
+		grid-row: 1;
+		grid-column: 2;
+		margin: 0;
+		padding: 0 0.3rem 0 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		align-items: flex-end;
+		line-height: 1;
+	}
+
+	.y-ticks li::after {
+		content: ' m';
+		opacity: 0.55;
+	}
+
+	.elev-fallback-svg {
+		grid-row: 1;
+		grid-column: 3;
+		width: 100%;
+		height: 100%;
+	}
+
+	/* X-ticks: 0 / mid / max, evenly distributed along the bottom of the
+	 * plot so they line up with the SVG's left edge, midpoint, and right
+	 * edge respectively. */
+	.x-ticks {
+		grid-row: 2;
+		grid-column: 3;
+		margin: 0;
+		padding: 0.15rem 0 0;
+		list-style: none;
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		line-height: 1;
+	}
+
+	.x-title {
+		grid-row: 3;
+		grid-column: 3;
+		text-align: center;
+		color: var(--color-text-secondary);
+		letter-spacing: 0.01em;
+		line-height: 1;
+		padding-top: 0.05rem;
+	}
+
+	.elev-fallback-grid line {
+		stroke: currentColor;
+		stroke-width: 1;
+		opacity: 0.15;
+	}
+
+	.elev-fallback-fill {
+		fill: var(--color-primary);
+		fill-opacity: 0.18;
+	}
+
+	.elev-fallback-line {
+		fill: none;
+		stroke: var(--color-primary);
+		stroke-width: 2;
+		stroke-linejoin: round;
+		stroke-linecap: round;
 	}
 </style>

@@ -39,6 +39,11 @@
 	// fade-out of the SSR-rendered static hero so the static→interactive
 	// handover is a soft cross-fade rather than a swap.
 	let heroMapReady = $state(false);
+	// Same trick for the secondary sticky map in the desktop scroll-area:
+	// the pre-rendered hero image shows behind Leaflet, giving no-JS readers
+	// a real map (instead of an empty rounded box) and bridging the gap
+	// until tiles paint for JS users.
+	let trailMapReady = $state(false);
 
 	// Three-band viewport switch (narrow ≤560, medium 561–899, wide ≥900)
 	// — picks which pre-rendered pose we hand to Leaflet's first `setView`
@@ -420,6 +425,11 @@
 		</section>
 	{/if}
 
+	<!-- Everything below the photo strip is wrapped so view-transitions
+	     can slide the whole block (metrics, tags, elevation chart, scroll
+	     area, footer) up from the bottom on enter and down on exit. The
+	     hero map and strip animate separately above this. -->
+	<div class="below-strip" style="view-transition-name: hike-below-strip">
 	<section class="metrics" aria-label="Tourendaten">
 		{#if hike.icon}
 			<img class="route-icon" src={hike.icon} alt="" aria-hidden="true" />
@@ -496,7 +506,49 @@
 	<section class="scroll-area">
 		<aside class="trail-col">
 			{#if track && track.length > 0}
-				<HikeMap {track} imagePoints={visibleImagePoints} showPrivate {trackColor} {stages} swissRegion={inSwissRegion} />
+				<!-- Wrapper turns the secondary map into its own stacking
+				     context so the pre-rendered hero `<img>` underlays the
+				     live Leaflet pane. Use the medium (tablet-sized) hero
+				     variant: the wide one is framed for a 1920×640
+				     desktop band and leaves the track tiny in the centre,
+				     while the narrow one is sized for phones and its
+				     aspect (1:1) doesn't match the desktop-only
+				     trail-col's wider 1.66:1 slot. Medium (2400×1500,
+				     1.6:1) lines up closest. Falls back to wide if a
+				     hike somehow lacks the medium render. -->
+				<div class="trail-map-wrap">
+					{#if hike.heroMapUrlLightMedium ?? hike.heroMapUrlLight}
+						<img
+							class="trail-static trail-static-light"
+							class:faded={trailMapReady}
+							src={hike.heroMapUrlLightMedium ?? hike.heroMapUrlLight}
+							alt=""
+							aria-hidden="true"
+							loading="lazy"
+							decoding="async"
+						/>
+					{/if}
+					{#if hike.heroMapUrlDarkMedium ?? hike.heroMapUrlDark}
+						<img
+							class="trail-static trail-static-dark"
+							class:faded={trailMapReady}
+							src={hike.heroMapUrlDarkMedium ?? hike.heroMapUrlDark}
+							alt=""
+							aria-hidden="true"
+							loading="lazy"
+							decoding="async"
+						/>
+					{/if}
+					<HikeMap
+						{track}
+						imagePoints={visibleImagePoints}
+						showPrivate
+						{trackColor}
+						{stages}
+						swissRegion={inSwissRegion}
+						onReady={() => (trailMapReady = true)}
+					/>
+				</div>
 				<ElevationProfile {track} viewRange={stageViewRange} />
 			{/if}
 		</aside>
@@ -536,6 +588,7 @@
 			<a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a>
 		</span>
 	</footer>
+	</div>
 </article>
 
 <style>
@@ -1012,11 +1065,84 @@
 		.trail-col :global(.map) {
 			height: 400px;
 			border-radius: var(--radius-card);
+			/* Transparent so the underlay `<img>` shows through until the
+			 * live tile-pane has finished painting. Same trick as the hero
+			 * map further up the page. */
+			background: transparent;
 		}
 
 		.trail-col :global(.elevation) {
 			height: 180px;
 		}
+	}
+
+	.trail-map-wrap {
+		position: relative;
+		width: 100%;
+		/* Clip the scaled underlay (see `.trail-static` below) and let the
+		 * wrapper own the rounded corners that the live leaflet pane
+		 * otherwise contributes — keeps the shape consistent across the
+		 * static → live handover. */
+		overflow: hidden;
+		border-radius: var(--radius-card);
+	}
+
+	/* Secondary-map underlay: pre-rendered medium hero (2400×1500 canvas
+	 * framed for a 1000×500 tablet fit). Cover-cropped to the trail-col
+	 * slot and magnified ~2.25× so the bbox region fills most of the
+	 * visible area while still keeping a little surrounding context
+	 * around the trail. Leaflet paints over this before anyone clocks
+	 * the framing shift, and no-JS readers simply see the static
+	 * composite framed on the track. */
+	.trail-static {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+		transform: scale(2.25);
+		transform-origin: center;
+		opacity: 1;
+		transition: opacity 450ms ease;
+		pointer-events: none;
+		z-index: 1;
+		display: none;
+	}
+
+	.trail-static.faded {
+		opacity: 0;
+	}
+
+	/* Default (light theme assumed): show the light variant. */
+	.trail-static-light {
+		display: block;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.trail-static-light {
+			display: none;
+		}
+		.trail-static-dark {
+			display: block;
+		}
+	}
+
+	/* Explicit `data-theme` always wins. */
+	:global(:root[data-theme='light']) .trail-static-dark {
+		display: none !important;
+	}
+
+	:global(:root[data-theme='light']) .trail-static-light {
+		display: block;
+	}
+
+	:global(:root[data-theme='dark']) .trail-static-light {
+		display: none !important;
+	}
+
+	:global(:root[data-theme='dark']) .trail-static-dark {
+		display: block;
 	}
 
 	.map-fallback {
