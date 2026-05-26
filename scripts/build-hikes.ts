@@ -29,7 +29,7 @@ import {
 	type GpxStage
 } from '../src/lib/server/gpx.js';
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
-import { computeStaticMapPose, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
+import { computeStaticMapPose, lngLatToPx, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
 import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
 import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/elevation.js';
 import type {
@@ -692,7 +692,17 @@ const HERO_NARROW_HEIGHT = 1200;
 const HERO_NARROW_FIT_WIDTH = 400;
 const HERO_NARROW_FIT_HEIGHT = 480;
 
-type HeroVariant = 'wide' | 'narrow';
+// Medium-viewport variant for the 561–899 px CSS width band (tablets, split
+// panes, small laptops). Picks an in-between pose so the auto-fit zoom
+// matches what Leaflet computes at tablet widths — without this the wide
+// hero (chosen for ~1920 CSS px) lands too zoomed-in on tablets, and the
+// narrow hero (chosen for ~400 CSS px) lands too zoomed-out.
+const HERO_MEDIUM_WIDTH = 2400;
+const HERO_MEDIUM_HEIGHT = 1500;
+const HERO_MEDIUM_FIT_WIDTH = 1000;
+const HERO_MEDIUM_FIT_HEIGHT = 500;
+
+type HeroVariant = 'wide' | 'medium' | 'narrow';
 
 const HERO_VARIANT_SPECS: ReadonlyArray<{
 	name: HeroVariant;
@@ -709,6 +719,13 @@ const HERO_VARIANT_SPECS: ReadonlyArray<{
 		fitHeight: HERO_FIT_HEIGHT
 	},
 	{
+		name: 'medium',
+		width: HERO_MEDIUM_WIDTH,
+		height: HERO_MEDIUM_HEIGHT,
+		fitWidth: HERO_MEDIUM_FIT_WIDTH,
+		fitHeight: HERO_MEDIUM_FIT_HEIGHT
+	},
+	{
 		name: 'narrow',
 		width: HERO_NARROW_WIDTH,
 		height: HERO_NARROW_HEIGHT,
@@ -717,32 +734,23 @@ const HERO_VARIANT_SPECS: ReadonlyArray<{
 	}
 ];
 
-// Padding + max-zoom match the live overview map's
-// `fitBounds(..., { padding: [32, 32], maxZoom: 13 })` so the static lands
-// at the same pose Leaflet will fit to. fitHeight matches the page's
-// `clamp(320px, 50vh, 520px)` hero at desktop viewports.
-const OVERVIEW_FIT_WIDTH = 1920;
-const OVERVIEW_FIT_HEIGHT = 520;
-const OVERVIEW_PADDING_PX = 32;
-const OVERVIEW_MAX_ZOOM = 13;
-// Bump alongside `HERO_RENDER_VERSION` (or independently) when the overview
-// renderer's output changes — e.g. stroke widths, palette tweaks.
-const OVERVIEW_RENDER_VERSION = 1;
+// Bump when the overview renderer's output changes — e.g. stroke widths,
+// palette tweaks, framing constants in `processOverview`.
+const OVERVIEW_RENDER_VERSION = 2;
 
 type OverviewVariantSpec = {
 	name: HeroVariant;
 	width: number;
 	height: number;
-	fitWidth: number;
-	fitHeight: number;
 };
 
-// Overview narrow uses the same canvas dims as the per-hike narrow but
-// fits the union bbox at phone size — same `maxZoom: 13` clamp as the
-// live map's `fitBounds`.
+// One spec per viewport band; the overview's per-variant zoom is fixed in
+// `processOverview` rather than being derived from a fit bbox, so we only
+// need to know the output canvas size here.
 const OVERVIEW_VARIANT_SPECS: ReadonlyArray<OverviewVariantSpec> = [
-	{ name: 'wide', width: HERO_WIDTH, height: HERO_HEIGHT, fitWidth: OVERVIEW_FIT_WIDTH, fitHeight: OVERVIEW_FIT_HEIGHT },
-	{ name: 'narrow', width: HERO_NARROW_WIDTH, height: HERO_NARROW_HEIGHT, fitWidth: HERO_NARROW_FIT_WIDTH, fitHeight: HERO_NARROW_FIT_HEIGHT }
+	{ name: 'wide', width: HERO_WIDTH, height: HERO_HEIGHT },
+	{ name: 'medium', width: HERO_MEDIUM_WIDTH, height: HERO_MEDIUM_HEIGHT },
+	{ name: 'narrow', width: HERO_NARROW_WIDTH, height: HERO_NARROW_HEIGHT }
 ];
 
 type OverviewVariantResult = {
@@ -764,49 +772,47 @@ async function processOverview(
 		}));
 	if (lines.length === 0) return undefined;
 
-	// Union bbox over every hike's bbox — that's what Leaflet's
-	// `fitBounds(bounds)` operates on with `extend()` per polyline. Using
-	// each hike's bbox rather than every polyline point keeps the math
-	// cheap without losing the framing accuracy.
-	let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-	for (const h of hikes) {
-		const [a, b, c, d] = h.bbox;
-		if (a < minLat) minLat = a;
-		if (c > maxLat) maxLat = c;
-		if (b < minLng) minLng = b;
-		if (d > maxLng) maxLng = d;
-	}
-	if (!Number.isFinite(minLat)) return undefined;
-	const bbox: [number, number, number, number] = [minLat, minLng, maxLat, maxLng];
+	// Frame on Switzerland, not the union of hike bboxes — the overview
+	// reads as "hikes across CH" instead of zooming in on whichever corner
+	// the catalogue clusters in. Center is the country's approximate
+	// geographic midpoint; zoom is picked per-variant so CH fills the
+	// hero at each viewport without the country bbox having to fit
+	// pixel-perfectly inside `OVERVIEW_FIT_*` (which would force the wide
+	// variant down to z=7 — too far out). At these zooms the rendered
+	// canvas slightly overflows the visible hero on the short axis, and
+	// `object-fit: none` crops to the centre — exactly what we want for
+	// a "frame on the country" composition.
+	const CH_CENTER: [number, number] = [46.82, 8.23];
+	const OVERVIEW_ZOOM_BY_VARIANT: Record<HeroVariant, number> = {
+		wide: 8,
+		medium: 8,
+		narrow: 7
+	};
 
 	const slug = '_overview';
 	const outDir = path.join(HIKES_ASSETS_DIR, slug, 'images');
 	await fs.mkdir(outDir, { recursive: true });
 
 	async function renderVariant(spec: OverviewVariantSpec): Promise<OverviewVariantResult | undefined> {
-		const pose = computeStaticMapPose({
-			bbox,
-			width: spec.width,
-			height: spec.height,
-			paddingPx: OVERVIEW_PADDING_PX,
-			fitWidth: spec.fitWidth,
-			fitHeight: spec.fitHeight,
-			maxZoom: OVERVIEW_MAX_ZOOM
-		});
-		if (!pose) return undefined;
+		const zoom = OVERVIEW_ZOOM_BY_VARIANT[spec.name];
+		const c = lngLatToPx(CH_CENTER[1], CH_CENTER[0], zoom);
+		const pose = {
+			zoom,
+			centerLat: CH_CENTER[0],
+			centerLng: CH_CENTER[1],
+			originX: Math.round(c.x - spec.width / 2),
+			originY: Math.round(c.y - spec.height / 2)
+		};
 
 		const hash = crypto
 			.createHash('sha256')
 			.update(
 				JSON.stringify({
-					bbox,
+					center: CH_CENTER,
+					zoom,
 					w: spec.width,
 					h: spec.height,
-					fw: spec.fitWidth,
-					fh: spec.fitHeight,
 					lines,
-					maxZoom: OVERVIEW_MAX_ZOOM,
-					pad: OVERVIEW_PADDING_PX,
 					v: OVERVIEW_RENDER_VERSION
 				})
 			)
@@ -877,6 +883,9 @@ async function processOverview(
 		url: byVariant.wide.url,
 		zoom: byVariant.wide.zoom,
 		center: byVariant.wide.center,
+		urlMedium: byVariant.medium?.url,
+		zoomMedium: byVariant.medium?.zoom,
+		centerMedium: byVariant.medium?.center,
 		urlNarrow: byVariant.narrow?.url,
 		zoomNarrow: byVariant.narrow?.zoom,
 		centerNarrow: byVariant.narrow?.center
@@ -1388,11 +1397,16 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 
 	const iconUrl = iconResult?.url;
 	const heroWide = heroResult?.wide;
+	const heroMedium = heroResult?.medium;
 	const heroNarrow = heroResult?.narrow;
 	const heroMapUrlLight = heroWide?.lightUrl;
 	const heroMapUrlDark = heroWide?.darkUrl;
 	const heroMapZoom = heroWide?.zoom;
 	const heroMapCenter = heroWide?.center;
+	const heroMapUrlLightMedium = heroMedium?.lightUrl;
+	const heroMapUrlDarkMedium = heroMedium?.darkUrl;
+	const heroMapZoomMedium = heroMedium?.zoom;
+	const heroMapCenterMedium = heroMedium?.center;
 	const heroMapUrlLightNarrow = heroNarrow?.lightUrl;
 	const heroMapUrlDarkNarrow = heroNarrow?.darkUrl;
 	const heroMapZoomNarrow = heroNarrow?.zoom;
@@ -1431,6 +1445,10 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		heroMapUrlDark,
 		heroMapZoom,
 		heroMapCenter,
+		heroMapUrlLightMedium,
+		heroMapUrlDarkMedium,
+		heroMapZoomMedium,
+		heroMapCenterMedium,
 		heroMapUrlLightNarrow,
 		heroMapUrlDarkNarrow,
 		heroMapZoomNarrow,

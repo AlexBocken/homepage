@@ -28,28 +28,39 @@
 	// page's hero map.
 	let heroMapReady = $state(false);
 
-	// Phone vs. desktop viewport switch — drives which pre-rendered pose
-	// (`HIKES_OVERVIEW.zoom/center` vs. `.zoomNarrow/.centerNarrow`) we
-	// hand to Leaflet's first `setView` so it lands aligned with whichever
-	// static `<img>` the CSS is showing. Starts `false` to match SSR (which
-	// has no window); the $effect snaps it to the real value on mount and
-	// keeps it in sync if the user rotates / resizes across the breakpoint.
+	// Three-band viewport switch — drives which pre-rendered pose
+	// (`HIKES_OVERVIEW.zoom/center` vs. `.zoomMedium/.centerMedium` vs.
+	// `.zoomNarrow/.centerNarrow`) we hand to Leaflet's first `setView` so
+	// it lands aligned with whichever static `<img>` the CSS is showing.
+	// Starts `false`/`false` to match SSR (which has no window); the
+	// $effect snaps to the real value on mount and keeps both flags in
+	// sync across rotate/resize. `narrow` wins over `medium` when both
+	// would match (≤560 is also <900).
 	let narrowViewport = $state(false);
+	let mediumViewport = $state(false);
 	$effect(() => {
 		if (typeof window === 'undefined') return;
-		const mq = window.matchMedia('(max-width: 560px)');
-		narrowViewport = mq.matches;
-		const onChange = (e: MediaQueryListEvent) => {
-			narrowViewport = e.matches;
+		const mqNarrow = window.matchMedia('(max-width: 560px)');
+		const mqMedium = window.matchMedia('(min-width: 561px) and (max-width: 899px)');
+		narrowViewport = mqNarrow.matches;
+		mediumViewport = mqMedium.matches;
+		const onNarrow = (e: MediaQueryListEvent) => { narrowViewport = e.matches; };
+		const onMedium = (e: MediaQueryListEvent) => { mediumViewport = e.matches; };
+		mqNarrow.addEventListener('change', onNarrow);
+		mqMedium.addEventListener('change', onMedium);
+		return () => {
+			mqNarrow.removeEventListener('change', onNarrow);
+			mqMedium.removeEventListener('change', onMedium);
 		};
-		mq.addEventListener('change', onChange);
-		return () => mq.removeEventListener('change', onChange);
 	});
 
 	const overviewPose = $derived.by(() => {
 		if (!HIKES_OVERVIEW) return null;
 		if (narrowViewport && HIKES_OVERVIEW.urlNarrow && HIKES_OVERVIEW.centerNarrow && typeof HIKES_OVERVIEW.zoomNarrow === 'number') {
 			return { center: HIKES_OVERVIEW.centerNarrow, zoom: HIKES_OVERVIEW.zoomNarrow };
+		}
+		if (mediumViewport && HIKES_OVERVIEW.urlMedium && HIKES_OVERVIEW.centerMedium && typeof HIKES_OVERVIEW.zoomMedium === 'number') {
+			return { center: HIKES_OVERVIEW.centerMedium, zoom: HIKES_OVERVIEW.zoomMedium };
 		}
 		return { center: HIKES_OVERVIEW.center, zoom: HIKES_OVERVIEW.zoom };
 	});
@@ -193,9 +204,9 @@
 			     visible hike's preview polyline, coloured by SAC tier.
 			     Displayed at native pixel size (`object-fit: none`) so it
 			     overlays Leaflet's live tiles exactly. The image fades out
-			     once Leaflet's first tile batch loads. Two width variants
-			     ship — desktop (wide pose) and phone (narrow pose, ≤560 CSS
-			     px). CSS chooses which one shows based on a media query so
+			     once Leaflet's first tile batch loads. Three width variants
+			     ship — wide (≥900 CSS px), medium (561–899), narrow (≤560).
+			     CSS chooses which one shows based on a media query so
 			     hydration doesn't need to wait. -->
 			<img
 				class="hero-static hero-static-wide"
@@ -206,6 +217,17 @@
 				loading="eager"
 				decoding="async"
 			/>
+			{#if HIKES_OVERVIEW.urlMedium}
+				<img
+					class="hero-static hero-static-medium"
+					class:faded={heroMapReady}
+					src={HIKES_OVERVIEW.urlMedium}
+					alt=""
+					aria-hidden="true"
+					loading="eager"
+					decoding="async"
+				/>
+			{/if}
 			{#if HIKES_OVERVIEW.urlNarrow}
 				<img
 					class="hero-static hero-static-narrow"
@@ -325,13 +347,20 @@
 		opacity: 0;
 	}
 
-	/* Wide ↔ narrow viewport swap. The narrow variant is rendered at a
-	 * phone-sized fit, so the zoom matches what Leaflet picks at the same
-	 * container width — without this the desktop hero would land too
-	 * zoomed-in on phones (its pose was chosen for ~1920 CSS px). */
+	/* Three-band viewport swap (wide ≥900, medium 561–899, narrow ≤560).
+	 * Each variant is rendered at a fit matching its band so Leaflet picks
+	 * the same zoom on first paint — without this the desktop hero would
+	 * land too zoomed-in on tablets/phones (its pose was chosen for
+	 * ~1920 CSS px), and the narrow hero would land too zoomed-out on
+	 * tablets (chosen for ~400 CSS px). */
+	.hero-static-medium,
 	.hero-static-narrow { display: none; }
-	@media (max-width: 560px) {
+	@media (max-width: 899px) {
 		.hero-static-wide { display: none; }
+		.hero-static-medium { display: block; }
+	}
+	@media (max-width: 560px) {
+		.hero-static-medium { display: none; }
 		.hero-static-narrow { display: block; }
 	}
 

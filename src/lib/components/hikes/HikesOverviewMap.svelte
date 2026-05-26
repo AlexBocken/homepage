@@ -151,35 +151,17 @@
 			// union bounds.
 			let initialBounds: ReturnType<typeof L.latLngBounds> | null = null;
 
-			// First-paint handover: when the schematic tile layer finishes
-			// loading its initial batch, fire `onReady` (so the static hero
-			// can fade out) and — if we opened with `setView` to match a
-			// pre-rendered hero — animate to Leaflet's natural `fitBounds`
-			// of the union polyline bounds. The fade overlaps with the zoom
-			// animation so the user sees the map ease into its final
-			// framing as the static dissolves. Mirrors the same pattern in
+			// First-paint handover: fire `onReady` once the schematic tile
+			// layer's initial batch loads so the static hero can fade out.
+			// The map already opened at the static pose via setView (see
+			// the initialCenter branch below), so no extra animation is
+			// needed — and `flyToBounds(union)` here used to cause a
+			// visible wobble on hikes whose union bbox sits at an integer-
+			// zoom boundary, where the static's fit and Leaflet's runtime
+			// fit disagree by one zoom step. Mirrors the same fix in
 			// `HikeMap.svelte`.
 			tileLayers.schematic.once('load', () => {
-				if (!initialCenter || typeof initialZoom !== 'number' || !initialBounds) {
-					onReady?.();
-					return;
-				}
-				map.flyToBounds(initialBounds, {
-					padding: [32, 32],
-					maxZoom: 13,
-					duration: 0.9,
-					easeLinearity: 0.3
-				});
-				map.once('moveend', () => {
-					let fired = false;
-					const fire = () => {
-						if (fired) return;
-						fired = true;
-						onReady?.();
-					};
-					tileLayers.schematic.once('load', fire);
-					setTimeout(fire, 350);
-				});
+				onReady?.();
 			});
 
 			// One polyline per hike, sourced from the manifest's already-

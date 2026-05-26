@@ -129,6 +129,15 @@ export type HikeManifestEntry = {
 	/** Map centre `[lat, lng]` the static hero was rendered around. */
 	heroMapCenter?: [number, number];
 
+	/** Medium-viewport variant (561–899 CSS px — tablets, split panes,
+	 * small laptops). Pose picked for a tablet-sized container so the
+	 * static→Leaflet handover lands at the same integer zoom without the
+	 * "too zoomed in" mismatch the wide pose would produce at this width. */
+	heroMapUrlLightMedium?: string;
+	heroMapUrlDarkMedium?: string;
+	heroMapZoomMedium?: number;
+	heroMapCenterMedium?: [number, number];
+
 	/** Narrow-viewport variant of the pre-rendered hero (≤ 560 CSS px).
 	 * Rendered with a phone-sized `fitWidth`/`fitHeight`, so the chosen
 	 * integer zoom matches what Leaflet's `fitBounds` picks at the same
@@ -162,6 +171,12 @@ export type HikesOverview = {
 	zoom: number;
 	/** Centre `[lat, lng]` the wide static was rendered around. */
 	center: [number, number];
+	/** Medium-viewport variant (561–899 CSS px). Pose picked for a tablet-
+	 * sized container so the static→Leaflet handover doesn't shift the map
+	 * at this width. */
+	urlMedium?: string;
+	zoomMedium?: number;
+	centerMedium?: [number, number];
 	/** Narrow-viewport variant for phones (≤ 560 CSS px). Rendered at a
 	 * phone-sized `fitWidth`/`fitHeight`, so the chosen zoom matches what
 	 * Leaflet picks at the same container size. The page shows it instead

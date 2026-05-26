@@ -191,50 +191,17 @@
 			let currentBase: BaseLayer = 'schematic';
 
 			// First-paint handover: when the schematic tile layer finishes
-			// loading its initial batch, fire `onReady` (so the static hero
-			// can fade out) AND — if we opened with `setView` to match a
-			// pre-rendered hero — animate to Leaflet's natural `fitBounds`
-			// view, which is typically slightly more zoomed out. The fade
-			// (~450 ms) overlaps with the zoom animation (~700 ms) so the
-			// user sees the map ease into its proper framing as the static
-			// dissolves.
+			// loading its initial batch, fire `onReady` so the static hero
+			// can fade out. The map already opened at the static pose via
+			// `setView(initialCenter, initialZoom)` below, so the live
+			// tiles paint over the static at the same framing — no second
+			// animation is needed (and a `flyToBounds` here would actually
+			// cause a visible wobble on hikes whose bbox sits right at an
+			// integer-zoom boundary, where the static's fit and Leaflet's
+			// runtime fit disagree by one zoom step at the user's actual
+			// container size).
 			tileLayers.schematic.once('load', () => {
-				// Initial tiles at the static-hero pose are present. If we
-				// don't need to fly to a different framing, fire `onReady`
-				// straight away — that's the simple path.
-				if (!initialCenter || typeof initialZoom !== 'number') {
-					onReady?.();
-					return;
-				}
-
-				// Otherwise: start the fly-to-bounds animation while the
-				// static stays visible on top. Once the fly settles AND the
-				// new tiles for the final view are in (or a short safety
-				// window elapses), THEN fire `onReady` so the static fades
-				// out over fully-loaded tiles — no grey flash in the gap
-				// between fly-end and tile-load.
-				map.flyToBounds(initialBounds, {
-					padding: [24, 24],
-					duration: 0.9,
-					easeLinearity: 0.3
-				});
-				map.once('moveend', () => {
-					let fired = false;
-					const fire = () => {
-						if (fired) return;
-						fired = true;
-						onReady?.();
-					};
-					// `load` fires when every currently-visible tile has
-					// arrived. Usually that's the trigger.
-					tileLayers.schematic.once('load', fire);
-					// Safety net: if the fly didn't change zoom enough to
-					// require any new tiles, `load` may not re-fire. 350 ms
-					// is short enough to feel responsive, long enough for
-					// the post-fly tile batch to arrive on typical
-					// connections.
-					setTimeout(fire, 350);
-				});
+				onReady?.();
 			});
 
 			// Canvas-rendered polylines can't resolve CSS custom properties,

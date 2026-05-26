@@ -30,7 +30,7 @@ function tileUrl(sub: string, layer: string, z: number, x: number, y: number): s
 }
 
 /** Web Mercator: lng/lat → absolute pixel coordinate at a given zoom. */
-function lngLatToPx(lng: number, lat: number, zoom: number): { x: number; y: number } {
+export function lngLatToPx(lng: number, lat: number, zoom: number): { x: number; y: number } {
 	const n = 2 ** zoom;
 	const x = ((lng + 180) / 360) * n * TILE_SIZE;
 	const latRad = (lat * Math.PI) / 180;

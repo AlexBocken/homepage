@@ -40,22 +40,29 @@
 	// handover is a soft cross-fade rather than a swap.
 	let heroMapReady = $state(false);
 
-	// Phone vs. desktop viewport — picks which pre-rendered pose we hand
-	// to Leaflet's first `setView` so it lands aligned with the static
-	// `<img>` the CSS is showing. Starts `false` for SSR; the $effect snaps
-	// it to the real value on mount and keeps it in sync across rotate /
-	// resize. See `/hikes/+page.svelte` for the matching overview-side
-	// pattern.
+	// Three-band viewport switch (narrow ≤560, medium 561–899, wide ≥900)
+	// — picks which pre-rendered pose we hand to Leaflet's first `setView`
+	// so it lands aligned with the static `<img>` the CSS is showing.
+	// Starts `false`/`false` for SSR; the $effect snaps to real values on
+	// mount and keeps both flags in sync across rotate/resize. `narrow`
+	// wins over `medium` when both would match. See the matching overview
+	// pattern in `/hikes/+page.svelte`.
 	let narrowViewport = $state(false);
+	let mediumViewport = $state(false);
 	$effect(() => {
 		if (typeof window === 'undefined') return;
-		const mq = window.matchMedia('(max-width: 560px)');
-		narrowViewport = mq.matches;
-		const onChange = (e: MediaQueryListEvent) => {
-			narrowViewport = e.matches;
+		const mqNarrow = window.matchMedia('(max-width: 560px)');
+		const mqMedium = window.matchMedia('(min-width: 561px) and (max-width: 899px)');
+		narrowViewport = mqNarrow.matches;
+		mediumViewport = mqMedium.matches;
+		const onNarrow = (e: MediaQueryListEvent) => { narrowViewport = e.matches; };
+		const onMedium = (e: MediaQueryListEvent) => { mediumViewport = e.matches; };
+		mqNarrow.addEventListener('change', onNarrow);
+		mqMedium.addEventListener('change', onMedium);
+		return () => {
+			mqNarrow.removeEventListener('change', onNarrow);
+			mqMedium.removeEventListener('change', onMedium);
 		};
-		mq.addEventListener('change', onChange);
-		return () => mq.removeEventListener('change', onChange);
 	});
 
 	const canton = $derived(resolveCanton(hike.canton));
@@ -83,6 +90,13 @@
 			typeof hike.heroMapZoomNarrow === 'number'
 		) {
 			return { center: hike.heroMapCenterNarrow, zoom: hike.heroMapZoomNarrow };
+		}
+		if (
+			mediumViewport &&
+			hike.heroMapCenterMedium &&
+			typeof hike.heroMapZoomMedium === 'number'
+		) {
+			return { center: hike.heroMapCenterMedium, zoom: hike.heroMapZoomMedium };
 		}
 		if (hike.heroMapCenter && typeof hike.heroMapZoom === 'number') {
 			return { center: hike.heroMapCenter, zoom: hike.heroMapZoom };
@@ -284,14 +298,14 @@
 	<section class="hero-map" style="view-transition-name: hike-{hike.slug}; view-transition-class: hike-fly-in">
 		{#if hike.heroMapUrlLight}
 			<!-- Build-time static composite of Swisstopo tiles + the trail
-			     polyline + public photo markers. Four variants ship — theme
-			     (light/dark) × viewport (wide/narrow). Theme is picked by
-			     `data-theme` / `prefers-color-scheme`; viewport by a
-			     `max-width: 560px` media query. Each variant is rendered at
-			     the same pose Leaflet's `fitBounds` picks for its target
-			     container size, so the static→live cross-fade aligns
-			     pixel-perfectly. The image fades out once Leaflet's first
-			     tile batch loads. -->
+			     polyline + public photo markers. Six variants ship — theme
+			     (light/dark) × viewport (wide ≥900 / medium 561–899 /
+			     narrow ≤560 CSS px). Theme is picked by `data-theme` /
+			     `prefers-color-scheme`; viewport by media queries. Each
+			     variant is rendered at the same pose Leaflet's `fitBounds`
+			     picks for its target container size, so the static→live
+			     cross-fade aligns pixel-perfectly. The image fades out once
+			     Leaflet's first tile batch loads. -->
 			<img
 				class="hero-static hero-static-light hero-static-wide"
 				class:faded={heroMapReady}
@@ -307,6 +321,28 @@
 				class="hero-static hero-static-dark hero-static-wide"
 				class:faded={heroMapReady}
 				src={hike.heroMapUrlDark}
+				alt=""
+				aria-hidden="true"
+				loading="eager"
+				decoding="async"
+			/>
+		{/if}
+		{#if hike.heroMapUrlLightMedium}
+			<img
+				class="hero-static hero-static-light hero-static-medium"
+				class:faded={heroMapReady}
+				src={hike.heroMapUrlLightMedium}
+				alt=""
+				aria-hidden="true"
+				loading="eager"
+				decoding="async"
+			/>
+		{/if}
+		{#if hike.heroMapUrlDarkMedium}
+			<img
+				class="hero-static hero-static-dark hero-static-medium"
+				class:faded={heroMapReady}
+				src={hike.heroMapUrlDarkMedium}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -573,28 +609,37 @@
 		pointer-events: none;
 	}
 
-	/* 2×2 picker: theme (light/dark) × viewport (wide/narrow). Each `<img>`
-	 * has both qualifiers (e.g. `.hero-static-light.hero-static-wide`); we
-	 * hide everything by default and reveal exactly one based on the
-	 * active theme and the `max-width: 560px` media query. The narrow
-	 * variant uses a phone-sized pose so the auto-fit zoom matches what
-	 * Leaflet picks at the same container width. */
+	/* 2×3 picker: theme (light/dark) × viewport (wide ≥900 / medium
+	 * 561–899 / narrow ≤560). Each `<img>` carries both qualifiers (e.g.
+	 * `.hero-static-light.hero-static-wide`); we hide everything by
+	 * default and reveal exactly one based on the active theme and the
+	 * viewport media queries. Each variant is rendered at a fit matching
+	 * its band so Leaflet picks the same integer zoom on first paint. */
 	.hero-static { display: none; }
 
-	/* Default (light theme assumed, no `data-theme` attribute, no
-	 * `prefers-color-scheme: dark`): show the wide-light variant. */
+	/* Default (light theme assumed): show the wide-light, then step down
+	 * the cascade as viewports shrink. */
 	.hero-static-light.hero-static-wide { display: block; }
-	@media (max-width: 560px) {
+	@media (max-width: 899px) {
 		.hero-static-light.hero-static-wide { display: none; }
+		.hero-static-light.hero-static-medium { display: block; }
+	}
+	@media (max-width: 560px) {
+		.hero-static-light.hero-static-medium { display: none; }
 		.hero-static-light.hero-static-narrow { display: block; }
 	}
 
 	@media (prefers-color-scheme: dark) {
 		.hero-static-light.hero-static-wide,
+		.hero-static-light.hero-static-medium,
 		.hero-static-light.hero-static-narrow { display: none; }
 		.hero-static-dark.hero-static-wide { display: block; }
-		@media (max-width: 560px) {
+		@media (max-width: 899px) {
 			.hero-static-dark.hero-static-wide { display: none; }
+			.hero-static-dark.hero-static-medium { display: block; }
+		}
+		@media (max-width: 560px) {
+			.hero-static-dark.hero-static-medium { display: none; }
 			.hero-static-dark.hero-static-narrow { display: block; }
 		}
 	}
@@ -602,15 +647,23 @@
 	/* Explicit `data-theme` always wins. */
 	:global(:root[data-theme='light']) .hero-static-dark { display: none !important; }
 	:global(:root[data-theme='light']) .hero-static-light.hero-static-wide { display: block; }
-	@media (max-width: 560px) {
+	@media (max-width: 899px) {
 		:global(:root[data-theme='light']) .hero-static-light.hero-static-wide { display: none; }
+		:global(:root[data-theme='light']) .hero-static-light.hero-static-medium { display: block; }
+	}
+	@media (max-width: 560px) {
+		:global(:root[data-theme='light']) .hero-static-light.hero-static-medium { display: none; }
 		:global(:root[data-theme='light']) .hero-static-light.hero-static-narrow { display: block; }
 	}
 
 	:global(:root[data-theme='dark']) .hero-static-light { display: none !important; }
 	:global(:root[data-theme='dark']) .hero-static-dark.hero-static-wide { display: block; }
-	@media (max-width: 560px) {
+	@media (max-width: 899px) {
 		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-wide { display: none; }
+		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-medium { display: block; }
+	}
+	@media (max-width: 560px) {
+		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-medium { display: none; }
 		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-narrow { display: block; }
 	}
 
