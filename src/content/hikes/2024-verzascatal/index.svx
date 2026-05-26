@@ -1,0 +1,74 @@
+---
+title: Wanderung durch das Verzascatal
+date: 2024-09-01
+author: Alexander
+difficulty: T1
+tags: [Zentralschweiz, Panorama, family, Spätsommer]
+summary: Eine schöne Aussichtstour durch die Zentralschweiz... wenn das Wetter hält
+heroAlt:
+seasons: 5-9
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Anfahrt
+
+Anreise von Lugano via Bus nach Lavertezzo, Ai Poss.
+<JourneyPlanner from="<current location>" to="Lavertezzo, Ai Poss" toFixed time="09:00" target="arrival" />
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+
+## Abreise
+
+Via Bus zurück von Sonogno nach Lugano. Dort von Zug nach Hause.
+<JourneyPlanner from="Sonogno" to="<current location>" fromFixed time="12:00" target="departure" />
