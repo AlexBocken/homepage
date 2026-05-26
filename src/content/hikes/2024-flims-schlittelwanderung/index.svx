@@ -1,0 +1,53 @@
+---
+title: Schlittelausflug Brün
+date: 2024-12-25
+author: Alexander
+difficulty: T1
+tags: [Graubünden, Flims, Winter, Schlitteln]
+seasons: 12-2
+summary:
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+	import Private from '$lib/components/Private.svelte';
+</script>
+
+## Übersicht
+
+Ein netter Ausflug zum Schlitteln wenn man bereits in Flims ist.
+Aufstieg ca. 1 Stunde mit wunderschöner Winterlandschaft.
+
+## Anreise
+
+Start direkt in Brün. Eine Anreise mit Bus (Linie 404) ist möglich, ein direktes anfahren mit Auto wäre jedoch zu empfehlen.
+Es empfiehlt sich ca. um 11 Uhr in Brün anzukommen, da durch die Nähe zum Piz Riein ausserhalb der Mittagszeit es schnell schattig werden kann.
+<JourneyPlanner from="<current location>" to="Valendas, Brün Dorf" toFixed time="11:00" target="arrival"/>
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+Immer wieder gab es jedoch auch Pausen im Regen und man konnte das vibrante Frühlingsgrün von Feldern und Wald geniessen.
+Der starke Regen hat auch das Aufnehmen weiterer Fotos verhindert, weswegen erst am Ziel wieder viele Bilder zu sehen sind.
+
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+
+<HikeImage src="PXL_20241225_121635285.jpg" alt="Anna auf dem Weg runter" private />
+<HikeImage src="PXL_20241225_122938851.jpg" alt="Wieder in Brün" private />
+<HikeImage src="PXL_20241225_122942649.jpg" alt="Wieder in Brün" />
+
+## Abreise
+Via Bus (Linie 404) oder Auto.
+<JourneyPlanner from="Valendas, Brün Dorf" fromFixed to="<current location>" time="12:30" target="departure"/>
