@@ -5,11 +5,18 @@
 //! the tile overlaps a swisstopo-covered region (Switzerland or Liechtenstein,
 //! each buffered ~2 km) and a global provider otherwise:
 //!
-//! | layer    | swisstopo region (CH + LI)   | elsewhere                  |
-//! |----------|------------------------------|----------------------------|
-//! | karte    | ch.swisstopo.pixelkarte-farbe| OpenTopoMap                |
-//! | luftbild | ch.swisstopo.swissimage      | Esri World Imagery         |
-//! | dufour   | ch.swisstopo.hiks-dufour     | — (CH/LI-only historical)  |
+//! | layer    | swisstopo region (CH + LI)   | elsewhere                            |
+//! |----------|------------------------------|--------------------------------------|
+//! | karte    | ch.swisstopo.pixelkarte-farbe| Thunderforest Outdoors (or OpenTopo) |
+//! | luftbild | ch.swisstopo.swissimage      | Esri World Imagery                   |
+//! | dufour   | ch.swisstopo.hiks-dufour     | — (CH/LI-only historical)            |
+//!
+//! The `karte` upstream abroad is Thunderforest Outdoors when the
+//! `THUNDERFOREST_API_KEY` env var is set at *build* time (it's baked into
+//! the binary via `option_env!`), otherwise OpenTopoMap (whose hypsometric
+//! tint reads "red mountains / green flats"). `build.rs` reads the key from
+//! `tile-proxy/.env` (gitignored) or a shell env var, and requests a
+//! recompile when either changes.
 //!
 //! Caching, TLS and rate-limiting live in nginx in front of this service
 //! (see README.md) — this binary only does the routing + upstream fetch.
@@ -133,13 +140,21 @@ fn upstreams(layer: &str, z: u32, x: u32, y: u32) -> Option<(String, Option<Stri
     // covered ground).
     let swiss = tile_intersects_regions(z, x, y);
     let opentopo = || format!("https://a.tile.opentopomap.org/{z}/{x}/{y}.png");
+    // Thunderforest Outdoors looks much closer to swisstopo (subtle hillshade,
+    // muted topo palette, hiking paths) than OpenTopoMap's hypsometric tint.
+    // Used as the foreign `karte` upstream when a build-time API key is
+    // baked in; otherwise we fall back to OpenTopoMap.
+    let outdoors_abroad = || match THUNDERFOREST_API_KEY {
+        Some(key) => format!("https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey={key}"),
+        None => opentopo(),
+    };
     // NB: Esri uses {z}/{y}/{x} (row before column).
     let esri = || {
         format!("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}")
     };
     match layer {
-        "karte" if swiss => Some((swisstopo("ch.swisstopo.pixelkarte-farbe", "jpeg", z, x, y), Some(opentopo()))),
-        "karte" => Some((opentopo(), None)),
+        "karte" if swiss => Some((swisstopo("ch.swisstopo.pixelkarte-farbe", "jpeg", z, x, y), Some(outdoors_abroad()))),
+        "karte" => Some((outdoors_abroad(), None)),
         "luftbild" if swiss => Some((swisstopo("ch.swisstopo.swissimage", "jpeg", z, x, y), Some(esri()))),
         "luftbild" => Some((esri(), None)),
         // Historical Dufour map only exists for Switzerland.
@@ -147,6 +162,12 @@ fn upstreams(layer: &str, z: u32, x: u32, y: u32) -> Option<(String, Option<Stri
         _ => None,
     }
 }
+
+/// Thunderforest Outdoors API key, baked into the binary at build time from
+/// the `THUNDERFOREST_API_KEY` env var. When absent the `karte` layer falls
+/// back to OpenTopoMap abroad. `build.rs` requests a rebuild whenever the
+/// env var changes.
+const THUNDERFOREST_API_KEY: Option<&str> = option_env!("THUNDERFOREST_API_KEY");
 
 async fn fetch(url: &str) -> Option<Response> {
     let r = client().get(url).send().await.ok()?;

@@ -1,6 +1,9 @@
 # systemd unit for the tile proxy.
 #   install:  cp deploy/tile-proxy.service /etc/systemd/system/
-#             (build first: cargo build --release; adjust paths/user below)
+#             (build first: drop the Thunderforest key into tile-proxy/.env
+#              and run `cargo build --release`; build.rs reads .env and bakes
+#              the key into the binary at compile time, nothing is read at
+#              runtime; adjust paths/user below)
 #   enable:   systemctl daemon-reload && systemctl enable --now tile-proxy
 
 [Unit]

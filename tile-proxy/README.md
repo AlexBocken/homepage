@@ -27,11 +27,25 @@ is stateless.
 
 ## Layers & providers
 
-| `{layer}`  | swisstopo region (CH + LI)       | elsewhere             |
-|------------|----------------------------------|-----------------------|
-| `karte`    | `ch.swisstopo.pixelkarte-farbe`  | OpenTopoMap           |
-| `luftbild` | `ch.swisstopo.swissimage`        | Esri World Imagery    |
-| `dufour`   | `ch.swisstopo.hiks-dufour`       | — (CH/LI-only)        |
+| `{layer}`  | swisstopo region (CH + LI)       | elsewhere                              |
+|------------|----------------------------------|----------------------------------------|
+| `karte`    | `ch.swisstopo.pixelkarte-farbe`  | Thunderforest Outdoors (or OpenTopoMap)|
+| `luftbild` | `ch.swisstopo.swissimage`        | Esri World Imagery                     |
+| `dufour`   | `ch.swisstopo.hiks-dufour`       | — (CH/LI-only)                         |
+
+The `karte` upstream abroad is **Thunderforest Outdoors** when a
+`THUNDERFOREST_API_KEY` is available at **build** time — it's baked into the
+binary via `option_env!`. The key is read from `tile-proxy/.env` (gitignored)
+by `build.rs`, or from a shell env var of the same name; both are watched so
+the binary recompiles whenever the value changes. Without a key, the build
+falls back to **OpenTopoMap** (no key needed, but its hypsometric tint reads
+as "red mountains / green flats", which is why Thunderforest is preferred
+when available).
+
+```sh
+# tile-proxy/.env  (gitignored)
+THUNDERFOREST_API_KEY=your-key-here
+```
 
 The swisstopo region is **Switzerland + Liechtenstein** (swisstopo has
 high-quality data for both). A tile is served by swisstopo when it **overlaps**
@@ -45,13 +59,16 @@ that 404s near the edge falls back to the global provider automatically.
 ## Build & run
 
 ```sh
+# Optional: drop a Thunderforest key in tile-proxy/.env for nicer abroad
+# `karte` tiles; the build falls back to OpenTopoMap when the file is absent.
+echo 'THUNDERFOREST_API_KEY=your-key-here' > .env
 cargo build --release
 TILE_PROXY_ADDR=127.0.0.1:8765 ./target/release/tile-proxy
 # smoke test
 curl -s -o /dev/null -w '%{http_code} %{content_type}\n' \
   http://127.0.0.1:8765/karte/9/266/180        # Bern  → swisstopo (jpeg)
 curl -s -o /dev/null -w '%{http_code} %{content_type}\n' \
-  http://127.0.0.1:8765/karte/9/255/171        # London → OpenTopoMap (png)
+  http://127.0.0.1:8765/karte/9/255/171        # London → Thunderforest / OpenTopoMap (png)
 ```
 
 `TILE_PROXY_ADDR` defaults to `127.0.0.1:8765` but should be set explicitly.
@@ -78,11 +95,12 @@ cache so old tiles aren't served by the previous provider.
 
 ## Attribution (required)
 
-All three providers require credit — keep these on the page (the hikes pages
-show them in the footer):
+All providers require credit — keep these on the page (the hikes pages show
+them in the footer):
 
 - **© swisstopo** — Swiss tiles.
-- **© OpenStreetMap contributors, SRTM | © OpenTopoMap (CC-BY-SA)** — world schematic.
+- **Maps © Thunderforest, Data © OpenStreetMap contributors** — world schematic (when the key is baked in).
+- **© OpenStreetMap contributors, SRTM | © OpenTopoMap (CC-BY-SA)** — world schematic (fallback build).
 - **© Esri, Maxar, Earthstar Geographics** — world satellite.
 
 ## Notes
