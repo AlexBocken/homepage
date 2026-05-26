@@ -227,14 +227,20 @@
 	</section>
 
 	<div class="below-hero">
-		<HikesFilterBar
-			hikes={data.hikes}
-			{filter}
-			resultCount={visible.length}
-			totalCount={data.hikes.length}
-			totalKm={totals.km}
-			totalGain={totals.gain}
-		/>
+		<!-- Wrapped in a named view-transition box so the filter bar can fly
+		     up alongside the cards when arriving at /hikes from outside the
+		     hikes group. Same `view-transition-class: hike-fly-in` as each
+		     HikeCard so one CSS rule animates both. -->
+		<div class="filter-vt-box">
+			<HikesFilterBar
+				hikes={data.hikes}
+				{filter}
+				resultCount={visible.length}
+				totalCount={data.hikes.length}
+				totalKm={totals.km}
+				totalGain={totals.gain}
+			/>
+		</div>
 
 		{#if visible.length === 0}
 			<p class="empty">Keine Wanderung entspricht den aktuellen Filtern.</p>
@@ -392,5 +398,13 @@
 			grid-template-columns: 1fr;
 			gap: 1rem;
 		}
+	}
+
+	/* Wrapper sets the view-transition name/class on the filter bar so the
+	 * same .hike-fly-in rules in app.css that animate the cards also
+	 * animate this bar (fly-in on /hikes enter, fly-out on /hikes exit). */
+	.filter-vt-box {
+		view-transition-name: hikes-filter-bar;
+		view-transition-class: hike-fly-in;
 	}
 </style>

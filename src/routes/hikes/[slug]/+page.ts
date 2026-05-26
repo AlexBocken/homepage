@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { HIKES } from '$lib/data/hikes.generated';
+import type { HikeTrackPoint } from '$types/hikes';
 import type { PageLoad } from './$types';
 
 // Not prerendered: the page needs the live session so private images can be
@@ -16,7 +17,7 @@ const mdxModules = import.meta.glob<{ default: unknown; metadata?: Record<string
 	'/src/content/hikes/*/index.svx'
 );
 
-export const load: PageLoad = async ({ params }) => {
+export const load: PageLoad = async ({ params, fetch }) => {
 	const hike = HIKES.find((h) => h.slug === params.slug);
 	if (!hike) throw error(404, 'Hike not found');
 
@@ -24,11 +25,21 @@ export const load: PageLoad = async ({ params }) => {
 	const loader = mdxModules[modPath];
 	if (!loader) throw error(404, 'Hike content missing');
 
-	const mod = await loader();
+	// Load the MDX module and the track JSON in parallel. The track was
+	// previously fetched in a client-side $effect; doing it here means the
+	// strip + map + elevation chart all render with real data on first
+	// paint (no async pop-in / layout shift), and crucially the photo
+	// strip exists in the DOM at view-transition snapshot time so the
+	// /hikes → /hikes/[slug] slide-in animation actually has something
+	// to capture.
+	const [mod, trackResp] = await Promise.all([loader(), fetch(hike.trackUrl)]);
+	if (!trackResp.ok) throw error(500, `Track konnte nicht geladen werden: ${trackResp.status}`);
+	const track = (await trackResp.json()) as HikeTrackPoint[];
 
 	return {
 		hike,
 		MdxComponent: mod.default,
-		mdxMetadata: mod.metadata ?? {}
+		mdxMetadata: mod.metadata ?? {},
+		track
 	};
 };

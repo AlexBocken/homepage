@@ -465,6 +465,101 @@ a:focus-visible {
 }
 
 /* ============================================
+   HIKES TRANSITIONS
+   Cards + filter fly in/out vertically, clicked card morphs into the hero
+   map (cross-fade between thumbnail and map), photo strip slides in from
+   the right. Page chrome under the hero cross-fades so nothing snaps in
+   at transition end. Lives in app.css (not the page component) so the
+   rules are still loaded on the OLD side of a nav AWAY from /hikes.
+   ============================================ */
+
+@keyframes hikes-fly-up {
+	from { transform: translateY(100vh); }
+	to { transform: translateY(0); }
+}
+@keyframes hikes-fly-down {
+	from { transform: translateY(0); }
+	to { transform: translateY(100vh); }
+}
+@keyframes hikes-root-fade-out {
+	from { opacity: 1; }
+	to { opacity: 0; }
+}
+@keyframes hikes-root-fade-in {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+@keyframes hike-strip-in-right {
+	from { transform: translateX(100vw); }
+	to { transform: translateX(0); }
+}
+@keyframes hike-strip-out-right {
+	from { transform: translateX(0); }
+	to { transform: translateX(100vw); }
+}
+
+/* Only-child hike-fly-in pseudos (unpaired cards/filter on enter or exit):
+ * kill UA's default fade, switch blend mode so the custom fly animation
+ * shows clean motion against the rest of the page. */
+::view-transition-old(.hike-fly-in):only-child,
+::view-transition-new(.hike-fly-in):only-child {
+	animation: none;
+	mix-blend-mode: normal;
+}
+
+/* Paired (card ↔ hero): keep UA cross-fade so the card thumbnail dissolves
+ * into the hero map — otherwise the new image would just cover the old one
+ * and the thumbnail would vanish silently at t=0. Stretch the duration to
+ * match the group so the fade ends exactly when the morph does. */
+::view-transition-old(.hike-fly-in):not(:only-child),
+::view-transition-new(.hike-fly-in):not(:only-child) {
+	animation-duration: 550ms;
+	animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Group (the morphing bbox) timing. */
+::view-transition-group(.hike-fly-in) {
+	animation-duration: 550ms;
+	animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cards + filter rise from below the viewport on enter. */
+html.vt-enter-hikes::view-transition-new(.hike-fly-in):only-child {
+	animation: hikes-fly-up 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Cards + filter drop off the bottom on exit. */
+html.vt-exit-hikes::view-transition-old(.hike-fly-in):only-child {
+	animation: hikes-fly-down 700ms cubic-bezier(0.4, 0.1, 0.4, 1) both;
+}
+
+/* Photo strip slides in from the right when arriving at the detail page,
+ * and slides back out when returning to /hikes. Overrides the global root
+ * `animation: none` only for these hike-specific transitions. */
+html.vt-enter-hike-detail::view-transition-new(hike-strip):only-child {
+	animation: hike-strip-in-right 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+html.vt-enter-hikes::view-transition-old(hike-strip):only-child {
+	animation: hike-strip-out-right 600ms cubic-bezier(0.4, 0.1, 0.4, 1) both;
+}
+
+/* Cross-fade the rest of the page (root pseudo) during hike transitions so
+ * the destination's chrome — metrics + content + footer on the detail page,
+ * overview hero + credit on the index — phases in instead of snapping in
+ * at the end of the morph. Overrides the global rule above; scope keeps
+ * other routes' transitions on their existing instant-swap behavior. */
+html.vt-enter-hike-detail::view-transition-old(root),
+html.vt-enter-hikes::view-transition-old(root),
+html.vt-exit-hikes::view-transition-old(root) {
+	animation: hikes-root-fade-out 450ms ease-out both;
+}
+html.vt-enter-hike-detail::view-transition-new(root),
+html.vt-enter-hikes::view-transition-new(root),
+html.vt-exit-hikes::view-transition-new(root) {
+	animation: hikes-root-fade-in 450ms ease-out both;
+}
+
+/* ============================================
    RECIPE GRID
    Responsive card grid used across recipe pages
    ============================================ */

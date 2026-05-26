@@ -60,15 +60,42 @@
 	onNavigate((navigation) => {
 		if (!(/** @type {any} */ (document)).startViewTransition) return;
 
-		// Skip if staying within the same route group (recipe layout handles its own)
-		const fromGroup = navigation.from?.route.id?.split('/')[1] ?? '';
-		const toGroup = navigation.to?.route.id?.split('/')[1] ?? '';
-		if (fromGroup === toGroup) return;
+		const fromId = navigation.from?.route.id ?? '';
+		const toId = navigation.to?.route.id ?? '';
+		const fromGroup = fromId.split('/')[1] ?? '';
+		const toGroup = toId.split('/')[1] ?? '';
+
+		// Skip same-group nav (recipe layout handles its own). Hikes is the
+		// exception: we want the card↔hero morph for /hikes ↔ /hikes/[slug].
+		if (fromGroup === toGroup && fromGroup !== 'hikes') return;
+
+		// Tag <html> so scoped CSS can target each variant of hike nav:
+		// - vt-enter-hikes: arriving at /hikes from any other route →
+		//   non-paired cards + filter bar fly up from below the viewport.
+		//   (Covers / → /hikes AND back-nav /hikes/[slug] → /hikes, where
+		//   the clicked card pairs with the hero and the rest fly in.)
+		// - vt-exit-hikes: leaving /hikes for any other route →
+		//   non-paired cards + filter bar fly down off-screen.
+		//   (Covers /hikes → / AND /hikes → /hikes/[slug], where the clicked
+		//   card pairs into the hero and the rest fly out.)
+		// - vt-enter-hike-detail: arriving at a hike detail page (card → zoom).
+		const intoHikesIndex = toId === '/hikes' && fromId !== '/hikes';
+		const outOfHikesIndex = fromId === '/hikes' && toId !== '/hikes';
+		const intoHikeDetail = toId === '/hikes/[slug]';
 
 		return new Promise((resolve) => {
-			(/** @type {any} */ (document)).startViewTransition(async () => {
+			const root = document.documentElement;
+			if (intoHikesIndex) root.classList.add('vt-enter-hikes');
+			if (outOfHikesIndex) root.classList.add('vt-exit-hikes');
+			if (intoHikeDetail) root.classList.add('vt-enter-hike-detail');
+			const transition = (/** @type {any} */ (document)).startViewTransition(async () => {
 				resolve();
 				await navigation.complete;
+			});
+			transition.finished.finally(() => {
+				root.classList.remove('vt-enter-hikes');
+				root.classList.remove('vt-exit-hikes');
+				root.classList.remove('vt-enter-hike-detail');
 			});
 		});
 	});

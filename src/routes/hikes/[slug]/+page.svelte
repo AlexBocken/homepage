@@ -29,8 +29,12 @@
 	const MdxComponent = $derived(data.MdxComponent as unknown as typeof import('svelte').SvelteComponent);
 	const showPrivate = $derived(!!data.session?.user);
 
-	let track = $state<HikeTrackPoint[] | null>(null);
-	let trackError = $state<string | null>(null);
+	// Track is now loaded synchronously in +page.ts so the photo strip,
+	// elevation chart, and hero polyline are in the DOM on first paint —
+	// fixes both the brief layout shift when the strip used to pop in
+	// after an async fetch, and the /hikes → /hikes/[slug] view-transition
+	// slide-in (snapshot is captured before client effects run).
+	const track = $derived(data.track);
 	// Toggled true once Leaflet's first tile batch paints. Drives the
 	// fade-out of the SSR-rendered static hero so the static→interactive
 	// handover is a soft cross-fade rather than a swap.
@@ -84,24 +88,6 @@
 			return { center: hike.heroMapCenter, zoom: hike.heroMapZoom };
 		}
 		return null;
-	});
-
-	$effect(() => {
-		let aborted = false;
-		fetch(hike.trackUrl)
-			.then((r) => {
-				if (!r.ok) throw new Error(`Track fetch failed: ${r.status}`);
-				return r.json() as Promise<HikeTrackPoint[]>;
-			})
-			.then((data) => {
-				if (!aborted) track = data;
-			})
-			.catch((err: Error) => {
-				if (!aborted) trackError = err.message;
-			});
-		return () => {
-			aborted = true;
-		};
 	});
 
 	// Active-stage scoping (multi-day hikes). When a stage is selected, the
@@ -286,13 +272,6 @@
 />
 
 <svelte:head>
-	<link
-		rel="preload"
-		as="fetch"
-		href={hike.trackUrl}
-		type="application/json"
-		crossorigin="anonymous"
-	/>
 	<link rel="preconnect" href="https://maps.bocken.org" crossorigin="anonymous" />
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
@@ -302,7 +281,7 @@
 	     hike, so we lead with it. Title overlays at the bottom-left. A second
 	     HikeMap further down sticks in the scroll-area; both share state via
 	     the focusedImageStore so they animate together. -->
-	<section class="hero-map" style="view-transition-name: hike-{hike.slug}">
+	<section class="hero-map" style="view-transition-name: hike-{hike.slug}; view-transition-class: hike-fly-in">
 		{#if hike.heroMapUrlLight}
 			<!-- Build-time static composite of Swisstopo tiles + the trail
 			     polyline + public photo markers. Four variants ship — theme
@@ -368,10 +347,8 @@
 				initialZoom={heroPose?.zoom}
 				onReady={() => (heroMapReady = true)}
 			/>
-		{:else if trackError}
-			<div class="map-fallback">Track konnte nicht geladen werden: {trackError}</div>
 		{:else if !hike.heroMapUrlLight}
-			<div class="map-fallback">Track wird geladen…</div>
+			<div class="map-fallback">Keine Trackdaten verfügbar.</div>
 		{/if}
 		<div class="hero-title">
 			<h1>{hike.title}</h1>
@@ -402,7 +379,7 @@
 	{/if}
 
 	{#if track && track.length > 0 && visibleImagePoints.length > 0}
-		<section class="strip-area">
+		<section class="strip-area" style="view-transition-name: hike-strip">
 			<HikePhotoStrip images={visibleImagePoints} {track} {stages} />
 		</section>
 	{/if}

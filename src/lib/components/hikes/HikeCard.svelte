@@ -53,7 +53,7 @@
 	const canton = $derived(resolveCanton(hike.canton));
 </script>
 
-<a class="card" href={resolve('/hikes/[slug]', { slug: hike.slug })} style="view-transition-name: hike-{hike.slug}">
+<a class="card" href={resolve('/hikes/[slug]', { slug: hike.slug })} style="view-transition-name: hike-{hike.slug}; view-transition-class: hike-fly-in">
 	<div class="cover">
 		{#if hike.cover.src}
 			<picture>
