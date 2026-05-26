@@ -533,14 +533,30 @@ html.vt-exit-hikes::view-transition-old(.hike-fly-in):only-child {
 	animation: hikes-fly-down 700ms cubic-bezier(0.4, 0.1, 0.4, 1) both;
 }
 
-/* Photo strip slides in from the right when arriving at the detail page,
- * and slides back out when returning to /hikes. Overrides the global root
- * `animation: none` only for these hike-specific transitions. */
+/* Photo strip slides in from the right when arriving at a detail page,
+ * and slides back out whenever the detail page is left for any other
+ * route (back to /hikes, off to /, /hikes/route-builder, …). Both exit
+ * scopes (vt-enter-hikes for the back-nav case, vt-exit-hike-detail for
+ * everywhere else) trigger the same animation. */
 html.vt-enter-hike-detail::view-transition-new(hike-strip):only-child {
 	animation: hike-strip-in-right 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-html.vt-enter-hikes::view-transition-old(hike-strip):only-child {
+html.vt-enter-hikes::view-transition-old(hike-strip):only-child,
+html.vt-exit-hike-detail::view-transition-old(hike-strip):only-child {
 	animation: hike-strip-out-right 600ms cubic-bezier(0.4, 0.1, 0.4, 1) both;
+}
+
+/* Everything below the photo strip on a detail page (metrics, tags,
+ * elevation chart, scroll area, meta footer) slides up from the bottom
+ * on enter and back down on any exit. Wrapper element carries
+ * `view-transition-name: hike-below-strip`; the rest of the page chrome
+ * still cross-fades via the root-pseudo rule above. */
+html.vt-enter-hike-detail::view-transition-new(hike-below-strip):only-child {
+	animation: hikes-fly-up 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+html.vt-enter-hikes::view-transition-old(hike-below-strip):only-child,
+html.vt-exit-hike-detail::view-transition-old(hike-below-strip):only-child {
+	animation: hikes-fly-down 700ms cubic-bezier(0.4, 0.1, 0.4, 1) both;
 }
 
 /* Cross-fade the rest of the page (root pseudo) during hike transitions so
@@ -550,12 +566,14 @@ html.vt-enter-hikes::view-transition-old(hike-strip):only-child {
  * other routes' transitions on their existing instant-swap behavior. */
 html.vt-enter-hike-detail::view-transition-old(root),
 html.vt-enter-hikes::view-transition-old(root),
-html.vt-exit-hikes::view-transition-old(root) {
+html.vt-exit-hikes::view-transition-old(root),
+html.vt-exit-hike-detail::view-transition-old(root) {
 	animation: hikes-root-fade-out 450ms ease-out both;
 }
 html.vt-enter-hike-detail::view-transition-new(root),
 html.vt-enter-hikes::view-transition-new(root),
-html.vt-exit-hikes::view-transition-new(root) {
+html.vt-exit-hikes::view-transition-new(root),
+html.vt-exit-hike-detail::view-transition-new(root) {
 	animation: hikes-root-fade-in 450ms ease-out both;
 }
 

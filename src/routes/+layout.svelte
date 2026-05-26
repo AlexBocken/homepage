@@ -79,15 +79,22 @@
 		//   (Covers /hikes → / AND /hikes → /hikes/[slug], where the clicked
 		//   card pairs into the hero and the rest fly out.)
 		// - vt-enter-hike-detail: arriving at a hike detail page (card → zoom).
+		// - vt-exit-hike-detail: leaving a hike detail page for anywhere
+		//   else (back to /hikes, off to /, route-builder, …) → photo strip
+		//   slides back out to the right and the below-strip block flies
+		//   down. Excluded for slug → slug navigations (both sides share the
+		//   same route.id, so paired UA transitions handle them).
 		const intoHikesIndex = toId === '/hikes' && fromId !== '/hikes';
 		const outOfHikesIndex = fromId === '/hikes' && toId !== '/hikes';
 		const intoHikeDetail = toId === '/hikes/[slug]';
+		const outOfHikeDetail = fromId === '/hikes/[slug]' && toId !== '/hikes/[slug]';
 
 		return new Promise((resolve) => {
 			const root = document.documentElement;
 			if (intoHikesIndex) root.classList.add('vt-enter-hikes');
 			if (outOfHikesIndex) root.classList.add('vt-exit-hikes');
 			if (intoHikeDetail) root.classList.add('vt-enter-hike-detail');
+			if (outOfHikeDetail) root.classList.add('vt-exit-hike-detail');
 			const transition = (/** @type {any} */ (document)).startViewTransition(async () => {
 				resolve();
 				await navigation.complete;
@@ -96,6 +103,7 @@
 				root.classList.remove('vt-enter-hikes');
 				root.classList.remove('vt-exit-hikes');
 				root.classList.remove('vt-enter-hike-detail');
+				root.classList.remove('vt-exit-hike-detail');
 			});
 		});
 	});
