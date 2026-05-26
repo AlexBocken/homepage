@@ -1,0 +1,33 @@
+---
+title: Spaziergang Uetliberg
+date: 2025-08-07
+author: Alexander
+difficulty: T1
+tags: [Zürich, Spaziergang, Sommer, mittel]
+seasons: 4-9
+summary:
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Anreise
+
+Start direkt von der Tramstation Triemli
+<JourneyPlanner from="<current location>" to="Zürich, Triemli" toFixed time="10:00" target="arrival"/>
+
+Der erste Anstieg ist recht intensiv.
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+Danach geht es gemütlich dem Grat entlang. Ein entspannter Spaziergang bei schönem Wetter.
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+
+
+## Heimreise
+
+Via Bus von Albispasshöhe nach Thalwil, dann nach Hause via Zug.
+<JourneyPlanner fromFixed from="Langnau a.A., Albispasshöhe" to="<current location>" time="15:00" target="departure"/>
