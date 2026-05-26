@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.89.9",
+	"version": "1.89.10",
 	"private": true,
 	"type": "module",
 	"scripts": {

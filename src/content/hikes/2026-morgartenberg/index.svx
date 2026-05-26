@@ -1,0 +1,49 @@
+---
+title: Wanderung auf den Morgartenberg
+date: 2026-04-19
+author: Alexander
+difficulty: T2
+tags: [Schwyz, Zentralschweiz, kurz, leicht]
+seasons: 4-9
+summary:
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Anreise
+
+Start direkt von der Tramstation Triemli
+<JourneyPlanner from="<current location>" to="Biberegg" toFixed time="10:00" target="arrival"/>
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+
+<HikeImage src="PXL_20260419_090639481.jpg" private />
+<HikeImage src="PXL_20260419_090657549.jpg" private />
+
+
+## Heimreise
+
+Via Bus von Albispasshöhe nach Thalwil, dann nach Hause via Zug.
+<JourneyPlanner fromFixed from="Sattel, Schornen" to="<current location>" time="12:00" target="departure"/>
