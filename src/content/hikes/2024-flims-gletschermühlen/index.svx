@@ -17,7 +17,7 @@ heroAlt:
 
 ## Anreise
 
-Start bei Bargis. Anreise am Besten via Bus von Flims.
+Start bei Bargis. Anreise am besten via Bus von Flims.
 <JourneyPlanner from="<current location>" to="Fidaz, Bargis" toFixed time="07:00" target="arrival"/>
 
 <HikeImage idx={0} />
@@ -98,5 +98,5 @@ Start bei Bargis. Anreise am Besten via Bus von Flims.
 <HikeImage idx={75} />
 
 ## Abreise
-Via Bus oder Auto wieder nach Hause. Wenn nicht abgeholt wird wie wir muss man noch etwas weiter laufen bis nach Trin.
+Via Bus oder Auto wieder nach Hause. Wenn man nicht abgeholt wird wie wir, muss man noch etwas weiter laufen bis nach Trin.
 <JourneyPlanner from="Trin, Quadris" fromFixed to="<current location>" time="15:30" target="departure"/>

@@ -17,20 +17,17 @@ heroAlt:
 
 ## Übersicht
 
-Ein netter Ausflug zum Schlitteln wenn man bereits in Flims ist.
+Ein netter Ausflug zum Schlitteln, wenn man bereits in Flims ist.
 Aufstieg ca. 1 Stunde mit wunderschöner Winterlandschaft.
 
 ## Anreise
 
-Start direkt in Brün. Eine Anreise mit Bus (Linie 404) ist möglich, ein direktes anfahren mit Auto wäre jedoch zu empfehlen.
+Start direkt in Brün. Eine Anreise mit Bus (Linie 404) ist möglich, ein direktes Anfahren mit Auto wäre jedoch zu empfehlen.
 Es empfiehlt sich ca. um 11 Uhr in Brün anzukommen, da durch die Nähe zum Piz Riein ausserhalb der Mittagszeit es schnell schattig werden kann.
 <JourneyPlanner from="<current location>" to="Valendas, Brün Dorf" toFixed time="11:00" target="arrival"/>
 
 <HikeImage idx={0} />
 <HikeImage idx={1} />
-
-Immer wieder gab es jedoch auch Pausen im Regen und man konnte das vibrante Frühlingsgrün von Feldern und Wald geniessen.
-Der starke Regen hat auch das Aufnehmen weiterer Fotos verhindert, weswegen erst am Ziel wieder viele Bilder zu sehen sind.
 
 <HikeImage idx={2} />
 <HikeImage idx={3} />

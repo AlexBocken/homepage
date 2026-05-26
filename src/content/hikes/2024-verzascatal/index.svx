@@ -3,8 +3,8 @@ title: Wanderung durch das Verzascatal
 date: 2024-09-01
 author: Alexander
 difficulty: T1
-tags: [Zentralschweiz, Panorama, family, Spätsommer]
-summary: Eine schöne Aussichtstour durch die Zentralschweiz... wenn das Wetter hält
+tags: [Tessin, Panorama, Familie, Spätsommer]
+summary: Eine schöne Aussichtstour durch das Tessin... wenn das Wetter hält
 heroAlt:
 seasons: 5-9
 ---
@@ -70,5 +70,5 @@ Anreise von Lugano via Bus nach Lavertezzo, Ai Poss.
 
 ## Abreise
 
-Via Bus zurück von Sonogno nach Lugano. Dort von Zug nach Hause.
+Via Bus zurück von Sonogno nach Lugano. Dort via Zug nach Hause.
 <JourneyPlanner from="Sonogno" to="<current location>" fromFixed time="12:00" target="departure" />

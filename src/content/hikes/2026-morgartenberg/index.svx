@@ -16,7 +16,7 @@ heroAlt:
 
 ## Anreise
 
-Start direkt von der Tramstation Triemli
+Start in Biberegg.
 <JourneyPlanner from="<current location>" to="Biberegg" toFixed time="10:00" target="arrival"/>
 
 <HikeImage idx={0} />
@@ -45,5 +45,5 @@ Start direkt von der Tramstation Triemli
 
 ## Heimreise
 
-Via Bus von Albispasshöhe nach Thalwil, dann nach Hause via Zug.
+Rückreise ab Sattel, Schornen.
 <JourneyPlanner fromFixed from="Sattel, Schornen" to="<current location>" time="12:00" target="departure"/>

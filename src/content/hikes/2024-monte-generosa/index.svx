@@ -16,18 +16,18 @@ heroAlt: Blick auf die Felswand, den schwierigsten Teil der Route
 
 ## Übersicht
 
-Eine tiefe T4-Wanderung mit starkem Anstieg konsistent. Der letzte Aufstieg ist sehr exponiert, benötigt Hände und hat die Gefahr eines üebr 100 m Absturz. Nichts für Bergsteigeranfänger.
-Es empfiehlt sich das Wetter explizit für Monte Generosa zu überprüfen.
-Wir wurden im schwierigsten Teil von Regen überrascht, was wohl zur nervenzerreibensten Wanderung meines Lebens geführt hat.
+Eine tiefe T4-Wanderung mit starkem Anstieg konsistent. Der letzte Aufstieg ist sehr exponiert, benötigt Hände und hat die Gefahr eines über 100 m Absturz. Nichts für Bergsteigeranfänger.
+Es empfiehlt sich, das Wetter explizit für Monte Generosa zu überprüfen.
+Wir wurden im schwierigsten Teil von Regen überrascht, was wohl zur nervenzerreibendsten Wanderung meines Lebens geführt hat.
 
 ## Anreise
 
-Anreise via Bus (Line 541) nach Rovio, Paese.
+Anreise via Bus (Linie 541) nach Rovio, Paese.
 <JourneyPlanner from="<current location>" to="Rovio, Paese" toFixed target="arrival" time="09:00" />
 
 ## Anfang
 
-Man fängt an in Rovio, und geniesst noch kurzen die engen Gassen des Dorfes.
+Man fängt in Rovio an und geniesst noch kurz die engen Gassen des Dorfes.
 <HikeImage idx={0} />
 <HikeImage idx={1} />
 
@@ -44,7 +44,7 @@ Dann fängt der erste Waldteil an. Anfangs noch auf einem recht guten Waldweg. S
 ## Letzte Rast
 
 Vor dem eigentlichen T4-Stück kann man sich noch gut bei einer kleinen Hütte ausruhen und die schöne Aussicht geniessen.
-Wie auf den Bildern zu sehen waren hier bereits grössere Wolken voll um uns herum.
+Wie auf den Bildern zu sehen, waren hier bereits grössere Wolken voll um uns herum.
 
 <HikeImage idx={10} />
 <HikeImage idx={11} />
@@ -54,7 +54,7 @@ Wie auf den Bildern zu sehen waren hier bereits grössere Wolken voll um uns her
 <HikeImage idx={15} />
 <HikeImage idx={16} />
 
-Blick auf die Steilwand welche man links vom Bild besteigen wird.
+Blick auf die Steilwand, welche man links vom Bild besteigen wird.
 
 <HikeImage idx={17} />
 
@@ -62,8 +62,8 @@ Wegen starkem Regen und Schwierigkeit der Strecke fehlen hier Bilder.
 
 ## Ankunft auf der Bergstation
 
-Oben auf der Station angekommen wurde das Wetter wieder besser und hat einen schönen Ausblick ermöglicht.
-Ein guter Punkt um ein ordentliches Dessert zu geniessen.
+Oben auf der Station angekommen, wurde das Wetter wieder besser und hat einen schönen Ausblick ermöglicht.
+Ein guter Punkt, um ein ordentliches Dessert zu geniessen.
 
 <HikeImage idx={18} />
 <HikeImage idx={19} />
@@ -71,6 +71,5 @@ Ein guter Punkt um ein ordentliches Dessert zu geniessen.
 
 ## Heimreise
 
-Von der Bergstation fährt eine Zahnradbahn nach Capolago-Riva S.Vitale. Von dort via Zug geht es schnell nach Lugano oder andere Orte.
-S-Bahn ab Einsiedeln.
+Von der Bergstation fährt eine Zahnradbahn nach Capolago-Riva S.Vitale. Von dort via Zug geht es schnell nach Lugano oder zu anderen Orten.
 <JourneyPlanner from="Generoso Vetta" to="<current location>" fromFixed target=departure time="14:30" />

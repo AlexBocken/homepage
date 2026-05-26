@@ -16,7 +16,7 @@ heroAlt:
 
 ## Anreise
 
-Start direkt von der Tramstation Triemli
+Start direkt von der Tramstation Triemli.
 <JourneyPlanner from="<current location>" to="Zürich, Triemli" toFixed time="10:00" target="arrival"/>
 
 Der erste Anstieg ist recht intensiv.
