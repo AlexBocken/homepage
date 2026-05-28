@@ -23,10 +23,10 @@
 		{#if showLatin}<v lang="la">ómnibus Sanctis, et tibi pater:</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">allen Heiligen und dir, Vater,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">to all the Saints, and to you, Father,</v>{/if}
-		{#if showLatin}<v lang="la">quia paccávi nimis</v>{/if}
+		{#if showLatin}<v lang="la">quia peccávi nimis</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">dass ich viel gesündigt habe</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">that I have sinned exceedingly</v>{/if}
-		{#if showLatin}<v lang="la">cogitatióne, verbe et ópere:</v>{/if}
+		{#if showLatin}<v lang="la">cogitatióne, verbo et ópere:</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">in Gedanken, Worten und Werken,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">in thought, word, and deed:</v>{/if}
 		{#if showLatin}<v lang="la">mea culpa, mea culpa, mea máxima culpa.</v>{/if}
@@ -39,7 +39,7 @@
 		{#if urlLang === 'de'}<v lang="de">den hl. Erzengel Michael,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">blessed Michael the Archangel,</v>{/if}
 		{#if showLatin}<v lang="la">beátum Ioánnem Baptístam,</v>{/if}
-		{#if urlLang === 'de'}<v lang="de">dem hl. Johannes den Täufer,</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">den hl. Johannes den Täufer,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">blessed John the Baptist,</v>{/if}
 		{#if showLatin}<v lang="la">sanctos Apóstolos Petrum et Paulum,</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">die hll. Apostel Petrus und Paulus,</v>{/if}

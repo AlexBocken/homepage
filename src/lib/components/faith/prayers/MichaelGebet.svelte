@@ -11,7 +11,7 @@
 		{#if showLatin}<v lang="la">defénde nos in proélio,</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">verteidige uns im Kampfe!</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">defend us in battle.</v>{/if}
-		{#if showLatin}<v lang="la">cóntra nequítam et insídias</v>{/if}
+		{#if showLatin}<v lang="la">cóntra nequítiam et insídias</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">Gegen die Bosheit und Nachstellungen</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">Be our protection against the wickedness</v>{/if}
 		{#if showLatin}<v lang="la">diáboli ésto præsídium.</v>{/if}
@@ -20,7 +20,7 @@
 		{#if showLatin}<v lang="la">Ímperet ílli Déus, súpplices deprecámur:</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">»Gott gebiete ihm!«, so bitten wir flehentlich.</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">May God rebuke him, we humbly pray;</v>{/if}
-		{#if showLatin}<v lang="la">tuque, Prínceps milítæ cæléstis,</v>{/if}
+		{#if showLatin}<v lang="la">tuque, Prínceps milítiæ cæléstis,</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">Du aber, Fürst der himmlischen Heerscharen,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">and do thou, O Prince of the heavenly host,</v>{/if}
 		{#if showLatin}<v lang="la">Sátanam aliósque spíritus malígnos,</v>{/if}

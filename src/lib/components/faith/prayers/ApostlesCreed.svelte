@@ -38,7 +38,7 @@
 		{#if urlLang === 'de'}<v lang="de">aufgefahren in den Himmel,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">He ascended into heaven,</v>{/if}
 		{#if showLatin}<v lang="la">sedet ad déxteram Dei Patris omnipoténtis,</v>{/if}
-		{#if urlLang === 'de'}<v lang="de">er sitzet zur Rechten Gottes, des allmächtigen Vaters;</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">er sitzt zur Rechten Gottes, des allmächtigen Vaters;</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">and sits at the right hand of God the Father almighty.</v>{/if}
 		{#if showLatin}<v lang="la">inde ventúrus est iudicáre vivos et mórtuos.</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">von dort wird er kommen, zu richten die Lebenden und die Toten.</v>{/if}

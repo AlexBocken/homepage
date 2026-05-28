@@ -23,7 +23,7 @@
 		{#if urlLang === 'de'}<v lang="de">verleihe uns, wir bitten dich,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">grant, we beseech Thee,</v>{/if}
 		{#if showLatin}<v lang="la">út, hæc mystéria sanctíssimo beátæ Maríæ Vírginis Rosário recoléntes;</v>{/if}
-		{#if urlLang === 'de'}<v lang="de">dass wir, indem wir die Geheimisse des heiligen Rosenkranzes der allerseligsten Jungfrau ehren,</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">dass wir, indem wir die Geheimnisse des heiligen Rosenkranzes der allerseligsten Jungfrau ehren,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">that by meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary,</v>{/if}
 		{#if showLatin}<v lang="la">ét imitémur quód cóntinent,</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">was sie enthalten nachahmen</v>{/if}

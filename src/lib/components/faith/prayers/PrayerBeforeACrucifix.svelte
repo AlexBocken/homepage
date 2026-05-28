@@ -17,8 +17,8 @@
 			{#if showLatin}<v lang=la>ac máximo ánimi ardóre te oro atque obtéstor, </v>{/if}
 			{#if urlLang=='de'}<v lang=de>Inbrünstig bitte und beschwöre ich Dich:</v>{/if}
 			{#if urlLang=='en'}<v lang=en>and with the most fervent desire of my soul I pray and beseech Thee</v>{/if}
-			{#if showLatin}<v lang=la> ut meum in cor vívidos fídei, spei et caritátis sensus, atque veram peccatórum meórum pœniténtiam,</v>{/if}
-			{#if urlLang=='de'}<v lang=de>Präge meinem Herzen lebendige Gefühle des Glaubens, der Hoffung und der Liebe ein</v>{/if}
+			{#if showLatin}<v lang=la> ut in cor meum vívidos fídei, spei et caritátis sensus, atque veram peccatórum meórum pœniténtiam,</v>{/if}
+			{#if urlLang=='de'}<v lang=de>Präge meinem Herzen lebendige Gefühle des Glaubens, der Hoffnung und der Liebe ein</v>{/if}
 			{#if urlLang=='en'}<v lang=en>to impress upon my heart lively sentiments of faith, hope and charity,</v>{/if}
 			{#if showLatin}	<v lang=la>éaque emendándi firmíssimam voluntátem velis</v>{/if}
 			{#if urlLang=='de'}<v lang=de>sowie wahre Reue über meine Sünden und den ganz festen Willen, mich zu bessern.</v>{/if}
@@ -29,9 +29,9 @@
 			{#if showLatin}<v lang=la>illud præ óculis habens, quod jam in ore ponébat tuo David Prophéta de te, o bone Jesu:</v>{/if}
 			{#if urlLang=='de'}<v lang=de>Dabei halte ich mir vor Augen, was im Hinblick auf Dich, o guter Jesus, schon der Prophet David Dir in den Mund legte:</v>{/if}
 			{#if urlLang=='en'}<v lang=en>having before mine eyes that which David, the prophet, long ago spoke in Thine Own person concerning Thee, my Jesus:</v>{/if}
-			{#if showLatin}<v lang=la> «Fodérunt manus meas et pedes meos; dinumeravérunt ómnio ossa mea.» (Ps. 21, 17-18)</v>{/if}
+			{#if showLatin}<v lang=la> «Fodérunt manus meas et pedes meos; dinumeravérunt ómnia ossa mea.» (Ps. 21, 17-18)</v>{/if}
 			{#if urlLang=='de'}<v lang=de>«Sie haben Meine Hände und Meine Füsse durchbohrt; alle meine Gebeine haben sie gezählt.» (Ps. 21, 17-18)</v>{/if}
-			{#if urlLang=='en'}<v lang=en>"They have pierced My hands and My feet, they have numbered all My bones." (Ps. 21:17-18</v>{/if}
+			{#if urlLang=='en'}<v lang=en>"They have pierced My hands and My feet, they have numbered all My bones." (Ps. 21:17-18)</v>{/if}
 			<v lang=und>Amen.</v>
 		</p>
 		{/snippet}

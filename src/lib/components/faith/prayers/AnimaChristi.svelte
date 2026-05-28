@@ -8,7 +8,7 @@
 <Prayer>
 	{#snippet children(showLatin, urlLang)}
 	<p>
-		{#if showLatin}<v lang=la>Ánima Christi, santífica me.</v>{/if}
+		{#if showLatin}<v lang=la>Ánima Christi, sanctífica me.</v>{/if}
 		{#if urlLang=='de'}<v lang=de>Seele Christi, heilige mich.</v>{/if}
 		{#if urlLang=='en'}<v lang=en>Soul of Christ, sanctify me.</v>{/if}
 		{#if showLatin}<v lang=la>Corpus Christi, salva me.</v>{/if}
@@ -22,7 +22,7 @@
 		{#if urlLang=='en'}<v lang=en>Water from the side of Christ, wash me.</v>{/if}
 		{#if showLatin}<v lang=la>Pássio Christi, confórta me.</v>{/if}
 		{#if urlLang=='de'}<v lang=de>Leiden Christi, stärke mich.</v>{/if}
-		{#if urlLang=='en'}<v lang=en>Passion of Christ, strenghten me.</v>{/if}
+		{#if urlLang=='en'}<v lang=en>Passion of Christ, strengthen me.</v>{/if}
 		{#if showLatin}<v lang=la>O bone Iesu, exáudi me.</v>{/if}
 		{#if urlLang=='de'}<v lang=de>O gütiger Jesus, erhöre mich.</v>{/if}
 		{#if urlLang=='en'}<v lang=en>O good Jesus, hear me.</v>{/if}
@@ -34,12 +34,12 @@
 		{#if urlLang=='en'}<v lang=en>Separated from Thee let me never be.</v>{/if}
 		{#if showLatin}<v lang=la>Ab hoste malígno defénde me.</v>{/if}
 		{#if urlLang=='de'}<v lang=de>Vor dem bösen Feind beschütze mich.</v>{/if}
-		{#if urlLang=='en'}<v lang=en>From the malignant enemeny, defend me.</v>{/if}
+		{#if urlLang=='en'}<v lang=en>From the malignant enemy, defend me.</v>{/if}
 		{#if showLatin}<v lang=la>In hora mortis meæ voca me.</v>{/if}
 		{#if urlLang=='de'}<v lang=de>In meiner Todesstunde rufe mich,</v>{/if}
 		{#if urlLang=='en'}<v lang=en>At the hour of death, call me.</v>{/if}
 		{#if showLatin}<v lang=la>Et iube me veníre ad te,</v>{/if}
-		{#if urlLang=='de'}<v lang=de>Und heisse zur Dir kommen mich,</v>{/if}
+		{#if urlLang=='de'}<v lang=de>Und heisse zu Dir kommen mich,</v>{/if}
 		{#if urlLang=='en'}<v lang=en>And bid me come unto Thee</v>{/if}
 		{#if showLatin}<v lang=la>Ut cum Sanctis tuis laudem te</v>{/if}
 		{#if urlLang=='de'}<v lang=de>Damit ich möge loben Dich</v>{/if}

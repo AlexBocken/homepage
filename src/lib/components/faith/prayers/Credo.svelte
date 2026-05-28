@@ -76,7 +76,7 @@
 		{#if showLatin}<v lang="la">secúndum Scriptúras.</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">gemäss der Schrift;</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">in accordance with the Scriptures.</v>{/if}
-		{#if showLatin}<v lang="la">Et ascéndit in cáelum:</v>{/if}
+		{#if showLatin}<v lang="la">Et ascéndit in cælum:</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">Er ist aufgefahren in den Himmel</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">He ascended into heaven</v>{/if}
 		{#if showLatin}<v lang="la">sedet ad déxteram Patris.</v>{/if}
@@ -91,7 +91,7 @@
 		{#if urlLang === 'de'}<v lang="de">Gericht zu halten über Lebende und Tote:</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">to judge the living and the dead</v>{/if}
 		{#if showLatin}<v lang="la">cujus regni non erit finis.</v>{/if}
-		{#if urlLang === 'de'}<v lang="de">und Seines Reiches wird kein Endes sein.</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">und Seines Reiches wird kein Ende sein.</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">and His kingdom will have no end.</v>{/if}
 	</p>
 	<p>

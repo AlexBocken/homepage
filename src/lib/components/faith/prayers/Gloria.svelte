@@ -22,7 +22,7 @@
 		{#if urlLang === 'de'}<v lang="de">Ehre sei <i><sup>⚬</sup></i> Gott in der Höhe.</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">Glory to <i><sup>⚬</sup></i> God in the highest.</v>{/if}
 		{#if showLatin}<v lang="la">Et in terra pax homínibus</v>{/if}
-		{#if urlLang === 'de'}<v lang="de">Und auf Erden Friede den Mesnchen,</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">Und auf Erden Friede den Menschen,</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">And on earth peace to men</v>{/if}
 		{#if showLatin}<v lang="la">bonæ voluntátis.</v>{/if}
 		{#if urlLang === 'de'}<v lang="de">die guten Willens sind.</v>{/if}
@@ -67,9 +67,9 @@
 		{#if urlLang === 'de'}<v lang="de">erbarme Dich unser.</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">have mercy on us.</v>{/if}
 		{#if showLatin}<v lang="la">Qui tollis peccáta mundi,</v>{/if}
-		{#if urlLang === 'de'}<v lang="de">Du nimmst hinwerg die Sünden der Welt.</v>{/if}
+		{#if urlLang === 'de'}<v lang="de">Du nimmst hinweg die Sünden der Welt.</v>{/if}
 		{#if urlLang === 'en'}<v lang="en">Thou who takest away the sins of the world,</v>{/if}
-		{#if showLatin}<v lang="la"><i><sup>⚬</sup></i> súscipe depreciatiónem nostram.</v>{/if}
+		{#if showLatin}<v lang="la"><i><sup>⚬</sup></i> súscipe deprecatiónem nostram.</v>{/if}
 		{#if urlLang === 'de'}<v lang="de"><i><sup>⚬</sup></i> nimm unser Flehen gnädig auf.</v>{/if}
 		{#if urlLang === 'en'}<v lang="en"><i><sup>⚬</sup></i> receive our prayer.</v>{/if}
 		{#if showLatin}<v lang="la">Qui sedes ad déxteram Patris,</v>{/if}
