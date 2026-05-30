@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Cross from '$lib/assets/icons/Cross.svelte';
+	import ImageEditor from '$lib/components/recipes/ImageEditor.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { onMount, type Snippet } from 'svelte';
 
@@ -53,9 +54,34 @@
 			input.value = '';
 			return;
 		}
+		openEditor(file);
+		input.value = '';
+	}
+
+	// Photo editor (crop / scale / webp quality) state
+	let editorFile = $state<File | null>(null);
+	let editorOpen = $state(false);
+
+	function openEditor(file: File) {
+		editorFile = file;
+		editorOpen = true;
+	}
+
+	function closeEditor() {
+		editorOpen = false;
+		editorFile = null;
+		if (fileInput) fileInput.value = '';
+	}
+
+	function handleEditorApply(file: File, url: string) {
 		if (image_preview_url?.startsWith('blob:')) URL.revokeObjectURL(image_preview_url);
-		image_preview_url = URL.createObjectURL(file);
 		selected_image_file = file;
+		image_preview_url = url;
+		closeEditor();
+	}
+
+	function editCurrentImage() {
+		if (selected_image_file) openEditor(selected_image_file);
 	}
 
 	function clearSelectedImage() {
@@ -129,15 +155,30 @@
 			</div>
 		</button>
 		{#if selected_image_file}
-			<button
-				type="button"
-				class="clear-img"
-				onclick={clearSelectedImage}
-				title="Auswahl verwerfen"
-				aria-label="Auswahl verwerfen"
-			>
-				<Cross fill="white" width="1.25rem" height="1.25rem" />
-			</button>
+			<div class="img-controls">
+				<button
+					type="button"
+					class="img-btn"
+					onclick={editCurrentImage}
+					title="Bild bearbeiten"
+					aria-label="Bild bearbeiten"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true">
+						<path
+							d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"
+						/>
+					</svg>
+				</button>
+				<button
+					type="button"
+					class="img-btn danger"
+					onclick={clearSelectedImage}
+					title="Auswahl verwerfen"
+					aria-label="Auswahl verwerfen"
+				>
+					<Cross fill="white" width="1.15rem" height="1.15rem" />
+				</button>
+			</div>
 		{/if}
 		<input
 			bind:this={fileInput}
@@ -214,6 +255,10 @@
 		{#if children}{@render children()}{/if}
 	</div>
 </section>
+
+{#if editorOpen && editorFile}
+	<ImageEditor file={editorFile} onApply={handleEditorApply} onCancel={closeEditor} />
+{/if}
 
 <style>
 	.section {
@@ -312,10 +357,18 @@
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 	}
 
-	.clear-img {
+	/* Edit / remove controls — top-right of the image, offset below the fixed
+	   site header (height 3rem, top max(12px, safe-area+4px)) so the nav never
+	   obstructs them. */
+	.img-controls {
 		position: absolute;
-		top: calc(1rem + env(safe-area-inset-top, 0px));
+		top: calc(max(12px, env(safe-area-inset-top, 0px) + 4px) + 3rem + 1rem);
 		right: 1rem;
+		display: flex;
+		gap: 0.5rem;
+		z-index: 5;
+	}
+	.img-btn {
 		background: rgba(0, 0, 0, 0.55);
 		border: none;
 		width: 2.5rem;
@@ -324,16 +377,25 @@
 		display: grid;
 		place-items: center;
 		cursor: pointer;
-		z-index: 5;
 		transition:
 			transform 150ms ease,
 			background 150ms ease;
 		backdrop-filter: blur(6px);
+		box-shadow: var(--shadow-sm);
 	}
-	.clear-img:hover,
-	.clear-img:focus-visible {
-		background: var(--red);
+	.img-btn svg {
+		width: 1.15rem;
+		height: 1.15rem;
+		fill: white;
+	}
+	.img-btn:hover,
+	.img-btn:focus-visible {
+		background: var(--color-primary);
 		transform: scale(1.08);
+	}
+	.img-btn.danger:hover,
+	.img-btn.danger:focus-visible {
+		background: var(--red);
 	}
 
 	.file-input {

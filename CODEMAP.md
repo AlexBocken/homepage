@@ -173,7 +173,6 @@ Generated: 2025-11-18
 - `EditButton.svelte` - Edit button (floating)
 - `FavoriteButton.svelte` - Toggle favorite
 - `Card.svelte` (259 lines) ⚠️ Large - Recipe card with hover effects, tags, category
-- `CardAdd.svelte` - Add recipe card placeholder
 - `FormSection.svelte` - Styled form section wrapper
 - `Header.svelte` - Page header
 - `UserHeader.svelte` - User-specific header
@@ -190,7 +189,6 @@ Generated: 2025-11-18
 
 #### Recipe-Specific Components
 - `Recipes.svelte` - Recipe list display
-- `RecipeEditor.svelte` - Recipe editing form
 - `RecipeNote.svelte` - Recipe notes display
 - `EditRecipe.svelte` - Edit recipe modal
 - `EditRecipeNote.svelte` - Edit recipe notes

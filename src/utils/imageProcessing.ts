@@ -1,4 +1,5 @@
 import path from 'path';
+import { writeFile } from 'fs/promises';
 import sharp from 'sharp';
 import { generateImageHashFromBuffer, getHashedFilename } from '$utils/imageHash';
 import { validateImageFile } from '$utils/imageValidation';
@@ -132,21 +133,27 @@ export async function processAndSaveRecipeImage(
 		unhashed: unhashedFilename
 	});
 
-	// Process image with Sharp - convert to WebP format
-	// Save full size - both hashed and unhashed versions
-	console.log('[ImageProcessing] Converting to WebP and generating full size...');
-	const fullBuffer = await sharp(buffer)
-		.toFormat('webp')
-		.webp({ quality: 90 }) // High quality for full size
-		.toBuffer();
-	console.log('[ImageProcessing] Full size buffer created, size:', fullBuffer.length, 'bytes');
-
+	// Full size: the client photo editor already crops, scales and encodes WebP at
+	// the user's chosen quality. Store that byte-for-byte so the on-disk file matches
+	// the size the user saw in the editor — re-encoding through sharp would silently
+	// re-compress and discard their quality/size choice.
+	// Fallback (non-webp upload, e.g. editor bypassed): re-encode to WebP q90 as before.
 	const fullHashedPath = path.join(imageDir, 'rezepte', 'full', hashedFilename);
 	const fullUnhashedPath = path.join(imageDir, 'rezepte', 'full', unhashedFilename);
+
+	let fullBuffer: Buffer;
+	if (file.type === 'image/webp') {
+		console.log('[ImageProcessing] Client WebP detected — storing full size as-is (passthrough)');
+		fullBuffer = buffer;
+	} else {
+		console.log('[ImageProcessing] Non-WebP upload — re-encoding full size to WebP q90...');
+		fullBuffer = await sharp(buffer).toFormat('webp').webp({ quality: 90 }).toBuffer();
+	}
+	console.log('[ImageProcessing] Full size buffer ready, size:', fullBuffer.length, 'bytes');
 	console.log('[ImageProcessing] Saving full size to:', { fullHashedPath, fullUnhashedPath });
 
-	await sharp(fullBuffer).toFile(fullHashedPath);
-	await sharp(fullBuffer).toFile(fullUnhashedPath);
+	await writeFile(fullHashedPath, fullBuffer);
+	await writeFile(fullUnhashedPath, fullBuffer);
 	console.log('[ImageProcessing] Full size images saved');
 
 	// Save thumbnail (800px width) - both hashed and unhashed versions
