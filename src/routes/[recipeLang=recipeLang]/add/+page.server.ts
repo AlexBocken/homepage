@@ -7,7 +7,8 @@ import { processAndSaveRecipeImage } from '$utils/imageProcessing';
 import {
 	extractRecipeFromFormData,
 	validateRecipeData,
-	serializeRecipeForDatabase
+	serializeRecipeForDatabase,
+	serializableFormValues
 } from '$utils/recipeFormHelpers';
 
 export const load: PageServerLoad = async ({locals, params}) => {
@@ -51,7 +52,7 @@ export const actions = {
 				return fail(400, {
 					error: validationErrors.join(', '),
 					errors: validationErrors,
-					values: Object.fromEntries(formData)
+					values: serializableFormValues(formData)
 				});
 			}
 
@@ -87,7 +88,7 @@ export const actions = {
 					return fail(400, {
 						error: `Failed to process image: ${message}`,
 						errors: ['Image processing failed'],
-						values: Object.fromEntries(formData)
+						values: serializableFormValues(formData)
 					});
 				}
 			} else {
@@ -127,7 +128,7 @@ export const actions = {
 					return fail(400, {
 						error: `A recipe with the short name "${recipeData.short_name}" already exists. Please choose a different short name.`,
 						errors: ['Duplicate short_name'],
-						values: Object.fromEntries(formData)
+						values: serializableFormValues(formData)
 					});
 				}
 
@@ -135,7 +136,7 @@ export const actions = {
 				return fail(500, {
 					error: `Failed to create recipe: ${dbMessage || 'Unknown database error'}`,
 					errors: [dbMessage],
-					values: Object.fromEntries(formData)
+					values: serializableFormValues(formData)
 				});
 			}
 		} catch (error: unknown) {

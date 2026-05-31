@@ -51,7 +51,25 @@ echo "   node $local_node (match)"
 echo ":: Installing deps (frozen lockfile)"
 pnpm install --frozen-lockfile
 
-echo ":: Building"
+# Build against production env, NOT the dev .env. SvelteKit's
+# `$env/static/private` (IMAGE_DIR, DB creds, …) is inlined at BUILD time, so a
+# build that picks up the dev .env ships dev values to prod — e.g. the relative
+# IMAGE_DIR="./imgs/" that resolves under the service's dist/ cwd instead of the
+# real served image dir. We export .env_prod into the environment; real env vars
+# take precedence over .env files in Vite/SvelteKit's env loading, so this wins
+# for the whole `pnpm build` lifecycle (prebuild vite-node scripts + build).
+PROD_ENV="${PROD_ENV:-.env_prod}"
+if [[ ! -f "$PROD_ENV" ]]; then
+    echo "!! $PROD_ENV not found in $(pwd) — refusing to build with the dev .env."
+    echo "   Create $PROD_ENV with production values (IMAGE_DIR must be an"
+    echo "   ABSOLUTE path to the served recipe-image dir, DB creds, etc.)."
+    exit 1
+fi
+echo ":: Building (env from $PROD_ENV)"
+set -a
+# shellcheck source=/dev/null
+source "$PROD_ENV"
+set +a
 pnpm build
 
 if [[ ! -d build ]]; then

@@ -13,7 +13,8 @@ import {
 	extractRecipeFromFormData,
 	validateRecipeData,
 	serializeRecipeForDatabase,
-	detectChangedFields
+	detectChangedFields,
+	serializableFormValues
 } from '$utils/recipeFormHelpers';
 
 /**
@@ -98,7 +99,7 @@ export const actions = {
 				return fail(400, {
 					error: 'Original short name is required for edit',
 					errors: ['Missing original_short_name'],
-					values: Object.fromEntries(formData)
+					values: serializableFormValues(formData)
 				});
 			}
 
@@ -108,7 +109,7 @@ export const actions = {
 				return fail(400, {
 					error: validationErrors.join(', '),
 					errors: validationErrors,
-					values: Object.fromEntries(formData)
+					values: serializableFormValues(formData)
 				});
 			}
 
@@ -143,7 +144,7 @@ export const actions = {
 					return fail(400, {
 						error: `Failed to process image: ${message}`,
 						errors: ['Image processing failed'],
-						values: Object.fromEntries(formData)
+						values: serializableFormValues(formData)
 					});
 				}
 			} else if (keepExistingImage && existingImagePath) {
@@ -206,7 +207,7 @@ export const actions = {
 					return fail(404, {
 						error: `Recipe with short name "${originalShortName}" not found`,
 						errors: ['Recipe not found'],
-						values: Object.fromEntries(formData)
+						values: serializableFormValues(formData)
 					});
 				}
 
@@ -263,7 +264,7 @@ export const actions = {
 					return fail(400, {
 						error: `A recipe with the short name "${recipeData.short_name}" already exists. Please choose a different short name.`,
 						errors: ['Duplicate short_name'],
-						values: Object.fromEntries(formData)
+						values: serializableFormValues(formData)
 					});
 				}
 
@@ -271,7 +272,7 @@ export const actions = {
 				return fail(500, {
 					error: `Failed to update recipe: ${dbMessage || 'Unknown database error'}`,
 					errors: [dbMessage],
-					values: Object.fromEntries(formData)
+					values: serializableFormValues(formData)
 				});
 			}
 		} catch (error: unknown) {

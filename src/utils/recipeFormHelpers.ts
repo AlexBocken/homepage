@@ -73,6 +73,20 @@ export interface RecipeFormData {
 }
 
 /**
+ * Build a plain object of form values that is safe to return from a SvelteKit
+ * action (e.g. inside `fail(...)`). Drops File entries such as `recipe_image`,
+ * which devalue cannot serialize and which would otherwise crash the action
+ * response with a 500 ("Cannot stringify arbitrary non-POJOs").
+ */
+export function serializableFormValues(formData: FormData): Record<string, string> {
+	const out: Record<string, string> = {};
+	for (const [key, value] of formData.entries()) {
+		if (typeof value === 'string') out[key] = value;
+	}
+	return out;
+}
+
+/**
  * Extracts recipe data from FormData
  * Handles both simple fields and complex JSON-encoded nested structures
  */

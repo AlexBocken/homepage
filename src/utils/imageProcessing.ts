@@ -1,5 +1,5 @@
 import path from 'path';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import sharp from 'sharp';
 import { generateImageHashFromBuffer, getHashedFilename } from '$utils/imageHash';
 import { validateImageFile } from '$utils/imageValidation';
@@ -138,8 +138,15 @@ export async function processAndSaveRecipeImage(
 	// the size the user saw in the editor — re-encoding through sharp would silently
 	// re-compress and discard their quality/size choice.
 	// Fallback (non-webp upload, e.g. editor bypassed): re-encode to WebP q90 as before.
-	const fullHashedPath = path.join(imageDir, 'rezepte', 'full', hashedFilename);
-	const fullUnhashedPath = path.join(imageDir, 'rezepte', 'full', unhashedFilename);
+	const fullDir = path.join(imageDir, 'rezepte', 'full');
+	const thumbDir = path.join(imageDir, 'rezepte', 'thumb');
+	// fs.writeFile (unlike sharp's toFile) does not create parent dirs, so ensure
+	// both target directories exist before writing.
+	await mkdir(fullDir, { recursive: true });
+	await mkdir(thumbDir, { recursive: true });
+
+	const fullHashedPath = path.join(fullDir, hashedFilename);
+	const fullUnhashedPath = path.join(fullDir, unhashedFilename);
 
 	let fullBuffer: Buffer;
 	if (file.type === 'image/webp') {
@@ -165,8 +172,8 @@ export async function processAndSaveRecipeImage(
 		.toBuffer();
 	console.log('[ImageProcessing] Thumbnail buffer created, size:', thumbBuffer.length, 'bytes');
 
-	const thumbHashedPath = path.join(imageDir, 'rezepte', 'thumb', hashedFilename);
-	const thumbUnhashedPath = path.join(imageDir, 'rezepte', 'thumb', unhashedFilename);
+	const thumbHashedPath = path.join(thumbDir, hashedFilename);
+	const thumbUnhashedPath = path.join(thumbDir, unhashedFilename);
 	console.log('[ImageProcessing] Saving thumbnail to:', { thumbHashedPath, thumbUnhashedPath });
 
 	await sharp(thumbBuffer).toFile(thumbHashedPath);
