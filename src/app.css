@@ -467,10 +467,11 @@ a:focus-visible {
 /* ============================================
    HIKES TRANSITIONS
    Cards + filter fly in/out vertically, clicked card morphs into the hero
-   map (cross-fade between thumbnail and map), photo strip slides in from
-   the right. Page chrome under the hero cross-fades so nothing snaps in
-   at transition end. Lives in app.css (not the page component) so the
-   rules are still loaded on the OLD side of a nav AWAY from /hikes.
+   map (cross-fade between thumbnail and map), and the whole below-map panel
+   (an opaque sheet) slides up from the bottom. Page chrome under the hero
+   cross-fades so nothing snaps in at transition end. Lives in app.css (not
+   the page component) so the rules are still loaded on the OLD side of a
+   nav AWAY from /hikes.
    ============================================ */
 
 @keyframes hikes-fly-up {
@@ -489,15 +490,6 @@ a:focus-visible {
 	from { opacity: 0; }
 	to { opacity: 1; }
 }
-@keyframes hike-strip-in-right {
-	from { transform: translateX(100vw); }
-	to { transform: translateX(0); }
-}
-@keyframes hike-strip-out-right {
-	from { transform: translateX(0); }
-	to { transform: translateX(100vw); }
-}
-
 /* Only-child hike-fly-in pseudos (unpaired cards/filter on enter or exit):
  * kill UA's default fade, switch blend mode so the custom fly animation
  * shows clean motion against the rest of the page. */
@@ -533,29 +525,17 @@ html.vt-exit-hikes::view-transition-old(.hike-fly-in):only-child {
 	animation: hikes-fly-down 700ms cubic-bezier(0.4, 0.1, 0.4, 1) both;
 }
 
-/* Photo strip slides in from the right when arriving at a detail page,
- * and slides back out whenever the detail page is left for any other
- * route (back to /hikes, off to /, /hikes/route-builder, …). Both exit
- * scopes (vt-enter-hikes for the back-nav case, vt-exit-hike-detail for
- * everywhere else) trigger the same animation. */
-html.vt-enter-hike-detail::view-transition-new(hike-strip):only-child {
-	animation: hike-strip-in-right 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-html.vt-enter-hikes::view-transition-old(hike-strip):only-child,
-html.vt-exit-hike-detail::view-transition-old(hike-strip):only-child {
-	animation: hike-strip-out-right 600ms cubic-bezier(0.4, 0.1, 0.4, 1) both;
-}
-
-/* Everything below the photo strip on a detail page (metrics, tags,
- * elevation chart, scroll area, meta footer) slides up from the bottom
- * on enter and back down on any exit. Wrapper element carries
- * `view-transition-name: hike-below-strip`; the rest of the page chrome
- * still cross-fades via the root-pseudo rule above. */
-html.vt-enter-hike-detail::view-transition-new(hike-below-strip):only-child {
+/* Everything below the hero map on a detail page — stage nav, photo strip,
+ * metrics, tags, elevation chart, scroll area, meta footer — slides up from
+ * the bottom on enter and back down on any exit, as one panel. The wrapper
+ * carries `view-transition-name: hike-below-map` and an opaque background, so
+ * the whole sheet (background included) moves; the hero map morphs separately
+ * above, and the rest of the page chrome cross-fades via the root-pseudo rule. */
+html.vt-enter-hike-detail::view-transition-new(hike-below-map):only-child {
 	animation: hikes-fly-up 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-html.vt-enter-hikes::view-transition-old(hike-below-strip):only-child,
-html.vt-exit-hike-detail::view-transition-old(hike-below-strip):only-child {
+html.vt-enter-hikes::view-transition-old(hike-below-map):only-child,
+html.vt-exit-hike-detail::view-transition-old(hike-below-map):only-child {
 	animation: hikes-fly-down 700ms cubic-bezier(0.4, 0.1, 0.4, 1) both;
 }
 

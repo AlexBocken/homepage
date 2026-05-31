@@ -415,21 +415,22 @@
 		</div>
 	</section>
 
+	<!-- Everything below the hero map — stage nav, photo strip, metrics,
+	     tags, elevation chart, scroll area, footer — is wrapped in one panel
+	     so view-transitions slide the whole block (with its own background)
+	     up from the bottom on enter and down on exit. The hero map morphs
+	     separately above this. -->
+	<div class="below-map" style="view-transition-name: hike-below-map">
 	{#if hasStages && stages}
 		<HikeStageNav {stages} />
 	{/if}
 
 	{#if track && track.length > 0 && visibleImagePoints.length > 0}
-		<section class="strip-area" style="view-transition-name: hike-strip">
+		<section class="strip-area">
 			<HikePhotoStrip images={visibleImagePoints} {track} {stages} />
 		</section>
 	{/if}
 
-	<!-- Everything below the photo strip is wrapped so view-transitions
-	     can slide the whole block (metrics, tags, elevation chart, scroll
-	     area, footer) up from the bottom on enter and down on exit. The
-	     hero map and strip animate separately above this. -->
-	<div class="below-strip" style="view-transition-name: hike-below-strip">
 	<section class="metrics" aria-label="Tourendaten">
 		{#if hike.icon}
 			<img class="route-icon" src={hike.icon} alt="" aria-hidden="true" />
@@ -983,6 +984,15 @@
 
 	.meta-dot {
 		opacity: 0.55;
+	}
+
+	/* The whole below-the-map block. The solid background makes its
+	   view-transition snapshot an opaque panel, so on enter/exit the entire
+	   sheet (background included) slides up/down from the bottom rather than
+	   just the metric tiles appearing to float. */
+	.below-map {
+		position: relative;
+		background: var(--color-bg-primary);
 	}
 
 	.strip-area {

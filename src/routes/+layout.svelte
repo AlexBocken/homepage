@@ -80,10 +80,10 @@
 		//   card pairs into the hero and the rest fly out.)
 		// - vt-enter-hike-detail: arriving at a hike detail page (card → zoom).
 		// - vt-exit-hike-detail: leaving a hike detail page for anywhere
-		//   else (back to /hikes, off to /, route-builder, …) → photo strip
-		//   slides back out to the right and the below-strip block flies
-		//   down. Excluded for slug → slug navigations (both sides share the
-		//   same route.id, so paired UA transitions handle them).
+		//   else (back to /hikes, off to /, route-builder, …) → the whole
+		//   below-map panel flies back down off the bottom. Excluded for
+		//   slug → slug navigations (both sides share the same route.id, so
+		//   paired UA transitions handle them).
 		const intoHikesIndex = toId === '/hikes' && fromId !== '/hikes';
 		const outOfHikesIndex = fromId === '/hikes' && toId !== '/hikes';
 		const intoHikeDetail = toId === '/hikes/[slug]';
