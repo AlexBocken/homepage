@@ -3,7 +3,7 @@ import { Task } from '$models/Task';
 import { TaskCompletion } from '$models/TaskCompletion';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
-import { getStickerForTags } from '$lib/utils/stickers';
+import { getStickerForTags, getStickerById } from '$lib/utils/stickers';
 import { addDays } from 'date-fns';
 
 function getNextDueDate(completedAt: Date, frequencyType: string, customDays?: number): Date {
@@ -37,8 +37,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   const now = new Date();
 
-  // Award a sticker based on task tags and difficulty
-  const sticker = getStickerForTags(task.tags, task.difficulty || 'medium');
+  // Award a sticker. The client rolls + displays it optimistically and passes
+  // the id here; fall back to a server-side roll if it's missing or invalid.
+  const sticker =
+    (typeof body.stickerId === 'string' && getStickerById(body.stickerId)) ||
+    getStickerForTags(task.tags, task.difficulty || 'medium');
 
   // Record the completion
   const completion = await TaskCompletion.create({

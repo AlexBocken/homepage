@@ -27,6 +27,7 @@
   import { flip } from 'svelte/animate';
   import TaskForm from '$lib/components/tasks/TaskForm.svelte';
   import StickerPopup from '$lib/components/tasks/StickerPopup.svelte';
+  import { getStickerForTags } from '$lib/utils/stickers';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 
   let { data } = $props();
@@ -112,16 +113,25 @@
    * @param {string} [forUser]
    */
   async function completeTask(task, forUser) {
+    // Roll the sticker client-side and show it immediately — don't wait on the
+    // POST roundtrip (DB writes) just to learn which sticker to display.
+    const sticker = getStickerForTags(task.tags, task.difficulty || 'medium');
+    // Warm the image cache so the cat is decoded by the time the popup finishes
+    // its bounce-in, instead of fading into an empty circle.
+    if (typeof Image !== 'undefined') {
+      const img = new Image();
+      img.src = `/stickers/${sticker.image}`;
+    }
+    awardedSticker = sticker;
+    completeForTaskId = null;
+
+    // Persist in the background; tell the server which sticker we showed.
     const res = await fetch(`/api/tasks/${task._id}/complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(forUser ? { completedFor: forUser } : {})
+      body: JSON.stringify({ stickerId: sticker.id, ...(forUser ? { completedFor: forUser } : {}) })
     });
     if (!res.ok) return;
-    const result = await res.json();
-
-    awardedSticker = result.sticker;
-    completeForTaskId = null;
     await refreshTasks();
   }
 
