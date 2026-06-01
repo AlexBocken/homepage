@@ -19,7 +19,12 @@ const config = {
 		// If your environment is not supported or you settled on a specific environment, switch out the adapter.
 		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
 		adapter: adapter({
-			precompress: true  // Enable brotli and gzip compression
+			// Precompression is handled by scripts/precompress.ts in postbuild.
+			// The adapter's own precompress is single-threaded and brotli-q11s every
+			// file in build/client — including ~90 MB of already-compressed media and
+			// 20 MB+ text blobs — adding minutes to the build for no gain. Our step is
+			// parallel, skips binaries, and tunes brotli quality by size.
+			precompress: false
 		}),
 		prerender: {
 			// The only intentionally-static pages are /hikes (prerender=true) and
