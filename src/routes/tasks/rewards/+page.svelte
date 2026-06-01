@@ -1,64 +1,99 @@
 <script>
   import { invalidateAll } from '$app/navigation';
   import { confirm } from '$lib/js/confirmDialog.svelte';
-  import { STICKERS, getStickerById, getRarityColor } from '$lib/utils/stickers';
-  import { formatDistanceToNow } from 'date-fns';
+  import { STICKERS, getStickerById, ALWAYS_CATEGORIES, getTagsForCategory } from '$lib/utils/stickers';
+  import { formatDistanceToNow, format } from 'date-fns';
   import { de } from 'date-fns/locale';
-  import { scale } from 'svelte/transition';
-  import { flip } from 'svelte/animate';
   import Trash2 from '@lucide/svelte/icons/trash-2';
+  import Sparkles from '@lucide/svelte/icons/sparkles';
+  import Wind from '@lucide/svelte/icons/wind';
+  import Brush from '@lucide/svelte/icons/brush';
+  import Bath from '@lucide/svelte/icons/bath';
+  import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
+  import CookingPot from '@lucide/svelte/icons/cooking-pot';
+  import Droplets from '@lucide/svelte/icons/droplets';
+  import WashingMachine from '@lucide/svelte/icons/washing-machine';
+  import Shirt from '@lucide/svelte/icons/shirt';
+  import Flower2 from '@lucide/svelte/icons/flower-2';
+  import Leaf from '@lucide/svelte/icons/leaf';
+  import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
   import StickerCalendar from '$lib/components/tasks/StickerCalendar.svelte';
-  import StickerPopup from '$lib/components/tasks/StickerPopup.svelte';
+  import VinylSticker from '$lib/components/tasks/VinylSticker.svelte';
+  import VinylStickerCard from '$lib/components/tasks/VinylStickerCard.svelte';
 
   let { data } = $props();
 
   /** @type {import('$lib/utils/stickers').Sticker | null} */
-  let selectedSticker = $state(null);
+  let selected = $state(null);
 
   let stats = $derived(data.stats || { userStats: [], userStickers: [], recentCompletions: [] });
   let currentUser = $derived(data.session?.user?.nickname || '');
 
-  const rarityLabels = /** @type {Record<string, string>} */ ({
-    common: 'Gewöhnlich',
-    uncommon: 'Ungewöhnlich',
-    rare: 'Selten',
-    legendary: 'Legendär'
-  });
-
-  const rarityOrder = /** @type {Record<string, number>} */ ({
-    legendary: 0,
-    rare: 1,
-    uncommon: 2,
-    common: 3
-  });
-
-  // Build current user's sticker collection
-  let displayedStickers = $derived.by(() => {
+  // id -> times earned (current user)
+  let counts = $derived.by(() => {
     /** @type {Map<string, number>} */
-    const collection = new Map();
+    const m = new Map();
     for (const entry of stats.userStickers) {
-      if (entry._id.user === currentUser) {
-        collection.set(entry._id.sticker, entry.count);
-      }
+      if (entry._id.user === currentUser) m.set(entry._id.sticker, entry.count);
     }
-    return collection;
+    return m;
   });
 
-  // Sort stickers for display: owned first (by rarity), then unowned
-  let sortedStickers = $derived.by(() => {
-    return [...STICKERS].sort((a, b) => {
-      const aOwned = displayedStickers.has(a.id);
-      const bOwned = displayedStickers.has(b.id);
-      if (aOwned && !bOwned) return -1;
-      if (!aOwned && bOwned) return 1;
-      const rarityDiff = (rarityOrder[a.rarity] ?? 3) - (rarityOrder[b.rarity] ?? 3);
-      if (rarityDiff !== 0) return rarityDiff;
-      return a.name.localeCompare(b.name, 'de');
-    });
+  // album "pages" by category
+  const PAGES = [
+    { cat: 'general', name: 'Allerlei' },
+    { cat: 'kitchen', name: 'Küche' },
+    { cat: 'cozy', name: 'Gemütlichkeit' },
+    { cat: 'plants', name: 'Pflanzen & Garten' },
+    { cat: 'cleaning', name: 'Sauberkeit' },
+    { cat: 'errands', name: 'Erledigungen' },
+    { cat: 'achievement', name: 'Erfolge' },
+    { cat: 'special', name: 'Besonderes' }
+  ];
+  const rarityRank = /** @type {Record<string, number>} */ ({ legendary: 0, rare: 1, uncommon: 2, common: 3 });
+  let pages = $derived(
+    PAGES.map((p) => {
+      const items = STICKERS.filter((s) => s.category === p.cat).sort(
+        (a, b) => (rarityRank[a.rarity] ?? 9) - (rarityRank[b.rarity] ?? 9) || a.name.localeCompare(b.name, 'de')
+      );
+      // category rank = average sticker rarity (lower = rarer -> higher up);
+      // 'general' is the catch-all bucket, so it always sinks to the bottom
+      const avg = items.reduce((sum, s) => sum + (rarityRank[s.rarity] ?? 9), 0) / (items.length || 1);
+      const score = p.cat === 'general' ? 99 : avg;
+      const always = ALWAYS_CATEGORIES.includes(p.cat);
+      const tags = always ? [] : getTagsForCategory(p.cat);
+      return { ...p, items, score, always, tags, owned: items.filter((s) => counts.has(s.id)).length };
+    }).sort((a, b) => a.score - b.score)
+  );
+
+  // id -> { first earned label, source task } (recentCompletions is newest-first)
+  let info = $derived.by(() => {
+    /** @type {Map<string, { first: string, task: string }>} */
+    const m = new Map();
+    for (const c of stats.recentCompletions || []) {
+      if (c.completedBy !== currentUser || !c.stickerId) continue;
+      m.set(c.stickerId, {
+        first: format(new Date(c.completedAt), 'd. MMM yyyy', { locale: de }),
+        task: c.taskTitle || ''
+      });
+    }
+    return m;
   });
 
-  let collectedCount = $derived(displayedStickers.size);
+  let collectedCount = $derived(counts.size);
   let totalCount = STICKERS.length;
+
+  let openInfo = $state('');
+
+  // same tag icons as the /tasks page
+  /** @type {Record<string, any>} */
+  const TAG_ICONS = {
+    putzen: Sparkles, saugen: Wind, wischen: Brush, bad: Bath,
+    küche: UtensilsCrossed, kochen: CookingPot, abwasch: Droplets,
+    wäsche: WashingMachine, bügeln: Shirt,
+    pflanzen: Flower2, gießen: Droplets, düngen: Leaf, garten: Leaf,
+    einkaufen: ShoppingCart, müll: Trash2
+  };
 
   // Recent completions with stickers
   let recentWithStickers = $derived(
@@ -89,54 +124,59 @@
     <div class="progress-bar">
       <div class="progress-fill" style="width: {(collectedCount / totalCount) * 100}%"></div>
     </div>
-
   </header>
 
   <StickerCalendar completions={stats.recentCompletions} {currentUser} />
 
   <h2 class="section-title">Alle Sticker</h2>
-  <div class="sticker-grid">
-    {#each sortedStickers as sticker (sticker.id)}
-      {@const count = displayedStickers.get(sticker.id) || 0}
-      {@const owned = count > 0}
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <div
-        class="sticker-card"
-        class:owned
-        class:locked={!owned}
-        animate:flip={{ duration: 300 }}
-        style="--rarity-color: {getRarityColor(sticker.rarity)}"
-        onclick={() => owned && (selectedSticker = sticker)}
-      >
-        <div class="sticker-visual">
-          {#if owned}
-            <img class="sticker-img" src="/stickers/{sticker.image}" alt={sticker.name} />
-          {:else}
-            <span class="sticker-unknown">?</span>
-          {/if}
-          {#if count > 1}
-            <span class="sticker-count">x{count}</span>
-          {/if}
+  {#each pages as page (page.cat)}
+    <section class="page">
+      <div class="page-head">
+        <div class="ph-title">
+          <h3>{page.name}</h3>
+          <button
+            class="info-btn"
+            class:open={openInfo === page.cat}
+            aria-label="Wie bekomme ich diese Sticker?"
+            aria-expanded={openInfo === page.cat}
+            onclick={() => (openInfo = openInfo === page.cat ? '' : page.cat)}
+          >i</button>
         </div>
-        <div class="sticker-info">
-          <span class="sticker-name">{owned ? sticker.name : '???'}</span>
-          <span class="sticker-rarity" style="color: {getRarityColor(sticker.rarity)}">
-            {rarityLabels[sticker.rarity]}
-          </span>
-          {#if owned}
-            <span class="sticker-desc">{sticker.description}</span>
-          {/if}
-        </div>
+        <span class="page-count">{page.owned}/{page.items.length}</span>
       </div>
-    {/each}
-  </div>
+      {#if openInfo === page.cat}
+        <p class="earn-info">
+          {#if page.always}
+            Diese Kätzchen können bei <strong>jeder erledigten Aufgabe</strong> auftauchen.
+          {:else}
+            Tauchen bei Aufgaben mit diesen Tags auf:
+            <span class="tags">
+              {#each page.tags as t (t)}
+                {@const Icon = TAG_ICONS[t]}
+                <span class="tag">{#if Icon}<Icon size={13} strokeWidth={1.8} />{/if}{t}</span>
+              {/each}
+            </span>
+          {/if}
+        </p>
+      {/if}
+      <div class="sheet">
+        {#each page.items as sticker (sticker.id)}
+          <VinylSticker
+            {sticker}
+            owned={counts.has(sticker.id)}
+            count={counts.get(sticker.id) || 0}
+            onpick={(/** @type {any} */ s) => (selected = s)}
+          />
+        {/each}
+      </div>
+    </section>
+  {/each}
 
   {#if recentWithStickers.length > 0}
     <section class="recent-section">
       <h2>Letzte Sticker</h2>
       <div class="recent-list">
-        {#each recentWithStickers as completion}
+        {#each recentWithStickers as completion (completion._id)}
           {@const sticker = getStickerById(completion.stickerId)}
           {#if sticker}
             <div class="recent-item">
@@ -159,8 +199,15 @@
     </section>
   {/if}
 
-  {#if selectedSticker}
-    <StickerPopup sticker={selectedSticker} title={selectedSticker.name} buttonText="Schließen" bounce={false} onclose={() => selectedSticker = null} />
+  {#if selected}
+    {@const meta = info.get(selected.id)}
+    <VinylStickerCard
+      sticker={selected}
+      count={counts.get(selected.id) || 0}
+      firstEarnedLabel={meta?.first || ''}
+      sourceTask={meta?.task || ''}
+      onclose={() => (selected = null)}
+    />
   {/if}
 
   <div class="danger-zone">
@@ -173,7 +220,7 @@
 
 <style>
   .rewards-page {
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 1.5rem 1rem;
   }
@@ -209,102 +256,102 @@
     transition: width 500ms ease;
   }
 
-
   .section-title {
     font-size: 1.1rem;
     font-weight: 600;
-    margin: 0 0 0.75rem;
+    margin: 1.5rem 0 0.75rem;
   }
 
-  /* Sticker grid */
-  .sticker-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 0.75rem;
+  /* sticker album pages */
+  .page {
+    margin-bottom: 1.25rem;
+    padding: 1rem 1rem 1.25rem;
+    border-radius: var(--radius-lg);
+    background-color: #f3ecd9;
+    background-image: radial-gradient(rgba(120, 100, 70, 0.16) 1px, transparent 1.4px);
+    background-size: 18px 18px;
+    border: 1px solid #e4d9be;
+    box-shadow: var(--shadow-sm), inset 0 0 40px rgba(150, 130, 90, 0.08);
   }
-
-  .sticker-card {
+  .page-head {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem 0.5rem;
-    border-radius: 14px;
-    border: 1px solid var(--color-border, #e8e4dd);
-    background: var(--color-bg-primary, white);
-    transition: transform 150ms, box-shadow 150ms;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0 0 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px dashed #cdbf9d;
   }
-  .sticker-card.owned {
-    border-color: var(--rarity-color);
-    border-width: 1.5px;
-    cursor: pointer;
+  .page-head h3 {
+    margin: 0;
+    font-family: 'Fredoka', Helvetica, sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #5a4a2c;
   }
-  .sticker-card.owned:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  }
-  .sticker-card.locked {
-    opacity: 0.4;
-    filter: grayscale(0.8);
-  }
-
-  .sticker-visual {
-    position: relative;
-    width: 60px;
-    height: 60px;
-    display: flex;
+  .ph-title { display: flex; align-items: center; gap: 0.45rem; }
+  .info-btn {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 0.4rem;
-  }
-  .owned .sticker-visual {
-    background: radial-gradient(circle, var(--rarity-color) 0%, transparent 70%);
+    border: 1.5px solid #b9a877;
+    background: transparent;
+    color: #8a7747;
     border-radius: 50%;
-    opacity: 0.95;
-  }
-  .sticker-img {
-    width: 52px;
-    height: 52px;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
-  }
-  .sticker-unknown {
-    font-size: 1.6rem;
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-size: 0.72rem;
     font-weight: 700;
-    color: var(--color-text-secondary, #ccc);
-    opacity: 0.4;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 120ms;
   }
-  .sticker-count {
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    background: var(--nord10);
-    color: white;
-    font-size: 0.65rem;
+  .info-btn:hover, .info-btn.open {
+    background: #8a7747;
+    color: #f3ecd9;
+    border-color: #8a7747;
+  }
+  .page-count {
+    font-family: 'Fredoka', Helvetica, sans-serif;
     font-weight: 700;
-    padding: 0.1rem 0.35rem;
-    border-radius: 100px;
-    line-height: 1.2;
+    font-size: 0.8rem;
+    color: #8a7747;
   }
-
-  .sticker-info {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-  }
-  .sticker-name {
+  .earn-info {
+    margin: 0 0 0.7rem;
+    padding: 0.5rem 0.7rem;
     font-size: 0.78rem;
+    line-height: 1.5;
+    color: #5a4a2c;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px dashed #cdbf9d;
+    border-radius: var(--radius-md);
+  }
+  .earn-info strong { color: #5a4a2c; }
+  .tags { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; vertical-align: middle; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.08rem 0.5rem;
+    font-size: 0.72rem;
     font-weight: 600;
+    color: #6a5a3a;
+    background: color-mix(in srgb, var(--nord14) 22%, #fff);
+    border: 1px solid color-mix(in srgb, var(--nord14) 45%, transparent);
+    border-radius: var(--radius-pill);
   }
-  .sticker-rarity {
-    font-size: 0.62rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+  .sheet {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 0.4rem 0.2rem;
   }
-  .sticker-desc {
-    font-size: 0.68rem;
-    color: var(--color-text-secondary, #999);
+  /* the album sheet is a physical page — stays warm in dark mode */
+  :global(:root[data-theme='dark']) .page,
+  :global(:root:not([data-theme='light'])) .page {
+    background-color: #ece3cb;
   }
 
   /* Recent section */
@@ -371,13 +418,6 @@
 
   /* Dark mode */
   @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .sticker-card {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .sticker-card.owned {
-      border-color: var(--rarity-color);
-    }
     :global(:root:not([data-theme="light"])) .recent-item {
       background: var(--nord1);
       border-color: var(--nord2);
@@ -385,13 +425,6 @@
     :global(:root:not([data-theme="light"])) .progress-bar {
       background: var(--nord2);
     }
-  }
-  :global(:root[data-theme="dark"]) .sticker-card {
-    background: var(--nord1);
-    border-color: var(--nord2);
-  }
-  :global(:root[data-theme="dark"]) .sticker-card.owned {
-    border-color: var(--rarity-color);
   }
   :global(:root[data-theme="dark"]) .recent-item {
     background: var(--nord1);
@@ -425,14 +458,5 @@
     color: var(--nord11);
     border-color: var(--nord11);
     background: rgba(191, 97, 106, 0.06);
-  }
-
-  @media (max-width: 600px) {
-    .sticker-grid {
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 0.5rem;
-    }
-    .sticker-card { padding: 0.7rem 0.3rem; }
-    h1 { font-size: 1.3rem; }
   }
 </style>

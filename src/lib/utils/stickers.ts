@@ -172,6 +172,18 @@ const DIFFICULTY_RARITY_WEIGHTS: Record<string, Record<string, number>> = {
   high:   { common: 25, uncommon: 30, rare: 30, legendary: 15 },
 };
 
+// Categories that can drop from ANY task (see getStickerForTags below).
+export const ALWAYS_CATEGORIES = ['general', 'achievement', 'cozy', 'special'];
+
+// Reverse of TAG_CATEGORY_MAP: which task tags can drop a given category.
+export function getTagsForCategory(category: string): string[] {
+  const tags: string[] = [];
+  for (const [tag, cats] of Object.entries(TAG_CATEGORY_MAP)) {
+    if (cats.includes(category)) tags.push(tag);
+  }
+  return tags;
+}
+
 export function getStickerForTags(tags: string[], difficulty?: string): Sticker {
   const weights = DIFFICULTY_RARITY_WEIGHTS[difficulty || 'medium'] || DIFFICULTY_RARITY_WEIGHTS.medium;
 
