@@ -97,20 +97,23 @@
 	});
 
 	// Draw the source onto the display canvas whenever it or the layout changes.
+	// The backing store is sized in physical pixels (CSS size × devicePixelRatio)
+	// so the preview stays sharp on HiDPI screens; CSS keeps it at dispW×dispH.
 	$effect(() => {
 		const cv = stageCanvas;
 		const bm = bitmap;
 		const w = dispW;
 		const h = dispH;
 		if (!cv || !bm || w <= 0 || h <= 0) return;
-		cv.width = w;
-		cv.height = h;
+		const dpr = window.devicePixelRatio || 1;
+		cv.width = Math.round(w * dpr);
+		cv.height = Math.round(h * dpr);
 		const ctx = cv.getContext('2d');
 		if (!ctx) return;
 		ctx.imageSmoothingEnabled = true;
 		ctx.imageSmoothingQuality = 'high';
-		ctx.clearRect(0, 0, w, h);
-		ctx.drawImage(bm, 0, 0, imgW, imgH, 0, 0, w, h);
+		ctx.clearRect(0, 0, cv.width, cv.height);
+		ctx.drawImage(bm, 0, 0, imgW, imgH, 0, 0, cv.width, cv.height);
 	});
 
 	// Debounced live encode — runs whenever crop / resolution / quality change.
