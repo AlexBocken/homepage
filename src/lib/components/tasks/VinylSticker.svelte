@@ -41,19 +41,18 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
   class="slot"
   class:owned
   bind:this={el}
-  role={owned ? 'button' : undefined}
-  tabindex={owned ? 0 : undefined}
+  role="button"
+  tabindex={0}
   onpointermove={onmove}
   onpointerleave={leave}
-  onclick={() => owned && onpick?.(sticker)}
-  onkeydown={(e) => owned && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onpick?.(sticker))}
+  onclick={() => onpick?.(sticker)}
+  onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onpick?.(sticker))}
   style="--tilt: {tilt}deg; --mx: {mx}%; --my: {my}%; --m: url('/stickers/{sticker.image}'); --foil: {owned ? foilByRarity[sticker.rarity] : 0}; --on: {active ? 1 : 0}; --rarity: {getRarityColor(sticker.rarity)};"
-  title={owned ? `${sticker.name} — ${rarityLabels[sticker.rarity]}` : 'Noch nicht gesammelt'}
+  title={owned ? `${sticker.name} — ${rarityLabels[sticker.rarity]}` : 'Noch nicht gesammelt — Drop-Chance ansehen'}
 >
   {#if owned}
     <div class="vinyl rarity-{sticker.rarity}">
@@ -190,6 +189,13 @@
     mask: var(--m) center / contain no-repeat;
     filter: drop-shadow(0 1.5px 0.5px rgba(255, 255, 255, 0.7));
     opacity: 0.85;
+    cursor: pointer;
+    transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background 180ms;
+  }
+  .slot:not(.owned):hover .deboss,
+  .slot:not(.owned):focus-visible .deboss {
+    transform: translateY(-3px) scale(1.05);
+    background: rgba(90, 74, 44, 0.34);
   }
 
   .label {

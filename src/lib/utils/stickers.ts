@@ -221,6 +221,23 @@ export function getStickerById(id: string): Sticker | undefined {
   return STICKERS.find(s => s.id === id);
 }
 
+// Probability that a single drop is exactly this sticker, on a task that can
+// actually drop it: the always-pool plus the sticker's own category (the same
+// pool getStickerForTags builds for a task tagged for this category). Returns a
+// value in 0..1. Always-category stickers (general/achievement/cozy/special)
+// resolve against the base always-pool, since they can drop from any task.
+export function getDropChance(sticker: Sticker, difficulty: string = 'medium'): number {
+  const weights = DIFFICULTY_RARITY_WEIGHTS[difficulty] || DIFFICULTY_RARITY_WEIGHTS.medium;
+
+  const categories = new Set<string>(ALWAYS_CATEGORIES);
+  categories.add(sticker.category);
+
+  const pool = STICKERS.filter(s => categories.has(s.category));
+  const totalWeight = pool.reduce((sum, s) => sum + weights[s.rarity], 0);
+  if (totalWeight === 0) return 0;
+  return weights[sticker.rarity] / totalWeight;
+}
+
 export function getRarityColor(rarity: string): string {
   switch (rarity) {
     case 'common': return 'var(--nord14)';

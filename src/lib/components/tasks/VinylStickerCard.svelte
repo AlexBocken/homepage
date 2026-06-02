@@ -3,7 +3,7 @@
   import { elasticOut } from 'svelte/easing';
   import { getRarityColor } from '$lib/utils/stickers';
 
-  let { sticker, count = 0, firstEarnedLabel = '', sourceTask = '', onclose } = $props();
+  let { sticker, owned = true, count = 0, dropChance = 0, firstEarnedLabel = '', sourceTask = '', onclose } = $props();
 
   const rarityLabels = /** @type {Record<string, string>} */ ({
     common: 'Gewöhnlich',
@@ -17,6 +17,15 @@
     rare: 0.65,
     legendary: 1
   });
+
+  /** @param {number} p drop probability in 0..1 */
+  function formatChance(p) {
+    if (!p) return '—';
+    const pct = p * 100;
+    if (pct >= 1) return `${pct.toFixed(1).replace('.', ',')} %`;
+    return `${pct.toFixed(2).replace('.', ',')} %`;
+  }
+  let chanceLabel = $derived(formatChance(dropChance));
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -29,20 +38,27 @@
     onclick={(e) => e.stopPropagation()}
   >
     <div class="stage">
-      <div class="vinyl">
-        <img src="/stickers/{sticker.image}" alt={sticker.name} />
-        <span class="foil" style="--m: url('/stickers/{sticker.image}');" aria-hidden="true"></span>
-      </div>
+      {#if owned}
+        <div class="vinyl">
+          <img src="/stickers/{sticker.image}" alt={sticker.name} />
+          <span class="foil" style="--m: url('/stickers/{sticker.image}');" aria-hidden="true"></span>
+        </div>
+      {:else}
+        <div class="silhouette" style="--m: url('/stickers/{sticker.image}');" aria-hidden="true"></div>
+      {/if}
     </div>
 
-    <h2 class="title">{sticker.name}</h2>
+    <h2 class="title">{owned ? sticker.name : '???'}</h2>
     <span class="rarity-badge">{rarityLabels[sticker.rarity]}</span>
-    <p class="desc">{sticker.description}</p>
+    <p class="desc">{owned ? sticker.description : 'Noch nicht gesammelt'}</p>
 
     <dl class="stats">
-      <div><dt>Anzahl</dt><dd>×{count}</dd></div>
-      <div><dt>Zuerst erhalten</dt><dd>{firstEarnedLabel || '—'}</dd></div>
-      <div><dt>Quelle</dt><dd>{sourceTask || '—'}</dd></div>
+      <div><dt>Drop-Chance (mittel)</dt><dd>{chanceLabel}</dd></div>
+      {#if owned}
+        <div><dt>Anzahl</dt><dd>×{count}</dd></div>
+        <div><dt>Zuerst erhalten</dt><dd>{firstEarnedLabel || '—'}</dd></div>
+        <div><dt>Quelle</dt><dd>{sourceTask || '—'}</dd></div>
+      {/if}
     </dl>
 
     <button class="close" onclick={onclose}>Schließen</button>
@@ -100,6 +116,15 @@
       drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff)
       drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff)
       drop-shadow(0 6px 7px rgba(0, 0, 0, 0.3));
+  }
+  .silhouette {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    background: color-mix(in srgb, var(--rarity) 45%, var(--color-text-secondary));
+    -webkit-mask: var(--m) center / contain no-repeat;
+    mask: var(--m) center / contain no-repeat;
+    opacity: 0.55;
   }
   .foil {
     position: absolute;

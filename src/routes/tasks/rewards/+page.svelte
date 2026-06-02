@@ -1,10 +1,13 @@
 <script>
   import { invalidateAll } from '$app/navigation';
   import { confirm } from '$lib/js/confirmDialog.svelte';
-  import { STICKERS, getStickerById, ALWAYS_CATEGORIES, getTagsForCategory } from '$lib/utils/stickers';
+  import { STICKERS, getStickerById, getDropChance, ALWAYS_CATEGORIES, getTagsForCategory } from '$lib/utils/stickers';
   import { formatDistanceToNow, format } from 'date-fns';
   import { de } from 'date-fns/locale';
   import Trash2 from '@lucide/svelte/icons/trash-2';
+  import Pencil from '@lucide/svelte/icons/pencil';
+  import Check from '@lucide/svelte/icons/check';
+  import X from '@lucide/svelte/icons/x';
   import Sparkles from '@lucide/svelte/icons/sparkles';
   import Wind from '@lucide/svelte/icons/wind';
   import Brush from '@lucide/svelte/icons/brush';
@@ -109,6 +112,35 @@
     if (res.ok) await invalidateAll();
   }
 
+  // --- edit a gained sticker's date ---
+  let editingId = $state('');
+  let editValue = $state('');
+
+  /** @param {any} c */
+  function startEdit(c) {
+    editingId = c._id;
+    editValue = format(new Date(c.completedAt), "yyyy-MM-dd'T'HH:mm");
+  }
+  function cancelEdit() {
+    editingId = '';
+    editValue = '';
+  }
+  /** @param {string} id */
+  async function saveEdit(id) {
+    if (!editValue) return;
+    const completedAt = new Date(editValue);
+    if (isNaN(completedAt.getTime())) return;
+    const res = await fetch(`/api/tasks/completions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completedAt: completedAt.toISOString() })
+    });
+    if (res.ok) {
+      editingId = '';
+      await invalidateAll();
+    }
+  }
+
   async function clearHistory() {
     if (!await confirm('Deinen gesamten Verlauf und alle Sticker wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return;
     const res = await fetch('/api/tasks/stats', { method: 'DELETE' });
@@ -179,18 +211,39 @@
         {#each recentWithStickers as completion (completion._id)}
           {@const sticker = getStickerById(completion.stickerId)}
           {#if sticker}
-            <div class="recent-item">
+            <div class="recent-item" class:editing={editingId === completion._id}>
               <img class="recent-img" src="/stickers/{sticker.image}" alt={sticker.name} />
               <div class="recent-info">
                 <span class="recent-task">{completion.taskTitle}</span>
-                <span class="recent-meta">
-                  {completion.completedBy} &middot; {formatDistanceToNow(new Date(completion.completedAt), { locale: de, addSuffix: true })}
-                </span>
+                {#if editingId === completion._id}
+                  <input
+                    class="date-edit"
+                    type="datetime-local"
+                    bind:value={editValue}
+                    aria-label="Datum bearbeiten"
+                  />
+                {:else}
+                  <span class="recent-meta">
+                    {completion.completedBy} &middot; {formatDistanceToNow(new Date(completion.completedAt), { locale: de, addSuffix: true })}
+                  </span>
+                {/if}
               </div>
               {#if completion.completedBy === currentUser}
-                <button class="btn-delete-completion" title="Eintrag löschen" onclick={() => deleteCompletion(completion._id)}>
-                  <Trash2 size={14} />
-                </button>
+                {#if editingId === completion._id}
+                  <button class="btn-row-action save" title="Speichern" onclick={() => saveEdit(completion._id)}>
+                    <Check size={15} />
+                  </button>
+                  <button class="btn-row-action" title="Abbrechen" onclick={cancelEdit}>
+                    <X size={15} />
+                  </button>
+                {:else}
+                  <button class="btn-row-action edit" title="Datum bearbeiten" onclick={() => startEdit(completion)}>
+                    <Pencil size={14} />
+                  </button>
+                  <button class="btn-row-action danger" title="Eintrag löschen" onclick={() => deleteCompletion(completion._id)}>
+                    <Trash2 size={14} />
+                  </button>
+                {/if}
               {/if}
             </div>
           {/if}
@@ -203,7 +256,9 @@
     {@const meta = info.get(selected.id)}
     <VinylStickerCard
       sticker={selected}
+      owned={counts.has(selected.id)}
       count={counts.get(selected.id) || 0}
+      dropChance={getDropChance(selected, 'medium')}
       firstEarnedLabel={meta?.first || ''}
       sourceTask={meta?.task || ''}
       onclose={() => (selected = null)}
@@ -377,27 +432,27 @@
     border: 1px solid var(--color-border, #e8e4dd);
     border-radius: 10px;
   }
-  .btn-delete-completion {
+  .btn-row-action {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 28px;
     height: 28px;
-    margin-left: auto;
     flex-shrink: 0;
     border: none;
     background: transparent;
-    color: var(--color-text-secondary, #ccc);
+    color: var(--color-text-secondary, #aaa);
     border-radius: 6px;
     cursor: pointer;
     opacity: 0;
     transition: all 150ms;
   }
-  .recent-item:hover .btn-delete-completion { opacity: 1; }
-  .btn-delete-completion:hover {
-    color: var(--nord11);
-    background: rgba(191, 97, 106, 0.08);
-  }
+  .recent-item:hover .btn-row-action,
+  .recent-item.editing .btn-row-action { opacity: 1; }
+  .btn-row-action:hover { background: var(--color-bg-secondary, #f0ede6); color: var(--color-text-primary, #333); }
+  .btn-row-action.danger:hover { color: var(--nord11); background: rgba(191, 97, 106, 0.08); }
+  .btn-row-action.save { color: var(--nord14); opacity: 1; }
+  .btn-row-action.save:hover { background: rgba(163, 190, 140, 0.14); }
   .recent-img {
     width: 36px;
     height: 36px;
@@ -406,6 +461,19 @@
   .recent-info {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+  .date-edit {
+    margin-top: 0.2rem;
+    align-self: flex-start;
+    font-size: 0.78rem;
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-family: inherit;
   }
   .recent-task {
     font-size: 0.82rem;
