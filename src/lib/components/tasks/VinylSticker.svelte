@@ -147,6 +147,12 @@
     background-position: var(--mx) var(--my);
     mix-blend-mode: color-dodge;
     opacity: calc(var(--foil) * (0.3 + 0.55 * var(--on)));
+  }
+  /* Continuous shimmer only for rare+ — common/uncommon foil is near-invisible,
+     so animating background-position there is pure repaint cost (no compositor
+     fast-path) across ~80 stickers. They stay static and only react on hover. */
+  .rarity-rare .foil,
+  .rarity-legendary .foil {
     animation: holo 5s linear infinite;
   }
   /* when the pointer is on the card, follow it instead of auto-drifting */
