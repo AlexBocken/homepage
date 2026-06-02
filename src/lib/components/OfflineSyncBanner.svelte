@@ -29,8 +29,13 @@
 		await pwaStore.syncForOffline();
 	}
 
+	// Gate on isInitialized so we never render from the store's default state:
+	// initialize() sets isStandalone synchronously but isOfflineAvailable only
+	// after the async IndexedDB check. Without this, the banner flashes on launch
+	// (standalone=true, offline-available still default false) before settling.
 	const visible = $derived(
 		mounted &&
+		pwaStore.isInitialized &&
 		pwaStore.isStandalone &&
 		!pwaStore.isOfflineAvailable &&
 		(!dismissed || pwaStore.isSyncing)
