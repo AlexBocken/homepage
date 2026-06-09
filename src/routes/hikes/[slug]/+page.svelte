@@ -25,7 +25,7 @@
 	import type { PageProps } from './$types';
 
 	const { data }: PageProps = $props();
-	const { hike } = data;
+	const hike = $derived(data.hike);
 	const MdxComponent = $derived(data.MdxComponent as unknown as typeof import('svelte').SvelteComponent);
 	const showPrivate = $derived(!!data.session?.user);
 

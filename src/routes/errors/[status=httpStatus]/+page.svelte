@@ -8,9 +8,9 @@
   import { getErrorTitle, getErrorDescription, getErrorBibleQuote } from '$lib/js/errorStrings';
 
   let { data } = $props();
-  const status = data.status;
+  const status = $derived(data.status);
 
-  const Icon = (() => {
+  const Icon = $derived.by(() => {
     switch (status) {
       case 401: return Lock;
       case 403: return Ban;
@@ -18,14 +18,14 @@
       case 500: return TriangleAlert;
       default: return CircleAlert;
     }
-  })();
+  });
 
-  const titleDe = getErrorTitle(status, false);
-  const titleEn = getErrorTitle(status, true);
-  const descDe = getErrorDescription(status, false);
-  const descEn = getErrorDescription(status, true);
-  const quoteDe = getErrorBibleQuote(status, false);
-  const quoteEn = getErrorBibleQuote(status, true);
+  const titleDe = $derived(getErrorTitle(status, false));
+  const titleEn = $derived(getErrorTitle(status, true));
+  const descDe = $derived(getErrorDescription(status, false));
+  const descEn = $derived(getErrorDescription(status, true));
+  const quoteDe = $derived(getErrorBibleQuote(status, false));
+  const quoteEn = $derived(getErrorBibleQuote(status, true));
 </script>
 
 <svelte:head>

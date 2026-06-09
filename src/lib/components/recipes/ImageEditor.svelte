@@ -40,6 +40,7 @@
 	let loadError = $state('');
 
 	let crop = $state<CropRect>({ x: 0, y: 0, w: 0, h: 0 });
+	// svelte-ignore state_referenced_locally
 	let ratioMode = $state<string>(forcedRatioKey || 'free');
 	let maxRes = $state(2000);
 	let quality = $state(92);

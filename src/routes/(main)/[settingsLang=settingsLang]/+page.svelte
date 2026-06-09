@@ -23,7 +23,9 @@
 	type Status = { kind: 'idle' | 'busy' | 'ok' | 'error'; msg?: string };
 
 	// --- Display name ---
+	// svelte-ignore state_referenced_locally
 	let name = $state(data.account.name);
+	// svelte-ignore state_referenced_locally
 	let savedName = $state(data.account.name);
 	let nameStatus = $state<Status>({ kind: 'idle' });
 	const nameDirty = $derived(name.trim() !== savedName && name.trim().length > 0);
@@ -56,6 +58,7 @@
 	}
 
 	// --- Avatar ---
+	// svelte-ignore state_referenced_locally
 	let avatarUrl = $state(data.account.avatar);
 	let editorFile = $state<File | null>(null);
 	let avatarStatus = $state<Status>({ kind: 'idle' });
