@@ -10,6 +10,17 @@
 	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
 	const t = $derived(m[lang as CommonLang]);
 
+	// Our own avatar: prefer the hashed thumb derived from the session's avatar URL
+	// (immutable → cache-busted). Fall back to a gravatar/initials image, then to
+	// the stable thumb by nickname.
+	const ownAvatarThumb = $derived.by(() => {
+		const img: string | undefined = user?.image;
+		if (typeof img === 'string' && img.includes('/static/user/full/')) {
+			return img.replace('/static/user/full/', '/static/user/thumb/');
+		}
+		return img || `https://bocken.org/static/user/thumb/${user?.nickname}.webp`;
+	});
+
 	async function handleSync() {
 		await pwaStore.syncForOffline();
 	}
@@ -198,7 +209,7 @@
 		<button
 			class="avatar"
 			onclick={toggle_options}
-			style="background-image: url(https://bocken.org/static/user/thumb/{user.nickname}.webp)"
+			style="background-image: url('{ownAvatarThumb}')"
 			id=button
 			aria-label={user.name}
 		></button>

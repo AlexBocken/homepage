@@ -18,6 +18,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 				token.nickname = profile.nickname;
 				token.groups = profile.groups;
 				token.sub = (profile.sub as string) ?? token.sub;
+				token.picture = (profile.picture as string) ?? token.picture;
 			}
 			// Resolve and cache the Authentik integer pk once. Settings endpoints
 			// scope every write to this pk; resolving here avoids a lookup per
@@ -37,6 +38,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 			session.user.groups = token.groups as string[];
 			session.user.sub = token.sub as string;
 			if (typeof token.pk === "number") session.user.pk = token.pk;
+			if (typeof token.picture === "string") session.user.image = token.picture;
 			return session;
 		},
 

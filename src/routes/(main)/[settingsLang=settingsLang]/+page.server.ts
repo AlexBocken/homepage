@@ -9,7 +9,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	// `attributes.avatar`) for the large upload view, falling back to Authentik's
 	// computed avatar (gravatar/initials) for users who never uploaded one. Using
 	// the stored URL also keeps the picture stable across email changes.
-	const uploadedAvatar = typeof user.attributes?.avatar === 'string' ? user.attributes.avatar : undefined
+	const avatarAttr = user.attributes?.avatar as { url?: unknown } | undefined
+	const uploadedAvatar = typeof avatarAttr?.url === 'string' ? avatarAttr.url : undefined
 	// Resolve group labels server-side and only ship {codename,label} — the full
 	// group map (incl. admin/system codenames) never reaches the client.
 	const currentCodes = user.groups_obj?.map((g) => g.name) ?? []

@@ -1,5 +1,5 @@
 import path from 'path';
-import { mkdir } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import type { RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
 import { IMAGE_DIR } from '$env/static/private';
@@ -50,19 +50,29 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	await mkdir(fullDir, { recursive: true });
 	await mkdir(thumbDir, { recursive: true });
 
-	const filename = `${nickname}.webp`;
-	await sharp(fullBuffer).toFile(path.join(fullDir, filename));
-	await sharp(thumbBuffer).toFile(path.join(thumbDir, filename));
-
-	// Stable filename keeps existing /static/user/... references valid; bust
-	// downstream caches (Authentik/SSO) with a content-hash query param.
+	// Write each size under both a stable name — referenced cross-user by username
+	// (e.g. cospend, where another user's content hash is unknown) — and a
+	// content-hashed name, which is immutable and therefore reliably cache-busted.
+	// Our own avatar uses the hashed URL (via Authentik's attributes.avatar.url);
+	// other users' avatars fall back to the stable name.
 	const hash = generateImageHashFromBuffer(fullBuffer);
-	const avatarUrl = `${STATIC_BASE}/static/user/full/${filename}?v=${hash}`;
+	const stableName = `${nickname}.webp`;
+	const hashedName = `${nickname}-${hash}.webp`;
+	await Promise.all([
+		writeFile(path.join(fullDir, stableName), fullBuffer),
+		writeFile(path.join(fullDir, hashedName), fullBuffer),
+		writeFile(path.join(thumbDir, stableName), thumbBuffer),
+		writeFile(path.join(thumbDir, hashedName), thumbBuffer)
+	]);
+
+	const avatarUrl = `${STATIC_BASE}/static/user/full/${hashedName}`;
 
 	// Authentik replaces the whole attributes object on PATCH — read first, then
-	// merge so we don't clobber other attributes.
+	// merge so we don't clobber other attributes. Stored as { url } to match the
+	// Authentik avatar source `attributes.avatar.url`, so the uploaded (hashed,
+	// cache-busted) image is used over gravatar.
 	const current = await getUser(pk);
-	await patchUser(pk, { attributes: { ...current.attributes, avatar: avatarUrl } });
+	await patchUser(pk, { attributes: { ...current.attributes, avatar: { url: avatarUrl } } });
 
 	return json({ ok: true, avatar: avatarUrl });
 };
