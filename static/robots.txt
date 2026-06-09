@@ -7,6 +7,8 @@ Disallow: /login
 Disallow: /logout
 Disallow: /tasks
 Disallow: /settings
+Disallow: /einstellungen
 Disallow: /register
+Disallow: /registrieren
 
 Sitemap: https://bocken.org/sitemap.xml

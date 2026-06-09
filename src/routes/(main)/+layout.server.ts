@@ -1,7 +1,8 @@
 import type { LayoutServerLoad } from "./$types"
+import { clientSession } from "$lib/server/session"
 
 export const load : LayoutServerLoad = (async ({locals}) => {
 	return {
-		session: locals.session ?? await locals.auth(),
+		session: clientSession(locals.session ?? await locals.auth()),
 	}
 });

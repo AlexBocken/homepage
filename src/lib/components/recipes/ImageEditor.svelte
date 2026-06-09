@@ -14,9 +14,12 @@
 		shortName?: string;
 		onApply: (file: File, url: string) => void;
 		onCancel: () => void;
+		/** When set (e.g. '1:1'), lock the crop to this ratio and hide the
+		 *  aspect-ratio picker. Omit for the default free-form behaviour. */
+		forcedRatioKey?: string;
 	};
 
-	let { file, shortName = '', onApply, onCancel }: Props = $props();
+	let { file, shortName = '', onApply, onCancel, forcedRatioKey = '' }: Props = $props();
 
 	const MIN_CROP = 24; // minimum crop edge, source px
 
@@ -37,7 +40,7 @@
 	let loadError = $state('');
 
 	let crop = $state<CropRect>({ x: 0, y: 0, w: 0, h: 0 });
-	let ratioMode = $state<string>('free');
+	let ratioMode = $state<string>(forcedRatioKey || 'free');
 	let maxRes = $state(2000);
 	let quality = $state(92);
 
@@ -87,6 +90,7 @@
 				imgW = bm.width;
 				imgH = bm.height;
 				crop = { x: 0, y: 0, w: bm.width, h: bm.height };
+				if (forcedRatioKey) selectRatio(forcedRatioKey);
 			} catch {
 				loadError = 'Bild konnte nicht geladen werden.';
 			}
@@ -364,19 +368,21 @@
 					</dl>
 				</div>
 
-				<fieldset class="group">
-					<legend>Seitenverhältnis</legend>
-					<div class="chips">
-						{#each RATIOS as r (r.key)}
-							<button
-								type="button"
-								class="chip"
-								class:active={ratioMode === r.key}
-								onclick={() => selectRatio(r.key)}>{r.label}</button
-							>
-						{/each}
-					</div>
-				</fieldset>
+				{#if !forcedRatioKey}
+					<fieldset class="group">
+						<legend>Seitenverhältnis</legend>
+						<div class="chips">
+							{#each RATIOS as r (r.key)}
+								<button
+									type="button"
+									class="chip"
+									class:active={ratioMode === r.key}
+									onclick={() => selectRatio(r.key)}>{r.label}</button
+								>
+							{/each}
+						</div>
+					</fieldset>
+				{/if}
 
 				<fieldset class="group">
 					<legend>Max. Auflösung</legend>

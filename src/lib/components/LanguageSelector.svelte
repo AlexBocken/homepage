@@ -55,6 +55,14 @@
 			languageStore.set('de');
 		} else if (path.startsWith('/expenses')) {
 			languageStore.set('en');
+		} else if (path.startsWith('/einstellungen')) {
+			languageStore.set('de');
+		} else if (path.startsWith('/settings')) {
+			languageStore.set('en');
+		} else if (path.startsWith('/registrieren')) {
+			languageStore.set('de');
+		} else if (path.startsWith('/register')) {
+			languageStore.set('en');
 		} else {
 			// On other pages, read from localStorage
 			if (typeof localStorage !== 'undefined') {
@@ -101,6 +109,14 @@
 			return convertCospendPath(path, targetLang);
 		}
 
+		if ((path.startsWith('/settings') || path.startsWith('/einstellungen')) && targetLang !== 'la') {
+			return targetLang === 'en' ? '/settings' : '/einstellungen';
+		}
+
+		if ((path.startsWith('/register') || path.startsWith('/registrieren')) && targetLang !== 'la') {
+			return targetLang === 'en' ? '/register' : '/registrieren';
+		}
+
 		// Use translated recipe slugs from page data when available (works during SSR)
 		const pageData = page.data;
 		if (targetLang === 'en' && path.startsWith('/rezepte')) {
@@ -138,6 +154,18 @@
 
 		// Get the current path directly from window
 		const path = typeof window !== 'undefined' ? window.location.pathname : currentPath;
+
+		// Settings is a language-prefixed route (/settings ↔ /einstellungen); navigate.
+		if (path.startsWith('/settings') || path.startsWith('/einstellungen')) {
+			if (lang !== 'la') await goto(lang === 'en' ? '/settings' : '/einstellungen');
+			return;
+		}
+
+		// Register is a language-prefixed route (/register ↔ /registrieren); navigate.
+		if (path.startsWith('/register') || path.startsWith('/registrieren')) {
+			if (lang !== 'la') await goto(lang === 'en' ? '/register' : '/registrieren');
+			return;
+		}
 
 		// For pages that handle their own translations inline (not recipe/faith routes),
 		// dispatch event and stay on the page

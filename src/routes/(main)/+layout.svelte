@@ -25,7 +25,7 @@ let user = $derived(data.session?.user);
 	{/snippet}
 
 	{#snippet right_side()}
-		<UserHeader {user}></UserHeader>
+		<UserHeader {user} lang={languageStore.value}></UserHeader>
 	{/snippet}
 
 	{@render children()}

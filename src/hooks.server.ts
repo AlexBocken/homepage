@@ -59,8 +59,8 @@ const NOINDEX_PATTERNS: RegExp[] = [
 	/^\/(rezepte|recipes)\/(search|admin|administration|add|edit|favorites|to-try)(\/|$)/,
 	/^\/login$/,
 	/^\/logout$/,
-	/^\/register(\/|$)/,
-	/^\/settings(\/|$)/,
+	/^\/(register|registrieren)(\/|$)/,
+	/^\/(settings|einstellungen)(\/|$)/,
 	/^\/tasks(\/|$)/,
 	/^\/fitness(\/|$)/,
 	/^\/cospend(\/|$)/,
@@ -217,6 +217,17 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		if (!session) {
 			if (url.pathname.startsWith('/api/fitness')) {
 				await errorWithVerse(fetch, url.pathname, 401, 'Authentication required.');
+			}
+			const callbackUrl = encodeURIComponent(url.pathname + url.search);
+			redirect(303, `/login?callbackUrl=${callbackUrl}`);
+		}
+	}
+
+	// Protect self-service settings page and user API (any logged-in user)
+	if (url.pathname.startsWith('/settings') || url.pathname.startsWith('/api/user')) {
+		if (!session) {
+			if (url.pathname.startsWith('/api/user')) {
+				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
 			}
 			const callbackUrl = encodeURIComponent(url.pathname + url.search);
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);

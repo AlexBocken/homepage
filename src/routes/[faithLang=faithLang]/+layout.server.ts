@@ -1,5 +1,6 @@
 import type { LayoutServerLoad } from "./$types"
 import { errorWithVerse } from "$lib/server/errorQuote"
+import { clientSession } from "$lib/server/session"
 
 export const load : LayoutServerLoad = async ({locals, params, fetch, url}) => {
 	// Validate faithLang parameter
@@ -10,7 +11,7 @@ export const load : LayoutServerLoad = async ({locals, params, fetch, url}) => {
 	const lang = params.faithLang === 'faith' ? 'en' : params.faithLang === 'fides' ? 'la' : 'de';
 
 	return {
-		session: locals.session ?? await locals.auth(),
+		session: clientSession(locals.session ?? await locals.auth()),
 		lang,
 		faithLang: params.faithLang
 	}

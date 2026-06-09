@@ -210,7 +210,7 @@
 					{#if user.groups?.includes('rezepte_users')}
 						<li><a href={resolve('/[recipeLang=recipeLang]/administration', { recipeLang })}>Administration</a></li>
 					{/if}
-					<li><a href="https://sso.bocken.org/if/user/#/settings" >Einstellungen</a></li>
+					<li><a href={resolve('/(main)/[settingsLang=settingsLang]', { settingsLang: lang === 'en' ? 'settings' : 'einstellungen' })}>{t.settings_title}</a></li>
 					{#if pwaStore.isStandalone}
 						<li class="menu-divider" aria-hidden="true"></li>
 						<li class="menu-section-label">{t.offline_data}</li>

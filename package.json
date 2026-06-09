@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.98.1",
+	"version": "1.99.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -41,6 +41,7 @@
 		"@types/leaflet": "^1.9.21",
 		"@types/node": "^22.12.0",
 		"@types/node-cron": "^3.0.11",
+		"@types/nodemailer": "^8.0.0",
 		"@vitest/ui": "^4.1.2",
 		"bwip-js": "^4.10.1",
 		"jsdom": "^27.2.0",
@@ -54,7 +55,7 @@
 		"vitest": "^4.1.2"
 	},
 	"dependencies": {
-		"@auth/sveltekit": "^1.11.1",
+		"@auth/sveltekit": "^1.11.2",
 		"@huggingface/transformers": "^4.0.1",
 		"@lucide/svelte": "^1.7.0",
 		"@nicolo-ribaudo/chokidar-2": "2.1.8-no-fsevents.3",
@@ -69,6 +70,7 @@
 		"leaflet": "^1.9.4",
 		"mongoose": "^9.4.1",
 		"node-cron": "^4.2.1",
+		"nodemailer": "^7",
 		"romcal": "github:AlexBocken/romcal#dev",
 		"sharp": "^0.34.5",
 		"web-haptics": "^0.0.6"

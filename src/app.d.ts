@@ -34,6 +34,8 @@ declare module "@auth/sveltekit" {
 			image?: string | null;
 			nickname?: string;
 			groups?: string[];
+			sub?: string;
+			pk?: number;
 		};
 	}
 }
