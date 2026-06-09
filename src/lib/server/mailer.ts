@@ -1,27 +1,30 @@
 /**
  * Minimal SMTP mailer (server-only). Reuses the same SMTP relay as Authentik.
- * Credentials are runtime-only ($env/dynamic/private).
+ * The SMTP_* connection config is inlined at build time ($env/static/private),
+ * so all SMTP_* keys must be present in the build env. GROUP_REQUEST_TO is an
+ * optional recipient whose default is the intended one, so it stays a dynamic
+ * read (undefined at runtime → falls back to admin@bocken.org).
  */
 import nodemailer, { type Transporter } from 'nodemailer';
+import { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, SMTP_FROM } from '$env/static/private';
 import { env } from '$env/dynamic/private';
 
 let cached: Transporter | null = null;
 
 function transporter(): Transporter {
 	if (cached) return cached;
-	const host = env.SMTP_HOST;
-	if (!host) throw new Error('SMTP_HOST is not configured');
+	if (!SMTP_HOST) throw new Error('SMTP_HOST is not configured');
 	cached = nodemailer.createTransport({
-		host,
-		port: Number(env.SMTP_PORT ?? 587),
-		secure: env.SMTP_SECURE === 'true',
-		auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: env.SMTP_PASS } : undefined
+		host: SMTP_HOST,
+		port: Number(SMTP_PORT) || 587,
+		secure: SMTP_SECURE === 'true',
+		auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASS } : undefined
 	});
 	return cached;
 }
 
 export async function sendMail(opts: { to: string; subject: string; text: string; html?: string }): Promise<void> {
-	const from = env.SMTP_FROM || env.SMTP_USER || 'noreply@bocken.org';
+	const from = SMTP_FROM || SMTP_USER || 'noreply@bocken.org';
 	await transporter().sendMail({ from, ...opts });
 }
 
