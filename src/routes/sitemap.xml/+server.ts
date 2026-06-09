@@ -1,6 +1,7 @@
 import type { RequestHandler } from './$types';
 import { ARGUMENTS, POS_ARGUMENTS } from '$lib/data/apologetik';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
+import { HIKES } from '$lib/data/hikes.generated';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 
@@ -62,6 +63,7 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 		['/glaube/katechese', '/faith/katechese'],
 		['/glaube/katechese/zehn-gebote', '/faith/katechese/zehn-gebote'],
 		['/glaube/angelus', '/faith/angelus'],
+		['/glaube/rosenkranz', '/faith/rosary'],
 	]) {
 		urls.push({
 			loc: `${SITE}${de}`,
@@ -202,6 +204,19 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 	for (const slug of validPrayerSlugs) {
 		urls.push({ loc: `${SITE}/glaube/gebete/${slug}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.5 });
 		urls.push({ loc: `${SITE}/faith/prayers/${slug}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.5 });
+	}
+
+	// Hikes — static generated manifest; not language-prefixed. Overview plus
+	// one URL per visible hike, using the hike's own date for <lastmod>.
+	urls.push({ loc: `${SITE}/hikes`, lastmod: BUILD_LASTMOD, changefreq: 'weekly', priority: 0.7 });
+	for (const hike of HIKES) {
+		if (hike.hidden) continue;
+		urls.push({
+			loc: `${SITE}/hikes/${encodeURIComponent(hike.slug)}`,
+			lastmod: hike.date || BUILD_LASTMOD,
+			changefreq: 'yearly',
+			priority: 0.6,
+		});
 	}
 
 	// Recipes — direct DB read so we get dateModified for <lastmod> and image

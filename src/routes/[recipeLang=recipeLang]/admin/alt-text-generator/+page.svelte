@@ -237,6 +237,8 @@
 	}
 </style>
 
+<svelte:head><title>AI Alt Text Generator - Bocken</title></svelte:head>
+
 <div class="container">
 	<h1>🤖 AI Alt Text Generator</h1>
 

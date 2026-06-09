@@ -198,6 +198,8 @@
 	}
 </style>
 
+<svelte:head><title>Image Dominant Colors - Bocken</title></svelte:head>
+
 <div class="container">
 	<h1>Image Dominant Colors</h1>
 

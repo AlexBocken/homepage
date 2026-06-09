@@ -64,6 +64,7 @@ input.hide{
   display:none;
 }
 </style>
+<svelte:head><title>Einstellungen - Bocken</title></svelte:head>
 <section>
 	<h2>Change Profile pictures</h2>
 </section>

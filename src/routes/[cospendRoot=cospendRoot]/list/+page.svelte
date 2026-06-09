@@ -425,6 +425,8 @@
 
 </script>
 
+<svelte:head><title>{t.shopping_list_title} - {t.cospend}</title></svelte:head>
+
 <div class="shopping-page">
   <header class="page-header">
     <div class="header-row">

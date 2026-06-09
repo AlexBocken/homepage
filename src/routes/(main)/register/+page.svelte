@@ -36,6 +36,8 @@ form h4 { margin-bottom: 0; }
 }
 </style>
 
+<svelte:head><title>Registrieren - Bocken</title></svelte:head>
+
 <form action="?/register" method=POST>
 	<h1>Registrieren</h1>
 	<label>

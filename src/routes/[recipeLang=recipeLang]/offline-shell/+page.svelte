@@ -36,6 +36,8 @@ onMount(() => {
 });
 </script>
 
+<svelte:head><title>{t.site_title}</title></svelte:head>
+
 <div class="offline-shell">
 	<div class="loading-spinner"></div>
 	<p>{t.loading_offline}</p>

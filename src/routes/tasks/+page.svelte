@@ -189,6 +189,8 @@
   }
 </script>
 
+<svelte:head><title>Aufgaben - Bocken</title></svelte:head>
+
 <div class="tasks-page">
   <header class="page-header">
     <div class="header-top">

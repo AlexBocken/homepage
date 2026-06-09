@@ -148,6 +148,8 @@
   }
 </script>
 
+<svelte:head><title>Sticker-Sammlung - Bocken</title></svelte:head>
+
 <div class="rewards-page">
   <header class="page-header">
     <h1>Sticker-Sammlung</h1>
