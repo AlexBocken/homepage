@@ -78,11 +78,20 @@ export const load: PageServerLoad = async ({ fetch, params, locals}) => {
 
 export const actions = {
 	default: async ({ request, locals, params }) => {
-		// Check authentication
+		// Authenticate AND authorize. The hook only guards the German `/rezepte/*`
+		// path; the `[recipeLang]` matcher also serves the English `/recipes/*`
+		// alias, so the group check must live here too — otherwise any logged-in
+		// user (regardless of group) could mutate recipes via the English route.
 		const auth = locals.session ?? await locals.auth();
-		if (!auth) {
+		if (!auth?.user?.nickname) {
 			return fail(401, {
 				error: 'You must be logged in to edit recipes',
+				requiresAuth: true
+			});
+		}
+		if (!auth.user.groups?.includes('rezepte_users')) {
+			return fail(403, {
+				error: 'You do not have permission to edit recipes',
 				requiresAuth: true
 			});
 		}

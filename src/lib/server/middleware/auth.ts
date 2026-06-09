@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 
 /**
@@ -34,7 +34,7 @@ export async function requireAuth(
 	const session = locals.session ?? await locals.auth();
 
 	if (!session || !session.user?.nickname) {
-		throw json({ error: 'Unauthorized' }, { status: 401 });
+		throw error(401, 'Unauthorized');
 	}
 
 	return {
@@ -56,11 +56,11 @@ export async function requireGroup(
 	const session = locals.session ?? await locals.auth();
 
 	if (!session || !session.user?.nickname) {
-		throw json({ error: 'Unauthorized' }, { status: 401 });
+		throw error(401, 'Unauthorized');
 	}
 
 	if (!session.user.groups?.includes(group)) {
-		throw json({ error: 'Forbidden' }, { status: 403 });
+		throw error(403, 'Forbidden');
 	}
 
 	return {

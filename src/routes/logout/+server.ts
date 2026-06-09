@@ -1,8 +1,22 @@
 import type { RequestHandler } from './$types';
 
+/** Only allow same-origin relative paths as a post-logout redirect target, then
+ *  HTML-escape for the attribute context. Anything external or containing markup
+ *  is dropped to `/`. Guards against reflected XSS and open redirect via the
+ *  `callbackUrl` query param. */
+function safeCallbackUrl(raw: string | null): string {
+	const value = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
 export const GET: RequestHandler = async ({ url }) => {
-	const callbackUrl = url.searchParams.get('callbackUrl') || '/';
-	
+	const callbackUrl = safeCallbackUrl(url.searchParams.get('callbackUrl'));
+
 	// Create a minimal page with site styling that immediately triggers logout
 	const html = `
 <!DOCTYPE html>

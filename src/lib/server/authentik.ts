@@ -10,7 +10,7 @@
  * user's `pk` from the signed session via {@link requireSelf}, never from client
  * input. `patchUser` additionally hard-whitelists the writable fields.
  */
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { AUTHENTIK_ISSUER } from '$env/static/private';
 // Runtime-only secret (not embedded in build) — read dynamically so dev/build
@@ -218,7 +218,7 @@ export async function requireSelf(locals: RequestEvent['locals']): Promise<SelfI
 	const session = locals.session ?? (await locals.auth());
 	const user = session?.user;
 	if (!user?.nickname) {
-		throw json({ error: 'Unauthorized' }, { status: 401 });
+		throw error(401, 'Unauthorized');
 	}
 	const pk = typeof user.pk === 'number' ? user.pk : await resolvePkByUsername(user.nickname);
 	return { pk, nickname: user.nickname };
