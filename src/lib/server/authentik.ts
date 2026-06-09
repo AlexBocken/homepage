@@ -12,9 +12,9 @@
  */
 import { error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { AUTHENTIK_ISSUER } from '$env/static/private';
-// Runtime-only secret (not embedded in build) — read dynamically so dev/build
-// don't require it to be present at compile time.
+import { AUTHENTIK_ISSUER, AUTHENTIK_API_TOKEN } from '$env/static/private';
+// AUTH_FLOW_SLUG is optional (has a default), so it stays a runtime-dynamic read —
+// $env/static/private would require it to be present at build time.
 import { env } from '$env/dynamic/private';
 
 // Issuer looks like https://sso.bocken.org/application/o/main/ — the API lives at
@@ -50,7 +50,7 @@ type PatchableUser = {
 
 function authHeaders(extra: Record<string, string> = {}): HeadersInit {
 	return {
-		Authorization: `Bearer ${env.AUTHENTIK_API_TOKEN}`,
+		Authorization: `Bearer ${AUTHENTIK_API_TOKEN}`,
 		Accept: 'application/json',
 		...extra
 	};
