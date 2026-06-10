@@ -1,11 +1,15 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Cross from '@lucide/svelte/icons/cross';
+	import Anchor from '@lucide/svelte/icons/anchor';
+	import Heart from '@lucide/svelte/icons/heart';
 	import { page } from '$app/state';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
+	import ErstesGebotSeries from '$lib/components/faith/ErstesGebotSeries.svelte';
 	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
+
 	/** @type {number | string | null} */
 	let expanded = $state(null);
 	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
@@ -18,15 +22,11 @@
 	}
 
 	const tocItems = [
-		{ id: 'ursprung', short: 'Ursprung', href: '#ursprung' },
-		{ id: 'warum', short: 'Warum die 10 Gebote?', href: '#warum' },
-		{ id: 'biblischer-text', short: 'Biblischer Text', href: '#biblischer-text' },
-		{ id: 'ueberlieferung', short: 'Katechetische Überlieferung', href: '#ueberlieferung' },
 		{ id: 'erstes-gebot', short: 'Das Erste Gebot', href: '#erstes-gebot' },
-		{ id: 'drei-pflichten', short: 'Drei Pflichten', href: '#drei-pflichten', group: 'Das Erste Gebot' },
-		{ id: 'tugend-der-religion', short: 'Tugend der Religion', href: '#tugend-der-religion', group: 'Das Erste Gebot' },
-		{ id: 'vier-akte', short: 'Vier Akte der religio', href: '#vier-akte', group: 'Das Erste Gebot' },
-		{ id: 'warnung', short: 'Warnung', href: '#warnung', group: 'Das Erste Gebot' }
+		{ id: 'drei-pflichten', short: 'Drei Pflichten', href: '#drei-pflichten' },
+		{ id: 'tugend-der-religion', short: 'Tugend der Religion', href: '#tugend-der-religion' },
+		{ id: 'vier-akte', short: 'Vier Akte der religio', href: '#vier-akte' },
+		{ id: 'warnung', short: 'Warnung', href: '#warnung' }
 	];
 
 	let activeId = $state('');
@@ -60,41 +60,28 @@
 		history.replaceState(null, '', `#${id}`);
 	}
 
-	const gebote = [
-		{ nr: 1, text: 'Du sollst keine anderen Götter neben mir haben.', active: true, tablet: 'god' },
-		{ nr: 2, text: 'Du sollst den Namen Gottes nicht verunehren.', active: false, tablet: 'god' },
-		{ nr: 3, text: 'Du sollst den Sonntag heiligen.', active: false, tablet: 'god' },
-		{ nr: 4, text: 'Du sollst Vater und Mutter ehren, auf dass es dir wohl ergehe und du lange lebst auf Erden.', active: false, tablet: 'neighbor' },
-		{ nr: 5, text: 'Du sollst nicht töten.', active: false, tablet: 'neighbor' },
-		{ nr: 6, text: 'Du sollst nicht Unkeuschheit treiben.', active: false, tablet: 'neighbor' },
-		{ nr: 7, text: 'Du sollst nicht stehlen.', active: false, tablet: 'neighbor' },
-		{ nr: 8, text: 'Du sollst kein falsches Zeugnis geben wider deinen Nächsten.', active: false, tablet: 'neighbor' },
-		{ nr: 9, text: 'Du sollst nicht Unkeusches begehren.', active: false, tablet: 'neighbor' },
-		{ nr: 10, text: 'Du sollst nicht begehren deines Nächsten Hab und Gut.', active: false, tablet: 'neighbor' },
-	];
-
 	const akteReligio = [
 		{ name: 'Anbetung', desc: 'Ich anerkenne Gottes als meinen höchsten Herrn.', icon: '1' },
 		{ name: 'Dank', desc: 'Ich anerkenne Gott als meinen Schöpfer, dem ich alles verdanke.', icon: '2' },
 		{ name: 'Bitte', desc: 'Ich anerkenne Gott als meinen Vater, von dem ich alles erwarte.', icon: '3' },
-		{ name: 'Sühne', desc: 'Ich anerkenne Gott als meinen gütigen Erlöser.', icon: '4' },
+		{ name: 'Sühne', desc: 'Ich anerkenne Gott als meinen gütigen Erlöser.', icon: '4' }
 	];
 </script>
 
 <svelte:head>
-	<title>Die 10 Gebote Gottes - Bocken</title>
-	<meta name="description" content="Die Zehn Gebote Gottes - Katechese nach P. Martin Ramm FSSP" />
+	<title>Das erste Gebot - Bocken</title>
+	<meta name="description" content="Das erste Gebot Gottes — Anerkennung Gottes und die Tugend der Religion. Katechese nach P. Martin Ramm FSSP" />
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
 		'@type': 'Article',
-		headline: 'Die Zehn Gebote Gottes',
-		description: 'Katechese zu den Zehn Geboten Gottes — Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
+		headline: 'Das erste Gebot',
+		description: 'Katechese zum ersten Gebot Gottes — Anerkennung Gottes und die Tugend der Religion. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
 		inLanguage: 'de',
-		url: 'https://bocken.org/glaube/katechese/zehn-gebote',
-		mainEntityOfPage: 'https://bocken.org/glaube/katechese/zehn-gebote',
+		url: 'https://bocken.org/glaube/katechese/erstes-gebot',
+		mainEntityOfPage: 'https://bocken.org/glaube/katechese/erstes-gebot',
 		isAccessibleForFree: true,
 		articleSection: 'Katechese',
-		about: { '@type': 'Thing', name: 'Dekalog' },
+		about: { '@type': 'Thing', name: 'Erstes Gebot' },
 		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
 		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
 		citation: [
@@ -107,8 +94,8 @@
 		itemListElement: [
 			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
 			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-			{ '@type': 'ListItem', position: 3, name: 'Katechese', item: 'https://bocken.org/glaube/katechese' },
-			{ '@type': 'ListItem', position: 4, name: 'Die Zehn Gebote Gottes', item: 'https://bocken.org/glaube/katechese/zehn-gebote' }
+			{ '@type': 'ListItem', position: 3, name: 'Die Zehn Gebote', item: 'https://bocken.org/glaube/katechese' },
+			{ '@type': 'ListItem', position: 4, name: 'Das erste Gebot', item: 'https://bocken.org/glaube/katechese/erstes-gebot' }
 		]
 	})}</script>`}
 </svelte:head>
@@ -117,110 +104,20 @@
 <ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
 <div class="page">
 	<header class="hero">
-		<h1>Die Zehn Gebote Gottes</h1>
+		<p class="eyebrow">Die Zehn Gebote &middot; Erstes Gebot</p>
+		<h1>Das erste Gebot</h1>
 		<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
 	</header>
 
 	{#if !isGerman}
-		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/zehn-gebote')}>{t.only_german_link}</a>{t.only_german_post}</p>
+		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/erstes-gebot')}>{t.only_german_link}</a>{t.only_german_post}</p>
 	{/if}
 
-	<section id="ursprung">
-		<h2>Ursprung</h2>
-		<p>Die Zehn Gebote (Dekalog, von <em>deca-logos</em> = zehn Worte) haben Gott selbst zum Urheber. Er hat sie dem Moses am Sinai gegeben (Ex 19–20) und auf zwei steinerne Tafeln geschrieben:</p>
-		<blockquote class="quote-scripture">
-			<p>Der Herr redete zu euch mitten aus dem Feuer heraus. &hellip; Er verkündete euch seinen Bund, welchen er euch zu halten gebot, die zehn Worte; und er schrieb sie auf zwei steinerne Tafeln.</p>
-			<cite>Dt 4, 12f.</cite>
-		</blockquote>
-		<p>Jesus Christus hat die Gebote bestätigt:</p>
-		<blockquote class="quote-scripture">
-			<p>Denkt nicht, ich sei gekommen, das Gesetz oder die Propheten aufzuheben. Ich bin nicht gekommen aufzuheben, sondern zu erfüllen.</p>
-			<cite>Mt 5, 17</cite>
-		</blockquote>
-		<blockquote class="quote-scripture">
-			<p>Willst du aber zum Leben eingehen, so halte die Gebote!</p>
-			<cite>Mt 19, 17</cite>
-		</blockquote>
-	</section>
-
-	<section id="warum">
-		<h2>Warum hat Gott die 10 Gebote gegeben?</h2>
-		<blockquote class="quote-saint">
-			<p>Gott schuf den Menschen auf das Gute hin, und der Mensch wird unglücklich, wenn er die Gesetze, die um seines Glückes willen aufgestellt sind, nicht hält.</p>
-			<cite>Fulton Sheen, Zur Liebe gehören Drei</cite>
-		</blockquote>
-		<p>Eigentlich sollte das Gewissen genügen, um die göttliche Ordnung zu erkennen. Aber seit dem Sündenfall ist die Erkenntniskraft des Menschen getrübt. Was durch den Sündenfall verdunkelt war, wird durch die Gesetzgebung auf dem Sinai erhellt. Die 10 Gebote nehmen uns nicht die Freiheit, sondern garantieren sie &mdash; sie sind Wegweiser zum zeitlichen und ewigen Glück.</p>
-		<blockquote class="quote-church">
-			<p>Obwohl die Gebote des Dekalogs schon der Vernunft einsichtig sind, wurden sie geoffenbart. Um zu einer vollständigen und sicheren Erkenntnis der Forderungen des natürlichen Gesetzes zu gelangen, bedurfte die sündige Menschheit dieser Offenbarung.</p>
-			<cite>KKK 2071</cite>
-		</blockquote>
-		<blockquote class="quote-scripture">
-			<p>Wenn du nach Weisheit verlangst, halte die Gebote.</p>
-			<cite>Sir 1, 26</cite>
-		</blockquote>
-
-		<h3>Befreiung aus der Knechtschaft</h3>
-		<p>Am Sinai erinnert Gott an die Befreiung aus der Knechtschaft: Die Knechtschaft des Pharao ist ein Bild für die Knechtschaft der Sünde. Entweder wir beherrschen unsere Leidenschaften oder die Leidenschaften beherrschen uns. Durch die 10 Gebote führt Gott den Menschen heraus aus dieser Knechtschaft.</p>
-		<blockquote class="quote-scripture">
-			<p>O hättest du doch meine Gebote beachtet, so wäre dein Glück wie ein Strom und dein Heil wie die Wogen des Meeres.</p>
-			<cite>Is 48, 18</cite>
-		</blockquote>
-		<p>Die Gebote sind nicht nur für den Einzelnen, sondern auch das Fundament jeglicher ziviler Gemeinschaft.</p>
-		<blockquote class="quote-saint">
-			<p>Wo die Zehn Gebote Gottes nicht mehr gehalten werden, da werden hunderttausend Staatsgesetze keine Rechtsordnung aufrichten.</p>
-			<cite>Kardinal Faulhaber</cite>
-		</blockquote>
-	</section>
-
-	<!-- Biblischer Text -->
-	<section id="biblischer-text">
-		<h2>Biblischer Text</h2>
-		<div class="scripture-block">
-			<p class="biblical-intro">„Ich bin der Herr, dein Gott, der dich aus dem Lande Ägypten, dem Hause der Knechtschaft, geführt hat.</p>
-			<ol class="exodus-list">
-				<li>Du sollst keine anderen Götter neben mir haben! Du sollst dir kein Schnitzbild machen, noch irgendein Abbild von dem, was droben im Himmel oder auf der Erde unten oder im Wasser unter der Erde ist! Du sollst dich vor ihnen nicht niederwerfen und sollst sie nicht verehren; denn ich, der Herr, dein Gott, bin ein eifersüchtiger Gott, der die Schuld der Väter an den Kindern, am dritten und vierten Geschlecht, nachprüft bei denen, die mich hassen. Ich erweise aber meine Gnade bis ins tausendste Geschlecht denen, die mich lieben und meine Gebote halten.</li>
-				<li>Du sollst den Namen des Herrn, deines Gottes, nicht unnütz aussprechen; denn der Herr lässt denjenigen nicht ungestraft, der seinen Namen unnütz ausspricht!</li>
-				<li>Gedenke des Sabbattages, um ihn heilig zu halten. Sechs Tage lang sollst du arbeiten und all deine Geschäfte verrichten. Doch der siebte Tag ist ein Ruhetag für den Herrn, deinen Gott. Du sollst an ihm keinerlei Arbeit tun, weder du selbst noch dein Sohn, noch deine Tochter, noch dein Knecht, noch deine Magd, noch dein Vieh, noch dein Fremdling, der sich in deinen Toren befindet. Denn in sechs Tagen hat der Herr den Himmel, die Erde, das Meer und alles, was in ihnen ist, erschaffen; doch am siebten Tage ruhte er. Darum segnete der Herr den Sabbat und erklärte ihn für heilig.</li>
-				<li>Ehre deinen Vater und deine Mutter, damit du lange lebst in dem Lande, das der Herr, dein Gott, dir gibt!</li>
-				<li>Du sollst nicht töten!</li>
-				<li>Du sollst nicht ehebrechen!</li>
-				<li>Du sollst nicht stehlen!</li>
-				<li>Du sollst gegen deinen Nächsten kein falsches Zeugnis abgeben!</li>
-				<li>Du sollst nicht das Haus deines Nächsten begehren!</li>
-				<li>Du sollst nicht begehren die Frau deines Nächsten und auch nicht seinen Knecht, seine Magd, sein Rind, seinen Esel und nichts von dem, was deinem Nächsten gehört!"</li>
-			</ol>
-			<p class="exodus-cite">Ex 20, 1–17</p>
-		</div>
-	</section>
-
-	<!-- Gebote overview -->
-	<section id="ueberlieferung">
-		<h2>Katechetische Überlieferung</h2>
-		<p class="intro-text">Ich bin der Herr, dein Gott:</p>
-		<div class="commandments-list">
-			{#each gebote as gebot (gebot.nr)}
-				{#if gebot.active}
-					<a href="#erstes-gebot" class="commandment-item active" class:tablet-god={gebot.tablet === 'god'} class:tablet-neighbor={gebot.tablet === 'neighbor'}>
-						<span class="commandment-nr">{gebot.nr}</span>
-						<span class="commandment-text">{gebot.text}</span>
-						<ArrowDown class="commandment-arrow" size={18} />
-					</a>
-				{:else}
-					<div class="commandment-item inactive" class:tablet-god={gebot.tablet === 'god'} class:tablet-neighbor={gebot.tablet === 'neighbor'}>
-						<span class="commandment-nr">{gebot.nr}</span>
-						<span class="commandment-text">{gebot.text}</span>
-					</div>
-				{/if}
-			{/each}
-		</div>
-	</section>
-
-	<!-- 1. Gebot detail -->
 	<section class="first-commandment" id="erstes-gebot">
 		<div class="gebot-header">
 			<span class="gebot-nr">I</span>
 			<div>
-				<h2>Das Erste Gebot</h2>
+				<h2>Du sollst keine fremden Götter neben mir haben</h2>
 				<p class="gebot-text-full">Ich bin der Herr, dein Gott. Du sollst keine fremden Götter neben mir haben.</p>
 			</div>
 		</div>
@@ -232,26 +129,26 @@
 			<h3>Das erste Gebot befiehlt</h3>
 			<div class="duties-visual">
 				<div class="duty">
-					<div class="duty-circle" style="background: var(--nord14)">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+					<div class="duty-circle" style="background: var(--blue)">
+						<Cross size={32} strokeWidth={2} />
 					</div>
-					<span class="duty-label" style="color: var(--nord14)">glauben</span>
+					<span class="duty-label" style="color: var(--blue)">glauben</span>
 					<p>An den einen wahren Gott fest glauben</p>
 				</div>
 				<div class="duty-connector"></div>
 				<div class="duty">
-					<div class="duty-circle" style="background: var(--nord13)">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+					<div class="duty-circle" style="background: var(--green)">
+						<Anchor size={32} strokeWidth={2} />
 					</div>
-					<span class="duty-label" style="color: var(--nord13)">hoffen</span>
+					<span class="duty-label" style="color: var(--green)">hoffen</span>
 					<p>Fest auf ihn hoffen</p>
 				</div>
 				<div class="duty-connector"></div>
 				<div class="duty">
-					<div class="duty-circle" style="background: var(--nord11)">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+					<div class="duty-circle" style="background: var(--red)">
+						<Heart size={32} strokeWidth={2} />
 					</div>
-					<span class="duty-label" style="color: var(--nord11)">lieben</span>
+					<span class="duty-label" style="color: var(--red)">lieben</span>
 					<p>Ihn über alles lieben</p>
 				</div>
 			</div>
@@ -348,6 +245,8 @@
 		</div>
 	</section>
 
+	<ErstesGebotSeries current={1} />
+
 	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
 </div>
 </div>
@@ -389,6 +288,13 @@
 		text-align: center;
 		padding: 2rem 0 1rem;
 	}
+	.eyebrow {
+		text-transform: uppercase;
+		letter-spacing: 0.18em;
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+		margin: 0 0 0.5em;
+	}
 	h1 {
 		font-size: 2.5rem;
 		margin: 0 0 0.25em;
@@ -423,12 +329,8 @@
 		line-height: 1.6;
 		margin: 0.75em 0;
 	}
-	li {
-		line-height: 1.6;
-		margin-bottom: 0.25em;
-	}
 
-	/* Blockquotes — base + source colors */
+	/* Blockquotes */
 	blockquote {
 		border-left: 3px solid var(--nord10);
 		margin: 1.25em 0;
@@ -449,79 +351,6 @@
 	}
 	blockquote.quote-church {
 		border-left-color: var(--nord14);
-	}
-	blockquote.quote-saint {
-		border-left-color: var(--nord15);
-	}
-
-	/* Scripture block */
-	.scripture-block {
-		background: var(--color-surface);
-		padding: 1.5em;
-		border-radius: 8px;
-	}
-	.biblical-intro {
-		font-style: italic;
-	}
-	.exodus-list {
-		padding-left: 1.5em;
-	}
-	.exodus-list li {
-		margin-bottom: 0.5em;
-		font-style: italic;
-	}
-	.exodus-cite {
-		color: var(--color-text-tertiary);
-		font-size: 0.85rem;
-		text-align: right;
-		margin-top: 0.5em;
-	}
-
-	/* Commandments overview */
-	.intro-text {
-		font-size: 1.1em;
-		font-weight: bold;
-		margin-bottom: 0.5em;
-	}
-	.commandments-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25em;
-	}
-	.commandment-item {
-		display: flex;
-		align-items: center;
-		gap: 0.75em;
-		padding: 0.5em 0.75em;
-		text-decoration: none;
-		color: inherit;
-		transition: all 0.2s ease;
-	}
-	.commandment-item.active {
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.commandment-item.active:hover {
-		filter: brightness(1.1);
-	}
-	.commandment-item.inactive {
-		opacity: 0.6;
-		cursor: default;
-	}
-	.commandment-item.tablet-god {
-		border-left: 3px solid var(--nord12);
-	}
-	.commandment-item.tablet-neighbor {
-		border-left: 3px solid var(--nord10);
-	}
-	.commandment-nr {
-		font-weight: bold;
-		font-size: 1.1em;
-		min-width: 1.5em;
-		text-align: center;
-	}
-	.commandment-text {
-		flex: 1;
 	}
 
 	/* First commandment */
@@ -570,10 +399,6 @@
 		align-items: center;
 		justify-content: center;
 		margin: 0 auto 0.5em;
-	}
-	.duty-circle svg {
-		width: 32px;
-		height: 32px;
 	}
 	.duty-label {
 		display: block;
