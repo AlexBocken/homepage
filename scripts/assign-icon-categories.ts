@@ -12,6 +12,9 @@ const MODEL_NAME = 'Xenova/multilingual-e5-base';
 const CATEGORY_EMBEDDINGS_PATH = resolve('src/lib/data/shoppingCategoryEmbeddings.json');
 const CATALOG_PATH = resolve('src/lib/data/shoppingCatalog.json');
 const OUTPUT_PATH = resolve('src/lib/data/shoppingIconCategories.json');
+// Manual category fixes. Applied AFTER the embedding-based assignment so a
+// re-run never clobbers a hand-corrected category. Keyed by catalog name.
+const OVERRIDES_PATH = resolve('src/lib/data/shoppingIconCategoryOverrides.json');
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0, normA = 0, normB = 0;
@@ -56,6 +59,24 @@ async function main() {
       console.log(`  ${i + 1}/${iconNames.length}`);
     }
   }
+
+  // Apply manual overrides last so they always win over the embedding guess.
+  const overrides: Record<string, string> = JSON.parse(readFileSync(OVERRIDES_PATH, 'utf-8'));
+  const validCategories = new Set(catData.entries.map((e: { category: string }) => e.category));
+  let applied = 0;
+  for (const [name, category] of Object.entries(overrides)) {
+    if (!validCategories.has(category)) {
+      console.warn(`  ⚠ override for "${name}" targets unknown category "${category}" — skipped`);
+      continue;
+    }
+    if (!(name in assignments)) {
+      console.warn(`  ⚠ override key "${name}" is not in the catalog — skipped`);
+      continue;
+    }
+    assignments[name] = category;
+    applied++;
+  }
+  console.log(`Applied ${applied}/${Object.keys(overrides).length} manual overrides`);
 
   writeFileSync(OUTPUT_PATH, JSON.stringify(assignments, null, 2), 'utf-8');
   console.log(`Written ${OUTPUT_PATH} (${iconNames.length} entries)`);
