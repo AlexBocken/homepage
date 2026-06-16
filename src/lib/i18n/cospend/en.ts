@@ -224,6 +224,7 @@ export const en = {
 	paid_in_full_by: "Paid in Full by",
 	cat_fruits_veg: "Fruits & Vegetables",
 	cat_meat_fish: "Meat & Fish",
+	cat_canned: "Canned Goods",
 	cat_dairy: "Dairy",
 	cat_bakery: "Bread & Bakery",
 	cat_grains: "Pasta, Rice & Grains",

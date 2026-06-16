@@ -42,6 +42,7 @@ export type CospendKey = keyof typeof de;
 const categoryDisplayNames: Record<string, Record<string, string>> = {
 	'Obst & Gemüse':          { en: 'Fruits & Vegetables', de: 'Obst & Gemüse' },
 	'Fleisch & Fisch':        { en: 'Meat & Fish', de: 'Fleisch & Fisch' },
+	'Konserven':              { en: 'Canned Goods', de: 'Konserven' },
 	'Milchprodukte':          { en: 'Dairy', de: 'Milchprodukte' },
 	'Brot & Backwaren':       { en: 'Bread & Bakery', de: 'Brot & Backwaren' },
 	'Pasta, Reis & Getreide': { en: 'Pasta, Rice & Grains', de: 'Pasta, Reis & Getreide' },

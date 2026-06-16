@@ -224,6 +224,7 @@ export const de = {
 	paid_in_full_by: "Vollständig bezahlt von",
 	cat_fruits_veg: "Obst & Gemüse",
 	cat_meat_fish: "Fleisch & Fisch",
+	cat_canned: "Konserven",
 	cat_dairy: "Milchprodukte",
 	cat_bakery: "Brot & Backwaren",
 	cat_grains: "Pasta, Reis & Getreide",

@@ -44,15 +44,21 @@ for raw in "${files[@]}"; do
   w=${dims%x*}
   h=${dims#*x}
 
-  # 1. Cover watermark sparkle in bottom-right with black
+  # 1. Remove the Gemini watermark sparkle from the bottom-right corner.
+  #    The sparkle is mid-grey (≤ #808080) while the artwork is a pure-white
+  #    (#ffffff) outline. Rather than paint a black box over the corner (which
+  #    clips artwork that reaches into it — e.g. kidney beans), clamp that
+  #    corner's levels: everything at/below mid-grey collapses to black, the
+  #    white outline is preserved untouched.
   # 2. Remove all black → transparent
   # 3. Trim transparent padding
-  wm_size=$(( w * 8 / 100 ))
-  wm_x=$(( w - wm_size ))
-  wm_y=$(( h - wm_size ))
+  region_w=$(( w * 22 / 100 ))
+  region_h=$(( h * 20 / 100 ))
+  region_x=$(( w - region_w ))
+  region_y=$(( h - region_h ))
 
   magick "$raw" \
-    -fill black -draw "rectangle ${wm_x},${wm_y} ${w},${h}" \
+    -region "${region_w}x${region_h}+${region_x}+${region_y}" -level 55%,100% +region \
     -fuzz 25% -transparent black \
     -trim +repage \
     "$out"

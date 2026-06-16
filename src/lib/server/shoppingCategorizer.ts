@@ -28,6 +28,7 @@ const CATEGORY_DEFAULT_ICONS: Record<string, string> = {
   'Milchprodukte': 'kaese',
   'Brot & Backwaren': 'brot',
   'Pasta, Reis & Getreide': 'nudeln',
+  'Konserven': 'kidneybohnen',
   'Gewürze & Saucen': 'kraeuter',
   'Getränke': 'wasser',
   'Süßes & Snacks': 'schokolade',

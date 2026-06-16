@@ -12,6 +12,7 @@
   import FlameKindling from '@lucide/svelte/icons/flame-kindling';
   import GlassWater from '@lucide/svelte/icons/glass-water';
   import Candy from '@lucide/svelte/icons/candy';
+  import Bean from '@lucide/svelte/icons/bean';
   import Snowflake from '@lucide/svelte/icons/snowflake';
   import SprayCan from '@lucide/svelte/icons/spray-can';
   import Sparkles from '@lucide/svelte/icons/sparkles';
@@ -58,6 +59,7 @@
   const categoryMeta = {
     'Obst & Gemüse':          { icon: Apple, color: 'var(--nord14)' },
     'Fleisch & Fisch':        { icon: Beef, color: 'var(--nord11)' },
+    'Konserven':              { icon: Bean, color: 'var(--nord13)' },
     'Milchprodukte':          { icon: Milk, color: 'var(--nord9)' },
     'Brot & Backwaren':       { icon: Croissant, color: 'var(--nord12)' },
     'Pasta, Reis & Getreide': { icon: Wheat, color: 'var(--nord13)' },
@@ -74,13 +76,13 @@
   const STORE_PRESETS = {
     'Coop Max-Bill Platz': [
       'Haushalt', 'Hygiene & Körperpflege', 'Gewürze & Saucen', 'Süßes & Snacks',
-      'Getränke', 'Pasta, Reis & Getreide', 'Brot & Backwaren', 'Milchprodukte',
+      'Getränke', 'Pasta, Reis & Getreide', 'Konserven', 'Brot & Backwaren', 'Milchprodukte',
       'Obst & Gemüse', 'Fleisch & Fisch', 'Tiefkühl', 'Sonstiges',
     ],
     'Migros Seebach': [
       'Obst & Gemüse', 'Fleisch & Fisch', 'Milchprodukte', 'Süßes & Snacks',
-      'Getränke', 'Brot & Backwaren', 'Gewürze & Saucen', 'Haushalt',
-      'Hygiene & Körperpflege', 'Tiefkühl', 'Pasta, Reis & Getreide', 'Sonstiges',
+      'Getränke', 'Brot & Backwaren', 'Gewürze & Saucen', 'Pasta, Reis & Getreide',
+      'Konserven', 'Haushalt', 'Hygiene & Körperpflege', 'Tiefkühl', 'Sonstiges',
     ],
   };
   const STORE_NAMES = Object.keys(STORE_PRESETS);

@@ -6,7 +6,7 @@ All prompts target: **360x420 px, PNG, 8-bit sRGB, solid black (#000000) backgro
 
 ## Condiments / Spreads
 
-### Pesto
+### Pesto [DONE]
 > Reference: honig.png (round jar with lid, honeycomb detail on label), konfituere.png (jar with cloth cover)
 
 White outline icon of a small glass jar of pesto on a solid black background. The jar is a short, wide-mouth round glass jar with a screw-on metal lid, viewed from a slight 3/4 top-down isometric angle. A few basil leaves sit on top of or next to the jar. The jar has a simple label outline on the front. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
@@ -21,37 +21,37 @@ White outline icon of a round plastic tub of hummus on a solid black background.
 
 White outline icon of a tall glass jar of tahini on a solid black background. The jar is a tall, slim cylindrical jar with a screw-on lid, viewed from a slight 3/4 top-down isometric angle. The jar shows a visible fill level about 3/4 full, with a simple label outline on the front. A few small sesame seeds are scattered next to the base of the jar. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Erdnussbutter
+### Erdnussbutter [DONE]
 > Reference: honig.png (round jar with lid and detail), konfituere.png (jar with cloth top)
 
 White outline icon of a jar of peanut butter on a solid black background. The jar is a wide, round glass jar with a screw-on lid, viewed from a slight 3/4 top-down isometric angle. The label area on the front shows a simple outline of a peanut (two rounded lobes with a small shell texture). The jar is about 3/4 full. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Currypulver
+### Currypulver [DONE]
 > Reference: paprikapulver.png (spice jar — tall cylindrical container with perforated shaker lid and label showing spice contents), salz.png (shaker with perforated top)
 
 White outline icon of a spice jar of curry powder on a solid black background. The jar is a tall, slim cylindrical glass spice jar with a screw-on lid, viewed from a slight 3/4 top-down isometric angle. The jar is filled about 3/4 with fine powder (indicated by a horizontal fill line and a few small dots/grain texture below it). The label area shows a simple leaf or spice motif. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Kurkuma
+### Kurkuma [DONE]
 > Reference: paprikapulver.png (spice jar), ingwer.png (root form)
 
 White outline icon of a turmeric root on a solid black background. The root is a short, knobbly, finger-like rhizome with 2-3 stubby branches, viewed from a slight 3/4 top-down isometric angle. One end is sliced to reveal a cross-section circle. A few faint ring lines indicate the skin texture. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Muskatnuss
+### Muskatnuss [DONE]
 > Reference: pfefferkoerner.png (loose scattered small round items)
 
 White outline icon of a whole nutmeg and a small grater on a solid black background. The nutmeg is an oval seed with a few lengthwise ridged lines along its surface. Beside it, a small handheld nutmeg grater (a tiny rectangular rasp). Viewed from a slight 3/4 top-down isometric angle. A few tiny shavings of grated nutmeg sit below. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Kreuzkuemmel
+### Kreuzkuemmel [DONE]
 > Reference: zimt.png (loose sticks scattered), pfefferkoerner.png (scattered small items)
 
 White outline icon of a small pile of cumin seeds on a solid black background. About 15-20 elongated, slightly curved tiny seeds are loosely scattered in a small mound, viewed from a slight 3/4 top-down isometric angle. Each seed is a thin oval/crescent shape with a faint line down the center. A few seeds have rolled away from the pile. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Worcestersauce
+### Worcestersauce [DONE]
 > Reference: ketchup.png (bottle with narrow neck, label with emblem), balsamico.png
 
 White outline icon of a Worcestershire sauce bottle on a solid black background. The bottle is a tall, narrow bottle with a tapered neck, a small cap, and a wider label area on the lower half — the classic Lea & Perrins silhouette. Viewed from a slight 3/4 top-down isometric angle. The label has a simple rectangular outline. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
-### Sriracha
+### Sriracha [DONE]
 > Reference: ketchup.png (squeeze bottle with cap)
 
 White outline icon of a Sriracha hot sauce bottle on a solid black background. The bottle is a medium squeeze bottle with a distinctive pointed green cap/nozzle and a slightly tapered body wider at the base. Viewed from a slight 3/4 top-down isometric angle. The label area shows a simple outline of a rooster (the classic Sriracha icon) or a chili pepper. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
@@ -205,6 +205,20 @@ White outline icon of several prawns/crevettes on a solid black background. 3-4 
 > Reference: rohschinken.png (thin slices of cured meat draped and overlapping, with visible fat marbling lines)
 
 White outline icon of sliced Buendnerfleisch (air-dried beef) on a solid black background. 4-5 very thin, roughly rectangular slices of dark dried meat are loosely arranged, slightly curled at the edges and overlapping. Each slice has a thin rim of fat along one edge and a few subtle grain lines across the surface. The slices have slightly irregular, rough-torn edges characteristic of thinly sliced air-dried meat. Viewed from a slight 3/4 top-down isometric angle. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
+
+---
+
+## Legumes / Canned
+
+### Kidneybohnen [DONE]
+> Reference: linsen.png (pile of small round legumes), mais.png / kichererbsen.png (canned legume tin with label)
+
+White outline icon of a can of kidney beans on a solid black background. The can is a standard cylindrical tin can with a slightly raised rim at top and bottom and a ring-pull tab on the lid, viewed from a slight 3/4 top-down isometric angle. The label area on the front shows a simple outline of 2-3 kidney beans (the characteristic curved, kidney-shaped legume). Beside the can, a small loose pile of 4-5 kidney beans, each a plump curved kidney shape with a faint indentation along the inner curve. Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
+
+### Heinz Beans (Baked Beans) [DONE]
+> Reference: linsen.png (pile of small round legumes), mais.png / kichererbsen.png (canned legume tin with label)
+
+White outline icon of a can of Heinz baked beans on a solid black background. The can is a standard cylindrical tin can with a slightly raised rim at top and bottom and a ring-pull tab on the lid, viewed from a slight 3/4 top-down isometric angle. The label area on the front shows the distinctive Heinz keystone emblem — a simple downward-pointing shield/keystone outline centered on the label — with a small outline of 2-3 oval baked beans below it. Beside the can, a small loose pile of 5-6 small oval beans in a pool of sauce (indicated by a shallow wavy outline beneath them). Drawn with white strokes only (~3-5px line weight), no fills, no color, no shading — pure contour/outline drawing. Anti-aliased edges. Style: clean, minimal grocery icon line-art. No text, no gradients. Solid black (#000000) background. 360x420 pixels, PNG, 8-bit sRGB.
 
 ---
 
