@@ -10,7 +10,7 @@ import { resolve } from 'path';
 
 const MODEL_NAME = 'Xenova/multilingual-e5-base';
 const CATEGORY_EMBEDDINGS_PATH = resolve('src/lib/data/shoppingCategoryEmbeddings.json');
-const CATALOG_PATH = resolve('static/shopping-icons/catalog.json');
+const CATALOG_PATH = resolve('src/lib/data/shoppingCatalog.json');
 const OUTPUT_PATH = resolve('src/lib/data/shoppingIconCategories.json');
 
 function cosineSimilarity(a: number[], b: number[]): number {

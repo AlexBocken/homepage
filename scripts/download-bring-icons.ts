@@ -9,7 +9,12 @@ import { resolve } from 'path';
 
 const CATALOG_URL = 'https://web.getbring.com/locale/articles.de-DE.json';
 const ICON_BASE = 'https://web.getbring.com/assets/images/items/';
+// Icon PNGs live under static/ (served directly by nginx); the name→file
+// catalog is a bundled runtime import, so it lives in src/lib/data (it cannot
+// be imported from static/). This is the single source of truth for the
+// catalog — the embed/assign scripts read it from here too.
 const OUTPUT_DIR = resolve('static/shopping-icons');
+const CATALOG_PATH = resolve('src/lib/data/shoppingCatalog.json');
 
 /** Normalize key to icon filename (matches Bring's normalizeStringPath) */
 function normalizeKey(key: string): string {
@@ -97,11 +102,10 @@ async function main() {
     }
   }
 
-  const mappingPath = resolve(OUTPUT_DIR, 'catalog.json');
-  writeFileSync(mappingPath, JSON.stringify(mapping, null, 2));
+  writeFileSync(CATALOG_PATH, JSON.stringify(mapping, null, 2));
 
   console.log(`\nDone: ${downloaded} downloaded, ${skipped} cached, ${failed} failed`);
-  console.log(`Catalog: ${Object.keys(mapping).length} entries → ${mappingPath}`);
+  console.log(`Catalog: ${Object.keys(mapping).length} entries → ${CATALOG_PATH}`);
 }
 
 main().catch(console.error);

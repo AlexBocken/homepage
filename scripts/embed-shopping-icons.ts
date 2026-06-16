@@ -9,7 +9,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 const MODEL_NAME = 'Xenova/multilingual-e5-base';
-const CATALOG_PATH = resolve('static/shopping-icons/catalog.json');
+const CATALOG_PATH = resolve('src/lib/data/shoppingCatalog.json');
 const OUTPUT_FILE = resolve('src/lib/data/shoppingIconEmbeddings.json');
 
 async function main() {
