@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { enhance } from '$app/forms';
   import { detectCospendLang, cospendRoot, locale, getCategoryOptionsI18n, frequencyDescription, m } from '$lib/js/cospendI18n';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { validateCronExpression, calculateNextExecutionDate } from '$lib/utils/recurring';
@@ -261,6 +260,11 @@
       return;
     }
 
+    if (formData.isRecurring && recurringData.frequency === 'custom' && !recurringData.cronExpression) {
+      error = 'Please provide a cron expression for custom recurring payments';
+      return;
+    }
+
     loading = true;
     error = null;
 
@@ -298,7 +302,39 @@
         throw new Error(errorData.message || 'Failed to create payment');
       }
 
-      const result = await response.json();
+      await response.json();
+
+      // Create the recurring payment record if requested
+      if (formData.isRecurring) {
+        const recurringPayload = {
+          title: formData.title,
+          description: formData.description,
+          amount: parseFloat(formData.amount),
+          currency: formData.currency,
+          paidBy: formData.paidBy,
+          category: formData.category,
+          splitMethod: formData.splitMethod,
+          splits,
+          frequency: recurringData.frequency,
+          cronExpression: recurringData.frequency === 'custom' ? recurringData.cronExpression : undefined,
+          startDate: recurringData.startDate ? new Date(recurringData.startDate).toISOString() : new Date().toISOString(),
+          endDate: recurringData.endDate ? new Date(recurringData.endDate).toISOString() : null
+        };
+
+        const recurringResponse = await fetch('/api/cospend/recurring-payments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(recurringPayload)
+        });
+
+        if (!recurringResponse.ok) {
+          // Payment already created; log but don't fail the whole flow
+          console.error('Failed to create recurring payment:', await recurringResponse.text());
+        }
+      }
+
       await goto(`/${root}/dash`);
 
     } catch (err) {
@@ -373,7 +409,7 @@
     <p>{t.add_payment_subtitle}</p>
   </div>
 
-  <form method="POST" use:enhance class="payment-form">
+  <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="payment-form">
     <div class="form-section">
       <h2>{t.payment_details_section}</h2>
       
