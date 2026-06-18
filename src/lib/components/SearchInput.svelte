@@ -4,7 +4,8 @@
 		value = $bindable(''),
 		placeholder = 'Search...',
 		clearTitle = 'Clear search',
-		onClear = () => {}
+		onClear = () => {},
+		oninput = () => {}
 	} = $props();
 
 	function handleClear() {
@@ -72,7 +73,7 @@ input::placeholder {
 </style>
 
 <div class="search">
-	<input type="text" {placeholder} bind:value>
+	<input type="text" {placeholder} bind:value oninput={(e) => oninput(e)}>
 	{#if value}
 		<button type="button" class="search-button" onclick={handleClear}>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">

@@ -4,6 +4,7 @@ import { PaymentSplit } from '$models/PaymentSplit';
 import { dbConnect } from '$utils/db';
 import { convertToCHF, isValidCurrencyCode } from '$lib/utils/currency';
 import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
+import { buildPaymentFilter } from '$lib/server/cospendFilter';
 import { error, json } from '@sveltejs/kit';
 
 interface SplitInput {
@@ -48,11 +49,12 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   const limit = parseInt(url.searchParams.get('limit') || '20');
   const offset = parseInt(url.searchParams.get('offset') || '0');
+  const filter = buildPaymentFilter(url.searchParams);
 
   await dbConnect();
 
   try {
-    const payments = await Payment.find()
+    const payments = await Payment.find(filter)
       .populate('splits')
       .sort({ date: -1, createdAt: -1 })
       .limit(limit)

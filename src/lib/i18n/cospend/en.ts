@@ -4,6 +4,10 @@ import type { de } from './de';
 export const en = {
 	cospend_title: "Expenses - Expense Sharing",
 	all_payments_title: "All Payments",
+	search_payments: "Search payments…",
+	no_results: "No matching payments",
+	filters: "Filters",
+	date_range: "Date range",
 	settle_title: "Settle Debts",
 	recurring_title: "Recurring Payments",
 	shopping_list_title: "Shopping List",

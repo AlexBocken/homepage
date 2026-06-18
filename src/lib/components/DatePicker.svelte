@@ -4,7 +4,7 @@
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import { m } from '$lib/js/commonI18n';
 	/** @typedef {import('$lib/js/commonI18n').CommonLang} CommonLang */
-	let { value = $bindable(''), lang = 'en', min = '', max = '', fontSize = '' } = $props();
+	let { value = $bindable(''), lang = 'en', min = '', max = '', fontSize = '', onchange = () => {} } = $props();
 	const t = $derived(m[/** @type {CommonLang} */ (lang)]);
 
 	let open = $state(false);
@@ -56,7 +56,7 @@
 		const d = new Date((value || todayStr) + 'T12:00:00');
 		d.setDate(d.getDate() + delta);
 		const next = d.toISOString().slice(0, 10);
-		if (!isDisabled(next)) value = next;
+		if (!isDisabled(next)) { value = next; onchange(); }
 	}
 
 	/** @param {number} delta */
@@ -70,10 +70,12 @@
 	function selectDay(dateStr) {
 		value = dateStr;
 		open = false;
+		onchange();
 	}
 
 	function goToday() {
 		value = todayStr;
+		onchange();
 		open = false;
 	}
 

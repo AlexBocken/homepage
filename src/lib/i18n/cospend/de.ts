@@ -4,6 +4,10 @@
 export const de = {
 	cospend_title: "Cospend - Ausgabenteilung",
 	all_payments_title: "Alle Zahlungen",
+	search_payments: "Zahlungen suchen…",
+	no_results: "Keine passenden Zahlungen",
+	filters: "Filter",
+	date_range: "Zeitraum",
 	settle_title: "Schulden begleichen",
 	recurring_title: "Wiederkehrende Zahlungen",
 	shopping_list_title: "Einkaufsliste",

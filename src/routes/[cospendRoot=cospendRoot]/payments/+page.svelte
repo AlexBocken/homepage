@@ -4,13 +4,15 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import CospendFilterBar from '$lib/components/cospend/CospendFilterBar.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
   import { receiptUrl } from '$lib/utils/cospendImage';
   import { toast } from '$lib/js/toast.svelte';
   import { confirm } from '$lib/js/confirmDialog.svelte';
   import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
-  import { detectCospendLang, cospendRoot, locale, splitDescription, paymentCategoryName, m } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, splitDescription, paymentCategoryName, getCategoryOptionsI18n, m } from '$lib/js/cospendI18n';
+  import { PREDEFINED_USERS } from '$lib/config/users';
 
   import { formatCurrency } from '$lib/utils/formatters';
 
@@ -33,6 +35,13 @@
   // svelte-ignore state_referenced_locally
   let hasMore = $state(data.hasMore || false);
 
+  // Search + filters (URL-driven so they're shareable and paginate correctly)
+  let categoryOptions = $derived(getCategoryOptionsI18n(lang));
+  const payers = PREDEFINED_USERS;
+  let filtersActive = $derived(Object.values(data.filters).some((v) => v));
+  // Filter portion of the query string (for paginate links that must keep it).
+  let filterQs = $derived(filterParams().toString());
+
   // Re-sync local state when server data changes (e.g. URL param navigation)
   $effect(() => {
     payments = data.payments || [];
@@ -40,6 +49,25 @@
     limit = data.limit || 20;
     hasMore = data.hasMore || false;
   });
+
+  /** Build the active filter params (no pagination), for hrefs and fetches. */
+  function filterParams() {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(data.filters)) {
+      if (v) p.set(k, /** @type {string} */ (v));
+    }
+    return p;
+  }
+
+  /** Navigate with a new filter set (from the filter bar), resetting to page 0. */
+  function handleFilterChange(/** @type {Record<string, string>} */ f) {
+    const query = new URLSearchParams(f).toString();
+    goto(query ? `?${query}` : '?', { keepFocus: true, noScroll: true });
+  }
+
+  function clearFilters() {
+    goto('?', { noScroll: true });
+  }
 
   // Progressive enhancement: only load if JavaScript is available
   onMount(async () => {
@@ -55,7 +83,10 @@
   async function loadPayments(page = 0) {
     try {
       loading = true;
-      const response = await fetch(`/api/cospend/payments?limit=${limit}&offset=${page * limit}`);
+      const p = filterParams();
+      p.set('limit', String(limit));
+      p.set('offset', String(page * limit));
+      const response = await fetch(`/api/cospend/payments?${p.toString()}`);
 
       if (!response.ok) {
         throw new Error('Failed to load payments');
@@ -139,10 +170,28 @@
     </div>
   </div>
 
+  {#if filtersActive || payments.length > 0}
+    <CospendFilterBar
+      filters={data.filters}
+      facets={data.facets}
+      {categoryOptions}
+      {payers}
+      {lang}
+      onChange={handleFilterChange}
+    />
+  {/if}
+
   {#if loading && payments.length === 0}
     <div class="loading">{t.loading_payments}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
+  {:else if payments.length === 0 && filtersActive}
+    <div class="empty-state">
+      <div class="empty-content">
+        <h2>{t.no_results}</h2>
+        <button type="button" class="btn btn-secondary" onclick={clearFilters}>{t.clear_filter}</button>
+      </div>
+    </div>
   {:else if payments.length === 0}
     <div class="empty-state">
       <div class="empty-content">
@@ -156,7 +205,7 @@
     </div>
   {:else}
     <div class="payments-grid">
-      {#each payments as payment}
+      {#each payments as payment (payment._id)}
         {#if isSettlementPayment(payment)}
           <!-- Settlement Card - Distinct Layout -->
           <a href={resolve('/[cospendRoot=cospendRoot]/payments/view/[id]', { cospendRoot: root, id: payment._id })} class="payment-card settlement-card">
@@ -233,7 +282,7 @@
               <div class="splits-summary">
                 <h4>{t.split_details}</h4>
                 <div class="splits-list">
-                  {#each payment.splits as split}
+                  {#each payment.splits as split (split.username)}
                     <div class="split-item">
                       <span class="split-user">{split.username}</span>
                       <span class="split-amount" class:positive={split.amount < 0} class:negative={split.amount > 0}>
@@ -258,14 +307,14 @@
     <!-- Pagination that works without JavaScript -->
     <div class="pagination">
       {#if data.currentOffset > 0}
-        <a href="?offset={Math.max(0, data.currentOffset - data.limit)}&limit={data.limit}"
+        <a href="?{filterQs ? filterQs + '&' : ''}offset={Math.max(0, data.currentOffset - data.limit)}&limit={data.limit}"
            class="btn btn-secondary">
           {t.previous}
         </a>
       {/if}
 
       {#if hasMore}
-        <a href="?offset={data.currentOffset + data.limit}&limit={data.limit}"
+        <a href="?{filterQs ? filterQs + '&' : ''}offset={data.currentOffset + data.limit}&limit={data.limit}"
            class="btn btn-secondary">
           {t.next}
         </a>

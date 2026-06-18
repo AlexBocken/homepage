@@ -135,3 +135,46 @@ Use `Toggle.svelte` (iOS-style) instead of raw `<input type="checkbox">` for use
 - Use `--color-bg-elevated` for hover/active states
 - Recipe cards: 300px wide, `--radius-card` corners
 - Global utility classes: `.g-icon-badge` (circular), `.g-pill` (pill-shaped)
+
+# Custom Components
+
+Prefer these existing components over rolling your own or reaching for a library.
+Most take `$bindable` props and small callbacks; check the source for the exact
+prop list before using.
+
+## Shared (`$lib/components/`)
+- `DatePicker.svelte` — themed date picker. `bind:value` (YYYY-MM-DD), `lang`,
+  `min`/`max` (YYYY-MM-DD strings), `fontSize`, `onchange()`. Use this for ALL
+  date inputs — never a raw `<input type="date">`.
+- `SearchInput.svelte` — pill search box. `bind:value`, `placeholder`,
+  `clearTitle`, `onClear()`, `oninput(e)`. Styled for a hero by default; override
+  `:global(.search)` when embedding inline.
+- `Toggle.svelte` — iOS-style switch. Use instead of a raw checkbox for
+  user-facing booleans.
+- `ImageUpload.svelte` — receipt/image dropzone + preview + camera capture
+  (touch). `bind:imageFile`/`imagePreview`/`uploading`, `currentImage`, callbacks
+  `onimageSelected`/`onimageRemoved`/`oncurrentImageRemoved`/`onerror`.
+- `AddButton.svelte` / `EditButton.svelte` / `SaveFab.svelte` — floating action
+  buttons (add / edit / save).
+- `hikes/RangeSlider.svelte` — dual-thumb numeric range. `bind:low`/`high`,
+  `min`/`max`/`step`, `format()`, optional `histogram: number[]` (distribution
+  bars over the track), `oncommit()` (fires on drag-end / key, not every move).
+  Generic despite its folder — reused outside hikes.
+
+## Cospend (`$lib/components/cospend/`)
+- `ProfilePicture.svelte` — user avatar from `bocken.org/static/user/...`,
+  initials fallback. `username`, `size`.
+- `CospendFilterBar.svelte` — collapsible search + filter panel (category/payer
+  pills, date-range pickers, amount `RangeSlider` with histogram). URL-driven via
+  `onChange(filters)`; modeled on `hikes/HikesFilterBar.svelte`.
+- `ReceiptScanner.svelte` — auto-scans an uploaded receipt (server OCR), lets you
+  tap/draw to correct the total and assign line items to people (highlight pens).
+- `ReceiptOverlay.svelte` — read-only replay of stored receipt highlight
+  selections over the image.
+- `SplitMethodSelector.svelte` — split-method cards + live per-person ledger.
+
+## Conventions
+- Receipt image URL: build with `receiptUrl()` from `$lib/utils/cospendImage`
+  (never reference the stored filename directly).
+- Cospend categories/colours: `$lib/js/cospendI18n` (`PAYMENT_CATEGORIES`,
+  `getCategoryOptionsI18n`) and `$lib/utils/receiptColors` (`penColor`).

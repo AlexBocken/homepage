@@ -16,6 +16,10 @@
 		high: number;
 		/** Renders a value for the readout + aria-valuetext. */
 		format?: (v: number) => string;
+		/** Optional distribution bars drawn above the track (left→right over min..max). */
+		histogram?: number[];
+		/** Called when a drag ends or a key adjustment is made (not on every move). */
+		oncommit?: () => void;
 	}
 
 	let {
@@ -25,8 +29,19 @@
 		step = 1,
 		low = $bindable(),
 		high = $bindable(),
-		format = (v) => String(v)
+		format = (v) => String(v),
+		histogram = [],
+		oncommit
 	}: Props = $props();
+
+	const histMax = $derived(histogram.length ? Math.max(1, ...histogram) : 1);
+	// A bar is "in range" when its value interval overlaps the selected [low, high].
+	function bucketActive(i: number) {
+		const bw = (max - min) / histogram.length;
+		const lo = min + i * bw;
+		const hi = min + (i + 1) * bw;
+		return hi >= low && lo <= high;
+	}
 
 	let trackEl = $state<HTMLElement>();
 	let lowThumb = $state<HTMLElement>();
@@ -93,6 +108,7 @@
 	}
 
 	function onPointerUp() {
+		if (dragging) oncommit?.();
 		dragging = null;
 	}
 
@@ -130,6 +146,7 @@
 		e.preventDefault();
 		if (which === 'low') setLow(low + delta);
 		else setHigh(high + delta);
+		oncommit?.();
 	}
 </script>
 
@@ -138,6 +155,13 @@
 		<span class="rs-label">{label}</span>
 		<span class="rs-value">{format(low)} – {format(high)}</span>
 	</div>
+	{#if histogram.length > 1}
+		<div class="rs-hist" aria-hidden="true">
+			{#each histogram as c, i (i)}
+				<div class="rs-bar" class:active={bucketActive(i)} style="height: {(c / histMax) * 100}%"></div>
+			{/each}
+		</div>
+	{/if}
 	<div
 		class="rs-track"
 		role="group"
@@ -209,6 +233,28 @@
 		font-weight: 600;
 		color: var(--color-text-primary);
 		font-variant-numeric: tabular-nums;
+	}
+
+	/* Distribution bars sit directly above the track and share its width, so a
+	   bar lines up with the slider position covering the same value range. */
+	.rs-hist {
+		display: flex;
+		align-items: flex-end;
+		gap: 1px;
+		height: 2.2rem;
+		padding: 0 0.5rem; /* match the thumb half-width so bars align with track ends */
+	}
+
+	.rs-bar {
+		flex: 1;
+		min-height: 2px;
+		border-radius: 2px 2px 0 0;
+		background: var(--color-bg-elevated);
+		transition: background-color var(--transition-fast);
+	}
+
+	.rs-bar.active {
+		background: color-mix(in srgb, var(--color-primary) 45%, transparent);
 	}
 
 	.rs-track {
