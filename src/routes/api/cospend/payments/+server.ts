@@ -3,6 +3,7 @@ import { Payment } from '$models/Payment';
 import { PaymentSplit } from '$models/PaymentSplit';
 import { dbConnect } from '$utils/db';
 import { convertToCHF, isValidCurrencyCode } from '$lib/utils/currency';
+import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
 import { error, json } from '@sveltejs/kit';
 
 interface SplitInput {
@@ -58,7 +59,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Invalid split method');
   }
 
-  if (category && !['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun', 'settlement'].includes(category)) {
+  if (category && !PAYMENT_CATEGORIES.includes(category)) {
     throw error(400, 'Invalid category');
   }
 

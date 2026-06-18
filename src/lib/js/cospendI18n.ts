@@ -30,6 +30,7 @@ export function cospendLabels(lang: CospendLang) {
 
 import { de } from '$lib/i18n/cospend/de';
 import { en } from '$lib/i18n/cospend/en';
+import { getCategoryEmoji, type PaymentCategory } from '$lib/utils/categories';
 
 /** All cospend translations, keyed by locale. */
 export const m = { de, en } as const;
@@ -72,23 +73,25 @@ const paymentCategoryNames: Record<string, Record<string, string>> = {
 	settlement: { en: 'Settlement', de: 'Ausgleich' },
 };
 
+/** Canonical list of valid payment category keys (single source of truth) */
+export const PAYMENT_CATEGORIES = Object.keys(paymentCategoryNames);
+
 /** Get translated payment category name */
 export function paymentCategoryName(category: string, lang: CospendLang): string {
 	return paymentCategoryNames[category]?.[lang] ?? category;
 }
 
-/** Get category options with translated labels */
+/** Get category options with translated labels (emoji sourced from categories.ts) */
 export function getCategoryOptionsI18n(lang: CospendLang) {
-	const emojis: Record<string, string> = {
-		groceries: '🛒', shopping: '🛍️', travel: '🚆', holidays: '🏖️',
-		restaurant: '🍽️', utilities: '⚡', fun: '🎉', settlement: '🤝'
-	};
-	return Object.keys(paymentCategoryNames).map(key => ({
-		value: key,
-		label: `${emojis[key] || ''} ${paymentCategoryName(key, lang)}`,
-		emoji: emojis[key] || '',
-		name: paymentCategoryName(key, lang)
-	}));
+	return PAYMENT_CATEGORIES.map(key => {
+		const emoji = getCategoryEmoji(key as PaymentCategory);
+		return {
+			value: key,
+			label: `${emoji} ${paymentCategoryName(key, lang)}`,
+			emoji,
+			name: paymentCategoryName(key, lang)
+		};
+	});
 }
 
 /**

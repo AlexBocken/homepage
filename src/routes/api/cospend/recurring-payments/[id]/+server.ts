@@ -3,6 +3,7 @@ import { RecurringPayment } from '$models/RecurringPayment';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
+import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
 import mongoose from 'mongoose';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -81,7 +82,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     }
     if (paidBy !== undefined) updateData.paidBy = paidBy;
     if (category !== undefined) {
-      if (!['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun', 'settlement'].includes(category)) {
+      if (!PAYMENT_CATEGORIES.includes(category)) {
         throw error(400, 'Invalid category');
       }
       updateData.category = category;

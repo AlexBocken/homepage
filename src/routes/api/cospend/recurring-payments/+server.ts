@@ -3,6 +3,7 @@ import { RecurringPayment, type IRecurringPayment } from '$models/RecurringPayme
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
+import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
   const auth = locals.session ?? await locals.auth();
@@ -80,7 +81,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
   }
 
-  if (category && !['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun', 'settlement'].includes(category)) {
+  if (category && !PAYMENT_CATEGORIES.includes(category)) {
     throw error(400, 'Invalid category');
   }
 

@@ -11,6 +11,10 @@ export const PAYMENT_CATEGORIES = {
     name: 'Travel',
     emoji: '🚆'
   },
+  holidays: {
+    name: 'Holidays',
+    emoji: '🏖️'
+  },
   restaurant: {
     name: 'Restaurant',
     emoji: '🍽️'

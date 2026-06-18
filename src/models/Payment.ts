@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
 
 export interface IPayment {
   _id?: string;
@@ -67,7 +68,7 @@ const PaymentSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['groceries', 'shopping', 'travel', 'restaurant', 'utilities', 'fun', 'settlement'],
+      enum: PAYMENT_CATEGORIES,
       default: 'groceries'
     },
     splitMethod: {
