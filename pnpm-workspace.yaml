@@ -1,0 +1,16 @@
+# pnpm 10+ reads build-script allowlist and dependency overrides from here.
+# The same settings are mirrored in package.json's "pnpm" field for the
+# pnpm 9 CI path (which still reads them there).
+packages:
+  - .
+onlyBuiltDependencies:
+  - esbuild
+overrides:
+  # Security overrides (Trivy CRITICAL/HIGH) — force fixed transitive versions.
+  # socks is pinned via a direct dependency in package.json instead (overrides
+  # don't apply to mongodb's optional *peer* socks) to drop the unfixable `ip`.
+  "protobufjs@7": "^7.6.4"  # CVE-2026-41242 + 44289/90/91/93 + 48712 (via onnxruntime-web)
+  "devalue": "^5.8.1"        # CVE-2026-42570 (via @sveltejs/kit, svelte)
+  "picomatch@2": "2.3.2"     # CVE-2026-33671
+  "picomatch@4": "4.0.4"     # CVE-2026-33671
+  "ws@8": "^8.21.0"          # CVE-2026-48779 (via jsdom, dev/test)
