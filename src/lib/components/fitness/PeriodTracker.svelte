@@ -349,6 +349,63 @@
 	// First future cycle (for status display)
 	const nextCycle = $derived(predictions.futureCycles[0] ?? null);
 
+	// Authoritative references for the cycle insights below.
+	const SRC_ACOG_AUB = { label: 'ACOG', url: 'https://www.acog.org/womens-health/faqs/abnormal-uterine-bleeding' };
+	const SRC_ACOG_VITAL = { label: 'ACOG', url: 'https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2015/12/menstruation-in-girls-and-adolescents-using-the-menstrual-cycle-as-a-vital-sign' };
+	const SRC_CC_ABNORMAL = { label: 'Cleveland Clinic', url: 'https://my.clevelandclinic.org/health/diseases/14633-abnormal-menstruation-periods' };
+	const SRC_CC_HYPO = { label: 'Cleveland Clinic', url: 'https://health.clevelandclinic.org/hypomenorrhea' };
+	const SRC_CC_MENORRHAGIA = { label: 'Cleveland Clinic', url: 'https://my.clevelandclinic.org/health/diseases/17734-menorrhagia-heavy-menstrual-bleeding' };
+	const SRC_CC_OLIGO = { label: 'Cleveland Clinic', url: 'https://my.clevelandclinic.org/health/symptoms/22834-oligomenorrhea' };
+
+	// Contextual, non-diagnostic insights about recent cycle/period behaviour.
+	// Thresholds follow common clinical guidance: cycle 21–35 days, period ≤7 days
+	// (≤2 = light), regularity judged over recent cycles. Patterns over several
+	// cycles matter more than any single one — copy and disclaimer reflect that.
+	const insights = $derived.by(() => {
+		const startsAsc = [...periods]
+			.map(p => midnight(new Date(p.startDate)))
+			.sort((a, b) => a - b);
+		const cycles = [];
+		for (let i = 1; i < startsAsc.length; i++) {
+			const c = Math.round((startsAsc[i] - startsAsc[i - 1]) / 86400000);
+			if (c > 0 && c < 60) cycles.push(c);
+		}
+		const periodDurs = completed.map(p =>
+			Math.round((midnight(new Date(p.endDate)) - midnight(new Date(p.startDate))) / 86400000) + 1
+		);
+
+		/** @type {{ id: string, level: 'positive'|'info'|'attention', title: string, body: string, source: { label: string, url: string } }[]} */
+		const list = [];
+
+		// Cycle regularity — needs at least 3 cycles to judge.
+		const recent = cycles.slice(-6);
+		if (recent.length >= 3) {
+			const min = Math.min(...recent);
+			const max = Math.max(...recent);
+			if (min >= 21 && max <= 35 && max - min <= 7) {
+				list.push({ id: 'regular', level: 'positive', title: t.insight_regular_title, body: t.insight_regular_body, source: SRC_ACOG_VITAL });
+			} else if (max - min > 9 || min < 21 || max > 35) {
+				list.push({ id: 'irregular', level: 'attention', title: t.insight_irregular_title, body: t.insight_irregular_body, source: SRC_CC_ABNORMAL });
+			}
+		}
+
+		// Most recent completed cycle length.
+		const lastCycle = cycles.at(-1);
+		if (lastCycle !== undefined) {
+			if (lastCycle < 21) list.push({ id: 'short_cycle', level: 'info', title: t.insight_short_cycle_title, body: t.insight_short_cycle_body, source: SRC_ACOG_AUB });
+			else if (lastCycle > 35) list.push({ id: 'long_cycle', level: 'info', title: t.insight_long_cycle_title, body: t.insight_long_cycle_body, source: SRC_CC_OLIGO });
+		}
+
+		// Most recent completed period length.
+		const lastPeriod = periodDurs.at(-1);
+		if (lastPeriod !== undefined) {
+			if (lastPeriod <= 2) list.push({ id: 'short_period', level: 'info', title: t.insight_short_period_title, body: t.insight_short_period_body, source: SRC_CC_HYPO });
+			else if (lastPeriod > 7) list.push({ id: 'long_period', level: 'attention', title: t.insight_long_period_title, body: t.insight_long_period_body, source: SRC_CC_MENORRHAGIA });
+		}
+
+		return list;
+	});
+
 	// Days into current period
 	const ongoingDay = $derived.by(() => {
 		if (!ongoing) return 0;
@@ -938,6 +995,20 @@
 					<span class="cycle-stat-variance">± {predictions.periodVariance} {t.days} (95% CI)</span>
 				{/if}
 			</div>
+		</div>
+	{/if}
+
+	{#if showProjection && insights.length > 0}
+		<div class="cycle-insights">
+			<h3 class="insights-title">{t.insights_title}</h3>
+			{#each insights as ins (ins.id)}
+				<div class="insight insight-{ins.level}">
+					<span class="insight-title">{ins.title}</span>
+					<p class="insight-body">{ins.body}</p>
+					<a class="insight-source" href={ins.source.url} target="_blank" rel="noopener noreferrer">{t.insight_source}: {ins.source.label}</a>
+				</div>
+			{/each}
+			<p class="insights-disclaimer">{t.insights_disclaimer}</p>
 		</div>
 	{/if}
 
@@ -1602,6 +1673,57 @@
 		font-size: 0.75rem;
 		font-weight: 400;
 		color: var(--color-text-secondary);
+	}
+
+	/* Cycle insights */
+	.cycle-insights {
+		margin-top: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.insights-title {
+		margin: 0;
+		font-size: 0.95rem;
+		color: var(--color-text-primary);
+	}
+	.insight {
+		background: var(--color-surface);
+		border-left: 3px solid var(--color-border);
+		border-radius: var(--radius-md);
+		padding: 0.7rem 0.85rem;
+		box-shadow: var(--shadow-sm);
+	}
+	.insight-positive { border-left-color: var(--green); }
+	.insight-info { border-left-color: var(--blue); }
+	.insight-attention { border-left-color: var(--orange); }
+	.insight-title {
+		display: block;
+		font-weight: 600;
+		font-size: 0.9rem;
+		color: var(--color-text-primary);
+		margin-bottom: 0.25rem;
+	}
+	.insight-body {
+		margin: 0;
+		font-size: 0.82rem;
+		line-height: 1.5;
+		color: var(--color-text-secondary);
+	}
+	.insight-source {
+		display: inline-block;
+		margin-top: 0.45rem;
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+		text-decoration: underline;
+	}
+	.insight-source:hover { color: var(--color-primary); }
+	.insights-disclaimer {
+		margin: 0.15rem 0 0;
+		font-size: 0.72rem;
+		font-style: italic;
+		line-height: 1.45;
+		color: var(--color-text-tertiary);
 	}
 
 	/* History */
