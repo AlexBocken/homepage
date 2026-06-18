@@ -321,6 +321,20 @@
 			pastFertileWindows.push(buildWindow(cycleStartMs, priorPeriodEndMs, nextPeriodStartMs, /* widen */ false));
 		}
 
+		// The cycle running into an ongoing period is fully determined — its next
+		// period start is known (the ongoing period's start) even though that
+		// period has no recorded end yet. Build its window from the most recent
+		// completed period so the gap before today isn't left blank.
+		if (ongoing && completed.length > 0) {
+			const last = completed[completed.length - 1];
+			const cycleStartMs = midnight(new Date(last.startDate));
+			const priorPeriodEndMs = last.endDate ? midnight(new Date(last.endDate)) : null;
+			const nextPeriodStartMs = midnight(new Date(ongoing.startDate));
+			if (nextPeriodStartMs > cycleStartMs) {
+				pastFertileWindows.push(buildWindow(cycleStartMs, priorPeriodEndMs, nextPeriodStartMs, /* widen */ false));
+			}
+		}
+
 		return {
 			avgCycle: Math.round(meanCycle * 10) / 10,
 			avgPeriod: Math.round(meanPeriod * 10) / 10,
