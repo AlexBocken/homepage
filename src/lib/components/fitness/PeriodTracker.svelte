@@ -438,158 +438,83 @@
 		const last = new Date(year, month + 1, 0);
 		const startDay = (first.getDay() + 6) % 7; // Monday = 0
 
-		// Build raw cells with status, including overflow days from adjacent months
-		/** @type {{ day: number, date: string, status: string, pos: string, edges: string, overflow?: boolean }[]} */
+		// Build cells with per-layer membership, including overflow days.
+		/** @type {{ day: number, date: string, overflow: boolean, layers: Record<string, boolean>, pos: Record<string, string> }[]} */
 		const cells = [];
+		/** @param {number} d @param {string} date @param {boolean} overflow */
+		const push = (d, date, overflow) => cells.push({ day: d, date, overflow, layers: getDayLayers(date), pos: {} });
 
 		// Previous month overflow
 		if (startDay > 0) {
 			const prevLast = new Date(year, month, 0); // last day of previous month
 			for (let i = startDay - 1; i >= 0; i--) {
 				const d = prevLast.getDate() - i;
-				const pm = new Date(year, month - 1, d);
-				const date = fmtLocal(pm);
-				cells.push({ day: d, date, status: getDayStatus(date), pos: '', edges: '', overflow: true });
+				push(d, fmtLocal(new Date(year, month - 1, d)), true);
 			}
 		}
 
 		// Current month
 		for (let d = 1; d <= last.getDate(); d++) {
-			const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-			cells.push({ day: d, date, status: getDayStatus(date), pos: '', edges: '' });
+			push(d, `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, false);
 		}
 
 		// Next month overflow to complete the last row
 		const remainder = cells.length % 7;
 		if (remainder > 0) {
-			const fill = 7 - remainder;
-			for (let d = 1; d <= fill; d++) {
-				const nm = new Date(year, month + 1, d);
-				const date = fmtLocal(nm);
-				cells.push({ day: d, date, status: getDayStatus(date), pos: '', edges: '', overflow: true });
-			}
+			for (let d = 1; d <= 7 - remainder; d++) push(d, fmtLocal(new Date(year, month + 1, d)), true);
 		}
 
-		// Status grouping: these flow into each other without rounding at boundaries
-		/** @param {string} s */
-		function statusGroup(s) {
-			if (s === 'fertile' || s === 'peak-fertile' || s === 'ovulation') return 'fertility';
-			return s;
-		}
-
-		// Sub-grouping: peak-fertile and ovulation form one pill
-		/** @param {string} s */
-		function posGroup(s) {
-			if (s === 'peak-fertile' || s === 'ovulation') return 'peak';
-			return s;
-		}
-
-		// Compute range positions and edge flags
-		// Position (border-radius): posGroup for left (peak-fertile+ovulation = one pill,
-		//   but fertile is separate so peak-fertile gets rounded left cap next to fertile)
-		//   statusGroup for right (fertile stays flat on right next to peak-fertile)
-		// Edges (border sides): posGroup for left, statusGroup for right/up/down
+		// Each nesting layer is rendered as its own rounded capsule band; a day rounds
+		// a layer's left/right end only where the linearly-adjacent day lacks that
+		// layer. Wrapping across the week boundary is linear adjacency, so a band stays
+		// flat there and reads as one capsule across rows. Inner layers (active, inner,
+		// ov) paint over the outer ones at the same height to give the nested look.
+		const LAYERS = ['predicted', 'active', 'luteal', 'fertile', 'inner'];
 		for (let i = 0; i < cells.length; i++) {
-			const c = cells[i];
-			if (!c || !c.status) continue;
-			const g = statusGroup(c.status);
-			const pg = posGroup(c.status);
-			const col = i % 7;
-			const leftSamePos = col > 0 && posGroup(cells[i - 1]?.status ?? '') === pg;
-			const rightGroup = col < 6 && i + 1 < cells.length && statusGroup(cells[i + 1]?.status ?? '') === g;
-			const upGroup = i >= 7 && statusGroup(cells[i - 7]?.status ?? '') === g;
-			const downGroup = i + 7 < cells.length && statusGroup(cells[i + 7]?.status ?? '') === g;
-
-			// Horizontal position for left/right rounding
-			if (!leftSamePos && !rightGroup) c.pos = 'solo';
-			else if (!leftSamePos) c.pos = 'start';
-			else if (!rightGroup) c.pos = 'end';
-			else c.pos = 'mid';
-
-			// If range continues across row boundary (col 6 → col 0), flatten the corners
-			// Right/next: statusGroup (fertile stays flat before peak-fertile)
-			// Left/prev: posGroup (peak-fertile keeps rounded cap after fertile)
-			const nextDaySameGroup = col === 6 && i + 1 < cells.length && statusGroup(cells[i + 1]?.status ?? '') === g;
-			const prevDaySamePos = col === 0 && i - 1 >= 0 && posGroup(cells[i - 1]?.status ?? '') === pg;
-			if (nextDaySameGroup) {
-				if (c.pos === 'solo') c.pos = 'start';
-				else if (c.pos === 'end') c.pos = 'mid';
+			for (const k of LAYERS) {
+				if (!cells[i].layers[k]) continue;
+				const prev = i > 0 && cells[i - 1].layers[k];
+				const next = i + 1 < cells.length && cells[i + 1].layers[k];
+				cells[i].pos[k] = (!prev && !next) ? 'solo' : (!prev) ? 'start' : (!next) ? 'end' : 'mid';
 			}
-			if (prevDaySamePos) {
-				if (c.pos === 'start') c.pos = 'mid';
-				else if (c.pos === 'solo') c.pos = 'end';
-			}
-
-			// Edge flags for border rendering
-			// Left: posGroup match (peak-fertile draws left border next to fertile)
-			// Right/Up/Down: group match (borders flow within group)
-			const edges = [];
-			if (!upGroup) edges.push('et');
-			if (!downGroup) edges.push('eb');
-			// At col 0, also check cross-row prev day with posGroup
-			const leftSameEdge = leftSamePos || prevDaySamePos;
-			if (!leftSameEdge) edges.push('el');
-			// At col 6, also check cross-row next day with statusGroup
-			const rightSameEdge = rightGroup || nextDaySameGroup;
-			if (!rightSameEdge) edges.push('er');
-			c.edges = edges.join(' ');
 		}
 
 		return cells;
 	});
 
 	/** @param {string} dateStr */
-	function getDayStatus(dateStr) {
+	function getDayLayers(dateStr) {
 		const d = parseLocal(dateStr);
+		const L = { active: false, predicted: false, fertile: false, inner: false, ov: false, luteal: false };
 
-		// Period days (actual)
+		// Actual logged period days (an ongoing period counts through today).
 		for (const p of periods) {
 			const start = midnight(new Date(p.startDate));
 			const end = p.endDate ? midnight(new Date(p.endDate)) : todayMidnight;
-			if (d >= start && d <= end) return 'period';
+			if (d >= start && d <= end) L.active = true;
 		}
 
-		// Predicted ongoing end
+		// Predicted period = the outer pill. For the ongoing period it spans the
+		// whole expected period so the logged days nest inside it; future cycles are
+		// entirely predicted.
 		if (ongoing && predictions.predictedEndOfOngoing) {
-			const ongoingEnd = midnight(predictions.predictedEndOfOngoing);
-			const ongoingStart = midnight(new Date(ongoing.startDate));
-			if (d > todayMidnight && d >= ongoingStart && d <= ongoingEnd) return 'predicted';
+			const start = midnight(new Date(ongoing.startDate));
+			const end = midnight(predictions.predictedEndOfOngoing);
+			if (d >= start && d <= end) L.predicted = true;
 		}
-
-		// Future predicted cycles
 		for (const c of predictions.futureCycles) {
-			const cs = midnight(c.start);
-			const ce = midnight(c.end);
-			if (d >= cs && d <= ce) return 'predicted';
-			const ovDay = midnight(c.ovulation);
-			if (d === ovDay) return 'ovulation';
-			const ps = midnight(c.peakStart);
-			const pe = midnight(c.peakEnd);
-			if (d >= ps && d <= pe) return 'peak-fertile';
-			const fs = midnight(c.fertileStart);
-			const fe = midnight(c.fertileEnd);
-			if (d >= fs && d <= fe) return 'fertile';
-			const ls = midnight(c.lutealStart);
-			const le = midnight(c.lutealEnd);
-			if (d >= ls && d <= le) return 'luteal';
+			if (d >= midnight(c.start) && d <= midnight(c.end)) L.predicted = true;
 		}
 
-		// Past fertility/luteal windows
-		for (const w of predictions.pastFertileWindows) {
-			const ovDay = midnight(w.ovulation);
-			if (d === ovDay) return 'ovulation';
-			const ps = midnight(w.peakStart);
-			const pe = midnight(w.peakEnd);
-			if (d >= ps && d <= pe) return 'peak-fertile';
-			const fs = midnight(w.fertileStart);
-			const fe = midnight(w.fertileEnd);
-			if (d >= fs && d <= fe) return 'fertile';
-			const ls = midnight(w.lutealStart);
-			const le = midnight(w.lutealEnd);
-			if (d >= ls && d <= le) return 'luteal';
+		// Fertility nesting: fertile (outer) ⊃ peak+ovulation (inner) ⊃ ovulation.
+		for (const w of [...predictions.futureCycles, ...predictions.pastFertileWindows]) {
+			if (d >= midnight(w.fertileStart) && d <= midnight(w.fertileEnd)) L.fertile = true;
+			if (d >= midnight(w.peakStart) && d <= midnight(w.ovulation)) L.inner = true;
+			if (d === midnight(w.ovulation)) L.ov = true;
+			if (d >= midnight(w.lutealStart) && d <= midnight(w.lutealEnd)) L.luteal = true;
 		}
 
-		return '';
+		return L;
 	}
 
 	async function startPeriod() {
@@ -722,11 +647,11 @@
 	}
 
 	/** Whether long-pressing the given calendar cell can start a period. */
-	/** @param {{ date: string, status: string }} cell */
+	/** @param {{ date: string, layers: Record<string, boolean> }} cell */
 	function canStartOn(cell) {
 		if (readOnly || !showEntry) return false;
 		if (ongoing) return false;
-		if (cell.status === 'period') return false;
+		if (cell.layers.active) return false;
 		return parseLocal(cell.date) <= todayMidnight;
 	}
 
@@ -963,15 +888,24 @@
 			{/each}
 		</div>
 		<div class="cal-grid">
-			{#each calendarDays as cell}
+			{#each calendarDays as cell (cell.date)}
 				{@const startable = canStartOn(cell)}
 				<span
-					class="cal-day {cell.status ? `s-${cell.status}` : ''} {cell.pos ? `p-${cell.pos}` : ''} {cell.edges}"
+					class="cal-day"
 					class:today={cell.date === todayStr}
 					class:overflow={cell.overflow}
 					class:startable
+					class:on-active={cell.layers.active}
 					{@attach startable && longPress(() => promptStartPeriodOn(cell.date))}
-				>{cell.day}</span>
+				>
+					{#if cell.layers.predicted}<i class="band band-pred p-{cell.pos.predicted}"></i>{/if}
+					{#if cell.layers.active}<i class="band band-active p-{cell.pos.active}"></i>{/if}
+					{#if cell.layers.luteal}<i class="band band-luteal p-{cell.pos.luteal}"></i>{/if}
+					{#if cell.layers.fertile}<i class="band band-fertile p-{cell.pos.fertile}"></i>{/if}
+					{#if cell.layers.inner}<i class="band band-inner p-{cell.pos.inner}"></i>{/if}
+					{#if cell.layers.ov}<i class="band band-ov p-solo"></i>{/if}
+					<span class="cal-num">{cell.day}</span>
+				</span>
 			{/each}
 		</div>
 		<div class="cal-legend">
@@ -1491,9 +1425,12 @@
 		justify-content: center;
 		color: var(--color-text-primary);
 		position: relative;
+		z-index: 0;
 		box-sizing: border-box;
 	}
 	.cal-day.overflow { color: var(--color-text-tertiary); }
+	.cal-num { position: relative; z-index: 5; }
+	.cal-day.on-active .cal-num { color: #fff; }
 
 	/* Long-press affordance: scale + colored ring grows during the hold. */
 	.cal-day.startable {
@@ -1526,108 +1463,71 @@
 		}
 	}
 
-	/* --- Range shape: border-radius per position --- */
-	.cal-day.p-solo { border-radius: 16px; }
-	.cal-day.p-start { border-radius: 16px 0 0 16px; }
-	.cal-day.p-mid { border-radius: 0; }
-	.cal-day.p-end { border-radius: 0 16px 16px 0; }
-
-	/* --- Filled statuses (background-based, border matches fill) --- */
-	.cal-day.s-period { background: var(--nord11); color: white; font-weight: 600; }
-	.cal-day.s-ovulation { border: 0 solid var(--blue); font-weight: 700; background: color-mix(in srgb, var(--blue) 15%, transparent); }
-	.cal-day.s-ovulation.et { border-top-width: 3px; }
-	.cal-day.s-ovulation.eb { border-bottom-width: 3px; }
-	.cal-day.s-ovulation.el { border-left-width: 3px; }
-	.cal-day.s-ovulation.er { border-right-width: 3px; }
-	.cal-day.s-ovulation::before {
-		content: '';
+	/* --- Nested cycle pills ---
+	   Every phase is a same-height capsule band (top/bottom rules + rounded caps),
+	   full cell width so equal-height fills tile seamlessly and wrap across weeks.
+	   Inner layers paint over outer ones at the same height, so peak nests inside
+	   fertile and ovulation inside peak; likewise the logged period nests inside the
+	   predicted period. A band rounds an end only where its range truly ends. */
+	.band {
 		position: absolute;
-		bottom: 4px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--blue);
-	}
-	.cal-day.s-luteal::before {
-		content: '';
-		position: absolute;
-		bottom: 4px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--orange);
-		opacity: 0.5;
-	}
-
-	/* --- Bordered statuses: width 0 by default, edge classes set per-side width --- */
-	.cal-day.s-fertile { border: 0 solid var(--blue); }
-	.cal-day.s-fertile.et { border-top-width: 2px; }
-	.cal-day.s-fertile.eb { border-bottom-width: 2px; }
-	.cal-day.s-fertile.el { border-left-width: 2px; }
-	.cal-day.s-fertile.er { border-right-width: 2px; }
-
-	.cal-day.s-peak-fertile { border: 0 solid var(--blue); font-weight: 600; background: color-mix(in srgb, var(--blue) 15%, transparent); }
-	.cal-day.s-peak-fertile.et { border-top-width: 3px; }
-	.cal-day.s-peak-fertile.eb { border-bottom-width: 3px; }
-	.cal-day.s-peak-fertile.el { border-left-width: 3px; }
-	.cal-day.s-peak-fertile.er { border-right-width: 3px; }
-	/* Extend fertile borders into peak-fertile's rounded corner gap.
-	   Uses background gradients instead of borders to avoid subpixel rounding misalignment. */
-	.cal-day.s-peak-fertile.p-start::before,
-	.cal-day.s-peak-fertile.p-solo::before {
-		content: '';
-		position: absolute;
-		left: -3px;
-		top: 0;
-		bottom: 0;
-		width: 16px;
+		top: 3px;
+		bottom: 3px;
+		left: 0;
+		right: 0;
 		pointer-events: none;
+		box-sizing: border-box;
 	}
-	.cal-day.s-peak-fertile.p-start.et::before,
-	.cal-day.s-peak-fertile.p-solo.et::before {
-		top: -3px;
-	}
-	.cal-day.s-peak-fertile.p-start.eb::before,
-	.cal-day.s-peak-fertile.p-solo.eb::before {
-		bottom: -3px;
-	}
-	.cal-day.s-peak-fertile.p-start.et.eb::before,
-	.cal-day.s-peak-fertile.p-solo.et.eb::before {
-		background:
-			linear-gradient(var(--blue), var(--blue)) top    / 100% 2px no-repeat,
-			linear-gradient(var(--blue), var(--blue)) bottom / 100% 2px no-repeat;
-	}
-	.cal-day.s-peak-fertile.p-start.et:not(.eb)::before,
-	.cal-day.s-peak-fertile.p-solo.et:not(.eb)::before {
-		background: linear-gradient(var(--blue), var(--blue)) top / 100% 2px no-repeat;
-	}
-	.cal-day.s-peak-fertile.p-start.eb:not(.et)::before,
-	.cal-day.s-peak-fertile.p-solo.eb:not(.et)::before {
-		background: linear-gradient(var(--blue), var(--blue)) bottom / 100% 2px no-repeat;
-	}
+	.band.p-solo  { border-radius: 999px; }
+	.band.p-start { border-radius: 999px 0 0 999px; }
+	.band.p-mid   { border-radius: 0; }
+	.band.p-end   { border-radius: 0 999px 999px 0; }
 
-	.cal-day.s-predicted { background: color-mix(in srgb, var(--nord11) 15%, transparent); border: 0 dashed var(--nord11); }
-	.cal-day.s-predicted.et { border-top-width: 2px; }
-	.cal-day.s-predicted.eb { border-bottom-width: 2px; }
-	.cal-day.s-predicted.el { border-left-width: 2px; }
-	.cal-day.s-predicted.er { border-right-width: 2px; }
+	/* Fertility: fertile outline (outer) → peak fill → ovulation (innermost). */
+	.band-fertile {
+		z-index: 1;
+		border-top: 2px solid color-mix(in srgb, var(--blue) 60%, transparent);
+		border-bottom: 2px solid color-mix(in srgb, var(--blue) 60%, transparent);
+	}
+	.band-fertile.p-start, .band-fertile.p-solo { border-left: 2px solid color-mix(in srgb, var(--blue) 60%, transparent); }
+	.band-fertile.p-end, .band-fertile.p-solo { border-right: 2px solid color-mix(in srgb, var(--blue) 60%, transparent); }
+	.band-inner {
+		z-index: 2;
+		background: color-mix(in srgb, var(--blue) 24%, var(--color-surface));
+		border-top: 2px solid var(--blue);
+		border-bottom: 2px solid var(--blue);
+	}
+	.band-inner.p-start, .band-inner.p-solo { border-left: 2px solid var(--blue); }
+	.band-inner.p-end, .band-inner.p-solo { border-right: 2px solid var(--blue); }
+	.band-ov { z-index: 3; background: var(--blue); }
 
-	/* Today marker — inner dot so it doesn't clash with range bg */
+	/* Menses: predicted period (dashed outer) with the logged period nested inside. */
+	.band-pred {
+		z-index: 1;
+		background: color-mix(in srgb, var(--nord11) 12%, var(--color-surface));
+		border-top: 1.5px dashed var(--nord11);
+		border-bottom: 1.5px dashed var(--nord11);
+	}
+	.band-pred.p-start, .band-pred.p-solo { border-left: 1.5px dashed var(--nord11); }
+	.band-pred.p-end, .band-pred.p-solo { border-right: 1.5px dashed var(--nord11); }
+	.band-active { z-index: 2; background: var(--nord11); }
+
+	/* Luteal: faint tail, the calmest band. */
+	.band-luteal { z-index: 0; background: color-mix(in srgb, var(--orange) 16%, transparent); }
+
+	/* Today marker — circle above the bands, behind the number. */
 	.cal-day.today { font-weight: 700; z-index: 1; }
 	.cal-day.today::after {
 		content: '';
 		position: absolute;
-		width: 26px;
-		height: 26px;
+		width: 30px;
+		height: 30px;
 		border-radius: 50%;
 		background: var(--color-text-primary);
-		z-index: -1;
+		z-index: 4;
 	}
-	.cal-day.today { color: var(--color-bg-primary); }
+	/* Today's number is inverted against its circle — wins over .on-active white. */
+	.cal-day.today .cal-num { color: var(--color-bg-primary); }
 
 	/* Legend */
 	.cal-legend {
@@ -1651,11 +1551,11 @@
 		flex-shrink: 0;
 	}
 	.legend-dot.period { background: var(--nord11); }
-	.legend-dot.predicted { background: color-mix(in srgb, var(--nord11) 15%, transparent); border: 1.5px dashed var(--nord11); box-sizing: border-box; }
-	.legend-dot.fertile { border: 2px solid var(--blue); box-sizing: border-box; }
-	.legend-dot.peak-fertile { border: 3px solid var(--blue); box-sizing: border-box; background: color-mix(in srgb, var(--blue) 15%, transparent); }
-	.legend-dot.ovulation { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
-	.legend-dot.luteal { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); opacity: 0.5; }
+	.legend-dot.predicted { background: color-mix(in srgb, var(--nord11) 12%, var(--color-surface)); border: 1.5px dashed var(--nord11); box-sizing: border-box; }
+	.legend-dot.fertile { border: 2px solid color-mix(in srgb, var(--blue) 60%, transparent); box-sizing: border-box; }
+	.legend-dot.peak-fertile { border: 2px solid var(--blue); box-sizing: border-box; background: color-mix(in srgb, var(--blue) 24%, var(--color-surface)); }
+	.legend-dot.ovulation { width: 12px; height: 10px; border-radius: 5px; background: var(--blue); }
+	.legend-dot.luteal { background: color-mix(in srgb, var(--orange) 16%, transparent); }
 
 	/* Cycle stats */
 	.cycle-stats {
