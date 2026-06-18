@@ -59,7 +59,7 @@
   /** @type {string | null} */
   let exchangeRateError = $state(null);
   /** @type {ReturnType<typeof setTimeout> | undefined} */
-  let exchangeRateTimeout = $state();
+  let exchangeRateTimeout;
   let jsEnhanced = $state(false);
 
   let categoryOptions = $derived(getCategoryOptionsI18n(lang));

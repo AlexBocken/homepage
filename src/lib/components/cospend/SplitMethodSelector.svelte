@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte';
   import ProfilePicture from './ProfilePicture.svelte';
   import { page } from '$app/state';
   import { detectCospendLang, m } from '$lib/js/cospendI18n';
@@ -111,23 +112,33 @@
     }
   }
 
-  // Validate and recalculate when personal amounts change
+  // Validate and recalculate when personal amounts change.
+  // Inputs are read outside untrack to register them as dependencies; the
+  // mutations (which write the bindable splitAmounts/personalTotalError) run
+  // inside untrack so writing them doesn't re-trigger this effect.
   $effect(() => {
     if (splitMethod === 'personal_equal' && personalAmounts && amount) {
       /** @type {number} */
       const totalPersonal = Object.values(personalAmounts).reduce((/** @type {number} */ sum, /** @type {number} */ val) => sum + (Number(val) || 0), 0);
       const totalAmount = Number(amount);
-      personalTotalError = totalPersonal > totalAmount;
+      // touch inputs so paidBy/users changes also recalculate
+      void paidBy;
+      void users.length;
 
-      if (!personalTotalError) {
-        calculatePersonalEqualSplit();
-      }
+      untrack(() => {
+        personalTotalError = totalPersonal > totalAmount;
+        if (!personalTotalError) {
+          calculatePersonalEqualSplit();
+        }
+      });
     }
   });
 
   $effect(() => {
     if (amount && splitMethod && paidBy) {
-      handleSplitMethodChange();
+      // touch users so member changes recalculate
+      void users.length;
+      untrack(() => handleSplitMethodChange());
     }
   });
 </script>

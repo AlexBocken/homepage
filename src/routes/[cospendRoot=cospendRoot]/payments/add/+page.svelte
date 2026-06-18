@@ -75,7 +75,7 @@
   /** @type {string | null} */
   let exchangeRateError = $state(null);
   /** @type {ReturnType<typeof setTimeout> | undefined} */
-  let exchangeRateTimeout = $state();
+  let exchangeRateTimeout;
 
   // Initialize users from server data for no-JS support (use data directly to avoid reactivity warning)
   // svelte-ignore state_referenced_locally
@@ -417,10 +417,10 @@
         <label for="title">{t.title_label}</label>
         <input 
           type="text" 
-          id="title" 
+          id="title"
           name="title"
-          value={formData.title}
-          required 
+          bind:value={formData.title}
+          required
           placeholder={t.title_placeholder}
         />
       </div>
@@ -430,7 +430,7 @@
         <textarea 
           id="description" 
           name="description"
-          value={formData.description} 
+          bind:value={formData.description}
           placeholder={t.description_placeholder}
           rows="3"
         ></textarea>
@@ -438,7 +438,7 @@
 
       <div class="form-group">
         <label for="category">{t.category_star}</label>
-        <select id="category" name="category" value={formData.category} required>
+        <select id="category" name="category" bind:value={formData.category} required>
           {#each categoryOptions as option}
             <option value={option.value}>{option.label}</option>
           {/each}
