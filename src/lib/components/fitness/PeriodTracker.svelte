@@ -8,6 +8,13 @@
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import HeartPulse from '@lucide/svelte/icons/heart-pulse';
+	import Waves from '@lucide/svelte/icons/waves';
+	import Droplet from '@lucide/svelte/icons/droplet';
+	import Droplets from '@lucide/svelte/icons/droplets';
+	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
+	import Hourglass from '@lucide/svelte/icons/hourglass';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -381,7 +388,7 @@
 			Math.round((midnight(new Date(p.endDate)) - midnight(new Date(p.startDate))) / 86400000) + 1
 		);
 
-		/** @type {{ id: string, level: 'positive'|'info'|'attention', title: string, body: string, source: { label: string, url: string } }[]} */
+		/** @type {{ id: string, level: 'positive'|'info'|'attention', icon: import('svelte').Component, title: string, body: string, source: { label: string, url: string } }[]} */
 		const list = [];
 
 		// Cycle regularity — needs at least 3 cycles to judge.
@@ -390,24 +397,24 @@
 			const min = Math.min(...recent);
 			const max = Math.max(...recent);
 			if (min >= 21 && max <= 35 && max - min <= 7) {
-				list.push({ id: 'regular', level: 'positive', title: t.insight_regular_title, body: t.insight_regular_body, source: SRC_ACOG_VITAL });
+				list.push({ id: 'regular', level: 'positive', icon: HeartPulse, title: t.insight_regular_title, body: t.insight_regular_body, source: SRC_ACOG_VITAL });
 			} else if (max - min > 9 || min < 21 || max > 35) {
-				list.push({ id: 'irregular', level: 'attention', title: t.insight_irregular_title, body: t.insight_irregular_body, source: SRC_CC_ABNORMAL });
+				list.push({ id: 'irregular', level: 'attention', icon: Waves, title: t.insight_irregular_title, body: t.insight_irregular_body, source: SRC_CC_ABNORMAL });
 			}
 		}
 
 		// Most recent completed cycle length.
 		const lastCycle = cycles.at(-1);
 		if (lastCycle !== undefined) {
-			if (lastCycle < 21) list.push({ id: 'short_cycle', level: 'info', title: t.insight_short_cycle_title, body: t.insight_short_cycle_body, source: SRC_ACOG_AUB });
-			else if (lastCycle > 35) list.push({ id: 'long_cycle', level: 'info', title: t.insight_long_cycle_title, body: t.insight_long_cycle_body, source: SRC_CC_OLIGO });
+			if (lastCycle < 21) list.push({ id: 'short_cycle', level: 'info', icon: CalendarClock, title: t.insight_short_cycle_title, body: t.insight_short_cycle_body, source: SRC_ACOG_AUB });
+			else if (lastCycle > 35) list.push({ id: 'long_cycle', level: 'info', icon: Hourglass, title: t.insight_long_cycle_title, body: t.insight_long_cycle_body, source: SRC_CC_OLIGO });
 		}
 
 		// Most recent completed period length.
 		const lastPeriod = periodDurs.at(-1);
 		if (lastPeriod !== undefined) {
-			if (lastPeriod <= 2) list.push({ id: 'short_period', level: 'info', title: t.insight_short_period_title, body: t.insight_short_period_body, source: SRC_CC_HYPO });
-			else if (lastPeriod > 7) list.push({ id: 'long_period', level: 'attention', title: t.insight_long_period_title, body: t.insight_long_period_body, source: SRC_CC_MENORRHAGIA });
+			if (lastPeriod <= 2) list.push({ id: 'short_period', level: 'info', icon: Droplet, title: t.insight_short_period_title, body: t.insight_short_period_body, source: SRC_CC_HYPO });
+			else if (lastPeriod > 7) list.push({ id: 'long_period', level: 'attention', icon: Droplets, title: t.insight_long_period_title, body: t.insight_long_period_body, source: SRC_CC_MENORRHAGIA });
 		}
 
 		return list;
@@ -923,7 +930,7 @@
 	{#if showProjection && completed.length >= 2}
 		<div class="cycle-stats">
 			<div class="cycle-stat">
-				<span class="cycle-stat-label">{t.cycle_length}</span>
+				<span class="cycle-stat-label"><RefreshCw size={13} strokeWidth={2.2} /> {t.cycle_length}</span>
 				<span class="cycle-stat-value">{Math.round(predictions.avgCycle)} {t.days}</span>
 				{#if predictions.cycleSd > 0}
 					<span class="cycle-stat-variance">± {predictions.cycleSd} {t.days} ({t.typical})</span>
@@ -933,7 +940,7 @@
 				{/if}
 			</div>
 			<div class="cycle-stat">
-				<span class="cycle-stat-label">{t.period_length}</span>
+				<span class="cycle-stat-label"><Droplet size={13} strokeWidth={2.2} /> {t.period_length}</span>
 				<span class="cycle-stat-value">{Math.round(predictions.avgPeriod)} {t.days}</span>
 				{#if predictions.periodSd > 0}
 					<span class="cycle-stat-variance">± {predictions.periodSd} {t.days} ({t.typical})</span>
@@ -949,10 +956,14 @@
 		<div class="cycle-insights">
 			<h3 class="insights-title">{t.insights_title}</h3>
 			{#each insights as ins (ins.id)}
+				{@const Icon = ins.icon}
 				<div class="insight insight-{ins.level}">
-					<span class="insight-title">{ins.title}</span>
-					<p class="insight-body">{ins.body}</p>
-					<a class="insight-source" href={ins.source.url} target="_blank" rel="noopener noreferrer">{t.insight_source}: {ins.source.label}</a>
+					<span class="insight-icon"><Icon size={24} strokeWidth={2} /></span>
+					<div class="insight-main">
+						<span class="insight-title">{ins.title}</span>
+						<p class="insight-body">{ins.body}</p>
+						<a class="insight-source" href={ins.source.url} target="_blank" rel="noopener noreferrer">{t.insight_source}: {ins.source.label}</a>
+					</div>
 				</div>
 			{/each}
 			<p class="insights-disclaimer">{t.insights_disclaimer}</p>
@@ -1581,11 +1592,15 @@
 		box-shadow: var(--shadow-sm);
 	}
 	.cycle-stat-label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 		font-size: 0.7rem;
 		color: var(--color-text-secondary);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
+	.cycle-stat-label :global(svg) { color: var(--blue); }
 	.cycle-stat-value {
 		font-size: 1.1rem;
 		font-weight: 700;
@@ -1614,15 +1629,34 @@
 		color: var(--color-text-primary);
 	}
 	.insight {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.7rem;
 		background: var(--color-surface);
-		border-left: 3px solid var(--color-border);
 		border-radius: var(--radius-md);
 		padding: 0.7rem 0.85rem;
 		box-shadow: var(--shadow-sm);
 	}
-	.insight-positive { border-left-color: var(--green); }
-	.insight-info { border-left-color: var(--blue); }
-	.insight-attention { border-left-color: var(--orange); }
+	.insight-icon {
+		flex: 0 0 auto;
+		display: grid;
+		place-items: center;
+		width: 42px;
+		height: 42px;
+		border-radius: 50%;
+		margin-top: 0.05rem;
+	}
+	.insight-main { min-width: 0; }
+	/* Blue carries good/informational, orange carries worth-a-look. */
+	.insight-positive .insight-icon,
+	.insight-info .insight-icon {
+		background: color-mix(in srgb, var(--blue) 15%, transparent);
+		color: var(--blue);
+	}
+	.insight-attention .insight-icon {
+		background: color-mix(in srgb, var(--orange) 18%, transparent);
+		color: var(--orange);
+	}
 	.insight-title {
 		display: block;
 		font-weight: 600;
