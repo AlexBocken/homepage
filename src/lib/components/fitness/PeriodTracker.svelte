@@ -502,7 +502,7 @@
 			const res = await fetch('/api/fitness/period', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ startDate: new Date().toISOString() })
+				body: JSON.stringify({ startDate: new Date().toISOString(), owner: ownerName || undefined })
 			});
 			if (res.ok) {
 				const { entry } = await res.json();
@@ -535,7 +535,7 @@
 			const res = await fetch('/api/fitness/period', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ startDate: d.toISOString() })
+				body: JSON.stringify({ startDate: d.toISOString(), owner: ownerName || undefined })
 			});
 			if (res.ok) {
 				const { entry } = await res.json();
@@ -658,7 +658,7 @@
 		if (!addStart) return;
 		loading = true;
 		try {
-			const body = { startDate: new Date(addStart).toISOString() };
+			const body = { startDate: new Date(addStart).toISOString(), owner: ownerName || undefined };
 			if (addEnd) Object.assign(body, { endDate: new Date(addEnd).toISOString() });
 			const res = await fetch('/api/fitness/period', {
 				method: 'POST',
@@ -768,13 +768,12 @@
 
 <section class="period-tracker" class:read-only={readOnly}>
 	<h2>
-		{#if readOnly && ownerName}
-			<span class="shared-header">
-				<ProfilePicture username={ownerName} size={24} />
-				{ownerName}
+		{t.period_tracker}
+		{#if ownerName}
+			<span class="shared-header" title={t.shared_from}>
+				<ProfilePicture username={ownerName} size={20} />
+				<span class="shared-name">{ownerName}</span>
 			</span>
-		{:else}
-			{t.period_tracker}
 		{/if}
 	</h2>
 
@@ -919,6 +918,7 @@
 						<h3>{t.history}</h3>
 						<ChevronRight size={14} class={showHistory ? 'chevron open' : 'chevron'} />
 					</button>
+					{#if !ownerName}
 					<div class="share-bar">
 						{#if shareList.length > 0}
 							<div class="shared-avatars">
@@ -934,6 +934,7 @@
 							<UserPlus size={16} />
 						</button>
 					</div>
+					{/if}
 				</div>
 
 				{#if showHistory}
@@ -1024,9 +1025,11 @@
 			<div class="empty-state">
 				<div class="share-bar">
 					<p>{t.no_period_data}</p>
+					{#if !ownerName}
 					<button class="share-btn" onclick={() => showShare = true} aria-label={t.share}>
 						<UserPlus size={16} />
 					</button>
+					{/if}
 				</div>
 				<button class="add-past-btn" onclick={() => showAddForm = !showAddForm}>
 					<Plus size={14} />
@@ -1893,7 +1896,17 @@
 	.shared-header {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.4rem;
+		gap: 0.35rem;
+		padding: 0.15rem 0.5rem 0.15rem 0.2rem;
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-tertiary);
+		vertical-align: middle;
+		font-size: 0.8rem;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+	}
+	.shared-name {
+		white-space: nowrap;
 	}
 
 	/* Read-only mode */

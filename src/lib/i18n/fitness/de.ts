@@ -308,6 +308,7 @@ export const de = {
 	ongoing: "laufend",
 	share: "Teilen",
 	shared_with: "Geteilt mit",
+	shared_from: "Mit dir geteilt",
 	add_user: "Nutzer hinzufügen…",
 	no_shared: "Mit niemandem geteilt.",
 	shared_by: "Geteilt von",

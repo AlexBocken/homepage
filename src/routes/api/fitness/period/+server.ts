@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { PeriodEntry } from '$models/PeriodEntry';
+import { canEditPeriodCalendar } from '$lib/server/periodAccess';
 
 /** GET: List period entries (most recent first) */
 export const GET: RequestHandler = async ({ url, locals }) => {
@@ -24,7 +25,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	await dbConnect();
 
 	const data = await request.json();
-	const { startDate, endDate } = data;
+	const { startDate, endDate, owner } = data;
 
 	if (!startDate) {
 		return json({ error: 'startDate is required' }, { status: 400 });
@@ -35,10 +36,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'Invalid startDate' }, { status: 400 });
 	}
 
+	// Target calendar: own by default, or a calendar shared with this user.
+	const targetOwner = owner || user.nickname;
+	if (targetOwner.toLowerCase() !== user.nickname.toLowerCase()) {
+		if (!(await canEditPeriodCalendar(user.nickname, targetOwner))) {
+			return json({ error: 'Not allowed to edit this calendar' }, { status: 403 });
+		}
+	}
+
 	// Check no ongoing period exists (endDate is null)
 	if (!endDate) {
 		const ongoing = await PeriodEntry.findOne({
-			createdBy: user.nickname,
+			createdBy: targetOwner,
 			endDate: null
 		});
 		if (ongoing) {
@@ -49,7 +58,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const entry = await PeriodEntry.create({
 		startDate: start,
 		endDate: endDate ? new Date(endDate) : undefined,
-		createdBy: user.nickname
+		createdBy: targetOwner
 	});
 
 	return json({ entry }, { status: 201 });

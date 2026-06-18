@@ -31,9 +31,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 		byOwner.set(e.createdBy, list);
 	}
 
-	const shared = owners
-		.filter(o => byOwner.has(o))
-		.map(owner => ({ owner, entries: byOwner.get(owner)! }));
+	// Include every sharing owner, even those with no entries yet, so a shared
+	// editor can start the first period on an empty calendar.
+	const shared = owners.map(owner => ({ owner, entries: byOwner.get(owner) ?? [] }));
 
 	return json({ shared });
 };

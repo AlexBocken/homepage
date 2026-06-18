@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 export interface IPeriodEntry {
 	_id?: string;
 	startDate: Date;
-	endDate?: Date;
+	endDate?: Date | null;
 	createdBy: string;
 	createdAt?: Date;
 	updatedAt?: Date;

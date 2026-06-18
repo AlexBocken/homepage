@@ -593,6 +593,12 @@
 				<PeriodTracker periods={data.periods ?? []} {lang} sharedWith={data.periodSharedWith ?? []} />
 			</div>
 		{/if}
+
+		{#each data.periodShared ?? [] as shared (shared.owner)}
+			<div class="period-slot">
+				<PeriodTracker periods={shared.entries} {lang} ownerName={shared.owner} />
+			</div>
+		{/each}
 	</div>
 
 	{#if measurements.length > 0}
