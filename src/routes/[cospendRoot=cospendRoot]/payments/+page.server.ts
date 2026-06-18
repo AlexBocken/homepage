@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ locals, fetch, url }) => {
     const paymentsData = await paymentsResponse.json();
     const facets = facetsResponse.ok
       ? await facetsResponse.json()
-      : { amount: { min: 0, max: 0 }, date: { min: null, max: null }, histogram: [] };
+      : { amount: { min: 0, max: 0 }, date: { min: null, max: null }, histogram: [], overflow: false };
 
     return {
       session,

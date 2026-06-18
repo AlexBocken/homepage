@@ -18,6 +18,8 @@
 		format?: (v: number) => string;
 		/** Optional distribution bars drawn above the track (left→right over min..max). */
 		histogram?: number[];
+		/** When true, the LAST histogram bar is an ">max" overflow bin (rendered apart). */
+		overflow?: boolean;
 		/** Called when a drag ends or a key adjustment is made (not on every move). */
 		oncommit?: () => void;
 	}
@@ -31,13 +33,16 @@
 		high = $bindable(),
 		format = (v) => String(v),
 		histogram = [],
+		overflow = false,
 		oncommit
 	}: Props = $props();
 
 	const histMax = $derived(histogram.length ? Math.max(1, ...histogram) : 1);
-	// A bar is "in range" when its value interval overlaps the selected [low, high].
+	// In-range bars span [min, max]; the overflow bin (if any) sits beyond max.
+	const inRangeBars = $derived(histogram.length - (overflow ? 1 : 0));
 	function bucketActive(i: number) {
-		const bw = (max - min) / histogram.length;
+		if (overflow && i === histogram.length - 1) return high >= max;
+		const bw = (max - min) / inRangeBars;
 		const lo = min + i * bw;
 		const hi = min + (i + 1) * bw;
 		return hi >= low && lo <= high;
@@ -158,7 +163,14 @@
 	{#if histogram.length > 1}
 		<div class="rs-hist" aria-hidden="true">
 			{#each histogram as c, i (i)}
-				<div class="rs-bar" class:active={bucketActive(i)} style="height: {(c / histMax) * 100}%"></div>
+				{@const isOverflow = overflow && i === histogram.length - 1}
+				<div
+					class="rs-bar"
+					class:active={bucketActive(i)}
+					class:overflow={isOverflow}
+					style="height: {(c / histMax) * 100}%"
+					title={isOverflow ? `> ${format(max)}` : undefined}
+				></div>
 			{/each}
 		</div>
 	{/if}
@@ -255,6 +267,17 @@
 
 	.rs-bar.active {
 		background: color-mix(in srgb, var(--color-primary) 45%, transparent);
+	}
+
+	/* Overflow bin (">max") — set apart from the in-range bars with a gap and a
+	   distinct tint so it doesn't read as part of the linear axis. */
+	.rs-bar.overflow {
+		margin-left: 0.5rem;
+		border-radius: 2px;
+	}
+
+	.rs-bar.overflow.active {
+		background: color-mix(in srgb, var(--orange) 50%, transparent);
 	}
 
 	.rs-track {

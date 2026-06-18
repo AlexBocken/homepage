@@ -13,7 +13,7 @@
     /** Applied filters (from the URL). */
     filters = {},
     /** { amount:{min,max}, date:{min,max}, histogram:number[] } */
-    facets = { amount: { min: 0, max: 0 }, date: { min: null, max: null }, histogram: [] },
+    facets = { amount: { min: 0, max: 0 }, date: { min: null, max: null }, histogram: [], overflow: false },
     /** [{ value, emoji, name }] */
     categoryOptions = [],
     /** @type {string[]} */
@@ -146,9 +146,10 @@
       out.push({ key: 'date', label, clear: () => { dateFrom = ''; dateTo = ''; emit(); } });
     }
     if (filters.amountMin || filters.amountMax) {
-      const lo = filters.amountMin ?? amountFloor;
-      const hi = filters.amountMax ?? amountCeil;
-      out.push({ key: 'amount', label: `CHF ${lo}–${hi}`, clear: () => { amountLow = amountFloor; amountHigh = amountCeil; emit(); } });
+      const label = filters.amountMin && filters.amountMax
+        ? `CHF ${filters.amountMin}–${filters.amountMax}`
+        : filters.amountMin ? `≥ CHF ${filters.amountMin}` : `≤ CHF ${filters.amountMax}`;
+      out.push({ key: 'amount', label, clear: () => { amountLow = amountFloor; amountHigh = amountCeil; emit(); } });
     }
     return out;
   });
@@ -253,6 +254,7 @@
             bind:low={amountLow}
             bind:high={amountHigh}
             histogram={facets.histogram}
+            overflow={facets.overflow}
             format={fmtAmount}
             oncommit={emit}
           />
