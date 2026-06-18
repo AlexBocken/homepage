@@ -13,6 +13,33 @@ interface SplitInput {
   personalAmount?: number;
 }
 
+/** Whitelist receipt highlight selections into the stored shape (boxes 0..1). */
+function sanitizeReceiptScan(raw: unknown) {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const data = raw as Record<string, unknown>;
+  const box = (b: unknown) => {
+    if (!b || typeof b !== 'object') return null;
+    const o = b as Record<string, unknown>;
+    const n = (v: unknown) => (typeof v === 'number' && isFinite(v) ? Math.min(1, Math.max(0, v)) : null);
+    const x0 = n(o.x0), y0 = n(o.y0), x1 = n(o.x1), y1 = n(o.y1);
+    if (x0 === null || y0 === null || x1 === null || y1 === null) return null;
+    return { x0, y0, x1, y1 };
+  };
+  const items = Array.isArray(data.items)
+    ? data.items
+        .map((it) => {
+          const o = (it ?? {}) as Record<string, unknown>;
+          const b = box(o.box);
+          if (!b || typeof o.user !== 'string' || typeof o.amount !== 'number') return null;
+          return { box: b, user: o.user, amount: o.amount };
+        })
+        .filter((x): x is { box: NonNullable<ReturnType<typeof box>>; user: string; amount: number } => x !== null)
+    : [];
+  const totalBox = box(data.totalBox);
+  if (!totalBox && items.length === 0) return undefined;
+  return { totalBox, items };
+}
+
 export const GET: RequestHandler = async ({ locals, url }) => {
   const auth = locals.session ?? await locals.auth();
   if (!auth || !auth.user?.nickname) {
@@ -45,7 +72,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   const data = await request.json();
-  const { title, description, amount, currency, paidBy, date, image, category, splitMethod, splits } = data;
+  const { title, description, amount, currency, paidBy, date, image, category, splitMethod, splits, receiptScan } = data;
 
   if (!title || !amount || !paidBy || !splitMethod || !splits) {
     throw error(400, 'Missing required fields');
@@ -113,7 +140,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       image,
       category: category || 'groceries',
       splitMethod,
-      createdBy: auth.user.nickname
+      createdBy: auth.user.nickname,
+      receiptScan: sanitizeReceiptScan(receiptScan)
     });
 
     // Convert split amounts to CHF if needed

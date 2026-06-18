@@ -15,9 +15,40 @@ export interface IPayment {
   category: 'groceries' | 'shopping' | 'travel' | 'restaurant' | 'utilities' | 'fun' | 'settlement';
   splitMethod: 'equal' | 'full' | 'proportional' | 'personal_equal';
   createdBy: string; // username/nickname of the person who created the payment
+  // Receipt highlight selections, boxes as 0..1 fractions of the image.
+  receiptScan?: {
+    totalBox?: ReceiptFracBox | null;
+    items?: { box: ReceiptFracBox; user: string; amount: number }[];
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+interface ReceiptFracBox {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+const FracBoxSchema = new mongoose.Schema(
+  { x0: Number, y0: Number, x1: Number, y1: Number },
+  { _id: false }
+);
+
+const ReceiptScanSchema = new mongoose.Schema(
+  {
+    totalBox: { type: FracBoxSchema, default: null },
+    items: {
+      type: [new mongoose.Schema(
+        { box: FracBoxSchema, user: String, amount: Number },
+        { _id: false }
+      )],
+      default: undefined
+    }
+  },
+  { _id: false }
+);
 
 const PaymentSchema = new mongoose.Schema(
   {
@@ -77,13 +108,18 @@ const PaymentSchema = new mongoose.Schema(
       enum: ['equal', 'full', 'proportional', 'personal_equal'],
       default: 'equal'
     },
-    createdBy: { 
-      type: String, 
+    createdBy: {
+      type: String,
       required: true,
-      trim: true 
+      trim: true
+    },
+    receiptScan: {
+      type: ReceiptScanSchema,
+      required: false,
+      default: undefined
     }
   },
-  { 
+  {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }

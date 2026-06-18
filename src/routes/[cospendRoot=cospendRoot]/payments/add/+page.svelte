@@ -9,6 +9,7 @@
   import SplitMethodSelector from '$lib/components/cospend/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/cospend/UsersList.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
+  import ReceiptScanner from '$lib/components/cospend/ReceiptScanner.svelte';
   import SaveFab from '$lib/components/SaveFab.svelte';
   import Toggle from '$lib/components/Toggle.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
@@ -51,6 +52,37 @@
   let imageFile = $state(null);
   let imagePreview = $state('');
   let uploading = $state(false);
+  /** @type {import('$lib/utils/receiptOcr').ReceiptScan | null} */
+  let receiptScan = $state(null);
+  /** @type {import('$lib/utils/receiptOcr').ReceiptAnnotations | null} */
+  let receiptAnnotations = $state(null);
+
+  /** @param {import('$lib/utils/receiptOcr').ReceiptAnnotations} ann */
+  function handleReceiptAnnotations(ann) {
+    receiptAnnotations = ann;
+  }
+
+  /** @param {import('$lib/utils/receiptOcr').ReceiptScan} scan */
+  function handleReceiptScanned(scan) {
+    receiptScan = scan;
+    if (scan.total != null) {
+      formData.amount = String(scan.total);
+    }
+  }
+
+  /**
+   * Personal shares assigned by tapping items on the receipt. Drives the
+   * personal + equal split method.
+   * @param {Record<string, number>} shares
+   */
+  function handleReceiptPersonal(shares) {
+    const filled = { ...personalAmounts };
+    for (const user of users) filled[user] = shares[user] ?? 0;
+    personalAmounts = filled;
+    if (Object.values(shares).some((v) => v > 0)) {
+      formData.splitMethod = 'personal_equal';
+    }
+  }
   let newUser = $state('');
   /** @type {Record<string, number>} */
   let splitAmounts = $state({});
@@ -181,6 +213,8 @@
   function handleImageRemoved() {
     imageFile = null;
     imagePreview = '';
+    receiptScan = null;
+    receiptAnnotations = null;
   }
 
   function addSplitForUser(/** @type {string} */ username) {
@@ -255,7 +289,8 @@
         amount: parseFloat(formData.amount),
         currency: formData.currency,
         image: imagePath,
-        splits
+        splits,
+        receiptScan: imagePath && receiptAnnotations ? receiptAnnotations : undefined
       };
 
       const response = await fetch('/api/cospend/payments', {
@@ -580,15 +615,29 @@
       </div>
     {/if}
 
-    <ImageUpload
-      bind:imagePreview={imagePreview}
-      bind:imageFile={imageFile}
-      bind:uploading={uploading}
-      {lang}
-      onimageSelected={(file) => { imageFile = file; }}
-      onimageRemoved={handleImageRemoved}
-      onerror={(message) => { error = message; }}
-    />
+    {#if imageFile}
+      {#key imageFile}
+        <ReceiptScanner
+          {imageFile}
+          {lang}
+          {users}
+          onscanned={handleReceiptScanned}
+          onpersonal={handleReceiptPersonal}
+          onannotations={handleReceiptAnnotations}
+          onremove={handleImageRemoved}
+        />
+      {/key}
+    {:else}
+      <ImageUpload
+        bind:imagePreview={imagePreview}
+        bind:imageFile={imageFile}
+        bind:uploading={uploading}
+        {lang}
+        onimageSelected={(file) => { imageFile = file; }}
+        onimageRemoved={handleImageRemoved}
+        onerror={(message) => { error = message; }}
+      />
+    {/if}
 
     <!-- Manual user management only when there's no fixed predefined group -->
     {#if !predefinedMode}

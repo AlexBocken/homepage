@@ -4,6 +4,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import ReceiptOverlay from '$lib/components/cospend/ReceiptOverlay.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
   import EditButton from '$lib/components/EditButton.svelte';
   import { detectCospendLang, cospendRoot, locale, splitDescription, paymentCategoryName, m } from '$lib/js/cospendI18n';
@@ -149,6 +150,13 @@
               </div>
             {/each}
           </div>
+        </div>
+      {/if}
+
+      {#if payment.receiptScan && payment.image && (payment.receiptScan.totalBox || (payment.receiptScan.items && payment.receiptScan.items.length > 0))}
+        <div class="splits-section receipt-breakdown">
+          <h3>{t.receipt}</h3>
+          <ReceiptOverlay src={payment.image} annotations={payment.receiptScan} alt={t.receipt} />
         </div>
       {/if}
     </div>

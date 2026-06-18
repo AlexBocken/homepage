@@ -1,0 +1,8 @@
+# PP-OCR models on ONNXRuntime (CPU). Installs cleanly on any modern Python —
+# no PaddlePaddle framework needed. Loose pins so it resolves on Arch's Python.
+rapidocr-onnxruntime>=1.3.0
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pillow>=10
+numpy>=1.24
+python-multipart>=0.0.9
