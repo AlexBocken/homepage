@@ -10,6 +10,11 @@
 	let recipesUrl = $state(resolve('/[recipeLang=recipeLang]', { recipeLang: 'rezepte' }));
 	let faithUrl = $state(resolve('/[faithLang=faithLang]', { faithLang: 'glaube' }));
 
+	const isAnna = $derived(data.session?.user?.nickname?.toLowerCase() === 'anna');
+	const periodUrl = $derived(
+		resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: lang === 'en' ? 'check-in' : 'erfassung' }) + '#period'
+	);
+
 	onMount(() => {
 		// Check localStorage for preferred language
 		const preferredLanguage = localStorage.getItem('preferredLanguage');
@@ -160,6 +165,14 @@ section h2{
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M0 24C0 10.7 10.7 0 24 0H69.5c22 0 41.5 12.8 50.6 32h411c26.3 0 45.5 25 38.6 50.4l-41 152.3c-8.5 31.4-37 53.3-69.5 53.3H170.7l5.4 28.5c2.2 11.3 12.1 19.5 23.6 19.5H488c13.3 0 24 10.7 24 24s-10.7 24-24 24H199.7c-34.6 0-64.3-24.6-70.7-58.5L77.4 54.5c-.7-3.8-4-6.5-7.9-6.5H24C10.7 48 0 37.3 0 24zM128 464a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zm336-48a48 48 0 1 1 0 96 48 48 0 1 1 0-96z"/></svg>
 		<h3>{labels.shopping}</h3>
 	</a>
+
+	{#if isAnna}
+		<a href={periodUrl}>
+			<svg class="lock-icon"><use href="#lock-icon"/></svg>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M192 512C86 512 0 426 0 320C0 228.8 130.2 57.7 166.6 11.7C172.6 4.2 181.5 0 191.1 0l1.8 0c9.6 0 18.5 4.2 24.5 11.7C253.8 57.7 384 228.8 384 320c0 106-86 192-192 192z"/></svg>
+			<h3>{isEnglish ? 'Period' : 'Periode'}</h3>
+		</a>
+	{/if}
 
 	<a href={resolve('/fitness')}>
 		<svg class="lock-icon"><use href="#lock-icon"/></svg>

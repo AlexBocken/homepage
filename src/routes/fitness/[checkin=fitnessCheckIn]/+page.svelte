@@ -589,7 +589,7 @@
 	</form>
 
 		{#if savedSex === 'female'}
-			<div class="period-slot">
+			<div class="period-slot" id="period">
 				<PeriodTracker periods={data.periods ?? []} {lang} sharedWith={data.periodSharedWith ?? []} />
 			</div>
 		{/if}
