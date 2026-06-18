@@ -6,6 +6,7 @@
   import ProfilePicture from './ProfilePicture.svelte';
   import EditButton from '$lib/components/EditButton.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
+  import { receiptUrl } from '$lib/utils/cospendImage';
   import { formatCurrency as formatCurrencyUtil } from '$lib/utils/formatters';
   import { detectCospendLang, cospendRoot, locale, splitDescription, paymentCategoryName, m } from '$lib/js/cospendI18n';
   import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -169,7 +170,7 @@
             </div>
             {#if payment.image}
               <div class="receipt-image">
-                <img src={payment.image} alt={t.receipt} />
+                <img src={receiptUrl(payment.image)} alt={t.receipt} />
               </div>
             {/if}
           </div>

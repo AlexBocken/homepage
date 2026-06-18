@@ -9,6 +9,7 @@
   import SaveFab from '$lib/components/SaveFab.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import { receiptUrl } from '$lib/utils/cospendImage';
 
   /**
    * @typedef {import('$models/Payment').IPayment & {splits?: import('$models/PaymentSplit').IPaymentSplit[]}} PaymentWithSplits
@@ -241,7 +242,7 @@
       }
 
       const result = await response.json();
-      if (payment) payment.image = result.imageUrl;
+      if (payment) payment.image = result.path;
       imageFile = null;
       imagePreview = '';
     } catch (err) {
@@ -537,7 +538,7 @@
         bind:imagePreview={imagePreview}
         bind:imageFile={imageFile}
         bind:uploading={uploading}
-        currentImage={payment.image}
+        currentImage={receiptUrl(payment.image)}
         {lang}
         onimageSelected={handleImageUpload}
         onimageRemoved={handleImageRemoved}

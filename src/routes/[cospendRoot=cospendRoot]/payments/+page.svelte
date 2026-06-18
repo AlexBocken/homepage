@@ -5,6 +5,7 @@
   import { page } from '$app/state';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
+  import { receiptUrl } from '$lib/utils/cospendImage';
   import { toast } from '$lib/js/toast.svelte';
   import { confirm } from '$lib/js/confirmDialog.svelte';
   import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
@@ -209,7 +210,7 @@
                 </div>
               </div>
               {#if payment.image}
-                <img src={payment.image} alt="Receipt" class="receipt-thumb" />
+                <img src={receiptUrl(payment.image)} alt="Receipt" class="receipt-thumb" />
               {/if}
             </div>
 

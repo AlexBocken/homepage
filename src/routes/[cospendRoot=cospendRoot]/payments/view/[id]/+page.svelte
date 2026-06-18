@@ -5,6 +5,7 @@
   import { page } from '$app/state';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import ReceiptOverlay from '$lib/components/cospend/ReceiptOverlay.svelte';
+  import { receiptUrl } from '$lib/utils/cospendImage';
   import { getCategoryEmoji } from '$lib/utils/categories';
   import EditButton from '$lib/components/EditButton.svelte';
   import { detectCospendLang, cospendRoot, locale, splitDescription, paymentCategoryName, m } from '$lib/js/cospendI18n';
@@ -85,7 +86,7 @@
         </div>
         {#if payment.image}
           <button type="button" class="receipt-image" onclick={() => lightboxOpen = true} aria-label={t.view_receipt}>
-            <img src={payment.image} alt={t.receipt} />
+            <img src={receiptUrl(payment.image)} alt={t.receipt} />
             <span class="receipt-zoom-hint" aria-hidden="true">⤢</span>
           </button>
         {/if}
@@ -156,7 +157,7 @@
       {#if payment.receiptScan && payment.image && (payment.receiptScan.totalBox || (payment.receiptScan.items && payment.receiptScan.items.length > 0))}
         <div class="splits-section receipt-breakdown">
           <h3>{t.receipt}</h3>
-          <ReceiptOverlay src={payment.image} annotations={payment.receiptScan} alt={t.receipt} />
+          <ReceiptOverlay src={receiptUrl(payment.image)} annotations={payment.receiptScan} alt={t.receipt} />
         </div>
       {/if}
     </div>
@@ -172,7 +173,7 @@
 {#if lightboxOpen && payment?.image}
   <div class="lightbox" role="dialog" aria-modal="true" aria-label={t.receipt}>
     <button class="lightbox-backdrop" onclick={() => lightboxOpen = false} aria-label={t.close}></button>
-    <img class="lightbox-img" src={payment.image} alt={t.receipt} />
+    <img class="lightbox-img" src={receiptUrl(payment.image)} alt={t.receipt} />
     <button class="lightbox-close" onclick={() => lightboxOpen = false} aria-label={t.close}>✕</button>
   </div>
 {/if}

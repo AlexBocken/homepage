@@ -48,11 +48,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     
     writeFileSync(filepath, new Uint8Array(buffer));
     
-    const publicPath = `/cospend/${filename}`;
-    
+    // Store just the filename; the URL is constructed at display time.
     return json({
       success: true,
-      path: publicPath
+      path: filename
     });
 
   } catch (err: unknown) {
