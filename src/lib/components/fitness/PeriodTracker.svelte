@@ -196,19 +196,13 @@
 			const variance = w.reduce((s, v) => s + (v - m) ** 2, 0) / (w.length - 1);
 			return Math.sqrt(variance);
 		}
-		/** 95% CI half-width of the mean over the last `n` values: 1.96 * s / √n. */
-		/** @param {number[]} arr @param {number} n */
-		function ci95(arr, n) {
-			const len = Math.min(arr.length, n);
-			if (len < 2) return 0;
-			return Math.round(1.96 * recentSd(arr, n) / Math.sqrt(len) * 10) / 10;
-		}
-
 		const meanCycle = recentMean(cycleLengths, MEAN_WINDOW, PRIOR_CYCLE);
 		const meanPeriod = recentMean(periodLengths, MEAN_WINDOW, PRIOR_PERIOD);
-		// CI describes the displayed average → same window as the mean.
-		const cycleVariance = ci95(cycleLengths, MEAN_WINDOW);
-		const periodVariance = ci95(periodLengths, MEAN_WINDOW);
+		// Typical cycle-to-cycle variation: one SD over the recent window. This is
+		// what users read a "± N days" as (how much an individual cycle swings),
+		// unlike a CI of the mean, which only narrows as more cycles are logged.
+		const cycleSd = Math.round(recentSd(cycleLengths, MEAN_WINDOW) * 10) / 10;
+		const periodSd = Math.round(recentSd(periodLengths, MEAN_WINDOW) * 10) / 10;
 
 		// Predict ongoing end
 		let predictedEndOfOngoing = null;
@@ -349,8 +343,8 @@
 		return {
 			avgCycle: Math.round(meanCycle * 10) / 10,
 			avgPeriod: Math.round(meanPeriod * 10) / 10,
-			cycleVariance,
-			periodVariance,
+			cycleSd,
+			periodSd,
 			lastCycleLength,
 			lastPeriodLength,
 			predictedEndOfOngoing,
@@ -997,8 +991,8 @@
 			<div class="cycle-stat">
 				<span class="cycle-stat-label">{t.cycle_length}</span>
 				<span class="cycle-stat-value">{Math.round(predictions.avgCycle)} {t.days}</span>
-				{#if predictions.cycleVariance > 0}
-					<span class="cycle-stat-variance">± {predictions.cycleVariance} {t.days} (95% CI)</span>
+				{#if predictions.cycleSd > 0}
+					<span class="cycle-stat-variance">± {predictions.cycleSd} {t.days} ({t.typical})</span>
 				{/if}
 				{#if predictions.lastCycleLength}
 					<span class="cycle-stat-sub">{t.last_cycle}: {predictions.lastCycleLength} {t.days}</span>
@@ -1007,8 +1001,8 @@
 			<div class="cycle-stat">
 				<span class="cycle-stat-label">{t.period_length}</span>
 				<span class="cycle-stat-value">{Math.round(predictions.avgPeriod)} {t.days}</span>
-				{#if predictions.periodVariance > 0}
-					<span class="cycle-stat-variance">± {predictions.periodVariance} {t.days} (95% CI)</span>
+				{#if predictions.periodSd > 0}
+					<span class="cycle-stat-variance">± {predictions.periodSd} {t.days} ({t.typical})</span>
 				{/if}
 				{#if predictions.lastPeriodLength}
 					<span class="cycle-stat-sub">{t.last_period}: {predictions.lastPeriodLength} {t.days}</span>

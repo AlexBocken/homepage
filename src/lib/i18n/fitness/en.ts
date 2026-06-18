@@ -320,6 +320,7 @@ export const en = {
 	predicted_ovulation: "Predicted ovulation",
 	last_cycle: "Last cycle",
 	last_period: "Last period",
+	typical: "typical",
 	insights_title: "Cycle insights",
 	insight_source: "Source",
 	insights_disclaimer: "This is general information, not medical advice. A single unusual cycle is rarely a concern — patterns over several cycles matter more. If something worries you, talk to a healthcare provider.",

@@ -320,6 +320,7 @@ export const de = {
 	predicted_ovulation: "Voraussichtlicher Eisprung",
 	last_cycle: "Letzter Zyklus",
 	last_period: "Letzte Periode",
+	typical: "typisch",
 	insights_title: "Zyklus-Einblicke",
 	insight_source: "Quelle",
 	insights_disclaimer: "Dies sind allgemeine Informationen, kein medizinischer Rat. Ein einzelner ungewöhnlicher Zyklus ist selten ein Problem – wichtiger sind Muster über mehrere Zyklen. Wenn dich etwas beunruhigt, sprich mit einer Ärztin oder einem Arzt.",
