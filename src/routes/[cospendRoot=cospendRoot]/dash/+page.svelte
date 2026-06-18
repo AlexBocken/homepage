@@ -159,10 +159,10 @@
           onFilterChange={(/** @type {string[] | null} */ categories) => categoryFilter = categories}
         />
       {:else}
-        <div class="loading">
-          Debug: expensesLoading={expensesLoading},
-          datasets={monthlyExpensesData.datasets?.length || 0},
-          data={JSON.stringify(monthlyExpensesData)}
+        <div class="chart-empty">
+          <span class="chart-empty-icon" aria-hidden="true">📊</span>
+          <p class="chart-empty-title">{t.no_expenses_month}</p>
+          <p class="chart-empty-hint">{t.no_expenses_month_hint}</p>
         </div>
       {/if}
     </div>
@@ -299,7 +299,6 @@
     display: flex;
     gap: 1rem;
     justify-content: center;
-    margin-bottom: 2rem;
     flex-wrap: wrap;
   }
 
@@ -608,7 +607,6 @@
     .actions {
       flex-direction: column;
       align-items: center;
-      margin-bottom: 1rem;
     }
 
     .btn {
@@ -678,6 +676,13 @@
     margin-right: auto;
   }
 
+  /* Consistent vertical rhythm between balance card, settle action, and breakdown */
+  .balance-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
   @media (min-width: 768px) {
     .dashboard-layout {
       gap: 1.5rem;
@@ -693,12 +698,6 @@
       align-items: start;
       max-width: 1200px;
     }
-
-    .balance-section {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
   }
 
   .chart-section {
@@ -710,6 +709,38 @@
     border-radius: 0.75rem;
     padding: 2rem;
     text-align: center;
+    color: var(--color-text-secondary);
+  }
+
+  .chart-empty {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: var(--color-bg-secondary);
+    border: 1px dashed var(--color-border);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .chart-empty-icon {
+    font-size: 2.25rem;
+    opacity: 0.65;
+    margin-bottom: 0.25rem;
+  }
+
+  .chart-empty-title {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  .chart-empty-hint {
+    margin: 0;
+    font-size: 0.9rem;
     color: var(--color-text-secondary);
   }
 </style>

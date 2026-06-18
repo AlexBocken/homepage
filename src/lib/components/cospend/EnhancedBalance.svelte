@@ -50,8 +50,6 @@
     return null;
   });
 
-  let shouldShowIntegratedView = $derived(singleDebtUser !== null);
-  
 
   onMount(async () => {
     // Mark that JavaScript is loaded
@@ -116,77 +114,53 @@
 </script>
 
 <div class="balance-cards">
-  <div class="balance-card net-balance" 
-       class:positive={balance.netBalance <= 0} 
+  <div class="balance-card net-balance"
+       class:positive={balance.netBalance < 0}
        class:negative={balance.netBalance > 0}
-       class:enhanced={shouldShowIntegratedView}>
-    
-    {#if loading}
-      <div class="loading-content">
-        <h3>{t.your_balance}</h3>
-        <div class="loading">{t.loading}</div>
-      </div>
-    {:else if error}
-      <h3>{t.your_balance}</h3>
-      <div class="error">{t.error_prefix}: {error}</div>
-    {:else if shouldShowIntegratedView}
-      <!-- Enhanced view with single user debt -->
-      <h3>{t.your_balance}</h3>
-      <div class="enhanced-balance">
-        <div class="main-amount">
-          {#if balance.netBalance < 0}
-            <span class="positive">+{formatCurrency(balance.netBalance)}</span>
-            <small>{t.you_are_owed}</small>
-          {:else if balance.netBalance > 0}
-            <span class="negative">-{formatCurrency(balance.netBalance)}</span>
-            <small>{t.you_owe_balance}</small>
-          {:else}
-            <span class="even">CHF 0.00</span>
-            <small>{t.all_even}</small>
-          {/if}
-        </div>
+       aria-busy={loading}>
 
-        <div class="debt-details">
-          <div class="debt-user">
-            {#if singleDebtUser && singleDebtUser.user}
-              <!-- Debug: ProfilePicture with username: {singleDebtUser.user.username} -->
-              <ProfilePicture username={singleDebtUser.user.username} size={40} />
-              <div class="user-info">
-                <span class="username">{singleDebtUser.user.username}</span>
-                <span class="debt-description">
-                  {#if singleDebtUser.type === 'owesMe'}
-                    {t.owes_you_balance} {formatCurrency(singleDebtUser.amount)}
-                  {:else}
-                    {t.you_owe_user} {formatCurrency(singleDebtUser.amount)}
-                  {/if}
-                </span>
-              </div>
-            {:else}
-              <div>Debug: No singleDebtUser data</div>
-            {/if}
-          </div>
-          <div class="transaction-count">
-            {#if singleDebtUser && singleDebtUser.user && singleDebtUser.user.transactions}
-              {singleDebtUser.user.transactions.length} {singleDebtUser.user.transactions.length !== 1 ? t.transactions : t.transaction}
-            {/if}
-          </div>
-        </div>
-      </div>
+    <span class="eyebrow">{t.your_balance}</span>
+
+    {#if loading}
+      <div class="amount-skeleton" aria-hidden="true"></div>
+    {:else if error}
+      <div class="error">{t.error_prefix}: {error}</div>
     {:else}
-      <!-- Standard balance view -->
-      <h3>{t.your_balance}</h3>
       <div class="amount">
         {#if balance.netBalance < 0}
-          <span class="positive">+{formatCurrency(balance.netBalance)}</span>
+          <span class="figure positive">+{formatCurrency(balance.netBalance)}</span>
           <small>{t.you_are_owed}</small>
         {:else if balance.netBalance > 0}
-          <span class="negative">-{formatCurrency(balance.netBalance)}</span>
+          <span class="figure negative">−{formatCurrency(balance.netBalance)}</span>
           <small>{t.you_owe_balance}</small>
         {:else}
-          <span class="even">CHF 0.00</span>
+          <span class="figure even">CHF 0.00</span>
           <small>{t.all_even}</small>
         {/if}
       </div>
+
+      {#if singleDebtUser?.user}
+        <div class="debt-details">
+          <div class="debt-user">
+            <ProfilePicture username={singleDebtUser.user.username} size={40} />
+            <div class="user-info">
+              <span class="username">{singleDebtUser.user.username}</span>
+              <span class="debt-description">
+                {#if singleDebtUser.type === 'owesMe'}
+                  {t.owes_you_balance} {formatCurrency(singleDebtUser.amount)}
+                {:else}
+                  {t.you_owe_user} {formatCurrency(singleDebtUser.amount)}
+                {/if}
+              </span>
+            </div>
+          </div>
+          {#if singleDebtUser.user.transactions}
+            <div class="transaction-count">
+              {singleDebtUser.user.transactions.length} {singleDebtUser.user.transactions.length !== 1 ? t.transactions : t.transaction}
+            </div>
+          {/if}
+        </div>
+      {/if}
     {/if}
   </div>
 </div>
@@ -195,158 +169,145 @@
   .balance-cards {
     display: flex;
     justify-content: center;
-    margin-bottom: 2rem;
   }
 
   .balance-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 440px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 1.75rem 2rem;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-md);
     text-align: center;
-    min-width: 300px;
   }
 
-  .balance-card.enhanced {
-    min-width: 400px;
-    text-align: left;
-  }
-
-  .balance-card.net-balance {
-    background: linear-gradient(135deg, #f5f5f5, #e8e8e8);
-  }
-
+  /* Status tint: green when you're owed, red when you owe, neutral at zero */
   .balance-card.net-balance.positive {
-    background: linear-gradient(135deg, #e8f5e8, #d4edda);
+    background: color-mix(in srgb, var(--green) 9%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--green) 32%, var(--color-border));
   }
 
   .balance-card.net-balance.negative {
-    background: linear-gradient(135deg, #ffeaea, #f8d7da);
+    background: color-mix(in srgb, var(--red) 9%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--red) 32%, var(--color-border));
   }
 
-  .balance-card h3 {
-    margin-bottom: 1rem;
-    color: #555;
-    font-size: 1.1rem;
-    text-align: center;
-  }
-
-  .loading-content {
-    text-align: center;
-  }
-
-  .loading {
-    color: #666;
+  .eyebrow {
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.6rem;
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
-    border-radius: 0.5rem;
-    padding: 1rem;
+    color: var(--red);
+    background: color-mix(in srgb, var(--red) 12%, var(--color-surface));
+    border-radius: var(--radius-md);
+    padding: 0.85rem;
   }
 
   .amount {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.05;
+  }
+
+  .amount .figure {
+    font-variant-numeric: tabular-nums;
   }
 
   .amount small {
     display: block;
     font-size: 0.9rem;
-    font-weight: normal;
-    color: #666;
-    margin-top: 0.5rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-top: 0.4rem;
   }
 
-  .enhanced-balance {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .main-amount {
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: bold;
-  }
-
-  .main-amount small {
-    display: block;
-    font-size: 0.9rem;
-    font-weight: normal;
-    color: #666;
-    margin-top: 0.5rem;
-  }
+  .figure.positive { color: var(--green); }
+  .figure.negative { color: var(--red); }
+  .figure.even { color: var(--color-text-secondary); }
 
   .debt-details {
-    background: rgba(255, 255, 255, 0.5);
-    padding: 1rem;
-    border-radius: 0.5rem;
+    margin-top: 1.5rem;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.75rem;
+    text-align: left;
   }
 
   .debt-user {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    flex: 1;
+    min-width: 0;
   }
 
   .user-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.15rem;
+    min-width: 0;
   }
 
   .username {
     font-weight: 600;
-    color: #333;
+    color: var(--color-text-primary);
     font-size: 1rem;
+    text-transform: capitalize;
   }
 
   .debt-description {
-    color: #666;
-    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
   }
 
   .transaction-count {
-    color: #666;
-    font-size: 0.85rem;
-    text-align: right;
+    color: var(--color-text-tertiary);
+    font-size: 0.8rem;
+    white-space: nowrap;
   }
 
-  .positive {
-    color: #2e7d32;
+  .amount-skeleton {
+    height: 2.6rem;
+    width: 60%;
+    margin: 0.2rem auto 0;
+    border-radius: var(--radius-md);
+    background: linear-gradient(90deg, var(--color-bg-tertiary), var(--color-bg-elevated), var(--color-bg-tertiary));
+    background-size: 200% 100%;
+    animation: balance-shimmer 1.3s infinite;
   }
 
-  .negative {
-    color: #d32f2f;
+  @keyframes balance-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 
-  .even {
-    color: #666;
+  @media (prefers-reduced-motion: reduce) {
+    .amount-skeleton { animation: none; }
   }
 
   @media (max-width: 600px) {
     .balance-card {
-      min-width: unset;
-      width: 100%;
-      padding: 1rem;
+      padding: 1.25rem;
     }
 
-    .balance-card.enhanced {
-      min-width: unset;
+    .amount {
+      font-size: 2rem;
     }
 
     .debt-details {
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.5rem;
       align-items: flex-start;
-      padding: 0.75rem;
     }
 
     .transaction-count {

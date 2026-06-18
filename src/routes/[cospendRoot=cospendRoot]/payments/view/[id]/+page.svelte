@@ -24,6 +24,7 @@
   let loading = $state(false);
   /** @type {string | null} */
   let error = $state(null);
+  let lightboxOpen = $state(false);
 
   // Progressive enhancement: refresh data if JavaScript is available
   onMount(async () => {
@@ -82,9 +83,10 @@
           </div>
         </div>
         {#if payment.image}
-          <div class="receipt-image">
-            <img src={payment.image} alt="Receipt" />
-          </div>
+          <button type="button" class="receipt-image" onclick={() => lightboxOpen = true} aria-label={t.view_receipt}>
+            <img src={payment.image} alt={t.receipt} />
+            <span class="receipt-zoom-hint" aria-hidden="true">⤢</span>
+          </button>
         {/if}
       </div>
 
@@ -124,7 +126,7 @@
         <div class="splits-section">
           <h3>{t.split_details}</h3>
           <div class="splits-list">
-            {#each payment.splits as split}
+            {#each payment.splits as split (split.username)}
               <div class="split-item" class:current-user={split.username === data.session?.user?.nickname}>
                 <div class="split-user">
                   <ProfilePicture username={split.username} size={24} />
@@ -155,6 +157,16 @@
 
 {#if payment}
   <EditButton href={resolve('/[cospendRoot=cospendRoot]/payments/edit/[id]', { cospendRoot: root, id: data.paymentId ?? '' })} />
+{/if}
+
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape') lightboxOpen = false; }} />
+
+{#if lightboxOpen && payment?.image}
+  <div class="lightbox" role="dialog" aria-modal="true" aria-label={t.receipt}>
+    <button class="lightbox-backdrop" onclick={() => lightboxOpen = false} aria-label={t.close}></button>
+    <img class="lightbox-img" src={payment.image} alt={t.receipt} />
+    <button class="lightbox-close" onclick={() => lightboxOpen = false} aria-label={t.close}>✕</button>
+  </div>
 {/if}
 
 <style>
@@ -220,6 +232,13 @@
   .receipt-image {
     flex-shrink: 0;
     margin-left: 2rem;
+    position: relative;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
+    border-radius: 0.5rem;
+    line-height: 0;
   }
 
   .receipt-image img {
@@ -228,6 +247,95 @@
     object-fit: cover;
     border-radius: 0.5rem;
     border: 1px solid var(--color-border);
+    transition: filter var(--transition-normal);
+  }
+
+  .receipt-image:hover img,
+  .receipt-image:focus-visible img {
+    filter: brightness(0.92);
+  }
+
+  .receipt-image:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .receipt-zoom-hint {
+    position: absolute;
+    right: 0.35rem;
+    bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+
+  .lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.8);
+    cursor: zoom-out;
+    animation: lightbox-fade 0.15s ease;
+  }
+
+  .lightbox-img {
+    position: relative;
+    max-width: min(92vw, 1000px);
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    animation: lightbox-fade 0.15s ease;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  .lightbox-close:hover,
+  .lightbox-close:focus-visible {
+    background: rgba(0, 0, 0, 0.8);
+    outline: none;
+  }
+
+  @keyframes lightbox-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox-backdrop,
+    .lightbox-img {
+      animation: none;
+    }
   }
 
   .payment-info {

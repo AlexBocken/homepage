@@ -8,6 +8,7 @@
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import SaveFab from '$lib/components/SaveFab.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
+  import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 
   /**
    * @typedef {import('$models/Payment').IPayment & {splits?: import('$models/PaymentSplit').IPaymentSplit[]}} PaymentWithSplits
@@ -47,6 +48,11 @@
   let paymentDateStr = $state('');
 
   let categoryOptions = $derived(getCategoryOptionsI18n(lang));
+  // Candidate payers come from the payment's own participants
+  let payerCandidates = $derived.by(() => {
+    const splits = /** @type {any[]} */ (payment?.splits ?? []);
+    return splits.map((s) => s.username);
+  });
 
   // Recalculate splits when amount changes
   function recalculateSplits() {
@@ -119,6 +125,8 @@
   let lastCalculatedAmount = $state(null);
   /** @type {string | null} */
   let lastPersonalAmounts = $state(null);
+  /** @type {string | null} */
+  let lastPaidBy = $state(null);
 
   $effect(() => {
     if (!jsEnhanced || !payment || !payment.splits || payment.splits.length === 0) {
@@ -139,8 +147,15 @@
       }
     }
 
-    // Recalculate if amount changed or personal amounts changed
-    if ((currentAmount !== lastCalculatedAmount && currentAmount > 0) || personalAmountsChanged) {
+    // Track payer changes so the split rebalances when you switch who paid
+    let paidByChanged = false;
+    if (payment.paidBy !== lastPaidBy) {
+      paidByChanged = true;
+      lastPaidBy = payment.paidBy;
+    }
+
+    // Recalculate if amount, personal amounts, or payer changed
+    if ((currentAmount !== lastCalculatedAmount && currentAmount > 0) || personalAmountsChanged || paidByChanged) {
       lastCalculatedAmount = currentAmount;
       recalculateSplits();
     }
@@ -177,6 +192,7 @@
       originalAmount = loaded.amount;
       // Set initial lastCalculatedAmount to prevent immediate recalculation on load
       lastCalculatedAmount = loaded.amount;
+      lastPaidBy = loaded.paidBy;
       // Store initial personal amounts to prevent immediate recalculation
       if (loaded.splitMethod === 'personal_equal' && loaded.splits) {
         lastPersonalAmounts = loaded.splits.map(s => s.personalAmount || 0).join(',');
@@ -406,12 +422,21 @@
         </div>
 
         <div class="form-group">
-          <label for="category">{t.category_star}</label>
-          <select id="category" bind:value={payment.category} required>
-            {#each categoryOptions as option}
-              <option value={option.value}>{option.label}</option>
+          <span class="label">{t.category_star}</span>
+          <div class="pill-group" role="radiogroup" aria-label={t.category_star}>
+            {#each categoryOptions as option (option.value)}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={payment.category === option.value}
+                class="opt-pill"
+                class:selected={payment.category === option.value}
+                onclick={() => { if (payment) payment.category = /** @type {any} */ (option.value); }}
+              >
+                <span class="pill-emoji">{option.emoji}</span>{option.name}
+              </button>
             {/each}
-          </select>
+          </div>
         </div>
 
         <div class="form-row">
@@ -485,13 +510,26 @@
         </div>
 
         <div class="form-group">
-          <label for="paidBy">{t.paid_by_form}</label>
-          <input 
-            type="text" 
-            id="paidBy" 
-            bind:value={payment.paidBy} 
-            required
-          />
+          <span class="label">{t.paid_by_form}</span>
+          {#if payerCandidates.length > 0}
+            <div class="payer-pills" role="radiogroup" aria-label={t.paid_by_form}>
+              {#each payerCandidates as user (user)}
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={payment.paidBy === user}
+                  class="payer-pill"
+                  class:selected={payment.paidBy === user}
+                  onclick={() => { if (payment) payment.paidBy = user; }}
+                >
+                  <ProfilePicture username={user} size={26} />
+                  <span>{user}</span>
+                </button>
+              {/each}
+            </div>
+          {:else}
+            <input type="text" id="paidBy" bind:value={payment.paidBy} required />
+          {/if}
         </div>
       </FormSection>
 
@@ -649,11 +687,82 @@
     gap: 1rem;
   }
 
-  label {
+  label, .label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
     color: var(--color-text-secondary);
+  }
+
+  /* ── Pill selectors (category, paid by) ── */
+  .pill-group, .payer-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .opt-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 120ms, background 120ms, color 120ms, transform 100ms;
+  }
+
+  .opt-pill:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text-primary);
+  }
+
+  .opt-pill:active { transform: scale(0.97); }
+
+  .opt-pill:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .opt-pill.selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
+  }
+
+  .pill-emoji { font-size: 1.05rem; line-height: 1; }
+
+  .payer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.85rem 0.3rem 0.3rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    cursor: pointer;
+    transition: border-color 120ms, background 120ms, transform 100ms;
+  }
+
+  .payer-pill:hover { border-color: var(--color-primary); }
+  .payer-pill:active { transform: scale(0.97); }
+
+  .payer-pill:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .payer-pill.selected {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
   }
 
   input, textarea, select {
@@ -845,20 +954,28 @@
     gap: 1rem;
   }
 
+  /* Quiet ghost-danger: clearly destructive but not competing with Save */
   .btn-danger {
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-size: 1rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
-    background-color: var(--red);
-    color: white;
-    border: none;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    background: transparent;
+    color: var(--red);
+    border: 1px solid color-mix(in srgb, var(--red) 45%, var(--color-border));
   }
 
   .btn-danger:hover:not(:disabled) {
-    background-color: var(--nord11);
-    transform: translateY(-1px);
+    background: var(--red);
+    color: var(--color-text-on-primary, white);
+    border-color: var(--red);
+  }
+
+  .btn-danger:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 2px;
   }
 
   .btn-danger:disabled {

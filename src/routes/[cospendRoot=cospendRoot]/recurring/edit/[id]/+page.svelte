@@ -331,12 +331,21 @@
         </div>
 
         <div class="form-group">
-          <label for="category">{t.category_star}</label>
-          <select id="category" bind:value={formData.category} required>
-            {#each categoryOptions as option}
-              <option value={option.value}>{option.label}</option>
+          <span class="label">{t.category_star}</span>
+          <div class="pill-group" role="radiogroup" aria-label={t.category_star}>
+            {#each categoryOptions as option (option.value)}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={formData.category === option.value}
+                class="opt-pill"
+                class:selected={formData.category === option.value}
+                onclick={() => formData.category = option.value}
+              >
+                <span class="pill-emoji">{option.emoji}</span>{option.name}
+              </button>
             {/each}
-          </select>
+          </div>
         </div>
 
         <div class="form-row">
@@ -384,12 +393,22 @@
           </div>
 
           <div class="form-group">
-            <label for="paidBy">{t.paid_by_form}</label>
-            <select id="paidBy" bind:value={formData.paidBy} required>
-              {#each users as user}
-                <option value={user}>{user}</option>
+            <span class="label">{t.paid_by_form}</span>
+            <div class="payer-pills" role="radiogroup" aria-label={t.paid_by_form}>
+              {#each users as user (user)}
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={formData.paidBy === user}
+                  class="payer-pill"
+                  class:selected={formData.paidBy === user}
+                  onclick={() => formData.paidBy = user}
+                >
+                  <ProfilePicture username={user} size={26} />
+                  <span>{user}</span>
+                </button>
               {/each}
-            </select>
+            </div>
           </div>
         </div>
 
@@ -545,11 +564,82 @@
     gap: 1rem;
   }
 
-  label {
+  label, .label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
     color: var(--color-text-secondary);
+  }
+
+  /* ── Pill selectors (category, paid by) ── */
+  .pill-group, .payer-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .opt-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 120ms, background 120ms, color 120ms, transform 100ms;
+  }
+
+  .opt-pill:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text-primary);
+  }
+
+  .opt-pill:active { transform: scale(0.97); }
+
+  .opt-pill:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .opt-pill.selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
+  }
+
+  .pill-emoji { font-size: 1.05rem; line-height: 1; }
+
+  .payer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.85rem 0.3rem 0.3rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    cursor: pointer;
+    transition: border-color 120ms, background 120ms, transform 100ms;
+  }
+
+  .payer-pill:hover { border-color: var(--color-primary); }
+  .payer-pill:active { transform: scale(0.97); }
+
+  .payer-pill:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .payer-pill.selected {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
   }
 
   input, textarea, select {

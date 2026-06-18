@@ -83,7 +83,7 @@
           </div>
 
           <div class="debt-list">
-            {#each debtData.whoOwesMe as debt}
+            {#each debtData.whoOwesMe as debt (debt.username)}
               <div class="debt-item">
                 <div class="debt-user">
                   <ProfilePicture username={debt.username} size={40} />
@@ -109,7 +109,7 @@
           </div>
 
           <div class="debt-list">
-            {#each debtData.whoIOwe as debt}
+            {#each debtData.whoIOwe as debt (debt.username)}
               <div class="debt-item">
                 <div class="debt-user">
                   <ProfilePicture username={debt.username} size={40} />
@@ -133,29 +133,30 @@
 
 <style>
   .debt-breakdown {
-    background: white;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     padding: 1.5rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-md);
     margin-bottom: 2rem;
   }
 
   .debt-breakdown h2 {
     margin-bottom: 1.5rem;
-    color: #333;
+    color: var(--color-text-primary);
     font-size: 1.4rem;
   }
 
   .loading, .error {
     text-align: center;
     padding: 2rem;
-    color: #666;
+    color: var(--color-text-secondary);
   }
 
   .error {
-    color: #d32f2f;
-    background-color: #ffebee;
-    border-radius: 0.5rem;
+    color: var(--red);
+    background: color-mix(in srgb, var(--red) 12%, var(--color-surface));
+    border-radius: var(--radius-md);
   }
 
   .debt-sections {
@@ -175,19 +176,19 @@
   }
 
   .debt-section.owed-to-me {
-    background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
-    border: 1px solid #c8e6c9;
+    background: color-mix(in srgb, var(--green) 10%, var(--color-surface));
+    border: 1px solid color-mix(in srgb, var(--green) 30%, var(--color-border));
   }
 
   .debt-section.owe-to-others {
-    background: linear-gradient(135deg, #ffeaea, #fff5f5);
-    border: 1px solid #ffcdd2;
+    background: color-mix(in srgb, var(--red) 10%, var(--color-surface));
+    border: 1px solid color-mix(in srgb, var(--red) 30%, var(--color-border));
   }
 
   .debt-section h3 {
     margin-bottom: 0.5rem;
     font-size: 1.1rem;
-    color: #333;
+    color: var(--color-text-primary);
   }
 
   .total-amount {
@@ -197,11 +198,11 @@
   }
 
   .total-amount.positive {
-    color: #2e7d32;
+    color: var(--green);
   }
 
   .total-amount.negative {
-    color: #d32f2f;
+    color: var(--red);
   }
 
   .debt-list {
@@ -215,9 +216,10 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
   }
 
   .debt-user {
@@ -235,7 +237,8 @@
 
   .username {
     font-weight: 500;
-    color: #333;
+    color: var(--color-text-primary);
+    text-transform: capitalize;
   }
 
   .amount {
@@ -244,15 +247,15 @@
   }
 
   .amount.positive {
-    color: #2e7d32;
+    color: var(--green);
   }
 
   .amount.negative {
-    color: #d32f2f;
+    color: var(--red);
   }
 
   .transaction-count {
-    color: #666;
+    color: var(--color-text-tertiary);
     font-size: 0.85rem;
     text-align: right;
   }
