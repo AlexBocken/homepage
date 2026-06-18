@@ -320,6 +320,7 @@ export const de = {
 	predicted_ovulation: "Voraussichtlicher Eisprung",
 	last_cycle: "Letzter Zyklus",
 	last_period: "Letzte Periode",
+	cycle: "Zyklus",
 	typical: "typisch",
 	insights_title: "Zyklus-Einblicke",
 	insight_source: "Quelle",

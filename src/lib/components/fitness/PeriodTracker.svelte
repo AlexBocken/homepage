@@ -1019,7 +1019,7 @@
 					{/if}
 
 					<div class="history-list">
-					{#each sorted as p (p._id)}
+					{#each sorted as p, i (p._id)}
 						{#if editId === p._id}
 							<div class="history-item editing">
 								<div class="add-row">
@@ -1066,6 +1066,14 @@
 									</button>
 								</div>
 							</div>
+						{/if}
+						{#if i < sorted.length - 1}
+							{@const cyc = Math.round((new Date(p.startDate).getTime() - new Date(sorted[i + 1].startDate).getTime()) / 86400000)}
+							{#if cyc > 0 && cyc < 365}
+								<div class="cycle-gap" title={t.cycle_length}>
+									<span class="cycle-gap-label">{t.cycle} · {cyc} {t.days}</span>
+								</div>
+							{/if}
 						{/if}
 					{/each}
 				</div>
@@ -1746,6 +1754,25 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.3rem;
+	}
+	/* Cycle length between consecutive entries (start-to-start). */
+	.cycle-gap {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+	.cycle-gap::before,
+	.cycle-gap::after {
+		content: '';
+		flex: 0 0 28px;
+		height: 1px;
+		background: var(--color-border);
+	}
+	.cycle-gap-label {
+		font-size: 0.68rem;
+		color: var(--color-text-tertiary);
+		white-space: nowrap;
 	}
 	.history-item {
 		display: flex;

@@ -320,6 +320,7 @@ export const en = {
 	predicted_ovulation: "Predicted ovulation",
 	last_cycle: "Last cycle",
 	last_period: "Last period",
+	cycle: "Cycle",
 	typical: "typical",
 	insights_title: "Cycle insights",
 	insight_source: "Source",
