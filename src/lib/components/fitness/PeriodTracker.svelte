@@ -151,11 +151,15 @@
 		)
 	);
 
-	// EMA predictions (α = 0.3, population priors: 29-day cycle, 5-day period)
+	// Cycle predictions — Clue-style: average over the recent cycles, variability
+	// over a longer recent window. Population priors (29-day cycle, 5-day period)
+	// stand in until enough history accrues.
 	const predictions = $derived.by(() => {
-		const alpha = 0.3;
-		let emaCycle = 29;
-		let emaPeriod = 5;
+		const MEAN_WINDOW = 6;   // average the last 6 cycles for the point estimate
+		const VAR_WINDOW = 12;   // ...over a 12-cycle history for variability
+		const PRIOR_CYCLE = 29;
+		const PRIOR_PERIOD = 5;
+		const lutealLength = 14;
 
 		/** @type {number[]} */
 		const cycleLengths = [];
@@ -167,56 +171,69 @@
 			const start = new Date(p.startDate);
 			const end = new Date(p.endDate);
 			const dur = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
-			emaPeriod = alpha * dur + (1 - alpha) * emaPeriod;
 			periodLengths.push(dur);
 
 			if (i > 0) {
 				const prevStart = new Date(completed[i - 1].startDate);
 				const cycle = Math.round((start.getTime() - prevStart.getTime()) / 86400000);
-				if (cycle > 0 && cycle < 60) {
-					emaCycle = alpha * cycle + (1 - alpha) * emaCycle;
-					cycleLengths.push(cycle);
-				}
+				if (cycle > 0 && cycle < 60) cycleLengths.push(cycle);
 			}
 		}
 
-		/** 95% CI half-width: 1.96 * s / √n */
-		/** @param {number[]} arr */
-		function ci95(arr) {
-			if (arr.length < 2) return 0;
-			const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
-			const variance = arr.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (arr.length - 1);
-			return Math.round(1.96 * Math.sqrt(variance / arr.length) * 10) / 10;
+		/** Mean of the last `n` values, or `fallback` if there are none. */
+		/** @param {number[]} arr @param {number} n @param {number} fallback */
+		function recentMean(arr, n, fallback) {
+			if (arr.length === 0) return fallback;
+			const w = arr.slice(-n);
+			return w.reduce((a, b) => a + b, 0) / w.length;
+		}
+		/** Sample standard deviation of the last `n` values (0 if fewer than 2). */
+		/** @param {number[]} arr @param {number} n */
+		function recentSd(arr, n) {
+			const w = arr.slice(-n);
+			if (w.length < 2) return 0;
+			const m = w.reduce((a, b) => a + b, 0) / w.length;
+			const variance = w.reduce((s, v) => s + (v - m) ** 2, 0) / (w.length - 1);
+			return Math.sqrt(variance);
+		}
+		/** 95% CI half-width of the mean over the last `n` values: 1.96 * s / √n. */
+		/** @param {number[]} arr @param {number} n */
+		function ci95(arr, n) {
+			const len = Math.min(arr.length, n);
+			if (len < 2) return 0;
+			return Math.round(1.96 * recentSd(arr, n) / Math.sqrt(len) * 10) / 10;
 		}
 
-		const cycleVariance = ci95(cycleLengths);
-		const periodVariance = ci95(periodLengths);
+		const meanCycle = recentMean(cycleLengths, MEAN_WINDOW, PRIOR_CYCLE);
+		const meanPeriod = recentMean(periodLengths, MEAN_WINDOW, PRIOR_PERIOD);
+		// CI describes the displayed average → same window as the mean.
+		const cycleVariance = ci95(cycleLengths, MEAN_WINDOW);
+		const periodVariance = ci95(periodLengths, MEAN_WINDOW);
 
 		// Predict ongoing end
 		let predictedEndOfOngoing = null;
 		if (ongoing) {
 			const ongoingStart = new Date(ongoing.startDate);
-			predictedEndOfOngoing = new Date(ongoingStart.getTime() + (Math.round(emaPeriod) - 1) * 86400000);
+			predictedEndOfOngoing = new Date(ongoingStart.getTime() + (Math.round(meanPeriod) - 1) * 86400000);
 		}
 
 		// Generate future predicted cycles (12 cycles ≈ ~1 year)
-		const meanCycleDays = Math.round(emaCycle);
+		const meanCycleDays = Math.round(meanCycle);
 		const cycleMs = meanCycleDays * 86400000;
-		const periodMs = (Math.round(emaPeriod) - 1) * 86400000;
-		const lutealLength = 14;
+		const periodMs = (Math.round(meanPeriod) - 1) * 86400000;
 		const lastStart = sorted[0] ? new Date(sorted[0].startDate) : null;
 
-		// Cycle range for Ogino-style widening of future fertile windows.
-		// Without ≥2 observed cycles, widening collapses to a point estimate.
-		const shortestCycle = cycleLengths.length >= 2 ? Math.min(...cycleLengths) : meanCycleDays;
-		const longestCycle = cycleLengths.length >= 2 ? Math.max(...cycleLengths) : meanCycleDays;
+		// Ovulation-timing uncertainty for widening future fertile windows: one SD
+		// of recent cycle length (capped at ±5d), so the band tracks how regular
+		// she actually is rather than being pinned by a single lifetime outlier.
+		const delta = Math.round(Math.min(recentSd(cycleLengths, VAR_WINDOW), 5));
 
 		/**
 		 * Build a fertility window for one cycle.
 		 *
 		 * Anchor: the next period's start (luteal-back-count). Past cycles know it
-		 * exactly; future cycles use the mean prediction and widen the outer fertile
-		 * range to cover the earliest/latest historically observed ovulation day.
+		 * exactly; future cycles use the mean prediction and widen the ovulation
+		 * estimate by ±delta (one SD of recent cycle length).
 		 *
 		 * Floor: fertile/peak never overlap the prior bleed. Day-after-period-end
 		 * is the earliest possible fertile day shown — a hard biological floor for
@@ -226,16 +243,15 @@
 		 * @param {number} cycleStartMs   ms of cycle start (= prior period start)
 		 * @param {number | null} priorPeriodEndMs  ms of prior bleed end, or null if unknown
 		 * @param {number} nextPeriodStartMs  ms of the next period's start
-		 * @param {boolean} widen  true → use shortest/longest cycle bounds; false → point estimate
+		 * @param {boolean} widen  true → widen ovulation by ±delta; false → point estimate
 		 */
 		function buildWindow(cycleStartMs, priorPeriodEndMs, nextPeriodStartMs, widen) {
 			const ovMs = nextPeriodStartMs - lutealLength * 86400000;
-			const earliestOvMs = widen
-				? cycleStartMs + (shortestCycle - lutealLength) * 86400000
-				: ovMs;
-			let latestOvMs = widen
-				? cycleStartMs + (longestCycle - lutealLength) * 86400000
-				: ovMs;
+			// Future cycles widen ovulation by ±delta around the prediction; past
+			// cycles know the next period exactly, so they collapse to a point.
+			const d = widen ? delta : 0;
+			const earliestOvMs = ovMs - d * 86400000;
+			let latestOvMs = ovMs + d * 86400000;
 			// Cap latest ov before the next bleed starts.
 			if (latestOvMs > nextPeriodStartMs - 86400000) latestOvMs = nextPeriodStartMs - 86400000;
 
@@ -243,7 +259,9 @@
 
 			let fertileStartMs = Math.max(earliestOvMs - 5 * 86400000, floorMs, cycleStartMs);
 			let peakStartMs = Math.max(ovMs - 2 * 86400000, floorMs, cycleStartMs);
-			const peakEndMs = ovMs - 86400000;
+			// Peak fertility includes ovulation day itself — highest conception
+			// probability is the 2 days before ovulation plus ovulation day.
+			const peakEndMs = ovMs;
 			let fertileEndMs = Math.max(latestOvMs, ovMs);
 
 			// Suppress peak if floor pushed it past ov (e.g. very short cycle + long period).
@@ -304,8 +322,8 @@
 		}
 
 		return {
-			avgCycle: Math.round(emaCycle * 10) / 10,
-			avgPeriod: Math.round(emaPeriod * 10) / 10,
+			avgCycle: Math.round(meanCycle * 10) / 10,
+			avgPeriod: Math.round(meanPeriod * 10) / 10,
 			cycleVariance,
 			periodVariance,
 			predictedEndOfOngoing,
