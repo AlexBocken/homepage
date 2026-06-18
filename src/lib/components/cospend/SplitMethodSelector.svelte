@@ -21,25 +21,23 @@
 
   let personalTotalError = $state(false);
 
-  // Reactive text for "Paid in Full" option
-  let paidInFullText = $derived((() => {
-    if (!paidBy) {
-      return t.paid_in_full;
-    }
+  // The person who owes everything under "paid for the other" (2-user setups)
+  let otherUser = $derived(users.find((/** @type {string} */ u) => u !== paidBy) || '');
 
-    // Special handling for 2-user predefined setup
-    if (predefinedMode && users.length === 2) {
-      const otherUser = users.find((/** @type {string} */ user) => user !== paidBy);
-      return otherUser ? `${t.paid_in_full_for} ${otherUser}` : t.paid_in_full;
-    }
+  // Split-method cards: title + one-line description; the diagram is keyed off value
+  let methods = $derived([
+    { value: 'equal', title: (predefinedMode && users.length === 2) ? t.split_5050 : t.equal_split, desc: t.split_desc_equal },
+    { value: 'personal_equal', title: t.personal_equal_split, desc: t.split_desc_personal },
+    { value: 'full', title: t.split_full_title, desc: otherUser ? `${otherUser} ${t.owes_full}` : t.split_desc_full },
+    { value: 'proportional', title: t.custom_proportions, desc: t.split_desc_custom }
+  ]);
 
-    // General case
-    if (paidBy === currentUser) {
-      return t.paid_in_full_by_you;
-    } else {
-      return `${t.paid_in_full_by} ${paidBy}`;
-    }
-  })());
+  // Live ledger rows for the preview; ledgerMax scales the proportional bars
+  let ledger = $derived(users.map((/** @type {string} */ user) => ({
+    user,
+    value: Number(splitAmounts[user]) || 0
+  })));
+  let ledgerMax = $derived(Math.max(1, ...ledger.map((/** @type {{value:number}} */ r) => Math.abs(r.value))));
 
   function calculateEqualSplits() {
     if (!amount || users.length === 0) return;
@@ -145,21 +143,42 @@
 
 <div class="form-section">
   <h2>{t.split_method}</h2>
+  <p class="section-hint">{t.how_split}</p>
 
-  <div class="form-group">
-    <label for="splitMethod">{t.how_split}</label>
-    <select id="splitMethod" name="splitMethod" bind:value={splitMethod} required>
-      <option value="equal">{predefinedMode && users.length === 2 ? t.split_5050 : t.equal_split}</option>
-      <option value="personal_equal">{t.personal_equal_split}</option>
-      <option value="full">{paidInFullText}</option>
-      <option value="proportional">{t.custom_proportions}</option>
-    </select>
+  <div class="method-cards" role="radiogroup" aria-label={t.split_method}>
+    {#each methods as method (method.value)}
+      <button
+        type="button"
+        role="radio"
+        aria-checked={splitMethod === method.value}
+        class="method-card"
+        class:selected={splitMethod === method.value}
+        onclick={() => splitMethod = method.value}
+      >
+        <span class="dgm dgm-{method.value}" aria-hidden="true">
+          {#if method.value === 'equal'}
+            <i></i><i></i>
+          {:else if method.value === 'personal_equal'}
+            <i class="accent"></i><i></i><i></i>
+          {:else if method.value === 'full'}
+            <i class="solo"></i>
+          {:else}
+            <i style="flex:0.5"></i><i style="flex:1.7"></i><i style="flex:1"></i>
+          {/if}
+        </span>
+        <span class="method-text">
+          <span class="method-title">{method.title}</span>
+          <span class="method-desc">{method.desc}</span>
+        </span>
+      </button>
+    {/each}
   </div>
+  <input type="hidden" name="splitMethod" value={splitMethod} />
 
   {#if splitMethod === 'proportional'}
     <div class="proportional-splits">
       <h3>{t.custom_split_amounts}</h3>
-      {#each users as user}
+      {#each users as user (user)}
         <div class="split-input">
           <label for="split_{user}">{user}</label>
           <input
@@ -179,7 +198,7 @@
     <div class="personal-splits">
       <h3>{t.personal_amounts}</h3>
       <p class="description">{t.personal_amounts_desc}</p>
-      {#each users as user}
+      {#each users as user (user)}
         <div class="split-input">
           <label for="personal_{user}">{user}</label>
           <input
@@ -206,26 +225,40 @@
     </div>
   {/if}
 
-  {#if Object.keys(splitAmounts).length > 0}
-    <div class="split-preview">
-      <h3>{t.split_preview}</h3>
-      {#each users as user}
-        <div class="split-item">
-          <div class="split-user">
-            <ProfilePicture username={user} size={24} />
-            <span class="username">{user}</span>
+  {#if amount && ledger.length > 0}
+    <div class="ledger">
+      <div class="ledger-head">
+        <ProfilePicture username={paidBy} size={30} />
+        <span class="ledger-payer">{paidBy}</span>
+        <span class="ledger-paid-label">{t.paid_verb}</span>
+        <span class="ledger-total">{currency} {Number(amount).toFixed(2)}</span>
+      </div>
+      <div class="ledger-rows">
+        {#each ledger as row (row.user)}
+          {@const owes = row.value > 0.005}
+          {@const back = row.value < -0.005}
+          <div class="ledger-row">
+            <ProfilePicture username={row.user} size={26} />
+            <span class="ledger-name">{row.user}</span>
+            <span class="ledger-track">
+              <i
+                class:owe={owes}
+                class:back={back}
+                style="width:{Math.min(100, Math.abs(row.value) / ledgerMax * 100)}%"
+              ></i>
+            </span>
+            <span class="ledger-chip" class:owe={owes} class:back={back}>
+              {#if owes}
+                {t.owes} {currency} {row.value.toFixed(2)}
+              {:else if back}
+                {t.is_owed} {currency} {Math.abs(row.value).toFixed(2)}
+              {:else}
+                {t.settled_up}
+              {/if}
+            </span>
           </div>
-          <span class="amount" class:positive={splitAmounts[user] < 0} class:negative={splitAmounts[user] > 0}>
-            {#if splitAmounts[user] > 0}
-              {t.owes} {currency} {splitAmounts[user].toFixed(2)}
-            {:else if splitAmounts[user] < 0}
-              {t.is_owed} {currency} {Math.abs(splitAmounts[user]).toFixed(2)}
-            {:else}
-              {t.owes} {currency} {splitAmounts[user].toFixed(2)}
-            {/if}
-          </span>
-        </div>
-      {/each}
+        {/each}
+      </div>
     </div>
   {/if}
 </div>
@@ -241,13 +274,15 @@
 
   .form-section h2 {
     margin-top: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 0.25rem;
     color: var(--color-text-primary);
     font-size: 1.25rem;
   }
 
-  .form-group {
-    margin-bottom: 1rem;
+  .section-hint {
+    margin: 0 0 1rem;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
   }
 
   label {
@@ -257,21 +292,87 @@
     color: var(--color-text-secondary);
   }
 
-  select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    box-sizing: border-box;
-    background-color: var(--color-bg-tertiary);
-    color: var(--color-text-primary);
+  /* ── Split-method cards ── */
+  .method-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
   }
 
-  select:focus {
-    outline: none;
-    border-color: var(--blue);
-    box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
+  .method-card {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg-tertiary);
+    cursor: pointer;
+    transition: border-color 120ms, background 120ms, transform 120ms;
+  }
+
+  .method-card:hover {
+    border-color: var(--color-primary);
+    background: var(--color-bg-elevated);
+  }
+
+  .method-card:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .method-card.selected {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  }
+
+  /* Mini split diagrams: a track divided to mirror each method's shape */
+  .dgm {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    width: 40px;
+    height: 26px;
+    flex-shrink: 0;
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-secondary);
+  }
+
+  .dgm i {
+    flex: 1;
+    border-radius: 2px;
+    background: var(--color-text-tertiary);
+    opacity: 0.45;
+  }
+
+  .dgm i.accent { background: var(--blue); opacity: 0.85; }
+  .dgm i.solo { background: var(--color-primary); opacity: 0.9; }
+
+  .method-card.selected .dgm i { opacity: 0.7; }
+  .method-card.selected .dgm i.accent,
+  .method-card.selected .dgm i.solo { opacity: 1; }
+
+  .method-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .method-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.2;
+  }
+
+  .method-desc {
+    font-size: 0.76rem;
+    color: var(--color-text-secondary);
+    line-height: 1.25;
   }
 
   .proportional-splits, .personal-splits {
@@ -354,43 +455,97 @@
     font-size: 0.9rem;
   }
 
-  .split-preview {
-    background-color: var(--color-bg-tertiary);
-    padding: 1rem;
-    border-radius: 0.5rem;
+  /* ── Live split ledger ── */
+  .ledger {
+    margin-top: 1.25rem;
     border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-tertiary);
+    overflow: hidden;
   }
 
-  .split-preview h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    color: var(--color-text-primary);
-  }
-
-  .split-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .split-user {
+  .ledger-head {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border);
   }
 
-  .username {
+  .ledger-payer {
+    font-weight: 600;
     color: var(--color-text-primary);
   }
 
-  .amount.positive {
-    color: var(--green);
-    font-weight: 500;
+  .ledger-paid-label {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
   }
 
-  .amount.negative {
-    color: var(--red);
+  .ledger-total {
+    margin-left: auto;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-primary);
+  }
+
+  .ledger-rows {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ledger-row {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.85rem;
+  }
+
+  .ledger-row + .ledger-row {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .ledger-name {
+    font-size: 0.9rem;
     font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  .ledger-track {
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-elevated);
+    overflow: hidden;
+  }
+
+  .ledger-track i {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: var(--color-text-tertiary);
+    transition: width 200ms ease;
+  }
+
+  .ledger-track i.owe { background: var(--orange); }
+  .ledger-track i.back { background: var(--green); }
+
+  .ledger-chip {
+    justify-self: end;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--color-text-secondary);
+  }
+
+  .ledger-chip.owe { color: var(--orange); }
+  .ledger-chip.back { color: var(--green); }
+
+  @media (max-width: 560px) {
+    .method-cards { grid-template-columns: 1fr; }
+    .ledger-row { grid-template-columns: auto 1fr auto; }
+    .ledger-row .ledger-track { grid-column: 1 / -1; order: 3; }
   }
 </style>

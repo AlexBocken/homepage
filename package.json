@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.102.4",
+	"version": "1.103.0",
 	"private": true,
 	"type": "module",
 	"scripts": {

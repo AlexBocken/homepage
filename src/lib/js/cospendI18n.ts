@@ -65,6 +65,7 @@ const paymentCategoryNames: Record<string, Record<string, string>> = {
 	groceries:  { en: 'Groceries', de: 'Lebensmittel' },
 	shopping:   { en: 'Shopping', de: 'Einkauf' },
 	travel:     { en: 'Travel', de: 'Reise' },
+	holidays:   { en: 'Holidays', de: 'Ferien' },
 	restaurant: { en: 'Restaurant', de: 'Restaurant' },
 	utilities:  { en: 'Utilities', de: 'Nebenkosten' },
 	fun:        { en: 'Fun', de: 'Freizeit' },
@@ -79,7 +80,7 @@ export function paymentCategoryName(category: string, lang: CospendLang): string
 /** Get category options with translated labels */
 export function getCategoryOptionsI18n(lang: CospendLang) {
 	const emojis: Record<string, string> = {
-		groceries: '🛒', shopping: '🛍️', travel: '🚆',
+		groceries: '🛒', shopping: '🛍️', travel: '🚆', holidays: '🏖️',
 		restaurant: '🍽️', utilities: '⚡', fun: '🎉', settlement: '🤝'
 	};
 	return Object.keys(paymentCategoryNames).map(key => ({

@@ -4,7 +4,7 @@
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import { m } from '$lib/js/commonI18n';
 	/** @typedef {import('$lib/js/commonI18n').CommonLang} CommonLang */
-	let { value = $bindable(''), lang = 'en', min = '', max = '' } = $props();
+	let { value = $bindable(''), lang = 'en', min = '', max = '', fontSize = '' } = $props();
 	const t = $derived(m[/** @type {CommonLang} */ (lang)]);
 
 	let open = $state(false);
@@ -134,7 +134,7 @@
 	});
 </script>
 
-<div class="datepicker" bind:this={pickerRef}>
+<div class="datepicker" bind:this={pickerRef} style={fontSize ? `--dp-font-size: ${fontSize}` : undefined}>
 	<div class="dp-pill">
 		<button type="button" class="dp-arrow" onclick={() => navigateDate(-1)} aria-label="Previous day">
 			<ChevronLeft size={16} />
@@ -232,7 +232,7 @@
 		border-left: 1px solid var(--color-border);
 		border-right: 1px solid var(--color-border);
 		color: var(--color-text-secondary);
-		font-size: 0.8rem;
+		font-size: var(--dp-font-size, 0.8rem);
 		font-weight: 500;
 		cursor: pointer;
 		white-space: nowrap;
