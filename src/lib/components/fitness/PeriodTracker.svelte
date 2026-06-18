@@ -335,11 +335,24 @@
 			}
 		}
 
+		// Most recent cycle length: gap between the two latest period starts
+		// (includes an ongoing period, so it reflects the genuinely last cycle).
+		let lastCycleLength = null;
+		if (sorted.length >= 2) {
+			const c = Math.round((midnight(new Date(sorted[0].startDate)) - midnight(new Date(sorted[1].startDate))) / 86400000);
+			if (c > 0 && c < 60) lastCycleLength = c;
+		}
+
+		// Most recent completed period length.
+		const lastPeriodLength = periodLengths.length > 0 ? periodLengths[periodLengths.length - 1] : null;
+
 		return {
 			avgCycle: Math.round(meanCycle * 10) / 10,
 			avgPeriod: Math.round(meanPeriod * 10) / 10,
 			cycleVariance,
 			periodVariance,
+			lastCycleLength,
+			lastPeriodLength,
 			predictedEndOfOngoing,
 			futureCycles,
 			pastFertileWindows
@@ -987,12 +1000,18 @@
 				{#if predictions.cycleVariance > 0}
 					<span class="cycle-stat-variance">± {predictions.cycleVariance} {t.days} (95% CI)</span>
 				{/if}
+				{#if predictions.lastCycleLength}
+					<span class="cycle-stat-sub">{t.last_cycle}: {predictions.lastCycleLength} {t.days}</span>
+				{/if}
 			</div>
 			<div class="cycle-stat">
 				<span class="cycle-stat-label">{t.period_length}</span>
 				<span class="cycle-stat-value">{Math.round(predictions.avgPeriod)} {t.days}</span>
 				{#if predictions.periodVariance > 0}
 					<span class="cycle-stat-variance">± {predictions.periodVariance} {t.days} (95% CI)</span>
+				{/if}
+				{#if predictions.lastPeriodLength}
+					<span class="cycle-stat-sub">{t.last_period}: {predictions.lastPeriodLength} {t.days}</span>
 				{/if}
 			</div>
 		</div>
@@ -1673,6 +1692,11 @@
 		font-size: 0.75rem;
 		font-weight: 400;
 		color: var(--color-text-secondary);
+	}
+	.cycle-stat-sub {
+		font-size: 0.72rem;
+		font-weight: 400;
+		color: var(--color-text-tertiary);
 	}
 
 	/* Cycle insights */
