@@ -23,6 +23,8 @@
     onpersonal,
     /** @type {(annotations: ReceiptAnnotations) => void} */
     onannotations,
+    /** @type {(date: string) => void} */
+    ondate,
     /** @type {() => void} */
     onremove
   } = $props();
@@ -224,6 +226,7 @@
       const result = await scanReceipt(imageFile);
       scan = result;
       onscanned?.(result);
+      if (result.date) ondate?.(result.date);
       emitAnnotations();
     } catch (err) {
       console.error('Receipt scan failed:', err);

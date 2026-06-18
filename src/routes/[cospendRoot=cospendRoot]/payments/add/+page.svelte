@@ -62,6 +62,11 @@
     receiptAnnotations = ann;
   }
 
+  /** @param {string} date YYYY-MM-DD detected on the receipt */
+  function handleReceiptDate(date) {
+    formData.date = date;
+  }
+
   /** @param {import('$lib/utils/receiptOcr').ReceiptScan} scan */
   function handleReceiptScanned(scan) {
     receiptScan = scan;
@@ -624,6 +629,7 @@
           onscanned={handleReceiptScanned}
           onpersonal={handleReceiptPersonal}
           onannotations={handleReceiptAnnotations}
+          ondate={handleReceiptDate}
           onremove={handleImageRemoved}
         />
       {/key}

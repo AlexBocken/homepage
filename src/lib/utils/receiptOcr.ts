@@ -34,6 +34,8 @@ export interface ReceiptAnnotations {
 export interface ReceiptScan {
 	lines: ReceiptLine[];
 	total: number | null;
+	/** Best-guess purchase date as YYYY-MM-DD, or null. */
+	date: string | null;
 	/** Bounding box of the line the total came from (for highlighting on the image). */
 	totalBox: ReceiptBox | null;
 	/** Width/height of the image the boxes are relative to. */
@@ -63,6 +65,53 @@ export function parsePrice(text: string): number | null {
 	const intPart = token.slice(0, token.length - 3).replace(/\D/g, '');
 	const value = parseFloat(`${intPart || '0'}.${dec[1]}`);
 	return Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Find the purchase date on the receipt. Returns YYYY-MM-DD or null. Picks the
+ * most frequently occurring plausible date (receipts repeat it across the
+ * transaction lines), assuming day-first (DD.MM.YYYY) for European receipts.
+ */
+function detectDate(lines: ReceiptLine[]): string | null {
+	const text = lines.map((l) => l.text).join('\n');
+	const now = new Date();
+	const maxTime = now.getTime() + 36 * 3600 * 1000; // allow ~today (tz slack)
+	const minYear = 2015;
+	const maxYear = now.getFullYear() + 1;
+	/** @type {string[]} */
+	const found: string[] = [];
+
+	const add = (y: number, m: number, d: number) => {
+		if (m < 1 || m > 12 || d < 1 || d > 31 || y < minYear || y > maxYear) return;
+		const dt = new Date(y, m - 1, d);
+		if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return;
+		if (dt.getTime() > maxTime) return;
+		found.push(`${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+	};
+
+	// ISO: YYYY-MM-DD
+	for (const m of text.matchAll(/\b(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})\b/g)) {
+		add(+m[1], +m[2], +m[3]);
+	}
+	// European: DD.MM.YYYY or DD.MM.YY
+	for (const m of text.matchAll(/\b(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})\b/g)) {
+		let y = +m[3];
+		if (y < 100) y += 2000;
+		add(y, +m[2], +m[1]);
+	}
+
+	if (found.length === 0) return null;
+	const counts = new Map<string, number>();
+	for (const c of found) counts.set(c, (counts.get(c) ?? 0) + 1);
+	let best = found[0];
+	let bestCount = 0;
+	for (const [c, n] of counts) {
+		if (n > bestCount) {
+			best = c;
+			bestCount = n;
+		}
+	}
+	return best;
 }
 
 /** Pick the line that best represents the grand total, or null. */
@@ -118,6 +167,7 @@ export async function scanReceipt(file: File): Promise<ReceiptScan> {
 	}));
 
 	const totalLine = detectTotalLine(lines);
+	const date = detectDate(lines);
 
 	// Debug: dump every scanned line and the chosen total line to the console
 	console.groupCollapsed(`[receipt OCR] ${lines.length} lines`);
@@ -131,11 +181,13 @@ export async function scanReceipt(file: File): Promise<ReceiptScan> {
 		'font-weight:bold',
 		totalLine ? `${totalLine.price?.toFixed(2)}  «${totalLine.text}»` : 'none detected'
 	);
+	console.log('%c[receipt OCR] date →', 'font-weight:bold', date ?? 'none detected');
 	console.groupEnd();
 
 	return {
 		lines,
 		total: totalLine?.price ?? null,
+		date,
 		totalBox: totalLine?.bbox ?? null,
 		width: data.width,
 		height: data.height,
