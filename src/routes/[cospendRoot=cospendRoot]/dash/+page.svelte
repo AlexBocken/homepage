@@ -41,6 +41,55 @@
       : balance.recentSplits || []
   );
 
+  // Dynamically pull the last 30 payments matching the active category filter
+  // (rather than client-filtering the small preloaded recentSplits set).
+  const currentUser = $derived(data.session?.user?.nickname);
+  const RECENT_PAGE = 30;
+  /** @type {any[] | null} */
+  let dynamicSplits = $state(null);
+  let splitsLoading = $state(false);
+  let hasMoreSplits = $state(false);
+  // Until the live fetch lands (and for no-JS), fall back to the SSR splits.
+  let displaySplits = $derived(dynamicSplits ?? filteredSplits);
+
+  /** Map a payment to the split shape the activity feed renders. */
+  function paymentToSplit(/** @type {any} */ payment) {
+    const mine = payment.splits?.find((/** @type {any} */ s) => s.username === currentUser);
+    const other = payment.splits?.find((/** @type {any} */ s) => s.username !== currentUser);
+    return { paymentId: payment, amount: mine ? mine.amount : 0, otherUser: other ? other.username : '' };
+  }
+
+  /** @param {boolean} reset start over (true) or append the next page (false). */
+  async function fetchRecentSplits(reset = true) {
+    try {
+      splitsLoading = true;
+      const offset = reset ? 0 : (dynamicSplits?.length ?? 0);
+      const params = new URLSearchParams({ limit: String(RECENT_PAGE), offset: String(offset) });
+      if (categoryFilter && categoryFilter.length) params.set('category', categoryFilter.join(','));
+      const res = await fetch(`/api/cospend/payments?${params.toString()}`);
+      if (res.ok) {
+        const result = await res.json();
+        const mapped = (result.payments || []).map(paymentToSplit);
+        dynamicSplits = reset ? mapped : [...(dynamicSplits ?? []), ...mapped];
+        hasMoreSplits = (result.payments || []).length === RECENT_PAGE;
+      }
+    } catch (e) {
+      console.error('Error fetching recent payments:', e);
+    } finally {
+      splitsLoading = false;
+    }
+  }
+
+  function loadMoreSplits() {
+    if (!splitsLoading && hasMoreSplits) fetchRecentSplits(false);
+  }
+
+  /** @param {string[] | null} categories */
+  function applyCategoryFilter(categories) {
+    categoryFilter = categories;
+    fetchRecentSplits(true);
+  }
+
   // Component references for refreshing
   /** @type {any} */
   let enhancedBalanceComponent;
@@ -63,6 +112,7 @@
   onMount(() => {
     document.body.classList.add('js-loaded');
     fetchMonthlyExpenses();
+    fetchRecentSplits();
 
     const handleDashboardRefresh = () => { refreshAllComponents(); };
     window.addEventListener('dashboardRefresh', handleDashboardRefresh);
@@ -71,7 +121,7 @@
 
   // Function to refresh all dashboard components after payment deletion
   async function refreshAllComponents() {
-    await Promise.all([invalidateAll(), fetchMonthlyExpenses()]);
+    await Promise.all([invalidateAll(), fetchMonthlyExpenses(), fetchRecentSplits()]);
 
     // Refresh the enhanced balance component if it exists and has a refresh method
     if (enhancedBalanceComponent && enhancedBalanceComponent.refresh) {
@@ -156,7 +206,7 @@
           title={t.monthly_expenses_chart}
           height="400px"
           {lang}
-          onFilterChange={(/** @type {string[] | null} */ categories) => categoryFilter = categories}
+          onFilterChange={(/** @type {string[] | null} */ categories) => applyCategoryFilter(categories)}
         />
       {:else}
         <div class="chart-empty">
@@ -172,19 +222,19 @@
     <div class="loading">{t.loading_recent}</div>
   {:else if error}
     <div class="error">Error: {error}</div>
-  {:else if balance.recentSplits && balance.recentSplits.length > 0}
+  {:else if displaySplits.length > 0 || categoryFilter}
     <div class="recent-activity">
       <div class="recent-activity-header">
         <h2>{t.recent_activity}{#if categoryFilter} <span class="filter-label">— {categoryFilter.map((/** @type {any} */ c) => paymentCategoryName(c, lang)).join(', ')}</span>{/if}</h2>
         {#if categoryFilter}
-          <button class="clear-filter" onclick={() => categoryFilter = null}>{t.clear_filter}</button>
+          <button class="clear-filter" onclick={() => applyCategoryFilter(null)}>{t.clear_filter}</button>
         {/if}
       </div>
-      {#if filteredSplits.length === 0}
+      {#if displaySplits.length === 0}
         <p class="no-results">{t.no_recent_in} {categoryFilter ? categoryFilter.map((/** @type {any} */ c) => paymentCategoryName(c, lang)).join(', ') : ''}.</p>
       {/if}
       <div class="activity-dialog">
-        {#each filteredSplits as split}
+        {#each displaySplits as split (split.paymentId?._id)}
           {#if isSettlementPayment(split.paymentId)}
             <!-- Settlement Payment Display - User -> User Flow -->
             <a
@@ -260,6 +310,14 @@
           {/if}
         {/each}
       </div>
+
+      {#if hasMoreSplits}
+        <div class="load-more-row">
+          <button type="button" class="load-more" onclick={loadMoreSplits} disabled={splitsLoading}>
+            {splitsLoading ? t.loading_ellipsis : t.load_more}
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 </main>
@@ -370,6 +428,34 @@
     color: var(--color-text-secondary);
     font-style: italic;
     padding: 1rem 0;
+  }
+
+  .load-more-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .load-more {
+    padding: 0.55rem 1.4rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 120ms, background 120ms;
+  }
+
+  .load-more:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    background: var(--color-bg-elevated);
+  }
+
+  .load-more:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 
   .activity-dialog {
