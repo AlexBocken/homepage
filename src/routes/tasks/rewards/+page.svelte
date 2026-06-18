@@ -160,7 +160,7 @@
     </div>
   </header>
 
-  <StickerCalendar completions={stats.recentCompletions} {currentUser} />
+  <StickerCalendar completions={stats.recentCompletions} {currentUser} onpick={(/** @type {any} */ s) => (selected = s)} />
 
   <h2 class="section-title">Alle Sticker</h2>
   {#each pages as page (page.cat)}

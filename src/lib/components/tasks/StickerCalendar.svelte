@@ -8,7 +8,8 @@
   } from 'date-fns';
   import { de } from 'date-fns/locale';
 
-  let { completions = [], currentUser = '' } = $props();
+  /** @type {{ completions?: any[], currentUser?: string, onpick?: (sticker: any) => void }} */
+  let { completions = [], currentUser = '', onpick } = $props();
 
   // who-did-what colours (the household)
   const PERSON_COLOR = /** @type {Record<string, string>} */ ({
@@ -131,10 +132,16 @@
               {@const sticker = getStickerById(c.stickerId)}
               {#if sticker}
                 {@const tilt = (hash(c._id) % 13) - 6}
-                <span class="cat" style="--tilt: {tilt}deg; --pc: {personColor(c.completedBy)}">
-                  <img src="/stickers/{sticker.image}" alt={sticker.name} title="{sticker.name} — {c.taskTitle} ({c.completedBy})" loading="lazy" />
+                <button
+                  type="button"
+                  class="cat"
+                  style="--tilt: {tilt}deg; --pc: {personColor(c.completedBy)}"
+                  title="{sticker.name} — {c.taskTitle} ({c.completedBy})"
+                  onclick={() => onpick?.(sticker)}
+                >
+                  <img src="/stickers/{sticker.image}" alt={sticker.name} loading="lazy" />
                   <span class="who-dot"></span>
-                </span>
+                </button>
               {/if}
             {/each}
             {#if dayDrops.length > 4}
@@ -291,9 +298,14 @@
   /* a cat sticker "stuck" on the date — die-cut white edge + hand tilt */
   .cat {
     position: relative;
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
     transform: rotate(var(--tilt));
     transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
-    cursor: default;
+    cursor: pointer;
   }
   .cat img {
     display: block;
