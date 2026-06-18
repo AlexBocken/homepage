@@ -7,7 +7,7 @@ import { error, json } from '@sveltejs/kit';
 const BUCKETS = 24;
 // Cap the amount axis so large settlements don't flatten the histogram; anything
 // above this collects in a final overflow bin.
-const CAP = 500;
+const CAP = 200;
 
 // Bounds (global, stable slider extent) + an amount histogram for the payments
 // filter bar. The histogram reflects every active filter EXCEPT the amount range
