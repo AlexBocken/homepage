@@ -57,6 +57,7 @@ export const de = {
 	remove_image: "Bild entfernen",
 	replace_image: "Bild ersetzen",
 	upload_receipt: "Beleg hochladen",
+	take_photo: "Foto aufnehmen",
 	uploading_image: "Bild wird hochgeladen...",
 	file_too_large: "Dateigrösse muss unter 5MB sein",
 	invalid_image: "Bitte eine gültige Bilddatei wählen (JPEG, PNG, WebP)",

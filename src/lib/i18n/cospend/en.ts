@@ -57,6 +57,7 @@ export const en = {
 	remove_image: "Remove Image",
 	replace_image: "Replace Image",
 	upload_receipt: "Upload Receipt Image",
+	take_photo: "Take photo",
 	uploading_image: "Uploading image...",
 	file_too_large: "File size must be less than 5MB",
 	invalid_image: "Please select a valid image file (JPEG, PNG, WebP)",

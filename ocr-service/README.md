@@ -23,10 +23,14 @@ same per-line boxes.
 **Use Python 3.12** — the OCR wheels don't support 3.13 yet, so a 3.13 system
 interpreter (e.g. Arch) will fail with "Could not find a version that satisfies".
 
+The unit expects the service at `/usr/share/webapps/homepage/ocr-service` (next
+to the deployed site). The venv must be created **there** so its absolute paths
+resolve, and the files must stay world-readable (the unit runs as a `DynamicUser`).
+
 ```sh
-sudo mkdir -p /opt/cospend-ocr
-sudo cp app.py requirements.txt /opt/cospend-ocr/
-cd /opt/cospend-ocr
+sudo install -d /usr/share/webapps/homepage/ocr-service
+sudo cp app.py requirements.txt /usr/share/webapps/homepage/ocr-service/
+cd /usr/share/webapps/homepage/ocr-service
 
 # with uv (fetches 3.12 automatically if missing):
 uv venv --python 3.12 venv
@@ -40,15 +44,17 @@ uv pip install --python venv/bin/python -r requirements.txt
 Smoke test:
 
 ```sh
-./venv/bin/uvicorn app:app --host 127.0.0.1 --port 8089
+./venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8089
 curl -F image=@some-receipt.jpg http://127.0.0.1:8089/ocr
 ```
 
 ## Run as a service
 
+The unit is hardened (`DynamicUser`, `ProtectSystem=strict`, loopback-only) — no
+edits needed unless you move the port.
+
 ```sh
 sudo cp cospend-ocr.service /etc/systemd/system/
-# edit User= and paths in the unit if needed
 sudo systemctl daemon-reload
 sudo systemctl enable --now cospend-ocr
 ```
@@ -67,7 +73,7 @@ This must match the service's bind address. The systemd unit sets that via
 move the port. For a manual/dev run, pass them on the command line:
 
 ```sh
-./venv/bin/uvicorn app:app --host 127.0.0.1 --port 8089
+./venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8089
 ```
 
 ## Notes

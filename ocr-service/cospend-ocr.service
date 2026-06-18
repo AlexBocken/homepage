@@ -1,23 +1,37 @@
-# systemd unit for the cospend receipt OCR service.
-# Install:  sudo cp cospend-ocr.service /etc/systemd/system/
-# Then edit User= and the two paths below to match your deployment, and:
-#   sudo systemctl daemon-reload && sudo systemctl enable --now cospend-ocr
 [Unit]
-Description=Cospend receipt OCR (PaddleOCR, CPU)
+Description=Cospend receipt OCR (PP-OCR via RapidOCR, CPU)
 After=network.target
 
 [Service]
-Type=simple
-User=www-data
-WorkingDirectory=/opt/cospend-ocr
-# Keep CPU usage civil on a shared box; tune to taste.
-Environment=OMP_NUM_THREADS=4
-# Bind address — must match OCR_SERVICE_URL in the website's .env.
+# The one place the bind address is configured — OCR_SERVICE_URL in the
+# website's .env must point at the same value.
 Environment=OCR_HOST=127.0.0.1
 Environment=OCR_PORT=8089
-ExecStart=/opt/cospend-ocr/venv/bin/uvicorn app:app --host ${OCR_HOST} --port ${OCR_PORT}
+# Keep CPU usage civil on a shared box; tune to taste.
+Environment=OMP_NUM_THREADS=4
+WorkingDirectory=/usr/share/webapps/homepage/ocr-service
+ExecStart=/usr/share/webapps/homepage/ocr-service/venv/bin/python -m uvicorn app:app --host ${OCR_HOST} --port ${OCR_PORT}
 Restart=on-failure
-RestartSec=3
+RestartSec=2
+
+# Hardening — the service only reads its own code/models and listens on loopback.
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+LockPersonality=yes
+# AF_UNIX is needed for asyncio's internal self-pipe socketpair.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# No outbound needed: bundled models, talks only to the local website.
+IPAddressDeny=any
+IPAddressAllow=localhost
+# OCR + ONNXRuntime is heavier than a Go proxy; give it room.
+MemoryMax=2G
 
 [Install]
 WantedBy=multi-user.target

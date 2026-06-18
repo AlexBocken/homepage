@@ -1,5 +1,8 @@
 <script lang="ts">
+  import Camera from '@lucide/svelte/icons/camera';
   import { m, type CospendLang } from '$lib/js/cospendI18n';
+
+  let cameraInput = $state<HTMLInputElement | null>(null);
 
   let {
     imagePreview = $bindable(''),
@@ -109,6 +112,22 @@
         hidden
       />
     </div>
+
+    <!-- Camera shortcut — sits outside the dropzone (whose label would otherwise
+         swallow taps); shown on touch devices via CSS. -->
+    <button type="button" class="camera-btn" onclick={() => cameraInput?.click()}>
+      <Camera size={18} />
+      {t.take_photo}
+    </button>
+    <input
+      bind:this={cameraInput}
+      type="file"
+      accept="image/*"
+      capture="environment"
+      onchange={handleImageChange}
+      disabled={uploading}
+      hidden
+    />
   {/if}
 
   {#if uploading}
@@ -165,6 +184,33 @@
 
   .upload-content small {
     color: var(--color-text-secondary);
+  }
+
+  /* Camera shortcut — only meaningful on devices with a camera (touch). */
+  .camera-btn {
+    display: none;
+    align-items: center;
+    gap: 0.45rem;
+    width: fit-content;
+    margin: 0.85rem auto 0;
+    padding: 0.6rem 1.3rem;
+    border: 1.5px solid var(--color-primary);
+    border-radius: var(--radius-pill, 1000px);
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .camera-btn:active {
+    transform: scale(0.98);
+  }
+
+  @media (pointer: coarse) {
+    .camera-btn {
+      display: flex;
+    }
   }
 
   .image-preview {
