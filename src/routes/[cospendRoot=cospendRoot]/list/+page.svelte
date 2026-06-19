@@ -268,7 +268,7 @@
   let filteredIconGroups = $derived(
     iconSearch.trim()
       ? iconsByCategory
-          .map(([cat, icons]) => /** @type {[string, [string,string][]]} */ ([cat, icons.filter(([name]) => name.includes(iconSearch.toLowerCase()))]))
+          .map(([cat, icons]) => /** @type {[string, [string,string][]]} */ ([cat, icons.filter(([name]) => name.toLowerCase().includes(iconSearch.trim().toLowerCase()))]))
           .filter(([, icons]) => icons.length > 0)
       : iconsByCategory
   );
