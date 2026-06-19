@@ -77,7 +77,7 @@
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+        video: { facingMode: 'environment', width: { ideal: 3840 }, height: { ideal: 2160 } }
       });
       cameraStream = stream;
       cameraOpen = true;
@@ -101,22 +101,60 @@
     if (videoEl) videoEl.srcObject = null;
   }
 
-  function capturePhoto() {
-    if (!videoEl || !videoEl.videoWidth) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = videoEl.videoWidth;
-    canvas.height = videoEl.videoHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) { closeCamera(); return; }
-    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob(
-      (blob) => {
-        if (blob) acceptFile(new File([blob], `receipt-${Date.now()}.jpg`, { type: 'image/jpeg' }));
-        closeCamera();
-      },
-      'image/jpeg',
-      0.92
-    );
+  // Take a real still photo via ImageCapture (full sensor resolution + proper
+  // focus/exposure) when the API is available, instead of grabbing a frame off
+  // the lower-res preview stream. Falls back to a frame grab otherwise.
+  async function capturePhoto() {
+    if (!cameraStream || !videoEl) return;
+    const track = cameraStream.getVideoTracks()[0];
+    let blob: Blob | null = null;
+
+    if (track && 'ImageCapture' in window) {
+      try {
+        const capture = new (window as unknown as { ImageCapture: new (t: MediaStreamTrack) => { takePhoto(): Promise<Blob> } }).ImageCapture(track);
+        blob = await capture.takePhoto();
+      } catch {
+        blob = null; // fall through to a preview-frame grab
+      }
+    }
+
+    if (!blob) {
+      if (!videoEl.videoWidth) { closeCamera(); return; }
+      const canvas = document.createElement('canvas');
+      canvas.width = videoEl.videoWidth;
+      canvas.height = videoEl.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { closeCamera(); return; }
+      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+      blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.92));
+    }
+
+    if (blob) {
+      blob = await shrinkToLimit(blob, 5 * 1024 * 1024, 3000);
+      acceptFile(new File([blob], `receipt-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' }));
+    }
+    closeCamera();
+  }
+
+  // Full-resolution stills can exceed the 5 MB upload cap — downscale (only when
+  // needed) so the high-quality capture still goes through.
+  async function shrinkToLimit(blob: Blob, maxBytes: number, maxDim: number): Promise<Blob> {
+    if (blob.size <= maxBytes) return blob;
+    try {
+      const bitmap = await createImageBitmap(blob);
+      const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return blob;
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      const out = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
+      return out && out.size < blob.size ? out : blob;
+    } catch {
+      return blob;
+    }
   }
 
   onDestroy(closeCamera);
