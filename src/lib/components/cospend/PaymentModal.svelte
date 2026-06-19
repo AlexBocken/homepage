@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import ProfilePicture from './ProfilePicture.svelte';
+  import ReceiptOverlay from './ReceiptOverlay.svelte';
   import EditButton from '$lib/components/EditButton.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
   import { receiptUrl } from '$lib/utils/cospendImage';
@@ -36,6 +37,7 @@
    *   category: import('$lib/utils/categories').PaymentCategory,
    *   splitMethod: string,
    *   createdBy: string,
+   *   receiptScan?: { totalBox?: unknown, items?: Array<{ box: unknown, user: string, amount: number }> },
    *   splits?: Array<{ username: string, amount: number, settled: boolean }>,
    *   createdAt?: string,
    *   updatedAt?: string
@@ -49,6 +51,7 @@
   let error = $state(null);
   /** @type {HTMLDivElement | undefined} */
   let modal = $state(undefined);
+  let lightboxOpen = $state(false);
 
   onMount(() => {
     loadPayment();
@@ -57,7 +60,9 @@
     /** @param {KeyboardEvent} event */
     function handleKeydown(event) {
       if (event.key === 'Escape') {
-        closeModal();
+        // Close the receipt lightbox first if it's open; otherwise close the modal.
+        if (lightboxOpen) lightboxOpen = false;
+        else closeModal();
       }
     }
 
@@ -168,11 +173,6 @@
                 {formatCurrency(payment.amount)}
               </div>
             </div>
-            {#if payment.image}
-              <div class="receipt-image">
-                <img src={receiptUrl(payment.image)} alt={t.receipt} />
-              </div>
-            {/if}
           </div>
 
           <div class="payment-info">
@@ -237,6 +237,20 @@
             </div>
           {/if}
 
+          {#if payment.receiptScan && payment.image && (payment.receiptScan.totalBox || (payment.receiptScan.items && payment.receiptScan.items.length > 0))}
+            <div class="splits-section receipt-breakdown">
+              <h3>{t.receipt}</h3>
+              <ReceiptOverlay src={receiptUrl(payment.image)} annotations={payment.receiptScan} alt={t.receipt} />
+            </div>
+          {:else if payment.image}
+            <div class="splits-section receipt-breakdown">
+              <h3>{t.receipt}</h3>
+              <button type="button" class="receipt-image-full" onclick={() => lightboxOpen = true} aria-label={t.view_receipt}>
+                <img src={receiptUrl(payment.image)} alt={t.receipt} />
+              </button>
+            </div>
+          {/if}
+
           <div class="panel-actions">
             <button class="btn-secondary" onclick={closeModal}>{t.close}</button>
           </div>
@@ -244,6 +258,14 @@
       {/if}
   </div>
 </div>
+
+{#if lightboxOpen && payment?.image}
+  <div class="lightbox" role="dialog" aria-modal="true" aria-label={t.receipt}>
+    <button class="lightbox-backdrop" onclick={() => lightboxOpen = false} aria-label={t.close}></button>
+    <img class="lightbox-img" src={receiptUrl(payment.image)} alt={t.receipt} />
+    <button class="lightbox-close" onclick={() => lightboxOpen = false} aria-label={t.close}>✕</button>
+  </div>
+{/if}
 
 {#if payment}
   <EditButton href={resolve('/[cospendRoot=cospendRoot]/payments/edit/[id]', { cospendRoot: root, id: paymentId })} />
@@ -343,17 +365,81 @@
     color: var(--blue);
   }
 
-  .receipt-image {
-    flex-shrink: 0;
-    margin-left: 1rem;
+  .receipt-image-full {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
+    line-height: 0;
   }
 
-  .receipt-image img {
-    max-width: 100px;
-    max-height: 100px;
-    object-fit: cover;
-    border-radius: 0.5rem;
+  .receipt-image-full img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
+    transition: filter var(--transition-normal);
+  }
+
+  .receipt-image-full:hover img,
+  .receipt-image-full:focus-visible img {
+    filter: brightness(0.95);
+  }
+
+  .receipt-image-full:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+
+  .lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.8);
+    cursor: zoom-out;
+    animation: lightbox-fade 0.15s ease;
+  }
+
+  .lightbox-img {
+    position: relative;
+    max-width: min(92vw, 1000px);
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    animation: lightbox-fade 0.15s ease;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  @keyframes lightbox-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   .payment-info {
@@ -544,10 +630,6 @@
     .panel-actions {
       padding: 1rem;
       flex-direction: column;
-    }
-
-    .receipt-image {
-      margin-left: 0;
     }
 
     .info-grid {

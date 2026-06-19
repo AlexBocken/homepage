@@ -282,15 +282,28 @@
                       <span class="username">{t.paid_by} {split.paymentId?.paidBy || 'Unknown'}</span>
                       <span class="category-name">{paymentCategoryName(split.paymentId?.category || 'groceries', lang)}</span>
                     </div>
-                    <div class="activity-amount"
-                         class:positive={split.amount < 0}
-                         class:negative={split.amount > 0}>
-                      {#if split.amount > 0}
-                        -{formatCurrency(Math.abs(split.amount), 'CHF', loc)}
-                      {:else if split.amount < 0}
-                        +{formatCurrency(Math.abs(split.amount), 'CHF', loc)}
-                      {:else}
-                        {formatCurrency(split.amount, 'CHF', loc)}
+                    <div class="activity-amount-block">
+                      <div class="activity-amount"
+                           class:positive={split.amount < 0}
+                           class:negative={split.amount > 0}>
+                        {#if split.amount > 0}
+                          -{formatCurrency(Math.abs(split.amount), 'CHF', loc)}
+                        {:else if split.amount < 0}
+                          +{formatCurrency(Math.abs(split.amount), 'CHF', loc)}
+                        {:else}
+                          {formatCurrency(split.amount, 'CHF', loc)}
+                        {/if}
+                      </div>
+                      {#if split.paymentId?.amount != null}
+                        {@const p = split.paymentId}
+                        <div class="activity-total">
+                          {t.total}
+                          {#if p.currency && p.currency !== 'CHF' && p.originalAmount != null}
+                            {formatCurrency(p.originalAmount, p.currency, loc)}
+                          {:else}
+                            {formatCurrency(p.amount, 'CHF', loc)}
+                          {/if}
+                        </div>
                       {/if}
                     </div>
                   </div>
@@ -645,10 +658,21 @@
     font-weight: 500;
   }
 
+  .activity-amount-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.05rem;
+    flex-shrink: 0;
+  }
   .activity-amount {
     font-weight: bold;
     font-size: 1rem;
-    flex-shrink: 0;
+  }
+  .activity-total {
+    font-size: 0.72rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
   }
 
   .payment-details {
