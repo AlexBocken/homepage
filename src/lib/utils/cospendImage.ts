@@ -8,3 +8,10 @@ export function receiptUrl(image?: string | null): string {
 	if (!image) return '';
 	return RECEIPT_BASE + image.split('/').pop();
 }
+
+// Downscaled thumbnail (cospend/thumb/<same filename>), used for list views.
+// Falls back to the full image on the consumer side if a thumb is missing.
+export function receiptThumbUrl(image?: string | null): string {
+	if (!image) return '';
+	return RECEIPT_BASE + 'thumb/' + image.split('/').pop();
+}

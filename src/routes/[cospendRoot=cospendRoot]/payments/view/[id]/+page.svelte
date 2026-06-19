@@ -84,12 +84,6 @@
             {/if}
           </div>
         </div>
-        {#if payment.image}
-          <button type="button" class="receipt-image" onclick={() => lightboxOpen = true} aria-label={t.view_receipt}>
-            <img src={receiptUrl(payment.image)} alt={t.receipt} />
-            <span class="receipt-zoom-hint" aria-hidden="true">⤢</span>
-          </button>
-        {/if}
       </div>
 
       <div class="payment-info">
@@ -158,6 +152,13 @@
         <div class="splits-section receipt-breakdown">
           <h3>{t.receipt}</h3>
           <ReceiptOverlay src={receiptUrl(payment.image)} annotations={payment.receiptScan} alt={t.receipt} />
+        </div>
+      {:else if payment.image}
+        <div class="splits-section receipt-breakdown">
+          <h3>{t.receipt}</h3>
+          <button type="button" class="receipt-image-full" onclick={() => lightboxOpen = true} aria-label={t.view_receipt}>
+            <img src={receiptUrl(payment.image)} alt={t.receipt} />
+          </button>
         </div>
       {/if}
     </div>
@@ -238,51 +239,32 @@
     color: var(--blue);
   }
 
-  .receipt-image {
-    flex-shrink: 0;
-    margin-left: 2rem;
-    position: relative;
+  .receipt-image-full {
+    display: block;
+    width: 100%;
     padding: 0;
     border: none;
     background: none;
     cursor: zoom-in;
-    border-radius: 0.5rem;
     line-height: 0;
   }
 
-  .receipt-image img {
-    max-width: 150px;
-    max-height: 150px;
-    object-fit: cover;
-    border-radius: 0.5rem;
+  .receipt-image-full img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
     transition: filter var(--transition-normal);
   }
 
-  .receipt-image:hover img,
-  .receipt-image:focus-visible img {
-    filter: brightness(0.92);
+  .receipt-image-full:hover img,
+  .receipt-image-full:focus-visible img {
+    filter: brightness(0.95);
   }
 
-  .receipt-image:focus-visible {
+  .receipt-image-full:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
-  }
-
-  .receipt-zoom-hint {
-    position: absolute;
-    right: 0.35rem;
-    bottom: 0.35rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: var(--radius-sm);
-    background: rgba(0, 0, 0, 0.55);
-    color: #fff;
-    font-size: 0.9rem;
-    line-height: 1;
   }
 
   .lightbox {
@@ -480,10 +462,6 @@
       flex-direction: column;
       gap: 1rem;
       text-align: center;
-    }
-
-    .receipt-image {
-      margin-left: 0;
     }
 
     .info-grid {

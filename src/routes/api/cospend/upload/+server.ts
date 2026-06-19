@@ -3,6 +3,7 @@ import { error, json } from '@sveltejs/kit';
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
+import sharp from 'sharp';
 import { IMAGE_DIR } from '$env/static/private';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -45,9 +46,25 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     const filepath = join(uploadsDir, filename);
     const buffer = await image.arrayBuffer();
-    
-    writeFileSync(filepath, new Uint8Array(buffer));
-    
+    const bytes = new Uint8Array(buffer);
+
+    writeFileSync(filepath, bytes);
+
+    // Generate a downscaled thumbnail for list views (payments overview),
+    // stored under cospend/thumb/ with the SAME filename + format as the full
+    // image. Best-effort: a thumbnail failure must never fail the upload.
+    try {
+      const thumbDir = join(uploadsDir, 'thumb');
+      mkdirSync(thumbDir, { recursive: true });
+      const thumbBytes = await sharp(bytes)
+        .rotate() // bake EXIF orientation so the thumbnail isn't sideways
+        .resize({ width: 400, withoutEnlargement: true })
+        .toBuffer(); // keeps the input format, so the filename/extension stay valid
+      writeFileSync(join(thumbDir, filename), thumbBytes);
+    } catch (thumbErr) {
+      console.error('Receipt thumbnail generation failed (full image kept):', thumbErr);
+    }
+
     // Store just the filename; the URL is constructed at display time.
     return json({
       success: true,
