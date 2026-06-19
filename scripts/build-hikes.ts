@@ -824,12 +824,13 @@ async function processOverview(
 		const outName = spec.name === 'wide' ? `overview.${hash}.webp` : `overview-${spec.name}.${hash}.webp`;
 		const outPath = path.join(outDir, outName);
 
-		const renderT0 = Date.now();
-		console.log(
-			`[build-hikes:_overview]   ${spec.name}: ${lines.length} polylines · zoom ${pose.zoom} · ` +
-				`${Math.round(spec.width / 256)}×${Math.round(spec.height / 256)} tile grid`
-		);
+		// Cached overview maps stay silent; only log the ones we actually render.
 		if (!(await pathExists(outPath))) {
+			const renderT0 = Date.now();
+			console.log(
+				`[build-hikes:_overview]   ${spec.name}: ${lines.length} polylines · zoom ${pose.zoom} · ` +
+					`${Math.round(spec.width / 256)}×${Math.round(spec.height / 256)} tile grid`
+			);
 			const ok = await renderOverviewMap({
 				pose,
 				polylines: lines,
@@ -842,8 +843,6 @@ async function processOverview(
 				return undefined;
 			}
 			console.log(`[build-hikes:_overview]   ${spec.name} rendered ${outName} in ${Date.now() - renderT0}ms`);
-		} else {
-			console.log(`[build-hikes:_overview]   ${spec.name} cached (${outName})`);
 		}
 
 		return {
@@ -1045,7 +1044,6 @@ function extractImagePoint(
 // ---------------------------------------------------------------------------
 
 async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifestEntry | null> {
-	const hikeStart = Date.now();
 	const hikeDir = path.join(CONTENT_DIR, slug);
 	const svxPath = path.join(hikeDir, 'index.svx');
 	const gpxPath = path.join(hikeDir, 'track.gpx');
@@ -1078,8 +1076,6 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		return null;
 	}
 	const gpxImageRefs = parseGpxImageRefs(gpxSource);
-	const gpxImageCount = Object.keys(gpxImageRefs).length;
-	console.log(`[build-hikes:${slug}]   parsed GPX (${track.length} track pts, ${gpxStages.length} stage(s), ${gpxImageCount} image refs)`);
 
 	// Privacy: anonymise absolute clock times. Re-base every timestamp so the
 	// hike starts at 08:00 "today" while preserving all relative offsets
@@ -1165,11 +1161,8 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 
 	const { bbox, centroid } = computeBboxAndCentroid(track);
 	const { previewPolyline, previewBreaks } = buildPreview(gpxStages);
-	console.log(`[build-hikes:${slug}]   metrics: ${distanceKm.toFixed(2)} km · ↑${gain}m / ↓${loss}m · ${elevationMinM ?? '?'}–${elevationMaxM ?? '?'}m · ${durationMin ?? '?'} min`);
 
-	const geoT0 = Date.now();
 	const geo = await reverseGeocode(centroid[0], centroid[1], cache);
-	console.log(`[build-hikes:${slug}]   geocode: ${geo.municipality ?? '–'}, ${geo.canton ?? '–'} (${Date.now() - geoT0}ms)`);
 
 	// Process images
 	const imageFiles: string[] = [];
@@ -1202,13 +1195,6 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		proseImages.set(name, isPrivate ? 'private' : 'public');
 	}
 
-	// Non-waypoint, non-prose images are dropped before encoding (see
-	// processImage). Count for the log line below.
-	if (imageFiles.length > 0) {
-		console.log(
-			`[build-hikes:${slug}]   processing ${imageFiles.length} image(s) — ${Object.keys(gpxImageRefs).length} on route, ${proseImages.size} named in prose (concurrency=${IMAGE_CONCURRENCY})…`
-		);
-	}
 
 	let cover: ImageVariant | null = null;
 	const imagePoints: ImagePoint[] = [];
@@ -1244,20 +1230,20 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 			// visibility that tag requested).
 			const processed = await processImage(imgPath, slug, alt, gpxImageRefs, proseImages.get(name) ?? null);
 			if ('skipped' in processed) {
-				console.log(
-					`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${name} · ${processed.hash} · skipped (not on route, not in prose)`
-				);
+				// Images not on the route and not in the prose are dropped silently.
 				return { name, variant: null, point: null, outNames: [], visibility: 'public' as const };
 			}
 			// Only waypoint images get a map ImagePoint; prose-only ones have no
 			// position, so they're exposed by name (imagesByName) instead.
 			const ref = gpxImageRefs[processed.hash];
 			const point = ref ? extractImagePoint(processed, alt, ref) : null;
-			const cacheTag = processed.cached ? ' · cached' : '';
 			const kind = ref ? processed.visibility : 'prose';
-			console.log(
-				`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${name} · ${processed.hash} · ${kind}${cacheTag} (${Date.now() - imgT0}ms)`
-			);
+			// Only log freshly-encoded images; cached ones stay silent to cut noise.
+			if (!processed.cached) {
+				console.log(
+					`[build-hikes:${slug}]     [${i + 1}/${imageFiles.length}] ${name} · ${processed.hash} · ${kind} (${Date.now() - imgT0}ms)`
+				);
+			}
 			return {
 				name,
 				variant: processed.variant,
@@ -1371,7 +1357,6 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	const trackFile = path.join(STATIC_DIR, slug, `track.${trackHash}.json`);
 	await fs.mkdir(path.dirname(trackFile), { recursive: true });
 	await fs.writeFile(trackFile, trackJson);
-	console.log(`[build-hikes:${slug}]   wrote track.${trackHash}.json (${trackJson.length} bytes)`);
 
 	// Sweep stale track.*.json from earlier builds. Without this the previous
 	// file lingers in static/ and ships on deploy — and since timestamps are
@@ -1457,7 +1442,6 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		...(Object.keys(imagesByName).length > 0 ? { imagesByName } : {})
 	};
 
-	console.log(`[build-hikes:${slug}]   done in ${((Date.now() - hikeStart) / 1000).toFixed(1)}s`);
 	return entry;
 }
 
