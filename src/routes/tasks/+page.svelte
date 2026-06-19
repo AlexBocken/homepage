@@ -178,7 +178,7 @@
     putzen: Sparkles, saugen: Wind, wischen: Brush, bad: Bath,
     küche: UtensilsCrossed, kochen: CookingPot, abwasch: Droplets,
     wäsche: WashingMachine, bügeln: Shirt,
-    pflanzen: Flower2, gießen: Droplets, düngen: Leaf, garten: Leaf,
+    pflanzen: Flower2, giessen: Droplets, düngen: Leaf, garten: Leaf,
     einkaufen: ShoppingCart, müll: Trash2,
   };
 

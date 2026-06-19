@@ -49,7 +49,7 @@ const categoryDisplayNames: Record<string, Record<string, string>> = {
 	'Pasta, Reis & Getreide': { en: 'Pasta, Rice & Grains', de: 'Pasta, Reis & Getreide' },
 	'Gewürze & Saucen':       { en: 'Spices & Sauces', de: 'Gewürze & Saucen' },
 	'Getränke':               { en: 'Beverages', de: 'Getränke' },
-	'Süßes & Snacks':         { en: 'Sweets & Snacks', de: 'Süßes & Snacks' },
+	'Süsses & Snacks':         { en: 'Sweets & Snacks', de: 'Süsses & Snacks' },
 	'Tiefkühl':               { en: 'Frozen', de: 'Tiefkühl' },
 	'Haushalt':               { en: 'Household', de: 'Haushalt' },
 	'Hygiene & Körperpflege': { en: 'Hygiene & Body Care', de: 'Hygiene & Körperpflege' },

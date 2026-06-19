@@ -256,7 +256,7 @@ export const de = {
 	cat_grains: "Pasta, Reis & Getreide",
 	cat_spices: "Gewürze & Saucen",
 	cat_drinks: "Getränke",
-	cat_sweets: "Süßes & Snacks",
+	cat_sweets: "Süsses & Snacks",
 	cat_frozen: "Tiefkühl",
 	cat_household: "Haushalt",
 	cat_hygiene: "Hygiene & Körperpflege",

@@ -31,7 +31,7 @@ const CATEGORY_DEFAULT_ICONS: Record<string, string> = {
   'Konserven': 'kidneybohnen',
   'Gewürze & Saucen': 'kraeuter',
   'Getränke': 'wasser',
-  'Süßes & Snacks': 'schokolade',
+  'Süsses & Snacks': 'schokolade',
   'Tiefkühl': 'gemuese_gefroren',
   'Haushalt': 'spuelmittel',
   'Hygiene & Körperpflege': 'seife',

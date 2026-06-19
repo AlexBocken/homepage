@@ -65,7 +65,7 @@
     'Pasta, Reis & Getreide': { icon: Wheat, color: 'var(--nord13)' },
     'Gewürze & Saucen':       { icon: FlameKindling, color: 'var(--nord11)' },
     'Getränke':               { icon: GlassWater, color: 'var(--nord10)' },
-    'Süßes & Snacks':         { icon: Candy, color: 'var(--nord15)' },
+    'Süsses & Snacks':         { icon: Candy, color: 'var(--nord15)' },
     'Tiefkühl':               { icon: Snowflake, color: 'var(--nord9)' },
     'Haushalt':               { icon: SprayCan, color: 'var(--nord8)' },
     'Hygiene & Körperpflege': { icon: Sparkles, color: 'var(--nord15)' },
@@ -75,12 +75,12 @@
   /** @type {Record<string, string[]>} */
   const STORE_PRESETS = {
     'Coop Max-Bill Platz': [
-      'Haushalt', 'Hygiene & Körperpflege', 'Gewürze & Saucen', 'Süßes & Snacks',
+      'Haushalt', 'Hygiene & Körperpflege', 'Gewürze & Saucen', 'Süsses & Snacks',
       'Getränke', 'Pasta, Reis & Getreide', 'Konserven', 'Brot & Backwaren', 'Milchprodukte',
       'Obst & Gemüse', 'Fleisch & Fisch', 'Tiefkühl', 'Sonstiges',
     ],
     'Migros Seebach': [
-      'Obst & Gemüse', 'Fleisch & Fisch', 'Milchprodukte', 'Süßes & Snacks',
+      'Obst & Gemüse', 'Fleisch & Fisch', 'Milchprodukte', 'Süsses & Snacks',
       'Getränke', 'Brot & Backwaren', 'Gewürze & Saucen', 'Pasta, Reis & Getreide',
       'Konserven', 'Haushalt', 'Hygiene & Körperpflege', 'Tiefkühl', 'Sonstiges',
     ],

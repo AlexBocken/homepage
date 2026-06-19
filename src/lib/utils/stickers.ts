@@ -252,7 +252,7 @@ const TAG_CATEGORY_MAP: Record<string, string[]> = {
   'wäsche': ['cleaning', 'general'],
   'bügeln': ['cleaning', 'general'],
   'pflanzen': ['plants', 'general'],
-  'gießen': ['plants', 'general'],
+  'giessen': ['plants', 'general'],
   'düngen': ['plants', 'general'],
   'garten': ['plants', 'general'],
   'einkaufen': ['errands', 'general'],
