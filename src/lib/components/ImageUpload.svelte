@@ -1,8 +1,14 @@
 <script lang="ts">
   import Camera from '@lucide/svelte/icons/camera';
+  import X from '@lucide/svelte/icons/x';
+  import { onDestroy } from 'svelte';
   import { m, type CospendLang } from '$lib/js/cospendI18n';
 
   let cameraInput = $state<HTMLInputElement | null>(null);
+  let videoEl = $state<HTMLVideoElement | null>(null);
+  let cameraOpen = $state(false);
+  let cameraError = $state('');
+  let cameraStream: MediaStream | null = null;
 
   let {
     imagePreview = $bindable(''),
@@ -31,30 +37,89 @@
 
   const displayTitle = $derived(title ?? t.receipt_image);
 
+  function acceptFile(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      onerror?.(t.file_too_large);
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      onerror?.(t.invalid_image);
+      return;
+    }
+
+    imageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+
+    onimageSelected?.(file);
+  }
+
   function handleImageChange(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        onerror?.(t.file_too_large);
-        return;
-      }
+    if (file) acceptFile(file);
+  }
 
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        onerror?.(t.invalid_image);
-        return;
-      }
-
-      imageFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        imagePreview = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-
-      onimageSelected?.(file);
+  // Live in-app camera (getUserMedia). The `capture` file-input attribute only
+  // opens the OS camera in mobile *browsers*; the Tauri WebView ignores it and
+  // shows the file picker. getUserMedia works in both, so it's the unified path.
+  async function openCamera() {
+    cameraError = '';
+    // Where the live camera API isn't available (e.g. insecure context), fall
+    // back to the OS picker/`capture` input so behaviour is no worse than before.
+    if (!globalThis.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      cameraInput?.click();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      cameraStream = stream;
+      cameraOpen = true;
+      await new Promise((r) => requestAnimationFrame(r));
+      if (!videoEl) { closeCamera(); return; }
+      videoEl.srcObject = stream;
+      await videoEl.play();
+    } catch {
+      closeCamera();
+      cameraError = t.camera_error;
+      cameraInput?.click();
     }
   }
+
+  function closeCamera() {
+    cameraOpen = false;
+    if (cameraStream) {
+      for (const track of cameraStream.getTracks()) track.stop();
+      cameraStream = null;
+    }
+    if (videoEl) videoEl.srcObject = null;
+  }
+
+  function capturePhoto() {
+    if (!videoEl || !videoEl.videoWidth) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoEl.videoWidth;
+    canvas.height = videoEl.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { closeCamera(); return; }
+    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) acceptFile(new File([blob], `receipt-${Date.now()}.jpg`, { type: 'image/jpeg' }));
+        closeCamera();
+      },
+      'image/jpeg',
+      0.92
+    );
+  }
+
+  onDestroy(closeCamera);
 
   function removeImage() {
     imageFile = null;
@@ -114,11 +179,16 @@
     </div>
 
     <!-- Camera shortcut — sits outside the dropzone (whose label would otherwise
-         swallow taps); shown on touch devices via CSS. -->
-    <button type="button" class="camera-btn" onclick={() => cameraInput?.click()}>
+         swallow taps); shown on touch devices via CSS. Opens a live in-app
+         camera (getUserMedia) so it works in the Tauri WebView too. -->
+    <button type="button" class="camera-btn" onclick={openCamera}>
       <Camera size={18} />
       {t.take_photo}
     </button>
+    {#if cameraError}
+      <p class="camera-error">{cameraError}</p>
+    {/if}
+    <!-- Fallback for browsers without a usable getUserMedia (insecure context, etc.) -->
     <input
       bind:this={cameraInput}
       type="file"
@@ -128,6 +198,20 @@
       disabled={uploading}
       hidden
     />
+  {/if}
+
+  {#if cameraOpen}
+    <div class="camera-overlay" role="dialog" aria-modal="true" aria-label={t.take_photo}>
+      <video bind:this={videoEl} class="camera-video" playsinline autoplay muted></video>
+      <div class="camera-controls">
+        <button type="button" class="camera-cancel" onclick={closeCamera}>
+          <X size={20} />
+          {t.cancel}
+        </button>
+        <button type="button" class="camera-shutter" onclick={capturePhoto} aria-label={t.capture_photo}></button>
+        <span class="camera-spacer"></span>
+      </div>
+    </div>
   {/if}
 
   {#if uploading}
@@ -267,4 +351,59 @@
     font-size: 0.9rem;
     text-align: center;
   }
+
+  .camera-error {
+    margin: 0.5rem 0 0;
+    text-align: center;
+    color: var(--red);
+    font-size: 0.85rem;
+  }
+
+  /* Full-screen live camera */
+  .camera-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+  }
+  .camera-video {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    object-fit: contain;
+    background: #000;
+  }
+  .camera-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem calc(1.25rem + env(safe-area-inset-bottom));
+    background: #000;
+  }
+  .camera-cancel {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .camera-spacer { flex: 1; }
+  .camera-shutter {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .camera-shutter:active { transform: scale(0.94); }
 </style>

@@ -62,6 +62,8 @@ export const en = {
 	replace_image: "Replace Image",
 	upload_receipt: "Upload Receipt Image",
 	take_photo: "Take photo",
+	capture_photo: "Capture",
+	camera_error: "Could not open the camera. Use upload instead.",
 	uploading_image: "Uploading image...",
 	file_too_large: "File size must be less than 5MB",
 	invalid_image: "Please select a valid image file (JPEG, PNG, WebP)",
