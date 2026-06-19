@@ -98,7 +98,7 @@ export function getDRI(sex: 'male' | 'female'): DRI {
 
 /** Nutrient display metadata: label, unit, and whether it's a max (upper limit) */
 export const NUTRIENT_META: Record<keyof DRI, { label: string; labelDe: string; unit: string; isMax?: boolean }> = {
-  protein:     { label: 'Protein',      labelDe: 'Eiweiß',        unit: 'g' },
+  protein:     { label: 'Protein',      labelDe: 'Eiweiss',        unit: 'g' },
   fat:         { label: 'Fat',          labelDe: 'Fett',          unit: 'g' },
   carbs:       { label: 'Carbs',        labelDe: 'Kohlenhydrate', unit: 'g' },
   fiber:       { label: 'Fiber',        labelDe: 'Ballaststoffe', unit: 'g' },

@@ -283,11 +283,11 @@
 			aria-label={`Foto ${lightboxIndex + 1} von ${images.length}`}
 			transition:fade={{ duration: 150 }}
 		>
-			<button class="lb-backdrop" aria-label="Schließen" onclick={closeLightbox}></button>
+			<button class="lb-backdrop" aria-label="Schliessen" onclick={closeLightbox}></button>
 
 			<button
 				class="lb-btn lb-close"
-				aria-label="Schließen"
+				aria-label="Schliessen"
 				bind:this={closeBtn}
 				onclick={closeLightbox}
 			>

@@ -192,8 +192,8 @@
 				type="button"
 				class="close"
 				onclick={closePanel}
-				aria-label="Panel schließen"
-				title="Schließen"
+				aria-label="Panel schliessen"
+				title="Schliessen"
 			>
 				<X size={16} strokeWidth={2} />
 			</button>

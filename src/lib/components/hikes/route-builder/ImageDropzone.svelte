@@ -302,7 +302,7 @@
 						{:else}Fehler: {e.message ?? 'unbekannt'}
 						{/if}
 					</span>
-					<button type="button" class="dismiss" aria-label="Schließen" onclick={() => dismiss(e.id)}>
+					<button type="button" class="dismiss" aria-label="Schliessen" onclick={() => dismiss(e.id)}>
 						<X size={13} strokeWidth={2} />
 					</button>
 				</li>

@@ -231,7 +231,7 @@ export function season1962Label(season: string, lang: CalendarLang): string {
 }
 
 const COLOR_LABEL_1962: Record<string, Record<CalendarLang, string>> = {
-	WHITE: { en: 'White', de: 'Weiß', la: 'Albus' },
+	WHITE: { en: 'White', de: 'Weiss', la: 'Albus' },
 	RED: { en: 'Red', de: 'Rot', la: 'Ruber' },
 	GREEN: { en: 'Green', de: 'Grün', la: 'Viridis' },
 	PURPLE: { en: 'Violet', de: 'Violett', la: 'Violaceus' },

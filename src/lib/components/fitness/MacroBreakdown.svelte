@@ -55,7 +55,7 @@
 	}
 
 	const macros = $derived([
-		{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', color: 'var(--nord14)', grams: protein, icon: Beef },
+		{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiss', color: 'var(--nord14)', grams: protein, icon: Beef },
 		{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: fat, icon: Droplet },
 		{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: carbs, icon: Wheat },
 	]);
@@ -86,7 +86,7 @@
 	{#if showDetailRows}
 		<div class="mb-rows">
 			<div class="mb-row">
-				<span class="mb-row-label"><Beef size={12} /> {isEn ? 'Protein' : 'Eiweiß'}</span>
+				<span class="mb-row-label"><Beef size={12} /> {isEn ? 'Protein' : 'Eiweiss'}</span>
 				<span>{fmt(protein)} g</span>
 			</div>
 			<div class="mb-row">

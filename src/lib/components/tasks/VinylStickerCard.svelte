@@ -61,7 +61,7 @@
       {/if}
     </dl>
 
-    <button class="close" onclick={onclose}>Schließen</button>
+    <button class="close" onclick={onclose}>Schliessen</button>
   </div>
 </div>
 

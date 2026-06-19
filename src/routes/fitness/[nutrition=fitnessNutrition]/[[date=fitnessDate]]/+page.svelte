@@ -1610,7 +1610,7 @@
 								<strong>{isEn ? 'TDEE unavailable' : 'TDEE nicht verfügbar'}</strong>
 								<span>{isEn
 									? 'Your TDEE (Total Daily Energy Expenditure) is the calories you burn per day. Set weight, height, and birth year under'
-									: 'Dein TDEE (Gesamtenergieumsatz) sind die Kalorien, die du pro Tag verbrauchst. Gewicht, Größe und Geburtsjahr einstellen unter'}
+									: 'Dein TDEE (Gesamtenergieumsatz) sind die Kalorien, die du pro Tag verbrauchst. Gewicht, Grösse und Geburtsjahr einstellen unter'}
 									<a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })}>{t.measure_title}</a>
 								</span>
 							</div>
@@ -1665,7 +1665,7 @@
 						<select id="goal-activity" bind:value={editActivityLevel}>
 							<option value="sedentary">{isEn ? 'Sedentary — desk job' : 'Sitzend — Bürojob'} (×1.2)</option>
 							<option value="light">{isEn ? 'Lightly active — some walking' : 'Leicht aktiv — etwas Gehen'} (×1.3)</option>
-							<option value="moderate">{isEn ? 'Moderately active — on feet' : 'Mäßig aktiv — auf den Beinen'} (×1.4)</option>
+							<option value="moderate">{isEn ? 'Moderately active — on feet' : 'Mässig aktiv — auf den Beinen'} (×1.4)</option>
 							<option value="very_active">{isEn ? 'Very active — physical job' : 'Sehr aktiv — körperliche Arbeit'} (×1.5)</option>
 						</select>
 					</div>

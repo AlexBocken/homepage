@@ -14,6 +14,36 @@
 # staging of a track.gpx won't survive. These files are generated, so that's fine.
 set -euo pipefail
 
+# --- Swiss High German: refuse newly-added »ß« in German text ---
+# We spell German the Swiss way (ß → ss). This scans only the lines a commit
+# ADDS, so pre-existing ß elsewhere never blocks you. Intentional ß (the
+# ß→ss normalisers, fixed category/tag identifiers, …) can stay by putting the
+# marker "ß-ok" on the line. Excluded wholesale: the Allioli corpus and BLS
+# food DB (kept verbatim) and generated embedding files.
+ss_bad=0
+while IFS= read -r -d '' f; do
+	case "$f" in
+		.githooks/*|pnpm-lock.yaml|static/allioli.tsv|src/lib/data/blsDb.ts) continue ;;
+		src/lib/server/nutritionMatcher.ts|scripts/translate-apologetik.ts) continue ;;
+		*embeddings*.json|*Embeddings*.json) continue ;;
+	esac
+	added=$(git diff --cached --no-color -U0 -- "$f" | grep '^+' | grep -v '^+++' | grep -F 'ß' | grep -vF 'ß-ok' || true)
+	if [ -n "$added" ]; then
+		if [ "$ss_bad" -eq 0 ]; then
+			echo "[pre-commit] ✗ Found »ß« in staged text — we use Swiss High German (ss):"
+		fi
+		ss_bad=1
+		echo "  $f"
+		printf '%s\n' "$added" | sed 's/^+/      /'
+	fi
+done < <(git diff --cached --name-only -z --diff-filter=ACM)
+
+if [ "$ss_bad" -ne 0 ]; then
+	echo "[pre-commit] Replace ß with ss. If a ß is intentional, add the marker 'ß-ok' on that line."
+	echo "[pre-commit] To bypass this check entirely: git commit --no-verify"
+	exit 1
+fi
+
 # Staged Added/Copied/Modified track.gpx paths, NUL-delimited so non-ASCII slug
 # dirs (e.g. "…pfäffikersee") come through as raw bytes, unquoted.
 files=()

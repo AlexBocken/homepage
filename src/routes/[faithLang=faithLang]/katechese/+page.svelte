@@ -253,7 +253,7 @@
 				</span>
 				<span class="step-body">
 					<span class="step-title">Göttliche Tugenden</span>
-					<span class="step-desc">Glaube, Hoffnung und Liebe — Gegenstand, Wirkungen und Verstöße.</span>
+					<span class="step-desc">Glaube, Hoffnung und Liebe — Gegenstand, Wirkungen und Verstösse.</span>
 				</span>
 				<ArrowRight class="step-go" size={18} />
 			</a>

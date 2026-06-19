@@ -218,7 +218,7 @@
 	<!-- Portion selector (USDA only) -->
 	{#if portions.length > 0}
 		<div class="portion-selector">
-			<label for="portion-select">{isEn ? 'Serving size' : 'Portionsgröße'}</label>
+			<label for="portion-select">{isEn ? 'Serving size' : 'Portionsgrösse'}</label>
 			<select id="portion-select" bind:value={selectedPortionIdx}>
 				<option value={-1}>{isEn ? 'Per 100 g' : 'Pro 100 g'}</option>
 				{#each portions as portion, i}
@@ -238,7 +238,7 @@
 	<!-- Macro rings -->
 	<div class="macro-rings">
 		{#each [
-			{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiß', color: 'var(--nord14)', grams: scaled(n.protein), icon: Beef },
+			{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiss', color: 'var(--nord14)', grams: scaled(n.protein), icon: Beef },
 			{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: scaled(n.fat), icon: Droplet },
 			{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: scaled(n.carbs), icon: Wheat },
 		] as macro (macro.color)}
@@ -257,7 +257,7 @@
 	<!-- Macro detail grid -->
 	<div class="macro-detail-card">
 		<div class="detail-row">
-			<span class="detail-name"><Beef size={12} /> {isEn ? 'Protein' : 'Eiweiß'}</span>
+			<span class="detail-name"><Beef size={12} /> {isEn ? 'Protein' : 'Eiweiss'}</span>
 			<span class="detail-val">{fmt(scaled(n.protein))} g</span>
 		</div>
 		<div class="detail-row">
@@ -364,7 +364,7 @@
 	<!-- Portions table (USDA only) -->
 	{#if portions.length > 0}
 		<div class="section-card">
-			<h2>{isEn ? 'Common Serving Sizes' : 'Übliche Portionsgrößen'}</h2>
+			<h2>{isEn ? 'Common Serving Sizes' : 'Übliche Portionsgrössen'}</h2>
 			<div class="portions-table">
 				<div class="portions-header">
 					<span>{isEn ? 'Serving' : 'Portion'}</span>

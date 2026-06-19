@@ -263,7 +263,7 @@
 				{#each Object.keys(LIT_COLOR_VAR) as key (key)}
 					{@const label =
 						lang === 'de'
-							? { WHITE: 'Weiß', RED: 'Rot', GREEN: 'Grün', PURPLE: 'Violett', ROSE: 'Rosa', BLACK: 'Schwarz' }[key]
+							? { WHITE: 'Weiss', RED: 'Rot', GREEN: 'Grün', PURPLE: 'Violett', ROSE: 'Rosa', BLACK: 'Schwarz' }[key]
 							: lang === 'la'
 								? { WHITE: 'Albus', RED: 'Ruber', GREEN: 'Viridis', PURPLE: 'Violaceus', ROSE: 'Rosaceus', BLACK: 'Niger' }[key]
 								: { WHITE: 'White', RED: 'Red', GREEN: 'Green', PURPLE: 'Violet', ROSE: 'Rose', BLACK: 'Black' }[key]}

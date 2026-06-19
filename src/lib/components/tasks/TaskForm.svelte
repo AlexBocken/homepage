@@ -37,7 +37,7 @@
     { tag: 'wäsche', icon: WashingMachine },
     { tag: 'bügeln', icon: Shirt },
     { tag: 'pflanzen', icon: Flower2 },
-    { tag: 'gießen', icon: Droplets },
+    { tag: 'giessen', icon: Droplets },
     { tag: 'düngen', icon: Leaf },
     { tag: 'garten', icon: Leaf },
     { tag: 'einkaufen', icon: ShoppingCart },

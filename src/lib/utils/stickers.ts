@@ -20,7 +20,7 @@ export const STICKERS: Sticker[] = [
   { id: 'rose-blue', name: 'Blaue-Rose-Katze', image: 'gutkato_rozo_blua.svg', description: 'Eine blaue Rose', rarity: 'uncommon', category: 'plants' },
   { id: 'rose-yellow', name: 'Gelbe-Rose-Katze', image: 'gutkato_rozo_flava.svg', description: 'Sonnengelbe Blüte', rarity: 'uncommon', category: 'plants' },
   { id: 'rose-green', name: 'Grüne-Rose-Katze', image: 'gutkato_rozo_verda.svg', description: 'Frisches Grün', rarity: 'uncommon', category: 'plants' },
-  { id: 'rose-white', name: 'Weiße-Rose-Katze', image: 'gutkato_rozo_blanka.svg', description: 'Reine Eleganz', rarity: 'uncommon', category: 'plants' },
+  { id: 'rose-white', name: 'Weisse-Rose-Katze', image: 'gutkato_rozo_blanka.svg', description: 'Reine Eleganz', rarity: 'uncommon', category: 'plants' },
   { id: 'rose-black', name: 'Schwarze-Rose-Katze', image: 'gutkato_rozo_nigra.svg', description: 'Geheimnisvoll', rarity: 'rare', category: 'plants' },
   { id: 'rose-orange', name: 'Orange-Rose-Katze', image: 'gutkato_rozo_oranĝkolora.svg', description: 'Warmer Orangeton', rarity: 'uncommon', category: 'plants' },
   { id: 'rose-violet', name: 'Violette-Rose-Katze', image: 'gutkato_rozo_violkolora.svg', description: 'Königliche Blüte', rarity: 'uncommon', category: 'plants' },
@@ -29,7 +29,7 @@ export const STICKERS: Sticker[] = [
 
   // Kitchen / cooking
   { id: 'cutlery', name: 'Besteckkatze', image: 'blobcat_cutlery.svg', description: 'Messer und Gabel bereit', rarity: 'common', category: 'kitchen' },
-  { id: 'cupcake', name: 'Muffinkatze', image: 'blobcat_cupcake.svg', description: 'Süße Belohnung!', rarity: 'common', category: 'kitchen' },
+  { id: 'cupcake', name: 'Muffinkatze', image: 'blobcat_cupcake.svg', description: 'Süsse Belohnung!', rarity: 'common', category: 'kitchen' },
   { id: 'eating-cupcake', name: 'Naschkatze', image: 'blobcat_eating_cupcake.svg', description: 'Nom nom nom', rarity: 'uncommon', category: 'kitchen' },
   { id: 'pot-cat', name: 'Topfkatze', image: 'blobcat_pot.svg', description: 'Was köchelt da?', rarity: 'uncommon', category: 'kitchen' },
   { id: 'hungry', name: 'Hungrige Katze', image: 'blobcat_hungry_cutlery.svg', description: 'Wann gibt\'s Essen?', rarity: 'rare', category: 'kitchen' },
@@ -44,7 +44,7 @@ export const STICKERS: Sticker[] = [
   { id: 'ice-cream', name: 'Eiskatze', image: 'gutkato_manĝas_glaciaĵon.svg', description: 'Kalt und lecker!', rarity: 'uncommon', category: 'kitchen' },
   { id: 'water', name: 'Wasserkatze', image: 'gutkato_trinkas_akvon.svg', description: 'Schluck für Schluck', rarity: 'common', category: 'kitchen' },
   { id: 'juice', name: 'Saftkatze', image: 'gutkato_trinkas_sukon.svg', description: 'Fruchtig frisch', rarity: 'common', category: 'kitchen' },
-  { id: 'oven-mitts', name: 'Ofenhandschuhkatze', image: 'gutkato_fornogantoj.svg', description: 'Heiß, aber sicher!', rarity: 'uncommon', category: 'kitchen' },
+  { id: 'oven-mitts', name: 'Ofenhandschuhkatze', image: 'gutkato_fornogantoj.svg', description: 'Heiss, aber sicher!', rarity: 'uncommon', category: 'kitchen' },
 
   // Errands
   { id: 'profit', name: 'Geschäftskatze', image: 'blobcat_profit.svg', description: 'Guter Deal!', rarity: 'common', category: 'errands' },
@@ -64,7 +64,7 @@ export const STICKERS: Sticker[] = [
   { id: 'finger-guns', name: 'Fingerpistolenkatze', image: 'blobcat_finger_guns.svg', description: 'Pew pew!', rarity: 'uncommon', category: 'general' },
   { id: 'proud', name: 'Stolze Katze', image: 'blobcat_proud.svg', description: 'Richtig gut!', rarity: 'uncommon', category: 'general' },
   { id: 'giggling', name: 'Kicherkatze', image: 'gutkato_hihias.svg', description: 'Hihihi!', rarity: 'common', category: 'general' },
-  { id: 'having-fun', name: 'Spaßkatze', image: 'gutkato_amuziĝas.svg', description: 'Macht Spaß!', rarity: 'common', category: 'general' },
+  { id: 'having-fun', name: 'Spasskatze', image: 'gutkato_amuziĝas.svg', description: 'Macht Spass!', rarity: 'common', category: 'general' },
   { id: 'wink', name: 'Zwinkerkatze', image: 'gutkato_palpebrosigno.svg', description: '*zwinker*', rarity: 'common', category: 'general' },
   { id: 'wink-tongue', name: 'Frechkatze', image: 'gutkato_palpebrosigno_lango.svg', description: 'Bleh! ;)', rarity: 'uncommon', category: 'general' },
   { id: 'xd', name: 'xD-Katze', image: 'gutkato_xD.svg', description: 'xDDD', rarity: 'uncommon', category: 'general' },
@@ -129,7 +129,7 @@ export const STICKERS: Sticker[] = [
   { id: 'mail-carrier', name: 'Postkatze', image: 'gutkato_leterportisto.svg', description: 'Post ist da!', rarity: 'rare', category: 'special' },
 
   // Quirky / cute (general pool — drops for any task)
-  { id: 'adorable', name: 'Süße Katze', image: 'blobcat_adorable.svg', description: 'Unwiderstehlich süß!', rarity: 'uncommon', category: 'general' },
+  { id: 'adorable', name: 'Süsse Katze', image: 'blobcat_adorable.svg', description: 'Unwiderstehlich süss!', rarity: 'uncommon', category: 'general' },
   { id: 'adoring', name: 'Bewundernde Katze', image: 'blobcat_adoring.svg', description: 'So toll!', rarity: 'common', category: 'general' },
   { id: 'joyful-surprise', name: 'Überraschte Katze', image: 'blobcat_joyful_surprise.svg', description: 'Oh! Was ist das?', rarity: 'uncommon', category: 'general' },
   { id: 'purring', name: 'Schnurrkatze', image: 'blobcat_purring.svg', description: 'Prrrrr...', rarity: 'common', category: 'general' },
@@ -149,7 +149,7 @@ export const STICKERS: Sticker[] = [
   { id: 'g-amused', name: 'Belustigte Katze', image: 'gutkato_amuzetiĝas.svg', description: 'Ganz amüsant', rarity: 'common', category: 'general' },
   { id: 'g-warning', name: 'Warnkatze', image: 'gutkato_averto.svg', description: 'Achtung!', rarity: 'uncommon', category: 'general' },
   { id: 'g-thumbs-down', name: 'Daumen-runter-Katze', image: 'gutkato_dikfingro_malsupren.svg', description: 'Eher nicht...', rarity: 'uncommon', category: 'general' },
-  { id: 'g-wide-eyed', name: 'Großaugenkatze', image: 'gutkato_disokula.svg', description: 'Ganz große Augen', rarity: 'uncommon', category: 'general' },
+  { id: 'g-wide-eyed', name: 'Grossaugenkatze', image: 'gutkato_disokula.svg', description: 'Ganz grosse Augen', rarity: 'uncommon', category: 'general' },
   { id: 'g-fallen', name: 'Umgekippte Katze', image: 'gutkato_falinta.svg', description: 'Einfach umgefallen', rarity: 'uncommon', category: 'general' },
   { id: 'g-dizzy', name: 'Schwindelkatze', image: 'gutkato_kapturniĝas.svg', description: 'Mir wird ganz wirr', rarity: 'uncommon', category: 'general' },
   { id: 'g-gesture', name: 'Gestenkatze', image: 'gutkato_kimegesto.svg', description: 'Komm mal her!', rarity: 'uncommon', category: 'general' },
@@ -223,7 +223,7 @@ export const STICKERS: Sticker[] = [
   // Rare / special
   { id: 'g-burning', name: 'Brennende Katze', image: 'gutkato_brulas.svg', description: 'Es brennt lichterloh!', rarity: 'legendary', category: 'special' },
   { id: 'g-this-is-fine', name: 'Alles-gut-Katze', image: 'gutkato_brulas_senzorge.svg', description: 'Alles in bester Ordnung.', rarity: 'legendary', category: 'special' },
-  { id: 'g-melting', name: 'Schmelzkatze', image: 'gutkato_degelas.svg', description: 'Ich zerfließe...', rarity: 'legendary', category: 'special' },
+  { id: 'g-melting', name: 'Schmelzkatze', image: 'gutkato_degelas.svg', description: 'Ich zerfliesse...', rarity: 'legendary', category: 'special' },
   { id: 'g-devil', name: 'Teufelskatze', image: 'gutkato_diablo.svg', description: 'Kleiner Schlingel!', rarity: 'legendary', category: 'special' },
   { id: 'g-fading', name: 'Verschwindende Katze', image: 'gutkato_dismalaperas.svg', description: 'Schon halb weg...', rarity: 'legendary', category: 'special' },
   { id: 'g-drowning', name: 'Untergehende Katze', image: 'gutkato_dronfeiĉo.svg', description: 'Hilfe, ich versinke!', rarity: 'legendary', category: 'special' },

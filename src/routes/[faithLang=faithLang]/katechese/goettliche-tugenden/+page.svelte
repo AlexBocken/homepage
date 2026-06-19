@@ -20,15 +20,15 @@
 		{ id: 'glaube', short: 'Glaube · fides', href: '#glaube' },
 		{ id: 'glaube-gegenstand', short: 'Gegenstand', href: '#glaube-gegenstand', group: 'Glaube' },
 		{ id: 'glaube-wirkungen', short: 'Wirkungen', href: '#glaube-wirkungen', group: 'Glaube' },
-		{ id: 'glaube-verstoesse', short: 'Verstöße', href: '#glaube-verstoesse', group: 'Glaube' },
+		{ id: 'glaube-verstoesse', short: 'Verstösse', href: '#glaube-verstoesse', group: 'Glaube' },
 		{ id: 'hoffnung', short: 'Hoffnung · spes', href: '#hoffnung' },
 		{ id: 'hoffnung-gegenstand', short: 'Gegenstand', href: '#hoffnung-gegenstand', group: 'Hoffnung' },
 		{ id: 'hoffnung-wirkungen', short: 'Wirkungen', href: '#hoffnung-wirkungen', group: 'Hoffnung' },
-		{ id: 'hoffnung-verstoesse', short: 'Verstöße', href: '#hoffnung-verstoesse', group: 'Hoffnung' },
+		{ id: 'hoffnung-verstoesse', short: 'Verstösse', href: '#hoffnung-verstoesse', group: 'Hoffnung' },
 		{ id: 'liebe', short: 'Liebe · caritas', href: '#liebe' },
 		{ id: 'liebe-gegenstand', short: 'Gegenstand', href: '#liebe-gegenstand', group: 'Liebe' },
 		{ id: 'liebe-wirkungen', short: 'Wirkungen', href: '#liebe-wirkungen', group: 'Liebe' },
-		{ id: 'liebe-verstoesse', short: 'Verstöße', href: '#liebe-verstoesse', group: 'Liebe' },
+		{ id: 'liebe-verstoesse', short: 'Verstösse', href: '#liebe-verstoesse', group: 'Liebe' },
 		{ id: 'dauer', short: 'Dauer der Tugenden', href: '#dauer' }
 	];
 
@@ -73,7 +73,7 @@
 		'auch die Mitmenschen um Gottes willen lieben'
 	];
 
-	// Verstöße gegen die Liebe — absteigend
+	// Verstösse gegen die Liebe — absteigend
 	const liebeAbstieg = [
 		{ name: 'Gleichgültigkeit', stufe: 1 },
 		{ name: 'Lauheit', stufe: 2 },
@@ -164,14 +164,14 @@
 				<span class="pillar-la">spes</span>
 			</a>
 			<a class="virtue-pillar v-liebe greatest" href="#liebe" onclick={(e) => jumpTo(e, 'liebe')}>
-				<span class="crown">das Größte</span>
+				<span class="crown">das Grösste</span>
 				<span class="pillar-icon"><Heart size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Liebe</span>
 				<span class="pillar-la">caritas</span>
 			</a>
 		</div>
 		<blockquote class="quote-scripture">
-			<p>Jetzt bleiben Glaube, Hoffnung, Liebe, diese drei: das Größte von ihnen ist die Liebe.</p>
+			<p>Jetzt bleiben Glaube, Hoffnung, Liebe, diese drei: das Grösste von ihnen ist die Liebe.</p>
 			<cite>1 Kor 13, 13</cite>
 		</blockquote>
 	</section>
@@ -211,7 +211,7 @@
 				</div>
 			</div>
 			<p class="formula-result">&rarr; Zustimmung zur göttlichen Offenbarung</p>
-			<p>Lebendig ist der Glaube, wenn er von der Liebe durchformt ist (<em>fides formata</em>) — im Unterschied zum bloßen Fürwahrhalten (<em>fides informis</em>).</p>
+			<p>Lebendig ist der Glaube, wenn er von der Liebe durchformt ist (<em>fides formata</em>) — im Unterschied zum blossen Fürwahrhalten (<em>fides informis</em>).</p>
 		</div>
 
 		<div class="part" id="glaube-wirkungen">
@@ -241,7 +241,7 @@
 		</div>
 
 		<div class="part" id="glaube-verstoesse">
-			<span class="part-tag">3 · Verstöße</span>
+			<span class="part-tag">3 · Verstösse</span>
 			<p>Gegen den Glauben steht jede Form von <strong>Un-</strong> und <strong>Aberglauben</strong>. Religiöse Unwissenheit lässt den Glauben verkümmern.</p>
 			<p class="dauer-note">Die Tugend des Glaubens dauert, bis wir Gott schauen von Angesicht zu Angesicht.</p>
 		</div>
@@ -265,7 +265,7 @@
 				<cite>KKK 2090</cite>
 			</blockquote>
 			<blockquote class="quote-scripture">
-				<p>Freut euch und frohlockt, denn euer Lohn ist groß im Himmel.</p>
+				<p>Freut euch und frohlockt, denn euer Lohn ist gross im Himmel.</p>
 				<cite>Mt 5, 12</cite>
 			</blockquote>
 		</div>
@@ -280,7 +280,7 @@
 		</div>
 
 		<div class="part" id="hoffnung-verstoesse">
-			<span class="part-tag">3 · Verstöße</span>
+			<span class="part-tag">3 · Verstösse</span>
 			<p>Die Hoffnung erwartet das Heil von Gott und sonst nirgends — gegen Esoterik und Gnosis. Gegen sie stehen <strong>zwei entgegengesetzte</strong> Fehlhaltungen:</p>
 			<div class="balance">
 				<div class="balance-side">
@@ -297,7 +297,7 @@
 					<span class="balance-desc">Übermut — der Mensch hofft, ohne Bekehrung und ohne Hilfe von oben selig zu werden.</span>
 				</div>
 			</div>
-			<p class="dauer-note">Die Tugend der Hoffnung dauert, bis wir die verheißenen Güter unverlierbar besitzen.</p>
+			<p class="dauer-note">Die Tugend der Hoffnung dauert, bis wir die verheissenen Güter unverlierbar besitzen.</p>
 		</div>
 	</section>
 
@@ -351,7 +351,7 @@
 		</div>
 
 		<div class="part" id="liebe-verstoesse">
-			<span class="part-tag">3 · Verstöße</span>
+			<span class="part-tag">3 · Verstösse</span>
 			<p>Gegen die Liebe stehen Gleichgültigkeit, Lauheit, Undankbarkeit und vor allem der <strong>Gotteshass</strong> — eine Abwärtsbewegung weg von Gott:</p>
 			<div class="descent">
 				{#each liebeAbstieg as stufe (stufe.name)}
@@ -841,7 +841,7 @@
 		padding-left: 1.4em;
 	}
 
-	/* Descent — Verstöße gegen die Liebe */
+	/* Descent — Verstösse gegen die Liebe */
 	.descent {
 		margin: 1em 0;
 	}

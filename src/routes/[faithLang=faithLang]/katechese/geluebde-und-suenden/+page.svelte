@@ -69,7 +69,7 @@
 	const geluebdeMerkmale = [
 		{ label: 'An Gott gerichtet', desc: 'Es zielt auf seine Ehre.' },
 		{ label: 'Freiwillig', desc: 'Unter Zwang oder aus schwerer Furcht abgelegt, wäre es ungültig.' },
-		{ label: 'Verbindlich', desc: 'Ein bloßer Vorsatz ist noch kein Gelübde — es verpflichtet zur Erfüllung.' },
+		{ label: 'Verbindlich', desc: 'Ein blosser Vorsatz ist noch kein Gelübde — es verpflichtet zur Erfüllung.' },
 		{ label: 'Sittlich gut & möglich', desc: 'Etwas Unmoralisches oder Unmögliches kann nicht Gegenstand eines Gelübdes sein.' }
 	];
 
@@ -153,7 +153,7 @@
 	<!-- ============ DAS GELÜBDE ============ -->
 	<section id="geluebde">
 		<h2>Das Gelübde</h2>
-		<p>Etwas <em>geloben</em> heißt, etwas ernsthaft und feierlich zu versprechen. Ein <strong>Gelübde</strong> im eigentlichen Sinn ist ein Gott überlegt und frei gegebenes Versprechen, das kraft der Tugend der Gottesverehrung erfüllt werden muss (vgl. CIC can 1191).</p>
+		<p>Etwas <em>geloben</em> heisst, etwas ernsthaft und feierlich zu versprechen. Ein <strong>Gelübde</strong> im eigentlichen Sinn ist ein Gott überlegt und frei gegebenes Versprechen, das kraft der Tugend der Gottesverehrung erfüllt werden muss (vgl. CIC can 1191).</p>
 		<blockquote class="quote-church">
 			<p>Das Gelübde ist ein Akt der Hingabe, durch den sich der Christ Gott weiht oder ihm ein gutes Werk verspricht. Durch die Erfüllung seiner Gelübde schenkt er Gott, was er ihm versprochen und geweiht hat.</p>
 			<cite>KKK 2102</cite>
@@ -185,7 +185,7 @@
 			<div class="axis-grid">
 				<div class="axis-pole strong a-geltung">
 					<span class="pole-name">öffentlich</span>
-					<span class="pole-desc">im Namen der Kirche von einem rechtmäßigen Oberen entgegengenommen</span>
+					<span class="pole-desc">im Namen der Kirche von einem rechtmässigen Oberen entgegengenommen</span>
 				</div>
 				<div class="axis-pole strong a-anerkennung">
 					<span class="pole-name">feierlich</span>
@@ -206,7 +206,7 @@
 		<details class="bible-examples">
 			<summary>Gelübde in der Heiligen Schrift</summary>
 			<blockquote class="quote-scripture">
-				<p>Wenn jemand, Mann oder Frau, das besondere Gelübde des Nasiräates ablegt, sich dem Herrn zu weihen … darf er nichts von dem genießen, was vom Weinstock kommt … ein Schermesser darf nicht über sein Haupt kommen … er lasse sein Haupthaar frei wachsen.</p>
+				<p>Wenn jemand, Mann oder Frau, das besondere Gelübde des Nasiräates ablegt, sich dem Herrn zu weihen … darf er nichts von dem geniessen, was vom Weinstock kommt … ein Schermesser darf nicht über sein Haupt kommen … er lasse sein Haupthaar frei wachsen.</p>
 				<cite>Num 6, 2–5</cite>
 			</blockquote>
 			<blockquote class="quote-scripture">
@@ -292,7 +292,7 @@
 			</svg>
 		</div>
 		<blockquote class="quote-church">
-			<p>Der Aberglaube ist gewissermaßen ein abartiges Zuviel an Religiosität, der Unglaube ein Zuwenig.</p>
+			<p>Der Aberglaube ist gewissermassen ein abartiges Zuviel an Religiosität, der Unglaube ein Zuwenig.</p>
 			<cite>KKK 2110</cite>
 		</blockquote>
 
@@ -345,9 +345,9 @@
 			<p>Sie fanden aber bei allen Gefallenen unter den Kleidern Abbilder von den Götzen aus Jamnia, deren Gebrauch das Gesetz den Juden verbietet. Da wurde allen klar, dass sie wegen dieser Verfehlung gefallen waren.</p>
 			<cite>2 Makk 12, 39–41</cite>
 		</blockquote>
-		<p>Aberglaube kann sich auch in die rechte Gottesverehrung einschleichen, wenn man die Wirksamkeit von Gebet oder Sakramenten allein dem äußeren Vollzug zuschreibt und die innere Haltung vernachlässigt.</p>
+		<p>Aberglaube kann sich auch in die rechte Gottesverehrung einschleichen, wenn man die Wirksamkeit von Gebet oder Sakramenten allein dem äusseren Vollzug zuschreibt und die innere Haltung vernachlässigt.</p>
 		<blockquote class="quote-church">
-			<p>Wer die Wirksamkeit von Gebeten oder von sakramentalen Zeichen dem bloß äußerlichen Verrichten zuschreibt und dabei von den inneren Haltungen, die sie erfordern, absieht, verfällt dem Aberglaube.</p>
+			<p>Wer die Wirksamkeit von Gebeten oder von sakramentalen Zeichen dem bloss äusserlichen Verrichten zuschreibt und dabei von den inneren Haltungen, die sie erfordern, absieht, verfällt dem Aberglaube.</p>
 			<cite>KKK 2111</cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
@@ -402,10 +402,10 @@
 			{/each}
 		</div>
 		<blockquote class="quote-church">
-			<p>Sämtliche Praktiken der Magie und Zauberei, mit denen man sich geheime Mächte untertan machen will … verstoßen schwer gegen die Tugend der Gottesverehrung … Auch das Tragen von Amuletten ist verwerflich. Spiritismus ist oft mit Wahrsagerei oder Magie verbunden. Darum warnt die Kirche die Gläubigen davor.</p>
+			<p>Sämtliche Praktiken der Magie und Zauberei, mit denen man sich geheime Mächte untertan machen will … verstossen schwer gegen die Tugend der Gottesverehrung … Auch das Tragen von Amuletten ist verwerflich. Spiritismus ist oft mit Wahrsagerei oder Magie verbunden. Darum warnt die Kirche die Gläubigen davor.</p>
 			<cite>KKK 2117</cite>
 		</blockquote>
-		<p class="callout-warn">Die sog. „weiße Magie" ist ebenso zu verwerfen wie die „schwarze Magie" — sie verfolgt nur angeblich gute Zwecke. Auch Tische- oder Gläserrücken darf man keinesfalls als harmlos betrachten; häufig tarnen sich solche okkulten Praktiken als Party-Gag.</p>
+		<p class="callout-warn">Die sog. „weisse Magie" ist ebenso zu verwerfen wie die „schwarze Magie" — sie verfolgt nur angeblich gute Zwecke. Auch Tische- oder Gläserrücken darf man keinesfalls als harmlos betrachten; häufig tarnen sich solche okkulten Praktiken als Party-Gag.</p>
 		<blockquote class="quote-scripture">
 			<p>Niemand finde sich bei dir, der … einen Totengeist oder Wahrsagegeist befragt oder Auskunft bei den Toten sucht. Denn ein Gräuel für den Herrn ist jeder, der solches tut.</p>
 			<cite>Dt 18, 10–12</cite>

@@ -12,7 +12,7 @@ export const de = {
 	// Nutrition summary
 	nutrition: 'Nährwerte',
 	per_portion: 'pro Portion',
-	protein: 'Eiweiß',
+	protein: 'Eiweiss',
 	fat: 'Fett',
 	carbs: 'Kohlenh.',
 	fiber: 'Ballaststoffe',
