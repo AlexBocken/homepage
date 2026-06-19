@@ -11,7 +11,7 @@ export interface Sticker {
 export const STICKERS: Sticker[] = [
   // Cleaning / household
   { id: 'clean-cat', name: 'Putzkatze', image: 'blobcat_clean.svg', description: 'Alles blitzeblank!', rarity: 'common', category: 'cleaning' },
-  { id: 'sparkle-proud', name: 'Glitzerkatze', image: 'blobcat_sparkling_proud.svg', description: 'Stolz auf die Sauberkeit', rarity: 'uncommon', category: 'cleaning' },
+  { id: 'sparkle-proud', name: 'Selbstzufriedene Katze', image: 'blobcat_sparkling_proud.svg', description: 'Stolz auf die Sauberkeit', rarity: 'uncommon', category: 'cleaning' },
   { id: 'in-box', name: 'Kartonkatze', image: 'blobcat_in_box.svg', description: 'Alles eingeräumt', rarity: 'rare', category: 'cleaning' },
 
   // Plants / garden
@@ -62,14 +62,14 @@ export const STICKERS: Sticker[] = [
   { id: 'thumbs-up', name: 'Daumen-hoch-Katze', image: 'blobcat_thumbs_up.svg', description: 'Super gemacht!', rarity: 'uncommon', category: 'general' },
   { id: 'sparkle-eyes', name: 'Funkelkatze', image: 'blobcat_sparkle_eyes.svg', description: 'Augen wie Sterne', rarity: 'uncommon', category: 'general' },
   { id: 'finger-guns', name: 'Fingerpistolenkatze', image: 'blobcat_finger_guns.svg', description: 'Pew pew!', rarity: 'uncommon', category: 'general' },
-  { id: 'proud', name: 'Stolze Katze', image: 'blobcat_proud.svg', description: 'Richtig gut!', rarity: 'uncommon', category: 'general' },
+  { id: 'proud', name: 'Zufriedene Katze', image: 'blobcat_proud.svg', description: 'Einfach zufrieden', rarity: 'uncommon', category: 'general' },
   { id: 'giggling', name: 'Kicherkatze', image: 'gutkato_hihias.svg', description: 'Hihihi!', rarity: 'common', category: 'general' },
   { id: 'having-fun', name: 'Spasskatze', image: 'gutkato_amuziĝas.svg', description: 'Macht Spass!', rarity: 'common', category: 'general' },
   { id: 'wink', name: 'Zwinkerkatze', image: 'gutkato_palpebrosigno.svg', description: '*zwinker*', rarity: 'common', category: 'general' },
   { id: 'wink-tongue', name: 'Frechkatze', image: 'gutkato_palpebrosigno_lango.svg', description: 'Bleh! ;)', rarity: 'uncommon', category: 'general' },
   { id: 'xd', name: 'xD-Katze', image: 'gutkato_xD.svg', description: 'xDDD', rarity: 'uncommon', category: 'general' },
   { id: 'heart-face', name: 'Schmusekatze', image: 'gutkato_3c.svg', description: 'Ganz viel Liebe!', rarity: 'uncommon', category: 'general' },
-  { id: 'blushing', name: 'Errötende Katze', image: 'gutkato_ruĝiĝas.svg', description: '*errötet*', rarity: 'common', category: 'general' },
+  { id: 'blushing', name: 'Unsichtbare Katze', image: 'gutkato_ruĝiĝas.svg', description: 'Nur noch Umrisse', rarity: 'common', category: 'general' },
   { id: 'curious', name: 'Neugierige Katze', image: 'gutkato_scivola.svg', description: 'Oh? Was gibt\'s?', rarity: 'common', category: 'general' },
   { id: 'hug', name: 'Kuschelkatze', image: 'gutkato_ĉirkaŭpreno.svg', description: 'Eine Umarmung für dich', rarity: 'uncommon', category: 'general' },
   { id: 'kyaa', name: 'Kyaa-Katze', image: 'gutkato_kjooo.svg', description: 'Kyaaaa!', rarity: 'uncommon', category: 'general' },
@@ -102,7 +102,7 @@ export const STICKERS: Sticker[] = [
   { id: '10-of-10', name: 'Perfekte Katze', image: 'blobcat_sign_10_of_10.svg', description: '10 von 10!', rarity: 'rare', category: 'achievement' },
   { id: 'birthday', name: 'Geburtstagskatze', image: 'blobcat_birthday.svg', description: 'Party!', rarity: 'rare', category: 'achievement' },
   { id: 'cool-guns', name: 'Cool-Pew-Katze', image: 'gutkato_mojosa_fingropafas.svg', description: 'Cool wie kein anderer', rarity: 'rare', category: 'achievement' },
-  { id: 'genius', name: 'Geistesblitzkatze', image: 'gutkato_flucerba.svg', description: 'Einfach genial!', rarity: 'rare', category: 'achievement' },
+  { id: 'genius', name: 'Lehnkatze', image: 'gutkato_flucerba.svg', description: 'Lässig angelehnt', rarity: 'rare', category: 'achievement' },
   { id: 'hero-baguette', name: 'Baguettheldkatze', image: 'gutkato_heroo_bastonpano.svg', description: 'Zur Rettung – mit Baguette!', rarity: 'rare', category: 'achievement' },
   { id: 'drummer', name: 'Trommelkatze', image: 'gutkato_tamburo.svg', description: 'Rhythmus im Blut', rarity: 'rare', category: 'achievement' },
 
@@ -111,7 +111,7 @@ export const STICKERS: Sticker[] = [
   { id: 'tea', name: 'Teekatze', image: 'blobcat_drinking_tea.svg', description: 'Erstmal Tee', rarity: 'uncommon', category: 'cozy' },
   { id: 'cocoa', name: 'Kakaokatze', image: 'blobcat_drinking_cocoa.svg', description: 'Mmh, Kakao!', rarity: 'uncommon', category: 'cozy' },
   { id: 'book', name: 'Lesekatze', image: 'blobcat_book.svg', description: 'Ein gutes Buch', rarity: 'rare', category: 'cozy' },
-  { id: 'stretching', name: 'Reckkatze', image: 'gutkato_etendas_piedojn.svg', description: 'Ausgestreckt und entspannt', rarity: 'uncommon', category: 'cozy' },
+  { id: 'stretching', name: 'Greifkatze', image: 'gutkato_etendas_piedojn.svg', description: 'Streckt sich nach dir', rarity: 'uncommon', category: 'cozy' },
   { id: 'headphones', name: 'Kopfhörerkatze', image: 'gutkato_kapaŭskultiloj.svg', description: 'Chill-Beats', rarity: 'uncommon', category: 'cozy' },
   { id: 'glasses', name: 'Brillenkatze', image: 'gutkato_okulvitroj.svg', description: 'Gemütlich am Studieren', rarity: 'uncommon', category: 'cozy' },
   { id: 'yawn', name: 'Gähnkatze', image: 'gutkato_oscedas.svg', description: '*gääähn*', rarity: 'uncommon', category: 'cozy' },
