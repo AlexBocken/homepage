@@ -410,5 +410,20 @@ export const en = {
 	exercise_title: "Exercise",
 	recent_label: "Recent",
 	starts_with: "starts with",
-	days_ago_template: "{n} days ago"
+	days_ago_template: "{n} days ago",
+
+	// GPS track snapping (completion screen)
+	snap_heading: "Snap track to paths",
+	snap_to_paths: "Snap to paths",
+	snapping: "Snapping …",
+	snap_choose: "Which version do you want to save?",
+	snap_keep_recorded: "Keep recorded",
+	snap_use_snapped: "Use snapped",
+	snap_recorded: "Recorded",
+	snap_snapped: "Snapped",
+	snap_saved: "Snapped track saved",
+	snap_kept: "Kept recorded track",
+	snap_failed: "Snapping failed",
+	snap_saving: "Saving …",
+	snap_retry: "Try again"
 } as const satisfies Record<keyof typeof de, string>;

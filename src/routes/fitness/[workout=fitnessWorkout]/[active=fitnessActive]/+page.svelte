@@ -158,7 +158,25 @@
 	/** @type {any} */
 	let completionData = $state(null);
 
-	/** @type {any[]} */
+	// --- BRouter path snapping on the completion screen (GPS runs) ---
+	// 'idle' | 'loading' | 'preview' | 'saving' | 'saved' | 'kept' | 'error'
+	let snapState = $state('idle');
+	/** @type {Array<{lat:number,lng:number,altitude?:number}>|null} */
+	let snappedTrack = $state(null);
+	let snappedDistance = $state(0);
+	let snapError = $state('');
+
+	/** The first completion exercise that carries a usable GPS track. */
+	const completionGps = $derived.by(() => {
+		const exs = completionData?.exercises ?? [];
+		for (let i = 0; i < exs.length; i++) {
+			const tr = exs[i]?.gpsTrack;
+			if (tr && tr.length >= 2) return { index: i, track: tr };
+		}
+		return null;
+	});
+
+	/** @type {any} */
 	let templateDiffs = $state([]);
 	let templateUpdateStatus = $state('idle'); // 'idle' | 'updating' | 'done'
 
@@ -928,6 +946,97 @@
 		};
 	}
 
+	// --- Completion-screen comparison map (recorded vs snapped track) ---
+	/** @type {any} */
+	let compMap = null;
+	/** @type {any} */
+	let compRecordedLine = null;
+	/** @type {any} */
+	let compSnappedLine = null;
+	/** @type {any} */
+	let compLeaflet = null;
+
+	/** @type {import('svelte/attachments').Attachment<HTMLElement>} */
+	function mountCompletionMap(node) {
+		initCompletionMap(node);
+		return () => {
+			if (compMap) compMap.remove();
+			compMap = null;
+			compRecordedLine = null;
+			compSnappedLine = null;
+			compLeaflet = null;
+		};
+	}
+
+	/** @param {HTMLElement} node */
+	async function initCompletionMap(node) {
+		compLeaflet = await import('leaflet');
+		if (!node.isConnected || !completionGps) return;
+		compMap = compLeaflet.map(node, { attributionControl: false, zoomControl: false });
+		compLeaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			maxZoom: 19
+		}).addTo(compMap);
+		const latlngs = completionGps.track.map((/** @type {any} */ p) => [p.lat, p.lng]);
+		compRecordedLine = compLeaflet.polyline(latlngs, { color: '#88c0d0', weight: 4 }).addTo(compMap);
+		if (latlngs.length) compMap.fitBounds(compRecordedLine.getBounds(), { padding: [20, 20] });
+		// Re-draw a snapped overlay if one was already fetched before remount.
+		if (snappedTrack) drawSnappedLine();
+	}
+
+	function drawSnappedLine() {
+		if (!compMap || !compLeaflet || !snappedTrack) return;
+		if (compSnappedLine) compSnappedLine.remove();
+		const ll = snappedTrack.map((p) => [p.lat, p.lng]);
+		compSnappedLine = compLeaflet.polyline(ll, { color: '#bf616a', weight: 4 }).addTo(compMap);
+	}
+
+	/** Fetch a BRouter-snapped preview of the recorded track. */
+	async function snapToPaths() {
+		if (!completionData?.sessionId || !completionGps) return;
+		snapState = 'loading';
+		snapError = '';
+		try {
+			const res = await fetch(`/api/fitness/sessions/${completionData.sessionId}/snap`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ exerciseIndex: completionGps.index, profile: 'trekking', persist: false })
+			});
+			if (!res.ok) throw new Error('snap failed');
+			const d = await res.json();
+			snappedTrack = d.track;
+			snappedDistance = d.distance;
+			drawSnappedLine();
+			snapState = 'preview';
+		} catch {
+			snapState = 'error';
+			snapError = t.snap_failed;
+		}
+	}
+
+	/** Persist the snapped track in place of the recorded one and refresh stats. */
+	async function useSnappedTrack() {
+		if (!completionData?.sessionId || !completionGps) return;
+		snapState = 'saving';
+		try {
+			const res = await fetch(`/api/fitness/sessions/${completionData.sessionId}/snap`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ exerciseIndex: completionGps.index, profile: 'trekking', persist: true })
+			});
+			if (!res.ok) throw new Error('snap failed');
+			const d = await res.json();
+			completionData = {
+				...completionData,
+				totalDistance: d.totalDistance ?? completionData.totalDistance,
+				kcalResult: d.kcalEstimate ?? completionData.kcalResult
+			};
+			snapState = 'saved';
+		} catch {
+			snapState = 'error';
+			snapError = t.snap_failed;
+		}
+	}
+
 	/**
 	 * Compare completed workout exercises against the source template
 	 * and compute diffs for weight/reps changes.
@@ -1156,6 +1265,46 @@
 				</div>
 			{/each}
 		</div>
+
+		{#if completionGps && completionData.sessionId && !offlineQueued}
+			<div class="snap-section">
+				<h2><Route size={16} /> {t.snap_heading}</h2>
+				<div class="snap-map" {@attach mountCompletionMap}></div>
+				<div class="snap-legend">
+					<span class="snap-legend-item">
+						<span class="snap-swatch recorded"></span>
+						{t.snap_recorded} · {completionData.totalDistance.toFixed(2)} km
+					</span>
+					{#if snappedTrack}
+						<span class="snap-legend-item">
+							<span class="snap-swatch snapped"></span>
+							{t.snap_snapped} · {snappedDistance.toFixed(2)} km
+						</span>
+					{/if}
+				</div>
+
+				{#if snapState === 'idle'}
+					<button class="snap-btn" onclick={snapToPaths}>{t.snap_to_paths}</button>
+				{:else if snapState === 'loading'}
+					<button class="snap-btn" disabled>{t.snapping}</button>
+				{:else if snapState === 'preview'}
+					<p class="snap-hint">{t.snap_choose}</p>
+					<div class="snap-choice">
+						<button class="snap-choice-btn keep" onclick={() => (snapState = 'kept')}>{t.snap_keep_recorded}</button>
+						<button class="snap-choice-btn use" onclick={useSnappedTrack}>{t.snap_use_snapped}</button>
+					</div>
+				{:else if snapState === 'saving'}
+					<button class="snap-btn" disabled>{t.snap_saving}</button>
+				{:else if snapState === 'saved'}
+					<p class="snap-result"><Check size={16} /> {t.snap_saved}</p>
+				{:else if snapState === 'kept'}
+					<p class="snap-result"><Check size={16} /> {t.snap_kept}</p>
+				{:else if snapState === 'error'}
+					<p class="snap-error">{snapError}</p>
+					<button class="snap-btn" onclick={snapToPaths}>{t.snap_retry}</button>
+				{/if}
+			</div>
+		{/if}
 
 		{#if templateDiffs.length > 0}
 			<div class="template-update-section">
@@ -1998,6 +2147,109 @@
 		margin-top: 0.3rem;
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
+	}
+
+	.snap-section {
+		background: var(--color-surface);
+		border-radius: 12px;
+		padding: 1rem;
+		margin-bottom: 1rem;
+	}
+	.snap-section h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.95rem;
+		margin: 0 0 0.6rem;
+	}
+	.snap-map {
+		width: 100%;
+		height: 220px;
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		margin-bottom: 0.6rem;
+	}
+	.snap-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1.25rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin-bottom: 0.75rem;
+	}
+	.snap-legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.snap-swatch {
+		width: 1rem;
+		height: 0.25rem;
+		border-radius: 1000px;
+	}
+	.snap-swatch.recorded {
+		background: #88c0d0;
+	}
+	.snap-swatch.snapped {
+		background: #bf616a;
+	}
+	.snap-hint {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin: 0 0 0.6rem;
+	}
+	.snap-btn {
+		width: 100%;
+		padding: 0.6rem;
+		background: transparent;
+		border: 1.5px solid var(--color-primary);
+		border-radius: 10px;
+		color: var(--color-primary);
+		font-weight: 700;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.snap-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.snap-choice {
+		display: flex;
+		gap: 0.6rem;
+	}
+	.snap-choice-btn {
+		flex: 1;
+		padding: 0.6rem;
+		border-radius: 10px;
+		font-weight: 700;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.snap-choice-btn.keep {
+		background: transparent;
+		border: 1.5px solid var(--color-border);
+		color: var(--color-text-secondary);
+	}
+	.snap-choice-btn.use {
+		background: var(--color-primary);
+		border: 1.5px solid var(--color-primary);
+		color: var(--color-text-on-primary);
+	}
+	.snap-result {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		color: var(--nord14);
+		font-weight: 600;
+		font-size: 0.9rem;
+		margin: 0;
+		padding: 0.4rem;
+	}
+	.snap-error {
+		font-size: 0.85rem;
+		color: var(--red);
+		margin: 0 0 0.6rem;
 	}
 
 	.template-update-section {

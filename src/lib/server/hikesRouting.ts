@@ -246,6 +246,101 @@ export async function routeWaypoints(opts: {
 }
 
 // ---------------------------------------------------------------------------
+// Snap a recorded GPS track to the path/road network (BRouter map-matching)
+// ---------------------------------------------------------------------------
+
+/** Max via-points for a single BRouter snap request. A recorded run can hold
+ *  thousands of trkpts; BRouter routes *through* every lonlat we pass, so we
+ *  down-sample to a manageable set of via-points (preserving the route shape)
+ *  and let the router fill in the on-network geometry between them. */
+const SNAP_MAX_WAYPOINTS = 120;
+/** Minimum spacing between retained via-points when down-sampling. */
+const SNAP_MIN_SPACING_M = 25;
+
+/** Thin a dense track down to BRouter via-points: keep the first and last
+ *  point, drop anything closer than SNAP_MIN_SPACING_M to the previously kept
+ *  point, then uniformly thin if still over the cap. */
+function downsampleForSnap(track: LatLng[]): LatLng[] {
+	if (track.length <= 2) return track;
+	const kept: LatLng[] = [track[0]];
+	let last = track[0];
+	for (let i = 1; i < track.length - 1; i++) {
+		if (haversineM(last, track[i]) >= SNAP_MIN_SPACING_M) {
+			kept.push(track[i]);
+			last = track[i];
+		}
+	}
+	kept.push(track[track.length - 1]);
+	if (kept.length <= SNAP_MAX_WAYPOINTS) return kept;
+	const step = (kept.length - 1) / (SNAP_MAX_WAYPOINTS - 1);
+	const thinned: LatLng[] = [];
+	for (let i = 0; i < SNAP_MAX_WAYPOINTS; i++) thinned.push(kept[Math.round(i * step)]);
+	return thinned;
+}
+
+/** One BRouter call routing *through* every waypoint (vs the per-pair routing
+ *  routeWaypoints does). Returns `[lng, lat, ele?]` coords or null. */
+async function routeBrouterMulti(
+	waypoints: LatLng[],
+	profile: RoutingProfile,
+	signal: AbortSignal
+): Promise<Array<[number, number, number?]> | null> {
+	const lonlats = waypoints.map((w) => `${w.lng},${w.lat}`).join('|');
+	const url =
+		`${BROUTER_URL}/brouter?lonlats=${lonlats}` +
+		`&profile=${BROUTER_PROFILE[profile]}&alternativeidx=0&format=geojson`;
+	const json = await fetchJson<BrouterGeoJson>(url, signal);
+	if (!json?.features?.[0]?.geometry?.coordinates) return null;
+	return json.features[0].geometry.coordinates.map(
+		(c) => [c[0], c[1], typeof c[2] === 'number' ? c[2] : undefined] as [number, number, number?]
+	);
+}
+
+/**
+ * Snap a recorded GPS track onto the path/road network via BRouter, then
+ * enrich the result with Swisstopo elevation (falling back to BRouter's inline
+ * SRTM elevation outside Switzerland) — the same elevation source the hikes
+ * pipeline uses. Returns null when routing fails so callers can keep the raw
+ * recorded track.
+ */
+export async function snapTrackToPaths(opts: {
+	track: LatLng[];
+	profile: RoutingProfile;
+}): Promise<{
+	points: Array<{ lat: number; lng: number; altitude?: number }>;
+	source: 'brouter';
+} | null> {
+	const clean = opts.track.filter(
+		(p) => typeof p?.lat === 'number' && typeof p?.lng === 'number' && isFinite(p.lat) && isFinite(p.lng)
+	);
+	if (clean.length < 2) return null;
+	const waypoints = downsampleForSnap(clean);
+
+	const ac = new AbortController();
+	const timeout = setTimeout(() => ac.abort(), 25_000);
+	let coords: Array<[number, number, number?]> | null = null;
+	try {
+		coords = await routeBrouterMulti(waypoints, opts.profile, ac.signal);
+	} finally {
+		clearTimeout(timeout);
+	}
+	if (!coords || coords.length < 2) return null;
+
+	const elevs = await enrichElevations(coords.map((c) => [c[0], c[1]] as [number, number]));
+	const points = coords.map((c, i) => ({
+		lat: c[1],
+		lng: c[0],
+		altitude:
+			typeof elevs[i] === 'number'
+				? (elevs[i] as number)
+				: typeof c[2] === 'number'
+					? c[2]
+					: undefined
+	}));
+	return { points, source: 'brouter' };
+}
+
+// ---------------------------------------------------------------------------
 // Swisstopo elevation enrichment
 // ---------------------------------------------------------------------------
 

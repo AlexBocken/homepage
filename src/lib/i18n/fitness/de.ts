@@ -410,5 +410,20 @@ export const de = {
 	exercise_title: "Übung",
 	recent_label: "Aktuell",
 	starts_with: "beginnt mit",
-	days_ago_template: "vor {n} Tagen"
+	days_ago_template: "vor {n} Tagen",
+
+	// GPS track snapping (completion screen)
+	snap_heading: "Strecke an Wege anpassen",
+	snap_to_paths: "An Wege anpassen",
+	snapping: "Wird angepasst …",
+	snap_choose: "Welche Version möchtest du speichern?",
+	snap_keep_recorded: "Aufgezeichnete behalten",
+	snap_use_snapped: "Angepasste verwenden",
+	snap_recorded: "Aufgezeichnet",
+	snap_snapped: "Angepasst",
+	snap_saved: "Angepasste Strecke gespeichert",
+	snap_kept: "Aufgezeichnete Strecke behalten",
+	snap_failed: "Anpassen fehlgeschlagen",
+	snap_saving: "Wird gespeichert …",
+	snap_retry: "Erneut versuchen"
 } as const;
