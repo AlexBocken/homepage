@@ -1,16 +1,25 @@
-# pnpm 10+ reads build-script allowlist and dependency overrides from here.
-# The same settings are mirrored in package.json's "pnpm" field for the
-# pnpm 9 CI path (which still reads them there).
+# pnpm 10+ reads the build-script allowlist (allowBuilds) and dependency
+# overrides from here. allowBuilds gates BOTH dependency lifecycle scripts and
+# git-hosted deps' `prepare` builds — only packages set to true may run them.
+# (pnpm 11 no longer honours the old `onlyBuiltDependencies` list, nor the
+# "pnpm" field in package.json — this file is the single source for both.)
 packages:
   - .
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  esbuild: true # bundler native binary
+  onnxruntime-node: true # downloads the ONNX runtime binary on install
+  protobufjs: true # postinstall (via onnxruntime-web)
+  romcal: true # git-hosted dep, needs its `prepare` build
+  # sharp ships prebuilt binaries via its @img/sharp-* optional deps; running
+  # its install script would force a from-source node-gyp build (needs
+  # node-addon-api + libvips headers) and fail. Keep it off → use the prebuilt.
+  sharp: false # native image pipeline (prebuilt @img binary, no build)
 overrides:
   # Security overrides (Trivy CRITICAL/HIGH) — force fixed transitive versions.
   # socks is pinned via a direct dependency in package.json instead (overrides
   # don't apply to mongodb's optional *peer* socks) to drop the unfixable `ip`.
-  "protobufjs@7": "^7.6.4"  # CVE-2026-41242 + 44289/90/91/93 + 48712 (via onnxruntime-web)
-  "devalue": "^5.8.1"        # CVE-2026-42570 (via @sveltejs/kit, svelte)
-  "picomatch@2": "2.3.2"     # CVE-2026-33671
-  "picomatch@4": "4.0.4"     # CVE-2026-33671
-  "ws@8": "^8.21.0"          # CVE-2026-48779 (via jsdom, dev/test)
+  "protobufjs@7": "^7.6.4" # CVE-2026-41242 + 44289/90/91/93 + 48712 (via onnxruntime-web)
+  "devalue": "^5.8.1" # CVE-2026-42570 (via @sveltejs/kit, svelte)
+  "picomatch@2": "2.3.2" # CVE-2026-33671
+  "picomatch@4": "4.0.4" # CVE-2026-33671
+  "ws@8": "^8.21.0" # CVE-2026-48779 (via jsdom, dev/test)

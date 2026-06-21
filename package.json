@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.117.2",
+	"version": "1.117.3",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -75,17 +75,5 @@
 		"sharp": "^0.34.5",
 		"socks": "^2.8.9",
 		"web-haptics": "^0.0.6"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild"
-		],
-		"overrides": {
-			"protobufjs@7": "^7.6.4",
-			"devalue": "^5.8.1",
-			"picomatch@2": "2.3.2",
-			"picomatch@4": "4.0.4",
-			"ws@8": "^8.21.0"
-		}
 	}
 }
