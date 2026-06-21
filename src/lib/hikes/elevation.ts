@@ -43,6 +43,19 @@ export function smoothAltitudes(track: HasAltitude[]): (number | null)[] {
 	return out;
 }
 
+/**
+ * Returns a copy of the track with each point's `altitude` replaced by its
+ * smoothed value (moving average over ±half ELEV_SMOOTH_WINDOW). Points whose
+ * window holds no defined altitude keep their original (undefined) value.
+ *
+ * Use this to denoise a freshly-recorded GPS track once at completion — the
+ * same moving-average smoothing the hikes pipeline applies to `<ele>` values.
+ */
+export function smoothTrackAltitudes<T extends HasAltitude>(track: T[]): T[] {
+	const smoothed = smoothAltitudes(track);
+	return track.map((p, i) => (smoothed[i] === null ? p : { ...p, altitude: smoothed[i]! }));
+}
+
 export function computeElevationStats(track: HasAltitude[]): { gain: number; loss: number } {
 	if (track.length < 2) return { gain: 0, loss: 0 };
 	const altitudes = smoothAltitudes(track);

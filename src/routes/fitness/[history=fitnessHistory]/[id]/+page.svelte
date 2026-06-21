@@ -31,6 +31,7 @@
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { onMount } from 'svelte';
+	import { computeElevationStats as computeElevationStatsShared } from '$lib/hikes/elevation';
 
 	let { data } = $props();
 
@@ -425,18 +426,14 @@
 	}
 
 	/**
-	 * Compute elevation gain and loss from altitude samples.
-	 * Uses a 5m threshold to filter GPS noise.
+	 * Compute elevation gain and loss from altitude samples, using the same
+	 * smoothing + 3 m minimum-step algorithm the hikes pipeline applies so GPS
+	 * jitter isn't counted as real gain/loss. Tracks recorded after this change
+	 * are already smoothed at completion; older raw tracks are smoothed here.
 	 * @param {Array<{dist: number, altitude: number}>} samples
 	 */
 	function computeElevationStats(samples) {
-		let gain = 0, loss = 0;
-		for (let i = 1; i < samples.length; i++) {
-			const diff = samples[i].altitude - samples[i - 1].altitude;
-			if (diff > 0) gain += diff;
-			else loss -= diff;
-		}
-		return { gain: Math.round(gain), loss: Math.round(loss) };
+		return computeElevationStatsShared(samples);
 	}
 
 	/**

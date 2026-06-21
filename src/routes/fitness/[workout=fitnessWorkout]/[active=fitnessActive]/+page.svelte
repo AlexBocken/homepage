@@ -33,6 +33,7 @@
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import { getGpsTracker, trackDistance, flattenIntervals } from '$lib/js/gps.svelte';
+	import { smoothTrackAltitudes } from '$lib/hikes/elevation';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
@@ -736,8 +737,10 @@
 		// completionData is set only after the awaited POST below resolves.
 		_finishingLocally = true;
 
-		// Stop GPS tracking and collect track data
-		const gpsTrack = gps.isTracking ? await gps.stop() : [];
+		// Stop GPS tracking and collect track data. Denoise altitudes with the
+		// same moving-average smoothing the hikes pipeline uses for <ele> values,
+		// so elevation gain/loss isn't inflated by GPS jitter.
+		const gpsTrack = gps.isTracking ? smoothTrackAltitudes(await gps.stop()) : [];
 		const wasGpsMode = workout.mode === 'gps';
 		const actType = workout.activityType;
 
