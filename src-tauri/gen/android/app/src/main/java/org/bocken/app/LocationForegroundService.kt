@@ -650,6 +650,9 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
+                // Frequent updates re-notify() the same id; without this every
+                // refresh would replay the channel's sound/vibration.
+                .setOnlyAlertOnce(true)
                 .build()
         } else {
             @Suppress("DEPRECATION")
@@ -659,6 +662,7 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
+                .setOnlyAlertOnce(true)
                 .build()
         }
     }

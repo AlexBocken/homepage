@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "bocken"
-version = "0.5.3"
+version = "1.0.0"
 dependencies = [
  "serde",
  "serde_json",
