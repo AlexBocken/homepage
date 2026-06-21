@@ -32,6 +32,9 @@ export const de = {
 	offline_banner_action: 'Rezepte herunterladen',
 	dismiss: 'Ausblenden',
 	offline_data: 'Offline-Daten',
+	update_banner_title: 'Update verfügbar',
+	update_banner_body: 'Eine neuere Version der App steht zum Download bereit.',
+	update_banner_action: 'Aktualisieren',
 
 	// Date picker
 	select_date: 'Datum wählen',

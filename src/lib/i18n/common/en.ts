@@ -32,6 +32,9 @@ export const en = {
 	offline_banner_action: 'Download recipes',
 	dismiss: 'Dismiss',
 	offline_data: 'Offline data',
+	update_banner_title: 'Update available',
+	update_banner_body: 'A newer version of the app is ready to download.',
+	update_banner_action: 'Update',
 
 	// Date picker
 	select_date: 'Select date',

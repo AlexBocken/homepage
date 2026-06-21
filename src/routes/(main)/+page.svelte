@@ -3,6 +3,7 @@
 	import LinksGrid from "$lib/components/LinksGrid.svelte";
 	import Seo from '$lib/components/Seo.svelte';
 	import OfflineSyncBanner from '$lib/components/OfflineSyncBanner.svelte';
+	import UpdateBanner from '$lib/components/UpdateBanner.svelte';
 	import { onMount } from 'svelte';
 	let { data } = $props();
 
@@ -148,6 +149,8 @@ section h2{
 </div>
 </section>
 {/if}
+
+<UpdateBanner {lang} />
 
 <OfflineSyncBanner {lang} />
 

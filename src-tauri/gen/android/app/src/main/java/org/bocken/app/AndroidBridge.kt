@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
@@ -206,5 +207,28 @@ class AndroidBridge(private val context: Context) {
             engine.shutdown()
         } catch (_: Exception) {}
         return result.toString()
+    }
+
+    /** Installed app version name (mirrors tauri.conf.json `version`). Used by
+     *  the in-app update check to compare against the latest published build. */
+    @JavascriptInterface
+    fun getAppVersion(): String {
+        return try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    /** Open a URL in the external browser / download manager. A plain in-webview
+     *  link to an .apk won't trigger an Android download, so the update banner
+     *  routes the APK link through here. */
+    @JavascriptInterface
+    fun openExternal(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } catch (_: Exception) {}
     }
 }
