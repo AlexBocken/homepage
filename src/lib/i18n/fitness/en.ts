@@ -472,7 +472,6 @@ export const en = {
 	seen_in: "in",
 	runs_word: "runs",
 	add_word: "Add",
-	dismiss: "Dismiss",
 	adding: "Adding …",
 	new_segment_pr: "New segment PR!",
 	new_kom: "New crown (KOM)!",

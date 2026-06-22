@@ -15,10 +15,13 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
 
 	const payload = await res.json();
 
+	// Version the card URL by updatedAt so editing/snapping busts any cached image.
+	const ver = payload.session?.updatedAt ? new Date(payload.session.updatedAt).getTime() : '';
+
 	return {
 		session: payload.session,
 		segmentEfforts: payload.segmentEfforts ?? [],
 		shareUrl: `${url.origin}/r/${params.id}?token=${shareToken}`,
-		cardImage: `${url.origin}/api/fitness/sessions/${params.id}/card.webp?token=${shareToken}`
+		cardImage: `${url.origin}/api/fitness/sessions/${params.id}/card.webp?token=${shareToken}&v=${ver}`
 	};
 };

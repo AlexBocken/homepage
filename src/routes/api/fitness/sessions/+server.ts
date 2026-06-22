@@ -47,7 +47,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const [sessions, total] = await Promise.all([
       WorkoutSession.find(query)
         .select(
-          'name startTime duration totalVolume totalDistance prs kcalEstimate ' +
+          'name startTime duration totalVolume totalDistance prs kcalEstimate updatedAt ' +
           'exercises.exerciseId exercises.totalDistance exercises.gpsPreview exercises.sets'
         )
         .sort({ startTime: -1 })

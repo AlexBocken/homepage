@@ -14,6 +14,7 @@
 	import Route from '@lucide/svelte/icons/route';
 	import X from '@lucide/svelte/icons/x';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Check from '@lucide/svelte/icons/check';
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import Flame from '@lucide/svelte/icons/flame';
 	import Info from '@lucide/svelte/icons/info';
@@ -30,10 +31,11 @@
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
 	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
+	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
-	import DatePicker from '$lib/components/DatePicker.svelte';
+	import DateTimePicker from '$lib/components/DateTimePicker.svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import SegmentCreator from '$lib/components/fitness/SegmentCreator.svelte';
 	import SegmentEffortsList from '$lib/components/fitness/SegmentEffortsList.svelte';
@@ -175,8 +177,7 @@
 	function startEdit() {
 		editData = {
 			name: session.name,
-			date: toLocalDate(session.startTime),
-			time: toLocalTime(session.startTime),
+			startMs: new Date(session.startTime).getTime(),
 			duration: session.duration ?? 0,
 			notes: session.notes ?? '',
 			exercises: session.exercises.map((/** @type {any} */ ex) => ({
@@ -197,7 +198,7 @@
 	async function saveEdit() {
 		if (!editData) return;
 		saving = true;
-		const startTime = new Date(`${editData.date}T${editData.time}`);
+		const startTime = new Date(editData.startMs);
 		const body = {
 			name: editData.name,
 			startTime: startTime.toISOString(),
@@ -294,18 +295,6 @@
 		return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 	}
 
-	/** @param {string} dateStr */
-	function toLocalDate(dateStr) {
-		const d = new Date(dateStr);
-		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-	}
-
-	/** @param {string} dateStr */
-	function toLocalTime(dateStr) {
-		const d = new Date(dateStr);
-		return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-	}
-
 	/** @param {number} weight @param {number} reps */
 	function epley1rm(weight, reps) {
 		if (reps <= 0 || weight <= 0) return 0;
@@ -325,6 +314,105 @@
 			}
 		} catch { toast.error('Failed to recalculate'); }
 		recalculating = false;
+	}
+
+	// --- BRouter path snapping on the edit screen (recorded vs snapped) ---
+	let snapState = $state('idle'); // idle | loading | preview | saving | saved | kept | error
+	/** @type {any[]|null} */
+	let snappedTrack = $state(null);
+	let snappedDistance = $state(0);
+	let snapError = $state('');
+
+	// First exercise carrying a GPS track — the snap endpoint operates on it.
+	const snapTarget = $derived.by(() => {
+		const exs = session?.exercises ?? [];
+		for (let i = 0; i < exs.length; i++) {
+			if ((exs[i].gpsTrack?.length ?? 0) >= 2) return { index: i, track: exs[i].gpsTrack };
+		}
+		return null;
+	});
+
+	/** @type {any} */ let compMap = null;
+	/** @type {any} */ let compRecordedLine = null;
+	/** @type {any} */ let compSnappedLine = null;
+	/** @type {any} */ let compLeaflet = null;
+
+	/** @param {HTMLElement} node */
+	function mountSnapMap(node) {
+		initSnapMap(node);
+		return () => {
+			if (compMap) compMap.remove();
+			compMap = null; compRecordedLine = null; compSnappedLine = null; compLeaflet = null;
+		};
+	}
+	/** @param {HTMLElement} node */
+	async function initSnapMap(node) {
+		compLeaflet = await import('leaflet');
+		if (!node.isConnected || !snapTarget) return;
+		compMap = compLeaflet.map(node, { attributionControl: false, zoomControl: false });
+		compLeaflet.tileLayer(TILE_URL.karte, { maxZoom: 19 }).addTo(compMap);
+		const latlngs = snapTarget.track.map((/** @type {any} */ p) => [p.lat, p.lng]);
+		compRecordedLine = compLeaflet.polyline(latlngs, { color: ROUTE_COLOR, weight: 4 }).addTo(compMap);
+		if (latlngs.length) compMap.fitBounds(compRecordedLine.getBounds(), { padding: [20, 20] });
+		if (snappedTrack) drawSnappedLine();
+	}
+	function drawSnappedLine() {
+		if (!compMap || !compLeaflet || !snappedTrack) return;
+		if (compSnappedLine) compSnappedLine.remove();
+		const ll = snappedTrack.map((/** @type {any} */ p) => [p.lat, p.lng]);
+		compSnappedLine = compLeaflet.polyline(ll, { color: '#5e81ac', weight: 4 }).addTo(compMap);
+	}
+
+	async function snapToPaths() {
+		if (!snapTarget) return;
+		snapState = 'loading';
+		snapError = '';
+		try {
+			const res = await fetch(`/api/fitness/sessions/${session._id}/snap`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ exerciseIndex: snapTarget.index, profile: 'trekking', persist: false })
+			});
+			if (!res.ok) throw new Error('snap failed');
+			const d = await res.json();
+			snappedTrack = d.track;
+			snappedDistance = d.distance;
+			drawSnappedLine();
+			snapState = 'preview';
+		} catch {
+			snapState = 'error';
+			snapError = t.snap_failed;
+		}
+	}
+	async function useSnappedTrack() {
+		if (!snapTarget) return;
+		snapState = 'saving';
+		try {
+			const res = await fetch(`/api/fitness/sessions/${session._id}/snap`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ exerciseIndex: snapTarget.index, profile: 'trekking', persist: true })
+			});
+			if (!res.ok) throw new Error('snap failed');
+			await res.json();
+			snapState = 'saved';
+			// Reload track/stats/efforts; the snap endpoint already recomputed the
+			// preview/distance/kcal/bbox + re-rendered images (new track hash).
+			await invalidateAll();
+			// Re-sync the edit form's sets to the snapped distances (keep the
+			// user's other in-progress edits to name/date/notes).
+			if (editData) {
+				editData.exercises = session.exercises.map((/** @type {any} */ ex) => ({
+					exerciseId: ex.exerciseId,
+					name: ex.name,
+					restTime: ex.restTime,
+					sets: ex.sets.map((/** @type {any} */ s) => ({ ...s }))
+				}));
+			}
+		} catch {
+			snapState = 'error';
+			snapError = t.snap_failed;
+		}
 	}
 
 	async function deleteSession() {
@@ -494,12 +582,8 @@
 	{#if editing}
 		<div class="edit-meta">
 			<div class="meta-row">
-				<label for="edit-date">{t.date}</label>
-				<DatePicker bind:value={editData.date} {lang} />
-			</div>
-			<div class="meta-row">
-				<label for="edit-time">{t.time}</label>
-				<input id="edit-time" type="time" bind:value={editData.time} />
+				<label for="edit-datetime">{t.date}</label>
+				<DateTimePicker bind:value={editData.startMs} mode="datetime" {lang} />
 			</div>
 			<div class="meta-row">
 				<label for="edit-duration">{t.duration_min}</label>
@@ -510,6 +594,46 @@
 				<textarea id="edit-notes" bind:value={editData.notes} rows="2" placeholder={t.notes_placeholder}></textarea>
 			</div>
 		</div>
+
+		{#if snapTarget}
+			<div class="snap-section">
+				<h2><Route size={16} /> {t.snap_heading}</h2>
+				<div class="snap-map" {@attach mountSnapMap}></div>
+				<div class="snap-legend">
+					<span class="snap-legend-item">
+						<span class="snap-swatch recorded"></span>
+						{t.snap_recorded}{#if session.totalDistance} · {session.totalDistance.toFixed(2)} km{/if}
+					</span>
+					{#if snappedTrack}
+						<span class="snap-legend-item">
+							<span class="snap-swatch snapped"></span>
+							{t.snap_snapped} · {snappedDistance.toFixed(2)} km
+						</span>
+					{/if}
+				</div>
+
+				{#if snapState === 'idle'}
+					<button class="snap-btn" onclick={snapToPaths}>{t.snap_to_paths}</button>
+				{:else if snapState === 'loading'}
+					<button class="snap-btn" disabled>{t.snapping}</button>
+				{:else if snapState === 'preview'}
+					<p class="snap-hint">{t.snap_choose}</p>
+					<div class="snap-choice">
+						<button class="snap-choice-btn keep" onclick={() => (snapState = 'kept')}>{t.snap_keep_recorded}</button>
+						<button class="snap-choice-btn use" onclick={useSnappedTrack}>{t.snap_use_snapped}</button>
+					</div>
+				{:else if snapState === 'saving'}
+					<button class="snap-btn" disabled>{t.snap_saving}</button>
+				{:else if snapState === 'saved'}
+					<p class="snap-result"><Check size={16} /> {t.snap_saved}</p>
+				{:else if snapState === 'kept'}
+					<p class="snap-result"><Check size={16} /> {t.snap_kept}</p>
+				{:else if snapState === 'error'}
+					<p class="snap-error">{snapError}</p>
+					<button class="snap-btn" onclick={snapToPaths}>{t.snap_retry}</button>
+				{/if}
+			</div>
+		{/if}
 	{:else}
 		<div class="stats-row">
 			{#if session.duration}
@@ -889,6 +1013,107 @@
 	.recalc-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+	.snap-section {
+		background: var(--color-surface);
+		border-radius: 12px;
+		padding: 1rem;
+	}
+	.snap-section h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.95rem;
+		margin: 0 0 0.6rem;
+	}
+	.snap-map {
+		width: 100%;
+		height: 240px;
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		margin-bottom: 0.6rem;
+	}
+	.snap-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1.25rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin-bottom: 0.75rem;
+	}
+	.snap-legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.snap-swatch {
+		width: 1rem;
+		height: 0.25rem;
+		border-radius: 1000px;
+	}
+	.snap-swatch.recorded {
+		background: #f4511e;
+	}
+	.snap-swatch.snapped {
+		background: #5e81ac;
+	}
+	.snap-hint {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin: 0 0 0.6rem;
+	}
+	.snap-btn {
+		width: 100%;
+		padding: 0.6rem;
+		background: transparent;
+		border: 1.5px solid var(--color-primary);
+		border-radius: 10px;
+		color: var(--color-primary);
+		font-weight: 700;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.snap-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.snap-choice {
+		display: flex;
+		gap: 0.6rem;
+	}
+	.snap-choice-btn {
+		flex: 1;
+		padding: 0.6rem;
+		border-radius: 10px;
+		font-weight: 700;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.snap-choice-btn.keep {
+		background: transparent;
+		border: 1.5px solid var(--color-border);
+		color: var(--color-text-secondary);
+	}
+	.snap-choice-btn.use {
+		background: var(--color-primary);
+		border: 1.5px solid var(--color-primary);
+		color: var(--color-text-on-primary);
+	}
+	.snap-result {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		color: var(--nord14);
+		font-weight: 600;
+		font-size: 0.9rem;
+		margin: 0;
+		padding: 0.4rem;
+	}
+	.snap-error {
+		font-size: 0.85rem;
+		color: var(--red);
+		margin: 0 0 0.6rem;
 	}
 	:global(.spinning) {
 		animation: spin 0.6s linear infinite;

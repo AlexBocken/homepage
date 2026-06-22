@@ -21,6 +21,7 @@
 	 *     _id: string,
 	 *     name: string,
 	 *     startTime: string,
+	 *     updatedAt?: string,
 	 *     duration?: number,
 	 *     totalVolume?: number,
 	 *     totalDistance?: number,
@@ -179,7 +180,7 @@
 			{#if !unsynced && !mapImgFailed}
 				<img
 					class="map-img"
-					src={`/api/fitness/sessions/${session._id}/map.webp`}
+					src={`/api/fitness/sessions/${session._id}/map.webp${session.updatedAt ? `?v=${new Date(session.updatedAt).getTime()}` : ''}`}
 					alt={t.route_map ?? 'Route map'}
 					loading="lazy"
 					decoding="async"

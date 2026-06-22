@@ -7,6 +7,7 @@ import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
+import { trackDistance } from '$lib/fitness/gpsSeries.js';
 import mongoose from 'mongoose';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
@@ -38,10 +39,28 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 			return json({ error: 'Session not found' }, { status: 404 });
 		}
 
-		// Recompute totalVolume and totalDistance
+		// First refresh per-set distance from the GPS track so a re-snapped /
+		// re-imported track flows through to the logged set distance. Single set
+		// → exact track length; multiple sets → scaled proportionally (same rule
+		// the snap endpoint uses).
+		for (const ex of workoutSession.exercises) {
+			const isCardio = getExerciseMetrics(getExerciseById(ex.exerciseId)).includes('distance');
+			if (!isCardio || !ex.gpsTrack || ex.gpsTrack.length < 2) continue;
+			const gpsDist = Math.round(trackDistance(ex.gpsTrack) * 100) / 100;
+			const completedWithDist = ex.sets.filter((s) => s.completed && (s.distance ?? 0) > 0);
+			const recordedDist = completedWithDist.reduce((sum, s) => sum + (s.distance ?? 0), 0);
+			if (completedWithDist.length === 1) {
+				completedWithDist[0].distance = gpsDist;
+			} else if (recordedDist > 0) {
+				const ratio = gpsDist / recordedDist;
+				for (const s of completedWithDist) s.distance = Math.round((s.distance ?? 0) * ratio * 100) / 100;
+			}
+			ex.totalDistance = gpsDist;
+		}
+
+		// Recompute totalVolume and totalDistance from the (refreshed) sets.
 		let totalVolume = 0;
 		let totalDistance = 0;
-		const gpsPreviewUpdates: Record<string, number[][]> = {};
 		for (let i = 0; i < workoutSession.exercises.length; i++) {
 			const ex = workoutSession.exercises[i];
 			const exercise = getExerciseById(ex.exerciseId);
@@ -59,7 +78,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
 			// Regenerate gpsPreview from gpsTrack if present
 			if (ex.gpsTrack && ex.gpsTrack.length >= 2) {
-				gpsPreviewUpdates[`exercises.${i}.gpsPreview`] = simplifyTrack(ex.gpsTrack);
+				ex.gpsPreview = simplifyTrack(ex.gpsTrack);
 			}
 		}
 
@@ -129,16 +148,14 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 			session.user.nickname
 		);
 
-		// Use $set to only update computed fields, preserving gpsTrack data
-		await WorkoutSession.updateOne({ _id: workoutSession._id }, {
-			$set: {
-				totalVolume: totalVolume > 0 ? totalVolume : undefined,
-				totalDistance: totalDistance > 0 ? totalDistance : undefined,
-				prs: prs.length > 0 ? prs : undefined,
-				kcalEstimate: kcalEstimate ?? undefined,
-				...gpsPreviewUpdates
-			}
-		});
+		// Persist the refreshed sets + recomputed fields (gpsTrack is loaded, so a
+		// full save preserves it).
+		workoutSession.totalVolume = totalVolume > 0 ? totalVolume : undefined;
+		workoutSession.totalDistance = totalDistance > 0 ? totalDistance : undefined;
+		workoutSession.prs = prs.length > 0 ? prs : undefined;
+		workoutSession.kcalEstimate = kcalEstimate ?? undefined;
+		workoutSession.markModified('exercises');
+		await workoutSession.save();
 
 		return json({
 			totalVolume: totalVolume > 0 ? totalVolume : undefined,
