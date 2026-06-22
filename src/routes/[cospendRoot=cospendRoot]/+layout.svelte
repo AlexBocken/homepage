@@ -1,8 +1,9 @@
 <script>
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
+  import { precacheShells } from '$lib/offline/precacheShells';
   import { fly } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import PaymentModal from '$lib/components/cospend/PaymentModal.svelte';
@@ -26,6 +27,25 @@
   let paymentId = $state(null);
   let user = $derived(data.session?.user);
   let isGuest = $derived(!data.session?.user);
+
+  // Cospend is gated on the `cospend` group (see api/cospend/receipt-auth).
+  // Only precache the section's shells for offline use if the user has access.
+  const COSPEND_SHELLS = ['cospend', 'expenses'].flatMap((r) =>
+    ['dash', 'list', 'payments', 'recurring', 'settle'].map((p) => `/${r}/${p}`)
+  );
+  function precacheCospendShells() {
+    if (!data.session?.user?.groups?.includes('cospend')) return;
+    precacheShells(COSPEND_SHELLS);
+  }
+
+  onMount(() => {
+    precacheCospendShells();
+    window.addEventListener('online', precacheCospendShells);
+  });
+
+  onDestroy(() => {
+    if (typeof window !== 'undefined') window.removeEventListener('online', precacheCospendShells);
+  });
 
   $effect(() => {
     // Check if URL contains payment view route OR if we have paymentId in state

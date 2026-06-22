@@ -112,7 +112,7 @@ sw.addEventListener('fetch', (event) => {
 	// Handle SvelteKit __data.json requests for cacheable routes (recipes, glaube, root)
 	// Cache successful responses, serve from cache when offline
 	const isCacheableDataRoute = url.pathname.includes('__data.json') &&
-		(url.pathname.match(/^\/(rezepte|recipes|glaube|faith|fitness)(\/|$)/) || url.pathname === '/__data.json');
+		(url.pathname.match(/^\/(rezepte|recipes|glaube|faith|fitness|tasks|cospend|expenses)(\/|$)/) || url.pathname === '/__data.json');
 
 	if (isCacheableDataRoute) {
 		event.respondWith(
@@ -242,7 +242,7 @@ sw.addEventListener('fetch', (event) => {
 				// Cache successful HTML responses for cacheable pages (using pathname as key)
 				if (response?.ok) {
 					const isCacheablePage =
-						url.pathname.match(/^\/(rezepte|recipes|glaube|faith|fitness)(\/|$)/) ||
+						url.pathname.match(/^\/(rezepte|recipes|glaube|faith|fitness|tasks|cospend|expenses)(\/|$)/) ||
 						url.pathname === '/';
 					if (isCacheablePage) {
 						cache.put(cacheKey, response.clone());

@@ -1,6 +1,7 @@
 import { saveAllRecipes } from './db';
 import type { BriefRecipeType, RecipeModelType } from '$types/types';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
+import { fitnessShellPages, fitnessShellData } from './fitnessShells';
 
 // Discover faith routes at build time using Vite's glob import
 // The actual directory is [faithLang=faithLang] with parameterized sub-dirs
@@ -179,6 +180,11 @@ async function precacheMainPages(_fetchFn: typeof fetch): Promise<void> {
 		pagesToCache.push(route);
 		pagesToCache.push(`${route}/__data.json`);
 	}
+
+	// Fitness shells (HTML + __data.json) so workouts/history work offline even
+	// if the user never browsed the fitness section online — its per-user data
+	// is only reachable while online+authenticated, so fold it into the sync.
+	pagesToCache.push(...fitnessShellPages, ...fitnessShellData);
 
 	// Send message to service worker to cache all pages
 	registration.active.postMessage({

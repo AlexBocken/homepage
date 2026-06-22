@@ -16,6 +16,8 @@
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';
 	import { detectFitnessLang, fitnessSlugs, fitnessLabels } from '$lib/js/fitnessI18n';
 	import { flushQueue } from '$lib/offline/fitnessQueue';
+	import { fitnessShellPages } from '$lib/offline/fitnessShells';
+	import { precacheShells } from '$lib/offline/precacheShells';
 
 	let { data, children } = $props();
 	let user = $derived(data.session?.user);
@@ -27,26 +29,10 @@
 	const s = $derived(fitnessSlugs(lang));
 	const labels = $derived(fitnessLabels(lang));
 
-	/** Pre-cache all fitness page shells so they work offline */
-	function precacheFitnessShells() {
-		if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
-		const slugs = [
-			'workout', 'training', 'workout/active', 'training/aktiv',
-			'exercises', 'uebungen', 'stats', 'statistik',
-			'history', 'verlauf', 'check-in', 'erfassung',
-			'nutrition', 'ernaehrung',
-			'nutrition/meals', 'ernaehrung/meals',
-			'check-in/body-parts', 'erfassung/body-parts'
-		];
-		const urls = ['/fitness', ...slugs.map((s) => `/fitness/${s}`)];
-		navigator.serviceWorker.controller.postMessage({ type: 'CACHE_PAGES', urls });
-		// Also cache __data.json for client-side navigation
-		const dataUrls = ['/fitness/__data.json', ...slugs.map((s) => `/fitness/${s}/__data.json`)];
-		navigator.serviceWorker.controller.postMessage({ type: 'CACHE_DATA', urls: dataUrls });
-	}
-
 	function onOnline() {
 		flushQueue();
+		// Refresh the offline shells with the now-reachable server data.
+		precacheShells(fitnessShellPages);
 	}
 
 	onMount(async () => {
@@ -54,7 +40,7 @@
 		workout.onChange(() => sync.notifyChange());
 		await sync.init();
 		flushQueue();
-		precacheFitnessShells();
+		precacheShells(fitnessShellPages);
 		window.addEventListener('online', onOnline);
 	});
 

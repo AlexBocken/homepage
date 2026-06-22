@@ -1,12 +1,31 @@
 <script>
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { onMount, onDestroy } from 'svelte';
   import Header from '$lib/components/Header.svelte';
   import UserHeader from '$lib/components/UserHeader.svelte';
   import ClipboardList from '@lucide/svelte/icons/clipboard-list';
   import Trophy from '@lucide/svelte/icons/trophy';
+  import { precacheShells } from '$lib/offline/precacheShells';
   let { data, children } = $props();
   let user = $derived(data.session?.user);
+
+  // Tasks are gated on the `task_users` group (see hooks.server.ts).
+  // Only precache the section's shells for offline use if the user has access.
+  const TASK_SHELLS = ['/tasks', '/tasks/rewards'];
+  function precacheTaskShells() {
+    if (!data.session?.user?.groups?.includes('task_users')) return;
+    precacheShells(TASK_SHELLS);
+  }
+
+  onMount(() => {
+    precacheTaskShells();
+    window.addEventListener('online', precacheTaskShells);
+  });
+
+  onDestroy(() => {
+    if (typeof window !== 'undefined') window.removeEventListener('online', precacheTaskShells);
+  });
 
   /** @param {string} path */
   function isActive(path) {
