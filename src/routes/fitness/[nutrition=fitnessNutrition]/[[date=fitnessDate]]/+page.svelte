@@ -639,7 +639,7 @@
 	// --- Inline add food ---
 	/** @type {string | null} */
 	let addingMeal = $state(null);
-	let inlineTab = $state('search'); // 'search' | 'favorites' | 'meals'
+	let inlineTab = $state('search'); // 'search' | 'favorites' | 'recent' | 'meals'
 
 	// --- FAB modal (route-based via ?add param) ---
 	const showFabModal = $derived(page.url.searchParams.has('add'));
@@ -696,7 +696,7 @@
 	}
 
 	// --- Custom meals in FAB ---
-	let fabTab = $state('search'); // 'search' | 'favorites' | 'meals'
+	let fabTab = $state('search'); // 'search' | 'favorites' | 'recent' | 'meals'
 
 	/** @typedef {{ name: string, source: string, id: string, per100g: Record<string, number>, portions?: any, calories: number, favorited: boolean }} FavTabItem */
 
@@ -729,6 +729,45 @@
 		}));
 		favTabItems = /** @type {FavTabItem[]} */ (enriched.filter(Boolean));
 		favTabLoaded = true;
+	}
+
+	// --- Recent tab ---
+	/** @type {FavTabItem[]} */
+	let recentTabItems = $state([]); // enriched with per100g
+	let recentTabLoaded = $state(false);
+
+	async function loadRecentTab() {
+		// Always re-enrich on open so freshly logged foods show up. Existing items
+		// stay visible until the new list resolves, so there's no loading flash.
+		const items = /** @type {RecentFood[]} */ (/** @type {unknown} */ (recentFoods));
+		const enriched = await Promise.all(items.map(async (item) => {
+			try {
+				let per100g = item.per100g;
+				/** @type {any} */
+				let portions;
+				if (!per100g) {
+					const res = await fetch(`/api/nutrition/lookup?source=${item.source}&id=${encodeURIComponent(item.sourceId)}`);
+					if (res.ok) {
+						const d = await res.json();
+						per100g = d.per100g;
+						portions = d.portions;
+					}
+				}
+				if (!per100g) return null;
+				return {
+					name: item.name,
+					source: item.source,
+					id: item.sourceId,
+					per100g,
+					portions,
+					calories: Math.round(per100g?.calories ?? 0),
+					favorited: quickFavorites.some(f => f.source === item.source && f.sourceId === item.sourceId),
+				};
+			} catch {}
+			return null;
+		}));
+		recentTabItems = /** @type {FavTabItem[]} */ (enriched.filter(Boolean));
+		recentTabLoaded = true;
 	}
 	/** @type {CustomMeal[]} */
 	let customMeals = $state([]);
@@ -1329,6 +1368,18 @@
 			<p class="meals-empty">{isEn ? 'No favorites yet. Tap the heart on foods to add them here.' : 'Noch keine Favoriten. Tippe auf das Herz bei Lebensmitteln.'}</p>
 		{:else}
 			<FoodSearch onselect={logFn} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} initialResults={favTabItems} />
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet recentTab(/** @type {(food: FoodSelection) => void} */ logFn)}
+	<div class="fav-tab-list">
+		{#if !recentTabLoaded}
+			<p class="meals-empty">{t.loading}</p>
+		{:else if recentTabItems.length === 0}
+			<p class="meals-empty">{isEn ? 'No recent foods yet.' : 'Noch keine kürzlichen Lebensmittel.'}</p>
+		{:else}
+			<FoodSearch onselect={logFn} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} initialResults={recentTabItems} />
 		{/if}
 	</div>
 {/snippet}
@@ -1980,6 +2031,10 @@
 								<Heart size={13} />
 								{isEn ? 'Favorites' : 'Favoriten'}
 							</button>
+							<button class="fab-tab" class:active={inlineTab === 'recent'} onclick={() => { inlineTab = 'recent'; loadRecentTab(); }}>
+								<Clock size={13} />
+								{isEn ? 'Recent' : 'Kürzlich'}
+							</button>
 							<button class="fab-tab" class:active={inlineTab === 'meals'} onclick={() => { inlineTab = 'meals'; loadCustomMeals(); }}>
 								<UtensilsCrossed size={13} />
 								{t.custom_meals}
@@ -1992,6 +2047,8 @@
 						<FoodSearch onselect={inlineLogFood} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} autofocus={true} />
 					{:else if inlineTab === 'favorites'}
 						{@render favoritesTab(inlineLogFood)}
+					{:else if inlineTab === 'recent'}
+						{@render recentTab(inlineLogFood)}
 					{:else}
 						{@render customMealsTab(inlineLogCustomMeal)}
 					{/if}
@@ -2103,6 +2160,10 @@
 					<Heart size={13} />
 					{isEn ? 'Favorites' : 'Favoriten'}
 				</button>
+				<button class="fab-tab" class:active={fabTab === 'recent'} onclick={() => { fabTab = 'recent'; loadRecentTab(); }}>
+					<Clock size={13} />
+					{isEn ? 'Recent' : 'Kürzlich'}
+				</button>
 				<button class="fab-tab" class:active={fabTab === 'meals'} onclick={() => { fabTab = 'meals'; loadCustomMeals(); }}>
 					<UtensilsCrossed size={13} />
 					{t.custom_meals}
@@ -2113,6 +2174,8 @@
 				<FoodSearch onselect={fabLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} autofocus={true} />
 			{:else if fabTab === 'favorites'}
 				{@render favoritesTab(fabLogFood)}
+			{:else if fabTab === 'recent'}
+				{@render recentTab(fabLogFood)}
 			{:else}
 				{@render customMealsTab(logCustomMeal)}
 			{/if}
