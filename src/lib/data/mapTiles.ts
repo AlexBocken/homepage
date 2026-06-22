@@ -20,6 +20,17 @@ export const TILE_URL = {
 	dufour: `${TILE_BASE}/dufour/{z}/{x}/{y}`
 } as const;
 
+/**
+ * Recorded GPS-track outline. A vivid, aggressive deep orange — punchy enough
+ * to dominate the map (the route is the subject) and warm against the mostly
+ * blue/green/grey surfaces, while the white casing carries the contrast over
+ * any tile (topo, street, satellite). Distinct from the other map marks: green
+ * start (nord14), red end (nord11) and the blue snapped-track overlay (nord10).
+ * Draw the casing wider and below the core.
+ */
+export const ROUTE_COLOR = '#f4511e';
+export const ROUTE_CASING = '#ffffff';
+
 /** Combined attribution — the proxy may serve any provider depending on the
  * region in view, so all are credited. Shown in the page footer (the on-map
  * control is disabled). Thunderforest is the primary `karte` upstream abroad

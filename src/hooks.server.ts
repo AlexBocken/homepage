@@ -212,8 +212,11 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		}
 	}
 
-	// Protect fitness routes and API endpoints
-	if (url.pathname.startsWith('/fitness') || url.pathname.startsWith('/api/fitness')) {
+	// Protect fitness routes and API endpoints. The run map/card images are an
+	// exception: they self-authorize (session ownership OR a per-run share
+	// token) so they can be fetched for OG/share previews without a login.
+	const isPublicRunImage = /^\/api\/fitness\/sessions\/[^/]+\/(map|card)\.webp$/.test(url.pathname);
+	if (!isPublicRunImage && (url.pathname.startsWith('/fitness') || url.pathname.startsWith('/api/fitness'))) {
 		if (!session) {
 			if (url.pathname.startsWith('/api/fitness')) {
 				await errorWithVerse(fetch, url.pathname, 401, 'Authentication required.');

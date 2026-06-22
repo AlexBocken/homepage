@@ -5,6 +5,8 @@
 	import Weight from '@lucide/svelte/icons/weight';
 	import Trophy from '@lucide/svelte/icons/trophy';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Share2 from '@lucide/svelte/icons/share-2';
+	import Copy from '@lucide/svelte/icons/copy';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Upload from '@lucide/svelte/icons/upload';
@@ -25,6 +27,7 @@
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
+	import { TILE_URL, ROUTE_COLOR, ROUTE_CASING } from '$lib/data/mapTiles';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -36,6 +39,66 @@
 	let { data } = $props();
 
 	const session = $derived(data.session);
+
+
+	/**
+	 * Share the run. Like the Strava apps, the generated card image travels
+	 * *with* the link via the OS share sheet (Web Share API Level 2 `files`),
+	 * so it lands as a real image in chats/social — not just a link relying on
+	 * the receiver to unfurl the OG tag. Falls back to a link-only share, then
+	 * to copying the link (desktop, where there's no share sheet).
+	 */
+	async function shareRun() {
+		const url = data.shareUrl;
+		if (!url) return;
+		const title = session?.name ?? t.workout_singular;
+
+		// Try sharing the card image as a file. The card is prefetched on mount
+		// so this fetch is cache-fast and keeps the click's transient activation.
+		try {
+			if (data.cardImage && navigator.canShare) {
+				const res = await fetch(data.cardImage);
+				if (res.ok) {
+					const blob = await res.blob();
+					const file = new File([blob], 'run.webp', { type: blob.type || 'image/webp' });
+					// Include the link as BOTH `url` and inside `text`, so it travels
+					// with the image whether the target app reads the structured `url`
+					// field or only the caption text. Some platforms reject `url`
+					// alongside files — fall back to text-only in that case.
+					const withUrl = { files: [file], title, text: url, url };
+					const fileData = navigator.canShare(withUrl) ? withUrl : { files: [file], title, text: url };
+					if (navigator.canShare(fileData)) {
+						await navigator.share(fileData);
+						return;
+					}
+				}
+			}
+		} catch (e) {
+			if (e instanceof DOMException && e.name === 'AbortError') return; // user cancelled
+			// otherwise fall through to link-only share
+		}
+
+		try {
+			if (navigator.share) {
+				await navigator.share({ title, url });
+			} else {
+				await navigator.clipboard.writeText(url);
+				toast.success(t.share_copied);
+			}
+		} catch {
+			// User dismissed the share sheet — nothing to do.
+		}
+	}
+
+	async function copyLog() {
+		try {
+			const { formatWorkoutLog } = await import('$lib/js/workoutLog');
+			await navigator.clipboard.writeText(formatWorkoutLog(session, lang));
+			toast.success(t.log_copied);
+		} catch {
+			toast.error(t.log_copy_failed);
+		}
+	}
 
 	/** Use server-computed kcal estimate (stored at save/recalculate time) */
 	const kcalResult = $derived(session?.kcalEstimate ?? null);
@@ -61,6 +124,10 @@
 	let dark = $state(checkDark());
 	let showKcalInfo = $state(false);
 	onMount(() => {
+		// Warm the share-card image so a later Share click can attach it without
+		// a slow fetch (which would lose the click's transient activation).
+		if (data.cardImage) fetch(data.cardImage).catch(() => {});
+
 		const mql = window.matchMedia('(prefers-color-scheme: dark)');
 		const onMql = () => { dark = checkDark(); };
 		mql.addEventListener('change', onMql);
@@ -315,9 +382,11 @@
 		const L = await import('leaflet');
 		if (!node.isConnected) return;
 		const map = L.map(node, { attributionControl: false, zoomControl: false });
-		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+		L.tileLayer(TILE_URL.karte, { maxZoom: 19 }).addTo(map);
 		const pts = track.map((/** @type {any} */ p) => /** @type {[number, number]} */ ([p.lat, p.lng]));
-		const polyline = L.polyline(pts, { color: '#5e81ac', weight: 3 }).addTo(map);
+		// White casing under the red route for high contrast on any map surface.
+		L.polyline(pts, { color: ROUTE_CASING, weight: 7, opacity: 0.9 }).addTo(map);
+		const polyline = L.polyline(pts, { color: ROUTE_COLOR, weight: 3.5 }).addTo(map);
 		// Start/end markers
 		L.circleMarker(pts[0], { radius: 5, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
 		L.circleMarker(pts[pts.length - 1], { radius: 5, fillColor: '#bf616a', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
@@ -582,6 +651,18 @@
 <svelte:head>
 	<title>{session?.name ?? t.workout_singular} - Bocken</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	{#if data.cardImage}
+		<meta property="og:title" content={session?.name ?? t.workout_singular} />
+		<meta property="og:image" content={data.cardImage} />
+		<meta property="og:image:secure_url" content={data.cardImage} />
+		<meta property="og:image:type" content="image/webp" />
+		<meta property="og:image:width" content="1080" />
+		<meta property="og:image:height" content="1080" />
+		<meta property="og:image:alt" content="{session?.name ?? t.workout_singular} — route map" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:image" content={data.cardImage} />
+		<meta name="twitter:image:alt" content="{session?.name ?? t.workout_singular} — route map" />
+	{/if}
 </svelte:head>
 
 <div class="session-detail">
@@ -604,6 +685,12 @@
 				</button>
 				<button class="cancel-edit-btn" onclick={cancelEdit}>{t.cancel}</button>
 			{:else}
+				<button class="share-btn" onclick={copyLog} aria-label={t.copy_log} title={t.copy_log}>
+					<Copy size={16} />
+				</button>
+				<button class="share-btn" onclick={shareRun} aria-label={t.share} title={t.share}>
+					<Share2 size={16} />
+				</button>
 				<button class="edit-btn" onclick={startEdit} aria-label="Edit session">
 					<Pencil size={16} />
 				</button>
@@ -937,7 +1024,8 @@
 		gap: 0.4rem;
 		align-items: center;
 	}
-	.edit-btn {
+	.edit-btn,
+	.share-btn {
 		background: none;
 		border: 1px solid var(--color-border);
 		border-radius: 8px;
@@ -946,7 +1034,8 @@
 		padding: 0.4rem;
 		display: flex;
 	}
-	.edit-btn:hover {
+	.edit-btn:hover,
+	.share-btn:hover {
 		border-color: var(--color-primary);
 		color: var(--color-primary);
 	}

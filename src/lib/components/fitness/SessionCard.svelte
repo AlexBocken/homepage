@@ -38,6 +38,10 @@
 	 */
 	let { session, unsynced = false } = $props();
 
+	// Prefer the server-rendered map screenshot; fall back to the SVG outline
+	// if it fails (unsynced local run, render failure, or offline).
+	let mapImgFailed = $state(false);
+
 	/** @param {number} mins */
 	function formatDuration(mins) {
 		const h = Math.floor(mins / 60);
@@ -170,19 +174,30 @@
 		<span class="session-date">{formatDate(session.startTime)} &middot; {formatTime(session.startTime)}</span>
 	</div>
 
-	{#if svgData}
+	{#if gpsPreview}
 		<div class="map-preview">
-			<svg viewBox={svgData.viewBox} preserveAspectRatio="xMidYMid meet">
-				<polyline
-					points={svgData.points}
-					fill="none"
-					stroke="var(--color-primary)"
-					stroke-width="2.5"
-					stroke-linejoin="round"
-					stroke-linecap="round"
-					vector-effect="non-scaling-stroke"
+			{#if !unsynced && !mapImgFailed}
+				<img
+					class="map-img"
+					src={`/api/fitness/sessions/${session._id}/map.webp`}
+					alt={t.route_map ?? 'Route map'}
+					loading="lazy"
+					decoding="async"
+					onerror={() => { mapImgFailed = true; }}
 				/>
-			</svg>
+			{:else if svgData}
+				<svg viewBox={svgData.viewBox} preserveAspectRatio="xMidYMid meet">
+					<polyline
+						points={svgData.points}
+						fill="none"
+						stroke="#f4511e"
+						stroke-width="2.5"
+						stroke-linejoin="round"
+						stroke-linecap="round"
+						vector-effect="non-scaling-stroke"
+					/>
+				</svg>
+			{/if}
 		</div>
 	{/if}
 
@@ -288,9 +303,22 @@
 		border-radius: 6px;
 		overflow: hidden;
 	}
+	/* Cards get wider on larger screens — give the map more room to breathe. */
+	@media (min-width: 560px) {
+		.map-preview { height: 190px; }
+	}
+	@media (min-width: 900px) {
+		.map-preview { height: 230px; }
+	}
 	.map-preview svg {
 		width: 100%;
 		height: 100%;
+	}
+	.map-img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 	.exercise-list {
 		font-size: 0.8rem;

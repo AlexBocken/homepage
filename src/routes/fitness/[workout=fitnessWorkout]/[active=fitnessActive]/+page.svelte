@@ -20,6 +20,7 @@
 	import Timer from '@lucide/svelte/icons/timer';
 	import Ruler from '@lucide/svelte/icons/ruler';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
+	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
 	import Plus from '@lucide/svelte/icons/plus';
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Repeat from '@lucide/svelte/icons/repeat';
@@ -512,10 +513,10 @@
 			attributionControl: false,
 			zoomControl: false
 		});
-		leafletLib.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		leafletLib.tileLayer(TILE_URL.karte, {
 			maxZoom: 19
 		}).addTo(liveMap);
-		livePolyline = leafletLib.polyline([], { color: '#88c0d0', weight: 3 }).addTo(liveMap);
+		livePolyline = leafletLib.polyline([], { color: ROUTE_COLOR, weight: 4 }).addTo(liveMap);
 		liveMarker = leafletLib.circleMarker([0, 0], {
 			radius: 6, fillColor: '#a3be8c', color: '#fff', weight: 2, opacity: 0, fillOpacity: 0
 		}).addTo(liveMap);
@@ -975,11 +976,11 @@
 		compLeaflet = await import('leaflet');
 		if (!node.isConnected || !completionGps) return;
 		compMap = compLeaflet.map(node, { attributionControl: false, zoomControl: false });
-		compLeaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		compLeaflet.tileLayer(TILE_URL.karte, {
 			maxZoom: 19
 		}).addTo(compMap);
 		const latlngs = completionGps.track.map((/** @type {any} */ p) => [p.lat, p.lng]);
-		compRecordedLine = compLeaflet.polyline(latlngs, { color: '#88c0d0', weight: 4 }).addTo(compMap);
+		compRecordedLine = compLeaflet.polyline(latlngs, { color: ROUTE_COLOR, weight: 4 }).addTo(compMap);
 		if (latlngs.length) compMap.fitBounds(compRecordedLine.getBounds(), { padding: [20, 20] });
 		// Re-draw a snapped overlay if one was already fetched before remount.
 		if (snappedTrack) drawSnappedLine();
@@ -989,7 +990,7 @@
 		if (!compMap || !compLeaflet || !snappedTrack) return;
 		if (compSnappedLine) compSnappedLine.remove();
 		const ll = snappedTrack.map((p) => [p.lat, p.lng]);
-		compSnappedLine = compLeaflet.polyline(ll, { color: '#bf616a', weight: 4 }).addTo(compMap);
+		compSnappedLine = compLeaflet.polyline(ll, { color: '#5e81ac', weight: 4 }).addTo(compMap);
 	}
 
 	/** Fetch a BRouter-snapped preview of the recorded track. */
@@ -2210,10 +2211,10 @@
 		border-radius: 1000px;
 	}
 	.snap-swatch.recorded {
-		background: #88c0d0;
+		background: #f4511e;
 	}
 	.snap-swatch.snapped {
-		background: #bf616a;
+		background: #5e81ac;
 	}
 	.snap-hint {
 		font-size: 0.8rem;
