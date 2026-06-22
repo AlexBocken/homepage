@@ -15,6 +15,7 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { MUSCLE_GROUPS, MUSCLE_GROUP_DE } from '$lib/data/muscleMap';
 	import MuscleFilter from '$lib/components/fitness/MuscleFilter.svelte';
+	import StretchIcon from '$lib/components/fitness/StretchIcon.svelte';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
@@ -158,7 +159,7 @@
 				class:active={typeFilter === 'stretch'}
 				onclick={() => typeFilter = 'stretch'}
 			>
-				<PersonStanding size={14} strokeWidth={2.2} />
+				<StretchIcon size={14} />
 				<span>{t.type_stretches}</span>
 			</button>
 		</div>

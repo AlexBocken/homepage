@@ -4,17 +4,69 @@ import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import type { IPr } from '$models/WorkoutSession';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
-import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+import { getExerciseById, getExerciseMetrics, exercises } from '$lib/data/exercises';
+import { searchAllExercises } from '$lib/data/exercisedb';
 import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
 import { addRunToGrid } from '$lib/server/segmentGrid';
+import mongoose from 'mongoose';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
   if (reps <= 0 || weight <= 0) return 0;
   if (reps === 1) return weight;
   return Math.round(weight * (1 + reps / 30));
+}
+
+const GPS_ACTIVITIES = new Set(['running', 'walking', 'cycling', 'hiking']);
+
+// Stretch/yoga exercise ids (memoised) — a "stretching" session contains one.
+let _stretchIds: string[] | null = null;
+function stretchExerciseIds(): string[] {
+  if (!_stretchIds) _stretchIds = searchAllExercises({ stretchFilter: 'stretch' }).map((e) => e.id);
+  return _stretchIds;
+}
+
+const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+const singular = (s: string) => (s.endsWith('s') ? s.slice(0, -1) : s);
+
+/** Catalog exercise ids whose (en/de) name contains the query (plural-tolerant). */
+function exerciseIdsMatching(query: string): string[] {
+  const needle = singular(normName(query));
+  if (needle.length < 2) return [];
+  const ids: string[] = [];
+  for (const e of exercises) {
+    const names = [e.name, e.de?.name].filter(Boolean) as string[];
+    if (names.some((nm) => normName(nm).includes(needle))) ids.push(e.id);
+  }
+  return ids;
+}
+
+/** Build the `q` text-search OR clauses: name, exercise name/id, numeric metric. */
+function searchClauses(q: string): Record<string, unknown>[] {
+  const rx = { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+  const or: Record<string, unknown>[] = [{ name: rx }, { 'exercises.name': rx }];
+
+  const ids = exerciseIdsMatching(q);
+  if (ids.length) or.push({ 'exercises.exerciseId': { $in: ids } });
+
+  // Numeric tokens like "95kg", "10km", "8 reps" → match a logged set's metric.
+  const kg = q.match(/([\d.]+)\s*kg\b/i);
+  const km = q.match(/([\d.]+)\s*km\b/i);
+  const rep = q.match(/([\d.]+)\s*(?:reps?|x)\b/i);
+  if (kg) or.push({ 'exercises.sets.weight': Number(kg[1]) });
+  if (km) or.push({ 'exercises.sets.distance': Number(km[1]) });
+  if (rep) or.push({ 'exercises.sets.reps': Number(rep[1]) });
+  if (!kg && !km && !rep && /^[\d.]+$/.test(q.trim())) {
+    const n = Number(q.trim());
+    or.push(
+      { 'exercises.sets.weight': n },
+      { 'exercises.sets.distance': n },
+      { 'exercises.sets.reps': n }
+    );
+  }
+  return or;
 }
 
 // GET /api/fitness/sessions - Get all workout sessions for the user
@@ -38,6 +90,69 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       end.setMonth(end.getMonth() + 1);
       query.startTime = { $gte: start, $lt: end };
     }
+
+    // Date-range filter (YYYY-MM-DD, inclusive).
+    const from = url.searchParams.get('from');
+    const to = url.searchParams.get('to');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(from ?? '') || /^\d{4}-\d{2}-\d{2}$/.test(to ?? '')) {
+      query.startTime = { ...(query.startTime ?? {}) };
+      if (from) query.startTime.$gte = new Date(`${from}T00:00:00.000`);
+      if (to) query.startTime.$lte = new Date(`${to}T23:59:59.999`);
+    }
+
+    // --- Optional filters (history search) ---
+    const num = (k: string) => {
+      const v = url.searchParams.get(k);
+      if (v == null || v === '') return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+    const range = (field: string, minK: string, maxK: string) => {
+      const lo = num(minK);
+      const hi = num(maxK);
+      if (lo == null && hi == null) return;
+      query[field] = {};
+      if (lo != null) query[field].$gte = lo;
+      if (hi != null) query[field].$lte = hi;
+    };
+
+    const q = url.searchParams.get('q')?.trim();
+    if (q) query.$or = searchClauses(q);
+    range('duration', 'minDuration', 'maxDuration');
+    range('totalDistance', 'minDistance', 'maxDistance');
+
+    const templateIds = url.searchParams.getAll('templateId').filter((id) => mongoose.Types.ObjectId.isValid(id));
+    if (templateIds.length) query.templateId = { $in: templateIds };
+
+    const exerciseId = url.searchParams.get('exerciseId');
+    if (exerciseId) query['exercises.exerciseId'] = exerciseId;
+
+    // "weightlifting" = a strength session: has volume, no GPS activity type.
+    const strengthMatch = {
+      totalVolume: { $gt: 0 },
+      $or: [{ activityType: { $exists: false } }, { activityType: null }]
+    };
+    const include = url.searchParams.getAll('activityType').filter(Boolean);
+    const exclude = url.searchParams.getAll('notActivityType').filter(Boolean);
+    const and: Record<string, unknown>[] = [...((query.$and as Record<string, unknown>[]) ?? [])];
+
+    if (include.length) {
+      const gps = include.filter((a) => GPS_ACTIVITIES.has(a));
+      const or: Record<string, unknown>[] = [];
+      if (gps.length) or.push({ activityType: { $in: gps } });
+      if (include.includes('strength')) or.push(strengthMatch);
+      if (include.includes('stretching')) or.push({ 'exercises.exerciseId': { $in: stretchExerciseIds() } });
+      if (or.length) and.push({ $or: or });
+    }
+    if (exclude.length) {
+      const gps = exclude.filter((a) => GPS_ACTIVITIES.has(a));
+      // $nin also keeps docs missing activityType, so excluding a GPS type never
+      // drops strength/stretching sessions.
+      if (gps.length) and.push({ activityType: { $nin: gps } });
+      if (exclude.includes('strength')) and.push({ $nor: [strengthMatch] });
+      if (exclude.includes('stretching')) and.push({ 'exercises.exerciseId': { $nin: stretchExerciseIds() } });
+    }
+    if (and.length) query.$and = and;
 
     // Projection matches what SessionCard + the history page actually read.
     // Drops notes, templateId/Name, mode, activityType, endTime, gpsTrack(s),
