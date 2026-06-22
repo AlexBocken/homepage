@@ -18,6 +18,8 @@
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import X from '@lucide/svelte/icons/x';
 	import Timer from '@lucide/svelte/icons/timer';
+	import Ruler from '@lucide/svelte/icons/ruler';
+	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Repeat from '@lucide/svelte/icons/repeat';
@@ -430,10 +432,10 @@
 	}
 
 	const GPS_ACTIVITIES = [
-		{ id: 'running', label: 'Running', icon: '🏃' },
-		{ id: 'walking', label: 'Walking', icon: '🚶' },
-		{ id: 'cycling', label: 'Cycling', icon: '🚴' },
-		{ id: 'hiking', label: 'Hiking', icon: '🥾' },
+		{ id: 'running', label: 'Running' },
+		{ id: 'walking', label: 'Walking' },
+		{ id: 'cycling', label: 'Cycling' },
+		{ id: 'hiking', label: 'Hiking' },
 	];
 
 	function selectActivity(/** @type {string} */ id) {
@@ -1424,7 +1426,7 @@
 			{:else}
 				<div class="gps-options-grid">
 					<button class="gps-option-tile" onclick={() => { showActivityPicker = !showActivityPicker; showAudioPanel = false; showIntervalPanel = false; }} type="button">
-						<span class="gps-option-icon">{GPS_ACTIVITIES.find(a => a.id === selectedActivity)?.icon ?? '🏃'}</span>
+						<span class="gps-option-icon"><ActivityIcon activity={selectedActivity} size={20} /></span>
 						<span class="gps-option-label">Activity</span>
 						<span class="gps-option-value">{GPS_ACTIVITIES.find(a => a.id === selectedActivity)?.label ?? 'Running'}</span>
 					</button>
@@ -1449,7 +1451,7 @@
 								onclick={() => selectActivity(act.id)}
 								type="button"
 							>
-								<span class="gps-activity-icon">{act.icon}</span>
+								<span class="gps-activity-icon"><ActivityIcon activity={act.id} size={18} /></span>
 								<span>{act.label}</span>
 							</button>
 						{/each}
@@ -1479,10 +1481,20 @@
 										step="0.5"
 										bind:value={vgTriggerValue}
 									/>
-									<select class="vg-select" bind:value={vgTriggerType}>
-										<option value="distance">km</option>
-										<option value="time">min</option>
-									</select>
+									<div class="vg-type-toggle">
+										<button
+											class="vg-type-btn"
+											class:active={vgTriggerType === 'distance'}
+											type="button"
+											onclick={() => { vgTriggerType = 'distance'; }}
+										><Ruler size={13} />km</button>
+										<button
+											class="vg-type-btn"
+											class:active={vgTriggerType === 'time'}
+											type="button"
+											onclick={() => { vgTriggerType = 'time'; }}
+										><Timer size={13} />min</button>
+									</div>
 								</div>
 							</div>
 
@@ -1645,13 +1657,13 @@
 										class:active={step.durationType === 'distance'}
 										type="button"
 										onclick={() => { step.durationType = 'distance'; }}
-									>{t.meters}</button>
+									><Ruler size={13} />{t.meters}</button>
 									<button
 										class="interval-type-btn"
 										class:active={step.durationType === 'time'}
 										type="button"
 										onclick={() => { step.durationType = 'time'; }}
-									>{t.seconds}</button>
+									><Timer size={13} />{t.seconds}</button>
 								</div>
 							</div>
 						</div>
@@ -1796,10 +1808,20 @@
 											step="0.5"
 											bind:value={vgTriggerValue}
 										/>
-										<select class="vg-select" bind:value={vgTriggerType}>
-											<option value="distance">km</option>
-											<option value="time">min</option>
-										</select>
+										<div class="vg-type-toggle">
+											<button
+												class="vg-type-btn"
+												class:active={vgTriggerType === 'distance'}
+												type="button"
+												onclick={() => { vgTriggerType = 'distance'; }}
+											><Ruler size={13} />km</button>
+											<button
+												class="vg-type-btn"
+												class:active={vgTriggerType === 'time'}
+												type="button"
+												onclick={() => { vgTriggerType = 'time'; }}
+											><Timer size={13} />min</button>
+										</div>
 									</div>
 								</div>
 
@@ -2589,7 +2611,7 @@
 		width: 14px;
 		height: 14px;
 		border: 2px solid var(--color-border);
-		border-top-color: var(--nord8);
+		border-top-color: var(--nord10);
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
 	}
@@ -2651,13 +2673,30 @@
 		color: var(--color-text-primary);
 		font-size: 0.9rem;
 	}
-	.vg-select {
-		padding: 0.3rem 0.4rem;
-		border-radius: 6px;
+	/* km / min selector — same two-pill toggle as the interval editor. */
+	.vg-type-toggle {
+		display: flex;
 		border: 1px solid var(--color-border);
-		background: var(--color-surface);
-		color: var(--color-text-primary);
-		font-size: 0.9rem;
+		border-radius: var(--radius-sm);
+		overflow: hidden;
+	}
+	.vg-type-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.3rem 0.6rem;
+		background: var(--color-bg-tertiary);
+		border: none;
+		color: var(--color-text-secondary);
+		font: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition: all 0.12s;
+	}
+	.vg-type-btn.active {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font-weight: 600;
 	}
 	.vg-metrics {
 		display: flex;
@@ -2720,11 +2759,21 @@
 	.gps-overlay .vg-label {
 		color: rgba(255,255,255,0.6);
 	}
-	.gps-overlay .vg-number,
-	.gps-overlay .vg-select {
+	.gps-overlay .vg-number {
 		background: rgba(255,255,255,0.1);
 		border-color: rgba(255,255,255,0.2);
 		color: #fff;
+	}
+	.gps-overlay .vg-type-toggle {
+		border-color: rgba(255,255,255,0.2);
+	}
+	.gps-overlay .vg-type-btn {
+		background: rgba(255,255,255,0.1);
+		color: rgba(255,255,255,0.7);
+	}
+	.gps-overlay .vg-type-btn.active {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 	}
 	.gps-overlay .vg-metric-chip {
 		background: rgba(255,255,255,0.1);
@@ -2782,6 +2831,12 @@
 		box-shadow: 0 -4px 24px var(--nav-shadow, rgba(0,0,0,0.25));
 		color: var(--nav-text-active, #fff);
 		pointer-events: none;
+		/* This panel always floats over the dark map, so pin the accent to the
+		   Nord dark blue (nord10) instead of letting --color-primary resolve to
+		   the light blue (nord8) in dark mode. Cascades to all descendants. */
+		--color-primary: var(--nord10);
+		--color-primary-hover: var(--nord9);
+		--color-text-on-primary: #fff;
 	}
 	@media (prefers-color-scheme: dark) {
 		.gps-overlay {
@@ -2863,7 +2918,9 @@
 		border-color: rgba(255,255,255,0.5);
 	}
 	.gps-option-icon {
-		font-size: 1.25rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 	.gps-option-label {
 		font-size: 0.65rem;
@@ -2898,16 +2955,19 @@
 		transition: all 0.15s ease;
 	}
 	.gps-activity-choice.active {
-		border-color: var(--nord8);
+		border-color: var(--nord10);
 		background: rgba(46, 52, 64, 0.9);
-		color: var(--nord8);
-		box-shadow: inset 0 0 0 1px rgba(136,192,208,0.25);
+		color: var(--nord10);
+		box-shadow: inset 0 0 0 1px rgba(94,129,172,0.25);
 	}
 	.gps-activity-choice:hover:not(.active) {
 		border-color: rgba(255,255,255,0.4);
 	}
 	.gps-activity-icon {
-		font-size: 1.1rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.4rem;
 	}
 	.gps-start-btn {
 		display: flex;
@@ -3022,8 +3082,8 @@
 		transition: border-color 0.15s;
 	}
 	.interval-card.selected {
-		border-color: var(--nord8);
-		background: rgba(136,192,208,0.12);
+		border-color: var(--nord10);
+		background: rgba(94,129,172,0.12);
 	}
 	.interval-card-main {
 		flex: 1;
@@ -3079,7 +3139,7 @@
 		background: rgba(255,255,255,0.08);
 		border: 1px dashed rgba(255,255,255,0.2);
 		border-radius: 8px;
-		color: var(--nord8);
+		color: var(--nord10);
 		font: inherit;
 		font-size: 0.8rem;
 		font-weight: 600;
@@ -3094,8 +3154,9 @@
 		position: absolute;
 		inset: 0;
 		z-index: 100;
-		background: rgba(46, 52, 64, 0.95);
-		backdrop-filter: blur(12px);
+		/* Opaque page surface so the editor reads as a normal route, not a
+		   panel floating over the map — solid black in dark mode. */
+		background: var(--color-bg-primary);
 		display: flex;
 		flex-direction: column;
 		overflow-y: auto;
@@ -3106,9 +3167,11 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		padding: 1rem;
-		padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+		/* Clear the floating nav bar (top offset + 3rem height) so the editor
+		   title and close button aren't hidden behind the header. */
+		padding-top: calc(max(12px, env(safe-area-inset-top, 0px) + 4px) + 3rem + 1rem);
 		padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-		color: #fff;
+		color: var(--color-text-primary);
 		max-width: 500px;
 		width: 100%;
 		margin: 0 auto;
@@ -3125,22 +3188,26 @@
 	.interval-editor-close {
 		background: none;
 		border: none;
-		color: rgba(255,255,255,0.6);
+		color: var(--color-text-secondary);
 		cursor: pointer;
 		padding: 0.3rem;
+		border-radius: var(--radius-sm);
+	}
+	.interval-editor-close:hover {
+		color: var(--color-text-primary);
 	}
 	.interval-editor-name {
 		width: 100%;
 		padding: 0.6rem 0.75rem;
-		background: rgba(255,255,255,0.08);
-		border: 1px solid rgba(255,255,255,0.15);
-		border-radius: 8px;
-		color: #fff;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-primary);
 		font: inherit;
 		font-size: 0.95rem;
 	}
 	.interval-editor-name::placeholder {
-		color: rgba(255,255,255,0.35);
+		color: var(--color-text-tertiary);
 	}
 	.interval-editor-steps {
 		display: flex;
@@ -3148,9 +3215,9 @@
 		gap: 0.6rem;
 	}
 	.interval-step-card {
-		background: rgba(255,255,255,0.06);
-		border: 1px solid rgba(255,255,255,0.1);
-		border-radius: 10px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
 		padding: 0.6rem;
 		display: flex;
 		flex-direction: column;
@@ -3164,7 +3231,8 @@
 	.interval-step-num {
 		font-weight: 700;
 		font-size: 0.8rem;
-		background: rgba(255,255,255,0.12);
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
 		border-radius: 50%;
 		width: 1.4rem;
 		height: 1.4rem;
@@ -3181,29 +3249,29 @@
 	.interval-step-move button {
 		background: none;
 		border: none;
-		color: rgba(255,255,255,0.4);
+		color: var(--color-text-tertiary);
 		cursor: pointer;
 		padding: 0.15rem;
 	}
 	.interval-step-move button:hover:not(:disabled) {
-		color: #fff;
+		color: var(--color-text-primary);
 	}
 	.interval-step-move button:disabled {
-		opacity: 0.2;
+		opacity: 0.3;
 		cursor: not-allowed;
 	}
 	.interval-step-remove {
 		background: none;
 		border: none;
-		color: rgba(255,255,255,0.3);
+		color: var(--color-text-tertiary);
 		cursor: pointer;
 		padding: 0.15rem;
 	}
 	.interval-step-remove:hover:not(:disabled) {
-		color: var(--nord11);
+		color: var(--red);
 	}
 	.interval-step-remove:disabled {
-		opacity: 0.2;
+		opacity: 0.3;
 		cursor: not-allowed;
 	}
 	.interval-step-labels {
@@ -3213,28 +3281,32 @@
 	}
 	.interval-label-chip {
 		padding: 0.25rem 0.55rem;
-		background: rgba(255,255,255,0.08);
-		border: 1px solid rgba(255,255,255,0.15);
-		border-radius: 20px;
-		color: rgba(255,255,255,0.7);
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-secondary);
 		font: inherit;
 		font-size: 0.72rem;
 		cursor: pointer;
 		transition: all 0.12s;
 	}
+	.interval-label-chip:hover {
+		border-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
 	.interval-label-chip.selected {
-		background: var(--nord8);
-		border-color: var(--nord8);
-		color: var(--nord0);
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-text-on-primary);
 		font-weight: 600;
 	}
 	.interval-step-custom-input {
 		width: 100%;
 		padding: 0.4rem 0.6rem;
-		background: rgba(255,255,255,0.08);
-		border: 1px solid rgba(255,255,255,0.15);
-		border-radius: 6px;
-		color: #fff;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-primary);
 		font: inherit;
 		font-size: 0.85rem;
 	}
@@ -3246,33 +3318,36 @@
 	.interval-step-value {
 		width: 5rem;
 		padding: 0.4rem 0.5rem;
-		background: rgba(255,255,255,0.08);
-		border: 1px solid rgba(255,255,255,0.15);
-		border-radius: 6px;
-		color: #fff;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-primary);
 		font: inherit;
 		font-size: 0.9rem;
 		text-align: center;
 	}
 	.interval-step-type-toggle {
 		display: flex;
-		border: 1px solid rgba(255,255,255,0.15);
-		border-radius: 6px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
 		overflow: hidden;
 	}
 	.interval-type-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
 		padding: 0.4rem 0.65rem;
-		background: rgba(255,255,255,0.06);
+		background: var(--color-bg-tertiary);
 		border: none;
-		color: rgba(255,255,255,0.5);
+		color: var(--color-text-secondary);
 		font: inherit;
 		font-size: 0.78rem;
 		cursor: pointer;
 		transition: all 0.12s;
 	}
 	.interval-type-btn.active {
-		background: var(--nord8);
-		color: var(--nord0);
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 		font-weight: 600;
 	}
 	.interval-add-row {
@@ -3289,22 +3364,27 @@
 		gap: 0.3rem;
 		width: 100%;
 		padding: 0.55rem;
-		background: rgba(255,255,255,0.06);
-		border: 1px dashed rgba(255,255,255,0.2);
-		border-radius: 8px;
-		color: var(--nord8);
+		background: transparent;
+		border: 1px dashed var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-primary);
 		font: inherit;
 		font-size: 0.85rem;
 		cursor: pointer;
+		transition: all 0.12s;
+	}
+	.interval-add-step-btn:hover {
+		background: var(--color-surface-hover);
+		border-color: var(--color-primary);
 	}
 	.interval-add-step-btn--inner {
 		padding: 0.4rem;
 		font-size: 0.78rem;
 	}
 	.interval-group-card {
-		background: rgba(136, 192, 208, 0.08);
-		border: 1px solid rgba(136, 192, 208, 0.25);
-		border-radius: 12px;
+		background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+		border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+		border-radius: var(--radius-lg);
 		padding: 0.6rem;
 		display: flex;
 		flex-direction: column;
@@ -3314,7 +3394,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		color: var(--nord8);
+		color: var(--color-primary);
 		font-size: 0.8rem;
 	}
 	.interval-group-label {
@@ -3326,17 +3406,17 @@
 	.interval-group-repeat {
 		width: 3rem;
 		padding: 0.25rem 0.4rem;
-		background: rgba(255,255,255,0.1);
-		border: 1px solid rgba(136, 192, 208, 0.4);
-		border-radius: 6px;
-		color: #fff;
+		background: var(--color-bg-tertiary);
+		border: 1px solid color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+		border-radius: var(--radius-sm);
+		color: var(--color-text-primary);
 		font: inherit;
 		font-size: 0.9rem;
 		font-weight: 700;
 		text-align: center;
 	}
 	.interval-group-times {
-		color: rgba(255,255,255,0.55);
+		color: var(--color-text-tertiary);
 		font-size: 0.78rem;
 	}
 	.interval-group-actions {
@@ -3348,15 +3428,15 @@
 	.interval-group-actions button {
 		background: none;
 		border: none;
-		color: rgba(255,255,255,0.4);
+		color: var(--color-text-tertiary);
 		cursor: pointer;
 		padding: 0.2rem;
 	}
 	.interval-group-actions button:hover:not(:disabled) {
-		color: #fff;
+		color: var(--color-text-primary);
 	}
 	.interval-group-actions button:disabled {
-		opacity: 0.2;
+		opacity: 0.3;
 		cursor: not-allowed;
 	}
 	.interval-group-ungroup {
@@ -3366,17 +3446,17 @@
 		text-transform: uppercase;
 		font-weight: 600;
 		padding: 0.2rem 0.45rem !important;
-		border-radius: 4px;
+		border-radius: var(--radius-sm);
 	}
 	.interval-group-ungroup:hover {
-		background: rgba(255,255,255,0.08);
+		background: var(--color-bg-elevated);
 	}
 	.interval-group-steps {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
 		padding-left: 0.6rem;
-		border-left: 2px solid rgba(136, 192, 208, 0.3);
+		border-left: 2px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
 	}
 	.interval-save-btn {
 		width: 100%;
@@ -3401,14 +3481,14 @@
 		flex-direction: column;
 		gap: 0.3rem;
 		padding: 0.4rem 0.5rem;
-		background: rgba(136,192,208,0.12);
-		border: 1px solid rgba(136,192,208,0.25);
+		background: rgba(94,129,172,0.12);
+		border: 1px solid rgba(94,129,172,0.25);
 		border-radius: 8px;
 	}
 	.interval-current-label {
 		font-size: 1.1rem;
 		font-weight: 800;
-		color: var(--nord8);
+		color: var(--nord10);
 		text-align: center;
 	}
 	.interval-progress-row {
@@ -3431,7 +3511,7 @@
 	}
 	.interval-progress-fill {
 		height: 100%;
-		background: var(--nord8);
+		background: var(--nord10);
 		border-radius: 2px;
 		transition: width 0.5s ease;
 	}
