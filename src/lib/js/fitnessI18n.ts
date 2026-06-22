@@ -17,8 +17,8 @@ export type FitnessLang = keyof typeof m;
 export type FitnessKey = keyof typeof de;
 
 const slugMap: Record<string, Record<string, string>> = {
-	en: { statistik: 'stats', verlauf: 'history', training: 'workout', aktiv: 'active', uebungen: 'exercises', erfassung: 'check-in', ernaehrung: 'nutrition' },
-	de: { stats: 'statistik', history: 'verlauf', workout: 'training', active: 'aktiv', exercises: 'uebungen', 'check-in': 'erfassung', nutrition: 'ernaehrung' }
+	en: { statistik: 'stats', verlauf: 'history', training: 'workout', aktiv: 'active', uebungen: 'exercises', erfassung: 'check-in', ernaehrung: 'nutrition', segmente: 'segments' },
+	de: { stats: 'statistik', history: 'verlauf', workout: 'training', active: 'aktiv', exercises: 'uebungen', 'check-in': 'erfassung', nutrition: 'ernaehrung', segments: 'segmente' }
 };
 
 const germanSlugs = new Set(Object.keys(slugMap.en));
@@ -48,7 +48,8 @@ export function fitnessSlugs(lang: FitnessLang) {
 		active: lang === 'en' ? 'active' : 'aktiv',
 		exercises: lang === 'en' ? 'exercises' : 'uebungen',
 		measure: lang === 'en' ? 'check-in' : 'erfassung',
-		nutrition: lang === 'en' ? 'nutrition' : 'ernaehrung'
+		nutrition: lang === 'en' ? 'nutrition' : 'ernaehrung',
+		segments: lang === 'en' ? 'segments' : 'segmente'
 	};
 }
 

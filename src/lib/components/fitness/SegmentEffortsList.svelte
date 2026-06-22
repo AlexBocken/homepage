@@ -4,7 +4,7 @@
 	import Flag from '@lucide/svelte/icons/flag';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { resolve } from '$app/paths';
-	import { m, type FitnessLang } from '$lib/js/fitnessI18n';
+	import { m, fitnessSlugs, type FitnessLang } from '$lib/js/fitnessI18n';
 	import { formatElapsed, formatDelta } from '$lib/fitness/segmentFormat';
 
 	interface RunEffort {
@@ -46,7 +46,7 @@
 					onmouseenter={() => onhighlight?.({ startIdx: e.startIdx, endIdx: e.endIdx, exerciseIndex: e.exerciseIndex })}
 					onmouseleave={() => onhighlight?.(null)}
 				>
-					<a class="seg-link" href={resolve('/fitness/segments/[id]', { id: e.segmentId })}>
+					<a class="seg-link" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: e.segmentId })}>
 						<div class="left">
 							<span class="seg-name">{e.segmentName}</span>
 							<span class="seg-dist">{e.segmentDistance.toFixed(2)} {t.km}</span>

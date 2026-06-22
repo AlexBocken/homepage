@@ -4,7 +4,7 @@
 	import Crown from '@lucide/svelte/icons/crown';
 	import Users from '@lucide/svelte/icons/users';
 	import { resolve } from '$app/paths';
-	import { m, type FitnessLang } from '$lib/js/fitnessI18n';
+	import { m, fitnessSlugs, type FitnessLang } from '$lib/js/fitnessI18n';
 	import { projectTrack, svgPath } from '$lib/fitness/trackSvg';
 	import { formatElapsed } from '$lib/fitness/segmentFormat';
 
@@ -31,7 +31,7 @@
 	let mapImgFailed = $state(false);
 </script>
 
-<a class="segment-card" href={resolve('/fitness/segments/[id]', { id: segment._id })}>
+<a class="segment-card" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: segment._id })}>
 	{#if !mapImgFailed}
 		<img
 			class="mini-map map-img"

@@ -8,7 +8,7 @@
 	import Crown from '@lucide/svelte/icons/crown';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
@@ -70,7 +70,7 @@
 		deleting = true;
 		const res = await fetch(`/api/fitness/segments/${seg._id}`, { method: 'DELETE' });
 		if (res.ok) {
-			goto(resolve('/fitness/segments'));
+			goto(resolve('/fitness/[segments=fitnessSegments]', { segments: fitnessSlugs(lang).segments }));
 		} else {
 			deleting = false;
 		}
