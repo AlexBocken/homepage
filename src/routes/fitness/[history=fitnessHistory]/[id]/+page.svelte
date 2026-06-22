@@ -27,14 +27,16 @@
 	const sl = $derived(fitnessSlugs(lang));
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
-	import { TILE_URL, ROUTE_COLOR, ROUTE_CASING } from '$lib/data/mapTiles';
+	import { createTrackHover } from '$lib/stores/trackHover.svelte';
+	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
+	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { onMount } from 'svelte';
-	import { computeElevationStats as computeElevationStatsShared } from '$lib/hikes/elevation';
+	import { buildGpsView, formatPaceTooltip } from '$lib/fitness/gpsSeries';
 
 	let { data } = $props();
 
@@ -328,28 +330,27 @@
 		return exercise?.bodyPart === 'cardio';
 	}
 
-	/** @type {Record<number, any>} */
-	let maps = {};
 	let uploading = $state(-1);
 
-	/** Haversine distance in km */
-	function haversine(/** @type {any} */ a, /** @type {any} */ b) {
-		const R = 6371;
-		const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-		const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-		const sinLat = Math.sin(dLat / 2);
-		const sinLng = Math.sin(dLng / 2);
-		const h = sinLat * sinLat +
-			Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) *
-			sinLng * sinLng;
-		return 2 * R * Math.asin(Math.sqrt(h));
+	// One hover cursor per GPS exercise so map pins / chart cursors stay
+	// independent. Created lazily and cached by exercise index.
+	/** @type {Map<number, import('$lib/stores/trackHover.svelte').TrackHoverStore>} */
+	const hoverStores = new Map();
+	/** @param {number} idx */
+	function hoverFor(idx) {
+		let s = hoverStores.get(idx);
+		if (!s) { s = createTrackHover(); hoverStores.set(idx, s); }
+		return s;
 	}
 
-	/** @param {any[]} track */
-	function trackDistance(track) {
-		let total = 0;
-		for (let i = 1; i < track.length; i++) total += haversine(track[i - 1], track[i]);
-		return total;
+	// Shared y-axis width per exercise so its stacked GPS charts align.
+	/** @type {Map<number, import('$lib/stores/axisWidthGroup.svelte').AxisWidthGroup>} */
+	const axisGroups = new Map();
+	/** @param {number} idx */
+	function axisGroupFor(idx) {
+		let g = axisGroups.get(idx);
+		if (!g) { g = createAxisWidthGroup(); axisGroups.set(idx, g); }
+		return g;
 	}
 
 	/** @param {number} minPerKm */
@@ -357,242 +358,6 @@
 		const m = Math.floor(minPerKm);
 		const s = Math.round((minPerKm - m) * 60);
 		return `${m}:${s.toString().padStart(2, '0')} /km`;
-	}
-
-	/**
-	 * Attachment factory — renders a Leaflet map for a GPS track.
-	 * @param {any[]} track
-	 * @param {number} idx
-	 * @returns {import('svelte/attachments').Attachment<HTMLElement>}
-	 */
-	function renderMap(track, idx) {
-		return (node) => {
-			initMapForTrack(node, track, idx);
-			return () => {
-				if (maps[idx]) {
-					maps[idx].remove();
-					delete maps[idx];
-				}
-			};
-		};
-	}
-
-	/** @param {HTMLElement} node @param {any[]} track @param {number} idx */
-	async function initMapForTrack(node, track, idx) {
-		const L = await import('leaflet');
-		if (!node.isConnected) return;
-		const map = L.map(node, { attributionControl: false, zoomControl: false });
-		L.tileLayer(TILE_URL.karte, { maxZoom: 19 }).addTo(map);
-		const pts = track.map((/** @type {any} */ p) => /** @type {[number, number]} */ ([p.lat, p.lng]));
-		// White casing under the red route for high contrast on any map surface.
-		L.polyline(pts, { color: ROUTE_CASING, weight: 7, opacity: 0.9 }).addTo(map);
-		const polyline = L.polyline(pts, { color: ROUTE_COLOR, weight: 3.5 }).addTo(map);
-		// Start/end markers
-		L.circleMarker(pts[0], { radius: 5, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
-		L.circleMarker(pts[pts.length - 1], { radius: 5, fillColor: '#bf616a', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
-		map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
-		maps[idx] = map;
-	}
-
-	/**
-	 * Compute km splits from a GPS track.
-	 * Returns array of { km, pace (min/km), elapsed (min) }
-	 * @param {any[]} track
-	 */
-	function computeSplits(track) {
-		if (track.length < 2) return [];
-		/** @type {Array<{km: number, pace: number, elapsed: number}>} */
-		const splits = [];
-		let cumDist = 0;
-		let splitStart = 0; // index where current km started
-		let splitStartTime = track[0].timestamp;
-
-		for (let i = 1; i < track.length; i++) {
-			cumDist += haversine(track[i - 1], track[i]);
-			const currentKm = Math.floor(cumDist);
-			const prevKm = splits.length;
-
-			if (currentKm > prevKm) {
-				// We crossed a km boundary
-				const elapsedMin = (track[i].timestamp - splitStartTime) / 60000;
-				// Distance covered in this segment (might be slightly over 1km)
-				const segDist = cumDist - prevKm;
-				const pace = segDist > 0 ? elapsedMin / segDist : 0;
-				splits.push({
-					km: currentKm,
-					pace,
-					elapsed: (track[i].timestamp - track[0].timestamp) / 60000
-				});
-				splitStart = i;
-				splitStartTime = track[i].timestamp;
-			}
-		}
-
-		// Final partial km
-		const lastKm = splits.length;
-		const partialDist = cumDist - lastKm;
-		if (partialDist > 0.05) { // only show if > 50m
-			const elapsedMin = (track[track.length - 1].timestamp - splitStartTime) / 60000;
-			const pace = elapsedMin / partialDist;
-			splits.push({
-				km: cumDist,
-				pace,
-				elapsed: (track[track.length - 1].timestamp - track[0].timestamp) / 60000
-			});
-		}
-
-		return splits;
-	}
-
-	/**
-	 * Compute rolling pace samples for the pace graph.
-	 * Returns array of { dist (km), pace (min/km) } sampled every ~100m.
-	 * @param {any[]} track
-	 */
-	function computePaceSamples(track) {
-		if (track.length < 2) return [];
-		/** @type {Array<{dist: number, pace: number}>} */
-		const samples = [];
-		let cumDist = 0;
-		const windowDist = 0.2; // 200m rolling window
-
-		for (let i = 1; i < track.length; i++) {
-			cumDist += haversine(track[i - 1], track[i]);
-
-			// Find point ~windowDist km back
-			let backDist = 0;
-			let j = i;
-			while (j > 0 && backDist < windowDist) {
-				backDist += haversine(track[j - 1], track[j]);
-				j--;
-			}
-			if (backDist < 0.05) continue; // too little distance
-
-			const dt = (track[i].timestamp - track[j].timestamp) / 60000;
-			const pace = dt / backDist;
-			if (pace > 0 && pace < 30) { // sanity: max 30 min/km
-				samples.push({ dist: cumDist, pace });
-			}
-		}
-		return samples;
-	}
-
-	/**
-	 * Compute elevation samples over distance from GPS track.
-	 * Returns array of { dist (km), altitude (m) }.
-	 * @param {any[]} track
-	 */
-	function computeElevationSamples(track) {
-		/** @type {Array<{dist: number, altitude: number}>} */
-		const samples = [];
-		let cumDist = 0;
-		for (let i = 0; i < track.length; i++) {
-			if (track[i].altitude == null) continue;
-			if (i > 0) cumDist += haversine(track[i - 1], track[i]);
-			samples.push({ dist: cumDist, altitude: track[i].altitude });
-		}
-		return samples;
-	}
-
-	/**
-	 * Compute elevation gain and loss from altitude samples, using the same
-	 * smoothing + 3 m minimum-step algorithm the hikes pipeline applies so GPS
-	 * jitter isn't counted as real gain/loss. Tracks recorded after this change
-	 * are already smoothed at completion; older raw tracks are smoothed here.
-	 * @param {Array<{dist: number, altitude: number}>} samples
-	 */
-	function computeElevationStats(samples) {
-		return computeElevationStatsShared(samples);
-	}
-
-	/**
-	 * Build Chart.js data for pace over distance
-	 * @param {Array<{dist: number, pace: number}>} samples
-	 */
-	function buildPaceChartData(samples) {
-		// Downsample to ~50 points for readability
-		const step = Math.max(1, Math.floor(samples.length / 50));
-		const filtered = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
-		const primary = dark ? '#88C0D0' : '#5E81AC';
-		const fill = dark ? 'rgba(136, 192, 208, 0.12)' : 'rgba(94, 129, 172, 0.12)';
-		return {
-			labels: filtered.map(s => s.dist.toFixed(2)),
-			datasets: [{
-				label: 'Pace',
-				data: filtered.map(s => s.pace),
-				borderColor: primary,
-				backgroundColor: fill,
-				borderWidth: 1.5,
-				pointRadius: 0,
-				tension: 0.3,
-				fill: true
-			}]
-		};
-	}
-
-	/**
-	 * Build Chart.js data for elevation over distance
-	 * @param {Array<{dist: number, altitude: number}>} samples
-	 */
-	function buildElevationChartData(samples) {
-		const step = Math.max(1, Math.floor(samples.length / 80));
-		const filtered = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
-		const color = dark ? '#A3BE8C' : '#8FBCBB';
-		const fill = dark ? 'rgba(163, 190, 140, 0.18)' : 'rgba(143, 188, 187, 0.18)';
-		return {
-			labels: filtered.map(s => s.dist.toFixed(2)),
-			datasets: [{
-				label: t.elevation,
-				data: filtered.map(s => Math.round(s.altitude)),
-				borderColor: color,
-				backgroundColor: fill,
-				borderWidth: 1.5,
-				pointRadius: 0,
-				tension: 0.3,
-				fill: true
-			}]
-		};
-	}
-
-	/**
-	 * Compute cadence samples over distance from GPS track.
-	 * Returns array of { dist (km), cadence (spm) } — only for points with cadence data.
-	 * @param {any[]} track
-	 */
-	function computeCadenceSamples(track) {
-		/** @type {Array<{dist: number, cadence: number}>} */
-		const samples = [];
-		let cumDist = 0;
-		for (let i = 0; i < track.length; i++) {
-			if (track[i].cadence == null) continue;
-			if (i > 0) cumDist += haversine(track[i - 1], track[i]);
-			samples.push({ dist: cumDist, cadence: Math.round(track[i].cadence) });
-		}
-		return samples;
-	}
-
-	/**
-	 * Build Chart.js data for cadence over distance
-	 * @param {Array<{dist: number, cadence: number}>} samples
-	 */
-	function buildCadenceChartData(samples) {
-		const step = Math.max(1, Math.floor(samples.length / 50));
-		const filtered = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
-		const color = dark ? '#B48EAD' : '#5E81AC';
-		const fill = dark ? 'rgba(180, 142, 173, 0.12)' : 'rgba(94, 129, 172, 0.12)';
-		return {
-			labels: filtered.map(s => s.dist.toFixed(2)),
-			datasets: [{
-				label: t.cadence,
-				data: filtered.map(s => s.cadence),
-				borderColor: color,
-				backgroundColor: fill,
-				borderWidth: 1.5,
-				pointRadius: 0,
-				tension: 0.3,
-				fill: true
-			}]
-		};
 	}
 
 	/** @param {number} exIdx */
@@ -792,7 +557,7 @@
 						</button>
 					</div>
 					{#if exData.gpsTrack?.length >= 2}
-						<div class="track-map" {@attach renderMap(exData.gpsTrack, exIdx)}></div>
+						<div class="track-map" {@attach attachTrackMap(exData.gpsTrack, hoverFor(exIdx))}></div>
 					{/if}
 				{/if}
 
@@ -856,63 +621,71 @@
 				</table>
 
 				{#if ex.gpsTrack?.length > 0}
-					{@const dist = ex.totalDistance ?? trackDistance(ex.gpsTrack)}
-					{@const elapsed = (ex.gpsTrack[ex.gpsTrack.length - 1].timestamp - ex.gpsTrack[0].timestamp) / 60000}
-					{@const pace = dist > 0 && elapsed > 0 ? elapsed / dist : 0}
-					{@const elevSamples = computeElevationSamples(ex.gpsTrack)}
-					{@const elevStats = elevSamples.length > 1 ? computeElevationStats(elevSamples) : null}
+					{@const gps = buildGpsView(ex.gpsTrack, { dark, elevationLabel: t.elevation, cadenceLabel: t.cadence })}
+					{@const dist = ex.totalDistance ?? gps.dist}
+					{@const hov = hoverFor(exIdx)}
+					{@const yGroup = axisGroupFor(exIdx)}
 					<div class="gps-track-section">
 						<div class="gps-stats">
 							<span class="gps-stat accent"><Route size={14} /> {dist.toFixed(2)} km</span>
-							{#if pace > 0}
-								<span class="gps-stat accent"><Gauge size={14} /> {formatPace(pace)}</span>
+							{#if gps.avgPace > 0}
+								<span class="gps-stat accent"><Gauge size={14} /> {formatPace(gps.avgPace)}</span>
 							{/if}
-							{#if elevStats}
-								<span class="gps-stat elev-gain"><Mountain size={14} /> +{elevStats.gain}{t.elevation_unit}</span>
-								<span class="gps-stat elev-loss">-{elevStats.loss}{t.elevation_unit}</span>
+							{#if gps.elevStats}
+								<span class="gps-stat elev-gain"><Mountain size={14} /> +{gps.elevStats.gain}{t.elevation_unit}</span>
+								<span class="gps-stat elev-loss">-{gps.elevStats.loss}{t.elevation_unit}</span>
 							{/if}
 						</div>
-						<div class="track-map" {@attach renderMap(ex.gpsTrack, exIdx)}></div>
+						<div class="track-map" {@attach attachTrackMap(ex.gpsTrack, hov)}></div>
 
-						{#if ex.gpsTrack.length >= 2}
-						{@const samples = computePaceSamples(ex.gpsTrack)}
-						{@const splits = computeSplits(ex.gpsTrack)}
-
-						{#if elevSamples.length > 1}
+						{#if gps.hasCharts}
+						{#if gps.elevation.has}
 							<div class="chart-section">
 								<FitnessChart
-									data={buildElevationChartData(elevSamples)}
+									data={gps.elevation.data}
 									title="{t.elevation} ({t.elevation_unit})"
 									height="160px"
 									yUnit="m"
+									xAxis={gps.xAxis}
+									yWidthGroup={yGroup}
+									onHover={(j) => onGraphHover(hov, gps.elevation.points, j, 'elev')}
+									hoverIndex={graphHoverIndex(hov, gps.elevation.points, 'elev')}
 								/>
 							</div>
 						{/if}
 
-						{#if samples.length > 0}
+						{#if gps.pace.has}
 							<div class="chart-section">
 								<FitnessChart
-									data={buildPaceChartData(samples)}
+									data={gps.pace.data}
 									title="Pace (min/km)"
 									height="180px"
+									xAxis={gps.xAxis}
+									yWidthGroup={yGroup}
+									tooltipFormatter={(v) => formatPaceTooltip(v)}
+									onHover={(j) => onGraphHover(hov, gps.pace.points, j, 'pace')}
+									hoverIndex={graphHoverIndex(hov, gps.pace.points, 'pace')}
 								/>
 							</div>
 						{/if}
 
-						{@const cadenceSamples = computeCadenceSamples(ex.gpsTrack)}
-						{#if cadenceSamples.length > 1}
-							{@const avgCadence = Math.round(cadenceSamples.reduce((a, s) => a + s.cadence, 0) / cadenceSamples.length)}
+						{#if gps.cadence.has}
 							<div class="chart-section">
 								<FitnessChart
-									data={buildCadenceChartData(cadenceSamples)}
-									title="{t.cadence} ({t.cadence_unit}) · {t.avg} {avgCadence}"
+									data={gps.cadence.data}
+									title="{t.cadence} ({t.cadence_unit}) · {t.avg} {gps.avgCadence}"
 									height="160px"
 									yUnit=" spm"
+									xAxis={gps.xAxis}
+									yWidthGroup={yGroup}
+									onHover={(j) => onGraphHover(hov, gps.cadence.points, j, 'cadence')}
+									hoverIndex={graphHoverIndex(hov, gps.cadence.points, 'cadence')}
 								/>
 							</div>
 						{/if}
 
-						{#if splits.length > 1}
+						{#if gps.splits.length > 1}
+							{@const splits = gps.splits}
 							{@const avgPace = splits.reduce((a, s) => a + s.pace, 0) / splits.length}
 							<div class="splits-section">
 								<h4>{t.splits}</h4>
@@ -1432,6 +1205,14 @@
 		border-radius: 8px;
 		overflow: hidden;
 	}
+	:global(.run-hover-pin) {
+		background: transparent !important;
+		border: 0 !important;
+		color: var(--red);
+		filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.25));
+		pointer-events: none;
+	}
+	:global(.run-hover-pin svg) { display: block; width: 28px; height: 34px; }
 	.gpx-upload-btn {
 		display: flex;
 		align-items: center;

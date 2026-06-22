@@ -4,17 +4,32 @@
 	/**
 	 * @type {{
 	 *   type?: 'line' | 'bar',
-	 *   data: { labels: string[], dates?: string[], datasets: Array<{ label: string, data: (number|null)[], borderColor?: string, backgroundColor?: string, borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number, type?: string, borderDash?: number[], [key: string]: any }> },
+	 *   data: { labels?: string[], dates?: string[], datasets: Array<{ label: string, data: Array<number|null|{ x: number, y: number|null }>, borderColor?: string, backgroundColor?: string, borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number, type?: string, borderDash?: number[], [key: string]: any }> },
 	 *   title?: string,
 	 *   height?: string,
 	 *   yUnit?: string,
 	 *   goalLine?: number,
 	 *   tooltipFormatter?: (value: number, datasetIndex: number, dataIndex: number, label: string) => string,
 	 *   yMin?: number,
-	 *   yMax?: number
+	 *   yMax?: number,
+	 *   onHover?: (index: number | null) => void,
+	 *   hoverIndex?: number | null,
+	 *   xAxis?: { min: number, max: number, stepSize: number, unit?: string },
+	 *   yWidthGroup?: import('$lib/stores/axisWidthGroup.svelte').AxisWidthGroup
 	 * }}
+	 *
+	 * `xAxis` switches the x-axis to a numeric *linear* scale (instead of the
+	 * default per-label category axis). Datasets must then carry `{x, y}` points.
+	 * Used to give the GPS pace/elevation/cadence charts one shared distance axis
+	 * with identical limits and clean, evenly-spaced ticks.
+	 *
+	 * `onHover` reports the data index under the pointer (null on leave) so a
+	 * parent can sync an external cursor (e.g. a map pin). `hoverIndex` drives
+	 * this chart's cursor from outside: a number highlights that point, `null`
+	 * clears it, and `undefined` leaves the chart's native hover untouched (used
+	 * for the chart that currently owns the pointer, so we don't fight Chart.js).
 	 */
-	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined, yMin = undefined, yMax = undefined } = $props();
+	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined, yMin = undefined, yMax = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined } = $props();
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
@@ -46,14 +61,16 @@
 		const textColor = dark ? '#D8DEE9' : '#2E3440';
 		const gridColor = dark ? 'rgba(216,222,233,0.1)' : 'rgba(46,52,64,0.08)';
 
-		const useTimeAxis = !!(data.dates && data.dates.length > 0);
+		const useLinearX = !!xAxis;
+		const useTimeAxis = !useLinearX && !!(data.dates && data.dates.length > 0);
 		const dates = data.dates || [];
-		const plainLabels = useTimeAxis ? [] : [...(data.labels || [])];
+		const plainLabels = useTimeAxis || useLinearX ? [] : [...(data.labels || [])];
 		const plainDatasets = (data.datasets || []).map((ds, i) => {
 			const isLine = ds.type === 'line' || (type === 'line' && !ds.type);
 			const isBar = ds.type === 'bar' || (type === 'bar' && !ds.type);
 			const rawData = [...(ds.data || [])];
-			// When using time axis, pair each value with its date
+			// Time axis pairs each value with its date; linear x already carries
+			// {x, y} points; otherwise the value sits on a category label.
 			const chartData = useTimeAxis
 				? rawData.map((v, j) => ({ x: dates[j], y: v }))
 				: rawData;
@@ -77,6 +94,30 @@
 
 		/** @type {import('chart.js').Plugin[]} */
 		const plugins = [];
+		if (onHover) {
+			// Dashed vertical cursor at the active point — mirrors the hike
+			// elevation chart so an externally-driven hover reads clearly.
+			const cursorColor = dark ? 'rgba(216,222,233,0.55)' : 'rgba(46,52,64,0.45)';
+			plugins.push({
+				id: 'hoverCursor',
+				afterDatasetsDraw(chart) {
+					const active = chart.tooltip?.getActiveElements?.() ?? [];
+					if (active.length === 0) return;
+					const x = /** @type {{ x: number }} */ (/** @type {unknown} */ (active[0].element)).x;
+					const { top, bottom } = chart.chartArea;
+					const ctx = chart.ctx;
+					ctx.save();
+					ctx.beginPath();
+					ctx.moveTo(x, top);
+					ctx.lineTo(x, bottom);
+					ctx.setLineDash([4, 4]);
+					ctx.lineWidth = 1;
+					ctx.strokeStyle = cursorColor;
+					ctx.stroke();
+					ctx.restore();
+				}
+			});
+		}
 		if (goalLine != null) {
 			plugins.push({
 				id: 'goalLine',
@@ -108,8 +149,27 @@
 				maintainAspectRatio: false,
 				animation: { duration: 0 },
 				interaction: type === 'line' ? { mode: 'index', intersect: false } : undefined,
+				onHover: onHover ? (/** @type {any} */ _evt, /** @type {any[]} */ elements) => {
+					if (!elements || elements.length === 0) { onHover(null); return; }
+					onHover(elements[0].index);
+				} : undefined,
 				scales: {
-					x: useTimeAxis ? {
+					x: useLinearX ? {
+						type: 'linear',
+						min: xAxis.min,
+						max: xAxis.max,
+						grid: { display: false },
+						border: { display: false },
+						ticks: {
+							color: textColor,
+							font: { size: 11 },
+							stepSize: xAxis.stepSize,
+							autoSkip: false,
+							maxRotation: 0,
+							// Tick values land on clean stepSize multiples; trim float noise.
+							callback: (/** @type {any} */ v) => `${+Number(v).toFixed(3)}${xAxis.unit ?? ''}`
+						}
+					} : useTimeAxis ? {
 						type: 'time',
 						time: { unit: 'day', tooltipFormat: 'MMM d' },
 						grid: { display: false },
@@ -126,6 +186,25 @@
 						suggestedMax: yMax,
 						grid: { color: gridColor },
 						border: { display: false },
+						// Share one y-axis width across a stack of charts so their plot
+						// areas start at the same x and line up vertically. We size to the
+						// widest *tick label text* (not Chart.js's padded natural width,
+						// which leaves slack) + a small gap, then pin to the group max.
+						afterFit: yWidthGroup ? (/** @type {any} */ scale) => {
+							const ctx = scale.ctx;
+							const size = scale.options?.ticks?.font?.size ?? 11;
+							ctx.save();
+							ctx.font = `${size}px Helvetica, Arial, "Noto Sans", sans-serif`;
+							let textW = 0;
+							for (const tk of scale.ticks ?? []) {
+								const label = tk.label ?? (yUnit ? `${scale.getLabelForValue(tk.value)}${yUnit}` : `${scale.getLabelForValue(tk.value)}`);
+								const w = ctx.measureText(String(label)).width;
+								if (w > textW) textW = w;
+							}
+							ctx.restore();
+							yWidthGroup.report(Math.ceil(textW) + 10);
+							scale.width = yWidthGroup.max;
+						} : undefined,
 						ticks: {
 							color: textColor,
 							font: { size: 11 },
@@ -153,20 +232,36 @@
 					},
 					tooltip: {
 						backgroundColor: dark ? '#2E3440' : '#ECEFF4',
-						titleColor: dark ? '#ECEFF4' : '#2E3440',
-						bodyColor: dark ? '#D8DEE9' : '#3B4252',
+						// On the linear (distance) charts the value is the headline and the
+						// distance is a muted sub-line; demote the title and drop the swatch.
+						titleColor: useLinearX ? (dark ? '#7B88A1' : '#7B88A1') : (dark ? '#ECEFF4' : '#2E3440'),
+						titleFont: useLinearX ? { size: 11, weight: 'normal' } : undefined,
+						bodyColor: dark ? '#ECEFF4' : '#2E3440',
+						bodyFont: useLinearX ? { size: 14, weight: 'bold' } : undefined,
+						displayColors: !useLinearX,
 						borderWidth: 0,
 						cornerRadius: 8,
 						padding: 10,
 						filter: (/** @type {any} */ ctx) => !(ctx.dataset?.label ?? '').includes('σ'),
-						...(tooltipFormatter ? {
+						...((tooltipFormatter || useLinearX) ? {
 							callbacks: {
+								...(useLinearX ? {
+									// Sub-line: distance, de-emphasized.
+									title: (/** @type {any} */ items) => {
+										const x = items?.[0]?.parsed?.x;
+										if (x == null) return '';
+										return `${+Number(x).toFixed(2)}${xAxis.unit ?? ''}`;
+									}
+								} : {}),
 								label: (/** @type {any} */ ctx) => {
 									const v = ctx.parsed.y;
 									const label = ctx.dataset.label ?? '';
-									if (v == null) return label;
-									const formatted = tooltipFormatter(v, ctx.datasetIndex, ctx.dataIndex, label);
-									return `${label}: ${formatted}`;
+									if (v == null) return useLinearX ? '' : label;
+									const formatted = tooltipFormatter
+										? tooltipFormatter(v, ctx.datasetIndex, ctx.dataIndex, label)
+										: `${v}${yUnit}`;
+									// Linear charts: just the value (no dataset label / colour key).
+									return useLinearX ? formatted : `${label}: ${formatted}`;
 								}
 							}
 						} : {})
@@ -215,6 +310,34 @@
 			obs?.disconnect();
 			if (chart) chart.destroy();
 		};
+	});
+
+	// When another chart in the group reports a wider y-axis, re-run layout so
+	// this chart's `afterFit` widens to the new shared max and stays aligned.
+	$effect(() => {
+		const max = yWidthGroup?.max;
+		if (!chart || max == null) return;
+		chart.update('none');
+	});
+
+	// Drive this chart's cursor from an external hover (e.g. a map pin or a
+	// sibling chart). `undefined` means "not externally controlled" — leave the
+	// chart's own hover alone.
+	$effect(() => {
+		const idx = hoverIndex;
+		if (!chart || idx === undefined) return;
+		if (idx === null) {
+			chart.setActiveElements([]);
+			chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+			chart.update('none');
+			return;
+		}
+		const meta = chart.getDatasetMeta(0);
+		const elem = /** @type {{ x: number, y: number } | undefined} */ (meta?.data?.[idx]);
+		if (!elem) return;
+		chart.setActiveElements([{ datasetIndex: 0, index: idx }]);
+		chart.tooltip?.setActiveElements([{ datasetIndex: 0, index: idx }], { x: elem.x, y: elem.y });
+		chart.update('none');
 	});
 </script>
 

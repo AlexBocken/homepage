@@ -8,21 +8,24 @@
  *
  * `source` records which side wrote the last update so the receiver can skip
  * redrawing on its own write and prevent feedback loops.
+ *
+ * A hike page has exactly one map + one chart, so this is a module singleton
+ * built on the shared {@link createTrackHover} factory (the same factory backs
+ * the per-exercise stores on workout GPS views).
  */
+
+import { createTrackHover } from '$lib/stores/trackHover.svelte';
 
 export type HoverSource = 'map' | 'chart' | 'image' | 'scroll' | null;
 
-export const hover = $state<{ index: number | null; source: HoverSource }>({
-	index: null,
-	source: null
-});
+const store = createTrackHover();
+
+export const hover = store.hover;
 
 export function setHover(index: number | null, source: HoverSource): void {
-	hover.index = index;
-	hover.source = source;
+	store.setHover(index, source);
 }
 
 export function clearHover(): void {
-	hover.index = null;
-	hover.source = null;
+	store.clearHover();
 }
