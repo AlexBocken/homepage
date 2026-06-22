@@ -5,6 +5,7 @@ import { WorkoutSession } from '$models/WorkoutSession';
 import { Segment } from '$models/Segment';
 import { SegmentEffort } from '$models/SegmentEffort';
 import { optedOutUsernames } from '$lib/server/segments';
+import { removeRunFromGrid } from '$lib/server/segmentGrid';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import mongoose from 'mongoose';
 
@@ -227,6 +228,8 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
     // Cascade: drop this run's segment efforts so leaderboards stay accurate.
     await SegmentEffort.deleteMany({ sessionId: params.id });
+    // And withdraw it from the auto-detect grid.
+    await removeRunFromGrid(session.user.nickname, params.id);
 
     return json({ message: 'Session deleted successfully' });
   } catch (error) {

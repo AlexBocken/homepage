@@ -1,10 +1,26 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { untrack } from 'svelte';
+	import { untrack, onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import Flag from '@lucide/svelte/icons/flag';
+	import Radar from '@lucide/svelte/icons/radar';
+	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
+	import { toast } from '$lib/js/toast.svelte';
 	import SegmentCard from '$lib/components/fitness/SegmentCard.svelte';
+	import SegmentSuggestionCard from '$lib/components/fitness/SegmentSuggestionCard.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
+
+	interface Suggestion {
+		routeHash: string;
+		sessionId: string;
+		exerciseIndex: number | null;
+		startIdx: number;
+		endIdx: number;
+		points: number[][];
+		distance: number;
+		seenCount: number;
+	}
 
 	let { data } = $props();
 
@@ -21,13 +37,57 @@
 		});
 	}
 
+	let suggestions = $state<Suggestion[]>([]);
+	async function loadSuggestions() {
+		try {
+			const res = await fetch('/api/fitness/segments/suggestions');
+			if (res.ok) suggestions = (await res.json()).suggestions ?? [];
+		} catch {
+			/* non-fatal */
+		}
+	}
+	onMount(loadSuggestions);
+
+	const keyOf = (s: Suggestion) => `${s.sessionId}:${s.exerciseIndex}:${s.startIdx}:${s.endIdx}`;
+	function dropSuggestion(s: Suggestion) {
+		suggestions = suggestions.filter((x) => keyOf(x) !== keyOf(s));
+	}
+	async function onSuggestionAdded(s: Suggestion) {
+		dropSuggestion(s);
+		toast.success(t.create_segment);
+		await invalidateAll();
+	}
+
+	let building = $state(false);
+	async function buildIndex() {
+		if (building) return;
+		building = true;
+		try {
+			const res = await fetch('/api/fitness/segments/grid/rebuild', { method: 'POST' });
+			const d = await res.json();
+			if (res.ok) {
+				toast.success(`${d.runs} ${t.route_index_runs} · ${d.popular} ${t.route_index_popular}`);
+				await loadSuggestions();
+			} else {
+				toast.error(d.error ?? 'Failed');
+			}
+		} catch {
+			toast.error('Failed');
+		} finally {
+			building = false;
+		}
+	}
+
 	let tab = $state<'all' | 'mine'>('all');
 	const shown = $derived(
 		tab === 'mine' ? data.segments.filter((s) => s.createdBy === me) : data.segments
 	);
 </script>
 
-<svelte:head><title>{t.segments}</title></svelte:head>
+<svelte:head>
+	<title>{t.segments}</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</svelte:head>
 
 <div class="segments-page">
 	<header>
@@ -41,7 +101,27 @@
 	<div class="opt-in">
 		<Toggle bind:checked={shareSegments} label={t.share_segments} onchange={toggleShare} />
 		<p class="opt-in-desc">{t.share_segments_desc}</p>
+		<button class="build-index" onclick={buildIndex} disabled={building}>
+			<Radar size={15} class={building ? 'spin' : ''} />
+			{building ? t.building_route_index : t.build_route_index}
+		</button>
 	</div>
+
+	{#if suggestions.length > 0}
+		<section class="suggestions">
+			<h2><Lightbulb size={18} /> {t.suggested_segments}</h2>
+			<div class="grid">
+				{#each suggestions as s (keyOf(s))}
+					<SegmentSuggestionCard
+						suggestion={s}
+						{lang}
+						onadded={() => onSuggestionAdded(s)}
+						ondismiss={() => dropSuggestion(s)}
+					/>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
 	{#if shown.length === 0}
 		<p class="empty">{t.no_segments}</p>
@@ -112,6 +192,45 @@
 		margin: 0;
 		font-size: 0.78rem;
 		color: var(--color-text-secondary);
+	}
+	.build-index {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.2rem;
+		padding: 0.4rem 0.75rem;
+		background: transparent;
+		border: 1px solid var(--color-primary);
+		border-radius: var(--radius-md, 0.5rem);
+		color: var(--color-primary);
+		font-size: 0.82rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.build-index:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+	}
+	.build-index:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+	:global(.spin) {
+		animation: spin 1s linear infinite;
+	}
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	.suggestions h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0 0 0.75rem;
+		font-size: 1.1rem;
+		color: var(--color-primary);
 	}
 	.empty {
 		color: var(--color-text-secondary);

@@ -10,6 +10,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
 	import { attachTrackMap } from '$lib/fitness/gpsTrackHover.svelte';
@@ -58,7 +59,14 @@
 
 	let deleting = $state(false);
 	async function del() {
-		if (deleting || !confirm(t.delete_segment_confirm)) return;
+		if (deleting) return;
+		const ok = await confirm(t.delete_segment_confirm, {
+			title: t.delete_segment,
+			confirmText: t.delete_segment,
+			cancelText: t.cancel,
+			destructive: true
+		});
+		if (!ok) return;
 		deleting = true;
 		const res = await fetch(`/api/fitness/segments/${seg._id}`, { method: 'DELETE' });
 		if (res.ok) {

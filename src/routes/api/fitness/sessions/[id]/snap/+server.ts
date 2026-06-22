@@ -7,6 +7,7 @@ import { rateLimit, snapTrackToPaths, type RoutingProfile } from '$lib/server/hi
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
+import { addRunToGrid, removeRunFromGrid } from '$lib/server/segmentGrid';
 import mongoose from 'mongoose';
 
 const VALID_PROFILES: RoutingProfile[] = ['hiking-mountain', 'trekking', 'road'];
@@ -186,6 +187,17 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 			await matchSessionAgainstAllSegments(ws);
 		} catch (err) {
 			console.error('Segment re-matching after snap failed:', err);
+		}
+
+		// Track changed → refresh its contribution to the auto-detect grid.
+		try {
+			await removeRunFromGrid(session.user.nickname, String(ws._id));
+			await addRunToGrid(session.user.nickname, String(ws._id), {
+				gpsTrack: ws.gpsTrack,
+				exercises: ws.exercises
+			});
+		} catch (err) {
+			console.error('Segment grid update after snap failed:', err);
 		}
 
 		return json({

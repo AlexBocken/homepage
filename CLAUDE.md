@@ -151,6 +151,11 @@ prop list before using.
   `:global(.search)` when embedding inline.
 - `Toggle.svelte` — iOS-style switch. Use instead of a raw checkbox for
   user-facing booleans.
+- `confirm()` from `$lib/js/confirmDialog.svelte` — themed confirm dialog.
+  `await confirm(message, { title?, confirmText?, cancelText?, destructive? })`
+  returns `Promise<boolean>`. Use this for ALL confirmations — never the native
+  `confirm()`/`alert()`/`prompt()`. The `<ConfirmDialog />` host is already
+  mounted in the root layout, so just import and call.
 - `ImageUpload.svelte` — receipt/image dropzone + preview + camera capture
   (touch). `bind:imageFile`/`imagePreview`/`uploading`, `currentImage`, callbacks
   `onimageSelected`/`onimageRemoved`/`oncurrentImageRemoved`/`onerror`.

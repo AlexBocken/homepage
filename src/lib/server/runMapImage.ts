@@ -148,7 +148,8 @@ export async function ensureSegmentMapImage(
 		points && points.length >= 2 ? points.map((p) => [p[0], p[1]]) : null;
 	if (!track) return null;
 
-	const filename = `seg-${segmentId}.${trackHash(track)}.webp`;
+	// `.t2` busts the cache when the taller / thicker-stroke render params below change.
+	const filename = `seg-${segmentId}.${trackHash(track)}.t2.webp`;
 	const dir = path.join(IMAGE_DIR, SUBDIR);
 	const filePath = path.join(dir, filename);
 
@@ -158,7 +159,7 @@ export async function ensureSegmentMapImage(
 	if (existing) return existing;
 
 	const job = (async () => {
-		const buf = await renderRunMap({ track });
+		const buf = await renderRunMap({ track, width: 900, height: 700, strokeWidth: 10 });
 		if (!buf) return null;
 		await fs.mkdir(dir, { recursive: true });
 		const tmp = `${filePath}.tmp`;

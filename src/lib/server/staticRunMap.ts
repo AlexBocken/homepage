@@ -87,6 +87,8 @@ export interface RenderRunMapOpts {
 	maxZoom?: number;
 	/** Route stroke colour. Defaults to the high-contrast red route colour. */
 	color?: string;
+	/** Route stroke width in px (casing scales with it). Default 6. */
+	strokeWidth?: number;
 }
 
 /**
@@ -113,6 +115,8 @@ async function buildRouteMapPng(
 	const paddingPx = opts.paddingPx ?? 48;
 	const maxZoom = opts.maxZoom ?? 16;
 	const color = opts.color ?? ROUTE_COLOR;
+	const routeW = opts.strokeWidth ?? 6;
+	const casingW = routeW + 5;
 	const track = opts.track;
 
 	if (track.length < 2) return null;
@@ -197,8 +201,8 @@ async function buildRouteMapPng(
 	const overlay = Buffer.from(
 		`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
 			// White casing under the route for high contrast on any map surface.
-			`<path d="${d}" fill="none" stroke="${ROUTE_CASING}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>` +
-			`<path d="${d}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>` +
+			`<path d="${d}" fill="none" stroke="${ROUTE_CASING}" stroke-width="${casingW}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>` +
+			`<path d="${d}" fill="none" stroke="${color}" stroke-width="${routeW}" stroke-linecap="round" stroke-linejoin="round"/>` +
 			`<circle cx="${fmt(s.x - originX)}" cy="${fmt(s.y - originY)}" r="10" fill="#a3be8c" stroke="#fff" stroke-width="3"/>` +
 			`<circle cx="${fmt(e.x - originX)}" cy="${fmt(e.y - originY)}" r="10" fill="#bf616a" stroke="#fff" stroke-width="3"/>` +
 			`</svg>`

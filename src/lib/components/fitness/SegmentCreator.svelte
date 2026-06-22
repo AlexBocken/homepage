@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { untrack, onMount } from 'svelte';
 	import Route from '@lucide/svelte/icons/route';
 	import Mountain from '@lucide/svelte/icons/mountain';
+	import Repeat from '@lucide/svelte/icons/repeat';
 	import X from '@lucide/svelte/icons/x';
 	import { m, type FitnessLang } from '$lib/js/fitnessI18n';
 	import { haversine } from '$lib/fitness/gpsSeries.js';
-	import { projectTrack, svgPath } from '$lib/fitness/trackSvg';
+	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
 	import RangeSlider from '$lib/components/hikes/RangeSlider.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 
@@ -14,6 +15,14 @@
 		lng: number;
 		altitude?: number | null;
 		timestamp: number;
+	}
+	interface RunSuggestion {
+		routeHash: string;
+		exerciseIndex: number | null;
+		startIdx: number;
+		endIdx: number;
+		distance: number;
+		seenCount: number;
 	}
 
 	let {
@@ -33,7 +42,6 @@
 	} = $props();
 
 	const t = $derived(m[lang]);
-	const n = $derived(track.length);
 
 	// Cumulative distance (km) per track point — drives the slider readout.
 	const cumDist = $derived.by(() => {
@@ -62,11 +70,113 @@
 		return Math.round(gain);
 	});
 
-	const W = 320;
-	const H = 120;
-	const xy = $derived(projectTrack(track, W, H, 8));
-	const fullPath = $derived(svgPath(xy));
-	const selPath = $derived(svgPath(xy.slice(low, high + 1)));
+	// Suggested segments found within this run's track (this exercise only).
+	let suggestions = $state<RunSuggestion[]>([]);
+	onMount(async () => {
+		try {
+			const res = await fetch(`/api/fitness/segments/suggestions?sessionId=${sessionId}`);
+			if (res.ok) {
+				const all: RunSuggestion[] = (await res.json()).suggestions ?? [];
+				suggestions = all.filter((s) => (s.exerciseIndex ?? null) === (exerciseIndex ?? null));
+			}
+		} catch {
+			/* non-fatal */
+		}
+	});
+	function loadSuggestion(s: RunSuggestion) {
+		const lo = Math.max(0, Math.min(s.startIdx, track.length - 1));
+		const hi = Math.max(lo + 1, Math.min(s.endIdx, track.length - 1));
+		low = lo;
+		high = hi;
+	}
+
+	function nearestIdx(lat: number, lng: number): number {
+		let best = 0;
+		let bd = Infinity;
+		for (let i = 0; i < track.length; i++) {
+			const d = haversine({ lat, lng }, track[i]);
+			if (d < bd) {
+				bd = d;
+				best = i;
+			}
+		}
+		return best;
+	}
+
+	// Leaflet map: full route + draggable start/end markers snapped to the track,
+	// and a live-highlighted selected sub-polyline.
+	function attachCreatorMap(node: HTMLElement) {
+		let map: any;
+		let stop: (() => void) | undefined;
+		let detach: (() => void) | undefined;
+		let cancelled = false;
+
+		(async () => {
+			const L = await import('leaflet');
+			if (cancelled || !node.isConnected) return;
+
+			map = L.map(node, { attributionControl: false, zoomControl: true });
+			L.tileLayer(TILE_URL.karte, { maxZoom: 19 }).addTo(map);
+
+			const latLngs = track.map((p) => [p.lat, p.lng] as [number, number]);
+			L.polyline(latLngs, { color: '#888', weight: 4, opacity: 0.55 }).addTo(map);
+			const sel = L.polyline([], { color: ROUTE_COLOR, weight: 5 }).addTo(map);
+			map.fitBounds(L.polyline(latLngs).getBounds(), { padding: [20, 20] });
+
+			const icon = (cls: string) =>
+				L.divIcon({ className: `seg-handle ${cls}`, html: '', iconSize: [18, 18], iconAnchor: [9, 9] });
+			const startM = L.marker(latLngs[low], { draggable: false, interactive: true, icon: icon('start'), zIndexOffset: 1000 }).addTo(map);
+			const endM = L.marker(latLngs[high], { draggable: false, interactive: true, icon: icon('end'), zIndexOffset: 1000 }).addTo(map);
+
+			// Custom drag (not Leaflet's marker drag): drive the handle purely from
+			// the pointer's nearest recorded point, so the marker stays glued to the
+			// route the entire drag. The effect below places it at that point.
+			let dragging: 'start' | 'end' | null = null;
+			const onPointerMove = (ev: PointerEvent) => {
+				if (!dragging) return;
+				const ll = map.mouseEventToLatLng(ev);
+				const i = nearestIdx(ll.lat, ll.lng);
+				if (dragging === 'start') low = Math.min(i, high - 1);
+				else high = Math.max(i, low + 1);
+			};
+			const onPointerUp = () => {
+				if (!dragging) return;
+				dragging = null;
+				map.dragging.enable();
+			};
+			const startDrag = (which: 'start' | 'end') => (ev: PointerEvent) => {
+				ev.preventDefault();
+				ev.stopPropagation();
+				dragging = which;
+				map.dragging.disable();
+			};
+			startM.getElement()?.addEventListener('pointerdown', startDrag('start'));
+			endM.getElement()?.addEventListener('pointerdown', startDrag('end'));
+			window.addEventListener('pointermove', onPointerMove);
+			window.addEventListener('pointerup', onPointerUp);
+			detach = () => {
+				window.removeEventListener('pointermove', onPointerMove);
+				window.removeEventListener('pointerup', onPointerUp);
+			};
+
+			stop = $effect.root(() => {
+				$effect(() => {
+					const lo = Math.min(low, high);
+					const hi = Math.max(low, high);
+					startM.setLatLng(latLngs[low]);
+					endM.setLatLng(latLngs[high]);
+					sel.setLatLngs(latLngs.slice(lo, hi + 1));
+				});
+			});
+		})();
+
+		return () => {
+			cancelled = true;
+			detach?.();
+			stop?.();
+			if (map) map.remove();
+		};
+	}
 
 	async function save() {
 		if (!name.trim() || saving || high <= low) return;
@@ -105,17 +215,25 @@
 		<button class="close" onclick={() => oncancel?.()} aria-label={t.cancel}><X size={18} /></button>
 	</div>
 
-	<svg class="preview" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-		<path d={fullPath} class="full" />
-		<path d={selPath} class="sel" />
-		{#if xy[low]}<circle cx={xy[low].x} cy={xy[low].y} r="4" class="dot start" />{/if}
-		{#if xy[high]}<circle cx={xy[high].x} cy={xy[high].y} r="4" class="dot end" />{/if}
-	</svg>
+	{#if suggestions.length > 0}
+		<div class="run-suggestions">
+			<span class="rs-label"><Repeat size={13} /> {t.suggested_segments}</span>
+			<div class="rs-chips">
+				{#each suggestions as s (s.routeHash)}
+					<button class="rs-chip" onclick={() => loadSuggestion(s)}>
+						{s.distance.toFixed(2)} {t.km} · {t.seen_in} {s.seenCount} {t.runs_word}
+					</button>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	<div class="creator-map" {@attach attachCreatorMap}></div>
 
 	<RangeSlider
 		label={t.select_section}
 		min={0}
-		max={n - 1}
+		max={track.length - 1}
 		step={1}
 		bind:low
 		bind:high
@@ -177,32 +295,56 @@
 	.close:hover {
 		color: var(--color-text-primary);
 	}
-	.preview {
+	.run-suggestions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+	.rs-label {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+	}
+	.rs-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+	.rs-chip {
+		padding: 0.3rem 0.6rem;
+		border: 1px solid var(--color-primary);
+		border-radius: var(--radius-pill, 1000px);
+		background: transparent;
+		color: var(--color-primary);
+		font-size: 0.78rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background var(--transition-fast, 100ms);
+	}
+	.rs-chip:hover {
+		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+	}
+	.creator-map {
 		width: 100%;
-		height: 120px;
-		background: var(--color-bg-tertiary);
+		height: 240px;
 		border-radius: var(--radius-md, 0.5rem);
-		display: block;
+		overflow: hidden;
 	}
-	.full {
-		fill: none;
-		stroke: var(--color-border);
-		stroke-width: 3;
-		stroke-linejoin: round;
-		stroke-linecap: round;
+	:global(.seg-handle) {
+		border-radius: 50%;
+		border: 2px solid #fff;
+		box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+		cursor: grab;
+		touch-action: none;
 	}
-	.sel {
-		fill: none;
-		stroke: var(--color-primary);
-		stroke-width: 3.5;
-		stroke-linejoin: round;
-		stroke-linecap: round;
+	:global(.seg-handle.start) {
+		background: var(--green, #a3be8c);
 	}
-	.dot.start {
-		fill: var(--green);
-	}
-	.dot.end {
-		fill: var(--red);
+	:global(.seg-handle.end) {
+		background: var(--red, #bf616a);
 	}
 	.sel-stats {
 		display: flex;

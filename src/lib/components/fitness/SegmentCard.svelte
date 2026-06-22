@@ -85,7 +85,7 @@
 	}
 	.mini-map {
 		width: 100%;
-		height: 90px;
+		height: 140px;
 		background: var(--color-bg-tertiary);
 		display: block;
 	}

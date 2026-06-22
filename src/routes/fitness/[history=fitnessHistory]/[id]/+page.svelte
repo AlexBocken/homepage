@@ -45,10 +45,24 @@
 
 	const session = $derived(data.session);
 
-	// Which exercise's GPS track is being carved into a segment (−1 = none).
-	let creatingSegmentFor = $state(-1);
+	// GPS tracks in this run that a segment can be carved from (top-level + per-exercise).
+	const gpsSources = $derived.by(() => {
+		const out = [];
+		if ((session?.gpsTrack?.length ?? 0) >= 2) {
+			out.push({ exerciseIndex: null, track: session.gpsTrack, label: session.name ?? t.workout_singular });
+		}
+		(session?.exercises ?? []).forEach((/** @type {any} */ ex, /** @type {number} */ idx) => {
+			if ((ex.gpsTrack?.length ?? 0) >= 2) {
+				out.push({ exerciseIndex: idx, track: ex.gpsTrack, label: getExerciseById(ex.exerciseId, lang)?.localName ?? ex.exerciseId });
+			}
+		});
+		return out;
+	});
+
+	let creatingSegment = $state(false);
+	let createSourceIdx = $state(0);
 	async function onSegmentCreated() {
-		creatingSegmentFor = -1;
+		creatingSegment = false;
 		toast.success(t.create_segment);
 		await invalidateAll();
 	}
@@ -725,22 +739,6 @@
 						{/if}
 						{/if}
 
-						{#if creatingSegmentFor === exIdx}
-							<SegmentCreator
-								track={ex.gpsTrack}
-								exerciseIndex={exIdx}
-								sessionId={session._id}
-								{lang}
-								oncreated={onSegmentCreated}
-								oncancel={() => (creatingSegmentFor = -1)}
-							/>
-						{:else if !editing}
-							<button class="segment-create-btn" onclick={() => (creatingSegmentFor = exIdx)}>
-								<Flag size={14} />
-								{t.create_segment}
-							</button>
-						{/if}
-
 						<button class="gpx-download-btn" onclick={() => downloadGpx(exIdx)}>
 							<Download size={14} />
 							{t.download_gpx}
@@ -758,6 +756,36 @@
 
 	{#if !editing && data.segmentEfforts?.length > 0}
 		<SegmentEffortsList efforts={data.segmentEfforts} {lang} />
+	{/if}
+
+	{#if !editing && gpsSources.length > 0}
+		<section class="create-segment-section">
+			{#if creatingSegment}
+				{#if gpsSources.length > 1}
+					<label class="source-select">
+						{t.exercise}
+						<select bind:value={createSourceIdx}>
+							{#each gpsSources as src, i (i)}<option value={i}>{src.label}</option>{/each}
+						</select>
+					</label>
+				{/if}
+				{#key createSourceIdx}
+					<SegmentCreator
+						track={gpsSources[createSourceIdx].track}
+						exerciseIndex={gpsSources[createSourceIdx].exerciseIndex}
+						sessionId={session._id}
+						{lang}
+						oncreated={onSegmentCreated}
+						oncancel={() => (creatingSegment = false)}
+					/>
+				{/key}
+			{:else}
+				<button class="segment-create-btn" onclick={() => (creatingSegment = true)}>
+					<Flag size={16} />
+					{t.create_segment}
+				</button>
+			{/if}
+		</section>
 	{/if}
 
 	{#if !editing && session.prs?.length > 0}
@@ -1304,6 +1332,27 @@
 	}
 	.segment-create-btn:hover {
 		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+	}
+	.create-segment-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.source-select {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+	}
+	.source-select select {
+		flex: 1;
+		padding: 0.4rem 0.6rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md, 0.5rem);
+		color: var(--color-text-primary);
+		font-size: 0.85rem;
 	}
 
 	/* GPS charts */

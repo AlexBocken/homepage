@@ -80,8 +80,10 @@ export function onGraphHover(
  */
 export function attachTrackMap(
 	track: TrackPoint[],
-	store: TrackHoverStore
+	store: TrackHoverStore,
+	opts: { interactive?: boolean } = {}
 ): Attachment<HTMLElement> {
+	const interactive = opts.interactive !== false;
 	return (node) => {
 		let map: any;
 		let cancelled = false;
@@ -91,7 +93,21 @@ export function attachTrackMap(
 			const L = await import('leaflet');
 			if (cancelled || !node.isConnected) return;
 
-			map = L.map(node, { attributionControl: false, zoomControl: false });
+			// A non-interactive map is locked to the route's fit — no pan/zoom.
+			map = L.map(node, {
+				attributionControl: false,
+				zoomControl: false,
+				...(interactive
+					? {}
+					: {
+							dragging: false,
+							scrollWheelZoom: false,
+							doubleClickZoom: false,
+							boxZoom: false,
+							keyboard: false,
+							touchZoom: false
+						})
+			});
 			L.tileLayer(TILE_URL.karte, { maxZoom: 19 }).addTo(map);
 
 			const latLngs = track.map((p) => [p.lat, p.lng] as [number, number]);
@@ -101,6 +117,9 @@ export function attachTrackMap(
 			L.circleMarker(latLngs[0], { radius: 5, fillColor: '#a3be8c', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
 			L.circleMarker(latLngs[latLngs.length - 1], { radius: 5, fillColor: '#bf616a', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
 			map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
+
+			// Static maps need no hover pin / cursor wiring.
+			if (!interactive) return;
 
 			const hoverIcon = L.divIcon({
 				className: 'run-hover-pin',

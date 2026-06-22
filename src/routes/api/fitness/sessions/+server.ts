@@ -9,6 +9,7 @@ import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
+import { addRunToGrid } from '$lib/server/segmentGrid';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
   if (reps <= 0 || weight <= 0) return 0;
@@ -211,6 +212,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       segmentAchievements = await matchSessionAgainstAllSegments(workoutSession);
     } catch (err) {
       console.error('Segment matching failed:', err);
+    }
+
+    // Feed the run into the auto-detect grid (best-effort).
+    try {
+      await addRunToGrid(session.user.nickname, String(workoutSession._id), {
+        gpsTrack,
+        exercises: processedExercises
+      });
+    } catch (err) {
+      console.error('Segment grid update failed:', err);
     }
 
     return json({ session: workoutSession, segmentAchievements }, { status: 201 });
