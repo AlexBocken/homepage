@@ -54,6 +54,7 @@
     'healthcare': '#BF616A',     // Red
     'education': '#88C0D0',      // Cyan
     'travel': '#8FBCBB',         // Light Cyan
+    'holidays': '#B48EAD',       // Purple (Ferien)
     'other': '#4C566A'           // Dark Gray
   };
 
