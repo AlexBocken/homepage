@@ -26,6 +26,13 @@ const config = {
 			// parallel, skips binaries, and tunes brotli quality by size.
 			precompress: false
 		}),
+		serviceWorker: {
+			// Don't auto-register for every visitor. The SW (offline caching) is only
+			// wanted in the installed PWA / Tauri app — a plain browser tab would
+			// otherwise install it and start serving stale cached content. Registration
+			// is gated to standalone/app contexts in src/routes/+layout.svelte.
+			register: false
+		},
 		prerender: {
 			// The only intentionally-static pages are /hikes (prerender=true) and
 			// the /errors/[status] set (via that route's EntryGenerator). With the

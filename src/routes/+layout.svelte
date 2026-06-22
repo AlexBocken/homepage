@@ -1,6 +1,7 @@
 <script>
 	import '../app.css';
 	import { onNavigate, invalidateAll } from '$app/navigation';
+	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -55,6 +56,31 @@
 			document.removeEventListener('visibilitychange', refresh);
 			window.removeEventListener('focus', refresh);
 		};
+	});
+
+	/** Gate the service worker (offline caching) to the installed PWA / Tauri app.
+	 *  SvelteKit's auto-register is off (svelte.config.js); we register manually only
+	 *  in a standalone/app context. In a normal browser tab we actively unregister any
+	 *  SW a previous build installed and drop its caches, so plain-web visitors stop
+	 *  getting stale cached pages. */
+	onMount(() => {
+		if (!('serviceWorker' in navigator)) return;
+		const isApp =
+			window.matchMedia('(display-mode: standalone)').matches ||
+			'__TAURI__' in window ||
+			/** @type {any} */ (navigator).standalone === true;
+		if (isApp) {
+			if (!dev) navigator.serviceWorker.register('/service-worker.js');
+		} else {
+			navigator.serviceWorker.getRegistrations().then((regs) => {
+				for (const reg of regs) reg.unregister();
+			});
+			if ('caches' in window) {
+				caches.keys().then((keys) => {
+					for (const key of keys) caches.delete(key);
+				});
+			}
+		}
 	});
 
 	onNavigate((navigation) => {
