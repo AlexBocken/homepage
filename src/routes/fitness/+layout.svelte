@@ -11,6 +11,7 @@
 	import ListChecks from '@lucide/svelte/icons/list-checks';
 	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
+	import Flag from '@lucide/svelte/icons/flag';
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';
@@ -85,6 +86,7 @@
 			<li style="--active-fill: var(--nord14)"><a href={resolve('/fitness/[exercises=fitnessExercises]', { exercises: s.exercises })} class:active={isActive(`/fitness/${s.exercises}`)}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.exercises}</span></a></li>
 			<li style="--active-fill: var(--nord12)"><a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })} class:active={isActive(`/fitness/${s.measure}`)}><NotebookPen size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.measure}</span></a></li>
 			<li style="--active-fill: var(--nord15)"><a href={resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })} class:active={isActive(`/fitness/${s.nutrition}`)}><UtensilsCrossed size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.nutrition}</span></a></li>
+			<li style="--active-fill: var(--nord13)"><a href={resolve('/fitness/segments')} class:active={isActive('/fitness/segments')}><Flag size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.segments}</span></a></li>
 		</ul>
 	{/snippet}
 

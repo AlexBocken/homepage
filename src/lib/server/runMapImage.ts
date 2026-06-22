@@ -135,6 +135,44 @@ export function runMapPath(filename: string): string {
 	return path.join(IMAGE_DIR, SUBDIR, filename);
 }
 
+/**
+ * Ensure the route-map image for a SEGMENT exists on disk and return its
+ * filename, or null if there's no usable polyline / rendering failed. Same
+ * renderer + cache dir as runs; a `seg-` prefix keeps the namespaces apart.
+ */
+export async function ensureSegmentMapImage(
+	segmentId: string,
+	points: number[][] | undefined
+): Promise<string | null> {
+	const track: Array<[number, number]> | null =
+		points && points.length >= 2 ? points.map((p) => [p[0], p[1]]) : null;
+	if (!track) return null;
+
+	const filename = `seg-${segmentId}.${trackHash(track)}.webp`;
+	const dir = path.join(IMAGE_DIR, SUBDIR);
+	const filePath = path.join(dir, filename);
+
+	if (await fileExists(filePath)) return filename;
+
+	const existing = inFlight.get(filename);
+	if (existing) return existing;
+
+	const job = (async () => {
+		const buf = await renderRunMap({ track });
+		if (!buf) return null;
+		await fs.mkdir(dir, { recursive: true });
+		const tmp = `${filePath}.tmp`;
+		await fs.writeFile(tmp, buf);
+		await fs.rename(tmp, filePath);
+		return filename;
+	})()
+		.catch(() => null)
+		.finally(() => inFlight.delete(filename));
+
+	inFlight.set(filename, job);
+	return job;
+}
+
 export type RunCard = { title: string; subtitle?: string; stats: RunCardStat[]; prs?: string[] };
 
 const CARD_LAYOUT_VERSION = 'v5-prtype';

@@ -13,8 +13,11 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
 	// login-free share link and OG card URL.
 	const shareToken = runMapToken(params.id);
 
+	const payload = await res.json();
+
 	return {
-		session: (await res.json()).session,
+		session: payload.session,
+		segmentEfforts: payload.segmentEfforts ?? [],
 		shareUrl: `${url.origin}/r/${params.id}?token=${shareToken}`,
 		cardImage: `${url.origin}/api/fitness/sessions/${params.id}/card.webp?token=${shareToken}`
 	};

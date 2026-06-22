@@ -8,6 +8,7 @@ import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
+import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
   if (reps <= 0 || weight <= 0) return 0;
@@ -178,6 +179,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // Compute kcal estimate using best available method (GPS + demographics)
     const kcalEstimate = await computeSessionKcal(processedExercises, session.user.nickname);
 
+    // Bounding box over all GPS points, for segment-match prefiltering.
+    const gpsBbox = sessionBbox({ gpsTrack, exercises: processedExercises }) ?? undefined;
+
     const workoutSession = new WorkoutSession({
       templateId,
       templateName,
@@ -192,6 +196,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       totalDistance: totalDistance > 0 ? totalDistance : undefined,
       gpsTrack: gpsTrack?.length ? gpsTrack : undefined,
       gpsPreview,
+      gpsBbox,
       prs: prs.length > 0 ? prs : undefined,
       kcalEstimate,
       notes,
@@ -199,8 +204,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     });
 
     await workoutSession.save();
-    
-    return json({ session: workoutSession }, { status: 201 });
+
+    // Match against segments (never fail the save on a matching error).
+    let segmentAchievements;
+    try {
+      segmentAchievements = await matchSessionAgainstAllSegments(workoutSession);
+    } catch (err) {
+      console.error('Segment matching failed:', err);
+    }
+
+    return json({ session: workoutSession, segmentAchievements }, { status: 201 });
   } catch (error) {
     console.error('Error creating workout session:', error);
     return json({ error: 'Failed to create workout session' }, { status: 500 });

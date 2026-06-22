@@ -13,6 +13,7 @@ const FitnessGoalSchema = new mongoose.Schema(
     proteinTarget: { type: Number, min: 0 },
     fatPercent: { type: Number, min: 0, max: 100 },
     carbPercent: { type: Number, min: 0, max: 100 },
+    shareSegments: { type: Boolean, default: true }, // cross-user segment leaderboards (opt-out)
   },
   { timestamps: true }
 );
@@ -29,6 +30,7 @@ interface IFitnessGoal {
   proteinTarget?: number;
   fatPercent?: number;
   carbPercent?: number;
+  shareSegments?: boolean;
 }
 
 let _model: mongoose.Model<IFitnessGoal>;

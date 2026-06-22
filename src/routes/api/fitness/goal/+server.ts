@@ -11,6 +11,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	const goal = await FitnessGoal.findOne({ username: user.nickname }).lean() as any;
 	const weeklyWorkouts = goal?.weeklyWorkouts ?? null;
+	const shareSegments = goal?.shareSegments ?? true;
 
 	const nutritionGoals = {
 		activityLevel: goal?.activityLevel ?? 'light',
@@ -23,11 +24,11 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	// If no goal set, return early
 	if (weeklyWorkouts === null) {
-		return json({ weeklyWorkouts: null, streak: 0, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals });
+		return json({ weeklyWorkouts: null, streak: 0, shareSegments, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals });
 	}
 
 	const streak = await computeStreak(user.nickname, weeklyWorkouts);
-	return json({ weeklyWorkouts, streak, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals });
+	return json({ weeklyWorkouts, streak, shareSegments, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals });
 };
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
@@ -35,11 +36,16 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 	const body = await request.json();
 	const { weeklyWorkouts, sex, heightCm } = body;
 
-	if (typeof weeklyWorkouts !== 'number' || weeklyWorkouts < 1 || weeklyWorkouts > 14 || !Number.isInteger(weeklyWorkouts)) {
+	// weeklyWorkouts is optional (so settings like the segment-leaderboard opt-in
+	// can be toggled on their own), but validated when present.
+	const hasWeekly = weeklyWorkouts !== undefined;
+	if (hasWeekly && (typeof weeklyWorkouts !== 'number' || weeklyWorkouts < 1 || weeklyWorkouts > 14 || !Number.isInteger(weeklyWorkouts))) {
 		return json({ error: 'weeklyWorkouts must be an integer between 1 and 14' }, { status: 400 });
 	}
 
-	const update: Record<string, unknown> = { weeklyWorkouts };
+	const update: Record<string, unknown> = {};
+	if (hasWeekly) update.weeklyWorkouts = weeklyWorkouts;
+	if (typeof body.shareSegments === 'boolean') update.shareSegments = body.shareSegments;
 	if (sex === 'male' || sex === 'female') update.sex = sex;
 	if (typeof heightCm === 'number' && heightCm >= 100 && heightCm <= 250) update.heightCm = heightCm;
 	if (typeof body.birthYear === 'number' && body.birthYear >= 1900 && body.birthYear <= 2020) update.birthYear = body.birthYear;
@@ -59,9 +65,11 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 		{ upsert: true, returnDocument: 'after' }
 	).lean() as any;
 
-	const streak = await computeStreak(user.nickname, weeklyWorkouts);
+	const effectiveWeekly = goal?.weeklyWorkouts ?? weeklyWorkouts ?? 4;
+	const streak = await computeStreak(user.nickname, effectiveWeekly);
 	return json({
-		weeklyWorkouts, streak,
+		weeklyWorkouts: effectiveWeekly, streak,
+		shareSegments: goal?.shareSegments ?? true,
 		sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null,
 		activityLevel: goal?.activityLevel ?? 'light',
 		dailyCalories: goal?.dailyCalories ?? null,

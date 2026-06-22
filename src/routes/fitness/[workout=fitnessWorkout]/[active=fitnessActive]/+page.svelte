@@ -6,6 +6,8 @@
 	import Play from '@lucide/svelte/icons/play';
 	import Pause from '@lucide/svelte/icons/pause';
 	import Trophy from '@lucide/svelte/icons/trophy';
+	import Crown from '@lucide/svelte/icons/crown';
+	import Flag from '@lucide/svelte/icons/flag';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Dumbbell from '@lucide/svelte/icons/dumbbell';
 	import Route from '@lucide/svelte/icons/route';
@@ -823,7 +825,7 @@
 			});
 			if (res.ok) {
 				const d = await res.json();
-				completionData = buildCompletion(sessionData, d.session);
+				completionData = buildCompletion(sessionData, d.session, d.segmentAchievements ?? []);
 				computeTemplateDiff(completionData);
 				await sync.onWorkoutEnd(d.session?._id);
 			} else {
@@ -870,8 +872,9 @@
 	/**
 	 * @param {any} local
 	 * @param {any} saved
+	 * @param {any[]} [achievements]
 	 */
-	function buildCompletion(local, saved) {
+	function buildCompletion(local, saved, achievements = []) {
 		const startTime = new Date(local.startTime);
 		const endTime = new Date(local.endTime);
 		const durationMin = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
@@ -945,6 +948,7 @@
 			totalDistance,
 			exerciseSummaries,
 			prs,
+			segmentAchievements: achievements,
 			kcalResult
 		};
 	}
@@ -1226,6 +1230,25 @@
 						<div class="pr-item">
 							<span class="pr-exercise">{getExerciseById(pr.exerciseId, lang)?.localName ?? pr.exerciseId}</span>
 							<span class="pr-detail">{pr.type}: <strong>{pr.value}</strong></span>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if completionData.segmentAchievements?.length > 0}
+			<div class="segments-section">
+				<h2><Flag size={16} /> {t.segments}</h2>
+				<div class="seg-ach-list">
+					{#each completionData.segmentAchievements as a (a.segmentId)}
+						<div class="seg-ach-item">
+							<span class="seg-ach-name">{a.segmentName}</span>
+							<span class="seg-ach-badges">
+								{#if a.isKOM}<span class="seg-badge kom"><Crown size={13} /> {t.new_kom}</span>
+								{:else if a.isPB}<span class="seg-badge pr"><Trophy size={13} /> {t.new_segment_pr}</span>{/if}
+								{#if a.rank}<span class="seg-rank">{a.rank}/{a.totalAthletes}</span>{/if}
+							</span>
+							<span class="seg-ach-time">{formatElapsed(a.elapsedSeconds)}</span>
 						</div>
 					{/each}
 				</div>
@@ -2138,6 +2161,69 @@
 	}
 	.pr-detail strong {
 		color: var(--nord13);
+	}
+	.segments-section {
+		background: var(--color-surface);
+		border-radius: 12px;
+		box-shadow: var(--shadow-sm);
+		padding: 1rem;
+	}
+	.segments-section h2 {
+		margin: 0 0 0.6rem;
+		font-size: 1rem;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.seg-ach-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.seg-ach-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+	}
+	.seg-ach-name {
+		font-weight: 600;
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.seg-ach-badges {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.seg-badge {
+		display: flex;
+		align-items: center;
+		gap: 0.2rem;
+		font-size: 0.65rem;
+		font-weight: 700;
+		padding: 0.1rem 0.35rem;
+		border-radius: 1000px;
+	}
+	.seg-badge.kom {
+		color: var(--nord13);
+		background: color-mix(in srgb, var(--nord13) 15%, transparent);
+	}
+	.seg-badge.pr {
+		color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	}
+	.seg-rank {
+		font-size: 0.78rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	.seg-ach-time {
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.exercise-summaries h2 {

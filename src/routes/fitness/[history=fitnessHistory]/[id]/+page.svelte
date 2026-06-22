@@ -35,12 +35,23 @@
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import SegmentCreator from '$lib/components/fitness/SegmentCreator.svelte';
+	import SegmentEffortsList from '$lib/components/fitness/SegmentEffortsList.svelte';
+	import Flag from '@lucide/svelte/icons/flag';
 	import { onMount } from 'svelte';
 	import { buildGpsView, formatPaceTooltip } from '$lib/fitness/gpsSeries';
 
 	let { data } = $props();
 
 	const session = $derived(data.session);
+
+	// Which exercise's GPS track is being carved into a segment (−1 = none).
+	let creatingSegmentFor = $state(-1);
+	async function onSegmentCreated() {
+		creatingSegmentFor = -1;
+		toast.success(t.create_segment);
+		await invalidateAll();
+	}
 
 
 	/**
@@ -713,6 +724,23 @@
 							</div>
 						{/if}
 						{/if}
+
+						{#if creatingSegmentFor === exIdx}
+							<SegmentCreator
+								track={ex.gpsTrack}
+								exerciseIndex={exIdx}
+								sessionId={session._id}
+								{lang}
+								oncreated={onSegmentCreated}
+								oncancel={() => (creatingSegmentFor = -1)}
+							/>
+						{:else if !editing}
+							<button class="segment-create-btn" onclick={() => (creatingSegmentFor = exIdx)}>
+								<Flag size={14} />
+								{t.create_segment}
+							</button>
+						{/if}
+
 						<button class="gpx-download-btn" onclick={() => downloadGpx(exIdx)}>
 							<Download size={14} />
 							{t.download_gpx}
@@ -726,6 +754,10 @@
 				{/if}
 			</div>
 		{/each}
+	{/if}
+
+	{#if !editing && data.segmentEfforts?.length > 0}
+		<SegmentEffortsList efforts={data.segmentEfforts} {lang} />
 	{/if}
 
 	{#if !editing && session.prs?.length > 0}
@@ -1253,6 +1285,25 @@
 	.gpx-download-btn:hover {
 		border-color: var(--color-primary);
 		color: var(--color-primary);
+	}
+	.segment-create-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.75rem;
+		margin-right: 0.5rem;
+		padding: 0.4rem 0.75rem;
+		background: transparent;
+		border: 1px solid var(--color-primary);
+		border-radius: var(--radius-md);
+		color: var(--color-primary);
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.segment-create-btn:hover {
+		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 	}
 
 	/* GPS charts */

@@ -6,6 +6,7 @@ import type { IGpsPoint } from '$models/WorkoutSession';
 import { rateLimit, snapTrackToPaths, type RoutingProfile } from '$lib/server/hikesRouting';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
+import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
 import mongoose from 'mongoose';
 
 const VALID_PROFILES: RoutingProfile[] = ['hiking-mountain', 'trekking', 'road'];
@@ -174,8 +175,18 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 
 		ws.kcalEstimate = (await computeSessionKcal(ws.exercises, session.user.nickname)) ?? undefined;
 
+		// The track changed: refresh the bbox so segment-matching prefilters stay correct.
+		ws.gpsBbox = sessionBbox({ gpsTrack: ws.gpsTrack, exercises: ws.exercises }) ?? undefined;
+
 		ws.markModified('exercises');
 		await ws.save();
+
+		// Re-match against segments (deletes the run's stale efforts first).
+		try {
+			await matchSessionAgainstAllSegments(ws);
+		} catch (err) {
+			console.error('Segment re-matching after snap failed:', err);
+		}
 
 		return json({
 			persisted: true,

@@ -59,6 +59,7 @@ export interface IWorkoutSession {
   totalDistance?: number; // Total distance across all cardio exercises
   gpsTrack?: IGpsPoint[]; // Top-level GPS track for GPS-only workouts
   gpsPreview?: number[][]; // Downsampled [[lat,lng], ...] for card preview
+  gpsBbox?: { minLat: number; maxLat: number; minLng: number; maxLng: number }; // bbox over all GPS points, for segment-match prefiltering
   prs?: IPr[];
   kcalEstimate?: IKcalEstimate;
   notes?: string;
@@ -210,6 +211,16 @@ const WorkoutSessionSchema = new mongoose.Schema(
       type: [[Number]],
       default: undefined
     },
+    gpsBbox: {
+      type: {
+        minLat: { type: Number, required: true },
+        maxLat: { type: Number, required: true },
+        minLng: { type: Number, required: true },
+        maxLng: { type: Number, required: true }
+      },
+      default: undefined,
+      _id: false
+    },
     prs: [{
       exerciseId: { type: String, required: true },
       type: { type: String, required: true },
@@ -247,5 +258,7 @@ const WorkoutSessionSchema = new mongoose.Schema(
 
 WorkoutSessionSchema.index({ createdBy: 1, startTime: -1 });
 WorkoutSessionSchema.index({ templateId: 1 });
+// Segment backfill: GPS runs of a given activity, bbox-prefiltered by lat range.
+WorkoutSessionSchema.index({ activityType: 1, 'gpsBbox.minLat': 1, 'gpsBbox.maxLat': 1 });
 
 export const WorkoutSession: mongoose.Model<IWorkoutSession> = mongoose.models.WorkoutSession || mongoose.model("WorkoutSession", WorkoutSessionSchema);

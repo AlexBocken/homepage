@@ -60,7 +60,8 @@ export function fitnessLabels(lang: FitnessLang) {
 		workout: lang === 'en' ? 'Workout' : 'Training',
 		exercises: lang === 'en' ? 'Exercises' : 'Übungen',
 		measure: lang === 'en' ? 'Check-in' : 'Erfassung',
-		nutrition: lang === 'en' ? 'Nutrition' : 'Ernährung'
+		nutrition: lang === 'en' ? 'Nutrition' : 'Ernährung',
+		segments: lang === 'en' ? 'Segments' : 'Segmente'
 	};
 }
 

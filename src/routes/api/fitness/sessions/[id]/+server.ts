@@ -2,8 +2,75 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
+import { Segment } from '$models/Segment';
+import { SegmentEffort } from '$models/SegmentEffort';
+import { optedOutUsernames } from '$lib/server/segments';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import mongoose from 'mongoose';
+
+/**
+ * The requester's segment efforts on a run, each annotated with the segment
+ * name, the user's PB on it, and (for public segments) the KOM time and the
+ * user's global rank. Powers the "Segments on this run" section.
+ */
+async function buildRunSegmentEfforts(sessionId: string, me: string) {
+  const efforts = await SegmentEffort.find({ sessionId, userId: me })
+    .sort({ elapsedSeconds: 1 })
+    .lean();
+  if (!efforts.length) return [];
+
+  const segIds = [...new Set(efforts.map((e) => String(e.segmentId)))];
+  const segs = await Segment.find({ _id: { $in: segIds } })
+    .select('name distance elevationGain public')
+    .lean();
+  const segMap = new Map(segs.map((s) => [String(s._id), s]));
+  const optedOut = [...(await optedOutUsernames())];
+
+  const result = [];
+  for (const e of efforts) {
+    const seg = segMap.get(String(e.segmentId));
+    if (!seg) continue;
+
+    const [myBestRow] = await SegmentEffort.find({ segmentId: e.segmentId, userId: me })
+      .sort({ elapsedSeconds: 1 })
+      .limit(1)
+      .lean();
+    const myBest = myBestRow?.elapsedSeconds ?? e.elapsedSeconds;
+
+    let komTime: number | null = null;
+    let rank: number | null = null;
+    let totalAthletes: number | null = null;
+    if (seg.public) {
+      const board = await SegmentEffort.aggregate([
+        { $match: { segmentId: e.segmentId, userId: { $nin: optedOut } } },
+        { $group: { _id: '$userId', best: { $min: '$elapsedSeconds' } } },
+        { $sort: { best: 1 } }
+      ]);
+      totalAthletes = board.length;
+      komTime = board[0]?.best ?? null;
+      const pos = board.findIndex((r) => r._id === me);
+      rank = pos >= 0 ? pos + 1 : null;
+    }
+
+    result.push({
+      effortId: String(e._id),
+      segmentId: String(e.segmentId),
+      segmentName: seg.name,
+      segmentDistance: seg.distance,
+      elapsedSeconds: e.elapsedSeconds,
+      avgPace: e.avgPace,
+      startIdx: e.startIdx,
+      endIdx: e.endIdx,
+      exerciseIndex: e.exerciseIndex,
+      isBest: e.elapsedSeconds <= myBest,
+      myBest,
+      komTime,
+      rank,
+      totalAthletes
+    });
+  }
+  return result;
+}
 
 // GET /api/fitness/sessions/[id] - Get a specific workout session
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -28,7 +95,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       return json({ error: 'Session not found' }, { status: 404 });
     }
 
-    return json({ session: workoutSession });
+    const segmentEfforts = await buildRunSegmentEfforts(params.id, session.user.nickname);
+
+    return json({ session: workoutSession, segmentEfforts });
   } catch (error) {
     console.error('Error fetching workout session:', error);
     return json({ error: 'Failed to fetch workout session' }, { status: 500 });
@@ -155,6 +224,9 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     if (!workoutSession) {
       return json({ error: 'Session not found or unauthorized' }, { status: 404 });
     }
+
+    // Cascade: drop this run's segment efforts so leaderboards stay accurate.
+    await SegmentEffort.deleteMany({ sessionId: params.id });
 
     return json({ message: 'Session deleted successfully' });
   } catch (error) {
