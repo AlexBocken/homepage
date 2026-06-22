@@ -327,6 +327,7 @@ export const en = {
 	last_period: "Last period",
 	cycle: "Cycle",
 	typical: "typical",
+	cycle_stats_tooltip: "Averaged over your last up to 6 cycles. ± is one standard deviation (1 SD) — the typical cycle-to-cycle variation, not a confidence interval.",
 	insights_title: "Cycle insights",
 	insight_source: "Source",
 	insights_disclaimer: "This is general information, not medical advice. A single unusual cycle is rarely a concern — patterns over several cycles matter more. If something worries you, talk to a healthcare provider.",

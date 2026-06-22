@@ -15,6 +15,7 @@
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import Hourglass from '@lucide/svelte/icons/hourglass';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Info from '@lucide/svelte/icons/info';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -42,6 +43,8 @@
 
 	// History collapsed by default
 	let showHistory = $state(false);
+	let showCycleStatInfo = $state(false);
+	let showPeriodStatInfo = $state(false);
 
 	// Sharing state
 	// svelte-ignore state_referenced_locally
@@ -933,7 +936,9 @@
 				<span class="cycle-stat-label"><RefreshCw size={13} strokeWidth={2.2} /> {t.cycle_length}</span>
 				<span class="cycle-stat-value">{Math.round(predictions.avgCycle)} {t.days}</span>
 				{#if predictions.cycleSd > 0}
-					<span class="cycle-stat-variance">± {predictions.cycleSd} {t.days} ({t.typical})</span>
+					<span class="cycle-stat-variance">± {predictions.cycleSd} {t.days} ({t.typical})<button class="card-info-trigger" onclick={() => (showCycleStatInfo = !showCycleStatInfo)} aria-label="Info"><Info size={11} /></button>
+						{#if showCycleStatInfo}<span class="card-info-tooltip">{t.cycle_stats_tooltip}</span>{/if}
+					</span>
 				{/if}
 				{#if predictions.lastCycleLength}
 					<span class="cycle-stat-sub">{t.last_cycle}: {predictions.lastCycleLength} {t.days}</span>
@@ -943,7 +948,9 @@
 				<span class="cycle-stat-label"><Droplet size={13} strokeWidth={2.2} /> {t.period_length}</span>
 				<span class="cycle-stat-value">{Math.round(predictions.avgPeriod)} {t.days}</span>
 				{#if predictions.periodSd > 0}
-					<span class="cycle-stat-variance">± {predictions.periodSd} {t.days} ({t.typical})</span>
+					<span class="cycle-stat-variance">± {predictions.periodSd} {t.days} ({t.typical})<button class="card-info-trigger" onclick={() => (showPeriodStatInfo = !showPeriodStatInfo)} aria-label="Info"><Info size={11} /></button>
+						{#if showPeriodStatInfo}<span class="card-info-tooltip">{t.cycle_stats_tooltip}</span>{/if}
+					</span>
 				{/if}
 				{#if predictions.lastPeriodLength}
 					<span class="cycle-stat-sub">{t.last_period}: {predictions.lastPeriodLength} {t.days}</span>
@@ -1606,9 +1613,48 @@
 		font-weight: 700;
 	}
 	.cycle-stat-variance {
+		position: relative;
 		font-size: 0.75rem;
 		font-weight: 400;
 		color: var(--color-text-secondary);
+	}
+	.card-info-trigger {
+		display: inline-flex;
+		align-items: center;
+		vertical-align: middle;
+		opacity: 0.4;
+		cursor: pointer;
+		margin-left: 0.15rem;
+		background: none;
+		border: none;
+		padding: 0;
+		color: inherit;
+	}
+	.card-info-trigger:hover {
+		opacity: 0.85;
+	}
+	.card-info-tooltip {
+		position: absolute;
+		bottom: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		margin-bottom: 0.4rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		padding: 0.5rem 0.65rem;
+		font-size: 0.7rem;
+		font-weight: 400;
+		line-height: 1.5;
+		color: var(--color-text-secondary);
+		text-transform: none;
+		letter-spacing: normal;
+		white-space: normal;
+		max-width: 240px;
+		width: max-content;
+		text-align: center;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		z-index: 20;
 	}
 	.cycle-stat-sub {
 		font-size: 0.72rem;

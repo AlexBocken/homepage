@@ -327,6 +327,7 @@ export const de = {
 	last_period: "Letzte Periode",
 	cycle: "Zyklus",
 	typical: "typisch",
+	cycle_stats_tooltip: "Durchschnitt über deine letzten bis zu 6 Zyklen. ± ist eine Standardabweichung (1 SD) — die typische Schwankung von Zyklus zu Zyklus, kein Konfidenzintervall.",
 	insights_title: "Zyklus-Einblicke",
 	insight_source: "Quelle",
 	insights_disclaimer: "Dies sind allgemeine Informationen, kein medizinischer Rat. Ein einzelner ungewöhnlicher Zyklus ist selten ein Problem – wichtiger sind Muster über mehrere Zyklen. Wenn dich etwas beunruhigt, sprich mit einer Ärztin oder einem Arzt.",
