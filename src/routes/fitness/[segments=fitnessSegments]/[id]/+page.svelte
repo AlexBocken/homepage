@@ -150,7 +150,11 @@
 					{#each myEfforts as e (e._id ?? e.date)}
 						{@const isBest = data.myBest != null && e.elapsedSeconds === data.myBest}
 						<tr class:best={isBest}>
-							<td class="date">{fmtDate(e.date)}</td>
+							<td class="date">
+								{#if e.sessionId}
+									<a href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: fitnessSlugs(lang).history, id: e.sessionId })}>{fmtDate(e.date)}</a>
+								{:else}{fmtDate(e.date)}{/if}
+							</td>
 							<td class="time">{formatElapsed(e.elapsedSeconds)}{#if isBest}<span class="pb"> · {t.your_best}</span>{/if}</td>
 						</tr>
 					{/each}
@@ -327,6 +331,13 @@
 	.pace,
 	.date {
 		color: var(--color-text-secondary);
+	}
+	.mine .date a {
+		color: var(--color-primary);
+		text-decoration: none;
+	}
+	.mine .date a:hover {
+		text-decoration: underline;
 	}
 	.pb {
 		color: var(--color-primary);
