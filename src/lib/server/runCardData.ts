@@ -12,7 +12,9 @@ type CardSession = {
 	name?: string;
 	startTime?: string | Date;
 	totalDistance?: number; // km
-	duration?: number; // minutes
+	duration?: number; // minutes (whole-workout, rounded)
+	gpsTrack?: Array<{ timestamp?: number }>;
+	exercises?: Array<{ gpsTrack?: Array<{ timestamp?: number }>; sets?: any[] }>;
 };
 
 type StrengthSession = CardSession & {
@@ -25,6 +27,47 @@ function formatDuration(mins: number): string {
 	const h = Math.floor(mins / 60);
 	const m = Math.round(mins % 60);
 	return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+/** Elapsed time as `M:SS` (or `H:MM:SS` past an hour). */
+function formatClock(totalSec: number): string {
+	const s = Math.max(0, Math.round(totalSec));
+	const h = Math.floor(s / 3600);
+	const m = Math.floor((s % 3600) / 60);
+	const sec = s % 60;
+	const pad = (n: number) => n.toString().padStart(2, '0');
+	return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
+/** First GPS track on the session (top-level, then per-exercise). */
+function pickTrack(session: CardSession): Array<{ timestamp?: number }> | null {
+	if ((session.gpsTrack?.length ?? 0) >= 2) return session.gpsTrack as Array<{ timestamp?: number }>;
+	for (const ex of session.exercises ?? []) {
+		if ((ex.gpsTrack?.length ?? 0) >= 2) return ex.gpsTrack as Array<{ timestamp?: number }>;
+	}
+	return null;
+}
+
+/**
+ * Cardio elapsed time in seconds, pulled from the GPX track (last − first
+ * timestamp) when available, else the sum of logged set durations. Falls back
+ * to the rounded whole-workout `duration` only as a last resort.
+ */
+function cardioElapsedSec(session: CardSession): number {
+	const track = pickTrack(session);
+	if (track) {
+		const a = track[0]?.timestamp;
+		const b = track[track.length - 1]?.timestamp;
+		if (typeof a === 'number' && typeof b === 'number' && b > a) return (b - a) / 1000;
+	}
+	let sec = 0;
+	for (const ex of session.exercises ?? []) {
+		for (const s of ex.sets ?? []) {
+			if (s?.completed && typeof s.duration === 'number' && s.duration > 0) sec += s.duration * 60;
+		}
+	}
+	if (sec > 0) return sec;
+	return (session.duration ?? 0) * 60;
 }
 
 function formatPace(minPerKm: number): string {
@@ -45,12 +88,12 @@ function formatDate(value?: string | Date): string {
 
 export function buildRunCard(session: CardSession): RunCard {
 	const dist = session.totalDistance ?? 0;
-	const dur = session.duration ?? 0;
+	const sec = cardioElapsedSec(session);
 
 	const stats = [];
 	if (dist > 0) stats.push({ value: `${dist.toFixed(1)} km`, label: 'Distance' });
-	if (dur > 0) stats.push({ value: formatDuration(dur), label: 'Time' });
-	if (dist > 0 && dur > 0) stats.push({ value: formatPace(dur / dist), label: 'Pace' });
+	if (sec > 0) stats.push({ value: formatClock(sec), label: 'Time' });
+	if (dist > 0 && sec > 0) stats.push({ value: formatPace(sec / 60 / dist), label: 'Pace' });
 
 	return {
 		title: session.name?.trim() || 'Workout',
@@ -66,12 +109,12 @@ export function buildRunCard(session: CardSession): RunCard {
  */
 export function buildCardioCard(session: StrengthSession, lang: 'en' | 'de' = 'en'): RunCard {
 	const dist = session.totalDistance ?? 0;
-	const dur = session.duration ?? 0;
+	const sec = cardioElapsedSec(session);
 
 	const stats = [];
 	if (dist > 0) stats.push({ value: `${dist.toFixed(1)} km`, label: 'Distance' });
-	if (dur > 0) stats.push({ value: formatDuration(dur), label: 'Time' });
-	if (dist > 0 && dur > 0) stats.push({ value: formatPace(dur / dist), label: 'Pace' });
+	if (sec > 0) stats.push({ value: formatClock(sec), label: 'Time' });
+	if (dist > 0 && sec > 0) stats.push({ value: formatPace(sec / 60 / dist), label: 'Pace' });
 
 	const prs = (session.prs ?? [])
 		.filter((p) => p.type === 'longestDistance' || p.type?.startsWith('fastestPace:'))
