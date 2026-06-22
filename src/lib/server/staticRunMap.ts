@@ -222,6 +222,26 @@ export interface RunCardStat {
 	label: string;
 }
 
+/** Greedy word-wrap for an uppercased caption label constrained to `maxWidth`.
+ * Uses a rough letter-spacing-aware Helvetica advance estimate (no font metrics
+ * available server-side) so long values like "TOP · ROMANIAN DEADLIFT" wrap
+ * instead of bleeding off the card edge. */
+function wrapLabel(text: string, maxWidth: number, fs: number, ls: number, maxLines = 3): string[] {
+	const advance = (s: string) => s.length * (fs * 0.62 + ls);
+	const lines: string[] = [];
+	let cur = '';
+	for (const w of text.split(/\s+/)) {
+		const cand = cur ? `${cur} ${w}` : w;
+		if (!cur || advance(cand) <= maxWidth) cur = cand;
+		else {
+			lines.push(cur);
+			cur = w;
+		}
+	}
+	if (cur) lines.push(cur);
+	return lines.slice(0, maxLines);
+}
+
 export interface RenderRunCardOpts extends RenderRunMapOpts {
 	/** Run title (e.g. the session name). */
 	title: string;
@@ -327,9 +347,19 @@ function backdropContentSvg(
 		.map((st, i) => {
 			const x = colX[i % 2];
 			const vy = rowYv[Math.floor(i / 2)];
+			// Right column runs to the inner edge; left column stops at the
+			// right column's start (less a small gutter) so labels never collide.
+			const labelMaxW = (i % 2 === 1 ? width - pad : colX[1]) - x - 24;
+			const labelLines = wrapLabel(st.label.toUpperCase(), labelMaxW, 34, 2.5);
+			const labelSvg =
+				`<text x="${x}" y="${vy + 52}" ${FONT} font-size="34" font-weight="600" fill="#d8dee9" letter-spacing="2.5">` +
+				labelLines
+					.map((ln, j) => `<tspan x="${x}" dy="${j === 0 ? 0 : 38}">${escapeXml(ln)}</tspan>`)
+					.join('') +
+				`</text>`;
 			return (
 				`<text x="${x}" y="${vy}" ${FONT} font-size="116" font-weight="800" fill="#ffffff">${escapeXml(st.value)}</text>` +
-				`<text x="${x}" y="${vy + 52}" ${FONT} font-size="34" font-weight="600" fill="#d8dee9" letter-spacing="2.5">${escapeXml(st.label.toUpperCase())}</text>`
+				labelSvg
 			);
 		})
 		.join('');
