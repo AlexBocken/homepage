@@ -4,6 +4,7 @@ import Symbol from "./Symbol.svelte"
 import ThemeToggle from "./ThemeToggle.svelte"
 import type { Snippet } from 'svelte';
 import { browser } from '$app/environment';
+import { networkStore } from '$lib/stores/network.svelte';
 
 const isTauri = browser && '__TAURI__' in window;
 
@@ -118,6 +119,46 @@ nav {
 		--nav-btn-border: rgba(0,0,0,0.15);
 		--nav-btn-border-hover: rgba(0,0,0,0.3);
 		--nav-divider: rgba(0,0,0,0.12);
+	}
+}
+
+/* ═══════════════════════════════════════════
+   OFFLINE PILL
+   ═══════════════════════════════════════════ */
+.offline-pill {
+	/* Perched on the top-left corner of the nav bar like a badge — nav is
+	   position: sticky, so it's the containing block. */
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform: translate(-35%, -50%);
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.25rem 0.55rem;
+	border-radius: 100px;
+	font-size: 0.7rem;
+	font-weight: 600;
+	line-height: 1;
+	color: #fff;
+	background: var(--red, #bf616a);
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+	white-space: nowrap;
+	pointer-events: none;
+	/* Own snapshot so it isn't clipped by the nav's overflow:hidden group. */
+	view-transition-name: offline-pill;
+}
+.offline-icon {
+	flex-shrink: 0;
+}
+@media screen and (max-width: 800px) {
+	.offline-pill {
+		padding: 0.3rem;
+	}
+	.offline-label {
+		display: none;
 	}
 }
 
@@ -297,11 +338,19 @@ nav {
 	animation-timing-function: ease;
 	overflow: hidden;
 }
+/* Offline badge: own group, NOT clipped — it overhangs the nav corner. */
+:global(::view-transition-group(offline-pill)) {
+	animation-duration: 300ms;
+	animation-timing-function: ease;
+	overflow: visible;
+}
 /* Header & right side: standard morph */
 :global(::view-transition-old(site-header)),
 :global(::view-transition-new(site-header)),
 :global(::view-transition-old(nav-right)),
-:global(::view-transition-new(nav-right)) {
+:global(::view-transition-new(nav-right)),
+:global(::view-transition-old(offline-pill)),
+:global(::view-transition-new(offline-pill)) {
 	animation-duration: 300ms;
 	animation-timing-function: ease;
 	height: 100%;
@@ -342,6 +391,16 @@ nav {
 <div>
 
 <nav class:no-links={!links}>
+	{#if networkStore.offline}
+		<span class="offline-pill" role="status" aria-live="polite" title="No internet connection">
+			<svg class="offline-icon" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+				<path d="M2 2l20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+				<path d="M5 12.5a10 10 0 0 1 4-2.4M1 8.5a16 16 0 0 1 6-3.6M12 5a16 16 0 0 1 11 3.5M19 12.5a10 10 0 0 0-3-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+				<circle cx="12" cy="19" r="1.4" fill="currentColor"/>
+			</svg>
+			<span class="offline-label">Offline</span>
+		</span>
+	{/if}
 	<div class="logo-slot">
 		<a href={resolve('/')} aria-label="Home" class="home-link" class:full={fullSymbol}><Symbol /></a>
 		{@render logo_overlay?.()}
