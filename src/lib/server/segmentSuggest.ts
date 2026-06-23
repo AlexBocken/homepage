@@ -1,9 +1,10 @@
 /**
  * Turn a user's popular grid cells into suggested segments: walk each GPS run,
- * find contiguous runs of popular cells (bridging small gaps), keep the long
- * ones, and dedup near-duplicates against each other and against segments that
- * already exist. Suggestions map back to real run-track indices so accepting
- * one reuses the normal create-from-slice flow.
+ * find contiguous runs of popular cells (bridging small gaps), dedup
+ * near-duplicates against each other and against segments that already exist,
+ * then surface only the few best-scoring corridors (frequently run, in the
+ * 500 m–3 km sweet spot). Suggestions map back to real run-track indices so
+ * accepting one reuses the normal create-from-slice flow.
  *
  * Server-only. Reuses the matcher (detectEfforts / bbox) and grid sampling.
  */
@@ -26,7 +27,9 @@ import { WorkoutSession, type IGpsPoint } from '$models/WorkoutSession';
 
 const MIN_SUGGEST_DIST_M = 400; // suggestions should be meaningful, > the manual floor
 const MERGE_GAP_M = 60; // bridge short non-popular gaps within a span
-const MAX_SUGGESTIONS = 15;
+const MAX_SUGGESTIONS = 3; // only surface the few best corridors
+const IDEAL_MIN_KM = 0.5; // sweet spot: not too short...
+const IDEAL_MAX_KM = 3.0; // ...and not too long
 const HASH_GRID_DEG = 0.0003; // ~33 m: same corridor → same hash across rebuilds
 
 export interface SegmentSuggestion {
@@ -131,6 +134,20 @@ function spansForTrack(
   return out;
 }
 
+/**
+ * Rank candidates by how often the corridor was run (repeats) weighted by how
+ * well its length sits in the 500 m–3 km sweet spot. Corridors outside the band
+ * decay linearly, so a well-sized, frequently-run corridor wins.
+ */
+function candidateScore(c: { distance: number; seenCount: number }): number {
+  const d = c.distance;
+  let lengthFactor: number;
+  if (d < IDEAL_MIN_KM) lengthFactor = d / IDEAL_MIN_KM; // ramps up to 1 at 500 m
+  else if (d > IDEAL_MAX_KM) lengthFactor = IDEAL_MAX_KM / d; // falls off past 3 km
+  else lengthFactor = 1;
+  return c.seenCount * lengthFactor;
+}
+
 /** Does `cand` cover the same ground as an existing geometry? */
 function overlaps(cand: Candidate, geom: SegmentGeometry, bbox: Bbox): boolean {
   if (!bboxIntersects(cand.bbox, bbox, 0)) return false;
@@ -166,8 +183,9 @@ async function buildSuggestions(userId: string, sources: TrackSource[]): Promise
     (await DismissedSuggestion.find({ userId }).select('routeHash').lean()).map((d) => d.routeHash)
   );
 
-  // Longest first; greedily keep non-overlapping, non-dismissed candidates.
-  candidates.sort((a, b) => b.distance - a.distance);
+  // Best-scoring first (repeats × length fit); greedily keep non-overlapping,
+  // non-dismissed candidates until we have the top MAX_SUGGESTIONS.
+  candidates.sort((a, b) => candidateScore(b) - candidateScore(a));
   const kept: Array<Candidate & { routeHash: string }> = [];
   for (const c of candidates) {
     const hash = routeHash(c.points, c.distance);
@@ -200,7 +218,7 @@ function runSources(run: { _id: unknown; gpsTrack?: IGpsPoint[]; exercises?: Arr
   return sources;
 }
 
-/** Suggested segments across all of a user's runs, longest first, deduped. */
+/** Suggested segments across all of a user's runs, top-scoring first, deduped. */
 export async function suggestSegments(userId: string): Promise<SegmentSuggestion[]> {
   const runs = await WorkoutSession.find({
     createdBy: userId,
