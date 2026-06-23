@@ -51,6 +51,15 @@ const LABELS: Record<IcsLang, Labels> = {
 	}
 };
 
+// Per-event colours (RFC 7986 COLOR). Must be CSS3 colour names — clients that
+// support COLOR map the name; others fall back to the calendar-level colour.
+const COLOR = {
+	period: 'red',
+	fertile: 'royalblue',
+	ovulation: 'navy', // the peak day within the (blue) fertile window
+	luteal: 'peru' // muted caramel/orange-brown (softer than chocolate)
+} as const;
+
 /** Build the ICS event list for a user's period calendar. */
 export function periodICSEvents(periods: PeriodInput[], lang: IcsLang = 'de'): ICSEvent[] {
 	const L = LABELS[lang];
@@ -66,7 +75,8 @@ export function periodICSEvents(periods: PeriodInput[], lang: IcsLang = 'de'): I
 				summary: L.period,
 				start,
 				end: new Date(p.endDate),
-				categories: [L.cat.period]
+				categories: [L.cat.period],
+				color: COLOR.period
 			});
 		} else {
 			// Ongoing: extend to the predicted end so the event isn't a single day.
@@ -75,7 +85,8 @@ export function periodICSEvents(periods: PeriodInput[], lang: IcsLang = 'de'): I
 				summary: L.periodOngoing,
 				start,
 				end: proj.predictedEndOfOngoing ?? start,
-				categories: [L.cat.period]
+				categories: [L.cat.period],
+				color: COLOR.period
 			});
 		}
 	}
@@ -90,6 +101,7 @@ export function periodICSEvents(periods: PeriodInput[], lang: IcsLang = 'de'): I
 			start: c.start,
 			end: c.end,
 			categories: [L.cat.prediction, L.cat.period],
+			color: COLOR.period,
 			alarm: reminder
 		});
 		events.push({
@@ -98,6 +110,7 @@ export function periodICSEvents(periods: PeriodInput[], lang: IcsLang = 'de'): I
 			start: c.fertileStart,
 			end: c.fertileEnd,
 			categories: [L.cat.prediction, L.cat.fertility],
+			color: COLOR.fertile,
 			alarm: reminder
 		});
 		events.push({
@@ -105,6 +118,7 @@ export function periodICSEvents(periods: PeriodInput[], lang: IcsLang = 'de'): I
 			summary: L.ovulation,
 			start: c.ovulation,
 			categories: [L.cat.prediction, L.cat.ovulation],
+			color: COLOR.ovulation,
 			alarm: reminder
 		});
 		events.push({
@@ -113,6 +127,7 @@ export function periodICSEvents(periods: PeriodInput[], lang: IcsLang = 'de'): I
 			start: c.lutealStart,
 			end: c.lutealEnd,
 			categories: [L.cat.prediction, L.cat.luteal],
+			color: COLOR.luteal,
 			alarm: reminder
 		});
 	}
@@ -126,20 +141,23 @@ export function periodICSEvents(periods: PeriodInput[], lang: IcsLang = 'de'): I
 			summary: L.fertilePast,
 			start: w.fertileStart,
 			end: w.fertileEnd,
-			categories: [L.cat.estimate, L.cat.fertility]
+			categories: [L.cat.estimate, L.cat.fertility],
+			color: COLOR.fertile
 		});
 		events.push({
 			uid: `past-ovulation-${key}${uidNs}`,
 			summary: L.ovulationPast,
 			start: w.ovulation,
-			categories: [L.cat.estimate, L.cat.ovulation]
+			categories: [L.cat.estimate, L.cat.ovulation],
+			color: COLOR.ovulation
 		});
 		events.push({
 			uid: `past-luteal-${key}${uidNs}`,
 			summary: L.lutealPast,
 			start: w.lutealStart,
 			end: w.lutealEnd,
-			categories: [L.cat.estimate, L.cat.luteal]
+			categories: [L.cat.estimate, L.cat.luteal],
+			color: COLOR.luteal
 		});
 	}
 
