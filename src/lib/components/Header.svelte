@@ -247,6 +247,15 @@ nav {
 :global(.site_header li:has(a.active) > a > .nav-icon) {
 	fill: var(--active-fill, none);
 }
+/* Stroke-drawn icons (bar chart, list-checks) can't be filled — their open
+   axis/check paths would otherwise close into filled triangles, so keep them
+   unfilled and colour only the .hl data strokes (the bars / the lines). */
+:global(.site_header li:has(a.active) .nav-icon:has(.hl)) {
+	fill: none;
+}
+:global(.site_header li:has(a.active) .nav-icon .hl) {
+	stroke: var(--active-fill);
+}
 /* For stroke-based icons: colored shape behind the icon */
 :global(.site_header li:has(a.active) .nav-icon-wrap) {
 	position: relative;

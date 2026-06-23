@@ -351,11 +351,6 @@
 <div class="stats-page">
 	<h1 class="sr-only">{t.stats_title}</h1>
 
-	<button class="dash-gear" onclick={openDashSettings}>
-		<Settings2 size={14} />
-		<span>{t.dash_customize}</span>
-	</button>
-
 	{#if dashEditing}
 		<div class="dash-overlay" onkeydown={(e) => { if (e.key === 'Escape') dashEditing = false; }} role="dialog" tabindex="-1">
 			<div class="dash-backdrop" onclick={() => dashEditing = false} role="presentation"></div>
@@ -677,6 +672,11 @@
 			<PeriodTracker periods={shared.entries} {lang} readOnly ownerName={shared.owner} mode="projection" />
 		{/each}
 	{/if}
+
+	<button class="dash-gear" onclick={openDashSettings}>
+		<Settings2 size={14} />
+		<span>{t.dash_customize}</span>
+	</button>
 </div>
 
 <style>
@@ -693,7 +693,7 @@
 		align-items: center;
 		gap: 0.35rem;
 		padding: 0.4rem 0.75rem;
-		margin-bottom: -0.25rem;
+		margin-top: 0.25rem;
 		background: none;
 		border: none;
 		color: var(--color-text-tertiary);

@@ -5,10 +5,8 @@
 	import Header from '$lib/components/Header.svelte';
 	import UserHeader from '$lib/components/UserHeader.svelte';
 	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-	import BarChart3 from '@lucide/svelte/icons/bar-chart-3';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Dumbbell from '@lucide/svelte/icons/dumbbell';
-	import ListChecks from '@lucide/svelte/icons/list-checks';
 	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import Flag from '@lucide/svelte/icons/flag';
@@ -80,11 +78,11 @@
 <Header>
 	{#snippet links()}
 		<ul class="site_header">
-			<li><a href={resolve('/fitness/[stats=fitnessStats]', { stats: s.stats })} class:active={isActive(`/fitness/${s.stats}`)}><BarChart3 size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.stats}</span></a></li>
+			<li style="--active-fill: var(--nord10)"><a href={resolve('/fitness/[stats=fitnessStats]', { stats: s.stats })} class:active={isActive(`/fitness/${s.stats}`)}><svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18" /><path class="hl" d="M18 17V9M13 17V5M8 17v-3" /></svg><span class="nav-label">{labels.stats}</span></a></li>
 			<li style="--active-fill: var(--nord11)"><a href={resolve('/fitness/[segments=fitnessSegments]', { segments: s.segments })} class:active={isActive(`/fitness/${s.segments}`)}><Flag size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.segments}</span></a></li>
 			<li style="--active-fill: var(--nord13)"><a href={resolve('/fitness/[history=fitnessHistory]', { history: s.history })} class:active={isActive(`/fitness/${s.history}`)}><Clock size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.history}</span></a></li>
 			<li style="--active-fill: var(--nord8)"><a href={resolve('/fitness/[workout=fitnessWorkout]', { workout: s.workout })} class:active={isActive(`/fitness/${s.workout}`)}><Dumbbell size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.workout}</span></a></li>
-			<li style="--active-fill: var(--nord14)"><a href={resolve('/fitness/[exercises=fitnessExercises]', { exercises: s.exercises })} class:active={isActive(`/fitness/${s.exercises}`)}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.exercises}</span></a></li>
+			<li style="--active-fill: var(--nord14)"><a href={resolve('/fitness/[exercises=fitnessExercises]', { exercises: s.exercises })} class:active={isActive(`/fitness/${s.exercises}`)}><svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4" /><path d="m3 7 2 2 4-4" /><path class="hl" d="M13 6h8M13 12h8M13 18h8" /></svg><span class="nav-label">{labels.exercises}</span></a></li>
 			<li style="--active-fill: var(--nord12)"><a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })} class:active={isActive(`/fitness/${s.measure}`)}><NotebookPen size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.measure}</span></a></li>
 			<li style="--active-fill: var(--nord15)"><a href={resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })} class:active={isActive(`/fitness/${s.nutrition}`)}><UtensilsCrossed size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.nutrition}</span></a></li>
 		</ul>
