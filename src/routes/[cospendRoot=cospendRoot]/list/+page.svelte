@@ -240,6 +240,22 @@
 
   /** @type {number | null} */
   let longPressTimer = $state(null);
+  // When a long-press opens the edit modal, the finger is still down. The trailing
+  // click on finger-lift would otherwise land on the freshly-rendered backdrop and
+  // close the modal immediately (or toggle the item). Swallow that one click.
+  let swallowNextClick = false;
+
+  $effect(() => {
+    /** @param {MouseEvent} e */
+    function swallow(e) {
+      if (!swallowNextClick) return;
+      swallowNextClick = false;
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    window.addEventListener('click', swallow, true); // capture: before backdrop/card
+    return () => window.removeEventListener('click', swallow, true);
+  });
   /** @type {import('$lib/js/shoppingSync.svelte').ShoppingItem | null} */
   let editingItem = $state(null);
   let editName = $state('');
@@ -283,6 +299,12 @@
       editCategory = item.category;
       editIcon = item.icon || '';
       iconSearch = '';
+      // Eat the click that fires when the finger lifts after this long-press, so
+      // it doesn't immediately close the just-opened modal / toggle the item.
+      swallowNextClick = true;
+      // Safety: if no trailing click arrives (e.g. pointercancel), don't leave the
+      // guard armed and swallow an unrelated later click.
+      setTimeout(() => { swallowNextClick = false; }, 800);
     }, 500);
   }
 
@@ -510,6 +532,7 @@
                   onpointerdown={() => startLongPress(item)}
                   onpointerup={cancelLongPress}
                   onpointerleave={cancelLongPress}
+                  onpointercancel={cancelLongPress}
                   oncontextmenu={(e) => e.preventDefault()}
                 >
                   {#if parsed.qty}
