@@ -69,15 +69,18 @@
     }).sort((a, b) => a.score - b.score)
   );
 
-  // id -> { first earned label, source task } (recentCompletions is newest-first)
+  // id -> { first earned label, most-recent source task } (recentCompletions is
+  // newest-first): the date keeps getting overwritten down to the oldest (first
+  // earned), while the task is kept from the first encounter (the latest gather).
   let info = $derived.by(() => {
     /** @type {Map<string, { first: string, task: string }>} */
     const m = new Map();
     for (const c of stats.recentCompletions || []) {
       if (c.completedBy !== currentUser || !c.stickerId) continue;
+      const prev = m.get(c.stickerId);
       m.set(c.stickerId, {
         first: format(new Date(c.completedAt), 'd. MMM yyyy', { locale: de }),
-        task: c.taskTitle || ''
+        task: prev ? prev.task : c.taskTitle || ''
       });
     }
     return m;

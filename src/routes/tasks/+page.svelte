@@ -80,6 +80,29 @@
     heroSlide = i;
   }
 
+  // Swipe between the two heroes on touch devices.
+  let swipeX = 0, swipeY = 0, swipeOn = false;
+  let suppressTap = false; // a swipe shouldn't also fire the Erledigt tap
+  /** @param {PointerEvent} e */
+  function heroPointerDown(e) {
+    if (e.pointerType !== 'touch') return;
+    swipeX = e.clientX;
+    swipeY = e.clientY;
+    swipeOn = true;
+    suppressTap = false;
+  }
+  /** @param {PointerEvent} e */
+  function heroPointerUp(e) {
+    if (!swipeOn) return;
+    swipeOn = false;
+    const dx = e.clientX - swipeX;
+    const dy = e.clientY - swipeY;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      suppressTap = true;
+      selectHero(dx < 0 ? Math.min(heroSlide + 1, 1) : Math.max(heroSlide - 1, 0));
+    }
+  }
+
   // After the reward popup closes: with urgent tasks still around (two heroes)
   // slide to the Stickerheft, then play the peel; onPeelDone glides back.
   function playStickerPlacement() {
@@ -350,7 +373,7 @@
               {/if}
               <button
                 class="hero-btn"
-                onclick={() => { cancelLongPress(); if (!completeForTaskId) completeTask(topUrgent); }}
+                onclick={() => { if (suppressTap) return; cancelLongPress(); if (!completeForTaskId) completeTask(topUrgent); }}
                 onpointerdown={() => startLongPress(topUrgent)}
                 onpointerup={cancelLongPress}
                 onpointerleave={cancelLongPress}
@@ -381,7 +404,13 @@
       {/snippet}
 
       {#if topUrgent}
-        <div class="hero-carousel">
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div
+          class="hero-carousel"
+          onpointerdown={heroPointerDown}
+          onpointerup={heroPointerUp}
+          onpointercancel={() => (swipeOn = false)}
+        >
           <div class="hero-track" style="transform: translateX(-{heroSlide * 100}%)">
             <div class="hero-slide">{@render urgentHero()}</div>
             <div class="hero-slide">{@render rewardHero()}</div>
@@ -756,6 +785,7 @@
     overflow: hidden;
     border-radius: var(--radius-lg);
     margin-bottom: 0.5rem;
+    touch-action: pan-y; /* let horizontal swipes drive the carousel, keep vertical scroll */
   }
   .hero-track {
     display: flex;
