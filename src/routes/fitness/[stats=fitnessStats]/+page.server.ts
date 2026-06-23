@@ -5,14 +5,16 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 
 	// stats / goal / latest block the shell because the main charts, goal header,
 	// and body-part cards all depend on them. The heavier panels below stream.
-	const [res, goalRes, latestRes] = await Promise.all([
+	const [res, goalRes, latestRes, dashRes] = await Promise.all([
 		fetch('/api/fitness/stats/overview'),
 		fetch('/api/fitness/goal'),
-		fetch('/api/fitness/measurements/latest')
+		fetch('/api/fitness/measurements/latest'),
+		fetch('/api/fitness/dashboard')
 	]);
 	const stats = await res.json();
 	const goal = goalRes.ok ? await goalRes.json() : { weeklyWorkouts: null, streak: 0 };
 	const latest = latestRes.ok ? await latestRes.json() : {};
+	const dashboard = dashRes.ok ? await dashRes.json() : {};
 
 	// Streamed — resolved into $state-backed locals on the client so the card
 	// shells render immediately and fill in once the value arrives. Error
@@ -30,5 +32,5 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 		.then(r => r.ok ? r.json().then(j => j.shared) : [])
 		.catch(() => []);
 
-	return { session, stats, goal, latest, muscleHeatmap, nutritionStats, periods, sharedPeriods };
+	return { session, stats, goal, latest, dashboard, muscleHeatmap, nutritionStats, periods, sharedPeriods };
 };

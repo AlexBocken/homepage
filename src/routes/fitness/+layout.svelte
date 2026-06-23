@@ -81,12 +81,12 @@
 	{#snippet links()}
 		<ul class="site_header">
 			<li><a href={resolve('/fitness/[stats=fitnessStats]', { stats: s.stats })} class:active={isActive(`/fitness/${s.stats}`)}><BarChart3 size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.stats}</span></a></li>
+			<li style="--active-fill: var(--nord11)"><a href={resolve('/fitness/[segments=fitnessSegments]', { segments: s.segments })} class:active={isActive(`/fitness/${s.segments}`)}><Flag size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.segments}</span></a></li>
 			<li style="--active-fill: var(--nord13)"><a href={resolve('/fitness/[history=fitnessHistory]', { history: s.history })} class:active={isActive(`/fitness/${s.history}`)}><Clock size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.history}</span></a></li>
 			<li style="--active-fill: var(--nord8)"><a href={resolve('/fitness/[workout=fitnessWorkout]', { workout: s.workout })} class:active={isActive(`/fitness/${s.workout}`)}><Dumbbell size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.workout}</span></a></li>
 			<li style="--active-fill: var(--nord14)"><a href={resolve('/fitness/[exercises=fitnessExercises]', { exercises: s.exercises })} class:active={isActive(`/fitness/${s.exercises}`)}><ListChecks size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.exercises}</span></a></li>
 			<li style="--active-fill: var(--nord12)"><a href={resolve('/fitness/[checkin=fitnessCheckIn]', { checkin: s.measure })} class:active={isActive(`/fitness/${s.measure}`)}><NotebookPen size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.measure}</span></a></li>
 			<li style="--active-fill: var(--nord15)"><a href={resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })} class:active={isActive(`/fitness/${s.nutrition}`)}><UtensilsCrossed size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.nutrition}</span></a></li>
-			<li style="--active-fill: var(--nord13)"><a href={resolve('/fitness/[segments=fitnessSegments]', { segments: s.segments })} class:active={isActive(`/fitness/${s.segments}`)}><Flag size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.segments}</span></a></li>
 		</ul>
 	{/snippet}
 

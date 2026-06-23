@@ -15,12 +15,14 @@
 	import Target from '@lucide/svelte/icons/target';
 	import Info from '@lucide/svelte/icons/info';
 	import Ruler from '@lucide/svelte/icons/ruler';
+	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 	import { onMount } from 'svelte';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 	import { BODY_PART_CARDS, bodyPartSlug, bodyPartAccent } from '$lib/js/fitnessBodyParts';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
@@ -87,6 +89,67 @@
 	let goalSaving = $state(false);
 
 	const hasDemographics = $derived(data.goal?.sex != null && data.goal?.heightCm != null && data.goal?.birthYear != null);
+
+	// --- dashboard section visibility (per-user, /api/fitness/dashboard) ---
+	const DASH_KEYS = ['simpleStats', 'streak', 'weight', 'bodyFat', 'dietStats', 'muscleBalance', 'bodyParts', 'ownPeriod', 'sharedPeriods'];
+	let prefs = $derived.by(() => {
+		const d = data.dashboard ?? {};
+		/** @type {Record<string, boolean>} */
+		const o = {};
+		for (const k of DASH_KEYS) o[k] = d[k] !== false; // default on
+		return o;
+	});
+
+	// Reflow rules for the diet/muscle grid:
+	//  - diet off            → muscle balance goes full width
+	//  - muscle off, diet on → body parts move up into the muscle-balance slot
+	//  - …and body parts off → the macro split goes horizontal (no bottom row)
+	const showMuscleNutrition = $derived(prefs.dietStats || prefs.muscleBalance);
+	const bodyPartsMovedUp = $derived(!prefs.muscleBalance && prefs.dietStats && prefs.bodyParts && cardsWithData.length > 0);
+	const macroHorizontal = $derived(!prefs.muscleBalance && prefs.dietStats && !prefs.bodyParts);
+	const isFemale = $derived(data.goal?.sex === 'female');
+
+	let dashEditing = $state(false);
+	let dashSaving = $state(false);
+	/** @type {Record<string, boolean>} */
+	let draft = $state({});
+	function openDashSettings() {
+		draft = { ...prefs };
+		dashEditing = true;
+	}
+	async function saveDash() {
+		dashSaving = true;
+		try {
+			const res = await fetch('/api/fitness/dashboard', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(draft)
+			});
+			if (res.ok) {
+				dashEditing = false;
+				await invalidateAll();
+			} else {
+				toast.error(t.dash_save_failed);
+			}
+		} catch {
+			toast.error(t.dash_save_failed);
+		}
+		dashSaving = false;
+	}
+	// Section toggles to show in the panel (own-cycle only for female users).
+	let dashSections = $derived(
+		[
+			{ key: 'simpleStats', label: t.dash_overview },
+			{ key: 'streak', label: t.dash_streak },
+			{ key: 'weight', label: t.dash_weight },
+			{ key: 'bodyFat', label: t.dash_bodyfat },
+			{ key: 'dietStats', label: t.dash_diet },
+			{ key: 'muscleBalance', label: t.muscle_balance },
+			{ key: 'bodyParts', label: t.body_parts },
+			...(isFemale ? [{ key: 'ownPeriod', label: t.dash_own_cycle }] : []),
+			{ key: 'sharedPeriods', label: t.dash_shared_cycles }
+		]
+	);
 
 	function startGoalEdit() {
 		goalInput = goalWeekly ?? 4;
@@ -288,6 +351,33 @@
 <div class="stats-page">
 	<h1 class="sr-only">{t.stats_title}</h1>
 
+	<button class="dash-gear" onclick={openDashSettings}>
+		<Settings2 size={14} />
+		<span>{t.dash_customize}</span>
+	</button>
+
+	{#if dashEditing}
+		<div class="dash-overlay" onkeydown={(e) => { if (e.key === 'Escape') dashEditing = false; }} role="dialog" tabindex="-1">
+			<div class="dash-backdrop" onclick={() => dashEditing = false} role="presentation"></div>
+			<div class="dash-panel">
+				<h3>{t.dash_customize}</h3>
+				<div class="dash-toggles">
+					{#each dashSections as section (section.key)}
+						<div class="dash-row">
+							<span class="dash-row-label">{section.label}</span>
+							<Toggle bind:checked={draft[section.key]} />
+						</div>
+					{/each}
+				</div>
+				<div class="dash-actions">
+					<button class="dash-cancel" onclick={() => dashEditing = false}>{t.cancel}</button>
+					<button class="dash-save" onclick={saveDash} disabled={dashSaving}>{dashSaving ? t.saving : t.save}</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	{#if prefs.simpleStats}
 	<div class="lifetime-cards">
 		<div class="lifetime-card workouts">
 			<div class="card-icon"><Dumbbell size={24} /></div>
@@ -315,6 +405,7 @@
 			<div class="card-label">{t.covered}</div>
 		</div>
 	</div>
+	{/if}
 
 	{#if goalEditing}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -338,6 +429,7 @@
 		</div>
 	{/if}
 
+	{#if prefs.streak}
 	<div class="chart-streak-row">
 		<div class="chart-streak-chart">
 			{#if (stats.workoutsChart?.data?.length ?? 0) > 0}
@@ -365,8 +457,9 @@
 			</div>
 		</button>
 	</div>
+	{/if}
 
-	{#if (stats.weightChart?.data?.length ?? 0) > 1}
+	{#if prefs.weight && (stats.weightChart?.data?.length ?? 0) > 1}
 		<FitnessChart
 			data={weightChartData}
 			title={t.weight}
@@ -375,7 +468,7 @@
 		/>
 	{/if}
 
-	{#if (stats.bfChart?.data?.length ?? 0) > 1}
+	{#if prefs.bodyFat && (stats.bfChart?.data?.length ?? 0) > 1}
 		<FitnessChart
 			data={bfChartData}
 			title={bfChartTitle}
@@ -385,7 +478,9 @@
 		/>
 	{/if}
 
-	<div class="muscle-nutrition-layout">
+	{#if showMuscleNutrition}
+	<div class="muscle-nutrition-layout" class:diet-off={!prefs.dietStats} class:macro-horizontal={macroHorizontal}>
+			{#if prefs.dietStats}
 			<div class="lifetime-card protein-card">
 				<div class="card-icon"><Beef size={24} /></div>
 				{#if ns.avgProteinPerKg != null}
@@ -500,24 +595,31 @@
 					{/each}
 				</div>
 			</div>
+			{/if}
 
-		<div class="section-block muscle-heatmap-block">
-			<h2 class="section-title">{t.muscle_balance}</h2>
-			{#await data.muscleHeatmap}
-				<div class="muscle-heatmap-pending" aria-hidden="true"></div>
-			{:then muscleHeatmap}
-				<MuscleHeatmap data={muscleHeatmap} />
-			{:catch}
-				<div class="muscle-heatmap-failed">{lang === 'de' ? 'Fehler beim Laden' : 'Failed to load'}</div>
-			{/await}
-		</div>
+			{#if prefs.muscleBalance}
+			<div class="section-block muscle-heatmap-block">
+				<h2 class="section-title">{t.muscle_balance}</h2>
+				{#await data.muscleHeatmap}
+					<div class="muscle-heatmap-pending" aria-hidden="true"></div>
+				{:then muscleHeatmap}
+					<MuscleHeatmap data={muscleHeatmap} />
+				{:catch}
+					<div class="muscle-heatmap-failed">{lang === 'de' ? 'Fehler beim Laden' : 'Failed to load'}</div>
+				{/await}
+			</div>
+			{:else if bodyPartsMovedUp}
+			<div class="section-block bp-in-mb">
+				{@render bodyPartsBlock()}
+			</div>
+			{/if}
 	</div>
+	{/if}
 
-	{#if cardsWithData.length > 0}
-		<section class="body-parts-section">
-			<h2>{t.body_parts}</h2>
-			<div class="bp-grid">
-				{#each cardsWithData as card (card.key)}
+	{#snippet bodyPartsBlock()}
+		<h2>{t.body_parts}</h2>
+		<div class="bp-grid">
+			{#each cardsWithData as card (card.key)}
 					{@const cv = currentValue(card)}
 					<a
 						class="bp-card"
@@ -558,16 +660,23 @@
 					</a>
 				{/each}
 			</div>
+	{/snippet}
+
+	{#if prefs.bodyParts && cardsWithData.length > 0 && !bodyPartsMovedUp}
+		<section class="body-parts-section">
+			{@render bodyPartsBlock()}
 		</section>
 	{/if}
 
-	{#if data.goal?.sex === 'female'}
+	{#if isFemale && prefs.ownPeriod}
 		<PeriodTracker periods={periodsData} {lang} mode="projection" />
 	{/if}
 
-	{#each sharedPeriodsData as shared (shared.owner)}
-		<PeriodTracker periods={shared.entries} {lang} readOnly ownerName={shared.owner} mode="projection" />
-	{/each}
+	{#if prefs.sharedPeriods}
+		{#each sharedPeriodsData as shared (shared.owner)}
+			<PeriodTracker periods={shared.entries} {lang} readOnly ownerName={shared.owner} mode="projection" />
+		{/each}
+	{/if}
 </div>
 
 <style>
@@ -575,6 +684,100 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+
+	/* Dashboard customize gear + panel */
+	.dash-gear {
+		align-self: flex-end;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.4rem 0.75rem;
+		margin-bottom: -0.25rem;
+		background: none;
+		border: none;
+		color: var(--color-text-tertiary);
+		font-size: 0.8rem;
+		font-weight: 500;
+		cursor: pointer;
+		border-radius: var(--radius-pill);
+		transition: color var(--transition-fast, 120ms), background var(--transition-fast, 120ms);
+	}
+	.dash-gear:hover {
+		color: var(--color-text-primary);
+		background: color-mix(in oklab, var(--color-text-primary) 6%, transparent);
+	}
+	.dash-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem;
+	}
+	.dash-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(3px);
+	}
+	.dash-panel {
+		position: relative;
+		width: 100%;
+		max-width: 360px;
+		max-height: 85vh;
+		overflow-y: auto;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg, 0.75rem);
+		padding: 1.25rem;
+		box-shadow: var(--shadow-lg);
+	}
+	.dash-panel h3 {
+		margin: 0 0 0.75rem;
+		font-size: 1.05rem;
+	}
+	.dash-toggles {
+		display: flex;
+		flex-direction: column;
+	}
+	.dash-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.5rem 0;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.dash-row:last-child { border-bottom: none; }
+	.dash-row-label {
+		font-size: 0.9rem;
+		color: var(--color-text-primary);
+	}
+	.dash-actions {
+		display: flex;
+		gap: 0.5rem;
+		justify-content: flex-end;
+		margin-top: 1rem;
+	}
+	.dash-save {
+		padding: 0.45rem 1.1rem;
+		border: none;
+		border-radius: var(--radius-pill, 1000px);
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.dash-save:disabled { opacity: 0.6; cursor: not-allowed; }
+	.dash-cancel {
+		padding: 0.45rem 1.1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill, 1000px);
+		background: transparent;
+		color: var(--color-text-secondary);
+		cursor: pointer;
 	}
 	.lifetime-cards {
 		display: grid;
@@ -876,7 +1079,8 @@
 		grid-template-columns: 1fr 1fr 1fr;
 		gap: 0.6rem;
 	}
-	.muscle-nutrition-layout .muscle-heatmap-block {
+	.muscle-nutrition-layout .muscle-heatmap-block,
+	.muscle-nutrition-layout .bp-in-mb {
 		grid-column: 1 / -1;
 	}
 	@media (min-width: 750px) {
@@ -899,9 +1103,33 @@
 			text-align: center;
 			margin-bottom: 1.25rem;
 		}
-		.muscle-nutrition-layout .muscle-heatmap-block {
+		.muscle-nutrition-layout .muscle-heatmap-block,
+		.muscle-nutrition-layout .bp-in-mb {
 			grid-column: 1 / 4;
 		}
+		/* macro-horizontal: muscle balance off + body parts off → the 3 stat cards
+		   sit on the top row and the macro split drops to its own full-width row */
+		.muscle-nutrition-layout.macro-horizontal {
+			grid-template-columns: 1fr 1fr 1fr;
+			grid-template-rows: auto auto;
+		}
+		.muscle-nutrition-layout.macro-horizontal .macro-card {
+			grid-column: 1 / -1;
+			grid-row: 2;
+			flex-direction: row !important;
+			align-items: center !important;
+		}
+		.muscle-nutrition-layout.macro-horizontal .macro-card .macro-rings {
+			flex-direction: row;
+		}
+		.muscle-nutrition-layout.macro-horizontal .macro-card .macro-header {
+			text-align: left;
+			margin-bottom: 0;
+		}
+	}
+	/* diet off → only the muscle-balance block remains; let it span full width */
+	.muscle-nutrition-layout.diet-off {
+		display: block;
 	}
 	.protein-card::before { background: var(--nord14); }
 	.balance-card::before { background: var(--color-text-secondary); }
