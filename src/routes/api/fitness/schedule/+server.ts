@@ -2,7 +2,6 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutSchedule } from '$models/WorkoutSchedule';
-import { WorkoutSession } from '$models/WorkoutSession';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { requireAuth } from '$lib/server/middleware/auth';
 
@@ -16,41 +15,30 @@ export const GET: RequestHandler = async ({ locals }) => {
     const schedule = await WorkoutSchedule.findOne({ userId: user.nickname });
 
     if (!schedule || schedule.templateOrder.length === 0) {
-      return json({ schedule: null, nextTemplateId: null });
+      return json({ schedule: null, nextTemplateId: null, nextIndex: null });
     }
 
-    // Find the most recent session that used a template in the schedule
-    const lastSession = await WorkoutSession.findOne({
-      createdBy: user.nickname,
-      templateId: { $in: schedule.templateOrder }
-    }).sort({ startTime: -1 });
+    const order = schedule.templateOrder;
+    const len = order.length;
 
-    let nextTemplateId: string;
-
-    if (!lastSession?.templateId) {
-      // No previous session — start at the first template
-      nextTemplateId = schedule.templateOrder[0];
-    } else {
-      const lastId = lastSession.templateId.toString();
-      const idx = schedule.templateOrder.indexOf(lastId);
-      if (idx === -1) {
-        // Last session's template no longer in schedule — start at first
-        nextTemplateId = schedule.templateOrder[0];
-      } else {
-        // Next in rotation (wraps around)
-        nextTemplateId = schedule.templateOrder[(idx + 1) % schedule.templateOrder.length];
-      }
-    }
-
-    // Verify the template still exists
-    const templateExists = await WorkoutTemplate.exists({ _id: nextTemplateId });
-    if (!templateExists) {
-      nextTemplateId = schedule.templateOrder[0];
+    // The stored pointer is the source of truth for where we are in the
+    // rotation; it advances (or re-anchors) as workouts are logged, so it stays
+    // correct when a template appears more than once. See advanceSchedulePointer.
+    const existingIds = new Set(
+      (await WorkoutTemplate.find({ _id: { $in: order }, createdBy: user.nickname })
+        .select('_id')
+        .lean()).map((t) => String(t._id))
+    );
+    let nextIndex = (((schedule.position ?? 0) % len) + len) % len;
+    // Skip past slots whose template has since been deleted (at most one lap).
+    for (let i = 0; i < len && !existingIds.has(String(order[nextIndex])); i++) {
+      nextIndex = (nextIndex + 1) % len;
     }
 
     return json({
-      schedule: { templateOrder: schedule.templateOrder },
-      nextTemplateId
+      schedule: { templateOrder: order },
+      nextTemplateId: order[nextIndex],
+      nextIndex
     });
   } catch (error) {
     console.error('Error fetching workout schedule:', error);
@@ -71,20 +59,24 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
       return json({ error: 'templateOrder must be an array' }, { status: 400 });
     }
 
-    // Validate all template IDs belong to this user
-    if (templateOrder.length > 0) {
+    // Validate all template IDs belong to this user. A template may legitimately
+    // appear more than once, so validate the distinct ids against the doc count.
+    const uniqueIds = [...new Set(templateOrder)];
+    if (uniqueIds.length > 0) {
       const count = await WorkoutTemplate.countDocuments({
-        _id: { $in: templateOrder },
+        _id: { $in: uniqueIds },
         createdBy: user.nickname
       });
-      if (count !== templateOrder.length) {
+      if (count !== uniqueIds.length) {
         return json({ error: 'Some template IDs are invalid' }, { status: 400 });
       }
     }
 
+    // Preserve the rotation pointer across edits (GET clamps it to the new
+    // length); only seed it on first creation.
     const schedule = await WorkoutSchedule.findOneAndUpdate(
       { userId: user.nickname },
-      { templateOrder },
+      { $set: { templateOrder }, $setOnInsert: { position: 0 } },
       { upsert: true, returnDocument: 'after' }
     );
 

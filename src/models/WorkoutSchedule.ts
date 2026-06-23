@@ -4,6 +4,7 @@ export interface IWorkoutSchedule {
   _id?: string;
   userId: string;
   templateOrder: string[]; // array of WorkoutTemplate _id strings in rotation order
+  position: number; // index of the next template to suggest in the rotation
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -19,6 +20,10 @@ const WorkoutScheduleSchema = new mongoose.Schema(
     templateOrder: {
       type: [String],
       default: []
+    },
+    position: {
+      type: Number,
+      default: 0
     }
   },
   {

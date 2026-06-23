@@ -11,6 +11,7 @@ import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
 import { addRunToGrid } from '$lib/server/segmentGrid';
+import { advanceSchedulePointer } from '$lib/server/workoutSchedule';
 import mongoose from 'mongoose';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
@@ -320,6 +321,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     });
 
     await workoutSession.save();
+
+    // Advance the workout-schedule rotation pointer (best-effort).
+    if (templateId) {
+      try {
+        await advanceSchedulePointer(session.user.nickname, String(templateId));
+      } catch (err) {
+        console.error('Schedule pointer update failed:', err);
+      }
+    }
 
     // Match against segments (never fail the save on a matching error).
     let segmentAchievements;

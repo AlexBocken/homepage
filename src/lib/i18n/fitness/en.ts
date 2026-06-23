@@ -75,7 +75,7 @@ export const en = {
 	add_exercise_btn: "Add Exercise",
 	save_template: "Save Template",
 	workout_schedule: "Workout Schedule",
-	schedule_hint: "Select templates and arrange their order. After completing a workout, the next one in the rotation will be suggested.",
+	schedule_hint: "Add templates and arrange their order — add the same one more than once to repeat it in the rotation. After completing a workout, the next one in the rotation will be suggested.",
 	available_templates: "Available templates",
 	all_templates_scheduled: "All templates are in the schedule",
 	save_schedule: "Save Schedule",

@@ -75,7 +75,7 @@ export const de = {
 	add_exercise_btn: "Übung hinzufügen",
 	save_template: "Vorlage speichern",
 	workout_schedule: "Trainingsplan",
-	schedule_hint: "Wähle Vorlagen und ordne sie an. Nach Abschluss eines Trainings wird das nächste in der Rotation vorgeschlagen.",
+	schedule_hint: "Füge Vorlagen hinzu und ordne sie an — dieselbe Vorlage darf mehrfach vorkommen, um sie in der Rotation zu wiederholen. Nach Abschluss eines Trainings wird das nächste in der Rotation vorgeschlagen.",
 	available_templates: "Verfügbare Vorlagen",
 	all_templates_scheduled: "Alle Vorlagen sind im Zeitplan",
 	save_schedule: "Zeitplan speichern",

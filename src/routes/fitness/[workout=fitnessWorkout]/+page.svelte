@@ -49,6 +49,9 @@
 	/** @type {string | null} */
 	// svelte-ignore state_referenced_locally
 	let nextTemplateId = $state(data.schedule?.nextTemplateId ?? null);
+	// Index of the next slot in the rotation; disambiguates repeated templates.
+	// svelte-ignore state_referenced_locally
+	let nextIndex = $state(data.schedule?.nextIndex ?? -1);
 	let showScheduleEditor = $state(false);
 	/** @type {string[]} */
 	let editorScheduleOrder = $state([]);
@@ -359,12 +362,15 @@
 	}
 
 	/** @param {string} templateId */
-	function toggleScheduleTemplate(templateId) {
-		if (editorScheduleOrder.includes(templateId)) {
-			editorScheduleOrder = editorScheduleOrder.filter((id) => id !== templateId);
-		} else {
-			editorScheduleOrder = [...editorScheduleOrder, templateId];
-		}
+	function addScheduleTemplate(templateId) {
+		// A template may appear more than once in the rotation, so every tap
+		// appends another slot rather than toggling membership.
+		editorScheduleOrder = [...editorScheduleOrder, templateId];
+	}
+
+	/** @param {number} idx */
+	function removeScheduleItem(idx) {
+		editorScheduleOrder = editorScheduleOrder.filter((_, i) => i !== idx);
 	}
 
 	/** @param {string[]} order */
@@ -381,6 +387,7 @@
 				const schedRes = await fetch('/api/fitness/schedule');
 				const schedData = await schedRes.json();
 				nextTemplateId = schedData.nextTemplateId ?? null;
+				nextIndex = schedData.nextIndex ?? -1;
 			} else {
 				const err = await res.json().catch(() => null);
 				toast.error(err?.error ?? 'Failed to save schedule');
@@ -441,8 +448,8 @@
 				</div>
 			</button>
 			<div class="schedule-preview">
-				{#each scheduleOrder as id, i}
-					<span class="schedule-dot" class:active={id === nextTemplateId}>{getTemplateName(id)}</span>
+				{#each scheduleOrder as id, i (i)}
+					<span class="schedule-dot" class:active={i === nextIndex}>{getTemplateName(id)}</span>
 					{#if i < scheduleOrder.length - 1}
 						<ArrowRight size={12} />
 					{/if}
@@ -715,7 +722,7 @@
 
 				{#if editorScheduleOrder.length > 0}
 					<div class="schedule-order">
-						{#each editorScheduleOrder as id, idx (id)}
+						{#each editorScheduleOrder as id, idx (idx)}
 							<div class="schedule-item">
 								<span class="schedule-pos">{idx + 1}</span>
 								<span class="schedule-item-name">{getTemplateName(id)}</span>
@@ -726,7 +733,7 @@
 									<button disabled={idx === editorScheduleOrder.length - 1} onclick={() => moveScheduleItem(idx, 1)} aria-label="Move down">
 										<ChevronDown size={16} />
 									</button>
-									<button onclick={() => toggleScheduleTemplate(id)} aria-label="Remove from schedule" class="schedule-remove">
+									<button onclick={() => removeScheduleItem(idx)} aria-label="Remove from schedule" class="schedule-remove">
 										<X size={16} />
 									</button>
 								</div>
@@ -737,14 +744,14 @@
 
 				<div class="schedule-available">
 					<p class="schedule-available-label">{t.available_templates}</p>
-					{#each templates.filter((t) => !editorScheduleOrder.includes(t._id)) as template (template._id)}
-						<button class="schedule-add-item" onclick={() => toggleScheduleTemplate(template._id)}>
+					{#each templates as template (template._id)}
+						<button class="schedule-add-item" onclick={() => addScheduleTemplate(template._id)}>
 							<Plus size={14} />
 							<span>{template.name}</span>
 						</button>
 					{/each}
-					{#if templates.filter((t) => !editorScheduleOrder.includes(t._id)).length === 0}
-						<p class="schedule-all-added">{t.all_templates_scheduled}</p>
+					{#if templates.length === 0}
+						<p class="schedule-all-added">{t.no_templates_yet}</p>
 					{/if}
 				</div>
 			</div>
