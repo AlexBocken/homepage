@@ -1,5 +1,6 @@
 <script>
 	import { m } from '$lib/js/fitnessI18n';
+	import { projectCycles } from '$lib/js/cycleProjection';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -16,6 +17,8 @@
 	import Hourglass from '@lucide/svelte/icons/hourglass';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Info from '@lucide/svelte/icons/info';
+	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
+	import Copy from '@lucide/svelte/icons/copy';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -52,6 +55,96 @@
 	let showShare = $state(false);
 	let shareInput = $state('');
 	let shareSaving = $state(false);
+
+	// Calendar (ICS) subscriptions — token links the owner can hand out / revoke.
+	let showSubs = $state(false);
+	/** @type {{ token: string, label: string, createdAt?: string }[]} */
+	let subs = $state([]);
+	let subsUser = $state('');
+	let subsLoaded = $state(false);
+	let subLabel = $state('');
+	let subBusy = $state(false);
+	let copiedToken = $state('');
+	let copiedRaw = $state('');
+
+	// When viewing someone else's shared tracker, scope subscriptions to that owner.
+	const subsQuery = $derived(ownerName ? `?owner=${encodeURIComponent(ownerName)}` : '');
+
+	async function openSubs() {
+		showSubs = true;
+		if (subsLoaded) return;
+		try {
+			const res = await fetch(`/api/fitness/period/subscriptions${subsQuery}`);
+			if (res.ok) {
+				const d = await res.json();
+				subs = d.subscriptions ?? [];
+				subsUser = d.username ?? '';
+				subsLoaded = true;
+			}
+		} catch { /* leave panel empty on failure */ }
+	}
+	async function createSub() {
+		subBusy = true;
+		try {
+			const res = await fetch('/api/fitness/period/subscriptions', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ label: subLabel.trim(), owner: ownerName || undefined })
+			});
+			if (res.ok) {
+				const d = await res.json();
+				subs = [d.subscription, ...subs];
+				subsUser = d.username ?? subsUser;
+				subLabel = '';
+			} else {
+				toast.error(lang === 'de' ? 'Fehlgeschlagen' : 'Failed');
+			}
+		} catch { toast.error(lang === 'de' ? 'Fehlgeschlagen' : 'Failed'); }
+		finally { subBusy = false; }
+	}
+	/** @param {string} token */
+	async function revokeSub(token) {
+		const res = await fetch(`/api/fitness/period/subscriptions/${encodeURIComponent(token)}`, { method: 'DELETE' });
+		if (res.ok) subs = subs.filter((s) => s.token !== token);
+	}
+	// Whose tracker this calendar shows: the shared owner, or yourself.
+	const calOwner = $derived(ownerName || subsUser);
+	/** @param {string} s */
+	const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+	/**
+	 * Subscribe URL on the localized public feed (/period EN, /periode DE), with
+	 * credentials embedded: username (your login) and the token as the password,
+	 * which is the form calendar apps actually accept. The trailing
+	 * "<Period|Periode> <Owner>.ics" segment is cosmetic: the .ics suffix makes
+	 * apps treat it as a plain (read-only) iCal file rather than probing it as a
+	 * CalDAV server, and it seeds a sensible default calendar name.
+	 * @param {string} token
+	 */
+	function subWebcal(token) {
+		if (typeof location === 'undefined') return '';
+		const base = lang === 'de' ? 'periode' : 'period';
+		const calName = lang === 'de' ? 'Periode' : 'Period';
+		const cred = subsUser ? `${encodeURIComponent(subsUser)}:${encodeURIComponent(token)}@` : '';
+		const file = encodeURIComponent(`${calName} ${cap(calOwner)}.ics`);
+		return `webcal://${cred}${location.host}/${base}/${file}`;
+	}
+	/** @param {string} token */
+	async function copySub(token) {
+		try {
+			await navigator.clipboard.writeText(subWebcal(token));
+			copiedToken = token;
+			setTimeout(() => { if (copiedToken === token) copiedToken = ''; }, 1500);
+		} catch { /* clipboard unavailable */ }
+	}
+	/** Copy the raw token, to paste as the password when adding a calendar manually. */
+	/** @param {string} token */
+	async function copyToken(token) {
+		try {
+			await navigator.clipboard.writeText(token);
+			copiedRaw = token;
+			setTimeout(() => { if (copiedRaw === token) copiedRaw = ''; }, 1500);
+		} catch { /* clipboard unavailable */ }
+	}
 
 	// Calendar navigation: month offset from today
 	let calendarOffset = $state(0);
@@ -161,207 +254,8 @@
 		)
 	);
 
-	// Cycle predictions — Clue-style: average over the recent cycles, variability
-	// over a longer recent window. Population priors (29-day cycle, 5-day period)
-	// stand in until enough history accrues.
-	const predictions = $derived.by(() => {
-		const MEAN_WINDOW = 6;   // average the last 6 cycles for the point estimate
-		const VAR_WINDOW = 12;   // ...over a 12-cycle history for variability
-		const PRIOR_CYCLE = 29;
-		const PRIOR_PERIOD = 5;
-		const lutealLength = 14;
-
-		/** @type {number[]} */
-		const cycleLengths = [];
-		/** @type {number[]} */
-		const periodLengths = [];
-
-		for (let i = 0; i < completed.length; i++) {
-			const p = completed[i];
-			const start = new Date(p.startDate);
-			const end = new Date(p.endDate);
-			const dur = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
-			periodLengths.push(dur);
-
-			if (i > 0) {
-				const prevStart = new Date(completed[i - 1].startDate);
-				const cycle = Math.round((start.getTime() - prevStart.getTime()) / 86400000);
-				if (cycle > 0 && cycle < 60) cycleLengths.push(cycle);
-			}
-		}
-
-		/** Mean of the last `n` values, or `fallback` if there are none. */
-		/** @param {number[]} arr @param {number} n @param {number} fallback */
-		function recentMean(arr, n, fallback) {
-			if (arr.length === 0) return fallback;
-			const w = arr.slice(-n);
-			return w.reduce((a, b) => a + b, 0) / w.length;
-		}
-		/** Sample standard deviation of the last `n` values (0 if fewer than 2). */
-		/** @param {number[]} arr @param {number} n */
-		function recentSd(arr, n) {
-			const w = arr.slice(-n);
-			if (w.length < 2) return 0;
-			const m = w.reduce((a, b) => a + b, 0) / w.length;
-			const variance = w.reduce((s, v) => s + (v - m) ** 2, 0) / (w.length - 1);
-			return Math.sqrt(variance);
-		}
-		const meanCycle = recentMean(cycleLengths, MEAN_WINDOW, PRIOR_CYCLE);
-		const meanPeriod = recentMean(periodLengths, MEAN_WINDOW, PRIOR_PERIOD);
-		// Typical cycle-to-cycle variation: one SD over the recent window. This is
-		// what users read a "± N days" as (how much an individual cycle swings),
-		// unlike a CI of the mean, which only narrows as more cycles are logged.
-		const cycleSd = Math.round(recentSd(cycleLengths, MEAN_WINDOW) * 10) / 10;
-		const periodSd = Math.round(recentSd(periodLengths, MEAN_WINDOW) * 10) / 10;
-
-		// Predict ongoing end
-		let predictedEndOfOngoing = null;
-		if (ongoing) {
-			const ongoingStart = new Date(ongoing.startDate);
-			predictedEndOfOngoing = new Date(ongoingStart.getTime() + (Math.round(meanPeriod) - 1) * 86400000);
-		}
-
-		// Generate future predicted cycles (12 cycles ≈ ~1 year)
-		const meanCycleDays = Math.round(meanCycle);
-		const cycleMs = meanCycleDays * 86400000;
-		const periodMs = (Math.round(meanPeriod) - 1) * 86400000;
-		const lastStart = sorted[0] ? new Date(sorted[0].startDate) : null;
-
-		// Ovulation-timing uncertainty for widening future fertile windows: one SD
-		// of recent cycle length (capped at ±5d), so the band tracks how regular
-		// she actually is rather than being pinned by a single lifetime outlier.
-		const delta = Math.round(Math.min(recentSd(cycleLengths, VAR_WINDOW), 5));
-
-		/**
-		 * Build a fertility window for one cycle.
-		 *
-		 * Anchor: the next period's start (luteal-back-count). Past cycles know it
-		 * exactly; future cycles use the mean prediction and widen the ovulation
-		 * estimate by ±delta (one SD of recent cycle length).
-		 *
-		 * Floor: fertile/peak never overlap the prior bleed. Day-after-period-end
-		 * is the earliest possible fertile day shown — a hard biological floor for
-		 * the user's mental model, even though sperm survival could in theory begin
-		 * earlier in the bleed for very short cycles.
-		 *
-		 * @param {number} cycleStartMs   ms of cycle start (= prior period start)
-		 * @param {number | null} priorPeriodEndMs  ms of prior bleed end, or null if unknown
-		 * @param {number} nextPeriodStartMs  ms of the next period's start
-		 * @param {boolean} widen  true → widen ovulation by ±delta; false → point estimate
-		 */
-		function buildWindow(cycleStartMs, priorPeriodEndMs, nextPeriodStartMs, widen) {
-			const ovMs = nextPeriodStartMs - lutealLength * 86400000;
-			// Future cycles widen ovulation by ±delta around the prediction; past
-			// cycles know the next period exactly, so they collapse to a point.
-			const d = widen ? delta : 0;
-			const earliestOvMs = ovMs - d * 86400000;
-			let latestOvMs = ovMs + d * 86400000;
-			// Cap latest ov before the next bleed starts.
-			if (latestOvMs > nextPeriodStartMs - 86400000) latestOvMs = nextPeriodStartMs - 86400000;
-
-			const floorMs = priorPeriodEndMs !== null ? priorPeriodEndMs + 86400000 : cycleStartMs;
-
-			let fertileStartMs = Math.max(earliestOvMs - 5 * 86400000, floorMs, cycleStartMs);
-			let peakStartMs = Math.max(ovMs - 2 * 86400000, floorMs, cycleStartMs);
-			// Peak fertility includes ovulation day itself — highest conception
-			// probability is the 2 days before ovulation plus ovulation day.
-			const peakEndMs = ovMs;
-			let fertileEndMs = Math.max(latestOvMs, ovMs);
-
-			// Suppress peak if floor pushed it past ov (e.g. very short cycle + long period).
-			if (peakStartMs > peakEndMs) peakStartMs = peakEndMs + 86400000;
-			// Keep fertile envelope around peak/ov.
-			if (fertileStartMs > peakStartMs && peakStartMs <= peakEndMs) fertileStartMs = peakStartMs;
-
-			return {
-				fertileStart: new Date(fertileStartMs),
-				fertileEnd: new Date(fertileEndMs),
-				peakStart: new Date(peakStartMs),
-				peakEnd: new Date(peakEndMs),
-				ovulation: new Date(ovMs),
-				lutealStart: new Date(latestOvMs + 86400000),
-				lutealEnd: new Date(nextPeriodStartMs - 86400000)
-			};
-		}
-
-		/** @type {{ start: Date, end: Date, fertileStart: Date, fertileEnd: Date, peakStart: Date, peakEnd: Date, ovulation: Date, lutealStart: Date, lutealEnd: Date }[]} */
-		const futureCycles = [];
-		if (lastStart) {
-			let base = lastStart.getTime();
-			// Prior bleed end for the first predicted cycle: actual end if recorded,
-			// predicted end if ongoing, else cycle start.
-			let priorPeriodEndMs;
-			if (sorted[0]?.endDate) {
-				priorPeriodEndMs = midnight(new Date(sorted[0].endDate));
-			} else if (predictedEndOfOngoing) {
-				priorPeriodEndMs = midnight(predictedEndOfOngoing);
-			} else {
-				priorPeriodEndMs = base;
-			}
-
-			for (let i = 0; i < 12; i++) {
-				const nextPeriodStartMs = base + cycleMs;
-				const periodEndMs = nextPeriodStartMs + periodMs;
-				const w = buildWindow(base, priorPeriodEndMs, nextPeriodStartMs, /* widen */ true);
-				futureCycles.push({
-					start: new Date(nextPeriodStartMs),
-					end: new Date(periodEndMs),
-					...w
-				});
-				base = nextPeriodStartMs;
-				priorPeriodEndMs = periodEndMs;
-			}
-		}
-
-		// Past fertility/luteal windows (from completed cycles)
-		/** @type {{ fertileStart: Date, fertileEnd: Date, peakStart: Date, peakEnd: Date, ovulation: Date, lutealStart: Date, lutealEnd: Date }[]} */
-		const pastFertileWindows = [];
-		for (let i = 1; i < completed.length; i++) {
-			const cycleStartMs = midnight(new Date(completed[i - 1].startDate));
-			const priorPeriodEndMs = completed[i - 1].endDate
-				? midnight(new Date(completed[i - 1].endDate))
-				: null;
-			const nextPeriodStartMs = midnight(new Date(completed[i].startDate));
-			pastFertileWindows.push(buildWindow(cycleStartMs, priorPeriodEndMs, nextPeriodStartMs, /* widen */ false));
-		}
-
-		// The cycle running into an ongoing period is fully determined — its next
-		// period start is known (the ongoing period's start) even though that
-		// period has no recorded end yet. Build its window from the most recent
-		// completed period so the gap before today isn't left blank.
-		if (ongoing && completed.length > 0) {
-			const last = completed[completed.length - 1];
-			const cycleStartMs = midnight(new Date(last.startDate));
-			const priorPeriodEndMs = last.endDate ? midnight(new Date(last.endDate)) : null;
-			const nextPeriodStartMs = midnight(new Date(ongoing.startDate));
-			if (nextPeriodStartMs > cycleStartMs) {
-				pastFertileWindows.push(buildWindow(cycleStartMs, priorPeriodEndMs, nextPeriodStartMs, /* widen */ false));
-			}
-		}
-
-		// Most recent cycle length: gap between the two latest period starts
-		// (includes an ongoing period, so it reflects the genuinely last cycle).
-		let lastCycleLength = null;
-		if (sorted.length >= 2) {
-			const c = Math.round((midnight(new Date(sorted[0].startDate)) - midnight(new Date(sorted[1].startDate))) / 86400000);
-			if (c > 0 && c < 60) lastCycleLength = c;
-		}
-
-		// Most recent completed period length.
-		const lastPeriodLength = periodLengths.length > 0 ? periodLengths[periodLengths.length - 1] : null;
-
-		return {
-			avgCycle: Math.round(meanCycle * 10) / 10,
-			avgPeriod: Math.round(meanPeriod * 10) / 10,
-			cycleSd,
-			periodSd,
-			lastCycleLength,
-			lastPeriodLength,
-			predictedEndOfOngoing,
-			futureCycles,
-			pastFertileWindows
-		};
-	});
+	// Cycle predictions — Clue-style; extracted to $lib/js/cycleProjection.
+	const predictions = $derived(projectCycles(periods, midnight));
 
 	// First future cycle (for status display)
 	const nextCycle = $derived(predictions.futureCycles[0] ?? null);
@@ -805,6 +699,9 @@
 				<ProfilePicture username={ownerName} size={20} />
 				<span class="shared-name">{ownerName}</span>
 			</span>
+			<button class="share-btn header-sub-btn" onclick={openSubs} aria-label={t.cal_subscribe} title={t.cal_subscribe}>
+				<CalendarPlus size={16} />
+			</button>
 		{/if}
 	</h2>
 
@@ -1001,6 +898,9 @@
 						<button class="share-btn" onclick={() => showShare = true} aria-label={t.share}>
 							<UserPlus size={16} />
 						</button>
+						<button class="share-btn" onclick={openSubs} aria-label={t.cal_subscribe}>
+							<CalendarPlus size={16} />
+						</button>
 					</div>
 					{/if}
 				</div>
@@ -1105,6 +1005,9 @@
 					<button class="share-btn" onclick={() => showShare = true} aria-label={t.share}>
 						<UserPlus size={16} />
 					</button>
+					<button class="share-btn" onclick={openSubs} aria-label={t.cal_subscribe}>
+						<CalendarPlus size={16} />
+					</button>
 					{/if}
 				</div>
 				<button class="add-past-btn" onclick={() => showAddForm = !showAddForm}>
@@ -1181,6 +1084,55 @@
 	</div>
 {/if}
 
+{#if showSubs}
+	<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+	<div class="share-overlay" onclick={() => showSubs = false} onkeydown={(e) => e.key === 'Escape' && (showSubs = false)}>
+		<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+		<div class="share-modal subs-modal" role="presentation" onclick={(e) => e.stopPropagation()}>
+			<div class="share-modal-header">
+				<h3>{t.cal_subscribe}</h3>
+				<button class="share-modal-close" onclick={() => showSubs = false}><X size={16} /></button>
+			</div>
+
+			<p class="subs-help">{t.cal_sub_help}</p>
+			{#if subsUser}
+				<p class="subs-user">{t.cal_sub_user}: <strong>{subsUser}</strong></p>
+			{/if}
+
+			{#if subs.length > 0}
+				<div class="subs-list">
+					{#each subs as s (s.token)}
+						<div class="subs-row">
+							<div class="subs-row-top">
+								<span class="subs-label">{s.label || '—'}</span>
+								<button class="subs-copy" onclick={() => copySub(s.token)} title={t.cal_copy_link}>
+									<Copy size={14} /> {copiedToken === s.token ? t.cal_copied : t.cal_copy_link}
+								</button>
+								<button class="subs-revoke" onclick={() => revokeSub(s.token)}>{t.cal_revoke}</button>
+							</div>
+							<div class="subs-token-field">
+								<input class="subs-token-input" type="text" readonly value={s.token} onclick={(e) => e.currentTarget.select()} aria-label={t.cal_copy_token} />
+								<button class="subs-copy" onclick={() => copyToken(s.token)} title={t.cal_copy_token}>
+									<Copy size={14} /> {copiedRaw === s.token ? t.cal_copied : t.cal_copy_token}
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{:else}
+				<span class="share-empty">{t.cal_sub_none}</span>
+			{/if}
+
+			<form class="share-add" onsubmit={(e) => { e.preventDefault(); createSub(); }}>
+				<input type="text" bind:value={subLabel} placeholder={t.cal_sub_label_ph} maxlength="80" />
+				<button type="submit" class="share-add-btn subs-create" disabled={subBusy}>
+					<CalendarPlus size={14} /> {t.cal_sub_create}
+				</button>
+			</form>
+		</div>
+	</div>
+{/if}
+
 <style>
 	.period-tracker {
 		display: flex;
@@ -1190,6 +1142,13 @@
 	.period-tracker h2 {
 		margin: 0;
 		font-size: 1.1rem;
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.header-sub-btn {
+		padding: 0.3rem;
 	}
 
 	/* Status card — split columns */
@@ -2092,5 +2051,100 @@
 	.read-only h2 {
 		font-size: 0.95rem;
 		color: var(--color-text-secondary);
+	}
+
+	/* Calendar subscription panel */
+	.subs-modal { max-width: 420px; }
+	.subs-help {
+		margin: 0 0 0.75rem;
+		font-size: 0.78rem;
+		line-height: 1.45;
+		color: var(--color-text-secondary);
+	}
+	.subs-user {
+		margin: 0 0 0.75rem;
+		font-size: 0.82rem;
+		color: var(--color-text-secondary);
+	}
+	.subs-user strong { color: var(--color-text-primary); }
+	.subs-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		margin-bottom: 0.75rem;
+	}
+	.subs-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 0.5rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md, 0.5rem);
+		background: var(--color-bg-tertiary);
+	}
+	.subs-row-top {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.subs-token-field {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.subs-token-input {
+		flex: 1;
+		min-width: 0;
+		padding: 0.3rem 0.5rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm, 0.3rem);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		font-family: monospace;
+		font-size: 0.72rem;
+	}
+	.subs-label {
+		flex: 1;
+		min-width: 0;
+		font-size: 0.85rem;
+		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.subs-copy {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		flex-shrink: 0;
+		padding: 0.25rem 0.55rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill, 1000px);
+		background: var(--color-surface);
+		color: var(--color-text-secondary);
+		font-size: 0.72rem;
+		cursor: pointer;
+		transition: all 120ms;
+	}
+	.subs-copy:hover { color: var(--color-text-primary); background: var(--color-bg-elevated); }
+	.subs-revoke {
+		flex-shrink: 0;
+		padding: 0.25rem 0.5rem;
+		border: none;
+		background: none;
+		color: var(--red);
+		font-size: 0.72rem;
+		cursor: pointer;
+		border-radius: var(--radius-sm, 0.3rem);
+	}
+	.subs-revoke:hover { background: color-mix(in srgb, var(--red) 12%, transparent); }
+	.subs-create {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		width: auto;
+		padding: 0.4rem 0.8rem;
+		font-size: 0.8rem;
+		white-space: nowrap;
 	}
 </style>

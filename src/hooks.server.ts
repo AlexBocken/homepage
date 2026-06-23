@@ -63,6 +63,7 @@ const NOINDEX_PATTERNS: RegExp[] = [
 	/^\/(settings|einstellungen)(\/|$)/,
 	/^\/tasks(\/|$)/,
 	/^\/fitness(\/|$)/,
+	/^\/(period|periode)(\/|$)/,
 	/^\/cospend(\/|$)/,
 	/^\/expenses(\/|$)/,
 ];
@@ -157,6 +158,14 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	event.locals.session = session;
 	const { fetch, url } = event;
 
+	// Calendar clients (e.g. Thunderbird) probe these CalDAV/CardDAV discovery
+	// paths before falling back to a plain ICS subscription. We don't run a
+	// CalDAV/CardDAV server, so answer 404 directly — returning a Response here
+	// avoids a noisy "Not found" SvelteKitError in the logs.
+	if (url.pathname === '/.well-known/caldav' || url.pathname === '/.well-known/carddav') {
+		return new Response('Not Found', { status: 404 });
+	}
+
 	// Protect rezepte routes
 	if (url.pathname.startsWith('/rezepte/edit') || url.pathname.startsWith('/rezepte/add')) {
 		if (!session) {
@@ -213,8 +222,10 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	}
 
 	// Protect fitness routes and API endpoints. The run map/card images are an
-	// exception: they self-authorize (session ownership OR a per-run share
-	// token) so they can be fetched for OG/share previews without a login.
+	// exception: they self-authorize (session ownership OR a per-run share token)
+	// so they can be fetched for OG/share previews without a login. (The period
+	// ICS feed lives at the public top-level /period and /periode routes, not
+	// under /api/fitness, and self-authorizes via HTTP Basic Auth.)
 	const isPublicRunImage = /^\/api\/fitness\/sessions\/[^/]+\/(map|card)\.webp$/.test(url.pathname);
 	if (!isPublicRunImage && (url.pathname.startsWith('/fitness') || url.pathname.startsWith('/api/fitness'))) {
 		if (!session) {
