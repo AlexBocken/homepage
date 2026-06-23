@@ -1,5 +1,6 @@
 <script>
-  import { invalidateAll } from '$app/navigation';
+  import { invalidateAll, goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { confirm } from '$lib/js/confirmDialog.svelte';
   import { formatDistanceToNow, isPast, isToday, differenceInDays, format } from 'date-fns';
   import { de } from 'date-fns/locale';
@@ -25,8 +26,8 @@
   import Brush from '@lucide/svelte/icons/brush';
   import { fly, scale } from 'svelte/transition';
   import { flip } from 'svelte/animate';
-  import TaskForm from '$lib/components/tasks/TaskForm.svelte';
   import StickerPopup from '$lib/components/tasks/StickerPopup.svelte';
+  import ActionButton from '$lib/components/ActionButton.svelte';
   import { getStickerForTags } from '$lib/utils/stickers';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 
@@ -36,9 +37,6 @@
   let stats = $derived(data.stats || { userStats: [], userStickers: [], recentCompletions: [] });
   let currentUser = $derived(data.session?.user?.nickname || '');
   let myStat = $derived(stats.userStats.find((/** @type {any} */ s) => s._id === currentUser));
-  let showForm = $state(false);
-  /** @type {any} */
-  let editingTask = $state(null);
   /** @type {any} */
   let awardedSticker = $state(null);
   let filterTag = $state('');
@@ -161,16 +159,9 @@
     await invalidateAll();
   }
 
-  async function handleTaskSaved() {
-    showForm = false;
-    editingTask = null;
-    await refreshTasks();
-  }
-
   /** @param {any} task */
   function startEdit(task) {
-    editingTask = task;
-    showForm = true;
+    goto(resolve('/tasks/[id]/edit', { id: task._id }));
   }
 
   /** @type {Record<string, any>} */
@@ -193,12 +184,7 @@
 
 <div class="tasks-page">
   <header class="page-header">
-    <div class="header-top">
-      <h1>Aufgaben</h1>
-      <button class="btn-add" onclick={() => { editingTask = null; showForm = true; }}>
-        <Plus size={18} /> Neue Aufgabe
-      </button>
-    </div>
+    <h1>Aufgaben</h1>
 
     {#if myStat}
       <div class="scoreboard">
@@ -213,39 +199,46 @@
 
     <div class="filters">
       {#if allTags.length > 0}
-        <div class="filter-group">
-          <Tag size={14} />
-          <select bind:value={filterTag}>
-            <option value="">Alle Tags</option>
-            {#each allTags as tag}
-              <option value={tag}>{tag}</option>
+        <div class="filter-row">
+          <span class="filter-label"><Tag size={14} /> Tags</span>
+          <div class="pill-group">
+            <button class="filter-pill" class:active={filterTag === ''} onclick={() => filterTag = ''}>Alle</button>
+            {#each allTags as tag (tag)}
+              <button
+                class="filter-pill"
+                class:active={filterTag === tag}
+                onclick={() => filterTag = filterTag === tag ? '' : tag}
+              >
+                {#if TAG_ICONS[tag]}
+                  {@const Icon = TAG_ICONS[tag]}
+                  <Icon size={13} />
+                {/if}
+                {tag}
+              </button>
             {/each}
-          </select>
+          </div>
         </div>
       {/if}
       {#if allAssignees.length > 0}
-        <div class="filter-group">
-          <Users size={14} />
-          <select bind:value={filterAssignee}>
-            <option value="">Alle Personen</option>
-            {#each allAssignees as assignee}
-              <option value={assignee}>{assignee}</option>
+        <div class="filter-row">
+          <span class="filter-label"><Users size={14} /> Personen</span>
+          <div class="pill-group">
+            <button class="filter-pill" class:active={filterAssignee === ''} onclick={() => filterAssignee = ''}>Alle</button>
+            {#each allAssignees as assignee (assignee)}
+              <button
+                class="filter-pill person"
+                class:active={filterAssignee === assignee}
+                onclick={() => filterAssignee = filterAssignee === assignee ? '' : assignee}
+              >
+                <ProfilePicture username={assignee} size={18} />
+                {assignee}
+              </button>
             {/each}
-          </select>
+          </div>
         </div>
       {/if}
     </div>
   </header>
-
-  {#if showForm}
-    <div class="form-overlay" transition:fly={{ y: -20, duration: 200 }}>
-      <TaskForm
-        task={editingTask}
-        onclosed={() => { showForm = false; editingTask = null; }}
-        onsaved={handleTaskSaved}
-      />
-    </div>
-  {/if}
 
   <div class="task-list">
     {#each sortedTasks as task (task._id)}
@@ -292,7 +285,7 @@
 
           {#if task.tags?.length > 0}
             <div class="task-tags">
-              {#each task.tags as tag}
+              {#each task.tags as tag (tag)}
                 <span class="tag">
                   {#if TAG_ICONS[tag]}
                     {@const Icon = TAG_ICONS[tag]}
@@ -325,7 +318,7 @@
               {#if completeForTaskId === task._id}
                 <div class="complete-for-popover" transition:scale={{ duration: 150, start: 0.9 }}>
                   <span class="popover-label">Erledigt für:</span>
-                  {#each USERS as user}
+                  {#each USERS as user (user)}
                     <button class="popover-user" onclick={() => completeTask(task, user)}>
                       <ProfilePicture username={user} size={28} />
                       <span>{user}</span>
@@ -353,13 +346,17 @@
     {#if sortedTasks.length === 0}
       <div class="empty-state">
         <p>Keine Aufgaben gefunden.</p>
-        <button class="btn-add" onclick={() => { editingTask = null; showForm = true; }}>
+        <a class="btn-add" href={resolve('/tasks/new')}>
           <Plus size={18} /> Erste Aufgabe erstellen
-        </button>
+        </a>
       </div>
     {/if}
   </div>
 </div>
+
+<ActionButton href={resolve('/tasks/new')} ariaLabel="Neue Aufgabe">
+  <svg class="icon_svg" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg>
+</ActionButton>
 
 {#if awardedSticker}
   <StickerPopup sticker={awardedSticker} onclose={() => awardedSticker = null} />
@@ -369,24 +366,17 @@
   .tasks-page {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 1.5rem 1rem;
+    padding: 1.5rem 1rem 6rem; /* bottom space so the FAB never covers a card */
   }
 
   .page-header {
     margin-bottom: 1.5rem;
   }
 
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
   h1 {
     font-size: 1.6rem;
     font-weight: 700;
-    margin: 0;
+    margin: 0 0 1rem;
   }
 
   .btn-add {
@@ -394,16 +384,17 @@
     align-items: center;
     gap: 0.4rem;
     padding: 0.5rem 1rem;
-    background: var(--nord10);
-    color: white;
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background 150ms;
+    transition: background var(--transition-normal);
+    text-decoration: none;
   }
-  .btn-add:hover { background: var(--nord9); }
+  .btn-add:hover { background: var(--color-primary-hover); }
 
   /* Scoreboard */
   .scoreboard {
@@ -416,8 +407,8 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    background: var(--color-bg-secondary, #f0ede6);
-    border-radius: 12px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
     padding: 0.6rem 1.2rem;
   }
   .score-info {
@@ -427,40 +418,64 @@
   .score-count {
     font-size: 1.3rem;
     font-weight: 800;
-    color: var(--nord10);
+    color: var(--color-primary);
     line-height: 1.2;
   }
   .score-label {
     font-size: 0.65rem;
     font-weight: 500;
-    color: var(--color-text-secondary, #999);
+    color: var(--color-text-secondary);
   }
 
-  /* Filters */
+  /* Filters — pill toggles */
   .filters {
     display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 0.6rem;
   }
-  .filter-group {
+  .filter-row {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    color: var(--color-text-secondary, #888);
+    gap: 0.6rem;
+    flex-wrap: wrap;
   }
-  .filter-group select {
-    padding: 0.3rem 0.6rem;
-    border: 1px solid var(--color-border, #ddd);
-    border-radius: 6px;
-    background: var(--color-bg-primary, white);
-    color: inherit;
+  .filter-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+  .pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
     font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-transform: capitalize;
+    transition: var(--transition-fast);
   }
-
-  /* Form overlay */
-  .form-overlay {
-    margin-bottom: 1.5rem;
-    max-width: 560px;
+  .filter-pill.person { padding-left: 0.3rem; }
+  .filter-pill:hover {
+    background: var(--color-bg-elevated);
+    scale: 1.05;
+  }
+  .filter-pill.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-text-on-primary);
   }
 
   /* Task grid */
@@ -473,14 +488,14 @@
   /* Card structure: left accent strip + content */
   .task-card {
     display: flex;
-    background: var(--color-bg-secondary, #f0ede6);
-    border-radius: 12px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    transition: box-shadow 250ms, transform 250ms;
+    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
     position: relative;
   }
   .task-card:hover {
-    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
   }
 
@@ -488,17 +503,17 @@
   .card-accent {
     width: 4px;
     flex-shrink: 0;
-    background: var(--nord14);
+    background: var(--green);
     transition: width 200ms;
   }
-  .task-card.overdue .card-accent { background: var(--nord11); width: 5px; }
-  .task-card.due-today .card-accent { background: var(--nord12); }
+  .task-card.overdue .card-accent { background: var(--red); width: 5px; }
+  .task-card.due-today .card-accent { background: var(--orange); }
   .task-card.due-soon .card-accent { background: var(--nord13); }
-  .task-card.upcoming .card-accent { background: var(--nord14); }
+  .task-card.upcoming .card-accent { background: var(--green); }
 
   /* Subtle urgency background tints */
-  .task-card.overdue { background: color-mix(in srgb, var(--nord11) 6%, var(--color-bg-secondary, #f0ede6)); }
-  .task-card.due-today { background: color-mix(in srgb, var(--nord12) 5%, var(--color-bg-secondary, #f0ede6)); }
+  .task-card.overdue { background: color-mix(in srgb, var(--red) 6%, var(--color-surface)); }
+  .task-card.due-today { background: color-mix(in srgb, var(--orange) 5%, var(--color-surface)); }
 
   .card-content {
     flex: 1;
@@ -528,7 +543,7 @@
   .task-description {
     margin: 0.2rem 0 0;
     font-size: 0.82rem;
-    color: var(--color-text-secondary, #777);
+    color: var(--color-text-secondary);
     line-height: 1.4;
   }
 
@@ -541,7 +556,7 @@
     position: absolute;
     bottom: -4px;
     right: -6px;
-    border: 2px solid var(--color-bg-secondary, #f0ede6);
+    border: 2px solid var(--color-surface);
     border-radius: 50%;
   }
 
@@ -552,10 +567,10 @@
     gap: 0.35rem;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--color-text-secondary, #888);
+    color: var(--color-text-secondary);
   }
-  .task-card.overdue .card-due { color: var(--nord11); }
-  .task-card.due-today .card-due { color: var(--nord12); }
+  .task-card.overdue .card-due { color: var(--red); }
+  .task-card.due-today .card-due { color: var(--orange); }
   .task-card.due-soon .card-due { color: var(--nord13); }
 
   .meta-badge {
@@ -563,9 +578,9 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.15rem 0.5rem;
-    border-radius: 100px;
-    color: var(--color-text-secondary, #888);
-    background: var(--color-bg-secondary, #f0ede6);
+    border-radius: var(--radius-pill);
+    color: var(--color-text-secondary);
+    background: var(--color-bg-tertiary);
     font-size: 0.78rem;
     width: fit-content;
   }
@@ -582,9 +597,9 @@
     gap: 0.3rem;
     font-size: 0.85rem;
     padding: 0.2rem 0.6rem;
-    border-radius: 100px;
-    background: rgba(94, 129, 172, 0.1);
-    color: var(--nord10);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
     font-weight: 500;
   }
 
@@ -609,7 +624,7 @@
     align-items: center;
     gap: 0.3rem;
     font-size: 0.72rem;
-    color: var(--color-text-secondary, #aaa);
+    color: var(--color-text-secondary);
   }
   .last-completed span {
     white-space: nowrap;
@@ -633,18 +648,18 @@
     height: 28px;
     border: none;
     background: transparent;
-    color: var(--color-text-secondary, #999);
-    border-radius: 6px;
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: all 150ms;
+    transition: var(--transition-fast);
   }
   .btn-icon:hover {
-    background: var(--color-bg-secondary, #f0ede6);
-    color: var(--color-text-primary, #333);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
   }
   .btn-icon-danger:hover {
-    background: rgba(191, 97, 106, 0.1);
-    color: var(--nord11);
+    background: color-mix(in srgb, var(--red) 12%, transparent);
+    color: var(--red);
   }
 
   /* Complete button wrapper with popover */
@@ -657,11 +672,11 @@
     position: absolute;
     bottom: calc(100% + 0.5rem);
     right: 0;
-    background: var(--color-bg-primary, white);
-    border: 1px solid var(--color-border, #ddd);
-    border-radius: 10px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     padding: 0.5rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
@@ -671,7 +686,7 @@
   .popover-label {
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--color-text-secondary, #888);
+    color: var(--color-text-secondary);
     padding: 0 0.25rem 0.15rem;
   }
   .popover-user {
@@ -681,16 +696,16 @@
     padding: 0.35rem 0.5rem;
     border: none;
     background: transparent;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 0.82rem;
     font-weight: 500;
     text-transform: capitalize;
-    color: var(--color-text-primary, #333);
-    transition: background 120ms;
+    color: var(--color-text-primary);
+    transition: background var(--transition-fast);
   }
   .popover-user:hover {
-    background: var(--color-bg-secondary, #f0ede6);
+    background: var(--color-bg-elevated);
   }
   .popover-close {
     position: absolute;
@@ -698,15 +713,15 @@
     right: 0.35rem;
     border: none;
     background: transparent;
-    color: var(--color-text-secondary, #aaa);
+    color: var(--color-text-secondary);
     font-size: 1.1rem;
     line-height: 1;
     cursor: pointer;
     padding: 0.1rem 0.25rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
   }
   .popover-close:hover {
-    color: var(--color-text-primary, #333);
+    color: var(--color-text-primary);
   }
 
   /* Round check button — neutral default, green on hover */
@@ -717,24 +732,24 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 2px solid var(--color-border, #ddd);
+    border: 2px solid var(--color-border);
     background: transparent;
-    color: var(--color-text-secondary, #bbb);
+    color: var(--color-text-tertiary);
     cursor: pointer;
     transition: all 200ms;
     flex-shrink: 0;
   }
   .btn-complete:hover {
-    border-color: var(--nord14);
-    background: var(--nord14);
+    border-color: var(--green);
+    background: var(--green);
     color: white;
-    box-shadow: 0 2px 10px rgba(163, 190, 140, 0.35);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--green) 35%, transparent);
     transform: scale(1.08);
   }
   .btn-complete:active {
     transform: scale(0.95);
-    background: #8fad7a;
-    border-color: #8fad7a;
+    background: color-mix(in srgb, var(--green) 80%, black);
+    border-color: color-mix(in srgb, var(--green) 80%, black);
     color: white;
   }
 
@@ -742,89 +757,10 @@
     grid-column: 1 / -1;
     text-align: center;
     padding: 3rem 1rem;
-    color: var(--color-text-secondary, #999);
+    color: var(--color-text-secondary);
   }
   .empty-state p { margin-bottom: 1rem; }
-  .empty-state .btn-add { margin: 0 auto; }
-
-  /* Dark mode */
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .task-card {
-      background: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .task-card.overdue {
-      background: color-mix(in srgb, var(--nord11) 8%, var(--nord2));
-    }
-    :global(:root:not([data-theme="light"])) .task-card.due-today {
-      background: color-mix(in srgb, var(--nord12) 6%, var(--nord2));
-    }
-    :global(:root:not([data-theme="light"])) .score-card {
-      background: var(--nord1);
-    }
-    :global(:root:not([data-theme="light"])) .btn-icon:hover {
-      background: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .meta-badge {
-      background: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .filter-group select {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .btn-complete {
-      border-color: var(--nord3);
-      color: var(--nord4);
-    }
-    :global(:root:not([data-theme="light"])) .complete-for-popover {
-      background: var(--nord1);
-      border-color: var(--nord3);
-    }
-    :global(:root:not([data-theme="light"])) .popover-user:hover {
-      background: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .assignee-extra {
-      border-color: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .tag {
-      background: rgba(94, 129, 172, 0.15);
-    }
-  }
-  :global(:root[data-theme="dark"]) .task-card {
-    background: var(--nord2);
-  }
-  :global(:root[data-theme="dark"]) .task-card.overdue {
-    background: color-mix(in srgb, var(--nord11) 8%, var(--nord2));
-  }
-  :global(:root[data-theme="dark"]) .task-card.due-today {
-    background: color-mix(in srgb, var(--nord12) 6%, var(--nord2));
-  }
-  :global(:root[data-theme="dark"]) .score-card {
-    background: var(--nord1);
-  }
-  :global(:root[data-theme="dark"]) .meta-badge {
-    background: var(--nord2);
-  }
-  :global(:root[data-theme="dark"]) .filter-group select {
-    background: var(--nord1);
-    border-color: var(--nord2);
-  }
-  :global(:root[data-theme="dark"]) .btn-complete {
-    border-color: var(--nord3);
-    color: var(--nord4);
-  }
-  :global(:root[data-theme="dark"]) .complete-for-popover {
-    background: var(--nord1);
-    border-color: var(--nord3);
-  }
-  :global(:root[data-theme="dark"]) .popover-user:hover {
-    background: var(--nord2);
-  }
-  :global(:root[data-theme="dark"]) .assignee-extra {
-    border-color: var(--nord1);
-  }
-  :global(:root[data-theme="dark"]) .tag {
-    background: rgba(94, 129, 172, 0.15);
-  }
+  .empty-state .btn-add { margin: 0 auto; width: fit-content; }
 
   @media (max-width: 600px) {
     .tasks-page { padding: 1rem 0.75rem; }

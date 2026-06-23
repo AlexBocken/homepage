@@ -22,7 +22,8 @@
   let {
     task = null,
     onclosed,
-    onsaved
+    onsaved,
+    oncompleted = undefined
   } = $props();
 
   /** @type {{tag: string, icon: any}[]} */
@@ -134,8 +135,9 @@
     return AVAILABLE_TAGS.find(t => t.tag === tag)?.icon;
   }
 
-  async function handleSubmit() {
-    if (!title.trim()) { error = 'Titel ist erforderlich'; return; }
+  /** Save the task; returns the created/updated task, or null on failure. */
+  async function save() {
+    if (!title.trim()) { error = 'Titel ist erforderlich'; return null; }
     saving = true;
     error = null;
 
@@ -163,13 +165,21 @@
       body: JSON.stringify(payload)
     });
 
-    if (res.ok) {
-      onsaved?.(new CustomEvent('saved'));
-    } else {
-      const data = await res.json().catch(() => ({}));
-      error = data.message || 'Fehler beim Speichern';
-    }
+    const data = await res.json().catch(() => ({}));
     saving = false;
+    if (res.ok) return data.task ?? null;
+    error = data.message || 'Fehler beim Speichern';
+    return null;
+  }
+
+  async function handleSubmit() {
+    const saved = await save();
+    if (saved) onsaved?.(saved);
+  }
+
+  async function handleSaveAndComplete() {
+    const saved = await save();
+    if (saved) await oncompleted?.(saved);
   }
 </script>
 
@@ -196,7 +206,7 @@
   <div class="field">
     <span class="label">Zugewiesen an</span>
     <div class="assignee-buttons" role="group" aria-label="Zugewiesen an">
-      {#each USERS as user}
+      {#each USERS as user (user)}
         <button
           type="button"
           class="assignee-btn"
@@ -235,7 +245,7 @@
         />
         {#if tagDropdownOpen && filteredDropdownTags.length > 0}
           <div class="tag-dropdown">
-            {#each filteredDropdownTags as { tag, icon: Icon }}
+            {#each filteredDropdownTags as { tag, icon: Icon } (tag)}
               <button type="button" class="tag-dropdown-item" onclick={() => selectDropdownTag(tag)}>
                 <Icon size={14} />
                 {tag}
@@ -248,7 +258,7 @@
 
     <!-- Mobile: pill buttons -->
     <div class="tag-pills-mobile">
-      {#each AVAILABLE_TAGS as { tag, icon: Icon }}
+      {#each AVAILABLE_TAGS as { tag, icon: Icon } (tag)}
         <button
           type="button"
           class="tag-pill"
@@ -264,7 +274,7 @@
     <!-- Selected tags (shown on desktop below input) -->
     {#if selectedTags.length > 0}
       <div class="selected-tags">
-        {#each selectedTags as tag}
+        {#each selectedTags as tag (tag)}
           {@const Icon = getTagIcon(tag)}
           <button type="button" class="tag-chip selected" onclick={() => toggleTag(tag)}>
             {#if Icon}
@@ -375,6 +385,11 @@
 
   <div class="form-actions">
     <button type="button" class="btn-cancel" onclick={onclosed}>Abbrechen</button>
+    {#if oncompleted && !task?._id}
+      <button type="button" class="btn-save-complete" onclick={handleSaveAndComplete} disabled={saving}>
+        Erstellen & erledigt
+      </button>
+    {/if}
     <button type="submit" class="btn-save" disabled={saving}>
       {saving ? 'Speichern...' : (task?._id ? 'Aktualisieren' : 'Erstellen')}
     </button>
@@ -719,6 +734,21 @@
   }
   .btn-save:hover { background: var(--nord9); }
   .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-save-complete {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.45rem 1rem;
+    border: none;
+    background: var(--green);
+    color: var(--nord0); /* dark text — Nord green is light, white is unreadable */
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 150ms;
+  }
+  .btn-save-complete:hover { background: color-mix(in srgb, var(--green) 88%, black); }
+  .btn-save-complete:disabled { opacity: 0.6; cursor: not-allowed; }
 
   /* Dark mode */
   @media (prefers-color-scheme: dark) {
