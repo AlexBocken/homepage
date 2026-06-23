@@ -16,5 +16,9 @@ export const la = {
 	rite1962DisclaimerTitle: "Accuratio adhuc probanda",
 	rite1962DisclaimerBody: "Calendarium anni 1962 ex datis divinum-officium ductum est et adhuc diebus singulis contra fontes fideles examinatur. Tantum calendaria propria dioecesium Helvetiae a romcal provisa adhibentur; cetera calendaria nationalia vel localia nondum praesto sunt.",
 	calendarVariant: "Calendarium",
+	calendarSubscribe: "Subscribere",
+	calendarSubscribeHint: "Hoc calendarium (ritus + regio) in programmate tuo subscribe. Sponte renovatur.",
+	calendarCopyLink: "Nexum copiare",
+	calendarCopied: "Copiatum",
 	rite1969SwissNote: "Pro anno 1969 romcal solum calendarium Helvetiae nationale praebet — calendaria dioecesana propria pro hoc ritu non adsunt.",
 } as const satisfies Record<keyof typeof de, string>;

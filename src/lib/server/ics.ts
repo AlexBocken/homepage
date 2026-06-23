@@ -19,6 +19,8 @@ export interface ICSEvent {
 	description?: string;
 	/** Optional categories (e.g. ['Period'] / ['Feast']). */
 	categories?: string[];
+	/** Optional per-event colour (RFC 7986 COLOR) — a CSS3 colour name, e.g. 'white'. */
+	color?: string;
 	/**
 	 * Optional display reminder. `trigger` is an RFC 5545 duration relative to the
 	 * start, e.g. '-P1D' (one day before) or '-PT24H'. Defaults description to the
@@ -108,6 +110,7 @@ function vevent(ev: ICSEvent, stamp: string): string[] {
 	lines.push(`SUMMARY:${esc(ev.summary)}`);
 	if (ev.description) lines.push(`DESCRIPTION:${esc(ev.description)}`);
 	if (ev.categories?.length) lines.push(`CATEGORIES:${ev.categories.map(esc).join(',')}`);
+	if (ev.color) lines.push(`COLOR:${ev.color}`);
 	if (ev.alarm) {
 		lines.push(
 			'BEGIN:VALARM',
@@ -145,9 +148,13 @@ export function buildICS(cal: ICSCalendar): string {
 
 /** Standard headers for an ICS HTTP response. */
 export function icsHeaders(filename: string): Record<string, string> {
+	// HTTP header values are Latin-1: fold non-ASCII (e.g. em dash, accents) to a
+	// plain ASCII filename, and carry the full UTF-8 name via RFC 5987 filename*.
+	const ascii = filename.replace(/[^\x20-\x7E]/g, '-').replace(/"/g, '');
+	const utf8 = encodeURIComponent(filename);
 	return {
 		'Content-Type': 'text/calendar; charset=utf-8',
-		'Content-Disposition': `inline; filename="${filename}"`,
+		'Content-Disposition': `inline; filename="${ascii}"; filename*=UTF-8''${utf8}`,
 		'Cache-Control': 'public, max-age=3600'
 	};
 }

@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { getMonthName, getWeekdayShort, rankEmphasis, dioceseLabel, DIOCESES_1962, DIOCESES_1969, DEFAULT_DIOCESE_1962, DEFAULT_DIOCESE_1969, type CalendarLang, m } from '../../../../calendarI18n';
+	import { getMonthName, getWeekdayShort, rankEmphasis, dioceseLabel, feastCalendarName, DIOCESES_1962, DIOCESES_1969, DEFAULT_DIOCESE_1962, DEFAULT_DIOCESE_1969, type CalendarLang, m } from '../../../../calendarI18n';
 	import { litBg, litInk, LIT_COLOR_VAR } from '../../../../calendarColors';
 	import RingView from './RingView.svelte';
 	import HillsView from './HillsView.svelte';
@@ -92,6 +92,22 @@
 	});
 
 	const dioceseOptions = $derived(rite === 'vetus' ? DIOCESES_1962 : DIOCESES_1969);
+
+	// Public ICS subscription feed for the currently-viewed rite + region + lang.
+	// The trailing "<name>.ics" segment is cosmetic — calendar apps name the
+	// calendar after it — so it carries the full "Vetus Ordo - Diocese of Chur".
+	const feedUrl = $derived.by(() => {
+		const file = encodeURIComponent(`${feastCalendarName(rite, diocese, lang)}.ics`);
+		return `webcal://${page.url.host}/${page.params.faithLang}/${page.params.calendar}/feed/${rite}/${diocese}/${file}`;
+	});
+	let copiedFeed = $state(false);
+	async function copyFeed() {
+		try {
+			await navigator.clipboard.writeText(feedUrl);
+			copiedFeed = true;
+			setTimeout(() => { copiedFeed = false; }, 1500);
+		} catch { /* clipboard unavailable */ }
+	}
 
 	// URL: /{faithLang}/{calendar}/{rite}/{yyyy}/{mm}/{dd} — rite is a required
 	// path segment so day/month nav stays inside the active rite.
@@ -391,6 +407,18 @@
 	</div>
 	{/if}
 
+	<aside class="cal-subscribe">
+		<span class="cal-subscribe-hint">{t.calendarSubscribeHint}</span>
+		<div class="cal-subscribe-actions">
+			<a class="cal-sub-btn" href={feedUrl}>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M12 14v4"/><path d="M10 16h4"/></svg>
+				{t.calendarSubscribe}
+			</a>
+			<button class="cal-sub-copy" type="button" onclick={copyFeed}>
+				{copiedFeed ? t.calendarCopied : t.calendarCopyLink}
+			</button>
+		</div>
+	</aside>
 	{/if}
 </main>
 
@@ -501,6 +529,58 @@
 	.diocese-picker select:focus-visible {
 		outline: 2px solid var(--color-primary);
 		outline-offset: 2px;
+	}
+	.cal-subscribe {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.6rem;
+		margin: 2.5rem auto 0;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--color-border);
+		max-width: 32rem;
+		text-align: center;
+	}
+	.cal-subscribe-hint {
+		font-size: var(--text-sm);
+		color: var(--color-text-tertiary);
+	}
+	.cal-subscribe-actions {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.cal-sub-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.35rem 0.7rem;
+		border-radius: var(--radius-pill);
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		border: 1px solid transparent;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		text-decoration: none;
+		transition: background var(--transition-normal);
+	}
+	.cal-sub-btn:hover {
+		background: var(--color-primary-hover);
+	}
+	.cal-sub-copy {
+		padding: 0.35rem 0.6rem;
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+		font: inherit;
+		font-size: var(--text-sm);
+		cursor: pointer;
+		transition: color var(--transition-fast), background var(--transition-fast);
+	}
+	.cal-sub-copy:hover {
+		color: var(--color-text-primary);
+		background: var(--color-bg-elevated);
 	}
 	.diocese-note {
 		margin: 0.25rem 0 0;

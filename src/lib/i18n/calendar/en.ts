@@ -16,5 +16,9 @@ export const en = {
 	rite1962DisclaimerTitle: "Accuracy still being verified",
 	rite1962DisclaimerBody: "The 1962 calendar is derived from divinum-officium data and is still being checked day-by-day against authoritative sources. Only the Swiss diocesan propers shipped by romcal are applied; other national/local calendars are not yet available.",
 	calendarVariant: "Calendar",
+	calendarSubscribe: "Subscribe",
+	calendarSubscribeHint: "Add this calendar (rite + region) to your calendar app. Auto-updates.",
+	calendarCopyLink: "Copy link",
+	calendarCopied: "Copied",
 	rite1969SwissNote: "romcal ships only a national Swiss calendar for 1969 — diocesan sub-calendars are not available for this rite.",
 } as const satisfies Record<keyof typeof de, string>;

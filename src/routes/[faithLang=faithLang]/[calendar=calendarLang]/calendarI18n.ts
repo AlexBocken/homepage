@@ -181,6 +181,22 @@ export function dioceseLabel(id: string, lang: CalendarLang): string {
 	return DIOCESE_LABEL[id]?.[lang] ?? id;
 }
 
+const RITE_CAL_LABEL: Record<Rite, string> = { vetus: 'Vetus Ordo', novus: 'Novus Ordo' };
+const DIOCESE_WORD: Record<CalendarLang, string> = { en: 'Diocese of', de: 'Diözese', la: 'Dioecesis' };
+
+/**
+ * Display name for a liturgical-calendar subscription, e.g. "Vetus Ordo -
+ * Diözese Chur". Used for both the feed's X-WR-CALNAME and the cosmetic .ics
+ * filename in the subscribe URL (calendar apps name the calendar after the URL's
+ * last path segment), so they must agree.
+ */
+export function feastCalendarName(rite: Rite, diocese: string, lang: CalendarLang): string {
+	const label = dioceseLabel(diocese, lang);
+	// 'general'/'switzerland' are whole-calendar names already; the rest are sees.
+	const region = diocese === 'general' || diocese === 'switzerland' ? label : `${DIOCESE_WORD[lang]} ${label}`;
+	return `${RITE_CAL_LABEL[rite]} - ${region}`;
+}
+
 export function isDiocese1962(v: string | null | undefined): v is Diocese1962 {
 	return !!v && (DIOCESES_1962 as string[]).includes(v);
 }

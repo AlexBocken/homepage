@@ -64,6 +64,7 @@ const NOINDEX_PATTERNS: RegExp[] = [
 	/^\/tasks(\/|$)/,
 	/^\/fitness(\/|$)/,
 	/^\/(period|periode)(\/|$)/,
+	/\.ics$/, // ICS subscription feeds (period + liturgical calendars)
 	/^\/cospend(\/|$)/,
 	/^\/expenses(\/|$)/,
 ];
