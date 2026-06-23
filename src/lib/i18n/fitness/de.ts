@@ -332,6 +332,8 @@ export const de = {
 	cal_sub_create: "Link erstellen",
 	cal_sub_none: "Noch keine Abos.",
 	cal_sub_user: "Benutzername",
+	cal_sub_add: "Abonnieren",
+	cal_sub_by: "Erstellt von",
 	cal_copy_link: "Link kopieren",
 	cal_copy_token: "Token kopieren",
 	cal_copied: "Kopiert",

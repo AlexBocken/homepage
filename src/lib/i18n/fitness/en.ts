@@ -332,6 +332,8 @@ export const en = {
 	cal_sub_create: "Create link",
 	cal_sub_none: "No subscriptions yet.",
 	cal_sub_user: "Username",
+	cal_sub_add: "Subscribe",
+	cal_sub_by: "Created by",
 	cal_copy_link: "Copy link",
 	cal_copy_token: "Copy token",
 	cal_copied: "Copied",

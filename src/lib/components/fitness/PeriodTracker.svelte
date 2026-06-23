@@ -58,9 +58,12 @@
 
 	// Calendar (ICS) subscriptions — token links the owner can hand out / revoke.
 	let showSubs = $state(false);
-	/** @type {{ token: string, label: string, createdAt?: string }[]} */
+	/** @type {{ token: string, label: string, createdAt?: string, createdBy?: string }[]} */
 	let subs = $state([]);
 	let subsUser = $state('');
+	// True when viewing your OWN tracker — you then manage every link, including
+	// ones created by people you shared the tracker with.
+	let subsIsOwner = $state(false);
 	let subsLoaded = $state(false);
 	let subLabel = $state('');
 	let subBusy = $state(false);
@@ -79,6 +82,7 @@
 				const d = await res.json();
 				subs = d.subscriptions ?? [];
 				subsUser = d.username ?? '';
+				subsIsOwner = d.isOwner ?? false;
 				subsLoaded = true;
 			}
 		} catch { /* leave panel empty on failure */ }
@@ -118,20 +122,24 @@
 	 * "<Period|Periode> <Owner>.ics" segment is cosmetic: the .ics suffix makes
 	 * apps treat it as a plain (read-only) iCal file rather than probing it as a
 	 * CalDAV server, and it seeds a sensible default calendar name.
+	 * The credential username must match the link's creator (Basic-Auth username =
+	 * token.createdBy), so it's passed in per row rather than assumed to be you.
 	 * @param {string} token
+	 * @param {string} [user]
 	 */
-	function subWebcal(token) {
+	function subWebcal(token, user) {
 		if (typeof location === 'undefined') return '';
+		const u = user || subsUser;
 		const base = lang === 'de' ? 'periode' : 'period';
 		const calName = lang === 'de' ? 'Periode' : 'Period';
-		const cred = subsUser ? `${encodeURIComponent(subsUser)}:${encodeURIComponent(token)}@` : '';
+		const cred = u ? `${encodeURIComponent(u)}:${encodeURIComponent(token)}@` : '';
 		const file = encodeURIComponent(`${calName} ${cap(calOwner)}.ics`);
 		return `webcal://${cred}${location.host}/${base}/${file}`;
 	}
-	/** @param {string} token */
-	async function copySub(token) {
+	/** @param {string} token @param {string} [user] */
+	async function copySub(token, user) {
 		try {
-			await navigator.clipboard.writeText(subWebcal(token));
+			await navigator.clipboard.writeText(subWebcal(token, user));
 			copiedToken = token;
 			setTimeout(() => { if (copiedToken === token) copiedToken = ''; }, 1500);
 		} catch { /* clipboard unavailable */ }
@@ -1102,10 +1110,22 @@
 			{#if subs.length > 0}
 				<div class="subs-list">
 					{#each subs as s (s.token)}
+						{@const foreign = !!s.createdBy && s.createdBy.toLowerCase() !== subsUser.toLowerCase()}
 						<div class="subs-row">
-							<div class="subs-row-top">
+							<div class="subs-head">
 								<span class="subs-label">{s.label || '—'}</span>
-								<button class="subs-copy" onclick={() => copySub(s.token)} title={t.cal_copy_link}>
+								{#if foreign}
+									<span class="subs-by" title={`${t.cal_sub_by} ${s.createdBy}`}>
+										<ProfilePicture username={s.createdBy ?? ''} size={18} />
+										{s.createdBy}
+									</span>
+								{/if}
+							</div>
+							<div class="subs-row-top">
+								<a class="subs-subscribe" href={subWebcal(s.token, s.createdBy)} title={t.cal_subscribe}>
+									<CalendarPlus size={14} /> {t.cal_sub_add}
+								</a>
+								<button class="subs-copy" onclick={() => copySub(s.token, s.createdBy)} title={t.cal_copy_link}>
 									<Copy size={14} /> {copiedToken === s.token ? t.cal_copied : t.cal_copy_link}
 								</button>
 								<button class="subs-revoke" onclick={() => revokeSub(s.token)}>{t.cal_revoke}</button>
@@ -2054,7 +2074,25 @@
 	}
 
 	/* Calendar subscription panel */
-	.subs-modal { max-width: 420px; }
+	.subs-modal { max-width: min(620px, 94vw); width: 100%; }
+	.subs-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+	.subs-by {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		flex-shrink: 0;
+		padding: 0.15rem 0.5rem 0.15rem 0.2rem;
+		border-radius: var(--radius-pill, 1000px);
+		background: var(--color-bg-elevated);
+		color: var(--color-text-secondary);
+		font-size: 0.72rem;
+		font-weight: 500;
+	}
 	.subs-help {
 		margin: 0 0 0.75rem;
 		font-size: 0.78rem;
@@ -2085,6 +2123,7 @@
 	.subs-row-top {
 		display: flex;
 		align-items: center;
+		flex-wrap: wrap;
 		gap: 0.5rem;
 	}
 	.subs-token-field {
@@ -2104,14 +2143,28 @@
 		font-size: 0.72rem;
 	}
 	.subs-label {
-		flex: 1;
-		min-width: 0;
 		font-size: 0.85rem;
 		font-weight: 600;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
+	.subs-subscribe {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		flex-shrink: 0;
+		padding: 0.25rem 0.6rem;
+		border: 1px solid transparent;
+		border-radius: var(--radius-pill, 1000px);
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font-size: 0.72rem;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 120ms;
+	}
+	.subs-subscribe:hover { background: var(--color-primary-hover); }
 	.subs-copy {
 		display: inline-flex;
 		align-items: center;

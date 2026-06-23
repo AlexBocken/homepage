@@ -20,7 +20,10 @@ async function resolveDataOwner(nickname: string, owner: string | null): Promise
 	return match ? match.owner : null;
 }
 
-/** GET: list the caller's subscription links for one tracker (own or shared). */
+/** GET: list subscription links for one tracker (own or shared).
+ *  - On your OWN tracker you see every link, including ones created by people you
+ *    shared it with (you can revoke any of them).
+ *  - On someone else's shared tracker you see only the links you created. */
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
@@ -28,14 +31,25 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const dataOwner = await resolveDataOwner(user.nickname, url.searchParams.get('owner'));
 	if (!dataOwner) return json({ error: 'Forbidden' }, { status: 403 });
 
-	const docs = await PeriodCalendarToken.find({ dataOwner, createdBy: user.nickname.toLowerCase() })
+	const isOwner = dataOwner.toLowerCase() === user.nickname.toLowerCase();
+	const filter = isOwner
+		? { dataOwner }
+		: { dataOwner, createdBy: user.nickname.toLowerCase() };
+
+	const docs = await PeriodCalendarToken.find(filter)
 		.sort({ createdAt: -1 })
-		.select('token label createdAt')
+		.select('token label createdAt createdBy')
 		.lean();
 	return json({
 		username: user.nickname,
 		dataOwner,
-		subscriptions: docs.map((d) => ({ token: d.token, label: d.label, createdAt: d.createdAt }))
+		isOwner,
+		subscriptions: docs.map((d) => ({
+			token: d.token,
+			label: d.label,
+			createdAt: d.createdAt,
+			createdBy: d.createdBy
+		}))
 	});
 };
 
@@ -61,7 +75,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		{
 			username: user.nickname,
 			dataOwner,
-			subscription: { token: doc.token, label: doc.label, createdAt: doc.createdAt }
+			subscription: { token: doc.token, label: doc.label, createdAt: doc.createdAt, createdBy: doc.createdBy }
 		},
 		{ status: 201 }
 	);
