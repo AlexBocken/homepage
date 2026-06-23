@@ -111,55 +111,59 @@
 		{#if data.leaderboard.length === 0}
 			<p class="empty">{t.no_efforts}</p>
 		{:else}
-			<table>
-				<thead>
-					<tr><th>{t.rank}</th><th></th><th>{t.time_col}</th><th>{t.pace}</th><th title={t.record_held_tooltip}>{t.held}</th><th>{t.date_col}</th></tr>
-				</thead>
-				<tbody>
-					{#each data.leaderboard as row (row.username)}
-						<tr class:me={row.username === me}>
-							<td class="rank">{row.rank}</td>
-							<td class="user">
-								<ProfilePicture username={row.username} size={28} />
-								{#if row.rank === 1}<Crown size={14} class="crown" />{/if}
-								<span class="uname">{row.username}</span>
-							</td>
-							<td class="time">{formatElapsed(row.elapsedSeconds)}</td>
-							<td class="pace">{formatPaceKm(row.avgPace)}</td>
-							<td class="held">
+			<div class="lb" role="table" aria-label={t.leaderboard}>
+				<div class="lb-head" role="row">
+					<span role="columnheader">{t.rank}</span>
+					<span role="columnheader" aria-label={t.athletes}></span>
+					<span role="columnheader">{t.time_col}</span>
+					<span role="columnheader">{t.pace}</span>
+					<span role="columnheader" title={t.record_held_tooltip}>{t.held}</span>
+					<span role="columnheader">{t.date_col}</span>
+				</div>
+				{#each data.leaderboard as row (row.username)}
+					<div class="lb-row" class:me={row.username === me} role="row">
+						<span class="rank" role="cell">{row.rank}</span>
+						<span class="user" role="cell">
+							<ProfilePicture username={row.username} size={28} />
+							{#if row.rank === 1}<Crown size={14} class="crown" />{/if}
+							<span class="uname">{row.username}</span>
+						</span>
+						<span class="time" role="cell">{formatElapsed(row.elapsedSeconds)}</span>
+						<span class="meta" role="presentation">
+							<span class="pace" role="cell">{formatPaceKm(row.avgPace)}</span>
+							<span class="held" role="cell">
 								{#if row.holdDays > 0}
-									<span class="held-badge" class:current={row.rank === 1}>
-										{row.holdDays} {t.days_short}
-									</span>
+									<span class="held-badge" class:current={row.rank === 1}>{row.holdDays} {t.days_short}</span>
 								{:else}—{/if}
-							</td>
-							<td class="date">{fmtDate(row.date)}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
+							</span>
+							<span class="date" role="cell">{fmtDate(row.date)}</span>
+						</span>
+					</div>
+				{/each}
+			</div>
 		{/if}
 	</section>
 
 	{#if myEfforts.length > 0}
 		<section class="mine">
 			<h2>{t.effort_history}</h2>
-			<table>
-				<thead><tr><th>{t.date_col}</th><th>{t.time_col}</th></tr></thead>
-				<tbody>
-					{#each myEfforts as e (e._id ?? e.date)}
-						{@const isBest = data.myBest != null && e.elapsedSeconds === data.myBest}
-						<tr class:best={isBest}>
-							<td class="date">
-								{#if e.sessionId}
-									<a href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: fitnessSlugs(lang).history, id: e.sessionId })}>{fmtDate(e.date)}</a>
-								{:else}{fmtDate(e.date)}{/if}
-							</td>
-							<td class="time">{formatElapsed(e.elapsedSeconds)}{#if isBest}<span class="pb"> · {t.your_best}</span>{/if}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
+			<div class="hist" role="table" aria-label={t.effort_history}>
+				<div class="hist-head" role="row">
+					<span role="columnheader">{t.date_col}</span>
+					<span role="columnheader">{t.time_col}</span>
+				</div>
+				{#each myEfforts as e (e._id ?? e.date)}
+					{@const isBest = data.myBest != null && e.elapsedSeconds === data.myBest}
+					<div class="hist-row" class:best={isBest} role="row">
+						<span class="date" role="cell">
+							{#if e.sessionId}
+								<a href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: fitnessSlugs(lang).history, id: e.sessionId })}>{fmtDate(e.date)}</a>
+							{:else}{fmtDate(e.date)}{/if}
+						</span>
+						<span class="time" role="cell">{formatElapsed(e.elapsedSeconds)}{#if isBest}<span class="pb"> · {t.your_best}</span>{/if}</span>
+					</div>
+				{/each}
+			</div>
 		</section>
 	{/if}
 </div>
@@ -265,42 +269,53 @@
 		color: var(--color-text-secondary);
 		margin: 0;
 	}
-	table {
-		width: 100%;
-		border-collapse: collapse;
+	.lb,
+	.hist {
+		display: flex;
+		flex-direction: column;
 		font-size: 0.85rem;
 	}
-	th {
-		text-align: left;
+
+	/* Leaderboard: 6-column grid that collapses to a card on mobile. */
+	.lb-head,
+	.lb-row {
+		display: grid;
+		grid-template-columns: 2.5rem minmax(0, 1fr) auto auto auto auto;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.5rem;
+	}
+	.lb-head,
+	.hist-head {
 		font-size: 0.7rem;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		color: var(--color-text-secondary);
-		padding: 0.3rem 0.5rem;
 		font-weight: 600;
+		padding-bottom: 0.3rem;
 	}
-	td {
-		padding: 0.4rem 0.5rem;
+	.lb-row,
+	.hist-row {
 		border-top: 1px solid var(--color-border);
 		font-variant-numeric: tabular-nums;
 	}
-	tr.me {
-		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+	/* On desktop the metadata children flow into their own grid columns. */
+	.lb-row .meta {
+		display: contents;
 	}
-	tr.best .time {
-		color: var(--color-primary);
-		font-weight: 700;
+	.lb-row.me {
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 	}
 	.rank {
 		font-weight: 700;
 		color: var(--color-text-secondary);
-		width: 2.5rem;
 	}
 	.user {
 		display: flex;
 		align-items: center;
 		gap: 0.45rem;
 		font-weight: 600;
+		min-width: 0;
 	}
 	.user .uname {
 		overflow: hidden;
@@ -310,6 +325,13 @@
 	.user :global(.crown) {
 		color: var(--nord13);
 		flex-shrink: 0;
+	}
+	.time {
+		font-weight: 700;
+	}
+	.pace,
+	.date {
+		color: var(--color-text-secondary);
 	}
 	.held-badge {
 		display: inline-block;
@@ -325,12 +347,22 @@
 		padding: 0.1rem 0.4rem;
 		border-radius: 1000px;
 	}
-	.time {
-		font-weight: 700;
+
+	/* Attempt history: simple two-column grid. */
+	.hist-head,
+	.hist-row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.5rem;
 	}
-	.pace,
-	.date {
-		color: var(--color-text-secondary);
+	.hist-row .time {
+		text-align: right;
+	}
+	.hist-row.best .time {
+		color: var(--color-primary);
+		font-weight: 700;
 	}
 	.mine .date a {
 		color: var(--color-primary);
@@ -342,5 +374,50 @@
 	.pb {
 		color: var(--color-primary);
 		font-weight: 600;
+	}
+
+	/* Mobile: collapse each leaderboard row into a rank-led card with a
+	   muted metadata line, so nothing overflows. */
+	@media (max-width: 560px) {
+		.lb-head {
+			display: none;
+		}
+		.lb-row {
+			grid-template-columns: 2rem minmax(0, 1fr) auto;
+			grid-template-areas:
+				'rank user time'
+				'rank meta meta';
+			row-gap: 0.15rem;
+			column-gap: 0.6rem;
+			padding: 0.55rem 0.4rem;
+		}
+		.rank {
+			grid-area: rank;
+			font-size: 1.1rem;
+			align-self: center;
+		}
+		.user {
+			grid-area: user;
+		}
+		.time {
+			grid-area: time;
+			align-self: center;
+			font-size: 1.05rem;
+		}
+		.lb-row .meta {
+			grid-area: meta;
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0.3rem 0.45rem;
+			color: var(--color-text-secondary);
+			font-size: 0.78rem;
+		}
+		.lb-row .meta .pace::after,
+		.lb-row .meta .held::after {
+			content: '·';
+			margin-left: 0.45rem;
+			color: var(--color-border);
+		}
 	}
 </style>
