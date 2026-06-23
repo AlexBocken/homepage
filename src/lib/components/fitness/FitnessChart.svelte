@@ -63,6 +63,17 @@
 
 		const useLinearX = !!xAxis;
 		const useTimeAxis = !useLinearX && !!(data.dates && data.dates.length > 0);
+		// Tooltip-visible series (drop the σ band + its lower bound).
+		const visibleSeries = (data.datasets || [])
+			.map((/** @type {any} */ d, /** @type {number} */ i) => ({ d, i }))
+			.filter((/** @type {any} */ s) => !(s.d.label ?? '').includes('σ') && !(s.d.label ?? '').includes('(lower)'));
+		const multiSeries = visibleSeries.length > 1;
+		// Only show a colour key (chip dot + legend) when the series are actually
+		// distinguishable by colour — pointless when they share a single colour.
+		const seriesColors = new Set(
+			visibleSeries.map((/** @type {any} */ s) => s.d.borderColor || nordColors[s.i % nordColors.length])
+		);
+		const showColorKey = multiSeries && seriesColors.size > 1;
 		const dates = data.dates || [];
 		const plainLabels = useTimeAxis || useLinearX ? [] : [...(data.labels || [])];
 		const plainDatasets = (data.datasets || []).map((ds, i) => {
@@ -215,7 +226,7 @@
 				},
 				plugins: /** @type {any} */ ({
 					legend: {
-						display: plainDatasets.length > 1,
+						display: showColorKey,
 						labels: {
 							color: textColor,
 							usePointStyle: true,
@@ -231,40 +242,42 @@
 						padding: { bottom: 12 }
 					},
 					tooltip: {
+						// Unified chip (from the run-detail charts): the value is the bold
+						// headline, the x context (distance/date) a muted sub-line. Single
+						// series drops the colour key; multi-series keeps it as a round dot
+						// matching the chart legend (usePointStyle).
 						backgroundColor: dark ? '#2E3440' : '#ECEFF4',
-						// On the linear (distance) charts the value is the headline and the
-						// distance is a muted sub-line; demote the title and drop the swatch.
-						titleColor: useLinearX ? (dark ? '#7B88A1' : '#7B88A1') : (dark ? '#ECEFF4' : '#2E3440'),
-						titleFont: useLinearX ? { size: 11, weight: 'normal' } : undefined,
+						titleColor: '#7B88A1',
+						titleFont: { size: 11, weight: 'normal' },
 						bodyColor: dark ? '#ECEFF4' : '#2E3440',
-						bodyFont: useLinearX ? { size: 14, weight: 'bold' } : undefined,
-						displayColors: !useLinearX,
+						bodyFont: { size: 14, weight: 'bold' },
+						displayColors: showColorKey,
+						usePointStyle: true,
+						boxPadding: 6,
 						borderWidth: 0,
 						cornerRadius: 8,
 						padding: 10,
 						filter: (/** @type {any} */ ctx) => !(ctx.dataset?.label ?? '').includes('σ'),
-						...((tooltipFormatter || useLinearX) ? {
-							callbacks: {
-								...(useLinearX ? {
-									// Sub-line: distance, de-emphasized.
-									title: (/** @type {any} */ items) => {
-										const x = items?.[0]?.parsed?.x;
-										if (x == null) return '';
-										return `${+Number(x).toFixed(2)}${xAxis.unit ?? ''}`;
-									}
-								} : {}),
-								label: (/** @type {any} */ ctx) => {
-									const v = ctx.parsed.y;
-									const label = ctx.dataset.label ?? '';
-									if (v == null) return useLinearX ? '' : label;
-									const formatted = tooltipFormatter
-										? tooltipFormatter(v, ctx.datasetIndex, ctx.dataIndex, label)
-										: `${v}${yUnit}`;
-									// Linear charts: just the value (no dataset label / colour key).
-									return useLinearX ? formatted : `${label}: ${formatted}`;
+						callbacks: {
+							...(useLinearX ? {
+								// Sub-line: distance, de-emphasized.
+								title: (/** @type {any} */ items) => {
+									const x = items?.[0]?.parsed?.x;
+									if (x == null) return '';
+									return `${+Number(x).toFixed(2)}${xAxis.unit ?? ''}`;
 								}
+							} : {}),
+							label: (/** @type {any} */ ctx) => {
+								const v = ctx.parsed.y;
+								const label = ctx.dataset.label ?? '';
+								if (v == null) return '';
+								const formatted = tooltipFormatter
+									? tooltipFormatter(v, ctx.datasetIndex, ctx.dataIndex, label)
+									: `${v}${yUnit}`;
+								// Single series: just the value. Multi: keep the dataset key.
+								return multiSeries ? `${label}: ${formatted}` : formatted;
 							}
-						} : {})
+						}
 					}
 				})
 			}
