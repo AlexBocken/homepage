@@ -12,8 +12,17 @@ const FitnessDashboardSchema = new mongoose.Schema(
     dietStats: { type: Boolean, default: true },
     muscleBalance: { type: Boolean, default: true },
     bodyParts: { type: Boolean, default: true },
+    segmentStat: { type: Boolean, default: true },
+    fastestK: { type: Boolean, default: true },
     ownPeriod: { type: Boolean, default: true },
-    sharedPeriods: { type: Boolean, default: true }
+    sharedPeriods: { type: Boolean, default: true },
+    // Up to two segments the segment-stat card tracks (Segment _ids). Not a
+    // toggle, so handled explicitly by the API (outside DASHBOARD_KEYS).
+    segmentStatIds: { type: [String], default: undefined },
+    // Legacy single-segment field, kept for back-compat reads.
+    segmentStatId: { type: String, default: '' },
+    // Distance (km) for the "fastest Nk" card.
+    fastestKm: { type: Number, default: 5 }
   },
   { timestamps: true }
 );
@@ -27,8 +36,13 @@ export interface IFitnessDashboard {
   dietStats: boolean;
   muscleBalance: boolean;
   bodyParts: boolean;
+  segmentStat: boolean;
+  fastestK: boolean;
   ownPeriod: boolean;
   sharedPeriods: boolean;
+  segmentStatIds?: string[];
+  segmentStatId: string;
+  fastestKm: number;
 }
 
 let _model: mongoose.Model<IFitnessDashboard>;
@@ -48,6 +62,8 @@ export const DASHBOARD_KEYS = [
   'dietStats',
   'muscleBalance',
   'bodyParts',
+  'segmentStat',
+  'fastestK',
   'ownPeriod',
   'sharedPeriods'
 ] as const;

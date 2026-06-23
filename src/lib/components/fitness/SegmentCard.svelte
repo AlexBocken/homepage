@@ -20,7 +20,19 @@
 		komTime: number | null;
 	}
 
-	let { segment, lang = 'en' }: { segment: SegmentSummary; lang?: FitnessLang } = $props();
+	// `onselect` turns the card into a selectable button (used by the stats-page
+	// segment picker) instead of a link to the segment detail page.
+	let {
+		segment,
+		lang = 'en',
+		onselect,
+		selected = false
+	}: {
+		segment: SegmentSummary;
+		lang?: FitnessLang;
+		onselect?: (id: string) => void;
+		selected?: boolean;
+	} = $props();
 
 	const t = $derived(m[lang]);
 	const W = 220;
@@ -31,7 +43,7 @@
 	let mapImgFailed = $state(false);
 </script>
 
-<a class="segment-card" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: segment._id })}>
+{#snippet inner()}
 	{#if !mapImgFailed}
 		<img
 			class="mini-map map-img"
@@ -65,23 +77,43 @@
 			{/if}
 		</div>
 	</div>
-</a>
+{/snippet}
+
+{#if onselect}
+	<button type="button" class="segment-card" class:selected onclick={() => onselect?.(segment._id)}>
+		{@render inner()}
+	</button>
+{:else}
+	<a class="segment-card" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: segment._id })}>
+		{@render inner()}
+	</a>
+{/if}
 
 <style>
 	.segment-card {
 		display: flex;
 		flex-direction: column;
 		background: var(--color-surface);
+		border: none;
 		border-radius: var(--radius-card, 16px);
 		box-shadow: var(--shadow-sm);
 		overflow: hidden;
 		text-decoration: none;
+		text-align: left;
 		color: inherit;
+		font: inherit;
+		width: 100%;
+		padding: 0;
+		cursor: pointer;
 		transition: scale var(--transition-normal, 200ms), box-shadow var(--transition-normal, 200ms);
 	}
 	.segment-card:hover {
 		scale: 1.02;
 		box-shadow: var(--shadow-hover, var(--shadow-md));
+	}
+	.segment-card.selected {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
 	}
 	.mini-map {
 		width: 100%;

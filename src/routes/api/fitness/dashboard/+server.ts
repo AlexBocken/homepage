@@ -10,16 +10,33 @@ export const GET: RequestHandler = async ({ locals }) => {
   const user = await requireAuth(locals);
   await dbConnect();
   const doc = (await FitnessDashboard.findOne({ username: user.nickname }).lean()) as Record<string, unknown> | null;
-  const out = defaults();
-  if (doc) for (const k of DASHBOARD_KEYS) if (typeof doc[k] === 'boolean') out[k] = doc[k] as boolean;
+  const out: Record<string, unknown> = defaults();
+  out.segmentStatIds = [];
+  out.fastestKm = 5;
+  if (doc) {
+    for (const k of DASHBOARD_KEYS) if (typeof doc[k] === 'boolean') out[k] = doc[k] as boolean;
+    if (Array.isArray(doc.segmentStatIds)) out.segmentStatIds = doc.segmentStatIds;
+    else if (typeof doc.segmentStatId === 'string' && doc.segmentStatId) out.segmentStatIds = [doc.segmentStatId];
+    if (typeof doc.fastestKm === 'number') out.fastestKm = doc.fastestKm;
+  }
   return json(out);
 };
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
   const user = await requireAuth(locals);
   const body = await request.json();
-  const update: Record<string, boolean> = {};
+  const update: Record<string, unknown> = {};
   for (const k of DASHBOARD_KEYS) if (typeof body[k] === 'boolean') update[k] = body[k];
+  // Up to two tracked segment ids (free-form strings, not toggles).
+  if (Array.isArray(body.segmentStatIds)) {
+    update.segmentStatIds = body.segmentStatIds
+      .filter((s: unknown) => typeof s === 'string')
+      .slice(0, 2)
+      .map((s: string) => s.slice(0, 64));
+  }
+  if (typeof body.fastestKm === 'number' && Number.isFinite(body.fastestKm)) {
+    update.fastestKm = Math.min(200, Math.max(1, Math.round(body.fastestKm)));
+  }
   await dbConnect();
   await FitnessDashboard.updateOne({ username: user.nickname }, { $set: update }, { upsert: true });
   return json({ ok: true });

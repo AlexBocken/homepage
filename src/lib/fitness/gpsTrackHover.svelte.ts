@@ -29,6 +29,7 @@ interface TrackSample {
 }
 
 const SNAP_PX = 70;
+const HIGHLIGHT_COLOR = '#7c3aed'; // violet overlay for a highlighted best-effort split
 
 /**
  * Map the shared cursor onto a chart point index for the chart identified by
@@ -81,13 +82,14 @@ export function onGraphHover(
 export function attachTrackMap(
 	track: TrackPoint[],
 	store: TrackHoverStore,
-	opts: { interactive?: boolean } = {}
+	opts: { interactive?: boolean; highlight?: () => [number, number] | null } = {}
 ): Attachment<HTMLElement> {
 	const interactive = opts.interactive !== false;
 	return (node) => {
 		let map: any;
 		let cancelled = false;
 		let stop: (() => void) | undefined;
+		let highlightLayer: any = null;
 
 		(async () => {
 			const L = await import('leaflet');
@@ -169,6 +171,39 @@ export function attachTrackMap(
 			});
 
 			stop = $effect.root(() => {
+				// Overlay for a highlighted best-effort split (start/end indices into
+				// this track): a white-cased violet line plus start/end bar markers.
+				// Updates in place when the picked distance changes.
+				const bar = (latlng: [number, number]) =>
+					L.marker(latlng, {
+						interactive: false,
+						keyboard: false,
+						zIndexOffset: 900,
+						icon: L.divIcon({
+							className: 'be-endbar',
+							html: `<span style="display:block;width:6px;height:22px;border-radius:3px;background:${HIGHLIGHT_COLOR};box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,0.4);"></span>`,
+							iconSize: [6, 22],
+							iconAnchor: [3, 11]
+						})
+					});
+				$effect(() => {
+					const range = opts.highlight?.();
+					if (highlightLayer) {
+						map.removeLayer(highlightLayer);
+						highlightLayer = null;
+					}
+					if (range) {
+						const seg = latLngs.slice(Math.max(0, range[0]), Math.min(latLngs.length, range[1] + 1));
+						if (seg.length > 1) {
+							const group = L.layerGroup();
+							L.polyline(seg, { color: '#fff', weight: 9, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }).addTo(group);
+							L.polyline(seg, { color: HIGHLIGHT_COLOR, weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(group);
+							bar(seg[0]).addTo(group);
+							bar(seg[seg.length - 1]).addTo(group);
+							highlightLayer = group.addTo(map);
+						}
+					}
+				});
 				$effect(() => {
 					const idx = store.hover.index;
 					if (idx == null || idx < 0 || idx >= latLngs.length) {

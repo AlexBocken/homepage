@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleHeatmap from '$lib/components/fitness/MuscleHeatmap.svelte';
+	import SegmentCard from '$lib/components/fitness/SegmentCard.svelte';
 	import Dumbbell from '@lucide/svelte/icons/dumbbell';
 	import Route from '@lucide/svelte/icons/route';
 	import Flame from '@lucide/svelte/icons/flame';
@@ -16,9 +17,21 @@
 	import Info from '@lucide/svelte/icons/info';
 	import Ruler from '@lucide/svelte/icons/ruler';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import TrendingDown from '@lucide/svelte/icons/trending-down';
+	import MinusIcon from '@lucide/svelte/icons/minus';
+	import Crown from '@lucide/svelte/icons/crown';
+	import Users from '@lucide/svelte/icons/users';
+	import Activity from '@lucide/svelte/icons/activity';
+	import Zap from '@lucide/svelte/icons/zap';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import X from '@lucide/svelte/icons/x';
+	import { formatElapsed, formatPaceKm } from '$lib/fitness/segmentFormat';
+	import { projectTrack, svgPath } from '$lib/fitness/trackSvg';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
+	import { buildSegStat } from '$lib/fitness/segmentStat';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
@@ -91,7 +104,7 @@
 	const hasDemographics = $derived(data.goal?.sex != null && data.goal?.heightCm != null && data.goal?.birthYear != null);
 
 	// --- dashboard section visibility (per-user, /api/fitness/dashboard) ---
-	const DASH_KEYS = ['simpleStats', 'streak', 'weight', 'bodyFat', 'dietStats', 'muscleBalance', 'bodyParts', 'ownPeriod', 'sharedPeriods'];
+	const DASH_KEYS = ['simpleStats', 'streak', 'weight', 'bodyFat', 'dietStats', 'muscleBalance', 'bodyParts', 'segmentStat', 'fastestK', 'ownPeriod', 'sharedPeriods'];
 	let prefs = $derived.by(() => {
 		const d = data.dashboard ?? {};
 		/** @type {Record<string, boolean>} */
@@ -108,6 +121,108 @@
 	const bodyPartsMovedUp = $derived(!prefs.muscleBalance && prefs.dietStats && prefs.bodyParts && cardsWithData.length > 0);
 	const macroHorizontal = $derived(!prefs.muscleBalance && prefs.dietStats && !prefs.bodyParts);
 	const isFemale = $derived(data.goal?.sex === 'female');
+
+	// --- Segment stat cards (track up to two segments: best time, pace, rank,
+	// KOM reign, athletes, recent runs, 30d trend) ---
+	/** @typedef {{ _id: string, name: string, activityType: string, distance: number, elevationGain: number, points: number[][], athleteCount: number, myBest: number|null, komTime: number|null }} SegSummary */
+	/** @typedef {{ best: number|null, pace: number|null, rank: number|null, dir: 'improve'|'worse'|'neutral', delta: number, komDays: number|null, athletes: number, recent: number, failed: boolean }} SegStat */
+	// Seeded from the server load (SSR) so the cards render filled on first paint.
+	/** @type {SegSummary[]} */
+	let segList = $state(untrack(() => data.segList ?? []));
+	/** @type {string[]} */
+	let segChosenIds = $state(untrack(() => data.segChosenIds ?? []));
+	/** @type {Record<string, SegStat>} */
+	let segStats = $state(untrack(() => ({ ...(data.segStats ?? {}) })));
+	let segModalOpen = $state(false);
+
+	/** @type {SegSummary[]} */
+	const chosenSegs = $derived(segChosenIds.map((id) => segList.find((s) => s._id === id)).filter((s) => s != null));
+
+	/** Fetch & store one segment's stat (used when the user picks a new segment). */
+	/** @param {string} id */
+	async function loadSegStat(id) {
+		if (!id) return;
+		try {
+			const r = await fetch(`/api/fitness/segments/${encodeURIComponent(id)}`);
+			if (!r.ok) return;
+			const j = await r.json();
+			const seg = segList.find((s) => s._id === id);
+			segStats = { ...segStats, [id]: buildSegStat(j, seg?.athleteCount) };
+		} catch { /* leave empty */ }
+	}
+
+	/** Toggle a segment in the (max two) tracked set. */
+	/** @param {string} id */
+	function toggleSeg(id) {
+		let next = segChosenIds.includes(id)
+			? segChosenIds.filter((x) => x !== id)
+			: [...segChosenIds, id].slice(-2); // keep at most two, newest wins
+		segChosenIds = next;
+		for (const sid of next) if (!segStats[sid]) loadSegStat(sid);
+		fetch('/api/fitness/dashboard', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ segmentStatIds: next })
+		}).catch(() => {});
+	}
+
+	/** @param {string} id */
+	function segMapFailed(id) {
+		const s = segStats[id];
+		if (s) segStats = { ...segStats, [id]: { ...s, failed: true } };
+	}
+	/** @param {SegSummary} seg */
+	function segSvgPath(seg) {
+		return svgPath(projectTrack(seg.points, 240, 150, 12));
+	}
+	/** @param {string} d */
+	function fmtShortDate(d) {
+		try {
+			return new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+		} catch { return ''; }
+	}
+
+	// --- Fastest Nk card (fastest run, by pace, over a user-set distance) ---
+	// Seeded from the server load (SSR) — no on-mount fetch / layout shift.
+	let fastestKm = $state(untrack(() => (typeof data.fastestKm === 'number' ? data.fastestKm : 5)));
+	/** @type {{ sessionId: string, name: string, date: string, activityType: string, seconds: number, pace: number, gpsPreview: number[][]|null } | null} */
+	let fastest = $state(untrack(() => data.fastest ?? null));
+	let fastestLoaded = $state(true);
+	let fastestEditOpen = $state(false);
+	let fastestMapFailed = $state(false);
+
+	async function loadFastest() {
+		fastestLoaded = false;
+		fastestMapFailed = false;
+		try {
+			const r = await fetch(`/api/fitness/stats/fastest?km=${fastestKm}`);
+			if (r.ok) fastest = (await r.json()).best ?? null;
+		} catch { fastest = null; }
+		fastestLoaded = true;
+	}
+	/** @param {number} n */
+	function setFastestKm(n) {
+		fastestKm = Math.min(200, Math.max(1, Math.round(n)));
+		loadFastest();
+		fetch('/api/fitness/dashboard', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ fastestKm })
+		}).catch(() => {});
+	}
+
+	// All segment/fastest cards in one responsive row. A lone trailing card (odd
+	// count) stretches full-width, so: 1 → full, 2 → side by side, 3 → 2 + 1 full.
+	const statCards = $derived.by(() => {
+		/** @type {({ kind: 'seg', seg: SegSummary } | { kind: 'seg-empty' } | { kind: 'fastest' })[]} */
+		const arr = [];
+		if (prefs.segmentStat) {
+			if (segList.length === 0) arr.push({ kind: 'seg-empty' });
+			else for (const seg of chosenSegs) arr.push({ kind: 'seg', seg });
+		}
+		if (prefs.fastestK) arr.push({ kind: 'fastest' });
+		return arr;
+	});
 
 	let dashEditing = $state(false);
 	let dashSaving = $state(false);
@@ -146,6 +261,8 @@
 			{ key: 'dietStats', label: t.dash_diet },
 			{ key: 'muscleBalance', label: t.muscle_balance },
 			{ key: 'bodyParts', label: t.body_parts },
+			{ key: 'segmentStat', label: t.dash_segment },
+			{ key: 'fastestK', label: t.dash_fastest },
 			...(isFemale ? [{ key: 'ownPeriod', label: t.dash_own_cycle }] : []),
 			{ key: 'sharedPeriods', label: t.dash_shared_cycles }
 		]
@@ -400,6 +517,158 @@
 			<div class="card-label">{t.covered}</div>
 		</div>
 	</div>
+	{/if}
+
+	{#if prefs.segmentStat || prefs.fastestK}
+	<div class="segment-stat-row">
+		{#each statCards as card, i (card.kind === 'seg' ? card.seg._id : card.kind)}
+			{@const full = statCards.length % 2 === 1 && i === statCards.length - 1}
+			{#if card.kind === 'seg-empty'}
+				<div class="seg-card-empty" class:span-full={full}>
+					<div class="seg-empty-icon"><Route size={22} /></div>
+					<p class="seg-empty-text">
+						{t.seg_stat_none}
+						<a href={resolve('/fitness/[segments=fitnessSegments]', { segments: lang === 'en' ? 'segments' : 'segmente' })}>{t.segments}</a>
+					</p>
+				</div>
+			{:else if card.kind === 'seg'}
+				{@const seg = card.seg}
+				{@const st = segStats[seg._id]}
+				<button type="button" class="seg-card" class:span-full={full} onclick={() => (segModalOpen = true)} aria-label={t.dash_segment}>
+					<div class="seg-map">
+						{#if !st?.failed}
+							<img class="seg-map-img" src={`/api/fitness/segments/${seg._id}/map.webp`} alt="" loading="lazy" decoding="async" onerror={() => segMapFailed(seg._id)} />
+						{:else}
+							<svg class="seg-map-svg" viewBox="0 0 240 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+								<path d={segSvgPath(seg)} class="seg-route-casing" />
+								<path d={segSvgPath(seg)} class="seg-route" />
+							</svg>
+						{/if}
+						{#if st?.rank != null}
+							<span class="seg-rank" class:kom={st.rank === 1} title={t.rank}>
+								{#if st.rank === 1}<Crown size={12} />{/if}
+								{st.rank === 1 ? t.seg_stat_1st : `#${st.rank}`}
+							</span>
+						{/if}
+					</div>
+
+					<div class="seg-body">
+						<span class="seg-name" title={seg.name}>{seg.name}</span>
+
+						<div class="seg-figures">
+							{#if st?.best != null}
+								<span class="seg-time">{formatElapsed(st.best)}</span>
+								{#if st.pace != null}<span class="seg-pace">{formatPaceKm(st.pace)}</span>{/if}
+							{:else}
+								<span class="seg-time muted">{st ? '—' : '…'}</span>
+								<span class="seg-pace">{st ? t.no_efforts : ''}</span>
+							{/if}
+							{#if st?.best != null}
+								{#if st.dir === 'improve'}
+									<span class="seg-delta improve" title={t.seg_stat_trend_hint}><TrendingDown size={14} /> {formatElapsed(st.delta)}</span>
+								{:else if st.dir === 'worse'}
+									<span class="seg-delta worse" title={t.seg_stat_trend_hint}><TrendingUp size={14} /> {formatElapsed(st.delta)}</span>
+								{/if}
+							{/if}
+						</div>
+
+						<div class="seg-meta">
+							<span class="seg-chip" title={t.distance}><Route size={13} /> {seg.distance.toFixed(2)} {t.km}</span>
+							{#if st?.komDays != null}
+								<span class="seg-chip kom" title={t.record_held_tooltip}><Crown size={13} /> {st.komDays}{t.days_short}</span>
+							{/if}
+							<span class="seg-chip" title={t.athletes}><Users size={13} /> {st?.athletes ?? '—'}</span>
+							<span class="seg-chip" title={t.seg_runs_30d}><Activity size={13} /> {st?.recent ?? 0} <span class="seg-chip-sub">/ 30{t.days_short}</span></span>
+						</div>
+					</div>
+				</button>
+			{:else}
+				<div class="seg-card-wrap" class:span-full={full}>
+				<button type="button" class="seg-card" onclick={() => (fastestEditOpen = true)} aria-label={t.dash_fastest}>
+					<div class="seg-map">
+						{#if fastest && !fastestMapFailed}
+							<img class="seg-map-img" src={`/api/fitness/sessions/${fastest.sessionId}/map.webp`} alt="" loading="lazy" decoding="async" onerror={() => (fastestMapFailed = true)} />
+						{:else if fastest?.gpsPreview?.length}
+							<svg class="seg-map-svg" viewBox="0 0 240 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+								<path d={svgPath(projectTrack(fastest.gpsPreview, 240, 150, 12))} class="seg-route-casing" />
+								<path d={svgPath(projectTrack(fastest.gpsPreview, 240, 150, 12))} class="seg-route" />
+							</svg>
+						{:else}
+							<div class="seg-map-blank"><Zap size={26} /></div>
+						{/if}
+						<span class="seg-rank dist">{fastestKm}{t.km_short}</span>
+					</div>
+
+					<div class="seg-body">
+						<span class="seg-name">{t.fastest_title.replace('{n}', String(fastestKm))}</span>
+
+						<div class="seg-figures">
+							{#if fastest}
+								<span class="seg-time">{formatElapsed(fastest.seconds)}</span>
+								<span class="seg-pace">{formatPaceKm(fastest.pace)}</span>
+							{:else}
+								<span class="seg-time muted">{fastestLoaded ? '—' : '…'}</span>
+								<span class="seg-pace">{fastestLoaded ? t.fastest_none : ''}</span>
+							{/if}
+						</div>
+
+						{#if fastest}
+							<div class="seg-meta">
+								<span class="seg-chip seg-chip-name" title={fastest.name}>{fastest.name}</span>
+								<span class="seg-chip">{fmtShortDate(fastest.date)}</span>
+							</div>
+						{/if}
+					</div>
+				</button>
+				{#if fastest}
+					<a class="seg-open-link" href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: historySlug, id: fastest.sessionId })} title={t.view_workout} aria-label={t.view_workout}>
+						<ExternalLink size={15} />
+					</a>
+				{/if}
+				</div>
+			{/if}
+		{/each}
+	</div>
+
+	{#if fastestEditOpen}
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="seg-modal-overlay" onclick={(e) => { if (e.target === e.currentTarget) fastestEditOpen = false; }} onkeydown={(e) => { if (e.key === 'Escape') fastestEditOpen = false; }} role="dialog" aria-modal="true" tabindex="-1">
+			<div class="fastest-editor">
+				<h3>{t.fastest_set}</h3>
+				<div class="goal-input-row">
+					<button class="adj-btn" onclick={() => setFastestKm(fastestKm - 1)} disabled={fastestKm <= 1}>−</button>
+					<span class="goal-value">{fastestKm}<span class="fastest-km-unit">{t.km_short}</span></span>
+					<button class="adj-btn" onclick={() => setFastestKm(fastestKm + 1)} disabled={fastestKm >= 200}>+</button>
+				</div>
+				<div class="fastest-presets">
+					{#each [1, 5, 10, 21, 42] as p (p)}
+						<button class="fastest-preset" class:active={fastestKm === p} onclick={() => setFastestKm(p)}>{p}{t.km_short}</button>
+					{/each}
+				</div>
+				<button class="goal-save" onclick={() => (fastestEditOpen = false)}>{t.done}</button>
+			</div>
+		</div>
+	{/if}
+
+	{#if segModalOpen}
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="seg-modal-overlay" onclick={(e) => { if (e.target === e.currentTarget) segModalOpen = false; }} onkeydown={(e) => { if (e.key === 'Escape') segModalOpen = false; }} role="dialog" aria-modal="true" tabindex="-1">
+			<div class="seg-modal">
+				<div class="seg-modal-head">
+					<div>
+						<h3>{t.seg_stat_pick}</h3>
+						<span class="seg-modal-sub">{t.seg_stat_pick_hint}</span>
+					</div>
+					<button class="seg-modal-close" onclick={() => (segModalOpen = false)} aria-label={t.close}><X size={18} /></button>
+				</div>
+				<div class="seg-modal-grid">
+					{#each segList as s (s._id)}
+						<SegmentCard segment={s} {lang} selected={segChosenIds.includes(s._id)} onselect={toggleSeg} />
+					{/each}
+				</div>
+			</div>
+		</div>
+	{/if}
 	{/if}
 
 	{#if goalEditing}
@@ -783,6 +1052,334 @@
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: 0.6rem;
+	}
+	/* Segment-stat card: 2 of the 4 top-row tiles wide, laid out horizontally. */
+	/* Segment-stat card: 2 of the 4 top-row tiles wide; the route map is the hero. */
+	/* Segment-stat cards: two side by side, one stretched full-width, the route
+	   map as the hero. Stack on narrow screens. */
+	.segment-stat-row {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.6rem;
+		/* The .stats-page flex gap is 1rem; pull the segment cards up so they sit
+		   0.6rem below the overview stats they belong with. */
+		margin-top: -0.4rem;
+	}
+	.seg-card {
+		display: flex;
+		align-items: stretch;
+		min-height: 140px;
+		border: none;
+		border-radius: 14px;
+		background: var(--color-surface);
+		box-shadow: var(--shadow-sm);
+		overflow: hidden;
+		padding: 0;
+		text-align: left;
+		font: inherit;
+		color: inherit;
+		cursor: pointer;
+		transition: box-shadow 0.15s;
+	}
+	.seg-card:hover,
+	.seg-card:focus-visible {
+		box-shadow: var(--shadow-sm), 0 0 0 2px var(--blue);
+		outline: none;
+	}
+	.seg-map {
+		position: relative;
+		flex: 0 0 clamp(150px, 38%, 320px);
+		background: var(--color-bg-tertiary);
+	}
+	.seg-map-img,
+	.seg-map-svg {
+		width: 100%;
+		height: 100%;
+		display: block;
+		object-fit: cover;
+	}
+	.seg-route-casing {
+		fill: none;
+		stroke: var(--color-surface);
+		stroke-width: 5;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+	}
+	.seg-route {
+		fill: none;
+		stroke: var(--blue);
+		stroke-width: 3;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+	}
+	.seg-rank {
+		position: absolute;
+		top: 7px;
+		left: 7px;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.15rem;
+		padding: 0.12rem 0.45rem;
+		border-radius: var(--radius-pill, 1000px);
+		background: var(--color-bg-elevated);
+		color: var(--color-text-secondary);
+		font-size: 0.68rem;
+		font-weight: 700;
+		box-shadow: var(--shadow-sm);
+	}
+	.seg-rank.kom {
+		background: #e3b341;
+		color: #3b2f0b;
+	}
+	.seg-body {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 0.4rem;
+		padding: 0.7rem 0.95rem;
+	}
+	.seg-name {
+		min-width: 0;
+		font-size: 0.95rem;
+		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.seg-figures {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.seg-time {
+		font-size: 1.75rem;
+		font-weight: 700;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+	.seg-time.muted {
+		color: var(--color-text-secondary);
+	}
+	.seg-pace {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	.seg-delta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.15rem;
+		font-size: 0.8rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+	.seg-delta.improve { color: var(--green); }
+	.seg-delta.worse { color: var(--red); }
+	.seg-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem 0.7rem;
+	}
+	.seg-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.74rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	.seg-chip.kom {
+		color: #b8860b;
+		font-weight: 600;
+	}
+	.seg-chip-name {
+		max-width: 16ch;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+	.seg-chip-sub { color: var(--color-text-tertiary); }
+	.seg-card-empty {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.9rem 1rem;
+		border-radius: 14px;
+		background: var(--color-surface);
+		box-shadow: var(--shadow-sm);
+	}
+	.seg-empty-icon {
+		width: 2.5rem;
+		height: 2.5rem;
+		flex-shrink: 0;
+		border-radius: 50%;
+		display: grid;
+		place-items: center;
+		background: color-mix(in srgb, var(--blue) 16%, transparent);
+		color: var(--blue);
+	}
+	.seg-empty-text {
+		margin: 0;
+		font-size: 0.82rem;
+		color: var(--color-text-secondary);
+	}
+	.seg-empty-text a { color: var(--blue); }
+	.span-full { grid-column: 1 / -1; }
+	/* Fastest card wrapper: the card-button plus a corner "view workout" link. */
+	.seg-card-wrap {
+		position: relative;
+		display: flex;
+	}
+	.seg-card-wrap > .seg-card {
+		flex: 1;
+		min-width: 0;
+	}
+	.seg-open-link {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		z-index: 2;
+		display: grid;
+		place-items: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: var(--color-surface);
+		color: var(--color-text-secondary);
+		box-shadow: var(--shadow-sm);
+		transition: color var(--transition-fast, 100ms), background var(--transition-fast, 100ms);
+	}
+	.seg-open-link:hover {
+		color: var(--blue);
+		background: var(--color-bg-elevated);
+	}
+	.seg-map-blank {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		place-items: center;
+		color: var(--blue);
+		background: color-mix(in srgb, var(--blue) 10%, var(--color-bg-tertiary));
+	}
+	.seg-rank.dist {
+		background: var(--blue);
+		color: var(--color-text-on-primary, #fff);
+	}
+	@media (max-width: 700px) {
+		.segment-stat-row { grid-template-columns: 1fr; }
+	}
+	/* Fastest-Nk distance editor */
+	.fastest-editor {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		padding: 1.5rem;
+		border-radius: var(--radius-lg, 0.75rem);
+		background: var(--color-bg-primary, var(--color-surface));
+		box-shadow: var(--shadow-lg, var(--shadow-md));
+	}
+	.fastest-editor h3 {
+		margin: 0;
+		font-size: 1rem;
+	}
+	.fastest-km-unit {
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		margin-left: 0.1rem;
+	}
+	.fastest-presets {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.4rem;
+	}
+	.fastest-preset {
+		padding: 0.3rem 0.7rem;
+		border: 1.5px solid var(--color-border);
+		border-radius: var(--radius-pill, 1000px);
+		background: transparent;
+		color: var(--color-text-secondary);
+		font: inherit;
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all var(--transition-fast, 100ms);
+	}
+	.fastest-preset:hover {
+		border-color: var(--blue);
+		color: var(--blue);
+	}
+	.fastest-preset.active {
+		background: var(--blue);
+		border-color: var(--blue);
+		color: var(--color-text-on-primary, #fff);
+	}
+	/* Segment picker modal */
+	.seg-modal-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 60;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem;
+		background: color-mix(in srgb, var(--nord0, #2e3440) 55%, transparent);
+		backdrop-filter: blur(3px);
+	}
+	.seg-modal {
+		display: flex;
+		flex-direction: column;
+		width: min(720px, 100%);
+		max-height: 85vh;
+		border-radius: var(--radius-lg, 0.75rem);
+		background: var(--color-bg-primary, var(--color-surface));
+		box-shadow: var(--shadow-lg, var(--shadow-md));
+		overflow: hidden;
+	}
+	.seg-modal-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.9rem 1.1rem;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.seg-modal-head h3 {
+		margin: 0;
+		font-size: 1rem;
+	}
+	.seg-modal-sub {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+	.seg-modal-close {
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		border: none;
+		border-radius: 50%;
+		background: transparent;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition: background var(--transition-fast, 100ms);
+	}
+	.seg-modal-close:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
+	.seg-modal-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 0.8rem;
+		padding: 1rem 1.1rem 1.2rem;
+		overflow-y: auto;
 	}
 	.lifetime-card {
 		display: flex;

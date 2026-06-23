@@ -15,6 +15,8 @@
 	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
 	import { buildGpsView, formatPaceTooltip } from '$lib/fitness/gpsSeries';
+	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
+	import { formatElapsed } from '$lib/fitness/segmentFormat';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 
@@ -24,6 +26,39 @@
 	 * @type {{ session: any, lang?: 'en' | 'de', showPrs?: boolean }}
 	 */
 	let { session, lang = 'en', showPrs = true } = $props();
+
+	// Best-effort list → map highlight. Hovering a row lights its split on the
+	// track; clicking pins it.
+	/** @type {Map<number, import('$lib/fitness/bestEfforts').BestEffort[]>} */
+	const effortsCache = new Map();
+	/** @param {number} idx @param {any[]} track */
+	function effortsFor(idx, track) {
+		if (session.bestEfforts?.length) return session.bestEfforts;
+		let e = effortsCache.get(idx);
+		if (!e) { e = computeBestEfforts(track); effortsCache.set(idx, e); }
+		return e;
+	}
+	/** @type {Record<number, number|null>} */
+	let beHover = $state({});
+	/** @type {Record<number, number|null>} */
+	let beClick = $state({});
+	/** @param {number} idx */
+	function beActiveKm(idx) { return beHover[idx] ?? beClick[idx] ?? null; }
+	/** @param {number} idx @param {number} km */
+	function clickEffort(idx, km) {
+		const next = beClick[idx] === km ? null : km;
+		beClick[idx] = next;
+		if (next != null && typeof document !== 'undefined') {
+			document.getElementById(`be-map-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	}
+	/** @param {number} idx @param {import('$lib/fitness/bestEfforts').BestEffort[]} efforts */
+	function beRange(idx, efforts) {
+		const km = beActiveKm(idx);
+		if (km == null) return null;
+		const e = efforts.find((x) => x.km === km);
+		return e ? /** @type {[number, number]} */ ([e.startIdx, e.endIdx]) : null;
+	}
 
 	const t = $derived(m[lang]);
 	const kcalResult = $derived(session?.kcalEstimate ?? null);
@@ -175,6 +210,7 @@
 				{@const dist = ex.totalDistance ?? gps.dist}
 				{@const hov = hoverFor(exIdx)}
 				{@const yGroup = axisGroupFor(exIdx)}
+				{@const efforts = effortsFor(exIdx, ex.gpsTrack)}
 				<div class="gps-track-section">
 					<div class="gps-stats">
 						<span class="gps-stat accent"><Route size={14} /> {dist.toFixed(2)} km</span>
@@ -184,7 +220,7 @@
 							<span class="gps-stat elev-loss">-{gps.elevStats.loss}{t.elevation_unit}</span>
 						{/if}
 					</div>
-					<div class="track-map" {@attach attachTrackMap(ex.gpsTrack, hov)}></div>
+					<div class="track-map" id={`be-map-${exIdx}`} {@attach attachTrackMap(ex.gpsTrack, hov, { highlight: () => beRange(exIdx, efforts) })}></div>
 
 					{#if gps.hasCharts}
 						{#if gps.elevation.has}
@@ -230,6 +266,25 @@
 							</div>
 						{/if}
 					{/if}
+						{#if efforts.length > 0}
+							<div class="splits-section best-efforts">
+								<h4>{t.best_efforts}</h4>
+								<table class="splits-table">
+									<thead><tr><th>{t.distance}</th><th>{t.pace}</th><th>TIME</th></tr></thead>
+									<tbody>
+										{#each efforts as e (e.km)}
+											<!-- svelte-ignore a11y_mouse_events_have_key_events -->
+											<tr class="be-row" class:active={beActiveKm(exIdx) === e.km} class:pinned={beClick[exIdx] === e.km}
+												onmouseenter={() => (beHover[exIdx] = e.km)} onmouseleave={() => (beHover[exIdx] = null)} onclick={() => clickEffort(exIdx, e.km)}>
+												<td class="split-km">{e.km}{t.km_short}</td>
+												<td class="split-pace">{formatPace(e.seconds / 60 / e.km)}</td>
+												<td class="split-elapsed">{formatElapsed(e.seconds)}</td>
+											</tr>
+										{/each}
+									</tbody>
+								</table>
+							</div>
+						{/if}
 				</div>
 			{/if}
 		</div>
@@ -379,6 +434,19 @@
 	.gps-stat.elev-gain { color: var(--nord14); font-weight: 600; }
 	.gps-stat.elev-loss { color: var(--nord11); font-weight: 600; font-size: 0.8rem; }
 	.track-map { height: 200px; border-radius: 8px; overflow: hidden; }
+	.best-efforts .be-row { cursor: pointer; transition: background var(--transition-fast, 100ms); }
+	.best-efforts .be-row:hover { background: var(--color-bg-elevated); }
+	.best-efforts .be-row.active .split-km { color: #7c3aed; font-weight: 700; }
+	.best-efforts .be-row.active .split-km::before {
+		content: '●';
+		color: #7c3aed;
+		font-size: 0.6em;
+		margin-right: 0.35em;
+		vertical-align: middle;
+	}
+	.best-efforts .be-row.pinned { background: color-mix(in srgb, #7c3aed 12%, transparent); }
+	.best-efforts .be-row.pinned td:first-child { box-shadow: inset 3px 0 0 #7c3aed; }
+	:global(.be-endbar) { background: transparent !important; border: 0 !important; }
 	:global(.run-hover-pin) {
 		background: transparent !important;
 		border: 0 !important;

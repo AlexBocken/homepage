@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { untrack, onMount } from 'svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { formatElapsed, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import Flag from '@lucide/svelte/icons/flag';
 	import Radar from '@lucide/svelte/icons/radar';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
@@ -27,6 +29,20 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const me = $derived(page.data.session?.user?.nickname ?? '');
+	const historySlug = $derived(lang === 'en' ? 'history' : 'verlauf');
+
+	/** @type {{ km: number, seconds: number, pace: number, sessionId: string, name: string, date: string }[]} */
+	const bestEfforts = $derived(data.bestEfforts ?? []);
+
+	/** Age of an effort relative to today, localised ("3 days ago"). */
+	function relativeAge(d: string) {
+		const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+		const rtf = new Intl.RelativeTimeFormat(lang === 'de' ? 'de' : 'en', { numeric: 'auto' });
+		if (days < 1) return rtf.format(0, 'day');
+		if (days < 30) return rtf.format(-days, 'day');
+		if (days < 365) return rtf.format(-Math.floor(days / 30), 'month');
+		return rtf.format(-Math.floor(days / 365), 'year');
+	}
 
 	let shareSegments = $state(untrack(() => data.shareSegments));
 	async function toggleShare() {
@@ -131,6 +147,33 @@
 				<SegmentCard {segment} {lang} />
 			{/each}
 		</div>
+	{/if}
+
+	{#if bestEfforts.length > 0}
+		<section class="best-efforts-all">
+			<h2>{t.best_efforts}</h2>
+			<table class="be-table">
+				<thead>
+					<tr>
+						<th>{t.distance}</th>
+						<th>TIME</th>
+						<th>{t.pace}</th>
+						<th>{t.age}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each bestEfforts as e (e.km)}
+						<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+						<tr class="be-all-row" onclick={() => goto(resolve('/fitness/[history=fitnessHistory]/[id]', { history: historySlug, id: e.sessionId }))} title={e.name}>
+							<td class="be-km">{e.km}{t.km_short}</td>
+							<td class="be-time">{formatElapsed(e.seconds)}</td>
+							<td class="be-pace">{formatPaceKm(e.pace)}</td>
+							<td class="be-age">{relativeAge(e.date)}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</section>
 	{/if}
 </div>
 
@@ -246,5 +289,57 @@
 		.grid {
 			gap: 0.5rem;
 		}
+	}
+
+	/* All-time best efforts table */
+	.best-efforts-all {
+		margin-top: 2rem;
+	}
+	.best-efforts-all h2 {
+		font-size: 1.1rem;
+		margin: 0 0 0.6rem;
+	}
+	.be-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.85rem;
+		background: var(--color-surface);
+		border-radius: var(--radius-md, 0.5rem);
+		overflow: hidden;
+		box-shadow: var(--shadow-sm);
+	}
+	.be-table th {
+		text-align: left;
+		font-size: 0.68rem;
+		letter-spacing: 0.05em;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		padding: 0.5rem 0.8rem;
+	}
+	.be-table td {
+		padding: 0.55rem 0.8rem;
+		border-top: 1px solid var(--color-border);
+		font-variant-numeric: tabular-nums;
+	}
+	.be-all-row {
+		cursor: pointer;
+		transition: background var(--transition-fast, 100ms);
+	}
+	.be-all-row:hover {
+		background: var(--color-bg-elevated);
+	}
+	.be-km {
+		font-weight: 700;
+		color: var(--color-primary);
+	}
+	.be-pace,
+	.be-age {
+		color: var(--color-text-secondary);
+	}
+	.be-age {
+		text-align: right;
+	}
+	.be-table th:last-child {
+		text-align: right;
 	}
 </style>

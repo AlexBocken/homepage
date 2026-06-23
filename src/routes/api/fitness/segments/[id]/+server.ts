@@ -86,7 +86,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     const myBest = myEfforts.length ? Math.min(...myEfforts.map((e) => e.elapsedSeconds)) : null;
     const myRank = leaderboard.find((r) => r.username === me)?.rank ?? null;
 
-    return json({ segment, leaderboard, myEfforts, myBest, myRank });
+    // Runs on this segment by anyone in the last 30 days.
+    const since = new Date(Date.now() - 30 * 86_400_000);
+    const recentCount = await SegmentEffort.countDocuments({ segmentId: segment._id, date: { $gte: since } });
+
+    return json({ segment, leaderboard, myEfforts, myBest, myRank, recentCount });
   } catch (error) {
     console.error('Error fetching segment:', error);
     return json({ error: 'Failed to fetch segment' }, { status: 500 });

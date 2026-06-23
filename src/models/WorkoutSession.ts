@@ -62,6 +62,9 @@ export interface IWorkoutSession {
   gpsBbox?: { minLat: number; maxLat: number; minLng: number; maxLng: number }; // bbox over all GPS points, for segment-match prefiltering
   prs?: IPr[];
   kcalEstimate?: IKcalEstimate;
+  // Fastest continuous K-km splits (one per integer km), computed from gpsTrack.
+  // Cached so the "fastest Nk" dashboard card is a cheap min query.
+  bestEfforts?: { km: number; seconds: number; startIdx: number; endIdx: number }[];
   notes?: string;
   createdBy: string; // username/nickname of the person who performed the workout
   createdAt?: Date;
@@ -237,6 +240,16 @@ const WorkoutSessionSchema = new mongoose.Schema(
       },
       default: undefined,
       _id: false,
+    },
+    bestEfforts: {
+      type: [{
+        km: { type: Number, required: true },
+        seconds: { type: Number, required: true },
+        startIdx: { type: Number, required: true },
+        endIdx: { type: Number, required: true },
+        _id: false,
+      }],
+      default: undefined,
     },
     notes: {
       type: String,
