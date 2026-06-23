@@ -1,7 +1,7 @@
 <script>
   import { scale, fade } from 'svelte/transition';
   import { elasticOut } from 'svelte/easing';
-  import { getRarityColor } from '$lib/utils/stickers';
+  import { getRarityColor, stickerUrl } from '$lib/utils/stickers';
 
   let { sticker, onclose, title = 'Sticker erhalten!', buttonText = 'Toll!', bounce = true } = $props();
 
@@ -19,7 +19,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div class="popup-card" transition:scale={bounce ? { start: 0.5, duration: 500, easing: elasticOut } : { start: 0.85, duration: 200 }} onclick={e => e.stopPropagation()}>
     <div class="sticker-display" style="--rarity-color: {getRarityColor(sticker.rarity)}">
-      <img class="sticker-img" src="/stickers/{sticker.image}" alt={sticker.name} />
+      <img class="sticker-img" src={stickerUrl(sticker.image)} alt={sticker.name} />
     </div>
     <div class="popup-text">
       <h3>{title}</h3>

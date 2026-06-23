@@ -29,6 +29,12 @@ HIKES_ASSETS_OWNER="${HIKES_ASSETS_OWNER:-http:http}"
 #   location /protected-images/ { internal; alias /var/www/static/private-images/; }
 PRIVATE_ASSETS_DIR="${PRIVATE_ASSETS_DIR:-/var/www/static/private-images}"
 PRIVATE_ASSETS_OWNER="${PRIVATE_ASSETS_OWNER:-http:http}"
+# Sticker SVGs (cats + baked dashed outlines) are served by nginx at
+# bocken.org/static/stickers/ instead of through Node, so the rewards album can
+# load ~200 of them lazily and cached. They live in ./static/stickers/ and we
+# rsync that tree to the path nginx serves.
+STICKERS_ASSETS_DIR="${STICKERS_ASSETS_DIR:-/var/www/static/stickers}"
+STICKERS_ASSETS_OWNER="${STICKERS_ASSETS_OWNER:-http:http}"
 
 DRY=""
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -90,6 +96,11 @@ echo ":: Syncing static/ → $REMOTE:$REMOTE_DIR/static/"
 rsync -az --delete $DRY --info=progress2 \
     static/ "$REMOTE:$REMOTE_DIR/static/"
 
+echo ":: Syncing static/stickers/ → $REMOTE:$STICKERS_ASSETS_DIR/ (nginx-served)"
+ssh "$REMOTE" "mkdir -p $STICKERS_ASSETS_DIR"
+rsync -az --delete $DRY --info=progress2 \
+    static/stickers/ "$REMOTE:$STICKERS_ASSETS_DIR/"
+
 echo ":: Syncing package.json + pnpm-lock.yaml"
 rsync -az $DRY \
     package.json pnpm-lock.yaml "$REMOTE:$REMOTE_DIR/"
@@ -128,7 +139,7 @@ if [[ -n "$DRY" ]]; then
 fi
 
 echo ":: Fixing ownership on server"
-ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi && if [[ -d $PRIVATE_ASSETS_DIR ]]; then chown -R $PRIVATE_ASSETS_OWNER $PRIVATE_ASSETS_DIR; fi"
+ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi && if [[ -d $PRIVATE_ASSETS_DIR ]]; then chown -R $PRIVATE_ASSETS_OWNER $PRIVATE_ASSETS_DIR; fi && if [[ -d $STICKERS_ASSETS_DIR ]]; then chown -R $STICKERS_ASSETS_OWNER $STICKERS_ASSETS_DIR; fi"
 
 echo ":: Restarting $SERVICE"
 ssh "$REMOTE" "systemctl restart $SERVICE"

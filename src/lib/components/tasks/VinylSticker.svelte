@@ -1,6 +1,5 @@
 <script>
-  import { getRarityColor } from '$lib/utils/stickers';
-  import { SILHOUETTES } from '$lib/data/stickerSilhouettes.js';
+  import { getRarityColor, stickerUrl } from '$lib/utils/stickers';
   import StickerOutline from './StickerOutline.svelte';
 
   let { sticker, count = 0, owned = false, onpick } = $props();
@@ -53,13 +52,13 @@
   onpointerleave={leave}
   onclick={() => onpick?.(sticker)}
   onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onpick?.(sticker))}
-  style="--tilt: {tilt}deg; --mx: {mx}%; --my: {my}%; --m: url('/stickers/{sticker.image}'); --foil: {owned ? foilByRarity[sticker.rarity] : 0}; --on: {active ? 1 : 0}; --rarity: {getRarityColor(sticker.rarity)};"
+  style="--tilt: {tilt}deg; --mx: {mx}%; --my: {my}%; --m: url('{stickerUrl(sticker.image)}'); --foil: {owned ? foilByRarity[sticker.rarity] : 0}; --on: {active ? 1 : 0}; --rarity: {getRarityColor(sticker.rarity)};"
   title={owned ? `${sticker.name} — ${rarityLabels[sticker.rarity]}` : 'Noch nicht gesammelt — Drop-Chance ansehen'}
 >
   {#if owned}
     <div class="vinyl rarity-{sticker.rarity}">
       <span class="glow" aria-hidden="true"></span>
-      <img src="/stickers/{sticker.image}" alt={sticker.name} loading="lazy" />
+      <img src={stickerUrl(sticker.image)} alt={sticker.name} loading="lazy" />
       <span class="sheen" aria-hidden="true"></span>
       <span class="foil" aria-hidden="true"></span>
       {#if count > 1}<span class="dupes">×{count}</span>{/if}
@@ -67,7 +66,7 @@
     <span class="label">{sticker.name}</span>
   {:else}
     <div class="deboss" aria-hidden="true">
-      <StickerOutline d={SILHOUETTES[sticker.image]} size={70} stroke="var(--deboss-stroke)" />
+      <StickerOutline image={sticker.image} size={70} color="var(--deboss-stroke)" />
     </div>
     <span class="label empty">?</span>
   {/if}

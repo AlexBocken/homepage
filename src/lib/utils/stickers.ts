@@ -7,6 +7,15 @@ export interface Sticker {
   category: string;
 }
 
+// Sticker images (cats + baked dashed-outline placeholders) are served by nginx
+// at bocken.org/static/stickers/ — not through the Node app — so the album can
+// load ~200 of them lazily and cached. Same host as the app in prod → same origin.
+export const STICKER_BASE = 'https://bocken.org/static/stickers';
+/** URL of a sticker image. */
+export const stickerUrl = (image: string) => `${STICKER_BASE}/${image}`;
+/** URL of a sticker's baked dashed-outline placeholder. */
+export const stickerOutlineUrl = (image: string) => `${STICKER_BASE}/outlines/${image}`;
+
 // Blobcat sticker catalog — images from Tirifto's Blobcats (Free Art Licence)
 export const STICKERS: Sticker[] = [
   // Cleaning / household

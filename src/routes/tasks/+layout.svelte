@@ -6,13 +6,14 @@
   import UserHeader from '$lib/components/UserHeader.svelte';
   import ClipboardList from '@lucide/svelte/icons/clipboard-list';
   import Trophy from '@lucide/svelte/icons/trophy';
+  import History from '@lucide/svelte/icons/history';
   import { precacheShells } from '$lib/offline/precacheShells';
   let { data, children } = $props();
   let user = $derived(data.session?.user);
 
   // Tasks are gated on the `task_users` group (see hooks.server.ts).
   // Only precache the section's shells for offline use if the user has access.
-  const TASK_SHELLS = ['/tasks', '/tasks/rewards'];
+  const TASK_SHELLS = ['/tasks', '/tasks/rewards', '/tasks/verlauf'];
   function precacheTaskShells() {
     if (!data.session?.user?.groups?.includes('task_users')) return;
     precacheShells(TASK_SHELLS);
@@ -41,7 +42,8 @@
   {#snippet links()}
     <ul class="site_header">
       <li style="--active-fill: var(--nord10)"><a href={resolve('/tasks')} class:active={isActive('/tasks')}><ClipboardList size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Aufgaben</span></a></li>
-      <li style="--active-fill: var(--nord13)"><a href={resolve('/tasks/rewards')} class:active={isActive('/tasks/rewards')}><Trophy size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Sticker</span></a></li>
+      <li style="--active-fill: var(--nord13)"><a href={resolve('/tasks/rewards')} class:active={isActive('/tasks/rewards')}><Trophy size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Sammlung</span></a></li>
+      <li style="--active-fill: var(--nord15)"><a href={resolve('/tasks/verlauf')} class:active={isActive('/tasks/verlauf')}><History size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">Verlauf</span></a></li>
     </ul>
   {/snippet}
 

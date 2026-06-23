@@ -3,7 +3,7 @@
   import { resolve } from '$app/paths';
   import TaskForm from '$lib/components/tasks/TaskForm.svelte';
   import StickerPopup from '$lib/components/tasks/StickerPopup.svelte';
-  import { getStickerForTags } from '$lib/utils/stickers';
+  import { getStickerForTags, stickerUrl } from '$lib/utils/stickers';
 
   /** @type {any} */
   let awardedSticker = $state(null);
@@ -19,7 +19,7 @@
     const sticker = getStickerForTags(task.tags ?? [], task.difficulty || 'medium');
     if (typeof Image !== 'undefined') {
       const img = new Image();
-      img.src = `/stickers/${sticker.image}`;
+      img.src = stickerUrl(sticker.image);
     }
     awardedSticker = sticker;
 

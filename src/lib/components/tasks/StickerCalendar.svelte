@@ -1,7 +1,7 @@
 <script>
   import ChevronLeft from '@lucide/svelte/icons/chevron-left';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
-  import { getStickerById } from '$lib/utils/stickers';
+  import { getStickerById, stickerUrl } from '$lib/utils/stickers';
   import {
     startOfMonth, endOfMonth, startOfWeek, endOfWeek,
     eachDayOfInterval, isSameMonth, isToday, isWeekend, format, addMonths, subMonths
@@ -132,16 +132,19 @@
               {@const sticker = getStickerById(c.stickerId)}
               {#if sticker}
                 {@const tilt = (hash(c._id) % 13) - 6}
-                <button
-                  type="button"
-                  class="cat"
-                  style="--tilt: {tilt}deg; --pc: {personColor(c.completedBy)}"
-                  title="{sticker.name} — {c.taskTitle} ({c.completedBy})"
-                  onclick={() => onpick?.(sticker)}
-                >
-                  <img src="/stickers/{sticker.image}" alt={sticker.name} loading="lazy" />
-                  <span class="who-dot"></span>
-                </button>
+                <span class="cat-wrap">
+                  <button
+                    type="button"
+                    class="cat"
+                    style="--tilt: {tilt}deg; --pc: {personColor(c.completedBy)}"
+                    aria-label="{sticker.name} — {c.taskTitle} ({c.completedBy})"
+                    onclick={() => onpick?.(sticker)}
+                  >
+                    <img src={stickerUrl(sticker.image)} alt={sticker.name} loading="lazy" />
+                    <span class="who-dot"></span>
+                  </button>
+                  {#if c.taskTitle}<span class="cat-tip">{c.taskTitle}</span>{/if}
+                </span>
               {/if}
             {/each}
             {#if dayDrops.length > 4}
@@ -318,6 +321,36 @@
       drop-shadow(0 2px 2px rgba(0, 0, 0, 0.22));
   }
   .cat:hover { transform: rotate(0deg) scale(1.9); z-index: 10; }
+
+  /* hover box naming the task — lives on the unscaled wrapper so the cat's
+     1.9× magnify doesn't enlarge it. */
+  .cat-wrap {
+    position: relative;
+    display: block;
+    line-height: 0;
+  }
+  .cat-tip {
+    position: absolute;
+    bottom: calc(100% + 1rem);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 140px;
+    padding: 0.25rem 0.45rem;
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: #5a4a2c;
+    border: 1px solid #e4d9be;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    font-size: 0.72rem; /* match the hero tooltip (the master) */
+    line-height: 1.25;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms;
+    z-index: 20;
+  }
+  .cat-wrap:hover .cat-tip { opacity: 1; }
   .who-dot {
     position: absolute;
     bottom: -1px;

@@ -1,8 +1,7 @@
 <script>
   import { scale, fade } from 'svelte/transition';
   import { elasticOut } from 'svelte/easing';
-  import { getRarityColor } from '$lib/utils/stickers';
-  import { SILHOUETTES } from '$lib/data/stickerSilhouettes.js';
+  import { getRarityColor, stickerUrl } from '$lib/utils/stickers';
   import StickerOutline from './StickerOutline.svelte';
 
   let { sticker, owned = true, count = 0, dropChance = 0, firstEarnedLabel = '', sourceTask = '', onclose } = $props();
@@ -42,16 +41,14 @@
     <div class="stage">
       {#if owned}
         <div class="vinyl">
-          <img src="/stickers/{sticker.image}" alt={sticker.name} />
-          <span class="foil" style="--m: url('/stickers/{sticker.image}');" aria-hidden="true"></span>
+          <img src={stickerUrl(sticker.image)} alt={sticker.name} />
+          <span class="foil" style="--m: url('{stickerUrl(sticker.image)}');" aria-hidden="true"></span>
         </div>
       {:else}
         <StickerOutline
-          d={SILHOUETTES[sticker.image]}
+          image={sticker.image}
           size={150}
-          strokeWidth={5}
-          dash="0.6 12"
-          stroke="color-mix(in srgb, var(--rarity) 55%, var(--color-text-secondary))"
+          color="color-mix(in srgb, var(--rarity) 55%, var(--color-text-secondary))"
         />
       {/if}
     </div>

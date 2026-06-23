@@ -32,12 +32,7 @@
   import StickerPeel from '$lib/components/tasks/StickerPeel.svelte';
   import StickerOutline from '$lib/components/tasks/StickerOutline.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
-
-  // Traced silhouette of blobcat_adorable (scripts/trace-sticker-silhouettes.mjs)
-  // — inlined so the empty-slot outline doesn't pull in the full silhouette map.
-  const SLOT_OUTLINE =
-    'M 39.022 22.750 C 36.814 30.474, 34 49.459, 34 56.628 C 34 62.801, 33.517 65.024, 31.140 69.779 C 19.093 93.878, 14.949 140.905, 23.569 155.688 C 43.493 189.853, 164.180 189.536, 176.995 155.285 C 181.877 142.234, 181.833 114.171, 176.892 89.943 L 174.801 79.689 176.872 72.595 C 180.830 59.033, 182.471 37.617, 179.917 32.846 C 178.103 29.455, 158.626 32.649, 141.986 39.066 L 133.888 42.189 126.194 40.129 C 110.683 35.978, 90.121 35.053, 77.633 37.946 C 73.946 38.800, 73.422 38.587, 66.319 33.334 C 56.674 26.201, 44.466 19, 42.018 19 C 40.652 19, 39.783 20.087, 39.022 22.750';
-  import { getStickerForTags, getStickerById } from '$lib/utils/stickers';
+  import { getStickerForTags, getStickerById, stickerUrl } from '$lib/utils/stickers';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 
   let { data } = $props();
@@ -163,21 +158,27 @@
   let topUrgent = $derived(urgentTasks[0] ?? null);
   let upcomingNext = $derived(allSorted[0] ?? null);
 
-  // Reward shelf — up to 8 cats I've earned this week, ordered oldest → newest
-  // so the freshest one lands on the right (next to the empty slots). Padded
-  // with empty slots that hint at more to collect.
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-  let weekStickers = $derived(
-    (stats.recentCompletions ?? [])
+  // Start of the current calendar week — Monday 00:00, local time.
+  function weekStartMs() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return d.getTime();
+  }
+  // Reward shelf — every cat I've earned this calendar week (since Monday),
+  // ordered oldest → newest so the freshest lands on the right. Always keep at
+  // least one empty outline as the spot for the next sticker.
+  let weekStickers = $derived.by(() => {
+    const start = weekStartMs();
+    return (stats.recentCompletions ?? [])
       .filter((/** @type {any} */ c) =>
         c.completedBy === currentUser && c.stickerId &&
-        Date.now() - new Date(c.completedAt).getTime() < WEEK_MS)
-      .map((/** @type {any} */ c) => getStickerById(c.stickerId))
-      .filter(Boolean)
-      .slice(0, 8)
-      .reverse()
-  );
-  let emptySlots = $derived(Array.from({ length: Math.max(0, 6 - weekStickers.length) }));
+        new Date(c.completedAt).getTime() >= start)
+      .map((/** @type {any} */ c) => ({ sticker: getStickerById(c.stickerId), task: c.taskTitle || '' }))
+      .filter((/** @type {any} */ o) => o.sticker)
+      .reverse();
+  });
+  let emptySlots = $derived(Array.from({ length: Math.max(1, 6 - weekStickers.length) }));
 
   /** @param {any} task */
   function getUrgencyClass(task) {
@@ -230,7 +231,7 @@
     // its bounce-in, instead of fading into an empty circle.
     if (typeof Image !== 'undefined') {
       const img = new Image();
-      img.src = `/stickers/${sticker.image}`;
+      img.src = stickerUrl(sticker.image);
     }
     awardedSticker = sticker;
     completeForTaskId = null;
@@ -301,29 +302,30 @@
     {#if tasks.length > 0}
       {#snippet stickerShelf()}
         <div class="shelf">
-          {#each weekStickers as s, i (i)}
+          {#each weekStickers as o, i (i)}
             {@const isNewest = i === weekStickers.length - 1}
             {#if isNewest && peelState !== 'idle'}
               <!-- Landing cell: keep the outline until the peel has fully played,
                    with the peel canvas overlaid while it animates. -->
               <span class="shelf-cat landing">
                 <span class="landing-outline" class:fading={peelState === 'peeling'} style="--fade: {PEEL_MS}ms">
-                  <StickerOutline d={SLOT_OUTLINE} size={64} stroke="rgba(90, 74, 44, 0.38)" />
+                  <StickerOutline image="blobcat_adorable.svg" size={64} color="rgba(90, 74, 44, 0.38)" />
                 </span>
                 {#if peelState === 'peeling'}
                   <span class="peel-over">
-                    <StickerPeel src="/stickers/{s.image}" size={64} duration={PEEL_MS} oncomplete={onPeelDone} />
+                    <StickerPeel src={stickerUrl(o.sticker.image)} size={64} duration={PEEL_MS} oncomplete={onPeelDone} />
                   </span>
                 {/if}
               </span>
             {:else}
               <span class="shelf-cat">
-                <img class="shelf-sticker" src="/stickers/{s.image}" alt={s.name} title={s.name} />
+                <img class="shelf-sticker" src={stickerUrl(o.sticker.image)} alt={o.sticker.name} loading="lazy" />
+                {#if o.task}<span class="cat-tip">{o.task}</span>{/if}
               </span>
             {/if}
           {/each}
           {#each emptySlots as _, i (i)}
-            <StickerOutline d={SLOT_OUTLINE} size={64} stroke="rgba(90, 74, 44, 0.38)" />
+            <StickerOutline image="blobcat_adorable.svg" size={64} color="rgba(90, 74, 44, 0.38)" />
           {/each}
         </div>
       {/snippet}
@@ -778,6 +780,32 @@
     object-fit: contain;
     display: block;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+  }
+  /* Hover box naming the task that earned this cat. */
+  .cat-tip {
+    position: absolute;
+    bottom: calc(100% + 0.35rem);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 150px;
+    padding: 0.28rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+    font-size: 0.72rem;
+    line-height: 1.25;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms;
+    z-index: 6;
+  }
+  .shelf-cat:hover .cat-tip,
+  .shelf-cat:focus-within .cat-tip {
+    opacity: 1;
   }
 
   /* ── Hero carousel (urgent ⇄ Stickerheft) ── */
