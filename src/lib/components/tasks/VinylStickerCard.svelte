@@ -2,6 +2,8 @@
   import { scale, fade } from 'svelte/transition';
   import { elasticOut } from 'svelte/easing';
   import { getRarityColor } from '$lib/utils/stickers';
+  import { SILHOUETTES } from '$lib/data/stickerSilhouettes.js';
+  import StickerOutline from './StickerOutline.svelte';
 
   let { sticker, owned = true, count = 0, dropChance = 0, firstEarnedLabel = '', sourceTask = '', onclose } = $props();
 
@@ -44,7 +46,13 @@
           <span class="foil" style="--m: url('/stickers/{sticker.image}');" aria-hidden="true"></span>
         </div>
       {:else}
-        <div class="silhouette" style="--m: url('/stickers/{sticker.image}');" aria-hidden="true"></div>
+        <StickerOutline
+          d={SILHOUETTES[sticker.image]}
+          size={150}
+          strokeWidth={5}
+          dash="0.6 12"
+          stroke="color-mix(in srgb, var(--rarity) 55%, var(--color-text-secondary))"
+        />
       {/if}
     </div>
 
@@ -116,15 +124,6 @@
       drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff)
       drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff)
       drop-shadow(0 6px 7px rgba(0, 0, 0, 0.3));
-  }
-  .silhouette {
-    position: relative;
-    width: 150px;
-    height: 150px;
-    background: color-mix(in srgb, var(--rarity) 45%, var(--color-text-secondary));
-    -webkit-mask: var(--m) center / contain no-repeat;
-    mask: var(--m) center / contain no-repeat;
-    opacity: 0.55;
   }
   .foil {
     position: absolute;
