@@ -1,5 +1,7 @@
 <script>
   import { getRarityColor } from '$lib/utils/stickers';
+  import { SILHOUETTES } from '$lib/data/stickerSilhouettes.js';
+  import StickerOutline from './StickerOutline.svelte';
 
   let { sticker, count = 0, owned = false, onpick } = $props();
 
@@ -64,7 +66,9 @@
     </div>
     <span class="label">{sticker.name}</span>
   {:else}
-    <div class="deboss" aria-hidden="true"></div>
+    <div class="deboss" aria-hidden="true">
+      <StickerOutline d={SILHOUETTES[sticker.image]} size={70} stroke="var(--deboss-stroke)" />
+    </div>
     <span class="label empty">?</span>
   {/if}
 </div>
@@ -185,23 +189,21 @@
     box-shadow: var(--shadow-sm);
   }
 
-  /* ---------- missing: debossed silhouette pressed into the page ---------- */
+  /* ---------- missing: dotted outline of the sticker's own silhouette ---------- */
   .deboss {
+    /* fixed paper tones — the album sheet stays cream in both themes */
+    --deboss-stroke: rgba(90, 74, 44, 0.5);
     width: 70px;
     height: 70px;
-    /* fixed paper tones — the album sheet stays cream in both themes */
-    background: rgba(90, 74, 44, 0.22);
-    -webkit-mask: var(--m) center / contain no-repeat;
-    mask: var(--m) center / contain no-repeat;
-    filter: drop-shadow(0 1.5px 0.5px rgba(255, 255, 255, 0.7));
-    opacity: 0.85;
+    display: grid;
+    place-items: center;
     cursor: pointer;
-    transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background 180ms;
+    transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .slot:not(.owned):hover .deboss,
   .slot:not(.owned):focus-visible .deboss {
     transform: translateY(-3px) scale(1.05);
-    background: rgba(90, 74, 44, 0.34);
+    --deboss-stroke: rgba(90, 74, 44, 0.72);
   }
 
   .label {

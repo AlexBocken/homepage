@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.131.0",
+	"version": "1.132.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -26,6 +26,7 @@
 		"deploy:dry": "bash scripts/deploy.sh --dry-run",
 		"photos:push": "bash scripts/hike-photos.sh push",
 		"photos:pull": "bash scripts/hike-photos.sh pull",
+		"trace:stickers": "node scripts/trace-sticker-silhouettes.mjs",
 		"tauri": "tauri"
 	},
 	"packageManager": "pnpm@11.3.0",
@@ -46,6 +47,7 @@
 		"bwip-js": "^4.10.1",
 		"jsdom": "^27.2.0",
 		"mdsvex": "^0.12.7",
+		"potrace": "^2.1.8",
 		"svelte": "^5.55.1",
 		"svelte-check": "^4.4.6",
 		"tslib": "^2.8.1",

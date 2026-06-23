@@ -1,4 +1,5 @@
 <script>
+  import { onDestroy } from 'svelte';
   import { invalidateAll, goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -13,6 +14,7 @@
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
   import Calendar from '@lucide/svelte/icons/calendar';
   import Sparkles from '@lucide/svelte/icons/sparkles';
+  import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import Wind from '@lucide/svelte/icons/wind';
   import Bath from '@lucide/svelte/icons/bath';
   import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
@@ -27,8 +29,15 @@
   import { fly, scale } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import StickerPopup from '$lib/components/tasks/StickerPopup.svelte';
+  import StickerPeel from '$lib/components/tasks/StickerPeel.svelte';
+  import StickerOutline from '$lib/components/tasks/StickerOutline.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { getStickerForTags } from '$lib/utils/stickers';
+
+  // Traced silhouette of blobcat_adorable (scripts/trace-sticker-silhouettes.mjs)
+  // — inlined so the empty-slot outline doesn't pull in the full silhouette map.
+  const SLOT_OUTLINE =
+    'M 39.022 22.750 C 36.814 30.474, 34 49.459, 34 56.628 C 34 62.801, 33.517 65.024, 31.140 69.779 C 19.093 93.878, 14.949 140.905, 23.569 155.688 C 43.493 189.853, 164.180 189.536, 176.995 155.285 C 181.877 142.234, 181.833 114.171, 176.892 89.943 L 174.801 79.689 176.872 72.595 C 180.830 59.033, 182.471 37.617, 179.917 32.846 C 178.103 29.455, 158.626 32.649, 141.986 39.066 L 133.888 42.189 126.194 40.129 C 110.683 35.978, 90.121 35.053, 77.633 37.946 C 73.946 38.800, 73.422 38.587, 66.319 33.334 C 56.674 26.201, 44.466 19, 42.018 19 C 40.652 19, 39.783 20.087, 39.022 22.750';
+  import { getStickerForTags, getStickerById } from '$lib/utils/stickers';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 
   let { data } = $props();
@@ -36,7 +45,6 @@
   let tasks = $derived(data.tasks || []);
   let stats = $derived(data.stats || { userStats: [], userStickers: [], recentCompletions: [] });
   let currentUser = $derived(data.session?.user?.nickname || '');
-  let myStat = $derived(stats.userStats.find((/** @type {any} */ s) => s._id === currentUser));
   /** @type {any} */
   let awardedSticker = $state(null);
   let filterTag = $state('');
@@ -47,6 +55,57 @@
   let completeForTaskId = $state(null);
   /** @type {ReturnType<typeof setTimeout> | null} */
   let longPressTimer = $state(null);
+
+  // Hero carousel (0 = urgent task, 1 = Stickerheft) + placement choreography.
+  // pendingPlacement is armed in completeTask the moment a task is completed, so
+  // the freshly-earned cat is rendered in its peeled-off (hidden) state and never
+  // flashes pre-placed; clearing it lets the CSS transition peel it onto the shelf.
+  let heroSlide = $state(0);
+  // Newest cat lifecycle: 'idle' (static img) → 'armed' (hidden after completion,
+  // before the popup closes) → 'peeling' (canvas plays the peel) → 'idle'.
+  let peelState = $state('idle');
+  const PEEL_MS = 1400; // sticker-peel duration
+  /** @type {ReturnType<typeof setTimeout>[]} */
+  let heroTimers = [];
+
+  function clearHeroTimers() {
+    heroTimers.forEach(clearTimeout);
+    heroTimers = [];
+  }
+
+  /** @param {number} i */
+  function selectHero(i) {
+    clearHeroTimers(); // a manual tap cancels any running sequence
+    peelState = 'idle';
+    heroSlide = i;
+  }
+
+  // After the reward popup closes: with urgent tasks still around (two heroes)
+  // slide to the Stickerheft, then play the peel; onPeelDone glides back.
+  function playStickerPlacement() {
+    clearHeroTimers();
+    if (topUrgent) {
+      heroSlide = 1;
+      heroTimers.push(setTimeout(() => { peelState = 'peeling'; }, 420));
+    } else {
+      heroTimers.push(setTimeout(() => { peelState = 'peeling'; }, 80));
+    }
+  }
+
+  function onPeelDone() {
+    peelState = 'idle';
+    if (heroSlide === 1) {
+      clearHeroTimers();
+      heroTimers.push(setTimeout(() => { heroSlide = 0; }, 800)); // admire, then glide back
+    }
+  }
+
+  function onStickerClosed() {
+    awardedSticker = null;
+    playStickerPlacement();
+  }
+
+  onDestroy(clearHeroTimers);
 
   // Collect all unique tags from tasks
   let allTags = $derived([...new Set(tasks.flatMap((/** @type {any} */ t) => t.tags))].sort());
@@ -66,6 +125,36 @@
       return new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime();
     })
   );
+
+  // Hero data — independent of the list filters, always reflects real urgency.
+  let allSorted = $derived(
+    [...tasks].sort((/** @type {any} */ a, /** @type {any} */ b) =>
+      new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime())
+  );
+  let urgentTasks = $derived(
+    allSorted.filter((/** @type {any} */ t) => {
+      const c = getUrgencyClass(t);
+      return c === 'overdue' || c === 'due-today';
+    })
+  );
+  let topUrgent = $derived(urgentTasks[0] ?? null);
+  let upcomingNext = $derived(allSorted[0] ?? null);
+
+  // Reward shelf — up to 8 cats I've earned this week, ordered oldest → newest
+  // so the freshest one lands on the right (next to the empty slots). Padded
+  // with empty slots that hint at more to collect.
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  let weekStickers = $derived(
+    (stats.recentCompletions ?? [])
+      .filter((/** @type {any} */ c) =>
+        c.completedBy === currentUser && c.stickerId &&
+        Date.now() - new Date(c.completedAt).getTime() < WEEK_MS)
+      .map((/** @type {any} */ c) => getStickerById(c.stickerId))
+      .filter(Boolean)
+      .slice(0, 8)
+      .reverse()
+  );
+  let emptySlots = $derived(Array.from({ length: Math.max(0, 6 - weekStickers.length) }));
 
   /** @param {any} task */
   function getUrgencyClass(task) {
@@ -123,13 +212,19 @@
     awardedSticker = sticker;
     completeForTaskId = null;
 
+    // Arm the shelf NOW (before the refresh below adds the new cat) so the
+    // freshly-earned cat never renders pre-placed — it stays hidden until the
+    // popup closes and we peel it on.
+    clearHeroTimers();
+    peelState = 'armed';
+
     // Persist in the background; tell the server which sticker we showed.
     const res = await fetch(`/api/tasks/${task._id}/complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stickerId: sticker.id, ...(forUser ? { completedFor: forUser } : {}) })
     });
-    if (!res.ok) return;
+    if (!res.ok) { peelState = 'idle'; return; }
     await refreshTasks();
   }
 
@@ -172,12 +267,6 @@
     pflanzen: Flower2, giessen: Droplets, düngen: Leaf, garten: Leaf,
     einkaufen: ShoppingCart, müll: Trash2,
   };
-
-  /** @param {string} nickname */
-  function getCompletionCount(nickname) {
-    const stat = stats.userStats.find((/** @type {any} */ s) => s._id === nickname);
-    return stat?.count || 0;
-  }
 </script>
 
 <svelte:head><title>Aufgaben - Bocken</title></svelte:head>
@@ -186,15 +275,125 @@
   <header class="page-header">
     <h1>Aufgaben</h1>
 
-    {#if myStat}
-      <div class="scoreboard">
-        <div class="score-card">
-          <ProfilePicture username={currentUser} size={36} />
-          <div class="score-info">
-            <span class="score-count">{myStat.count} <span class="score-label">erledigt</span></span>
+    {#if tasks.length > 0}
+      {#snippet stickerShelf()}
+        <div class="shelf">
+          {#each weekStickers as s, i (i)}
+            {@const isNewest = i === weekStickers.length - 1}
+            {#if isNewest && peelState !== 'idle'}
+              <!-- Landing cell: keep the outline until the peel has fully played,
+                   with the peel canvas overlaid while it animates. -->
+              <span class="shelf-cat landing">
+                <span class="landing-outline" class:fading={peelState === 'peeling'} style="--fade: {PEEL_MS}ms">
+                  <StickerOutline d={SLOT_OUTLINE} size={64} stroke="rgba(90, 74, 44, 0.38)" />
+                </span>
+                {#if peelState === 'peeling'}
+                  <span class="peel-over">
+                    <StickerPeel src="/stickers/{s.image}" size={64} duration={PEEL_MS} oncomplete={onPeelDone} />
+                  </span>
+                {/if}
+              </span>
+            {:else}
+              <span class="shelf-cat">
+                <img class="shelf-sticker" src="/stickers/{s.image}" alt={s.name} title={s.name} />
+              </span>
+            {/if}
+          {/each}
+          {#each emptySlots as _, i (i)}
+            <StickerOutline d={SLOT_OUTLINE} size={64} stroke="rgba(90, 74, 44, 0.38)" />
+          {/each}
+        </div>
+      {/snippet}
+
+      {#snippet urgentHero()}
+        {@const uClass = topUrgent ? getUrgencyClass(topUrgent) : ''}
+        <section class="hero hero-urgent {uClass}">
+          <div class="hero-eyebrow">
+            <AlertCircle size={15} />
+            <span>{getUrgencyLabel(topUrgent)}</span>
+          </div>
+          <div class="hero-main">
+            <div class="hero-text">
+              <h2 class="hero-title">{topUrgent.title}</h2>
+              <div class="hero-meta">
+                {#if topUrgent.tags?.length}
+                  {#each topUrgent.tags.slice(0, 2) as tag (tag)}
+                    <span class="hero-tag">
+                      {#if TAG_ICONS[tag]}
+                        {@const Icon = TAG_ICONS[tag]}
+                        <Icon size={13} />
+                      {/if}
+                      {tag}
+                    </span>
+                  {/each}
+                {/if}
+                {#if topUrgent.assignees?.length}
+                  <span class="hero-assignee">
+                    <ProfilePicture username={topUrgent.assignees[0]} size={22} />
+                    {topUrgent.assignees[0]}
+                  </span>
+                {/if}
+              </div>
+            </div>
+            <div class="complete-wrapper hero-complete">
+              {#if completeForTaskId === topUrgent._id}
+                <div class="complete-for-popover" transition:scale={{ duration: 150, start: 0.9 }}>
+                  <span class="popover-label">Erledigt für:</span>
+                  {#each USERS as user (user)}
+                    <button class="popover-user" onclick={() => completeTask(topUrgent, user)}>
+                      <ProfilePicture username={user} size={28} />
+                      <span>{user}</span>
+                    </button>
+                  {/each}
+                  <button class="popover-close" onclick={() => completeForTaskId = null}>&times;</button>
+                </div>
+              {/if}
+              <button
+                class="hero-btn"
+                onclick={() => { cancelLongPress(); if (!completeForTaskId) completeTask(topUrgent); }}
+                onpointerdown={() => startLongPress(topUrgent)}
+                onpointerup={cancelLongPress}
+                onpointerleave={cancelLongPress}
+                title="Klick = selbst erledigt, gedrückt halten = für andere"
+              >
+                <Check size={20} strokeWidth={2.5} /> Erledigt
+              </button>
+            </div>
+          </div>
+          {#if urgentTasks.length > 1}
+            <p class="hero-more">Noch {urgentTasks.length - 1} {urgentTasks.length - 1 === 1 ? 'Aufgabe' : 'Aufgaben'} dringend</p>
+          {/if}
+        </section>
+      {/snippet}
+
+      {#snippet rewardHero()}
+        <section class="hero hero-reward">
+          <div class="hero-eyebrow done">
+            <Sparkles size={15} />
+            <span>{topUrgent ? 'Dein Stickerheft' : 'Für heute geschafft'}</span>
+          </div>
+          <p class="shelf-title">Diese Woche gesammelt</p>
+          {@render stickerShelf()}
+          {#if upcomingNext && !topUrgent}
+            <p class="hero-more">Als Nächstes: {upcomingNext.title} · {getUrgencyLabel(upcomingNext)}</p>
+          {/if}
+        </section>
+      {/snippet}
+
+      {#if topUrgent}
+        <div class="hero-carousel">
+          <div class="hero-track" style="transform: translateX(-{heroSlide * 100}%)">
+            <div class="hero-slide">{@render urgentHero()}</div>
+            <div class="hero-slide">{@render rewardHero()}</div>
           </div>
         </div>
-      </div>
+        <div class="hero-dots" role="tablist" aria-label="Hero umschalten">
+          <button class="hero-dot" class:active={heroSlide === 0} role="tab" aria-selected={heroSlide === 0} aria-label="Dringende Aufgabe" onclick={() => selectHero(0)}></button>
+          <button class="hero-dot" class:active={heroSlide === 1} role="tab" aria-selected={heroSlide === 1} aria-label="Stickerheft" onclick={() => selectHero(1)}></button>
+        </div>
+      {:else}
+        {@render rewardHero()}
+      {/if}
     {/if}
 
     <div class="filters">
@@ -359,7 +558,7 @@
 </ActionButton>
 
 {#if awardedSticker}
-  <StickerPopup sticker={awardedSticker} onclose={() => awardedSticker = null} />
+  <StickerPopup sticker={awardedSticker} onclose={onStickerClosed} />
 {/if}
 
 <style>
@@ -396,35 +595,214 @@
   }
   .btn-add:hover { background: var(--color-primary-hover); }
 
-  /* Scoreboard */
-  .scoreboard {
-    display: flex;
-    gap: 1rem;
+  /* ── Hero: adaptive "what's urgent now" / reward shelf ── */
+  .hero {
     margin-bottom: 1rem;
-    flex-wrap: wrap;
+    padding: 1.1rem 1.25rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--nord13) 6%, var(--color-surface));
   }
-  .score-card {
+  .hero-urgent.overdue {
+    background: color-mix(in srgb, var(--red) 9%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--red) 28%, var(--color-border));
+  }
+  .hero-urgent.due-today {
+    background: color-mix(in srgb, var(--orange) 8%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--orange) 24%, var(--color-border));
+  }
+  /* Stickerheft hero uses the same warm dotted "paper" as the rewards album. */
+  .hero-reward {
+    background-color: #f3ecd9;
+    background-image: radial-gradient(rgba(120, 100, 70, 0.16) 1px, transparent 1.4px);
+    background-size: 18px 18px;
+    border-color: #e4d9be;
+    box-shadow: var(--shadow-sm), inset 0 0 40px rgba(150, 130, 90, 0.08);
+  }
+  .hero-reward .shelf-title { color: #5a4a2c; }
+  .hero-reward .hero-more { color: #8a7747; }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.5rem;
+  }
+  .hero-urgent.overdue .hero-eyebrow { color: var(--red); }
+  .hero-urgent.due-today .hero-eyebrow { color: var(--orange); }
+  .hero-eyebrow.done { color: var(--green); }
+
+  .hero-main {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: 0.6rem 1.2rem;
+    justify-content: space-between;
+    gap: 1rem;
   }
-  .score-info {
-    display: flex;
-    flex-direction: column;
-  }
-  .score-count {
-    font-size: 1.3rem;
+  .hero-text { min-width: 0; }
+  .hero-title {
+    margin: 0;
+    font-size: 1.6rem;
     font-weight: 800;
-    color: var(--color-primary);
-    line-height: 1.2;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
   }
-  .score-label {
-    font-size: 0.65rem;
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    text-transform: capitalize;
+  }
+  .hero-assignee {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
     font-weight: 500;
     color: var(--color-text-secondary);
+    text-transform: capitalize;
+  }
+
+  .hero-complete { flex-shrink: 0; }
+  .hero-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.1rem;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--green);
+    color: var(--nord0); /* dark text — Nord green is light */
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 150ms;
+  }
+  .hero-btn:hover { background: color-mix(in srgb, var(--green) 88%, black); transform: scale(1.03); }
+  .hero-btn:active { transform: scale(0.97); }
+
+  .hero-more {
+    margin: 0.7rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+  }
+
+  /* Reward shelf (shown when nothing is urgent) */
+  .shelf-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .shelf {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  /* Resting cats are plain images; the peel animation is handled by an overlaid
+     <canvas> (StickerPeel) only while a cat is being placed. */
+  .shelf-cat {
+    --cat: 64px;
+    position: relative;
+    display: inline-block;
+    width: var(--cat);
+    height: var(--cat);
+    line-height: 0;
+  }
+  .shelf-cat.landing { position: relative; }
+  .landing-outline {
+    display: block;
+    line-height: 0;
+    transition: opacity var(--fade, 600ms) ease;
+  }
+  .landing-outline.fading { opacity: 0; } /* fade the outline out as the cat peels on */
+  .peel-over {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  .shelf-sticker {
+    width: var(--cat);
+    height: var(--cat);
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+  }
+
+  /* ── Hero carousel (urgent ⇄ Stickerheft) ── */
+  .hero-carousel {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    margin-bottom: 0.5rem;
+  }
+  .hero-track {
+    display: flex;
+    align-items: stretch;
+    transition: transform 420ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .hero-slide {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+  .hero-slide .hero {
+    height: 100%;
+    margin-bottom: 0;
+  }
+
+  .hero-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.2rem;
+    margin-bottom: 1rem;
+  }
+  .hero-dot {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  .hero-dot::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-border);
+    transition: all 200ms;
+  }
+  .hero-dot.active::before {
+    background: var(--color-primary);
+    transform: scale(1.3);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-track { transition: none; }
+    .hero-dot::before { transition: none; }
   }
 
   /* Filters — pill toggles */
@@ -763,13 +1141,17 @@
   .empty-state .btn-add { margin: 0 auto; width: fit-content; }
 
   @media (max-width: 600px) {
-    .tasks-page { padding: 1rem 0.75rem; }
+    .tasks-page { padding: 1rem 0.75rem 6rem; }
     h1 { font-size: 1.3rem; }
     .task-list { grid-template-columns: 1fr; }
     .task-actions { opacity: 1; }
-    .scoreboard { gap: 0.5rem; }
-    .score-card { padding: 0.5rem 1rem; min-width: 80px; }
-    .score-count { font-size: 1.4rem; }
     .btn-complete { width: 40px; height: 40px; }
+
+    /* Hero stacks: title above a full-width complete button */
+    .hero-main { flex-direction: column; align-items: stretch; gap: 0.85rem; }
+    .hero-title { font-size: 1.35rem; }
+    .hero-complete { width: 100%; }
+    .hero-btn { width: 100%; }
+    /* keep cats at 64px so they match the canvas peel overlay */
   }
 </style>
