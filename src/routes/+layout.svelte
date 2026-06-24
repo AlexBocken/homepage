@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import { initExternalLinks } from '$lib/js/externalLinks';
 	let { children } = $props();
 
 	const websiteJsonLd = {
@@ -82,6 +83,10 @@
 			}
 		}
 	});
+
+	/** In the Tauri app / installed PWA, open external links in the system browser
+	 *  instead of trapping them inside the app window. No-op in a normal browser tab. */
+	onMount(() => initExternalLinks());
 
 	onNavigate((navigation) => {
 		if (!(/** @type {any} */ (document)).startViewTransition) return;
