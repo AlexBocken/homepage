@@ -90,7 +90,7 @@
 		padding: 0.4rem !important;
 	}
 	.options-wrap {
-		--menu-bg: rgba(46, 52, 64, 0.95);
+		--menu-bg: rgba(46, 52, 64, 0.82);
 		--menu-border: rgba(255,255,255,0.08);
 		--menu-text: rgba(255,255,255,0.9);
 		--menu-text-hover: var(--nord11);
@@ -116,11 +116,13 @@
 		border-radius: 8px;
 		width: 30ch;
 		padding: 1rem;
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
 		box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 	}
 	@media (prefers-color-scheme: dark) {
 		.options-wrap {
-			--menu-bg: rgba(20, 20, 20, 0.92);
+			--menu-bg: rgba(20, 20, 20, 0.82);
 		}
 	}
 	:global(:root[data-theme="dark"]) .options-wrap {
@@ -128,7 +130,7 @@
 	}
 	@media (prefers-color-scheme: light) {
 		:global(:root:not([data-theme])) .options-wrap {
-			--menu-bg: rgba(255, 255, 255, 0.95);
+			--menu-bg: rgba(255, 255, 255, 0.85);
 			--menu-border: rgba(0,0,0,0.08);
 			--menu-text: var(--color-text-primary);
 			--menu-text-hover: var(--nord11);
