@@ -35,6 +35,14 @@ PRIVATE_ASSETS_OWNER="${PRIVATE_ASSETS_OWNER:-http:http}"
 # rsync that tree to the path nginx serves.
 STICKERS_ASSETS_DIR="${STICKERS_ASSETS_DIR:-/var/www/static/stickers}"
 STICKERS_ASSETS_OWNER="${STICKERS_ASSETS_OWNER:-http:http}"
+# Android APK: built + signed by scripts/android-build-deploy.sh and published to
+# the nginx-served path below, but ONLY when the Tauri app version was bumped.
+# "Bumped" = src-tauri/tauri.conf.json version differs from the sidecar
+# Bocken.apk.version recorded on the server next to the last-published APK.
+APK_REMOTE_PATH="${APK_REMOTE_PATH:-/var/www/static/Bocken.apk}"
+APK_OWNER="${APK_OWNER:-http:http}"
+APK_SIGNED="src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-signed.apk"
+TAURI_CONF="src-tauri/tauri.conf.json"
 
 DRY=""
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -88,9 +96,27 @@ echo ":: Syncing build/ → $REMOTE:$REMOTE_DIR/dist/"
 rsync -az --delete $DRY --info=progress2 \
     build/ "$REMOTE:$REMOTE_DIR/dist/"
 
+# The server only needs production deps at runtime, so prune the build-only
+# devDependencies before shipping node_modules. Build already ran above (it needs
+# the dev deps), and they're restored right after the sync — both so local dev
+# isn't left crippled and because the optional APK build below needs @tauri-apps/cli.
+# Skipped entirely on --dry-run so the tree is never mutated.
+if [[ -z "$DRY" ]]; then
+    echo ":: Pruning dev dependencies from node_modules (production-only)"
+    pnpm prune --prod
+    # Safety net: restore dev deps on any exit, even if a later step aborts.
+    trap 'echo ":: Restoring dev dependencies locally"; pnpm install --frozen-lockfile' EXIT
+fi
+
 echo ":: Syncing node_modules/ → $REMOTE:$REMOTE_DIR/node_modules/"
 rsync -az --delete $DRY --info=progress2 \
     node_modules/ "$REMOTE:$REMOTE_DIR/node_modules/"
+
+if [[ -z "$DRY" ]]; then
+    echo ":: Restoring dev dependencies locally"
+    pnpm install --frozen-lockfile
+    trap - EXIT
+fi
 
 echo ":: Syncing static/ → $REMOTE:$REMOTE_DIR/static/"
 rsync -az --delete $DRY --info=progress2 \
@@ -134,24 +160,47 @@ else
 fi
 
 if [[ -n "$DRY" ]]; then
-    echo ":: Dry run complete — no service restart"
-    exit 0
+    echo ":: Dry run — skipping ownership fix + service restart"
+else
+    echo ":: Fixing ownership on server"
+    ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi && if [[ -d $PRIVATE_ASSETS_DIR ]]; then chown -R $PRIVATE_ASSETS_OWNER $PRIVATE_ASSETS_DIR; fi && if [[ -d $STICKERS_ASSETS_DIR ]]; then chown -R $STICKERS_ASSETS_OWNER $STICKERS_ASSETS_DIR; fi"
+
+    echo ":: Restarting $SERVICE"
+    ssh "$REMOTE" "systemctl restart $SERVICE"
+
+    echo ":: Verifying service is active"
+    sleep 2
+    if ssh "$REMOTE" "systemctl is-active --quiet $SERVICE"; then
+        echo "   $SERVICE is running"
+    else
+        echo "!! $SERVICE failed to start — check logs:"
+        ssh "$REMOTE" "journalctl -u $SERVICE -n 30 --no-pager"
+        exit 1
+    fi
 fi
 
-echo ":: Fixing ownership on server"
-ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi && if [[ -d $PRIVATE_ASSETS_DIR ]]; then chown -R $PRIVATE_ASSETS_OWNER $PRIVATE_ASSETS_DIR; fi && if [[ -d $STICKERS_ASSETS_DIR ]]; then chown -R $STICKERS_ASSETS_OWNER $STICKERS_ASSETS_DIR; fi"
+# Publish the Android APK only when the Tauri app version was bumped (see config above).
+# A web-only deploy leaves tauri.conf.json untouched, so this whole block no-ops.
+local_tauri_version=$(grep -m1 '"version"' "$TAURI_CONF" | sed -E 's/.*:[[:space:]]*"([^"]+)".*/\1/' || true)
+remote_tauri_version=$(ssh "$REMOTE" "cat '${APK_REMOTE_PATH}.version' 2>/dev/null" || true)
 
-echo ":: Restarting $SERVICE"
-ssh "$REMOTE" "systemctl restart $SERVICE"
-
-echo ":: Verifying service is active"
-sleep 2
-if ssh "$REMOTE" "systemctl is-active --quiet $SERVICE"; then
-    echo "   $SERVICE is running"
+if [[ -z "$local_tauri_version" ]]; then
+    echo "!! Could not read Tauri version from $TAURI_CONF — skipping APK publish"
+elif [[ "$local_tauri_version" == "$remote_tauri_version" ]]; then
+    echo ":: Tauri app v$local_tauri_version unchanged — skipping APK build/publish"
+elif [[ -n "$DRY" ]]; then
+    echo ":: [dry-run] Tauri app bumped (${remote_tauri_version:-none} → $local_tauri_version) — would build + publish APK to $REMOTE:$APK_REMOTE_PATH"
 else
-    echo "!! $SERVICE failed to start — check logs:"
-    ssh "$REMOTE" "journalctl -u $SERVICE -n 30 --no-pager"
-    exit 1
+    echo ":: Tauri app bumped (${remote_tauri_version:-none} → $local_tauri_version) — building signed APK"
+    bash scripts/android-build-deploy.sh build
+    if [[ ! -f "$APK_SIGNED" ]]; then
+        echo "!! Signed APK not found at $APK_SIGNED — aborting APK publish"
+        exit 1
+    fi
+    echo ":: Syncing APK → $REMOTE:$APK_REMOTE_PATH"
+    rsync -az --info=progress2 "$APK_SIGNED" "$REMOTE:$APK_REMOTE_PATH"
+    ssh "$REMOTE" "printf '%s' '$local_tauri_version' > '${APK_REMOTE_PATH}.version' && chown $APK_OWNER '$APK_REMOTE_PATH' '${APK_REMOTE_PATH}.version'"
+    echo ":: Published Bocken.apk v$local_tauri_version"
 fi
 
 echo ":: Deploy complete"
