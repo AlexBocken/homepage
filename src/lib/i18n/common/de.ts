@@ -9,6 +9,7 @@ export const de = {
 	pages: 'Seiten',
 	recipes: 'Rezepte',
 	family_photos: 'Familienbilder',
+	photos: 'Fotos',
 	video_conferences: 'Videokonferenzen',
 	search_engine: 'Suchmaschine',
 	shopping: 'Einkauf',
