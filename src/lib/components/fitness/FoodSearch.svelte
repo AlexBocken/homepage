@@ -6,6 +6,7 @@
 	import Heart from '@lucide/svelte/icons/heart';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import ScanBarcode from '@lucide/svelte/icons/scan-barcode';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import X from '@lucide/svelte/icons/x';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import MacroBreakdown from './MacroBreakdown.svelte';
@@ -79,12 +80,21 @@
 
 	// --- Barcode scanner state ---
 	let scanning = $state(false);
+	let cameraStarting = $state(false); // true from scan-start until the live preview plays
 	let scanError = $state('');
 	/** @type {HTMLVideoElement | null} */
 	let videoEl = $state(null);
 	/** @type {MediaStream | null} */
 	let scanStream = $state(null);
 	let scanDebug = $state('');
+	/** ZXing-ponyfill detection worker (created only when native BarcodeDetector is absent). @type {Worker | null} */
+	let scanWorker = null;
+	/** Resolver for the in-flight worker detect request. @type {((codes: string[]) => void) | null} */
+	let workerPending = null;
+	/** @type {((value?: unknown) => void) | null} */
+	let workerReadyResolve = null;
+	/** @type {((reason?: unknown) => void) | null} */
+	let workerReadyReject = null;
 
 
 	function doSearch() {
@@ -228,6 +238,108 @@
 		return (10 - (sum % 10)) % 10 === check;
 	}
 
+	/** Hand a frame to the detection worker, which takes ownership of (and closes) the bitmap.
+	 * @param {ImageBitmap} bitmap
+	 * @returns {Promise<string[]>}
+	 */
+	function detectViaWorker(bitmap) {
+		return new Promise((resolve) => {
+			if (!scanWorker) { bitmap.close(); resolve([]); return; }
+			workerPending = resolve;
+			scanWorker.postMessage({ type: 'detect', bitmap }, [bitmap]);
+		});
+	}
+
+	/** @param {MessageEvent} e */
+	function handleWorkerMessage(e) {
+		const d = e.data;
+		if (d?.type === 'ready') {
+			workerReadyResolve?.(undefined);
+			workerReadyResolve = workerReadyReject = null;
+		} else if (d?.type === 'error') {
+			workerReadyReject?.(new Error(d.message));
+			workerReadyResolve = workerReadyReject = null;
+		} else if (d?.type === 'result') {
+			const cb = workerPending; workerPending = null; cb?.(d.codes ?? []);
+		} else if (d?.type === 'detect-error') {
+			const cb = workerPending; workerPending = null; cb?.([]);
+		}
+	}
+
+	/** Crop to the central reticle ROI and downscale before detecting — far fewer pixels
+	 * for the decoder, so each pass is much cheaper than a full-frame decode.
+	 * @returns {Promise<ImageBitmap | null>}
+	 */
+	async function grabRoiBitmap() {
+		const v = videoEl;
+		if (!v || !v.videoWidth || !v.videoHeight) return null;
+		const fw = v.videoWidth, fh = v.videoHeight;
+		const roiW = Math.round(fw * 0.9);
+		const roiH = Math.round(fh * 0.5);
+		const sx = Math.round((fw - roiW) / 2);
+		const sy = Math.round((fh - roiH) / 2);
+		const resizeWidth = Math.min(roiW, 800);
+		const resizeHeight = Math.max(1, Math.round(roiH * (resizeWidth / roiW)));
+		try {
+			return await createImageBitmap(v, sx, sy, roiW, roiH, { resizeWidth, resizeHeight, resizeQuality: 'medium' });
+		} catch {
+			// Some engines (older Safari) reject crop/resize options — fall back to the full frame.
+			try { return await createImageBitmap(v); } catch { return null; }
+		}
+	}
+
+	/** Resolve on the next decoded video frame (requestVideoFrameCallback) or a timed fallback —
+	 * paces detection to the display cadence instead of a fixed busy-loop. */
+	function nextVideoFrame() {
+		return new Promise((resolve) => {
+			const v = videoEl;
+			if (v && 'requestVideoFrameCallback' in v) {
+				/** @type {any} */ (v).requestVideoFrameCallback(() => resolve(undefined));
+			} else {
+				setTimeout(() => resolve(undefined), 120);
+			}
+		});
+	}
+
+	/** Last-resort ZXing ponyfill running on the main thread, for WebViews that lack
+	 * native BarcodeDetector AND can't run the detection worker (e.g. older WebKitGTK in
+	 * a Tauri desktop shell). Janky but functional. Throws (with the real cause) if even
+	 * this fails, so the reason can be surfaced rather than swallowed.
+	 * @param {string[]} formats
+	 * @returns {Promise<any>}
+	 */
+	async function loadMainThreadDetector(formats) {
+		const mod = await import('barcode-detector/ponyfill');
+		// Fetch the wasm ourselves and pass the raw bytes (wasmBinary) so Emscripten
+		// instantiates straight from the buffer — no locateFile fetch, no instantiateStreaming
+		// MIME requirement, no default CDN fallback.
+		const resp = await fetch('/fitness/zxing_reader.wasm');
+		if (!resp.ok) throw new Error(`wasm fetch failed: ${resp.status}`);
+		const wasmBinary = await resp.arrayBuffer();
+		await mod.prepareZXingModule({
+			overrides: { wasmBinary },
+			fireImmediately: true
+		});
+		return new mod.BarcodeDetector({ formats });
+	}
+
+	/** Build a platform-native BarcodeDetector if one that supports EAN-13 is available.
+	 * @param {string[]} formats
+	 * @returns {Promise<any>}
+	 */
+	async function tryNativeDetector(formats) {
+		try {
+			if ('BarcodeDetector' in globalThis) {
+				const BD = /** @type {any} */ (globalThis).BarcodeDetector;
+				const supported = await BD.getSupportedFormats();
+				if (supported.includes('ean_13')) return new BD({ formats });
+			}
+		} catch {
+			// not usable
+		}
+		return null;
+	}
+
 	// --- Barcode scanning ---
 	async function startScan() {
 		scanError = '';
@@ -258,6 +370,7 @@
 		}
 
 		scanning = true;
+		cameraStarting = true;
 		scanDebug = '';
 
 		try {
@@ -273,37 +386,65 @@
 			videoEl.srcObject = stream;
 			await videoEl.play();
 
-			// Use native BarcodeDetector if available, else ponyfill with self-hosted WASM
+			// Native BarcodeDetector stays on the main thread (the browser offloads it
+			// internally and it's already smooth); the ZXing WASM ponyfill — which would
+			// otherwise block the main thread ~100-300ms per frame and stutter the preview —
+			// runs in a Web Worker instead. Either path only ever sees a cropped, downscaled
+			// ROI of the frame (grabRoiBitmap).
 			/** @type {any} */
-			let detector;
-			/** @type {any} */
+			let nativeDetector = null;
+			/** ZXing ponyfill on the main thread — used when the worker can't run. @type {any} */
+			let mainDetector = null;
 			const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'];
-			try {
-				if ('BarcodeDetector' in globalThis) {
-					const BD = /** @type {any} */ (globalThis).BarcodeDetector;
-					const supported = await BD.getSupportedFormats();
-					if (supported.includes('ean_13')) {
-						detector = new BD({ formats });
+			/** Why ZXing couldn't load, surfaced if we end up with no detector at all. */
+			let zxingFailReason = '';
+
+			// Always prefer ZXing — in a worker (off the main thread → smooth preview), or on the
+			// main thread if the worker can't run. The platform's native detector is only a
+			// fallback: it's laggy (notably in the Android WebView) and unavailable/limited in
+			// many browsers, whereas ZXing is consistent everywhere WebAssembly exists.
+			if (typeof WebAssembly === 'undefined') {
+				zxingFailReason = 'WebAssembly is not defined';
+			} else {
+				try {
+					const { default: BarcodeWorker } = await import('$lib/workers/barcodeDetector.worker?worker');
+					scanWorker = new BarcodeWorker();
+					scanWorker.onmessage = handleWorkerMessage;
+					await new Promise((resolve, reject) => {
+						workerReadyResolve = resolve;
+						workerReadyReject = reject;
+						/** @type {Worker} */ (scanWorker).postMessage({ type: 'init', wasmUrl: '/fitness/zxing_reader.wasm' });
+					});
+				} catch (workerErr) {
+					// Worker unavailable (e.g. a WebView without module-worker support). Try the
+					// ponyfill on the main thread before giving up on ZXing.
+					console.warn('[barcode] worker path failed, trying main-thread ZXing:', workerErr);
+					if (scanWorker) { scanWorker.terminate(); scanWorker = null; }
+					workerPending = null;
+					workerReadyResolve = workerReadyReject = null;
+					try {
+						mainDetector = await loadMainThreadDetector(formats);
+					} catch (mainErr) {
+						console.warn('[barcode] main-thread ZXing failed, falling back to native:', mainErr);
+						const wm = workerErr instanceof Error ? workerErr.message : String(workerErr);
+						const mm = mainErr instanceof Error ? mainErr.message : String(mainErr);
+						zxingFailReason = `worker: ${wm} · main: ${mm}`;
 					}
 				}
-			} catch {
-				// native not usable, fall through to ponyfill
 			}
-			if (!detector) {
-				try {
-					const mod = await import('barcode-detector/ponyfill');
-					await mod.prepareZXingModule({
-						overrides: {
-							locateFile: (/** @type {string} */ path, /** @type {string} */ prefix) => {
-								if (path.endsWith('.wasm')) return '/fitness/zxing_reader.wasm';
-								return prefix + path;
-							},
-						},
-						fireImmediately: true,
-					});
-					detector = new mod.BarcodeDetector({ formats });
-				} catch (importErr) {
-					scanError = isEn ? 'Barcode library failed to load. Try reloading.' : 'Barcode-Bibliothek konnte nicht geladen werden. Seite neu laden.';
+
+			// Native fallback only when ZXing couldn't run at all.
+			if (!scanWorker && !mainDetector) {
+				nativeDetector = await tryNativeDetector(formats);
+				if (!nativeDetector) {
+					scanError = zxingFailReason === 'WebAssembly is not defined'
+						? (isEn
+							? 'Barcode scanning needs WebAssembly, which is unavailable in this browser.'
+							: 'Barcode-Scannen benötigt WebAssembly, das in diesem Browser nicht verfügbar ist.')
+						: (isEn
+							? 'Barcode library failed to load. Try reloading.'
+							: 'Barcode-Bibliothek konnte nicht geladen werden. Seite neu laden.');
+					scanDebug = zxingFailReason || 'no detector available';
 					stopScan();
 					return;
 				}
@@ -313,21 +454,37 @@
 			let confirmCount = 0;
 			let errorCount = 0;
 			const CONFIRM_THRESHOLD = 2;
+			const MIN_INTERVAL = 90; // ms floor between detection passes (caps CPU when native is fast)
 
 			const detectLoop = async () => {
 				while (scanning && videoEl) {
+					const startedAt = performance.now();
 					try {
-						if (videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
-							await new Promise(r => setTimeout(r, 500));
-							continue;
+						/** @type {string[]} */
+						let codes;
+						if (nativeDetector) {
+							// Detect straight off the <video>: the native (offloaded) detector grabs the
+							// frame itself, avoiding a per-frame createImageBitmap() readback on the main
+							// thread — that GPU→CPU copy was what stuttered the preview on Android.
+							if (!videoEl.videoWidth || !videoEl.videoHeight) { await new Promise(r => setTimeout(r, 200)); continue; }
+							const results = await nativeDetector.detect(videoEl);
+							codes = results.map((/** @type {any} */ r) => r.rawValue);
+						} else {
+							// ZXing fallback (no native detector): hand a cropped, downscaled ROI to the
+							// worker (or main thread) — fewer pixels, and the heavy decode stays off the UI.
+							const bitmap = await grabRoiBitmap();
+							if (!bitmap) { await new Promise(r => setTimeout(r, 300)); continue; }
+							if (scanWorker) {
+								codes = await detectViaWorker(bitmap); // worker closes the bitmap
+							} else {
+								const results = await mainDetector.detect(bitmap);
+								bitmap.close();
+								codes = results.map((/** @type {any} */ r) => r.rawValue);
+							}
 						}
 
-						const bitmap = await createImageBitmap(videoEl);
-						const results = await detector.detect(bitmap);
-						bitmap.close();
-
-						if (results.length > 0) {
-							const code = results[0].rawValue;
+						if (codes.length > 0) {
+							const code = codes[0];
 							if (/^\d+$/.test(code) && [8, 12, 13].includes(code.length) && validCheckDigit(code)) {
 								if (code === lastCode) {
 									confirmCount++;
@@ -352,7 +509,9 @@
 							return;
 						}
 					}
-					await new Promise(r => setTimeout(r, 200));
+					const elapsed = performance.now() - startedAt;
+					if (elapsed < MIN_INTERVAL) await new Promise(r => setTimeout(r, MIN_INTERVAL - elapsed));
+					await nextVideoFrame();
 				}
 			};
 			detectLoop();
@@ -376,10 +535,17 @@
 
 	function stopScan() {
 		scanning = false;
+		cameraStarting = false;
 		if (scanStream) {
 			for (const track of scanStream.getTracks()) track.stop();
 			scanStream = null;
 		}
+		if (scanWorker) {
+			scanWorker.terminate();
+			scanWorker = null;
+		}
+		workerPending = null;
+		workerReadyResolve = workerReadyReject = null;
 		if (videoEl) videoEl.srcObject = null;
 	}
 
@@ -411,10 +577,23 @@
 			<button class="fs-scanner-close" onclick={stopScan} aria-label="Close scanner"><X size={18} /></button>
 		</div>
 		<!-- svelte-ignore a11y_media_has_caption -->
-		<video bind:this={videoEl} class="fs-scanner-video" playsinline></video>
-		<div class="fs-scanner-overlay">
-			<div class="fs-scanner-reticle"></div>
-		</div>
+		<video
+			bind:this={videoEl}
+			class="fs-scanner-video"
+			playsinline
+			autoplay
+			muted
+			onplaying={() => (cameraStarting = false)}
+		></video>
+		{#if cameraStarting}
+			<div class="fs-scanner-loading">
+				<LoaderCircle class="spin" size={34} strokeWidth={2} />
+			</div>
+		{:else}
+			<div class="fs-scanner-overlay">
+				<div class="fs-scanner-reticle"></div>
+			</div>
+		{/if}
 		{#if scanDebug}
 			<div class="fs-scan-debug">{scanDebug}</div>
 		{/if}
@@ -674,6 +853,22 @@
 		display: block;
 		max-height: 260px;
 		object-fit: cover;
+	}
+	.fs-scanner-loading {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #000;
+	}
+	.fs-scanner-loading :global(.spin) {
+		animation: spin 1s linear infinite;
+		color: #88c0d0;
+	}
+	@keyframes spin {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
 	}
 	.fs-scanner-overlay {
 		position: absolute;
