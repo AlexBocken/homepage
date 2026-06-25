@@ -51,6 +51,8 @@
 	import ActiveRestTimer from '$lib/components/fitness/ActiveRestTimer.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import PoseCoach from '$lib/components/fitness/PoseCoach.svelte';
+	import MobileFormCoach from '$lib/components/fitness/MobileFormCoach.svelte';
+	import CameraFeed from '$lib/components/fitness/CameraFeed.svelte';
 	import { hasFormConfig } from '$lib/js/poseCoach';
 	import Info from '@lucide/svelte/icons/info';
 	import { onMount, tick } from 'svelte';
@@ -130,6 +132,102 @@
 		!!activeExercise && hasFormConfig(activeExercise.exerciseId) && coachFits
 	);
 	const showCoach = $derived(coachAvailable && coachEnabled);
+
+	// --- Mobile full-screen coach (below the desktop coach's 1180px breakpoint) ---
+	// Below 1180 the side panel doesn't fit, so the same toggle opens a full-screen
+	// HUD instead. Unlike the pose-only desktop panel, the mobile view also covers
+	// timed exercises (planks/stretches) with a hold timer.
+	let coachNarrow = $state(false);
+	$effect(() => {
+		if (!browser) return;
+		const mq = window.matchMedia('(max-width: 1179.98px)');
+		const sync = () => (coachNarrow = mq.matches);
+		sync();
+		mq.addEventListener('change', sync);
+		return () => mq.removeEventListener('change', sync);
+	});
+	const activeMetrics = $derived(
+		activeExercise ? getExerciseMetrics(getExerciseById(activeExercise.exerciseId)) : []
+	);
+	const activeIsDurationOnly = $derived(
+		activeMetrics.includes('duration') &&
+			!activeMetrics.includes('weight') &&
+			!activeMetrics.includes('reps')
+	);
+	/** On mobile the coach also applies to timed holds, not just pose-config lifts. */
+	const coachAvailableMobile = $derived(
+		!!activeExercise &&
+			coachNarrow &&
+			(hasFormConfig(activeExercise.exerciseId) || activeIsDurationOnly)
+	);
+	const showMobileCoach = $derived(coachAvailableMobile && coachEnabled);
+	const mobileCoachMode = $derived(activeIsDurationOnly ? 'hold' : 'reps');
+	/** Mobile coach camera: defaults to the selfie cam; the HUD flip button toggles it. */
+	let coachFacing = $state(/** @type {'user' | 'environment'} */ ('user'));
+	/** Live coaching message surfaced from the bare PoseCoach background. */
+	let coachFeedback = $state({ text: '', kind: /** @type {'good'|'bad'|'advice'|'info'} */ ('info') });
+	$effect(() => {
+		// Reset the message when the coach closes or the exercise changes.
+		if (!showMobileCoach || mobileCoachMode !== 'reps') coachFeedback = { text: '', kind: 'info' };
+	});
+
+	const activeSet = $derived(activeExercise ? (activeExercise.sets[activeSetIdx] ?? null) : null);
+	const activePrevSet = $derived(
+		activeExercise ? (previousData[activeExercise.exerciseId]?.[activeSetIdx] ?? null) : null
+	);
+	/** Preview of the upcoming set (during rest, activeSetIdx has already advanced). */
+	const mobileNext = $derived.by(() => {
+		const ex = activeExercise;
+		if (!ex || activeSetIdx >= ex.sets.length) return null;
+		const s = ex.sets[activeSetIdx];
+		const base = {
+			exerciseName: activeExerciseMeta?.localName ?? ex.exerciseId,
+			setNumber: activeSetIdx + 1,
+			totalSets: ex.sets.length
+		};
+		return activeIsDurationOnly
+			? { ...base, holdTarget: Math.round((s?.duration ?? 0) * 60) }
+			: { ...base, weight: s?.weight ?? 0, targetReps: s?.reps ?? 0, rpe: s?.rpe ?? 0 };
+	});
+	const mobileHoldActive = $derived(
+		workout.holdTimerActive && workout.holdExerciseIdx === activeIdx && workout.holdSetIdx === activeSetIdx
+	);
+
+	/** Edit a field of the current set from the mobile HUD (duration arrives in seconds). */
+	function mobileEditField(
+		/** @type {'weight' | 'reps' | 'rpe' | 'duration'} */ field,
+		/** @type {number | null} */ value
+	) {
+		if (!activeExercise) return;
+		const data = field === 'duration' ? { duration: value == null ? null : value / 60 } : { [field]: value };
+		workout.updateSet(activeIdx, activeSetIdx, data);
+	}
+
+	/** Mark the current set complete and start its rest timer (mobile "Done set"). */
+	function mobileCompleteSet() {
+		const idx = activeIdx;
+		const setIdx = activeSetIdx;
+		const ex = workout.exercises[idx];
+		if (!ex?.sets[setIdx] || ex.sets[setIdx].completed) return;
+		workout.toggleSetComplete(idx, setIdx);
+		const updated = workout.exercises[idx];
+		if (updated?.sets[setIdx]?.completed) {
+			workout.startRestTimer(updated.restTime, idx, setIdx);
+			playSetCompleteSound();
+		}
+	}
+
+	/** Begin the hold countdown for the current timed set. */
+	function mobileStartHold() {
+		const secs = Math.round((activeSet?.duration ?? 0) * 60);
+		if (secs > 0) workout.startHoldTimer(secs, activeIdx, activeSetIdx);
+	}
+
+	/** Finish a hold early → complete the set and rest (0:00 auto-completes in the store). */
+	function mobileFinishHold() {
+		workout.cancelHoldTimer();
+		mobileCompleteSet();
+	}
 
 	/** Write the live rep count from the camera into the current (unfinished) set. */
 	function fillRepsFromCoach(/** @type {number} */ reps) {
@@ -1826,6 +1924,63 @@
 
 {:else if workout.active}
 	<div class="active-workout">
+		<!-- Mobile full-screen form coach (below 1180px). The same toggle that opens
+		     the desktop side panel opens this; the back button disables it. -->
+		{#if showMobileCoach && activeExercise}
+			{#key activeExercise.exerciseId}
+				<MobileFormCoach
+					phase={workout.restTimerActive ? 'resting' : 'lifting'}
+					mode={mobileCoachMode}
+					exerciseName={activeExerciseMeta?.localName ?? activeExercise.exerciseId}
+					setNumber={activeSetIdx + 1}
+					totalSets={activeExercise.sets.length}
+					targetReps={activePrevSet?.reps ?? 0}
+					weight={activeSet?.weight ?? undefined}
+					rpe={activeSet?.rpe ?? undefined}
+					last={activePrevSet && !activeIsDurationOnly
+						? { weight: activePrevSet.weight ?? 0, reps: activePrevSet.reps ?? 0, rpe: activePrevSet.rpe ?? 0 }
+						: null}
+					repCount={activeSet?.reps ?? 0}
+					holdTarget={Math.round((activeSet?.duration ?? 0) * 60)}
+					holdSeconds={workout.holdTimerSeconds}
+					holdTotal={workout.holdTimerTotal}
+					holdActive={mobileHoldActive}
+					lastSeconds={activeIsDurationOnly && activePrevSet?.duration != null
+						? Math.round(activePrevSet.duration * 60)
+						: null}
+					feedback={coachFeedback}
+					restSeconds={workout.restTimerSeconds}
+					restTotal={workout.restTimerTotal}
+					next={mobileNext}
+					editable={true}
+					privacyText={t.coach_privacy}
+					privacyAria={t.coach_privacy_aria}
+					onField={mobileEditField}
+					onFlipCamera={() => (coachFacing = coachFacing === 'user' ? 'environment' : 'user')}
+					onback={() => (coachEnabled = false)}
+					oncompleteSet={mobileCompleteSet}
+					onnextSet={() => workout.cancelRestTimer()}
+					onRestAdjust={(d) => workout.adjustRestTimer(d)}
+					onStartHold={mobileStartHold}
+					onHoldSkip={mobileFinishHold}
+				>
+					{#if mobileCoachMode === 'hold'}
+						<CameraFeed facing={coachFacing} />
+					{:else}
+						<PoseCoach
+							exerciseId={activeExercise.exerciseId}
+							{lang}
+							variant="bare"
+							facing={coachFacing}
+							resetKey={activeSetIdx}
+							onrep={fillRepsFromCoach}
+							onfeedback={(a) => (coachFeedback = a)}
+						/>
+					{/if}
+				</MobileFormCoach>
+			{/key}
+		{/if}
+
 		{#snippet workoutTitle()}
 			<input
 				class="workout-name-input"
@@ -2000,7 +2155,7 @@
 							setOf: (i, n) => isEn ? `Set ${i} of ${n}` : `Satz ${i} von ${n}`,
 							done: (n) => isEn ? `${n}/${n} complete` : `${n}/${n} erledigt`,
 						}}
-						coachAvailable={coachAvailable}
+						coachAvailable={coachAvailable || coachAvailableMobile}
 						coachEnabled={coachEnabled}
 						coachLabel={t.coach_title}
 						onCoachToggle={() => coachEnabled = !coachEnabled}

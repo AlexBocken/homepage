@@ -15,10 +15,18 @@
 	import X from '@lucide/svelte/icons/x';
 
 	/**
+	 * `variant: 'bare'` strips the panel chrome (rep header, advice line, controls)
+	 * and lets the camera fill its host — for use as the background of the mobile
+	 * full-screen coach, which renders its own HUD. `onfeedback` surfaces the live
+	 * coaching message so that HUD can show it.
+	 *
 	 * @type {{
 	 *   exerciseId: string,
 	 *   lang?: 'en' | 'de',
+	 *   variant?: 'panel' | 'bare',
+	 *   facing?: 'environment' | 'user',
 	 *   onrep?: (reps: number) => void,
+	 *   onfeedback?: (advice: { text: string, kind: 'good' | 'bad' | 'advice' | 'info' }) => void,
 	 *   onclose?: () => void,
 	 *   resetKey?: number | string,
 	 * }}
@@ -26,10 +34,15 @@
 	let {
 		exerciseId,
 		lang = 'en',
+		variant = 'panel',
+		facing = undefined,
 		onrep = undefined,
+		onfeedback = undefined,
 		onclose = undefined,
 		resetKey = 0
 	} = $props();
+
+	const bare = $derived(variant === 'bare');
 
 	const t = $derived(m[lang]);
 	const supported = $derived(hasFormConfig(exerciseId));
@@ -70,6 +83,14 @@
 		if (cue) return { text: t[cue], kind: cueKind ?? 'info' };
 		return { text: t.coach_cue_get_in_position, kind: 'info' };
 	});
+	// Surface the live message to a parent HUD (used by the bare/mobile variant).
+	$effect(() => {
+		onfeedback?.(
+			running
+				? { text: advice.text, kind: /** @type {'good'|'bad'|'advice'|'info'} */ (advice.kind) }
+				: { text: '', kind: 'info' }
+		);
+	});
 
 	/** @type {HTMLVideoElement | null} */
 	let videoEl = $state(null);
@@ -88,11 +109,21 @@
 
 	function videoConstraints() {
 		const base = { width: { ideal: 1280 }, height: { ideal: 720 } };
-		// An explicit pick wins; otherwise fall back to a front/back hint (best on mobile).
+		// An explicit pick wins; otherwise fall back to a front/back hint (best on
+		// mobile). A `facing` prop (mobile HUD flip) overrides the internal default.
 		return selectedDeviceId
 			? { ...base, deviceId: { exact: selectedDeviceId } }
-			: { ...base, facingMode };
+			: { ...base, facingMode: facing ?? facingMode };
 	}
+
+	// External facing control (the mobile coach's flip button). Re-acquire the
+	// stream whenever the prop flips; no-op on desktop where `facing` is undefined.
+	$effect(() => {
+		facing;
+		untrack(() => {
+			if (running) switchCamera();
+		});
+	});
 
 	/** List video inputs. Labels are only exposed after permission, so call this once a stream is live. */
 	async function refreshCameras() {
@@ -349,19 +380,19 @@
 	});
 </script>
 
-<div class="pose-coach">
-	{#if running}
+<div class="pose-coach" class:bare>
+	{#if running && !bare}
 		<div class="rep-header">
 			<span class="rep-count">{reps}</span>
 			<span class="rep-label">{t.coach_reps}</span>
 		</div>
 	{/if}
 
-	<div class="stage" class:tall={orientation === 'tall'}>
+	<div class="stage" class:tall={orientation === 'tall' && !bare} class:bare>
 		<video bind:this={videoEl} playsinline muted style:object-position={feedPosition}></video>
 		<canvas bind:this={canvasEl} class="overlay" style:object-position={feedPosition}></canvas>
 
-		{#if running}
+		{#if running && !bare}
 			<div class="meta">
 				<span class="phase">{phase}</span>{#if angle != null}<span class="angle"> · {Math.round(angle)}°</span>{/if}
 			</div>
@@ -388,11 +419,12 @@
 		{/if}
 	</div>
 
-	{#if running}
+	{#if running && !bare}
 		<!-- Advice lives below the video, never on top of it, and is colour-coded by tone. -->
 		<p class="advice" data-kind={advice.kind} role="status" aria-live="polite">{advice.text}</p>
 	{/if}
 
+	{#if !bare}
 	<div class="controls">
 		{#if !supported}
 			<p class="note">{t.coach_unsupported}</p>
@@ -428,6 +460,7 @@
 			</button>
 		{/if}
 	</div>
+	{/if}
 </div>
 
 <style>
@@ -436,6 +469,20 @@
 		flex-direction: column;
 		gap: 1rem;
 		width: 100%;
+	}
+	/* Bare variant: fill the host (the mobile HUD's background) with just the feed. */
+	.pose-coach.bare {
+		gap: 0;
+		height: 100%;
+	}
+	.stage.bare {
+		aspect-ratio: auto;
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		margin-inline: 0;
+		border-radius: 0;
+		background: transparent;
 	}
 	.stage {
 		position: relative;
