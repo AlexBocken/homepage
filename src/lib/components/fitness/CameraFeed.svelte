@@ -12,11 +12,14 @@
 
 	/** @type {HTMLVideoElement | null} */
 	let videoEl = $state(null);
+	/** True once frames are playing — until then we mask the empty <video>. */
+	let ready = $state(false);
 
 	// (Re)acquire the stream whenever `facing` changes; the cleanup stops the
 	// previous stream so flips don't leak camera handles.
 	$effect(() => {
 		const wanted = facing;
+		ready = false;
 		if (!globalThis.isSecureContext || !navigator.mediaDevices?.getUserMedia) return;
 		let cancelled = false;
 		/** @type {MediaStream | null} */
@@ -33,6 +36,7 @@
 				if (videoEl) {
 					videoEl.srcObject = stream;
 					await videoEl.play();
+					if (!cancelled) ready = true;
 				}
 			} catch {
 				// no camera / denied → leave it blank; the HUD's gradient shows through
@@ -46,6 +50,10 @@
 </script>
 
 <video bind:this={videoEl} playsinline muted></video>
+<!-- Mask the empty <video> (grey box + UA play button) until frames play. -->
+{#if !ready}
+	<div class="feed-cover" aria-hidden="true"></div>
+{/if}
 
 <style>
 	video {
@@ -54,5 +62,10 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+	.feed-cover {
+		position: absolute;
+		inset: 0;
+		background: #11141a;
 	}
 </style>

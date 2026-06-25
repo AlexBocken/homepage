@@ -392,6 +392,12 @@
 		<video bind:this={videoEl} playsinline muted style:object-position={feedPosition}></video>
 		<canvas bind:this={canvasEl} class="overlay" style:object-position={feedPosition}></canvas>
 
+		<!-- Until the first frame plays, the empty <video> renders as a grey box with
+		     a UA play button — cover it with a flat fill (the spinner sits on top). -->
+		{#if !running}
+			<div class="feed-cover" aria-hidden="true"></div>
+		{/if}
+
 		{#if running && !bare}
 			<div class="meta">
 				<span class="phase">{phase}</span>{#if angle != null}<span class="angle"> · {Math.round(angle)}°</span>{/if}
@@ -509,6 +515,15 @@
 	}
 	.overlay {
 		pointer-events: none;
+	}
+	/* Startup fill that masks the empty <video> (grey box + UA play button). */
+	.feed-cover {
+		position: absolute;
+		inset: 0;
+		background: var(--color-bg-tertiary);
+	}
+	.stage.bare .feed-cover {
+		background: #11141a;
 	}
 	/* Rep counter — at the top of the card, above the video. Big enough to read
 	   from across the room. */
