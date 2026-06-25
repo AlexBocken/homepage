@@ -2002,7 +2002,7 @@
 						}}
 						coachAvailable={coachAvailable}
 						coachEnabled={coachEnabled}
-						coachLabel={isEn ? 'Form coach' : 'Formcheck'}
+						coachLabel={t.coach_title}
 						onCoachToggle={() => coachEnabled = !coachEnabled}
 					/>
 
@@ -2100,35 +2100,24 @@
 			</main>
 
 			{#if showCoach && activeExercise}
-				<aside class="coach-col" aria-label={isEn ? 'Form coach' : 'Formcheck'}>
+				<aside class="coach-col" aria-label={t.coach_title}>
 					{#key activeExercise.exerciseId}
 						<div class="coach-panel">
 							<header class="coach-head">
 								<span class="coach-title">
-									{isEn ? 'Form coach' : 'Formcheck'}
+									{t.coach_title}
 									<span class="coach-beta">Beta</span>
 									<button
 										class="coach-info-trigger"
 										onclick={() => (showCoachInfo = !showCoachInfo)}
-										aria-label={isEn ? 'About form coach privacy' : 'Datenschutz-Hinweis'}
+										aria-label={t.coach_privacy_aria}
 									>
 										<Info size={13} />
 									</button>
 									{#if showCoachInfo}
-										<div class="coach-info-tooltip">
-											{isEn
-												? 'All analysis runs on your device. Your camera feed is never uploaded or shared with the server.'
-												: 'Die Analyse läuft komplett auf deinem Gerät. Dein Kamerabild wird nie hochgeladen oder an den Server gesendet.'}
-										</div>
+										<div class="coach-info-tooltip">{t.coach_privacy}</div>
 									{/if}
 								</span>
-								<button
-									class="coach-close"
-									onclick={() => (coachEnabled = false)}
-									aria-label={isEn ? 'Hide form coach' : 'Formcheck ausblenden'}
-								>
-									<X size={18} />
-								</button>
 							</header>
 							<PoseCoach
 								exerciseId={activeExercise.exerciseId}
@@ -2138,9 +2127,7 @@
 							/>
 							<p class="coach-sync">
 								<span class="coach-pulse" aria-hidden="true"></span>
-								{isEn
-									? 'Counting reps into your current set'
-									: 'Zählt Wiederholungen in deinen aktuellen Satz'}
+								{t.coach_counting}
 							</p>
 						</div>
 					{/key}
@@ -2658,23 +2645,6 @@
 		border-radius: var(--radius-pill);
 		background: color-mix(in srgb, var(--color-primary) 16%, transparent);
 		color: var(--color-primary);
-	}
-	.coach-close {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border: none;
-		border-radius: 100px;
-		background: transparent;
-		color: var(--color-text-tertiary);
-		cursor: pointer;
-		transition: background 140ms, color 140ms;
-	}
-	.coach-close:hover {
-		background: var(--color-bg-elevated);
-		color: var(--color-text-primary);
 	}
 	.coach-sync {
 		display: flex;

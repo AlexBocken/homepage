@@ -8,6 +8,7 @@
 	} from '$lib/js/poseCoach';
 	import { playSetCompleteSound, playRepWarningSound } from '$lib/js/fitnessSounds';
 	import { loadPoseLandmarker, isPoseModelReady } from '$lib/js/poseLandmarker';
+	import { m } from '$lib/js/fitnessI18n';
 	import CameraOff from '@lucide/svelte/icons/camera-off';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -30,7 +31,7 @@
 		resetKey = 0
 	} = $props();
 
-	const isEn = $derived(lang === 'en');
+	const t = $derived(m[lang]);
 	const supported = $derived(hasFormConfig(exerciseId));
 	/** Standing lifts get a taller portrait crop; lying/seated lifts stay wide. */
 	const orientation = $derived(FORM_CONFIGS[exerciseId]?.orientation ?? 'tall');
@@ -51,10 +52,10 @@
 	// Live readout
 	let reps = $state(0);
 	let phase = $state(/** @type {string} */ ('top'));
-	let cue = $state(/** @type {string | null} */ (null));
+	let cue = $state(/** @type {import('$lib/js/fitnessI18n').FitnessKey | null} */ (null));
 	let cueKind = $state(/** @type {import('$lib/js/poseCoach').CueKind} */ (null));
 	let angle = $state(/** @type {number | null} */ (null));
-	let faults = $state(/** @type {string[]} */ ([]));
+	let faults = $state(/** @type {import('$lib/js/fitnessI18n').FitnessKey[]} */ ([]));
 
 	// Smoothed object-position (%) that pans the cover-cropped feed to keep the
 	// person centred. Only takes effect where the feed overflows the panel
@@ -65,9 +66,9 @@
 
 	/** The single message shown below the video, with a tone ('good' | 'bad' | 'advice' | 'info') for colouring. */
 	const advice = $derived.by(() => {
-		if (faults.length) return { text: faults[0], kind: 'bad' };
-		if (cue) return { text: cue, kind: cueKind ?? 'info' };
-		return { text: isEn ? 'Get into position' : 'In Position gehen', kind: 'info' };
+		if (faults.length) return { text: t[faults[0]], kind: 'bad' };
+		if (cue) return { text: t[cue], kind: cueKind ?? 'info' };
+		return { text: t.coach_cue_get_in_position, kind: 'info' };
 	});
 
 	/** @type {HTMLVideoElement | null} */
@@ -102,7 +103,7 @@
 				.filter((d) => d.kind === 'videoinput')
 				.map((d, i) => ({
 					deviceId: d.deviceId,
-					label: d.label || `${isEn ? 'Camera' : 'Kamera'} ${i + 1}`
+					label: d.label || `${t.coach_camera} ${i + 1}`
 				}));
 			// Reflect the device actually in use so the selector matches reality (e.g. after a flip).
 			const id = stream?.getVideoTracks()[0]?.getSettings().deviceId;
@@ -134,16 +135,16 @@
 	async function start() {
 		error = '';
 		if (!globalThis.isSecureContext) {
-			error = isEn ? 'Camera requires HTTPS' : 'Kamera benötigt HTTPS';
+			error = t.coach_err_https;
 			return;
 		}
 		if (!navigator.mediaDevices?.getUserMedia) {
-			error = isEn ? 'Camera API not available' : 'Kamera-API nicht verfügbar';
+			error = t.coach_err_no_api;
 			return;
 		}
 		starting = true;
 		try {
-			coach = new ExerciseCoach(exerciseId, lang);
+			coach = new ExerciseCoach(exerciseId);
 			reps = 0;
 			cue = null;
 			if (!landmarker) {
@@ -162,9 +163,7 @@
 		} catch (e) {
 			error =
 				e instanceof Error && e.name === 'NotAllowedError'
-					? isEn
-						? 'Camera permission denied'
-						: 'Kamerazugriff verweigert'
+					? t.coach_err_denied
 					: e instanceof Error
 						? e.message
 						: String(e);
@@ -354,7 +353,7 @@
 	{#if running}
 		<div class="rep-header">
 			<span class="rep-count">{reps}</span>
-			<span class="rep-label">{isEn ? 'reps' : 'Whlg.'}</span>
+			<span class="rep-label">{t.coach_reps}</span>
 		</div>
 	{/if}
 
@@ -370,9 +369,7 @@
 
 		{#if preparing}
 			<div class="state-msg">
-				<span class="prep-title"
-					>{isEn ? 'Downloading form-coach model' : 'Lade Formcheck-Modell'}</span
-				>
+				<span class="prep-title">{t.coach_downloading}</span>
 				<div class="progress" class:indeterminate={prepProgress < 0}>
 					<div
 						class="progress-bar"
@@ -380,15 +377,13 @@
 					></div>
 				</div>
 				<span class="prep-sub">
-					{#if prepProgress >= 0}{Math.round(prepProgress * 100)}% · {/if}{isEn
-						? '~17 MB, first time only'
-						: '~17 MB, nur beim ersten Mal'}
+					{#if prepProgress >= 0}{Math.round(prepProgress * 100)}% · {/if}{t.coach_download_note}
 				</span>
 			</div>
 		{:else if starting}
 			<div class="state-msg">
 				<LoaderCircle class="spin" size={28} />
-				<span>{isEn ? 'Starting camera…' : 'Kamera startet…'}</span>
+				<span>{t.coach_starting}</span>
 			</div>
 		{/if}
 	</div>
@@ -400,15 +395,11 @@
 
 	<div class="controls">
 		{#if !supported}
-			<p class="note">
-				{isEn
-					? 'Form coaching is only available for squat, bench press and deadlift.'
-					: 'Formhilfe nur für Kniebeuge, Bankdrücken und Kreuzheben verfügbar.'}
-			</p>
+			<p class="note">{t.coach_unsupported}</p>
 		{:else if error}
 			<p class="error"><CameraOff size={16} /> {error}</p>
 			<button class="btn" onclick={start} disabled={starting}>
-				{isEn ? 'Try again' : 'Erneut versuchen'}
+				{t.coach_try_again}
 			</button>
 		{/if}
 
@@ -418,21 +409,21 @@
 					class="cam-select"
 					bind:value={selectedDeviceId}
 					onchange={switchCamera}
-					aria-label={isEn ? 'Select camera' : 'Kamera auswählen'}
+					aria-label={t.coach_select_camera}
 				>
 					{#each cameras as cam (cam.deviceId)}
 						<option value={cam.deviceId}>{cam.label}</option>
 					{/each}
 				</select>
 			{/if}
-			<button class="btn" onclick={flipCamera} aria-label={isEn ? 'Flip camera' : 'Kamera wechseln'}>
+			<button class="btn" onclick={flipCamera} aria-label={t.coach_flip_camera}>
 				<RefreshCw size={18} />
-				<span>{isEn ? 'Flip' : 'Wechseln'}</span>
+				<span>{t.coach_flip}</span>
 			</button>
 		{/if}
 
 		{#if onclose}
-			<button class="btn icon" onclick={close} aria-label={isEn ? 'Close' : 'Schliessen'}>
+			<button class="btn icon" onclick={close} aria-label={t.coach_close}>
 				<X size={18} />
 			</button>
 		{/if}

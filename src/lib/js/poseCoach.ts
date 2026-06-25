@@ -11,7 +11,12 @@
  *
  * Only the three lifts the source project supports are configured here; any
  * other exercise simply has no config and the coach stays idle.
+ *
+ * Coaching messages are returned as i18n keys (see fitness/{de,en}.ts), not
+ * text — the engine itself is language-agnostic; the UI resolves the keys.
  */
+
+import type { FitnessKey } from '$lib/js/fitnessI18n';
 
 /** A single MediaPipe pose landmark (normalized image coords + visibility). */
 export interface Landmark {
@@ -108,40 +113,34 @@ export interface FormConfig {
 	 * thrust, leg press) want a wide crop.
 	 */
 	orientation?: 'tall' | 'wide';
-	/** Human label for the cue when the rep doesn't reach `depthTarget`. */
-	shallowCue: { en: string; de: string };
+	/** i18n key for the cue when the rep doesn't reach `depthTarget`. */
+	shallowCue: FitnessKey;
 	/** Optional spine-flexion ("rounded back") check, evaluated while under load. */
 	backRounding?: {
 		/** Flag a fault when the ear–shoulder–hip angle drops below this (deg). */
 		minAngle: number;
-		cue: { en: string; de: string };
+		cue: FitnessKey;
 	};
 }
 
 /** Reused back-rounding (spine-flexion) checks. */
-const SQUAT_BACK_ROUNDING = {
-	minAngle: 150,
-	cue: { en: 'Chest up — keep your back flat', de: 'Brust raus — Rücken gerade' }
-};
-const HINGE_BACK_ROUNDING = {
-	minAngle: 150,
-	cue: { en: 'Flatten your back — stop rounding', de: 'Rücken gerade — nicht rund machen' }
-};
+const SQUAT_BACK_ROUNDING = { minAngle: 150, cue: 'coach_cue_back_round_squat' } as const;
+const HINGE_BACK_ROUNDING = { minAngle: 150, cue: 'coach_cue_back_round_hinge' } as const;
 
-/** Reused depth/ROM cues. */
+/** Reused depth/ROM cue keys (resolved via i18n in the UI). */
 const CUE = {
-	squatDeeper: { en: 'Squat deeper', de: 'Tiefer in die Hocke' },
-	lowerToChest: { en: 'Lower the bar to your chest', de: 'Bis zur Brust ablassen' },
-	curlUp: { en: 'Curl all the way up', de: 'Ganz nach oben curlen' },
-	hingeDeeper: { en: 'Hinge deeper at the hips', de: 'Tiefer aus der Hüfte' },
-	rowToTorso: { en: 'Pull to your torso', de: 'Zum Körper ziehen' },
-	chinOverBar: { en: 'Pull your chin over the bar', de: 'Kinn über die Stange' },
-	fullLockout: { en: 'Press to full lockout', de: 'Voll durchdrücken' },
-	hipLockout: { en: 'Squeeze to full hip lockout', de: 'Hüfte voll strecken' },
-	shoulderHeight: { en: 'Raise to shoulder height', de: 'Auf Schulterhöhe heben' },
-	pullHigher: { en: 'Pull higher', de: 'Höher ziehen' },
-	lowerBehindHead: { en: 'Lower behind your head', de: 'Hinter den Kopf ablassen' }
-} as const;
+	squatDeeper: 'coach_cue_squat_deeper',
+	lowerToChest: 'coach_cue_lower_to_chest',
+	curlUp: 'coach_cue_curl_up',
+	hingeDeeper: 'coach_cue_hinge_deeper',
+	rowToTorso: 'coach_cue_row_to_torso',
+	chinOverBar: 'coach_cue_chin_over_bar',
+	fullLockout: 'coach_cue_full_lockout',
+	hipLockout: 'coach_cue_hip_lockout',
+	shoulderHeight: 'coach_cue_shoulder_height',
+	pullHigher: 'coach_cue_pull_higher',
+	lowerBehindHead: 'coach_cue_lower_behind_head'
+} as const satisfies Record<string, FitnessKey>;
 
 /**
  * Per-exercise form configs, keyed by the exercise `id` from exercises.ts.
@@ -329,12 +328,12 @@ export interface CoachUpdate {
 	angle: number | null;
 	/** Fired exactly once on the frame a rep completes. */
 	repCompleted: boolean;
-	/** Sticky verdict from the last completed rep (depth / tracking hint), or null. */
-	cue: string | null;
+	/** i18n key for the last completed rep's verdict (depth / tracking hint), or null. */
+	cue: FitnessKey | null;
 	/** Severity of `cue`, so the UI can colour it. */
 	cueKind: CueKind;
-	/** Live form faults detected this frame (e.g. rounded back). Empty when form looks OK. */
-	faults: string[];
+	/** i18n keys for live form faults this frame (e.g. rounded back). Empty when form looks OK. */
+	faults: FitnessKey[];
 }
 
 /** Tone of a coaching message: a clean rep, a correction to apply, or a neutral hint. */
@@ -346,7 +345,6 @@ export type CueKind = 'good' | 'advice' | 'info' | null;
  */
 export class ExerciseCoach {
 	readonly config: FormConfig;
-	private lang: 'en' | 'de';
 
 	private reps = 0;
 	private phase: RepPhase = 'top';
@@ -354,17 +352,16 @@ export class ExerciseCoach {
 	private repMinE = Number.POSITIVE_INFINITY;
 	/** Frames in a row with no reliable tracking, used to debounce the "no body" cue. */
 	private lostFrames = 0;
-	/** Sticky cue from the last completed rep (e.g. a depth warning). */
-	private lastRepCue: string | null = null;
+	/** Sticky cue key from the last completed rep (e.g. a depth warning). */
+	private lastRepCue: FitnessKey | null = null;
 	private lastRepCueKind: CueKind = null;
 	/** Debounce counter for the back-rounding fault (avoids single-frame flicker). */
 	private backRoundFrames = 0;
 
-	constructor(exerciseId: string, lang: 'en' | 'de' = 'en') {
+	constructor(exerciseId: string) {
 		const config = FORM_CONFIGS[exerciseId];
 		if (!config) throw new Error(`No form config for exercise "${exerciseId}"`);
 		this.config = config;
-		this.lang = lang;
 	}
 
 	get repCount(): number {
@@ -389,11 +386,7 @@ export class ExerciseCoach {
 			this.lostFrames++;
 			this.backRoundFrames = 0;
 			const lost = this.lostFrames > 5;
-			const cue = lost
-				? this.lang === 'de'
-					? 'Ganzen Körper ins Bild bringen'
-					: 'Get your whole body in frame'
-				: this.lastRepCue;
+			const cue: FitnessKey | null = lost ? 'coach_cue_get_in_frame' : this.lastRepCue;
 			const cueKind: CueKind = lost ? 'info' : this.lastRepCueKind;
 			return {
 				reps: this.reps,
@@ -443,10 +436,10 @@ export class ExerciseCoach {
 					this.reps++;
 					repCompleted = true;
 					if (this.repMinE > depthE) {
-						this.lastRepCue = this.config.shallowCue[this.lang];
+						this.lastRepCue = this.config.shallowCue;
 						this.lastRepCueKind = 'advice';
 					} else {
-						this.lastRepCue = this.lang === 'de' ? 'Saubere Wiederholung' : 'Good rep';
+						this.lastRepCue = 'coach_cue_good_rep';
 						this.lastRepCueKind = 'good';
 					}
 					this.phase = 'top';
@@ -458,7 +451,7 @@ export class ExerciseCoach {
 		}
 
 		// Live form faults — only meaningful while under load (not standing at the top).
-		const faults: string[] = [];
+		const faults: FitnessKey[] = [];
 		const br = this.config.backRounding;
 		if (br && lms && this.phase !== 'top') {
 			const sa = spineAngle(lms);
@@ -467,7 +460,7 @@ export class ExerciseCoach {
 			} else {
 				this.backRoundFrames = Math.max(this.backRoundFrames - 1, 0);
 			}
-			if (this.backRoundFrames >= 3) faults.push(br.cue[this.lang]);
+			if (this.backRoundFrames >= 3) faults.push(br.cue);
 		} else {
 			this.backRoundFrames = 0;
 		}
