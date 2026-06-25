@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { browser } from '$app/environment';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Play from '@lucide/svelte/icons/play';
 	import Pause from '@lucide/svelte/icons/pause';
@@ -49,6 +50,9 @@
 	import WorkoutFocusCard from '$lib/components/fitness/WorkoutFocusCard.svelte';
 	import ActiveRestTimer from '$lib/components/fitness/ActiveRestTimer.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
+	import PoseCoach from '$lib/components/fitness/PoseCoach.svelte';
+	import { hasFormConfig } from '$lib/js/poseCoach';
+	import Info from '@lucide/svelte/icons/info';
 	import { onMount, tick } from 'svelte';
 
 	const workout = getWorkout();
@@ -92,6 +96,51 @@
 		}
 		return ex.sets.length;
 	});
+
+	// --- Pose form coach (camera-based rep + form feedback) ---
+	const COACH_PREF_KEY = 'fitness:formCoachEnabled';
+	let coachEnabled = $state(false);
+	let showCoachInfo = $state(false);
+	// Persist the toggle across sessions. First run loads the stored preference
+	// (after hydration, so SSR markup matches); later runs write changes.
+	let coachPrefLoaded = false;
+	$effect(() => {
+		if (!browser) return;
+		if (!coachPrefLoaded) {
+			coachPrefLoaded = true;
+			const stored = localStorage.getItem(COACH_PREF_KEY);
+			if (stored !== null) coachEnabled = stored === '1';
+			return;
+		}
+		localStorage.setItem(COACH_PREF_KEY, coachEnabled ? '1' : '0');
+	});
+	// The coach needs a wide screen for its own column; below that we hide it (and
+	// its toggle) entirely rather than cramming the camera in.
+	let coachFits = $state(false);
+	$effect(() => {
+		if (!browser) return;
+		const mq = window.matchMedia('(min-width: 1180px)');
+		const sync = () => (coachFits = mq.matches);
+		sync();
+		mq.addEventListener('change', sync);
+		return () => mq.removeEventListener('change', sync);
+	});
+	/** The coach only applies to lifts we have a form config for, on a wide-enough screen. */
+	const coachAvailable = $derived(
+		!!activeExercise && hasFormConfig(activeExercise.exerciseId) && coachFits
+	);
+	const showCoach = $derived(coachAvailable && coachEnabled);
+
+	/** Write the live rep count from the camera into the current (unfinished) set. */
+	function fillRepsFromCoach(/** @type {number} */ reps) {
+		const ex = activeExercise;
+		if (!ex) return;
+		const metrics = getExerciseMetrics(getExerciseById(ex.exerciseId));
+		if (!metrics.includes('reps')) return;
+		const set = ex.sets[activeSetIdx];
+		if (!set || set.completed) return;
+		workout.updateSet(activeIdx, activeSetIdx, { reps });
+	}
 
 	const activeExDoneCount = $derived(activeExercise ? activeExercise.sets.filter((/** @type {any} */ s) => s.completed).length : 0);
 
@@ -1908,7 +1957,7 @@
 			</div>
 		{/if}
 
-		<div class="workout-grid">
+		<div class="workout-grid" class:with-coach={showCoach}>
 			<WorkoutRail
 				title={workoutTitle}
 				exercises={workout.exercises}
@@ -1951,6 +2000,10 @@
 							setOf: (i, n) => isEn ? `Set ${i} of ${n}` : `Satz ${i} von ${n}`,
 							done: (n) => isEn ? `${n}/${n} complete` : `${n}/${n} erledigt`,
 						}}
+						coachAvailable={coachAvailable}
+						coachEnabled={coachEnabled}
+						coachLabel={isEn ? 'Form coach' : 'Formcheck'}
+						onCoachToggle={() => coachEnabled = !coachEnabled}
 					/>
 
 					<ActiveRestTimer
@@ -2045,6 +2098,54 @@
 					</button>
 				</div>
 			</main>
+
+			{#if showCoach && activeExercise}
+				<aside class="coach-col" aria-label={isEn ? 'Form coach' : 'Formcheck'}>
+					{#key activeExercise.exerciseId}
+						<div class="coach-panel">
+							<header class="coach-head">
+								<span class="coach-title">
+									{isEn ? 'Form coach' : 'Formcheck'}
+									<span class="coach-beta">Beta</span>
+									<button
+										class="coach-info-trigger"
+										onclick={() => (showCoachInfo = !showCoachInfo)}
+										aria-label={isEn ? 'About form coach privacy' : 'Datenschutz-Hinweis'}
+									>
+										<Info size={13} />
+									</button>
+									{#if showCoachInfo}
+										<div class="coach-info-tooltip">
+											{isEn
+												? 'All analysis runs on your device. Your camera feed is never uploaded or shared with the server.'
+												: 'Die Analyse läuft komplett auf deinem Gerät. Dein Kamerabild wird nie hochgeladen oder an den Server gesendet.'}
+										</div>
+									{/if}
+								</span>
+								<button
+									class="coach-close"
+									onclick={() => (coachEnabled = false)}
+									aria-label={isEn ? 'Hide form coach' : 'Formcheck ausblenden'}
+								>
+									<X size={18} />
+								</button>
+							</header>
+							<PoseCoach
+								exerciseId={activeExercise.exerciseId}
+								{lang}
+								resetKey={activeSetIdx}
+								onrep={fillRepsFromCoach}
+							/>
+							<p class="coach-sync">
+								<span class="coach-pulse" aria-hidden="true"></span>
+								{isEn
+									? 'Counting reps into your current set'
+									: 'Zählt Wiederholungen in deinen aktuellen Satz'}
+							</p>
+						</div>
+					{/key}
+				</aside>
+			{/if}
 		</div>
 	</div>
 {/if}
@@ -2486,6 +2587,134 @@
 			gap: 2rem;
 		}
 	}
+
+	/* --- Form coach side panel --- */
+	.coach-col {
+		min-width: 0;
+	}
+	.coach-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-card);
+	}
+	.coach-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+	.coach-title {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--color-text-secondary);
+	}
+	.coach-info-trigger {
+		display: inline-flex;
+		align-items: center;
+		padding: 0;
+		border: none;
+		background: none;
+		color: inherit;
+		opacity: 0.45;
+		cursor: pointer;
+	}
+	.coach-info-trigger:hover {
+		opacity: 0.85;
+	}
+	.coach-info-tooltip {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		margin-top: 0.4rem;
+		z-index: 20;
+		width: max-content;
+		max-width: 16rem;
+		padding: 0.5rem 0.65rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-md);
+		font-size: 0.72rem;
+		font-weight: 400;
+		line-height: 1.5;
+		letter-spacing: normal;
+		text-transform: none;
+		color: var(--color-text-secondary);
+	}
+	.coach-beta {
+		letter-spacing: 0.04em;
+		font-size: 0.62rem;
+		padding: 0.1rem 0.4rem;
+		border-radius: var(--radius-pill);
+		background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+		color: var(--color-primary);
+	}
+	.coach-close {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border: none;
+		border-radius: 100px;
+		background: transparent;
+		color: var(--color-text-tertiary);
+		cursor: pointer;
+		transition: background 140ms, color 140ms;
+	}
+	.coach-close:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
+	.coach-sync {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		margin: 0;
+		font-size: 0.78rem;
+		color: var(--color-text-secondary);
+	}
+	.coach-pulse {
+		flex-shrink: 0;
+		width: 8px;
+		height: 8px;
+		border-radius: 100px;
+		background: var(--green);
+		animation: coach-pulse 1.6s ease-out infinite;
+	}
+	@keyframes coach-pulse {
+		0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green), transparent 35%); }
+		70% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--green), transparent 100%); }
+		100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green), transparent 100%); }
+	}
+	/* The coach only renders at ≥1180px — a dedicated third column. */
+	@media (min-width: 1180px) {
+		.workout-grid.with-coach {
+			grid-template-columns: 360px minmax(0, 1fr) 360px;
+		}
+		/* The camera column is tall, so the grid row is tall. A sticky rail (a short
+		   element in a tall row) would pin and drift down on scroll. In coach mode
+		   keep the rail static so all three columns' tops stay aligned. */
+		.workout-grid.with-coach :global(.workout-rail) {
+			position: static;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.coach-pulse {
+			animation: none;
+		}
+	}
+
 	.empty-stage {
 		padding: 2rem 1rem;
 		text-align: center;

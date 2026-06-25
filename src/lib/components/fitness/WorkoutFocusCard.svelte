@@ -1,6 +1,8 @@
 <script>
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Video from '@lucide/svelte/icons/video';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 
 	/** @type {{
 	 *   exerciseId: string,
@@ -13,6 +15,10 @@
 	 *   sets: Array<{ completed?: boolean }>,
 	 *   activeSetIdx: number,
 	 *   labels: { exerciseOf: (i: number, n: number) => string, setOf: (i: number, n: number) => string, done: (n: number) => string },
+	 *   coachAvailable?: boolean,
+	 *   coachEnabled?: boolean,
+	 *   coachLabel?: string,
+	 *   onCoachToggle?: () => void,
 	 * }} */
 	let {
 		exerciseId,
@@ -24,7 +30,11 @@
 		totalExercises,
 		sets,
 		activeSetIdx,
-		labels
+		labels,
+		coachAvailable = false,
+		coachEnabled = false,
+		coachLabel = 'Form coach',
+		onCoachToggle = undefined
 	} = $props();
 
 	const totalSets = $derived(sets.length);
@@ -42,6 +52,12 @@
 		{#if equipment}
 			<span class="focus-dot-sep" aria-hidden="true">·</span>
 			<span class="focus-meta">{equipment}</span>
+		{/if}
+		{#if coachAvailable}
+			<span class="focus-coach" role="group" aria-label={coachLabel} title={coachLabel}>
+				<Video size={15} strokeWidth={2.2} aria-hidden="true" />
+				<Toggle checked={coachEnabled} onchange={onCoachToggle} />
+			</span>
 		{/if}
 	</header>
 
@@ -68,6 +84,7 @@
 			{/each}
 		</span>
 	</div>
+
 </section>
 
 <style>
@@ -182,6 +199,15 @@
 	@keyframes focus-dot-pulse {
 		0%, 100% { transform: scale(1.25); }
 		50% { transform: scale(1.05); }
+	}
+
+	/* Form-coach toggle — icon + switch, pinned to the right of the eyebrow row. */
+	.focus-coach {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		color: var(--color-text-tertiary);
 	}
 
 	@media (max-width: 560px) {

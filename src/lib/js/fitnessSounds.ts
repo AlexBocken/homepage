@@ -61,6 +61,18 @@ export function playSetCompleteSound() {
 }
 
 /**
+ * Low descending two-tone for a sub-par rep (e.g. not deep enough / form flagged).
+ * A downward tritone reads as "not quite" — clearly distinct from the bright
+ * upward set-complete tick, without being a harsh error buzz.
+ */
+export function playRepWarningSound() {
+	_playNotes([
+		{ freq: 392, start: 0, dur: 0.12, gain: 0.15 }, // G4
+		{ freq: 277.18, start: 0.1, dur: 0.22, gain: 0.15 } // C#4 — descending tritone
+	]);
+}
+
+/**
  * Two-note rise played when the final set of an exercise is checked and we
  * auto-advance. Sequential (vs. the per-set tick's stacked fifth) so it reads
  * as a small step up — not a fanfare.
