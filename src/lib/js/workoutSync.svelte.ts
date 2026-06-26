@@ -43,6 +43,7 @@ export function createWorkoutSync() {
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectDelay = 1000;
   let _applying = false; // guard against re-entrant syncs
+  let _localFinishing = false; // true between a local finish/cancel and its own 'finished' echo
 
   function getWorkoutSnapshot(): ServerWorkout {
     // Compute current elapsed for an accurate snapshot
@@ -120,7 +121,7 @@ export function createWorkoutSync() {
 
       // Merge strategy: server state wins for structure,
       // but we keep the higher value for completed sets
-      workout.applyRemoteState({
+      const mapped = {
         name: doc.name,
         mode: doc.mode ?? 'manual',
         activityType: doc.activityType ?? null,
@@ -138,7 +139,15 @@ export function createWorkoutSync() {
         holdTotal: doc.holdTotal ?? 0,
         holdExerciseIdx: doc.holdExerciseIdx ?? -1,
         holdSetIdx: doc.holdSetIdx ?? -1
-      });
+      };
+
+      if (workout.active) {
+        workout.applyRemoteState(mapped);
+      } else {
+        // A workout started on another device — adopt it locally so this
+        // device shows it live (FAB, active page) without a reload.
+        workout.restoreFromRemote(mapped);
+      }
 
       status = 'synced';
     } finally {
@@ -152,32 +161,43 @@ export function createWorkoutSync() {
       eventSource = null;
     }
 
-    if (!workout.active) return;
-
     try {
       eventSource = new EventSource('/api/fitness/workout/active/stream');
 
       eventSource.addEventListener('update', (e) => {
         try {
           const doc = JSON.parse(e.data);
-          // Only apply if server version is newer than ours
-          if (doc.version > serverVersion) {
+          // Apply when the server has a newer version, or when this device has
+          // no local workout yet (a workout just started on another device).
+          if (!workout.active || doc.version > serverVersion) {
             applyServerState(doc);
           }
         } catch {}
       });
 
       eventSource.addEventListener('finished', (e) => {
-        // Another device finished the workout. If they passed along the saved
-        // session, expose it so the active page can build the completion overview.
-        try {
-          const data = JSON.parse(e.data);
-          lastFinishedSession = data?.session ?? null;
-        } catch {
-          lastFinishedSession = null;
+        // Our own finish/cancel echoes back over the stream — the local
+        // completion flow already handles it, so just clear the baseline.
+        if (_localFinishing) {
+          _localFinishing = false;
+          serverVersion = 0;
+          return;
         }
-        workout.cancel();
-        disconnectSSE();
+        // Another device finished the workout. Only surface the completion
+        // overview if this device was actually in the workout.
+        const wasActive = workout.active;
+        if (wasActive) {
+          try {
+            const data = JSON.parse(e.data);
+            lastFinishedSession = data?.session ?? null;
+          } catch {
+            lastFinishedSession = null;
+          }
+          workout.cancel();
+        }
+        // Reset the version baseline but keep the connection open so the next
+        // workout started on any device shows up here live.
+        serverVersion = 0;
       });
 
       eventSource.onerror = () => {
@@ -185,10 +205,11 @@ export function createWorkoutSync() {
         eventSource?.close();
         eventSource = null;
 
-        // Reconnect with exponential backoff
+        // Reconnect with exponential backoff. Stay connected even with no
+        // active workout so workouts started elsewhere arrive live.
         reconnectTimer = setTimeout(() => {
           reconnectDelay = Math.min(reconnectDelay * 2, 30000);
-          if (workout.active) connectSSE();
+          connectSSE();
         }, reconnectDelay);
       };
 
@@ -221,15 +242,24 @@ export function createWorkoutSync() {
   /** Called when workout starts — push initial state and connect SSE */
   async function onWorkoutStart() {
     serverVersion = 0;
+    _localFinishing = false;
+    if (!eventSource) connectSSE();
     await pushToServer();
-    connectSSE();
   }
 
   /** Called when workout finishes or is cancelled — clean up server state.
    *  Pass the just-saved session id so other devices receive it via SSE
-   *  and can render the finish overview. */
+   *  and can render the finish overview.
+   *
+   *  The SSE connection is kept open so this device stays in sync with any
+   *  future workout started on another device. `_localFinishing` suppresses
+   *  the finish event echoed back to us. */
   async function onWorkoutEnd(sessionId?: string | null) {
-    disconnectSSE();
+    _localFinishing = true;
+    serverVersion = 0;
+    // Safety net: clear the guard even if the echo never arrives (e.g. the
+    // stream is momentarily down) so a later genuine remote finish isn't eaten.
+    setTimeout(() => { _localFinishing = false; }, 5000);
     try {
       const qs = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
       await fetch(`/api/fitness/workout/active${qs}`, { method: 'DELETE' });
@@ -245,21 +275,27 @@ export function createWorkoutSync() {
   async function init() {
     try {
       const res = await fetch('/api/fitness/workout/active');
-      if (!res.ok) return;
+      if (res.status === 401) {
+        status = 'offline';
+        return;
+      }
 
-      const data = await res.json();
+      const data = res.ok ? await res.json() : null;
 
-      if (data.active && data.workout) {
+      // Always open a live connection — even with no active workout — so a
+      // workout started on another device shows up here without a reload.
+      connectSSE();
+
+      if (data?.active && data.workout) {
         const serverDoc = data.workout as ServerWorkout;
+        serverVersion = serverDoc.version;
 
         if (workout.active) {
-          // Both local and server have active workout — use higher version
-          serverVersion = serverDoc.version;
-          // Push local state to update server (will handle conflicts)
+          // Both local and server have active workout — push local state to
+          // update server (will handle conflicts).
           await pushToServer();
         } else {
-          // Server has workout but local doesn't — restore from server
-          serverVersion = serverDoc.version;
+          // Server has workout but local doesn't — restore from server.
           workout.restoreFromRemote({
             name: serverDoc.name,
             mode: serverDoc.mode ?? 'manual',
@@ -280,11 +316,9 @@ export function createWorkoutSync() {
             holdSetIdx: serverDoc.holdSetIdx ?? -1
           });
         }
-        connectSSE();
       } else if (workout.active) {
-        // Local has workout but server doesn't — push to server
+        // Local has workout but server doesn't — push to server.
         await pushToServer();
-        connectSSE();
       }
     } catch {
       // Server unreachable — continue with local-only
