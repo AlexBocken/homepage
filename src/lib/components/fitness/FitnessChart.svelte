@@ -50,6 +50,53 @@
 		return window.matchMedia('(prefers-color-scheme: dark)').matches;
 	}
 
+	/** Normalise a CSS colour to "r,g,b" (alpha dropped) so a faded σ-band fill
+	 *  matches the solid line it shades, regardless of hex vs rgba() notation. */
+	function rgbKey(/** @type {any} */ c) {
+		if (typeof c !== 'string') return '';
+		const hex = c.match(/^#([0-9a-f]{3,8})$/i);
+		if (hex) {
+			let h = hex[1];
+			h = h.length < 6 ? h.slice(0, 3).split('').map((x) => x + x).join('') : h.slice(0, 6);
+			const n = parseInt(h, 16);
+			return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+		}
+		const rgb = c.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+		return rgb ? `${+rgb[1]},${+rgb[2]},${+rgb[3]}` : '';
+	}
+
+	// HTML colour key. A σ-band ("± 1σ") isn't a series of its own — it shades a
+	// line — so instead of a separate swatchless legend entry, its label is folded
+	// onto that line ("Trend ± 1σ"), matched by base colour. Shown only when ≥2
+	// visibly-distinct series exist, matching the old canvas legend's condition.
+	const legend = $derived.by(() => {
+		const datasets = data?.datasets || [];
+		const entries = datasets
+			.map((/** @type {any} */ d, /** @type {number} */ i) => {
+				const isBand = d.borderColor === 'transparent' || (d.label ?? '').includes('σ');
+				return {
+					label: d.label ?? '',
+					color: isBand ? null : d.borderColor || nordColors[i % nordColors.length],
+					bandKey: isBand ? rgbKey(d.backgroundColor) : '',
+					isBand,
+					lower: (d.label ?? '').includes('(lower)')
+				};
+			})
+			.filter((e) => !e.lower);
+
+		// band base-colour → its label ("± 1σ"), to suffix onto the matching line.
+		const suffix = new Map();
+		for (const e of entries) if (e.isBand && e.bandKey && e.label) suffix.set(e.bandKey, e.label);
+
+		const lines = entries.filter((e) => !e.isBand && e.color);
+		const items = lines.map((l) => {
+			const s = suffix.get(rgbKey(l.color));
+			return { label: s ? `${l.label} ${s}` : l.label, color: l.color };
+		});
+		const colors = new Set(lines.map((l) => l.color));
+		return { show: lines.length > 1 && colors.size > 1, items };
+	});
+
 	function createChart() {
 		if (!canvas || !data?.datasets || !ChartCtor) return;
 		if (chart) chart.destroy();
@@ -226,7 +273,7 @@
 				},
 				plugins: /** @type {any} */ ({
 					legend: {
-						display: showColorKey,
+						display: false, // colour key is rendered as HTML below (see `legend` derived)
 						labels: {
 							color: textColor,
 							usePointStyle: true,
@@ -355,15 +402,54 @@
 </script>
 
 <div class="chart-container" style="height: {height}">
-	<canvas bind:this={canvas}></canvas>
+	<div class="chart-canvas-wrap">
+		<canvas bind:this={canvas}></canvas>
+	</div>
+	{#if legend.show}
+		<div class="chart-legend">
+			{#each legend.items as it (it.label)}
+				<span class="legend-item">
+					<span class="legend-swatch" style:background-color={it.color}></span>
+					<span class="legend-text">{it.label}</span>
+				</span>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>
 	.chart-container {
+		display: flex;
+		flex-direction: column;
 		background: var(--color-surface);
 		border-radius: 12px;
 		padding: 1rem;
 		border: 1px solid var(--color-border);
+	}
+	.chart-canvas-wrap {
+		position: relative;
+		flex: 1;
+		min-height: 0;
+	}
+	.chart-legend {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.2rem 1rem;
+		padding-top: 0.6rem;
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+	.legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+	.legend-swatch {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		flex-shrink: 0;
 	}
 	canvas {
 		max-width: 100%;
