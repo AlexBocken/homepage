@@ -255,14 +255,14 @@
 	let dashSections = $derived(
 		[
 			{ key: 'simpleStats', label: t.dash_overview },
+			{ key: 'segmentStat', label: t.dash_segment },
+			{ key: 'fastestK', label: t.dash_fastest },
 			{ key: 'streak', label: t.dash_streak },
 			{ key: 'weight', label: t.dash_weight },
 			{ key: 'bodyFat', label: t.dash_bodyfat },
 			{ key: 'dietStats', label: t.dash_diet },
 			{ key: 'muscleBalance', label: t.muscle_balance },
 			{ key: 'bodyParts', label: t.body_parts },
-			{ key: 'segmentStat', label: t.dash_segment },
-			{ key: 'fastestK', label: t.dash_fastest },
 			...(isFemale ? [{ key: 'ownPeriod', label: t.dash_own_cycle }] : []),
 			{ key: 'sharedPeriods', label: t.dash_shared_cycles }
 		]
@@ -534,7 +534,8 @@
 			{:else if card.kind === 'seg'}
 				{@const seg = card.seg}
 				{@const st = segStats[seg._id]}
-				<button type="button" class="seg-card" class:span-full={full} onclick={() => (segModalOpen = true)} aria-label={t.dash_segment}>
+				<div class="seg-card-wrap" class:span-full={full}>
+					<button type="button" class="seg-card" onclick={() => (segModalOpen = true)} aria-label={t.dash_segment}>
 					<div class="seg-map">
 						{#if !st?.failed}
 							<img class="seg-map-img" src={`/api/fitness/segments/${seg._id}/map.webp`} alt="" loading="lazy" decoding="async" onerror={() => segMapFailed(seg._id)} />
@@ -582,6 +583,10 @@
 						</div>
 					</div>
 				</button>
+					<a class="seg-open-link" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: seg._id })} title={t.view_segment} aria-label={t.view_segment}>
+						<ExternalLink size={15} />
+					</a>
+					</div>
 			{:else}
 				<div class="seg-card-wrap" class:span-full={full}>
 				<button type="button" class="seg-card" onclick={() => (fastestEditOpen = true)} aria-label={t.dash_fastest}>

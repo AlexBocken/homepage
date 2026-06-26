@@ -56,14 +56,14 @@ export const FitnessDashboard = _model;
 /** Section keys, in dashboard order. */
 export const DASHBOARD_KEYS = [
   'simpleStats',
+  'segmentStat',
+  'fastestK',
   'streak',
   'weight',
   'bodyFat',
   'dietStats',
   'muscleBalance',
   'bodyParts',
-  'segmentStat',
-  'fastestK',
   'ownPeriod',
   'sharedPeriods'
 ] as const;
