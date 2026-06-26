@@ -14,6 +14,10 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import X from '@lucide/svelte/icons/x';
 
+	// MediaPipe pose face points we never use in calculations (nose, eyes, mouth).
+	// Ears (7, 8) are kept — they feed the spine-angle check.
+	const UNUSED_FACE_LANDMARKS = new Set([0, 1, 2, 3, 4, 5, 6, 9, 10]);
+
 	/**
 	 * `variant: 'bare'` strips the panel chrome (rep header, advice line, controls)
 	 * and lets the camera fill its host — for use as the background of the mobile
@@ -242,7 +246,9 @@
 		}
 		ctx.fillStyle = '#88C0D0'; // nord8 light blue — joints
 		const r = Math.max(5, w / 120);
-		for (const p of lms) {
+		for (let i = 0; i < lms.length; i++) {
+			if (UNUSED_FACE_LANDMARKS.has(i)) continue; // nose/eyes/mouth — not used in any calc
+			const p = lms[i];
 			if ((p.visibility ?? 0) < 0.5) continue;
 			ctx.beginPath();
 			ctx.arc(p.x * w, p.y * h, r, 0, Math.PI * 2);
