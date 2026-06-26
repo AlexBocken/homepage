@@ -3,6 +3,13 @@ import { errorWithVerse } from '$lib/server/errorQuote';
 import { runMapToken } from '$lib/server/runMapShare';
 
 export const load: PageServerLoad = async ({ params, fetch, url }) => {
+	// Unsynced (offline-queued) runs live only in the browser's IndexedDB, so
+	// there's nothing to fetch server-side. The universal load (+page.ts) reads
+	// them from the outbox on the client.
+	if (params.id.startsWith('queued-')) {
+		return { session: null, segmentEfforts: [], shareUrl: null, cardImage: null };
+	}
+
 	const res = await fetch(`/api/fitness/sessions/${params.id}`);
 
 	if (!res.ok) {

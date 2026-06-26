@@ -41,7 +41,8 @@ export async function getQueuedSessions(): Promise<Array<{ id: number; data: unk
 	});
 }
 
-async function removeSession(id: number): Promise<void> {
+/** Drop a queued session from the outbox (e.g. user deleted it before it synced). */
+export async function removeQueuedSession(id: number): Promise<void> {
 	const db = await openDB();
 	return new Promise((resolve, reject) => {
 		const tx = db.transaction(STORE, 'readwrite');
@@ -65,7 +66,7 @@ export async function flushQueue(): Promise<number> {
 				body: JSON.stringify(entry.data)
 			});
 			if (res.ok) {
-				await removeSession(entry.id);
+				await removeQueuedSession(entry.id);
 				synced++;
 			}
 		} catch {

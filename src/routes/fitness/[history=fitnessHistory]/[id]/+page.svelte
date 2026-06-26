@@ -19,6 +19,7 @@
 	import Flame from '@lucide/svelte/icons/flame';
 	import Info from '@lucide/svelte/icons/info';
 	import Mountain from '@lucide/svelte/icons/mountain';
+	import CloudOff from '@lucide/svelte/icons/cloud-off';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { toast } from '$lib/js/toast.svelte';
@@ -49,6 +50,10 @@
 	let { data } = $props();
 
 	const session = $derived(data.session);
+	// Unsynced (offline-queued) run: lives only in the browser outbox, so the
+	// server-only actions (edit, share, snap, GPX, segments, recalculate) don't
+	// apply — only viewing and deleting do.
+	const unsynced = $derived(!!data.unsynced);
 	// Board for this run — best efforts read in pace (running) or speed (cycling).
 	const beKind = $derived(activityKindOf(session?.activityType));
 
@@ -427,6 +432,13 @@
 		if (!await confirm(t.delete_session_confirm)) return;
 		deleting = true;
 		try {
+			if (unsynced) {
+				// Not on the server yet — drop it straight from the offline outbox.
+				const { removeQueuedSession } = await import('$lib/offline/fitnessQueue');
+				await removeQueuedSession(Number(String(session._id).slice('queued-'.length)));
+				await goto(`/fitness/${sl.history}`);
+				return;
+			}
 			const res = await fetch(`/api/fitness/sessions/${session._id}`, { method: 'DELETE' });
 			if (res.ok) {
 				await goto(`/fitness/${sl.history}`);
@@ -643,12 +655,23 @@
 </svelte:head>
 
 <div class="session-detail">
+	{#if !session}
+		<p class="device-only-notice">{t.unsynced_device_only}</p>
+	{:else}
 	<div class="detail-header">
 		<div>
 			{#if editing}
 				<input class="edit-name-input" type="text" bind:value={editData.name} />
 			{:else}
-				<h1>{session.name}</h1>
+				<h1>
+					{session.name}
+					{#if unsynced}
+						<span class="unsynced-badge" title={t.unsynced_label}>
+							<CloudOff size={13} strokeWidth={2} />
+							{t.unsynced_label}
+						</span>
+					{/if}
+				</h1>
 			{/if}
 			<p class="session-date">{formatDate(session.startTime)} · {formatTime(session.startTime)}</p>
 		</div>
@@ -662,15 +685,17 @@
 				</button>
 				<button class="cancel-edit-btn" onclick={cancelEdit}>{t.cancel}</button>
 			{:else}
-				<button class="share-btn" onclick={copyLog} aria-label={t.copy_log} title={t.copy_log}>
-					<Copy size={16} />
-				</button>
-				<button class="share-btn" onclick={shareRun} aria-label={t.share} title={t.share}>
-					<Share2 size={16} />
-				</button>
-				<button class="edit-btn" onclick={startEdit} aria-label="Edit session">
-					<Pencil size={16} />
-				</button>
+				{#if !unsynced}
+					<button class="share-btn" onclick={copyLog} aria-label={t.copy_log} title={t.copy_log}>
+						<Copy size={16} />
+					</button>
+					<button class="share-btn" onclick={shareRun} aria-label={t.share} title={t.share}>
+						<Share2 size={16} />
+					</button>
+					<button class="edit-btn" onclick={startEdit} aria-label="Edit session">
+						<Pencil size={16} />
+					</button>
+				{/if}
 				<button class="delete-btn" onclick={deleteSession} disabled={deleting} aria-label="Delete session">
 					<Trash2 size={18} />
 				</button>
@@ -991,12 +1016,14 @@
 							</div>
 						{/if}
 
-						<button class="gpx-download-btn" onclick={() => downloadGpx(exIdx)}>
-							<Download size={14} />
-							{t.download_gpx}
-						</button>
+						{#if !unsynced}
+							<button class="gpx-download-btn" onclick={() => downloadGpx(exIdx)}>
+								<Download size={14} />
+								{t.download_gpx}
+							</button>
+						{/if}
 					</div>
-				{:else if isCardio(ex.exerciseId)}
+				{:else if isCardio(ex.exerciseId) && !unsynced}
 					<button class="gpx-upload-btn" onclick={() => uploadGpx(exIdx)} disabled={uploading === exIdx}>
 						<Upload size={14} />
 						{uploading === exIdx ? t.uploading : t.upload_gpx}
@@ -1016,7 +1043,7 @@
 		/>
 	{/if}
 
-	{#if !editing && gpsSources.length > 0}
+	{#if !editing && !unsynced && gpsSources.length > 0}
 		<section class="create-segment-section">
 			{#if creatingSegment}
 				{#if gpsSources.length > 1}
@@ -1081,6 +1108,7 @@
 			<p>{session.notes}</p>
 		</div>
 	{/if}
+	{/if}
 </div>
 
 {#if showPicker}
@@ -1109,6 +1137,26 @@
 		margin: 0.2rem 0 0;
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
+	}
+	.unsynced-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin-left: 0.5rem;
+		padding: 0.15rem 0.5rem;
+		font-size: 0.7rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--orange, var(--nord12));
+		background: color-mix(in srgb, var(--orange, var(--nord12)) 12%, transparent);
+		border-radius: 100px;
+		vertical-align: middle;
+	}
+	.device-only-notice {
+		color: var(--color-text-secondary);
+		text-align: center;
+		padding: 3rem 0;
 	}
 	.header-actions {
 		display: flex;

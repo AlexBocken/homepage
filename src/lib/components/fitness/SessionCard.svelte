@@ -236,11 +236,11 @@
 	</div>
 {/snippet}
 
-{#if unsynced}
-	<div class="session-card unsynced">{@render cardBody()}</div>
-{:else}
-	<a href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: sl.history, id: session._id })} class="session-card">{@render cardBody()}</a>
-{/if}
+<a
+	href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: sl.history, id: session._id })}
+	class="session-card"
+	class:unsynced
+>{@render cardBody()}</a>
 
 <style>
 	.session-card {
@@ -263,12 +263,6 @@
 	}
 	.session-card.unsynced {
 		border-left: 3px solid var(--orange, var(--nord12));
-		opacity: 0.92;
-		cursor: default;
-	}
-	.session-card.unsynced:hover {
-		transform: none;
-		box-shadow: var(--shadow-sm);
 	}
 	.unsynced-badge {
 		display: inline-flex;
