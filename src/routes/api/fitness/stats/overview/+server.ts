@@ -8,6 +8,7 @@ import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { estimateWorkoutKcal, type ExerciseData, type Demographics } from '$lib/data/kcalEstimate';
 import { estimateCardioKcal, type CardioEstimateResult } from '$lib/data/cardioKcalEstimate';
 import { FitnessGoal } from '$models/FitnessGoal';
+import { timeDecayedTrend } from '$lib/fitness/trend';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
@@ -188,27 +189,16 @@ export const GET: RequestHandler = async ({ locals }) => {
 		weightChart.data.push(allWeights[idx]);
 	}
 
-	// Adaptive window: 7 if enough data, otherwise half the data (min 2)
-	const w = Math.min(7, Math.max(2, Math.floor(allWeights.length / 2)));
+	// Time-decayed EMA (date-aware) so gaps / irregular spacing don't let stale
+	// readings drag the trend — see timeDecayedTrend. Runs over the full history
+	// so the displayed window starts already warmed up.
+	const allWeightDates = weightMeasurements.map((m) => m.date);
+	const weightTrend = timeDecayedTrend(allWeights, allWeightDates);
 	for (let idx = displayStart; idx < allWeights.length; idx++) {
-		// Use full window when available, otherwise use all points so far
-		const k = Math.min(w, idx + 1);
-		let sum = 0;
-		for (let j = idx - k + 1; j <= idx; j++) sum += allWeights[j];
-		const mean = sum / k;
-
-		let variance = 0;
-		for (let j = idx - k + 1; j <= idx; j++) variance += (allWeights[j] - mean) ** 2;
-		// Bessel's correction (k-1) for unbiased sample variance;
-		// scale by sqrt(w/k) so the band widens when k < w
-		const std = k > 1
-			? Math.sqrt(variance / (k - 1)) * Math.sqrt(w / k)
-			: Math.sqrt(variance) * Math.sqrt(w);
-
 		const round = (v: number) => Math.round(v * 100) / 100;
-		weightChart.sma.push(round(mean));
-		weightChart.upper.push(round(mean + std));
-		weightChart.lower.push(round(mean - std));
+		weightChart.sma.push(round(weightTrend.trend[idx]));
+		weightChart.upper.push(round(weightTrend.upper[idx]));
+		weightChart.lower.push(round(weightTrend.lower[idx]));
 	}
 
 	// Build body-fat chart as Δ from the first displayed point — emphasises
@@ -238,21 +228,14 @@ export const GET: RequestHandler = async ({ locals }) => {
 			bfChart.data.push(Math.round((allBf[idx] - baseline) * 100) / 100);
 		}
 
-		const wBf = Math.min(7, Math.max(2, Math.floor(allBf.length / 2)));
+		// Same date-aware EMA; output is Δ from the baseline (first shown point).
+		const allBfDates = bfMeasurements.map((m) => m.date);
+		const bfTrend = timeDecayedTrend(allBf, allBfDates);
 		for (let idx = displayStartBf; idx < allBf.length; idx++) {
-			const k = Math.min(wBf, idx + 1);
-			let sum = 0;
-			for (let j = idx - k + 1; j <= idx; j++) sum += allBf[j];
-			const mean = sum / k;
-			let variance = 0;
-			for (let j = idx - k + 1; j <= idx; j++) variance += (allBf[j] - mean) ** 2;
-			const std = k > 1
-				? Math.sqrt(variance / (k - 1)) * Math.sqrt(wBf / k)
-				: Math.sqrt(variance) * Math.sqrt(wBf);
 			const round = (v: number) => Math.round(v * 100) / 100;
-			bfChart.sma.push(round(mean - baseline));
-			bfChart.upper.push(round(mean - baseline + std));
-			bfChart.lower.push(round(mean - baseline - std));
+			bfChart.sma.push(round(bfTrend.trend[idx] - baseline));
+			bfChart.upper.push(round(bfTrend.upper[idx] - baseline));
+			bfChart.lower.push(round(bfTrend.lower[idx] - baseline));
 		}
 	}
 

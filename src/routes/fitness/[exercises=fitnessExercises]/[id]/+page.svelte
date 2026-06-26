@@ -27,6 +27,7 @@
 	const s = $derived(fitnessSlugs(lang));
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleMap from '$lib/components/fitness/MuscleMap.svelte';
+	import { timeDecayedTrend, TREND_TAU_DAYS_STRENGTH } from '$lib/fitness/trend';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
@@ -69,7 +70,7 @@
 		return withTrend({
 			labels: points.map((/** @type {any} */ p) => new Date(p.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
 			datasets: [{ label: 'Est. 1RM (kg)', data: points.map((/** @type {any} */ p) => p.value), borderColor: primary }]
-		});
+		}, primary, points.map((/** @type {any} */ p) => p.date));
 	});
 
 	const maxWeightChartData = $derived.by(() => {
@@ -77,7 +78,7 @@
 		return withTrend({
 			labels: points.map((/** @type {any} */ p) => new Date(p.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
 			datasets: [{ label: 'Max Weight (kg)', data: points.map((/** @type {any} */ p) => p.value), borderColor: '#A3BE8C' }]
-		}, '#A3BE8C');
+		}, '#A3BE8C', points.map((/** @type {any} */ p) => p.date));
 	});
 
 	const volumeChartData = $derived.by(() => {
@@ -85,31 +86,25 @@
 		return withTrend({
 			labels: points.map((/** @type {any} */ p) => new Date(p.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
 			datasets: [{ label: 'Total Volume (kg)', data: points.map((/** @type {any} */ p) => p.value), borderColor: '#EBCB8B' }]
-		}, '#EBCB8B');
+		}, '#EBCB8B', points.map((/** @type {any} */ p) => p.date));
 	});
 
-	/** @param {number[]} data */
-	function trendWithBands(data) {
-		const n = data.length;
-		if (n < 3) return null;
-		let sx = 0, sy = 0, sxx = 0, sxy = 0;
-		for (let i = 0; i < n; i++) {
-			sx += i; sy += data[i]; sxx += i * i; sxy += i * data[i];
-		}
-		const slope = (n * sxy - sx * sy) / (n * sxx - sx * sx);
-		const intercept = (sy - slope * sx) / n;
-		const trend = data.map((_, i) => Math.round((intercept + slope * i) * 10) / 10);
-		let ssRes = 0;
-		for (let i = 0; i < n; i++) { const r = data[i] - trend[i]; ssRes += r * r; }
-		const sigma = Math.sqrt(ssRes / (n - 2));
-		return { trend, upper: trend.map(v => Math.round((v + sigma) * 10) / 10), lower: trend.map(v => Math.round((v - sigma) * 10) / 10) };
+	// Date-aware, heavily-smoothed trend (same EMA as the weight/body-fat charts
+	// but with a much longer memory): a plain line fit is misled by the uneven
+	// spacing of ~1-2 sessions/week, and a short window barely smooths.
+	/** @param {number[]} values @param {Array<string|Date>} dates */
+	function trendWithBands(values, dates) {
+		if (values.length < 3) return null;
+		const r = (/** @type {number} */ v) => Math.round(v * 10) / 10;
+		const { trend, upper, lower } = timeDecayedTrend(values, dates, TREND_TAU_DAYS_STRENGTH);
+		return { trend: trend.map(r), upper: upper.map(r), lower: lower.map(r) };
 	}
 
-	/** @param {{ labels: string[], datasets: Array<any> }} chartData @param {string} trendColor */
-	function withTrend(chartData, trendColor = primary) {
+	/** @param {{ labels: string[], datasets: Array<any> }} chartData @param {string} trendColor @param {Array<string|Date>} dates */
+	function withTrend(chartData, trendColor = primary, dates = []) {
 		const values = chartData.datasets[0]?.data;
-		if (!values || values.length < 3) return chartData;
-		const bands = trendWithBands(values);
+		if (!values || values.length < 3 || dates.length !== values.length) return chartData;
+		const bands = trendWithBands(values, dates);
 		if (!bands) return chartData;
 		return {
 			labels: chartData.labels,
