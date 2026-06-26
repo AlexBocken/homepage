@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
-import { getEnrichedExerciseById } from '$lib/data/exercisedb';
+import { getEnrichedExerciseById, isStretchType } from '$lib/data/exercisedb';
 import { edbMuscleToSimple, MUSCLE_GROUPS } from '$lib/data/muscleMap';
 
 /**
@@ -62,6 +62,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		for (const ex of session.exercises) {
 			const enriched = getEnrichedExerciseById(ex.exerciseId);
 			if (!enriched) continue;
+
+			// Stretches/yoga are mobility work, not loading volume — exclude
+			// them so they don't skew the muscle-balance heatmap.
+			if (isStretchType(enriched.exerciseType)) continue;
 
 			const setCount = ex.sets?.filter((s: any) => s.completed !== false).length ?? 0;
 			if (setCount === 0) continue;
