@@ -6,21 +6,21 @@ import { FoodLogEntry } from '$models/FoodLogEntry';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { WorkoutSession } from '$models/WorkoutSession';
+import { localDateStr, localDateOffset } from '$lib/js/fitnessDate';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
-	// Exclude today (incomplete day) — stats cover completed days only
+	// Exclude today (incomplete day) — stats cover completed days only.
+	// Day keys are stored as UTC-midnight of the *local* calendar-day label
+	// (see fitnessDate.ts), so boundaries must be derived from the local date,
+	// not from the current UTC instant (which rolls back a day in the small
+	// hours for positive-offset timezones).
 	const now = new Date();
-	const todayStart = new Date(now);
-	todayStart.setUTCHours(0, 0, 0, 0);
-
-	const sevenDaysAgo = new Date(todayStart);
-	sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 7);
-
-	const thirtyDaysAgo = new Date(todayStart);
-	thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
+	const todayStart = new Date(localDateStr() + 'T00:00:00.000Z');
+	const sevenDaysAgo = new Date(localDateOffset(-7) + 'T00:00:00.000Z');
+	const thirtyDaysAgo = new Date(localDateOffset(-30) + 'T00:00:00.000Z');
 
 	const [entries30d, goal, weightMeasurements, workoutSessions30d] = await Promise.all([
 		FoodLogEntry.find({
