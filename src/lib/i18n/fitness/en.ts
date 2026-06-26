@@ -138,6 +138,7 @@ export const en = {
 	no_exercises_match: "No exercises match your search.",
 	type_any: "Any type",
 	type_weights: "Strength",
+	type_cardio: "Cardio",
 	type_stretches: "Stretches",
 	stretch_pill: "Stretch",
 	strength_pill: "Strength",

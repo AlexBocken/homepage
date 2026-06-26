@@ -138,7 +138,7 @@
 		z-index: 5;
 		font-size: 2.5rem;
 		font-weight: 700;
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		--shadow-outline: 0 0 1px rgba(255,255,255,0.9), 0 0 3px rgba(0,0,0,0.4);
 	}
 

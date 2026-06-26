@@ -31,7 +31,7 @@
 		opacity: 0.7;
 	}
 	.syncing {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		opacity: 0.8;
 	}
 	.offline {

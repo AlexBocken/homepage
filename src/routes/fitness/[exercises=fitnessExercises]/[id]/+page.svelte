@@ -377,7 +377,7 @@
 	.tag.type-stretch { background: rgba(180, 142, 173, 0.2); color: var(--nord15); }
 	.tag.type-strength { background: rgba(94, 129, 172, 0.2); color: var(--nord10); }
 	.tag.type-cardio { background: rgba(191, 97, 106, 0.2); color: var(--nord11); }
-	.tag.type-plyo { background: rgba(235, 203, 139, 0.22); color: var(--nord13); }
+	.tag.type-plyo { background: rgba(235, 203, 139, 0.22); color: var(--color-amber-text); }
 
 	/* About layout — two-column on wide screens */
 	.about-layout {

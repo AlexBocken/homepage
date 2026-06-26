@@ -388,7 +388,7 @@
 	}
 	.kcal-info-tooltip a { color: var(--nord12); text-decoration: underline; }
 	.stat-pill.pr {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		border-color: var(--nord13);
 		background: color-mix(in srgb, var(--nord13) 10%, transparent);
 	}
@@ -489,13 +489,13 @@
 		border-radius: 12px;
 		padding: 1rem;
 	}
-	.prs-section h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--nord13); }
+	.prs-section h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--color-amber-text); }
 	.pr-list { display: flex; flex-direction: column; gap: 0.4rem; }
 	.pr-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
-	.pr-item :global(.pr-icon) { color: var(--nord13); flex-shrink: 0; }
+	.pr-item :global(.pr-icon) { color: var(--color-amber-text); flex-shrink: 0; }
 	.pr-exercise { font-weight: 600; }
 	.pr-type { color: var(--color-text-secondary); font-size: 0.75rem; }
-	.pr-value { margin-left: auto; font-weight: 700; color: var(--nord13); }
+	.pr-value { margin-left: auto; font-weight: 700; color: var(--color-amber-text); }
 	.notes-section {
 		background: var(--color-surface);
 		border-radius: 8px;

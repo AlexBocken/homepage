@@ -16,6 +16,7 @@
 	import { MUSCLE_GROUPS, MUSCLE_GROUP_DE } from '$lib/data/muscleMap';
 	import MuscleFilter from '$lib/components/fitness/MuscleFilter.svelte';
 	import StretchIcon from '$lib/components/fitness/StretchIcon.svelte';
+	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
@@ -29,7 +30,7 @@
 	let equipmentFilters = $state([]);
 	/** @type {string[]} */
 	let muscleGroups = $state([]);
-	/** @type {'all' | 'stretch' | 'non-stretch'} */
+	/** @type {'all' | 'stretch' | 'non-stretch' | 'cardio'} */
 	let typeFilter = $state('all');
 
 	const filterOptions = getFilterOptionsAll();
@@ -107,13 +108,20 @@
 		else addMuscle(group);
 	}
 
-	const filtered = $derived(searchAllExercises({
-		search: query || undefined,
-		equipment: equipmentFilters.length ? equipmentFilters : undefined,
-		muscleGroups: muscleGroups.length ? muscleGroups : undefined,
-		stretchFilter: typeFilter === 'all' ? undefined : typeFilter,
-		lang
-	}));
+	const filtered = $derived.by(() => {
+		const results = searchAllExercises({
+			search: query || undefined,
+			equipment: equipmentFilters.length ? equipmentFilters : undefined,
+			muscleGroups: muscleGroups.length ? muscleGroups : undefined,
+			// Cardio is its own category; only the stretch/strength split goes through stretchFilter.
+			bodyPart: typeFilter === 'cardio' ? 'cardio' : undefined,
+			stretchFilter: typeFilter === 'stretch' || typeFilter === 'non-stretch' ? typeFilter : undefined,
+			lang
+		});
+		// Keep the categories mutually exclusive: "Strength" means non-stretch *and* non-cardio.
+		if (typeFilter === 'non-stretch') return results.filter(e => e.bodyPart !== 'cardio');
+		return results;
+	});
 </script>
 
 <svelte:head><title>{t.exercises_title} - Bocken</title></svelte:head>
@@ -151,6 +159,16 @@
 			>
 				<BicepsFlexed size={14} strokeWidth={2.2} />
 				<span>{t.type_weights}</span>
+			</button>
+			<button
+				role="tab"
+				aria-selected={typeFilter === 'cardio'}
+				class="type-btn"
+				class:active={typeFilter === 'cardio'}
+				onclick={() => typeFilter = 'cardio'}
+			>
+				<ActivityIcon activity="running" size={14} />
+				<span>{t.type_cardio}</span>
 			</button>
 			<button
 				role="tab"
@@ -421,6 +439,7 @@
 		border-radius: var(--radius-pill, 100px);
 		font-size: 0.75rem;
 		font-weight: 600;
+		white-space: nowrap;
 		color: var(--color-text-secondary);
 		cursor: pointer;
 		transition: background 0.15s, color 0.15s;

@@ -338,7 +338,7 @@
 		white-space: nowrap;
 	}
 	.user :global(.crown) {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		flex-shrink: 0;
 	}
 	.time {
@@ -364,7 +364,7 @@
 		white-space: nowrap;
 	}
 	.held-badge.current {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		background: color-mix(in srgb, var(--nord13) 15%, transparent);
 		padding: 0.1rem 0.4rem;
 		border-radius: 1000px;

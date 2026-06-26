@@ -157,7 +157,7 @@
 		border-radius: 1000px;
 	}
 	.badge.kom {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		background: color-mix(in srgb, var(--nord13) 15%, transparent);
 	}
 	.badge.pr {

@@ -138,6 +138,7 @@ export const de = {
 	no_exercises_match: "Keine Übungen gefunden.",
 	type_any: "Alle Arten",
 	type_weights: "Kraft",
+	type_cardio: "Ausdauer",
 	type_stretches: "Dehnen",
 	stretch_pill: "Dehnung",
 	strength_pill: "Kraft",

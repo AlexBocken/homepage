@@ -359,6 +359,6 @@
 		color: var(--nord12);
 	}
 	.stat.pr {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 	}
 </style>

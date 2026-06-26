@@ -196,7 +196,7 @@
 		font-weight: 600;
 	}
 	.time.kom {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 	}
 	.time.mine {
 		color: var(--color-primary);

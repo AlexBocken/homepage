@@ -60,6 +60,13 @@
 	--green: var(--nord14);
 	--purple: var(--nord15);
 
+	/* Foreground amber for text & icons (PRs, streak, KOM badges…). The bright
+	   nord13 yellow is hard to read on light surfaces, so in light mode we use a
+	   darker goldenrod for real contrast at small sizes (no shadow/outline, which
+	   only smears small glyphs). Dark mode keeps bright nord13 — see overrides.
+	   Backgrounds/borders keep using nord13 directly; this is foreground only. */
+	--color-amber-text: #9a6f00;
+
 	/* ============================================
 	   SEMANTIC COLOR SYSTEM - LIGHT MODE
 	   Warm, easy-on-the-eyes palette
@@ -173,6 +180,9 @@
 		--background-dark: #000;
 		--font-default-dark: #e5e5e5;
 
+		/* Bright yellow reads fine on the dark base. */
+		--color-amber-text: var(--nord13);
+
 		/* Primary Color - frost blue, the single interactive accent */
 		--color-primary: var(--nord8);
 		--color-primary-hover: var(--nord7);
@@ -238,6 +248,8 @@
 	--accent-dark: #1a1a1a;
 	--background-dark: #000;
 	--font-default-dark: #e5e5e5;
+
+	--color-amber-text: var(--nord13);
 
 	--color-primary: var(--nord8);
 	--color-primary-hover: var(--nord7);

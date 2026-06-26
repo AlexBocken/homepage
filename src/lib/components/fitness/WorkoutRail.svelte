@@ -316,7 +316,7 @@
 		min-width: 0;
 	}
 	.rail-elapsed.paused {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 	}
 	.rail-sync {
 		display: inline-flex;

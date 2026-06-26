@@ -204,7 +204,7 @@
 							<td class="be-pace">{formatEffortRate(e.km, e.seconds, activity)}</td>
 							{#if tab === 'all'}
 								<td class="be-athlete">
-									<span class="be-athlete-cell" class:me={e.mine}>
+									<span class="be-athlete-cell" class:me={e.mine} title={e.createdBy}>
 										<ProfilePicture username={e.createdBy} size={22} />
 										<span class="be-athlete-name">{e.createdBy}</span>
 									</span>
@@ -385,6 +385,12 @@
 	.be-athlete-cell.me .be-athlete-name {
 		font-weight: 700;
 		color: var(--color-primary);
+	}
+	/* Tight screens: collapse the athlete column to just the avatar. */
+	@media (max-width: 560px) {
+		.be-athlete-name {
+			display: none;
+		}
 	}
 	.be-km {
 		font-weight: 700;

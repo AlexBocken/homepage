@@ -2920,7 +2920,7 @@
 		border: 1px solid color-mix(in srgb, var(--nord13) 30%, var(--color-border));
 		border-radius: 8px;
 		margin-bottom: 0.75rem;
-		color: var(--nord13);
+		color: var(--color-amber-text);
 	}
 	.tdee-warning :global(svg) {
 		flex-shrink: 0;

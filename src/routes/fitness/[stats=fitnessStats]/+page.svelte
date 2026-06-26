@@ -1198,11 +1198,12 @@
 	.seg-pick-tabs {
 		display: flex;
 		gap: 0.25rem;
-		align-self: flex-start;
+		align-self: center;
 		background: var(--color-bg-tertiary);
 		border-radius: var(--radius-pill, 1000px);
 		padding: 0.2rem;
-		margin: 0.25rem 0 0.75rem;
+		margin: 0.75rem 0 0.4rem;
+		flex-shrink: 0;
 	}
 	.seg-pick-tabs button {
 		display: inline-flex;
@@ -1456,11 +1457,23 @@
 		background: color-mix(in srgb, var(--nord0, #2e3440) 55%, transparent);
 		backdrop-filter: blur(3px);
 	}
+	/* The segment picker can get tall — anchor it below the sticky header and let
+	   it grow downward instead of centering (which lets it expand up behind the
+	   header). Clearance = header top offset + height (3rem) + a small gap. */
+	.seg-modal-overlay:has(.seg-modal) {
+		--seg-modal-clear: calc(max(12px, env(safe-area-inset-top, 0px) + 4px) + 3rem + 0.75rem);
+		align-items: flex-start;
+		padding-top: var(--seg-modal-clear);
+		/* Let the modal grow past the viewport and scroll the overlay instead of
+		   constraining the card grid (which made cards overlap on short screens). */
+		overflow-y: auto;
+	}
 	.seg-modal {
 		display: flex;
 		flex-direction: column;
 		width: min(720px, 100%);
-		max-height: 85vh;
+		/* Grows to fit all cards; the overlay scrolls when it exceeds the screen. */
+		margin-bottom: 1rem;
 		border-radius: var(--radius-lg, 0.75rem);
 		background: var(--color-bg-primary, var(--color-surface));
 		box-shadow: var(--shadow-lg, var(--shadow-md));
@@ -1472,6 +1485,7 @@
 		justify-content: space-between;
 		padding: 0.9rem 1.1rem;
 		border-bottom: 1px solid var(--color-border);
+		flex-shrink: 0;
 	}
 	.seg-modal-head h3 {
 		margin: 0;
@@ -1499,10 +1513,13 @@
 	}
 	.seg-modal-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		/* min(220px, 100%) so a single card never forces horizontal overflow on a
+		   phone narrower than 220px. */
+		grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
 		gap: 0.8rem;
 		padding: 1rem 1.1rem 1.2rem;
-		overflow-y: auto;
+		/* Each card keeps its natural height so the stats below the map never clip. */
+		align-items: start;
 	}
 	.lifetime-card {
 		display: flex;
@@ -1652,7 +1669,7 @@
 	.streak-label {
 		font-size: 1rem;
 		font-weight: 700;
-		color: var(--nord13);
+		color: var(--color-amber-text);
 	}
 	.streak-goal {
 		font-size: 0.7rem;
@@ -1874,7 +1891,7 @@
 		background: color-mix(in srgb, var(--nord11) 15%, transparent);
 	}
 	.adherence-card .card-icon {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		background: color-mix(in srgb, var(--nord13) 15%, transparent);
 	}
 	.muscle-nutrition-layout .card-icon {

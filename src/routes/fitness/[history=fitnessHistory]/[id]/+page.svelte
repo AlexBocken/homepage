@@ -1420,7 +1420,7 @@
 		text-decoration: underline;
 	}
 	.stat-pill.pr {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		border-color: var(--nord13);
 		background: color-mix(in srgb, var(--nord13) 10%, transparent);
 	}
@@ -1536,7 +1536,7 @@
 	.prs-section h2 {
 		margin: 0 0 0.5rem;
 		font-size: 1rem;
-		color: var(--nord13);
+		color: var(--color-amber-text);
 	}
 	.pr-list {
 		display: flex;
@@ -1550,7 +1550,7 @@
 		font-size: 0.85rem;
 	}
 	.pr-item :global(.pr-icon) {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		flex-shrink: 0;
 	}
 	.pr-exercise {
@@ -1563,7 +1563,7 @@
 	.pr-value {
 		margin-left: auto;
 		font-weight: 700;
-		color: var(--nord13);
+		color: var(--color-amber-text);
 	}
 
 	.notes-section {

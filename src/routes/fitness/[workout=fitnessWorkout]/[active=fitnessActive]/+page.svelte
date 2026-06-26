@@ -2355,7 +2355,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		margin-top: 0.4rem;
 	}
 	.pr-badge-count {
@@ -2398,7 +2398,7 @@
 	.prs-section h2 {
 		margin: 0 0 0.6rem;
 		font-size: 1rem;
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
@@ -2422,7 +2422,7 @@
 		font-size: 0.8rem;
 	}
 	.pr-detail strong {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 	}
 	.segments-section {
 		background: var(--color-surface);
@@ -2471,7 +2471,7 @@
 		border-radius: 1000px;
 	}
 	.seg-badge.kom {
-		color: var(--nord13);
+		color: var(--color-amber-text);
 		background: color-mix(in srgb, var(--nord13) 15%, transparent);
 	}
 	.seg-badge.pr {
