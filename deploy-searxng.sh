@@ -10,7 +10,8 @@ CSS_SRC=static/other/searxng.css
 CSS_DEST=/var/www/static/css/searxng.css
 
 TMPL_SRC=static/other/searxng_base.html
-TMPL_DEST=/var/lib/searxng/venv/lib/python3.14/site-packages/searx/templates/simple/base.html
+TMPL_DEST=/usr/lib/python3.14/site-packages/searx/templates/simple/base.html
+#/var/lib/searxng/venv/lib/python3.14/site-packages/searx/templates/simple/base.html
 TMPL_BACKUP="${TMPL_DEST}.orig"
 
 if [ "$1" = "reset" ]; then

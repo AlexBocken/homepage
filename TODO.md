@@ -3,10 +3,13 @@
 ## more
 - [x]  Use a datetimepicker for the edit workout screen
 - [x] the sharecards should show the Minutes + seconds in <MM:SS> for GPS-tracked/cardio exercises, not minutes -> needs to pull the information from the GPX/set, not workout info
-- [ ] expose importable shared calendar for the period tracker to be subscribable to. let the user who shared initial view who has access via such a shared calendar and revoke individual calendar subscriptions.
+- [x] expose importable shared calendar for the period tracker to be subscribable to. let the user who shared initial view who has access via such a shared calendar and revoke individual calendar subscriptions.
 - [ ] Similarly, expose the vetus ordo and novus ordo calendars (customizable per region) as well, here, no permissions are required.
 - [x] on the stats icon for the /fitness/stats route, color the three bars inside the graph a color instead of filling (does not work here)
 - [x] likewise, for the exercises, color the horizontal lines in a color when selected
+- [x] Add optional stat(s) cards for run/cycle segments and performance over time. For now, focus on own improvements, if we would have more users KOM days of reign could be cool, but useless currently
+- [x] JS-less graceful degradation for workout and shared detail page (pre-rendered image on the map, svgs for the graphs)
+- [ ] https://github.com/DanielGuarnizo/Pose-Estimation-for-Fitness-Exercise-Analysis investigate this repo for potential integratin into Squats, Deadlifts, bench press, etc.
 
 ## Perf (audit 2026-04-23)
 
