@@ -972,7 +972,7 @@
 			});
 			if (res.ok) {
 				const d = await res.json();
-				completionData = buildCompletion(sessionData, d.session, d.segmentAchievements ?? []);
+				completionData = buildCompletion(sessionData, d.session, d.segmentAchievements ?? [], d.bestEffortPrs ?? []);
 				computeTemplateDiff(completionData);
 				await sync.onWorkoutEnd(d.session?._id);
 			} else {
@@ -1020,8 +1020,9 @@
 	 * @param {any} local
 	 * @param {any} saved
 	 * @param {any[]} [achievements]
+	 * @param {any[]} [bestEffortPrs]
 	 */
-	function buildCompletion(local, saved, achievements = []) {
+	function buildCompletion(local, saved, achievements = [], bestEffortPrs = []) {
 		const startTime = new Date(local.startTime);
 		const endTime = new Date(local.endTime);
 		const durationMin = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
@@ -1096,6 +1097,7 @@
 			exerciseSummaries,
 			prs,
 			segmentAchievements: achievements,
+			bestEffortPrs,
 			kcalResult
 		};
 	}
@@ -1377,6 +1379,23 @@
 						<div class="pr-item">
 							<span class="pr-exercise">{getExerciseById(pr.exerciseId, lang)?.localName ?? pr.exerciseId}</span>
 							<span class="pr-detail">{pr.type}: <strong>{pr.value}</strong></span>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if completionData.bestEffortPrs?.length > 0}
+			<div class="segments-section">
+				<h2><Trophy size={16} /> {t.best_efforts}</h2>
+				<div class="seg-ach-list">
+					{#each completionData.bestEffortPrs as p (p.km)}
+						<div class="seg-ach-item">
+							<span class="seg-ach-name">{p.km}{t.km_short}</span>
+							<span class="seg-ach-badges">
+								<span class="seg-badge pr"><Trophy size={13} /> {t.new_distance_pr}</span>
+							</span>
+							<span class="seg-ach-time">{formatElapsed(p.seconds)}</span>
 						</div>
 					{/each}
 				</div>

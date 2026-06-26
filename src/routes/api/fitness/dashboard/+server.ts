@@ -13,11 +13,13 @@ export const GET: RequestHandler = async ({ locals }) => {
   const out: Record<string, unknown> = defaults();
   out.segmentStatIds = [];
   out.fastestKm = 5;
+  out.fastestActivity = 'running';
   if (doc) {
     for (const k of DASHBOARD_KEYS) if (typeof doc[k] === 'boolean') out[k] = doc[k] as boolean;
     if (Array.isArray(doc.segmentStatIds)) out.segmentStatIds = doc.segmentStatIds;
     else if (typeof doc.segmentStatId === 'string' && doc.segmentStatId) out.segmentStatIds = [doc.segmentStatId];
     if (typeof doc.fastestKm === 'number') out.fastestKm = doc.fastestKm;
+    if (doc.fastestActivity === 'cycling' || doc.fastestActivity === 'running') out.fastestActivity = doc.fastestActivity;
   }
   return json(out);
 };
@@ -36,6 +38,9 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
   if (typeof body.fastestKm === 'number' && Number.isFinite(body.fastestKm)) {
     update.fastestKm = Math.min(200, Math.max(1, Math.round(body.fastestKm)));
+  }
+  if (body.fastestActivity === 'running' || body.fastestActivity === 'cycling') {
+    update.fastestActivity = body.fastestActivity;
   }
   await dbConnect();
   await FitnessDashboard.updateOne({ username: user.nickname }, { $set: update }, { upsert: true });

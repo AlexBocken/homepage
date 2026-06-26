@@ -21,3 +21,17 @@ export function formatDelta(seconds: number): string {
   const sign = seconds > 0 ? '+' : seconds < 0 ? '−' : '±';
   return sign + formatElapsed(Math.abs(seconds));
 }
+
+/** Average speed over a split → `NN.N km/h`. */
+export function formatSpeedKmh(km: number, seconds: number): string {
+  if (!km || !seconds || seconds <= 0) return '—';
+  return `${((km / seconds) * 3600).toFixed(1)} km/h`;
+}
+
+/**
+ * Rate label for a best-effort split: running boards read in pace (min/km),
+ * cycling boards in speed (km/h).
+ */
+export function formatEffortRate(km: number, seconds: number, kind: 'running' | 'cycling'): string {
+  return kind === 'cycling' ? formatSpeedKmh(km, seconds) : formatPaceKm(seconds / 60 / km);
+}

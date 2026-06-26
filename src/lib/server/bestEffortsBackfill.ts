@@ -5,15 +5,32 @@
 import { WorkoutSession } from '$models/WorkoutSession';
 import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
 
-// Foot activities measured in min/km — cycling is excluded so a bike ride never
-// wins a "fastest Nk" by pace.
+// Best efforts are kept in two separate leaderboards so a bike ride never
+// competes with a run: foot activities are ranked by pace (min/km), cycling by
+// speed (km/h). Walking/hiking share the running board.
 export const FOOT_ACTIVITIES = ['running', 'walking', 'hiking'];
+export const CYCLING_ACTIVITIES = ['cycling'];
+export const BEST_EFFORT_ACTIVITIES = [...FOOT_ACTIVITIES, ...CYCLING_ACTIVITIES];
 
-/** Compute & store best efforts for any of the user's foot runs that lack them. */
+export type ActivityKind = 'running' | 'cycling';
+
+/** Which best-effort board an activity belongs to (null = not tracked). */
+export function activityKind(activityType: string | null | undefined): ActivityKind | null {
+	if (activityType && FOOT_ACTIVITIES.includes(activityType)) return 'running';
+	if (activityType && CYCLING_ACTIVITIES.includes(activityType)) return 'cycling';
+	return null;
+}
+
+/** The activity types that make up a board. */
+export function activitiesForKind(kind: ActivityKind): string[] {
+	return kind === 'cycling' ? CYCLING_ACTIVITIES : FOOT_ACTIVITIES;
+}
+
+/** Compute & store best efforts for any of the user's tracked runs/rides that lack them. */
 export async function backfillBestEfforts(createdBy: string): Promise<void> {
 	const pending = await WorkoutSession.find({
 		createdBy,
-		activityType: { $in: FOOT_ACTIVITIES },
+		activityType: { $in: BEST_EFFORT_ACTIVITIES },
 		bestEfforts: { $exists: false }
 	})
 		.select('gpsTrack exercises.gpsTrack')

@@ -7,6 +7,7 @@
 	import { m, fitnessSlugs, type FitnessLang } from '$lib/js/fitnessI18n';
 	import { projectTrack, svgPath } from '$lib/fitness/trackSvg';
 	import { formatElapsed } from '$lib/fitness/segmentFormat';
+	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 
 	interface SegmentSummary {
 		_id: string;
@@ -44,6 +45,9 @@
 </script>
 
 {#snippet inner()}
+	<span class="activity-badge" title={segment.activityType}>
+		<ActivityIcon activity={segment.activityType} size={13} />
+	</span>
 	{#if !mapImgFailed}
 		<img
 			class="mini-map map-img"
@@ -91,6 +95,7 @@
 
 <style>
 	.segment-card {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		background: var(--color-surface);
@@ -114,6 +119,21 @@
 	.segment-card.selected {
 		outline: 2px solid var(--color-primary);
 		outline-offset: 2px;
+	}
+	.activity-badge {
+		position: absolute;
+		top: 8px;
+		left: 8px;
+		z-index: 1;
+		display: grid;
+		place-items: center;
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+		backdrop-filter: blur(6px);
+		color: var(--color-text-secondary);
+		box-shadow: var(--shadow-sm);
 	}
 	.mini-map {
 		width: 100%;

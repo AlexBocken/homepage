@@ -12,6 +12,9 @@ import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
 import { addRunToGrid } from '$lib/server/segmentGrid';
 import { advanceSchedulePointer } from '$lib/server/workoutSchedule';
+import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
+import { activityKind } from '$lib/server/bestEffortsBackfill';
+import { detectBestEffortPrs } from '$lib/server/bestEffortPrs';
 import mongoose from 'mongoose';
 
 function estimatedOneRepMax(weight: number, reps: number): number {
@@ -299,6 +302,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // Bounding box over all GPS points, for segment-match prefiltering.
     const gpsBbox = sessionBbox({ gpsTrack, exercises: processedExercises }) ?? undefined;
 
+    // Fastest continuous Nk splits, cached on the run so the best-efforts
+    // dashboard / leaderboard queries stay cheap. Tracked for foot (pace) and
+    // cycling (speed) on separate boards; untracked activity types get none.
+    const beKind = activityKind(activityType);
+    const bestEfforts = beKind
+      ? computeBestEfforts(gatherSessionTrack({ gpsTrack, exercises: processedExercises }))
+      : [];
+
     const workoutSession = new WorkoutSession({
       templateId,
       templateName,
@@ -315,6 +326,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       gpsPreview,
       gpsBbox,
       prs: prs.length > 0 ? prs : undefined,
+      bestEfforts: bestEfforts.length > 0 ? bestEfforts : undefined,
       kcalEstimate,
       notes,
       createdBy: session.user.nickname
@@ -349,7 +361,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       console.error('Segment grid update failed:', err);
     }
 
-    return json({ session: workoutSession, segmentAchievements }, { status: 201 });
+    // New all-time "fastest Nk" records set by this run (never fail the save).
+    let bestEffortPrs;
+    try {
+      if (bestEfforts.length > 0 && beKind) {
+        bestEffortPrs = await detectBestEffortPrs(session.user.nickname, workoutSession._id, bestEfforts, beKind);
+      }
+    } catch (err) {
+      console.error('Best-effort PR detection failed:', err);
+    }
+
+    return json({ session: workoutSession, segmentAchievements, bestEffortPrs }, { status: 201 });
   } catch (error) {
     console.error('Error creating workout session:', error);
     return json({ error: 'Failed to create workout session' }, { status: 500 });

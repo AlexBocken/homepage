@@ -14,7 +14,7 @@
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
 	import { attachTrackMap } from '$lib/fitness/gpsTrackHover.svelte';
-	import { formatElapsed, formatPaceKm } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatPaceKm, formatDelta } from '$lib/fitness/segmentFormat';
 
 	let { data } = $props();
 
@@ -23,9 +23,19 @@
 	const me = $derived(page.data.session?.user?.nickname ?? '');
 	const seg = $derived(data.segment);
 
-	// Your attempts, fastest first.
+	// KOM time — every other row on the board is shown relative to it (+0:18).
+	const komSeconds = $derived(
+		data.leaderboard.length
+			? Math.min(...data.leaderboard.map((r: { elapsedSeconds: number }) => r.elapsedSeconds))
+			: 0
+	);
+
+	// Your attempts, most recent first.
 	const myEfforts = $derived(
-		[...(data.myEfforts ?? [])].sort((a, b) => a.elapsedSeconds - b.elapsedSeconds)
+		[...(data.myEfforts ?? [])].sort(
+			(a: { date: string | Date }, b: { date: string | Date }) =>
+				new Date(b.date).getTime() - new Date(a.date).getTime()
+		)
 	);
 	const isOwner = $derived(seg.createdBy === me);
 
@@ -128,7 +138,9 @@
 							{#if row.rank === 1}<Crown size={14} class="crown" />{/if}
 							<span class="uname">{row.username}</span>
 						</span>
-						<span class="time" role="cell">{formatElapsed(row.elapsedSeconds)}</span>
+						<span class="time" role="cell" class:delta={row.rank !== 1}>
+							{row.rank === 1 ? formatElapsed(row.elapsedSeconds) : formatDelta(row.elapsedSeconds - komSeconds)}
+						</span>
 						<span class="meta" role="presentation">
 							<span class="pace" role="cell">{formatPaceKm(row.avgPace)}</span>
 							<span class="held" role="cell">
@@ -157,10 +169,13 @@
 					<div class="hist-row" class:best={isBest} role="row">
 						<span class="date" role="cell">
 							{#if e.sessionId}
-								<a href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: fitnessSlugs(lang).history, id: e.sessionId })}>{fmtDate(e.date)}</a>
+								<a href={`${resolve('/fitness/[history=fitnessHistory]/[id]', { history: fitnessSlugs(lang).history, id: e.sessionId })}?highlight=seg:${seg._id}`}>{fmtDate(e.date)}</a>
 							{:else}{fmtDate(e.date)}{/if}
 						</span>
-						<span class="time" role="cell">{formatElapsed(e.elapsedSeconds)}{#if isBest}<span class="pb"> · {t.your_best}</span>{/if}</span>
+						<span class="time" role="cell" class:delta={!isBest}>
+							{#if isBest}{formatElapsed(e.elapsedSeconds)}<span class="pb"> · {t.your_best}</span>
+							{:else}{formatDelta(e.elapsedSeconds - (data.myBest ?? e.elapsedSeconds))}{/if}
+						</span>
 					</div>
 				{/each}
 			</div>
@@ -328,6 +343,13 @@
 	}
 	.time {
 		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+	}
+	/* Non-leaders show a gap to the KOM (+0:18) — muted so the leader's absolute
+	   time still reads as the reference. */
+	.time.delta {
+		font-weight: 600;
+		color: var(--color-text-secondary);
 	}
 	.pace,
 	.date {

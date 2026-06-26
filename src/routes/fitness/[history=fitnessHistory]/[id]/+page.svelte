@@ -32,7 +32,8 @@
 	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
 	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
-	import { formatElapsed } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatEffortRate } from '$lib/fitness/segmentFormat';
+	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
 	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
@@ -48,6 +49,8 @@
 	let { data } = $props();
 
 	const session = $derived(data.session);
+	// Board for this run — best efforts read in pace (running) or speed (cycling).
+	const beKind = $derived(activityKindOf(session?.activityType));
 
 	// GPS tracks in this run that a segment can be carved from (top-level + per-exercise).
 	const gpsSources = $derived.by(() => {
@@ -158,6 +161,9 @@
 		// Warm the share-card image so a later Share click can attach it without
 		// a slow fetch (which would lose the click's transient activation).
 		if (data.cardImage) fetch(data.cardImage).catch(() => {});
+
+		// Honour a ?highlight= deep-link once the GPS maps are mounted.
+		applyHighlight();
 
 		const mql = window.matchMedia('(prefers-color-scheme: dark)');
 		const onMql = () => { dark = checkDark(); };
@@ -494,6 +500,61 @@
 		return e ? /** @type {[number, number]} */ ([e.startIdx, e.endIdx]) : null;
 	}
 
+	// Deep-link highlight via ?highlight= — `5k` pre-pins that best-effort split,
+	// `seg:<segmentId>` highlights that segment's effort. Both light the matching
+	// stretch up on the run's map and scroll it into view.
+	/** @type {{ exIdx: number, startIdx: number, endIdx: number } | null} */
+	let segPin = $state(null);
+	/** @type {{ exIdx: number, startIdx: number, endIdx: number } | null} */
+	let segHover = $state(null);
+	/** First exercise index carrying a GPS track (-1 if none). */
+	function firstGpsExIdx() {
+		const exs = session?.exercises ?? [];
+		for (let i = 0; i < exs.length; i++) if ((exs[i].gpsTrack?.length ?? 0) > 0) return i;
+		return -1;
+	}
+	/** An effort's exerciseIndex (null = top-level track) → a rendered map's exIdx. */
+	function effortExIdx(/** @type {number|null} */ exerciseIndex) {
+		return exerciseIndex != null && (session?.exercises?.[exerciseIndex]?.gpsTrack?.length ?? 0) > 0
+			? exerciseIndex
+			: firstGpsExIdx();
+	}
+	/** Highlight for exercise `idx`'s map: a hovered/pinned segment wins over the active split. */
+	/** @param {number} idx @param {import('$lib/fitness/bestEfforts').BestEffort[]} efforts */
+	function mapHighlight(idx, efforts) {
+		const seg = segHover ?? segPin;
+		if (seg && seg.exIdx === idx) return /** @type {[number, number]} */ ([seg.startIdx, seg.endIdx]);
+		return beRange(idx, efforts);
+	}
+	/** @param {number} idx */
+	function scrollToMap(idx) {
+		if (idx < 0 || typeof document === 'undefined') return;
+		requestAnimationFrame(() =>
+			document.getElementById(`be-map-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+		);
+	}
+	function applyHighlight() {
+		const h = page.url.searchParams.get('highlight');
+		if (!h) return;
+		const km = h.match(/^(\d+)\s*km?$/i);
+		if (km) {
+			const idx = firstGpsExIdx();
+			if (idx >= 0) { beClick[idx] = Number(km[1]); scrollToMap(idx); }
+			return;
+		}
+		const seg = h.match(/^seg(?:ment)?[:-](.+)$/i);
+		if (seg) {
+			const e = (data.segmentEfforts ?? []).find(
+				(/** @type {any} */ x) => x.segmentId === seg[1] || x.effortId === seg[1]
+			);
+			if (e) {
+				const idx = effortExIdx(e.exerciseIndex);
+				segPin = { exIdx: idx, startIdx: e.startIdx, endIdx: e.endIdx };
+				scrollToMap(idx);
+			}
+		}
+	}
+
 	// Shared y-axis width per exercise so its stacked GPS charts align.
 	/** @type {Map<number, import('$lib/stores/axisWidthGroup.svelte').AxisWidthGroup>} */
 	const axisGroups = new Map();
@@ -824,7 +885,7 @@
 								<span class="gps-stat elev-loss">-{gps.elevStats.loss}{t.elevation_unit}</span>
 							{/if}
 						</div>
-						<div class="track-map" id={`be-map-${exIdx}`} {@attach attachTrackMap(ex.gpsTrack, hov, { highlight: () => beRange(exIdx, efforts) })}></div>
+						<div class="track-map" id={`be-map-${exIdx}`} {@attach attachTrackMap(ex.gpsTrack, hov, { highlight: () => mapHighlight(exIdx, efforts) })}></div>
 
 						{#if gps.hasCharts}
 						{#if gps.elevation.has}
@@ -907,7 +968,7 @@
 								<h4>{t.best_efforts}</h4>
 								<table class="splits-table">
 									<thead>
-										<tr><th>{t.distance}</th><th>{t.pace}</th><th>TIME</th></tr>
+										<tr><th>{t.distance}</th><th>{beKind === 'cycling' ? t.speed : t.pace}</th><th>TIME</th></tr>
 									</thead>
 									<tbody>
 										{#each efforts as e (e.km)}
@@ -921,7 +982,7 @@
 												onclick={() => clickEffort(exIdx, e.km)}
 											>
 												<td class="split-km">{e.km}{t.km_short}</td>
-												<td class="split-pace">{formatPace(e.seconds / 60 / e.km)}</td>
+												<td class="split-pace">{formatEffortRate(e.km, e.seconds, beKind)}</td>
 												<td class="split-elapsed">{formatElapsed(e.seconds)}</td>
 											</tr>
 										{/each}
@@ -946,7 +1007,13 @@
 	{/if}
 
 	{#if !editing && data.segmentEfforts?.length > 0}
-		<SegmentEffortsList efforts={data.segmentEfforts} {lang} />
+		<SegmentEffortsList
+			efforts={data.segmentEfforts}
+			{lang}
+			onhighlight={(e) => {
+				segHover = e ? { exIdx: effortExIdx(e.exerciseIndex), startIdx: e.startIdx, endIdx: e.endIdx } : null;
+			}}
+		/>
 	{/if}
 
 	{#if !editing && gpsSources.length > 0}

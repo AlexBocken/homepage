@@ -25,6 +25,7 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 			? [dashboard.segmentStatId]
 			: [];
 	const fastestKm = typeof dashboard.fastestKm === 'number' ? dashboard.fastestKm : 5;
+	const fastestActivity = dashboard.fastestActivity === 'cycling' ? 'cycling' : 'running';
 
 	const segListRes = await fetch('/api/fitness/segments?mine=1');
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,7 +43,7 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 				return [id, buildSegStat(j, segList.find((s) => s._id === id)?.athleteCount, now)] as const;
 			})
 		),
-		fetch(`/api/fitness/stats/fastest?km=${fastestKm}`)
+		fetch(`/api/fitness/stats/fastest?km=${fastestKm}&activity=${fastestActivity}`)
 	]);
 	const segStats: Record<string, SegStat> = {};
 	for (const [id, stat] of statEntries) if (stat) segStats[id] = stat;
@@ -66,7 +67,7 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 
 	return {
 		session, stats, goal, latest, dashboard,
-		segList, segChosenIds, segStats, fastest, fastestKm,
+		segList, segChosenIds, segStats, fastest, fastestKm, fastestActivity,
 		muscleHeatmap, nutritionStats, periods, sharedPeriods
 	};
 };

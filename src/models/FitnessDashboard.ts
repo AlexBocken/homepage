@@ -22,7 +22,9 @@ const FitnessDashboardSchema = new mongoose.Schema(
     // Legacy single-segment field, kept for back-compat reads.
     segmentStatId: { type: String, default: '' },
     // Distance (km) for the "fastest Nk" card.
-    fastestKm: { type: Number, default: 5 }
+    fastestKm: { type: Number, default: 5 },
+    // Board the "fastest Nk" card shows (running pace vs cycling speed).
+    fastestActivity: { type: String, enum: ['running', 'cycling'], default: 'running' }
   },
   { timestamps: true }
 );
@@ -43,6 +45,7 @@ export interface IFitnessDashboard {
   segmentStatIds?: string[];
   segmentStatId: string;
   fastestKm: number;
+  fastestActivity: 'running' | 'cycling';
 }
 
 let _model: mongoose.Model<IFitnessDashboard>;

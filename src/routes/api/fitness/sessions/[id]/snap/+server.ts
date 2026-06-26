@@ -8,6 +8,8 @@ import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
 import { addRunToGrid, removeRunFromGrid } from '$lib/server/segmentGrid';
+import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
+import { activityKind } from '$lib/server/bestEffortsBackfill';
 import mongoose from 'mongoose';
 
 const VALID_PROFILES: RoutingProfile[] = ['hiking-mountain', 'trekking', 'road'];
@@ -178,6 +180,12 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 
 		// The track changed: refresh the bbox so segment-matching prefilters stay correct.
 		ws.gpsBbox = sessionBbox({ gpsTrack: ws.gpsTrack, exercises: ws.exercises }) ?? undefined;
+
+		// The snapped geometry/timing changes the fastest-Nk windows — recompute the
+		// cached splits so the best-efforts dashboard / leaderboard stay accurate.
+		ws.bestEfforts = activityKind(ws.activityType)
+			? computeBestEfforts(gatherSessionTrack({ gpsTrack: ws.gpsTrack, exercises: ws.exercises }))
+			: undefined;
 
 		ws.markModified('exercises');
 		await ws.save();

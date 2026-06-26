@@ -26,8 +26,10 @@
 	import Zap from '@lucide/svelte/icons/zap';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import X from '@lucide/svelte/icons/x';
-	import { formatElapsed, formatPaceKm } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatPaceKm, formatEffortRate } from '$lib/fitness/segmentFormat';
+	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
 	import { projectTrack, svgPath } from '$lib/fitness/trackSvg';
+	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 	import { onMount, untrack } from 'svelte';
@@ -134,6 +136,10 @@
 	/** @type {Record<string, SegStat>} */
 	let segStats = $state(untrack(() => ({ ...(data.segStats ?? {}) })));
 	let segModalOpen = $state(false);
+	// Activity filter for the segment picker (selection only — not the display cards).
+	/** @type {'running' | 'cycling'} */
+	let pickActivity = $state('running');
+	const pickSegList = $derived(segList.filter((s) => activityKindOf(s.activityType) === pickActivity));
 
 	/** @type {SegSummary[]} */
 	const chosenSegs = $derived(segChosenIds.map((id) => segList.find((s) => s._id === id)).filter((s) => s != null));
@@ -182,20 +188,24 @@
 		} catch { return ''; }
 	}
 
-	// --- Fastest Nk card (fastest run, by pace, over a user-set distance) ---
+	// --- Fastest Nk card (fastest run/ride over a user-set distance) ---
 	// Seeded from the server load (SSR) — no on-mount fetch / layout shift.
 	let fastestKm = $state(untrack(() => (typeof data.fastestKm === 'number' ? data.fastestKm : 5)));
+	let fastestActivity = $state(untrack(() => /** @type {'running' | 'cycling'} */ (data.fastestActivity === 'cycling' ? 'cycling' : 'running')));
 	/** @type {{ sessionId: string, name: string, date: string, activityType: string, seconds: number, pace: number, gpsPreview: number[][]|null } | null} */
 	let fastest = $state(untrack(() => data.fastest ?? null));
 	let fastestLoaded = $state(true);
 	let fastestEditOpen = $state(false);
 	let fastestMapFailed = $state(false);
 
+	// Distance presets offered in the editor, per board (cycling rides longer).
+	const fastestPresets = $derived(fastestActivity === 'cycling' ? [5, 10, 20, 40, 100] : [1, 5, 10, 21, 42]);
+
 	async function loadFastest() {
 		fastestLoaded = false;
 		fastestMapFailed = false;
 		try {
-			const r = await fetch(`/api/fitness/stats/fastest?km=${fastestKm}`);
+			const r = await fetch(`/api/fitness/stats/fastest?km=${fastestKm}&activity=${fastestActivity}`);
 			if (r.ok) fastest = (await r.json()).best ?? null;
 		} catch { fastest = null; }
 		fastestLoaded = true;
@@ -208,6 +218,18 @@
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ fastestKm })
+		}).catch(() => {});
+	}
+	/** @param {'running' | 'cycling'} a */
+	function setFastestActivity(a) {
+		if (fastestActivity === a) return;
+		fastestActivity = a;
+		loadFastest();
+		// Persist the chosen board so the card opens on it next time (default: running).
+		fetch('/api/fitness/dashboard', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ fastestActivity: a })
 		}).catch(() => {});
 	}
 
@@ -551,6 +573,7 @@
 								{st.rank === 1 ? t.seg_stat_1st : `#${st.rank}`}
 							</span>
 						{/if}
+						<span class="seg-activity-badge" title={seg.activityType}><ActivityIcon activity={seg.activityType} size={13} /></span>
 					</div>
 
 					<div class="seg-body">
@@ -601,7 +624,7 @@
 						{:else}
 							<div class="seg-map-blank"><Zap size={26} /></div>
 						{/if}
-						<span class="seg-rank dist">{fastestKm}{t.km_short}</span>
+						<span class="seg-rank dist"><ActivityIcon activity={fastestActivity} size={11} /> {fastestKm}{t.km_short}</span>
 					</div>
 
 					<div class="seg-body">
@@ -610,7 +633,7 @@
 						<div class="seg-figures">
 							{#if fastest}
 								<span class="seg-time">{formatElapsed(fastest.seconds)}</span>
-								<span class="seg-pace">{formatPaceKm(fastest.pace)}</span>
+								<span class="seg-pace">{formatEffortRate(fastestKm, fastest.seconds, fastestActivity)}</span>
 							{:else}
 								<span class="seg-time muted">{fastestLoaded ? '—' : '…'}</span>
 								<span class="seg-pace">{fastestLoaded ? t.fastest_none : ''}</span>
@@ -626,7 +649,7 @@
 					</div>
 				</button>
 				{#if fastest}
-					<a class="seg-open-link" href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: historySlug, id: fastest.sessionId })} title={t.view_workout} aria-label={t.view_workout}>
+					<a class="seg-open-link" href={`${resolve('/fitness/[history=fitnessHistory]/[id]', { history: historySlug, id: fastest.sessionId })}?highlight=${fastestKm}k`} title={t.view_workout} aria-label={t.view_workout}>
 						<ExternalLink size={15} />
 					</a>
 				{/if}
@@ -640,13 +663,21 @@
 		<div class="seg-modal-overlay" onclick={(e) => { if (e.target === e.currentTarget) fastestEditOpen = false; }} onkeydown={(e) => { if (e.key === 'Escape') fastestEditOpen = false; }} role="dialog" aria-modal="true" tabindex="-1">
 			<div class="fastest-editor">
 				<h3>{t.fastest_set}</h3>
+				<div class="fastest-mode" role="group" aria-label={t.activity}>
+					<button class:active={fastestActivity === 'running'} onclick={() => setFastestActivity('running')} aria-pressed={fastestActivity === 'running'}>
+						<ActivityIcon activity="running" size={16} /> {t.activity_running}
+					</button>
+					<button class:active={fastestActivity === 'cycling'} onclick={() => setFastestActivity('cycling')} aria-pressed={fastestActivity === 'cycling'}>
+						<ActivityIcon activity="cycling" size={16} /> {t.activity_cycling}
+					</button>
+				</div>
 				<div class="goal-input-row">
 					<button class="adj-btn" onclick={() => setFastestKm(fastestKm - 1)} disabled={fastestKm <= 1}>−</button>
 					<span class="goal-value">{fastestKm}<span class="fastest-km-unit">{t.km_short}</span></span>
 					<button class="adj-btn" onclick={() => setFastestKm(fastestKm + 1)} disabled={fastestKm >= 200}>+</button>
 				</div>
 				<div class="fastest-presets">
-					{#each [1, 5, 10, 21, 42] as p (p)}
+					{#each fastestPresets as p (p)}
 						<button class="fastest-preset" class:active={fastestKm === p} onclick={() => setFastestKm(p)}>{p}{t.km_short}</button>
 					{/each}
 				</div>
@@ -666,10 +697,22 @@
 					</div>
 					<button class="seg-modal-close" onclick={() => (segModalOpen = false)} aria-label={t.close}><X size={18} /></button>
 				</div>
+				<div class="seg-pick-tabs" role="group" aria-label={t.activity}>
+					<button class:active={pickActivity === 'running'} onclick={() => (pickActivity = 'running')} aria-pressed={pickActivity === 'running'}>
+						<ActivityIcon activity="running" size={15} /> {t.activity_running}
+					</button>
+					<button class:active={pickActivity === 'cycling'} onclick={() => (pickActivity = 'cycling')} aria-pressed={pickActivity === 'cycling'}>
+						<ActivityIcon activity="cycling" size={15} /> {t.activity_cycling}
+					</button>
+				</div>
 				<div class="seg-modal-grid">
-					{#each segList as s (s._id)}
-						<SegmentCard segment={s} {lang} selected={segChosenIds.includes(s._id)} onselect={toggleSeg} />
-					{/each}
+					{#if pickSegList.length === 0}
+						<p class="seg-pick-empty">{t.no_segments}</p>
+					{:else}
+						{#each pickSegList as s (s._id)}
+							<SegmentCard segment={s} {lang} selected={segChosenIds.includes(s._id)} onselect={toggleSeg} />
+						{/each}
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -1136,6 +1179,55 @@
 		background: #e3b341;
 		color: #3b2f0b;
 	}
+	/* Activity glyph, top-right of a segment card's map (rank sits top-left). */
+	.seg-activity-badge {
+		position: absolute;
+		top: 7px;
+		right: 7px;
+		display: grid;
+		place-items: center;
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+		backdrop-filter: blur(6px);
+		color: var(--color-text-secondary);
+		box-shadow: var(--shadow-sm);
+	}
+	/* Running / cycling filter for the segment picker modal. */
+	.seg-pick-tabs {
+		display: flex;
+		gap: 0.25rem;
+		align-self: flex-start;
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-pill, 1000px);
+		padding: 0.2rem;
+		margin: 0.25rem 0 0.75rem;
+	}
+	.seg-pick-tabs button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		border: none;
+		background: none;
+		padding: 0.35rem 0.8rem;
+		border-radius: var(--radius-pill, 1000px);
+		cursor: pointer;
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		transition: background var(--transition-fast, 100ms);
+	}
+	.seg-pick-tabs button.active {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+	}
+	.seg-pick-empty {
+		grid-column: 1 / -1;
+		text-align: center;
+		color: var(--color-text-secondary);
+		padding: 1.5rem;
+	}
 	.seg-body {
 		flex: 1;
 		min-width: 0;
@@ -1292,6 +1384,32 @@
 	.fastest-editor h3 {
 		margin: 0;
 		font-size: 1rem;
+	}
+	/* Running / cycling board switch — preference is persisted to user settings. */
+	.fastest-mode {
+		display: flex;
+		gap: 0.25rem;
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-pill, 1000px);
+		padding: 0.2rem;
+	}
+	.fastest-mode button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		border: none;
+		background: none;
+		padding: 0.4rem 0.9rem;
+		border-radius: var(--radius-pill, 1000px);
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		transition: background var(--transition-fast, 100ms);
+	}
+	.fastest-mode button.active {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 	}
 	.fastest-km-unit {
 		font-size: 1rem;

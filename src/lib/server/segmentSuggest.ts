@@ -21,16 +21,21 @@ import {
   type Bbox
 } from '$lib/server/segmentMatch';
 import { sampledCells, loadPopularCells } from '$lib/server/segmentGrid';
+import { activityKindOf, type ActivityKind } from '$lib/fitness/bestEffortDistances';
 import { Segment } from '$models/Segment';
 import { DismissedSuggestion } from '$models/DismissedSuggestion';
 import { WorkoutSession, type IGpsPoint } from '$models/WorkoutSession';
 
-const MIN_SUGGEST_DIST_M = 400; // suggestions should be meaningful, > the manual floor
 const MERGE_GAP_M = 60; // bridge short non-popular gaps within a span
-const MAX_SUGGESTIONS = 3; // only surface the few best corridors
-const IDEAL_MIN_KM = 0.5; // sweet spot: not too short...
-const IDEAL_MAX_KM = 3.0; // ...and not too long
+const MAX_SUGGESTIONS = 3; // only surface the few best corridors (per board)
 const HASH_GRID_DEG = 0.0003; // ~33 m: same corridor → same hash across rebuilds
+
+// Length thresholds per board — a "meaningful" segment is much longer for a bike
+// than on foot, so cycling corridors aren't judged against running ranges.
+const RANGES: Record<ActivityKind, { minM: number; idealMinKm: number; idealMaxKm: number }> = {
+  running: { minM: 400, idealMinKm: 0.5, idealMaxKm: 3.0 },
+  cycling: { minM: 2000, idealMinKm: 3.0, idealMaxKm: 15.0 }
+};
 
 export interface SegmentSuggestion {
   routeHash: string; // stable id of the corridor, for persistent dismissal
@@ -41,6 +46,7 @@ export interface SegmentSuggestion {
   points: number[][]; // simplified polyline for preview
   distance: number; // km
   seenCount: number; // distinct runs over the least-travelled cell in the span
+  activityType: string; // the source run's activity (board filter on the page)
 }
 
 /** Coarse, geometry-based id so the same corridor hashes the same next rebuild. */
@@ -68,12 +74,14 @@ function buildCandidate(
   rawEnd: number,
   seenCount: number,
   sessionId: string,
-  exerciseIndex: number | null
+  exerciseIndex: number | null,
+  activityType: string
 ): Candidate | null {
   const slice = track.slice(rawStart, rawEnd + 1);
   if (slice.length < 2) return null;
   const distance = trackDistance(slice);
-  if (distance * 1000 < MIN_SUGGEST_DIST_M) return null;
+  // Floor scales with the board: a 600 m "ride" isn't a meaningful cycling segment.
+  if (distance * 1000 < RANGES[activityKindOf(activityType)].minM) return null;
   const bbox = computeBbox(slice);
   if (!bbox) return null;
   const points = simplifyTrack(slice, 64);
@@ -87,6 +95,7 @@ function buildCandidate(
     points,
     distance,
     seenCount,
+    activityType,
     slice,
     geom: { points, startPoint, endPoint, distance },
     bbox
@@ -98,7 +107,8 @@ function spansForTrack(
   track: IGpsPoint[],
   popular: Map<string, number>,
   sessionId: string,
-  exerciseIndex: number | null
+  exerciseIndex: number | null,
+  activityType: string
 ): Candidate[] {
   const sc = sampledCells(track);
   const out: Candidate[] = [];
@@ -109,7 +119,7 @@ function spansForTrack(
 
   const close = () => {
     if (spanStart >= 0 && lastPopular > spanStart) {
-      const c = buildCandidate(track, sc[spanStart].idx, sc[lastPopular].idx, minCount, sessionId, exerciseIndex);
+      const c = buildCandidate(track, sc[spanStart].idx, sc[lastPopular].idx, minCount, sessionId, exerciseIndex, activityType);
       if (c) out.push(c);
     }
     spanStart = -1;
@@ -139,11 +149,12 @@ function spansForTrack(
  * well its length sits in the 500 m–3 km sweet spot. Corridors outside the band
  * decay linearly, so a well-sized, frequently-run corridor wins.
  */
-function candidateScore(c: { distance: number; seenCount: number }): number {
+function candidateScore(c: { distance: number; seenCount: number; activityType: string }): number {
   const d = c.distance;
+  const { idealMinKm, idealMaxKm } = RANGES[activityKindOf(c.activityType)];
   let lengthFactor: number;
-  if (d < IDEAL_MIN_KM) lengthFactor = d / IDEAL_MIN_KM; // ramps up to 1 at 500 m
-  else if (d > IDEAL_MAX_KM) lengthFactor = IDEAL_MAX_KM / d; // falls off past 3 km
+  if (d < idealMinKm) lengthFactor = d / idealMinKm; // ramps up to 1 at the board's floor
+  else if (d > idealMaxKm) lengthFactor = idealMaxKm / d; // falls off past the board's ceiling
   else lengthFactor = 1;
   return c.seenCount * lengthFactor;
 }
@@ -158,6 +169,7 @@ interface TrackSource {
   track: IGpsPoint[];
   sessionId: string;
   exerciseIndex: number | null;
+  activityType: string;
 }
 
 /** Stitch + dedup candidates from a set of track sources into suggestions. */
@@ -167,7 +179,7 @@ async function buildSuggestions(userId: string, sources: TrackSource[]): Promise
 
   const candidates: Candidate[] = [];
   for (const s of sources) {
-    if ((s.track?.length ?? 0) >= 2) candidates.push(...spansForTrack(s.track, popular, s.sessionId, s.exerciseIndex));
+    if ((s.track?.length ?? 0) >= 2) candidates.push(...spansForTrack(s.track, popular, s.sessionId, s.exerciseIndex, s.activityType));
   }
   if (candidates.length === 0) return [];
 
@@ -184,16 +196,21 @@ async function buildSuggestions(userId: string, sources: TrackSource[]): Promise
   );
 
   // Best-scoring first (repeats × length fit); greedily keep non-overlapping,
-  // non-dismissed candidates until we have the top MAX_SUGGESTIONS.
+  // non-dismissed candidates, up to MAX_SUGGESTIONS PER board so cycling
+  // corridors aren't crowded out of the list by (typically more numerous) runs.
   candidates.sort((a, b) => candidateScore(b) - candidateScore(a));
   const kept: Array<Candidate & { routeHash: string }> = [];
+  const keptPerKind: Record<ActivityKind, number> = { running: 0, cycling: 0 };
   for (const c of candidates) {
+    const kind = activityKindOf(c.activityType);
+    if (keptPerKind[kind] >= MAX_SUGGESTIONS) continue;
     const hash = routeHash(c.points, c.distance);
     if (dismissed.has(hash)) continue;
     if (existingGeoms.some((e) => overlaps(c, e.geom, e.bbox))) continue;
     if (kept.some((k) => overlaps(c, k.geom, k.bbox))) continue;
     kept.push({ ...c, routeHash: hash });
-    if (kept.length >= MAX_SUGGESTIONS) break;
+    keptPerKind[kind]++;
+    if (keptPerKind.running >= MAX_SUGGESTIONS && keptPerKind.cycling >= MAX_SUGGESTIONS) break;
   }
 
   return kept.map((c) => ({
@@ -204,16 +221,18 @@ async function buildSuggestions(userId: string, sources: TrackSource[]): Promise
     endIdx: c.endIdx,
     points: c.points,
     distance: c.distance,
-    seenCount: c.seenCount
+    seenCount: c.seenCount,
+    activityType: c.activityType
   }));
 }
 
-function runSources(run: { _id: unknown; gpsTrack?: IGpsPoint[]; exercises?: Array<{ gpsTrack?: IGpsPoint[] }> }): TrackSource[] {
+function runSources(run: { _id: unknown; activityType?: string; gpsTrack?: IGpsPoint[]; exercises?: Array<{ gpsTrack?: IGpsPoint[] }> }): TrackSource[] {
   const id = String(run._id);
+  const activityType = run.activityType ?? '';
   const sources: TrackSource[] = [];
-  if ((run.gpsTrack?.length ?? 0) >= 2) sources.push({ track: run.gpsTrack as IGpsPoint[], sessionId: id, exerciseIndex: null });
+  if ((run.gpsTrack?.length ?? 0) >= 2) sources.push({ track: run.gpsTrack as IGpsPoint[], sessionId: id, exerciseIndex: null, activityType });
   (run.exercises ?? []).forEach((ex, idx) => {
-    if ((ex.gpsTrack?.length ?? 0) >= 2) sources.push({ track: ex.gpsTrack as IGpsPoint[], sessionId: id, exerciseIndex: idx });
+    if ((ex.gpsTrack?.length ?? 0) >= 2) sources.push({ track: ex.gpsTrack as IGpsPoint[], sessionId: id, exerciseIndex: idx, activityType });
   });
   return sources;
 }
@@ -224,7 +243,7 @@ export async function suggestSegments(userId: string): Promise<SegmentSuggestion
     createdBy: userId,
     $or: [{ gpsTrack: { $exists: true, $ne: [] } }, { 'exercises.gpsTrack': { $exists: true, $ne: [] } }]
   })
-    .select('gpsTrack exercises.gpsTrack')
+    .select('gpsTrack exercises.gpsTrack activityType')
     .lean();
   return buildSuggestions(userId, runs.flatMap(runSources));
 }
@@ -232,7 +251,7 @@ export async function suggestSegments(userId: string): Promise<SegmentSuggestion
 /** Suggested segments found within a single run (indices map to that run's tracks). */
 export async function suggestSegmentsForRun(userId: string, sessionId: string): Promise<SegmentSuggestion[]> {
   const run = await WorkoutSession.findOne({ _id: sessionId, createdBy: userId })
-    .select('gpsTrack exercises.gpsTrack')
+    .select('gpsTrack exercises.gpsTrack activityType')
     .lean();
   if (!run) return [];
   return buildSuggestions(userId, runSources(run));

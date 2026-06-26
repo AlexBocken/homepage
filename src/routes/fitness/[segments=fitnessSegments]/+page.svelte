@@ -3,15 +3,17 @@
 	import { untrack, onMount } from 'svelte';
 	import { invalidateAll, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { formatElapsed, formatPaceKm } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatEffortRate } from '$lib/fitness/segmentFormat';
+	import { tableDistances, activityKindOf, type ActivityKind } from '$lib/fitness/bestEffortDistances';
 	import Flag from '@lucide/svelte/icons/flag';
-	import Radar from '@lucide/svelte/icons/radar';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import SegmentCard from '$lib/components/fitness/SegmentCard.svelte';
 	import SegmentSuggestionCard from '$lib/components/fitness/SegmentSuggestionCard.svelte';
+	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
+	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 
 	interface Suggestion {
 		routeHash: string;
@@ -22,6 +24,7 @@
 		points: number[][];
 		distance: number;
 		seenCount: number;
+		activityType: string;
 	}
 
 	let { data } = $props();
@@ -31,8 +34,44 @@
 	const me = $derived(page.data.session?.user?.nickname ?? '');
 	const historySlug = $derived(lang === 'en' ? 'history' : 'verlauf');
 
-	/** @type {{ km: number, seconds: number, pace: number, sessionId: string, name: string, date: string }[]} */
-	const bestEfforts = $derived(data.bestEfforts ?? []);
+	let tab = $state<'all' | 'mine'>('all');
+	let activity = $state<ActivityKind>('running');
+	const scope = $derived(tab === 'mine' ? 'me' : 'all');
+
+	// Best-efforts table data, cached per board+scope. The loader SSR-seeds the
+	// running board for both scopes; cycling (and refreshes) load on demand.
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let beCache = $state<Record<string, any[]>>(
+		untrack(() => ({
+			'running:me': data.bestEffortsMine ?? [],
+			'running:all': data.bestEffortsAll ?? []
+		}))
+	);
+	let beLoading = $state(false);
+	async function loadBestEfforts(act: ActivityKind, sc: string) {
+		const key = `${act}:${sc}`;
+		if (beCache[key]) return;
+		beLoading = true;
+		try {
+			const r = await fetch(`/api/fitness/stats/best-efforts?scope=${sc}&activity=${act}`);
+			if (r.ok) beCache = { ...beCache, [key]: (await r.json()).efforts ?? [] };
+		} catch {
+			/* leave empty */
+		} finally {
+			beLoading = false;
+		}
+	}
+	$effect(() => {
+		loadBestEfforts(activity, scope);
+	});
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const rawEfforts = $derived((beCache[`${activity}:${scope}`] ?? []) as any[]);
+	// Trim cycling to milestone distances (running shows every km).
+	const bestEfforts = $derived.by(() => {
+		const allowed = new Set(tableDistances(activity, rawEfforts.map((e) => e.km)));
+		return rawEfforts.filter((e) => allowed.has(e.km));
+	});
 
 	/** Age of an effort relative to today, localised ("3 days ago"). */
 	function relativeAge(d: string) {
@@ -54,6 +93,8 @@
 	}
 
 	let suggestions = $state<Suggestion[]>([]);
+	// Only suggest corridors for the board currently in view.
+	const shownSuggestions = $derived(suggestions.filter((s) => activityKindOf(s.activityType) === activity));
 	async function loadSuggestions() {
 		try {
 			const res = await fetch('/api/fitness/segments/suggestions');
@@ -74,29 +115,12 @@
 		await invalidateAll();
 	}
 
-	let building = $state(false);
-	async function buildIndex() {
-		if (building) return;
-		building = true;
-		try {
-			const res = await fetch('/api/fitness/segments/grid/rebuild', { method: 'POST' });
-			const d = await res.json();
-			if (res.ok) {
-				toast.success(`${d.runs} ${t.route_index_runs} · ${d.popular} ${t.route_index_popular}`);
-				await loadSuggestions();
-			} else {
-				toast.error(d.error ?? 'Failed');
-			}
-		} catch {
-			toast.error('Failed');
-		} finally {
-			building = false;
-		}
-	}
 
-	let tab = $state<'all' | 'mine'>('all');
 	const shown = $derived(
-		tab === 'mine' ? data.segments.filter((s) => s.createdBy === me) : data.segments
+		data.segments.filter(
+			(s) =>
+				(tab === 'mine' ? s.createdBy === me : true) && activityKindOf(s.activityType) === activity
+		)
 	);
 </script>
 
@@ -108,6 +132,14 @@
 <div class="segments-page">
 	<header>
 		<h1><Flag size={22} /> {t.segments}</h1>
+		<div class="tabs activity-tabs" role="group" aria-label={t.activity}>
+			<button class:active={activity === 'running'} onclick={() => (activity = 'running')} aria-pressed={activity === 'running'} title={t.activity_running}>
+				<ActivityIcon activity="running" size={16} /> <span class="tab-label">{t.activity_running}</span>
+			</button>
+			<button class:active={activity === 'cycling'} onclick={() => (activity = 'cycling')} aria-pressed={activity === 'cycling'} title={t.activity_cycling}>
+				<ActivityIcon activity="cycling" size={16} /> <span class="tab-label">{t.activity_cycling}</span>
+			</button>
+		</div>
 		<div class="tabs">
 			<button class:active={tab === 'all'} onclick={() => (tab = 'all')}>{t.all_segments}</button>
 			<button class:active={tab === 'mine'} onclick={() => (tab = 'mine')}>{t.my_segments}</button>
@@ -117,17 +149,13 @@
 	<div class="opt-in">
 		<Toggle bind:checked={shareSegments} label={t.share_segments} onchange={toggleShare} />
 		<p class="opt-in-desc">{t.share_segments_desc}</p>
-		<button class="build-index" onclick={buildIndex} disabled={building}>
-			<Radar size={15} class={building ? 'spin' : ''} />
-			{building ? t.building_route_index : t.build_route_index}
-		</button>
 	</div>
 
-	{#if suggestions.length > 0}
+	{#if shownSuggestions.length > 0}
 		<section class="suggestions">
 			<h2><Lightbulb size={18} /> {t.suggested_segments}</h2>
 			<div class="grid">
-				{#each suggestions as s (keyOf(s))}
+				{#each shownSuggestions as s (keyOf(s))}
 					<SegmentSuggestionCard
 						suggestion={s}
 						{lang}
@@ -151,23 +179,37 @@
 
 	{#if bestEfforts.length > 0}
 		<section class="best-efforts-all">
-			<h2>{t.best_efforts}</h2>
+			<h2>{tab === 'mine' ? t.best_efforts : `${t.best_efforts} · ${t.all_segments}`}</h2>
 			<table class="be-table">
 				<thead>
 					<tr>
 						<th>{t.distance}</th>
 						<th>TIME</th>
-						<th>{t.pace}</th>
+						<th>{activity === 'cycling' ? t.speed : t.pace}</th>
+						{#if tab === 'all'}<th class="be-athlete-col">{t.athlete}</th>{/if}
 						<th>{t.age}</th>
 					</tr>
 				</thead>
 				<tbody>
 					{#each bestEfforts as e (e.km)}
 						<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-						<tr class="be-all-row" onclick={() => goto(resolve('/fitness/[history=fitnessHistory]/[id]', { history: historySlug, id: e.sessionId }))} title={e.name}>
+						<tr
+							class="be-all-row"
+							class:be-clickable={e.mine}
+							onclick={() => { if (e.mine) goto(`${resolve('/fitness/[history=fitnessHistory]/[id]', { history: historySlug, id: e.sessionId })}?highlight=${e.km}k`); }}
+							title={e.name}
+						>
 							<td class="be-km">{e.km}{t.km_short}</td>
 							<td class="be-time">{formatElapsed(e.seconds)}</td>
-							<td class="be-pace">{formatPaceKm(e.pace)}</td>
+							<td class="be-pace">{formatEffortRate(e.km, e.seconds, activity)}</td>
+							{#if tab === 'all'}
+								<td class="be-athlete">
+									<span class="be-athlete-cell" class:me={e.mine}>
+										<ProfilePicture username={e.createdBy} size={22} />
+										<span class="be-athlete-name">{e.createdBy}</span>
+									</span>
+								</td>
+							{/if}
 							<td class="be-age">{relativeAge(e.date)}</td>
 						</tr>
 					{/each}
@@ -222,6 +264,35 @@
 		background: var(--color-primary);
 		color: var(--color-text-on-primary);
 	}
+	.activity-tabs button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+	/* Header wraps on narrow screens; let the activity switch sit in the middle. */
+	header {
+		row-gap: 0.5rem;
+	}
+	/* Collapse the activity switch to icons early so it and the All/Mine tabs
+	   stay on one line as long as possible before the header wraps. */
+	@media (max-width: 720px) {
+		.activity-tabs .tab-label {
+			display: none;
+		}
+	}
+	/* Tighten the title and tabs on narrow screens so the row wraps later. */
+	@media (max-width: 600px) {
+		header {
+			gap: 0.5rem;
+		}
+		h1 {
+			font-size: 1.2rem;
+		}
+		.tabs button {
+			padding: 0.4rem 0.7rem;
+			font-size: 0.8rem;
+		}
+	}
 	.opt-in {
 		background: var(--color-surface);
 		border-radius: 12px;
@@ -235,37 +306,6 @@
 		margin: 0;
 		font-size: 0.78rem;
 		color: var(--color-text-secondary);
-	}
-	.build-index {
-		align-self: flex-start;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		margin-top: 0.2rem;
-		padding: 0.4rem 0.75rem;
-		background: transparent;
-		border: 1px solid var(--color-primary);
-		border-radius: var(--radius-md, 0.5rem);
-		color: var(--color-primary);
-		font-size: 0.82rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: background 0.15s;
-	}
-	.build-index:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-	}
-	.build-index:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-	:global(.spin) {
-		animation: spin 1s linear infinite;
-	}
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
 	}
 	.suggestions h2 {
 		display: flex;
@@ -322,11 +362,29 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.be-all-row {
-		cursor: pointer;
 		transition: background var(--transition-fast, 100ms);
 	}
-	.be-all-row:hover {
+	.be-all-row.be-clickable {
+		cursor: pointer;
+	}
+	.be-all-row.be-clickable:hover {
 		background: var(--color-bg-elevated);
+	}
+	.be-athlete-cell {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		min-width: 0;
+	}
+	.be-athlete-name {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 12ch;
+	}
+	.be-athlete-cell.me .be-athlete-name {
+		font-weight: 700;
+		color: var(--color-primary);
 	}
 	.be-km {
 		font-weight: 700;
