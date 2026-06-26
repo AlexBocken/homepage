@@ -340,6 +340,12 @@ export interface CoachUpdate {
 export type CueKind = 'good' | 'advice' | 'info' | null;
 
 /**
+ * Minimum wall-clock gap between two *counted* reps. Rejects bounces and
+ * double-counts at the top of a rep where the angle can jitter across the gate.
+ */
+const MIN_REP_INTERVAL_MS = 1000;
+
+/**
  * Stateful per-exercise rep counter + form critic. Feed it one frame of
  * landmarks at a time via {@link update}.
  */
@@ -347,6 +353,8 @@ export class ExerciseCoach {
 	readonly config: FormConfig;
 
 	private reps = 0;
+	/** Timestamp (ms) of the last counted rep, for the {@link MIN_REP_INTERVAL_MS} guard. */
+	private lastRepTime = -Infinity;
 	private phase: RepPhase = 'top';
 	/** Lowest sign-normalized angle seen since leaving rest — the peak depth of the current rep. */
 	private repMinE = Number.POSITIVE_INFINITY;
@@ -370,6 +378,7 @@ export class ExerciseCoach {
 
 	reset(): void {
 		this.reps = 0;
+		this.lastRepTime = -Infinity;
 		this.phase = 'top';
 		this.repMinE = Number.POSITIVE_INFINITY;
 		this.lostFrames = 0;
@@ -378,8 +387,8 @@ export class ExerciseCoach {
 		this.backRoundFrames = 0;
 	}
 
-	/** Advance the state machine by one frame. */
-	update(lms: Landmark[] | undefined): CoachUpdate {
+	/** Advance the state machine by one frame. `now` is a ms timestamp (defaults to {@link performance.now}). */
+	update(lms: Landmark[] | undefined, now: number = performance.now()): CoachUpdate {
 		const angle = lms ? jointAngle(lms, this.config.joint) : Number.NaN;
 
 		if (Number.isNaN(angle)) {
@@ -432,16 +441,21 @@ export class ExerciseCoach {
 				break;
 			case 'ascending':
 				if (e >= topE) {
-					// Rep complete: returned to rest after a valid peak.
-					this.reps++;
-					repCompleted = true;
-					if (this.repMinE > depthE) {
-						this.lastRepCue = this.config.shallowCue;
-						this.lastRepCueKind = 'advice';
-					} else {
-						this.lastRepCue = 'coach_cue_good_rep';
-						this.lastRepCueKind = 'good';
+					// Returned to rest after a valid peak. Only *count* it if enough
+					// time has passed since the last rep — otherwise it's a bounce.
+					if (now - this.lastRepTime >= MIN_REP_INTERVAL_MS) {
+						this.reps++;
+						this.lastRepTime = now;
+						repCompleted = true;
+						if (this.repMinE > depthE) {
+							this.lastRepCue = this.config.shallowCue;
+							this.lastRepCueKind = 'advice';
+						} else {
+							this.lastRepCue = 'coach_cue_good_rep';
+							this.lastRepCueKind = 'good';
+						}
 					}
+					// Reset the movement either way so the next rep starts clean.
 					this.phase = 'top';
 					this.repMinE = Number.POSITIVE_INFINITY;
 				} else if (e <= gateE) {

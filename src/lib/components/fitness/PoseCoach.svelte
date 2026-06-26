@@ -18,6 +18,14 @@
 	// Ears (7, 8) are kept — they feed the spine-angle check.
 	const UNUSED_FACE_LANDMARKS = new Set([0, 1, 2, 3, 4, 5, 6, 9, 10]);
 
+	// Skeleton smoothing: each frame we ease every landmark toward its new
+	// position (EMA) instead of snapping, so the drawn bones — and the angles fed
+	// to the coach — stop flickering. Higher = snappier / less smoothing.
+	const LM_SMOOTH = 0.4;
+	// Minimum time a coaching message stays up before a different one may replace
+	// it, so there's time to actually read it. Faults bypass it to surface promptly.
+	const MIN_ADVICE_MS = 1600;
+
 	/**
 	 * `variant: 'bare'` strips the panel chrome (rep header, advice line, controls)
 	 * and lets the camera fill its host — for use as the background of the mobile
@@ -87,12 +95,38 @@
 		if (cue) return { text: t[cue], kind: cueKind ?? 'info' };
 		return { text: t.coach_cue_get_in_position, kind: 'info' };
 	});
-	// Surface the live message to a parent HUD (used by the bare/mobile variant).
+
+	// `advice` can change every frame; surfacing it raw makes the message flicker.
+	// `displayedAdvice` is the same message held for at least MIN_ADVICE_MS so it's
+	// readable — updated from the detection loop (see stabilizeAdvice).
+	let displayedAdvice = $state(
+		/** @type {{ text: string, kind: 'good' | 'bad' | 'advice' | 'info' }} */ ({ text: '', kind: 'info' })
+	);
+	let adviceSince = 0;
+
+	/** Promote `advice` into `displayedAdvice`, but no more often than MIN_ADVICE_MS. */
+	function stabilizeAdvice(/** @type {number} */ now) {
+		const cand = {
+			text: advice.text,
+			kind: /** @type {'good' | 'bad' | 'advice' | 'info'} */ (advice.kind)
+		};
+		if (cand.text === displayedAdvice.text) {
+			if (cand.kind !== displayedAdvice.kind) displayedAdvice = cand;
+			return;
+		}
+		// Show the first message immediately; let faults interrupt promptly;
+		// otherwise hold the current one until it's had its reading time.
+		const urgent = cand.kind === 'bad' || displayedAdvice.text === '';
+		if (urgent || now - adviceSince >= MIN_ADVICE_MS) {
+			displayedAdvice = cand;
+			adviceSince = now;
+		}
+	}
+
+	// Surface the (stabilized) live message to a parent HUD (bare/mobile variant).
 	$effect(() => {
 		onfeedback?.(
-			running
-				? { text: advice.text, kind: /** @type {'good'|'bad'|'advice'|'info'} */ (advice.kind) }
-				: { text: '', kind: 'info' }
+			running ? { text: displayedAdvice.text, kind: displayedAdvice.kind } : { text: '', kind: 'info' }
 		);
 	});
 
@@ -106,6 +140,8 @@
 	let landmarker = null;
 	/** @type {ExerciseCoach | null} */
 	let coach = null;
+	/** EMA-smoothed copy of the latest landmarks (null until first frame / when tracking is lost). @type {import('$lib/js/poseCoach').Landmark[] | null} */
+	let smoothedLms = null;
 	let rafId = 0;
 	let stopped = false;
 	/** Last seen resetKey — a change means the caller advanced the set; recount from zero. */
@@ -123,9 +159,14 @@
 	// External facing control (the mobile coach's flip button). Re-acquire the
 	// stream whenever the prop flips; no-op on desktop where `facing` is undefined.
 	$effect(() => {
-		facing;
+		const f = facing;
 		untrack(() => {
-			if (running) switchCamera();
+			// Drop any device id pinned by refreshCameras() — otherwise videoConstraints()
+			// keeps reopening that exact camera and the flip appears to do nothing.
+			if (f !== undefined && running) {
+				selectedDeviceId = null;
+				switchCamera();
+			}
 		});
 	});
 
@@ -182,6 +223,9 @@
 			coach = new ExerciseCoach(exerciseId);
 			reps = 0;
 			cue = null;
+			smoothedLms = null;
+			displayedAdvice = { text: '', kind: 'info' };
+			adviceSince = 0;
 			if (!landmarker) {
 				// Only show the download bar if it's not already cached and the load
 				// actually takes a moment — a warm HTTP cache resolves near-instantly.
@@ -218,6 +262,33 @@
 			starting = false;
 			stop();
 		}
+	}
+
+	/**
+	 * EMA-smooth the raw landmarks so both the drawn skeleton and the angles fed to
+	 * the coach stop jittering. Returns the smoothed array (or undefined when there's
+	 * no person), and resets when tracking drops so we don't ease from stale points.
+	 * @param {import('$lib/js/poseCoach').Landmark[] | undefined} raw
+	 */
+	function smoothLandmarks(raw) {
+		if (!raw) {
+			smoothedLms = null;
+			return undefined;
+		}
+		if (!smoothedLms || smoothedLms.length !== raw.length) {
+			smoothedLms = raw.map((p) => ({ ...p }));
+			return smoothedLms;
+		}
+		for (let i = 0; i < raw.length; i++) {
+			const s = smoothedLms[i];
+			const r = raw[i];
+			s.x += (r.x - s.x) * LM_SMOOTH;
+			s.y += (r.y - s.y) * LM_SMOOTH;
+			if (typeof r.z === 'number') s.z = (s.z ?? r.z) + (r.z - (s.z ?? r.z)) * LM_SMOOTH;
+			// Keep the raw visibility so the <0.5 joint cull stays responsive.
+			s.visibility = r.visibility;
+		}
+		return smoothedLms;
 	}
 
 	function drawOverlay(/** @type {import('$lib/js/poseCoach').Landmark[] | undefined} */ lms) {
@@ -314,19 +385,23 @@
 			cue = null;
 			cueKind = null;
 			faults = [];
+			displayedAdvice = { text: '', kind: 'info' };
+			adviceSince = 0;
 		}
 		const v = videoEl;
 		if (v.readyState >= 2) {
-			const result = landmarker.detectForVideo(v, performance.now());
-			const lms = result.landmarks?.[0];
+			const now = performance.now();
+			const result = landmarker.detectForVideo(v, now);
+			const lms = smoothLandmarks(result.landmarks?.[0]);
 			drawOverlay(lms);
 			trackPerson(lms);
-			const update = coach.update(lms);
+			const update = coach.update(lms, now);
 			phase = update.phase;
 			cue = update.cue;
 			cueKind = update.cueKind;
 			angle = update.angle;
 			faults = update.faults;
+			stabilizeAdvice(now);
 			if (update.repCompleted) {
 				reps = update.reps;
 				// Bright tick for a clean rep; descending warning when the rep was sub-par
@@ -348,6 +423,7 @@
 	function stop() {
 		stopped = true;
 		running = false;
+		smoothedLms = null;
 		if (rafId && videoEl && 'cancelVideoFrameCallback' in videoEl) {
 			/** @type {any} */ (videoEl).cancelVideoFrameCallback(rafId);
 		} else if (rafId) {
@@ -433,7 +509,7 @@
 
 	{#if running && !bare}
 		<!-- Advice lives below the video, never on top of it, and is colour-coded by tone. -->
-		<p class="advice" data-kind={advice.kind} role="status" aria-live="polite">{advice.text}</p>
+		<p class="advice" data-kind={displayedAdvice.kind} role="status" aria-live="polite">{displayedAdvice.text}</p>
 	{/if}
 
 	{#if !bare}
