@@ -6,15 +6,16 @@ import { WorkoutSchedule } from '$models/WorkoutSchedule';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { Recipe } from '$models/Recipe';
 import { RoundOffCache } from '$models/RoundOffCache';
+import { localDateStr, localDateOffset } from '$lib/js/fitnessDate';
 import mongoose from 'mongoose';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
-	const dateParam = params.date || new Date().toISOString().slice(0, 10);
+	const dateParam = params.date || localDateStr();
 
 	// Run all independent work in parallel: 3 API calls + workout kcal DB query
 	const dayStart = new Date(dateParam + 'T00:00:00.000Z');
 	const dayEnd = new Date(dateParam + 'T23:59:59.999Z');
-	const todayStr = new Date().toISOString().slice(0, 10);
+	const todayStr = localDateStr();
 	const isTodayOrFuture = dateParam >= todayStr;
 
 	const exercisePromise = (async () => {
@@ -70,9 +71,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		} catch { return { kcal: 0, projected: null }; }
 	})();
 
-	const recentFrom = new Date();
-	recentFrom.setDate(recentFrom.getDate() - 3);
-	const recentFromStr = recentFrom.toISOString().slice(0, 10);
+	const recentFromStr = localDateOffset(-3);
 
 	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
@@ -111,7 +110,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	// Try to load cached round-off suggestions for SSR (no loading flash)
 	let roundOffSuggestions = null;
 	try {
-		const today = new Date().toISOString().slice(0, 10);
+		const today = localDateStr();
 		if (dateParam === today) {
 			const user = await requireAuth(locals);
 			await dbConnect();
