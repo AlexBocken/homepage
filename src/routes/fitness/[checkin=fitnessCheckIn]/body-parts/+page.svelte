@@ -21,6 +21,7 @@
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
+	import { localDateStr } from '$lib/js/fitnessDate';
 
 	let { data } = $props();
 
@@ -82,7 +83,7 @@
 
 	let idx = $state(0);
 	let direction = $state(1);
-	let formDate = $state(new Date().toISOString().slice(0, 10));
+	let formDate = $state(localDateStr());
 	let saving = $state(false);
 
 	const total = steps.length;

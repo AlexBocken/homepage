@@ -33,6 +33,7 @@
 	const t = $derived(m[lang]);
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	import { getWorkout } from '$lib/js/workout.svelte';
+	import { localDateStr } from '$lib/js/fitnessDate';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 
 	let { data } = $props();
@@ -189,7 +190,7 @@
 	const lastWeight = $derived(latest.weight?.value ?? null);
 	const lastBodyFat = $derived(latest.bodyFatPercent?.value ?? null);
 
-	let formDate = $state(new Date().toISOString().slice(0, 10));
+	let formDate = $state(localDateStr());
 	let formWeight = $state('');
 	let formBodyFat = $state('');
 
@@ -336,7 +337,7 @@
 	function resetForm() {
 		formWeight = '';
 		formBodyFat = '';
-		formDate = new Date().toISOString().slice(0, 10);
+		formDate = localDateStr();
 	}
 
 	/**

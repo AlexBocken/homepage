@@ -26,6 +26,7 @@
 	import Droplet from '@lucide/svelte/icons/droplet';
 	import Wheat from '@lucide/svelte/icons/wheat';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { localDateStr } from '$lib/js/fitnessDate';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
@@ -80,7 +81,7 @@
 	// --- Date navigation ---
 	// svelte-ignore state_referenced_locally
 	let currentDate = $state(data.date);
-	const todayStr = new Date().toISOString().slice(0, 10);
+	const todayStr = localDateStr();
 	const isToday = $derived(currentDate === todayStr);
 
 	const displayDate = $derived.by(() => {
@@ -92,7 +93,7 @@
 	function dateOffset(offset) {
 		const d = new Date(currentDate + 'T12:00:00');
 		d.setDate(d.getDate() + offset);
-		return d.toISOString().slice(0, 10);
+		return localDateStr(d);
 	}
 
 	const prevDate = $derived(dateOffset(-1));

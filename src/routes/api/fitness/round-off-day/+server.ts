@@ -10,6 +10,7 @@ import { FavoriteIngredient } from '$models/FavoriteIngredient';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { RoundOffCache } from '$models/RoundOffCache';
+import { localDateStr } from '$lib/js/fitnessDate';
 import { PANTRY_FOODS } from '$lib/server/pantryFoods';
 import {
 	findBestCombos,
@@ -157,7 +158,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	await dbConnect();
 
-	const today = new Date().toISOString().slice(0, 10);
+	const today = localDateStr();
 
 	// Check cache (validate shape: new schema has items array)
 	const cached = await RoundOffCache.findOne({ createdBy: user.nickname, date: today }).lean();
