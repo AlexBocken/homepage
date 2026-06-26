@@ -18,7 +18,9 @@
 	import StretchIcon from '$lib/components/fitness/StretchIcon.svelte';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	import { getExerciseById } from '$lib/data/exercises';
-	import { getQueuedSessions } from '$lib/offline/fitnessQueue';
+	import { getQueuedSessions, flushQueue } from '$lib/offline/fitnessQueue';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import CloudOff from '@lucide/svelte/icons/cloud-off';
 
 	const lang = $derived(detectFitnessLang(appPage.url.pathname));
 	const t = $derived(m[lang]);
@@ -202,6 +204,29 @@
 		}, 1500);
 	}
 
+	// Manual "sync now" — force a flush attempt for offline-queued sessions.
+	let syncing = $state(false);
+	let syncFailed = $state(false);
+	async function forceSync() {
+		if (syncing) return;
+		syncing = true;
+		syncFailed = false;
+		const before = queuedSessions.length;
+		try {
+			const synced = await flushQueue();
+			await loadQueued();
+			// Refresh the server-paged list so newly-synced sessions appear as synced.
+			await refilter();
+			// Anything still queued and nothing synced means we're still offline / failing.
+			if (synced === 0 && queuedSessions.length >= before && before > 0) syncFailed = true;
+		} catch (err) {
+			console.error('Force sync failed:', err);
+			syncFailed = true;
+		} finally {
+			syncing = false;
+		}
+	}
+
 	/** @type {HTMLElement | undefined} */
 	let sentinel = $state();
 	/** @type {IntersectionObserver | undefined} */
@@ -276,6 +301,25 @@
 			{#if activeCount > 0}<span class="badge">{activeCount}</span>{/if}
 		</button>
 	</div>
+
+	{#if queuedSessions.length > 0}
+		<div class="sync-banner" class:failed={syncFailed} transition:slide={{ duration: 150 }}>
+			<CloudOff size={16} class="sync-banner-icon" />
+			<span class="sync-banner-text">
+				{#if syncFailed}
+					{t.sync_failed}
+				{:else if queuedSessions.length === 1}
+					{t.unsynced_one}
+				{:else}
+					{t.unsynced_many.replace('{n}', String(queuedSessions.length))}
+				{/if}
+			</span>
+			<button class="sync-now" onclick={forceSync} disabled={syncing}>
+				<RefreshCw size={15} class={syncing ? 'spin' : ''} />
+				<span>{syncing ? t.syncing : t.sync_now}</span>
+			</button>
+		</div>
+	{/if}
 
 	{#if showFilters}
 		<div class="filter-panel" transition:slide={{ duration: 150 }}>
@@ -569,5 +613,55 @@
 		to {
 			transform: rotate(360deg);
 		}
+	}
+
+	.sync-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.7rem 0.9rem;
+		border-radius: var(--radius-md);
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+	}
+	.sync-banner.failed {
+		border-color: var(--orange);
+		color: var(--color-text-primary);
+	}
+	.sync-banner :global(.sync-banner-icon) {
+		flex-shrink: 0;
+		color: var(--color-text-tertiary);
+	}
+	.sync-banner.failed :global(.sync-banner-icon) {
+		color: var(--orange);
+	}
+	.sync-banner-text {
+		flex: 1;
+		font-size: var(--text-sm);
+		line-height: 1.3;
+	}
+	.sync-now {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-shrink: 0;
+		padding: 0.45rem 0.8rem;
+		border: none;
+		border-radius: var(--radius-pill);
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font-size: var(--text-sm);
+		font-weight: 600;
+		cursor: pointer;
+		transition: background var(--transition-normal), scale var(--transition-fast);
+	}
+	.sync-now:hover:not(:disabled) {
+		background: var(--color-primary-hover);
+		scale: 1.05;
+	}
+	.sync-now:disabled {
+		opacity: 0.7;
+		cursor: default;
 	}
 </style>
