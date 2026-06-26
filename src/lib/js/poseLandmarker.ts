@@ -112,7 +112,13 @@ export function loadPoseLandmarker(
 				delegate: 'GPU'
 			},
 			runningMode: 'VIDEO',
-			numPoses: 1
+			numPoses: 1,
+			// Defaults are 0.5 across the board, which lets the lite model emit a
+			// ghost skeleton for an empty scene. Raising the detection/presence/
+			// tracking gates makes it return no pose when nobody is actually there.
+			minPoseDetectionConfidence: 0.6,
+			minPosePresenceConfidence: 0.6,
+			minTrackingConfidence: 0.6
 		});
 		cached = lm;
 		return lm;

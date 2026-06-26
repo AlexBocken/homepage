@@ -1992,6 +1992,7 @@
 							variant="bare"
 							facing={coachFacing}
 							resetKey={activeSetIdx}
+							paused={workout.restTimerActive}
 							onrep={fillRepsFromCoach}
 							onfeedback={(a) => (coachFeedback = a)}
 						/>
@@ -2297,6 +2298,7 @@
 								exerciseId={activeExercise.exerciseId}
 								{lang}
 								resetKey={activeSetIdx}
+								paused={workout.restTimerActive}
 								onrep={fillRepsFromCoach}
 							/>
 							<p class="coach-sync">

@@ -1,10 +1,22 @@
+<script module>
+	// Camera choice persisted across remounts. The coach is wrapped in
+	// `{#key exerciseId}`, so switching exercises tears down and rebuilds this
+	// component — without this, the flip / camera-picker selection would reset to
+	// the default every time. Module scope keeps it for the session (one coach is
+	// mounted at a time); a new instance seeds its state from here.
+	let savedFacingMode = /** @type {'environment' | 'user'} */ ('environment');
+	let savedDeviceId = /** @type {string | null} */ (null);
+</script>
+
 <script>
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import {
 		ExerciseCoach,
 		FORM_CONFIGS,
 		POSE_CONNECTIONS,
-		hasFormConfig
+		hasFormConfig,
+		jointAngle,
+		upperArmElevation
 	} from '$lib/js/poseCoach';
 	import { playSetCompleteSound, playRepWarningSound } from '$lib/js/fitnessSounds';
 	import { loadPoseLandmarker, isPoseModelReady } from '$lib/js/poseLandmarker';
@@ -14,9 +26,49 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import X from '@lucide/svelte/icons/x';
 
-	// MediaPipe pose face points we never use in calculations (nose, eyes, mouth).
-	// Ears (7, 8) are kept — they feed the spine-angle check.
-	const UNUSED_FACE_LANDMARKS = new Set([0, 1, 2, 3, 4, 5, 6, 9, 10]);
+	// Face points we don't draw as joints (nose, eyes, mouth, ears) — they look odd
+	// floating on the head. Ears (7, 8) still feed the engine's spine-angle check;
+	// that reads the raw landmarks directly, so hiding the dots here doesn't affect it.
+	const HIDDEN_OVERLAY_LANDMARKS = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+	// MediaPipe gives no single pose-level confidence — the only per-frame signal
+	// is each landmark's `visibility` (0..1). With nobody in frame the model still
+	// hallucinates a full low-visibility skeleton, so we gate the whole pose on two
+	// cheap checks. Failing either is treated as "no person": overlay cleared,
+	// nothing fed to the coach.
+	const CORE_LANDMARKS = [11, 12, 23, 24]; // shoulders + hips
+	const PRESENCE_MIN_VIS = 0.7; // mean core visibility required to trust the skeleton
+	const BONE_MIN_VIS = 0.5; // per-endpoint visibility to draw a bone (and count toward span)
+	const MIN_BODY_SPAN = 0.5; // standing body must cover ≥50% of the frame height
+
+	/**
+	 * Is a real person confidently tracked this frame? Two gates:
+	 *  1. the core torso landmarks (shoulders + hips) average above PRESENCE_MIN_VIS
+	 *     — robust to a hand or foot leaving frame, but rejects the low-confidence
+	 *     ghost skeleton the model emits with an empty scene;
+	 *  2. for standing ('tall') lifts only, the visible skeleton spans at least
+	 *     MIN_BODY_SPAN of the frame height — an upright body fills the frame, so
+	 *     this filters compact spurious detections that still clear the visibility
+	 *     gate. Lying/reclined ('wide') lifts (bench, hip-thrust) are exempt: the
+	 *     body is horizontal, so a height span would wrongly reject them.
+	 * @param {import('$lib/js/poseCoach').Landmark[] | undefined} raw
+	 */
+	function poseConfident(raw) {
+		if (!raw) return false;
+		let sum = 0;
+		for (const i of CORE_LANDMARKS) sum += raw[i]?.visibility ?? 0;
+		if (sum / CORE_LANDMARKS.length < PRESENCE_MIN_VIS) return false;
+
+		if (orientation === 'wide') return true;
+		let minY = Infinity;
+		let maxY = -Infinity;
+		for (const p of raw) {
+			if ((p?.visibility ?? 0) < BONE_MIN_VIS) continue;
+			if (p.y < minY) minY = p.y;
+			if (p.y > maxY) maxY = p.y;
+		}
+		return maxY - minY >= MIN_BODY_SPAN;
+	}
 
 	// Skeleton smoothing: each frame we ease every landmark toward its new
 	// position (EMA) instead of snapping, so the drawn bones — and the angles fed
@@ -41,6 +93,7 @@
 	 *   onfeedback?: (advice: { text: string, kind: 'good' | 'bad' | 'advice' | 'info' }) => void,
 	 *   onclose?: () => void,
 	 *   resetKey?: number | string,
+	 *   paused?: boolean,
 	 * }}
 	 */
 	let {
@@ -51,7 +104,8 @@
 		onrep = undefined,
 		onfeedback = undefined,
 		onclose = undefined,
-		resetKey = 0
+		resetKey = 0,
+		paused = false
 	} = $props();
 
 	const bare = $derived(variant === 'bare');
@@ -68,11 +122,18 @@
 	let preparing = $state(false);
 	/** Download fraction 0..1, or -1 when the total size is unknown (indeterminate). */
 	let prepProgress = $state(0);
-	let facingMode = $state(/** @type {'environment' | 'user'} */ ('environment'));
+	// Seed from the last session-wide choice so the camera survives exercise switches.
+	let facingMode = $state(savedFacingMode);
 	/** Available video inputs (populated once permission is granted). @type {{ deviceId: string, label: string }[]} */
 	let cameras = $state(/** @type {{ deviceId: string, label: string }[]} */ ([]));
 	/** Explicitly chosen camera; null = use facingMode (front/back) instead. @type {string | null} */
-	let selectedDeviceId = $state(/** @type {string | null} */ (null));
+	let selectedDeviceId = $state(savedDeviceId);
+
+	// Remember the choice across remounts (the `{#key exerciseId}` teardown).
+	$effect(() => {
+		savedFacingMode = facingMode;
+		savedDeviceId = selectedDeviceId;
+	});
 
 	// Live readout
 	let reps = $state(0);
@@ -81,6 +142,13 @@
 	let cueKind = $state(/** @type {import('$lib/js/poseCoach').CueKind} */ (null));
 	let angle = $state(/** @type {number | null} */ (null));
 	let faults = $state(/** @type {import('$lib/js/fitnessI18n').FitnessKey[]} */ ([]));
+
+	// Debug readout: live joint angles drawn on the feed.
+	let dbgKnee = $state(/** @type {number | null} */ (null));
+	let dbgHip = $state(/** @type {number | null} */ (null));
+	let dbgShoulder = $state(/** @type {number | null} */ (null));
+	let dbgElbow = $state(/** @type {number | null} */ (null));
+	let dbgArmElev = $state(/** @type {number | null} */ (null));
 
 	// Smoothed object-position (%) that pans the cover-cropped feed to keep the
 	// person centred. Only takes effect where the feed overflows the panel
@@ -193,7 +261,18 @@
 	async function startCamera() {
 		stopped = false;
 		if (!landmarker) landmarker = await loadPoseLandmarker();
-		stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints() });
+		try {
+			stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints() });
+		} catch (e) {
+			// A remembered camera may be gone (unplugged, or a different device set on
+			// reload). Drop the exact-device pin and retry on the front/back hint.
+			if (selectedDeviceId) {
+				selectedDeviceId = null;
+				stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints() });
+			} else {
+				throw e;
+			}
+		}
 		await new Promise((r) => requestAnimationFrame(r));
 		if (!videoEl || stopped) {
 			stop();
@@ -310,6 +389,9 @@
 			const pa = lms[a];
 			const pb = lms[b];
 			if (!pa || !pb) continue;
+			// Skip bones whose endpoints aren't confidently tracked, so a partly
+			// visible body doesn't sprout stray limbs into empty space.
+			if ((pa.visibility ?? 0) < BONE_MIN_VIS || (pb.visibility ?? 0) < BONE_MIN_VIS) continue;
 			ctx.beginPath();
 			ctx.moveTo(pa.x * w, pa.y * h);
 			ctx.lineTo(pb.x * w, pb.y * h);
@@ -318,7 +400,7 @@
 		ctx.fillStyle = '#88C0D0'; // nord8 light blue — joints
 		const r = Math.max(5, w / 120);
 		for (let i = 0; i < lms.length; i++) {
-			if (UNUSED_FACE_LANDMARKS.has(i)) continue; // nose/eyes/mouth — not used in any calc
+			if (HIDDEN_OVERLAY_LANDMARKS.has(i)) continue; // nose/eyes/mouth/ears — don't draw on the head
 			const p = lms[i];
 			if ((p.visibility ?? 0) < 0.5) continue;
 			ctx.beginPath();
@@ -392,23 +474,48 @@
 		if (v.readyState >= 2) {
 			const now = performance.now();
 			const result = landmarker.detectForVideo(v, now);
-			const lms = smoothLandmarks(result.landmarks?.[0]);
+			// Drop the model's low-confidence ghost skeleton before it reaches the
+			// overlay, auto-pan, or coach — otherwise an empty scene paints garbage.
+			const raw = result.landmarks?.[0];
+			const lms = smoothLandmarks(poseConfident(raw) ? raw : undefined);
 			drawOverlay(lms);
 			trackPerson(lms);
-			const update = coach.update(lms, now);
-			phase = update.phase;
-			cue = update.cue;
-			cueKind = update.cueKind;
-			angle = update.angle;
-			faults = update.faults;
-			stabilizeAdvice(now);
-			if (update.repCompleted) {
-				reps = update.reps;
-				// Bright tick for a clean rep; descending warning when the rep was sub-par
-				// (shallow depth) or a form fault is showing.
-				if (update.cueKind === 'good' && !update.faults.length) playSetCompleteSound();
-				else playRepWarningSound();
-				onrep?.(update.reps);
+			// Debug joint angles (NaN → null when that joint isn't tracked).
+			const round1 = (/** @type {number} */ v) => (Number.isNaN(v) ? null : Math.round(v));
+			dbgKnee = lms ? round1(jointAngle(lms, 'knee')) : null;
+			dbgHip = lms ? round1(jointAngle(lms, 'hip')) : null;
+			dbgShoulder = lms ? round1(jointAngle(lms, 'shoulder')) : null;
+			dbgElbow = lms ? round1(jointAngle(lms, 'elbow')) : null;
+			dbgArmElev = lms ? round1(upperArmElevation(lms)) : null;
+			// During rest the set is over — keep the camera + skeleton live for framing,
+			// but freeze rep counting and form cues so re-racking or grabbing water can't
+			// register phantom reps or surface stale corrections. The next set's resetKey
+			// change re-arms the coach cleanly.
+			if (paused) {
+				cue = null;
+				cueKind = null;
+				faults = [];
+				angle = null;
+				// Clear any held advice so the consumer HUD shows nothing while resting,
+				// and the next set's first cue surfaces immediately on resume.
+				displayedAdvice = { text: '', kind: 'info' };
+				adviceSince = 0;
+			} else {
+				const update = coach.update(lms, now);
+				phase = update.phase;
+				cue = update.cue;
+				cueKind = update.cueKind;
+				angle = update.angle;
+				faults = update.faults;
+				stabilizeAdvice(now);
+				if (update.repCompleted) {
+					reps = update.reps;
+					// Bright tick for a clean rep; descending warning when the rep was sub-par
+					// (shallow depth) or a form fault is showing.
+					if (update.cueKind === 'good' && !update.faults.length) playSetCompleteSound();
+					else playRepWarningSound();
+					onrep?.(update.reps);
+				}
 			}
 		}
 		// requestVideoFrameCallback paces to the camera cadence when available;
@@ -483,6 +590,17 @@
 		{#if running && !bare}
 			<div class="meta">
 				<span class="phase">{phase}</span>{#if angle != null}<span class="angle"> · {Math.round(angle)}°</span>{/if}
+			</div>
+		{/if}
+
+		<!-- Debug angle readout, shown in both variants. -->
+		{#if running}
+			<div class="debug-angles" aria-hidden="true">
+				<span class:null={dbgHip == null}>hip {dbgHip ?? '—'}°</span>
+				<span class:null={dbgKnee == null}>knee {dbgKnee ?? '—'}°</span>
+				<span class:null={dbgShoulder == null}>shldr {dbgShoulder ?? '—'}°</span>
+				<span class:null={dbgElbow == null}>elbow {dbgElbow ?? '—'}°</span>
+				<span class:null={dbgArmElev == null}>armElev {dbgArmElev ?? '—'}°</span>
 			</div>
 		{/if}
 
@@ -640,6 +758,29 @@
 		text-transform: capitalize;
 		font-variant-numeric: tabular-nums;
 		pointer-events: none;
+	}
+	/* Debug joint angles — big and legible over the feed, on top of everything. */
+	.debug-angles {
+		position: absolute;
+		top: 0.5rem;
+		left: 0.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		padding: 0.4rem 0.6rem;
+		border-radius: var(--radius-sm, 0.3rem);
+		background: rgba(0, 0, 0, 0.7);
+		color: #a3be8c; /* green = tracked */
+		font-size: clamp(1.1rem, 4.5vw, 1.6rem);
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		line-height: 1.25;
+		white-space: nowrap;
+		pointer-events: none;
+		z-index: 999;
+	}
+	.debug-angles .null {
+		color: #bf616a; /* red = not in frame */
 	}
 	/* Coaching message — sits below the video, colour-coded by tone, sized to read
 	   from across the room. */

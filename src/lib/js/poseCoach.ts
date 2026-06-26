@@ -107,6 +107,8 @@ export interface FormConfig {
 	depthTarget: number;
 	/** Set when peak effort is at the high-angle end (lockout / arm raised) rather than the low end. */
 	invert?: boolean;
+	/** When set, a rep only counts if it actually reaches `depthTarget` — partial reps don't count. */
+	requireDepth?: boolean;
 	/**
 	 * Preferred camera framing. Standing movements (the default) want a taller,
 	 * portrait crop so the whole body fits; lying/seated movements (bench, hip
@@ -121,6 +123,43 @@ export interface FormConfig {
 		minAngle: number;
 		cue: FitnessKey;
 	};
+	/** Optional plane + height coaching for shoulder-raise variants (lateral vs front). */
+	raise?: RaiseCheck;
+	/** Optional bent-over checks for free rows (hip hinge + over-pull). */
+	row?: RowCheck;
+}
+
+/**
+ * Live checks for the free bent-over barbell row. The torso must stay hinged —
+ * so a standing curl/upright lift can't score as a row — and the bar shouldn't be
+ * yanked up past the lower chest (which over-flexes the elbow).
+ */
+interface RowCheck {
+	/** Torso must be hinged: the hip angle (shoulder–hip–knee) has to be at/below this to count a rep. */
+	maxHipAngle: number;
+	/** Advice when standing too upright instead of hinging at the hips. */
+	hingeCue: FitnessKey;
+	/** Upper-arm elevation (deg) above which the elbow is yanked too high (bar to the chest/neck). */
+	maxElevation: number;
+	/** Advice when the bar is pulled too high. */
+	tooHighCue: FitnessKey;
+}
+
+/**
+ * Live checks for dumbbell/cable raises: the *plane* the arms travel in (out to
+ * the sides vs. in front of the chest) and the *height* they reach. The plane
+ * check reads the wrists' sideways spread, so it only works front-on (it no-ops
+ * side-on, where the shoulders overlap); the height check uses the shoulder angle.
+ */
+interface RaiseCheck {
+	/** Where the hands belong at the top: `lateral` = out to the sides, `front` = in front of the chest. */
+	plane: 'lateral' | 'front';
+	/** Cue when the wrists are in the wrong plane for this lift. */
+	planeCue: FitnessKey;
+	/** Real shoulder-elevation angle (deg) past which the rep has gone above shoulder height. */
+	overAngle: number;
+	/** Cue when raised too high (e.g. swinging the weights up / shrugging the traps in). */
+	overCue: FitnessKey;
 }
 
 /** Reused back-rounding (spine-flexion) checks. */
@@ -139,7 +178,12 @@ const CUE = {
 	hipLockout: 'coach_cue_hip_lockout',
 	shoulderHeight: 'coach_cue_shoulder_height',
 	pullHigher: 'coach_cue_pull_higher',
-	lowerBehindHead: 'coach_cue_lower_behind_head'
+	lowerBehindHead: 'coach_cue_lower_behind_head',
+	raiseToSides: 'coach_cue_raise_to_sides',
+	raiseInFront: 'coach_cue_raise_in_front',
+	notAboveShoulder: 'coach_cue_not_above_shoulder',
+	hingeOver: 'coach_cue_hinge_over',
+	rowTooHigh: 'coach_cue_row_too_high'
 } as const satisfies Record<string, FitnessKey>;
 
 /**
@@ -149,27 +193,27 @@ const CUE = {
  * or landmarks aren't reliable for single-camera angle tracking.
  */
 export const FORM_CONFIGS: Record<string, FormConfig> = {
-	// --- Squat pattern (knee, peak = low) ---
+	// --- Squat pattern (knee, peak = low) — require depth so partial reps don't count ---
 	'squat-barbell': {
-		joint: 'knee', topAngle: 160, bottomAngle: 110, depthTarget: 95,
+		joint: 'knee', topAngle: 160, bottomAngle: 110, depthTarget: 95, requireDepth: true,
 		shallowCue: CUE.squatDeeper, backRounding: SQUAT_BACK_ROUNDING
 	},
 	'front-squat-barbell': {
-		joint: 'knee', topAngle: 160, bottomAngle: 110, depthTarget: 95,
+		joint: 'knee', topAngle: 160, bottomAngle: 110, depthTarget: 95, requireDepth: true,
 		shallowCue: CUE.squatDeeper, backRounding: SQUAT_BACK_ROUNDING
 	},
 	'goblet-squat-dumbbell': {
-		joint: 'knee', topAngle: 160, bottomAngle: 110, depthTarget: 95,
+		joint: 'knee', topAngle: 160, bottomAngle: 110, depthTarget: 95, requireDepth: true,
 		shallowCue: CUE.squatDeeper, backRounding: SQUAT_BACK_ROUNDING
 	},
 	'bulgarian-split-squat-dumbbell': {
-		joint: 'knee', topAngle: 160, bottomAngle: 105, depthTarget: 95, shallowCue: CUE.squatDeeper
+		joint: 'knee', topAngle: 160, bottomAngle: 105, depthTarget: 95, requireDepth: true, shallowCue: CUE.squatDeeper
 	},
 	'lunge-dumbbell': {
-		joint: 'knee', topAngle: 160, bottomAngle: 105, depthTarget: 95, shallowCue: CUE.squatDeeper
+		joint: 'knee', topAngle: 160, bottomAngle: 105, depthTarget: 95, requireDepth: true, shallowCue: CUE.squatDeeper
 	},
 	'leg-press-machine': {
-		joint: 'knee', orientation: 'wide', topAngle: 165, bottomAngle: 110, depthTarget: 95, shallowCue: CUE.squatDeeper
+		joint: 'knee', orientation: 'wide', topAngle: 165, bottomAngle: 110, depthTarget: 95, requireDepth: true, shallowCue: CUE.squatDeeper
 	},
 
 	// --- Hip hinge (hip, peak = low) ---
@@ -218,9 +262,15 @@ export const FORM_CONFIGS: Record<string, FormConfig> = {
 	},
 
 	// --- Rows & pulls (elbow, peak = low) ---
+	// Counted from shoulder extension (upper-arm elevation), NOT the elbow — the
+	// elbow angle can't tell a row from a curl. top/bottom/depth here are upper-arm
+	// elevations in deg: ~−80° hanging, 0° = elbow at shoulder height. invert+peak
+	// is the high (raised) end; requireDepth so a half-pull doesn't count.
 	'bent-over-row-barbell': {
-		joint: 'elbow', topAngle: 160, bottomAngle: 80, depthTarget: 65,
-		shallowCue: CUE.rowToTorso, backRounding: HINGE_BACK_ROUNDING
+		joint: 'shoulder', invert: true, requireDepth: true,
+		topAngle: -55, bottomAngle: -30, depthTarget: -10,
+		shallowCue: CUE.rowToTorso, backRounding: HINGE_BACK_ROUNDING,
+		row: { maxHipAngle: 150, hingeCue: CUE.hingeOver, maxElevation: 40, tooHighCue: CUE.rowTooHigh }
 	},
 	'incline-row-dumbbell': {
 		joint: 'elbow', topAngle: 160, bottomAngle: 80, depthTarget: 65, shallowCue: CUE.rowToTorso
@@ -249,17 +299,22 @@ export const FORM_CONFIGS: Record<string, FormConfig> = {
 	},
 
 	// --- Raises (shoulder elevation, peak = HIGH → invert) ---
+	// `raise` adds plane (sides vs. front) + over-height coaching on top of the
+	// shared shoulder-height depth target.
 	'lateral-raise-dumbbell': {
 		joint: 'shoulder', invert: true, topAngle: 25, bottomAngle: 70, depthTarget: 80,
-		shallowCue: CUE.shoulderHeight
+		shallowCue: CUE.shoulderHeight,
+		raise: { plane: 'lateral', planeCue: CUE.raiseToSides, overAngle: 105, overCue: CUE.notAboveShoulder }
 	},
 	'lateral-raise-cable': {
 		joint: 'shoulder', invert: true, topAngle: 25, bottomAngle: 70, depthTarget: 80,
-		shallowCue: CUE.shoulderHeight
+		shallowCue: CUE.shoulderHeight,
+		raise: { plane: 'lateral', planeCue: CUE.raiseToSides, overAngle: 105, overCue: CUE.notAboveShoulder }
 	},
 	'front-raise-dumbbell': {
 		joint: 'shoulder', invert: true, topAngle: 25, bottomAngle: 65, depthTarget: 75,
-		shallowCue: CUE.shoulderHeight
+		shallowCue: CUE.shoulderHeight,
+		raise: { plane: 'front', planeCue: CUE.raiseInFront, overAngle: 110, overCue: CUE.notAboveShoulder }
 	},
 	'upright-row-barbell': {
 		joint: 'shoulder', invert: true, topAngle: 20, bottomAngle: 50, depthTarget: 58,
@@ -317,6 +372,91 @@ export function spineAngle(lms: Landmark[]): number {
 	return measureAngle(lms, SPINE_TRIPLETS);
 }
 
+/** y of landmark `i` if reliably tracked, else NaN. */
+function visibleY(lms: Landmark[], i: number): number {
+	const p = lms[i];
+	return p && (p.visibility ?? 0) >= MIN_VISIBILITY ? p.y : Number.NaN;
+}
+
+/** Mean of the non-NaN inputs, or NaN when all are NaN. */
+function meanDefined(...vals: number[]): number {
+	const ok = vals.filter((v) => !Number.isNaN(v));
+	return ok.length ? ok.reduce((a, b) => a + b, 0) / ok.length : Number.NaN;
+}
+
+/**
+ * How far the wrists are spread sideways *beyond* the shoulders, as a fraction of
+ * shoulder width (front-on view): high (~0.6+) = arms out to the sides (lateral
+ * raise); ~0 or negative = hands kept in front of the chest (front raise). NaN
+ * when filmed side-on (shoulders overlap) or the wrists/shoulders aren't tracked.
+ */
+export function raiseSpread(lms: Landmark[]): number {
+	const ls = lms[LM.leftShoulder];
+	const rs = lms[LM.rightShoulder];
+	if (!ls || !rs) return Number.NaN;
+	const width = Math.abs(ls.x - rs.x);
+	if (width < 0.08) return Number.NaN; // side-on: shoulders overlap, spread is meaningless
+	const center = (ls.x + rs.x) / 2;
+	const spreads: number[] = [];
+	for (const [sh, wr] of [
+		[LM.leftShoulder, LM.leftWrist],
+		[LM.rightShoulder, LM.rightWrist]
+	] as const) {
+		const s = lms[sh];
+		const w = lms[wr];
+		if (!s || !w) continue;
+		if ((s.visibility ?? 0) < MIN_VISIBILITY || (w.visibility ?? 0) < MIN_VISIBILITY) continue;
+		spreads.push((Math.abs(w.x - center) - Math.abs(s.x - center)) / width);
+	}
+	if (!spreads.length) return Number.NaN;
+	return spreads.reduce((a, b) => a + b, 0) / spreads.length;
+}
+
+/**
+ * Elevation of the upper arm above horizontal (deg), averaged over visible sides:
+ * −90° = elbow hanging straight below the shoulder, 0° = elbow at shoulder height,
+ * +90° = straight overhead. This is the shoulder-extension signal a bent-over row
+ * is judged on (the elbow driving up toward the torso). Unlike the shoulder *angle*
+ * (hip–shoulder–elbow), it stays monotonic through the whole pull. Best filmed
+ * side-on. NaN when neither shoulder/elbow pair is tracked.
+ */
+export function upperArmElevation(lms: Landmark[]): number {
+	const vals: number[] = [];
+	for (const [sh, el] of [
+		[LM.leftShoulder, LM.leftElbow],
+		[LM.rightShoulder, LM.rightElbow]
+	] as const) {
+		const s = lms[sh];
+		const e = lms[el];
+		if (!s || !e) continue;
+		if ((s.visibility ?? 0) < MIN_VISIBILITY || (e.visibility ?? 0) < MIN_VISIBILITY) continue;
+		// y grows downward, so (shoulderY − elbowY) is positive when the elbow is up.
+		vals.push((Math.atan2(s.y - e.y, Math.abs(e.x - s.x)) * 180) / Math.PI);
+	}
+	if (!vals.length) return Number.NaN;
+	return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+/** At least one hip landmark reliably tracked — a cheap "is the body actually in frame" gate. */
+function hipInFrame(lms: Landmark[] | undefined): boolean {
+	if (!lms) return false;
+	return (
+		(lms[LM.leftHip]?.visibility ?? 0) >= MIN_VISIBILITY ||
+		(lms[LM.rightHip]?.visibility ?? 0) >= MIN_VISIBILITY
+	);
+}
+
+/** True when a wrist is up around shoulder height (above mid-torso) — robust to foreshortening. */
+function wristsRaised(lms: Landmark[]): boolean {
+	const shY = meanDefined(visibleY(lms, LM.leftShoulder), visibleY(lms, LM.rightShoulder));
+	const hipY = meanDefined(visibleY(lms, LM.leftHip), visibleY(lms, LM.rightHip));
+	if (Number.isNaN(shY) || Number.isNaN(hipY)) return false;
+	const midTorso = (shY + hipY) / 2;
+	const lw = visibleY(lms, LM.leftWrist);
+	const rw = visibleY(lms, LM.rightWrist);
+	return (!Number.isNaN(lw) && lw < midTorso) || (!Number.isNaN(rw) && rw < midTorso);
+}
+
 export type RepPhase = 'top' | 'descending' | 'bottom' | 'ascending';
 
 export interface CoachUpdate {
@@ -365,6 +505,12 @@ export class ExerciseCoach {
 	private lastRepCueKind: CueKind = null;
 	/** Debounce counter for the back-rounding fault (avoids single-frame flicker). */
 	private backRoundFrames = 0;
+	/** Debounce counters for the raise plane / over-height faults. */
+	private raisePlaneFrames = 0;
+	private overRaiseFrames = 0;
+	/** Debounce counters for the bent-over-row hinge / over-pull faults. */
+	private rowHingeFrames = 0;
+	private rowTooHighFrames = 0;
 
 	constructor(exerciseId: string) {
 		const config = FORM_CONFIGS[exerciseId];
@@ -385,16 +531,46 @@ export class ExerciseCoach {
 		this.lastRepCue = null;
 		this.lastRepCueKind = null;
 		this.backRoundFrames = 0;
+		this.raisePlaneFrames = 0;
+		this.overRaiseFrames = 0;
+		this.rowHingeFrames = 0;
+		this.rowTooHighFrames = 0;
 	}
 
 	/** Advance the state machine by one frame. `now` is a ms timestamp (defaults to {@link performance.now}). */
 	update(lms: Landmark[] | undefined, now: number = performance.now()): CoachUpdate {
-		const angle = lms ? jointAngle(lms, this.config.joint) : Number.NaN;
+		// A row is counted off shoulder extension (upper-arm elevation); everything
+		// else off its configured joint angle.
+		const rowCfg = this.config.row;
+		const angle = lms
+			? rowCfg
+				? upperArmElevation(lms)
+				: jointAngle(lms, this.config.joint)
+			: Number.NaN;
 
-		if (Number.isNaN(angle)) {
+		// Require the hip in frame for every lift — it's the cheapest guard against
+		// erroneous counts when the body is only partly visible (e.g. walking to/from
+		// the camera). A bent-over row needs the whole hip *angle* (shoulder–hip–knee,
+		// which also pulls in the knee) to tell a real row from a standing lift.
+		const hipAngle = rowCfg && lms ? jointAngle(lms, 'hip') : Number.NaN;
+		const untracked =
+			Number.isNaN(angle) || !hipInFrame(lms) || (rowCfg !== undefined && Number.isNaN(hipAngle));
+
+		if (untracked) {
 			this.lostFrames++;
 			this.backRoundFrames = 0;
 			const lost = this.lostFrames > 5;
+			// Once the "get your whole body in frame" warning is relevant, abandon the
+			// in-progress rep so a rep that spanned the tracking gap can't complete on
+			// recovery — only reps observed end-to-end with tracking are counted.
+			if (lost) {
+				this.phase = 'top';
+				this.repMinE = Number.POSITIVE_INFINITY;
+				this.raisePlaneFrames = 0;
+				this.overRaiseFrames = 0;
+				this.rowHingeFrames = 0;
+				this.rowTooHighFrames = 0;
+			}
 			const cue: FitnessKey | null = lost ? 'coach_cue_get_in_frame' : this.lastRepCue;
 			const cueKind: CueKind = lost ? 'info' : this.lastRepCueKind;
 			return {
@@ -408,6 +584,10 @@ export class ExerciseCoach {
 			};
 		}
 		this.lostFrames = 0;
+
+		// Bent-over rows: is the torso actually hinged? `hipAngle` is guaranteed
+		// tracked here (untracked is handled above as "get in frame").
+		const hinged = !rowCfg || hipAngle <= rowCfg.maxHipAngle;
 
 		// Work in sign-normalized space so the same FSM handles both polarities:
 		// `e` is high at rest and low at peak effort for every exercise.
@@ -443,17 +623,28 @@ export class ExerciseCoach {
 				if (e >= topE) {
 					// Returned to rest after a valid peak. Only *count* it if enough
 					// time has passed since the last rep — otherwise it's a bounce.
-					if (now - this.lastRepTime >= MIN_REP_INTERVAL_MS) {
+					const spaced = now - this.lastRepTime >= MIN_REP_INTERVAL_MS;
+					const shallow = this.repMinE > depthE;
+					if (spaced && hinged && !(this.config.requireDepth && shallow)) {
 						this.reps++;
 						this.lastRepTime = now;
 						repCompleted = true;
-						if (this.repMinE > depthE) {
+						if (shallow) {
 							this.lastRepCue = this.config.shallowCue;
 							this.lastRepCueKind = 'advice';
 						} else {
 							this.lastRepCue = 'coach_cue_good_rep';
 							this.lastRepCueKind = 'good';
 						}
+					} else if (spaced && rowCfg && !hinged) {
+						// The arms completed the motion but the torso never hinged —
+						// it's a standing lift, not a row. Coach it instead of counting.
+						this.lastRepCue = rowCfg.hingeCue;
+						this.lastRepCueKind = 'advice';
+					} else if (spaced && this.config.requireDepth && shallow) {
+						// Didn't reach depth — coach it instead of counting the partial rep.
+						this.lastRepCue = this.config.shallowCue;
+						this.lastRepCueKind = 'advice';
 					}
 					// Reset the movement either way so the next rep starts clean.
 					this.phase = 'top';
@@ -477,6 +668,50 @@ export class ExerciseCoach {
 			if (this.backRoundFrames >= 3) faults.push(br.cue);
 		} else {
 			this.backRoundFrames = 0;
+		}
+
+		// Raise plane (sides vs. front) + over-height. Both judged only while the
+		// arms are actually up, and debounced so a single noisy frame can't flash.
+		const rz = this.config.raise;
+		if (rz && lms && this.phase !== 'top' && wristsRaised(lms)) {
+			const spread = raiseSpread(lms);
+			// lateral wants the wrists wide of the shoulders; front wants them in
+			// front of the chest. NaN (side-on) → skip, can't judge the plane.
+			const planeWrong =
+				!Number.isNaN(spread) && (rz.plane === 'lateral' ? spread < 0.2 : spread > 0.45);
+			this.raisePlaneFrames = planeWrong
+				? Math.min(this.raisePlaneFrames + 1, 10)
+				: Math.max(this.raisePlaneFrames - 1, 0);
+			if (this.raisePlaneFrames >= 4) faults.push(rz.planeCue);
+
+			const tooHigh = angle > rz.overAngle;
+			this.overRaiseFrames = tooHigh
+				? Math.min(this.overRaiseFrames + 1, 10)
+				: Math.max(this.overRaiseFrames - 1, 0);
+			if (this.overRaiseFrames >= 4) faults.push(rz.overCue);
+		} else {
+			this.raisePlaneFrames = 0;
+			this.overRaiseFrames = 0;
+		}
+
+		// Bent-over row: nag if standing too upright, or if the elbow is driven up so
+		// high the bar's gone past the chest. Judged under load, debounced like the others.
+		if (rowCfg && lms && this.phase !== 'top') {
+			const upright = !Number.isNaN(hipAngle) && hipAngle > rowCfg.maxHipAngle;
+			this.rowHingeFrames = upright
+				? Math.min(this.rowHingeFrames + 1, 10)
+				: Math.max(this.rowHingeFrames - 1, 0);
+			if (this.rowHingeFrames >= 4) faults.push(rowCfg.hingeCue);
+
+			// `angle` is the upper-arm elevation here; too high = bar pulled past the chest.
+			const overPulled = angle > rowCfg.maxElevation;
+			this.rowTooHighFrames = overPulled
+				? Math.min(this.rowTooHighFrames + 1, 10)
+				: Math.max(this.rowTooHighFrames - 1, 0);
+			if (this.rowTooHighFrames >= 4) faults.push(rowCfg.tooHighCue);
+		} else {
+			this.rowHingeFrames = 0;
+			this.rowTooHighFrames = 0;
 		}
 
 		return {
