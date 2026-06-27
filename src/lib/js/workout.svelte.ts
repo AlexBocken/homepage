@@ -259,6 +259,9 @@ export function createWorkout() {
 	}
 
 	function startHoldTimer(seconds: number, exerciseIdx: number, setIdx: number) {
+		// Starting a timed hold cancels any running rest timer without playing the
+		// rest-done beep (only _computeRestSeconds hitting 0:00 plays the sound).
+		_stopRestTimer();
 		_stopHoldTimer();
 		_holdStartedAt = Date.now();
 		_holdSeconds = seconds;
