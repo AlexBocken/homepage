@@ -33,7 +33,7 @@
 	const t = $derived(m[lang]);
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	import { getWorkout } from '$lib/js/workout.svelte';
-	import { localDateStr } from '$lib/js/fitnessDate';
+	import { localDateStr } from '$lib/js/localDate';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 
 	let { data } = $props();

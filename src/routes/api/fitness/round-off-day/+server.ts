@@ -10,7 +10,7 @@ import { FavoriteIngredient } from '$models/FavoriteIngredient';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { RoundOffCache } from '$models/RoundOffCache';
-import { localDateStr } from '$lib/js/fitnessDate';
+import { localDateStr } from '$lib/js/localDate';
 import { PANTRY_FOODS } from '$lib/server/pantryFoods';
 import {
 	findBestCombos,

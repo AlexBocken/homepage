@@ -26,7 +26,7 @@
 	import Droplet from '@lucide/svelte/icons/droplet';
 	import Wheat from '@lucide/svelte/icons/wheat';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
-	import { localDateStr } from '$lib/js/fitnessDate';
+	import { localDateStr } from '$lib/js/localDate';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';

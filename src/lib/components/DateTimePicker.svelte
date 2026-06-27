@@ -6,6 +6,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { m } from '$lib/js/commonI18n';
 	import type { CommonLang } from '$lib/js/commonI18n';
+	import { localDateStr } from '$lib/js/localDate';
 
 	/**
 	 * Pill-styled date + (optional) time picker. Built to share the look of
@@ -86,7 +87,7 @@
 
 	const dateStr = $derived(toDateStr(effective));
 	const timeStr = $derived(toTimeStr(effective));
-	const todayStr = new Date().toISOString().slice(0, 10);
+	const todayStr = localDateStr();
 
 	const dateLabel = $derived.by(() => {
 		if (!dateStr) return t.select_date;

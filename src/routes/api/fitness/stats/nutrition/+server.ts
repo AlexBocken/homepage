@@ -6,7 +6,7 @@ import { FoodLogEntry } from '$models/FoodLogEntry';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { WorkoutSession } from '$models/WorkoutSession';
-import { localDateStr, localDateOffset } from '$lib/js/fitnessDate';
+import { localDateStr, localDateOffset } from '$lib/js/localDate';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	// Exclude today (incomplete day) — stats cover completed days only.
 	// Day keys are stored as UTC-midnight of the *local* calendar-day label
-	// (see fitnessDate.ts), so boundaries must be derived from the local date,
+	// (see localDate.ts), so boundaries must be derived from the local date,
 	// not from the current UTC instant (which rolls back a day in the small
 	// hours for positive-offset timezones).
 	const now = new Date();

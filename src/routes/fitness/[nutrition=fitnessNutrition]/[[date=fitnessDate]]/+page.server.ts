@@ -6,7 +6,7 @@ import { WorkoutSchedule } from '$models/WorkoutSchedule';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { Recipe } from '$models/Recipe';
 import { RoundOffCache } from '$models/RoundOffCache';
-import { localDateStr, localDateOffset } from '$lib/js/fitnessDate';
+import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import mongoose from 'mongoose';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {

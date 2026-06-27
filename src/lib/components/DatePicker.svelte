@@ -3,6 +3,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import { m } from '$lib/js/commonI18n';
+	import { localDateStr } from '$lib/js/localDate';
 	/** @typedef {import('$lib/js/commonI18n').CommonLang} CommonLang */
 	let { value = $bindable(''), lang = 'en', min = '', max = '', fontSize = '', onchange = () => {} } = $props();
 	const t = $derived(m[/** @type {CommonLang} */ (lang)]);
@@ -35,7 +36,7 @@
 		}
 	});
 
-	const todayStr = new Date().toISOString().slice(0, 10);
+	const todayStr = localDateStr();
 
 	const displayDate = $derived.by(() => {
 		if (!value) return t.select_date;
@@ -55,7 +56,7 @@
 	function navigateDate(delta) {
 		const d = new Date((value || todayStr) + 'T12:00:00');
 		d.setDate(d.getDate() + delta);
-		const next = d.toISOString().slice(0, 10);
+		const next = localDateStr(d);
 		if (!isDisabled(next)) { value = next; onchange(); }
 	}
 

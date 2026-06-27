@@ -21,7 +21,7 @@
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
-	import { localDateStr } from '$lib/js/fitnessDate';
+	import { localDateStr } from '$lib/js/localDate';
 
 	let { data } = $props();
 
