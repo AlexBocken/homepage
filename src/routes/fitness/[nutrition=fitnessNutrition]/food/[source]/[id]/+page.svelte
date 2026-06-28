@@ -7,8 +7,15 @@
 	import Beef from '@lucide/svelte/icons/beef';
 	import Droplet from '@lucide/svelte/icons/droplet';
 	import Wheat from '@lucide/svelte/icons/wheat';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Coffee from '@lucide/svelte/icons/coffee';
+	import Sun from '@lucide/svelte/icons/sun';
+	import Moon from '@lucide/svelte/icons/moon';
+	import Cookie from '@lucide/svelte/icons/cookie';
+	import ActionButton from '$lib/components/ActionButton.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { localDateStr } from '$lib/js/localDate';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 
@@ -172,6 +179,70 @@
 			toast.error(isEn ? 'Failed to update favorite' : 'Fehler beim Aktualisieren');
 		}
 		favLoading = false;
+	}
+
+	// --- Log to today's diary ---
+	/** @type {Array<'breakfast' | 'lunch' | 'dinner' | 'snack'>} */
+	const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+	const mealMeta = {
+		breakfast: { icon: Coffee, color: 'var(--nord13)' },
+		lunch:     { icon: Sun, color: 'var(--nord12)' },
+		dinner:    { icon: Moon, color: 'var(--nord15)' },
+		snack:     { icon: Cookie, color: 'var(--nord14)' },
+	};
+
+	/** @returns {'breakfast' | 'lunch' | 'dinner' | 'snack'} */
+	function defaultMealType() {
+		const h = new Date().getHours();
+		if (h >= 5 && h < 10) return 'breakfast';
+		if (h >= 10 && h < 15) return 'lunch';
+		if (h >= 15 && h < 17) return 'snack';
+		return 'dinner';
+	}
+
+	let showLog = $state(false);
+	/** @type {'breakfast' | 'lunch' | 'dinner' | 'snack'} */
+	let logMealType = $state('lunch');
+	let logGrams = $state(100);
+	let logging = $state(false);
+
+	const logPreviewCal = $derived(Math.round((n.calories ?? 0) * logGrams / 100));
+
+	function openLog() {
+		logMealType = defaultMealType();
+		logGrams = selectedPortionIdx >= 0 && portions[selectedPortionIdx]
+			? portions[selectedPortionIdx].grams
+			: 100;
+		showLog = true;
+	}
+
+	async function logFood() {
+		if (logging || !(logGrams > 0)) return;
+		logging = true;
+		try {
+			const res = await fetch('/api/fitness/food-log', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					date: localDateStr(),
+					mealType: logMealType,
+					name: food.nameDe ?? food.name,
+					source: food.source,
+					sourceId: food.id ?? /** @type {any} */ (food).sourceId,
+					amountGrams: logGrams,
+					per100g: n,
+				}),
+			});
+			if (res.ok) {
+				showLog = false;
+				toast.success(isEn ? 'Added to today' : 'Zu heute hinzugefügt');
+			} else {
+				toast.error(isEn ? 'Failed to add food' : 'Fehler beim Hinzufügen');
+			}
+		} catch {
+			toast.error(isEn ? 'Failed to add food' : 'Fehler beim Hinzufügen');
+		}
+		logging = false;
 	}
 </script>
 
@@ -387,6 +458,66 @@
 		</div>
 	{/if}
 </div>
+
+<!-- FAB: add this food to today's diary -->
+<ActionButton onclick={openLog} ariaLabel={isEn ? 'Add to today' : 'Zu heute hinzufügen'}>
+	<svg class="icon_svg" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg>
+</ActionButton>
+
+<!-- Log modal -->
+{#if showLog}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="fab-overlay" onclick={() => (showLog = false)} onkeydown={(e) => e.key === 'Escape' && (showLog = false)}>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="fab-modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+			<div class="fab-modal-header">
+				<h3>{t.add_food}</h3>
+				<button class="fab-close" onclick={() => (showLog = false)}><Plus size={18} style="transform: rotate(45deg)" /></button>
+			</div>
+
+			<p class="log-food-name">{food.nameDe ?? food.name}</p>
+
+			<!-- Meal type selector -->
+			<div class="fab-meal-select">
+				{#each mealTypes as meal (meal)}
+					{@const meta = mealMeta[meal]}
+					{@const MealIcon = meta.icon}
+					<button
+						class="fab-meal-btn"
+						class:active={logMealType === meal}
+						style="--mc: {meta.color}"
+						onclick={() => (logMealType = meal)}
+					>
+						<MealIcon size={14} />
+						<span>{t[meal]}</span>
+					</button>
+				{/each}
+			</div>
+
+			<!-- Portion quick-select (USDA / OFF only) -->
+			{#if portions.length > 0}
+				<select class="log-portion-select" onchange={(e) => (logGrams = Number(e.currentTarget.value))}>
+					<option value="100">{isEn ? 'Per 100 g' : 'Pro 100 g'}</option>
+					{#each portions as portion, i (i)}
+						<option value={portion.grams}>{portion.description} ({portion.grams}g)</option>
+					{/each}
+				</select>
+			{/if}
+
+			<!-- Amount -->
+			<form class="log-amount-row" onsubmit={(e) => { e.preventDefault(); logFood(); }}>
+				<input type="number" class="log-amount-input" bind:value={logGrams} min="1" step="1" />
+				<span class="log-amount-unit">g</span>
+				<span class="log-amount-cal">{logPreviewCal} kcal</span>
+			</form>
+
+			<button class="log-confirm" disabled={logging || !(logGrams > 0)} onclick={logFood}>
+				<Plus size={16} />
+				{t.log_food}
+			</button>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.food-detail {
@@ -804,5 +935,158 @@
 			grid-template-columns: 1fr 3rem 3rem 3rem 3rem;
 			font-size: 0.72rem;
 		}
+	}
+
+	/* ── Log modal ── */
+	.fab-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		z-index: 200;
+		animation: fade-in 0.15s ease;
+	}
+	@keyframes fade-in {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
+	.fab-modal {
+		background: var(--color-surface);
+		border-radius: 16px 16px 0 0;
+		width: 100%;
+		max-width: 500px;
+		max-height: 85vh;
+		overflow-y: auto;
+		padding: 1rem 1.25rem 1.5rem;
+		animation: slide-up 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+	@keyframes slide-up {
+		from { transform: translateY(100%); }
+		to { transform: translateY(0); }
+	}
+	.fab-modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.fab-modal-header h3 {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+	}
+	.fab-close {
+		background: none;
+		border: none;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.3rem;
+		border-radius: 50%;
+		display: flex;
+		transition: background 0.12s;
+	}
+	.fab-close:hover {
+		background: var(--color-bg-elevated);
+	}
+	.log-food-name {
+		margin: 0;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+	}
+	.fab-meal-select {
+		display: flex;
+		gap: 0.35rem;
+	}
+	.fab-meal-btn {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		padding: 0.55rem 0.25rem;
+		border: 1px solid var(--color-border);
+		border-radius: 10px;
+		background: var(--color-bg-tertiary);
+		cursor: pointer;
+		color: var(--color-text-secondary);
+		font-size: 0.68rem;
+		font-weight: 600;
+		transition: border-color 0.15s, color 0.15s, background 0.15s;
+	}
+	.fab-meal-btn.active {
+		border-color: var(--mc);
+		color: var(--mc);
+		background: color-mix(in srgb, var(--mc) 8%, var(--color-bg-tertiary));
+	}
+	.fab-meal-btn:hover:not(.active) {
+		border-color: var(--color-text-secondary);
+	}
+	.log-portion-select {
+		width: 100%;
+		padding: 0.5rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+	}
+	.log-amount-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.log-amount-input {
+		flex: 1;
+		min-width: 0;
+		padding: 0.5rem 0.6rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font-size: 1rem;
+		font-variant-numeric: tabular-nums;
+	}
+	.log-amount-input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+	.log-amount-unit {
+		font-size: 0.9rem;
+		color: var(--color-text-secondary);
+	}
+	.log-amount-cal {
+		margin-left: auto;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text-tertiary);
+		font-variant-numeric: tabular-nums;
+	}
+	.log-confirm {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem;
+		padding: 0.7rem;
+		border: none;
+		border-radius: 10px;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font-size: 0.95rem;
+		font-weight: 700;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.log-confirm:hover:not(:disabled) {
+		background: var(--color-primary-hover);
+	}
+	.log-confirm:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 </style>
