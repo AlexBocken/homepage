@@ -594,5 +594,8 @@ export const de = {
 	coach_cue_get_in_frame: "Ganzen Körper ins Bild bringen",
 	coach_cue_back_round_squat: "Brust raus — Rücken gerade",
 	coach_cue_back_round_hinge: "Rücken gerade — nicht rund machen",
-	coach_cue_get_in_position: "In Position gehen"
+	coach_cue_get_in_position: "In Position gehen",
+	body_trends_title: "Körperverlauf",
+	body_trends_hint: "Scrollen oder Pinch zum Zoomen · ziehen zum Verschieben",
+	reset_zoom: "Zoom zurücksetzen"
 } as const;

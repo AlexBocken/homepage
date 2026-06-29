@@ -25,6 +25,7 @@
 	import Activity from '@lucide/svelte/icons/activity';
 	import Zap from '@lucide/svelte/icons/zap';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import Maximize2 from '@lucide/svelte/icons/maximize-2';
 	import X from '@lucide/svelte/icons/x';
 	import { formatElapsed, formatPaceKm, formatEffortRate } from '$lib/fitness/segmentFormat';
 	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
@@ -772,22 +773,28 @@
 	{/if}
 
 	{#if prefs.weight && (stats.weightChart?.data?.length ?? 0) > 1}
-		<FitnessChart
-			data={weightChartData}
-			title={t.weight}
-			yUnit=" kg"
-			height="220px"
-		/>
+		<a class="chart-link" href={resolve('/fitness/[stats=fitnessStats]/body', { stats: statsSlug })} aria-label={t.body_trends_title}>
+			<FitnessChart
+				data={weightChartData}
+				title={t.weight}
+				yUnit=" kg"
+				height="220px"
+			/>
+			<span class="chart-expand"><Maximize2 size={15} /></span>
+		</a>
 	{/if}
 
 	{#if prefs.bodyFat && (stats.bfChart?.data?.length ?? 0) > 1}
-		<FitnessChart
-			data={bfChartData}
-			title={bfChartTitle}
-			yUnit=" pp"
-			height="220px"
-			tooltipFormatter={bfTooltipFormatter}
-		/>
+		<a class="chart-link" href={resolve('/fitness/[stats=fitnessStats]/body', { stats: statsSlug })} aria-label={t.body_trends_title}>
+			<FitnessChart
+				data={bfChartData}
+				title={bfChartTitle}
+				yUnit=" pp"
+				height="220px"
+				tooltipFormatter={bfTooltipFormatter}
+			/>
+			<span class="chart-expand"><Maximize2 size={15} /></span>
+		</a>
 	{/if}
 
 	{#if showMuscleNutrition}
@@ -1001,6 +1008,38 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+
+	/* Weight / body-fat dashboard charts link through to the pan/zoom detail view. */
+	.chart-link {
+		position: relative;
+		display: block;
+		text-decoration: none;
+		color: inherit;
+		border-radius: 12px;
+		transition: transform var(--transition-fast, 120ms);
+	}
+	.chart-link:hover { transform: scale(1.01); }
+	.chart-expand {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		display: grid;
+		place-items: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+		color: var(--color-text-secondary);
+		box-shadow: var(--shadow-sm);
+		opacity: 0;
+		transition: opacity var(--transition-fast, 120ms), color var(--transition-fast, 120ms);
+		pointer-events: none;
+	}
+	.chart-link:hover .chart-expand,
+	.chart-link:focus-visible .chart-expand { opacity: 1; }
+	@media (hover: none) {
+		.chart-expand { opacity: 1; }
 	}
 
 	/* Dashboard customize gear + panel */

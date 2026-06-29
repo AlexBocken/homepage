@@ -15,8 +15,18 @@
 	 *   onHover?: (index: number | null) => void,
 	 *   hoverIndex?: number | null,
 	 *   xAxis?: { min: number, max: number, stepSize: number, unit?: string },
-	 *   yWidthGroup?: import('$lib/stores/axisWidthGroup.svelte').AxisWidthGroup
+	 *   yWidthGroup?: import('$lib/stores/axisWidthGroup.svelte').AxisWidthGroup,
+	 *   zoom?: boolean,
+	 *   applyXRange?: { min: number, max: number } | null,
+	 *   onXRangeChange?: (range: { min: number, max: number }) => void
 	 * }}
+	 *
+	 * `zoom` enables wheel / pinch / drag pan-zoom constrained to the x-axis (used
+	 * by the body-trend detail view). `onXRangeChange` reports the new x min/max
+	 * after a user gesture, and `applyXRange` programmatically sets the visible
+	 * window — together they let a parent keep two stacked charts on one shared
+	 * time range. Programmatic `applyXRange` updates don't re-fire `onXRangeChange`,
+	 * so syncing the two can't loop.
 	 *
 	 * `xAxis` switches the x-axis to a numeric *linear* scale (instead of the
 	 * default per-label category axis). Datasets must then carry `{x, y}` points.
@@ -29,7 +39,7 @@
 	 * clears it, and `undefined` leaves the chart's native hover untouched (used
 	 * for the chart that currently owns the pointer, so we don't fight Chart.js).
 	 */
-	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined, yMin = undefined, yMax = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined } = $props();
+	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined, yMin = undefined, yMax = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined, zoom = false, applyXRange = undefined, onXRangeChange = undefined } = $props();
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
@@ -104,6 +114,157 @@
 		const colors = new Set(lines.map((l) => l.color));
 		return { show: lines.length > 1 && colors.size > 1, items };
 	});
+
+	// ── Custom x-axis pan / pinch / wheel (zoom mode) ──────────────────────────
+	// We drive the visible x window directly (chart.options.scales.x.min/max)
+	// rather than through a zoom plugin: a drag pans it, a pinch or wheel scales
+	// it around the gesture's focal point. Fully under our control, no extra deps.
+	let applyingXRange = false;        // guard so external sync doesn't echo back out
+	let fullMin = 0;                   // data extent (epoch ms) — the pan/zoom limits
+	let fullMax = 0;
+	const MIN_SPAN_MS = 2 * 86_400_000; // never zoom tighter than ~2 days
+
+	/** Clamp a requested window to the data extent and a minimum span.
+	 *  @param {number} min @param {number} max */
+	function clampWindow(min, max) {
+		const fullSpan = fullMax - fullMin;
+		let span = max - min;
+		if (fullSpan > 0) span = Math.min(span, fullSpan);
+		span = Math.max(span, MIN_SPAN_MS);
+		const center = (min + max) / 2;
+		let lo = center - span / 2;
+		let hi = center + span / 2;
+		if (lo < fullMin) { lo = fullMin; hi = lo + span; }
+		if (hi > fullMax) { hi = fullMax; lo = hi - span; }
+		if (lo < fullMin) lo = fullMin;
+		return { min: lo, max: hi };
+	}
+
+	/** Refit y to the data inside [xMin,xMax] so a zoomed slice fills the height.
+	 *  @param {number} xMin @param {number} xMax */
+	function autofitY(xMin, xMax) {
+		const c = chart;
+		const ys = /** @type {any} */ (c?.options?.scales?.y);
+		if (!c || !ys) return;
+		let lo = Infinity;
+		let hi = -Infinity;
+		for (const ds of c.data.datasets) {
+			for (const pt of /** @type {any[]} */ (ds.data)) {
+				if (pt == null) continue;
+				const y = typeof pt === 'object' ? pt.y : pt;
+				if (y == null || !Number.isFinite(y)) continue;
+				if (typeof pt === 'object' && pt.x != null) {
+					const xv = new Date(pt.x).getTime();
+					if (Number.isFinite(xv) && (xv < xMin || xv > xMax)) continue;
+				}
+				if (y < lo) lo = y;
+				if (y > hi) hi = y;
+			}
+		}
+		if (!Number.isFinite(lo) || !Number.isFinite(hi)) return;
+		const pad = (hi - lo) * 0.1 || Math.abs(hi) * 0.1 || 1;
+		ys.min = lo - pad;
+		ys.max = hi + pad;
+	}
+
+	/** Apply an x window: clamp, set the axis, refit y, redraw, optionally report.
+	 *  @param {number} min @param {number} max @param {boolean} report */
+	function setXWindow(min, max, report) {
+		const c = chart;
+		if (!c) return;
+		const w = clampWindow(min, max);
+		const xOpts = /** @type {any} */ (c.options).scales.x;
+		xOpts.min = w.min;
+		xOpts.max = w.max;
+		autofitY(w.min, w.max);
+		// Animated update: x is pinned to duration 0 (pan/zoom track the gesture
+		// instantly) while y eases to its new range (see `animations` in createChart).
+		c.update();
+		if (report && onXRangeChange && !applyingXRange) onXRangeChange({ min: w.min, max: w.max });
+	}
+
+	/** The current visible window (full extent before any gesture). */
+	function currentWindow() {
+		const x = /** @type {any} */ (chart?.options?.scales?.x);
+		const min = Number.isFinite(x?.min) ? Number(x.min) : fullMin;
+		const max = Number.isFinite(x?.max) ? Number(x.max) : fullMax;
+		return { min, max };
+	}
+
+	// Active touch/mouse pointers (id → clientX) for pan + pinch.
+	/** @type {Map<number, number>} */
+	const activePointers = new Map();
+	let pinchPrevDist = 0;
+
+	/** chartArea left/width in CSS px (the plotted region). */
+	function plotLeftWidth() {
+		const area = chart?.chartArea;
+		return { left: area?.left ?? 0, width: (area?.width || canvas?.clientWidth) ?? 1 };
+	}
+
+	/** @param {PointerEvent} e */
+	function onPointerDown(e) {
+		if (!zoom || !chart) return;
+		try { canvas?.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+		activePointers.set(e.pointerId, e.clientX);
+		if (activePointers.size === 2) {
+			const xs = [...activePointers.values()];
+			pinchPrevDist = Math.abs(xs[0] - xs[1]) || 1;
+		}
+	}
+
+	/** @param {PointerEvent} e */
+	function onPointerMove(e) {
+		const cv = canvas;
+		if (!zoom || !chart || !cv || !activePointers.has(e.pointerId)) return;
+		const prevX = activePointers.get(e.pointerId) ?? e.clientX;
+		activePointers.set(e.pointerId, e.clientX);
+		const rect = cv.getBoundingClientRect();
+		const { left, width } = plotLeftWidth();
+		const { min, max } = currentWindow();
+		const span = max - min;
+		if (activePointers.size === 1) {
+			// Pan: shift the window opposite the finger so content tracks the drag.
+			const dValue = -((e.clientX - prevX) / width) * span;
+			setXWindow(min + dValue, max + dValue, true);
+		} else if (activePointers.size === 2) {
+			// Pinch: scale the span by the change in finger distance, anchored at
+			// the time under the gesture's midpoint so it stays put.
+			const xs = [...activePointers.values()];
+			const curDist = Math.abs(xs[0] - xs[1]) || 1;
+			const midPx = (xs[0] + xs[1]) / 2 - rect.left;
+			const anchor = min + ((midPx - left) / width) * span;
+			const newSpan = span * (pinchPrevDist / curDist);
+			pinchPrevDist = curDist;
+			const newMin = anchor - ((midPx - left) / width) * newSpan;
+			setXWindow(newMin, newMin + newSpan, true);
+		}
+	}
+
+	/** @param {PointerEvent} e */
+	function onPointerUp(e) {
+		activePointers.delete(e.pointerId);
+		if (activePointers.size === 2) {
+			const xs = [...activePointers.values()];
+			pinchPrevDist = Math.abs(xs[0] - xs[1]) || 1;
+		}
+	}
+
+	/** @param {WheelEvent} e */
+	function onWheel(e) {
+		const cv = canvas;
+		if (!zoom || !chart || !cv) return;
+		e.preventDefault();
+		const rect = cv.getBoundingClientRect();
+		const { left, width } = plotLeftWidth();
+		const { min, max } = currentWindow();
+		const span = max - min;
+		const px = e.clientX - rect.left;
+		const anchor = min + ((px - left) / width) * span;
+		const newSpan = span * (e.deltaY > 0 ? 1.15 : 1 / 1.15);
+		const newMin = anchor - ((px - left) / width) * newSpan;
+		setXWindow(newMin, newMin + newSpan, true);
+	}
 
 	function createChart() {
 		if (!canvas || !data?.datasets || !ChartCtor) return;
@@ -214,6 +375,12 @@
 				responsive: true,
 				maintainAspectRatio: false,
 				animation: { duration: 0 },
+				// Zoom charts: pin x to instant (pan/zoom track the gesture 1:1) but
+				// ease y so the auto-fitted range glides instead of snapping.
+				animations: zoom ? /** @type {any} */ ({
+					x: { duration: 0 },
+					y: { duration: 300, easing: 'easeOutQuart' }
+				}) : undefined,
 				interaction: type === 'line' ? { mode: 'index', intersect: false } : undefined,
 				onHover: onHover ? (/** @type {any} */ _evt, /** @type {any[]} */ elements) => {
 					if (!elements || elements.length === 0) { onHover(null); return; }
@@ -337,6 +504,15 @@
 				})
 			}
 		}));
+
+		// Cache the data extent (epoch ms) — the limits for pan/zoom gestures.
+		if (zoom && dates.length) {
+			const stamps = dates.map((d) => new Date(d).getTime()).filter((n) => Number.isFinite(n));
+			if (stamps.length) {
+				fullMin = Math.min(...stamps);
+				fullMax = Math.max(...stamps);
+			}
+		}
 	}
 
 	onMount(() => {
@@ -345,6 +521,17 @@
 		const onTheme = () => setTimeout(createChart, 100);
 		/** @type {MutationObserver | undefined} */
 		let obs;
+
+		// Pan/pinch/wheel gesture wiring (zoom mode only). Pointer events cover
+		// mouse-drag, touch-drag and multi-touch pinch; wheel zooms on desktop.
+		if (zoom && canvas) {
+			canvas.addEventListener('pointerdown', onPointerDown);
+			canvas.addEventListener('pointermove', onPointerMove);
+			canvas.addEventListener('pointerup', onPointerUp);
+			canvas.addEventListener('pointercancel', onPointerUp);
+			canvas.addEventListener('pointerleave', onPointerUp);
+			canvas.addEventListener('wheel', onWheel, { passive: false });
+		}
 
 		(async () => {
 			const [{ Chart, registerables }] = await Promise.all([
@@ -376,6 +563,14 @@
 			disposed = true;
 			mq.removeEventListener('change', onTheme);
 			obs?.disconnect();
+			if (zoom && canvas) {
+				canvas.removeEventListener('pointerdown', onPointerDown);
+				canvas.removeEventListener('pointermove', onPointerMove);
+				canvas.removeEventListener('pointerup', onPointerUp);
+				canvas.removeEventListener('pointercancel', onPointerUp);
+				canvas.removeEventListener('pointerleave', onPointerUp);
+				canvas.removeEventListener('wheel', onWheel);
+			}
 			if (chart) chart.destroy();
 		};
 	});
@@ -386,6 +581,21 @@
 		const max = yWidthGroup?.max;
 		if (!chart || max == null) return;
 		chart.update('none');
+	});
+
+	// Apply an externally-driven x window (the sibling chart's range, or a restore
+	// after a theme-triggered chart rebuild). Guarded so it doesn't echo back out
+	// through onXRangeChange.
+	$effect(() => {
+		const r = applyXRange;
+		if (!chart || !zoom || r == null) return;
+		const cur = currentWindow();
+		// Already showing this window (e.g. the chart that originated the gesture) —
+		// skip to avoid an echo back through onXRangeChange.
+		if (Math.abs(cur.min - r.min) < 1000 && Math.abs(cur.max - r.max) < 1000) return;
+		applyingXRange = true;
+		setXWindow(r.min, r.max, false);
+		applyingXRange = false;
 	});
 
 	// Drive this chart's cursor from an external hover (e.g. a map pin or a
@@ -411,7 +621,7 @@
 
 <div class="chart-container" style="height: {height}">
 	<div class="chart-canvas-wrap">
-		<canvas bind:this={canvas}></canvas>
+		<canvas bind:this={canvas} class:zoomable={zoom}></canvas>
 	</div>
 	{#if legend.show}
 		<div class="chart-legend">
@@ -462,5 +672,11 @@
 	canvas {
 		max-width: 100%;
 		height: 100% !important;
+	}
+	/* Let our own pointer handlers own every touch gesture (drag = pan,
+	   two-finger = pinch). Without this the browser scrolls / page-zooms and
+	   cancels the pointer stream mid-gesture. */
+	canvas.zoomable {
+		touch-action: none;
 	}
 </style>

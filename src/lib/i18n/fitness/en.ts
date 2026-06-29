@@ -594,5 +594,8 @@ export const en = {
 	coach_cue_get_in_frame: "Get your whole body in frame",
 	coach_cue_back_round_squat: "Chest up — keep your back flat",
 	coach_cue_back_round_hinge: "Flatten your back — stop rounding",
-	coach_cue_get_in_position: "Get into position"
+	coach_cue_get_in_position: "Get into position",
+	body_trends_title: "Body trends",
+	body_trends_hint: "Scroll or pinch to zoom · drag to pan",
+	reset_zoom: "Reset zoom"
 } as const satisfies Record<keyof typeof de, string>;

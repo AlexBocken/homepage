@@ -40,24 +40,35 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	// Lifetime totals: tonnage lifted + cardio km + kcal estimate
 	// Use stored kcalEstimate when available; fall back to on-the-fly for legacy sessions
-	const DISPLAY_LIMIT = 30;
-	const SMA_LOOKBACK = 6; // w - 1 where w = 7 max
+	// Dashboard weight/body-fat charts show the last DISPLAY_DAYS; we also pull
+	// WARMUP_DAYS of earlier history (not displayed) so the time-decayed trend is
+	// already warmed up at the start of the shown window. The full-history view
+	// lives at /fitness/stats/body.
+	const DISPLAY_DAYS = 14;
+	const WARMUP_DAYS = 28;
+	const displayCutoff = new Date();
+	displayCutoff.setDate(displayCutoff.getDate() - DISPLAY_DAYS);
+	const fetchCutoff = new Date();
+	fetchCutoff.setDate(fetchCutoff.getDate() - (DISPLAY_DAYS + WARMUP_DAYS));
 	const [allSessions, weightMeasurements, bfMeasurements] = await Promise.all([
 		WorkoutSession.find(
 			{ createdBy: user.nickname },
 			{ 'exercises.exerciseId': 1, 'exercises.sets': 1, 'exercises.totalDistance': 1, kcalEstimate: 1 }
 		).lean(),
 		BodyMeasurement.find(
-			{ createdBy: user.nickname, weight: { $ne: null } },
+			{ createdBy: user.nickname, weight: { $ne: null }, date: { $gte: fetchCutoff } },
 			{ date: 1, weight: 1, _id: 0 }
-		).sort({ date: -1 }).limit(DISPLAY_LIMIT + SMA_LOOKBACK).lean(),
+		).sort({ date: 1 }).lean(),
 		BodyMeasurement.find(
-			{ createdBy: user.nickname, bodyFatPercent: { $ne: null } },
+			{ createdBy: user.nickname, bodyFatPercent: { $ne: null }, date: { $gte: fetchCutoff } },
 			{ date: 1, bodyFatPercent: 1, _id: 0 }
-		).sort({ date: -1 }).limit(DISPLAY_LIMIT + SMA_LOOKBACK).lean()
+		).sort({ date: 1 }).lean()
 	]);
-	weightMeasurements.reverse(); // back to chronological order
-	bfMeasurements.reverse();
+	// Index of the first measurement inside the displayed window (rest is warmup).
+	const firstShown = (list: Array<{ date: Date }>) => {
+		const i = list.findIndex((m) => new Date(m.date) >= displayCutoff);
+		return i === -1 ? list.length : i;
+	};
 
 	let totalTonnage = 0;
 	let totalCardioKm = 0;
@@ -143,8 +154,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		upper: totalKcal + combinedMargin,
 	};
 
-	// Split into lookback-only (not displayed) and display portions
-	const displayStart = Math.max(0, weightMeasurements.length - DISPLAY_LIMIT);
+	// Split into warmup-only (not displayed) and display portions by date.
+	const displayStart = firstShown(weightMeasurements);
 
 	// Build chart-ready workouts-per-week with filled gaps
 	const weekMap = new Map<string, number>();
@@ -215,7 +226,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	if (bfMeasurements.length > 0) {
 		const allBf: number[] = bfMeasurements.map((m) => m.bodyFatPercent!);
-		const displayStartBf = Math.max(0, allBf.length - DISPLAY_LIMIT);
+		const displayStartBf = firstShown(bfMeasurements);
 		const baseline = allBf[displayStartBf];
 		bfChart.baseline = Math.round(baseline * 100) / 100;
 
