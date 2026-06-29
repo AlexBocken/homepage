@@ -121,16 +121,24 @@ export async function addRunToGrid(userId: string, sessionId: string, session: S
     }
   }));
   await SegmentGridCell.bulkWrite(ops, { ordered: false });
-  // Refresh denormalized counts for the touched cells.
-  await SegmentGridCell.updateMany({ userId, cellKey: { $in: [...cells.keys()] } }, [
-    { $set: { count: { $size: '$runIds' } } }
-  ]);
+  // Refresh denormalized counts for the touched cells. Array update = aggregation
+  // pipeline; Mongoose 9 requires `updatePipeline` to accept it.
+  await SegmentGridCell.updateMany(
+    { userId, cellKey: { $in: [...cells.keys()] } },
+    [{ $set: { count: { $size: '$runIds' } } }],
+    { updatePipeline: true }
+  );
 }
 
 /** Remove a run from the user's grid (on delete, or before re-adding on snap). */
 export async function removeRunFromGrid(userId: string, sessionId: string): Promise<void> {
   await SegmentGridCell.updateMany({ userId, runIds: sessionId }, { $pull: { runIds: sessionId } });
-  await SegmentGridCell.updateMany({ userId }, [{ $set: { count: { $size: '$runIds' } } }]);
+  // Array update = aggregation pipeline; Mongoose 9 requires `updatePipeline`.
+  await SegmentGridCell.updateMany(
+    { userId },
+    [{ $set: { count: { $size: '$runIds' } } }],
+    { updatePipeline: true }
+  );
   await SegmentGridCell.deleteMany({ userId, count: { $lte: 0 } });
 }
 
