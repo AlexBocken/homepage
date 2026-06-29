@@ -20,8 +20,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!source || !sourceId || !name) {
 		return json({ error: 'source, sourceId, and name are required' }, { status: 400 });
 	}
-	if (source !== 'bls' && source !== 'usda' && source !== 'recipe') {
-		return json({ error: 'source must be "bls", "usda", or "recipe"' }, { status: 400 });
+	if (!['bls', 'usda', 'off', 'recipe', 'custom'].includes(source)) {
+		return json({ error: 'source must be "bls", "usda", "off", "recipe", or "custom"' }, { status: 400 });
 	}
 
 	await dbConnect();
