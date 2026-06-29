@@ -203,31 +203,55 @@ export const GET: RequestHandler = async ({ locals }) => {
 		adherencePercent = Math.round(withinRange / totalDays * 100);
 	}
 
-	// Macro targets from goal — protein gets priority, remaining kcal split
-	// between fat and carbs proportionally to the stored fat:carb ratio.
+	// Macro targets — averaged the same way as the actual split, and over the same
+	// logged days. The per-day target moves: protein grams scale with that day's
+	// trend weight, and the calorie allowance grows by that day's workout kcal
+	// (the extra flows into fat/carb, matching the daily nutrition page). So we
+	// sum the underlying daily target *calories* per macro and only THEN take the
+	// percentage split — never average the daily percentages. Protein gets
+	// priority; the remaining kcal split by the stored fat:carb ratio.
 	let macroTargets: { protein: number | null; fat: number | null; carbs: number | null } = {
 		protein: null, fat: null, carbs: null
 	};
-	if (goal && dailyCalorieGoal) {
-		let proteinGrams: number | null = null;
-		if (goal.proteinTarget) {
-			proteinGrams = goal.proteinTarget;
-			if (goal.proteinMode === 'per_kg' && trendWeight) {
-				proteinGrams = goal.proteinTarget * trendWeight;
+	if (goal && dailyCalorieGoal && recent7.length > 0) {
+		const fatRatio = goal.fatPercent ?? 0;
+		const carbRatio = goal.carbPercent ?? 0;
+		const ratioSum = fatRatio + carbRatio;
+
+		/** Per-day target protein grams (per-kg mode uses that day's trend weight). */
+		const proteinGramsForDate = (dateStr: string): number | null => {
+			if (!goal.proteinTarget) return null;
+			if (goal.proteinMode === 'per_kg') {
+				const w = getTrendWeightForDate(dateStr) ?? trendWeight;
+				return w ? goal.proteinTarget * w : null;
 			}
+			return goal.proteinTarget; // fixed grams/day
+		};
+
+		// Accumulate each logged day's target calories per macro. Protein calories
+		// come from its weight-based grams; the rest of that day's allowance
+		// (base goal + workout kcal) splits into fat/carb by the fat:carb ratio.
+		let sumProteinCal = 0, sumFatCal = 0, sumCarbCal = 0, days = 0;
+		for (const d of recent7) {
+			const pGrams = proteinGramsForDate(d.date);
+			if (pGrams == null) continue;
+			const calorieGoal = dailyCalorieGoal + (workoutKcalByDate.get(d.date) ?? 0);
+			const remainingCal = Math.max(0, calorieGoal - pGrams * 4);
+			sumProteinCal += pGrams * 4;
+			sumFatCal += ratioSum > 0 ? remainingCal * fatRatio / ratioSum : 0;
+			sumCarbCal += ratioSum > 0 ? remainingCal * carbRatio / ratioSum : 0;
+			days++;
 		}
-		if (proteinGrams != null) {
-			const proteinPct = Math.min(Math.round((proteinGrams * 4) / dailyCalorieGoal * 100), 100);
-			macroTargets.protein = proteinPct;
-			const remainingPct = 100 - proteinPct;
-			const fatRatio = goal.fatPercent ?? 0;
-			const carbRatio = goal.carbPercent ?? 0;
-			const ratioSum = fatRatio + carbRatio;
-			if (ratioSum > 0) {
-				macroTargets.fat = Math.round(remainingPct * fatRatio / ratioSum);
-				macroTargets.carbs = remainingPct - macroTargets.fat;
+
+		if (days > 0) {
+			const total = sumProteinCal + sumFatCal + sumCarbCal;
+			if (total > 0) {
+				macroTargets.protein = Math.min(Math.round(sumProteinCal / total * 100), 100);
+				macroTargets.fat = Math.round(sumFatCal / total * 100);
+				macroTargets.carbs = 100 - macroTargets.protein - macroTargets.fat;
 			}
 		} else {
+			// No usable protein target → fall back to the static fat/carb split.
 			if (goal.fatPercent != null) macroTargets.fat = goal.fatPercent;
 			if (goal.carbPercent != null) macroTargets.carbs = goal.carbPercent;
 		}
