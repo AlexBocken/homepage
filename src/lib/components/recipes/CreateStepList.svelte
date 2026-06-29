@@ -15,8 +15,12 @@ import "$lib/css/action_button.css"
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import { confirm } from '$lib/js/confirmDialog.svelte'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
+import { ListDnd } from '$lib/components/recipes/list_dnd.svelte'
 
 let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() } = $props<{ lang?: 'de' | 'en', instructions: any, add_info: any }>();
+
+// Drag-and-drop: move steps between lists, reorder lists.
+const dnd = new ListDnd('steps', () => instructions, (v: any) => { instructions = v });
 
 const BAKING_MODES: Record<string, string[]> = {
 	de: ['Ober-/Unterhitze', 'Umluft', 'Grill', 'Dampf'],
@@ -75,6 +79,8 @@ const t: Record<string, Record<string, string>> = {
 		removeReferenceAria: 'Referenz entfernen',
 		moveListUpAria: 'Liste nach oben verschieben',
 		moveListDownAria: 'Liste nach unten verschieben',
+		dragListAria: 'Liste ziehen zum Verschieben',
+		dragRowHint: 'Ziehen zum Verschieben',
 		notSet: 'Nicht gesetzt',
 		duration: 'Dauer',
 		temperature: 'Temperatur',
@@ -115,6 +121,8 @@ const t: Record<string, Record<string, string>> = {
 		removeReferenceAria: 'Remove reference',
 		moveListUpAria: 'Move list up',
 		moveListDownAria: 'Move list down',
+		dragListAria: 'Drag list to move',
+		dragRowHint: 'Drag to move',
 		notSet: 'Not set',
 		duration: 'Duration',
 		temperature: 'Temperature',
@@ -396,56 +404,11 @@ export function add_placeholder(){
 	}
 }
 
-export function update_list_position(list_index: number, direction: number){
-	if(direction == 1){
-		if(list_index == 0){
-			return
-		}
-		instructions.splice(list_index - 1, 0, instructions.splice(list_index, 1)[0])
-	}
-	else if(direction == -1){
-		if(list_index == instructions.length - 1){
-			return
-		}
-		instructions.splice(list_index + 1, 0, instructions.splice(list_index, 1)[0])
-	}
-	instructions = instructions //tells svelte to update dom
-}
-export function update_step_position(list_index: number, step_index: number, direction: number){
-	if(direction == 1){
-		if(step_index == 0){
-			return
-		}
-		instructions[list_index].steps.splice(step_index - 1, 0, instructions[list_index].steps.splice(step_index, 1)[0])
-	}
-	else if(direction == -1){
-		if(step_index == instructions[list_index].steps.length - 1){
-			return
-		}
-		instructions[list_index].steps.splice(step_index + 1, 0, instructions[list_index].steps.splice(step_index, 1)[0])
-	}
-	instructions = instructions //tells svelte to update dom
-}
 </script>
 
 <style>
 .move_buttons_container{
 	display: inline-flex;
-	flex-direction: column;
-}
-.move_buttons_container button{
-	background-color: transparent;
-	border: none;
-	padding: 0;
-	margin: 0;
-	transition: var(--transition-normal);
-}
-.move_buttons_container button:hover{
-	scale: 1.4;
-}
-.step_move_buttons{
-	position: absolute;
-	left: -2.5rem;
 	flex-direction: column;
 }
 input::placeholder{
@@ -992,6 +955,62 @@ h3{
 	scale: 1.02 1.02 !important;
 	transform: scale(1.02) !important;
 }
+
+/* Drag-and-drop */
+.drag-handle{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	cursor: grab;
+	padding: 0;
+	line-height: 0;
+	transition: var(--transition-normal);
+}
+.step-drag-handle{
+	position: absolute;
+	left: -1.7rem;
+	top: 0.15em;
+}
+.drag-handle:hover{
+	scale: 1.4;
+}
+.drag-handle:active{
+	cursor: grabbing;
+}
+/* List-title handles sit further left than step handles → indent hierarchy */
+.move_buttons_container .drag-handle{
+	transform: translateX(-1.7rem);
+}
+.instructions li{
+	border-radius: var(--radius-sm);
+	transition: opacity 0.12s, box-shadow 0.12s;
+}
+.dnd-dragging{
+	opacity: 0.4;
+}
+.dnd-insert-before{
+	box-shadow: inset 0 3px 0 0 var(--color-primary);
+}
+.dnd-insert-after{
+	box-shadow: inset 0 -3px 0 0 var(--color-primary);
+}
+.instructions ol.dnd-active{
+	min-height: 2.5em;
+	outline: 1px dashed var(--color-border);
+	outline-offset: 4px;
+	border-radius: var(--radius-md);
+}
+.instructions ol.dnd-section-over{
+	outline: 2px dashed var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.dnd-header-before{
+	box-shadow: inset 0 4px 0 0 var(--color-primary);
+}
+.dnd-header-after{
+	box-shadow: inset 0 -4px 0 0 var(--color-primary);
+}
 </style>
 
 <div class=instructions>
@@ -1103,15 +1122,30 @@ h3{
 {#each instructions as list, list_index}
 	{#if list.type === 'reference'}
 		<!-- Reference item display -->
-		<div class="reference-container">
+		<div
+			class="reference-container"
+			data-dnd-list
+			role="group"
+			class:dnd-dragging={dnd.isListDragSource(list_index)}
+			class:dnd-header-before={dnd.draggingList && dnd.overHeader === list_index && dnd.headerPos === 'before'}
+			class:dnd-header-after={dnd.draggingList && dnd.overHeader === list_index && dnd.headerPos === 'after'}
+			ondragover={(e) => dnd.headerDragOver(e, list_index)}
+			ondragleave={(e) => dnd.headerDragLeave(e, list_index)}
+			ondrop={(e) => dnd.headerDrop(e, list_index)}
+		>
 			<div class="reference-header">
 				<div class="move_buttons_container">
-					<button type="button" onclick={() => update_list_position(list_index, 1)} aria-label={t[lang].moveReferenceUpAria}>
-						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-					</button>
-					<button type="button" onclick={() => update_list_position(list_index, -1)} aria-label={t[lang].moveReferenceDownAria}>
-						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-					</button>
+					<span
+						class="drag-handle"
+						draggable="true"
+						role="button"
+						tabindex="-1"
+						aria-label={t[lang].dragListAria}
+						ondragstart={(e) => dnd.listDragStart(e, list_index)}
+						ondragend={() => dnd.dragEnd()}
+					>
+						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path fill="none" d="M0 0h24v24H0z"/><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+					</span>
 				</div>
 				<div class="reference-badge">
 					📋 {t[lang].baseRecipe}: {list.name || t[lang].unnamed}
@@ -1202,14 +1236,27 @@ h3{
 		</div>
 	{:else}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<h3>
+		<h3
+			data-dnd-list
+			class:dnd-dragging={dnd.isListDragSource(list_index)}
+			class:dnd-header-before={dnd.draggingList && dnd.overHeader === list_index && dnd.headerPos === 'before'}
+			class:dnd-header-after={dnd.draggingList && dnd.overHeader === list_index && dnd.headerPos === 'after'}
+			ondragover={(e) => dnd.headerDragOver(e, list_index)}
+			ondragleave={(e) => dnd.headerDragLeave(e, list_index)}
+			ondrop={(e) => dnd.headerDrop(e, list_index)}
+		>
 		<div class=move_buttons_container>
-			<button type="button" onclick="{() => update_list_position(list_index, 1)}" aria-label={t[lang].moveListUpAria}>
-							<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-					</button>
-			<button type="button" onclick="{() => update_list_position(list_index, -1)}" aria-label={t[lang].moveListDownAria}>
-							<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-			</button>
+			<span
+				class="drag-handle"
+				draggable="true"
+				role="button"
+				tabindex="-1"
+				aria-label={t[lang].dragListAria}
+				ondragstart={(e) => dnd.listDragStart(e, list_index)}
+				ondragend={() => dnd.dragEnd()}
+			>
+				<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path fill="none" d="M0 0h24v24H0z"/><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+			</span>
 		</div>
 		<button type="button" onclick={() => show_modal_edit_subheading_step(list_index)} class="subheading-button">
 		{#if list.name}
@@ -1224,18 +1271,35 @@ h3{
 					<Cross fill=var(--nord1)></Cross>
 		</button>
 	</h3>
-	<ol>
+	<ol
+		class:dnd-active={dnd.draggingItem}
+		class:dnd-section-over={dnd.draggingItem && dnd.overList === list_index && dnd.overRow === -1}
+		ondragover={(e) => dnd.sectionDragOver(e, list_index)}
+		ondragleave={(e) => dnd.sectionDragLeave(e, list_index)}
+		ondrop={(e) => dnd.itemDrop(e)}
+	>
 	{#each list.steps as step, step_index}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<li>
-			<div class="move_buttons_container step_move_buttons">
-				<button type="button" onclick="{() => update_step_position(list_index, step_index, 1)}" aria-label={t[lang].moveUpAria}>
-		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-		                </button>
-				<button type="button" onclick="{() => update_step_position(list_index, step_index, -1)}" aria-label={t[lang].moveDownAria}>
-		                        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-				</button>
-			</div>
+		<li
+			data-dnd-item
+			class:dnd-dragging={dnd.isItemDragSource(list_index, step_index)}
+			class:dnd-insert-before={dnd.draggingItem && dnd.overList === list_index && dnd.overRow === step_index && dnd.overPos === 'before'}
+			class:dnd-insert-after={dnd.draggingItem && dnd.overList === list_index && dnd.overRow === step_index && dnd.overPos === 'after'}
+			ondragover={(e) => dnd.itemDragOverRow(e, list_index, step_index)}
+			ondrop={(e) => dnd.itemDrop(e)}
+		>
+			<span
+				class="drag-handle step-drag-handle"
+				draggable="true"
+				role="button"
+				tabindex="-1"
+				aria-label={t[lang].dragRowHint}
+				title={t[lang].dragRowHint}
+				ondragstart={(e) => dnd.itemDragStart(e, list_index, step_index)}
+				ondragend={() => dnd.dragEnd()}
+			>
+				<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path fill="none" d="M0 0h24v24H0z"/><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+			</span>
 			<div>
 				<button type="button" onclick={() => show_modal_edit_step(list_index, step_index)} class="step-button">
 					{@html step}

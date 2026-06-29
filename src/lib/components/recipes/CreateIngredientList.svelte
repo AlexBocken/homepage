@@ -12,6 +12,7 @@ import { confirm } from '$lib/js/confirmDialog.svelte'
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import { portions } from '$lib/js/portions_store.js'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
+import { ListDnd } from '$lib/components/recipes/list_dnd.svelte'
 import { untrack } from 'svelte'
 
 let {
@@ -47,6 +48,9 @@ export function set_portions(){
 	portionsProp = portions_local
 }
 
+// Drag-and-drop: move ingredients between lists, reorder lists.
+const dnd = new ListDnd('list', () => ingredients, (v: any) => { ingredients = v });
+
 // Translation strings
 const t: Record<string, Record<string, string>> = {
 	de: {
@@ -74,7 +78,9 @@ const t: Record<string, Record<string, string>> = {
 		moveDownAria: 'Nach unten verschieben',
 		moveReferenceUpAria: 'Referenz nach oben verschieben',
 		moveReferenceDownAria: 'Referenz nach unten verschieben',
-		removeReferenceAria: 'Referenz entfernen'
+		removeReferenceAria: 'Referenz entfernen',
+		dragListAria: 'Liste ziehen zum Verschieben',
+		dragRowHint: 'Ziehen zum Verschieben'
 	},
 	en: {
 		portions: 'Portions:',
@@ -101,7 +107,9 @@ const t: Record<string, Record<string, string>> = {
 		moveDownAria: 'Move down',
 		moveReferenceUpAria: 'Move reference up',
 		moveReferenceDownAria: 'Move reference down',
-		removeReferenceAria: 'Remove reference'
+		removeReferenceAria: 'Remove reference',
+		dragListAria: 'Drag list to move',
+		dragRowHint: 'Drag to move'
 	}
 };
 
@@ -370,36 +378,6 @@ export function edit_ingredient_and_close_modal(){
 		setTimeout(() => modal_el.close(), 0);
 	}
 }
-export function update_list_position(list_index: number, direction: number){
-	if(direction == 1){
-		if(list_index == 0){
-			return
-		}
-		ingredients.splice(list_index - 1, 0, ingredients.splice(list_index, 1)[0])
-	}
-	else if(direction == -1){
-		if(list_index == ingredients.length - 1){
-			return
-		}
-		ingredients.splice(list_index + 1, 0, ingredients.splice(list_index, 1)[0])
-	}
-	ingredients = ingredients //tells svelte to update dom
-}
-export function update_ingredient_position(list_index: number, ingredient_index: number, direction: number){
-	if(direction == 1){
-		if(ingredient_index == 0){
-			return
-		}
-		ingredients[list_index].list.splice(ingredient_index - 1, 0, ingredients[list_index].list.splice(ingredient_index, 1)[0])
-	}
-	else if(direction == -1){
-		if(ingredient_index == ingredients[list_index].list.length - 1){
-			return
-		}
-		ingredients[list_index].list.splice(ingredient_index + 1, 0, ingredients[list_index].list.splice(ingredient_index, 1)[0])
-	}
-	ingredients = ingredients //tells svelte to update dom
-}
 
 </script>
 
@@ -585,16 +563,6 @@ dialog h2{
 	display: flex;
 	flex-direction: column;
 }
-.move_buttons_container button{
-	background-color: transparent;
-	border: none;
-	padding: 0;
-	margin: 0;
-	transition: var(--transition-normal);
-}
-.move_buttons_container button:hover{
-	scale: 1.4;
-}
 h3{
 	width: fit-content;
 	display: flex;
@@ -758,6 +726,64 @@ h3{
 	scale: 1.02 1.02 !important;
 	transform: scale(1.02) !important;
 }
+
+/* Drag-and-drop */
+.ingredient_row{
+	display: grid;
+	grid-column: 1 / -1;
+	grid-template-columns: subgrid;
+	align-items: center;
+	cursor: grab;
+	border-radius: var(--radius-sm);
+	transition: opacity 0.12s, box-shadow 0.12s;
+}
+.ingredient_row:active{
+	cursor: grabbing;
+}
+.drag-handle{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: grab;
+	padding: 0;
+	line-height: 0;
+	transition: var(--transition-normal);
+}
+.drag-handle:hover{
+	scale: 1.4;
+}
+.drag-handle:active{
+	cursor: grabbing;
+}
+/* List-title handles sit further left than item handles → indent hierarchy */
+.move_buttons_container .drag-handle{
+	transform: translateX(-1.7rem);
+}
+.dnd-dragging{
+	opacity: 0.4;
+}
+.dnd-insert-before{
+	box-shadow: inset 0 3px 0 0 var(--color-primary);
+}
+.dnd-insert-after{
+	box-shadow: inset 0 -3px 0 0 var(--color-primary);
+}
+.ingredients_grid.dnd-active{
+	min-height: 2.5em;
+	outline: 1px dashed var(--color-border);
+	outline-offset: 4px;
+	border-radius: var(--radius-md);
+}
+.ingredients_grid.dnd-section-over{
+	outline: 2px dashed var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.dnd-header-before{
+	box-shadow: inset 0 4px 0 0 var(--color-primary);
+}
+.dnd-header-after{
+	box-shadow: inset 0 -4px 0 0 var(--color-primary);
+}
 </style>
 
 <div class=list_wrapper >
@@ -768,15 +794,30 @@ h3{
 {#each ingredients as list, list_index}
 	{#if list.type === 'reference'}
 		<!-- Reference item display -->
-		<div class="reference-container">
+		<div
+			class="reference-container"
+			data-dnd-list
+			role="group"
+			class:dnd-dragging={dnd.isListDragSource(list_index)}
+			class:dnd-header-before={dnd.draggingList && dnd.overHeader === list_index && dnd.headerPos === 'before'}
+			class:dnd-header-after={dnd.draggingList && dnd.overHeader === list_index && dnd.headerPos === 'after'}
+			ondragover={(e) => dnd.headerDragOver(e, list_index)}
+			ondragleave={(e) => dnd.headerDragLeave(e, list_index)}
+			ondrop={(e) => dnd.headerDrop(e, list_index)}
+		>
 			<div class="reference-header">
 				<div class="move_buttons_container">
-					<button type="button" onclick={() => update_list_position(list_index, 1)} aria-label={t[lang].moveReferenceUpAria}>
-						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-					</button>
-					<button type="button" onclick={() => update_list_position(list_index, -1)} aria-label={t[lang].moveReferenceDownAria}>
-						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-					</button>
+					<span
+						class="drag-handle"
+						draggable="true"
+						role="button"
+						tabindex="-1"
+						aria-label={t[lang].dragListAria}
+						ondragstart={(e) => dnd.listDragStart(e, list_index)}
+						ondragend={() => dnd.dragEnd()}
+					>
+						<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path fill="none" d="M0 0h24v24H0z"/><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+					</span>
 				</div>
 				<div class="reference-badge">
 					📋 {t[lang].baseRecipe}: {list.name || t[lang].unnamed}
@@ -865,14 +906,27 @@ h3{
 		</div>
 	{:else}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<h3>
+		<h3
+			data-dnd-list
+			class:dnd-dragging={dnd.isListDragSource(list_index)}
+			class:dnd-header-before={dnd.draggingList && dnd.overHeader === list_index && dnd.headerPos === 'before'}
+			class:dnd-header-after={dnd.draggingList && dnd.overHeader === list_index && dnd.headerPos === 'after'}
+			ondragover={(e) => dnd.headerDragOver(e, list_index)}
+			ondragleave={(e) => dnd.headerDragLeave(e, list_index)}
+			ondrop={(e) => dnd.headerDrop(e, list_index)}
+		>
 		<div class=move_buttons_container>
-			<button type="button" onclick="{() => update_list_position(list_index, 1)}" aria-label="Liste nach oben verschieben">
-							<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-					</button>
-			<button type="button" onclick="{() => update_list_position(list_index, -1)}" aria-label="Liste nach unten verschieben">
-							<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-			</button>
+			<span
+				class="drag-handle"
+				draggable="true"
+				role="button"
+				tabindex="-1"
+				aria-label={t[lang].dragListAria}
+				ondragstart={(e) => dnd.listDragStart(e, list_index)}
+				ondragend={() => dnd.dragEnd()}
+			>
+				<svg class="button_arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path fill="none" d="M0 0h24v24H0z"/><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+			</span>
 		</div>
 
 		<button type="button" onclick="{() => show_modal_edit_subheading_ingredient(list_index)}" class="subheading-button">
@@ -889,16 +943,38 @@ h3{
 				<Cross fill=var(--nord1)></Cross></button>
 		</div>
 		</h3>
-		<div class=ingredients_grid>
+		<div
+			class=ingredients_grid
+			role="list"
+			class:dnd-active={dnd.draggingItem}
+			class:dnd-section-over={dnd.draggingItem && dnd.overList === list_index && dnd.overRow === -1}
+			ondragover={(e) => dnd.sectionDragOver(e, list_index)}
+			ondragleave={(e) => dnd.sectionDragLeave(e, list_index)}
+			ondrop={(e) => dnd.itemDrop(e)}
+		>
 		{#each list.list as ingredient, ingredient_index (ingredient_index)}
-		<div class=move_buttons_container>
-			<button type="button" onclick="{() => update_ingredient_position(list_index, ingredient_index, 1)}" aria-label={t[lang].moveUpAria}>
-                	        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
-                	</button>
-			<button type="button" onclick="{() => update_ingredient_position(list_index, ingredient_index, -1)}" aria-label={t[lang].moveDownAria}>
-                	        <svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-			</button>
-		</div>
+		<div
+			class="ingredient_row"
+			data-dnd-item
+			class:dnd-dragging={dnd.isItemDragSource(list_index, ingredient_index)}
+			class:dnd-insert-before={dnd.draggingItem && dnd.overList === list_index && dnd.overRow === ingredient_index && dnd.overPos === 'before'}
+			class:dnd-insert-after={dnd.draggingItem && dnd.overList === list_index && dnd.overRow === ingredient_index && dnd.overPos === 'after'}
+			role="listitem"
+			ondragover={(e) => dnd.itemDragOverRow(e, list_index, ingredient_index)}
+			ondrop={(e) => dnd.itemDrop(e)}
+		>
+		<span
+			class="drag-handle"
+			draggable="true"
+			role="button"
+			tabindex="-1"
+			aria-label={t[lang].dragRowHint}
+			title={t[lang].dragRowHint}
+			ondragstart={(e) => dnd.itemDragStart(e, list_index, ingredient_index)}
+			ondragend={() => dnd.dragEnd()}
+		>
+			<svg class=button_arrow xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px"><path fill="none" d="M0 0h24v24H0z"/><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+		</span>
 		<button type="button" onclick={() => show_modal_edit_ingredient(list_index, ingredient_index)} class="ingredient-amount-button">
 			{ingredient.amount} {ingredient.unit}
 		</button>
@@ -908,6 +984,7 @@ h3{
 		<div class=mod_icons><button type="button" class="action_button button_subtle" onclick={() => show_modal_edit_ingredient(list_index, ingredient_index)} aria-label={t[lang].editIngredientAria}>
 			<Pen fill=var(--nord1) height=1em width=1em></Pen></button>
 			<button type="button" class="action_button button_subtle" onclick="{() => remove_ingredient(list_index, ingredient_index)}" aria-label={t[lang].removeIngredientAria}><Cross fill=var(--nord1) height=1em width=1em></Cross></button></div>
+		</div>
 	{/each}
 		</div>
 	{/if}
