@@ -2,8 +2,8 @@ import type { PageServerLoad } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
-import { WorkoutSchedule } from '$models/WorkoutSchedule';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
+import { getNextScheduledTemplate } from '$lib/server/workoutSchedule';
 import { Recipe } from '$models/Recipe';
 import { RoundOffCache } from '$models/RoundOffCache';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
@@ -22,43 +22,29 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		try {
 			const user = await requireAuth(locals);
 			await dbConnect();
-			const [sessions, schedule] = await Promise.all([
-				WorkoutSession.find({
-					createdBy: user.nickname,
-					startTime: { $gte: dayStart, $lte: dayEnd }
-				}).select('kcalEstimate').lean(),
-				isTodayOrFuture ? WorkoutSchedule.findOne({ userId: user.nickname }).lean() : Promise.resolve(null)
-			]);
+			const sessions = await WorkoutSession.find({
+				createdBy: user.nickname,
+				startTime: { $gte: dayStart, $lte: dayEnd }
+			}).select('kcalEstimate').lean();
 			let kcal = 0;
 			for (const s of sessions) {
 				if (s.kcalEstimate?.kcal) kcal += s.kcalEstimate.kcal;
 			}
 
-			// For today or future days without logged exercise, project kcal from the next scheduled template
+			// For today or future days without logged exercise, project kcal from the next scheduled
+			// template, using the same rotation logic as /fitness/workout.
 			let projected = null;
 			if (kcal === 0 && isTodayOrFuture) {
-				if (schedule?.templateOrder?.length) {
-					const lastScheduled = await WorkoutSession.findOne({
-						createdBy: user.nickname,
-						templateId: { $in: schedule.templateOrder }
-					}).sort({ startTime: -1 }).select('templateId').lean();
-
-					let nextId;
-					if (!lastScheduled?.templateId) {
-						nextId = schedule.templateOrder[0];
-					} else {
-						const idx = schedule.templateOrder.indexOf(lastScheduled.templateId.toString());
-						nextId = schedule.templateOrder[(idx === -1 ? 0 : idx + 1) % schedule.templateOrder.length];
-					}
-
+				const { nextTemplateId } = await getNextScheduledTemplate(user.nickname);
+				if (nextTemplateId) {
 					const prevSession = await WorkoutSession.findOne({
 						createdBy: user.nickname,
-						templateId: nextId,
+						templateId: nextTemplateId,
 						'kcalEstimate.kcal': { $gt: 0 }
 					}).sort({ startTime: -1 }).select('kcalEstimate templateName').lean();
 
 					if (prevSession?.kcalEstimate?.kcal) {
-						const tmpl = await WorkoutTemplate.findById(nextId).select('name').lean();
+						const tmpl = await WorkoutTemplate.findById(nextTemplateId).select('name').lean();
 						projected = {
 							kcal: Math.round(prevSession.kcalEstimate.kcal),
 							templateName: tmpl?.name || prevSession.templateName || '?',

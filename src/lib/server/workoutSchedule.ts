@@ -1,4 +1,52 @@
 import { WorkoutSchedule } from '$models/WorkoutSchedule';
+import { WorkoutTemplate } from '$models/WorkoutTemplate';
+
+export interface NextScheduledTemplate {
+  schedule: { templateOrder: string[] } | null;
+  nextTemplateId: string | null;
+  nextIndex: number | null;
+}
+
+/**
+ * Resolve the next template in a user's workout rotation.
+ *
+ * The stored `position` pointer is the source of truth for where we are in the
+ * rotation; it advances (or re-anchors) as workouts are logged (see
+ * advanceSchedulePointer), so it stays correct even when a template appears
+ * more than once. Slots whose template has since been deleted are skipped (at
+ * most one lap around the rotation).
+ *
+ * Shared by the schedule API (/fitness/workout) and the nutrition projection
+ * (/fitness/nutrition) so both agree on what the next workout is.
+ */
+export async function getNextScheduledTemplate(userId: string): Promise<NextScheduledTemplate> {
+  const schedule = await WorkoutSchedule.findOne({ userId });
+
+  if (!schedule || schedule.templateOrder.length === 0) {
+    return { schedule: null, nextTemplateId: null, nextIndex: null };
+  }
+
+  const order = schedule.templateOrder.map(String);
+  const len = order.length;
+
+  const existingIds = new Set(
+    (await WorkoutTemplate.find({ _id: { $in: order }, createdBy: userId })
+      .select('_id')
+      .lean()).map((t) => String(t._id))
+  );
+
+  let nextIndex = (((schedule.position ?? 0) % len) + len) % len;
+  // Skip past slots whose template has since been deleted (at most one lap).
+  for (let i = 0; i < len && !existingIds.has(order[nextIndex]); i++) {
+    nextIndex = (nextIndex + 1) % len;
+  }
+
+  return {
+    schedule: { templateOrder: order },
+    nextTemplateId: order[nextIndex],
+    nextIndex,
+  };
+}
 
 /**
  * Advance the rotation pointer after a workout using `templateId` was logged.

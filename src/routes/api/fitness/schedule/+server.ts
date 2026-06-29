@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutSchedule } from '$models/WorkoutSchedule';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
+import { getNextScheduledTemplate } from '$lib/server/workoutSchedule';
 import { requireAuth } from '$lib/server/middleware/auth';
 
 // GET /api/fitness/schedule - Get the user's workout schedule and next workout
@@ -12,34 +13,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   try {
     await dbConnect();
 
-    const schedule = await WorkoutSchedule.findOne({ userId: user.nickname });
-
-    if (!schedule || schedule.templateOrder.length === 0) {
-      return json({ schedule: null, nextTemplateId: null, nextIndex: null });
-    }
-
-    const order = schedule.templateOrder;
-    const len = order.length;
-
-    // The stored pointer is the source of truth for where we are in the
-    // rotation; it advances (or re-anchors) as workouts are logged, so it stays
-    // correct when a template appears more than once. See advanceSchedulePointer.
-    const existingIds = new Set(
-      (await WorkoutTemplate.find({ _id: { $in: order }, createdBy: user.nickname })
-        .select('_id')
-        .lean()).map((t) => String(t._id))
-    );
-    let nextIndex = (((schedule.position ?? 0) % len) + len) % len;
-    // Skip past slots whose template has since been deleted (at most one lap).
-    for (let i = 0; i < len && !existingIds.has(String(order[nextIndex])); i++) {
-      nextIndex = (nextIndex + 1) % len;
-    }
-
-    return json({
-      schedule: { templateOrder: order },
-      nextTemplateId: order[nextIndex],
-      nextIndex
-    });
+    return json(await getNextScheduledTemplate(user.nickname));
   } catch (error) {
     console.error('Error fetching workout schedule:', error);
     return json({ error: 'Failed to fetch workout schedule' }, { status: 500 });
