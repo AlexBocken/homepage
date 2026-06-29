@@ -637,3 +637,12 @@ html {
   		scrollbar-color: rgba(255, 255,255,0.3) transparent;
 	}
 }
+
+/* Leaflet renders its internal panes and controls at z-index up to 1000, which
+   otherwise punches through the fixed site header (z-index 100) and modal
+   overlays (e.g. the add-exercise picker on the workout editor). Isolating each
+   map container caps those z-indices inside the map's own stacking context, so
+   the map always sits beneath the app chrome. */
+.leaflet-container {
+	isolation: isolate;
+}

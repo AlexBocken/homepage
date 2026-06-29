@@ -2,19 +2,23 @@
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { onMount } from 'svelte';
 	import Route from '@lucide/svelte/icons/route';
 	import Mountain from '@lucide/svelte/icons/mountain';
 	import Users from '@lucide/svelte/icons/users';
 	import Crown from '@lucide/svelte/icons/crown';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
 	import { attachTrackMap } from '$lib/fitness/gpsTrackHover.svelte';
 	import { formatElapsed, formatPaceKm, formatDelta } from '$lib/fitness/segmentFormat';
+	import { buildTrendChart } from '$lib/fitness/progressChart';
 
 	let { data } = $props();
 
@@ -45,6 +49,46 @@
 	const locale = $derived(lang === 'de' ? 'de-CH' : 'en-GB');
 	function fmtDate(d: string | Date) {
 		return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
+	}
+
+	// Theme-reactive trend colour (charts can't read CSS vars; recolour on toggle).
+	function checkDark() {
+		if (typeof document === 'undefined') return false;
+		const th = document.documentElement.dataset.theme;
+		if (th === 'dark') return true;
+		if (th === 'light') return false;
+		return window.matchMedia('(prefers-color-scheme: dark)').matches;
+	}
+	let dark = $state(checkDark());
+	onMount(() => {
+		const mql = window.matchMedia('(prefers-color-scheme: dark)');
+		const onMql = () => { dark = checkDark(); };
+		mql.addEventListener('change', onMql);
+		const obs = new MutationObserver(() => { dark = checkDark(); });
+		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
+	});
+	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
+
+	// Pace-over-time chart for the viewer's own efforts. Pace per effort is stored
+	// (avgPace); fall back to deriving it from the fixed segment distance. Plotted
+	// with the same EMA trend + ±1σ band as the weight/strength charts.
+	const paceChartData = $derived.by(() => {
+		const efforts = (data.myEfforts ?? []) as Array<{ date: string | Date; avgPace: number | null; elapsedSeconds: number }>;
+		const pts = efforts
+			.map((e) => ({
+				date: e.date,
+				value: e.avgPace ?? (seg.distance > 0 ? e.elapsedSeconds / 60 / seg.distance : NaN)
+			}))
+			.filter((p) => Number.isFinite(p.value));
+		if (pts.length < 2) return null;
+		return buildTrendChart(pts, { label: t.pace, color: primary, locale });
+	});
+	const paceTooltip = (v: number) => formatPaceKm(v);
+
+	// Link to the run an effort was set in, pre-pinning this segment on its map.
+	function effortHref(sessionId: string) {
+		return `${resolve('/fitness/[history=fitnessHistory]/[id]', { history: fitnessSlugs(lang).history, id: sessionId })}?highlight=seg:${seg._id}`;
 	}
 
 	let rescanning = $state(false);
@@ -116,6 +160,14 @@
 		<span class="stat muted">{t.created_by} {seg.createdBy}</span>
 	</div>
 
+	{#if paceChartData}
+		<section class="chart-section">
+			<h2><TrendingUp size={17} /> {t.pace_progress}</h2>
+			<FitnessChart data={paceChartData} height="240px" tooltipFormatter={paceTooltip} />
+			<p class="chart-hint">{t.lower_is_faster}</p>
+		</section>
+	{/if}
+
 	<section class="board">
 		<h2>{t.leaderboard}</h2>
 		{#if data.leaderboard.length === 0}
@@ -159,24 +211,20 @@
 	{#if myEfforts.length > 0}
 		<section class="mine">
 			<h2>{t.effort_history}</h2>
-			<div class="hist" role="table" aria-label={t.effort_history}>
-				<div class="hist-head" role="row">
-					<span role="columnheader">{t.date_col}</span>
-					<span role="columnheader">{t.time_col}</span>
+			<div class="hist">
+				<div class="hist-head">
+					<span>{t.date_col}</span>
+					<span>{t.time_col}</span>
 				</div>
 				{#each myEfforts as e (e._id ?? e.date)}
 					{@const isBest = data.myBest != null && e.elapsedSeconds === data.myBest}
-					<div class="hist-row" class:best={isBest} role="row">
-						<span class="date" role="cell">
-							{#if e.sessionId}
-								<a href={`${resolve('/fitness/[history=fitnessHistory]/[id]', { history: fitnessSlugs(lang).history, id: e.sessionId })}?highlight=seg:${seg._id}`}>{fmtDate(e.date)}</a>
-							{:else}{fmtDate(e.date)}{/if}
-						</span>
-						<span class="time" role="cell" class:delta={!isBest}>
+					<a class="hist-row" class:best={isBest} href={effortHref(e.sessionId)}>
+						<span class="date">{fmtDate(e.date)}</span>
+						<span class="time" class:delta={!isBest}>
 							{#if isBest}{formatElapsed(e.elapsedSeconds)}<span class="pb"> · {t.your_best}</span>
 							{:else}{formatDelta(e.elapsedSeconds - (data.myBest ?? e.elapsedSeconds))}{/if}
 						</span>
-					</div>
+					</a>
 				{/each}
 			</div>
 		</section>
@@ -280,6 +328,17 @@
 		margin: 0 0 0.6rem;
 		font-size: 1.05rem;
 	}
+	.chart-section h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.chart-hint {
+		margin: 0.4rem 0 0;
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		text-align: right;
+	}
 	.empty {
 		color: var(--color-text-secondary);
 		margin: 0;
@@ -382,16 +441,22 @@
 	.hist-row .time {
 		text-align: right;
 	}
+	.hist-row {
+		color: inherit;
+		text-decoration: none;
+		cursor: pointer;
+		transition: background var(--transition-fast, 100ms);
+	}
+	.hist-row:hover {
+		background: var(--color-bg-elevated);
+	}
 	.hist-row.best .time {
 		color: var(--color-primary);
 		font-weight: 700;
 	}
-	.mine .date a {
+	.mine .date {
 		color: var(--color-primary);
-		text-decoration: none;
-	}
-	.mine .date a:hover {
-		text-decoration: underline;
+		font-weight: 600;
 	}
 	.pb {
 		color: var(--color-primary);

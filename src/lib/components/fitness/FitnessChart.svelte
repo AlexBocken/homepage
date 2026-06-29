@@ -65,6 +65,14 @@
 		return rgb ? `${+rgb[1]},${+rgb[2]},${+rgb[3]}` : '';
 	}
 
+	// Strip floating-point drift from an axis tick value so labels read cleanly
+	// (Chart.js can hand back e.g. 4.6000000000000005 for a 0.1 step). Non-numeric
+	// values (category labels) pass through untouched.
+	function cleanTick(/** @type {any} */ v) {
+		const n = Number(v);
+		return Number.isFinite(n) ? +n.toFixed(6) : v;
+	}
+
 	// HTML colour key. A σ-band ("± 1σ") isn't a series of its own — it shades a
 	// line — so instead of a separate swatchless legend entry, its label is folded
 	// onto that line ("Trend ± 1σ"), matched by base colour. Shown only when ≥2
@@ -255,7 +263,7 @@
 							ctx.font = `${size}px Helvetica, Arial, "Noto Sans", sans-serif`;
 							let textW = 0;
 							for (const tk of scale.ticks ?? []) {
-								const label = tk.label ?? (yUnit ? `${scale.getLabelForValue(tk.value)}${yUnit}` : `${scale.getLabelForValue(tk.value)}`);
+								const label = tk.label ?? `${cleanTick(scale.getLabelForValue(tk.value))}${yUnit}`;
 								const w = ctx.measureText(String(label)).width;
 								if (w > textW) textW = w;
 							}
@@ -267,7 +275,7 @@
 							color: textColor,
 							font: { size: 11 },
 							stepSize: type === 'bar' ? 1 : undefined,
-							callback: yUnit ? (/** @type {any} */ v) => `${v}${yUnit}` : undefined
+							callback: (/** @type {any} */ v) => `${cleanTick(v)}${yUnit}`
 						}
 					}
 				},

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { untrack, onMount } from 'svelte';
-	import { invalidateAll, goto } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { formatElapsed, formatEffortRate } from '$lib/fitness/segmentFormat';
 	import { tableDistances, activityKindOf, type ActivityKind } from '$lib/fitness/bestEffortDistances';
@@ -32,7 +32,6 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const me = $derived(page.data.session?.user?.nickname ?? '');
-	const historySlug = $derived(lang === 'en' ? 'history' : 'verlauf');
 
 	let tab = $state<'all' | 'mine'>('all');
 	let activity = $state<ActivityKind>('running');
@@ -73,9 +72,25 @@
 		return rawEfforts.filter((e) => allowed.has(e.km));
 	});
 
+	/** Per-distance progress page for the current activity board. */
+	function bestEffortHref(km: number) {
+		const seg = page.params.segments ?? 'segments';
+		return resolve('/fitness/[segments=fitnessSegments]/[activity=fitnessActivity]/best/[km]', {
+			segments: seg,
+			activity,
+			km: `${km}k`
+		});
+	}
+
 	/** Age of an effort relative to today, localised ("3 days ago"). */
 	function relativeAge(d: string) {
-		const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+		// Calendar-day difference in local time (midnight to midnight), so a run
+		// from yesterday evening reads "yesterday" rather than "today" just because
+		// it's under 24 h ago. Math.round absorbs DST hour shifts.
+		const then = new Date(d);
+		const now = new Date();
+		const midnight = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+		const days = Math.round((midnight(now) - midnight(then)) / 86400000);
 		const rtf = new Intl.RelativeTimeFormat(lang === 'de' ? 'de' : 'en', { numeric: 'auto' });
 		if (days < 1) return rtf.format(0, 'day');
 		if (days < 30) return rtf.format(-days, 'day');
@@ -180,41 +195,31 @@
 	{#if bestEfforts.length > 0}
 		<section class="best-efforts-all">
 			<h2>{tab === 'mine' ? t.best_efforts : `${t.best_efforts} · ${t.all_segments}`}</h2>
-			<table class="be-table">
-				<thead>
-					<tr>
-						<th>{t.distance}</th>
-						<th>TIME</th>
-						<th>{activity === 'cycling' ? t.speed : t.pace}</th>
-						{#if tab === 'all'}<th class="be-athlete-col">{t.athlete}</th>{/if}
-						<th>{t.age}</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each bestEfforts as e (e.km)}
-						<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-						<tr
-							class="be-all-row"
-							class:be-clickable={e.mine}
-							onclick={() => { if (e.mine) goto(`${resolve('/fitness/[history=fitnessHistory]/[id]', { history: historySlug, id: e.sessionId })}?highlight=${e.km}k`); }}
-							title={e.name}
-						>
-							<td class="be-km">{e.km}{t.km_short}</td>
-							<td class="be-time">{formatElapsed(e.seconds)}</td>
-							<td class="be-pace">{formatEffortRate(e.km, e.seconds, activity)}</td>
-							{#if tab === 'all'}
-								<td class="be-athlete">
-									<span class="be-athlete-cell" class:me={e.mine} title={e.createdBy}>
-										<ProfilePicture username={e.createdBy} size={22} />
-										<span class="be-athlete-name">{e.createdBy}</span>
-									</span>
-								</td>
-							{/if}
-							<td class="be-age">{relativeAge(e.date)}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
+			<div class="be-table" class:has-athlete={tab === 'all'}>
+				<div class="be-head">
+					<span>{t.distance}</span>
+					<span>TIME</span>
+					<span>{activity === 'cycling' ? t.speed : t.pace}</span>
+					{#if tab === 'all'}<span class="be-athlete-col">{t.athlete}</span>{/if}
+					<span class="be-age">{t.age}</span>
+				</div>
+				{#each bestEfforts as e (e.km)}
+					<a class="be-row" href={bestEffortHref(e.km)} title={e.name}>
+						<span class="be-km">{e.km}{t.km_short}</span>
+						<span class="be-time">{formatElapsed(e.seconds)}</span>
+						<span class="be-pace">{formatEffortRate(e.km, e.seconds, activity)}</span>
+						{#if tab === 'all'}
+							<span class="be-athlete">
+								<span class="be-athlete-cell" class:me={e.mine} title={e.createdBy}>
+									<ProfilePicture username={e.createdBy} size={22} />
+									<span class="be-athlete-name">{e.createdBy}</span>
+								</span>
+							</span>
+						{/if}
+						<span class="be-age">{relativeAge(e.date)}</span>
+					</a>
+				{/each}
+			</div>
 		</section>
 	{/if}
 </div>
@@ -340,35 +345,47 @@
 		margin: 0 0 0.6rem;
 	}
 	.be-table {
-		width: 100%;
-		border-collapse: collapse;
 		font-size: 0.85rem;
 		background: var(--color-surface);
 		border-radius: var(--radius-md, 0.5rem);
 		overflow: hidden;
 		box-shadow: var(--shadow-sm);
+		display: flex;
+		flex-direction: column;
 	}
-	.be-table th {
-		text-align: left;
+	.be-head,
+	.be-row {
+		display: grid;
+		grid-template-columns: auto auto auto minmax(0, 1fr);
+		align-items: center;
+		gap: 0.8rem;
+		padding: 0.55rem 0.8rem;
+	}
+	.be-table.has-athlete .be-head,
+	.be-table.has-athlete .be-row {
+		grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+	}
+	.be-head {
 		font-size: 0.68rem;
 		letter-spacing: 0.05em;
+		text-transform: uppercase;
 		font-weight: 600;
 		color: var(--color-text-secondary);
-		padding: 0.5rem 0.8rem;
+		padding-bottom: 0.5rem;
 	}
-	.be-table td {
-		padding: 0.55rem 0.8rem;
+	.be-row {
 		border-top: 1px solid var(--color-border);
 		font-variant-numeric: tabular-nums;
-	}
-	.be-all-row {
+		color: inherit;
+		text-decoration: none;
+		cursor: pointer;
 		transition: background var(--transition-fast, 100ms);
 	}
-	.be-all-row.be-clickable {
-		cursor: pointer;
-	}
-	.be-all-row.be-clickable:hover {
+	.be-row:hover {
 		background: var(--color-bg-elevated);
+	}
+	.be-athlete {
+		min-width: 0;
 	}
 	.be-athlete-cell {
 		display: inline-flex;
@@ -402,8 +419,6 @@
 	}
 	.be-age {
 		text-align: right;
-	}
-	.be-table th:last-child {
-		text-align: right;
+		justify-self: end;
 	}
 </style>

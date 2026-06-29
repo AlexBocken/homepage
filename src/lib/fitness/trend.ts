@@ -16,6 +16,10 @@ export const TREND_TAU_DAYS = 14;
 // Strength metrics (1RM / max weight / volume): trained only ~1-2×/week and move
 // slowly, so they want far heavier smoothing — a ~6-week memory.
 export const TREND_TAU_DAYS_STRENGTH = 42;
+// Pace on a segment / best-effort distance: efforts land sparsely (a given route
+// or distance is run maybe weekly) and fitness drifts slowly, so a ~1-month
+// memory rides through day-to-day noise without erasing real progress.
+export const TREND_TAU_DAYS_PACE = 30;
 
 const DAY_MS = 86_400_000;
 // Floor on Δt so multiple same-day readings still nudge the trend instead of
