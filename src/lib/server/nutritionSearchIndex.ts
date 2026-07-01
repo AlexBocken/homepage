@@ -1,0 +1,169 @@
+/**
+ * In-memory search index for the static BLS + USDA food tables.
+ *
+ * Instead of fuzzy-scoring all ~20k entries on every keystroke, we build (once,
+ * lazily) a word→entries inverted index and only score the candidates whose name
+ * has a word starting with each query word. All text is diacritic-folded so the
+ * German (BLS) and English names match accent-insensitively (e.g. "hahnchen"
+ * finds "Hähnchen"). Matching is word-prefix + AND across query words, then
+ * ranked with the shared fuzzyScore.
+ */
+
+import { NUTRITION_DB } from '$lib/data/nutritionDb';
+import { BLS_DB } from '$lib/data/blsDb';
+import { fuzzyScore } from '$lib/js/fuzzy';
+
+/** Per-character penalty applied to a match's score by name length, so shorter
+ *  names rank above longer ones that match equally well. Small enough that it
+ *  only breaks ties, not real match-quality differences. Shared with the recipe
+ *  and OFF ranking in the search endpoint for consistent ordering. */
+export const NAME_LENGTH_PENALTY = 0.1;
+
+/** Lowercase + strip diacritics (ä→a, ö→o, ü→u, é→e, …) + sharp-s→ss. */
+export function foldText(s: string): string {
+	return s
+		.toLowerCase()
+		.normalize('NFKD')
+		.replace(/\p{Diacritic}/gu, '')
+		.replace(/ß/g, 'ss'); // ß-ok (folding eszett to ss is the point)
+}
+
+interface Candidate {
+	source: 'bls' | 'usda';
+	idx: number; // index into BLS_DB / NUTRITION_DB
+	folded: string[]; // folded full field strings to score against (de+en, or name)
+}
+
+let _candidates: Candidate[] | null = null;
+let _sortedWords: string[] | null = null;
+let _wordToCands: Map<string, number[]> | null = null;
+
+function tokenize(folded: string): string[] {
+	return folded.split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+function build(): void {
+	if (_candidates) return;
+
+	const candidates: Candidate[] = [];
+	const wordSets = new Map<string, Set<number>>();
+
+	const addWords = (folded: string, candId: number) => {
+		for (const w of tokenize(folded)) {
+			let set = wordSets.get(w);
+			if (!set) {
+				set = new Set();
+				wordSets.set(w, set);
+			}
+			set.add(candId);
+		}
+	};
+
+	for (let i = 0; i < BLS_DB.length; i++) {
+		const e = BLS_DB[i];
+		const de = foldText(e.nameDe);
+		const en = e.nameEn ? foldText(e.nameEn) : '';
+		const candId = candidates.length;
+		candidates.push({ source: 'bls', idx: i, folded: en ? [de, en] : [de] });
+		addWords(de, candId);
+		if (en) addWords(en, candId);
+	}
+
+	for (let i = 0; i < NUTRITION_DB.length; i++) {
+		const name = foldText(NUTRITION_DB[i].name);
+		const candId = candidates.length;
+		candidates.push({ source: 'usda', idx: i, folded: [name] });
+		addWords(name, candId);
+	}
+
+	const wordToCands = new Map<string, number[]>();
+	for (const [w, set] of wordSets) wordToCands.set(w, [...set]);
+
+	_candidates = candidates;
+	_wordToCands = wordToCands;
+	_sortedWords = [...wordToCands.keys()].sort();
+}
+
+/** Build the index eagerly (called from server startup so the first search is warm). */
+export function warmFoodSearchIndex(): void {
+	build();
+}
+
+/** First index in sorted words whose value is >= target. */
+function lowerBound(arr: string[], target: string): number {
+	let lo = 0;
+	let hi = arr.length;
+	while (lo < hi) {
+		const mid = (lo + hi) >> 1;
+		if (arr[mid] < target) lo = mid + 1;
+		else hi = mid;
+	}
+	return lo;
+}
+
+/** Candidate ids whose (German or English) name has a word starting with `prefix`. */
+function candsForPrefix(prefix: string): Set<number> {
+	const out = new Set<number>();
+	const words = _sortedWords!;
+	const map = _wordToCands!;
+	for (let i = lowerBound(words, prefix); i < words.length && words[i].startsWith(prefix); i++) {
+		for (const c of map.get(words[i])!) out.add(c);
+	}
+	return out;
+}
+
+export interface LocalHit {
+	source: 'bls' | 'usda';
+	idx: number;
+	score: number;
+}
+
+/**
+ * Word-prefix, diacritic-folded search over BLS + USDA. Each query word must be a
+ * prefix of some word in the entry's German or English name (AND across query
+ * words, order-independent); survivors are ranked with fuzzyScore.
+ */
+export function searchBlsUsda(rawQuery: string): LocalHit[] {
+	build();
+
+	const qf = foldText(rawQuery).trim();
+	const qWords = qf.split(/\s+/).filter(Boolean);
+	if (!qWords.length) return [];
+
+	let acc: Set<number> | null = null;
+	for (const qw of qWords) {
+		const ids = candsForPrefix(qw);
+		if (acc === null) {
+			acc = ids;
+		} else {
+			// Intersect (iterate the smaller set for speed).
+			const [small, large] = acc.size <= ids.size ? [acc, ids] : [ids, acc];
+			const next = new Set<number>();
+			for (const id of small) if (large.has(id)) next.add(id);
+			acc = next;
+		}
+		if (acc.size === 0) return [];
+	}
+
+	const hits: LocalHit[] = [];
+	for (const id of acc!) {
+		const cand = _candidates![id];
+		let rawBest = 0;
+		let bestLen = 0;
+		for (const f of cand.folded) {
+			const sc = fuzzyScore(qf, f);
+			if (sc > rawBest) {
+				rawBest = sc;
+				bestLen = f.length;
+			}
+		}
+		// Mild tiebreaker: among equally-good matches prefer the shorter name
+		// (penalise by the matched field's length, so a bilingual BLS entry isn't
+		// punished for carrying both languages). Kept small so real match quality
+		// still dominates. Filter on the raw score so nothing new drops out.
+		if (rawBest > 0) {
+			hits.push({ source: cand.source, idx: cand.idx, score: rawBest - bestLen * NAME_LENGTH_PENALTY });
+		}
+	}
+	return hits;
+}

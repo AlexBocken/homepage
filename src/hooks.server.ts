@@ -152,6 +152,17 @@ export const init: ServerInit = async () => {
   warmLiturgicalCache()
     .then(() => console.log(`✅ Liturgical calendar cache warmed in ${Math.round(performance.now() - t0)}ms`))
     .catch((error) => console.error('⚠️ Liturgical calendar warmup failed:', error));
+
+  // Warm the BLS+USDA food search index in the background. Dynamic import keeps
+  // the ~20 MB nutrition data modules out of the hooks build graph; loaded here
+  // only at runtime. Any search arriving before this finishes just builds lazily.
+  const tIdx = performance.now();
+  import('$lib/server/nutritionSearchIndex')
+    .then((m) => {
+      m.warmFoodSearchIndex();
+      console.log(`✅ Food search index built in ${Math.round(performance.now() - tIdx)}ms`);
+    })
+    .catch((error) => console.error('⚠️ Food search index warmup failed:', error));
 };
 
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {

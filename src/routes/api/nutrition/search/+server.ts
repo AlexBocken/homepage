@@ -8,6 +8,7 @@ import { FavoriteIngredient } from '$models/FavoriteIngredient';
 import { Recipe } from '$models/Recipe';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutritionMatcher';
+import { searchBlsUsda, NAME_LENGTH_PENALTY } from '$lib/server/nutritionSearchIndex';
 
 type SearchResult = {
 	source: 'bls' | 'usda' | 'recipe' | 'off';
@@ -200,10 +201,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			]
 		}).select('name short_name icon images ingredients nutritionMappings portions').limit(10).lean()
 			.catch(() => [] as any[]),
+		// NOTE: no `.sort({ $meta: 'textScore' })`. Sorting by text score forces
+		// Mongo to score every matching doc before limiting — 100ms–1s+ for common
+		// words over the 1M-doc OFF collection. We instead fetch a larger unsorted
+		// candidate pool (the `limit` short-circuits the index scan, ~1–5ms) and
+		// re-rank with fuzzyScore below, which already overrode textScore anyway.
 		OpenFoodFact.find(
 			{ $text: { $search: q } },
-			{ ...(full ? {} : { name: 1, nameDe: 1, brands: 1, category: 1, 'per100g.calories': 1, serving: 1 }), score: { $meta: 'textScore' } }
-		).sort({ score: { $meta: 'textScore' } }).limit(15).lean()
+			full ? {} : { name: 1, nameDe: 1, brands: 1, category: 1, 'per100g.calories': 1, serving: 1 }
+		).limit(200).lean()
 			.catch(() => [] as any[]),
 	]);
 
@@ -213,6 +219,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		const scoreShort = fuzzyScore(q, (r.short_name || '').replace(/_/g, ' ').toLowerCase());
 		const best = Math.max(scoreName, scoreShort);
 		if (best <= 0) continue;
+		const lenPenalty = (r.name || '').length * NAME_LENGTH_PENALTY;
 
 		const nutrition = computeRecipePer100g(r);
 		const image = r.images?.[0]?.mediapath;
@@ -231,7 +238,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			name: r.name.replace(/&shy;|­/g, ''),
 			category: r.icon || '🍽️',
 			calories: Math.round(nutrition?.per100g.calories ?? 0),
-			score: best + 100, // Boost recipes above BLS/USDA/OFF
+			score: best + 100 - lenPenalty, // Boost recipes above BLS/USDA/OFF; shorter names first
 			...(full && nutrition && { per100g: nutrition.per100g }),
 			...(portions.length > 0 && { portions }),
 			...(image && { image }),
@@ -239,36 +246,30 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		});
 	}
 
-	// Search BLS (in-memory, primary)
-	for (const entry of BLS_DB) {
-		const scoreDe = fuzzyScore(q, entry.nameDe.toLowerCase());
-		const scoreEn = entry.nameEn ? fuzzyScore(q, entry.nameEn.toLowerCase()) : 0;
-		const best = Math.max(scoreDe, scoreEn);
-		if (best > 0) {
+	// Search BLS + USDA via the diacritic-folded inverted prefix index (only the
+	// candidate entries get fuzzy-scored, instead of a linear scan of all ~20k).
+	for (const hit of searchBlsUsda(q)) {
+		if (hit.source === 'bls') {
+			const entry = BLS_DB[hit.idx];
 			scored.push({
 				source: 'bls',
 				id: entry.blsCode,
 				name: `${entry.nameDe}${entry.nameEn ? ` (${entry.nameEn})` : ''}`,
 				category: entry.category,
 				calories: entry.per100g.calories,
-				score: best,
+				score: hit.score,
 				...(full && { per100g: entry.per100g }),
 				...(favKeys.has(`bls:${entry.blsCode}`) && { favorited: true }),
 			});
-		}
-	}
-
-	// Search USDA
-	for (const entry of NUTRITION_DB) {
-		const s = fuzzyScore(q, entry.name.toLowerCase());
-		if (s > 0) {
+		} else {
+			const entry = NUTRITION_DB[hit.idx];
 			scored.push({
 				source: 'usda',
 				id: String(entry.fdcId),
 				name: entry.name,
 				category: entry.category,
 				calories: entry.per100g.calories,
-				score: s,
+				score: hit.score,
 				...(full && { per100g: entry.per100g, portions: entry.portions }),
 				...(favKeys.has(`usda:${entry.fdcId}`) && { favorited: true }),
 			});
@@ -283,7 +284,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			const scoreDe = entry.nameDe ? fuzzyScore(q, entry.nameDe.toLowerCase()) : 0;
 			const scoreEn = fuzzyScore(q, entry.name.toLowerCase());
 			const scoreBrand = entry.brands ? fuzzyScore(q, entry.brands.toLowerCase()) : 0;
-			const best = Math.max(scoreDe, scoreEn, scoreBrand, 1); // text search already filtered
+			// text search already filtered; prefer shorter names among matches
+			const best = Math.max(scoreDe, scoreEn, scoreBrand, 1) - displayName.length * NAME_LENGTH_PENALTY;
 
 			const portions: any[] = [];
 			if (entry.serving?.grams) {
