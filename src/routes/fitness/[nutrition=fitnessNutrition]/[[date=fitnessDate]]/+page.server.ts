@@ -57,7 +57,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		} catch { return { kcal: 0, projected: null }; }
 	})();
 
-	const recentFromStr = localDateOffset(-3);
+	const recentFromStr = localDateOffset(-7);
 
 	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
@@ -125,7 +125,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 			seen.add(key);
 			return true;
 		})
-		.slice(0, 10);
+		.slice(0, 20);
 
 	const goal = goalRes.ok ? await goalRes.json() : {};
 	const roundedExerciseKcal = Math.round(exerciseData.kcal);

@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import Heart from '@lucide/svelte/icons/heart';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import ScanBarcode from '@lucide/svelte/icons/scan-barcode';
@@ -38,6 +38,9 @@
 	 *   autofocus?: boolean,
 	 *   confirmLabel?: string,
 	 *   initialResults?: FoodItem[],
+	 *   query?: string,
+	 *   results?: FoodItem[],
+	 *   placeholder?: string,
 	 * }}
 	 */
 	let {
@@ -49,6 +52,9 @@
 		autofocus = false,
 		confirmLabel = undefined,
 		initialResults = undefined,
+		query = $bindable(''),
+		results = $bindable(untrack(() => initialResults ?? [])),
+		placeholder = undefined,
 	} = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
@@ -58,19 +64,37 @@
 	const btnLabel = $derived(confirmLabel ?? t.log_food);
 
 	// --- Search state ---
-	let query = $state('');
-	/** @type {FoodItem[]} */
-	let results = $state(untrack(() => initialResults ?? []));
+	// `query` is $bindable so the parent can share ONE search string across all
+	// add-food tabs (Search / Favorites / Recent / Meals) — the value persists
+	// when switching tabs even though this component unmounts. In prefilled mode
+	// (Favorites/Recent) `query` filters the given list locally; in search mode it
+	// drives the server search.
 	let loading = $state(false);
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	let timeout = $state(null);
 	const isPrefilledMode = $derived(initialResults != null);
-	let filterQuery = $state('');
 	const displayResults = $derived(
-		isPrefilledMode && filterQuery
-			? results.filter(r => r.name.toLowerCase().includes(filterQuery.toLowerCase()))
+		isPrefilledMode && query
+			? results.filter((/** @type {FoodItem} */ r) => r.name.toLowerCase().includes(query.toLowerCase()))
 			: results
 	);
+
+	function onQueryInput() {
+		// Prefilled lists filter reactively via displayResults; only the search tab
+		// hits the server.
+		if (!isPrefilledMode) doSearch();
+	}
+
+	function clearQuery() {
+		query = '';
+		if (!isPrefilledMode) results = [];
+	}
+
+	// Entering the search tab with a query carried over from another tab: run the
+	// search so the results match the shared text.
+	onMount(() => {
+		if (!isPrefilledMode && query.length >= 2) doSearch();
+	});
 
 	// --- Selection state ---
 	/** @type {FoodItem | null} */
@@ -599,38 +623,27 @@
 		{/if}
 	</div>
 {:else if !selected}
-	{#if isPrefilledMode}
-		{#if results.length > 3}
-			<input
-				type="text"
-				class="fs-filter-input"
-				placeholder={isEn ? 'Filter…' : 'Filtern…'}
-				bind:value={filterQuery}
-			/>
+	<div class="fs-search-row">
+		<!-- svelte-ignore a11y_autofocus -->
+		<input
+			type="text"
+			class="fs-search-input"
+			placeholder={placeholder ?? t.search_food}
+			bind:value={query}
+			oninput={onQueryInput}
+			autofocus={autofocus}
+		/>
+		{#if query}
+			<button class="fs-clear-btn" onclick={clearQuery} aria-label="Clear">
+				<X size={16} />
+			</button>
 		{/if}
-	{:else}
-		<div class="fs-search-row">
-			<!-- svelte-ignore a11y_autofocus -->
-			<input
-				type="text"
-				class="fs-search-input"
-				placeholder={t.search_food}
-				bind:value={query}
-				oninput={doSearch}
-				autofocus={autofocus}
-			/>
-			{#if query}
-				<button class="fs-clear-btn" onclick={() => { query = ''; results = []; }} aria-label="Clear">
-					<X size={16} />
-				</button>
-			{/if}
-			{#if browser}
-				<button class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
-					<ScanBarcode size={20} />
-				</button>
-			{/if}
-		</div>
-	{/if}
+		{#if browser && !isPrefilledMode}
+			<button class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
+				<ScanBarcode size={20} />
+			</button>
+		{/if}
+	</div>
 	{#if scanError}
 		<p class="fs-scan-error">{scanError}</p>
 	{/if}
@@ -750,23 +763,6 @@
 		box-sizing: border-box;
 		transition: border-color 0.15s;
 		min-width: 0;
-	}
-	.fs-filter-input {
-		display: block;
-		width: 100%;
-		padding: 0.55rem 0.65rem;
-		background: var(--color-bg-tertiary);
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		color: var(--color-text-primary);
-		font-size: 0.9rem;
-		box-sizing: border-box;
-		transition: border-color 0.15s;
-		margin-bottom: 0.25rem;
-	}
-	.fs-filter-input:focus {
-		outline: none;
-		border-color: var(--color-primary);
 	}
 	.fs-search-input:focus {
 		outline: none;

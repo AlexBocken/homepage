@@ -22,6 +22,7 @@
 	import Heart from '@lucide/svelte/icons/heart';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Search from '@lucide/svelte/icons/search';
+	import X from '@lucide/svelte/icons/x';
 	import Beef from '@lucide/svelte/icons/beef';
 	import Droplet from '@lucide/svelte/icons/droplet';
 	import Wheat from '@lucide/svelte/icons/wheat';
@@ -641,6 +642,11 @@
 	/** @type {string | null} */
 	let addingMeal = $state(null);
 	let inlineTab = $state('search'); // 'search' | 'favorites' | 'recent' | 'meals'
+	// One shared search string for the whole add-food flow, so the input persists
+	// when switching between the Search / Favorites / Recent / Meals tabs. Reset
+	// each time the add-food UI is (re)opened. Inline and FAB are never usefully
+	// open at once, so a single value is fine.
+	let addFoodQuery = $state('');
 
 	// --- FAB modal (route-based via ?add param) ---
 	const showFabModal = $derived(page.url.searchParams.has('add'));
@@ -661,6 +667,7 @@
 		if (showFabModal) {
 			fabMealType = defaultMealType();
 			fabTab = 'search';
+			addFoodQuery = '';
 			loadCustomMeals();
 		}
 	});
@@ -775,10 +782,9 @@
 	let customMealsLoaded = $state(false);
 
 	// Custom meal filter
-	let cmFilter = $state('');
 	const filteredCustomMeals = $derived(
-		cmFilter
-			? customMeals.filter(cm => cm.name.toLowerCase().includes(cmFilter.toLowerCase()))
+		addFoodQuery
+			? customMeals.filter(cm => cm.name.toLowerCase().includes(addFoodQuery.toLowerCase()))
 			: customMeals
 	);
 
@@ -922,14 +928,14 @@
 		addingMeal = meal;
 		inlineTab = 'search';
 		selectedCmMeal = null;
-		cmFilter = '';
+		addFoodQuery = '';
 		loadCustomMeals();
 	}
 
 	function cancelAdd() {
 		addingMeal = null;
 		selectedCmMeal = null;
-		cmFilter = '';
+		addFoodQuery = '';
 	}
 
 	/**
@@ -1365,10 +1371,11 @@
 	<div class="fav-tab-list">
 		{#if !favTabLoaded}
 			<p class="meals-empty">{t.loading}</p>
-		{:else if favTabItems.length === 0}
-			<p class="meals-empty">{isEn ? 'No favorites yet. Tap the heart on foods to add them here.' : 'Noch keine Favoriten. Tippe auf das Herz bei Lebensmitteln.'}</p>
 		{:else}
-			<FoodSearch onselect={logFn} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} initialResults={favTabItems} />
+			<FoodSearch onselect={logFn} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} initialResults={favTabItems} bind:query={addFoodQuery} />
+			{#if favTabItems.length === 0}
+				<p class="meals-empty">{isEn ? 'No favorites yet. Tap the heart on foods to add them here.' : 'Noch keine Favoriten. Tippe auf das Herz bei Lebensmitteln.'}</p>
+			{/if}
 		{/if}
 	</div>
 {/snippet}
@@ -1377,10 +1384,11 @@
 	<div class="fav-tab-list">
 		{#if !recentTabLoaded}
 			<p class="meals-empty">{t.loading}</p>
-		{:else if recentTabItems.length === 0}
-			<p class="meals-empty">{isEn ? 'No recent foods yet.' : 'Noch keine kürzlichen Lebensmittel.'}</p>
 		{:else}
-			<FoodSearch onselect={logFn} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} initialResults={recentTabItems} />
+			<FoodSearch onselect={logFn} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} initialResults={recentTabItems} bind:query={addFoodQuery} />
+			{#if recentTabItems.length === 0}
+				<p class="meals-empty">{isEn ? 'No recent foods yet.' : 'Noch keine kürzlichen Lebensmittel.'}</p>
+			{/if}
 		{/if}
 	</div>
 {/snippet}
@@ -1390,10 +1398,15 @@
 		{@render cmDetailScreen(selectedCmMeal, logFn)}
 	{:else}
 		<div class="custom-meals-list">
-			{#if customMeals.length > 3}
-				<input type="text" class="cm-filter-input" placeholder={isEn ? 'Filter meals…' : 'Mahlzeiten filtern…'}
-					bind:value={cmFilter} />
-			{/if}
+			<div class="cm-filter-row">
+				<input type="text" class="cm-filter-input" placeholder={t.search_food}
+					bind:value={addFoodQuery} />
+				{#if addFoodQuery}
+					<button class="cm-clear-btn" onclick={() => addFoodQuery = ''} aria-label="Clear">
+						<X size={16} />
+					</button>
+				{/if}
+			</div>
 			{#if customMeals.length === 0}
 				<p class="meals-empty">{t.no_custom_meals}</p>
 			{/if}
@@ -2045,7 +2058,7 @@
 					</div>
 
 					{#if inlineTab === 'search'}
-						<FoodSearch onselect={inlineLogFood} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} autofocus={true} />
+						<FoodSearch onselect={inlineLogFood} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} autofocus={true} bind:query={addFoodQuery} />
 					{:else if inlineTab === 'favorites'}
 						{@render favoritesTab(inlineLogFood)}
 					{:else if inlineTab === 'recent'}
@@ -2172,7 +2185,7 @@
 			</div>
 
 			{#if fabTab === 'search'}
-				<FoodSearch onselect={fabLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} autofocus={true} />
+				<FoodSearch onselect={fabLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} autofocus={true} bind:query={addFoodQuery} />
 			{:else if fabTab === 'favorites'}
 				{@render favoritesTab(fabLogFood)}
 			{:else if fabTab === 'recent'}
@@ -3802,8 +3815,15 @@
 		padding: 1rem 0;
 		margin: 0;
 	}
+	.cm-filter-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-bottom: 0.25rem;
+	}
 	.cm-filter-input {
-		width: 100%;
+		flex: 1;
+		min-width: 0;
 		padding: 0.55rem 0.65rem;
 		background: var(--color-bg-tertiary);
 		border: 1px solid var(--color-border);
@@ -3812,11 +3832,26 @@
 		font-size: 0.9rem;
 		box-sizing: border-box;
 		transition: border-color 0.15s;
-		margin-bottom: 0.25rem;
 	}
 	.cm-filter-input:focus {
 		outline: none;
 		border-color: var(--color-primary);
+	}
+	.cm-clear-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: none;
+		border: none;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		padding: 0.3rem;
+		border-radius: 50%;
+		flex-shrink: 0;
+		transition: background 0.12s;
+	}
+	.cm-clear-btn:hover {
+		background: var(--color-bg-elevated);
 	}
 	.custom-meal-card {
 		display: flex;

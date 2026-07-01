@@ -2,6 +2,8 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
 import { BLS_DB } from '$lib/data/blsDb';
 import { Recipe } from '$models/Recipe';
+import { OpenFoodFact } from '$models/OpenFoodFact';
+import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 
@@ -83,6 +85,43 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 
 		return json({ per100g, ...(portions.length > 0 && { portions }) });
+	}
+
+	if (source === 'off') {
+		await dbConnect();
+		const entry = await OpenFoodFact.findOne({ barcode: id }).lean();
+		if (!entry) return json({ error: 'Not found' }, { status: 404 });
+		const portions: { description: string; grams: number }[] = [];
+		if (entry.serving?.grams) {
+			portions.push(entry.serving as { description: string; grams: number });
+		}
+		return json({
+			per100g: entry.per100g,
+			...(portions.length > 0 && { portions }),
+		});
+	}
+
+	if (source === 'custom') {
+		await dbConnect();
+		const meal = await CustomMeal.findById(id).lean();
+		if (!meal) return json({ error: 'Not found' }, { status: 404 });
+
+		const totals: Record<string, number> = {};
+		let totalGrams = 0;
+		for (const ing of meal.ingredients) {
+			totalGrams += ing.amountGrams;
+			for (const [k, v] of Object.entries(ing.per100g)) {
+				if (typeof v === 'number') {
+					totals[k] = (totals[k] || 0) + v * (ing.amountGrams / 100);
+				}
+			}
+		}
+		const per100g: Record<string, number> = {};
+		const scale = totalGrams > 0 ? 100 / totalGrams : 0;
+		for (const [k, v] of Object.entries(totals)) {
+			per100g[k] = v * scale;
+		}
+		return json({ per100g });
 	}
 
 	return json({ error: 'Invalid source' }, { status: 400 });
