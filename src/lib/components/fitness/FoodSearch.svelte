@@ -1,3 +1,20 @@
+<script module>
+	// Cross-instance cache of slim search results (survives tab switches, which
+	// remount FoodSearch). Small LRU cap.
+	const SEARCH_CACHE = new Map();
+	const SEARCH_CACHE_MAX = 50;
+	function cacheGet(/** @type {string} */ key) {
+		return SEARCH_CACHE.get(key);
+	}
+	function cacheSet(/** @type {string} */ key, /** @type {any} */ value) {
+		if (SEARCH_CACHE.has(key)) SEARCH_CACHE.delete(key);
+		SEARCH_CACHE.set(key, value);
+		if (SEARCH_CACHE.size > SEARCH_CACHE_MAX) {
+			SEARCH_CACHE.delete(SEARCH_CACHE.keys().next().value);
+		}
+	}
+</script>
+
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -72,6 +89,8 @@
 	let loading = $state(false);
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	let timeout = $state(null);
+	/** Aborts the previous in-flight search so an older response can't overwrite a newer one. @type {AbortController | null} */
+	let searchAbort = null;
 	const isPrefilledMode = $derived(initialResults != null);
 	const displayResults = $derived(
 		isPrefilledMode && query
@@ -123,26 +142,75 @@
 
 	function doSearch() {
 		if (timeout) clearTimeout(timeout);
-		if (query.length < 2) {
+		scanError = '';
+		const q = query.trim();
+		if (q.length < 2) {
+			searchAbort?.abort();
+			searchAbort = null;
 			results = [];
+			loading = false;
+			return;
+		}
+		// Results are slim (no per100g) — served instantly from cache on repeat/backspace.
+		const key = `${showFavorites ? 'f:' : ''}${q.toLowerCase()}`;
+		const cached = cacheGet(key);
+		if (cached) {
+			searchAbort?.abort();
+			searchAbort = null;
+			results = cached;
+			loading = false;
 			return;
 		}
 		loading = true;
 		timeout = setTimeout(async () => {
+			searchAbort?.abort();
+			const ac = new AbortController();
+			searchAbort = ac;
 			try {
 				const favParam = showFavorites ? '&favorites=true' : '';
-				const res = await fetch(`/api/nutrition/search?q=${encodeURIComponent(query)}&full=true${favParam}`);
-				if (res.ok) results = await res.json();
-			} catch {} finally {
-				loading = false;
+				const res = await fetch(`/api/nutrition/search?q=${encodeURIComponent(q)}${favParam}`, { signal: ac.signal });
+				if (res.ok) {
+					const data = await res.json();
+					results = data;
+					cacheSet(key, data);
+				}
+			} catch {
+				// aborted or network error — ignore
+			} finally {
+				if (searchAbort === ac) {
+					loading = false;
+					searchAbort = null;
+				}
 			}
-		}, 300);
+		}, 150);
 	}
 
 	/** @param {FoodItem} item */
-	function selectItem(item) {
-		selected = item;
-		if ((item.portions?.length ?? 0) > 0) {
+	async function selectItem(item) {
+		let chosen = item;
+		// Slim search results carry no per100g — fetch it on demand when picked.
+		// Prefilled items (favorites/recent) and barcode results already have it.
+		if (!item.per100g) {
+			loading = true;
+			try {
+				const res = await fetch(`/api/nutrition/lookup?source=${item.source}&id=${encodeURIComponent(item.id)}`);
+				if (res.ok) {
+					const data = await res.json();
+					if (data.per100g) {
+						chosen = { ...item, per100g: data.per100g, portions: data.portions ?? item.portions };
+					}
+				}
+			} catch {
+				// fall through to the guard below
+			}
+			loading = false;
+			if (!chosen.per100g) {
+				scanError = isEn ? 'Could not load food data' : 'Lebensmitteldaten nicht gefunden';
+				return;
+			}
+		}
+		selected = chosen;
+		if ((chosen.portions?.length ?? 0) > 0) {
 			portionIdx = 0;
 			amountInput = '1';
 		} else {
@@ -624,15 +692,20 @@
 	</div>
 {:else if !selected}
 	<div class="fs-search-row">
-		<!-- svelte-ignore a11y_autofocus -->
-		<input
-			type="text"
-			class="fs-search-input"
-			placeholder={placeholder ?? t.search_food}
-			bind:value={query}
-			oninput={onQueryInput}
-			autofocus={autofocus}
-		/>
+		<div class="fs-input-wrap">
+			<!-- svelte-ignore a11y_autofocus -->
+			<input
+				type="text"
+				class="fs-search-input"
+				placeholder={placeholder ?? t.search_food}
+				bind:value={query}
+				oninput={onQueryInput}
+				autofocus={autofocus}
+			/>
+			{#if loading}
+				<LoaderCircle class="fs-spinner" size={18} strokeWidth={2} />
+			{/if}
+		</div>
 		{#if query}
 			<button class="fs-clear-btn" onclick={clearQuery} aria-label="Clear">
 				<X size={16} />
@@ -646,9 +719,6 @@
 	</div>
 	{#if scanError}
 		<p class="fs-scan-error">{scanError}</p>
-	{/if}
-	{#if loading}
-		<p class="fs-status">{t.loading}</p>
 	{/if}
 	{#if displayResults.length > 0}
 		<div class="fs-results">
@@ -678,6 +748,9 @@
 				</div>
 			{/each}
 		</div>
+	{/if}
+	{#if !loading && displayResults.length === 0 && (isPrefilledMode ? results.length > 0 && query.trim().length > 0 : query.trim().length >= 2)}
+		<p class="fs-no-results">{isEn ? 'No results found' : 'Keine Ergebnisse gefunden'}</p>
 	{/if}
 	{#if oncancel}
 		<button class="fs-btn-cancel" onclick={oncancel}>{t.cancel}</button>
@@ -752,9 +825,15 @@
 		align-items: center;
 		gap: 0.4rem;
 	}
+	.fs-input-wrap {
+		position: relative;
+		flex: 1;
+		min-width: 0;
+		display: flex;
+	}
 	.fs-search-input {
 		flex: 1;
-		padding: 0.55rem 0.65rem;
+		padding: 0.55rem 2.3rem 0.55rem 0.65rem; /* right space reserved for the spinner */
 		background: var(--color-bg-tertiary);
 		border: 1px solid var(--color-border);
 		border-radius: 8px;
@@ -801,15 +880,29 @@
 		color: var(--nord8);
 		border-color: var(--nord8);
 	}
-	.fs-status {
-		font-size: 0.78rem;
+	.fs-input-wrap :global(.fs-spinner) {
+		position: absolute;
+		right: 1rem;
+		/* Center vertically via margin, NOT transform — the spin animation animates
+		   `transform: rotate()`, which would override a translateY centering. */
+		top: 0;
+		bottom: 0;
+		margin-block: auto;
+		height: 18px;
 		color: var(--color-text-tertiary);
-		margin: 0.4rem 0;
+		animation: spin 1s linear infinite;
+		pointer-events: none;
 	}
 	.fs-scan-error {
 		font-size: 0.78rem;
 		color: var(--nord11);
 		margin: 0.3rem 0;
+	}
+	.fs-no-results {
+		font-size: 0.82rem;
+		color: var(--color-text-tertiary);
+		margin: 0.5rem 0;
+		text-align: center;
 	}
 
 	/* ── Barcode scanner ── */
