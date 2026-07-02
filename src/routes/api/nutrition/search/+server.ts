@@ -208,7 +208,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		// re-rank with fuzzyScore below, which already overrode textScore anyway.
 		OpenFoodFact.find(
 			{ $text: { $search: q } },
-			full ? {} : { name: 1, nameDe: 1, brands: 1, category: 1, 'per100g.calories': 1, serving: 1 }
+			full ? {} : { barcode: 1, name: 1, nameDe: 1, brands: 1, category: 1, 'per100g.calories': 1, serving: 1 }
 		).limit(200).lean()
 			.catch(() => [] as any[]),
 	]);
