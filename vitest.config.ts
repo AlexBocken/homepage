@@ -8,7 +8,10 @@ export default defineConfig({
 		globals: true,
 		environment: 'jsdom',
 		setupFiles: ['./tests/setup.ts'],
-		include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}'],
+		// Unit tests only. The Playwright e2e specs (tests/e2e/**) import from
+		// @auth/sveltekit-incompatible @playwright/test and must NOT be picked up
+		// by Vitest — they run via `pnpm test:e2e`.
+		include: ['src/**/*.{test,spec}.{js,ts}', 'tests/unit/**/*.{test,spec}.{js,ts}'],
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'json', 'html'],

@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.159.0",
+	"version": "1.159.1",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -12,7 +12,8 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "vitest run",
+		"test": "pnpm run test:units && pnpm run test:e2e",
+		"test:units": "vitest run",
 		"test:watch": "vitest",
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest run --coverage",
