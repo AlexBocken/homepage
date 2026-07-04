@@ -30,6 +30,7 @@
 	import { localDateStr } from '$lib/js/localDate';
 	import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
 	import { atwaterCalories as atwaterKcal, macroCaloriePercent, scaleFromPer100g } from '$lib/fitness/nutritionMath';
+	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
@@ -303,7 +304,7 @@
 
 	// --- Computed daily totals ---
 	/** @type {Array<'breakfast'|'lunch'|'dinner'|'snack'>} */
-	const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+	const mealTypes = [...MEAL_TYPES];
 
 	const grouped = $derived.by(() => {
 		/** @type {Record<string, any[]>} */
@@ -639,14 +640,6 @@
 	let fabMealType = $state('lunch');
 
 	const fabHref = $derived(`${resolve('/fitness/[nutrition=fitnessNutrition]', { nutrition: s.nutrition })}?add`);
-
-	function defaultMealType() {
-		const h = new Date().getHours();
-		if (h >= 5 && h < 10) return 'breakfast';
-		if (h >= 10 && h < 15) return 'lunch';
-		if (h >= 15 && h < 17) return 'snack';
-		return 'dinner';
-	}
 
 	// Reset modal state when it opens
 	$effect(() => {

@@ -8,6 +8,13 @@ export function formatElapsed(seconds: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
+/** Duration in whole minutes → `Hh Mm` (or `Mm` under an hour). */
+export function formatDurationMin(mins: number): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
 /** Pace (min/km) → `M:SS /km`. */
 export function formatPaceKm(minPerKm: number | null | undefined): string {
   if (minPerKm == null || !Number.isFinite(minPerKm) || minPerKm <= 0) return '—';

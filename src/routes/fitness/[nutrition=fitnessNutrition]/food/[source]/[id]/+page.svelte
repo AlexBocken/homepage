@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
+	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import Heart from '@lucide/svelte/icons/heart';
@@ -173,22 +174,13 @@
 
 	// --- Log to today's diary ---
 	/** @type {Array<'breakfast' | 'lunch' | 'dinner' | 'snack'>} */
-	const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+	const mealTypes = [...MEAL_TYPES];
 	const mealMeta = {
 		breakfast: { icon: Coffee, color: 'var(--nord13)' },
 		lunch:     { icon: Sun, color: 'var(--nord12)' },
 		dinner:    { icon: Moon, color: 'var(--nord15)' },
 		snack:     { icon: Cookie, color: 'var(--nord14)' },
 	};
-
-	/** @returns {'breakfast' | 'lunch' | 'dinner' | 'snack'} */
-	function defaultMealType() {
-		const h = new Date().getHours();
-		if (h >= 5 && h < 10) return 'breakfast';
-		if (h >= 10 && h < 15) return 'lunch';
-		if (h >= 15 && h < 17) return 'snack';
-		return 'dinner';
-	}
 
 	let showLog = $state(false);
 	/** @type {'breakfast' | 'lunch' | 'dinner' | 'snack'} */

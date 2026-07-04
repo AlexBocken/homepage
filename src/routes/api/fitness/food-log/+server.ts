@@ -4,8 +4,7 @@ import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { RoundOffCache } from '$models/RoundOffCache';
-
-const VALID_MEALS = ['breakfast', 'lunch', 'dinner', 'snack', 'water'];
+import { LOGGABLE_MEALS } from '$lib/fitness/meals';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = await requireAuth(locals);
@@ -44,7 +43,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const { date, mealType, name, source, sourceId, amountGrams, per100g, liquidMl } = body;
 
 	if (!date || !name?.trim()) throw error(400, 'date and name are required');
-	if (!VALID_MEALS.includes(mealType)) throw error(400, 'Invalid mealType');
+	if (!LOGGABLE_MEALS.includes(mealType)) throw error(400, 'Invalid mealType');
 	if (typeof amountGrams !== 'number' || amountGrams <= 0) throw error(400, 'amountGrams must be positive');
 	if (!per100g || typeof per100g.calories !== 'number') throw error(400, 'per100g with calories is required');
 

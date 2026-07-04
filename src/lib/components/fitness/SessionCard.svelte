@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+	import { formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Weight from '@lucide/svelte/icons/weight';
 	import Trophy from '@lucide/svelte/icons/trophy';
@@ -43,14 +44,6 @@
 	// if it fails (unsynced local run, render failure, or offline).
 	let mapImgFailed = $state(false);
 
-	/** @param {number} mins */
-	function formatDuration(mins) {
-		const h = Math.floor(mins / 60);
-		const m = mins % 60;
-		if (h > 0) return `${h}h ${m}m`;
-		return `${m}m`;
-	}
-
 	/** @param {string} dateStr */
 	function formatDate(dateStr) {
 		const d = new Date(dateStr);
@@ -63,12 +56,6 @@
 		return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 	}
 
-	/** @param {number} minPerKm */
-	function formatPace(minPerKm) {
-		const m = Math.floor(minPerKm);
-		const s = Math.round((minPerKm - m) * 60);
-		return `${m}:${s.toString().padStart(2, '0')} /km`;
-	}
 
 	/**
 	 * @param {Array<Record<string, any>>} sets
@@ -217,12 +204,12 @@
 
 	<div class="card-footer">
 		{#if session.duration}
-			<span class="stat"><Clock size={14} /> {formatDuration(session.duration)}</span>
+			<span class="stat"><Clock size={14} /> {formatDurationMin(session.duration)}</span>
 		{/if}
 		{#if hasGpsCardio && cardioSummary.distance > 0}
 			<span class="stat accent"><Route size={14} /> {cardioSummary.distance.toFixed(1)} km</span>
 			{#if cardioSummary.pace > 0}
-				<span class="stat accent"><Gauge size={14} /> {formatPace(cardioSummary.pace)}</span>
+				<span class="stat accent"><Gauge size={14} /> {formatPaceKm(cardioSummary.pace)}</span>
 			{/if}
 		{:else if session.totalVolume}
 			<span class="stat"><Weight size={14} /> {session.totalVolume >= 1000 ? `${(session.totalVolume / 1000).toFixed(1)}t` : `${Math.round(session.totalVolume).toLocaleString()} kg`}</span>

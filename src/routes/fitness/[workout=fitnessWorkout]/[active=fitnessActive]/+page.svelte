@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
+	import { formatElapsed, formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Play from '@lucide/svelte/icons/play';
 	import Pause from '@lucide/svelte/icons/pause';
@@ -1281,29 +1282,6 @@
 		}
 	}
 
-	/** @param {number} secs */
-	function formatElapsed(secs) {
-		const h = Math.floor(secs / 3600);
-		const m = Math.floor((secs % 3600) / 60);
-		const s = secs % 60;
-		if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-		return `${m}:${s.toString().padStart(2, '0')}`;
-	}
-
-	/** @param {number} mins */
-	function formatDuration(mins) {
-		const h = Math.floor(mins / 60);
-		const m = mins % 60;
-		if (h > 0) return `${h}h ${m}m`;
-		return `${m}m`;
-	}
-
-	/** @param {number} minPerKm */
-	function formatPace(minPerKm) {
-		const m = Math.floor(minPerKm);
-		const s = Math.round((minPerKm - m) * 60);
-		return `${m}:${s.toString().padStart(2, '0')} /km`;
-	}
 
 	function cancelRest() {
 		workout.cancelRestTimer();
@@ -1341,7 +1319,7 @@
 		<div class="completion-stats">
 			<div class="comp-stat">
 				<Clock size={18} />
-				<span class="comp-stat-value">{formatDuration(completionData.durationMin)}</span>
+				<span class="comp-stat-value">{formatDurationMin(completionData.durationMin)}</span>
 				<span class="comp-stat-label">{t.duration}</span>
 			</div>
 			{#if completionData.totalTonnage > 0}
@@ -1440,7 +1418,7 @@
 								<span>{ex.duration} min</span>
 							{/if}
 							{#if ex.pace > 0}
-								<span>{formatPace(ex.pace)} {t.avg}</span>
+								<span>{formatPaceKm(ex.pace)} {t.avg}</span>
 							{/if}
 						{:else}
 							{#if ex.tonnage > 0}

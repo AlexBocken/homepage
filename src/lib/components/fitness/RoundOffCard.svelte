@@ -8,6 +8,7 @@
 	import { untrack } from 'svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { m } from '$lib/js/fitnessI18n';
+	import { defaultMealType } from '$lib/fitness/meals';
 	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
 	/** @typedef {import('$lib/server/roundOffScoring').ComboSuggestion} ComboSuggestion */
 
@@ -46,14 +47,6 @@
 	let loading = $state(!initialSuggestions);
 	let expanded = $state(false);
 	let loggingIdx = $state(-1);
-
-	function defaultMealType() {
-		const h = new Date().getHours();
-		if (h >= 5 && h < 10) return 'breakfast';
-		if (h >= 10 && h < 15) return 'lunch';
-		if (h >= 15 && h < 17) return 'snack';
-		return 'dinner';
-	}
 
 	let editingComboIdx = $state(-1);
 	/** @type {'breakfast' | 'lunch' | 'dinner' | 'snack'} */

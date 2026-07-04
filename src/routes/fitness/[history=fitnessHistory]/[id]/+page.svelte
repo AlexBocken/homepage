@@ -33,7 +33,7 @@
 	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
 	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
-	import { formatElapsed, formatEffortRate } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatEffortRate, formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import { estimatedOneRepMax } from '$lib/fitness/strength';
 	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
 	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
@@ -289,13 +289,6 @@
 		};
 	}
 
-	/** @param {number} mins */
-	function formatDuration(mins) {
-		const h = Math.floor(mins / 60);
-		const m = mins % 60;
-		if (h > 0) return `${h}h ${m}m`;
-		return `${m}m`;
-	}
 
 	/** @param {string} dateStr */
 	function formatDate(dateStr) {
@@ -571,12 +564,6 @@
 		return g;
 	}
 
-	/** @param {number} minPerKm */
-	function formatPace(minPerKm) {
-		const m = Math.floor(minPerKm);
-		const s = Math.round((minPerKm - m) * 60);
-		return `${m}:${s.toString().padStart(2, '0')} /km`;
-	}
 
 	/** @param {number} exIdx */
 	async function uploadGpx(exIdx) {
@@ -757,7 +744,7 @@
 			{#if session.duration}
 				<div class="stat-pill">
 					<Clock size={14} />
-					<span>{formatDuration(session.duration)}</span>
+					<span>{formatDurationMin(session.duration)}</span>
 				</div>
 			{/if}
 			{#if session.totalVolume}
@@ -897,7 +884,7 @@
 						<div class="gps-stats">
 							<span class="gps-stat accent"><Route size={14} /> {dist.toFixed(2)} km</span>
 							{#if gps.avgPace > 0}
-								<span class="gps-stat accent"><Gauge size={14} /> {formatPace(gps.avgPace)}</span>
+								<span class="gps-stat accent"><Gauge size={14} /> {formatPaceKm(gps.avgPace)}</span>
 							{/if}
 							{#if gps.elevStats}
 								<span class="gps-stat elev-gain"><Mountain size={14} /> +{gps.elevStats.gain}{t.elevation_unit}</span>
@@ -971,7 +958,7 @@
 											<tr class:partial={!isFull}>
 												<td class="split-km">{isFull ? split.km : split.km.toFixed(2)}</td>
 												<td class="split-pace" class:fast={split.pace < avgPace * 0.97} class:slow={split.pace > avgPace * 1.03}>
-													{formatPace(split.pace)}
+													{formatPaceKm(split.pace)}
 												</td>
 												<td class="split-elapsed">{Math.floor(split.elapsed)}:{Math.round((split.elapsed % 1) * 60).toString().padStart(2, '0')}</td>
 											</tr>

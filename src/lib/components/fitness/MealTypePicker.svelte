@@ -4,6 +4,7 @@
 	import Moon from '@lucide/svelte/icons/moon';
 	import Cookie from '@lucide/svelte/icons/cookie';
 	import { m } from '$lib/js/fitnessI18n';
+	import { MEAL_TYPES } from '$lib/fitness/meals';
 
 	/** @type {{ value?: 'breakfast' | 'lunch' | 'dinner' | 'snack', lang?: 'en' | 'de', onchange?: (meal: 'breakfast' | 'lunch' | 'dinner' | 'snack') => void }} */
 	let {
@@ -14,7 +15,7 @@
 	const t = $derived(m[lang]);
 
 	/** @type {Array<'breakfast' | 'lunch' | 'dinner' | 'snack'>} */
-	const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+	const mealTypes = [...MEAL_TYPES];
 
 	const mealMeta = {
 		breakfast: { icon: Coffee, color: 'var(--nord13)' },

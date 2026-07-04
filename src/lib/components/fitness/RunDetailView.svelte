@@ -16,7 +16,7 @@
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
 	import { buildGpsView, formatPaceTooltip } from '$lib/fitness/gpsSeries';
 	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
-	import { formatElapsed } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import { estimatedOneRepMax } from '$lib/fitness/strength';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
@@ -92,12 +92,6 @@
 		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
 	});
 
-	/** @param {number} mins */
-	function formatDuration(mins) {
-		const h = Math.floor(mins / 60);
-		const mm = mins % 60;
-		return h > 0 ? `${h}h ${mm}m` : `${mm}m`;
-	}
 
 	/** @param {string} exerciseId */
 	function isStrength(exerciseId) {
@@ -105,12 +99,6 @@
 		return metrics.includes('weight') && metrics.includes('reps');
 	}
 
-	/** @param {number} minPerKm */
-	function formatPace(minPerKm) {
-		const mm = Math.floor(minPerKm);
-		const s = Math.round((minPerKm - mm) * 60);
-		return `${mm}:${s.toString().padStart(2, '0')} /km`;
-	}
 
 	// One hover cursor per GPS exercise so their map pins / chart cursors stay
 	// independent. Created lazily and cached by exercise index.
@@ -138,7 +126,7 @@
 <div class="run-detail">
 	<div class="stats-row">
 		{#if session.duration}
-			<div class="stat-pill"><Clock size={14} /><span>{formatDuration(session.duration)}</span></div>
+			<div class="stat-pill"><Clock size={14} /><span>{formatDurationMin(session.duration)}</span></div>
 		{/if}
 		{#if session.totalVolume}
 			<div class="stat-pill"><Weight size={14} /><span>{Math.round(session.totalVolume).toLocaleString()} kg</span></div>
@@ -208,7 +196,7 @@
 				<div class="gps-track-section">
 					<div class="gps-stats">
 						<span class="gps-stat accent"><Route size={14} /> {dist.toFixed(2)} km</span>
-						{#if gps.avgPace > 0}<span class="gps-stat accent"><Gauge size={14} /> {formatPace(gps.avgPace)}</span>{/if}
+						{#if gps.avgPace > 0}<span class="gps-stat accent"><Gauge size={14} /> {formatPaceKm(gps.avgPace)}</span>{/if}
 						{#if gps.elevStats}
 							<span class="gps-stat elev-gain"><Mountain size={14} /> +{gps.elevStats.gain}{t.elevation_unit}</span>
 							<span class="gps-stat elev-loss">-{gps.elevStats.loss}{t.elevation_unit}</span>
@@ -251,7 +239,7 @@
 											{@const isFull = split.km === Math.floor(split.km)}
 											<tr class:partial={!isFull}>
 												<td class="split-km">{isFull ? split.km : split.km.toFixed(2)}</td>
-												<td class="split-pace" class:fast={split.pace < avgPace * 0.97} class:slow={split.pace > avgPace * 1.03}>{formatPace(split.pace)}</td>
+												<td class="split-pace" class:fast={split.pace < avgPace * 0.97} class:slow={split.pace > avgPace * 1.03}>{formatPaceKm(split.pace)}</td>
 												<td class="split-elapsed">{Math.floor(split.elapsed)}:{Math.round((split.elapsed % 1) * 60).toString().padStart(2, '0')}</td>
 											</tr>
 										{/each}
@@ -271,7 +259,7 @@
 											<tr class="be-row" class:active={beActiveKm(exIdx) === e.km} class:pinned={beClick[exIdx] === e.km}
 												onmouseenter={() => (beHover[exIdx] = e.km)} onmouseleave={() => (beHover[exIdx] = null)} onclick={() => clickEffort(exIdx, e.km)}>
 												<td class="split-km">{e.km}{t.km_short}</td>
-												<td class="split-pace">{formatPace(e.seconds / 60 / e.km)}</td>
+												<td class="split-pace">{formatPaceKm(e.seconds / 60 / e.km)}</td>
 												<td class="split-elapsed">{formatElapsed(e.seconds)}</td>
 											</tr>
 										{/each}
