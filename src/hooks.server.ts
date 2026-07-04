@@ -249,8 +249,16 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		}
 	}
 
-	// Protect self-service settings page and user API (any logged-in user)
-	if (url.pathname.startsWith('/settings') || url.pathname.startsWith('/api/user')) {
+	// Protect self-service settings page and user API (any logged-in user). The
+	// settings page is one route behind the [settingsLang] matcher, so guard both
+	// slugs ('settings' and 'einstellungen') identically — otherwise the German
+	// slug falls through to the page load's requireSelf() and 401s instead of
+	// redirecting to login like the English slug.
+	if (
+		url.pathname.startsWith('/settings') ||
+		url.pathname.startsWith('/einstellungen') ||
+		url.pathname.startsWith('/api/user')
+	) {
 		if (!session) {
 			if (url.pathname.startsWith('/api/user')) {
 				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
