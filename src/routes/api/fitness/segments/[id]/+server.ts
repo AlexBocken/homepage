@@ -5,17 +5,16 @@ import { Segment } from '$models/Segment';
 import { SegmentEffort } from '$models/SegmentEffort';
 import { optedOutUsernames } from '$lib/server/segments';
 import { requireAuth } from '$lib/server/middleware/auth';
-import mongoose from 'mongoose';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 // GET /api/fitness/segments/[id] — segment + global leaderboard + my efforts.
 export const GET: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'segment ID');
+
   try {
     await dbConnect();
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid segment ID' }, { status: 400 });
-    }
     const me = user.nickname;
 
     const segment = await Segment.findById(params.id).lean();
@@ -99,11 +98,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 export const DELETE: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'segment ID');
+
   try {
     await dbConnect();
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid segment ID' }, { status: 400 });
-    }
 
     const segment = await Segment.findOneAndDelete({
       _id: params.id,

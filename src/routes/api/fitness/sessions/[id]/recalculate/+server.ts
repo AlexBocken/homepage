@@ -10,15 +10,13 @@ import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { trackDistance } from '$lib/fitness/gpsSeries.js';
 import { estimatedOneRepMax } from '$lib/fitness/strength';
 import { requireAuth } from '$lib/server/middleware/auth';
-import mongoose from 'mongoose';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 // POST /api/fitness/sessions/[id]/recalculate — recompute derived fields
 export const POST: RequestHandler = async ({ params, locals }) => {
 	const user = await requireAuth(locals);
 
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		return json({ error: 'Invalid session ID' }, { status: 400 });
-	}
+	assertObjectId(params.id, 'session ID');
 
 	try {
 		await dbConnect();

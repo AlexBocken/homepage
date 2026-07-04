@@ -7,15 +7,13 @@ import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { generateGpx, buildGpxFilename } from '$lib/server/gpxExport';
 import { parseGpx, trackDistance } from '$lib/server/gpx';
 import { requireAuth } from '$lib/server/middleware/auth';
-import mongoose from 'mongoose';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 // GET /api/fitness/sessions/[id]/gpx?exerciseIdx=N — download GPX export of the track
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const user = await requireAuth(locals);
 
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		return json({ error: 'Invalid session ID' }, { status: 400 });
-	}
+	assertObjectId(params.id, 'session ID');
 
 	const exerciseIdx = parseInt(url.searchParams.get('exerciseIdx') ?? '', 10);
 	if (isNaN(exerciseIdx) || exerciseIdx < 0) {
@@ -66,9 +64,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = await requireAuth(locals);
 
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		return json({ error: 'Invalid session ID' }, { status: 400 });
-	}
+	assertObjectId(params.id, 'session ID');
 
 	try {
 		const formData = await request.formData();
@@ -141,9 +137,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 	const user = await requireAuth(locals);
 
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		return json({ error: 'Invalid session ID' }, { status: 400 });
-	}
+	assertObjectId(params.id, 'session ID');
 
 	try {
 		const { exerciseIdx } = await request.json();

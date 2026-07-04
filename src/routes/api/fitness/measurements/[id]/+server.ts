@@ -3,24 +3,13 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { BodyMeasurement } from '$models/BodyMeasurement';
-import mongoose from 'mongoose';
+import { assertObjectId, findOwnedOr404 } from '$lib/server/ownedResource';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		return json({ error: 'Invalid measurement ID' }, { status: 400 });
-	}
-
-	const measurement = await BodyMeasurement.findOne({
-		_id: params.id,
-		createdBy: user.nickname
-	});
-
-	if (!measurement) {
-		return json({ error: 'Measurement not found' }, { status: 404 });
-	}
+	const measurement = await findOwnedOr404(BodyMeasurement, params.id, user.nickname, 'Measurement');
 
 	return json({ measurement });
 };
@@ -29,9 +18,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		return json({ error: 'Invalid measurement ID' }, { status: 400 });
-	}
+	assertObjectId(params.id, 'measurement ID');
 
 	const data = await request.json();
 	const { date, weight, bodyFatPercent, caloricIntake, measurements, notes } = data;
@@ -61,9 +48,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		return json({ error: 'Invalid measurement ID' }, { status: 400 });
-	}
+	assertObjectId(params.id, 'measurement ID');
 
 	const measurement = await BodyMeasurement.findOneAndDelete({
 		_id: params.id,

@@ -11,7 +11,7 @@ import { addRunToGrid, removeRunFromGrid } from '$lib/server/segmentGrid';
 import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
 import { activityKind } from '$lib/server/bestEffortsBackfill';
 import { requireAuth } from '$lib/server/middleware/auth';
-import mongoose from 'mongoose';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 const VALID_PROFILES: RoutingProfile[] = ['hiking-mountain', 'trekking', 'road'];
 
@@ -89,9 +89,7 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 		});
 	}
 
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		return json({ error: 'Invalid session ID' }, { status: 400 });
-	}
+	assertObjectId(params.id, 'session ID');
 
 	let body: { exerciseIndex?: number; profile?: RoutingProfile; persist?: boolean };
 	try {

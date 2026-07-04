@@ -2,19 +2,17 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
-import mongoose from 'mongoose';
 import { requireAuth } from '$lib/server/middleware/auth';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 // GET /api/fitness/templates/[id] - Get a specific workout template
 export const GET: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'template ID');
+
   try {
     await dbConnect();
-    
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid template ID' }, { status: 400 });
-    }
 
     const template = await WorkoutTemplate.findOne({
       _id: params.id,
@@ -39,12 +37,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'template ID');
+
   try {
     await dbConnect();
-    
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid template ID' }, { status: 400 });
-    }
 
     const data = await request.json();
     const { name, description, exercises, isPublic, mode = 'manual', activityType, intervalTemplateId } = data;
@@ -100,12 +96,10 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 export const DELETE: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'template ID');
+
   try {
     await dbConnect();
-    
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid template ID' }, { status: 400 });
-    }
 
     const template = await WorkoutTemplate.findOneAndDelete({
       _id: params.id,

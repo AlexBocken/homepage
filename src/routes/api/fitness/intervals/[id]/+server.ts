@@ -3,16 +3,15 @@ import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { IntervalTemplate, validateIntervalEntries } from '$models/IntervalTemplate';
 import { requireAuth } from '$lib/server/middleware/auth';
-import mongoose from 'mongoose';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'template ID');
+
   try {
     await dbConnect();
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid template ID' }, { status: 400 });
-    }
 
     const template = await IntervalTemplate.findOne({
       _id: params.id,
@@ -33,11 +32,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'template ID');
+
   try {
     await dbConnect();
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid template ID' }, { status: 400 });
-    }
 
     const data = await request.json();
     const { name, steps } = data;
@@ -69,11 +67,10 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 export const DELETE: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'template ID');
+
   try {
     await dbConnect();
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid template ID' }, { status: 400 });
-    }
 
     const template = await IntervalTemplate.findOneAndDelete({
       _id: params.id,

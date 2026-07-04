@@ -8,7 +8,7 @@ import { optedOutUsernames } from '$lib/server/segments';
 import { removeRunFromGrid } from '$lib/server/segmentGrid';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { requireAuth } from '$lib/server/middleware/auth';
-import mongoose from 'mongoose';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 /**
  * The requester's segment efforts on a run, each annotated with the segment
@@ -78,12 +78,10 @@ async function buildRunSegmentEfforts(sessionId: string, me: string) {
 export const GET: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'session ID');
+
   try {
     await dbConnect();
-
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid session ID' }, { status: 400 });
-    }
 
     const workoutSession = await WorkoutSession.findOne({
       _id: params.id,
@@ -107,12 +105,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'session ID');
+
   try {
     await dbConnect();
-    
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid session ID' }, { status: 400 });
-    }
 
     const data = await request.json();
     const { name, exercises, startTime, endTime, duration, notes } = data;
@@ -202,12 +198,10 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 export const DELETE: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'session ID');
+
   try {
     await dbConnect();
-
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid session ID' }, { status: 400 });
-    }
 
     const workoutSession = await WorkoutSession.findOneAndDelete({
       _id: params.id,

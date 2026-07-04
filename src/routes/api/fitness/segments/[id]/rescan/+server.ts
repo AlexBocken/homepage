@@ -4,18 +4,17 @@ import { dbConnect } from '$utils/db';
 import { Segment } from '$models/Segment';
 import { backfillSegment } from '$lib/server/segments';
 import { requireAuth } from '$lib/server/middleware/auth';
-import mongoose from 'mongoose';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 // POST /api/fitness/segments/[id]/rescan — re-run the backfill for a segment
 // against history (creator only). Idempotent: rebuilds the segment's efforts.
 export const POST: RequestHandler = async ({ params, locals }) => {
   const user = await requireAuth(locals);
 
+  assertObjectId(params.id, 'segment ID');
+
   try {
     await dbConnect();
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return json({ error: 'Invalid segment ID' }, { status: 400 });
-    }
 
     const segment = await Segment.findById(params.id).lean();
     if (!segment) return json({ error: 'Segment not found' }, { status: 404 });
