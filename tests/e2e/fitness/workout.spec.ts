@@ -21,7 +21,12 @@ test('log a full workout: start → log a PR set → finish → PR summary → h
 
 	await page.getByRole('button', { name: /^FINISH$/i }).click();
 	await expect(page.getByRole('heading', { name: 'Workout Complete' })).toBeVisible();
+
+	// The completion summary shows the computed PRs with their values.
 	await expect(page.getByRole('heading', { name: /Personal Records/i })).toBeVisible();
+	await expect(page.getByText(/Max Weight:\s*500\s*kg/i)).toBeVisible();
+	await expect(page.getByText(/Est\.?\s*1RM:\s*583\s*kg/i)).toBeVisible(); // Epley round(500*(1+5/30))
+	await expect(page.getByText(/Best Set Volume:\s*2500\s*kg/i)).toBeVisible();
 
 	// The saved session is reachable in history and shows the exercise.
 	await page.getByRole('button', { name: /VIEW WORKOUT/i }).click();
