@@ -77,7 +77,8 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/fitness/stats', kind: 'page' },
 	{ path: '/api/fitness/goal', kind: 'api' },
 	{ path: '/settings', kind: 'page' },
-	{ path: '/einstellungen', kind: 'page' }
+	{ path: '/einstellungen', kind: 'page' },
+	{ path: '/hikes/route-builder', kind: 'page' }
 ];
 
 for (const r of GROUP_ROUTES) {
