@@ -1,16 +1,35 @@
 import { test, expect } from '@playwright/test';
 import { storageStateFor } from '../helpers/auth';
 import { gotoHydrated } from '../helpers/nav';
-import { createLoggedSession, deleteSession } from '../helpers/fitness';
+import { startEmptyWorkout, deleteSession } from '../helpers/fitness';
 
 test.use({ storageState: storageStateFor('fitness') });
 
-test('log a full workout: start → add exercise → log a set → finish → history', async ({ page }) => {
-	const sessionUrl = await createLoggedSession(page);
-	await expect(page.getByText(/Bench Press/i).first()).toBeVisible();
+// The one fitness UI workout flow (other UI workout specs use different users to
+// avoid colliding on e2e_fitness's active-workout state). Logs a PR set so it
+// also covers the completion summary's Personal Records section.
+test('log a full workout: start → log a PR set → finish → PR summary → history', async ({ page }) => {
+	await startEmptyWorkout(page);
+
+	// Squat has prior history (best 120 kg); 500 kg is a guaranteed PR.
+	await page.getByRole('button', { name: /ADD EXERCISE/i }).first().click();
+	await page.getByPlaceholder(/Search exercises/i).fill('Squat (Barbell)');
+	await page.locator('.exercise-item').first().click();
+	await page.locator('input[placeholder="0"]').nth(0).fill('500');
+	await page.locator('input[placeholder="0"]').nth(1).fill('5');
+	await page.locator('button[aria-label="Mark set complete"]').first().click();
+
+	await page.getByRole('button', { name: /^FINISH$/i }).click();
+	await expect(page.getByRole('heading', { name: 'Workout Complete' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: /Personal Records/i })).toBeVisible();
+
+	// The saved session is reachable in history and shows the exercise.
+	await page.getByRole('button', { name: /VIEW WORKOUT/i }).click();
+	await expect(page).toHaveURL(/\/fitness\/history\/[a-f0-9]+/);
+	await expect(page.getByText(/Squat/i).first()).toBeVisible();
+	const sessionUrl = page.url();
 	const sessionId = sessionUrl.split('/').pop()!;
 
-	// It appears in the history list too.
 	await gotoHydrated(page, '/fitness/history');
 	await expect(page.locator(`a[href*="${sessionId}"]`).first()).toBeVisible();
 
