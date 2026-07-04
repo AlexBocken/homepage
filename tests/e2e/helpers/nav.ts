@@ -11,3 +11,8 @@ export async function gotoHydrated(page: Page, url: string): Promise<void> {
 	await page.waitForLoadState('networkidle');
 	await page.waitForTimeout(300);
 }
+
+/** Accept the app's themed confirm() dialog (ConfirmDialog.svelte). */
+export async function acceptConfirm(page: import('@playwright/test').Page): Promise<void> {
+	await page.locator('button.confirm-btn.confirm').click();
+}
