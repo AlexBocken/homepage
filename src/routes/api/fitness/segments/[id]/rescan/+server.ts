@@ -3,15 +3,13 @@ import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { Segment } from '$models/Segment';
 import { backfillSegment } from '$lib/server/segments';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 // POST /api/fitness/segments/[id]/rescan — re-run the backfill for a segment
 // against history (creator only). Idempotent: rebuilds the segment's efforts.
 export const POST: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? (await locals.auth());
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -21,7 +19,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
     const segment = await Segment.findById(params.id).lean();
     if (!segment) return json({ error: 'Segment not found' }, { status: 404 });
-    if (segment.createdBy !== session.user.nickname) {
+    if (segment.createdBy !== user.nickname) {
       return json({ error: 'Only the creator can rescan' }, { status: 403 });
     }
 

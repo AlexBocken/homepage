@@ -2,16 +2,14 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { IntervalTemplate, validateIntervalEntries } from '$models/IntervalTemplate';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
-    const templates = await IntervalTemplate.find({ createdBy: session.user.nickname }).sort({ updatedAt: -1 });
+    const templates = await IntervalTemplate.find({ createdBy: user.nickname }).sort({ updatedAt: -1 });
     return json({ templates });
   } catch (error) {
     console.error('Error fetching interval templates:', error);
@@ -20,10 +18,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -40,7 +35,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const template = new IntervalTemplate({
       name,
       steps,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     await template.save();

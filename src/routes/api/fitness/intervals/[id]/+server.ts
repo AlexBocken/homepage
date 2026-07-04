@@ -2,13 +2,11 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { IntervalTemplate, validateIntervalEntries } from '$models/IntervalTemplate';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -18,7 +16,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
     const template = await IntervalTemplate.findOne({
       _id: params.id,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     if (!template) {
@@ -33,10 +31,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -55,7 +50,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     if (validationError) return json({ error: validationError }, { status: 400 });
 
     const template = await IntervalTemplate.findOneAndUpdate(
-      { _id: params.id, createdBy: session.user.nickname },
+      { _id: params.id, createdBy: user.nickname },
       { name, steps },
       { returnDocument: 'after' }
     );
@@ -72,10 +67,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -85,7 +77,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
     const template = await IntervalTemplate.findOneAndDelete({
       _id: params.id,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     if (!template) {

@@ -3,13 +3,11 @@ import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import mongoose from 'mongoose';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 // GET /api/fitness/templates/[id] - Get a specific workout template
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -21,7 +19,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     const template = await WorkoutTemplate.findOne({
       _id: params.id,
       $or: [
-        { createdBy: session.user.nickname },
+        { createdBy: user.nickname },
         { isPublic: true }
       ]
     });
@@ -39,10 +37,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 // PUT /api/fitness/templates/[id] - Update a workout template
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -76,7 +71,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     const template = await WorkoutTemplate.findOneAndUpdate(
       {
         _id: params.id,
-        createdBy: session.user.nickname
+        createdBy: user.nickname
       },
       {
         name,
@@ -103,10 +98,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
 // DELETE /api/fitness/templates/[id] - Delete a workout template
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -117,7 +109,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
     const template = await WorkoutTemplate.findOneAndDelete({
       _id: params.id,
-      createdBy: session.user.nickname // Only allow users to delete their own templates
+      createdBy: user.nickname // Only allow users to delete their own templates
     });
 
     if (!template) {

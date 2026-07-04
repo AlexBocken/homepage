@@ -1,13 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getEnrichedExerciseById, findSimilarExercises } from '$lib/data/exercisedb';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 // GET /api/fitness/exercises/[id] - Get enriched exercise with EDB data + similar exercises
 export const GET: RequestHandler = async ({ params, locals, url }) => {
-	const session = locals.session ?? await locals.auth();
-	if (!session || !session.user?.nickname) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	await requireAuth(locals);
 
 	const lang = url.searchParams.get('lang') === 'de' ? 'de' : 'en';
 	const exercise = getEnrichedExerciseById(params.id, lang);

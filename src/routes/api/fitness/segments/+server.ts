@@ -5,14 +5,12 @@ import { Segment } from '$models/Segment';
 import { SegmentEffort } from '$models/SegmentEffort';
 import { WorkoutSession, type IGpsPoint } from '$models/WorkoutSession';
 import { buildSegmentGeometry, backfillSegment, optedOutUsernames } from '$lib/server/segments';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 // POST /api/fitness/segments — create a segment from a slice of a run's track.
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? (await locals.auth());
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -30,7 +28,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     const ws = await WorkoutSession.findOne({
       _id: sessionId,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     }).lean();
     if (!ws) return json({ error: 'Session not found' }, { status: 404 });
 
@@ -53,7 +51,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const segment = await Segment.create({
       name: name.trim(),
       activityType: ws.activityType ?? 'running',
-      createdBy: session.user.nickname,
+      createdBy: user.nickname,
       public: isPublic !== false,
       points: geom.points,
       startPoint: geom.startPoint,
@@ -84,14 +82,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 // GET /api/fitness/segments — list segments (?mine=1 for own only).
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = locals.session ?? (await locals.auth());
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
-    const me = session.user.nickname;
+    const me = user.nickname;
     const mine = url.searchParams.get('mine') === '1';
 
     const filter = mine

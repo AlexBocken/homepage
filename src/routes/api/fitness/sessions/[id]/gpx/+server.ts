@@ -6,14 +6,12 @@ import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { generateGpx, buildGpxFilename } from '$lib/server/gpxExport';
 import { parseGpx, trackDistance } from '$lib/server/gpx';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 // GET /api/fitness/sessions/[id]/gpx?exerciseIdx=N — download GPX export of the track
 export const GET: RequestHandler = async ({ params, url, locals }) => {
-	const session = locals.session ?? await locals.auth();
-	if (!session || !session.user?.nickname) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	const user = await requireAuth(locals);
 
 	if (!mongoose.Types.ObjectId.isValid(params.id)) {
 		return json({ error: 'Invalid session ID' }, { status: 400 });
@@ -28,7 +26,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 
 	const workoutSession = await WorkoutSession.findOne({
 		_id: params.id,
-		createdBy: session.user.nickname
+		createdBy: user.nickname
 	}).lean();
 
 	if (!workoutSession) {
@@ -66,10 +64,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 
 // POST /api/fitness/sessions/[id]/gpx — upload GPX file for an exercise
 export const POST: RequestHandler = async ({ params, request, locals }) => {
-	const session = locals.session ?? await locals.auth();
-	if (!session || !session.user?.nickname) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	const user = await requireAuth(locals);
 
 	if (!mongoose.Types.ObjectId.isValid(params.id)) {
 		return json({ error: 'Invalid session ID' }, { status: 400 });
@@ -98,7 +93,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 		const workoutSession = await WorkoutSession.findOne({
 			_id: params.id,
-			createdBy: session.user.nickname
+			createdBy: user.nickname
 		});
 
 		if (!workoutSession) {
@@ -126,7 +121,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		// Recompute kcal with the new GPS data
 		workoutSession.kcalEstimate = await computeSessionKcal(
 			workoutSession.exercises,
-			session.user.nickname
+			user.nickname
 		) ?? undefined;
 
 		await workoutSession.save();
@@ -144,10 +139,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 // DELETE /api/fitness/sessions/[id]/gpx — remove GPS track from an exercise
 export const DELETE: RequestHandler = async ({ params, request, locals }) => {
-	const session = locals.session ?? await locals.auth();
-	if (!session || !session.user?.nickname) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	const user = await requireAuth(locals);
 
 	if (!mongoose.Types.ObjectId.isValid(params.id)) {
 		return json({ error: 'Invalid session ID' }, { status: 400 });
@@ -160,7 +152,7 @@ export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 
 		const workoutSession = await WorkoutSession.findOne({
 			_id: params.id,
-			createdBy: session.user.nickname
+			createdBy: user.nickname
 		});
 
 		if (!workoutSession) {
@@ -178,7 +170,7 @@ export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 		// Recompute kcal without the GPS data
 		workoutSession.kcalEstimate = await computeSessionKcal(
 			workoutSession.exercises,
-			session.user.nickname
+			user.nickname
 		) ?? undefined;
 
 		await workoutSession.save();

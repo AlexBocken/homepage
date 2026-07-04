@@ -2,13 +2,11 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 // POST /api/fitness/seed-example - Create the example workout template
 export const POST: RequestHandler = async ({ locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -16,7 +14,7 @@ export const POST: RequestHandler = async ({ locals }) => {
     // Check if example template already exists for this user
     const existingTemplate = await WorkoutTemplate.findOne({
       name: 'Push Day (Example)',
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     if (existingTemplate) {
@@ -48,7 +46,7 @@ export const POST: RequestHandler = async ({ locals }) => {
         }
       ],
       isPublic: false,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     await exampleTemplate.save();

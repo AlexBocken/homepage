@@ -7,6 +7,7 @@ import { SegmentEffort } from '$models/SegmentEffort';
 import { optedOutUsernames } from '$lib/server/segments';
 import { removeRunFromGrid } from '$lib/server/segmentGrid';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 /**
@@ -75,28 +76,25 @@ async function buildRunSegmentEfforts(sessionId: string, me: string) {
 
 // GET /api/fitness/sessions/[id] - Get a specific workout session
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
-    
+
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
       return json({ error: 'Invalid session ID' }, { status: 400 });
     }
 
     const workoutSession = await WorkoutSession.findOne({
       _id: params.id,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     if (!workoutSession) {
       return json({ error: 'Session not found' }, { status: 404 });
     }
 
-    const segmentEfforts = await buildRunSegmentEfforts(params.id, session.user.nickname);
+    const segmentEfforts = await buildRunSegmentEfforts(params.id, user.nickname);
 
     return json({ session: workoutSession, segmentEfforts });
   } catch (error) {
@@ -107,10 +105,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 // PUT /api/fitness/sessions/[id] - Update a workout session
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -132,7 +127,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       // Preserve gpsTrack/gpsPreview/totalDistance from existing exercises
       const existing = await WorkoutSession.findOne({
         _id: params.id,
-        createdBy: session.user.nickname
+        createdBy: user.nickname
       }).select('exercises.exerciseId exercises.gpsTrack exercises.gpsPreview exercises.totalDistance').lean();
 
       const gpsDataByExercise = new Map<string, { gpsTrack?: unknown; gpsPreview?: unknown; totalDistance?: number }>();
@@ -186,7 +181,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     const workoutSession = await WorkoutSession.findOneAndUpdate(
       {
         _id: params.id,
-        createdBy: session.user.nickname
+        createdBy: user.nickname
       },
       updateData,
       { returnDocument: 'after' }
@@ -205,21 +200,18 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
 // DELETE /api/fitness/sessions/[id] - Delete a workout session
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
-    
+
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
       return json({ error: 'Invalid session ID' }, { status: 400 });
     }
 
     const workoutSession = await WorkoutSession.findOneAndDelete({
       _id: params.id,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     if (!workoutSession) {
@@ -229,7 +221,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     // Cascade: drop this run's segment efforts so leaderboards stay accurate.
     await SegmentEffort.deleteMany({ sessionId: params.id });
     // And withdraw it from the auto-detect grid.
-    await removeRunFromGrid(session.user.nickname, params.id);
+    await removeRunFromGrid(user.nickname, params.id);
 
     return json({ message: 'Session deleted successfully' });
   } catch (error) {

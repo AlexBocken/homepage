@@ -4,21 +4,19 @@ import { dbConnect } from '$utils/db';
 import { Segment } from '$models/Segment';
 import { SegmentEffort } from '$models/SegmentEffort';
 import { optedOutUsernames } from '$lib/server/segments';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 // GET /api/fitness/segments/[id] — segment + global leaderboard + my efforts.
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? (await locals.auth());
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
       return json({ error: 'Invalid segment ID' }, { status: 400 });
     }
-    const me = session.user.nickname;
+    const me = user.nickname;
 
     const segment = await Segment.findById(params.id).lean();
     if (!segment) return json({ error: 'Segment not found' }, { status: 404 });
@@ -99,10 +97,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 // DELETE /api/fitness/segments/[id] — creator only; cascade its efforts.
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? (await locals.auth());
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -112,7 +107,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
     const segment = await Segment.findOneAndDelete({
       _id: params.id,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
     if (!segment) {
       return json({ error: 'Segment not found or unauthorized' }, { status: 404 });

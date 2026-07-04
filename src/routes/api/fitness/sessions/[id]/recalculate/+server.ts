@@ -9,14 +9,12 @@ import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { trackDistance } from '$lib/fitness/gpsSeries.js';
 import { estimatedOneRepMax } from '$lib/fitness/strength';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 // POST /api/fitness/sessions/[id]/recalculate — recompute derived fields
 export const POST: RequestHandler = async ({ params, locals }) => {
-	const session = locals.session ?? await locals.auth();
-	if (!session || !session.user?.nickname) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	const user = await requireAuth(locals);
 
 	if (!mongoose.Types.ObjectId.isValid(params.id)) {
 		return json({ error: 'Invalid session ID' }, { status: 400 });
@@ -27,7 +25,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
 		const workoutSession = await WorkoutSession.findOne({
 			_id: params.id,
-			createdBy: session.user.nickname
+			createdBy: user.nickname
 		});
 
 		if (!workoutSession) {
@@ -89,7 +87,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
 			// Find previous best (sessions before this one)
 			const prevSessions = await WorkoutSession.find({
-				createdBy: session.user!.nickname,
+				createdBy: user.nickname,
 				'exercises.exerciseId': ex.exerciseId,
 				startTime: { $lt: workoutSession.startTime }
 			}).sort({ startTime: -1 }).limit(50).lean();
@@ -140,7 +138,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		// Recompute kcal estimate using best available method
 		const kcalEstimate = await computeSessionKcal(
 			workoutSession.exercises,
-			session.user.nickname
+			user.nickname
 		);
 
 		// Persist the refreshed sets + recomputed fields (gpsTrack is loaded, so a

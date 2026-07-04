@@ -10,6 +10,7 @@ import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segment
 import { addRunToGrid, removeRunFromGrid } from '$lib/server/segmentGrid';
 import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
 import { activityKind } from '$lib/server/bestEffortsBackfill';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 const VALID_PROFILES: RoutingProfile[] = ['hiking-mountain', 'trekking', 'road'];
@@ -77,12 +78,9 @@ function assignTimestamps(
 // for the completion screen; `persist: true` replaces the stored track and
 // recomputes distance / preview / kcal.
 export const POST: RequestHandler = async ({ params, request, locals, getClientAddress }) => {
-	const session = locals.session ?? (await locals.auth());
-	if (!session || !session.user?.nickname) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	const user = await requireAuth(locals);
 
-	const rateKey = session.user.nickname ?? session.user.email ?? getClientAddress();
+	const rateKey = user.nickname ?? user.email ?? getClientAddress();
 	const { ok, retryAfter } = rateLimit(`snap:${rateKey}`);
 	if (!ok) {
 		return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
@@ -111,7 +109,7 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 
 		const ws = await WorkoutSession.findOne({
 			_id: params.id,
-			createdBy: session.user.nickname
+			createdBy: user.nickname
 		});
 		if (!ws) return json({ error: 'Session not found' }, { status: 404 });
 
@@ -176,7 +174,7 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 		}
 		ws.totalDistance = totalDistance > 0 ? totalDistance : undefined;
 
-		ws.kcalEstimate = (await computeSessionKcal(ws.exercises, session.user.nickname)) ?? undefined;
+		ws.kcalEstimate = (await computeSessionKcal(ws.exercises, user.nickname)) ?? undefined;
 
 		// The track changed: refresh the bbox so segment-matching prefilters stay correct.
 		ws.gpsBbox = sessionBbox({ gpsTrack: ws.gpsTrack, exercises: ws.exercises }) ?? undefined;
@@ -199,8 +197,8 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 
 		// Track changed → refresh its contribution to the auto-detect grid.
 		try {
-			await removeRunFromGrid(session.user.nickname, String(ws._id));
-			await addRunToGrid(session.user.nickname, String(ws._id), {
+			await removeRunFromGrid(user.nickname, String(ws._id));
+			await addRunToGrid(user.nickname, String(ws._id), {
 				gpsTrack: ws.gpsTrack,
 				exercises: ws.exercises
 			});

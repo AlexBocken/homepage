@@ -2,14 +2,12 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { DismissedSuggestion } from '$models/DismissedSuggestion';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 // POST /api/fitness/segments/suggestions/dismiss — permanently hide a suggested
 // corridor (by its route hash) for the caller.
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? (await locals.auth());
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     const { routeHash } = await request.json();
@@ -18,8 +16,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
     await dbConnect();
     await DismissedSuggestion.updateOne(
-      { userId: session.user.nickname, routeHash },
-      { $setOnInsert: { userId: session.user.nickname, routeHash } },
+      { userId: user.nickname, routeHash },
+      { $setOnInsert: { userId: user.nickname, routeHash } },
       { upsert: true }
     );
     return json({ ok: true });

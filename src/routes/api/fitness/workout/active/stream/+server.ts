@@ -1,14 +1,12 @@
 import type { RequestHandler } from './$types';
 import { addConnection, removeConnection } from '$lib/server/sseManager';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 // GET /api/fitness/workout/active/stream — SSE endpoint
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session?.user?.nickname) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
-  const userId = session.user.nickname;
+  const userId = user.nickname;
   const encoder = new TextEncoder();
 
   let controllerRef: ReadableStreamDefaultController<Uint8Array>;

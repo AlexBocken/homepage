@@ -2,21 +2,19 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 // GET /api/fitness/templates - Get all workout templates for the user
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
-    
+
     const includePublic = url.searchParams.get('include_public') === 'true';
-    
+
     const orConditions: Record<string, unknown>[] = [
-      { createdBy: session.user.nickname }
+      { createdBy: user.nickname }
     ];
 
     if (includePublic) {
@@ -36,10 +34,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 // POST /api/fitness/templates - Create a new workout template
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -73,7 +68,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       ...(isGps ? { activityType, intervalTemplateId } : {}),
       exercises: exercises ?? [],
       isPublic,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     await template.save();

@@ -16,6 +16,7 @@ import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts
 import { activityKind } from '$lib/server/bestEffortsBackfill';
 import { detectBestEffortPrs } from '$lib/server/bestEffortPrs';
 import { estimatedOneRepMax } from '$lib/fitness/strength';
+import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
 
 const GPS_ACTIVITIES = new Set(['running', 'walking', 'cycling', 'hiking']);
@@ -70,19 +71,16 @@ function searchClauses(q: string): Record<string, unknown>[] {
 
 // GET /api/fitness/sessions - Get all workout sessions for the user
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
-    
+
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const month = url.searchParams.get('month'); // YYYY-MM
 
-    const query: Record<string, any> = { createdBy: session.user.nickname };
+    const query: Record<string, any> = { createdBy: user.nickname };
     if (month && /^\d{4}-\d{2}$/.test(month)) {
       const start = new Date(month + '-01T00:00:00.000Z');
       const end = new Date(start);
@@ -180,10 +178,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 // POST /api/fitness/sessions - Create a new workout session
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session || !session.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -233,7 +228,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
       // Find previous best for this exercise
       const prevSessions = await WorkoutSession.find({
-        createdBy: session.user!.nickname,
+        createdBy: user.nickname,
         'exercises.exerciseId': ex.exerciseId,
       }).sort({ startTime: -1 }).limit(50).lean();
 
@@ -292,7 +287,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     });
 
     // Compute kcal estimate using best available method (GPS + demographics)
-    const kcalEstimate = await computeSessionKcal(processedExercises, session.user.nickname);
+    const kcalEstimate = await computeSessionKcal(processedExercises, user.nickname);
 
     // Bounding box over all GPS points, for segment-match prefiltering.
     const gpsBbox = sessionBbox({ gpsTrack, exercises: processedExercises }) ?? undefined;
@@ -324,7 +319,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       bestEfforts: bestEfforts.length > 0 ? bestEfforts : undefined,
       kcalEstimate,
       notes,
-      createdBy: session.user.nickname
+      createdBy: user.nickname
     });
 
     await workoutSession.save();
@@ -332,7 +327,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // Advance the workout-schedule rotation pointer (best-effort).
     if (templateId) {
       try {
-        await advanceSchedulePointer(session.user.nickname, String(templateId));
+        await advanceSchedulePointer(user.nickname, String(templateId));
       } catch (err) {
         console.error('Schedule pointer update failed:', err);
       }
@@ -348,7 +343,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     // Feed the run into the auto-detect grid (best-effort).
     try {
-      await addRunToGrid(session.user.nickname, String(workoutSession._id), {
+      await addRunToGrid(user.nickname, String(workoutSession._id), {
         gpsTrack,
         exercises: processedExercises
       });
@@ -360,7 +355,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     let bestEffortPrs;
     try {
       if (bestEfforts.length > 0 && beKind) {
-        bestEffortPrs = await detectBestEffortPrs(session.user.nickname, workoutSession._id, bestEfforts, beKind);
+        bestEffortPrs = await detectBestEffortPrs(user.nickname, workoutSession._id, bestEfforts, beKind);
       }
     } catch (err) {
       console.error('Best-effort PR detection failed:', err);

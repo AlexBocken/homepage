@@ -4,17 +4,15 @@ import { dbConnect } from '$utils/db';
 import { ActiveWorkout } from '$models/ActiveWorkout';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { broadcast } from '$lib/server/sseManager';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 // GET /api/fitness/workout/active — fetch current active workout
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session?.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
-    const doc = await ActiveWorkout.findOne({ userId: session.user.nickname }).lean();
+    const doc = await ActiveWorkout.findOne({ userId: user.nickname }).lean();
     if (!doc) {
       return json({ active: false });
     }
@@ -27,10 +25,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 // PUT /api/fitness/workout/active — create or update active workout state
 export const PUT: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session?.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
@@ -41,7 +36,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
       return json({ error: 'Name is required' }, { status: 400 });
     }
 
-    const userId = session.user.nickname;
+    const userId = user.nickname;
     const existing = await ActiveWorkout.findOne({ userId });
 
     if (existing && expectedVersion != null && existing.version !== expectedVersion) {
@@ -95,14 +90,11 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 // Optional ?sessionId=<id> attaches the just-saved session to the broadcast so
 // other devices can render the finish overview instead of a blank page.
 export const DELETE: RequestHandler = async ({ locals, url }) => {
-  const session = locals.session ?? await locals.auth();
-  if (!session?.user?.nickname) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const user = await requireAuth(locals);
 
   try {
     await dbConnect();
-    const userId = session.user.nickname;
+    const userId = user.nickname;
     await ActiveWorkout.deleteOne({ userId });
 
     const sessionId = url.searchParams.get('sessionId');
