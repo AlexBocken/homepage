@@ -87,6 +87,29 @@ async function cloneOffTargeted(src, dst) {
 	console.log(`  openfoodfacts: ${all.length} (terms: ${OFF_TERMS.join(', ')}) + text index`);
 }
 
+// Personal activity data (owned by 'alexander' in dev) remapped onto the
+// e2e_fitness test user, so stats / history filters / segments / best-efforts
+// have realistic workouts, GPS runs, segments and measurements. Health/period
+// data is NOT cloned — seed.mjs synthesizes that for anna instead.
+const FITNESS_REMAP = [
+	{ coll: 'workoutsessions', field: 'createdBy' },
+	{ coll: 'bodymeasurements', field: 'createdBy' },
+	{ coll: 'segments', field: 'createdBy' },
+	{ coll: 'segmentefforts', field: 'userId' },
+	{ coll: 'fitnessgoals', field: 'username' }
+];
+const FITNESS_TEST_USER = 'e2e_fitness';
+
+async function cloneFitnessRemapped(src, dst) {
+	for (const { coll, field } of FITNESS_REMAP) {
+		const docs = await src.collection(coll).find({ [field]: 'alexander' }).toArray();
+		for (const d of docs) d[field] = FITNESS_TEST_USER;
+		await dst.collection(coll).deleteMany({ [field]: FITNESS_TEST_USER });
+		if (docs.length) await dst.collection(coll).insertMany(docs, { ordered: false }).catch(() => {});
+		console.log(`  ${coll}: ${docs.length} (alexander → ${FITNESS_TEST_USER})`);
+	}
+}
+
 async function main() {
 	if (!SOURCE) {
 		console.log('ℹ️  No dev MONGO_URL found (.env); skipping clone, overlay only.');
@@ -105,6 +128,9 @@ async function main() {
 
 	console.log('📋 Cloning content collections dev → test:');
 	for (const coll of COLLECTIONS) await copyAll(src, dst, coll);
+
+	console.log('🏋️  Cloning fitness activity data (remapped to e2e_fitness):');
+	await cloneFitnessRemapped(src, dst);
 
 	console.log('📋 Cloning OpenFoodFacts products by term:');
 	await cloneOffTargeted(src, dst);

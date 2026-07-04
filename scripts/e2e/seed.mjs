@@ -188,6 +188,31 @@ const COSPEND = [
 	cospendPayment({ title: 'Kinoabend', amount: 30, paidBy: 'anna', category: 'fun', date: '2026-06-28' })
 ];
 
+// Period tracker only renders for a female profile, so give the 'anna' test user
+// a synthetic female FitnessGoal + past cycles. Synthetic on purpose — we don't
+// clone anyone's real health data.
+const FEMALE_PROFILE = {
+	username: 'anna',
+	weeklyWorkouts: 4,
+	sex: 'female',
+	heightCm: 168,
+	birthYear: 1995,
+	activityLevel: 'moderate'
+};
+// Deliberately varied so the analysis has real spread and known expected values
+// (see tests/e2e/fitness/period.spec.ts + tests/unit/.../cycleProjection):
+//   cycle gaps  [28, 30, 27, 29, 26]  → mean 28, sample-SD 1.6
+//   period durs [ 5,  4,  6,  5,  4, 6] → mean 5,  sample-SD 0.9
+//   min 26 / max 30 (span 4) → "regular" insight
+const PERIOD_CYCLES = [
+	{ createdBy: 'anna', startDate: new Date('2026-01-21'), endDate: new Date('2026-01-25') }, // 5d
+	{ createdBy: 'anna', startDate: new Date('2026-02-18'), endDate: new Date('2026-02-21') }, // 4d, cycle 28
+	{ createdBy: 'anna', startDate: new Date('2026-03-20'), endDate: new Date('2026-03-25') }, // 6d, cycle 30
+	{ createdBy: 'anna', startDate: new Date('2026-04-16'), endDate: new Date('2026-04-20') }, // 5d, cycle 27
+	{ createdBy: 'anna', startDate: new Date('2026-05-15'), endDate: new Date('2026-05-18') }, // 4d, cycle 29
+	{ createdBy: 'anna', startDate: new Date('2026-06-10'), endDate: new Date('2026-06-15') } //  6d, cycle 26
+];
+
 async function main() {
 	await mongoose.connect(MONGO_URL, { serverSelectionTimeoutMS: 8000 });
 	const db = mongoose.connection.db;
@@ -211,6 +236,13 @@ async function main() {
 	await db.collection('payments').insertMany(COSPEND.map((c) => c.payment));
 	await db.collection('paymentsplits').insertMany(COSPEND.flatMap((c) => c.splits));
 	console.log(`  payments: ${COSPEND.length} (+ splits)`);
+
+	// anna's female profile + period cycles (synthetic).
+	await db.collection('fitnessgoals').replaceOne({ username: 'anna' }, FEMALE_PROFILE, { upsert: true });
+	await db.collection('periodentries').deleteMany({ createdBy: 'anna' });
+	await db.collection('periodentries').insertMany(PERIOD_CYCLES);
+	await db.collection('periodcalendartokens').deleteMany({ createdBy: 'anna' }); // start with no shared links
+	console.log(`  anna: female profile + ${PERIOD_CYCLES.length} period cycles`);
 
 	console.log('✅ Seed overlay complete.');
 	await mongoose.disconnect();
