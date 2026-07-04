@@ -95,3 +95,34 @@ for (const r of LOGIN_ONLY_ROUTES) {
 		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path)));
 	});
 }
+
+// Browser-level spot-checks: the request matrix above proves the status codes
+// for every route; these confirm a user actually SEES the right thing in the UI
+// (the page, the 403 verse page, or the login flow) for a representative gate.
+test.describe('authorization is visible in the UI (cospend gate)', () => {
+	test('a permitted user sees the page', async ({ browser }) => {
+		const ctx = await browser.newContext({ storageState: storageStateFor('cospend') });
+		const page = await ctx.newPage();
+		await page.goto(`${BASE}/cospend/dash`);
+		await expect(page.getByRole('heading', { name: 'Cospend' })).toBeVisible();
+		await ctx.close();
+	});
+
+	for (const role of ['recipes', 'none']) {
+		test(`a ${role === 'none' ? 'no-groups' : 'wrong-group'} user sees the 403 page`, async ({ browser }) => {
+			const ctx = await browser.newContext({ storageState: storageStateFor(role) });
+			const page = await ctx.newPage();
+			await page.goto(`${BASE}/cospend/dash`);
+			await expect(page.getByText(/Zugriff verweigert/i)).toBeVisible();
+			await ctx.close();
+		});
+	}
+
+	test('a logged-out user is sent to the login flow', async ({ browser }) => {
+		const ctx = await browser.newContext(); // anonymous
+		const page = await ctx.newPage();
+		await page.goto(`${BASE}/cospend/dash`);
+		await expect(page).toHaveURL(/\/login|localhost:9100/);
+		await ctx.close();
+	});
+});
