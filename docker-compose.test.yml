@@ -1,0 +1,94 @@
+# Isolated E2E test stack: throwaway MongoDB + a real Authentik OIDC provider.
+#
+# Nothing here is meant for production. Every secret is a fixed, well-known
+# constant so the SvelteKit build (which bakes AUTHENTIK_ISSUER + AUTHENTIK_API_TOKEN
+# as $env/static/private) is fully deterministic. Ports are shifted off the
+# defaults so this never collides with a dev stack running on the same host.
+#
+#   Mongo      -> localhost:27018   (app MONGO_URL)
+#   Authentik  -> localhost:9100    (issuer / OIDC + admin API)
+#
+# Bring up:   docker compose -f docker-compose.test.yml up -d
+# Tear down:  docker compose -f docker-compose.test.yml down -v   (-v wipes data)
+
+name: bocken-e2e
+
+services:
+  mongo:
+    image: mongo:8.0
+    command: ["--quiet"]
+    ports:
+      - "27018:27017"
+    tmpfs:
+      - /data/db # ephemeral: a fresh, empty DB every run
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  authentik-postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: authentik
+      POSTGRES_PASSWORD: authentik
+      POSTGRES_DB: authentik
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authentik -d authentik"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  authentik-redis:
+    image: redis:7
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2026.5.3}
+    command: server
+    environment: &authentik-env
+      AUTHENTIK_SECRET_KEY: "e2e-authentik-secret-key-not-for-production-0000"
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgres
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_DISABLE_UPDATE_CHECK: "true"
+      AUTHENTIK_DISABLE_STARTUP_ANALYTICS: "true"
+      AUTHENTIK_LOG_LEVEL: warning
+      # Seeds the akadmin user + a fixed API token so provisioning can start
+      # immediately. This token is used by the app as AUTHENTIK_API_TOKEN.
+      AUTHENTIK_BOOTSTRAP_PASSWORD: "e2e-akadmin-password"
+      AUTHENTIK_BOOTSTRAP_TOKEN: "e2e-authentik-admin-api-token-0123456789abcdef"
+      AUTHENTIK_BOOTSTRAP_EMAIL: "akadmin@e2e.local"
+    ports:
+      - "9100:9000"
+    depends_on:
+      authentik-postgres:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 60s
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2026.5.3}
+    command: worker
+    environment: *authentik-env
+    depends_on:
+      authentik-postgres:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy

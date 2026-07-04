@@ -1,0 +1,61 @@
+import { test, expect } from '@playwright/test';
+import { ANONYMOUS, storageStateFor } from './helpers/auth';
+
+// Harness smoke test: proves the docker stack + Authentik login + seeded Mongo +
+// per-role storageState + the app's authorization gating all line up. If this is
+// green, the domain suites can be built on top with confidence.
+
+test.describe('anonymous (logged out)', () => {
+	test.use({ storageState: ANONYMOUS });
+
+	test('home page renders', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.getByText('Ad maiorem Dei gloriam')).toBeVisible();
+	});
+
+	test('public recipe content is served', async ({ page }) => {
+		await page.goto('/rezepte/schokokuchen');
+		await expect(page.getByRole('heading', { name: 'Schokokuchen' })).toBeVisible();
+	});
+
+	test('protected route redirects to login', async ({ request }) => {
+		const res = await request.get('/fitness', { maxRedirects: 0 });
+		expect(res.status()).toBe(303);
+		expect(res.headers()['location']).toContain('/login');
+	});
+});
+
+// Permission matrix — each role hits gated routes and we assert the exact
+// authorization outcome from src/hooks.server.ts.
+type Case = { role: string; path: string; expect: number | 'redirect' };
+const MATRIX: Case[] = [
+	// cospend: needs login + `cospend` group
+	{ role: 'full', path: '/cospend/dash', expect: 200 },
+	{ role: 'cospend', path: '/cospend/dash', expect: 200 },
+	{ role: 'none', path: '/cospend/dash', expect: 403 },
+	{ role: 'recipes', path: '/cospend/dash', expect: 403 },
+	// fitness: needs login only (no group). /fitness root self-redirects to
+	// /fitness/workout, so target a real page to assert plain access.
+	{ role: 'none', path: '/fitness/check-in', expect: 200 },
+	{ role: 'fitness', path: '/fitness/check-in', expect: 200 },
+	// tasks: needs login + `task_users`
+	{ role: 'tasks', path: '/tasks', expect: 200 },
+	{ role: 'none', path: '/tasks', expect: 403 },
+	// recipes add/edit: needs login + `rezepte_users`
+	{ role: 'recipes', path: '/rezepte/add', expect: 200 },
+	{ role: 'none', path: '/rezepte/add', expect: 403 }
+];
+
+for (const c of MATRIX) {
+	test.describe(`role=${c.role} -> ${c.path}`, () => {
+		test.use({ storageState: storageStateFor(c.role) });
+		test(`expect ${c.expect}`, async ({ request }) => {
+			const res = await request.get(c.path, { maxRedirects: 0 });
+			if (c.expect === 'redirect') {
+				expect(res.status()).toBe(303);
+			} else {
+				expect(res.status()).toBe(c.expect);
+			}
+		});
+	});
+}

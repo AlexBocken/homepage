@@ -1,0 +1,12 @@
+{
+  "comment": "Test-user permission matrix. Shared by the Authentik provisioner and the Playwright auth setup. `key` is the storageState/role name; `username` is the Authentik login + OIDC nickname; `groups` drives the app's authorization gates (src/hooks.server.ts).",
+  "users": [
+    { "key": "full",    "username": "e2e_full",    "name": "Full Access",  "email": "full@e2e.local",    "groups": ["rezepte_users", "cospend", "task_users", "fitness"] },
+    { "key": "none",    "username": "e2e_none",    "name": "No Groups",    "email": "none@e2e.local",    "groups": [] },
+    { "key": "recipes", "username": "e2e_recipes", "name": "Recipes Only", "email": "recipes@e2e.local", "groups": ["rezepte_users"] },
+    { "key": "cospend", "username": "e2e_cospend", "name": "Cospend Only", "email": "cospend@e2e.local", "groups": ["cospend"] },
+    { "key": "tasks",   "username": "e2e_tasks",   "name": "Tasks Only",   "email": "tasks@e2e.local",   "groups": ["task_users"] },
+    { "key": "fitness", "username": "e2e_fitness", "name": "Fitness Only", "email": "fitness@e2e.local", "groups": ["fitness"] },
+    { "key": "anna",    "username": "anna",        "name": "Anna",         "email": "anna@e2e.local",    "groups": ["rezepte_users", "cospend", "task_users", "fitness"] }
+  ]
+}
