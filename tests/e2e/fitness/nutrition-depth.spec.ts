@@ -34,15 +34,28 @@ test('set a calorie goal via the wizard and it persists', async ({ page }) => {
 	await gotoHydrated(page, '/fitness/nutrition');
 	await page.getByRole('button', { name: /Daily Goal/i }).first().click();
 	await page.getByRole('button', { name: /Maintain/i }).first().click(); // preset → step 2
+
+	// Capture the daily-calorie target the preset set. This is the value stored
+	// verbatim (goal.dailyCalories); the day view's macro *grams* are derived from
+	// it plus burned calories and rounded, so they drift across a reload — assert
+	// on the stable stored field instead.
+	const calInput = page.locator('#goal-calories');
+	await expect(calInput).toBeVisible();
+	const savedCalories = await calInput.inputValue();
+	expect(Number(savedCalories)).toBeGreaterThan(0);
+
 	await page.getByRole('button', { name: /Next/i }).first().click(); // → step 3 (macros)
 	await page.getByRole('button', { name: /^Save$/i }).click();
 
-	// The saved goal drives the day view's macro targets; capture one and confirm
-	// it survives a reload (server persistence).
-	const macro = page.getByText(/\/\s*\d+\s*g\s*left/i).first();
-	await expect(macro).toBeVisible();
-	const targetGrams = (await macro.innerText()).match(/\/\s*(\d+)\s*g/)![1];
+	// The saved goal drives the day view's macro bars (vs. the "set a goal" prompt).
+	await expect(page.locator('.macro-bar-info').first()).toBeVisible();
 
+	// Persisted: reload, the goal still drives the macro bars, and reopening the
+	// wizard shows the same stored calorie target.
 	await gotoHydrated(page, '/fitness/nutrition');
-	await expect(page.getByText(new RegExp(`/\\s*${targetGrams}\\s*g\\s*left`, 'i')).first()).toBeVisible();
+	await expect(page.locator('.macro-bar-info').first()).toBeVisible();
+
+	await page.getByRole('button', { name: /Daily Goal/i }).first().click();
+	await page.locator('.wizard-step').nth(1).click(); // → step 2 (calories)
+	await expect(page.locator('#goal-calories')).toHaveValue(savedCalories);
 });
