@@ -11,6 +11,8 @@
 	import MapIcon from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
 	import Layers from '@lucide/svelte/icons/layers';
+	import SearchInput from '$lib/components/SearchInput.svelte';
+	import type { GeoResult } from '$lib/data/geocode';
 	// Single-point Swisstopo elevation lookups are intentionally NOT used —
 	// they returned 0 against WGS-84 inputs in practice, and image waypoints
 	// don't need per-point altitudes anyway. Waypoint altitudes flow from
@@ -62,6 +64,81 @@
 
 	const TRACK_COLOR = SAC_TRAIL_COLOR.T2;
 	const ACCENT_COLOR = '#2965c8'; // SAC T4 blue — used for the focused-marker accent ring
+
+	// --- Location search (Photon-backed geocoding proxy) ---
+	let searchQuery = $state('');
+	let searchResults = $state<GeoResult[]>([]);
+	let searchOpen = $state(false);
+	let searchLoading = $state(false);
+	let searchError = $state('');
+	let searchDebounce: ReturnType<typeof setTimeout> | undefined;
+	let searchAbort: AbortController | null = null;
+
+	// Assigned by the map attachment so the (imperative) search handlers can drive
+	// the Leaflet instance without leaking it into component scope.
+	let flyToResult: ((r: GeoResult) => void) | null = null;
+	let readMapCenter: (() => { lat: number; lng: number }) | null = null;
+
+	function onSearchInput() {
+		searchOpen = true;
+		searchError = '';
+		clearTimeout(searchDebounce);
+		const q = searchQuery.trim();
+		if (q.length < 2) {
+			searchResults = [];
+			searchLoading = false;
+			return;
+		}
+		searchLoading = true;
+		searchDebounce = setTimeout(() => runSearch(q), 300);
+	}
+
+	async function runSearch(q: string) {
+		searchAbort?.abort();
+		searchAbort = new AbortController();
+		try {
+			const params = new URLSearchParams({ q });
+			const c = readMapCenter?.();
+			if (c) {
+				params.set('lat', String(c.lat));
+				params.set('lon', String(c.lng));
+			}
+			const res = await fetch(`/api/hikes/route-builder/search?${params}`, {
+				signal: searchAbort.signal
+			});
+			if (!res.ok) throw new Error(String(res.status));
+			const data: { results: GeoResult[] } = await res.json();
+			searchResults = data.results ?? [];
+		} catch (err) {
+			if (err instanceof DOMException && err.name === 'AbortError') return;
+			searchResults = [];
+			searchError = 'Suche fehlgeschlagen';
+		} finally {
+			searchLoading = false;
+		}
+	}
+
+	function pickResult(r: GeoResult) {
+		flyToResult?.(r);
+		searchOpen = false;
+	}
+
+	function clearSearch() {
+		searchResults = [];
+		searchOpen = false;
+		searchError = '';
+	}
+
+	// Close the results dropdown on outside click (mirrors the layer popover).
+	$effect(() => {
+		if (!searchOpen) return;
+		function onAway(e: MouseEvent) {
+			const target = e.target as HTMLElement | null;
+			if (target && !target.closest('.map-search')) searchOpen = false;
+		}
+		window.addEventListener('click', onAway);
+		return () => window.removeEventListener('click', onAway);
+	});
 
 	function escapeAttr(s: string): string {
 		return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -143,6 +220,36 @@
 
 			const markerLayer = L.layerGroup().addTo(map);
 			const lineLayer = L.layerGroup().addTo(map);
+
+			// Location-search: a dedicated layer for the single "you searched here"
+			// pin, plus the closures the search UI calls to bias/drive the map.
+			const searchLayer = L.layerGroup().addTo(map);
+			const searchIcon = L.divIcon({
+				className: 'rb-search-pin',
+				html: `<svg viewBox="0 0 24 32" width="24" height="32" aria-hidden="true"><path d="M12 32 L4.5 16 A8 8 0 1 1 19.5 16 Z" fill="${ACCENT_COLOR}" stroke="white" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="white"/></svg>`,
+				iconSize: [24, 32],
+				iconAnchor: [12, 32]
+			});
+			readMapCenter = () => {
+				const c = map.getCenter();
+				return { lat: c.lat, lng: c.lng };
+			};
+			flyToResult = (r) => {
+				searchLayer.clearLayers();
+				L.marker([r.lat, r.lon], { icon: searchIcon, keyboard: false }).addTo(searchLayer);
+				if (r.extent) {
+					const [minLon, maxLat, maxLon, minLat] = r.extent;
+					map.flyToBounds(
+						[
+							[minLat, minLon],
+							[maxLat, maxLon]
+						],
+						{ maxZoom: 15, padding: [40, 40] }
+					);
+				} else {
+					map.flyTo([r.lat, r.lon], 14);
+				}
+			};
 
 			// Route polylines render on a canvas with a hit-test `tolerance`, so a
 			// click *near* the (thin) line still inserts a waypoint into the route
@@ -364,6 +471,8 @@
 			}
 
 			cleanup = () => {
+				flyToResult = null;
+				readMapCenter = null;
 				stopRoot();
 				map.remove();
 			};
@@ -378,6 +487,33 @@
 
 <div class="edit-map-wrap" class:placement-mode={!!pendingWaypoint}>
 	<div class="edit-map" {@attach editAttachment}></div>
+
+	<div class="map-search">
+		<SearchInput
+			bind:value={searchQuery}
+			placeholder="Ort suchen…"
+			clearTitle="Suche leeren"
+			oninput={onSearchInput}
+			onClear={clearSearch}
+		/>
+		{#if searchOpen && (searchLoading || searchError || searchResults.length > 0 || searchQuery.trim().length >= 2)}
+			<ul class="map-search-results" role="listbox">
+				{#if searchLoading}
+					<li class="ms-status">Suche…</li>
+				{:else if searchError}
+					<li class="ms-status">{searchError}</li>
+				{:else if searchResults.length === 0}
+					<li class="ms-status">Keine Treffer</li>
+				{:else}
+					{#each searchResults as r (r.label + r.lat + r.lon)}
+						<li>
+							<button type="button" class="ms-result" onclick={() => pickResult(r)}>{r.label}</button>
+						</li>
+					{/each}
+				{/if}
+			</ul>
+		{/if}
+	</div>
 
 	<div class="map-controls">
 		<div class="layer-menu" class:open={layerMenuOpen}>
@@ -624,5 +760,81 @@
 		:global(.rb-pin.is-active) {
 			animation: none;
 		}
+	}
+
+	/* Location search — top-centre overlay, clear of the top-left zoom control
+	 * and the bottom-right layer menu. */
+	.map-search {
+		position: absolute;
+		top: 0.9rem;
+		left: 50%;
+		transform: translateX(-50%);
+		width: min(340px, calc(100% - 5rem));
+		z-index: 600;
+	}
+
+	/* Compact the hero-styled SearchInput down to a map control and re-theme it
+	 * to match the round controls (its defaults are a large dark pill). */
+	.map-search :global(.search) {
+		width: 100%;
+		max-width: none;
+		margin: 0;
+		font-size: 0.95rem;
+		filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
+	}
+	.map-search :global(.search:hover),
+	.map-search :global(.search:focus-within) {
+		scale: 1;
+	}
+	.map-search :global(.search input) {
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		border: 1px solid var(--color-border);
+		box-shadow: var(--shadow-md);
+		padding: 0.55rem 2.2rem 0.55rem 0.95rem;
+	}
+	.map-search :global(.search input::placeholder) {
+		color: var(--color-text-tertiary);
+	}
+	.map-search :global(.search-button) {
+		color: var(--color-text-secondary);
+	}
+
+	.map-search-results {
+		list-style: none;
+		margin: 0.4rem 0 0;
+		padding: 0.25rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+		max-height: 16rem;
+		overflow-y: auto;
+	}
+	.map-search-results li {
+		margin: 0;
+	}
+	.ms-result {
+		display: block;
+		width: 100%;
+		text-align: left;
+		border: 0;
+		background: transparent;
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: 0.85rem;
+		line-height: 1.3;
+		padding: 0.5rem 0.6rem;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		transition: background var(--transition-fast);
+	}
+	.ms-result:hover {
+		background: var(--color-bg-elevated);
+	}
+	.ms-status {
+		padding: 0.5rem 0.6rem;
+		font-size: 0.85rem;
+		color: var(--color-text-tertiary);
 	}
 </style>
