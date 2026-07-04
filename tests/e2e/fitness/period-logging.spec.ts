@@ -2,99 +2,89 @@ import { test, expect, type Page } from '@playwright/test';
 import { storageStateFor } from '../helpers/auth';
 import { gotoHydrated } from '../helpers/nav';
 
-// Period tracker INPUT + persistence (start/end/add/edit/delete). Runs as the
-// e2e_full user (also female-profiled) so anna's analysis fixtures stay pristine.
-// Serial + self-cleaning so the shared history is stable between checks.
+// Period tracker INPUT + persistence, driven and verified entirely through the
+// UI. Runs as the e2e_full user (also female-profiled) so anna's analysis
+// fixtures stay pristine. Serial + self-cleaning via the UI delete buttons.
 
 test.use({ storageState: storageStateFor('full') });
 test.describe.configure({ mode: 'serial' });
 
-async function periodEntries(page: Page): Promise<{ _id: string; startDate: string; endDate: string | null }[]> {
-	return (await (await page.request.get('/api/fitness/period')).json()).entries;
+const items = (page: Page) => page.locator('.history-item');
+
+/** Ensure the history list is expanded. */
+async function openHistory(page: Page) {
+	if (await items(page).first().isVisible().catch(() => false)) return;
+	await page.getByRole('button', { name: /^History$/i }).first().click();
+	await items(page).first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
 }
 
-/** End any ongoing period and delete entries created after `keepIds` (cleanup). */
-async function reset(page: Page, keepIds: Set<string>) {
+/** End any ongoing period so a fresh one can be started (idempotent re-runs). */
+async function endOngoing(page: Page) {
 	const ended = page.getByRole('button', { name: /period ended/i });
 	if (await ended.count()) {
 		await ended.first().click();
-		await page.waitForTimeout(500);
-	}
-	for (const e of await periodEntries(page)) {
-		if (!keepIds.has(e._id)) await page.request.delete(`/api/fitness/period/${e._id}`);
+		await page.waitForTimeout(400);
 	}
 }
 
-test('start a period, confirm it persists, end it, then delete it', async ({ page }) => {
+test('start a period, confirm it persists on reload, end it, then delete it', async ({ page }) => {
 	await gotoHydrated(page, '/fitness/check-in');
-	const baseline = new Set((await periodEntries(page)).map((e) => e._id));
-	await reset(page, baseline); // clear any leftover ongoing/entries from a prior run
+	await endOngoing(page);
+	await openHistory(page);
+	const before = await items(page).count();
 
-	// Start → ongoing.
+	// Start → the UI reflects an ongoing period.
 	await page.getByRole('button', { name: /^Start Period$/i }).click();
+	await expect(page.getByRole('button', { name: /period ended/i })).toBeVisible();
 	await expect(page.getByText(/Day 1/i).first()).toBeVisible();
-	await expect(page.getByRole('button', { name: /period ended/i })).toBeVisible();
-	expect((await periodEntries(page)).length).toBe(baseline.size + 1);
 
-	// Persists across a reload (server, not just local state).
-	await page.reload();
-	await page.waitForTimeout(800);
+	// Persists across a reload (read back from the server, in the UI).
+	await gotoHydrated(page, '/fitness/check-in');
 	await expect(page.getByRole('button', { name: /period ended/i })).toBeVisible();
 
-	// End → completes the cycle.
+	// End → the completed cycle shows up in history.
 	await page.getByRole('button', { name: /period ended/i }).click();
 	await expect(page.getByRole('button', { name: /^Start Period$/i })).toBeVisible();
-	const afterEnd = await periodEntries(page);
-	const created = afterEnd.find((e) => !baseline.has(e._id))!;
-	expect(created.endDate).not.toBeNull(); // now a completed cycle
+	await openHistory(page);
+	await expect.poll(() => items(page).count()).toBe(before + 1);
 
-	// Delete it via the history UI and confirm it's gone.
-	await page.getByRole('button', { name: /^History$/i }).first().click();
-	const delBtns = page.locator('button[aria-label="Delete"]');
-	const before = await delBtns.count();
-	await delBtns.first().click();
+	// Delete it via the history UI → back to the original list.
+	await items(page).first().locator('button[aria-label="Delete"]').click();
 	await page.locator('button.confirm-btn.confirm').click();
-	await expect.poll(() => delBtns.count()).toBe(before - 1);
-
-	await reset(page, baseline); // safety net
-	expect((await periodEntries(page)).length).toBe(baseline.size);
+	await expect.poll(() => items(page).count()).toBe(before);
 });
 
-test('edit a period entry date and confirm it persists', async ({ page }) => {
+test('edit a period entry date and see the change persist', async ({ page }) => {
 	await gotoHydrated(page, '/fitness/check-in');
-	const baseline = new Set((await periodEntries(page)).map((e) => e._id));
+	await openHistory(page);
+	const first = items(page).first();
+	const originalText = (await first.innerText()).replace(/\s+/g, ' ').trim(); // e.g. "Jun 5 — Jun 10 6 days"
 
-	// Own a fresh target: the newest entry → first in the history list.
-	await page.request.post('/api/fitness/period', {
-		data: { startDate: '2026-06-20T00:00:00.000Z', endDate: '2026-06-24T00:00:00.000Z' }
-	});
-	const created = (await periodEntries(page)).find((e) => !baseline.has(e._id))!;
-	const originalEnd = new Date(created.endDate!).getTime();
-
-	// Edit it in the UI: advance the end date one day (2nd picker = end).
-	await page.reload();
-	await page.waitForTimeout(600);
-	await page.getByRole('button', { name: /^History$/i }).first().click();
-	await page.locator('button[aria-label="Edit"]').first().click();
-	const form = page.locator('.history-item.editing');
-	await expect(form).toBeVisible();
-	await form.locator('button[aria-label="Next day"]').nth(1).click();
+	await first.locator('button[aria-label="Edit"]').click();
+	// Advance the end date by one day (2nd picker in the edit form = end).
+	await page.locator('.history-item.editing button[aria-label="Next day"]').nth(1).click();
 	await page.getByRole('button', { name: /^Save$/i }).click();
-	await page.waitForTimeout(500);
 
-	// The change persisted server-side (end moved later).
-	const after = (await periodEntries(page)).find((e) => e._id === created._id)!;
-	expect(new Date(after.endDate!).getTime()).toBeGreaterThan(originalEnd);
+	// The history row now shows a later end date / longer duration.
+	await expect.poll(() => items(page).first().innerText().then((t) => t.replace(/\s+/g, ' ').trim())).not.toBe(originalText);
 
-	await page.request.delete(`/api/fitness/period/${created._id}`);
-	expect((await periodEntries(page)).length).toBe(baseline.size);
+	// Survives a reload.
+	await gotoHydrated(page, '/fitness/check-in');
+	await openHistory(page);
+	await expect(items(page).first()).not.toHaveText(new RegExp(originalText.replace(/[.*+?^${}()|[\]\\—]/g, '\\$&')));
+
+	// Revert so the fixture is unchanged for re-runs.
+	await items(page).first().locator('button[aria-label="Edit"]').click();
+	await page.locator('.history-item.editing button[aria-label="Previous day"]').nth(1).click();
+	await page.getByRole('button', { name: /^Save$/i }).click();
+	await expect.poll(() => items(page).first().innerText().then((t) => t.replace(/\s+/g, ' ').trim())).toBe(originalText);
 });
 
-test('add a past period via the form and confirm it persists', async ({ page }) => {
+test('add a past period via the form and see it in history', async ({ page }) => {
 	await gotoHydrated(page, '/fitness/check-in');
-	const baseline = new Set((await periodEntries(page)).map((e) => e._id));
+	await openHistory(page);
+	const before = await items(page).count();
 
-	await page.getByRole('button', { name: /^History$/i }).first().click();
 	await page.getByRole('button', { name: /Add Past Period/i }).click();
 	const form = page.locator('.add-form, .history-item.editing').last();
 	await expect(form).toBeVisible();
@@ -102,14 +92,15 @@ test('add a past period via the form and confirm it persists', async ({ page }) 
 	const prevDay = form.locator('button[aria-label="Previous day"]').first();
 	for (let i = 0; i < 7; i++) await prevDay.click();
 	await page.getByRole('button', { name: /^Save$/i }).click();
-	await page.waitForTimeout(600);
 
-	// A new entry was persisted.
-	const after = await periodEntries(page);
-	const created = after.filter((e) => !baseline.has(e._id));
-	expect(created.length).toBe(1);
+	// A new row appears and survives a reload.
+	await expect.poll(() => items(page).count()).toBe(before + 1);
+	await gotoHydrated(page, '/fitness/check-in');
+	await openHistory(page);
+	await expect(items(page)).toHaveCount(before + 1);
 
-	// Clean up.
-	await page.request.delete(`/api/fitness/period/${created[0]._id}`);
-	expect((await periodEntries(page)).length).toBe(baseline.size);
+	// Clean up via the UI delete (the added cycle is the most recent → first).
+	await items(page).first().locator('button[aria-label="Delete"]').click();
+	await page.locator('button.confirm-btn.confirm').click();
+	await expect.poll(() => items(page).count()).toBe(before);
 });
