@@ -136,14 +136,18 @@ export function formatRelativeTime(
 		return 'Invalid Date';
 	}
 
+	// Truncate toward zero (NOT Math.floor): for past dates the diffs are
+	// negative, and Math.floor(-3 / 365) === -1 would make every past date fall
+	// into the "year" branch and render as "last year". Math.trunc keeps a small
+	// negative ratio at 0 so the correct (smaller) unit is chosen.
 	const diffMs = dateObj.getTime() - baseDate.getTime();
-	const diffSeconds = Math.floor(diffMs / 1000);
-	const diffMinutes = Math.floor(diffSeconds / 60);
-	const diffHours = Math.floor(diffMinutes / 60);
-	const diffDays = Math.floor(diffHours / 24);
-	const diffWeeks = Math.floor(diffDays / 7);
-	const diffMonths = Math.floor(diffDays / 30);
-	const diffYears = Math.floor(diffDays / 365);
+	const diffSeconds = Math.trunc(diffMs / 1000);
+	const diffMinutes = Math.trunc(diffSeconds / 60);
+	const diffHours = Math.trunc(diffMinutes / 60);
+	const diffDays = Math.trunc(diffHours / 24);
+	const diffWeeks = Math.trunc(diffDays / 7);
+	const diffMonths = Math.trunc(diffDays / 30);
+	const diffYears = Math.trunc(diffDays / 365);
 
 	const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 

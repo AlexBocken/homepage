@@ -106,14 +106,25 @@ describe('formatters', () => {
 	});
 
 	describe('formatRelativeTime', () => {
-		it.skip('should format past time (days)', () => {
-			// Skipping due to year calculation edge case with test dates
-			// The function works correctly in production
+		it('should format past time (days)', () => {
+			// Use 3 days: with numeric:'auto', German renders -1/-2 days as the
+			// idiomatic "gestern"/"vorgestern" (no digit, no "Tag"), so assert on a
+			// value past that range where the numeric form kicks in ("vor 3 Tagen").
 			const baseDate = new Date('2024-06-18T12:00:00Z');
-			const pastDate = new Date('2024-06-16T12:00:00Z'); // 2 days before
+			const pastDate = new Date('2024-06-15T12:00:00Z'); // 3 days before
 			const result = formatRelativeTime(pastDate, baseDate, 'de-DE');
-			expect(result).toContain('2');
+			expect(result).toContain('3');
 			expect(result.toLowerCase()).toMatch(/tag/);
+		});
+
+		it('should pick the right unit for past dates (no "last year" collapse)', () => {
+			// Regression guard: with Math.floor, any past date's week/month/year diff
+			// truncated to -1 and everything collapsed to "letztes Jahr".
+			const baseDate = new Date('2024-06-18T12:00:00Z');
+			const twoWeeks = formatRelativeTime(new Date('2024-06-04T12:00:00Z'), baseDate, 'de-DE');
+			expect(twoWeeks.toLowerCase()).toMatch(/woche/);
+			const twoMonths = formatRelativeTime(new Date('2024-04-18T12:00:00Z'), baseDate, 'de-DE');
+			expect(twoMonths.toLowerCase()).toMatch(/monat/);
 		});
 
 		it('should format future time (hours)', () => {
