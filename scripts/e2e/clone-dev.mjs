@@ -40,8 +40,14 @@ const DEFAULT_COLLECTIONS = ['recipes', 'totryrecipes', 'shoppingitemcategories'
 const COLLECTIONS = (process.env.E2E_CLONE_COLLECTIONS
 	? process.env.E2E_CLONE_COLLECTIONS.split(',').map((s) => s.trim()).filter(Boolean)
 	: DEFAULT_COLLECTIONS);
-// Optional capped sample of the ~1M-doc OpenFoodFacts cache (0 = skip).
+// Optional extra random sample of the ~1M-doc OpenFoodFacts cache (0 = skip).
 const OFF_LIMIT = Number(process.env.E2E_CLONE_OFF || 0);
+// Real OFF products are always pulled for these (brand) terms so food search
+// reliably returns an OFF-source result. Overridable.
+const OFF_TERMS = (process.env.E2E_CLONE_OFF_TERMS
+	? process.env.E2E_CLONE_OFF_TERMS.split(',').map((s) => s.trim()).filter(Boolean)
+	: ['nutella', 'coca-cola', 'cola', 'oreo', 'haribo', 'pringles']);
+const OFF_PER_TERM = 40;
 
 async function connect(url, name) {
 	const c = mongoose.createConnection(url, { serverSelectionTimeoutMS: 6000 });
@@ -63,6 +69,24 @@ async function copyAll(src, dst, coll, limit = 0) {
 	console.log(`  ${coll}: ${docs.length}`);
 }
 
+// Pull real OFF products matching each term (deduped by barcode) and build the
+// $text index the app's food search relies on.
+async function cloneOffTargeted(src, dst) {
+	const seen = new Map();
+	for (const term of OFF_TERMS) {
+		const docs = await src.collection('openfoodfacts')
+			.find({ name: { $regex: term, $options: 'i' } }).limit(OFF_PER_TERM).toArray();
+		for (const d of docs) seen.set(d.barcode, d);
+	}
+	const all = [...seen.values()];
+	await dst.collection('openfoodfacts').deleteMany({});
+	if (all.length) await dst.collection('openfoodfacts').insertMany(all, { ordered: false });
+	await dst.collection('openfoodfacts')
+		.createIndex({ name: 'text', nameDe: 'text', brands: 'text' }, { name: 'off_text' })
+		.catch(() => {});
+	console.log(`  openfoodfacts: ${all.length} (terms: ${OFF_TERMS.join(', ')}) + text index`);
+}
+
 async function main() {
 	if (!SOURCE) {
 		console.log('ℹ️  No dev MONGO_URL found (.env); skipping clone, overlay only.');
@@ -81,8 +105,11 @@ async function main() {
 
 	console.log('📋 Cloning content collections dev → test:');
 	for (const coll of COLLECTIONS) await copyAll(src, dst, coll);
+
+	console.log('📋 Cloning OpenFoodFacts products by term:');
+	await cloneOffTargeted(src, dst);
 	if (OFF_LIMIT > 0) {
-		console.log(`📋 Sampling openfoodfacts (limit ${OFF_LIMIT}):`);
+		console.log(`📋 Additionally sampling openfoodfacts (limit ${OFF_LIMIT}):`);
 		await copyAll(src, dst, 'openfoodfacts', OFF_LIMIT);
 	}
 

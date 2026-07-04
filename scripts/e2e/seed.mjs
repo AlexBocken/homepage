@@ -29,6 +29,7 @@ function recipe(o) {
 		seasonRanges: o.seasonRanges ?? [],
 		defaultForm: o.defaultForm,
 		isBaseRecipe: o.isBaseRecipe ?? false,
+		nutritionMappings: o.nutritionMappings ?? [],
 		ingredients: o.ingredients ?? [section('', [{ name: 'Zutat', unit: 'g', amount: '100' }])],
 		instructions: o.instructions ?? [steps('', ['Schritt eins.', 'Schritt zwei.'])],
 		preparation: o.preparation ?? '',
