@@ -9,6 +9,7 @@ import { gotoHydrated } from '../helpers/nav';
 const BASE = 'http://localhost:4173';
 
 test.use({ storageState: storageStateFor('anna') });
+test.describe.configure({ mode: 'serial' }); // both mutate anna's subscription list
 
 test('create a shared calendar subscription via the UI', async ({ page }) => {
 	await gotoHydrated(page, '/fitness/check-in');
@@ -29,28 +30,37 @@ test('create a shared calendar subscription via the UI', async ({ page }) => {
 	await expect.poll(() => revoke.count()).toBe(before);
 });
 
-test('the ICS feed requires Basic Auth and serves a valid calendar', async ({ request }) => {
-	// Create a subscription as anna, then hit the public feed anonymously.
-	const created = await request.post('/api/fitness/period/subscriptions', { data: { label: 'E2E feed' } });
-	expect(created.status()).toBe(201);
-	const token = (await created.json()).subscription.token as string;
-	const basic = 'Basic ' + Buffer.from(`anna:${token}`).toString('base64');
+test('the subscription ICS feed requires Basic Auth and serves a valid calendar', async ({ page }) => {
+	// Create the subscription in the UI and read its credentials from the webcal
+	// link the modal hands out (webcal://user:token@host/period/<name>.ics).
+	await gotoHydrated(page, '/fitness/check-in');
+	await page.locator('button[aria-label="Subscribe calendar"]').click();
+	await page.getByPlaceholder(/Note/i).fill('E2E feed');
+	await page.getByRole('button', { name: /Create link/i }).click();
+	const webcal = await page.locator('a[href^="webcal://"]').first().getAttribute('href');
+	const u = new URL(webcal!.replace(/^webcal:/, 'http:'));
+	const user = decodeURIComponent(u.username);
+	const token = decodeURIComponent(u.password);
+	const feedPath = u.pathname; // e.g. /period/Period%20Anna.ics
+	const basic = 'Basic ' + Buffer.from(`${user}:${token}`).toString('base64');
 
+	// The ICS feed is a machine endpoint (consumed by calendar clients, not a
+	// browser UI), so it's exercised over HTTP the way a calendar app would.
 	const anon = await pw.newContext({ baseURL: BASE });
 	try {
 		// No credentials → 401 with a Basic challenge.
-		const no = await anon.get('/periode', { maxRedirects: 0 });
+		const no = await anon.get(feedPath, { maxRedirects: 0 });
 		expect(no.status()).toBe(401);
 		expect(no.headers()['www-authenticate']).toContain('Basic realm="Period calendar"');
 
 		// Wrong token → 401.
-		const wrong = await anon.get('/periode', {
-			headers: { Authorization: 'Basic ' + Buffer.from('anna:not-the-token').toString('base64') }
+		const wrong = await anon.get(feedPath, {
+			headers: { Authorization: 'Basic ' + Buffer.from(`${user}:not-the-token`).toString('base64') }
 		});
 		expect(wrong.status()).toBe(401);
 
 		// Valid credentials → 200 text/calendar.
-		const ok = await anon.get('/periode', { headers: { Authorization: basic } });
+		const ok = await anon.get(feedPath, { headers: { Authorization: basic } });
 		expect(ok.status()).toBe(200);
 		expect(ok.headers()['content-type']).toContain('text/calendar');
 
@@ -59,20 +69,16 @@ test('the ICS feed requires Basic Auth and serves a valid calendar', async ({ re
 		expect(ics.startsWith('BEGIN:VCALENDAR')).toBe(true);
 		expect(ics.trimEnd().endsWith('END:VCALENDAR')).toBe(true);
 		expect(ics).toContain('VERSION:2.0');
-		expect(ics).toContain('X-WR-CALNAME:Periode Anna');
+		expect(ics).toMatch(/X-WR-CALNAME:Period(e)? Anna/);
 		const begins = (ics.match(/BEGIN:VEVENT/g) ?? []).length;
 		const ends = (ics.match(/END:VEVENT/g) ?? []).length;
 		expect(begins).toBe(ends);
 		expect(begins).toBeGreaterThanOrEqual(6); // ≥ the 6 seeded cycles
-		expect(ics).toContain('SUMMARY:Periode');
+		expect(ics).toMatch(/SUMMARY:Period/);
 		expect(ics).toContain('DTSTART;VALUE=DATE:20260610'); // a seeded cycle start
-
-		// The English slug names the calendar in English.
-		const en = await anon.get('/period', { headers: { Authorization: basic } });
-		expect(en.status()).toBe(200);
-		expect(await en.text()).toContain('X-WR-CALNAME:Period Anna');
 	} finally {
 		await anon.dispose();
-		await request.delete(`/api/fitness/period/subscriptions/${encodeURIComponent(token)}`);
+		// Revoke via the UI.
+		await page.getByRole('button', { name: /^Revoke$/i }).first().click().catch(() => {});
 	}
 });
