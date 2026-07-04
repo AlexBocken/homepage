@@ -7,6 +7,7 @@
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import X from '@lucide/svelte/icons/x';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { entriesCalories } from '$lib/fitness/nutritionMath';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -58,7 +59,7 @@
 	// --- Computed ---
 	/** @param {Meal} meal */
 	function mealTotalCal(meal) {
-		return meal.ingredients.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + (ing.per100g?.calories ?? 0) * ing.amountGrams / 100, 0);
+		return entriesCalories(meal.ingredients);
 	}
 
 	/** @param {MealIngredient[]} ings */

@@ -17,6 +17,7 @@
 	import { buildGpsView, formatPaceTooltip } from '$lib/fitness/gpsSeries';
 	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
 	import { formatElapsed } from '$lib/fitness/segmentFormat';
+	import { estimatedOneRepMax } from '$lib/fitness/strength';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 
@@ -96,13 +97,6 @@
 		const h = Math.floor(mins / 60);
 		const mm = mins % 60;
 		return h > 0 ? `${h}h ${mm}m` : `${mm}m`;
-	}
-
-	/** @param {number} weight @param {number} reps */
-	function epley1rm(weight, reps) {
-		if (reps <= 0 || weight <= 0) return 0;
-		if (reps === 1) return weight;
-		return Math.round(weight * (1 + reps / 30));
 	}
 
 	/** @param {string} exerciseId */
@@ -199,7 +193,7 @@
 							<td class="set-num">{i + 1}</td>
 							{#each mainMetrics as metric (metric)}<td>{set[metric] ?? '—'}</td>{/each}
 							<td class="rpe">{set.rpe ?? '—'}</td>
-							{#if showEst1rm}<td class="est1rm">{set.weight && set.reps ? epley1rm(set.weight, set.reps) : '—'}</td>{/if}
+							{#if showEst1rm}<td class="est1rm">{set.weight && set.reps ? estimatedOneRepMax(set.weight, set.reps) : '—'}</td>{/if}
 						</tr>
 					{/each}
 				</tbody>

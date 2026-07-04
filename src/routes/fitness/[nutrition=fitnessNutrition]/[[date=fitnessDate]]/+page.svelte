@@ -28,6 +28,8 @@
 	import Wheat from '@lucide/svelte/icons/wheat';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { localDateStr } from '$lib/js/localDate';
+	import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
+	import { atwaterCalories as atwaterKcal, macroCaloriePercent, scaleFromPer100g } from '$lib/fitness/nutritionMath';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
@@ -440,14 +442,14 @@
 
 	/** @param {FoodLogEntry} e */
 	function entryCalories(e) {
-		return (e.per100g?.calories ?? 0) * e.amountGrams / 100;
+		return scaleFromPer100g(e.per100g?.calories, e.amountGrams);
 	}
 	/**
 	 * @param {FoodLogEntry} e
 	 * @param {string} key
 	 */
 	function entryNutrient(e, key) {
-		return (e.per100g?.[key] ?? 0) * e.amountGrams / 100;
+		return scaleFromPer100g(/** @type {Record<string, number>} */ (e.per100g ?? {})[key], e.amountGrams);
 	}
 
 	const microKeys = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
@@ -483,21 +485,10 @@
 	});
 
 	// Atwater-derived calories (consistent with macro goals which use 4/9/4)
-	const atwaterCalories = $derived(dayTotals.protein * 4 + dayTotals.fat * 9 + dayTotals.carbs * 4);
+	const atwaterCalories = $derived(atwaterKcal(dayTotals));
 
 	// Macro percentages by calorie contribution
-	const macroPercent = $derived.by(() => {
-		const proteinCal = dayTotals.protein * 4;
-		const fatCal = dayTotals.fat * 9;
-		const carbsCal = dayTotals.carbs * 4;
-		const total = proteinCal + fatCal + carbsCal;
-		if (total === 0) return { protein: 0, fat: 0, carbs: 0 };
-		return {
-			protein: Math.round(proteinCal / total * 100),
-			fat: Math.round(fatCal / total * 100),
-			carbs: 100 - Math.round(proteinCal / total * 100) - Math.round(fatCal / total * 100),
-		};
-	});
+	const macroPercent = $derived(macroCaloriePercent(dayTotals));
 
 	// --- Burned kcal ---
 	// svelte-ignore state_referenced_locally
@@ -554,22 +545,17 @@
 	const userAge = $derived(birthYear ? new Date().getFullYear() - birthYear : null);
 	const hasBmrData = $derived(latestWeight != null && data.goal?.heightCm != null && birthYear != null);
 
-	// NEAT-only multipliers (exercise tracked separately)
-	/** @type {Record<string, number>} */
-	const ACTIVITY_MULT = { sedentary: 1.2, light: 1.3, moderate: 1.4, very_active: 1.5 };
-
 	const dailyBmr = $derived.by(() => {
 		const w = Number(latestWeight) || 80;
 		const h = Number(data.goal?.heightCm) || 175;
 		const age = userAge ?? 30;
-		if (goalSex === 'female') return 10 * w + 6.25 * h - 5 * age - 161;
-		return 10 * w + 6.25 * h - 5 * age + 5;
+		return computeBmr(w, h, age, goalSex);
 	});
 
-	const dailyTdee = $derived(dailyBmr * (ACTIVITY_MULT[activityLevel] ?? 1.3));
+	const dailyTdee = $derived(dailyBmr * activityMultiplier(activityLevel));
 
 	// TDEE comparison bar (for goal editor)
-	const editTdee = $derived(dailyBmr * (ACTIVITY_MULT[editActivityLevel] ?? 1.3));
+	const editTdee = $derived(dailyBmr * activityMultiplier(editActivityLevel));
 	const editCalNum = $derived(Number(editCalories) || 0);
 	const tdeeBarData = $derived.by(() => {
 		const tdee = Math.round(editTdee);
@@ -1537,12 +1523,12 @@
 						{#if showTdeeInfo}
 							<div class="tdee-info-tooltip">
 								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? 'TDEE = Total Daily Energy Expenditure — calories your body burns per day at rest + daily activity (excluding tracked exercise).' : 'TDEE = Gesamtenergieumsatz — Kalorien, die dein Körper pro Tag in Ruhe + Alltagsaktivität verbrennt (ohne getracktes Training).'}</span>
-								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? `BMR × ${(ACTIVITY_MULT[activityLevel] ?? 1.3).toFixed(1)} (${activityLevel.replace('_', ' ')}) = ${fmtCal(Math.round(dailyTdee))} kcal` : `BMR × ${(ACTIVITY_MULT[activityLevel] ?? 1.3).toFixed(1)} (${activityLevel.replace('_', ' ')}) = ${fmtCal(Math.round(dailyTdee))} kcal`}</span>
+								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? `BMR × ${activityMultiplier(activityLevel).toFixed(1)} (${activityLevel.replace('_', ' ')}) = ${fmtCal(Math.round(dailyTdee))} kcal` : `BMR × ${activityMultiplier(activityLevel).toFixed(1)} (${activityLevel.replace('_', ' ')}) = ${fmtCal(Math.round(dailyTdee))} kcal`}</span>
 								{#if latestWeight}
 									<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? `Based on your latest logged weight (${latestWeight} kg).` : `Basierend auf deinem letzten Gewicht (${latestWeight} kg).`}</span>
 								{/if}
 								<span class="cite-line"><strong>BMR:</strong> {fmtCal(Math.round(dailyBmr))} kcal — <a href="https://doi.org/10.1093/ajcn/51.2.241" target="_blank" rel="noopener">Mifflin-St Jeor (1990)</a></span>
-								<span class="cite-line"><strong>NEAT:</strong> ×{(ACTIVITY_MULT[activityLevel] ?? 1.3).toFixed(1)} — <a href="https://doi.org/10.1093/ajcn/75.5.914" target="_blank" rel="noopener">Levine (2002)</a></span>
+								<span class="cite-line"><strong>NEAT:</strong> ×{activityMultiplier(activityLevel).toFixed(1)} — <a href="https://doi.org/10.1093/ajcn/75.5.914" target="_blank" rel="noopener">Levine (2002)</a></span>
 								<span class="cite-note">{isEn ? 'NEAT multiplier accounts for non-exercise activity (walking, fidgeting, daily tasks). Tracked exercise kcal are added separately on top.' : 'NEAT-Multiplikator berücksichtigt Alltagsaktivität (Gehen, Bewegung, tägliche Aufgaben). Getracktes Training wird separat oben drauf addiert.'}</span>
 							</div>
 						{/if}

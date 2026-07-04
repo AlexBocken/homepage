@@ -4,15 +4,7 @@ import { requireAuth } from '$lib/server/middleware/auth';
 import { getEnrichedExerciseById, getExerciseMetrics } from '$lib/data/exercisedb';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
-
-/**
- * Epley formula for estimated 1RM
- */
-function estimatedOneRepMax(weight: number, reps: number): number {
-	if (reps <= 0 || weight <= 0) return 0;
-	if (reps === 1) return weight;
-	return Math.round(weight * (1 + reps / 30) * 10) / 10;
-}
+import { estimatedOneRepMax } from '$lib/fitness/strength';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const user = await requireAuth(locals);

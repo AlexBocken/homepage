@@ -15,13 +15,8 @@ import { advanceSchedulePointer } from '$lib/server/workoutSchedule';
 import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
 import { activityKind } from '$lib/server/bestEffortsBackfill';
 import { detectBestEffortPrs } from '$lib/server/bestEffortPrs';
+import { estimatedOneRepMax } from '$lib/fitness/strength';
 import mongoose from 'mongoose';
-
-function estimatedOneRepMax(weight: number, reps: number): number {
-  if (reps <= 0 || weight <= 0) return 0;
-  if (reps === 1) return weight;
-  return Math.round(weight * (1 + reps / 30));
-}
 
 const GPS_ACTIVITIES = new Set(['running', 'walking', 'cycling', 'hiking']);
 

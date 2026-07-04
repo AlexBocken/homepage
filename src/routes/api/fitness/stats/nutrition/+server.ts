@@ -7,6 +7,8 @@ import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
+import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
+import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
@@ -103,12 +105,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	const dailyCalorieGoal = goal?.dailyCalories ?? null;
 
-	// NEAT-only multipliers (lower than standard TDEE multipliers because
-	// we add tracked workout kcal separately to avoid double-counting)
-	const neatMultipliers: Record<string, number> = {
-		sedentary: 1.2, light: 1.3, moderate: 1.4, very_active: 1.5
-	};
-	const neatMult = neatMultipliers[goal?.activityLevel ?? 'light'] ?? 1.3;
+	const neatMult = activityMultiplier(goal?.activityLevel);
 	const canComputeTdee = !!(goal?.heightCm && goal?.birthYear && trendWeight);
 
 	/** Compute daily TDEE using per-day trend weight */
@@ -117,8 +114,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		const dayWeight = getTrendWeightForDate(dateStr);
 		if (!dayWeight) return null;
 		const age = now.getFullYear() - goal.birthYear;
-		const bmr = 10 * dayWeight + 6.25 * goal.heightCm - 5 * age + (goal.sex === 'female' ? -161 : 5);
-		return bmr * neatMult;
+		return computeBmr(dayWeight, goal.heightCm, age, goal.sex ?? 'male') * neatMult;
 	}
 
 	// Group workout kcal by date for the 30-day window
@@ -168,16 +164,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		}
 
 		// Macro split by calorie contribution
-		const proteinCal = avgProtein * 4;
-		const fatCal = avgFat * 9;
-		const carbsCal = avgCarbs * 4;
-		const totalCal = proteinCal + fatCal + carbsCal;
-		if (totalCal > 0) {
-			macroSplit = {
-				protein: Math.round(proteinCal / totalCal * 100),
-				fat: Math.round(fatCal / totalCal * 100),
-				carbs: 100 - Math.round(proteinCal / totalCal * 100) - Math.round(fatCal / totalCal * 100),
-			};
+		if (avgProtein * 4 + avgFat * 9 + avgCarbs * 4 > 0) {
+			macroSplit = macroCaloriePercent({ protein: avgProtein, fat: avgFat, carbs: avgCarbs });
 		}
 	}
 

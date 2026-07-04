@@ -1,6 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import Heart from '@lucide/svelte/icons/heart';
@@ -53,18 +54,7 @@
 	}
 
 	// --- Macro calorie percentages ---
-	const macroPercent = $derived.by(() => {
-		const proteinCal = n.protein * 4;
-		const fatCal = n.fat * 9;
-		const carbsCal = n.carbs * 4;
-		const total = proteinCal + fatCal + carbsCal;
-		if (total === 0) return { protein: 0, fat: 0, carbs: 0 };
-		return {
-			protein: Math.round(proteinCal / total * 100),
-			fat: Math.round(fatCal / total * 100),
-			carbs: 100 - Math.round(proteinCal / total * 100) - Math.round(fatCal / total * 100),
-		};
-	});
+	const macroPercent = $derived(macroCaloriePercent(n));
 
 	// --- Formatting ---
 	/** @param {number | undefined | null} v */

@@ -4,6 +4,7 @@ import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { WorkoutSession } from '$models/WorkoutSession';
+import { isoWeekKey } from '$lib/fitness/dates';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
@@ -125,12 +126,3 @@ async function computeStreak(username: string, weeklyGoal: number): Promise<numb
 	return 104; // Max 2-year streak
 }
 
-function isoWeekKey(date: Date): string {
-	const d = new Date(date.getTime());
-	d.setHours(0, 0, 0, 0);
-	d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-	const year = d.getFullYear();
-	const week1 = new Date(year, 0, 4);
-	const week = 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
-	return `${year}-${week}`;
-}

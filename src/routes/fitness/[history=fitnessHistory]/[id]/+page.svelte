@@ -34,6 +34,7 @@
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
 	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
 	import { formatElapsed, formatEffortRate } from '$lib/fitness/segmentFormat';
+	import { estimatedOneRepMax } from '$lib/fitness/strength';
 	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
 	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
@@ -306,13 +307,6 @@
 	function formatTime(dateStr) {
 		const d = new Date(dateStr);
 		return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-	}
-
-	/** @param {number} weight @param {number} reps */
-	function epley1rm(weight, reps) {
-		if (reps <= 0 || weight <= 0) return 0;
-		if (reps === 1) return weight;
-		return Math.round(weight * (1 + reps / 30));
 	}
 
 	async function recalculate() {
@@ -886,7 +880,7 @@
 								{/each}
 								<td class="rpe">{set.rpe ?? '—'}</td>
 								{#if showEst1rm}
-									<td class="est1rm">{set.weight && set.reps ? epley1rm(set.weight, set.reps) : '—'}</td>
+									<td class="est1rm">{set.weight && set.reps ? estimatedOneRepMax(set.weight, set.reps) : '—'}</td>
 								{/if}
 							</tr>
 						{/each}

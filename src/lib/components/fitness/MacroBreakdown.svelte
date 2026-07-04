@@ -1,5 +1,6 @@
 <script>
 	import { detectFitnessLang } from '$lib/js/fitnessI18n';
+	import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
 	import { page } from '$app/state';
 	import Beef from '@lucide/svelte/icons/beef';
 	import Droplet from '@lucide/svelte/icons/droplet';
@@ -34,18 +35,7 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const isEn = $derived(lang === 'en');
 
-	const macroPercent = $derived.by(() => {
-		const proteinCal = protein * 4;
-		const fatCal = fat * 9;
-		const carbsCal = carbs * 4;
-		const total = proteinCal + fatCal + carbsCal;
-		if (total === 0) return { protein: 0, fat: 0, carbs: 0 };
-		return {
-			protein: Math.round(proteinCal / total * 100),
-			fat: Math.round(fatCal / total * 100),
-			carbs: 100 - Math.round(proteinCal / total * 100) - Math.round(fatCal / total * 100),
-		};
-	});
+	const macroPercent = $derived(macroCaloriePercent({ protein, fat, carbs }));
 
 	/** @param {number | null | undefined} v */
 	function fmt(v) {

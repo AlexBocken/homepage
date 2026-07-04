@@ -8,13 +8,8 @@ import { detectCardioPrs } from '$lib/data/cardioPrRanges';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { trackDistance } from '$lib/fitness/gpsSeries.js';
+import { estimatedOneRepMax } from '$lib/fitness/strength';
 import mongoose from 'mongoose';
-
-function estimatedOneRepMax(weight: number, reps: number): number {
-	if (reps <= 0 || weight <= 0) return 0;
-	if (reps === 1) return weight;
-	return Math.round(weight * (1 + reps / 30));
-}
 
 // POST /api/fitness/sessions/[id]/recalculate — recompute derived fields
 export const POST: RequestHandler = async ({ params, locals }) => {

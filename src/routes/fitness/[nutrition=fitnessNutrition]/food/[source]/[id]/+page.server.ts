@@ -8,6 +8,7 @@ import { OpenFoodFact } from '$models/OpenFoodFact';
 import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, resolvePer100g, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
+import { scaleFromPer100g } from '$lib/fitness/nutritionMath';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 
 async function computeRecipePer100g(id: string): Promise<Record<string, number>> {
@@ -210,10 +211,10 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 					source: ing.source,
 					sourceId: ing.sourceId,
 					amountGrams: ing.amountGrams,
-					calories: (ing.per100g?.calories ?? 0) * ing.amountGrams / 100,
-					protein: (ing.per100g?.protein ?? 0) * ing.amountGrams / 100,
-					fat: (ing.per100g?.fat ?? 0) * ing.amountGrams / 100,
-					carbs: (ing.per100g?.carbs ?? 0) * ing.amountGrams / 100,
+					calories: scaleFromPer100g(ing.per100g?.calories, ing.amountGrams),
+					protein: scaleFromPer100g(ing.per100g?.protein, ing.amountGrams),
+					fat: scaleFromPer100g(ing.per100g?.fat, ing.amountGrams),
+					carbs: scaleFromPer100g(ing.per100g?.carbs, ing.amountGrams),
 				})),
 			},
 			dri: DRI_MALE,

@@ -1,6 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { estimatedOneRepMax } from '$lib/fitness/strength';
 
 	/** @param {string | undefined | null} type @param {'en'|'de'} lang */
 	function exerciseTypeInfo(type, lang) {
@@ -117,12 +118,6 @@
 		};
 	}
 
-	/** @param {number} weight @param {number} reps */
-	function epley1rm(weight, reps) {
-		if (reps <= 0) return weight;
-		if (reps === 1) return weight;
-		return Math.round(weight * (1 + reps / 30));
-	}
 </script>
 
 <svelte:head><title>{exercise?.localName ?? t.exercise_title} - Bocken</title></svelte:head>
@@ -248,7 +243,7 @@
 										<td>{i + 1}</td>
 										<td>{set.weight}</td>
 										<td>{set.reps}{#if set.rpe} <span class="rpe">@{set.rpe}</span>{/if}</td>
-										<td>{epley1rm(set.weight, set.reps)} kg</td>
+										<td>{estimatedOneRepMax(set.weight, set.reps)} kg</td>
 									</tr>
 								{/each}
 							</tbody>
@@ -301,7 +296,7 @@
 							<tr>
 								<td>{rec.reps}</td>
 								<td>{rec.weight} kg × {rec.reps}{#if rec.date} <span class="rec-date">({new Date(rec.date).toLocaleDateString()})</span>{/if}</td>
-								<td>{rec.estimated1rm ?? epley1rm(rec.weight, rec.reps)} kg</td>
+								<td>{rec.estimated1rm ?? estimatedOneRepMax(rec.weight, rec.reps)} kg</td>
 							</tr>
 						{/each}
 					</tbody>

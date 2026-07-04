@@ -7,6 +7,7 @@ import { getNextScheduledTemplate } from '$lib/server/workoutSchedule';
 import { Recipe } from '$models/Recipe';
 import { RoundOffCache } from '$models/RoundOffCache';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
+import { entriesCalories } from '$lib/fitness/nutritionMath';
 import mongoose from 'mongoose';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
@@ -134,9 +135,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	// Compute initial showRoundOff server-side to avoid flicker
 	let initialShowRoundOff = false;
 	if (isTodayOrFuture && goal.dailyCalories) {
-		const totalCal = (foodLog.entries ?? []).reduce(
-			(sum: number, e: any) => sum + ((e.per100g?.calories ?? 0) * e.amountGrams / 100), 0
-		);
+		const totalCal = entriesCalories(foodLog.entries ?? []);
 		const balance = goal.dailyCalories + (roundedExerciseKcal || 0) - totalCal;
 		initialShowRoundOff = balance > 50 && balance <= goal.dailyCalories * 0.5;
 	}

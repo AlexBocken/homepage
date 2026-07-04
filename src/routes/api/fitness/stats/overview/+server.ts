@@ -8,6 +8,7 @@ import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { estimateWorkoutKcal, type ExerciseData, type Demographics } from '$lib/data/kcalEstimate';
 import { estimateCardioKcal, type CardioEstimateResult } from '$lib/data/cardioKcalEstimate';
 import { FitnessGoal } from '$models/FitnessGoal';
+import { isoWeek, isoWeekYear } from '$lib/fitness/dates';
 import { timeDecayedTrend } from '$lib/fitness/trend';
 
 export const GET: RequestHandler = async ({ locals }) => {
@@ -169,8 +170,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 	for (let i = 9; i >= 0; i--) {
 		const d = new Date(now);
 		d.setDate(d.getDate() - i * 7);
-		const year = getISOWeekYear(d);
-		const week = getISOWeek(d);
+		const year = isoWeekYear(d);
+		const week = isoWeek(d);
 		const key = `${year}-${week}`;
 		allLabels.push(`W${week}`);
 		allData.push(weekMap.get(key) ?? 0);
@@ -260,17 +261,3 @@ export const GET: RequestHandler = async ({ locals }) => {
 		bfChart
 	});
 };
-
-function getISOWeek(date: Date): number {
-	const d = new Date(date.getTime());
-	d.setHours(0, 0, 0, 0);
-	d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-	const week1 = new Date(d.getFullYear(), 0, 4);
-	return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
-}
-
-function getISOWeekYear(date: Date): number {
-	const d = new Date(date.getTime());
-	d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-	return d.getFullYear();
-}
