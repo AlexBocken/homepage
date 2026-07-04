@@ -902,7 +902,23 @@
 		hiking: 'hiking',
 	});
 
+	// Tear down an in-progress workout and return to the workout home. Pass
+	// { confirm: true } to gate it behind an "are you sure" prompt (active
+	// workout); the GPS setup screen cancels without one (nothing logged yet).
+	async function cancelWorkout({ confirm: needConfirm = false } = {}) {
+		if (needConfirm && !await confirm(t.cancel_workout_confirm)) return;
+		if (gps.isTracking) await gps.stop();
+		gps.reset();
+		workout.cancel();
+		await sync.onWorkoutEnd();
+		await goto(`/fitness/${sl.workout}`);
+	}
+
 	async function finishWorkout() {
+		// Finishing with sets still unmarked discards their intended completion —
+		// confirm before ending early.
+		if (hasUnfinishedSets && !await confirm(t.finish_early_confirm)) return;
+
 		// Guard the redirect-on-inactive effect for the duration of this flow.
 		// workout.finish() flips workout.active to false synchronously, but
 		// completionData is set only after the awaited POST below resolves.
@@ -1740,7 +1756,7 @@
 					{/if}
 				</button>
 
-				<button class="gps-cancel-link" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }} type="button">
+				<button class="gps-cancel-link" onclick={() => cancelWorkout()} type="button">
 					<X size={14} />
 					{t.cancel_workout}
 				</button>
@@ -2243,7 +2259,7 @@
 				{/if}
 
 				<div class="workout-actions">
-					<button class="cancel-btn" onclick={async () => { if (gps.isTracking) await gps.stop(); gps.reset(); workout.cancel(); await sync.onWorkoutEnd(); await goto(`/fitness/${sl.workout}`); }}>
+					<button class="cancel-btn" onclick={() => cancelWorkout({ confirm: true })}>
 						{t.cancel_workout}
 					</button>
 					<button class="finish-btn" class:premature={hasUnfinishedSets} onclick={finishWorkout}>
@@ -2952,12 +2968,16 @@
 	.finish-btn:active {
 		transform: scale(0.98);
 	}
+	/* Premature finish is a de-emphasised, cautionary action: outline, not filled. */
 	.finish-btn.premature {
-		background: var(--orange);
-		color: var(--nord0);
+		background: transparent;
+		color: var(--orange);
+		border: 1.5px solid var(--orange);
+		box-shadow: none;
 	}
 	.finish-btn.premature:hover {
-		background: color-mix(in srgb, var(--orange) 85%, var(--nord0));
+		background: color-mix(in srgb, var(--orange), transparent 88%);
+		box-shadow: none;
 	}
 
 	/* GPS section */

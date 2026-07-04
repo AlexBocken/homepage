@@ -10,6 +10,11 @@
 - [x] Add optional stat(s) cards for run/cycle segments and performance over time. For now, focus on own improvements, if we would have more users KOM days of reign could be cool, but useless currently
 - [x] JS-less graceful degradation for workout and shared detail page (pre-rendered image on the map, svgs for the graphs)
 - [ ] https://github.com/DanielGuarnizo/Pose-Estimation-for-Fitness-Exercise-Analysis investigate this repo for potential integratin into Squats, Deadlifts, bench press, etc.
+- [ ] on logout on auth-required routes, drop user of at closests non-auth gated route. e.g., /rezepte/edit/[name] -> /rezepte, /fitness/workout -> /
+- [x] on an active workout, make the cancel workout pop up an "Are you sure" prompt.
+- [x] on an active workout, make the "Finish early" button a) less dominant (maybe just an outline, not filled), b)also have a prompt for are you sure.
+- [ ] Add tests for offline workout storage and sync on reconnect
+- [ ] Add tests for rosary/angelus streak counters (local and online sync)
 
 ## Perf (audit 2026-04-23)
 
