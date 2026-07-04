@@ -183,3 +183,32 @@ prop list before using.
   (never reference the stored filename directly).
 - Cospend categories/colours: `$lib/js/cospendI18n` (`PAYMENT_CATEGORIES`,
   `getCategoryOptionsI18n`) and `$lib/utils/receiptColors` (`penColor`).
+
+# End-to-End Tests (Playwright)
+
+The e2e suite lives in `tests/e2e/` and runs the app against a disposable stack
+(throwaway Mongo + a real Authentik OIDC provider), so **auth and permissions are
+exercised for real — never bypass auth**. Run with `pnpm test:e2e` (up →
+provision → seed → run → teardown); `pnpm e2e:up` / `pnpm e2e:down` manage the
+stack for iterating. See `tests/e2e/README.md` for the full picture.
+
+Key pieces: seven test users in `tests/e2e/users.json` (`full`, `none`,
+`recipes`, `cospend`, `tasks`, `fitness`, `anna`) whose saved logins are picked
+with `storageStateFor('<role>')` (or `ANONYMOUS`) from `helpers/auth.ts`; use
+`gotoHydrated()` from `helpers/nav.ts` before the first interaction (a click
+before hydration is a silent no-op). Realistic content is cloned from the dev DB
+(`scripts/e2e/clone-dev.mjs`); deterministic fixtures tests key on are upserted
+by `scripts/e2e/seed.mjs`.
+
+**When you add or change routes, update the tests in the same change:**
+- **New route / user-facing flow** → add an e2e spec under the matching
+  `tests/e2e/<domain>/` covering its real interactions (prefer stable ids /
+  `aria-label` / roles over translated text; card names live in `aria-label`).
+  Round-trip create→verify→delete so specs stay idempotent; own any needed
+  fixtures on the `e2e_*` users in `seed.mjs`.
+- **New permission-gated route** (a group check in `src/hooks.server.ts`, or a
+  page/endpoint guarded in its own load) → add it to
+  `tests/e2e/permissions/matrix.spec.ts`. Every group-gated route must be checked
+  with a user who has the **right** group, a user with a **different** group, a
+  user with **no** groups, and a **logged-out** user; login-only routes with a
+  logged-in user vs logged-out. Keep both language slugs behaving identically.
