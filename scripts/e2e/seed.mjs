@@ -152,6 +152,41 @@ const RECIPES = [
 	})
 ];
 
+// Cospend is a fixed 2-user shared pool (src/lib/config/users.ts). Split
+// convention (from real data): one split per user; +amount owes, -amount is owed
+// (the payer). These give the dashboard a non-zero balance and settle a debt.
+const COSPEND_USERS = ['alexander', 'anna'];
+const cospendPayment = (o) => {
+	const id = new mongoose.Types.ObjectId();
+	const half = Math.round((o.amount / 2) * 100) / 100;
+	const other = COSPEND_USERS.find((u) => u !== o.paidBy);
+	const payment = {
+		_id: id,
+		title: o.title,
+		description: o.description ?? '',
+		amount: o.amount,
+		currency: 'CHF',
+		paidBy: o.paidBy,
+		date: new Date(o.date),
+		category: o.category,
+		splitMethod: 'equal',
+		createdBy: o.paidBy,
+		createdAt: new Date(o.date),
+		updatedAt: new Date(o.date)
+	};
+	const splits = [
+		{ paymentId: id, username: o.paidBy, amount: -half, settled: false },
+		{ paymentId: id, username: other, amount: half, settled: false }
+	];
+	return { payment, splits };
+};
+
+const COSPEND = [
+	cospendPayment({ title: 'Wocheneinkauf', amount: 100, paidBy: 'alexander', category: 'groceries', date: '2026-06-20' }),
+	cospendPayment({ title: 'Restaurant', amount: 40, paidBy: 'alexander', category: 'restaurant', date: '2026-06-24' }),
+	cospendPayment({ title: 'Kinoabend', amount: 30, paidBy: 'anna', category: 'fun', date: '2026-06-28' })
+];
+
 async function main() {
 	await mongoose.connect(MONGO_URL, { serverSelectionTimeoutMS: 8000 });
 	const db = mongoose.connection.db;
@@ -168,8 +203,13 @@ async function main() {
 
 	console.log('🌱 Seeding test Mongo (deterministic overlay)...');
 	await upsertBy('recipes', 'short_name', RECIPES);
-	// Additional domain fixtures (cospend/tasks/fitness) owned by the e2e_* test
-	// users are added here as their suites come online.
+
+	// Cospend: not cloned (personal), so own it fully here.
+	await db.collection('payments').deleteMany({});
+	await db.collection('paymentsplits').deleteMany({});
+	await db.collection('payments').insertMany(COSPEND.map((c) => c.payment));
+	await db.collection('paymentsplits').insertMany(COSPEND.flatMap((c) => c.splits));
+	console.log(`  payments: ${COSPEND.length} (+ splits)`);
 
 	console.log('✅ Seed overlay complete.');
 	await mongoose.disconnect();
