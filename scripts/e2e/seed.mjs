@@ -213,6 +213,22 @@ const PERIOD_CYCLES = [
 	{ createdBy: 'anna', startDate: new Date('2026-06-10'), endDate: new Date('2026-06-15') } //  6d, cycle 26
 ];
 
+// A second female profile (the e2e_full user) used by the period *logging* tests
+// (start/end/add/edit/delete), so anna's analysis fixtures above stay pristine.
+// Exact values don't matter here — the tests create + clean up their own entries.
+const FULL_FEMALE_PROFILE = {
+	username: 'e2e_full',
+	weeklyWorkouts: 4,
+	sex: 'female',
+	heightCm: 170,
+	birthYear: 1994,
+	activityLevel: 'moderate'
+};
+const FULL_PERIOD_CYCLES = [
+	{ createdBy: 'e2e_full', startDate: new Date('2026-05-08'), endDate: new Date('2026-05-13') },
+	{ createdBy: 'e2e_full', startDate: new Date('2026-06-05'), endDate: new Date('2026-06-10') }
+];
+
 async function main() {
 	await mongoose.connect(MONGO_URL, { serverSelectionTimeoutMS: 8000 });
 	const db = mongoose.connection.db;
@@ -243,6 +259,13 @@ async function main() {
 	await db.collection('periodentries').insertMany(PERIOD_CYCLES);
 	await db.collection('periodcalendartokens').deleteMany({ createdBy: 'anna' }); // start with no shared links
 	console.log(`  anna: female profile + ${PERIOD_CYCLES.length} period cycles`);
+
+	// e2e_full female profile + a couple of cycles for the period logging tests.
+	await db.collection('fitnessgoals').replaceOne({ username: 'e2e_full' }, FULL_FEMALE_PROFILE, { upsert: true });
+	await db.collection('periodentries').deleteMany({ createdBy: 'e2e_full' });
+	await db.collection('periodentries').insertMany(FULL_PERIOD_CYCLES);
+	await db.collection('periodcalendartokens').deleteMany({ createdBy: 'e2e_full' });
+	console.log(`  e2e_full: female profile + ${FULL_PERIOD_CYCLES.length} period cycles`);
 
 	console.log('✅ Seed overlay complete.');
 	await mongoose.disconnect();
