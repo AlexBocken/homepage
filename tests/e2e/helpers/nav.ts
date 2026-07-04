@@ -7,8 +7,12 @@ import type { Page } from '@playwright/test';
  * gives hydration time to run before the test interacts.
  */
 export async function gotoHydrated(page: Page, url: string): Promise<void> {
-	await page.goto(url);
-	await page.waitForLoadState('networkidle');
+	await page.goto(url); // resolves on 'load'
+	// Race networkidle with a cap: normal pages settle quickly (a good hydration
+	// signal), while pages holding a live connection open (shopping-list SSE,
+	// fitness sync) never reach idle and just hit the cap. Either way Svelte has
+	// had time to attach handlers before the first interaction.
+	await page.waitForLoadState('networkidle', { timeout: 2500 }).catch(() => {});
 	await page.waitForTimeout(300);
 }
 
