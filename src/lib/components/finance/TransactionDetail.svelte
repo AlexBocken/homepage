@@ -64,7 +64,7 @@
 			<button class="close" onclick={onClose} aria-label={t.close}>×</button>
 		</header>
 
-		<table class="postings">
+		<table class="postings fin-table">
 			<thead>
 				<tr><th>{t.account_col}</th><th class="r">{t.amount_col}</th><th class="r">CHF</th></tr>
 			</thead>
@@ -75,11 +75,11 @@
 							{#if onAccount}<button class="acct-link" onclick={() => onAccount?.(p.account)}>{p.account}</button>
 							{:else}{p.account}{/if}
 						</td>
-						<td class="r num fin-num">
+						<td class="r num fin-num" data-label={t.amount_col}>
 							{#if p.units}{amount(p.units.number, p.units.currency)}{:else}–{/if}
 							{#if p.cost}<span class="cost">@ {amount(p.cost.number, p.cost.currency)}</span>{/if}
 						</td>
-						<td class="r num fin-num" class:muted={p.units?.currency === 'CHF'}>
+						<td class="r num fin-num" class:muted={p.units?.currency === 'CHF'} class:hide-sm={p.chf == null} data-label="CHF">
 							{p.chf == null ? '' : money(p.chf, true)}
 						</td>
 					</tr>

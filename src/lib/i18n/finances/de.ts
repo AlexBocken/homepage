@@ -75,8 +75,8 @@ export const de = {
 	// Overview
 	ov_networth: 'Nettovermögen',
 	ov_per_currency: 'Pro Währung',
-	tax_required: '⚠️ Steuererklärung erforderlich',
-	tax_ok: '✓ Quellensteuer genügt',
+	tax_required: 'Steuererklärung erforderlich',
+	tax_ok: 'Quellensteuer genügt',
 	tax_note_base: 'Steuerbares Vermögen (ohne Pensionskasse & Säule 3a).',
 	tax_over: 'Über der Schwelle von 80’000 CHF — Steuererklärung nötig.',
 	tax_under: 'Unter der Schwelle von 80’000 CHF — reguläre Quellensteuer reicht.',

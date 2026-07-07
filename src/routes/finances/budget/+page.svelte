@@ -9,6 +9,11 @@
 	import type { PageData } from './$types';
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { m as financesM, financesLang, MONTHS_SHORT } from '$lib/js/financesI18n';
+	import PiggyBank from '@lucide/svelte/icons/piggy-bank';
+	import LayoutList from '@lucide/svelte/icons/layout-list';
+	import Trophy from '@lucide/svelte/icons/trophy';
+	import ChartColumn from '@lucide/svelte/icons/chart-column';
+	import Tags from '@lucide/svelte/icons/tags';
 
 	let { data }: { data: PageData } = $props();
 	const b: Budget = $derived(data.budget);
@@ -180,7 +185,7 @@
 			<section class="card">
 				<div class="sv-head">
 					<div class="sv-main">
-						<h2>{t.bg_savings_goal} <span class="hint">{money(st.monthly)} {t.per_month}</span></h2>
+						<h2><PiggyBank size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.bg_savings_goal} <span class="hint">{money(st.monthly)} {t.per_month}</span></h2>
 						<div class="sv-fig">
 							<span class="fin-num" style="color: {st.current.hit ? GREEN : 'var(--color-text-primary)'}">{money(st.current.saved)}</span>
 							<span class="of fin-num"> / {money(st.monthly)}</span>
@@ -215,7 +220,7 @@
 
 		<!-- Pace board -->
 		<section class="card">
-			<h2>{t.bg_categories} <span class="hint">{t.bg_cat_hint}</span></h2>
+			<h2><LayoutList size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.bg_categories} <span class="hint">{t.bg_cat_hint}</span></h2>
 			<ul class="rows">
 				{#each cur.rows as r (r.account)}
 					<li>
@@ -234,7 +239,7 @@
 
 		<!-- Challenges -->
 		<section class="card">
-			<h2>{t.bg_challenges} <span class="hint">{t.bg_challenge_hint}</span></h2>
+			<h2><Trophy size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.bg_challenges} <span class="hint">{t.bg_challenge_hint}</span></h2>
 			{#if challenges.items.length}
 				<ul class="rows">
 					{#each challenges.items as ch, i (ch.account + ch.label)}
@@ -272,14 +277,14 @@
 	{:else}
 		<!-- History -->
 		<section class="card">
-			<h2>{t.bg_monthly} <span class="hint">{t.bg_monthly_hint}</span></h2>
+			<h2><ChartColumn size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.bg_monthly} <span class="hint">{t.bg_monthly_hint}</span></h2>
 			{#key chartKey}
 				<FitnessChart type="bar" height="260px" data={monthlyChart} tooltipFormatter={(v: number) => money(v, true)} />
 			{/key}
 		</section>
 
 		<section class="card">
-			<h2>{t.sp_by_category} <span class="hint">{b.from} – {b.to}</span></h2>
+			<h2><Tags size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.sp_by_category} <span class="hint">{b.from} – {b.to}</span></h2>
 			<ul class="rows">
 				{#each b.rows as r (r.account)}
 					<li>
@@ -412,6 +417,10 @@
 		margin-bottom: 2rem;
 	}
 	h2 {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
 		margin: 0 0 1rem;
 		font-size: var(--text-lg);
 		color: var(--color-text-primary);

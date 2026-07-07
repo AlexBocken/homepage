@@ -11,6 +11,16 @@
 	import type { PageData } from './$types';
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { m as financesM, financesLang } from '$lib/js/financesI18n';
+	import PiggyBank from '@lucide/svelte/icons/piggy-bank';
+	import ChartPie from '@lucide/svelte/icons/chart-pie';
+	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
+	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
+	import Scale from '@lucide/svelte/icons/scale';
+	import ReceiptText from '@lucide/svelte/icons/receipt-text';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import TrendingDown from '@lucide/svelte/icons/trending-down';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 
 	let { data }: { data: PageData } = $props();
 	const t = $derived(financesM[financesLang(languageStore.value)]);
@@ -250,6 +260,7 @@
 	<section class="tax" class:warn={data.tax.must_file}>
 		<div class="tax-head">
 			<span class="tax-status">
+				{#if data.tax.must_file}<TriangleAlert size={18} strokeWidth={2} color="var(--orange)" />{:else}<ShieldCheck size={18} strokeWidth={2} color="var(--green)" />{/if}
 				{data.tax.must_file ? t.tax_required : t.tax_ok}
 			</span>
 			<span class="tax-fig">
@@ -270,7 +281,7 @@
 	<!-- Savings rate -->
 	{#if data.savings && savingsChart}
 		<section class="card wide">
-			<h2>{t.ov_savings_rate} <span class="basis-tag">{savingsRate}</span></h2>
+			<h2><PiggyBank size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.ov_savings_rate} <span class="basis-tag">{savingsRate}</span></h2>
 			<div class="totals">
 				<div><span class="t-label">{t.saved_word}</span><strong class="pos">{money(data.savings.saved)}</strong></div>
 				<div><span class="t-label">{t.income}</span><strong>{money(data.savings.income)}</strong></div>
@@ -284,14 +295,15 @@
 
 	<!-- Portfolio -->
 	<section class="card wide">
-		<h2>{t.portfolio}</h2>
+		<h2><ChartPie size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.portfolio}</h2>
 		{#if h && h.holdings.length}
 				<div class="totals">
 					<div><span class="t-label">{t.market_value}</span><strong>{money(h.totals.market_chf)}</strong></div>
 					<div><span class="t-label">{t.cost_basis}</span><strong>{money(h.totals.cost_chf)}</strong></div>
 					<div>
 						<span class="t-label">{t.gain}</span>
-						<strong class={gainClass(h.totals.gain_chf)}>
+						<strong class="trend {gainClass(h.totals.gain_chf)}">
+							{#if (h.totals.gain_chf ?? 0) >= 0}<TrendingUp size={16} strokeWidth={2} />{:else}<TrendingDown size={16} strokeWidth={2} />{/if}
 							{money(h.totals.gain_chf)} ({percent(h.totals.gain_pct)})
 						</strong>
 					</div>
@@ -319,7 +331,7 @@
 				</div>
 
 				<div class="table-scroll">
-					<table>
+					<table class="fin-table">
 						<thead>
 							<tr>
 								<th>{t.security}</th><th class="r">{t.units_col}</th><th class="r">{t.price}</th>
@@ -335,10 +347,10 @@
 											<span class="cname">{row.name}</span>
 										</a>
 									</td>
-									<td class="r num">{fmtUnits(row.units)}</td>
-									<td class="r num">{row.price ?? '–'} {row.quote_currency}</td>
-									<td class="r num">{money(row.market_chf)}</td>
-									<td class="r num {gainClass(row.gain_chf)}">
+									<td class="r num" data-label={t.units_col}>{fmtUnits(row.units)}</td>
+									<td class="r num" data-label={t.price}>{row.price ?? '–'} {row.quote_currency}</td>
+									<td class="r num" data-label={t.market_value}>{money(row.market_chf)}</td>
+									<td class="r num {gainClass(row.gain_chf)}" data-label={t.gain}>
 										{money(row.gain_chf)}<br /><small>{percent(row.gain_pct)}</small>
 									</td>
 								</tr>
@@ -353,14 +365,14 @@
 
 	<!-- Income vs expenses -->
 	<section class="card">
-		<h2>{t.income_statement}</h2>
+		<h2><ArrowUpDown size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.income_statement}</h2>
 		{#if inc}
 				{@const income = sectionTotal(inc, 'Income')}
 				{@const expenses = sectionTotal(inc, 'Expenses')}
 				<div class="ie">
 					<div><span class="t-label">{t.income}</span><strong class="pos">{money(income)}</strong></div>
 					<div><span class="t-label">{t.expenses}</span><strong class="neg">{money(expenses)}</strong></div>
-					<div><span class="t-label">{t.balance}</span><strong class={gainClass(income - expenses)}>{money(income - expenses)}</strong></div>
+					<div><span class="t-label">{t.balance}</span><strong class="trend {gainClass(income - expenses)}">{#if income - expenses >= 0}<TrendingUp size={16} strokeWidth={2} />{:else}<TrendingDown size={16} strokeWidth={2} />{/if} {money(income - expenses)}</strong></div>
 				</div>
 				<h3>{t.ov_top_expenses}</h3>
 				<ul class="cats">
@@ -385,7 +397,7 @@
 		{@const fc = data.forecast}
 		{@const expMax = Math.max(1, ...fc.expenses.map((e) => e.monthly ?? 0))}
 		<section class="card">
-			<h2>{t.ov_typical_month} <span class="basis-tag fin-num">Ø {fc.based_on_months} {t.ov_months_abbr}</span></h2>
+			<h2><CalendarClock size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.ov_typical_month} <span class="basis-tag fin-num">Ø {fc.based_on_months} {t.ov_months_abbr}</span></h2>
 			<div class="ie">
 				<div><span class="t-label">{t.income}</span><strong class="pos fin-num">{money(fc.income_total)}</strong></div>
 				<div><span class="t-label">{t.expenses}</span><strong class="neg fin-num">{money(fc.expense_total)}</strong></div>
@@ -409,7 +421,7 @@
 
 	<!-- Balance sheet -->
 	<section class="card">
-		<h2>{t.balance_sheet} <span class="basis-tag">{basis === 'cost' ? t.at_cost : t.market_value}</span></h2>
+		<h2><Scale size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.balance_sheet} <span class="basis-tag">{basis === 'cost' ? t.at_cost : t.market_value}</span></h2>
 		{#if bs}
 			{#each bs.sections as sect (sect.account)}
 				<div class="tree"><AccountTree node={sect} hrefFor={accountHref} /></div>
@@ -421,22 +433,22 @@
 
 	<!-- Recent journal -->
 	<section class="card wide">
-		<h2>{t.ov_recent}</h2>
+		<h2><ReceiptText size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.ov_recent}</h2>
 		{#if jrnl}
 			<div class="table-scroll">
-				<table class="journal">
+				<table class="journal fin-table">
 					<tbody>
 						{#each jrnl.transactions as row, i (i)}
 							<tr class="jrow" onclick={() => (detail = row)} title={t.details_view}>
-								<td class="jflag">{row.postings.length > 2 ? '⑃' : ''}</td>
-								<td class="jdate">{row.date}</td>
-								<td class="jpayee">
+								<td class="jflag hide-sm">{row.postings.length > 2 ? '⑃' : ''}</td>
+								<td class="jdate" data-label={t.date_col}>{row.date}</td>
+								<td class="jpayee" class:hide-sm={!row.payee} data-label={t.payee_col}>
 									{#if row.payee}
 										<a href={payeeHref(row.payee)} onclick={(e) => { e.stopPropagation(); e.preventDefault(); findPayee(row.payee ?? ''); }}>{row.payee}</a>
 									{/if}
 								</td>
-								<td class="jnarr">{row.narration ?? ''}</td>
-								<td class="r num">{money(row.total_chf, true)}</td>
+								<td class="jnarr" class:hide-sm={!row.narration} data-label={t.narration_col}>{row.narration ?? ''}</td>
+								<td class="r num" data-label={t.amount_col}>{money(row.total_chf, true)}</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -574,6 +586,9 @@
 		gap: 0.5rem;
 	}
 	.tax-status {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
 		font-weight: 600;
 		color: var(--color-text-primary);
 	}
@@ -625,9 +640,18 @@
 		grid-column: 1 / -1;
 	}
 	h2 {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
 		margin: 0 0 1rem;
 		font-size: var(--text-lg);
 		color: var(--color-text-primary);
+	}
+	.trend {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 	h3 {
 		margin: 1.25rem 0 0.5rem;

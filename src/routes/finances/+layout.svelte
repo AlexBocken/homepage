@@ -96,4 +96,73 @@
 		margin-inline: auto;
 		padding: 1.5rem 1rem 4rem;
 	}
+
+	/* Responsive tables (opt-in via class="fin-table"). On phones each row reflows
+	   into a stacked card: the header is dropped and every cell shows its column
+	   name (from data-label) beside the value, so wide financial tables stay
+	   readable without a horizontal scroll. A cell with NO data-label becomes the
+	   card's title (e.g. a security name); mark decorative cells .hide-sm. Desktop
+	   is untouched. Defined globally here so every finance page shares one rule. */
+	@media (max-width: 600px) {
+		/* Cards are full-width, so the horizontal scroller must not clip the
+		   right-aligned values. */
+		:global(.finances .table-scroll:has(.fin-table)) {
+			overflow-x: visible;
+		}
+		:global(.finances .fin-table thead) {
+			display: none;
+		}
+		:global(.finances .fin-table),
+		:global(.finances .fin-table tbody),
+		:global(.finances .fin-table tfoot),
+		:global(.finances .fin-table tr),
+		:global(.finances .fin-table td) {
+			display: block;
+			width: 100%;
+		}
+		:global(.finances .fin-table tr) {
+			padding: 0.55rem 0.15rem;
+			border-bottom: 1px solid var(--color-border);
+		}
+		:global(.finances .fin-table tr:last-child) {
+			border-bottom: none;
+		}
+		:global(.finances .fin-table td) {
+			display: flex;
+			justify-content: space-between;
+			align-items: baseline;
+			gap: 1.5rem;
+			padding: 0.18rem 0;
+			border: none;
+			text-align: right;
+			white-space: normal;
+		}
+		:global(.finances .fin-table td)::before {
+			content: attr(data-label);
+			color: var(--color-text-secondary);
+			font-weight: 500;
+			text-align: left;
+			white-space: nowrap;
+		}
+		/* Title cell: no data-label → left-aligned heading, no ::before label. */
+		:global(.finances .fin-table td:not([data-label])) {
+			justify-content: flex-start;
+			gap: 0;
+			text-align: left;
+			font-weight: 600;
+			padding-bottom: 0.3rem;
+		}
+		:global(.finances .fin-table td:not([data-label]))::before {
+			content: none;
+		}
+		:global(.finances .fin-table td.hide-sm),
+		:global(.finances .fin-table th.hide-sm) {
+			display: none;
+		}
+		/* Drop cells with no value (e.g. an empty narration) so the card doesn't
+		   show a dangling label. */
+		:global(.finances .fin-table td:empty) {
+			display: none;
+		}
+	}
 </style>

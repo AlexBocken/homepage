@@ -8,6 +8,13 @@
 	import type { PageData } from './$types';
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { m as financesM, financesLang } from '$lib/js/financesI18n';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import TrendingDown from '@lucide/svelte/icons/trending-down';
+	import ChartLine from '@lucide/svelte/icons/chart-line';
+	import Activity from '@lucide/svelte/icons/activity';
+	import ChartArea from '@lucide/svelte/icons/chart-area';
+	import Coins from '@lucide/svelte/icons/coins';
+	import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
 
 	let { data }: { data: PageData } = $props();
 	const d: HoldingDetail = $derived(data.detail);
@@ -118,7 +125,10 @@
 		</p>
 	</div>
 	<div class="head-gain {gainClass(c.gain_chf)}">
-		<span class="hg-val">{money(c.gain_chf)}</span>
+		<span class="hg-val">
+			{#if (c.gain_chf ?? 0) >= 0}<TrendingUp size={20} strokeWidth={2} />{:else}<TrendingDown size={20} strokeWidth={2} />{/if}
+			{money(c.gain_chf)}
+		</span>
 		<span class="hg-pct">{percent(c.gain_pct)}</span>
 	</div>
 </header>
@@ -143,7 +153,7 @@
 
 <!-- Price history -->
 <section class="card">
-	<h2>{t.id_price_history}</h2>
+	<h2><ChartLine size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.id_price_history}</h2>
 	{#key chartKey}
 		<FitnessChart type="line" height="240px" data={priceData} yWidthGroup={yGroup} onHover={onHover('price')} hoverIndex={hoverAt('price')} tooltipFormatter={(v: number) => amount(v, d.quote_currency)} />
 	{/key}
@@ -152,7 +162,7 @@
 <!-- Performance vs benchmark -->
 {#if hasBenchmark}
 	<section class="card">
-		<h2>{t.id_return_vs_benchmark} <span class="hint">{t.id_rebased_dashed}</span></h2>
+		<h2><Activity size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.id_return_vs_benchmark} <span class="hint">{t.id_rebased_dashed}</span></h2>
 		{#key chartKey}
 			<FitnessChart type="line" height="240px" data={perfData} yWidthGroup={yGroup} onHover={onHover('perf')} hoverIndex={hoverAt('perf')} tooltipFormatter={(v: number) => `${v.toFixed(1)} %`} />
 		{/key}
@@ -161,7 +171,7 @@
 
 <!-- Value vs cost -->
 <section class="card">
-	<h2>{t.id_value_dev} <span class="hint">{t.id_value_hint}</span></h2>
+	<h2><ChartArea size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.id_value_dev} <span class="hint">{t.id_value_hint}</span></h2>
 	{#key chartKey}
 		<FitnessChart type="line" height="240px" data={valueData} yWidthGroup={yGroup} onHover={onHover('value')} hoverIndex={hoverAt('value')} tooltipFormatter={(v: number) => money(v, true)} />
 	{/key}
@@ -170,19 +180,19 @@
 <!-- Dividends -->
 {#if d.dividends.length}
 	<section class="card">
-		<h2>{t.dividends} <span class="hint">{t.id_div_hint}</span></h2>
+		<h2><Coins size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.dividends} <span class="hint">{t.id_div_hint}</span></h2>
 		<div class="table-scroll">
-			<table>
+			<table class="fin-table">
 				<thead>
 					<tr><th>{t.date_col}</th><th class="r">{t.id_gross}</th><th class="r">{t.id_withholding}</th><th class="r">{t.net}</th></tr>
 				</thead>
 				<tbody>
 					{#each d.dividends as dv, i (i)}
 						<tr>
-							<td class="date">{dv.date}</td>
-							<td class="r num">{money(dv.gross, true)}</td>
-							<td class="r num">{dv.withholding ? `−${money(dv.withholding, true)}` : '–'}</td>
-							<td class="r num">{money(dv.net, true)}</td>
+							<td class="date" data-label={t.date_col}>{dv.date}</td>
+							<td class="r num" data-label={t.id_gross}>{money(dv.gross, true)}</td>
+							<td class="r num" data-label={t.id_withholding}>{dv.withholding ? `−${money(dv.withholding, true)}` : '–'}</td>
+							<td class="r num" data-label={t.net}>{money(dv.net, true)}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -193,21 +203,21 @@
 
 <!-- Transactions -->
 <section class="card">
-	<h2>{t.id_purchases}</h2>
+	<h2><ShoppingCart size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.id_purchases}</h2>
 	{#if d.transactions.length}
 		<div class="table-scroll">
-			<table>
+			<table class="fin-table">
 				<thead>
 					<tr><th>{t.date_col}</th><th>{t.account_col}</th><th class="r">{t.units_col}</th><th class="r">{t.price}</th><th>{t.narration_col}</th></tr>
 				</thead>
 				<tbody>
 					{#each d.transactions as tx, i (i)}
 						<tr>
-							<td class="date">{tx.date}</td>
-							<td class="acct">{tx.account.split(':').slice(-2).join(':')}</td>
-							<td class="r num">{fmtUnits(tx.units)}</td>
-							<td class="r num">{tx.price} {tx.cost_currency}</td>
-							<td class="narr">{tx.narration ?? ''}</td>
+							<td class="date" data-label={t.date_col}>{tx.date}</td>
+							<td class="acct" data-label={t.account_col}>{tx.account.split(':').slice(-2).join(':')}</td>
+							<td class="r num" data-label={t.units_col}>{fmtUnits(tx.units)}</td>
+							<td class="r num" data-label={t.price}>{tx.price} {tx.cost_currency}</td>
+							<td class="narr" data-label={t.narration_col}>{tx.narration ?? ''}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -266,8 +276,12 @@
 		text-align: right;
 		display: flex;
 		flex-direction: column;
+		align-items: flex-end;
 	}
 	.hg-val {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
 		font-size: var(--text-2xl);
 		font-weight: 700;
 		font-variant-numeric: tabular-nums;
@@ -313,6 +327,10 @@
 		margin-bottom: 2rem;
 	}
 	h2 {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
 		margin: 0 0 1rem;
 		font-size: var(--text-lg);
 		color: var(--color-text-primary);

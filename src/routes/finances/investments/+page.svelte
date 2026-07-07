@@ -9,6 +9,11 @@
 	import { m as financesM, financesLang } from '$lib/js/financesI18n';
 	import type { PageData } from './$types';
 
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import TrendingDown from '@lucide/svelte/icons/trending-down';
+	import ChartLine from '@lucide/svelte/icons/chart-line';
+	import Layers from '@lucide/svelte/icons/layers';
+
 	let { data }: { data: PageData } = $props();
 	const inv: Investments = $derived(data.investments);
 	const tot = $derived(inv.totals);
@@ -148,7 +153,10 @@
 	</div>
 	<div class="kpi">
 		<span class="label">{t.inv_gain_loss}</span>
-		<span class="figure {gainClass(tot.gain_chf)}">{money(tot.gain_chf)} ({percent(tot.gain_pct)})</span>
+		<span class="figure trend {gainClass(tot.gain_chf)}">
+			{#if (tot.gain_chf ?? 0) >= 0}<TrendingUp size={18} strokeWidth={2} />{:else}<TrendingDown size={18} strokeWidth={2} />{/if}
+			{money(tot.gain_chf)} ({percent(tot.gain_pct)})
+		</span>
 	</div>
 	<div class="kpi">
 		<span class="label" title={t.inv_xirr_tip}>XIRR p.a.</span>
@@ -166,7 +174,7 @@
 
 <!-- Cumulative P/L (hero) -->
 <section class="card">
-	<h2>{t.inv_cum_pl}</h2>
+	<h2><TrendingUp size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.inv_cum_pl}</h2>
 	{#key chartKey}
 		<FitnessChart
 			type="line"
@@ -180,7 +188,7 @@
 
 <!-- Price performance -->
 <section class="card">
-	<h2>{t.inv_price_perf} <span class="hint">{t.inv_rebased}{hasBenchmark ? t.inv_benchmark_dashed : ''}</span></h2>
+	<h2><ChartLine size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.inv_price_perf} <span class="hint">{t.inv_rebased}{hasBenchmark ? t.inv_benchmark_dashed : ''}</span></h2>
 	{#key chartKey}
 		<FitnessChart type="line" height="300px" data={perfData} tooltipFormatter={(v: number) => `${v.toFixed(1)} %`} />
 	{/key}
@@ -188,7 +196,7 @@
 
 <!-- Holdings + allocation -->
 <section class="card">
-	<h2>{t.inv_positions}</h2>
+	<h2><Layers size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.inv_positions}</h2>
 
 	<div class="alloc-bar">
 		{#each allocation as [cls, val] (cls)}
@@ -202,12 +210,12 @@
 	</div>
 
 	<div class="table-scroll">
-		<table>
+		<table class="fin-table">
 			<thead>
 				<tr>
 					<th>{t.security}</th><th class="r">{t.units_col}</th><th class="r">{t.price}</th>
 					<th class="r">{t.market_value}</th><th class="r">{t.inv_div_abbr}</th><th class="r">{t.inv_pl_abbr}</th>
-					<th class="r">XIRR</th><th class="r">TWR</th><th></th>
+					<th class="r">XIRR</th><th class="r">TWR</th><th class="hide-sm"></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -217,29 +225,29 @@
 							<span class="ticker">{h.commodity}</span>
 							<span class="cname">{h.name}</span>
 						</td>
-						<td class="r num">{fmtUnits(h.units)}</td>
-						<td class="r num">{h.price ?? '–'} {h.quote_currency}</td>
-						<td class="r num">{money(h.market_chf)}</td>
-						<td class="r num">{h.dividends_chf ? money(h.dividends_chf) : '–'}</td>
-						<td class="r num {gainClass(gainOf(h))}">
+						<td class="r num" data-label={t.units_col}>{fmtUnits(h.units)}</td>
+						<td class="r num" data-label={t.price}>{h.price ?? '–'} {h.quote_currency}</td>
+						<td class="r num" data-label={t.market_value}>{money(h.market_chf)}</td>
+						<td class="r num" data-label={t.inv_div_abbr}>{h.dividends_chf ? money(h.dividends_chf) : '–'}</td>
+						<td class="r num {gainClass(gainOf(h))}" data-label={t.inv_pl_abbr}>
 							{money(h.gain_chf)}<br /><small>{percent(h.gain_pct)}</small>
 						</td>
-						<td class="r num {gainClass(h.xirr_pct)}">{percent(h.xirr_pct)}</td>
-						<td class="r num {gainClass(h.twr_pct)}">{percent(h.twr_pct)}</td>
-						<td class="chev">›</td>
+						<td class="r num {gainClass(h.xirr_pct)}" data-label="XIRR">{percent(h.xirr_pct)}</td>
+						<td class="r num {gainClass(h.twr_pct)}" data-label="TWR">{percent(h.twr_pct)}</td>
+						<td class="chev hide-sm">›</td>
 					</tr>
 				{/each}
 			</tbody>
 			<tfoot>
 				<tr>
 					<td>{t.total}</td>
-					<td></td><td></td>
-					<td class="r num">{money(tot.market_chf)}</td>
-					<td class="r num">{money(tot.dividends_chf)}</td>
-					<td class="r num {gainClass(tot.gain_chf)}">{money(tot.gain_chf)}<br /><small>{percent(tot.gain_pct)}</small></td>
-					<td class="r num {gainClass(tot.xirr_pct)}">{percent(tot.xirr_pct)}</td>
-					<td class="r num {gainClass(tot.twr_pct)}">{percent(tot.twr_pct)}</td>
-					<td></td>
+					<td class="hide-sm"></td><td class="hide-sm"></td>
+					<td class="r num" data-label={t.market_value}>{money(tot.market_chf)}</td>
+					<td class="r num" data-label={t.inv_div_abbr}>{money(tot.dividends_chf)}</td>
+					<td class="r num {gainClass(tot.gain_chf)}" data-label={t.inv_pl_abbr}>{money(tot.gain_chf)}<br /><small>{percent(tot.gain_pct)}</small></td>
+					<td class="r num {gainClass(tot.xirr_pct)}" data-label="XIRR">{percent(tot.xirr_pct)}</td>
+					<td class="r num {gainClass(tot.twr_pct)}" data-label="TWR">{percent(tot.twr_pct)}</td>
+					<td class="hide-sm"></td>
 				</tr>
 			</tfoot>
 		</table>
@@ -290,9 +298,18 @@
 		margin-bottom: 2rem;
 	}
 	h2 {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
 		margin: 0 0 1rem;
 		font-size: var(--text-lg);
 		color: var(--color-text-primary);
+	}
+	.figure.trend {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 	.hint {
 		font-size: var(--text-sm);

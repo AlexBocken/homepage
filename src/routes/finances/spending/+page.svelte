@@ -10,6 +10,11 @@
 	import type { PageData } from './$types';
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { m as financesM, financesLang } from '$lib/js/financesI18n';
+	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
+	import ChartColumn from '@lucide/svelte/icons/chart-column';
+	import Tags from '@lucide/svelte/icons/tags';
+	import Store from '@lucide/svelte/icons/store';
+	import ReceiptText from '@lucide/svelte/icons/receipt-text';
 
 	let { data }: { data: PageData } = $props();
 
@@ -110,7 +115,7 @@
 {#if data.cashflow}
 	<section class="card hero-card">
 		<header class="cf-header">
-			<h2>{t.sp_income_expenses}</h2>
+			<h2><ArrowUpDown size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.sp_income_expenses}</h2>
 			<nav class="section-tabs" aria-label={t.view_aria}>
 				<button class="section" class:active={cfMode === 'split'} onclick={() => (cfMode = 'split')}>
 					{t.sp_breakdown}
@@ -149,7 +154,7 @@
 
 <!-- Monthly trend -->
 <section class="card">
-	<h2>{t.sp_monthly_trend}</h2>
+	<h2><ChartColumn size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.sp_monthly_trend}</h2>
 	{#key page.url.search}
 		<FitnessChart type="bar" height="240px" data={trend} tooltipFormatter={(v: number) => money(v, true)} />
 	{/key}
@@ -159,7 +164,7 @@
 	<!-- Category breakdown (drill-down) -->
 	{#if cats.length}
 		<section class="card">
-			<h2>{t.sp_by_category}</h2>
+			<h2><Tags size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.sp_by_category}</h2>
 			<ul class="bars">
 				{#each cats as c (c.account)}
 					{@const val = disp(c.amount) ?? 0}
@@ -179,7 +184,7 @@
 
 	<!-- Top payees -->
 	<section class="card">
-		<h2>{t.sp_top_payees}</h2>
+		<h2><Store size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.sp_top_payees}</h2>
 		{#if exp.by_payee.length}
 			<ul class="bars">
 				{#each exp.by_payee as p (p.payee)}
@@ -203,7 +208,7 @@
 <!-- Individual entries (drill-down) -->
 <section class="card">
 	<h2>
-		{t.bookings} {#if jrnl}<span class="count">({jrnl.total})</span>{/if}
+		<ReceiptText size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.bookings} {#if jrnl}<span class="count">({jrnl.total})</span>{/if}
 		{#if data.payee}
 			<a class="payee-chip" href={resolve('/finances/spending')} onclick={(e) => { e.preventDefault(); clearPayee(); }}>
 				{data.payee} ✕
@@ -212,24 +217,24 @@
 	</h2>
 	{#if jrnl && jrnl.transactions.length}
 		<div class="table-scroll">
-			<table>
+			<table class="fin-table">
 				<thead>
-					<tr><th></th><th>{t.date_col}</th><th>{t.payee_col}</th><th>{t.narration_col}</th><th class="r">{t.amount_col}</th></tr>
+					<tr><th class="hide-sm"></th><th>{t.date_col}</th><th>{t.payee_col}</th><th>{t.narration_col}</th><th class="r">{t.amount_col}</th></tr>
 				</thead>
 				<tbody>
 					{#each jrnl.transactions as row, i (i)}
 						<tr class="trow" onclick={() => (detail = row)} title={t.details_view}>
-							<td class="flag" title={row.postings.length > 2 ? `${row.postings.length} ${t.ac_postings_suffix}` : ''}>
+							<td class="flag hide-sm" title={row.postings.length > 2 ? `${row.postings.length} ${t.ac_postings_suffix}` : ''}>
 								{row.postings.length > 2 ? '⑃' : ''}
 							</td>
-							<td class="date">{row.date}</td>
-							<td class="payee">
+							<td class="date" data-label={t.date_col}>{row.date}</td>
+							<td class="payee" class:hide-sm={!row.payee} data-label={t.payee_col}>
 								{#if row.payee}
 									<a href={payeeHref(row.payee)} onclick={(e) => { e.stopPropagation(); e.preventDefault(); findPayee(row.payee ?? ''); }}>{row.payee}</a>
 								{/if}
 							</td>
-							<td class="narr">{row.narration ?? ''}</td>
-							<td class="r num">{money(disp(row.amount_chf), true)}</td>
+							<td class="narr" class:hide-sm={!row.narration} data-label={t.narration_col}>{row.narration ?? ''}</td>
+							<td class="r num" data-label={t.amount_col}>{money(disp(row.amount_chf), true)}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -318,6 +323,10 @@
 		box-shadow: var(--shadow-sm);
 	}
 	h2 {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
 		margin: 0 0 1rem;
 		font-size: var(--text-lg);
 		color: var(--color-text-primary);

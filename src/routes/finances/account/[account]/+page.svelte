@@ -8,6 +8,7 @@
 	import type { AccountJournalTxn, AccountView } from '$lib/utils/finance';
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { m, financesLang } from '$lib/js/financesI18n';
+	import ReceiptText from '@lucide/svelte/icons/receipt-text';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -83,23 +84,23 @@
 </section>
 
 <section class="card">
-	<h2>{t.ac_journal} <span class="count">({v.count})</span></h2>
+	<h2><ReceiptText size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.ac_journal} <span class="count">({v.count})</span></h2>
 	<div class="table-scroll">
-		<table>
+		<table class="fin-table">
 			<thead>
-				<tr><th></th><th>{t.date_col}</th><th>{t.ac_payee_narration}</th><th class="r">{t.ac_change}</th><th class="r">{t.balance}</th></tr>
+				<tr><th class="hide-sm"></th><th>{t.date_col}</th><th>{t.ac_payee_narration}</th><th class="r">{t.ac_change}</th><th class="r">{t.balance}</th></tr>
 			</thead>
 			<tbody>
 				{#each v.journal as row, i (i)}
 					<tr class="trow" onclick={() => (detail = row)} title={t.details_view}>
-						<td class="flag" title={row.postings.length > 2 ? `${row.postings.length} ${t.ac_postings_suffix}` : ''}>{row.postings.length > 2 ? '⑃' : ''}</td>
-						<td class="date fin-num">{row.date}</td>
-						<td class="pn">
+						<td class="flag hide-sm" title={row.postings.length > 2 ? `${row.postings.length} ${t.ac_postings_suffix}` : ''}>{row.postings.length > 2 ? '⑃' : ''}</td>
+						<td class="date fin-num" data-label={t.date_col}>{row.date}</td>
+						<td class="pn" data-label={t.ac_payee_narration}>
 							{#if row.payee}<a class="payee" href={`${resolve('/finances/spending')}?payee=${encodeURIComponent(row.payee)}`} onclick={(e) => { e.stopPropagation(); e.preventDefault(); findPayee(row.payee ?? ''); }}>{row.payee}</a>{/if}
 							{#if row.narration}<span class="narr">{row.payee ? ' · ' : ''}{row.narration}</span>{/if}
 						</td>
-						<td class="r num fin-num">{money(row.change, true)}</td>
-						<td class="r num fin-num bal">{money(row.balance, true)}</td>
+						<td class="r num fin-num" data-label={t.ac_change}>{money(row.change, true)}</td>
+						<td class="r num fin-num bal" data-label={t.balance}>{money(row.balance, true)}</td>
 					</tr>
 				{/each}
 			</tbody>
@@ -186,6 +187,10 @@
 		margin-bottom: 2rem;
 	}
 	h2 {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
 		margin: 0 0 1rem;
 		font-size: var(--text-lg);
 		color: var(--color-text-primary);

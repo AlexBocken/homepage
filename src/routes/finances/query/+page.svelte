@@ -3,6 +3,7 @@
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { m as financesM, financesLang } from '$lib/js/financesI18n';
+	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -149,7 +150,7 @@
 
 <div class="layout">
 	<aside class="saved">
-		<h2>{t.qy_saved}</h2>
+		<h2><Bookmark size={16} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.qy_saved}</h2>
 		{#if saved.length}
 			<ul>
 				{#each saved as q (q.id)}
@@ -200,13 +201,13 @@
 		{:else if result}
 			<p class="count muted">{result.count} {result.count === 1 ? t.qy_row_sg : t.qy_row_pl}</p>
 			<div class="table-scroll">
-				<table class="fin-num">
+				<table class="fin-num fin-table">
 					<thead>
 						<tr>{#each result.columns as col (col)}<th>{col}</th>{/each}</tr>
 					</thead>
 					<tbody>
 						{#each result.rows as row, i (i)}
-							<tr>{#each row as v, j (j)}<td class:num={typeof v === 'number'}>{v ?? ''}</td>{/each}</tr>
+							<tr>{#each row as v, j (j)}<td class:num={typeof v === 'number'} data-label={result.columns[j]}>{v ?? ''}</td>{/each}</tr>
 						{/each}
 					</tbody>
 				</table>
@@ -233,6 +234,9 @@
 		align-self: start;
 	}
 	.saved h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 		margin: 0 0 0.75rem;
 		font-size: var(--text-base);
 		color: var(--color-text-primary);

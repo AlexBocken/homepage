@@ -7,6 +7,8 @@
 	import type { BalanceSheet, TreeNode } from '$lib/utils/finance';
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { m, financesLang } from '$lib/js/financesI18n';
+	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
+	import Scale from '@lucide/svelte/icons/scale';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -71,7 +73,7 @@
      it adjacent makes that connection intuitive. -->
 {#if inc}
 	<header class="page-head">
-		<h1>{t.income_statement}</h1>
+		<h1><ArrowUpDown size={20} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.income_statement}</h1>
 		<span class="range fin-num">{inc.from} – {inc.to}</span>
 	</header>
 	<section class="sheet">
@@ -91,7 +93,7 @@
 {/if}
 
 <header class="page-head second">
-	<h1>{t.balance_sheet}</h1>
+	<h1><Scale size={20} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.balance_sheet}</h1>
 	<div class="basis" role="group" aria-label={t.valuation} class:loading>
 		<button class:active={basis === 'market'} onclick={() => setBasis('market')} disabled={loading}>
 			{t.market_value}
@@ -140,6 +142,9 @@
 		margin-top: 2.5rem;
 	}
 	h1 {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		margin: 0;
 		font-size: var(--text-2xl);
 		color: var(--color-text-primary);

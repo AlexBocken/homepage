@@ -72,8 +72,8 @@ export const en = {
 	// Overview
 	ov_networth: 'Net worth',
 	ov_per_currency: 'Per currency',
-	tax_required: '⚠️ Tax return required',
-	tax_ok: '✓ Withholding tax suffices',
+	tax_required: 'Tax return required',
+	tax_ok: 'Withholding tax suffices',
 	tax_note_base: 'Taxable wealth (excl. pension fund & pillar 3a).',
 	tax_over: 'Above the 80,000 CHF threshold — a tax return is required.',
 	tax_under: 'Below the 80,000 CHF threshold — regular withholding tax is enough.',
