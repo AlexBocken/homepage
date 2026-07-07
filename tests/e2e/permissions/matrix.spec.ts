@@ -59,7 +59,13 @@ const GROUP_ROUTES: GroupRoute[] = [
 	{ path: '/cospend/settle', group: 'cospend', kind: 'page' },
 	{ path: '/cospend/recurring', group: 'cospend', kind: 'page' },
 	{ path: '/expenses/dash', group: 'cospend', kind: 'page' },
+	{ path: '/cospend/settings', group: 'cospend', kind: 'page' },
+	{ path: '/expenses/settings', group: 'cospend', kind: 'page' },
 	{ path: '/api/cospend/payments', group: 'cospend', kind: 'api' },
+	// Session+group management of beancount export tokens (mint/list). The
+	// token-authenticated /api/cospend/export endpoint is covered separately
+	// below (it rejects sessions without a token).
+	{ path: '/api/cospend/export/tokens', group: 'cospend', kind: 'api' },
 	// task_users
 	{ path: '/tasks', group: 'task_users', kind: 'page' },
 	{ path: '/tasks/new', group: 'task_users', kind: 'page' },
@@ -107,9 +113,16 @@ const OWNER_ONLY_ROUTES: Route[] = [
 	{ path: '/finances/spending', kind: 'page' },
 	{ path: '/finances/investments', kind: 'page' },
 	{ path: '/finances/budget', kind: 'page' },
+	{ path: '/finances/account', kind: 'page' },
+	{ path: '/finances/account/Expenses:Food', kind: 'page' },
+	{ path: '/finances/query', kind: 'page' },
 	{ path: '/api/finances/meta', kind: 'api' },
 	{ path: '/api/finances/budget', kind: 'api' },
-	{ path: '/api/finances/investments', kind: 'api' }
+	{ path: '/api/finances/investments', kind: 'api' },
+	{ path: '/api/finances/account?account=Assets', kind: 'api' },
+	{ path: '/api/finances/query?q=SELECT%20account', kind: 'api' },
+	// Specific (non-proxy) owner-gated API route backing the BQL console.
+	{ path: '/api/finances/saved-queries', kind: 'api' }
 ];
 
 for (const r of OWNER_ONLY_ROUTES) {
@@ -119,6 +132,56 @@ for (const r of OWNER_ONLY_ROUTES) {
 		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs('anon', r.path)));
 	});
 }
+
+// Token-only: /api/cospend/export is authenticated by a CospendApiToken (see
+// src/lib/server/cospendApiAuth.ts), NOT a session. Without a valid token every
+// caller must be rejected — including a logged-in cospend user, who clears the
+// hooks group gate but is then refused by the endpoint for lack of a token.
+// Guards against the export being loosened to plain session/group access.
+test.describe('/api/cospend/export [token-only]', () => {
+	test('cospend user without token → 401', async () => {
+		expect((await fetchAs('cospend', '/api/cospend/export')).status()).toBe(401);
+	});
+	test('wrong-group user → blocked', async () => {
+		expect([401, 403]).toContain((await fetchAs('recipes', '/api/cospend/export')).status());
+	});
+	test('no-groups user → blocked', async () => {
+		expect([401, 403]).toContain((await fetchAs('none', '/api/cospend/export')).status());
+	});
+	test('logged out → 401', async () => {
+		expect((await fetchAs('anon', '/api/cospend/export')).status()).toBe(401);
+	});
+	test('invalid bearer token → 401', async () => {
+		const ctx = await request.newContext({ baseURL: BASE });
+		try {
+			const res = await ctx.get('/api/cospend/export', {
+				headers: { authorization: 'Bearer not-a-real-token' },
+				maxRedirects: 0
+			});
+			expect(res.status()).toBe(401);
+		} finally {
+			await ctx.dispose();
+		}
+	});
+
+	// Valid token (seeded in scripts/e2e/seed.mjs) → 200 with the full ledger,
+	// proving the gate isn't merely "always deny". No session cookie is sent.
+	test('valid bearer token (no session) → 200 with payments', async () => {
+		const ctx = await request.newContext({ baseURL: BASE });
+		try {
+			const res = await ctx.get('/api/cospend/export', {
+				headers: { authorization: 'Bearer e2e-cospend-export-token' },
+				maxRedirects: 0
+			});
+			expect(res.status()).toBe(200);
+			const body = await res.json();
+			expect(Array.isArray(body.payments)).toBe(true);
+			expect(body.payments.length).toBeGreaterThan(0);
+		} finally {
+			await ctx.dispose();
+		}
+	});
+});
 
 // Browser-level spot-checks: the request matrix above proves the status codes
 // for every route; these confirm a user actually SEES the right thing in the UI

@@ -10,6 +10,11 @@ import mongoose from 'mongoose';
 
 const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27018/bocken_test?directConnection=true';
 
+// Fixed cospend export API token seeded for the permissions matrix (valid-token
+// happy path). Keep in sync with the same literal in
+// tests/e2e/permissions/matrix.spec.ts.
+const COSPEND_EXPORT_TOKEN = 'e2e-cospend-export-token';
+
 /** One German section with an English mirror. */
 const section = (name, list) => ({ name, type: 'section', list });
 const steps = (name, arr) => ({ name, type: 'section', steps: arr });
@@ -252,6 +257,19 @@ async function main() {
 	await db.collection('payments').insertMany(COSPEND.map((c) => c.payment));
 	await db.collection('paymentsplits').insertMany(COSPEND.flatMap((c) => c.splits));
 	console.log(`  payments: ${COSPEND.length} (+ splits)`);
+
+	// A fixed cospend export API token so the permissions matrix can assert the
+	// token happy-path (valid token → 200) deterministically.
+	await db.collection('cospendapitokens').deleteMany({ label: 'e2e-export' });
+	await db.collection('cospendapitokens').insertOne({
+		token: COSPEND_EXPORT_TOKEN,
+		createdBy: 'e2e_cospend',
+		label: 'e2e-export',
+		lastUsedAt: null,
+		createdAt: new Date(),
+		updatedAt: new Date()
+	});
+	console.log('  cospend export token: seeded');
 
 	// anna's female profile + period cycles (synthetic).
 	await db.collection('fitnessgoals').replaceOne({ username: 'anna' }, FEMALE_PROFILE, { upsert: true });
