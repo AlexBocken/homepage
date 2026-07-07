@@ -1510,6 +1510,107 @@ def account_view(
     }
 
 
+@app.get("/payee")
+def payee_view(
+    payee: str = Query(...),
+    from_: str = Query(None, alias="from"),
+    to: str = Query(None),
+    limit: int = Query(300, ge=1, le=2000),
+):
+    """A payee deep-dive mirroring /account: monthly spend stacked by the
+    Expenses/Income accounts this payee hits, a cumulative-total series, and the
+    payee's transaction journal with a running total. Amounts in CHF."""
+    from calendar import monthrange
+
+    led = get_ledger()
+    lo, hi = period_bounds(led, from_, to)
+
+    def flow(a):  # the accounts a payee's money flows to/from
+        return a.startswith("Expenses") or a.startswith("Income")
+
+    months = month_range(lo, hi)
+    midx = {mk: i for i, mk in enumerate(months)}
+    by_acct = {}
+
+    tx = [t for t in led.txns if lo <= t.date <= hi and (t.payee or "") == payee]
+    tx.sort(key=lambda t: (t.date, t.meta.get("lineno", 0)))
+
+    for t in tx:
+        i = midx[f"{t.date.year}-{t.date.month:02d}"]
+        for p in t.postings:
+            if p.units is None or not flow(p.account):
+                continue
+            v = posting_chf(p, led.price_map, led.opcur, t.date)
+            d = by_acct.get(p.account)
+            if d is None:
+                d = by_acct[p.account] = {"name": p.account, "monthly": [D("0")] * len(months)}
+            d["monthly"][i] += v
+
+    children = sorted(
+        (
+            {"account": a, "name": d["name"], "total": num(sum(d["monthly"], D("0"))),
+             "monthly": [num(x) for x in d["monthly"]]}
+            for a, d in by_acct.items()
+        ),
+        key=lambda r: abs(r["total"] or 0),
+        reverse=True,
+    )
+
+    # Cumulative total at each month-end (running sum of monthly spend).
+    balance_series = []
+    running = D("0")
+    for mk in months:
+        i = midx[mk]
+        running += sum(by_acct[a]["monthly"][i] for a in by_acct)  # noqa: B023
+        y, m = int(mk[:4]), int(mk[5:7])
+        last = date(y, m, monthrange(y, m)[1])
+        balance_series.append({"date": min(last, hi).isoformat(), "balance": num(running)})
+
+    total = running
+
+    # Journal with a running total (oldest->newest, shown newest-first). Each
+    # row's `change` is the flow (Expenses/Income) attributable to the payee.
+    bal = D("0")
+    rows = []
+    for t in tx:
+        change = sum((posting_chf(p, led.price_map, led.opcur, t.date) for p in t.postings if flow(p.account)), D("0"))
+        bal += change
+        rows.append({
+            "date": t.date.isoformat(),
+            "flag": t.flag,
+            "payee": t.payee,
+            "narration": t.narration,
+            "tags": sorted(t.tags) if t.tags else [],
+            "change": num(change),
+            "balance": num(bal),
+            "total_chf": num(max((posting_chf(p, led.price_map, led.opcur, t.date) for p in t.postings), key=abs, default=D("0"))),
+            "postings": [
+                {
+                    "account": p.account,
+                    "chf": num(posting_chf(p, led.price_map, led.opcur, t.date)),
+                    **({"units": {"number": num(p.units.number, 4), "currency": p.units.currency}} if p.units else {}),
+                    **({"cost": {"number": num(p.cost.number, 4), "currency": p.cost.currency}} if p.cost else {}),
+                }
+                for p in t.postings
+            ],
+        })
+    rows.reverse()
+    journal = rows[:limit]
+
+    return {
+        "currency": led.opcur,
+        "payee": payee,
+        "from": lo.isoformat(),
+        "to": hi.isoformat(),
+        "total": num(total),
+        "months": months,
+        "children": children,
+        "balance_series": balance_series,
+        "journal": journal,
+        "count": len(rows),
+    }
+
+
 @app.get("/savings")
 def savings(from_: str = Query(None, alias="from"), to: str = Query(None)):
     """Savings rate = (income − expenses) / income, overall and per month."""

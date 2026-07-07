@@ -425,8 +425,10 @@ def test_account_view_running_balance_and_children():
     dates = [r["date"] for r in j]
     assert dates == sorted(dates, reverse=True)
     assert approx(j[0]["balance"], d["balance"])
-    total_change = sum((D(str(r["change"])) for r in j), D("0"))
-    assert approx(D(str(d["opening"])) + total_change, d["balance"])
+    # Running balance is internally consistent even when the journal is truncated
+    # to `limit` rows: each row's (balance - change) equals the next-older balance.
+    for a, b in zip(j, j[1:]):
+        assert approx(D(str(a["balance"])) - D(str(a["change"])), D(str(b["balance"])))
 
     # Children partition the change; their totals sum to (balance - opening).
     csum = sum((D(str(c["total"])) for c in d["children"]), D("0"))
@@ -438,3 +440,39 @@ def test_account_view_running_balance_and_children():
     # Balance series ends at the current balance.
     assert d["balance_series"]
     assert approx(d["balance_series"][-1]["balance"], d["balance"])
+
+
+def test_payee_view_running_total_and_accounts():
+    # Pick a payee whose transactions actually hit Expenses (so the breakdown +
+    # total are non-trivial).
+    payee = next(
+        (t.payee for t in TXNS
+         if t.payee and any(p.account.startswith("Expenses") for p in t.postings)),
+        None,
+    )
+    assert payee, "expected a payee with expense postings"
+
+    d = client.get("/payee", params={"payee": payee, "from": "2000-01-01"}).json()
+    assert d["payee"] == payee
+
+    j = d["journal"]
+    assert j, "expected journal rows"
+    dates = [r["date"] for r in j]
+    assert dates == sorted(dates, reverse=True)  # newest-first
+
+    # Running total: newest row's balance == total, internally consistent even
+    # when the journal is truncated to `limit` rows.
+    assert approx(j[0]["balance"], d["total"])
+    for a, b in zip(j, j[1:]):
+        assert approx(D(str(a["balance"])) - D(str(a["change"])), D(str(b["balance"])))
+
+    # The account breakdown partitions the flow; child totals sum to the total.
+    csum = sum((D(str(c["total"])) for c in d["children"]), D("0"))
+    assert approx(csum, D(str(d["total"])))
+    for c in d["children"]:
+        assert len(c["monthly"]) == len(d["months"])
+        assert c["account"].startswith("Expenses") or c["account"].startswith("Income")
+
+    # Cumulative series ends at the total.
+    assert d["balance_series"]
+    assert approx(d["balance_series"][-1]["balance"], d["total"])
