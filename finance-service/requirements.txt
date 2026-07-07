@@ -1,0 +1,10 @@
+# Read-only beancount JSON API for the /finances dashboards. Loose pins so it
+# resolves on Arch's Python (which ships beancount v3 as a system package; the
+# venv is created with --system-site-packages so beancount/beanquery come from
+# there, and only the web bits are pip-installed here).
+fastapi>=0.110
+uvicorn[standard]>=0.27
+# Provided by the system site-packages on the ledger host; listed for venvs
+# created without --system-site-packages.
+beancount>=3.0
+beanquery>=0.1

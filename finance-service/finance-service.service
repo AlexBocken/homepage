@@ -1,0 +1,43 @@
+[Unit]
+Description=Finances (beancount) read-only JSON API for the website
+After=network.target
+
+[Service]
+# The one place the bind address is configured — FINANCE_SERVICE_URL in the
+# website's .env must point at the same value.
+Environment=FINANCE_HOST=127.0.0.1
+Environment=FINANCE_PORT=8091
+# Absolute path to the ledger entry point on this host. The accounting repo must
+# be deployed and refreshed here (make build && make prices); this service only
+# ever reads it.
+Environment=LEDGER_PATH=/usr/share/webapps/homepage/finance-service/ledger/main.bean
+WorkingDirectory=/usr/share/webapps/homepage/finance-service
+ExecStart=/usr/share/webapps/homepage/finance-service/venv/bin/python -m uvicorn app:app --host ${FINANCE_HOST} --port ${FINANCE_PORT}
+Restart=on-failure
+RestartSec=2
+
+# Hardening — the service only reads its own code and the ledger, and listens on
+# loopback. It never writes to the ledger.
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+LockPersonality=yes
+# The ledger is read-only to the service. If LEDGER_PATH lives outside the
+# WorkingDirectory (e.g. a checkout under /home or /var/lib), expose it with:
+#   ReadOnlyPaths=/path/to/accounting
+# ProtectHome=yes blocks /home, so keep the deployed ledger under
+# /usr/share/webapps/homepage or /var/lib and point LEDGER_PATH at it.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# No outbound needed: it reads local files and talks only to the local website.
+IPAddressDeny=any
+IPAddressAllow=localhost
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

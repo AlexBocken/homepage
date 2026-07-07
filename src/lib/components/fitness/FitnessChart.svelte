@@ -10,6 +10,7 @@
 	 *   yUnit?: string,
 	 *   goalLine?: number,
 	 *   tooltipFormatter?: (value: number, datasetIndex: number, dataIndex: number, label: string) => string,
+	 *   tooltipLabelColor?: (value: number, datasetIndex: number, dataIndex: number) => string,
 	 *   yMin?: number,
 	 *   yMax?: number,
 	 *   onHover?: (index: number | null) => void,
@@ -39,7 +40,7 @@
 	 * clears it, and `undefined` leaves the chart's native hover untouched (used
 	 * for the chart that currently owns the pointer, so we don't fight Chart.js).
 	 */
-	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined, yMin = undefined, yMax = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined, zoom = false, applyXRange = undefined, onXRangeChange = undefined } = $props();
+	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined, tooltipLabelColor = undefined, yMin = undefined, yMax = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined, zoom = false, applyXRange = undefined, onXRangeChange = undefined } = $props();
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
@@ -473,7 +474,7 @@
 						titleFont: { size: 11, weight: 'normal' },
 						bodyColor: dark ? '#ECEFF4' : '#2E3440',
 						bodyFont: { size: 14, weight: 'bold' },
-						displayColors: showColorKey,
+						displayColors: showColorKey || !!tooltipLabelColor,
 						usePointStyle: true,
 						boxPadding: 6,
 						borderWidth: 0,
@@ -481,6 +482,13 @@
 						padding: 10,
 						filter: (/** @type {any} */ ctx) => !(ctx.dataset?.label ?? '').includes('σ'),
 						callbacks: {
+							...(tooltipLabelColor ? {
+								// Colour the tooltip swatch by value (e.g. red below zero).
+								labelColor: (/** @type {any} */ ctx) => {
+									const c = tooltipLabelColor(ctx.parsed.y, ctx.datasetIndex, ctx.dataIndex);
+									return { borderColor: c, backgroundColor: c, borderWidth: 0, borderRadius: 4 };
+								}
+							} : {}),
 							...(useLinearX ? {
 								// Sub-line: distance, de-emphasized.
 								title: (/** @type {any} */ items) => {

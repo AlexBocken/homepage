@@ -97,6 +97,29 @@ for (const r of LOGIN_ONLY_ROUTES) {
 	});
 }
 
+// Owner-only: the private /finances area is gated on a specific Authentik
+// username (see hooks.server.ts), not a group. No e2e user is that person, so
+// every logged-in role — even the all-groups `full` user — must be forbidden,
+// and anonymous access blocked. Guards against the gate being accidentally
+// loosened to a group or login-only check.
+const OWNER_ONLY_ROUTES: Route[] = [
+	{ path: '/finances', kind: 'page' },
+	{ path: '/finances/spending', kind: 'page' },
+	{ path: '/finances/investments', kind: 'page' },
+	{ path: '/finances/budget', kind: 'page' },
+	{ path: '/api/finances/meta', kind: 'api' },
+	{ path: '/api/finances/budget', kind: 'api' },
+	{ path: '/api/finances/investments', kind: 'api' }
+];
+
+for (const r of OWNER_ONLY_ROUTES) {
+	test.describe(`${r.path} [owner-only]`, () => {
+		test('most-privileged user (full) → 403', async () => expectForbidden(await fetchAs('full', r.path)));
+		test('no permissions → 403', async () => expectForbidden(await fetchAs('none', r.path)));
+		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs('anon', r.path)));
+	});
+}
+
 // Browser-level spot-checks: the request matrix above proves the status codes
 // for every route; these confirm a user actually SEES the right thing in the UI
 // (the page, the 403 verse page, or the login flow) for a representative gate.

@@ -67,6 +67,7 @@ const NOINDEX_PATTERNS: RegExp[] = [
 	/\.ics$/, // ICS subscription feeds (period + liturgical calendars)
 	/^\/cospend(\/|$)/,
 	/^\/expenses(\/|$)/,
+	/^\/finances(\/|$)/,
 ];
 
 async function noindex({ event, resolve }: Parameters<Handle>[0]) {
@@ -228,6 +229,24 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
 		else if (!session.user?.groups?.includes('task_users')) {
+			await errorWithVerse(fetch, url.pathname, 403,
+				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
+		}
+	}
+
+	// Protect finances routes and API — private single-user area (owner only).
+	// Unlike the group-gated features above this checks the Authentik username
+	// directly, since it's for exactly one person. Nicknames are compared
+	// lowercased (as elsewhere, e.g. the fitness period subscriptions route).
+	if (url.pathname.startsWith('/finances') || url.pathname.startsWith('/api/finances')) {
+		if (!session) {
+			if (url.pathname.startsWith('/api/finances')) {
+				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
+			}
+			const callbackUrl = encodeURIComponent(url.pathname + url.search);
+			redirect(303, `/login?callbackUrl=${callbackUrl}`);
+		}
+		else if (session.user?.nickname?.toLowerCase() !== 'alexander') {
 			await errorWithVerse(fetch, url.pathname, 403,
 				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
 		}
