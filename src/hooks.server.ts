@@ -204,6 +204,15 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 				}
 			}
 
+			// Allow a valid cospend API token to reach the read-only export endpoint
+			// without a session (for the beancount importer). The endpoint re-verifies.
+			if (url.pathname === '/api/cospend/export') {
+				const { verifyCospendApiToken } = await import('$lib/server/cospendApiAuth');
+				if (await verifyCospendApiToken(event.request, url)) {
+					return resolve(event);
+				}
+			}
+
 			// For API routes, return 401 instead of redirecting
 			if (url.pathname.startsWith('/api/cospend')) {
 				await errorWithVerse(fetch, url.pathname, 401,

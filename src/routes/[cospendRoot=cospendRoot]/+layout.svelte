@@ -14,6 +14,7 @@
   import Wallet from '@lucide/svelte/icons/wallet';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
   import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
+  import Settings from '@lucide/svelte/icons/settings';
   import { detectCospendLang, cospendRoot, cospendLabels } from '$lib/js/cospendI18n';
 
   let { data, children } = $props();
@@ -96,6 +97,7 @@
       {#if !isGuest}
         <li style="--active-fill: var(--nord14)"><a href={resolve('/[cospendRoot=cospendRoot]/payments', { cospendRoot: root })} class:active={isActive(`/${root}/payments`)}><span class="nav-icon-wrap nav-icon-wallet"><Wallet size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">{labels.payments}</span></a></li>
         <li style="--active-fill: var(--nord12); --active-shape: circle(50%)"><a href={resolve('/[cospendRoot=cospendRoot]/recurring', { cospendRoot: root })} class:active={isActive(`/${root}/recurring`)}><span class="nav-icon-wrap"><RefreshCw size={16} strokeWidth={1.5} class="nav-icon" /></span><span class="nav-label">{labels.recurring}</span></a></li>
+        <li style="--active-fill: var(--nord8)"><a href={resolve('/[cospendRoot=cospendRoot]/settings', { cospendRoot: root })} class:active={isActive(`/${root}/settings`)}><Settings size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.settings}</span></a></li>
       {/if}
     </ul>
   {/snippet}

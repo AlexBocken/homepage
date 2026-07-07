@@ -263,4 +263,22 @@ export const de = {
 	cat_household: "Haushalt",
 	cat_hygiene: "Hygiene & Körperpflege",
 	cat_other: "Sonstiges",
+
+	// Settings · API access (beancount export token)
+	settings_title: "Einstellungen",
+	api_access_title: "API-Zugang",
+	api_access_desc: "Erzeuge ein Token, um alle Zahlungen als JSON abzurufen — z. B. für den Import in deine Beancount-Buchhaltung.",
+	api_access_scope: "Ein Token gewährt Lese-Zugriff auf sämtliche Cospend-Zahlungen. Bewahre es sicher auf und widerrufe es, wenn du es nicht mehr brauchst.",
+	api_label_placeholder: "Bezeichnung (z. B. Beancount-Import)",
+	api_generate: "Token erzeugen",
+	api_generating: "Wird erzeugt…",
+	api_none: "Noch keine Token erstellt.",
+	api_created: "Erstellt",
+	api_last_used: "Zuletzt verwendet",
+	api_never: "nie",
+	api_copy: "Kopieren",
+	api_copied: "Kopiert",
+	api_revoke: "Widerrufen",
+	api_revoke_confirm: "Dieses Token widerrufen? Skripte, die es verwenden, verlieren sofort den Zugriff.",
+	api_usage: "So rufst du die Daten ab:",
 } as const;

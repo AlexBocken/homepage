@@ -23,7 +23,8 @@ export function cospendLabels(lang: CospendLang) {
 		dash: lang === 'en' ? 'Dashboard' : 'Dashboard',
 		list: lang === 'en' ? 'List' : 'Liste',
 		payments: lang === 'en' ? 'All Payments' : 'Alle Zahlungen',
-		recurring: lang === 'en' ? 'Recurring' : 'Wiederkehrend'
+		recurring: lang === 'en' ? 'Recurring' : 'Wiederkehrend',
+		settings: lang === 'en' ? 'Settings' : 'Einstellungen'
 	};
 }
 

@@ -263,4 +263,22 @@ export const en = {
 	cat_household: "Household",
 	cat_hygiene: "Hygiene & Body Care",
 	cat_other: "Other",
+
+	// Settings · API access (beancount export token)
+	settings_title: "Settings",
+	api_access_title: "API access",
+	api_access_desc: "Generate a token to pull all payments as JSON — e.g. to import into your beancount accounting.",
+	api_access_scope: "A token grants read access to every cospend payment. Keep it safe and revoke it when you no longer need it.",
+	api_label_placeholder: "Label (e.g. beancount import)",
+	api_generate: "Generate token",
+	api_generating: "Generating…",
+	api_none: "No tokens created yet.",
+	api_created: "Created",
+	api_last_used: "Last used",
+	api_never: "never",
+	api_copy: "Copy",
+	api_copied: "Copied",
+	api_revoke: "Revoke",
+	api_revoke_confirm: "Revoke this token? Scripts using it will lose access immediately.",
+	api_usage: "Pull the data with:",
 } as const satisfies Record<keyof typeof de, string>;
