@@ -115,11 +115,13 @@ const OWNER_ONLY_ROUTES: Route[] = [
 	{ path: '/finances/budget', kind: 'page' },
 	{ path: '/finances/account', kind: 'page' },
 	{ path: '/finances/account/Expenses:Food', kind: 'page' },
+	{ path: '/finances/payee/Cospend', kind: 'page' },
 	{ path: '/finances/query', kind: 'page' },
 	{ path: '/api/finances/meta', kind: 'api' },
 	{ path: '/api/finances/budget', kind: 'api' },
 	{ path: '/api/finances/investments', kind: 'api' },
 	{ path: '/api/finances/account?account=Assets', kind: 'api' },
+	{ path: '/api/finances/payee?payee=Cospend', kind: 'api' },
 	{ path: '/api/finances/query?q=SELECT%20account', kind: 'api' },
 	// Specific (non-proxy) owner-gated API route backing the BQL console.
 	{ path: '/api/finances/saved-queries', kind: 'api' }
@@ -177,6 +179,19 @@ test.describe('/api/cospend/export [token-only]', () => {
 			const body = await res.json();
 			expect(Array.isArray(body.payments)).toBe(true);
 			expect(body.payments.length).toBeGreaterThan(0);
+
+			// Per-user net balances must reconcile with the exported splits.
+			expect(Array.isArray(body.balances)).toBe(true);
+			const expected = new Map<string, number>();
+			for (const p of body.payments) {
+				for (const s of p.splits ?? []) {
+					expected.set(s.username, (expected.get(s.username) ?? 0) + s.amount);
+				}
+			}
+			expect(body.balances.length).toBe(expected.size);
+			for (const { username, netBalance } of body.balances) {
+				expect(netBalance).toBeCloseTo(expected.get(username) as number, 2);
+			}
 		} finally {
 			await ctx.dispose();
 		}

@@ -19,6 +19,9 @@ import { verifyCospendApiToken } from '$lib/server/cospendApiAuth';
 // The raw stored fields (amount = CHF, originalAmount, exchangeRate) are kept
 // too. Splits store only CHF, so their foreign amount is derived as
 // amountChf / exchangeRate.
+//
+// `balances` carries each user's current net balance in CHF (positive = owed to
+// them, negative = they owe), for balance assertions on the importer side.
 
 /** Round to 2 dp, leaving non-numbers untouched. */
 function money(n: unknown): number | null | undefined {
@@ -75,10 +78,27 @@ export const GET: RequestHandler = async ({ request, url }) => {
 		};
 	});
 
+	// Current net balance per user, in CHF: the sum of that user's splits over the
+	// whole ledger (positive = owed, negative = owing). Derived from the same
+	// splits we export, so a balance assertion can be checked against the imported
+	// transactions without a second source of truth.
+	const netByUser = new Map<string, number>();
+	for (const p of payments) {
+		for (const s of p.splits) {
+			const amount = s.amount as number;
+			if (typeof amount !== 'number') continue;
+			netByUser.set(s.username, (netByUser.get(s.username) ?? 0) + amount);
+		}
+	}
+	const balances = [...netByUser]
+		.map(([username, netBalance]) => ({ username, netBalance: money(netBalance) }))
+		.sort((a, b) => a.username.localeCompare(b.username));
+
 	return json({
 		generatedAt: new Date().toISOString(),
 		operatingCurrency: 'CHF',
 		count: payments.length,
+		balances,
 		payments
 	});
 };
