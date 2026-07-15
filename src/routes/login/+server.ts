@@ -1,58 +1,49 @@
+import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-/** Only allow same-origin relative paths as a post-auth redirect target, then
- *  HTML-escape for the attribute context. Anything external (`//evil`, `http:…`)
- *  or containing markup is dropped to `/`. Guards against reflected XSS and open
- *  redirect via the `callbackUrl` query param. */
+/** Only allow same-origin relative paths as a post-auth redirect target.
+ *  Anything external (`//evil`, `http:…`) is dropped to `/`. Guards against
+ *  open redirect via the `callbackUrl` query param. The value is sent to
+ *  Auth.js in a URL-encoded body, so no HTML escaping is needed here. */
 function safeCallbackUrl(raw: string | null): string {
-	const value = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
-	return value
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#39;');
+	return raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
 }
 
-export const GET: RequestHandler = async ({ url }) => {
+/** Kick off the Authentik OIDC flow entirely server-side and 302 the browser
+ *  straight to the provider — no intermediate HTML page and no client-side
+ *  form auto-submit (which briefly painted a blank styled page and cost an
+ *  extra client→server round trip before the redirect).
+ *
+ *  We replay what the auto-submitting form did, but in-process: POST the
+ *  Auth.js sign-in endpoint via `event.fetch` (SvelteKit routes this through
+ *  the auth `handle` hook). Auth.js answers with a 302 to Authentik plus the
+ *  short-lived state/PKCE/nonce cookies; SvelteKit's internal-fetch machinery
+ *  forwards those `Set-Cookie`s onto our own response automatically, so we only
+ *  need to relay the `Location`.
+ *
+ *  Notes:
+ *  - `@auth/sveltekit` runs Auth.js with `skipCSRFCheck`, so no CSRF token is
+ *    required on the sign-in POST.
+ *  - The explicit `origin` header satisfies SvelteKit's own cross-site form
+ *    protection for the internal POST (a form-encoded body with no Origin would
+ *    be rejected with 403 in production). */
+export const GET: RequestHandler = async ({ url, fetch }) => {
 	const callbackUrl = safeCallbackUrl(url.searchParams.get('callbackUrl'));
 
-	// Create a minimal page with site styling that immediately triggers auth
-	const html = `
-<!DOCTYPE html>
-<html>
-<head>
-	<title>Login</title>
-	<style>
-		:root{
-			--nord0: #2E3440;
-			--nord1: #3B4252;
-			--nord4: #D8DEE9;
-		}
-		body {
-			background-color: var(--nord1);
-			color: var(--nord4);
-			font-family: sans-serif;
-			margin: 0;
-			padding: 0;
-			min-height: 100vh;
-		}
-	</style>
-</head>
-<body>
-	<form id="signin-form" method="POST" action="/auth/signin/authentik">
-		<input type="hidden" name="callbackUrl" value="${callbackUrl}" />
-	</form>
-	<script>
-		// Immediately submit the form to trigger auth flow
-		document.getElementById('signin-form').submit();
-	</script>
-</body>
-</html>`;
-
-	return new Response(html, {
+	const res = await fetch('/auth/signin/authentik', {
+		method: 'POST',
 		headers: {
-			'Content-Type': 'text/html'
-		}
+			'content-type': 'application/x-www-form-urlencoded',
+			origin: url.origin
+		},
+		body: new URLSearchParams({ callbackUrl }),
+		redirect: 'manual'
 	});
+
+	const location = res.headers.get('location');
+	if (!location) {
+		error(502, 'Login konnte nicht gestartet werden.');
+	}
+
+	redirect(302, location);
 };

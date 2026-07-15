@@ -1,6 +1,8 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
+  import { resolve } from '$app/paths';
   import ErrorView from './ErrorView.svelte';
   import { getErrorTitle, getErrorDescription, errorLabels, pick } from '$lib/js/errorStrings';
   import type { Snippet } from 'svelte';
@@ -31,7 +33,6 @@
     if (window.history.length > 1) window.history.back();
     else goto(sectionHref);
   }
-  function login() { goto('/login'); }
 </script>
 
 <ErrorView
@@ -46,7 +47,10 @@
     {#if extraActions}{@render extraActions()}{/if}
 
     {#if status === 401}
-      <button class="link link-primary" onclick={login}>{pick(errorLabels.login, isEnglish)}</button>
+      <!-- Full navigation (an <a>, not goto): /login is a server endpoint that 302s
+           straight to Authentik; an SPA nav would only tear the page down and flash
+           blank before the hard redirect. -->
+      <a class="link link-primary" href={`${resolve('/login')}?callbackUrl=${encodeURIComponent(page.url.pathname + (browser ? page.url.search : ''))}`}>{pick(errorLabels.login, isEnglish)}</a>
       <a class="link" href={sectionHref}>{label}</a>
     {:else if status === 500}
       <button class="link link-primary" onclick={goBack}>{pick(errorLabels.tryAgain, isEnglish)}</button>

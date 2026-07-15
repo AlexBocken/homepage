@@ -43,29 +43,6 @@
 			}
 		})
 	})
-
-	function getLogoutCallbackUrl(pathname: string): string {
-		// Cospend has no public equivalent
-		if (pathname.startsWith('/cospend')) return '/';
-
-		// Match /rezepte or /recipes prefix
-		const m = pathname.match(/^\/(rezepte|recipes)(\/.*)?$/);
-		if (m) {
-			const base = `/${m[1]}`;
-			const rest = m[2] ?? '';
-
-			// /edit/[name] → the recipe detail page
-			const editMatch = rest.match(/^\/edit\/(.+)$/);
-			if (editMatch) return `${base}/${editMatch[1]}`;
-
-			// Auth-only sub-routes → recipe root
-			if (/^\/(add|favorites|to-try|admin|administration)(\/|$)/.test(rest))
-				return base;
-		}
-
-		// Public page: stay here
-		return pathname;
-	}
 </script>
 <style>
 	.user-wrap {
@@ -256,7 +233,7 @@
 						{/if}
 						<li class="menu-divider" aria-hidden="true"></li>
 					{/if}
-					<li><a href={`${resolve('/logout')}?callbackUrl=${encodeURIComponent(getLogoutCallbackUrl(page.url.pathname))}`}>Log Out</a></li>
+					<li><a href={`${resolve('/logout')}?callbackUrl=${encodeURIComponent(page.url.pathname)}`}>Log Out</a></li>
 				</ul>
 			</div>
 		</div>

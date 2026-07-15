@@ -2,6 +2,7 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
   import { onMount } from 'svelte';
   import ErrorView from '$lib/components/ErrorView.svelte';
   import { getErrorTitle, getErrorDescription, errorLabels, pick } from '$lib/js/errorStrings';
@@ -64,7 +65,6 @@
     if (window.history.length > 1) window.history.back();
     else goto(recipesHref);
   }
-  function login() { goto('/login'); }
 </script>
 
 <svelte:head>
@@ -74,7 +74,10 @@
 <ErrorView {status} {title} {description} {details} {bibleQuote} {isEnglish}>
   {#snippet actions()}
     {#if status === 401}
-      <button class="link link-primary" onclick={login}>{pick(errorLabels.login, isEnglish)}</button>
+      <!-- Full navigation (an <a>, not goto): /login is a server endpoint that 302s
+           straight to Authentik; an SPA nav would only tear the page down and flash
+           blank before the hard redirect. -->
+      <a class="link link-primary" href={`${resolve('/login')}?callbackUrl=${encodeURIComponent(page.url.pathname + (browser ? page.url.search : ''))}`}>{pick(errorLabels.login, isEnglish)}</a>
       <a class="link" href={recipesHref}>{t.recipes_link}</a>
     {:else if showGermanFallback}
       <button class="link link-primary" onclick={viewGermanRecipe}>View German recipe</button>
