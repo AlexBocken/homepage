@@ -11,6 +11,7 @@
 	import Flame from '@lucide/svelte/icons/flame';
 	import CloudOff from '@lucide/svelte/icons/cloud-off';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { prCount } from '$lib/fitness/prCount';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
@@ -27,6 +28,8 @@
 	 *     totalVolume?: number,
 	 *     totalDistance?: number,
 	 *     prs?: Array<any>,
+	 *     bestEffortPrs?: Array<any>,
+	 *     segmentPrs?: Array<any>,
 	 *     kcalEstimate?: { kcal: number, lower: number, upper: number, methods: string[] },
 	 *     exercises: Array<{
 	 *       exerciseId: string,
@@ -217,8 +220,9 @@
 		{#if kcalResult}
 			<span class="stat kcal"><Flame size={14} /> {kcalResult.kcal} &plusmn; {kcalResult.kcal - kcalResult.lower} kcal</span>
 		{/if}
-		{#if session.prs && session.prs.length > 0}
-			<span class="stat pr"><Trophy size={14} /> {session.prs.length} PR{session.prs.length > 1 ? 's' : ''}</span>
+		{#if prCount(session) > 0}
+			{@const nPr = prCount(session)}
+			<span class="stat pr"><Trophy size={14} /> {nPr} PR{nPr > 1 ? 's' : ''}</span>
 		{/if}
 	</div>
 {/snippet}

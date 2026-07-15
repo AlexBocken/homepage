@@ -65,6 +65,19 @@ export interface IWorkoutSession {
   // Fastest continuous K-km splits (one per integer km), computed from gpsTrack.
   // Cached so the "fastest Nk" dashboard card is a cheap min query.
   bestEfforts?: { km: number; seconds: number; startIdx: number; endIdx: number }[];
+  // "Records earned by this run", persisted so they count toward the run's PR
+  // total (badge / history / cards) beyond the completion screen. Distance PRs:
+  // an all-time-fastest Nk on this run's board. Segment PRs: a personal best or
+  // a KOM (crown) on a matched segment. Both are snapshots at save/snap time.
+  bestEffortPrs?: { km: number; seconds: number; prevSeconds: number }[];
+  segmentPrs?: {
+    segmentId: string;
+    segmentName: string;
+    distance: number;
+    elapsedSeconds: number;
+    isPB: boolean;
+    isKOM: boolean;
+  }[];
   notes?: string;
   createdBy: string; // username/nickname of the person who performed the workout
   createdAt?: Date;
@@ -247,6 +260,27 @@ const WorkoutSessionSchema = new mongoose.Schema(
         seconds: { type: Number, required: true },
         startIdx: { type: Number, required: true },
         endIdx: { type: Number, required: true },
+        _id: false,
+      }],
+      default: undefined,
+    },
+    bestEffortPrs: {
+      type: [{
+        km: { type: Number, required: true },
+        seconds: { type: Number, required: true },
+        prevSeconds: { type: Number, required: true },
+        _id: false,
+      }],
+      default: undefined,
+    },
+    segmentPrs: {
+      type: [{
+        segmentId: { type: String, required: true },
+        segmentName: { type: String, required: true },
+        distance: { type: Number, required: true },
+        elapsedSeconds: { type: Number, required: true },
+        isPB: { type: Boolean, required: true },
+        isKOM: { type: Boolean, required: true },
         _id: false,
       }],
       default: undefined,

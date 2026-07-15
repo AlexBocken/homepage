@@ -16,15 +16,19 @@ export interface BestEffortPr {
 }
 
 /**
- * Distances on which `efforts` (a single run's best efforts) set a new all-time
- * best for `user`, excluding the run itself (`sessionId`). Compared only within
- * the same board (`kind`) — a fast ride never sets a "running PR".
+ * Distances on which `efforts` (a single run's best efforts) set a new best for
+ * `user` *as of* the run's own start (`before`) — a PR is judged only against
+ * earlier runs, so recalculating or re-snapping a historical run never counts a
+ * later run against it. Compared only within the same board (`kind`) — a fast
+ * ride never sets a "running PR". `sessionId` is the run itself (belt-and-braces
+ * exclusion for a run sharing the exact start time).
  */
 export async function detectBestEffortPrs(
 	user: string,
 	sessionId: unknown,
 	efforts: BestEffort[],
-	kind: ActivityKind
+	kind: ActivityKind,
+	before: Date
 ): Promise<BestEffortPr[]> {
 	if (!efforts?.length) return [];
 
@@ -32,13 +36,14 @@ export async function detectBestEffortPrs(
 	// would silently ignore them and over-report PRs.
 	await backfillBestEfforts(user);
 
-	// Previous all-time best per distance across the user's OTHER same-board runs.
+	// Best per distance across the user's EARLIER same-board runs only.
 	const rows = await WorkoutSession.aggregate([
 		{
 			$match: {
 				createdBy: user,
 				activityType: { $in: activitiesForKind(kind) },
 				bestEfforts: { $exists: true },
+				startTime: { $lt: before },
 				_id: { $ne: sessionId }
 			}
 		},

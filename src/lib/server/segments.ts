@@ -184,15 +184,21 @@ export async function matchSessionAgainstAllSegments(
     }
   }
 
-  return computeAchievements(created, owner, sessionId, ownerSharing);
+  return computeAchievements(created, owner, sessionId, ownerSharing, session.startTime);
 }
 
-/** Best (fastest) effort per segment in this run, evaluated for PB / KOM. */
+/**
+ * Best (fastest) effort per segment in this run, evaluated for PB / KOM *as of*
+ * the run's own start (`cutoff`). Only efforts recorded before this run count,
+ * so recalculating or re-snapping a historical run judges it against the data
+ * available at the time — never against later efforts by the user or anyone else.
+ */
 async function computeAchievements(
   created: Array<{ segment: ISegment; effort: Effort }>,
   owner: string,
   sessionId: string,
-  ownerSharing: boolean
+  ownerSharing: boolean,
+  cutoff: Date
 ): Promise<SegmentAchievement[]> {
   // Keep the fastest effort per segment for this run.
   const bestPerSegment = new Map<string, { segment: ISegment; elapsed: number }>();
@@ -207,8 +213,13 @@ async function computeAchievements(
   const achievements: SegmentAchievement[] = [];
 
   for (const [segmentId, { segment, elapsed }] of bestPerSegment) {
-    // PB: did the user have a faster effort on this segment in a DIFFERENT run?
-    const prevBest = await SegmentEffort.find({ segmentId, userId: owner, sessionId: { $ne: sessionId } })
+    // PB: did the user have a faster effort on this segment in an EARLIER run?
+    const prevBest = await SegmentEffort.find({
+      segmentId,
+      userId: owner,
+      date: { $lt: cutoff },
+      sessionId: { $ne: sessionId }
+    })
       .sort({ elapsedSeconds: 1 })
       .limit(1)
       .lean();
@@ -218,13 +229,21 @@ async function computeAchievements(
     let rank: number | null = null;
     let totalAthletes: number | null = null;
     if (ownerSharing && segment.public) {
-      // Best-per-user across sharing athletes → leaderboard.
+      // Best-per-user among efforts BEFORE this run (its own effort is excluded
+      // by the date bound), then fold in this run for the owner. Gives the
+      // standing as of the run rather than today's leaderboard.
       const rows = await SegmentEffort.aggregate([
-        { $match: { segmentId: segment._id } },
-        { $group: { _id: '$userId', best: { $min: '$elapsedSeconds' } } },
-        { $sort: { best: 1 } }
+        { $match: { segmentId: segment._id, date: { $lt: cutoff } } },
+        { $group: { _id: '$userId', best: { $min: '$elapsedSeconds' } } }
       ]);
-      const board = rows.filter((r) => !optedOut.has(r._id));
+      const bestByUser = new Map<string, number>();
+      for (const r of rows) if (!optedOut.has(r._id)) bestByUser.set(r._id, r.best);
+      const ownerPrior = bestByUser.get(owner);
+      bestByUser.set(owner, ownerPrior !== undefined ? Math.min(ownerPrior, elapsed) : elapsed);
+
+      const board = [...bestByUser.entries()]
+        .map(([_id, best]) => ({ _id, best }))
+        .sort((a, b) => a.best - b.best);
       totalAthletes = board.length;
       const myPos = board.findIndex((r) => r._id === owner);
       rank = myPos >= 0 ? myPos + 1 : null;

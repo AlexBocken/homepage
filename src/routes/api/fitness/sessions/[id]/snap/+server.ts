@@ -10,6 +10,7 @@ import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segment
 import { addRunToGrid, removeRunFromGrid } from '$lib/server/segmentGrid';
 import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
 import { activityKind } from '$lib/server/bestEffortsBackfill';
+import { detectBestEffortPrs } from '$lib/server/bestEffortPrs';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { assertObjectId } from '$lib/server/ownedResource';
 
@@ -179,18 +180,53 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 
 		// The snapped geometry/timing changes the fastest-Nk windows — recompute the
 		// cached splits so the best-efforts dashboard / leaderboard stay accurate.
-		ws.bestEfforts = activityKind(ws.activityType)
+		const beKind = activityKind(ws.activityType);
+		const bestEfforts = beKind
 			? computeBestEfforts(gatherSessionTrack({ gpsTrack: ws.gpsTrack, exercises: ws.exercises }))
-			: undefined;
+			: [];
+		ws.bestEfforts = bestEfforts.length ? bestEfforts : undefined;
 
 		ws.markModified('exercises');
 		await ws.save();
 
-		// Re-match against segments (deletes the run's stale efforts first).
+		// Re-match against segments (deletes the run's stale efforts first) and keep
+		// the PB/KOM records this run now earns.
+		let segmentPrs: NonNullable<typeof ws.segmentPrs> = [];
 		try {
-			await matchSessionAgainstAllSegments(ws);
+			const achievements = await matchSessionAgainstAllSegments(ws);
+			segmentPrs = achievements
+				.filter((a) => a.isPB || a.isKOM)
+				.map((a) => ({
+					segmentId: a.segmentId,
+					segmentName: a.segmentName,
+					distance: a.distance,
+					elapsedSeconds: a.elapsedSeconds,
+					isPB: a.isPB,
+					isKOM: a.isKOM
+				}));
 		} catch (err) {
 			console.error('Segment re-matching after snap failed:', err);
+		}
+
+		// The snapped splits may set new all-time distance PRs — redetect against
+		// history (the recorded track's PRs no longer apply).
+		let bestEffortPrs: NonNullable<typeof ws.bestEffortPrs> = [];
+		try {
+			if (bestEfforts.length > 0 && beKind) {
+				bestEffortPrs = await detectBestEffortPrs(user.nickname, ws._id, bestEfforts, beKind, ws.startTime);
+			}
+		} catch (err) {
+			console.error('Best-effort PR detection after snap failed:', err);
+		}
+
+		// Persist the refreshed records so they still count toward the run's PR
+		// total on history and cards.
+		try {
+			ws.bestEffortPrs = bestEffortPrs.length ? bestEffortPrs : undefined;
+			ws.segmentPrs = segmentPrs.length ? segmentPrs : undefined;
+			await ws.save();
+		} catch (err) {
+			console.error('Persisting run PRs after snap failed:', err);
 		}
 
 		// Track changed → refresh its contribution to the auto-detect grid.

@@ -14,7 +14,7 @@ import { addRunToGrid } from '$lib/server/segmentGrid';
 import { advanceSchedulePointer } from '$lib/server/workoutSchedule';
 import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
 import { activityKind } from '$lib/server/bestEffortsBackfill';
-import { detectBestEffortPrs } from '$lib/server/bestEffortPrs';
+import { detectBestEffortPrs, type BestEffortPr } from '$lib/server/bestEffortPrs';
 import { estimatedOneRepMax } from '$lib/fitness/strength';
 import { requireAuth } from '$lib/server/middleware/auth';
 import mongoose from 'mongoose';
@@ -159,7 +159,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const [sessions, total] = await Promise.all([
       WorkoutSession.find(query)
         .select(
-          'name startTime duration totalVolume totalDistance prs kcalEstimate updatedAt ' +
+          'name startTime duration totalVolume totalDistance prs bestEffortPrs segmentPrs kcalEstimate updatedAt ' +
           'exercises.exerciseId exercises.totalDistance exercises.gpsPreview exercises.sets'
         )
         .sort({ startTime: -1 })
@@ -352,13 +352,36 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
 
     // New all-time "fastest Nk" records set by this run (never fail the save).
-    let bestEffortPrs;
+    let bestEffortPrs: BestEffortPr[] = [];
     try {
       if (bestEfforts.length > 0 && beKind) {
-        bestEffortPrs = await detectBestEffortPrs(user.nickname, workoutSession._id, bestEfforts, beKind);
+        bestEffortPrs = await detectBestEffortPrs(user.nickname, workoutSession._id, bestEfforts, beKind, workoutSession.startTime);
       }
     } catch (err) {
       console.error('Best-effort PR detection failed:', err);
+    }
+
+    // Persist the records this run earned (new distance PRs + segment PB/KOM) so
+    // they count toward the run's PR total on history and cards, not just in this
+    // response. Best-effort; never fail the save on a write error here.
+    try {
+      const segmentPrs = (segmentAchievements ?? [])
+        .filter((a) => a.isPB || a.isKOM)
+        .map((a) => ({
+          segmentId: a.segmentId,
+          segmentName: a.segmentName,
+          distance: a.distance,
+          elapsedSeconds: a.elapsedSeconds,
+          isPB: a.isPB,
+          isKOM: a.isKOM
+        }));
+      if ((bestEffortPrs?.length ?? 0) > 0 || segmentPrs.length > 0) {
+        workoutSession.bestEffortPrs = bestEffortPrs?.length ? bestEffortPrs : undefined;
+        workoutSession.segmentPrs = segmentPrs.length ? segmentPrs : undefined;
+        await workoutSession.save();
+      }
+    } catch (err) {
+      console.error('Persisting run PRs failed:', err);
     }
 
     return json({ session: workoutSession, segmentAchievements, bestEffortPrs }, { status: 201 });

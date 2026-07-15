@@ -350,7 +350,15 @@
 	$effect(() => {
 		const remoteSession = sync.lastFinishedSession;
 		if (!remoteSession || completionData) return;
-		completionData = buildCompletion(remoteSession, remoteSession);
+		// The synced session carries its earned records persisted (segmentPrs are
+		// already filtered to PB/KOM); feed them so the mirrored overview shows and
+		// counts the same PRs the finishing device did.
+		completionData = buildCompletion(
+			remoteSession,
+			remoteSession,
+			remoteSession.segmentPrs ?? [],
+			remoteSession.bestEffortPrs ?? []
+		);
 		computeTemplateDiff(completionData);
 		sync.clearFinishedSession();
 	});
@@ -1103,6 +1111,12 @@
 		const prs = (saved.prs ?? []).map(formatPr);
 		const kcalResult = saved.kcalEstimate ?? null;
 
+		// Total PRs = strength/cardio + new distance PRs + segment PB/KOM. Mirrors
+		// the persisted count on history/cards (prCount()), computed here from the
+		// live achievement lists this response carries.
+		const segmentPrCount = achievements.filter((a) => a.isPB || a.isKOM).length;
+		const prCount = prs.length + bestEffortPrs.length + segmentPrCount;
+
 		return {
 			sessionId: saved._id,
 			name: local.name,
@@ -1113,6 +1127,7 @@
 			totalDistance,
 			exerciseSummaries,
 			prs,
+			prCount,
 			segmentAchievements: achievements,
 			bestEffortPrs,
 			kcalResult
@@ -1320,9 +1335,9 @@
 	<div class="completion">
 		<div class="completion-header">
 			<h1>{t.workout_complete}</h1>
-			{#if completionData.prs.length > 0}
+			{#if completionData.prCount > 0}
 				<div class="pr-badge">
-					<span class="pr-badge-count">{completionData.prs.length}</span>
+					<span class="pr-badge-count">{completionData.prCount}</span>
 					<Trophy size={20} />
 				</div>
 			{/if}

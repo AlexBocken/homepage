@@ -36,6 +36,8 @@
 	import { formatElapsed, formatEffortRate, formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import { estimatedOneRepMax } from '$lib/fitness/strength';
 	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
+	import { prCount } from '$lib/fitness/prCount';
+	import Crown from '@lucide/svelte/icons/crown';
 	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
@@ -778,10 +780,11 @@
 					{/if}
 				</div>
 			{/if}
-			{#if session.prs?.length > 0}
+			{#if prCount(session) > 0}
+				{@const nPr = prCount(session)}
 				<div class="stat-pill pr">
 					<Trophy size={14} />
-					<span>{session.prs.length} PR{session.prs.length !== 1 ? 's' : ''}</span>
+					<span>{nPr} PR{nPr !== 1 ? 's' : ''}</span>
 				</div>
 			{/if}
 		</div>
@@ -1077,6 +1080,38 @@
 							{:else if pr.type.startsWith('fastestPace:')}{formatPaceValue(pr.value)}
 							{:else}{pr.value} kg{/if}
 						</span>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	{#if !editing && session.bestEffortPrs?.length > 0}
+		<div class="prs-section">
+			<h2>{t.best_efforts}</h2>
+			<div class="pr-list">
+				{#each session.bestEffortPrs as p (p.km)}
+					<div class="pr-item">
+						<Trophy size={14} class="pr-icon" />
+						<span class="pr-exercise">{p.km}{t.km_short}</span>
+						<span class="pr-type">{t.new_distance_pr}</span>
+						<span class="pr-value">{formatElapsed(p.seconds)}</span>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	{#if !editing && session.segmentPrs?.length > 0}
+		<div class="prs-section">
+			<h2>{t.segments}</h2>
+			<div class="pr-list">
+				{#each session.segmentPrs as s (s.segmentId)}
+					<div class="pr-item">
+						{#if s.isKOM}<Crown size={14} class="pr-icon" />{:else}<Trophy size={14} class="pr-icon" />{/if}
+						<span class="pr-exercise">{s.segmentName}</span>
+						<span class="pr-type">{s.isKOM ? t.new_kom : t.new_segment_pr}</span>
+						<span class="pr-value">{formatElapsed(s.elapsedSeconds)}</span>
 					</div>
 				{/each}
 			</div>
