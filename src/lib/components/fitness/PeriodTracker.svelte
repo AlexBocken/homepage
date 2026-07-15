@@ -1249,13 +1249,6 @@
 		background: var(--nord11);
 		color: white;
 	}
-	.status-label {
-		font-size: 0.6rem;
-		font-weight: 700;
-		color: var(--color-text-secondary);
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-	}
 	.status-hero {
 		font-size: 1.15rem;
 		font-weight: 700;

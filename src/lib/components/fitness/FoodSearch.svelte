@@ -955,10 +955,6 @@
 		animation: spin 1s linear infinite;
 		color: #88c0d0;
 	}
-	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
-	}
 	.fs-scanner-overlay {
 		position: absolute;
 		inset: 0;

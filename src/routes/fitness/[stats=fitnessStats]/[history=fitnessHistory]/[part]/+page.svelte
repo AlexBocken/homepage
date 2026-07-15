@@ -253,9 +253,7 @@
 			{/if}
 		</section>
 
-		<section class="chart-wrap">
-			<FitnessChart data={chartData} yUnit=" cm" height="320px" yMin={yRange.min} yMax={yRange.max} />
-		</section>
+		<FitnessChart data={chartData} yUnit=" cm" height="320px" yMin={yRange.min} yMax={yRange.max} />
 	{/if}
 </div>
 

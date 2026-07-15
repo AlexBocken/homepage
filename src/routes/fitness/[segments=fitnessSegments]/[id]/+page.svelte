@@ -288,11 +288,6 @@
 	:global(.spin) {
 		animation: spin 1s linear infinite;
 	}
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
-	}
 	.track-map {
 		height: 280px;
 		border-radius: 12px;

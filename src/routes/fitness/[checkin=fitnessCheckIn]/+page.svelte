@@ -596,9 +596,7 @@
 		{/if}
 
 		{#each data.periodShared ?? [] as shared (shared.owner)}
-			<div class="period-slot">
-				<PeriodTracker periods={shared.entries} {lang} ownerName={shared.owner} />
-			</div>
+			<PeriodTracker periods={shared.entries} {lang} ownerName={shared.owner} />
 		{/each}
 	</div>
 

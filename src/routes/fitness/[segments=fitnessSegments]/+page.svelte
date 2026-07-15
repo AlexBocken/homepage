@@ -209,11 +209,9 @@
 						<span class="be-time">{formatElapsed(e.seconds)}</span>
 						<span class="be-pace">{formatEffortRate(e.km, e.seconds, activity)}</span>
 						{#if tab === 'all'}
-							<span class="be-athlete">
-								<span class="be-athlete-cell" class:me={e.mine} title={e.createdBy}>
-									<ProfilePicture username={e.createdBy} size={22} />
-									<span class="be-athlete-name">{e.createdBy}</span>
-								</span>
+							<span class="be-athlete-cell" class:me={e.mine} title={e.createdBy}>
+								<ProfilePicture username={e.createdBy} size={22} />
+								<span class="be-athlete-name">{e.createdBy}</span>
 							</span>
 						{/if}
 						<span class="be-age">{relativeAge(e.date)}</span>
@@ -383,9 +381,6 @@
 	}
 	.be-row:hover {
 		background: var(--color-bg-elevated);
-	}
-	.be-athlete {
-		min-width: 0;
 	}
 	.be-athlete-cell {
 		display: inline-flex;

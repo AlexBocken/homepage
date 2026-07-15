@@ -166,8 +166,49 @@ export const init: ServerInit = async () => {
     .catch((error) => console.error('⚠️ Food search index warmup failed:', error));
 };
 
+/** Cache the decoded session keyed by the raw session-token cookie(s).
+ *
+ *  A single page render fans out into many same-origin `event.fetch('/api/…')`
+ *  calls, and each one re-runs this whole hook chain — including a fresh JWE
+ *  decrypt of the session cookie in `locals.auth()`. That decrypt is CPU-bound
+ *  (~3–5ms) and, on Node's single thread, the parallel internal fetches
+ *  serialize on it, so a page firing ~10 internal requests pays it ~10× back to
+ *  back. Because a JWT session cookie is immutable for its lifetime (groups etc.
+ *  are baked in at sign-in — the app is already "stale until re-login"), the
+ *  same cookie value always decodes to the same session. So we cache the
+ *  in-flight promise keyed by the exact cookie value(s): the burst of internal
+ *  fetches during one render shares a single decrypt. A short TTL bounds memory
+ *  and staleness; a missing cookie is never cached (logout must resolve live). */
+type ResolvedSession = Awaited<ReturnType<App.Locals['auth']>>;
+const SESSION_CACHE = new Map<string, { promise: Promise<ResolvedSession>; ts: number }>();
+const SESSION_TTL = 10_000;
+
+function sessionCookieKey(event: Parameters<Handle>[0]['event']): string | undefined {
+	// Auth.js splits large session tokens into `…session-token.0`, `.1`, … —
+	// concatenate every chunk so a chunked cookie still keys correctly.
+	const chunks = event.cookies.getAll().filter((c) => c.name.includes('session-token'));
+	if (!chunks.length) return undefined;
+	return chunks.map((c) => `${c.name}=${c.value}`).join(';');
+}
+
+function resolveSession(event: Parameters<Handle>[0]['event']): Promise<ResolvedSession> {
+	const key = sessionCookieKey(event);
+	if (!key) return event.locals.auth(); // no session cookie → never cache
+	const now = Date.now();
+	const hit = SESSION_CACHE.get(key);
+	if (hit && now - hit.ts < SESSION_TTL) return hit.promise;
+	const promise = event.locals.auth();
+	SESSION_CACHE.set(key, { promise, ts: now });
+	// A failed decode must not be served for the rest of the TTL.
+	promise.catch(() => SESSION_CACHE.delete(key));
+	if (SESSION_CACHE.size > 500) {
+		for (const [k, v] of SESSION_CACHE) if (now - v.ts >= SESSION_TTL) SESSION_CACHE.delete(k);
+	}
+	return promise;
+}
+
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {
-	const session = await event.locals.timing.measure('auth', () => event.locals.auth());
+	const session = await event.locals.timing.measure('auth', () => resolveSession(event));
 	event.locals.session = session;
 	const { fetch, url } = event;
 

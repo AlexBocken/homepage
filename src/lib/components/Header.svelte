@@ -193,9 +193,6 @@ nav {
 /* ═══════════════════════════════════════════
    NAV LINKS (rendered via snippet)
    ═══════════════════════════════════════════ */
-.links-wrapper {
-	display: contents;
-}
 :global(.site_header) {
 	display: flex;
 	flex-direction: row;
@@ -397,7 +394,6 @@ nav {
 </style>
 
 <div class="wrapper" lang="de">
-<div>
 
 <nav class:no-links={!links}>
 	{#if networkStore.offline}
@@ -415,9 +411,7 @@ nav {
 		{@render logo_overlay?.()}
 	</div>
 	{#if links}
-		<div class="links-wrapper">
-			{@render links()}
-		</div>
+		{@render links()}
 		<div class="spacer"></div>
 	{/if}
 	<div class="header-right">
@@ -431,7 +425,6 @@ nav {
 {@render children?.()}
 </main>
 
-</div>
 <footer>
 Ad maiorem Dei gloriam
 </footer>

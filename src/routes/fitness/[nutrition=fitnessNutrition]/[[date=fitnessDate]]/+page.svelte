@@ -1470,7 +1470,6 @@
 					<span class="cal-stat-label">{isEn ? 'EATEN' : 'GEGESSEN'}</span>
 				</div>
 
-				<div class="calorie-ring-wrap">
 					<svg class="calorie-ring" width="130" height="130" viewBox="0 0 70 70">
 						<circle class="ring-bg" cx="35" cy="35" r={RADIUS}
 							stroke-dasharray="{ARC_LENGTH} {2 * Math.PI * RADIUS}"
@@ -1495,7 +1494,6 @@
 						<text class="ring-text-main" x="35" y="30">{fmtCal(Math.abs(calorieBalance))}</text>
 						<text class="ring-text-sub" x="35" y="42">{calorieBalance >= 0 ? (isEn ? 'KCAL LEFT' : 'KCAL ÜBRIG') : (isEn ? 'KCAL OVER' : 'KCAL ÜBER')}</text>
 					</svg>
-				</div>
 
 				<div class="cal-stat burned">
 					{#if exerciseKcal > 0}
@@ -2460,10 +2458,8 @@
 		color: var(--nord12);
 		text-decoration: underline;
 	}
-	.calorie-ring-wrap {
-		flex-shrink: 0;
-	}
 	.calorie-ring {
+		flex-shrink: 0;
 		overflow: visible;
 	}
 

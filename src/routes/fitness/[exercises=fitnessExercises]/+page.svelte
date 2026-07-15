@@ -234,15 +234,13 @@
 			{#each filtered as exercise (exercise.id)}
 				<li>
 					<a href={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: sl.exercises, id: exercise.id })} class="exercise-row">
-						<div class="exercise-info">
-							<span class="exercise-name">
-								{exercise.localName}
-								{#if isStretchType(exercise.exerciseType)}
-									<span class="stretch-badge">{t.stretch_pill}</span>
-								{/if}
-							</span>
-							<span class="exercise-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
-						</div>
+						<span class="exercise-name">
+							{exercise.localName}
+							{#if isStretchType(exercise.exerciseType)}
+								<span class="stretch-badge">{t.stretch_pill}</span>
+							{/if}
+						</span>
+						<span class="exercise-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
 					</a>
 				</li>
 			{/each}
@@ -479,8 +477,8 @@
 	}
 	.exercise-row {
 		display: flex;
-		align-items: center;
-		gap: 0.6rem;
+		flex-direction: column;
+		min-width: 0;
 		padding: 0.5rem 0;
 		text-decoration: none;
 		color: inherit;
@@ -488,11 +486,6 @@
 	}
 	.exercise-row:hover {
 		background: var(--color-surface-hover);
-	}
-	.exercise-info {
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
 	}
 	.exercise-name {
 		font-weight: 600;

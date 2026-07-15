@@ -486,6 +486,13 @@ a:focus-visible {
    nav AWAY from /hikes.
    ============================================ */
 
+/* Shared spinner rotation — used by loading indicators across the app.
+   Keyframes are global (not scope-hashed), so a single definition here
+   replaces the per-component copies. */
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
 @keyframes hikes-fly-up {
 	from { transform: translateY(100vh); }
 	to { transform: translateY(0); }
