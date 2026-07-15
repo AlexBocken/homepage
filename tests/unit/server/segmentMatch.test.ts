@@ -62,7 +62,7 @@ describe('detectEfforts', () => {
     // ~40 fixes × 1s, interpolated to the exact crossings
     expect(e.elapsedSeconds).toBeGreaterThan(35);
     expect(e.elapsedSeconds).toBeLessThan(45);
-    expect(e.avgPace).toBeGreaterThan(0);
+    expect(e.distance).toBeGreaterThan(0);
   });
 
   it('does not match a run travelling the opposite direction', () => {

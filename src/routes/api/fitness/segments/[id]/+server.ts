@@ -33,7 +33,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         $group: {
           _id: '$userId',
           elapsedSeconds: { $first: '$elapsedSeconds' },
-          avgPace: { $first: '$avgPace' },
           date: { $first: '$date' }
         }
       },
@@ -70,7 +69,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       rank: i + 1,
       username: r._id,
       elapsedSeconds: r.elapsedSeconds,
-      avgPace: r.avgPace,
       date: r.date,
       holdDays: Math.round((holdMs.get(r._id) ?? 0) / 86_400_000)
     }));
@@ -78,7 +76,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     // The viewer's own efforts (history), regardless of opt-in.
     const myEfforts = await SegmentEffort.find({ segmentId: segment._id, userId: me })
       .sort({ date: 1 })
-      .select('elapsedSeconds avgPace date sessionId')
+      .select('elapsedSeconds date sessionId')
       .lean();
     const myBest = myEfforts.length ? Math.min(...myEfforts.map((e) => e.elapsedSeconds)) : null;
     const myRank = leaderboard.find((r) => r.username === me)?.rank ?? null;

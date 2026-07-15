@@ -15,7 +15,8 @@ export interface SegStat {
 }
 
 interface SegDetail {
-	myEfforts?: { elapsedSeconds: number; avgPace: number | null; date: string }[];
+	segment?: { distance?: number };
+	myEfforts?: { elapsedSeconds: number; date: string }[];
 	myBest?: number | null;
 	myRank?: number | null;
 	leaderboard?: { rank: number; username: string; date: string }[];
@@ -26,7 +27,11 @@ interface SegDetail {
 export function buildSegStat(d: SegDetail, athleteCount: number | undefined, now = Date.now()): SegStat {
 	const efforts = d.myEfforts ?? [];
 	const best = d.myBest ?? (efforts.length ? Math.min(...efforts.map((e) => e.elapsedSeconds)) : null);
-	const pace = best != null ? (efforts.find((e) => e.elapsedSeconds === best)?.avgPace ?? null) : null;
+	// Pace against the segment's fixed distance, NOT each effort's own measured
+	// GPS length (which drifts run-to-run and would let a slower time show a
+	// faster pace). Fixed distance ⇒ pace tracks time monotonically.
+	const dist = d.segment?.distance ?? 0;
+	const pace = best != null && dist > 0 ? best / 60 / dist : null;
 
 	// Trend: best time in the last 30 days vs best before that window.
 	const cutoff = now - 30 * 86400000;

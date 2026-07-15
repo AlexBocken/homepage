@@ -60,7 +60,6 @@ async function buildRunSegmentEfforts(sessionId: string, me: string) {
       segmentName: seg.name,
       segmentDistance: seg.distance,
       elapsedSeconds: e.elapsedSeconds,
-      avgPace: e.avgPace,
       startIdx: e.startIdx,
       endIdx: e.endIdx,
       exerciseIndex: e.exerciseIndex,

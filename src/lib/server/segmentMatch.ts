@@ -41,7 +41,6 @@ export interface Effort {
   endIdx: number;
   elapsedSeconds: number;
   distance: number; // km traversed
-  avgPace: number | null; // min/km
   elevationGain: number | null; // m
 }
 
@@ -212,7 +211,6 @@ export function detectEfforts(track: TrackPoint[], segment: SegmentGeometry): Ef
       endIdx,
       elapsedSeconds,
       distance: dist,
-      avgPace: dist > 0 ? elapsedSeconds / 60 / dist : null,
       elevationGain: computeGain(sub)
     });
 

@@ -70,15 +70,16 @@
 	});
 	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
 
-	// Pace-over-time chart for the viewer's own efforts. Pace per effort is stored
-	// (avgPace); fall back to deriving it from the fixed segment distance. Plotted
-	// with the same EMA trend + ±1σ band as the weight/strength charts.
+	// Pace-over-time chart for the viewer's own efforts. Pace is derived from the
+	// segment's FIXED distance, not each effort's own measured GPS length (which
+	// drifts run-to-run and would let a slower time plot as a faster pace).
+	// Plotted with the same EMA trend + ±1σ band as the weight/strength charts.
 	const paceChartData = $derived.by(() => {
-		const efforts = (data.myEfforts ?? []) as Array<{ date: string | Date; avgPace: number | null; elapsedSeconds: number }>;
+		const efforts = (data.myEfforts ?? []) as Array<{ date: string | Date; elapsedSeconds: number }>;
 		const pts = efforts
 			.map((e) => ({
 				date: e.date,
-				value: e.avgPace ?? (seg.distance > 0 ? e.elapsedSeconds / 60 / seg.distance : NaN)
+				value: seg.distance > 0 ? e.elapsedSeconds / 60 / seg.distance : NaN
 			}))
 			.filter((p) => Number.isFinite(p.value));
 		if (pts.length < 2) return null;
@@ -194,7 +195,7 @@
 							{row.rank === 1 ? formatElapsed(row.elapsedSeconds) : formatDelta(row.elapsedSeconds - komSeconds)}
 						</span>
 						<span class="meta" role="presentation">
-							<span class="pace" role="cell">{formatPaceKm(row.avgPace)}</span>
+							<span class="pace" role="cell">{formatPaceKm(seg.distance > 0 ? row.elapsedSeconds / 60 / seg.distance : null)}</span>
 							<span class="held" role="cell">
 								{#if row.holdDays > 0}
 									<span class="held-badge" class:current={row.rank === 1}>{row.holdDays} {t.days_short}</span>

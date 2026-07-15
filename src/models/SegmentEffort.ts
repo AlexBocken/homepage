@@ -9,7 +9,6 @@ export interface ISegmentEffort {
 
   elapsedSeconds: number; // interpolated end-crossing minus start-crossing
   distance: number; // km actually traversed for this effort
-  avgPace: number | null; // min/km
   elevationGain: number | null; // m
 
   startIdx: number; // index range within the session's track
@@ -42,7 +41,6 @@ const SegmentEffortSchema = new mongoose.Schema(
 
     elapsedSeconds: { type: Number, required: true, min: 0 },
     distance: { type: Number, required: true, min: 0 },
-    avgPace: { type: Number, default: null },
     elevationGain: { type: Number, default: null },
 
     startIdx: { type: Number, required: true },

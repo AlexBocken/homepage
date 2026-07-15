@@ -172,7 +172,6 @@ export async function matchSessionAgainstAllSegments(
           activityType: seg.activityType, // the segment defines the activity (required by schema)
           elapsedSeconds: Math.round(e.elapsedSeconds),
           distance: e.distance,
-          avgPace: e.avgPace,
           elevationGain: e.elevationGain,
           startIdx: e.startIdx,
           endIdx: e.endIdx,
@@ -323,7 +322,6 @@ export async function backfillSegment(segment: ISegment & { _id: unknown }): Pro
           activityType: segment.activityType,
           elapsedSeconds: Math.round(e.elapsedSeconds),
           distance: e.distance,
-          avgPace: e.avgPace,
           elevationGain: e.elevationGain,
           startIdx: e.startIdx,
           endIdx: e.endIdx,
