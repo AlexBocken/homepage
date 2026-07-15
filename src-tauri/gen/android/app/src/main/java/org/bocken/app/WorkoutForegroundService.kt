@@ -46,6 +46,11 @@ class WorkoutForegroundService : Service() {
     private var notificationManager: NotificationManager? = null
     private val handler = Handler(Looper.getMainLooper())
     private var restRunnable: Runnable? = null
+    private var holdRunnable: Runnable? = null
+    // Re-notify()s ~1×/sec while a rest/hold runs so the progress bar decays
+    // (the system animates the chronometer text but not setProgress). Silent —
+    // setOnlyAlertOnce(true) keeps these refreshes from re-alerting.
+    private var tickRunnable: Runnable? = null
     private var pendingIntent: PendingIntent? = null
 
     /** Remaining sets, head = current. Each entry mirrors what JS pushed. */
@@ -56,6 +61,13 @@ class WorkoutForegroundService : Service() {
 
     /** Total seconds of the current rest (for the JS-side reconstruction). */
     private var restTotalSecs: Int = 0
+
+    /** Epoch ms when the current timed hold (plank/stretch) ends, or 0. Only set
+     *  for holds started from the notification — this service owns those. */
+    private var holdEndsAt: Long = 0L
+
+    /** Total seconds of the current hold (progress-bar denominator). */
+    private var holdTotalSecs: Int = 0
 
     data class SetInfo(
         val exerciseIdx: Int,
@@ -78,6 +90,7 @@ class WorkoutForegroundService : Service() {
         const val ACTION_START_REST = "org.bocken.app.workout.START_REST"
         const val ACTION_STOP_REST = "org.bocken.app.workout.STOP_REST"
         const val ACTION_COMPLETE_SET = "org.bocken.app.workout.COMPLETE_SET"
+        const val ACTION_START_HOLD = "org.bocken.app.workout.START_HOLD"
         const val ACTION_ADJUST_REST = "org.bocken.app.workout.ADJUST_REST"
         const val ACTION_STOP = "org.bocken.app.workout.STOP"
 
@@ -163,8 +176,9 @@ class WorkoutForegroundService : Service() {
                 intent.getIntExtra(EXTRA_REST_TOTAL, 0)
             )
             ACTION_STOP_REST -> applyRest(0L, 0)
-            ACTION_COMPLETE_SET -> onCompleteSet()
-            ACTION_ADJUST_REST -> onAdjustRest(intent?.getIntExtra(EXTRA_DELTA, 0) ?: 0)
+            ACTION_COMPLETE_SET -> finishCurrentSet()
+            ACTION_START_HOLD -> onStartHold()
+            ACTION_ADJUST_REST -> onAdjustRest(intent.getIntExtra(EXTRA_DELTA, 0))
             ACTION_STOP -> {
                 stopSelfCleanly()
                 return START_NOT_STICKY
@@ -211,13 +225,16 @@ class WorkoutForegroundService : Service() {
         restTotalSecs = totalSecs
         if (endsAt > System.currentTimeMillis()) {
             scheduleRestBeep(endsAt - System.currentTimeMillis())
+            startProgressTicker()
         }
         updateNotification()
     }
 
     // --- Notification actions ------------------------------------------------
 
-    private fun onCompleteSet() {
+    /** Complete the current set (from "Complete set", "Finish", or a hold ending):
+     *  queue the completion for JS, advance the shadow, and start the rest. */
+    private fun finishCurrentSet() {
         val current = remaining.firstOrNull() ?: return
         val now = System.currentTimeMillis()
         val total = current.restSecs
@@ -235,12 +252,81 @@ class WorkoutForegroundService : Service() {
 
         // Advance our shadow and start the next rest locally so the notification
         // and the beep keep working without the WebView.
+        cancelHoldRunnable()
+        holdEndsAt = 0L
+        holdTotalSecs = 0
         remaining.removeAt(0)
         if (total > 0) {
             applyRest(now + total * 1000L, total)
         } else {
             applyRest(0L, 0)
         }
+    }
+
+    /** Start a timed hold (plank/stretch) for the current set from the
+     *  notification. This service owns the countdown, so the end beep and the
+     *  auto-complete work while backgrounded, mirroring the in-app hold timer. */
+    private fun onStartHold() {
+        val current = remaining.firstOrNull() ?: return
+        if (!current.isDuration || current.holdSecs <= 0) {
+            // Nothing to time — treat as a plain completion.
+            finishCurrentSet()
+            return
+        }
+        val now = System.currentTimeMillis()
+        val secs = current.holdSecs
+        cancelRestRunnable()
+        restEndsAt = 0L
+        holdEndsAt = now + secs * 1000L
+        holdTotalSecs = secs
+        // Let JS mirror the running hold (display only — this service completes it).
+        actionQueue.add(JSONObject().apply {
+            put("type", "holdStart")
+            put("exerciseIdx", current.exerciseIdx)
+            put("setIdx", current.setIdx)
+            put("holdStartedAt", now)
+            put("holdTotal", secs)
+        })
+        cancelHoldRunnable()
+        val r = Runnable {
+            playRestDoneBeep()
+            forceVibrate(600L)
+            // Hold done → complete the set and roll into its rest.
+            finishCurrentSet()
+        }
+        holdRunnable = r
+        handler.postDelayed(r, secs * 1000L)
+        startProgressTicker()
+        updateNotification()
+    }
+
+    private fun cancelHoldRunnable() {
+        holdRunnable?.let { handler.removeCallbacks(it) }
+        holdRunnable = null
+    }
+
+    /** Refresh the notification ~1×/sec so the progress bar decays; self-stops
+     *  once neither a rest nor a hold is running. */
+    private fun startProgressTicker() {
+        stopProgressTicker()
+        val r = object : Runnable {
+            override fun run() {
+                val now = System.currentTimeMillis()
+                if (holdEndsAt > now || restEndsAt > now) {
+                    updateNotification()
+                    handler.postDelayed(this, 1000L)
+                } else {
+                    tickRunnable = null
+                }
+            }
+        }
+        tickRunnable = r
+        handler.postDelayed(r, 1000L)
+    }
+
+    private fun stopProgressTicker() {
+        tickRunnable?.let { handler.removeCallbacks(it) }
+        tickRunnable = null
     }
 
     private fun onAdjustRest(deltaSecs: Int) {
@@ -344,21 +430,9 @@ class WorkoutForegroundService : Service() {
 
     private fun buildNotification(): Notification {
         val current = remaining.firstOrNull()
-        val resting = restEndsAt > System.currentTimeMillis()
-
-        val title: String
-        val text: String
-        if (current == null) {
-            title = "Workout complete"
-            text = "All sets done — tap to finish"
-        } else if (resting) {
-            val secs = ((restEndsAt - System.currentTimeMillis()) / 1000).coerceAtLeast(0)
-            title = "Rest — ${formatMs(secs)}"
-            text = "Next: ${current.exerciseName} · ${current.setLabel} · ${setDetail(current)}"
-        } else {
-            title = "${current.exerciseName} · ${current.setLabel}"
-            text = setDetail(current)
-        }
+        val nowMs = System.currentTimeMillis()
+        val holding = holdEndsAt > nowMs
+        val resting = restEndsAt > nowMs
 
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, CHANNEL_ID)
@@ -367,21 +441,57 @@ class WorkoutForegroundService : Service() {
             Notification.Builder(this)
         }
         builder
-            .setContentTitle(title)
-            .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_menu_agenda)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
+            // Frequent notify() updates must not replay the channel alert; the
+            // rest/hold beep is played manually. Matches the GPS notification.
             .setOnlyAlertOnce(true)
 
-        if (current != null) {
-            builder.addAction(action(ACTION_COMPLETE_SET, "Complete set", 10))
-        }
-        if (resting) {
-            builder.addAction(action(ACTION_ADJUST_REST, "+30s", 11, 30))
-            builder.addAction(action(ACTION_ADJUST_REST, "−30s", 12, -30))
+        when {
+            current == null -> {
+                builder.setContentTitle("Workout complete")
+                    .setContentText("All sets done — tap to finish")
+            }
+            holding -> {
+                builder.setContentTitle("Holding · ${current.exerciseName}")
+                    .setContentText(current.setLabel)
+                setCountdown(builder, holdEndsAt, holdTotalSecs)
+                builder.addAction(action(ACTION_COMPLETE_SET, "Finish", 10))
+            }
+            resting -> {
+                builder.setContentTitle("Rest")
+                    .setContentText("Next: ${current.exerciseName} · ${current.setLabel} · ${setDetail(current)}")
+                setCountdown(builder, restEndsAt, restTotalSecs)
+                builder.addAction(action(ACTION_ADJUST_REST, "+30s", 11, 30))
+                builder.addAction(action(ACTION_ADJUST_REST, "−30s", 12, -30))
+            }
+            else -> {
+                builder.setContentTitle("${current.exerciseName} · ${current.setLabel}")
+                    .setContentText(setDetail(current))
+                if (current.isDuration && current.holdSecs > 0) {
+                    builder.addAction(action(ACTION_START_HOLD, "Start", 13))
+                } else {
+                    builder.addAction(action(ACTION_COMPLETE_SET, "Complete set", 10))
+                }
+            }
         }
         return builder.build()
+    }
+
+    /** Render a live count-down to [endsAt]: a system-driven chronometer in the
+     *  time slot (ticks itself, even backgrounded) plus a decaying progress bar
+     *  (remaining/total) that the progress ticker refreshes ~1×/sec. */
+    private fun setCountdown(builder: Notification.Builder, endsAt: Long, totalSecs: Int) {
+        builder.setWhen(endsAt).setShowWhen(true).setUsesChronometer(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            builder.setChronometerCountDown(true)
+        }
+        if (totalSecs > 0) {
+            val remaining = ((endsAt - System.currentTimeMillis()) / 1000)
+                .coerceIn(0L, totalSecs.toLong())
+            builder.setProgress(totalSecs, remaining.toInt(), false)
+        }
     }
 
     private fun setDetail(s: SetInfo): String {
@@ -406,9 +516,10 @@ class WorkoutForegroundService : Service() {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Active Workout",
-                // LOW: the ongoing notification updates frequently and must not
-                // buzz on every refresh. The rest beep is played manually.
-                NotificationManager.IMPORTANCE_LOW
+                // DEFAULT to match the GPS-tracking channel (audible on first
+                // post). Frequent updates don't re-alert because buildNotification
+                // sets setOnlyAlertOnce(true).
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "Shows your current set and rest timer during a workout"
                 setShowBadge(false)
@@ -419,10 +530,14 @@ class WorkoutForegroundService : Service() {
 
     private fun stopSelfCleanly() {
         cancelRestRunnable()
+        cancelHoldRunnable()
+        stopProgressTicker()
         running = false
         instance = null
         remaining.clear()
         restEndsAt = 0L
+        holdEndsAt = 0L
+        holdTotalSecs = 0
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
@@ -434,6 +549,8 @@ class WorkoutForegroundService : Service() {
 
     override fun onDestroy() {
         cancelRestRunnable()
+        cancelHoldRunnable()
+        stopProgressTicker()
         running = false
         instance = null
         super.onDestroy()

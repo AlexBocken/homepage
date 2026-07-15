@@ -130,6 +130,9 @@ export function createWorkout() {
 	let _holdExerciseIdx = $state(-1);
 	let _holdSetIdx = $state(-1);
 	let _holdInterval: ReturnType<typeof setInterval> | null = null;
+	// True when the hold was started from the native Android notification, which
+	// owns its countdown/beep/completion — the in-page hold is then display-only.
+	let _holdNativeOwned = false;
 
 	let _timerInterval: ReturnType<typeof setInterval> | null = null;
 	let _restInterval: ReturnType<typeof setInterval> | null = null;
@@ -242,7 +245,14 @@ export function createWorkout() {
 		const elapsed = Math.floor((Date.now() - _holdStartedAt) / 1000);
 		_holdSeconds = Math.max(0, _holdTotal - elapsed);
 		if (_holdSeconds <= 0) {
-			_onHoldComplete();
+			if (_holdNativeOwned) {
+				// Native beeps + completes it; here just retire the display timer.
+				// The matching `complete` event applies the completion + rest.
+				_stopHoldTimer();
+				_persist();
+			} else {
+				_onHoldComplete();
+			}
 		}
 	}
 
@@ -292,6 +302,7 @@ export function createWorkout() {
 		_holdStartedAt = null;
 		_holdExerciseIdx = -1;
 		_holdSetIdx = -1;
+		_holdNativeOwned = false;
 	}
 
 	// Restore from localStorage on creation
@@ -553,6 +564,28 @@ export function createWorkout() {
 		_persist();
 	}
 
+	/** Adopt a timed-hold countdown started from the Android notification. The
+	 *  native service owns the beep + completion, so this is display-only (see
+	 *  `_holdNativeOwned`): reopening the app mid-hold shows the live countdown. */
+	function adoptHoldTimer(startedAt: number, totalSeconds: number, exerciseIdx: number, setIdx: number) {
+		_stopRestTimer();
+		_stopHoldTimer();
+		const remaining = totalSeconds - Math.floor((Date.now() - startedAt) / 1000);
+		if (remaining <= 0) {
+			_persist();
+			return;
+		}
+		_holdStartedAt = startedAt;
+		_holdTotal = totalSeconds;
+		_holdSeconds = remaining;
+		_holdActive = true;
+		_holdExerciseIdx = exerciseIdx;
+		_holdSetIdx = setIdx;
+		_holdNativeOwned = true;
+		_holdInterval = setInterval(() => _computeHoldSeconds(), 1000);
+		_persist();
+	}
+
 	/** Replay a "complete set" event originated from the Android notification.
 	 *  Idempotent (keyed by set identity) and drift-free (adopts the native rest
 	 *  window). `weight`/`reps` are the assumed prefilled values. */
@@ -567,6 +600,8 @@ export function createWorkout() {
 		const ex = exercises[ev.exerciseIdx];
 		const set = ex?.sets[ev.setIdx];
 		if (!set) return;
+		// Clear any display-only hold for the set now finishing natively.
+		_stopHoldTimer();
 		if (ev.weight != null) set.weight = ev.weight;
 		if (ev.reps != null) set.reps = ev.reps;
 		if (!set.completed) set.completed = true;
@@ -801,6 +836,7 @@ export function createWorkout() {
 		cancelRestTimer,
 		adjustRestTimer,
 		adoptRestTimer,
+		adoptHoldTimer,
 		applyNativeCompletion,
 		startHoldTimer,
 		cancelHoldTimer,

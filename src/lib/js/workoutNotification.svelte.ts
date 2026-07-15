@@ -44,7 +44,14 @@ type NativeEvent =
 			restStartedAt: number;
 			restTotal: number;
 	  }
-	| { type: 'restAdjust'; endsAt: number; total: number };
+	| { type: 'restAdjust'; endsAt: number; total: number }
+	| {
+			type: 'holdStart';
+			exerciseIdx: number;
+			setIdx: number;
+			holdStartedAt: number;
+			holdTotal: number;
+	  };
 
 /** The custom JS interface is injected only inside the Android app. */
 function bridge(): WorkoutBridge | null {
@@ -107,6 +114,8 @@ function drain(b: WorkoutBridge, workout: Workout) {
 				workout.restExerciseIdx,
 				workout.restSetIdx
 			);
+		} else if (ev.type === 'holdStart') {
+			workout.adoptHoldTimer(ev.holdStartedAt, ev.holdTotal, ev.exerciseIdx, ev.setIdx);
 		}
 	}
 }
