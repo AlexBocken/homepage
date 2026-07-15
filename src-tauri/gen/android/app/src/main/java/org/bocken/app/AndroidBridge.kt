@@ -278,6 +278,21 @@ class AndroidBridge(private val context: Context) {
         sendWorkout(WorkoutForegroundService.ACTION_STOP_REST)
     }
 
+    /** Mirror an in-app-started timed hold so native shows its countdown and
+     *  beeps at the end even while backgrounded. `holdEndsAt` is epoch ms. */
+    @JavascriptInterface
+    fun startWorkoutHold(holdEndsAt: String, holdTotalSecs: Int) {
+        sendWorkout(WorkoutForegroundService.ACTION_MIRROR_HOLD) {
+            it.putExtra(WorkoutForegroundService.EXTRA_HOLD_ENDS_AT, holdEndsAt.toLongOrNull() ?: 0L)
+            it.putExtra(WorkoutForegroundService.EXTRA_HOLD_TOTAL, holdTotalSecs)
+        }
+    }
+
+    @JavascriptInterface
+    fun stopWorkoutHold() {
+        sendWorkout(WorkoutForegroundService.ACTION_STOP_HOLD)
+    }
+
     @JavascriptInterface
     fun stopWorkoutService() {
         sendWorkout(WorkoutForegroundService.ACTION_STOP)

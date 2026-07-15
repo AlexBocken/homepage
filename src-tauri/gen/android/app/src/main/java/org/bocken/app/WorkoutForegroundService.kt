@@ -13,10 +13,12 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.SystemClock
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.widget.RemoteViews
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Collections
@@ -91,12 +93,16 @@ class WorkoutForegroundService : Service() {
         const val ACTION_STOP_REST = "org.bocken.app.workout.STOP_REST"
         const val ACTION_COMPLETE_SET = "org.bocken.app.workout.COMPLETE_SET"
         const val ACTION_START_HOLD = "org.bocken.app.workout.START_HOLD"
+        const val ACTION_MIRROR_HOLD = "org.bocken.app.workout.MIRROR_HOLD"
+        const val ACTION_STOP_HOLD = "org.bocken.app.workout.STOP_HOLD"
         const val ACTION_ADJUST_REST = "org.bocken.app.workout.ADJUST_REST"
         const val ACTION_STOP = "org.bocken.app.workout.STOP"
 
         const val EXTRA_STATE = "state"
         const val EXTRA_REST_ENDS_AT = "restEndsAt"
         const val EXTRA_REST_TOTAL = "restTotalSecs"
+        const val EXTRA_HOLD_ENDS_AT = "holdEndsAt"
+        const val EXTRA_HOLD_TOTAL = "holdTotalSecs"
         const val EXTRA_DELTA = "deltaSecs"
 
         @Volatile
@@ -178,6 +184,11 @@ class WorkoutForegroundService : Service() {
             ACTION_STOP_REST -> applyRest(0L, 0)
             ACTION_COMPLETE_SET -> finishCurrentSet()
             ACTION_START_HOLD -> onStartHold()
+            ACTION_MIRROR_HOLD -> applyMirrorHold(
+                intent.getLongExtra(EXTRA_HOLD_ENDS_AT, 0L),
+                intent.getIntExtra(EXTRA_HOLD_TOTAL, 0)
+            )
+            ACTION_STOP_HOLD -> clearMirrorHold()
             ACTION_ADJUST_REST -> onAdjustRest(intent.getIntExtra(EXTRA_DELTA, 0))
             ACTION_STOP -> {
                 stopSelfCleanly()
@@ -303,6 +314,38 @@ class WorkoutForegroundService : Service() {
     private fun cancelHoldRunnable() {
         holdRunnable?.let { handler.removeCallbacks(it) }
         holdRunnable = null
+    }
+
+    /** Mirror a hold that the WebView started in-app: show the same countdown +
+     *  bar and beep at the end (so it's audible while backgrounded), but do NOT
+     *  complete — JS owns the completion/rest for in-app holds (avoids acting on
+     *  the wrong set when a non-current exercise is focused). */
+    private fun applyMirrorHold(endsAt: Long, totalSecs: Int) {
+        cancelHoldRunnable()
+        cancelRestRunnable()
+        restEndsAt = 0L
+        holdEndsAt = endsAt
+        holdTotalSecs = totalSecs
+        if (endsAt > System.currentTimeMillis()) {
+            val r = Runnable {
+                playRestDoneBeep()
+                forceVibrate(600L)
+                holdEndsAt = 0L
+                holdTotalSecs = 0
+                updateNotification()
+            }
+            holdRunnable = r
+            handler.postDelayed(r, endsAt - System.currentTimeMillis())
+            startProgressTicker()
+        }
+        updateNotification()
+    }
+
+    private fun clearMirrorHold() {
+        cancelHoldRunnable()
+        holdEndsAt = 0L
+        holdTotalSecs = 0
+        updateNotification()
     }
 
     /** Refresh the notification ~1×/sec so the progress bar decays; self-stops
@@ -454,15 +497,21 @@ class WorkoutForegroundService : Service() {
                     .setContentText("All sets done — tap to finish")
             }
             holding -> {
-                builder.setContentTitle("Holding · ${current.exerciseName}")
-                    .setContentText(current.setLabel)
+                val t = "Holding · ${current.exerciseName}"
+                val txt = current.setLabel
+                builder.setContentTitle(t).setContentText(txt)
                 setCountdown(builder, holdEndsAt, holdTotalSecs)
+                builder.setStyle(Notification.DecoratedCustomViewStyle())
+                    .setCustomBigContentView(timerBigView(t, txt, holdEndsAt, holdTotalSecs))
                 builder.addAction(action(ACTION_COMPLETE_SET, "Finish", 10))
             }
             resting -> {
-                builder.setContentTitle("Rest")
-                    .setContentText("Next: ${current.exerciseName} · ${current.setLabel} · ${setDetail(current)}")
+                val t = "Rest"
+                val txt = "Next: ${current.exerciseName} · ${current.setLabel} · ${setDetail(current)}"
+                builder.setContentTitle(t).setContentText(txt)
                 setCountdown(builder, restEndsAt, restTotalSecs)
+                builder.setStyle(Notification.DecoratedCustomViewStyle())
+                    .setCustomBigContentView(timerBigView(t, txt, restEndsAt, restTotalSecs))
                 builder.addAction(action(ACTION_ADJUST_REST, "+30s", 11, 30))
                 builder.addAction(action(ACTION_ADJUST_REST, "−30s", 12, -30))
             }
@@ -492,6 +541,26 @@ class WorkoutForegroundService : Service() {
                 .coerceIn(0L, totalSecs.toLong())
             builder.setProgress(totalSecs, remaining.toInt(), false)
         }
+    }
+
+    /** Expanded body: a wide progress bar with the live count-down chronometer
+     *  beside it. The chronometer ticks itself; the bar is refreshed by the
+     *  progress ticker (setProgress isn't animated by the system). */
+    private fun timerBigView(title: String, text: String, endsAt: Long, totalSecs: Int): RemoteViews {
+        val rv = RemoteViews(packageName, R.layout.workout_timer_big)
+        rv.setTextViewText(R.id.wp_title, title)
+        rv.setTextViewText(R.id.wp_text, text)
+        if (totalSecs > 0) {
+            val remaining = ((endsAt - System.currentTimeMillis()) / 1000)
+                .coerceIn(0L, totalSecs.toLong())
+            rv.setProgressBar(R.id.wp_bar, totalSecs, remaining.toInt(), false)
+        }
+        val base = SystemClock.elapsedRealtime() + (endsAt - System.currentTimeMillis())
+        rv.setChronometer(R.id.wp_chrono, base, null, true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            rv.setChronometerCountDown(R.id.wp_chrono, true)
+        }
+        return rv
     }
 
     private fun setDetail(s: SetInfo): String {

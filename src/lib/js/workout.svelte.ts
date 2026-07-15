@@ -260,7 +260,9 @@ export function createWorkout() {
 		const exIdx = _holdExerciseIdx;
 		const setIdx = _holdSetIdx;
 		_stopHoldTimer();
-		_playRestDoneSound();
+		// Native plays the beep for in-app holds too (audible while backgrounded);
+		// suppress the Web Audio cue there to avoid a double beep.
+		if (!_suppressRestSound) _playRestDoneSound();
 		// Auto-complete the set
 		const ex = exercises[exIdx];
 		if (ex?.sets[setIdx] && !ex.sets[setIdx].completed) {
@@ -815,6 +817,7 @@ export function createWorkout() {
 		get holdTimerSeconds() { return _holdSeconds; },
 		get holdTimerTotal() { return _holdTotal; },
 		get holdTimerActive() { return _holdActive; },
+		get holdNativeOwned() { return _holdNativeOwned; },
 		get holdStartedAt() { return _holdStartedAt; },
 		get holdExerciseIdx() { return _holdExerciseIdx; },
 		get holdSetIdx() { return _holdSetIdx; },

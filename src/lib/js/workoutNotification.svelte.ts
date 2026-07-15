@@ -28,6 +28,8 @@ interface WorkoutBridge {
 	updateWorkoutState(stateJson: string): void;
 	startWorkoutRest(restEndsAt: string, restTotalSecs: number): void;
 	stopWorkoutRest(): void;
+	startWorkoutHold(holdEndsAt: string, holdTotalSecs: number): void;
+	stopWorkoutHold(): void;
 	stopWorkoutService(): void;
 	isWorkoutServiceRunning(): boolean;
 	drainWorkoutActions(): string;
@@ -146,6 +148,9 @@ export function attachWorkoutNotification(workout: Workout, getLang: () => Lang)
 	workout.suppressRestSound = true;
 
 	let pushTimer: ReturnType<typeof setTimeout> | null = null;
+	// Whether we've pushed a mirror hold to native for the current in-app hold, so
+	// we only send a matching stop (and never clobber a notification-owned hold).
+	let mirrorPushed = false;
 	const stopRoot = $effect.root(() => {
 		// Push the remaining-sets shadow whenever it changes (debounced so rapid
 		// weight/reps edits don't thrash startForegroundService).
@@ -172,6 +177,25 @@ export function attachWorkoutNotification(workout: Workout, getLang: () => Lang)
 				b.startWorkoutRest(String(endsAt), workout.restTimerTotal);
 			} else {
 				b.stopWorkoutRest();
+			}
+		});
+
+		// Mirror an in-app-started timed hold to native (countdown + backgrounded
+		// beep). Notification-started holds are `holdNativeOwned` and already fully
+		// owned by native, so we skip those to avoid clobbering them.
+		$effect(() => {
+			if (!(workout.active && workout.mode !== 'gps')) return;
+			const jsOwnedHold =
+				workout.holdTimerActive && !!workout.holdStartedAt && !workout.holdNativeOwned;
+			if (jsOwnedHold) {
+				const endsAt = workout.holdStartedAt! + workout.holdTimerTotal * 1000;
+				if (typeof b.startWorkoutHold === 'function') {
+					b.startWorkoutHold(String(endsAt), workout.holdTimerTotal);
+				}
+				mirrorPushed = true;
+			} else if (mirrorPushed) {
+				if (typeof b.stopWorkoutHold === 'function') b.stopWorkoutHold();
+				mirrorPushed = false;
 			}
 		});
 	});
