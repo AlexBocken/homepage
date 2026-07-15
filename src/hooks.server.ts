@@ -248,6 +248,14 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	// directly, since it's for exactly one person. Nicknames are compared
 	// lowercased (as elsewhere, e.g. the fitness period subscriptions route).
 	if (url.pathname.startsWith('/finances') || url.pathname.startsWith('/api/finances')) {
+		// Allow a valid finance API token to reach the read-only overrides export
+		// (the ledger repo's pull script), like the cospend export above.
+		if (url.pathname === '/api/finances/export') {
+			const { verifyFinanceApiToken } = await import('$lib/server/financeApiAuth');
+			if (await verifyFinanceApiToken(event.request, url)) {
+				return resolve(event);
+			}
+		}
 		if (!session) {
 			if (url.pathname.startsWith('/api/finances')) {
 				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');

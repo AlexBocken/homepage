@@ -15,6 +15,7 @@ export const de = {
 	nav_budget: 'Budget',
 	nav_accounts: 'Konten',
 	nav_query: 'Abfrage',
+	nav_categorize: 'Zuordnen',
 
 	// Page titles (<title>)
 	title_overview: 'Finanzen',
@@ -197,8 +198,46 @@ export const de = {
 	ac_showing_mid: ' von ',
 	ac_showing_b: '.',
 
+	// Payee detail (per payee)
+	payee_label: 'Zahlungsempfänger',
+	py_monthly: 'Monatlich',
+	py_cumulative: 'Kumuliert',
+	py_journal: 'Buchungen',
+	py_running: 'Summe',
+
 	// Transaction detail
 	td_title: 'Buchungsdetails',
+
+	// Categorizer (assign an Expenses/Income account to a transaction)
+	cat_assign: 'Konto zuweisen',
+	cat_redefine: 'Konto ändern',
+	cat_saved_as: 'Zugeordnet:',
+	cat_ph_assign: 'Konto zuweisen…',
+	cat_ph_redefine: 'Konto ändern…',
+	cat_clear: 'Zuordnung entfernen',
+	cat_flash: 'Gespeichert →',
+	cat_no_payee: '(kein Empfänger)',
+	cat_uncategorized: 'nicht zugeordnet',
+	cat_hint: '1–9 wählen · ↵ oben · ↑↓ bewegen · → überspringen · esc leeren',
+	cat_queue_count_a: 'von',
+	cat_queue_count_b: 'offen',
+	cat_queue_empty_title: 'Alles zugeordnet',
+	cat_queue_empty_body: 'Keine nicht zugeordneten Buchungen mehr. Ziehe die CSV im Ledger-Repo mit make overrides-pull.',
+	cat_skip: 'Überspringen',
+	cat_intro: 'Nicht zugeordnete Buchungen einem Konto zuweisen. Gespeichert auf dem Server; per make overrides-pull ins Ledger.',
+
+	// Export token panel
+	tok_title: 'Export-Token',
+	tok_desc: 'Token für das Pull-Skript des Ledger-Repos (make overrides-pull). Wie ein Passwort behandeln.',
+	tok_label_ph: 'Bezeichnung (z. B. Laptop)',
+	tok_new: 'Token erstellen',
+	tok_copy: 'Kopieren',
+	tok_copied: 'Kopiert',
+	tok_revoke: 'Widerrufen',
+	tok_never_used: 'nie verwendet',
+	tok_last_used: 'zuletzt',
+	tok_none: 'Noch keine Token.',
+	tok_revoke_confirm: 'Diesen Token widerrufen? Skripte, die ihn nutzen, verlieren den Zugriff.',
 
 	// Cashflow chart
 	cf_income_one: 'Einnahme',

@@ -117,6 +117,7 @@ const OWNER_ONLY_ROUTES: Route[] = [
 	{ path: '/finances/account/Expenses:Food', kind: 'page' },
 	{ path: '/finances/payee/Cospend', kind: 'page' },
 	{ path: '/finances/query', kind: 'page' },
+	{ path: '/finances/categorize', kind: 'page' },
 	{ path: '/api/finances/meta', kind: 'api' },
 	{ path: '/api/finances/budget', kind: 'api' },
 	{ path: '/api/finances/investments', kind: 'api' },
@@ -124,7 +125,10 @@ const OWNER_ONLY_ROUTES: Route[] = [
 	{ path: '/api/finances/payee?payee=Cospend', kind: 'api' },
 	{ path: '/api/finances/query?q=SELECT%20account', kind: 'api' },
 	// Specific (non-proxy) owner-gated API route backing the BQL console.
-	{ path: '/api/finances/saved-queries', kind: 'api' }
+	{ path: '/api/finances/saved-queries', kind: 'api' },
+	// Categorizer store + its export-token management (both owner-session gated).
+	{ path: '/api/finances/overrides', kind: 'api' },
+	{ path: '/api/finances/export/tokens', kind: 'api' }
 ];
 
 for (const r of OWNER_ONLY_ROUTES) {
@@ -192,6 +196,52 @@ test.describe('/api/cospend/export [token-only]', () => {
 			for (const { username, netBalance } of body.balances) {
 				expect(netBalance).toBeCloseTo(expected.get(username) as number, 2);
 			}
+		} finally {
+			await ctx.dispose();
+		}
+	});
+});
+
+// Token-only: /api/finances/export (the ledger repo's categorization pull) is
+// authenticated by a FinanceApiToken (src/lib/server/financeApiAuth.ts), NOT a
+// session. The rest of /api/finances is owner-only, so without a token every
+// caller — including a logged-in user — must be rejected. Guards against the
+// export being loosened to session access.
+test.describe('/api/finances/export [token-only]', () => {
+	test('logged-in non-owner without token → blocked', async () => {
+		expect([401, 403]).toContain((await fetchAs('full', '/api/finances/export')).status());
+	});
+	test('no-groups user → blocked', async () => {
+		expect([401, 403]).toContain((await fetchAs('none', '/api/finances/export')).status());
+	});
+	test('logged out → 401', async () => {
+		expect((await fetchAs('anon', '/api/finances/export')).status()).toBe(401);
+	});
+	test('invalid bearer token → 401', async () => {
+		const ctx = await request.newContext({ baseURL: BASE });
+		try {
+			const res = await ctx.get('/api/finances/export', {
+				headers: { authorization: 'Bearer not-a-real-token' },
+				maxRedirects: 0
+			});
+			expect(res.status()).toBe(401);
+		} finally {
+			await ctx.dispose();
+		}
+	});
+
+	// Valid token (seeded in scripts/e2e/seed.mjs) → 200 with the overrides CSV
+	// header, proving the gate isn't merely "always deny". No session cookie.
+	test('valid bearer token (no session) → 200 with CSV header', async () => {
+		const ctx = await request.newContext({ baseURL: BASE });
+		try {
+			const res = await ctx.get('/api/finances/export', {
+				headers: { authorization: 'Bearer e2e-finance-export-token' },
+				maxRedirects: 0
+			});
+			expect(res.status()).toBe(200);
+			expect(res.headers()['content-type']).toContain('text/csv');
+			expect(await res.text()).toContain('key,account,date,amount,payee,narration');
 		} finally {
 			await ctx.dispose();
 		}

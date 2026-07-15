@@ -12,6 +12,7 @@ export const en = {
 	nav_budget: 'Budget',
 	nav_accounts: 'Accounts',
 	nav_query: 'Query',
+	nav_categorize: 'Categorize',
 
 	// Page titles (<title>)
 	title_overview: 'Finances',
@@ -194,8 +195,46 @@ export const en = {
 	ac_showing_mid: ' of ',
 	ac_showing_b: '.',
 
+	// Payee detail (per payee)
+	payee_label: 'Payee',
+	py_monthly: 'Monthly',
+	py_cumulative: 'Cumulative',
+	py_journal: 'Transactions',
+	py_running: 'Running total',
+
 	// Transaction detail
 	td_title: 'Transaction details',
+
+	// Categorizer (assign an Expenses/Income account to a transaction)
+	cat_assign: 'Assign account',
+	cat_redefine: 'Change account',
+	cat_saved_as: 'Assigned:',
+	cat_ph_assign: 'assign account…',
+	cat_ph_redefine: 'redefine account…',
+	cat_clear: 'Clear assignment',
+	cat_flash: 'Saved →',
+	cat_no_payee: '(no payee)',
+	cat_uncategorized: 'uncategorized',
+	cat_hint: '1–9 pick · ↵ top · ↑↓ move · → skip · esc clear',
+	cat_queue_count_a: 'of',
+	cat_queue_count_b: 'left',
+	cat_queue_empty_title: 'Queue clear',
+	cat_queue_empty_body: 'No uncategorized transactions left. Pull the CSV into the ledger repo with make overrides-pull.',
+	cat_skip: 'Skip',
+	cat_intro: 'Assign an account to uncategorized transactions. Saved on the server; fold into the ledger with make overrides-pull.',
+
+	// Export token panel
+	tok_title: 'Export token',
+	tok_desc: 'A token for the ledger repo pull script (make overrides-pull). Treat it like a password.',
+	tok_label_ph: 'Label (e.g. laptop)',
+	tok_new: 'Create token',
+	tok_copy: 'Copy',
+	tok_copied: 'Copied',
+	tok_revoke: 'Revoke',
+	tok_never_used: 'never used',
+	tok_last_used: 'last used',
+	tok_none: 'No tokens yet.',
+	tok_revoke_confirm: 'Revoke this token? Scripts using it will lose access.',
 
 	// Cashflow chart
 	cf_income_one: 'Income',

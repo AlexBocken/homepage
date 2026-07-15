@@ -1,18 +1,58 @@
+<script module lang="ts">
+	import type { CategorizeData } from '$lib/utils/finance';
+	import { SvelteMap } from 'svelte/reactivity';
+
+	// Cross-modal caches: the account list rarely changes within a session, and
+	// the overrides map lets any opened txn show whether it's already assigned.
+	// Both are lazily filled the first time a modal needs them. `savedByKey` is a
+	// SvelteMap so a save from one modal reactively updates any other.
+	let catData: CategorizeData | null = null;
+	const savedByKey = new SvelteMap<string, string>();
+	let overridesLoaded = false;
+
+	async function loadCategorizeData(): Promise<CategorizeData | null> {
+		if (!catData) {
+			const res = await fetch('/api/finances/categorize');
+			if (res.ok) catData = (await res.json()) as CategorizeData;
+		}
+		return catData;
+	}
+
+	async function loadOverrides(): Promise<void> {
+		if (overridesLoaded) return;
+		const res = await fetch('/api/finances/overrides');
+		if (res.ok) {
+			const { overrides } = (await res.json()) as {
+				overrides: Array<{ key: string; account: string }>;
+			};
+			for (const o of overrides) savedByKey.set(o.key, o.account);
+			overridesLoaded = true;
+		}
+	}
+</script>
+
 <script lang="ts">
 	import { money, amount } from '$lib/utils/finance';
 	import type { Posting } from '$lib/utils/finance';
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { m, financesLang } from '$lib/js/financesI18n';
+	import AccountPicker from './AccountPicker.svelte';
 
 	const t = $derived(m[financesLang(languageStore.value)]);
 
-	// Accepts any journal-txn shape (spending, overview, account view).
+	// Accepts any journal-txn shape (spending, overview, account view). The
+	// categorizer fields (key/bank_amount/…) are present once finance-service
+	// serves them; the assign UI hides itself when `key` is absent.
 	interface TxnLike {
 		date: string;
 		payee: string | null;
 		narration: string | null;
 		tags: string[];
 		postings: Posting[];
+		key?: string;
+		bank_amount?: string;
+		current?: string | null;
+		uncategorized?: boolean;
 	}
 
 	let {
@@ -28,6 +68,41 @@
 		/** Optional: called with a posting account to go to that account. */
 		onAccount?: ((account: string) => void) | undefined;
 	} = $props();
+
+	// Categorizer state. `saved` (the assigned account, or null) reads straight off
+	// the reactive overrides map; `current` is the picker's baseline.
+	let picking = $state(false);
+	let loadingCat = $state(false);
+	let cat = $state<CategorizeData | null>(null);
+
+	const kind = $derived<'credit' | 'debit'>(
+		parseFloat(txn.bank_amount ?? '0') > 0 ? 'credit' : 'debit'
+	);
+	const saved = $derived(txn.key ? (savedByKey.get(txn.key) ?? null) : null);
+	const current = $derived(saved ?? (txn.uncategorized ? null : (txn.current ?? null)));
+
+	// Reset the picker and pull the overrides map whenever the modal is pointed at
+	// a different transaction (the instance is reused, not remounted).
+	$effect(() => {
+		void txn.key;
+		picking = false;
+		loadOverrides();
+	});
+
+	async function openPicker() {
+		loadingCat = true;
+		cat = await loadCategorizeData();
+		loadingCat = false;
+		if (cat) picking = true;
+	}
+
+	function onSaved(account: string | null) {
+		if (txn.key) {
+			if (account) savedByKey.set(txn.key, account);
+			else savedByKey.delete(txn.key);
+		}
+		picking = false;
+	}
 
 	function onKey(e: KeyboardEvent) {
 		if (e.key === 'Escape') onClose();
@@ -86,6 +161,38 @@
 				{/each}
 			</tbody>
 		</table>
+
+		{#if txn.key}
+			<section class="categorize">
+				{#if saved}
+					<p class="assigned">
+						<span class="lbl">{t.cat_saved_as}</span>
+						<span class="acct-val fin-num">{saved}</span>
+					</p>
+				{/if}
+				{#if picking && cat}
+					<AccountPicker
+						txn={{
+							key: txn.key,
+							bank_amount: txn.bank_amount ?? '',
+							date: txn.date,
+							payee: txn.payee,
+							narration: txn.narration,
+							kind
+						}}
+						accounts={cat.accounts}
+						usage={cat.usage}
+						{current}
+						autofocus
+						{onSaved}
+					/>
+				{:else}
+					<button class="cat-btn" onclick={openPicker} disabled={loadingCat}>
+						{saved || (current && !txn.uncategorized) ? t.cat_redefine : t.cat_assign}
+					</button>
+				{/if}
+			</section>
+		{/if}
 	</div>
 </div>
 
@@ -212,5 +319,47 @@
 	}
 	.muted {
 		color: var(--color-text-tertiary);
+	}
+
+	.categorize {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+	.assigned {
+		margin: 0;
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		font-size: var(--text-sm);
+	}
+	.assigned .lbl {
+		color: var(--color-text-secondary);
+	}
+	.assigned .acct-val {
+		color: var(--color-text-primary);
+		font-weight: 600;
+	}
+	.cat-btn {
+		align-self: flex-start;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		border: none;
+		border-radius: var(--radius-md);
+		padding: 0.5rem 1rem;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		cursor: pointer;
+		transition: background var(--transition-normal);
+	}
+	.cat-btn:hover {
+		background: var(--color-primary-hover);
+	}
+	.cat-btn:disabled {
+		opacity: 0.6;
+		cursor: default;
 	}
 </style>

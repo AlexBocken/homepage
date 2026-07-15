@@ -13,6 +13,7 @@
 	import Target from '@lucide/svelte/icons/target';
 	import Terminal from '@lucide/svelte/icons/terminal';
 	import FolderTree from '@lucide/svelte/icons/folder-tree';
+	import Tags from '@lucide/svelte/icons/tags';
 
 	let { data, children } = $props();
 	const user = $derived(data.session?.user);
@@ -28,6 +29,7 @@
 	const budget = resolve('/finances/budget');
 	const accounts = resolve('/finances/account');
 	const queryPage = resolve('/finances/query');
+	const categorize = resolve('/finances/categorize');
 </script>
 
 <Header>
@@ -61,6 +63,11 @@
 			<li style="--active-fill: var(--nord7)">
 				<a href={queryPage} class:active={page.url.pathname.startsWith(queryPage)}>
 					<Terminal size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{t.nav_query}</span>
+				</a>
+			</li>
+			<li style="--active-fill: var(--nord15)">
+				<a href={categorize} class:active={page.url.pathname.startsWith(categorize)}>
+					<Tags size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{t.nav_categorize}</span>
 				</a>
 			</li>
 		</ul>

@@ -14,6 +14,7 @@ const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27018/bocken_tes
 // happy path). Keep in sync with the same literal in
 // tests/e2e/permissions/matrix.spec.ts.
 const COSPEND_EXPORT_TOKEN = 'e2e-cospend-export-token';
+const FINANCE_EXPORT_TOKEN = 'e2e-finance-export-token';
 
 /** One German section with an English mirror. */
 const section = (name, list) => ({ name, type: 'section', list });
@@ -270,6 +271,19 @@ async function main() {
 		updatedAt: new Date()
 	});
 	console.log('  cospend export token: seeded');
+
+	// A fixed finance export API token so the permissions matrix can assert the
+	// /api/finances/export happy-path (valid token → 200) deterministically.
+	await db.collection('financeapitokens').deleteMany({ label: 'e2e-export' });
+	await db.collection('financeapitokens').insertOne({
+		token: FINANCE_EXPORT_TOKEN,
+		createdBy: 'alexander',
+		label: 'e2e-export',
+		lastUsedAt: null,
+		createdAt: new Date(),
+		updatedAt: new Date()
+	});
+	console.log('  finance export token: seeded');
 
 	// anna's female profile + period cycles (synthetic).
 	await db.collection('fitnessgoals').replaceOne({ username: 'anna' }, FEMALE_PROFILE, { upsert: true });

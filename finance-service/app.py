@@ -17,6 +17,7 @@ Endpoints (MVP — replicates Fava's core reports):
     GET /income-statement?from&to          Income/Expenses tree
     GET /holdings?date                     per-commodity cost/market/gain
     GET /journal?account&from&to&limit&offset   paginated transactions
+    GET /categorize                        Uncategorized queue + rankable accounts
 
 All monetary values are returned as plain numbers in the operating currency
 (CHF), converted at market prices for the requested date, unless a native
@@ -24,8 +25,10 @@ currency/units field says otherwise.
 """
 
 import decimal
+import hashlib
 import os
 import re
+from collections import Counter
 from datetime import date, datetime, timedelta
 from itertools import groupby
 
@@ -121,6 +124,50 @@ def num(x, places=2):
     if x is None:
         return None
     return round(float(x), places)
+
+
+# --------------------------------------------------------------------------- #
+# Categorization support.
+#
+# The website's categorizer assigns an Expenses/Income account to Uncategorized
+# transactions and stores the choice keyed by a stable content hash. That hash
+# MUST be the one the ledger importers look it up by, so `txn_key`/_bank_posting
+# are copied byte-for-byte from accounting/importers/overrides.py — the money
+# values in our JSON are rounded floats (see num()), so the website cannot
+# recompute the key itself; we compute it here where the raw Decimal is present
+# and carry it through. Do NOT change the formula on one side only.
+# --------------------------------------------------------------------------- #
+UNCATEGORIZED = ("Expenses:Uncategorized", "Income:Uncategorized")
+
+
+def _bank_posting(txn):
+    for p in txn.postings:
+        if p.account.split(":")[0] in ("Assets", "Liabilities"):
+            return p
+    return None
+
+
+def txn_key(dt, payee, narration, amount):
+    """Stable key for a transaction, matching accounting/importers/overrides.py.
+    `amount` is the bank/asset posting's Decimal number (or "" if none)."""
+    s = f"{dt}|{payee or ''}|{narration or ''}|{amount}"
+    return hashlib.sha1(s.encode("utf-8")).hexdigest()[:12]
+
+
+def categorize_fields(t):
+    """The extra fields the categorizer needs on a transaction: its stable `key`,
+    the bank posting's raw Decimal as a string (`bank_amount`, exactly what lands
+    in overrides.csv), whether it is still Uncategorized, and its `current`
+    single non-bank account (None when split or uncategorized)."""
+    bp = _bank_posting(t)
+    amount = bp.units.number if bp and bp.units else ""
+    others = [p for p in t.postings if p is not bp]
+    return {
+        "key": txn_key(t.date, t.payee, t.narration, amount),
+        "bank_amount": str(amount),
+        "uncategorized": any(p.account in UNCATEGORIZED for p in t.postings),
+        "current": others[0].account if len(others) == 1 else None,
+    }
 
 
 def parse_date(s, default):
@@ -1077,10 +1124,51 @@ def journal(
                 "amount_chf": num(scoped_amount(t)),
                 "total_chf": num(total_amount(t)),
                 "postings": [posting_json(p, t.date) for p in t.postings],
+                **categorize_fields(t),
             }
             for t in page
         ],
     }
+
+
+@app.get("/categorize")
+def categorize():
+    """Everything the website's categorizer needs: the still-Uncategorized
+    transactions (the triage queue, oldest first) and the ranked Expenses/Income
+    accounts to assign them to, with usage counts. Mirrors the collect() step of
+    tools/categorize.py in the ledger repo."""
+    led = get_ledger()
+    usage = Counter()
+    accounts = set()
+    for e in led.entries:
+        if isinstance(e, data.Open) and e.account.split(":")[0] in ("Expenses", "Income"):
+            accounts.add(e.account)
+        if isinstance(e, data.Transaction):
+            for p in e.postings:
+                usage[p.account] += 1
+    accounts |= {a for a in usage if a.split(":")[0] in ("Expenses", "Income")}
+    accounts -= set(UNCATEGORIZED)
+    ranked = sorted(accounts, key=lambda a: (-usage[a], a))
+
+    def describe(t):
+        bp = _bank_posting(t)
+        return {
+            "date": t.date.isoformat(),
+            "payee": t.payee or "",
+            "narration": t.narration or "",
+            "currency": bp.units.currency if bp and bp.units else "",
+            "source": bp.account if bp else "",
+            "kind": "credit" if bp and bp.units and bp.units.number > 0 else "debit",
+            **categorize_fields(t),
+        }
+
+    txns = [
+        describe(t)
+        for t in led.txns
+        if _bank_posting(t) and any(p.account in UNCATEGORIZED for p in t.postings)
+    ]
+    txns.sort(key=lambda d: d["date"])
+    return {"txns": txns, "accounts": ranked, "usage": {a: usage[a] for a in ranked}}
 
 
 _INTERVAL_MONTHS = {
@@ -1491,6 +1579,7 @@ def account_view(
                 }
                 for p in t.postings
             ],
+            **categorize_fields(t),
         })
     rows.reverse()
     journal = rows[:limit]
@@ -1593,6 +1682,7 @@ def payee_view(
                 }
                 for p in t.postings
             ],
+            **categorize_fields(t),
         })
     rows.reverse()
     journal = rows[:limit]

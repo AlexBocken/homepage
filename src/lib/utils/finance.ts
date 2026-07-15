@@ -331,6 +331,11 @@ export interface AccountJournalTxn {
 	balance: number | null;
 	total_chf: number | null;
 	postings: Posting[];
+	/** Categorizer fields (see CategorizeFields). */
+	key?: string;
+	bank_amount?: string;
+	uncategorized?: boolean;
+	current?: string | null;
 }
 
 export interface AccountView {
@@ -340,6 +345,23 @@ export interface AccountView {
 	to: string;
 	balance: number | null;
 	opening: number | null;
+	months: string[];
+	children: AccountChild[];
+	balance_series: BalancePoint[];
+	journal: AccountJournalTxn[];
+	count: number;
+}
+
+/** A payee deep-dive: mirrors AccountView but keyed on a payee. `children` are
+ *  the Expenses/Income accounts the payee's money flows through; `balance_series`
+ *  is the cumulative spend total (not an account balance); journal `balance` is a
+ *  running total. */
+export interface PayeeView {
+	currency: string;
+	payee: string;
+	from: string;
+	to: string;
+	total: number | null;
 	months: string[];
 	children: AccountChild[];
 	balance_series: BalancePoint[];
@@ -367,6 +389,51 @@ export interface JournalTxn {
 	/** The largest-magnitude leg (CHF) — a meaningful figure for any leg count. */
 	total_chf: number | null;
 	postings: Posting[];
+	/** Categorizer fields (see CategorizeFields). */
+	key?: string;
+	bank_amount?: string;
+	uncategorized?: boolean;
+	current?: string | null;
+}
+
+/** Per-transaction fields the categorizer needs, computed by finance-service
+ *  (the key can't be recomputed client-side — our JSON carries rounded floats).
+ *  `key` is the stable content hash; `bank_amount` is the raw Decimal string that
+ *  lands in overrides.csv; `current` is the single non-bank account (null when
+ *  split); `uncategorized` is true while the txn still hits Expenses/Income:Uncategorized. */
+export interface CategorizeFields {
+	key: string;
+	bank_amount: string;
+	uncategorized: boolean;
+	current: string | null;
+}
+
+/** A row in the uncategorized triage queue (GET /api/finances/categorize). */
+export interface CategorizeTxn extends CategorizeFields {
+	date: string;
+	payee: string;
+	narration: string;
+	currency: string;
+	source: string;
+	kind: 'credit' | 'debit';
+}
+
+/** Payload of GET /api/finances/categorize: the queue plus the rankable
+ *  Expenses/Income accounts and their usage counts. */
+export interface CategorizeData {
+	txns: CategorizeTxn[];
+	accounts: string[];
+	usage: Record<string, number>;
+}
+
+/** A stored override row (GET /api/finances/overrides), matching overrides.csv. */
+export interface OverrideRow {
+	key: string;
+	account: string;
+	date: string;
+	amount: string;
+	payee: string;
+	narration: string;
 }
 
 export interface MonthPoint {
