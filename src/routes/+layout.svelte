@@ -6,6 +6,10 @@
 	import Toast from '$lib/components/Toast.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { initExternalLinks } from '$lib/js/externalLinks';
+	import { page } from '$app/state';
+	import { getWorkout } from '$lib/js/workout.svelte';
+	import { detectFitnessLang } from '$lib/js/fitnessI18n';
+	import { attachWorkoutNotification } from '$lib/js/workoutNotification.svelte';
 	let { children } = $props();
 
 	const websiteJsonLd = {
@@ -87,6 +91,15 @@
 	/** In the Tauri app / installed PWA, open external links in the system browser
 	 *  instead of trapping them inside the app window. No-op in a normal browser tab. */
 	onMount(() => initExternalLinks());
+
+	/** Drive the native Android workout notification (persistent set card + rest
+	 *  beep + "complete set" actions) for the whole session, so it survives
+	 *  navigating away from the active-workout page. No-op outside the Android app. */
+	onMount(() =>
+		attachWorkoutNotification(getWorkout(), () =>
+			/** @type {'en' | 'de'} */ (detectFitnessLang(page.url.pathname))
+		)
+	);
 
 	onNavigate((navigation) => {
 		if (!(/** @type {any} */ (document)).startViewTransition) return;

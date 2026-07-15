@@ -134,6 +134,9 @@ export function createWorkout() {
 	let _timerInterval: ReturnType<typeof setInterval> | null = null;
 	let _restInterval: ReturnType<typeof setInterval> | null = null;
 	let _onChangeCallback: (() => void) | null = null;
+	// When the native Android workout service owns the rest-end beep (so it plays
+	// while backgrounded), suppress the in-page Web Audio cue to avoid a double beep.
+	let _suppressRestSound = false;
 
 	function _persist() {
 		if (!active) return;
@@ -208,7 +211,7 @@ export function createWorkout() {
 		const elapsed = Math.floor((Date.now() - _restStartedAt) / 1000);
 		_restSeconds = Math.max(0, _restTotal - elapsed);
 		if (_restSeconds <= 0) {
-			_playRestDoneSound();
+			if (!_suppressRestSound) _playRestDoneSound();
 			_stopRestTimer();
 			_persist();
 		}
@@ -531,6 +534,49 @@ export function createWorkout() {
 		_persist();
 	}
 
+	/** Adopt a rest window from an absolute start timestamp (not "now"), so state
+	 *  handed back from the native workout service stays drift-free. */
+	function adoptRestTimer(startedAt: number, totalSeconds: number, exerciseIdx: number, setIdx: number) {
+		_stopRestTimer();
+		const remaining = totalSeconds - Math.floor((Date.now() - startedAt) / 1000);
+		if (remaining <= 0) {
+			_persist();
+			return;
+		}
+		_restStartedAt = startedAt;
+		_restTotal = totalSeconds;
+		_restSeconds = remaining;
+		_restActive = true;
+		_restExerciseIdx = exerciseIdx;
+		_restSetIdx = setIdx;
+		_startRestInterval();
+		_persist();
+	}
+
+	/** Replay a "complete set" event originated from the Android notification.
+	 *  Idempotent (keyed by set identity) and drift-free (adopts the native rest
+	 *  window). `weight`/`reps` are the assumed prefilled values. */
+	function applyNativeCompletion(ev: {
+		exerciseIdx: number;
+		setIdx: number;
+		weight?: number | null;
+		reps?: number | null;
+		restStartedAt: number;
+		restTotal: number;
+	}) {
+		const ex = exercises[ev.exerciseIdx];
+		const set = ex?.sets[ev.setIdx];
+		if (!set) return;
+		if (ev.weight != null) set.weight = ev.weight;
+		if (ev.reps != null) set.reps = ev.reps;
+		if (!set.completed) set.completed = true;
+		if (ev.restTotal > 0) {
+			adoptRestTimer(ev.restStartedAt, ev.restTotal, ev.exerciseIdx, ev.setIdx);
+		} else {
+			_persist();
+		}
+	}
+
 	function adjustRestTimer(delta: number) {
 		if (!_restActive) return;
 		_restTotal = Math.max(1, _restTotal + delta);
@@ -754,13 +800,16 @@ export function createWorkout() {
 		startRestTimer,
 		cancelRestTimer,
 		adjustRestTimer,
+		adoptRestTimer,
+		applyNativeCompletion,
 		startHoldTimer,
 		cancelHoldTimer,
 		finish,
 		cancel,
 		applyRemoteState,
 		restoreFromRemote,
-		onChange
+		onChange,
+		set suppressRestSound(v: boolean) { _suppressRestSound = v; }
 	};
 }
 

@@ -220,6 +220,88 @@ class AndroidBridge(private val context: Context) {
         }
     }
 
+    // --- Active workout notification (lifting sessions) ----------------------
+
+    private fun sendWorkout(action: String, apply: (Intent) -> Unit = {}) {
+        val intent = Intent(context, WorkoutForegroundService::class.java).apply {
+            this.action = action
+            apply(this)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
+
+    /** Start (or update) the persistent workout notification. `stateJson` is the
+     *  ordered remaining-sets shadow the service renders + walks. */
+    @JavascriptInterface
+    fun startWorkoutService(stateJson: String) {
+        // Notification permission is required for the foreground-service notification.
+        if (context is Activity && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    context,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    REQ_NOTIFICATIONS
+                )
+            }
+        }
+        sendWorkout(WorkoutForegroundService.ACTION_START) {
+            it.putExtra(WorkoutForegroundService.EXTRA_STATE, stateJson)
+        }
+    }
+
+    /** Push a fresh remaining-sets shadow (current set / prefill changed). */
+    @JavascriptInterface
+    fun updateWorkoutState(stateJson: String) {
+        sendWorkout(WorkoutForegroundService.ACTION_UPDATE) {
+            it.putExtra(WorkoutForegroundService.EXTRA_STATE, stateJson)
+        }
+    }
+
+    /** Tell native the authoritative rest window so it can beep at the end even
+     *  while backgrounded. `restEndsAt` is epoch ms. */
+    @JavascriptInterface
+    fun startWorkoutRest(restEndsAt: String, restTotalSecs: Int) {
+        sendWorkout(WorkoutForegroundService.ACTION_START_REST) {
+            it.putExtra(WorkoutForegroundService.EXTRA_REST_ENDS_AT, restEndsAt.toLongOrNull() ?: 0L)
+            it.putExtra(WorkoutForegroundService.EXTRA_REST_TOTAL, restTotalSecs)
+        }
+    }
+
+    @JavascriptInterface
+    fun stopWorkoutRest() {
+        sendWorkout(WorkoutForegroundService.ACTION_STOP_REST)
+    }
+
+    @JavascriptInterface
+    fun stopWorkoutService() {
+        sendWorkout(WorkoutForegroundService.ACTION_STOP)
+    }
+
+    /** True while the workout notification/service is live. */
+    @JavascriptInterface
+    fun isWorkoutServiceRunning(): Boolean {
+        return WorkoutForegroundService.running
+    }
+
+    /** Drain the queued notification-originated events (completions / rest
+     *  adjustments) for JS to replay into its store. JSON array string. */
+    @JavascriptInterface
+    fun drainWorkoutActions(): String {
+        return WorkoutForegroundService.drainActions()
+    }
+
+    /** Consume a one-shot navigation route stashed by a notification tap. */
+    @JavascriptInterface
+    fun consumePendingRoute(): String {
+        return MainActivity.consumePendingRoute()
+    }
+
     /** Open a URL in the external browser / download manager. A plain in-webview
      *  link to an .apk won't trigger an Android download, so the update banner
      *  routes the APK link through here. */

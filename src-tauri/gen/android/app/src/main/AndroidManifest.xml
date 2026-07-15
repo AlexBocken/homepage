@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Active lifting-workout notification (WorkoutForegroundService) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -43,6 +45,11 @@
         <service
             android:name=".LocationForegroundService"
             android:foregroundServiceType="location"
+            android:exported="false" />
+
+        <service
+            android:name=".WorkoutForegroundService"
+            android:foregroundServiceType="health"
             android:exported="false" />
 
         <provider
