@@ -120,8 +120,41 @@ export function attachTrackMap(
 			L.circleMarker(latLngs[latLngs.length - 1], { radius: 5, fillColor: '#bf616a', fillOpacity: 1, color: '#fff', weight: 2 }).addTo(map);
 			map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
 
-			// Static maps need no hover pin / cursor wiring.
+			// Static maps need no hover pin / cursor wiring — nor a re-center button.
 			if (!interactive) return;
+
+			// Re-center control (bottom-right), mirroring the hikes map: fly back to
+			// the whole-route fit. Hidden until the user changes the view — keyed on
+			// zoom change and a manual drag (`dragend`), so the hover-driven auto-pan
+			// below, which fires `moveend`/`panTo` but never `dragend`, never reveals
+			// it. Clicking it flies back to the initial fit and re-hides.
+			const initialZoom = map.getZoom();
+			const HIDDEN = 'track-map-recenter--hidden';
+			const RecenterControl = L.Control.extend({
+				options: { position: 'bottomright' as const },
+				onAdd() {
+					const btn = L.DomUtil.create('button', `track-map-recenter ${HIDDEN}`) as HTMLButtonElement;
+					btn.type = 'button';
+					btn.title = 'Karte auf die gesamte Strecke zurückzentrieren';
+					btn.setAttribute('aria-label', 'Auf die Strecke zurückzentrieren');
+					btn.innerHTML =
+						'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" ' +
+						'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+						'<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>' +
+						'<line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+					const setShown = (shown: boolean) => btn.classList.toggle(HIDDEN, !shown);
+					map.on('zoomend', () => { if (map.getZoom() !== initialZoom) setShown(true); });
+					map.on('dragend', () => setShown(true));
+					L.DomEvent.disableClickPropagation(btn);
+					L.DomEvent.on(btn, 'click', (e) => {
+						L.DomEvent.stop(e);
+						setShown(false);
+						map.flyToBounds(polyline.getBounds(), { padding: [20, 20], duration: 0.5, easeLinearity: 0.25 });
+					});
+					return btn;
+				}
+			});
+			map.addControl(new RecenterControl());
 
 			const hoverIcon = L.divIcon({
 				className: 'run-hover-pin',

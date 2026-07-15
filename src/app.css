@@ -646,3 +646,35 @@ html {
 .leaflet-container {
 	isolation: isolate;
 }
+
+/* Re-center button on fitness route maps (attachTrackMap). Mirrors the hikes
+   map's .round-btn; global because the control is created in a shared module,
+   not a component with scoped styles. */
+.track-map-recenter {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	margin: 0 0.75rem 0.75rem 0;
+	background: var(--color-surface);
+	color: var(--color-text-secondary);
+	border: 1px solid var(--color-border);
+	border-radius: 50%;
+	box-shadow: var(--shadow-md);
+	cursor: pointer;
+	transition:
+		color var(--transition-fast),
+		transform var(--transition-fast),
+		box-shadow var(--transition-fast),
+		opacity var(--transition-fast);
+}
+.track-map-recenter:hover {
+	color: var(--color-primary);
+	transform: scale(1.05);
+	box-shadow: var(--shadow-hover);
+}
+/* Hidden until the user changes the view (zoom/drag); faded out + inert. */
+.track-map-recenter--hidden {
+	opacity: 0;
+	pointer-events: none;
+}
