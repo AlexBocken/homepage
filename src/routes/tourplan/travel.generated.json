@@ -1,0 +1,817 @@
+{
+  "generatedAt": "2026-07-09T09:53:16.074Z",
+  "coords": {
+    "2026-07-10|13:30|Gymnasium Weingarten": {
+      "lat": 47.8126013,
+      "lng": 9.628818899999999
+    },
+    "2026-07-10|15:15|Kervan": {
+      "lat": 47.8128347,
+      "lng": 9.6302475
+    },
+    "2026-07-10|16:00|Kaspar": {
+      "lat": 47.8001121,
+      "lng": 9.597514799999999
+    },
+    "2026-07-10|17:15|Abgabe der Fahnen": {
+      "lat": 47.807396,
+      "lng": 9.638844299999999
+    },
+    "2026-07-10|18:00|Fahnenübergabe": {
+      "lat": 47.807396,
+      "lng": 9.638844299999999
+    },
+    "2026-07-10|19:30|Bürgertreff": {
+      "lat": 47.807396,
+      "lng": 9.638844299999999
+    },
+    "2026-07-10|20:00|Blues Rock Kneipe Linde": {
+      "lat": 47.8117505,
+      "lng": 9.6430356
+    },
+    "2026-07-10|20:30|Schinderhannes": {
+      "lat": 47.8046589,
+      "lng": 9.6380821
+    },
+    "2026-07-10|21:00|Cafe Museum": {
+      "lat": 47.8068143,
+      "lng": 9.6406618
+    },
+    "2026-07-10|22:00|SVW": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-11|07:00|Bäckerei Sauter": {
+      "lat": 47.8080581,
+      "lng": 9.632613899999999
+    },
+    "2026-07-11|07:30|Stadtmetzgerei Isser": {
+      "lat": 47.8107915,
+      "lng": 9.626907
+    },
+    "2026-07-11|08:00|Oehler": {
+      "lat": 47.82990179999999,
+      "lng": 9.6446107
+    },
+    "2026-07-11|08:40|Altdorf Apotheke": {
+      "lat": 47.8080834,
+      "lng": 9.6407911
+    },
+    "2026-07-11|09:00|Gedenk-Antrommeln": {
+      "lat": 47.8093101,
+      "lng": 9.644700900000002
+    },
+    "2026-07-11|09:30|Innenstadt": {
+      "lat": 47.806772,
+      "lng": 9.640876
+    },
+    "2026-07-11|10:00|Sektstation": {
+      "lat": 47.8072396,
+      "lng": 9.6424854
+    },
+    "2026-07-11|10:20|Stadtverwaltung": {
+      "lat": 47.80778660564809,
+      "lng": 9.641496187037214
+    },
+    "2026-07-11|11:00|Walker": {
+      "lat": 47.7988156,
+      "lng": 9.6355217
+    },
+    "2026-07-11|12:00|Mündel": {
+      "lat": 47.8098654,
+      "lng": 9.6583141
+    },
+    "2026-07-11|13:30|Steinhauser": {
+      "lat": 47.8110016,
+      "lng": 9.6363453
+    },
+    "2026-07-11|14:00|Baumgärtner": {
+      "lat": 47.8120877,
+      "lng": 9.6408884
+    },
+    "2026-07-11|15:00|Staudacher/Rall": {
+      "lat": 47.8112627,
+      "lng": 9.6345074
+    },
+    "2026-07-11|15:30|Grimm/Chico": {
+      "lat": 47.80119149999999,
+      "lng": 9.6304319
+    },
+    "2026-07-11|16:30|Zimmerei Bernhardt": {
+      "lat": 47.8189672,
+      "lng": 9.6453934
+    },
+    "2026-07-11|17:00|Wiest": {
+      "lat": 47.8140651,
+      "lng": 9.6312529
+    },
+    "2026-07-11|17:30|Hund": {
+      "lat": 47.7964518,
+      "lng": 9.640543
+    },
+    "2026-07-11|18:00|Müller": {
+      "lat": 47.8005107,
+      "lng": 9.6389757
+    },
+    "2026-07-11|18:30|Pech": {
+      "lat": 47.8082595,
+      "lng": 9.6245791
+    },
+    "2026-07-11|19:30|Krause": {
+      "lat": 47.80522089999999,
+      "lng": 9.631565
+    },
+    "2026-07-11|20:00|Enderle/Beck": {
+      "lat": 47.8136782,
+      "lng": 9.631486899999999
+    },
+    "2026-07-11|21:20|Bistro Florian": {
+      "lat": 47.81236579999999,
+      "lng": 9.6309542
+    },
+    "2026-07-11|22:00|Festplatz": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-11|22:15|SVW": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-12|07:00|Louwers": {
+      "lat": 47.82698329999999,
+      "lng": 9.6514758
+    },
+    "2026-07-12|08:30|Beck, Rainer": {
+      "lat": 47.8247313,
+      "lng": 9.6560528
+    },
+    "2026-07-12|09:20|Zimmermann": {
+      "lat": 47.82698329999999,
+      "lng": 9.6514758
+    },
+    "2026-07-12|10:00|Mascha": {
+      "lat": 47.8007828,
+      "lng": 9.6960672
+    },
+    "2026-07-12|10:30|Ströbele/Hilebrand/Löffelholz": {
+      "lat": 47.7999261,
+      "lng": 9.6885196
+    },
+    "2026-07-12|11:30|Wochner": {
+      "lat": 47.81319999999999,
+      "lng": 9.660737899999999
+    },
+    "2026-07-12|12:15|Schneider/Beck": {
+      "lat": 47.8041698,
+      "lng": 9.649042099999999
+    },
+    "2026-07-12|13:15|Baumhof": {
+      "lat": 47.8125547,
+      "lng": 9.658727100000002
+    },
+    "2026-07-12|13:50|Stiefenhofer": {
+      "lat": 47.8148349,
+      "lng": 9.5992289
+    },
+    "2026-07-12|14:30|Meschenmoser": {
+      "lat": 47.8290885,
+      "lng": 9.6525014
+    },
+    "2026-07-12|15:15|Eisele": {
+      "lat": 47.827583,
+      "lng": 9.657788499999999
+    },
+    "2026-07-12|16:00|Jäger/Strodel": {
+      "lat": 47.8077451,
+      "lng": 9.635335999999999
+    },
+    "2026-07-12|16:50|Vorstand": {
+      "lat": 47.81475,
+      "lng": 9.621819
+    },
+    "2026-07-12|17:30|Metzler": {
+      "lat": 47.8184329,
+      "lng": 9.6494105
+    },
+    "2026-07-12|18:10|Ruess": {
+      "lat": 47.8160633,
+      "lng": 9.647585
+    },
+    "2026-07-12|18:50|Weber": {
+      "lat": 47.8096019,
+      "lng": 9.637983199999999
+    },
+    "2026-07-12|19:30|Jahrgang 2016": {
+      "lat": 47.8005657,
+      "lng": 9.630724599999999
+    },
+    "2026-07-12|21:30|Festplatz": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-12|22:00|SVW": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-13|08:15|Frick": {
+      "lat": 47.8090594,
+      "lng": 9.6417233
+    },
+    "2026-07-13|09:00|Festumzug": {
+      "lat": 47.8096019,
+      "lng": 9.637983199999999
+    },
+    "2026-07-13|11:00|Polizei": {
+      "lat": 47.811514,
+      "lng": 9.637545099999999
+    },
+    "2026-07-13|11:30|Weinhaus Betz": {
+      "lat": 47.8085962,
+      "lng": 9.6416344
+    },
+    "2026-07-13|12:00|Scheurer": {
+      "lat": 47.80636670000001,
+      "lng": 9.6365682
+    },
+    "2026-07-13|12:30|König/Zierhut/Steinmaßl": {
+      "lat": 47.8094051,
+      "lng": 9.6473003
+    },
+    "2026-07-13|14:10|Hund": {
+      "lat": 47.8308103,
+      "lng": 9.6503374
+    },
+    "2026-07-13|15:30|Welfinchenrally": {
+      "lat": 47.80994,
+      "lng": 9.634559999999999
+    },
+    "2026-07-13|16:00|Biergarten": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-13|16:30|Zechner": {
+      "lat": 47.80978,
+      "lng": 9.643046499999999
+    },
+    "2026-07-13|17:00|Brunnbauer": {
+      "lat": 47.8010297,
+      "lng": 9.6241972
+    },
+    "2026-07-13|18:00|Boxauto": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-13|19:00|Lehrerfest": {
+      "lat": 47.8126013,
+      "lng": 9.628818899999999
+    },
+    "2026-07-13|20:30|Alibi": {
+      "lat": 47.8082336,
+      "lng": 9.6471153
+    },
+    "2026-07-13|21:15|Festplatz": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-13|21:45|SVW": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    },
+    "2026-07-14|09:00|Gymnasium Weingarten": {
+      "lat": 47.8126013,
+      "lng": 9.628818899999999
+    },
+    "2026-07-14|09:15|Lehrerzimmer": {
+      "lat": 47.8126013,
+      "lng": 9.628818899999999
+    },
+    "2026-07-14|09:45|Tränkle": {
+      "lat": 47.8058053,
+      "lng": 9.6372512
+    },
+    "2026-07-14|10:05|Zahnarztpraxis Mündel": {
+      "lat": 47.8063527,
+      "lng": 9.6377692
+    },
+    "2026-07-14|10:20|Kreissparkasse Ravensburg": {
+      "lat": 47.8067997,
+      "lng": 9.6393512
+    },
+    "2026-07-14|10:45|Baustoff Mayer": {
+      "lat": 47.8138387,
+      "lng": 9.635931099999999
+    },
+    "2026-07-14|11:15|Habisreutinger": {
+      "lat": 47.8126788,
+      "lng": 9.6384425
+    },
+    "2026-07-14|11:50|Martinus": {
+      "lat": 47.80929,
+      "lng": 9.643609999999999
+    },
+    "2026-07-14|13:10|Plus Punkt": {
+      "lat": 47.8176303,
+      "lng": 9.6364605
+    },
+    "2026-07-14|13:40|Geschwister-Scholl-Schule": {
+      "lat": 47.8161055,
+      "lng": 9.6395258
+    },
+    "2026-07-14|14:30|Autohaus Riess": {
+      "lat": 47.7731961,
+      "lng": 9.603415
+    },
+    "2026-07-14|15:00|Volksbank Weingarten": {
+      "lat": 47.8080158,
+      "lng": 9.6421394
+    },
+    "2026-07-14|15:15|Max.Cafe": {
+      "lat": 47.8086596,
+      "lng": 9.642322799999999
+    },
+    "2026-07-14|16:00|Busse putzen ARAL": {
+      "lat": 47.8176333,
+      "lng": 9.6420439
+    },
+    "2026-07-14|19:30|Festplatz": {
+      "lat": 47.8100349,
+      "lng": 9.6324598
+    }
+  },
+  "legs": {
+    "2026-07-10|13:30|Gymnasium Weingarten": {
+      "to": "2026-07-10|15:15|Kervan",
+      "mode": "walking",
+      "meters": 114,
+      "seconds": 94
+    },
+    "2026-07-10|15:15|Kervan": {
+      "to": "2026-07-10|16:00|Kaspar",
+      "mode": "driving",
+      "meters": 5744,
+      "seconds": 520
+    },
+    "2026-07-10|16:00|Kaspar": {
+      "to": "2026-07-10|17:15|Abgabe der Fahnen",
+      "mode": "driving",
+      "meters": 5161,
+      "seconds": 574
+    },
+    "2026-07-10|17:15|Abgabe der Fahnen": {
+      "to": "2026-07-10|18:00|Fahnenübergabe",
+      "mode": "walking",
+      "meters": 0,
+      "seconds": 0
+    },
+    "2026-07-10|18:00|Fahnenübergabe": {
+      "to": "2026-07-10|19:30|Bürgertreff",
+      "mode": "walking",
+      "meters": 0,
+      "seconds": 0
+    },
+    "2026-07-10|19:30|Bürgertreff": {
+      "to": "2026-07-10|20:00|Blues Rock Kneipe Linde",
+      "mode": "driving",
+      "meters": 1268,
+      "seconds": 205
+    },
+    "2026-07-10|20:00|Blues Rock Kneipe Linde": {
+      "to": "2026-07-10|20:30|Schinderhannes",
+      "mode": "driving",
+      "meters": 1991,
+      "seconds": 325
+    },
+    "2026-07-10|20:30|Schinderhannes": {
+      "to": "2026-07-10|21:00|Cafe Museum",
+      "mode": "driving",
+      "meters": 890,
+      "seconds": 218
+    },
+    "2026-07-10|21:00|Cafe Museum": {
+      "to": "2026-07-10|22:00|SVW",
+      "mode": "driving",
+      "meters": 1246,
+      "seconds": 280
+    },
+    "2026-07-11|07:00|Bäckerei Sauter": {
+      "to": "2026-07-11|07:30|Stadtmetzgerei Isser",
+      "mode": "driving",
+      "meters": 1222,
+      "seconds": 177
+    },
+    "2026-07-11|07:30|Stadtmetzgerei Isser": {
+      "to": "2026-07-11|08:00|Oehler",
+      "mode": "driving",
+      "meters": 4224,
+      "seconds": 520
+    },
+    "2026-07-11|08:00|Oehler": {
+      "to": "2026-07-11|08:40|Altdorf Apotheke",
+      "mode": "driving",
+      "meters": 3485,
+      "seconds": 482
+    },
+    "2026-07-11|08:40|Altdorf Apotheke": {
+      "to": "2026-07-11|09:00|Gedenk-Antrommeln",
+      "mode": "driving",
+      "meters": 1190,
+      "seconds": 188
+    },
+    "2026-07-11|09:00|Gedenk-Antrommeln": {
+      "to": "2026-07-11|09:30|Innenstadt",
+      "mode": "driving",
+      "meters": 1262,
+      "seconds": 266
+    },
+    "2026-07-11|09:30|Innenstadt": {
+      "to": "2026-07-11|10:00|Sektstation",
+      "mode": "walking",
+      "meters": 156,
+      "seconds": 133
+    },
+    "2026-07-11|10:00|Sektstation": {
+      "to": "2026-07-11|10:20|Stadtverwaltung",
+      "mode": "walking",
+      "meters": 123,
+      "seconds": 97
+    },
+    "2026-07-11|10:20|Stadtverwaltung": {
+      "to": "2026-07-11|11:00|Walker",
+      "mode": "driving",
+      "meters": 1418,
+      "seconds": 280
+    },
+    "2026-07-11|11:00|Walker": {
+      "to": "2026-07-11|12:00|Mündel",
+      "mode": "driving",
+      "meters": 2505,
+      "seconds": 357
+    },
+    "2026-07-11|12:00|Mündel": {
+      "to": "2026-07-11|13:30|Steinhauser",
+      "mode": "driving",
+      "meters": 2147,
+      "seconds": 283
+    },
+    "2026-07-11|13:30|Steinhauser": {
+      "to": "2026-07-11|14:00|Baumgärtner",
+      "mode": "driving",
+      "meters": 851,
+      "seconds": 170
+    },
+    "2026-07-11|14:00|Baumgärtner": {
+      "to": "2026-07-11|15:00|Staudacher/Rall",
+      "mode": "driving",
+      "meters": 684,
+      "seconds": 127
+    },
+    "2026-07-11|15:00|Staudacher/Rall": {
+      "to": "2026-07-11|15:30|Grimm/Chico",
+      "mode": "driving",
+      "meters": 1717,
+      "seconds": 262
+    },
+    "2026-07-11|15:30|Grimm/Chico": {
+      "to": "2026-07-11|16:30|Zimmerei Bernhardt",
+      "mode": "driving",
+      "meters": 3061,
+      "seconds": 419
+    },
+    "2026-07-11|16:30|Zimmerei Bernhardt": {
+      "to": "2026-07-11|17:00|Wiest",
+      "mode": "driving",
+      "meters": 1966,
+      "seconds": 329
+    },
+    "2026-07-11|17:00|Wiest": {
+      "to": "2026-07-11|17:30|Hund",
+      "mode": "driving",
+      "meters": 3073,
+      "seconds": 447
+    },
+    "2026-07-11|17:30|Hund": {
+      "to": "2026-07-11|18:00|Müller",
+      "mode": "driving",
+      "meters": 1115,
+      "seconds": 172
+    },
+    "2026-07-11|18:00|Müller": {
+      "to": "2026-07-11|18:30|Pech",
+      "mode": "driving",
+      "meters": 1987,
+      "seconds": 355
+    },
+    "2026-07-11|18:30|Pech": {
+      "to": "2026-07-11|19:30|Krause",
+      "mode": "driving",
+      "meters": 744,
+      "seconds": 164
+    },
+    "2026-07-11|19:30|Krause": {
+      "to": "2026-07-11|20:00|Enderle/Beck",
+      "mode": "driving",
+      "meters": 1209,
+      "seconds": 215
+    },
+    "2026-07-11|20:00|Enderle/Beck": {
+      "to": "2026-07-11|21:20|Bistro Florian",
+      "mode": "walking",
+      "meters": 214,
+      "seconds": 184
+    },
+    "2026-07-11|21:20|Bistro Florian": {
+      "to": "2026-07-11|22:00|Festplatz",
+      "mode": "driving",
+      "meters": 631,
+      "seconds": 112
+    },
+    "2026-07-11|22:00|Festplatz": {
+      "to": "2026-07-11|22:15|SVW",
+      "mode": "walking",
+      "meters": 0,
+      "seconds": 0
+    },
+    "2026-07-12|07:00|Louwers": {
+      "to": "2026-07-12|08:30|Beck, Rainer",
+      "mode": "driving",
+      "meters": 647,
+      "seconds": 127
+    },
+    "2026-07-12|08:30|Beck, Rainer": {
+      "to": "2026-07-12|09:20|Zimmermann",
+      "mode": "driving",
+      "meters": 647,
+      "seconds": 156
+    },
+    "2026-07-12|09:20|Zimmermann": {
+      "to": "2026-07-12|10:00|Mascha",
+      "mode": "driving",
+      "meters": 7333,
+      "seconds": 589
+    },
+    "2026-07-12|10:00|Mascha": {
+      "to": "2026-07-12|10:30|Ströbele/Hilebrand/Löffelholz",
+      "mode": "driving",
+      "meters": 1279,
+      "seconds": 190
+    },
+    "2026-07-12|10:30|Ströbele/Hilebrand/Löffelholz": {
+      "to": "2026-07-12|11:30|Wochner",
+      "mode": "driving",
+      "meters": 3894,
+      "seconds": 357
+    },
+    "2026-07-12|11:30|Wochner": {
+      "to": "2026-07-12|12:15|Schneider/Beck",
+      "mode": "driving",
+      "meters": 1657,
+      "seconds": 249
+    },
+    "2026-07-12|12:15|Schneider/Beck": {
+      "to": "2026-07-12|13:15|Baumhof",
+      "mode": "driving",
+      "meters": 1519,
+      "seconds": 238
+    },
+    "2026-07-12|13:15|Baumhof": {
+      "to": "2026-07-12|13:50|Stiefenhofer",
+      "mode": "driving",
+      "meters": 6590,
+      "seconds": 736
+    },
+    "2026-07-12|13:50|Stiefenhofer": {
+      "to": "2026-07-12|14:30|Meschenmoser",
+      "mode": "driving",
+      "meters": 6660,
+      "seconds": 723
+    },
+    "2026-07-12|14:30|Meschenmoser": {
+      "to": "2026-07-12|15:15|Eisele",
+      "mode": "driving",
+      "meters": 511,
+      "seconds": 92
+    },
+    "2026-07-12|15:15|Eisele": {
+      "to": "2026-07-12|16:00|Jäger/Strodel",
+      "mode": "driving",
+      "meters": 3186,
+      "seconds": 419
+    },
+    "2026-07-12|16:00|Jäger/Strodel": {
+      "to": "2026-07-12|16:50|Vorstand",
+      "mode": "driving",
+      "meters": 1558,
+      "seconds": 224
+    },
+    "2026-07-12|16:50|Vorstand": {
+      "to": "2026-07-12|17:30|Metzler",
+      "mode": "driving",
+      "meters": 6332,
+      "seconds": 746
+    },
+    "2026-07-12|17:30|Metzler": {
+      "to": "2026-07-12|18:10|Ruess",
+      "mode": "walking",
+      "meters": 298,
+      "seconds": 235
+    },
+    "2026-07-12|18:10|Ruess": {
+      "to": "2026-07-12|18:50|Weber",
+      "mode": "driving",
+      "meters": 1745,
+      "seconds": 296
+    },
+    "2026-07-12|18:50|Weber": {
+      "to": "2026-07-12|19:30|Jahrgang 2016",
+      "mode": "driving",
+      "meters": 1363,
+      "seconds": 191
+    },
+    "2026-07-12|19:30|Jahrgang 2016": {
+      "to": "2026-07-12|21:30|Festplatz",
+      "mode": "driving",
+      "meters": 1169,
+      "seconds": 205
+    },
+    "2026-07-12|21:30|Festplatz": {
+      "to": "2026-07-12|22:00|SVW",
+      "mode": "walking",
+      "meters": 0,
+      "seconds": 0
+    },
+    "2026-07-13|08:15|Frick": {
+      "to": "2026-07-13|09:00|Festumzug",
+      "mode": "driving",
+      "meters": 572,
+      "seconds": 154
+    },
+    "2026-07-13|09:00|Festumzug": {
+      "to": "2026-07-13|11:00|Polizei",
+      "mode": "walking",
+      "meters": 212,
+      "seconds": 162
+    },
+    "2026-07-13|11:00|Polizei": {
+      "to": "2026-07-13|11:30|Weinhaus Betz",
+      "mode": "driving",
+      "meters": 646,
+      "seconds": 175
+    },
+    "2026-07-13|11:30|Weinhaus Betz": {
+      "to": "2026-07-13|12:00|Scheurer",
+      "mode": "driving",
+      "meters": 669,
+      "seconds": 170
+    },
+    "2026-07-13|12:00|Scheurer": {
+      "to": "2026-07-13|12:30|König/Zierhut/Steinmaßl",
+      "mode": "driving",
+      "meters": 1589,
+      "seconds": 269
+    },
+    "2026-07-13|12:30|König/Zierhut/Steinmaßl": {
+      "to": "2026-07-13|14:10|Hund",
+      "mode": "driving",
+      "meters": 3516,
+      "seconds": 511
+    },
+    "2026-07-13|14:10|Hund": {
+      "to": "2026-07-13|15:30|Welfinchenrally",
+      "mode": "driving",
+      "meters": 3519,
+      "seconds": 491
+    },
+    "2026-07-13|15:30|Welfinchenrally": {
+      "to": "2026-07-13|16:00|Biergarten",
+      "mode": "walking",
+      "meters": 248,
+      "seconds": 193
+    },
+    "2026-07-13|16:00|Biergarten": {
+      "to": "2026-07-13|16:30|Zechner",
+      "mode": "driving",
+      "meters": 858,
+      "seconds": 157
+    },
+    "2026-07-13|16:30|Zechner": {
+      "to": "2026-07-13|17:00|Brunnbauer",
+      "mode": "driving",
+      "meters": 2371,
+      "seconds": 421
+    },
+    "2026-07-13|17:00|Brunnbauer": {
+      "to": "2026-07-13|18:00|Boxauto",
+      "mode": "driving",
+      "meters": 2523,
+      "seconds": 335
+    },
+    "2026-07-13|18:00|Boxauto": {
+      "to": "2026-07-13|19:00|Lehrerfest",
+      "mode": "driving",
+      "meters": 527,
+      "seconds": 86
+    },
+    "2026-07-13|19:00|Lehrerfest": {
+      "to": "2026-07-13|20:30|Alibi",
+      "mode": "driving",
+      "meters": 1922,
+      "seconds": 300
+    },
+    "2026-07-13|20:30|Alibi": {
+      "to": "2026-07-13|21:15|Festplatz",
+      "mode": "driving",
+      "meters": 1728,
+      "seconds": 248
+    },
+    "2026-07-13|21:15|Festplatz": {
+      "to": "2026-07-13|21:45|SVW",
+      "mode": "walking",
+      "meters": 0,
+      "seconds": 0
+    },
+    "2026-07-14|09:00|Gymnasium Weingarten": {
+      "to": "2026-07-14|09:15|Lehrerzimmer",
+      "mode": "walking",
+      "meters": 0,
+      "seconds": 0
+    },
+    "2026-07-14|09:15|Lehrerzimmer": {
+      "to": "2026-07-14|09:45|Tränkle",
+      "mode": "driving",
+      "meters": 1573,
+      "seconds": 301
+    },
+    "2026-07-14|09:45|Tränkle": {
+      "to": "2026-07-14|10:05|Zahnarztpraxis Mündel",
+      "mode": "walking",
+      "meters": 176,
+      "seconds": 147
+    },
+    "2026-07-14|10:05|Zahnarztpraxis Mündel": {
+      "to": "2026-07-14|10:20|Kreissparkasse Ravensburg",
+      "mode": "walking",
+      "meters": 180,
+      "seconds": 155
+    },
+    "2026-07-14|10:20|Kreissparkasse Ravensburg": {
+      "to": "2026-07-14|10:45|Baustoff Mayer",
+      "mode": "driving",
+      "meters": 1031,
+      "seconds": 232
+    },
+    "2026-07-14|10:45|Baustoff Mayer": {
+      "to": "2026-07-14|11:15|Habisreutinger",
+      "mode": "driving",
+      "meters": 524,
+      "seconds": 175
+    },
+    "2026-07-14|11:15|Habisreutinger": {
+      "to": "2026-07-14|11:50|Martinus",
+      "mode": "driving",
+      "meters": 1153,
+      "seconds": 264
+    },
+    "2026-07-14|11:50|Martinus": {
+      "to": "2026-07-14|13:10|Plus Punkt",
+      "mode": "driving",
+      "meters": 1750,
+      "seconds": 281
+    },
+    "2026-07-14|13:10|Plus Punkt": {
+      "to": "2026-07-14|13:40|Geschwister-Scholl-Schule",
+      "mode": "driving",
+      "meters": 1038,
+      "seconds": 185
+    },
+    "2026-07-14|13:40|Geschwister-Scholl-Schule": {
+      "to": "2026-07-14|14:30|Autohaus Riess",
+      "mode": "driving",
+      "meters": 6313,
+      "seconds": 904
+    },
+    "2026-07-14|14:30|Autohaus Riess": {
+      "to": "2026-07-14|15:00|Volksbank Weingarten",
+      "mode": "driving",
+      "meters": 5649,
+      "seconds": 819
+    },
+    "2026-07-14|15:00|Volksbank Weingarten": {
+      "to": "2026-07-14|15:15|Max.Cafe",
+      "mode": "walking",
+      "meters": 70,
+      "seconds": 64
+    },
+    "2026-07-14|15:15|Max.Cafe": {
+      "to": "2026-07-14|16:00|Busse putzen ARAL",
+      "mode": "driving",
+      "meters": 1278,
+      "seconds": 222
+    },
+    "2026-07-14|16:00|Busse putzen ARAL": {
+      "to": "2026-07-14|19:30|Festplatz",
+      "mode": "driving",
+      "meters": 1401,
+      "seconds": 276
+    }
+  }
+}

@@ -1,0 +1,17 @@
+import { chromium } from '@playwright/test';
+const b = await chromium.launch();
+const theme = process.argv[2] || 'light';
+const D = '/tmp/claude-1000/-home-alex--local-src-homepage-new/9033488a-1990-4903-a7b9-f0ee59c4f4c3/scratchpad';
+const p = await b.newPage({ viewport: { width: 440, height: 880 }, deviceScaleFactor: 2 });
+if (theme === 'dark') await p.emulateMedia({ colorScheme: 'dark' });
+await p.goto('http://localhost:5199/tourplan', { waitUntil: 'networkidle' });
+await p.waitForTimeout(400);
+await p.screenshot({ path: `${D}/a-hero-${theme}.png` });
+await p.getByRole('tab', { name: 'Ehemaligen' }).click();
+await p.waitForTimeout(300);
+await p.screenshot({ path: `${D}/c-ehemhero-${theme}.png` });
+await p.locator('.r--ehem').nth(2).scrollIntoViewIfNeeded();
+await p.evaluate(() => window.scrollBy(0, -300));
+await p.waitForTimeout(250);
+await p.screenshot({ path: `${D}/d-ehemlist-${theme}.png` });
+await b.close(); console.log('ok', theme);

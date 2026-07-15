@@ -1,6 +1,6 @@
 {
 	"name": "homepage",
-	"version": "1.160.0",
+	"version": "1.161.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -28,6 +28,7 @@
 		"photos:push": "bash scripts/hike-photos.sh push",
 		"photos:pull": "bash scripts/hike-photos.sh pull",
 		"trace:stickers": "node scripts/trace-sticker-silhouettes.mjs",
+		"tourplan:travel": "pnpm exec vite-node scripts/build-tourplan-travel.ts",
 		"tauri": "tauri"
 	},
 	"packageManager": "pnpm@11.3.0",
