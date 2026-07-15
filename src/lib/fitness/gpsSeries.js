@@ -83,6 +83,54 @@ export function niceDistanceStep(maxKm) {
 }
 
 /**
+ * Half-widths (km) of the distance-window smoothing applied to each chart
+ * series before rendering. Small on purpose — enough to take the jitter off
+ * (Swisstopo's 0.5 m elevation quantisation, GPS pace jitter, the stair-stepped
+ * cadence carried over from snapping), not so much that hills or pace changes
+ * get flattened. Nudge toward 0 to show rawer data.
+ */
+const SMOOTH_HALF_WINDOW_KM = { elevation: 0.03, pace: 0.03, cadence: 0.04 };
+
+/**
+ * Distance-windowed moving average. Averages each point with its neighbours
+ * within ±`halfWindowKm` along the track. A distance window (rather than a
+ * fixed point count) keeps the amount of smoothing consistent regardless of how
+ * densely the track was sampled, and averaging before the render-grid subsample
+ * also anti-aliases that subsample.
+ *
+ * Nulls are skipped in the average and preserved at the centre, so gaps in the
+ * series (e.g. implausible pace) stay gaps rather than being bridged. `cumDist`
+ * is monotonic, so a pair of forward-only cursors keeps this O(n).
+ *
+ * @param {Array<number|null>} series
+ * @param {number[]} cumDist cumulative distance (km), same length as `series`
+ * @param {number} halfWindowKm
+ * @returns {Array<number|null>}
+ */
+function smoothByDistance(series, cumDist, halfWindowKm) {
+	const n = series.length;
+	/** @type {Array<number|null>} */
+	const out = new Array(n).fill(null);
+	let lo = 0;
+	let hi = 0;
+	let sum = 0;
+	let count = 0;
+	for (let i = 0; i < n; i++) {
+		const center = cumDist[i];
+		while (hi < n && cumDist[hi] <= center + halfWindowKm) {
+			if (series[hi] != null) { sum += /** @type {number} */ (series[hi]); count++; }
+			hi++;
+		}
+		while (lo < i && cumDist[lo] < center - halfWindowKm) {
+			if (series[lo] != null) { sum -= /** @type {number} */ (series[lo]); count--; }
+			lo++;
+		}
+		out[i] = series[i] == null ? null : count > 0 ? sum / count : series[i];
+	}
+	return out;
+}
+
+/**
  * Build everything the detail views render for one GPS exercise: the three
  * charts (pace / elevation / cadence) on a shared distance grid + linear axis,
  * elevation gain/loss, km splits, and summary distance/pace.
@@ -150,11 +198,17 @@ export function buildGpsView(track, { dark, elevationLabel, cadenceLabel }) {
 		};
 	};
 
-	const pace = mk(paceAt, 'Pace', dark ? '#88C0D0' : '#5E81AC', dark ? 'rgba(136, 192, 208, 0.12)' : 'rgba(94, 129, 172, 0.12)', false);
-	const elevation = mk(altAt, elevationLabel, dark ? '#A3BE8C' : '#8FBCBB', dark ? 'rgba(163, 190, 140, 0.18)' : 'rgba(143, 188, 187, 0.18)', true);
-	const cadence = mk(cadAt, cadenceLabel, dark ? '#B48EAD' : '#5E81AC', dark ? 'rgba(180, 142, 173, 0.12)' : 'rgba(94, 129, 172, 0.12)', true);
+	// Light distance-window smoothing for the drawn lines only. The gain/loss and
+	// average below stay on the raw series so the reported numbers don't drift.
+	const paceSmooth = smoothByDistance(paceAt, cumDist, SMOOTH_HALF_WINDOW_KM.pace);
+	const altSmooth = smoothByDistance(altAt, cumDist, SMOOTH_HALF_WINDOW_KM.elevation);
+	const cadSmooth = smoothByDistance(cadAt, cumDist, SMOOTH_HALF_WINDOW_KM.cadence);
 
-	// Elevation gain/loss from the full-resolution altitude series.
+	const pace = mk(paceSmooth, 'Pace', dark ? '#88C0D0' : '#5E81AC', dark ? 'rgba(136, 192, 208, 0.12)' : 'rgba(94, 129, 172, 0.12)', false);
+	const elevation = mk(altSmooth, elevationLabel, dark ? '#A3BE8C' : '#8FBCBB', dark ? 'rgba(163, 190, 140, 0.18)' : 'rgba(143, 188, 187, 0.18)', true);
+	const cadence = mk(cadSmooth, cadenceLabel, dark ? '#B48EAD' : '#5E81AC', dark ? 'rgba(180, 142, 173, 0.12)' : 'rgba(94, 129, 172, 0.12)', true);
+
+	// Elevation gain/loss from the full-resolution (unsmoothed) altitude series.
 	/** @type {Array<{dist: number, altitude: number}>} */
 	const elevSamples = [];
 	for (let i = 0; i < n; i++) if (altAt[i] != null) elevSamples.push({ dist: cumDist[i], altitude: /** @type {number} */ (altAt[i]) });
