@@ -33,8 +33,16 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 		throw error(res.status === 400 ? 400 : 502, 'Finance service error');
 	}
 
-	// Pass the JSON straight through.
-	return new Response(res.body, {
+	// Buffer the upstream body into a concrete string rather than streaming
+	// `res.body` through. A server `load()` fetches this endpoint during SSR, and
+	// SvelteKit then reads the response body a *second* time to inline it into the
+	// hydration payload. Teeing a live upstream stream for that second read races
+	// under rapid navigation (aborted in-flight requests) and intermittently
+	// throws "Body has already been read" → a 500. The sidecar payloads are small
+	// (millisecond queries), so materializing them is effectively free and makes
+	// the response body safe to read more than once.
+	const body = await res.text();
+	return new Response(body, {
 		status: res.status,
 		headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' }
 	});
