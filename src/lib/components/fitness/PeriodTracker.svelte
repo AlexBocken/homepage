@@ -18,6 +18,9 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Info from '@lucide/svelte/icons/info';
 	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
+	import CalendarCheck from '@lucide/svelte/icons/calendar-check';
+	import Sprout from '@lucide/svelte/icons/sprout';
+	import Egg from '@lucide/svelte/icons/egg';
 	import Copy from '@lucide/svelte/icons/copy';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import { toast } from '$lib/js/toast.svelte';
@@ -725,12 +728,18 @@
 			<div class="status-split">
 				<div class="status-main">
 					<span class="status-pill period-pill">{t.current_period}</span>
-					<span class="status-hero ongoing-hero">{t.period_day} {ongoingDay}</span>
-					{#if showProjection && predictions.predictedEndOfOngoing}
-						<span class="status-detail">{t.predicted_end}</span>
-						<span class="status-relative">{relativeDate(predictions.predictedEndOfOngoing)}</span>
-						<span class="status-date">{formatDate(predictions.predictedEndOfOngoing)}</span>
-					{/if}
+					<!-- Day count and its predicted end belong to the same timeline, so
+					     they share a row; the fertile/ovulation forecast is separate. -->
+					<div class="status-hero-row">
+						<span class="status-hero ongoing-hero">{t.period_day} {ongoingDay}</span>
+						{#if showProjection && predictions.predictedEndOfOngoing}
+							<div class="status-endblock">
+								<span class="status-end-label"><CalendarCheck size={13} strokeWidth={2.4} /> {t.predicted_end}</span>
+								<span class="status-end-relative">{relativeDate(predictions.predictedEndOfOngoing)}</span>
+								<span class="status-end-date">{formatDate(predictions.predictedEndOfOngoing)}</span>
+							</div>
+						{/if}
+					</div>
 					{#if showEntry && !readOnly}
 						<button class="end-btn" onclick={endPeriod} disabled={loading}>
 							<span class="end-btn-icon"><Check size={18} strokeWidth={2.5} /></span>
@@ -739,15 +748,18 @@
 					{/if}
 				</div>
 				{#if showProjection && nextCycle}
+					<!-- Forecast tiles in cycle order: the fertile window opens, then
+					     ovulation within it. -->
 					<div class="status-side">
+						<div class="status-side-item fertile-accent">
+							<span class="status-side-label"><Sprout size={12} strokeWidth={2.4} /> {t.fertile}</span>
+							<span class="status-side-relative">{relativeDate(nextCycle.fertileStart)}</span>
+							<span class="status-side-date">{formatDate(nextCycle.fertileStart)} — {formatDate(nextCycle.fertileEnd)}</span>
+						</div>
 						<div class="status-side-item ovulation-accent">
-							<span class="status-side-label">{t.ovulation}</span>
+							<span class="status-side-label"><Egg size={12} strokeWidth={2.4} /> {t.ovulation}</span>
 							<span class="status-side-relative">{relativeDate(nextCycle.ovulation)}</span>
 							<span class="status-side-date">{formatDate(nextCycle.ovulation)}</span>
-						</div>
-						<div class="status-side-item fertile-accent">
-							<span class="status-side-label">{t.fertile}</span>
-							<span class="status-side-date">{formatDate(nextCycle.fertileStart)} — {formatDate(nextCycle.fertileEnd)}</span>
 						</div>
 					</div>
 				{/if}
@@ -765,14 +777,15 @@
 					{/if}
 				</div>
 				<div class="status-side">
+					<div class="status-side-item fertile-accent">
+						<span class="status-side-label"><Sprout size={12} strokeWidth={2.4} /> {t.fertile}</span>
+						<span class="status-side-relative">{relativeDate(nextCycle.fertileStart)}</span>
+						<span class="status-side-date">{formatDate(nextCycle.fertileStart)} — {formatDate(nextCycle.fertileEnd)}</span>
+					</div>
 					<div class="status-side-item ovulation-accent">
-						<span class="status-side-label">{t.ovulation}</span>
+						<span class="status-side-label"><Egg size={12} strokeWidth={2.4} /> {t.ovulation}</span>
 						<span class="status-side-relative">{relativeDate(nextCycle.ovulation)}</span>
 						<span class="status-side-date">{formatDate(nextCycle.ovulation)}</span>
-					</div>
-					<div class="status-side-item fertile-accent">
-						<span class="status-side-label">{t.fertile}</span>
-						<span class="status-side-date">{formatDate(nextCycle.fertileStart)} — {formatDate(nextCycle.fertileEnd)}</span>
 					</div>
 				</div>
 			</div>
@@ -817,6 +830,7 @@
 					class:overflow={cell.overflow}
 					class:startable
 					class:on-active={cell.layers.active}
+					class:on-ov={cell.layers.ov}
 					{@attach startable && longPress(() => promptStartPeriodOn(cell.date))}
 				>
 					{#if cell.layers.predicted}<i class="band band-pred p-{cell.pos.predicted}"></i>{/if}
@@ -1218,16 +1232,22 @@
 		padding-left: 0.6rem;
 		border-left: 3px solid transparent;
 	}
+	/* Accents mirror the calendar legend below, so the tiles double as its key. */
 	.status-side-item.ovulation-accent { border-left-color: var(--blue); }
 	.status-side-item.fertile-accent { border-left-color: color-mix(in srgb, var(--blue) 40%, transparent); }
 
 	.status-side-label {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
 		font-size: 0.6rem;
 		font-weight: 600;
 		color: var(--color-text-secondary);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
+	.status-side-item.ovulation-accent .status-side-label :global(svg) { color: var(--blue); }
+	.status-side-item.fertile-accent .status-side-label :global(svg) { color: color-mix(in srgb, var(--blue) 70%, var(--color-text-secondary)); }
 	.status-side-relative {
 		font-size: 0.8rem;
 		font-weight: 600;
@@ -1261,20 +1281,60 @@
 		color: var(--color-text-primary);
 		line-height: 1.25;
 	}
+
+	/* Stacked by default; the wide rule turns this into hero-left / end-right. */
+	.status-hero-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		min-width: 0;
+	}
+	.status-endblock {
+		display: flex;
+		flex-direction: column;
+		gap: 0.05rem;
+		min-width: 0;
+	}
+	.status-end-label {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.6rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+	.status-end-label :global(svg) { color: var(--red); }
+	.status-end-relative {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+		line-height: 1.2;
+		white-space: nowrap;
+	}
+	.status-end-date {
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+	}
+
+	/* As soon as the row fits, the predicted end moves out from under the day
+	   count, right-aligns against it, and steps up in size. */
+	@media (min-width: 560px) {
+		.status-hero-row {
+			flex-direction: row;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 1rem;
+		}
+		.status-endblock { align-items: flex-end; text-align: right; }
+		.status-end-label { font-size: 0.7rem; }
+		.status-end-relative { font-size: 1.6rem; }
+		.status-end-date { font-size: 0.85rem; }
+	}
 	.status-hero.ongoing-hero {
 		font-size: 1.5rem;
 		color: var(--red);
-	}
-	.status-relative {
-		font-size: 0.85rem;
-		font-weight: 500;
-		color: var(--color-text-primary);
-	}
-	.status-detail {
-		font-size: 0.7rem;
-		color: var(--color-text-secondary);
-		font-weight: 500;
-		margin-top: 0.2rem;
 	}
 	.status-date {
 		font-size: 0.7rem;
@@ -1283,6 +1343,40 @@
 	.status-empty {
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
+	}
+
+	/* Wide screens: surplus width belongs to the forecast, not the hero. Below
+	   this the tiles stay a vertical rail beside the hero (see the 360px rule). */
+	@media (min-width: 900px) {
+		.status-card { padding: 1.25rem 1.4rem; }
+		.status-split {
+			display: grid;
+			grid-template-columns: minmax(18rem, 1.15fr) minmax(0, 1fr);
+			gap: 1.5rem;
+			align-items: stretch;
+		}
+		.status-main { justify-content: center; gap: 0.25rem; }
+		.status-side {
+			flex-direction: row;
+			align-items: stretch;
+			gap: 0.7rem;
+			padding-left: 1.5rem;
+		}
+		.status-side-item {
+			flex: 1;
+			min-width: 0;
+			gap: 0.2rem;
+			padding: 0.7rem 0.5rem 0.7rem 0.75rem;
+			border-radius: 0 var(--radius-md) var(--radius-md) 0;
+			background: var(--color-bg-tertiary);
+		}
+		.status-side-label { font-size: 0.65rem; }
+		.status-side-relative { font-size: 1.05rem; white-space: normal; }
+		.status-side-date { font-size: 0.75rem; white-space: normal; }
+		.status-hero { font-size: 1.35rem; }
+		.status-hero.ongoing-hero { font-size: 2.1rem; }
+
+		.status-hero-row { gap: 1.25rem; }
 	}
 
 	.start-btn {
@@ -1351,7 +1445,8 @@
 
 	@media (max-width: 360px) {
 		.status-split { flex-direction: column; gap: 0.6rem; }
-		.status-side { border-left: none; padding-left: 0; border-top: 1px solid var(--color-border); padding-top: 0.6rem; flex-direction: row; gap: 1rem; }
+		/* Wraps because the ongoing card carries three tiles, not two. */
+		.status-side { border-left: none; padding-left: 0; border-top: 1px solid var(--color-border); padding-top: 0.6rem; flex-direction: row; flex-wrap: wrap; gap: 0.6rem 1rem; }
 	}
 
 	/* Stats row */
@@ -1435,6 +1530,11 @@
 	.cal-day.overflow { color: var(--color-text-tertiary); }
 	.cal-num { position: relative; z-index: 5; }
 	.cal-day.on-active .cal-num { color: #fff; }
+	/* Solid bands own their contrast: the tertiary grey an overflow day inherits
+	   is unreadable on them, so numbers go white and overflow days dim by alpha
+	   against the band rather than against the calendar surface. */
+	.cal-day.on-ov .cal-num { color: #fff; }
+	.cal-day.on-ov.overflow .cal-num { color: color-mix(in srgb, #fff 72%, transparent); }
 
 	/* Long-press affordance: scale + colored ring grows during the hold. */
 	.cal-day.startable {
