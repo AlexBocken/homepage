@@ -253,8 +253,20 @@ nav {
 :global(.site_header li:has(a.active) .nav-icon .hl) {
 	stroke: var(--active-fill);
 }
-/* For stroke-based icons: colored shape behind the icon */
-:global(.site_header li:has(a.active) .nav-icon-wrap) {
+/* Icons where only part of the artwork is a solid body (receipt sheet, the two
+   folders of folder-tree): fill just the .fill paths and leave the rest — the
+   dollar sign, the tree spine — as plain strokes on top. Author them with the
+   filled path first so the strokes paint over it. */
+:global(.site_header li:has(a.active) .nav-icon:has(.fill)) {
+	fill: none;
+}
+:global(.site_header li:has(a.active) .nav-icon .fill) {
+	fill: var(--active-fill);
+}
+/* For stroke-based icons: colored shape behind the icon. The wrap is laid out
+   the same active or not — an inline span would box the icon on its baseline and
+   nudge the whole bar down the moment the link went active. */
+:global(.site_header .nav-icon-wrap) {
 	position: relative;
 	display: flex;
 	align-items: center;

@@ -115,6 +115,17 @@
 {/if}
 
 <style>
+	/* Seven links with labels this long outgrow the pill well before the header's
+	   own 800px label breakpoint, so drop to icons only earlier here. */
+	@media screen and (max-width: 900px) {
+		.site_header .nav-label {
+			display: none;
+		}
+		.site_header li > a {
+			padding: 0.4rem;
+		}
+	}
+
 	.fitness-content {
 		max-width: var(--fitness-max-width, 900px);
 		margin: 0 auto;
