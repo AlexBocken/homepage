@@ -2359,7 +2359,7 @@
 		padding: 0.4rem 0.8rem;
 		font-size: 0.8rem;
 		color: var(--nord0);
-		background: var(--nord13);
+		background: var(--yellow);
 		border-radius: 0.4rem;
 	}
 	.pr-badge {
@@ -2397,12 +2397,12 @@
 		letter-spacing: 0.04em;
 	}
 	.comp-stat.kcal {
-		color: var(--nord12);
+		color: var(--orange);
 	}
 
 	.prs-section {
-		background: color-mix(in srgb, var(--nord13) 8%, transparent);
-		border: 1px solid color-mix(in srgb, var(--nord13) 30%, transparent);
+		background: color-mix(in srgb, var(--yellow) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--yellow) 30%, transparent);
 		border-radius: 12px;
 		padding: 1rem;
 	}
@@ -2483,7 +2483,7 @@
 	}
 	.seg-badge.kom {
 		color: var(--color-amber-text);
-		background: color-mix(in srgb, var(--nord13) 15%, transparent);
+		background: color-mix(in srgb, var(--yellow) 15%, transparent);
 	}
 	.seg-badge.pr {
 		color: var(--color-primary);
@@ -2622,7 +2622,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.4rem;
-		color: var(--nord14);
+		color: var(--green);
 		font-weight: 600;
 		font-size: 0.9rem;
 		margin: 0;
@@ -2705,7 +2705,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.4rem;
-		color: var(--nord14);
+		color: var(--green);
 		font-weight: 600;
 		font-size: 0.9rem;
 		padding: 0.4rem;
@@ -2959,8 +2959,8 @@
 		flex-shrink: 0;
 	}
 	.cancel-btn:hover {
-		color: var(--nord11);
-		background: color-mix(in srgb, var(--nord11), transparent 92%);
+		color: var(--red);
+		background: color-mix(in srgb, var(--red), transparent 92%);
 	}
 	/* Finish: primary, dominant */
 	.finish-btn {
@@ -3039,7 +3039,7 @@
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	}
 	.gps-toggle-track.checked {
-		background: var(--nord14);
+		background: var(--green);
 	}
 	.gps-toggle-track.checked::before {
 		transform: translateX(20px);
@@ -3052,7 +3052,7 @@
 		color: var(--color-text-secondary);
 	}
 	.gps-bar.active {
-		color: var(--nord14);
+		color: var(--green);
 	}
 	.gps-distance {
 		font-weight: 700;
@@ -3086,7 +3086,7 @@
 		width: 14px;
 		height: 14px;
 		border: 2px solid var(--color-border);
-		border-top-color: var(--nord10);
+		border-top-color: var(--blue);
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
 	}
@@ -3130,7 +3130,7 @@
 	}
 	.vg-range {
 		width: 100%;
-		accent-color: var(--nord10);
+		accent-color: var(--blue);
 	}
 	.vg-trigger-row {
 		display: flex;
@@ -3186,9 +3186,9 @@
 		transition: all 0.15s ease;
 	}
 	.vg-metric-chip.selected {
-		background: var(--nord14);
+		background: var(--green);
 		color: var(--nord0);
-		border-color: var(--nord14);
+		border-color: var(--green);
 	}
 	.vg-no-engine {
 		display: flex;
@@ -3200,9 +3200,9 @@
 	.vg-install-btn {
 		padding: 0.4rem 0.8rem;
 		border-radius: 6px;
-		border: 1px solid var(--nord14);
+		border: 1px solid var(--green);
 		background: transparent;
-		color: var(--nord14);
+		color: var(--green);
 		font-size: 0.85rem;
 		cursor: pointer;
 		align-self: flex-start;
@@ -3212,7 +3212,7 @@
 		align-items: center;
 		gap: 0.4rem;
 		font-size: 0.75rem;
-		color: var(--nord14);
+		color: var(--green);
 		opacity: 0.8;
 	}
 	.gps-overlay .vg-active-badge {
@@ -3253,9 +3253,9 @@
 		color: rgba(255,255,255,0.7);
 	}
 	.gps-overlay .vg-metric-chip.selected {
-		background: var(--nord14);
+		background: var(--green);
 		color: var(--nord0);
-		border-color: var(--nord14);
+		border-color: var(--green);
 	}
 
 	/* GPS Workout Mode — full-bleed map with overlay */
@@ -3306,8 +3306,8 @@
 		/* This panel always floats over the dark map, so pin the accent to the
 		   Nord dark blue (nord10) instead of letting --color-primary resolve to
 		   the light blue (nord8) in dark mode. Cascades to all descendants. */
-		--color-primary: var(--nord10);
-		--color-primary-hover: var(--nord9);
+		--color-primary: var(--blue);
+		--color-primary-hover: var(--lightblue);
 		--color-text-on-primary: #fff;
 	}
 	@media (prefers-color-scheme: dark) {
@@ -3427,9 +3427,9 @@
 		transition: all 0.15s ease;
 	}
 	.gps-activity-choice.active {
-		border-color: var(--nord10);
+		border-color: var(--blue);
 		background: rgba(46, 52, 64, 0.9);
-		color: var(--nord10);
+		color: var(--blue);
 		box-shadow: inset 0 0 0 1px rgba(94,129,172,0.25);
 	}
 	.gps-activity-choice:hover:not(.active) {
@@ -3477,7 +3477,7 @@
 		background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
 	}
 	.gps-cancel-link:hover {
-		color: var(--nord11);
+		color: var(--red);
 	}
 	.gps-overlay-actions {
 		display: flex;
@@ -3507,9 +3507,9 @@
 		width: 3rem;
 		height: 3rem;
 		background: rgba(191,97,106,0.25);
-		border: 1px solid var(--nord11);
+		border: 1px solid var(--red);
 		border-radius: 50%;
-		color: var(--nord11);
+		color: var(--red);
 		cursor: pointer;
 		flex-shrink: 0;
 	}
@@ -3519,7 +3519,7 @@
 	.gps-overlay-finish {
 		flex: 1;
 		padding: 0.85rem;
-		background: var(--nord11);
+		background: var(--red);
 		color: #fff;
 		border: none;
 		border-radius: 50px;
@@ -3554,7 +3554,7 @@
 		transition: border-color 0.15s;
 	}
 	.interval-card.selected {
-		border-color: var(--nord10);
+		border-color: var(--blue);
 		background: rgba(94,129,172,0.12);
 	}
 	.interval-card-main {
@@ -3611,7 +3611,7 @@
 		background: rgba(255,255,255,0.08);
 		border: 1px dashed rgba(255,255,255,0.2);
 		border-radius: 8px;
-		color: var(--nord10);
+		color: var(--blue);
 		font: inherit;
 		font-size: 0.8rem;
 		font-weight: 600;
@@ -3933,7 +3933,7 @@
 	.interval-save-btn {
 		width: 100%;
 		padding: 0.8rem;
-		background: var(--nord14);
+		background: var(--green);
 		border: none;
 		border-radius: 50px;
 		color: var(--nord0);
@@ -3960,7 +3960,7 @@
 	.interval-current-label {
 		font-size: 1.1rem;
 		font-weight: 800;
-		color: var(--nord10);
+		color: var(--blue);
 		text-align: center;
 	}
 	.interval-progress-row {
@@ -3983,7 +3983,7 @@
 	}
 	.interval-progress-fill {
 		height: 100%;
-		background: var(--nord10);
+		background: var(--blue);
 		border-radius: 2px;
 		transition: width 0.5s ease;
 	}
@@ -3993,7 +3993,7 @@
 		justify-content: center;
 		gap: 0.3rem;
 		padding: 0.3rem;
-		color: var(--nord14);
+		color: var(--green);
 		font-size: 0.85rem;
 		font-weight: 600;
 	}

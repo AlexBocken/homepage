@@ -29,7 +29,7 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { localDateStr } from '$lib/js/localDate';
 	import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
-	import { atwaterCalories as atwaterKcal, macroCaloriePercent, scaleFromPer100g } from '$lib/fitness/nutritionMath';
+	import { atwaterCalories as atwaterKcal, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -1158,23 +1158,11 @@
 		];
 	});
 
-	/** @param {number} v */
-	function fmt(v) {
-		if (v >= 100) return Math.round(v).toString();
-		if (v >= 10) return v.toFixed(1);
-		return v.toFixed(1);
-	}
-
-	/** @param {number} v */
-	function fmtCal(v) {
-		return Math.round(v).toString();
-	}
-
 	const mealMeta = {
-		breakfast: { icon: Coffee, color: 'var(--nord13)' },
-		lunch:     { icon: Sun, color: 'var(--nord12)' },
-		dinner:    { icon: Moon, color: 'var(--nord15)' },
-		snack:     { icon: Cookie, color: 'var(--nord14)' },
+		breakfast: { icon: Coffee, color: 'var(--yellow)' },
+		lunch:     { icon: Sun, color: 'var(--orange)' },
+		dinner:    { icon: Moon, color: 'var(--purple)' },
+		snack:     { icon: Cookie, color: 'var(--green)' },
 	};
 
 	/** @typedef {{ name: string, source: string, sourceId: string }} QuickFavorite */
@@ -1533,9 +1521,9 @@
 			<!-- Macro progress bars -->
 			<div class="macro-bars">
 				{#each [
-					{ value: dayTotals.protein, goal: proteinGoalGrams, label: t.protein, color: 'var(--nord14)', icon: Beef },
-					{ value: dayTotals.fat, goal: fatGoalGrams, label: t.fat, color: 'var(--nord12)', icon: Droplet },
-					{ value: dayTotals.carbs, goal: carbGoalGrams, label: t.carbs, color: 'var(--nord9)', icon: Wheat },
+					{ value: dayTotals.protein, goal: proteinGoalGrams, label: t.protein, color: 'var(--green)', icon: Beef },
+					{ value: dayTotals.fat, goal: fatGoalGrams, label: t.fat, color: 'var(--orange)', icon: Droplet },
+					{ value: dayTotals.carbs, goal: carbGoalGrams, label: t.carbs, color: 'var(--lightblue)', icon: Wheat },
 				] as macro}
 					{@const pct = macro.goal ? macro.value / macro.goal * 100 : 0}
 					{@const over = pct > 100}
@@ -1735,21 +1723,21 @@
 							<svg class="macro-ring" width="120" height="120" viewBox="0 0 120 120">
 								<!-- Fat -->
 								<circle cx="60" cy="60" r={RING_R}
-									fill="none" stroke="var(--nord12)" stroke-width="10"
+									fill="none" stroke="var(--orange)" stroke-width="10"
 									stroke-dasharray="{Math.max(0, editMacroRing.fatLen - RING_GAP)} {RING_C - Math.max(0, editMacroRing.fatLen - RING_GAP)}"
 									stroke-linecap="round"
 									transform="rotate(-90 60 60)"
 									opacity={editMacroRing.fat > 0 ? 1 : 0} />
 								<!-- Carbs -->
 								<circle cx="60" cy="60" r={RING_R}
-									fill="none" stroke="var(--nord9)" stroke-width="10"
+									fill="none" stroke="var(--lightblue)" stroke-width="10"
 									stroke-dasharray="{Math.max(0, editMacroRing.carbLen - RING_GAP)} {RING_C - Math.max(0, editMacroRing.carbLen - RING_GAP)}"
 									stroke-linecap="round"
 									transform="rotate({-90 + editMacroRing.fatDeg} 60 60)"
 									opacity={editMacroRing.carb > 0 ? 1 : 0} />
 								<!-- Protein -->
 								<circle cx="60" cy="60" r={RING_R}
-									fill="none" stroke="var(--nord14)" stroke-width="10"
+									fill="none" stroke="var(--green)" stroke-width="10"
 									stroke-dasharray="{Math.max(0, editMacroRing.protLen - RING_GAP)} {RING_C - Math.max(0, editMacroRing.protLen - RING_GAP)}"
 									stroke-linecap="round"
 									transform="rotate({-90 + editMacroRing.fatDeg + editMacroRing.carbDeg} 60 60)"
@@ -1758,9 +1746,9 @@
 								<text x="60" y="70" text-anchor="middle" class="ring-cal-sub">kcal</text>
 							</svg>
 							<div class="macro-ring-legend">
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord14)"></span><Beef size={12} /> {t.protein} {editMacroRing.prot}%</span>
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord12)"></span><Droplet size={12} /> {t.fat} {editMacroRing.fat}%</span>
-								<span class="mrl-item"><span class="mrl-dot" style="background: var(--nord9)"></span><Wheat size={12} /> {t.carbs} {editMacroRing.carb}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--green)"></span><Beef size={12} /> {t.protein} {editMacroRing.prot}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--orange)"></span><Droplet size={12} /> {t.fat} {editMacroRing.fat}%</span>
+								<span class="mrl-item"><span class="mrl-dot" style="background: var(--lightblue)"></span><Wheat size={12} /> {t.carbs} {editMacroRing.carb}%</span>
 							</div>
 						</div>
 					{/if}
@@ -1865,9 +1853,9 @@
 						<path d="M4 4 L6 28 C6 30 8 30 8 30 L16 30 C16 30 18 30 18 28 L20 4 Z" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" stroke-width="1.2" />
 						{#if showWater}
 							<g clip-path="url(#cup-clip-{i})" class="water-body">
-								<path class="water-wave w1" d="M-8 10 Q-2 6 4 10 T16 10 T28 10 T40 10 V34 H-8 Z" fill={isAuto ? 'var(--nord7)' : 'var(--nord10)'} opacity="0.85" />
-								<path class="water-wave w2" d="M-4 12 Q2 8 8 12 T20 12 T32 12 V34 H-4 Z" fill={isAuto ? 'var(--nord8)' : 'var(--nord9)'} opacity="0.5" />
-								<path class="water-wave w3" d="M0 11 Q6 7 12 11 T24 11 T36 11 V34 H0 Z" fill={isAuto ? 'var(--nord7)' : 'var(--nord10)'} opacity="0.35" />
+								<path class="water-wave w1" d="M-8 10 Q-2 6 4 10 T16 10 T28 10 T40 10 V34 H-8 Z" fill={isAuto ? 'var(--nord7)' : 'var(--blue)'} opacity="0.85" />
+								<path class="water-wave w2" d="M-4 12 Q2 8 8 12 T20 12 T32 12 V34 H-4 Z" fill={isAuto ? 'var(--nord8)' : 'var(--lightblue)'} opacity="0.5" />
+								<path class="water-wave w3" d="M0 11 Q6 7 12 11 T24 11 T36 11 V34 H0 Z" fill={isAuto ? 'var(--nord7)' : 'var(--blue)'} opacity="0.35" />
 							</g>
 						{/if}
 						{#if isNextEmpty}
@@ -2378,7 +2366,7 @@
 	}
 	.cal-stat-value.projected.included {
 		opacity: 0.8;
-		color: var(--nord14);
+		color: var(--green);
 	}
 	.projected-label {
 		font-style: italic;
@@ -2437,7 +2425,7 @@
 		gap: 0.15rem;
 	}
 	.tdee-info-tooltip a {
-		color: var(--nord12);
+		color: var(--orange);
 		text-decoration: underline;
 	}
 	.tdee-info-tooltip .cite-note {
@@ -2455,7 +2443,7 @@
 		line-height: 1.3;
 	}
 	.bmr-hint a {
-		color: var(--nord12);
+		color: var(--orange);
 		text-decoration: underline;
 	}
 	.calorie-ring {
@@ -2507,7 +2495,7 @@
 		top: 0;
 		right: 0;
 		height: 100%;
-		background: var(--nord11);
+		background: var(--red);
 		border-radius: 0 3px 3px 0;
 		animation: bar-overflow-fill 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s both;
 	}
@@ -2520,7 +2508,7 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.macro-bar-info.over {
-		color: var(--nord11);
+		color: var(--red);
 		font-weight: 600;
 	}
 
@@ -2561,8 +2549,8 @@
 		to { stroke-dashoffset: var(--glow-target); }
 	}
 	.ring-overflow {
-		stroke: var(--nord11);
-		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--nord11) 25%, transparent));
+		stroke: var(--red);
+		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--red) 25%, transparent));
 		stroke-dashoffset: var(--overflow-target);
 		animation: overflow-fill 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
 	}
@@ -2665,12 +2653,12 @@
 	}
 	.micro-bar {
 		height: 100%;
-		background: var(--nord14);
+		background: var(--green);
 		border-radius: 3px;
 		transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	.micro-bar.is-max {
-		background: var(--nord12);
+		background: var(--orange);
 	}
 	.micro-value {
 		text-align: right;
@@ -2702,8 +2690,8 @@
 		height: 3.5rem;
 		border-radius: 50%;
 		margin: 0 auto 1rem;
-		color: var(--nord15);
-		background: color-mix(in srgb, var(--nord15) 12%, transparent);
+		color: var(--purple);
+		background: color-mix(in srgb, var(--purple) 12%, transparent);
 	}
 	.no-goal p {
 		color: var(--color-text-secondary);
@@ -2774,14 +2762,14 @@
 		transition: all 0.2s;
 	}
 	.wizard-step.active .ws-num {
-		background: var(--nord10);
+		background: var(--blue);
 		color: white;
-		border-color: var(--nord10);
+		border-color: var(--blue);
 	}
 	.wizard-step.done .ws-num {
-		background: var(--nord14);
+		background: var(--green);
 		color: white;
-		border-color: var(--nord14);
+		border-color: var(--green);
 	}
 	.ws-label {
 		font-size: 0.6rem;
@@ -2791,7 +2779,7 @@
 		color: var(--color-text-tertiary);
 	}
 	.wizard-step.active .ws-label {
-		color: var(--nord10);
+		color: var(--blue);
 	}
 	.ws-line {
 		flex: 1;
@@ -2802,7 +2790,7 @@
 		transition: background 0.2s;
 	}
 	.ws-line.done {
-		background: var(--nord14);
+		background: var(--green);
 	}
 
 	/* Preset cards (Step 1) */
@@ -2829,13 +2817,13 @@
 		transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 	}
 	.preset-card:hover {
-		border-color: var(--nord10);
-		background: color-mix(in srgb, var(--nord10) 6%, var(--color-bg-tertiary));
+		border-color: var(--blue);
+		background: color-mix(in srgb, var(--blue) 6%, var(--color-bg-tertiary));
 	}
 	.preset-card.selected {
-		border-color: var(--nord10);
-		background: color-mix(in srgb, var(--nord10) 10%, var(--color-bg-tertiary));
-		box-shadow: 0 0 0 1px var(--nord10);
+		border-color: var(--blue);
+		background: color-mix(in srgb, var(--blue) 10%, var(--color-bg-tertiary));
+		box-shadow: 0 0 0 1px var(--blue);
 	}
 	.preset-card-emoji {
 		font-size: 1.3rem;
@@ -2895,8 +2883,8 @@
 		transition: border-color 0.15s;
 	}
 	.step-pill:hover {
-		border-color: var(--nord10);
-		color: var(--nord10);
+		border-color: var(--blue);
+		color: var(--blue);
 	}
 
 	/* TDEE warning */
@@ -2905,8 +2893,8 @@
 		align-items: flex-start;
 		gap: 0.5rem;
 		padding: 0.6rem 0.75rem;
-		background: color-mix(in srgb, var(--nord13) 10%, var(--color-bg-tertiary));
-		border: 1px solid color-mix(in srgb, var(--nord13) 30%, var(--color-border));
+		background: color-mix(in srgb, var(--yellow) 10%, var(--color-bg-tertiary));
+		border: 1px solid color-mix(in srgb, var(--yellow) 30%, var(--color-border));
 		border-radius: 8px;
 		margin-bottom: 0.75rem;
 		color: var(--color-amber-text);
@@ -2928,7 +2916,7 @@
 		color: var(--color-text-secondary);
 	}
 	.tdee-warning-text a {
-		color: var(--nord10);
+		color: var(--blue);
 		text-decoration: underline;
 	}
 
@@ -2961,9 +2949,9 @@
 		border-radius: 5px;
 		transition: width 0.3s;
 	}
-	.tdee-compare-target.deficit { background: var(--nord9); }
-	.tdee-compare-target.surplus { background: var(--nord12); }
-	.tdee-compare-target.maintenance { background: var(--nord14); }
+	.tdee-compare-target.deficit { background: var(--lightblue); }
+	.tdee-compare-target.surplus { background: var(--orange); }
+	.tdee-compare-target.maintenance { background: var(--green); }
 	.tdee-compare-labels {
 		display: flex;
 		justify-content: space-between;
@@ -2978,9 +2966,9 @@
 		font-weight: 600;
 		text-align: center;
 	}
-	.tdee-compare-diff.deficit { color: var(--nord9); }
-	.tdee-compare-diff.surplus { color: var(--nord12); }
-	.tdee-compare-diff.maintenance { color: var(--nord14); }
+	.tdee-compare-diff.deficit { color: var(--lightblue); }
+	.tdee-compare-diff.surplus { color: var(--orange); }
+	.tdee-compare-diff.maintenance { color: var(--green); }
 
 	/* Macro donut ring */
 	.macro-ring-wrap {
@@ -3050,8 +3038,8 @@
 		white-space: nowrap;
 	}
 	.bmr-calc-btn:hover {
-		border-color: var(--nord10);
-		color: var(--nord10);
+		border-color: var(--blue);
+		color: var(--blue);
 	}
 	.tdee-basis {
 		display: block;
@@ -3137,7 +3125,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		color: var(--nord10);
+		color: var(--blue);
 	}
 	.water-title h3 {
 		margin: 0;
@@ -3153,7 +3141,7 @@
 	.water-amount {
 		font-size: 0.85rem;
 		font-weight: 600;
-		color: var(--nord10);
+		color: var(--blue);
 	}
 	.water-goal-btn {
 		background: none;
@@ -3184,7 +3172,7 @@
 	}
 	.goal-input-inline:focus {
 		outline: none;
-		border-color: var(--nord10);
+		border-color: var(--blue);
 	}
 	.goal-unit {
 		font-size: 0.75rem;
@@ -3205,8 +3193,8 @@
 		padding: 0;
 	}
 	.goal-save-inline:hover {
-		border-color: var(--nord14);
-		background: var(--nord14);
+		border-color: var(--green);
+		background: var(--green);
 		color: white;
 		box-shadow: 0 2px 8px rgba(163, 190, 140, 0.35);
 		transform: scale(1.08);
@@ -3247,7 +3235,7 @@
 		opacity: 1;
 	}
 	.water-cup.next-empty:hover .cup-svg > path:first-of-type {
-		fill: color-mix(in srgb, var(--nord10) 20%, var(--color-bg-tertiary));
+		fill: color-mix(in srgb, var(--blue) 20%, var(--color-bg-tertiary));
 	}
 
 	/* Water fill animation — only on newly filled cups */
@@ -3311,7 +3299,7 @@
 		color: var(--color-text-secondary);
 	}
 	.beverage-ml {
-		color: var(--nord10);
+		color: var(--blue);
 		font-weight: 500;
 		font-variant-numeric: tabular-nums;
 	}
@@ -3481,7 +3469,7 @@
 	}
 	.food-card-edit-input:focus {
 		outline: none;
-		border-color: var(--nord10);
+		border-color: var(--blue);
 	}
 	.food-card-edit-unit {
 		font-size: 0.7rem;
@@ -3513,19 +3501,19 @@
 		display: flex;
 	}
 	.food-card-action.edit:hover {
-		color: var(--nord10);
-		background: color-mix(in srgb, var(--nord10) 10%, transparent);
+		color: var(--blue);
+		background: color-mix(in srgb, var(--blue) 10%, transparent);
 	}
 	.food-card-action.edit.active {
-		color: var(--nord14);
+		color: var(--green);
 	}
 	.food-card-action.edit.active:hover {
-		color: var(--nord14);
-		background: color-mix(in srgb, var(--nord14) 10%, transparent);
+		color: var(--green);
+		background: color-mix(in srgb, var(--green) 10%, transparent);
 	}
 	.food-card-action.delete:hover {
-		color: var(--nord11);
-		background: color-mix(in srgb, var(--nord11) 10%, transparent);
+		color: var(--red);
+		background: color-mix(in srgb, var(--red) 10%, transparent);
 	}
 
 	/* ── Wider screens: grid of vertical cards ── */

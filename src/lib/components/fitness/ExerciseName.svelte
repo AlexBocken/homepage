@@ -35,7 +35,7 @@
 		font: inherit;
 	}
 	.exercise-unknown {
-		color: var(--nord11);
+		color: var(--red);
 		font-style: italic;
 	}
 </style>

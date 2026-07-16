@@ -1164,8 +1164,8 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--orange, var(--nord12));
-		background: color-mix(in srgb, var(--orange, var(--nord12)) 12%, transparent);
+		color: var(--orange, var(--orange));
+		background: color-mix(in srgb, var(--orange, var(--orange)) 12%, transparent);
 		border-radius: 100px;
 		vertical-align: middle;
 	}
@@ -1302,7 +1302,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.4rem;
-		color: var(--nord14);
+		color: var(--green);
 		font-weight: 600;
 		font-size: 0.9rem;
 		margin: 0;
@@ -1318,9 +1318,9 @@
 	}
 	.delete-btn {
 		background: none;
-		border: 1px solid var(--nord11);
+		border: 1px solid var(--red);
 		border-radius: 8px;
-		color: var(--nord11);
+		color: var(--red);
 		cursor: pointer;
 		padding: 0.4rem;
 		display: flex;
@@ -1435,9 +1435,9 @@
 		color: var(--color-text-secondary);
 	}
 	.stat-pill.kcal {
-		color: var(--nord12);
-		border-color: var(--nord12);
-		background: color-mix(in srgb, var(--nord12) 10%, transparent);
+		color: var(--orange);
+		border-color: var(--orange);
+		background: color-mix(in srgb, var(--orange) 10%, transparent);
 	}
 	.stat-pill.has-info {
 		position: relative;
@@ -1477,13 +1477,13 @@
 		gap: 0.15rem;
 	}
 	.kcal-info-tooltip a {
-		color: var(--nord12);
+		color: var(--orange);
 		text-decoration: underline;
 	}
 	.stat-pill.pr {
 		color: var(--color-amber-text);
-		border-color: var(--nord13);
-		background: color-mix(in srgb, var(--nord13) 10%, transparent);
+		border-color: var(--yellow);
+		background: color-mix(in srgb, var(--yellow) 10%, transparent);
 	}
 
 	.exercise-block {
@@ -1505,7 +1505,7 @@
 	.remove-exercise {
 		background: none;
 		border: none;
-		color: var(--nord11);
+		color: var(--red);
 		cursor: pointer;
 		padding: 0.25rem;
 		opacity: 0.6;
@@ -1581,7 +1581,7 @@
 		color: var(--color-text-secondary);
 	}
 	.rpe {
-		color: var(--nord12);
+		color: var(--orange);
 	}
 	.est1rm {
 		color: var(--color-primary);
@@ -1589,8 +1589,8 @@
 	}
 
 	.prs-section {
-		background: color-mix(in srgb, var(--nord13) 8%, transparent);
-		border: 1px solid color-mix(in srgb, var(--nord13) 30%, transparent);
+		background: color-mix(in srgb, var(--yellow) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--yellow) 30%, transparent);
 		border-radius: 12px;
 		padding: 1rem;
 	}
@@ -1671,7 +1671,7 @@
 		margin-left: auto;
 		background: none;
 		border: none;
-		color: var(--nord11);
+		color: var(--red);
 		cursor: pointer;
 		padding: 0.2rem;
 		opacity: 0.5;
@@ -1811,11 +1811,11 @@
 		margin-top: 0.25rem;
 	}
 	.gps-stat.elev-gain {
-		color: var(--nord14);
+		color: var(--green);
 		font-weight: 600;
 	}
 	.gps-stat.elev-loss {
-		color: var(--nord11);
+		color: var(--red);
 		font-weight: 600;
 		font-size: 0.8rem;
 	}
@@ -1854,10 +1854,10 @@
 		color: var(--color-text-secondary);
 	}
 	.split-pace.fast {
-		color: var(--nord14);
+		color: var(--green);
 	}
 	.split-pace.slow {
-		color: var(--nord12);
+		color: var(--orange);
 	}
 	tr.partial .split-km {
 		font-style: italic;

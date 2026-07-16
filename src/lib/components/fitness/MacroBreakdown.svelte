@@ -1,6 +1,6 @@
 <script>
 	import { detectFitnessLang } from '$lib/js/fitnessI18n';
-	import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
+	import { macroCaloriePercent, formatGrams as fmt } from '$lib/fitness/nutritionMath';
 	import { page } from '$app/state';
 	import Beef from '@lucide/svelte/icons/beef';
 	import Droplet from '@lucide/svelte/icons/droplet';
@@ -38,16 +38,10 @@
 	const macroPercent = $derived(macroCaloriePercent({ protein, fat, carbs }));
 
 	/** @param {number | null | undefined} v */
-	function fmt(v) {
-		if (v == null || isNaN(v)) return '0';
-		if (v >= 100) return Math.round(v).toString();
-		return v.toFixed(1);
-	}
-
 	const macros = $derived([
-		{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiss', color: 'var(--nord14)', grams: protein, icon: Beef },
-		{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: fat, icon: Droplet },
-		{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: carbs, icon: Wheat },
+		{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiss', color: 'var(--green)', grams: protein, icon: Beef },
+		{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--orange)', grams: fat, icon: Droplet },
+		{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--lightblue)', grams: carbs, icon: Wheat },
 	]);
 </script>
 

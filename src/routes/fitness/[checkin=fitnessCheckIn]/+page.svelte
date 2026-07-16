@@ -1323,8 +1323,8 @@
 		opacity: 0.5;
 	}
 	.icon-btn.delete:hover {
-		border-color: var(--nord11);
-		color: var(--nord11);
+		border-color: var(--red);
+		color: var(--red);
 		opacity: 1;
 	}
 

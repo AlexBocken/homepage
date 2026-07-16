@@ -253,7 +253,7 @@
 		transform: translateY(0);
 	}
 	.session-card.unsynced {
-		border-left: 3px solid var(--orange, var(--nord12));
+		border-left: 3px solid var(--orange, var(--orange));
 	}
 	.unsynced-badge {
 		display: inline-flex;
@@ -265,8 +265,8 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--orange, var(--nord12));
-		background: color-mix(in srgb, var(--orange, var(--nord12)) 12%, transparent);
+		color: var(--orange, var(--orange));
+		background: color-mix(in srgb, var(--orange, var(--orange)) 12%, transparent);
 		border-radius: 100px;
 		vertical-align: middle;
 	}
@@ -341,7 +341,7 @@
 		font-weight: 700;
 	}
 	.stat.kcal {
-		color: var(--nord12);
+		color: var(--orange);
 	}
 	.stat.pr {
 		color: var(--color-amber-text);

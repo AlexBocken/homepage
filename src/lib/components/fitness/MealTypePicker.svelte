@@ -18,10 +18,10 @@
 	const mealTypes = [...MEAL_TYPES];
 
 	const mealMeta = {
-		breakfast: { icon: Coffee, color: 'var(--nord13)' },
-		lunch:     { icon: Sun, color: 'var(--nord12)' },
-		dinner:    { icon: Moon, color: 'var(--nord15)' },
-		snack:     { icon: Cookie, color: 'var(--nord14)' },
+		breakfast: { icon: Coffee, color: 'var(--yellow)' },
+		lunch:     { icon: Sun, color: 'var(--orange)' },
+		dinner:    { icon: Moon, color: 'var(--purple)' },
+		snack:     { icon: Cookie, color: 'var(--green)' },
 	};
 </script>
 

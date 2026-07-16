@@ -1113,9 +1113,9 @@
 		gap: 0.4rem;
 		padding: 0.65rem;
 		background: transparent;
-		border: 1px solid var(--nord11);
+		border: 1px solid var(--red);
 		border-radius: 8px;
-		color: var(--nord11);
+		color: var(--red);
 		font-weight: 600;
 		font-size: 0.85rem;
 		cursor: pointer;
@@ -1161,9 +1161,9 @@
 		cursor: pointer;
 	}
 	.mode-btn.active {
-		background: var(--nord10);
+		background: var(--blue);
 		color: #fff;
-		border-color: var(--nord10);
+		border-color: var(--blue);
 	}
 	.editor-gps-options {
 		display: flex;
@@ -1192,9 +1192,9 @@
 		cursor: pointer;
 	}
 	.activity-chip.selected {
-		background: var(--nord10);
+		background: var(--blue);
 		color: #fff;
-		border-color: var(--nord10);
+		border-color: var(--blue);
 	}
 	.interval-select {
 		display: flex;
@@ -1212,9 +1212,9 @@
 		cursor: pointer;
 	}
 	.interval-option.selected {
-		background: var(--nord10);
+		background: var(--blue);
 		color: #fff;
-		border-color: var(--nord10);
+		border-color: var(--blue);
 	}
 	.gps-desktop-notice {
 		display: flex;
@@ -1227,7 +1227,7 @@
 		font-size: 0.85rem;
 	}
 	.gps-desktop-notice a {
-		color: var(--nord10);
+		color: var(--blue);
 	}
 	.modal-gps-info {
 		display: flex;
@@ -1246,11 +1246,11 @@
 	}
 	.modal-gps-badge {
 		background: rgba(94, 129, 172, 0.15);
-		color: var(--nord10);
+		color: var(--blue);
 	}
 	.modal-interval-badge {
 		background: rgba(163, 190, 140, 0.15);
-		color: var(--nord14);
+		color: var(--green);
 	}
 	.editor-exercise {
 		background: var(--color-bg-elevated);
@@ -1293,7 +1293,7 @@
 	.remove-exercise {
 		background: none;
 		border: none;
-		color: var(--nord11);
+		color: var(--red);
 		cursor: pointer;
 		padding: 0.25rem;
 		opacity: 0.6;
@@ -1342,7 +1342,7 @@
 	.set-remove {
 		background: none;
 		border: none;
-		color: var(--nord11);
+		color: var(--red);
 		cursor: pointer;
 		padding: 0.15rem;
 		opacity: 0.5;
@@ -1440,7 +1440,7 @@
 		cursor: not-allowed;
 	}
 	.schedule-remove:hover:not(:disabled) {
-		color: var(--nord11) !important;
+		color: var(--red) !important;
 	}
 	.schedule-available {
 		border-top: 1px solid var(--color-border);
@@ -1557,7 +1557,7 @@
 	}
 	.library-add-btn:disabled {
 		background: var(--color-bg-elevated);
-		color: var(--nord14);
+		color: var(--green);
 		cursor: default;
 	}
 </style>

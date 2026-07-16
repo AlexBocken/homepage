@@ -40,6 +40,23 @@ export function macroCaloriePercent(m: MacroGrams): { protein: number; fat: numb
 	return { protein, fat, carbs: 100 - protein - fat };
 }
 
+/**
+ * Format a gram amount for display: whole numbers at ≥100 g, one decimal below,
+ * '0' for null/NaN. The single source of truth previously copy-pasted (with a
+ * dead `v >= 10` branch and an inconsistent null guard) into the nutrition,
+ * food-detail, and meals pages and MacroBreakdown.
+ */
+export function formatGrams(v: number | null | undefined): string {
+	if (v == null || isNaN(v)) return '0';
+	if (v >= 100) return Math.round(v).toString();
+	return v.toFixed(1);
+}
+
+/** Format a calorie value as a rounded whole number. */
+export function formatKcal(v: number): string {
+	return Math.round(v).toString();
+}
+
 /** Scale a single per-100g nutrient value to a gram amount. */
 export function scaleFromPer100g(valuePer100g: number | undefined | null, grams: number): number {
 	return ((valuePer100g ?? 0) * grams) / 100;

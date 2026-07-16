@@ -229,11 +229,11 @@
 		height: 100%;
 		background-image: radial-gradient(
 			farthest-corner at 10px 0,
-			color-mix(in srgb, var(--nord11) 70%, transparent),
-			color-mix(in srgb, var(--nord12) 70%, transparent) 60%,
-			color-mix(in srgb, var(--nord13) 85%, transparent) 95%
+			color-mix(in srgb, var(--red) 70%, transparent),
+			color-mix(in srgb, var(--orange) 70%, transparent) 60%,
+			color-mix(in srgb, var(--yellow) 85%, transparent) 95%
 		);
-		filter: drop-shadow(0 0 6px var(--nord12));
+		filter: drop-shadow(0 0 6px var(--orange));
 		transform: scaleX(0.8) rotate(45deg);
 		border-radius: 0 40% 60% 40%;
 	}
@@ -244,8 +244,8 @@
 		position: absolute;
 		width: 10px;
 		height: 10px;
-		background-color: var(--nord13);
-		filter: drop-shadow(0 0 4px var(--nord12));
+		background-color: var(--yellow);
+		filter: drop-shadow(0 0 4px var(--orange));
 		border-radius: 50%;
 		animation: particleUp 1.4s ease-out infinite;
 	}
@@ -279,8 +279,8 @@
 	}
 	.burst-particles .bp {
 		position: absolute;
-		background-color: var(--nord13);
-		filter: drop-shadow(0 0 4px var(--nord12));
+		background-color: var(--yellow);
+		filter: drop-shadow(0 0 4px var(--orange));
 		border-radius: 50%;
 		opacity: 0;
 		animation: burstParticleUp 2s ease-out forwards;

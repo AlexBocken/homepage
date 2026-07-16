@@ -7,7 +7,7 @@
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import X from '@lucide/svelte/icons/x';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
-	import { entriesCalories } from '$lib/fitness/nutritionMath';
+	import { entriesCalories, formatGrams as fmt } from '$lib/fitness/nutritionMath';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -163,9 +163,6 @@
 	}
 
 	/** @param {number} v */
-	function fmt(v) {
-		return v >= 100 ? Math.round(v).toString() : v.toFixed(1);
-	}
 </script>
 
 <svelte:head>
@@ -508,8 +505,8 @@
 		color: var(--color-text-primary);
 	}
 	.icon-btn.danger:hover {
-		color: var(--nord11);
-		background: color-mix(in srgb, var(--nord11) 10%, transparent);
+		color: var(--red);
+		background: color-mix(in srgb, var(--red) 10%, transparent);
 	}
 
 	/* ── Form card ── */

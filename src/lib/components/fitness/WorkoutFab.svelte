@@ -1,5 +1,6 @@
 <script>
 import { goto } from '$app/navigation';
+import { formatElapsed as formatRest } from '$lib/fitness/segmentFormat';
 import Play from '@lucide/svelte/icons/play';
 import Pause from '@lucide/svelte/icons/pause';
 import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -13,12 +14,6 @@ const t = $derived(m[lang]);
 let { href, elapsed = '0:00', paused = false, syncStatus = 'idle', onPauseToggle,
 	restSeconds = 0, restTotal = 0, onRestAdjust = null, onRestSkip = null } = $props();
 
-/** @param {number} secs */
-function formatRest(secs) {
-	const m = Math.floor(secs / 60);
-	const s = secs % 60;
-	return `${m}:${s.toString().padStart(2, '0')}`;
-}
 
 const restActive = $derived(restTotal > 0 && restSeconds > 0);
 const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
@@ -103,7 +98,7 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 		--fab-btn-border: rgba(255, 255, 255, 0.14);
 		--fab-divider: rgba(255, 255, 255, 0.12);
 		--fab-accent: var(--blue, #5e81ac);
-		--fab-paused: var(--nord13, #ebcb8b);
+		--fab-paused: var(--yellow, #ebcb8b);
 	}
 
 	.workout-fab:hover {

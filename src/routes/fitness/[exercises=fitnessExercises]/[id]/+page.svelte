@@ -359,9 +359,9 @@
 		font-weight: 600;
 		text-transform: capitalize;
 	}
-	.body-part { background: rgba(94, 129, 172, 0.2); color: var(--nord9); }
-	.equipment { background: rgba(163, 190, 140, 0.2); color: var(--nord14); }
-	.target { background: rgba(208, 135, 112, 0.2); color: var(--nord12); }
+	.body-part { background: rgba(94, 129, 172, 0.2); color: var(--lightblue); }
+	.equipment { background: rgba(163, 190, 140, 0.2); color: var(--green); }
+	.target { background: rgba(208, 135, 112, 0.2); color: var(--orange); }
 	.tag.type-stretch,
 	.tag.type-strength,
 	.tag.type-cardio,
@@ -369,9 +369,9 @@
 		font-weight: 700;
 		letter-spacing: 0.04em;
 	}
-	.tag.type-stretch { background: rgba(180, 142, 173, 0.2); color: var(--nord15); }
-	.tag.type-strength { background: rgba(94, 129, 172, 0.2); color: var(--nord10); }
-	.tag.type-cardio { background: rgba(191, 97, 106, 0.2); color: var(--nord11); }
+	.tag.type-stretch { background: rgba(180, 142, 173, 0.2); color: var(--purple); }
+	.tag.type-strength { background: rgba(94, 129, 172, 0.2); color: var(--blue); }
+	.tag.type-cardio { background: rgba(191, 97, 106, 0.2); color: var(--red); }
 	.tag.type-plyo { background: rgba(235, 203, 139, 0.22); color: var(--color-amber-text); }
 
 	/* About layout — two-column on wide screens */
@@ -431,7 +431,7 @@
 	}
 	.muscle-pill.primary {
 		background: rgba(94, 129, 172, 0.2);
-		color: var(--nord9);
+		color: var(--lightblue);
 	}
 	.muscle-pill.secondary {
 		background: transparent;
@@ -549,7 +549,7 @@
 		padding: 0.25rem;
 	}
 	.rpe {
-		color: var(--nord12);
+		color: var(--orange);
 		font-size: 0.75rem;
 	}
 

@@ -577,7 +577,7 @@
 		gap: 0.1rem;
 	}
 	.compact-delta-item.overshoot :global(*) {
-		color: var(--nord11) !important;
+		color: var(--red) !important;
 	}
 
 	.compact-add {
@@ -636,10 +636,10 @@
 	.edit-confirm:disabled { opacity: 0.5; }
 
 	/* ── Macro colors ── */
-	.macro-p { color: var(--nord14); }
-	.macro-f { color: var(--nord12); }
-	.macro-c { color: var(--nord9); }
-	.overshoot { color: var(--nord11) !important; }
+	.macro-p { color: var(--green); }
+	.macro-f { color: var(--orange); }
+	.macro-c { color: var(--lightblue); }
+	.overshoot { color: var(--red) !important; }
 
 	/* ── Toggle ── */
 	.round-off-toggle {

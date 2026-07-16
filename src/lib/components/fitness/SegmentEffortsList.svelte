@@ -158,7 +158,7 @@
 	}
 	.badge.kom {
 		color: var(--color-amber-text);
-		background: color-mix(in srgb, var(--nord13) 15%, transparent);
+		background: color-mix(in srgb, var(--yellow) 15%, transparent);
 	}
 	.badge.pr {
 		color: var(--color-primary);
@@ -180,7 +180,7 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.delta.slow {
-		color: var(--nord12);
+		color: var(--orange);
 	}
 	.right :global(.chev) {
 		color: var(--color-text-secondary);

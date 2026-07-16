@@ -1246,7 +1246,7 @@
 		border-radius: 10px;
 	}
 	.status-pill.period-pill {
-		background: var(--nord11);
+		background: var(--red);
 		color: white;
 	}
 	.status-hero {
@@ -1257,7 +1257,7 @@
 	}
 	.status-hero.ongoing-hero {
 		font-size: 1.5rem;
-		color: var(--nord11);
+		color: var(--red);
 	}
 	.status-relative {
 		font-size: 0.85rem;
@@ -1289,7 +1289,7 @@
 		white-space: nowrap;
 		align-self: flex-start;
 		margin-top: 0.6rem;
-		background: var(--nord11);
+		background: var(--red);
 		color: white;
 	}
 	.start-btn:disabled {
@@ -1310,19 +1310,19 @@
 		border-radius: 10px;
 		cursor: pointer;
 		color: white;
-		background: var(--nord11);
+		background: var(--red);
 		box-shadow: var(--shadow-sm);
 		transition: background 140ms ease;
 		-webkit-tap-highlight-color: transparent;
 	}
 	.end-btn:hover {
-		background: color-mix(in srgb, var(--nord11) 88%, black);
+		background: color-mix(in srgb, var(--red) 88%, black);
 	}
 	.end-btn:active {
-		background: color-mix(in srgb, var(--nord11) 80%, black);
+		background: color-mix(in srgb, var(--red) 80%, black);
 	}
 	.end-btn:focus-visible {
-		outline: 2px solid var(--nord11);
+		outline: 2px solid var(--red);
 		outline-offset: 2px;
 	}
 	.end-btn:disabled {
@@ -1446,18 +1446,18 @@
 	@keyframes longPressRing {
 		from {
 			transform: scale(1);
-			box-shadow: 0 0 0 0 color-mix(in srgb, var(--nord11) 70%, transparent);
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 70%, transparent);
 		}
 		to {
 			transform: scale(1.18);
-			box-shadow: 0 0 0 4px color-mix(in srgb, var(--nord11) 70%, transparent);
+			box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 70%, transparent);
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.cal-day.startable.long-pressing {
 			animation: none;
 			transform: scale(1.1);
-			box-shadow: 0 0 0 3px color-mix(in srgb, var(--nord11) 70%, transparent);
+			box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 70%, transparent);
 		}
 	}
 
@@ -1502,13 +1502,13 @@
 	/* Menses: predicted period (dashed outer) with the logged period nested inside. */
 	.band-pred {
 		z-index: 1;
-		background: color-mix(in srgb, var(--nord11) 12%, var(--color-surface));
-		border-top: 1.5px dashed var(--nord11);
-		border-bottom: 1.5px dashed var(--nord11);
+		background: color-mix(in srgb, var(--red) 12%, var(--color-surface));
+		border-top: 1.5px dashed var(--red);
+		border-bottom: 1.5px dashed var(--red);
 	}
-	.band-pred.p-start, .band-pred.p-solo { border-left: 1.5px dashed var(--nord11); }
-	.band-pred.p-end, .band-pred.p-solo { border-right: 1.5px dashed var(--nord11); }
-	.band-active { z-index: 2; background: var(--nord11); }
+	.band-pred.p-start, .band-pred.p-solo { border-left: 1.5px dashed var(--red); }
+	.band-pred.p-end, .band-pred.p-solo { border-right: 1.5px dashed var(--red); }
+	.band-active { z-index: 2; background: var(--red); }
 
 	/* Luteal: faint tail, the calmest band. */
 	.band-luteal { z-index: 0; background: color-mix(in srgb, var(--orange) 16%, transparent); }
@@ -1548,8 +1548,8 @@
 		border-radius: 5px;
 		flex-shrink: 0;
 	}
-	.legend-dot.period { background: var(--nord11); }
-	.legend-dot.predicted { background: color-mix(in srgb, var(--nord11) 12%, var(--color-surface)); border: 1.5px dashed var(--nord11); box-sizing: border-box; }
+	.legend-dot.period { background: var(--red); }
+	.legend-dot.predicted { background: color-mix(in srgb, var(--red) 12%, var(--color-surface)); border: 1.5px dashed var(--red); box-sizing: border-box; }
 	.legend-dot.fertile { border: 2px solid color-mix(in srgb, var(--blue) 60%, transparent); box-sizing: border-box; }
 	.legend-dot.peak-fertile { border: 2px solid var(--blue); box-sizing: border-box; background: color-mix(in srgb, var(--blue) 24%, var(--color-surface)); }
 	.legend-dot.ovulation { width: 12px; height: 10px; border-radius: 5px; background: var(--blue); }
@@ -1783,7 +1783,7 @@
 	}
 	.save-btn {
 		padding: 0.35rem 0.75rem;
-		background: var(--nord11);
+		background: var(--red);
 		color: white;
 		border: none;
 		border-radius: 6px;
@@ -1852,7 +1852,7 @@
 		display: inline-block;
 		margin-left: 0.4rem;
 		padding: 0.1rem 0.4rem;
-		background: var(--nord11);
+		background: var(--red);
 		color: white;
 		border-radius: 4px;
 		font-size: 0.65rem;
@@ -1887,8 +1887,8 @@
 		color: var(--blue);
 	}
 	.icon-btn.delete:hover {
-		border-color: var(--nord11);
-		color: var(--nord11);
+		border-color: var(--red);
+		color: var(--red);
 	}
 
 	.empty-state {
@@ -2006,7 +2006,7 @@
 		display: flex;
 		border-radius: 50%;
 	}
-	.chip-remove:hover { color: var(--nord11); background: var(--color-bg-tertiary); }
+	.chip-remove:hover { color: var(--red); background: var(--color-bg-tertiary); }
 	.chip-remove:disabled { opacity: 0.4; cursor: not-allowed; }
 	.share-empty {
 		font-size: 0.8rem;

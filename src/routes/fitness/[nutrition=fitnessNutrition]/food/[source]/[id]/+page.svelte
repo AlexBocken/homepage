@@ -1,7 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
+	import { macroCaloriePercent, formatGrams as fmt } from '$lib/fitness/nutritionMath';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
@@ -59,12 +59,6 @@
 
 	// --- Formatting ---
 	/** @param {number | undefined | null} v */
-	function fmt(v) {
-		if (v == null || isNaN(v)) return '0';
-		if (v >= 100) return Math.round(v).toString();
-		if (v >= 10) return v.toFixed(1);
-		return v.toFixed(1);
-	}
 
 	// --- Micronutrient sections ---
 	const mineralKeys = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
@@ -176,10 +170,10 @@
 	/** @type {Array<'breakfast' | 'lunch' | 'dinner' | 'snack'>} */
 	const mealTypes = [...MEAL_TYPES];
 	const mealMeta = {
-		breakfast: { icon: Coffee, color: 'var(--nord13)' },
-		lunch:     { icon: Sun, color: 'var(--nord12)' },
-		dinner:    { icon: Moon, color: 'var(--nord15)' },
-		snack:     { icon: Cookie, color: 'var(--nord14)' },
+		breakfast: { icon: Coffee, color: 'var(--yellow)' },
+		lunch:     { icon: Sun, color: 'var(--orange)' },
+		dinner:    { icon: Moon, color: 'var(--purple)' },
+		snack:     { icon: Cookie, color: 'var(--green)' },
 	};
 
 	let showLog = $state(false);
@@ -245,7 +239,7 @@
 		<div class="food-header-row">
 			<h1>{food.nameDe ?? food.name}</h1>
 			<button class="fav-btn" class:active={favorited} disabled={favLoading} onclick={toggleFavorite} aria-label={favorited ? 'Remove favorite' : 'Add favorite'}>
-				<Heart size={20} fill={favorited ? 'var(--nord11)' : 'none'} color={favorited ? 'var(--nord11)' : 'var(--color-text-tertiary)'} />
+				<Heart size={20} fill={favorited ? 'var(--red)' : 'none'} color={favorited ? 'var(--red)' : 'var(--color-text-tertiary)'} />
 			</button>
 		</div>
 		{#if food.nameEn && food.nameDe}
@@ -291,9 +285,9 @@
 	<!-- Macro rings -->
 	<div class="macro-rings">
 		{#each [
-			{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiss', color: 'var(--nord14)', grams: scaled(n.protein), icon: Beef },
-			{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--nord12)', grams: scaled(n.fat), icon: Droplet },
-			{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--nord9)', grams: scaled(n.carbs), icon: Wheat },
+			{ pct: macroPercent.protein, label: isEn ? 'Protein' : 'Eiweiss', color: 'var(--green)', grams: scaled(n.protein), icon: Beef },
+			{ pct: macroPercent.fat, label: isEn ? 'Fat' : 'Fett', color: 'var(--orange)', grams: scaled(n.fat), icon: Droplet },
+			{ pct: macroPercent.carbs, label: isEn ? 'Carbs' : 'Kohlenh.', color: 'var(--lightblue)', grams: scaled(n.carbs), icon: Wheat },
 		] as macro (macro.color)}
 			{@const MacroIcon = macro.icon}
 			<RingGraph
@@ -573,7 +567,7 @@
 		letter-spacing: 0.03em;
 	}
 	.badge-source {
-		background: var(--nord10);
+		background: var(--blue);
 		color: #fff;
 	}
 	.badge-category {
@@ -752,12 +746,12 @@
 	}
 	.micro-bar {
 		height: 100%;
-		background: var(--nord14);
+		background: var(--green);
 		border-radius: 3px;
 		transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	.micro-bar.is-max {
-		background: var(--nord12);
+		background: var(--orange);
 	}
 	.micro-value {
 		text-align: right;
@@ -799,7 +793,7 @@
 		font-size: 0.65rem;
 		padding: 0.1rem 0.35rem;
 		border-radius: 3px;
-		background: var(--nord14);
+		background: var(--green);
 		color: #fff;
 		font-weight: 600;
 		text-transform: uppercase;

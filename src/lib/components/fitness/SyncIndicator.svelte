@@ -27,7 +27,7 @@
 		transition: opacity 0.2s;
 	}
 	.synced {
-		color: var(--nord14);
+		color: var(--green);
 		opacity: 0.7;
 	}
 	.syncing {
@@ -39,7 +39,7 @@
 		opacity: 0.5;
 	}
 	.conflict {
-		color: var(--nord12);
+		color: var(--orange);
 		opacity: 0.9;
 	}
 	.sync-indicator :global(.spin) {

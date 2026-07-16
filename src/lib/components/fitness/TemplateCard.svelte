@@ -126,7 +126,7 @@
 		align-items: center;
 		gap: 0.3rem;
 		font-size: 0.8rem;
-		color: var(--nord10);
+		color: var(--blue);
 		font-weight: 600;
 	}
 	.last-used {

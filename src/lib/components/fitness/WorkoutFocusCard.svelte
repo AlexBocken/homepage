@@ -172,7 +172,7 @@
 		color: var(--color-text-secondary);
 	}
 	.focus-set-label.complete {
-		color: var(--nord14);
+		color: var(--green);
 	}
 	.focus-dots {
 		display: inline-flex;

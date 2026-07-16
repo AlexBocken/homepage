@@ -463,7 +463,7 @@
 		padding: 0.1rem 0.45rem;
 		border-radius: var(--radius-pill, 100px);
 		background: rgba(180, 142, 173, 0.2);
-		color: var(--nord15);
+		color: var(--purple);
 		font-size: 0.65rem;
 		font-weight: 700;
 		text-transform: uppercase;

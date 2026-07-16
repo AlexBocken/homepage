@@ -1,4 +1,5 @@
 <script>
+	import { formatElapsed as fmt } from '$lib/fitness/segmentFormat';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Pause from '@lucide/svelte/icons/pause';
 	import Play from '@lucide/svelte/icons/play';
@@ -107,8 +108,6 @@
 		children
 	} = $props();
 
-	const fmt = (/** @type {number} */ s) =>
-		`${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
 	/** Parse a number input → value (or null when cleared) and emit it. */
 	function emitField(/** @type {'weight' | 'reps' | 'rpe' | 'duration'} */ field, /** @type {Event} */ e) {

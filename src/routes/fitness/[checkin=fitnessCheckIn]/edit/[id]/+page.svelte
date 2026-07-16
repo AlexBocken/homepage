@@ -232,7 +232,7 @@
 		cursor: pointer;
 	}
 	.btn-danger:hover:not(:disabled) {
-		background: var(--nord11);
+		background: var(--red);
 	}
 	.btn-danger:disabled {
 		opacity: 0.5;

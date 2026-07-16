@@ -1,4 +1,5 @@
 <script>
+	import { formatElapsed } from '$lib/fitness/segmentFormat';
 	import Check from '@lucide/svelte/icons/check';
 	import X from '@lucide/svelte/icons/x';
 	import Play from '@lucide/svelte/icons/play';
@@ -197,7 +198,7 @@
 							<div class="hold-fill" style:width="{holdTotal > 0 ? (holdSeconds / holdTotal) * 100 : 0}%"></div>
 							<div class="hold-controls">
 								<button class="hold-skip-btn" onclick={() => onHoldSkip?.()}>
-									{Math.floor(holdSeconds / 60)}:{(holdSeconds % 60).toString().padStart(2, '0')}
+									{formatElapsed(holdSeconds)}
 								</button>
 							</div>
 						</div>
@@ -271,7 +272,7 @@
 		width: 2.5rem;
 	}
 	tr.completed {
-		background: color-mix(in srgb, var(--nord14) 10%, transparent);
+		background: color-mix(in srgb, var(--green) 10%, transparent);
 	}
 	input {
 		width: 100%;
@@ -313,8 +314,8 @@
 		padding: 0;
 	}
 	.set-remove-btn:hover {
-		color: var(--nord11);
-		background: color-mix(in srgb, var(--nord11) 10%, transparent);
+		color: var(--red);
+		background: color-mix(in srgb, var(--red) 10%, transparent);
 	}
 	.check-btn {
 		display: flex;
@@ -331,23 +332,23 @@
 		margin: 0 auto;
 	}
 	.check-btn.checked {
-		background: var(--nord14);
-		border-color: var(--nord14);
+		background: var(--green);
+		border-color: var(--green);
 		color: white;
 	}
 	.check-btn.hold-play {
-		border-color: var(--nord14);
-		color: var(--nord14);
+		border-color: var(--green);
+		color: var(--green);
 	}
 	.check-btn.hold-play:hover {
-		background: color-mix(in srgb, var(--nord14) 15%, transparent);
+		background: color-mix(in srgb, var(--green) 15%, transparent);
 	}
 	.check-btn.hold-stop {
-		border-color: var(--nord11);
-		color: var(--nord11);
+		border-color: var(--red);
+		color: var(--red);
 	}
 	.check-btn.hold-stop:hover {
-		background: color-mix(in srgb, var(--nord11) 15%, transparent);
+		background: color-mix(in srgb, var(--red) 15%, transparent);
 	}
 	.rest-row td {
 		border-top: none;
@@ -360,12 +361,12 @@
 		overflow: hidden;
 		position: relative;
 		height: 2.2rem;
-		background: color-mix(in srgb, var(--nord14) 20%, var(--nord0));
+		background: color-mix(in srgb, var(--green) 20%, var(--nord0));
 	}
 	.hold-fill {
 		position: absolute;
 		inset: 0;
-		background: var(--nord14);
+		background: var(--green);
 		border-radius: 8px;
 		transition: width 1s linear;
 	}

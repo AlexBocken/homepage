@@ -726,7 +726,7 @@
 				<div class="fs-result-row">
 					{#if showFavorites}
 						<button class="fs-fav" class:is-fav={item.favorited} onclick={() => toggleFavorite(item)} aria-label="Toggle favorite">
-							<Heart size={14} fill={item.favorited ? 'var(--nord11)' : 'none'} />
+							<Heart size={14} fill={item.favorited ? 'var(--red)' : 'none'} />
 						</button>
 					{/if}
 					<button class="fs-result" onclick={() => selectItem(item)}>
@@ -895,7 +895,7 @@
 	}
 	.fs-scan-error {
 		font-size: 0.78rem;
-		color: var(--nord11);
+		color: var(--red);
 		margin: 0.3rem 0;
 	}
 	.fs-no-results {
@@ -1015,8 +1015,8 @@
 		display: flex;
 		transition: color 0.15s;
 	}
-	.fs-fav.is-fav { color: var(--nord11); }
-	.fs-fav:hover { color: var(--nord11); }
+	.fs-fav.is-fav { color: var(--red); }
+	.fs-fav:hover { color: var(--red); }
 
 	.fs-result {
 		display: flex;
@@ -1071,16 +1071,16 @@
 		vertical-align: middle;
 	}
 	.fs-source-badge.usda {
-		background: color-mix(in srgb, var(--nord10) 15%, transparent);
-		color: var(--nord10);
+		background: color-mix(in srgb, var(--blue) 15%, transparent);
+		color: var(--blue);
 	}
 	.fs-source-badge.off {
-		background: color-mix(in srgb, var(--nord15) 15%, transparent);
-		color: var(--nord15);
+		background: color-mix(in srgb, var(--purple) 15%, transparent);
+		color: var(--purple);
 	}
 	.fs-source-badge.recipe {
-		background: color-mix(in srgb, var(--nord14) 15%, transparent);
-		color: var(--nord14);
+		background: color-mix(in srgb, var(--green) 15%, transparent);
+		color: var(--green);
 		font-size: 0.7rem;
 		padding: 0.02rem 0.15rem;
 	}
@@ -1105,7 +1105,7 @@
 		transition: color 0.15s;
 	}
 	.fs-detail-link:hover {
-		color: var(--nord10);
+		color: var(--blue);
 	}
 
 	/* ── Selected food ── */

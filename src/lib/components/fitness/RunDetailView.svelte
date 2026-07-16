@@ -332,9 +332,9 @@
 		color: var(--color-text-secondary);
 	}
 	.stat-pill.kcal {
-		color: var(--nord12);
-		border-color: var(--nord12);
-		background: color-mix(in srgb, var(--nord12) 10%, transparent);
+		color: var(--orange);
+		border-color: var(--orange);
+		background: color-mix(in srgb, var(--orange) 10%, transparent);
 	}
 	.stat-pill.has-info { position: relative; }
 	.kcal-info-trigger {
@@ -368,11 +368,11 @@
 		flex-direction: column;
 		gap: 0.15rem;
 	}
-	.kcal-info-tooltip a { color: var(--nord12); text-decoration: underline; }
+	.kcal-info-tooltip a { color: var(--orange); text-decoration: underline; }
 	.stat-pill.pr {
 		color: var(--color-amber-text);
-		border-color: var(--nord13);
-		background: color-mix(in srgb, var(--nord13) 10%, transparent);
+		border-color: var(--yellow);
+		background: color-mix(in srgb, var(--yellow) 10%, transparent);
 	}
 	.exercise-block {
 		background: var(--color-surface);
@@ -396,7 +396,7 @@
 		border-top: 1px solid var(--color-border);
 	}
 	.set-num { font-weight: 700; color: var(--color-text-secondary); }
-	.rpe { color: var(--nord12); }
+	.rpe { color: var(--orange); }
 	.est1rm { color: var(--color-primary); font-weight: 600; }
 	.gps-track-section {
 		margin-top: 0.75rem;
@@ -413,8 +413,8 @@
 		color: var(--color-text-secondary);
 	}
 	.gps-stat.accent { font-weight: 700; color: var(--color-primary); }
-	.gps-stat.elev-gain { color: var(--nord14); font-weight: 600; }
-	.gps-stat.elev-loss { color: var(--nord11); font-weight: 600; font-size: 0.8rem; }
+	.gps-stat.elev-gain { color: var(--green); font-weight: 600; }
+	.gps-stat.elev-loss { color: var(--red); font-weight: 600; font-size: 0.8rem; }
 	.track-map { height: 200px; border-radius: 8px; overflow: hidden; }
 	.best-efforts .be-row { cursor: pointer; transition: background var(--transition-fast, 100ms); }
 	.best-efforts .be-row:hover { background: var(--color-bg-elevated); }
@@ -461,13 +461,13 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.split-km { font-weight: 600; color: var(--color-text-secondary); }
-	.split-pace.fast { color: var(--nord14); }
-	.split-pace.slow { color: var(--nord12); }
+	.split-pace.fast { color: var(--green); }
+	.split-pace.slow { color: var(--orange); }
 	tr.partial .split-km { font-style: italic; opacity: 0.7; }
 	.split-elapsed { color: var(--color-text-secondary); font-size: 0.75rem; }
 	.prs-section {
-		background: color-mix(in srgb, var(--nord13) 8%, transparent);
-		border: 1px solid color-mix(in srgb, var(--nord13) 30%, transparent);
+		background: color-mix(in srgb, var(--yellow) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--yellow) 30%, transparent);
 		border-radius: 12px;
 		padding: 1rem;
 	}

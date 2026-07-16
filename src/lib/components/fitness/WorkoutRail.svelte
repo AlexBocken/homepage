@@ -465,7 +465,7 @@
 		width: 1.55rem;
 		height: 1.55rem;
 		border-radius: 100px;
-		color: var(--nord11);
+		color: var(--red);
 		opacity: 0;
 		pointer-events: none;
 		cursor: pointer;
@@ -478,7 +478,7 @@
 		pointer-events: auto;
 	}
 	.rail-chip-remove:hover {
-		background: color-mix(in srgb, var(--nord11), transparent 82%);
+		background: color-mix(in srgb, var(--red), transparent 82%);
 		transform: translateY(-50%) scale(1.08);
 	}
 	.rail-chip-remove:active {
@@ -580,8 +580,8 @@
 		width: 1.55rem;
 		height: 1.55rem;
 		border-radius: 50%;
-		border: 2px solid var(--nord14);
-		background: var(--nord14);
+		border: 2px solid var(--green);
+		background: var(--green);
 		color: white;
 	}
 	.rail-item:hover .rail-chip-count {

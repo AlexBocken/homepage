@@ -1,4 +1,6 @@
 <script>
+	import { formatElapsed as formatTime } from '$lib/fitness/segmentFormat';
+
 	/**
 	 * @type {{
 	 *   seconds: number,
@@ -11,13 +13,6 @@
 	let { seconds, total, onComplete = null, onAdjust = null, onSkip = null } = $props();
 
 	const progress = $derived(total > 0 ? seconds / total : 0);
-
-	/** @param {number} secs */
-	function formatTime(secs) {
-		const m = Math.floor(secs / 60);
-		const s = secs % 60;
-		return `${m}:${s.toString().padStart(2, '0')}`;
-	}
 
 	$effect(() => {
 		if (seconds <= 0 && total > 0) {

@@ -420,7 +420,7 @@
 	}
 	.held-badge.current {
 		color: var(--color-amber-text);
-		background: color-mix(in srgb, var(--nord13) 15%, transparent);
+		background: color-mix(in srgb, var(--yellow) 15%, transparent);
 		padding: 0.1rem 0.4rem;
 		border-radius: 1000px;
 	}

@@ -895,9 +895,9 @@
 				</div>
 				<div class="macro-rings">
 					{#each [
-						{ pct: ns.macroSplit?.protein ?? 0, target: ns.macroTargets?.protein, label: t.protein, color: 'var(--nord14)', fill: '#a3be8c', icon: Beef },
-						{ pct: ns.macroSplit?.fat ?? 0, target: ns.macroTargets?.fat, label: t.fat, color: 'var(--nord12)', fill: '#d08770', icon: Droplet },
-						{ pct: ns.macroSplit?.carbs ?? 0, target: ns.macroTargets?.carbs, label: t.carbs, color: 'var(--nord9)', fill: '#81a1c1', icon: Wheat },
+						{ pct: ns.macroSplit?.protein ?? 0, target: ns.macroTargets?.protein, label: t.protein, color: 'var(--green)', fill: '#a3be8c', icon: Beef },
+						{ pct: ns.macroSplit?.fat ?? 0, target: ns.macroTargets?.fat, label: t.fat, color: 'var(--orange)', fill: '#d08770', icon: Droplet },
+						{ pct: ns.macroSplit?.carbs ?? 0, target: ns.macroTargets?.carbs, label: t.carbs, color: 'var(--lightblue)', fill: '#81a1c1', icon: Wheat },
 					] as macro (macro.color)}
 						{@const MacroIcon = macro.icon}
 						<div class="macro-ring">
@@ -1583,13 +1583,13 @@
 		background: var(--color-primary);
 	}
 	.lifetime-card.tonnage::before {
-		background: var(--nord10);
+		background: var(--blue);
 	}
 	.lifetime-card.kcal::before {
-		background: var(--nord12);
+		background: var(--orange);
 	}
 	.lifetime-card.cardio::before {
-		background: var(--nord14);
+		background: var(--green);
 	}
 	.card-icon {
 		display: flex;
@@ -1605,16 +1605,16 @@
 		background: color-mix(in srgb, var(--color-primary) 15%, transparent);
 	}
 	.tonnage .card-icon {
-		color: var(--nord10);
-		background: color-mix(in srgb, var(--nord10) 15%, transparent);
+		color: var(--blue);
+		background: color-mix(in srgb, var(--blue) 15%, transparent);
 	}
 	.kcal .card-icon {
-		color: var(--nord12);
-		background: color-mix(in srgb, var(--nord12) 15%, transparent);
+		color: var(--orange);
+		background: color-mix(in srgb, var(--orange) 15%, transparent);
 	}
 	.cardio .card-icon {
-		color: var(--nord14);
-		background: color-mix(in srgb, var(--nord14) 15%, transparent);
+		color: var(--green);
+		background: color-mix(in srgb, var(--green) 15%, transparent);
 	}
 	.card-value {
 		font-size: 1.4rem;
@@ -1643,7 +1643,7 @@
 		line-height: 1.3;
 	}
 	.card-hint a {
-		color: var(--nord12);
+		color: var(--orange);
 		text-decoration: underline;
 	}
 	.card-hint-warning {
@@ -1690,7 +1690,7 @@
 		transition: box-shadow 0.15s;
 	}
 	.streak-section:hover {
-		box-shadow: var(--shadow-sm), 0 0 0 2px var(--nord13);
+		box-shadow: var(--shadow-sm), 0 0 0 2px var(--yellow);
 	}
 	.streak-meta {
 		display: flex;
@@ -1797,9 +1797,9 @@
 		transition: background 0.15s;
 	}
 	.adj-btn:hover:not(:disabled) {
-		background: var(--nord13);
+		background: var(--yellow);
 		color: var(--nord0);
-		border-color: var(--nord13);
+		border-color: var(--yellow);
 	}
 	.adj-btn:disabled {
 		opacity: 0.3;
@@ -1824,7 +1824,7 @@
 		padding: 0.4rem 1rem;
 		border: none;
 		border-radius: 8px;
-		background: var(--nord13);
+		background: var(--yellow);
 		color: var(--nord0);
 		font-size: 0.85rem;
 		font-weight: 600;
@@ -1907,31 +1907,31 @@
 	.muscle-nutrition-layout.diet-off {
 		display: block;
 	}
-	.protein-card::before { background: var(--nord14); }
+	.protein-card::before { background: var(--green); }
 	.balance-card::before { background: var(--color-text-secondary); }
-	.balance-card.surplus::before { background: var(--nord14); }
-	.balance-card.deficit::before { background: var(--nord11); }
-	.adherence-card::before { background: var(--nord13); }
+	.balance-card.surplus::before { background: var(--green); }
+	.balance-card.deficit::before { background: var(--red); }
+	.adherence-card::before { background: var(--yellow); }
 	.macro-card::before { background: var(--color-primary); }
 	.protein-card .card-icon {
-		color: var(--nord14);
-		background: color-mix(in srgb, var(--nord14) 15%, transparent);
+		color: var(--green);
+		background: color-mix(in srgb, var(--green) 15%, transparent);
 	}
 	.balance-card .card-icon {
 		color: var(--color-text-secondary);
 		background: color-mix(in srgb, var(--color-text-secondary) 15%, transparent);
 	}
 	.balance-card.surplus .card-icon {
-		color: var(--nord14);
-		background: color-mix(in srgb, var(--nord14) 15%, transparent);
+		color: var(--green);
+		background: color-mix(in srgb, var(--green) 15%, transparent);
 	}
 	.balance-card.deficit .card-icon {
-		color: var(--nord11);
-		background: color-mix(in srgb, var(--nord11) 15%, transparent);
+		color: var(--red);
+		background: color-mix(in srgb, var(--red) 15%, transparent);
 	}
 	.adherence-card .card-icon {
 		color: var(--color-amber-text);
-		background: color-mix(in srgb, var(--nord13) 15%, transparent);
+		background: color-mix(in srgb, var(--yellow) 15%, transparent);
 	}
 	.muscle-nutrition-layout .card-icon {
 		flex-shrink: 0;
@@ -1983,8 +1983,8 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 		z-index: 20;
 	}
-	.card-value.positive { color: var(--nord14); }
-	.card-value.negative { color: var(--nord11); }
+	.card-value.positive { color: var(--green); }
+	.card-value.negative { color: var(--red); }
 	.card-value-na {
 		color: var(--color-text-secondary);
 		opacity: 0.5;
