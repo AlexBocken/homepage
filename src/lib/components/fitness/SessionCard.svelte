@@ -4,6 +4,7 @@
 	import { getExerciseById } from '$lib/data/exercises';
 	import { formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import { bestSetLabel } from '$lib/fitness/setSummary';
+	import { sessionParam } from '$lib/fitness/prettyUrl';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Weight from '@lucide/svelte/icons/weight';
 	import Trophy from '@lucide/svelte/icons/trophy';
@@ -198,7 +199,7 @@
 {/snippet}
 
 <a
-	href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: sl.history, id: session._id })}
+	href={resolve('/fitness/[history=fitnessHistory]/[id]', { history: sl.history, id: sessionParam(session, lang) })}
 	class="session-card"
 	class:unsynced
 >{@render cardBody()}</a>

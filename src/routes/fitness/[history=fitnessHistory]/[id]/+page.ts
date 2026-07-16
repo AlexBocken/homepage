@@ -1,6 +1,7 @@
 import type { PageLoad } from './$types';
 import { browser } from '$app/environment';
 import { error } from '@sveltejs/kit';
+import { extractId, isQueuedId } from '$lib/fitness/prettyUrl';
 
 /**
  * Build a detail-page session object from a queued (unsynced) POST body. The
@@ -25,14 +26,18 @@ function buildQueuedSession(entry: { id: number; data: any }) {
 }
 
 export const load: PageLoad = async ({ params, data }) => {
-	if (!params.id.startsWith('queued-')) return data;
+	// Queued ids are never slugged (there's no server-side record to name them
+	// after), so the raw param is the id — but go through extractId so this can't
+	// drift from the server load's notion of what the param means.
+	const id = extractId(params.id);
+	if (!isQueuedId(id)) return data;
 
 	// IndexedDB only exists in the browser. On SSR (direct URL hit) we can't read
 	// the outbox; the page renders a "device-only" notice until hydration.
 	if (!browser) return { ...data, session: null, unsynced: true };
 
 	const { getQueuedSessions } = await import('$lib/offline/fitnessQueue');
-	const qid = Number(params.id.slice('queued-'.length));
+	const qid = Number(id.slice('queued-'.length));
 	const entry = (await getQueuedSessions()).find((e) => e.id === qid);
 	if (!entry) error(404, 'Session not found');
 

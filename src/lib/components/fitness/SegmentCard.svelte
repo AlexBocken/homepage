@@ -7,6 +7,7 @@
 	import { m, fitnessSlugs, type FitnessLang } from '$lib/js/fitnessI18n';
 	import { projectTrack, svgPath } from '$lib/fitness/trackSvg';
 	import { formatElapsed } from '$lib/fitness/segmentFormat';
+	import { segmentParam } from '$lib/fitness/prettyUrl';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 
 	interface SegmentSummary {
@@ -88,7 +89,7 @@
 		{@render inner()}
 	</button>
 {:else}
-	<a class="segment-card" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: segment._id })}>
+	<a class="segment-card" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: segmentParam(segment) })}>
 		{@render inner()}
 	</a>
 {/if}

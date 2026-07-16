@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { m, fitnessSlugs, type FitnessLang } from '$lib/js/fitnessI18n';
 	import { formatElapsed, formatDelta } from '$lib/fitness/segmentFormat';
+	import { segmentParam } from '$lib/fitness/prettyUrl';
 
 	interface RunEffort {
 		effortId: string;
@@ -46,7 +47,7 @@
 					onmouseenter={() => onhighlight?.({ startIdx: e.startIdx, endIdx: e.endIdx, exerciseIndex: e.exerciseIndex })}
 					onmouseleave={() => onhighlight?.(null)}
 				>
-					<a class="seg-link" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: e.segmentId })}>
+					<a class="seg-link" href={resolve('/fitness/[segments=fitnessSegments]/[id]', { segments: fitnessSlugs(lang).segments, id: segmentParam({ _id: e.segmentId, name: e.segmentName }) })}>
 						<div class="left">
 							<span class="seg-name">{e.segmentName}</span>
 							<span class="seg-dist">{e.segmentDistance.toFixed(2)} {t.km}</span>
