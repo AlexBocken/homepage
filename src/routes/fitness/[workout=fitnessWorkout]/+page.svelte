@@ -26,7 +26,8 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const sl = $derived(fitnessSlugs(lang));
-	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
+	import { getExerciseById, getExerciseMetrics, isTimedMetrics, METRIC_LABELS } from '$lib/data/exercises';
+	import { formatSetDuration } from '$lib/fitness/segmentFormat';
 	import TemplateCard from '$lib/components/fitness/TemplateCard.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 
@@ -112,6 +113,31 @@
 		}
 	});
 
+	/**
+	 * One planned set → "60 kg × 10". A template set can leave any metric blank,
+	 * so only the filled ones are rendered; RPE is left out to keep the preview
+	 * readable. Timed sets carry their own unit ("45 s" / "1:30").
+	 * @param {Record<string, any>} set
+	 * @param {import('$lib/data/exercises').MetricField[]} metrics
+	 */
+	function formatTemplateSet(set, metrics) {
+		const timed = isTimedMetrics(metrics);
+		/** @type {string[]} */
+		const parts = [];
+		for (const metric of metrics) {
+			const v = set[metric];
+			if (metric === 'rpe' || v == null) continue;
+			if (metric === 'weight') parts.push(`${v} kg`);
+			else if (metric === 'reps') parts.push(String(v));
+			else if (metric === 'distance') parts.push(`${v} km`);
+			else if (metric === 'duration') parts.push(timed ? formatSetDuration(v) : `${v} min`);
+		}
+		if (parts.length === 0) return '—';
+		// A lone rep count needs its unit; alongside a weight the "×" already says it.
+		if (parts.length === 1 && set.reps != null && set.weight == null) return `${set.reps} ${t.coach_reps}`;
+		return parts.join(' × ');
+	}
+
 	/** @param {any} template */
 	function openTemplateDetail(template) {
 		selectedTemplate = template;
@@ -146,9 +172,9 @@
 		goto(`/fitness/${sl.workout}/${sl.active}`);
 	}
 
-	async function startNextScheduled() {
+	function previewNextScheduled() {
 		if (!nextTemplate) return;
-		await startFromTemplate(nextTemplate);
+		openTemplateDetail(nextTemplate);
 	}
 
 	async function openLibrary() {
@@ -417,7 +443,7 @@
 				<CalendarClock size={16} />
 				<span>{t.next_in_schedule}</span>
 			</div>
-			<button class="next-workout-btn" onclick={startNextScheduled}>
+			<button class="next-workout-btn" onclick={previewNextScheduled}>
 				<div class="next-info">
 					<span class="next-name">{nextTemplate.name}</span>
 					{#if nextTemplate.mode === 'gps'}
@@ -540,14 +566,19 @@
 					{/if}
 				{:else}
 					<ul class="template-exercises">
-						{#each selectedTemplate.exercises as ex (ex.exerciseId)}
+						{#each selectedTemplate.exercises as ex, exIdx (exIdx)}
 							{@const exercise = getExerciseById(ex.exerciseId, lang)}
-							{@const firstWeight = ex.sets.find((/** @type {any} */ s) => s.weight != null)?.weight}
+							{@const metrics = getExerciseMetrics(exercise)}
 							<li>
-								<span class="tex-name">{exercise?.localName ?? ex.exerciseId}</span>
-								<span class="tex-meta">
-									{ex.sets.length} {ex.sets.length !== 1 ? t.sets : t.set}{#if firstWeight != null} · {firstWeight} kg{/if}
-								</span>
+								<div class="tex-head">
+									<span class="tex-name">{exercise?.localName ?? ex.exerciseId}</span>
+									<span class="tex-meta">{ex.sets.length} {ex.sets.length !== 1 ? t.sets : t.set}</span>
+								</div>
+								<ul class="tex-sets">
+									{#each ex.sets as set, setIdx (setIdx)}
+										<li>{formatTemplateSet(set, metrics)}</li>
+									{/each}
+								</ul>
 							</li>
 						{/each}
 					</ul>
@@ -1046,18 +1077,41 @@
 		padding: 0;
 		margin: 0;
 	}
-	.template-exercises li {
+	.template-exercises > li {
+		padding: 0.5rem 0 0.75rem;
+		font-size: 0.85rem;
+	}
+	.template-exercises > li + li {
+		border-top: 1px solid var(--color-border);
+	}
+	.tex-head {
 		display: flex;
 		justify-content: space-between;
-		padding: 0.5rem 0;
-		border-bottom: 1px solid var(--color-border);
-		font-size: 0.85rem;
+		align-items: baseline;
+		gap: 0.5rem;
 	}
 	.tex-name {
 		font-weight: 600;
 	}
 	.tex-meta {
 		color: var(--color-text-secondary);
+		white-space: nowrap;
+	}
+	.tex-sets {
+		list-style: none;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+		padding: 0;
+		margin: 0.4rem 0 0;
+	}
+	.tex-sets li {
+		padding: 0.15rem 0.5rem;
+		background: var(--color-bg-elevated);
+		border-radius: var(--radius-sm);
+		font-size: 0.8rem;
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
 	}
 	.modal-meta {
 		font-size: 0.75rem;
