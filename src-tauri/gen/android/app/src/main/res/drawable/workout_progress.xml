@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rounded, full-height progress drawable for the workout notification bar, so
+     the bar's thickness follows the ProgressBar's layout_height (a stock
+     horizontal bar keeps a fixed thin drawable and just pads the extra space). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="#4C566A" />
+        </shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="8dp" />
+                <solid android:color="#5E81AC" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>

@@ -39,12 +39,11 @@
             android:id="@+id/wp_bar"
             style="@android:style/Widget.Material.ProgressBar.Horizontal"
             android:layout_width="0dp"
-            android:layout_height="18dp"
+            android:layout_height="16dp"
             android:layout_weight="1"
             android:max="100"
             android:progress="100"
-            android:progressBackgroundTint="#4C566A"
-            android:progressTint="#5E81AC" />
+            android:progressDrawable="@drawable/workout_progress" />
 
         <Chronometer
             android:id="@+id/wp_chrono"

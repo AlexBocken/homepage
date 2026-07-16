@@ -1,7 +1,7 @@
 {
   "productName": "Bocken",
   "identifier": "org.bocken.app",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "build": {
     "devUrl": "http://192.168.1.4:5173",
     "frontendDist": "https://bocken.org"

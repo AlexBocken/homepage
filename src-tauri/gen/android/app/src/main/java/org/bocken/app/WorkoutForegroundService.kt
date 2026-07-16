@@ -500,7 +500,7 @@ class WorkoutForegroundService : Service() {
                 val t = "Holding · ${current.exerciseName}"
                 val txt = current.setLabel
                 builder.setContentTitle(t).setContentText(txt)
-                setCountdown(builder, holdEndsAt, holdTotalSecs)
+                setCountdown(builder, holdEndsAt)
                 builder.setStyle(Notification.DecoratedCustomViewStyle())
                     .setCustomBigContentView(timerBigView(t, txt, holdEndsAt, holdTotalSecs))
                 builder.addAction(action(ACTION_COMPLETE_SET, "Finish", 10))
@@ -509,7 +509,7 @@ class WorkoutForegroundService : Service() {
                 val t = "Rest"
                 val txt = "Next: ${current.exerciseName} · ${current.setLabel} · ${setDetail(current)}"
                 builder.setContentTitle(t).setContentText(txt)
-                setCountdown(builder, restEndsAt, restTotalSecs)
+                setCountdown(builder, restEndsAt)
                 builder.setStyle(Notification.DecoratedCustomViewStyle())
                     .setCustomBigContentView(timerBigView(t, txt, restEndsAt, restTotalSecs))
                 builder.addAction(action(ACTION_ADJUST_REST, "+30s", 11, 30))
@@ -528,18 +528,14 @@ class WorkoutForegroundService : Service() {
         return builder.build()
     }
 
-    /** Render a live count-down to [endsAt]: a system-driven chronometer in the
-     *  time slot (ticks itself, even backgrounded) plus a decaying progress bar
-     *  (remaining/total) that the progress ticker refreshes ~1×/sec. */
-    private fun setCountdown(builder: Notification.Builder, endsAt: Long, totalSecs: Int) {
+    /** Render a live count-down to [endsAt] as a system-driven chronometer in the
+     *  time slot (ticks itself, even backgrounded). The decaying bar lives in the
+     *  expanded custom view (timerBigView) — we deliberately don't also call
+     *  setProgress here, which would draw a second bar below it. */
+    private fun setCountdown(builder: Notification.Builder, endsAt: Long) {
         builder.setWhen(endsAt).setShowWhen(true).setUsesChronometer(true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             builder.setChronometerCountDown(true)
-        }
-        if (totalSecs > 0) {
-            val remaining = ((endsAt - System.currentTimeMillis()) / 1000)
-                .coerceIn(0L, totalSecs.toLong())
-            builder.setProgress(totalSecs, remaining.toInt(), false)
         }
     }
 
