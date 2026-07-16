@@ -27,6 +27,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import MacroBreakdown from './MacroBreakdown.svelte';
+	import PortionAmountInput from './PortionAmountInput.svelte';
 
 	/**
 	 * @typedef {{ description: string, grams: number }} Portion
@@ -118,8 +119,10 @@
 	// --- Selection state ---
 	/** @type {FoodItem | null} */
 	let selected = $state(null);
-	let amountInput = $state('100');
-	let portionIdx = $state(-1); // -1 = grams
+	/** Canonical consumed amount; PortionAmountInput keeps it in sync with the qty+unit UI. */
+	let logGrams = $state(100);
+	/** @type {Portion | undefined} */
+	let chosenPortion = $state(undefined);
 
 	// --- Barcode scanner state ---
 	let scanning = $state(false);
@@ -210,30 +213,14 @@
 			}
 		}
 		selected = chosen;
-		if ((chosen.portions?.length ?? 0) > 0) {
-			portionIdx = 0;
-			amountInput = '1';
-		} else {
-			portionIdx = -1;
-			amountInput = '100';
-		}
+		// Default to one of the first portion when the source offers any — that's the
+		// unit the label is written in, and far likelier what the user means than 100 g.
+		const first = chosen.portions?.[0];
+		chosenPortion = first;
+		logGrams = first ? Math.round(first.grams) : 100;
 	}
 
-	function resolveGrams() {
-		const qty = Number(amountInput) || 0;
-		if (portionIdx >= 0 && selected?.portions?.[portionIdx]) {
-			return Math.round(qty * selected.portions[portionIdx].grams);
-		}
-		return qty;
-	}
-
-	const previewGrams = $derived.by(() => {
-		const qty = Number(amountInput) || 0;
-		if (portionIdx >= 0 && selected?.portions?.[portionIdx]) {
-			return Math.round(qty * selected.portions[portionIdx].grams);
-		}
-		return qty;
-	});
+	const previewGrams = $derived(logGrams);
 
 	/** Scaled nutrient values for the preview */
 	const previewNutrients = $derived.by(() => {
@@ -253,22 +240,21 @@
 
 	function confirm() {
 		if (!selected) return;
-		const grams = resolveGrams();
-		if (!grams || grams <= 0) return;
+		if (!logGrams || logGrams <= 0) return;
 
 		/** @type {{ name: string, source: string, sourceId: string, amountGrams: number, per100g: any, portions?: Portion[], selectedPortion?: Portion }} */
 		const food = {
 			name: selected.name,
 			source: selected.source,
 			sourceId: selected.id,
-			amountGrams: grams,
+			amountGrams: logGrams,
 			per100g: selected.per100g,
 		};
 		if (selected.portions && selected.portions.length > 0) {
 			food.portions = selected.portions;
 		}
-		if (portionIdx >= 0 && selected.portions?.[portionIdx]) {
-			food.selectedPortion = selected.portions[portionIdx];
+		if (chosenPortion) {
+			food.selectedPortion = chosenPortion;
 		}
 		onselect(food);
 		reset();
@@ -278,8 +264,8 @@
 		selected = null;
 		query = '';
 		results = [];
-		amountInput = '100';
-		portionIdx = -1;
+		logGrams = 100;
+		chosenPortion = undefined;
 	}
 
 	/** @param {FoodItem} item */
@@ -768,36 +754,15 @@
 			{/if}
 		</div>
 
-		<!-- Amount selector -->
-		<div class="fs-amount-row">
-			<input
-				type="number"
-				class="fs-amount-input"
-				bind:value={amountInput}
-				min="0.1"
-				step={portionIdx >= 0 ? '0.5' : '1'}
+		<!-- Amount selector — keyed so a newly picked food reseeds its portion basis -->
+		{#key selected.source + ':' + selected.id}
+			<PortionAmountInput
+				bind:grams={logGrams}
+				bind:selectedPortion={chosenPortion}
+				portions={selected.portions ?? []}
+				onenter={confirm}
 			/>
-			{#if (selected.portions?.length ?? 0) > 0}
-				<select class="fs-unit-select" bind:value={portionIdx} onchange={() => {
-					const grams = resolveGrams();
-					if (portionIdx >= 0 && selected?.portions?.[portionIdx]) {
-						amountInput = String(Math.round((grams / selected.portions[portionIdx].grams) * 10) / 10 || 1);
-					} else {
-						amountInput = String(grams || 100);
-					}
-				}}>
-					<option value={-1}>g</option>
-					{#each selected.portions as p, pi}
-						<option value={pi}>{p.description} ({Math.round(p.grams)}g)</option>
-					{/each}
-				</select>
-			{:else}
-				<span class="fs-unit-label">g</span>
-			{/if}
-		</div>
-		{#if portionIdx >= 0 && previewGrams > 0}
-			<span class="fs-detail-hint">= {previewGrams}g</span>
-		{/if}
+		{/key}
 
 		{#if previewNutrients}
 			<MacroBreakdown
@@ -1127,52 +1092,6 @@
 		color: var(--color-text-tertiary);
 		font-style: italic;
 	}
-	.fs-amount-row {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-	.fs-amount-input {
-		width: 5rem;
-		padding: 0.45rem 0.55rem;
-		background: var(--color-bg-tertiary);
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		color: var(--color-text-primary);
-		font-size: 0.9rem;
-		text-align: right;
-		transition: border-color 0.15s;
-		box-sizing: border-box;
-	}
-	.fs-amount-input:focus {
-		outline: none;
-		border-color: var(--nord8);
-	}
-	.fs-unit-select {
-		padding: 0.45rem 0.4rem;
-		background: var(--color-bg-tertiary);
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		color: var(--color-text-primary);
-		font-size: 0.78rem;
-		min-width: 0;
-		flex: 1;
-	}
-	.fs-unit-select:focus {
-		outline: none;
-		border-color: var(--nord8);
-	}
-	.fs-unit-label {
-		font-size: 0.85rem;
-		color: var(--color-text-secondary);
-	}
-
-	/* ── Detail view ── */
-	.fs-detail-hint {
-		font-size: 0.75rem;
-		color: var(--color-text-tertiary);
-	}
-
 	/* ── Buttons ── */
 	.fs-actions {
 		display: flex;

@@ -20,6 +20,7 @@
 	import { localDateStr } from '$lib/js/localDate';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
+	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
 
 	let { data } = $props();
 
@@ -32,7 +33,7 @@
 	const dri = $derived(data.dri);
 	const n = $derived(food.per100g);
 
-	// --- Portion selector (USDA only) ---
+	// --- Portion selector: the basis the whole page's figures are shown in ---
 	let selectedPortionIdx = $state(-1); // -1 = per 100g
 	const portions = $derived(food.portions ?? []);
 	const portionMultiplier = $derived(
@@ -180,15 +181,19 @@
 	/** @type {'breakfast' | 'lunch' | 'dinner' | 'snack'} */
 	let logMealType = $state('lunch');
 	let logGrams = $state(100);
+	/** @type {{ description: string, grams: number } | undefined} */
+	let logPortion = $state(undefined);
 	let logging = $state(false);
 
 	const logPreviewCal = $derived(Math.round((n.calories ?? 0) * logGrams / 100));
 
 	function openLog() {
 		logMealType = defaultMealType();
-		logGrams = selectedPortionIdx >= 0 && portions[selectedPortionIdx]
-			? portions[selectedPortionIdx].grams
-			: 100;
+		// Open on whatever basis the page is already showing; failing that the first
+		// portion, since that's the unit the product is labelled in.
+		const basis = portions[selectedPortionIdx] ?? portions[0];
+		logPortion = basis;
+		logGrams = basis ? Math.round(basis.grams) : 100;
 		showLog = true;
 	}
 
@@ -206,6 +211,8 @@
 					source: food.source,
 					sourceId: food.id ?? /** @type {any} */ (food).sourceId,
 					amountGrams: logGrams,
+					portions,
+					selectedPortion: logPortion,
 					per100g: n,
 				}),
 			});
@@ -262,7 +269,7 @@
 		</div>
 	</header>
 
-	<!-- Portion selector (USDA only) -->
+	<!-- Portion selector (any source that ships portions: USDA, OFF, recipes) -->
 	{#if portions.length > 0}
 		<div class="portion-selector">
 			<label for="portion-select">{isEn ? 'Serving size' : 'Portionsgrösse'}</label>
@@ -408,7 +415,7 @@
 		</div>
 	{/if}
 
-	<!-- Portions table (USDA only) -->
+	<!-- Portions table (any source that ships portions: USDA, OFF, recipes) -->
 	{#if portions.length > 0}
 		<div class="section-card">
 			<h2>{isEn ? 'Common Serving Sizes' : 'Übliche Portionsgrössen'}</h2>
@@ -470,22 +477,20 @@
 				{/each}
 			</div>
 
-			<!-- Portion quick-select (USDA / OFF only) -->
-			{#if portions.length > 0}
-				<select class="log-portion-select" onchange={(e) => (logGrams = Number(e.currentTarget.value))}>
-					<option value="100">{isEn ? 'Per 100 g' : 'Pro 100 g'}</option>
-					{#each portions as portion, i (i)}
-						<option value={portion.grams}>{portion.description} ({portion.grams}g)</option>
-					{/each}
-				</select>
-			{/if}
-
-			<!-- Amount -->
-			<form class="log-amount-row" onsubmit={(e) => { e.preventDefault(); logFood(); }}>
-				<input type="number" class="log-amount-input" bind:value={logGrams} min="1" step="1" />
-				<span class="log-amount-unit">g</span>
+			<!-- Amount, in portions or grams -->
+			<div class="log-amount-row">
+				<PortionAmountInput
+					bind:grams={logGrams}
+					bind:selectedPortion={logPortion}
+					{portions}
+					showGramsHint={false}
+					onenter={logFood}
+				/>
 				<span class="log-amount-cal">{logPreviewCal} kcal</span>
-			</form>
+			</div>
+			{#if logPortion && logGrams > 0}
+				<span class="log-amount-hint">= {logGrams} g</span>
+			{/if}
 
 			<button class="log-confirm" disabled={logging || !(logGrams > 0)} onclick={logFood}>
 				<Plus size={16} />
@@ -1003,38 +1008,14 @@
 	.fab-meal-btn:hover:not(.active) {
 		border-color: var(--color-text-secondary);
 	}
-	.log-portion-select {
-		width: 100%;
-		padding: 0.5rem;
-		border-radius: 8px;
-		border: 1px solid var(--color-border);
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-		font-size: 0.9rem;
-	}
 	.log-amount-row {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 	}
-	.log-amount-input {
-		flex: 1;
-		min-width: 0;
-		padding: 0.5rem 0.6rem;
-		border-radius: 8px;
-		border: 1px solid var(--color-border);
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-		font-size: 1rem;
-		font-variant-numeric: tabular-nums;
-	}
-	.log-amount-input:focus {
-		outline: none;
-		border-color: var(--color-primary);
-	}
-	.log-amount-unit {
-		font-size: 0.9rem;
-		color: var(--color-text-secondary);
+	.log-amount-hint {
+		font-size: 0.78rem;
+		color: var(--color-text-tertiary);
 	}
 	.log-amount-cal {
 		margin-left: auto;

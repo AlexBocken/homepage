@@ -9,6 +9,7 @@ import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, resolvePer100g, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 import { scaleFromPer100g } from '$lib/fitness/nutritionMath';
+import { offPortions } from '$lib/server/offPortions';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 
 async function computeRecipePer100g(id: string): Promise<Record<string, number>> {
@@ -142,10 +143,6 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 			await errorWithVerse(fetch, url.pathname, 404, 'Food not found');
 			throw new Error('unreachable');
 		}
-		const portions: { description: string; grams: number }[] = [];
-		if (entry.serving?.grams) {
-			portions.push(entry.serving as { description: string; grams: number });
-		}
 		return {
 			food: {
 				source: 'off' as const,
@@ -157,7 +154,7 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 				per100g: entry.per100g as unknown as Record<string, number>,
 				brands: entry.brands,
 				nutriscore: entry.nutriscore,
-				portions,
+				portions: offPortions(entry),
 			},
 			dri: DRI_MALE,
 		};

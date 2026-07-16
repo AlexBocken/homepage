@@ -4,6 +4,7 @@ import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { RoundOffCache } from '$models/RoundOffCache';
+import { coercePortion, coercePortions } from '$lib/fitness/portions';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const user = await requireAuth(locals);
@@ -17,6 +18,15 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const allowed = ['amountGrams', 'mealType', 'name'] as const;
 	for (const key of allowed) {
 		if (body[key] !== undefined) (entry as any)[key] = body[key];
+	}
+
+	// `selectedPortion: null` means the user switched the amount back to plain
+	// grams — distinct from omitting the key, which leaves the basis untouched.
+	if (body.selectedPortion !== undefined) {
+		entry.selectedPortion = coercePortion(body.selectedPortion) ?? undefined;
+	}
+	if (body.portions !== undefined) {
+		entry.portions = coercePortions(body.portions);
 	}
 
 	await entry.save();

@@ -7,7 +7,16 @@ interface IFoodLogEntry {
   name: string;
   source: 'bls' | 'usda' | 'recipe' | 'custom' | 'off';
   sourceId?: string;
+  /**
+   * The canonical consumed amount. Every nutrition figure derives from this and
+   * `per100g` — `selectedPortion` is only a display lens over it (see
+   * $lib/fitness/portions).
+   */
   amountGrams: number;
+  /** Portion choices offered when this was logged, so editing can re-offer them. */
+  portions?: { description: string; grams: number }[];
+  /** The portion basis the user picked, if any. Never used for nutrition math. */
+  selectedPortion?: { description: string; grams: number };
   per100g: {
     calories: number; protein: number; fat: number; saturatedFat: number;
     carbs: number; fiber: number; sugars: number;
@@ -43,6 +52,11 @@ const NutritionSnapshotSchema = new mongoose.Schema({
   serine: Number, tyrosine: Number,
 }, { _id: false });
 
+const PortionSchema = new mongoose.Schema({
+  description: { type: String, required: true },
+  grams: { type: Number, required: true },
+}, { _id: false });
+
 const FoodLogEntrySchema = new mongoose.Schema(
   {
     date: { type: Date, required: true },
@@ -51,6 +65,8 @@ const FoodLogEntrySchema = new mongoose.Schema(
     source: { type: String, enum: ['bls', 'usda', 'recipe', 'custom', 'off'], required: true },
     sourceId: { type: String },
     amountGrams: { type: Number, required: true, min: 0 },
+    portions: { type: [PortionSchema], default: undefined },
+    selectedPortion: { type: PortionSchema, default: undefined },
     per100g: { type: NutritionSnapshotSchema, required: true },
     liquidMl: { type: Number, min: 0 },
     createdBy: { type: String, required: true },

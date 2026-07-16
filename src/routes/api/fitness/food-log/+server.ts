@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { RoundOffCache } from '$models/RoundOffCache';
 import { LOGGABLE_MEALS } from '$lib/fitness/meals';
+import { coercePortion, coercePortions } from '$lib/fitness/portions';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = await requireAuth(locals);
@@ -47,6 +48,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (typeof amountGrams !== 'number' || amountGrams <= 0) throw error(400, 'amountGrams must be positive');
 	if (!per100g || typeof per100g.calories !== 'number') throw error(400, 'per100g with calories is required');
 
+	// Portions are display metadata only — amountGrams above stays the source of
+	// truth, so invalid portion data is dropped rather than rejecting the log.
+	const portions = coercePortions(body.portions);
+	const selectedPortion = coercePortion(body.selectedPortion);
+
 	const entry = await FoodLogEntry.create({
 		date: new Date(date + 'T00:00:00.000Z'),
 		mealType,
@@ -54,6 +60,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		source: source || 'custom',
 		sourceId,
 		amountGrams,
+		...(portions && { portions }),
+		...(selectedPortion && { selectedPortion }),
 		per100g,
 		...(liquidMl > 0 && { liquidMl }),
 		createdBy: user.nickname,

@@ -32,7 +32,9 @@
 	import { atwaterCalories as atwaterKcal, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import AddButton from '$lib/components/AddButton.svelte';
+	import { formatAmountLabel } from '$lib/fitness/portions';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
+	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
 	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
 	import RoundOffCard from '$lib/components/fitness/RoundOffCard.svelte';
@@ -41,6 +43,8 @@
 	import { getDRI, NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 
 	/**
+	 * @typedef {{ description: string, grams: number }} Portion
+	 *
 	 * @typedef {{
 	 *   _id: string,
 	 *   mealType: string,
@@ -48,6 +52,8 @@
 	 *   source?: string,
 	 *   sourceId?: string,
 	 *   amountGrams: number,
+	 *   portions?: Portion[],
+	 *   selectedPortion?: Portion,
 	 *   liquidMl?: number,
 	 *   per100g?: Record<string, number>,
 	 * }} FoodLogEntry
@@ -71,6 +77,8 @@
 	 *   source: string,
 	 *   sourceId: string,
 	 *   amountGrams: number,
+	 *   portions?: Portion[],
+	 *   selectedPortion?: Portion,
 	 *   per100g: Record<string, number>,
 	 * }} FoodSelection
 	 */
@@ -669,6 +677,8 @@
 					source: food.source,
 					sourceId: food.sourceId,
 					amountGrams: food.amountGrams,
+					portions: food.portions,
+					selectedPortion: food.selectedPortion,
 					per100g: food.per100g,
 				})
 			});
@@ -968,6 +978,8 @@
 					source: food.source,
 					sourceId: food.sourceId,
 					amountGrams: food.amountGrams,
+					portions: food.portions,
+					selectedPortion: food.selectedPortion,
 					per100g: food.per100g,
 				})
 			});
@@ -984,6 +996,10 @@
 	/** @type {string|null} */
 	let editingEntryId = $state(null);
 	let editingGrams = $state(0);
+	/** @type {Portion[]} */
+	let editingPortions = $state([]);
+	/** @type {Portion | undefined} */
+	let editingPortion = $state(undefined);
 	/** @type {'breakfast'|'lunch'|'dinner'|'snack'} */
 	let editingMeal = $state('breakfast');
 
@@ -991,6 +1007,8 @@
 	function startEditEntry(entry) {
 		editingEntryId = entry._id;
 		editingGrams = entry.amountGrams;
+		editingPortions = entry.portions ?? [];
+		editingPortion = entry.selectedPortion;
 		editingMeal = /** @type {'breakfast'|'lunch'|'dinner'|'snack'} */ (entry.mealType);
 	}
 
@@ -1000,7 +1018,12 @@
 			const res = await fetch(`/api/fitness/food-log/${editingEntryId}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ amountGrams: editingGrams, mealType: editingMeal }),
+				body: JSON.stringify({
+					amountGrams: editingGrams,
+					mealType: editingMeal,
+					// Explicit null clears the basis when the user switches back to grams.
+					selectedPortion: editingPortion ?? null,
+				}),
 			});
 			if (res.ok) {
 				const updated = await res.json();
@@ -1213,38 +1236,44 @@
 		favTabLoaded = false;
 	}
 
-	/** @type {{ name: string, source?: string, sourceId?: string, per100g?: any, amountGrams?: number } | null} */
+	/** @type {{ name: string, source?: string, sourceId?: string, per100g?: any, portions?: Portion[], amountGrams?: number } | null} */
 	let qlSelected = $state(null);
 	let qlGrams = $state(100);
+	/** @type {Portion | undefined} */
+	let qlPortion = $state(undefined);
 	let qlLoading = $state(false);
 
-	/** @param {{ name: string, source?: string, sourceId?: string, per100g?: any, amountGrams?: number }} item */
+	/** @param {{ name: string, source?: string, sourceId?: string, per100g?: any, portions?: Portion[], amountGrams?: number }} item */
 	async function qlSelect(item) {
 		if (qlSelected && qlSelected.source === item.source && qlSelected.sourceId === item.sourceId) {
 			qlSelected = null;
 			return;
 		}
-		qlGrams = item.amountGrams ?? 100;
-		if (item.per100g) {
-			qlSelected = item;
-		} else {
-			// Favorites don't have per100g — fetch by exact source+id
+		let chosen = item;
+		// Look up whenever either the nutrition or the portion list is missing —
+		// favourites carry neither, and recents cache per100g but never portions.
+		if ((!item.per100g || !item.portions) && item.source && item.sourceId) {
 			qlLoading = true;
 			try {
-				const res = await fetch(`/api/nutrition/lookup?source=${item.source}&id=${encodeURIComponent(item.sourceId ?? '')}`);
+				const res = await fetch(`/api/nutrition/lookup?source=${item.source}&id=${encodeURIComponent(item.sourceId)}`);
 				if (res.ok) {
 					const data = await res.json();
-					if (data.per100g) {
-						qlSelected = { ...item, per100g: data.per100g };
-					} else {
-						toast.error(isEn ? 'Could not load food data' : 'Lebensmitteldaten nicht gefunden');
-					}
+					chosen = { ...item, per100g: item.per100g ?? data.per100g, portions: item.portions ?? data.portions };
 				}
 			} catch {
 				toast.error(isEn ? 'Failed to load food data' : 'Fehler beim Laden');
 			}
 			qlLoading = false;
 		}
+		if (!chosen.per100g) {
+			toast.error(isEn ? 'Could not load food data' : 'Lebensmitteldaten nicht gefunden');
+			return;
+		}
+		// Default to one whole portion when the food has one, mirroring FoodSearch.
+		const first = chosen.portions?.[0];
+		qlPortion = first;
+		qlGrams = item.amountGrams ?? (first ? Math.round(first.grams) : 100);
+		qlSelected = chosen;
 	}
 
 	async function qlConfirm() {
@@ -1260,6 +1289,8 @@
 					source: qlSelected.source,
 					sourceId: qlSelected.sourceId,
 					amountGrams: qlGrams,
+					portions: qlSelected.portions,
+					selectedPortion: qlPortion,
 					per100g: qlSelected.per100g,
 				})
 			});
@@ -1954,10 +1985,15 @@
 							<span class="food-card-name">{entry.name}</span>
 						{/if}
 							{#if editingEntryId === entry._id}
-								<form class="food-card-edit-form" onsubmit={e => { e.preventDefault(); saveEditEntry(); }}>
-									<input type="number" class="food-card-edit-input" bind:value={editingGrams} min="1" step="1" />
-									<span class="food-card-edit-unit">g</span>
-								</form>
+								<div class="food-card-edit-form">
+									<PortionAmountInput
+										bind:grams={editingGrams}
+										bind:selectedPortion={editingPortion}
+										portions={editingPortions}
+										size="compact"
+										onenter={saveEditEntry}
+									/>
+								</div>
 								<div class="food-card-meal-pills" role="radiogroup" aria-label={isEn ? 'Meal' : 'Mahlzeit'}>
 									{#each mealTypes as m}
 										{@const MPIcon = mealMeta[m].icon}
@@ -1976,7 +2012,7 @@
 									{/each}
 								</div>
 							{:else}
-								<span class="food-card-detail">{entry.amountGrams}g · {fmtCal(entryCalories(entry))} kcal</span>
+								<span class="food-card-detail">{formatAmountLabel(entry.amountGrams, entry.selectedPortion)} · {fmtCal(entryCalories(entry))} kcal</span>
 							{/if}
 							<span class="food-card-macros">{fmt(entryNutrient(entry, 'protein'))}g <Beef size={10} /> · {fmt(entryNutrient(entry, 'fat'))}g <Droplet size={10} /> · {fmt(entryNutrient(entry, 'carbs'))}g <Wheat size={10} /></span>
 						</div>
@@ -2060,11 +2096,17 @@
 							<Plus size={14} class="ql-item-add" />
 						</button>
 						{#if isActive}
-							<form class="ql-amount-row" onsubmit={e => { e.preventDefault(); qlConfirm(); }}>
-								<input type="number" class="ql-amount-input" bind:value={qlGrams} min="1" step="1" />
-								<span class="ql-amount-unit">g</span>
-								<button type="submit" class="ql-amount-confirm"><Check size={14} /></button>
-							</form>
+							<div class="ql-amount-row">
+								<PortionAmountInput
+									bind:grams={qlGrams}
+									bind:selectedPortion={qlPortion}
+									portions={qlSelected?.portions ?? []}
+									size="compact"
+									showGramsHint={false}
+									onenter={qlConfirm}
+								/>
+								<button type="button" class="ql-amount-confirm" onclick={qlConfirm} aria-label={t.log_food}><Check size={14} /></button>
+							</div>
 						{/if}
 					{/each}
 				</div>
@@ -2080,11 +2122,17 @@
 							<Plus size={14} class="ql-item-add" />
 						</button>
 						{#if isActive}
-							<form class="ql-amount-row" onsubmit={e => { e.preventDefault(); qlConfirm(); }}>
-								<input type="number" class="ql-amount-input" bind:value={qlGrams} min="1" step="1" />
-								<span class="ql-amount-unit">g</span>
-								<button type="submit" class="ql-amount-confirm"><Check size={14} /></button>
-							</form>
+							<div class="ql-amount-row">
+								<PortionAmountInput
+									bind:grams={qlGrams}
+									bind:selectedPortion={qlPortion}
+									portions={qlSelected?.portions ?? []}
+									size="compact"
+									showGramsHint={false}
+									onenter={qlConfirm}
+								/>
+								<button type="button" class="ql-amount-confirm" onclick={qlConfirm} aria-label={t.log_food}><Check size={14} /></button>
+							</div>
 						{/if}
 					{/each}
 				</div>
@@ -3457,24 +3505,6 @@
 		align-items: center;
 		gap: 0.2rem;
 	}
-	.food-card-edit-input {
-		width: 55px;
-		padding: 0.1rem 0.3rem;
-		background: var(--color-bg-tertiary);
-		border: 1px solid var(--color-border);
-		border-radius: 4px;
-		color: var(--color-text-primary);
-		font-size: 0.75rem;
-		text-align: right;
-	}
-	.food-card-edit-input:focus {
-		outline: none;
-		border-color: var(--blue);
-	}
-	.food-card-edit-unit {
-		font-size: 0.7rem;
-		color: var(--color-text-secondary);
-	}
 	.food-card-macros {
 		display: flex;
 		align-items: center;
@@ -4035,24 +4065,6 @@
 		justify-content: flex-end;
 		gap: 0.3rem;
 		padding: 0.25rem 0.5rem 0.4rem;
-	}
-	.ql-amount-input {
-		width: 4rem;
-		padding: 0.3rem 0.4rem;
-		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-		font-size: 0.78rem;
-		text-align: right;
-	}
-	.ql-amount-input:focus {
-		border-color: var(--nord8);
-		outline: none;
-	}
-	.ql-amount-unit {
-		font-size: 0.75rem;
-		color: var(--color-text-secondary);
 	}
 	.ql-amount-confirm {
 		display: flex;

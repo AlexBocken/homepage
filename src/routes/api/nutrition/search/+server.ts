@@ -9,6 +9,7 @@ import { Recipe } from '$models/Recipe';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutritionMatcher';
 import { searchBlsUsda, NAME_LENGTH_PENALTY } from '$lib/server/nutritionSearchIndex';
+import { offPortions } from '$lib/server/offPortions';
 
 type SearchResult = {
 	source: 'bls' | 'usda' | 'recipe' | 'off';
@@ -208,7 +209,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		// re-rank with fuzzyScore below, which already overrode textScore anyway.
 		OpenFoodFact.find(
 			{ $text: { $search: q } },
-			full ? {} : { barcode: 1, name: 1, nameDe: 1, brands: 1, category: 1, 'per100g.calories': 1, serving: 1 }
+			// `serving` + `productQuantityG` are needed even in the slim projection —
+			// offPortions() derives the package portion from them.
+			full ? {} : { barcode: 1, name: 1, nameDe: 1, brands: 1, category: 1, 'per100g.calories': 1, serving: 1, productQuantityG: 1 }
 		).limit(200).lean()
 			.catch(() => [] as any[]),
 	]);
@@ -287,10 +290,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			// text search already filtered; prefer shorter names among matches
 			const best = Math.max(scoreDe, scoreEn, scoreBrand, 1) - displayName.length * NAME_LENGTH_PENALTY;
 
-			const portions: any[] = [];
-			if (entry.serving?.grams) {
-				portions.push(entry.serving);
-			}
+			const portions = offPortions(entry);
 
 			scored.push({
 				source: 'off',

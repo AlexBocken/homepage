@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { OpenFoodFact } from '$models/OpenFoodFact';
+import { offPortions } from '$lib/server/offPortions';
 
 const NUTRIENT_MAP: Record<string, string> = {
 	'energy-kcal_100g': 'calories',
@@ -74,17 +75,11 @@ async function fetchFromOffApi(code: string) {
 	const name = en || generic || fr;
 	if (!name) return null;
 
-	const portions: { description: string; grams: number }[] = [];
 	const servingG = Number(p.serving_quantity);
 	const servingDesc = typeof p.serving_size === 'string' ? p.serving_size.trim() : '';
-	if (servingG > 0 && servingDesc) {
-		portions.push({ description: servingDesc, grams: servingG });
-	}
 	const pq = Number(p.product_quantity);
-	if (pq > 0) {
-		const label = de ? `1 Packung (${pq}g)` : `1 package (${pq}g)`;
-		portions.push({ description: label, grams: pq });
-	}
+	const serving = servingG > 0 && servingDesc ? { description: servingDesc, grams: servingG } : null;
+	const portions = offPortions({ nameDe: de, serving, productQuantityG: pq > 0 ? pq : null });
 
 	let nutriscore: string | null = null;
 	if (typeof p.nutriscore_grade === 'string' && /^[a-e]$/.test(p.nutriscore_grade)) {
@@ -110,7 +105,7 @@ async function fetchFromOffApi(code: string) {
 		calories: per100g.calories,
 		per100g,
 		portions,
-		serving: servingG > 0 && servingDesc ? { description: servingDesc, grams: servingG } : null,
+		serving,
 		productQuantityG: pq > 0 ? pq : null,
 	};
 }
@@ -126,15 +121,6 @@ export const GET: RequestHandler = async ({ url }) => {
 	const doc = await OpenFoodFact.findOne({ barcode: code }).lean();
 
 	if (doc) {
-		const portions = [];
-		if (doc.serving && doc.serving.grams > 0) {
-			portions.push({ description: doc.serving.description, grams: doc.serving.grams });
-		}
-		if (doc.productQuantityG && doc.productQuantityG > 0) {
-			const label = doc.nameDe ? `1 Packung (${doc.productQuantityG}g)` : `1 package (${doc.productQuantityG}g)`;
-			portions.push({ description: label, grams: doc.productQuantityG });
-		}
-
 		return json({
 			source: 'off',
 			id: doc.barcode,
@@ -145,7 +131,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			nutriscore: doc.nutriscore ?? null,
 			calories: doc.per100g.calories,
 			per100g: doc.per100g,
-			portions,
+			portions: offPortions(doc),
 		});
 	}
 

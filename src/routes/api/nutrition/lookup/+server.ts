@@ -6,6 +6,7 @@ import { OpenFoodFact } from '$models/OpenFoodFact';
 import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
+import { offPortions } from '$lib/server/offPortions';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const source = url.searchParams.get('source');
@@ -91,10 +92,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		await dbConnect();
 		const entry = await OpenFoodFact.findOne({ barcode: id }).lean();
 		if (!entry) return json({ error: 'Not found' }, { status: 404 });
-		const portions: { description: string; grams: number }[] = [];
-		if (entry.serving?.grams) {
-			portions.push(entry.serving as { description: string; grams: number });
-		}
+		const portions = offPortions(entry);
 		return json({
 			per100g: entry.per100g,
 			...(portions.length > 0 && { portions }),
