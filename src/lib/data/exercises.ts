@@ -2129,10 +2129,98 @@ const STATIC_STRETCH_IDS = new Set<string>([
 	'elbow-flexor-stretch',
 ]);
 
-// Apply exerciseType classification post-hoc so we don't need to touch each entry
+/** IDs of static exercises classified as cardio (continuous, cardiovascular-system target) */
+const STATIC_CARDIO_IDS = new Set<string>([
+	'running',
+	'walking',
+	'cycling-indoor',
+	'cycling-outdoor',
+	'swimming',
+	'rowing-machine',
+	'rowing-outdoor',
+	'hiking',
+	'elliptical',
+	'stair-climber',
+]);
+
+/** IDs of static exercises classified as Olympic weightlifting, matching how ExerciseDB
+ *  types its one such entry (dumbbell-clean-and-press) rather than lumping them in with
+ *  general strength work. */
+const STATIC_WEIGHTLIFTING_IDS = new Set<string>([
+	'clean-and-press-barbell',
+]);
+
+/** IDs of static exercises classified as strength — resistance work done for reps. */
+const STATIC_STRENGTH_IDS = new Set<string>([
+	// chest
+	'incline-bench-press-barbell',
+	'decline-bench-press-barbell',
+	'bench-press-dumbbell',
+	'incline-bench-press-dumbbell',
+	'chest-fly-dumbbell',
+	'cable-crossover',
+	// back
+	'bent-over-row-barbell',
+	'deadlift-barbell',
+	'lat-pulldown-cable',
+	'seated-row-cable',
+	't-bar-row',
+	'incline-row-dumbbell',
+	'face-pull-cable',
+	// shoulders
+	'overhead-press-barbell',
+	'lateral-raise-cable',
+	'upright-row-barbell',
+	'shrug-barbell',
+	'shrug-dumbbell',
+	// arms
+	'bench-press-close-grip-barbell',
+	'bicep-curl-barbell',
+	'bicep-curl-dumbbell',
+	'hammer-curl-dumbbell',
+	'preacher-curl-barbell',
+	'concentration-curl-dumbbell',
+	'cable-curl',
+	'tricep-pushdown-cable',
+	'skullcrusher-barbell',
+	'overhead-tricep-extension-dumbbell',
+	'kickback-dumbbell',
+	// legs
+	'squat-barbell',
+	'front-squat-barbell',
+	'leg-press-machine',
+	'leg-extension-machine',
+	'leg-curl-machine',
+	'romanian-deadlift-barbell',
+	'calf-raise-machine',
+	'nordic-hamstring-curl',
+	'hack-squat-machine',
+	// core
+	'decline-crunch',
+	'flat-leg-raise',
+	'hanging-leg-raise',
+	'cable-crunch',
+	'ab-wheel-rollout',
+	'farmers-walk',
+]);
+
+// Apply exerciseType classification post-hoc so we don't need to touch each entry.
+//
+// Every static-only exercise is listed in exactly one set above. There is deliberately
+// no catch-all default: an unclassified exercise stays undefined, which shows up as a
+// missing type chip, rather than being silently mislabelled as strength. Only the
+// EDB-mapped entries get their type from ExerciseDB (see exercisedb.ts), and for those
+// our classification wins — EDB often tags hand-curated stretches as STRENGTH.
 for (const ex of exercises) {
-	if (!ex.exerciseType && STATIC_STRETCH_IDS.has(ex.id)) {
+	if (ex.exerciseType) continue;
+	if (STATIC_STRETCH_IDS.has(ex.id)) {
 		ex.exerciseType = ex.id === 'butterfly-yoga-pose' ? 'YOGA' : 'STRETCHING';
+	} else if (STATIC_CARDIO_IDS.has(ex.id)) {
+		ex.exerciseType = 'CARDIO';
+	} else if (STATIC_WEIGHTLIFTING_IDS.has(ex.id)) {
+		ex.exerciseType = 'WEIGHTLIFTING';
+	} else if (STATIC_STRENGTH_IDS.has(ex.id)) {
+		ex.exerciseType = 'STRENGTH';
 	}
 }
 

@@ -10,12 +10,13 @@
 	import Weight from '@lucide/svelte/icons/weight';
 	import BicepsFlexed from '@lucide/svelte/icons/biceps-flexed';
 	import Layers from '@lucide/svelte/icons/layers';
-	import { getFilterOptionsAll, searchAllExercises, isStretchType } from '$lib/data/exercisedb';
+	import { getFilterOptionsAll, searchAllExercises } from '$lib/data/exercisedb';
 	import { translateTerm } from '$lib/data/exercises';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { MUSCLE_GROUPS, MUSCLE_GROUP_DE } from '$lib/data/muscleMap';
 	import MuscleFilter from '$lib/components/fitness/MuscleFilter.svelte';
 	import StretchIcon from '$lib/components/fitness/StretchIcon.svelte';
+	import ExerciseChips from '$lib/components/fitness/ExerciseChips.svelte';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
@@ -234,13 +235,8 @@
 			{#each filtered as exercise (exercise.id)}
 				<li>
 					<a href={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: sl.exercises, id: exercise.id })} class="exercise-row">
-						<span class="exercise-name">
-							{exercise.localName}
-							{#if isStretchType(exercise.exerciseType)}
-								<span class="stretch-badge">{t.stretch_pill}</span>
-							{/if}
-						</span>
-						<span class="exercise-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
+						<span class="exercise-name">{exercise.localName}</span>
+						<ExerciseChips {exercise} {lang} showTarget={true} size="sm" />
 					</a>
 				</li>
 			{/each}
@@ -456,20 +452,6 @@
 		background: var(--color-primary);
 		color: var(--color-text-on-primary);
 	}
-	.stretch-badge {
-		display: inline-block;
-		vertical-align: middle;
-		margin-left: 0.4rem;
-		padding: 0.1rem 0.45rem;
-		border-radius: var(--radius-pill, 100px);
-		background: rgba(180, 142, 173, 0.2);
-		color: var(--purple);
-		font-size: 0.65rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-	}
-
 	.exercise-list {
 		list-style: none;
 		padding: 0;
@@ -478,6 +460,7 @@
 	.exercise-row {
 		display: flex;
 		flex-direction: column;
+		gap: 0.3rem;
 		min-width: 0;
 		padding: 0.5rem 0;
 		text-decoration: none;
@@ -490,11 +473,6 @@
 	.exercise-name {
 		font-weight: 600;
 		font-size: 0.9rem;
-	}
-	.exercise-meta {
-		font-size: 0.75rem;
-		color: var(--color-text-secondary);
-		text-transform: capitalize;
 	}
 	.no-results {
 		text-align: center;

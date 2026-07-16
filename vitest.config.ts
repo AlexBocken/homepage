@@ -26,6 +26,11 @@ export default defineConfig({
 		}
 	},
 	resolve: {
+		// Svelte ships separate client and server builds. Without the browser
+		// condition, importing a component under jsdom resolves to the server build
+		// and @testing-library/svelte's render() dies on "mount() is not available on
+		// the server".
+		conditions: ['browser'],
 		alias: {
 			$lib: resolve('./src/lib'),
 			$utils: resolve('./src/utils'),

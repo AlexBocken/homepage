@@ -3,25 +3,8 @@
 	import { page } from '$app/state';
 	import { estimatedOneRepMax } from '$lib/fitness/strength';
 
-	/** @param {string | undefined | null} type @param {'en'|'de'} lang */
-	function exerciseTypeInfo(type, lang) {
-		if (!type) return null;
-		switch (type) {
-			case 'STRETCHING':
-			case 'YOGA':
-				return { key: 'stretch', label: t.stretch_pill };
-			case 'STRENGTH':
-			case 'WEIGHTLIFTING':
-				return { key: 'strength', label: t.strength_pill };
-			case 'CARDIO':
-				return { key: 'cardio', label: t.cardio_pill };
-			case 'PLYOMETRICS':
-				return { key: 'plyo', label: t.plyo_pill };
-			default:
-				return null;
-		}
-	}
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import ExerciseChips from '$lib/components/fitness/ExerciseChips.svelte';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
@@ -56,7 +39,6 @@
 	let activeTab = $state('about');
 
 	const exercise = $derived(data.exercise);
-	const typeInfo = $derived(exerciseTypeInfo(exercise?.exerciseType, lang));
 	const similar = $derived(data.similar ?? []);
 	const history = $derived(data.history?.history ?? []);
 	const stats = $derived(data.stats ?? {});
@@ -141,13 +123,8 @@
 		<div class="tab-content about-layout">
 			<div class="about-main">
 				<!-- Tags -->
-				<div class="tags">
-					{#if typeInfo}
-						<span class="tag type-{typeInfo.key}">{typeInfo.label}</span>
-					{/if}
-					<span class="tag body-part">{exercise?.localBodyPart}</span>
-					<span class="tag equipment">{exercise?.localEquipment}</span>
-					<span class="tag target">{exercise?.localTarget}</span>
+				<div class="tags-row">
+					<ExerciseChips {exercise} {lang} showTarget={true} />
 				</div>
 
 				<!-- Muscle map (mobile only — shown inline) -->
@@ -346,33 +323,9 @@
 	}
 
 	/* Tags */
-	.tags {
-		display: flex;
-		gap: 0.5rem;
-		flex-wrap: wrap;
+	.tags-row {
 		margin-bottom: 0.5rem;
 	}
-	.tag {
-		padding: 0.25rem 0.6rem;
-		border-radius: 20px;
-		font-size: 0.75rem;
-		font-weight: 600;
-		text-transform: capitalize;
-	}
-	.body-part { background: rgba(94, 129, 172, 0.2); color: var(--lightblue); }
-	.equipment { background: rgba(163, 190, 140, 0.2); color: var(--green); }
-	.target { background: rgba(208, 135, 112, 0.2); color: var(--orange); }
-	.tag.type-stretch,
-	.tag.type-strength,
-	.tag.type-cardio,
-	.tag.type-plyo {
-		font-weight: 700;
-		letter-spacing: 0.04em;
-	}
-	.tag.type-stretch { background: rgba(180, 142, 173, 0.2); color: var(--purple); }
-	.tag.type-strength { background: rgba(94, 129, 172, 0.2); color: var(--blue); }
-	.tag.type-cardio { background: rgba(191, 97, 106, 0.2); color: var(--red); }
-	.tag.type-plyo { background: rgba(235, 203, 139, 0.22); color: var(--color-amber-text); }
 
 	/* About layout — two-column on wide screens */
 	.about-layout {
