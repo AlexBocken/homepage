@@ -201,47 +201,146 @@
       + play triangle overlay on cards
    ═══════════════════════════════════════════ */
 (function () {
+  var PLAY_BTN_SELECTOR = '.btnPlay[title="Resume"], .btnPlay[title="Play"]';
+
+  /* Leaf items that play directly. Folders (Series, Season, BoxSet,
+     CollectionFolder/UserView = library covers) open a detail page
+     instead — clicking their cover must not start playback. */
+  var PLAYABLE_TYPES = ['Movie', 'Episode', 'Video', 'MusicVideo', 'Audio', 'AudioBook'];
+
+  /* The play/resume button of the details page currently on screen.
+     Hidden pages stay in the DOM, so visibility is what qualifies it. */
+  function pagePlayButton() {
+    var btns = document.querySelectorAll(PLAY_BTN_SELECTOR);
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].offsetParent !== null) return btns[i];
+    }
+    return null;
+  }
+
+  /* Card data lives on .card, but some layouts put it on the inner
+     anchor/button instead. Merge both, preferring the outer element. */
+  function getCardInfo(imageContainer) {
+    var card = imageContainer.closest('.card');
+    if (!card) return null;
+    var inner = card.querySelector('[data-id]');
+    function attr(name) {
+      return card.getAttribute('data-' + name)
+        || (inner && inner.getAttribute('data-' + name))
+        || '';
+    }
+    var id = attr('id');
+    if (!id) return null;
+    return {
+      id: id,
+      serverId: attr('serverid'),
+      type: attr('type'),
+      isFolder: attr('isfolder') === 'true',
+      collectionType: attr('collectiontype'),
+    };
+  }
+
+  function isPlayable(info) {
+    if (!info || !info.id || !info.serverId) return false;
+    if (info.isFolder) return false;
+    if (info.collectionType) return false;
+    return PLAYABLE_TYPES.indexOf(info.type) !== -1;
+  }
+
+  function currentDetailsId() {
+    var m = /[#&?]id=([^&]+)/.exec(window.location.hash);
+    return m && window.location.hash.indexOf('/details') !== -1
+      ? decodeURIComponent(m[1])
+      : null;
+  }
+
+  /* Poll until the details page for `id` has rendered its own play
+     button, so we never click a stale button left from the page we
+     navigated away from. */
+  function playWhenReady(id, deadline) {
+    if (currentDetailsId() !== id) return;
+    var btn = pagePlayButton();
+    if (btn) {
+      btn.click();
+      return;
+    }
+    if (Date.now() > deadline) return;
+    setTimeout(function () { playWhenReady(id, deadline); }, 100);
+  }
+
+  /* What clicking this image container should do, or null for
+     "nothing — let Jellyfin handle it".
+       kind 'page'  → the details page's own poster: press this page's
+                      play button (a Series poster plays next unwatched,
+                      which is what its button already does).
+       kind 'item'  → a card in a row: play that specific item.
+     The poster carries no data-id of its own, hence the split. */
+  function getTarget(imageContainer) {
+    if (imageContainer.closest('.detailImageContainer')) {
+      var pageId = currentDetailsId();
+      /* No visible play button = nothing playable on this page. */
+      if (!pageId || !pagePlayButton()) return null;
+      return { kind: 'page', id: pageId };
+    }
+    var info = getCardInfo(imageContainer);
+    if (!isPlayable(info)) return null;
+    return { kind: 'item', id: info.id, serverId: info.serverId };
+  }
+
+  function onCardClick(e) {
+    var info = getTarget(e.currentTarget);
+    if (!info) return; /* let Jellyfin navigate normally */
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    /* The page's own poster, or a card for the item already open —
+       either way this page's button is the right one. */
+    if (info.kind === 'page' || currentDetailsId() === info.id) {
+      var btn = pagePlayButton();
+      if (btn) btn.click();
+      return;
+    }
+
+    window.location.hash =
+      '/details?id=' + encodeURIComponent(info.id) +
+      '&serverId=' + encodeURIComponent(info.serverId);
+    playWhenReady(info.id, Date.now() + 5000);
+  }
+
   /* Add play overlay and click-to-play on card thumbnails */
   function processCards() {
-    var cards = document.querySelectorAll('.cardImageContainer.coveredImage');
+    var cards = document.querySelectorAll(
+      '.cardImageContainer.coveredImage, .detailImageContainer .cardImageContainer'
+    );
     cards.forEach(function (card) {
-      if (card.dataset.bockenPlay) return;
-      card.dataset.bockenPlay = '1';
-      card.style.cursor = 'pointer';
+      var info = getTarget(card);
+      var playable = !!info;
 
-      /* Add play triangle overlay */
-      var overlay = document.createElement('div');
-      overlay.className = 'bocken-play-overlay';
-      overlay.innerHTML = '<span class="material-icons" aria-hidden="true">play_arrow</span>';
-      card.appendChild(overlay);
+      /* Jellyfin recycles card elements across views, and the details
+         poster renders before its play button does, so re-evaluate
+         whenever what's behind this container changes. */
+      var stamp = playable ? info.kind + ':' + info.id : 'none';
+      if (card.dataset.bockenPlayId === stamp) return;
+      card.dataset.bockenPlayId = stamp;
 
-      /* Click to play */
-      card.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
+      card.style.cursor = playable ? 'pointer' : '';
 
-        /* Find the detail page's play/resume button */
-        var playBtn = document.querySelector('.btnPlay[title="Resume"], .btnPlay[title="Play"]');
-        if (playBtn) {
-          playBtn.click();
-          return;
-        }
+      var overlay = card.querySelector('.bocken-play-overlay');
+      if (playable && !overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'bocken-play-overlay';
+        overlay.innerHTML =
+          '<span class="material-icons" aria-hidden="true">play_arrow</span>';
+        card.appendChild(overlay);
+      } else if (!playable && overlay) {
+        overlay.remove();
+      }
 
-        /* If we're on the homepage, navigate to the item first */
-        var itemCard = card.closest('.card');
-        if (!itemCard) return;
-        var link = itemCard.querySelector('a[data-id], button[data-id]');
-        var id = link ? link.dataset.id : null;
-        var serverId = link ? link.dataset.serverid : null;
-        if (id && serverId) {
-          window.location.hash = '/details?id=' + id + '&serverId=' + serverId;
-          /* Wait for page to load, then click play */
-          setTimeout(function () {
-            var btn = document.querySelector('.btnPlay[title="Resume"], .btnPlay[title="Play"]');
-            if (btn) btn.click();
-          }, 1000);
-        }
-      });
+      if (!card.dataset.bockenPlay) {
+        card.dataset.bockenPlay = '1';
+        card.addEventListener('click', onCardClick);
+      }
     });
   }
 
