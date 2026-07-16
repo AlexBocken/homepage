@@ -248,6 +248,7 @@ export const en = {
 	overwrite_confirm: "Overwrite",
 	same_as_last: "Same as last",
 	set_header: "SET",
+	time_header: "TIME",
 	prev_header: "PREV",
 	rpe: "RPE",
 	picker_title: "Add Exercise",

@@ -8,6 +8,19 @@ export function formatElapsed(seconds: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
+/**
+ * A timed set's duration → `45 s` under a minute, `1:30` above it.
+ *
+ * Takes minutes because that is the stored unit (ICompletedSet.duration), even
+ * though timed holds are entered in seconds and stored as `raw / 60` — so a 45 s
+ * plank sits in the DB as 0.75 and must never be printed raw.
+ */
+export function formatSetDuration(minutes: number | null | undefined): string {
+  if (minutes == null || !Number.isFinite(minutes) || minutes <= 0) return '—';
+  const seconds = Math.round(minutes * 60);
+  return seconds < 60 ? `${seconds} s` : formatElapsed(seconds);
+}
+
 /** Duration in whole minutes → `Hh Mm` (or `Mm` under an hour). */
 export function formatDurationMin(mins: number): string {
   const h = Math.floor(mins / 60);

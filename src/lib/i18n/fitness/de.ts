@@ -248,6 +248,7 @@ export const de = {
 	overwrite_confirm: "Überschreiben",
 	same_as_last: "Wie zuletzt",
 	set_header: "SATZ",
+	time_header: "ZEIT",
 	prev_header: "VORH",
 	rpe: "RPE",
 	picker_title: "Übung hinzufügen",

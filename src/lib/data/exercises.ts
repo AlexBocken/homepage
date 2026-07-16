@@ -105,6 +105,19 @@ export function getExerciseMetrics(exercise: Exercise | undefined): MetricField[
 	return METRIC_PRESETS.strength;
 }
 
+/**
+ * True when a set is defined by how long it was held rather than how much was
+ * lifted — planks, the 15 stretches, jump rope. Such a set carries no weight, so
+ * summarising it as load × reps yields a meaningless "0 kg × 0".
+ *
+ * Deliberately keyed on the absence of `weight` rather than the absence of `reps`:
+ * jump rope counts both duration and skips, and is still a timed exercise. Distance
+ * is excluded so cardio (duration + distance) keeps its own pace/distance summary.
+ */
+export function isTimedMetrics(metrics: MetricField[]): boolean {
+	return metrics.includes('duration') && !metrics.includes('weight') && !metrics.includes('distance');
+}
+
 export const exercises: Exercise[] = [
 	// === CHEST ===
 	{

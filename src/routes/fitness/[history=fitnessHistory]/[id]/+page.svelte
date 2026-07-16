@@ -27,13 +27,13 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const sl = $derived(fitnessSlugs(lang));
-	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
+	import { getExerciseById, getExerciseMetrics, isTimedMetrics, METRIC_LABELS } from '$lib/data/exercises';
 	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
 	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
 	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
-	import { formatElapsed, formatEffortRate, formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatEffortRate, formatDurationMin, formatPaceKm, formatSetDuration } from '$lib/fitness/segmentFormat';
 	import { estimatedOneRepMax } from '$lib/fitness/strength';
 	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
 	import { prCount } from '$lib/fitness/prCount';
@@ -844,6 +844,7 @@
 			{@const metrics = getExerciseMetrics(exercise)}
 			{@const mainMetrics = metrics.filter((/** @type {string} */ m) => m !== 'rpe')}
 			{@const showEst1rm = isStrength(ex.exerciseId)}
+			{@const timed = isTimedMetrics(metrics)}
 			<div class="exercise-block">
 				<h3 class="exercise-title">
 					<ExerciseName exerciseId={ex.exerciseId} />
@@ -853,7 +854,9 @@
 						<tr>
 							<th>{t.set_header}</th>
 							{#each mainMetrics as metric (metric)}
-								<th>{METRIC_LABELS[metric]}</th>
+								<!-- A timed set's cell carries its own unit ("45 s" / "1:30"), so the
+								     stored-minutes "MIN" header would contradict it. -->
+								<th>{timed && metric === 'duration' ? t.time_header : METRIC_LABELS[metric]}</th>
 							{/each}
 							<th>RPE</th>
 							{#if showEst1rm}
@@ -866,7 +869,7 @@
 							<tr>
 								<td class="set-num">{i + 1}</td>
 								{#each mainMetrics as metric (metric)}
-									<td>{set[metric] ?? '—'}</td>
+									<td>{timed && metric === 'duration' ? formatSetDuration(set.duration) : set[metric] ?? '—'}</td>
 								{/each}
 								<td class="rpe">{set.rpe ?? '—'}</td>
 								{#if showEst1rm}

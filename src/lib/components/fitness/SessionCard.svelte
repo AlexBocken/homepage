@@ -1,8 +1,9 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
+	import { getExerciseById } from '$lib/data/exercises';
 	import { formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
+	import { bestSetLabel } from '$lib/fitness/setSummary';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Weight from '@lucide/svelte/icons/weight';
 	import Trophy from '@lucide/svelte/icons/trophy';
@@ -59,37 +60,6 @@
 		return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 	}
 
-
-	/**
-	 * @param {Array<Record<string, any>>} sets
-	 * @param {string} exerciseId
-	 */
-	function bestSetLabel(sets, exerciseId) {
-		const exercise = getExerciseById(exerciseId, lang);
-		const metrics = getExerciseMetrics(exercise);
-		const isCardio = metrics.includes('distance');
-
-		if (isCardio) {
-			let best = sets[0];
-			for (const s of sets) {
-				if ((s.distance ?? 0) > (best.distance ?? 0)) best = s;
-			}
-			const parts = [];
-			if (best.distance) parts.push(`${best.distance} km`);
-			if (best.duration) parts.push(`${best.duration} min`);
-			return parts.join(' · ') || null;
-		}
-
-		let best = sets[0];
-		for (const s of sets) {
-			if ((s.weight ?? 0) > (best.weight ?? 0) || ((s.weight ?? 0) === (best.weight ?? 0) && (s.reps ?? 0) > (best.reps ?? 0))) {
-				best = s;
-			}
-		}
-		let label = `${best.weight ?? 0} kg × ${best.reps ?? 0}`;
-		if (best.rpe) label += ` @ ${best.rpe}`;
-		return label;
-	}
 
 	/** Find first GPS preview from cardio exercises */
 	const gpsPreview = $derived.by(() => {
@@ -195,7 +165,7 @@
 	<div class="exercise-list">
 		{#each session.exercises as ex (ex.exerciseId)}
 			{@const exercise = getExerciseById(ex.exerciseId, lang)}
-			{@const label = bestSetLabel(ex.sets, ex.exerciseId)}
+			{@const label = bestSetLabel(ex.sets, ex.exerciseId, lang)}
 			<div class="exercise-row">
 				<span class="ex-sets">{ex.sets.length} &times; {exercise?.localName ?? ex.exerciseId}</span>
 				{#if label}
