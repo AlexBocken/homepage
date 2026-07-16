@@ -1,5 +1,5 @@
 <script>
-	import { m } from '$lib/js/fitnessI18n';
+	import { m, insightText } from '$lib/js/fitnessI18n';
 	import { projectCycles } from '$lib/js/cycleProjection';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -276,6 +276,12 @@
 	const SRC_CC_MENORRHAGIA = { label: 'Cleveland Clinic', url: 'https://my.clevelandclinic.org/health/diseases/17734-menorrhagia-heavy-menstrual-bleeding' };
 	const SRC_CC_OLIGO = { label: 'Cleveland Clinic', url: 'https://my.clevelandclinic.org/health/symptoms/22834-oligomenorrhea' };
 
+	// Insight copy is second-person on your own tracker and third-person ("Anna's
+	// last period was long") on someone else's, where `ownerName` is set.
+	const insightName = $derived(cap(ownerName));
+	/** @param {import('$lib/js/fitnessI18n').InsightKey} key */
+	const ins_t = (key) => insightText(lang, key, insightName);
+
 	// Contextual, non-diagnostic insights about recent cycle/period behaviour.
 	// Thresholds follow common clinical guidance: cycle 21–35 days, period ≤7 days
 	// (≤2 = light), regularity judged over recent cycles. Patterns over several
@@ -302,24 +308,24 @@
 			const min = Math.min(...recent);
 			const max = Math.max(...recent);
 			if (min >= 21 && max <= 35 && max - min <= 7) {
-				list.push({ id: 'regular', level: 'positive', icon: HeartPulse, title: t.insight_regular_title, body: t.insight_regular_body, source: SRC_ACOG_VITAL });
+				list.push({ id: 'regular', level: 'positive', icon: HeartPulse, title: ins_t('insight_regular_title'), body: ins_t('insight_regular_body'), source: SRC_ACOG_VITAL });
 			} else if (max - min > 9 || min < 21 || max > 35) {
-				list.push({ id: 'irregular', level: 'attention', icon: Waves, title: t.insight_irregular_title, body: t.insight_irregular_body, source: SRC_CC_ABNORMAL });
+				list.push({ id: 'irregular', level: 'attention', icon: Waves, title: ins_t('insight_irregular_title'), body: ins_t('insight_irregular_body'), source: SRC_CC_ABNORMAL });
 			}
 		}
 
 		// Most recent completed cycle length.
 		const lastCycle = cycles.at(-1);
 		if (lastCycle !== undefined) {
-			if (lastCycle < 21) list.push({ id: 'short_cycle', level: 'info', icon: CalendarClock, title: t.insight_short_cycle_title, body: t.insight_short_cycle_body, source: SRC_ACOG_AUB });
-			else if (lastCycle > 35) list.push({ id: 'long_cycle', level: 'info', icon: Hourglass, title: t.insight_long_cycle_title, body: t.insight_long_cycle_body, source: SRC_CC_OLIGO });
+			if (lastCycle < 21) list.push({ id: 'short_cycle', level: 'info', icon: CalendarClock, title: ins_t('insight_short_cycle_title'), body: ins_t('insight_short_cycle_body'), source: SRC_ACOG_AUB });
+			else if (lastCycle > 35) list.push({ id: 'long_cycle', level: 'info', icon: Hourglass, title: ins_t('insight_long_cycle_title'), body: ins_t('insight_long_cycle_body'), source: SRC_CC_OLIGO });
 		}
 
 		// Most recent completed period length.
 		const lastPeriod = periodDurs.at(-1);
 		if (lastPeriod !== undefined) {
-			if (lastPeriod <= 2) list.push({ id: 'short_period', level: 'info', icon: Droplet, title: t.insight_short_period_title, body: t.insight_short_period_body, source: SRC_CC_HYPO });
-			else if (lastPeriod > 7) list.push({ id: 'long_period', level: 'attention', icon: Droplets, title: t.insight_long_period_title, body: t.insight_long_period_body, source: SRC_CC_MENORRHAGIA });
+			if (lastPeriod <= 2) list.push({ id: 'short_period', level: 'info', icon: Droplet, title: ins_t('insight_short_period_title'), body: ins_t('insight_short_period_body'), source: SRC_CC_HYPO });
+			else if (lastPeriod > 7) list.push({ id: 'long_period', level: 'attention', icon: Droplets, title: ins_t('insight_long_period_title'), body: ins_t('insight_long_period_body'), source: SRC_CC_MENORRHAGIA });
 		}
 
 		return list;
@@ -878,7 +884,7 @@
 					</div>
 				</div>
 			{/each}
-			<p class="insights-disclaimer">{t.insights_disclaimer}</p>
+			<p class="insights-disclaimer">{ins_t('insights_disclaimer')}</p>
 		</div>
 	{/if}
 

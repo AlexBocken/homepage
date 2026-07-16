@@ -16,6 +16,27 @@ export const m = { de, en } as const;
 export type FitnessLang = keyof typeof m;
 export type FitnessKey = keyof typeof de;
 
+/** Insight keys that have a third-person `_her` counterpart. */
+export type InsightKey = FitnessKey extends infer K
+	? K extends `${infer B}_her`
+		? B
+		: never
+	: never;
+
+/**
+ * Cycle-insight copy, phrased for whoever the cycle belongs to.
+ *
+ * With no `name` the reader owns the tracker, so the second-person base string
+ * is used as-is. With a `name` the reader is viewing someone else's shared
+ * tracker: the `_her` variant switches to third person and `{name}` is filled
+ * in. Both variants are authored per key rather than derived, because German
+ * inflects the possessive (Dein/Deine/{name}s) differently per sentence.
+ */
+export function insightText(lang: FitnessLang, key: InsightKey, name = ''): string {
+	if (!name) return m[lang][key];
+	return m[lang][`${key}_her` as FitnessKey].replaceAll('{name}', name);
+}
+
 const slugMap: Record<string, Record<string, string>> = {
 	en: { statistik: 'stats', verlauf: 'history', training: 'workout', aktiv: 'active', uebungen: 'exercises', erfassung: 'check-in', ernaehrung: 'nutrition', segmente: 'segments' },
 	de: { stats: 'statistik', history: 'verlauf', workout: 'training', active: 'aktiv', exercises: 'uebungen', 'check-in': 'erfassung', nutrition: 'ernaehrung', segments: 'segmente' }
