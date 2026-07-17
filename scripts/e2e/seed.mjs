@@ -132,6 +132,45 @@ const RECIPES = [
 		defaultForm: { shape: 'gugelhupf', diameter: 22, innerDiameter: 8 },
 		en: { short_name: 'bundt-cake', name: 'Bundt Cake', description: 'Traditional bundt cake.', category: 'Cake', tags: ['cake', 'classic'] }
 	}),
+	// Dedicated fixture for nutrition-recipe-image.spec: the ONLY seeded recipe
+	// with an image + a working nutrition mapping (so it's loggable with real
+	// calories). Kept unique to that spec so its log→delete round-trip doesn't
+	// collide with the shared Älplermagronen the other nutrition specs log
+	// concurrently on the same e2e_fitness user. The image mediapath needn't
+	// resolve — the test asserts the URL is wired, not that the file loads.
+	recipe({
+		short_name: 'e2e_bildkuchen',
+		name: 'E2E Bildkuchen',
+		category: 'Kuchen',
+		icon: '🎂',
+		description: 'Fixture cake with an image for the food-log image test.',
+		tags: ['e2e', 'kuchen'],
+		portions: '8',
+		images: [{ mediapath: 'e2e-bildkuchen.e2e0image.webp', caption: '' }],
+		ingredients: [section('Teig', [{ name: 'Mehl', unit: 'g', amount: '400' }])],
+		// fdcId must be a real USDA entry: nutrition resolves through resolvePer100g,
+		// which reads fdcId/blsCode and ignores any inline per100g. 168894 is
+		// "Wheat flour, white, all-purpose, enriched, bleached" (364 kcal).
+		nutritionMappings: [{
+			sectionIndex: 0,
+			ingredientIndex: 0,
+			ingredientName: 'Flour',
+			ingredientNameDe: 'Mehl',
+			source: 'usda',
+			fdcId: 168894,
+			matchMethod: 'exact',
+			matchConfidence: 1,
+			gramsPerUnit: 1,
+		}],
+		en: {
+			short_name: 'e2e_imagecake',
+			name: 'E2E Image Cake',
+			description: 'Fixture cake with an image for the food-log image test.',
+			category: 'Cake',
+			tags: ['e2e', 'cake'],
+			ingredients: [section('Batter', [{ name: 'Flour', unit: 'g', amount: '400' }])],
+		}
+	}),
 	recipe({
 		short_name: 'hefezopf',
 		name: 'Hefezopf',

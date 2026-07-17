@@ -1,11 +1,14 @@
 import { json, error } from '@sveltejs/kit';
+import mongoose from 'mongoose';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { RoundOffCache } from '$models/RoundOffCache';
+import { Recipe } from '$models/Recipe';
 import { LOGGABLE_MEALS } from '$lib/fitness/meals';
 import { coercePortion, coercePortions } from '$lib/fitness/portions';
+import { recipeThumbUrl } from '$lib/utils/recipeImage';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = await requireAuth(locals);
@@ -70,5 +73,22 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// Invalidate round-off cache for this date
 	RoundOffCache.deleteOne({ createdBy: user.nickname, date: date.slice(0, 10) }).catch(() => {});
 
-	return json(entry.toObject(), { status: 201 });
+	const created: Record<string, any> = entry.toObject();
+
+	// The day page resolves recipe thumbnails once, at load, into a sourceId->url
+	// map. A recipe logged after that isn't in the map, so it would render without
+	// its image until the next navigation re-ran the load. Hand the URL back with
+	// the created entry so the client can fill the gap. Response-only — the food
+	// log doesn't store images, it points at the recipe.
+	if (created.source === 'recipe' && created.sourceId && mongoose.Types.ObjectId.isValid(created.sourceId)) {
+		try {
+			const recipe = await Recipe.findById(created.sourceId, { 'images.mediapath': 1 }).lean();
+			const mediapath = (recipe as any)?.images?.[0]?.mediapath;
+			if (mediapath) created.image = recipeThumbUrl(mediapath);
+		} catch {
+			// Image is a nicety — never fail a log over it.
+		}
+	}
+
+	return json(created, { status: 201 });
 };

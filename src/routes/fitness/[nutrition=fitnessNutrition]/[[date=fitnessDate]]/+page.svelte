@@ -128,6 +128,23 @@
 	// svelte-ignore state_referenced_locally
 	let recipeImages = $state(/** @type {Record<string, string>} */ (data.recipeImages ?? {}));
 
+	/**
+	 * Append a freshly logged entry to the day view.
+	 *
+	 * `recipeImages` is built server-side at load, so a recipe logged afterwards
+	 * has no thumbnail in the map and would render imageless until the next
+	 * navigation. The POST response carries the URL for exactly this reason —
+	 * fold it in so the entry appears complete straight away.
+	 * @param {any} entry
+	 */
+	function addEntry(entry) {
+		if (!entry) return;
+		if (entry.source === 'recipe' && entry.sourceId && entry.image) {
+			recipeImages = { ...recipeImages, [entry.sourceId]: entry.image };
+		}
+		entries = [...entries, entry];
+	}
+
 	// Keep reactive with server data when navigating
 	$effect(() => {
 		entries = data.foodLog?.entries ?? [];
@@ -435,7 +452,7 @@
 				);
 				const results = await Promise.all(promises);
 				const newEntries = results.filter(Boolean);
-				if (newEntries.length) entries = [...entries, ...newEntries];
+				for (const e of newEntries) addEntry(e);
 			} else {
 				const toRemove = waterEntries.slice(target);
 				const ids = toRemove.map((/** @type {FoodLogEntry} */ e) => e._id);
@@ -684,7 +701,7 @@
 			});
 			if (res.ok) {
 				const entry = await res.json();
-				entries = [...entries, entry];
+				addEntry(entry);
 				closeFabModal();
 			}
 		} catch {
@@ -902,7 +919,7 @@
 
 			if (res.ok) {
 				const entry = await res.json();
-				entries = [...entries, entry];
+				addEntry(entry);
 			}
 			selectedCmMeal = null;
 			closeFabModal();
@@ -955,7 +972,7 @@
 
 			if (res.ok) {
 				const entry = await res.json();
-				entries = [...entries, entry];
+				addEntry(entry);
 			}
 			selectedCmMeal = null;
 			cancelAdd();
@@ -985,7 +1002,7 @@
 			});
 			if (res.ok) {
 				const entry = await res.json();
-				entries = [...entries, entry];
+				addEntry(entry);
 				cancelAdd();
 			}
 		} catch {
@@ -1296,7 +1313,7 @@
 			});
 			if (res.ok) {
 				const entry = await res.json();
-				entries = [...entries, entry];
+				addEntry(entry);
 				toast.success(isEn ? `Logged "${qlSelected.name}"` : `"${qlSelected.name}" eingetragen`);
 				qlSelected = null;
 			}

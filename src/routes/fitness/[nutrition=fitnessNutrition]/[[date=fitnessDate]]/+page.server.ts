@@ -8,6 +8,7 @@ import { Recipe } from '$models/Recipe';
 import { RoundOffCache } from '$models/RoundOffCache';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { entriesCalories } from '$lib/fitness/nutritionMath';
+import { recipeThumbUrl } from '$lib/utils/recipeImage';
 import mongoose from 'mongoose';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
@@ -88,7 +89,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 			for (const r of recipes as any[]) {
 				const mediapath = r.images?.[0]?.mediapath;
 				if (mediapath) {
-					recipeImages[String(r._id)] = `https://bocken.org/static/rezepte/thumb/${mediapath}`;
+					recipeImages[String(r._id)] = recipeThumbUrl(mediapath);
 				}
 			}
 		} catch {}
