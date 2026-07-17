@@ -26,7 +26,10 @@
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import X from '@lucide/svelte/icons/x';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
+	import { formatGrams } from '$lib/fitness/nutritionMath';
 	import MacroBreakdown from './MacroBreakdown.svelte';
 	import PortionAmountInput from './PortionAmountInput.svelte';
 
@@ -287,6 +290,42 @@
 			fiber: (n.fiber ?? 0) * s,
 		};
 	});
+
+	// --- Micronutrient preview (collapsed by default) ---
+	// Same grouping as the food detail page, so the numbers you see before
+	// logging line up with the ones on the entry's own page. No %DRI bars here:
+	// those need the user's profile, which this component isn't given.
+	let showMicros = $state(false);
+
+	const MINERAL_KEYS = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
+	const VITAMIN_KEYS = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
+	const OTHER_KEYS = ['cholesterol'];
+
+	const microSections = $derived.by(() => {
+		const n = selected?.per100g;
+		if (!n || !previewGrams) return [];
+		const s = previewGrams / 100;
+		/** @param {string[]} keys */
+		const rows = (keys) =>
+			keys.map((k) => {
+				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
+				return {
+					key: k,
+					label: isEn ? meta.label : meta.labelDe,
+					unit: meta.unit,
+					value: (/** @type {Record<string, number>} */ (n)[k] ?? 0) * s,
+				};
+			});
+		return [
+			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: rows(MINERAL_KEYS) },
+			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: rows(VITAMIN_KEYS) },
+			{ title: isEn ? 'Other' : 'Sonstiges', rows: rows(OTHER_KEYS) },
+		];
+	});
+
+	/** True when the source carries any micronutrient data at all — OFF products
+	 *  usually don't, and an all-zero table is just noise. */
+	const hasMicros = $derived(microSections.some((s) => s.rows.some((r) => r.value > 0)));
 
 	function confirm() {
 		if (!selected) return;
@@ -849,6 +888,33 @@
 			/>
 		{/if}
 
+		{#if hasMicros}
+			<button
+				class="fs-micro-toggle"
+				class:is-open={showMicros}
+				aria-expanded={showMicros}
+				onclick={() => (showMicros = !showMicros)}
+			>
+				<span>{isEn ? 'Micronutrients' : 'Mikronährstoffe'}</span>
+				<ChevronDown class="fs-micro-chevron" size={15} strokeWidth={2.5} />
+			</button>
+			{#if showMicros}
+				<div class="fs-micros">
+					{#each microSections as section (section.title)}
+						<div class="fs-micro-section">
+							<h4 class="fs-micro-title">{section.title}</h4>
+							{#each section.rows as row (row.key)}
+								<div class="fs-micro-row">
+									<span class="fs-micro-label">{row.label}</span>
+									<span class="fs-micro-value">{formatGrams(row.value)}<small> {row.unit}</small></span>
+								</div>
+							{/each}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{/if}
+
 		<div class="fs-actions">
 			<button class="fs-btn-cancel" onclick={() => { selected = null; }}>{t.cancel}</button>
 			<button class="fs-btn-confirm" onclick={confirm}>{btnLabel}</button>
@@ -1211,6 +1277,78 @@
 		color: var(--color-text-tertiary);
 		font-style: italic;
 	}
+	/* ── Micronutrient disclosure ── */
+	.fs-micro-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		padding: 0.45rem 0.65rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-secondary);
+		font-size: 0.78rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background var(--transition-fast), color var(--transition-fast);
+	}
+	.fs-micro-toggle:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
+	.fs-micro-toggle :global(.fs-micro-chevron) {
+		transition: rotate var(--transition-normal);
+	}
+	.fs-micro-toggle.is-open :global(.fs-micro-chevron) {
+		rotate: 180deg;
+	}
+	.fs-micros {
+		max-height: 220px;
+		overflow-y: auto;
+		padding: 0.1rem 0.15rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.fs-micro-title {
+		margin: 0.2rem 0 0.15rem;
+		font-size: 0.66rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-tertiary);
+	}
+	.fs-micro-row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.2rem 0;
+		border-bottom: 1px solid var(--color-border);
+		font-size: 0.76rem;
+	}
+	.fs-micro-row:last-child {
+		border-bottom: none;
+	}
+	.fs-micro-label {
+		color: var(--color-text-secondary);
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.fs-micro-value {
+		color: var(--color-text-primary);
+		font-weight: 600;
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
+	}
+	.fs-micro-value small {
+		font-weight: 500;
+		color: var(--color-text-tertiary);
+	}
+
 	/* ── Buttons ── */
 	.fs-actions {
 		display: flex;

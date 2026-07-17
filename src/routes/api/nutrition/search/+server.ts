@@ -1,14 +1,13 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
 import { BLS_DB } from '$lib/data/blsDb';
-import { fuzzyScore } from '$lib/js/fuzzy';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FavoriteIngredient } from '$models/FavoriteIngredient';
 import { Recipe } from '$models/Recipe';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutritionMatcher';
-import { searchBlsUsda, NAME_LENGTH_PENALTY } from '$lib/server/nutritionSearchIndex';
+import { searchBlsUsda, scoreName, queryWords, NAME_LENGTH_PENALTY } from '$lib/server/nutritionSearchIndex';
 import { offPortions } from '$lib/server/offPortions';
 
 type SearchResult = {
@@ -225,7 +224,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	// Search recipes + OFF in parallel with BLS/USDA (which are in-memory)
 	await dbConnect();
 	const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	const words = q.split(/\s+/).filter(Boolean);
+	// Punctuation-free words, so "peppers, bell" looks for "peppers" AND "bell"
+	// rather than the literal token "peppers,".
+	const words = queryWords(q);
 	const nameRegex = words.map(w => `(?=.*${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`).join('') + '.*';
 
 	const [recipes, offResults] = await Promise.all([
@@ -241,7 +242,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		// Mongo to score every matching doc before limiting — 100ms–1s+ for common
 		// words over the 1M-doc OFF collection. We instead fetch a larger unsorted
 		// candidate pool (the `limit` short-circuits the index scan, ~1–5ms) and
-		// re-rank with fuzzyScore below, which already overrode textScore anyway.
+		// re-rank with scoreName below, which already overrode textScore anyway.
 		!sources.has('off') ? [] as any[] : OpenFoodFact.find(
 			{ $text: { $search: q } },
 			// `serving` + `productQuantityG` are needed even in the slim projection —
@@ -253,9 +254,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	// Process recipe results (highest priority — scored with bonus)
 	for (const r of recipes as any[]) {
-		const scoreName = fuzzyScore(q, (r.name || '').toLowerCase());
-		const scoreShort = fuzzyScore(q, (r.short_name || '').replace(/_/g, ' ').toLowerCase());
-		const best = Math.max(scoreName, scoreShort);
+		// scoreName, not fuzzyScore: the Mongo query above already matches words in
+		// any order, so ranking must too — otherwise "bolognese ragu" finds the
+		// recipe and then throws it away for scoring 0.
+		const nameScore = scoreName(q, words, (r.name || '').toLowerCase());
+		const scoreShort = scoreName(q, words, (r.short_name || '').replace(/_/g, ' ').toLowerCase());
+		const best = Math.max(nameScore, scoreShort);
 		if (best <= 0) continue;
 		const lenPenalty = (r.name || '').length * NAME_LENGTH_PENALTY;
 
@@ -323,9 +327,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			if (hideReadyMeals && isReadyMeal('off', entry.category)) continue;
 			const displayName = entry.nameDe || entry.name;
 			// Use fuzzy score for ranking consistency with BLS/USDA
-			const scoreDe = entry.nameDe ? fuzzyScore(q, entry.nameDe.toLowerCase()) : 0;
-			const scoreEn = fuzzyScore(q, entry.name.toLowerCase());
-			const scoreBrand = entry.brands ? fuzzyScore(q, entry.brands.toLowerCase()) : 0;
+			const scoreDe = entry.nameDe ? scoreName(q, words, entry.nameDe.toLowerCase()) : 0;
+			const scoreEn = scoreName(q, words, entry.name.toLowerCase());
+			const scoreBrand = entry.brands ? scoreName(q, words, entry.brands.toLowerCase()) : 0;
 			// text search already filtered; prefer shorter names among matches
 			const best = Math.max(scoreDe, scoreEn, scoreBrand, 1) - displayName.length * NAME_LENGTH_PENALTY;
 

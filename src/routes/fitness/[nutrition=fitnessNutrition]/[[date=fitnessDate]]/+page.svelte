@@ -2059,7 +2059,7 @@
 					</div>
 
 					{#if inlineTab === 'search'}
-						<FoodSearch onselect={inlineLogFood} onfavoritechange={handleFavoriteChange} showDetailLinks={false} showFavorites={false} autofocus={true} bind:query={addFoodQuery} />
+						<FoodSearch onselect={inlineLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} autofocus={true} bind:query={addFoodQuery} />
 					{:else if inlineTab === 'favorites'}
 						{@render favoritesTab(inlineLogFood)}
 					{:else if inlineTab === 'recent'}

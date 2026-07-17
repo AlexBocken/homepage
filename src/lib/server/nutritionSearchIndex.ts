@@ -19,6 +19,46 @@ import { fuzzyScore } from '$lib/js/fuzzy';
  *  and OFF ranking in the search endpoint for consistent ordering. */
 export const NAME_LENGTH_PENALTY = 0.1;
 
+/**
+ * Score a query against one name, tolerating word order.
+ *
+ * fuzzyScore is a subsequence match, so it only ever scores the query words in
+ * the order they were typed: "peppers bell red" scores against
+ * "Peppers, bell, red, raw", but "bell peppers raw red" scores 0 and the entry
+ * gets dropped — even though it is obviously the same food, and even though the
+ * inverted index below already proved every query word prefixes a word in that
+ * name. So fall back to scoring the words independently.
+ *
+ * In-order queries keep their exact previous score (fuzzyScore's consecutive-run
+ * and word-boundary bonuses make those naturally outrank the reordered path), so
+ * this only ever adds results that used to be dropped.
+ */
+export function scoreName(query: string, queryWords: string[], name: string): number {
+	const phrase = fuzzyScore(query, name);
+	if (phrase > 0) return phrase;
+	let sum = 0;
+	for (const qw of queryWords) {
+		const s = fuzzyScore(qw, name);
+		// Every word must still be present somewhere in this name — a partial hit
+		// is not a match, it's a different food.
+		if (s === 0) return 0;
+		sum += s;
+	}
+	return sum;
+}
+
+/**
+ * Split a query into words on anything that isn't a letter or digit, matching how
+ * entry names are tokenized for the index. Splitting on whitespace alone would
+ * leave punctuation stuck to the word — "peppers, bell" would look for a word
+ * starting with "peppers," and find nothing, even though the user just typed the
+ * food's name exactly as USDA writes it. Letters are left alone (not folded) so
+ * callers matching against unfolded text keep their diacritics.
+ */
+export function queryWords(s: string): string[] {
+	return s.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+}
+
 /** Lowercase + strip diacritics (ä→a, ö→o, ü→u, é→e, …) + sharp-s→ss. */
 export function foldText(s: string): string {
 	return s
@@ -127,7 +167,7 @@ export function searchBlsUsda(rawQuery: string): LocalHit[] {
 	build();
 
 	const qf = foldText(rawQuery).trim();
-	const qWords = qf.split(/\s+/).filter(Boolean);
+	const qWords = queryWords(qf);
 	if (!qWords.length) return [];
 
 	let acc: Set<number> | null = null;
@@ -151,7 +191,7 @@ export function searchBlsUsda(rawQuery: string): LocalHit[] {
 		let rawBest = 0;
 		let bestLen = 0;
 		for (const f of cand.folded) {
-			const sc = fuzzyScore(qf, f);
+			const sc = scoreName(qf, qWords, f);
 			if (sc > rawBest) {
 				rawBest = sc;
 				bestLen = f.length;
