@@ -98,6 +98,20 @@ async function getUsdaEmbeddingIndex() {
 	return usdaEmbeddingIndex!;
 }
 
+/**
+ * Seed the embedding indexes from outside SvelteKit. `read()` is only available
+ * inside the app runtime, so a vite-node script (e.g. a migration re-running the
+ * matcher) must hand the parsed indexes in here first — otherwise the lazy
+ * loaders above call read() and throw. The app itself never calls this.
+ */
+export function preloadEmbeddingIndexes(
+	usda: { fdcId: number; name: string; vector: number[] }[],
+	bls: { blsCode: string; name: string; vector: number[] }[],
+) {
+	usdaEmbeddingIndex = usda;
+	blsEmbeddingIndex = bls;
+}
+
 // ── BLS helpers ──
 
 function getBlsByCode(): Map<string, BlsEntry> {
@@ -552,6 +566,13 @@ export async function matchIngredient(
 	amount: string,
 	sectionIndex: number,
 	ingredientIndex: number,
+	/**
+	 * `ignoreOverwrites` skips step 0 below and matches from scratch. Only used to
+	 * repair an overwrite that points at an entry which no longer exists: deriving
+	 * its replacement means asking what this ingredient would match to *without*
+	 * the broken overwrite short-circuiting the answer.
+	 */
+	opts?: { ignoreOverwrites?: boolean },
 ): Promise<NutritionMapping> {
 	const normalizedEn = ingredientNameEn ? normalizeIngredientName(ingredientNameEn) : '';
 	const normalizedDe = normalizeIngredientNameDe(ingredientNameDe);
@@ -566,7 +587,7 @@ export async function matchIngredient(
 	let category = '';
 
 	// 0. Check global overwrites (DB-stored manual mappings)
-	const overwrite = await lookupGlobalOverwrite(normalizedDe);
+	const overwrite = opts?.ignoreOverwrites ? null : await lookupGlobalOverwrite(normalizedDe);
 	if (overwrite) {
 		if (overwrite.excluded || overwrite.source === 'skip') {
 			return {

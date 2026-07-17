@@ -19,6 +19,21 @@ const USDA_URLS = {
 	foundation: 'https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2024-10-31.zip',
 };
 
+// Only real, consumable food records. The Foundation dataset's food.csv is mostly
+// laboratory bookkeeping — 57k sub_sample_food, 7k market_acquisition and 3.5k
+// sample_food rows around just 387 actual foundation_food entries. Those lab rows
+// reuse ordinary food names ("peppers, bell, green, raw") but carry only the one
+// or two nutrients that sample happened to be assayed for, so importing them
+// yields near-empty entries that shadow the real ones in search.
+const ALLOWED_DATA_TYPES = new Set(['foundation_food', 'sr_legacy_food']);
+
+// Energy is reported inconsistently between the datasets. SR Legacy always carries
+// 1008 (Energy, kcal), but most Foundation foods omit 1008 and report Atwater
+// factors instead: 2048 (specific — per-food coefficients) or 2047 (general).
+// Prefer 1008, then the more accurate specific factors, then general. Without this
+// fallback 205 of the 387 Foundation foods import as 0 kcal.
+const ENERGY_PRIORITY: Record<number, number> = { 1008: 3, 2048: 2, 2047: 1 };
+
 // Nutrient IDs we care about
 const NUTRIENT_IDS: Record<number, string> = {
 	1008: 'calories',
@@ -207,6 +222,7 @@ async function importDataset(datasetDir: string, label: string) {
 		const catId = parseInt(row['food_category_id'] || '0');
 		const category = categoryMap.get(row['food_category_id']) || '';
 
+		if (!ALLOWED_DATA_TYPES.has(row['data_type'])) continue;
 		if (!INCLUDED_CATEGORIES.has(category)) continue;
 
 		const fdcId = parseInt(row['fdc_id']);
@@ -222,20 +238,31 @@ async function importDataset(datasetDir: string, label: string) {
 	// Read nutrients
 	const nutrientRows = await readCSV(resolve(datasetDir, 'food_nutrient.csv'));
 	const nutrients = new Map<number, NutrientData>();
+	// Which energy nutrient won for each food, so a lower-priority one can't clobber it.
+	const energyRank = new Map<number, number>();
 
 	for (const row of nutrientRows) {
 		const fdcId = parseInt(row['fdc_id']);
 		if (!foods.has(fdcId)) continue;
 
 		const nutrientId = parseInt(row['nutrient_id']);
+		const amount = parseFloat(row['amount'] || '0');
+		if (isNaN(amount)) continue;
+
+		const rank = ENERGY_PRIORITY[nutrientId];
+		if (rank) {
+			if (rank <= (energyRank.get(fdcId) ?? 0)) continue;
+			energyRank.set(fdcId, rank);
+			if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
+			nutrients.get(fdcId)!['calories'] = amount;
+			continue;
+		}
+
 		const fieldName = NUTRIENT_IDS[nutrientId];
 		if (!fieldName) continue;
 
 		if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
-		const amount = parseFloat(row['amount'] || '0');
-		if (!isNaN(amount)) {
-			nutrients.get(fdcId)![fieldName] = amount;
-		}
+		nutrients.get(fdcId)![fieldName] = amount;
 	}
 	console.log(`  Loaded nutrients for ${nutrients.size} foods`);
 
@@ -262,7 +289,7 @@ async function importDataset(datasetDir: string, label: string) {
 	}
 	console.log(`  Loaded portions for ${portions.size} foods`);
 
-	return { foods, nutrients, portions };
+	return { foods, nutrients, portions, hasEnergy: new Set(energyRank.keys()) };
 }
 
 function buildNutrientRecord(data: NutrientData | undefined): Record<string, number> {
@@ -299,11 +326,18 @@ async function main() {
 		portions: Portion[];
 	}>();
 
+	// A food with an energy row of 0 (bottled water) really is 0 kcal, but a food
+	// with no energy row at all has unknown energy — 47 Foundation foods are in that
+	// state, and USDA gives them no carbs either, so it can't be derived via Atwater.
+	// Surfacing them as "0 kcal" in a calorie tracker is worse than not listing them.
+	const skipped = { sr: 0, foundation: 0 };
+
 	// Add SR Legacy first
 	for (const [fdcId, food] of sr.foods) {
 		const nutrientData = buildNutrientRecord(sr.nutrients.get(fdcId));
 		// Skip entries with no nutrient data at all
 		if (!sr.nutrients.has(fdcId)) continue;
+		if (!sr.hasEnergy.has(fdcId)) { skipped.sr++; continue; }
 
 		merged.set(food.description.toLowerCase(), {
 			fdcId,
@@ -318,6 +352,7 @@ async function main() {
 	for (const [fdcId, food] of foundation.foods) {
 		const nutrientData = buildNutrientRecord(foundation.nutrients.get(fdcId));
 		if (!foundation.nutrients.has(fdcId)) continue;
+		if (!foundation.hasEnergy.has(fdcId)) { skipped.foundation++; continue; }
 
 		merged.set(food.description.toLowerCase(), {
 			fdcId,
@@ -328,7 +363,8 @@ async function main() {
 		});
 	}
 
-	console.log(`\nMerged total: ${merged.size} unique foods`);
+	console.log(`\nSkipped (no energy data): ${skipped.sr} SR Legacy, ${skipped.foundation} Foundation`);
+	console.log(`Merged total: ${merged.size} unique foods`);
 
 	// Sort by name for stable output
 	const entries = [...merged.values()].sort((a, b) => a.name.localeCompare(b.name));
