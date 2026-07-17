@@ -25,6 +25,28 @@ type SearchResult = {
 	image?: string;
 };
 
+const ALL_SOURCES = ['recipe', 'bls', 'usda', 'off'] as const;
+type Source = (typeof ALL_SOURCES)[number];
+
+// --- Ready-meal exclusion (`hideReadyMeals=true`) ---
+// Drops finished dishes so a search surfaces ingredients instead. BLS and USDA
+// have fixed category lists, so they're matched exactly. OFF's `category` is the
+// most specific free-form tag off the product, so it can only be keyword-matched
+// — `\b` anchors keep "meal" from eating oatmeal/cornmeal. User recipes are never
+// filtered: they're the user's own, and being a finished dish is the point.
+const READY_MEAL_BLS = new Set(['Brühen & Fertiggerichte', 'Gerichte & Rezepte']);
+const READY_MEAL_USDA = new Set(['Restaurant Foods', 'Soups, Sauces, and Gravies']);
+const READY_MEAL_OFF_RE =
+	/\b(ready[ -]?(made|to[ -]eat|meals?)|meals?|prepared|convenience|pizzas?|quiches?|sandwiches|sandwich|burgers?|soups?|broths?|bouillons?|stews?|casseroles?|lasagnas?|gratins?|dishes|dish|entrees?|dinners?)\b/i;
+
+function isReadyMeal(source: Source, category: string | undefined): boolean {
+	if (!category) return false;
+	if (source === 'bls') return READY_MEAL_BLS.has(category);
+	if (source === 'usda') return READY_MEAL_USDA.has(category);
+	if (source === 'off') return READY_MEAL_OFF_RE.test(category);
+	return false;
+}
+
 function lookupBls(blsCode: string, full: boolean): SearchResult | null {
 	const entry = BLS_DB.find(e => e.blsCode === blsCode);
 	if (!entry) return null;
@@ -126,6 +148,17 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const full = url.searchParams.get('full') === 'true';
 	const wantFavorites = url.searchParams.get('favorites') === 'true';
 
+	// `sources` narrows the search to a subset of the databases. Absent (or listing
+	// none we know) means all of them — the ranking below already mixes sources, so
+	// filtering has to happen here rather than client-side: the top-30 cut would
+	// otherwise leave a single-source view with only the few rows that survived it.
+	const requested = (url.searchParams.get('sources') || '')
+		.split(',')
+		.map(s => s.trim())
+		.filter((s): s is Source => (ALL_SOURCES as readonly string[]).includes(s));
+	const sources = new Set<Source>(requested.length > 0 ? requested : ALL_SOURCES);
+	const hideReadyMeals = url.searchParams.get('hideReadyMeals') === 'true';
+
 	// Optionally load user favorites
 	let favResults: SearchResult[] = [];
 	let favKeys = new Set<string>();
@@ -152,6 +185,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			}
 
 			for (const fav of favDocs) {
+				if (!sources.has(fav.source as Source)) continue;
 				const key = `${fav.source}:${fav.sourceId}`;
 				let result: SearchResult | null = null;
 				if (fav.source === 'bls') {
@@ -174,6 +208,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 						};
 					}
 				}
+				if (result && hideReadyMeals && isReadyMeal(fav.source as Source, result.category)) continue;
 				if (result) {
 					result.favorited = true;
 					favResults.push(result);
@@ -194,7 +229,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const nameRegex = words.map(w => `(?=.*${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`).join('') + '.*';
 
 	const [recipes, offResults] = await Promise.all([
-		Recipe.find({
+		!sources.has('recipe') ? [] as any[] : Recipe.find({
 			$or: [
 				{ name: { $regex: nameRegex, $options: 'i' } },
 				{ short_name: { $regex: nameRegex, $options: 'i' } },
@@ -207,7 +242,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		// words over the 1M-doc OFF collection. We instead fetch a larger unsorted
 		// candidate pool (the `limit` short-circuits the index scan, ~1–5ms) and
 		// re-rank with fuzzyScore below, which already overrode textScore anyway.
-		OpenFoodFact.find(
+		!sources.has('off') ? [] as any[] : OpenFoodFact.find(
 			{ $text: { $search: q } },
 			// `serving` + `productQuantityG` are needed even in the slim projection —
 			// offPortions() derives the package portion from them.
@@ -252,8 +287,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	// Search BLS + USDA via the diacritic-folded inverted prefix index (only the
 	// candidate entries get fuzzy-scored, instead of a linear scan of all ~20k).
 	for (const hit of searchBlsUsda(q)) {
+		if (!sources.has(hit.source)) continue;
 		if (hit.source === 'bls') {
 			const entry = BLS_DB[hit.idx];
+			if (hideReadyMeals && isReadyMeal('bls', entry.category)) continue;
 			scored.push({
 				source: 'bls',
 				id: entry.blsCode,
@@ -266,6 +303,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			});
 		} else {
 			const entry = NUTRITION_DB[hit.idx];
+			if (hideReadyMeals && isReadyMeal('usda', entry.category)) continue;
 			scored.push({
 				source: 'usda',
 				id: String(entry.fdcId),
@@ -282,6 +320,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	// Process OpenFoodFacts results
 	{
 		for (const entry of offResults as any[]) {
+			if (hideReadyMeals && isReadyMeal('off', entry.category)) continue;
 			const displayName = entry.nameDe || entry.name;
 			// Use fuzzy score for ranking consistency with BLS/USDA
 			const scoreDe = entry.nameDe ? fuzzyScore(q, entry.nameDe.toLowerCase()) : 0;

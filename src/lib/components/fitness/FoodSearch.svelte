@@ -23,6 +23,7 @@
 	import Heart from '@lucide/svelte/icons/heart';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import ScanBarcode from '@lucide/svelte/icons/scan-barcode';
+	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import X from '@lucide/svelte/icons/x';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
@@ -90,6 +91,47 @@
 	let loading = $state(false);
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	let timeout = $state(null);
+
+	// --- Source filter ---
+	// Empty set means "all databases" — the state the search starts in. The first
+	// click narrows to just that source; from there clicks toggle sources on and
+	// off, and clearing the last one lands back on "all" rather than on a filter
+	// that can never match anything.
+	const SOURCES = /** @type {const} */ ([
+		{ key: 'recipe', label: () => t.source_recipes },
+		{ key: 'usda', label: () => 'USDA' },
+		{ key: 'bls', label: () => 'BLS' },
+		{ key: 'off', label: () => 'OFF' },
+	]);
+	/** @type {Set<string>} */
+	let activeSources = $state(new Set());
+	const allSources = $derived(activeSources.size === 0);
+
+	/** @param {string} key */
+	function isSourceOn(key) {
+		return allSources || activeSources.has(key);
+	}
+
+	/** @param {string} key */
+	function toggleSource(key) {
+		if (allSources) {
+			activeSources = new Set([key]);
+		} else {
+			const next = new Set(activeSources);
+			if (next.has(key)) next.delete(key);
+			else next.add(key);
+			activeSources = next;
+		}
+		if (!isPrefilledMode) doSearch({ immediate: true });
+	}
+
+	/** Off by default — ready meals stay searchable until deliberately excluded. */
+	let hideReadyMeals = $state(false);
+
+	function toggleReadyMeals() {
+		hideReadyMeals = !hideReadyMeals;
+		if (!isPrefilledMode) doSearch({ immediate: true });
+	}
 	/** Aborts the previous in-flight search so an older response can't overwrite a newer one. @type {AbortController | null} */
 	let searchAbort = null;
 	const isPrefilledMode = $derived(initialResults != null);
@@ -143,7 +185,8 @@
 	let workerReadyReject = null;
 
 
-	function doSearch() {
+	/** @param {{ immediate?: boolean }} [opts] */
+	function doSearch(opts = {}) {
 		if (timeout) clearTimeout(timeout);
 		scanError = '';
 		const q = query.trim();
@@ -154,8 +197,9 @@
 			loading = false;
 			return;
 		}
+		const sourceParam = allSources ? '' : [...activeSources].sort().join(',');
 		// Results are slim (no per100g) — served instantly from cache on repeat/backspace.
-		const key = `${showFavorites ? 'f:' : ''}${q.toLowerCase()}`;
+		const key = `${showFavorites ? 'f:' : ''}${hideReadyMeals ? 'nrm:' : ''}${sourceParam}|${q.toLowerCase()}`;
 		const cached = cacheGet(key);
 		if (cached) {
 			searchAbort?.abort();
@@ -165,13 +209,15 @@
 			return;
 		}
 		loading = true;
-		timeout = setTimeout(async () => {
+		const run = async () => {
 			searchAbort?.abort();
 			const ac = new AbortController();
 			searchAbort = ac;
 			try {
 				const favParam = showFavorites ? '&favorites=true' : '';
-				const res = await fetch(`/api/nutrition/search?q=${encodeURIComponent(q)}${favParam}`, { signal: ac.signal });
+				const srcParam = sourceParam ? `&sources=${sourceParam}` : '';
+				const rmParam = hideReadyMeals ? '&hideReadyMeals=true' : '';
+				const res = await fetch(`/api/nutrition/search?q=${encodeURIComponent(q)}${favParam}${srcParam}${rmParam}`, { signal: ac.signal });
 				if (res.ok) {
 					const data = await res.json();
 					results = data;
@@ -185,7 +231,11 @@
 					searchAbort = null;
 				}
 			}
-		}, 150);
+		};
+		// A filter click is a deliberate one-shot action — no need to debounce it
+		// the way we debounce each keystroke.
+		if (opts.immediate) run();
+		else timeout = setTimeout(run, 150);
 	}
 
 	/** @param {FoodItem} item */
@@ -703,6 +753,29 @@
 			</button>
 		{/if}
 	</div>
+	{#if !isPrefilledMode}
+		<div class="fs-sources" role="group" aria-label={t.source_filter}>
+			{#each SOURCES as src}
+				<button
+					class="fs-source-btn"
+					class:is-on={isSourceOn(src.key)}
+					aria-pressed={isSourceOn(src.key)}
+					onclick={() => toggleSource(src.key)}
+				>{src.label()}</button>
+			{/each}
+			<span class="fs-sources-sep" aria-hidden="true"></span>
+			<button
+				class="fs-source-btn fs-rm-btn"
+				class:is-on={hideReadyMeals}
+				aria-pressed={hideReadyMeals}
+				title={t.hide_ready_meals_title}
+				onclick={toggleReadyMeals}
+			>
+				<UtensilsCrossed size={11} strokeWidth={2.5} />
+				{t.hide_ready_meals}
+			</button>
+		</div>
+	{/if}
 	{#if scanError}
 		<p class="fs-scan-error">{scanError}</p>
 	{/if}
@@ -857,6 +930,52 @@
 		color: var(--color-text-tertiary);
 		animation: spin 1s linear infinite;
 		pointer-events: none;
+	}
+	/* ── Source filter pills ── */
+	.fs-sources {
+		display: flex;
+		gap: 0.35rem;
+		margin-top: 0.4rem;
+		flex-wrap: wrap;
+	}
+	.fs-source-btn {
+		padding: 0.2rem 0.6rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-tertiary);
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		cursor: pointer;
+		transition: background var(--transition-fast), color var(--transition-fast),
+			border-color var(--transition-fast), scale var(--transition-fast);
+	}
+	.fs-source-btn:hover {
+		scale: 1.05;
+	}
+	.fs-source-btn.is-on {
+		background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+	.fs-sources-sep {
+		width: 1px;
+		align-self: stretch;
+		margin-inline: 0.15rem;
+		background: var(--color-border);
+	}
+	/* The ready-meal pill excludes rather than includes, so it gets its own accent —
+	   "on" here means results are being removed, not a database added. */
+	.fs-rm-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	.fs-rm-btn.is-on {
+		background: color-mix(in srgb, var(--orange) 15%, transparent);
+		border-color: var(--orange);
+		color: var(--orange);
 	}
 	.fs-scan-error {
 		font-size: 0.78rem;
