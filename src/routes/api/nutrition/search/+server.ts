@@ -1,5 +1,6 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
+import { usdaDisplayName } from '$lib/data/usdaNamesDe';
 import { BLS_DB } from '$lib/data/blsDb';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
@@ -65,7 +66,7 @@ function lookupUsda(fdcId: string, full: boolean): SearchResult | null {
 	return {
 		source: 'usda',
 		id: String(entry.fdcId),
-		name: entry.name,
+		name: usdaDisplayName(entry.name),
 		category: entry.category,
 		calories: entry.per100g.calories,
 		...(full && { per100g: entry.per100g, portions: entry.portions }),
@@ -311,7 +312,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			scored.push({
 				source: 'usda',
 				id: String(entry.fdcId),
-				name: entry.name,
+				name: usdaDisplayName(entry.name),
 				category: entry.category,
 				calories: entry.per100g.calories,
 				score: hit.score,

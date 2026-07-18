@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
+import { usdaDisplayName, usdaNameDe } from '$lib/data/usdaNamesDe';
 import { BLS_DB } from '$lib/data/blsDb';
 import { DRI_MALE } from '$lib/data/dailyReferenceIntake';
 import { Recipe } from '$models/Recipe';
@@ -82,6 +83,9 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 				name: `${entry.nameDe}${entry.nameEn ? ` (${entry.nameEn})` : ''}`,
 				nameDe: entry.nameDe,
 				nameEn: entry.nameEn,
+				// BLS is a German source, so German leads and English is the subtitle.
+				namePrimary: entry.nameDe,
+				nameSecondary: entry.nameEn || undefined,
 				category: entry.category,
 				per100g: entry.per100g,
 			},
@@ -229,7 +233,12 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 		food: {
 			source: 'usda' as const,
 			id: String(entry.fdcId),
-			name: entry.name,
+			name: usdaDisplayName(entry.name),
+			nameEn: entry.name,
+			nameDe: usdaNameDe(entry.name),
+			// USDA is an English source — the mirror of BLS: English leads, German follows.
+			namePrimary: entry.name,
+			nameSecondary: usdaNameDe(entry.name),
 			category: entry.category,
 			per100g: entry.per100g,
 			portions: entry.portions,

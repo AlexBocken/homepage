@@ -244,13 +244,13 @@
 	<!-- Header -->
 	<header class="food-header">
 		<div class="food-header-row">
-			<h1>{food.nameDe ?? food.name}</h1>
+			<h1>{food.namePrimary ?? food.nameDe ?? food.name}</h1>
 			<button class="fav-btn" class:active={favorited} disabled={favLoading} onclick={toggleFavorite} aria-label={favorited ? 'Remove favorite' : 'Add favorite'}>
 				<Heart size={20} fill={favorited ? 'var(--red)' : 'none'} color={favorited ? 'var(--red)' : 'var(--color-text-tertiary)'} />
 			</button>
 		</div>
-		{#if food.nameEn && food.nameDe}
-			<p class="name-alt">{food.nameEn}</p>
+		{#if food.nameSecondary}
+			<p class="name-alt">{food.nameSecondary}</p>
 		{/if}
 		<div class="badges">
 			<span class="badge badge-source">{food.source === 'bls' ? 'BLS' : food.source === 'usda' ? 'USDA' : food.source === 'off' ? 'OFF' : food.source === 'custom' ? (isEn ? 'Custom Meal' : 'Eigene Mahlzeit') : isEn ? 'Recipe' : 'Rezept'}</span>

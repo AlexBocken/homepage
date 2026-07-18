@@ -1,15 +1,20 @@
 /**
  * In-memory search index for the static BLS + USDA food tables.
  *
- * Instead of fuzzy-scoring all ~20k entries on every keystroke, we build (once,
+ * Instead of fuzzy-scoring all ~14.5k entries on every keystroke, we build (once,
  * lazily) a word→entries inverted index and only score the candidates whose name
  * has a word starting with each query word. All text is diacritic-folded so the
- * German (BLS) and English names match accent-insensitively (e.g. "hahnchen"
- * finds "Hähnchen"). Matching is word-prefix + AND across query words, then
- * ranked with the shared fuzzyScore.
+ * German and English names match accent-insensitively (e.g. "hahnchen" finds
+ * "Hähnchen"). Matching is word-prefix + AND across query words, then ranked with
+ * the shared fuzzyScore.
+ *
+ * Both tables are bilingual, so both names are indexed per entry: BLS carries
+ * nameDe/nameEn, and USDA's English names are paired with the German translations in
+ * usdaNamesDe. A German query therefore reaches USDA foods too.
  */
 
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
+import { usdaNameDe } from '$lib/data/usdaNamesDe';
 import { BLS_DB } from '$lib/data/blsDb';
 import { fuzzyScore } from '$lib/js/fuzzy';
 
@@ -110,10 +115,13 @@ function build(): void {
 	}
 
 	for (let i = 0; i < NUTRITION_DB.length; i++) {
-		const name = foldText(NUTRITION_DB[i].name);
+		const en = foldText(NUTRITION_DB[i].name);
+		const deName = usdaNameDe(NUTRITION_DB[i].name);
+		const de = deName ? foldText(deName) : '';
 		const candId = candidates.length;
-		candidates.push({ source: 'usda', idx: i, folded: [name] });
-		addWords(name, candId);
+		candidates.push({ source: 'usda', idx: i, folded: de ? [en, de] : [en] });
+		addWords(en, candId);
+		if (de) addWords(de, candId);
 	}
 
 	const wordToCands = new Map<string, number[]>();
