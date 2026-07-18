@@ -82,6 +82,14 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/fitness/history', kind: 'page' },
 	{ path: '/fitness/stats', kind: 'page' },
 	{ path: '/api/fitness/goal', kind: 'api' },
+	// The nutrition API is login-only rather than group-gated: it is consumed both by
+	// the fitness food diary and by the recipe editor, which sit behind different
+	// groups. Query params are real ones so a permitted user gets a 200, not a 400
+	// that would pass the gate assertion without exercising the endpoint.
+	{ path: '/api/nutrition/search?q=chicken', kind: 'api' },
+	{ path: '/api/nutrition/lookup?source=usda&id=2646170', kind: 'api' },
+	{ path: '/api/nutrition/overwrites', kind: 'api' },
+	{ path: '/api/nutrition/barcode?code=0000000000000', kind: 'api' },
 	{ path: '/settings', kind: 'page' },
 	{ path: '/einstellungen', kind: 'page' },
 	{ path: '/hikes/route-builder', kind: 'page' }

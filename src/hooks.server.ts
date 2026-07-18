@@ -326,6 +326,17 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		}
 	}
 
+	// Protect the nutrition API (any logged-in user, no group needed). It is consumed
+	// by the fitness food search/diary and the recipe editor, which are already gated to
+	// logged-in users, so nothing legitimate loses access. Without this the endpoints
+	// were an open read API over the bundled USDA/BLS tables. There are no page routes
+	// under /api/nutrition, so always answer 401 rather than redirecting to login.
+	if (url.pathname.startsWith('/api/nutrition')) {
+		if (!session) {
+			await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
+		}
+	}
+
 	// Protect self-service settings page and user API (any logged-in user). The
 	// settings page is one route behind the [settingsLang] matcher, so guard both
 	// slugs ('settings' and 'einstellungen') identically — otherwise the German
