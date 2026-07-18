@@ -6,6 +6,16 @@
 	function cacheGet(/** @type {string} */ key) {
 		return SEARCH_CACHE.get(key);
 	}
+	/**
+	 * Drop every cached result set. Call this whenever a favourite changes: results
+	 * carry a `favorited` flag and are ranked favourites-first, and this cache is
+	 * module state that survives client-side navigation — so after favouriting on a
+	 * food's detail page and coming back, a previously-typed query would otherwise
+	 * replay pre-favourite results (no heart, old order).
+	 */
+	export function clearFoodSearchCache() {
+		SEARCH_CACHE.clear();
+	}
 	function cacheSet(/** @type {string} */ key, /** @type {any} */ value) {
 		if (SEARCH_CACHE.has(key)) SEARCH_CACHE.delete(key);
 		SEARCH_CACHE.set(key, value);
@@ -56,6 +66,7 @@
 	 *   oncancel?: () => void,
 	 *   onfavoritechange?: (payload: { source: string, sourceId: string, name: string, favorited: boolean }) => void,
 	 *   showFavorites?: boolean,
+	 *   highlightFavorites?: boolean,
 	 *   showDetailLinks?: boolean,
 	 *   autofocus?: boolean,
 	 *   confirmLabel?: string,
@@ -70,6 +81,7 @@
 		oncancel = undefined,
 		onfavoritechange = undefined,
 		showFavorites = true,
+		highlightFavorites = false,
 		showDetailLinks = true,
 		autofocus = false,
 		confirmLabel = undefined,
@@ -362,6 +374,9 @@
 		const wasFav = item.favorited;
 		item.favorited = !wasFav;
 		results = [...results];
+		// Cached result sets carry the favourite flag and favourites-first order, so
+		// they are stale the moment this changes.
+		clearFoodSearchCache();
 		try {
 			if (wasFav) {
 				await fetch('/api/fitness/favorite-ingredients', {
@@ -838,6 +853,19 @@
 						</div>
 						<span class="fs-result-cal">{item.calories}<small> kcal</small></span>
 					</button>
+					{#if highlightFavorites && !showFavorites}
+						<!-- Indicator, not a toggle: only favourited rows carry a heart here, so
+						     clicking to unfavourite would make it vanish with no way back. The
+						     empty span keeps the trailing controls aligned across rows, since
+						     .fs-result is flex:1 and would otherwise pull them leftwards. -->
+						{#if item.favorited}
+							<span class="fs-fav-mark" role="img" aria-label="Favorite">
+								<Heart size={14} fill="var(--red)" />
+							</span>
+						{:else}
+							<span class="fs-fav-mark" aria-hidden="true"></span>
+						{/if}
+					{/if}
 					{#if showDetailLinks && (item.source === 'bls' || item.source === 'usda' || item.source === 'off')}
 						<a class="fs-detail-link" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: item.source, id: item.id })} aria-label="View details">
 							<ExternalLink size={13} />
@@ -1166,6 +1194,15 @@
 		transition: color 0.15s;
 	}
 	.fs-fav.is-fav { color: var(--red); }
+	/* Mirrors .fs-fav's box (14px icon + 0.4rem padding either side) so highlighted
+	   and non-highlighted rows align. Doubles as the empty spacer. */
+	.fs-fav-mark {
+		width: calc(14px + 0.8rem);
+		flex-shrink: 0;
+		display: flex;
+		justify-content: center;
+		color: var(--red);
+	}
 	.fs-fav:hover { color: var(--red); }
 
 	.fs-result {

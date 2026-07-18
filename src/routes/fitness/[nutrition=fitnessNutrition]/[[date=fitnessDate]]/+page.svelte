@@ -2076,7 +2076,7 @@
 					</div>
 
 					{#if inlineTab === 'search'}
-						<FoodSearch onselect={inlineLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} autofocus={true} bind:query={addFoodQuery} />
+						<FoodSearch onselect={inlineLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} highlightFavorites={true} autofocus={true} bind:query={addFoodQuery} />
 					{:else if inlineTab === 'favorites'}
 						{@render favoritesTab(inlineLogFood)}
 					{:else if inlineTab === 'recent'}
@@ -2215,7 +2215,7 @@
 			</div>
 
 			{#if fabTab === 'search'}
-				<FoodSearch onselect={fabLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} autofocus={true} bind:query={addFoodQuery} />
+				<FoodSearch onselect={fabLogFood} onfavoritechange={handleFavoriteChange} showFavorites={false} highlightFavorites={true} autofocus={true} bind:query={addFoodQuery} />
 			{:else if fabTab === 'favorites'}
 				{@render favoritesTab(fabLogFood)}
 			{:else if fabTab === 'recent'}

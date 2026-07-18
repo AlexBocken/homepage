@@ -163,11 +163,18 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	let favResults: SearchResult[] = [];
 	let favKeys = new Set<string>();
 
-	if (wantFavorites) {
-		try {
-			const user = await requireAuth(locals);
-			await dbConnect();
-			const favDocs = await FavoriteIngredient.find({ createdBy: user.nickname }).lean();
+	// Favourite keys are loaded for every logged-in caller, not just ?favorites=true.
+	// Marking a result as favourited (heart in the row, ranked to the top) needs only
+	// the keys, and that is a single indexed query. Hydrating the *full* favourites
+	// list into results is the expensive part — a recipe fetch plus per-100g compute
+	// per favourite — and stays behind the flag.
+	try {
+		const user = await requireAuth(locals);
+		await dbConnect();
+		const favDocs = await FavoriteIngredient.find({ createdBy: user.nickname }).lean();
+		for (const fav of favDocs) favKeys.add(`${fav.source}:${fav.sourceId}`);
+
+		if (wantFavorites) {
 
 			// Batch-load favorited recipes
 			const recipeFavIds = favDocs.filter(f => (f.source as string) === 'recipe').map(f => f.sourceId);
@@ -186,7 +193,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 			for (const fav of favDocs) {
 				if (!sources.has(fav.source as Source)) continue;
-				const key = `${fav.source}:${fav.sourceId}`;
 				let result: SearchResult | null = null;
 				if (fav.source === 'bls') {
 					result = lookupBls(fav.sourceId, full);
@@ -212,12 +218,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				if (result) {
 					result.favorited = true;
 					favResults.push(result);
-					favKeys.add(key);
 				}
 			}
-		} catch {
-			// Not authenticated or DB error — ignore, just return normal results
 		}
+	} catch {
+		// Not authenticated or DB error — ignore, just return normal results
 	}
 
 	const scored: (SearchResult & { score: number })[] = [];
@@ -346,12 +351,18 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				score: best,
 				...(full && { per100g: entry.per100g }),
 				...(portions.length > 0 && { portions }),
+				...(favKeys.has(`off:${entry.barcode}`) && { favorited: true }),
 			});
 		}
 	}
 
-	// Sort by score descending, return top 30 (without score field)
-	scored.sort((a, b) => b.score - a.score);
+	// Favourites first, then by score. Sorting before the top-30 cut matters: a
+	// favourite that matches the query must not be truncated away by higher-scoring
+	// non-favourites.
+	scored.sort((a, b) => {
+		if (!!a.favorited !== !!b.favorited) return a.favorited ? -1 : 1;
+		return b.score - a.score;
+	});
 	const searchResults = scored.slice(0, 30).map(({ score, ...rest }) => rest);
 
 	// Prepend favorites, deduplicating

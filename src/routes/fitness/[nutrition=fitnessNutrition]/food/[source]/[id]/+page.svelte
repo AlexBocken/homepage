@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { macroCaloriePercent, formatGrams as fmt } from '$lib/fitness/nutritionMath';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
+	import { clearFoodSearchCache } from '$lib/components/fitness/FoodSearch.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import Heart from '@lucide/svelte/icons/heart';
@@ -144,6 +145,9 @@
 
 	async function toggleFavorite() {
 		favLoading = true;
+		// The food search caches result sets across navigations and now marks/ranks
+		// favourites, so its cache has to be dropped when this changes.
+		clearFoodSearchCache();
 		const id = food.id ?? /** @type {any} */ (food).sourceId;
 		try {
 			if (favorited) {
