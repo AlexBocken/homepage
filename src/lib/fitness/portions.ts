@@ -60,6 +60,18 @@ export function coercePortions(v: unknown): Portion[] | undefined {
 	return out.length > 0 ? out : undefined;
 }
 
+/**
+ * The portion list for a custom meal: the whole meal as assembled, so it can be
+ * logged as "1 × Porridge" instead of forcing the user to recall its gram weight.
+ *
+ * The label carries the meal's own name rather than a "1 serving" wording — server
+ * read paths have no request locale, and the name reads correctly in both.
+ */
+export function customMealPortions(name: string, totalGrams: number): Portion[] {
+	if (!(totalGrams > 0)) return [];
+	return [{ description: `1× ${name}`, grams: totalGrams }];
+}
+
 /** Round a portion's gram figure for display — packages are rarely fractional. */
 export function formatPortionGrams(grams: number): string {
 	return Math.round(grams).toString();

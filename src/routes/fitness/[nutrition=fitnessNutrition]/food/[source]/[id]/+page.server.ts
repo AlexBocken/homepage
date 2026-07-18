@@ -11,6 +11,7 @@ import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, resolvePer100g, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 import { scaleFromPer100g } from '$lib/fitness/nutritionMath';
 import { offPortions } from '$lib/server/offPortions';
+import { customMealPortions } from '$lib/fitness/portions';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 
 async function computeRecipePer100g(id: string): Promise<Record<string, number>> {
@@ -207,6 +208,7 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 				category: 'Custom Meal',
 				per100g,
 				totalGrams,
+				portions: customMealPortions(meal.name, totalGrams),
 				ingredients: meal.ingredients.map((ing: any) => ({
 					name: ing.name,
 					source: ing.source,

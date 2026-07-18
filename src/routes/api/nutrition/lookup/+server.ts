@@ -7,6 +7,7 @@ import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 import { offPortions } from '$lib/server/offPortions';
+import { customMealPortions } from '$lib/fitness/portions';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const source = url.searchParams.get('source');
@@ -119,7 +120,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		for (const [k, v] of Object.entries(totals)) {
 			per100g[k] = v * scale;
 		}
-		return json({ per100g });
+		const portions = customMealPortions(meal.name, totalGrams);
+		return json({ per100g, ...(portions.length > 0 && { portions }) });
 	}
 
 	return json({ error: 'Invalid source' }, { status: 400 });
