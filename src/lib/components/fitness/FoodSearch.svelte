@@ -738,7 +738,17 @@
 		try {
 			const res = await fetch(`/api/nutrition/barcode?code=${encodeURIComponent(code)}`);
 			if (!res.ok) {
-				scanError = isEn ? `No product found for barcode ${code}` : `Kein Produkt gefunden für Barcode ${code}`;
+				// Distinguish the failure modes — collapsing every status into "not found"
+				// made a session timeout or a server fault look like an unknown product.
+				if (res.status === 404) {
+					scanError = isEn ? `No product found for barcode ${code}` : `Kein Produkt gefunden für Barcode ${code}`;
+				} else if (res.status === 401) {
+					scanError = isEn ? 'Session expired — log in again' : 'Sitzung abgelaufen — bitte neu anmelden';
+				} else {
+					scanError = isEn
+						? `Lookup failed (${res.status}) for barcode ${code}`
+						: `Suche fehlgeschlagen (${res.status}) für Barcode ${code}`;
+				}
 				return;
 			}
 			const data = await res.json();

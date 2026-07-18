@@ -7,6 +7,7 @@ import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 import { offPortions } from '$lib/server/offPortions';
+import { fetchFromOffApi, cacheOffProduct } from '$lib/server/offLookup';
 import { customMealPortions } from '$lib/fitness/portions';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -92,11 +93,22 @@ export const GET: RequestHandler = async ({ url }) => {
 	if (source === 'off') {
 		await dbConnect();
 		const entry = await OpenFoodFact.findOne({ barcode: id }).lean();
-		if (!entry) return json({ error: 'Not found' }, { status: 404 });
-		const portions = offPortions(entry);
+		if (entry) {
+			const portions = offPortions(entry);
+			return json({
+				per100g: entry.per100g,
+				...(portions.length > 0 && { portions }),
+			});
+		}
+		// Not cached yet — resolve it live, same as the barcode endpoint does. Without
+		// this an OFF food that isn't in the local mirror 404s here, which the client
+		// surfaces as "Could not load food data" even though the product is resolvable.
+		const live = await fetchFromOffApi(id);
+		if (!live) return json({ error: 'Not found' }, { status: 404 });
+		await cacheOffProduct(live, id);
 		return json({
-			per100g: entry.per100g,
-			...(portions.length > 0 && { portions }),
+			per100g: live.per100g,
+			...(live.portions.length > 0 && { portions: live.portions }),
 		});
 	}
 
