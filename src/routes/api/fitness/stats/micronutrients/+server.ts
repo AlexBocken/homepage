@@ -55,12 +55,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	// The amino acid requirements are per kg, and these figures are an average over the
 	// window — so the weight they scale by is averaged over the same window. If nothing
 	// was measured in it, the most recent measurement stands in.
+	// BodyMeasurement.weight is a plain number (kg), not a { value, unit } object.
 	const rangeWeights = weightsInRange
-		.map(m => m?.weight?.value)
+		.map(m => m?.weight)
 		.filter((v): v is number => typeof v === 'number' && v > 0);
 	const weight = rangeWeights.length > 0
 		? rangeWeights.reduce((a, b) => a + b, 0) / rangeWeights.length
-		: (latestWeight?.weight?.value ?? null);
+		: (typeof latestWeight?.weight === 'number' ? latestWeight.weight : null);
 
 	const micros: Record<string, number> = {};
 	const aminos: Record<string, number> = {};
