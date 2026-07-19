@@ -2,21 +2,23 @@ import { test, expect } from '@playwright/test';
 import { storageStateFor } from '../helpers/auth';
 import { gotoHydrated } from '../helpers/nav';
 
-// Favourites are marked in the Search-food tab: a favourited food shows a red
-// heart at the right of its row and is ranked above the other matches. The heart
-// there is an indicator, not a toggle — favouriting happens on the detail page.
+// Favourites are marked in the Search-food tab: every row shows a heart at its
+// right — filled and red when favourited, outline when not — and favourited foods
+// rank above the other matches. The heart is also a toggle, so favouriting can
+// happen from the row itself as well as from the detail page.
 //
 // Round-trips (favourite → assert → unfavourite) so the spec is idempotent and
 // leaves the e2e_fitness user's favourites as it found them.
 
 test.use({ storageState: storageStateFor('fitness') });
-// Serial: both tests favourite/unfavourite for the same e2e_fitness user and assert
+// Serial: these tests favourite/unfavourite for the same e2e_fitness user and assert
 // on the absence of hearts, so running them concurrently makes each see the other's
 // state.
 test.describe.configure({ mode: 'serial' });
 
 const QUERY = 'banana';
-const MARK = '.fs-fav-mark[role="img"]';
+// Every row has a .fs-fav-mark button; only favourited ones carry .is-fav.
+const MARK = '.fs-fav-mark.is-fav';
 // Only BLS/USDA/OFF rows carry a detail link, which is how we reach the favourite
 // toggle. Recipes have no detail page from here.
 const LINKED_ROW = '.fs-result-row:has(a.fs-detail-link)';
@@ -68,9 +70,9 @@ test('a favourited food is hearted and ranked first in search', async ({ page })
 		const first = page.locator('.fs-result-row').first();
 		await expect(first.locator('.fs-result-name')).toHaveText(target);
 		await expect(first.locator(MARK)).toBeVisible();
-		// Only the favourite is marked — the heart highlights, it is not a toggle on
-		// every row.
+		// Only that row is filled in; the rest show the outline heart.
 		await expect(page.locator(MARK)).toHaveCount(1);
+		await expect(page.locator('.fs-fav-mark')).toHaveCount(await page.locator('.fs-result-row').count());
 	} finally {
 		await setFavorite(page, QUERY, target, false);
 	}
@@ -103,6 +105,35 @@ test('the heart appears without a full page load after favouriting', async ({ pa
 		const first = page.locator('.fs-result-row').first();
 		await expect(first.locator('.fs-result-name')).toHaveText(target);
 		await expect(first.locator(MARK)).toBeVisible();
+	} finally {
+		await setFavorite(page, QUERY, target, false);
+	}
+});
+
+test('the heart in a search row toggles the favourite', async ({ page }) => {
+	await openSearch(page, QUERY);
+	const row = page.locator(LINKED_ROW).nth(1);
+	await expect(row).toBeVisible();
+	const target = (await row.locator('.fs-result-name').innerText()).trim();
+	const heart = row.locator('.fs-fav-mark');
+	await expect(heart).not.toHaveClass(/is-fav/);
+
+	try {
+		await heart.click();
+		await expect(heart).toHaveClass(/is-fav/);
+
+		// Survives a reload, i.e. the toggle actually persisted server-side, and the
+		// food now ranks first.
+		await openSearch(page, QUERY);
+		const first = page.locator('.fs-result-row').first();
+		await expect(first.locator('.fs-result-name')).toHaveText(target);
+		await expect(first.locator('.fs-fav-mark')).toHaveClass(/is-fav/);
+
+		// Toggling back off from the row leaves no heart filled.
+		await first.locator('.fs-fav-mark').click();
+		await expect(first.locator('.fs-fav-mark')).not.toHaveClass(/is-fav/);
+		await openSearch(page, QUERY);
+		await expect(page.locator(MARK)).toHaveCount(0);
 	} finally {
 		await setFavorite(page, QUERY, target, false);
 	}

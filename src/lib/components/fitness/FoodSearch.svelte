@@ -864,17 +864,12 @@
 						<span class="fs-result-cal">{item.calories}<small> kcal</small></span>
 					</button>
 					{#if highlightFavorites && !showFavorites}
-						<!-- Indicator, not a toggle: only favourited rows carry a heart here, so
-						     clicking to unfavourite would make it vanish with no way back. The
-						     empty span keeps the trailing controls aligned across rows, since
-						     .fs-result is flex:1 and would otherwise pull them leftwards. -->
-						{#if item.favorited}
-							<span class="fs-fav-mark" role="img" aria-label="Favorite">
-								<Heart size={14} fill="var(--red)" />
-							</span>
-						{:else}
-							<span class="fs-fav-mark" aria-hidden="true"></span>
-						{/if}
+						<!-- Every row carries a heart — filled when favourited, outline when not —
+						     so the indicator doubles as a toggle without a row's control
+						     disappearing when it is switched off. -->
+						<button class="fs-fav-mark" class:is-fav={item.favorited} onclick={() => toggleFavorite(item)} aria-label="Toggle favorite" aria-pressed={item.favorited}>
+							<Heart size={14} fill={item.favorited ? 'var(--red)' : 'none'} />
+						</button>
 					{/if}
 					{#if showDetailLinks && (item.source === 'bls' || item.source === 'usda' || item.source === 'off')}
 						<a class="fs-detail-link" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: item.source, id: item.id })} aria-label="View details">
@@ -1204,16 +1199,21 @@
 		transition: color 0.15s;
 	}
 	.fs-fav.is-fav { color: var(--red); }
-	/* Mirrors .fs-fav's box (14px icon + 0.4rem padding either side) so highlighted
-	   and non-highlighted rows align. Doubles as the empty spacer. */
+	/* Trailing twin of .fs-fav: same box (14px icon + 0.4rem padding either side),
+	   so rows line up whichever side the toggle sits on. */
 	.fs-fav-mark {
-		width: calc(14px + 0.8rem);
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0.4rem;
+		color: var(--color-text-tertiary);
 		flex-shrink: 0;
 		display: flex;
 		justify-content: center;
-		color: var(--red);
+		transition: color 0.15s;
 	}
-	.fs-fav:hover { color: var(--red); }
+	.fs-fav-mark.is-fav { color: var(--red); }
+	.fs-fav:hover, .fs-fav-mark:hover { color: var(--red); }
 
 	.fs-result {
 		display: flex;
