@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { queryWords, scoreName, foldText } from '$lib/server/nutritionSearchIndex';
+import { queryWords, scoreName, foldText, searchBlsUsda } from '$lib/server/nutritionSearchIndex';
+import { BLS_DB } from '$lib/data/blsDb';
 
 describe('queryWords', () => {
 	it('splits on whitespace', () => {
@@ -65,5 +66,46 @@ describe('scoreName', () => {
 	it('works on folded text (the index folds before scoring)', () => {
 		const folded = foldText('Hähnchenbrust, roh');
 		expect(score('roh hahnchenbrust', folded)).toBeGreaterThan(0);
+	});
+});
+
+describe('German queries after the Swiss renaming', () => {
+	/** Best-scoring BLS name for a query, or '' if nothing matched. */
+	function topBls(query: string): string {
+		const best = searchBlsUsda(query)
+			.filter((h) => h.source === 'bls')
+			.sort((a, b) => b.score - a.score)[0];
+		return best ? BLS_DB[best.idx].nameDe : '';
+	}
+
+	// The food tables display Swiss High German (Rüebli, Poulet, Rahm). Nobody who
+	// learned these foods in Germany types that, so the index carries the German
+	// wording as an invisible shadow — see germanSynonyms in $lib/data/helvetisms.
+	it('finds a food that no longer contains the word typed', () => {
+		expect(topBls('karotte')).toMatch(/Rüebli/);
+		expect(topBls('möhre')).toMatch(/Rüebli/);
+		expect(topBls('zucchini')).toMatch(/Zucchetti/);
+		expect(topBls('grünkohl')).toMatch(/Federkohl/);
+		expect(topBls('feldsalat')).toMatch(/Nüsslisalat/);
+		expect(topBls('rote bete')).toMatch(/Randen/);
+	});
+
+	it('matches German compounds, not just the bare word', () => {
+		// The shadow substitutes into the name ("Pouletbrust" → "hähnchenbrust")
+		// precisely so this works: the index matches whole words by prefix, and
+		// "hähnchen" is not a prefix of "hähnchenbrust".
+		expect(topBls('hähnchenbrust')).toMatch(/Poulet/);
+		expect(topBls('schlagsahne')).toMatch(/Schlagrahm/);
+		expect(topBls('karottensuppe')).toMatch(/Rüeblisuppe/);
+	});
+
+	it('mixes a German word with an unchanged one', () => {
+		expect(topBls('karotte roh')).toMatch(/Rüebli/);
+	});
+
+	it('still finds the food by its Swiss name', () => {
+		expect(topBls('rüebli')).toMatch(/Rüebli/);
+		expect(topBls('zucchetti')).toMatch(/Zucchetti/);
+		expect(topBls('poulet')).toMatch(/Poulet/);
 	});
 });

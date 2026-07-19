@@ -19,13 +19,13 @@ export const PANTRY_FOODS: PantryItem[] = [
 	{ blsCode: 'C118000', name: 'Quinoa', nameEn: 'Quinoa', group: 'grains' },
 	{ blsCode: 'C119200', name: 'Couscous', nameEn: 'Couscous', group: 'grains' },
 	{ blsCode: 'C119100', name: 'Bulgur', nameEn: 'Bulgur', group: 'grains' },
-	{ blsCode: 'B311000', name: 'Weißbrot', nameEn: 'White bread', group: 'grains' },
+	{ blsCode: 'B311000', name: 'Weissbrot', nameEn: 'White bread', group: 'grains' },
 	{ blsCode: 'B121000', name: 'Vollkornbrot', nameEn: 'Whole grain bread', group: 'grains' },
 
 	// Meat
-	{ blsCode: 'V416100', name: 'Hähnchenbrust', nameEn: 'Chicken breast', group: 'meat' },
-	{ blsCode: 'V413000', name: 'Hähnchenfleisch', nameEn: 'Chicken meat', group: 'meat' },
-	{ blsCode: 'V486100', name: 'Putenbrust', nameEn: 'Turkey breast', group: 'meat' },
+	{ blsCode: 'V416100', name: 'Pouletbrust', nameEn: 'Chicken breast', group: 'meat' },
+	{ blsCode: 'V413000', name: 'Pouletfleisch', nameEn: 'Chicken meat', group: 'meat' },
+	{ blsCode: 'V486100', name: 'Trutenbrust', nameEn: 'Turkey breast', group: 'meat' },
 	{ blsCode: 'U201000', name: 'Rindfleisch', nameEn: 'Beef', group: 'meat' },
 	{ blsCode: 'U287100', name: 'Rind Oberschale', nameEn: 'Beef top round', group: 'meat' },
 	{ blsCode: 'U020100', name: 'Schweinehack', nameEn: 'Pork mince', group: 'meat' },
@@ -36,7 +36,7 @@ export const PANTRY_FOODS: PantryItem[] = [
 	{ blsCode: 'T121100', name: 'Thunfisch', nameEn: 'Tuna', group: 'fish' },
 	{ blsCode: 'T204100', name: 'Kabeljau', nameEn: 'Cod', group: 'fish' },
 	{ blsCode: 'T422100', name: 'Forelle', nameEn: 'Trout', group: 'fish' },
-	{ blsCode: 'T753100', name: 'Garnelen', nameEn: 'Shrimp', group: 'fish' },
+	{ blsCode: 'T753100', name: 'Crevetten', nameEn: 'Shrimp', group: 'fish' },
 	{ blsCode: 'T107100', name: 'Makrele', nameEn: 'Mackerel', group: 'fish' },
 
 	// Dairy
@@ -47,7 +47,7 @@ export const PANTRY_FOODS: PantryItem[] = [
 	{ blsCode: 'M402600', name: 'Gouda', nameEn: 'Gouda', group: 'dairy' },
 	{ blsCode: 'M012200', name: 'Feta', nameEn: 'Feta', group: 'dairy' },
 	{ blsCode: 'Q611000', name: 'Butter', nameEn: 'Butter', group: 'dairy' },
-	{ blsCode: 'M173900', name: 'Sahne', nameEn: 'Heavy cream', group: 'dairy' },
+	{ blsCode: 'M173900', name: 'Rahm', nameEn: 'Heavy cream', group: 'dairy' },
 
 	// Eggs
 	{ blsCode: 'E111100', name: 'Ei', nameEn: 'Egg', group: 'eggs' },
@@ -64,10 +64,10 @@ export const PANTRY_FOODS: PantryItem[] = [
 	{ blsCode: 'G561100', name: 'Tomate', nameEn: 'Tomato', group: 'vegetables' },
 	{ blsCode: 'G543100', name: 'Paprika rot', nameEn: 'Red bell pepper', group: 'vegetables' },
 	{ blsCode: 'G211100', name: 'Spinat', nameEn: 'Spinach', group: 'vegetables' },
-	{ blsCode: 'G582100', name: 'Zucchini', nameEn: 'Zucchini', group: 'vegetables' },
-	{ blsCode: 'G620100', name: 'Karotte', nameEn: 'Carrot', group: 'vegetables' },
+	{ blsCode: 'G582100', name: 'Zucchetti', nameEn: 'Zucchini', group: 'vegetables' },
+	{ blsCode: 'G620100', name: 'Rüebli', nameEn: 'Carrot', group: 'vegetables' },
 	{ blsCode: 'K110100', name: 'Kartoffel', nameEn: 'Potato', group: 'vegetables' },
-	{ blsCode: 'K420100', name: 'Süßkartoffel', nameEn: 'Sweet potato', group: 'vegetables' },
+	{ blsCode: 'K420100', name: 'Süsskartoffel', nameEn: 'Sweet potato', group: 'vegetables' },
 	{ blsCode: 'F502100', name: 'Avocado', nameEn: 'Avocado', group: 'vegetables' },
 
 	// Fruits

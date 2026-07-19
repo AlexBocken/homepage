@@ -383,4 +383,18 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   { name: 'Hundefutter', category: 'Sonstiges' },
   { name: 'flowers', category: 'Sonstiges' },
   { name: 'pet food', category: 'Sonstiges' },
+
+  // ── Swiss High German ──
+  // The food tables display these forms (see $lib/data/helvetisms), so a shopping
+  // list written the way the app names things categorises too. The German entries
+  // above stay: this list is what users type, and both are typed here.
+  { name: 'Zucchetti', category: 'Obst & Gemüse' },
+  { name: 'Würstli', category: 'Fleisch & Fisch' },
+  { name: 'Trutenbrust', category: 'Fleisch & Fisch' },
+  { name: 'Sauerrahm', category: 'Milchprodukte' },
+  { name: 'Brötli', category: 'Brot & Backwaren' },
+  { name: 'Teigwaren', category: 'Pasta, Reis & Getreide' },
+  { name: 'Müesli', category: 'Pasta, Reis & Getreide' },
+  { name: 'Biscuits', category: 'Süsses & Snacks' },
+  { name: 'Müesliriegel', category: 'Süsses & Snacks' },
 ];

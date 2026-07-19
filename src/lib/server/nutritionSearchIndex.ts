@@ -16,6 +16,7 @@
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
 import { usdaNameDe } from '$lib/data/usdaNamesDe';
 import { BLS_DB } from '$lib/data/blsDb';
+import { germanSynonyms } from '$lib/data/helvetisms';
 import { fuzzyScore } from '$lib/js/fuzzy';
 
 /** Per-character penalty applied to a match's score by name length, so shorter
@@ -76,7 +77,15 @@ export function foldText(s: string): string {
 interface Candidate {
 	source: 'bls' | 'usda';
 	idx: number; // index into BLS_DB / NUTRITION_DB
-	folded: string[]; // folded full field strings to score against (de+en, or name)
+	/**
+	 * Folded field strings to score against (de+en, or name), each with the length the
+	 * tiebreaker should charge for it. The two differ only for the German-synonym
+	 * variant: it carries invisible keywords (Karotte for a food now called Rüebli) so
+	 * that a German query still scores, but charging for those extra characters would
+	 * push every helvetised food down the ranking against foods that were never
+	 * renamed. It is charged for the displayed name instead.
+	 */
+	folded: { text: string; len: number }[];
 }
 
 let _candidates: Candidate[] | null = null;
@@ -109,7 +118,16 @@ function build(): void {
 		const de = foldText(e.nameDe);
 		const en = e.nameEn ? foldText(e.nameEn) : '';
 		const candId = candidates.length;
-		candidates.push({ source: 'bls', idx: i, folded: en ? [de, en] : [de] });
+		const folded = [{ text: de, len: de.length }];
+		if (en) folded.push({ text: en, len: en.length });
+		const syn = foldText(germanSynonyms(e.nameDe));
+		if (syn) {
+			// Appended to the name, not indexed on its own: a query mixes renamed and
+			// unchanged words ("karotte roh"), and neither string carries both.
+			folded.push({ text: `${de} ${syn}`, len: de.length });
+			addWords(syn, candId);
+		}
+		candidates.push({ source: 'bls', idx: i, folded });
 		addWords(de, candId);
 		if (en) addWords(en, candId);
 	}
@@ -119,7 +137,14 @@ function build(): void {
 		const deName = usdaNameDe(NUTRITION_DB[i].name);
 		const de = deName ? foldText(deName) : '';
 		const candId = candidates.length;
-		candidates.push({ source: 'usda', idx: i, folded: de ? [en, de] : [en] });
+		const folded = [{ text: en, len: en.length }];
+		if (de) folded.push({ text: de, len: de.length });
+		const syn = deName ? foldText(germanSynonyms(deName)) : '';
+		if (syn) {
+			folded.push({ text: `${de} ${syn}`, len: de.length });
+			addWords(syn, candId);
+		}
+		candidates.push({ source: 'usda', idx: i, folded });
 		addWords(en, candId);
 		if (de) addWords(de, candId);
 	}
@@ -199,10 +224,10 @@ export function searchBlsUsda(rawQuery: string): LocalHit[] {
 		let rawBest = 0;
 		let bestLen = 0;
 		for (const f of cand.folded) {
-			const sc = scoreName(qf, qWords, f);
+			const sc = scoreName(qf, qWords, f.text);
 			if (sc > rawBest) {
 				rawBest = sc;
-				bestLen = f.length;
+				bestLen = f.len;
 			}
 		}
 		// Mild tiebreaker: among equally-good matches prefer the shorter name

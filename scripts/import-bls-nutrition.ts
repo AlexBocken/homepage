@@ -8,6 +8,7 @@
  */
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
+import { toSwissGerman } from '../src/lib/data/helvetisms';
 
 /** Parse CSV handling quoted fields with commas */
 function parseCSV(text: string): string[][] {
@@ -127,7 +128,10 @@ async function main() {
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
     const blsCode = row[0]?.trim();
-    const nameDe = row[1]?.trim();
+    // BLS is a German database; this site writes Swiss High German. Normalising here
+    // rather than in the generated file means a re-import cannot bring back Sahne,
+    // Hähnchen and the eszett.
+    const nameDe = toSwissGerman(row[1]?.trim() ?? '');
     const nameEn = row[2]?.trim() || '';
 
     if (!blsCode || !nameDe) continue;

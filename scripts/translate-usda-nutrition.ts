@@ -37,6 +37,7 @@
  * characters, so this disambiguation is free.
  */
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { toSwissGerman } from '../src/lib/data/helvetisms';
 import { resolve } from 'path';
 import { NUTRITION_DB } from '../src/lib/data/nutritionDb';
 import { canonicalSegment } from './usdaGermanTerms';
@@ -132,21 +133,6 @@ function unprotect(text: string): string {
 	);
 }
 
-/**
- * This repo writes Swiss High German. DeepL always returns reichsdeutsch, so normalise
- * its output here rather than fixing up the generated files afterwards — otherwise the
- * next re-run quietly reintroduces it.
- *
- *  - eszett becomes ss (also enforced by the pre-commit hook)
- *  - grilling is grillieren, not grillen, so "gegrillt" becomes "grilliert". The
- *    suffix is left alone so inflections carry through ("gegrilltes" → "grilliertes").
- *    Nouns like "Grillputen" are already fine and must not be touched.
- */
-function toSwissGerman(text: string): string {
-	return text
-		.replace(/ß/g, 'ss') // ß-ok (this is the normaliser)
-		.replace(/([Gg])egrillt/g, (_, g: string) => (g === 'G' ? 'Grilliert' : 'grilliert'));
-}
 
 function preprocess(seg: string): string {
 	let out = seg;
@@ -241,7 +227,11 @@ function assemble(name: string, category: string, segments: Record<string, strin
 	// — and a translated segment can itself contain a comma, so re-split before checking.
 	const flat = parts.join(', ').split(', ');
 	const deduped = flat.filter((p, i) => i === 0 || p.toLowerCase() !== flat[i - 1].toLowerCase());
-	return deduped.join(', ');
+	// Normalise the assembled name, not just the DeepL output: the canonical terms in
+	// usdaGermanTerms.ts are written in plain German, and the segment cache predates
+	// most of the helvetism table. Some terms also only become visible once segments
+	// are joined — "Rote" and "Bete" arrive separately.
+	return toSwissGerman(deduped.join(', '));
 }
 
 /** Proportional sample across all categories, with a floor so small ones appear. */
