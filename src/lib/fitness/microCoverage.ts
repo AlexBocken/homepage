@@ -1,0 +1,103 @@
+/**
+ * How much of a set of food log entries actually carries micronutrient data.
+ *
+ * The three data sources differ sharply. BLS and USDA write every nutrient key
+ * explicitly, so a stored 0 means "measured, none present" — oats really do have
+ * no B12. Open Food Facts writes only the keys a product happens to declare, and
+ * its importer maps no amino acids at all, so an OFF entry never has them.
+ *
+ * That makes key *presence* the signal, not value > 0: an absent key is unknown,
+ * a zero is a measurement. Coverage is tracked per nutrient group, because OFF
+ * products routinely declare a mineral or two and nothing else — judging them on
+ * "has any micronutrient" would wave through a record that is mostly empty.
+ */
+
+export const MINERAL_KEYS = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'zinc'];
+export const VITAMIN_KEYS = [
+	'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
+	'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate',
+];
+export const AMINO_KEYS = [
+	'leucine', 'isoleucine', 'valine', 'lysine', 'methionine',
+	'phenylalanine', 'threonine', 'tryptophan', 'histidine',
+];
+
+export const NUTRIENT_GROUPS = {
+	minerals: MINERAL_KEYS,
+	vitamins: VITAMIN_KEYS,
+	aminos: AMINO_KEYS,
+} as const;
+
+export type GroupName = keyof typeof NUTRIENT_GROUPS;
+export type GroupFlags = Record<GroupName, boolean>;
+
+type Per100g = Record<string, number | undefined | null> | null | undefined;
+
+type Entry = {
+	source?: string;
+	name?: string;
+	amountGrams?: number;
+	per100g?: Per100g;
+};
+
+/** Sodium is excluded from the mineral probe: OFF derives it from salt on nearly
+ *  every product, so counting it would mark macro-only records as covered. */
+function present(per100g: Per100g, key: string): boolean {
+	return typeof per100g?.[key] === 'number';
+}
+
+/** A group counts as reported when at least half its nutrients are present. */
+export function groupsPresent(per100g: Per100g): GroupFlags {
+	const flags = {} as GroupFlags;
+	for (const [group, keys] of Object.entries(NUTRIENT_GROUPS) as [GroupName, readonly string[]][]) {
+		const n = keys.filter(k => present(per100g, k)).length;
+		flags[group] = n >= keys.length / 2;
+	}
+	return flags;
+}
+
+/** True only when minerals, vitamins and amino acids are all reported. */
+export function hasMicros(per100g: Per100g): boolean {
+	const g = groupsPresent(per100g);
+	return g.minerals && g.vitamins && g.aminos;
+}
+
+export type MicroCoverage = {
+	/** Share of logged grams whose entry reports that group, 0–1. */
+	ratios: Record<GroupName, number>;
+	/** The weakest group's ratio — what a single headline warning should quote. */
+	worst: number;
+	totalGrams: number;
+	/** Names of entries not fully covered, deduplicated, for the warning text. */
+	missing: string[];
+};
+
+export function microCoverage(entries: Entry[] | null | undefined): MicroCoverage {
+	const covered: Record<GroupName, number> = { minerals: 0, vitamins: 0, aminos: 0 };
+	let totalGrams = 0;
+	const missing = new Set<string>();
+
+	for (const e of entries ?? []) {
+		const grams = e.amountGrams ?? 0;
+		if (grams <= 0) continue;
+		totalGrams += grams;
+		const g = groupsPresent(e.per100g);
+		for (const group of Object.keys(covered) as GroupName[]) {
+			if (g[group]) covered[group] += grams;
+		}
+		if ((!g.minerals || !g.vitamins || !g.aminos) && e.name) missing.add(e.name);
+	}
+
+	const ratios = {
+		minerals: totalGrams > 0 ? covered.minerals / totalGrams : 1,
+		vitamins: totalGrams > 0 ? covered.vitamins / totalGrams : 1,
+		aminos: totalGrams > 0 ? covered.aminos / totalGrams : 1,
+	};
+
+	return {
+		ratios,
+		worst: Math.min(ratios.minerals, ratios.vitamins, ratios.aminos),
+		totalGrams,
+		missing: [...missing],
+	};
+}

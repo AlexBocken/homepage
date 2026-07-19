@@ -6,6 +6,7 @@ import { FoodLogEntry } from '$models/FoodLogEntry';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
+import { microCoverage } from '$lib/fitness/microCoverage';
 
 const MICRO_KEYS = [
 	'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
@@ -87,6 +88,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	return json({
 		days,
 		daysTracked,
+		// Open Food Facts products carry no micronutrient data, so a diary built from
+		// them understates every value here. Report how much of the window is covered.
+		coverage: microCoverage(entries),
 		micros,
 		aminos,
 		sex: goal?.sex === 'female' ? 'female' : 'male',

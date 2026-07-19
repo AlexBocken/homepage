@@ -24,6 +24,20 @@
 	const ns = $derived(data.nutritionStats ?? {});
 	const daysTracked = $derived(mn.daysTracked ?? 0);
 
+	// Open Food Facts entries ship macros only, so anything logged from them is
+	// missing from every figure below.
+	const coverage = $derived(mn.coverage ?? { ratios: { minerals: 1, vitamins: 1, aminos: 1 }, missing: [] });
+	const coverageGaps = $derived.by(() => {
+		/** @type {string[]} */
+		const gaps = [];
+		const names = { minerals: isEn ? 'minerals' : 'Mineralstoffe', vitamins: isEn ? 'vitamins' : 'Vitamine', aminos: isEn ? 'amino acids' : 'Aminosäuren' };
+		for (const g of /** @type {const} */ (['minerals', 'vitamins', 'aminos'])) {
+			const missingPct = Math.round((1 - (coverage.ratios?.[g] ?? 1)) * 100);
+			if (missingPct >= 1) gaps.push(`${names[g]} ${missingPct}%`);
+		}
+		return gaps;
+	});
+
 	/** @param {number} d */
 	function rangeHref(d) {
 		return resolve('/fitness/[stats=fitnessStats]/nutrition', { stats: statsSlug }) + (d === 30 ? '?days=30' : '');
@@ -220,6 +234,28 @@
 
 		<section class="micro-card">
 			<h2>{isEn ? 'Micronutrients' : 'Mikronährstoffe'}</h2>
+
+			{#if coverageGaps.length > 0}
+				<div class="coverage-warning">
+					<TriangleAlert size={16} />
+					<div>
+						<p class="coverage-head">
+							{isEn ? 'Share of your intake whose source publishes no figures' : 'Anteil der Zufuhr, für den die Quelle keine Werte veröffentlicht'}: {coverageGaps.join(' · ')}
+						</p>
+						<p>
+							{isEn
+								? 'Open Food Facts declares a mineral or two at best and no amino acids at all. Those foods may still contain them — the figures are missing, not zero — so the averages below read low by roughly that much.'
+								: 'Open Food Facts führt höchstens ein paar Mineralstoffe und gar keine Aminosäuren. Diese Lebensmittel können sie trotzdem enthalten — die Werte fehlen, sie sind nicht null — die Durchschnitte unten liegen also entsprechend zu tief.'}
+						</p>
+						{#if coverage.missing?.length}
+							<p class="coverage-detail">
+								{isEn ? 'Sources without full figures: ' : 'Quellen ohne vollständige Werte: '}
+								{coverage.missing.slice(0, 6).join(', ')}{coverage.missing.length > 6 ? ` +${coverage.missing.length - 6}` : ''}
+							</p>
+						{/if}
+					</div>
+				</div>
+			{/if}
 
 			{#if overLimitRows.length > 0}
 				<div class="limit-warning">
@@ -446,6 +482,32 @@
 	.micro-value.over-limit {
 		color: var(--red);
 		font-weight: 700;
+	}
+	.coverage-warning {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 0.9rem;
+		padding: 0.6rem 0.7rem;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--orange);
+		background: color-mix(in srgb, var(--orange) 10%, transparent);
+		font-size: 0.75rem;
+		line-height: 1.45;
+		color: var(--color-text-primary);
+	}
+	.coverage-warning :global(svg) {
+		flex-shrink: 0;
+		color: var(--orange);
+	}
+	.coverage-warning p {
+		margin: 0;
+	}
+	.coverage-head {
+		font-weight: 700;
+	}
+	.coverage-detail {
+		margin-top: 0.35rem !important;
+		color: var(--color-text-secondary);
 	}
 	.limit-warning {
 		display: flex;

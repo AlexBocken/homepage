@@ -32,6 +32,7 @@
 	import { onMount, untrack } from 'svelte';
 	import Heart from '@lucide/svelte/icons/heart';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import ScanBarcode from '@lucide/svelte/icons/scan-barcode';
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
@@ -57,6 +58,7 @@
 	 *   category?: string,
 	 *   calories?: number,
 	 *   favorited?: boolean,
+	 *   microGroups?: { minerals: boolean, vitamins: boolean, aminos: boolean },
 	 * }} FoodItem
 	 */
 
@@ -147,6 +149,41 @@
 		hideReadyMeals = !hideReadyMeals;
 		if (!isPrefilledMode) doSearch({ immediate: true });
 	}
+	/**
+	 * What a record is missing, phrased for a search row. This is a gap in the
+	 * source data, not a statement about the food — Open Food Facts simply does not
+	 * publish vitamin or amino acid figures — so every label says "data".
+	 * @param {{ minerals: boolean, vitamins: boolean, aminos: boolean }} g
+	 */
+	function microGap(g) {
+		if (g.minerals && g.vitamins && g.aminos) return null;
+		const notListed = isEn
+			? 'The source does not list these — the food may well contain them.'
+			: 'Die Quelle führt diese nicht auf — das Lebensmittel kann sie durchaus enthalten.';
+		if (!g.minerals && !g.vitamins) {
+			return {
+				label: isEn ? 'no micro data' : 'keine Mikrodaten',
+				title: (isEn ? 'No mineral, vitamin or amino acid figures in this record. ' : 'Keine Mineralstoff-, Vitamin- oder Aminosäurewerte in diesem Datensatz. ') + notListed,
+			};
+		}
+		if (!g.vitamins) {
+			return {
+				label: isEn ? 'no vitamin data' : 'keine Vitamindaten',
+				title: (isEn ? 'This record lists minerals but no vitamin or amino acid figures. ' : 'Dieser Datensatz führt Mineralstoffe, aber keine Vitamin- oder Aminosäurewerte. ') + notListed,
+			};
+		}
+		if (!g.minerals) {
+			return {
+				label: isEn ? 'no mineral data' : 'keine Mineraldaten',
+				title: (isEn ? 'No mineral figures in this record. ' : 'Keine Mineralstoffwerte in diesem Datensatz. ') + notListed,
+			};
+		}
+		return {
+			label: isEn ? 'no amino data' : 'keine Aminodaten',
+			title: (isEn ? 'No amino acid figures in this record. ' : 'Keine Aminosäurewerte in diesem Datensatz. ') + notListed,
+		};
+	}
+
 	/** Aborts the previous in-flight search so an older response can't overwrite a newer one. @type {AbortController | null} */
 	let searchAbort = null;
 	const isPrefilledMode = $derived(initialResults != null);
@@ -857,6 +894,15 @@
 							<span class="fs-result-name">{item.name}</span>
 							<span class="fs-result-meta">
 								<span class="fs-source-badge" class:usda={item.source === 'usda'} class:off={item.source === 'off'} class:recipe={item.source === 'recipe'}>{sourceLabel(item.source)}</span>
+								{#if item.microGroups}
+									{@const gap = microGap(item.microGroups)}
+									{#if gap}
+										<span class="fs-no-micros" title={gap.title}>
+											<TriangleAlert size={11} />
+											{gap.label}
+										</span>
+									{/if}
+								{/if}
 								{#if item.brands}<span class="fs-result-brands">{item.brands}</span>{/if}
 								{#if item.category}{item.category}{/if}
 							</span>
@@ -1300,6 +1346,13 @@
 		font-size: 0.65rem;
 		font-weight: 500;
 		color: var(--color-text-tertiary);
+	}
+	.fs-no-micros {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.15rem;
+		flex-shrink: 0;
+		color: var(--orange);
 	}
 	.fs-detail-link {
 		display: flex;

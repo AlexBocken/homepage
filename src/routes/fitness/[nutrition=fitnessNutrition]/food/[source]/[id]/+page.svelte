@@ -22,6 +22,8 @@
 	import { NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
+	import { groupsPresent } from '$lib/fitness/microCoverage';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
 
 	let { data } = $props();
@@ -80,6 +82,10 @@
 			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, isMax: meta.isMax };
 		});
 	}
+
+	// Which groups this record reports at all. Open Food Facts entries declare a
+	// mineral or two at best and never any amino acids.
+	const microGroups = $derived(groupsPresent(/** @type {Record<string, number>} */ (n)));
 
 	const microSections = $derived([
 		{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkMicroRows(mineralKeys) },
@@ -422,6 +428,26 @@
 
 		{#if showMicros}
 			<div class="micro-details">
+				{#if !microGroups.minerals || !microGroups.vitamins}
+					<p class="micro-coverage">
+						<TriangleAlert size={13} />
+						<span>
+							{#if !microGroups.minerals && !microGroups.vitamins}
+								{isEn
+									? 'The source has no mineral or vitamin figures for this food — the values below are unknown, not zero. The food may well contain them.'
+									: 'Die Quelle hat für dieses Lebensmittel keine Mineralstoff- oder Vitaminwerte — die Werte unten sind unbekannt, nicht null. Das Lebensmittel kann sie durchaus enthalten.'}
+							{:else if !microGroups.vitamins}
+								{isEn
+									? 'The source has no vitamin figures for this food — those values are unknown, not zero.'
+									: 'Die Quelle hat für dieses Lebensmittel keine Vitaminwerte — diese Werte sind unbekannt, nicht null.'}
+							{:else}
+								{isEn
+									? 'The source has no mineral figures for this food — those values are unknown, not zero.'
+									: 'Die Quelle hat für dieses Lebensmittel keine Mineralstoffwerte — diese Werte sind unbekannt, nicht null.'}
+							{/if}
+						</span>
+					</p>
+				{/if}
 				<p class="micro-source">
 					{isEn ? `% of the daily reference intake, covered by ${portionLabel}` : `% der Tagesreferenzmenge, gedeckt durch ${portionLabel}`}
 					<DriSourceInfo {isEn} aminos={false} />
@@ -455,6 +481,16 @@
 
 			{#if showAminos}
 				<div class="micro-details">
+					{#if !microGroups.aminos}
+						<p class="micro-coverage">
+							<TriangleAlert size={13} />
+							<span>
+								{isEn
+									? 'The source has no amino acid figures for this food — Open Food Facts does not publish them. Values here are unknown, not zero.'
+									: 'Die Quelle hat für dieses Lebensmittel keine Aminosäurewerte — Open Food Facts veröffentlicht sie nicht. Die Werte hier sind unbekannt, nicht null.'}
+							</span>
+						</p>
+					{/if}
 					<p class="micro-source">
 						{isEn ? 'Reference values' : 'Referenzwerte'}
 						<DriSourceInfo {isEn} align="right" />
@@ -843,6 +879,20 @@
 	}
 
 	/* Amino acids */
+	.micro-coverage {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.3rem;
+		margin: 0 0 0.5rem;
+		font-size: 0.72rem;
+		line-height: 1.4;
+		color: var(--color-text-secondary);
+	}
+	.micro-coverage :global(svg) {
+		flex-shrink: 0;
+		margin-top: 0.1rem;
+		color: var(--orange);
+	}
 	.micro-source {
 		display: flex;
 		align-items: center;

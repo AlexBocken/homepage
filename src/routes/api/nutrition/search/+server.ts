@@ -10,6 +10,7 @@ import { OpenFoodFact } from '$models/OpenFoodFact';
 import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutritionMatcher';
 import { searchBlsUsda, scoreName, queryWords, NAME_LENGTH_PENALTY } from '$lib/server/nutritionSearchIndex';
 import { offPortions } from '$lib/server/offPortions';
+import { groupsPresent } from '$lib/fitness/microCoverage';
 
 type SearchResult = {
 	source: 'bls' | 'usda' | 'recipe' | 'off';
@@ -18,12 +19,32 @@ type SearchResult = {
 	category: string;
 	calories: number;
 	favorited?: boolean;
+	/** Which nutrient groups this record reports — Open Food Facts entries never carry amino acids. */
+	microGroups?: { minerals: boolean; vitamins: boolean; aminos: boolean };
 	per100g?: any;
 	portions?: any[];
 	brands?: string;
 	icon?: string;
 	image?: string;
 };
+
+/**
+ * Ranking bonus for how complete a record's nutrition data is: 8 points per
+ * nutrient group reported (minerals, vitamins, essential amino acids), so a full
+ * BLS/USDA entry gains 24 over an Open Food Facts one, which declares a mineral
+ * or two at best and never any amino acids.
+ *
+ * Deliberately a nudge, not a tier: typical name scores run 20-80, so a clearly
+ * better OFF match still outranks a weak BLS one — you can find your branded
+ * yoghurt — while equal-quality matches favour the source that can actually fill
+ * the micronutrient breakdown. Quality-based rather than source-based, so a
+ * sparse USDA record earns less of it too.
+ */
+const COVERAGE_BONUS_PER_GROUP = 8;
+
+function coverageBonus(groups: { minerals: boolean; vitamins: boolean; aminos: boolean }): number {
+	return (Number(groups.minerals) + Number(groups.vitamins) + Number(groups.aminos)) * COVERAGE_BONUS_PER_GROUP;
+}
 
 const ALL_SOURCES = ['recipe', 'bls', 'usda', 'off'] as const;
 type Source = (typeof ALL_SOURCES)[number];
@@ -56,6 +77,7 @@ function lookupBls(blsCode: string, full: boolean): SearchResult | null {
 		name: `${entry.nameDe}${entry.nameEn ? ` (${entry.nameEn})` : ''}`,
 		category: entry.category,
 		calories: entry.per100g.calories,
+		microGroups: groupsPresent(entry.per100g),
 		...(full && { per100g: entry.per100g }),
 	};
 }
@@ -69,6 +91,7 @@ function lookupUsda(fdcId: string, full: boolean): SearchResult | null {
 		name: usdaDisplayName(entry.name),
 		category: entry.category,
 		calories: entry.per100g.calories,
+		microGroups: groupsPresent(entry.per100g),
 		...(full && { per100g: entry.per100g, portions: entry.portions }),
 	};
 }
@@ -209,6 +232,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 							name: r.name.replace(/&shy;|­/g, ''),
 							category: r.icon || '🍽️',
 							calories: Math.round(nutrition?.per100g.calories ?? 0),
+							microGroups: groupsPresent(nutrition?.per100g),
 							...(full && nutrition && { per100g: nutrition.per100g }),
 							...(image && { image }),
 						};
@@ -253,7 +277,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			{ $text: { $search: q } },
 			// `serving` + `productQuantityG` are needed even in the slim projection —
 			// offPortions() derives the package portion from them.
-			full ? {} : { barcode: 1, name: 1, nameDe: 1, brands: 1, category: 1, 'per100g.calories': 1, serving: 1, productQuantityG: 1 }
+			// The slim projection also pulls the micro probe keys so `hasMicros` can be
+			// reported per row — same documents, a handful of extra numbers each.
+			full ? {} : {
+				barcode: 1, name: 1, nameDe: 1, brands: 1, category: 1, serving: 1, productQuantityG: 1,
+				'per100g.calories': 1, 'per100g.calcium': 1, 'per100g.iron': 1, 'per100g.magnesium': 1,
+				'per100g.phosphorus': 1, 'per100g.potassium': 1, 'per100g.zinc': 1, 'per100g.vitaminA': 1,
+				'per100g.vitaminC': 1, 'per100g.vitaminE': 1, 'per100g.thiamin': 1, 'per100g.riboflavin': 1,
+				'per100g.niacin': 1, 'per100g.folate': 1,
+			}
 		).limit(200).lean()
 			.catch(() => [] as any[]),
 	]);
@@ -286,6 +318,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			name: r.name.replace(/&shy;|­/g, ''),
 			category: r.icon || '🍽️',
 			calories: Math.round(nutrition?.per100g.calories ?? 0),
+			microGroups: groupsPresent(nutrition?.per100g),
 			score: best + 100 - lenPenalty, // Boost recipes above BLS/USDA/OFF; shorter names first
 			...(full && nutrition && { per100g: nutrition.per100g }),
 			...(portions.length > 0 && { portions }),
@@ -301,26 +334,30 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		if (hit.source === 'bls') {
 			const entry = BLS_DB[hit.idx];
 			if (hideReadyMeals && isReadyMeal('bls', entry.category)) continue;
+			const blsGroups = groupsPresent(entry.per100g);
 			scored.push({
 				source: 'bls',
 				id: entry.blsCode,
 				name: `${entry.nameDe}${entry.nameEn ? ` (${entry.nameEn})` : ''}`,
 				category: entry.category,
 				calories: entry.per100g.calories,
-				score: hit.score,
+				microGroups: blsGroups,
+				score: hit.score + coverageBonus(blsGroups),
 				...(full && { per100g: entry.per100g }),
 				...(favKeys.has(`bls:${entry.blsCode}`) && { favorited: true }),
 			});
 		} else {
 			const entry = NUTRITION_DB[hit.idx];
 			if (hideReadyMeals && isReadyMeal('usda', entry.category)) continue;
+			const usdaGroups = groupsPresent(entry.per100g);
 			scored.push({
 				source: 'usda',
 				id: String(entry.fdcId),
 				name: usdaDisplayName(entry.name),
 				category: entry.category,
 				calories: entry.per100g.calories,
-				score: hit.score,
+				microGroups: usdaGroups,
+				score: hit.score + coverageBonus(usdaGroups),
 				...(full && { per100g: entry.per100g, portions: entry.portions }),
 				...(favKeys.has(`usda:${entry.fdcId}`) && { favorited: true }),
 			});
@@ -340,6 +377,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			const best = Math.max(scoreDe, scoreEn, scoreBrand, 1) - displayName.length * NAME_LENGTH_PENALTY;
 
 			const portions = offPortions(entry);
+			const offGroups = groupsPresent(entry.per100g);
 
 			scored.push({
 				source: 'off',
@@ -347,8 +385,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				name: displayName,
 				category: entry.category || '',
 				calories: entry.per100g?.calories ?? 0,
+				microGroups: offGroups,
 				brands: entry.brands,
-				score: best,
+				score: best + coverageBonus(offGroups),
 				...(full && { per100g: entry.per100g }),
 				...(portions.length > 0 && { portions }),
 				...(favKeys.has(`off:${entry.barcode}`) && { favorited: true }),

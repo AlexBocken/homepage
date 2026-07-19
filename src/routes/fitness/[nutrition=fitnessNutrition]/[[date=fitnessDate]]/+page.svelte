@@ -42,6 +42,8 @@
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
+	import { microCoverage } from '$lib/fitness/microCoverage';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
 	/**
 	 * @typedef {{ description: string, grams: number }} Portion
@@ -485,6 +487,20 @@
 	const aminoKeys = ['isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine',
 		'threonine', 'tryptophan', 'valine', 'histidine', 'alanine', 'arginine',
 		'asparticAcid', 'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
+
+	// Open Food Facts products carry macros only, so anything logged from them is
+	// absent from the micro totals below.
+	const microCov = $derived(microCoverage(entries.filter(e => e.mealType !== 'water')));
+	const coverageGaps = $derived.by(() => {
+		/** @type {string[]} */
+		const gaps = [];
+		const names = { minerals: isEn ? 'minerals' : 'Mineralstoffe', vitamins: isEn ? 'vitamins' : 'Vitamine', aminos: isEn ? 'amino acids' : 'Aminosäuren' };
+		for (const g of /** @type {const} */ (['minerals', 'vitamins', 'aminos'])) {
+			const missingPct = Math.round((1 - microCov.ratios[g]) * 100);
+			if (missingPct >= 1) gaps.push(`${names[g]} ${missingPct}%`);
+		}
+		return gaps;
+	});
 
 	const dayTotals = $derived.by(() => {
 		let calories = 0, protein = 0, fat = 0, carbs = 0, fiber = 0, sugars = 0, saturatedFat = 0;
@@ -1473,6 +1489,16 @@
 			{isEn ? '% of the daily reference intake' : '% der Tagesreferenzmenge'}
 			<DriSourceInfo {isEn} />
 		</p>
+		{#if coverageGaps.length > 0}
+			<p class="micro-coverage">
+				<TriangleAlert size={13} />
+				<span>
+					{isEn
+						? `Share of what you logged whose source publishes no figures — ${coverageGaps.join(', ')}. Those foods may well contain these nutrients; they are simply unrecorded, so the totals below read low.`
+						: `Anteil des Erfassten, für den die Quelle keine Werte veröffentlicht — ${coverageGaps.join(', ')}. Diese Lebensmittel können die Nährstoffe durchaus enthalten, sie sind nur nicht erfasst — die Werte unten liegen daher zu tief.`}
+				</span>
+			</p>
+		{/if}
 		{#each microSections as section}
 			<div class="micro-section">
 				<h4>{section.title}</h4>
@@ -2733,6 +2759,20 @@
 		margin: 0 0 0.2rem;
 		font-size: 0.7rem;
 		color: var(--color-text-secondary);
+	}
+	.micro-coverage {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.3rem;
+		margin: 0 0 0.4rem;
+		font-size: 0.7rem;
+		line-height: 1.4;
+		color: var(--color-text-secondary);
+	}
+	.micro-coverage :global(svg) {
+		flex-shrink: 0;
+		margin-top: 0.1rem;
+		color: var(--orange);
 	}
 	.micro-note {
 		margin: 0 0 0.4rem;
