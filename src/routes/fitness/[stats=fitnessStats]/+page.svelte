@@ -876,7 +876,12 @@
 				</div>
 			</div>
 
-			<div class="lifetime-card macro-card" class:macro-card-empty={!ns.macroSplit}>
+			<a
+				class="lifetime-card macro-card"
+				class:macro-card-empty={!ns.macroSplit}
+				href={resolve('/fitness/[stats=fitnessStats]/nutrition', { stats: statsSlug })}
+				aria-label={t.nutrient_averages}
+			>
 				<div class="macro-left">
 					<div class="macro-header">{t.macro_split} <span class="macro-subtitle">({t.seven_day_avg})</span></div>
 					<div class="macro-legend">
@@ -913,7 +918,7 @@
 						</div>
 					{/each}
 				</div>
-			</div>
+			</a>
 			{/if}
 
 			{#if prefs.muscleBalance}
@@ -1992,6 +1997,9 @@
 
 	/* Macro split card — spans full row on mobile, sidebar on desktop */
 	.macro-card {
+		text-decoration: none;
+		color: inherit;
+		transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 		grid-column: 1 / -1;
 		padding: 1rem 1.25rem;
 		flex-direction: row !important;
@@ -2004,6 +2012,10 @@
 			padding: 0.75rem;
 			gap: 0.75rem !important;
 		}
+	}
+	.macro-card:hover {
+		transform: scale(1.01);
+		box-shadow: var(--shadow-hover);
 	}
 	.macro-header {
 		font-size: 1.15rem;

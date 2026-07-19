@@ -424,6 +424,7 @@ export const en = {
 	seven_day_avg: "7-day avg",
 	thirty_day: "30 days",
 	macro_split: "Macro Split",
+	nutrient_averages: "Nutrient Averages",
 	no_nutrition_data: "No nutrition data yet. Start logging food to see stats.",
 	target: "Target",
 	days_tracked: "days tracked",

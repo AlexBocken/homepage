@@ -96,6 +96,38 @@ export function getDRI(sex: 'male' | 'female'): DRI {
   return sex === 'female' ? DRI_FEMALE : DRI_MALE;
 }
 
+/**
+ * Tolerable Upper Intake Levels (UL) for adults, NASEM/IOM — habitual intake above
+ * these carries a risk of harm. Only nutrients whose UL applies to *total* intake are
+ * listed: the ULs for magnesium, niacin, vitamin E, vitamin B6 and folate cover
+ * supplements and fortification only, so food-log totals must not be judged against
+ * them. Units match DRI.
+ */
+export const UPPER_LIMITS: Partial<Record<keyof DRI, number>> = {
+  calcium: 2500,
+  iron: 45,
+  phosphorus: 4000,
+  zinc: 40,
+  vitaminA: 3000, // mcg RAE, preformed retinol — carotenoids are not capped
+  vitaminC: 2000,
+  vitaminD: 100,
+};
+
+/** WHO essential amino acid requirements for adults, in mg per kg body weight per day */
+export const AMINO_DRI_PER_KG = {
+  histidine: 10, isoleucine: 20, leucine: 39, lysine: 30,
+  methionine: 15, phenylalanine: 25, threonine: 15, tryptophan: 4, valine: 26,
+};
+
+/** Body weight the amino acid requirements fall back to when none is known */
+export const AMINO_DRI_REFERENCE_WEIGHT = 70;
+
+/** Daily requirement of an essential amino acid in grams, or 0 if it has none */
+export function aminoDri(key: string, weightKg: number): number {
+  const perKg = AMINO_DRI_PER_KG[key as keyof typeof AMINO_DRI_PER_KG];
+  return perKg ? (perKg * weightKg) / 1000 : 0;
+}
+
 /** Nutrient display metadata: label, unit, and whether it's a max (upper limit) */
 export const NUTRIENT_META: Record<keyof DRI, { label: string; labelDe: string; unit: string; isMax?: boolean }> = {
   protein:     { label: 'Protein',      labelDe: 'Eiweiss',        unit: 'g' },

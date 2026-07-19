@@ -19,8 +19,9 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { localDateStr } from '$lib/js/localDate';
-	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
+	import { NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
+	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
 
 	let { data } = $props();
@@ -32,6 +33,8 @@
 
 	const food = $derived(data.food);
 	const dri = $derived(data.dri);
+	// WHO amino acid requirements are per kg — use the logged weight, else the reference adult.
+	const aminoWeight = $derived(data.bodyWeight ?? AMINO_DRI_REFERENCE_WEIGHT);
 	const n = $derived(food.per100g);
 
 	// --- Portion selector: the basis the whole page's figures are shown in ---
@@ -73,7 +76,7 @@
 			const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
 			const value = scaled(/** @type {Record<string, number>} */ (n)[k]);
 			const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
-			const pct = goal > 0 ? Math.round(value / goal * 100) : 0;
+			const pct = goal > 0 ? Math.round(value / goal * 100) : null;
 			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, isMax: meta.isMax };
 		});
 	}
@@ -114,8 +117,9 @@
 		return essentialOrder.some(k => (nRec[k] ?? 0) > 0) || nonEssentialOrder.some(k => (nRec[k] ?? 0) > 0);
 	});
 
-	const aminoRows = $derived(
-		[...essentialOrder, ...nonEssentialOrder]
+	/** @param {string[]} keys */
+	function aminoGroup(keys) {
+		return keys
 			.filter(k => (/** @type {Record<string, number>} */ (n)[k] ?? 0) > 0)
 			.map(k => {
 				const aminoKey = /** @type {keyof typeof AMINO_META} */ (k);
@@ -123,14 +127,56 @@
 					key: k,
 					label: isEn ? AMINO_META[aminoKey].en : AMINO_META[aminoKey].de,
 					value: scaled(/** @type {Record<string, number>} */ (n)[k]),
-					essential: essentialOrder.includes(k),
 				};
-			})
+			});
+	}
+
+	// Essentials: how much of the daily WHO requirement this portion covers.
+	const essentialRows = $derived(
+		aminoGroup(essentialOrder).map(r => {
+			const goal = aminoDri(r.key, aminoWeight);
+			const pct = goal > 0 ? Math.round(r.value / goal * 100) : null;
+			return { ...r, pct, bar: pct ?? 0 };
+		})
 	);
+
+	// Non-essentials have no requirement — shown as a distribution among themselves,
+	// bars scaled to the biggest one so they stay readable.
+	const nonEssentialRows = $derived.by(() => {
+		const rows = aminoGroup(nonEssentialOrder);
+		const total = rows.reduce((a, r) => a + r.value, 0);
+		const max = rows.reduce((a, r) => Math.max(a, r.value), 0);
+		return rows.map(r => ({
+			...r,
+			pct: total > 0 ? Math.round(r.value / total * 100) : null,
+			bar: max > 0 ? r.value / max * 100 : 0,
+		}));
+	});
+
+	const aminoGroups = $derived([
+		{
+			title: isEn ? 'Essential' : 'Essenziell',
+			rows: essentialRows,
+			note: data.bodyWeight
+				? (isEn
+					? `Share of the daily requirement at ${Math.round(aminoWeight)} kg of body weight, covered by ${portionLabel}.`
+					: `Anteil am Tagesbedarf bei ${Math.round(aminoWeight)} kg Körpergewicht, gedeckt durch ${portionLabel}.`)
+				: (isEn
+					? `No body weight logged — requirement shown for a ${AMINO_DRI_REFERENCE_WEIGHT} kg adult, covered by ${portionLabel}.`
+					: `Kein Körpergewicht erfasst — Bedarf für einen ${AMINO_DRI_REFERENCE_WEIGHT} kg schweren Erwachsenen, gedeckt durch ${portionLabel}.`),
+		},
+		{
+			title: isEn ? 'Non-Essential' : 'Nicht-essenziell',
+			rows: nonEssentialRows,
+			note: isEn
+				? 'No intake requirement — share of the non-essential amino acids in this food, bars scaled to the biggest one.'
+				: 'Kein Bedarfswert — Anteil an den nicht-essenziellen Aminosäuren dieses Lebensmittels, Balken auf die grösste skaliert.',
+		},
+	]);
 
 	// --- Expand toggles ---
 	let showMicros = $state(true);
-	let showAminos = $state(false);
+	let showAminos = $state(true);
 
 	// --- Favorite ---
 	let favorited = $state(false);
@@ -376,6 +422,10 @@
 
 		{#if showMicros}
 			<div class="micro-details">
+				<p class="micro-source">
+					{isEn ? `% of the daily reference intake, covered by ${portionLabel}` : `% der Tagesreferenzmenge, gedeckt durch ${portionLabel}`}
+					<DriSourceInfo {isEn} aminos={false} />
+				</p>
 				{#each microSections as section}
 					<div class="micro-section">
 						<h4>{section.title}</h4>
@@ -383,10 +433,10 @@
 							<div class="micro-row">
 								<span class="micro-label">{row.label}</span>
 								<div class="micro-bar-wrap">
-									<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.pct, 100)}%"></div>
+									<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.pct ?? 0, 100)}%"></div>
 								</div>
 								<span class="micro-value">{fmt(row.value)} {row.unit}</span>
-								<span class="micro-pct">{row.pct}%</span>
+								<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
 							</div>
 						{/each}
 					</div>
@@ -404,15 +454,28 @@
 			</button>
 
 			{#if showAminos}
-				<div class="amino-list">
-					{#each aminoRows as row}
-						<div class="amino-row" class:essential={row.essential}>
-							<span class="amino-label">{row.label}</span>
-							<span class="amino-value">{fmt(row.value)} g</span>
-							{#if row.essential}
-								<span class="amino-badge">{isEn ? 'essential' : 'essenziell'}</span>
-							{/if}
-						</div>
+				<div class="micro-details">
+					<p class="micro-source">
+						{isEn ? 'Reference values' : 'Referenzwerte'}
+						<DriSourceInfo {isEn} align="right" />
+					</p>
+					{#each aminoGroups as group}
+						{#if group.rows.length > 0}
+							<div class="micro-section">
+								<h4>{group.title}</h4>
+								<p class="amino-note">{group.note}</p>
+								{#each group.rows as row}
+									<div class="micro-row">
+										<span class="micro-label">{row.label}</span>
+										<div class="micro-bar-wrap">
+											<div class="micro-bar" style="width: {Math.min(row.bar, 100)}%"></div>
+										</div>
+										<span class="micro-value">{fmt(row.value)} g</span>
+										<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
+									</div>
+								{/each}
+							</div>
+						{/if}
 					{/each}
 				</div>
 			{/if}
@@ -768,6 +831,10 @@
 		white-space: nowrap;
 		font-variant-numeric: tabular-nums;
 	}
+	.micro-pct.is-na {
+		font-weight: 500;
+		color: var(--color-text-tertiary);
+	}
 	.micro-pct {
 		text-align: right;
 		font-weight: 700;
@@ -776,37 +843,18 @@
 	}
 
 	/* Amino acids */
-	.amino-list {
-		margin-top: 0.75rem;
-	}
-	.amino-row {
+	.micro-source {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.3rem 0;
-		border-bottom: 1px solid var(--color-border);
-		font-size: 0.85rem;
-	}
-	.amino-row:last-child {
-		border-bottom: none;
-	}
-	.amino-label {
-		flex: 1;
-		color: var(--color-text-primary);
-	}
-	.amino-value {
+		margin: 0 0 0.2rem;
+		font-size: 0.7rem;
 		color: var(--color-text-secondary);
-		font-variant-numeric: tabular-nums;
 	}
-	.amino-badge {
-		font-size: 0.65rem;
-		padding: 0.1rem 0.35rem;
-		border-radius: 3px;
-		background: var(--green);
-		color: #fff;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.03em;
+	.amino-note {
+		margin: 0.3rem 0 0;
+		font-size: 0.72rem;
+		line-height: 1.4;
+		color: var(--color-text-secondary);
 	}
 
 	/* Portions table */

@@ -3,7 +3,7 @@ import { errorWithVerse } from '$lib/server/errorQuote';
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
 import { usdaDisplayName, usdaNameDe } from '$lib/data/usdaNamesDe';
 import { BLS_DB } from '$lib/data/blsDb';
-import { DRI_MALE } from '$lib/data/dailyReferenceIntake';
+import { getDRI } from '$lib/data/dailyReferenceIntake';
 import { Recipe } from '$models/Recipe';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { CustomMeal } from '$models/CustomMeal';
@@ -71,6 +71,18 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 		await errorWithVerse(fetch, url.pathname, 404, 'Invalid source');
 	}
 
+	// Reference intakes are sex-specific (iron, for one, differs by a factor of two),
+	// and the WHO amino acid requirements are per kg of body weight — so both come
+	// from the user's own goal/measurements, with the generic adult as the fallback.
+	const [goalRes, weightRes] = await Promise.all([
+		fetch('/api/fitness/goal'),
+		fetch('/api/fitness/measurements/latest'),
+	]);
+	const goal = goalRes.ok ? await goalRes.json() : {};
+	const latestWeight = weightRes.ok ? await weightRes.json() : {};
+	const dri = getDRI(goal?.sex === 'female' ? 'female' : 'male');
+	const bodyWeight: number | null = latestWeight?.weight?.value ?? null;
+
 	if (source === 'bls') {
 		const entry = BLS_DB.find(e => e.blsCode === id);
 		if (!entry) {
@@ -90,7 +102,8 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 				category: entry.category,
 				per100g: entry.per100g,
 			},
-			dri: DRI_MALE,
+			dri,
+			bodyWeight,
 		};
 	}
 
@@ -137,7 +150,8 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 				recipeSlugEn: recipe.translations?.en?.short_name || undefined,
 				image,
 			},
-			dri: DRI_MALE,
+			dri,
+			bodyWeight,
 		};
 	}
 
@@ -161,7 +175,8 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 				nutriscore: entry.nutriscore,
 				portions: offPortions(entry),
 			},
-			dri: DRI_MALE,
+			dri,
+			bodyWeight,
 		};
 	}
 
@@ -220,7 +235,8 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 					carbs: scaleFromPer100g(ing.per100g?.carbs, ing.amountGrams),
 				})),
 			},
-			dri: DRI_MALE,
+			dri,
+			bodyWeight,
 		};
 	}
 
@@ -245,6 +261,7 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 			per100g: entry.per100g,
 			portions: entry.portions,
 		},
-		dri: DRI_MALE,
+		dri,
+		bodyWeight,
 	};
 };

@@ -81,7 +81,9 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/fitness/exercises', kind: 'page' },
 	{ path: '/fitness/history', kind: 'page' },
 	{ path: '/fitness/stats', kind: 'page' },
+	{ path: '/fitness/stats/nutrition', kind: 'page' },
 	{ path: '/api/fitness/goal', kind: 'api' },
+	{ path: '/api/fitness/stats/micronutrients', kind: 'api' },
 	// The nutrition API is login-only rather than group-gated: it is consumed both by
 	// the fitness food diary and by the recipe editor, which sit behind different
 	// groups. Query params are real ones so a permitted user gets a 200, not a 400

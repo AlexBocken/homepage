@@ -40,7 +40,8 @@
 	import RoundOffCard from '$lib/components/fitness/RoundOffCard.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
-	import { getDRI, NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
+	import { getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
+	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 
 	/**
 	 * @typedef {{ description: string, grams: number }} Portion
@@ -1133,12 +1134,6 @@
 	let showMicros = $state(false);
 	let showTdeeInfo = $state(false);
 
-	// WHO essential amino acid requirements (mg/kg/day for adults)
-	const AMINO_DRI_PER_KG = {
-		histidine: 10, isoleucine: 20, leucine: 39, lysine: 30,
-		methionine: 15, phenylalanine: 25, threonine: 15, tryptophan: 4, valine: 26
-	};
-
 	const AMINO_META = {
 		leucine:       { en: 'Leucine',       de: 'Leucin' },
 		isoleucine:    { en: 'Isoleucine',    de: 'Isoleucin' },
@@ -1171,30 +1166,45 @@
 				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
 				const value = dayTotals.micros[k] ?? 0;
 				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
-				const pct = goal > 0 ? Math.round(value / goal * 100) : 0;
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, isMax: meta.isMax };
+				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false };
 			});
 		}
 
-		// Amino acids: essential first (with DRI), then non-essential
+		// Essential amino acids: measured against the WHO requirement
 		const essentialOrder = ['leucine', 'isoleucine', 'valine', 'lysine', 'methionine', 'phenylalanine', 'threonine', 'tryptophan', 'histidine'];
+		// Non-essential ones have no requirement — shown as a distribution among themselves
 		const nonEssentialOrder = ['alanine', 'arginine', 'asparticAcid', 'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
-		const w = latestWeight ?? 70;
-		const aminoRows = [...essentialOrder, ...nonEssentialOrder].map(k => {
+		const w = latestWeight ?? AMINO_DRI_REFERENCE_WEIGHT;
+
+		const essentialRows = essentialOrder.map(k => {
 			const value = dayTotals.aminos[k] ?? 0;
-			// WHO DRI is mg/kg/day; value is in grams → convert goal to grams
-			const driPerKg = AMINO_DRI_PER_KG[/** @type {keyof typeof AMINO_DRI_PER_KG} */ (k)];
-			const goal = driPerKg ? (driPerKg * w) / 1000 : 0;
-			const pct = goal > 0 ? Math.round(value / goal * 100) : 0;
+			const goal = aminoDri(k, w);
+			const pct = goal > 0 ? Math.round(value / goal * 100) : null;
 			const meta = AMINO_META[/** @type {keyof typeof AMINO_META} */ (k)];
-			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal, pct, isMax: false };
+			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal, pct, bar: pct ?? 0, isMax: false, essential: true };
+		});
+
+		const nonEssentialValues = nonEssentialOrder.map(k => dayTotals.aminos[k] ?? 0);
+		const nonEssentialTotal = nonEssentialValues.reduce((a, b) => a + b, 0);
+		const nonEssentialMax = Math.max(...nonEssentialValues);
+		const nonEssentialRows = nonEssentialOrder.map((k, i) => {
+			const value = nonEssentialValues[i];
+			const meta = AMINO_META[/** @type {keyof typeof AMINO_META} */ (k)];
+			// Share of the non-essential total; bars are scaled to the biggest one so they stay readable
+			const pct = nonEssentialTotal > 0 ? Math.round(value / nonEssentialTotal * 100) : null;
+			const bar = nonEssentialMax > 0 ? value / nonEssentialMax * 100 : 0;
+			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal: 0, pct, bar, isMax: false, essential: false };
 		});
 
 		return [
-			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkRows(minerals) },
-			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkRows(vitamins) },
-			{ title: isEn ? 'Amino Acids' : 'Aminosäuren', rows: aminoRows },
-			{ title: isEn ? 'Other' : 'Sonstiges', rows: mkRows(other) },
+			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkRows(minerals), note: '' },
+			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkRows(vitamins), note: '' },
+			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: essentialRows, note: '' },
+			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: nonEssentialRows, note: isEn
+				? 'No intake requirement — bars show each one’s share of the non-essential amino acids you ate.'
+				: 'Kein Bedarfswert — die Balken zeigen den Anteil an den aufgenommenen nicht-essenziellen Aminosäuren.' },
+			{ title: isEn ? 'Other' : 'Sonstiges', rows: mkRows(other), note: '' },
 		];
 	});
 
@@ -1459,17 +1469,24 @@
 
 {#snippet microPanel()}
 	<div class="micro-details" class:micro-hidden={!showMicros}>
+		<p class="micro-source">
+			{isEn ? '% of the daily reference intake' : '% der Tagesreferenzmenge'}
+			<DriSourceInfo {isEn} />
+		</p>
 		{#each microSections as section}
 			<div class="micro-section">
 				<h4>{section.title}</h4>
+				{#if section.note}
+					<p class="micro-note">{section.note}</p>
+				{/if}
 				{#each section.rows as row}
 					<div class="micro-row">
 						<span class="micro-label">{row.label}</span>
 						<div class="micro-bar-wrap">
-							<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.pct, 100)}%"></div>
+							<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.bar, 100)}%"></div>
 						</div>
 						<span class="micro-value">{fmt(row.value)} {row.unit}</span>
-						<span class="micro-pct">{row.pct}%</span>
+						<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
 					</div>
 				{/each}
 			</div>
@@ -2710,6 +2727,19 @@
 		color: var(--color-text-primary);
 		font-weight: 500;
 	}
+	.micro-source {
+		display: flex;
+		align-items: center;
+		margin: 0 0 0.2rem;
+		font-size: 0.7rem;
+		color: var(--color-text-secondary);
+	}
+	.micro-note {
+		margin: 0 0 0.4rem;
+		font-size: 0.7rem;
+		line-height: 1.4;
+		color: var(--color-text-secondary);
+	}
 	.micro-bar-wrap {
 		height: 5px;
 		background: var(--color-bg-tertiary);
@@ -2736,6 +2766,10 @@
 		font-weight: 700;
 		font-size: 0.72rem;
 		font-variant-numeric: tabular-nums;
+	}
+	.micro-pct.is-na {
+		font-weight: 500;
+		color: var(--color-text-tertiary);
 	}
 
 	/* ── Empty / No Goal State ── */

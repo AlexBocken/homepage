@@ -890,12 +890,19 @@
 	<!-- Selected food — detail & amount -->
 	<div class="fs-selected">
 		<div class="fs-selected-header">
-			<span class="fs-selected-name">
-				<span class="fs-source-badge" class:usda={selected.source === 'usda'} class:off={selected.source === 'off'} class:recipe={selected.source === 'recipe'}>{sourceLabel(selected.source)}</span>
-				{selected.name}
-			</span>
-			{#if selected.brands}
-				<span class="fs-selected-brands">{selected.brands}</span>
+			<div class="fs-selected-title">
+				<span class="fs-selected-name">
+					<span class="fs-source-badge" class:usda={selected.source === 'usda'} class:off={selected.source === 'off'} class:recipe={selected.source === 'recipe'}>{sourceLabel(selected.source)}</span>
+					{selected.name}
+				</span>
+				{#if selected.brands}
+					<span class="fs-selected-brands">{selected.brands}</span>
+				{/if}
+			</div>
+			{#if showDetailLinks && (selected.source === 'bls' || selected.source === 'usda' || selected.source === 'off')}
+				<a class="fs-selected-detail-link" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: selected.source, id: selected.id })} aria-label="View details">
+					<ExternalLink size={20} />
+				</a>
 			{/if}
 		</div>
 
@@ -1310,6 +1317,31 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.6rem;
+	}
+	.fs-selected-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+	.fs-selected-title {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		min-width: 0;
+	}
+	.fs-selected-detail-link {
+		display: flex;
+		flex-shrink: 0;
+		padding: 0.35rem;
+		margin: -0.35rem -0.35rem 0 0;
+		border-radius: var(--radius-md);
+		color: var(--color-text-secondary);
+		transition: color var(--transition-fast), background var(--transition-fast);
+	}
+	.fs-selected-detail-link:hover {
+		color: var(--blue);
+		background: var(--color-bg-elevated);
 	}
 	.fs-selected-name {
 		font-weight: 700;

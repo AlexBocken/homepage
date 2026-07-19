@@ -424,6 +424,7 @@ export const de = {
 	seven_day_avg: "7-Tage-Ø",
 	thirty_day: "30 Tage",
 	macro_split: "Makroverteilung",
+	nutrient_averages: "Nährstoff-Durchschnitt",
 	no_nutrition_data: "Noch keine Ernährungsdaten. Beginne mit dem Tracking.",
 	target: "Ziel",
 	days_tracked: "Tage erfasst",
