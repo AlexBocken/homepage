@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ fetch, url }) => {
 		fetch(`/api/fitness/stats/micronutrients?days=${days}`).then(r => (r.ok ? r.json() : null)),
 		// The macro split hero mirrors the stats page card exactly, so it reuses the
 		// same endpoint rather than recomputing the target logic.
-		fetch('/api/fitness/stats/nutrition').then(r => (r.ok ? r.json() : null)),
+		fetch(`/api/fitness/stats/nutrition?days=${days}`).then(r => (r.ok ? r.json() : null)),
 	]);
 
 	return { days, micronutrients, nutritionStats };

@@ -10,7 +10,7 @@ import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
 import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
 
-export const GET: RequestHandler = async ({ locals }) => {
+export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
@@ -21,7 +21,10 @@ export const GET: RequestHandler = async ({ locals }) => {
 	// hours for positive-offset timezones).
 	const now = new Date();
 	const todayStart = new Date(localDateStr() + 'T00:00:00.000Z');
-	const sevenDaysAgo = new Date(localDateOffset(-7) + 'T00:00:00.000Z');
+	// Averaging window: 7 days by default, 30 when the caller asks for it
+	// (the nutrients page toggles between the two).
+	const windowDays = url.searchParams.get('days') === '30' ? 30 : 7;
+	const windowStart = new Date(localDateOffset(-windowDays) + 'T00:00:00.000Z');
 	const thirtyDaysAgo = new Date(localDateOffset(-30) + 'T00:00:00.000Z');
 
 	const [entries30d, goal, weightMeasurements, workoutSessions30d] = await Promise.all([
@@ -124,21 +127,21 @@ export const GET: RequestHandler = async ({ locals }) => {
 		workoutKcalByDate.set(key, (workoutKcalByDate.get(key) ?? 0) + (s.kcalEstimate?.kcal ?? 0));
 	}
 
-	// 7-day averages — only over days with non-zero logged intake, so untracked
+	// Window averages — only over days with non-zero logged intake, so untracked
 	// days don't skew the balance toward an artificial deficit.
-	const sevenDayStr = sevenDaysAgo.toISOString().slice(0, 10);
-	const recent7 = dailyTotals.filter(d => d.date >= sevenDayStr && d.calories > 0);
+	const windowStartStr = windowStart.toISOString().slice(0, 10);
+	const recentDays = dailyTotals.filter(d => d.date >= windowStartStr && d.calories > 0);
 
 	let avgProteinPerKg: number | null = null;
 	let avgCalorieBalance: number | null = null;
 	let avgDailyExpenditure: number | null = null;
 	let macroSplit: { protein: number; fat: number; carbs: number } | null = null;
 
-	if (recent7.length > 0) {
-		const avgProtein = recent7.reduce((s, d) => s + d.protein, 0) / recent7.length;
-		const avgCalories = recent7.reduce((s, d) => s + d.calories, 0) / recent7.length;
-		const avgFat = recent7.reduce((s, d) => s + d.fat, 0) / recent7.length;
-		const avgCarbs = recent7.reduce((s, d) => s + d.carbs, 0) / recent7.length;
+	if (recentDays.length > 0) {
+		const avgProtein = recentDays.reduce((s, d) => s + d.protein, 0) / recentDays.length;
+		const avgCalories = recentDays.reduce((s, d) => s + d.calories, 0) / recentDays.length;
+		const avgFat = recentDays.reduce((s, d) => s + d.fat, 0) / recentDays.length;
+		const avgCarbs = recentDays.reduce((s, d) => s + d.carbs, 0) / recentDays.length;
 
 		if (trendWeight) {
 			avgProteinPerKg = Math.round((avgProtein / trendWeight) * 100) / 100;
@@ -150,7 +153,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		if (canComputeTdee) {
 			let totalExpenditure = 0;
 			let expenditureDays = 0;
-			for (const d of recent7) {
+			for (const d of recentDays) {
 				const dayTdee = getDailyTdee(d.date);
 				if (dayTdee != null) {
 					totalExpenditure += dayTdee + (workoutKcalByDate.get(d.date) ?? 0);
@@ -201,7 +204,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 	let macroTargets: { protein: number | null; fat: number | null; carbs: number | null } = {
 		protein: null, fat: null, carbs: null
 	};
-	if (goal && dailyCalorieGoal && recent7.length > 0) {
+	if (goal && dailyCalorieGoal && recentDays.length > 0) {
 		const fatRatio = goal.fatPercent ?? 0;
 		const carbRatio = goal.carbPercent ?? 0;
 		const ratioSum = fatRatio + carbRatio;
@@ -220,7 +223,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		// come from its weight-based grams; the rest of that day's allowance
 		// (base goal + workout kcal) splits into fat/carb by the fat:carb ratio.
 		let sumProteinCal = 0, sumFatCal = 0, sumCarbCal = 0, days = 0;
-		for (const d of recent7) {
+		for (const d of recentDays) {
 			const pGrams = proteinGramsForDate(d.date);
 			if (pGrams == null) continue;
 			const calorieGoal = dailyCalorieGoal + (workoutKcalByDate.get(d.date) ?? 0);
@@ -254,7 +257,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		macroSplit,
 		macroTargets,
 		trendWeight,
-		daysTracked7: recent7.length,
+		daysTracked7: recentDays.length,
 		daysTracked30: dailyTotals.length,
 	});
 };
