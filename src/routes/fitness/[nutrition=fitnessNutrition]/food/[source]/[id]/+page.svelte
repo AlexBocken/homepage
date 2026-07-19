@@ -310,7 +310,9 @@
 		{/if}
 		<div class="badges">
 			<span class="badge badge-source">{food.source === 'bls' ? 'BLS' : food.source === 'usda' ? 'USDA' : food.source === 'off' ? 'OFF' : food.source === 'custom' ? (isEn ? 'Custom Meal' : 'Eigene Mahlzeit') : isEn ? 'Recipe' : 'Rezept'}</span>
-			<span class="badge badge-category">{food.category}</span>
+			{#if food.category}
+				<span class="badge badge-category">{food.category}</span>
+			{/if}
 			{#if food.brands}
 				<span class="badge badge-category">{food.brands}</span>
 			{/if}

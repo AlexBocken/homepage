@@ -31,12 +31,12 @@ test('macro split card opens the nutrient averages page', async ({ page }) => {
 
 	// The whole macro-split card is the link into the averages breakdown.
 	await page.getByRole('link', { name: 'Nutrient Averages' }).click();
-	await expect(page).toHaveURL(/\/fitness\/stats\/nutrition$/);
+	await expect(page).toHaveURL(/\/fitness\/stats\/nutrients$/);
 	await expect(page.getByRole('heading', { name: 'Nutrient Averages' })).toBeVisible();
 });
 
 test('nutrient averages switches between the 7- and 30-day range', async ({ page }) => {
-	await gotoHydrated(page, '/fitness/stats/nutrition');
+	await gotoHydrated(page, '/fitness/stats/nutrients');
 	await expect(page.getByText(/7-day average/i)).toBeVisible();
 
 	await page.getByRole('link', { name: '30', exact: true }).click();

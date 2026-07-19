@@ -27,20 +27,19 @@
 	// Open Food Facts entries ship macros only, so anything logged from them is
 	// missing from every figure below.
 	const coverage = $derived(mn.coverage ?? { ratios: { minerals: 1, vitamins: 1, aminos: 1 }, missing: [] });
-	const coverageGaps = $derived.by(() => {
-		/** @type {string[]} */
-		const gaps = [];
-		const names = { minerals: isEn ? 'minerals' : 'Mineralstoffe', vitamins: isEn ? 'vitamins' : 'Vitamine', aminos: isEn ? 'amino acids' : 'Aminosäuren' };
-		for (const g of /** @type {const} */ (['minerals', 'vitamins', 'aminos'])) {
-			const missingPct = Math.round((1 - (coverage.ratios?.[g] ?? 1)) * 100);
-			if (missingPct >= 1) gaps.push(`${names[g]} ${missingPct}%`);
-		}
-		return gaps;
-	});
+	/** Per-group share of logged calories whose source publishes no figures. */
+	const coverageRows = $derived(
+		/** @type {const} */ (['minerals', 'vitamins', 'aminos']).map(g => ({
+			key: g,
+			label: { minerals: isEn ? 'Minerals' : 'Mineralstoffe', vitamins: isEn ? 'Vitamins' : 'Vitamine', aminos: isEn ? 'Amino acids' : 'Aminosäuren' }[g],
+			missingPct: Math.round((1 - (coverage.ratios?.[g] ?? 1)) * 100),
+		}))
+	);
+	const hasCoverageGap = $derived(coverageRows.some(r => r.missingPct >= 1));
 
 	/** @param {number} d */
 	function rangeHref(d) {
-		return resolve('/fitness/[stats=fitnessStats]/nutrition', { stats: statsSlug }) + (d === 30 ? '?days=30' : '');
+		return resolve('/fitness/[stats=fitnessStats]/nutrients', { stats: statsSlug }) + (d === 30 ? '?days=30' : '');
 	}
 
 	const rangeLabel = $derived(
@@ -235,21 +234,34 @@
 		<section class="micro-card">
 			<h2>{isEn ? 'Micronutrients' : 'Mikronährstoffe'}</h2>
 
-			{#if coverageGaps.length > 0}
+			{#if hasCoverageGap}
 				<div class="coverage-warning">
 					<TriangleAlert size={16} />
-					<div>
+					<div class="coverage-body">
 						<p class="coverage-head">
-							{isEn ? 'Share of your intake whose source publishes no figures' : 'Anteil der Zufuhr, für den die Quelle keine Werte veröffentlicht'}: {coverageGaps.join(' · ')}
+							{isEn ? 'Not every food logged comes with a full nutrient breakdown' : 'Nicht jedes erfasste Lebensmittel bringt eine vollständige Nährwerttabelle mit'}
 						</p>
-						<p>
+						<ul class="coverage-list">
+							{#each coverageRows as row (row.key)}
+								<li>
+									<span class="coverage-label">{row.label}</span>
+									<span class="coverage-meter">
+										<span class="coverage-meter-fill" style="width: {100 - row.missingPct}%"></span>
+									</span>
+									<span class="coverage-figure" class:is-gap={row.missingPct >= 1}>
+										{row.missingPct}%
+									</span>
+								</li>
+							{/each}
+						</ul>
+						<p class="coverage-detail">
 							{isEn
-								? 'Open Food Facts declares a mineral or two at best and no amino acids at all. Those foods may still contain them — the figures are missing, not zero — so the averages below read low by roughly that much.'
-								: 'Open Food Facts führt höchstens ein paar Mineralstoffe und gar keine Aminosäuren. Diese Lebensmittel können sie trotzdem enthalten — die Werte fehlen, sie sind nicht null — die Durchschnitte unten liegen also entsprechend zu tief.'}
+								? `Share of the ${Math.round(coverage.totalCalories ?? 0).toLocaleString('en-US')} kcal logged whose source publishes no figures. Open Food Facts declares a mineral or two at best and no amino acids at all — those foods may still contain them, so the averages below read low by roughly that much.`
+								: `Anteil der erfassten ${Math.round(coverage.totalCalories ?? 0).toLocaleString('de-CH')} kcal, für die die Quelle keine Werte veröffentlicht. Open Food Facts führt höchstens ein paar Mineralstoffe und gar keine Aminosäuren — diese Lebensmittel können sie trotzdem enthalten, die Durchschnitte unten liegen also entsprechend zu tief.`}
 						</p>
 						{#if coverage.missing?.length}
 							<p class="coverage-detail">
-								{isEn ? 'Sources without full figures: ' : 'Quellen ohne vollständige Werte: '}
+								{isEn ? 'Without full figures: ' : 'Ohne vollständige Werte: '}
 								{coverage.missing.slice(0, 6).join(', ')}{coverage.missing.length > 6 ? ` +${coverage.missing.length - 6}` : ''}
 							</p>
 						{/if}
@@ -504,6 +516,49 @@
 	}
 	.coverage-head {
 		font-weight: 700;
+	}
+	.coverage-body {
+		min-width: 0;
+		flex: 1;
+	}
+	.coverage-list {
+		list-style: none;
+		margin: 0.45rem 0 0.5rem;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+	.coverage-list li {
+		display: grid;
+		grid-template-columns: 6.5rem 1fr 2.75rem;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.coverage-label {
+		color: var(--color-text-secondary);
+	}
+	.coverage-meter {
+		display: block;
+		height: 5px;
+		border-radius: 3px;
+		background: color-mix(in srgb, var(--orange) 35%, transparent);
+		overflow: hidden;
+	}
+	.coverage-meter-fill {
+		display: block;
+		height: 100%;
+		border-radius: 3px;
+		background: var(--green);
+	}
+	.coverage-figure {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-text-secondary);
+	}
+	.coverage-figure.is-gap {
+		font-weight: 700;
+		color: var(--orange);
 	}
 	.coverage-detail {
 		margin-top: 0.35rem !important;

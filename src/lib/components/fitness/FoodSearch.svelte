@@ -907,7 +907,7 @@
 								{#if item.category}{item.category}{/if}
 							</span>
 						</div>
-						<span class="fs-result-cal">{item.calories}<small> kcal</small></span>
+						<span class="fs-result-cal">{Math.round(item.calories ?? 0)}<small> kcal</small></span>
 					</button>
 					{#if highlightFavorites && !showFavorites}
 						<!-- Every row carries a heart — filled when favourited, outline when not —
@@ -917,7 +917,7 @@
 							<Heart size={14} fill={item.favorited ? 'var(--red)' : 'none'} />
 						</button>
 					{/if}
-					{#if showDetailLinks && (item.source === 'bls' || item.source === 'usda' || item.source === 'off')}
+					{#if showDetailLinks && (item.source === 'bls' || item.source === 'usda' || item.source === 'off' || item.source === 'recipe')}
 						<a class="fs-detail-link" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: item.source, id: item.id })} aria-label="View details">
 							<ExternalLink size={13} />
 						</a>
@@ -945,7 +945,7 @@
 					<span class="fs-selected-brands">{selected.brands}</span>
 				{/if}
 			</div>
-			{#if showDetailLinks && (selected.source === 'bls' || selected.source === 'usda' || selected.source === 'off')}
+			{#if showDetailLinks && (selected.source === 'bls' || selected.source === 'usda' || selected.source === 'off' || selected.source === 'recipe')}
 				<a class="fs-selected-detail-link" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', { nutrition: s.nutrition, source: selected.source, id: selected.id })} aria-label="View details">
 					<ExternalLink size={20} />
 				</a>

@@ -1494,8 +1494,8 @@
 				<TriangleAlert size={13} />
 				<span>
 					{isEn
-						? `Share of what you logged whose source publishes no figures — ${coverageGaps.join(', ')}. Those foods may well contain these nutrients; they are simply unrecorded, so the totals below read low.`
-						: `Anteil des Erfassten, für den die Quelle keine Werte veröffentlicht — ${coverageGaps.join(', ')}. Diese Lebensmittel können die Nährstoffe durchaus enthalten, sie sind nur nicht erfasst — die Werte unten liegen daher zu tief.`}
+						? `Share of the day's calories whose source publishes no figures — ${coverageGaps.join(', ')}. Those foods may well contain these nutrients; they are simply unrecorded, so the totals below read low.`
+						: `Anteil der Tageskalorien, für den die Quelle keine Werte veröffentlicht — ${coverageGaps.join(', ')}. Diese Lebensmittel können die Nährstoffe durchaus enthalten, sie sind nur nicht erfasst — die Werte unten liegen daher zu tief.`}
 				</span>
 			</p>
 		{/if}

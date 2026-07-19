@@ -4,13 +4,6 @@ import { dbConnect } from '$utils/db';
 import { requireGroup } from '$lib/server/middleware/auth';
 import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutritionMatcher';
 
-const KEYS = [
-	'calories', 'protein', 'fat', 'saturatedFat', 'carbs', 'fiber', 'sugars',
-	'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
-	'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
-	'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
-];
-
 function parseAmount(amount: string | undefined): number {
 	if (!amount?.trim()) return 0;
 	const s = amount.trim().replace(',', '.');
@@ -26,8 +19,10 @@ function computePer100g(recipe: any): { per100g: Record<string, number>; totalGr
 	const mappings = recipe.nutritionMappings;
 	if (!mappings?.length) return null;
 
+	// Sum every numeric key the ingredient carries, amino acids included. A fixed
+	// list silently drops what it omits, and this result is *cached onto the
+	// recipe*, so anything missed stays missing until the cache is rebuilt.
 	const totals: Record<string, number> = {};
-	for (const k of KEYS) totals[k] = 0;
 	let totalGrams = 0;
 
 	for (const m of mappings) {
@@ -51,13 +46,15 @@ function computePer100g(recipe: any): { per100g: Record<string, number>; totalGr
 		const grams = parsedAmount * m.gramsPerUnit;
 		totalGrams += grams;
 		const factor = grams / 100;
-		for (const k of KEYS) totals[k] += factor * ((per100g as any)[k] ?? 0);
+		for (const [k, v] of Object.entries(per100g as Record<string, unknown>)) {
+			if (typeof v === 'number') totals[k] = (totals[k] ?? 0) + factor * v;
+		}
 	}
 
 	if (totalGrams <= 0) return null;
 
 	const per100g: Record<string, number> = {};
-	for (const k of KEYS) per100g[k] = totals[k] / totalGrams * 100;
+	for (const [k, v] of Object.entries(totals)) per100g[k] = v / totalGrams * 100;
 	return { per100g, totalGrams };
 }
 

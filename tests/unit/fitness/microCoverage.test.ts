@@ -64,17 +64,29 @@ describe('hasMicros', () => {
 });
 
 describe('microCoverage', () => {
-	it('weights each group by grams logged, not by entry count', () => {
+	it('weights each group by calories, so a bulky low-energy food cannot mask a gap', () => {
+		// 300 g of oats at 120 kcal/100 g = 360 kcal covered;
+		// 100 g of bar at 250 kcal/100 g = 250 kcal uncovered.
 		const c = microCoverage([
 			{ name: 'Oats', amountGrams: 300, per100g: full() },
 			{ name: 'Bar', amountGrams: 100, per100g: OFF_MACROS_ONLY },
 		]);
+		expect(c.basis).toBe('calories');
+		expect(c.totalCalories).toBeCloseTo(610);
 		expect(c.totalGrams).toBe(400);
-		expect(c.ratios.minerals).toBeCloseTo(0.75);
-		expect(c.ratios.vitamins).toBeCloseTo(0.75);
-		expect(c.ratios.aminos).toBeCloseTo(0.75);
-		expect(c.worst).toBeCloseTo(0.75);
+		// by grams this would read 0.75 — by calories the gap is bigger
+		expect(c.ratios.minerals).toBeCloseTo(360 / 610);
+		expect(c.worst).toBeCloseTo(360 / 610);
 		expect(c.missing).toEqual(['Bar']);
+	});
+
+	it('falls back to grams when nothing logged carries calories', () => {
+		const c = microCoverage([
+			{ name: 'Oats', amountGrams: 300, per100g: { ...full(), calories: 0 } },
+			{ name: 'Bar', amountGrams: 100, per100g: { ...OFF_MACROS_ONLY, calories: 0 } },
+		]);
+		expect(c.basis).toBe('grams');
+		expect(c.ratios.minerals).toBeCloseTo(0.75);
 	});
 
 	it('tracks groups separately — minerals can be covered while aminos are not', () => {

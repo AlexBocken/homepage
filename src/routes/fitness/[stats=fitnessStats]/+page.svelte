@@ -879,7 +879,7 @@
 			<a
 				class="lifetime-card macro-card"
 				class:macro-card-empty={!ns.macroSplit}
-				href={resolve('/fitness/[stats=fitnessStats]/nutrition', { stats: statsSlug })}
+				href={resolve('/fitness/[stats=fitnessStats]/nutrients', { stats: statsSlug })}
 				aria-label={t.nutrient_averages}
 			>
 				<div class="macro-left">

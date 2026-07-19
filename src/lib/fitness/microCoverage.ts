@@ -63,41 +63,63 @@ export function hasMicros(per100g: Per100g): boolean {
 }
 
 export type MicroCoverage = {
-	/** Share of logged grams whose entry reports that group, 0–1. */
+	/** Share of logged calories whose entry reports that group, 0–1. */
 	ratios: Record<GroupName, number>;
 	/** The weakest group's ratio — what a single headline warning should quote. */
 	worst: number;
+	totalCalories: number;
 	totalGrams: number;
+	/** Calories are the weighting unless nothing logged carries any, then grams. */
+	basis: 'calories' | 'grams';
 	/** Names of entries not fully covered, deduplicated, for the warning text. */
 	missing: string[];
 };
 
+/**
+ * Coverage is weighted by calories rather than grams: 300 g of sparkling water
+ * missing its vitamin figures says far less about a day than 30 g of an
+ * unlabelled protein bar. Falls back to grams if nothing logged carries calories.
+ */
 export function microCoverage(entries: Entry[] | null | undefined): MicroCoverage {
 	const covered: Record<GroupName, number> = { minerals: 0, vitamins: 0, aminos: 0 };
+	const coveredGrams: Record<GroupName, number> = { minerals: 0, vitamins: 0, aminos: 0 };
+	let totalCalories = 0;
 	let totalGrams = 0;
 	const missing = new Set<string>();
 
 	for (const e of entries ?? []) {
 		const grams = e.amountGrams ?? 0;
 		if (grams <= 0) continue;
+		const kcal = ((e.per100g?.calories ?? 0) as number) * grams / 100;
 		totalGrams += grams;
+		totalCalories += kcal;
+
 		const g = groupsPresent(e.per100g);
 		for (const group of Object.keys(covered) as GroupName[]) {
-			if (g[group]) covered[group] += grams;
+			if (g[group]) {
+				covered[group] += kcal;
+				coveredGrams[group] += grams;
+			}
 		}
 		if ((!g.minerals || !g.vitamins || !g.aminos) && e.name) missing.add(e.name);
 	}
 
+	const useCalories = totalCalories > 0;
+	const total = useCalories ? totalCalories : totalGrams;
+	const source = useCalories ? covered : coveredGrams;
+
 	const ratios = {
-		minerals: totalGrams > 0 ? covered.minerals / totalGrams : 1,
-		vitamins: totalGrams > 0 ? covered.vitamins / totalGrams : 1,
-		aminos: totalGrams > 0 ? covered.aminos / totalGrams : 1,
+		minerals: total > 0 ? source.minerals / total : 1,
+		vitamins: total > 0 ? source.vitamins / total : 1,
+		aminos: total > 0 ? source.aminos / total : 1,
 	};
 
 	return {
 		ratios,
 		worst: Math.min(ratios.minerals, ratios.vitamins, ratios.aminos),
+		totalCalories,
 		totalGrams,
+		basis: useCalories ? 'calories' : 'grams',
 		missing: [...missing],
 	};
 }

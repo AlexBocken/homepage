@@ -81,7 +81,7 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/fitness/exercises', kind: 'page' },
 	{ path: '/fitness/history', kind: 'page' },
 	{ path: '/fitness/stats', kind: 'page' },
-	{ path: '/fitness/stats/nutrition', kind: 'page' },
+	{ path: '/fitness/stats/nutrients', kind: 'page' },
 	{ path: '/api/fitness/goal', kind: 'api' },
 	{ path: '/api/fitness/stats/micronutrients', kind: 'api' },
 	// The nutrition API is login-only rather than group-gated: it is consumed both by

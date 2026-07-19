@@ -113,14 +113,10 @@ function computeRecipePer100g(recipe: any): { per100g: Record<string, number>; t
 	const mappings = recipe.nutritionMappings;
 	if (!mappings?.length) return null;
 
-	const keys = [
-		'calories', 'protein', 'fat', 'saturatedFat', 'carbs', 'fiber', 'sugars',
-		'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
-		'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
-		'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
-	];
+	// Every numeric key an ingredient carries is summed, amino acids included —
+	// a fixed list silently drops whatever it forgets, which is how recipes ended
+	// up reporting no amino acids at all.
 	const totals: Record<string, number> = {};
-	for (const k of keys) totals[k] = 0;
 	let totalGrams = 0;
 
 	// Build mapping index
@@ -153,13 +149,15 @@ function computeRecipePer100g(recipe: any): { per100g: Record<string, number>; t
 		const grams = parsedAmount * m.gramsPerUnit;
 		totalGrams += grams;
 		const factor = grams / 100;
-		for (const k of keys) totals[k] += factor * (per100g[k] ?? 0);
+		for (const [k, v] of Object.entries(per100g as Record<string, unknown>)) {
+			if (typeof v === 'number') totals[k] = (totals[k] ?? 0) + factor * v;
+		}
 	}
 
 	if (totalGrams <= 0) return null;
 
 	const per100g: Record<string, number> = {};
-	for (const k of keys) per100g[k] = totals[k] / totalGrams * 100;
+	for (const [k, v] of Object.entries(totals)) per100g[k] = v / totalGrams * 100;
 	return { per100g, totalGrams };
 }
 
