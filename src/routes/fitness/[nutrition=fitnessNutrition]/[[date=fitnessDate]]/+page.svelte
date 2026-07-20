@@ -588,6 +588,14 @@
 
 	const hasComposition = $derived(dayTotals.fat > 0 || dayTotals.carbs > 0);
 
+	/** Deep dive into which foods supplied a nutrient on the day being viewed. */
+	function nutrientHref(/** @type {string} */ key) {
+		return resolve('/fitness/[nutrition=fitnessNutrition]/nutrient/[key]', {
+			nutrition: s.nutrition,
+			key,
+		}) + `?date=${currentDate}`;
+	}
+
 	// Names the energy the fatty acid ceilings were computed from, so a target that
 	// differs from the textbook 2000/1600 kcal figure is explained rather than odd.
 	const energyBasisLabel = $derived(
@@ -1614,14 +1622,14 @@
 					<p class="micro-note">{section.note}</p>
 				{/if}
 				{#each section.rows as row}
-					<div class="micro-row">
+					<a class="micro-row is-link" href={nutrientHref(row.key)} data-sveltekit-noscroll>
 						<span class="micro-label">{row.label}</span>
 						<div class="micro-bar-wrap">
 							<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.bar, 100)}%"></div>
 						</div>
 						<span class="micro-value">{fmt(row.value)} {row.unit}</span>
 						<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
-					</div>
+					</a>
 				{/each}
 			</div>
 		{/each}
@@ -2870,6 +2878,18 @@
 		gap: 0.4rem;
 		padding: 0.2rem 0;
 		font-size: 0.78rem;
+	}
+	/* Rows link through to which foods supplied the nutrient — see nutrientHref. */
+	.micro-row.is-link {
+		color: inherit;
+		text-decoration: none;
+		border-radius: var(--radius-sm);
+		padding-inline: 0.3rem;
+		margin-inline: -0.3rem;
+		transition: background var(--transition-fast);
+	}
+	.micro-row.is-link:hover {
+		background: var(--color-bg-elevated);
 	}
 	.micro-label {
 		color: var(--color-text-primary);

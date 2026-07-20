@@ -82,6 +82,9 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/fitness/history', kind: 'page' },
 	{ path: '/fitness/stats', kind: 'page' },
 	{ path: '/fitness/stats/nutrients', kind: 'page' },
+	// The per-nutrient contribution breakdown reads one user's food log, so it must be
+	// gated exactly like the diary it is reached from.
+	{ path: '/fitness/nutrition/nutrient/vitaminA', kind: 'page' },
 	{ path: '/api/fitness/goal', kind: 'api' },
 	{ path: '/api/fitness/stats/micronutrients', kind: 'api' },
 	// The nutrition API is login-only rather than group-gated: it is consumed both by

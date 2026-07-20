@@ -39,6 +39,14 @@
 	);
 	const hasCoverageGap = $derived(coverageRows.some(r => r.missingPct >= 1));
 
+	/** Deep dive into which foods supplied a nutrient over the same window. */
+	function nutrientHref(/** @type {string} */ key) {
+		return resolve('/fitness/[nutrition=fitnessNutrition]/nutrient/[key]', {
+			nutrition: fitnessSlugs(lang).nutrition,
+			key,
+		}) + `?days=${data.days === 30 ? 30 : 7}`;
+	}
+
 	/** @param {number} d */
 	function rangeHref(d) {
 		return resolve('/fitness/[stats=fitnessStats]/nutrients', { stats: statsSlug }) + (d === 30 ? '?days=30' : '');
@@ -415,7 +423,7 @@
 							<p class="micro-note">{section.note}</p>
 						{/if}
 						{#each section.rows as row (row.key)}
-							<div class="micro-row">
+							<a class="micro-row is-link" href={nutrientHref(row.key)} data-sveltekit-noscroll>
 								<span class="micro-label">
 									{row.label}
 									{#if row.overLimit}
@@ -427,7 +435,7 @@
 								</div>
 								<span class="micro-value" class:over-limit={row.overLimit}>{fmt(row.value)} {row.unit}</span>
 								<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
-							</div>
+							</a>
 						{/each}
 					</div>
 				{/each}
@@ -596,6 +604,20 @@
 		gap: 0.4rem;
 		padding: 0.2rem 0;
 		font-size: 0.78rem;
+	}
+	/* Rows link through to which foods supplied the nutrient. Kept visually identical
+	   to the old static row apart from the hover, so the table does not turn into a
+	   wall of link-blue. */
+	.micro-row.is-link {
+		color: inherit;
+		text-decoration: none;
+		border-radius: var(--radius-sm);
+		padding-inline: 0.3rem;
+		margin-inline: -0.3rem;
+		transition: background var(--transition-fast);
+	}
+	.micro-row.is-link:hover {
+		background: var(--color-bg-elevated);
 	}
 	.micro-label {
 		display: flex;
