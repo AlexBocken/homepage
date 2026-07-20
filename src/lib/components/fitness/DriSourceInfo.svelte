@@ -13,6 +13,34 @@
 
 	let open = $state(false);
 
+	/**
+	 * Keeps the panel inside the viewport.
+	 *
+	 * It is anchored to the (i), so on a narrow screen a panel up to 320px wide hangs
+	 * off whichever edge the trigger sits near — off the left for `align: right`.
+	 * CSS anchor positioning would cover this but is not broadly supported yet, so
+	 * measure and shift. The transform is written straight to the node because it
+	 * changes what getBoundingClientRect reports: going through state would make the
+	 * next measurement include the previous correction.
+	 * @param {HTMLElement} node
+	 */
+	function clampIntoView(node) {
+		const margin = 8;
+		const place = () => {
+			node.style.transform = '';
+			const r = node.getBoundingClientRect();
+			const dx = r.left < margin
+				? margin - r.left
+				: r.right > window.innerWidth - margin
+					? window.innerWidth - margin - r.right
+					: 0;
+			if (dx) node.style.transform = `translateX(${dx}px)`;
+		};
+		place();
+		window.addEventListener('resize', place);
+		return () => window.removeEventListener('resize', place);
+	}
+
 	/** @param {MouseEvent} e */
 	function onWindowClick(e) {
 		if (!open) return;
@@ -40,7 +68,7 @@
 	</button>
 
 	{#if open}
-		<div class="dri-info-pop" class:align-right={align === 'right'}>
+		<div class="dri-info-pop" class:align-right={align === 'right'} {@attach clampIntoView}>
 			{#if variant === 'limits'}
 				<p class="dri-info-title">{isEn ? 'Upper intake levels' : 'Höchstmengen'}</p>
 				<ul>
@@ -96,6 +124,13 @@
 						</li>
 					{/if}
 				</ul>
+				{#if aminos}
+					<p class="dri-info-note">
+						{isEn
+							? 'Asx and Glx are combined figures. The acid hydrolysis used to measure amino acids turns asparagine into aspartic acid and glutamine into glutamic acid, so no food table reports the four separately — the amide is already counted in the acid.'
+							: 'Asx und Glx sind Summenwerte. Die saure Hydrolyse, mit der Aminosäuren bestimmt werden, wandelt Asparagin in Asparaginsäure und Glutamin in Glutaminsäure um; deshalb weist keine Nährwerttabelle die vier getrennt aus — das Amid steckt bereits im Säurewert.'}
+					</p>
+				{/if}
 				<p class="dri-info-note">
 					{isEn
 						? 'Vitamin and mineral values follow your logged sex; amino acid requirements scale with your logged body weight. Where either is missing, the generic adult reference is used.'
