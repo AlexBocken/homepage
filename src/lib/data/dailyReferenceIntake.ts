@@ -12,6 +12,16 @@ export type DRI = {
   carbs: number;
   fiber: number;
   sugars: number; // max recommended
+  // Fatty acids (g). EFSA/DGE express these as a share of energy rather than an
+  // absolute mass, so they are resolved here at the same reference energy the
+  // `fat` figure above uses — 2000 kcal male, 1600 kcal female. A person eating
+  // well away from that will see targets that are proportionally off, which is the
+  // same caveat the existing macro targets already carry.
+  saturatedFat: number;       // max, 10% of energy
+  transFat: number;           // max, 1% of energy
+  linoleicAcid: number;       // 4% of energy (EFSA adequate intake)
+  alphaLinolenicAcid: number; // 0.5% of energy (EFSA adequate intake)
+  epaDha: number;             // 250 mg/day combined (EFSA adequate intake)
   // Minerals (mg)
   calcium: number;
   iron: number;
@@ -42,6 +52,11 @@ export const DRI_MALE: DRI = {
   carbs: 300,
   fiber: 38,
   sugars: 50,      // WHO max free sugars
+  saturatedFat: 22,       // 10% of 2000 kcal
+  transFat: 2.2,          // 1% of 2000 kcal
+  linoleicAcid: 8.9,      // 4% of 2000 kcal
+  alphaLinolenicAcid: 1.1, // 0.5% of 2000 kcal
+  epaDha: 0.25,
   calcium: 1000,
   iron: 8,
   magnesium: 420,
@@ -70,6 +85,11 @@ export const DRI_FEMALE: DRI = {
   carbs: 250,
   fiber: 25,
   sugars: 50,
+  saturatedFat: 18,        // 10% of 1600 kcal
+  transFat: 1.8,           // 1% of 1600 kcal
+  linoleicAcid: 7.1,       // 4% of 1600 kcal
+  alphaLinolenicAcid: 0.9, // 0.5% of 1600 kcal
+  epaDha: 0.25,
   calcium: 1000,
   iron: 18,
   magnesium: 320,
@@ -91,9 +111,40 @@ export const DRI_FEMALE: DRI = {
   cholesterol: 300,
 };
 
-/** Get DRI values by sex */
-export function getDRI(sex: 'male' | 'female'): DRI {
-  return sex === 'female' ? DRI_FEMALE : DRI_MALE;
+/** Energy the fatty acid reference values above are expressed at, by sex. */
+export const REFERENCE_ENERGY = { male: 2000, female: 1600 } as const;
+
+/**
+ * Fatty acid references EFSA and the DGE state as a share of energy. These scale
+ * with what a person actually eats: a 10%-of-energy saturated fat ceiling is 22 g
+ * at 2000 kcal but 33 g at 3000. EPA+DHA is deliberately absent — its 250 mg/day
+ * adequate intake is an absolute amount, not a proportion, and must not scale.
+ */
+const ENERGY_SCALED: (keyof DRI)[] = [
+  'saturatedFat', 'transFat', 'linoleicAcid', 'alphaLinolenicAcid',
+];
+
+/**
+ * Get DRI values by sex, optionally rescaled to a real energy intake.
+ *
+ * `energyKcal` should be the person's calorie *goal*, not their basal metabolic
+ * rate: these are percentages of energy consumed, and BMR is resting expenditure —
+ * typically 30-40% below intake, which would set the ceilings far too low. Passing
+ * nothing keeps the 2000/1600 kcal reference, which is the right fallback when no
+ * goal has been set.
+ */
+export function getDRI(sex: 'male' | 'female', energyKcal?: number | null): DRI {
+  const base = sex === 'female' ? DRI_FEMALE : DRI_MALE;
+  if (!energyKcal || energyKcal <= 0) return base;
+
+  const ratio = energyKcal / REFERENCE_ENERGY[sex];
+  const scaled = { ...base };
+  for (const k of ENERGY_SCALED) {
+    // One decimal: trans fat lands near 2 g, where rounding to whole grams would
+    // move the ceiling by half.
+    scaled[k] = Math.round(base[k] * ratio * 10) / 10;
+  }
+  return scaled;
 }
 
 /**
@@ -135,6 +186,11 @@ export const NUTRIENT_META: Record<keyof DRI, { label: string; labelDe: string; 
   carbs:       { label: 'Carbs',        labelDe: 'Kohlenhydrate', unit: 'g' },
   fiber:       { label: 'Fiber',        labelDe: 'Ballaststoffe', unit: 'g' },
   sugars:      { label: 'Sugars',       labelDe: 'Zucker',        unit: 'g', isMax: true },
+  saturatedFat:       { label: 'Saturated fat', labelDe: 'Gesättigte Fettsäuren', unit: 'g', isMax: true },
+  transFat:           { label: 'Trans fat',     labelDe: 'Trans-Fettsäuren',      unit: 'g', isMax: true },
+  linoleicAcid:       { label: 'Linoleic acid (n-6)', labelDe: 'Linolsäure (n-6)', unit: 'g' },
+  alphaLinolenicAcid: { label: 'α-Linolenic acid (n-3)', labelDe: 'α-Linolensäure (n-3)', unit: 'g' },
+  epaDha:             { label: 'EPA + DHA',     labelDe: 'EPA + DHA',             unit: 'g' },
   calcium:     { label: 'Calcium',      labelDe: 'Kalzium',       unit: 'mg' },
   iron:        { label: 'Iron',         labelDe: 'Eisen',         unit: 'mg' },
   magnesium:   { label: 'Magnesium',    labelDe: 'Magnesium',     unit: 'mg' },

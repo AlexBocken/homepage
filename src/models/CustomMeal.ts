@@ -15,6 +15,12 @@ interface ICustomMealIngredient {
     vitaminA: number; vitaminC: number; vitaminD: number; vitaminE: number;
     vitaminK: number; thiamin: number; riboflavin: number; niacin: number;
     vitaminB6: number; vitaminB12: number; folate: number; cholesterol: number;
+    // Fatty acids (g/100g) — see $lib/fitness/fattyAcids for how totals are derived.
+    monounsaturatedFat?: number; polyunsaturatedFat?: number; transFat?: number;
+    linoleicAcid?: number; alphaLinolenicAcid?: number; gammaLinolenicAcid?: number;
+    arachidonicAcid?: number; epa?: number; dpa?: number; dha?: number;
+    stearidonicAcid?: number; eicosadienoicAcid?: number; dihomoGammaLinolenicAcid?: number;
+    omega3?: number; omega6?: number;
     isoleucine?: number; leucine?: number; lysine?: number; methionine?: number;
     phenylalanine?: number; threonine?: number; tryptophan?: number; valine?: number;
     histidine?: number; alanine?: number; arginine?: number; asparticAcid?: number;
@@ -40,6 +46,11 @@ const NutritionSnapshotSchema = new mongoose.Schema({
   vitaminA: Number, vitaminC: Number, vitaminD: Number, vitaminE: Number,
   vitaminK: Number, thiamin: Number, riboflavin: Number, niacin: Number,
   vitaminB6: Number, vitaminB12: Number, folate: Number, cholesterol: Number,
+  monounsaturatedFat: Number, polyunsaturatedFat: Number, transFat: Number,
+  linoleicAcid: Number, alphaLinolenicAcid: Number, gammaLinolenicAcid: Number,
+  arachidonicAcid: Number, epa: Number, dpa: Number, dha: Number,
+  stearidonicAcid: Number, eicosadienoicAcid: Number, dihomoGammaLinolenicAcid: Number,
+  omega3: Number, omega6: Number,
   isoleucine: Number, leucine: Number, lysine: Number, methionine: Number,
   phenylalanine: Number, threonine: Number, tryptophan: Number, valine: Number,
   histidine: Number, alanine: Number, arginine: Number, asparticAcid: Number,

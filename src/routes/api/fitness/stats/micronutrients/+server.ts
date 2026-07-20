@@ -7,6 +7,9 @@ import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { microCoverage } from '$lib/fitness/microCoverage';
+import {
+	FAT_GROUP_KEYS, ACID_KEYS, omegaTotals, epaDha as epaDhaOf, fatSplit, carbSplit,
+} from '$lib/fitness/fattyAcids';
 
 const MICRO_KEYS = [
 	'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
@@ -69,6 +72,20 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	for (const k of MICRO_KEYS) micros[k] = 0;
 	for (const k of AMINO_KEYS) aminos[k] = 0;
 
+	// Fatty acids are summed only over the entries that report them, so a key absent
+	// from a record leaves the average alone instead of pulling it toward zero. That
+	// makes the totals honest but partial, which is why the fat they were measured
+	// across is tracked alongside them.
+	const fats: Record<string, number> = {};
+	// Fat and carbohydrate composition for the hero bars. `unknown` is the mass from
+	// entries that published no breakdown at all — kept separate from `other` (the
+	// measured remainder) so the bar can distinguish "not sugar or fibre" from
+	// "nobody said".
+	const composition = {
+		fat: 0, saturated: 0, mono: 0, poly: 0, trans: 0, fatOther: 0, fatUnknown: 0,
+		carbs: 0, sugars: 0, fiber: 0, carbOther: 0, carbUnknown: 0,
+	};
+
 	const loggedDates = new Set<string>();
 	for (const e of entries) {
 		const mult = (e.amountGrams ?? 0) / 100;
@@ -77,13 +94,59 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		loggedDates.add(new Date(e.date).toISOString().slice(0, 10));
 		for (const k of MICRO_KEYS) micros[k] += (p[k] ?? 0) * mult;
 		for (const k of AMINO_KEYS) aminos[k] += (p[k] ?? 0) * mult;
+
+		for (const k of [...FAT_GROUP_KEYS, ...ACID_KEYS] as string[]) {
+			const v = p[k];
+			if (typeof v === 'number') fats[k] = (fats[k] ?? 0) + v * mult;
+		}
+		// Derived per entry, not from the summed acids: an OFF record contributing a
+		// stored omega-3 total and a USDA record contributing four acids must both
+		// land in the same figure, and only the per-record view knows which is which.
+		const { omega3, omega6 } = omegaTotals(p);
+		if (omega3) fats.omega3 = (fats.omega3 ?? 0) + omega3.value * mult;
+		if (omega6) fats.omega6 = (fats.omega6 ?? 0) + omega6.value * mult;
+		const ed = epaDhaOf(p);
+		if (ed) fats.epaDha = (fats.epaDha ?? 0) + ed.value * mult;
+
+		const fs = fatSplit(p);
+		composition.fat += fs.fat * mult;
+		if (fs.hasBreakdown) {
+			composition.saturated += (fs.saturated ?? 0) * mult;
+			composition.mono += (fs.mono ?? 0) * mult;
+			composition.poly += (fs.poly ?? 0) * mult;
+			composition.trans += (fs.trans ?? 0) * mult;
+			composition.fatOther += fs.unaccounted * mult;
+		} else {
+			composition.fatUnknown += fs.fat * mult;
+		}
+
+		const cs = carbSplit(p);
+		composition.carbs += cs.carbs * mult;
+		if (cs.hasBreakdown) {
+			composition.sugars += (cs.sugars ?? 0) * mult;
+			composition.fiber += (cs.fiber ?? 0) * mult;
+			composition.carbOther += cs.other * mult;
+		} else {
+			composition.carbUnknown += cs.carbs * mult;
+		}
 	}
 
 	const daysTracked = loggedDates.size;
 	if (daysTracked > 0) {
 		for (const k of MICRO_KEYS) micros[k] /= daysTracked;
 		for (const k of AMINO_KEYS) aminos[k] /= daysTracked;
+		for (const k of Object.keys(fats)) fats[k] /= daysTracked;
+		for (const k of Object.keys(composition)) {
+			composition[k as keyof typeof composition] /= daysTracked;
+		}
 	}
+
+	// What share of the fat logged came with any breakdown. The fatty acid figures
+	// are averages across that share only, so the page can say so rather than
+	// implying the day was fully characterised.
+	const fatCoverage = composition.fat > 0
+		? (composition.fat - composition.fatUnknown) / composition.fat
+		: 1;
 
 	return json({
 		days,
@@ -93,7 +156,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		coverage: microCoverage(entries),
 		micros,
 		aminos,
+		fats,
+		composition,
+		fatCoverage,
 		sex: goal?.sex === 'female' ? 'female' : 'male',
+		// Lets the page scale the energy-share fatty acid references to what this
+		// person actually aims to eat rather than a generic 2000/1600 kcal day.
+		dailyCalories: typeof goal?.dailyCalories === 'number' ? goal.dailyCalories : null,
 		weight,
 		weightIsAverage: rangeWeights.length > 0,
 	});

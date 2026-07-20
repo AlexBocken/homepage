@@ -23,6 +23,11 @@
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import { groupsPresent } from '$lib/fitness/microCoverage';
+	import {
+		fatSplit, carbSplit, omegaTotals, epaDha as epaDhaFrom, hasFattyAcids,
+		FATTY_ACID_META, ACID_KEYS,
+	} from '$lib/fitness/fattyAcids';
+	import CompositionBar from '$lib/components/fitness/CompositionBar.svelte';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
 
@@ -92,6 +97,63 @@
 		{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkMicroRows(vitaminKeys) },
 		{ title: isEn ? 'Other' : 'Sonstiges', rows: mkMicroRows(otherKeys) },
 	]);
+
+	// --- Fat & carbohydrate breakdown ---
+	// Driven entirely by which keys the record carries, so it works the same for BLS,
+	// USDA, recipes, custom meals and Open Food Facts without knowing the source.
+	const nRecord = $derived(/** @type {Record<string, number>} */ (n));
+	const fats = $derived(fatSplit(nRecord));
+	const carbs = $derived(carbSplit(nRecord));
+	const omegas = $derived(omegaTotals(nRecord));
+	const marine = $derived(epaDhaFrom(nRecord));
+
+	const hasFatBreakdown = $derived(hasFattyAcids(nRecord) || carbs.hasBreakdown);
+
+	const fatSegments = $derived([
+		{ key: 'saturated', label: isEn ? 'Saturated' : 'Gesättigt', value: scaled(fats.saturated), color: 'var(--orange)' },
+		{ key: 'mono', label: isEn ? 'Monounsaturated' : 'Einfach ungesättigt', value: scaled(fats.mono), color: 'var(--green)' },
+		{ key: 'poly', label: isEn ? 'Polyunsaturated' : 'Mehrfach ungesättigt', value: scaled(fats.poly), color: 'var(--blue)' },
+		{ key: 'trans', label: isEn ? 'Trans' : 'Trans', value: scaled(fats.trans), color: 'var(--red)' },
+		{ key: 'other', label: isEn ? 'Glycerol & other lipids' : 'Glycerin & andere Lipide', value: scaled(fats.unaccounted), color: 'var(--color-bg-elevated)' },
+	]);
+
+	const carbSegments = $derived([
+		{ key: 'sugars', label: isEn ? 'Sugars' : 'Zucker', value: scaled(carbs.sugars), color: 'var(--red)' },
+		{ key: 'fiber', label: isEn ? 'Fibre' : 'Ballaststoffe', value: scaled(carbs.fiber), color: 'var(--green)' },
+		{ key: 'other', label: isEn ? 'Starch & other' : 'Stärke & übrige', value: scaled(carbs.other), color: 'var(--lightblue)' },
+	]);
+
+	// Acids with a reference intake, shown as the share of a day this portion covers.
+	const fattyAcidRows = $derived(
+		['saturatedFat', 'transFat', 'linoleicAcid', 'alphaLinolenicAcid', 'epaDha']
+			.filter(k => k === 'epaDha' ? marine !== null : typeof nRecord[k] === 'number')
+			.map(k => {
+				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
+				const value = k === 'epaDha' ? scaled(marine?.value) : scaled(nRecord[k]);
+				const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
+				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, isMax: meta.isMax };
+			})
+	);
+
+	// The rest have no reference value — listed with their amounts only, and only
+	// where the source actually measured them.
+	const fatCompositionRows = $derived.by(() => {
+		/** @type {{ key: string, label: string, value: number }[]} */
+		const rows = [];
+		for (const [key, derivedValue] of /** @type {const} */ ([['omega3', omegas.omega3], ['omega6', omegas.omega6]])) {
+			if (!derivedValue) continue;
+			const meta = FATTY_ACID_META[key];
+			rows.push({ key, label: isEn ? meta.label : meta.labelDe, value: scaled(derivedValue.value) });
+		}
+		for (const key of ['monounsaturatedFat', 'polyunsaturatedFat', ...ACID_KEYS]) {
+			if (typeof nRecord[key] !== 'number') continue;
+			const meta = FATTY_ACID_META[key];
+			const label = isEn ? meta.label : meta.labelDe;
+			rows.push({ key, label: meta.short ? `${label} (${meta.short})` : label, value: scaled(nRecord[key]) });
+		}
+		return rows;
+	});
 
 	// --- Amino acids ---
 	const AMINO_META = {
@@ -183,6 +245,7 @@
 	// --- Expand toggles ---
 	let showMicros = $state(true);
 	let showAminos = $state(true);
+	let showFats = $state(true);
 
 	// --- Favorite ---
 	let favorited = $state(false);
@@ -472,6 +535,76 @@
 			</div>
 		{/if}
 	</div>
+
+	<!-- Fat & carbohydrate breakdown -->
+	{#if hasFatBreakdown}
+		<div class="section-card">
+			<button class="section-toggle" onclick={() => showFats = !showFats}>
+				<h2>{isEn ? 'Fat & Carbohydrate Breakdown' : 'Fett- & Kohlenhydrat-Aufschlüsselung'}</h2>
+				<ChevronDown size={18} style={showFats ? 'transform: rotate(180deg)' : ''} />
+			</button>
+
+			{#if showFats}
+				<div class="micro-details">
+					<div class="composition-grid">
+						{#if fats.hasBreakdown}
+							<CompositionBar
+								title={isEn ? 'Fat' : 'Fett'}
+								total={scaled(fats.fat)}
+								segments={fatSegments}
+								note={isEn
+									? 'Total fat is the whole lipid extract; the acids are only part of it. The remainder is glycerol, phospholipid and sterol — a few percent in an oil, but over half in a lean food.'
+									: 'Das Gesamtfett ist der gesamte Lipidextrakt; die Fettsäuren sind nur ein Teil davon. Der Rest sind Glycerin, Phospholipide und Sterine — in einem Öl wenige Prozent, in einem mageren Lebensmittel über die Hälfte.'}
+							/>
+						{/if}
+						{#if carbs.hasBreakdown}
+							<CompositionBar
+								title={isEn ? 'Carbohydrates' : 'Kohlenhydrate'}
+								total={scaled(carbs.carbs) + scaled(carbs.fiber)}
+								segments={carbSegments}
+							/>
+						{/if}
+					</div>
+
+					{#if fattyAcidRows.length > 0}
+						<p class="micro-source">
+							{isEn ? `% of the daily reference intake, covered by ${portionLabel}` : `% der Tagesreferenzmenge, gedeckt durch ${portionLabel}`}
+							<DriSourceInfo {isEn} aminos={false} />
+						</p>
+						<div class="micro-section">
+							{#each fattyAcidRows as row (row.key)}
+								<div class="micro-row">
+									<span class="micro-label">{row.label}</span>
+									<div class="micro-bar-wrap">
+										<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.pct ?? 0, 100)}%"></div>
+									</div>
+									<span class="micro-value">{fmt(row.value)} {row.unit}</span>
+									<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
+								</div>
+							{/each}
+						</div>
+					{/if}
+
+					{#if fatCompositionRows.length > 0}
+						<div class="micro-section">
+							<h4>{isEn ? 'Fat Composition' : 'Fettzusammensetzung'}</h4>
+							<p class="micro-note">
+								{isEn
+									? 'No reference intake for these. Omega-3 and omega-6 are summed from the individual acids the source reports.'
+									: 'Für diese gibt es keinen Referenzwert. Omega-3 und Omega-6 werden aus den von der Quelle ausgewiesenen Einzelfettsäuren summiert.'}
+							</p>
+							{#each fatCompositionRows as row (row.key)}
+								<div class="fat-row">
+									<span class="micro-label">{row.label}</span>
+									<span class="micro-value">{fmt(row.value)} g</span>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	<!-- Amino Acids -->
 	{#if hasAminos}
@@ -825,6 +958,35 @@
 	/* Micro details */
 	.micro-details {
 		margin-top: 0.75rem;
+	}
+	.composition-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+		gap: 1.5rem;
+		margin-bottom: 0.5rem;
+	}
+	/* Matches the note styling on the diary and stats pages — this class was used
+	   here without ever being defined, so the text rendered at full body size. */
+	.micro-note {
+		margin: 0 0 0.4rem;
+		font-size: 0.7rem;
+		line-height: 1.4;
+		color: var(--color-text-secondary);
+	}
+	/* Acids without a reference value get no bar — a label and an amount only. */
+	.fat-row {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.15rem 0;
+		font-size: var(--text-sm);
+	}
+	@media (max-width: 560px) {
+		.composition-grid {
+			grid-template-columns: 1fr;
+			gap: 1.25rem;
+		}
 	}
 	.micro-section {
 		margin-bottom: 0.75rem;

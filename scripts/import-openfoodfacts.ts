@@ -79,6 +79,20 @@ const NUTRIENT_MAP: Record<string, string> = {
 	'vitamin-b12_100g': 'vitaminB12',
 	'folates_100g': 'folate',
 	'cholesterol_100g': 'cholesterol',
+	// Fatty acids (g/100 g). See $lib/fitness/fattyAcids — the omega totals here are
+	// a fallback used only for products that declare no individual acids.
+	'monounsaturated-fat_100g': 'monounsaturatedFat',
+	'polyunsaturated-fat_100g': 'polyunsaturatedFat',
+	'trans-fat_100g': 'transFat',
+	'omega-3-fat_100g': 'omega3',
+	'omega-6-fat_100g': 'omega6',
+	'linoleic-acid_100g': 'linoleicAcid',
+	'alpha-linolenic-acid_100g': 'alphaLinolenicAcid',
+	'gamma-linolenic-acid_100g': 'gammaLinolenicAcid',
+	'arachidonic-acid_100g': 'arachidonicAcid',
+	'eicosapentaenoic-acid_100g': 'epa',
+	'docosapentaenoic-acid_100g': 'dpa',
+	'docosahexaenoic-acid_100g': 'dha',
 };
 
 function extractPer100g(nutriments: any): Record<string, number> | null {

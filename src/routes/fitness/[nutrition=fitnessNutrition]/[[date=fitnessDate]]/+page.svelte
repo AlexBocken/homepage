@@ -40,7 +40,9 @@
 	import RoundOffCard from '$lib/components/fitness/RoundOffCard.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
-	import { getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
+	import { getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, REFERENCE_ENERGY } from '$lib/data/dailyReferenceIntake';
+	import { fatSplit, carbSplit, epaDha as epaDhaOf, FAT_GROUP_KEYS, ACID_KEYS } from '$lib/fitness/fattyAcids';
+	import CompositionBar from '$lib/components/fitness/CompositionBar.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import { microCoverage } from '$lib/fitness/microCoverage';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
@@ -504,10 +506,21 @@
 
 	const dayTotals = $derived.by(() => {
 		let calories = 0, protein = 0, fat = 0, carbs = 0, fiber = 0, sugars = 0, saturatedFat = 0;
+		// Fat and carbohydrate composition. `unknown` collects the mass from entries
+		// whose source published no breakdown, kept apart from `other` (the measured
+		// remainder) so the bar never implies a food was characterised when it wasn't.
+		const composition = {
+			saturated: 0, mono: 0, poly: 0, trans: 0, fatOther: 0, fatUnknown: 0,
+			carbOther: 0, carbUnknown: 0,
+		};
 		/** @type {Record<string, number>} */
 		const micros = {};
 		/** @type {Record<string, number>} */
 		const aminos = {};
+		// Summed only over the entries that report each acid, so a food without a fat
+		// panel leaves these alone rather than dragging them toward zero.
+		/** @type {Record<string, number>} */
+		const fats = {};
 		for (const k of microKeys) micros[k] = 0;
 		for (const k of aminoKeys) aminos[k] = 0;
 
@@ -523,8 +536,32 @@
 			saturatedFat += (p.saturatedFat ?? 0) * r;
 			for (const k of microKeys) micros[k] += (p[k] ?? 0) * r;
 			for (const k of aminoKeys) aminos[k] += (p[k] ?? 0) * r;
+
+			const fs = fatSplit(p);
+			if (fs.hasBreakdown) {
+				composition.saturated += (fs.saturated ?? 0) * r;
+				composition.mono += (fs.mono ?? 0) * r;
+				composition.poly += (fs.poly ?? 0) * r;
+				composition.trans += (fs.trans ?? 0) * r;
+				composition.fatOther += fs.unaccounted * r;
+			} else {
+				composition.fatUnknown += fs.fat * r;
+			}
+
+			const cs = carbSplit(p);
+			if (cs.hasBreakdown) composition.carbOther += cs.other * r;
+			else composition.carbUnknown += cs.carbs * r;
+
+			for (const k of /** @type {string[]} */ ([...FAT_GROUP_KEYS, ...ACID_KEYS])) {
+				const v = p[k];
+				if (typeof v === 'number') fats[k] = (fats[k] ?? 0) + v * r;
+			}
+			// EPA + DHA is the pair the marine omega-3 reference is set against, and it
+			// is derived per entry for the same reason the omega totals are.
+			const ed = epaDhaOf(p);
+			if (ed) fats.epaDha = (fats.epaDha ?? 0) + ed.value * r;
 		}
-		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, micros, aminos };
+		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, micros, aminos, composition, fats };
 	});
 
 	// Atwater-derived calories (consistent with macro goals which use 4/9/4)
@@ -532,6 +569,32 @@
 
 	// Macro percentages by calorie contribution
 	const macroPercent = $derived(macroCaloriePercent(dayTotals));
+
+	const fatSegments = $derived([
+		{ key: 'saturated', label: isEn ? 'Saturated' : 'Gesättigt', value: dayTotals.composition.saturated, color: 'var(--orange)' },
+		{ key: 'mono', label: isEn ? 'Monounsaturated' : 'Einfach ungesättigt', value: dayTotals.composition.mono, color: 'var(--green)' },
+		{ key: 'poly', label: isEn ? 'Polyunsaturated' : 'Mehrfach ungesättigt', value: dayTotals.composition.poly, color: 'var(--blue)' },
+		{ key: 'trans', label: isEn ? 'Trans' : 'Trans', value: dayTotals.composition.trans, color: 'var(--red)' },
+		{ key: 'fatOther', label: isEn ? 'Glycerol & other lipids' : 'Glycerin & andere Lipide', value: dayTotals.composition.fatOther, color: 'var(--color-bg-elevated)' },
+		{ key: 'fatUnknown', label: isEn ? 'Not broken down' : 'Ohne Aufschlüsselung', value: dayTotals.composition.fatUnknown, color: 'var(--color-bg-elevated)', unknown: true },
+	]);
+
+	const carbSegments = $derived([
+		{ key: 'sugars', label: isEn ? 'Sugars' : 'Zucker', value: dayTotals.sugars, color: 'var(--red)' },
+		{ key: 'fiber', label: isEn ? 'Fibre' : 'Ballaststoffe', value: dayTotals.fiber, color: 'var(--green)' },
+		{ key: 'carbOther', label: isEn ? 'Starch & other' : 'Stärke & übrige', value: dayTotals.composition.carbOther, color: 'var(--lightblue)' },
+		{ key: 'carbUnknown', label: isEn ? 'Not broken down' : 'Ohne Aufschlüsselung', value: dayTotals.composition.carbUnknown, color: 'var(--color-bg-elevated)', unknown: true },
+	]);
+
+	const hasComposition = $derived(dayTotals.fat > 0 || dayTotals.carbs > 0);
+
+	// Names the energy the fatty acid ceilings were computed from, so a target that
+	// differs from the textbook 2000/1600 kcal figure is explained rather than odd.
+	const energyBasisLabel = $derived(
+		goalCalories
+			? (isEn ? `your ${Math.round(goalCalories).toLocaleString('en-US')} kcal goal` : `dein Ziel von ${Math.round(goalCalories).toLocaleString('de-CH')} kcal`)
+			: (isEn ? `a ${REFERENCE_ENERGY[/** @type {'male' | 'female'} */ (goalSex)].toLocaleString('en-US')} kcal reference day` : `einen Referenztag mit ${REFERENCE_ENERGY[/** @type {'male' | 'female'} */ (goalSex)].toLocaleString('de-CH')} kcal`)
+	);
 
 	// --- Burned kcal ---
 	// svelte-ignore state_referenced_locally
@@ -646,7 +709,11 @@
 	);
 
 	// DRI for micros
-	const dri = $derived(getDRI(goalSex));
+	// The fatty acid references are shares of energy, so they follow the calorie goal
+	// rather than a fixed 2000/1600 kcal figure. The goal excludes exercise burn: the
+	// ceiling should not rise because of a workout, and a target that moved during the
+	// day would let the same meal pass or fail depending on when it was looked at.
+	const dri = $derived(getDRI(goalSex, goalCalories));
 
 	// SVG ring constants (same as NutritionSummary)
 	const RADIUS = 28;
@@ -1213,7 +1280,31 @@
 			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal: 0, pct, bar, isMax: false, essential: false };
 		});
 
+		// Carbohydrate and fat quality, judged against their reference intakes. Fibre and
+		// sugars come from the core panel every source publishes, so these rows work on
+		// anything already logged; the fatty acids below them only fill in for foods
+		// imported since the fat panel was added.
+		const carbQuality = ['fiber', 'sugars'];
+		const fatQuality = ['saturatedFat', 'transFat', 'linoleicAcid', 'alphaLinolenicAcid', 'epaDha'];
+
+		/** @param {string[]} keys */
+		function mkFatRows(keys) {
+			return keys.map(k => {
+				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
+				const value = k === 'fiber' ? dayTotals.fiber
+					: k === 'sugars' ? dayTotals.sugars
+					: dayTotals.fats[k] ?? 0;
+				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
+				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false };
+			});
+		}
+
 		return [
+			{ title: isEn ? 'Carbohydrate Quality' : 'Kohlenhydrat-Qualität', rows: mkFatRows(carbQuality), note: '' },
+			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: mkFatRows(fatQuality), note: isEn
+				? `Saturated and trans fat are ceilings; linoleic and α-linolenic acid are adequate intakes, so passing them is fine. All four are shares of energy, scaled to ${energyBasisLabel}. EPA + DHA is a fixed 250 mg a day and does not scale.`
+				: `Gesättigte und Trans-Fettsäuren sind Obergrenzen; Linol- und α-Linolensäure sind Richtwerte, ein Überschreiten ist unproblematisch. Alle vier sind Energieanteile, skaliert auf ${energyBasisLabel}. EPA + DHA sind fixe 250 mg pro Tag und skalieren nicht.` },
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkRows(minerals), note: '' },
 			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkRows(vitamins), note: '' },
 			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: essentialRows, note: '' },
@@ -1499,6 +1590,23 @@
 				</span>
 			</p>
 		{/if}
+		{#if hasComposition}
+			<div class="micro-section">
+				<h4>{isEn ? 'Macro Breakdown' : 'Makro-Aufschlüsselung'}</h4>
+				<div class="composition-grid">
+					<CompositionBar
+						title={isEn ? 'Fat' : 'Fett'}
+						total={dayTotals.fat}
+						segments={fatSegments}
+					/>
+					<CompositionBar
+						title={isEn ? 'Carbohydrates' : 'Kohlenhydrate'}
+						total={dayTotals.carbs + dayTotals.fiber}
+						segments={carbSegments}
+					/>
+				</div>
+			</div>
+		{/if}
 		{#each microSections as section}
 			<div class="micro-section">
 				<h4>{section.title}</h4>
@@ -1645,7 +1753,7 @@
 				<div class="details-toggle-row">
 					<button class="details-toggle" onclick={() => showMicros = !showMicros}>
 						<ChevronDown size={14} style={showMicros ? 'transform: rotate(180deg)' : ''} />
-						{t.micro_details}
+						{t.details}
 					</button>
 				</div>
 				{@render microPanel()}
@@ -1977,7 +2085,7 @@
 	{#if goalCalories}
 		<!-- Micros card (desktop) -->
 		<div class="micro-card">
-			<h3 class="micro-card-title">{t.micro_details}</h3>
+			<h3 class="micro-card-title">{t.details}</h3>
 			{@render microPanel()}
 		</div>
 	{/if}
@@ -2566,6 +2674,20 @@
 		gap: 1rem;
 		padding: 0 0.25rem;
 		margin-bottom: 0.25rem;
+	}
+	.composition-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+		gap: 1.25rem;
+		padding: 1rem 0.25rem 0;
+		margin-top: 0.75rem;
+		border-top: 1px solid var(--color-border);
+	}
+	@media (max-width: 560px) {
+		.composition-grid {
+			grid-template-columns: 1fr;
+			gap: 1rem;
+		}
 	}
 	.macro-bar-item {
 		flex: 1;

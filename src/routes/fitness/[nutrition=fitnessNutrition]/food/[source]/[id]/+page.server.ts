@@ -80,7 +80,9 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 	]);
 	const goal = goalRes.ok ? await goalRes.json() : {};
 	const latestWeight = weightRes.ok ? await weightRes.json() : {};
-	const dri = getDRI(goal?.sex === 'female' ? 'female' : 'male');
+	// The fatty acid references are shares of energy, so they follow the calorie goal
+	// where one is set — same rule as the diary and the stats page.
+	const dri = getDRI(goal?.sex === 'female' ? 'female' : 'male', goal?.dailyCalories ?? null);
 	const bodyWeight: number | null = latestWeight?.weight?.value ?? null;
 
 	if (source === 'bls') {

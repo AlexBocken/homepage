@@ -86,6 +86,39 @@ const NUTRIENT_IDS: Record<number, string> = {
 	1218: 'tyrosine',
 };
 
+// Fatty acids, written only when the food actually reports them. Every nutrient
+// above is forced to 0 when absent, because BLS and USDA measure the full panel and
+// a zero there means "measured, none present". That does not hold for fats:
+// coverage across SR Legacy runs from 96% (saturated) down to 16% (arachidonic), so
+// a blanket 0 would claim a measurement nobody made and would quietly drag down the
+// omega-3/omega-6 sums derived in $lib/fitness/fattyAcids.
+const FATTY_ACID_IDS: Record<number, string> = {
+	1292: 'monounsaturatedFat',
+	1293: 'polyunsaturatedFat',
+	1257: 'transFat',
+	1321: 'gammaLinolenicAcid', // 18:3 n-6
+	1406: 'arachidonicAcid',    // 20:4 n-6
+	1278: 'epa',                // 20:5 n-3
+	1280: 'dpa',                // 22:5 n-3
+	1272: 'dha',                // 22:6 n-3
+	// 18:4 is undifferentiated in USDA but is stearidonic (n-3) in practically all
+	// food. There is no n-6-specific 20:3 id — only undifferentiated, n-3 and n-9 —
+	// so dihomo-γ-linolenic is left to BLS rather than guessed at from the total.
+	1276: 'stearidonicAcid',    // 18:4
+	1313: 'eicosadienoicAcid',  // 20:2 n-6 c,c
+};
+
+// Isomer-resolved figures are preferred but far sparser than the undifferentiated
+// ones — 18:2 n-6 c,c covers 1,842 SR Legacy foods where plain 18:2 covers 7,031.
+// Falling back keeps the common case populated, and in food the undifferentiated
+// value is overwhelmingly the named isomer, so the error is small.
+const FATTY_ACID_PRIORITY: Record<number, { field: string; rank: number }> = {
+	1316: { field: 'linoleicAcid', rank: 2 },       // 18:2 n-6 c,c
+	1269: { field: 'linoleicAcid', rank: 1 },       // 18:2, undifferentiated
+	1404: { field: 'alphaLinolenicAcid', rank: 2 }, // 18:3 n-3 c,c,c (ALA)
+	1270: { field: 'alphaLinolenicAcid', rank: 1 }, // 18:3, undifferentiated
+};
+
 // Food categories to include (SR Legacy food_category_id descriptions)
 const INCLUDED_CATEGORIES = new Set([
 	'Dairy and Egg Products',
@@ -240,6 +273,9 @@ async function importDataset(datasetDir: string, label: string) {
 	const nutrients = new Map<number, NutrientData>();
 	// Which energy nutrient won for each food, so a lower-priority one can't clobber it.
 	const energyRank = new Map<number, number>();
+	// Same idea per fatty acid field, so an undifferentiated figure can't overwrite
+	// the isomer-resolved one regardless of row order.
+	const faRank = new Map<number, Record<string, number>>();
 
 	for (const row of nutrientRows) {
 		const fdcId = parseInt(row['fdc_id']);
@@ -258,12 +294,41 @@ async function importDataset(datasetDir: string, label: string) {
 			continue;
 		}
 
+		const fa = FATTY_ACID_PRIORITY[nutrientId];
+		if (fa) {
+			let ranks = faRank.get(fdcId);
+			if (!ranks) { ranks = {}; faRank.set(fdcId, ranks); }
+			if (fa.rank <= (ranks[fa.field] ?? 0)) continue;
+			ranks[fa.field] = fa.rank;
+			if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
+			nutrients.get(fdcId)![fa.field] = amount;
+			continue;
+		}
+
+		const faField = FATTY_ACID_IDS[nutrientId];
+		if (faField) {
+			if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
+			nutrients.get(fdcId)![faField] = amount;
+			continue;
+		}
+
 		const fieldName = NUTRIENT_IDS[nutrientId];
 		if (!fieldName) continue;
 
 		if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
 		nutrients.get(fdcId)![fieldName] = amount;
 	}
+
+	// Undifferentiated 18:3 is the sum of the n-3 (ALA) and n-6 (GLA) isomers. Where
+	// ALA had to fall back to it and GLA was measured separately, leaving both in
+	// would count GLA once as omega-3 and again as omega-6.
+	for (const [fdcId, data] of nutrients) {
+		if (faRank.get(fdcId)?.alphaLinolenicAcid !== 1) continue;
+		const gla = data['gammaLinolenicAcid'];
+		if (typeof gla !== 'number') continue;
+		data['alphaLinolenicAcid'] = Math.max(0, (data['alphaLinolenicAcid'] ?? 0) - gla);
+	}
+
 	console.log(`  Loaded nutrients for ${nutrients.size} foods`);
 
 	// Read portions
@@ -298,6 +363,14 @@ function buildNutrientRecord(data: NutrientData | undefined): Record<string, num
 	for (const field of allFields) {
 		result[field] = Math.round((data?.[field] || 0) * 100) / 100;
 	}
+	// Fatty acids are omitted rather than zeroed when unmeasured — see FATTY_ACID_IDS.
+	// Rounded to 3 decimals instead of 2: EPA and DHA in a lean meat sit in the
+	// hundredths of a gram, where 2 decimals would flatten real values to zero.
+	const faFields = [...Object.values(FATTY_ACID_IDS), ...new Set(Object.values(FATTY_ACID_PRIORITY).map(f => f.field))];
+	for (const field of faFields) {
+		const v = data?.[field];
+		if (typeof v === 'number') result[field] = Math.round(v * 1000) / 1000;
+	}
 	return result;
 }
 
@@ -317,12 +390,21 @@ async function main() {
 	const sr = await importDataset(srDir, 'SR Legacy');
 	const foundation = await importDataset(foundationDir, 'Foundation Foods');
 
-	// Merge: Foundation Foods takes priority (more detailed), SR Legacy fills gaps
+	// Merge: Foundation Foods takes priority (more detailed), SR Legacy fills gaps.
+	//
+	// Merged per nutrient rather than per record. Foundation is the better source
+	// where it has a figure, but it is not uniformly richer: for 281 foods it carries
+	// total fat and no fat panel at all, and replacing the record wholesale threw away
+	// SR Legacy's. That is how farmed Atlantic salmon ended up with 13 g of fat, no
+	// EPA or DHA, and 0 g saturated fat, and raw avocado with 20 g of fat and 0 g
+	// saturated. Keeping the raw measurements until the end means an absent nutrient
+	// falls back instead of overwriting.
 	const merged = new Map<string, {
 		fdcId: number;
 		name: string;
 		category: string;
-		per100g: Record<string, number>;
+		/** Raw measurements — only keys the source actually reported. */
+		raw: NutrientData;
 		portions: Portion[];
 	}>();
 
@@ -334,7 +416,6 @@ async function main() {
 
 	// Add SR Legacy first
 	for (const [fdcId, food] of sr.foods) {
-		const nutrientData = buildNutrientRecord(sr.nutrients.get(fdcId));
 		// Skip entries with no nutrient data at all
 		if (!sr.nutrients.has(fdcId)) continue;
 		if (!sr.hasEnergy.has(fdcId)) { skipped.sr++; continue; }
@@ -343,31 +424,48 @@ async function main() {
 			fdcId,
 			name: food.description,
 			category: food.category,
-			per100g: nutrientData,
+			raw: sr.nutrients.get(fdcId)!,
 			portions: sr.portions.get(fdcId) || [],
 		});
 	}
 
 	// Override with Foundation Foods where available
+	let gapFilled = 0;
 	for (const [fdcId, food] of foundation.foods) {
-		const nutrientData = buildNutrientRecord(foundation.nutrients.get(fdcId));
 		if (!foundation.nutrients.has(fdcId)) continue;
 		if (!foundation.hasEnergy.has(fdcId)) { skipped.foundation++; continue; }
 
-		merged.set(food.description.toLowerCase(), {
+		const key = food.description.toLowerCase();
+		const prev = merged.get(key);
+		const foundationRaw = foundation.nutrients.get(fdcId)!;
+		// Foundation wins per nutrient; anything it does not report keeps SR Legacy's.
+		const raw = prev ? { ...prev.raw, ...foundationRaw } : foundationRaw;
+		if (prev && Object.keys(raw).length > Object.keys(foundationRaw).length) gapFilled++;
+
+		merged.set(key, {
 			fdcId,
 			name: food.description,
 			category: food.category,
-			per100g: nutrientData,
+			raw,
 			portions: foundation.portions.get(fdcId) || [],
 		});
 	}
+	console.log(`Foundation records gap-filled from SR Legacy: ${gapFilled}`);
 
 	console.log(`\nSkipped (no energy data): ${skipped.sr} SR Legacy, ${skipped.foundation} Foundation`);
 	console.log(`Merged total: ${merged.size} unique foods`);
 
-	// Sort by name for stable output
-	const entries = [...merged.values()].sort((a, b) => a.name.localeCompare(b.name));
+	// Sort by name for stable output. The per-100 g record is built here, once the
+	// two sources have been reconciled.
+	const entries = [...merged.values()]
+		.map(e => ({
+			fdcId: e.fdcId,
+			name: e.name,
+			category: e.category,
+			per100g: buildNutrientRecord(e.raw),
+			portions: e.portions,
+		}))
+		.sort((a, b) => a.name.localeCompare(b.name));
 
 	// Generate TypeScript output
 	const tsContent = `// Auto-generated from USDA FoodData Central (SR Legacy + Foundation Foods)

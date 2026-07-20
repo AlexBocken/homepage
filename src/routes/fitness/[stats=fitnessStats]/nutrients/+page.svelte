@@ -6,10 +6,12 @@
 	import Wheat from '@lucide/svelte/icons/wheat';
 	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
+	import CompositionBar from '$lib/components/fitness/CompositionBar.svelte';
+	import { FATTY_ACID_META } from '$lib/fitness/fattyAcids';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { formatGrams as fmt } from '$lib/fitness/nutritionMath';
 	import {
-		getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, UPPER_LIMITS
+		getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, UPPER_LIMITS, REFERENCE_ENERGY
 	} from '$lib/data/dailyReferenceIntake';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
@@ -20,7 +22,7 @@
 	const isEn = $derived(lang === 'en');
 	const statsSlug = $derived(fitnessSlugs(lang).stats);
 
-	const mn = $derived(data.micronutrients ?? { micros: {}, aminos: {}, daysTracked: 0, sex: 'male', weight: null });
+	const mn = $derived(data.micronutrients ?? { micros: {}, aminos: {}, fats: {}, composition: null, fatCoverage: 1, daysTracked: 0, sex: 'male', weight: null, dailyCalories: null });
 	const ns = $derived(data.nutritionStats ?? {});
 	const daysTracked = $derived(mn.daysTracked ?? 0);
 
@@ -48,7 +50,8 @@
 			: (isEn ? '7-day average' : '7-Tage-Durchschnitt')
 	);
 
-	const dri = $derived(getDRI(mn.sex === 'female' ? 'female' : 'male'));
+	// Energy-share fatty acid references follow the calorie goal — see getDRI.
+	const dri = $derived(getDRI(mn.sex === 'female' ? 'female' : 'male', mn.dailyCalories));
 	// Per-kg requirements are scaled by the body weight averaged over the same window,
 	// so a weight trend during it doesn't skew the comparison.
 	const aminoWeight = $derived(mn.weight ?? AMINO_DRI_REFERENCE_WEIGHT);
@@ -97,6 +100,48 @@
 		tyrosine:      { en: 'Tyrosine',       de: 'Tyrosin' },
 	};
 
+	// Fat and carbohydrate composition for the hero. Segments are listed in the order
+	// they stack; `unknown` always sits last so the measured part of the bar starts
+	// at the left edge and stays comparable between days.
+	const comp = $derived(mn.composition);
+
+	const fatSegments = $derived(comp ? [
+		{ key: 'saturated', label: isEn ? 'Saturated' : 'Gesättigt', value: comp.saturated, color: 'var(--orange)' },
+		{ key: 'mono', label: isEn ? 'Monounsaturated' : 'Einfach ungesättigt', value: comp.mono, color: 'var(--green)' },
+		{ key: 'poly', label: isEn ? 'Polyunsaturated' : 'Mehrfach ungesättigt', value: comp.poly, color: 'var(--blue)' },
+		{ key: 'trans', label: isEn ? 'Trans' : 'Trans', value: comp.trans, color: 'var(--red)' },
+		{ key: 'fatOther', label: isEn ? 'Glycerol & other lipids' : 'Glycerin & andere Lipide', value: comp.fatOther, color: 'var(--color-bg-elevated)' },
+		{ key: 'fatUnknown', label: isEn ? 'Not broken down' : 'Ohne Aufschlüsselung', value: comp.fatUnknown, color: 'var(--color-bg-elevated)', unknown: true },
+	] : []);
+
+	const carbSegments = $derived(comp ? [
+		{ key: 'sugars', label: isEn ? 'Sugars' : 'Zucker', value: comp.sugars, color: 'var(--red)' },
+		{ key: 'fiber', label: isEn ? 'Fibre' : 'Ballaststoffe', value: comp.fiber, color: 'var(--green)' },
+		{ key: 'carbOther', label: isEn ? 'Starch & other' : 'Stärke & übrige', value: comp.carbOther, color: 'var(--lightblue)' },
+		{ key: 'carbUnknown', label: isEn ? 'Not broken down' : 'Ohne Aufschlüsselung', value: comp.carbUnknown, color: 'var(--color-bg-elevated)', unknown: true },
+	] : []);
+
+	// Fibre is reported alongside sugars but is not part of the carbohydrate figure
+	// in any of the three sources, so the bar totals carbs + fibre rather than carbs.
+	const carbBarTotal = $derived(comp ? comp.carbs + comp.fiber : 0);
+
+	const fatGapPct = $derived(Math.round((1 - (mn.fatCoverage ?? 1)) * 100));
+
+	// Names the energy the fatty acid ceilings were computed from — see getDRI.
+	const energyBasisLabel = $derived(
+		mn.dailyCalories
+			? (isEn ? `your ${Math.round(mn.dailyCalories).toLocaleString('en-US')} kcal goal` : `dein Ziel von ${Math.round(mn.dailyCalories).toLocaleString('de-CH')} kcal`)
+			: (isEn ? `a ${REFERENCE_ENERGY[mn.sex === 'female' ? 'female' : 'male'].toLocaleString('en-US')} kcal reference day` : `einen Referenztag mit ${REFERENCE_ENERGY[mn.sex === 'female' ? 'female' : 'male'].toLocaleString('de-CH')} kcal`)
+	);
+
+	const compositionNote = $derived(
+		fatGapPct >= 1
+			? (isEn
+				? `${fatGapPct}% of the fat logged came with no breakdown — those grams are shown hatched and are excluded from the fatty acid figures below.`
+				: `Für ${fatGapPct}% des erfassten Fetts gibt es keine Aufschlüsselung — diese Gramm sind schraffiert dargestellt und fliessen nicht in die Fettsäurewerte unten ein.`)
+			: ''
+	);
+
 	const essentialOrder = ['leucine', 'isoleucine', 'valine', 'lysine', 'methionine', 'phenylalanine', 'threonine', 'tryptophan', 'histidine'];
 	const nonEssentialOrder = ['alanine', 'arginine', 'asparticAcid', 'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
 
@@ -119,6 +164,44 @@
 				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit, overLimit };
 			});
 		}
+
+		// Fatty acids that carry a reference intake, judged against it like any other
+		// nutrient. Saturated and trans fat are ceilings; the other three are adequate
+		// intakes, so exceeding them is not a problem.
+		const fattyAcidOrder = ['saturatedFat', 'transFat', 'linoleicAcid', 'alphaLinolenicAcid', 'epaDha'];
+		const fattyAcidRows = fattyAcidOrder.map(k => {
+			const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
+			const value = mn.fats?.[k] ?? 0;
+			const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
+			const pct = goal > 0 ? Math.round(value / goal * 100) : null;
+			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit: undefined, overLimit: false };
+		});
+
+		// The rest have no reference value. Shown against the largest of the set, the
+		// same treatment the non-essential amino acids get — the useful reading is the
+		// relative shape of the fat eaten, not a percentage of anything.
+		const compositionOrder = [
+			'monounsaturatedFat', 'polyunsaturatedFat', 'omega3', 'omega6',
+			'gammaLinolenicAcid', 'arachidonicAcid', 'epa', 'dpa', 'dha',
+		];
+		const compValues = compositionOrder.map(k => mn.fats?.[k] ?? 0);
+		const compMax = Math.max(0, ...compValues);
+		const compTotal = compValues.reduce((a, b) => a + b, 0);
+		const fatCompositionRows = compositionOrder.map((k, i) => {
+			const meta = FATTY_ACID_META[k];
+			const value = compValues[i];
+			return {
+				key: k,
+				label: isEn ? meta.label : meta.labelDe,
+				unit: 'g',
+				value,
+				pct: compTotal > 0 ? Math.round(value / compTotal * 100) : null,
+				bar: compMax > 0 ? value / compMax * 100 : 0,
+				isMax: false,
+				limit: undefined,
+				overLimit: false,
+			};
+		});
 
 		// Essentials: average intake against the WHO requirement for the logged body weight
 		const essentialRows = essentialOrder.map(k => {
@@ -153,6 +236,12 @@
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkRows(minerals), note: '' },
 			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkRows(vitamins), note: '' },
 			{ title: isEn ? 'Other' : 'Sonstiges', rows: mkRows(other), note: '' },
+			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: fattyAcidRows, note: isEn
+				? `Saturated and trans fat are ceilings. Linoleic and α-linolenic acid are adequate intakes — reaching them is the goal, exceeding them is not a concern. All four are shares of energy, scaled to ${energyBasisLabel}; EPA + DHA is a fixed 250 mg a day.`
+				: `Gesättigte und Trans-Fettsäuren sind Obergrenzen. Linol- und α-Linolensäure sind Richtwerte — sie zu erreichen ist das Ziel, sie zu überschreiten unproblematisch. Alle vier sind Energieanteile, skaliert auf ${energyBasisLabel}; EPA + DHA sind fixe 250 mg pro Tag.` },
+			{ title: isEn ? 'Fat Composition' : 'Fettzusammensetzung', rows: fatCompositionRows, note: isEn
+				? 'No intake requirement — bars show each one’s size against the largest, and % its share of the fatty acids measured. Omega-3 and omega-6 are summed from the individual acids wherever a source reports them.'
+				: 'Kein Bedarfswert — die Balken zeigen die Grösse im Verhältnis zum grössten Wert, % den Anteil an den gemessenen Fettsäuren. Omega-3 und Omega-6 werden aus den Einzelfettsäuren summiert, sofern eine Quelle sie ausweist.' },
 			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: essentialRows, note: weightNote },
 			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: nonEssentialRows, note: isEn
 				? 'No intake requirement — bars show each one’s share of the non-essential amino acids eaten.'
@@ -229,6 +318,23 @@
 					</div>
 				{/each}
 			</div>
+
+			{#if comp && (comp.fat > 0 || comp.carbs > 0)}
+				<div class="composition-grid">
+					<CompositionBar
+						title={isEn ? 'Fat' : 'Fett'}
+						total={comp.fat}
+						segments={fatSegments}
+						note={compositionNote}
+					/>
+					<CompositionBar
+						title={isEn ? 'Carbohydrates' : 'Kohlenhydrate'}
+						total={carbBarTotal}
+						segments={carbSegments}
+						note={isEn ? 'Fibre is shown alongside carbohydrate, not inside it — none of the three sources counts it as part of the figure.' : 'Ballaststoffe stehen neben den Kohlenhydraten, nicht darin — keine der drei Quellen zählt sie zum Wert dazu.'}
+					/>
+				</div>
+			{/if}
 		</section>
 
 		<section class="micro-card">
@@ -443,6 +549,20 @@
 	.macro-ring :global(.ring-svg) {
 		width: 100%;
 		height: auto;
+	}
+	.composition-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+		gap: 1.5rem;
+		margin-top: 1.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--color-border);
+	}
+	@media (max-width: 560px) {
+		.composition-grid {
+			grid-template-columns: 1fr;
+			gap: 1.25rem;
+		}
 	}
 	.empty {
 		color: var(--color-text-secondary);

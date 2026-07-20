@@ -95,6 +95,37 @@ const NUTRIENT_MAP: Record<string, { field: string; divisor?: number }> = {
   TYR: { field: 'tyrosine' },
 };
 
+// Fatty acids (g/100 g), kept apart from NUTRIENT_MAP because they are written only
+// where the food reports them. The map above forces 0 for anything missing, which is
+// right for a panel BLS measures throughout, but a fabricated 0 for EPA would be
+// indistinguishable from a real one and would bias the omega-3 sum derived in
+// $lib/fitness/fattyAcids.
+//
+// BLS 4.0 dropped the old F160/FO3 codes for EuroFIR tags (BLS_4_0_Dokumentation_DE,
+// ch. "Fettsäuren"). FAPUN3/FAPUN6 exist in the source but are deliberately not
+// imported: we hold the individual acids, so the totals are derived on read and
+// cannot drift out of step with the acids they claim to sum.
+// BLS 4.0 publishes no trans fat total — the only trans figure in the file is the
+// conjugated linoleic acid isomer F18:2C9T11, which is not the same thing and is not
+// what the 1%-of-energy ceiling refers to. Trans fat therefore comes only from USDA
+// and Open Food Facts, and BLS-sourced foods leave the key absent rather than zero.
+const FATTY_ACID_MAP: Record<string, string> = {
+  FAMS: 'monounsaturatedFat',
+  FAPU: 'polyunsaturatedFat',
+  'F18:2CN6': 'linoleicAcid',
+  'F18:3CN3': 'alphaLinolenicAcid',
+  'F18:3CN6': 'gammaLinolenicAcid',
+  'F20:4CN6': 'arachidonicAcid',
+  'F20:5CN3': 'epa',
+  'F22:5CN3': 'dpa',
+  'F22:6CN3': 'dha',
+  // Minor members of both families. BLS fills these for every food, so including
+  // them makes the derived omega-3/omega-6 totals exact rather than approximate.
+  'F18:4CN3': 'stearidonicAcid',
+  'F20:2CN6': 'eicosadienoicAcid',
+  'F20:3CN6': 'dihomoGammaLinolenicAcid',
+};
+
 // BLS 4.0 code first letter → category (Hauptlebensmittelgruppen)
 const CATEGORY_MAP: Record<string, string> = {
   B: 'Brot & Backwaren', C: 'Getreide', D: 'Dauerbackwaren & Kekse',
@@ -123,6 +154,19 @@ async function main() {
     if (code) codeToCol.set(code, c);
   }
 
+  // The fatty acid tags come from the BLS 4.0 documentation rather than from a
+  // column we have seen, so say plainly which ones this file actually carries.
+  // A tag listed as missing means the mapping needs correcting, not that the data
+  // is absent.
+  const faFound = Object.keys(FATTY_ACID_MAP).filter(code => codeToCol.has(code));
+  const faMissing = Object.keys(FATTY_ACID_MAP).filter(code => !codeToCol.has(code));
+  console.log(`Fatty acid columns matched: ${faFound.length}/${Object.keys(FATTY_ACID_MAP).length}`);
+  if (faMissing.length) {
+    console.warn(`  NOT FOUND in CSV: ${faMissing.join(', ')}`);
+    const faLike = [...codeToCol.keys()].filter(c => /^(FA|F\d)/.test(c) && !(c in FATTY_ACID_MAP));
+    if (faLike.length) console.warn(`  Unmapped fatty-acid-looking columns present: ${faLike.join(', ')}`);
+  }
+
   const entries: any[] = [];
 
   for (let r = 1; r < rows.length; r++) {
@@ -149,6 +193,25 @@ async function main() {
       if (isNaN(value)) value = 0;
       if (mapping.divisor) value /= mapping.divisor;
       per100g[mapping.field] = Math.round(value * 1000) / 1000;
+    }
+
+    // BLS distinguishes three kinds of non-numeric cell, and they do not mean the
+    // same thing. '-' is "not determined" and must leave the key absent, so the
+    // omega sums derived on read skip it rather than counting it as none present.
+    // 'TR' (Spuren) and '<LOD or <LOQ' are measurements — the lab looked and found
+    // at most traces — so those record a real zero.
+    for (const [blsNutrientCode, field] of Object.entries(FATTY_ACID_MAP)) {
+      const col = codeToCol.get(blsNutrientCode);
+      if (col === undefined) continue;
+      const raw = row[col]?.trim();
+      if (!raw || raw === '-') continue;
+      if (raw === 'TR' || raw.startsWith('<LOD') || raw.startsWith('<LOQ')) {
+        per100g[field] = 0;
+        continue;
+      }
+      const value = parseFloat(raw);
+      if (isNaN(value)) continue;
+      per100g[field] = Math.round(value * 1000) / 1000;
     }
 
     entries.push({ blsCode, nameDe, nameEn, category, per100g });

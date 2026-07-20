@@ -328,7 +328,7 @@ export const de = {
 	over: "über",
 	no_entries_yet: "Noch keine Einträge. Füge Essen hinzu, um zu tracken.",
 	set_goal_prompt: "Setze ein Kalorienziel, um mit dem Tracking zu beginnen.",
-	micro_details: "Mikronährstoffe",
+	details: "Details",
 	of_daily: "vom Tagesziel",
 	per_serving: "pro Portion",
 	log_food: "Eintragen",

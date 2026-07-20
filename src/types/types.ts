@@ -7,6 +7,29 @@ export type NutritionPer100g = {
   vitaminA: number; vitaminC: number; vitaminD: number; vitaminE: number;
   vitaminK: number; thiamin: number; riboflavin: number; niacin: number;
   vitaminB6: number; vitaminB12: number; folate: number; cholesterol: number;
+  // Fatty acids (g/100g). Only `saturatedFat` is universal; the rest are optional
+  // because coverage varies sharply by source (see $lib/fitness/fattyAcids).
+  //
+  // Individual acids are stored as measured and never rolled up at write time:
+  // omega-3 and omega-6 totals are summed on read, so a later importer that adds
+  // one more acid improves every existing record. `omega3`/`omega6` below are the
+  // *fallback* — written only by sources (OFF) that publish a total and no
+  // breakdown, and ignored whenever individual acids are present.
+  monounsaturatedFat?: number; polyunsaturatedFat?: number; transFat?: number;
+  linoleicAcid?: number;        // 18:2 n-6
+  alphaLinolenicAcid?: number;  // 18:3 n-3 (not to be confused with `alanine`)
+  gammaLinolenicAcid?: number;  // 18:3 n-6
+  arachidonicAcid?: number;     // 20:4 n-6
+  epa?: number;                 // 20:5 n-3
+  dpa?: number;                 // 22:5 n-3
+  dha?: number;                 // 22:6 n-3
+  // Minor members of both families. BLS reports all three for every food, so
+  // mapping them makes the omega sums exact rather than approximate; USDA has no
+  // n-6-specific 20:3 figure, so that key stays absent for USDA-sourced foods.
+  stearidonicAcid?: number;          // 18:4 n-3
+  eicosadienoicAcid?: number;        // 20:2 n-6
+  dihomoGammaLinolenicAcid?: number; // 20:3 n-6
+  omega3?: number; omega6?: number; // source-published totals; fallback only
   // Amino acids (g/100g) — available from BLS, partially from USDA
   isoleucine?: number; leucine?: number; lysine?: number; methionine?: number;
   phenylalanine?: number; threonine?: number; tryptophan?: number; valine?: number;

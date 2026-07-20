@@ -132,10 +132,28 @@ const NUTRIENTS: Record<number, NutrientDef> = {
 	1106: { field: 'vitaminA', factor: UG }, // Vitamin A, RAE (µg)
 	1114: { field: 'vitaminD', factor: UG }, // Vitamin D (D2+D3) (µg)
 	1109: { field: 'vitaminE', factor: MG }, // Vitamin E (alpha-tocopherol) (mg)
+	// Fatty acids. USDA reports these in grams, which is already OFF's convention
+	// for fats, so no conversion. Branded labels carry the group totals far more
+	// often than individual acids — the acids mostly turn up on oils, infant
+	// formula and supplements — but where they exist they beat anything OFF has.
+	1292: { field: 'monounsaturatedFat', factor: 1 },
+	1293: { field: 'polyunsaturatedFat', factor: 1 },
+	1257: { field: 'transFat', factor: 1 },
+	1269: { field: 'linoleicAcid', factor: 1 },       // 18:2, undifferentiated
+	1270: { field: 'alphaLinolenicAcid', factor: 1 }, // 18:3, undifferentiated
+	1321: { field: 'gammaLinolenicAcid', factor: 1 },
+	1406: { field: 'arachidonicAcid', factor: 1 },
+	1278: { field: 'epa', factor: 1 },
+	1280: { field: 'dpa', factor: 1 },
+	1272: { field: 'dha', factor: 1 },
+	// Isomer-resolved forms; these override the undifferentiated entries above.
+	1316: { field: 'linoleicAcid', factor: 1 },       // 18:2 n-6 c,c
+	1404: { field: 'alphaLinolenicAcid', factor: 1 }, // 18:3 n-3 c,c,c (ALA)
 };
 
-// Nutrient ids whose value should win over an IU-derived value for the same field.
-const PREFERRED_IDS = new Set([1106, 1114, 1109]);
+// Nutrient ids whose value should win over an IU-derived value for the same field,
+// or over an undifferentiated fatty acid figure for the same acid.
+const PREFERRED_IDS = new Set([1106, 1114, 1109, 1316, 1404]);
 
 // -------------------------------------------------------------- sanity rules
 // Upper bounds per 100 g, in the units we store (grams, except calories).
@@ -154,6 +172,23 @@ const MAX: Record<string, number> = {
 	carbs: 100,
 	fiber: 100,
 	sugars: 100,
+	// Fatty acids, all g/100 g. Nothing can exceed total fat, and pure oils reach
+	// ~100 g, so the group totals share the fat cap. Individual acids are capped at
+	// the same bound rather than something tighter because single-acid oils exist:
+	// safflower oil is ~75 g linoleic acid, algal oil ~40 g DHA.
+	monounsaturatedFat: 100,
+	polyunsaturatedFat: 100,
+	transFat: 100,
+	linoleicAcid: 100,
+	alphaLinolenicAcid: 100,
+	gammaLinolenicAcid: 100,
+	arachidonicAcid: 100,
+	epa: 100,
+	dpa: 100,
+	dha: 100,
+	omega3: 100,
+	omega6: 100,
+
 	sodium: 40, // g/100 g — pure salt is ~39 g Na
 	cholesterol: 10, // 10 g — egg yolk ~1.1 g
 
@@ -185,6 +220,10 @@ const ZERO_TRUSTED = new Set([
 	'protein',
 	'fat',
 	'saturatedFat',
+	// Trans fat joined the mandatory US panel alongside saturated fat, so a declared
+	// 0 g is a measurement. The other fatty acids are voluntary — an absent figure
+	// there means nobody tested for it, not that the food contains none.
+	'transFat',
 	'carbs',
 	'fiber',
 	'sugars',
