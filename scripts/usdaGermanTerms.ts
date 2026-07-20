@@ -107,6 +107,13 @@ export const CANONICAL_SEGMENTS: Record<string, string> = {
 	Turkey: 'Pute',
 	Chicken: 'Hähnchen',
 	Fish: 'Fisch',
+	// Tuna species. Pinned because DeepL renders the -fin names as salmon —
+	// "Blauflossenlachs", "Gelbflossenlachs" — which is a different fish, and the
+	// error is invisible to anyone reading only the German. Unambiguous terms, so
+	// pinning them costs nothing. The head noun stays Thunfisch here; helvetisms.ts
+	// decides where that becomes Thon, since only the tin does.
+	bluefin: 'Blauflossenthun',
+	yellowfin: 'Gelbflossenthun',
 	'Game meat': 'Wildfleisch',
 	Mollusks: 'Weichtiere',
 	Sausage: 'Wurst',

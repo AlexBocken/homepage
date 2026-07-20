@@ -23,6 +23,13 @@ type Rule = {
 	re: RegExp;
 	/** Swiss replacement (a function receives the match, for case preservation). */
 	to: string | ((m: string) => string);
+	/**
+	 * Optional gate on the *whole* name: the rule is skipped unless this matches.
+	 * For the handful of terms whose Swiss form depends on what the food is rather
+	 * than on the word itself — see the Thon rule. Must not be global (a /g regex
+	 * carries lastIndex between calls and would match every other time).
+	 */
+	when?: RegExp;
 };
 
 /**
@@ -103,6 +110,25 @@ const RULES: Rule[] = [
 	w('Garnele', 'Crevette'),
 	w('Shrimps', 'Crevetten'),
 	w('Shrimp', 'Crevette'),
+	// Thon is the tin. Fresh fish stays Thunfisch here — "Thon roh" or "Thonsteak
+	// grilliert" is not what anyone says — so this is the one rule that has to read
+	// the whole name instead of just the word.
+	//
+	// The gate lists tinned contexts only, and everything else keeps the German form
+	// by default. That direction is deliberate: the fresh preparations (roh,
+	// grilliert, pochiert, tiefgefroren, -steak) carry no marker of their own, so an
+	// exclusion list would have to enumerate them and would silently let the next one
+	// through. Salat/Aufstrich/Sandwich/Pizza/Antipasti/Teigwaren are here because in
+	// the tables those are always made from the tin.
+	//
+	// Not a bare "Thun" rule either: Thun is the correct head of the species names
+	// (Roter Thun, Gelbflossenthun) and BLS ships "Gelbflossen-Thun" — rewriting that
+	// to "Gelbflossenthon" would invent a fish. Only the compound is touched.
+	{
+		re: /Thunfisch/g,
+		to: 'Thon',
+		when: /Konserve|konserviert|[Ss]alat|[Aa]ufstrich|[Ss]andwich|[Pp]izza|[Aa]ntipasti|[Tt]eigwaren/,
+	},
 
 	// ── Vegetables ─────────────────────────────────────────────────────────────
 	w('Karotten|Möhren', 'Rüebli'),
@@ -222,7 +248,8 @@ export function toSwissGerman(name: string): string {
 	// sense-changing — and can still be a doublet whose German half we drop.
 	let out = guarded ? name.replace(/ß/g, 'ss') : name; // ß-ok
 	if (!guarded) {
-		for (const { re, to } of RULES) {
+		for (const { re, to, when } of RULES) {
+			if (when && !when.test(out)) continue;
 			out = typeof to === 'function' ? out.replace(re, to) : out.replace(re, to);
 		}
 	}
@@ -257,6 +284,9 @@ const GERMAN_SYNONYMS: [swiss: string, german: string[]][] = [
 	['wädli', ['eisbein', 'schweinshaxe']],
 	['crevette', ['garnele', 'garnelen', 'shrimp']],
 	['crevetten', ['garnelen', 'shrimps']],
+	// Only the tinned names display as Thon, but the German word has to keep finding
+	// them — and "thunfisch" is not a prefix of "thon", so the index cannot bridge it.
+	['thon', ['thunfisch']],
 	['rüebli', ['karotte', 'karotten', 'möhre', 'möhren']],
 	['zucchetti', ['zucchini']],
 	['peperoni', ['gemüsepaprika', 'paprikaschote']],
