@@ -4,6 +4,7 @@ import { dbConnect } from '$utils/db';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { offPortions } from '$lib/server/offPortions';
 import { fetchFromOffApi, cacheOffProduct } from '$lib/server/offLookup';
+import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 
 /** GET /api/nutrition/barcode?code=3017620422003 */
 export const GET: RequestHandler = async ({ url }) => {
@@ -25,7 +26,8 @@ export const GET: RequestHandler = async ({ url }) => {
 			category: doc.category ?? null,
 			nutriscore: doc.nutriscore ?? null,
 			calories: doc.per100g.calories,
-			per100g: doc.per100g,
+			// Stored in OFF's grams-for-everything convention; converted on read.
+			per100g: offPer100gToAppUnits(doc.per100g as Record<string, number>),
 			portions: offPortions(doc),
 		});
 	}
@@ -37,5 +39,8 @@ export const GET: RequestHandler = async ({ url }) => {
 	// Cache under both OFF's canonical code and the code that was scanned.
 	await cacheOffProduct(live, code);
 
-	return json(live);
+	// `per100gRaw` exists only so the cache write above can keep OFF's units — it is
+	// not part of what a client consumes.
+	const { per100gRaw: _raw, ...response } = live;
+	return json(response);
 };

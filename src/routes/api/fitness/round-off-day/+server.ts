@@ -9,6 +9,7 @@ import { CustomMeal } from '$models/CustomMeal';
 import { FavoriteIngredient } from '$models/FavoriteIngredient';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { OpenFoodFact } from '$models/OpenFoodFact';
+import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { RoundOffCache } from '$models/RoundOffCache';
 import { localDateStr } from '$lib/js/localDate';
 import { PANTRY_FOODS } from '$lib/server/pantryFoods';
@@ -69,7 +70,8 @@ async function resolveFavoritesAndRecents(nickname: string): Promise<ResolvedFoo
 			if (entry) per100g = entry.per100g as unknown as Record<string, number>;
 		} else if (fav.source === 'off') {
 			const entry = await OpenFoodFact.findOne({ barcode: fav.sourceId }).lean();
-			if (entry) per100g = entry.per100g as unknown as Record<string, number>;
+			// Stored in OFF's grams-for-everything convention; converted on read.
+			if (entry) per100g = offPer100gToAppUnits(entry.per100g as unknown as Record<string, number>);
 		}
 		if (per100g && (per100g.calories ?? 0) > 5) {
 			foods.push({

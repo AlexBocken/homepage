@@ -11,6 +11,7 @@ import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, resolvePer100g, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 import { scaleFromPer100g } from '$lib/fitness/nutritionMath';
 import { offPortions } from '$lib/server/offPortions';
+import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { customMealPortions } from '$lib/fitness/portions';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 
@@ -172,7 +173,8 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 				nameDe: entry.nameDe,
 				nameEn: entry.nameDe ? entry.name : undefined,
 				category: entry.category || '',
-				per100g: entry.per100g as unknown as Record<string, number>,
+				// Stored in OFF's grams-for-everything convention; converted on read.
+				per100g: offPer100gToAppUnits(entry.per100g as unknown as Record<string, number>),
 				brands: entry.brands,
 				nutriscore: entry.nutriscore,
 				portions: offPortions(entry),

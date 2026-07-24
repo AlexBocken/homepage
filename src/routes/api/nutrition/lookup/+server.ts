@@ -8,6 +8,7 @@ import { dbConnect } from '$utils/db';
 import { computeRecipeNutritionTotals, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
 import { offPortions } from '$lib/server/offPortions';
 import { fetchFromOffApi, cacheOffProduct } from '$lib/server/offLookup';
+import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { customMealPortions } from '$lib/fitness/portions';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -96,7 +97,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		if (entry) {
 			const portions = offPortions(entry);
 			return json({
-				per100g: entry.per100g,
+				// Stored in OFF's grams-for-everything convention; converted on read.
+				per100g: offPer100gToAppUnits(entry.per100g as Record<string, number>),
 				...(portions.length > 0 && { portions }),
 			});
 		}

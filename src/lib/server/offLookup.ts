@@ -1,5 +1,6 @@
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { offPortions } from '$lib/server/offPortions';
+import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import type { Portion } from '$lib/fitness/portions';
 
 const NUTRIENT_MAP: Record<string, string> = {
@@ -55,7 +56,11 @@ export type OffProduct = {
 	category: string | null;
 	nutriscore: string | null;
 	calories: number;
+	/** App units — mg/µg per the table above, not OFF's grams. */
 	per100g: Record<string, number>;
+	/** The same figures in OFF's own convention, for writing back to the mirror.
+	 *  Nothing outside `cacheOffProduct` should read this. */
+	per100gRaw: Record<string, number>;
 	portions: Portion[];
 	serving: { description: string; grams: number } | null;
 	productQuantityG: number | null;
@@ -95,8 +100,9 @@ export async function fetchFromOffApi(code: string): Promise<OffProduct | null> 
 	if (data.status !== 1 || !data.product) return null;
 
 	const p = data.product;
-	const per100g = extractPer100g(p.nutriments);
-	if (!per100g) return null;
+	const raw = extractPer100g(p.nutriments);
+	if (!raw) return null;
+	const per100g = offPer100gToAppUnits(raw);
 
 	const en = p.product_name_en?.trim();
 	const de = p.product_name_de?.trim();
@@ -136,6 +142,7 @@ export async function fetchFromOffApi(code: string): Promise<OffProduct | null> 
 		nutriscore,
 		calories: per100g.calories,
 		per100g,
+		per100gRaw: raw,
 		portions,
 		serving,
 		productQuantityG: pq > 0 ? pq : null,
@@ -164,7 +171,9 @@ export async function cacheOffProduct(product: OffProduct, ...alsoUnder: string[
 					...(product.brands ? { brands: product.brands } : {}),
 					...(product.category ? { category: product.category } : {}),
 					...(product.nutriscore ? { nutriscore: product.nutriscore } : {}),
-					per100g: product.per100g,
+					// OFF's units, not the app's — the mirror stays a faithful copy of
+					// the source, and readers convert (see offPer100gToAppUnits).
+					per100g: product.per100gRaw,
 					...(product.serving ? { serving: product.serving } : {}),
 					...(product.productQuantityG ? { productQuantityG: product.productQuantityG } : {}),
 				}},

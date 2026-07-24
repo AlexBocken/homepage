@@ -10,6 +10,7 @@ import { OpenFoodFact } from '$models/OpenFoodFact';
 import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutritionMatcher';
 import { searchBlsUsda, scoreName, queryWords, NAME_LENGTH_PENALTY } from '$lib/server/nutritionSearchIndex';
 import { offPortions } from '$lib/server/offPortions';
+import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { groupsPresent } from '$lib/fitness/microCoverage';
 
 type SearchResult = {
@@ -386,7 +387,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				microGroups: offGroups,
 				brands: entry.brands,
 				score: best + coverageBonus(offGroups),
-				...(full && { per100g: entry.per100g }),
+				// Stored in OFF's grams-for-everything convention; converted on read.
+				...(full && { per100g: offPer100gToAppUnits(entry.per100g) }),
 				...(portions.length > 0 && { portions }),
 				...(favKeys.has(`off:${entry.barcode}`) && { favorited: true }),
 			});
