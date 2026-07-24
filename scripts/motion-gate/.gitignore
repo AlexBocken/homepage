@@ -1,0 +1,12 @@
+# Self-contained training env + generated artifacts. The SHIPPED model lives at
+# static/fitness/motion-gate.{onnx,json} and is committed from there, not here.
+venv/
+__pycache__/
+*.npz
+smoke-*.onnx
+smoke-*.json
+*.onnx.data
+*.log
+# Downloaded public datasets (MM-Fit / HAR) — large, fetched locally.
+data/
+pretrained/
