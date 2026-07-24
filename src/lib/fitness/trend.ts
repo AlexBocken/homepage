@@ -11,8 +11,12 @@
 // widens after a gap (the first post-break reading carries real uncertainty) and
 // tightens as fresh readings accumulate.
 
-// Body-weight weigh-ins: often daily, change fast → ~2-week memory.
-export const TREND_TAU_DAYS = 14;
+// Body weight and body fat: weighed often, sometimes daily, and both move faster
+// than the smoothing used to admit. At τ=14 the trend lagged real change by about a
+// fortnight, so a genuine shift only showed up once it was half over. A ~10-day
+// memory still rides over day-to-day water and gut-content swings — the noise these
+// readings actually carry — while following a real trend closely enough to act on.
+export const TREND_TAU_DAYS = 10;
 // Strength metrics (1RM / max weight / volume): trained only ~1-2×/week and move
 // slowly, so they want far heavier smoothing — a ~6-week memory.
 export const TREND_TAU_DAYS_STRENGTH = 42;
@@ -20,6 +24,12 @@ export const TREND_TAU_DAYS_STRENGTH = 42;
 // or distance is run maybe weekly) and fitness drifts slowly, so a ~1-month
 // memory rides through day-to-day noise without erasing real progress.
 export const TREND_TAU_DAYS_PACE = 30;
+// Body-part circumferences: taken every week or two at most, and a tape measure
+// carries more reading-to-reading noise than a scale — placement, tension and time
+// of day all move it a few millimetres. Still slower-moving than body weight, so the
+// memory stays longer, but a full month buried change that was actually visible in
+// the readings; three weeks keeps the noise rejection without the lag.
+export const TREND_TAU_DAYS_BODY_PART = 21;
 
 const DAY_MS = 86_400_000;
 // Floor on Δt so multiple same-day readings still nudge the trend instead of
@@ -73,4 +83,55 @@ export function timeDecayedTrend(
 	}
 
 	return { trend, upper, lower };
+}
+
+export interface SparseTrendBands {
+	trend: (number | null)[];
+	upper: (number | null)[];
+	lower: (number | null)[];
+}
+
+/**
+ * Trend ± 1σ for a series with gaps, aligned back to the original axis.
+ *
+ * Paired body measurements can carry a reading for one side only, so the trend is
+ * computed over just the points that exist — feeding nulls to the smoother would
+ * treat "not measured" as a value — and then scattered back into a full-length
+ * array with nulls where there was nothing. Charts here span gaps, so a band stays
+ * continuous across a date where only the other side was recorded.
+ *
+ * Returns null below two points: a single reading yields a trend equal to itself
+ * and a zero-width band, which is noise presented as information.
+ */
+export function sparseTrend(
+	values: (number | null | undefined)[],
+	dates: Array<Date | string | number>,
+	tauDays: number = TREND_TAU_DAYS,
+	round: (v: number) => number = (v) => Math.round(v * 100) / 100
+): SparseTrendBands | null {
+	const present: number[] = [];
+	const presentDates: Array<Date | string | number> = [];
+	const indices: number[] = [];
+
+	for (let i = 0; i < values.length; i++) {
+		const v = values[i];
+		if (v == null || Number.isNaN(v)) continue;
+		present.push(v);
+		presentDates.push(dates[i]);
+		indices.push(i);
+	}
+	if (present.length < 2) return null;
+
+	const { trend, upper, lower } = timeDecayedTrend(present, presentDates, tauDays);
+	const out: SparseTrendBands = {
+		trend: new Array(values.length).fill(null),
+		upper: new Array(values.length).fill(null),
+		lower: new Array(values.length).fill(null),
+	};
+	for (let j = 0; j < indices.length; j++) {
+		out.trend[indices[j]] = round(trend[j]);
+		out.upper[indices[j]] = round(upper[j]);
+		out.lower[indices[j]] = round(lower[j]);
+	}
+	return out;
 }

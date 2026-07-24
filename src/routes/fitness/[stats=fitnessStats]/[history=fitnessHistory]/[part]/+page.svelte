@@ -9,6 +9,7 @@
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
+	import { sparseTrend, TREND_TAU_DAYS_BODY_PART } from '$lib/fitness/trend';
 
 	let { data } = $props();
 
@@ -65,28 +66,60 @@
 		return { paired: false, dates, values };
 	});
 
+	const LEFT_COLOR = '#88C0D0';
+	const RIGHT_COLOR = '#D08770';
+	const LEFT_FILL = 'rgba(136, 192, 208, 0.15)';
+	const RIGHT_FILL = 'rgba(208, 135, 112, 0.15)';
+
+	/**
+	 * @param {(number|null)[]} values
+	 * @param {string[]} dates
+	 */
+	function trendFor(values, dates) {
+		return sparseTrend(values, dates, TREND_TAU_DAYS_BODY_PART);
+	}
+
+	/**
+	 * Band, trend and raw line for one series, in the order the weight chart uses:
+	 * the band sits behind (order 2), the trend over it (order 1), the raw readings
+	 * on top (order 0) and thinned to 1px so the trend reads as the signal.
+	 *
+	 * @param {string} label
+	 * @param {(number|null)[]} values
+	 * @param {ReturnType<typeof trendFor>} bands
+	 * @param {string} color
+	 * @param {string} fill
+	 */
+	function datasetsFor(label, values, bands, color, fill) {
+		return [
+			...(bands ? [
+				{ label: `${label} ± 1σ`, data: bands.upper, borderColor: 'transparent', backgroundColor: fill, fill: '+1', pointRadius: 0, borderWidth: 0, tension: 0.3, order: 2 },
+				{ label: `${label} ± 1σ (lower)`, data: bands.lower, borderColor: 'transparent', backgroundColor: 'transparent', fill: false, pointRadius: 0, borderWidth: 0, tension: 0.3, order: 2 },
+				{ label: `${label} Trend`, data: bands.trend, borderColor: color, pointRadius: 0, borderWidth: 3, tension: 0.3, order: 1 },
+			] : []),
+			{ label, data: values, borderColor: color, pointBackgroundColor: color, borderWidth: bands ? 1 : 2, pointRadius: 2, order: 0 },
+		];
+	}
+
+	const leftBands = $derived(series.paired ? trendFor(series.left, series.dates) : null);
+	const rightBands = $derived(series.paired ? trendFor(series.right, series.dates) : null);
+	const singleBands = $derived(series.paired ? null : trendFor(series.values, series.dates));
+
 	const chartData = $derived.by(() => {
 		if (series.paired) {
 			return {
 				dates: series.dates,
 				labels: series.dates,
 				datasets: [
-					{ label: 'L', data: series.left, borderColor: '#88C0D0', pointBackgroundColor: '#88C0D0' },
-					{ label: 'R', data: series.right, borderColor: '#D08770', pointBackgroundColor: '#D08770' }
+					...datasetsFor('L', series.left, leftBands, LEFT_COLOR, LEFT_FILL),
+					...datasetsFor('R', series.right, rightBands, RIGHT_COLOR, RIGHT_FILL),
 				]
 			};
 		}
 		return {
 			dates: series.dates,
 			labels: series.dates,
-			datasets: [
-				{
-					label: t[card.labelKey],
-					data: series.values,
-					borderColor: '#88C0D0',
-					pointBackgroundColor: '#88C0D0'
-				}
-			]
+			datasets: datasetsFor(t[card.labelKey], series.values, singleBands, LEFT_COLOR, LEFT_FILL)
 		};
 	});
 
@@ -96,10 +129,18 @@
 	 */
 	const Y_MIN_RANGE = 4;
 	const yRange = $derived.by(() => {
+		// The σ band can reach past every raw reading, so it has to be part of the
+		// range or the shading gets clipped at the top or bottom of the plot.
+		const bandValues = [leftBands, rightBands, singleBands]
+			.filter(b => b !== null)
+			.flatMap(b => [...b.upper, ...b.lower]);
 		/** @type {number[]} */
-		const vals = series.paired
-			? [...series.left, ...series.right].filter((/** @type {number|null} */ v) => v != null)
-			: series.values.filter((/** @type {number|null} */ v) => v != null);
+		const vals = [
+			...(series.paired
+				? [...series.left, ...series.right]
+				: series.values),
+			...bandValues,
+		].filter((/** @type {number|null} */ v) => v != null);
 		if (vals.length === 0) return { min: undefined, max: undefined };
 		const dMin = Math.min(...vals);
 		const dMax = Math.max(...vals);
