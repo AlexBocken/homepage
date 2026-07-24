@@ -135,15 +135,40 @@
   }
 
   /**
-   * Get icon URL for an item
-   * @param {import('$lib/js/shoppingSync.svelte').ShoppingItem} item
+   * The letter whose drawn tile stands in for an item with no icon of its own.
+   *
+   * Diacritics are folded first, because the tiles only run a–z: "Äpfel" has to
+   * reach a.png rather than falling through to a bare glyph, and on a German list
+   * that fallback was hitting umlauts constantly. If the first character still is
+   * not a letter — "7up" — the first one that is stands in, which beats showing a
+   * digit in a font.
+   *
+   * @param {string} name
+   * @returns {string | null}
    */
-  function iconUrl(item) {
+  function iconLetter(name) {
+    const folded = name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/ß/g, 's') // ß-ok: folding an input someone may have typed, not our own prose
+      .toLowerCase();
+    return folded.match(/[a-z]/)?.[0] ?? null;
+  }
+
+  /**
+   * Get icon URL for an item.
+   *
+   * `displayName` is the name with any quantity already stripped. Reading the raw
+   * `item.name` instead meant "2 Milch" looked up 2.png, which does not exist, so
+   * every item entered with a leading quantity lost its tile.
+   *
+   * @param {import('$lib/js/shoppingSync.svelte').ShoppingItem} item
+   * @param {string} displayName
+   */
+  function iconUrl(item, displayName) {
     if (item.icon) return `https://bocken.org/static/shopping-icons/${item.icon}.png`;
-    // Fallback: first letter
-    const letter = item.name.charAt(0).toLowerCase();
-    if (letter >= 'a' && letter <= 'z') return `https://bocken.org/static/shopping-icons/${letter}.png`;
-    return null;
+    const letter = iconLetter(displayName);
+    return letter ? `https://bocken.org/static/shopping-icons/${letter}.png` : null;
   }
 
   // Group items by category, unchecked first within each group
@@ -522,6 +547,7 @@
             <div class="card-grid">
               {#each group.items as item (item.id)}
                 {@const parsed = parseQuantity(item.name)}
+                {@const icon = iconUrl(item, parsed.name)}
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <div
@@ -539,8 +565,8 @@
                     <span class="qty-badge">{parsed.qty}</span>
                   {/if}
                   <div class="card-icon">
-                    {#if iconUrl(item)}
-                      <img src={iconUrl(item)} alt="" />
+                    {#if icon}
+                      <img src={icon} alt="" />
                     {:else}
                       <span class="card-letter">{parsed.name.charAt(0)}</span>
                     {/if}
