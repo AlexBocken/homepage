@@ -1,14 +1,18 @@
 import { json, error } from '@sveltejs/kit';
-import mongoose from 'mongoose';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
+import { CustomMeal } from '$models/CustomMeal';
 import { RoundOffCache } from '$models/RoundOffCache';
 import { Recipe } from '$models/Recipe';
 import { LOGGABLE_MEALS } from '$lib/fitness/meals';
 import { coercePortion, coercePortions } from '$lib/fitness/portions';
 import { recipeThumbUrl } from '$lib/utils/recipeImage';
+import {
+	resolveEntries, foodLeaf, mealLeaves, recipeLeaves,
+	type LeafRef, type LeafSource,
+} from '$lib/server/foodLogComponents';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = await requireAuth(locals);
@@ -35,37 +39,72 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		}
 	}
 
-	const entries = await FoodLogEntry.find(query).sort({ date: -1, mealType: 1 }).lean();
+	const stored = await FoodLogEntry.find(query).sort({ date: -1, mealType: 1 }).lean();
+	// The stored rows are references; resolve them to live nutrition before handing
+	// them out, so clients see a blended per100g + derived amountGrams exactly as
+	// before, and a base-table fix shows up here with no re-log.
+	const entries = await resolveEntries(stored as any[]);
 	return json({ entries });
 };
+
+/** Build the frozen components for one logged food / meal / recipe. Throws a 400
+ *  when the reference can't be resolved to any base-table nutrition. */
+async function buildComponents(
+	source: string,
+	sourceId: string | undefined,
+	amountGrams: number,
+	leafExtras: { portions?: LeafRef['portions']; selectedPortion?: LeafRef['selectedPortion'] },
+): Promise<{ components: LeafRef[]; loggedAs: { kind: 'food' | 'custom' | 'recipe'; refId?: any } }> {
+	if (source === 'custom') {
+		if (!sourceId) throw error(400, 'custom log needs a meal id');
+		const meal = await CustomMeal.findById(sourceId).lean();
+		if (!meal) throw error(400, 'custom meal not found');
+		const components = await mealLeaves(meal, amountGrams);
+		if (!components.length) throw error(400, 'custom meal resolved to no ingredients');
+		return { components, loggedAs: { kind: 'custom', refId: (meal as any)._id } };
+	}
+	if (source === 'recipe') {
+		if (!sourceId) throw error(400, 'recipe log needs a recipe id');
+		const query = /^[0-9a-fA-F]{24}$/.test(sourceId) ? { _id: sourceId } : { short_name: sourceId };
+		const recipe = await Recipe.findOne(query).select('short_name ingredients nutritionMappings').lean();
+		if (!recipe) throw error(400, 'recipe not found');
+		const components = await recipeLeaves(recipe, amountGrams);
+		if (!components.length) throw error(400, 'recipe resolved to no ingredients');
+		return { components, loggedAs: { kind: 'recipe', refId: (recipe as any)._id } };
+	}
+	// Plain base-table food.
+	if (source !== 'bls' && source !== 'usda' && source !== 'off') throw error(400, 'unknown source');
+	if (!sourceId) throw error(400, 'food log needs a sourceId');
+	const components = foodLeaf({ source: source as LeafSource, sourceId, ...leafExtras }, amountGrams);
+	return { components, loggedAs: { kind: 'food' } };
+}
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
 	const body = await request.json();
-	const { date, mealType, name, source, sourceId, amountGrams, per100g, liquidMl } = body;
+	const { date, mealType, name, source, sourceId, amountGrams, liquidMl } = body;
 
 	if (!date || !name?.trim()) throw error(400, 'date and name are required');
 	if (!LOGGABLE_MEALS.includes(mealType)) throw error(400, 'Invalid mealType');
 	if (typeof amountGrams !== 'number' || amountGrams <= 0) throw error(400, 'amountGrams must be positive');
-	if (!per100g || typeof per100g.calories !== 'number') throw error(400, 'per100g with calories is required');
 
-	// Portions are display metadata only — amountGrams above stays the source of
-	// truth, so invalid portion data is dropped rather than rejecting the log.
+	// Portions are display metadata, frozen onto the single leaf of a plain food.
 	const portions = coercePortions(body.portions);
 	const selectedPortion = coercePortion(body.selectedPortion);
+
+	const { components, loggedAs } = await buildComponents(
+		source || 'custom', sourceId, amountGrams,
+		{ ...(portions && { portions }), ...(selectedPortion && { selectedPortion }) },
+	);
 
 	const entry = await FoodLogEntry.create({
 		date: new Date(date + 'T00:00:00.000Z'),
 		mealType,
 		name: name.trim(),
-		source: source || 'custom',
-		sourceId,
-		amountGrams,
-		...(portions && { portions }),
-		...(selectedPortion && { selectedPortion }),
-		per100g,
+		components,
+		loggedAs,
 		...(liquidMl > 0 && { liquidMl }),
 		createdBy: user.nickname,
 	});
@@ -73,16 +112,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// Invalidate round-off cache for this date
 	RoundOffCache.deleteOne({ createdBy: user.nickname, date: date.slice(0, 10) }).catch(() => {});
 
-	const created: Record<string, any> = entry.toObject();
+	// Hand back the entry in the resolved shape the client optimistically renders.
+	const [hydrated] = await resolveEntries([entry.toObject() as any]);
+	const created: Record<string, any> = hydrated;
 
-	// The day page resolves recipe thumbnails once, at load, into a sourceId->url
-	// map. A recipe logged after that isn't in the map, so it would render without
-	// its image until the next navigation re-ran the load. Hand the URL back with
-	// the created entry so the client can fill the gap. Response-only — the food
-	// log doesn't store images, it points at the recipe.
-	if (created.source === 'recipe' && created.sourceId && mongoose.Types.ObjectId.isValid(created.sourceId)) {
+	// The day page resolves recipe thumbnails once at load into a sourceId->url map;
+	// a recipe logged afterwards isn't in it, so return the URL with the new entry.
+	if (loggedAs.kind === 'recipe' && loggedAs.refId) {
 		try {
-			const recipe = await Recipe.findById(created.sourceId, { 'images.mediapath': 1 }).lean();
+			const recipe = await Recipe.findById(loggedAs.refId, { 'images.mediapath': 1 }).lean();
 			const mediapath = (recipe as any)?.images?.[0]?.mediapath;
 			if (mediapath) created.image = recipeThumbUrl(mediapath);
 		} catch {

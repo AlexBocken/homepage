@@ -12,10 +12,10 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
  * Most days repeat. Re-logging the same breakfast by hand is the single most tedious
  * thing in the diary, and it is pure duplication of data the app already holds.
  *
- * The copy is a snapshot, not a link: each entry is re-created with the per100g it
- * had on the source day. Editing the copy must never reach back and change the
- * original, and the original's nutrition figures are the ones that were true when it
- * was logged.
+ * Each entry is re-created as an independent document with the same component
+ * references and frozen amounts. Editing the copy's amount scales only its own
+ * components and never touches the original; both resolve their nutrition live, so a
+ * later base-table fix reaches copy and original alike.
  *
  * Appends rather than replaces. Overwriting a day someone has already part-filled is
  * destructive and not obviously undoable, so anything already logged on the target
@@ -55,13 +55,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		date: targetDate,
 		mealType: e.mealType,
 		name: e.name,
-		source: e.source,
-		sourceId: e.sourceId,
-		amountGrams: e.amountGrams,
-		portions: e.portions,
-		selectedPortion: e.selectedPortion,
-		per100g: e.per100g,
-		liquidMl: e.liquidMl,
+		components: e.components,
+		loggedAs: e.loggedAs,
+		...(e.liquidMl != null && { liquidMl: e.liquidMl }),
 		createdBy: user.nickname,
 	}));
 

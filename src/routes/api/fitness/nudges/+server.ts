@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { buildNudges, learnStaples } from '$lib/fitness/nudges';
+import { resolveEntries } from '$lib/server/foodLogComponents';
 
 /** How far back to look for foods eaten often enough to count as staples. */
 const STAPLE_WINDOW_DAYS = 90;
@@ -46,20 +47,23 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const dayEnd = new Date(dateStr + 'T23:59:59.999Z');
 	const stapleFrom = new Date(localDateOffset(-STAPLE_WINDOW_DAYS) + 'T00:00:00.000Z');
 
-	const [todays, history] = await Promise.all([
+	const [todaysRaw, historyRaw] = await Promise.all([
 		FoodLogEntry.find({
 			createdBy: user.nickname,
 			date: { $gte: dayStart, $lte: dayEnd },
 			mealType: { $ne: 'water' },
 		}).lean() as any,
-		FoodLogEntry.find(
-			{
-				createdBy: user.nickname,
-				date: { $gte: stapleFrom },
-				mealType: { $ne: 'water' },
-			},
-			{ name: 1, source: 1, sourceId: 1, date: 1, per100g: 1, _id: 0 }
-		).lean() as any,
+		FoodLogEntry.find({
+			createdBy: user.nickname,
+			date: { $gte: stapleFrom },
+			mealType: { $ne: 'water' },
+		}).lean() as any,
+	]);
+	// Entries are references; resolve to live nutrition (blended per100g, derived
+	// amountGrams, presentation source/sourceId) before the nudge logic reads them.
+	const [todays, history] = await Promise.all([
+		resolveEntries(todaysRaw as any[]),
+		resolveEntries(historyRaw as any[]),
 	]);
 
 	const logged = todays.map((e: any) => ({

@@ -212,9 +212,7 @@
 							<div class="ingredient-info">
 								<div class="ingredient-name-row">
 									<span class="ingredient-name">{ing.name}</span>
-									{#if ing.source !== 'custom'}
-										<span class="source-tag">{ing.source === 'bls' ? 'BLS' : 'USDA'}</span>
-									{/if}
+									<span class="source-tag">{ing.source === 'bls' ? 'BLS' : ing.source === 'usda' ? 'USDA' : 'OFF'}</span>
 								</div>
 								<div class="ingredient-edit-row">
 									<input

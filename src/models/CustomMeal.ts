@@ -1,35 +1,25 @@
 import mongoose from 'mongoose';
+import type { NutritionPer100g } from '$types/types';
 
+/**
+ * A custom meal is a named list of *references* into the base tables. Each
+ * ingredient carries a frozen amount and portion choice; its nutrition is resolved
+ * live from bls/usda/off on read (see $lib/server/foodLogComponents), so fixing a
+ * source entry updates the meal everywhere — the editor and every future log — while
+ * the composition the user built stays put. Logging a meal decomposes it into these
+ * same leaves at log time.
+ */
 interface ICustomMealIngredient {
   name: string;
-  source: 'bls' | 'usda' | 'custom' | 'off';
-  sourceId?: string;
+  source: 'bls' | 'usda' | 'off';
+  sourceId: string;
   amountGrams: number;
   portions?: { description: string; grams: number }[];
   selectedPortion?: { description: string; grams: number };
-  per100g: {
-    calories: number; protein: number; fat: number; saturatedFat: number;
-    carbs: number; fiber: number; sugars: number;
-    calcium: number; iron: number; magnesium: number; phosphorus: number;
-    potassium: number; sodium: number; zinc: number;
-    // Trace minerals — optional, see $lib/fitness/traceMinerals.
-    copper?: number; manganese?: number; iodine?: number;
-    selenium?: number; chromium?: number; molybdenum?: number;
-    vitaminA: number; vitaminC: number; vitaminD: number; vitaminE: number;
-    vitaminK: number; thiamin: number; riboflavin: number; niacin: number;
-    vitaminB6: number; vitaminB12: number; folate: number; cholesterol: number;
-    // Fatty acids (g/100g) — see $lib/fitness/fattyAcids for how totals are derived.
-    monounsaturatedFat?: number; polyunsaturatedFat?: number; transFat?: number;
-    linoleicAcid?: number; alphaLinolenicAcid?: number; gammaLinolenicAcid?: number;
-    arachidonicAcid?: number; epa?: number; dpa?: number; dha?: number;
-    stearidonicAcid?: number; eicosadienoicAcid?: number; dihomoGammaLinolenicAcid?: number;
-    omega3?: number; omega6?: number;
-    isoleucine?: number; leucine?: number; lysine?: number; methionine?: number;
-    phenylalanine?: number; threonine?: number; tryptophan?: number; valine?: number;
-    histidine?: number; alanine?: number; arginine?: number; asparticAcid?: number;
-    cysteine?: number; glutamicAcid?: number; glycine?: number; proline?: number;
-    serine?: number; tyrosine?: number;
-  };
+  /** Resolved on read, never stored: the custom-meals API and resolveMeal() attach
+   *  this from the live base tables so editors and lists can show nutrition. The
+   *  schema has no per100g, so it is never persisted. */
+  per100g?: NutritionPer100g;
 }
 
 interface ICustomMeal {
@@ -41,28 +31,6 @@ interface ICustomMeal {
   updatedAt?: Date;
 }
 
-const NutritionSnapshotSchema = new mongoose.Schema({
-  calories: Number, protein: Number, fat: Number, saturatedFat: Number,
-  carbs: Number, fiber: Number, sugars: Number,
-  calcium: Number, iron: Number, magnesium: Number, phosphorus: Number,
-  potassium: Number, sodium: Number, zinc: Number,
-  copper: Number, manganese: Number, iodine: Number,
-  selenium: Number, chromium: Number, molybdenum: Number,
-  vitaminA: Number, vitaminC: Number, vitaminD: Number, vitaminE: Number,
-  vitaminK: Number, thiamin: Number, riboflavin: Number, niacin: Number,
-  vitaminB6: Number, vitaminB12: Number, folate: Number, cholesterol: Number,
-  monounsaturatedFat: Number, polyunsaturatedFat: Number, transFat: Number,
-  linoleicAcid: Number, alphaLinolenicAcid: Number, gammaLinolenicAcid: Number,
-  arachidonicAcid: Number, epa: Number, dpa: Number, dha: Number,
-  stearidonicAcid: Number, eicosadienoicAcid: Number, dihomoGammaLinolenicAcid: Number,
-  omega3: Number, omega6: Number,
-  isoleucine: Number, leucine: Number, lysine: Number, methionine: Number,
-  phenylalanine: Number, threonine: Number, tryptophan: Number, valine: Number,
-  histidine: Number, alanine: Number, arginine: Number, asparticAcid: Number,
-  cysteine: Number, glutamicAcid: Number, glycine: Number, proline: Number,
-  serine: Number, tyrosine: Number,
-}, { _id: false });
-
 const PortionSchema = new mongoose.Schema({
   description: { type: String, required: true },
   grams: { type: Number, required: true },
@@ -70,12 +38,11 @@ const PortionSchema = new mongoose.Schema({
 
 const IngredientSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
-  source: { type: String, enum: ['bls', 'usda', 'custom', 'off'], required: true },
-  sourceId: { type: String },
+  source: { type: String, enum: ['bls', 'usda', 'off'], required: true },
+  sourceId: { type: String, required: true },
   amountGrams: { type: Number, required: true, min: 0 },
   portions: { type: [PortionSchema], default: undefined },
   selectedPortion: { type: PortionSchema, default: undefined },
-  per100g: { type: NutritionSnapshotSchema, required: true },
 }, { _id: false });
 
 const CustomMealSchema = new mongoose.Schema(

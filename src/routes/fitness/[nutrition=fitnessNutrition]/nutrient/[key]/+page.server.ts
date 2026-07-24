@@ -9,9 +9,9 @@ import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import {
 	getDRI, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, NUTRIENT_META,
 } from '$lib/data/dailyReferenceIntake';
-import { CustomMeal } from '$models/CustomMeal';
+import { resolveEntries, flattenComponents } from '$lib/server/foodLogComponents';
 import {
-	nutrientContributions, nutrientMeta, isKnownNutrient, expandCustomMeals,
+	nutrientContributions, nutrientMeta, isKnownNutrient, parseSortBy,
 } from '$lib/fitness/nutrientContributions';
 
 /**
@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	if (!isKnownNutrient(key)) throw error(404, 'Unknown nutrient');
 
 	const meta = nutrientMeta(key)!;
-	const sortBy = url.searchParams.get('by') === 'per100g' ? 'per100g' : 'amount';
+	const sortBy = parseSortBy(url.searchParams.get('by'));
 
 	const daysParam = url.searchParams.get('days');
 	const isRange = daysParam === '7' || daysParam === '30';
@@ -69,19 +69,12 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		).sort({ date: -1 }).lean() as any,
 	]);
 
-	// Custom meals are logged as a single aggregate, which would leave the biggest
-	// contributor on many days as an opaque "Chili". Expanding them here means the
-	// list names the ingredient that actually carried the nutrient.
-	const mealIds: string[] = [...new Set<string>(
-		entries
-			.filter((e: any) => e.source === 'custom' && e.sourceId)
-			.map((e: any) => String(e.sourceId))
-	)];
-	const meals = mealIds.length
-		? await CustomMeal.find({ _id: { $in: mealIds }, createdBy: user.nickname }).lean() as any[]
-		: [];
-
-	const contributions = nutrientContributions(expandCustomMeals(entries, meals), key, sortBy);
+	// Entries are stored as references to base-table leaves; a meal or recipe is
+	// already its ingredients. Resolving and flattening gives the breakdown the real
+	// food that carried the nutrient — the meal's ingredient, live-named — instead of
+	// an opaque "Chili" row.
+	const resolved = await resolveEntries(entries as any[]);
+	const contributions = nutrientContributions(flattenComponents(resolved), key, sortBy);
 
 	// Averaged over logged days only, matching the stats page — days with nothing
 	// logged are not evidence that little of the nutrient was eaten.
@@ -96,6 +89,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		for (const r of contributions.rows) {
 			r.amount /= divisor;
 			r.grams /= divisor;
+			// `per100kcal` is a ratio of the two, so it survives the averaging untouched.
+			if (r.kcal !== null) r.kcal /= divisor;
 		}
 		contributions.total /= divisor;
 		for (const u of contributions.unreported) u.grams /= divisor;

@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
+import { resolveEntries } from '$lib/server/foodLogComponents';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { WorkoutSession } from '$models/WorkoutSession';
@@ -84,9 +85,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		return latest;
 	}
 
+	// Resolve reference entries to live nutrition (blended per100g + derived
+	// amountGrams); only macros are read below, which the blend reproduces exactly.
+	const entriesResolved = await resolveEntries(entries30d as any[]);
+
 	// Group entries by date string
-	const byDate = new Map<string, typeof entries30d>();
-	for (const entry of entries30d) {
+	const byDate = new Map<string, typeof entriesResolved>();
+	for (const entry of entriesResolved) {
 		const key = new Date(entry.date).toISOString().slice(0, 10);
 		if (!byDate.has(key)) byDate.set(key, []);
 		byDate.get(key)!.push(entry);

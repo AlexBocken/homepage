@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { RoundOffCache } from '$models/RoundOffCache';
 import { coercePortion, coercePortions } from '$lib/fitness/portions';
+import { resolveEntries } from '$lib/server/foodLogComponents';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const user = await requireAuth(locals);
@@ -15,24 +16,37 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	if (entry.createdBy !== user.nickname) throw error(403, 'Not authorized');
 
 	const body = await request.json();
-	const allowed = ['amountGrams', 'mealType', 'name'] as const;
-	for (const key of allowed) {
-		if (body[key] !== undefined) (entry as any)[key] = body[key];
+	if (body.name !== undefined) entry.name = body.name;
+	if (body.mealType !== undefined) entry.mealType = body.mealType;
+
+	// The diary amount is the sum of the component amounts, so changing it scales
+	// every component by the same factor — the composition (their ratios) is frozen,
+	// only the overall size moves.
+	if (typeof body.amountGrams === 'number' && body.amountGrams > 0) {
+		const current = entry.components.reduce((s, c) => s + (c.amountGrams ?? 0), 0);
+		if (current > 0) {
+			const factor = body.amountGrams / current;
+			for (const c of entry.components) c.amountGrams *= factor;
+		}
 	}
 
-	// `selectedPortion: null` means the user switched the amount back to plain
-	// grams — distinct from omitting the key, which leaves the basis untouched.
-	if (body.selectedPortion !== undefined) {
-		entry.selectedPortion = coercePortion(body.selectedPortion) ?? undefined;
-	}
-	if (body.portions !== undefined) {
-		entry.portions = coercePortions(body.portions);
+	// Portion display is per-leaf. It only makes sense to edit for a plain food (one
+	// component); a decomposed meal has no single portion basis. `null` means the
+	// user switched back to plain grams, distinct from omitting the key.
+	if (entry.components.length === 1) {
+		if (body.selectedPortion !== undefined) {
+			entry.components[0].selectedPortion = coercePortion(body.selectedPortion) ?? undefined;
+		}
+		if (body.portions !== undefined) {
+			entry.components[0].portions = coercePortions(body.portions);
+		}
 	}
 
 	await entry.save();
 	const dateStr = entry.date instanceof Date ? entry.date.toISOString().slice(0, 10) : '';
 	if (dateStr) RoundOffCache.deleteOne({ createdBy: user.nickname, date: dateStr }).catch(() => {});
-	return json(entry.toObject());
+	const [hydrated] = await resolveEntries([entry.toObject() as any]);
+	return json(hydrated);
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {

@@ -10,6 +10,7 @@ import { FavoriteIngredient } from '$models/FavoriteIngredient';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
+import { resolveEntries, resolveLeaves } from '$lib/server/foodLogComponents';
 import { RoundOffCache } from '$models/RoundOffCache';
 import { localDateStr } from '$lib/js/localDate';
 import { PANTRY_FOODS } from '$lib/server/pantryFoods';
@@ -92,20 +93,21 @@ async function resolveFavoritesAndRecents(nickname: string): Promise<ResolvedFoo
 	// Recents (last 3 days)
 	const recentFrom = new Date();
 	recentFrom.setDate(recentFrom.getDate() - 3);
-	const recentEntries = await FoodLogEntry.find({
+	const recentRaw = await FoodLogEntry.find({
 		createdBy: nickname,
 		date: { $gte: recentFrom },
 		mealType: { $ne: 'water' },
-		source: { $exists: true },
-		sourceId: { $exists: true, $ne: '' },
-		per100g: { $exists: true },
 	}).sort({ date: -1 }).lean();
+	// Entries are references; resolve to the presentation source/sourceId and a
+	// blended per100g (macros only are read here, which the blend reproduces exactly).
+	const recentEntries = await resolveEntries(recentRaw as any[]);
 
-	for (const entry of recentEntries as any[]) {
+	for (const entry of recentEntries) {
+		if (!entry.sourceId) continue;
 		const key = `${entry.source}:${entry.sourceId}`;
 		if (seen.has(key)) continue;
 		seen.add(key);
-		if (!entry.per100g || (entry.per100g.calories ?? 0) <= 5) continue;
+		if ((entry.per100g.calories ?? 0) <= 5) continue;
 		foods.push({
 			source: entry.source,
 			id: entry.sourceId,
@@ -192,20 +194,28 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		allFoods.push(f);
 	}
 
-	// 3. Resolve custom meals and add to food pool
-	const customMeals = await CustomMeal.find({ createdBy: user.nickname }).lean();
-	for (const meal of customMeals as any[]) {
+	// 3. Resolve custom meals and add to food pool. Ingredients are references, so
+	// resolve every meal's ingredients live in one OFF round-trip before summing.
+	const customMeals = await CustomMeal.find({ createdBy: user.nickname }).lean() as any[];
+	const cmResolved = await resolveLeaves(
+		customMeals.flatMap(m => (m.ingredients ?? []).map((i: any) => ({
+			source: i.source, sourceId: i.sourceId, amountGrams: i.amountGrams ?? 0,
+		}))),
+	);
+	let ci = 0;
+	for (const meal of customMeals) {
 		if (!meal.ingredients?.length) continue;
 		let totalGrams = 0;
 		let totalCal = 0, totalP = 0, totalF = 0, totalC = 0;
 		for (const ing of meal.ingredients) {
+			const p = cmResolved[ci++]?.per100g ?? {};
 			const g = ing.amountGrams ?? 100;
 			totalGrams += g;
 			const f = g / 100;
-			totalCal += (ing.per100g?.calories ?? 0) * f;
-			totalP += (ing.per100g?.protein ?? 0) * f;
-			totalF += (ing.per100g?.fat ?? 0) * f;
-			totalC += (ing.per100g?.carbs ?? 0) * f;
+			totalCal += (p.calories ?? 0) * f;
+			totalP += (p.protein ?? 0) * f;
+			totalF += (p.fat ?? 0) * f;
+			totalC += (p.carbs ?? 0) * f;
 		}
 		if (totalGrams <= 0 || totalCal <= 5) continue;
 		const key = `custom:${meal._id}`;

@@ -12,6 +12,7 @@ import { computeRecipeNutritionTotals, resolvePer100g, parseAmount, resolveRefer
 import { scaleFromPer100g } from '$lib/fitness/nutritionMath';
 import { offPortions } from '$lib/server/offPortions';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
+import { resolveEntries, resolveMeal } from '$lib/server/foodLogComponents';
 import { customMealPortions } from '$lib/fitness/portions';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 
@@ -127,9 +128,12 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 		let per100g: Record<string, number>;
 
 		if (logEntryId) {
-			const logEntry = await FoodLogEntry.findById(logEntryId).select('per100g').lean();
-			if (logEntry?.per100g) {
-				per100g = logEntry.per100g as unknown as Record<string, number>;
+			// The entry stores references; resolve it to the blended nutrition it works
+			// out to now (a base-table fix since logging is reflected here too).
+			const logEntry = await FoodLogEntry.findById(logEntryId).lean();
+			if (logEntry) {
+				const [hydrated] = await resolveEntries([logEntry as any]);
+				per100g = hydrated.per100g;
 			} else {
 				per100g = await computeRecipePer100g(id);
 			}
@@ -192,30 +196,18 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 			throw new Error('unreachable');
 		}
 
-		// Aggregate per100g from ingredients
-		const totals: Record<string, number> = {};
-		let totalGrams = 0;
-		for (const ing of meal.ingredients) {
-			const r = ing.amountGrams / 100;
-			totalGrams += ing.amountGrams;
-			for (const [k, v] of Object.entries(ing.per100g)) {
-				if (typeof v === 'number') {
-					totals[k] = (totals[k] || 0) + v * r;
-				}
-			}
-		}
-		const per100g: Record<string, number> = {};
-		const scale = totalGrams > 0 ? 100 / totalGrams : 0;
-		for (const [k, v] of Object.entries(totals)) {
-			per100g[k] = v * scale;
-		}
+		// Ingredients are references; resolve them live, keeping the per-ingredient
+		// figures for the breakdown list and the blend for the meal total.
+		const { ingredients: resolvedIngredients, totalGrams, per100g } = await resolveMeal(meal);
 
-		// Use logged per100g snapshot if provided
+		// Show the meal as it was actually logged, if opened from a diary entry — its
+		// components resolved to today's tables.
 		const logEntryId = url.searchParams.get('logEntry');
 		if (logEntryId) {
-			const logEntry = await FoodLogEntry.findById(logEntryId).select('per100g').lean();
-			if (logEntry?.per100g) {
-				Object.assign(per100g, logEntry.per100g);
+			const logEntry = await FoodLogEntry.findById(logEntryId).lean();
+			if (logEntry) {
+				const [hydrated] = await resolveEntries([logEntry as any]);
+				Object.assign(per100g, hydrated.per100g);
 			}
 		}
 
@@ -228,16 +220,19 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 				per100g,
 				totalGrams,
 				portions: customMealPortions(meal.name, totalGrams),
-				ingredients: meal.ingredients.map((ing: any) => ({
-					name: ing.name,
-					source: ing.source,
-					sourceId: ing.sourceId,
-					amountGrams: ing.amountGrams,
-					calories: scaleFromPer100g(ing.per100g?.calories, ing.amountGrams),
-					protein: scaleFromPer100g(ing.per100g?.protein, ing.amountGrams),
-					fat: scaleFromPer100g(ing.per100g?.fat, ing.amountGrams),
-					carbs: scaleFromPer100g(ing.per100g?.carbs, ing.amountGrams),
-				})),
+				ingredients: meal.ingredients.map((ing: any, i: number) => {
+					const p = resolvedIngredients[i]?.per100g ?? {};
+					return {
+						name: ing.name,
+						source: ing.source,
+						sourceId: ing.sourceId,
+						amountGrams: ing.amountGrams,
+						calories: scaleFromPer100g(p.calories, ing.amountGrams),
+						protein: scaleFromPer100g(p.protein, ing.amountGrams),
+						fat: scaleFromPer100g(p.fat, ing.amountGrams),
+						carbs: scaleFromPer100g(p.carbs, ing.amountGrams),
+					};
+				}),
 			},
 			dri,
 			bodyWeight,

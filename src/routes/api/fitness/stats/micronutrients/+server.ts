@@ -8,6 +8,7 @@ import { BodyMeasurement } from '$models/BodyMeasurement';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { microCoverage } from '$lib/fitness/microCoverage';
 import { TRACE_MINERAL_KEYS, traceTotals } from '$lib/fitness/traceMinerals';
+import { resolveEntries } from '$lib/server/foodLogComponents';
 import {
 	FAT_GROUP_KEYS, ACID_KEYS, omegaTotals, epaDha as epaDhaOf, fatSplit, carbSplit,
 } from '$lib/fitness/fattyAcids';
@@ -87,12 +88,18 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		carbs: 0, sugars: 0, fiber: 0, carbOther: 0, carbUnknown: 0,
 	};
 
-	const loggedDates = new Set<string>();
-	for (const e of entries) {
-		const mult = (e.amountGrams ?? 0) / 100;
+	// Stored entries are references; resolve them, then aggregate over the flattened
+	// leaves rather than the entries. A decomposed meal must count as its base-table
+	// ingredients so trace/amino sparsity and coverage stay honest per source.
+	const resolved = await resolveEntries(entries as any[]);
+	const flat = resolved.flatMap(e => e.components);
+	const loggedDates = new Set<string>(
+		resolved.map(e => new Date(e.date).toISOString().slice(0, 10)),
+	);
+	for (const c of flat) {
+		const mult = (c.amountGrams ?? 0) / 100;
 		if (mult <= 0) continue;
-		const p = e.per100g ?? {};
-		loggedDates.add(new Date(e.date).toISOString().slice(0, 10));
+		const p = c.per100g ?? {};
 		for (const k of MICRO_KEYS) micros[k] += (p[k] ?? 0) * mult;
 		for (const k of AMINO_KEYS) aminos[k] += (p[k] ?? 0) * mult;
 
@@ -132,9 +139,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		}
 	}
 
-	// Trace minerals are summed over the entries that report each one, so they are
-	// derived from the entries rather than accumulated in the loop above.
-	const traces = traceTotals(entries);
+	// Trace minerals are summed over the leaves that report each one, so they are
+	// derived from the flattened components rather than accumulated in the loop above.
+	const traces = traceTotals(flat);
 	const traceAvg: Record<string, number> = {};
 
 	const daysTracked = loggedDates.size;
@@ -163,7 +170,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		daysTracked,
 		// Open Food Facts products carry no micronutrient data, so a diary built from
 		// them understates every value here. Report how much of the window is covered.
-		coverage: microCoverage(entries),
+		coverage: microCoverage(flat),
 		micros,
 		// Trace minerals travel with their own per-mineral coverage: BLS has no
 		// selenium and USDA no chromium or molybdenum, so how much of the window a

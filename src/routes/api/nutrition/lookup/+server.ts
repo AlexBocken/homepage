@@ -9,6 +9,7 @@ import { computeRecipeNutritionTotals, parseAmount, resolveReferencedNutrition }
 import { offPortions } from '$lib/server/offPortions';
 import { fetchFromOffApi, cacheOffProduct } from '$lib/server/offLookup';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
+import { resolveMeal } from '$lib/server/foodLogComponents';
 import { customMealPortions } from '$lib/fitness/portions';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -119,21 +120,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		const meal = await CustomMeal.findById(id).lean();
 		if (!meal) return json({ error: 'Not found' }, { status: 404 });
 
-		const totals: Record<string, number> = {};
-		let totalGrams = 0;
-		for (const ing of meal.ingredients) {
-			totalGrams += ing.amountGrams;
-			for (const [k, v] of Object.entries(ing.per100g)) {
-				if (typeof v === 'number') {
-					totals[k] = (totals[k] || 0) + v * (ing.amountGrams / 100);
-				}
-			}
-		}
-		const per100g: Record<string, number> = {};
-		const scale = totalGrams > 0 ? 100 / totalGrams : 0;
-		for (const [k, v] of Object.entries(totals)) {
-			per100g[k] = v * scale;
-		}
+		// Ingredients are references; resolve them live and blend.
+		const { per100g, totalGrams } = await resolveMeal(meal);
 		const portions = customMealPortions(meal.name, totalGrams);
 		return json({ per100g, ...(portions.length > 0 && { portions }) });
 	}
