@@ -38,6 +38,8 @@
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
 	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
 	import NudgeCard from '$lib/components/fitness/NudgeCard.svelte';
+	import CopyIcon from '@lucide/svelte/icons/copy';
+	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, REFERENCE_ENERGY } from '$lib/data/dailyReferenceIntake';
@@ -712,6 +714,61 @@
 	const remainingFat = $derived(fatGoalGrams ? fatGoalGrams - dayTotals.fat : 0);
 	const remainingCarbs = $derived(carbGoalGrams ? carbGoalGrams - dayTotals.carbs : 0);
 	const isTodayOrFuture = $derived(currentDate >= todayStr);
+
+	// --- Copy from yesterday ---
+	// The ids that came back are kept so undo removes exactly what was copied, rather
+	// than clearing the day and taking anything logged since with it.
+	let copying = $state(false);
+	let copiedIds = $state(/** @type {string[]} */ ([]));
+
+	$effect(() => {
+		// Leaving the day invalidates the undo — those ids belong to another date.
+		currentDate;
+		copiedIds = [];
+	});
+
+	/** The calendar day before the one being viewed, in local time. */
+	function previousDay() {
+		const d = new Date(currentDate + 'T00:00:00');
+		d.setDate(d.getDate() - 1);
+		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+	}
+
+	async function copyYesterday() {
+		copying = true;
+		try {
+			const res = await fetch('/api/fitness/food-log/copy-day', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ from: previousDay(), to: currentDate }),
+			});
+			if (!res.ok) throw new Error('copy failed');
+			const d = await res.json();
+			if (!d.copied) {
+				toast.info(isEn ? 'Nothing logged yesterday' : 'Gestern nichts erfasst');
+				return;
+			}
+			copiedIds = d.ids ?? [];
+			await invalidateAll();
+		} catch {
+			toast.error(isEn ? 'Could not copy yesterday' : 'Kopieren fehlgeschlagen');
+		} finally {
+			copying = false;
+		}
+	}
+
+	async function undoCopyYesterday() {
+		copying = true;
+		try {
+			await Promise.all(copiedIds.map(id => fetch(`/api/fitness/food-log/${id}`, { method: 'DELETE' })));
+			copiedIds = [];
+			await invalidateAll();
+		} catch {
+			toast.error(isEn ? 'Could not undo the copy' : 'Rückgängig machen fehlgeschlagen');
+		} finally {
+			copying = false;
+		}
+	}
 
 	/**
 	 * Suggestions for finishing the day. The card decides for itself whether it has
@@ -2169,6 +2226,30 @@
 			{@render roundOffSnippet()}
 		</div>
 	{/if}
+	<!-- Offered only on a day with nothing logged, and sitting with the meals it
+	     fills rather than in the summary column: on a day that already has entries
+	     the copy appends rather than replaces, which reads as a mistake more often
+	     than as a shortcut. -->
+	{#if entries.length === 0}
+		<div class="copy-yesterday">
+			{#if copiedIds.length > 0}
+				<span class="copy-done">
+					{isEn ? `Copied ${copiedIds.length} items from yesterday` : `${copiedIds.length} Einträge von gestern kopiert`}
+				</span>
+				<button class="copy-btn is-undo" onclick={undoCopyYesterday} disabled={copying}>
+					<Undo2 size={14} />
+					{isEn ? 'Undo' : 'Rückgängig'}
+				</button>
+			{:else}
+				<button class="copy-btn" onclick={copyYesterday} disabled={copying}>
+					<CopyIcon size={14} />
+					{copying
+						? (isEn ? 'Copying…' : 'Kopiere…')
+						: (isEn ? 'Copy from yesterday' : 'Von gestern kopieren')}
+				</button>
+			{/if}
+		</div>
+	{/if}
 	{#each mealTypes as meal, mi}
 		{@const mealEntries = grouped[meal]}
 		{@const mealCal = mealEntries.reduce((s, e) => s + entryCalories(e), 0)}
@@ -2751,6 +2832,40 @@
 		padding: 1rem 0.25rem 0;
 		margin-top: 0.75rem;
 		border-top: 1px solid var(--color-border);
+	}
+	/* A shortcut, not a call to action — pushed to the trailing edge below the
+	   suggestions so it stays available without competing with them. */
+	.copy-yesterday {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.copy-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.3rem 0.7rem;
+		border-radius: var(--radius-pill);
+		border: 1px solid var(--color-border);
+		background: transparent;
+		color: var(--color-text-secondary);
+		font-size: 0.78rem;
+		cursor: pointer;
+		transition: background var(--transition-fast), color var(--transition-fast);
+	}
+	.copy-btn:hover:not(:disabled) {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
+	.copy-btn:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+	.copy-done {
+		font-size: var(--text-sm);
+		color: var(--color-text-secondary);
 	}
 	@media (max-width: 560px) {
 		.composition-grid {
