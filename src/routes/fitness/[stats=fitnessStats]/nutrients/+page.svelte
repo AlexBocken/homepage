@@ -13,6 +13,7 @@
 	import {
 		getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, UPPER_LIMITS, REFERENCE_ENERGY
 	} from '$lib/data/dailyReferenceIntake';
+	import { TRACE_MINERAL_KEYS, traceCoverageNote } from '$lib/fitness/traceMinerals';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
 	let { data } = $props();
@@ -150,6 +151,13 @@
 			: ''
 	);
 
+	// Trace minerals carry their own per-mineral coverage: no source publishes all
+	// six, so the share of the window each was measured across differs between them
+	// and cannot be folded into the group coverage above.
+	const traceCov = $derived(
+		mn.traceCoverage ?? Object.fromEntries(TRACE_MINERAL_KEYS.map(k => [k, 1]))
+	);
+
 	const essentialOrder = ['leucine', 'isoleucine', 'valine', 'lysine', 'methionine', 'phenylalanine', 'threonine', 'tryptophan', 'histidine'];
 	const nonEssentialOrder = ['alanine', 'arginine', 'asparticAcid', 'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
 
@@ -169,7 +177,24 @@
 				// signal worth flagging — a single heavy day is not.
 				const limit = UPPER_LIMITS[/** @type {keyof typeof UPPER_LIMITS} */ (k)];
 				const overLimit = !!limit && value > limit;
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit, overLimit };
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit, overLimit, noData: false };
+			});
+		}
+
+		// Trace minerals. A mineral no logged food reported at all gets `noData` and
+		// renders as a dash — averaging it as zero would read as a deficiency when it
+		// is really an absence of measurements.
+		function mkTraceRows() {
+			return TRACE_MINERAL_KEYS.map(k => {
+				const meta = NUTRIENT_META[k];
+				const raw = mn.traces?.[k];
+				const noData = typeof raw !== 'number';
+				const value = noData ? 0 : raw;
+				const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
+				const pct = noData || goal <= 0 ? null : Math.round(value / goal * 100);
+				const limit = UPPER_LIMITS[k];
+				const overLimit = !noData && !!limit && value > limit;
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit, overLimit, noData };
 			});
 		}
 
@@ -182,7 +207,7 @@
 			const value = mn.fats?.[k] ?? 0;
 			const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
 			const pct = goal > 0 ? Math.round(value / goal * 100) : null;
-			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit: undefined, overLimit: false };
+			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit: undefined, overLimit: false, noData: false };
 		});
 
 		// The rest have no reference value. Shown against the largest of the set, the
@@ -208,6 +233,7 @@
 				isMax: false,
 				limit: undefined,
 				overLimit: false,
+				noData: false,
 			};
 		});
 
@@ -217,7 +243,7 @@
 			const value = mn.aminos?.[k] ?? 0;
 			const goal = aminoDri(k, aminoWeight);
 			const pct = goal > 0 ? Math.round(value / goal * 100) : null;
-			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, pct, bar: pct ?? 0, isMax: false, limit: undefined, overLimit: false };
+			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, pct, bar: pct ?? 0, isMax: false, limit: undefined, overLimit: false, noData: false };
 		});
 
 		// Non-essentials have no requirement — shown as a distribution among themselves
@@ -237,11 +263,13 @@
 				isMax: false,
 				limit: undefined,
 				overLimit: false,
+				noData: false,
 			};
 		});
 
 		return [
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkRows(minerals), note: '' },
+			{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: mkTraceRows(), note: traceCoverageNote(traceCov, isEn) },
 			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkRows(vitamins), note: '' },
 			{ title: isEn ? 'Other' : 'Sonstiges', rows: mkRows(other), note: '' },
 			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: fattyAcidRows, note: isEn
@@ -433,7 +461,9 @@
 								<div class="micro-bar-wrap">
 									<div class="micro-bar" class:is-max={row.isMax} class:over-limit={row.overLimit} style="width: {Math.min(row.bar, 100)}%"></div>
 								</div>
-								<span class="micro-value" class:over-limit={row.overLimit}>{fmt(row.value)} {row.unit}</span>
+								<span class="micro-value" class:over-limit={row.overLimit} class:is-na={row.noData}>
+									{#if row.noData}—{:else}{fmt(row.value)} {row.unit}{/if}
+								</span>
 								<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
 							</a>
 						{/each}
@@ -761,5 +791,10 @@
 	.micro-pct.is-na {
 		font-weight: 500;
 		color: var(--color-text-tertiary);
+	}
+	/* Nothing logged reported this nutrient — muted so it reads as "no measurement"
+	   rather than as a value of zero. */
+	.micro-value.is-na {
+		opacity: 0.55;
 	}
 </style>

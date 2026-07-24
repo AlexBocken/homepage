@@ -30,6 +30,14 @@ export type DRI = {
   potassium: number;
   sodium: number; // max recommended
   zinc: number;
+  // Trace minerals. Copper and manganese are stored in mg like the minerals above;
+  // the rest in mcg, which is the unit their reference values are stated in.
+  copper: number;     // mg
+  manganese: number;  // mg
+  iodine: number;     // mcg
+  selenium: number;   // mcg
+  chromium: number;   // mcg
+  molybdenum: number; // mcg
   // Vitamins
   vitaminA: number;   // mcg RAE
   vitaminC: number;   // mg
@@ -64,6 +72,12 @@ export const DRI_MALE: DRI = {
   potassium: 3400,
   sodium: 2300,
   zinc: 11,
+  copper: 0.9,
+  manganese: 2.3,  // adequate intake, not an RDA
+  iodine: 150,
+  selenium: 55,
+  chromium: 35,    // adequate intake, not an RDA
+  molybdenum: 45,
   vitaminA: 900,
   vitaminC: 90,
   vitaminD: 15,
@@ -97,6 +111,12 @@ export const DRI_FEMALE: DRI = {
   potassium: 2600,
   sodium: 2300,
   zinc: 8,
+  copper: 0.9,
+  manganese: 1.8,  // adequate intake, not an RDA
+  iodine: 150,
+  selenium: 55,
+  chromium: 25,    // adequate intake, not an RDA
+  molybdenum: 45,
   vitaminA: 700,
   vitaminC: 75,
   vitaminD: 15,
@@ -159,6 +179,15 @@ export const UPPER_LIMITS: Partial<Record<keyof DRI, number>> = {
   iron: 45,
   phosphorus: 4000,
   zinc: 40,
+  // Trace minerals. All four cover intake from food as well as supplements, so a
+  // food log can legitimately be judged against them. Chromium has no UL — the
+  // evidence was judged insufficient to set one, which is not the same as safe at
+  // any dose — so it is deliberately absent rather than listed with a guess.
+  copper: 10,
+  manganese: 11,
+  iodine: 1100,
+  selenium: 400,
+  molybdenum: 2000,
   vitaminA: 3000, // mcg RAE, preformed retinol — carotenoids are not capped
   vitaminC: 2000,
   vitaminD: 100,
@@ -198,6 +227,12 @@ export const NUTRIENT_META: Record<keyof DRI, { label: string; labelDe: string; 
   potassium:   { label: 'Potassium',    labelDe: 'Kalium',        unit: 'mg' },
   sodium:      { label: 'Sodium',       labelDe: 'Natrium',       unit: 'mg', isMax: true },
   zinc:        { label: 'Zinc',         labelDe: 'Zink',          unit: 'mg' },
+  copper:      { label: 'Copper',       labelDe: 'Kupfer',        unit: 'mg' },
+  manganese:   { label: 'Manganese',    labelDe: 'Mangan',        unit: 'mg' },
+  iodine:      { label: 'Iodine',       labelDe: 'Jod',           unit: 'mcg' },
+  selenium:    { label: 'Selenium',     labelDe: 'Selen',         unit: 'mcg' },
+  chromium:    { label: 'Chromium',     labelDe: 'Chrom',         unit: 'mcg' },
+  molybdenum:  { label: 'Molybdenum',   labelDe: 'Molybdän',      unit: 'mcg' },
   vitaminA:    { label: 'Vitamin A',    labelDe: 'Vitamin A',     unit: 'mcg' },
   vitaminC:    { label: 'Vitamin C',    labelDe: 'Vitamin C',     unit: 'mg' },
   vitaminD:    { label: 'Vitamin D',    labelDe: 'Vitamin D',     unit: 'mcg' },

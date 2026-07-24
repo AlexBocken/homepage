@@ -22,6 +22,10 @@ interface IFoodLogEntry {
     carbs: number; fiber: number; sugars: number;
     calcium: number; iron: number; magnesium: number; phosphorus: number;
     potassium: number; sodium: number; zinc: number;
+    // Trace minerals. Optional: no source carries all six, and an absent key means
+    // "not measured" — see $lib/fitness/traceMinerals.
+    copper?: number; manganese?: number; iodine?: number;
+    selenium?: number; chromium?: number; molybdenum?: number;
     vitaminA: number; vitaminC: number; vitaminD: number; vitaminE: number;
     vitaminK: number; thiamin: number; riboflavin: number; niacin: number;
     vitaminB6: number; vitaminB12: number; folate: number; cholesterol: number;
@@ -50,6 +54,8 @@ const NutritionSnapshotSchema = new mongoose.Schema({
   carbs: Number, fiber: Number, sugars: Number,
   calcium: Number, iron: Number, magnesium: Number, phosphorus: Number,
   potassium: Number, sodium: Number, zinc: Number,
+  copper: Number, manganese: Number, iodine: Number,
+  selenium: Number, chromium: Number, molybdenum: Number,
   vitaminA: Number, vitaminC: Number, vitaminD: Number, vitaminE: Number,
   vitaminK: Number, thiamin: Number, riboflavin: Number, niacin: Number,
   vitaminB6: Number, vitaminB12: Number, folate: Number, cholesterol: Number,

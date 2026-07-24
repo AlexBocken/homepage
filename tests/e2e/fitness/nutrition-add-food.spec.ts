@@ -52,3 +52,22 @@ test('micronutrients are collapsed by default and expand on demand', async ({ pa
 	await toggle.click();
 	await expect(page.locator('.fs-micros')).toHaveCount(0);
 });
+
+// Trace minerals are listed only where the record has them, so the section proves
+// two things at once: USDA's figures made it through the import, and the rows shown
+// are the ones that source actually measures.
+test('a USDA food lists the trace minerals it reports and no others', async ({ page }) => {
+	await openMealSearch(page, 'nuts, brazilnuts');
+
+	await page.locator('.fs-result-row').filter({ has: page.locator('.fs-source-badge.usda') })
+		.first().locator('button.fs-result').click();
+	await page.getByRole('button', { name: /Micronutrients/i }).click();
+
+	const micros = page.locator('.fs-micros');
+	await expect(micros.getByText('Trace Minerals')).toBeVisible();
+	// Brazil nuts are the densest selenium source in the table by a wide margin.
+	await expect(micros.locator('.fs-micro-row', { hasText: 'Selenium' })).toBeVisible();
+	await expect(micros.locator('.fs-micro-row', { hasText: 'Copper' })).toBeVisible();
+	// USDA publishes no chromium at all, so no row may claim one.
+	await expect(micros.locator('.fs-micro-row', { hasText: 'Chromium' })).toHaveCount(0);
+});

@@ -40,6 +40,7 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
+	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
 	import { formatGrams } from '$lib/fitness/nutritionMath';
 	import MacroBreakdown from './MacroBreakdown.svelte';
 	import PortionAmountInput from './PortionAmountInput.svelte';
@@ -365,8 +366,16 @@
 					value: (/** @type {Record<string, number>} */ (n)[k] ?? 0) * s,
 				};
 			});
+		// Trace minerals are listed only where the record has them: no source carries
+		// all six, and zero rows for the ones it never measured would read as a result.
+		const traceKeys = TRACE_MINERAL_KEYS.filter(
+			(k) => typeof (/** @type {Record<string, number>} */ (n)[k]) === 'number'
+		);
 		return [
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: rows(MINERAL_KEYS) },
+			...(traceKeys.length > 0
+				? [{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: rows(traceKeys) }]
+				: []),
 			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: rows(VITAMIN_KEYS) },
 			{ title: isEn ? 'Other' : 'Sonstiges', rows: rows(OTHER_KEYS) },
 		];

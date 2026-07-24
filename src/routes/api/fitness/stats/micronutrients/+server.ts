@@ -7,6 +7,7 @@ import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { microCoverage } from '$lib/fitness/microCoverage';
+import { TRACE_MINERAL_KEYS, traceTotals } from '$lib/fitness/traceMinerals';
 import {
 	FAT_GROUP_KEYS, ACID_KEYS, omegaTotals, epaDha as epaDhaOf, fatSplit, carbSplit,
 } from '$lib/fitness/fattyAcids';
@@ -131,8 +132,17 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		}
 	}
 
+	// Trace minerals are summed over the entries that report each one, so they are
+	// derived from the entries rather than accumulated in the loop above.
+	const traces = traceTotals(entries);
+	const traceAvg: Record<string, number> = {};
+
 	const daysTracked = loggedDates.size;
 	if (daysTracked > 0) {
+		for (const k of TRACE_MINERAL_KEYS) {
+			const v = traces.totals[k];
+			if (typeof v === 'number') traceAvg[k] = v / daysTracked;
+		}
 		for (const k of MICRO_KEYS) micros[k] /= daysTracked;
 		for (const k of AMINO_KEYS) aminos[k] /= daysTracked;
 		for (const k of Object.keys(fats)) fats[k] /= daysTracked;
@@ -155,6 +165,11 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		// them understates every value here. Report how much of the window is covered.
 		coverage: microCoverage(entries),
 		micros,
+		// Trace minerals travel with their own per-mineral coverage: BLS has no
+		// selenium and USDA no chromium or molybdenum, so how much of the window a
+		// figure was measured across varies by mineral, not just by entry.
+		traces: traceAvg,
+		traceCoverage: traces.coverage,
 		aminos,
 		fats,
 		composition,

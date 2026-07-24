@@ -3,6 +3,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { toast } from '$lib/js/toast.svelte';
 	import { m } from '$lib/js/recipesI18n';
+	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
 	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	let {
@@ -89,6 +90,12 @@
 		];
 		for (const k of nutrientKeys) result[k] = 0;
 
+		/** Trace mineral intake, and the grams of ingredient it was measured across. */
+		/** @type {Record<string, number>} */
+		const traceTotalsG = {};
+		/** @type {Record<string, number>} */
+		const traceGrams = {};
+
 		let totalWeightGrams = 0;
 
 		// Build mapping index
@@ -110,6 +117,18 @@
 			for (const k of nutrientKeys) {
 				result[k] += factor * (mapping.per100g[k] ?? 0);
 			}
+			// Trace minerals only from the ingredients that report them, tracking the
+			// weight each was measured across so the per-100 g figure below is a
+			// concentration of what was measured rather than of the whole pot. A
+			// referenced sub-recipe contributes none: its stored aggregate carries no
+			// record of which of its own ingredients were tested.
+			for (const k of TRACE_MINERAL_KEYS) {
+				const v = mapping.per100g[k];
+				if (typeof v === 'number') {
+					traceTotalsG[k] = (traceTotalsG[k] ?? 0) + factor * v;
+					traceGrams[k] = (traceGrams[k] ?? 0) + grams;
+				}
+			}
 		}
 
 		// Add referenced recipe nutrition
@@ -120,7 +139,7 @@
 			}
 		}
 
-		return { totals: result, totalWeightGrams };
+		return { totals: result, totalWeightGrams, traceTotalsG, traceGrams };
 	});
 
 	// Per-100g for the entire recipe
@@ -131,6 +150,12 @@
 		const result = {};
 		for (const [k, v] of Object.entries(recipeTotals.totals)) {
 			result[k] = v / w * 100;
+		}
+		// Scaled by the weight each was measured across, and written only when
+		// something reported it.
+		for (const k of TRACE_MINERAL_KEYS) {
+			const g = recipeTotals.traceGrams[k] ?? 0;
+			if (g > 0) result[k] = (recipeTotals.traceTotalsG[k] ?? 0) * (100 / g);
 		}
 		return result;
 	});

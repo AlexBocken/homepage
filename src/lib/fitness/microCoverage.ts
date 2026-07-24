@@ -12,6 +12,11 @@
  * "has any micronutrient" would wave through a record that is mostly empty.
  */
 
+/** The minerals every source measures. The six trace minerals in
+ *  $lib/fitness/traceMinerals are deliberately not probed here: BLS publishes no
+ *  selenium and USDA no chromium or molybdenum, so a record missing one says
+ *  something about its source rather than about how well characterised it is, and
+ *  counting them would fail well-populated entries from both databases. */
 export const MINERAL_KEYS = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'zinc'];
 export const VITAMIN_KEYS = [
 	'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',

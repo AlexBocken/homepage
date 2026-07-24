@@ -45,6 +45,7 @@
 	import CompositionBar from '$lib/components/fitness/CompositionBar.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import { microCoverage } from '$lib/fitness/microCoverage';
+	import { TRACE_MINERAL_KEYS, traceTotals, traceCoverageNote } from '$lib/fitness/traceMinerals';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
 	/**
@@ -561,7 +562,11 @@
 			const ed = epaDhaOf(p);
 			if (ed) fats.epaDha = (fats.epaDha ?? 0) + ed.value * r;
 		}
-		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, micros, aminos, composition, fats };
+		// Trace minerals are summed over the entries reporting each one, with the share
+		// of the day that covers, so a mineral BLS or USDA never measured is shown as
+		// missing rather than as zero.
+		const traces = traceTotals(entries);
+		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, micros, aminos, composition, fats, traces };
 	});
 
 	// Atwater-derived calories (consistent with macro goals which use 4/9/4)
@@ -968,16 +973,36 @@
 		/** @type {Record<string, number>} */
 		const totals = {};
 		for (const k of NUTRIENT_KEYS) totals[k] = 0;
+		/** Grams of ingredient each trace mineral was actually measured across. */
+		/** @type {Record<string, number>} */
+		const traceGrams = {};
 		let totalGrams = 0;
 		for (const ing of meal.ingredients) {
 			const r = ing.amountGrams / 100;
 			totalGrams += ing.amountGrams;
 			for (const k of NUTRIENT_KEYS) totals[k] += (ing.per100g?.[k] ?? 0) * r;
+			// Trace minerals only from the ingredients that report them, so a meal built
+			// from one BLS and one USDA food keeps both sources' figures instead of
+			// diluting each with a fabricated zero for the other.
+			for (const k of TRACE_MINERAL_KEYS) {
+				const v = ing.per100g?.[k];
+				if (typeof v === 'number') {
+					totals[k] = (totals[k] ?? 0) + v * r;
+					traceGrams[k] = (traceGrams[k] ?? 0) + ing.amountGrams;
+				}
+			}
 		}
 		/** @type {Record<string, number>} */
 		const per100g = {};
 		const scale = totalGrams > 0 ? 100 / totalGrams : 0;
 		for (const k of NUTRIENT_KEYS) per100g[k] = totals[k] * scale;
+		// Scaled by the grams they were measured across, not the meal weight: the
+		// concentration of what was measured is the honest per-100 g figure, and it is
+		// written only when something reported it.
+		for (const k of TRACE_MINERAL_KEYS) {
+			const g = traceGrams[k] ?? 0;
+			if (g > 0) per100g[k] = (totals[k] ?? 0) * (100 / g);
+		}
 		const liquidMl = meal.ingredients
 			.filter(isLiquidIngredient)
 			.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + ing.amountGrams, 0);
@@ -1258,7 +1283,22 @@
 				const value = dayTotals.micros[k] ?? 0;
 				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
 				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false };
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false };
+			});
+		}
+
+		// Trace minerals. A mineral nothing eaten today reported renders as a dash:
+		// counting it as zero would draw an empty bar against the reference intake and
+		// read as a deficiency, when it only means no source measured it.
+		function mkTraceRows() {
+			return TRACE_MINERAL_KEYS.map(k => {
+				const meta = NUTRIENT_META[k];
+				const raw = dayTotals.traces.totals[k];
+				const noData = typeof raw !== 'number';
+				const value = noData ? 0 : raw;
+				const goal = dri[k] ?? 0;
+				const pct = noData || goal <= 0 ? null : Math.round(value / goal * 100);
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData };
 			});
 		}
 
@@ -1273,7 +1313,7 @@
 			const goal = aminoDri(k, w);
 			const pct = goal > 0 ? Math.round(value / goal * 100) : null;
 			const meta = AMINO_META[/** @type {keyof typeof AMINO_META} */ (k)];
-			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal, pct, bar: pct ?? 0, isMax: false, essential: true };
+			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal, pct, bar: pct ?? 0, isMax: false, essential: true, noData: false };
 		});
 
 		const nonEssentialValues = nonEssentialOrder.map(k => dayTotals.aminos[k] ?? 0);
@@ -1285,7 +1325,7 @@
 			// Share of the non-essential total; bars are scaled to the biggest one so they stay readable
 			const pct = nonEssentialTotal > 0 ? Math.round(value / nonEssentialTotal * 100) : null;
 			const bar = nonEssentialMax > 0 ? value / nonEssentialMax * 100 : 0;
-			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal: 0, pct, bar, isMax: false, essential: false };
+			return { key: k, label: isEn ? meta.en : meta.de, unit: 'g', value, goal: 0, pct, bar, isMax: false, essential: false, noData: false };
 		});
 
 		// Carbohydrate and fat quality, judged against their reference intakes. Fibre and
@@ -1304,7 +1344,7 @@
 					: dayTotals.fats[k] ?? 0;
 				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
 				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false };
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false };
 			});
 		}
 
@@ -1314,6 +1354,7 @@
 				? `Saturated and trans fat are ceilings; linoleic and α-linolenic acid are adequate intakes, so passing them is fine. All four are shares of energy, scaled to ${energyBasisLabel}. EPA + DHA is a fixed 250 mg a day and does not scale.`
 				: `Gesättigte und Trans-Fettsäuren sind Obergrenzen; Linol- und α-Linolensäure sind Richtwerte, ein Überschreiten ist unproblematisch. Alle vier sind Energieanteile, skaliert auf ${energyBasisLabel}. EPA + DHA sind fixe 250 mg pro Tag und skalieren nicht.` },
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkRows(minerals), note: '' },
+			{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: mkTraceRows(), note: traceCoverageNote(dayTotals.traces.coverage, isEn) },
 			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkRows(vitamins), note: '' },
 			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: essentialRows, note: '' },
 			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: nonEssentialRows, note: isEn
@@ -1627,7 +1668,9 @@
 						<div class="micro-bar-wrap">
 							<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.bar, 100)}%"></div>
 						</div>
-						<span class="micro-value">{fmt(row.value)} {row.unit}</span>
+						<span class="micro-value" class:is-na={row.noData}>
+							{#if row.noData}—{:else}{fmt(row.value)} {row.unit}{/if}
+						</span>
 						<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
 					</a>
 				{/each}
@@ -2952,6 +2995,11 @@
 	.micro-pct.is-na {
 		font-weight: 500;
 		color: var(--color-text-tertiary);
+	}
+	/* Nothing logged reported this nutrient — muted so a dash reads as "not
+	   measured" rather than as a value. */
+	.micro-value.is-na {
+		opacity: 0.55;
 	}
 
 	/* ── Empty / No Goal State ── */

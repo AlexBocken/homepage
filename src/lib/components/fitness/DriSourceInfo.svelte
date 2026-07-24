@@ -80,8 +80,8 @@
 					</li>
 					<li>
 						{isEn
-							? 'Only nutrients whose UL applies to total intake are checked: calcium, iron, phosphorus, zinc, vitamin C and vitamin D, plus preformed vitamin A.'
-							: 'Geprüft werden nur Nährstoffe, deren UL für die Gesamtzufuhr gilt: Calcium, Eisen, Phosphor, Zink, Vitamin C und Vitamin D sowie vorgebildetes Vitamin A.'}
+							? 'Only nutrients whose UL applies to total intake are checked: calcium, iron, phosphorus, zinc, copper, manganese, iodine, selenium, molybdenum, vitamin C and vitamin D, plus preformed vitamin A. Chromium has none — the evidence was judged too thin to set one.'
+							: 'Geprüft werden nur Nährstoffe, deren UL für die Gesamtzufuhr gilt: Calcium, Eisen, Phosphor, Zink, Kupfer, Mangan, Jod, Selen, Molybdän, Vitamin C und Vitamin D sowie vorgebildetes Vitamin A. Für Chrom gibt es keinen — die Datenlage reichte nicht aus, um einen festzulegen.'}
 					</li>
 					<li>
 						{isEn

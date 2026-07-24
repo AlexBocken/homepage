@@ -86,6 +86,22 @@ const NUTRIENT_IDS: Record<number, string> = {
 	1218: 'tyrosine',
 };
 
+// Trace minerals, written only when the food actually reports them — same rule as
+// the fatty acids below, and for the same reason. USDA measures selenium for 88% of
+// the foods imported here and copper and manganese for ~91% / ~82%, but iodine for
+// 0.5% of them and chromium and molybdenum for none at all. Forcing those to 0
+// would tell a food log that a meal contained no iodine when USDA never tested for
+// it; BLS carries iodine, chromium and molybdenum and fills that gap instead.
+// Units are USDA's own: copper and manganese in mg, the rest in µg.
+const TRACE_MINERAL_IDS: Record<number, string> = {
+	1098: 'copper',     // mg
+	1101: 'manganese',  // mg
+	1100: 'iodine',     // µg
+	1103: 'selenium',   // µg
+	1096: 'chromium',   // µg
+	1102: 'molybdenum', // µg
+};
+
 // Fatty acids, written only when the food actually reports them. Every nutrient
 // above is forced to 0 when absent, because BLS and USDA measure the full panel and
 // a zero there means "measured, none present". That does not hold for fats:
@@ -305,6 +321,13 @@ async function importDataset(datasetDir: string, label: string) {
 			continue;
 		}
 
+		const traceField = TRACE_MINERAL_IDS[nutrientId];
+		if (traceField) {
+			if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
+			nutrients.get(fdcId)![traceField] = amount;
+			continue;
+		}
+
 		const faField = FATTY_ACID_IDS[nutrientId];
 		if (faField) {
 			if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
@@ -362,6 +385,13 @@ function buildNutrientRecord(data: NutrientData | undefined): Record<string, num
 	const result: Record<string, number> = {};
 	for (const field of allFields) {
 		result[field] = Math.round((data?.[field] || 0) * 100) / 100;
+	}
+	// Trace minerals are omitted rather than zeroed when unmeasured — see
+	// TRACE_MINERAL_IDS. Three decimals: copper in most foods sits in the hundredths
+	// of a milligram, where two would round a real figure down to nothing.
+	for (const field of Object.values(TRACE_MINERAL_IDS)) {
+		const v = data?.[field];
+		if (typeof v === 'number') result[field] = Math.round(v * 1000) / 1000;
 	}
 	// Fatty acids are omitted rather than zeroed when unmeasured — see FATTY_ACID_IDS.
 	// Rounded to 3 decimals instead of 2: EPA and DHA in a lean meat sit in the
@@ -467,6 +497,21 @@ async function main() {
 		}))
 		.sort((a, b) => a.name.localeCompare(b.name));
 
+	// Emitted in chunks rather than as one array literal. TypeScript infers the type
+	// of an array literal as a union over its elements before checking it against the
+	// annotation, and at ~7,400 entries of this width that union exceeds the
+	// checker's limit — `tsc` fails the whole file with TS2590 (union too complex).
+	// Splitting the literal keeps each inference inside the limit; 1,500 leaves room
+	// for the table to grow, since 3,000 already trips it.
+	const CHUNK_SIZE = 1500;
+	const chunkNames: string[] = [];
+	let chunkDecls = '';
+	for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+		const name = `CHUNK_${chunkNames.length}`;
+		chunkNames.push(name);
+		chunkDecls += `const ${name}: NutritionEntry[] = ${JSON.stringify(entries.slice(i, i + CHUNK_SIZE), null, '\t')};\n\n`;
+	}
+
 	// Generate TypeScript output
 	const tsContent = `// Auto-generated from USDA FoodData Central (SR Legacy + Foundation Foods)
 // Generated: ${new Date().toISOString().split('T')[0]}
@@ -482,7 +527,7 @@ export type NutritionEntry = {
 	portions: { description: string; grams: number }[];
 };
 
-export const NUTRITION_DB: NutritionEntry[] = ${JSON.stringify(entries, null, '\t')};
+${chunkDecls}export const NUTRITION_DB: NutritionEntry[] = [${chunkNames.map(n => `...${n}`).join(', ')}];
 `;
 
 	writeFileSync(OUTPUT_PATH, tsContent, 'utf-8');

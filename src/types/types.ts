@@ -4,6 +4,17 @@ export type NutritionPer100g = {
   carbs: number; fiber: number; sugars: number;
   calcium: number; iron: number; magnesium: number; phosphorus: number;
   potassium: number; sodium: number; zinc: number;
+  // Trace minerals. Optional because no single source carries all six: BLS has no
+  // selenium column at all, and USDA has iodine for 0.5% of foods and no chromium
+  // or molybdenum. An absent key means "this source never measured it" — it is
+  // never written as 0, which would claim the food contains none. See
+  // $lib/fitness/traceMinerals for how totals are summed over that gap.
+  copper?: number;     // mg
+  manganese?: number;  // mg
+  iodine?: number;     // mcg
+  selenium?: number;   // mcg
+  chromium?: number;   // mcg
+  molybdenum?: number; // mcg
   vitaminA: number; vitaminC: number; vitaminD: number; vitaminE: number;
   vitaminK: number; thiamin: number; riboflavin: number; niacin: number;
   vitaminB6: number; vitaminB12: number; folate: number; cholesterol: number;

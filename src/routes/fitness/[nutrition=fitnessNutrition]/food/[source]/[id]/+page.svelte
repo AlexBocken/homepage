@@ -20,6 +20,7 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { localDateStr } from '$lib/js/localDate';
 	import { NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
+	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import { groupsPresent } from '$lib/fitness/microCoverage';
@@ -92,8 +93,18 @@
 	// mineral or two at best and never any amino acids.
 	const microGroups = $derived(groupsPresent(/** @type {Record<string, number>} */ (n)));
 
+	// Only the trace minerals this record actually carries. No source publishes all
+	// six — BLS has no selenium, USDA no chromium or molybdenum — and a row of zeros
+	// for the ones it never measured would be a claim, not a gap.
+	const traceRows = $derived(
+		mkMicroRows(TRACE_MINERAL_KEYS.filter(k => typeof (/** @type {Record<string, number>} */ (n))[k] === 'number'))
+	);
+
 	const microSections = $derived([
 		{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkMicroRows(mineralKeys) },
+		...(traceRows.length > 0
+			? [{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: traceRows }]
+			: []),
 		{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkMicroRows(vitaminKeys) },
 		{ title: isEn ? 'Other' : 'Sonstiges', rows: mkMicroRows(otherKeys) },
 	]);

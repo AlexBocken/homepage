@@ -95,6 +95,22 @@ const NUTRIENT_MAP: Record<string, { field: string; divisor?: number }> = {
   TYR: { field: 'tyrosine' },
 };
 
+// Trace minerals, kept apart from NUTRIENT_MAP for the same reason the fatty acids
+// are: BLS leaves a cell '-' where nothing was determined, and forcing that to 0
+// would claim a food contains no iodine when nobody looked. Coverage runs 81%
+// (molybdenum) to 99% (copper, manganese). BLS 4.0 has no selenium column at all —
+// that key comes from USDA only, and BLS-sourced foods leave it absent.
+//
+// Copper and manganese are published in µg but stored in mg, so they line up with
+// the other minerals in NutritionPer100g and with their reference values.
+const TRACE_MINERAL_MAP: Record<string, { field: string; divisor?: number }> = {
+  CU: { field: 'copper', divisor: 1000 },    // BLS: µg → mg
+  MN: { field: 'manganese', divisor: 1000 }, // BLS: µg → mg
+  ID: { field: 'iodine' },
+  CR: { field: 'chromium' },
+  MO: { field: 'molybdenum' },
+};
+
 // Fatty acids (g/100 g), kept apart from NUTRIENT_MAP because they are written only
 // where the food reports them. The map above forces 0 for anything missing, which is
 // right for a panel BLS measures throughout, but a fabricated 0 for EPA would be
@@ -167,6 +183,9 @@ async function main() {
     if (faLike.length) console.warn(`  Unmapped fatty-acid-looking columns present: ${faLike.join(', ')}`);
   }
 
+  const tmMissing = Object.keys(TRACE_MINERAL_MAP).filter(code => !codeToCol.has(code));
+  if (tmMissing.length) console.warn(`Trace mineral columns NOT FOUND in CSV: ${tmMissing.join(', ')}`);
+
   const entries: any[] = [];
 
   for (let r = 1; r < rows.length; r++) {
@@ -212,6 +231,25 @@ async function main() {
       const value = parseFloat(raw);
       if (isNaN(value)) continue;
       per100g[field] = Math.round(value * 1000) / 1000;
+    }
+
+    // Trace minerals follow the same rule: '-' leaves the key absent, TR and a
+    // below-detection result are measurements and record a zero.
+    for (const [blsNutrientCode, mapping] of Object.entries(TRACE_MINERAL_MAP)) {
+      const col = codeToCol.get(blsNutrientCode);
+      if (col === undefined) continue;
+      const raw = row[col]?.trim();
+      if (!raw || raw === '-') continue;
+      if (raw === 'TR' || raw.startsWith('<LOD') || raw.startsWith('<LOQ')) {
+        per100g[mapping.field] = 0;
+        continue;
+      }
+      let value = parseFloat(raw);
+      if (isNaN(value)) continue;
+      if (mapping.divisor) value /= mapping.divisor;
+      // Three decimals on a mg field is 1 µg of resolution, which is finer than the
+      // µg figures BLS publishes for copper and manganese in the first place.
+      per100g[mapping.field] = Math.round(value * 1000) / 1000;
     }
 
     entries.push({ blsCode, nameDe, nameEn, category, per100g });
