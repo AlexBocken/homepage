@@ -37,10 +37,20 @@
 	const bfAccentFill = $derived(dark ? 'rgba(180, 142, 173, 0.2)' : 'rgba(180, 142, 173, 0.16)');
 
 	const weightChart = $derived(data.weightChart ?? { dates: [], data: [], sma: [], upper: [], lower: [] });
-	const bfChart = $derived(data.bfChart ?? { dates: [], data: [], sma: [], upper: [], lower: [], baseline: null });
+	const emptyBf = { dates: [], data: [], sma: [], upper: [], lower: [], baseline: null };
+	const bfPctChart = $derived(data.bfChart ?? emptyBf);
+	const bfMassChart = $derived(data.bfMassChart ?? emptyBf);
+
+	// Body fat can be read as a percentage of body weight or as fat mass in kg —
+	// both plotted as Δ from their own first reading.
+	let bfUnit = $state(/** @type {'pct' | 'kg'} */ ('pct'));
+	const hasBfPct = $derived((bfPctChart.data?.length ?? 0) > 1);
+	const hasBfMass = $derived((bfMassChart.data?.length ?? 0) > 1);
+	const bfChart = $derived(bfUnit === 'kg' && hasBfMass ? bfMassChart : bfPctChart);
+	const bfUnitSuffix = $derived(bfUnit === 'kg' && hasBfMass ? ' kg' : ' pp');
 
 	const hasWeight = $derived((weightChart.data?.length ?? 0) > 1);
-	const hasBf = $derived((bfChart.data?.length ?? 0) > 1);
+	const hasBf = $derived(hasBfPct || hasBfMass);
 
 	const hasSma = $derived(weightChart.sma?.some((/** @type {any} */ v) => v !== null));
 	const hasSmaBf = $derived(bfChart.sma?.some((/** @type {any} */ v) => v !== null));
@@ -65,7 +75,7 @@
 				{ label: '± 1σ (lower)', data: bfChart.lower, borderColor: 'transparent', backgroundColor: 'transparent', fill: false, pointRadius: 0, borderWidth: 0, tension: 0.3, order: 2 },
 				{ label: 'Trend', data: bfChart.sma, borderColor: bfAccent, pointRadius: 0, borderWidth: 3, tension: 0.3, order: 1 }
 			] : []),
-			{ label: 'Body fat Δ (pp)', data: bfChart.data, borderColor: '#D08770', borderWidth: hasSmaBf ? 1 : 2, pointRadius: 2, order: 0 }
+			{ label: bfUnit === 'kg' ? 'Fat mass Δ (kg)' : 'Body fat Δ (pp)', data: bfChart.data, borderColor: '#D08770', borderWidth: hasSmaBf ? 1 : 2, pointRadius: 2, order: 0 }
 		]
 	});
 
@@ -76,10 +86,13 @@
 	 * @param {string} label
 	 */
 	function bfTooltipFormatter(v, _datasetIndex, dataIndex, label) {
+		const kg = bfUnit === 'kg' && hasBfMass;
+		const deltaUnit = kg ? ' kg' : ' pp';
+		const absUnit = kg ? ' kg' : '%';
 		const baseline = bfChart.baseline ?? 0;
 		const abs = baseline + v;
 		const sign = v > 0 ? '+' : v < 0 ? '' : '±';
-		const base = `${sign}${v.toFixed(2)} pp · ${abs.toFixed(1)}%`;
+		const base = `${sign}${v.toFixed(2)}${deltaUnit} · ${abs.toFixed(1)}${absUnit}`;
 		if (label === 'Trend') {
 			const upper = bfChart.upper?.[dataIndex];
 			const lower = bfChart.lower?.[dataIndex];
@@ -87,22 +100,24 @@
 				const sigma = (upper - lower) / 2;
 				const absLower = baseline + lower;
 				const absUpper = baseline + upper;
-				return `${sign}${v.toFixed(2)} ±${sigma.toFixed(2)} pp · ${abs.toFixed(1)}% (${absLower.toFixed(1)}–${absUpper.toFixed(1)}%)`;
+				return `${sign}${v.toFixed(2)} ±${sigma.toFixed(2)}${deltaUnit} · ${abs.toFixed(1)}${absUnit} (${absLower.toFixed(1)}–${absUpper.toFixed(1)}${absUnit})`;
 			}
 		}
 		return base;
 	}
 
 	const bfChartTitle = $derived.by(() => {
+		const kg = bfUnit === 'kg' && hasBfMass;
 		const baseline = bfChart.baseline;
-		const label = t.body_fat.replace(' %', '').replace(' (%)', '');
+		const label = kg ? t.fat_mass : t.body_fat.replace(' %', '').replace(' (%)', '');
 		if (baseline == null) return label;
-		return `${label} · ${t.bf_delta_from_prefix} ${baseline.toFixed(1)}%`;
+		const base = kg ? `${baseline.toFixed(1)} kg` : `${baseline.toFixed(1)}%`;
+		return `${label} · ${t.bf_delta_from_prefix} ${base}`;
 	});
 
 	// Full extent of the data (epoch ms), used to reset the zoom to "show all".
 	const fullRange = $derived.by(() => {
-		const stamps = [...(weightChart.dates ?? []), ...(bfChart.dates ?? [])].map((d) => new Date(d).getTime());
+		const stamps = [...(weightChart.dates ?? []), ...(bfChart.dates ?? [])].map((/** @type {string} */ d) => new Date(d).getTime());
 		if (!stamps.length) return null;
 		return { min: Math.min(...stamps), max: Math.max(...stamps) };
 	});
@@ -145,16 +160,36 @@
 	{/if}
 
 	{#if hasBf}
-		<FitnessChart
-			data={bfChartData}
-			title={bfChartTitle}
-			yUnit=" pp"
-			height="320px"
-			tooltipFormatter={bfTooltipFormatter}
-			zoom
-			applyXRange={xRange}
-			onXRangeChange={onRange}
-		/>
+		{#if hasBfPct && hasBfMass}
+			<div class="unit-switch" role="group" aria-label={t.bf_unit_switch_label}>
+				<button
+					class="unit-btn"
+					class:is-active={bfUnit === 'pct'}
+					aria-pressed={bfUnit === 'pct'}
+					onclick={() => (bfUnit = 'pct')}
+				>%</button>
+				<button
+					class="unit-btn"
+					class:is-active={bfUnit === 'kg'}
+					aria-pressed={bfUnit === 'kg'}
+					onclick={() => (bfUnit = 'kg')}
+				>kg</button>
+			</div>
+		{/if}
+		<!-- FitnessChart builds its canvas once on mount, so switching units has to
+		     remount it. The current x window is restored via applyXRange. -->
+		{#key bfUnit}
+			<FitnessChart
+				data={bfChartData}
+				title={bfChartTitle}
+				yUnit={bfUnitSuffix}
+				height="320px"
+				tooltipFormatter={bfTooltipFormatter}
+				zoom
+				applyXRange={xRange}
+				onXRangeChange={onRange}
+			/>
+		{/key}
 	{/if}
 
 	{#if !hasWeight && !hasBf}
@@ -224,6 +259,32 @@
 		border-color: var(--color-text-tertiary);
 	}
 	.reset-btn:disabled { opacity: 0.45; cursor: default; }
+	.unit-switch {
+		display: flex;
+		gap: 0.25rem;
+		align-self: flex-end;
+		margin-bottom: -0.5rem;
+		background: var(--color-bg-tertiary);
+		padding: 0.2rem;
+		border-radius: var(--radius-pill);
+	}
+	.unit-btn {
+		padding: 0.3rem 0.9rem;
+		border: none;
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--color-text-secondary);
+		font: inherit;
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background var(--transition-fast), color var(--transition-fast);
+	}
+	.unit-btn:hover:not(.is-active) { color: var(--color-text-primary); }
+	.unit-btn.is-active {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+	}
 	.empty {
 		text-align: center;
 		color: var(--color-text-secondary);

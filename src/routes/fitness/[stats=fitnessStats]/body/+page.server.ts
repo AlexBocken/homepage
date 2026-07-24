@@ -32,20 +32,28 @@ export const load: PageServerLoad = async ({ fetch }) => {
 	const bfPoints: Point[] = measurements
 		.filter((m: any) => m.bodyFatPercent != null)
 		.map((m: any) => ({ date: m.date, value: m.bodyFatPercent }));
+	// Fat mass needs a weight from the same reading — a scale reports both at
+	// once, so entries missing one are simply skipped rather than paired with a
+	// stale weight.
+	const bfMassPoints: Point[] = measurements
+		.filter((m: any) => m.bodyFatPercent != null && m.weight != null)
+		.map((m: any) => ({ date: m.date, value: (m.weight * m.bodyFatPercent) / 100 }));
 
 	const weightChart = buildSeries(weightPoints);
 
 	// Body fat is plotted as Δ from the first recorded point — same convention as
 	// the dashboard card, where relative change reads more clearly than noisy
-	// absolute percentages.
-	let bfChart: ReturnType<typeof buildSeries> & { baseline: number | null } = {
+	// absolute percentages. Fat mass gets the same treatment, in kg.
+	type DeltaSeries = ReturnType<typeof buildSeries> & { baseline: number | null };
+	const emptySeries = (): DeltaSeries => ({
 		dates: [], data: [], sma: [], upper: [], lower: [], baseline: null
-	};
-	if (bfPoints.length > 0) {
-		const built = buildSeries(bfPoints);
-		const baseline = bfPoints[0].value;
+	});
+	function buildDeltaSeries(points: Point[]): DeltaSeries {
+		if (points.length === 0) return emptySeries();
+		const built = buildSeries(points);
+		const baseline = points[0].value;
 		const round = (v: number) => Math.round(v * 100) / 100;
-		bfChart = {
+		return {
 			dates: built.dates,
 			data: built.data.map((v) => round(v - baseline)),
 			sma: built.sma.map((v) => round(v - baseline)),
@@ -55,5 +63,8 @@ export const load: PageServerLoad = async ({ fetch }) => {
 		};
 	}
 
-	return { weightChart, bfChart };
+	const bfChart = buildDeltaSeries(bfPoints);
+	const bfMassChart = buildDeltaSeries(bfMassPoints);
+
+	return { weightChart, bfChart, bfMassChart };
 };

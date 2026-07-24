@@ -472,6 +472,8 @@ export const en = {
 
 	// Stats page
 	bf_delta_from_prefix: "Δ from",
+	fat_mass: "Fat Mass",
+	bf_unit_switch_label: "Body fat unit",
 	set_height_birthyear_weight: "Set height, birth year & weight",
 	actual_label: "Actual",
 	target_label: "Target",
