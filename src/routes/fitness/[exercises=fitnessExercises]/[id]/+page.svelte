@@ -272,7 +272,7 @@
 						{#each records as rec (rec.reps)}
 							<tr>
 								<td>{rec.reps}</td>
-								<td>{rec.weight} kg × {rec.reps}{#if rec.date} <span class="rec-date">({new Date(rec.date).toLocaleDateString()})</span>{/if}</td>
+								<td>{rec.weight} kg{#if rec.rpe} <span class="rpe">@{rec.rpe} RPE</span>{/if}{#if rec.date} <span class="rec-date">({new Date(rec.date).toLocaleDateString()})</span>{/if}</td>
 								<td>{rec.estimated1rm ?? estimatedOneRepMax(rec.weight, rec.reps)} kg</td>
 							</tr>
 						{/each}

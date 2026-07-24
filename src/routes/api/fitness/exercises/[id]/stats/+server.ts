@@ -69,7 +69,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 	const repRecords = new Map<
 		number,
-		{ weight: number; reps: number; date: Date; estimated1rm: number }
+		{ weight: number; reps: number; rpe?: number; date: Date; estimated1rm: number }
 	>();
 	let bestEst1rm = 0;
 	let bestMaxWeight = 0;
@@ -100,6 +100,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 				repRecords.set(reps, {
 					weight,
 					reps,
+					rpe: set.rpe ?? undefined,
 					date: session.startTime,
 					estimated1rm: est1rm
 				});
@@ -120,6 +121,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.map(([reps, data]) => ({
 			reps,
 			weight: data.weight,
+			rpe: data.rpe,
 			date: data.date,
 			estimated1rm: data.estimated1rm
 		}));
