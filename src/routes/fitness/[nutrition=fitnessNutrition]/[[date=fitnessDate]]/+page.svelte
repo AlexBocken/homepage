@@ -1832,7 +1832,7 @@
 									<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? `Based on your latest logged weight (${latestWeight} kg).` : `Basierend auf deinem letzten Gewicht (${latestWeight} kg).`}</span>
 								{/if}
 								<span class="cite-line"><strong>BMR:</strong> {fmtCal(Math.round(dailyBmr))} kcal — <a href="https://doi.org/10.1093/ajcn/51.2.241" target="_blank" rel="noopener">Mifflin-St Jeor (1990)</a></span>
-								<span class="cite-line"><strong>NEAT:</strong> ×{activityMultiplier(activityLevel).toFixed(1)} — <a href="https://doi.org/10.1093/ajcn/75.5.914" target="_blank" rel="noopener">Levine (2002)</a></span>
+								<span class="cite-line"><strong>NEAT:</strong> ×{activityMultiplier(activityLevel).toFixed(1)} — <a href="https://doi.org/10.1053/beem.2002.0227" target="_blank" rel="noopener">Levine (2002)</a></span>
 								<span class="cite-note">{isEn ? 'NEAT multiplier accounts for non-exercise activity (walking, fidgeting, daily tasks). Tracked exercise kcal are added separately on top.' : 'NEAT-Multiplikator berücksichtigt Alltagsaktivität (Gehen, Bewegung, tägliche Aufgaben). Getracktes Training wird separat oben drauf addiert.'}</span>
 							</div>
 						{/if}

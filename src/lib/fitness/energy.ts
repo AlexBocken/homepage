@@ -7,7 +7,8 @@
 export type Sex = 'male' | 'female';
 
 /**
- * NEAT-only activity multipliers. These are deliberately lower than standard
+ * NEAT-only activity multipliers (non-exercise activity thermogenesis, Levine
+ * 2002 — doi:10.1053/beem.2002.0227). These are deliberately lower than standard
  * TDEE multipliers because tracked workout kcal are added separately, so folding
  * a full exercise multiplier in here would double-count them.
  */
