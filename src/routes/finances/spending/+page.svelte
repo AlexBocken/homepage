@@ -206,7 +206,7 @@
 </div>
 
 <!-- Individual entries (drill-down) -->
-<section class="card">
+<section class="card entries">
 	<h2>
 		<ReceiptText size={18} strokeWidth={1.75} color="var(--color-text-tertiary)" /> {t.bookings} {#if jrnl}<span class="count">({jrnl.total})</span>{/if}
 		{#if data.payee}
@@ -321,6 +321,12 @@
 		border-radius: var(--radius-card);
 		padding: 1.25rem 1.5rem;
 		box-shadow: var(--shadow-sm);
+	}
+	/* This one sits outside `.grid`, so it gets none of the grid's gap and would
+	   otherwise butt straight up against the cards above. 2rem is the page's spacing
+	   between card blocks throughout. */
+	.entries {
+		margin-top: 2rem;
 	}
 	h2 {
 		display: flex;
