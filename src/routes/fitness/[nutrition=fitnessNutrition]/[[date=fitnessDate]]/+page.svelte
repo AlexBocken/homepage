@@ -2892,7 +2892,7 @@
 	}
 	.macro-bar-track {
 		width: 100%;
-		height: 6px;
+		height: var(--meter-md);
 		background: var(--color-bg-elevated);
 		border: 1px solid var(--color-border);
 		border-radius: 3px;
@@ -3099,7 +3099,7 @@
 		color: var(--color-text-secondary);
 	}
 	.micro-bar-wrap {
-		height: 5px;
+		height: var(--meter-sm);
 		background: var(--color-bg-tertiary);
 		border-radius: 3px;
 		overflow: hidden;

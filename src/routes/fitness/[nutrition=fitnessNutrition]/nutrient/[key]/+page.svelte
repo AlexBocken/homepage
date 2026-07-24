@@ -357,7 +357,7 @@
 	}
 	.row-bar-wrap {
 		grid-column: 1 / -1;
-		height: 0.3rem;
+		height: var(--meter-sm);
 		border-radius: var(--radius-pill);
 		background: var(--color-bg-tertiary);
 		overflow: hidden;

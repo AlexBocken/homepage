@@ -95,10 +95,13 @@
 		font-size: var(--text-sm);
 	}
 
+	/* Same weight as the macro progress bars this sits beside, so the panel reads as
+	   one set of meters. The segments stay legible at 6px because they are adjacent
+	   rather than stacked — it is length, not height, that separates them. */
 	.comp-track {
 		display: flex;
 		width: 100%;
-		height: 1.1rem;
+		height: var(--meter-md);
 		border-radius: var(--radius-pill);
 		overflow: hidden;
 		background: var(--color-bg-tertiary);
@@ -131,16 +134,18 @@
 
 	.comp-legend li {
 		display: grid;
-		grid-template-columns: 0.7rem 1fr auto auto;
+		grid-template-columns: var(--meter-md) 1fr auto auto;
 		align-items: center;
 		gap: 0.45rem;
 		font-size: var(--text-sm);
 	}
 
+	/* Sized to the bar it samples, so the legend reads as a key to the meter rather
+	   than as a row of bullets competing with it. */
 	.swatch {
-		width: 0.7rem;
-		height: 0.7rem;
-		border-radius: var(--radius-sm);
+		width: var(--meter-md);
+		height: var(--meter-md);
+		border-radius: 2px;
 		background: var(--seg-color);
 	}
 
@@ -148,9 +153,9 @@
 		background: repeating-linear-gradient(
 			45deg,
 			var(--color-bg-elevated),
-			var(--color-bg-elevated) 3px,
-			var(--color-bg-tertiary) 3px,
-			var(--color-bg-tertiary) 6px
+			var(--color-bg-elevated) 2px,
+			var(--color-bg-tertiary) 2px,
+			var(--color-bg-tertiary) 4px
 		);
 	}
 

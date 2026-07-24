@@ -141,6 +141,16 @@
 	--radius-md: 0.5rem;
 	--radius-lg: 0.75rem;
 
+	/* Meter thickness. Bars that report a value against a total read as one family
+	   only if they share two weights: `sm` for a bar annotating a single row of a
+	   table, `md` for one summarising a whole section. Past about 8px a bar stops
+	   reading as a meter and becomes a block of colour — a segmented composition bar
+	   at 1rem outweighed the numbers beside it and looked like a different component.
+	   Gauges that carry an overlaid marker, like the TDEE comparison, are a separate
+	   pattern and set their own height: they need room for the marker to land in. */
+	--meter-sm: 5px;
+	--meter-md: 6px;
+
 	/* Spacing scale */
 	--space-xs: 0.25rem;
 	--space-sm: 0.5rem;

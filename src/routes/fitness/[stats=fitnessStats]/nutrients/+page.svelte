@@ -712,7 +712,7 @@
 	}
 	.coverage-meter {
 		display: block;
-		height: 5px;
+		height: var(--meter-sm);
 		border-radius: 3px;
 		background: color-mix(in srgb, var(--orange) 35%, transparent);
 		overflow: hidden;
@@ -763,7 +763,7 @@
 		color: var(--color-text-secondary);
 	}
 	.micro-bar-wrap {
-		height: 5px;
+		height: var(--meter-sm);
 		background: var(--color-bg-tertiary);
 		border-radius: 3px;
 		overflow: hidden;

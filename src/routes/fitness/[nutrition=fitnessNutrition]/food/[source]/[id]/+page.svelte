@@ -1022,7 +1022,7 @@
 		font-weight: 500;
 	}
 	.micro-bar-wrap {
-		height: 5px;
+		height: var(--meter-sm);
 		background: var(--color-bg-tertiary);
 		border-radius: 3px;
 		overflow: hidden;
