@@ -37,7 +37,7 @@
 	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
 	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
-	import RoundOffCard from '$lib/components/fitness/RoundOffCard.svelte';
+	import NudgeCard from '$lib/components/fitness/NudgeCard.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, REFERENCE_ENERGY } from '$lib/data/dailyReferenceIntake';
@@ -711,15 +711,36 @@
 	const remainingProtein = $derived(proteinGoalGrams ? proteinGoalGrams - dayTotals.protein : 0);
 	const remainingFat = $derived(fatGoalGrams ? fatGoalGrams - dayTotals.fat : 0);
 	const remainingCarbs = $derived(carbGoalGrams ? carbGoalGrams - dayTotals.carbs : 0);
-	// Server computes initial value to avoid flicker; $derived keeps it reactive
-	let hasHydrated = $state(false);
-	$effect(() => { hasHydrated = true; });
 	const isTodayOrFuture = $derived(currentDate >= todayStr);
-	const showRoundOff = $derived(
-		hasHydrated
-			? !!(isTodayOrFuture && goalCalories && calorieBalance > 50 && calorieBalance <= goalCalories * 0.5)
-			: data.initialShowRoundOff
-	);
+
+	/**
+	 * Suggestions for finishing the day. The card decides for itself whether it has
+	 * anything worth saying — an empty list renders nothing — so the only gate here
+	 * is whether the day can still be added to at all. The old percentage-of-goal
+	 * window is gone with the solver it belonged to.
+	 */
+	let nudges = $state(/** @type {any[]} */ ([]));
+	const showRoundOff = $derived(isTodayOrFuture && !!goalCalories && calorieBalance > 0 && nudges.length > 0);
+
+	$effect(() => {
+		const q = new URLSearchParams({
+			date: currentDate,
+			remainingKcal: String(Math.round(calorieBalance)),
+			remainingProtein: String(Math.round(remainingProtein)),
+			remainingFat: String(Math.round(remainingFat)),
+			remainingCarbs: String(Math.round(remainingCarbs)),
+		});
+		if (!isTodayOrFuture || !goalCalories || calorieBalance <= 0) {
+			nudges = [];
+			return;
+		}
+		let cancelled = false;
+		fetch(`/api/fitness/nudges?${q}`)
+			.then(r => (r.ok ? r.json() : { nudges: [] }))
+			.then(d => { if (!cancelled) nudges = d.nudges ?? []; })
+			.catch(() => { if (!cancelled) nudges = []; });
+		return () => { cancelled = true; };
+	});
 
 	// DRI for micros
 	// The fatty acid references are shares of energy, so they follow the calorie goal
@@ -1608,16 +1629,12 @@
 {/snippet}
 
 {#snippet roundOffSnippet()}
-	<RoundOffCard
-		remainingKcal={calorieBalance}
-		{remainingProtein}
-		{remainingFat}
-		{remainingCarbs}
-		{currentDate}
-		{lang}
-		nutritionSlug={s.nutrition}
-		initialSuggestions={data.roundOffSuggestions?.suggestions ?? null}
-		onlogged={() => {
+	<NudgeCard
+		nudges={nudges}
+		date={currentDate}
+		{isEn}
+		defaultMealType={defaultMealType()}
+		onapplied={() => {
 			invalidateAll();
 		}}
 	/>
@@ -1696,6 +1713,7 @@
 			<a class="go-today-btn" href={todayHref} data-sveltekit-replacestate data-sveltekit-noscroll>{t.today}</a>
 		{/if}
 	</div>
+
 
 	<div class="sidebar-col">
 	<!-- Daily Summary -->
