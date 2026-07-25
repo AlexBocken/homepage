@@ -9,6 +9,7 @@ import { RoundOffCache } from '$models/RoundOffCache';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { entriesCalories } from '$lib/fitness/nutritionMath';
 import { recipeThumbUrl } from '$lib/utils/recipeImage';
+import { calorieTargetForDate, stampDailyTargets } from '$lib/server/dailyTargets';
 import mongoose from 'mongoose';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
@@ -59,15 +60,26 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		} catch { return { kcal: 0, projected: null }; }
 	})();
 
+	// The goal this particular day was eaten against. Past days keep theirs when the
+	// target later moves, so the rings and the adherence grid agree.
+	const dayTargetPromise = (async () => {
+		try {
+			const user = await requireAuth(locals);
+			await dbConnect();
+			return await calorieTargetForDate(user.nickname, dateParam);
+		} catch { return null; }
+	})();
+
 	const recentFromStr = localDateOffset(-7);
 
-	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes] = await Promise.all([
+	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes, dayCalorieGoal] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
 		fetch('/api/fitness/goal'),
 		fetch('/api/fitness/measurements/latest'),
 		exercisePromise,
 		fetch('/api/fitness/favorite-ingredients'),
 		fetch(`/api/fitness/food-log?from=${recentFromStr}&to=${todayStr}`),
+		dayTargetPromise,
 	]);
 
 	const foodLog = foodRes.ok ? await foodRes.json() : { entries: [] };
@@ -133,18 +145,29 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	const roundedExerciseKcal = Math.round(exerciseData.kcal);
 	const projectedExercise = exerciseData.projected;
 
+	// A day with food but no stored target predates them: write the current goal for
+	// it now instead of only assuming it on read, so the next goal change leaves it
+	// alone (see $lib/server/dailyTargets).
+	if (dayCalorieGoal == null && (foodLog.entries ?? []).some((e: any) => e.mealType !== 'water')) {
+		requireAuth(locals)
+			.then(u => stampDailyTargets(u.nickname, [dateParam]))
+			.catch(() => {});
+	}
+
 	// Compute initial showRoundOff server-side to avoid flicker
+	const effectiveCalorieGoal = dayCalorieGoal ?? goal.dailyCalories ?? null;
 	let initialShowRoundOff = false;
-	if (isTodayOrFuture && goal.dailyCalories) {
+	if (isTodayOrFuture && effectiveCalorieGoal) {
 		const totalCal = entriesCalories(foodLog.entries ?? []);
-		const balance = goal.dailyCalories + (roundedExerciseKcal || 0) - totalCal;
-		initialShowRoundOff = balance > 50 && balance <= goal.dailyCalories * 0.5;
+		const balance = effectiveCalorieGoal + (roundedExerciseKcal || 0) - totalCal;
+		initialShowRoundOff = balance > 50 && balance <= effectiveCalorieGoal * 0.5;
 	}
 
 	return {
 		date: dateParam,
 		foodLog,
 		goal,
+		dayCalorieGoal,
 		latestWeight: weightRes.ok ? await weightRes.json() : {},
 		exerciseKcal: roundedExerciseKcal,
 		projectedExercise,

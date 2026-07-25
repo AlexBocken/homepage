@@ -10,6 +10,7 @@ import { WorkoutSession } from '$models/WorkoutSession';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
 import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
+import { backfillDailyTargets, calorieTargetsInRange } from '$lib/server/dailyTargets';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = await requireAuth(locals);
@@ -113,6 +114,18 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	const dailyCalorieGoal = goal?.dailyCalories ?? null;
 
+	// Adherence is judged per day against the goal that was live *that* day, so a
+	// goal change doesn't invalidate the history. Logged days without a stored
+	// target get today's goal written for them now (see $lib/server/dailyTargets).
+	await backfillDailyTargets(user.nickname, dailyCalorieGoal);
+	const calorieTargets = await calorieTargetsInRange(
+		user.nickname,
+		thirtyDaysAgo.toISOString().slice(0, 10),
+		localDateOffset(-1),
+	);
+	const goalForDate = (dateStr: string): number | null =>
+		calorieTargets.get(dateStr) ?? dailyCalorieGoal;
+
 	const neatMult = activityMultiplier(goal?.activityLevel);
 	const canComputeTdee = !!(goal?.heightCm && goal?.birthYear && trendWeight);
 
@@ -177,12 +190,12 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		}
 	}
 
-	// Adherence: % of days within ±10% of calorie goal.
+	// Adherence: % of days within ±10% of that day's calorie goal.
 	// Range: from first tracked day (within 30-day window) to today.
 	// Untracked days between first tracked day and today count as misses.
 	let adherencePercent: number | null = null;
 	let adherenceDays: number | null = null;
-	if (dailyCalorieGoal && dailyTotals.length > 0) {
+	if ((dailyCalorieGoal || calorieTargets.size > 0) && dailyTotals.length > 0) {
 		const sortedDates = dailyTotals.map(d => d.date).sort();
 		const firstTracked = sortedDates[0];
 		// Count calendar days from first tracked day to yesterday (inclusive)
@@ -192,7 +205,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		const totalDays = Math.round((yesterday.getTime() - firstDate.getTime()) / 86400000) + 1;
 
 		const withinRange = dailyTotals.filter(d => {
-			const dayGoal = dailyCalorieGoal + (workoutKcalByDate.get(d.date) ?? 0);
+			const target = goalForDate(d.date);
+			if (target == null) return false;
+			const dayGoal = target + (workoutKcalByDate.get(d.date) ?? 0);
 			return d.calories >= dayGoal * 0.9 && d.calories <= dayGoal * 1.1;
 		}).length;
 		adherenceDays = totalDays;
@@ -231,7 +246,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		for (const d of recentDays) {
 			const pGrams = proteinGramsForDate(d.date);
 			if (pGrams == null) continue;
-			const calorieGoal = dailyCalorieGoal + (workoutKcalByDate.get(d.date) ?? 0);
+			const dayTarget = goalForDate(d.date);
+			if (dayTarget == null) continue;
+			const calorieGoal = dayTarget + (workoutKcalByDate.get(d.date) ?? 0);
 			const remainingCal = Math.max(0, calorieGoal - pGrams * 4);
 			sumProteinCal += pGrams * 4;
 			sumFatCal += ratioSum > 0 ? remainingCal * fatRatio / ratioSum : 0;

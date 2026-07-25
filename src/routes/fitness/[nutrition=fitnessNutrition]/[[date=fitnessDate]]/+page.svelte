@@ -164,11 +164,18 @@
 		exerciseKcal = Number(data.exerciseKcal) || 0;
 		projectedExercise = data.projectedExercise ?? null;
 		currentDate = data.date;
+		goalCalories = data.dayCalorieGoal ?? data.goal?.dailyCalories ?? null;
+		currentGoalCalories = data.goal?.dailyCalories ?? null;
 	});
 
 	// --- Goals ---
+	// The calorie goal shown is the one *this day* was eaten against; only days with
+	// no stored target (logged before targets existed) fall back to the current goal.
 	// svelte-ignore state_referenced_locally
-	let goalCalories = $state(data.goal?.dailyCalories ?? null);
+	let goalCalories = $state(data.dayCalorieGoal ?? data.goal?.dailyCalories ?? null);
+	/** The live goal, which is what the editor edits — see openGoalEditor. */
+	// svelte-ignore state_referenced_locally
+	let currentGoalCalories = $state(data.goal?.dailyCalories ?? null);
 	// svelte-ignore state_referenced_locally
 	let goalProteinMode = $state(data.goal?.proteinMode ?? 'fixed');
 	// svelte-ignore state_referenced_locally
@@ -248,7 +255,9 @@
 	}
 
 	function openGoalEditor() {
-		editCalories = String(goalCalories ?? '');
+		// The editor edits the *current* goal, never the historic one this page may be
+		// showing — opening it on an old day must not offer to restore that number.
+		editCalories = String(currentGoalCalories ?? goalCalories ?? '');
 		editActivityLevel = activityLevel;
 		editProteinMode = goalProteinMode;
 		editProteinTarget = String(goalProteinTarget ?? '');
@@ -326,7 +335,9 @@
 			});
 			if (res.ok) {
 				const d = await res.json();
-				goalCalories = d.dailyCalories;
+				currentGoalCalories = d.dailyCalories;
+				// A goal change only reaches today onwards; a past day keeps its own.
+				if (isTodayOrFuture) goalCalories = d.dailyCalories;
 				activityLevel = d.activityLevel ?? 'light';
 				goalProteinMode = d.proteinMode ?? 'fixed';
 				goalProteinTarget = d.proteinTarget;

@@ -13,6 +13,7 @@ import {
 	resolveEntries, foodLeaf, mealLeaves, recipeLeaves,
 	type LeafRef, type LeafSource,
 } from '$lib/server/foodLogComponents';
+import { stampDailyTargets } from '$lib/server/dailyTargets';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = await requireAuth(locals);
@@ -111,6 +112,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	// Invalidate round-off cache for this date
 	RoundOffCache.deleteOne({ createdBy: user.nickname, date: date.slice(0, 10) }).catch(() => {});
+
+	// Pin the day to the goal that is live right now, so a later goal change judges
+	// it against what it was actually eaten against.
+	stampDailyTargets(user.nickname, [date.slice(0, 10)]).catch(() => {});
 
 	// Hand back the entry in the resolved shape the client optimistically renders.
 	const [hydrated] = await resolveEntries([entry.toObject() as any]);

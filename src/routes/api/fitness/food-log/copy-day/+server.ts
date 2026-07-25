@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
+import { stampDailyTargets } from '$lib/server/dailyTargets';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -62,6 +63,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}));
 
 	const created = await FoodLogEntry.insertMany(docs);
+
+	// The target day now has food, so pin it to the current goal (see dailyTargets).
+	stampDailyTargets(user.nickname, [to]).catch(() => {});
+
 	return json({
 		copied: created.length,
 		// Returned so the caller can offer an exact undo rather than guessing which

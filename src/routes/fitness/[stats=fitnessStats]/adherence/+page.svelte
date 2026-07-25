@@ -10,7 +10,11 @@
 	const isEn = $derived(lang === 'en');
 
 	const balance = $derived(data.balance ?? { series: [], goalCalories: null, start: '', end: '' });
-	const hasGoal = $derived(balance.goalCalories != null);
+	// A goal per day, not one global goal: days keep the target they were eaten
+	// against, so the grid still reads even if no current goal is set.
+	const hasGoal = $derived(
+		balance.goalCalories != null || (balance.series ?? []).some((/** @type {any} */ d) => d.goal != null)
+	);
 
 	/** @type {Record<string, any>} */
 	const byDate = $derived(Object.fromEntries((balance.series ?? []).map((/** @type {any} */ d) => [d.date, d])));

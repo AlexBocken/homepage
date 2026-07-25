@@ -9,13 +9,15 @@ import { BodyMeasurement } from '$models/BodyMeasurement';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
+import { backfillDailyTargets, calorieTargetsInRange } from '$lib/server/dailyTargets';
 
 /**
  * Per-day calorie series for the activity-grid and bar-chart views: for every day
  * with logged food in the window, its intake, estimated expenditure (BMR·NEAT +
  * workout kcal), the resulting balance (intake − expenditure) and whether it landed
- * within ±10% of that day's goal. Non-logged days are simply absent — the client
- * fills the calendar and renders them as "not logged".
+ * within ±10% of that day's goal — the goal *that day* was eaten against, which is
+ * not the current one once the target moves. Non-logged days are simply absent —
+ * the client fills the calendar and renders them as "not logged".
  *
  * Mirrors the definitions the stats-page cards use (see stats/nutrition) so the grid
  * and the headline numbers agree, but keeps one row per day instead of averaging.
@@ -94,6 +96,18 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	}
 
 	const goalCalories: number | null = goal?.dailyCalories ?? null;
+
+	// Any logged day still without a stored target gets today's goal written for it
+	// now, so it is pinned before the goal moves again.
+	await backfillDailyTargets(user.nickname, goalCalories);
+	const targets = await calorieTargetsInRange(
+		user.nickname,
+		windowStart.toISOString().slice(0, 10),
+		localDateOffset(-1),
+	);
+	/** The goal a day was eaten against; the current goal for days predating targets. */
+	const goalForDate = (dateStr: string): number | null => targets.get(dateStr) ?? goalCalories;
+
 	const neatMult = activityMultiplier(goal?.activityLevel);
 	const canComputeTdee = !!(goal?.heightCm && goal?.birthYear);
 
@@ -112,7 +126,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			const tdee = tdeeForDate(date);
 			const expenditure = tdee != null ? Math.round(tdee + workout) : null;
 			const balance = expenditure != null ? Math.round(calories - expenditure) : null;
-			const dayGoal = goalCalories != null ? goalCalories + workout : null;
+			const dayTarget = goalForDate(date);
+			const dayGoal = dayTarget != null ? dayTarget + workout : null;
 			const adhered = dayGoal != null && calories >= dayGoal * 0.9 && calories <= dayGoal * 1.1;
 			return { date, calories: Math.round(calories), expenditure, balance, goal: dayGoal != null ? Math.round(dayGoal) : null, adhered };
 		});

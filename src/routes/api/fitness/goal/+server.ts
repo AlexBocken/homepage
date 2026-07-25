@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { isoWeekKey } from '$lib/fitness/dates';
+import { applyCalorieGoalChange } from '$lib/server/dailyTargets';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
@@ -60,11 +61,23 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
 	await dbConnect();
 
+	// Read the outgoing calorie goal before overwriting it: every logged day that
+	// hasn't been stamped yet was eaten under *that* number, not the new one.
+	const previous = update.dailyCalories !== undefined
+		? ((await FitnessGoal.findOne({ username: user.nickname }, { dailyCalories: 1 }).lean() as any)?.dailyCalories ?? null)
+		: null;
+
 	const goal = await FitnessGoal.findOneAndUpdate(
 		{ username: user.nickname },
 		update,
 		{ upsert: true, returnDocument: 'after' }
 	).lean() as any;
+
+	// Pin history to the old goal, then move today (and any already-logged future
+	// day) to the new one — see $lib/server/dailyTargets.
+	if (typeof update.dailyCalories === 'number') {
+		await applyCalorieGoalChange(user.nickname, previous, update.dailyCalories);
+	}
 
 	const effectiveWeekly = goal?.weeklyWorkouts ?? weeklyWorkouts ?? 4;
 	const streak = await computeStreak(user.nickname, effectiveWeekly);
