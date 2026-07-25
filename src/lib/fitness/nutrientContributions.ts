@@ -6,9 +6,11 @@
  *
  * Two orderings matter and they answer different questions. "Amount" ranks by how
  * much of the nutrient a food actually delivered, which is what moved the day's
- * total. "Per 100 g" ranks by concentration, which is what you would want when
- * deciding what to eat more of — a sprinkle of dried parsley beats a bowl of
- * spinach per gram while contributing almost nothing to the day.
+ * total. "Per 100 kcal" ranks by nutrient density against the energy budget, which
+ * is what you want when deciding what to eat more of: the day has a calorie ceiling,
+ * not a weight ceiling, so a food that carries the nutrient per calorie is what buys
+ * room for it. Ranking per gram instead flatters anything watery or dry rather than
+ * anything nutritious — it puts a sprinkle of dried parsley above spinach.
  */
 
 import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
@@ -106,6 +108,17 @@ export function per100gValue(per100g: Per100g, key: string): number | null {
 	return typeof v === 'number' && !Number.isNaN(v) ? v : null;
 }
 
+/**
+ * A food's kcal per 100 g, or null when it reported none.
+ *
+ * Zero counts as null rather than as an energy figure: dividing by it would rank a
+ * calorie-free drink above every food on earth for whatever trace mineral it lists.
+ */
+export function kcalPer100g(per100g: Per100g): number | null {
+	const v = per100g?.calories;
+	return typeof v === 'number' && !Number.isNaN(v) && v > 0 ? v : null;
+}
+
 export type ContributionRow = {
 	name: string;
 	source: string;
@@ -116,8 +129,15 @@ export type ContributionRow = {
 	grams: number;
 	/** Total of the nutrient this food supplied, in the nutrient's unit. */
 	amount: number;
-	/** The food's concentration, unchanged by how much was eaten. */
+	/** The food's concentration by weight, unchanged by how much was eaten. */
 	per100g: number;
+	/** Energy this food supplied over the window, kcal, or null if it reported none. */
+	kcal: number | null;
+	/**
+	 * The food's concentration against energy, in the nutrient's unit per 100 kcal.
+	 * Null when the food publishes no calories — undefined, not zero.
+	 */
+	per100kcal: number | null;
 	/** How many separate log entries were folded into this row. */
 	entries: number;
 	/** Share of the window's total for this nutrient, 0-1. */
@@ -184,6 +204,19 @@ export function expandCustomMeals(
 	return out;
 }
 
+export type SortBy = 'amount' | 'per100kcal';
+
+/**
+ * The ordering a `?by=` parameter asks for.
+ *
+ * `per100g` is still honoured because the ordering used to be per gram and links to
+ * it are already out there; it now resolves to the energy ordering, which answers the
+ * same question better.
+ */
+export function parseSortBy(by: string | null | undefined): SortBy {
+	return by === 'per100kcal' || by === 'per100g' ? 'per100kcal' : 'amount';
+}
+
 export type Contributions = {
 	rows: ContributionRow[];
 	/** Total supplied by every food that reported the nutrient. */
@@ -213,7 +246,7 @@ export type Contributions = {
 export function nutrientContributions(
 	entries: ContributionEntry[] | null | undefined,
 	key: string,
-	sortBy: 'amount' | 'per100g' = 'amount',
+	sortBy: SortBy = 'amount',
 ): Contributions {
 	const byFood = new Map<string, ContributionRow>();
 	const unreported = new Map<string, { name: string; grams: number }>();
@@ -240,6 +273,9 @@ export function nutrientContributions(
 		const amount = (conc * grams) / 100;
 		total += amount;
 
+		const energy = kcalPer100g(e.per100g);
+		const kcal = energy === null ? null : (energy * grams) / 100;
+
 		const k = `${e.source ?? ''}:${e.sourceId ?? name}:${e.via ?? ''}`;
 		const prev = byFood.get(k);
 		if (prev) {
@@ -249,6 +285,7 @@ export function nutrientContributions(
 			// Weighted by grams so folding two servings of the same food that were
 			// logged from different sources cannot drift the concentration.
 			prev.per100g = prev.grams > 0 ? (prev.amount / prev.grams) * 100 : conc;
+			if (kcal !== null) prev.kcal = (prev.kcal ?? 0) + kcal;
 		} else {
 			byFood.set(k, {
 				name,
@@ -258,6 +295,8 @@ export function nutrientContributions(
 				grams,
 				amount,
 				per100g: conc,
+				kcal,
+				per100kcal: null,
 				entries: 1,
 				share: 0,
 			});
@@ -265,11 +304,16 @@ export function nutrientContributions(
 	}
 
 	const rows = [...byFood.values()];
-	for (const r of rows) r.share = total > 0 ? r.amount / total : 0;
+	for (const r of rows) {
+		r.share = total > 0 ? r.amount / total : 0;
+		r.per100kcal = r.kcal !== null && r.kcal > 0 ? (r.amount / r.kcal) * 100 : null;
+	}
 
+	// Foods with no published energy have no density to rank on, so they go last
+	// rather than sorting as if they were empty of the nutrient.
 	rows.sort((a, b) =>
-		sortBy === 'per100g'
-			? b.per100g - a.per100g || b.amount - a.amount
+		sortBy === 'per100kcal'
+			? (b.per100kcal ?? -1) - (a.per100kcal ?? -1) || b.amount - a.amount
 			: b.amount - a.amount || b.per100g - a.per100g
 	);
 

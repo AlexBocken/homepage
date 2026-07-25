@@ -8,8 +8,9 @@ test.use({ storageState: storageStateFor('fitness') });
  * The contribution breakdown needs a food log to break down, and nothing is seeded
  * for it, so each test owns its entries and removes them again. Values are chosen so
  * the ranking is unambiguous: the liver-like fixture dominates by amount while the
- * parsley-like one wins on concentration, which is exactly the disagreement the sort
- * toggle exists to show.
+ * lean concentrated one wins per calorie, which is exactly the disagreement the sort
+ * toggle exists to show. The oily fixture is the richest of the three per gram and
+ * the poorest per calorie, so it pins the ordering to energy rather than weight.
  */
 const RICH = {
 	name: 'E2E Vitamin A Fixture',
@@ -24,7 +25,15 @@ const CONCENTRATED = {
 	source: 'bls',
 	sourceId: 'E2E-VITA-2',
 	amountGrams: 2,
-	per100g: { calories: 100, protein: 1, fat: 1, carbs: 1, vitaminA: 20000 },
+	per100g: { calories: 50, protein: 1, fat: 1, carbs: 1, vitaminA: 20000 },
+};
+
+const OILY = {
+	name: 'E2E Oily Fixture',
+	source: 'bls',
+	sourceId: 'E2E-VITA-3',
+	amountGrams: 1,
+	per100g: { calories: 900, protein: 0, fat: 100, carbs: 0, vitaminA: 25000 },
 };
 
 /** Today in the local calendar, matching how the diary keys days. */
@@ -37,7 +46,7 @@ test('nutrient contributions rank foods and can be re-sorted by concentration', 
 	const date = today();
 	const created: string[] = [];
 
-	for (const food of [RICH, CONCENTRATED]) {
+	for (const food of [RICH, CONCENTRATED, OILY]) {
 		const res = await request.post('/api/fitness/food-log', {
 			data: { ...food, date, mealType: 'lunch' },
 		});
@@ -57,11 +66,16 @@ test('nutrient contributions rank foods and can be re-sorted by concentration', 
 		const byAmount = page.locator('.rows li').first();
 		await expect(byAmount).toContainText(RICH.name);
 
-		// Switching to concentration flips the order.
+		// Switching to concentration flips the order: 20000 mcg at 50 kcal per 100 g
+		// beats 9000 at 100 kcal, and the oily fixture's 25000 at 900 kcal comes last
+		// despite being the richest by weight.
 		await page.getByRole('link', { name: /By concentration|Nach Gehalt/i }).click();
-		await expect(page).toHaveURL(/by=per100g/);
-		const byConcentration = page.locator('.rows li').first();
-		await expect(byConcentration).toContainText(CONCENTRATED.name);
+		await expect(page).toHaveURL(/by=per100kcal/);
+		const rows = page.locator('.rows li');
+		await expect(rows.first()).toContainText(CONCENTRATED.name);
+		await expect(rows.nth(1)).toContainText(RICH.name);
+		await expect(rows.nth(2)).toContainText(OILY.name);
+		await expect(rows.first()).toContainText('/100 kcal');
 	} finally {
 		for (const id of created) {
 			if (id) await request.delete(`/api/fitness/food-log/${id}`);

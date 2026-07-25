@@ -21,8 +21,10 @@
 	// Bars are scaled to the biggest contributor rather than to the total: most days
 	// have one dominant food, and scaling to the total would leave everything else
 	// as a sliver too short to compare.
+	const byEnergy = $derived(data.sortBy === 'per100kcal');
+
 	const maxAmount = $derived(Math.max(0, ...rows.map(r => r.amount)));
-	const maxPer100g = $derived(Math.max(0, ...rows.map(r => r.per100g)));
+	const maxPer100kcal = $derived(Math.max(0, ...rows.map(r => r.per100kcal ?? 0)));
 
 	const goalPct = $derived(data.goal > 0 ? Math.round((total / data.goal) * 100) : null);
 
@@ -35,11 +37,11 @@
 	);
 
 	/** Preserves the window while switching the ordering. */
-	function hrefWith(/** @type {'amount' | 'per100g'} */ by) {
+	function hrefWith(/** @type {'amount' | 'per100kcal'} */ by) {
 		const q = new URLSearchParams();
 		if (data.isRange) q.set('days', String(data.days));
 		else if (data.date) q.set('date', data.date);
-		if (by === 'per100g') q.set('by', 'per100g');
+		if (by === 'per100kcal') q.set('by', 'per100kcal');
 		const qs = q.toString();
 		const base = resolve('/fitness/[nutrition=fitnessNutrition]/nutrient/[key]', {
 			nutrition: slugs.nutrition,
@@ -116,17 +118,17 @@
 			>{isEn ? 'By amount contributed' : 'Nach Beitrag'}</a>
 			<a
 				class="sort-btn"
-				class:is-active={data.sortBy === 'per100g'}
-				href={hrefWith('per100g')}
+				class:is-active={data.sortBy === 'per100kcal'}
+				href={hrefWith('per100kcal')}
 				data-sveltekit-noscroll
 			>{isEn ? 'By concentration' : 'Nach Gehalt'}</a>
 		</div>
 
 		<p class="sort-note">
-			{data.sortBy === 'per100g'
+			{byEnergy
 				? (isEn
-					? 'Ranked by content per 100 g — what is richest, regardless of how much you ate.'
-					: 'Sortiert nach Gehalt pro 100 g — was am reichhaltigsten ist, unabhängig von der Menge.')
+					? 'Ranked by content per 100 kcal — what carries the most for the calories it costs, regardless of how much you ate.'
+					: 'Sortiert nach Gehalt pro 100 kcal — was pro Kalorie am meisten liefert, unabhängig von der Menge.')
 				: (isEn
 					? 'Ranked by how much each food actually supplied over this window.'
 					: 'Sortiert danach, wie viel jedes Lebensmittel in diesem Zeitraum tatsächlich beigesteuert hat.')}
@@ -140,8 +142,8 @@
 			     painted. -->
 			{#each rows as row (`${row.source}:${row.sourceId}:${row.via ?? ''}:${row.name}`)}
 				{@const href = foodHref(row)}
-				{@const barBase = data.sortBy === 'per100g' ? maxPer100g : maxAmount}
-				{@const barValue = data.sortBy === 'per100g' ? row.per100g : row.amount}
+				{@const barBase = byEnergy ? maxPer100kcal : maxAmount}
+				{@const barValue = byEnergy ? (row.per100kcal ?? 0) : row.amount}
 				<li class="row">
 					<svelte:element
 						this={href ? 'a' : 'div'}
@@ -170,7 +172,13 @@
 							{#if row.entries > 1}
 								· {row.entries}× {isEn ? 'logged' : 'erfasst'}
 							{/if}
-							· {fmt(row.per100g)} {meta.unit}/100 g
+							{#if byEnergy}
+								· {row.per100kcal !== null
+									? `${fmt(row.per100kcal)} ${meta.unit}/100 kcal`
+									: (isEn ? 'no calories reported' : 'keine Kalorienangabe')}
+							{:else}
+								· {fmt(row.per100g)} {meta.unit}/100 g
+							{/if}
 						</span>
 					</svelte:element>
 				</li>

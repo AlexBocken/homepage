@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	nutrientContributions, expandCustomMeals, per100gValue, nutrientMeta, isKnownNutrient,
+	parseSortBy,
 } from '../../../src/lib/fitness/nutrientContributions';
 
 describe('nutrientMeta', () => {
@@ -30,11 +31,20 @@ describe('per100gValue', () => {
 	});
 });
 
+describe('parseSortBy', () => {
+	it('defaults to amount and keeps the old per-gram links working', () => {
+		expect(parseSortBy(null)).toBe('amount');
+		expect(parseSortBy('nonsense')).toBe('amount');
+		expect(parseSortBy('per100kcal')).toBe('per100kcal');
+		expect(parseSortBy('per100g')).toBe('per100kcal');
+	});
+});
+
 describe('nutrientContributions', () => {
 	const entries = [
-		{ name: 'Liver', source: 'bls', sourceId: 'U1', amountGrams: 50, per100g: { vitaminA: 9000 } },
-		{ name: 'Carrot', source: 'bls', sourceId: 'G1', amountGrams: 200, per100g: { vitaminA: 830 } },
-		{ name: 'Bread', source: 'bls', sourceId: 'B1', amountGrams: 100, per100g: { protein: 8 } },
+		{ name: 'Liver', source: 'bls', sourceId: 'U1', amountGrams: 50, per100g: { calories: 130, vitaminA: 9000 } },
+		{ name: 'Carrot', source: 'bls', sourceId: 'G1', amountGrams: 200, per100g: { calories: 40, vitaminA: 830 } },
+		{ name: 'Bread', source: 'bls', sourceId: 'B1', amountGrams: 100, per100g: { calories: 250, protein: 8 } },
 	];
 
 	it('ranks by amount contributed by default', () => {
@@ -45,21 +55,68 @@ describe('nutrientContributions', () => {
 		expect(total).toBeCloseTo(6160);
 	});
 
-	it('ranks by concentration when asked, independent of how much was eaten', () => {
-		const { rows } = nutrientContributions(entries, 'vitaminA', 'per100g');
+	it('ranks by nutrient per 100 kcal when asked, independent of how much was eaten', () => {
+		const { rows } = nutrientContributions(entries, 'vitaminA', 'per100kcal');
 		expect(rows.map(r => r.name)).toEqual(['Liver', 'Carrot']);
-		expect(rows[0].per100g).toBe(9000);
+		// 9000 mcg per 100 g at 130 kcal per 100 g.
+		expect(rows[0].per100kcal).toBeCloseTo((9000 / 130) * 100);
+		expect(rows[1].per100kcal).toBeCloseTo((830 / 40) * 100);
 	});
 
-	// Ordering by concentration must be able to disagree with ordering by amount,
+	// Ordering by density must be able to disagree with ordering by amount,
 	// otherwise the toggle is decorative.
 	it('the two orderings can disagree', () => {
 		const e = [
-			{ name: 'Parsley', source: 'bls', sourceId: 'R1', amountGrams: 2, per100g: { vitaminK: 1640 } },
-			{ name: 'Spinach', source: 'bls', sourceId: 'G2', amountGrams: 200, per100g: { vitaminK: 483 } },
+			{ name: 'Liver', source: 'bls', sourceId: 'U1', amountGrams: 20, per100g: { calories: 130, vitaminA: 9000 } },
+			{ name: 'Carrot', source: 'bls', sourceId: 'G1', amountGrams: 300, per100g: { calories: 40, vitaminA: 830 } },
 		];
-		expect(nutrientContributions(e, 'vitaminK').rows[0].name).toBe('Spinach');
-		expect(nutrientContributions(e, 'vitaminK', 'per100g').rows[0].name).toBe('Parsley');
+		expect(nutrientContributions(e, 'vitaminA').rows[0].name).toBe('Carrot');
+		expect(nutrientContributions(e, 'vitaminA', 'per100kcal').rows[0].name).toBe('Liver');
+	});
+
+	// Per gram, a dried herb beats everything; per calorie it does not. Ranking by
+	// energy is the whole point of the change, so it is worth pinning down.
+	it('ranks per calorie rather than per gram', () => {
+		const e = [
+			{ name: 'Parsley', source: 'bls', sourceId: 'R1', amountGrams: 2, per100g: { calories: 292, vitaminK: 1640 } },
+			{ name: 'Spinach', source: 'bls', sourceId: 'G2', amountGrams: 200, per100g: { calories: 23, vitaminK: 483 } },
+		];
+		const { rows } = nutrientContributions(e, 'vitaminK', 'per100kcal');
+		expect(rows[0].name).toBe('Spinach');
+		// Parsley is still the richer of the two by weight.
+		expect(rows[1].per100g).toBeGreaterThan(rows[0].per100g);
+	});
+
+	it('ranks a food that publishes no calories last rather than as if it were empty', () => {
+		const e = [
+			{ name: 'Unlabelled', source: 'bls', sourceId: 'N1', amountGrams: 100, per100g: { vitaminC: 500 } },
+			{ name: 'Pepper', source: 'bls', sourceId: 'P1', amountGrams: 100, per100g: { calories: 31, vitaminC: 128 } },
+		];
+		const { rows } = nutrientContributions(e, 'vitaminC', 'per100kcal');
+		expect(rows.map(r => r.name)).toEqual(['Pepper', 'Unlabelled']);
+		expect(rows[1].per100kcal).toBeNull();
+	});
+
+	// A zero-calorie figure is an energy-free food, not a divisor: dividing by it
+	// would rank a diet drink above every food that exists.
+	it('treats a zero-calorie figure as no density rather than an infinite one', () => {
+		const e = [
+			{ name: 'Diet Drink', source: 'off', sourceId: 'D1', amountGrams: 500, per100g: { calories: 0, sodium: 10 } },
+			{ name: 'Bread', source: 'bls', sourceId: 'B1', amountGrams: 100, per100g: { calories: 250, sodium: 500 } },
+		];
+		const { rows } = nutrientContributions(e, 'sodium', 'per100kcal');
+		expect(rows[0].name).toBe('Bread');
+		expect(rows[1].per100kcal).toBeNull();
+	});
+
+	it('sums energy across folded entries of the same food', () => {
+		const e = [
+			{ name: 'Milk', source: 'bls', sourceId: 'M1', amountGrams: 200, per100g: { calories: 64, calcium: 120 } },
+			{ name: 'Milk', source: 'bls', sourceId: 'M1', amountGrams: 100, per100g: { calories: 64, calcium: 120 } },
+		];
+		const { rows } = nutrientContributions(e, 'calcium', 'per100kcal');
+		expect(rows[0].kcal).toBeCloseTo(192);
+		expect(rows[0].per100kcal).toBeCloseTo((120 / 64) * 100);
 	});
 
 	it('separates foods that report no figure instead of ranking them last at zero', () => {
