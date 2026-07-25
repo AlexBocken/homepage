@@ -622,6 +622,38 @@
 		applyingXRange = false;
 	});
 
+	// Push new values into the existing chart when the data prop changes.
+	//
+	// Rebuilding the canvas would flicker and would drop the pan/zoom window
+	// mid-gesture, which matters for the body-trend charts: their Δ is measured from
+	// the visible window's start, so every pan hands us a re-zeroed series. Only
+	// values (and the title, which can name that baseline) are swapped — a change in
+	// dataset *shape* still needs a keyed remount, as the unit switch does.
+	$effect(() => {
+		const d = data;
+		const c = chart;
+		const ttl = title;
+		if (!c || !d?.datasets || d.datasets.length !== c.data.datasets.length) return;
+
+		const dts = d.dates || [];
+		const useTimeAxis = !xAxis && dts.length > 0;
+		d.datasets.forEach((/** @type {any} */ ds, /** @type {number} */ i) => {
+			const raw = ds.data || [];
+			c.data.datasets[i].data = useTimeAxis
+				? /** @type {any} */ (raw.map((/** @type {any} */ v, /** @type {number} */ j) => ({ x: dts[j], y: v })))
+				: [...raw];
+			if (ds.backgroundColor !== undefined) c.data.datasets[i].backgroundColor = ds.backgroundColor;
+		});
+		if (!useTimeAxis && !xAxis) c.data.labels = [...(d.labels || [])];
+
+		const titleOpts = /** @type {any} */ (c.options.plugins)?.title;
+		if (titleOpts) { titleOpts.display = !!ttl; titleOpts.text = ttl; }
+
+		// Values moved, so the auto-fitted y range no longer matches them.
+		if (zoom) { const w = currentWindow(); autofitY(w.min, w.max); }
+		c.update('none');
+	});
+
 	// Drive this chart's cursor from an external hover (e.g. a map pin or a
 	// sibling chart). `undefined` means "not externally controlled" — leave the
 	// chart's own hover alone.

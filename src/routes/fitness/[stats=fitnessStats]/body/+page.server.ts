@@ -41,30 +41,12 @@ export const load: PageServerLoad = async ({ fetch }) => {
 
 	const weightChart = buildSeries(weightPoints);
 
-	// Body fat is plotted as Δ from the first recorded point — same convention as
-	// the dashboard card, where relative change reads more clearly than noisy
-	// absolute percentages. Fat mass gets the same treatment, in kg.
-	type DeltaSeries = ReturnType<typeof buildSeries> & { baseline: number | null };
-	const emptySeries = (): DeltaSeries => ({
-		dates: [], data: [], sma: [], upper: [], lower: [], baseline: null
-	});
-	function buildDeltaSeries(points: Point[]): DeltaSeries {
-		if (points.length === 0) return emptySeries();
-		const built = buildSeries(points);
-		const baseline = points[0].value;
-		const round = (v: number) => Math.round(v * 100) / 100;
-		return {
-			dates: built.dates,
-			data: built.data.map((v) => round(v - baseline)),
-			sma: built.sma.map((v) => round(v - baseline)),
-			upper: built.upper.map((v) => round(v - baseline)),
-			lower: built.lower.map((v) => round(v - baseline)),
-			baseline: round(baseline)
-		};
-	}
-
-	const bfChart = buildDeltaSeries(bfPoints);
-	const bfMassChart = buildDeltaSeries(bfMassPoints);
+	// Body fat is plotted as Δ rather than as a noisy absolute percentage, but the
+	// point it counts from depends on the window the reader has zoomed to, so the
+	// subtraction happens on the client. Here the series stay absolute (percent, and
+	// fat mass in kg).
+	const bfChart = buildSeries(bfPoints);
+	const bfMassChart = buildSeries(bfMassPoints);
 
 	return { weightChart, bfChart, bfMassChart };
 };

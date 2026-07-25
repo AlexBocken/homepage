@@ -85,9 +85,11 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	// The per-nutrient contribution breakdown reads one user's food log, so it must be
 	// gated exactly like the diary it is reached from.
 	{ path: '/fitness/nutrition/nutrient/vitaminA', kind: 'page' },
-	// Calorie balance and adherence: one user's intake, weight and goal, day by day.
+	// Calorie balance, adherence and body trends: one user's intake, weight and goal,
+	// day by day.
 	{ path: '/fitness/stats/deficit', kind: 'page' },
 	{ path: '/fitness/stats/adherence', kind: 'page' },
+	{ path: '/fitness/stats/body', kind: 'page' },
 	{ path: '/api/fitness/stats/daily-balance', kind: 'api' },
 	{ path: '/api/fitness/goal', kind: 'api' },
 	{ path: '/api/fitness/stats/micronutrients', kind: 'api' },

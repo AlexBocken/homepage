@@ -1,17 +1,14 @@
 <script>
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
-	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
-	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
-	const statsSlug = $derived(fitnessSlugs(lang).stats);
 
 	function checkDark() {
 		if (typeof document === 'undefined') return false;
@@ -37,20 +34,124 @@
 	const bfAccentFill = $derived(dark ? 'rgba(180, 142, 173, 0.2)' : 'rgba(180, 142, 173, 0.16)');
 
 	const weightChart = $derived(data.weightChart ?? { dates: [], data: [], sma: [], upper: [], lower: [] });
-	const emptyBf = { dates: [], data: [], sma: [], upper: [], lower: [], baseline: null };
+	const emptyBf = { dates: [], data: [], sma: [], upper: [], lower: [] };
 	const bfPctChart = $derived(data.bfChart ?? emptyBf);
 	const bfMassChart = $derived(data.bfMassChart ?? emptyBf);
 
-	// Body fat can be read as a percentage of body weight or as fat mass in kg —
-	// both plotted as Δ from their own first reading.
+	// Body fat can be read as a percentage of body weight or as fat mass in kg. Both
+	// arrive absolute and are plotted as Δ from the visible window's start (see
+	// `bfChart`), so what the eye compares is the change across what it can see.
 	let bfUnit = $state(/** @type {'pct' | 'kg'} */ ('pct'));
 	const hasBfPct = $derived((bfPctChart.data?.length ?? 0) > 1);
 	const hasBfMass = $derived((bfMassChart.data?.length ?? 0) > 1);
-	const bfChart = $derived(bfUnit === 'kg' && hasBfMass ? bfMassChart : bfPctChart);
+	const bfAbsolute = $derived(bfUnit === 'kg' && hasBfMass ? bfMassChart : bfPctChart);
 	const bfUnitSuffix = $derived(bfUnit === 'kg' && hasBfMass ? ' kg' : ' pp');
 
 	const hasWeight = $derived((weightChart.data?.length ?? 0) > 1);
 	const hasBf = $derived(hasBfPct || hasBfMass);
+
+	// ── Visible x window ───────────────────────────────────────────────────────
+	// Full extent of the data (epoch ms) — the pan/zoom limits. Taken from the
+	// absolute series: the Δ series is derived from the window, so reading it here
+	// would make the window depend on itself.
+	const fullRange = $derived.by(() => {
+		const stamps = [...(weightChart.dates ?? []), ...(bfAbsolute.dates ?? [])]
+			.map((/** @type {string} */ d) => new Date(d).getTime())
+			.filter((n) => Number.isFinite(n));
+		if (!stamps.length) return null;
+		return { min: Math.min(...stamps), max: Math.max(...stamps) };
+	});
+
+	// A month is the span most weight questions are about, and a year of daily
+	// readings compresses the recent trend into the last few pixels. Zooming out to
+	// the whole history is a pinch or a scroll away.
+	const DEFAULT_DAYS = 30;
+	const defaultRange = $derived.by(() => {
+		if (!fullRange) return null;
+		return { min: Math.max(fullRange.min, fullRange.max - (DEFAULT_DAYS - 1) * 86400000), max: fullRange.max };
+	});
+
+	// Shared x window across both charts. A gesture on either writes `userRange`,
+	// which takes over from the default until it is reset.
+	/** @type {{ min: number, max: number } | null} */
+	let userRange = $state(null);
+	const xRange = $derived(userRange ?? defaultRange);
+	const isZoomed = $derived(userRange !== null);
+	/** @param {{ min: number, max: number }} r */
+	function onRange(r) { userRange = { ...r }; }
+	function resetZoom() { userRange = null; }
+
+	// ── Window-relative Δ ──────────────────────────────────────────────────────
+
+	/**
+	 * The value the window's Δ counts from.
+	 *
+	 * The first reading inside the window is the natural zero — that is the point
+	 * the eye starts from. A window that contains no reading at all (zoomed into a
+	 * gap between measurements) falls back to the trend line, which is defined
+	 * everywhere between readings: it is interpolated at the window's start so the
+	 * curve still reads as "change since the left edge" instead of jumping to
+	 * whatever the last window's baseline happened to be.
+	 *
+	 * @param {{ dates?: string[], data?: (number|null)[], sma?: (number|null)[] }} series
+	 * @param {{ min: number, max: number } | null} range
+	 */
+	function baselineFor(series, range) {
+		const dates = series.dates ?? [];
+		const values = series.data ?? [];
+		if (!dates.length) return null;
+		const stamps = dates.map((d) => new Date(d).getTime());
+
+		if (!range) return values[0] ?? null;
+
+		for (let i = 0; i < stamps.length; i++) {
+			if (stamps[i] < range.min || stamps[i] > range.max) continue;
+			if (values[i] != null) return values[i];
+		}
+
+		// Interpolate the trend at the window start, clamping to the ends so a window
+		// entirely before or after the data still has a defined zero.
+		const sma = series.sma ?? [];
+		/** @type {number[]} */
+		const known = [];
+		for (let i = 0; i < sma.length; i++) if (sma[i] != null) known.push(i);
+		if (!known.length) return values[0] ?? null;
+		const x = range.min;
+		if (x <= stamps[known[0]]) return sma[known[0]];
+		const last = known[known.length - 1];
+		if (x >= stamps[last]) return sma[last];
+		for (let k = 1; k < known.length; k++) {
+			const a = known[k - 1];
+			const b = known[k];
+			if (x <= stamps[b]) {
+				const span = stamps[b] - stamps[a];
+				const t = span > 0 ? (x - stamps[a]) / span : 0;
+				return /** @type {number} */ (sma[a]) + (/** @type {number} */ (sma[b]) - /** @type {number} */ (sma[a])) * t;
+			}
+		}
+		return sma[last];
+	}
+
+	/** @param {number} v */
+	const round2 = (v) => Math.round(v * 100) / 100;
+
+	// The plotted body-fat series: absolute values re-expressed as Δ from the
+	// window's baseline, so panning re-zeroes the curve on what is now on screen.
+	const bfChart = $derived.by(() => {
+		const abs = bfAbsolute;
+		const base = baselineFor(abs, xRange);
+		if (base == null) return { ...abs, baseline: null };
+		/** @param {(number|null)[] | undefined} arr */
+		const shift = (arr) => (arr ?? []).map((v) => (v == null ? null : round2(v - base)));
+		return {
+			dates: abs.dates,
+			data: shift(abs.data),
+			sma: shift(abs.sma),
+			upper: shift(abs.upper),
+			lower: shift(abs.lower),
+			baseline: round2(base),
+		};
+	});
 
 	const hasSma = $derived(weightChart.sma?.some((/** @type {any} */ v) => v !== null));
 	const hasSmaBf = $derived(bfChart.sma?.some((/** @type {any} */ v) => v !== null));
@@ -115,33 +216,23 @@
 		return `${label} · ${t.bf_delta_from_prefix} ${base}`;
 	});
 
-	// Full extent of the data (epoch ms), used to reset the zoom to "show all".
-	const fullRange = $derived.by(() => {
-		const stamps = [...(weightChart.dates ?? []), ...(bfChart.dates ?? [])].map((/** @type {string} */ d) => new Date(d).getTime());
-		if (!stamps.length) return null;
-		return { min: Math.min(...stamps), max: Math.max(...stamps) };
-	});
-
-	// Shared x window. null = full range (charts render unzoomed). A user gesture
-	// on either chart writes here; both charts mirror it via applyXRange.
-	/** @type {{ min: number, max: number } | null} */
-	let xRange = $state(null);
-	/** @param {{ min: number, max: number }} r */
-	function onRange(r) { xRange = { ...r }; }
-	function resetZoom() { if (fullRange) xRange = { ...fullRange }; }
 </script>
 
 <svelte:head><title>{t.body_trends_title} - Bocken</title></svelte:head>
 
 <div class="body-detail">
 	<div class="detail-head">
-		<a class="back-link" href={resolve('/fitness/[stats=fitnessStats]', { stats: statsSlug })}>
-			<ChevronLeft size={18} /> {t.stats_title}
-		</a>
-		<h1>{t.body_trends_title}</h1>
+		<h1>
+			{t.body_trends_title}
+			{#if !isZoomed}
+				<span class="head-range">
+					{lang === 'en' ? `last ${DEFAULT_DAYS} days` : `letzte ${DEFAULT_DAYS} Tage`}
+				</span>
+			{/if}
+		</h1>
 		<div class="head-row">
 			<span class="zoom-hint">{t.body_trends_hint}</span>
-			<button class="reset-btn" onclick={resetZoom} disabled={xRange === null}>
+			<button class="reset-btn" onclick={resetZoom} disabled={!isZoomed}>
 				<RotateCcw size={14} /> {t.reset_zoom}
 			</button>
 		</div>
@@ -211,22 +302,15 @@
 		flex-direction: column;
 		gap: 0.4rem;
 	}
-	.back-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.2rem;
-		align-self: flex-start;
-		color: var(--color-text-secondary);
-		font-size: 0.85rem;
-		font-weight: 500;
-		text-decoration: none;
-		border-radius: var(--radius-pill, 1000px);
-		transition: color var(--transition-fast, 120ms);
-	}
-	.back-link:hover { color: var(--color-text-primary); }
 	.detail-head h1 {
 		margin: 0;
 		font-size: 1.4rem;
+	}
+	.head-range {
+		font-size: 0.8rem;
+		font-weight: 400;
+		color: var(--color-text-secondary);
+		margin-left: 0.4rem;
 	}
 	.head-row {
 		display: flex;
