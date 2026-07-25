@@ -7,7 +7,7 @@
 	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import CompositionBar from '$lib/components/fitness/CompositionBar.svelte';
-	import { FATTY_ACID_META } from '$lib/fitness/fattyAcids';
+	import { fatCompositionRows, fatCompositionNote } from '$lib/fitness/fatComposition';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { formatGrams as fmt } from '$lib/fitness/nutritionMath';
 	import {
@@ -198,6 +198,17 @@
 			});
 		}
 
+		// Fibre and sugars, the two carbohydrate figures that carry a reference. They
+		// come from the composition totals rather than the micronutrient map, but are
+		// judged the same way, and the diary shows the same pair in the same place.
+		const carbQualityRows = ['fiber', 'sugars'].map(k => {
+			const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
+			const value = /** @type {Record<string, number>} */ (mn.composition ?? {})[k] ?? 0;
+			const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
+			const pct = goal > 0 ? Math.round(value / goal * 100) : null;
+			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit: undefined, overLimit: false, noData: false };
+		});
+
 		// Fatty acids that carry a reference intake, judged against it like any other
 		// nutrient. Saturated and trans fat are ceilings; the other three are adequate
 		// intakes, so exceeding them is not a problem.
@@ -210,32 +221,19 @@
 			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit: undefined, overLimit: false, noData: false };
 		});
 
-		// The rest have no reference value. Shown against the largest of the set, the
-		// same treatment the non-essential amino acids get — the useful reading is the
-		// relative shape of the fat eaten, not a percentage of anything.
-		const compositionOrder = [
-			'monounsaturatedFat', 'polyunsaturatedFat', 'omega3', 'omega6',
-			'gammaLinolenicAcid', 'arachidonicAcid', 'epa', 'dpa', 'dha',
-		];
-		const compValues = compositionOrder.map(k => mn.fats?.[k] ?? 0);
-		const compMax = Math.max(0, ...compValues);
-		const compTotal = compValues.reduce((a, b) => a + b, 0);
-		const fatCompositionRows = compositionOrder.map((k, i) => {
-			const meta = FATTY_ACID_META[k];
-			const value = compValues[i];
-			return {
-				key: k,
-				label: isEn ? meta.label : meta.labelDe,
-				unit: 'g',
-				value,
-				pct: compTotal > 0 ? Math.round(value / compTotal * 100) : null,
-				bar: compMax > 0 ? value / compMax * 100 : 0,
-				isMax: false,
-				limit: undefined,
-				overLimit: false,
-				noData: false,
-			};
-		});
+		// The rest have no reference value — shown as the shape of the fat eaten, with
+		// each omega total heading the acids it is the sum of. Same rows, same order and
+		// same rules as the diary's day panel; see $lib/fitness/fatComposition.
+		const compositionRows = fatCompositionRows(mn.fats, {
+			totalFat: mn.composition?.fat ?? 0,
+			isEn,
+		}).map(r => ({
+			...r,
+			isMax: false,
+			limit: undefined,
+			overLimit: false,
+			noData: false,
+		}));
 
 		// Essentials: average intake against the WHO requirement for the logged body weight
 		const essentialRows = essentialOrder.map(k => {
@@ -267,21 +265,28 @@
 			};
 		});
 
+		// Only the fat-composition rows nest, but every row carries the flags so the
+		// renderer can stay one shape.
+		/** @param {any[]} rows */
+		const flat = (rows) => rows.map(r => ({ child: false, header: false, ...r }));
+
+		// Section order matches the diary's day panel exactly — the two views answer the
+		// same question over different spans, and a reader moving between them should
+		// not have to re-find anything.
 		return [
-			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkRows(minerals), note: '' },
-			{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: mkTraceRows(), note: traceCoverageNote(traceCov, isEn) },
-			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkRows(vitamins), note: '' },
-			{ title: isEn ? 'Other' : 'Sonstiges', rows: mkRows(other), note: '' },
-			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: fattyAcidRows, note: isEn
+			{ title: isEn ? 'Carbohydrate Quality' : 'Kohlenhydrat-Qualität', rows: flat(carbQualityRows), note: '' },
+			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: flat(fattyAcidRows), note: isEn
 				? `Saturated and trans fat are ceilings. Linoleic and α-linolenic acid are adequate intakes — reaching them is the goal, exceeding them is not a concern. All four are shares of energy, scaled to ${energyBasisLabel}; EPA + DHA is a fixed 250 mg a day.`
 				: `Gesättigte und Trans-Fettsäuren sind Obergrenzen. Linol- und α-Linolensäure sind Richtwerte — sie zu erreichen ist das Ziel, sie zu überschreiten unproblematisch. Alle vier sind Energieanteile, skaliert auf ${energyBasisLabel}; EPA + DHA sind fixe 250 mg pro Tag.` },
-			{ title: isEn ? 'Fat Composition' : 'Fettzusammensetzung', rows: fatCompositionRows, note: isEn
-				? 'No intake requirement — bars show each one’s size against the largest, and % its share of the fatty acids measured. Omega-3 and omega-6 are summed from the individual acids wherever a source reports them.'
-				: 'Kein Bedarfswert — die Balken zeigen die Grösse im Verhältnis zum grössten Wert, % den Anteil an den gemessenen Fettsäuren. Omega-3 und Omega-6 werden aus den Einzelfettsäuren summiert, sofern eine Quelle sie ausweist.' },
-			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: essentialRows, note: weightNote },
-			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: nonEssentialRows, note: isEn
+			{ title: isEn ? 'Fat Composition' : 'Fettzusammensetzung', rows: flat(compositionRows), note: fatCompositionNote(isEn) },
+			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: flat(mkRows(minerals)), note: '' },
+			{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: flat(mkTraceRows()), note: traceCoverageNote(traceCov, isEn) },
+			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: flat(mkRows(vitamins)), note: '' },
+			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: flat(essentialRows), note: weightNote },
+			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: flat(nonEssentialRows), note: isEn
 				? 'No intake requirement — bars show each one’s share of the non-essential amino acids eaten.'
 				: 'Kein Bedarfswert — die Balken zeigen den Anteil an den aufgenommenen nicht-essenziellen Aminosäuren.' },
+			{ title: isEn ? 'Other' : 'Sonstiges', rows: flat(mkRows(other)), note: '' },
 		];
 	});
 
@@ -451,7 +456,13 @@
 							<p class="micro-note">{section.note}</p>
 						{/if}
 						{#each section.rows as row (row.key)}
-							<a class="micro-row is-link" href={nutrientHref(row.key)} data-sveltekit-noscroll>
+							<a
+								class="micro-row is-link"
+								class:is-child={row.child}
+								class:is-group={row.header}
+								href={nutrientHref(row.key)}
+								data-sveltekit-noscroll
+							>
 								<span class="micro-label">
 									{row.label}
 									{#if row.overLimit}
@@ -655,6 +666,13 @@
 		gap: 0.25rem;
 		color: var(--color-text-primary);
 		font-weight: 500;
+	}
+	/* An omega total heads the acids it is the sum of; those sit indented under it. */
+	.micro-row.is-group .micro-label { font-weight: 700; }
+	.micro-row.is-child .micro-label {
+		padding-left: 0.85rem;
+		font-weight: 400;
+		color: var(--color-text-secondary);
 	}
 	.micro-label :global(.micro-warn-icon) {
 		color: var(--red);

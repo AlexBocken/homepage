@@ -26,8 +26,9 @@
 	import { groupsPresent } from '$lib/fitness/microCoverage';
 	import {
 		fatSplit, carbSplit, omegaTotals, epaDha as epaDhaFrom, hasFattyAcids,
-		FATTY_ACID_META, ACID_KEYS,
+		ACID_KEYS,
 	} from '$lib/fitness/fattyAcids';
+	import { fatCompositionRows as buildFatCompositionRows } from '$lib/fitness/fatComposition';
 	import CompositionBar from '$lib/components/fitness/CompositionBar.svelte';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
@@ -148,23 +149,27 @@
 	);
 
 	// The rest have no reference value — listed with their amounts only, and only
-	// where the source actually measured them.
-	const fatCompositionRows = $derived.by(() => {
-		/** @type {{ key: string, label: string, value: number }[]} */
-		const rows = [];
-		for (const [key, derivedValue] of /** @type {const} */ ([['omega3', omegas.omega3], ['omega6', omegas.omega6]])) {
-			if (!derivedValue) continue;
-			const meta = FATTY_ACID_META[key];
-			rows.push({ key, label: isEn ? meta.label : meta.labelDe, value: scaled(derivedValue.value) });
-		}
+	// where the source actually measured them. Order and nesting come from the shared
+	// builder, so this reads the same as the diary and the averages.
+	const fatCompositionValues = $derived.by(() => {
+		/** @type {Record<string, number>} */
+		const values = {};
 		for (const key of ['monounsaturatedFat', 'polyunsaturatedFat', ...ACID_KEYS]) {
-			if (typeof nRecord[key] !== 'number') continue;
-			const meta = FATTY_ACID_META[key];
-			const label = isEn ? meta.label : meta.labelDe;
-			rows.push({ key, label: meta.short ? `${label} (${meta.short})` : label, value: scaled(nRecord[key]) });
+			if (typeof nRecord[key] === 'number') values[key] = scaled(nRecord[key]);
 		}
-		return rows;
+		// Resolved totals, not the raw keys: a source that published only a lump
+		// omega-3 figure and one that published four acids must both land here.
+		if (omegas.omega3) values.omega3 = scaled(omegas.omega3.value);
+		if (omegas.omega6) values.omega6 = scaled(omegas.omega6.value);
+		return values;
 	});
+
+	const fatCompositionRows = $derived(buildFatCompositionRows(fatCompositionValues, {
+		isEn,
+		totalFat: scaled(fats.fat),
+		includeMissing: false,
+		withShort: true,
+	}));
 
 	// --- Amino acids ---
 	const AMINO_META = {
@@ -601,11 +606,11 @@
 							<h4>{isEn ? 'Fat Composition' : 'Fettzusammensetzung'}</h4>
 							<p class="micro-note">
 								{isEn
-									? 'No reference intake for these. Omega-3 and omega-6 are summed from the individual acids the source reports.'
-									: 'Für diese gibt es keinen Referenzwert. Omega-3 und Omega-6 werden aus den von der Quelle ausgewiesenen Einzelfettsäuren summiert.'}
+									? 'No reference intake for these. Omega-3 and omega-6 are summed from the individual acids the source reports, listed indented beneath each total.'
+									: 'Für diese gibt es keinen Referenzwert. Omega-3 und Omega-6 werden aus den von der Quelle ausgewiesenen Einzelfettsäuren summiert, die eingerückt darunter stehen.'}
 							</p>
 							{#each fatCompositionRows as row (row.key)}
-								<div class="fat-row">
+								<div class="fat-row" class:is-child={row.child} class:is-group={row.header}>
 									<span class="micro-label">{row.label}</span>
 									<span class="micro-value">{fmt(row.value)} g</span>
 								</div>
@@ -992,6 +997,12 @@
 		gap: 0.5rem;
 		padding: 0.15rem 0;
 		font-size: var(--text-sm);
+	}
+	/* An omega total heads the acids it is the sum of; those sit indented under it. */
+	.fat-row.is-group .micro-label { font-weight: 700; }
+	.fat-row.is-child .micro-label {
+		padding-left: 0.85rem;
+		color: var(--color-text-secondary);
 	}
 	@media (max-width: 560px) {
 		.composition-grid {

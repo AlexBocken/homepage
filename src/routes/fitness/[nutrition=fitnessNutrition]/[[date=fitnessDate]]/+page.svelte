@@ -43,7 +43,11 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, REFERENCE_ENERGY } from '$lib/data/dailyReferenceIntake';
-	import { fatSplit, carbSplit, epaDha as epaDhaOf, FAT_GROUP_KEYS, ACID_KEYS } from '$lib/fitness/fattyAcids';
+	import {
+		fatSplit, carbSplit, epaDha as epaDhaOf, omegaTotals as omegaTotalsOf,
+		FAT_GROUP_KEYS, ACID_KEYS,
+	} from '$lib/fitness/fattyAcids';
+	import { fatCompositionRows, fatCompositionNote } from '$lib/fitness/fatComposition';
 	import CompositionBar from '$lib/components/fitness/CompositionBar.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import { microCoverage } from '$lib/fitness/microCoverage';
@@ -559,6 +563,13 @@
 				const v = p[k];
 				if (typeof v === 'number') fats[k] = (fats[k] ?? 0) + v * r;
 			}
+			// Derived per entry rather than from the summed acids: a food logged from
+			// Open Food Facts carries a stored omega-3 total and no breakdown, one from
+			// USDA carries the acids and no total, and only the per-record view knows
+			// which is which. Same rule as the averages endpoint.
+			const { omega3, omega6 } = omegaTotalsOf(p);
+			if (omega3) fats.omega3 = (fats.omega3 ?? 0) + omega3.value * r;
+			if (omega6) fats.omega6 = (fats.omega6 ?? 0) + omega6.value * r;
 			// EPA + DHA is the pair the marine omega-3 reference is set against, and it
 			// is derived per entry for the same reason the omega totals are.
 			const ed = epaDhaOf(p);
@@ -1426,19 +1437,32 @@
 			});
 		}
 
+		// The shape of the fat eaten, with each omega total heading the acids it sums.
+		// Same builder the nutrient averages use, so the two views cannot drift apart.
+		const compositionRows = fatCompositionRows(dayTotals.fats, {
+			totalFat: dayTotals.fat,
+			isEn,
+		}).map(r => ({ ...r, goal: 0, isMax: false, essential: false, noData: false }));
+
+		// Only the fat-composition rows nest, but every row carries the flags so the
+		// renderer can stay one shape.
+		/** @param {any[]} rows */
+		const flat = (rows) => rows.map(r => ({ child: false, header: false, ...r }));
+
 		return [
-			{ title: isEn ? 'Carbohydrate Quality' : 'Kohlenhydrat-Qualität', rows: mkFatRows(carbQuality), note: '' },
-			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: mkFatRows(fatQuality), note: isEn
+			{ title: isEn ? 'Carbohydrate Quality' : 'Kohlenhydrat-Qualität', rows: flat(mkFatRows(carbQuality)), note: '' },
+			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: flat(mkFatRows(fatQuality)), note: isEn
 				? `Saturated and trans fat are ceilings; linoleic and α-linolenic acid are adequate intakes, so passing them is fine. All four are shares of energy, scaled to ${energyBasisLabel}. EPA + DHA is a fixed 250 mg a day and does not scale.`
 				: `Gesättigte und Trans-Fettsäuren sind Obergrenzen; Linol- und α-Linolensäure sind Richtwerte, ein Überschreiten ist unproblematisch. Alle vier sind Energieanteile, skaliert auf ${energyBasisLabel}. EPA + DHA sind fixe 250 mg pro Tag und skalieren nicht.` },
-			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: mkRows(minerals), note: '' },
-			{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: mkTraceRows(), note: traceCoverageNote(dayTotals.traces.coverage, isEn) },
-			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: mkRows(vitamins), note: '' },
-			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: essentialRows, note: '' },
-			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: nonEssentialRows, note: isEn
+			{ title: isEn ? 'Fat Composition' : 'Fettzusammensetzung', rows: flat(compositionRows), note: fatCompositionNote(isEn) },
+			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: flat(mkRows(minerals)), note: '' },
+			{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: flat(mkTraceRows()), note: traceCoverageNote(dayTotals.traces.coverage, isEn) },
+			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: flat(mkRows(vitamins)), note: '' },
+			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: flat(essentialRows), note: '' },
+			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: flat(nonEssentialRows), note: isEn
 				? 'No intake requirement — bars show each one’s share of the non-essential amino acids you ate.'
 				: 'Kein Bedarfswert — die Balken zeigen den Anteil an den aufgenommenen nicht-essenziellen Aminosäuren.' },
-			{ title: isEn ? 'Other' : 'Sonstiges', rows: mkRows(other), note: '' },
+			{ title: isEn ? 'Other' : 'Sonstiges', rows: flat(mkRows(other)), note: '' },
 		];
 	});
 
@@ -1737,7 +1761,13 @@
 					<p class="micro-note">{section.note}</p>
 				{/if}
 				{#each section.rows as row}
-					<a class="micro-row is-link" href={nutrientHref(row.key)} data-sveltekit-noscroll>
+					<a
+						class="micro-row is-link"
+						class:is-child={row.child}
+						class:is-group={row.header}
+						href={nutrientHref(row.key)}
+						data-sveltekit-noscroll
+					>
 						<span class="micro-label">{row.label}</span>
 						<div class="micro-bar-wrap">
 							<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.bar, 100)}%"></div>
@@ -3070,6 +3100,13 @@
 	.micro-label {
 		color: var(--color-text-primary);
 		font-weight: 500;
+	}
+	/* An omega total heads the acids it is the sum of; those sit indented under it. */
+	.micro-row.is-group .micro-label { font-weight: 700; }
+	.micro-row.is-child .micro-label {
+		padding-left: 0.85rem;
+		font-weight: 400;
+		color: var(--color-text-secondary);
 	}
 	.micro-source {
 		display: flex;
