@@ -1,23 +1,19 @@
 <script>
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ActivityGrid from '$lib/components/fitness/ActivityGrid.svelte';
-	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const isEn = $derived(lang === 'en');
-	const statsSlug = $derived(fitnessSlugs(lang).stats);
 
 	const balance = $derived(data.balance ?? { series: [], goalCalories: null, start: '', end: '' });
 	const hasGoal = $derived(balance.goalCalories != null);
 
 	/** @type {Record<string, any>} */
 	const byDate = $derived(Object.fromEntries((balance.series ?? []).map((/** @type {any} */ d) => [d.date, d])));
-
 
 	/** @param {any} day → true when logged under 90% of that day's goal */
 	const isUnder = (/** @type {any} */ day) => day.goal != null && !day.adhered && day.calories < day.goal * 0.9;
@@ -58,12 +54,7 @@
 <svelte:head><title>{t.diet_adherence} - Bocken</title></svelte:head>
 
 <div class="page">
-	<div class="head">
-		<a class="back" href={resolve('/fitness/[stats=fitnessStats]', { stats: statsSlug })} aria-label={isEn ? 'Back to stats' : 'Zurück zur Statistik'}>
-			<ArrowLeft size={18} />
-		</a>
-		<h1>{t.diet_adherence}</h1>
-	</div>
+	<h1>{t.diet_adherence}</h1>
 
 	{#if !hasGoal}
 		<p class="empty">{t.no_calorie_goal}</p>
@@ -99,9 +90,7 @@
 
 <style>
 	.page { max-width: 1000px; margin-inline: auto; padding: 1rem; width: 100%; }
-	.head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
-	.back { display: inline-flex; color: var(--color-text-secondary); }
-	h1 { margin: 0; font-size: 1.4rem; }
+	h1 { margin: 0 0 1rem; font-size: 1.4rem; }
 	.empty { color: var(--color-text-secondary); }
 	.stat-row { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 0.75rem; }
 	.stat { display: flex; flex-direction: column; }

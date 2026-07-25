@@ -1,18 +1,15 @@
 <script>
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ActivityGrid from '$lib/components/fitness/ActivityGrid.svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
-	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const isEn = $derived(lang === 'en');
-	const statsSlug = $derived(fitnessSlugs(lang).stats);
 
 	// Match the balance card: surplus (eating over) green, deficit (under) red.
 	const GREEN = '#A3BE8C';
@@ -118,12 +115,7 @@
 <svelte:head><title>{t.calorie_balance} - Bocken</title></svelte:head>
 
 <div class="page">
-	<div class="head">
-		<a class="back" href={resolve('/fitness/[stats=fitnessStats]', { stats: statsSlug })} aria-label={isEn ? 'Back to stats' : 'Zurück zur Statistik'}>
-			<ArrowLeft size={18} />
-		</a>
-		<h1>{t.calorie_balance}</h1>
-	</div>
+	<h1>{t.calorie_balance}</h1>
 
 	{#if !balance.hasTdee}
 		<p class="empty">{t.set_height_birthyear_weight}</p>
@@ -187,9 +179,7 @@
 
 <style>
 	.page { max-width: 1000px; margin-inline: auto; padding: 1rem; width: 100%; }
-	.head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
-	.back { display: inline-flex; color: var(--color-text-secondary); }
-	h1 { margin: 0; font-size: 1.4rem; }
+	h1 { margin: 0 0 1rem; font-size: 1.4rem; }
 	h2 { font-size: 1rem; margin: 1.5rem 0 0.5rem; }
 	.h2-range { font-size: 0.8rem; font-weight: 400; color: var(--color-text-secondary); margin-left: 0.4rem; }
 	.section-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }

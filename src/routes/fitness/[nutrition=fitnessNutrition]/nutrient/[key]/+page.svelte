@@ -50,14 +50,14 @@
 		return base + (qs ? `?${qs}` : '');
 	}
 
+	// Only the averages list gets a link back: it is a list in another section, and
+	// returning to the right day range of it is not something the header can do. The
+	// day view needs no such link — the header already leads back to the diary.
 	const backHref = $derived(
 		data.isRange
 			? resolve('/fitness/[stats=fitnessStats]/nutrients', { stats: slugs.stats })
 				+ (data.days === 30 ? '?days=30' : '')
-			: resolve('/fitness/[nutrition=fitnessNutrition]/[[date=fitnessDate]]', {
-				nutrition: slugs.nutrition,
-				date: data.date ?? undefined,
-			})
+			: null
 	);
 
 	/** @param {{ source: string, sourceId: string }} row */
@@ -78,12 +78,12 @@
 <svelte:head><title>{pageTitle} - Bocken</title></svelte:head>
 
 <div class="nutrient-page">
-	<a class="back-link" href={backHref}>
-		<ChevronLeft size={16} />
-		{data.isRange
-			? (isEn ? 'Nutrient averages' : 'Nährstoff-Durchschnitte')
-			: (isEn ? 'Diary' : 'Tagebuch')}
-	</a>
+	{#if backHref}
+		<a class="back-link" href={backHref}>
+			<ChevronLeft size={16} />
+			{isEn ? 'Nutrient averages' : 'Nährstoff-Durchschnitte'}
+		</a>
+	{/if}
 
 	<div class="head">
 		<h1>{label}</h1>

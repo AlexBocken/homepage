@@ -1,7 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Ruler from '@lucide/svelte/icons/ruler';
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
@@ -15,7 +14,6 @@
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
-	const statsSlug = $derived(lang === 'en' ? 'stats' : 'statistik');
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 	const card = $derived(data.card);
 
@@ -194,9 +192,6 @@
 
 <div class="detail-page">
 	<header class="detail-header" style="--accent: {bodyPartAccent(card.key)}">
-		<a class="back-link" href={resolve('/fitness/[stats=fitnessStats]', { stats: statsSlug })} aria-label={t.back}>
-			<ArrowLeft size={18} />
-		</a>
 		<div class="head-text">
 			<span class="eyebrow">{t.body_parts}</span>
 			<h1>{t[card.labelKey]}</h1>
@@ -312,22 +307,6 @@
 		display: flex;
 		align-items: center;
 		gap: 0.85rem;
-	}
-	.back-link {
-		display: grid;
-		place-items: center;
-		width: 2.2rem;
-		height: 2.2rem;
-		border-radius: 50%;
-		border: 1px solid var(--color-border);
-		background: var(--color-surface);
-		color: var(--color-text-secondary);
-		text-decoration: none;
-		transition: all 150ms;
-	}
-	.back-link:hover {
-		color: var(--color-text-primary);
-		border-color: var(--color-text-tertiary);
 	}
 	.head-text {
 		flex: 1;
