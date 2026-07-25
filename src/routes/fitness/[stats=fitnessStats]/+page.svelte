@@ -819,7 +819,8 @@
 				</div>
 			</div>
 
-			<div class="lifetime-card balance-card" class:surplus={ns.avgCalorieBalance > 0} class:deficit={ns.avgCalorieBalance < 0}>
+			<a class="lifetime-card balance-card" class:surplus={ns.avgCalorieBalance > 0} class:deficit={ns.avgCalorieBalance < 0}
+				href={resolve('/fitness/[stats=fitnessStats]/deficit', { stats: statsSlug })} aria-label={t.calorie_balance}>
 				<div class="card-icon"><Scale size={24} /></div>
 				{#if ns.avgCalorieBalance != null}
 					<div class="card-value" class:positive={ns.avgCalorieBalance > 0} class:negative={ns.avgCalorieBalance < 0}>
@@ -830,7 +831,9 @@
 				{/if}
 				<div class="card-label card-label-info">
 					{t.calorie_balance}
-					<button class="card-info-trigger" onclick={() => showBalanceInfo = !showBalanceInfo} aria-label="Info"><Info size={12} /></button>
+					<span class="card-info-trigger" role="button" tabindex="0" aria-label="Info"
+						onclick={(e) => { e.preventDefault(); e.stopPropagation(); showBalanceInfo = !showBalanceInfo; }}
+						onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); showBalanceInfo = !showBalanceInfo; } }}><Info size={12} /></span>
 					{#if showBalanceInfo}
 						<div class="card-info-tooltip">
 							{t.calorie_balance_tooltip}
@@ -849,9 +852,10 @@
 						{t.no_nutrition_data}
 					{/if}
 				</div>
-			</div>
+			</a>
 
-			<div class="lifetime-card adherence-card">
+			<a class="lifetime-card adherence-card"
+				href={resolve('/fitness/[stats=fitnessStats]/adherence', { stats: statsSlug })} aria-label={t.diet_adherence}>
 				<div class="card-icon"><Target size={24} /></div>
 				{#if ns.adherencePercent != null}
 					<div class="card-value">{ns.adherencePercent}<span class="card-unit">%</span></div>
@@ -860,7 +864,9 @@
 				{/if}
 				<div class="card-label card-label-info">
 					{t.diet_adherence}
-					<button class="card-info-trigger" onclick={() => showAdherenceInfo = !showAdherenceInfo} aria-label="Info"><Info size={12} /></button>
+					<span class="card-info-trigger" role="button" tabindex="0" aria-label="Info"
+						onclick={(e) => { e.preventDefault(); e.stopPropagation(); showAdherenceInfo = !showAdherenceInfo; }}
+						onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); showAdherenceInfo = !showAdherenceInfo; } }}><Info size={12} /></span>
 					{#if showAdherenceInfo}
 						<div class="card-info-tooltip">
 							{t.diet_adherence_tooltip}
@@ -874,7 +880,7 @@
 						{t.no_calorie_goal}
 					{/if}
 				</div>
-			</div>
+			</a>
 
 			<a
 				class="lifetime-card macro-card"
@@ -1576,7 +1582,12 @@
 		box-shadow: var(--shadow-sm);
 		text-align: center;
 		position: relative;
+		/* balance/adherence/macro cards are links; keep them looking like cards */
+		color: inherit;
+		text-decoration: none;
 	}
+	a.lifetime-card { cursor: pointer; transition: transform var(--transition-fast), box-shadow var(--transition-fast); }
+	a.lifetime-card:hover { transform: scale(1.02); box-shadow: var(--shadow-md); }
 	.lifetime-card::before {
 		content: '';
 		position: absolute;

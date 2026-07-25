@@ -4,7 +4,7 @@
 	/**
 	 * @type {{
 	 *   type?: 'line' | 'bar',
-	 *   data: { labels?: string[], dates?: string[], datasets: Array<{ label: string, data: Array<number|null|{ x: number, y: number|null }>, borderColor?: string, backgroundColor?: string, borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number, type?: string, borderDash?: number[], [key: string]: any }> },
+	 *   data: { labels?: string[], dates?: string[], datasets: Array<{ label: string, data: Array<number|null|{ x: number, y: number|null }>, borderColor?: string, backgroundColor?: string|string[], borderWidth?: number, pointRadius?: number, pointBackgroundColor?: string, tension?: number, fill?: boolean|string, order?: number, type?: string, borderDash?: number[], [key: string]: any }> },
 	 *   title?: string,
 	 *   height?: string,
 	 *   yUnit?: string,
@@ -163,6 +163,10 @@
 			}
 		}
 		if (!Number.isFinite(lo) || !Number.isFinite(hi)) return;
+		// Bars are read against zero, so keep the baseline in view even when the
+		// visible slice sits entirely above or below it — otherwise they float, and a
+		// goal line at zero would be drawn outside the plot area.
+		if (type === 'bar') { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
 		const pad = (hi - lo) * 0.1 || Math.abs(hi) * 0.1 || 1;
 		ys.min = lo - pad;
 		ys.max = hi + pad;
@@ -320,6 +324,18 @@
 			};
 		});
 
+		// Bar charts of small counts (workouts per week) read best on whole-number
+		// ticks, but forcing a step of 1 on a chart that runs into the thousands asks
+		// Chart.js for thousands of ticks — past its 1000-tick guard it gives up and
+		// draws none. So the integer step only applies while the values stay small.
+		const barPeak = type !== 'bar' ? 0 : Math.max(0, ...plainDatasets.flatMap((ds) =>
+			/** @type {any[]} */ (ds.data).map((pt) => {
+				const y = pt != null && typeof pt === 'object' ? pt.y : pt;
+				return typeof y === 'number' && Number.isFinite(y) ? Math.abs(y) : 0;
+			})
+		));
+		const yStepSize = type === 'bar' && barPeak <= 12 ? 1 : undefined;
+
 		/** @type {import('chart.js').Plugin[]} */
 		const plugins = [];
 		if (onHover) {
@@ -442,7 +458,7 @@
 						ticks: {
 							color: textColor,
 							font: { size: 11 },
-							stepSize: type === 'bar' ? 1 : undefined,
+							stepSize: yStepSize,
 							callback: (/** @type {any} */ v) => `${cleanTick(v)}${yUnit}`
 						}
 					}
