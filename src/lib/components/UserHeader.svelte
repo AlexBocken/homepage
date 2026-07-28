@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { onMount } from "svelte";
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import LogIn from '@lucide/svelte/icons/log-in';
@@ -28,29 +27,39 @@
 		await pwaStore.clearOfflineData();
 	}
 
-	function toggle_options(){
-		const el = document.querySelector("#options-wrap") as HTMLElement | null;
-		if (el) el.hidden = !el.hidden;
+	let toggleEl: HTMLInputElement | undefined = $state();
+
+	// The menu opens and closes on its own via the checkbox, with no JS at all.
+	// This only adds click-outside-to-close on top.
+	function closeOnOutsideClick(node: HTMLElement) {
+		const handler = (e: MouseEvent) => {
+			if (!toggleEl?.checked) return;
+			if (node.contains(e.target as Node)) return;
+			toggleEl.checked = false;
+		};
+		document.addEventListener('click', handler);
+		return () => document.removeEventListener('click', handler);
 	}
-
-	onMount( () => {
-		document.addEventListener("click", (e: MouseEvent) => {
-			const userWrap = document.querySelector("#user-wrap");
-
-			if(userWrap && !userWrap.contains(e.target as Node)){
-				const wrap = document.querySelector("#options-wrap") as HTMLElement | null;
-				if (wrap) wrap.hidden = true;
-			}
-		})
-	})
 </script>
 <style>
 	.user-wrap {
 		position: relative;
 		display: inline-flex;
 	}
-	button.avatar {
-		background-color: transparent;
+	/* Visually hidden but still focusable — it is the real control, so keyboard
+	   users can Tab to it and toggle with Space, JS or no JS. */
+	.menu-toggle {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	label.avatar {
+		display: block;
 		border: none;
 		width: 1.8rem;
 		height: 1.8rem;
@@ -60,6 +69,10 @@
 		background-size: contain;
 		cursor: pointer;
 	}
+	.menu-toggle:focus-visible + label.avatar {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
 	.login-link {
 		display: flex !important;
 		align-items: center;
@@ -67,14 +80,20 @@
 		padding: 0.4rem !important;
 	}
 	.options-wrap {
-		--menu-bg: rgba(46, 52, 64, 0.82);
-		--menu-border: rgba(255,255,255,0.08);
+		/* Same frosted recipe as the nav bar — see app.css → --glass-*. */
+		--menu-bg: var(--glass-bg);
+		--menu-border: var(--glass-border);
 		--menu-text: rgba(255,255,255,0.9);
 		--menu-text-hover: var(--nord11);
+		display: none;
 		position: absolute;
 		right: 0;
 		top: calc(100% + 2px);
 		z-index: 10;
+	}
+	/* Pure-CSS disclosure — works with JS disabled. */
+	.menu-toggle:checked ~ .options-wrap {
+		display: block;
 	}
 	.options-wrap::before {
 		content: '';
@@ -93,29 +112,17 @@
 		border-radius: 8px;
 		width: 30ch;
 		padding: 1rem;
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+		backdrop-filter: blur(var(--glass-blur));
+		box-shadow: 0 4px 24px var(--glass-shadow);
 	}
-	@media (prefers-color-scheme: dark) {
-		.options-wrap {
-			--menu-bg: rgba(20, 20, 20, 0.82);
-		}
-	}
-	:global(:root[data-theme="dark"]) .options-wrap {
-		--menu-bg: rgba(20, 20, 20, 0.92);
-	}
+	/* Only the text colour still varies per theme; the glass itself is global. */
 	@media (prefers-color-scheme: light) {
 		:global(:root:not([data-theme])) .options-wrap {
-			--menu-bg: rgba(255, 255, 255, 0.85);
-			--menu-border: rgba(0,0,0,0.08);
 			--menu-text: var(--color-text-primary);
 			--menu-text-hover: var(--nord11);
 		}
 	}
 	:global(:root[data-theme="light"]) .options-wrap {
-		--menu-bg: rgba(255, 255, 255, 0.95);
-		--menu-border: rgba(0,0,0,0.08);
 		--menu-text: var(--color-text-primary);
 		--menu-text-hover: var(--nord11);
 	}
@@ -184,15 +191,21 @@
 </style>
 
 {#if user}
-	<div class="user-wrap" id=user-wrap>
-		<button
+	<div class="user-wrap" id=user-wrap {@attach closeOnOutsideClick}>
+		<input
+			type="checkbox"
+			class="menu-toggle"
+			id="pfp-menu-toggle"
+			bind:this={toggleEl}
+			aria-label={user.name}
+		/>
+		<label
 			class="avatar"
-			onclick={toggle_options}
+			for="pfp-menu-toggle"
 			style="background-image: url('{ownAvatarThumb}')"
 			id=button
-			aria-label={user.name}
-		></button>
-		<div class="options-wrap" hidden id=options-wrap>
+		></label>
+		<div class="options-wrap" id=options-wrap>
 			<div id=options>
 				<h2>{user.name}</h2>
 				<p>({user.nickname})</p>

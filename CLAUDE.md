@@ -123,7 +123,77 @@ Use `Toggle.svelte` (iOS-style) instead of raw `<input type="checkbox">` for use
 - Cards/links: `scale: 1.02` + shadow elevation on hover
 - Tags/pills: `scale: 1.05` with `--transition-fast` (100ms)
 - Standard transitions: `--transition-normal` (200ms)
-- Nav bar: glassmorphism (`backdrop-filter: blur(16px)`, semi-transparent bg)
+- Nav bar: glassmorphism — see below
+
+## Glassmorphism
+
+Frosted panels (nav bar, the popovers anchored to it) all share one recipe.
+**Never hardcode the tint or the blur radius** — use the `--glass-*` tokens from
+`app.css`, which already resolve per theme:
+
+```css
+background: var(--glass-bg);
+backdrop-filter: blur(var(--glass-blur));
+border: 1px solid var(--glass-border);
+box-shadow: 0 4px 24px var(--glass-shadow);
+```
+
+### Nothing that needs blur may sit inside a backdrop root
+
+An element becomes a **backdrop root** — meaning descendants can only sample what
+is painted *inside* it, which is nothing — when it has any of:
+
+- `backdrop-filter`
+- **`view-transition-name`** ← the non-obvious one; it bit this repo twice
+- `filter`, `opacity < 1`, `mask`, `mix-blend-mode`, `contain: paint`
+
+A `backdrop-filter` under any of those renders as a flat translucent panel. No
+error, no warning — it silently does nothing. `position: fixed` does **not**
+escape it; only leaving the DOM subtree does. (A background colour with an alpha
+channel is fine — that is not `opacity`.)
+
+**This is why the header is shaped the way it is.** `Header.svelte` is:
+
+```
+.header-shell     ← sticky + z-index. Plain box: NO filter, NO view-transition-name
+  .glass          ← the frosted pane: background + backdrop-filter + view-transition-name
+  nav             ← plain flex row, position: relative
+      … .header-right, popovers, everything that needs its own blur …
+```
+
+The frosted pane is a **sibling** of the bar's content, never its ancestor, so a
+popover inside `nav` still blurs the page behind it. Do not move
+`backdrop-filter` or `view-transition-name` onto `nav` or `.header-shell` —
+either flattens every popover in the bar.
+
+`.header-right` is the one exception, and it shows the general escape hatch. It
+*needs* `view-transition-name: nav-right`, or the theme toggle, language picker
+and avatar drop out of the morph and just fade in place. It also *contains* the
+profile menu, which needs to blur. Both are satisfied because the two are never
+required at the same time — the bar only morphs during navigation, and the menu
+is closed then — so the name is dropped exactly while the menu is open:
+
+```css
+.header-right { view-transition-name: nav-right; }
+.header-right:has(:global(#pfp-menu-toggle:checked)) { view-transition-name: none; }
+```
+
+Reach for that pattern when an element genuinely needs both: scope the
+backdrop-root-creating property to the state where the blur isn't showing.
+
+Popovers in the bar use a **CSS-only checkbox disclosure** so they work with
+JavaScript disabled — a visually-hidden-but-focusable `<input type="checkbox">`,
+a `<label>` as the visible trigger, and `:checked ~ .panel { display: block }`.
+JS is only a progressive enhancement for click-outside-to-close. See
+`UserHeader.svelte` and `OfflineSyncIndicator.svelte`.
+
+### Never hand-write `-webkit-backdrop-filter`
+
+Lightning CSS auto-prefixes from the browser targets in `vite.config.ts`
+(safari 14). Writing both by hand makes it dedupe them down to **only** the
+`-webkit-` property, silently dropping the standard one and breaking blur in
+Firefox. The sole exception is the offline page's inline CSS string in
+`service-worker.ts`, which never passes through Lightning CSS.
 
 ## Typography
 - Font stack: Helvetica, Arial, "Noto Sans", sans-serif

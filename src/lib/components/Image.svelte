@@ -165,7 +165,6 @@
 		background: rgb(0 0 0 / 0.55);
 		color: #fff;
 		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
 	}
 
 	/* Shown when the gated request 401s (anonymous viewer). */

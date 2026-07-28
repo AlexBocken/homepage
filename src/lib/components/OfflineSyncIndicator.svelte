@@ -6,7 +6,7 @@
 	let { lang = 'de' }: { lang?: string } = $props();
 
 	let mounted = $state(false);
-	let open = $state(false);
+	let toggleEl: HTMLInputElement | undefined = $state();
 
 	const t = $derived(m[lang as CommonLang]);
 
@@ -15,12 +15,13 @@
 		await pwaStore.initialize();
 	});
 
+	// The popover opens and closes on its own via the checkbox, with no JS at
+	// all. This only adds click-outside-to-close on top.
 	function closeOnOutsideClick(node: HTMLElement) {
 		const handler = (e: MouseEvent) => {
-			if (!open) return;
-			if (!node.contains(e.target as Node)) {
-				open = false;
-			}
+			if (!toggleEl?.checked) return;
+			if (node.contains(e.target as Node)) return;
+			toggleEl.checked = false;
 		};
 		document.addEventListener('click', handler);
 		return () => document.removeEventListener('click', handler);
@@ -43,7 +44,7 @@
 
 	async function handleClear() {
 		await pwaStore.clearOfflineData();
-		open = false;
+		if (toggleEl) toggleEl.checked = false;
 	}
 
 	const visible = $derived(
@@ -64,11 +65,24 @@
 		align-items: center;
 	}
 
+	/* Visually hidden but still focusable — it is the real control, so keyboard
+	   users can Tab to it and toggle with Space, JS or no JS. */
+	.popover-toggle {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	.popover-toggle:focus-visible + .pip {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
 	.pip {
 		--size: 8px;
-		appearance: none;
-		background: transparent;
-		border: none;
 		padding: 3px;
 		display: grid;
 		place-items: center;
@@ -101,10 +115,12 @@
 	}
 
 	.popover {
-		--menu-bg: rgba(46, 52, 64, 0.95);
-		--menu-border: rgba(255,255,255,0.08);
+		/* Same frosted recipe as the nav bar — see app.css → --glass-*. */
+		--menu-bg: var(--glass-bg);
+		--menu-border: var(--glass-border);
 		--menu-text: rgba(255,255,255,0.92);
 		--menu-text-secondary: rgba(255,255,255,0.6);
+		display: none;
 		position: absolute;
 		top: calc(100% + 10px);
 		left: -8px;
@@ -114,9 +130,13 @@
 		border: 1px solid var(--menu-border);
 		border-radius: 10px;
 		padding: 0.85rem 0.95rem;
-		box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+		box-shadow: 0 4px 24px var(--glass-shadow);
 		z-index: 50;
-		backdrop-filter: blur(16px);
+		backdrop-filter: blur(var(--glass-blur));
+	}
+	/* Pure-CSS disclosure — works with JS disabled. */
+	.popover-toggle:checked ~ .popover {
+		display: block;
 	}
 	.popover::before {
 		content: '';
@@ -127,23 +147,14 @@
 		border-bottom-color: var(--menu-bg);
 		border-top: 0;
 	}
-	@media (prefers-color-scheme: dark) {
-		.popover { --menu-bg: rgba(20, 20, 20, 0.95); }
-	}
-	:global(:root[data-theme="dark"]) .popover {
-		--menu-bg: rgba(20, 20, 20, 0.95);
-	}
+	/* Only the text colours still vary per theme; the glass itself is global. */
 	@media (prefers-color-scheme: light) {
 		:global(:root:not([data-theme])) .popover {
-			--menu-bg: rgba(255, 255, 255, 0.97);
-			--menu-border: rgba(0,0,0,0.08);
 			--menu-text: var(--color-text-primary);
 			--menu-text-secondary: var(--color-text-secondary);
 		}
 	}
 	:global(:root[data-theme="light"]) .popover {
-		--menu-bg: rgba(255, 255, 255, 0.97);
-		--menu-border: rgba(0,0,0,0.08);
 		--menu-text: var(--color-text-primary);
 		--menu-text-secondary: var(--color-text-secondary);
 	}
@@ -230,71 +241,69 @@
 
 {#if visible}
 	<div class="wrap" {@attach closeOnOutsideClick}>
-		<button
-			class="pip"
-			onclick={() => open = !open}
+		<input
+			type="checkbox"
+			class="popover-toggle"
+			id="offline-popover-toggle"
+			bind:this={toggleEl}
 			aria-label={t.offline_ready}
-			aria-expanded={open}
-			title={t.offline_ready}
-			type="button"
-		>
+		/>
+		<label class="pip" for="offline-popover-toggle" title={t.offline_ready}>
 			<span class="dot" class:syncing={pwaStore.isSyncing}></span>
-		</button>
+		</label>
 
-		{#if open}
-			<div class="popover" role="dialog">
-				<div class="status-row">
-					<span class="status-dot"></span>
-					{t.offline_ready}
-				</div>
-				<div class="meta">
-					{pwaStore.recipeCount} {t.recipes_word}
-					{#if pwaStore.lastSyncDate}
-						<br />{t.last_sync}: {formatDate(pwaStore.lastSyncDate)}
-					{/if}
-				</div>
-
-				<div class="divider"></div>
-
-				<div class="actions">
-					<button
-						class="action"
-						onclick={handleSync}
-						disabled={pwaStore.isSyncing}
-						type="button"
-					>
-						{pwaStore.isSyncing ? t.syncing : t.sync_now}
-					</button>
-					<button
-						class="action danger"
-						onclick={handleClear}
-						disabled={pwaStore.isSyncing}
-						type="button"
-					>
-						{t.clear_offline_data}
-					</button>
-				</div>
-
-				{#if pwaStore.isSyncing && pwaStore.syncProgress}
-					<div class="progress">
-						<div class="progress-text">
-							{pwaStore.syncProgress.message}
-							{#if pwaStore.syncProgress.imageProgress}
-								· {progressPct}%
-							{/if}
-						</div>
-						{#if pwaStore.syncProgress.imageProgress}
-							<div class="progress-bar">
-								<div class="progress-fill" style="width: {progressPct}%"></div>
-							</div>
-						{/if}
-					</div>
-				{/if}
-
-				{#if pwaStore.error}
-					<div class="error">{pwaStore.error}</div>
+		<div class="popover" role="dialog">
+			<div class="status-row">
+				<span class="status-dot"></span>
+				{t.offline_ready}
+			</div>
+			<div class="meta">
+				{pwaStore.recipeCount} {t.recipes_word}
+				{#if pwaStore.lastSyncDate}
+					<br />{t.last_sync}: {formatDate(pwaStore.lastSyncDate)}
 				{/if}
 			</div>
-		{/if}
+
+			<div class="divider"></div>
+
+			<div class="actions">
+				<button
+					class="action"
+					onclick={handleSync}
+					disabled={pwaStore.isSyncing}
+					type="button"
+				>
+					{pwaStore.isSyncing ? t.syncing : t.sync_now}
+				</button>
+				<button
+					class="action danger"
+					onclick={handleClear}
+					disabled={pwaStore.isSyncing}
+					type="button"
+				>
+					{t.clear_offline_data}
+				</button>
+			</div>
+
+			{#if pwaStore.isSyncing && pwaStore.syncProgress}
+				<div class="progress">
+					<div class="progress-text">
+						{pwaStore.syncProgress.message}
+						{#if pwaStore.syncProgress.imageProgress}
+							· {progressPct}%
+						{/if}
+					</div>
+					{#if pwaStore.syncProgress.imageProgress}
+						<div class="progress-bar">
+							<div class="progress-fill" style="width: {progressPct}%"></div>
+						</div>
+					{/if}
+				</div>
+			{/if}
+
+			{#if pwaStore.error}
+				<div class="error">{pwaStore.error}</div>
+			{/if}
+		</div>
 	</div>
 {/if}

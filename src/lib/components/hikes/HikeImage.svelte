@@ -225,7 +225,6 @@
 		background: rgb(0 0 0 / 0.55);
 		color: #fff;
 		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
 	}
 
 	/* Capture time, bottom-right so it never collides with the private badge. */
@@ -244,7 +243,6 @@
 		background: rgb(0 0 0 / 0.55);
 		color: #fff;
 		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
 	}
 
 	/* Sits within the rounded image; if a caption follows, the figure grows so

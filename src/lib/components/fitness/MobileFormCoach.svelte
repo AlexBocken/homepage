@@ -531,7 +531,6 @@
 		border: 1px solid rgba(236, 239, 244, 0.18);
 		background: rgba(30, 34, 42, 0.5);
 		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
 		color: #eceff4;
 		cursor: pointer;
 		transition:
@@ -591,7 +590,6 @@
 		border: 1px solid rgba(236, 239, 244, 0.18);
 		background: rgba(30, 34, 42, 0.92);
 		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
 		box-shadow: var(--shadow-md, 0 4px 24px rgba(0, 0, 0, 0.4));
 		font-size: 0.74rem;
 		font-weight: 400;
@@ -709,7 +707,6 @@
 		border-left: 4px solid var(--tone);
 		background: color-mix(in srgb, var(--tone) 16%, rgba(17, 20, 26, 0.55));
 		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
 		color: #eceff4;
 		text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 	}
@@ -798,7 +795,6 @@
 		border: 1px solid rgba(236, 239, 244, 0.22);
 		background: rgba(46, 52, 64, 0.5);
 		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
 		color: #eceff4;
 		font-family: var(--mono);
 		font-size: 0.9rem;
@@ -829,7 +825,6 @@
 		border-radius: var(--radius-lg, 0.75rem);
 		background: rgba(30, 34, 42, 0.45);
 		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
 	}
 	.next-name {
 		margin: 0.2rem 0 0.5rem;
@@ -977,7 +972,6 @@
 		border-radius: var(--radius-md, 0.5rem);
 		background: rgba(20, 24, 31, 0.5);
 		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
 	}
 	.field-inp:focus-within {
 		border-color: var(--frost);

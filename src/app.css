@@ -175,6 +175,21 @@
 	--grid-fill-pop-a: var(--nord11);
 	--grid-fill-pop-b: var(--nord12);
 	--grid-fill-pop-c: var(--nord14);
+
+	/* Glassmorphism — the nav bar and every popover anchored to it share these,
+	   so the frosted panels stay identical. A panel using these MUST NOT sit
+	   inside another element that has backdrop-filter (it would be a backdrop
+	   root and the blur would silently do nothing). See CLAUDE.md →
+	   Glassmorphism. */
+	--glass-blur: 16px;
+	--glass-bg: rgba(255, 255, 255, 0.82);
+	--glass-border: rgba(0, 0, 0, 0.08);
+	--glass-shadow: rgba(0, 0, 0, 0.1);
+
+	/* Modal scrim — the dimmed, blurred page behind a dialog. Softer than the
+	   nav's glass on purpose: the page should stay readable as context. */
+	--scrim-blur: 10px;
+	--scrim-bg: rgba(0, 0, 0, 0.5);
 }
 
 /* ============================================
@@ -217,6 +232,11 @@
 		/* Surface Colors - subtle lift from black */
 		--color-surface: #1a1a1a;
 		--color-surface-hover: #222;
+
+		/* Glassmorphism — see :root */
+		--glass-bg: rgba(20, 20, 20, 0.78);
+		--glass-border: rgba(255, 255, 255, 0.06);
+		--glass-shadow: rgba(0, 0, 0, 0.25);
 
 		/* Text Colors - soft white, not blinding */
 		--color-text-primary: #e5e5e5;
@@ -280,6 +300,11 @@
 
 	--color-surface: #1a1a1a;
 	--color-surface-hover: #222;
+
+	/* Glassmorphism — see :root */
+	--glass-bg: rgba(20, 20, 20, 0.78);
+	--glass-border: rgba(255, 255, 255, 0.06);
+	--glass-shadow: rgba(0, 0, 0, 0.25);
 
 	--color-text-primary: #e5e5e5;
 	--color-text-secondary: #aaa;

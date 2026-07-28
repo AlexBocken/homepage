@@ -457,7 +457,6 @@
 		opacity: 0;
 		transform: scale(0.85);
 		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
 		transition:
 			opacity var(--transition-fast),
 			transform var(--transition-fast),
@@ -521,7 +520,6 @@
 		border-radius: var(--radius-pill);
 		background: rgb(0 0 0 / 0.45);
 		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
 		letter-spacing: 0.01em;
 	}
 
@@ -547,7 +545,6 @@
 		background: rgb(0 0 0 / 0.55);
 		color: #fff;
 		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
 	}
 
 	.chev {
@@ -704,7 +701,6 @@
 		color: #fff;
 		cursor: pointer;
 		backdrop-filter: blur(6px);
-		-webkit-backdrop-filter: blur(6px);
 		transition:
 			background var(--transition-fast),
 			transform var(--transition-fast);

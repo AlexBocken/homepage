@@ -80,7 +80,6 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 		border-radius: 100px;
 		background: var(--fab-bg, rgba(46, 52, 64, 0.82));
 		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
 		border: 1px solid var(--fab-border, rgba(255, 255, 255, 0.08));
 		box-shadow: 0 4px 24px var(--fab-shadow, rgba(0, 0, 0, 0.25));
 

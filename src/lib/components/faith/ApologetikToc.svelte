@@ -65,7 +65,6 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
 		z-index: 50;
 		font-family: var(--font-sans);
 		scrollbar-width: thin;

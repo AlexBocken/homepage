@@ -46,7 +46,7 @@ footer {
 /* ═══════════════════════════════════════════
    FLOATING GLASS BAR
    ═══════════════════════════════════════════ */
-nav {
+.header-shell {
 	position: sticky;
 	/* Without a safe-area inset (regular browser tabs), keep the comfortable
 	   12px gap. With an inset present (PWA / Tauri shell with notch / status
@@ -54,20 +54,34 @@ nav {
 	   instead of stacking ~56px down. */
 	top: max(12px, calc(env(safe-area-inset-top, 0px) + 4px));
 	z-index: 100;
+	margin: max(12px, calc(env(safe-area-inset-top, 0px) + 4px)) auto 0;
+	width: fit-content;
+	max-width: calc(100% - 1.5rem);
+	border-radius: 100px;
+	/* Popovers hang below the bar — they must not be clipped. */
+	overflow: visible;
+}
+/* The frosted pane. A sibling of the bar's content, so the blur it performs
+   never becomes a backdrop root for the popovers inside the bar. */
+.glass {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: var(--glass-bg);
+	backdrop-filter: blur(var(--glass-blur));
+	border: 1px solid var(--glass-border);
+	box-shadow: 0 4px 24px var(--glass-shadow);
+	view-transition-name: site-header;
+	pointer-events: none;
+}
+nav {
+	position: relative;
 	display: flex;
 	align-items: center;
 	height: var(--header-h);
 	gap: 0.4rem;
 	padding: 0 0.8rem;
-	margin: max(12px, calc(env(safe-area-inset-top, 0px) + 4px)) auto 0;
-	width: fit-content;
-	max-width: calc(100% - 1.5rem);
-	border-radius: 100px;
-	background: var(--nav-bg, rgba(46, 52, 64, 0.82));
-	backdrop-filter: blur(16px);
-	border: 1px solid var(--nav-border, rgba(255,255,255,0.08));
-	box-shadow: 0 4px 24px var(--nav-shadow, rgba(0,0,0,0.25));
-	view-transition-name: site-header;
+	border-radius: inherit;
 
 	/* token defaults (dark bar) */
 	--nav-text: #999;
@@ -79,23 +93,10 @@ nav {
 	--nav-btn-border-hover: rgba(255,255,255,0.4);
 	--nav-divider: rgba(255,255,255,0.15);
 }
-/* Dark system preference */
-@media (prefers-color-scheme: dark) {
-	nav {
-		--nav-bg: rgba(20, 20, 20, 0.78);
-		--nav-border: rgba(255,255,255,0.06);
-	}
-}
-/* User forced dark */
-:global(:root[data-theme="dark"]) nav {
-	--nav-bg: rgba(20, 20, 20, 0.78);
-	--nav-border: rgba(255,255,255,0.06);
-}
+/* Dark bars need no overrides — the base token values above are the dark set,
+   and the tint/border/shadow now come from --glass-* in app.css. */
 /* User forced light — OR system light (default, already handled by base values) */
 :global(:root[data-theme="light"]) nav {
-	--nav-bg: rgba(255, 255, 255, 0.82);
-	--nav-border: rgba(0,0,0,0.08);
-	--nav-shadow: rgba(0,0,0,0.1);
 	--nav-text: #888;
 	--nav-text-hover: var(--nord0);
 	--nav-text-active: var(--nord0);
@@ -108,9 +109,6 @@ nav {
 /* System light preference (no data-theme set) */
 @media (prefers-color-scheme: light) {
 	:global(:root:not([data-theme])) nav {
-		--nav-bg: rgba(255, 255, 255, 0.82);
-		--nav-border: rgba(0,0,0,0.08);
-		--nav-shadow: rgba(0,0,0,0.1);
 		--nav-text: #888;
 		--nav-text-hover: var(--nord0);
 		--nav-text-active: var(--nord0);
@@ -127,7 +125,7 @@ nav {
    ═══════════════════════════════════════════ */
 .offline-pill {
 	/* Perched on the top-left corner of the nav bar like a badge — nav is
-	   position: sticky, so it's the containing block. */
+	   position: relative, so it's the containing block. */
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -200,6 +198,10 @@ nav {
 	margin: 0;
 	padding: 0;
 	list-style: none;
+	/* Own group so the links rise/exit with the right-hand controls. Exactly
+	   one .site_header exists per page, so the name stays unique. Nothing in
+	   here blurs, so being a backdrop root is harmless. */
+	view-transition-name: nav-links;
 }
 :global(.site_header li) {
 	list-style-type: none;
@@ -314,6 +316,14 @@ nav {
 	flex-shrink: 0;
 	view-transition-name: nav-right;
 }
+/* A view-transition-name makes this a backdrop root, which flattens the
+   profile menu's blur — so drop the name while the menu is open. The two are
+   never needed at once: the bar only morphs during navigation, and the menu is
+   closed then. Opening the menu costs nothing; navigating from inside it just
+   forfeits this one group's morph. */
+.header-right:has(:global(#pfp-menu-toggle:checked)) {
+	view-transition-name: none;
+}
 
 /* ═══════════════════════════════════════════
    NO-LINKS VARIANT (pages without nav)
@@ -351,9 +361,12 @@ nav {
 /* Let the header bar morph its width smoothly */
 :global(::view-transition-group(site-header)),
 :global(::view-transition-group(nav-logo)),
+:global(::view-transition-group(nav-links)),
 :global(::view-transition-group(nav-right)) {
 	animation-duration: 300ms;
 	animation-timing-function: ease;
+	/* Clips the rise/exit below, so the controls appear to travel inside the
+	   bar rather than over the page. */
 	overflow: hidden;
 }
 /* Offline badge: own group, NOT clipped — it overhangs the nav corner. */
@@ -362,16 +375,45 @@ nav {
 	animation-timing-function: ease;
 	overflow: visible;
 }
-/* Header & right side: standard morph */
+/* Bar & offline badge: standard morph */
 :global(::view-transition-old(site-header)),
 :global(::view-transition-new(site-header)),
-:global(::view-transition-old(nav-right)),
-:global(::view-transition-new(nav-right)),
 :global(::view-transition-old(offline-pill)),
 :global(::view-transition-new(offline-pill)) {
 	animation-duration: 300ms;
 	animation-timing-function: ease;
 	height: 100%;
+}
+
+/* Bar contents — nav links (icons + labels) and the right-hand controls — ride
+   in from below the bar and leave upward, so the header reads as one strip of
+   content scrolling over rather than a cross-fade. Keyframes are -global-
+   because they drive document-level ::view-transition pseudo-elements. */
+@keyframes -global-nav-content-in {
+	from { opacity: 0; transform: translateY(100%); }
+	to { opacity: 1; transform: translateY(0); }
+}
+@keyframes -global-nav-content-out {
+	from { opacity: 1; transform: translateY(0); }
+	to { opacity: 0; transform: translateY(-100%); }
+}
+:global(::view-transition-new(nav-links)),
+:global(::view-transition-new(nav-right)) {
+	animation: nav-content-in 300ms ease both;
+	height: 100%;
+}
+:global(::view-transition-old(nav-links)),
+:global(::view-transition-old(nav-right)) {
+	animation: nav-content-out 300ms ease both;
+	height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+	:global(::view-transition-new(nav-links)),
+	:global(::view-transition-new(nav-right)),
+	:global(::view-transition-old(nav-links)),
+	:global(::view-transition-old(nav-right)) {
+		animation-duration: 1ms;
+	}
 }
 /* Logo: clip-reveal instead of scale — keep natural size, left-aligned */
 :global(::view-transition-old(nav-logo)),
@@ -386,10 +428,12 @@ nav {
    MOBILE: compact pill, horizontal scroll
    ═══════════════════════════════════════════ */
 @media screen and (max-width: 800px) {
+	.header-shell {
+		max-width: calc(100% - 1rem);
+	}
 	nav {
 		gap: 0.25rem;
 		padding: 0.4rem 0.6rem;
-		max-width: calc(100% - 1rem);
 	}
 	/* Mobile: hide labels, keep icons */
 	:global(.site_header .nav-label) {
@@ -407,6 +451,12 @@ nav {
 
 <div class="wrapper" lang="de">
 
+<!-- The shell owns the sticky placement and stays a plain box: no filter, no
+     view-transition-name. Both make an element a backdrop root, which would kill
+     the blur on any popover inside the bar. The frosted pane is .glass, a
+     sibling of the bar's content rather than its ancestor. -->
+<div class="header-shell">
+<div class="glass" aria-hidden="true"></div>
 <nav class:no-links={!links}>
 	{#if networkStore.offline}
 		<span class="offline-pill" role="status" aria-live="polite" title="No internet connection">
@@ -432,6 +482,7 @@ nav {
 		{@render right_side?.()}
 	</div>
 </nav>
+</div>
 
 <main>
 {@render children?.()}

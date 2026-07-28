@@ -47,7 +47,8 @@
 	.confirm-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: var(--scrim-bg);
+		backdrop-filter: blur(var(--scrim-blur));
 		z-index: 10000;
 		display: flex;
 		align-items: center;
@@ -105,9 +106,11 @@
 		background: var(--nord11);
 		color: white;
 	}
+	/* Blur ramps in with the scrim, the same way the recipe dialogs' ::backdrop
+	   animates from blur(0). */
 	@keyframes fade-in {
-		from { opacity: 0; }
-		to { opacity: 1; }
+		from { opacity: 0; backdrop-filter: blur(0px); }
+		to { opacity: 1; backdrop-filter: blur(var(--scrim-blur)); }
 	}
 	@keyframes scale-in {
 		from { opacity: 0; transform: scale(0.95); }

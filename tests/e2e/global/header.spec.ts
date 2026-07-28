@@ -60,10 +60,27 @@ test.describe('user menu', () => {
 		test.use({ storageState: storageStateFor('full') });
 		test('avatar menu reveals name + log out', async ({ page }) => {
 			await gotoHydrated(page, '/');
-			await page.locator('button.avatar').click();
 			const menu = page.locator('#options');
+			await expect(menu).toBeHidden();
+			// The avatar is a <label> driving a checkbox, so the menu opens with
+			// no JS involved.
+			await page.locator('label.avatar').click();
 			await expect(menu.getByRole('heading', { name: userByKey('full').name })).toBeVisible();
 			await expect(menu.getByRole('link', { name: /log ?out|abmelden/i })).toBeVisible();
+		});
+
+		test('avatar menu opens without JavaScript', async ({ browser }) => {
+			const context = await browser.newContext({
+				storageState: storageStateFor('full'),
+				javaScriptEnabled: false
+			});
+			const page = await context.newPage();
+			await page.goto('/');
+			const menu = page.locator('#options');
+			await expect(menu).toBeHidden();
+			await page.locator('label.avatar').click();
+			await expect(menu.getByRole('link', { name: /log ?out|abmelden/i })).toBeVisible();
+			await context.close();
 		});
 	});
 });
