@@ -34,6 +34,7 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { getStickerForTags, getStickerById, stickerUrl } from '$lib/utils/stickers';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import { clampToViewport } from '$lib/js/clampToViewport';
 
   let { data } = $props();
 
@@ -362,7 +363,7 @@
             </div>
             <div class="complete-wrapper hero-complete">
               {#if completeForTaskId === topUrgent._id}
-                <div class="complete-for-popover" transition:scale={{ duration: 150, start: 0.9 }}>
+                <div class="complete-for-popover" {@attach clampToViewport} transition:scale={{ duration: 150, start: 0.9 }}>
                   <span class="popover-label">Erledigt für:</span>
                   {#each USERS as user (user)}
                     <button class="popover-user" onclick={() => completeTask(topUrgent, user)}>
@@ -546,7 +547,7 @@
             </div>
             <div class="complete-wrapper">
               {#if completeForTaskId === task._id}
-                <div class="complete-for-popover" transition:scale={{ duration: 150, start: 0.9 }}>
+                <div class="complete-for-popover" {@attach clampToViewport} transition:scale={{ duration: 150, start: 0.9 }}>
                   <span class="popover-label">Erledigt für:</span>
                   {#each USERS as user (user)}
                     <button class="popover-user" onclick={() => completeTask(task, user)}>

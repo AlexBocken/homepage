@@ -53,6 +53,7 @@
 	import { microCoverage } from '$lib/fitness/microCoverage';
 	import { TRACE_MINERAL_KEYS, traceTotals, traceCoverageNote } from '$lib/fitness/traceMinerals';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	/**
 	 * @typedef {{ description: string, grams: number }} Portion
@@ -1898,7 +1899,7 @@
 					<span class="burned-bmr tdee-info-wrap">
 						+{fmtCal(Math.round(dailyTdee))} TDEE<button class="tdee-info-trigger" onclick={() => showTdeeInfo = !showTdeeInfo} aria-label="TDEE info"><Info size={10} /></button>
 						{#if showTdeeInfo}
-							<div class="tdee-info-tooltip">
+							<div class="tdee-info-tooltip" {@attach clampToViewport}>
 								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? 'TDEE = Total Daily Energy Expenditure — calories your body burns per day at rest + daily activity (excluding tracked exercise).' : 'TDEE = Gesamtenergieumsatz — Kalorien, die dein Körper pro Tag in Ruhe + Alltagsaktivität verbrennt (ohne getracktes Training).'}</span>
 								<span class="cite-note" style="margin-bottom: 0.2rem">{isEn ? `BMR × ${activityMultiplier(activityLevel).toFixed(1)} (${activityLevel.replace('_', ' ')}) = ${fmtCal(Math.round(dailyTdee))} kcal` : `BMR × ${activityMultiplier(activityLevel).toFixed(1)} (${activityLevel.replace('_', ' ')}) = ${fmtCal(Math.round(dailyTdee))} kcal`}</span>
 								{#if latestWeight}
@@ -2856,7 +2857,11 @@
 		font-style: normal;
 		line-height: 1.5;
 		color: var(--color-text-secondary);
-		white-space: nowrap;
+		/* Sentence-length citations: wrapped and capped, because a nowrap panel is as
+		   wide as its longest line and hangs a phone-width page off its own right
+		   edge. clampToViewport then moves what is left of the overhang. */
+		width: max-content;
+		max-width: min(24rem, calc(100vw - 2rem));
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 		z-index: 100;
 		display: flex;

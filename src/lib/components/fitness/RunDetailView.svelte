@@ -20,6 +20,7 @@
 	import { estimatedOneRepMax } from '$lib/fitness/strength';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	/**
 	 * Read-only render of a workout session — the same body the history detail
@@ -139,7 +140,7 @@
 					<Info size={12} />
 				</button>
 				{#if showKcalInfo}
-					<div class="kcal-info-tooltip">
+					<div class="kcal-info-tooltip" {@attach clampToViewport}>
 						{#each kcalResult.methods as method (method)}
 							{@const cite = METHOD_CITATIONS[method]}
 							{#if cite}
@@ -361,7 +362,11 @@
 		font-size: 0.65rem;
 		line-height: 1.5;
 		color: var(--color-text-secondary);
-		white-space: nowrap;
+		/* Sentence-length citations: wrapped and capped, because a nowrap panel is as
+		   wide as its longest line and hangs a phone-width page off its own right
+		   edge. clampToViewport then moves what is left of the overhang. */
+		width: max-content;
+		max-width: min(24rem, calc(100vw - 2rem));
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 		z-index: 20;
 		display: flex;

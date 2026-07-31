@@ -57,6 +57,7 @@
 	import { hasFormConfig } from '$lib/js/poseCoach';
 	import Info from '@lucide/svelte/icons/info';
 	import { onMount, tick } from 'svelte';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
@@ -2299,7 +2300,7 @@
 										<Info size={13} />
 									</button>
 									{#if showCoachInfo}
-										<div class="coach-info-tooltip">{t.coach_privacy}</div>
+										<div class="coach-info-tooltip" {@attach clampToViewport}>{t.coach_privacy}</div>
 									{/if}
 								</span>
 							</header>

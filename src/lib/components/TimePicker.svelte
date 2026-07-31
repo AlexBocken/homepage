@@ -4,6 +4,7 @@
 	import Clock from '@lucide/svelte/icons/clock';
 	import { m } from '$lib/js/commonI18n';
 	import type { CommonLang } from '$lib/js/commonI18n';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	/**
 	 * Pill-styled time picker, sibling to `DatePicker.svelte` (date) and
@@ -149,7 +150,7 @@
 	</div>
 
 	{#if open}
-		<div class="tp-dropdown" role="dialog" aria-label={t.select_time}>
+		<div class="tp-dropdown" {@attach clampToViewport} role="dialog" aria-label={t.select_time}>
 			<div class="tp-cols">
 				<div class="tp-col" bind:this={hourCol} role="listbox" aria-label="Stunde">
 					{#each hours as h (h)}

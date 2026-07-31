@@ -4,6 +4,7 @@
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import { m } from '$lib/js/commonI18n';
 	import { localDateStr } from '$lib/js/localDate';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 	/** @typedef {import('$lib/js/commonI18n').CommonLang} CommonLang */
 	let { value = $bindable(''), lang = 'en', min = '', max = '', fontSize = '', onchange = () => {} } = $props();
 	const t = $derived(m[/** @type {CommonLang} */ (lang)]);
@@ -152,7 +153,7 @@
 	</div>
 
 	{#if open}
-		<div class="dp-dropdown">
+		<div class="dp-dropdown" {@attach clampToViewport}>
 			<div class="dp-header">
 				<button type="button" class="dp-nav" onclick={() => navMonth(-1)} aria-label="Previous month">
 					<ChevronLeft size={16} />

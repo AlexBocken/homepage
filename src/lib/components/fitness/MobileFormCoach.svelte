@@ -7,6 +7,7 @@
 	import SkipForward from '@lucide/svelte/icons/skip-forward';
 	import SwitchCamera from '@lucide/svelte/icons/switch-camera';
 	import Info from '@lucide/svelte/icons/info';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	/**
 	 * Full-screen mobile HUD for the live form coach. The camera feed is the
@@ -181,7 +182,7 @@
 				<Info size={16} />
 			</button>
 			{#if showInfo}
-				<div class="info-tip" role="status">{privacyText}</div>
+				<div class="info-tip" role="status" {@attach clampToViewport}>{privacyText}</div>
 			{/if}
 		</div>
 		<div class="top-right">

@@ -7,6 +7,7 @@
 	import { m } from '$lib/js/commonI18n';
 	import type { CommonLang } from '$lib/js/commonI18n';
 	import { localDateStr } from '$lib/js/localDate';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	/**
 	 * Pill-styled date + (optional) time picker. Built to share the look of
@@ -296,7 +297,7 @@
 	</div>
 
 	{#if open}
-		<div class="dtp-dropdown" role="dialog" aria-label={t.select_date}>
+		<div class="dtp-dropdown" {@attach clampToViewport} role="dialog" aria-label={t.select_date}>
 			<div class="dtp-header">
 				<button type="button" class="dtp-nav" onclick={() => navMonth(-1)} aria-label="<<">
 					<ChevronLeft size={16} />

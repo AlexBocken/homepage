@@ -40,6 +40,7 @@
 	import StatsRingGraph from '$lib/components/fitness/StatsRingGraph.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import { BODY_PART_CARDS, bodyPartSlug, bodyPartAccent } from '$lib/js/fitnessBodyParts';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
@@ -835,7 +836,7 @@
 						onclick={(e) => { e.preventDefault(); e.stopPropagation(); showBalanceInfo = !showBalanceInfo; }}
 						onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); showBalanceInfo = !showBalanceInfo; } }}><Info size={12} /></span>
 					{#if showBalanceInfo}
-						<div class="card-info-tooltip">
+						<div class="card-info-tooltip" {@attach clampToViewport}>
 							{t.calorie_balance_tooltip}
 							{#if ns.avgDailyExpenditure}
 								{t.daily_expenditure_estimate_prefix} ~{ns.avgDailyExpenditure} kcal
@@ -868,7 +869,7 @@
 						onclick={(e) => { e.preventDefault(); e.stopPropagation(); showAdherenceInfo = !showAdherenceInfo; }}
 						onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); showAdherenceInfo = !showAdherenceInfo; } }}><Info size={12} /></span>
 					{#if showAdherenceInfo}
-						<div class="card-info-tooltip">
+						<div class="card-info-tooltip" {@attach clampToViewport}>
 							{t.diet_adherence_tooltip}
 						</div>
 					{/if}

@@ -26,6 +26,7 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	/**
 	 * @type {{ periods: any[], lang: 'en' | 'de', sharedWith?: string[], readOnly?: boolean, ownerName?: string, mode?: 'entry' | 'projection' | 'full' }}
@@ -862,7 +863,7 @@
 				<span class="cycle-stat-value">{Math.round(predictions.avgCycle)} {t.days}</span>
 				{#if predictions.cycleSd > 0}
 					<span class="cycle-stat-variance">± {predictions.cycleSd} {t.days} ({t.typical})<button class="card-info-trigger" onclick={() => (showCycleStatInfo = !showCycleStatInfo)} aria-label="Info"><Info size={11} /></button>
-						{#if showCycleStatInfo}<span class="card-info-tooltip">{t.cycle_stats_tooltip}</span>{/if}
+						{#if showCycleStatInfo}<span class="card-info-tooltip" {@attach clampToViewport}>{t.cycle_stats_tooltip}</span>{/if}
 					</span>
 				{/if}
 				{#if predictions.lastCycleLength}
@@ -874,7 +875,7 @@
 				<span class="cycle-stat-value">{Math.round(predictions.avgPeriod)} {t.days}</span>
 				{#if predictions.periodSd > 0}
 					<span class="cycle-stat-variance">± {predictions.periodSd} {t.days} ({t.typical})<button class="card-info-trigger" onclick={() => (showPeriodStatInfo = !showPeriodStatInfo)} aria-label="Info"><Info size={11} /></button>
-						{#if showPeriodStatInfo}<span class="card-info-tooltip">{t.cycle_stats_tooltip}</span>{/if}
+						{#if showPeriodStatInfo}<span class="card-info-tooltip" {@attach clampToViewport}>{t.cycle_stats_tooltip}</span>{/if}
 					</span>
 				{/if}
 				{#if predictions.lastPeriodLength}
