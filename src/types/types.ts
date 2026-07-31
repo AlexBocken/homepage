@@ -15,9 +15,32 @@ export type NutritionPer100g = {
   selenium?: number;   // mcg
   chromium?: number;   // mcg
   molybdenum?: number; // mcg
-  vitaminA: number; vitaminC: number; vitaminD: number; vitaminE: number;
+  // vitaminA is retinol *activity* equivalents (RAE) from every source. `retinol`
+  // is the preformed share of it, kept separately because the tolerable upper
+  // intake level applies to that alone — carotenoids are not capped, so judging
+  // total vitamin A against the UL overstates it.
+  vitaminA: number; retinol?: number;
+  vitaminC: number; vitaminD: number; vitaminE: number;
   vitaminK: number; thiamin: number; riboflavin: number; niacin: number;
   vitaminB6: number; vitaminB12: number; folate: number; cholesterol: number;
+  pantothenicAcid?: number; // B5, mg
+  // B7, mcg. Optional because coverage splits by source: BLS measures it for 94% of
+  // its foods, USDA for 13% of the imported ones, so an absent key is "unmeasured"
+  // rather than "none".
+  biotin?: number;
+  // mg. USDA measures it; BLS has no caffeine column at all, so its coffees, teas,
+  // colas and chocolates borrow the figure from an explicitly matched USDA record,
+  // and its milk-coffee drinks are estimated from a stated shot-per-serving recipe
+  // (CAFFEINE_FROM_USDA / CAFFEINE_ESTIMATED in scripts/import-bls-nutrition.ts).
+  // Everything else from BLS leaves the key absent, meaning "no figure".
+  caffeine?: number;
+  // Carbohydrate detail (g). BLS reports all three for ~98% of its foods; USDA for
+  // a third to a half of the imported ones.
+  starch?: number; fructose?: number; lactose?: number;
+  // The two energy sources that are neither macro nor alcohol (g). Sugar alcohols
+  // yield 2.4 kcal/g and organic acids 3, which is most of what a food's stated
+  // energy carries beyond 4/9/4. BLS only. See $lib/fitness/nutritionMath.
+  sugarAlcohols?: number; organicAcids?: number;
   // Fatty acids (g/100g). Only `saturatedFat` is universal; the rest are optional
   // because coverage varies sharply by source (see $lib/fitness/fattyAcids).
   //

@@ -16,7 +16,13 @@ import {
 const MICRO_KEYS = [
 	'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
 	'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin',
-	'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
+	'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin', 'cholesterol',
+	// Preformed vitamin A, averaged separately because the upper limit applies to it
+	// rather than to the RAE total above.
+	'retinol',
+	// Not micronutrients, but averaged the same way from the same records: caffeine
+	// and the carbohydrate detail.
+	'caffeine', 'starch', 'fructose', 'lactose', 'sugarAlcohols',
 	// Not a micronutrient, but averaged the same way and read from the same map: a
 	// weekly mean is the honest unit for alcohol, where a single evening is not.
 	'alcohol',

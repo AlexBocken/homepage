@@ -18,6 +18,33 @@ export const MACRO_KCAL = { protein: 4, fat: 9, carbs: 4 } as const;
  */
 export const ALCOHOL_KCAL = 7;
 
+/**
+ * The rest of what a food's stated energy is made of. Sugar alcohols are only
+ * partly absorbed (EU Regulation 1169/2011 fixes them at 2.4 kcal/g) and organic
+ * acids — citric, malic, lactic — are metabolised at about 3. Neither is a macro,
+ * neither is alcohol, and together with ethanol they account for nearly all of the
+ * gap between a source's own kcal figure and the 4/9/4 sum of its macros.
+ *
+ * BLS publishes both; USDA and Open Food Facts publish neither, so for a food from
+ * those the gap stays in `energySources().other` rather than being attributed.
+ */
+export const SUGAR_ALCOHOL_KCAL = 2.4;
+export const ORGANIC_ACID_KCAL = 3;
+
+/**
+ * Nutrients no single source measures throughout, so an absent key means "nobody
+ * looked" rather than "none present" — the rule the trace minerals and fatty acids
+ * already follow. BLS publishes the sugar alcohols and organic acids and USDA none
+ * of them; USDA publishes caffeine and BLS none of it; biotin, starch and the two
+ * sugars are well covered in BLS and partly in USDA.
+ *
+ * Anything summing these across foods must weight by the amount that actually
+ * reported them rather than fabricating a zero for the rest.
+ */
+export const SPARSELY_MEASURED_KEYS = [
+	'biotin', 'caffeine', 'starch', 'fructose', 'lactose', 'sugarAlcohols', 'organicAcids',
+] as const;
+
 export type MacroGrams = { protein?: number; fat?: number; carbs?: number };
 
 /**
@@ -97,23 +124,34 @@ export function entryCalories(e: NutritionEntry): number {
 /**
  * Where a day's energy came from, in kcal.
  *
- * The three macros and ethanol are computed from their grams; `other` is whatever
- * the foods' own kcal figures carry beyond them. That remainder is real — polyols
- * (2.4 kcal/g), organic acids (3), and the plain fact that a source's energy figure
- * is measured rather than reconstructed from 4/9/4 — so it is shown rather than
- * silently absorbed into a macro. Clamped at zero: a food whose macros over-explain
- * its stated energy would otherwise render a negative slice.
+ * Everything with a known factor is computed from its grams — the three macros,
+ * ethanol, sugar alcohols and organic acids. `other` is whatever the foods' own
+ * kcal figures still carry beyond all of them: the share from a source that
+ * published no polyol or acid figure, plus the plain fact that a stated energy
+ * value is measured rather than reconstructed. It is shown rather than folded into
+ * a macro, because attributing it would be a guess.
+ *
+ * Clamped at zero: a food whose components over-explain its stated energy would
+ * otherwise render a negative slice.
  */
 export function energySources(
-	totals: MacroGrams & { alcohol?: number },
+	totals: MacroGrams & { alcohol?: number; sugarAlcohols?: number; organicAcids?: number },
 	statedCalories: number
-): { protein: number; fat: number; carbs: number; alcohol: number; other: number } {
+): {
+	protein: number; fat: number; carbs: number;
+	alcohol: number; sugarAlcohols: number; organicAcids: number; other: number;
+} {
 	const protein = (totals.protein ?? 0) * MACRO_KCAL.protein;
 	const fat = (totals.fat ?? 0) * MACRO_KCAL.fat;
 	const carbs = (totals.carbs ?? 0) * MACRO_KCAL.carbs;
 	const alcohol = (totals.alcohol ?? 0) * ALCOHOL_KCAL;
-	const other = Math.max(0, statedCalories - protein - fat - carbs - alcohol);
-	return { protein, fat, carbs, alcohol, other };
+	const sugarAlcohols = (totals.sugarAlcohols ?? 0) * SUGAR_ALCOHOL_KCAL;
+	const organicAcids = (totals.organicAcids ?? 0) * ORGANIC_ACID_KCAL;
+	const accounted = protein + fat + carbs + alcohol + sugarAlcohols + organicAcids;
+	return {
+		protein, fat, carbs, alcohol, sugarAlcohols, organicAcids,
+		other: Math.max(0, statedCalories - accounted),
+	};
 }
 
 /** Total energy over food-log-style entries. See {@link entryCalories}. */

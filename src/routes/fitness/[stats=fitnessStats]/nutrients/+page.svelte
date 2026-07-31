@@ -11,7 +11,7 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { formatGrams as fmt } from '$lib/fitness/nutritionMath';
 	import {
-		getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, UPPER_LIMITS, REFERENCE_ENERGY
+		getDRI, NUTRIENT_META, RELATIVE_TO, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, UPPER_LIMITS, REFERENCE_ENERGY
 	} from '$lib/data/dailyReferenceIntake';
 	import { TRACE_MINERAL_KEYS, traceCoverageNote } from '$lib/fitness/traceMinerals';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
@@ -39,6 +39,14 @@
 		}))
 	);
 	const hasCoverageGap = $derived(coverageRows.some(r => r.missingPct >= 1));
+
+	/** Names what a relative percentage is a percentage *of*, so the column is not
+	 *  read as progress toward a reference intake like the rows around it. */
+	function relativeTitle(/** @type {string} */ parentKey) {
+		const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (parentKey)];
+		const label = isEn ? meta.label : meta.labelDe;
+		return isEn ? `Share of ${label.toLowerCase()}` : `Anteil an ${label}`;
+	}
 
 	/** Deep dive into which foods supplied a nutrient over the same window. */
 	function nutrientHref(/** @type {string} */ key) {
@@ -163,8 +171,30 @@
 
 	const sections = $derived.by(() => {
 		const minerals = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
-		const vitamins = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
-		const other = ['cholesterol', 'alcohol'];
+		const vitamins = ['vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin'];
+		const carbDetail = ['starch', 'fructose', 'lactose'];
+		const other = ['cholesterol', 'caffeine', 'alcohol', 'sugarAlcohols'];
+
+		/** The window's average for a nutrient — the composition figures are kept
+		 *  apart from the micro averages, and a parent may live in either. */
+		function avgValue(/** @type {string} */ k) {
+			const micro = mn.micros?.[k];
+			if (typeof micro === 'number') return micro;
+			return /** @type {Record<string, number>} */ (comp ?? {})[k] ?? 0;
+		}
+
+		/**
+		 * A nutrient with no requirement of its own, shown as a share of the figure it
+		 * is part of instead — see RELATIVE_TO.
+		 * @param {string} k
+		 */
+		function relativeShare(k) {
+			const parent = RELATIVE_TO[/** @type {keyof typeof RELATIVE_TO} */ (k)];
+			if (!parent) return null;
+			const whole = avgValue(parent);
+			if (!(whole > 0)) return { pct: null, parent };
+			return { pct: Math.round((avgValue(k) / whole) * 100), parent };
+		}
 
 		/** @param {string[]} keys */
 		function mkRows(keys) {
@@ -172,12 +202,13 @@
 				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
 				const value = mn.micros?.[k] ?? 0;
 				const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
-				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
+				const rel = relativeShare(k);
+				const pct = rel ? rel.pct : (goal > 0 ? Math.round(value / goal * 100) : null);
 				// A sustained average above the tolerable upper intake level is the
 				// signal worth flagging — a single heavy day is not.
 				const limit = UPPER_LIMITS[/** @type {keyof typeof UPPER_LIMITS} */ (k)];
 				const overLimit = !!limit && value > limit;
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit, overLimit, noData: false };
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, pct, bar: pct ?? 0, isMax: meta.isMax, limit, overLimit, noData: false, relativeTo: rel?.parent ?? null };
 			});
 		}
 
@@ -268,25 +299,32 @@
 		// Only the fat-composition rows nest, but every row carries the flags so the
 		// renderer can stay one shape.
 		/** @param {any[]} rows */
-		const flat = (rows) => rows.map(r => ({ child: false, header: false, ...r }));
+		const flat = (rows) => rows.map(r => ({ child: false, header: false, relativeTo: null, ...r }));
 
 		// Section order matches the diary's day panel exactly — the two views answer the
 		// same question over different spans, and a reader moving between them should
 		// not have to re-find anything.
 		return [
 			{ title: isEn ? 'Carbohydrate Quality' : 'Kohlenhydrat-Qualität', rows: flat(carbQualityRows), note: '' },
+			{ title: isEn ? 'Carbohydrate Detail' : 'Kohlenhydrate im Detail', rows: flat(mkRows(carbDetail)), note: isEn
+				? 'No reference intake — these break the carbohydrates down rather than set a target. BLS reports all three for nearly every food, USDA for a third of its own.'
+				: 'Kein Referenzwert — diese schlüsseln die Kohlenhydrate auf, statt ein Ziel zu setzen. BLS erfasst alle drei für fast jedes Lebensmittel, USDA nur für ein Drittel.' },
 			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: flat(fattyAcidRows), note: isEn
 				? `Saturated and trans fat are ceilings. Linoleic and α-linolenic acid are adequate intakes — reaching them is the goal, exceeding them is not a concern. All four are shares of energy, scaled to ${energyBasisLabel}; EPA + DHA is a fixed 250 mg a day.`
 				: `Gesättigte und Trans-Fettsäuren sind Obergrenzen. Linol- und α-Linolensäure sind Richtwerte — sie zu erreichen ist das Ziel, sie zu überschreiten unproblematisch. Alle vier sind Energieanteile, skaliert auf ${energyBasisLabel}; EPA + DHA sind fixe 250 mg pro Tag.` },
 			{ title: isEn ? 'Fat Composition' : 'Fettzusammensetzung', rows: flat(compositionRows), note: fatCompositionNote(isEn) },
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: flat(mkRows(minerals)), note: '' },
 			{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: flat(mkTraceRows()), note: traceCoverageNote(traceCov, isEn) },
-			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: flat(mkRows(vitamins)), note: '' },
+			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: flat(mkRows(vitamins)), note: isEn
+				? 'Retinol is the preformed share of vitamin A and the only part with an upper limit — it has no target of its own. Biotin is measured by BLS for almost every food but by USDA for one in eight.'
+				: 'Retinol ist der vorgebildete Anteil von Vitamin A und der einzige mit einer Obergrenze — ein eigener Zielwert existiert nicht. Biotin erfasst BLS für fast jedes Lebensmittel, USDA nur für jedes achte.' },
 			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: flat(essentialRows), note: weightNote },
 			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: flat(nonEssentialRows), note: isEn
 				? 'No intake requirement — bars show each one’s share of the non-essential amino acids eaten.'
 				: 'Kein Bedarfswert — die Balken zeigen den Anteil an den aufgenommenen nicht-essenziellen Aminosäuren.' },
-			{ title: isEn ? 'Other' : 'Sonstiges', rows: flat(mkRows(other)), note: '' },
+			{ title: isEn ? 'Other' : 'Sonstiges', rows: flat(mkRows(other)), note: isEn
+				? 'Caffeine is not in BLS at all: its coffees, teas, colas and chocolates take the figure from a matched USDA record, and the milk-coffee drinks are estimated from one espresso shot per serving. Anything else logged from BLS carries none.'
+				: 'Koffein fehlt in BLS vollständig: Kaffee, Tee, Cola und Schokolade übernehmen den Wert eines zugeordneten USDA-Eintrags, Milchkaffeegetränke sind mit einem Espresso pro Portion geschätzt. Alles andere aus BLS führt keinen.' },
 		];
 	});
 
@@ -475,7 +513,12 @@
 								<span class="micro-value" class:over-limit={row.overLimit} class:is-na={row.noData}>
 									{#if row.noData}—{:else}{fmt(row.value)} {row.unit}{/if}
 								</span>
-								<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
+								<span
+									class="micro-pct"
+									class:is-na={row.pct === null}
+									class:is-relative={row.relativeTo}
+									title={row.relativeTo ? relativeTitle(row.relativeTo) : null}
+								>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
 							</a>
 						{/each}
 					</div>
@@ -805,6 +848,12 @@
 		font-weight: 700;
 		font-size: 0.72rem;
 		font-variant-numeric: tabular-nums;
+	}
+	/* A share of a parent figure, not of a target — lighter, so the eye does not read
+	   it as progress toward a reference intake. */
+	.micro-pct.is-relative {
+		font-weight: 500;
+		color: var(--color-text-secondary);
 	}
 	.micro-pct.is-na {
 		font-weight: 500;

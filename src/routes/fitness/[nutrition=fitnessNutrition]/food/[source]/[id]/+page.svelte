@@ -20,7 +20,7 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { localDateStr } from '$lib/js/localDate';
-	import { NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
+	import { NUTRIENT_META, RELATIVE_TO, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
 	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
@@ -77,10 +77,30 @@
 
 	// --- Micronutrient sections ---
 	const mineralKeys = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
-	const vitaminKeys = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
-	// Alcohol only where the record reports some. The key is absent on almost every
-	// food, and a '0 g' alcohol row under an apple would be noise, not information.
-	const otherKeys = $derived(['cholesterol', ...(Number(n?.alcohol) > 0 ? ['alcohol'] : [])]);
+	const vitaminKeys = ['vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin'];
+	// Only where the record reports some: these keys are absent on almost every food,
+	// and a '0 g' alcohol row under an apple would be noise, not information.
+	const otherKeys = $derived([
+		'cholesterol',
+		...(['caffeine', 'alcohol', 'sugarAlcohols'].filter(
+			(k) => Number(/** @type {Record<string, number>} */ (n ?? {})[k]) > 0
+		)),
+	]);
+
+	/**
+	 * A nutrient with no requirement of its own, measured against the figure it is
+	 * part of — see RELATIVE_TO. Scaling cancels out, so this reads the same at any
+	 * portion size.
+	 * @param {string} k
+	 */
+	function relativeShare(k) {
+		const parent = RELATIVE_TO[/** @type {keyof typeof RELATIVE_TO} */ (k)];
+		if (!parent) return null;
+		const rec = /** @type {Record<string, number>} */ (n ?? {});
+		const whole = rec[parent] ?? 0;
+		if (!(whole > 0)) return { pct: null, parent };
+		return { pct: Math.round(((rec[k] ?? 0) / whole) * 100), parent };
+	}
 
 	/** @param {string[]} keys */
 	function mkMicroRows(keys) {
@@ -88,9 +108,17 @@
 			const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
 			const value = scaled(/** @type {Record<string, number>} */ (n)[k]);
 			const goal = /** @type {Record<string, number>} */ (dri)[k] ?? 0;
-			const pct = goal > 0 ? Math.round(value / goal * 100) : null;
-			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, isMax: meta.isMax };
+			const rel = relativeShare(k);
+			const pct = rel ? rel.pct : (goal > 0 ? Math.round(value / goal * 100) : null);
+			return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, isMax: meta.isMax, relativeTo: rel?.parent ?? null };
 		});
+	}
+
+	/** Names what a relative percentage is a percentage *of*. */
+	function relativeTitle(/** @type {string} */ parentKey) {
+		const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (parentKey)];
+		const label = isEn ? meta.label : meta.labelDe;
+		return isEn ? `Share of ${label.toLowerCase()}` : `Anteil an ${label}`;
 	}
 
 	// Which groups this record reports at all. Open Food Facts entries declare a
@@ -474,6 +502,21 @@
 			<span class="detail-name">{isEn ? 'Fiber' : 'Ballaststoffe'}</span>
 			<span class="detail-val">{fmt(scaled(n.fiber))} g</span>
 		</div>
+		<!-- Carbohydrate detail, listed only where the source measured it: BLS reports
+		     all three for nearly every food, USDA for a third of its own, and a row of
+		     zeros would read as a measurement rather than as a gap. -->
+		{#each [
+			{ key: 'starch', label: isEn ? 'Starch' : 'Stärke' },
+			{ key: 'fructose', label: isEn ? 'Fructose' : 'Fructose' },
+			{ key: 'lactose', label: isEn ? 'Lactose' : 'Lactose' },
+		] as row (row.key)}
+			{#if typeof nRecord[row.key] === 'number'}
+				<div class="detail-row sub">
+					<span class="detail-name">{row.label}</span>
+					<span class="detail-val">{fmt(scaled(nRecord[row.key]))} g</span>
+				</div>
+			{/if}
+		{/each}
 		<!-- Alcohol belongs in this card even though it is not a macro: the rings above
 		     split only the macro calories, so on a drink they account for a quarter of
 		     the headline figure and this row is what explains the rest. -->
@@ -558,7 +601,12 @@
 									<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.pct ?? 0, 100)}%"></div>
 								</div>
 								<span class="micro-value">{fmt(row.value)} {row.unit}</span>
-								<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
+								<span
+									class="micro-pct"
+									class:is-na={row.pct === null}
+									class:is-relative={row.relativeTo}
+									title={row.relativeTo ? relativeTitle(row.relativeTo) : null}
+								>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
 							</div>
 						{/each}
 					</div>
@@ -1072,6 +1120,11 @@
 		color: var(--color-text-tertiary);
 		white-space: nowrap;
 		font-variant-numeric: tabular-nums;
+	}
+	/* A share of a parent figure, not of a target. */
+	.micro-pct.is-relative {
+		font-weight: 500;
+		color: var(--color-text-secondary);
 	}
 	.micro-pct.is-na {
 		font-weight: 500;

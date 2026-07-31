@@ -40,6 +40,18 @@ const ENERGY_PRIORITY: Record<number, number> = { 1008: 3, 2048: 2, 2047: 1 };
 // the dishes cooked with them, which is exactly the set that matters.
 const ALCOHOL_ID = 1018;
 
+// Nutrients USDA measures for only part of the table, written where measured and
+// left absent otherwise — the same rule the trace minerals and fatty acids follow.
+// Zero-filling these would claim, from a food nobody analysed for it, that it
+// contains none: no starch in bread, no caffeine in coffee.
+const SPARSE_IDS: Record<number, string> = {
+	1176: 'biotin',   // 977 foods (BLS carries it for nearly all of its own)
+	1057: 'caffeine', // 5215
+	1009: 'starch',   // 2623
+	1012: 'fructose', // 3039
+	1013: 'lactose',  // 3008
+};
+
 // Nutrient IDs we care about
 const NUTRIENT_IDS: Record<number, string> = {
 	1008: 'calories',
@@ -69,6 +81,10 @@ const NUTRIENT_IDS: Record<number, string> = {
 	1175: 'vitaminB6',
 	1178: 'vitaminB12',
 	1177: 'folate',
+	1170: 'pantothenicAcid', // B5 — 6750 of the imported foods carry it
+	// Preformed vitamin A, the share the upper intake level applies to. Total
+	// vitamin A above (1106) is RAE and includes carotenoids, which are not capped.
+	1105: 'retinol',
 	// Other
 	1253: 'cholesterol',
 	// Amino acids (g/100g)
@@ -341,6 +357,13 @@ async function importDataset(datasetDir: string, label: string) {
 			continue;
 		}
 
+		const sparseField = SPARSE_IDS[nutrientId];
+		if (sparseField) {
+			if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
+			nutrients.get(fdcId)![sparseField] = amount;
+			continue;
+		}
+
 		if (nutrientId === ALCOHOL_ID) {
 			if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
 			nutrients.get(fdcId)!['alcohol'] = amount;
@@ -416,6 +439,13 @@ function buildNutrientRecord(data: NutrientData | undefined): Record<string, num
 	// Ethanol: written only where there is some — see ALCOHOL_ID.
 	const alcohol = data?.['alcohol'];
 	if (typeof alcohol === 'number' && alcohol > 0) result['alcohol'] = Math.round(alcohol * 100) / 100;
+	// Partly-covered nutrients keep a measured 0 and stay absent otherwise — see
+	// SPARSE_IDS. Three decimals because caffeine in decaf and lactose in cheese
+	// both sit in the hundredths.
+	for (const field of Object.values(SPARSE_IDS)) {
+		const v = data?.[field];
+		if (typeof v === 'number') result[field] = Math.round(v * 1000) / 1000;
+	}
 	return result;
 }
 

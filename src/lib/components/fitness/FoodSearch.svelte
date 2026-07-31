@@ -351,7 +351,7 @@
 	let showMicros = $state(false);
 
 	const MINERAL_KEYS = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
-	const VITAMIN_KEYS = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
+	const VITAMIN_KEYS = ['vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin'];
 	const OTHER_KEYS = ['cholesterol'];
 
 	const microSections = $derived.by(() => {
@@ -374,11 +374,14 @@
 		const traceKeys = TRACE_MINERAL_KEYS.filter(
 			(k) => typeof (/** @type {Record<string, number>} */ (n)[k]) === 'number'
 		);
-		// Alcohol only where the food has some — the same rule as the food detail page,
-		// so a '0 g' row never appears under a slice of bread.
-		const otherKeys = (/** @type {Record<string, number>} */ (n).alcohol ?? 0) > 0
-			? [...OTHER_KEYS, 'alcohol']
-			: OTHER_KEYS;
+		// Alcohol, caffeine and sugar alcohols only where the food has some — the same
+		// rule as the food detail page, so a '0 g' row never appears under bread.
+		const otherKeys = [
+			...OTHER_KEYS,
+			...['caffeine', 'alcohol', 'sugarAlcohols'].filter(
+				(k) => ((/** @type {Record<string, number>} */ (n)[k]) ?? 0) > 0
+			),
+		];
 		return [
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: rows(MINERAL_KEYS) },
 			...(traceKeys.length > 0

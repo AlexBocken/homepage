@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-	entryCalories, entriesCalories, energySources, atwaterCalories, ALCOHOL_KCAL,
+	entryCalories, entriesCalories, energySources, atwaterCalories,
+	ALCOHOL_KCAL, SUGAR_ALCOHOL_KCAL, ORGANIC_ACID_KCAL,
 } from '../../../src/lib/fitness/nutritionMath';
 
 // BLS P162000, pale export beer: the food that exposed the bug these tests pin down.
@@ -43,11 +44,26 @@ describe('energySources', () => {
 		expect(e.other).toBeLessThan(1);
 	});
 
-	it('reports what the macros cannot explain rather than absorbing it', () => {
+	it('attributes sugar alcohols and organic acids where the source reports them', () => {
 		// A sweetener-heavy product: 40 g of polyols at 2.4 kcal/g are neither a macro
-		// nor alcohol, and the stated energy is the only place they show up.
+		// nor alcohol, and before they were imported the whole 96 kcal was unexplained.
+		const e = energySources({ protein: 0, fat: 0, carbs: 0, sugarAlcohols: 40 }, 96);
+		expect(e.sugarAlcohols).toBeCloseTo(40 * SUGAR_ALCOHOL_KCAL);
+		expect(e.other).toBeCloseTo(0);
+	});
+
+	it('leaves the remainder unattributed when the source published no figures', () => {
+		// USDA and OFF carry no organic-acid column, so a food from them keeps its gap
+		// rather than having one invented for it.
 		const e = energySources({ protein: 0, fat: 0, carbs: 0 }, 96);
+		expect(e.sugarAlcohols).toBe(0);
+		expect(e.organicAcids).toBe(0);
 		expect(e.other).toBeCloseTo(96);
+	});
+
+	it('counts organic acids at their own factor', () => {
+		const e = energySources({ protein: 0, fat: 0, carbs: 0, organicAcids: 5 }, 100);
+		expect(e.organicAcids).toBeCloseTo(5 * ORGANIC_ACID_KCAL);
 	});
 
 	it('never returns a negative remainder', () => {

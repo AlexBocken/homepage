@@ -29,7 +29,7 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { localDateStr } from '$lib/js/localDate';
 	import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
-	import { entryCalories, energySources, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
+	import { entryCalories, energySources, SPARSELY_MEASURED_KEYS, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import { formatAmountLabel } from '$lib/fitness/portions';
@@ -42,7 +42,7 @@
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
-	import { getDRI, NUTRIENT_META, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, REFERENCE_ENERGY } from '$lib/data/dailyReferenceIntake';
+	import { getDRI, NUTRIENT_META, RELATIVE_TO, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, REFERENCE_ENERGY } from '$lib/data/dailyReferenceIntake';
 	import {
 		fatSplit, carbSplit, epaDha as epaDhaOf, omegaTotals as omegaTotalsOf,
 		FAT_GROUP_KEYS, ACID_KEYS,
@@ -499,8 +499,11 @@
 	}
 
 	const microKeys = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
-		'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin',
-		'vitaminB6', 'vitaminB12', 'folate', 'cholesterol'];
+		'vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin',
+		'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin', 'cholesterol', 'caffeine',
+		// Carbohydrate detail, summed here with the rest rather than in its own pass —
+		// the values come from the same per-100 g record and scale the same way.
+		'starch', 'fructose', 'lactose'];
 	const aminoKeys = ['isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine',
 		'threonine', 'tryptophan', 'valine', 'histidine', 'alanine', 'arginine',
 		'asparticAcid', 'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
@@ -521,6 +524,8 @@
 
 	const dayTotals = $derived.by(() => {
 		let calories = 0, protein = 0, fat = 0, carbs = 0, fiber = 0, sugars = 0, saturatedFat = 0, alcohol = 0;
+		// Neither macro nor alcohol, but both carry energy — see energySources.
+		let sugarAlcohols = 0, organicAcids = 0;
 		// Fat and carbohydrate composition. `unknown` collects the mass from entries
 		// whose source published no breakdown, kept apart from `other` (the measured
 		// remainder) so the bar never implies a food was characterised when it wasn't.
@@ -551,6 +556,8 @@
 			saturatedFat += (p.saturatedFat ?? 0) * r;
 			// Absent means none rather than unmeasured — see NutritionPer100g.alcohol.
 			alcohol += (p.alcohol ?? 0) * r;
+			sugarAlcohols += (p.sugarAlcohols ?? 0) * r;
+			organicAcids += (p.organicAcids ?? 0) * r;
 			for (const k of microKeys) micros[k] += (p[k] ?? 0) * r;
 			for (const k of aminoKeys) aminos[k] += (p[k] ?? 0) * r;
 
@@ -589,7 +596,7 @@
 		// of the day that covers, so a mineral BLS or USDA never measured is shown as
 		// missing rather than as zero.
 		const traces = traceTotals(entries);
-		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, alcohol, micros, aminos, composition, fats, traces };
+		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, alcohol, sugarAlcohols, organicAcids, micros, aminos, composition, fats, traces };
 	});
 
 	// Energy eaten, from each food's own kcal figure rather than an Atwater sum of
@@ -629,11 +636,21 @@
 			{ key: 'fat', label: t.fat, value: e.fat, color: 'var(--orange)' },
 			{ key: 'carbs', label: t.carbs, value: e.carbs, color: 'var(--lightblue)' },
 			{ key: 'alcohol', label: isEn ? 'Alcohol' : 'Alkohol', value: e.alcohol, color: 'var(--red)' },
-			{ key: 'energyOther', label: isEn ? 'Other' : 'Übrige', value: e.other, color: 'var(--color-bg-elevated)', unknown: true },
+			{ key: 'sugarAlcohols', label: isEn ? 'Sugar alcohols' : 'Zuckeralkohole', value: e.sugarAlcohols, color: 'var(--nord15)' },
+			{ key: 'organicAcids', label: isEn ? 'Organic acids' : 'Organische Säuren', value: e.organicAcids, color: 'var(--nord12)' },
+			{ key: 'energyOther', label: isEn ? 'Not attributed' : 'Nicht zugeordnet', value: e.other, color: 'var(--color-bg-elevated)', unknown: true },
 		];
 	});
 
 	const hasComposition = $derived(dayTotals.fat > 0 || dayTotals.carbs > 0);
+
+	/** Spells out what a relative percentage is a percentage *of*, since the column
+	 *  otherwise reads as a share of a reference intake like every row around it. */
+	function relativeTitle(/** @type {string} */ parentKey) {
+		const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (parentKey)];
+		const label = isEn ? meta.label : meta.labelDe;
+		return isEn ? `Share of ${label.toLowerCase()}` : `Anteil an ${label}`;
+	}
 
 	/** Deep dive into which foods supplied a nutrient on the day being viewed. */
 	function nutrientHref(/** @type {string} */ key) {
@@ -1073,6 +1090,7 @@
 		'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
 		'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
 		'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
+		'pantothenicAcid', 'retinol',
 		// Summed like a macro rather than like a trace mineral: an ingredient without
 		// the key contains none, so a plain zero is the truth here.
 		'alcohol',
@@ -1090,6 +1108,10 @@
 		return meal.ingredients.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + (ing.per100g?.calories ?? 0) * ing.amountGrams / 100, 0);
 	}
 
+	// Keys a meal must blend over the ingredients that reported them rather than over
+	// its whole weight, or an unmeasured ingredient dilutes the ones that were.
+	const MEASURED_WHERE_PRESENT = [...TRACE_MINERAL_KEYS, ...SPARSELY_MEASURED_KEYS];
+
 	/** @param {CustomMeal} meal */
 	function aggregateMealPer100g(meal) {
 		/** @type {Record<string, number>} */
@@ -1106,7 +1128,7 @@
 			// Trace minerals only from the ingredients that report them, so a meal built
 			// from one BLS and one USDA food keeps both sources' figures instead of
 			// diluting each with a fabricated zero for the other.
-			for (const k of TRACE_MINERAL_KEYS) {
+			for (const k of MEASURED_WHERE_PRESENT) {
 				const v = ing.per100g?.[k];
 				if (typeof v === 'number') {
 					totals[k] = (totals[k] ?? 0) + v * r;
@@ -1121,7 +1143,7 @@
 		// Scaled by the grams they were measured across, not the meal weight: the
 		// concentration of what was measured is the honest per-100 g figure, and it is
 		// written only when something reported it.
-		for (const k of TRACE_MINERAL_KEYS) {
+		for (const k of MEASURED_WHERE_PRESENT) {
 			const g = traceGrams[k] ?? 0;
 			if (g > 0) per100g[k] = (totals[k] ?? 0) * (100 / g);
 		}
@@ -1395,19 +1417,48 @@
 
 	const microSections = $derived.by(() => {
 		const minerals = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
-		const vitamins = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
-		// Alcohol sits here rather than with the macros: it is a ceiling, not a target,
-		// and it is the one row whose bar filling up is not an achievement.
-		const other = ['cholesterol', 'alcohol'];
+		// Retinol follows vitamin A because it is the part of it that has a ceiling.
+		const vitamins = ['vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin'];
+		// Alcohol and caffeine sit here rather than with the macros: they are ceilings,
+		// not targets, and theirs are the rows whose bar filling up is not an
+		// achievement. Sugar alcohols are here because they are neither macro nor
+		// micronutrient — the energy bar above is where they earn their place.
+		const other = ['cholesterol', 'caffeine', 'alcohol', 'sugarAlcohols'];
+
+		/** The day's total for a nutrient, wherever dayTotals happens to keep it. */
+		function dayValue(/** @type {string} */ k) {
+			return k === 'fiber' ? dayTotals.fiber
+				: k === 'sugars' ? dayTotals.sugars
+				: k === 'carbs' ? dayTotals.carbs
+				: k === 'alcohol' ? dayTotals.alcohol
+				: k === 'sugarAlcohols' ? dayTotals.sugarAlcohols
+				: k in dayTotals.micros ? dayTotals.micros[k]
+				: dayTotals.fats[k] ?? 0;
+		}
+
+		/**
+		 * A row for a nutrient with no requirement of its own, measured against the
+		 * figure it is part of instead — see RELATIVE_TO. Null when nothing was eaten
+		 * to be a share of, which renders as the same dash an unmeasured row does.
+		 * @param {string} k
+		 */
+		function relativeShare(k) {
+			const parent = RELATIVE_TO[/** @type {keyof typeof RELATIVE_TO} */ (k)];
+			if (!parent) return null;
+			const whole = dayValue(parent);
+			if (!(whole > 0)) return { pct: null, parent };
+			return { pct: Math.round((dayValue(k) / whole) * 100), parent };
+		}
 
 		/** @param {string[]} keys */
 		function mkRows(keys) {
 			return keys.map(k => {
 				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
-				const value = k === 'alcohol' ? dayTotals.alcohol : dayTotals.micros[k] ?? 0;
+				const value = dayValue(k);
 				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
-				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false };
+				const rel = relativeShare(k);
+				const pct = rel ? rel.pct : (goal > 0 ? Math.round(value / goal * 100) : null);
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false, relativeTo: rel?.parent ?? null };
 			});
 		}
 
@@ -1456,19 +1507,18 @@
 		// sugars come from the core panel every source publishes, so these rows work on
 		// anything already logged; the fatty acids below them only fill in for foods
 		// imported since the fat panel was added.
-		const carbQuality = ['fiber', 'sugars'];
+		const carbQuality = ['fiber', 'sugars', 'starch', 'fructose', 'lactose'];
 		const fatQuality = ['saturatedFat', 'transFat', 'linoleicAcid', 'alphaLinolenicAcid', 'epaDha'];
 
 		/** @param {string[]} keys */
 		function mkFatRows(keys) {
 			return keys.map(k => {
 				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
-				const value = k === 'fiber' ? dayTotals.fiber
-					: k === 'sugars' ? dayTotals.sugars
-					: dayTotals.fats[k] ?? 0;
+				const value = dayValue(k);
 				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
-				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false };
+				const rel = relativeShare(k);
+				const pct = rel ? rel.pct : (goal > 0 ? Math.round(value / goal * 100) : null);
+				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false, relativeTo: rel?.parent ?? null };
 			});
 		}
 
@@ -1482,22 +1532,28 @@
 		// Only the fat-composition rows nest, but every row carries the flags so the
 		// renderer can stay one shape.
 		/** @param {any[]} rows */
-		const flat = (rows) => rows.map(r => ({ child: false, header: false, ...r }));
+		const flat = (rows) => rows.map(r => ({ child: false, header: false, relativeTo: null, ...r }));
 
 		return [
-			{ title: isEn ? 'Carbohydrate Quality' : 'Kohlenhydrat-Qualität', rows: flat(mkFatRows(carbQuality)), note: '' },
+			{ title: isEn ? 'Carbohydrate Quality' : 'Kohlenhydrat-Qualität', rows: flat(mkFatRows(carbQuality)), note: isEn
+				? 'Starch, fructose and lactose have no reference intake — they are shown to break the carbohydrates down, not to be met. BLS reports all three for nearly every food, USDA for a third of its own.'
+				: 'Für Stärke, Fructose und Lactose gibt es keinen Referenzwert — sie schlüsseln die Kohlenhydrate auf, sie sind kein Ziel. BLS erfasst alle drei für fast jedes Lebensmittel, USDA nur für ein Drittel.' },
 			{ title: isEn ? 'Fatty Acids' : 'Fettsäuren', rows: flat(mkFatRows(fatQuality)), note: isEn
 				? `Saturated and trans fat are ceilings; linoleic and α-linolenic acid are adequate intakes, so passing them is fine. All four are shares of energy, scaled to ${energyBasisLabel}. EPA + DHA is a fixed 250 mg a day and does not scale.`
 				: `Gesättigte und Trans-Fettsäuren sind Obergrenzen; Linol- und α-Linolensäure sind Richtwerte, ein Überschreiten ist unproblematisch. Alle vier sind Energieanteile, skaliert auf ${energyBasisLabel}. EPA + DHA sind fixe 250 mg pro Tag und skalieren nicht.` },
 			{ title: isEn ? 'Fat Composition' : 'Fettzusammensetzung', rows: flat(compositionRows), note: fatCompositionNote(isEn) },
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: flat(mkRows(minerals)), note: '' },
 			{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: flat(mkTraceRows()), note: traceCoverageNote(dayTotals.traces.coverage, isEn) },
-			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: flat(mkRows(vitamins)), note: '' },
+			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: flat(mkRows(vitamins)), note: isEn
+				? 'Retinol is the preformed share of vitamin A and the only part with an upper limit — it has no target of its own. Biotin is measured by BLS for almost every food but by USDA for one in eight, so a day logged from USDA reads low.'
+				: 'Retinol ist der vorgebildete Anteil von Vitamin A und der einzige mit einer Obergrenze — ein eigener Zielwert existiert nicht. Biotin erfasst BLS für fast jedes Lebensmittel, USDA nur für jedes achte; ein aus USDA erfasster Tag liegt daher zu tief.' },
 			{ title: isEn ? 'Essential Amino Acids' : 'Essenzielle Aminosäuren', rows: flat(essentialRows), note: '' },
 			{ title: isEn ? 'Non-Essential Amino Acids' : 'Nicht-essenzielle Aminosäuren', rows: flat(nonEssentialRows), note: isEn
 				? 'No intake requirement — bars show each one’s share of the non-essential amino acids you ate.'
 				: 'Kein Bedarfswert — die Balken zeigen den Anteil an den aufgenommenen nicht-essenziellen Aminosäuren.' },
-			{ title: isEn ? 'Other' : 'Sonstiges', rows: flat(mkRows(other)), note: '' },
+			{ title: isEn ? 'Other' : 'Sonstiges', rows: flat(mkRows(other)), note: isEn
+				? 'Caffeine is not in BLS at all: its coffees, teas, colas and chocolates take the figure from a matched USDA record, and the milk-coffee drinks are estimated from one espresso shot per serving. Anything else logged from BLS carries none.'
+				: 'Koffein fehlt in BLS vollständig: Kaffee, Tee, Cola und Schokolade übernehmen den Wert eines zugeordneten USDA-Eintrags, Milchkaffeegetränke sind mit einem Espresso pro Portion geschätzt. Alles andere aus BLS führt keinen.' },
 		];
 	});
 
@@ -1819,7 +1875,12 @@
 						<span class="micro-value" class:is-na={row.noData}>
 							{#if row.noData}—{:else}{fmt(row.value)} {row.unit}{/if}
 						</span>
-						<span class="micro-pct" class:is-na={row.pct === null}>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
+						<span
+							class="micro-pct"
+							class:is-na={row.pct === null}
+							class:is-relative={row.relativeTo}
+							title={row.relativeTo ? relativeTitle(row.relativeTo) : null}
+						>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
 					</a>
 				{/each}
 			</div>
@@ -3209,6 +3270,12 @@
 		font-weight: 700;
 		font-size: 0.72rem;
 		font-variant-numeric: tabular-nums;
+	}
+	/* A share of a parent figure, not of a target — lighter, so the eye does not read
+	   it as progress toward a reference intake. */
+	.micro-pct.is-relative {
+		font-weight: 500;
+		color: var(--color-text-secondary);
 	}
 	.micro-pct.is-na {
 		font-weight: 500;

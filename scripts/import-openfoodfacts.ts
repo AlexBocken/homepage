@@ -93,6 +93,16 @@ const NUTRIENT_MAP: Record<string, string> = {
 	'eicosapentaenoic-acid_100g': 'epa',
 	'docosapentaenoic-acid_100g': 'dpa',
 	'docosahexaenoic-acid_100g': 'dha',
+	// Vitamin B5 and B7, and the carbohydrate detail OFF products sometimes declare.
+	'pantothenic-acid_100g': 'pantothenicAcid',
+	'biotin_100g': 'biotin',
+	'starch_100g': 'starch',
+	'fructose_100g': 'fructose',
+	'lactose_100g': 'lactose',
+	// Sugar alcohols, one of the two things a stated energy figure carries beyond
+	// the macros. OFF has no organic-acid field, so that half stays unattributed.
+	'polyols_100g': 'sugarAlcohols',
+	'caffeine_100g': 'caffeine',
 	// Ethanol. OFF is the one field it does *not* normalise to grams: the `alcohol`
 	// nutriment is stored in **% vol** (ml ethanol per 100 ml), the unit the label
 	// states. Converted on read like every other OFF unit mismatch — see

@@ -50,6 +50,8 @@ export type DRI = {
   vitaminB6: number;  // mg
   vitaminB12: number; // mcg
   folate: number;     // mcg
+  pantothenicAcid: number; // mg — adequate intake, no RDA was set
+  biotin: number;     // mcg — adequate intake, no RDA was set
   cholesterol: number; // mg max
   // Ethanol (g), a ceiling and never a target. The DGE/SGE tolerable daily amount:
   // 20 g for men, 10 g for women — roughly half a litre and a quarter litre of beer.
@@ -95,6 +97,8 @@ export const DRI_MALE: DRI = {
   vitaminB6: 1.3,
   vitaminB12: 2.4,
   folate: 400,
+  pantothenicAcid: 5,
+  biotin: 30,
   cholesterol: 300,
   alcohol: 20,
 };
@@ -135,6 +139,8 @@ export const DRI_FEMALE: DRI = {
   vitaminB6: 1.3,
   vitaminB12: 2.4,
   folate: 400,
+  pantothenicAcid: 5,
+  biotin: 30,
   cholesterol: 300,
   alcohol: 10,
 };
@@ -176,13 +182,52 @@ export function getDRI(sex: 'male' | 'female', energyKcal?: number | null): DRI 
 }
 
 /**
+ * Nutrients the diary shows that have no daily *requirement* to state.
+ *
+ * Some are ceilings (caffeine, preformed retinol), some are composition detail the
+ * bars break down rather than judge (starch, the two sugars), and two are energy
+ * sources that belong to no macro. They carry a label and a unit like everything
+ * else, so the breakdown pages work on them, but no DRI — a bar against a target
+ * that does not exist would be an invention.
+ */
+export type ExtraNutrientKey =
+  | 'retinol'
+  | 'caffeine'
+  | 'starch'
+  | 'fructose'
+  | 'lactose'
+  | 'sugarAlcohols'
+  | 'organicAcids';
+
+/**
+ * Nutrients whose bar is a share of a larger figure they are part of, rather than
+ * of a requirement they do not have.
+ *
+ * Without this the rows draw an empty bar and read 'N/A', which says nothing —
+ * and the interesting question about each of them is compositional anyway: how
+ * much of the vitamin A came preformed, how much of the sugar was fructose or
+ * lactose, how much of the carbohydrate was starch. Each denominator is the figure
+ * the nutrient is literally part of, so the share can never exceed 100%.
+ *
+ * Starch is measured against carbohydrate rather than against sugars: BLS counts
+ * available carbohydrate as sugars + starch + oligosaccharides, so sugars is its
+ * sibling, not its parent — a slice of bread would otherwise read 1500%.
+ */
+export const RELATIVE_TO: Partial<Record<keyof DRI | ExtraNutrientKey, string>> = {
+  retinol: 'vitaminA',
+  fructose: 'sugars',
+  lactose: 'sugars',
+  starch: 'carbs',
+};
+
+/**
  * Tolerable Upper Intake Levels (UL) for adults, NASEM/IOM — habitual intake above
  * these carries a risk of harm. Only nutrients whose UL applies to *total* intake are
  * listed: the ULs for magnesium, niacin, vitamin E, vitamin B6 and folate cover
  * supplements and fortification only, so food-log totals must not be judged against
  * them. Units match DRI.
  */
-export const UPPER_LIMITS: Partial<Record<keyof DRI, number>> = {
+export const UPPER_LIMITS: Partial<Record<keyof DRI | ExtraNutrientKey, number>> = {
   calcium: 2500,
   iron: 45,
   phosphorus: 4000,
@@ -196,9 +241,17 @@ export const UPPER_LIMITS: Partial<Record<keyof DRI, number>> = {
   iodine: 1100,
   selenium: 400,
   molybdenum: 2000,
-  vitaminA: 3000, // mcg RAE, preformed retinol — carotenoids are not capped
   vitaminC: 2000,
   vitaminD: 100,
+  // The vitamin A UL covers *preformed* retinol only — β-carotene and the other
+  // provitamin carotenoids are not capped, because the body regulates how much of
+  // them it converts. Judging total vitamin A (RAE, carotenoids included) against
+  // 3000 mcg flagged carrot-heavy days as an overdose they were not, so the limit
+  // is stated against retinol and only foods reporting it are measured by it.
+  retinol: 3000, // mcg preformed
+  // EFSA: 400 mg/day habitual intake is without safety concern for healthy adults
+  // (200 mg in one sitting, which a daily total cannot see).
+  caffeine: 400, // mg
 };
 
 /** WHO essential amino acid requirements for adults, in mg per kg body weight per day */
@@ -217,7 +270,7 @@ export function aminoDri(key: string, weightKg: number): number {
 }
 
 /** Nutrient display metadata: label, unit, and whether it's a max (upper limit) */
-export const NUTRIENT_META: Record<keyof DRI, { label: string; labelDe: string; unit: string; isMax?: boolean }> = {
+export const NUTRIENT_META: Record<keyof DRI | ExtraNutrientKey, { label: string; labelDe: string; unit: string; isMax?: boolean }> = {
   protein:     { label: 'Protein',      labelDe: 'Eiweiss',        unit: 'g' },
   fat:         { label: 'Fat',          labelDe: 'Fett',          unit: 'g' },
   carbs:       { label: 'Carbs',        labelDe: 'Kohlenhydrate', unit: 'g' },
@@ -252,6 +305,15 @@ export const NUTRIENT_META: Record<keyof DRI, { label: string; labelDe: string; 
   vitaminB6:   { label: 'Vitamin B6',   labelDe: 'Vitamin B6',   unit: 'mg' },
   vitaminB12:  { label: 'Vitamin B12',  labelDe: 'Vitamin B12',  unit: 'mcg' },
   folate:      { label: 'Folate',       labelDe: 'Folsäure',     unit: 'mcg' },
+  pantothenicAcid: { label: 'Pantothenic acid (B5)', labelDe: 'Pantothensäure (B5)', unit: 'mg' },
+  biotin:      { label: 'Biotin (B7)',  labelDe: 'Biotin (B7)',  unit: 'mcg' },
+  retinol:     { label: 'Retinol',      labelDe: 'Retinol',      unit: 'mcg', isMax: true },
+  caffeine:    { label: 'Caffeine',     labelDe: 'Koffein',      unit: 'mg', isMax: true },
+  starch:      { label: 'Starch',       labelDe: 'Stärke',       unit: 'g' },
+  fructose:    { label: 'Fructose',     labelDe: 'Fructose',     unit: 'g' },
+  lactose:     { label: 'Lactose',      labelDe: 'Lactose',      unit: 'g' },
+  sugarAlcohols: { label: 'Sugar alcohols', labelDe: 'Zuckeralkohole', unit: 'g' },
+  organicAcids:  { label: 'Organic acids',  labelDe: 'Organische Säuren', unit: 'g' },
   cholesterol: { label: 'Cholesterol',  labelDe: 'Cholesterin',  unit: 'mg', isMax: true },
   alcohol:     { label: 'Alcohol',      labelDe: 'Alkohol',      unit: 'g',  isMax: true },
 };

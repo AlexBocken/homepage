@@ -25,6 +25,7 @@ export const OFF_UNIT_SCALE: Record<string, number> = {
 	sodium: 1e3, zinc: 1e3, vitaminC: 1e3, vitaminE: 1e3, thiamin: 1e3,
 	riboflavin: 1e3, niacin: 1e3, vitaminB6: 1e3, cholesterol: 1e3,
 	vitaminA: 1e6, vitaminD: 1e6, vitaminK: 1e6, vitaminB12: 1e6, folate: 1e6,
+	pantothenicAcid: 1e3, caffeine: 1e3, biotin: 1e6,
 	// Ethanol is the one nutriment OFF does not express as a mass: `alcohol_100g` is
 	// **% vol**, ml of ethanol per 100 ml, because that is what a bottle states.
 	// Ethanol's density (0.789 g/ml at 20 °C) turns that into g/100 ml, which is
