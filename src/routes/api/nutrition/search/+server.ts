@@ -11,6 +11,7 @@ import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutriti
 import { searchBlsUsda, scoreName, queryWords, NAME_LENGTH_PENALTY } from '$lib/server/nutritionSearchIndex';
 import { offPortions } from '$lib/server/offPortions';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
+import { resolveBarcodeOverrides } from '$lib/server/barcodeOverrides';
 import { groupsPresent } from '$lib/fitness/microCoverage';
 
 type SearchResult = {
@@ -365,6 +366,16 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	// Process OpenFoodFacts results
 	{
+		// A mapped barcode surfaces as its BLS/USDA entry here too, so the same
+		// product can't show two different nutrition profiles depending on whether
+		// it was scanned or searched for.
+		const overrides = await resolveBarcodeOverrides(
+			(offResults as any[]).map((e) => e.barcode).filter(Boolean)
+		);
+		// The mapping target may also have matched the query on its own name; keep
+		// the direct hit and drop the duplicate.
+		const seenKeys = new Set(scored.map((s: any) => `${s.source}:${s.id}`));
+
 		for (const entry of offResults as any[]) {
 			if (hideReadyMeals && isReadyMeal('off', entry.category)) continue;
 			const displayName = entry.nameDe || entry.name;
@@ -374,6 +385,30 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			const scoreBrand = entry.brands ? scoreName(q, words, entry.brands.toLowerCase()) : 0;
 			// text search already filtered; prefer shorter names among matches
 			const best = Math.max(scoreDe, scoreEn, scoreBrand, 1) - displayName.length * NAME_LENGTH_PENALTY;
+
+			const override = overrides.get(entry.barcode);
+			if (override) {
+				if (hideReadyMeals && isReadyMeal(override.source, override.category || '')) continue;
+				const key = `${override.source}:${override.id}`;
+				if (seenKeys.has(key)) continue;
+				seenKeys.add(key);
+				const overrideGroups = groupsPresent(override.per100g);
+				scored.push({
+					source: override.source,
+					id: override.id,
+					// Ranked on the brand text the user actually typed, then shown as
+					// the BLS/USDA record it resolves to.
+					name: override.name,
+					category: override.category || '',
+					calories: override.calories,
+					microGroups: overrideGroups,
+					score: best + coverageBonus(overrideGroups),
+					...(full && { per100g: override.per100g }),
+					...(full && override.portions.length > 0 && { portions: override.portions }),
+					...(favKeys.has(key) && { favorited: true }),
+				});
+				continue;
+			}
 
 			const portions = offPortions(entry);
 			const offGroups = groupsPresent(entry.per100g);

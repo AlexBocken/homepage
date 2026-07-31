@@ -101,6 +101,9 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/api/nutrition/lookup?source=usda&id=2646170', kind: 'api' },
 	{ path: '/api/nutrition/overwrites', kind: 'api' },
 	{ path: '/api/nutrition/barcode?code=0000000000000', kind: 'api' },
+	// Barcode → BLS/USDA mappings are global and any logged-in user may set them,
+	// so this is login-only like the rest of /api/nutrition.
+	{ path: '/api/nutrition/barcode-override?code=0000000000000', kind: 'api' },
 	{ path: '/settings', kind: 'page' },
 	{ path: '/einstellungen', kind: 'page' },
 	{ path: '/hikes/route-builder', kind: 'page' }

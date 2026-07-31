@@ -1,5 +1,7 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { errorWithVerse } from '$lib/server/errorQuote';
+import { resolveBarcodeOverride } from '$lib/server/barcodeOverrides';
 import { NUTRITION_DB } from '$lib/data/nutritionDb';
 import { usdaDisplayName, usdaNameDe } from '$lib/data/usdaNamesDe';
 import { BLS_DB } from '$lib/data/blsDb';
@@ -164,6 +166,13 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 
 	if (source === 'off') {
 		await dbConnect();
+		// A mapped barcode belongs on its BLS/USDA page — redirect rather than
+		// render, so the URL matches the record actually being shown and links
+		// people copy stay correct.
+		const override = await resolveBarcodeOverride(id);
+		if (override) {
+			redirect(307, `/${params.nutrition}/food/${override.source}/${encodeURIComponent(override.id)}`);
+		}
 		const entry = await OpenFoodFact.findOne({ barcode: id }).lean();
 		if (!entry) {
 			await errorWithVerse(fetch, url.pathname, 404, 'Food not found');

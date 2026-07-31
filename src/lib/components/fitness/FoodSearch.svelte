@@ -38,6 +38,8 @@
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import X from '@lucide/svelte/icons/x';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Link2 from '@lucide/svelte/icons/link-2';
+	import SearchInput from '$lib/components/SearchInput.svelte';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
@@ -60,6 +62,7 @@
 	 *   calories?: number,
 	 *   favorited?: boolean,
 	 *   microGroups?: { minerals: boolean, vitamins: boolean, aminos: boolean },
+	 *   overriddenBarcode?: string,
 	 * }} FoodItem
 	 */
 
@@ -782,10 +785,112 @@
 		if (videoEl) videoEl.srcObject = null;
 	}
 
+	// --- Barcode → BLS/USDA mapping ---
+	// OFF entries are crowd-sourced and usually carry only the macros, so a barcode
+	// can be pointed at the BLS/USDA record for the same food. Mappings are global.
+	/** The code being mapped, or '' when the picker is closed. */
+	let linkingCode = $state('');
+	/** Last code scanned, so an unknown product can still be mapped. */
+	let lastScannedCode = $state('');
+	let linkQuery = $state('');
+	/** @type {FoodItem[]} */
+	let linkResults = $state([]);
+	let linkBusy = $state(false);
+	let linkError = $state('');
+	let linkSearchSeq = 0;
+
+	/** @param {string} code */
+	function openLinkPicker(code) {
+		linkingCode = code;
+		linkQuery = '';
+		linkResults = [];
+		linkError = '';
+	}
+
+	function closeLinkPicker() {
+		linkingCode = '';
+		linkResults = [];
+		linkError = '';
+	}
+
+	async function searchLinkTargets() {
+		const q = linkQuery.trim();
+		if (q.length < 2) {
+			linkResults = [];
+			return;
+		}
+		const seq = ++linkSearchSeq;
+		linkBusy = true;
+		try {
+			const res = await fetch(
+				`/api/nutrition/search?q=${encodeURIComponent(q)}&sources=bls,usda`
+			);
+			if (!res.ok) throw new Error(String(res.status));
+			const data = await res.json();
+			// Ignore a slower earlier request that landed after this one.
+			if (seq !== linkSearchSeq) return;
+			linkResults = data;
+		} catch {
+			if (seq === linkSearchSeq) {
+				linkError = isEn ? 'Search failed' : 'Suche fehlgeschlagen';
+			}
+		} finally {
+			if (seq === linkSearchSeq) linkBusy = false;
+		}
+	}
+
+	/** @param {{ source: string, id: string, name: string }} target */
+	async function linkBarcodeTo(target) {
+		linkBusy = true;
+		linkError = '';
+		try {
+			const res = await fetch('/api/nutrition/barcode-override', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					barcode: linkingCode,
+					source: target.source,
+					...(target.source === 'bls' ? { blsCode: target.id } : { fdcId: Number(target.id) })
+				})
+			});
+			if (!res.ok) {
+				const body = await res.json().catch(() => ({}));
+				linkError = body.error || (isEn ? 'Could not save the link' : 'Verknüpfung fehlgeschlagen');
+				return;
+			}
+			const { food } = await res.json();
+			closeLinkPicker();
+			scanError = '';
+			// Show the mapped record straight away, in place of the OFF entry.
+			selectItem(food);
+		} catch {
+			linkError = isEn ? 'Could not save the link' : 'Verknüpfung fehlgeschlagen';
+		} finally {
+			linkBusy = false;
+		}
+	}
+
+	/** @param {string} code */
+	async function unlinkBarcode(code) {
+		linkBusy = true;
+		try {
+			await fetch(`/api/nutrition/barcode-override?code=${encodeURIComponent(code)}`, {
+				method: 'DELETE'
+			});
+			// Re-resolve: without the mapping this falls back to the OFF entry.
+			await lookupBarcode(code);
+		} catch {
+			linkError = isEn ? 'Could not remove the link' : 'Verknüpfung konnte nicht entfernt werden';
+		} finally {
+			linkBusy = false;
+		}
+	}
+
 	/** @param {string} code */
 	async function lookupBarcode(code) {
 		loading = true;
 		scanError = '';
+		lastScannedCode = code;
 		try {
 			const res = await fetch(`/api/nutrition/barcode?code=${encodeURIComponent(code)}`);
 			if (!res.ok) {
@@ -813,7 +918,50 @@
 	}
 </script>
 
-{#if scanning}
+{#if linkingCode}
+	<!-- Target picker. Searches BLS + USDA only; the point is to leave OFF. -->
+	<div class="fs-linker">
+		<div class="fs-linker-header">
+			<span class="fs-linker-title">
+				{isEn ? 'Link barcode' : 'Barcode verknüpfen'}
+				<code>{linkingCode}</code>
+			</span>
+			<button class="fs-scanner-close" onclick={closeLinkPicker} aria-label={isEn ? 'Cancel linking' : 'Verknüpfen abbrechen'}>
+				<X size={18} />
+			</button>
+		</div>
+		<p class="fs-linker-hint">
+			{isEn
+				? 'Pick the BLS or USDA entry for this product. It applies for everyone, and you can unlink it later.'
+				: 'Wähle den BLS- oder USDA-Eintrag für dieses Produkt. Gilt für alle und kann später wieder getrennt werden.'}
+		</p>
+		<SearchInput
+			bind:value={linkQuery}
+			placeholder={isEn ? 'Search BLS / USDA…' : 'BLS / USDA durchsuchen…'}
+			oninput={searchLinkTargets}
+			onClear={() => { linkQuery = ''; linkResults = []; }}
+		/>
+		{#if linkError}
+			<p class="fs-scan-error">{linkError}</p>
+		{/if}
+		{#if linkBusy}
+			<p class="fs-linker-status"><LoaderCircle class="fs-spinner" size={16} strokeWidth={2} /></p>
+		{/if}
+		<div class="fs-linker-results">
+			{#each linkResults as target (target.source + ':' + target.id)}
+				<button class="fs-linker-row" type="button" disabled={linkBusy} onclick={() => linkBarcodeTo(target)}>
+					<span class="fs-source-badge" class:usda={target.source === 'usda'}>{sourceLabel(target.source)}</span>
+					<span class="fs-linker-name">{target.name}</span>
+					<span class="fs-linker-kcal">{Math.round(target.calories ?? 0)} kcal</span>
+				</button>
+			{:else}
+				{#if linkQuery.trim().length >= 2 && !linkBusy}
+					<p class="fs-linker-status">{isEn ? 'No matches' : 'Keine Treffer'}</p>
+				{/if}
+			{/each}
+		</div>
+	</div>
+{:else if scanning}
 	<div class="fs-scanner">
 		<div class="fs-scanner-header">
 			<span class="fs-scanner-title">{isEn ? 'Scan barcode' : 'Barcode scannen'}</span>
@@ -893,6 +1041,16 @@
 	{/if}
 	{#if scanError}
 		<p class="fs-scan-error">{scanError}</p>
+		{#if lastScannedCode && !linkingCode}
+			<!-- A code OFF has never heard of is still mappable — otherwise scanning
+			     it is a dead end. -->
+			<button class="fs-link-btn" type="button" onclick={() => openLinkPicker(lastScannedCode)}>
+				<Link2 size={15} />
+				{isEn
+					? `Link ${lastScannedCode} to a BLS/USDA entry`
+					: `${lastScannedCode} mit BLS/USDA-Eintrag verknüpfen`}
+			</button>
+		{/if}
 	{/if}
 	{#if displayResults.length > 0}
 		<div class="fs-results">
@@ -965,6 +1123,31 @@
 				</a>
 			{/if}
 		</div>
+
+		{#if selected.source === 'off'}
+			<!-- OFF rarely carries micros; point the barcode at the BLS/USDA record
+			     for the same food to get the full profile. Applies for everyone. -->
+			<button class="fs-link-btn" type="button" onclick={() => { if (selected) openLinkPicker(selected.id); }}>
+				<Link2 size={15} />
+				{isEn ? 'Link to a BLS/USDA entry' : 'Mit BLS/USDA-Eintrag verknüpfen'}
+			</button>
+		{:else if selected.overriddenBarcode}
+			<div class="fs-link-note">
+				<span>
+					{isEn
+						? `Linked from barcode ${selected.overriddenBarcode}`
+						: `Verknüpft mit Barcode ${selected.overriddenBarcode}`}
+				</span>
+				<button
+					class="fs-unlink-btn"
+					type="button"
+					disabled={linkBusy}
+					onclick={() => { if (selected?.overriddenBarcode) unlinkBarcode(selected.overriddenBarcode); }}
+				>
+					{isEn ? 'Unlink' : 'Trennen'}
+				</button>
+			</div>
+		{/if}
 
 		<!-- Amount selector — keyed so a newly picked food reseeds its portion basis -->
 		{#key selected.source + ':' + selected.id}
@@ -1147,6 +1330,115 @@
 		font-size: 0.78rem;
 		color: var(--red);
 		margin: 0.3rem 0;
+	}
+
+	/* ── Barcode → BLS/USDA linking ── */
+	.fs-link-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		margin: 0.5rem 0 0;
+		padding: 0.4rem 0.7rem;
+		font-size: 0.78rem;
+		border-radius: var(--radius-pill);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition: var(--transition-fast);
+	}
+	.fs-link-btn:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
+	.fs-link-note {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--color-text-tertiary);
+	}
+	.fs-unlink-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		color: var(--red);
+		cursor: pointer;
+	}
+	.fs-unlink-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.fs-linker {
+		display: flex;
+		flex-direction: column;
+		padding: 0.25rem 0;
+	}
+	.fs-linker-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+	.fs-linker-title {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+	.fs-linker-title code {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+	.fs-linker-hint {
+		font-size: 0.78rem;
+		color: var(--color-text-tertiary);
+		margin: 0.35rem 0 0.6rem;
+	}
+	.fs-linker-status {
+		font-size: 0.8rem;
+		color: var(--color-text-tertiary);
+		margin: 0.4rem 0;
+	}
+	.fs-linker-results {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin-top: 0.5rem;
+		max-height: 45vh;
+		overflow-y: auto;
+	}
+	.fs-linker-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.5rem 0.6rem;
+		border: none;
+		border-radius: var(--radius-md);
+		background: var(--color-surface);
+		text-align: left;
+		cursor: pointer;
+		transition: var(--transition-fast);
+	}
+	.fs-linker-row:hover:not(:disabled) {
+		background: var(--color-bg-elevated);
+	}
+	.fs-linker-row:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+	.fs-linker-name {
+		flex: 1;
+		font-size: 0.85rem;
+		color: var(--color-text-primary);
+	}
+	.fs-linker-kcal {
+		font-size: 0.75rem;
+		color: var(--color-text-tertiary);
+		white-space: nowrap;
 	}
 	.fs-no-results {
 		font-size: 0.82rem;

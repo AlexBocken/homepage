@@ -5,6 +5,7 @@ import { OpenFoodFact } from '$models/OpenFoodFact';
 import { offPortions } from '$lib/server/offPortions';
 import { fetchFromOffApi, cacheOffProduct } from '$lib/server/offLookup';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
+import { resolveBarcodeOverride } from '$lib/server/barcodeOverrides';
 
 /** GET /api/nutrition/barcode?code=3017620422003 */
 export const GET: RequestHandler = async ({ url }) => {
@@ -14,6 +15,12 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	await dbConnect();
+
+	// A mapping wins over OFF entirely — including for codes OFF has never heard
+	// of, which is why this runs before both the cache and the live lookup.
+	const override = await resolveBarcodeOverride(code);
+	if (override) return json(override);
+
 	const doc = await OpenFoodFact.findOne({ barcode: code }).lean();
 
 	if (doc) {
