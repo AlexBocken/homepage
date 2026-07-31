@@ -659,7 +659,7 @@
 					{/if}
 					<p class="micro-source">
 						{isEn ? 'Reference values' : 'Referenzwerte'}
-						<DriSourceInfo {isEn} align="right" />
+						<DriSourceInfo {isEn} />
 					</p>
 					{#each aminoGroups as group}
 						{#if group.rows.length > 0}
