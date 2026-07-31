@@ -51,6 +51,12 @@ export type DRI = {
   vitaminB12: number; // mcg
   folate: number;     // mcg
   cholesterol: number; // mg max
+  // Ethanol (g), a ceiling and never a target. The DGE/SGE tolerable daily amount:
+  // 20 g for men, 10 g for women — roughly half a litre and a quarter litre of beer.
+  // No health authority states a *recommended* intake, and the WHO's position is
+  // that no level is risk-free, so a bar at 100% here means "at the upper limit
+  // health guidance tolerates", not "requirement met".
+  alcohol: number; // g max
 };
 
 /** DRI for adult males (19-50) */
@@ -90,6 +96,7 @@ export const DRI_MALE: DRI = {
   vitaminB12: 2.4,
   folate: 400,
   cholesterol: 300,
+  alcohol: 20,
 };
 
 /** DRI for adult females (19-50) */
@@ -129,6 +136,7 @@ export const DRI_FEMALE: DRI = {
   vitaminB12: 2.4,
   folate: 400,
   cholesterol: 300,
+  alcohol: 10,
 };
 
 /** Energy the fatty acid reference values above are expressed at, by sex. */
@@ -245,4 +253,5 @@ export const NUTRIENT_META: Record<keyof DRI, { label: string; labelDe: string; 
   vitaminB12:  { label: 'Vitamin B12',  labelDe: 'Vitamin B12',  unit: 'mcg' },
   folate:      { label: 'Folate',       labelDe: 'Folsäure',     unit: 'mcg' },
   cholesterol: { label: 'Cholesterol',  labelDe: 'Cholesterin',  unit: 'mg', isMax: true },
+  alcohol:     { label: 'Alcohol',      labelDe: 'Alkohol',      unit: 'g',  isMax: true },
 };

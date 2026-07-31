@@ -164,7 +164,7 @@
 	const sections = $derived.by(() => {
 		const minerals = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
 		const vitamins = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
-		const other = ['cholesterol'];
+		const other = ['cholesterol', 'alcohol'];
 
 		/** @param {string[]} keys */
 		function mkRows(keys) {

@@ -1,7 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { macroCaloriePercent, formatGrams as fmt } from '$lib/fitness/nutritionMath';
+	import { macroCaloriePercent, formatGrams as fmt, ALCOHOL_KCAL } from '$lib/fitness/nutritionMath';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import { clearFoodSearchCache } from '$lib/components/fitness/FoodSearch.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -15,6 +15,7 @@
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
 	import Cookie from '@lucide/svelte/icons/cookie';
+	import Wine from '@lucide/svelte/icons/wine';
 	import ActionButton from '$lib/components/ActionButton.svelte';
 	import { toast } from '$lib/js/toast.svelte';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
@@ -77,7 +78,9 @@
 	// --- Micronutrient sections ---
 	const mineralKeys = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
 	const vitaminKeys = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
-	const otherKeys = ['cholesterol'];
+	// Alcohol only where the record reports some. The key is absent on almost every
+	// food, and a '0 g' alcohol row under an apple would be noise, not information.
+	const otherKeys = $derived(['cholesterol', ...(Number(n?.alcohol) > 0 ? ['alcohol'] : [])]);
 
 	/** @param {string[]} keys */
 	function mkMicroRows(keys) {
@@ -471,6 +474,18 @@
 			<span class="detail-name">{isEn ? 'Fiber' : 'Ballaststoffe'}</span>
 			<span class="detail-val">{fmt(scaled(n.fiber))} g</span>
 		</div>
+		<!-- Alcohol belongs in this card even though it is not a macro: the rings above
+		     split only the macro calories, so on a drink they account for a quarter of
+		     the headline figure and this row is what explains the rest. -->
+		{#if Number(n.alcohol) > 0}
+			<div class="detail-row">
+				<span class="detail-name"><Wine size={12} /> {isEn ? 'Alcohol' : 'Alkohol'}</span>
+				<span class="detail-val">
+					{fmt(scaled(n.alcohol))} g
+					<small class="detail-sub">· {Math.round(scaled(n.alcohol) * ALCOHOL_KCAL)} kcal</small>
+				</span>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Ingredients (custom meals) -->
@@ -944,6 +959,11 @@
 	.detail-val {
 		color: var(--color-text-secondary);
 		font-variant-numeric: tabular-nums;
+	}
+	/* The energy a gram figure stands for, subordinate to it rather than beside it. */
+	.detail-sub {
+		color: var(--color-text-tertiary);
+		font-size: 0.9em;
 	}
 
 	/* Section cards */

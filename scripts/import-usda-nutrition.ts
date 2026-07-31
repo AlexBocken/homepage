@@ -34,6 +34,12 @@ const ALLOWED_DATA_TYPES = new Set(['foundation_food', 'sr_legacy_food']);
 // fallback 205 of the 387 Foundation foods import as 0 kcal.
 const ENERGY_PRIORITY: Record<number, number> = { 1008: 3, 2048: 2, 2047: 1 };
 
+// Ethanol (g/100 g). Kept out of NUTRIENT_IDS because that map zero-fills every
+// field for every food; alcohol is written only where a food has some, so an absent
+// key reads as "none" rather than "unmeasured". USDA reports 1018 for the drinks and
+// the dishes cooked with them, which is exactly the set that matters.
+const ALCOHOL_ID = 1018;
+
 // Nutrient IDs we care about
 const NUTRIENT_IDS: Record<number, string> = {
 	1008: 'calories',
@@ -335,6 +341,12 @@ async function importDataset(datasetDir: string, label: string) {
 			continue;
 		}
 
+		if (nutrientId === ALCOHOL_ID) {
+			if (!nutrients.has(fdcId)) nutrients.set(fdcId, {});
+			nutrients.get(fdcId)!['alcohol'] = amount;
+			continue;
+		}
+
 		const fieldName = NUTRIENT_IDS[nutrientId];
 		if (!fieldName) continue;
 
@@ -401,6 +413,9 @@ function buildNutrientRecord(data: NutrientData | undefined): Record<string, num
 		const v = data?.[field];
 		if (typeof v === 'number') result[field] = Math.round(v * 1000) / 1000;
 	}
+	// Ethanol: written only where there is some — see ALCOHOL_ID.
+	const alcohol = data?.['alcohol'];
+	if (typeof alcohol === 'number' && alcohol > 0) result['alcohol'] = Math.round(alcohol * 100) / 100;
 	return result;
 }
 

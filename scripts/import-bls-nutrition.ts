@@ -74,6 +74,12 @@ const NUTRIENT_MAP: Record<string, { field: string; divisor?: number }> = {
   VITB12: { field: 'vitaminB12' },
   FOL: { field: 'folate' },
   CHORL: { field: 'cholesterol' },
+  // Ethanol. Belongs with the panel BLS determines for every food rather than with
+  // the sparse maps below: a 0 here is a measurement, not a guess. Writing it for
+  // every row also keeps one object shape across the generated array — TypeScript
+  // gives up on assignability ("union type too complex to represent") when a 7000-
+  // element literal carries two different key sets.
+  ALC: { field: 'alcohol' },
   // Amino acids (all g/100g)
   ILE: { field: 'isoleucine' },
   LEU: { field: 'leucine' },

@@ -93,6 +93,11 @@ const NUTRIENT_MAP: Record<string, string> = {
 	'eicosapentaenoic-acid_100g': 'epa',
 	'docosapentaenoic-acid_100g': 'dpa',
 	'docosahexaenoic-acid_100g': 'dha',
+	// Ethanol. OFF is the one field it does *not* normalise to grams: the `alcohol`
+	// nutriment is stored in **% vol** (ml ethanol per 100 ml), the unit the label
+	// states. Converted on read like every other OFF unit mismatch — see
+	// OFF_UNIT_SCALE in $lib/fitness/offUnits.
+	'alcohol_100g': 'alcohol',
 };
 
 function extractPer100g(nutriments: any): Record<string, number> | null {

@@ -45,6 +45,10 @@ const NUTRIENT_MAP: Record<string, string> = {
 	'eicosapentaenoic-acid_100g': 'epa',
 	'docosapentaenoic-acid_100g': 'dpa',
 	'docosahexaenoic-acid_100g': 'dha',
+	// Ethanol, the one nutriment OFF states as a volume fraction (% vol) rather than
+	// a mass. offPer100gToAppUnits closes that gap with ethanol's density, the same
+	// way it closes the mg/µg ones.
+	'alcohol_100g': 'alcohol',
 };
 
 export type OffProduct = {

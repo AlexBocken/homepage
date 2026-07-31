@@ -17,6 +17,9 @@ const MICRO_KEYS = [
 	'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
 	'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin',
 	'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
+	// Not a micronutrient, but averaged the same way and read from the same map: a
+	// weekly mean is the honest unit for alcohol, where a single evening is not.
+	'alcohol',
 ];
 
 const AMINO_KEYS = [

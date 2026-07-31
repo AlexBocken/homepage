@@ -83,6 +83,9 @@
 			'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
 			'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
 			'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
+			// An ingredient without the key contains none, so summing a zero is honest
+			// here — cooking wine in a recipe still has to reach the day's total.
+			'alcohol',
 			'isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine',
 			'threonine', 'tryptophan', 'valine', 'histidine', 'alanine',
 			'arginine', 'asparticAcid', 'cysteine', 'glutamicAcid', 'glycine',

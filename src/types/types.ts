@@ -41,6 +41,16 @@ export type NutritionPer100g = {
   eicosadienoicAcid?: number;        // 20:2 n-6
   dihomoGammaLinolenicAcid?: number; // 20:3 n-6
   omega3?: number; omega6?: number; // source-published totals; fallback only
+  // Ethanol (g/100 g). An absent key reads as "none" rather than "unmeasured" — the
+  // opposite of the trace minerals above, and safe because a food's alcohol content
+  // is never in doubt for the ~99% of the tables that are not drinks. BLS publishes
+  // it for every food and so always writes it; USDA and Open Food Facts carry it
+  // only for the drinks, hence optional.
+  //
+  // Carries the calories the macros cannot: ethanol is 7 kcal/g and is neither
+  // protein, fat nor carbohydrate, so a beer's stated energy is roughly four times
+  // its Atwater sum. See $lib/fitness/nutritionMath.
+  alcohol?: number;
   // Amino acids (g/100g) — available from BLS, partially from USDA
   isoleucine?: number; leucine?: number; lysine?: number; methionine?: number;
   phenylalanine?: number; threonine?: number; tryptophan?: number; valine?: number;

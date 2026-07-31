@@ -371,13 +371,18 @@
 		const traceKeys = TRACE_MINERAL_KEYS.filter(
 			(k) => typeof (/** @type {Record<string, number>} */ (n)[k]) === 'number'
 		);
+		// Alcohol only where the food has some — the same rule as the food detail page,
+		// so a '0 g' row never appears under a slice of bread.
+		const otherKeys = (/** @type {Record<string, number>} */ (n).alcohol ?? 0) > 0
+			? [...OTHER_KEYS, 'alcohol']
+			: OTHER_KEYS;
 		return [
 			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: rows(MINERAL_KEYS) },
 			...(traceKeys.length > 0
 				? [{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: rows(traceKeys) }]
 				: []),
 			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: rows(VITAMIN_KEYS) },
-			{ title: isEn ? 'Other' : 'Sonstiges', rows: rows(OTHER_KEYS) },
+			{ title: isEn ? 'Other' : 'Sonstiges', rows: rows(otherKeys) },
 		];
 	});
 

@@ -46,11 +46,19 @@ describe('offPer100gToAppUnits', () => {
 		expect(offPer100gToAppUnits(undefined)).toEqual({});
 	});
 
+	// OFF states alcohol in % vol, the one nutriment it does not normalise to a mass.
+	// Read straight through, a 5% beer would log as 5 g of ethanol instead of 3.9.
+	it('converts alcohol from % vol to grams', () => {
+		const out = offPer100gToAppUnits({ alcohol: 5 });
+		expect(out.alcohol).toBeCloseTo(3.945);
+	});
+
 	// Every scaled key must be one the app actually stores, or the conversion would
 	// be writing a nutrient nothing reads.
-	it('scales only keys with a milligram or microgram reference unit', () => {
-		for (const scale of Object.values(OFF_UNIT_SCALE)) {
-			expect([1e3, 1e6]).toContain(scale);
+	it('scales only keys with a unit mismatch the app knows how to close', () => {
+		for (const [key, scale] of Object.entries(OFF_UNIT_SCALE)) {
+			// mg and µg out of grams, plus ethanol's density for the % vol figure.
+			expect([1e3, 1e6, 0.789], `unexpected scale for ${key}`).toContain(scale);
 		}
 	});
 });

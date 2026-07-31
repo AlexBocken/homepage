@@ -1,5 +1,5 @@
 // Auto-generated from USDA FoodData Central (SR Legacy + Foundation Foods)
-// Generated: 2026-07-22
+// Generated: 2026-07-31
 // Do not edit manually — regenerate with: pnpm exec vite-node scripts/import-usda-nutrition.ts
 
 import type { NutritionPer100g } from '$types/types';
@@ -277,7 +277,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 3.1
 		},
 		"portions": [
 			{
@@ -341,7 +342,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"saturatedFat": 0,
 			"copper": 0.002,
 			"manganese": 0.006,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 3.3
 		},
 		"portions": [
 			{
@@ -405,7 +407,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"saturatedFat": 0,
 			"copper": 0.001,
 			"manganese": 0.007,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 3.4
 		},
 		"portions": [
 			{
@@ -476,7 +479,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 6
 		},
 		"portions": [
 			{
@@ -545,7 +549,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 3.3
 		},
 		"portions": [
 			{
@@ -618,7 +623,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 3.9
 		},
 		"portions": [
 			{
@@ -682,7 +688,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"saturatedFat": 0,
 			"copper": 0.003,
 			"manganese": 0.009,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 3.9
 		},
 		"portions": [
 			{
@@ -755,7 +762,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0.015,
 			"polyunsaturatedFat": 0.167,
 			"linoleicAcid": 0.058,
-			"alphaLinolenicAcid": 0.109
+			"alphaLinolenicAcid": 0.109,
+			"alcohol": 29.8
 		},
 		"portions": [
 			{
@@ -820,7 +828,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"copper": 0.016,
 			"manganese": 0.005,
 			"selenium": 0.1,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 9.6
 		},
 		"portions": [
 			{
@@ -893,7 +902,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0.006,
 			"polyunsaturatedFat": 0.016,
 			"linoleicAcid": 0.011,
-			"alphaLinolenicAcid": 0.006
+			"alphaLinolenicAcid": 0.006,
+			"alcohol": 23.1
 		},
 		"portions": [
 			{
@@ -966,7 +976,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 42.5
 		},
 		"portions": [
 			{
@@ -1039,7 +1050,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 33.4
 		},
 		"portions": [
 			{
@@ -1112,7 +1124,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 36
 		},
 		"portions": [
 			{
@@ -1185,7 +1198,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 37.9
 		},
 		"portions": [
 			{
@@ -1258,7 +1272,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 39.7
 		},
 		"portions": [
 			{
@@ -1331,7 +1346,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 33.4
 		},
 		"portions": [
 			{
@@ -1404,7 +1420,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 33.4
 		},
 		"portions": [
 			{
@@ -1477,7 +1494,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 36
 		},
 		"portions": [
 			{
@@ -1549,7 +1567,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 4.458,
 			"polyunsaturatedFat": 0.669,
 			"linoleicAcid": 0.439,
-			"alphaLinolenicAcid": 0.232
+			"alphaLinolenicAcid": 0.232,
+			"alcohol": 13.8
 		},
 		"portions": [
 			{
@@ -1622,7 +1641,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0.022,
 			"polyunsaturatedFat": 0.105,
 			"linoleicAcid": 0.096,
-			"alphaLinolenicAcid": 0.008
+			"alphaLinolenicAcid": 0.008,
+			"alcohol": 21.7
 		},
 		"portions": [
 			{
@@ -1691,7 +1711,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0.022,
 			"polyunsaturatedFat": 0.105,
 			"linoleicAcid": 0.097,
-			"alphaLinolenicAcid": 0.008
+			"alphaLinolenicAcid": 0.008,
+			"alcohol": 26
 		},
 		"portions": [
 			{
@@ -1763,7 +1784,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 4
 		},
 		"portions": [
 			{
@@ -1827,7 +1849,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"transFat": 0,
 			"monounsaturatedFat": 0.442,
 			"polyunsaturatedFat": 0.137,
-			"linoleicAcid": 0.137
+			"linoleicAcid": 0.137,
+			"alcohol": 9
 		},
 		"portions": [
 			{
@@ -1900,7 +1923,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0.082,
 			"polyunsaturatedFat": 0.033,
 			"linoleicAcid": 0.027,
-			"alphaLinolenicAcid": 0.005
+			"alphaLinolenicAcid": 0.005,
+			"alcohol": 9.9
 		},
 		"portions": [
 			{
@@ -1972,7 +1996,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 16.1
 		},
 		"portions": [
 			{
@@ -2033,7 +2058,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"copper": 0.042,
 			"manganese": 0.014,
 			"selenium": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 9.4
 		},
 		"portions": [
 			{
@@ -2106,7 +2132,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0.001,
 			"polyunsaturatedFat": 0.012,
 			"linoleicAcid": 0.008,
-			"alphaLinolenicAcid": 0.003
+			"alphaLinolenicAcid": 0.003,
+			"alcohol": 14.1
 		},
 		"portions": [
 			{
@@ -2175,7 +2202,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"copper": 0.009,
 			"manganese": 0.006,
 			"selenium": 0.1,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 9.5
 		},
 		"portions": [
 			{
@@ -2248,7 +2276,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0.001,
 			"polyunsaturatedFat": 0.011,
 			"linoleicAcid": 0.008,
-			"alphaLinolenicAcid": 0.003
+			"alphaLinolenicAcid": 0.003,
+			"alcohol": 14.5
 		},
 		"portions": [
 			{
@@ -2321,7 +2350,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0.001,
 			"polyunsaturatedFat": 0.006,
 			"linoleicAcid": 0.004,
-			"alphaLinolenicAcid": 0.002
+			"alphaLinolenicAcid": 0.002,
+			"alcohol": 14.6
 		},
 		"portions": [
 			{
@@ -2393,7 +2423,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 3.3
 		},
 		"portions": [
 			{
@@ -2466,7 +2497,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 15.3
 		},
 		"portions": [
 			{
@@ -2539,7 +2571,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 15.3
 		},
 		"portions": [
 			{
@@ -2611,7 +2644,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 6.4
 		},
 		"portions": [
 			{
@@ -2684,7 +2718,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 10.4
 		},
 		"portions": [
 			{
@@ -2757,7 +2792,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 10.6
 		},
 		"portions": [
 			{
@@ -2819,7 +2855,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.6
 		},
 		"portions": [
 			{
@@ -2881,7 +2918,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.3
 		},
 		"portions": [
 			{
@@ -2943,7 +2981,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.6
 		},
 		"portions": [
 			{
@@ -3005,7 +3044,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.5
 		},
 		"portions": [
 			{
@@ -3067,7 +3107,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 9.3
 		},
 		"portions": [
 			{
@@ -3129,7 +3170,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.2
 		},
 		"portions": [
 			{
@@ -3191,7 +3233,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 9.8
 		},
 		"portions": [
 			{
@@ -3253,7 +3296,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.2
 		},
 		"portions": [
 			{
@@ -3318,7 +3362,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"copper": 0.011,
 			"manganese": 0.132,
 			"selenium": 0.2,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.6
 		},
 		"portions": [
 			{
@@ -3380,7 +3425,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 11.2
 		},
 		"portions": [
 			{
@@ -3442,7 +3488,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.7
 		},
 		"portions": [
 			{
@@ -3504,7 +3551,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.4
 		},
 		"portions": [
 			{
@@ -3566,7 +3614,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.9
 		},
 		"portions": [
 			{
@@ -3628,7 +3677,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.5
 		},
 		"portions": [
 			{
@@ -3690,7 +3740,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 11.1
 		},
 		"portions": [
 			{
@@ -3763,7 +3814,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 10.3
 		},
 		"portions": [
 			{
@@ -3828,7 +3880,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"copper": 0.004,
 			"manganese": 0.117,
 			"selenium": 0.1,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.7
 		},
 		"portions": [
 			{
@@ -3890,7 +3943,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 9.6
 		},
 		"portions": [
 			{
@@ -3952,7 +4006,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.5
 		},
 		"portions": [
 			{
@@ -4014,7 +4069,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.1
 		},
 		"portions": [
 			{
@@ -4076,7 +4132,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 8.5
 		},
 		"portions": [
 			{
@@ -4138,7 +4195,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 8.9
 		},
 		"portions": [
 			{
@@ -4200,7 +4258,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 9
 		},
 		"portions": [
 			{
@@ -4262,7 +4321,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 8.8
 		},
 		"portions": [
 			{
@@ -4324,7 +4384,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.6
 		},
 		"portions": [
 			{
@@ -4386,7 +4447,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.7
 		},
 		"portions": [
 			{
@@ -4448,7 +4510,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 9.5
 		},
 		"portions": [
 			{
@@ -4510,7 +4573,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.5
 		},
 		"portions": [
 			{
@@ -4572,7 +4636,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"serine": 0,
 			"cholesterol": 0,
 			"saturatedFat": 0,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 10.1
 		},
 		"portions": [
 			{
@@ -4644,7 +4709,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 7.7
 		},
 		"portions": [
 			{
@@ -4716,7 +4782,8 @@ const CHUNK_0: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 9.6
 		},
 		"portions": [
 			{
@@ -113639,7 +113706,8 @@ const CHUNK_1: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 4
 		},
 		"portions": [
 			{
@@ -122340,7 +122408,8 @@ const CHUNK_1: NutritionEntry[] = [
 			"monounsaturatedFat": 0,
 			"polyunsaturatedFat": 0,
 			"linoleicAcid": 0,
-			"alphaLinolenicAcid": 0
+			"alphaLinolenicAcid": 0,
+			"alcohol": 5.5
 		},
 		"portions": [
 			{
@@ -316588,7 +316657,8 @@ const CHUNK_2: NutritionEntry[] = [
 			"monounsaturatedFat": 0.015,
 			"polyunsaturatedFat": 0.056,
 			"linoleicAcid": 0.05,
-			"alphaLinolenicAcid": 0.006
+			"alphaLinolenicAcid": 0.006,
+			"alcohol": 0.3
 		},
 		"portions": [
 			{
@@ -414128,7 +414198,8 @@ const CHUNK_3: NutritionEntry[] = [
 			"gammaLinolenicAcid": 0,
 			"arachidonicAcid": 0.003,
 			"linoleicAcid": 0.093,
-			"alphaLinolenicAcid": 0.008
+			"alphaLinolenicAcid": 0.008,
+			"alcohol": 0.3
 		},
 		"portions": [
 			{
@@ -505520,7 +505591,8 @@ const CHUNK_4: NutritionEntry[] = [
 			"monounsaturatedFat": 0.01,
 			"polyunsaturatedFat": 0.004,
 			"linoleicAcid": 0.003,
-			"alphaLinolenicAcid": 0.001
+			"alphaLinolenicAcid": 0.001,
+			"alcohol": 34.4
 		},
 		"portions": [
 			{
@@ -505588,7 +505660,8 @@ const CHUNK_4: NutritionEntry[] = [
 			"saturatedFat": 0,
 			"copper": 0.023,
 			"manganese": 0.482,
-			"transFat": 0
+			"transFat": 0,
+			"alcohol": 32.9
 		},
 		"portions": [
 			{

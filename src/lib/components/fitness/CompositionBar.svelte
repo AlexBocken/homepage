@@ -8,24 +8,29 @@
 	 * the share of it that no source characterised, and reading it as a real slice
 	 * would overstate how much is known.
 	 */
-	import { formatGrams } from '$lib/fitness/nutritionMath';
+	import { formatGrams, formatKcal } from '$lib/fitness/nutritionMath';
 
 	/**
 	 * @typedef {Object} Segment
 	 * @property {string} key
 	 * @property {string} label
-	 * @property {number} value grams
+	 * @property {number} value in the bar's `unit`
 	 * @property {string} color any CSS colour, normally a theme variable
 	 * @property {boolean} [unknown] mass no source characterised, styled apart
 	 */
 
-	/** @type {{ title: string, total: number, segments: Segment[], note?: string }} */
+	/** @type {{ title: string, total: number, segments: Segment[], note?: string, unit?: 'g' | 'kcal' }} */
 	let {
 		title,
 		total,
 		segments,
 		note = '',
+		unit = 'g',
 	} = $props();
+
+	// Grams want a decimal below 100 g; calories never do — a day's energy split to
+	// a tenth of a kcal is noise.
+	const fmt = $derived(unit === 'kcal' ? formatKcal : formatGrams);
 
 	const shown = $derived(segments.filter(/** @param {Segment} s */ s => (s.value ?? 0) > 0.005));
 	const sum = $derived(shown.reduce(/** @param {number} a @param {Segment} s */ (a, s) => a + s.value, 0));
@@ -38,13 +43,13 @@
 <div class="composition">
 	<div class="comp-head">
 		<span class="comp-title">{title}</span>
-		<span class="comp-total">{formatGrams(total)} g</span>
+		<span class="comp-total">{fmt(total)} {unit}</span>
 	</div>
 
 	{#if shown.length === 0}
 		<p class="comp-empty">{note}</p>
 	{:else}
-		<div class="comp-track" role="img" aria-label={shown.map(/** @param {Segment} s */ s => `${s.label} ${formatGrams(s.value)} g`).join(', ')}>
+		<div class="comp-track" role="img" aria-label={shown.map(/** @param {Segment} s */ s => `${s.label} ${fmt(s.value)} ${unit}`).join(', ')}>
 			{#each shown as seg (seg.key)}
 				<span
 					class="comp-seg"
@@ -59,7 +64,7 @@
 				<li>
 					<span class="swatch" class:is-unknown={seg.unknown} style="--seg-color: {seg.color}"></span>
 					<span class="seg-label">{seg.label}</span>
-					<span class="seg-value">{formatGrams(seg.value)} g</span>
+					<span class="seg-value">{fmt(seg.value)} {unit}</span>
 					<span class="seg-pct">{Math.round((seg.value / scale) * 100)}%</span>
 				</li>
 			{/each}

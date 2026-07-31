@@ -11,6 +11,13 @@
 /** kcal per gram of each macro (Atwater factors). */
 export const MACRO_KCAL = { protein: 4, fat: 9, carbs: 4 } as const;
 
+/**
+ * kcal per gram of ethanol (Atwater). Not a macro and not part of MACRO_KCAL: it
+ * belongs to no macro goal and is never a target, but it is energy, and leaving it
+ * out is what made a beer's calories vanish from a day's total.
+ */
+export const ALCOHOL_KCAL = 7;
+
 export type MacroGrams = { protein?: number; fat?: number; carbs?: number };
 
 /**
@@ -62,9 +69,54 @@ export function scaleFromPer100g(valuePer100g: number | undefined | null, grams:
 	return ((valuePer100g ?? 0) * grams) / 100;
 }
 
-/** Total calories over food-log-style entries, from their per100g.calories. */
-export function entriesCalories(
-	entries: Array<{ per100g?: { calories?: number } | null; amountGrams: number }>
-): number {
-	return entries.reduce((sum, e) => sum + scaleFromPer100g(e.per100g?.calories, e.amountGrams), 0);
+export type NutritionEntry = {
+	per100g?: (MacroGrams & { calories?: number }) | null;
+	amountGrams: number;
+};
+
+/**
+ * Energy of one food-log entry.
+ *
+ * Always prefers the energy the source itself publishes. Protein/fat/carbs do
+ * not account for every calorie a food carries — alcohol (7 kcal/g), polyols and
+ * organic acids are all invisible to the 4/9/4 sum, so an Atwater total for a
+ * beer lands at roughly a third of its real kcal. The stated figure already
+ * includes them.
+ *
+ * Atwater is only the fallback for entries whose source published no energy
+ * value at all, so those still contribute something rather than nothing.
+ */
+export function entryCalories(e: NutritionEntry): number {
+	const p = e.per100g;
+	if (p && typeof p.calories === 'number' && p.calories > 0) {
+		return scaleFromPer100g(p.calories, e.amountGrams);
+	}
+	return scaleFromPer100g(atwaterCalories(p ?? {}), e.amountGrams);
+}
+
+/**
+ * Where a day's energy came from, in kcal.
+ *
+ * The three macros and ethanol are computed from their grams; `other` is whatever
+ * the foods' own kcal figures carry beyond them. That remainder is real — polyols
+ * (2.4 kcal/g), organic acids (3), and the plain fact that a source's energy figure
+ * is measured rather than reconstructed from 4/9/4 — so it is shown rather than
+ * silently absorbed into a macro. Clamped at zero: a food whose macros over-explain
+ * its stated energy would otherwise render a negative slice.
+ */
+export function energySources(
+	totals: MacroGrams & { alcohol?: number },
+	statedCalories: number
+): { protein: number; fat: number; carbs: number; alcohol: number; other: number } {
+	const protein = (totals.protein ?? 0) * MACRO_KCAL.protein;
+	const fat = (totals.fat ?? 0) * MACRO_KCAL.fat;
+	const carbs = (totals.carbs ?? 0) * MACRO_KCAL.carbs;
+	const alcohol = (totals.alcohol ?? 0) * ALCOHOL_KCAL;
+	const other = Math.max(0, statedCalories - protein - fat - carbs - alcohol);
+	return { protein, fat, carbs, alcohol, other };
+}
+
+/** Total energy over food-log-style entries. See {@link entryCalories}. */
+export function entriesCalories(entries: NutritionEntry[]): number {
+	return entries.reduce((sum, e) => sum + entryCalories(e), 0);
 }

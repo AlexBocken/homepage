@@ -29,7 +29,7 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { localDateStr } from '$lib/js/localDate';
 	import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
-	import { atwaterCalories as atwaterKcal, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
+	import { entryCalories, energySources, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import { formatAmountLabel } from '$lib/fitness/portions';
@@ -489,10 +489,6 @@
 		}
 	}
 
-	/** @param {FoodLogEntry} e */
-	function entryCalories(e) {
-		return scaleFromPer100g(e.per100g?.calories, e.amountGrams);
-	}
 	/**
 	 * @param {FoodLogEntry} e
 	 * @param {string} key
@@ -523,7 +519,7 @@
 	});
 
 	const dayTotals = $derived.by(() => {
-		let calories = 0, protein = 0, fat = 0, carbs = 0, fiber = 0, sugars = 0, saturatedFat = 0;
+		let calories = 0, protein = 0, fat = 0, carbs = 0, fiber = 0, sugars = 0, saturatedFat = 0, alcohol = 0;
 		// Fat and carbohydrate composition. `unknown` collects the mass from entries
 		// whose source published no breakdown, kept apart from `other` (the measured
 		// remainder) so the bar never implies a food was characterised when it wasn't.
@@ -545,13 +541,15 @@
 		for (const e of entries) {
 			const r = e.amountGrams / 100;
 			const p = /** @type {Record<string, number>} */ (e.per100g ?? {});
-			calories += (p.calories ?? 0) * r;
+			calories += entryCalories(e);
 			protein += (p.protein ?? 0) * r;
 			fat += (p.fat ?? 0) * r;
 			carbs += (p.carbs ?? 0) * r;
 			fiber += (p.fiber ?? 0) * r;
 			sugars += (p.sugars ?? 0) * r;
 			saturatedFat += (p.saturatedFat ?? 0) * r;
+			// Absent means none rather than unmeasured — see NutritionPer100g.alcohol.
+			alcohol += (p.alcohol ?? 0) * r;
 			for (const k of microKeys) micros[k] += (p[k] ?? 0) * r;
 			for (const k of aminoKeys) aminos[k] += (p[k] ?? 0) * r;
 
@@ -590,13 +588,17 @@
 		// of the day that covers, so a mineral BLS or USDA never measured is shown as
 		// missing rather than as zero.
 		const traces = traceTotals(entries);
-		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, micros, aminos, composition, fats, traces };
+		return { calories, protein, fat, carbs, fiber, sugars, saturatedFat, alcohol, micros, aminos, composition, fats, traces };
 	});
 
-	// Atwater-derived calories (consistent with macro goals which use 4/9/4)
-	const atwaterCalories = $derived(atwaterKcal(dayTotals));
+	// Energy eaten, from each food's own kcal figure rather than an Atwater sum of
+	// its macros — see entryCalories. Beer is the clearest case: its alcohol carries
+	// most of its calories and none of its macros.
+	const eatenCalories = $derived(dayTotals.calories);
 
-	// Macro percentages by calorie contribution
+	// Macro percentages by calorie contribution. Atwater-based on purpose: this is
+	// the split *between the three macros*, matched to the macro goals, so kcal from
+	// anything else (alcohol) is outside it and the three still sum to 100.
 	const macroPercent = $derived(macroCaloriePercent(dayTotals));
 
 	const fatSegments = $derived([
@@ -614,6 +616,21 @@
 		{ key: 'carbOther', label: isEn ? 'Starch & other' : 'Stärke & übrige', value: dayTotals.composition.carbOther, color: 'var(--lightblue)' },
 		{ key: 'carbUnknown', label: isEn ? 'Not broken down' : 'Ohne Aufschlüsselung', value: dayTotals.composition.carbUnknown, color: 'var(--color-bg-elevated)', unknown: true },
 	]);
+
+	// Where the day's kcal came from. Sits beside the fat and carbohydrate bars
+	// because it answers the same kind of question, and because it is the only place
+	// the ring's number is reconciled with the macros underneath it — a day with a
+	// beer in it reads 'eaten' well above 4/9/4, and this says why.
+	const energySegments = $derived.by(() => {
+		const e = energySources(dayTotals, dayTotals.calories);
+		return [
+			{ key: 'protein', label: t.protein, value: e.protein, color: 'var(--green)' },
+			{ key: 'fat', label: t.fat, value: e.fat, color: 'var(--orange)' },
+			{ key: 'carbs', label: t.carbs, value: e.carbs, color: 'var(--lightblue)' },
+			{ key: 'alcohol', label: isEn ? 'Alcohol' : 'Alkohol', value: e.alcohol, color: 'var(--red)' },
+			{ key: 'energyOther', label: isEn ? 'Other' : 'Übrige', value: e.other, color: 'var(--color-bg-elevated)', unknown: true },
+		];
+	});
 
 	const hasComposition = $derived(dayTotals.fat > 0 || dayTotals.carbs > 0);
 
@@ -725,9 +742,10 @@
 
 
 	// Net calorie balance: effective goal (includes exercise) - eaten
-	// Use Atwater-derived calories so the ring and macro bars always agree
-	const calorieBalance = $derived(effectiveCalorieGoal ? (effectiveCalorieGoal - atwaterCalories) : 0);
-	const calorieProgressRaw = $derived(effectiveCalorieGoal ? atwaterCalories / effectiveCalorieGoal * 100 : 0);
+	// Against the foods' own kcal, so the ring matches what the server logged and
+	// what each row shows
+	const calorieBalance = $derived(effectiveCalorieGoal ? (effectiveCalorieGoal - eatenCalories) : 0);
+	const calorieProgressRaw = $derived(effectiveCalorieGoal ? eatenCalories / effectiveCalorieGoal * 100 : 0);
 	const calorieProgress = $derived(Math.min(calorieProgressRaw, 100));
 	const calorieOverflow = $derived(Math.max(calorieProgressRaw - 100, 0));
 
@@ -1054,6 +1072,9 @@
 		'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
 		'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
 		'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
+		// Summed like a macro rather than like a trace mineral: an ingredient without
+		// the key contains none, so a plain zero is the truth here.
+		'alcohol',
 		'isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine', 'threonine',
 		'tryptophan', 'valine', 'histidine', 'alanine', 'arginine', 'asparticAcid',
 		'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
@@ -1374,13 +1395,15 @@
 	const microSections = $derived.by(() => {
 		const minerals = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
 		const vitamins = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate'];
-		const other = ['cholesterol'];
+		// Alcohol sits here rather than with the macros: it is a ceiling, not a target,
+		// and it is the one row whose bar filling up is not an achievement.
+		const other = ['cholesterol', 'alcohol'];
 
 		/** @param {string[]} keys */
 		function mkRows(keys) {
 			return keys.map(k => {
 				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
-				const value = dayTotals.micros[k] ?? 0;
+				const value = k === 'alcohol' ? dayTotals.alcohol : dayTotals.micros[k] ?? 0;
 				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
 				const pct = goal > 0 ? Math.round(value / goal * 100) : null;
 				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false };
@@ -1753,6 +1776,15 @@
 				<h4>{isEn ? 'Macro Breakdown' : 'Makro-Aufschlüsselung'}</h4>
 				<div class="composition-grid">
 					<CompositionBar
+						title={isEn ? 'Energy' : 'Energie'}
+						unit="kcal"
+						total={dayTotals.calories}
+						segments={energySegments}
+						note={isEn
+							? 'Protein, fat and carbohydrate at 4/9/4 kcal per gram and alcohol at 7. “Other” is what each food’s own energy figure carries beyond them — sugar alcohols, organic acids, and measurement rather than reconstruction.'
+							: 'Eiweiss, Fett und Kohlenhydrate mit 4/9/4 kcal pro Gramm, Alkohol mit 7. «Übrige» ist, was der Energiewert des Lebensmittels darüber hinaus enthält — Zuckeralkohole, organische Säuren und der Unterschied zwischen Messung und Berechnung.'}
+					/>
+					<CompositionBar
 						title={isEn ? 'Fat' : 'Fett'}
 						total={dayTotals.fat}
 						segments={fatSegments}
@@ -1820,7 +1852,7 @@
 			<!-- Eaten / Ring / Burned row -->
 			<div class="calorie-trio">
 				<div class="cal-stat eaten">
-					<span class="cal-stat-value">{fmtCal(atwaterCalories)}</span>
+					<span class="cal-stat-value">{fmtCal(eatenCalories)}</span>
 					<span class="cal-stat-label">{isEn ? 'EATEN' : 'GEGESSEN'}</span>
 				</div>
 
