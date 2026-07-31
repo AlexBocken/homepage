@@ -65,7 +65,13 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
     private var lastAnnouncementDistanceKm: Double = 0.0
     private var lastAnnouncementTimeMs: Long = 0L
     private var splitDistanceAtLastAnnouncement: Double = 0.0
-    private var splitTimeAtLastAnnouncement: Long = 0L
+    // Measured in *active* milliseconds, not wall clock: a split that spans a pause
+    // would otherwise be timed with the break included and read out as a collapse in
+    // pace. Average pace has always excluded paused time; the split now agrees.
+    private var splitActiveMsAtLastAnnouncement: Long = 0L
+    // The first announcement's split covers the whole workout so far, which makes
+    // it the average — see announceMetrics.
+    private var isFirstAnnouncement: Boolean = true
 
     // Interval tracking
     private var intervalSteps: List<IntervalStep> = emptyList()
@@ -303,7 +309,8 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
             lastAnnouncementDistanceKm = 0.0
             lastAnnouncementTimeMs = startTimeMs
             splitDistanceAtLastAnnouncement = 0.0
-            splitTimeAtLastAnnouncement = startTimeMs
+            splitActiveMsAtLastAnnouncement = 0L
+            isFirstAnnouncement = true
 
             val dummyTts = TextToSpeech(applicationContext, null)
             val engines = dummyTts.engines
@@ -567,7 +574,8 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
         val config = ttsConfig ?: return
 
         val now = System.currentTimeMillis()
-        val activeSecs = activeElapsedSecs()
+        val activeMs = activeElapsedMs()
+        val activeSecs = activeMs / 1000
         val parts = mutableListOf<String>()
 
         for (metric in config.metrics) {
@@ -597,9 +605,15 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
                     }
                 }
                 "splitPace" -> {
+                    // The first split runs from the start of the workout, so it covers
+                    // exactly the same ground as the average and would be read out twice
+                    // in a row in the same breath. Skipped only when the average is also
+                    // being announced — on its own the split is still the pace you asked
+                    // to hear.
+                    val duplicatesAverage = isFirstAnnouncement && config.metrics.contains("avgPace")
                     val splitDist = totalDistanceKm - splitDistanceAtLastAnnouncement
-                    val splitTimeMin = (now - splitTimeAtLastAnnouncement) / 60000.0
-                    if (splitDist > 0.01) {
+                    val splitTimeMin = (activeMs - splitActiveMsAtLastAnnouncement) / 60000.0
+                    if (!duplicatesAverage && splitDist > 0.01) {
                         val splitPace = splitTimeMin / splitDist
                         val mins = splitPace.toInt()
                         val secs = ((splitPace - mins) * 60).toInt()
@@ -618,8 +632,9 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
 
         // Update split tracking
         splitDistanceAtLastAnnouncement = totalDistanceKm
-        splitTimeAtLastAnnouncement = now
+        splitActiveMsAtLastAnnouncement = activeMs
         lastAnnouncementTimeMs = now
+        isFirstAnnouncement = false
 
         if (parts.isNotEmpty()) {
             val text = parts.joinToString(". ")
@@ -667,12 +682,15 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
         }
     }
 
-    /** Returns active (non-paused) elapsed time in seconds. */
-    private fun activeElapsedSecs(): Long {
+    /** Returns active (non-paused) elapsed time in milliseconds. */
+    private fun activeElapsedMs(): Long {
         val now = System.currentTimeMillis()
         val totalPaused = pausedAccumulatedMs + if (pausedSinceMs > 0) (now - pausedSinceMs) else 0L
-        return (now - startTimeMs - totalPaused) / 1000
+        return now - startTimeMs - totalPaused
     }
+
+    /** Returns active (non-paused) elapsed time in seconds. */
+    private fun activeElapsedSecs(): Long = activeElapsedMs() / 1000
 
     private fun formatElapsed(): String {
         val secs = activeElapsedSecs()
