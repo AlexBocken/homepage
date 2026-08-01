@@ -1,30 +1,52 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { replaceState } from '$app/navigation';
+	import { page } from '$app/state';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import type { PageData } from './$types';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
-	import Search from '$lib/components/recipes/Search.svelte';
-	import { getCategories } from '$lib/js/categories';
+	import RecipeFilterRail from '$lib/components/recipes/RecipeFilterRail.svelte';
+	import { createRecipeBrowse, type RankedRecipe } from '$lib/js/recipeBrowse.svelte';
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
 	let { data } = $props<{ data: PageData }>();
 	const lang = $derived(data.lang as RecipesLang);
 	const t = $derived(m[lang]);
 
-	// Search state
-	let matchedRecipeIds = $state(new Set());
-	let matchedCategories = $state(new Set());
-	let hasActiveSearch = $state(false);
-
-	function handleSearchResults(ids: Set<string>, categories: Set<string>) {
-		matchedRecipeIds = ids;
-		matchedCategories = categories || new Set();
-		hasActiveSearch = ids.size < data.all_brief.length;
-	}
-
 	const isEnglish = $derived(lang === 'en');
-	const categories = $derived(getCategories(data.lang));
+
+	const browse = createRecipeBrowse(() => data.all_brief);
+
+	// Deep links from elsewhere on the site (`?q=`, `?category=`, `?tag=`) land
+	// pre-filtered; after that the writer below owns the URL.
+	let urlApplied = $state(false);
+	$effect(() => {
+		if (urlApplied || typeof window === 'undefined') return;
+		const params = page.url.searchParams;
+		browse.query = params.get('q') ?? '';
+		browse.category = params.get('category');
+		for (const tag of params.getAll('tag')) browse.tags.add(tag);
+		if (params.get('season') === 'now') browse.inSeasonOnly = true;
+		urlApplied = true;
+	});
+
+	// Keep the address bar in step so a filtered listing is shareable.
+	// `replaceState` rather than `goto`: toggling four keywords should not leave
+	// four back-button stops.
+	$effect(() => {
+		if (!urlApplied || typeof window === 'undefined') return;
+		const url = new URL(window.location.href);
+		const next = new URLSearchParams();
+		if (browse.query.trim()) next.set('q', browse.query.trim());
+		if (browse.category) next.set('category', browse.category);
+		for (const tag of [...browse.tags].sort()) next.append('tag', tag);
+		if (browse.inSeasonOnly) next.set('season', 'now');
+		if (next.toString() === url.searchParams.toString()) return;
+		url.search = next.toString();
+		replaceState(url, page.state);
+	});
 
 	// Pick a seasonal hero recipe (changes daily) — only recipes with hashed images
 	// Only recipes with hashed images (e.g. myrecipe.a1b2c3d4.webp)
@@ -46,21 +68,15 @@
 		heroRecipe ? (heroRecipe.images[0].color || '') : ''
 	);
 
-	// Category chip state: 'all', 'season', or a category name
-	let activeChip = $state('all');
-	let chipsExpanded = $state(false);
-
 	// Incremental rendering
 	const BATCH_SIZE = 24;
 	let visibleCount = $state(BATCH_SIZE);
 	let sentinel = $state<HTMLElement | null>(null);
+	let filtersOpen = $state(false);
 
-	// Reset visible count when chip or search changes
+	// Any change to the result set starts the page over from the first batch.
 	$effect(() => {
-		// Track dependencies
-		activeChip;
-		hasActiveSearch;
-		matchedRecipeIds;
+		browse.results;
 		visibleCount = BATCH_SIZE;
 	});
 
@@ -76,55 +92,17 @@
 		return () => observer.disconnect();
 	});
 
-	// Pre-compute category-to-recipes Map
-	const recipesByCategory = $derived.by(() => {
-		const map = new Map<string, typeof data.all_brief>();
-		for (const recipe of data.all_brief) {
-			if (!map.has(recipe.category)) {
-				map.set(recipe.category, []);
-			}
-			map.get(recipe.category)!.push(recipe);
-		}
-		return map;
-	});
-
-	// Category counts (unfiltered, for chip badges)
-	const categoryCounts = $derived.by(() => {
-		const counts = new Map<string, number>();
-		for (const [cat, recipes] of recipesByCategory) {
-			counts.set(cat, recipes.length);
-		}
-		return counts;
-	});
-
-	// Filtered recipes for the active view
-	const displayRecipes = $derived.by(() => {
-		let pool: typeof data.all_brief;
-
-		if (activeChip === 'all') {
-			pool = data.all_brief;
-		} else if (activeChip === 'season') {
-			pool = data.season;
-		} else {
-			pool = recipesByCategory.get(activeChip) || [];
-		}
-
-		if (hasActiveSearch) {
-			pool = pool.filter((r: any) => matchedRecipeIds.has(r._id));
-		}
-
-		return pool;
-	});
-
-	// Sliced for incremental rendering
-	const visibleRecipes = $derived(displayRecipes.slice(0, visibleCount));
-	const hasMore = $derived(visibleCount < displayRecipes.length);
+	// `results` is already [in-season…, everything else…], so one slice keeps
+	// both groups in order and the batching honest.
+	const visible = $derived(browse.results.slice(0, visibleCount));
+	const visibleInSeason = $derived(visible.slice(0, Math.min(visibleCount, browse.inSeason.length)));
+	const visibleRest = $derived(visible.slice(visibleInSeason.length));
+	const hasMore = $derived(visibleCount < browse.results.length);
+	const routePrefix = $derived(resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang }));
 
 	const labels = $derived({
 		title: t.index_title,
 		subheading: `${data.all_brief.length} ${t.recipes_growing_suffix}`,
-		all: t.all,
-		inSeason: t.in_season_now,
 		metaTitle: t.site_title,
 		metaDescription: t.recipes_collection_meta,
 		metaAlt: t.meta_alt_hero
@@ -180,17 +158,13 @@
 .hero-scroll-content {
 	position: relative;
 	margin: -20vh auto 0;
-	transition: margin-top 0.25s ease;
-}
-.hero-scroll-content.chips-open {
-	margin-top: -25vh;
 }
 
 /* Title area: overlaps the lower portion of the hero */
 .hero-text {
 	max-width: 1200px;
 	margin: 0 auto;
-	padding: 0 2em 3.5em;
+	padding: 0 2em 4.5em;
 	color: white;
 	position: relative;
 }
@@ -236,76 +210,14 @@
 	fill: currentColor;
 }
 
-/* ─── Category chip bar ─── */
-.chip-wrap {
-	display: flex;
-	gap: 0.5em;
-	align-items: flex-start;
-	margin: 0.8em 0 0;
-}
-.chip-bar {
-	display: flex;
-	gap: 0.5em;
-	padding: 0.5em 0;
-	flex-wrap: wrap;
-	flex: 1;
-	min-width: 0;
-}
-/* On small screens, collapse to single row */
-@media (max-width: 600px) {
-	.chip-bar:not(.expanded) {
-		max-height: 2.4em;
-		overflow: hidden;
-	}
-}
-.chip {
-	white-space: nowrap;
-	padding: 0.35em 0.9em;
-	font-size: 0.85rem;
-	font-weight: 500;
-	background: rgba(255,255,255,0.85);
-	color: #2a2a2a;
-	flex-shrink: 0;
-}
-.chip:hover {
-	background: white;
-	transform: scale(1.04);
-}
-.chip.active {
-	background: var(--color-primary);
-	color: var(--color-text-on-primary);
-}
-.chip.season {
-	background: var(--color-accent);
-	color: var(--color-text-on-accent);
-}
-.chip .count {
-	font-size: 0.8em;
-	opacity: 0.7;
-	margin-left: 0.25em;
-}
-/* Ellipsis button — outside chip-bar overflow, always visible */
-.chip-more {
-	background: rgba(255,255,255,0.5);
-	font-weight: 700;
-	letter-spacing: 0.1em;
-	flex-shrink: 0;
-	margin-top: 0.5em;
-}
-@media (min-width: 601px) {
-	.chip-more {
-		display: none;
-	}
-}
-
-/* ─── Content below the hero (grid, etc.) ─── */
+/* ─── Content below the hero ─── */
 .below-hero {
 	background: var(--color-bg-primary);
 	padding-top: 2.5em;
 	overflow: visible;
 }
 
-/* ─── Search bar — anchored to top of below-hero, straddles the boundary ─── */
+/* ─── Search bar — straddles the hero boundary ─── */
 .hero-search-wrap {
 	max-width: 1200px;
 	margin: -4em auto 0;
@@ -313,9 +225,192 @@
 	position: relative;
 	z-index: 10;
 }
+.search {
+	width: 560px;
+	max-width: 100%;
+	position: relative;
+	margin: 0 auto;
+	font-size: 1.6rem;
+	display: flex;
+	align-items: center;
+	transition: var(--transition-fast);
+	filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
+}
+.search:hover,
+.search:focus-within {
+	scale: 1.02 1.02;
+	filter: drop-shadow(0.4em 0.5em 1em rgba(0,0,0,0.6));
+}
+.search input {
+	all: unset;
+	box-sizing: border-box;
+	background: var(--color-surface);
+	color: var(--color-text-primary);
+	padding: 0.7rem 2.6rem 0.7rem 2rem;
+	border-radius: var(--radius-pill);
+	width: 100%;
+}
+.search input::placeholder {
+	color: var(--color-text-muted);
+}
+.search-button {
+	all: unset;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: absolute;
+	right: 0.5em;
+	width: 1.5em;
+	height: 1.5em;
+	color: var(--color-text-tertiary);
+	cursor: pointer;
+	transition: color 180ms ease-in-out;
+}
+.search-button:hover { color: var(--color-text-primary); }
+.search-button svg { width: 100%; height: 100%; }
+
+/* ─── Two-column browse: filters left, results right ───
+   The rail lives in the gutter *beside* the content, not inside it: the
+   results column keeps the full 1200px the rest of the site uses, so the
+   grid still fits four cards at max width and three well before that. */
+.browse {
+	--rail-w: 240px;
+	--rail-gap: 2rem;
+	max-width: calc(1200px + var(--rail-w) + var(--rail-gap));
+	margin: 2.5em auto 0;
+	padding: 0 1rem;
+	display: grid;
+	grid-template-columns: var(--rail-w) minmax(0, 1fr);
+	gap: var(--rail-gap);
+	align-items: start;
+}
+/* Slightly tighter cards than the site-wide grid: with the rail beside it the
+   column is narrower, and four across at full width beats three plus air. */
+@media (min-width: 1024px) {
+	.browse :global(.recipe-grid) {
+		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+	}
+}
+.rail-column {
+	position: sticky;
+	/* Clears the sticky header. */
+	top: 5.5rem;
+	max-height: calc(100vh - 7rem);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	/* Room for the range-slider thumbs, which overhang their track at 0 % and
+	   100 %; without it the scroll container gains a horizontal axis and the
+	   column drifts sideways when a thumb takes focus. */
+	padding-inline: 0.75rem;
+	margin-inline: -0.75rem;
+}
+
+/* ─── Group headers: the ranking, stated once ─── */
+.group-head {
+	display: flex;
+	align-items: baseline;
+	gap: 0.6em;
+	margin: 0 0 1.2em;
+	/* Line the rule up with the cards: .recipe-grid carries its own padding. */
+	padding: 0 0.8em 0.5em;
+	border-bottom: 1px solid var(--color-border);
+}
+@media (min-width: 600px) {
+	.group-head { padding: 0 1.5em 0.5em; }
+}
+.group-head h2 {
+	margin: 0;
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--color-text-primary);
+	white-space: nowrap;
+}
+.group-head .count {
+	font-size: 0.8rem;
+	color: var(--color-text-secondary);
+	font-variant-numeric: tabular-nums;
+}
+.group-head .note {
+	margin-left: auto;
+	font-size: 0.75rem;
+	color: var(--color-text-tertiary);
+	white-space: nowrap;
+}
+.group + .group { margin-top: 3em; }
+
+.mobile-bar {
+	display: none;
+}
+
+.empty {
+	padding: 3em 0;
+	text-align: center;
+	color: var(--color-text-secondary);
+}
+.empty button {
+	margin-top: 1em;
+	background: var(--color-primary);
+	color: var(--color-text-on-primary);
+	border: none;
+	border-radius: var(--radius-pill);
+	padding: 0.6em 1.4em;
+	font-size: 0.9rem;
+	cursor: pointer;
+}
 
 .sentinel {
 	height: 1px;
+}
+
+@media (max-width: 1150px) {
+	.browse {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0;
+		padding: 0 1rem;
+	}
+	.rail-column {
+		position: static;
+		max-height: none;
+		overflow: visible;
+	}
+	/* One row above the grid: what you are looking at, and the way in. */
+	.mobile-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1.5em;
+		padding: 0 0.8em;
+	}
+	.mobile-bar .result-count {
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	.filters-trigger {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5em;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		padding: 0.5em 1.1em;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-text-primary);
+		cursor: pointer;
+		box-shadow: var(--shadow-sm);
+	}
+	.filters-trigger .badge {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		border-radius: var(--radius-pill);
+		padding: 0 0.5em;
+		font-size: 0.75rem;
+	}
+	.group-head .note { display: none; }
 }
 
 /* ─── No-hero fallback ─── */
@@ -336,6 +431,87 @@
 	opacity: 0.7;
 }
 </style>
+
+{#snippet searchField()}
+	<form class="search" method="get" action={resolve('/[recipeLang=recipeLang]/search', { recipeLang: data.recipeLang })}>
+		<input
+			type="text"
+			id="search"
+			name="q"
+			placeholder={t.search_placeholder_short}
+			bind:value={browse.query}
+		/>
+		{#if browse.query}
+			<button type="button" class="search-button" onclick={() => (browse.query = '')}>
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>{t.clear_search_title}</title><path d="M135.19 390.14a28.79 28.79 0 0021.68 9.86h246.26A29 29 0 00432 371.13V140.87A29 29 0 00403.13 112H156.87a28.84 28.84 0 00-21.67 9.84v0L46.33 256l88.86 134.11z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33"/></svg>
+			</button>
+		{:else}
+			<button type="submit" class="search-button">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>{t.search_title}</title><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="m338.29 338.29 105.25 105.25"/></svg>
+			</button>
+		{/if}
+	</form>
+{/snippet}
+
+{#snippet grid(entries: RankedRecipe[], eager: boolean)}
+	<div class="recipe-grid">
+		{#each entries as entry, i (entry.recipe._id)}
+			<CompactCard
+				recipe={entry.recipe}
+				isFavorite={entry.recipe.isFavorite}
+				showFavoriteIndicator={!!data.session?.user}
+				loading_strat={eager && i < 12 ? 'eager' : 'lazy'}
+				{routePrefix}
+			/>
+		{/each}
+	</div>
+{/snippet}
+
+{#snippet results()}
+	<div class="mobile-bar">
+		<button class="filters-trigger" onclick={() => (filtersOpen = true)}>
+			<SlidersHorizontal size={16} />
+			{t.filters}
+			{#if browse.activeCount > 0}<span class="badge">{browse.activeCount}</span>{/if}
+		</button>
+		<span class="result-count">{browse.results.length} {t.recipes_count_suffix}</span>
+	</div>
+
+	{#if browse.results.length === 0}
+		<p class="empty">
+			{t.no_recipes_found}<br />{t.try_other_search}
+			<br />
+			<button onclick={() => browse.reset()}>{t.clear_all_filters}</button>
+		</p>
+	{:else}
+		{#if visibleInSeason.length > 0}
+			<section class="group">
+				<div class="group-head">
+					<h2>{t.in_season_heading}</h2>
+					<span class="count">{browse.inSeason.length}</span>
+					<span class="note">{t.in_season_ordering_note}</span>
+				</div>
+				{@render grid(visibleInSeason, true)}
+			</section>
+		{/if}
+
+		{#if visibleRest.length > 0}
+			<section class="group">
+				{#if browse.grouped}
+					<div class="group-head">
+						<h2>{t.everything_else}</h2>
+						<span class="count">{browse.rest.length}</span>
+					</div>
+				{/if}
+				{@render grid(visibleRest, visibleInSeason.length === 0)}
+			</section>
+		{/if}
+	{/if}
+
+	{#if hasMore}
+		<div class="sentinel" bind:this={sentinel}></div>
+	{/if}
+{/snippet}
 
 <Seo
 	title={labels.metaTitle}
@@ -364,7 +540,7 @@
 			<div class="hero-overlay"></div>
 		</figure>
 
-		<div class="hero-scroll-content" class:chips-open={chipsExpanded}>
+		<div class="hero-scroll-content">
 			<div class="hero-text">
 				<h1>{labels.title}</h1>
 				<p class="subheading">{labels.subheading}</p>
@@ -376,74 +552,21 @@
 					<span class="recipe-name"><span class="recipe-icon">{heroRecipe.icon}</span> {@html heroRecipe.name}</span>
 					<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -197 535 410"><path d="M503 31c12-13 12-33 0-46L343-175c-13-12-33-12-46 0-12 13-12 33 0 46L403-24H32C14-24 0-10 0 8s14 32 32 32h371L297 145c-12 13-12 33 0 46 13 12 33 12 46 0L503 31z"/></svg>
 				</a>
-
-				<div class="chip-wrap">
-					<div class="chip-bar" class:expanded={chipsExpanded}>
-						<button
-							class="chip g-pill"
-							class:active={activeChip === 'all'}
-							onclick={() => activeChip = 'all'}
-						>
-							{labels.all}
-							<span class="count">({data.all_brief.length})</span>
-						</button>
-
-						{#if data.season.length > 0}
-							<button
-								class="chip g-pill"
-								class:season={activeChip === 'season'}
-								class:active={activeChip === 'season'}
-								onclick={() => activeChip = 'season'}
-							>
-								{labels.inSeason}
-								<span class="count">({data.season.length})</span>
-							</button>
-						{/if}
-
-						{#each categories as cat (cat)}
-							{@const count = categoryCounts.get(cat) || 0}
-							{#if count > 0}
-								<button
-									class="chip g-pill"
-									class:active={activeChip === cat}
-									onclick={() => activeChip = cat}
-								>
-									{cat}
-									<span class="count">({count})</span>
-								</button>
-							{/if}
-						{/each}
-					</div>
-					<button
-						class="chip chip-more g-pill"
-						onclick={() => chipsExpanded = !chipsExpanded}
-					>
-						{chipsExpanded ? '\u2715' : '\u2026'}
-					</button>
-				</div>
-
 			</div>
 
 			<div class="below-hero">
 				<div class="hero-search-wrap">
-					<Search lang={data.lang} recipes={data.all_brief} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
-				</div>
-				<div class="recipe-grid">
-					{#each visibleRecipes as recipe, i (recipe._id)}
-						<CompactCard
-							{recipe}
-							isFavorite={recipe.isFavorite}
-							showFavoriteIndicator={!!data.session?.user}
-							loading_strat={i < 12 ? "eager" : "lazy"}
-							routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}
-						/>
-					{/each}
+					{@render searchField()}
 				</div>
 
-				{#if hasMore}
-					<div class="sentinel" bind:this={sentinel}></div>
-				{/if}
-
+				<div class="browse">
+					<div class="rail-column">
+						<RecipeFilterRail {browse} {lang} isLoggedIn={!!data.session?.user} bind:open={filtersOpen} />
+					</div>
+					<div>
+						{@render results()}
+					</div>
+				</div>
 			</div>
 		</div>
 	</section>
@@ -455,23 +578,18 @@
 		<h1>{labels.title}</h1>
 		<p class="subheading">{labels.subheading}</p>
 	</div>
-	<Search lang={data.lang} recipes={data.all_brief} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
-
-	<div class="recipe-grid">
-		{#each visibleRecipes as recipe, i (recipe._id)}
-			<CompactCard
-				{recipe}
-				isFavorite={recipe.isFavorite}
-				showFavoriteIndicator={!!data.session?.user}
-				loading_strat={i < 12 ? "eager" : "lazy"}
-				routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}
-			/>
-		{/each}
+	<div class="hero-search-wrap">
+		{@render searchField()}
 	</div>
 
-	{#if hasMore}
-		<div class="sentinel" bind:this={sentinel}></div>
-	{/if}
+	<div class="browse">
+		<div class="rail-column">
+			<RecipeFilterRail {browse} {lang} isLoggedIn={!!data.session?.user} bind:open={filtersOpen} />
+		</div>
+		<div>
+			{@render results()}
+		</div>
+	</div>
 
 	{#if !isEnglish}
 		<AddButton href={resolve('/rezepte/add')}></AddButton>

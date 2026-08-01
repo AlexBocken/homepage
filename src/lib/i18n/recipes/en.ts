@@ -226,6 +226,42 @@ export const en = {
 	// Search results pageTitle
 	search_results_for_word: 'for',
 
+	// Index filter rail
+	filters: 'Filters',
+	filters_reset: 'Reset all',
+	filters_show_results: 'Show results',
+	filters_close: 'Close filters',
+	sort_label: 'Order',
+	sort_season: 'Season first',
+	sort_alpha: 'A–Z',
+	sort_shuffle: "Today's shuffle",
+	season_section: 'Season',
+	season_only_now: 'Only what is in season now',
+	category_section: 'Category',
+	nutrition_section: 'Nutrition',
+	macro_share_note: 'Share of calories',
+	preset_high_protein: 'High protein',
+	preset_low_carb: 'Low carb',
+	preset_light: 'Light',
+	kcal_per_portion: 'kcal per portion',
+	kcal_axis_label: 'Energy',
+	include_unknown_nutrition: 'Include recipes without nutrition data',
+	no_nutrition_data: 'No nutrition calculated',
+	recipes_count_suffix: 'recipes',
+	clear_all_filters: 'Clear filters',
+	tags_show_more_suffix: 'more',
+	tags_show_fewer: 'Show fewer',
+
+	// Seasonal ranking
+	in_season_heading: 'In season now',
+	in_season_ordering_note: 'shortest window first',
+	everything_else: 'Everything else',
+	season_window_label: 'Season window',
+	season_last_day: 'Last day today',
+	season_days_left_suffix: 'days left',
+	season_weeks_left_suffix: 'weeks left',
+	season_open_all_year: 'All year',
+
 	// Favorites count label
 	favorites_count_label: 'favorite recipes',
 	favorite_recipe_singular: 'favorite recipe',

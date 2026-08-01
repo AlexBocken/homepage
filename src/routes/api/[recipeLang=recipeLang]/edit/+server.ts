@@ -37,7 +37,14 @@ export const POST: RequestHandler = async ({request, locals}) => {
     }
   }
 
-  await Recipe.findOneAndUpdate({short_name: message.old_short_name }, recipe_json);
+  // Ingredients or their mappings may have changed, which makes the stored
+  // per-100 g figures a claim about a recipe that no longer exists. Unsetting
+  // the field marks it "never calculated", and the listing endpoint refills it
+  // on the next request.
+  await Recipe.findOneAndUpdate(
+    { short_name: message.old_short_name },
+    { $set: recipe_json, $unset: { cachedPer100g: '', cachedTotalGrams: '' } }
+  );
 
   return new Response(JSON.stringify({msg: "Edited recipe successfully"}),{
     status: 200,

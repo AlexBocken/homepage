@@ -2,6 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import type { BriefRecipeType, RecipeModelType } from '$types/types';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { recipeMacros } from '$lib/js/recipeMacros';
 
 export const GET: RequestHandler = async () => {
 	await dbConnect();
@@ -10,7 +11,7 @@ export const GET: RequestHandler = async () => {
 	const [briefRecipes, fullRecipes] = await Promise.all([
 		Recipe.find(
 			{},
-			'name short_name tags category icon description seasonRanges dateModified images translations'
+			'name short_name tags category icon description seasonRanges dateModified images translations portions cachedPer100g cachedTotalGrams'
 		).lean() as unknown as Promise<BriefRecipeType[]>,
 		Recipe.find({})
 		.populate({
@@ -71,8 +72,19 @@ export const GET: RequestHandler = async () => {
 		return processed;
 	});
 
+	// The cached nutrition table is a full micronutrient record per recipe; the
+	// listing only needs the macro split, so it is condensed here and the raw
+	// table left out of what gets mirrored into IndexedDB.
+	const briefWithMacros = briefRecipes.map((recipe) => {
+		const { cachedPer100g, cachedTotalGrams, ...rest } = recipe as BriefRecipeType & {
+			cachedPer100g?: Parameters<typeof recipeMacros>[0];
+			cachedTotalGrams?: number;
+		};
+		return { ...rest, macros: recipeMacros(cachedPer100g, cachedTotalGrams, recipe.portions) };
+	});
+
 	return json({
-		brief: briefRecipes,
+		brief: briefWithMacros,
 		full: processedFullRecipes,
 		syncedAt: new Date().toISOString()
 	});

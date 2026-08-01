@@ -30,9 +30,11 @@ export const POST: RequestHandler = async ({ locals }) => {
 			return manualMappings.get(key) || m;
 		});
 
+		// Drop the per-100 g cache with the mappings it was summed from; the
+		// listing endpoint recalculates it on the next request.
 		await Recipe.updateOne(
 			{ _id: recipe._id },
-			{ $set: { nutritionMappings: finalMappings } }
+			{ $set: { nutritionMappings: finalMappings }, $unset: { cachedPer100g: '', cachedTotalGrams: '' } }
 		);
 
 		const mapped = finalMappings.filter(m => m.matchMethod !== 'none').length;

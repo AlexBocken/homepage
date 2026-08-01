@@ -74,6 +74,10 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	}
 
 	recipe.nutritionMappings = mappings;
+	// The per-100 g cache was summed from the old mappings; the listing endpoint
+	// recalculates it once this field is gone.
+	recipe.set('cachedPer100g', undefined);
+	recipe.set('cachedTotalGrams', undefined);
 	await recipe.save();
 
 	return json({ updated: updates.length });

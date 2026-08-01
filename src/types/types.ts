@@ -288,6 +288,14 @@ export type RecipeModelType = {
   note?: string;
   isBaseRecipe?: boolean;
   nutritionMappings?: NutritionMapping[];
+  /**
+   * Nutrition summed over the whole recipe and divided back down to 100 g,
+   * cached because it costs a table lookup per ingredient. Absent means "never
+   * calculated"; explicit null means "calculated, nothing usable" — the recipe
+   * listing relies on that distinction to avoid recalculating dead ends.
+   */
+  cachedPer100g?: Partial<NutritionPer100g> | null;
+  cachedTotalGrams?: number;
   translations?: {
     en?: TranslatedRecipeType;
   };
@@ -311,4 +319,7 @@ export type BriefRecipeType = {
 	description: string;
 	tags: [string];
 	seasonRanges?: SeasonRange[];
+	portions?: string;
+	/** Macro split + energy, for listing filters. Null when never calculated. */
+	macros?: import('$lib/js/recipeMacros').RecipeMacros | null;
 }

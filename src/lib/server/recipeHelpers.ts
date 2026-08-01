@@ -1,4 +1,5 @@
 import type { BriefRecipeType, RecipeModelType } from '$types/types';
+import { recipeMacros } from '$lib/js/recipeMacros';
 
 /**
  * Check whether a recipeLang param refers to the English version.
@@ -20,9 +21,21 @@ export function briefQueryConfig(recipeLang: string) {
 		prefix: en ? 'translations.en.' : '',
 		/** Projection for brief list queries */
 		projection: en
-			? '_id translations.en short_name images seasonRanges icon'
-			: 'name short_name images tags category icon description seasonRanges',
+			? '_id translations.en short_name images seasonRanges icon cachedPer100g cachedTotalGrams portions'
+			: 'name short_name images tags category icon description seasonRanges cachedPer100g cachedTotalGrams portions',
 	};
+}
+
+/**
+ * The macro facet a listing filters on, from the recipe's cached nutrition.
+ * Cheap enough to derive per request; the expensive part (summing ingredient
+ * mappings) is what `cachedPer100g` already holds.
+ */
+function briefMacros(recipe: RecipeModelType, recipeLang: string) {
+	const portions = isEnglish(recipeLang)
+		? recipe.translations?.en?.portions || recipe.portions
+		: recipe.portions;
+	return recipeMacros(recipe.cachedPer100g, recipe.cachedTotalGrams, portions);
 }
 
 /**
@@ -46,12 +59,21 @@ export function toBrief(recipe: RecipeModelType, recipeLang: string): BriefRecip
 			description: en?.description,
 			seasonRanges: recipe.seasonRanges || [],
 			germanShortName: recipe.short_name,
+			macros: briefMacros(recipe, recipeLang),
 		} as unknown as BriefRecipeType;
 	}
+	// The German branch spreads the document, so the raw nutrition cache has to
+	// be dropped explicitly — it is a full micronutrient table per recipe and
+	// would multiply the size of a listing payload for no gain.
+	const { cachedPer100g, cachedTotalGrams, ...rest } = recipe as RecipeModelType & {
+		cachedPer100g?: unknown;
+		cachedTotalGrams?: number;
+	};
 	return {
-		...recipe,
+		...rest,
 		images: recipe.images?.[0]
 			? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath, color: recipe.images[0].color }]
 			: [],
-	} as BriefRecipeType;
+		macros: briefMacros(recipe, recipeLang),
+	} as unknown as BriefRecipeType;
 }

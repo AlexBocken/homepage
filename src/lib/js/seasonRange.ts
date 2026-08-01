@@ -102,6 +102,77 @@ export function recipeOverlapsMonth(recipe: RecipeWithRanges, month: number, yea
 	return false;
 }
 
+const DAY_MS = 86_400_000;
+
+/** Whole days between two midnights. */
+function daysBetween(a: Date, b: Date): number {
+	return Math.round((b.getTime() - a.getTime()) / DAY_MS);
+}
+
+/** Merge overlapping or back-to-back intervals into the smallest covering set. */
+function mergeIntervals(intervals: Array<{ start: Date; end: Date }>): Array<{ start: Date; end: Date }> {
+	if (intervals.length < 2) return intervals;
+	const sorted = [...intervals].sort((a, b) => a.start.getTime() - b.start.getTime());
+	const out = [sorted[0]];
+	for (const iv of sorted.slice(1)) {
+		const last = out[out.length - 1];
+		// `+ DAY_MS` so Apr 1–Apr 30 and May 1–May 31 count as one 61-day window
+		// rather than two — the window a cook experiences is the union.
+		if (iv.start.getTime() <= last.end.getTime() + DAY_MS) {
+			if (iv.end.getTime() > last.end.getTime()) out[out.length - 1] = { start: last.start, end: iv.end };
+		} else {
+			out.push(iv);
+		}
+	}
+	return out;
+}
+
+/** Every interval a recipe's ranges resolve to across years Y-1 … Y+1, merged. */
+function recipeIntervals(recipe: RecipeWithRanges, year: number): Array<{ start: Date; end: Date }> {
+	const ranges = recipe.seasonRanges;
+	if (!ranges || ranges.length === 0) return [];
+	const all: Array<{ start: Date; end: Date }> = [];
+	for (const r of ranges) all.push(...intervalsForYears(r, [year - 1, year, year + 1]));
+	return mergeIntervals(all);
+}
+
+export type SeasonWindow = {
+	start: Date;
+	end: Date;
+	/** Inclusive length of the window in days — 1 for a single-day season. */
+	lengthDays: number;
+	/** Days until the window shuts, 0 on its last day. */
+	daysLeft: number;
+	/** Days since it opened, 0 on its first day. */
+	daysIn: number;
+};
+
+/**
+ * The season window a recipe is *currently* inside, or null if it is out of
+ * season. Adjacent and overlapping ranges merge first, so a recipe split into
+ * two touching ranges reports the one window a cook actually experiences.
+ *
+ * `lengthDays` is what the listing ranks on: a two-day window outranks a
+ * six-month one because the chance to cook it is about to be gone.
+ */
+export function activeSeasonWindow(recipe: RecipeWithRanges, date: Date = new Date()): SeasonWindow | null {
+	const d = midnight(date);
+	const t = d.getTime();
+	for (const iv of recipeIntervals(recipe, d.getFullYear())) {
+		if (t >= iv.start.getTime() && t <= iv.end.getTime()) {
+			return {
+				start: iv.start,
+				end: iv.end,
+				lengthDays: daysBetween(iv.start, iv.end) + 1,
+				daysLeft: daysBetween(d, iv.end),
+				daysIn: daysBetween(iv.start, d)
+			};
+		}
+	}
+	return null;
+}
+
+
 /**
  * Format a resolved range as a human-readable string for the editor preview,
  * resolved against `year`. Fixed/fixed renders as `Mar 1 – Mar 31`; ranges

@@ -226,6 +226,42 @@ export const de = {
 	// Search results pageTitle
 	search_results_for_word: 'für',
 
+	// Index filter rail
+	filters: 'Filter',
+	filters_reset: 'Alle zurücksetzen',
+	filters_show_results: 'Ergebnisse zeigen',
+	filters_close: 'Filter schliessen',
+	sort_label: 'Reihenfolge',
+	sort_season: 'Saison zuerst',
+	sort_alpha: 'A–Z',
+	sort_shuffle: 'Tagesmischung',
+	season_section: 'Saison',
+	season_only_now: 'Nur was jetzt Saison hat',
+	category_section: 'Kategorie',
+	nutrition_section: 'Nährwerte',
+	macro_share_note: 'Anteil an den Kalorien',
+	preset_high_protein: 'Proteinreich',
+	preset_low_carb: 'Wenig Kohlenhydrate',
+	preset_light: 'Leicht',
+	kcal_per_portion: 'kcal pro Portion',
+	kcal_axis_label: 'Energie',
+	include_unknown_nutrition: 'Rezepte ohne Nährwerte einschliessen',
+	no_nutrition_data: 'Keine Nährwerte berechnet',
+	recipes_count_suffix: 'Rezepte',
+	clear_all_filters: 'Filter zurücksetzen',
+	tags_show_more_suffix: 'weitere',
+	tags_show_fewer: 'Weniger anzeigen',
+
+	// Seasonal ranking
+	in_season_heading: 'Jetzt in Saison',
+	in_season_ordering_note: 'kürzestes Fenster zuerst',
+	everything_else: 'Alle anderen',
+	season_window_label: 'Saisonfenster',
+	season_last_day: 'Heute letzter Tag',
+	season_days_left_suffix: 'Tage übrig',
+	season_weeks_left_suffix: 'Wochen übrig',
+	season_open_all_year: 'Ganzjährig',
+
 	// Favorites count label
 	favorites_count_label: 'favorisierte Rezepte',
 	favorite_recipe_singular: 'favorite recipe',

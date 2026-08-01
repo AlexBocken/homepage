@@ -30,15 +30,15 @@ test('live search narrows the grid to a known fixture', async ({ page }) => {
 	await expect(cards(page).first()).toHaveAttribute('aria-label', /Schokokuchen/);
 });
 
-test('a category chip filters the grid', async ({ page }) => {
+test('a category in the filter rail filters the grid', async ({ page }) => {
 	await gotoHydrated(page, '/rezepte');
 	const before = await page.locator('.recipe-grid .compact-card').count();
 
 	// Suppe (fewer than the 24-card first batch) reliably shrinks the grid, and
 	// contains the seeded Tomatensuppe fixture.
-	const suppe = page.getByRole('button', { name: /^Suppe \(/ });
+	const suppe = page.getByRole('button', { name: /^Suppe\b/ });
 	await suppe.click();
-	await expect(suppe).toHaveClass(/active/);
+	await expect(suppe).toHaveAttribute('aria-pressed', 'true');
 	await expect.poll(() => page.locator('.recipe-grid .compact-card').count()).toBeLessThan(before);
 	await expect(page.locator('.recipe-grid .compact-card a.card-link[aria-label="Tomatensuppe"]')).toBeVisible();
 });
