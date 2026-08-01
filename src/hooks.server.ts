@@ -164,6 +164,23 @@ export const init: ServerInit = async () => {
       console.log(`✅ Food search index built in ${Math.round(performance.now() - tIdx)}ms`);
     })
     .catch((error) => console.error('⚠️ Food search index warmup failed:', error));
+
+  // Warm the recipes' per-100g nutrition cache. The listing filters on it and
+  // sends an 8-hour Cache-Control, so a first visitor arriving before it exists
+  // would have an empty payload cached in front of them for the rest of the
+  // day. Doing it here means that request never has to calculate anything.
+  // Same dynamic import for the same reason as above.
+  const tNut = performance.now();
+  import('$lib/server/recipeNutritionCache')
+    .then(async (m) => {
+      const { filled, empty } = await m.fillMissingRecipeNutrition();
+      if (filled || empty) {
+        console.log(
+          `✅ Recipe nutrition cache warmed in ${Math.round(performance.now() - tNut)}ms (${filled} calculated, ${empty} without usable mappings)`
+        );
+      }
+    })
+    .catch((error) => console.error('⚠️ Recipe nutrition warmup failed:', error));
 };
 
 /** Cache the decoded session keyed by the raw session-token cookie(s).

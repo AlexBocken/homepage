@@ -5,44 +5,19 @@ import { rand_array } from '$lib/js/randomize';
 import { briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
 
 /**
- * Fill in `cachedPer100g` for recipes that have never had it calculated, so the
- * listing's nutrition filter works without an admin first pressing the rebuild
- * button. A recipe whose mappings yield nothing usable is written as an
- * explicit null, which is how it stays skipped afterwards — `$exists: false`
- * means "never calculated", not "nothing to calculate".
+ * Top up any recipe whose nutrition cache was cleared by an edit since the
+ * server started. Startup warms the whole collection (see hooks.server.ts), so
+ * in the steady state this is one query that returns nothing.
  *
- * Steady state this is one indexed query returning nothing. Editing a recipe
- * clears the field again, which is what keeps the figures honest.
+ * Dynamic import on purpose: calculating nutrition needs the BLS and USDA
+ * tables, ~19 MB between them, and this is the busiest public endpoint on the
+ * site. On the normal path they never enter this route's module graph.
  */
 async function fillMissingNutritionCache(): Promise<void> {
-  const missing = await Recipe.find(
-    { cachedPer100g: { $exists: false } },
-    { ingredients: 1, nutritionMappings: 1 }
-  ).lean();
-  if (missing.length === 0) return;
-
-  // Imported here rather than at module scope: computing a recipe's nutrition
-  // needs the BLS and USDA tables, ~19 MB of data between them, and this is the
-  // busiest public endpoint on the site. On the normal path — every cache
-  // present — they never enter this route's module graph at all.
-  const { computePer100g } = await import('$lib/server/recipePer100g');
-
-  await Recipe.bulkWrite(
-    missing.map((recipe) => {
-      const result = computePer100g(recipe);
-      return {
-        updateOne: {
-          filter: { _id: recipe._id },
-          update: {
-            $set: {
-              cachedPer100g: result?.per100g ?? null,
-              cachedTotalGrams: result?.totalGrams ?? 0
-            }
-          }
-        }
-      };
-    })
-  );
+  const missing = await Recipe.countDocuments({ cachedPer100g: { $exists: false } });
+  if (missing === 0) return;
+  const { fillMissingRecipeNutrition } = await import('$lib/server/recipeNutritionCache');
+  await fillMissingRecipeNutrition();
 }
 
 export const GET: RequestHandler = async ({ params, setHeaders }) => {
