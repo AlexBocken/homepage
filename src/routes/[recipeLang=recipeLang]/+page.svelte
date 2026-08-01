@@ -109,26 +109,42 @@
 	});
 </script>
 <style>
-/* ─── Hero parallax (same scaleY technique as TitleImgParallax) ─── */
+/* ─── Hero parallax ───
+   Same scaleY technique as TitleImgParallax, but confined to a decorative
+   layer that is *out of flow*. That matters: a transform makes an element the
+   containing block for `position: fixed` and skews how `position: sticky`
+   resolves its offsets, and the old markup had the whole listing inside the
+   scaled box. Anything sticky in there — the filter rail — stuck to the wrong
+   place. Out of flow, the transform can never reach the content tree. */
 .hero-section {
 	--parallax-scale: 0.3;
-	margin-bottom: calc(var(--parallax-scale) * (20vh - min(60vh, 520px)));
-	transform-origin: center top;
-	transform: scaleY(calc(1 - var(--parallax-scale)));
+	position: relative;
 	margin-top: calc(-3.5rem - 12px - env(safe-area-inset-top, 0px));
 }
 @media (prefers-reduced-motion) {
 	.hero-section {
 		--parallax-scale: 0;
-		margin-bottom: 0;
 	}
 }
-.hero-section > * {
+.hero-layer {
+	position: absolute;
+	inset-inline: 0;
+	top: 0;
+	/* How far the image keeps parallaxing before it un-sticks: its own height
+	   plus a screenful. The opaque content has covered it well before then.
+	   Kept modest because an out-of-flow box still counts towards the page's
+	   scrollable area, and a filter that matches nothing should not leave a
+	   long empty page behind. */
+	height: calc(min(65vh, 560px) + 100vh);
+	z-index: -1;
+	pointer-events: none;
 	transform-origin: center top;
-	transform: scaleY(calc(1 / (1 - var(--parallax-scale))));
+	transform: scaleY(calc(1 - var(--parallax-scale)));
 }
 
-/* Sticky image — stays at top while content scrolls over it */
+/* Sticky image — stays at top while content scrolls over it. The counter-scale
+   undoes the layer's squash, so the picture keeps its true height while its
+   top edge still travels at the parallax rate. */
 .hero {
 	position: sticky;
 	top: 0;
@@ -136,7 +152,8 @@
 	overflow: hidden;
 	max-width: calc(1200px + 2rem);
 	margin: 0 auto;
-	z-index: -1;
+	transform-origin: center top;
+	transform: scaleY(calc(1 / (1 - var(--parallax-scale))));
 }
 .hero-img {
 	width: 100%;
@@ -154,10 +171,14 @@
 	);
 }
 
-/* ─── Scrollable content that moves over the sticky hero ─── */
+/* ─── Content that scrolls over the sticky hero ───
+   The image is out of flow now, so the content reserves its own space. The
+   parallax factor is in the sum because the layer paints the image's top edge
+   at `(1 - scale)` of its scroll offset: this is where the picture's lower
+   edge actually is, not where an unscaled 65vh box would put it. */
 .hero-scroll-content {
 	position: relative;
-	margin: -20vh auto 0;
+	padding-top: calc((1 - var(--parallax-scale)) * (min(65vh, 560px) - 20vh));
 }
 
 /* Title area: overlaps the lower portion of the hero */
@@ -291,17 +312,19 @@
 		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
 	}
 }
-/* Deliberately not `position: sticky`. The listing sits inside .hero-section,
-   which is scaled to drive the hero parallax, and a sticky element under a
-   transformed ancestor has its offsets resolved in the scaled coordinate
-   space: the column stuck ~110px too high — its heading hidden behind the
-   nav bar — and its scroll box ended ~130px above the bottom of the window.
-   The error is not a fixed offset either; it moves with viewport height, so
-   there is nothing sound to correct it by. Left in flow the rail renders at
-   its full height and scrolls with the page. */
 .rail-column {
+	position: sticky;
+	/* Clears the sticky header. */
+	top: 5.5rem;
+	/* Taller than the window, so it scrolls within itself rather than being cut
+	   off. This only holds because nothing above it is transformed any more —
+	   see the note on .hero-layer. */
+	max-height: calc(100vh - 7rem);
+	overflow-y: auto;
+	overscroll-behavior: contain;
 	/* Room for the range-slider thumbs, which overhang their track at 0 % and
-	   100 %, so a focused thumb cannot push the column sideways. */
+	   100 %; without it the scroll container gains a horizontal axis and the
+	   column drifts sideways when a thumb takes focus. */
 	padding-inline: 0.75rem;
 	margin-inline: -0.75rem;
 }
@@ -529,17 +552,19 @@
 
 {#if heroRecipe}
 	<section class="hero-section">
-		<figure class="hero" style:background-color={heroColor}>
-			<img
-				class="hero-img"
-				src="https://bocken.org/static/rezepte/full/{heroImg}"
-				alt=""
-				loading="eager"
-				fetchpriority="high"
-				data-recipe={heroRecipe.short_name}
-			/>
-			<div class="hero-overlay"></div>
-		</figure>
+		<div class="hero-layer">
+			<figure class="hero" style:background-color={heroColor}>
+				<img
+					class="hero-img"
+					src="https://bocken.org/static/rezepte/full/{heroImg}"
+					alt=""
+					loading="eager"
+					fetchpriority="high"
+					data-recipe={heroRecipe.short_name}
+				/>
+				<div class="hero-overlay"></div>
+			</figure>
+		</div>
 
 		<div class="hero-scroll-content">
 			<div class="hero-text">
