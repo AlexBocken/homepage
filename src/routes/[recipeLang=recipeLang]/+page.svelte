@@ -291,16 +291,17 @@
 		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
 	}
 }
+/* Deliberately not `position: sticky`. The listing sits inside .hero-section,
+   which is scaled to drive the hero parallax, and a sticky element under a
+   transformed ancestor has its offsets resolved in the scaled coordinate
+   space: the column stuck ~110px too high — its heading hidden behind the
+   nav bar — and its scroll box ended ~130px above the bottom of the window.
+   The error is not a fixed offset either; it moves with viewport height, so
+   there is nothing sound to correct it by. Left in flow the rail renders at
+   its full height and scrolls with the page. */
 .rail-column {
-	position: sticky;
-	/* Clears the sticky header. */
-	top: 5.5rem;
-	max-height: calc(100vh - 7rem);
-	overflow-y: auto;
-	overscroll-behavior: contain;
 	/* Room for the range-slider thumbs, which overhang their track at 0 % and
-	   100 %; without it the scroll container gains a horizontal axis and the
-	   column drifts sideways when a thumb takes focus. */
+	   100 %, so a focused thumb cannot push the column sideways. */
 	padding-inline: 0.75rem;
 	margin-inline: -0.75rem;
 }
