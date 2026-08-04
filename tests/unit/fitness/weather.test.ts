@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { conditionFromWmoCode, trackAverage } from '$lib/fitness/weather';
-import { weatherUrl, pickHour } from '$lib/server/weather';
+import { weatherUrls, pickHour } from '$lib/server/weather';
 
 // The parts of the weather lookup that must be right without a network: which point and
 // hour a run is described by, which endpoint answers for a given age, how a provider's
@@ -76,30 +76,36 @@ describe('trackAverage', () => {
 	});
 });
 
-describe('weatherUrl', () => {
+describe('weatherUrls', () => {
 	const now = new Date('2026-08-04T12:00:00Z');
 
-	it('asks the forecast endpoint for a run just finished', () => {
-		const url = weatherUrl(47.37, 8.54, new Date('2026-08-04T09:00:00Z'), now);
-		expect(url).toContain('api.open-meteo.com/v1/forecast');
-		expect(url).toContain('past_days=');
-		expect(url).toContain('hourly=temperature_2m,relative_humidity_2m,weather_code');
+	it('asks the forecast endpoint, alone, for a run just finished', () => {
+		const urls = weatherUrls(47.37, 8.54, new Date('2026-08-04T09:00:00Z'), now);
+		expect(urls).toHaveLength(1);
+		expect(urls[0]).toContain('api.open-meteo.com/v1/forecast');
+		expect(urls[0]).toContain('past_days=');
+		expect(urls[0]).toContain('hourly=temperature_2m,relative_humidity_2m,weather_code');
 	});
 
 	it('still uses the forecast endpoint inside its 92-day past window', () => {
-		const url = weatherUrl(47.37, 8.54, new Date('2026-07-05T09:00:00Z'), now);
-		expect(url).toContain('/v1/forecast');
-		// The reanalysis archive lags a few days, so recent history comes from here.
+		const urls = weatherUrls(47.37, 8.54, new Date('2026-07-05T09:00:00Z'), now);
+		expect(urls).toHaveLength(1);
 		// 30.1 days back asks for 32: the day itself, rounded up, plus one to absorb a
 		// run that straddles UTC midnight.
-		expect(url).toContain('past_days=32');
+		expect(urls[0]).toContain('past_days=32');
 	});
 
-	it('switches to the archive for an older backfill', () => {
-		const url = weatherUrl(47.37, 8.54, new Date('2026-01-15T09:00:00Z'), now);
-		expect(url).toContain('archive-api.open-meteo.com/v1/archive');
-		expect(url).toContain('start_date=2026-01-15');
-		expect(url).toContain('end_date=2026-01-15');
+	it('prefers the high-resolution archive for an older backfill, ERA5 second', () => {
+		const urls = weatherUrls(47.37, 8.54, new Date('2026-01-15T09:00:00Z'), now);
+		// ERA5's 25 km grid reads over a degree off for a city in a valley, so the 2 km
+		// models are asked first and the reanalysis is only the fallback.
+		expect(urls).toHaveLength(2);
+		expect(urls[0]).toContain('historical-forecast-api.open-meteo.com/v1/forecast');
+		expect(urls[1]).toContain('archive-api.open-meteo.com/v1/archive');
+		for (const url of urls) {
+			expect(url).toContain('start_date=2026-01-15');
+			expect(url).toContain('end_date=2026-01-15');
+		}
 	});
 });
 

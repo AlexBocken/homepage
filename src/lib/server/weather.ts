@@ -6,10 +6,17 @@
  * on a billing-gated credential. Free for non-commercial use, CC-BY 4.0 — the attribution
  * is rendered next to the reading in the UI.
  *
- * Two endpoints, one query shape. The reanalysis archive is authoritative but lags a few
- * days, while the forecast endpoint will serve up to 92 days of recent past from the
- * high-resolution models — so a run saved minutes ago is answered by the latter and a
- * months-old backfill by the former.
+ * One query shape, up to three sources, all asked for the *high-resolution* models where
+ * possible — ERA5's 25 km reanalysis grid is too coarse for a city in a valley, and it
+ * reads over a degree colder than the 2 km models for the same Zürich hour.
+ *
+ *   - inside 92 days: the forecast endpoint, which keeps that much recent past
+ *   - older: the historical-forecast archive, i.e. the same high-resolution runs, stored
+ *   - older than that archive reaches (or if it fails): ERA5 reanalysis as a last resort
+ *
+ * The point of preferring the same model family everywhere is consistency as much as
+ * accuracy: before this, a run read at save time and the same run backfilled later could
+ * disagree by a degree purely because of which endpoint answered.
  *
  * Every failure here is non-fatal by construction: the caller stores nothing and the
  * session is saved regardless. Weather is a nice thing to have on a run, never a reason
@@ -22,24 +29,35 @@ const SOURCE = 'open-meteo';
 const HOURLY = 'temperature_2m,relative_humidity_2m,weather_code';
 /** The forecast endpoint's own limit on how far back it will look. */
 const MAX_PAST_DAYS = 92;
-/** Leave the last few days to the forecast endpoint — the archive has not caught up. */
+/** Beyond this, ask an archive instead of the forecast endpoint's past window. */
 const ARCHIVE_FROM_DAYS = 88;
 /** A run's weather is an hourly sample; further off than this and it is a data gap. */
 const MAX_SAMPLE_DISTANCE_MS = 90 * 60_000;
 const TIMEOUT_MS = 2500;
 
-/** Which endpoint answers for a given age, and the query that asks it. */
-export function weatherUrl(lat: number, lng: number, when: Date, now = new Date()): string {
+/**
+ * The sources to ask for a given age, best first.
+ *
+ * More than one only for older runs, where the high-resolution archive is preferred but
+ * does not reach back indefinitely — ERA5 then answers rather than nothing.
+ */
+export function weatherUrls(lat: number, lng: number, when: Date, now = new Date()): string[] {
 	const ageDays = (now.getTime() - when.getTime()) / 86_400_000;
 	const coords = `latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}`;
 
 	if (ageDays > ARCHIVE_FROM_DAYS) {
 		const day = when.toISOString().slice(0, 10);
-		return `https://archive-api.open-meteo.com/v1/archive?${coords}&start_date=${day}&end_date=${day}&hourly=${HOURLY}&timezone=UTC`;
+		const range = `start_date=${day}&end_date=${day}`;
+		return [
+			`https://historical-forecast-api.open-meteo.com/v1/forecast?${coords}&${range}&hourly=${HOURLY}&timezone=UTC`,
+			`https://archive-api.open-meteo.com/v1/archive?${coords}&${range}&hourly=${HOURLY}&timezone=UTC`
+		];
 	}
 	// past_days must cover the run's own day; +1 absorbs a run near a UTC midnight.
 	const pastDays = Math.min(MAX_PAST_DAYS, Math.max(1, Math.ceil(ageDays) + 1));
-	return `https://api.open-meteo.com/v1/forecast?${coords}&hourly=${HOURLY}&past_days=${pastDays}&forecast_days=1&timezone=UTC`;
+	return [
+		`https://api.open-meteo.com/v1/forecast?${coords}&hourly=${HOURLY}&past_days=${pastDays}&forecast_days=1&timezone=UTC`
+	];
 }
 
 type HourlyBlock = {
@@ -91,15 +109,22 @@ export function pickHour(
 	};
 }
 
-/** The weather at a point and time, or null if it could not be established. */
+/** The weather at a point and time, or null if no source could establish it. */
 export async function fetchWeatherAt(lat: number, lng: number, when: Date): Promise<SessionWeather | null> {
-	const res = await fetch(weatherUrl(lat, lng, when), {
-		signal: AbortSignal.timeout(TIMEOUT_MS),
-		headers: { accept: 'application/json' }
-	});
-	if (!res.ok) return null;
-	const body = await res.json();
-	const hour = pickHour(body?.hourly, when);
+	let hour: ReturnType<typeof pickHour> = null;
+	for (const url of weatherUrls(lat, lng, when)) {
+		try {
+			const res = await fetch(url, {
+				signal: AbortSignal.timeout(TIMEOUT_MS),
+				headers: { accept: 'application/json' }
+			});
+			if (!res.ok) continue;
+			hour = pickHour((await res.json())?.hourly, when);
+			if (hour) break;
+		} catch {
+			// Try the next source; the last one failing is the caller's null.
+		}
+	}
 	if (!hour) return null;
 
 	return {
