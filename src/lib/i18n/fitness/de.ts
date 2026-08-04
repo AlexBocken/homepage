@@ -76,6 +76,7 @@ export const de = {
 	notes_placeholder: "Wie hat es sich angefühlt? Etwas fürs nächste Mal?",
 	gps_track_stored: "GPS-Track gespeichert",
 	weather_clear: "Klar",
+	weather_mainly_clear: "Heiter",
 	weather_partly_cloudy: "Teils bewölkt",
 	weather_cloudy: "Bedeckt",
 	weather_fog: "Nebel",

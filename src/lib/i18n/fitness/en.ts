@@ -76,6 +76,7 @@ export const en = {
 	notes_placeholder: "How did it feel? Anything to change next time?",
 	gps_track_stored: "GPS track stored",
 	weather_clear: "Clear",
+	weather_mainly_clear: "Mainly clear",
 	weather_partly_cloudy: "Partly cloudy",
 	weather_cloudy: "Overcast",
 	weather_fog: "Fog",

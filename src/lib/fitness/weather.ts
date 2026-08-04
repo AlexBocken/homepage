@@ -10,6 +10,7 @@
 /** The conditions a run is described by. Deliberately coarse — this is a log entry. */
 export type WeatherCondition =
 	| 'clear'
+	| 'mainly_clear'
 	| 'partly_cloudy'
 	| 'cloudy'
 	| 'fog'
@@ -44,7 +45,10 @@ export type SessionWeather = {
  */
 export function conditionFromWmoCode(code: number): WeatherCondition {
 	if (code === 0) return 'clear';
-	if (code === 1 || code === 2) return 'partly_cloudy';
+	// WMO separates these and so do forecasts in both languages — "mainly clear"/heiter
+	// is a different sky from "partly cloudy"/teils bewölkt.
+	if (code === 1) return 'mainly_clear';
+	if (code === 2) return 'partly_cloudy';
 	if (code === 3) return 'cloudy';
 	if (code === 45 || code === 48) return 'fog';
 	if (code >= 51 && code <= 57) return 'drizzle';

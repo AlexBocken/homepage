@@ -12,6 +12,7 @@
 	 */
 	import Sun from '@lucide/svelte/icons/sun';
 	import CloudSun from '@lucide/svelte/icons/cloud-sun';
+	import Cloudy from '@lucide/svelte/icons/cloudy';
 	import Cloud from '@lucide/svelte/icons/cloud';
 	import CloudFog from '@lucide/svelte/icons/cloud-fog';
 	import CloudDrizzle from '@lucide/svelte/icons/cloud-drizzle';
@@ -31,9 +32,12 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 
+	// Four distinct skies, four distinct marks: full sun, sun behind cloud, cloud with
+	// more cloud behind it, then the flat overcast one.
 	const ICONS = {
 		clear: Sun,
-		partly_cloudy: CloudSun,
+		mainly_clear: CloudSun,
+		partly_cloudy: Cloudy,
 		cloudy: Cloud,
 		fog: CloudFog,
 		drizzle: CloudDrizzle,
@@ -49,6 +53,7 @@
 	// condition then fails to compile instead of rendering a blank pill.
 	const LABELS = $derived({
 		clear: t.weather_clear,
+		mainly_clear: t.weather_mainly_clear,
 		partly_cloudy: t.weather_partly_cloudy,
 		cloudy: t.weather_cloudy,
 		fog: t.weather_fog,

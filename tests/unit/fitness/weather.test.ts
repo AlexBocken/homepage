@@ -10,7 +10,9 @@ import { weatherUrls, pickHour } from '$lib/server/weather';
 describe('conditionFromWmoCode', () => {
 	it('maps the WMO groups Open-Meteo returns', () => {
 		expect(conditionFromWmoCode(0)).toBe('clear');
-		expect(conditionFromWmoCode(1)).toBe('partly_cloudy');
+		// 1 and 2 are different skies to WMO, and are named differently by forecasts in
+		// both languages — they must not collapse into one label.
+		expect(conditionFromWmoCode(1)).toBe('mainly_clear');
 		expect(conditionFromWmoCode(2)).toBe('partly_cloudy');
 		expect(conditionFromWmoCode(3)).toBe('cloudy');
 		expect(conditionFromWmoCode(45)).toBe('fog');
