@@ -110,9 +110,19 @@ export function sharedRunParam(
 	return who ? `${who}-${base}` : base;
 }
 
+/** `name-slug-<id>`, or the bare id when there is nothing worth slugging. */
+function namedParam(doc: { _id: string; name?: string }): string {
+	const id = String(doc._id);
+	const slug = doc.name ? slugify(doc.name) : '';
+	return slug ? `${slug}-${id}` : id;
+}
+
 /** Canonical route param for a segment: `lakeside-sprint-<id>`. */
 export function segmentParam(segment: { _id: string; name?: string }): string {
-	const id = String(segment._id);
-	const slug = segment.name ? slugify(segment.name) : '';
-	return slug ? `${slug}-${id}` : id;
+	return namedParam(segment);
+}
+
+/** Canonical route param for a workout template: `tuesday-tempo-<id>`. */
+export function templateParam(template: { _id: string; name?: string }): string {
+	return namedParam(template);
 }

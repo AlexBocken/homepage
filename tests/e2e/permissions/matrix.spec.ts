@@ -94,6 +94,14 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	// same weight history, so it is gated like both.
 	{ path: '/fitness/stats/protein', kind: 'page' },
 	{ path: '/api/fitness/stats/protein-per-kg', kind: 'api' },
+	// Per-workout cardio progress. One athlete's own templates and sessions — there is
+	// no shared-scope variant, so every caller must at least be logged in. The detail
+	// routes are checked with an id nobody has run: a permitted user gets a 404 (which
+	// is "allowed" here), an anonymous one must still be bounced to /login.
+	{ path: '/fitness/segments', kind: 'page' },
+	{ path: '/fitness/segments/template/000000000000000000000000', kind: 'page' },
+	{ path: '/api/fitness/stats/workout-templates', kind: 'api' },
+	{ path: '/api/fitness/stats/workout-templates/000000000000000000000000', kind: 'api' },
 	{ path: '/api/fitness/stats/daily-balance', kind: 'api' },
 	{ path: '/api/fitness/goal', kind: 'api' },
 	{ path: '/api/fitness/stats/micronutrients', kind: 'api' },

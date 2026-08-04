@@ -561,6 +561,12 @@ export const en = {
 	speed_progress: "Speed progress",
 	lower_is_faster: "Lower is faster",
 	higher_is_faster: "Higher is faster",
+	workout_progress: "Workout progress",
+	typical_col: "Typical",
+	no_workout_progress: "No runs from a saved workout yet.",
+	workout_progress_hint:
+		"Attempts at the same saved workout, ranked by pace rather than time — two runs of one workout need not cover the same distance, so each keeps its own.",
+	template_deleted: "Template deleted",
 	delete_segment: "Delete segment",
 	delete_segment_confirm: "Delete this segment and all its efforts?",
 	rescan: "Rescan history",

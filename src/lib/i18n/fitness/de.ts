@@ -561,6 +561,12 @@ export const de = {
 	speed_progress: "Geschwindigkeits-Verlauf",
 	lower_is_faster: "Tiefer = schneller",
 	higher_is_faster: "Höher = schneller",
+	workout_progress: "Trainingsfortschritt",
+	typical_col: "Typisch",
+	no_workout_progress: "Noch keine Läufe aus einer gespeicherten Vorlage.",
+	workout_progress_hint:
+		"Versuche derselben gespeicherten Vorlage, nach Tempo statt nach Zeit gewertet — zwei Läufe desselben Trainings müssen nicht dieselbe Distanz haben, daher steht bei jedem seine eigene.",
+	template_deleted: "Vorlage gelöscht",
 	delete_segment: "Segment löschen",
 	delete_segment_confirm: "Dieses Segment und alle Versuche löschen?",
 	rescan: "Verlauf neu scannen",

@@ -13,10 +13,22 @@
 	 *   template: { _id: string, name: string, mode?: string, activityType?: string, exercises: Array<{ exerciseId: string, sets: any[] }> },
 	 *   lastUsed?: string | null,
 	 *   onStart?: (() => void) | null,
-	 *   onMenu?: ((e: MouseEvent) => void) | null
+	 *   onMenu?: ((e: MouseEvent) => void) | null,
+	 *   href?: string | null,
+	 *   body?: import('svelte').Snippet | null
 	 * }}
+	 *
+	 * `href` turns the card into a real link instead of a click-handled div, for the
+	 * boards that navigate rather than open a sheet (per-workout progress on the
+	 * segments page) — so middle-click and open-in-new-tab work there.
+	 *
+	 * `body` replaces the middle of the card (the exercise preview / GPS badge) when the
+	 * caller has something else to show in that slot, e.g. that workout's pace and
+	 * attempt count. The chrome — surface, radius, hover lift, title, last-performed
+	 * line — stays here, so every template card in the app looks the same wherever it
+	 * appears.
 	 */
-	let { template, lastUsed = null, onStart = null, onMenu = null } = $props();
+	let { template, lastUsed = null, onStart = null, onMenu = null, href = null, body = null } = $props();
 
 	/** @param {string} dateStr */
 	function formatDate(dateStr) {
@@ -31,7 +43,7 @@
 	}
 </script>
 
-<div class="template-card" role="button" tabindex="0" onclick={() => onStart?.()} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStart?.(); }}}>
+{#snippet cardBody()}
 	<div class="card-header">
 		<h3 class="card-title">{template.name}</h3>
 		{#if onMenu}
@@ -44,7 +56,9 @@
 			</button>
 		{/if}
 	</div>
-	{#if template.mode === 'gps'}
+	{#if body}
+		{@render body()}
+	{:else if template.mode === 'gps'}
 		<div class="gps-badge"><MapPin size={12} /> {template.activityType?.[0]?.toUpperCase()}{template.activityType?.slice(1) ?? 'Running'}</div>
 	{:else}
 		<ul class="exercise-preview">
@@ -60,7 +74,15 @@
 	{#if lastUsed}
 		<p class="last-used">{t.last_performed} {formatDate(lastUsed)}</p>
 	{/if}
-</div>
+{/snippet}
+
+{#if href}
+	<a class="template-card" {href}>{@render cardBody()}</a>
+{:else}
+	<div class="template-card" role="button" tabindex="0" onclick={() => onStart?.()} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStart?.(); }}}>
+		{@render cardBody()}
+	</div>
+{/if}
 
 <style>
 	.template-card {
@@ -77,6 +99,7 @@
 		width: 100%;
 		font: inherit;
 		color: inherit;
+		text-decoration: none; /* the card renders as an <a> when given an href */
 	}
 	.template-card:hover {
 		transform: translateY(-2px);

@@ -5,11 +5,13 @@
 	import { resolve } from '$app/paths';
 	import { formatElapsed, formatEffortRate } from '$lib/fitness/segmentFormat';
 	import { tableDistances, activityKindOf, type ActivityKind } from '$lib/fitness/bestEffortDistances';
+	import { templateParam } from '$lib/fitness/prettyUrl';
 	import Flag from '@lucide/svelte/icons/flag';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
 	import SegmentCard from '$lib/components/fitness/SegmentCard.svelte';
+	import TemplateCard from '$lib/components/fitness/TemplateCard.svelte';
 	import SegmentSuggestionCard from '$lib/components/fitness/SegmentSuggestionCard.svelte';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
@@ -71,6 +73,36 @@
 		const allowed = new Set(tableDistances(activity, rawEfforts.map((e) => e.km)));
 		return rawEfforts.filter((e) => allowed.has(e.km));
 	});
+
+	// Per-workout progress, cached per activity. The loader SSR-seeds running; cycling
+	// loads on demand. No scope split — a template is personal, so there is no
+	// cross-athlete board to switch to, and the table stays yours under either tab.
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let tplCache = $state<Record<string, any[]>>(
+		untrack(() => ({ running: data.templatesRunning ?? [] }))
+	);
+	async function loadTemplateBoard(act: ActivityKind) {
+		if (tplCache[act]) return;
+		try {
+			const r = await fetch(`/api/fitness/stats/workout-templates?activity=${act}`);
+			if (r.ok) tplCache = { ...tplCache, [act]: (await r.json()).templates ?? [] };
+		} catch {
+			/* leave empty */
+		}
+	}
+	$effect(() => {
+		loadTemplateBoard(activity);
+	});
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const templateBoard = $derived((tplCache[activity] ?? []) as any[]);
+
+	/** Progress page for one repeated workout. */
+	function templateHref(row: { templateId: string; name: string }) {
+		return resolve('/fitness/[segments=fitnessSegments]/template/[id]', {
+			segments: page.params.segments ?? 'segments',
+			id: templateParam({ _id: row.templateId, name: row.name })
+		});
+	}
 
 	/** Per-distance progress page for the current activity board. */
 	function bestEffortHref(km: number) {
@@ -190,6 +222,33 @@
 				<SegmentCard {segment} {lang} />
 			{/each}
 		</div>
+	{/if}
+
+	{#if templateBoard.length > 0}
+		<section class="workout-progress">
+			<h2>{t.workout_progress}</h2>
+			<!-- The same card as /fitness/workout, down to the last-performed line; only
+			     the middle slot differs, carrying this workout's figures instead of its
+			     exercise list. -->
+			<div class="template-grid">
+				{#each templateBoard as row (row.templateId)}
+					<TemplateCard
+						template={{ _id: row.templateId, name: row.name, mode: 'gps', activityType: activity, exercises: [] }}
+						lastUsed={row.lastDate}
+						href={templateHref(row)}
+					>
+						{#snippet body()}
+							<div class="tpl-figures">
+								<span class="tpl-rate">{formatEffortRate(row.bestKm, row.bestSeconds, activity)}</span>
+								<span class="tpl-meta">
+									{row.attempts} {t.attempts} · {row.avgKm.toFixed(1)} {t.km} {t.typical_col.toLowerCase()}
+								</span>
+							</div>
+						{/snippet}
+					</TemplateCard>
+				{/each}
+			</div>
+		</section>
 	{/if}
 
 	{#if bestEfforts.length > 0}
@@ -407,6 +466,39 @@
 	.be-km {
 		font-weight: 700;
 		color: var(--color-primary);
+	}
+
+	/* Per-workout progress. Section heading matches the best-efforts one above it; the
+	   cards and their grid are the ones /fitness/workout uses, so a workout looks the
+	   same whether you are about to start it or looking back at it. */
+	.workout-progress {
+		margin-top: 2rem;
+	}
+	.workout-progress h2 {
+		font-size: 1.1rem;
+		margin: 0 0 0.6rem;
+	}
+	.template-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+		gap: 0.75rem;
+	}
+	/* Fills the card's middle slot, where a startable template lists its exercises. */
+	.tpl-figures {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+	.tpl-rate {
+		font-size: 0.95rem;
+		font-weight: 700;
+		color: var(--blue);
+		font-variant-numeric: tabular-nums;
+	}
+	.tpl-meta {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
 	}
 	.be-pace,
 	.be-age {
