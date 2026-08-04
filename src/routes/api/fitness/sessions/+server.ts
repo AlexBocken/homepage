@@ -17,6 +17,7 @@ import { activityKind } from '$lib/server/bestEffortsBackfill';
 import { detectBestEffortPrs, type BestEffortPr } from '$lib/server/bestEffortPrs';
 import { estimatedOneRepMax } from '$lib/fitness/strength';
 import { requireAuth } from '$lib/server/middleware/auth';
+import { weatherForTrack } from '$lib/server/weather';
 import mongoose from 'mongoose';
 
 const GPS_ACTIVITIES = new Set(['running', 'walking', 'cycling', 'hiking']);
@@ -382,6 +383,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       }
     } catch (err) {
       console.error('Persisting run PRs failed:', err);
+    }
+
+    // What the weather was doing, for a run that recorded where it went. Awaited so the
+    // reading is on the session the completion screen navigates to, but bounded by the
+    // lookup's own 2.5s timeout and swallowed on failure — an offline save must not wait
+    // on a weather service, and a missing reading is filled in later by Recalculate.
+    try {
+      const track = gatherSessionTrack({ gpsTrack, exercises: processedExercises });
+      if (track.length > 0) {
+        const weather = await weatherForTrack(track);
+        if (weather) {
+          workoutSession.weather = weather;
+          await workoutSession.save();
+        }
+      }
+    } catch (err) {
+      console.error('Weather lookup failed:', err);
     }
 
     return json({ session: workoutSession, segmentAchievements, bestEffortPrs }, { status: 201 });

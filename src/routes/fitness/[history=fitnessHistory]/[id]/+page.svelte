@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import Clock from '@lucide/svelte/icons/clock';
 	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
+	import WeatherPill from '$lib/components/fitness/WeatherPill.svelte';
 	import Weight from '@lucide/svelte/icons/weight';
 	import Trophy from '@lucide/svelte/icons/trophy';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -789,6 +790,9 @@
 					<span>{nPr} PR{nPr !== 1 ? 's' : ''}</span>
 				</div>
 			{/if}
+			<!-- Present whenever the session tracked a location — a manual workout with a
+			     GPS'd cardio exercise gets a reading too, not only pure runs. -->
+			<WeatherPill weather={session.weather} />
 		</div>
 	{/if}
 

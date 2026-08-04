@@ -78,6 +78,20 @@ export interface IWorkoutSession {
     isPB: boolean;
     isKOM: boolean;
   }[];
+  // The weather this run was performed in, sampled once at its average location and
+  // mid-time (see $lib/server/weather). Stored rather than looked up on read: it is a
+  // fact about a past hour, it must be readable offline, and re-asking would spend a
+  // third-party call per page view to get the same answer.
+  weather?: {
+    temperatureC: number;
+    humidity: number;
+    code: number;
+    condition: string;
+    lat: number;
+    lng: number;
+    time: Date;
+    source: string;
+  };
   notes?: string;
   createdBy: string; // username/nickname of the person who performed the workout
   createdAt?: Date;
@@ -284,6 +298,22 @@ const WorkoutSessionSchema = new mongoose.Schema(
         _id: false,
       }],
       default: undefined,
+    },
+    weather: {
+      type: {
+        temperatureC: { type: Number, required: true },
+        humidity: { type: Number, required: true },
+        // The provider's raw code, so a change to the condition mapping is a redeploy
+        // rather than a refetch of every run ever recorded.
+        code: { type: Number, required: true },
+        condition: { type: String, required: true },
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true },
+        time: { type: Date, required: true },
+        source: { type: String, required: true },
+        _id: false
+      },
+      default: undefined
     },
     notes: {
       type: String,

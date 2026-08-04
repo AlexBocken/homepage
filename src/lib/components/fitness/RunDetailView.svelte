@@ -22,6 +22,7 @@
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import { clampToViewport } from '$lib/js/clampToViewport';
+	import WeatherPill from '$lib/components/fitness/WeatherPill.svelte';
 
 	/**
 	 * Read-only render of a workout session — the same body the history detail
@@ -159,6 +160,7 @@
 		{#if showPrs && session.prs?.length > 0}
 			<div class="stat-pill pr"><Trophy size={14} /><span>{session.prs.length} PR{session.prs.length !== 1 ? 's' : ''}</span></div>
 		{/if}
+		<WeatherPill weather={session.weather} />
 	</div>
 
 	{#each session.exercises as ex, exIdx (ex.exerciseId + '-' + exIdx)}

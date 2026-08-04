@@ -14,6 +14,7 @@ import { activityKind } from '$lib/server/bestEffortsBackfill';
 import { detectBestEffortPrs } from '$lib/server/bestEffortPrs';
 import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
 import { requireAuth } from '$lib/server/middleware/auth';
+import { weatherForTrack } from '$lib/server/weather';
 import { assertObjectId } from '$lib/server/ownedResource';
 
 // POST /api/fitness/sessions/[id]/recalculate — recompute derived fields
@@ -198,13 +199,35 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 			console.error('Persisting run PRs during recalculate failed:', err);
 		}
 
+		// Weather is the one derived field that comes from outside: fill it in for runs
+		// recorded before it was collected, or where the lookup failed at save time. Only
+		// when missing — a stored reading describes an hour that is not going to change,
+		// and refetching it on every recalculate would spend calls to relearn it.
+		let weather = workoutSession.weather ?? null;
+		try {
+			if (!weather) {
+				const track = gatherSessionTrack(workoutSession);
+				if (track.length > 0) {
+					const found = await weatherForTrack(track);
+					if (found) {
+						workoutSession.weather = found;
+						await workoutSession.save();
+						weather = workoutSession.weather ?? null;
+					}
+				}
+			}
+		} catch (err) {
+			console.error('Weather lookup during recalculate failed:', err);
+		}
+
 		return json({
 			totalVolume: totalVolume > 0 ? totalVolume : undefined,
 			totalDistance: totalDistance > 0 ? totalDistance : undefined,
 			prs: prs.length,
 			bestEffortPrs: bestEffortPrs.length,
 			segmentPrs: segmentPrs.length,
-			kcalEstimate
+			kcalEstimate,
+			weather
 		});
 	} catch (error) {
 		console.error('Error recalculating session:', error);
