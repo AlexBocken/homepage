@@ -76,9 +76,20 @@
 			.map((/** @type {any} */ m) => ({ date: m.date, value: m.measurements[single] }));
 	}
 
+	/** Did the most recent record for this part have different values per side? */
+	/** @param {Step} s */
+	function sidesDifferedLast(s) {
+		if (!s.paired) return false;
+		const last = historyFor(s).at(-1);
+		return !!last && last.left != null && last.right != null && last.left !== last.right;
+	}
+
 	/** @type {Record<string, any>} */
 	const initial = {};
-	for (const s of steps) initial[s.key] = s.paired ? { left: '', right: '', same: true } : '';
+	for (const s of steps) {
+		// Start expanded when the sides last measured differently — they likely still do.
+		initial[s.key] = s.paired ? { left: '', right: '', same: !sidesDifferedLast(s) } : '';
+	}
 	let values = $state(initial);
 
 	let idx = $state(0);
@@ -130,7 +141,7 @@
 		next();
 	}
 	/** @param {string} key */
-	function copyLtoR(key) { values[key].right = values[key].left; }
+	function copyRtoL(key) { values[key].left = values[key].right; }
 
 	/** @param {string} key */
 	function useLastValue(key) {
@@ -139,8 +150,8 @@
 		const last = historyFor(s).at(-1);
 		if (!last) return;
 		if (s.paired) {
-			if (last.left != null) values[key].left = String(last.left);
-			if (!values[key].same && last.right != null) values[key].right = String(last.right);
+			if (last.right != null) values[key].right = String(last.right);
+			if (!values[key].same && last.left != null) values[key].left = String(last.left);
 		} else if (last.value != null) {
 			values[key] = String(last.value);
 		}
@@ -161,10 +172,10 @@
 	function formatValue(s) {
 		const v = values[s.key];
 		if (s.paired) {
-			if (v.same) return v.left ? `${v.left} cm` : '—';
-			if (v.left && v.right) return `L ${v.left} · R ${v.right}`;
-			if (v.left) return `L ${v.left}`;
+			if (v.same) return v.right ? `${v.right} cm` : '—';
+			if (v.right && v.left) return `R ${v.right} · L ${v.left}`;
 			if (v.right) return `R ${v.right}`;
+			if (v.left) return `L ${v.left}`;
 			return '—';
 		}
 		return v ? `${v} cm` : '—';
@@ -196,13 +207,13 @@
 		for (const s of steps) {
 			const v = values[s.key];
 			if (s.paired) {
-				const l = Number(v.left);
-				if (v.left !== '' && isFinite(l)) ms[/** @type {string} */ (s.dbLeft)] = l;
+				const r = Number(v.right);
+				if (v.right !== '' && isFinite(r)) ms[/** @type {string} */ (s.dbRight)] = r;
 				if (v.same) {
-					if (v.left !== '' && isFinite(l)) ms[/** @type {string} */ (s.dbRight)] = l;
+					if (v.right !== '' && isFinite(r)) ms[/** @type {string} */ (s.dbLeft)] = r;
 				} else {
-					const r = Number(v.right);
-					if (v.right !== '' && isFinite(r)) ms[/** @type {string} */ (s.dbRight)] = r;
+					const l = Number(v.left);
+					if (v.left !== '' && isFinite(l)) ms[/** @type {string} */ (s.dbLeft)] = l;
 				}
 			} else {
 				const n = Number(v);
@@ -275,19 +286,19 @@
 	function chartSeries(s) {
 		const h = historyFor(s);
 		const v = values[s.key];
-		/** @type {Array<{name: string, color: string, points: {date: string, value: number}[], pending: number | null}>} */
+		/** @type {Array<{name: string, color: string, grad: string, points: {date: string, value: number}[], pending: number | null}>} */
 		const series = [];
 		if (s.paired) {
 			const leftPoints = h.filter((/** @type {any} */ r) => r.left != null).map((/** @type {any} */ r) => ({ date: r.date, value: r.left }));
 			const rightPoints = h.filter((/** @type {any} */ r) => r.right != null).map((/** @type {any} */ r) => ({ date: r.date, value: r.right }));
-			const pendL = Number(v.left);
-			const pendR = v.same ? Number(v.left) : Number(v.right);
-			series.push({ name: 'L', color: 'var(--color-primary)', points: leftPoints, pending: isFinite(pendL) && v.left !== '' ? pendL : null });
-			series.push({ name: 'R', color: 'var(--orange)', points: rightPoints, pending: isFinite(pendR) && (v.same ? v.left : v.right) !== '' ? pendR : null });
+			const pendR = Number(v.right);
+			const pendL = v.same ? Number(v.right) : Number(v.left);
+			series.push({ name: 'R', color: 'var(--orange)', grad: 'url(#area-grad-orange)', points: rightPoints, pending: isFinite(pendR) && v.right !== '' ? pendR : null });
+			series.push({ name: 'L', color: 'var(--color-primary)', grad: 'url(#area-grad-primary)', points: leftPoints, pending: isFinite(pendL) && (v.same ? v.right : v.left) !== '' ? pendL : null });
 		} else {
 			const p = h.map((/** @type {any} */ r) => ({ date: r.date, value: r.value }));
 			const pend = Number(v);
-			series.push({ name: '', color: 'var(--color-primary)', points: p, pending: isFinite(pend) && v !== '' ? pend : null });
+			series.push({ name: '', color: 'var(--color-primary)', grad: 'url(#area-grad-primary)', points: p, pending: isFinite(pend) && v !== '' ? pend : null });
 		}
 		return series;
 	}
@@ -342,7 +353,7 @@
 				  all.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ') +
 				  ` L ${all[all.length - 1].x.toFixed(1)},${baseY.toFixed(1)} Z`
 				: '';
-			return { name: s.name, color: s.color, linePath, areaPath, hist, pending };
+			return { name: s.name, color: s.color, grad: s.grad, linePath, areaPath, hist, pending };
 		});
 
 		return {
@@ -452,31 +463,20 @@
 					{#if step.paired}
 						{@const pv = values[step.key]}
 						{#if pv.same}
-							<div class="stepper" onwheel={(e) => onWheel(e, step.key, 'left')}>
-								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', -0.5)} aria-label="-0.5">
+							<div class="stepper" onwheel={(e) => onWheel(e, step.key, 'right')}>
+								<button type="button" class="step-btn" onclick={() => bump(step.key, 'right', -0.5)} aria-label="-0.5">
 									<Minus size={20} />
 								</button>
 								<div class="num-wrap">
-									<input type="number" step="0.1" bind:value={pv.left} placeholder={ph(lastForStep?.left)} inputmode="decimal" />
+									<input type="number" step="0.1" bind:value={pv.right} placeholder={ph(lastForStep?.right)} inputmode="decimal" />
 									<span class="unit">cm</span>
 								</div>
-								<button type="button" class="step-btn" onclick={() => bump(step.key, 'left', 0.5)} aria-label="+0.5">
+								<button type="button" class="step-btn" onclick={() => bump(step.key, 'right', 0.5)} aria-label="+0.5">
 									<Plus size={20} />
 								</button>
 							</div>
 						{:else}
 							<div class="split">
-								<div class="stepper compact" onwheel={(e) => onWheel(e, step.key, 'left')}>
-									<span class="side-tag" style="--side-color: var(--color-primary)">L</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', -0.5)} aria-label="L -0.5">
-										<Minus size={14} />
-									</button>
-									<input type="number" step="0.1" bind:value={pv.left} placeholder={ph(lastForStep?.left)} inputmode="decimal" />
-									<span class="unit-sm">cm</span>
-									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', 0.5)} aria-label="L +0.5">
-										<Plus size={14} />
-									</button>
-								</div>
 								<div class="stepper compact" onwheel={(e) => onWheel(e, step.key, 'right')}>
 									<span class="side-tag" style="--side-color: var(--orange)">R</span>
 									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'right', -0.5)} aria-label="R -0.5">
@@ -488,11 +488,22 @@
 										<Plus size={14} />
 									</button>
 								</div>
-								<button type="button" class="copy-btn" onclick={() => copyLtoR(step.key)} disabled={!pv.left}>
+								<div class="stepper compact" onwheel={(e) => onWheel(e, step.key, 'left')}>
+									<span class="side-tag" style="--side-color: var(--color-primary)">L</span>
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', -0.5)} aria-label="L -0.5">
+										<Minus size={14} />
+									</button>
+									<input type="number" step="0.1" bind:value={pv.left} placeholder={ph(lastForStep?.left)} inputmode="decimal" />
+									<span class="unit-sm">cm</span>
+									<button type="button" class="step-btn sm" onclick={() => bump(step.key, 'left', 0.5)} aria-label="L +0.5">
+										<Plus size={14} />
+									</button>
+								</div>
+								<button type="button" class="copy-btn" onclick={() => copyRtoL(step.key)} disabled={!pv.right}>
 									<CopyPlus size={15} />
-									<span>{t.copy_l_to_r_before}</span>
+									<span>{t.copy_r_to_l_before}</span>
 									<ArrowRight size={14} />
-									<span>{t.copy_l_to_r_after}</span>
+									<span>{t.copy_r_to_l_after}</span>
 								</button>
 							</div>
 						{/if}
@@ -583,8 +594,8 @@
 								</linearGradient>
 							</defs>
 							<line x1={CHART_PAD.l} x2={CHART_W - CHART_PAD.r} y1={CHART_H - CHART_PAD.b} y2={CHART_H - CHART_PAD.b} class="axis-line" />
-							{#each chart.series as s, i (s.name || 'single')}
-								<path d={s.areaPath} fill={i === 0 ? 'url(#area-grad-primary)' : 'url(#area-grad-orange)'} />
+							{#each chart.series as s (s.name || 'single')}
+								<path d={s.areaPath} fill={s.grad} />
 								<path d={s.linePath} stroke={s.color} stroke-width="1.8" fill="none" stroke-linejoin="round" stroke-linecap="round" />
 								{#each s.hist as d}
 									<circle cx={d.x} cy={d.y} r="2.5" fill={s.color} class="hist-dot" />
