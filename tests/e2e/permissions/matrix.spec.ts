@@ -90,6 +90,10 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/fitness/stats/deficit', kind: 'page' },
 	{ path: '/fitness/stats/adherence', kind: 'page' },
 	{ path: '/fitness/stats/body', kind: 'page' },
+	// Protein per kg of bodyweight, day by day: the same food log divided by the
+	// same weight history, so it is gated like both.
+	{ path: '/fitness/stats/protein', kind: 'page' },
+	{ path: '/api/fitness/stats/protein-per-kg', kind: 'api' },
 	{ path: '/api/fitness/stats/daily-balance', kind: 'api' },
 	{ path: '/api/fitness/goal', kind: 'api' },
 	{ path: '/api/fitness/stats/micronutrients', kind: 'api' },

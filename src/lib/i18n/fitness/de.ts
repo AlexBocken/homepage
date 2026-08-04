@@ -418,6 +418,16 @@ export const de = {
 	play_video: "Video abspielen",
 	nutrition_stats: "Ernährung",
 	protein_per_kg_unit: "g/kg",
+	protein_per_kg_title: "Protein pro kg",
+	protein_per_kg_daily: "Protein pro kg, nach Tag",
+	protein_per_kg_inputs: "Woraus es sich ergibt",
+	protein_grams: "Protein",
+	thirty_day_avg: "30-Tage-Ø",
+	days_normalised: "Tage mit Gewicht",
+	protein_per_kg_note:
+		"Jeder Tag teilt das protokollierte Protein durch das Trendgewicht dieses Tages — den geglätteten Durchschnitt der Wiegungen bis dahin, nicht das heutige Gewicht. So wird ein Tag im Aufbau oder in der Diät am damaligen Körper gemessen. Tage vor der ersten Wiegung zeigen Protein, aber kein Verhältnis.",
+	protein_per_kg_note_fixed:
+		"Dein Ziel ist in Gramm pro Tag gesetzt, daher verschiebt sich seine pro-kg-Linie mit deinem Gewicht.",
 	calorie_balance: "Kalorienbilanz",
 	calorie_balance_unit: "kcal/Tag",
 	diet_adherence: "Einhaltung",

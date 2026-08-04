@@ -418,6 +418,16 @@ export const en = {
 	play_video: "Play Video",
 	nutrition_stats: "Nutrition",
 	protein_per_kg_unit: "g/kg",
+	protein_per_kg_title: "Protein per kg",
+	protein_per_kg_daily: "Protein per kg, by day",
+	protein_per_kg_inputs: "What it is made of",
+	protein_grams: "Protein",
+	thirty_day_avg: "30-day avg",
+	days_normalised: "days with a weight",
+	protein_per_kg_note:
+		"Each day divides that day's logged protein by the trend weight as it stood on that day — a smoothed average of the weigh-ins up to then, not today's weight — so a day during a bulk or a cut is judged against the body that ate it. Days before your first weigh-in show protein but no ratio.",
+	protein_per_kg_note_fixed:
+		"Your goal is set in grams per day, so its per-kg line moves as your weight does.",
 	calorie_balance: "Calorie Balance",
 	calorie_balance_unit: "kcal/day",
 	diet_adherence: "Adherence",

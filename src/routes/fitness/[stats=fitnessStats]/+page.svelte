@@ -801,7 +801,8 @@
 	{#if showMuscleNutrition}
 	<div class="muscle-nutrition-layout" class:diet-off={!prefs.dietStats} class:macro-horizontal={macroHorizontal}>
 			{#if prefs.dietStats}
-			<div class="lifetime-card protein-card">
+			<a class="lifetime-card protein-card"
+				href={resolve('/fitness/[stats=fitnessStats]/protein', { stats: statsSlug })} aria-label={t.protein_per_kg_title}>
 				<div class="card-icon"><Beef size={24} /></div>
 				{#if ns.avgProteinPerKg != null}
 					<div class="card-value">{ns.avgProteinPerKg.toFixed(1)}<span class="card-unit">{t.protein_per_kg_unit}</span></div>
@@ -818,7 +819,7 @@
 						{t.no_nutrition_data}
 					{/if}
 				</div>
-			</div>
+			</a>
 
 			<a class="lifetime-card balance-card" class:surplus={ns.avgCalorieBalance > 0} class:deficit={ns.avgCalorieBalance < 0}
 				href={resolve('/fitness/[stats=fitnessStats]/deficit', { stats: statsSlug })} aria-label={t.calorie_balance}>
@@ -1583,7 +1584,7 @@
 		box-shadow: var(--shadow-sm);
 		text-align: center;
 		position: relative;
-		/* balance/adherence/macro cards are links; keep them looking like cards */
+		/* protein/balance/adherence/macro cards are links; keep them looking like cards */
 		color: inherit;
 		text-decoration: none;
 	}

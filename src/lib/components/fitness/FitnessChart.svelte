@@ -8,6 +8,10 @@
 	 *   title?: string,
 	 *   height?: string,
 	 *   yUnit?: string,
+	 *   y2Unit?: string,
+	 *   yDecimals?: number,
+	 *   y2Decimals?: number,
+	 *   y2WidthGroup?: import('$lib/stores/axisWidthGroup.svelte').AxisWidthGroup,
 	 *   goalLine?: number,
 	 *   tooltipFormatter?: (value: number, datasetIndex: number, dataIndex: number, label: string) => string,
 	 *   tooltipLabelColor?: (value: number, datasetIndex: number, dataIndex: number) => string,
@@ -29,6 +33,15 @@
 	 * time range. Programmatic `applyXRange` updates don't re-fire `onXRangeChange`,
 	 * so syncing the two can't loop.
 	 *
+	 * A dataset carrying `yAxisID: 'y2'` is measured against a second y-axis drawn
+	 * on the right, labelled with `y2Unit` (used to overlay body weight on the
+	 * protein-per-day bars). Both axes get the same number of ticks, so the two
+	 * scales share one set of gridlines instead of drawing a confusing double grid.
+	 * `y2WidthGroup` is the right-hand counterpart of `yWidthGroup`: charts with a
+	 * right axis report its width, and stacked charts *without* one reserve the
+	 * group's width as blank space, so every plot area in the stack ends at the
+	 * same x too.
+	 *
 	 * `xAxis` switches the x-axis to a numeric *linear* scale (instead of the
 	 * default per-label category axis). Datasets must then carry `{x, y}` points.
 	 * Used to give the GPS pace/elevation/cadence charts one shared distance axis
@@ -40,7 +53,7 @@
 	 * clears it, and `undefined` leaves the chart's native hover untouched (used
 	 * for the chart that currently owns the pointer, so we don't fight Chart.js).
 	 */
-	let { type = 'line', data, title = '', height = '250px', yUnit = '', goalLine = undefined, tooltipFormatter = undefined, tooltipLabelColor = undefined, yMin = undefined, yMax = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined, zoom = false, applyXRange = undefined, onXRangeChange = undefined } = $props();
+	let { type = 'line', data, title = '', height = '250px', yUnit = '', y2Unit = '', yDecimals = undefined, y2Decimals = undefined, goalLine = undefined, tooltipFormatter = undefined, tooltipLabelColor = undefined, yMin = undefined, yMax = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined, y2WidthGroup = undefined, zoom = false, applyXRange = undefined, onXRangeChange = undefined } = $props();
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
@@ -74,6 +87,67 @@
 		}
 		const rgb = c.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
 		return rgb ? `${+rgb[1]},${+rgb[2]},${+rgb[3]}` : '';
+	}
+
+	// Tick count shared by the left and right y-axes when a chart has both, so the two
+	// scales land on one set of gridlines instead of drawing a double grid. It is a
+	// starting point: a zoom chart recomputes the count from its data (see autofitY),
+	// which is what keeps the steps fine-grained.
+	const Y_TICK_COUNT = 6;
+	// Ceiling on gridline gaps, i.e. on how coarse the step may get. Bounding the gaps
+	// rather than the tick count is deliberate: with a fixed 6 ticks, a 0–220 g series
+	// has to jump to 100 g steps, where allowing more gridlines keeps it on 25 g.
+	const MAX_Y_INTERVALS = 10;
+
+	/** Candidate gridline steps from `from` upward: 1, 2, 2.5, 5 × a power of ten.
+	 *  @param {number} from @param {number} i */
+	function niceStep(from, i) {
+		const mults = [1, 2, 2.5, 5];
+		const baseMag = Math.pow(10, Math.floor(Math.log10(from)));
+		return mults[i % mults.length] * baseMag * Math.pow(10, Math.floor(i / mults.length));
+	}
+
+	/** Round [lo,hi] outward until it divides into exactly `count - 1` steps of a
+	 *  readable size. Used for a secondary axis, which has to take the tick count the
+	 *  primary one settled on so their gridlines coincide.
+	 *  @param {number} lo @param {number} hi @param {number} count */
+	function niceRange(lo, hi, count) {
+		const intervals = Math.max(1, count - 1);
+		const raw = (hi - lo) / intervals;
+		if (!Number.isFinite(raw) || raw <= 0) return { min: lo, max: hi, intervals };
+		for (let i = 0; i < 4 * 8; i++) {
+			const step = niceStep(raw, i);
+			const min = Math.floor(lo / step + 1e-9) * step;
+			const max = min + step * intervals;
+			if (max >= hi - 1e-9) return { min, max, intervals };
+		}
+		return { min: lo, max: hi, intervals };
+	}
+
+	/** Fit [lo,hi] onto readable gridlines using at most `maxIntervals` gaps: the
+	 *  smallest nice step that covers the range within that many. Unlike niceRange the
+	 *  tick count comes out of the fit rather than being imposed on it, so the step
+	 *  stays as fine as the gap budget allows.
+	 *  @param {number} lo @param {number} hi @param {number} maxIntervals */
+	function niceFit(lo, hi, maxIntervals) {
+		const span = hi - lo;
+		if (!Number.isFinite(span) || span <= 0) return { min: lo, max: hi, intervals: 1 };
+		for (let i = 0; i < 4 * 8; i++) {
+			const step = niceStep(span / maxIntervals, i);
+			const min = Math.floor(lo / step + 1e-9) * step;
+			const intervals = Math.max(1, Math.ceil((hi - min) / step - 1e-9));
+			if (intervals <= maxIntervals) return { min, max: min + step * intervals, intervals };
+		}
+		return { min: lo, max: hi, intervals: maxIntervals };
+	}
+
+	/** Axis tick label: fixed to `decimals` places when the caller pins a precision
+	 *  (whole grams, tenths of a kilo), otherwise just de-noised.
+	 *  @param {any} v @param {number|undefined} decimals @param {string} unit */
+	function tickLabel(v, decimals, unit) {
+		const n = Number(v);
+		if (decimals != null && Number.isFinite(n)) return `${n.toFixed(decimals)}${unit}`;
+		return `${cleanTick(v)}${unit}`;
 	}
 
 	// Strip floating-point drift from an axis tick value so labels read cleanly
@@ -145,11 +219,18 @@
 	 *  @param {number} xMin @param {number} xMax */
 	function autofitY(xMin, xMax) {
 		const c = chart;
-		const ys = /** @type {any} */ (c?.options?.scales?.y);
-		if (!c || !ys) return;
-		let lo = Infinity;
-		let hi = -Infinity;
+		if (!c || !c.options?.scales) return;
+		// Fitted per axis, over only the datasets plotted against it: pooling a body
+		// weight line (≈75 kg) with protein bars (≈150 g) would stretch both out of
+		// readability, and would leave a right-hand axis unfitted entirely.
+		/** @type {Map<string, { lo: number, hi: number, bars: boolean }>} */
+		const perAxis = new Map();
 		for (const ds of c.data.datasets) {
+			const axisId = /** @type {any} */ (ds).yAxisID ?? 'y';
+			if (!(/** @type {any} */ (c.options.scales)[axisId])) continue;
+			let agg = perAxis.get(axisId);
+			if (!agg) { agg = { lo: Infinity, hi: -Infinity, bars: false }; perAxis.set(axisId, agg); }
+			if (ds.type === 'bar' || (type === 'bar' && !ds.type)) agg.bars = true;
 			for (const pt of /** @type {any[]} */ (ds.data)) {
 				if (pt == null) continue;
 				const y = typeof pt === 'object' ? pt.y : pt;
@@ -158,18 +239,55 @@
 					const xv = new Date(pt.x).getTime();
 					if (Number.isFinite(xv) && (xv < xMin || xv > xMax)) continue;
 				}
-				if (y < lo) lo = y;
-				if (y > hi) hi = y;
+				if (y < agg.lo) agg.lo = y;
+				if (y > agg.hi) agg.hi = y;
 			}
 		}
-		if (!Number.isFinite(lo) || !Number.isFinite(hi)) return;
-		// Bars are read against zero, so keep the baseline in view even when the
-		// visible slice sits entirely above or below it — otherwise they float, and a
-		// goal line at zero would be drawn outside the plot area.
-		if (type === 'bar') { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
-		const pad = (hi - lo) * 0.1 || Math.abs(hi) * 0.1 || 1;
-		ys.min = lo - pad;
-		ys.max = hi + pad;
+		/** @type {Map<string, { min: number, max: number, nonNeg: boolean }>} */
+		const ranges = new Map();
+		for (const [axisId, agg] of perAxis) {
+			if (!Number.isFinite(agg.lo) || !Number.isFinite(agg.hi)) continue;
+			let lo = agg.lo;
+			let hi = agg.hi;
+			// Bars are read against zero, so keep the baseline in view even when the
+			// visible slice sits entirely above or below it — otherwise they float, and a
+			// goal line at zero would be drawn outside the plot area. A line series is
+			// fitted to its own range instead: anchoring body weight to zero would draw
+			// every real fluctuation as a flat line.
+			if (agg.bars) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+			const pad = (hi - lo) * 0.1 || Math.abs(hi) * 0.1 || 1;
+			ranges.set(axisId, {
+				// Padding must not open up an impossible range: a quantity that cannot go
+				// below zero (grams eaten) gets a baseline of exactly zero, not −pad. A
+				// series that genuinely goes negative (calorie balance) keeps its pad.
+				min: lo === 0 && agg.lo >= 0 ? 0 : lo - pad,
+				max: hi + pad,
+				nonNeg: agg.lo >= 0
+			});
+		}
+
+		if (ranges.has('y2')) {
+			// Both axes have to share a tick count, or the two grids fight. The primary
+			// axis picks it by fitting its own data to readable gridlines; every other
+			// axis then divides its own range into that many.
+			const primaryId = ranges.has('y') ? 'y' : /** @type {string} */ ([...ranges.keys()][0]);
+			const primary = /** @type {any} */ (ranges.get(primaryId));
+			const fit = niceFit(primary.min, primary.max, MAX_Y_INTERVALS);
+			for (const [axisId, r] of ranges) {
+				const box = axisId === primaryId ? fit : niceRange(r.min, r.max, fit.intervals + 1);
+				const ys = /** @type {any} */ (c.options.scales)[axisId];
+				ys.min = r.nonNeg ? Math.max(0, box.min) : box.min;
+				ys.max = box.max;
+				if (ys.ticks) ys.ticks.count = fit.intervals + 1;
+			}
+			return;
+		}
+
+		for (const [axisId, r] of ranges) {
+			const ys = /** @type {any} */ (c.options.scales)[axisId];
+			ys.min = r.min;
+			ys.max = r.max;
+		}
 	}
 
 	/** Apply an x window: clamp, set the axis, refit y, redraw, optionally report.
@@ -328,13 +446,25 @@
 		// ticks, but forcing a step of 1 on a chart that runs into the thousands asks
 		// Chart.js for thousands of ticks — past its 1000-tick guard it gives up and
 		// draws none. So the integer step only applies while the values stay small.
-		const barPeak = type !== 'bar' ? 0 : Math.max(0, ...plainDatasets.flatMap((ds) =>
-			/** @type {any[]} */ (ds.data).map((pt) => {
+		const barValues = type !== 'bar' ? [] : plainDatasets.flatMap((ds) =>
+			/** @type {any[]} */ (ds.data).flatMap((pt) => {
 				const y = pt != null && typeof pt === 'object' ? pt.y : pt;
-				return typeof y === 'number' && Number.isFinite(y) ? Math.abs(y) : 0;
+				return typeof y === 'number' && Number.isFinite(y) ? [y] : [];
 			})
-		));
-		const yStepSize = type === 'bar' && barPeak <= 12 ? 1 : undefined;
+		);
+		const barPeak = Math.max(0, ...barValues.map((y) => Math.abs(y)));
+		// …and only when the series really is counts. A small fractional series
+		// (protein g/kg, all between 1 and 3) would otherwise collapse onto two ticks.
+		const yStepSize = type === 'bar' && barPeak <= 12 && barValues.every((y) => Number.isInteger(y))
+			? 1
+			: undefined;
+
+		// A second y-axis on the right, for a series in different units riding along
+		// with the first (body weight over protein bars). Both axes are pinned to the
+		// same tick count so their gridlines coincide — a fixed count also overrides
+		// any integer stepSize, which only ever applied to a single-axis count chart.
+		const hasY2 = (data.datasets || []).some((/** @type {any} */ ds) => ds.yAxisID === 'y2');
+		const Y_TICK_COUNT = 6;
 
 		/** @type {import('chart.js').Plugin[]} */
 		const plugins = [];
@@ -398,7 +528,9 @@
 					x: { duration: 0 },
 					y: { duration: 300, easing: 'easeOutQuart' }
 				}) : undefined,
-				interaction: type === 'line' ? { mode: 'index', intersect: false } : undefined,
+				// Two axes: hovering should surface both series for that day, not only
+				// the bar the pointer happens to be inside.
+				interaction: type === 'line' || hasY2 ? { mode: 'index', intersect: false } : undefined,
 				onHover: onHover ? (/** @type {any} */ _evt, /** @type {any[]} */ elements) => {
 					if (!elements || elements.length === 0) { onHover(null); return; }
 					onHover(elements[0].index);
@@ -447,7 +579,7 @@
 							ctx.font = `${size}px Helvetica, Arial, "Noto Sans", sans-serif`;
 							let textW = 0;
 							for (const tk of scale.ticks ?? []) {
-								const label = tk.label ?? `${cleanTick(scale.getLabelForValue(tk.value))}${yUnit}`;
+								const label = tk.label ?? tickLabel(scale.getLabelForValue(tk.value), yDecimals, yUnit);
 								const w = ctx.measureText(String(label)).width;
 								if (w > textW) textW = w;
 							}
@@ -458,10 +590,53 @@
 						ticks: {
 							color: textColor,
 							font: { size: 11 },
-							stepSize: yStepSize,
-							callback: (/** @type {any} */ v) => `${cleanTick(v)}${yUnit}`
+							stepSize: hasY2 ? undefined : yStepSize,
+							count: hasY2 ? Y_TICK_COUNT : undefined,
+							callback: (/** @type {any} */ v) => tickLabel(v, yDecimals, yUnit)
 						}
-					}
+					},
+					...(hasY2 ? {
+						y2: {
+							position: 'right',
+							// Auto-fitted, never zero-based: a weight series spanning 72–76 kg
+							// drawn from zero is a flat line that says nothing.
+							beginAtZero: false,
+							grid: { display: false }, // the left axis owns the gridlines
+							border: { display: false },
+							afterFit: y2WidthGroup ? (/** @type {any} */ scale) => {
+								const ctx = scale.ctx;
+								const size = scale.options?.ticks?.font?.size ?? 11;
+								ctx.save();
+								ctx.font = `${size}px Helvetica, Arial, "Noto Sans", sans-serif`;
+								let textW = 0;
+								for (const tk of scale.ticks ?? []) {
+									const label = tk.label ?? tickLabel(scale.getLabelForValue(tk.value), y2Decimals, y2Unit);
+									const w = ctx.measureText(String(label)).width;
+									if (w > textW) textW = w;
+								}
+								ctx.restore();
+								y2WidthGroup.report(Math.ceil(textW) + 10);
+								scale.width = y2WidthGroup.max;
+							} : undefined,
+							ticks: {
+								color: textColor,
+								font: { size: 11 },
+								count: Y_TICK_COUNT,
+								callback: (/** @type {any} */ v) => tickLabel(v, y2Decimals, y2Unit)
+							}
+						}
+					} : y2WidthGroup ? {
+						// No right-hand series of its own, but it is stacked with charts that
+						// have one: reserve the same width as blank space so all the plot
+						// areas end at the same x.
+						y2: {
+							position: 'right',
+							grid: { display: false },
+							border: { display: false },
+							ticks: { display: false },
+							afterFit: (/** @type {any} */ scale) => { scale.width = y2WidthGroup.max; }
+						}
+					} : {})
 				},
 				plugins: /** @type {any} */ ({
 					legend: {
