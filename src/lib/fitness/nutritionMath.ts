@@ -158,3 +158,21 @@ export function energySources(
 export function entriesCalories(entries: NutritionEntry[]): number {
 	return entries.reduce((sum, e) => sum + entryCalories(e), 0);
 }
+
+/**
+ * Protein / fat / carb grams eaten over food-log-style entries.
+ *
+ * The nutrition page sums these alongside forty other fields in one pass, so it keeps
+ * its own loop; this is for callers (the nudge endpoint) that need only the macros.
+ */
+export function entriesMacroGrams(entries: NutritionEntry[]): { protein: number; fat: number; carbs: number } {
+	let protein = 0, fat = 0, carbs = 0;
+	for (const e of entries) {
+		const r = (e.amountGrams ?? 0) / 100;
+		const p = /** per-100 g panel */ (e.per100g ?? {}) as Record<string, number | undefined>;
+		protein += (p.protein ?? 0) * r;
+		fat += (p.fat ?? 0) * r;
+		carbs += (p.carbs ?? 0) * r;
+	}
+	return { protein, fat, carbs };
+}

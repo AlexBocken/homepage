@@ -30,6 +30,7 @@
 	import { localDateStr } from '$lib/js/localDate';
 	import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
 	import { entryCalories, energySources, SPARSELY_MEASURED_KEYS, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
+	import { macroGoalGrams } from '$lib/fitness/macroGoals';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import { formatAmountLabel } from '$lib/fitness/portions';
@@ -167,6 +168,8 @@
 		currentDate = data.date;
 		goalCalories = data.dayCalorieGoal ?? data.goal?.dailyCalories ?? null;
 		currentGoalCalories = data.goal?.dailyCalories ?? null;
+		// A new day (or an invalidateAll after applying one) brings its own suggestions.
+		nudges = data.nudges ?? [];
 	});
 
 	// --- Goals ---
@@ -680,43 +683,21 @@
 	// Effective daily calorie goal including exercise burned calories
 	const effectiveCalorieGoal = $derived(goalCalories ? goalCalories + effectiveBurned : null);
 
-	// Protein goal in grams (fixed by body weight, unaffected by exercise)
-	const proteinGoalGrams = $derived.by(() => {
-		if (goalProteinTarget) {
-			if (goalProteinMode === 'per_kg' && latestWeight) {
-				return goalProteinTarget * latestWeight;
-			}
-			if (goalProteinMode === 'fixed') return goalProteinTarget;
-		}
-		// Fallback: derive from remaining calorie % (100 - fat% - carb%)
-		if (effectiveCalorieGoal && goalFatPercent != null && goalCarbPercent != null) {
-			const proteinPct = 100 - (goalFatPercent || 0) - (goalCarbPercent || 0);
-			if (proteinPct > 0) return (effectiveCalorieGoal * proteinPct / 100) / 4;
-		}
-		return null;
-	});
-
-	// Fat/carb goals in grams — protein gets priority, remaining kcal split
-	// between fat and carbs proportionally to the stored fat:carb ratio.
-	// Extra exercise calories flow into fat/carb (protein is body-weight-based).
-	const fatGoalGrams = $derived.by(() => {
-		if (!effectiveCalorieGoal) return null;
-		if (proteinGoalGrams != null && goalFatPercent != null && goalCarbPercent != null) {
-			const remainingCal = Math.max(0, effectiveCalorieGoal - proteinGoalGrams * 4);
-			const ratioSum = (goalFatPercent || 0) + (goalCarbPercent || 0);
-			if (ratioSum > 0) return (remainingCal * goalFatPercent / ratioSum) / 9;
-		}
-		return goalFatPercent ? (effectiveCalorieGoal * goalFatPercent / 100) / 9 : null;
-	});
-	const carbGoalGrams = $derived.by(() => {
-		if (!effectiveCalorieGoal) return null;
-		if (proteinGoalGrams != null && goalFatPercent != null && goalCarbPercent != null) {
-			const remainingCal = Math.max(0, effectiveCalorieGoal - proteinGoalGrams * 4);
-			const ratioSum = (goalFatPercent || 0) + (goalCarbPercent || 0);
-			if (ratioSum > 0) return (remainingCal * goalCarbPercent / ratioSum) / 4;
-		}
-		return goalCarbPercent ? (effectiveCalorieGoal * goalCarbPercent / 100) / 4 : null;
-	});
+	// Macro targets in grams. Shared with the server, which builds the "finish your
+	// day" nudges from what is left of them (see $lib/fitness/macroGoals): protein is
+	// body-weight-based and unaffected by exercise, so extra exercise calories flow
+	// into fat and carbs.
+	const macroGoals = $derived(macroGoalGrams({
+		calorieGoal: effectiveCalorieGoal,
+		proteinMode: goalProteinMode,
+		proteinTarget: goalProteinTarget,
+		weightKg: latestWeight,
+		fatPercent: goalFatPercent,
+		carbPercent: goalCarbPercent,
+	}));
+	const proteinGoalGrams = $derived(macroGoals.protein);
+	const fatGoalGrams = $derived(macroGoals.fat);
+	const carbGoalGrams = $derived(macroGoals.carbs);
 
 	// BMR via Mifflin-St Jeor (doi:10.1093/ajcn/51.2.241)
 	const birthYear = $derived(data.goal?.birthYear ?? null);
@@ -834,21 +815,42 @@
 	 * is whether the day can still be added to at all. The old percentage-of-goal
 	 * window is gone with the solver it belonged to.
 	 */
-	let nudges = $state(/** @type {any[]} */ ([]));
+	// Seeded from the server, so the card is in the first paint instead of appearing a
+	// beat after hydration. The effect below only takes over once the numbers it was
+	// built from no longer match.
+	// svelte-ignore state_referenced_locally
+	let nudges = $state(/** @type {any[]} */ (data.nudges ?? []));
 	const showRoundOff = $derived(isTodayOrFuture && !!goalCalories && calorieBalance > 0 && nudges.length > 0);
 
 	$effect(() => {
-		const q = new URLSearchParams({
-			date: currentDate,
-			remainingKcal: String(Math.round(calorieBalance)),
-			remainingProtein: String(Math.round(remainingProtein)),
-			remainingFat: String(Math.round(remainingFat)),
-			remainingCarbs: String(Math.round(remainingCarbs)),
-		});
+		const remaining = {
+			kcal: Math.round(calorieBalance),
+			protein: Math.round(remainingProtein),
+			fat: Math.round(remainingFat),
+			carbs: Math.round(remainingCarbs),
+		};
 		if (!isTodayOrFuture || !goalCalories || calorieBalance <= 0) {
 			nudges = [];
 			return;
 		}
+		// The server already built this exact list — from the same four numbers, for the
+		// same day — so re-requesting it on hydration would only spend a round trip to
+		// arrive at what is already on screen. Any drift (a logged food, an edited goal,
+		// or client math that disagrees) fails the comparison and refetches.
+		const ssr = data.nudgesRemaining;
+		if (
+			data.date === currentDate && ssr &&
+			ssr.kcal === remaining.kcal && ssr.protein === remaining.protein &&
+			ssr.fat === remaining.fat && ssr.carbs === remaining.carbs
+		) return;
+
+		const q = new URLSearchParams({
+			date: currentDate,
+			remainingKcal: String(remaining.kcal),
+			remainingProtein: String(remaining.protein),
+			remainingFat: String(remaining.fat),
+			remainingCarbs: String(remaining.carbs),
+		});
 		let cancelled = false;
 		fetch(`/api/fitness/nudges?${q}`)
 			.then(r => (r.ok ? r.json() : { nudges: [] }))

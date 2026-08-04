@@ -5,9 +5,7 @@ import { WorkoutSession } from '$models/WorkoutSession';
 import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { getNextScheduledTemplate } from '$lib/server/workoutSchedule';
 import { Recipe } from '$models/Recipe';
-import { RoundOffCache } from '$models/RoundOffCache';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
-import { entriesCalories } from '$lib/fitness/nutritionMath';
 import { recipeThumbUrl } from '$lib/utils/recipeImage';
 import { calorieTargetForDate, stampDailyTargets } from '$lib/server/dailyTargets';
 import mongoose from 'mongoose';
@@ -72,7 +70,19 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 
 	const recentFromStr = localDateOffset(-7);
 
-	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes, dayCalorieGoal] = await Promise.all([
+	// "Finish your day" used to be fetched from the browser after hydration, which meant
+	// the card could only ever appear a beat after the page. It is requested here
+	// instead, so it is in the first paint. It rides in this same wave rather than
+	// after it: the endpoint derives the remaining macros itself when they are not
+	// passed, so this does not have to wait for the goal and food log to come back.
+	// Past days get nothing — they cannot be added to — so they don't pay for it.
+	const nudgesPromise = isTodayOrFuture
+		? fetch(`/api/fitness/nudges?date=${dateParam}`)
+			.then(r => (r.ok ? r.json() : null))
+			.catch(() => null)
+		: Promise.resolve(null);
+
+	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes, dayCalorieGoal, nudgeData] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
 		fetch('/api/fitness/goal'),
 		fetch('/api/fitness/measurements/latest'),
@@ -80,6 +90,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		fetch('/api/fitness/favorite-ingredients'),
 		fetch(`/api/fitness/food-log?from=${recentFromStr}&to=${todayStr}`),
 		dayTargetPromise,
+		nudgesPromise,
 	]);
 
 	const foodLog = foodRes.ok ? await foodRes.json() : { entries: [] };
@@ -106,24 +117,6 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 			}
 		} catch {}
 	}
-
-	// Try to load cached round-off suggestions for SSR (no loading flash)
-	let roundOffSuggestions = null;
-	try {
-		const today = localDateStr();
-		if (dateParam === today) {
-			const user = await requireAuth(locals);
-			await dbConnect();
-			const cached = await RoundOffCache.findOne({ createdBy: user.nickname, date: today }).lean();
-			if (cached?.suggestions?.length && cached.suggestions[0]?.items) {
-				roundOffSuggestions = {
-					suggestions: cached.suggestions,
-					foodPoolCount: cached.foodPoolCount,
-					recipeCount: cached.recipeCount,
-				};
-			}
-		}
-	} catch {}
 
 	const favData = favRes.ok ? await favRes.json() : { favorites: [] };
 	const recentData = recentRes.ok ? await recentRes.json() : { entries: [] };
@@ -154,15 +147,6 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 			.catch(() => {});
 	}
 
-	// Compute initial showRoundOff server-side to avoid flicker
-	const effectiveCalorieGoal = dayCalorieGoal ?? goal.dailyCalories ?? null;
-	let initialShowRoundOff = false;
-	if (isTodayOrFuture && effectiveCalorieGoal) {
-		const totalCal = entriesCalories(foodLog.entries ?? []);
-		const balance = effectiveCalorieGoal + (roundedExerciseKcal || 0) - totalCal;
-		initialShowRoundOff = balance > 50 && balance <= effectiveCalorieGoal * 0.5;
-	}
-
 	return {
 		date: dateParam,
 		foodLog,
@@ -174,7 +158,9 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		recipeImages,
 		favorites: favData.favorites ?? [],
 		recentFoods,
-		roundOffSuggestions,
-		initialShowRoundOff,
+		nudges: nudgeData?.nudges ?? [],
+		// What those nudges were built from, so the client can tell whether its own live
+		// numbers still agree and skip an identical refetch on hydration.
+		nudgesRemaining: nudgeData?.remaining ?? null,
 	};
 };

@@ -60,6 +60,41 @@ test('a day with nothing left to close returns no nudges', async ({ request }) =
 	expect((await res.json()).nudges).toEqual([]);
 });
 
+test('the endpoint works out what is left when it is not told', async ({ request }) => {
+	// This is the form the nutrition page's server load uses, so it can request the
+	// card's data in parallel with the goal and the food log rather than after them.
+	const res = await request.get('/api/fitness/nudges', { params: { date: isoDay(0) } });
+	expect(res.ok()).toBeTruthy();
+	const body = await res.json();
+	expect(Array.isArray(body.nudges)).toBe(true);
+	// Either it derived the remainders, or it said it had nothing to derive them from
+	// (no calorie goal). A silent 0-for-everything would quietly disable the card.
+	if (body.nudges.length > 0) {
+		expect(body.remaining).not.toBeNull();
+		expect(body.remaining.kcal).toBeGreaterThan(0);
+	}
+	// Past days cannot be added to, so they are answered without suggestions.
+	const past = await request.get('/api/fitness/nudges', { params: { date: isoDay(-3) } });
+	expect(past.ok()).toBeTruthy();
+	expect((await past.json()).nudges).toEqual([]);
+});
+
+test('the card is server-rendered, not fetched after hydration', async ({ request }) => {
+	// The whole point of deriving the remainders server-side: whatever the card shows
+	// has to be in the HTML the browser first receives. This asserts on the raw
+	// document, so a client-side fetch could not satisfy it.
+	const res = await request.get('/fitness/nutrition');
+	expect(res.ok()).toBeTruthy();
+	const html = await res.text();
+	// The load's payload carries the suggestions, whether or not today has any.
+	expect(html).toContain('nudgesRemaining');
+	// When there are suggestions, the card itself is already in that HTML.
+	const nudges = await request.get('/api/fitness/nudges', { params: { date: isoDay(0) } });
+	if (((await nudges.json()).nudges ?? []).length > 0) {
+		expect(html).toContain('Finish your day');
+	}
+});
+
 test('copy-day duplicates a day and the copies can be removed again', async ({ request }) => {
 	const from = isoDay(-1);
 	const to = isoDay(0);
