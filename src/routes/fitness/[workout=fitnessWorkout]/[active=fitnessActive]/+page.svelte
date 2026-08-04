@@ -15,6 +15,7 @@
 	import Route from '@lucide/svelte/icons/route';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Check from '@lucide/svelte/icons/check';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Flame from '@lucide/svelte/icons/flame';
@@ -44,10 +45,11 @@
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
-	import { queueSession } from '$lib/offline/fitnessQueue';
+	import { queueSession, updateQueuedSession } from '$lib/offline/fitnessQueue';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import WorkoutRail from '$lib/components/fitness/WorkoutRail.svelte';
+	import NoteSheet from '$lib/components/fitness/NoteSheet.svelte';
 	import WorkoutFocusCard from '$lib/components/fitness/WorkoutFocusCard.svelte';
 	import ActiveRestTimer from '$lib/components/fitness/ActiveRestTimer.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
@@ -386,6 +388,25 @@
 		}
 	});
 	let offlineQueued = $state(false);
+	// Outbox id of the queued session, so a note written on the completion screen can be
+	// folded into the payload that is still waiting to upload.
+	/** @type {number | null} */
+	let queuedSessionId = null;
+	/** @type {any} */
+	let queuedSessionData = null;
+
+	// The note sheet is shared by the manual and GPS layouts; both write straight into
+	// the workout store, which persists it and syncs it to other devices.
+	let showNote = $state(false);
+
+	// On the completion screen the workout store is already reset, so the note lives
+	// here and is written to the saved session (or to its queued payload) on save.
+	let completionNote = $state('');
+	// What is currently on the session, so the screen can tell "nothing to save" from
+	// "not saved yet" without a second flag.
+	let completionNoteSaved = $state('');
+	let savingNote = $state(false);
+	const noteDirty = $derived(completionNote.trim() !== completionNoteSaved);
 
 	let useGps = $state(gps.isTracking);
 
@@ -1002,16 +1023,54 @@
 				computeTemplateDiff(completionData);
 				await sync.onWorkoutEnd(d.session?._id);
 			} else {
-				await queueSession(sessionData);
-				offlineQueued = true;
+				await queueLocally(sessionData);
 				completionData = buildCompletion(sessionData, { _id: null });
 				await sync.onWorkoutEnd();
 			}
 		} catch {
-			await queueSession(sessionData);
-			offlineQueued = true;
+			await queueLocally(sessionData);
 			completionData = buildCompletion(sessionData, { _id: null });
 			await sync.onWorkoutEnd();
+		}
+	}
+
+	/** Park a session in the outbox, keeping hold of it so its note stays editable. */
+	async function queueLocally(/** @type {any} */ sessionData) {
+		queuedSessionData = sessionData;
+		queuedSessionId = await queueSession(sessionData);
+		offlineQueued = true;
+	}
+
+	/**
+	 * Save the completion-screen note onto the workout it belongs to.
+	 *
+	 * Two destinations, one action: a saved session is patched, a queued one has its
+	 * outbox payload rewritten. Either way nothing new is created — the note is part of
+	 * that workout, not an entry of its own.
+	 */
+	async function saveCompletionNote() {
+		if (!noteDirty || savingNote) return true;
+		const text = completionNote.trim();
+		savingNote = true;
+		try {
+			if (completionData?.sessionId) {
+				const res = await fetch(`/api/fitness/sessions/${completionData.sessionId}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ notes: text })
+				});
+				if (!res.ok) throw new Error('note save failed');
+			} else if (queuedSessionId != null && queuedSessionData) {
+				queuedSessionData = { ...queuedSessionData, notes: text || undefined };
+				await updateQueuedSession(queuedSessionId, queuedSessionData);
+			}
+			completionNoteSaved = text;
+			return true;
+		} catch {
+			toast.error(isEn ? 'Could not save the note' : 'Notiz konnte nicht gespeichert werden');
+			return false;
+		} finally {
+			savingNote = false;
 		}
 	}
 
@@ -1117,6 +1176,11 @@
 		// live achievement lists this response carries.
 		const segmentPrCount = achievements.filter((a) => a.isPB || a.isKOM).length;
 		const prCount = prs.length + bestEffortPrs.length + segmentPrCount;
+
+		// Seed the completion field with whatever was written mid-session, so the note is
+		// picked up where it was left rather than asked for twice.
+		completionNote = local.notes ?? '';
+		completionNoteSaved = completionNote.trim();
 
 		return {
 			sessionId: saved._id,
@@ -1557,7 +1621,40 @@
 			</div>
 		{/if}
 
-		<button class="done-btn" onclick={() => goto(offlineQueued ? `/fitness/${sl.workout}` : `/fitness/${sl.history}/${completionData.sessionId}`)}>
+		<!-- Last thing before leaving: the summary above is for reading, this is the one
+		     input on the screen, so it sits with the action rather than interrupting. -->
+		<div class="completion-note">
+			<label class="note-label" for="completion-note">
+				<NotebookPen size={15} /> {t.notes}
+			</label>
+			<textarea
+				id="completion-note"
+				bind:value={completionNote}
+				rows="3"
+				maxlength="1000"
+				placeholder={t.notes_placeholder}
+			></textarea>
+			<div class="note-actions">
+				{#if !noteDirty && completionNoteSaved}
+					<span class="note-saved"><Check size={14} /> {t.note_saved}</span>
+				{:else}
+					<span class="note-hint">{t.note_hint}</span>
+				{/if}
+				<button class="note-save" onclick={saveCompletionNote} disabled={!noteDirty || savingNote}>
+					{savingNote ? t.saving : t.note_save}
+				</button>
+			</div>
+		</div>
+
+		<!-- Leaving saves an unsaved note first: nobody types a note, taps the only
+		     button on the screen, and expects to lose it. -->
+		<button
+			class="done-btn"
+			onclick={async () => {
+				if (!await saveCompletionNote()) return;
+				goto(offlineQueued ? `/fitness/${sl.workout}` : `/fitness/${sl.history}/${completionData.sessionId}`);
+			}}
+		>
 			{offlineQueued ? t.done : t.view_workout}
 		</button>
 	</div>
@@ -1621,6 +1718,15 @@
 							<Trash2 size={18} />
 						</button>
 					{/if}
+					<button
+						class="gps-overlay-note"
+						class:written={!!workout.notes.trim()}
+						onclick={() => (showNote = true)}
+						aria-label={workout.notes ? t.note_edit : t.note_add}
+						title={workout.notes ? t.note_edit : t.note_add}
+					>
+						<NotebookPen size={16} strokeWidth={2.2} />
+					</button>
 					<button class="gps-overlay-finish" onclick={finishWorkout}>Finish</button>
 				</div>
 			{:else}
@@ -2158,6 +2264,9 @@
 				resumeLabel={isEn ? 'Resume' : 'Fortsetzen'}
 				removeLabel={isEn ? 'Remove exercise' : 'Übung entfernen'}
 				previousData={previousData}
+				noteLabel={workout.notes ? t.note_edit : t.note_add}
+				hasNote={!!workout.notes.trim()}
+				onNote={() => (showNote = true)}
 				onPauseToggle={() => workout.paused ? workout.resumeTimer() : workout.pauseTimer()}
 				onFocus={setFocus}
 				onAddExercise={() => showPicker = true}
@@ -2327,6 +2436,17 @@
 	<ExercisePicker
 		onSelect={addExerciseFromPicker}
 		onClose={() => showPicker = false}
+	/>
+{/if}
+
+{#if showNote}
+	<NoteSheet
+		bind:value={workout.notes}
+		title={t.notes}
+		placeholder={t.notes_placeholder}
+		doneLabel={t.done}
+		closeLabel={t.close}
+		onClose={() => (showNote = false)}
 	/>
 {/if}
 
@@ -2711,6 +2831,79 @@
 		font-size: 0.9rem;
 		padding: 0.4rem;
 	}
+	/* The note, in the same margin-ruled form it takes on the history page — written
+	   here, read there. */
+	.completion-note {
+		background: var(--color-surface);
+		border-radius: 12px;
+		padding: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.note-label {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--color-text-secondary);
+	}
+	.completion-note textarea {
+		width: 100%;
+		box-sizing: border-box;
+		resize: vertical;
+		font: inherit;
+		font-size: 0.95rem;
+		line-height: 1.6;
+		padding: 0.65rem 0.8rem;
+		color: var(--color-text-primary);
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-left: 3px solid var(--color-primary);
+		border-radius: 0 var(--radius-md) var(--radius-md) 0;
+	}
+	.completion-note textarea::placeholder { color: var(--color-text-tertiary); }
+	.completion-note textarea:focus { outline: none; border-color: var(--color-primary); }
+	.note-actions {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+	.note-hint {
+		margin: 0;
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
+	}
+	.note-saved {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.78rem;
+		font-weight: 600;
+		color: var(--green);
+	}
+	.note-save {
+		flex-shrink: 0;
+		padding: 0.45rem 0.9rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.note-save:hover:not(:disabled) {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+	.note-save:disabled { opacity: 0.5; cursor: default; }
+
 	.done-btn {
 		width: 100%;
 		padding: 0.85rem;
@@ -3516,6 +3709,25 @@
 	}
 	.gps-overlay-cancel:hover {
 		background: rgba(191,97,106,0.4);
+	}
+	/* Sits beside Finish, on the map overlay, so a thought can be caught mid-run. */
+	.gps-overlay-note {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 3rem;
+		height: 3rem;
+		flex-shrink: 0;
+		border-radius: 50px;
+		background: rgba(46, 52, 64, 0.82);
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		color: #eceff4;
+		cursor: pointer;
+	}
+	.gps-overlay-note.written {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-text-on-primary);
 	}
 	.gps-overlay-finish {
 		flex: 1;

@@ -21,11 +21,36 @@ function openDB(): Promise<IDBDatabase> {
 	});
 }
 
-export async function queueSession(sessionData: unknown): Promise<void> {
+/** Queue a session for later upload; returns its outbox id. */
+export async function queueSession(sessionData: unknown): Promise<number | null> {
 	const db = await openDB();
 	return new Promise((resolve, reject) => {
 		const tx = db.transaction(STORE, 'readwrite');
-		tx.objectStore(STORE).add({ data: sessionData, queuedAt: Date.now() });
+		const req = tx.objectStore(STORE).add({ data: sessionData, queuedAt: Date.now() });
+		tx.oncomplete = () => resolve(typeof req.result === 'number' ? req.result : null);
+		tx.onerror = () => reject(tx.error);
+	});
+}
+
+/**
+ * Replace the payload of a session still waiting in the outbox.
+ *
+ * The completion screen lets a note be written after the workout was saved. When the
+ * save went to the outbox instead of the server, the note has to be edited in place
+ * there — POSTing it separately would create a second session out of the same workout.
+ */
+export async function updateQueuedSession(id: number, sessionData: unknown): Promise<void> {
+	const db = await openDB();
+	return new Promise((resolve, reject) => {
+		const tx = db.transaction(STORE, 'readwrite');
+		const store = tx.objectStore(STORE);
+		const req = store.get(id);
+		req.onsuccess = () => {
+			const row = req.result;
+			// Gone already means it synced while the note was being typed; the note is
+			// then simply lost rather than resurrecting a duplicate.
+			if (row) store.put({ ...row, data: sessionData });
+		};
 		tx.oncomplete = () => resolve();
 		tx.onerror = () => reject(tx.error);
 	});

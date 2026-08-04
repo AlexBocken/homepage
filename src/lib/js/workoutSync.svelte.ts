@@ -14,6 +14,7 @@ type SyncStatus = 'idle' | 'synced' | 'syncing' | 'offline' | 'conflict';
 interface ServerWorkout {
   version: number;
   name: string;
+  notes: string;
   mode: WorkoutMode;
   activityType: GpsActivityType | null;
   templateId: string | null;
@@ -84,6 +85,7 @@ export function createWorkoutSync() {
     return {
       version: serverVersion,
       name: workout.name,
+      notes: workout.notes,
       mode: workout.mode,
       activityType: workout.activityType,
       templateId: workout.templateId,
@@ -156,6 +158,7 @@ export function createWorkoutSync() {
       // but we keep the higher value for completed sets
       const mapped = {
         name: doc.name,
+        notes: doc.notes ?? '',
         mode: doc.mode ?? 'manual',
         activityType: doc.activityType ?? null,
         templateId: doc.templateId,
@@ -356,6 +359,7 @@ export function createWorkoutSync() {
           // Server has workout but local doesn't — restore from server.
           workout.restoreFromRemote({
             name: serverDoc.name,
+            notes: serverDoc.notes ?? '',
             mode: serverDoc.mode ?? 'manual',
             activityType: serverDoc.activityType ?? null,
             templateId: serverDoc.templateId,

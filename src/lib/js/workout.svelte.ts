@@ -42,6 +42,8 @@ export interface StoredState {
 	mode: WorkoutMode;
 	activityType: GpsActivityType | null;
 	name: string;
+	/** Free-text note written during the session; saved with it on finish. */
+	notes: string;
 	templateId: string | null;
 	intervalTemplateId: string | null;
 	exercises: WorkoutExercise[];
@@ -59,6 +61,7 @@ export interface StoredState {
 
 export interface RemoteState {
 	name: string;
+	notes?: string;
 	mode: WorkoutMode;
 	activityType: GpsActivityType | null;
 	templateId: string | null;
@@ -109,6 +112,7 @@ export function createWorkout() {
 	let mode = $state<WorkoutMode>('manual');
 	let activityType = $state<GpsActivityType | null>(null);
 	let name = $state('');
+	let notes = $state('');
 	let templateId: string | null = $state(null);
 	let intervalTemplateId: string | null = $state(null);
 	let exercises = $state<WorkoutExercise[]>([]);
@@ -153,6 +157,7 @@ export function createWorkout() {
 			mode,
 			activityType,
 			name,
+			notes,
 			templateId,
 			intervalTemplateId,
 			exercises: JSON.parse(JSON.stringify(exercises)),
@@ -317,6 +322,7 @@ export function createWorkout() {
 		mode = stored.mode ?? 'manual';
 		activityType = stored.activityType ?? null;
 		name = stored.name;
+		notes = stored.notes ?? '';
 		templateId = stored.templateId;
 		intervalTemplateId = stored.intervalTemplateId ?? null;
 		exercises = stored.exercises;
@@ -637,6 +643,9 @@ export function createWorkout() {
 			templateId,
 			templateName: templateId ? name : undefined,
 			name,
+			// Whatever was jotted down mid-session travels with it; the completion
+			// screen edits the saved session, not this copy.
+			notes: notes.trim() || undefined,
 			mode,
 			activityType,
 			exercises: exercises
@@ -677,6 +686,7 @@ export function createWorkout() {
 		mode = 'manual';
 		activityType = null;
 		name = '';
+		notes = '';
 		templateId = null;
 		intervalTemplateId = null;
 		exercises = [];
@@ -696,6 +706,7 @@ export function createWorkout() {
 	/** Apply state from another device (merge strategy: incoming wins) */
 	function applyRemoteState(remote: RemoteState) {
 		name = remote.name;
+		notes = remote.notes ?? '';
 		mode = remote.mode ?? 'manual';
 		activityType = remote.activityType ?? null;
 		templateId = remote.templateId;
@@ -768,6 +779,7 @@ export function createWorkout() {
 			mode,
 			activityType,
 			name,
+			notes,
 			templateId,
 			intervalTemplateId,
 			exercises: JSON.parse(JSON.stringify(exercises)),
@@ -803,6 +815,8 @@ export function createWorkout() {
 		set activityType(v: GpsActivityType | null) { activityType = v; _persist(); },
 		get name() { return name; },
 		set name(v: string) { name = v; _persist(); },
+		get notes() { return notes; },
+		set notes(v: string) { notes = v; _persist(); },
 		get templateId() { return templateId; },
 		get intervalTemplateId() { return intervalTemplateId; },
 		get exercises() { return exercises; },

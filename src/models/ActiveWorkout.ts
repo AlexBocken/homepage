@@ -20,6 +20,7 @@ export interface IActiveWorkout {
   userId: string;
   version: number;
   name: string;
+  notes: string;
   mode: 'manual' | 'gps';
   activityType: 'running' | 'walking' | 'cycling' | 'hiking' | null;
   templateId: string | null;
@@ -71,6 +72,21 @@ const ActiveWorkoutSchema = new mongoose.Schema(
       required: true,
       trim: true,
       maxlength: 100
+    },
+    // Note written while the session is running, so it follows the workout to
+    // whichever device is looking at it. Copied onto the saved session on finish.
+    //
+    // Deliberately NOT trimmed: this is a draft that syncs on every keystroke, and
+    // trimming it server-side eats the space the moment you type it — the value comes
+    // back one character shorter than what is in the textarea. The finished session
+    // trims once, on save (see workout.finish()).
+    notes: {
+      type: String,
+      default: '',
+      // Same ceiling as the saved session's note (WorkoutSession.notes). A draft that
+      // could outgrow it would only fail validation at save time, after the workout is
+      // over — the worst possible moment to find out.
+      maxlength: 1000
     },
     mode: {
       type: String,

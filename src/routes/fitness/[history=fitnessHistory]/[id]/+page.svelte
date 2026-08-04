@@ -2,6 +2,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import Clock from '@lucide/svelte/icons/clock';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import Weight from '@lucide/svelte/icons/weight';
 	import Trophy from '@lucide/svelte/icons/trophy';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -699,7 +700,7 @@
 			</div>
 			<div class="meta-row">
 				<label for="edit-notes">{t.notes}</label>
-				<textarea id="edit-notes" bind:value={editData.notes} rows="2" placeholder={t.notes_placeholder}></textarea>
+				<textarea id="edit-notes" bind:value={editData.notes} rows="2" maxlength="1000" placeholder={t.notes_placeholder}></textarea>
 			</div>
 		</div>
 
@@ -1124,8 +1125,8 @@
 
 	{#if !editing && session.notes}
 		<div class="notes-section">
-			<h2>{t.notes}</h2>
-			<p>{session.notes}</p>
+			<h2><NotebookPen size={15} /> {t.notes}</h2>
+			<p class="note-body">{session.notes}</p>
 		</div>
 	{/if}
 	{/if}
@@ -1642,13 +1643,26 @@
 		padding: 1rem;
 	}
 	.notes-section h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 		margin: 0 0 0.5rem;
 		font-size: 1rem;
 	}
-	.notes-section p {
+	/* The margin rule marks a note wherever it appears (the sheet during the workout,
+	   the completion screen, here). pre-wrap because notes are typed in lines —
+	   collapsing them would turn a list of observations into a paragraph. */
+	.notes-section .note-body {
 		margin: 0;
-		font-size: 0.85rem;
-		color: var(--color-text-secondary);
+		padding: 0.55rem 0.8rem;
+		background: var(--color-bg-tertiary);
+		border-left: 3px solid var(--color-primary);
+		border-radius: 0 var(--radius-md) var(--radius-md) 0;
+		font-size: 0.9rem;
+		line-height: 1.65;
+		color: var(--color-text-primary);
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
 	}
 
 	/* GPS track section */

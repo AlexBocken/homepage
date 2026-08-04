@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import Clock from '@lucide/svelte/icons/clock';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import Weight from '@lucide/svelte/icons/weight';
 	import Trophy from '@lucide/svelte/icons/trophy';
 	import Route from '@lucide/svelte/icons/route';
@@ -304,8 +305,8 @@
 
 	{#if session.notes}
 		<div class="notes-section">
-			<h2>{t.notes}</h2>
-			<p>{session.notes}</p>
+			<h2><NotebookPen size={15} /> {t.notes}</h2>
+			<p class="note-body">{session.notes}</p>
 		</div>
 	{/if}
 </div>
@@ -489,6 +490,18 @@
 		box-shadow: var(--shadow-sm);
 		padding: 1rem;
 	}
-	.notes-section h2 { margin: 0 0 0.5rem; font-size: 1rem; }
-	.notes-section p { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); }
+	.notes-section h2 { display: flex; align-items: center; gap: 0.4rem; margin: 0 0 0.5rem; font-size: 1rem; }
+	/* Same margin-ruled note as the strength detail view — see its .note-body. */
+	.notes-section .note-body {
+		margin: 0;
+		padding: 0.55rem 0.8rem;
+		background: var(--color-bg-tertiary);
+		border-left: 3px solid var(--color-primary);
+		border-radius: 0 var(--radius-md) var(--radius-md) 0;
+		font-size: 0.9rem;
+		line-height: 1.65;
+		color: var(--color-text-primary);
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
 </style>

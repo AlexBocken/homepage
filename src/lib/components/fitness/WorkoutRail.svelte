@@ -1,5 +1,6 @@
 <script>
 	import Plus from '@lucide/svelte/icons/plus';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import Play from '@lucide/svelte/icons/play';
 	import Pause from '@lucide/svelte/icons/pause';
 	import X from '@lucide/svelte/icons/x';
@@ -26,6 +27,9 @@
 	 *   removeLabel?: string,
 	 *   previousData?: Record<string, Array<{ weight?: number | null, reps?: number | null }>>,
 	 *   weightUnit?: string,
+	 *   noteLabel?: string,
+	 *   hasNote?: boolean,
+	 *   onNote?: () => void,
 	 *   onPauseToggle?: () => void,
 	 *   onFocus: (idx: number) => void,
 	 *   onAddExercise: () => void,
@@ -48,6 +52,9 @@
 		previousData = {},
 		weightUnit = 'kg',
 		title,
+		noteLabel = 'Note',
+		hasNote = false,
+		onNote,
 		onPauseToggle,
 		onFocus,
 		onAddExercise,
@@ -148,6 +155,18 @@
 				{#if paused}<Play size={14} strokeWidth={2.4} />{:else}<Pause size={14} strokeWidth={2.4} />{/if}
 			</button>
 			<span class="rail-elapsed" class:paused>{elapsedLabel}</span>
+			{#if onNote}
+				<button
+					class="rail-note"
+					class:written={hasNote}
+					onclick={() => onNote?.()}
+					aria-label={noteLabel}
+					title={noteLabel}
+					type="button"
+				>
+					<NotebookPen size={14} strokeWidth={2.2} />
+				</button>
+			{/if}
 			<span class="rail-sync"><SyncIndicator status={syncStatus} /></span>
 		</div>
 		<div class="rail-progress">
@@ -304,6 +323,37 @@
 	}
 	.rail-pause:active {
 		transform: scale(0.94);
+	}
+	/* Same pill as pause. Once something is written it fills in, so the header itself
+	   says a note exists without having to open it. */
+	.rail-note {
+		all: unset;
+		-webkit-tap-highlight-color: transparent;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.9rem;
+		height: 1.9rem;
+		border-radius: 100px;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: background 140ms, color 140ms, border-color 140ms, transform 120ms;
+	}
+	.rail-note:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-primary);
+		border-color: var(--color-primary);
+	}
+	.rail-note:active {
+		transform: scale(0.94);
+	}
+	.rail-note.written {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-text-on-primary);
 	}
 	.rail-elapsed {
 		flex: 1;
