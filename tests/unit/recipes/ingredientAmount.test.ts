@@ -43,8 +43,12 @@ describe('ingredientUnits', () => {
 		expect(ingredientUnits({ defaultAmount: 0.5 }, '')).toBe(0.5);
 	});
 
-	it('counts one unit for a mapping written before the default was recorded', () => {
-		expect(ingredientUnits({ defaultAmountUsed: true }, '')).toBe(1);
+	it('counts a single occurrence when the line states no amount at all', () => {
+		// "Olivenöl" with no amount means some olive oil, not none — and a mapping
+		// written before defaultAmount existed carries no number either.
+		expect(ingredientUnits({}, '')).toBe(1);
+		expect(ingredientUnits({}, undefined)).toBe(1);
+		expect(ingredientUnits({}, 'nach Geschmack')).toBe(1);
 	});
 });
 
@@ -74,5 +78,11 @@ describe('ingredientGrams', () => {
 
 	it('uses the default amount when the line states none', () => {
 		expect(ingredientGrams({ gramsPerUnit: 4, defaultAmount: 0.5 }, '')).toBe(2);
+	});
+
+	it('counts one unit for an amountless line with no default', () => {
+		// The regression this guards: "Olivenöl" with a hand-set 15 g per tablespoon
+		// used to contribute nothing, so the gram figure looked like it did nothing.
+		expect(ingredientGrams({ gramsPerUnit: 15 }, '')).toBe(15);
 	});
 });

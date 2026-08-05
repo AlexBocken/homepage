@@ -20,8 +20,6 @@ export type AmountMapping = {
 	gramsPerUnit?: number;
 	/** Units assumed for a line that states no amount — see `ingredientUnits`. */
 	defaultAmount?: number;
-	/** Legacy flag: true when a default amount was applied but not recorded. */
-	defaultAmountUsed?: boolean;
 };
 
 /**
@@ -57,13 +55,17 @@ export function parseAmount(amount: string | undefined | null): number {
  * How many of the ingredient's units the line represents.
  *
  * A line that states no amount falls back to the default the matcher resolved
- * for it — half a teaspoon of a spice, a tablespoon of oil. `defaultAmount`
- * carries the number; `defaultAmountUsed` is the older boolean that recorded
- * only *that* a default applied, so mappings written before the number was
- * stored still count as one unit.
+ * for it — half a teaspoon of a spice, a tablespoon of oil — and failing that,
+ * to a single occurrence. "Olivenöl" in an ingredient list means some olive
+ * oil, not none: counting it as zero meant no gram weight you set for it could
+ * ever reach the total, which read as the field being broken.
+ *
+ * A line no one meant to count is expressed by skipping it, not by leaving its
+ * amount blank. `resolveDefaultAmount` already returns 0 for "nach Geschmack"
+ * cases and the matcher marks those `excluded`, so they never reach here.
  */
 export function ingredientUnits(mapping: AmountMapping, amount: string | undefined | null): number {
-	return parseAmount(amount) || mapping.defaultAmount || (mapping.defaultAmountUsed ? 1 : 0);
+	return parseAmount(amount) || mapping.defaultAmount || 1;
 }
 
 /**
