@@ -58,7 +58,7 @@ describe('computeTotals', () => {
 		expect(computeTotals(recipe).totalGrams).toBe(300);
 	});
 
-	it('leaves an anchor-linked line to the reference resolver', () => {
+	it('leaves a recipe-linked line to the reference resolver', () => {
 		const recipe = {
 			ingredients: [section(undefined, [
 				{ name: '<a href="pizzateig">Pizzateig</a>', unit: 'g', amount: '400' },
@@ -67,6 +67,26 @@ describe('computeTotals', () => {
 			nutritionMappings: [mapping(0, 0), mapping(0, 1)],
 		};
 		expect(computeTotals(recipe).totalGrams).toBe(100);
+	});
+
+	it('still counts a line whose link points outside the site', () => {
+		// A citation is not a component: skipping the line for having any anchor in
+		// it dropped a real ingredient's weight from the recipe.
+		const recipe = {
+			ingredients: [section(undefined, [
+				{ name: 'Kletzen, Schweiz: <a href="https://doerrbirnen.ch">doerrbirnen.ch</a>', unit: 'g', amount: '200' },
+			])],
+			nutritionMappings: [mapping(0, 0)],
+		};
+		expect(computeTotals(recipe).totalGrams).toBe(200);
+	});
+
+	it('leaves a line with a hand-set recipe reference to the resolver', () => {
+		const recipe = {
+			ingredients: [section(undefined, [{ name: 'Mayonnaise', unit: 'g', amount: '80' }])],
+			nutritionMappings: [mapping(0, 0, { recipeRef: 'mayonnaise' })],
+		};
+		expect(computeTotals(recipe).totalGrams).toBe(0);
 	});
 
 	it('counts a skipped line as mappable but not mapped', () => {

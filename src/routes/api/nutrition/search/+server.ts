@@ -21,6 +21,9 @@ type SearchResult = {
 	category: string;
 	calories: number;
 	favorited?: boolean;
+	/** Recipes only: the slug a base-recipe reference is stored as. An id would
+	 *  not do — `recipeRef` holds a short_name everywhere it is read. */
+	shortName?: string;
 	/** Which nutrient groups this record reports — Open Food Facts entries never carry amino acids. */
 	microGroups?: { minerals: boolean; vitamins: boolean; aminos: boolean };
 	per100g?: any;
@@ -184,6 +187,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 						result = {
 							source: 'recipe',
 							id: String(r._id),
+							shortName: r.short_name,
 							name: r.name.replace(/&shy;|­/g, ''),
 							category: r.icon || '🍽️',
 							calories: Math.round(nutrition?.per100g.calories ?? 0),
@@ -270,6 +274,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		scored.push({
 			source: 'recipe',
 			id: recipeId,
+			shortName: r.short_name,
 			name: r.name.replace(/&shy;|­/g, ''),
 			category: r.icon || '🍽️',
 			calories: Math.round(nutrition?.per100g.calories ?? 0),

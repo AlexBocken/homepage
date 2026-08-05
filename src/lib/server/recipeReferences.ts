@@ -24,7 +24,20 @@ import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
 /** The fields a referenced recipe must carry to be summed. */
 const REF_FIELDS = 'short_name name ingredients nutritionMappings';
 
-type RefRequest = { slug?: string; id?: unknown; baseMultiplier: number };
+type RefRequest = {
+	slug?: string;
+	id?: unknown;
+	baseMultiplier: number;
+	sectionIndex: number;
+	ingredientIndex?: number;
+};
+
+/** The same slug in the other separator convention, or itself if it has neither. */
+function swapSeparators(slug: string): string {
+	if (slug.includes('_')) return slug.replace(/_/g, '-');
+	if (slug.includes('-')) return slug.replace(/-/g, '_');
+	return slug;
+}
 
 /** Every recipe this one names, with the fraction of each that it uses. */
 function collectRequests(ingredients: any[], mappings: any[] | undefined): RefRequest[] {
@@ -35,20 +48,38 @@ function collectRequests(ingredients: any[], mappings: any[] | undefined): RefRe
 	);
 
 	const out: RefRequest[] = [];
-	for (const section of ingredients ?? []) {
+	// Position-keyed, so a mapping's stored `recipeRef` can override the link in
+	// the ingredient's name — the link may point at a slug that no longer exists,
+	// or at nothing at all when the reference was set by hand.
+	const byIndex = new Map(
+		(mappings ?? []).map((m: any) => [`${m.sectionIndex}-${m.ingredientIndex}`, m])
+	);
+
+	ingredients?.forEach((section: any, si: number) => {
 		if (section?.type === 'reference' && section.baseRecipeRef) {
 			const ref = section.baseRecipeRef;
 			// Populated document or a bare ObjectId, depending on the caller's query.
 			const slug = typeof ref === 'object' && ref?.short_name ? ref.short_name : undefined;
-			out.push({ slug, id: slug ? undefined : ref, baseMultiplier: section.baseMultiplier || 1 });
-			continue;
+			out.push({
+				slug,
+				id: slug ? undefined : ref,
+				baseMultiplier: section.baseMultiplier || 1,
+				sectionIndex: si,
+			});
+			return;
 		}
-		for (const item of section?.list ?? []) {
-			const slug = parseAnchorRecipeRef(item?.name || '');
-			if (!slug) continue;
-			out.push({ slug, baseMultiplier: byRef.get(slug)?.recipeRefMultiplier ?? 1 });
-		}
-	}
+		(section?.list ?? []).forEach((item: any, ii: number) => {
+			const mapping = byIndex.get(`${si}-${ii}`);
+			const slug = mapping?.recipeRef || parseAnchorRecipeRef(item?.name || '');
+			if (!slug) return;
+			out.push({
+				slug,
+				baseMultiplier: mapping?.recipeRefMultiplier ?? byRef.get(slug)?.recipeRefMultiplier ?? 1,
+				sectionIndex: si,
+				ingredientIndex: ii,
+			});
+		});
+	});
 	return out;
 }
 
@@ -70,8 +101,16 @@ export async function resolveReferences(
 	const slugs = requests.map((r) => r.slug).filter((s): s is string => !!s);
 	const ids = requests.map((r) => r.id).filter(Boolean);
 
+	// Recipe slugs were once written with underscores and are now hyphenated, and
+	// the links inside older ingredient names were never rewritten: ten of them
+	// point at poulet_bouillon, levito_madre and birnen_mit_preiselbeeren, none of
+	// which exist while all three do under the current spelling. Both forms are
+	// asked for, and the separator is the only thing that may differ — anything
+	// else is a genuinely wrong link, which the editor lets you repoint by hand.
+	const wanted = [...new Set(slugs.flatMap((s) => [s, swapSeparators(s)]))];
+
 	const or: Record<string, unknown>[] = [];
-	if (slugs.length) or.push({ short_name: { $in: slugs } });
+	if (wanted.length) or.push({ short_name: { $in: wanted } });
 	if (ids.length) or.push({ _id: { $in: ids } });
 	if (or.length === 0) return [];
 
@@ -81,7 +120,9 @@ export async function resolveReferences(
 
 	const results: ReferencedTotals[] = [];
 	for (const req of requests) {
-		const doc: any = req.slug ? bySlug.get(req.slug) : byId.get(String(req.id));
+		const doc: any = req.slug
+			? (bySlug.get(req.slug) ?? bySlug.get(swapSeparators(req.slug)))
+			: byId.get(String(req.id));
 		if (!doc) continue;
 		if (visited.has(doc.short_name)) continue;
 		visited.add(doc.short_name);
@@ -111,6 +152,8 @@ export async function resolveReferences(
 		results.push({
 			shortName: doc.short_name,
 			name: doc.name,
+			sectionIndex: req.sectionIndex,
+			...(req.ingredientIndex !== undefined && { ingredientIndex: req.ingredientIndex }),
 			nutrition: totals,
 			totalGrams,
 			baseMultiplier: req.baseMultiplier,

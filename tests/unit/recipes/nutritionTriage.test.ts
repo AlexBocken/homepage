@@ -107,6 +107,38 @@ describe('buildRows', () => {
 		const rows = buildRows(ingredients, [{ sectionIndex: 9, ingredientIndex: 9, ...matched }]);
 		expect(rows.filter((r) => r.kind === 'ingredient')).toHaveLength(0);
 	});
+
+	it('reads the recipe from the link when the mapping never recorded one', () => {
+		// Almost no stored mapping has recipeRef — the matcher's anchor branch is
+		// newer than they are, so they carry whatever food the embedder guessed.
+		// The link in the name is the recipe's own statement of what it points at.
+		const rows = buildRows(
+			[{ type: 'section', list: [{ name: '<a href=mayonnaise>Mayonnaise</a> mit mehr Senf', unit: 'g', amount: '50' }] }],
+			[{ sectionIndex: 0, ingredientIndex: 0, ...matched, nutritionDbName: 'Joghurt-Dressing' }]
+		);
+		expect(rows).toHaveLength(1);
+		expect(rows[0].kind).toBe('base');
+		expect(rows[0].kind === 'base' && rows[0].slug).toBe('mayonnaise');
+	});
+
+	it('prefers a hand-set reference over the link', () => {
+		const rows = buildRows(
+			[{ type: 'section', list: [{ name: '<a href=alt-slug>Sauce</a>', unit: 'g', amount: '50' }] }],
+			[{ sectionIndex: 0, ingredientIndex: 0, ...matched, recipeRef: 'neuer-slug' }]
+		);
+		expect(rows[0].kind === 'base' && rows[0].slug).toBe('neuer-slug');
+	});
+
+	it('leaves a line with an external link an ordinary ingredient', () => {
+		// "Kletzen, Schweiz: doerrbirnen.ch" is a citation, not a component — the
+		// line is still something you put in the pot.
+		const rows = buildRows(
+			[{ type: 'section', list: [{ name: 'Kletzen, Schweiz: <a href=https://doerrbirnen.ch>doerrbirnen.ch</a>', unit: 'g', amount: '200' }] }],
+			[{ sectionIndex: 0, ingredientIndex: 0, ...matched }]
+		);
+		expect(rows[0].kind).toBe('ingredient');
+		expect(rows[0].kind === 'ingredient' && rows[0].grams).toBe(200);
+	});
 });
 
 describe('coverageOf', () => {

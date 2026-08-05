@@ -18,7 +18,7 @@
  * diary, where coverage is weighted by calories rather than by entries.
  */
 import { ingredientGrams, parseAmount } from '$lib/js/ingredientAmount';
-import { isAnchorRef } from '$lib/js/recipeRefs';
+import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
 
 /** Below this, an automatic match is a guess worth confirming. */
 export const UNSURE_CONFIDENCE = 0.6;
@@ -166,13 +166,26 @@ export function buildRows(ingredients: any[], mappings: Mapping[]): MapperRow[] 
 			const mapping = byIndex.get(`${si}-${ii}`);
 			if (!mapping) continue;
 			index++;
-			if (mapping.recipeRef || isAnchorRef(item?.name || '')) {
+
+			// The stored `recipeRef` is authoritative — it is what a manual override
+			// writes — but almost no mapping has one: the anchor branch of the matcher
+			// is newer than most of them, so a line like
+			// `<a href=mayonnaise>Mayonnaise</a> mit mehr Senf` carries whatever food
+			// the embedder guessed instead. The link in the name is the recipe's own
+			// statement of what it points at, so read it rather than trusting the
+			// mapping to have caught up.
+			//
+			// A link that is *not* a recipe — an external URL, a downloadable file —
+			// parses to nothing and leaves the line an ordinary ingredient, which is
+			// what a sentence with a citation in it is.
+			const slug = mapping.recipeRef || parseAnchorRecipeRef(item?.name || '') || '';
+			if (slug) {
 				rows.push({
 					kind: 'base',
 					key: `base-${si}-${ii}`,
 					index,
 					mapping,
-					slug: mapping.recipeRef || '',
+					slug,
 					state: 'ref',
 					grams: 0,
 					nominalGrams: 0,

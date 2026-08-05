@@ -13,6 +13,8 @@
 	 */
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import X from '@lucide/svelte/icons/x';
 
 	/**
 	 * @typedef {{
@@ -20,11 +22,55 @@
 	 *   reference: { name?: string, totalGrams?: number, nutrition?: Record<string, number>, baseMultiplier?: number, coverage?: number } | undefined,
 	 *   recipeGrams: number,
 	 *   onmultiplierchange: ((value: number) => void) | undefined,
+	 *   onrefchange: ((slug: string) => void) | undefined,
 	 * }} Props
 	 */
 
 	/** @type {Props} */
-	let { row, reference, recipeGrams, onmultiplierchange } = $props();
+	let { row, reference, recipeGrams, onmultiplierchange, onrefchange } = $props();
+
+	// --- Picking the recipe by hand ---------------------------------------
+	// The link in an ingredient's name is usually right, but it can point at a slug
+	// that was renamed or deleted, and there is no other way to say which recipe a
+	// line means. Only offered where the mapping can hold the answer: a
+	// `type: 'reference'` section stores its target on the ingredient itself.
+	let picking = $state(false);
+	let query = $state('');
+	/** @type {{ shortName?: string, name: string, id: string }[]} */
+	let results = $state([]);
+	let searching = $state(false);
+	/** @type {ReturnType<typeof setTimeout> | null} */
+	let timer = null;
+
+	function search(/** @type {string} */ value) {
+		query = value;
+		if (timer) clearTimeout(timer);
+		if (value.trim().length < 2) {
+			results = [];
+			return;
+		}
+		searching = true;
+		timer = setTimeout(async () => {
+			try {
+				const res = await fetch(
+					`/api/nutrition/search?q=${encodeURIComponent(value.trim())}&sources=recipe`
+				);
+				if (res.ok) results = await res.json();
+			} catch {
+				results = [];
+			} finally {
+				searching = false;
+			}
+		}, 200);
+	}
+
+	function choose(/** @type {{ shortName?: string }} */ hit) {
+		if (!hit.shortName || !onrefchange) return;
+		onrefchange(hit.shortName);
+		picking = false;
+		query = '';
+		results = [];
+	}
 
 	const multiplier = $derived(reference?.baseMultiplier ?? 1);
 	const grams = $derived((reference?.totalGrams ?? 0) * multiplier);
@@ -70,8 +116,54 @@
 			{:else}
 				<p class="warn">
 					<TriangleAlert size={11} />
-					Nährwerte dieses Grundrezepts konnten nicht geladen werden — es fliesst nichts in die Summe ein.
+					{#if row.slug}
+						Kein Rezept mit dem Kurznamen <code>{row.slug}</code> — es fliesst nichts in die Summe
+						ein. Wähle das richtige Rezept aus.
+					{:else}
+						Kein Rezept zugeordnet — es fliesst nichts in die Summe ein.
+					{/if}
 				</p>
+			{/if}
+
+			{#if onrefchange}
+				{#if picking}
+					<div class="picker">
+						<div class="picker-row">
+							<!-- svelte-ignore a11y_autofocus -->
+							<input
+								type="text"
+								class="picker-input"
+								placeholder="Rezept suchen…"
+								aria-label="Grundrezept suchen"
+								autofocus
+								value={query}
+								oninput={(e) => search(e.currentTarget.value)}
+							/>
+							<button type="button" class="picker-close" aria-label="Abbrechen" onclick={() => (picking = false)}>
+								<X size={14} />
+							</button>
+						</div>
+						{#if results.length > 0}
+							<ul class="picker-results">
+								{#each results as hit (hit.id)}
+									<li>
+										<button type="button" onclick={() => choose(hit)} disabled={!hit.shortName}>
+											{hit.name}
+											{#if hit.shortName}<code>{hit.shortName}</code>{/if}
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{:else if query.trim().length >= 2 && !searching}
+							<p class="picker-empty">Kein Rezept gefunden.</p>
+						{/if}
+					</div>
+				{:else}
+					<button type="button" class="pick-btn" onclick={() => (picking = true)}>
+						<Pencil size={11} />
+						{reference ? 'Anderes Rezept wählen' : 'Rezept wählen'}
+					</button>
+				{/if}
 			{/if}
 		</div>
 
@@ -186,6 +278,105 @@
 	.warn :global(svg) {
 		flex: none;
 		margin-top: 0.15em;
+	}
+
+	code {
+		padding: 0 0.2rem;
+		border-radius: 3px;
+		background: var(--color-bg-tertiary);
+		font-size: 0.92em;
+	}
+
+	/* --- Picking the recipe by hand --- */
+	.pick-btn {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin-top: 0.15rem;
+		padding: 0.15rem 0.45rem;
+		background: transparent;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-secondary);
+		font-size: 0.68rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+	.pick-btn:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+
+	.picker {
+		margin-top: 0.35rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+	.picker-row {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+	.picker-input {
+		flex: 1;
+		min-width: 0;
+		padding: 0.35rem 0.5rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-primary);
+		font-size: 0.8rem;
+	}
+	.picker-close {
+		display: inline-flex;
+		padding: 0.25rem;
+		background: none;
+		border: none;
+		border-radius: var(--radius-sm);
+		color: var(--color-text-tertiary);
+		cursor: pointer;
+	}
+	.picker-close:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
+	.picker-results {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		max-height: 12rem;
+		overflow-y: auto;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+	}
+	.picker-results button {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.35rem 0.5rem;
+		background: none;
+		border: none;
+		border-bottom: 1px solid var(--color-border);
+		color: var(--color-text-primary);
+		font-size: 0.78rem;
+		text-align: left;
+		cursor: pointer;
+	}
+	.picker-results li:last-child button {
+		border-bottom: none;
+	}
+	.picker-results button:hover {
+		background: var(--color-bg-elevated);
+	}
+	.picker-empty {
+		margin: 0;
+		font-size: 0.72rem;
+		color: var(--color-text-tertiary);
 	}
 
 	.mult {

@@ -4,10 +4,11 @@ import { gotoHydrated } from '../helpers/nav';
 
 // The recipe editor's nutrition triage section (requires login + rezepte_users).
 //
-// Runs against e2e_mapping, a fixture owned by this spec whose four ingredient
-// lines are seeded one per triage state, plus a base recipe reference. Its
-// mappings are pre-baked in scripts/e2e/seed.mjs — generating them would run two
-// embedding models, which no CI run should carry.
+// Runs against e2e_mapping, a fixture owned by this spec: four ingredient lines
+// seeded one per triage state, two lines linking to another recipe (one live,
+// one dangling), and a base recipe reference section. Its mappings are pre-baked
+// in scripts/e2e/seed.mjs — generating them would run two embedding models,
+// which no CI run should carry.
 //
 // Every test that changes something changes it back, so the fixture is unchanged
 // for re-runs and for whatever runs next.
@@ -38,15 +39,15 @@ test('shows each ingredient in the bucket its mapping puts it in', async ({ page
 test('the coverage bar is weighted by grams, not by row count', async ({ page }) => {
 	await gotoHydrated(page, EDIT_URL);
 
-	// 500 g flour + 15 g oil of 500 + 250 + 15 + 1 g, plus the 300 g base recipe:
-	// two of five rows are unmapped or skipped, but they are a small share of the
-	// weight — which a "3 von 5" summary would not say.
+	// The unmapped Rätselzutat is 250 of roughly 1200 g, which a row count cannot
+	// say either way.
 	const note = page.locator('.coverage-note');
 	await expect(note).toContainText('des Gewichts erfasst');
 	await expect(page.locator('.coverage-pct')).toContainText('%');
 
-	// One segment per row, base recipe included.
-	await expect(page.locator('.strip .seg')).toHaveCount(5);
+	// One segment per row: four ingredient lines, two linked recipes, and the
+	// reference section.
+	await expect(page.locator('.strip .seg')).toHaveCount(7);
 });
 
 test('filtering to open shows only the unmapped ingredient', async ({ page }) => {
@@ -57,7 +58,7 @@ test('filtering to open shows only the unmapped ingredient', async ({ page }) =>
 	await expect(card(page, 'Rätselzutat')).toBeVisible();
 
 	await chip(page, 'all').click();
-	await expect(page.locator('[data-mapper-card], [data-base-card]')).toHaveCount(5);
+	await expect(page.locator('[data-mapper-card], [data-base-card]')).toHaveCount(7);
 });
 
 test('the base recipe gets a card stating what it contributes', async ({ page }) => {
@@ -65,15 +66,45 @@ test('the base recipe gets a card stating what it contributes', async ({ page })
 
 	// A type:'reference' section has no mapping, so the old table had no row to
 	// put it in — while it is 300 of the recipe's ~1066 g.
-	const base = page.locator('[data-base-card]');
+	const base = page.locator('[data-base-card]').filter({ hasText: 'E2E Mapping Basis' });
 	await expect(base).toHaveCount(1);
 	await expect(base).toContainText('Grundrezept');
-	await expect(base).toContainText('E2E Mapping Basis');
 	await expect(base).toContainText('300 g');
 	await expect(base).toContainText('des Rezepts');
 	// Its multiplier is owned by the ingredient section above, so it is stated,
 	// not editable here.
 	await expect(base.locator('input')).toHaveCount(0);
+});
+
+test('a linked ingredient names the recipe it links to', async ({ page }) => {
+	await gotoHydrated(page, EDIT_URL);
+
+	// Almost no stored mapping carries recipeRef — the matcher's anchor branch is
+	// newer than they are — so the card has to read the link out of the name. It
+	// used to say "Unbekanntes Rezept" for every one of them.
+	// Zweitbasis is named only by a link inside an ingredient's name, and its
+	// mapping carries a food match instead of a recipeRef.
+	const linked = page.locator('[data-base-card]').filter({ hasText: 'Zweitbasis' });
+	await expect(linked).toHaveCount(1);
+	await expect(linked).not.toContainText('Unbekanntes Rezept');
+	await expect(linked).toContainText('120 g');
+});
+
+test('a base recipe can be repointed at a different recipe', async ({ page }) => {
+	await gotoHydrated(page, EDIT_URL);
+
+	// The line's link is the recipe's own statement of what it means, but it can
+	// name a slug that was renamed or deleted, and nothing else can say otherwise.
+	const linked = page.locator('[data-base-card]').filter({ hasText: 'E2E Mapping Verweis' });
+	await linked.getByRole('button', { name: /Rezept wählen|Anderes Rezept wählen/ }).click();
+
+	await linked.getByLabel('Grundrezept suchen').fill('E2E Mapping Basis');
+	const hit = linked.locator('.picker-results button').first();
+	await expect(hit).toBeVisible({ timeout: 15_000 });
+	await hit.click();
+
+	await expect(linked).toContainText('E2E Mapping Basis');
+	await expect(linked).toContainText('300 g');
 });
 
 test('the assumed-amount line shows its resolved grams', async ({ page }) => {

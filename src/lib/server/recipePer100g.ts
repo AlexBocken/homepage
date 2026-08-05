@@ -9,7 +9,7 @@
 import { NUTRITION_DB, type NutritionEntry } from '$lib/data/nutritionDb';
 import { BLS_DB, type BlsEntry } from '$lib/data/blsDb';
 import { ingredientGrams } from '$lib/js/ingredientAmount';
-import { isAnchorRef } from '$lib/js/recipeRefs';
+import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
 import type { NutritionPer100g } from '$types/types';
 
 function stripHtml(html: string): string {
@@ -54,6 +54,12 @@ export type Per100gResult = { per100g: Record<string, number>; totalGrams: numbe
 export type ReferencedTotals = {
 	shortName: string;
 	name: string;
+	/** Where in the recipe it was named. A `type: 'reference'` section stores an
+	 *  ObjectId, which only says which recipe it means once it has been looked up,
+	 *  so position is the one key both sides can agree on before that happens. */
+	sectionIndex: number;
+	/** Absent for a whole reference section; set for a linked ingredient line. */
+	ingredientIndex?: number;
 	/** Absolute nutrient totals of the referenced recipe, at multiplier 1. */
 	nutrition: Record<string, number>;
 	/** What the referenced recipe weighs, at multiplier 1. */
@@ -114,8 +120,12 @@ export function computeTotals(recipe: {
 		const items = section?.list ?? section?.ingredients ?? section?.items ?? [];
 		const ing = items[m.ingredientIndex];
 
+		// Only a link to another *recipe* is a reference, counted whole by
+		// resolveReferences. A link to an external page is a citation — "Kletzen,
+		// Schweiz: doerrbirnen.ch" is still an ingredient — and skipping the line for
+		// having any anchor in it dropped its weight from the recipe silently.
 		const rawName = ing?.name ?? '';
-		if (isAnchorRef(rawName)) continue;
+		if (parseAnchorRecipeRef(rawName)) continue;
 		const itemName = stripHtml(rawName).toLowerCase().trim();
 		const ownSection = section?.name ? stripHtml(section.name).toLowerCase().trim() : '';
 		if (itemName && sectionNames.has(itemName) && itemName !== ownSection) continue;

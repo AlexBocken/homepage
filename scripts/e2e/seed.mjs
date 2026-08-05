@@ -216,6 +216,35 @@ const RECIPES = [
 			ingredients: [section('Dough', [{ name: 'Flour', unit: 'g', amount: '300' }])],
 		}
 	}),
+	// A second base recipe, so the fixture can carry both ways of naming one: a
+	// reference section (resolved by id) and a link inside an ingredient name
+	// (resolved by parsing the href). Pointing both at the same recipe would not
+	// work — a recipe named twice is counted once.
+	recipe({
+		short_name: 'e2e_mapping_zweitbasis',
+		name: 'E2E Mapping Zweitbasis',
+		category: 'Sauce',
+		icon: '🥣',
+		description: 'Zweites Grundrezept, per Link in einer Zutat referenziert.',
+		tags: ['e2e'],
+		portions: '4',
+		isBaseRecipe: true,
+		ingredients: [section('Sauce', [{ name: 'Mehl', unit: 'g', amount: '120' }])],
+		nutritionMappings: [{
+			sectionIndex: 0, ingredientIndex: 0,
+			ingredientName: 'Flour', ingredientNameDe: 'Mehl',
+			source: 'usda', fdcId: 168894,
+			matchMethod: 'exact', matchConfidence: 1,
+			gramsPerUnit: 1, unitConversionSource: 'direct',
+			manuallyEdited: false, excluded: false,
+		}],
+		en: {
+			short_name: 'e2e_mapping_secondbase', name: 'E2E Mapping Second Base',
+			description: 'Second base recipe, referenced by a link in an ingredient.',
+			category: 'Sauce', tags: ['e2e'],
+			ingredients: [section('Sauce', [{ name: 'Flour', unit: 'g', amount: '120' }])],
+		}
+	}),
 	// One line per triage state, so the spec can assert each bucket without
 	// having to first put the recipe into that state.
 	recipe({
@@ -232,6 +261,12 @@ const RECIPES = [
 				{ name: 'Rätselzutat', unit: 'g', amount: '250' }, // open
 				{ name: 'Olivenöl', unit: 'EL', amount: '' },      // amount assumed → unsure
 				{ name: 'Salz', unit: 'Prise', amount: '1' },      // skipped
+				// A link to another recipe, with no recipeRef on its mapping — the
+				// shape 74 of 77 real anchor ingredients are in, because the matcher's
+				// anchor branch is newer than they are. The card has to read the href.
+				{ name: '<a href=e2e_mapping_zweitbasis>Zweitbasis</a> mit mehr Senf', unit: 'g', amount: '100' },
+				// A link naming a recipe that does not exist, so the spec can repoint it.
+				{ name: '<a href=e2e_gibt_es_nicht>E2E Mapping Verweis</a>', unit: 'g', amount: '50' },
 			]),
 			// A base recipe section: no mapping of its own, invisible in the old table.
 			{ type: 'reference', baseRecipeRef: E2E_BASE_RECIPE_ID, baseMultiplier: 1, includeIngredients: true, showLabel: true },
@@ -267,6 +302,24 @@ const RECIPES = [
 				gramsPerUnit: 1, unitConversionSource: 'estimate',
 				manuallyEdited: true, excluded: true,
 			},
+			// Both linked lines carry a food match and no recipeRef — exactly what
+			// the embedder left on the real ones.
+			{
+				sectionIndex: 0, ingredientIndex: 4,
+				ingredientName: 'Second base', ingredientNameDe: 'Zweitbasis',
+				source: 'usda', fdcId: 168894,
+				matchMethod: 'embedding', matchConfidence: 0.5,
+				gramsPerUnit: 1, unitConversionSource: 'direct',
+				manuallyEdited: false, excluded: false,
+			},
+			{
+				sectionIndex: 0, ingredientIndex: 5,
+				ingredientName: 'Dangling ref', ingredientNameDe: 'E2E Mapping Verweis',
+				source: 'usda', fdcId: 168894,
+				matchMethod: 'embedding', matchConfidence: 0.5,
+				gramsPerUnit: 1, unitConversionSource: 'direct',
+				manuallyEdited: false, excluded: false,
+			},
 		],
 		en: {
 			short_name: 'e2e_mapping_en', name: 'E2E Mapping',
@@ -277,6 +330,8 @@ const RECIPES = [
 				{ name: 'Mystery', unit: 'g', amount: '250' },
 				{ name: 'Olive oil', unit: 'tbsp', amount: '' },
 				{ name: 'Salt', unit: 'pinch', amount: '1' },
+				{ name: '<a href=e2e_mapping_zweitbasis>Second base</a> with extra mustard', unit: 'g', amount: '100' },
+				{ name: '<a href=e2e_gibt_es_nicht>E2E Mapping Verweis</a>', unit: 'g', amount: '50' },
 			])],
 		}
 	}),

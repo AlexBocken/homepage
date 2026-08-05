@@ -45,16 +45,34 @@
 
 	const rows = $derived(buildRows(ingredients, mappings));
 
-	/** Referenced recipes by slug, for the base cards and the coverage denominator. */
-	const refBySlug = $derived(
-		new Map((referencedNutrition ?? []).map((r) => [r.shortName, r]))
+	/**
+	 * The resolved reference behind a base card.
+	 *
+	 * Matched by position first: a `type: 'reference'` section stores an ObjectId,
+	 * which only names a recipe once the server has looked it up, so the card has
+	 * no slug to match on until then. Slug is the fallback, for a reference that
+	 * came back without a position (an older payload).
+	 */
+	const refByPosition = $derived(
+		new Map(
+			(referencedNutrition ?? [])
+				.filter((r) => r.sectionIndex !== undefined)
+				.map((r) => [`${r.sectionIndex}-${r.ingredientIndex ?? ''}`, r])
+		)
 	);
+	const refBySlug = $derived(new Map((referencedNutrition ?? []).map((r) => [r.shortName, r])));
+
+	/** @param {any} row */
+	function referenceFor(row) {
+		const [, si, ii] = row.key.match(/^base-(\d+)(?:-(\d+))?$/) ?? [];
+		return refByPosition.get(`${si}-${ii ?? ''}`) ?? (row.slug ? refBySlug.get(row.slug) : undefined);
+	}
 
 	const baseContributions = $derived(
 		rows
 			.filter((r) => r.kind === 'base')
 			.map((r) => {
-				const ref = refBySlug.get(/** @type {any} */ (r).slug);
+				const ref = referenceFor(r);
 				if (!ref) return { grams: 0, covered: 0 };
 				const mult = ref.baseMultiplier ?? 1;
 				const grams = (ref.totalGrams ?? 0) * mult;
@@ -224,6 +242,34 @@
 		toast.success(`${mapping.ingredientNameDe || mapping.ingredientName} → ${entry.name}`);
 	}
 
+	/**
+	 * Point a base-recipe row at a different recipe.
+	 *
+	 * The link in the ingredient's name is the recipe's own statement of what it
+	 * means, and normally right — but it can name a slug that was since renamed or
+	 * deleted, which no amount of re-matching will fix. Writing `recipeRef` onto
+	 * the mapping overrides it, and the resolver reads that before the link.
+	 *
+	 * The food match is cleared with it: a line cannot be both a reference to a
+	 * recipe and an ingredient in its own right, and leaving a stale
+	 * `nutritionDbName` behind would show a food that contributes nothing.
+	 */
+	function setRecipeRef(/** @type {any} */ mapping, /** @type {string} */ slug) {
+		patch(mapping, {
+			recipeRef: slug,
+			recipeRefMultiplier: mapping.recipeRefMultiplier ?? 1,
+			manuallyEdited: true,
+			excluded: true,
+			matchMethod: 'manual',
+			source: undefined,
+			fdcId: undefined,
+			blsCode: undefined,
+			nutritionDbName: undefined,
+			per100g: undefined,
+		});
+		toast.success(`Grundrezept: ${slug}`);
+	}
+
 	function skip(/** @type {any} */ mapping) {
 		patch(mapping, { excluded: true, matchMethod: 'manual', manuallyEdited: true });
 	}
@@ -277,11 +323,12 @@
 				{#if row.kind === 'base'}
 					<BaseRecipeCard
 						{row}
-						reference={refBySlug.get(row.slug)}
+						reference={referenceFor(row)}
 						recipeGrams={coverage.totalGrams}
 						onmultiplierchange={row.mapping
 							? (value) => patch(row.mapping, { recipeRefMultiplier: value })
 							: undefined}
+						onrefchange={row.mapping ? (slug) => setRecipeRef(row.mapping, slug) : undefined}
 					/>
 				{:else}
 					<NutritionMapperCard
