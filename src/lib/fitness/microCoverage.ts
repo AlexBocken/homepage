@@ -18,9 +18,12 @@
  *  something about its source rather than about how well characterised it is, and
  *  counting them would fail well-populated entries from both databases. */
 export const MINERAL_KEYS = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'zinc'];
+/** The vitamins every source measures, in the shared display order — pantothenic
+ *  acid, biotin and retinol are left out for the same reason as the trace
+ *  minerals: a record missing them says something about its source. */
 export const VITAMIN_KEYS = [
-	'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
-	'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate',
+	'vitaminA', 'vitaminD', 'vitaminE', 'vitaminK', 'vitaminC',
+	'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'folate', 'vitaminB12',
 ];
 export const AMINO_KEYS = [
 	'leucine', 'isoleucine', 'valine', 'lysine', 'methionine',

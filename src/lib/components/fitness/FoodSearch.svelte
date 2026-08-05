@@ -43,6 +43,7 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
 	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
+	import { MINERAL_ORDER, VITAMIN_ORDER, OTHER_ORDER, OTHER_WHEN_PRESENT } from '$lib/fitness/nutrientOrder';
 	import { formatGrams } from '$lib/fitness/nutritionMath';
 	import MacroBreakdown from './MacroBreakdown.svelte';
 	import PortionAmountInput from './PortionAmountInput.svelte';
@@ -350,10 +351,6 @@
 	// those need the user's profile, which this component isn't given.
 	let showMicros = $state(false);
 
-	const MINERAL_KEYS = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
-	const VITAMIN_KEYS = ['vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin'];
-	const OTHER_KEYS = ['cholesterol'];
-
 	const microSections = $derived.by(() => {
 		const n = selected?.per100g;
 		if (!n || !previewGrams) return [];
@@ -376,18 +373,17 @@
 		);
 		// Alcohol, caffeine and sugar alcohols only where the food has some — the same
 		// rule as the food detail page, so a '0 g' row never appears under bread.
-		const otherKeys = [
-			...OTHER_KEYS,
-			...['caffeine', 'alcohol', 'sugarAlcohols'].filter(
-				(k) => ((/** @type {Record<string, number>} */ (n)[k]) ?? 0) > 0
-			),
-		];
+		const otherKeys = OTHER_ORDER.filter(
+			(k) =>
+				!OTHER_WHEN_PRESENT.includes(k) ||
+				((/** @type {Record<string, number>} */ (n)[k]) ?? 0) > 0
+		);
 		return [
-			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: rows(MINERAL_KEYS) },
+			{ title: isEn ? 'Minerals' : 'Mineralstoffe', rows: rows(MINERAL_ORDER) },
 			...(traceKeys.length > 0
 				? [{ title: isEn ? 'Trace Minerals' : 'Spurenelemente', rows: rows(traceKeys) }]
 				: []),
-			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: rows(VITAMIN_KEYS) },
+			{ title: isEn ? 'Vitamins' : 'Vitamine', rows: rows(VITAMIN_ORDER) },
 			{ title: isEn ? 'Other' : 'Sonstiges', rows: rows(otherKeys) },
 		];
 	});

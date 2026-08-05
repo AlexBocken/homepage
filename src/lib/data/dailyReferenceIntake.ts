@@ -304,7 +304,7 @@ export const NUTRIENT_META: Record<keyof DRI | ExtraNutrientKey, { label: string
   niacin:      { label: 'Niacin (B3)',  labelDe: 'Niacin (B3)',   unit: 'mg' },
   vitaminB6:   { label: 'Vitamin B6',   labelDe: 'Vitamin B6',   unit: 'mg' },
   vitaminB12:  { label: 'Vitamin B12',  labelDe: 'Vitamin B12',  unit: 'mcg' },
-  folate:      { label: 'Folate',       labelDe: 'Folsäure',     unit: 'mcg' },
+  folate:      { label: 'Folate (B9)',  labelDe: 'Folsäure (B9)', unit: 'mcg' },
   pantothenicAcid: { label: 'Pantothenic acid (B5)', labelDe: 'Pantothensäure (B5)', unit: 'mg' },
   biotin:      { label: 'Biotin (B7)',  labelDe: 'Biotin (B7)',  unit: 'mcg' },
   retinol:     { label: 'Retinol',      labelDe: 'Retinol',      unit: 'mcg', isMax: true },

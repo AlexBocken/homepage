@@ -4,7 +4,20 @@
 	import { toast } from '$lib/js/toast.svelte';
 	import { m } from '$lib/js/recipesI18n';
 	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
+	import { SPARSELY_MEASURED_KEYS } from '$lib/fitness/nutritionMath';
 	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
+
+	// Blended over the ingredients that report them rather than over the whole pot,
+	// the same rule the trace minerals follow — an untested ingredient must not
+	// dilute the ones that were. Biotin and caffeine are on the vitamin and 'other'
+	// panels, so a recipe that dropped them logged an entry reading zero where the
+	// same food logged directly reads a figure. Sugar alcohols and organic acids are
+	// excluded here: they are summed with the macros above, and running them through
+	// both passes would count them twice.
+	const MEASURED_WHERE_PRESENT = [
+		...TRACE_MINERAL_KEYS,
+		...SPARSELY_MEASURED_KEYS.filter(k => k !== 'sugarAlcohols' && k !== 'organicAcids'),
+	];
 
 	let {
 		recipeName,
@@ -127,7 +140,7 @@
 			// concentration of what was measured rather than of the whole pot. A
 			// referenced sub-recipe contributes none: its stored aggregate carries no
 			// record of which of its own ingredients were tested.
-			for (const k of TRACE_MINERAL_KEYS) {
+			for (const k of MEASURED_WHERE_PRESENT) {
 				const v = mapping.per100g[k];
 				if (typeof v === 'number') {
 					traceTotalsG[k] = (traceTotalsG[k] ?? 0) + factor * v;
@@ -158,7 +171,7 @@
 		}
 		// Scaled by the weight each was measured across, and written only when
 		// something reported it.
-		for (const k of TRACE_MINERAL_KEYS) {
+		for (const k of MEASURED_WHERE_PRESENT) {
 			const g = recipeTotals.traceGrams[k] ?? 0;
 			if (g > 0) result[k] = (recipeTotals.traceTotalsG[k] ?? 0) * (100 / g);
 		}

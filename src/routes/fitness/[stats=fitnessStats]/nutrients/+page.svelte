@@ -14,6 +14,7 @@
 		getDRI, NUTRIENT_META, RELATIVE_TO, aminoDri, AMINO_DRI_REFERENCE_WEIGHT, UPPER_LIMITS, REFERENCE_ENERGY
 	} from '$lib/data/dailyReferenceIntake';
 	import { TRACE_MINERAL_KEYS, traceCoverageNote } from '$lib/fitness/traceMinerals';
+	import { MINERAL_ORDER, VITAMIN_ORDER, OTHER_ORDER, CARB_DETAIL_ORDER } from '$lib/fitness/nutrientOrder';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
 	let { data } = $props();
@@ -170,10 +171,10 @@
 	const nonEssentialOrder = ['alanine', 'arginine', 'asparticAcid', 'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
 
 	const sections = $derived.by(() => {
-		const minerals = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
-		const vitamins = ['vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin'];
-		const carbDetail = ['starch', 'fructose', 'lactose'];
-		const other = ['cholesterol', 'caffeine', 'alcohol', 'sugarAlcohols'];
+		const minerals = MINERAL_ORDER;
+		const vitamins = VITAMIN_ORDER;
+		const carbDetail = CARB_DETAIL_ORDER;
+		const other = OTHER_ORDER;
 
 		/** The window's average for a nutrient — the composition figures are kept
 		 *  apart from the micro averages, and a parent may live in either. */

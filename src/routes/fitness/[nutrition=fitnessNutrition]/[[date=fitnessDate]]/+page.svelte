@@ -53,6 +53,7 @@
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import { microCoverage } from '$lib/fitness/microCoverage';
 	import { TRACE_MINERAL_KEYS, traceTotals, traceCoverageNote } from '$lib/fitness/traceMinerals';
+	import { MINERAL_ORDER, VITAMIN_ORDER, OTHER_ORDER, CARB_DETAIL_ORDER } from '$lib/fitness/nutrientOrder';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { clampToViewport } from '$lib/js/clampToViewport';
 
@@ -1418,14 +1419,11 @@
 	};
 
 	const microSections = $derived.by(() => {
-		const minerals = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
-		// Retinol follows vitamin A because it is the part of it that has a ceiling.
-		const vitamins = ['vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin'];
-		// Alcohol and caffeine sit here rather than with the macros: they are ceilings,
-		// not targets, and theirs are the rows whose bar filling up is not an
-		// achievement. Sugar alcohols are here because they are neither macro nor
-		// micronutrient — the energy bar above is where they earn their place.
-		const other = ['cholesterol', 'caffeine', 'alcohol', 'sugarAlcohols'];
+		const minerals = MINERAL_ORDER;
+		const vitamins = VITAMIN_ORDER;
+		// A day's running total lists all four, unlike a single food: the bar for what
+		// you did not drink today is still worth seeing at zero.
+		const other = OTHER_ORDER;
 
 		/** The day's total for a nutrient, wherever dayTotals happens to keep it. */
 		function dayValue(/** @type {string} */ k) {
@@ -1509,7 +1507,7 @@
 		// sugars come from the core panel every source publishes, so these rows work on
 		// anything already logged; the fatty acids below them only fill in for foods
 		// imported since the fat panel was added.
-		const carbQuality = ['fiber', 'sugars', 'starch', 'fructose', 'lactose'];
+		const carbQuality = ['fiber', 'sugars', ...CARB_DETAIL_ORDER];
 		const fatQuality = ['saturatedFat', 'transFat', 'linoleicAcid', 'alphaLinolenicAcid', 'epaDha'];
 
 		/** @param {string[]} keys */

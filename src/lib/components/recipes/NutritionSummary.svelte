@@ -1,6 +1,8 @@
 <script>
 	import { createNutritionCalculator } from '$lib/js/nutrition.svelte';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
+	import { NUTRIENT_META } from '$lib/data/dailyReferenceIntake';
+	import { MINERAL_ORDER, VITAMIN_ORDER } from '$lib/fitness/nutrientOrder';
 	import { m } from '$lib/js/recipesI18n';
 	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
@@ -55,6 +57,7 @@
 		fiber: t.fiber,
 		sugars: t.sugars,
 		saturatedFat: t.saturated_fat,
+		cholesterol: isEnglish ? NUTRIENT_META.cholesterol.label : NUTRIENT_META.cholesterol.labelDe,
 		details: t.details,
 		vitamins: t.vitamins,
 		minerals: t.minerals,
@@ -74,6 +77,32 @@
 		if (value >= 10) return value.toFixed(1);
 		return value.toFixed(1);
 	}
+
+	// Labels, units and order come from the same place the fitness pages take them,
+	// so a recipe's vitamin list reads identically to the one on the food it maps to.
+	// The recipe calculator sums a narrower set of nutrients than a food record
+	// carries — retinol, pantothenic acid and biotin have no total here — so the
+	// shared order is filtered rather than reordered.
+	/** @param {string[]} keys */
+	function mkRows(keys) {
+		const totals = /** @type {Record<string, number>} */ (
+			/** @type {unknown} */ (nutrition.totalMicros)
+		);
+		return keys
+			.filter((k) => typeof totals[k] === 'number')
+			.map((k) => {
+				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
+				return {
+					key: k,
+					label: isEnglish ? meta.label : meta.labelDe,
+					unit: meta.unit,
+					value: totals[k] / div,
+				};
+			});
+	}
+
+	const mineralRows = $derived(mkRows(MINERAL_ORDER));
+	const vitaminRows = $derived(mkRows(VITAMIN_ORDER));
 
 
 </script>
@@ -185,25 +214,19 @@
 				<div class="detail-row"><span>{labels.carbs}</span><span>{fmt(nutrition.totalMacros.carbs / div)}g</span></div>
 				<div class="detail-row"><span>&nbsp;&nbsp;{labels.sugars}</span><span>{fmt(nutrition.totalMacros.sugars / div)}g</span></div>
 				<div class="detail-row"><span>{labels.fiber}</span><span>{fmt(nutrition.totalMacros.fiber / div)}g</span></div>
+				<div class="detail-row"><span>{labels.cholesterol}</span><span>{fmt(nutrition.totalMicros.cholesterol / div)} mg</span></div>
 			</div>
 			<div class="detail-section">
 				<h4>{labels.vitamins}</h4>
-				<div class="detail-row"><span>Vitamin A</span><span>{fmt(nutrition.totalMicros.vitaminA / div)} mcg</span></div>
-				<div class="detail-row"><span>Vitamin C</span><span>{fmt(nutrition.totalMicros.vitaminC / div)} mg</span></div>
-				<div class="detail-row"><span>Vitamin D</span><span>{fmt(nutrition.totalMicros.vitaminD / div)} mcg</span></div>
-				<div class="detail-row"><span>Vitamin E</span><span>{fmt(nutrition.totalMicros.vitaminE / div)} mg</span></div>
-				<div class="detail-row"><span>Vitamin K</span><span>{fmt(nutrition.totalMicros.vitaminK / div)} mcg</span></div>
-				<div class="detail-row"><span>Vitamin B12</span><span>{fmt(nutrition.totalMicros.vitaminB12 / div)} mcg</span></div>
-				<div class="detail-row"><span>Folate</span><span>{fmt(nutrition.totalMicros.folate / div)} mcg</span></div>
+				{#each vitaminRows as row (row.key)}
+					<div class="detail-row"><span>{row.label}</span><span>{fmt(row.value)} {row.unit}</span></div>
+				{/each}
 			</div>
 			<div class="detail-section">
 				<h4>{labels.minerals}</h4>
-				<div class="detail-row"><span>Calcium</span><span>{fmt(nutrition.totalMicros.calcium / div)} mg</span></div>
-				<div class="detail-row"><span>{t.iron}</span><span>{fmt(nutrition.totalMicros.iron / div)} mg</span></div>
-				<div class="detail-row"><span>Magnesium</span><span>{fmt(nutrition.totalMicros.magnesium / div)} mg</span></div>
-				<div class="detail-row"><span>Potassium</span><span>{fmt(nutrition.totalMicros.potassium / div)} mg</span></div>
-				<div class="detail-row"><span>Sodium</span><span>{fmt(nutrition.totalMicros.sodium / div)} mg</span></div>
-				<div class="detail-row"><span>{t.zinc}</span><span>{fmt(nutrition.totalMicros.zinc / div)} mg</span></div>
+				{#each mineralRows as row (row.key)}
+					<div class="detail-row"><span>{row.label}</span><span>{fmt(row.value)} {row.unit}</span></div>
+				{/each}
 			</div>
 			{#if hasAminoAcids}
 			<div class="detail-section">

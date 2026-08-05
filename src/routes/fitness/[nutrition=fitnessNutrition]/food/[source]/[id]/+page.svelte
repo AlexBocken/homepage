@@ -22,6 +22,7 @@
 	import { localDateStr } from '$lib/js/localDate';
 	import { NUTRIENT_META, RELATIVE_TO, aminoDri, AMINO_DRI_REFERENCE_WEIGHT } from '$lib/data/dailyReferenceIntake';
 	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
+	import { MINERAL_ORDER, VITAMIN_ORDER, OTHER_ORDER, OTHER_WHEN_PRESENT } from '$lib/fitness/nutrientOrder';
 	import RingGraph from '$lib/components/fitness/RingGraph.svelte';
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import { groupsPresent } from '$lib/fitness/microCoverage';
@@ -76,16 +77,17 @@
 	/** @param {number | undefined | null} v */
 
 	// --- Micronutrient sections ---
-	const mineralKeys = ['calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc'];
-	const vitaminKeys = ['vitaminA', 'retinol', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'pantothenicAcid', 'biotin'];
+	const mineralKeys = MINERAL_ORDER;
+	const vitaminKeys = VITAMIN_ORDER;
 	// Only where the record reports some: these keys are absent on almost every food,
 	// and a '0 g' alcohol row under an apple would be noise, not information.
-	const otherKeys = $derived([
-		'cholesterol',
-		...(['caffeine', 'alcohol', 'sugarAlcohols'].filter(
-			(k) => Number(/** @type {Record<string, number>} */ (n ?? {})[k]) > 0
-		)),
-	]);
+	const otherKeys = $derived(
+		OTHER_ORDER.filter(
+			(k) =>
+				!OTHER_WHEN_PRESENT.includes(k) ||
+				Number(/** @type {Record<string, number>} */ (n ?? {})[k]) > 0
+		)
+	);
 
 	/**
 	 * A nutrient with no requirement of its own, measured against the figure it is
