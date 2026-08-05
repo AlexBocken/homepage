@@ -16,6 +16,10 @@ const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27018/bocken_tes
 const COSPEND_EXPORT_TOKEN = 'e2e-cospend-export-token';
 const FINANCE_EXPORT_TOKEN = 'e2e-finance-export-token';
 
+// A base recipe reference stores an ObjectId, so the recipe being pointed at
+// needs a known one before either document is inserted.
+const E2E_BASE_RECIPE_ID = new mongoose.Types.ObjectId('e2eba5e0000000000000ba5e');
+
 /** One German section with an English mirror. */
 const section = (name, list) => ({ name, type: 'section', list });
 const steps = (name, arr) => ({ name, type: 'section', steps: arr });
@@ -24,6 +28,9 @@ const steps = (name, arr) => ({ name, type: 'section', steps: arr });
  *  /rezepte/<de> and /recipes/<en> resolve. */
 function recipe(o) {
 	return {
+		// Only the fixtures another fixture has to point at set this — a base
+		// recipe reference stores an ObjectId, so it must be known before insert.
+		...(o._id && { _id: o._id }),
 		short_name: o.short_name,
 		name: o.name,
 		category: o.category,
@@ -169,6 +176,108 @@ const RECIPES = [
 			category: 'Cake',
 			tags: ['e2e', 'cake'],
 			ingredients: [section('Batter', [{ name: 'Flour', unit: 'g', amount: '400' }])],
+		}
+	}),
+	// --- Nutrition-mapping fixtures (tests/e2e/recipes/nutrition-mapping.spec.ts) ---
+	//
+	// Owned by that spec alone. The editor specs mutate what they touch, and
+	// schokokuchen is already claimed by edit.spec, so the mapping flow gets its
+	// own pair rather than sharing.
+	//
+	// Mappings are pre-baked because generating them runs two embedding models
+	// through @huggingface/transformers — minutes of CPU and a model download,
+	// which no CI run should carry. fdcId 168894 is "Wheat flour, white,
+	// all-purpose, enriched, bleached" (364 kcal): it must be a real USDA row,
+	// because nutrition resolves through the tables and ignores any inline
+	// per100g. See e2e_bildkuchen above for the same constraint.
+	recipe({
+		_id: E2E_BASE_RECIPE_ID,
+		short_name: 'e2e_mapping_basis',
+		name: 'E2E Mapping Basis',
+		category: 'Brot',
+		icon: '🥖',
+		description: 'Grundrezept-Fixture für den Zuordnungs-Flow.',
+		tags: ['e2e'],
+		portions: '4',
+		isBaseRecipe: true,
+		ingredients: [section('Teig', [{ name: 'Mehl', unit: 'g', amount: '300' }])],
+		nutritionMappings: [{
+			sectionIndex: 0, ingredientIndex: 0,
+			ingredientName: 'Flour', ingredientNameDe: 'Mehl',
+			source: 'usda', fdcId: 168894,
+			matchMethod: 'exact', matchConfidence: 1,
+			gramsPerUnit: 1, unitConversionSource: 'direct',
+			manuallyEdited: false, excluded: false,
+		}],
+		en: {
+			short_name: 'e2e_mapping_base', name: 'E2E Mapping Base',
+			description: 'Base recipe fixture for the mapping flow.',
+			category: 'Bread', tags: ['e2e'],
+			ingredients: [section('Dough', [{ name: 'Flour', unit: 'g', amount: '300' }])],
+		}
+	}),
+	// One line per triage state, so the spec can assert each bucket without
+	// having to first put the recipe into that state.
+	recipe({
+		short_name: 'e2e_mapping',
+		name: 'E2E Zuordnung',
+		category: 'Hauptspeise',
+		icon: '🧪',
+		description: 'Fixture für den Nährwert-Zuordnungs-Flow.',
+		tags: ['e2e'],
+		portions: '4',
+		ingredients: [
+			section('Zutaten', [
+				{ name: 'Mehl', unit: 'g', amount: '500' },       // matched
+				{ name: 'Rätselzutat', unit: 'g', amount: '250' }, // open
+				{ name: 'Olivenöl', unit: 'EL', amount: '' },      // amount assumed → unsure
+				{ name: 'Salz', unit: 'Prise', amount: '1' },      // skipped
+			]),
+			// A base recipe section: no mapping of its own, invisible in the old table.
+			{ type: 'reference', baseRecipeRef: E2E_BASE_RECIPE_ID, baseMultiplier: 1, includeIngredients: true, showLabel: true },
+		],
+		nutritionMappings: [
+			{
+				sectionIndex: 0, ingredientIndex: 0,
+				ingredientName: 'Flour', ingredientNameDe: 'Mehl',
+				source: 'usda', fdcId: 168894,
+				matchMethod: 'exact', matchConfidence: 1,
+				gramsPerUnit: 1, unitConversionSource: 'direct',
+				manuallyEdited: false, excluded: false,
+			},
+			{
+				sectionIndex: 0, ingredientIndex: 1,
+				ingredientName: 'Mystery', ingredientNameDe: 'Rätselzutat',
+				matchMethod: 'none', matchConfidence: 0,
+				gramsPerUnit: 1, unitConversionSource: 'direct',
+				manuallyEdited: false, excluded: false,
+			},
+			{
+				sectionIndex: 0, ingredientIndex: 2,
+				ingredientName: 'Olive oil', ingredientNameDe: 'Olivenöl',
+				source: 'usda', fdcId: 168894,
+				matchMethod: 'exact', matchConfidence: 1,
+				gramsPerUnit: 15, unitConversionSource: 'direct',
+				manuallyEdited: false, excluded: false,
+			},
+			{
+				sectionIndex: 0, ingredientIndex: 3,
+				ingredientName: 'Salt', ingredientNameDe: 'Salz',
+				matchMethod: 'manual', matchConfidence: 0,
+				gramsPerUnit: 1, unitConversionSource: 'estimate',
+				manuallyEdited: true, excluded: true,
+			},
+		],
+		en: {
+			short_name: 'e2e_mapping_en', name: 'E2E Mapping',
+			description: 'Fixture for the nutrition mapping flow.',
+			category: 'Main', tags: ['e2e'],
+			ingredients: [section('Ingredients', [
+				{ name: 'Flour', unit: 'g', amount: '500' },
+				{ name: 'Mystery', unit: 'g', amount: '250' },
+				{ name: 'Olive oil', unit: 'tbsp', amount: '' },
+				{ name: 'Salt', unit: 'pinch', amount: '1' },
+			])],
 		}
 	}),
 	recipe({

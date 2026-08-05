@@ -104,6 +104,7 @@
 			<button
 				type="button"
 				class="chip"
+				data-filter={key}
 				data-state={key}
 				class:is-on={filter === key}
 				aria-pressed={filter === key}

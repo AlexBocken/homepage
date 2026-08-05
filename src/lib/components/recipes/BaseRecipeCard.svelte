@@ -38,7 +38,7 @@
 	}
 </script>
 
-<article class="card" class:is-missing={!reference} id="map-{row.key}">
+<article class="card" class:is-missing={!reference} data-base-card id="map-{row.key}" aria-label={displayName}>
 	<div class="head">
 		<span class="num">{row.index}</span>
 

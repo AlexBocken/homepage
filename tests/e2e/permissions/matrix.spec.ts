@@ -15,12 +15,16 @@ const BASE = 'http://localhost:4173';
 const RIGHT_ROLE: Record<string, string> = { rezepte_users: 'recipes', cospend: 'cospend', task_users: 'tasks' };
 const WRONG_ROLE: Record<string, string> = { rezepte_users: 'cospend', cospend: 'recipes', task_users: 'recipes' };
 
-async function fetchAs(role: string, path: string): Promise<APIResponse> {
+async function fetchAs(role: string, path: string, method: 'get' | 'post' = 'get'): Promise<APIResponse> {
 	const ctx = await request.newContext({
 		baseURL: BASE,
 		storageState: role === 'anon' ? undefined : storageStateFor(role)
 	});
 	try {
+		// A POST-only endpoint answers a GET with 405, which says nothing about who
+		// is allowed to call it — the group check runs inside the handler. An empty
+		// JSON body is enough: the guard runs before any validation of it.
+		if (method === 'post') return await ctx.post(path, { data: {}, maxRedirects: 0 });
 		return await ctx.get(path, { maxRedirects: 0 });
 	} finally {
 		await ctx.dispose();
@@ -46,13 +50,21 @@ function expectAnonBlocked(res: APIResponse) {
 	expect(redirectedToLogin || denied, `expected anon to be blocked, got ${s} ${loc}`).toBe(true);
 }
 
-type Route = { path: string; kind: 'page' | 'api' };
+type Route = { path: string; kind: 'page' | 'api'; method?: 'get' | 'post' };
 type GroupRoute = Route & { group: keyof typeof RIGHT_ROLE };
 
 const GROUP_ROUTES: GroupRoute[] = [
 	// rezepte_users
 	{ path: '/rezepte/add', group: 'rezepte_users', kind: 'page' },
 	{ path: '/rezepte/edit/schokokuchen', group: 'rezepte_users', kind: 'page' },
+	// POST-only: re-matches one ingredient for the editor's triage list. Writes
+	// nothing, but it reads a recipe and runs the matcher, so it is gated like the
+	// editor that calls it.
+	// An empty body reaches the guard and then fails validation with a 400, which
+	// expectAllowed accepts and which writes nothing. (cache-per100g is gated the
+	// same way but is deliberately absent: its allowed-path call would rebuild
+	// every recipe's cached figures and disturb the specs that read them.)
+	{ path: '/api/rezepte/nutrition/match-one', group: 'rezepte_users', kind: 'api', method: 'post' },
 	// cospend
 	{ path: '/cospend/dash', group: 'cospend', kind: 'page' },
 	{ path: '/cospend/payments', group: 'cospend', kind: 'page' },
@@ -118,15 +130,22 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/api/nutrition/barcode-override?code=0000000000000', kind: 'api' },
 	{ path: '/settings', kind: 'page' },
 	{ path: '/einstellungen', kind: 'page' },
+	// Anki sync provisioning state. Login-only, not gated on `anki_users`: the
+	// settings card has to render for someone who does not have the group yet so
+	// it can point them at the request form. Access to syncing itself is enforced
+	// by anki-bridge, not here. The endpoint only ever reports on the session
+	// user, and degrades to `available: false` when the bridge is absent — which
+	// it is in the e2e stack.
+	{ path: '/api/anki/status', kind: 'api' },
 	{ path: '/hikes/route-builder', kind: 'page' }
 ];
 
 for (const r of GROUP_ROUTES) {
 	test.describe(`${r.path} [needs ${r.group}]`, () => {
-		test('right permissions → allowed', async () => expectAllowed(await fetchAs(RIGHT_ROLE[r.group], r.path)));
-		test('different permissions → 403', async () => expectForbidden(await fetchAs(WRONG_ROLE[r.group], r.path)));
-		test('no permissions → 403', async () => expectForbidden(await fetchAs('none', r.path)));
-		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path)));
+		test('right permissions → allowed', async () => expectAllowed(await fetchAs(RIGHT_ROLE[r.group], r.path, r.method)));
+		test('different permissions → 403', async () => expectForbidden(await fetchAs(WRONG_ROLE[r.group], r.path, r.method)));
+		test('no permissions → 403', async () => expectForbidden(await fetchAs('none', r.path, r.method)));
+		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path, r.method)));
 	});
 }
 

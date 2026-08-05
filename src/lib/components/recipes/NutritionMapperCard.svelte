@@ -109,7 +109,7 @@
 	}
 </script>
 
-<article class="card" data-state={row.state} id="map-{row.key}">
+<article class="card" data-state={row.state} data-mapper-card id="map-{row.key}" aria-label={lineName}>
 	<div class="head">
 		<span class="num">{row.index}</span>
 
@@ -208,6 +208,7 @@
 						step="0.1"
 						inputmode="decimal"
 						value={mapping.gramsPerUnit ?? 0}
+						aria-label="Gramm pro Einheit"
 						oninput={(e) => ongramschange(Number(e.currentTarget.value) || 0)}
 					/>
 					<span>g</span>
