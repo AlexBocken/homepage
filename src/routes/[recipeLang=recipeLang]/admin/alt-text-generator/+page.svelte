@@ -8,6 +8,7 @@
 	});
 
 	let processing = $state(false);
+	let elapsed = $state(0);
 	let filter = $state<'missing' | 'all'>('missing');
 	let limit = $state(10);
 	let results = $state<any[]>([]);
@@ -32,6 +33,14 @@
 		processing = true;
 		error = '';
 		results = [];
+		elapsed = 0;
+
+		const startedAt = Date.now();
+		const ticker = setInterval(() => {
+			elapsed = Math.round((Date.now() - startedAt) / 1000);
+		}, 1000);
+
+		console.log('[alt-text] POST /api/generate-alt-text-bulk', { filter, limit });
 
 		try {
 			const response = await fetch('/api/generate-alt-text-bulk', {
@@ -40,19 +49,41 @@
 				body: JSON.stringify({ filter, limit }),
 			});
 
-			const data = await response.json();
+			console.log(
+				`[alt-text] response headers after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+				response.status,
+				response.headers.get('content-type')
+			);
+
+			// Read as text first: a proxy timeout or crash returns HTML, and response.json()
+			// would throw an unhelpful "Unexpected token '<'" that hides the real status.
+			const raw = await response.text();
+			console.log(
+				`[alt-text] body read after ${((Date.now() - startedAt) / 1000).toFixed(1)}s, ${raw.length} bytes:`,
+				raw.slice(0, 500)
+			);
+
+			let data: any;
+			try {
+				data = JSON.parse(raw);
+			} catch {
+				throw new Error(`Server returned non-JSON (${response.status}): ${raw.slice(0, 200)}`);
+			}
 
 			if (!response.ok) {
 				throw new Error(data.message || 'Failed to process batch');
 			}
 
 			results = data.results || [];
+			console.log('[alt-text] done', data);
 
 			// Refresh stats
 			await fetchStats();
 		} catch (err) {
+			console.error('[alt-text] request failed:', err);
 			error = err instanceof Error ? err.message : 'An error occurred';
 		} finally {
+			clearInterval(ticker);
 			processing = false;
 		}
 	}
@@ -281,7 +312,7 @@
 		</div>
 
 		<button onclick={processBatch} disabled={processing || !stats.ollamaAvailable}>
-			{processing ? '🔄 Processing...' : '✨ Generate Alt Texts'}
+			{processing ? `🔄 Processing... (${elapsed}s)` : '✨ Generate Alt Texts'}
 		</button>
 	</div>
 

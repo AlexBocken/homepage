@@ -37,9 +37,13 @@ export async function resizeAndEncodeImage(
 
 		return processedImage.toString('base64');
 	} catch (error) {
-		console.error('Error resizing image:', error);
+		console.error(`Error resizing image ${imagePath}:`, error);
 		// Fallback to original image if resize fails
 		const imageBuffer = await readFile(imagePath);
+		console.warn(
+			`[imageUtils] FALLBACK: sending ${imagePath} at ORIGINAL resolution ` +
+				`(${(imageBuffer.length / 1024).toFixed(0)}KB) — this is slow`
+		);
 		return imageBuffer.toString('base64');
 	}
 }

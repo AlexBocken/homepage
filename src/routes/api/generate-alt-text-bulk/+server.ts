@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { generateAltText, type RecipeContext } from '$lib/server/ai/alttext.js';
-import { checkOllamaHealth } from '$lib/server/ai/ollama.js';
+import { generateAltText, DEFAULT_ALT_TEXT_MODEL, type RecipeContext } from '$lib/server/ai/alttext.js';
+import { checkOllamaHealth, logModelAvailability, logRuntimePlacement } from '$lib/server/ai/ollama.js';
 import { Recipe } from '$models/Recipe.js';
 import { requireGroup } from '$lib/server/middleware/auth';
 
@@ -11,12 +11,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		const body = await request.json();
 		const { filter = 'missing', limit = 10, modelName } = body;
+		const model = modelName || DEFAULT_ALT_TEXT_MODEL;
+		const runStart = Date.now();
+
+		console.log(`[alt-text-bulk] request: filter=${filter} limit=${limit} model=${model}`);
 
 		// Check if Ollama is available
 		const isOllamaAvailable = await checkOllamaHealth();
 		if (!isOllamaAvailable) {
 			throw error(503, 'Ollama service is not available. Make sure Ollama is running.');
 		}
+		await logModelAvailability(model);
 
 		// Build query based on filter
 		let query: Record<string, unknown> = { images: { $exists: true, $ne: [] } };
@@ -39,6 +44,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// Fetch recipes
 		const recipes = await Recipe.find(query).limit(limit);
 
+		const totalImages = recipes.reduce(
+			(sum, r) =>
+				sum + (r.images ?? []).filter((img) => !(filter === 'missing' && img.alt)).length,
+			0
+		);
+		console.log(
+			`[alt-text-bulk] matched ${recipes.length} recipes / ${totalImages} images to process. ` +
+				`Each image = 2 Ollama calls, so ${totalImages * 2} generations total. ` +
+				`The HTTP response is only sent after ALL of them finish.`
+		);
+
 		if (recipes.length === 0) {
 			return json({
 				success: true,
@@ -55,18 +71,31 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}> = [];
 
 		// Process each recipe
-		for (const recipe of recipes) {
+		let imageCounter = 0;
+		for (const [recipeIndex, recipe] of recipes.entries()) {
 			let processed = 0;
 			let failed = 0;
 			if (!recipe.images) continue;
+
+			console.log(
+				`[alt-text-bulk] recipe ${recipeIndex + 1}/${recipes.length}: ${recipe.short_name} ` +
+					`(${recipe.images.length} images)`
+			);
 
 			for (let i = 0; i < recipe.images.length; i++) {
 				const image = recipe.images[i];
 
 				// Skip if alt text exists and we're only processing missing ones
 				if (filter === 'missing' && image.alt) {
+					console.log(`[alt-text-bulk]   image ${i}: skipped (alt already set)`);
 					continue;
 				}
+
+				imageCounter++;
+				const imageStart = Date.now();
+				console.log(
+					`[alt-text-bulk]   image ${i} (${imageCounter}/${totalImages} overall): ${image.mediapath}`
+				);
 
 				try {
 					// Prepare context
@@ -77,11 +106,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					};
 
 					// Generate alt text
-					const altTextResult = await generateAltText(
-						image.mediapath,
-						context,
-						modelName || 'gemma3:latest'
-					);
+					const altTextResult = await generateAltText(image.mediapath, context, model);
 
 					// Update German alt text
 					recipe.images[i].alt = altTextResult.de;
@@ -106,6 +131,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					recipe.translations!.en!.images![i].alt = altTextResult.en;
 
 					processed++;
+					// After the first image the model is resident, so this reports the
+					// real GPU/CPU split rather than an empty pre-load state.
+					if (imageCounter === 1) await logRuntimePlacement();
+					console.log(
+						`[alt-text-bulk]   image ${i} done in ${((Date.now() - imageStart) / 1000).toFixed(1)}s ` +
+							`(${imageCounter}/${totalImages} overall, ` +
+							`${((Date.now() - runStart) / 1000).toFixed(0)}s into the run)`
+					);
 				} catch (err) {
 					console.error(`Failed to process image ${i} for recipe ${recipe.short_name}:`, err);
 					failed++;
@@ -114,7 +147,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 			// Save recipe if any images were processed
 			if (processed > 0) {
+				console.log(`[alt-text-bulk] saving ${recipe.short_name} (${processed} images updated)`);
 				await recipe.save();
+				console.log(`[alt-text-bulk] saved ${recipe.short_name}`);
 			}
 
 			results.push({
@@ -124,6 +159,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				failed,
 			});
 		}
+
+		console.log(
+			`[alt-text-bulk] run complete in ${((Date.now() - runStart) / 1000).toFixed(0)}s — ` +
+				`processed=${results.reduce((s, r) => s + r.processed, 0)} ` +
+				`failed=${results.reduce((s, r) => s + r.failed, 0)}. Sending response.`
+		);
 
 		return json({
 			success: true,

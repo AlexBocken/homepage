@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { generateAltText, type RecipeContext } from '$lib/server/ai/alttext.js';
+import { generateAltText, DEFAULT_ALT_TEXT_MODEL, type RecipeContext } from '$lib/server/ai/alttext.js';
 import { checkOllamaHealth } from '$lib/server/ai/ollama.js';
 import { Recipe } from '$models/Recipe.js';
 import { requireGroup } from '$lib/server/middleware/auth';
@@ -43,10 +43,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		};
 
 		// Generate alt text in both languages
+		const singleStart = Date.now();
+		console.log(
+			`[alt-text-single] ${shortName} image ${imageIndex} (${image.mediapath}) ` +
+				`model=${modelName || DEFAULT_ALT_TEXT_MODEL}`
+		);
 		const altTextResult = await generateAltText(
 			image.mediapath,
 			context,
-			modelName || 'gemma3:latest'
+			modelName || DEFAULT_ALT_TEXT_MODEL
+		);
+		console.log(
+			`[alt-text-single] ${shortName} done in ${((Date.now() - singleStart) / 1000).toFixed(1)}s`
 		);
 
 		// Update recipe in database
