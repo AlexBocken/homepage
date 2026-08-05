@@ -87,6 +87,10 @@
 
 	// svelte-ignore state_referenced_locally
 	let images = $state(data.recipe.images || []);
+	// German alt text for the hero image. Held separately from `images` so the field
+	// still has somewhere to write when the recipe has no image row yet.
+	// svelte-ignore state_referenced_locally
+	let imageAlt = $state(data.recipe.images?.[0]?.alt || "");
 	// svelte-ignore state_referenced_locally
 	let short_name = $state(data.recipe.short_name || "");
 	// svelte-ignore state_referenced_locally
@@ -113,17 +117,19 @@
 			// New image selected (will be uploaded on form submission)
 			recipeImages = [{
 				mediapath: 'pending',
-				alt: images[0]?.alt || "",
+				alt: imageAlt,
 				caption: images[0]?.caption || ""
 			}];
 		} else if (images && images.length > 0) {
-			// Use existing images
-			recipeImages = images;
+			// Use existing images, with the edited alt text applied to the hero
+			recipeImages = images.map((img: { alt?: string }, i: number) =>
+				i === 0 ? { ...img, alt: imageAlt } : img
+			);
 		} else {
 			// No images - use placeholder based on short_name
 			recipeImages = [{
 				mediapath: `${short_name.trim()}.webp`,
-				alt: "",
+				alt: imageAlt,
 				caption: ""
 			}];
 		}
@@ -325,6 +331,29 @@
 	.url-field input:focus-visible {
 		border-color: var(--color-primary);
 		outline: none;
+	}
+	.alt-row {
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-end;
+		justify-content: center;
+		flex-wrap: wrap;
+		margin-block: 0 2rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.alt-field input {
+		min-width: min(32rem, 100%);
+	}
+	.alt-count {
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		color: var(--color-text-secondary);
+		padding-bottom: 0.7em;
+		font-variant-numeric: tabular-nums;
+	}
+	.alt-count.over {
+		color: var(--red);
 	}
 	.toggle-field {
 		align-self: center;
@@ -608,6 +637,9 @@
 	<input type="hidden" name="existing_image_path" value={images[0]?.mediapath || `${old_short_name}.webp`} />
 
 	<!-- Hidden inputs for complex nested data -->
+	<!-- Without images_json the extractor sees no images at all, and the action's
+	     `recipeData.images?.[0]?.alt || ''` fallback blanked the alt text on save. -->
+	<input type="hidden" name="images_json" value={JSON.stringify(currentRecipeData.images)} />
 	<input type="hidden" name="ingredients_json" value={JSON.stringify(ingredients)} />
 	<input type="hidden" name="instructions_json" value={JSON.stringify(instructions)} />
 	<input type="hidden" name="add_info_json" value={JSON.stringify(add_info)} />
@@ -677,6 +709,21 @@
 						label="Als Basisrezept markieren"
 					/>
 				</div>
+			</div>
+
+			<div class="alt-row">
+				<label class="url-field alt-field">
+					<span>Bildbeschreibung (Alt-Text)</span>
+					<input
+						bind:value={imageAlt}
+						maxlength="125"
+						aria-label="Bildbeschreibung"
+						placeholder="Was auf dem Bild zu sehen ist — für Screenreader"
+					/>
+				</label>
+				<span class="alt-count" class:over={imageAlt.length > 125}>
+					{imageAlt.length}/125
+				</span>
 			</div>
 
 			<div class="form-size-section">
