@@ -98,6 +98,14 @@
 	// rather than the tick count is deliberate: with a fixed 6 ticks, a 0–220 g series
 	// has to jump to 100 g steps, where allowing more gridlines keeps it on 25 g.
 	const MAX_Y_INTERVALS = 10;
+	// How far past the left/right plot edges a dataset may paint, so a point sitting
+	// on the x limit is drawn as a full circle instead of a half one. Covers the
+	// hovered radius (4) plus its border.
+	const EDGE_CLIP_PAD = 6;
+	// Touch has no "pointer left the chart" event, so a tap-and-drag leaves the
+	// tooltip and cursor stuck on screen. Dismiss them shortly after the finger
+	// lifts — long enough to read the value, short enough not to linger.
+	const TOUCH_DISMISS_MS = 500;
 
 	/** Candidate gridline steps from `from` upward: 1, 2, 2.5, 5 × a power of ten.
 	 *  @param {number} from @param {number} i */
@@ -389,6 +397,40 @@
 		setXWindow(newMin, newMin + newSpan, true);
 	}
 
+	// ── Touch: auto-dismiss the tooltip after the finger lifts ─────────────────
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let touchDismissTimer;
+
+	function cancelTouchDismiss() {
+		if (touchDismissTimer) { clearTimeout(touchDismissTimer); touchDismissTimer = undefined; }
+	}
+
+	/** Clear the tooltip + dashed cursor (and any parent-synced hover). */
+	function clearHover() {
+		const c = chart;
+		if (!c) return;
+		c.setActiveElements([]);
+		c.tooltip?.setActiveElements([], { x: 0, y: 0 });
+		c.update('none');
+		onHover?.(null);
+	}
+
+	/** @param {PointerEvent} e */
+	function onTouchStart(e) {
+		if (e.pointerType === 'mouse') return;
+		cancelTouchDismiss();
+	}
+
+	/** @param {PointerEvent} e */
+	function onTouchEnd(e) {
+		if (e.pointerType === 'mouse') return;
+		cancelTouchDismiss();
+		touchDismissTimer = setTimeout(() => {
+			touchDismissTimer = undefined;
+			clearHover();
+		}, TOUCH_DISMISS_MS);
+	}
+
 	function createChart() {
 		if (!canvas || !data?.datasets || !ChartCtor) return;
 		if (chart) chart.destroy();
@@ -437,6 +479,12 @@
 				tension: ds.tension ?? 0.3,
 				fill: ds.fill ?? false,
 				spanGaps: true,
+				// The first and last points sit exactly on the x limits, so with the
+				// default clip (the plot area's edges) only their inner halves get
+				// drawn. Widen the clip box horizontally by a point's worth of pixels
+				// so the end markers render whole. Top/bottom stay clipped: a σ-band
+				// fill spilling past the axes would read as a drawing bug.
+				clip: ds.clip ?? { left: EDGE_CLIP_PAD, right: EDGE_CLIP_PAD, top: 0, bottom: 0 },
 				order: ds.order ?? i,
 				...(isBar ? { maxBarThickness: 40 } : {})
 			};
@@ -723,6 +771,15 @@
 
 		// Pan/pinch/wheel gesture wiring (zoom mode only). Pointer events cover
 		// mouse-drag, touch-drag and multi-touch pinch; wheel zooms on desktop.
+		// Touch tooltips are dismissed on a timer after the finger lifts (all charts,
+		// zoom or not — a stuck tooltip is just as annoying on a static one).
+		if (canvas) {
+			canvas.addEventListener('pointerdown', onTouchStart);
+			canvas.addEventListener('pointerup', onTouchEnd);
+			canvas.addEventListener('pointercancel', onTouchEnd);
+			canvas.addEventListener('pointerleave', onTouchEnd);
+		}
+
 		if (zoom && canvas) {
 			canvas.addEventListener('pointerdown', onPointerDown);
 			canvas.addEventListener('pointermove', onPointerMove);
@@ -762,6 +819,13 @@
 			disposed = true;
 			mq.removeEventListener('change', onTheme);
 			obs?.disconnect();
+			cancelTouchDismiss();
+			if (canvas) {
+				canvas.removeEventListener('pointerdown', onTouchStart);
+				canvas.removeEventListener('pointerup', onTouchEnd);
+				canvas.removeEventListener('pointercancel', onTouchEnd);
+				canvas.removeEventListener('pointerleave', onTouchEnd);
+			}
 			if (zoom && canvas) {
 				canvas.removeEventListener('pointerdown', onPointerDown);
 				canvas.removeEventListener('pointermove', onPointerMove);
