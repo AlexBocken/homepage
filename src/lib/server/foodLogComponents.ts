@@ -19,6 +19,7 @@
  */
 
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
+import { ingredientGrams } from '$lib/js/ingredientAmount';
 
 // The BLS/USDA table accessors and the USDA display-name map are imported lazily
 // inside resolveLeaves rather than at the top: they pull in nutritionMatcher, which
@@ -307,8 +308,7 @@ function directRecipeLeaves(ingredients: any[], mappings: any[]): { leaves: Leaf
 			const leaf = mappingLeaf(mapping);
 			if (!leaf) continue;
 
-			const amount = parseAmount(item?.amount || '') || (mapping.defaultAmountUsed ? 1 : 0);
-			const grams = amount * (mapping.gramsPerUnit || 0);
+			const grams = ingredientGrams(mapping, item?.amount);
 			if (grams <= 0) continue;
 			weightGrams += grams;
 			leaves.push({ ...leaf, amountGrams: grams });
@@ -405,17 +405,6 @@ export function parseAnchorRecipeRef(ingredientName: string): string | null {
 	href = href.replace(/^(\.?\/?rezepte\/|\.\/|\/)/, '');
 	if (href.includes('.')) return null;
 	return href || null;
-}
-
-function parseAmount(amount: string | undefined): number {
-	if (!amount?.trim()) return 0;
-	const s = amount.trim().replace(',', '.');
-	const range = s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
-	if (range) return (parseFloat(range[1]) + parseFloat(range[2])) / 2;
-	const frac = s.match(/^(\d+)\s*\/\s*(\d+)$/);
-	if (frac) return parseInt(frac[1]) / parseInt(frac[2]);
-	const n = parseFloat(s);
-	return isNaN(n) ? 0 : n;
 }
 
 // ------------------------------------------------------ top-level entry builder

@@ -8,6 +8,7 @@
  * in the NutritionMapping objects from the API to keep client bundle small.
  */
 import type { NutritionMapping } from '$types/types';
+import { ingredientGrams } from '$lib/js/ingredientAmount';
 
 export type MacroTotals = {
 	calories: number;
@@ -75,39 +76,6 @@ export type IngredientNutrition = {
 	mapped: boolean;
 };
 
-/** Parse a recipe amount string to a number */
-function parseAmount(amount: string): number {
-	if (!amount?.trim()) return 0;
-	let s = amount.trim();
-
-	const rangeMatch = s.match(/^(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)$/);
-	if (rangeMatch) {
-		return (parseFloat(rangeMatch[1].replace(',', '.')) + parseFloat(rangeMatch[2].replace(',', '.'))) / 2;
-	}
-
-	s = s.replace(',', '.');
-
-	const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
-	if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
-
-	const mixedMatch = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
-	if (mixedMatch) return parseInt(mixedMatch[1]) + parseInt(mixedMatch[2]) / parseInt(mixedMatch[3]);
-
-	const parsed = parseFloat(s);
-	return isNaN(parsed) ? 0 : parsed;
-}
-
-/** Calculate grams for a single ingredient */
-function calculateGrams(
-	amount: string,
-	mapping: NutritionMapping,
-	multiplier: number
-): number {
-	if (mapping.excluded || !mapping.gramsPerUnit) return 0;
-	const parsedAmount = parseAmount(amount) || (mapping.defaultAmountUsed ? 1 : 0);
-	return parsedAmount * multiplier * mapping.gramsPerUnit;
-}
-
 export type ReferencedNutrition = {
 	shortName: string;
 	name: string;
@@ -167,7 +135,7 @@ export function createNutritionCalculator(
 				return { name: ing.name, calories: 0, mapped: false };
 			}
 
-			const grams = calculateGrams(ing.amount, mapping, getMultiplier());
+			const grams = ingredientGrams(mapping, ing.amount, getMultiplier());
 			const calories = (grams / 100) * mapping.per100g.calories;
 
 			return { name: ing.name, calories, mapped: true };
@@ -197,7 +165,7 @@ export function createNutritionCalculator(
 			const mapping = mappingIndex.get(`${ing.sectionIndex}-${ing.ingredientIndex}`);
 			if (!mapping || mapping.matchMethod === 'none' || mapping.excluded || !mapping.per100g) continue;
 
-			const factor = calculateGrams(ing.amount, mapping, mult) / 100;
+			const factor = ingredientGrams(mapping, ing.amount, mult) / 100;
 
 			result.calories += factor * mapping.per100g.calories;
 			result.protein += factor * mapping.per100g.protein;
@@ -228,7 +196,7 @@ export function createNutritionCalculator(
 			const mapping = mappingIndex.get(`${ing.sectionIndex}-${ing.ingredientIndex}`);
 			if (!mapping || mapping.matchMethod === 'none' || mapping.excluded || !mapping.per100g) continue;
 
-			const factor = calculateGrams(ing.amount, mapping, mult) / 100;
+			const factor = ingredientGrams(mapping, ing.amount, mult) / 100;
 			for (const key of Object.keys(result) as (keyof MicroTotals)[]) {
 				result[key] += factor * ((mapping.per100g as any)[key] || 0);
 			}
@@ -253,7 +221,7 @@ export function createNutritionCalculator(
 			const mapping = mappingIndex.get(`${ing.sectionIndex}-${ing.ingredientIndex}`);
 			if (!mapping || mapping.matchMethod === 'none' || mapping.excluded || !mapping.per100g) continue;
 
-			const factor = calculateGrams(ing.amount, mapping, mult) / 100;
+			const factor = ingredientGrams(mapping, ing.amount, mult) / 100;
 			for (const key of AMINO_ACID_KEYS) {
 				result[key] += factor * ((mapping.per100g as any)[key] || 0);
 			}

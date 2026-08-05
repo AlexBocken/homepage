@@ -28,6 +28,7 @@ function parseTimeToISO8601(timeString: string | undefined): string | undefined 
 
 import type { RecipeModelType, NutritionMapping } from '$types/types';
 import { m, type RecipesLang } from '$lib/js/recipesI18n';
+import { ingredientGrams } from '$lib/js/ingredientAmount';
 
 interface HowToStep {
   "@type": "HowToStep";
@@ -169,19 +170,6 @@ export function generateRecipeJsonLd(data: RecipeModelType, referencedNutrition?
   return jsonLd;
 }
 
-function parseAmount(amount: string): number {
-  if (!amount?.trim()) return 0;
-  const s = amount.trim().replace(',', '.');
-  const rangeMatch = s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
-  if (rangeMatch) return (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
-  const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
-  if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
-  const mixedMatch = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
-  if (mixedMatch) return parseInt(mixedMatch[1]) + parseInt(mixedMatch[2]) / parseInt(mixedMatch[3]);
-  const parsed = parseFloat(s);
-  return isNaN(parsed) ? 0 : parsed;
-}
-
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '');
 }
@@ -221,9 +209,7 @@ function computeNutritionInfo(
       const m = index.get(`${si}-${ii}`);
       if (!m || m.matchMethod === 'none' || m.excluded || !m.per100g) continue;
 
-      const amount = parseAmount(item.amount || '') || (m.defaultAmountUsed ? 1 : 0);
-      const grams = amount * (m.gramsPerUnit || 0);
-      const factor = grams / 100;
+      const factor = ingredientGrams(m, item.amount) / 100;
 
       totals.calories += factor * m.per100g.calories;
       totals.protein += factor * m.per100g.protein;

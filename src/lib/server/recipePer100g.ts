@@ -8,6 +8,7 @@
  */
 import { NUTRITION_DB, type NutritionEntry } from '$lib/data/nutritionDb';
 import { BLS_DB, type BlsEntry } from '$lib/data/blsDb';
+import { ingredientGrams } from '$lib/js/ingredientAmount';
 import type { NutritionPer100g } from '$types/types';
 
 let blsByCode: Map<string, BlsEntry> | null = null;
@@ -21,17 +22,6 @@ function getBlsByCode(): Map<string, BlsEntry> {
 function getUsdaByFdcId(): Map<number, NutritionEntry> {
 	if (!usdaByFdcId) usdaByFdcId = new Map(NUTRITION_DB.map((e) => [e.fdcId, e]));
 	return usdaByFdcId;
-}
-
-function parseAmount(amount: string | undefined): number {
-	if (!amount?.trim()) return 0;
-	const s = amount.trim().replace(',', '.');
-	const rangeMatch = s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
-	if (rangeMatch) return (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
-	const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
-	if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
-	const parsed = parseFloat(s);
-	return isNaN(parsed) ? 0 : parsed;
 }
 
 function resolvePer100g(m: {
@@ -75,9 +65,8 @@ export function computePer100g(recipe: {
 		const section = recipe.ingredients?.[m.sectionIndex];
 		const items = section?.list ?? section?.ingredients ?? section?.items ?? [];
 		const ing = items[m.ingredientIndex];
-		const parsedAmount = (ing ? parseAmount(ing.amount) : 0) || (m.defaultAmountUsed ? 1 : 0);
 
-		const grams = parsedAmount * m.gramsPerUnit;
+		const grams = ingredientGrams(m, ing?.amount);
 		totalGrams += grams;
 		const factor = grams / 100;
 		for (const [k, v] of Object.entries(per100g as Record<string, unknown>)) {

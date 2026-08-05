@@ -10,7 +10,8 @@ import { Recipe } from '$models/Recipe';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
-import { computeRecipeNutritionTotals, resolvePer100g, parseAmount, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
+import { computeRecipeNutritionTotals, resolvePer100g, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
+import { ingredientGrams } from '$lib/js/ingredientAmount';
 import { scaleFromPer100g } from '$lib/fitness/nutritionMath';
 import { offPortions } from '$lib/server/offPortions';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
@@ -52,8 +53,7 @@ async function computeRecipePer100g(id: string): Promise<Record<string, number>>
 			if (/<a\s/i.test(item.name || '')) continue;
 			const mapping = mappingIndex.get(`${si}-${ii}`);
 			if (!mapping || mapping.matchMethod === 'none' || mapping.excluded) continue;
-			const amount = parseAmount(item.amount || '') || (mapping.defaultAmountUsed ? 1 : 0);
-			totalWeightGrams += amount * (mapping.gramsPerUnit || 0);
+			totalWeightGrams += ingredientGrams(mapping, item.amount);
 		}
 	}
 

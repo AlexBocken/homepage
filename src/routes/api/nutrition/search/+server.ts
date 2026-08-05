@@ -13,6 +13,7 @@ import { offPortions } from '$lib/server/offPortions';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { resolveBarcodeOverrides } from '$lib/server/barcodeOverrides';
 import { groupsPresent } from '$lib/fitness/microCoverage';
+import { ingredientGrams } from '$lib/js/ingredientAmount';
 
 type SearchResult = {
 	source: 'bls' | 'usda' | 'recipe' | 'off';
@@ -98,18 +99,6 @@ function lookupUsda(fdcId: string, full: boolean): SearchResult | null {
 	};
 }
 
-/** Parse ingredient amount string to a number */
-function parseAmount(amount: string | undefined): number {
-	if (!amount?.trim()) return 0;
-	let s = amount.trim().replace(',', '.');
-	const rangeMatch = s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
-	if (rangeMatch) return (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
-	const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
-	if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
-	const parsed = parseFloat(s);
-	return isNaN(parsed) ? 0 : parsed;
-}
-
 /** Compute per-100g nutrition for a recipe from its ingredients + nutritionMappings */
 function computeRecipePer100g(recipe: any): { per100g: Record<string, number>; totalGrams: number } | null {
 	const mappings = recipe.nutritionMappings;
@@ -146,9 +135,8 @@ function computeRecipePer100g(recipe: any): { per100g: Record<string, number>; t
 		const section = recipe.ingredients?.[m.sectionIndex];
 		const items = section?.list ?? section?.ingredients ?? section?.items ?? [];
 		const ing = items[m.ingredientIndex];
-		const parsedAmount = (ing ? parseAmount(ing.amount) : 0) || (m.defaultAmountUsed ? 1 : 0);
 
-		const grams = parsedAmount * m.gramsPerUnit;
+		const grams = ingredientGrams(m, ing?.amount);
 		totalGrams += grams;
 		const factor = grams / 100;
 		for (const [k, v] of Object.entries(per100g as Record<string, unknown>)) {

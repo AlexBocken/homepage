@@ -5,6 +5,7 @@
 	import { m } from '$lib/js/recipesI18n';
 	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
 	import { SPARSELY_MEASURED_KEYS } from '$lib/fitness/nutritionMath';
+	import { ingredientGrams } from '$lib/js/ingredientAmount';
 	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	// Blended over the ingredients that report them rather than over the whole pot,
@@ -72,21 +73,6 @@
 		return match ? parseFloat(match[1].replace(',', '.')) : 0;
 	});
 
-	// Parse amount string to number (simplified from nutrition.svelte.ts)
-	/** @param {string | undefined | null} amount */
-	function parseAmount(amount) {
-		if (!amount?.trim()) return 0;
-		let s = amount.trim().replace(',', '.');
-		const rangeMatch = s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
-		if (rangeMatch) return (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
-		const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
-		if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
-		const mixedMatch = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
-		if (mixedMatch) return parseInt(mixedMatch[1]) + parseInt(mixedMatch[2]) / parseInt(mixedMatch[3]);
-		const parsed = parseFloat(s);
-		return isNaN(parsed) ? 0 : parsed;
-	}
-
 	// Compute total recipe nutrition (all ingredients at multiplier=1)
 	const recipeTotals = $derived.by(() => {
 		/** @type {Record<string, number>} */
@@ -125,10 +111,9 @@
 		for (const ing of flatIngredients) {
 			const mapping = mappingIndex.get(`${ing.sectionIndex}-${ing.ingredientIndex}`);
 			if (!mapping || mapping.matchMethod === 'none' || mapping.excluded || !mapping.per100g) continue;
-			if (!mapping.gramsPerUnit) continue;
 
-			const parsedAmount = parseAmount(ing.amount) || (mapping.defaultAmountUsed ? 1 : 0);
-			const grams = parsedAmount * mapping.gramsPerUnit;
+			const grams = ingredientGrams(mapping, ing.amount);
+			if (!grams) continue;
 			totalWeightGrams += grams;
 			const factor = grams / 100;
 

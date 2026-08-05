@@ -12,6 +12,7 @@ import { BLS_DB, type BlsEntry } from '$lib/data/blsDb';
 import { lookupAlias } from '$lib/data/ingredientAliases';
 import { canonicalizeUnit, resolveGramsPerUnit } from '$lib/data/unitConversions';
 import { resolveDefaultAmount } from '$lib/data/defaultAmounts';
+import { parseAmount, ingredientGrams } from '$lib/js/ingredientAmount';
 import type { NutritionMapping, NutritionPer100g } from '$types/types';
 import { NutritionOverwrite } from '$models/NutritionOverwrite';
 import usdaEmbeddingsUrl from '$lib/data/nutritionEmbeddings.json?url';
@@ -509,28 +510,6 @@ async function usdaEmbeddingMatch(
 	return { entry: nutrition, confidence: bestScore };
 }
 
-/** Parse a recipe amount string to a number */
-export function parseAmount(amount: string): number {
-	if (!amount || !amount.trim()) return 0;
-	let s = amount.trim();
-
-	const rangeMatch = s.match(/^(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)$/);
-	if (rangeMatch) {
-		return (parseFloat(rangeMatch[1].replace(',', '.')) + parseFloat(rangeMatch[2].replace(',', '.'))) / 2;
-	}
-
-	s = s.replace(',', '.');
-
-	const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
-	if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
-
-	const mixedMatch = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
-	if (mixedMatch) return parseInt(mixedMatch[1]) + parseInt(mixedMatch[2]) / parseInt(mixedMatch[3]);
-
-	const parsed = parseFloat(s);
-	return isNaN(parsed) ? 0 : parsed;
-}
-
 // ── Global overwrite cache ──
 let overwriteCache: Map<string, any> | null = null;
 let overwriteCacheTime = 0;
@@ -838,8 +817,7 @@ export function computeRecipeNutritionTotals(
 			const per100g = resolvePer100g(mapping);
 			if (!per100g) continue;
 
-			const amount = parseAmount(item.amount || '') || (mapping.defaultAmountUsed ? 1 : 0);
-			const grams = amount * multiplier * (mapping.gramsPerUnit || 0);
+			const grams = ingredientGrams(mapping, item.amount, multiplier);
 			const factor = grams / 100;
 
 			for (const [key, value] of Object.entries(per100g)) {
