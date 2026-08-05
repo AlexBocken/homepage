@@ -3,6 +3,7 @@ import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { requireGroup } from '$lib/server/middleware/auth';
 import { computePer100g } from '$lib/server/recipePer100g';
+import { resolveReferences } from '$lib/server/recipeReferences';
 
 export const POST: RequestHandler = async ({ locals }) => {
 	await requireGroup(locals, 'rezepte_users');
@@ -13,7 +14,8 @@ export const POST: RequestHandler = async ({ locals }) => {
 	let skipped = 0;
 
 	for (const recipe of recipes) {
-		const result = computePer100g(recipe);
+		const references = await resolveReferences(recipe.ingredients || [], recipe.nutritionMappings);
+		const result = computePer100g(recipe, references);
 		if (!result) {
 			// Record the miss rather than leaving the field absent: "computed, and
 			// there was nothing usable" is what stops the listing endpoint from

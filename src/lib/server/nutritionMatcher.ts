@@ -12,7 +12,8 @@ import { BLS_DB, type BlsEntry } from '$lib/data/blsDb';
 import { lookupAlias } from '$lib/data/ingredientAliases';
 import { canonicalizeUnit, resolveGramsPerUnit } from '$lib/data/unitConversions';
 import { resolveDefaultAmount } from '$lib/data/defaultAmounts';
-import { parseAmount, ingredientGrams } from '$lib/js/ingredientAmount';
+import { parseAmount } from '$lib/js/ingredientAmount';
+import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
 import type { NutritionMapping, NutritionPer100g } from '$types/types';
 import { NutritionOverwrite } from '$models/NutritionOverwrite';
 import usdaEmbeddingsUrl from '$lib/data/nutritionEmbeddings.json?url';
@@ -712,7 +713,7 @@ export async function generateNutritionMappings(
 			const itemEn = sectionEn?.list?.[itemIdx];
 
 			// Anchor-tag references to other recipes — their nutrition
-			// is resolved separately via resolveReferencedNutrition()
+			// is resolved separately via resolveReferences()
 			const refSlug = parseAnchorRecipeRef(itemDe.name || '');
 			if (refSlug) {
 				mappings.push({
@@ -770,154 +771,4 @@ export function resolvePer100g(mapping: any): NutritionPer100g | null {
 		return entry?.per100g ?? null;
 	}
 	return null;
-}
-
-/**
- * Compute absolute nutrition totals for a recipe's ingredients using its nutritionMappings.
- * Returns total nutrients (not per-100g), optionally scaled by a multiplier.
- */
-export function computeRecipeNutritionTotals(
-	ingredients: any[],
-	nutritionMappings: any[],
-	multiplier = 1,
-): Record<string, number> {
-	const index = new Map(
-		(nutritionMappings || []).map((m: any) => [`${m.sectionIndex}-${m.ingredientIndex}`, m])
-	);
-
-	const totals: Record<string, number> = {};
-
-	// Collect section names for dedup (skip ingredients referencing earlier sections)
-	const sectionNames = new Set<string>();
-
-	for (let si = 0; si < ingredients.length; si++) {
-		const section = ingredients[si];
-		if (section.type === 'reference' || !section.list) {
-			if (section.name) sectionNames.add(stripHtml(section.name).toLowerCase().trim());
-			continue;
-		}
-		if (section.name) sectionNames.add(stripHtml(section.name).toLowerCase().trim());
-	}
-
-	for (let si = 0; si < ingredients.length; si++) {
-		const section = ingredients[si];
-		if (section.type === 'reference' || !section.list) continue;
-
-		const currentSectionName = section.name ? stripHtml(section.name).toLowerCase().trim() : '';
-
-		for (let ii = 0; ii < section.list.length; ii++) {
-			const item = section.list[ii];
-			const rawName = item.name || '';
-			const itemName = stripHtml(rawName).toLowerCase().trim();
-
-			// Skip anchor-tag references to other recipes (handled separately)
-			if (/<a\s/i.test(rawName)) continue;
-
-			// Skip if this ingredient name matches a DIFFERENT section's name
-			if (itemName && sectionNames.has(itemName) && itemName !== currentSectionName) continue;
-
-			const mapping = index.get(`${si}-${ii}`);
-			if (!mapping || mapping.matchMethod === 'none' || mapping.excluded) continue;
-
-			const per100g = resolvePer100g(mapping);
-			if (!per100g) continue;
-
-			const grams = ingredientGrams(mapping, item.amount, multiplier);
-			const factor = grams / 100;
-
-			for (const [key, value] of Object.entries(per100g)) {
-				if (typeof value === 'number') {
-					totals[key] = (totals[key] || 0) + factor * value;
-				}
-			}
-		}
-	}
-
-	return totals;
-}
-
-/** Strip HTML tags from a string */
-function stripHtml(html: string): string {
-	return html.replace(/<[^>]*>/g, '');
-}
-
-/** Parse anchor href from ingredient name, return recipe short_name or null */
-export function parseAnchorRecipeRef(ingredientName: string): string | null {
-	const match = ingredientName.match(/<a\s+href=["']?([^"' >]+)["']?[^>]*>/i);
-	if (!match) return null;
-	let href = match[1].trim();
-	href = href.split('?')[0];
-	if (href.startsWith('http') || href.includes('://')) return null;
-	href = href.replace(/^(\.?\/?rezepte\/|\.\/|\/)/, '');
-	if (href.includes('.')) return null;
-	return href || null;
-}
-
-export type ReferencedNutritionResult = {
-	shortName: string;
-	name: string;
-	nutrition: Record<string, number>;
-	baseMultiplier: number;
-};
-
-/**
- * Build nutrition totals for referenced recipes:
- * 1. Base recipe references (type='reference' with populated baseRecipeRef)
- * 2. Anchor-tag references in ingredient names (<a href=...>)
- *
- * When nutritionMappings are provided, uses recipeRefMultiplier from the
- * mapping for anchor-tag refs (allowing user-configured fractions).
- */
-export async function resolveReferencedNutrition(
-	ingredients: any[],
-	nutritionMappings?: any[],
-): Promise<ReferencedNutritionResult[]> {
-	const { Recipe } = await import('$models/Recipe');
-	const results: ReferencedNutritionResult[] = [];
-	const processedSlugs = new Set<string>();
-
-	// Build mapping index for recipeRefMultiplier lookup
-	const mappingIndex = new Map(
-		(nutritionMappings || [])
-			.filter((m: any) => m.recipeRef)
-			.map((m: any) => [m.recipeRef, m])
-	);
-
-	for (const section of ingredients) {
-		// Type 1: Base recipe references
-		if (section.type === 'reference' && section.baseRecipeRef) {
-			const ref = section.baseRecipeRef;
-			const slug = ref.short_name;
-			if (processedSlugs.has(slug)) continue;
-			processedSlugs.add(slug);
-
-			if (ref.nutritionMappings?.length > 0) {
-				const mult = section.baseMultiplier || 1;
-				const nutrition = computeRecipeNutritionTotals(ref.ingredients || [], ref.nutritionMappings, 1);
-				results.push({ shortName: slug, name: ref.name, nutrition, baseMultiplier: mult });
-			}
-		}
-
-		// Type 2: Anchor-tag references in ingredient names
-		if (section.list) {
-			for (const item of section.list) {
-				const refSlug = parseAnchorRecipeRef(item.name || '');
-				if (!refSlug || processedSlugs.has(refSlug)) continue;
-				processedSlugs.add(refSlug);
-
-				const refRecipe = await Recipe.findOne({ short_name: refSlug })
-					.select('short_name name ingredients nutritionMappings portions')
-					.lean();
-				if (!refRecipe?.nutritionMappings?.length) continue;
-
-				const mult = mappingIndex.get(refSlug)?.recipeRefMultiplier ?? 1;
-				const nutrition = computeRecipeNutritionTotals(
-					refRecipe.ingredients || [], refRecipe.nutritionMappings, 1
-				);
-				results.push({ shortName: refSlug, name: refRecipe.name, nutrition, baseMultiplier: mult });
-			}
-		}
-	}
-
-	return results;
 }

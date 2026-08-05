@@ -7,13 +7,12 @@ import { dbConnect } from '$utils/db';
 import { FavoriteIngredient } from '$models/FavoriteIngredient';
 import { Recipe } from '$models/Recipe';
 import { OpenFoodFact } from '$models/OpenFoodFact';
-import { getBlsEntryByCode, getNutritionEntryByFdcId } from '$lib/server/nutritionMatcher';
+import { computePer100g } from '$lib/server/recipePer100g';
 import { searchBlsUsda, scoreName, queryWords, NAME_LENGTH_PENALTY } from '$lib/server/nutritionSearchIndex';
 import { offPortions } from '$lib/server/offPortions';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { resolveBarcodeOverrides } from '$lib/server/barcodeOverrides';
 import { groupsPresent } from '$lib/fitness/microCoverage';
-import { ingredientGrams } from '$lib/js/ingredientAmount';
 
 type SearchResult = {
 	source: 'bls' | 'usda' | 'recipe' | 'off';
@@ -99,56 +98,24 @@ function lookupUsda(fdcId: string, full: boolean): SearchResult | null {
 	};
 }
 
-/** Compute per-100g nutrition for a recipe from its ingredients + nutritionMappings */
+/**
+ * Per-100 g nutrition for a recipe search result.
+ *
+ * Prefers the figures cached on the document. They are the only ones that
+ * include the recipes this one builds on — resolving those needs a database
+ * round trip per recipe, which a search returning thirty of them cannot afford —
+ * and using them here is also what keeps a recipe's calories in the food search
+ * equal to its calories on the listing card.
+ *
+ * The direct sum is the fallback for a recipe whose cache has not been built
+ * yet, and it understates any recipe with a base. That is the pre-cache state,
+ * not a second opinion.
+ */
 function computeRecipePer100g(recipe: any): { per100g: Record<string, number>; totalGrams: number } | null {
-	const mappings = recipe.nutritionMappings;
-	if (!mappings?.length) return null;
-
-	// Every numeric key an ingredient carries is summed, amino acids included —
-	// a fixed list silently drops whatever it forgets, which is how recipes ended
-	// up reporting no amino acids at all.
-	const totals: Record<string, number> = {};
-	let totalGrams = 0;
-
-	// Build mapping index
-	const mappingIndex = new Map<string, any>();
-	for (const m of mappings) {
-		mappingIndex.set(`${m.sectionIndex}-${m.ingredientIndex}`, m);
+	if (recipe.cachedPer100g && recipe.cachedTotalGrams > 0) {
+		return { per100g: recipe.cachedPer100g, totalGrams: recipe.cachedTotalGrams };
 	}
-
-	// Resolve per100g for each mapping and sum
-	for (const m of mappings) {
-		if (m.matchMethod === 'none' || m.excluded || !m.gramsPerUnit) continue;
-
-		let per100g = m.per100g;
-		if (!per100g) {
-			// Resolve from DB
-			if (m.source === 'bls' && m.blsCode) {
-				per100g = getBlsEntryByCode(m.blsCode)?.per100g;
-			} else if (m.fdcId) {
-				per100g = getNutritionEntryByFdcId(m.fdcId)?.per100g;
-			}
-		}
-		if (!per100g) continue;
-
-		// Find the ingredient in the recipe to get its amount
-		const section = recipe.ingredients?.[m.sectionIndex];
-		const items = section?.list ?? section?.ingredients ?? section?.items ?? [];
-		const ing = items[m.ingredientIndex];
-
-		const grams = ingredientGrams(m, ing?.amount);
-		totalGrams += grams;
-		const factor = grams / 100;
-		for (const [k, v] of Object.entries(per100g as Record<string, unknown>)) {
-			if (typeof v === 'number') totals[k] = (totals[k] ?? 0) + factor * v;
-		}
-	}
-
-	if (totalGrams <= 0) return null;
-
-	const per100g: Record<string, number> = {};
-	for (const [k, v] of Object.entries(totals)) per100g[k] = v / totalGrams * 100;
-	return { per100g, totalGrams };
+	return computePer100g(recipe);
 }
 
 /** GET: Search recipes, BLS, USDA, and OpenFoodFacts by fuzzy name match */
@@ -194,7 +161,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					$or: recipeFavIds.map(id =>
 						id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { short_name: id }
 					)
-				}).select('name short_name icon images ingredients nutritionMappings portions').lean()
+				}).select('name short_name icon images ingredients nutritionMappings portions cachedPer100g cachedTotalGrams').lean()
 				: [];
 			const favRecipeMap = new Map<string, any>();
 			for (const r of favRecipes) {
@@ -254,7 +221,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				{ short_name: { $regex: nameRegex, $options: 'i' } },
 				{ tags: { $regex: escaped, $options: 'i' } },
 			]
-		}).select('name short_name icon images ingredients nutritionMappings portions').limit(10).lean()
+		}).select('name short_name icon images ingredients nutritionMappings portions cachedPer100g cachedTotalGrams').limit(10).lean()
 			.catch(() => [] as any[]),
 		// NOTE: no `.sort({ $meta: 'textScore' })`. Sorting by text score forces
 		// Mongo to score every matching doc before limiting — 100ms–1s+ for common

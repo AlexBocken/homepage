@@ -2,7 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { generateRecipeJsonLd } from '$lib/js/recipeJsonLd';
-import { resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
+import { resolveReferences } from '$lib/server/recipeReferences';
 import type { RecipeModelType } from '$types/types';
 import { error } from '@sveltejs/kit';
 
@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
     throw error(404, "Recipe not found");
   }
 
-  const referencedNutrition = await resolveReferencedNutrition(recipe.ingredients || [], recipe.nutritionMappings);
+  const referencedNutrition = await resolveReferences(recipe.ingredients || [], recipe.nutritionMappings);
   const lang = params.recipeLang === 'recipes' ? 'en' : 'de';
   const jsonLd = generateRecipeJsonLd(recipe, referencedNutrition, lang);
 

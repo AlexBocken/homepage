@@ -134,9 +134,13 @@
 			}
 		}
 
-		// Add referenced recipe nutrition
+		// Add referenced recipe nutrition — its weight as well as its nutrients.
+		// Counting only the nutrients divided a base recipe's calories by the
+		// parent's grams alone, so logging a pizza overstated every figure by
+		// however much of it was dough.
 		for (const ref of referencedNutrition) {
 			const refMult = ref.baseMultiplier ?? 1;
+			totalWeightGrams += (ref.totalGrams ?? 0) * refMult;
 			for (const k of nutrientKeys) {
 				result[k] += (ref.nutrition?.[k] ?? 0) * refMult;
 			}

@@ -80,7 +80,13 @@ export type ReferencedNutrition = {
 	shortName: string;
 	name: string;
 	nutrition: Record<string, number>;
+	/** What the referenced recipe weighs, at multiplier 1. Needed by anything
+	 *  dividing by the recipe's weight — its nutrients without its grams is how a
+	 *  pizza's per-100 g figures came out inflated by the dough. */
+	totalGrams?: number;
 	baseMultiplier: number;
+	/** Share of the referenced recipe's own lines that resolved, 0–1. */
+	coverage?: number;
 };
 
 /** Strip HTML tags from a string */

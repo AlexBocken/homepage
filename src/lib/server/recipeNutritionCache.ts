@@ -14,6 +14,7 @@
  */
 import { Recipe } from '$models/Recipe';
 import { computePer100g } from '$lib/server/recipePer100g';
+import { resolveReferences } from '$lib/server/recipeReferences';
 
 export type NutritionFillResult = {
 	/** Recipes that gained usable figures. */
@@ -31,8 +32,12 @@ export async function fillMissingRecipeNutrition(): Promise<NutritionFillResult>
 
 	let filled = 0;
 	let empty = 0;
-	const ops = missing.map((recipe) => {
-		const result = computePer100g(recipe);
+	const ops = await Promise.all(missing.map(async (recipe) => {
+		// A recipe that builds on another is mostly that other recipe — a pizza is
+		// mostly dough. Leaving base recipes out was why a listing card could show
+		// a fraction of the calories the recipe's own page did.
+		const references = await resolveReferences(recipe.ingredients || [], recipe.nutritionMappings);
+		const result = computePer100g(recipe, references);
 		if (result) filled++;
 		else empty++;
 		return {
@@ -46,7 +51,7 @@ export async function fillMissingRecipeNutrition(): Promise<NutritionFillResult>
 				}
 			}
 		};
-	});
+	}));
 
 	await Recipe.bulkWrite(ops);
 	return { filled, empty };

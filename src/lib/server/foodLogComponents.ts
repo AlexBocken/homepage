@@ -20,6 +20,7 @@
 
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { ingredientGrams } from '$lib/js/ingredientAmount';
+import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
 
 // The BLS/USDA table accessors and the USDA display-name map are imported lazily
 // inside resolveLeaves rather than at the top: they pull in nutritionMatcher, which
@@ -330,7 +331,7 @@ function mappingLeaf(mapping: any): { source: LeafSource; sourceId: string } | n
  *
  * Referenced sub-recipes (base-recipe sections and `<a href>` ingredient anchors)
  * are expanded one level deep and scaled by their multiplier — the same depth
- * resolveReferencedNutrition uses, so the itemised leaves reproduce the recipe's
+ * resolveReferences uses, so the itemised leaves reproduce the recipe's
  * logged nutrition. Their mass is intentionally *not* added to the denominator, to
  * match how the recipe per-100 g is computed (weight counts direct ingredients
  * only); scaling every leaf by amountGrams/directWeight keeps the totals identical.
@@ -394,17 +395,6 @@ async function referencedRecipeLeaves(ingredients: any[], mappings: any[]): Prom
 
 function stripHtml(html: string): string {
 	return html.replace(/<[^>]*>/g, '');
-}
-
-/** Parse anchor href from an ingredient name → recipe short_name, or null. */
-export function parseAnchorRecipeRef(ingredientName: string): string | null {
-	const match = ingredientName.match(/<a\s+href=["']?([^"' >]+)["']?[^>]*>/i);
-	if (!match) return null;
-	let href = match[1].trim().split('?')[0];
-	if (href.startsWith('http') || href.includes('://')) return null;
-	href = href.replace(/^(\.?\/?rezepte\/|\.\/|\/)/, '');
-	if (href.includes('.')) return null;
-	return href || null;
 }
 
 // ------------------------------------------------------ top-level entry builder

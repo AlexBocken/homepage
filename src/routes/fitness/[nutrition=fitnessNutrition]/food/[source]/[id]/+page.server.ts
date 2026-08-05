@@ -10,8 +10,8 @@ import { Recipe } from '$models/Recipe';
 import { OpenFoodFact } from '$models/OpenFoodFact';
 import { CustomMeal } from '$models/CustomMeal';
 import { dbConnect } from '$utils/db';
-import { computeRecipeNutritionTotals, resolvePer100g, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
-import { ingredientGrams } from '$lib/js/ingredientAmount';
+import { computePer100g } from '$lib/server/recipePer100g';
+import { resolveReferences } from '$lib/server/recipeReferences';
 import { scaleFromPer100g } from '$lib/fitness/nutritionMath';
 import { offPortions } from '$lib/server/offPortions';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
@@ -26,46 +26,10 @@ async function computeRecipePer100g(id: string): Promise<Record<string, number>>
 		.lean();
 	if (!recipe) return {};
 
-	const mappings = recipe.nutritionMappings || [];
-	const ingredients = recipe.ingredients || [];
-
-	const totals = computeRecipeNutritionTotals(ingredients, mappings, 1);
-
-	const referencedNutrition = await resolveReferencedNutrition(ingredients, mappings);
-	for (const ref of referencedNutrition) {
-		const mult = ref.baseMultiplier ?? 1;
-		for (const [k, v] of Object.entries(ref.nutrition)) {
-			if (typeof v === 'number') {
-				totals[k] = (totals[k] || 0) + v * mult;
-			}
-		}
-	}
-
-	const mappingIndex = new Map(
-		mappings.map((m: any) => [`${m.sectionIndex}-${m.ingredientIndex}`, m])
-	);
-	let totalWeightGrams = 0;
-	for (let si = 0; si < ingredients.length; si++) {
-		const section = ingredients[si];
-		if (section.type === 'reference' || !section.list) continue;
-		for (let ii = 0; ii < section.list.length; ii++) {
-			const item = section.list[ii];
-			if (/<a\s/i.test(item.name || '')) continue;
-			const mapping = mappingIndex.get(`${si}-${ii}`);
-			if (!mapping || mapping.matchMethod === 'none' || mapping.excluded) continue;
-			totalWeightGrams += ingredientGrams(mapping, item.amount);
-		}
-	}
-
-	const per100g: Record<string, number> = {};
-	if (totalWeightGrams > 0) {
-		for (const [k, v] of Object.entries(totals)) {
-			per100g[k] = (v / totalWeightGrams) * 100;
-		}
-	} else {
-		Object.assign(per100g, totals);
-	}
-	return per100g;
+	// Base recipes contribute their weight as well as their nutrients. Adding only
+	// the latter divided a pizza's dough calories by the toppings' grams.
+	const references = await resolveReferences(recipe.ingredients || [], recipe.nutritionMappings);
+	return computePer100g(recipe, references)?.per100g ?? {};
 }
 
 export const load: PageServerLoad = async ({ params, url, fetch }) => {

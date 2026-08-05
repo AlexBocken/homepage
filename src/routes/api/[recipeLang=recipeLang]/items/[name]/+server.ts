@@ -4,7 +4,8 @@ import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
 import type { RecipeModelType, IngredientItem, InstructionItem } from '$types/types';
 import { isEnglish } from '$lib/server/recipeHelpers';
-import { getNutritionEntryByFdcId, getBlsEntryByCode, resolveReferencedNutrition } from '$lib/server/nutritionMatcher';
+import { getNutritionEntryByFdcId, getBlsEntryByCode } from '$lib/server/nutritionMatcher';
+import { resolveReferences } from '$lib/server/recipeReferences';
 
 /** Recursively map populated baseRecipeRef to resolvedRecipe field */
 function mapBaseRecipeRefs(items: any[]): any[] {
@@ -162,7 +163,7 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
     }
 
     // Resolve nutrition from referenced recipes (base refs + anchor tags)
-    recipe.referencedNutrition = await resolveReferencedNutrition(rawRecipe.ingredients || [], rawRecipe.nutritionMappings);
+    recipe.referencedNutrition = await resolveReferences(rawRecipe.ingredients || [], rawRecipe.nutritionMappings);
 
     // Merge English alt/caption with original image paths
     const imagesArray = Array.isArray(rawRecipe.images) ? rawRecipe.images : (rawRecipe.images ? [rawRecipe.images] : []);
@@ -189,6 +190,6 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
     recipe.instructions = mapBaseRecipeRefs(recipe.instructions);
   }
   // Resolve nutrition from referenced recipes (base refs + anchor tags)
-  recipe.referencedNutrition = await resolveReferencedNutrition(rawRecipe.ingredients || [], rawRecipe.nutritionMappings);
+  recipe.referencedNutrition = await resolveReferences(rawRecipe.ingredients || [], rawRecipe.nutritionMappings);
   return json(recipe);
 };
