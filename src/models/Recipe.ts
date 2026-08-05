@@ -195,6 +195,7 @@ const RecipeSchema = new mongoose.Schema(
        matchMethod: { type: String, enum: ['exact', 'embedding', 'manual', 'none'] },
        gramsPerUnit: { type: Number },
        defaultAmountUsed: { type: Boolean, default: false },
+       defaultAmount: { type: Number },
        unitConversionSource: { type: String, enum: ['direct', 'density', 'usda_portion', 'estimate', 'manual', 'none'] },
        manuallyEdited: { type: Boolean, default: false },
        excluded: { type: Boolean, default: false },

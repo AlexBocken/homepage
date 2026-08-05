@@ -95,7 +95,13 @@ export type NutritionMapping = {
   matchConfidence?: number;
   matchMethod: 'exact' | 'embedding' | 'manual' | 'none';
   gramsPerUnit?: number;
+  /** True when the line stated no amount and one was assumed. Display only —
+   *  `defaultAmount` carries the number the arithmetic uses. */
   defaultAmountUsed?: boolean;
+  /** Units assumed for a line that states no amount: half a teaspoon of a spice,
+   *  a tablespoon of oil. Absent on mappings written before it was recorded, which
+   *  is why `ingredientUnits` still falls back to one whole unit. */
+  defaultAmount?: number;
   unitConversionSource: 'direct' | 'density' | 'usda_portion' | 'estimate' | 'manual' | 'none';
   manuallyEdited: boolean;
   excluded: boolean;

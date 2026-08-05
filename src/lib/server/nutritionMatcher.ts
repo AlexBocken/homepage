@@ -663,6 +663,11 @@ export async function matchIngredient(
 				matchConfidence: confidence, matchMethod,
 				gramsPerUnit: unitResolution.grams,
 				defaultAmountUsed,
+				// The number, not just the fact. A category fallback can be half a
+				// teaspoon of a spice or a quarter of one; recording only the boolean
+				// left every consumer multiplying by a whole unit, so those lines were
+				// counted at two to four times what was meant.
+				defaultAmount: defaultAmt.amount,
 				unitConversionSource: unitResolution.source,
 				manuallyEdited: false,
 				excluded: defaultAmt.amount === 0,
