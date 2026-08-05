@@ -32,14 +32,6 @@
 			description: t.nutrition_mappings_description,
 			href: `/${data.recipeLang}/admin/nutrition`,
 			icon: '🥗'
-		},
-		{
-			title: data.lang === 'en' ? 'Convert food log' : 'Ernährungslog konvertieren',
-			description: data.lang === 'en'
-				? 'One-time migration of diary entries and meals to reference form.'
-				: 'Einmalige Migration der Tagebucheinträge und Mahlzeiten auf Referenzform.',
-			href: `/${data.recipeLang}/administration/convert-food-log`,
-			icon: '🔄'
 		}
 	]);
 </script>
