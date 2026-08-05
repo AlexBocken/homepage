@@ -59,6 +59,31 @@
 		}
 	);
 
+	// Snapshot of the English exactly as it was handed to us. A recipe that merely
+	// *has* a translation opens in 'preview' too, so the state alone cannot tell
+	// "user produced something to approve" from "user just opened the page".
+	const initialEditableJson = JSON.stringify(editableEnglish ?? null);
+
+	/** Set once an auto-translate run has replaced the English. */
+	let translationTouched = $state(false);
+
+	/**
+	 * Is there a translation the save button should approve? True after an
+	 * auto-translate, or once the English has been edited by hand. False for an
+	 * untouched existing translation, which keeps whatever needs_update state it had.
+	 */
+	export function hasPendingApproval(): boolean {
+		if (translationState === 'translating' || translationState === 'approved') return false;
+		if (translationTouched) return true;
+		return JSON.stringify(editableEnglish ?? null) !== initialEditableJson;
+	}
+
+	/** Approve the current English. Returns false if validation failed; the errors
+	 *  are rendered in-panel. */
+	export function approve(): boolean {
+		return handleApprove();
+	}
+
 	// Translation metadata (tracks which items were re-translated)
 	let translationMetadata = $state<any>(null);
 
@@ -243,6 +268,7 @@
 			}
 
 			translationState = 'preview';
+			translationTouched = true;
 
 		} catch (error: any) {
 			console.error('Translation error:', error);
@@ -310,7 +336,7 @@
 	});
 
 	// Handle approval
-	function handleApprove() {
+	function handleApprove(): boolean {
 		// Validate required fields
 		validationErrors = [];
 
@@ -325,7 +351,7 @@
 		}
 
 		if (validationErrors.length > 0) {
-			return;
+			return false;
 		}
 
 		translationState = 'approved';
@@ -339,6 +365,7 @@
 				}
 			}
 		}));
+		return true;
 	}
 
 	// Handle skip translation
@@ -602,6 +629,13 @@ button:disabled {
 	font-size: 1.05rem;
 }
 
+.approve-hint {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.5rem 0;
+	color: var(--color-text-secondary);
+	font-size: 0.85rem;
+}
 .approved-pill {
 	display: inline-flex;
 	align-items: center;
@@ -1012,9 +1046,7 @@ button:disabled {
 				<button class="btn-secondary" onclick={() => handleAutoTranslate()}>
 					Re-translate
 				</button>
-				<button class="btn-primary" onclick={handleApprove}>
-					Approve Translation
-				</button>
+				<span class="approve-hint">Speichern übernimmt die Übersetzung</span>
 			{:else}
 				<span class="approved-pill" aria-live="polite">Translation Approved</span>
 			{/if}

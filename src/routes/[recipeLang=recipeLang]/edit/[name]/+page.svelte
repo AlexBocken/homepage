@@ -38,7 +38,7 @@
 	let showTranslationWorkflow = $state(false);
 	// svelte-ignore state_referenced_locally
 	let translationData = $state<any>(data.recipe.translations?.en || null);
-	let changedFields = $state<string[]>([]);
+	let translationPanel = $state<any>(null);
 
 	// Store original recipe data for change detection
 	// svelte-ignore state_referenced_locally
@@ -153,6 +153,32 @@
 		};
 	});
 
+	/**
+	 * Empty string, empty array and an all-empty object all mean "not set".
+	 * The form normalises absent groups into fully-keyed objects — a recipe with no
+	 * baking step still gets `{length:'',temperature:'',mode:''}` — so comparing raw
+	 * values reported `baking` and `fermentation` as changed on every recipe that has
+	 * neither, and sent them to be re-translated for nothing. Keys are sorted and
+	 * Mongo's `_id` dropped so ordering and subdocument ids don't register as edits.
+	 */
+	function normalizeForCompare(value: unknown): unknown {
+		if (value === null || value === undefined) return '';
+		if (typeof value === 'string') return value.trim();
+		if (Array.isArray(value)) {
+			const items = value.map(normalizeForCompare);
+			return items.length ? items : '';
+		}
+		if (typeof value === 'object') {
+			const entries = Object.entries(value as Record<string, unknown>)
+				.filter(([key]) => key !== '_id')
+				.map(([key, v]) => [key, normalizeForCompare(v)] as const)
+				.filter(([, v]) => v !== '')
+				.sort(([a], [b]) => (a < b ? -1 : 1));
+			return entries.length ? Object.fromEntries(entries) : '';
+		}
+		return value;
+	}
+
 	// Detect which fields have changed from the original
 	function detectChangedFields(): string[] {
 		const current = currentRecipeData;
@@ -165,8 +191,12 @@
 		];
 
 		for (const field of fieldsToCheck) {
-			const oldValue = JSON.stringify((originalRecipe as Record<string, any>)[field] || '');
-			const newValue = JSON.stringify((current as Record<string, any>)[field] || '');
+			const oldValue = JSON.stringify(
+				normalizeForCompare((originalRecipe as Record<string, any>)[field])
+			);
+			const newValue = JSON.stringify(
+				normalizeForCompare((current as Record<string, any>)[field])
+			);
 			if (oldValue !== newValue) {
 				changed.push(field);
 			}
@@ -174,6 +204,15 @@
 
 		return changed;
 	}
+
+	/**
+	 * Which German fields moved since load. Must be reactive, not computed on demand:
+	 * the panel renders as soon as a translation exists, so the only code that used to
+	 * populate this (openTranslation) never ran for an already-translated recipe. It
+	 * stayed `[]`, and an empty list is the signal for "translate the whole recipe" —
+	 * which is why delta translation effectively never happened.
+	 */
+	let changedFields = $derived(translationData ? detectChangedFields() : []);
 
 	// Save recipe directly (no translation workflow)
 	async function saveRecipe() {
@@ -185,6 +224,19 @@
 			toast.error('Bitte einen Namen eingeben');
 			return;
 		}
+
+		// The panel has no Approve button any more — saving is what approves. Only a
+		// translation that was actually produced or edited counts; an untouched one
+		// falls through to the needs_update path below.
+		if (translationPanel?.hasPendingApproval()) {
+			if (!translationPanel.approve()) {
+				toast.error('Übersetzung unvollständig — bitte die markierten Felder ergänzen');
+				return;
+			}
+			// approve() fires onapproved, which submits the form itself.
+			return;
+		}
+
 		// Mark translation as needing update if fields changed
 		if (translationData) {
 			const changed = detectChangedFields();
@@ -207,7 +259,6 @@
 			toast.error('Bitte einen Namen eingeben');
 			return;
 		}
-		changedFields = translationData ? detectChangedFields() : [];
 		showTranslationWorkflow = true;
 		setTimeout(() => {
 			document.getElementById('translation-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -875,6 +926,7 @@
 {#if translationData || showTranslationWorkflow}
 	<div id="translation-section">
 		<TranslationApproval
+			bind:this={translationPanel}
 			germanData={currentRecipeData}
 			englishData={translationData}
 			changedFields={changedFields}
