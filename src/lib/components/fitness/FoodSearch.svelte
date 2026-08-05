@@ -81,6 +81,13 @@
 	 *   query?: string,
 	 *   results?: FoodItem[],
 	 *   placeholder?: string,
+	 *   lang?: 'de' | 'en',
+	 *   showBarcode?: boolean,
+	 *   sources?: string[],
+	 *   amountMode?: 'grams' | 'per-unit',
+	 *   unitLabel?: string,
+	 *   initialAmount?: number,
+	 *   previewBasisGrams?: number,
 	 * }}
 	 */
 	let {
@@ -96,9 +103,22 @@
 		query = $bindable(''),
 		results = $bindable(untrack(() => initialResults ?? [])),
 		placeholder = undefined,
+		// --- Opt-outs for hosts outside the fitness routes ---
+		// The recipe editor embeds this to map an ingredient to a food entry. It
+		// needs a narrower component than the diary does, and every one of these
+		// defaults to what the diary already gets.
+		lang: langProp = undefined,
+		showBarcode = true,
+		sources: lockedSources = undefined,
+		amountMode = 'grams',
+		unitLabel = undefined,
+		initialAmount = undefined,
+		previewBasisGrams = undefined,
 	} = $props();
 
-	const lang = $derived(detectFitnessLang(page.url.pathname));
+	// detectFitnessLang only strips a `/fitness/` prefix, so on any other route it
+	// falls through to English. A host outside those routes has to say.
+	const lang = $derived(langProp ?? detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
 	const isEn = $derived(lang === 'en');
@@ -254,8 +274,14 @@
 			loading = false;
 			return;
 		}
-		const sourceParam = allSources ? '' : [...activeSources].sort().join(',');
+		// A locked source list wins over the pill row, which is hidden in that case.
+		const sourceParam = lockedSources
+			? [...lockedSources].sort().join(',')
+			: allSources ? '' : [...activeSources].sort().join(',');
 		// Results are slim (no per100g) — served instantly from cache on repeat/backspace.
+		// The source list is part of the key: a query typed on the diary page searches
+		// every database, and replaying that inside a BLS/USDA-only host would answer
+		// with rows it cannot use.
 		const key = `${showFavorites ? 'f:' : ''}${hideReadyMeals ? 'nrm:' : ''}${sourceParam}|${q.toLowerCase()}`;
 		const cached = cacheGet(key);
 		if (cached) {
@@ -320,6 +346,19 @@
 			}
 		}
 		selected = chosen;
+
+		// Per-unit hosts already know the weight they are asking about — the grams a
+		// recipe's tablespoon resolved to — and a portion whose description names that
+		// unit is a better second guess than whichever portion happens to be first.
+		if (amountMode === 'per-unit') {
+			const named = unitLabel
+				? chosen.portions?.find((p) => p.description?.toLowerCase().includes(unitLabel.toLowerCase()))
+				: undefined;
+			chosenPortion = undefined;
+			logGrams = initialAmount || (named ? Math.round(named.grams) : 0);
+			return;
+		}
+
 		// Default to one of the first portion when the source offers any — that's the
 		// unit the label is written in, and far likelier what the user means than 100 g.
 		const first = chosen.portions?.[0];
@@ -327,7 +366,10 @@
 		logGrams = first ? Math.round(first.grams) : 100;
 	}
 
-	const previewGrams = $derived(logGrams);
+	// What the macro and micronutrient previews are scaled to. A per-unit host passes
+	// the ingredient's real weight in the recipe, so the preview answers "what does
+	// this contribute to the dish" rather than "what is in one tablespoon".
+	const previewGrams = $derived(previewBasisGrams ?? logGrams);
 
 	/** Scaled nutrient values for the preview */
 	const previewNutrients = $derived.by(() => {
@@ -1009,13 +1051,15 @@
 				<X size={16} />
 			</button>
 		{/if}
-		{#if browser && !isPrefilledMode}
+		{#if browser && !isPrefilledMode && showBarcode}
 			<button class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
 				<ScanBarcode size={20} />
 			</button>
 		{/if}
 	</div>
-	{#if !isPrefilledMode}
+	<!-- Hidden when the host locks the source list: pills that cannot be changed
+	     are furniture, and the one source you are allowed is already implied. -->
+	{#if !isPrefilledMode && !lockedSources}
 		<div class="fs-sources" role="group" aria-label={t.source_filter}>
 			{#each SOURCES as src}
 				<button
@@ -1150,12 +1194,41 @@
 
 		<!-- Amount selector — keyed so a newly picked food reseeds its portion basis -->
 		{#key selected.source + ':' + selected.id}
-			<PortionAmountInput
-				bind:grams={logGrams}
-				bind:selectedPortion={chosenPortion}
-				portions={selected.portions ?? []}
-				onenter={confirm}
-			/>
+			{#if amountMode === 'per-unit'}
+				<!-- The question here is not how much was eaten but what one of the
+				     ingredient's own units weighs: 1 EL of this oil is how many grams. -->
+				<label class="fs-per-unit">
+					<span class="fs-per-unit-label">1&nbsp;{unitLabel || (isEn ? 'unit' : 'Einheit')}&nbsp;=</span>
+					<input
+						class="fs-per-unit-input"
+						type="number"
+						min="0"
+						step="0.1"
+						inputmode="decimal"
+						bind:value={logGrams}
+						onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); confirm(); } }}
+					/>
+					<span class="fs-per-unit-unit">g</span>
+				</label>
+				{#if selected.portions?.length}
+					<div class="fs-per-unit-hints">
+						{#each selected.portions.slice(0, 4) as p (p.description)}
+							<button
+								type="button"
+								class="fs-per-unit-hint"
+								onclick={() => (logGrams = Math.round(p.grams))}
+							>{p.description} · {Math.round(p.grams)} g</button>
+						{/each}
+					</div>
+				{/if}
+			{:else}
+				<PortionAmountInput
+					bind:grams={logGrams}
+					bind:selectedPortion={chosenPortion}
+					portions={selected.portions ?? []}
+					onenter={confirm}
+				/>
+			{/if}
 		{/key}
 
 		{#if previewNutrients}
@@ -1199,7 +1272,9 @@
 
 		<div class="fs-actions">
 			<button class="fs-btn-cancel" onclick={() => { selected = null; }}>{t.cancel}</button>
-			<button class="fs-btn-confirm" onclick={confirm}>{btnLabel}</button>
+			<!-- confirm() refuses a zero amount. Disabling says so instead of letting
+			     the click land on nothing. -->
+			<button class="fs-btn-confirm" disabled={!logGrams || logGrams <= 0} onclick={confirm}>{btnLabel}</button>
 		</div>
 	</div>
 {/if}
@@ -1824,5 +1899,66 @@
 	}
 	.fs-btn-confirm:active {
 		transform: scale(0.97);
+	}
+	.fs-btn-confirm:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+	.fs-btn-confirm:disabled:active {
+		transform: none;
+	}
+
+	/* ── Per-unit amount (recipe mapping) ── */
+	.fs-per-unit {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+	}
+	.fs-per-unit-label {
+		font-weight: 600;
+		color: var(--color-text-primary);
+		white-space: nowrap;
+	}
+	.fs-per-unit-input {
+		width: 5.5rem;
+		padding: 0.4rem 0.5rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+		font-variant-numeric: tabular-nums;
+		text-align: right;
+	}
+	.fs-per-unit-input:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 1px;
+	}
+	.fs-per-unit-unit {
+		font-weight: 600;
+	}
+	/* The portions the source publishes, as one-tap fills. A USDA "1 tbsp, 13.6 g"
+	   is usually the answer, and typing it out from the detail page was the old way. */
+	.fs-per-unit-hints {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+	}
+	.fs-per-unit-hint {
+		padding: 0.2rem 0.55rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-secondary);
+		font-size: 0.7rem;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+	.fs-per-unit-hint:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+		scale: 1.05;
 	}
 </style>
