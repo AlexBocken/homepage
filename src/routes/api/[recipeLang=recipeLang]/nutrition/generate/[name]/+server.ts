@@ -41,9 +41,13 @@ export const POST: RequestHandler = async ({ params, locals, url }) => {
 		return manualMappings.get(key) || m;
 	});
 
+	// New mappings make the stored per-100 g figures a claim about a recipe that no
+	// longer exists. Unsetting marks them "never calculated"; the listing endpoint
+	// refills them on the next request. Nothing recomputes a cache that is merely
+	// stale, so leaving it set would keep serving the old numbers forever.
 	await Recipe.updateOne(
 		{ _id: recipe._id },
-		{ $set: { nutritionMappings: finalMappings } }
+		{ $set: { nutritionMappings: finalMappings }, $unset: { cachedPer100g: '', cachedTotalGrams: '' } }
 	);
 
 	return json({ mappings: finalMappings, count: finalMappings.length });

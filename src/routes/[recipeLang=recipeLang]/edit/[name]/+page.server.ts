@@ -206,9 +206,14 @@ export const actions = {
 			await dbConnect();
 
 			try {
+				// Ingredients or their mappings may have changed, which makes the stored
+				// per-100 g figures a claim about a recipe that no longer exists.
+				// Unsetting marks them "never calculated" and the listing endpoint
+				// refills them; nothing recomputes a cache that is merely stale, so a
+				// value left in place would be served forever.
 				const result = await Recipe.findOneAndUpdate(
 					{ short_name: originalShortName },
-					recipe_json,
+					{ $set: recipe_json, $unset: { cachedPer100g: '', cachedTotalGrams: '' } },
 					{ returnDocument: 'after' }
 				);
 
@@ -220,7 +225,13 @@ export const actions = {
 					});
 				}
 
-				// Save nutrition mappings (deferred from nutrition UI)
+				// Save nutrition mappings (deferred from nutrition UI).
+				//
+				// A rejected write is reported rather than logged: a mapping that fails
+				// the schema — an unknown `source`, a NaN `fdcId` — discards the whole
+				// array, and swallowing that showed the user a successful save while
+				// their mapping work was gone. The recipe body itself is already
+				// written by this point, which the message has to say.
 				const nutritionMappingsJson = formData.get('nutritionMappings_json')?.toString();
 				if (nutritionMappingsJson) {
 					try {
@@ -233,6 +244,11 @@ export const actions = {
 						}
 					} catch (e) {
 						console.error('Failed to save nutrition mappings:', e);
+						return fail(500, {
+							error: `Das Rezept wurde gespeichert, die Nährwert-Zuordnungen aber nicht: ${e instanceof Error ? e.message : String(e)}`,
+							errors: ['Nutrition mappings not saved'],
+							values: serializableFormValues(formData)
+						});
 					}
 				}
 
