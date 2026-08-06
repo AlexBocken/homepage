@@ -8,6 +8,7 @@ import { Recipe } from '$models/Recipe';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { recipeThumbUrl } from '$lib/utils/recipeImage';
 import { calorieTargetForDate, stampDailyTargets } from '$lib/server/dailyTargets';
+import { trendValueOn } from '$lib/fitness/trend';
 import mongoose from 'mongoose';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
@@ -82,10 +83,14 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 			.catch(() => null)
 		: Promise.resolve(null);
 
-	const [foodRes, goalRes, weightRes, exerciseData, favRes, recentRes, dayCalorieGoal, nudgeData] = await Promise.all([
+	const [foodRes, goalRes, weightRes, weightHistoryRes, exerciseData, favRes, recentRes, dayCalorieGoal, nudgeData] = await Promise.all([
 		fetch(`/api/fitness/food-log?date=${dateParam}`),
 		fetch('/api/fitness/goal'),
 		fetch('/api/fitness/measurements/latest'),
+		// Weights up to and including the viewed day. A per-kg protein goal has to be
+		// read against the weight you were then; `to` keeps anything later out of the
+		// trend entirely rather than trusting the client to ignore it.
+		fetch(`/api/fitness/measurements?to=${dateParam}&limit=2000`),
 		exercisePromise,
 		fetch('/api/fitness/favorite-ingredients'),
 		fetch(`/api/fitness/food-log?from=${recentFromStr}&to=${todayStr}`),
@@ -147,11 +152,23 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 			.catch(() => {});
 	}
 
+	// What the weight trend said on the viewed day, for a per-kg protein goal.
+	// Null when nothing had been weighed yet, in which case the page falls back to
+	// the latest reading — the old behaviour, and the best guess available.
+	const weightHistory = weightHistoryRes.ok ? await weightHistoryRes.json() : { measurements: [] };
+	const trendWeight = trendValueOn(
+		(weightHistory.measurements ?? [])
+			.filter((m: { weight?: number | null }) => m.weight != null)
+			.map((m: { date: string; weight: number }) => ({ date: m.date, value: m.weight })),
+		dateParam
+	);
+
 	return {
 		date: dateParam,
 		foodLog,
 		goal,
 		dayCalorieGoal,
+		trendWeight,
 		latestWeight: weightRes.ok ? await weightRes.json() : {},
 		exerciseKcal: roundedExerciseKcal,
 		projectedExercise,

@@ -286,8 +286,10 @@
 		if (cal > 0) {
 			// Compute protein % from target
 			let protGrams = Number(editProteinTarget) || 0;
-			if (editProteinMode === 'per_kg' && latestWeight) {
-				protGrams = protGrams * latestWeight;
+			// Same weight the rings use, or the preview would promise a split the page
+			// then draws differently.
+			if (editProteinMode === 'per_kg' && goalWeightKg) {
+				protGrams = protGrams * goalWeightKg;
 			}
 			prot = Math.min(Math.round((protGrams * 4) / cal * 100), 100);
 			const remaining = 100 - prot;
@@ -688,11 +690,19 @@
 	// day" nudges from what is left of them (see $lib/fitness/macroGoals): protein is
 	// body-weight-based and unaffected by exercise, so extra exercise calories flow
 	// into fat and carbs.
+	// The weight a per-kg protein goal is read against: the *trend* on the viewed
+	// day, never a raw reading. A single measurement carries a kilo of water noise,
+	// so a target set from it moves for reasons that have nothing to do with the
+	// goal; and for a past day it has to be the trend as it stood *then*, or last
+	// month's diary restates its target against today's scale. `latestWeight` is
+	// only a fallback for when the history request itself failed.
+	const goalWeightKg = $derived(data.trendWeight ?? latestWeight);
+
 	const macroGoals = $derived(macroGoalGrams({
 		calorieGoal: effectiveCalorieGoal,
 		proteinMode: goalProteinMode,
 		proteinTarget: goalProteinTarget,
-		weightKg: latestWeight,
+		weightKg: goalWeightKg,
 		fatPercent: goalFatPercent,
 		carbPercent: goalCarbPercent,
 	}));

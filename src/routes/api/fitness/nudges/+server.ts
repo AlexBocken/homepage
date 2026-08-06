@@ -11,6 +11,7 @@ import { buildNudges, learnStaples, type Remaining } from '$lib/fitness/nudges';
 import { resolveEntries } from '$lib/server/foodLogComponents';
 import { entriesCalories, entriesMacroGrams } from '$lib/fitness/nutritionMath';
 import { macroGoalGrams } from '$lib/fitness/macroGoals';
+import { trendValueOn } from '$lib/fitness/trend';
 import { calorieTargetForDate } from '$lib/server/dailyTargets';
 
 /** How far back to look for foods eaten often enough to count as staples. */
@@ -108,10 +109,17 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!remaining) {
 		if (dateStr < localDateStr()) return json({ nudges: [], stapleCount: staples.length, remaining: null });
 
-		const [goal, latestWeight, sessions, dayTarget] = await Promise.all([
+		const [goal, weightHistory, sessions, dayTarget] = await Promise.all([
 			FitnessGoal.findOne({ username: user.nickname }).lean() as any,
-			BodyMeasurement.findOne({ createdBy: user.nickname, weight: { $exists: true, $ne: null } })
-				.sort({ date: -1 }).select('weight').lean() as any,
+			// The weight trend on this day, matching what the page's rings are drawn
+			// against. A raw latest reading would put these suggestions on a different
+			// protein target than the ring above them — the exact drift the shared
+			// macro-goal helper exists to prevent.
+			BodyMeasurement.find({
+				createdBy: user.nickname,
+				weight: { $exists: true, $ne: null },
+				date: { $lte: dayEnd },
+			}).sort({ date: 1 }).select('date weight').lean() as any,
 			WorkoutSession.find({
 				createdBy: user.nickname,
 				startTime: { $gte: dayStart, $lte: dayEnd },
@@ -128,7 +136,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			calorieGoal,
 			proteinMode: goal?.proteinMode,
 			proteinTarget: goal?.proteinTarget,
-			weightKg: latestWeight?.weight ?? null,
+			weightKg: trendValueOn(
+				(weightHistory ?? []).map((m: { date: Date; weight: number }) => ({
+					date: m.date,
+					value: m.weight,
+				})),
+				dateStr
+			),
 			fatPercent: goal?.fatPercent,
 			carbPercent: goal?.carbPercent,
 		});

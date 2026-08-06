@@ -135,3 +135,43 @@ export function sparseTrend(
 	}
 	return out;
 }
+
+/**
+ * The trend value as it stood on a given day.
+ *
+ * A goal expressed per kilo of body weight has to be read against the weight you
+ * were then, not the weight you are now — otherwise opening last month's diary
+ * restates its protein target against today's scale reading and the day looks
+ * missed (or met) for a reason that had not happened yet.
+ *
+ * The raw reading for the day is the wrong answer even when there is one: a single
+ * measurement carries a kilo of water noise, and a target that jumps around with it
+ * is not a target. `timeDecayedTrend` is causal — index i is built only from points
+ * up to i — so the trend at the last measurement on or before `onDate` is exactly
+ * "what the trend said that day", with no knowledge of anything later.
+ *
+ * @param points Chronological or not; sorted here. Later-than-`onDate` points are
+ *   dropped before the trend runs, so they cannot pull the answer.
+ * @returns The trend weight, or null when nothing had been measured yet.
+ */
+export function trendValueOn(
+	points: Array<{ date: Date | string | number; value: number }>,
+	onDate: Date | string,
+	tauDays: number = TREND_TAU_DAYS
+): number | null {
+	const cutoff = new Date(onDate).getTime();
+	const upTo = points
+		.filter((p) => p.value != null && !Number.isNaN(p.value) && new Date(p.date).getTime() <= cutoff)
+		.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+	if (upTo.length === 0) return null;
+	// One reading is its own trend; the EMA seeds from it either way.
+	if (upTo.length === 1) return upTo[0].value;
+
+	const { trend } = timeDecayedTrend(
+		upTo.map((p) => p.value),
+		upTo.map((p) => p.date),
+		tauDays
+	);
+	return trend[trend.length - 1] ?? null;
+}
