@@ -20,10 +20,16 @@
 	import CloudRainWind from '@lucide/svelte/icons/cloud-rain-wind';
 	import CloudSnow from '@lucide/svelte/icons/cloud-snow';
 	import CloudLightning from '@lucide/svelte/icons/cloud-lightning';
+	import CircleQuestionMark from '@lucide/svelte/icons/circle-question-mark';
+	import DropletOff from '@lucide/svelte/icons/droplet-off';
+	import Droplet from '@lucide/svelte/icons/droplet';
 	import Droplets from '@lucide/svelte/icons/droplets';
+	import Waves from '@lucide/svelte/icons/waves';
+	import ThermometerSun from '@lucide/svelte/icons/thermometer-sun';
 	import Info from '@lucide/svelte/icons/info';
 	import { clampToViewport } from '$lib/js/clampToViewport';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
+	import { dewPointC, humidityFeel } from '$lib/fitness/weather';
 	import { page } from '$app/state';
 
 	/** @type {{ weather: { temperatureC: number, humidity: number, condition: string, code?: number } | null | undefined }} */
@@ -44,11 +50,14 @@
 		rain: CloudRain,
 		showers: CloudRainWind,
 		snow: CloudSnow,
-		thunderstorm: CloudLightning
+		thunderstorm: CloudLightning,
+		unknown: CircleQuestionMark
 	};
 
-	const condition = $derived(/** @type {keyof typeof ICONS} */ (weather?.condition ?? 'cloudy'));
-	const Icon = $derived(ICONS[condition] ?? Cloud);
+	const condition = $derived(/** @type {keyof typeof ICONS} */ (weather?.condition ?? 'unknown'));
+	// An unrecognised condition string falls to the same question mark as an unmapped
+	// code — the component never invents a sky either.
+	const Icon = $derived(ICONS[condition] ?? CircleQuestionMark);
 	// Spelled out rather than built from the condition string: a typo'd or newly added
 	// condition then fails to compile instead of rendering a blank pill.
 	const LABELS = $derived({
@@ -61,9 +70,47 @@
 		rain: t.weather_rain,
 		showers: t.weather_showers,
 		snow: t.weather_snow,
-		thunderstorm: t.weather_thunderstorm
+		thunderstorm: t.weather_thunderstorm,
+		unknown: t.weather_unknown
 	});
 	const label = $derived(LABELS[condition] ?? weather?.condition ?? '');
+
+	// How the air felt to work in. Derived from temperature *and* humidity, because the
+	// percentage alone does not say — see humidityFeel.
+	const feel = $derived(
+		weather ? humidityFeel(weather.temperatureC, weather.humidity) : null
+	);
+	const dewPoint = $derived(weather ? dewPointC(weather.temperatureC, weather.humidity) : null);
+
+	const FEEL_ICONS = {
+		dry: DropletOff,
+		comfortable: Droplet,
+		humid: Droplets,
+		muggy: Waves,
+		oppressive: ThermometerSun
+	};
+	const FEEL_LABELS = $derived({
+		dry: t.humidity_dry,
+		comfortable: t.humidity_comfortable,
+		humid: t.humidity_humid,
+		muggy: t.humidity_muggy,
+		oppressive: t.humidity_oppressive
+	});
+	const FeelIcon = $derived(feel ? FEEL_ICONS[feel] : Droplets);
+	// Named only when it is worth knowing. On an ordinary day the percentage speaks for
+	// itself and a word for it is noise; once the air is holding sweat in, that is the
+	// thing that explains the run.
+	const feelWorthNaming = $derived(feel === 'humid' || feel === 'muggy' || feel === 'oppressive');
+	// The full reading always reachable, whether or not the word is shown.
+	const humidityTitle = $derived(
+		[
+			`${t.humidity} ${weather?.humidity}%`,
+			dewPoint != null ? `${t.dew_point} ${dewPoint.toFixed(1)} °C` : '',
+			feel ? FEEL_LABELS[feel] : ''
+		]
+			.filter(Boolean)
+			.join(' · ')
+	);
 
 	let showSource = $state(false);
 </script>
@@ -72,10 +119,16 @@
 	<div class="stat-pill weather has-info">
 		<Icon size={14} />
 		<span class="weather-condition">{label}</span>
+		{#if condition === 'unknown' && weather.code != null}
+			<!-- The code is the whole point of an unknown reading: it is what turns "we
+			     don't know" into a one-line fix. -->
+			<span class="weather-code">WMO {weather.code}</span>
+		{/if}
 		<span class="weather-sep" aria-hidden="true">·</span>
 		<span class="weather-temp">{weather.temperatureC.toFixed(1)} °C</span>
-		<span class="weather-humidity" title={t.humidity}>
-			<Droplets size={12} />{weather.humidity}%
+		<span class="weather-humidity" class:strong={feelWorthNaming} title={humidityTitle}>
+			<FeelIcon size={12} />{weather.humidity}%
+			{#if feelWorthNaming && feel}<span class="weather-feel">{FEEL_LABELS[feel]}</span>{/if}
 		</span>
 		<button
 			class="weather-info-trigger"
@@ -116,6 +169,10 @@
 	.weather-sep {
 		opacity: 0.5;
 	}
+	.weather-code {
+		font-variant-numeric: tabular-nums;
+		opacity: 0.75;
+	}
 	.weather-temp {
 		font-variant-numeric: tabular-nums;
 	}
@@ -125,6 +182,15 @@
 		gap: 0.15rem;
 		font-variant-numeric: tabular-nums;
 		opacity: 0.85;
+	}
+	/* Air that held the sweat in is the part of the reading that explains a run, so it
+	   stops being the quiet half of the pill. */
+	.weather-humidity.strong {
+		opacity: 1;
+		font-weight: 600;
+	}
+	.weather-feel {
+		margin-left: 0.15rem;
 	}
 	.weather-info-trigger {
 		display: flex;

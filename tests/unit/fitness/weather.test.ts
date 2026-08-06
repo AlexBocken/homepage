@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { conditionFromWmoCode, trackAverage } from '$lib/fitness/weather';
+import { conditionFromWmoCode, trackAverage, dewPointC, humidityFeel } from '$lib/fitness/weather';
 import { weatherUrls, pickHour } from '$lib/server/weather';
 
 // The parts of the weather lookup that must be right without a network: which point and
@@ -33,10 +33,11 @@ describe('conditionFromWmoCode', () => {
 		expect(conditionFromWmoCode(86)).toBe('snow');
 	});
 
-	it('falls back to overcast for a code it does not know', () => {
-		// The raw code is stored alongside, so an unmapped one is recoverable.
-		expect(conditionFromWmoCode(4)).toBe('cloudy');
-		expect(conditionFromWmoCode(999)).toBe('cloudy');
+	it('admits a code it does not know instead of guessing overcast', () => {
+		// Claiming a sky we were not told about is worse than showing the gap; the raw
+		// code is stored and rendered alongside, so it is a one-line fix when it happens.
+		expect(conditionFromWmoCode(4)).toBe('unknown');
+		expect(conditionFromWmoCode(999)).toBe('unknown');
 	});
 });
 
@@ -148,5 +149,52 @@ describe('pickHour', () => {
 	it('has nothing to pick from an empty response', () => {
 		expect(pickHour(undefined, new Date())).toBeNull();
 		expect(pickHour({ time: [] }, new Date())).toBeNull();
+	});
+});
+
+describe('dewPointC', () => {
+	it('matches the textbook values for the Magnus formula', () => {
+		// 20 °C / 50% → 9.3 °C is the standard worked example.
+		expect(dewPointC(20, 50)).toBeCloseTo(9.3, 1);
+		// Saturated air: dew point is the temperature itself.
+		expect(dewPointC(15, 100)).toBeCloseTo(15, 1);
+		// Below freezing stays sane.
+		expect(dewPointC(-5, 80)).toBeCloseTo(-7.9, 1);
+		// The same 60% either side of the band boundary, which is the point of the scale.
+		expect(dewPointC(12, 60)).toBeCloseTo(4.5, 1);
+		expect(dewPointC(26, 60)).toBeCloseTo(17.6, 1);
+	});
+
+	it('clamps an implausible zero rather than returning nothing', () => {
+		// A stored 0% is a rounded 0.4 far more often than genuinely dry-to-the-limit air,
+		// and log(0) would take the whole reading down with it.
+		expect(dewPointC(20, 0)).toBeLessThan(-20);
+		expect(Number.isFinite(dewPointC(20, 0) as number)).toBe(true);
+	});
+
+	it('has nothing to say about unusable inputs', () => {
+		expect(dewPointC(NaN, 50)).toBeNull();
+		expect(dewPointC(20, NaN)).toBeNull();
+	});
+});
+
+describe('humidityFeel', () => {
+	it('reads the same percentage differently depending on the temperature', () => {
+		// The whole reason the band exists: 60% is pleasant in spring and punishing in
+		// summer, because warm air at the same percentage holds far more water.
+		expect(humidityFeel(12, 60)).toBe('comfortable'); // dew point 4.5
+		expect(humidityFeel(27, 60)).toBe('muggy'); // dew point 18.6
+	});
+
+	it('follows the published dew-point bands at their °F boundaries', () => {
+		expect(humidityFeel(0, 60)).toBe('dry'); // ~-6.8
+		expect(humidityFeel(20, 50)).toBe('comfortable'); // ~9.3
+		expect(humidityFeel(24, 60)).toBe('humid'); // ~15.8, just over 60 °F
+		expect(humidityFeel(25, 70)).toBe('muggy'); // ~19.1, over 65 °F
+		expect(humidityFeel(30, 70)).toBe('oppressive'); // ~23.9, over 70 °F
+	});
+
+	it('has nothing to say about unusable inputs', () => {
+		expect(humidityFeel(NaN, 60)).toBeNull();
 	});
 });

@@ -18,7 +18,9 @@ export type WeatherCondition =
 	| 'rain'
 	| 'showers'
 	| 'snow'
-	| 'thunderstorm';
+	| 'thunderstorm'
+	/** The provider sent a code we have no mapping for. Shown as such, never guessed. */
+	| 'unknown';
 
 /** What gets stored on the session. */
 export type SessionWeather = {
@@ -57,8 +59,55 @@ export function conditionFromWmoCode(code: number): WeatherCondition {
 	if (code === 85 || code === 86) return 'snow';
 	if (code >= 80 && code <= 82) return 'showers';
 	if (code >= 95 && code <= 99) return 'thunderstorm';
-	// Unknown code: overcast is the least wrong guess, and `code` is stored anyway.
-	return 'cloudy';
+	// Anything else is reported as unknown rather than folded into overcast: a wrong
+	// claim about the sky is worse than an admitted gap, and the raw code travels with
+	// it so the gap can be closed later.
+	return 'unknown';
+}
+
+/**
+ * How the air felt to work in, on the dew-point scale.
+ *
+ * Relative humidity on its own says very little about that: 60% at 12 °C is pleasant and
+ * 60% at 27 °C is punishing, because warm air holds far more water at the same
+ * percentage. Dew point is the absolute measure, and it is the one that tracks whether
+ * sweat can still evaporate — which is exactly what makes a run feel harder.
+ */
+export type HumidityFeel = 'dry' | 'comfortable' | 'humid' | 'muggy' | 'oppressive';
+
+/**
+ * Dew point in °C, from temperature and relative humidity (Magnus–Tetens with the
+ * Sonntag coefficients, valid roughly −45…60 °C).
+ *
+ * Derived rather than stored: the provider offers it, but deriving means every reading
+ * already recorded gains a dew point without refetching a single one.
+ */
+export function dewPointC(temperatureC: number, humidityPercent: number): number | null {
+	if (!Number.isFinite(temperatureC) || !Number.isFinite(humidityPercent)) return null;
+	// 0% would take log(0); clamp rather than return nothing, since a stored 0 is far
+	// more likely to be a rounded 0.4% than genuinely dry-to-the-limit air.
+	const rh = Math.min(100, Math.max(1, humidityPercent));
+	const gamma = Math.log(rh / 100) + (17.62 * temperatureC) / (243.12 + temperatureC);
+	const dp = (243.12 * gamma) / (17.62 - gamma);
+	return Math.round(dp * 10) / 10;
+}
+
+/**
+ * The dew-point bands in common use, which are published in whole °F and converted here:
+ * 40 °F → 4.4, 60 °F → 15.6, 65 °F → 18.3, 70 °F → 21.1.
+ *
+ * They happen to be the boundaries endurance guidance uses too — pace begins to suffer
+ * above a 60 °F dew point, noticeably past 65 °F and badly past 70 °F — which is why this
+ * scale is worth showing on a run rather than the raw percentage alone.
+ */
+export function humidityFeel(temperatureC: number, humidityPercent: number): HumidityFeel | null {
+	const dp = dewPointC(temperatureC, humidityPercent);
+	if (dp == null) return null;
+	if (dp < 4.4) return 'dry';
+	if (dp < 15.6) return 'comfortable';
+	if (dp < 18.3) return 'humid';
+	if (dp < 21.1) return 'muggy';
+	return 'oppressive';
 }
 
 export type TrackPointLike = { lat: number; lng: number; timestamp: number };
