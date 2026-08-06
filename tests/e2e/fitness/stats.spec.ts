@@ -26,6 +26,39 @@ test('customize dashboard enters and leaves edit mode', async ({ page }) => {
 	await expect(page.getByRole('button', { name: /Customize dashboard/i })).toBeVisible();
 });
 
+test('body-change tiles round-trip a reference period and body-fat unit', async ({ page }) => {
+	await gotoHydrated(page, '/fitness/stats');
+
+	// One tile per body chart (weight left, body fat right), each opening the
+	// settings for its own metric.
+	const tiles = page.getByRole('button', { name: /Change the reference period/i });
+	await expect(tiles.first()).toBeVisible();
+	await expect(tiles.first()).toContainText(/Last 7 days/i);
+
+	// The weight card is titled for its own metric, and carries no unit choice —
+	// kilos-or-percentage-points is a body-fat question.
+	await tiles.first().click();
+	await expect(page.getByRole('heading', { name: /Weight change/i })).toBeVisible();
+	await expect(page.getByRole('button', { name: /% points/i })).toBeHidden();
+	await page.getByRole('button', { name: /^Cancel$/i }).click();
+
+	// The body-fat card has it.
+	await tiles.last().click();
+	await expect(page.getByRole('heading', { name: /Body-fat change/i })).toBeVisible();
+	await page.getByRole('button', { name: /% points/i }).click();
+	await page.getByRole('button', { name: /^Save$/i }).click();
+
+	// The choice is persisted server-side, so it survives a reload.
+	await gotoHydrated(page, '/fitness/stats');
+	await expect(page.getByRole('button', { name: /Change the reference period/i }).last()).toContainText('pp');
+
+	// Put it back so the spec is idempotent.
+	await page.getByRole('button', { name: /Change the reference period/i }).last().click();
+	await page.getByRole('button', { name: /kg of fat/i }).click();
+	await page.getByRole('button', { name: /^Save$/i }).click();
+	await expect(page.getByRole('heading', { name: /Body-fat change/i })).toBeHidden();
+});
+
 test('macro split card opens the nutrient averages page', async ({ page }) => {
 	await gotoHydrated(page, '/fitness/stats');
 
