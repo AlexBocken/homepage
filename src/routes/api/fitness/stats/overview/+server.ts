@@ -41,27 +41,30 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	// Lifetime totals: tonnage lifted + cardio km + kcal estimate
 	// Use stored kcalEstimate when available; fall back to on-the-fly for legacy sessions
-	// Dashboard weight/body-fat charts show the last DISPLAY_DAYS; we also pull
-	// WARMUP_DAYS of earlier history (not displayed) so the time-decayed trend is
-	// already warmed up at the start of the shown window. The full-history view
+	// Dashboard weight/body-fat charts show the last DISPLAY_DAYS. The readings
+	// themselves are fetched in full: the trend is then warmed up over everything
+	// rather than an arbitrary run-up window, and the change tiles get a series
+	// that actually reaches their reference date. The full-history *chart* still
 	// lives at /fitness/stats/body.
 	const DISPLAY_DAYS = 14;
-	const WARMUP_DAYS = 28;
 	const displayCutoff = new Date();
 	displayCutoff.setDate(displayCutoff.getDate() - DISPLAY_DAYS);
-	const fetchCutoff = new Date();
-	fetchCutoff.setDate(fetchCutoff.getDate() - (DISPLAY_DAYS + WARMUP_DAYS));
 	const [allSessions, weightMeasurements, bfMeasurements] = await Promise.all([
 		WorkoutSession.find(
 			{ createdBy: user.nickname },
 			{ 'exercises.exerciseId': 1, 'exercises.sets': 1, 'exercises.totalDistance': 1, kcalEstimate: 1 }
 		).lean(),
+		// Full history, not just the charted window. The change tiles measure from a
+		// date the user picked, which is routinely older than the chart shows — with
+		// only the window fetched, "since 1 January" silently became "since 14 days
+		// ago" because that was the earliest reading that existed to fall back to.
+		// Two fields per row; the cost is bytes, not joins.
 		BodyMeasurement.find(
-			{ createdBy: user.nickname, weight: { $ne: null }, date: { $gte: fetchCutoff } },
+			{ createdBy: user.nickname, weight: { $ne: null } },
 			{ date: 1, weight: 1, _id: 0 }
 		).sort({ date: 1 }).lean(),
 		BodyMeasurement.find(
-			{ createdBy: user.nickname, bodyFatPercent: { $ne: null }, date: { $gte: fetchCutoff } },
+			{ createdBy: user.nickname, bodyFatPercent: { $ne: null } },
 			{ date: 1, bodyFatPercent: 1, _id: 0 }
 		).sort({ date: 1 }).lean()
 	]);
@@ -251,6 +254,34 @@ export const GET: RequestHandler = async ({ locals }) => {
 		}
 	}
 
+	// Series for the change tiles: every reading there has ever been, as absolute
+	// trend values. Separate from the charts, which stay at their DISPLAY_DAYS
+	// window — the tiles answer "how much since <date>", and that date can be any
+	// date, so they cannot be served from a fourteen-day slice.
+	//
+	// Only dates and the trend line are sent. The delta reads the trend when a
+	// series carries one, and the raw points, the ±1σ band and the labels are all
+	// chart furniture the tiles never look at.
+	const round2 = (v: number) => Math.round(v * 100) / 100;
+	const deltaWeightSeries = {
+		dates: weightMeasurements.map((m) => new Date(m.date).toISOString()),
+		sma: weightTrend.trend.map(round2),
+	};
+	// baseline 0 so `sma` is read as the absolute percentage: bodyFatDelta computes
+	// fat mass from `baseline + value`, which is what the chart's own baseline
+	// offset exists to undo.
+	const deltaBfSeries =
+		bfMeasurements.length > 0
+			? {
+					dates: bfMeasurements.map((m) => new Date(m.date).toISOString()),
+					sma: timeDecayedTrend(
+						bfMeasurements.map((m) => m.bodyFatPercent!),
+						bfMeasurements.map((m) => m.date)
+					).trend.map(round2),
+					baseline: 0,
+				}
+			: { dates: [], sma: [], baseline: 0 };
+
 	return json({
 		totalWorkouts,
 		totalTonnage: Math.round(totalTonnage / 1000 * 10) / 10,
@@ -258,6 +289,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		kcalEstimate,
 		workoutsChart,
 		weightChart,
-		bfChart
+		bfChart,
+		deltaWeightSeries,
+		deltaBfSeries
 	});
 };

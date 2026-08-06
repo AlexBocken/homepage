@@ -665,5 +665,18 @@ export const en = {
 	coach_cue_get_in_position: "Get into position",
 	body_trends_title: "Body trends",
 	body_trends_hint: "Scroll or pinch to zoom · drag to pan",
-	reset_zoom: "Reset zoom"
+	reset_zoom: "Reset zoom",
+	dash_body_delta: "Change tiles",
+	delta_weight_label: "Weight change",
+	delta_bodyfat_label: "Body-fat change",
+	delta_last_7d: "Last 7 days",
+	delta_since: "Since",
+	delta_edit_aria: "Change the reference period",
+	delta_title: "Change since",
+	delta_reference_date: "Reference date",
+	delta_rolling: "Rolling 7 days",
+	delta_unit_label: "Body fat measured in",
+	delta_unit_kg: "kg of fat",
+	delta_unit_pp: "% points",
+	delta_unit_pp_short: "pp"
 } as const satisfies Record<keyof typeof de, string>;

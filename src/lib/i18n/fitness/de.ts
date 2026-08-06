@@ -665,5 +665,18 @@ export const de = {
 	coach_cue_get_in_position: "In Position gehen",
 	body_trends_title: "Körperverlauf",
 	body_trends_hint: "Scrollen oder Pinch zum Zoomen · ziehen zum Verschieben",
-	reset_zoom: "Zoom zurücksetzen"
+	reset_zoom: "Zoom zurücksetzen",
+	dash_body_delta: "Veränderungs-Kacheln",
+	delta_weight_label: "Gewichtsänderung",
+	delta_bodyfat_label: "Körperfettänderung",
+	delta_last_7d: "Letzte 7 Tage",
+	delta_since: "Seit",
+	delta_edit_aria: "Bezugszeitraum ändern",
+	delta_title: "Veränderung seit",
+	delta_reference_date: "Stichtag",
+	delta_rolling: "Rollende 7 Tage",
+	delta_unit_label: "Körperfett gemessen in",
+	delta_unit_kg: "kg Fett",
+	delta_unit_pp: "%-Punkten",
+	delta_unit_pp_short: "pp"
 } as const;

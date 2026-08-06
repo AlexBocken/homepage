@@ -32,6 +32,10 @@
 	import { projectTrack, svgPath } from '$lib/fitness/trackSvg';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
+	import BodyDeltaTile from '$lib/components/fitness/BodyDeltaTile.svelte';
+	import DatePicker from '$lib/components/DatePicker.svelte';
+	import { weightDelta, bodyFatDelta } from '$lib/fitness/bodyDelta';
+	import { localDateStr } from '$lib/js/localDate';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 	import { onMount, untrack } from 'svelte';
 	import { buildSegStat } from '$lib/fitness/segmentStat';
@@ -108,7 +112,7 @@
 	const hasDemographics = $derived(data.goal?.sex != null && data.goal?.heightCm != null && data.goal?.birthYear != null);
 
 	// --- dashboard section visibility (per-user, /api/fitness/dashboard) ---
-	const DASH_KEYS = ['simpleStats', 'streak', 'weight', 'bodyFat', 'dietStats', 'muscleBalance', 'bodyParts', 'segmentStat', 'fastestK', 'ownPeriod', 'sharedPeriods'];
+	const DASH_KEYS = ['simpleStats', 'streak', 'weight', 'bodyFat', 'bodyDelta', 'dietStats', 'muscleBalance', 'bodyParts', 'segmentStat', 'fastestK', 'ownPeriod', 'sharedPeriods'];
 	let prefs = $derived.by(() => {
 		const d = data.dashboard ?? {};
 		/** @type {Record<string, boolean>} */
@@ -284,6 +288,7 @@
 			{ key: 'streak', label: t.dash_streak },
 			{ key: 'weight', label: t.dash_weight },
 			{ key: 'bodyFat', label: t.dash_bodyfat },
+			{ key: 'bodyDelta', label: t.dash_body_delta },
 			{ key: 'dietStats', label: t.dash_diet },
 			{ key: 'muscleBalance', label: t.muscle_balance },
 			{ key: 'bodyParts', label: t.body_parts },
@@ -485,6 +490,77 @@
 		]
 	});
 
+	// --- Body-change tiles (beside the weight / body-fat charts) --------------
+	// Both tiles read from one reference point, since they answer the same
+	// question about the same stretch of time. It lives in the dashboard prefs so
+	// the choice survives a reload; empty means the rolling last-7-days window.
+	// One reference date each. "Since I started lifting" and "since the cut began"
+	// are rarely the same day, and a single shared setting forced them to be.
+	let weightFrom = $state(untrack(() => (typeof data.dashboard?.weightDeltaFrom === 'string' ? data.dashboard.weightDeltaFrom : '')));
+	let bodyFatFrom = $state(untrack(() => (typeof data.dashboard?.bodyFatDeltaFrom === 'string' ? data.dashboard.bodyFatDeltaFrom : '')));
+	// Kilos of fat mass vs percentage points — a body-fat question only.
+	let deltaUnit = $state(untrack(() => /** @type {'kg' | 'pp'} */ (data.dashboard?.bodyDeltaUnit === 'pp' ? 'pp' : 'kg')));
+	/** @type {'weight' | 'bodyFat' | null} */
+	let deltaEditing = $state(null);
+	let deltaFromDraft = $state('');
+	/** @type {'kg' | 'pp'} */
+	let deltaUnitDraft = $state('kg');
+	const todayStr = localDateStr();
+
+	// End of the reference day: "since 1 Jul" reads the last weigh-in up to and
+	// including that day, not the one before it.
+	/** @param {string} from */
+	const fromMs = (from) =>
+		from ? new Date(`${from}T23:59:59`).getTime() : Date.now() - 7 * 86_400_000;
+	const weightFromMs = $derived(fromMs(weightFrom));
+	const bodyFatFromMs = $derived(fromMs(bodyFatFrom));
+
+	// Read from the full-history series, not the charts. The charts are a 14-day
+	// window, so measuring from anything older than that landed on their first
+	// point and the tile quietly reported the last fortnight under the label of
+	// whatever date was picked. Falls back to the chart series for a cached
+	// payload from before the API sent these.
+	const deltaWeightSeries = $derived(stats.deltaWeightSeries ?? stats.weightChart ?? {});
+	const deltaBfSeries = $derived(stats.deltaBfSeries ?? stats.bfChart ?? {});
+
+	const wDelta = $derived(weightDelta(deltaWeightSeries, weightFromMs));
+	const bfDelta = $derived(bodyFatDelta(deltaBfSeries, deltaWeightSeries, bodyFatFromMs, deltaUnit));
+
+	/** Sub-label under a tile: the rolling window, or the reading it measures from.
+	 *  @param {{ from: string } | null} d @param {string} from */
+	function deltaPeriod(d, from) {
+		if (!from) return t.delta_last_7d;
+		// The date actually compared against, not the one asked for — a reference
+		// date older than the data falls back to the earliest reading.
+		return `${t.delta_since} ${fmtShortDate(d?.from ?? from)}`;
+	}
+
+	/** @param {'weight' | 'bodyFat'} which */
+	function openDeltaEdit(which) {
+		deltaFromDraft = which === 'weight' ? weightFrom : bodyFatFrom;
+		deltaUnitDraft = deltaUnit;
+		deltaEditing = which;
+	}
+
+	function saveDelta() {
+		/** @type {Record<string, string>} */
+		const payload = {};
+		if (deltaEditing === 'weight') {
+			weightFrom = deltaFromDraft;
+			payload.weightDeltaFrom = weightFrom;
+		} else {
+			bodyFatFrom = deltaFromDraft;
+			deltaUnit = deltaUnitDraft;
+			payload.bodyFatDeltaFrom = bodyFatFrom;
+			payload.bodyDeltaUnit = deltaUnit;
+		}
+		deltaEditing = null;
+		fetch('/api/fitness/dashboard', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(payload)
+		}).catch(() => {});
+	}
 </script>
 
 <svelte:head><title>{t.stats_title} - Bocken</title></svelte:head>
@@ -743,6 +819,45 @@
 		</div>
 	{/if}
 
+	{#if deltaEditing}
+		<!-- One panel, but it is the settings for *one* metric: the title says which,
+		     the body-fat one carries that chart's purple, and the unit choice only
+		     appears where it means something. -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="goal-editor-overlay" onkeydown={(e) => { if (e.key === 'Escape') deltaEditing = null; }} role="dialog" tabindex="-1">
+			<div class="goal-editor-backdrop" onclick={() => deltaEditing = null} onkeydown={(e) => { if (e.key === 'Escape') deltaEditing = null; }} role="presentation"></div>
+			<div
+				class="goal-editor-panel delta-editor-panel"
+				style="--delta-accent: {deltaEditing === 'bodyFat' ? bfAccent : primary}"
+			>
+				<h3>{deltaEditing === 'bodyFat' ? t.delta_bodyfat_label : t.delta_weight_label}</h3>
+				<div class="delta-field">
+					<span class="delta-field-label">{t.delta_reference_date}</span>
+					<DatePicker bind:value={deltaFromDraft} {lang} max={todayStr} />
+					<button
+						class="delta-rolling"
+						class:active={!deltaFromDraft}
+						onclick={() => (deltaFromDraft = '')}
+						aria-pressed={!deltaFromDraft}
+					>{t.delta_rolling}</button>
+				</div>
+				{#if deltaEditing === 'bodyFat'}
+					<div class="delta-field">
+						<span class="delta-field-label">{t.delta_unit_label}</span>
+						<div class="delta-unit-tabs" role="group" aria-label={t.delta_unit_label}>
+							<button class:active={deltaUnitDraft === 'kg'} onclick={() => (deltaUnitDraft = 'kg')} aria-pressed={deltaUnitDraft === 'kg'}>{t.delta_unit_kg}</button>
+							<button class:active={deltaUnitDraft === 'pp'} onclick={() => (deltaUnitDraft = 'pp')} aria-pressed={deltaUnitDraft === 'pp'}>{t.delta_unit_pp}</button>
+						</div>
+					</div>
+				{/if}
+				<div class="goal-actions">
+					<button class="goal-save" onclick={saveDelta}>{t.save}</button>
+					<button class="goal-cancel" onclick={() => deltaEditing = null}>{t.cancel}</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	{#if prefs.streak}
 	<div class="chart-streak-row">
 		<div class="chart-streak-chart">
@@ -774,28 +889,55 @@
 	{/if}
 
 	{#if prefs.weight && (stats.weightChart?.data?.length ?? 0) > 1}
-		<a class="chart-link" href={resolve('/fitness/[stats=fitnessStats]/body', { stats: statsSlug })} aria-label={t.body_trends_title}>
-			<FitnessChart
-				data={weightChartData}
-				title={t.weight}
-				yUnit=" kg"
-				height="220px"
-			/>
-			<span class="chart-expand"><Maximize2 size={15} /></span>
-		</a>
+		<div class="chart-delta-row">
+			{#if prefs.bodyDelta}
+				<BodyDeltaTile
+					value={wDelta?.delta ?? null}
+					unit={t.kg}
+					label={t.delta_weight_label}
+					period={deltaPeriod(wDelta, weightFrom)}
+					accent={primary}
+					editLabel={t.delta_edit_aria}
+					onedit={() => openDeltaEdit('weight')}
+				/>
+			{/if}
+			<a class="chart-link chart-delta-chart" href={resolve('/fitness/[stats=fitnessStats]/body', { stats: statsSlug })} aria-label={t.body_trends_title}>
+				<FitnessChart
+					data={weightChartData}
+					title={t.weight}
+					yUnit=" kg"
+					height="220px"
+				/>
+				<span class="chart-expand"><Maximize2 size={15} /></span>
+			</a>
+		</div>
 	{/if}
 
 	{#if prefs.bodyFat && (stats.bfChart?.data?.length ?? 0) > 1}
-		<a class="chart-link" href={resolve('/fitness/[stats=fitnessStats]/body', { stats: statsSlug })} aria-label={t.body_trends_title}>
-			<FitnessChart
-				data={bfChartData}
-				title={bfChartTitle}
-				yUnit=" pp"
-				height="220px"
-				tooltipFormatter={bfTooltipFormatter}
-			/>
-			<span class="chart-expand"><Maximize2 size={15} /></span>
-		</a>
+		<div class="chart-delta-row tile-right">
+			<a class="chart-link chart-delta-chart" href={resolve('/fitness/[stats=fitnessStats]/body', { stats: statsSlug })} aria-label={t.body_trends_title}>
+				<FitnessChart
+					data={bfChartData}
+					title={bfChartTitle}
+					yUnit=" pp"
+					height="220px"
+					tooltipFormatter={bfTooltipFormatter}
+				/>
+				<span class="chart-expand"><Maximize2 size={15} /></span>
+			</a>
+			{#if prefs.bodyDelta}
+				<BodyDeltaTile
+					value={bfDelta?.delta ?? null}
+					unit={deltaUnit === 'pp' ? t.delta_unit_pp_short : t.kg}
+					label={t.delta_bodyfat_label}
+					period={deltaPeriod(bfDelta, bodyFatFrom)}
+					decimals={deltaUnit === 'pp' ? 2 : 1}
+					accent={bfAccent}
+					editLabel={t.delta_edit_aria}
+					onedit={() => openDeltaEdit('bodyFat')}
+				/>
+			{/if}
+		</div>
 	{/if}
 
 	{#if showMuscleNutrition}
@@ -1053,6 +1195,104 @@
 	.chart-link:focus-visible .chart-expand { opacity: 1; }
 	@media (hover: none) {
 		.chart-expand { opacity: 1; }
+	}
+
+	/* Body chart + change tile row (mirrors the chart + streak row) */
+	.chart-delta-row {
+		display: flex;
+		gap: 1rem;
+		align-items: stretch;
+	}
+	.chart-delta-chart {
+		flex: 1;
+		min-width: 0;
+	}
+	/* Stacked, the tile goes above its chart whichever side it sits on — same as
+	   the streak tile does. */
+	@media (max-width: 600px) {
+		.chart-delta-row {
+			flex-direction: column;
+		}
+		.chart-delta-row.tile-right {
+			flex-direction: column-reverse;
+		}
+	}
+
+	/* Reference-period editor (shared by both change tiles) */
+	.delta-editor-panel {
+		align-items: stretch;
+		min-width: min(20rem, 90vw);
+		/* Set inline per metric: the weight card takes the chart blue, the body-fat
+		   card the purple its own chart and tile already use, so the panel is
+		   recognisably the settings for the card you opened it from. */
+		border-top: 3px solid var(--delta-accent, var(--color-primary));
+	}
+	.delta-editor-panel h3 {
+		color: var(--delta-accent, var(--color-text-primary));
+	}
+	.delta-editor-panel .delta-rolling.active,
+	.delta-editor-panel .delta-unit-tabs button.active {
+		background: var(--delta-accent, var(--color-primary));
+		border-color: var(--delta-accent, var(--color-primary));
+		color: var(--color-text-on-primary);
+	}
+	.delta-editor-panel .goal-save {
+		background: var(--delta-accent, var(--color-primary));
+		border-color: var(--delta-accent, var(--color-primary));
+	}
+	.delta-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.delta-field-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--color-text-secondary);
+	}
+	.delta-rolling {
+		align-self: flex-start;
+		border: 1px solid var(--color-border);
+		background: none;
+		border-radius: var(--radius-pill, 1000px);
+		padding: 0.25rem 0.75rem;
+		cursor: pointer;
+		font-family: inherit;
+		font-size: 0.78rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		transition: background var(--transition-fast, 100ms), color var(--transition-fast, 100ms);
+	}
+	.delta-rolling.active {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-text-on-primary);
+	}
+	.delta-unit-tabs {
+		display: flex;
+		gap: 0.25rem;
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-pill, 1000px);
+		padding: 0.2rem;
+	}
+	.delta-unit-tabs button {
+		flex: 1;
+		border: none;
+		background: none;
+		padding: 0.35rem 0.8rem;
+		border-radius: var(--radius-pill, 1000px);
+		cursor: pointer;
+		font-family: inherit;
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		transition: background var(--transition-fast, 100ms);
+	}
+	.delta-unit-tabs button.active {
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 	}
 
 	/* Dashboard customize gear + panel */

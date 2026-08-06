@@ -14,12 +14,18 @@ export const GET: RequestHandler = async ({ locals }) => {
   out.segmentStatIds = [];
   out.fastestKm = 5;
   out.fastestActivity = 'running';
+  out.weightDeltaFrom = '';
+  out.bodyFatDeltaFrom = '';
+  out.bodyDeltaUnit = 'kg';
   if (doc) {
     for (const k of DASHBOARD_KEYS) if (typeof doc[k] === 'boolean') out[k] = doc[k] as boolean;
     if (Array.isArray(doc.segmentStatIds)) out.segmentStatIds = doc.segmentStatIds;
     else if (typeof doc.segmentStatId === 'string' && doc.segmentStatId) out.segmentStatIds = [doc.segmentStatId];
     if (typeof doc.fastestKm === 'number') out.fastestKm = doc.fastestKm;
     if (doc.fastestActivity === 'cycling' || doc.fastestActivity === 'running') out.fastestActivity = doc.fastestActivity;
+    if (typeof doc.weightDeltaFrom === 'string') out.weightDeltaFrom = doc.weightDeltaFrom;
+    if (typeof doc.bodyFatDeltaFrom === 'string') out.bodyFatDeltaFrom = doc.bodyFatDeltaFrom;
+    if (doc.bodyDeltaUnit === 'kg' || doc.bodyDeltaUnit === 'pp') out.bodyDeltaUnit = doc.bodyDeltaUnit;
   }
   return json(out);
 };
@@ -41,6 +47,17 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
   if (body.fastestActivity === 'running' || body.fastestActivity === 'cycling') {
     update.fastestActivity = body.fastestActivity;
+  }
+  // Reference date for the body-change tiles: a plain calendar day, or '' for
+  // the rolling 7-day window. Anything else is dropped rather than stored.
+  for (const key of ['weightDeltaFrom', 'bodyFatDeltaFrom'] as const) {
+    if (typeof body[key] === 'string') {
+      const v = body[key].trim();
+      if (v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v)) update[key] = v;
+    }
+  }
+  if (body.bodyDeltaUnit === 'kg' || body.bodyDeltaUnit === 'pp') {
+    update.bodyDeltaUnit = body.bodyDeltaUnit;
   }
   await dbConnect();
   await FitnessDashboard.updateOne({ username: user.nickname }, { $set: update }, { upsert: true });

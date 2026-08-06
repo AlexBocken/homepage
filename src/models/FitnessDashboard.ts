@@ -9,6 +9,7 @@ const FitnessDashboardSchema = new mongoose.Schema(
     streak: { type: Boolean, default: true },
     weight: { type: Boolean, default: true },
     bodyFat: { type: Boolean, default: true },
+    bodyDelta: { type: Boolean, default: true },
     dietStats: { type: Boolean, default: true },
     muscleBalance: { type: Boolean, default: true },
     bodyParts: { type: Boolean, default: true },
@@ -24,7 +25,16 @@ const FitnessDashboardSchema = new mongoose.Schema(
     // Distance (km) for the "fastest Nk" card.
     fastestKm: { type: Number, default: 5 },
     // Board the "fastest Nk" card shows (running pace vs cycling speed).
-    fastestActivity: { type: String, enum: ['running', 'cycling'], default: 'running' }
+    fastestActivity: { type: String, enum: ['running', 'cycling'], default: 'running' },
+    // Reference point each body-change tile measures from (YYYY-MM-DD). Empty
+    // means the rolling last-7-days window. Weight and body fat are set apart:
+    // "since I started lifting" and "since the cut began" are rarely the same
+    // day, and one shared date forced them to be.
+    weightDeltaFrom: { type: String, default: '' },
+    bodyFatDeltaFrom: { type: String, default: '' },
+    // Whether the body-fat tile reads in kilos of fat mass or percentage points.
+    // Body fat only — weight has no such choice.
+    bodyDeltaUnit: { type: String, enum: ['kg', 'pp'], default: 'kg' }
   },
   { timestamps: true }
 );
@@ -35,6 +45,7 @@ export interface IFitnessDashboard {
   streak: boolean;
   weight: boolean;
   bodyFat: boolean;
+  bodyDelta: boolean;
   dietStats: boolean;
   muscleBalance: boolean;
   bodyParts: boolean;
@@ -46,6 +57,9 @@ export interface IFitnessDashboard {
   segmentStatId: string;
   fastestKm: number;
   fastestActivity: 'running' | 'cycling';
+  weightDeltaFrom: string;
+  bodyFatDeltaFrom: string;
+  bodyDeltaUnit: 'kg' | 'pp';
 }
 
 let _model: mongoose.Model<IFitnessDashboard>;
@@ -64,6 +78,7 @@ export const DASHBOARD_KEYS = [
   'streak',
   'weight',
   'bodyFat',
+  'bodyDelta',
   'dietStats',
   'muscleBalance',
   'bodyParts',
