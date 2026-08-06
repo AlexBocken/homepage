@@ -23,29 +23,65 @@ export type AmountMapping = {
 };
 
 /**
+ * Hedges people put in front of an amount. They say the number is approximate,
+ * which changes nothing about how much to count — "~125 ml" is 125 ml. Left in
+ * place they defeated `parseFloat` outright, so the line fell through to its
+ * default of one unit and a glass of milk was weighed as a millilitre.
+ */
+const APPROX_PREFIX =
+	/^(?:~|≈|∼|±|\+\/-|ca\.?|circa|zirka|etwa|ungefähr|ungefaehr|approx\.?|about|rund|gut|knapp)\s*/;
+
+/** Typed as one character but meaning two numbers and a slash. */
+const VULGAR_FRACTIONS: Record<string, string> = {
+	'½': '1/2', '⅓': '1/3', '⅔': '2/3', '¼': '1/4', '¾': '3/4',
+	'⅕': '1/5', '⅖': '2/5', '⅗': '3/5', '⅘': '4/5', '⅙': '1/6',
+	'⅚': '5/6', '⅛': '1/8', '⅜': '3/8', '⅝': '5/8', '⅞': '7/8',
+};
+
+/** A bare number, decimal comma or point. */
+const NUM = String.raw`\d+(?:[.,]\d+)?`;
+
+/**
  * Parse a recipe amount string to a number.
  *
  * Handles what recipe lines actually contain: `"250"`, `"1,5"`, `"1/2"`,
- * `"1 1/2"`, and ranges like `"2-3"` or `"2–3"` (en dash), which resolve to
- * their midpoint. Anything unparseable — `"etwas"`, `"nach Geschmack"` — is 0.
+ * `"1 1/2"`, `"1½"`, hedges like `"~125"` or `"ca. 3"`, and ranges — `"2-3"`,
+ * `"2–3"`, `"2 bis 3"` — which resolve to their midpoint. Trailing text is
+ * ignored, so a unit left in the amount field does not break the number.
+ * Anything unparseable — `"etwas"`, `"nach Geschmack"` — is 0.
  */
 export function parseAmount(amount: string | undefined | null): number {
 	if (!amount || !amount.trim()) return 0;
-	let s = amount.trim();
+	let s = amount.trim().toLowerCase();
 
-	// Before the comma is normalised, so "2,5-3,5" is still seen as a range.
-	const rangeMatch = s.match(/^(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)$/);
+	// Repeated because both halves of "ca. ~125" are hedges, and because a range
+	// can carry one on each side ("ca. 2 bis ca. 3").
+	while (APPROX_PREFIX.test(s)) s = s.replace(APPROX_PREFIX, '');
+
+	// "1½" becomes "1 1/2" and a bare "½" becomes "1/2", which the mixed and
+	// plain fraction branches below already understand.
+	for (const [glyph, fraction] of Object.entries(VULGAR_FRACTIONS)) {
+		if (s.includes(glyph)) s = s.split(glyph).join(` ${fraction}`).trim();
+	}
+
+	// Before the comma is normalised, so "2,5-3,5" is still seen as a range. The
+	// second number may carry its own hedge, and anything after it is a unit.
+	const rangeMatch = s.match(
+		new RegExp(String.raw`^(${NUM})\s*(?:[-–—−]|bis|to)\s*(?:${APPROX_PREFIX.source.slice(1)})?(${NUM})(?![\d.,/])`)
+	);
 	if (rangeMatch) {
-		return (parseFloat(rangeMatch[1].replace(',', '.')) + parseFloat(rangeMatch[2].replace(',', '.'))) / 2;
+		return (
+			(parseFloat(rangeMatch[1].replace(',', '.')) + parseFloat(rangeMatch[2].replace(',', '.'))) / 2
+		);
 	}
 
 	s = s.replace(',', '.');
 
-	const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)$/);
-	if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
-
-	const mixedMatch = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+	const mixedMatch = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)/);
 	if (mixedMatch) return parseInt(mixedMatch[1]) + parseInt(mixedMatch[2]) / parseInt(mixedMatch[3]);
+
+	const fractionMatch = s.match(/^(\d+)\s*\/\s*(\d+)/);
+	if (fractionMatch) return parseInt(fractionMatch[1]) / parseInt(fractionMatch[2]);
 
 	const parsed = parseFloat(s);
 	return isNaN(parsed) ? 0 : parsed;

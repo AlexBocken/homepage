@@ -21,7 +21,49 @@ describe('parseAmount', () => {
 	it('takes the midpoint of a range, either dash', () => {
 		expect(parseAmount('2-3')).toBe(2.5);
 		expect(parseAmount('2–3')).toBe(2.5); // en dash
+		expect(parseAmount('2—3')).toBe(2.5); // em dash
+		expect(parseAmount('2−3')).toBe(2.5); // minus sign
+		expect(parseAmount('4-5')).toBe(4.5);
 		expect(parseAmount('2,5-3,5')).toBe(3);
+	});
+
+	it('reads a spelled-out range', () => {
+		expect(parseAmount('2 bis 3')).toBe(2.5);
+		expect(parseAmount('2 to 3')).toBe(2.5);
+	});
+
+	// "~125 ml Milch" used to parse as 0, so the line fell through to its default
+	// of one unit and a glass of milk was counted as a millilitre.
+	it('ignores hedges in front of the number', () => {
+		expect(parseAmount('~125')).toBe(125);
+		expect(parseAmount('≈125')).toBe(125);
+		expect(parseAmount('± 20')).toBe(20);
+		expect(parseAmount('ca. 3')).toBe(3);
+		expect(parseAmount('ca 3')).toBe(3);
+		expect(parseAmount('etwa 250')).toBe(250);
+		expect(parseAmount('ungefähr 2')).toBe(2);
+		expect(parseAmount('approx. 4')).toBe(4);
+		expect(parseAmount('about 4')).toBe(4);
+		expect(parseAmount('knapp 500')).toBe(500);
+		expect(parseAmount('gut 500')).toBe(500);
+	});
+
+	it('handles a hedge on a range, on either side', () => {
+		expect(parseAmount('~2-3')).toBe(2.5);
+		expect(parseAmount('ca. 2 bis ca. 3')).toBe(2.5);
+	});
+
+	it('reads a typographic fraction', () => {
+		expect(parseAmount('½')).toBe(0.5);
+		expect(parseAmount('1½')).toBe(1.5);
+		expect(parseAmount('2¾')).toBe(2.75);
+		expect(parseAmount('⅓')).toBeCloseTo(1 / 3);
+	});
+
+	// The unit lives in its own field, but people type it here anyway.
+	it('ignores a unit left in the amount field', () => {
+		expect(parseAmount('125 ml')).toBe(125);
+		expect(parseAmount('2-3 EL')).toBe(2.5);
 	});
 
 	it('is zero for anything it cannot read', () => {
