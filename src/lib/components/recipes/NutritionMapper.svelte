@@ -11,6 +11,7 @@
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm as confirmDialog } from '$lib/js/confirmDialog.svelte';
 	import { buildRows, coverageOf } from '$lib/js/nutritionTriage';
 	import { resolveFinalWeight, hasFinalWeightOverride } from '$lib/js/finalWeight';
 	import NutritionCoverageStrip from './NutritionCoverageStrip.svelte';
@@ -179,7 +180,7 @@
 			// Hand edits survive a regenerate — they are the only part of this the
 			// matcher cannot reproduce.
 			const manual = new Map(
-				mappings.filter((m) => m.manuallyEdited).map((m) => [keyOf(m), m])
+				mappings.filter((m) => m.manuallyEdited || m.confirmed).map((m) => [keyOf(m), m])
 			);
 			mappings = result.mappings.map((/** @type {any} */ m) => manual.get(keyOf(m)) || m);
 			await loadGlobalOverwrites();
@@ -259,6 +260,9 @@
 			matchConfidence: 1,
 			excluded: false,
 			manuallyEdited: true,
+			// Choosing the food *is* the review, so the row must not stay flagged for
+			// a reason the choice already settled.
+			confirmed: true,
 			// per100g is resolved server-side on the next load; until then the card's
 			// kcal line has nothing to show, which is honest.
 			per100g: undefined,
@@ -300,6 +304,27 @@
 
 	function skip(/** @type {any} */ mapping) {
 		patch(mapping, { excluded: true, matchMethod: 'manual', manuallyEdited: true });
+	}
+
+	/**
+	 * Rows a bulk approve would cover: flagged, and flagged for something approving
+	 * can actually settle. A row with no gram figure is deliberately not included —
+	 * see triageState.
+	 */
+	const confirmableRows = $derived(
+		rows.filter((r) => r.kind === 'ingredient' && r.state === 'unsure' && r.mapping?.gramsPerUnit)
+	);
+
+	async function confirmAllVisible() {
+		const targets = confirmableRows;
+		if (targets.length === 0) return;
+		const ok = await confirmDialog(
+			`${targets.length} Zuordnung${targets.length === 1 ? '' : 'en'} als geprüft markieren? Die Zuordnungen selbst ändern sich nicht.`,
+			{ title: 'Alle übernehmen?', confirmText: 'Übernehmen', cancelText: 'Abbrechen' }
+		);
+		if (!ok) return;
+		for (const row of targets) patch(row.mapping, { confirmed: true });
+		toast.success(`${targets.length} übernommen`);
 	}
 
 	function jumpTo(/** @type {string} */ key) {
@@ -346,6 +371,15 @@
 			onfilter={(next) => (filter = next)}
 			onjump={jumpTo}
 		/>
+
+		{#if confirmableRows.length > 0}
+			<div class="confirm-all">
+				<span>
+					{confirmableRows.length} Zuordnung{confirmableRows.length === 1 ? '' : 'en'} zum Prüfen
+				</span>
+				<button type="button" onclick={confirmAllVisible}>Alle übernehmen</button>
+			</div>
+		{/if}
 
 		<div class="final-weight">
 			<div class="fw-head">
@@ -460,7 +494,10 @@
 								gramsPerUnit: grams,
 								unitConversionSource: 'manual',
 								manuallyEdited: true,
+								confirmed: true,
 							})}
+						onconfirm={() => patch(row.mapping, { confirmed: true })}
+						onunconfirm={() => patch(row.mapping, { confirmed: false })}
 						onglobalchange={(on) => (globalToggle = { ...globalToggle, [row.key]: on })}
 					/>
 				{/if}
@@ -487,6 +524,33 @@
 		justify-content: space-between;
 		gap: 1rem;
 	}
+
+	.confirm-all {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		flex-wrap: wrap;
+		padding: 0.6rem 0.9rem;
+		background: color-mix(in srgb, var(--orange) 12%, transparent);
+		border-radius: var(--radius-md);
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+	}
+	.confirm-all button {
+		padding: 0.3rem 0.8rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-primary);
+		font-size: 0.82rem;
+		cursor: pointer;
+		transition: var(--transition-fast);
+	}
+	.confirm-all button:hover {
+		background: var(--color-bg-elevated);
+	}
+
 	.final-weight {
 		display: flex;
 		flex-direction: column;
@@ -575,7 +639,6 @@
 	.fw-result.is-override {
 		color: var(--color-text-secondary);
 	}
-
 	.mapper-head h3 {
 		margin: 0;
 		font-size: 1.1rem;

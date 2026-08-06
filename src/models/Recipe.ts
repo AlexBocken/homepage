@@ -198,6 +198,8 @@ const RecipeSchema = new mongoose.Schema(
        defaultAmount: { type: Number },
        unitConversionSource: { type: String, enum: ['direct', 'density', 'usda_portion', 'estimate', 'manual', 'none'] },
        manuallyEdited: { type: Boolean, default: false },
+       // A person checked this row and accepted it, silencing the unsure warning.
+       confirmed: { type: Boolean, default: false },
        excluded: { type: Boolean, default: false },
        recipeRef: { type: String },
        recipeRefMultiplier: { type: Number, default: 1 },

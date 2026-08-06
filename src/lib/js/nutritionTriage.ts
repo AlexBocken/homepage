@@ -65,6 +65,8 @@ export type Mapping = {
 	defaultAmountUsed?: boolean;
 	unitConversionSource?: string;
 	manuallyEdited?: boolean;
+	/** A person looked at this row and said it is right. */
+	confirmed?: boolean;
 	excluded?: boolean;
 	recipeRef?: string;
 	recipeRefMultiplier?: number;
@@ -89,11 +91,22 @@ export function amountAssumed(mapping: Mapping, amount: string | undefined): boo
  * else that could be wrong lands in `unsure` rather than passing quietly: a weak
  * confidence, a gram figure that was guessed or missing, or an amount nobody
  * stated.
+ *
+ * `confirmed` is the way out of that list. Some doubts cannot be resolved by
+ * re-matching — nobody wrote an amount on the line, or the unit only converts by
+ * estimate — so without a way to say "checked, it is right" those rows warn
+ * forever and the warnings stop meaning anything. The one thing it cannot
+ * silence is a missing gram figure: that line contributes nothing to the recipe's
+ * weight, and confirming it would be approving a hole in the sum rather than
+ * accepting a rough number.
  */
 export function triageState(mapping: Mapping, amount: string | undefined): TriageState {
 	if (mapping.recipeRef) return 'ref';
 	if (mapping.excluded) return 'skipped';
 	if (!mapping.matchMethod || mapping.matchMethod === 'none') return 'open';
+
+	if (!mapping.gramsPerUnit) return 'unsure';
+	if (mapping.confirmed) return 'ok';
 
 	const trust = trustLevel(mapping);
 	if (trust !== 'ok') return 'unsure';
@@ -101,6 +114,25 @@ export function triageState(mapping: Mapping, amount: string | undefined): Triag
 	if (mapping.manuallyEdited) return 'ok';
 	if ((mapping.matchConfidence ?? 0) < UNSURE_CONFIDENCE) return 'unsure';
 	return 'ok';
+}
+
+/**
+ * Why this row is flagged, in the words the card shows next to the approve
+ * button. Empty when the row is not `unsure`.
+ */
+export function unsureReasons(mapping: Mapping, amount: string | undefined): string[] {
+	const reasons: string[] = [];
+	if (!mapping.gramsPerUnit) reasons.push('kein Gewicht pro Einheit');
+	else if (trustLevel(mapping) !== 'ok') reasons.push('Einheit nur geschätzt');
+	if (amountAssumed(mapping, amount)) reasons.push('keine Menge angegeben');
+	if (
+		mapping.gramsPerUnit &&
+		!mapping.manuallyEdited &&
+		(mapping.matchConfidence ?? 0) < UNSURE_CONFIDENCE
+	) {
+		reasons.push('unsichere Zuordnung');
+	}
+	return reasons;
 }
 
 export type IngredientLine = { name: string; unit?: string; amount?: string };

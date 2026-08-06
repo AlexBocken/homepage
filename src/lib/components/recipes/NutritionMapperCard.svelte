@@ -16,7 +16,8 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
-	import { trustLevel, amountAssumed } from '$lib/js/nutritionTriage';
+	import Check from '@lucide/svelte/icons/check';
+	import { trustLevel, amountAssumed, unsureReasons } from '$lib/js/nutritionTriage';
 	import { confirm as confirmDialog } from '$lib/js/confirmDialog.svelte';
 
 	/**
@@ -31,6 +32,8 @@
 	 *   onrevert: () => void,
 	 *   ongramschange: (grams: number) => void,
 	 *   onglobalchange: (on: boolean) => void,
+	 *   onconfirm?: () => void,
+	 *   onunconfirm?: () => void,
 	 * }} Props
 	 */
 
@@ -46,12 +49,18 @@
 		onrevert,
 		ongramschange,
 		onglobalchange,
+		onconfirm,
+		onunconfirm,
 	} = $props();
 
 	const mapping = $derived(row.mapping);
 	const line = $derived(row.line);
 	const trust = $derived(trustLevel(mapping));
 	const assumed = $derived(amountAssumed(mapping, line?.amount));
+	const reasons = $derived(unsureReasons(mapping, line?.amount));
+	// Approving cannot invent a weight, so the button is withheld until one exists —
+	// the grams field in the expanded panel is the fix for that case.
+	const canConfirm = $derived(row.state === 'unsure' && !!mapping.gramsPerUnit);
 
 	const STATE_LABEL = {
 		open: 'offen',
@@ -135,15 +144,21 @@
 				<div class="line-facts">
 					<span class="grams">{fmtGrams(row.grams)} g</span>
 					{#if kcal !== null}<span class="kcal">{kcal} kcal</span>{/if}
+					<!-- Still stated once accepted, because the assumption is still being
+					     made — but as a note rather than an alarm. -->
 					{#if trust !== 'ok'}
-						<span class="warn" title={TRUST_NOTE[trust]}>
-							<TriangleAlert size={11} />
+						<span class="warn" class:is-accepted={mapping.confirmed} title={TRUST_NOTE[trust]}>
+							{#if !mapping.confirmed}<TriangleAlert size={11} />{/if}
 							{trust === 'none' ? 'keine Umrechnung' : 'geschätzt'}
 						</span>
 					{/if}
 					{#if assumed}
-						<span class="warn" title="Die Zutat nennt keine Menge — es wird eine Einheit angenommen">
-							<TriangleAlert size={11} /> Menge angenommen
+						<span
+							class="warn"
+							class:is-accepted={mapping.confirmed}
+							title="Die Zutat nennt keine Menge — es wird eine Einheit angenommen"
+						>
+							{#if !mapping.confirmed}<TriangleAlert size={11} />{/if} Menge angenommen
 						</span>
 					{/if}
 				</div>
@@ -162,7 +177,28 @@
 			>
 				{#if row.state === 'skipped'}<Undo2 size={15} />{:else}<Ban size={15} />{/if}
 			</button>
-			{#if mapping.manuallyEdited || mapping.excluded}
+			{#if canConfirm}
+				<button
+					type="button"
+					class="icon-btn confirm"
+					title={reasons.length ? `Trotzdem übernehmen (${reasons.join(', ')})` : 'Übernehmen'}
+					aria-label="Zuordnung übernehmen"
+					onclick={onconfirm}
+				>
+					<Check size={15} />
+				</button>
+			{:else if mapping.confirmed}
+				<button
+					type="button"
+					class="icon-btn is-confirmed"
+					title="Bestätigt — wieder als zu prüfen markieren"
+					aria-label="Bestätigung aufheben"
+					onclick={onunconfirm}
+				>
+					<Check size={15} />
+				</button>
+			{/if}
+			{#if mapping.manuallyEdited || mapping.excluded || mapping.confirmed}
 				<button type="button" class="icon-btn" title="Zurück auf automatisch" aria-label="Zurück auf automatisch" onclick={onrevert}>
 					<RotateCcw size={15} />
 				</button>
@@ -336,6 +372,9 @@
 		gap: 0.2rem;
 		color: var(--orange);
 	}
+	.warn.is-accepted {
+		color: var(--color-text-tertiary);
+	}
 
 	.state-chip {
 		align-self: center;
@@ -379,6 +418,22 @@
 	.icon-btn:hover {
 		background: var(--color-bg-elevated);
 		color: var(--color-text-primary);
+	}
+	.icon-btn.confirm {
+		color: var(--green);
+	}
+	.icon-btn.confirm:hover {
+		background: color-mix(in srgb, var(--green) 18%, transparent);
+		color: var(--green);
+	}
+	.icon-btn.is-confirmed {
+		color: var(--green);
+		opacity: 0.6;
+	}
+	.icon-btn.is-confirmed:hover {
+		background: var(--color-bg-elevated);
+		color: var(--green);
+		opacity: 1;
 	}
 	.icon-btn.expand :global(svg) {
 		transition: rotate var(--transition-normal);

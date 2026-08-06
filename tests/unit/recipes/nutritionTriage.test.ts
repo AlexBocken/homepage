@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { triageState, trustLevel, buildRows, coverageOf } from '$lib/js/nutritionTriage';
+import { triageState, trustLevel, buildRows, coverageOf, unsureReasons } from '$lib/js/nutritionTriage';
 
 const matched = {
 	matchMethod: 'embedding',
@@ -57,6 +57,26 @@ describe('triageState', () => {
 
 	it('is unsure when the unit could not be converted', () => {
 		expect(triageState({ ...matched, gramsPerUnit: 0 }, '2')).toBe('unsure');
+	});
+
+	// Some doubts no amount of re-matching can settle — nobody wrote an amount on
+	// the line, the unit only converts by estimate. Without a way to accept those
+	// the row warns forever and the warnings stop meaning anything.
+	it('is ok once a person has confirmed it', () => {
+		expect(triageState({ ...matched, matchConfidence: 0.5, confirmed: true }, '200')).toBe('ok');
+		expect(triageState({ ...matched, unitConversionSource: 'estimate', confirmed: true }, '2')).toBe('ok');
+		expect(triageState({ ...matched, confirmed: true }, '')).toBe('ok');
+	});
+
+	// Confirming cannot invent a weight: the line would still contribute nothing to
+	// the recipe's total, so accepting it would approve a hole in the sum.
+	it('stays unsure when confirmed but weightless', () => {
+		expect(triageState({ ...matched, gramsPerUnit: 0, confirmed: true }, '2')).toBe('unsure');
+	});
+
+	it('does not let confirmation resurrect a skipped or unmatched row', () => {
+		expect(triageState({ ...matched, excluded: true, confirmed: true }, '2')).toBe('skipped');
+		expect(triageState({ ...matched, matchMethod: 'none', confirmed: true }, '2')).toBe('open');
 	});
 
 	it('is unsure when the amount had to be assumed', () => {
@@ -182,5 +202,22 @@ describe('coverageOf', () => {
 		const c = coverageOf(buildRows(ingredients, mappings), [{ grams: 400, covered: 300 }]);
 		expect(c.totalGrams).toBe(900);
 		expect(c.coveredGrams).toBe(800);
+	});
+});
+
+describe('unsureReasons', () => {
+	it('names each thing the row is flagged for', () => {
+		expect(unsureReasons({ ...matched, gramsPerUnit: 0 }, '2')).toEqual(['kein Gewicht pro Einheit']);
+		expect(unsureReasons({ ...matched, unitConversionSource: 'estimate' }, '2')).toEqual([
+			'Einheit nur geschätzt',
+		]);
+		expect(unsureReasons(matched, '')).toEqual(['keine Menge angegeben']);
+		expect(unsureReasons({ ...matched, matchConfidence: 0.5 }, '2')).toEqual([
+			'unsichere Zuordnung',
+		]);
+	});
+
+	it('is empty for a row with nothing to answer for', () => {
+		expect(unsureReasons(matched, '200')).toEqual([]);
 	});
 });
