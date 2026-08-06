@@ -1,0 +1,59 @@
+[Unit]
+Description=Anki sync bridge (Authentik auth in front of anki --syncserver)
+After=network.target
+
+[Service]
+# The one place the bind address is configured — ANKI_BRIDGE_URL in the
+# website's .env must point at the same value, and so must the nginx proxy_pass.
+Environment=BRIDGE_HOST=127.0.0.1
+Environment=BRIDGE_PORT=8092
+# The sync server is a child of this service, on loopback only. It is never
+# reachable except through the bridge, which is the entire point.
+Environment=UPSTREAM_HOST=127.0.0.1
+Environment=UPSTREAM_PORT=27701
+Environment=ANKI_BIN=/usr/bin/anki
+# Keep in step with nginx's client_max_body_size (which must be larger).
+Environment=MAX_SYNC_PAYLOAD_MEGS=200
+# Authentik group required to sync at all.
+Environment=ANKI_GROUP=anki_users
+# Secrets and site-specific URLs: AUTHENTIK_ISSUER, AUTHENTIK_API_TOKEN,
+# BRIDGE_TOKEN, ANKI_SYNC_PUBLIC_URL. Create it 0600 root:root — see README.
+EnvironmentFile=/etc/anki-bridge/env
+WorkingDirectory=/usr/share/webapps/homepage/anki-bridge
+ExecStart=/usr/share/webapps/homepage/anki-bridge/venv/bin/python -m uvicorn app:app --host ${BRIDGE_HOST} --port ${BRIDGE_PORT}
+Restart=on-failure
+RestartSec=2
+# The sync server runs as a child process. Without this, a stop or restart would
+# leave it orphaned and holding the upstream port, and the next start would fail.
+KillMode=mixed
+
+# Hardening. Mostly the same shape as the other services here, with two
+# deliberate differences called out below.
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# 1. Persistent state: the account database and every user's collection. A
+#    DynamicUser gets a stable uid for this directory, so it survives restarts.
+#    Treat it as secret material — see the note in accounts.py.
+StateDirectory=anki-bridge
+StateDirectoryMode=0700
+Environment=STATE_DIR=/var/lib/anki-bridge
+# 2. NO IPAddressDeny=any here, unlike cospend-ocr and finance-service: this
+#    service must reach Authentik. If your Authentik is on this host, uncomment
+#    the two lines below; otherwise add its address to IPAddressAllow.
+IPAddressDeny=any
+IPAddressAllow=localhost
+# Collections are held in memory while a user syncs; a few large ones at once
+# need room.
+MemoryMax=16G
+
+[Install]
+WantedBy=multi-user.target

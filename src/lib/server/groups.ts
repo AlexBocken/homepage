@@ -35,6 +35,7 @@ export const GROUPS: Record<string, GroupMeta> = {
 	opencloud_admins: { label: 'Cloud-Admins', requestable: false },
 	opencloud_users: { label: 'Cloud', requestable: true },
 	task_users: { label: 'Aufgaben', requestable: true },
+	anki_users: { label: 'Anki', requestable: true },
 	'ldap-search': { label: 'LDAP-Suche', requestable: false },
 
 	// Dropped from the request form (requestable: false). The label is retained

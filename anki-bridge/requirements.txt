@@ -1,0 +1,11 @@
+# Authentik-authenticated front end for Anki's built-in sync server. Loose pins
+# so it resolves on Arch's Python; the service only needs a web stack, an HTTP
+# client and zstd (Anki wraps sync bodies in it).
+fastapi>=0.110
+uvicorn[standard]>=0.27
+httpx>=0.27
+zstandard>=0.22
+
+# Tests only.
+pytest>=8.0
+pytest-asyncio>=0.23
