@@ -6,6 +6,7 @@
  */
 
 import type { IngredientItem, InstructionItem, SeasonRange, TranslatedRecipeType, TranslationMetadata } from '$types/types';
+import { hasFinalWeightOverride, type FinalWeightOverride } from '$lib/js/finalWeight';
 
 export interface RecipeFormData {
 	// Basic fields
@@ -50,6 +51,9 @@ export interface RecipeFormData {
 		caption: string;
 		color?: string;
 	}>;
+
+	// Finished weight override (denominator only — see $lib/js/finalWeight)
+	finalWeight?: FinalWeightOverride;
 
 	// Cake form
 	defaultForm?: {
@@ -170,6 +174,17 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 		}
 	}
 
+	// Finished weight override
+	let finalWeight: FinalWeightOverride | undefined;
+	const finalWeightData = formData.get('finalWeight_json')?.toString();
+	if (finalWeightData) {
+		try {
+			finalWeight = JSON.parse(finalWeightData);
+		} catch (error) {
+			console.error('Failed to parse finalWeight:', error);
+		}
+	}
+
 	// Default form (cake pan size)
 	let defaultForm: RecipeFormData['defaultForm'] = undefined;
 	const defaultFormData = formData.get('defaultForm_json')?.toString();
@@ -229,6 +244,7 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 		instructions,
 		add_info,
 		images,
+		finalWeight,
 		defaultForm,
 		isBaseRecipe,
 		datecreated,
@@ -385,6 +401,12 @@ export function serializeRecipeForDatabase(data: RecipeFormData): Record<string,
 	if (data.images && data.images.length > 0) {
 		recipe.images = data.images;
 	}
+
+	// Finished weight. Always written, so clearing the override back to automatic
+	// actually takes effect instead of leaving the previous value on the document.
+	recipe.finalWeight = hasFinalWeightOverride(data.finalWeight)
+		? data.finalWeight
+		: { mode: 'auto' };
 
 	// Translations
 	if (data.translations) {

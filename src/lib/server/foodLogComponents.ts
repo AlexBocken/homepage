@@ -21,6 +21,7 @@
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { ingredientGrams } from '$lib/js/ingredientAmount';
 import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
+import { resolveFinalWeight } from '$lib/js/finalWeight';
 
 // The BLS/USDA table accessors and the USDA display-name map are imported lazily
 // inside resolveLeaves rather than at the top: they pull in nutritionMatcher, which
@@ -346,7 +347,12 @@ export async function recipeLeaves(recipe: any, amountGrams: number): Promise<Le
 	const referenced = await referencedRecipeLeaves(ingredients, mappings);
 	const all = [...direct, ...referenced];
 
-	const factor = amountGrams / weightGrams;
+	// 100 g of the logged dish is 100 g of what came out of the oven, so the share
+	// of each ingredient it represents is measured against the finished weight.
+	const finishedGrams = resolveFinalWeight(weightGrams, recipe?.finalWeight);
+	if (finishedGrams <= 0) return [];
+
+	const factor = amountGrams / finishedGrams;
 	return all
 		.map(l => ({ ...l, amountGrams: l.amountGrams * factor }))
 		.filter(l => l.amountGrams > 0);

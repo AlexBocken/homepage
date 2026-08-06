@@ -203,6 +203,14 @@ const RecipeSchema = new mongoose.Schema(
        recipeRefMultiplier: { type: Number, default: 1 },
      }],
 
+     // What the finished dish weighs, when the ingredient sum is the wrong answer
+     // (baking loss, reduction, draining). Denominator only — see $lib/js/finalWeight.
+     finalWeight: {
+       mode: { type: String, enum: ['auto', 'relative', 'absolute'], default: 'auto' },
+       percent: { type: Number },
+       grams: { type: Number },
+     },
+
      // Cached nutrition per 100g (for round-off suggestions & listing)
      cachedPer100g: { type: mongoose.Schema.Types.Mixed },
      cachedTotalGrams: { type: Number },

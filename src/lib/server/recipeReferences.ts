@@ -20,6 +20,7 @@
 import { Recipe } from '$models/Recipe';
 import { computeTotals, type ReferencedTotals } from '$lib/server/recipePer100g';
 import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
+import { resolveFinalWeight } from '$lib/js/finalWeight';
 
 /** The fields a referenced recipe must carry to be summed. */
 const REF_FIELDS = 'short_name name ingredients nutritionMappings';
@@ -149,13 +150,18 @@ export async function resolveReferences(
 
 		if (totalGrams <= 0) continue;
 
+		// What the parent actually puts in is the finished base, not the raw sum:
+		// 1 kg of dough ingredients goes into the oven and 900 g of bread comes out.
+		const finishedGrams = resolveFinalWeight(totalGrams, doc.finalWeight);
+		if (finishedGrams <= 0) continue;
+
 		results.push({
 			shortName: doc.short_name,
 			name: doc.name,
 			sectionIndex: req.sectionIndex,
 			...(req.ingredientIndex !== undefined && { ingredientIndex: req.ingredientIndex }),
 			nutrition: totals,
-			totalGrams,
+			totalGrams: finishedGrams,
 			baseMultiplier: req.baseMultiplier,
 			mapped,
 			mappable,

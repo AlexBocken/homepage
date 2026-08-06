@@ -12,6 +12,7 @@
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import { toast } from '$lib/js/toast.svelte';
 	import { buildRows, coverageOf } from '$lib/js/nutritionTriage';
+	import { resolveFinalWeight, hasFinalWeightOverride } from '$lib/js/finalWeight';
 	import NutritionCoverageStrip from './NutritionCoverageStrip.svelte';
 	import NutritionMapperCard from './NutritionMapperCard.svelte';
 	import BaseRecipeCard from './BaseRecipeCard.svelte';
@@ -22,6 +23,7 @@
 	 *   ingredients: any[],
 	 *   shortName: string,
 	 *   referencedNutrition?: any[],
+	 *   finalWeight?: import('$lib/js/finalWeight').FinalWeightOverride,
 	 * }} Props
 	 */
 
@@ -31,6 +33,7 @@
 		ingredients = [],
 		shortName = '',
 		referencedNutrition = [],
+		finalWeight = $bindable({ mode: 'auto' }),
 	} = $props();
 
 	let generating = $state(false);
@@ -81,6 +84,31 @@
 	);
 
 	const coverage = $derived(coverageOf(rows, baseContributions));
+
+	// What the ingredients add up to before anything is cooked off. coverageOf
+	// already sums exactly this — own lines at nominal grams plus each base recipe's
+	// contribution — so the override has a live number to work against.
+	const sumGrams = $derived(coverage.totalGrams);
+	const finishedGrams = $derived(resolveFinalWeight(sumGrams, finalWeight));
+	const weightMode = $derived(finalWeight?.mode ?? 'auto');
+	const overrideActive = $derived(hasFinalWeightOverride(finalWeight));
+
+	/** @param {'auto' | 'relative' | 'absolute'} mode */
+	function setWeightMode(mode) {
+		// Seed the field being switched to, so the number box is never blank on open.
+		if (mode === 'relative') {
+			finalWeight = { mode, percent: finalWeight?.percent ?? -10 };
+		} else if (mode === 'absolute') {
+			finalWeight = { mode, grams: finalWeight?.grams ?? (Math.round(sumGrams) || null) };
+		} else {
+			finalWeight = { mode: 'auto' };
+		}
+	}
+
+	/** @param {number} g */
+	function fmtGrams(g) {
+		return `${Math.round(g).toLocaleString('de-CH')} g`;
+	}
 
 	const visibleRows = $derived(filter === 'all' ? rows : rows.filter((r) => r.state === filter));
 
@@ -286,6 +314,7 @@
 <!-- Rendered unconditionally: see the module comment. -->
 <input type="hidden" name="nutritionMappings_json" value={JSON.stringify(mappings)} />
 <input type="hidden" name="globalOverwrites_json" value={JSON.stringify(getGlobalOverwrites())} />
+<input type="hidden" name="finalWeight_json" value={JSON.stringify(finalWeight ?? { mode: 'auto' })} />
 
 <section class="mapper">
 	<header class="mapper-head">
@@ -317,6 +346,92 @@
 			onfilter={(next) => (filter = next)}
 			onjump={jumpTo}
 		/>
+
+		<div class="final-weight">
+			<div class="fw-head">
+				<span class="fw-title">Fertiggewicht</span>
+				<span class="fw-sum">Zutaten: {fmtGrams(sumGrams)}</span>
+			</div>
+
+			<div class="fw-modes" role="radiogroup" aria-label="Fertiggewicht bestimmen">
+				<button
+					type="button"
+					role="radio"
+					aria-checked={weightMode === 'auto'}
+					class:is-on={weightMode === 'auto'}
+					onclick={() => setWeightMode('auto')}
+				>
+					Automatisch
+				</button>
+				<button
+					type="button"
+					role="radio"
+					aria-checked={weightMode === 'relative'}
+					class:is-on={weightMode === 'relative'}
+					onclick={() => setWeightMode('relative')}
+				>
+					Relativ
+				</button>
+				<button
+					type="button"
+					role="radio"
+					aria-checked={weightMode === 'absolute'}
+					class:is-on={weightMode === 'absolute'}
+					onclick={() => setWeightMode('absolute')}
+				>
+					Absolut
+				</button>
+			</div>
+
+			{#if weightMode === 'relative'}
+				<label class="fw-field">
+					<span>Abweichung zur Zutatensumme</span>
+					<span class="fw-input-row">
+						<input
+							type="number"
+							step="1"
+							min="-99"
+							max="500"
+							aria-label="Abweichung in Prozent"
+							value={finalWeight?.percent ?? ''}
+							oninput={(e) => {
+								const raw = e.currentTarget.value;
+								finalWeight = { mode: 'relative', percent: raw === '' ? null : Number(raw) };
+							}}
+						/>
+						<span class="fw-unit">%</span>
+					</span>
+				</label>
+				<p class="fw-hint">Negativ für Verlust beim Backen oder Einkochen, z.&nbsp;B. −10.</p>
+			{:else if weightMode === 'absolute'}
+				<label class="fw-field">
+					<span>Fertiggewicht</span>
+					<span class="fw-input-row">
+						<input
+							type="number"
+							step="1"
+							min="1"
+							aria-label="Fertiggewicht in Gramm"
+							value={finalWeight?.grams ?? ''}
+							oninput={(e) => {
+								const raw = e.currentTarget.value;
+								finalWeight = { mode: 'absolute', grams: raw === '' ? null : Number(raw) };
+							}}
+						/>
+						<span class="fw-unit">g</span>
+					</span>
+				</label>
+			{/if}
+
+			<p class="fw-result" class:is-override={overrideActive}>
+				{#if overrideActive}
+					Nährwerte werden auf <strong>{fmtGrams(finishedGrams)}</strong> bezogen
+					({sumGrams > 0 ? Math.round((finishedGrams / sumGrams - 1) * 100) : 0}&thinsp;% zur Summe).
+				{:else}
+					Nährwerte werden auf die Zutatensumme bezogen.
+				{/if}
+			</p>
+		</div>
 
 		<div class="cards">
 			{#each visibleRows as row (row.key)}
@@ -372,6 +487,95 @@
 		justify-content: space-between;
 		gap: 1rem;
 	}
+	.final-weight {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 0.9rem 1rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+	}
+	.fw-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+	.fw-title {
+		font-weight: 700;
+		color: var(--color-text-primary);
+	}
+	.fw-sum {
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	.fw-modes {
+		display: flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+	.fw-modes button {
+		padding: 0.35rem 0.8rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-secondary);
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition: var(--transition-fast);
+	}
+	.fw-modes button:hover {
+		background: var(--color-bg-elevated);
+	}
+	.fw-modes button.is-on {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font-weight: 700;
+	}
+	.fw-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+	.fw-input-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.fw-field input {
+		width: 8rem;
+		padding: 0.4rem 0.7rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-primary);
+		font-size: 1rem;
+		font-variant-numeric: tabular-nums;
+	}
+	.fw-field input:hover,
+	.fw-field input:focus-visible {
+		border-color: var(--color-primary);
+		outline: none;
+	}
+	.fw-unit {
+		color: var(--color-text-secondary);
+	}
+	.fw-hint,
+	.fw-result {
+		margin: 0;
+		font-size: 0.8rem;
+		color: var(--color-text-tertiary);
+	}
+	.fw-result.is-override {
+		color: var(--color-text-secondary);
+	}
+
 	.mapper-head h3 {
 		margin: 0;
 		font-size: 1.1rem;

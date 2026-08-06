@@ -304,6 +304,8 @@
 	// form's hidden inputs. Only the state itself stays here, because the form
 	// action reads it back out of the same page data on save.
 	let nutritionMappings = $state<any[]>(data.recipe.nutritionMappings || []);
+	// svelte-ignore state_referenced_locally
+	let finalWeight = $state<any>(data.recipe.finalWeight ?? { mode: 'auto' });
 
 	// Display form errors if any
 	$effect(() => {
@@ -904,6 +906,7 @@
 
 	<NutritionMapper
 		bind:mappings={nutritionMappings}
+		bind:finalWeight
 		{ingredients}
 		shortName={short_name}
 		referencedNutrition={data.recipe.referencedNutrition || []}

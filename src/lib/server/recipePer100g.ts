@@ -10,6 +10,7 @@ import { NUTRITION_DB, type NutritionEntry } from '$lib/data/nutritionDb';
 import { BLS_DB, type BlsEntry } from '$lib/data/blsDb';
 import { ingredientGrams } from '$lib/js/ingredientAmount';
 import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
+import { resolveFinalWeight, type FinalWeightOverride } from '$lib/js/finalWeight';
 import type { NutritionPer100g } from '$types/types';
 
 function stripHtml(html: string): string {
@@ -156,23 +157,27 @@ export function computeTotals(recipe: {
  * every ingredient was excluded and which builds on nothing.
  */
 export function computePer100g(
-	recipe: { nutritionMappings?: any[]; ingredients?: any[] },
+	recipe: { nutritionMappings?: any[]; ingredients?: any[]; finalWeight?: FinalWeightOverride },
 	references: ReferencedTotals[] = [],
 ): Per100gResult | null {
 	if (!recipe.nutritionMappings?.length && references.length === 0) return null;
 
 	const { totals, totalGrams: ownGrams } = computeTotals(recipe);
-	let totalGrams = ownGrams;
+	let sumGrams = ownGrams;
 
 	// Nutrients *and* weight, both scaled by how much of the base recipe is used.
 	for (const ref of references) {
 		const scale = ref.baseMultiplier || 1;
-		totalGrams += ref.totalGrams * scale;
+		sumGrams += ref.totalGrams * scale;
 		for (const [k, v] of Object.entries(ref.nutrition)) {
 			if (typeof v === 'number') totals[k] = (totals[k] ?? 0) + v * scale;
 		}
 	}
 
+	if (sumGrams <= 0) return null;
+
+	// The nutrients are what they are; only what they are divided by moves.
+	const totalGrams = resolveFinalWeight(sumGrams, recipe.finalWeight);
 	if (totalGrams <= 0) return null;
 
 	const per100g: Record<string, number> = {};
