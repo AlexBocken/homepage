@@ -92,6 +92,8 @@ export const de = {
 	settings_err_request: 'Anfrage fehlgeschlagen.',
 	settings_deactivate_title: 'Konto deaktivieren',
 	settings_deactivate_desc: 'Du wirst abgemeldet und kannst dich erst wieder anmelden, wenn ein Administrator dein Konto reaktiviert.',
+	action_deactivate: 'Deaktivieren',
+	action_cancel: 'Abbrechen',
 	settings_deactivate_confirm: 'Konto wirklich deaktivieren? Du wirst abgemeldet und kannst dich nicht mehr anmelden, bis ein Administrator das Konto reaktiviert.',
 	settings_deactivating: 'Wird deaktiviert…',
 	settings_err_deactivate: 'Deaktivierung fehlgeschlagen.',

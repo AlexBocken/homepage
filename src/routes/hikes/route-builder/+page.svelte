@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import EditMap from '$lib/components/hikes/route-builder/EditMap.svelte';
 	import WaypointTable from '$lib/components/hikes/route-builder/WaypointTable.svelte';
@@ -233,9 +234,10 @@
 	async function importGpxFile(file: File) {
 		if (
 			builder.waypoints.length > 0 &&
-			!confirm(
-				'Bestehenden Entwurf durch importierte GPX ersetzen? Aktuelle Wegpunkte gehen verloren.'
-			)
+			!(await confirm(
+				`Entwurf durch die importierte GPX ersetzen? Die ${builder.waypoints.length} aktuellen Wegpunkte gehen verloren.`,
+				{ confirmText: 'Ersetzen', cancelText: 'Entwurf behalten', destructive: true }
+			))
 		) {
 			return;
 		}

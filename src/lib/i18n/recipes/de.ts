@@ -89,6 +89,8 @@ export const de = {
 	add_recipe_to_try: 'Rezept hinzufügen',
 	edit_recipe: 'Rezept bearbeiten',
 	delete_recipe_confirm: 'Dieses Rezept löschen?',
+	delete_totry_confirm: '{name} von der Merkliste entfernen?',
+	delete_totry_confirm_plain: 'Diesen Eintrag von der Merkliste entfernen?',
 
 	// Search page
 	search_results_title: 'Suchergebnisse',
@@ -170,6 +172,8 @@ export const de = {
 	// Card actions
 	edit: 'Bearbeiten',
 	delete: 'Löschen',
+	action_delete: 'Löschen',
+	action_cancel: 'Abbrechen',
 
 	// Administration page
 	administration_title: 'Administration',

@@ -44,7 +44,11 @@
 	}
 
 	async function revoke(token: string) {
-		if (!(await confirm(t.tok_revoke_confirm, { destructive: true }))) return;
+		if (!(await confirm(t.tok_revoke_confirm, {
+			destructive: true,
+			confirmText: t.action_revoke,
+			cancelText: t.action_cancel,
+		}))) return;
 		const res = await fetch(`/api/finances/export/tokens/${encodeURIComponent(token)}`, {
 			method: 'DELETE'
 		});

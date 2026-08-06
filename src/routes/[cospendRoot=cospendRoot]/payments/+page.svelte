@@ -117,7 +117,11 @@
   }
 
   async function deletePayment(/** @type {string} */ paymentId) {
-    if (!await confirm(t.delete_payment_confirm)) {
+    const payment = payments.find((/** @type {any} */ p) => p._id === paymentId);
+    const message = payment
+      ? t.delete_payment_confirm.replace('{title}', `„${payment.title}"`)
+      : t.delete_payment_confirm_plain;
+    if (!await confirm(message, { confirmText: t.action_delete, cancelText: t.action_cancel })) {
       return;
     }
 

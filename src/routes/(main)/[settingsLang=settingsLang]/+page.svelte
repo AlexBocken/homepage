@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ImageEditor from '$lib/components/recipes/ImageEditor.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import Camera from '@lucide/svelte/icons/camera';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
@@ -10,6 +11,8 @@
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Users from '@lucide/svelte/icons/users';
 	import Send from '@lucide/svelte/icons/send';
+	import Layers from '@lucide/svelte/icons/layers';
+	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { m } from '$lib/js/commonI18n';
 	import type { PageData } from './$types';
@@ -144,7 +147,11 @@
 	let deactivateStatus = $state<Status>({ kind: 'idle' });
 
 	async function deactivate() {
-		if (!confirm(t.settings_deactivate_confirm)) return;
+		if (!await confirm(t.settings_deactivate_confirm, {
+			confirmText: t.action_deactivate,
+			cancelText: t.action_cancel,
+			destructive: true,
+		})) return;
 		deactivateStatus = { kind: 'busy' };
 		try {
 			const res = await fetch('/api/user/deactivate', {
@@ -191,6 +198,54 @@
 			groupNote = '';
 		} catch (err) {
 			groupStatus = { kind: 'error', msg: err instanceof Error ? err.message : String(err) };
+		}
+	}
+
+	// --- Anki sync ---
+	// Group membership is already in the page data, so the "request access" case
+	// renders immediately; only the bridge details need fetching. That fetch is
+	// client-side on purpose — the sync server is optional infrastructure and a
+	// slow or absent one must not hold up SSR of this page.
+	type AnkiStatus = {
+		available: boolean;
+		username: string;
+		syncUrl: string;
+		provisioned: boolean;
+		lastSeen: string | null;
+	};
+	const hasAnkiGroup = $derived(account.groups.some((g) => g.codename === 'anki_users'));
+	let anki = $state<AnkiStatus | null>(null);
+	let ankiLoaded = $state(false);
+	let ankiCopied = $state(false);
+
+	onMount(async () => {
+		try {
+			const res = await fetch('/api/anki/status');
+			if (res.ok) anki = await res.json();
+		} catch {
+			/* leaves `anki` null → the card shows the unavailable line */
+		}
+		ankiLoaded = true;
+	});
+
+	const ankiLastSync = $derived(
+		anki?.lastSeen
+			? new Date(anki.lastSeen).toLocaleDateString(lang === 'en' ? 'en-GB' : 'de-DE', {
+					year: 'numeric',
+					month: 'long',
+					day: 'numeric'
+				})
+			: ''
+	);
+
+	async function copySyncUrl() {
+		if (!anki?.syncUrl) return;
+		try {
+			await navigator.clipboard.writeText(anki.syncUrl);
+			ankiCopied = true;
+			setTimeout(() => (ankiCopied = false), 1500);
+		} catch {
+			/* clipboard blocked — the URL is selectable in the page anyway */
 		}
 	}
 </script>
@@ -374,6 +429,49 @@
 			</form>
 		{:else}
 			<p class="muted">{t.settings_groups_all}</p>
+		{/if}
+	</section>
+
+	<!-- Anki sync -->
+	<section class="card">
+		<div class="card-head">
+			<span class="card-icon"><Layers size={18} /></span>
+			<div>
+				<h2>{t.settings_anki_title}</h2>
+				<p>{t.settings_anki_desc}</p>
+			</div>
+		</div>
+
+		{#if !hasAnkiGroup}
+			<p class="muted">{t.settings_anki_needs_group}</p>
+		{:else if anki && anki.available}
+			<div class="anki-details">
+				<div class="field">
+					<span>{t.settings_anki_url_label}</span>
+					<div class="copy-row">
+						<code>{anki.syncUrl}</code>
+						<button type="button" class="choice" onclick={copySyncUrl}>
+							{#if ankiCopied}<Check size={14} />{/if}
+							{ankiCopied ? t.settings_anki_copied : t.settings_anki_copy}
+						</button>
+					</div>
+				</div>
+				<div class="field">
+					<span>{t.settings_anki_username_label}</span>
+					<code>{anki.username}</code>
+					<small>{t.settings_anki_username_hint}</small>
+				</div>
+			</div>
+			<p class="muted">{t.settings_anki_password_hint} {t.settings_anki_how}</p>
+			<p class="muted">
+				{#if anki.provisioned}
+					{t.settings_anki_ready}{#if ankiLastSync} · {t.settings_anki_last_seen}: {ankiLastSync}{/if}
+				{:else}
+					{t.settings_anki_first_sync}
+				{/if}
+			</p>
+		{:else if ankiLoaded}
+			<p class="muted">{t.settings_anki_unavailable}</p>
 		{/if}
 	</section>
 
@@ -747,6 +845,36 @@
 	.muted {
 		margin: 0.5rem 0 0;
 		font-size: var(--text-sm, 0.85rem);
+		color: var(--color-text-tertiary);
+	}
+
+	/* Anki sync */
+	.anki-details {
+		display: grid;
+		gap: 1rem;
+		margin-top: 1.25rem;
+	}
+	.copy-row {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.anki-details code {
+		padding: 0.6rem 0.8rem;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-primary);
+		/* The URL and username are meant to be copied by hand as a fallback. */
+		user-select: all;
+		overflow-wrap: anywhere;
+	}
+	.copy-row code {
+		flex: 1 1 14rem;
+	}
+	.anki-details small {
+		font-size: var(--text-sm, 0.8rem);
 		color: var(--color-text-tertiary);
 	}
 

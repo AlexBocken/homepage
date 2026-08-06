@@ -286,7 +286,10 @@
   let deleting = $state(false);
 
   async function deletePayment() {
-    if (!await confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
+    if (!await confirm(t.delete_payment_confirm_plain, {
+      confirmText: t.action_delete,
+      cancelText: t.action_cancel,
+    })) {
       return;
     }
 

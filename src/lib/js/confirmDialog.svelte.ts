@@ -40,7 +40,18 @@ interface ConfirmOptions {
 	destructive?: boolean;
 }
 
+/**
+ * Ask the user to confirm something.
+ *
+ * Always pass `confirmText`: the fallbacks below are hardcoded English and name no
+ * action, so a German page ends up asking "Eintrag löschen?" under an "OK" button.
+ * The label should be the verb for what happens — Delete, Remove, Discard — because
+ * that is what a hurried reader actually reads. In dev, omitting it warns.
+ */
 export function confirm(message: string, options: ConfirmOptions = {}): Promise<boolean> {
+	if (import.meta.env.DEV && !options.confirmText) {
+		console.warn(`[confirm] no confirmText — falling back to "OK": ${message}`);
+	}
 	return new Promise((resolve) => {
 		state = {
 			open: true,

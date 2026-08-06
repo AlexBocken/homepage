@@ -606,7 +606,10 @@
 	}
 
 	async function deleteInterval(/** @type {string} */ id) {
-		if (!await confirm(t.delete_interval_confirm)) return;
+		if (!await confirm(t.delete_interval_confirm, {
+			confirmText: t.action_delete,
+			cancelText: t.action_cancel,
+		})) return;
 		await fetch(`/api/fitness/intervals/${id}`, { method: 'DELETE' });
 		if (selectedIntervalId === id) selectedIntervalId = null;
 		await fetchIntervalTemplates();
@@ -936,7 +939,11 @@
 	// { confirm: true } to gate it behind an "are you sure" prompt (active
 	// workout); the GPS setup screen cancels without one (nothing logged yet).
 	async function cancelWorkout({ confirm: needConfirm = false } = {}) {
-		if (needConfirm && !await confirm(t.cancel_workout_confirm)) return;
+		// "Cancel" on both buttons of a "Cancel this workout?" dialog is a trap.
+		if (needConfirm && !await confirm(t.cancel_workout_confirm, {
+			confirmText: t.action_discard,
+			cancelText: t.action_keep,
+		})) return;
 		if (gps.isTracking) await gps.stop();
 		gps.reset();
 		workout.cancel();
@@ -947,7 +954,11 @@
 	async function finishWorkout() {
 		// Finishing with sets still unmarked discards their intended completion —
 		// confirm before ending early.
-		if (hasUnfinishedSets && !await confirm(t.finish_early_confirm)) return;
+		if (hasUnfinishedSets && !await confirm(t.finish_early_confirm, {
+			confirmText: t.action_finish,
+			cancelText: t.action_back,
+			destructive: false,
+		})) return;
 
 		// Guard the redirect-on-inactive effect for the duration of this flow.
 		// workout.finish() flips workout.active to false synchronously, but

@@ -255,7 +255,7 @@
 					{
 						title: t.overwrite_title,
 						confirmText: t.overwrite_confirm,
-						cancelText: t.cancel,
+						cancelText: t.action_cancel,
 						destructive: true
 					}
 				);

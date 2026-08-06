@@ -150,7 +150,11 @@
 
 	/** @param {Meal} meal */
 	async function deleteMeal(meal) {
-		if (!await confirm(t.delete_meal_confirm)) return;
+		const ok = await confirm(t.delete_meal_confirm.replace('{meal}', `„${meal.name}"`), {
+			confirmText: t.action_delete,
+			cancelText: t.action_cancel,
+		});
+		if (!ok) return;
 		try {
 			const res = await fetch(`/api/fitness/custom-meals/${meal._id}`, { method: 'DELETE' });
 			if (res.ok) {

@@ -92,6 +92,8 @@ export const en = {
 	settings_err_request: 'Request failed.',
 	settings_deactivate_title: 'Deactivate account',
 	settings_deactivate_desc: 'You will be logged out and cannot log in again until an administrator reactivates your account.',
+	action_deactivate: 'Deactivate',
+	action_cancel: 'Cancel',
 	settings_deactivate_confirm: 'Really deactivate your account? You will be logged out and cannot log in until an administrator reactivates it.',
 	settings_deactivating: 'Deactivating…',
 	settings_err_deactivate: 'Deactivation failed.',

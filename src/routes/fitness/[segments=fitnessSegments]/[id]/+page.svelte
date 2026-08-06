@@ -118,7 +118,7 @@
 		const ok = await confirm(t.delete_segment_confirm, {
 			title: t.delete_segment,
 			confirmText: t.delete_segment,
-			cancelText: t.cancel,
+			cancelText: t.action_cancel,
 			destructive: true
 		});
 		if (!ok) return;

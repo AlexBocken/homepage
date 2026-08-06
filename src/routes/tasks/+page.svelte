@@ -270,7 +270,10 @@
 
   /** @param {any} task */
   async function deleteTask(task) {
-    if (!await confirm(`"${task.title}" wirklich löschen?`)) return;
+    if (!await confirm(`Aufgabe „${task.title}" löschen?`, {
+      confirmText: 'Löschen',
+      cancelText: 'Abbrechen',
+    })) return;
     const res = await fetch(`/api/tasks/${task._id}`, { method: 'DELETE' });
     if (res.ok) await refreshTasks();
   }

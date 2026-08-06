@@ -159,7 +159,7 @@
 
 	async function clearAll() {
 		if (!clips.length) return;
-		if (await confirm(`Discard all ${clips.length} recorded clips?`, { destructive: true, confirmText: 'Discard' }))
+		if (await confirm(`Discard all ${clips.length} recorded clips?`, { destructive: true, confirmText: 'Discard', cancelText: 'Keep' }))
 			clips = [];
 	}
 

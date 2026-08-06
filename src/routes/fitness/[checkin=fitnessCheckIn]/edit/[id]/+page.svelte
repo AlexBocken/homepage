@@ -84,7 +84,10 @@
 	}
 
 	async function deleteMeasurement() {
-		if (!await confirm(t.delete_measurement_confirm)) return;
+		if (!await confirm(t.delete_measurement_confirm, {
+			confirmText: t.action_delete,
+			cancelText: t.action_cancel,
+		})) return;
 		deleting = true;
 		try {
 			const res = await fetch(`/api/fitness/measurements/${m._id}`, { method: 'DELETE' });

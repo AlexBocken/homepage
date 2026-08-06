@@ -102,8 +102,11 @@
 
 	/** @param {any} id */
 	async function handleDelete(id) {
-		const msg = t.delete_recipe_confirm;
-		if (!await confirm(msg)) return;
+		const item = items.find((/** @type {any} */ i) => i._id === id);
+		const msg = item
+			? t.delete_totry_confirm.replace('{name}', `„${item.name}"`)
+			: t.delete_totry_confirm_plain;
+		if (!await confirm(msg, { confirmText: t.action_delete, cancelText: t.action_cancel })) return;
 
 		const res = await fetch(`/api/${data.recipeLang}/to-try`, {
 			method: 'DELETE',

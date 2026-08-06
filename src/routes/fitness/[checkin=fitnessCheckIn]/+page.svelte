@@ -147,7 +147,10 @@
 
 	/** @param {string} id */
 	async function deleteMeasurement(id) {
-		if (!await confirm(t.delete_measurement_confirm)) return;
+		if (!await confirm(t.delete_measurement_confirm, {
+			confirmText: t.action_delete,
+			cancelText: t.action_cancel,
+		})) return;
 		try {
 			const res = await fetch(`/api/fitness/measurements/${id}`, { method: 'DELETE' });
 			if (res.ok) {
@@ -386,7 +389,7 @@
 					{
 						title: t.overwrite_title,
 						confirmText: t.overwrite_confirm,
-						cancelText: t.cancel,
+						cancelText: t.action_cancel,
 						destructive: true
 					}
 				);

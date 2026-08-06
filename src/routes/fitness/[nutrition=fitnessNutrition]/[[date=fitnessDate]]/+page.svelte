@@ -1382,9 +1382,27 @@
 		if (id) moveEntryToMeal(id, meal);
 	}
 
+	/** Meal names for prose, keyed so a runtime mealType string can index them. */
+	const mealLabels = $derived(
+		/** @type {Record<string, string>} */ ({
+			breakfast: t.breakfast,
+			lunch: t.lunch,
+			dinner: t.dinner,
+			snack: t.snack,
+		})
+	);
+
 	/** @param {string} id */
 	async function deleteEntry(id) {
-		if (!await confirm(t.delete_entry_confirm)) return;
+		// Name what is being removed and where from. "Delete this food entry?" gave no
+		// way to tell a mis-click from the row you meant, on a page that lists dozens.
+		const entry = entries.find((e) => e._id === id);
+		const message = entry
+			? t.delete_entry_confirm
+					.replace('{food}', `„${entry.name}"`)
+					.replace('{meal}', mealLabels[entry.mealType] ?? entry.mealType)
+			: t.delete_entry_confirm_plain;
+		if (!await confirm(message, { confirmText: t.action_remove, cancelText: t.action_cancel })) return;
 		try {
 			const res = await fetch(`/api/fitness/food-log/${id}`, { method: 'DELETE' });
 			if (res.ok) {

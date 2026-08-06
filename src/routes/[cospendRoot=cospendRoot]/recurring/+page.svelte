@@ -68,7 +68,10 @@
   }
 
   async function deleteRecurringPayment(/** @type {string} */ paymentId, /** @type {string} */ title) {
-    if (!await confirm(`${t.delete_recurring_confirm} "${title}"?`)) {
+    if (!await confirm(`${t.delete_recurring_confirm} „${title}"?`, {
+      confirmText: t.action_delete,
+      cancelText: t.action_cancel,
+    })) {
       return;
     }
 

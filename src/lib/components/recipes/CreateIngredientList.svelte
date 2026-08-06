@@ -69,6 +69,8 @@ const t: Record<string, Record<string, string>> = {
 		renameCategory: 'Kategorie umbenennen',
 		confirmDeleteReference: 'Bist du dir sicher, dass du diese Referenz löschen möchtest?',
 		confirmDeleteList: 'Bist du dir sicher, dass du diese Liste löschen möchtest? Alle Zutaten der Liste werden hiermit auch gelöscht.',
+		actionDelete: 'Löschen',
+		actionCancel: 'Abbrechen',
 		empty: 'Leer',
 		editHeading: 'Überschrift bearbeiten',
 		removeList: 'Liste entfernen',
@@ -98,6 +100,8 @@ const t: Record<string, Record<string, string>> = {
 		renameCategory: 'Rename Category',
 		confirmDeleteReference: 'Are you sure you want to delete this reference?',
 		confirmDeleteList: 'Are you sure you want to delete this list? All ingredients in the list will also be deleted.',
+		actionDelete: 'Delete',
+		actionCancel: 'Cancel',
 		empty: 'Empty',
 		editHeading: 'Edit heading',
 		removeList: 'Remove list',
@@ -171,7 +175,10 @@ function handleSelect(recipe: any, options: any) {
 }
 
 export async function removeReference(list_index: number) {
-	const confirmed = await confirm(t[lang].confirmDeleteReference);
+	const confirmed = await confirm(t[lang].confirmDeleteReference, {
+		confirmText: t[lang].actionDelete,
+		cancelText: t[lang].actionCancel,
+	});
 	if (confirmed) {
 		ingredients.splice(list_index, 1);
 		ingredients = ingredients;
@@ -299,7 +306,10 @@ export function add_new_ingredient(){
 }
 export async function remove_list(list_index: number){
 	if(ingredients[list_index].list.length > 1){
-		const response = await confirm(t[lang].confirmDeleteList);
+		const response = await confirm(t[lang].confirmDeleteList, {
+			confirmText: t[lang].actionDelete,
+			cancelText: t[lang].actionCancel,
+		});
 		if(!response){
 			return
 		}

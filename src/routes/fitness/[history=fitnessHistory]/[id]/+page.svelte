@@ -421,7 +421,10 @@
 	}
 
 	async function deleteSession() {
-		if (!await confirm(t.delete_session_confirm)) return;
+		if (!await confirm(t.delete_session_confirm, {
+			confirmText: t.action_delete,
+			cancelText: t.action_cancel,
+		})) return;
 		deleting = true;
 		try {
 			if (unsynced) {
@@ -606,7 +609,10 @@
 
 	/** @param {number} exIdx */
 	async function removeGpx(exIdx) {
-		if (!await confirm(t.remove_gps_confirm)) return;
+		if (!await confirm(t.remove_gps_confirm, {
+			confirmText: t.action_remove,
+			cancelText: t.action_cancel,
+		})) return;
 		try {
 			const res = await fetch(`/api/fitness/sessions/${session._id}/gpx`, {
 				method: 'DELETE',

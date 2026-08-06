@@ -140,7 +140,11 @@
 	}
 
 	async function del(q: SavedQuery) {
-		if (!(await confirm(`${t.qy_delete_confirm_a}${q.name}${t.qy_delete_confirm_b}`, { destructive: true }))) return;
+		if (!(await confirm(`${t.qy_delete_confirm_a}${q.name}${t.qy_delete_confirm_b}`, {
+			destructive: true,
+			confirmText: t.action_delete,
+			cancelText: t.action_cancel,
+		}))) return;
 		const res = await fetch(`/api/finances/saved-queries/${q.id}`, { method: 'DELETE' });
 		if (res.ok) saved = saved.filter((s) => s.id !== q.id);
 	}

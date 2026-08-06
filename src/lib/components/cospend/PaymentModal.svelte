@@ -119,7 +119,10 @@
   let deleting = $state(false);
 
   async function deletePayment() {
-    if (!await confirm(t.delete_payment_confirm)) {
+    if (!await confirm(t.delete_payment_confirm_plain, {
+      confirmText: t.action_delete,
+      cancelText: t.action_cancel,
+    })) {
       return;
     }
 

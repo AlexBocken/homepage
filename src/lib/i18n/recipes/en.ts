@@ -89,6 +89,8 @@ export const en = {
 	add_recipe_to_try: 'Add recipe to try',
 	edit_recipe: 'Edit recipe',
 	delete_recipe_confirm: 'Delete this recipe?',
+	delete_totry_confirm: 'Remove {name} from your to-try list?',
+	delete_totry_confirm_plain: 'Remove this entry from your to-try list?',
 
 	// Search page
 	search_results_title: 'Search Results',
@@ -170,6 +172,8 @@ export const en = {
 	// Card actions
 	edit: 'Edit',
 	delete: 'Delete',
+	action_delete: 'Delete',
+	action_cancel: 'Cancel',
 
 	// Administration page
 	administration_title: 'Administration',

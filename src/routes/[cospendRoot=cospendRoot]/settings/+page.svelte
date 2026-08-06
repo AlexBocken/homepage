@@ -63,7 +63,11 @@
 
 	/** @param {ApiToken} tok */
 	async function revoke(tok) {
-		if (!(await confirm(t.api_revoke_confirm, { destructive: true, confirmText: t.api_revoke }))) return;
+		if (!(await confirm(t.api_revoke_confirm, {
+			destructive: true,
+			confirmText: t.action_revoke,
+			cancelText: t.action_cancel,
+		}))) return;
 		const res = await fetch(`/api/cospend/export/tokens/${encodeURIComponent(tok.token)}`, {
 			method: 'DELETE'
 		});
