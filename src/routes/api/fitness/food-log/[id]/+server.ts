@@ -19,6 +19,15 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	if (body.name !== undefined) entry.name = body.name;
 	if (body.mealType !== undefined) entry.mealType = body.mealType;
 
+	// Moving an entry to another day. The day it came from has to be remembered:
+	// its round-off cache is now wrong too, and after the save the entry no longer
+	// knows where it used to be.
+	const previousDateStr =
+		entry.date instanceof Date ? entry.date.toISOString().slice(0, 10) : '';
+	if (typeof body.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
+		entry.date = new Date(body.date + 'T00:00:00.000Z');
+	}
+
 	// The diary amount is the sum of the component amounts, so changing it scales
 	// every component by the same factor — the composition (their ratios) is frozen,
 	// only the overall size moves.
@@ -44,7 +53,9 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
 	await entry.save();
 	const dateStr = entry.date instanceof Date ? entry.date.toISOString().slice(0, 10) : '';
-	if (dateStr) RoundOffCache.deleteOne({ createdBy: user.nickname, date: dateStr }).catch(() => {});
+	for (const d of new Set([dateStr, previousDateStr].filter(Boolean))) {
+		RoundOffCache.deleteOne({ createdBy: user.nickname, date: d }).catch(() => {});
+	}
 	const [hydrated] = await resolveEntries([entry.toObject() as any]);
 	return json(hydrated);
 };

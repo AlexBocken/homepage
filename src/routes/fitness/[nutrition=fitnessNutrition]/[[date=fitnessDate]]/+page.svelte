@@ -774,6 +774,12 @@
 		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 	}
 
+	function nextDay() {
+		const d = new Date(currentDate + 'T00:00:00');
+		d.setDate(d.getDate() + 1);
+		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+	}
+
 	async function copyYesterday() {
 		copying = true;
 		try {
@@ -1344,22 +1350,77 @@
 	/** @type {string|null} */
 	let dragOverMeal = $state(null);
 
+	/** Ctrl (or Cmd) held during the drag: leave the original where it is. */
+	let dragCopy = $state(false);
+	/** Where the next-day panel should sit, measured off today's meal sections. */
+	let nextDayBoxes = $state(/** @type {{meal: string, top: number, height: number}[]} */ ([]));
+	/** The quick-log column's footprint, or null when it is not on screen. */
+	let nextDayCol = $state(/** @type {{left: number, width: number}|null} */ (null));
+	/** @type {string|null} */
+	let dragOverNextDay = $state(null);
+	let nextDayRailOpen = $state(false);
+
+	/** Meal accent colour by runtime string, mirroring mealLabels. */
+	function mealColor(/** @type {string} */ meal) {
+		const map = /** @type {Record<string, {color: string}>} */ (mealMeta);
+		return map[meal]?.color ?? 'var(--color-primary)';
+	}
+
+	/**
+	 * Line the next-day targets up with today's meal sections, inside the quick-log
+	 * column's own footprint.
+	 *
+	 * Both are measured rather than guessed. The sections are different heights
+	 * depending on how much is logged, so four equal boxes would drift out of step
+	 * with them; and the column's position comes from the page grid, which moves
+	 * with the viewport — pinning the panel to the right edge instead would leave it
+	 * sitting somewhere the column is not.
+	 *
+	 * A missing or zero-width column means this breakpoint has none, which is the
+	 * signal to fall back to the edge rail. Tying the switch to whether there is
+	 * actually a column to borrow beats repeating a media query here and in CSS.
+	 */
+	function measureNextDayBoxes() {
+		const colRect = document.querySelector('.quick-log-col')?.getBoundingClientRect();
+		nextDayCol =
+			colRect && colRect.width > 0 ? { left: colRect.left, width: colRect.width } : null;
+
+		const boxes = [];
+		for (const meal of mealTypes) {
+			const el = document.querySelector(`[data-meal-section="${meal}"]`);
+			if (!el) continue;
+			const r = el.getBoundingClientRect();
+			boxes.push({ meal, top: r.top, height: r.height });
+		}
+		nextDayBoxes = boxes;
+	}
+
 	function onEntryDragStart(/** @type {DragEvent} */ ev, /** @type {string} */ entryId) {
 		if (!ev.dataTransfer) return;
 		draggingEntryId = entryId;
-		ev.dataTransfer.effectAllowed = 'move';
+		dragCopy = ev.ctrlKey || ev.metaKey;
+		// copyMove, not move: the cursor has to be able to show a plus when Ctrl is
+		// down, and the browser picks that from what the source says it allows.
+		ev.dataTransfer.effectAllowed = 'copyMove';
 		ev.dataTransfer.setData('text/plain', entryId);
+		measureNextDayBoxes();
 	}
 
 	function onEntryDragEnd() {
 		draggingEntryId = null;
 		dragOverMeal = null;
+		dragOverNextDay = null;
+		nextDayRailOpen = false;
+		dragCopy = false;
 	}
 
 	function onMealDragOver(/** @type {DragEvent} */ ev, /** @type {string} */ meal) {
 		if (!draggingEntryId) return;
 		ev.preventDefault();
-		if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+		// Read the modifier every time: it can be pressed or released mid-drag, and
+		// dragstart's value would be stale by the drop.
+		dragCopy = ev.ctrlKey || ev.metaKey;
+		if (ev.dataTransfer) ev.dataTransfer.dropEffect = dragCopy ? 'copy' : 'move';
 		dragOverMeal = meal;
 	}
 
@@ -1377,9 +1438,104 @@
 	function onMealDrop(/** @type {DragEvent} */ ev, /** @type {string} */ meal) {
 		ev.preventDefault();
 		const id = ev.dataTransfer?.getData('text/plain') || draggingEntryId;
+		const copy = ev.ctrlKey || ev.metaKey;
 		dragOverMeal = null;
 		draggingEntryId = null;
-		if (id) moveEntryToMeal(id, meal);
+		dragCopy = false;
+		if (!id) return;
+		if (copy) duplicateEntry(id, meal, currentDate);
+		else moveEntryToMeal(id, meal);
+	}
+
+	/**
+	 * Write an entry a second time — same food, same amount, a different meal or day.
+	 *
+	 * The whole logged shape is carried over, portions included, so a copy is not
+	 * quietly a rounder version of the original.
+	 */
+	async function duplicateEntry(
+		/** @type {string} */ entryId,
+		/** @type {string} */ meal,
+		/** @type {string} */ date,
+	) {
+		const entry = entries.find(e => e._id === entryId);
+		if (!entry) return;
+		try {
+			const res = await fetch('/api/fitness/food-log', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					date,
+					mealType: meal,
+					name: entry.name,
+					source: entry.source,
+					sourceId: entry.sourceId,
+					amountGrams: entry.amountGrams,
+					...(entry.liquidMl ? { liquidMl: entry.liquidMl } : {}),
+					...(entry.portions ? { portions: entry.portions } : {}),
+					...(entry.selectedPortion ? { selectedPortion: entry.selectedPortion } : {}),
+				}),
+			});
+			if (!res.ok) throw new Error('copy failed');
+			const created = await res.json();
+			// Only lands in view when it was copied into the day being shown.
+			if (date === currentDate) entries = [...entries, created];
+			toast.success(
+				date === currentDate
+					? (isEn ? `Copied to ${mealLabels[meal]}` : `Nach ${mealLabels[meal]} kopiert`)
+					: (isEn ? `Copied to tomorrow, ${mealLabels[meal]}` : `Auf morgen kopiert, ${mealLabels[meal]}`)
+			);
+		} catch {
+			toast.error(isEn ? 'Could not copy' : 'Kopieren fehlgeschlagen');
+		}
+	}
+
+	/** Move an entry to another day, keeping its meal unless one is given. */
+	async function moveEntryToDate(
+		/** @type {string} */ entryId,
+		/** @type {string} */ meal,
+		/** @type {string} */ date,
+	) {
+		const entry = entries.find(e => e._id === entryId);
+		if (!entry) return;
+		const snapshot = entries;
+		entries = entries.filter(e => e._id !== entryId);
+		try {
+			const res = await fetch(`/api/fitness/food-log/${entryId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ mealType: meal, date }),
+			});
+			if (!res.ok) throw new Error('update failed');
+			toast.success(
+				isEn ? `Moved to tomorrow, ${mealLabels[meal]}` : `Auf morgen verschoben, ${mealLabels[meal]}`
+			);
+		} catch {
+			entries = snapshot;
+			toast.error(isEn ? 'Failed to move' : 'Verschieben fehlgeschlagen');
+		}
+	}
+
+	function onNextDayDragOver(/** @type {DragEvent} */ ev, /** @type {string} */ meal) {
+		if (!draggingEntryId) return;
+		ev.preventDefault();
+		dragCopy = ev.ctrlKey || ev.metaKey;
+		if (ev.dataTransfer) ev.dataTransfer.dropEffect = dragCopy ? 'copy' : 'move';
+		dragOverNextDay = meal;
+		dragOverMeal = null;
+	}
+
+	function onNextDayDrop(/** @type {DragEvent} */ ev, /** @type {string} */ meal) {
+		ev.preventDefault();
+		const id = ev.dataTransfer?.getData('text/plain') || draggingEntryId;
+		const copy = ev.ctrlKey || ev.metaKey;
+		dragOverNextDay = null;
+		draggingEntryId = null;
+		nextDayRailOpen = false;
+		dragCopy = false;
+		if (!id) return;
+		if (copy) duplicateEntry(id, meal, nextDay());
+		else moveEntryToDate(id, meal, nextDay());
 	}
 
 	/** Meal names for prose, keyed so a runtime mealType string can index them. */
@@ -2410,7 +2566,9 @@
 		{@const MealSectionIcon = meta.icon}
 		<div
 			class="meal-section"
+			data-meal-section={meal}
 			class:drop-target={dragOverMeal === meal && draggingEntryId}
+			class:copy-target={dragOverMeal === meal && draggingEntryId && dragCopy}
 			style="--meal-color: {meta.color}"
 			ondragover={(ev) => onMealDragOver(ev, meal)}
 			ondragleave={(ev) => onMealDragLeave(ev, meal)}
@@ -2433,10 +2591,12 @@
 			<div class="meal-entries" role="list">
 				{#each mealEntries as entry}
 					{@const imgUrl = entry.source === 'recipe' && entry.sourceId ? recipeImages[entry.sourceId] : null}
+					<!-- Dimming says "this card is leaving here". On a copy it is not: the
+					     original stays put, so it keeps its normal weight. -->
 					<div
 						class="food-card"
 						class:has-image={!!imgUrl}
-						class:dragging={draggingEntryId === entry._id}
+						class:dragging={draggingEntryId === entry._id && !dragCopy}
 						draggable={editingEntryId !== entry._id}
 						role="listitem"
 						ondragstart={(ev) => onEntryDragStart(ev, entry._id)}
@@ -2617,6 +2777,79 @@
 
 </div>
 
+<!--
+	Next-day drop targets, shown only while an entry is in flight.
+
+	Wide screens get a panel over the quick-log column — that column is the only
+	thing on screen you are never reaching for mid-drag, and the boxes are placed at
+	the measured tops of today's meal sections so each one sits beside its own meal.
+	Narrower screens have no such column, so the same targets live behind a thin edge
+	on the right that opens when the drag reaches it.
+-->
+{#if draggingEntryId && nextDayCol}
+	<div class="nextday-panel">
+		{#each nextDayBoxes as box (box.meal)}
+			<div
+				class="nextday-box"
+				class:is-over={dragOverNextDay === box.meal}
+				class:is-copy={dragOverNextDay === box.meal && dragCopy}
+				style="top: {box.top}px; height: {box.height}px; left: {nextDayCol.left}px; width: {nextDayCol.width}px; --meal-color: {mealColor(box.meal)}"
+				ondragover={(ev) => onNextDayDragOver(ev, box.meal)}
+				ondragleave={() => { if (dragOverNextDay === box.meal) dragOverNextDay = null; }}
+				ondrop={(ev) => onNextDayDrop(ev, box.meal)}
+				role="region"
+				aria-label="{isEn ? 'Tomorrow' : 'Morgen'} — {mealLabels[box.meal]}"
+			>
+				<span class="nextday-day">{isEn ? 'Tomorrow' : 'Morgen'}</span>
+				<span class="nextday-meal">{mealLabels[box.meal]}</span>
+				<span class="nextday-hint">
+					{dragCopy ? (isEn ? 'Copy here' : 'Hierher kopieren') : (isEn ? 'Move here' : 'Hierher verschieben')}
+				</span>
+			</div>
+		{/each}
+	</div>
+
+{/if}
+
+{#if draggingEntryId && !nextDayCol}
+	<div
+		class="nextday-rail"
+		class:is-open={nextDayRailOpen}
+		ondragenter={() => (nextDayRailOpen = true)}
+		ondragover={(ev) => ev.preventDefault()}
+		ondragleave={(ev) => {
+			const related = /** @type {Element|null} */ (ev.relatedTarget);
+			const target = /** @type {Element} */ (ev.currentTarget);
+			if (!related || !target.contains(related)) nextDayRailOpen = false;
+		}}
+		role="region"
+		aria-label={isEn ? 'Move to tomorrow' : 'Auf morgen verschieben'}
+	>
+		{#if nextDayRailOpen}
+			<div class="rail-list">
+				<span class="rail-title">{isEn ? 'Tomorrow' : 'Morgen'}</span>
+				{#each mealTypes as meal (meal)}
+					<div
+						class="rail-box"
+						class:is-over={dragOverNextDay === meal}
+						class:is-copy={dragOverNextDay === meal && dragCopy}
+						style="--meal-color: {mealColor(meal)}"
+						ondragover={(ev) => onNextDayDragOver(ev, meal)}
+						ondragleave={() => { if (dragOverNextDay === meal) dragOverNextDay = null; }}
+						ondrop={(ev) => onNextDayDrop(ev, meal)}
+						role="region"
+						aria-label="{isEn ? 'Tomorrow' : 'Morgen'} — {mealLabels[meal]}"
+					>
+						{mealLabels[meal]}
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<span class="rail-edge-label">{isEn ? 'Tomorrow' : 'Morgen'}</span>
+		{/if}
+	</div>
+{/if}
+
 <!-- FAB -->
 <AddButton href={fabHref} />
 
@@ -2751,6 +2984,132 @@
 			position: sticky;
 			top: 1rem;
 		}
+	}
+
+	/* ── Next-day drop targets ───────────────────────────────────────────────
+	   Fixed, not absolute: the boxes are placed from getBoundingClientRect, which
+	   is already viewport-relative, and a fixed parent keeps them there without
+	   having to subtract scroll on every dragover. */
+	/* Rendered only when a quick-log column was actually measured, so there is no
+	   breakpoint to repeat here. Each box gets its left/width/top from that
+	   measurement inline. */
+	.nextday-panel {
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		z-index: 60;
+	}
+	.nextday-box {
+		position: fixed;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.15rem;
+		padding: 0.5rem;
+		border-radius: var(--radius-lg);
+		border: 2px dashed color-mix(in srgb, var(--meal-color) 55%, transparent);
+		background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+		backdrop-filter: blur(var(--glass-blur));
+		color: var(--color-text-secondary);
+		text-align: center;
+		pointer-events: auto;
+		transition: var(--transition-fast);
+	}
+	.nextday-box.is-over {
+		border-style: solid;
+		border-color: var(--meal-color);
+		background: color-mix(in srgb, var(--meal-color) 16%, var(--color-surface));
+		color: var(--color-text-primary);
+	}
+	.nextday-box.is-copy {
+		border-color: var(--green);
+		background: color-mix(in srgb, var(--green) 16%, var(--color-surface));
+	}
+	.nextday-day {
+		font-size: 0.68rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-text-tertiary);
+	}
+	.nextday-meal {
+		font-weight: 700;
+		color: var(--meal-color);
+	}
+	.nextday-hint {
+		font-size: 0.72rem;
+	}
+	.nextday-rail {
+		position: fixed;
+		top: 50%;
+		right: 0;
+		translate: 0 -50%;
+		z-index: 60;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.6rem;
+		max-height: 80vh;
+		padding: 1.5rem 0;
+		border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+		background: var(--glass-bg);
+		backdrop-filter: blur(var(--glass-blur));
+		border: 1px solid var(--glass-border);
+		border-right: none;
+		box-shadow: 0 4px 24px var(--glass-shadow);
+		transition: width var(--transition-normal);
+		overflow: hidden;
+	}
+	.nextday-rail.is-open {
+		width: 11rem;
+		padding: 0.6rem;
+	}
+	.rail-edge-label {
+		font-size: 0.65rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-text-secondary);
+		writing-mode: vertical-rl;
+		white-space: nowrap;
+	}
+	.rail-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		width: 100%;
+	}
+	.rail-title {
+		font-size: 0.65rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
+		text-align: center;
+	}
+	.rail-box {
+		padding: 0.55rem 0.5rem;
+		border-radius: var(--radius-md);
+		border: 2px dashed color-mix(in srgb, var(--meal-color) 55%, transparent);
+		color: var(--meal-color);
+		font-size: 0.85rem;
+		font-weight: 600;
+		text-align: center;
+		transition: var(--transition-fast);
+	}
+	.rail-box.is-over {
+		border-style: solid;
+		background: color-mix(in srgb, var(--meal-color) 18%, transparent);
+	}
+	.rail-box.is-copy {
+		border-color: var(--green);
+		color: var(--green);
+		background: color-mix(in srgb, var(--green) 18%, transparent);
+	}
+
+	.meal-section.copy-target {
+		outline-color: var(--green);
+		background: color-mix(in srgb, var(--green) 12%, transparent);
 	}
 
 
