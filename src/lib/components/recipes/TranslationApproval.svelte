@@ -68,6 +68,49 @@
 	let translationTouched = $state(false);
 
 	/**
+	 * Which fields the English is behind on.
+	 *
+	 * Two sources, because they answer different questions. `changedFields` is what
+	 * the German form has moved *this session*. The list stored on the translation is
+	 * what a previous save recorded when it marked the translation `needs_update` and
+	 * the user did not retranslate — without it, reopening the recipe later showed
+	 * "needs update" with no indication of what.
+	 */
+	const staleFields = $derived.by(() => {
+		const out = new Set(changedFields);
+		if (englishData?.translationStatus === 'needs_update') {
+			for (const f of englishData.changedFields ?? []) out.add(f);
+		}
+		return out;
+	});
+
+	function isStale(field: string): boolean {
+		return staleFields.has(field);
+	}
+
+	const FIELD_LABELS: Record<string, string> = {
+		name: 'Name',
+		description: 'Description',
+		category: 'Category',
+		tags: 'Tags',
+		preamble: 'Preamble',
+		note: 'Note',
+		addendum: 'Addendum',
+		portions: 'Portions',
+		preparation: 'Preparation',
+		cooking: 'Cooking',
+		total_time: 'Total time',
+		baking: 'Baking',
+		fermentation: 'Fermentation',
+		ingredients: 'Ingredients',
+		instructions: 'Instructions',
+	};
+
+	const staleLabels = $derived(
+		[...staleFields].map((f) => FIELD_LABELS[f] ?? f)
+	);
+
+	/**
 	 * Is there a translation the save button should approve? True after an
 	 * auto-translate, or once the English has been edited by hand. False for an
 	 * untouched existing translation, which keeps whatever needs_update state it had.
@@ -606,6 +649,26 @@ button:disabled {
 	border-color: color-mix(in srgb, var(--blue) 40%, transparent);
 }
 
+.stale-badge {
+	display: inline-block;
+	padding: 0.05rem 0.4rem;
+	border-radius: var(--radius-pill);
+	background: color-mix(in srgb, var(--orange) 18%, transparent);
+	color: var(--orange);
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.stale-note {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0 0 0.5rem;
+	font-size: 0.8rem;
+	color: var(--orange);
+}
+
 .notice ul {
 	margin: 0.35rem 0 0;
 	padding-left: 1.25rem;
@@ -769,11 +832,24 @@ button:disabled {
 		</div>
 	{/if}
 
-	{#if isEditMode && changedFields.length > 0}
-		<div class="notice notice-info">
+	{#if isEditMode && staleFields.size > 0}
+		<div class="notice notice-warn">
 			<div class="notice-body">
-				<strong>Changed fields: {changedFields.join(', ')}</strong>
-				<small>Only these fields will be re-translated if you use auto-translate.</small>
+				<strong>Needs an update: {staleLabels.join(', ')}</strong>
+				<small>
+					Marked <span class="stale-badge">veraltet</span> below. Auto-translate re-translates
+					only these and leaves the rest of the English as it is.
+				</small>
+			</div>
+		</div>
+	{:else if isEditMode && englishData?.translationStatus === 'needs_update'}
+		<div class="notice notice-warn">
+			<div class="notice-body">
+				<strong>Translation is marked as needing an update</strong>
+				<small>
+					No record of which fields changed — the flag predates that being stored.
+					Auto-translate will redo the whole recipe.
+				</small>
 			</div>
 		</div>
 	{/if}
@@ -837,6 +913,7 @@ button:disabled {
 					germanValue={germanData.name}
 					englishValue={editableEnglish?.name || ''}
 					fieldName="name"
+					stale={isStale('name')}
 					readonly={false}
 					onchange={(value) => handleFieldChange(value, 'name')}
 				/>
@@ -848,6 +925,7 @@ button:disabled {
 					germanValue={germanData.short_name}
 					englishValue={editableEnglish?.short_name || ''}
 					fieldName="short_name"
+					stale={isStale('short_name')}
 					readonly={false}
 					onchange={(value) => handleFieldChange(value, 'short_name')}
 				/>
@@ -859,6 +937,7 @@ button:disabled {
 					germanValue={germanData.description}
 					englishValue={editableEnglish?.description || ''}
 					fieldName="description"
+					stale={isStale('description')}
 					readonly={false}
 					multiline={true}
 					onchange={(value) => handleFieldChange(value, 'description')}
@@ -871,6 +950,7 @@ button:disabled {
 					germanValue={germanData.category}
 					englishValue={editableEnglish?.category || ''}
 					fieldName="category"
+					stale={isStale('category')}
 					readonly={false}
 					onchange={(value) => handleFieldChange(value, 'category')}
 				/>
@@ -883,6 +963,7 @@ button:disabled {
 						germanValue={germanData.tags?.join(', ') || ''}
 						englishValue={editableEnglish.tags.join(', ')}
 						fieldName="tags"
+					stale={isStale('tags')}
 						readonly={false}
 						onchange={(value) => handleFieldChange(value, 'tags')}
 					/>
@@ -896,6 +977,7 @@ button:disabled {
 						germanValue={germanData.preamble || ''}
 						englishValue={editableEnglish.preamble}
 						fieldName="preamble"
+					stale={isStale('preamble')}
 						readonly={false}
 						multiline={true}
 						onchange={(value) => handleFieldChange(value, 'preamble')}
@@ -910,6 +992,7 @@ button:disabled {
 						germanValue={germanData.note || ''}
 						englishValue={editableEnglish.note}
 						fieldName="note"
+					stale={isStale('note')}
 						readonly={false}
 						multiline={true}
 						onchange={(value) => handleFieldChange(value, 'note')}
@@ -989,6 +1072,9 @@ button:disabled {
 			{#if editableEnglish?.ingredients || editableEnglish?.instructions}
 				<div class="list-wrapper">
 					<div>
+						{#if isStale('ingredients')}
+							<p class="stale-note"><span class="stale-badge">veraltet</span> Zutaten wurden auf Deutsch geändert</p>
+						{/if}
 						{#if editableEnglish?.ingredients}
 							<CreateIngredientList
 								bind:ingredients={editableEnglish.ingredients}
@@ -999,6 +1085,9 @@ button:disabled {
 						{/if}
 					</div>
 					<div>
+						{#if isStale('instructions')}
+							<p class="stale-note"><span class="stale-badge">veraltet</span> Zubereitung wurde auf Deutsch geändert</p>
+						{/if}
 						{#if editableEnglish?.instructions && englishAddInfo}
 							<CreateStepList bind:instructions={editableEnglish.instructions} add_info={englishAddInfo} lang="en" />
 						{/if}
@@ -1013,6 +1102,7 @@ button:disabled {
 						germanValue={germanData.addendum || ''}
 						englishValue={editableEnglish.addendum}
 						fieldName="addendum"
+					stale={isStale('addendum')}
 						readonly={false}
 						multiline={true}
 						onchange={(value) => handleFieldChange(value, 'addendum')}

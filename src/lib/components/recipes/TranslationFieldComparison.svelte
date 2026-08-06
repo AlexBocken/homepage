@@ -6,6 +6,8 @@
 		fieldName: string;
 		readonly?: boolean;
 		multiline?: boolean;
+		/** The German side moved since this was translated, so the English is stale. */
+		stale?: boolean;
 		onchange?: (value: string) => void;
 	}
 
@@ -16,6 +18,7 @@
 		fieldName,
 		readonly = false,
 		multiline = false,
+		stale = false,
 		onchange
 	}: Props = $props();
 
@@ -47,6 +50,24 @@
 	height: 0.35rem;
 	border-radius: 50%;
 	background: var(--color-primary);
+}
+.field-label.is-stale::before{
+	background: var(--orange);
+}
+.field-label.is-stale{
+	color: var(--orange);
+}
+.stale-badge{
+	padding: 0.05rem 0.4rem;
+	border-radius: var(--radius-pill);
+	background: color-mix(in srgb, var(--orange) 18%, transparent);
+	color: var(--orange);
+	font-size: 0.65rem;
+	letter-spacing: 0.04em;
+}
+.field-comparison.is-stale{
+	padding-left: 0.6rem;
+	border-left: 3px solid var(--orange);
 }
 
 .pair {
@@ -140,8 +161,11 @@ textarea.field-value {
 }
 </style>
 
-<div class="field-comparison">
-	<div class="field-label">{label}</div>
+<div class="field-comparison" class:is-stale={stale}>
+	<div class="field-label" class:is-stale={stale}>
+		{label}
+		{#if stale}<span class="stale-badge">veraltet</span>{/if}
+	</div>
 	<div class="pair">
 		<div class="lang-column">
 			<span class="lang-chip">Deutsch</span>
