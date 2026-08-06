@@ -79,7 +79,7 @@
 	}
 </style>
 
-<button onclick={generateAltText} disabled={loading}>
+<button type="button" onclick={generateAltText} disabled={loading}>
 	{loading ? '🤖 Generating...' : '✨ Generate Alt Text (AI)'}
 </button>
 

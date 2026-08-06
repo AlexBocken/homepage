@@ -967,7 +967,7 @@
 				{isEn ? 'Link barcode' : 'Barcode verknüpfen'}
 				<code>{linkingCode}</code>
 			</span>
-			<button class="fs-scanner-close" onclick={closeLinkPicker} aria-label={isEn ? 'Cancel linking' : 'Verknüpfen abbrechen'}>
+			<button type="button" class="fs-scanner-close" onclick={closeLinkPicker} aria-label={isEn ? 'Cancel linking' : 'Verknüpfen abbrechen'}>
 				<X size={18} />
 			</button>
 		</div>
@@ -1006,7 +1006,7 @@
 	<div class="fs-scanner">
 		<div class="fs-scanner-header">
 			<span class="fs-scanner-title">{isEn ? 'Scan barcode' : 'Barcode scannen'}</span>
-			<button class="fs-scanner-close" onclick={stopScan} aria-label="Close scanner"><X size={18} /></button>
+			<button type="button" class="fs-scanner-close" onclick={stopScan} aria-label="Close scanner"><X size={18} /></button>
 		</div>
 		<!-- svelte-ignore a11y_media_has_caption -->
 		<video
@@ -1040,6 +1040,7 @@
 				placeholder={placeholder ?? t.search_food}
 				bind:value={query}
 				oninput={onQueryInput}
+				onkeydown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
 				autofocus={autofocus}
 			/>
 			{#if loading}
@@ -1047,12 +1048,12 @@
 			{/if}
 		</div>
 		{#if query}
-			<button class="fs-clear-btn" onclick={clearQuery} aria-label="Clear">
+			<button type="button" class="fs-clear-btn" onclick={clearQuery} aria-label="Clear">
 				<X size={16} />
 			</button>
 		{/if}
 		{#if browser && !isPrefilledMode && showBarcode}
-			<button class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
+			<button type="button" class="fs-barcode-btn" onclick={startScan} aria-label={isEn ? 'Scan barcode' : 'Barcode scannen'}>
 				<ScanBarcode size={20} />
 			</button>
 		{/if}
@@ -1062,7 +1063,7 @@
 	{#if !isPrefilledMode && !lockedSources}
 		<div class="fs-sources" role="group" aria-label={t.source_filter}>
 			{#each SOURCES as src}
-				<button
+				<button type="button"
 					class="fs-source-btn"
 					class:is-on={isSourceOn(src.key)}
 					aria-pressed={isSourceOn(src.key)}
@@ -1070,7 +1071,7 @@
 				>{src.label()}</button>
 			{/each}
 			<span class="fs-sources-sep" aria-hidden="true"></span>
-			<button
+			<button type="button"
 				class="fs-source-btn fs-rm-btn"
 				class:is-on={hideReadyMeals}
 				aria-pressed={hideReadyMeals}
@@ -1100,11 +1101,11 @@
 			{#each displayResults as item}
 				<div class="fs-result-row">
 					{#if showFavorites}
-						<button class="fs-fav" class:is-fav={item.favorited} onclick={() => toggleFavorite(item)} aria-label="Toggle favorite">
+						<button type="button" class="fs-fav" class:is-fav={item.favorited} onclick={() => toggleFavorite(item)} aria-label="Toggle favorite">
 							<Heart size={14} fill={item.favorited ? 'var(--red)' : 'none'} />
 						</button>
 					{/if}
-					<button class="fs-result" onclick={() => selectItem(item)}>
+					<button type="button" class="fs-result" onclick={() => selectItem(item)}>
 						<div class="fs-result-info">
 							<span class="fs-result-name">{item.name}</span>
 							<span class="fs-result-meta">
@@ -1128,7 +1129,7 @@
 						<!-- Every row carries a heart — filled when favourited, outline when not —
 						     so the indicator doubles as a toggle without a row's control
 						     disappearing when it is switched off. -->
-						<button class="fs-fav-mark" class:is-fav={item.favorited} onclick={() => toggleFavorite(item)} aria-label="Toggle favorite" aria-pressed={item.favorited}>
+						<button type="button" class="fs-fav-mark" class:is-fav={item.favorited} onclick={() => toggleFavorite(item)} aria-label="Toggle favorite" aria-pressed={item.favorited}>
 							<Heart size={14} fill={item.favorited ? 'var(--red)' : 'none'} />
 						</button>
 					{/if}
@@ -1145,7 +1146,7 @@
 		<p class="fs-no-results">{isEn ? 'No results found' : 'Keine Ergebnisse gefunden'}</p>
 	{/if}
 	{#if oncancel}
-		<button class="fs-btn-cancel" onclick={oncancel}>{t.cancel}</button>
+		<button type="button" class="fs-btn-cancel" onclick={oncancel}>{t.cancel}</button>
 	{/if}
 {:else}
 	<!-- Selected food — detail & amount -->
@@ -1244,7 +1245,7 @@
 		{/if}
 
 		{#if hasMicros}
-			<button
+			<button type="button"
 				class="fs-micro-toggle"
 				class:is-open={showMicros}
 				aria-expanded={showMicros}
@@ -1271,10 +1272,10 @@
 		{/if}
 
 		<div class="fs-actions">
-			<button class="fs-btn-cancel" onclick={() => { selected = null; }}>{t.cancel}</button>
+			<button type="button" class="fs-btn-cancel" onclick={() => { selected = null; }}>{t.cancel}</button>
 			<!-- confirm() refuses a zero amount. Disabling says so instead of letting
 			     the click land on nothing. -->
-			<button class="fs-btn-confirm" disabled={!logGrams || logGrams <= 0} onclick={confirm}>{btnLabel}</button>
+			<button type="button" class="fs-btn-confirm" disabled={!logGrams || logGrams <= 0} onclick={confirm}>{btnLabel}</button>
 		</div>
 	</div>
 {/if}
