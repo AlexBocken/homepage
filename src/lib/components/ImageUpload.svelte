@@ -37,8 +37,11 @@
 
   const displayTitle = $derived(title ?? t.receipt_image);
 
+  /** Kept in step with the same cap in /api/cospend/upload. */
+  const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
   function acceptFile(file: File) {
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       onerror?.(t.file_too_large);
       return;
     }
@@ -130,13 +133,13 @@
     }
 
     if (blob) {
-      blob = await shrinkToLimit(blob, 5 * 1024 * 1024, 3000);
+      blob = await shrinkToLimit(blob, MAX_UPLOAD_BYTES, 3000);
       acceptFile(new File([blob], `receipt-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' }));
     }
     closeCamera();
   }
 
-  // Full-resolution stills can exceed the 5 MB upload cap — downscale (only when
+  // Full-resolution stills can exceed the upload cap — downscale (only when
   // needed) so the high-quality capture still goes through.
   async function shrinkToLimit(blob: Blob, maxBytes: number, maxDim: number): Promise<Blob> {
     if (blob.size <= maxBytes) return blob;
@@ -203,7 +206,7 @@
             <line x1="19" y1="2" x2="19" y2="8"/>
           </svg>
           <p>{currentImage ? t.replace_image : t.upload_receipt}</p>
-          <small>JPEG, PNG, WebP (max 5MB)</small>
+          <small>JPEG, PNG, WebP (max 10MB)</small>
         </div>
       </label>
       <input

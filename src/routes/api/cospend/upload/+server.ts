@@ -25,8 +25,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       throw error(400, 'Invalid file type. Only JPEG, PNG, and WebP are allowed.');
     }
 
-    if (image.size > 5 * 1024 * 1024) {
-      throw error(400, 'File too large. Maximum size is 5MB.');
+    if (image.size > 10 * 1024 * 1024) {
+      throw error(400, 'File too large. Maximum size is 10MB.');
     }
 
     const extension = image.type.split('/')[1];

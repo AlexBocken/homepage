@@ -65,7 +65,7 @@ export const en = {
 	capture_photo: "Capture",
 	camera_error: "Could not open the camera. Use upload instead.",
 	uploading_image: "Uploading image...",
-	file_too_large: "File size must be less than 5MB",
+	file_too_large: "File size must be less than 10MB",
 	invalid_image: "Please select a valid image file (JPEG, PNG, WebP)",
 	you: "You",
 	close: "Close",

@@ -65,7 +65,7 @@ export const de = {
 	capture_photo: "Aufnehmen",
 	camera_error: "Kamera konnte nicht geöffnet werden. Stattdessen hochladen.",
 	uploading_image: "Bild wird hochgeladen...",
-	file_too_large: "Dateigrösse muss unter 5MB sein",
+	file_too_large: "Dateigrösse muss unter 10MB sein",
 	invalid_image: "Bitte eine gültige Bilddatei wählen (JPEG, PNG, WebP)",
 	you: "Du",
 	close: "Schliessen",
