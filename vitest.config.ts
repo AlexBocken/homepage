@@ -33,9 +33,11 @@ export default defineConfig({
 		conditions: ['browser'],
 		alias: {
 			// SvelteKit's virtual env modules don't exist outside its build, so a
-			// unit test that reaches a `+server.ts` cannot resolve them. Point at a
-			// stub whose `env` object tests can write to.
+			// unit test that reaches a `+server.ts` cannot resolve them. The dynamic
+			// stub carries an `env` object tests can write to; the static one carries
+			// constants, matching how the real modules behave.
 			'$env/dynamic/private': resolve('./tests/mocks/envDynamicPrivate.ts'),
+			'$env/static/private': resolve('./tests/mocks/envStaticPrivate.ts'),
 			$lib: resolve('./src/lib'),
 			$utils: resolve('./src/utils'),
 			$models: resolve('./src/models'),

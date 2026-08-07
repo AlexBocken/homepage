@@ -1,8 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { env } from '$env/dynamic/private';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 
-// requireSelf reaches Authentik and pulls in $env/static/private; the endpoint's
-// contract is what it does with the identity, not how it resolves one.
+// The endpoint's bridge URL and token are inlined from $env/static/private,
+// which vitest.config aliases to tests/mocks/envStaticPrivate — the fixture
+// values asserted on below live there.
+//
+// requireSelf reaches Authentik; the endpoint's contract is what it does with
+// the identity, not how it resolves one.
 vi.mock('$lib/server/authentik', () => ({
 	requireSelf: vi.fn(async () => ({ pk: 42, nickname: 'alex' }))
 }));
@@ -25,13 +28,6 @@ const BRIDGE_OK = {
 };
 
 describe('/api/anki/status', () => {
-	beforeEach(() => {
-		for (const key of Object.keys(env)) delete env[key];
-		env.ANKI_BRIDGE_URL = 'http://bridge.test:8092';
-		env.ANKI_BRIDGE_TOKEN = 'shared-secret';
-		env.ANKI_SYNC_PUBLIC_URL = 'https://anki.example.org/';
-	});
-
 	afterEach(() => {
 		vi.unstubAllGlobals();
 		vi.restoreAllMocks();

@@ -1,10 +1,17 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import { requireSelf } from '$lib/server/authentik';
-// Read at runtime rather than inlined via $env/static/private: the bridge is
-// optional infrastructure, and a missing key here must not fail the build for a
-// checkout (or an e2e run) that has no Anki sync server.
-import { env } from '$env/dynamic/private';
+// Inlined at build time. The dynamic form reads process.env on the *server*,
+// which the deploy never populates — it sources .env_prod around `pnpm build`
+// and ships only build output — so the token arrived empty and the bridge
+// answered 401 for a sync server that was working perfectly. The cost is that
+// these three keys must now exist wherever the app is built; they are in
+// .env.example for exactly that.
+import {
+	ANKI_BRIDGE_URL,
+	ANKI_BRIDGE_TOKEN,
+	ANKI_SYNC_PUBLIC_URL
+} from '$env/static/private';
 
 const ANKI_GROUP = 'anki_users';
 const TIMEOUT_MS = 3000;
@@ -23,9 +30,9 @@ const TIMEOUT_MS = 3000;
 export const GET: RequestHandler = async ({ locals }) => {
 	const { nickname } = await requireSelf(locals);
 
-	const base = (env.ANKI_BRIDGE_URL || 'http://127.0.0.1:8092').replace(/\/+$/, '');
-	const token = env.ANKI_BRIDGE_TOKEN ?? '';
-	const publicUrl = env.ANKI_SYNC_PUBLIC_URL ?? '';
+	const base = (ANKI_BRIDGE_URL || 'http://127.0.0.1:8092').replace(/\/+$/, '');
+	const token = ANKI_BRIDGE_TOKEN ?? '';
+	const publicUrl = ANKI_SYNC_PUBLIC_URL ?? '';
 
 	const session = await locals.auth();
 	const hasGroup = (session?.user?.groups ?? []).includes(ANKI_GROUP);
