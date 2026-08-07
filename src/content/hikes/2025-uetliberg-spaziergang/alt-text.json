@@ -1,0 +1,37 @@
+{
+	"PXL_20250807_092147679.MP.jpg": {
+		"hash": "9f4357cf",
+		"de": "Zwei Wanderer auf dem Uetliberg mit Blick über Zürich unter blauem Himmel.",
+		"en": "Two hikers on the Uetliberg overlooking Zurich under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250807_092153821.jpg": {
+		"hash": "b078034e",
+		"de": "Blick über Zürich mit grünen Wäldern und städtischer Landschaft unter bewölktem Himmel.",
+		"en": "View over Zurich’s green forests and urban sprawl under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250807_123146825.jpg": {
+		"hash": "e962c16e",
+		"de": "Grüne Wiesen, Felder und Bäume unter blauem Himmel mit fernen Bergen im Hintergrund.",
+		"en": "Green fields, trees, and distant mountains under a clear blue sky on a sunny day.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250807_123149520.jpg": {
+		"hash": "116eca34",
+		"de": "Eine Wanderin steht auf einem Kiesweg im grünen Tal mit Wald und Hügeln unter blauem Himmel.",
+		"en": "A hiker stands on a gravel path through green hills, with trees and blue sky in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "e962c16e",
+		"de": "Grüne Hügel, Felder und Bäume unter blauem Himmel mit fernen Bergen im Hintergrund.",
+		"en": "Green hills, fields and trees under a blue sky with distant mountains in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

@@ -1,0 +1,156 @@
+{
+	"PXL_20240902_063904663.jpg": {
+		"hash": "9f93ba2c",
+		"de": "Wolkiger Himmel über grünen Hängen und Felsgipfeln; dichte Bäume im Vordergrund, kleine Häuser unten links sichtbar.",
+		"en": "Cloudy sky above green slopes and rocky peaks; dense trees in foreground, small houses visible lower left.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_064149152.jpg": {
+		"hash": "e046fbac",
+		"de": "Schmale Kopfsteinstrasse zwischen gelben und grauen Häusern führt zu einem Bogen mit Blick auf ein weisses Gebäude im Tal.",
+		"en": "Narrow cobblestone path between yellow and gray buildings leads through an arch toward a white building in the valley below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_065207264.jpg": {
+		"hash": "4de06f9d",
+		"de": "Wanderin vor einer kleinen Kapelle im Wald am Monte Generosa.",
+		"en": "Hiker stands before a small chapel in the forest on Monte Generosa.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_065816404.MP.jpg": {
+		"hash": "162ba164",
+		"de": "Eine Wanderin geht auf einem Laubweg durch einen grünen Wald im Tessin.",
+		"en": "A hiker walks along a leaf-strewn trail through the green woods of Ticino.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_065817830.jpg": {
+		"hash": "e3444fc9",
+		"de": "Eine Wanderin in blauem Shirt steht auf einem Waldweg mit Laubstreu unter grünen Bäumen im Tessiner Bergland.",
+		"en": "A hiker in a blue shirt stands on a leaf-strewn forest trail under green trees in the Ticino mountains.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_070441085.jpg": {
+		"hash": "27c978a8",
+		"de": "Wanderer in blauem Shirt geht auf steinigem Waldpfad durch Laub und Bäume im Tessin.",
+		"en": "Hiker in blue shirt walks along rocky forest trail through leaves and trees in Ticino.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_070809228.jpg": {
+		"hash": "729adef9",
+		"de": "Ein Wanderer steigt auf steinigem Pfad durch den bewaldeten Hang des Monte Generosa im Tessin.",
+		"en": "A hiker ascends a rocky trail through the wooded slope of Monte Generosa in Ticino, Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_073733790.jpg": {
+		"hash": "322f1ed9",
+		"de": "Steinerne Hänge mit Bäumen und abgestorbener Vegetation im Wald von Rovio, Schweiz.",
+		"en": "Rocky slopes dotted with trees and dead vegetation in the forest of Rovio, Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_073737114.jpg": {
+		"hash": "f421c715",
+		"de": "Steiler Waldweg mit Felsen und Moos zwischen hohen Bäumen im Septemberlicht.",
+		"en": "Steep forest trail with rocks, moss, and tall trees under September light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_075434175.MP.jpg": {
+		"hash": "32b75f31",
+		"de": "Waldboden mit Laub und Bäumen im Tessin.",
+		"en": "Forest floor covered in leaves, surrounded by trees in Ticino.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_082018344.jpg": {
+		"hash": "3730f02f",
+		"de": "Nebel verhüllt den bewaldeten Berggipfel im Hintergrund; grüne Bäume rahmen die Szene ein, der Himmel ist bedeckt.",
+		"en": "Fog shrouds the forested mountain peak in the background; green trees frame the scene under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_082024170.jpg": {
+		"hash": "66f6a3d7",
+		"de": "Ein einsamer Baum steht auf grasigem Hang vor nebligen Bergen im Tessin.",
+		"en": "A lone tree stands on a grassy slope before misty mountains in Ticino.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_082027686.jpg": {
+		"hash": "ab93ae2d",
+		"de": "Ein steiler Pfad führt durch grüne Vegetation mit Bäumen und Felsen unter bewölktem Himmel.",
+		"en": "A steep path winds through green vegetation, trees and rocks under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_084255762.jpg": {
+		"hash": "299d08a2",
+		"de": "Nebel umhüllt steile Felswände mit dichtem Grün im Tessiner Bergland.",
+		"en": "Mist clings to steep limestone cliffs draped in lush greenery above the valley floor.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_084302882.jpg": {
+		"hash": "59ab8175",
+		"de": "Steile Felswände mit dichtem Grün, Nebel über dem Tal – Wanderung im Tessin.",
+		"en": "Steep cliffs draped in greenery, mist clinging to the valley below — hike through Ticino’s mountains.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_084527986.jpg": {
+		"hash": "dd7763b0",
+		"de": "Blick durch grüne Äste auf Tal und Wasser im Hintergrund unter blauem Himmel.",
+		"en": "View through green branches down to valley and water in background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_085154662.jpg": {
+		"hash": "5f49e0e7",
+		"de": "Nebel umhüllt felsige Gipfelgrate mit grüner Vegetation und Bäumen im Vordergrund bei diffusem Licht.",
+		"en": "Mist clings to rocky ridges with green vegetation and trees in the foreground under diffused light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_085159285.jpg": {
+		"hash": "27d25795",
+		"de": "Nebel umhüllt felsige Gipfelgrate mit grüner Vegetation auf steilem Hang im Tessin.",
+		"en": "Mist clings to rocky ridges and green slopes on a steep hillside in Ticino, Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_105143659.jpg": {
+		"hash": "ee005a86",
+		"de": "Steile Felswand links, grüne Hügel und See im Tal unter bewölktem Himmel.",
+		"en": "Steep cliff on left, green hills and lake below under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_105149784.jpg": {
+		"hash": "72f5b9bb",
+		"de": "Grüne Hänge und felsige Gipfel über einem See unter bewölktem Himmel.",
+		"en": "Green slopes and rocky peaks overlook a lake under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240902_105158548.jpg": {
+		"hash": "d58837b8",
+		"de": "Der Gipfel mit Funkmast und Gebäude überragt steile Felswände und grüne Hänge über einem See im Tal.",
+		"en": "The summit with a radio tower and building overlooks steep rock faces, green slopes, and a lake below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "5f49e0e7",
+		"de": "Nebel umhüllt felsige Gipfel mit grüner Vegetation und Bäumen im Vordergrund unter grauem Himmel.",
+		"en": "Mist shrouds rocky peaks with green vegetation and trees in the foreground under a gray sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

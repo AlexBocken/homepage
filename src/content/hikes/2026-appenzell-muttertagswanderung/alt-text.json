@@ -1,0 +1,282 @@
+{
+	"PXL_20260509_081955722.RAW-01.COVER.jpg": {
+		"hash": "eea6b6e6",
+		"de": "Ein Wanderer steht auf einem Pfad neben grüner Hecke und Wiese.",
+		"en": "A hiker stands on a path next to green hedgerow and meadow.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_082931895.jpg": {
+		"hash": "7c716327",
+		"de": "Asphaltierte Strasse führt über grüne Hügel mit Bäumen und fernen Bergen unter blauem Himmel.",
+		"en": "Paved road winds over green hills dotted with trees, distant mountains under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_083454513.RAW-01.COVER.jpg": {
+		"hash": "af0aff85",
+		"de": "Schweizerflagge weht über grünen Hügeln mit Häusern und Bäumen unter blauem Himmel.",
+		"en": "Swiss flag waves over green hills dotted with houses and trees under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_084037606.RAW-01.COVER.jpg": {
+		"hash": "4357a51f",
+		"de": "Grüne Hügel mit Gänseblümchen und gelben Blumen unter blauem Himmel.",
+		"en": "Green hills dotted with dandelions and yellow flowers under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_084612539.RAW-01.MP.COVER.jpg": {
+		"hash": "df92a194",
+		"de": "Ein Wanderer mit Rucksack steht auf einem Weg im grünen Grasland unter blauem Himmel.",
+		"en": "A hiker with a backpack stands on a path through green meadows under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_084706108.jpg": {
+		"hash": "0ba534d3",
+		"de": "Eine lächelnde Wanderin steht auf einer grünen Wiese mit gelben Blumen vor bewaldeten Hügeln und Häusern unter blauem Himmel.",
+		"en": "A smiling hiker stands on a green meadow with yellow flowers, before wooded hills and houses under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_090713632.jpg": {
+		"hash": "e4e40fa7",
+		"de": "Grüne Weiden und Nadelwald vor hügeligem Dorf unter wolkenverhangenem Himmel",
+		"en": "Green meadows, pine forest before a hilly village under cloudy sky",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_091841493.jpg": {
+		"hash": "632dbdae",
+		"de": "Holzbalkendecke mit eingraviertem Text in einer alten Holzkonstruktion unter freiem Himmel.",
+		"en": "Wooden ceiling beams with engraved text under an open sky, part of a historic structure.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_091912145.jpg": {
+		"hash": "f2d28866",
+		"de": "Holzbalkendecke mit Inschrift; Holzbrücke führt durch grüne Hügel bei Teufen, Appenzell Ausserrhoden.",
+		"en": "Wooden-beamed ceiling with inscription; wooden bridge leads through green hills near Teufen, Appenzell Ausserrhoden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_091938414.jpg": {
+		"hash": "486bce69",
+		"de": "Holzgedeckter Weg mit Inschrift im Inneren; grüne Hügel sichtbar am Ende des Ganges.",
+		"en": "Wooden covered path with inscription inside; green hills visible at the end of the walkway.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_092245135.jpg": {
+		"hash": "ee136ec5",
+		"de": "Eine Holzbrücke überspannt einen klaren Bach in grüner Hügellandschaft unter blauem Himmel.",
+		"en": "A wooden bridge crosses a clear stream through green hills under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_092248836.jpg": {
+		"hash": "7bc4635c",
+		"de": "Ein steiniger Bachlauf durch grüne Wälder unter blauem Himmel mit vereinzelten Wolken.",
+		"en": "A rocky streambed winds through green woods under a blue sky with scattered clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_094633622.RAW-01.MP.COVER.jpg": {
+		"hash": "c62f0718",
+		"de": "Ein Wanderer steht auf einem felsigen Flussbett unter grünen Bäumen mit einer Holzbrücke im Hintergrund bei blauem Himmel.",
+		"en": "A hiker stands on a rocky riverbed beneath green trees, with a wooden bridge in the background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_102455309.RAW-01.COVER.jpg": {
+		"hash": "a773cda3",
+		"de": "Ein Weg führt durch eine blühende Wiese mit Bäumen und Häusern im Hintergrund unter blauem Himmel.",
+		"en": "A path winds through a meadow of yellow flowers with trees and houses under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_102458815.RAW-01.COVER.jpg": {
+		"hash": "5ba814a3",
+		"de": "Gelbe Blumen und grünes Gras unter Baumkronen mit Dörfern im Appenzeller Hügelland.",
+		"en": "Yellow flowers and green grass under tree canopy, with villages in the Appenzell hills.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_103058824.jpg": {
+		"hash": "5324ca1b",
+		"de": "Weisse Ziegen weiden auf grüner Wiese mit gelben Blumen vor ländlichen Häusern und bewaldeten Hügeln.",
+		"en": "White goats graze on a green meadow dotted with yellow flowers, backed by farmhouses and forested hills.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_103059835.jpg": {
+		"hash": "1bb1864f",
+		"de": "Weisse Ziegen und Kühe weiden auf grüner Wiese mit blühenden Gelbblumen vor hügeligem Appenzell-Land.",
+		"en": "White goats and cows graze on a green meadow dotted with yellow flowers, backed by rolling hills of Appenzell.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_103153426.jpg": {
+		"hash": "98fd3074",
+		"de": "Eine Kuh weidet auf grüner Wiese vor einem Holzstall unter blauem Himmel mit Wolken.",
+		"en": "A cow grazes on a green meadow in front of a wooden barn under blue skies with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_104500125.jpg": {
+		"hash": "12ecc00a",
+		"de": "Ein Waldpfad schlängelt sich durch grüne Bäume mit sichtbaren Wurzeln und Moos an den Hängen.",
+		"en": "A forest trail winds through green trees with visible roots and moss on the slopes.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_104746061.jpg": {
+		"hash": "ea707ad4",
+		"de": "Ein Wanderer geht auf einem Waldweg zwischen hohen Bäumen mit grüner Vegetation und Laub am Boden.",
+		"en": "A hiker walks along a forest trail surrounded by tall trees, green foliage, and fallen leaves on the ground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_110809156.jpg": {
+		"hash": "4fba4a68",
+		"de": "Grüne Hügel unter blauem Himmel mit weissen Wolken und fernen Bergen im Appenzell.",
+		"en": "Green rolling hills under a blue sky with white clouds, distant mountains in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_111350351.jpg": {
+		"hash": "dbca5a47",
+		"de": "Ein Schild mit „Kein Hund“ steht auf einem Holzpfosten in einer blühenden Wiese unter blauem Himmel.",
+		"en": "A “No Dog” sign stands on a wooden post amid yellow wildflowers under a bright blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_113725341.jpg": {
+		"hash": "fc4c3ef8",
+		"de": "Ein gerahmtes Gemälde zeigt eine ländliche Appenzell-Landschaft mit Bergen, Häusern und einer grossen Spinne im Zentrum.",
+		"en": "A framed painting depicts an Appenzell countryside scene with mountains, houses, and a large spider at the center.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_122105709.jpg": {
+		"hash": "535bb0e0",
+		"de": "Ein helles Holzhaus mit Solarpanelen steht auf grünem Rasen unter blauem Himmel.",
+		"en": "A bright wooden house with solar panels stands on green grass under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_122219700.jpg": {
+		"hash": "05601853",
+		"de": "Ein altes Holzhaus mit braunem Dach steht neben einer blühenden Wiese und einem Zaun unter blauem Himmel.",
+		"en": "An old wooden house with a brown roof stands beside a flowering meadow and fence under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_122225295.jpg": {
+		"hash": "30d11313",
+		"de": "Ein altes Holzhaus mit rotem Dach steht neben einer Wiese unter blauem Himmel.",
+		"en": "An old wooden house with a red roof stands beside a meadow under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_123558456.jpg": {
+		"hash": "d30e4585",
+		"de": "Eine Wanderin steht in einer blumenreichen Wiese vor einem Holzhaus auf grünem Hügel unter blauem Himmel mit Wolken.",
+		"en": "A hiker stands in a flower-filled meadow before a wooden house on a green hill under blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_123648329.jpg": {
+		"hash": "609ffeb3",
+		"de": "Ein Kreis aus Baumstümpfen liegt im Wald bei Herisau Teufen, umgeben von hohen Bäumen und Laub.",
+		"en": "A circle of tree stumps sits in a forest near Herisau Teufen, surrounded by tall trees and leaves.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_124136465.jpg": {
+		"hash": "a0b33d7f",
+		"de": "Ein klarer blauer Himmel über einem steinigen Flussbett mit klarem Wasser und umgeben von grünen Wäldern im Appenzell.",
+		"en": "A clear blue sky above a rocky riverbed with clear water, surrounded by green forests in the Appenzell region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_124141418.jpg": {
+		"hash": "8f9b8942",
+		"de": "Ein Fluss schlängelt sich durch einen steinigen Bachbett mit grüner Vegetation an den Ufern im Schatten von Bäumen.",
+		"en": "A river winds through a rocky bed with green vegetation along the banks, shaded by trees.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_124438003.jpg": {
+		"hash": "fc39d9c5",
+		"de": "Ein klarer Bach fliesst durch felsiges Terrain unter grünen Wäldern bei blauem Himmel mit wenigen Wolken.",
+		"en": "A clear stream flows through rocky terrain beneath green forests under a blue sky with few clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_124548329.jpg": {
+		"hash": "f4e187d5",
+		"de": "Klare Wasserläufe schlängeln sich zwischen moosigen Felsen in grüner Hügellandschaft unter sonnigem Himmel.",
+		"en": "Clear streams wind between mossy rocks through green hills under a sunny sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_124637391.jpg": {
+		"hash": "209fa853",
+		"de": "Klarer Bach fliesst zwischen Felsen und grünen Ufern im schattigen Wald von Appenzell.",
+		"en": "Clear stream flows between rocks and green banks in the shaded forest of Appenzell.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_130237259.jpg": {
+		"hash": "7076b91d",
+		"de": "Eine Frau geht auf einem Kiesweg durch grüne Hügel unter blauem Himmel mit Wolken.",
+		"en": "A woman walks along a gravel path through green hills under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_132109296.jpg": {
+		"hash": "0c34b674",
+		"de": "Kirchenschiff mit Altären und Bänken in hellem Licht.",
+		"en": "Church interior with altars, pews, and bright natural light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_134105399.MP.jpg": {
+		"hash": "25fe50bd",
+		"de": "Ein Pfad führt zwischen einer Betonmauer und grünen Bäumen unter blauem Himmel im Appenzeller Hügelland.",
+		"en": "A path winds between a concrete wall and green trees under a blue sky in the Appenzell hills.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_135608560.jpg": {
+		"hash": "6a03326e",
+		"de": "Ein rotes Auto steht vor einem grossen Holzhaus mit vielen Fenstern und umgeben von Blumen und Bäumen unter blauem Himmel.",
+		"en": "A red car is parked in front of a large wooden house with many windows, surrounded by flowers and trees under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_135713903.jpg": {
+		"hash": "a921c5b3",
+		"de": "Ein dunkles Holzhaus mit steilem Dach steht zwischen hohen Nadelbäumen und grünen Sträuchern unter blauem Himmel.",
+		"en": "A dark wooden house with a steep roof stands among tall evergreens and green shrubs under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260509_135831180.jpg": {
+		"hash": "07b96067",
+		"de": "Eine Wanderin geht auf einem Pfad durch grüne Hügel unter blauen Himmel mit Wolken und Bäumen im Vordergrund.",
+		"en": "A hiker walks along a path through green hills under blue sky with clouds and trees framing the view.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "a773cda3",
+		"de": "Ein Pfad führt durch blühende Wiesen mit gelben Blüten vor grünen Hügeln und einem Dorf im Hintergrund unter blauem Himmel.",
+		"en": "A path winds through yellow-flowered meadows across green hills, with a village and blue sky in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

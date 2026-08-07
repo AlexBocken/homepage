@@ -1,0 +1,191 @@
+{
+	"PXL_20260307_110913184.jpg": {
+		"hash": "a6740ada",
+		"de": "Ein sanfter Hügel mit Resten von Schnee führt zu einem Dorf am Ufer eines Sees, umgeben von grünen Hängen und blauem Himmel.",
+		"en": "A gentle slope with patches of snow leads toward a lakeside village nestled among green hills under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_111427874.jpg": {
+		"hash": "88f37405",
+		"de": "Ein Wanderer steigt einen holzgetreppten Pfad in einem bewaldeten Hang hinauf, umgeben von Nadel- und Laubbäumen.",
+		"en": "A hiker ascends a wooden-stair trail up a wooded hillside surrounded by evergreen and deciduous trees.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_114701779.jpg": {
+		"hash": "fea3963e",
+		"de": "Ein kahler Baum steht auf schneebedecktem Hang mit grüner Vegetation und kleinen Häusern im Hintergrund unter hellem Himmel.",
+		"en": "A bare tree stands on a snowy slope with green vegetation and small houses in the background under bright sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_114712971.jpg": {
+		"hash": "b5e1d57c",
+		"de": "Schnee bedeckt den Vordergrund vor Nadelbäumen und einem See mit umliegenden Hügeln unter klarem Himmel.",
+		"en": "Snow covers the foreground before pine trees, a lake and surrounding hills under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_114716664.jpg": {
+		"hash": "b3980139",
+		"de": "Zwei Wanderer steigen auf schneebedecktem Hang mit rotem Wegmarkierer unter hellem Sonnenlicht.",
+		"en": "Two hikers ascend a snow-dusted slope marked by a red post under bright sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_122233449.jpg": {
+		"hash": "7f6d63ef",
+		"de": "Zwei lächelnde Wanderer vor schneebedecktem Hang und blauem Himmel im Schweizer Bergland.",
+		"en": "Two smiling hikers stand before snow-dusted slopes under a clear blue sky in the Swiss mountains.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_122234562.jpg": {
+		"hash": "80c3f51b",
+		"de": "Zwei Wanderer lächeln vor schneebedecktem Bergpanorama unter blauem Himmel mit Sonnenlicht.",
+		"en": "Two hikers smile before a snowy mountain landscape under blue sky with sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_122243489.jpg": {
+		"hash": "c9c9f980",
+		"de": "Schneebedeckte Hänge und braunes Gras unter blauem Himmel mit fernen schneebergigen Gipfeln im Hintergrund.",
+		"en": "Snow-dusted slopes, brown grass under blue sky with distant snow-capped peaks in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_122244657.jpg": {
+		"hash": "b8c4fdab",
+		"de": "Schnee bedeckter Hang mit braunem Gras und fernen schneebedeckten Gipfeln unter klarem Himmel.",
+		"en": "Snow-dusted slope with brown grass, distant snow-capped peaks under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_122423307.jpg": {
+		"hash": "289afccd",
+		"de": "Weissblühende Pflanzen wachsen im trockenen Gras der Schweizer Alpenlandschaft.",
+		"en": "White flowers bloom in dry grass across the Swiss alpine landscape.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_122431018.jpg": {
+		"hash": "39481ac1",
+		"de": "Weisse Krokusse blühen im trockenen Gras auf dem Weg nach Einsiedeln.",
+		"en": "White crocuses bloom in dry grass along the trail near Einsiedeln.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_123039106.jpg": {
+		"hash": "c4c60af4",
+		"de": "Wanderer steigt auf steinigem Pfad durch moosigen Wald mit hohen Bäumen und umgestürztem Holz.",
+		"en": "Hiker climbs rocky trail through mossy forest with tall trees and fallen logs.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_123043131.jpg": {
+		"hash": "54761fb1",
+		"de": "Wanderer auf steilem Moosweg zwischen hohen Nadelbäumen im Waldhang.",
+		"en": "Hiker on a steep mossy trail among tall pine trees in the forest slope.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_123847565.jpg": {
+		"hash": "afa15c60",
+		"de": "Eine Person wandert auf schneebedecktem Pfad durch Nadelwald bei hellem Sonnenlicht.",
+		"en": "A person walks along a snow-covered trail through pine forest under bright sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_123848658.jpg": {
+		"hash": "07061c53",
+		"de": "Wanderer im Schnee zwischen Nadelbäumen auf Pfad in Einsiedeln.",
+		"en": "Hiker walking on snowy trail among evergreen trees near Einsiedeln.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_124315692.jpg": {
+		"hash": "56ec70ae",
+		"de": "Eine Person steht auf einem schneebedeckten Berg mit Nadelwäldern im Hintergrund bei klarem Himmel.",
+		"en": "A person stands on a snow-dusted mountain slope with pine forests under a bright sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_124318313.jpg": {
+		"hash": "f64770c8",
+		"de": "Schneebedeckte Hänge mit Nadelwäldern und fernen Gipfeln unter klarem Himmel.",
+		"en": "Snow-covered slopes, pine forests, distant peaks under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_125312636.jpg": {
+		"hash": "9f8e8ef9",
+		"de": "Ein Wanderer steigt schneebedeckten Hang hinauf; Schatten streckt sich lang vor ihm aus.",
+		"en": "A hiker ascends a snow-covered slope, casting a long shadow ahead.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_125313691.jpg": {
+		"hash": "d6609151",
+		"de": "Eine Person steigt schneebedeckten Hang hinauf; im Hintergrund Nadelwald unter hellem Himmel.",
+		"en": "A person hikes up a snow-covered slope with evergreen trees in the background under bright sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_131625198.jpg": {
+		"hash": "8fd2313f",
+		"de": "Schneebedeckte Alpen mit Nadelwald und kleinen Hütten unter klarem Himmel.",
+		"en": "Snow-capped Alps, pine forest, small huts under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_131626897.jpg": {
+		"hash": "15d9534f",
+		"de": "Schnee bedeckter Hang mit Holzzaun und fernen schneebedeckten Bergen unter klarem Himmel.",
+		"en": "Snow-dusted slope with wooden fence, distant snow-capped mountains under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_131658068.jpg": {
+		"hash": "7d4ac16b",
+		"de": "Zwei Wanderer lächeln vor einem Wegweiser mit Bergen und Schnee im Hintergrund.",
+		"en": "Two hikers smile in front of a trail sign, with mountains and snow behind them.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_131936461.jpg": {
+		"hash": "bae922e0",
+		"de": "Ein hölzernes Kreuz mit einer Figur Christi steht auf einem grasbewachsenen Hügel vor blauem Himmel und Holzzaun.",
+		"en": "A wooden cross with a figure of Christ stands on a grassy hill against a blue sky and wooden fence.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_133542157.jpg": {
+		"hash": "ebb3a6f9",
+		"de": "Schnee bedeckt den Hang; ein Bach fliesst durch moosiges Gelände mit alten Baumstümpfen und jungen Bäumen im Schatten.",
+		"en": "Snow covers the slope; a stream flows through mossy terrain with old stumps and young trees in shadow.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_133721168.jpg": {
+		"hash": "8dd25b95",
+		"de": "Schneebedeckter Hang mit Fussspuren und Nadelbäumen vor schneeigen Bergen unter klarem Himmel.",
+		"en": "Snow-covered slope with footprints, evergreen trees, and distant snow-capped mountains under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260307_144812318.jpg": {
+		"hash": "df4ec06a",
+		"de": "Zwei Wanderer vor Parkhaus mit Bergen im Hintergrund bei Sonnenschein.",
+		"en": "Two hikers in front of a parking garage, mountains visible behind them under sunny skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "f64770c8",
+		"de": "Schneebedeckte Hänge mit Nadelwäldern und fernen Gipfeln unter klarem Himmel.",
+		"en": "Snowy slopes, pine forests, distant peaks under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

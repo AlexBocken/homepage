@@ -1,0 +1,219 @@
+{
+	"PXL_20250817_064844146.jpg": {
+		"hash": "35b4aed1",
+		"de": "Eine Person wandert auf einem Pfad durch grüne Berglandschaften unter bewölktem Himmel.",
+		"en": "A hiker walks along a trail through green mountain valleys under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_065233030.MP.jpg": {
+		"hash": "3b6aa0d5",
+		"de": "Ein schwarzer Salamander kriecht zwischen Felsen auf einem steinigen Pfad im Spätsommergras der Zentralschweiz.",
+		"en": "A black salamander crawls among rocks on a gravel path amid late-summer grass in central Switzerland’s foothills.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_065239719.jpg": {
+		"hash": "40f7b620",
+		"de": "Ein schwarzer Salamander liegt auf Felsen und Erde mit kleinen Steinen und Gräsern umher.",
+		"en": "A black salamander rests on rocks, soil, small stones, and grasses nearby.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_065647254.jpg": {
+		"hash": "b9b3b8b1",
+		"de": "Grün bewachsene Hügel mit Bachlauf unter wolkenverhangenem Himmel in der Zentralschweiz.",
+		"en": "Green hills with a stream winding through, under cloudy skies in central Switzerland’s Spiringen region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_070721023.jpg": {
+		"hash": "45f794e8",
+		"de": "Grüne Almwiesen mit kleinen Häusern vor schneebedeckten Bergen unter blauem Himmel mit Wolken.",
+		"en": "Green alpine meadows with small houses before snow-capped mountains under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_070722154.jpg": {
+		"hash": "448f93e9",
+		"de": "Grüne Almwiesen mit kleinen Häusern vor schneebedeckten Bergen unter blauem Himmel mit Wolken.",
+		"en": "Green alpine meadows with small buildings before snow-capped mountains under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_071423434.jpg": {
+		"hash": "e9d9befc",
+		"de": "Kiesweg führt über grünen Berggrat mit weiten Blick auf die Zentralschweiz unter blauem Himmel.",
+		"en": "Gravel path winds along a green ridge with views of Central Switzerland under blue sky and clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_075547790.jpg": {
+		"hash": "21923ce3",
+		"de": "Nebel umhüllt grüne Bergflanken mit Nadelwäldern unter blauem Himmel mit Wolken.",
+		"en": "Mist clings to green mountain slopes with pine forests beneath a blue, cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_075549901.jpg": {
+		"hash": "b53da470",
+		"de": "Nebel umgibt grüne Bergflanken mit Nadelwäldern unter blauem Himmel mit Wolken.",
+		"en": "Mist wraps green mountain slopes with pine forests under a blue sky and clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_075557066.jpg": {
+		"hash": "ec30caeb",
+		"de": "Ein schmaler Pfad führt steil bergauf durch neblige Grashänge unter blauem Himmel mit Wolken.",
+		"en": "A narrow trail ascends steeply through misty grass slopes under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_080034053.jpg": {
+		"hash": "5d73bfe1",
+		"de": "Grüner Berg mit felsigem Gipfel unter blauem Himmel und weissen Wolken; Weg führt an Steinmauer entlang.",
+		"en": "Green mountain peak under blue sky with white clouds; path runs beside stone wall on grassy slope.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_080627140.jpg": {
+		"hash": "b7a4c1c7",
+		"de": "Ein Wanderer geht auf einem schmalen Pfad durch nebligen Wald mit grünen Hängen und Nadelbäumen im Hintergrund.",
+		"en": "A hiker walks along a narrow trail through misty forest with green slopes and pine trees in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_081302370.jpg": {
+		"hash": "7e15c1a9",
+		"de": "Ein Wanderer geht auf einem schmalen Pfad durch grüne Hänge mit Nadelbäumen im Nebel.",
+		"en": "A hiker walks along a narrow trail through green slopes with pine trees in misty light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_081304582.jpg": {
+		"hash": "b0eadd54",
+		"de": "Ein Wanderer geht auf einem Pfad durch grüne Hänge mit Nadelbäumen im Spätsommer.",
+		"en": "A hiker walks along a trail through green slopes with evergreen trees in late summer.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_081835960.jpg": {
+		"hash": "2135be09",
+		"de": "Eine Wanderin steht vor einem toten Baum am Hang; Nebel liegt tief unten im Tal unter bewölktem Himmel.",
+		"en": "A hiker stands before a dead tree on the slope, with mist below and cloudy sky above.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_083045468.jpg": {
+		"hash": "c36b63ca",
+		"de": "Wanderin auf steilem Pfad im Nebel mit grüner Vegetation und Baumzweigen oben links.",
+		"en": "Hiker walks uphill on a misty trail, surrounded by greenery with tree branches overhead left.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_094358484.jpg": {
+		"hash": "7f283bc5",
+		"de": "Kiesweg schlängelt sich durch grüne Hänge unter bewölktem Himmel mit Nebelglocke im Hintergrund.",
+		"en": "Gravel path winds through green slopes under cloudy sky with mist clinging to distant hillsides.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_100152866.jpg": {
+		"hash": "2d25c99d",
+		"de": "Nebel umhüllt grüne Hänge und eine schmale Schotterpfad führt durch die Zentralschweiz.",
+		"en": "Fog blankets green slopes as a narrow gravel path winds through the Central Switzerland landscape.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_104649394.jpg": {
+		"hash": "de9a3811",
+		"de": "Grüner Hang führt zu bewaldetem Felsmassiv unter Wolken im Spätsommer.",
+		"en": "Green slope leads to forested rock face under clouds in late summer.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_104652203.jpg": {
+		"hash": "025b7705",
+		"de": "Grasmulde mit Felsen, Nadelwald und Berg im Nebel; gelbe Leine am Wegrand.",
+		"en": "Grassy hollow with boulders, pine forest and mist-shrouded mountain; yellow tape along trail edge.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_105647439.MP.jpg": {
+		"hash": "b79d3cc7",
+		"de": "Ein kleiner Teich in grüner Wiese mit Nadelwald im Hintergrund bei sonnigem Spätsommerwetter.",
+		"en": "A small pond nestled in green meadow, backed by pine forest under bright late-summer sun.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_105927823.jpg": {
+		"hash": "dd190e88",
+		"de": "Ein Wanderer auf einem Pfad durch grüne Almwiesen mit Kühen und Nadelwäldern im Hintergrund unter bewölktem Himmel.",
+		"en": "A hiker walks along a path through green alpine meadows with cows and pine forests under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_105931863.jpg": {
+		"hash": "b561c296",
+		"de": "Ein graues Tier läuft über eine grüne Wiese mit Farnen und Bäumen im Hintergrund, hell erleuchtet von der Sonne.",
+		"en": "A gray animal walks across a green meadow with ferns and trees in the background, brightly lit by sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_110403620.jpg": {
+		"hash": "c1e2237a",
+		"de": "Ein Waldweg führt durch grüne Farnpflanzen und hohe Nadelbäume im Spätsommer.",
+		"en": "A forest path winds past lush ferns under tall evergreens in late summer light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_111719475.jpg": {
+		"hash": "d96cd8e3",
+		"de": "Nebel verhüllt den Hang mit grüner Wiese und wenigen Bäumen im Spätsommer.",
+		"en": "Fog blankets the green hillside dotted with sparse trees in late summer.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_111723818.jpg": {
+		"hash": "78af8ae6",
+		"de": "Ein grüner Hang mit Pfad und Zaun unter bewölktem Himmel in der Zentralschweiz.",
+		"en": "A green hillside with a path and fence under cloudy skies in central Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_111724712.jpg": {
+		"hash": "3914f563",
+		"de": "Ein schmaler Weg führt über grüne Hänge mit Zäunen und einer kleinen Hutte am Hang unter bewölktem Himmel.",
+		"en": "A narrow path winds up green slopes with fences and a small hut on the hillside under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_112045979.jpg": {
+		"hash": "c5ecfc9a",
+		"de": "Grüner Hang mit Nadelbäumen am Horizont unter blauem Himmel und weissen Wolken.",
+		"en": "Green hillside dotted with conifers under a blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_113208254.jpg": {
+		"hash": "937d0f59",
+		"de": "Grünstreifen mit Weg, Häusern und Nadelbäumen vor nebligem See- und Bergpanorama im Spätsommer.",
+		"en": "Green slope with path, houses and evergreens before misty lake and mountain view in late summer.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250817_113639558.MP.jpg": {
+		"hash": "f7db09df",
+		"de": "Wanderin geht auf Kiesweg zu grauem Gebäude mit „EGG BERAT“-Schild, grüne Bäume im Hintergrund unter bewölktem Himmel.",
+		"en": "Hiker walks on gravel path toward gray building with “EGG BERAT” sign, green trees behind under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "21923ce3",
+		"de": "Wolken umschliessen grüne Berggipfel mit Nadelwäldern unter blauem Himmel im Spätsummer.",
+		"en": "Clouds wrap green mountain peaks with pine forests under a blue sky in late summer.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

@@ -1,0 +1,541 @@
+{
+	"PXL_20240714_071350469.jpg": {
+		"hash": "b894ea07",
+		"de": "Grüne Almweide vor nebelverhangenen Felswänden unter blauem Himmel mit leichten Wolken.",
+		"en": "Green alpine meadow before mist-shrouded rock faces under a blue sky with light clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_071702948.jpg": {
+		"hash": "0a6f64c7",
+		"de": "Grüne Wiese vor Nadelwald; Nebel umgibt Bergspitzen unter blauem Himmel mit Wolken.",
+		"en": "Green meadow before pine forest; mist clings to mountain peaks under blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_071712749.jpg": {
+		"hash": "d3d07192",
+		"de": "Grüne Wiese vor Nadelwald mit Bergen im Nebel unter blauem Himmel.",
+		"en": "Green meadow before pine forest, misty mountains under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_074241484.jpg": {
+		"hash": "cd38fd7a",
+		"de": "Nebel umhüllt grüne Felswände und Nadelwald im Sommergrauen Graubünden.",
+		"en": "Mist clings to green rock faces and pine forest under summer skies in Grisons.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_074251927.jpg": {
+		"hash": "8b1b537d",
+		"de": "Grüner Hang mit Nadelbäumen und blühenden Pflanzen unter blauem Himmel in den Alpen Graubündens.",
+		"en": "Green slope dotted with evergreens and wildflowers under a clear blue sky in the Swiss Alps.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_074325240.jpg": {
+		"hash": "2b51ef4b",
+		"de": "Grüner Wald vor steilen Felswänden mit Nebel im Tal unter blauem Himmel.",
+		"en": "Green forest before steep rock faces, mist in the valley beneath a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_074920645.jpg": {
+		"hash": "1793f420",
+		"de": "Ein steiniger Pfad führt durch grüne Almwiesen hin zu felsigen Bergen unter blauem Himmel mit wenigen Wolken.",
+		"en": "A rocky trail winds through green alpine meadows toward craggy peaks under a blue sky with scattered clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_075924846.jpg": {
+		"hash": "84d5e834",
+		"de": "Grüner Weinberg im Tal mit steilen Hängen und blauen Himmel über Graubünden.",
+		"en": "Vineyard in a valley flanked by steep green slopes under blue sky, Grisons region visible.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_075932100.jpg": {
+		"hash": "c51804a6",
+		"de": "Grüner Talhang mit steilen Felswänden unter blauem Himmel und weissen Wolken im Hintergrund.",
+		"en": "Green valley slope with steep rock faces under a blue sky and white clouds in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_080431783.jpg": {
+		"hash": "2e9259b5",
+		"de": "Grüner Hang mit Felswänden und spärlichem Pfad im sonnigen Graubünden-Sommer.",
+		"en": "Green slope with rocky outcrops and faint trail under bright summer sun in Grisons.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_080435766.jpg": {
+		"hash": "8fcc9b50",
+		"de": "Ein schmaler Wanderweg führt durch grüne Almwiesen mit steilen Hängen und Felswänden unter blauem Himmel.",
+		"en": "A narrow trail winds through green alpine meadows with steep slopes and rock faces under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_080444051.jpg": {
+		"hash": "11fb9f2e",
+		"de": "Grüner Bergweg führt durch nebelige Täler mit Felswänden und Nadelbäumen unter blauem Himmel.",
+		"en": "Green trail winds through misty valleys, flanked by rocky cliffs and pine trees under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_083213311.jpg": {
+		"hash": "dc3dd517",
+		"de": "Ein Bach fliesst über Felsen in einer grünen Talniederung unter blauem Himmel mit Wolken.",
+		"en": "A stream flows over rocks through a green valley under blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_085722363.jpg": {
+		"hash": "a14a68d5",
+		"de": "Grüner Hang mit weidenden Tieren vor felsigem Gletscherhintergrund unter blauem Himmel.",
+		"en": "Green slope with grazing animals before rocky glacier backdrop under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_085725735.jpg": {
+		"hash": "c105e4f7",
+		"de": "Grüner Hang mit Rindern vor felsigem Gletscherhang unter blauem Himmel.",
+		"en": "Green slope with cattle before rocky glacier face under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_085738774.MP.jpg": {
+		"hash": "c8e92e6c",
+		"de": "Eine Wanderin mit Stock und Rucksack auf einem Grashang vor steilen Felswänden im Sommergrün von Graubünden.",
+		"en": "A hiker with poles and backpack stands on a grassy slope before steep rock faces under summer skies in Graubünden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_090341740.jpg": {
+		"hash": "676b0719",
+		"de": "Wanderer mit blauem Rucksack auf schmalen Pfad durch grüne Alpenflanke, Fels und Gras umgeben.",
+		"en": "Hiker with blue backpack walks narrow trail along green alpine slope, flanked by rock and grass.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_090349509.jpg": {
+		"hash": "03cdc859",
+		"de": "Ein Wanderer mit Stöcken steigt auf einem steilen Pfad durch grüne Almwiesen hinauf, rechts eine schmale Gletscherspalte.",
+		"en": "A hiker with poles ascends a steep trail through green alpine meadows; to the right, a narrow glacial crevasse is visible.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_090431201.jpg": {
+		"hash": "cd061fe3",
+		"de": "Ein felsiger Bachlauf schlängelt sich durch grüne Bergflanken unter blauem Himmel im Sommer.",
+		"en": "A rocky stream winds through green mountain slopes under a blue summer sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_090451178.jpg": {
+		"hash": "e6e8f54b",
+		"de": "Wanderer mit Rucksack auf schmalen Pfad im Berggras unter blauem Himmel.",
+		"en": "Hiker with backpack on narrow trail through mountain grass under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_090504793.jpg": {
+		"hash": "d51ff4c1",
+		"de": "Grüner Hang mit Felsen und Gras unter blauem Himmel, im Tal liegen bewaldete Hügel.",
+		"en": "Green slope dotted with rocks and grass under blue sky; forested hills visible in the valley below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_090608320.jpg": {
+		"hash": "22c83499",
+		"de": "Ein steiler Pfad führt durch grüne Bergwiesen mit Blick auf die Alpenkette im Hintergrund unter blauem Himmel.",
+		"en": "A steep trail winds through green mountain meadows with a view of the Alps in the background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_090610991.jpg": {
+		"hash": "011f5c55",
+		"de": "Grüner Berggrat mit wilden Blumen und steinigen Hängen vor tiefem Talblick in Graubünden.",
+		"en": "Green ridge dotted with wildflowers, rocky slopes overlooking a deep valley in the Grisons Alps.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_091220833.jpg": {
+		"hash": "7d54a776",
+		"de": "Wanderer mit blauem Rucksack auf dem Pfad im Bergwald.",
+		"en": "Hiker with a blue backpack on a trail through mountain forest.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_091230262.jpg": {
+		"hash": "6a0114dd",
+		"de": "Grüne Felskante mit Nadelgehölzen vor weiten Bergpanorama unter blauem Himmel mit Wolken.",
+		"en": "Rocky ridge lined with conifers overlooking vast mountain valleys under a blue sky dotted with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_091241218.jpg": {
+		"hash": "cab0feaa",
+		"de": "Ein schmaler Pfad führt durch grüne Felswände im Gebirge.",
+		"en": "A narrow path winds through green rock walls in the mountains.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_092628164.jpg": {
+		"hash": "050bf343",
+		"de": "Ein steiler Wanderweg führt durch grüne Felswände mit Wolken im Tal – klarer Himmel, Sommerlicht in Graubünden.",
+		"en": "A steep trail winds past green rock faces and valley clouds under clear skies — summer light in Graubünden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_092941966.jpg": {
+		"hash": "614c5b6e",
+		"de": "Wanderer geniessen Aussicht über grüne Täler und steile Felsen unter blauem Himmel mit Wolken.",
+		"en": "Hikers enjoy a view over green valleys and steep cliffs under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_093543915.jpg": {
+		"hash": "0f64d01f",
+		"de": "Ein felsiger Pfad führt durch grüne Felsenformationen mit Nadelbäumen unter blauem Himmel im Sommer in Graubünden.",
+		"en": "A rocky trail winds through green rock formations with conifers under a blue summer sky in the Grisons region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_093942426.jpg": {
+		"hash": "629c3a93",
+		"de": "Grüner Hang mit wilden Blumen und Felswand im Hintergrund unter blauem Himmel.",
+		"en": "Green slope dotted with wildflowers, backed by a rocky cliff under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_094000957.jpg": {
+		"hash": "4c1f417c",
+		"de": "Blaue Glockenblumen blühen im grünen Gras an einem sonnigen Wanderweg in Graubünden.",
+		"en": "Blue gentians bloom among green grass on a sunny hiking trail in the Grisons region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_094126935.jpg": {
+		"hash": "50d26905",
+		"de": "Ein steiniger Wanderweg führt durch eine grüne Alm mit Felswänden im Hintergrund unter blauem Himmel.",
+		"en": "A gravel trail winds through a green alpine meadow with rocky cliffs rising behind under clear blue skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_094255354.jpg": {
+		"hash": "f795e667",
+		"de": "Ein blühender Grashang mit bunten Sommerblumen im sonnigen Graubünden.",
+		"en": "A sunlit hillside carpeted in colorful summer wildflowers across the landscape.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_094259471.jpg": {
+		"hash": "ab533a75",
+		"de": "Ein grüner Hang mit bunten Sommerblumen unter hellem Sonnenlicht.",
+		"en": "A green slope dotted with colorful summer flowers in bright sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_094327688.jpg": {
+		"hash": "8d7f6229",
+		"de": "Grün bewachsener Hang mit felsigem Bachbett und schneebedeckten Gipfeln im blauen Himmel.",
+		"en": "Grassy slope with rocky stream bed, snow-capped peaks under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_094521813.jpg": {
+		"hash": "26d92f52",
+		"de": "Grüner Hang mit Felswand und kleiner Hütte im Schatten unter blauem Himmel.",
+		"en": "Green slope, rocky cliff face, small hut in shadow beneath a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_094644153.MP.jpg": {
+		"hash": "b84d7aac",
+		"de": "Ein alter Holzbett und Stuhl in einer steinernen Hütte mit Holzdecke und Besen an der Wand.",
+		"en": "An old wooden bed, chair inside a stone hut with wood ceiling and broom leaning against the wall.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_094650459.jpg": {
+		"hash": "ef7a9665",
+		"de": "Ein einfacher Holzboden mit rustikalem Bett und Regal in einer steinernen Hütte im Sommer.",
+		"en": "A simple wooden floor, rustic bed, and shelf inside a stone hut during summer.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_101000401.MP.jpg": {
+		"hash": "fecb1352",
+		"de": "Eine Wanderin mit Stocken steht auf grüner Wiese vor felsigem Hang und Gletscherschutt unter blauem Himmel.",
+		"en": "A hiker with poles stands on a grassy slope before rocky terrain and glacial debris under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_101130926.jpg": {
+		"hash": "07781c23",
+		"de": "Ein rosa Rhododendronbusch blüht auf grüner Alm mit Weidevieh im Hintergrund und schneebedeckten Felsen.",
+		"en": "A pink rhododendron bush blooms on a green alpine meadow with grazing cattle and snow-dusted rocks in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_101619427.jpg": {
+		"hash": "c7e049db",
+		"de": "Grüner Hang mit wilden Blumen und Gräsern im Sommerlicht.",
+		"en": "Green slope dotted with wildflowers under summer sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_101625160.jpg": {
+		"hash": "fc344674",
+		"de": "Grüner Berghang mit Kühen und klarem Himmel im Sommer.",
+		"en": "Green hillside dotted with cows under a clear summer sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_101751145.jpg": {
+		"hash": "e55d8fd1",
+		"de": "Eine Herde Kühe weidet auf einer grünen Alm im Sommer in Graubünden.",
+		"en": "A herd of cows grazes on a green alpine meadow under summer skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_103239242.jpg": {
+		"hash": "316526f2",
+		"de": "Grüner Hang mit Nadelwald, felsige Felsen und blauem Himmel im Hintergrund von Flims.",
+		"en": "Green slope dotted with pine trees, rocky outcrops and blue sky in the background of Flims.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_103255641.jpg": {
+		"hash": "c00c5c6e",
+		"de": "Ein Wanderer mit Rucksack und Kappe steht auf einem steinigen Pfad vor grünen Hängen unter blauem Himmel.",
+		"en": "A hiker with a backpack and cap stands on a gravel path before green slopes under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_105154974.jpg": {
+		"hash": "010e28f2",
+		"de": "Ein schmaler Kiesweg schlängelt sich durch grüne Alpenhänge unter blauem Himmel mit wenigen Wolken.",
+		"en": "A narrow gravel path winds through green alpine slopes under a blue sky with scattered clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_105254794.jpg": {
+		"hash": "804f482d",
+		"de": "Grüner Berghang mit gelben Blumen und Felsen unter blauem Himmel.",
+		"en": "Green hillside dotted with yellow flowers and rocks under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_105643309.jpg": {
+		"hash": "b88efc6a",
+		"de": "Gelbe Wegweiser zeigen Gletschermühlen vor grüner Berglandschaft unter blauem Himmel.",
+		"en": "Yellow signs point to Glatschermühlen against green mountain slopes under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_110534869.jpg": {
+		"hash": "1ce98fee",
+		"de": "Ein steiniger Wanderweg schlängelt sich durch grüne Bergwiesen unter blauem Himmel mit Wolken und fernen Gipfeln.",
+		"en": "A rocky trail winds through green alpine meadows under a blue sky with clouds and distant mountain peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_110940309.jpg": {
+		"hash": "96742eed",
+		"de": "Grüner Hang mit Schneefeldern und Wanderwegen unter blauem Himmel in Graubünden.",
+		"en": "Green slopes dotted with snowfields, trails, and hikers under a blue sky in Graubünden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_110944385.jpg": {
+		"hash": "1fc917b6",
+		"de": "Grüne Hänge mit schmelzendem Schnee und Wanderpfaden unter blauem Himmel in Graubünden.",
+		"en": "Green slopes, melting snow patches, hiking trails under a blue sky in the Grisons region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_111001891.PANO.jpg": {
+		"hash": "38de406e",
+		"de": "Grün bewachsene Hänge mit felsigen Stellen unter blauem Himmel; Wanderweg führt bergauf durch die Bergwelt Graubündens.",
+		"en": "Green slopes with rocky outcrops under a blue sky; hiking trail ascends through the mountainous landscape of Graubünden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_111156092.jpg": {
+		"hash": "73cc5be3",
+		"de": "Wanderer geniessen kühle Wasserbecken in felsigem Tal mit grünen Hängen und blauem Himmel im Graubünden-Sommer.",
+		"en": "Hikers relax in icy pools along a rocky valley with green slopes and blue sky under summer sun in Grisons.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_111200513.jpg": {
+		"hash": "e20aeacd",
+		"de": "Klare Wasserbecken in einer felsigen Schlucht mit grüner Vegetation im Vordergrund und steilen Felswänden dahinter.",
+		"en": "Clear water pools nestled among rocky cliffs, with green vegetation in the foreground and steep rock faces behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_111546609.jpg": {
+		"hash": "6cfd69dd",
+		"de": "Klare Wasserpfütze in felsigem Gestein mit spärlichem Grasbewuchs im Vordergrund.",
+		"en": "Clear water pool nestled among rocky terrain with sparse grass in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_111549954.jpg": {
+		"hash": "86fe4a10",
+		"de": "Wanderer gehen über felsiges Terrain mit klarem Wassergraben und grünen Hängen unter blauem Himmel.",
+		"en": "Two hikers walk across rocky terrain with a clear water channel and green slopes under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_112205619.MP.jpg": {
+		"hash": "11793c32",
+		"de": "Eine Frau steht mit ausgebreiteten Armen in einem klaren Wasserbecken zwischen felsigen Wänden im Sommer.",
+		"en": "A woman stands barefoot in clear water, arms outstretched, surrounded by rocky walls under bright summer light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_114811985.MP.jpg": {
+		"hash": "636d8622",
+		"de": "Eine Frau sitzt auf Felsen im Sommerwald bei Flims.",
+		"en": "A woman sits on rocks in a summer forest near Flims.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_115041904.jpg": {
+		"hash": "f1504a0e",
+		"de": "Klare Wasserläufe schlängeln sich durch felsiges Tal mit grünen Hängen und Wanderern im Hintergrund unter blauem Himmel.",
+		"en": "Clear streams wind through rocky valley with green slopes and hikers in background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_120313851.jpg": {
+		"hash": "8abbbb91",
+		"de": "Wanderer entspannen sich in natürlichen Becken eines Gletscherbachs zwischen grünen Hängen unter blauem Himmel mit Wolken.",
+		"en": "Hikers relax in natural pools of a glacial stream nestled between green slopes under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_120813774.jpg": {
+		"hash": "0560fb49",
+		"de": "Klare Wasserbecken in einer felsigen Schlucht mit spärlicher Vegetation und hellem Sonnenlicht.",
+		"en": "Clear water pools nestled among rocky cliffs, sparse vegetation under bright sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_120840836.jpg": {
+		"hash": "46b0146f",
+		"de": "Ein steiler Gletscherrinnenabhang mit Fels und Schutt zwischen grüner Vegetation, kein Wasser sichtbar.",
+		"en": "A steep glacial ravine with rock and scree between green vegetation; no water visible.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_121710260.jpg": {
+		"hash": "94ac8c62",
+		"de": "Ein Gletscherabhang mit grüner Vegetation und felsigem Talboden unter blauem Himmel.",
+		"en": "A glacier slope flanked by green vegetation and rocky terrain under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_121809662.jpg": {
+		"hash": "c42dd259",
+		"de": "Ein steiler Gletscherriss mit schneebedeckten Felswänden und einem schlammigen Bach im Talgrund.",
+		"en": "A steep glacial crevasse with snow-dusted rock walls and a muddy stream in the valley floor.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_121816860.jpg": {
+		"hash": "4b9a304a",
+		"de": "Ein Wanderer am Flussbett mit Fels und grünen Hängen im Sommer in Graubünden.",
+		"en": "A hiker walks along a rocky stream bed with green slopes under summer skies in the Grisons region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_123414761.jpg": {
+		"hash": "335bca45",
+		"de": "Ein Wanderweg führt an türkisfarbenen Wasserbecken entlang grüner Hänge mit fernen Bergen im Hintergrund.",
+		"en": "A trail winds past turquoise pools along green slopes, with distant mountains in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_123417008.jpg": {
+		"hash": "5ec3edc1",
+		"de": "Klare Seen in einem grünen Tal mit Bergpfad und Wanderern im Hintergrund unter blauem Himmel.",
+		"en": "Clear pools flow through a green valley with a trail, hikers visible in the distance under blue skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_123441825.jpg": {
+		"hash": "ddc51579",
+		"de": "Ein Bach fliesst über felsiges Terrain zwischen grünen Hängen unter blauem Himmel mit Wolken.",
+		"en": "A stream flows over rocky terrain between green slopes under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_123547779.jpg": {
+		"hash": "e7122d40",
+		"de": "Klare Wasserfläche in felsigem Tal mit grünen Hängen und blauem Himmel im Hintergrund.",
+		"en": "Clear pool nestled among rocky slopes, green hillsides, and a blue sky above.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_124050006.jpg": {
+		"hash": "8d500bd5",
+		"de": "Klare Wasserbecken in schneebedeckten Felsmulden auf grüner Almlandschaft, mit Bergen im Hintergrund.",
+		"en": "Clear pools nestled in snow-dusted rock gullies on a green alpine slope with distant mountains visible.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_124056887.jpg": {
+		"hash": "d0045560",
+		"de": "Klare Wasserpfützen in einem felsigen Tal mit grünen Hängen und Bergen im Hintergrund unter blauem Himmel.",
+		"en": "Clear water pools carve through rocky terrain, flanked by green slopes and distant mountains under a bright blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_124100773.jpg": {
+		"hash": "f7788e6e",
+		"de": "Klare Wasserbecken in Felsnischen auf grüner Bergflanke unter blauem Himmel im Sommer.",
+		"en": "Clear pools nestled in rocky crevices on a green mountainside under blue summer sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_124106839.jpg": {
+		"hash": "74ef9722",
+		"de": "Klare Seen in Felskanälen schlängeln sich durch grüne Hänge im Hochsommer Graubündens.",
+		"en": "Clear pools wind through rocky gullies, framed by lush green slopes under summer skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_130616279.jpg": {
+		"hash": "2f17129f",
+		"de": "Ein grasbewachsener Hang mit kleinen Bäumen und Felsen im Hintergrund von Nadelwäldern.",
+		"en": "A grassy slope dotted with small trees and rocks, backed by pine forests in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_130618814.jpg": {
+		"hash": "e6d7702d",
+		"de": "Grüner Hang mit Felsen und Nadelbäumen vor bewaldetem Berg im Hintergrund.",
+		"en": "Green hillside dotted with rocks, evergreens, forested mountains in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240714_141634885.jpg": {
+		"hash": "86df6d84",
+		"de": "Ein orangefarbener Schmetterling ruht auf grauem Kies mit spärlichem Gras im Sommer in Graubünden.",
+		"en": "An orange butterfly rests on gray gravel with sparse grass under summer light in the Grisons region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "335bca45",
+		"de": "Wasserbecken im Fels mit grüner Vegetation und Bergpanorama.",
+		"en": "Rock pools with green grass and mountain views ahead.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

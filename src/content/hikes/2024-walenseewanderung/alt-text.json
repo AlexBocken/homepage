@@ -1,0 +1,394 @@
+{
+	"PXL_20240414_100020049.jpg": {
+		"hash": "a7488cbd",
+		"de": "Ein Kiesweg schlängelt sich durch grüne Wiesen mit gelben Blumen vor einem bewaldeten Hügel und schneebedeckten Bergen.",
+		"en": "A gravel path winds through green meadows with yellow flowers before a wooded hill and snow-capped mountains.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_100050497.jpg": {
+		"hash": "7f1ef7ad",
+		"de": "Zwei Wanderer auf einem Pfad vor grünen Hängen und Bergen mit Schnee im Hintergrund unter blauem Himmel.",
+		"en": "Two hikers on a trail with green slopes, snow-capped mountains in the background under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_100121172.jpg": {
+		"hash": "b486ff00",
+		"de": "Ein blühender Baum steht auf einer grünen Wiese unter blauem Himmel mit Wolken; im Hintergrund Häuser und Hügel.",
+		"en": "A blossoming tree stands on a green lawn under blue sky with clouds; houses and hills in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_100222901.jpg": {
+		"hash": "e4fc7690",
+		"de": "Graue Felsen mit Gras und kleinen Pflanzen im Walenseegebiet bei Amden.",
+		"en": "Gray rocks surrounded by grass and small plants in the Walensee area near Amden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_100256985.jpg": {
+		"hash": "a8715994",
+		"de": "Ein Bach fliesst durch einen grünen Talhang mit Bäumen und Felsen im Walenseegebiet.",
+		"en": "A stream flows down a green hillside dotted with trees and rocks in the St. Gallen region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_100330194.jpg": {
+		"hash": "8f0149e3",
+		"de": "Ein grüner Hang mit gelben Blumen führt zu einem kleinen Stall vor schneebedeckten Bergen unter blauem Himmel.",
+		"en": "A green hillside with yellow flowers leads to a small shed before snow-capped mountains under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_100514130.jpg": {
+		"hash": "a402a8b5",
+		"de": "Gelbe Blumenwiese mit blühendem Baum und Kirche im Hintergrund.",
+		"en": "Yellow flower field with blooming tree and church in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_102014074.jpg": {
+		"hash": "0f5d3585",
+		"de": "Wanderer auf Pfad neben Steinmauer vor Walensee und Bergen.",
+		"en": "Hiker on trail beside stone wall with lake and mountains behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_102027175_exported_0_1713106555307.jpg": {
+		"hash": "7200ea62",
+		"de": "Eine lächelnde Wanderin mit Rucksack vor Steinmauer und Walensee.",
+		"en": "A smiling hiker with a backpack stands before a stone wall and lake view.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_102036398.jpg": {
+		"hash": "def4f8e6",
+		"de": "Wanderer am Steinweg mit Blick auf Walensee und Alpen unter blauem Himmel im April.",
+		"en": "Hiker on stone path overlooking Lake Walen and Alps under blue spring sky, wildflowers in foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_102252179.jpg": {
+		"hash": "1e398f76",
+		"de": "Betonstufen führen durch grüne Wiesen hinab zum türkisfarbenen Walensee mit bewaldeten Hängen im Hintergrund.",
+		"en": "Concrete stairs descend through green meadows toward the turquoise lake, framed by forested hills in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_102446239.MP.jpg": {
+		"hash": "667a79f9",
+		"de": "Zweige rahmen Blick auf grüne Wiese und blauen See mit schneebedeckten Bergen im Hintergrund unter blauem Himmel.",
+		"en": "Branches frame a view of green meadow, blue lake, snow-capped mountains under clear sky ahead on trail.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_102539267.jpg": {
+		"hash": "7b759fe9",
+		"de": "Wanderer auf Pfad mit Blick über See und Berge im Hintergrund.",
+		"en": "Hiker on trail with view of lake and mountains in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_102950914.jpg": {
+		"hash": "3d0565eb",
+		"de": "Wanderer auf steinigem Pfad mit Blick über grüne Hügel und blauen See im Hintergrund.",
+		"en": "Hiker on rocky trail overlooking green hillsides and a blue lake in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_102957904.jpg": {
+		"hash": "c5962dc6",
+		"de": "Ein Wanderer mit Rucksack geht auf einem steinigen Pfad durch grünen Wald über dem Walensee.",
+		"en": "A hiker walks on a rocky trail through green forest overlooking the lake below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_103001886.jpg": {
+		"hash": "0bcd783b",
+		"de": "Blick über grüne Hügel und Walensee durch Äste hindurch bei hellem Tageslicht.",
+		"en": "View over green hills and Lake Walen through tree branches in bright daylight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_103025855.jpg": {
+		"hash": "9cc15afa",
+		"de": "Kleine rosa Blüten blühen zwischen Felsen und grünen Pflanzen am Waldrand im April.",
+		"en": "Small pink flowers bloom among rocks and green plants along the forest edge in April.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_103052906.jpg": {
+		"hash": "57d7acd4",
+		"de": "Ein Haufen lila Blüten wächst an einem felsigen Hang unter grüner Vegetation und trockenem Gras.",
+		"en": "A cluster of purple flowers grows on a rocky slope amid green foliage and dry grass.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_103635801.jpg": {
+		"hash": "4f687bac",
+		"de": "Blick durch grünen Wald auf türkisfarbene Seenfläche und fernen Berggipfel unter leicht bewölktem Himmel.",
+		"en": "View through green forest to turquoise lake surface and distant mountain peak under partly cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_104549512.jpg": {
+		"hash": "0914f0ee",
+		"de": "Ein sonniger Tag mit blauen Wolken über grünen Wiesen und Bäumen im Walenseegebiet.",
+		"en": "Sunny day with blue clouds over green meadows and trees in the Walensee region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_104559754.jpg": {
+		"hash": "4dac6b23",
+		"de": "Grüner Hang mit Bäumen und kleinen Häusern unter blauem Himmel.",
+		"en": "Green hillside dotted with trees, small houses under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_104718142.jpg": {
+		"hash": "ff460f24",
+		"de": "Steile Felswand über grünen Hängen mit kleinen Häusern und Wanderern im Vordergrund unter blauem Himmel.",
+		"en": "Steep rock face rises above green slopes with small houses and hikers in foreground under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_105148779.jpg": {
+		"hash": "c0c48da8",
+		"de": "Walensee mit grünen Hängen und schneebedeckten Gipfeln im Hintergrund unter blauem Himmel.",
+		"en": "Lake Walen surrounded by green slopes and snow-capped peaks under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_105543450.jpg": {
+		"hash": "b6e62fd4",
+		"de": "Eine kleine Kirche thront auf einer blütenreichen Wiese vor schneebedeckten Bergen unter blauem Himmel mit Wolkenfetzen.",
+		"en": "A small church sits on a flower-filled meadow before snow-capped mountains under a blue sky with wispy clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_105928717.jpg": {
+		"hash": "12654f18",
+		"de": "Wasserfall an steilen Felsen mit grünen Hängen und Häusern im Vordergrund unter blauem Himmel.",
+		"en": "Waterfall cascades down steep cliffs, green slopes frame houses under a bright blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_105930724.jpg": {
+		"hash": "9ccad81b",
+		"de": "Wasserfall stürzt von steilen Felsen; grüner Wald umgibt die Klippe unter blauem Himmel.",
+		"en": "Waterfalls cascade down steep cliffs, surrounded by green forest under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_110103541.jpg": {
+		"hash": "6766f287",
+		"de": "Weiss blühende Äste rahmen grünen Hügel und See ein.",
+		"en": "White blossoms frame a green hillside and lake view.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_110616249.jpg": {
+		"hash": "d40afd28",
+		"de": "Ein Wasserfall stürzt von einer steilen Felswand herab, umgeben von grünen Bäumen und kahlen Ästen im Aprillicht.",
+		"en": "A waterfall cascades down a steep rock face, framed by green trees and bare branches in spring light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_110618388.jpg": {
+		"hash": "d223497b",
+		"de": "Ein Wasserfall stürzt über steile Felsen, umgeben von grünen Bäumen und blühendem Gras unter blauem Himmel mit Wolken.",
+		"en": "A waterfall cascades down steep cliffs, surrounded by green trees and blooming grass under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_110633023.MP.jpg": {
+		"hash": "4cf5de8b",
+		"de": "Ein Wasserfall stürzt von der Felswand herab in den bewaldeten Hang unten.",
+		"en": "A waterfall cascades down the rocky cliff into the wooded slope below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_110750543.jpg": {
+		"hash": "76e30c5b",
+		"de": "Ein Wasserfall stürzt zwischen Felsen und jungen Bäumen herab; frisches Grün im Aprillicht.",
+		"en": "A waterfall cascades between rocks and young trees, bathed in fresh spring light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_110753350.jpg": {
+		"hash": "89b913c6",
+		"de": "Ein Wasserfall stürzt von einer steilen Felswand herab; kahme Bäume im Vordergrund, grüner Untergrund unten.",
+		"en": "A waterfall cascades down a steep cliff face with bare trees in the foreground and greenery below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_111036445.jpg": {
+		"hash": "958c53ad",
+		"de": "Ein Wasserfall stürzt von einer Felswand in einen Nebelmeer; dahinter erstreckt sich ein blauer See mit grünen Ufern.",
+		"en": "A waterfall plunges from a cliff into mist, with a blue lake and green shores visible beyond the forested slope.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_111128457.jpg": {
+		"hash": "76135bc3",
+		"de": "Zwei Wanderer lächeln vor einem Wasserfall mit steilen Felsen und grüner Vegetation im Hintergrund.",
+		"en": "Two hikers smile in front of a waterfall with steep rocks and greenery behind them.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_112018657.jpg": {
+		"hash": "e15c0eb7",
+		"de": "Ein bewaldeter Pfad schlängelt sich durch grünes Unterholz und hohe Bäume im Walenseegebiet bei St. Gallen.",
+		"en": "A forest trail winds through lush green undergrowth and tall trees in the Walensee region near St. Gallen.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_112020120.jpg": {
+		"hash": "11785d71",
+		"de": "Waldrand mit jungen Bäumen und grüner Vegetation; im Hintergrund schneebedeckte Berge unter blauem Himmel.",
+		"en": "Forest edge with young trees and green vegetation, snow-capped mountains in the background under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_112228885.jpg": {
+		"hash": "06486f5f",
+		"de": "Ein Fluss rauscht durch einen dichten Wald mit grünen Pflanzen und hohen Bäumen im April.",
+		"en": "A river rushes through a dense forest of green plants and tall trees in April.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_112238414.jpg": {
+		"hash": "d96ba3c0",
+		"de": "Waldrain mit klarem Wasser fliesst durch grünen Wald; im Hintergrund schneebedeckte Berge unter blauem Himmel.",
+		"en": "A clear stream flows through a green forest, with snow-capped mountains visible in the background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_112319435.jpg": {
+		"hash": "692b39b1",
+		"de": "Wasser stürzt über Felsen durch grünen Wald in Schlucht bei St. Gallen.",
+		"en": "Water cascades over rocks through green forest into a gorge near St. Gallen.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_112357581.jpg": {
+		"hash": "263f715f",
+		"de": "Wasserfall stürzt durch moosige Felsen im sonnigen Waldbereich bei St. Gallen.",
+		"en": "Waterfalls cascade over mossy rocks in a sunlit forest near St. Gallen.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_112402194.jpg": {
+		"hash": "c29b8ef4",
+		"de": "Ein Bach rauscht über moosige Felsen im sonnigen Waldboden von Amden, St. Gallen.",
+		"en": "A stream rushes over mossy rocks in the sunlit forest floor of Amden, Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_112739401.jpg": {
+		"hash": "77ec222c",
+		"de": "Walensee im Tal mit grünen Hängen und einem Haus unter Bäumen am Ufer.",
+		"en": "Lake surrounded by green slopes, trees framing a house near the shore under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_113657861.jpg": {
+		"hash": "a2bd6161",
+		"de": "Wasserfall stürzt über Moos bedeckte Felsen im grünen Waldaufenthalt in St. Gallen.",
+		"en": "Waterfall cascades over mossy rocks amid lush green forest near St. Gallen.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_121401488.jpg": {
+		"hash": "8950cf1f",
+		"de": "Lila Blumen und grüne Vegetation wachsen an einem steilen Felshang mit gelben Blüten im Hintergrund, unter freiem Himmel.",
+		"en": "Purple flowers and green vegetation grow on a steep rocky slope with yellow blooms in the background under open sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_122855514.jpg": {
+		"hash": "f1a696c2",
+		"de": "Walensee mit schneebedeckten Gipfeln und grünen Hängen unter blauem Himmel.",
+		"en": "Lake Walen surrounded by snow-capped peaks, green slopes and blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_124522353.jpg": {
+		"hash": "4c13974f",
+		"de": "Wanderer auf Waldweg mit Weinreben; blauer Himmel über Walensee und Bergen im Hintergrund.",
+		"en": "Hiker on wooded trail beside vineyards, blue sky above lake and mountains in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_124524960.MP.jpg": {
+		"hash": "bdf3af4e",
+		"de": "Wanderer auf Pfad mit Walensee und Bergen im Hintergrund.",
+		"en": "Hiker on path with lake and mountains behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_124525892.jpg": {
+		"hash": "ade44d36",
+		"de": "Wanderer auf Pfad mit Weinreben; dahinter Walensee und schneebedeckte Berge unter blauem Himmel.",
+		"en": "Hiker on path beside vineyards, with lake and snow-capped mountains under blue sky behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_124806265.jpg": {
+		"hash": "50e06893",
+		"de": "Walensee mit grünen Weinreben und Häusern am Ufer; schneebedeckte Berge im Hintergrund unter blauem Himmel.",
+		"en": "Lake with green vines and houses along the shore, snow-capped mountains in background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_124807339.jpg": {
+		"hash": "9bcc271d",
+		"de": "Grüne Weinreben im Vordergrund, Häuser am Walensee und schneebedeckte Berge unter blauem Himmel.",
+		"en": "Green vines in foreground, houses by the lake and snow-capped mountains under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_124807969.jpg": {
+		"hash": "7c9bec95",
+		"de": "Grüner Weinberg im Vordergrund, Häuser am Ufer des Walensees mit Bergen und blauem Himmel dahinter.",
+		"en": "Green vineyard in foreground, houses by lake shore with mountains and blue sky behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_133934547.jpg": {
+		"hash": "f1d0d54c",
+		"de": "Zwei Wanderer lächeln vor blauem Himmel mit Fahnenschmuck und bewaldetem Berg im Hintergrund.",
+		"en": "Two hikers smile under a blue sky, with flags and forested mountain in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_134055674.jpg": {
+		"hash": "c56651af",
+		"de": "Walensee mit Boot und farbenfrohen Flaggen; grüne Hänge unter blauem Himmel.",
+		"en": "Lake Walenau, boat docked near colorful flags against green slopes and blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_134056943.jpg": {
+		"hash": "ac58592c",
+		"de": "Ein Boot fährt an einem malerischen Ufer mit Häusern und Bäumen am Walensee vorbei, unter blauem Himmel.",
+		"en": "A boat passes a picturesque lakeside with houses and trees along the shore of Lake Walen under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20240414_135240771.MP.jpg": {
+		"hash": "b4c2bb1b",
+		"de": "Steile Felswände überragen einen grünen Wald unter blauem Himmel mit zarten Wolken; farbenfrohe Flaggen im Vordergrund.",
+		"en": "Rugged cliffs rise above a green forest under blue sky with wispy clouds; colorful flags frame the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "c56651af",
+		"de": "Boot am Ufer mit bunten Flaggen vor grünen Hängen und blauem Himmel.",
+		"en": "Boat docked by green hills and blue sky with colorful flags on shore.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

@@ -1,0 +1,387 @@
+{
+	"PXL_20250811_063155325.jpg": {
+		"hash": "ce07cca5",
+		"de": "Zwei Wanderer mit Rucksäcken lächeln vor Bergpanorama und blauem Himmel im August.",
+		"en": "Two hikers smile before mountain views under a clear blue sky in August.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_063200725.jpg": {
+		"hash": "f70bece8",
+		"de": "Ein klarer blauer Himmel über grünen Almen und fernen Berggipfeln mit Nadelbäumen rechts.",
+		"en": "Clear blue sky above green alpine meadows and distant peaks with conifers on the right.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_063547328.jpg": {
+		"hash": "5accd3a3",
+		"de": "Ein kleines Holzhaus steht auf grünen Hängen mit Blick auf Seen und fernes Gebirge unter blauem Himmel.",
+		"en": "A small wooden hut sits on green slopes overlooking lakes and distant mountains under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_064003772.jpg": {
+		"hash": "bb9f817f",
+		"de": "Ein rotes Schild zeigt „Ziger 2074 m“ vor grünen Hängen und fernen Bergen unter blauem Himmel.",
+		"en": "A red sign reads “Ziger” before green slopes and distant mountains under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_064157666.jpg": {
+		"hash": "d1f899e6",
+		"de": "Ein rotes Wanderzeichen zeigt „Tiger 2074 m“ am Pfad in grüner Berglandschaft unter blauem Himmel.",
+		"en": "A red trail sign reads “Tiger” on a grassy mountain path under clear blue sky ahead of hikers.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_071442633.jpg": {
+		"hash": "85c241a8",
+		"de": "Steile Felswand links, grüne Almenhänge im Vordergrund, ferner See und Bergkette unter blauem Himmel.",
+		"en": "Rugged cliff on left, green alpine slopes in foreground, distant lake and mountain range under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_071941090.jpg": {
+		"hash": "6b148a38",
+		"de": "Ein Wanderer geht auf einem schmalen Pfad durch grüne Almweiden mit Blick auf felsige Gipfel unter klarem blauem Himmel.",
+		"en": "A hiker walks along a narrow trail through green alpine meadows, with rocky peaks visible under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_071944760.jpg": {
+		"hash": "a6cf54b3",
+		"de": "Grüne Berglandschaft mit Fels und klarer blauer Himmelssicht.",
+		"en": "Green mountain landscape with rock and clear blue sky view.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_071946641.jpg": {
+		"hash": "0149ab81",
+		"de": "Grüne Berglandschaft mit felsigen Gipfeln unter klarem blauen Himmel.",
+		"en": "Green mountain landscape with rocky peaks under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_072108866.jpg": {
+		"hash": "e186219b",
+		"de": "Ein Wanderweg mit Schildern an einem grasigen Hang vor schneebedeckten Bergen unter blauem Himmel.",
+		"en": "A trail marked by signs on a grassy slope, with snow-capped mountains under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_072117044.jpg": {
+		"hash": "9028dcbe",
+		"de": "Wanderweg führt über grüne Almen mit markantem Felsgipfel im Hintergrund und Seilbahnseilen rechts.",
+		"en": "Trail winds across green alpine meadows with a prominent rocky peak and cable car lines in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_074332209.jpg": {
+		"hash": "695e13cb",
+		"de": "Wanderweg führt über grasbewachsene Hänge mit Blick auf die Alpenkette im Hintergrund; Schild zeigt „Räinissalts 2242 m“.",
+		"en": "Trail winds over grassy slopes with alpine peaks in the distance; sign reads “Räinissalts 2242 m”.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_074336979.jpg": {
+		"hash": "35bad51f",
+		"de": "Steiler Felsgrat mit Gras und Geröll vor blauem Himmel über alpinen Gipfeln im Schweizer Alpenraum.",
+		"en": "Rocky ridge with grass under blue sky, overlooking distant mountain peaks in the Swiss Alps.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_074339330.jpg": {
+		"hash": "1ab5ce6a",
+		"de": "Grüner Almwiese mit Felsen im Vordergrund, dahinter schroffe Gipfel unter klarem Blau.",
+		"en": "Green alpine meadow with rocks in foreground; rugged peaks rise behind under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_074342436.jpg": {
+		"hash": "e926df0d",
+		"de": "Steiler Felsgrat mit grasbewachsenem Hang unter klarem blauen Himmel.",
+		"en": "Steep rocky ridge with grassy slopes under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_075243704.jpg": {
+		"hash": "9cede121",
+		"de": "Grün bewachsener Hang führt zu felsigen Gipfeln unter klarem blauen Himmel.",
+		"en": "Grassy slope leads to rocky peaks under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_075549731.jpg": {
+		"hash": "0d549b88",
+		"de": "Grüner Almhänge mit kleinen Seen und felsigem Vordergrund unter hellem Himmel.",
+		"en": "Green alpine slopes dotted with small lakes, rocky foreground under bright sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_080201721.jpg": {
+		"hash": "ed30eedb",
+		"de": "Ein rotes Schild zeigt „Gulmen 2317 m“ vor grüner Alm mit fernen Bergen unter blauem Himmel.",
+		"en": "A red sign reads “Gulmen” in front of green alpine meadow with distant mountains under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_080207580.jpg": {
+		"hash": "acf3aa29",
+		"de": "Ein rotes Schild zeigt „Gulmen 2317 m“ vor grünen Hängen und fernen Bergen unter klarem Himmel.",
+		"en": "A red sign reads “Gulmen” against green slopes and distant mountains under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_080211060.jpg": {
+		"hash": "96f0651d",
+		"de": "Grüne Berglandschaft mit weiten Ausblicken unter klarem Himmel.",
+		"en": "Green mountain landscape with wide views under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_080219905.jpg": {
+		"hash": "f97f3eda",
+		"de": "Grüne Täler und felsige Gipfel unter blauem Himmel mit schneebedeckten Felsen im Hintergrund.",
+		"en": "Green valleys, rocky peaks under blue sky with snow-capped rocks in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_080423219.jpg": {
+		"hash": "0227f3e5",
+		"de": "Ein grüner Bergweg führt über grasbewachsene Hänge zu felsigen Gipfeln unter klarem Himmel.",
+		"en": "A green trail winds over grassy slopes toward rocky peaks under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_080910164.jpg": {
+		"hash": "465f8051",
+		"de": "Grüner Bergsee umgeben von grasigen Hängen mit kleinen Pfützen und Felsen im Vordergrund.",
+		"en": "Green alpine lake nestled among grassy slopes, with small puddles and rocks in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_084607382.jpg": {
+		"hash": "85258e69",
+		"de": "Grüner Hang mit Felsen und fernen schneebedeckten Gipfeln unter blauem Himmel.",
+		"en": "Green slope dotted with rocks, distant snow-capped peaks under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_084745491.jpg": {
+		"hash": "c0edf53f",
+		"de": "Ein Wanderer in hellblauem Shirt und schwarzen Shorts geht auf einem steinigen Pfad durch grüne Almen unter blauem Himmel.",
+		"en": "A hiker in a light blue shirt and black shorts walks along a rocky trail through green alpine meadows under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_085412659.jpg": {
+		"hash": "54f3f547",
+		"de": "Ein steiniger Wanderweg führt durch grüne Almen mit kleinen Tümpeln unter blauem Himmel zwischen Berggipfeln.",
+		"en": "A rocky trail winds through green alpine meadows with small ponds under a clear blue sky between mountain peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_085744531.jpg": {
+		"hash": "eafc9d4c",
+		"de": "Wanderer auf Schotterweg neben See mit Felsen und grüner Vegetation unter blauem Himmel.",
+		"en": "Hiker on gravel path beside lake, rocks, greenery under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_085856913.jpg": {
+		"hash": "879d02b5",
+		"de": "Wanderer auf steinigem Pfad mit Berggipfel im Hintergrund unter blauem Himmel.",
+		"en": "Hiker on rocky trail with mountain peak against clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_091722336.jpg": {
+		"hash": "ce992aea",
+		"de": "Kühe grasen auf grüner Alm vor alpinem Berg und Hütte unter blauem Himmel.",
+		"en": "Cows graze on a green meadow before an alpine mountain and hut under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_092150949.jpg": {
+		"hash": "99c850ff",
+		"de": "Ein Wanderweg führt durch grüne Bergwiesen mit Felsen und Bergen im Hintergrund unter blauem Himmel.",
+		"en": "A trail winds through green alpine meadows with rocky outcrops and distant mountains under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_092318758.jpg": {
+		"hash": "07be804b",
+		"de": "Steile Felswand unter der Sonne mit grüner Hangvegetation und blauem Himmel.",
+		"en": "Sunlit steep rock face above green slope under blue sky with wispy clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_092323924.jpg": {
+		"hash": "0695d845",
+		"de": "Grashügel mit Steinen und Pfad führen zu grünen Hügeln vor fernen Bergen unter blauem Himmel.",
+		"en": "Grassy hills with rocks and a trail lead to green slopes before distant mountains under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093336366.jpg": {
+		"hash": "95505ccf",
+		"de": "Grüner Bergpanorama mit Wiesen, Wald und serpentinartiger Strasse im Tal unter blauem Himmel.",
+		"en": "Green mountain vista with meadows, forest, winding road in valley under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093339599.jpg": {
+		"hash": "18f05f01",
+		"de": "Grüne Almen mit Wäldern und Serpentinenstrasse vor schneebedeckten Bergen im Hintergrund.",
+		"en": "Green alpine meadows, forests, winding road ahead of snow-capped mountains in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093342669.jpg": {
+		"hash": "7f1a826c",
+		"de": "Wanderer auf dem Weg zum Gipfel unter blauem Himmel.",
+		"en": "Hiker on a trail to the summit under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093344595.jpg": {
+		"hash": "5046bec9",
+		"de": "Wanderer auf dem Siebengipfelweg im August bei blauem Himmel.",
+		"en": "Hiker on a trail under blue sky during an Alpine hike.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093449419.jpg": {
+		"hash": "1f3e2b77",
+		"de": "Grüner Berggrat mit Nadelbäumen und Felsvorsprung unter blauem Himmel; Wanderpfad führt durch Almenlandschaft.",
+		"en": "Green ridge with evergreens and rock outcrop under blue sky; trail winds through alpine meadow landscape.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093549574.jpg": {
+		"hash": "a0dcc1c4",
+		"de": "Grüner Hang mit Felskuppe im Vordergrund, dahinter Wald und See unter blauem Himmel.",
+		"en": "Green slope with rocky outcrop in foreground; forested valley and lake beyond under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093817093.jpg": {
+		"hash": "a84e4ef2",
+		"de": "Ein Wanderweg führt über grasbewachsenen Hang mit Felsen und einem Schild „Cuncels 1935 m“ vor Bergkette.",
+		"en": "A trail winds up a grassy slope with rocks and a sign reading “Cuncels” against mountain range backdrop.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093822601.jpg": {
+		"hash": "d69bbce2",
+		"de": "Ein rotes Schild zeigt „Cuntels 1935 m“ vor grünen Hängen mit einer gewundenen Strasse im Tal.",
+		"en": "A red sign reads “Cuntels 1935m” in front of green slopes with a winding road below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_093849310.PANO.jpg": {
+		"hash": "0cf343d5",
+		"de": "Ein schmaler Wanderweg führt über eine grüne Alm mit Blick auf die schneebedeckten Gipfel im Hintergrund unter blauem Himmel.",
+		"en": "A narrow trail winds across a green alpine meadow, with snow-capped peaks visible in the distance under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_095625904.jpg": {
+		"hash": "b67fffe8",
+		"de": "Ein markanter Felsgipfel ragt über grüne Hänge unter blauem Himmel mit Wolken empor.",
+		"en": "A prominent rock peak rises above green slopes under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_100907357.jpg": {
+		"hash": "95bae458",
+		"de": "Wanderweg führt über grüne Hänge mit Blick auf See und Berge; Schild zeigt „Chli Güslen 1868 m“.",
+		"en": "Trail winds up green slopes overlooking lake and mountains; sign reads “Chli Güslen 1868 m”.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_100912852.jpg": {
+		"hash": "cb954975",
+		"de": "Grüner Berggrat mit Nadelbäumen und schmalen Pfaden vor steilen Felswänden unter blauem Himmel.",
+		"en": "Green mountain ridge with conifers and narrow trails before steep rock faces under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_101336867.jpg": {
+		"hash": "dabaf23a",
+		"de": "Wanderer auf rotem Pfad durch grünen Wald mit markierter Steinplatte im Vordergrund.",
+		"en": "Hiker on red trail through green forest, marked rock in foreground visible.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_101912561.jpg": {
+		"hash": "1f5edbef",
+		"de": "Wanderer auf dem Siebengipfelweg vor steilen Bergen und blauem Himmel; Schild zeigt „Gross Güslen 1833 m“.",
+		"en": "Hiker on the Seven Peaks Trail with steep mountains and blue sky ahead; sign reads “Gross Güslen 1833 m”.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_102013814.jpg": {
+		"hash": "02b8bb74",
+		"de": "Blick auf den Walensee mit Bergen im Hintergrund und grüner Vegetation am Vordergrund.",
+		"en": "View of Lake Walen with mountains in the background and green vegetation in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_102601107.jpg": {
+		"hash": "87dd2641",
+		"de": "Ein roter Pilz mit weissen Punkten wächst zwischen grünen Pflanzen am Waldboden.",
+		"en": "A red-spotted mushroom grows among green plants on the forest floor.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_103222030.jpg": {
+		"hash": "47d30cff",
+		"de": "Grüner Bergpanorama mit Seen und Nadelwäldern unter blauem Himmel.",
+		"en": "Green mountain panorama with lakes, pine forests under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_103610455.MP.jpg": {
+		"hash": "10f04e3b",
+		"de": "Ein kleiner Bach fliesst über Felsen und grünes Gras an einem sonnigen Hang im Waldgebiet von Quarten, St. Gallen.",
+		"en": "A small stream flows over rocks and green grass on a sunny slope in the forest area of Quarten, St. Gallen.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_104551277.jpg": {
+		"hash": "a7c9d4bc",
+		"de": "Ein See spiegelt grüne Hänge und Nadelwälder unter blauem Himmel mit wenigen Wolken.",
+		"en": "A lake reflects green slopes, pine forests under a blue sky with scattered clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_112511483.jpg": {
+		"hash": "fd89bbe0",
+		"de": "Ein Wanderer läuft auf einem Pfad am Walensee; grüne Hänge und ein Berggipfel ragen unter blauem Himmel empor.",
+		"en": "A hiker walks along a lakeside path with green slopes and a mountain peak rising under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_114957842.jpg": {
+		"hash": "963b41c7",
+		"de": "Ein Wanderweg führt an einem See vorbei mit grünen Hängen und einer Bergspitze im Hintergrund unter blauem Himmel.",
+		"en": "A gravel path winds past a lake, green slopes and a mountain peak under blue sky with scattered clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20250811_123243188.jpg": {
+		"hash": "597a9047",
+		"de": "Ein asphaltierter Weg führt zu einem Haus mit Garten und Zäunen unter blauem Himmel.",
+		"en": "A paved path leads to a house with garden and fences under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "85c241a8",
+		"de": "Steile Felswand links, grüne Almweiden mit Seilbahnmasten, blauer Himmel über dem Walensee im Hintergrund.",
+		"en": "Rugged cliff on left, green alpine meadows with cable car towers, blue sky above Lake Walensee in distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

@@ -1,0 +1,100 @@
+{
+	"PXL_20260419_074935852.jpg": {
+		"hash": "da838a7f",
+		"de": "Grüner Hang mit gelben Blumen vor bewaldeten Bergen unter wolkenverhangenem Himmel.",
+		"en": "Green hillside dotted with yellow flowers, backed by forested mountains under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_074953707.jpg": {
+		"hash": "ac571b3c",
+		"de": "Blick über grüne Hügel und einen See von Nadelbäumen umrahmt unter bewölktem Himmel.",
+		"en": "View over green hills and a lake framed by evergreens under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_075127072.jpg": {
+		"hash": "083d753d",
+		"de": "Zwei Wanderer lächeln vor kahlen Bäumen und Nadelwald unter bewölktem Himmel im April.",
+		"en": "Two hikers smile before bare trees and evergreens under a cloudy sky in April.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_075142257.jpg": {
+		"hash": "838caa9c",
+		"de": "Zwei lächelnde Wanderer vor grünen Hängen und schneebedeckten Bergen unter bewölktem Himmel.",
+		"en": "Two smiling hikers stand before green slopes and snow-capped peaks under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_081104962.jpg": {
+		"hash": "3d98d9db",
+		"de": "Ein schmaler Waldweg führt durch grünes Gras und Nadelbäume auf dem Morgartenberg bei Sattel, Schwyz.",
+		"en": "A narrow trail winds through green grass and evergreen trees on the Morgartenberg near Sattel, Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_081914698.jpg": {
+		"hash": "bc54a994",
+		"de": "Grüner Hügel mit Nadelbäumen vor einem See und bewaldeten Bergen unter Wolkenhimmel.",
+		"en": "Green hill dotted with evergreens overlooks a lake and forested mountains under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_083036568.jpg": {
+		"hash": "e3c08cdb",
+		"de": "Ein Holzschuppen mit Brennholz und ein Steinfeuerplatz liegen in einem Waldgelände voller Laub.",
+		"en": "A woodshed stacked with firewood sits beside a stone fire pit on a leaf-covered forest floor.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_083043661.jpg": {
+		"hash": "839667b8",
+		"de": "Ein hölzerner Pfosten mit Schallloch steht neben einem Aussichtspfad über See und grünen Hügeln unter bewölktem Himmel.",
+		"en": "A wooden post with a sound hole stands beside an overlook path above lake and green hills under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_083100279.jpg": {
+		"hash": "bb7e447a",
+		"de": "Grüne Hügel mit Häusern und Bäumen umgeben einen See unter bewölktem Himmel im April.",
+		"en": "Green hills dotted with houses and trees frame a lake under cloudy skies in April.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_083355362.jpg": {
+		"hash": "c5489186",
+		"de": "Zwei Wanderer lächeln vor grünen Hängen und einem See im Hintergrund unter bewölktem Himmel.",
+		"en": "Two hikers smile before green slopes with a lake in the background under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_090625604.jpg": {
+		"hash": "3e0ded11",
+		"de": "Ein Relief und ein farbiges Schild mit „Morgarten 1315“ stehen auf einem Kiesweg vor grüner Wiese.",
+		"en": "A relief and a colorful sign reading “Morgarten 1315” stand on a gravel path before green grassland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_090639481.jpg": {
+		"hash": "bbd8056b",
+		"de": "Schild zeigt Ritter mit Holzstamm und „Morgarten 1315“ vor grünem Hang, Bäumen und Steinmauer.",
+		"en": "Sign shows knight with log and “Morgarten 1315” against green slope, trees, stone wall.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260419_090657549.jpg": {
+		"hash": "666e41a4",
+		"de": "Ein Ritter auf gelbem Pferd mit Schild und Banner „Morgarten 1315“ steht vor grüner Wiese und Wald.",
+		"en": "A knight on a yellow horse with shield and banner “Morgarten 1315” stands before green meadow and forest.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "bc54a994",
+		"de": "Grüner Hügel mit Nadelbäumen vor einem See und bewaldeten Bergen unter blauem Himmel.",
+		"en": "Green hill with evergreens overlooking a lake, forested mountains under blue sky and clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

@@ -8,7 +8,8 @@
  *   3. Reverse-geocode the centroid via Swisstopo (cached on disk).
  *   4. Process every image in `images/` with sharp into AVIF + WebP at 3 widths
  *      and emit srcset strings. Only encode images whose hash is referenced
- *      and collect them as `imagePoints` for on-map markers.
+ *      and collect them as `imagePoints` for on-map markers. Alt text comes
+ *      from `alt-text.json` (see `scripts/generate-hike-alt-text.ts`).
  *   5. Write `static/hikes/<slug>/track.<hash>.json` (compact tuple format).
  * Emits `src/lib/data/hikes.generated.ts` containing the typed manifest used
  * by the `/hikes` overview page.
@@ -144,6 +145,54 @@ function stripQuotes(s: string): string {
 		return s.slice(1, -1);
 	}
 	return s;
+}
+
+// ---------------------------------------------------------------------------
+// Alt text (`<slug>/alt-text.json`, produced by scripts/generate-hike-alt-text.ts)
+//
+// Keyed by source filename, carrying the content hash the description was
+// written for. Only the German text is published — the hike pages are
+// German-only — but the English line is stored alongside it so a future
+// translated route has it without a second inference run.
+// ---------------------------------------------------------------------------
+
+const ALT_TEXT_FILE = 'alt-text.json';
+
+type AltTextEntry = { hash: string; de: string; en: string; locked?: boolean };
+type AltTextMap = Record<string, AltTextEntry>;
+
+async function loadAltText(hikeDir: string): Promise<AltTextMap> {
+	try {
+		const raw = await fs.readFile(path.join(hikeDir, ALT_TEXT_FILE), 'utf-8');
+		const parsed = JSON.parse(raw);
+		return parsed && typeof parsed === 'object' ? (parsed as AltTextMap) : {};
+	} catch {
+		return {};
+	}
+}
+
+/**
+ * Resolve one image's alt text. A generated description is only trusted when it
+ * was written for the bytes we just hashed — an edited photo under an unchanged
+ * filename otherwise ships a description of the old one.
+ */
+function resolveAlt(
+	altMap: AltTextMap,
+	name: string,
+	hash: string,
+	fallback: string,
+	slug: string
+): string {
+	const entry = altMap[name];
+	if (!entry?.de) return fallback;
+	if (entry.hash && entry.hash !== hash) {
+		console.warn(
+			`[build-hikes:${slug}]   alt text for ${name} is stale (generated for ${entry.hash}, ` +
+				`file is ${hash}) — falling back. Re-run: pnpm hikes:alt -- --slug=${slug}`
+		);
+		return fallback;
+	}
+	return entry.de;
 }
 
 /** Parse a `seasons` frontmatter value into `{ seasonStart, seasonEnd }`.
@@ -399,7 +448,9 @@ function shortHashOfBuffer(buf: Buffer): string {
 async function processImage(
 	srcPath: string,
 	slug: string,
-	alt: string,
+	/** Called with the content hash once known, so a stored description can be
+	 *  matched against the exact bytes being encoded. */
+	altForHash: (hash: string) => string,
 	gpxImageRefs: Record<string, GpxImageRef>,
 	/** Visibility for a non-waypoint prose image, or null when it isn't one. */
 	forceVisibility: 'public' | 'private' | null
@@ -427,7 +478,7 @@ async function processImage(
 	// under `private/` (proxied through Node for the auth check, then handed off
 	// via X-Accel-Redirect). The encode itself is shared with the cover image.
 	const segment = visibility === 'private' ? 'private' : 'images';
-	const enc = await encodeImageVariant(buffer, hash, slug, segment, alt);
+	const enc = await encodeImageVariant(buffer, hash, slug, segment, altForHash(hash));
 	return { ...enc, hash, visibility };
 }
 
@@ -552,7 +603,8 @@ async function processCover(
 	slug: string,
 	imagesDir: string,
 	hikeDir: string,
-	alt: string
+	/** Called with the chosen cover's filename and content hash. */
+	altFor: (name: string, hash: string) => string
 ): Promise<{ variant: ImageVariant; outNames: string[] } | undefined> {
 	let srcPath: string | undefined;
 	for (const dir of [imagesDir, hikeDir]) {
@@ -569,7 +621,7 @@ async function processCover(
 
 	const buffer = await fs.readFile(srcPath);
 	const hash = shortHashOfBuffer(buffer);
-	const enc = await encodeImageVariant(buffer, hash, slug, 'images', alt);
+	const enc = await encodeImageVariant(buffer, hash, slug, 'images', altFor(path.basename(srcPath), hash));
 	return { variant: enc.variant, outNames: enc.outNames };
 }
 
@@ -1066,6 +1118,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	}
 
 	const { data: fm } = parseFrontmatter(svxSource);
+	const altMap = await loadAltText(hikeDir);
 	// One stage per <trk>. The flat track is their concatenation — identical to
 	// the old `parseGpx` output for single-track GPX, so everything downstream
 	// (track JSON, hero map, images) is unchanged for normal hikes.
@@ -1220,15 +1273,23 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		async (imgPath, i) => {
 			const imgT0 = Date.now();
 			const name = path.basename(imgPath);
-			// Hero alt only applies to the first image; later ones get a generic
-			// label (image basenames usually encode date/camera info that we don't
-			// want to leak into alt text or hover tooltips).
-			const alt = i === 0 && typeof fm.heroAlt === 'string'
-				? fm.heroAlt
-				: `Bild ${i + 1}`;
+			// Fallback ladder when no description was generated for this file:
+			// an explicit `heroAlt` for the first image, otherwise a generic
+			// label (image basenames usually encode date/camera info that we
+			// don't want to leak into alt text or hover tooltips).
+			const fallbackAlt =
+				i === 0 && typeof fm.heroAlt === 'string' && fm.heroAlt.length > 0
+					? fm.heroAlt
+					: `Bild ${i + 1}`;
 			// Encode if it's a route waypoint OR named in the prose (with the
 			// visibility that tag requested).
-			const processed = await processImage(imgPath, slug, alt, gpxImageRefs, proseImages.get(name) ?? null);
+			const processed = await processImage(
+				imgPath,
+				slug,
+				(hash) => resolveAlt(altMap, name, hash, fallbackAlt, slug),
+				gpxImageRefs,
+				proseImages.get(name) ?? null
+			);
 			if ('skipped' in processed) {
 				// Images not on the route and not in the prose are dropped silently.
 				return { name, variant: null, point: null, outNames: [], visibility: 'public' as const };
@@ -1236,7 +1297,9 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 			// Only waypoint images get a map ImagePoint; prose-only ones have no
 			// position, so they're exposed by name (imagesByName) instead.
 			const ref = gpxImageRefs[processed.hash];
-			const point = ref ? extractImagePoint(processed, alt, ref) : null;
+			// Same resolved text the <img> gets — the map popup and photo strip
+			// read `ImagePoint.alt`.
+			const point = ref ? extractImagePoint(processed, processed.variant.alt, ref) : null;
 			const kind = ref ? processed.visibility : 'prose';
 			// Only log freshly-encoded images; cached ones stay silent to cut noise.
 			if (!processed.cached) {
@@ -1284,16 +1347,18 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	// (before cleanup) so their outNames join `keepFiles.images` and survive the
 	// orphan sweep, while previous-build `icon.<oldhash>.*` / `hero.<oldhash>.*`
 	// files (different hash, not in keepFiles) get removed automatically.
-	const coverAlt =
-		typeof fm.heroAlt === 'string'
+	// An explicit `heroAlt` is the author's own words and outranks anything
+	// generated; below it sits the cover's generated description, then the title.
+	const coverFallback =
+		typeof fm.title === 'string' && fm.title.length > 0 ? fm.title : 'Titelbild';
+	const coverAltFor = (name: string, hash: string) =>
+		typeof fm.heroAlt === 'string' && fm.heroAlt.length > 0
 			? fm.heroAlt
-			: typeof fm.title === 'string'
-				? fm.title
-				: 'Titelbild';
+			: resolveAlt(altMap, name, hash, coverFallback, slug);
 	const [iconResult, heroResult, coverResult] = await Promise.all([
 		processIcon(slug, hikeDir),
 		processHero(slug, track, bbox, imagePoints, difficulty),
-		processCover(slug, imagesDir, hikeDir, coverAlt)
+		processCover(slug, imagesDir, hikeDir, coverAltFor)
 	]);
 	if (iconResult) keepFiles.images.add(iconResult.outName);
 	if (heroResult) {

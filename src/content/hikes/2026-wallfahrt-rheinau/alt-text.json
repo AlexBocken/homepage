@@ -1,0 +1,79 @@
+{
+	"PXL_20260514_073321200.MP.jpg": {
+		"hash": "effcc8b1",
+		"de": "Wandergänger auf schmalen Asphaltweg zwischen grüner Vegetation und Bäumen unter bewölktem Himmel.",
+		"en": "Hikers walk along a narrow asphalt path bordered by greenery and trees under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_074348402.MP.jpg": {
+		"hash": "f116fbcb",
+		"de": "Grünes Feld im Vordergrund, Dorf mit Häusern und Bäumen dahinter, bewölkter Himmel.",
+		"en": "Green field in foreground, village with houses and trees behind, cloudy sky above.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_082626452.MP.jpg": {
+		"hash": "3bc3d2b5",
+		"de": "Eine Gruppe von Wanderern folgt einem Pfad auf einer grünen Wiese unter bewölktem Himmel, mit roter Flagge im Hintergrund.",
+		"en": "A group of hikers walks along a path through green fields under cloudy skies, with a red flag visible ahead.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_082630519.MP.jpg": {
+		"hash": "f5e10d12",
+		"de": "Wandergruppe auf dem Weg zu einer roten Fahne unter bewölktem Himmel.",
+		"en": "Group of hikers walking on a path towards a red flag under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_121957231.jpg": {
+		"hash": "2238abcb",
+		"de": "Zwei Kühe ruhen auf grünem Hang über einem Fluss mit Brücke und bewaldetem Ufer unter wolkenverhangen Himmel.",
+		"en": "Two cows rest on a green hill overlooking a river with bridge and wooded banks under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_122242393.MP.jpg": {
+		"hash": "7d65acd0",
+		"de": "Grün bewaldeter Flusslauf mit weissem Kloster im Hintergrund unter wolkenverhangen Himmel.",
+		"en": "Green riverbank, white monastery in distance under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_122248447.jpg": {
+		"hash": "5e7610dc",
+		"de": "Wandergruppe auf Pfad mit rotem Banner; Weinberganbau links, Haus oben rechts unter Wolkenhimmel.",
+		"en": "Group of hikers on trail with red banner; vineyard slope left, house top right under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_123427307.MP.jpg": {
+		"hash": "ecf0c34c",
+		"de": "Zwei Wanderer stehen vor einer steinernen Kirche mit zwei Türmen und Statuen unter blauem Himmel.",
+		"en": "Two hikers stand before a stone church with twin towers and statues under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_125105765.jpg": {
+		"hash": "75aa06a0",
+		"de": "Menschen betreten eine prachtvolle Kirche mit goldenen Altären und Deckenfresken im Inneren der Wallfahrtskirche Rheinau.",
+		"en": "People enter a grand church with gilded altars and ceiling frescoes inside the pilgrimage site of Rheinau.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"PXL_20260514_143513399.jpg": {
+		"hash": "d2351c96",
+		"de": "Innenansicht einer Kirche mit goldenem Altar und Deckenfresken; Pilgergruppe im Vordergrund.",
+		"en": "Interior of a church featuring an ornate gold altar, ceiling frescoes, and pilgrims in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	},
+	"cover.jpg": {
+		"hash": "f5e10d12",
+		"de": "Eine Gruppe wandert auf einem Pfad durch grüne Wiesen unter bewölktem Himmel mit roter Fahne im Hintergrund.",
+		"en": "A group hikes along a path through green fields under cloudy skies, with a red flag visible ahead.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-07"
+	}
+}

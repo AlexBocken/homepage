@@ -1,6 +1,6 @@
 {
   "name": "homepage",
-  "version": "2.30.1",
+  "version": "2.31.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -25,6 +25,7 @@
     "e2e:seed": "node scripts/e2e/clone-dev.mjs && node scripts/e2e/seed.mjs",
     "deploy": "bash scripts/deploy.sh",
     "deploy:dry": "bash scripts/deploy.sh --dry-run",
+    "hikes:alt": "pnpm exec vite-node scripts/generate-hike-alt-text.ts",
     "photos:push": "bash scripts/hike-photos.sh push",
     "photos:pull": "bash scripts/hike-photos.sh pull",
     "trace:stickers": "node scripts/trace-sticker-silhouettes.mjs",
