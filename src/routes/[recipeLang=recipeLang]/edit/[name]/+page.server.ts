@@ -14,7 +14,8 @@ import {
 	validateRecipeData,
 	serializeRecipeForDatabase,
 	detectChangedFields,
-	serializableFormValues
+	serializableFormValues,
+	splitClearedFields
 } from '$utils/recipeFormHelpers';
 
 /**
@@ -200,7 +201,9 @@ export const actions = {
 			}
 
 			// Serialize for database
-			const recipe_json = serializeRecipeForDatabase(recipeData);
+			const { set: recipe_json, unset: cleared } = splitClearedFields(
+				serializeRecipeForDatabase(recipeData)
+			);
 
 			// Connect to database and update recipe
 			await dbConnect();
@@ -213,7 +216,10 @@ export const actions = {
 				// value left in place would be served forever.
 				const result = await Recipe.findOneAndUpdate(
 					{ short_name: originalShortName },
-					{ $set: recipe_json, $unset: { cachedPer100g: '', cachedTotalGrams: '' } },
+					{
+						$set: recipe_json,
+						$unset: { ...cleared, cachedPer100g: '', cachedTotalGrams: '' }
+					},
 					{ returnDocument: 'after' }
 				);
 
@@ -249,6 +255,29 @@ export const actions = {
 							errors: ['Nutrition mappings not saved'],
 							values: serializableFormValues(formData)
 						});
+					}
+				}
+
+				// Drop the global overwrites whose switch was turned off.
+				//
+				// Runs before the upserts below so that a switch flipped off and an
+				// ingredient of the same name mapped afresh in one save ends up mapped,
+				// not deleted. Without this half the switch was one-way: the editor
+				// could create a global mapping — or a global *skip* — and nothing in
+				// the UI could take it back.
+				const removedOverwritesJson = formData.get('globalOverwritesRemoved_json')?.toString();
+				if (removedOverwritesJson) {
+					try {
+						const removed: string[] = JSON.parse(removedOverwritesJson);
+						const names = removed
+							.filter((n): n is string => typeof n === 'string' && n.trim() !== '')
+							.map((n) => n.toLowerCase().trim());
+						if (names.length > 0) {
+							await NutritionOverwrite.deleteMany({ ingredientNameDe: { $in: names } });
+							invalidateOverwriteCache();
+						}
+					} catch (e) {
+						console.error('Failed to remove global overwrites:', e);
 					}
 				}
 

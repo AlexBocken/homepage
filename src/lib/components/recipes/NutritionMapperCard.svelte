@@ -29,6 +29,7 @@
 	 *   oncollapse: () => void,
 	 *   onassign: (entry: { source: string, sourceId: string, name: string, gramsPerUnit: number }) => void,
 	 *   onskip: () => void,
+	 *   onunskip: () => void,
 	 *   onrevert: () => void,
 	 *   ongramschange: (grams: number) => void,
 	 *   onglobalchange: (on: boolean) => void,
@@ -46,6 +47,7 @@
 		oncollapse,
 		onassign,
 		onskip,
+		onunskip,
 		onrevert,
 		ongramschange,
 		onglobalchange,
@@ -102,8 +104,8 @@
 
 	/**
 	 * Turning the global switch on writes a NutritionOverwrite that short-circuits
-	 * this ingredient in *every* recipe, so it asks first. Turning it off does not:
-	 * undoing a broad change needs no ceremony.
+	 * this ingredient in *every* recipe, so it asks first. Turning it off deletes
+	 * that overwrite on save — undoing a broad change needs no ceremony.
 	 */
 	async function toggleGlobal() {
 		if (globalOn) {
@@ -173,7 +175,7 @@
 				class="icon-btn"
 				title={row.state === 'skipped' ? 'Wieder aufnehmen' : 'Überspringen'}
 				aria-label={row.state === 'skipped' ? 'Wieder aufnehmen' : 'Überspringen'}
-				onclick={row.state === 'skipped' ? onrevert : onskip}
+				onclick={row.state === 'skipped' ? onunskip : onskip}
 			>
 				{#if row.state === 'skipped'}<Undo2 size={15} />{:else}<Ban size={15} />{/if}
 			</button>

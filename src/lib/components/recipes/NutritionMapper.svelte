@@ -46,6 +46,10 @@
 	let globalToggle = $state({});
 	/** @type {Set<string>} */
 	let globalOverwriteNames = $state(new Set());
+	// Until the overwrite list is in, every switch reads as off — which is
+	// indistinguishable from "the user turned it off" and would post the whole
+	// list for deletion on an early save. Removals only count once this is true.
+	let globalOverwritesLoaded = $state(false);
 
 	const rows = $derived(buildRows(ingredients, mappings));
 
@@ -137,10 +141,15 @@
 		/** @type {Record<string, boolean>} */
 		const next = {};
 		for (const m of mappings) {
-			const de = (m.ingredientNameDe || m.ingredientName || '').toLowerCase().trim();
-			next[keyOf(m)] = globalOverwriteNames.has(de);
+			next[keyOf(m)] = globalOverwriteNames.has(globalNameOf(m));
 		}
 		globalToggle = next;
+		globalOverwritesLoaded = true;
+	}
+
+	/** The key a global overwrite is stored under for this mapping. */
+	function globalNameOf(/** @type {any} */ m) {
+		return (m.ingredientNameDe || m.ingredientName || '').toLowerCase().trim();
 	}
 
 	// Once, at init — deliberately not an $effect on `mappings`, which would refetch
@@ -153,7 +162,7 @@
 		return mappings
 			.filter((m) => globalToggle[keyOf(m)])
 			.map((m) => ({
-				ingredientNameDe: (m.ingredientNameDe || m.ingredientName || '').toLowerCase().trim(),
+				ingredientNameDe: globalNameOf(m),
 				ingredientNameEn: m.ingredientName,
 				source: m.excluded ? 'skip' : m.source || 'usda',
 				fdcId: m.fdcId,
@@ -161,6 +170,23 @@
 				nutritionDbName: m.nutritionDbName,
 				excluded: m.excluded || false,
 			}));
+	}
+
+	/**
+	 * Overwrites the form posts for deletion — switched on when the page loaded,
+	 * off now.
+	 *
+	 * Without this, turning the switch off did nothing at all: the save only ever
+	 * upserted the switched-on entries, so a global mapping — including a global
+	 * *skip* — could be created from here but never taken back. That is how "Salz"
+	 * ended up skipped in every recipe with no way out of it.
+	 */
+	function getRemovedGlobalOverwrites() {
+		if (!globalOverwritesLoaded) return [];
+		const removed = mappings
+			.filter((m) => !globalToggle[keyOf(m)] && globalOverwriteNames.has(globalNameOf(m)))
+			.map(globalNameOf);
+		return [...new Set(removed)];
 	}
 
 	// --- Matching ----------------------------------------------------------
@@ -302,8 +328,31 @@
 		toast.success(`Grundrezept: ${slug}`);
 	}
 
+	/**
+	 * Leave this line out of the calculation — here, in this recipe.
+	 *
+	 * The global switch comes off with it. It is on by default for any ingredient
+	 * that already has a global mapping, and a saved overwrite carries `source:
+	 * 'skip'` when the mapping is excluded — so skipping a line like salt once
+	 * used to write "skip salt" for *every* recipe, silently. Making it global is
+	 * still possible, but it has to be asked for after the fact.
+	 */
 	function skip(/** @type {any} */ mapping) {
 		patch(mapping, { excluded: true, matchMethod: 'manual', manuallyEdited: true });
+		globalToggle = { ...globalToggle, [keyOf(mapping)]: false };
+	}
+
+	/**
+	 * Put a skipped line back in.
+	 *
+	 * Local, deliberately. This used to call `revertOne`, which re-derives the row
+	 * from the matcher — and the matcher's first step is the global overwrite
+	 * table, so any ingredient carrying a global skip came straight back excluded
+	 * and the button looked broken. Re-matching is what the "Zurück auf
+	 * automatisch" button is for.
+	 */
+	function unskip(/** @type {any} */ mapping) {
+		patch(mapping, { excluded: false, manuallyEdited: true });
 	}
 
 	/**
@@ -339,6 +388,11 @@
 <!-- Rendered unconditionally: see the module comment. -->
 <input type="hidden" name="nutritionMappings_json" value={JSON.stringify(mappings)} />
 <input type="hidden" name="globalOverwrites_json" value={JSON.stringify(getGlobalOverwrites())} />
+<input
+	type="hidden"
+	name="globalOverwritesRemoved_json"
+	value={JSON.stringify(getRemovedGlobalOverwrites())}
+/>
 <input type="hidden" name="finalWeight_json" value={JSON.stringify(finalWeight ?? { mode: 'auto' })} />
 
 <section class="mapper">
@@ -488,6 +542,7 @@
 						oncollapse={() => (expandedKey = null)}
 						onassign={(entry) => assign(row.mapping, entry)}
 						onskip={() => skip(row.mapping)}
+						onunskip={() => unskip(row.mapping)}
 						onrevert={() => revertOne(row.mapping, row.line)}
 						ongramschange={(grams) =>
 							patch(row.mapping, {

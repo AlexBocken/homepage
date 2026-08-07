@@ -8,7 +8,8 @@ import {
 	extractRecipeFromFormData,
 	validateRecipeData,
 	serializeRecipeForDatabase,
-	serializableFormValues
+	serializableFormValues,
+	splitClearedFields
 } from '$utils/recipeFormHelpers';
 
 export const load: PageServerLoad = async ({locals, params}) => {
@@ -110,8 +111,9 @@ export const actions = {
 				}];
 			}
 
-			// Serialize for database
-			const recipe_json = serializeRecipeForDatabase(recipeData);
+			// Serialize for database. A new recipe has nothing to clear, so only the
+			// `set` half is of interest — see splitClearedFields.
+			const { set: recipe_json } = splitClearedFields(serializeRecipeForDatabase(recipeData));
 
 			// Connect to database and create recipe
 			await dbConnect();

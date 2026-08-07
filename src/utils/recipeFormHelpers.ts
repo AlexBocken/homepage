@@ -382,11 +382,20 @@ export function serializeRecipeForDatabase(data: RecipeFormData): Record<string,
 		datemodified: data.datemodified || new Date()
 	};
 
-	// Optional fields
-	if (data.preamble) recipe.preamble = data.preamble;
-	if (data.addendum) recipe.addendum = data.addendum;
-	if (data.note) recipe.note = data.note;
-	if (data.defaultForm) recipe.defaultForm = data.defaultForm;
+	// Optional fields, written even when the editor cleared them.
+	//
+	// These used to be set only when truthy, which reads as "leave it alone" but
+	// means something else on an update: `$set` without the key leaves the *old*
+	// text on the document, so deleting a note or an introduction never took —
+	// the English copy vanished (it rides along in the whole `translations.en`
+	// object) while the German one came back. An empty string is what the form
+	// actually posted, so that is what gets stored.
+	recipe.preamble = data.preamble ?? '';
+	recipe.addendum = data.addendum ?? '';
+	recipe.note = data.note ?? '';
+	// Same problem, but a nested object has no empty value to write: `null` marks
+	// it for removal and `splitClearedFields` turns that into an `$unset`.
+	recipe.defaultForm = data.defaultForm ?? null;
 
 	// Additional info
 	if (data.add_info && Object.keys(data.add_info).length > 0) {
@@ -418,4 +427,28 @@ export function serializeRecipeForDatabase(data: RecipeFormData): Record<string,
 	}
 
 	return recipe;
+}
+
+/**
+ * Split a serialized recipe into the halves an update needs.
+ *
+ * A field the editor cleared is marked with `null` rather than dropped, because
+ * a missing key in `$set` is not "clear this" — it leaves whatever the document
+ * already had. Mongo has no way to set a field to absent, so the nulls move to
+ * `$unset` here. `Recipe.create` takes `set` on its own; nothing to remove on a
+ * document that does not exist yet.
+ */
+export function splitClearedFields(recipe: Record<string, unknown>): {
+	set: Record<string, unknown>;
+	unset: Record<string, ''>;
+} {
+	const set: Record<string, unknown> = {};
+	const unset: Record<string, ''> = {};
+
+	for (const [key, value] of Object.entries(recipe)) {
+		if (value === null) unset[key] = '';
+		else set[key] = value;
+	}
+
+	return { set, unset };
 }
