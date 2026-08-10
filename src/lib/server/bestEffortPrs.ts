@@ -1,9 +1,10 @@
 // Detect all-time "fastest Nk" personal records set by a freshly saved run.
 // Each run caches its fastest continuous K-km splits (`bestEfforts`); this
 // compares those against the user's history and reports the distances on which
-// the new run is now the fastest ever. Mirrors the segment-PB rule: a distance
-// only counts as a PR when a PRIOR effort exists, so a user's very first run
-// doesn't light up every distance as a "record".
+// the new run is now the fastest ever — either by beating a previous time, or by
+// being the first time the user has covered that distance at all (going further
+// than ever before is a record in its own right). A run only counts once SOME
+// earlier run exists, so a user's very first run doesn't light up every distance.
 
 import { WorkoutSession } from '$models/WorkoutSession';
 import { backfillBestEfforts, activitiesForKind, type ActivityKind } from '$lib/server/bestEffortsBackfill';
@@ -12,7 +13,7 @@ import type { BestEffort } from '$lib/fitness/bestEfforts';
 export interface BestEffortPr {
 	km: number;
 	seconds: number; // this run's time over the distance
-	prevSeconds: number; // the previous all-time best it beat
+	prevSeconds: number | null; // the previous all-time best it beat; null = never run this far
 }
 
 /**
@@ -52,10 +53,18 @@ export async function detectBestEffortPrs(
 	]);
 	const prevByKm = new Map<number, number>(rows.map((r) => [r._id as number, r.best as number]));
 
+	// Whether there is any history to be measured against at all. Distances the
+	// user has never covered before only count once they have run *something*
+	// earlier — otherwise a first-ever run would light up every distance it holds.
+	const hasHistory = prevByKm.size > 0;
+
 	const prs: BestEffortPr[] = [];
 	for (const e of efforts) {
 		const prev = prevByKm.get(e.km);
-		if (prev !== undefined && e.seconds < prev) {
+		if (prev === undefined) {
+			// Never run this far before: going further than ever is its own record.
+			if (hasHistory) prs.push({ km: e.km, seconds: e.seconds, prevSeconds: null });
+		} else if (e.seconds < prev) {
 			prs.push({ km: e.km, seconds: e.seconds, prevSeconds: prev });
 		}
 	}

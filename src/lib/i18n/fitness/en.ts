@@ -624,6 +624,7 @@ export const en = {
 	new_segment_pr: "New segment PR!",
 	new_kom: "New crown (KOM)!",
 	new_distance_pr: "New PR!",
+	first_distance_pr: "Furthest yet!",
 	share_segments: "Compete on segment leaderboards",
 	share_segments_desc: "Your username, segment times and dates become visible to others. Your full GPS tracks and other workouts stay private.",
 	created_by: "Created by",

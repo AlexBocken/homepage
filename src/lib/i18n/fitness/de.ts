@@ -624,6 +624,7 @@ export const de = {
 	new_segment_pr: "Neue Segment-Bestzeit!",
 	new_kom: "Neue Krone (KOM)!",
 	new_distance_pr: "Neue Bestzeit!",
+	first_distance_pr: "So weit wie nie!",
 	share_segments: "An Segment-Ranglisten teilnehmen",
 	share_segments_desc: "Dein Benutzername, deine Segmentzeiten und -daten werden für andere sichtbar. Deine vollständigen GPS-Strecken und übrigen Trainings bleiben privat.",
 	created_by: "Erstellt von",

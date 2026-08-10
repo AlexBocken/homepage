@@ -1109,7 +1109,7 @@
 					<div class="pr-item">
 						<Trophy size={14} class="pr-icon" />
 						<span class="pr-exercise">{p.km}{t.km_short}</span>
-						<span class="pr-type">{t.new_distance_pr}</span>
+						<span class="pr-type">{p.prevSeconds == null ? t.first_distance_pr : t.new_distance_pr}</span>
 						<span class="pr-value">{formatElapsed(p.seconds)}</span>
 					</div>
 				{/each}

@@ -1478,7 +1478,10 @@
 						<div class="seg-ach-item">
 							<span class="seg-ach-name">{p.km}{t.km_short}</span>
 							<span class="seg-ach-badges">
-								<span class="seg-badge pr"><Trophy size={13} /> {t.new_distance_pr}</span>
+								<span class="seg-badge pr">
+									<Trophy size={13} />
+									{p.prevSeconds == null ? t.first_distance_pr : t.new_distance_pr}
+								</span>
 							</span>
 							<span class="seg-ach-time">{formatElapsed(p.seconds)}</span>
 						</div>

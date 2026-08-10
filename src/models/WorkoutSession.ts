@@ -69,7 +69,7 @@ export interface IWorkoutSession {
   // total (badge / history / cards) beyond the completion screen. Distance PRs:
   // an all-time-fastest Nk on this run's board. Segment PRs: a personal best or
   // a KOM (crown) on a matched segment. Both are snapshots at save/snap time.
-  bestEffortPrs?: { km: number; seconds: number; prevSeconds: number }[];
+  bestEffortPrs?: { km: number; seconds: number; prevSeconds: number | null }[];
   segmentPrs?: {
     segmentId: string;
     segmentName: string;
@@ -282,7 +282,8 @@ const WorkoutSessionSchema = new mongoose.Schema(
       type: [{
         km: { type: Number, required: true },
         seconds: { type: Number, required: true },
-        prevSeconds: { type: Number, required: true },
+        // null when the distance had never been covered before (furthest yet).
+        prevSeconds: { type: Number, default: null },
         _id: false,
       }],
       default: undefined,
