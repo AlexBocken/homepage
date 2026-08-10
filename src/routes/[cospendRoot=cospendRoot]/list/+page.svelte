@@ -114,6 +114,20 @@
    * @param {string} raw
    * @returns {{ qty: string | null, name: string }}
    */
+  /**
+   * Title-case an entry as it is written: every word starts upper, the rest of
+   * each word is left exactly as typed, so deliberate casing survives ("BBQ
+   * Sauce", "H-Milch") while an all-lowercase entry comes out looking like the
+   * rest of the list. A leading quantity ("500g milch") starts on a digit and is
+   * therefore untouched. The categorizer lowercases its query, so this changes
+   * nothing about icon or category matching.
+   * @param {string} raw
+   */
+  function toTitleCase(raw) {
+    return raw.replace(/(^|[\s\-/])(\p{L})/gu, (_, sep, letter) => sep + letter.toLocaleUpperCase(lang));
+  }
+
+  /** @param {string} raw */
   function parseQuantity(raw) {
     // Trailing: "Milch, 3x" or "Milch 3x" or "Milch, 500g"
     const trailingMatch = raw.match(/^(.+?)[,\s]+(\d+\s*[xX×]|\d+(?:\.\d+)?\s*(?:L|l|kg|g|ml|mL|st|St|Stk|stk|Pkg|pkg))\s*$/);
@@ -220,7 +234,7 @@
   onDestroy(() => { sync.disconnect(); });
 
   async function addItem() {
-    const name = newItemName.trim();
+    const name = toTitleCase(newItemName.trim());
     if (!name) return;
 
     sync.addItem(name, user);
@@ -306,6 +320,41 @@
     return [...groups.entries()].filter(([, icons]) => icons.length > 0);
   })();
 
+  // The icon set ships a plain letter tile per a–z (what `iconUrl` already falls
+  // back to when an item has no icon). Offered as their own group so a name the
+  // catalogue has nothing for can still be given a deliberate tile by hand.
+  const ALPHABET = [...'abcdefghijklmnopqrstuvwxyz'];
+
+  /** @type {HTMLDivElement | undefined} */
+  let iconPickerEl = $state();
+  /** @type {Record<string, HTMLDivElement | undefined>} */
+  let iconGroupEls = $state({});
+
+  /**
+   * Bring a category's icons into view inside the picker. Scrolling the picker
+   * itself (rather than scrollIntoView) keeps the modal around it still.
+   * @param {string} cat
+   */
+  function scrollToIconGroup(cat) {
+    const group = iconGroupEls[cat];
+    if (!iconPickerEl || !group) return;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    iconPickerEl.scrollTo({ top: group.offsetTop, behavior: still ? 'auto' : 'smooth' });
+  }
+
+  // The modal builds a tile, so it shows the tile: name, quantity, icon and the
+  // letter fallback resolve exactly as they will in the list the moment you save.
+  let previewName = $derived.by(() => {
+    const item = editingItem;
+    return editName.trim() || (item ? parseQuantity(item.name).name : '');
+  });
+  let previewQty = $derived(editQty.trim());
+  let previewIcon = $derived.by(() => {
+    if (editIcon) return `https://bocken.org/static/shopping-icons/${editIcon}.png`;
+    const item = editingItem;
+    return item && previewName ? iconUrl({ ...item, icon: null }, previewName) : null;
+  });
+
   let filteredIconGroups = $derived(
     iconSearch.trim()
       ? iconsByCategory
@@ -314,8 +363,25 @@
       : iconsByCategory
   );
 
-  /** @param {import('$lib/js/shoppingSync.svelte').ShoppingItem} item */
-  function startLongPress(item) {
+  // Android hands the touch to the WebView's own gesture handling mid-hold — a
+  // few px of thumb drift is read as the start of a scroll, and the icon is its
+  // own long-press target — which fires pointercancel and used to kill the
+  // timer, so long-press-to-edit almost never survived 500 ms on a phone. Only
+  // real movement may cancel: a pointercancel/pointerleave while the finger has
+  // effectively stayed put is the OS stealing the gesture, not the user
+  // scrolling. Roughly Android's touch slop, in CSS px.
+  const LONG_PRESS_SLOP_PX = 12;
+  /** @type {{ x: number, y: number } | null} */
+  let pressOrigin = null;
+  let pressMoved = false;
+
+  /**
+   * @param {import('$lib/js/shoppingSync.svelte').ShoppingItem} item
+   * @param {PointerEvent} e
+   */
+  function startLongPress(item, e) {
+    pressOrigin = { x: e.clientX, y: e.clientY };
+    pressMoved = false;
     longPressTimer = window.setTimeout(() => {
       editingItem = item;
       const parsed = parseQuantity(item.name);
@@ -338,6 +404,21 @@
       clearTimeout(longPressTimer);
       longPressTimer = null;
     }
+    pressOrigin = null;
+  }
+
+  /** Movement is the only thing that aborts a hold. @param {PointerEvent} e */
+  function trackLongPress(e) {
+    if (!longPressTimer || !pressOrigin) return;
+    if (Math.hypot(e.clientX - pressOrigin.x, e.clientY - pressOrigin.y) > LONG_PRESS_SLOP_PX) {
+      pressMoved = true;
+      cancelLongPress();
+    }
+  }
+
+  /** pointercancel / pointerleave: honour it only if the finger really moved. */
+  function maybeCancelLongPress() {
+    if (pressMoved) cancelLongPress();
   }
 
   function closeEdit() {
@@ -450,7 +531,7 @@
   async function saveEdit() {
     if (!editingItem) return;
     editSaving = true;
-    const trimmedName = editName.trim();
+    const trimmedName = toTitleCase(editName.trim());
     const trimmedQty = editQty.trim();
     if (!trimmedName) { editSaving = false; return; }
     const newRawName = trimmedQty ? `${trimmedQty} ${trimmedName}` : trimmedName;
@@ -520,6 +601,7 @@
       type="text"
       placeholder={t.add_item_placeholder}
       autocomplete="off"
+      autocapitalize="words"
     />
     <button class="btn-add" onclick={addItem} disabled={!newItemName.trim()}>
       <Plus size={18} />
@@ -555,10 +637,11 @@
                   class:checked={item.checked}
                   animate:flip={{ duration: 200 }}
                   onclick={() => sync.toggleItem(item.id, user)}
-                  onpointerdown={() => startLongPress(item)}
+                  onpointerdown={(e) => startLongPress(item, e)}
+                  onpointermove={trackLongPress}
                   onpointerup={cancelLongPress}
-                  onpointerleave={cancelLongPress}
-                  onpointercancel={cancelLongPress}
+                  onpointerleave={maybeCancelLongPress}
+                  onpointercancel={maybeCancelLongPress}
                   oncontextmenu={(e) => e.preventDefault()}
                 >
                   {#if parsed.qty}
@@ -598,18 +681,36 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="edit-modal" onclick={(e) => e.stopPropagation()}>
-      <h3>{parseQuantity(editingItem.name).name}</h3>
+      <h3>{t.edit_item}</h3>
 
-      <div class="name-qty-row">
-        <div class="field name-field">
-          <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="edit-label">{t.edit_name}</label>
-          <input class="edit-input" type="text" bind:value={editName} />
+      <div class="preview-row">
+        <!-- The tile as it will land in the list. Every control below writes to
+             it, so nothing about the result is left to be imagined. -->
+        <div class="item-card preview" aria-hidden="true">
+          {#if previewQty}
+            <span class="qty-badge">{previewQty}</span>
+          {/if}
+          <div class="card-icon">
+            {#if previewIcon}
+              <img src={previewIcon} alt="" />
+            {:else}
+              <span class="card-letter">{previewName.charAt(0)}</span>
+            {/if}
+          </div>
+          <span class="card-name">{previewName}</span>
         </div>
-        <div class="field qty-field">
-          <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="edit-label">{t.edit_qty}</label>
-          <input class="edit-input" type="text" bind:value={editQty} placeholder={t.edit_qty_ph} />
+
+        <div class="preview-fields">
+          <div class="field name-field">
+            <!-- svelte-ignore a11y_label_has_associated_control -->
+            <label class="edit-label">{t.edit_name}</label>
+            <input class="edit-input" type="text" bind:value={editName} autocapitalize="words" />
+          </div>
+          <div class="field qty-field">
+            <!-- svelte-ignore a11y_label_has_associated_control -->
+            <label class="edit-label">{t.edit_qty}</label>
+            <input class="edit-input" type="text" bind:value={editQty} placeholder={t.edit_qty_ph} />
+          </div>
         </div>
       </div>
 
@@ -623,9 +724,9 @@
             class="cat-option"
             class:selected={editCategory === cat}
             style="--cat-color: {meta.color}"
-            onclick={() => { editCategory = cat; }}
+            onclick={() => { editCategory = cat; scrollToIconGroup(cat); }}
           >
-            <CatIcon size={14} />
+            <CatIcon size={16} />
             <span>{categoryName(cat, lang)}</span>
           </button>
         {/each}
@@ -637,10 +738,10 @@
         <Search size={14} />
         <input bind:value={iconSearch} type="text" placeholder={t.search_icon} />
       </div>
-      <div class="icon-picker">
+      <div class="icon-picker" bind:this={iconPickerEl}>
         {#each filteredIconGroups as [cat, icons]}
           {@const meta = categoryMeta[cat] || categoryMeta['Sonstiges']}
-          <div class="icon-group">
+          <div class="icon-group" bind:this={iconGroupEls[cat]}>
             <span class="icon-group-label" style="color: {meta.color}">{categoryName(cat, lang)}</span>
             <div class="icon-group-grid">
               {#each icons as [name, file]}
@@ -656,6 +757,23 @@
             </div>
           </div>
         {/each}
+        <!-- Always last, and never filtered by the search: the letters are the
+             way out when the catalogue has nothing for this item. -->
+        <div class="icon-group letters">
+          <span class="icon-group-label">{t.icon_letters}</span>
+          <div class="icon-group-grid">
+            {#each ALPHABET as letter}
+              <button
+                class="icon-option"
+                class:selected={editIcon === letter}
+                onclick={() => { editIcon = letter; }}
+                title={letter.toUpperCase()}
+              >
+                <img src="https://bocken.org/static/shopping-icons/{letter}.png" alt={letter.toUpperCase()} />
+              </button>
+            {/each}
+          </div>
+        </div>
       </div>
 
       <div class="edit-actions">
@@ -937,6 +1055,12 @@
     transition: all 150ms;
     aspect-ratio: 1;
     user-select: none;
+    /* Keep vertical scrolling, but deny the WebView the double-tap-zoom and
+       pinch gestures it would otherwise weigh up during a long press. */
+    touch-action: pan-y;
+    /* No "save image"/link callout on hold (WebKit; Blink uses contextmenu). */
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
   }
   .item-card:hover {
     background: var(--color-bg-elevated);
@@ -977,6 +1101,11 @@
     max-height: 100%;
     object-fit: contain;
     filter: var(--shopping-icon-filter, none);
+    /* The icon covers most of the card, so a hold usually lands on it — and an
+       image is its own long-press target (drag / "save image"), which aborts
+       the pointer stream. Taking it out of hit-testing hands the hold to the
+       card; nothing here needs events of its own. */
+    pointer-events: none;
   }
   .item-card.checked .card-icon {
     filter: grayscale(0.6);
@@ -1080,6 +1209,16 @@
     font-size: 1.2rem;
     color: var(--color-text-primary);
   }
+  /* The item's own name is the field below, not the title — the title says what
+     this screen does. Sized as an eyebrow so the tile leads instead. */
+  .edit-modal h3:has(+ .preview-row) {
+    margin-bottom: 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+  }
   .edit-label {
     display: block;
     font-size: 0.75rem;
@@ -1090,14 +1229,38 @@
     margin-bottom: 0.5rem;
   }
 
-  .name-qty-row {
+  .preview-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+  /* Name and amount stay on one line, as before the preview joined them — the
+     tile takes the space at the side, not from the top of the modal. */
+  .preview-fields {
     display: flex;
     gap: 0.6rem;
-    margin-bottom: 1rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .name-field { flex: 2; min-width: 0; }
+  .qty-field { flex: 1; min-width: 0; }
+  /* Same tile as the list — reusing .item-card keeps the two from drifting —
+     but scaled down: it is a reference next to the fields, not the subject of
+     the screen, and at full size it pushed the controls off a phone screen. */
+  .item-card.preview {
+    width: 88px;
+    flex: none;
+    pointer-events: none; /* a mirror, not a control */
+  }
+  .item-card.preview .card-icon {
+    width: 52px;
+    height: 52px;
+  }
+  .item-card.preview .card-name {
+    font-size: 0.65rem;
   }
   .field { display: flex; flex-direction: column; }
-  .name-field { flex: 2; }
-  .qty-field { flex: 1; }
   .edit-input {
     padding: 0.5rem 0.65rem;
     border: 1px solid var(--color-border);
@@ -1116,24 +1279,31 @@
   .category-picker {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 0.45rem;
     margin-bottom: 1.25rem;
   }
   .cat-option {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.6rem;
-    border-radius: 8px;
+    gap: 0.4rem;
+    /* Sized as a thumb target — these are the modal's main control on a phone. */
+    min-height: 40px;
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--color-border);
     background: var(--color-bg-tertiary);
     color: var(--color-text-primary);
-    font-size: 0.72rem;
+    font-size: 0.85rem;
     cursor: pointer;
     transition: all 150ms;
   }
   .cat-option:hover {
     border-color: var(--cat-color);
+  }
+  .cat-option:focus-visible,
+  .icon-option:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
   .cat-option.selected {
     background: var(--cat-color);
@@ -1168,13 +1338,34 @@
     max-height: 250px;
     overflow-y: auto;
     margin-bottom: 1.25rem;
-    padding: 0.25rem;
+    /* No padding at the top: a sticky header pins to the padding box, so any
+       padding there leaves a strip of scrolling icons visible above it. */
+    padding: 0 0.25rem 0.25rem;
+    /* Offset parent for the groups, so scrolling to one is just its offsetTop. */
+    position: relative;
   }
   .icon-group-label {
+    /* Pinned while its own shelf is on screen: with thirteen groups and a
+       jump-to-category, the header answers "where am I" at any scroll offset. */
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: block;
+    /* Bleeds over the picker's side padding so nothing scrolls past its edges. */
+    margin-inline: -0.25rem;
+    padding: 0.4rem 0.25rem 0.3rem;
+    background: var(--color-bg-secondary);
     font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
+    /* Category groups override this inline with their own colour. */
+    color: var(--color-text-secondary);
+  }
+  /* The letters are a fallback, not one category among the others. */
+  .icon-group.letters {
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.5rem;
   }
   .icon-group-grid {
     display: grid;
@@ -1404,5 +1595,23 @@
   @media (max-width: 500px) {
     .edit-backdrop { padding: 0.5rem; }
     .edit-modal { padding: 1rem 0.75rem; }
+    /* Thumb-sized pills are worth their room on a wide screen; on a phone the
+       modal is the whole screen and thirteen of them would own most of it, so
+       they go back to the compact set. */
+    .category-picker { gap: 0.35rem; }
+    .cat-option {
+      min-height: 0;
+      gap: 0.3rem;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.72rem;
+    }
+    /* The icon is rendered by the Lucide component, hence :global. */
+    .cat-option :global(svg) {
+      width: 14px;
+      height: 14px;
+    }
+    /* Give the two fields beside it room on a narrow screen. */
+    .item-card.preview { width: 72px; }
+    .item-card.preview .card-icon { width: 44px; height: 44px; }
   }
 </style>

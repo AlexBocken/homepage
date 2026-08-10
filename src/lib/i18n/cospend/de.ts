@@ -151,6 +151,8 @@ export const de = {
 	kategorie: "Kategorie",
 	icon: "Icon",
 	search_icon: "Icon suchen...",
+	icon_letters: "Buchstaben",
+	edit_item: "Artikel bearbeiten",
 	save: "Speichern",
 	saving: "Speichern...",
 	edit_name: "Name",
