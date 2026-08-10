@@ -98,6 +98,38 @@ describe('detectEfforts', () => {
     expect(detectEfforts([...half, ...veer], segment)).toHaveLength(0);
   });
 
+  it('times a lapped segment from the lap that actually completed it', () => {
+    // Loop 1 touches the segment start, covers half of it, then swings north and
+    // back round to the start. Loop 2 runs the segment through to the end. The
+    // effort must be the second pass alone — not start-of-loop-1 → end-of-loop-2.
+    const partial = run.slice(30, 51); // segment start → halfway
+    const north = { lat: run[50].lat + 0.0015, lng: run[50].lng };
+    const away = line({ lat: run[50].lat, lng: run[50].lng }, north, 30);
+    const back = line(north, { lat: run[30].lat, lng: run[30].lng }, 40);
+    const full = run.slice(30, 71); // the real effort
+    const track = reindexTime([...partial, ...away, ...back, ...full], 0);
+
+    const efforts = detectEfforts(track, segment);
+    expect(efforts).toHaveLength(1);
+    const e = efforts[0];
+    // Anchored on the second pass, i.e. after the detour.
+    expect(e.startIdx).toBeGreaterThanOrEqual(partial.length + away.length);
+    // Same ~40 s as a clean single pass, not the whole lap.
+    expect(e.elapsedSeconds).toBeGreaterThan(35);
+    expect(e.elapsedSeconds).toBeLessThan(45);
+    expect(e.distance).toBeLessThan(segment.distance * 1.25);
+  });
+
+  it('rejects a lap that never completes the segment on any single pass', () => {
+    // Same detour, but the second pass also stops halfway → no valid effort.
+    const partial = run.slice(30, 51);
+    const north = { lat: run[50].lat + 0.0015, lng: run[50].lng };
+    const away = line({ lat: run[50].lat, lng: run[50].lng }, north, 30);
+    const back = line(north, { lat: run[30].lat, lng: run[30].lng }, 40);
+    const track = reindexTime([...partial, ...away, ...back, ...run.slice(30, 51)], 0);
+    expect(detectEfforts(track, segment)).toHaveLength(0);
+  });
+
   it('rejects a run that hits both endpoints but ignores the shape (similarity gate)', () => {
     // L-shaped segment: east leg then north leg
     const corner = { lat: 47.0, lng: 8.004 };

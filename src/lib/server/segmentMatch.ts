@@ -17,7 +17,10 @@ export const SIMILARITY_MIN_FRAC = 0.8; // ≥ this fraction of samples must be 
 export const MIN_SEGMENT_DIST_M = 100; // refuse degenerate segments
 export const SIMILARITY_SAMPLE_N = 30; // segment resampled to this many even points
 export const MIN_TRAVEL_FRAC = 0.7; // travel ≥ this × segment length before an end counts
-export const END_SCAN_CAP_FACTOR = 3; // stop scanning for an end after this × segment length
+export const MAX_DETOUR_FRAC = 1.25; // an effort may travel at most this × segment length …
+export const MAX_DETOUR_ABS_KM = 0.05; // … plus this slack, so short segments aren't over-tight
+export const OFF_ROUTE_TOL_M = 40; // a fix further than this from the segment is "off route"
+export const MAX_OFF_ROUTE_GAP_M = 60; // tolerated off-route excursion (GPS dropout / drift)
 
 export interface LatLng {
   lat: number;
@@ -126,6 +129,29 @@ function refineCrossing(track: TrackPoint[], idx: number, point: LatLng): { dist
   return best;
 }
 
+/**
+ * Longest contiguous stretch (m of travel) that `sub` spends further than
+ * `tolM` from the segment polyline. The mirror image of the similarity gate:
+ * similarity asks whether the run *covered* the segment, this asks whether it
+ * ever *left* it. Without it a run that touches the segment start, wanders off
+ * on a lap, and only completes the segment later still looks like one long
+ * effort — timed from the first touch instead of from the pass that counted.
+ */
+function maxOffRouteGapM(sub: TrackPoint[], segPts: LatLng[], tolM: number): number {
+  let worst = 0;
+  let run = 0;
+  for (let i = 0; i < sub.length; i++) {
+    if (minDistToTrackM(sub[i], segPts) <= tolM) {
+      run = 0;
+      continue;
+    }
+    // Charge the leg that got us here, so a single stray fix still counts.
+    run += i > 0 ? haversine(sub[i - 1], sub[i]) * 1000 : 0;
+    if (run > worst) worst = run;
+  }
+  return worst;
+}
+
 /** Cumulative positive altitude change (m) over a sub-track; null altitudes skipped. */
 function computeGain(sub: TrackPoint[]): number {
   let gain = 0;
@@ -140,8 +166,12 @@ function computeGain(sub: TrackPoint[]): number {
 
 /**
  * Find all efforts for `segment` within `track`. Direction is enforced
- * implicitly (start must be reached before the end). Multiple laps each yield
- * an effort; the scan resumes past each completed effort so they never overlap.
+ * implicitly (start must be reached before the end). An effort must also be
+ * *continuous*: it may not travel much further than the segment itself, nor
+ * stray off it — so touching the start, looping away, and finishing the segment
+ * on a later lap is rejected here and re-anchored on that later lap's start.
+ * Multiple laps each yield an effort; the scan resumes past each completed
+ * effort so they never overlap.
  */
 export function detectEfforts(track: TrackPoint[], segment: SegmentGeometry): Effort[] {
   const efforts: Effort[] = [];
@@ -152,7 +182,10 @@ export function detectEfforts(track: TrackPoint[], segment: SegmentGeometry): Ef
   const startRadKm = START_END_RADIUS_M / 1000;
   const segDistKm = segment.distance;
   const minTravelKm = segDistKm * MIN_TRAVEL_FRAC;
-  const endScanCapKm = Math.max(END_SCAN_CAP_FACTOR * segDistKm, segDistKm + 0.2);
+  // Furthest an effort may travel between its crossings. Doubles as the end-scan
+  // cap: an end beyond it can never yield a valid effort, so locking onto it
+  // would only shadow a nearer, legitimate one.
+  const maxTravelKm = Math.max(MAX_DETOUR_FRAC * segDistKm, segDistKm + MAX_DETOUR_ABS_KM);
 
   let i = 0;
   while (i < track.length) {
@@ -168,7 +201,7 @@ export function detectEfforts(track: TrackPoint[], segment: SegmentGeometry): Ef
     let cum = 0;
     let bestEndDist = Infinity;
     let bestEndIdx = -1;
-    for (let j = i; j < track.length - 1 && cum <= endScanCapKm; j++) {
+    for (let j = i; j < track.length - 1 && cum <= maxTravelKm; j++) {
       cum += haversine(track[j], track[j + 1]);
       if (cum < minTravelKm) continue;
       const dEnd = haversine(track[j + 1], segment.endPoint);
@@ -187,8 +220,16 @@ export function detectEfforts(track: TrackPoint[], segment: SegmentGeometry): Ef
       continue;
     }
 
-    // 3. Path similarity — most segment samples must lie near the sub-track.
+    // 3. Continuity (cheap gate) — the run between the crossings may not cover
+    //    much more ground than the segment does.
     const sub = track.slice(i, endIdx + 1);
+    const dist = trackDistance(sub);
+    if (dist > maxTravelKm) {
+      i++;
+      continue;
+    }
+
+    // 4. Path similarity — most segment samples must lie near the sub-track.
     let covered = 0;
     for (const s of resampled) if (minDistToTrackM(s, sub) <= SIMILARITY_TOL_M) covered++;
     if (covered / resampled.length < SIMILARITY_MIN_FRAC) {
@@ -196,7 +237,13 @@ export function detectEfforts(track: TrackPoint[], segment: SegmentGeometry): Ef
       continue;
     }
 
-    // 4. Elapsed time from the interpolated crossings.
+    // 5. Continuity (strict gate) — and it may not leave the segment either.
+    if (maxOffRouteGapM(sub, segPts, OFF_ROUTE_TOL_M) > MAX_OFF_ROUTE_GAP_M) {
+      i++;
+      continue;
+    }
+
+    // 6. Elapsed time from the interpolated crossings.
     const endCross = refineCrossing(track, endIdx, segment.endPoint);
     const elapsedMs = endCross.timeMs - startCross.timeMs;
     if (elapsedMs <= 0) {
@@ -204,7 +251,6 @@ export function detectEfforts(track: TrackPoint[], segment: SegmentGeometry): Ef
       continue;
     }
 
-    const dist = trackDistance(sub);
     const elapsedSeconds = elapsedMs / 1000;
     efforts.push({
       startIdx: i,
@@ -214,7 +260,7 @@ export function detectEfforts(track: TrackPoint[], segment: SegmentGeometry): Ef
       elevationGain: computeGain(sub)
     });
 
-    // 5. Resume past this effort (handles laps; keeps efforts non-overlapping).
+    // 7. Resume past this effort (handles laps; keeps efforts non-overlapping).
     i = endIdx + 1;
   }
 
