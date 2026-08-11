@@ -346,7 +346,7 @@ export async function snapTrackToPaths(opts: {
 
 const ELEV_CACHE_DIR = path.resolve(process.cwd(), 'scripts', '.cache', 'swisstopo-elevation');
 
-type SwisstopoProfile = Array<{ alts: { COMB?: number; DTM2?: number; DTM25?: number } }>;
+type SwisstopoProfile = Array<{ dist: number; alts: { COMB?: number; DTM2?: number; DTM25?: number } }>;
 
 /**
  * WGS84 (lng, lat in degrees) → CH1903+ / LV95 (easting, northing in
@@ -426,7 +426,51 @@ async function heightAt(lng: number, lat: number): Promise<number | null> {
  * duplicates before calling profile.json and expand the result back; for
  * the resulting single-unique-vertex degenerate case we fall through to
  * the per-point `height` endpoint instead.
+ *
+ * The samples that come back are matched to vertices by arc length, never by
+ * index. profile.json returns the vertices it was given *and* its own evenly
+ * spaced samples between them — ask for three points on an uneven line and four
+ * come back — so reading them off positionally hands each vertex the height of
+ * somewhere further along, and the error grows with every extra sample. On a
+ * lapped route that showed up as the same spot carrying two different altitudes
+ * (~10 m apart on a 15 m hill) and a profile with no periodicity in it.
  */
+
+/** Planar distance between two projected (LV95 metre) coordinates. */
+function planarDist(a: number[], b: number[]): number {
+	return Math.hypot(b[0] - a[0], b[1] - a[1]);
+}
+
+/**
+ * Read a distance-indexed elevation profile at the given arc lengths.
+ *
+ * Both inputs are sorted ascending, so one forward cursor walks them together.
+ * A distance that falls between two samples is interpolated; one past either end
+ * clamps to it. Samples without an elevation are skipped rather than treated as
+ * zero — a hole in the DEM must not pull the neighbouring heights toward sea
+ * level.
+ */
+export function sampleProfileAtDistances(
+	profile: Array<{ dist: number; alt: number | null }>,
+	distances: number[]
+): (number | null)[] {
+	const usable = profile.filter((p) => typeof p.alt === 'number' && Number.isFinite(p.dist));
+	if (usable.length === 0) return distances.map(() => null);
+	if (usable.length === 1) return distances.map(() => usable[0].alt);
+
+	let cursor = 0;
+	return distances.map((d) => {
+		while (cursor < usable.length - 2 && usable[cursor + 1].dist < d) cursor++;
+		const a = usable[cursor];
+		const b = usable[cursor + 1];
+		if (d <= a.dist) return a.alt;
+		if (d >= b.dist) return b.alt;
+		const span = b.dist - a.dist;
+		const f = span > 0 ? (d - a.dist) / span : 0;
+		return (a.alt as number) + f * ((b.alt as number) - (a.alt as number));
+	});
+}
+
 export async function enrichElevations(
 	coordinates: Array<[number, number]>
 ): Promise<(number | null)[]> {
@@ -454,7 +498,8 @@ export async function enrichElevations(
 	}
 
 	const uniqueCoords = runs.map((r) => r.coord);
-	const key = hashKey({ kind: 'elev', c: uniqueCoords });
+	// v2: v1 entries were written by the index-matched mapping and are wrong.
+	const key = hashKey({ kind: 'elev', v: 2, c: uniqueCoords });
 	let uniqueElev: (number | null)[] | null = null;
 	try {
 		await fs.mkdir(ELEV_CACHE_DIR, { recursive: true });
@@ -481,11 +526,18 @@ export async function enrichElevations(
 				return [p.easting, p.northing];
 			});
 			const slicedGeom = { type: 'LineString', coordinates: lv95 };
+			// Where each vertex sits along this chunk's line — the key the response
+			// is matched on, since the response carries the same measure in `dist`.
+			const cum = [0];
+			for (let i = 1; i < lv95.length; i++) cum[i] = cum[i - 1] + planarDist(lv95[i - 1], lv95[i]);
 			const body = new URLSearchParams({
 				geom: JSON.stringify(slicedGeom),
 				nb_points: String(slice.length),
 				offset: '0',
-				sr: '2056'
+				sr: '2056',
+				// Guarantees our own vertices are among the samples, so matching them
+				// by distance lands on exact values rather than interpolations.
+				distinct_points: 'true'
 			});
 			try {
 				const res = await fetch('https://api3.geo.admin.ch/rest/services/profile.json', {
@@ -498,9 +550,15 @@ export async function enrichElevations(
 				});
 				if (res.ok) {
 					const json = (await res.json()) as SwisstopoProfile;
-					for (let i = 0; i < json.length && cursor + i < uniqueElev.length; i++) {
-						const e = json[i].alts?.COMB ?? json[i].alts?.DTM2 ?? json[i].alts?.DTM25 ?? null;
-						uniqueElev[cursor + i] = typeof e === 'number' ? e : null;
+					const sampled = sampleProfileAtDistances(
+						json.map((pt) => ({
+							dist: pt.dist,
+							alt: pt.alts?.COMB ?? pt.alts?.DTM2 ?? pt.alts?.DTM25 ?? null
+						})),
+						cum
+					);
+					for (let i = 0; i < sampled.length && cursor + i < uniqueElev.length; i++) {
+						uniqueElev[cursor + i] = sampled[i];
 					}
 				}
 			} catch { /* keep nulls */ }
