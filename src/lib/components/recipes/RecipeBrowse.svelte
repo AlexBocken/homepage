@@ -68,6 +68,62 @@
 	const visibleInSeason = $derived(visible.slice(0, Math.min(visibleCount, browse.inSeason.length)));
 	const visibleRest = $derived(visible.slice(visibleInSeason.length));
 	const hasMore = $derived(visibleCount < browse.results.length);
+
+	// ── Reserved height for the batches not rendered yet ──────────────────────
+	// Every filter's full result set is already in memory; only the DOM is being
+	// held back. So the page's final height is knowable from the first paint, and
+	// withholding it is what makes the scrollbar shrink under the thumb on every
+	// batch — you grab it, the page grows, and the grip you took is somewhere else.
+	// A spacer standing in for the missing rows keeps the total constant: as cards
+	// arrive it gives back exactly the height they take.
+	let resultsEl = $state<HTMLElement | null>(null);
+	let columns = $state(0);
+	let rowHeight = $state(0);
+
+	/**
+	 * Read the geometry off the last grid actually on screen rather than assuming
+	 * it. The column count comes from the resolved template, so `auto-fill` and
+	 * every breakpoint are accounted for without repeating the CSS here, and the
+	 * row height is averaged over the rendered rows — cards differ by a line of
+	 * title, and a row is as tall as its tallest card.
+	 */
+	function measureGrid() {
+		const grids = resultsEl?.querySelectorAll('.recipe-grid');
+		const grid = grids?.length ? (grids[grids.length - 1] as HTMLElement) : null;
+		if (!grid || grid.children.length === 0) return;
+
+		const cs = getComputedStyle(grid);
+		const cols = cs.gridTemplateColumns.split(' ').filter(Boolean).length;
+		const gap = parseFloat(cs.rowGap) || 0;
+		if (cols < 1) return;
+
+		const rows = Math.ceil(grid.children.length / cols);
+		const height = (grid.getBoundingClientRect().height - (rows - 1) * gap) / rows + gap;
+		if (!Number.isFinite(height) || height <= 0) return;
+
+		// Guarded so a re-measure that finds nothing new writes nothing, which is
+		// what stops the observer below from chasing its own tail.
+		if (cols !== columns) columns = cols;
+		if (Math.abs(height - rowHeight) > 0.5) rowHeight = height;
+	}
+
+	$effect(() => {
+		visible.length;
+		measureGrid();
+	});
+
+	$effect(() => {
+		if (!resultsEl) return;
+		const observer = new ResizeObserver(() => measureGrid());
+		observer.observe(resultsEl);
+		return () => observer.disconnect();
+	});
+
+	const spacerHeight = $derived(
+		columns > 0 && rowHeight > 0
+			? Math.ceil(Math.max(0, browse.results.length - visibleCount) / columns) * rowHeight
+			: 0
+	);
 </script>
 
 <style>
@@ -168,6 +224,11 @@
 .sentinel {
 	height: 1px;
 }
+/* Holds the place of the rows still to come. Empty on purpose: it exists to be
+   the right height, and shrinks to nothing as the cards it stands for arrive. */
+.spacer {
+	pointer-events: none;
+}
 
 @media (max-width: 1150px) {
 	.browse {
@@ -243,7 +304,7 @@
 			bind:open={filtersOpen}
 		/>
 	</div>
-	<div>
+	<div bind:this={resultsEl}>
 		<div class="mobile-bar">
 			<button class="filters-trigger" onclick={() => (filtersOpen = true)}>
 				<SlidersHorizontal size={16} />
@@ -285,7 +346,12 @@
 		{/if}
 
 		{#if hasMore}
+			<!-- Sentinel first: it has to sit against the last rendered card so the
+			     next batch is asked for before the reserved space is reached. -->
 			<div class="sentinel" bind:this={sentinel}></div>
+			{#if spacerHeight > 0}
+				<div class="spacer" style:height="{spacerHeight}px" aria-hidden="true"></div>
+			{/if}
 		{/if}
 	</div>
 </div>
