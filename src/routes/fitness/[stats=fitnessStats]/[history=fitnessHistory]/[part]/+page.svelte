@@ -121,6 +121,46 @@
 		};
 	});
 
+	// ── Visible x window ──────────────────────────────────────────────────────
+	// A tape measure comes out every week or two, so a year of history squeezes
+	// the part worth reading — the last few measurements — into the right-hand
+	// centimetre of the chart. The default view is the last two months, and no
+	// wider than the readings themselves: if nothing was measured between three
+	// months ago and one month ago, the window starts at that later reading
+	// rather than opening on a month of blank paper. Everything older is a scroll
+	// or a pinch away.
+	const DEFAULT_WINDOW_DAYS = 60;
+	const DAY = 86400000;
+
+	const stamps = $derived(
+		series.dates.map((/** @type {string} */ d) => new Date(d).getTime()).filter((n) => Number.isFinite(n))
+	);
+
+	const defaultRange = $derived.by(() => {
+		if (stamps.length === 0) return null;
+		const last = Math.max(...stamps);
+		const earliest = Math.min(...stamps);
+		const cutoff = last - DEFAULT_WINDOW_DAYS * DAY;
+		// The oldest reading that still falls inside the two months — the window's
+		// real left edge, so it never opens wider than there is data to show.
+		const inWindow = stamps.filter((ms) => ms >= cutoff);
+		let min = inWindow.length ? Math.min(...inWindow) : earliest;
+		let max = last;
+		// One reading (or several on one day) has no span of its own to show; give
+		// it a week either side so the chart has something to draw an axis across.
+		if (max - min < 7 * DAY) {
+			min = Math.max(earliest, min - 3.5 * DAY);
+			max = max + 3.5 * DAY;
+		}
+		return { min, max };
+	});
+
+	/** A pan or a pinch takes over from the default until the page is left. */
+	let userRange = $state(/** @type {{ min: number, max: number } | null} */ (null));
+	const xRange = $derived(userRange ?? defaultRange);
+	/** @param {{ min: number, max: number }} r */
+	function onRange(r) { userRange = { ...r }; }
+
 	/**
 	 * Enforce a minimum y-axis range of 4 cm — prevents tiny variations
 	 * from stretching across the full chart height.
@@ -289,11 +329,26 @@
 			{/if}
 		</section>
 
-		<FitnessChart data={chartData} yUnit=" cm" height="320px" yMin={yRange.min} yMax={yRange.max} />
+		<p class="zoom-hint">{t.body_trends_hint}</p>
+		<FitnessChart
+			data={chartData}
+			yUnit=" cm"
+			height="320px"
+			yMin={yRange.min}
+			yMax={yRange.max}
+			zoom
+			applyXRange={xRange}
+			onXRangeChange={onRange}
+		/>
 	{/if}
 </div>
 
 <style>
+	.zoom-hint {
+		margin: 0;
+		font-size: 0.78rem;
+		color: var(--color-text-tertiary);
+	}
 	.detail-page {
 		display: flex;
 		flex-direction: column;
