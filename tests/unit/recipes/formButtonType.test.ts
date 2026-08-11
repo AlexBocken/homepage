@@ -29,6 +29,7 @@ const FILES = [
 	// Mounted outside the form today, but it is a modal over these pages and one
 	// re-parenting away from being inside it.
 	'src/lib/components/recipes/TranslationApproval.svelte',
+	'src/lib/components/recipes/TranslationField.svelte',
 ];
 
 /**

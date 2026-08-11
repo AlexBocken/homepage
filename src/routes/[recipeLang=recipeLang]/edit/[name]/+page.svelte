@@ -385,24 +385,72 @@
 		border-color: var(--color-primary);
 		outline: none;
 	}
-	.alt-row {
+	.image-card {
+		max-width: min(44rem, 100%);
+		margin: 0 auto 2rem;
+		padding: 1rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+	}
+	.image-card-row {
 		display: flex;
-		gap: 0.75rem;
-		align-items: flex-end;
-		justify-content: center;
-		flex-wrap: wrap;
-		margin-block: 0 2rem;
-		padding-bottom: 1.5rem;
-		border-bottom: 1px solid var(--color-border);
+		gap: 1rem;
+		align-items: flex-start;
+	}
+	.image-card-row img {
+		width: 96px;
+		height: 96px;
+		object-fit: cover;
+		border-radius: var(--radius-sm);
+		flex-shrink: 0;
+	}
+	.image-card-body {
+		flex: 1;
+		min-width: 0;
+	}
+	.alt-label {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--color-text-tertiary);
 	}
 	.alt-field input {
-		min-width: min(32rem, 100%);
+		width: 100%;
+		box-sizing: border-box;
+		padding: 0.5rem 0.7rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: 0.95rem;
+		transition: border-color 150ms ease, box-shadow 150ms ease;
+	}
+	.alt-field input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+	}
+	.alt-foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+		margin-top: 0.6rem;
+	}
+	@media (max-width: 560px) {
+		.image-card-row { flex-direction: column; }
+		.image-card-row img { width: 100%; height: 140px; }
 	}
 	.alt-count {
 		font-size: 0.72rem;
 		letter-spacing: 0.08em;
 		color: var(--color-text-secondary);
-		padding-bottom: 0.7em;
 		font-variant-numeric: tabular-nums;
 	}
 	.alt-count.over {
@@ -764,19 +812,34 @@
 				</div>
 			</div>
 
-			<div class="alt-row">
-				<label class="url-field alt-field">
-					<span>Bildbeschreibung (Alt-Text)</span>
-					<input
-						bind:value={imageAlt}
-						maxlength="125"
-						aria-label="Bildbeschreibung"
-						placeholder="Was auf dem Bild zu sehen ist — für Screenreader"
-					/>
-				</label>
-				<span class="alt-count" class:over={imageAlt.length > 125}>
-					{imageAlt.length}/125
-				</span>
+			<!-- The picture beside the words describing it: judging an alt text
+			     without seeing the image is guesswork, and the translation panel
+			     has shown it this way all along. -->
+			<div class="image-card">
+				<div class="image-card-row">
+					<img src={image_preview_url} alt={imageAlt || 'Rezeptbild'} />
+					<div class="image-card-body">
+						<label class="alt-field">
+							<span class="alt-label">Bildbeschreibung (Alt-Text)</span>
+							<input
+								bind:value={imageAlt}
+								maxlength="125"
+								aria-label="Bildbeschreibung"
+								placeholder="Was auf dem Bild zu sehen ist — für Screenreader"
+							/>
+						</label>
+						<div class="alt-foot">
+							<GenerateAltTextButton
+								shortName={old_short_name}
+								imageIndex={0}
+								onGenerated={(alt) => (imageAlt = alt.de)}
+							/>
+							<span class="alt-count" class:over={imageAlt.length > 125}>
+								{imageAlt.length}/125
+							</span>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<div class="form-size-section">

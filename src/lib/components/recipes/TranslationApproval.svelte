@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import type { TranslatedRecipeType } from '$types/types';
-	import TranslationFieldComparison from './TranslationFieldComparison.svelte';
+	import TranslationField from './TranslationField.svelte';
 	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
 	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 	import GenerateAltTextButton from './GenerateAltTextButton.svelte';
@@ -320,7 +320,37 @@
 		}
 	}
 
-	// Handle field changes from TranslationFieldComparison components
+	/** Global reveal — opens the German under every field at once. */
+	let showGerman = $state(false);
+
+	// Tags are chips on both sides, the same ones the German form uses. The
+	// German pills are clickable because most tags travel untranslated: a name,
+	// a loanword, a technique. Adopting beats retyping.
+	let newTag = $state('');
+
+	function addTag() {
+		const t = newTag.trim();
+		if (t && !(editableEnglish.tags ?? []).includes(t)) {
+			editableEnglish.tags = [...(editableEnglish.tags ?? []), t];
+		}
+		newTag = '';
+	}
+	function removeTag(tag: string) {
+		editableEnglish.tags = (editableEnglish.tags ?? []).filter((x: string) => x !== tag);
+	}
+	function adoptTag(tag: string) {
+		if (!(editableEnglish.tags ?? []).includes(tag)) {
+			editableEnglish.tags = [...(editableEnglish.tags ?? []), tag];
+		}
+	}
+	function onTagKey(e: KeyboardEvent) {
+		if (e.key === 'Enter' || e.key === ',') {
+			e.preventDefault();
+			addTag();
+		}
+	}
+
+	// Handle field changes from the translation fields
 	function handleFieldChange(value: string, field: string) {
 		// Special handling for tags (comma-separated string -> array)
 		if (field === 'tags') {
@@ -509,11 +539,6 @@
 	margin: 1.5rem auto;
 }
 
-.field-section {
-	margin-bottom: 1.25rem;
-	max-width: 900px;
-	margin-inline: auto;
-}
 
 .list-wrapper {
 	margin-inline: auto;
@@ -755,47 +780,123 @@ button:disabled {
 	font-family: monospace;
 	word-break: break-all;
 }
-.image-grid{
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 0.75rem;
-	margin-bottom: 0.75rem;
-}
 @media (max-width: 560px){
 	.image-card-row{ flex-direction: column; }
 	.image-card-row img{ width: 100%; height: 140px; }
-	.image-grid{ grid-template-columns: 1fr; gap: 0.5rem; }
 }
-.image-field label{
-	display: block;
-	margin-bottom: 0.25rem;
-	font-size: 0.75rem;
-	font-weight: 700;
-	color: var(--color-text-secondary);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
+/* ── English recipe block ─────────────────────────────────────────────────
+   Same width and centring as the German hero, so the two read as one object
+   seen twice rather than as a form about a recipe. */
+.review-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	margin-bottom: 1rem;
 }
-.image-field input{
-	width: 100%;
-	padding: 0.45rem 0.6rem;
+.show-all {
+	padding: 0.3rem 0.85rem;
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
-	background: var(--color-bg-tertiary);
+	border-radius: var(--radius-pill);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: color var(--transition-fast, 120ms), border-color var(--transition-fast, 120ms);
+}
+.show-all:hover,
+.show-all[aria-pressed='true'] {
 	color: var(--color-text-primary);
-	font-size: 0.9rem;
-	box-sizing: border-box;
-	font-family: inherit;
-	transition: border-color 150ms ease;
+	border-color: var(--color-text-tertiary);
 }
-.image-field input:focus{
-	outline: none;
-	border-color: var(--color-primary);
+.show-all:focus-visible {
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
 }
-.image-field input:disabled{
-	background: var(--color-bg-secondary);
-	color: var(--color-text-tertiary);
-	cursor: default;
+
+.en-recipe {
+	max-width: 46rem;
+	margin-inline: auto;
 }
+.meta-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem;
+}
+@media (max-width: 640px) {
+	.meta-row { grid-template-columns: 1fr; }
+}
+
+/* Tags: the chips from the German hero, unchanged, plus a muted source row
+   whose pills copy themselves across on click. */
+.tag-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	justify-content: center;
+}
+.tag-chip {
+	all: unset;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35em;
+	padding: 0.25em 0.9em;
+	border-radius: var(--radius-pill);
+	background: var(--color-bg-elevated);
+	color: var(--color-text-primary);
+	transition: var(--transition-fast);
+}
+.tag-chip .x {
+	opacity: 0.55;
+	font-size: 1.1em;
+	line-height: 1;
+}
+.tag-chip:hover,
+.tag-chip:focus-visible {
+	background: var(--red);
+	color: white;
+	transform: scale(1.05);
+}
+.tag-chip:hover .x,
+.tag-chip:focus-visible .x { opacity: 1; }
+.tag-add {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35em;
+	background: transparent;
+	border: 1px dashed var(--color-border);
+	color: var(--color-text-secondary);
+	padding: 0.15em 0.7em;
+	border-radius: var(--radius-pill);
+}
+.tag-add input {
+	all: unset;
+	min-width: 6ch;
+	color: var(--color-text-primary);
+	font-size: inherit;
+}
+.tag-source {
+	all: unset;
+	cursor: pointer;
+	padding: 0.15em 0.8em;
+	border-radius: var(--radius-pill);
+	background: transparent;
+	border: 1px solid var(--color-border);
+	color: var(--color-text-secondary);
+	font-size: 0.85rem;
+	transition: var(--transition-fast);
+}
+.tag-source:hover,
+.tag-source:focus-visible {
+	background: var(--color-bg-elevated);
+	color: var(--color-text-primary);
+}
+.tag-empty { color: var(--color-text-tertiary); }
+
 </style>
 
 <div class="translation-approval">
@@ -904,101 +1005,134 @@ button:disabled {
 
 	{#if translationState === 'idle' || translationState === 'preview' || translationState === 'approved'}
 		<div class="translation-preview">
-			<h3 class="preview-title">Side-by-side review</h3>
+			<div class="review-head">
+				<h3 class="preview-title">Review English translation</h3>
+				<button type="button" class="show-all" aria-pressed={showGerman} onclick={() => (showGerman = !showGerman)}>
+					{showGerman ? 'Hide German' : 'Show German'}
+				</button>
+			</div>
 
-			<!-- Basic Fields -->
-			<div class="field-section">
-				<TranslationFieldComparison
+			<!-- The recipe as it will read in English, in the chrome the German is
+			     edited in. German sits underneath each field, on request. -->
+			<div class="en-recipe">
+				<TranslationField
 					label="Name"
-					germanValue={germanData.name}
-					englishValue={editableEnglish?.name || ''}
 					fieldName="name"
+					variant="title"
+					german={germanData.name}
+					value={editableEnglish?.name || ''}
 					stale={isStale('name')}
-					readonly={false}
+					{showGerman}
+					placeholder="Recipe name"
 					onchange={(value) => handleFieldChange(value, 'name')}
 				/>
-			</div>
 
-			<div class="field-section">
-				<TranslationFieldComparison
-					label="Short Name (URL)"
-					germanValue={germanData.short_name}
-					englishValue={editableEnglish?.short_name || ''}
-					fieldName="short_name"
-					stale={isStale('short_name')}
-					readonly={false}
-					onchange={(value) => handleFieldChange(value, 'short_name')}
-				/>
-			</div>
-
-			<div class="field-section">
-				<TranslationFieldComparison
+				<TranslationField
 					label="Description"
-					germanValue={germanData.description}
-					englishValue={editableEnglish?.description || ''}
 					fieldName="description"
+					variant="description"
+					german={germanData.description}
+					value={editableEnglish?.description || ''}
 					stale={isStale('description')}
-					readonly={false}
-					multiline={true}
+					{showGerman}
+					placeholder="Short description"
 					onchange={(value) => handleFieldChange(value, 'description')}
 				/>
-			</div>
 
-			<div class="field-section">
-				<TranslationFieldComparison
-					label="Category"
-					germanValue={germanData.category}
-					englishValue={editableEnglish?.category || ''}
-					fieldName="category"
-					stale={isStale('category')}
-					readonly={false}
-					onchange={(value) => handleFieldChange(value, 'category')}
-				/>
-			</div>
+				<TranslationField label="Tags" fieldName="tags" stale={isStale('tags')} {showGerman}>
+					{#snippet control()}
+						<div class="tag-row">
+							{#each editableEnglish?.tags ?? [] as tag (tag)}
+								<button
+									type="button"
+									class="g-tag tag-chip"
+									onclick={() => removeTag(tag)}
+									aria-label={`Remove tag ${tag}`}
+								>
+									<span>{tag}</span><span class="x" aria-hidden="true">×</span>
+								</button>
+							{/each}
+							<label class="g-tag tag-add">
+								<span aria-hidden="true">+</span>
+								<input
+									type="text"
+									bind:value={newTag}
+									onkeydown={onTagKey}
+									onblur={addTag}
+									placeholder="new…"
+									size="1"
+									aria-label="New tag"
+								/>
+							</label>
+						</div>
+					{/snippet}
+					{#snippet germanSlot()}
+						<div class="tag-row">
+							{#each germanData.tags ?? [] as tag (tag)}
+								<button
+									type="button"
+									class="g-tag tag-source"
+									onclick={() => adoptTag(tag)}
+									title="Use as English tag"
+									aria-label={`Use ${tag} as English tag`}
+								>{tag}</button>
+							{/each}
+							{#if !(germanData.tags ?? []).length}<span class="tag-empty">—</span>{/if}
+						</div>
+					{/snippet}
+				</TranslationField>
 
-			{#if editableEnglish?.tags}
-				<div class="field-section">
-					<TranslationFieldComparison
-						label="Tags"
-						germanValue={germanData.tags?.join(', ') || ''}
-						englishValue={editableEnglish.tags.join(', ')}
-						fieldName="tags"
-					stale={isStale('tags')}
-						readonly={false}
-						onchange={(value) => handleFieldChange(value, 'tags')}
+				<div class="meta-row">
+					<TranslationField
+						label="URL short name"
+						fieldName="short_name"
+						german={germanData.short_name}
+						value={editableEnglish?.short_name || ''}
+						stale={isStale('short_name')}
+						{showGerman}
+						placeholder="url-short-name"
+						onchange={(value) => handleFieldChange(value, 'short_name')}
+					/>
+					<TranslationField
+						label="Category"
+						fieldName="category"
+						german={germanData.category}
+						value={editableEnglish?.category || ''}
+						stale={isStale('category')}
+						{showGerman}
+						placeholder="Category"
+						onchange={(value) => handleFieldChange(value, 'category')}
 					/>
 				</div>
-			{/if}
 
-			{#if editableEnglish?.preamble !== undefined}
-				<div class="field-section">
-					<TranslationFieldComparison
+				{#if editableEnglish?.preamble !== undefined}
+					<TranslationField
 						label="Preamble"
-						germanValue={germanData.preamble || ''}
-						englishValue={editableEnglish.preamble}
 						fieldName="preamble"
-					stale={isStale('preamble')}
-						readonly={false}
-						multiline={true}
+						variant="block"
+						german={germanData.preamble || ''}
+						value={editableEnglish.preamble}
+						stale={isStale('preamble')}
+						{showGerman}
+						placeholder="Longer introduction to this recipe…"
 						onchange={(value) => handleFieldChange(value, 'preamble')}
 					/>
-				</div>
-			{/if}
+				{/if}
 
-			{#if editableEnglish?.note !== undefined}
-				<div class="field-section">
-					<TranslationFieldComparison
+				{#if editableEnglish?.note !== undefined}
+					<TranslationField
 						label="Note"
-						germanValue={germanData.note || ''}
-						englishValue={editableEnglish.note}
 						fieldName="note"
-					stale={isStale('note')}
-						readonly={false}
-						multiline={true}
+						variant="block"
+						german={germanData.note || ''}
+						value={editableEnglish.note}
+						stale={isStale('note')}
+						{showGerman}
+						placeholder="Note"
 						onchange={(value) => handleFieldChange(value, 'note')}
 					/>
-				</div>
-			{/if}
+				{/if}
+			</div>
 
 			<!-- Images Section -->
 			{#if germanData.images && germanData.images.length > 0}
@@ -1015,50 +1149,32 @@ button:disabled {
 									<div class="image-card-body">
 										<p class="image-path"><strong>Image {i + 1}:</strong> {germanImage.mediapath}</p>
 
-										<div class="image-grid">
-											<div class="image-field">
-												<label for="german-alt-{i}">German Alt-Text</label>
-												<input
-													id="german-alt-{i}"
-													type="text"
-													value={germanImage.alt || ''}
-													disabled
-												/>
-											</div>
-											<div class="image-field">
-												<label for="english-alt-{i}">English Alt-Text</label>
-												<input
-													id="english-alt-{i}"
-													type="text"
-													bind:value={editableEnglish.images[i].alt}
-													placeholder="English image description for screen readers"
-												/>
-											</div>
-										</div>
+										<TranslationField
+											label="Alt text"
+											fieldName="image-alt-{i}"
+											german={germanImage.alt || ''}
+											value={editableEnglish.images[i].alt || ''}
+											{showGerman}
+											placeholder="English image description for screen readers"
+											onchange={(value) => (editableEnglish.images[i].alt = value)}
+										/>
 
-										<div class="image-grid">
-											<div class="image-field">
-												<label for="german-caption-{i}">German Caption</label>
-												<input
-													id="german-caption-{i}"
-													type="text"
-													value={germanImage.caption || ''}
-													disabled
-												/>
-											</div>
-											<div class="image-field">
-												<label for="english-caption-{i}">English Caption</label>
-												<input
-													id="english-caption-{i}"
-													type="text"
-													bind:value={editableEnglish.images[i].caption}
-													placeholder="English caption (optional)"
-												/>
-											</div>
-										</div>
+										<TranslationField
+											label="Caption"
+											fieldName="image-caption-{i}"
+											german={germanImage.caption || ''}
+											value={editableEnglish.images[i].caption || ''}
+											{showGerman}
+											placeholder="English caption (optional)"
+											onchange={(value) => (editableEnglish.images[i].caption = value)}
+										/>
 
 										<div style="margin-top: 0.75rem;">
-											<GenerateAltTextButton shortName={germanData.short_name} imageIndex={i} />
+											<GenerateAltTextButton
+												shortName={germanData.short_name}
+												imageIndex={i}
+												onGenerated={(alt) => (editableEnglish.images[i].alt = alt.en)}
+											/>
 										</div>
 									</div>
 								</div>
@@ -1096,18 +1212,17 @@ button:disabled {
 			{/if}
 
 			{#if editableEnglish?.addendum !== undefined}
-				<div class="field-section">
-					<TranslationFieldComparison
-						label="Addendum"
-						germanValue={germanData.addendum || ''}
-						englishValue={editableEnglish.addendum}
-						fieldName="addendum"
+				<TranslationField
+					label="Addendum"
+					fieldName="addendum"
+					variant="block"
+					german={germanData.addendum || ''}
+					value={editableEnglish.addendum}
 					stale={isStale('addendum')}
-						readonly={false}
-						multiline={true}
-						onchange={(value) => handleFieldChange(value, 'addendum')}
-					/>
-				</div>
+					{showGerman}
+					placeholder="Addendum"
+					onchange={(value) => handleFieldChange(value, 'addendum')}
+				/>
 			{/if}
 		</div>
 
