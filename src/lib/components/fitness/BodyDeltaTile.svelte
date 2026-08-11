@@ -19,10 +19,12 @@
 	 *   onedit: () => void
 	 * }}
 	 *
-	 * `accent` is the tile's chart colour — the trend-line colour of the chart it
-	 * sits beside, so weight reads blue and body fat purple on both halves of the
-	 * row. It tints the resting badge and the hover ring only: a change that has a
-	 * direction keeps the green/orange sign colours, which mean something.
+	 * `accent` colours the whole tile — badge, number and hover ring — and says
+	 * which measurement it belongs to: green for weight, purple for body fat,
+	 * matching the chart beside it. Direction is deliberately *not* in the colour.
+	 * Green-for-down and orange-for-up read as good and bad, which is a judgement
+	 * the tile has no business making: a gain during a bulk is the plan working.
+	 * The arrow already says which way it went.
 	 */
 	let { value, unit, label, period, decimals = 1, accent = 'var(--color-primary)', editLabel, onedit } = $props();
 
@@ -43,7 +45,7 @@
 </script>
 
 <button class="delta-tile" style:--tile-accent={accent} onclick={onedit} aria-label={editLabel}>
-	<span class="delta-icon {dir}">
+	<span class="delta-icon">
 		{#if dir === 'down'}
 			<TrendingDown size={22} />
 		{:else if dir === 'up'}
@@ -53,7 +55,7 @@
 		{/if}
 	</span>
 	<span class="delta-meta">
-		<span class="delta-value {dir}">{text}<span class="delta-unit">{unit}</span></span>
+		<span class="delta-value">{text}<span class="delta-unit">{unit}</span></span>
 		<span class="delta-label">{label}</span>
 		<span class="delta-period">{period}</span>
 	</span>
@@ -94,14 +96,6 @@
 		background: color-mix(in srgb, var(--tile-accent) 16%, transparent);
 		color: var(--tile-accent);
 	}
-	.delta-icon.down {
-		background: color-mix(in srgb, var(--green) 18%, transparent);
-		color: var(--green);
-	}
-	.delta-icon.up {
-		background: color-mix(in srgb, var(--orange) 18%, transparent);
-		color: var(--orange);
-	}
 	.delta-meta {
 		display: flex;
 		flex-direction: column;
@@ -112,10 +106,8 @@
 		font-size: 1.5rem;
 		font-weight: 800;
 		line-height: 1.1;
-		color: var(--color-text-primary);
+		color: var(--tile-accent);
 	}
-	.delta-value.down { color: var(--green); }
-	.delta-value.up { color: var(--orange); }
 	.delta-unit {
 		font-size: 0.8rem;
 		font-weight: 600;

@@ -896,7 +896,7 @@
 					unit={t.kg}
 					label={t.delta_weight_label}
 					period={deltaPeriod(wDelta, weightFrom)}
-					accent={primary}
+					accent="var(--green)"
 					editLabel={t.delta_edit_aria}
 					onedit={() => openDeltaEdit('weight')}
 				/>
@@ -932,7 +932,7 @@
 					label={t.delta_bodyfat_label}
 					period={deltaPeriod(bfDelta, bodyFatFrom)}
 					decimals={deltaUnit === 'pp' ? 2 : 1}
-					accent={bfAccent}
+					accent="var(--purple)"
 					editLabel={t.delta_edit_aria}
 					onedit={() => openDeltaEdit('bodyFat')}
 				/>
