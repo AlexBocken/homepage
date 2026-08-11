@@ -15,6 +15,7 @@
 
 	import Flag from '@lucide/svelte/icons/flag';
 	import Pencil from '@lucide/svelte/icons/pencil';
+	import X from '@lucide/svelte/icons/x';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import { m } from '$lib/js/fitnessI18n';
 
@@ -186,7 +187,22 @@
 			</label>
 			<div class="field">
 				<span class="field-label">{t.goal_target_date}</span>
-				<DatePicker bind:value={draftDate} {lang} fontSize="0.85rem" />
+				<div class="date-row">
+					<DatePicker bind:value={draftDate} {lang} fontSize="0.85rem" />
+					{#if draftDate}
+						<!-- The picker can set a date but not take one back, and dropping
+						     the deadline should not mean dropping the goal with it. -->
+						<button
+							type="button"
+							class="clear-date"
+							onclick={() => (draftDate = '')}
+							title={t.goal_clear_date}
+							aria-label={t.goal_clear_date}
+						>
+							<X size={14} />
+						</button>
+					{/if}
+				</div>
 			</div>
 			<div class="editor-actions">
 				{#if goal != null}
@@ -408,6 +424,34 @@
 		letter-spacing: 0.04em;
 		color: var(--color-text-secondary);
 	}
+	.date-row {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+	.clear-date {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md, 0.5rem);
+		background: transparent;
+		color: var(--color-text-tertiary);
+		cursor: pointer;
+		transition: color var(--transition-fast, 120ms), border-color var(--transition-fast, 120ms);
+	}
+	.clear-date:hover {
+		color: var(--red);
+		border-color: var(--red);
+	}
+	.clear-date:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
+
 	.num-input {
 		width: 6.5rem;
 		padding: 0.4rem 0.55rem;

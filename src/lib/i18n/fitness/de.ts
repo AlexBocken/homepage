@@ -677,6 +677,7 @@ export const de = {
 	goal_edit: "Ändern",
 	goal_target_value: "Zielwert",
 	goal_target_date: "Bis (optional)",
+	goal_clear_date: "Datum entfernen",
 	goal_clear: "Ziel entfernen",
 	goal_save: "Speichern",
 	goal_reached: "Erreicht",

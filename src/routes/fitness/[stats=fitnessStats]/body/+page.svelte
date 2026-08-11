@@ -240,9 +240,11 @@
 	// design — an EMA trails a steady change by about τ·rate, and seeing that gap
 	// is the point. Where they diverge wildly, the forecast is not to be trusted.
 	const DAY = 86400000;
-	// How far the line runs past the last reading when there is no arrival to aim
-	// at. Matches the window it is fitted over, and the default view's right half.
-	const PROJECT_AHEAD_DAYS = 30;
+	// How far past the last reading the line is drawn. The default view only shows
+	// the first month of it (see defaultRange) — the rest is there so panning and
+	// zooming right has somewhere to go, and so the chart's own pan limits, which
+	// it takes from the extent of the dates it was built with, reach that far.
+	const PROJECT_MAX_DAYS = 365;
 
 	/**
 	 * Absolute geometry only — no Δ baseline in here. The baseline comes from the
@@ -254,11 +256,10 @@
 	 */
 	function projectionOf(fit, forecast = null) {
 		if (!fit) return null;
-		// Back across the window it was fitted to, forward to the arrival — or, with
-		// nothing being aimed at, as far forward as it looks back, which is exactly
-		// the span the default view shows.
+		// Back across the window it was fitted to, forward a year regardless of where
+		// the arrival falls — the view decides how much of that is on screen.
 		const startMs = fit.windowStartMs;
-		const endMs = forecast?.status === 'eta' ? forecast.etaMs : fit.lastMs + PROJECT_AHEAD_DAYS * DAY;
+		const endMs = fit.lastMs + PROJECT_MAX_DAYS * DAY;
 		/** @param {number} ms */
 		const at = (ms) => fit.level + (fit.slope * (ms - fit.lastMs)) / DAY;
 		// Half-width of the shaded cone: the same slope ± one standard error the
@@ -285,17 +286,23 @@
 	 * @param {string[]} dates
 	 * @param {{ startMs: number, endMs: number, at: (ms: number) => number, spread: (ms: number) => number, hasFuture: boolean } | null} proj
 	 * @param {number} shift subtracted from every value (the Δ baseline, or 0)
-	 * @param {number | null} visibleMaxMs right edge of the x window, if there is one
 	 */
-	function withProjection(dates, proj, shift = 0, visibleMaxMs = null) {
-		// Stop the line at the edge of what is on screen. Chart.js fits y to the
-		// points inside the x window, so a far-off arrival left at its true date
-		// would be excluded from that reckoning and the visible part of the line
-		// would run straight out of the plot area.
-		const endMs = proj ? (visibleMaxMs != null ? Math.min(proj.endMs, visibleMaxMs) : proj.endMs) : 0;
-		const extra = proj && endMs > proj.startMs && endMs > new Date(dates[dates.length - 1] ?? 0).getTime()
-			? [new Date(endMs).toISOString()]
-			: [];
+	function withProjection(dates, proj, shift = 0) {
+		// One future point per day rather than a single far endpoint. Two points
+		// would draw the same straight line, but a tooltip can only land on a point
+		// that exists — with one, every hover past the last weigh-in reported the
+		// same distant date. These also carry the chart's pan limits, which it reads
+		// off the extent of the dates it was built with.
+		const lastKnownMs = new Date(dates[dates.length - 1] ?? NaN).getTime();
+		/** @type {string[]} */
+		const extra = [];
+		// The guard is not decoration: without a last reading to count from, the
+		// loop below would start at the epoch and run for fifty thousand years.
+		if (proj && Number.isFinite(lastKnownMs)) {
+			for (let ms = lastKnownMs + DAY; ms <= proj.endMs; ms += DAY) {
+				extra.push(new Date(ms).toISOString());
+			}
+		}
 		/** @param {(number|null)[] | undefined} arr */
 		const pad = (arr) => [...(arr ?? []), ...extra.map(() => null)];
 		/** @param {(ms: number) => number} valueAt */
@@ -304,7 +311,7 @@
 				const ms = new Date(d).getTime();
 				return ms >= /** @type {any} */ (proj).startMs ? round2(valueAt(ms) - shift) : null;
 			}),
-			...extra.map(() => round2(valueAt(endMs) - shift))
+			...extra.map((d) => round2(valueAt(new Date(d).getTime()) - shift))
 		];
 		if (!proj) return { dates: [...dates, ...extra], pad, line: null, upper: null, lower: null };
 		return {
@@ -320,7 +327,7 @@
 	const hasSmaBf = $derived(bfChart.sma?.some((/** @type {any} */ v) => v !== null));
 
 	const weightChartData = $derived.by(() => {
-		const { dates, pad, line, upper, lower } = withProjection(weightChart.dates ?? [], weightProjection, 0, xRange?.max ?? null);
+		const { dates, pad, line, upper, lower } = withProjection(weightChart.dates ?? [], weightProjection);
 		return {
 			dates,
 			datasets: [
@@ -342,7 +349,7 @@
 	});
 
 	const bfChartData = $derived.by(() => {
-		const { dates, pad, line, upper, lower } = withProjection(bfChart.dates ?? [], bfProjection, bfChart.baseline ?? 0, xRange?.max ?? null);
+		const { dates, pad, line, upper, lower } = withProjection(bfChart.dates ?? [], bfProjection, bfChart.baseline ?? 0);
 		return {
 			dates,
 			datasets: [
