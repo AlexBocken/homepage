@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 
 	/**
 	 * @type {{
@@ -197,6 +198,295 @@
 		const colors = new Set(lines.map((l) => l.color));
 		return { show: lines.length > 1 && colors.size > 1, items };
 	});
+
+	// ── Skeleton drawn until Chart.js has loaded ──────────────────────────────
+	// Chart.js is imported on mount, so a chart is an empty box for as long as that
+	// chunk takes to arrive — that is the pop-in. The data is already in the page,
+	// so the series can be drawn as plain SVG/HTML in the meantime; the only cost
+	// in the SSR'd HTML is the path string.
+	//
+	// A ghost only helps if it lands where the real chart will, so:
+	//   • the y range comes from Chart.js's own linear-tick algorithm (niceNum plus
+	//     the floor/ceil spacing dance, cloned from scale.linear.js) rather than the
+	//     raw data extent — the two differ by 10-20% of the height, which is most of
+	//     the "shift" you'd otherwise see;
+	//   • the plot-area gutters are *remembered* from the last time a chart with the
+	//     same shape was drawn (see calKey). Reproducing Chart.js's box layout would
+	//     mean reimplementing it; measuring the real thing once is exact and cheap.
+	//     The first ever paint uses estimates, every later one is pixel-accurate.
+	const TICK_LINE_HEIGHT = 13.2; // 11px tick font × Chart.js's default 1.2 line height
+	const MAX_TICKS_LIMIT = 11;    // Chart.js's default when no stepSize is set
+	const SKELETON_POINTS = 120;   // cap on ghost samples, so the HTML stays small
+
+	/** Remembered plot-area gutters in px, or null before the first measurement. */
+	let cal = $state(/** @type {{ l: number, t: number, r: number, b: number } | null} */ (null));
+
+	/** @param {number} n */
+	function r1(n) {
+		return +n.toFixed(1);
+	}
+
+	// The pages pick this one colour per theme (nord10 light / nord8 dark) and hand
+	// it in as a hex — but the skeleton is server-rendered, where the theme is
+	// unknowable, so it would render the light blue on a dark page until hydration.
+	// Hand those two back to the CSS variable that already switches. Every other
+	// colour in the palette (green, purple, orange) is theme-independent and is
+	// passed through exactly.
+	const PRIMARY_RGB = ['94,129,172', '136,192,208'];
+
+	/** @param {any} c */
+	function ghostColor(c) {
+		if (typeof c !== 'string' || !PRIMARY_RGB.includes(rgbKey(c))) return c;
+		const alpha = Number(c.match(/rgba\([^)]*,\s*([\d.]+)\s*\)/)?.[1] ?? 1);
+		return alpha >= 1
+			? 'var(--color-primary)'
+			: `color-mix(in srgb, var(--color-primary) ${Math.round(alpha * 100)}%, transparent)`;
+	}
+
+	/** chart.js `helpers.math.niceNum` — the 1/2/5/10 × 10ⁿ step family. @param {number} range */
+	function cjsNiceNum(range) {
+		const rounded = Math.round(range);
+		const r = Math.abs(range - rounded) < range / 1000 ? rounded : range;
+		const mag = Math.pow(10, Math.floor(Math.log10(r)));
+		const f = r / mag;
+		return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag;
+	}
+
+	/** chart.js `scale.linear` tick generation for the plain case we use (bounds
+	 *  'ticks', no explicit min/max/precision). Returns the axis range it settles on.
+	 *  @param {number} lo @param {number} hi @param {number} maxTicks @param {number|undefined} stepSize */
+	function cjsTickRange(lo, hi, maxTicks, stepSize) {
+		const unit = stepSize || 1;
+		const maxSpaces = Math.max(1, maxTicks - 1);
+		let spacing = cjsNiceNum((hi - lo) / maxSpaces / unit) * unit;
+		if (!Number.isFinite(spacing) || spacing <= 0) return { min: lo, max: hi, values: [lo, hi] };
+		const spaces = Math.ceil(hi / spacing) - Math.floor(lo / spacing);
+		if (spaces > maxSpaces) spacing = cjsNiceNum((spaces * spacing) / maxSpaces / unit) * unit;
+		const min = Math.floor(lo / spacing) * spacing;
+		const max = Math.ceil(hi / spacing) * spacing;
+		const count = Math.max(1, Math.round((max - min) / spacing));
+		const values = [];
+		// Same rounding Chart.js applies, so a 0.1 step doesn't print float drift.
+		const factor = Math.pow(10, Math.max(0, -Math.floor(Math.log10(spacing)) + 1));
+		for (let i = 0; i <= count; i++) values.push(Math.round((min + i * spacing) * factor) / factor);
+		return { min, max, values };
+	}
+
+	const skeleton = $derived.by(() => {
+		const sets = data?.datasets || [];
+		if (!sets.length) return null;
+
+		/** @type {{ color: string, bar: boolean, width: number, dot: number, dotColor: string, values: any[] }[]} */
+		const series = [];
+		/** @type {any[] | null} */
+		let bandUpper = null;
+		/** @type {any[] | null} */
+		let bandLower = null;
+		let bandColor = '';
+		sets.forEach((/** @type {any} */ d, /** @type {number} */ i) => {
+			// A second axis is in its own units; it can't share this normalisation.
+			if (d.yAxisID === 'y2') return;
+			const label = d.label ?? '';
+			const values = (d.data || []).map((/** @type {any} */ p) => (p != null && typeof p === 'object' ? p.y : p));
+			if (label.includes('σ')) {
+				bandUpper = values;
+				bandColor = ghostColor(Array.isArray(d.backgroundColor) ? d.backgroundColor[0] : d.backgroundColor);
+				return;
+			}
+			if (label.includes('(lower)')) {
+				bandLower = values;
+				return;
+			}
+			const bar = d.type === 'bar' || (type === 'bar' && !d.type);
+			const stroke = (bar ? (Array.isArray(d.backgroundColor) ? d.backgroundColor[0] : d.backgroundColor) : d.borderColor) || d.borderColor || nordColors[i % nordColors.length];
+			series.push({
+				color: ghostColor(stroke),
+				bar,
+				width: d.borderWidth ?? 2,
+				// Same default the real chart uses: 3px dots on a line, none on bars.
+				dot: d.pointRadius ?? (bar ? 0 : 3),
+				dotColor: ghostColor(d.pointBackgroundColor || stroke),
+				values
+			});
+		});
+		if (!series.length) return null;
+
+		// ── y range, as Chart.js will compute it ───────────────────────────────
+		const allValues = [...series.map((s) => s.values), bandUpper, bandLower].filter(Boolean);
+		let lo = Infinity;
+		let hi = -Infinity;
+		for (const arr of /** @type {any[][]} */ (allValues)) {
+			for (const v of arr) {
+				if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+				if (v < lo) lo = v;
+				if (v > hi) hi = v;
+			}
+		}
+		if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+		if (yMin != null) lo = Math.min(lo, yMin);
+		if (yMax != null) hi = Math.max(hi, yMax);
+		// handleTickRangeOptions: beginAtZero (bars) pulls the range to the baseline.
+		const isBar = type === 'bar';
+		if (isBar) {
+			if (lo > 0 && hi > 0) lo = 0;
+			else if (lo < 0 && hi < 0) hi = 0;
+		}
+		if (lo === hi) {
+			const offset = hi === 0 ? 1 : Math.abs(hi * 0.05);
+			hi += offset;
+			if (!isBar) lo -= offset;
+		}
+
+		// Mirrors the integer step createChart asks for on small count charts.
+		const barValues = isBar
+			? /** @type {any[]} */ (allValues.flat()).filter((v) => typeof v === 'number' && Number.isFinite(v))
+			: [];
+		const barPeak = Math.max(0, ...barValues.map((v) => Math.abs(v)));
+		const stepSize = isBar && barPeak <= 12 && barValues.every((v) => Number.isInteger(v)) ? 1 : undefined;
+		const hasY2 = sets.some((/** @type {any} */ d) => d.yAxisID === 'y2');
+
+		// Gutter estimate, also used for the tick-count fit so the ticks don't move
+		// once a measured calibration arrives.
+		const boxH = parseFloat(height) || 250;
+		const estTop = (title ? 29 : 0) + 10;
+		const estBottom = 20;
+		const plotH = Math.max(40, boxH - 32 - estTop - estBottom); // 32 = container padding
+		const maxTicks = Math.max(2, stepSize
+			? Math.ceil(hi / stepSize) - Math.floor(lo / stepSize) + 1
+			: Math.min(MAX_TICKS_LIMIT, Math.ceil(plotH / TICK_LINE_HEIGHT)));
+		const range = cjsTickRange(lo, hi, maxTicks, stepSize);
+		// A second axis pins both sides to a fixed tick count (see createChart).
+		const tickValues = hasY2
+			? Array.from({ length: 6 }, (_, i) => range.min + ((range.max - range.min) * i) / 5)
+			: range.values;
+		const labels = tickValues.map((v) => String(tickLabel(v, yDecimals, yUnit)));
+		const widest = Math.max(1, ...labels.map((l) => l.length));
+
+		const gut = cal ?? {
+			// 8px tick mark + 2×3px tick padding + the widest label at ~6.1px/char.
+			l: Math.round(14 + widest * 6.1),
+			t: estTop,
+			// Half of the last x-axis label spills past the plot on a date/linear axis.
+			r: hasY2 ? Math.round(14 + widest * 6.1) : 16,
+			b: estBottom
+		};
+
+		// ── x positions ────────────────────────────────────────────────────────
+		const n = Math.max(...(/** @type {any[][]} */ (allValues)).map((a) => a.length));
+		if (!n) return null;
+		const dates = data.dates || [];
+		/** Raw x values when the axis is numeric (linear) or time. */
+		const xRaw = xAxis
+			? (sets.find((/** @type {any} */ d) => Array.isArray(d.data) && typeof d.data[0] === 'object')?.data || []).map((/** @type {any} */ p) => p?.x)
+			: dates.length
+				? dates.map((/** @type {string} */ d) => new Date(d).getTime())
+				: null;
+		let xLo = 0;
+		let xHi = 1;
+		if (xRaw) {
+			const nums = xRaw.filter((/** @type {any} */ v) => Number.isFinite(v));
+			xLo = xAxis ? xAxis.min : Math.min(...nums);
+			xHi = xAxis ? xAxis.max : Math.max(...nums);
+		}
+		/** @param {number} i */
+		const xAt = (i) => {
+			if (xRaw && xHi > xLo) return ((xRaw[i] - xLo) / (xHi - xLo)) * 100;
+			// Category axis: bars sit in the middle of their band, lines on the edges.
+			if (isBar) return ((i + 0.5) / n) * 100;
+			return n < 2 ? 50 : (i / (n - 1)) * 100;
+		};
+		const ySpan = range.max - range.min || 1;
+		/** @param {number} v */
+		const yAt = (v) => ((range.max - v) / ySpan) * 100;
+
+		const stride = Math.max(1, Math.ceil(n / SKELETON_POINTS));
+		/** @param {any[]} values @param {boolean} [reverse] */
+		const pointsOf = (values, reverse = false) => {
+			/** @type {string[]} */
+			const pts = [];
+			for (let i = 0; i < values.length; i += stride) {
+				const v = values[i];
+				if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+				pts.push(`${r1(xAt(i))},${r1(yAt(v))}`);
+			}
+			return reverse ? pts.reverse() : pts;
+		};
+
+		/** @type {{ points: string, color: string, width: number }[]} */
+		const lines = [];
+		/** @type {{ cx: number, w: number, y: number, h: number, color: string }[]} */
+		const bars = [];
+		/** @type {{ x: number, y: number, d: number, color: string }[]} */
+		const dots = [];
+		const zeroY = yAt(Math.min(Math.max(0, range.min), range.max));
+		for (const s of series) {
+			if (s.bar) {
+				// Chart.js bar width: categoryPercentage 0.8 × barPercentage 0.9 of the
+				// band, capped by the maxBarThickness of 40 createChart sets (applied in
+				// CSS, since the SVG is stretched).
+				const w = (100 / n) * 0.72;
+				for (let i = 0; i < s.values.length; i++) {
+					const v = s.values[i];
+					if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+					const y = yAt(v);
+					bars.push({ cx: r1(xAt(i)), w: r1(w), y: r1(Math.min(y, zeroY)), h: r1(Math.abs(zeroY - y)), color: s.color });
+				}
+				continue;
+			}
+			const pts = pointsOf(s.values);
+			if (pts.length > 1) lines.push({ points: pts.join(' '), color: s.color, width: s.width });
+			// Measurement dots. Drawn as elements of their own rather than SVG circles
+			// because the plot SVG is stretched to the plot area — a circle in it would
+			// come out an ellipse.
+			if (s.dot > 0) {
+				for (let i = 0; i < s.values.length; i += stride) {
+					const v = s.values[i];
+					if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+					dots.push({ x: r1(xAt(i)), y: r1(yAt(v)), d: s.dot * 2, color: s.dotColor });
+				}
+			}
+		}
+
+		let band = null;
+		if (bandUpper && bandLower) {
+			const up = pointsOf(bandUpper);
+			const down = pointsOf(bandLower, true);
+			if (up.length > 1 && down.length > 1) band = { points: [...up, ...down].join(' '), color: bandColor };
+		}
+
+		if (!lines.length && !bars.length) return null;
+		return {
+			gut,
+			band,
+			lines,
+			bars,
+			dots,
+			ticks: tickValues.map((v, i) => ({ label: labels[i], top: r1(yAt(v)) })),
+			// Layout depends on the label width, so charts with differently-sized
+			// numbers get their own remembered geometry.
+			key: `fitchart:${type}|${height}|${title ? 1 : 0}|${yUnit}|${y2Unit}|${xAxis ? 'lin' : dates.length ? 'time' : 'cat'}|${widest}`
+		};
+	});
+
+	/** Remember the real plot area so the next cold load draws the ghost on it. */
+	function saveCalibration() {
+		const key = skeleton?.key;
+		const area = chart?.chartArea;
+		if (!key || !area || !canvas) return;
+		const cw = canvas.clientWidth;
+		const ch = canvas.clientHeight;
+		if (!cw || !ch) return;
+		try {
+			localStorage.setItem(key, JSON.stringify({
+				l: Math.round(area.left),
+				t: Math.round(area.top),
+				r: Math.round(cw - area.right),
+				b: Math.round(ch - area.bottom)
+			}));
+		} catch {
+			// Private mode / quota — the estimate stays good enough.
+		}
+	}
 
 	// ── Custom x-axis pan / pinch / wheel (zoom mode) ──────────────────────────
 	// We drive the visible x window directly (chart.options.scales.x.min/max)
@@ -752,6 +1042,8 @@
 			}
 		}));
 
+		saveCalibration();
+
 		// Cache the data extent (epoch ms) — the limits for pan/zoom gestures.
 		if (zoom && dates.length) {
 			const stamps = dates.map((d) => new Date(d).getTime()).filter((n) => Number.isFinite(n));
@@ -764,6 +1056,15 @@
 
 	onMount(() => {
 		let disposed = false;
+		// Snap the ghost onto the plot area this chart had last time. Read here
+		// rather than during render so the SSR'd markup and the first client render
+		// stay identical.
+		try {
+			const stored = skeleton?.key ? localStorage.getItem(skeleton.key) : null;
+			if (stored) cal = JSON.parse(stored);
+		} catch {
+			// No storage / bad JSON — the estimate stands.
+		}
 		const mq = window.matchMedia('(prefers-color-scheme: dark)');
 		const onTheme = () => setTimeout(createChart, 100);
 		/** @type {MutationObserver | undefined} */
@@ -916,6 +1217,65 @@
 
 <div class="chart-container" style="height: {height}">
 	<div class="chart-canvas-wrap">
+		{#if !chart && skeleton}
+			<!-- Stand-in until Chart.js has drawn: the same series, on the same plot
+			     area, with the same gridlines and y ticks. -->
+			<div class="chart-skeleton" out:fade={{ duration: 150 }} aria-hidden="true">
+				{#if title}
+					<!-- Chart.js paints the title inside the canvas, so it would pop in
+					     with the chart unless we stand in for it too. -->
+					<span class="skeleton-title">{title}</span>
+				{/if}
+				<div
+					class="skeleton-plot"
+					style:left="{skeleton.gut.l}px"
+					style:top="{skeleton.gut.t}px"
+					style:right="{skeleton.gut.r}px"
+					style:bottom="{skeleton.gut.b}px"
+				>
+					<svg viewBox="0 0 100 100" preserveAspectRatio="none">
+						{#each skeleton.ticks as tk (tk.top)}
+							<line class="skeleton-grid" x1="0" y1={tk.top} x2="100" y2={tk.top} vector-effect="non-scaling-stroke" />
+						{/each}
+						{#if skeleton.band}
+							<polygon points={skeleton.band.points} style:fill={skeleton.band.color} />
+						{/if}
+						{#each skeleton.lines as ln, i (i)}
+							<polyline
+								class="skeleton-line"
+								points={ln.points}
+								style:stroke={ln.color}
+								style:stroke-width={ln.width}
+								vector-effect="non-scaling-stroke"
+							/>
+						{/each}
+					</svg>
+					{#each skeleton.bars as b, i (i)}
+						<span
+							class="skeleton-bar"
+							style:left="{b.cx}%"
+							style:width="min(40px, {b.w}%)"
+							style:top="{b.y}%"
+							style:height="{b.h}%"
+							style:background={b.color}
+						></span>
+					{/each}
+					{#each skeleton.dots as dot, i (i)}
+						<span
+							class="skeleton-dot"
+							style:left="{dot.x}%"
+							style:top="{dot.y}%"
+							style:width="{dot.d}px"
+							style:height="{dot.d}px"
+							style:background={dot.color}
+						></span>
+					{/each}
+					{#each skeleton.ticks as tk (tk.top)}
+						<span class="skeleton-tick" style:top="{tk.top}%">{tk.label}</span>
+					{/each}
+				</div>
+			</div>
+		{/if}
 		<canvas bind:this={canvas} class:zoomable={zoom}></canvas>
 	</div>
 	{#if legend.show}
@@ -943,6 +1303,62 @@
 		position: relative;
 		flex: 1;
 		min-height: 0;
+	}
+	/* The ghost is laid out on the plot area Chart.js will use — inset by the
+	   measured (or estimated) axis gutters — so the swap is a fade, not a jump. */
+	.chart-skeleton {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+	.skeleton-title {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		text-align: center;
+		font-size: 14px;
+		font-weight: bold;
+		line-height: 1.2;
+		color: var(--color-text-primary);
+	}
+	.skeleton-plot {
+		position: absolute;
+	}
+	.skeleton-plot svg {
+		width: 100%;
+		height: 100%;
+		display: block;
+		overflow: visible;
+	}
+	/* Same rgba(text, 0.08) Chart.js draws its gridlines with, in both themes. */
+	.skeleton-grid {
+		stroke: color-mix(in srgb, var(--color-text-primary) 9%, transparent);
+		stroke-width: 1;
+	}
+	.skeleton-line {
+		fill: none;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+	}
+	.skeleton-bar {
+		position: absolute;
+		transform: translateX(-50%);
+	}
+	.skeleton-dot {
+		position: absolute;
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+	}
+	/* Right-aligned 11px from the plot edge: Chart.js's 8px tick mark + 3px pad. */
+	.skeleton-tick {
+		position: absolute;
+		right: calc(100% + 11px);
+		transform: translateY(-50%);
+		font-size: 11px;
+		line-height: 1.2;
+		white-space: nowrap;
+		color: var(--color-text-primary);
 	}
 	.chart-legend {
 		display: flex;
