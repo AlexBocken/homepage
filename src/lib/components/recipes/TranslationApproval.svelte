@@ -876,7 +876,7 @@ button:disabled {
 					{/each}
 				</ul>
 				<div style="margin-top: 0.75rem;">
-					<button class="btn-secondary" onclick={syncBaseRecipeReferences}>
+					<button type="button" class="btn-secondary" onclick={syncBaseRecipeReferences}>
 						Re-check base recipes
 					</button>
 				</div>
@@ -1113,13 +1113,13 @@ button:disabled {
 
 		<div class="actions">
 			{#if translationState === 'idle'}
-				<button class="btn-danger" onclick={handleCancel}>
+				<button type="button" class="btn-danger" onclick={handleCancel}>
 					Cancel
 				</button>
-				<button class="btn-secondary" onclick={handleSkip}>
+				<button type="button" class="btn-secondary" onclick={handleSkip}>
 					Skip Translation
 				</button>
-				<button class="btn-primary" onclick={() => handleAutoTranslate()} disabled={untranslatedBaseRecipes.length > 0}>
+				<button type="button" class="btn-primary" onclick={() => handleAutoTranslate()} disabled={untranslatedBaseRecipes.length > 0}>
 					{#if untranslatedBaseRecipes.length > 0}
 						Translate base recipes first
 					{:else}
@@ -1127,13 +1127,13 @@ button:disabled {
 					{/if}
 				</button>
 			{:else if translationState !== 'approved'}
-				<button class="btn-danger" onclick={handleCancel}>
+				<button type="button" class="btn-danger" onclick={handleCancel}>
 					Cancel
 				</button>
-				<button class="btn-secondary" onclick={() => handleAutoTranslate(true)}>
+				<button type="button" class="btn-secondary" onclick={() => handleAutoTranslate(true)}>
 					Vollständig neu übersetzen
 				</button>
-				<button class="btn-secondary" onclick={() => handleAutoTranslate()}>
+				<button type="button" class="btn-secondary" onclick={() => handleAutoTranslate()}>
 					Re-translate
 				</button>
 				<span class="approve-hint">Speichern übernimmt die Übersetzung</span>

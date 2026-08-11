@@ -266,10 +266,10 @@ dialog h2 {
 		</label>
 
 		<div class="button-group">
-			<button class="button-insert" onclick={handleInsert} disabled={!selectedRecipe}>
+			<button type="button" class="button-insert" onclick={handleInsert} disabled={!selectedRecipe}>
 				Einfügen
 			</button>
-			<button class="button-cancel" onclick={closeModal}>
+			<button type="button" class="button-cancel" onclick={closeModal}>
 				Abbrechen
 			</button>
 		</div>
