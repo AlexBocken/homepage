@@ -62,11 +62,44 @@ test('a filtered listing is shareable and survives a reload', async ({ page }) =
 	).toBeVisible();
 });
 
+// Every listing browses through the same rail; a facet route just opens with
+// its own filter already pressed, and lifting it there widens the listing.
+
+test('a category page opens with that category pressed in the rail', async ({ page }) => {
+	await gotoHydrated(page, '/rezepte/category/Suppe');
+
+	const suppe = page.getByRole('button', { name: /^Suppe\b/ });
+	await expect(suppe).toHaveAttribute('aria-pressed', 'true');
+	await expect(
+		page.locator('.recipe-grid .compact-card a.card-link[aria-label="Tomatensuppe"]')
+	).toBeVisible();
+	// The grid renders in batches of 24, so compare the totals the bar reports
+	// rather than the cards on screen.
+	const total = async () =>
+		Number((await page.locator('.result-count').textContent())?.match(/\d+/)?.[0] ?? 0);
+	const before = await total();
+
+	// "Alle" is the first option in the category section.
+	await page.locator('.rail .options button').first().click();
+	await expect(suppe).toHaveAttribute('aria-pressed', 'false');
+	await expect.poll(total).toBeGreaterThan(before);
+});
+
+test('the search page opens with the query and the rail applied', async ({ page }) => {
+	await gotoHydrated(page, '/rezepte/search?q=Tomatensuppe');
+
+	await expect(page.locator('input#search')).toHaveValue('Tomatensuppe');
+	await expect(
+		page.locator('.recipe-grid .compact-card a.card-link[aria-label="Tomatensuppe"]')
+	).toBeVisible();
+	await expect(page.locator('.rail')).toBeVisible();
+});
+
 test('the rail becomes a sheet on a phone', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await gotoHydrated(page, '/rezepte');
 
-	const sheet = page.locator('dialog.rail');
+	const sheet = page.locator('.rail');
 	await expect(sheet).toBeHidden();
 
 	await page.locator('.filters-trigger').click();
@@ -78,4 +111,22 @@ test('the rail becomes a sheet on a phone', async ({ page }) => {
 	await expect(
 		page.locator('.recipe-grid .compact-card a.card-link[aria-label="Tomatensuppe"]')
 	).toBeVisible();
+});
+
+test('the sheet closes on Escape and on a tap outside it', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await gotoHydrated(page, '/rezepte');
+
+	const sheet = page.locator('.rail');
+
+	await page.locator('.filters-trigger').click();
+	await expect(sheet).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(sheet).toBeHidden();
+
+	await page.locator('.filters-trigger').click();
+	await expect(sheet).toBeVisible();
+	// The scrim covers everything the sheet does not.
+	await page.locator('.scrim').click({ position: { x: 10, y: 10 } });
+	await expect(sheet).toBeHidden();
 });

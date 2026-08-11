@@ -2,13 +2,12 @@
 	import { resolve } from '$app/paths';
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
-	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import type { PageData } from './$types';
 	import AddButton from '$lib/components/AddButton.svelte';
 	import Seo from '$lib/components/Seo.svelte';
-	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
-	import RecipeFilterRail from '$lib/components/recipes/RecipeFilterRail.svelte';
-	import { createRecipeBrowse, type RankedRecipe } from '$lib/js/recipeBrowse.svelte';
+	import RecipeBrowse from '$lib/components/recipes/RecipeBrowse.svelte';
+	import RecipeSearchField from '$lib/components/recipes/RecipeSearchField.svelte';
+	import { createRecipeBrowse } from '$lib/js/recipeBrowse.svelte';
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
 	let { data } = $props<{ data: PageData }>();
@@ -67,38 +66,6 @@
 	const heroColor = $derived(
 		heroRecipe ? (heroRecipe.images[0].color || '') : ''
 	);
-
-	// Incremental rendering
-	const BATCH_SIZE = 24;
-	let visibleCount = $state(BATCH_SIZE);
-	let sentinel = $state<HTMLElement | null>(null);
-	let filtersOpen = $state(false);
-
-	// Any change to the result set starts the page over from the first batch.
-	$effect(() => {
-		browse.results;
-		visibleCount = BATCH_SIZE;
-	});
-
-	// IntersectionObserver for infinite scroll
-	$effect(() => {
-		if (!sentinel) return;
-		const observer = new IntersectionObserver((entries) => {
-			if (entries[0].isIntersecting) {
-				visibleCount += BATCH_SIZE;
-			}
-		}, { rootMargin: '200px' });
-		observer.observe(sentinel);
-		return () => observer.disconnect();
-	});
-
-	// `results` is already [in-season…, everything else…], so one slice keeps
-	// both groups in order and the batching honest.
-	const visible = $derived(browse.results.slice(0, visibleCount));
-	const visibleInSeason = $derived(visible.slice(0, Math.min(visibleCount, browse.inSeason.length)));
-	const visibleRest = $derived(visible.slice(visibleInSeason.length));
-	const hasMore = $derived(visibleCount < browse.results.length);
-	const routePrefix = $derived(resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang }));
 
 	const labels = $derived({
 		title: t.index_title,
@@ -238,205 +205,6 @@
 	overflow: visible;
 }
 
-/* ─── Search bar — straddles the hero boundary ─── */
-.hero-search-wrap {
-	max-width: 1200px;
-	margin: -4em auto 0;
-	padding: 0 2em;
-	position: relative;
-	z-index: 10;
-}
-.search {
-	width: 560px;
-	max-width: 100%;
-	position: relative;
-	margin: 0 auto;
-	font-size: 1.6rem;
-	display: flex;
-	align-items: center;
-	transition: var(--transition-fast);
-	filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
-}
-.search:hover,
-.search:focus-within {
-	scale: 1.02 1.02;
-	filter: drop-shadow(0.4em 0.5em 1em rgba(0,0,0,0.6));
-}
-.search input {
-	all: unset;
-	box-sizing: border-box;
-	background: var(--color-surface);
-	color: var(--color-text-primary);
-	padding: 0.7rem 2.6rem 0.7rem 2rem;
-	border-radius: var(--radius-pill);
-	width: 100%;
-}
-.search input::placeholder {
-	color: var(--color-text-muted);
-}
-.search-button {
-	all: unset;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	position: absolute;
-	right: 0.5em;
-	width: 1.5em;
-	height: 1.5em;
-	color: var(--color-text-tertiary);
-	cursor: pointer;
-	transition: color 180ms ease-in-out;
-}
-.search-button:hover { color: var(--color-text-primary); }
-.search-button svg { width: 100%; height: 100%; }
-
-/* ─── Two-column browse: filters left, results right ───
-   The rail lives in the gutter *beside* the content, not inside it: the
-   results column keeps the full 1200px the rest of the site uses, so the
-   grid still fits four cards at max width and three well before that. */
-.browse {
-	--rail-w: 240px;
-	--rail-gap: 2rem;
-	max-width: calc(1200px + var(--rail-w) + var(--rail-gap));
-	margin: 2.5em auto 0;
-	padding: 0 1rem;
-	display: grid;
-	grid-template-columns: var(--rail-w) minmax(0, 1fr);
-	gap: var(--rail-gap);
-	align-items: start;
-}
-/* Slightly tighter cards than the site-wide grid: with the rail beside it the
-   column is narrower, and four across at full width beats three plus air. */
-@media (min-width: 1024px) {
-	.browse :global(.recipe-grid) {
-		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-	}
-}
-.rail-column {
-	position: sticky;
-	/* Clears the sticky header. */
-	top: 5.5rem;
-	/* Taller than the window, so it scrolls within itself rather than being cut
-	   off. This only holds because nothing above it is transformed any more —
-	   see the note on .hero-layer. */
-	max-height: calc(100vh - 7rem);
-	overflow-y: auto;
-	overscroll-behavior: contain;
-	/* Room for the range-slider thumbs, which overhang their track at 0 % and
-	   100 %; without it the scroll container gains a horizontal axis and the
-	   column drifts sideways when a thumb takes focus. */
-	padding-inline: 0.75rem;
-	margin-inline: -0.75rem;
-}
-
-/* ─── Group headers: the ranking, stated once ─── */
-.group-head {
-	display: flex;
-	align-items: baseline;
-	gap: 0.6em;
-	margin: 0 0 1.2em;
-	/* Line the rule up with the cards: .recipe-grid carries its own padding. */
-	padding: 0 0.8em 0.5em;
-	border-bottom: 1px solid var(--color-border);
-}
-@media (min-width: 600px) {
-	.group-head { padding: 0 1.5em 0.5em; }
-}
-.group-head h2 {
-	margin: 0;
-	font-size: 0.8rem;
-	font-weight: 700;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: var(--color-text-primary);
-	white-space: nowrap;
-}
-.group-head .count {
-	font-size: 0.8rem;
-	color: var(--color-text-secondary);
-	font-variant-numeric: tabular-nums;
-}
-.group-head .note {
-	margin-left: auto;
-	font-size: 0.75rem;
-	color: var(--color-text-tertiary);
-	white-space: nowrap;
-}
-.group + .group { margin-top: 3em; }
-
-.mobile-bar {
-	display: none;
-}
-
-.empty {
-	padding: 3em 0;
-	text-align: center;
-	color: var(--color-text-secondary);
-}
-.empty button {
-	margin-top: 1em;
-	background: var(--color-primary);
-	color: var(--color-text-on-primary);
-	border: none;
-	border-radius: var(--radius-pill);
-	padding: 0.6em 1.4em;
-	font-size: 0.9rem;
-	cursor: pointer;
-}
-
-.sentinel {
-	height: 1px;
-}
-
-@media (max-width: 1150px) {
-	.browse {
-		grid-template-columns: minmax(0, 1fr);
-		gap: 0;
-		padding: 0 1rem;
-	}
-	.rail-column {
-		position: static;
-		max-height: none;
-		overflow: visible;
-	}
-	/* One row above the grid: what you are looking at, and the way in. */
-	.mobile-bar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		margin-bottom: 1.5em;
-		padding: 0 0.8em;
-	}
-	.mobile-bar .result-count {
-		font-size: 0.85rem;
-		color: var(--color-text-secondary);
-		font-variant-numeric: tabular-nums;
-	}
-	.filters-trigger {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5em;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
-		padding: 0.5em 1.1em;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		cursor: pointer;
-		box-shadow: var(--shadow-sm);
-	}
-	.filters-trigger .badge {
-		background: var(--color-primary);
-		color: var(--color-text-on-primary);
-		border-radius: var(--radius-pill);
-		padding: 0 0.5em;
-		font-size: 0.75rem;
-	}
-	.group-head .note { display: none; }
-}
-
 /* ─── No-hero fallback ─── */
 .hero-fallback {
 	text-align: left;
@@ -455,87 +223,6 @@
 	opacity: 0.7;
 }
 </style>
-
-{#snippet searchField()}
-	<form class="search" method="get" action={resolve('/[recipeLang=recipeLang]/search', { recipeLang: data.recipeLang })}>
-		<input
-			type="text"
-			id="search"
-			name="q"
-			placeholder={t.search_placeholder_short}
-			bind:value={browse.query}
-		/>
-		{#if browse.query}
-			<button type="button" class="search-button" onclick={() => (browse.query = '')}>
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>{t.clear_search_title}</title><path d="M135.19 390.14a28.79 28.79 0 0021.68 9.86h246.26A29 29 0 00432 371.13V140.87A29 29 0 00403.13 112H156.87a28.84 28.84 0 00-21.67 9.84v0L46.33 256l88.86 134.11z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M336.67 192.33L206.66 322.34M336.67 322.34L206.66 192.33"/></svg>
-			</button>
-		{:else}
-			<button type="submit" class="search-button">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>{t.search_title}</title><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="m338.29 338.29 105.25 105.25"/></svg>
-			</button>
-		{/if}
-	</form>
-{/snippet}
-
-{#snippet grid(entries: RankedRecipe[], eager: boolean)}
-	<div class="recipe-grid">
-		{#each entries as entry, i (entry.recipe._id)}
-			<CompactCard
-				recipe={entry.recipe}
-				isFavorite={entry.recipe.isFavorite}
-				showFavoriteIndicator={!!data.session?.user}
-				loading_strat={eager && i < 12 ? 'eager' : 'lazy'}
-				{routePrefix}
-			/>
-		{/each}
-	</div>
-{/snippet}
-
-{#snippet results()}
-	<div class="mobile-bar">
-		<button class="filters-trigger" onclick={() => (filtersOpen = true)}>
-			<SlidersHorizontal size={16} />
-			{t.filters}
-			{#if browse.activeCount > 0}<span class="badge">{browse.activeCount}</span>{/if}
-		</button>
-		<span class="result-count">{browse.results.length} {t.recipes_count_suffix}</span>
-	</div>
-
-	{#if browse.results.length === 0}
-		<p class="empty">
-			{t.no_recipes_found}<br />{t.try_other_search}
-			<br />
-			<button onclick={() => browse.reset()}>{t.clear_all_filters}</button>
-		</p>
-	{:else}
-		{#if visibleInSeason.length > 0}
-			<section class="group">
-				<div class="group-head">
-					<h2>{t.in_season_heading}</h2>
-					<span class="count">{browse.inSeason.length}</span>
-					<span class="note">{t.in_season_ordering_note}</span>
-				</div>
-				{@render grid(visibleInSeason, true)}
-			</section>
-		{/if}
-
-		{#if visibleRest.length > 0}
-			<section class="group">
-				{#if browse.grouped}
-					<div class="group-head">
-						<h2>{t.everything_else}</h2>
-						<span class="count">{browse.rest.length}</span>
-					</div>
-				{/if}
-				{@render grid(visibleRest, visibleInSeason.length === 0)}
-			</section>
-		{/if}
-	{/if}
-
-	{#if hasMore}
-		<div class="sentinel" bind:this={sentinel}></div>
-	{/if}
-{/snippet}
 
 <Seo
 	title={labels.metaTitle}
@@ -581,18 +268,8 @@
 			</div>
 
 			<div class="below-hero">
-				<div class="hero-search-wrap">
-					{@render searchField()}
-				</div>
-
-				<div class="browse">
-					<div class="rail-column">
-						<RecipeFilterRail {browse} {lang} isLoggedIn={!!data.session?.user} bind:open={filtersOpen} />
-					</div>
-					<div>
-						{@render results()}
-					</div>
-				</div>
+				<RecipeSearchField {browse} {lang} recipeLang={data.recipeLang} hero={true} />
+				<RecipeBrowse {browse} {lang} recipeLang={data.recipeLang} isLoggedIn={!!data.session?.user} />
 			</div>
 		</div>
 	</section>
@@ -604,18 +281,8 @@
 		<h1>{labels.title}</h1>
 		<p class="subheading">{labels.subheading}</p>
 	</div>
-	<div class="hero-search-wrap">
-		{@render searchField()}
-	</div>
-
-	<div class="browse">
-		<div class="rail-column">
-			<RecipeFilterRail {browse} {lang} isLoggedIn={!!data.session?.user} bind:open={filtersOpen} />
-		</div>
-		<div>
-			{@render results()}
-		</div>
-	</div>
+	<RecipeSearchField {browse} {lang} recipeLang={data.recipeLang} />
+	<RecipeBrowse {browse} {lang} recipeLang={data.recipeLang} isLoggedIn={!!data.session?.user} />
 
 	{#if !isEnglish}
 		<AddButton href={resolve('/rezepte/add')}></AddButton>

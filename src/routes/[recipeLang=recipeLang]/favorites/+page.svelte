@@ -1,8 +1,9 @@
 <script lang="ts">
     import { resolve } from '$app/paths';
     import type { PageData } from './$types';
-    import CompactCard from '$lib/components/recipes/CompactCard.svelte';
-    import Search from '$lib/components/recipes/Search.svelte';
+    import RecipeBrowse from '$lib/components/recipes/RecipeBrowse.svelte';
+    import RecipeSearchField from '$lib/components/recipes/RecipeSearchField.svelte';
+    import { createRecipeBrowse } from '$lib/js/recipeBrowse.svelte';
 
     let { data } = $props<{ data: PageData }>();
 
@@ -27,24 +28,17 @@
         toTry: t.recipes_to_try_link
     });
 
-    let matchedRecipeIds = $state(new Set());
-    let hasActiveSearch = $state(false);
-
-    function handleSearchResults(ids: Set<string>, categories: Set<string>) {
-        matchedRecipeIds = ids;
-        hasActiveSearch = ids.size < data.favorites.length;
-    }
-
-    const filteredFavorites = $derived.by(() => {
-        if (!hasActiveSearch) return data.favorites;
-        return data.favorites.filter((r: any) => matchedRecipeIds.has(r._id));
-    });
+    // The pool is already every favourite, so the rail's favourites toggle is
+    // left off the sheet here — see `showFavoritesFilter`.
+    const browse = createRecipeBrowse(() => data.favorites);
 </script>
 
 <style>
 .subheading{
     text-align: center;
-    margin-top: 0;
+    /* The h1 is screen-reader-only, so this is the first thing under the
+       header — it needs the gap the heading would have given it. */
+    margin-top: 2rem;
     font-size: 1.5rem;
 }
 .empty-state{
@@ -92,20 +86,17 @@
 
 <p class="to-try-link"><a href={resolve('/[recipeLang=recipeLang]/to-try', { recipeLang: data.recipeLang })}>{labels.toTry} &rarr;</a></p>
 
-<Search favoritesOnly={true} lang={data.lang} recipes={data.favorites} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
-
 {#if data.error}
     <p class="empty-state">{labels.errorLoading} {data.error}</p>
-{:else if filteredFavorites.length > 0}
-    <div class="recipe-grid">
-        {#each filteredFavorites as recipe (recipe._id)}
-            <CompactCard {recipe} isFavorite={true} showFavoriteIndicator={true} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
-        {/each}
-    </div>
 {:else if data.favorites.length > 0}
-    <div class="empty-state">
-        <p>{t.no_matching_favorites}</p>
-    </div>
+    <RecipeSearchField {browse} {lang} recipeLang={data.recipeLang} />
+    <RecipeBrowse
+        {browse}
+        {lang}
+        recipeLang={data.recipeLang}
+        isLoggedIn={true}
+        showFavoritesFilter={false}
+    />
 {:else}
     <div class="empty-state">
         <p>{labels.emptyState1}</p>

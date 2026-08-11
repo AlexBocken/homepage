@@ -2,33 +2,19 @@
     import { resolve } from '$app/paths';
     import type { PageData } from './$types';
     import IconLayout from '$lib/components/recipes/IconLayout.svelte';
-    import CompactCard from '$lib/components/recipes/CompactCard.svelte';
+    import RecipeBrowse from '$lib/components/recipes/RecipeBrowse.svelte';
+    import RecipeSearchField from '$lib/components/recipes/RecipeSearchField.svelte';
     import Seo from '$lib/components/Seo.svelte';
+    import { createRecipeBrowse } from '$lib/js/recipeBrowse.svelte';
     let { data } = $props<{ data: PageData }>();
-    import { rand_array } from '$lib/js/randomize';
 
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
     const lang = $derived(data.lang as RecipesLang);
     const t = $derived(m[lang]);
     const siteTitle = $derived(t.site_title);
 
-    // Search state
-    let matchedRecipeIds = $state(new Set());
-    let hasActiveSearch = $state(false);
-
-    // Handle search results from Search component
-    function handleSearchResults(ids: Set<string>, categories: Set<string>) {
-        matchedRecipeIds = ids;
-        hasActiveSearch = ids.size < data.season.length;
-    }
-
-    // Filter recipes based on search
-    const filteredRecipes: any[] = $derived.by(() => {
-        if (!hasActiveSearch) {
-            return data.season;
-        }
-        return data.season.filter((r: any) => matchedRecipeIds.has(r._id));
-    });
+    // The pool is every recipe carrying this icon; the rail narrows within it.
+    const browse = createRecipeBrowse(() => data.season);
 </script>
 
 <Seo
@@ -37,12 +23,15 @@
     lang={lang}
 />
 
-<IconLayout icons={data.icons} active_icon={data.icon} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} lang={data.lang} recipes={data.season} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}>
+<IconLayout icons={data.icons} active_icon={data.icon} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })}>
 	{#snippet recipesSlot()}
-		<div class="recipe-grid">
-			{#each rand_array(filteredRecipes) as recipe (recipe._id)}
-				<CompactCard {recipe} icon_override={true} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
-			{/each}
-		</div>
+		<RecipeSearchField {browse} {lang} recipeLang={data.recipeLang} />
+		<RecipeBrowse
+			{browse}
+			{lang}
+			recipeLang={data.recipeLang}
+			isLoggedIn={!!data.session?.user}
+			iconOverride={true}
+		/>
 	{/snippet}
 </IconLayout>

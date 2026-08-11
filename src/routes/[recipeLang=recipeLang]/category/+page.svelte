@@ -20,6 +20,13 @@
     description={t.categories_meta_description}
     lang={lang}
 />
+<style>
+	/* The h1 is screen-reader-only, so the cloud is the first thing under the
+	   header — it needs the gap the heading would have given it. */
+	section {
+		margin-top: 2rem;
+	}
+</style>
 <h1 class="sr-only">{labels.title}</h1>
 <section>
 <TagCloud>

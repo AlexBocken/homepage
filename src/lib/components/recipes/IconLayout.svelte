@@ -1,25 +1,20 @@
 <script lang="ts">
+    /**
+     * Icon navigation for the by-icon listings. The listing itself — search
+     * box, filter rail, grid — comes in through `recipesSlot`; see
+     * RecipeBrowse.svelte.
+     */
     import type { Snippet } from 'svelte';
-    import Recipes from '$lib/components/recipes/Recipes.svelte';
-    import Search from './Search.svelte';
 
     let {
         icons,
         active_icon,
         routePrefix = '/rezepte',
-        lang = 'de',
-        recipes = [],
-        isLoggedIn = false,
-        onSearchResults = (ids, categories) => {},
         recipesSlot
     }: {
         icons: string[],
         active_icon: string,
         routePrefix?: string,
-        lang?: string,
-        recipes?: any[],
-        isLoggedIn?: boolean,
-        onSearchResults?: (ids: Set<string>, categories: Set<string>) => void,
         recipesSlot?: Snippet
     } = $props();
 </script>
@@ -89,9 +84,6 @@
 	<a class:active={active_icon == icon} href="{routePrefix}/icon/{icon}">{icon}</a>
 {/each}
 </div>
-<section>
-<Search icon={active_icon} {lang} {recipes} {isLoggedIn} {onSearchResults}></Search>
-</section>
 <section>
 {@render recipesSlot?.()}
 </section>

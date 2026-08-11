@@ -1,13 +1,9 @@
 <script lang="ts">
-    import { resolve } from '$app/paths';
     import type { PageData } from './$types';
-    import type { BriefRecipeType } from '$types/types';
-    import Search from '$lib/components/recipes/Search.svelte';
-    import CompactCard from '$lib/components/recipes/CompactCard.svelte';
+    import RecipeBrowse from '$lib/components/recipes/RecipeBrowse.svelte';
+    import RecipeSearchField from '$lib/components/recipes/RecipeSearchField.svelte';
     import Seo from '$lib/components/Seo.svelte';
-    import { rand_array } from '$lib/js/randomize';
-
-    type RecipeItem = BriefRecipeType & { isFavorite: boolean };
+    import { createRecipeBrowse, seedRecipeBrowse } from '$lib/js/recipeBrowse.svelte';
 
     let { data } = $props<{ data: PageData }>();
 
@@ -17,19 +13,18 @@
     const label = $derived(t.recipes_in_category);
     const siteTitle = $derived(t.site_title);
 
-    let matchedRecipeIds = $state(new Set<string>());
-    let hasActiveSearch = $state(false);
-
-    function handleSearchResults(ids: Set<string>, categories: Set<string>) {
-        matchedRecipeIds = ids;
-        hasActiveSearch = ids.size < (data.allRecipes as RecipeItem[]).length;
-    }
-
-    const displayRecipes = $derived.by((): RecipeItem[] => {
-        const all = data.allRecipes as RecipeItem[];
-        const base = data.recipes as RecipeItem[];
-        if (!hasActiveSearch) return base;
-        return all.filter((r) => matchedRecipeIds.has(r._id));
+    // The whole collection is the pool; the category is just where the rail
+    // starts, so it can be widened from here. Offline the cache may only hold
+    // this category — then that is all there is to browse.
+    const browse = createRecipeBrowse(() => data.allRecipes?.length ? data.allRecipes : data.recipes);
+    // svelte-ignore state_referenced_locally
+    let seeded = data.category;
+    // svelte-ignore state_referenced_locally
+    seedRecipeBrowse(browse, { category: data.category });
+    $effect(() => {
+        if (data.category === seeded) return;
+        seeded = data.category;
+        seedRecipeBrowse(browse, { category: data.category });
     });
 </script>
 <style>
@@ -46,9 +41,5 @@
 />
 
 <h1>{label} <q>{data.category}</q>:</h1>
-<Search category={data.category} lang={data.lang} recipes={data.allRecipes} isLoggedIn={!!data.session?.user} onSearchResults={handleSearchResults}></Search>
-<div class="recipe-grid">
-	{#each rand_array(displayRecipes) as recipe (recipe._id)}
-		<CompactCard {recipe} isFavorite={recipe.isFavorite} showFavoriteIndicator={!!data.session?.user} routePrefix={resolve('/[recipeLang=recipeLang]', { recipeLang: data.recipeLang })} />
-	{/each}
-</div>
+<RecipeSearchField {browse} {lang} recipeLang={data.recipeLang} />
+<RecipeBrowse {browse} {lang} recipeLang={data.recipeLang} isLoggedIn={!!data.session?.user} />

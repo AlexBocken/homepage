@@ -1,9 +1,8 @@
 /**
  * Filter + ranking state for the recipe listing.
  *
- * Factory pattern (see searchFilter.svelte.ts): `createRecipeBrowse()` owns the
- * runes and hands back getters, so the page, the filter rail and the grid all
- * read one source of truth.
+ * Factory pattern: `createRecipeBrowse()` owns the runes and hands back getters,
+ * so the page, the filter rail and the grid all read one source of truth.
  *
  * The ordering is the point of the page. Season-first is not a sort the way
  * A–Z is a sort — it answers "what will I lose if I don't cook it this week",
@@ -309,3 +308,32 @@ export function createRecipeBrowse(
 }
 
 export type RecipeBrowse = ReturnType<typeof createRecipeBrowse>;
+
+/** The facet a route is already about, handed to the browse as its start. */
+export type BrowseSeed = {
+	query?: string;
+	category?: string | null;
+	tags?: string[];
+	months?: number[];
+	inSeasonOnly?: boolean;
+	favoritesOnly?: boolean;
+};
+
+/**
+ * Open a listing with the route's own facet already applied — /rezepte/tag/Suppe
+ * shows that keyword pressed in the rail, so lifting it there widens the listing
+ * instead of dead-ending.
+ *
+ * Call it once at component init, so the server renders the filtered set, and
+ * again whenever the parameter changes: SvelteKit reuses a page component
+ * across its own params, and init would not run a second time.
+ */
+export function seedRecipeBrowse(browse: RecipeBrowse, seed: BrowseSeed) {
+	browse.reset();
+	browse.query = seed.query ?? '';
+	browse.category = seed.category ?? null;
+	for (const tag of seed.tags ?? []) browse.tags.add(tag);
+	for (const month of seed.months ?? []) browse.months.add(month);
+	browse.inSeasonOnly = seed.inSeasonOnly ?? false;
+	browse.favoritesOnly = seed.favoritesOnly ?? false;
+}

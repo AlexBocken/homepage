@@ -1,29 +1,22 @@
 <script lang="ts">
+    /**
+     * Month navigation for the seasonal listings. The listing itself — search
+     * box, filter rail, grid — comes in through `recipesSlot`; see
+     * RecipeBrowse.svelte.
+     */
     import type { Snippet } from 'svelte';
-    import Recipes from '$lib/components/recipes/Recipes.svelte';
-    import Search from './Search.svelte';
 
     let {
         months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
         active_index,
         routePrefix = '/rezepte',
-        lang = 'de',
-        recipes = [],
-        isLoggedIn = false,
-        onSearchResults = (ids, categories) => {},
         recipesSlot
     }: {
         months?: string[],
         active_index: number,
         routePrefix?: string,
-        lang?: string,
-        recipes?: any[],
-        isLoggedIn?: boolean,
-        onSearchResults?: (ids: Set<string>, categories: Set<string>) => void,
         recipesSlot?: Snippet
     } = $props();
-
-    let month: number = $state(0);
 </script>
 <style>
 a.month{
@@ -57,9 +50,6 @@ a.month:hover,
 	<a class:active={i == active_index}  class=month href="{routePrefix}/season/{i+1}">{month}</a>
 {/each}
 </div>
-<section>
-<Search season={active_index + 1} {lang} {recipes} {isLoggedIn} {onSearchResults}></Search>
-</section>
 <section>
 {@render recipesSlot?.()}
 </section>

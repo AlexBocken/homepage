@@ -8,7 +8,6 @@ export const en = {
 	welcome: 'Welcome to bocken.org',
 	pages: 'Pages',
 	recipes: 'Recipes',
-	family_photos: 'Family Photos',
 	photos: 'Photos',
 	video_conferences: 'Video Conferences',
 	search_engine: 'Search Engine',

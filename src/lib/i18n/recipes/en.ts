@@ -95,12 +95,10 @@ export const en = {
 	// Search page
 	search_results_title: 'Search Results',
 	search_meta_description: "Search results in Bocken's recipes.",
-	filtered_by: 'Filtered by:',
 	keywords_label: 'Keywords',
 	seasons_label: 'Seasons',
 	favorites_only: 'Favorites only',
 	search_error: 'Search error:',
-	results_for: 'results for',
 	no_recipes_found: 'No recipes found.',
 	try_other_search: 'Try different search terms.',
 
@@ -110,7 +108,6 @@ export const en = {
 
 	// Index page
 	index_title: 'Recipes',
-	in_season_now: 'In Season',
 	meta_alt_hero: 'Pasta al Ragu with Linguine',
 
 	// Detail page
@@ -124,7 +121,6 @@ export const en = {
 	error_loading_favorites: 'Error loading favorites:',
 	recipe_singular_link: 'recipe',
 	recipes_to_try_link: 'Recipes to try',
-	no_matching_favorites: 'No matching favorites found.',
 
 	// Error pages
 	recipe_not_found: 'Recipe Not Found',
@@ -154,11 +150,6 @@ export const en = {
 	empty_favorites_2: 'Visit a recipe and click the heart icon to add it to your favorites.',
 
 	// Filters
-	filter_mode: 'Filter Mode',
-	and_label: 'AND',
-	or_label: 'OR',
-	select_category_placeholder: 'Select category…',
-	select_season_placeholder: 'Select season…',
 
 	// Search component
 	search_placeholder_short: 'Search…',
@@ -201,11 +192,8 @@ export const en = {
 	jsonld_for_duration: 'for',
 
 	// CreateStepList baking
-	not_set: 'Not set',
 	duration: 'Duration',
 	temperature: 'Temperature',
-	mode_label: 'Mode',
-	custom_mode_placeholder: 'or enter custom mode…',
 
 	// Administration page descriptions
 	administration_description: 'Manage recipes and content',
@@ -216,10 +204,6 @@ export const en = {
 
 	// Smaller filters / pages
 	loading_offline: 'Loading offline content…',
-	hide_filters: 'Hide Filters',
-	show_filters: 'Show Filters',
-	select_icon_placeholder: 'Select icon…',
-	add_tag_placeholder: 'Type or select tag…',
 
 	// Index / tips / yeast
 	recipes_growing_suffix: 'recipes and constantly growing…',

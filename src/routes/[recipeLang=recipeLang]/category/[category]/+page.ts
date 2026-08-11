@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
-import { getBriefRecipesByCategory, isOfflineDataAvailable } from '$lib/offline/db';
+import { getAllBriefRecipes, getBriefRecipesByCategory, isOfflineDataAvailable } from '$lib/offline/db';
 import { rand_array } from '$lib/js/randomize';
 import type { PageLoad } from './$types';
 
@@ -20,11 +20,17 @@ export const load: PageLoad = async ({ data, params }) => {
 		try {
 			const hasOfflineData = await isOfflineDataAvailable();
 			if (hasOfflineData) {
-				const recipes = await getBriefRecipesByCategory(params.category);
+				// The whole collection too, so the filter rail can be widened
+				// past this category without a network round trip.
+				const [recipes, allRecipes] = await Promise.all([
+					getBriefRecipesByCategory(params.category),
+					getAllBriefRecipes()
+				]);
 
 				return {
 					...data,
 					recipes: rand_array(recipes),
+					allRecipes,
 					isOffline: true
 				};
 			}

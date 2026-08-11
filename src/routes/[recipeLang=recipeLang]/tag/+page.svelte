@@ -31,7 +31,9 @@
 <style>
 	.search-wrap {
 		max-width: 400px;
-		margin: 0 auto 1rem;
+		/* The h1 is screen-reader-only, so this is the first thing under the
+		   header — it needs the gap the heading would have given it. */
+		margin: 2rem auto 1rem;
 		padding-inline: 1rem;
 	}
 	input {

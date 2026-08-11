@@ -8,12 +8,11 @@
 	 * whole collection.
 	 *
 	 * Below 1150px — the width at which the results column stops fitting three
-	 * cards beside the rail — the column becomes a sheet: same markup, opened
-	 * by a button that carries the active-filter count.
+	 * cards beside the rail — the column becomes a bottom sheet: same markup,
+	 * opened by a button that carries the active-filter count.
 	 */
 	import { slide } from 'svelte/transition';
 	import { prefersReducedMotion } from 'svelte/motion';
-	import { MediaQuery } from 'svelte/reactivity';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import X from '@lucide/svelte/icons/x';
 	import RangeSlider from '$lib/components/hikes/RangeSlider.svelte';
@@ -26,12 +25,13 @@
 	interface Props {
 		browse: RecipeBrowse;
 		lang: RecipesLang;
-		isLoggedIn?: boolean;
+		/** Off when signed out, and on a listing that is already all favourites. */
+		showFavorites?: boolean;
 		/** Sheet visibility on narrow screens. Bindable. */
 		open?: boolean;
 	}
 
-	let { browse, lang, isLoggedIn = false, open = $bindable(false) }: Props = $props();
+	let { browse, lang, showFavorites = false, open = $bindable(false) }: Props = $props();
 
 	const t = $derived(m[lang]);
 	const categories = $derived(getCategories(lang));
@@ -81,24 +81,31 @@
 		sectionOpen[key] = !sectionOpen[key];
 	}
 
-	// Wide: the dialog is opened non-modally and reads as a plain column.
-	// Narrow: `showModal()` puts it in the top layer, which is the only way to
-	// escape the hero's parallax transform (see the styles below), and brings
-	// Esc-to-close and a focus trap along for free.
-	let dialogEl = $state<HTMLDialogElement>();
-	const narrow = new MediaQuery('(max-width: 1150px)');
+	// Deliberately not a <dialog>/`showModal()`. Those, and the `:modal`
+	// selector that the sheet's visibility hung off, are Safari 15.4/15.6 —
+	// on an iPad that stopped at an earlier iPadOS the panel could never be
+	// opened, and `:not(:modal)` was an invalid selector there, which drops the
+	// whole rule it sits in. Result: no filters at all. A class the CSS keys on
+	// works everywhere. `position: fixed` is safe for the sheet because the
+	// listing sits outside the hero's parallax transform, which lives in its
+	// own out-of-flow layer (see the note on `.hero-layer` in the page).
+	let closeEl = $state<HTMLButtonElement>();
+	let restoreFocus: HTMLElement | null = null;
 
+	// What `showModal()` used to hand us: focus lands in the sheet, and comes
+	// back to whatever opened it.
 	$effect(() => {
-		const el = dialogEl;
-		if (!el) return;
-		if (narrow.current) {
-			if (open && !el.open) el.showModal();
-			else if (!open && el.open) el.close();
-			return;
-		}
-		if (el.matches(':modal')) el.close();
-		if (!el.open) el.show();
+		if (!open) return;
+		restoreFocus = document.activeElement as HTMLElement | null;
+		closeEl?.focus();
+		return () => {
+			if (restoreFocus?.isConnected) restoreFocus.focus();
+		};
 	});
+
+	function onKeydown(e: KeyboardEvent) {
+		if (open && e.key === 'Escape') open = false;
+	}
 
 	const slideOpts = $derived(prefersReducedMotion.current ? { duration: 0 } : { duration: 180 });
 	const pct = (v: number) => `${v} %`;
@@ -106,24 +113,17 @@
 </script>
 
 <style>
-	/* A <dialog> so the narrow-screen sheet can use the top layer; on wide
-	   screens it is opened non-modally and stripped back to a plain column. */
+	/* Wide screens: a plain column. Narrow: the same markup, fixed to the
+	   bottom of the viewport over a scrim. */
 	.rail {
-		position: static;
-		width: auto;
-		max-width: none;
-		max-height: none;
-		margin: 0;
-		padding: 0;
-		border: none;
-		background: var(--color-bg-primary);
-		color: inherit;
-		font-size: 0.9rem;
-	}
-	.rail[open] {
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
+		color: inherit;
+		font-size: 0.9rem;
+	}
+	.scrim {
+		display: none;
 	}
 
 	.rail-head {
@@ -325,25 +325,43 @@
 	.done-bar { display: none; }
 
 	@media (max-width: 1150px) {
-		/* The listing lives inside a transformed ancestor (the hero's parallax
-		   scaleY), which would make a `position: fixed` panel scroll and scale
-		   with it. A modal <dialog> renders in the browser's top layer instead,
-		   where no ancestor transform reaches it. */
-		/* Server-rendered open-but-not-modal: no sheet until it is asked for. */
-		.rail[open]:not(:modal) { display: none; }
-		.rail[open] {
+		/* The column is in the server-rendered HTML either way; here it stays
+		   out of the flow until the trigger asks for it. Longhand offsets
+		   rather than `inset`, and no `:modal`/`::backdrop`, so this still
+		   resolves on pre-15 Safari. */
+		.rail { display: none; }
+		.rail.open {
+			display: flex;
 			position: fixed;
-			inset: auto 0 0 0;
+			top: auto;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 201;
 			width: 100%;
 			max-width: 100%;
 			max-height: 88vh;
+			background: var(--color-bg-primary);
 			border-radius: var(--radius-card) var(--radius-card) 0 0;
+			box-shadow: var(--shadow-lg);
 			padding: 0 1.25rem;
 			overflow-y: auto;
 			overscroll-behavior: contain;
 			animation: sheet-up 220ms ease-out;
 		}
-		.rail::backdrop {
+		/* Above the sticky header (z-index 100), below the sheet. */
+		.scrim {
+			display: block;
+			position: fixed;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 200;
+			width: 100%;
+			height: 100%;
+			border: none;
+			padding: 0;
 			background: rgba(0, 0, 0, 0.45);
 		}
 		.rail-head { display: none; }
@@ -402,23 +420,35 @@
 		to { transform: translateY(0); }
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.rail[open] { animation: none; }
+		.rail.open { animation: none; }
 	}
 </style>
 
-<!-- `open` is set in the markup so the column is there in the server-rendered
-	 HTML; on narrow screens CSS hides the non-modal state until it is opened
-	 properly, and the effect above closes it on hydration. -->
-<dialog
+<svelte:window onkeydown={onKeydown} />
+
+{#if open}
+	<button class="scrim" tabindex="-1" aria-label={t.filters_close} onclick={() => (open = false)}
+	></button>
+{/if}
+
+<!-- One markup for both shapes: the column on wide screens, the sheet on
+	 narrow ones. Nothing here needs JS to render — only the sheet's open state
+	 does. -->
+<div
 	class="rail"
-	open
-	bind:this={dialogEl}
-	onclose={() => (open = false)}
+	class:open
+	role={open ? 'dialog' : 'group'}
+	aria-modal={open ? 'true' : undefined}
 	aria-label={t.filters}
 >
 	<div class="sheet-head">
 		<h2>{t.filters}</h2>
-		<button class="icon-button" onclick={() => (open = false)} aria-label={t.filters_close}>
+		<button
+			class="icon-button"
+			bind:this={closeEl}
+			onclick={() => (open = false)}
+			aria-label={t.filters_close}
+		>
 			<X size={20} />
 		</button>
 	</div>
@@ -454,7 +484,7 @@
 				<div class="switch-row">
 					<Toggle bind:checked={browse.inSeasonOnly} label={t.season_only_now} />
 				</div>
-				{#if isLoggedIn}
+				{#if showFavorites}
 					<div class="switch-row">
 						<Toggle bind:checked={browse.favoritesOnly} label={t.favorites_only} />
 					</div>
@@ -611,4 +641,4 @@
 			{t.filters_show_results} ({browse.results.length})
 		</button>
 	</div>
-</dialog>
+</div>

@@ -95,12 +95,10 @@ export const de = {
 	// Search page
 	search_results_title: 'Suchergebnisse',
 	search_meta_description: 'Suchergebnisse in den Bockenschen Rezepten.',
-	filtered_by: 'Gefiltert nach:',
 	keywords_label: 'Stichwörter',
 	seasons_label: 'Monate',
 	favorites_only: 'Nur Favoriten',
 	search_error: 'Fehler bei der Suche:',
-	results_for: 'Ergebnisse für',
 	no_recipes_found: 'Keine Rezepte gefunden.',
 	try_other_search: 'Versuche es mit anderen Suchbegriffen.',
 
@@ -110,7 +108,6 @@ export const de = {
 
 	// Index page
 	index_title: 'Rezepte',
-	in_season_now: 'In Saison',
 	meta_alt_hero: 'Pasta al Ragu mit Linguine',
 
 	// Detail page
@@ -124,7 +121,6 @@ export const de = {
 	error_loading_favorites: 'Fehler beim Laden der Favoriten:',
 	recipe_singular_link: 'Rezept',
 	recipes_to_try_link: 'Zum Ausprobieren',
-	no_matching_favorites: 'Keine passenden Favoriten gefunden.',
 
 	// Error pages
 	recipe_not_found: 'Rezept nicht gefunden',
@@ -154,11 +150,6 @@ export const de = {
 	empty_favorites_2: 'Besuche ein Rezept und klicke auf das Herz-Symbol, um es zu deinen Favoriten hinzuzufügen.',
 
 	// Filters
-	filter_mode: 'Filter-Modus',
-	and_label: 'UND',
-	or_label: 'ODER',
-	select_category_placeholder: 'Kategorie auswählen…',
-	select_season_placeholder: 'Saison auswählen…',
 
 	// Search component
 	search_placeholder_short: 'Suche…',
@@ -201,11 +192,8 @@ export const de = {
 	jsonld_for_duration: 'für',
 
 	// CreateStepList baking
-	not_set: 'Nicht gesetzt',
 	duration: 'Dauer',
 	temperature: 'Temperatur',
-	mode_label: 'Modus',
-	custom_mode_placeholder: 'oder eigenen Modus eingeben…',
 
 	// Administration page descriptions
 	administration_description: 'Rezepte und Inhalte verwalten',
@@ -216,10 +204,6 @@ export const de = {
 
 	// Smaller filters / pages
 	loading_offline: 'Lade Offline-Inhalte…',
-	hide_filters: 'Filter ausblenden',
-	show_filters: 'Filter einblenden',
-	select_icon_placeholder: 'Icon auswählen…',
-	add_tag_placeholder: 'Tag eingeben oder auswählen…',
 
 	// Index / tips / yeast
 	recipes_growing_suffix: 'Rezepte und stetig wachsend…',
