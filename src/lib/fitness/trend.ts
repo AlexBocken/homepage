@@ -85,6 +85,94 @@ export function timeDecayedTrend(
 	return { trend, upper, lower };
 }
 
+// The rate behind the goal forecast is read off a plain straight line through
+// the last month of readings. A month is long enough that day-to-day water and
+// gut-content noise averages out, short enough that a rate which changed three
+// weeks ago is already the rate you see, and — unlike a decayed fit over all
+// history — it is a claim anyone can check by looking at the chart.
+export const RATE_WINDOW_DAYS = 30;
+
+export interface LinearFit {
+	/** Units per day. Negative when the measurement is falling. */
+	slope: number;
+	/** Fitted value at the last reading — free of the EMA's lag (see below). */
+	level: number;
+	/** Standard error of `slope`, same units. */
+	seSlope: number;
+	/** Readings the fit is built from. */
+	n: number;
+	/** First to last of those readings, in days. */
+	spanDays: number;
+	/** Timestamp the fit is anchored at (the last reading). */
+	lastMs: number;
+	/** Start of the window the fit covers. */
+	windowStartMs: number;
+}
+
+/**
+ * Least-squares straight line through the readings of the last `windowDays`.
+ *
+ * The EMA above says where the measurement is; this says how fast it is moving,
+ * which a mean cannot. Differencing the EMA instead is a dead end — an EMA step
+ * is α·(x − trend), i.e. the very noise the smoothing removed.
+ *
+ * `level` is the fit's own value at the last reading, not the EMA's. An EMA
+ * trails a steady change by about τ·rate — at 0.5 kg/week and τ=10 that is
+ * 0.7 kg — so anchoring a projection on the drawn trend line would put every
+ * arrival date about τ days late. A straight line has no such lag.
+ *
+ * Returns null when there is nothing to fit: fewer than two readings in the
+ * window, or all of them on the same day (no spread in t to regress against).
+ */
+export function linearFit(
+	values: number[],
+	dates: Array<Date | string | number>,
+	windowDays: number = RATE_WINDOW_DAYS
+): LinearFit | null {
+	if (values.length < 2) return null;
+
+	const ms = dates.map((d) => new Date(d).getTime());
+	const lastMs = ms[ms.length - 1];
+	const fromMs = lastMs - windowDays * DAY_MS;
+
+	// Days relative to the last reading, so t = 0 is "now" and the fitted
+	// intercept *is* the current level.
+	const t: number[] = [];
+	const x: number[] = [];
+	for (let i = 0; i < values.length; i++) {
+		if (ms[i] < fromMs) continue;
+		t.push((ms[i] - lastMs) / DAY_MS);
+		x.push(values[i]);
+	}
+	const n = t.length;
+	if (n < 2) return null;
+
+	let st = 0, sx = 0;
+	for (let i = 0; i < n; i++) { st += t[i]; sx += x[i]; }
+	const tBar = st / n;
+	const xBar = sx / n;
+
+	let stt = 0, stx = 0;
+	for (let i = 0; i < n; i++) {
+		stt += (t[i] - tBar) * (t[i] - tBar);
+		stx += (t[i] - tBar) * (x[i] - xBar);
+	}
+	if (!(stt > 0)) return null; // every reading at one instant
+
+	const slope = stx / stt;
+	const level = xBar - slope * tBar; // the fit at t = 0
+
+	// Residual scatter about the line, the textbook Σr²/((n−2)·Σ(t−t̄)²).
+	let ssr = 0;
+	for (let i = 0; i < n; i++) {
+		const r = x[i] - (level + slope * t[i]);
+		ssr += r * r;
+	}
+	const seSlope = n > 2 ? Math.sqrt(ssr / (stt * (n - 2))) : Infinity;
+
+	return { slope, level, seSlope, n, spanDays: (lastMs - ms[ms.length - n]) / DAY_MS, lastMs, windowStartMs: fromMs };
+}
+
 export interface SparseTrendBands {
 	trend: (number | null)[];
 	upper: (number | null)[];

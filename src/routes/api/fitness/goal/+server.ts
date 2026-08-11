@@ -15,6 +15,15 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const weeklyWorkouts = goal?.weeklyWorkouts ?? null;
 	const shareSegments = goal?.shareSegments ?? true;
 
+	const bodyTargets = {
+		targetWeightKg: goal?.targetWeightKg ?? null,
+		targetBodyFatPercent: goal?.targetBodyFatPercent ?? null,
+		targetFatMassKg: goal?.targetFatMassKg ?? null,
+		// Date-only: the forecast compares whole days, and a stored midnight in one
+		// timezone must not read as the previous day in another.
+		targetDate: goal?.targetDate ? new Date(goal.targetDate).toISOString().slice(0, 10) : null,
+	};
+
 	const nutritionGoals = {
 		activityLevel: goal?.activityLevel ?? 'light',
 		dailyCalories: goal?.dailyCalories ?? null,
@@ -26,11 +35,11 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	// If no goal set, return early
 	if (weeklyWorkouts === null) {
-		return json({ weeklyWorkouts: null, streak: 0, shareSegments, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals });
+		return json({ weeklyWorkouts: null, streak: 0, shareSegments, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals, ...bodyTargets });
 	}
 
 	const streak = await computeStreak(user.nickname, weeklyWorkouts);
-	return json({ weeklyWorkouts, streak, shareSegments, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals });
+	return json({ weeklyWorkouts, streak, shareSegments, sex: goal?.sex ?? 'male', heightCm: goal?.heightCm ?? null, birthYear: goal?.birthYear ?? null, ...nutritionGoals, ...bodyTargets });
 };
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
@@ -59,6 +68,30 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 	if (typeof body.fatPercent === 'number' && body.fatPercent >= 0 && body.fatPercent <= 100) update.fatPercent = body.fatPercent;
 	if (typeof body.carbPercent === 'number' && body.carbPercent >= 0 && body.carbPercent <= 100) update.carbPercent = body.carbPercent;
 
+	// Body-composition targets. Explicit null clears one — dropping a goal has to
+	// be as easy as setting it, and an absent key must keep meaning "unchanged"
+	// so a partial PUT from any other settings form can't wipe them.
+	const unset: Record<string, unknown> = {};
+	const numericTarget = (key: string, min: number, max: number) => {
+		const v = body[key];
+		if (v === undefined) return;
+		if (v === null || v === '') { unset[key] = ''; return; }
+		if (typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max) update[key] = v;
+	};
+	numericTarget('targetWeightKg', 30, 300);
+	numericTarget('targetBodyFatPercent', 3, 60);
+	numericTarget('targetFatMassKg', 1, 150);
+	if (body.targetDate !== undefined) {
+		if (body.targetDate === null || body.targetDate === '') {
+			unset.targetDate = '';
+		} else if (typeof body.targetDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.targetDate)) {
+			// Noon UTC: far enough from either midnight that no timezone reads the
+			// stored instant as the day before or after.
+			const ms = Date.parse(`${body.targetDate}T12:00:00Z`);
+			if (Number.isFinite(ms)) update.targetDate = new Date(ms);
+		}
+	}
+
 	await dbConnect();
 
 	// Read the outgoing calorie goal before overwriting it: every logged day that
@@ -67,9 +100,15 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 		? ((await FitnessGoal.findOne({ username: user.nickname }, { dailyCalories: 1 }).lean() as any)?.dailyCalories ?? null)
 		: null;
 
+	// Mongo rejects an empty $set/$unset, so each half only appears when it carries
+	// something; a PUT that validated to nothing stays the no-op it was before.
+	const mongoUpdate: Record<string, unknown> = {};
+	if (Object.keys(update).length) mongoUpdate.$set = update;
+	if (Object.keys(unset).length) mongoUpdate.$unset = unset;
+
 	const goal = await FitnessGoal.findOneAndUpdate(
 		{ username: user.nickname },
-		update,
+		mongoUpdate,
 		{ upsert: true, returnDocument: 'after' }
 	).lean() as any;
 
@@ -91,6 +130,10 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 		proteinTarget: goal?.proteinTarget ?? null,
 		fatPercent: goal?.fatPercent ?? null,
 		carbPercent: goal?.carbPercent ?? null,
+		targetWeightKg: goal?.targetWeightKg ?? null,
+		targetBodyFatPercent: goal?.targetBodyFatPercent ?? null,
+		targetFatMassKg: goal?.targetFatMassKg ?? null,
+		targetDate: goal?.targetDate ? new Date(goal.targetDate).toISOString().slice(0, 10) : null,
 	});
 };
 
