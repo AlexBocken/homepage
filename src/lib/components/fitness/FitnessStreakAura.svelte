@@ -139,19 +139,24 @@
 		font-size: 2.5rem;
 		font-weight: 700;
 		color: var(--color-amber-text);
-		--shadow-outline: 0 0 1px rgba(255,255,255,0.9), 0 0 3px rgba(0,0,0,0.4);
+		/* Dark outline only. The white halo this used to carry lifted the glyph
+		   off its own colour and read as gold rather than as the yellow it is. */
+		--shadow-outline: 0 0 3px rgba(0,0,0,0.45);
+		/* Every glow below is mixed from this, so a lit streak is the same yellow
+		   as an unlit one — brighter, not a different colour. */
+		--glow: var(--yellow);
 	}
 
 	/* Phase 1 - Glow (1 week) */
 	.phase-1 .number {
 		text-shadow:
-			0 0 8px rgba(255,215,100,.5),
-			0 0 16px rgba(255,215,100,.35);
+			0 0 8px color-mix(in srgb, var(--glow) 50%, transparent),
+			0 0 16px color-mix(in srgb, var(--glow) 35%, transparent);
 		animation: glow-pulse 2.5s ease-in-out infinite;
 	}
 	@keyframes glow-pulse {
-		0%,100% { text-shadow: 0 0 8px rgba(255,215,100,.4); }
-		50% { text-shadow: 0 0 16px rgba(255,215,100,.8); }
+		0%,100% { text-shadow: 0 0 8px color-mix(in srgb, var(--glow) 40%, transparent); }
+		50% { text-shadow: 0 0 16px color-mix(in srgb, var(--glow) 80%, transparent); }
 	}
 
 	/* Phase 2/3 - Ember text shadow (2-3 weeks) */
@@ -160,20 +165,22 @@
 	.phase-4 .number {
 		animation: ember-pulse 1.4s infinite alternate;
 	}
+	/* The near glow is the number's own yellow; only the outer haze warms toward
+	   the flames underneath, which is where the heat belongs. */
 	@keyframes ember-pulse {
 		0% {
 			text-shadow:
 				var(--shadow-outline),
-				0 0 6px rgba(255,140,0,.6),
-				0 0 12px rgba(255,90,0,.4),
-				0 0 20px rgba(255,50,0,.2);
+				0 0 6px color-mix(in srgb, var(--glow) 55%, transparent),
+				0 0 12px color-mix(in srgb, var(--orange) 40%, transparent),
+				0 0 20px color-mix(in srgb, var(--red) 20%, transparent);
 		}
 		100% {
 			text-shadow:
 				var(--shadow-outline),
-				0 0 10px rgba(255,180,0,.9),
-				0 0 18px rgba(255,120,0,.6),
-				0 0 28px rgba(255,70,0,.35);
+				0 0 10px color-mix(in srgb, var(--glow) 85%, transparent),
+				0 0 18px color-mix(in srgb, var(--orange) 55%, transparent),
+				0 0 28px color-mix(in srgb, var(--red) 32%, transparent);
 		}
 	}
 
