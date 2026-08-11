@@ -30,6 +30,7 @@
 	import { formatElapsed, formatPaceKm, formatEffortRate } from '$lib/fitness/segmentFormat';
 	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
 	import { projectTrack, svgPath } from '$lib/fitness/trackSvg';
+	import { revealOnLoad } from '$lib/js/imgReveal';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 	import BodyDeltaTile from '$lib/components/fitness/BodyDeltaTile.svelte';
@@ -636,14 +637,15 @@
 				{@const st = segStats[seg._id]}
 				<div class="seg-card-wrap" class:span-full={full}>
 					<button type="button" class="seg-card" onclick={() => (segModalOpen = true)} aria-label={t.dash_segment}>
-					<div class="seg-map">
+					<div class="seg-map" class:raster={!st?.failed}>
+						<!-- Route ghost under the raster so the lazy map fades in over the
+						     right shape instead of popping onto an empty panel. -->
+						<svg class="seg-map-svg ghost" class:solo={st?.failed} viewBox="0 0 240 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+							<path d={segSvgPath(seg)} class="seg-route-casing" />
+							<path d={segSvgPath(seg)} class="seg-route" />
+						</svg>
 						{#if !st?.failed}
-							<img class="seg-map-img" src={`/api/fitness/segments/${seg._id}/map.webp`} alt="" loading="lazy" decoding="async" onerror={() => segMapFailed(seg._id)} />
-						{:else}
-							<svg class="seg-map-svg" viewBox="0 0 240 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-								<path d={segSvgPath(seg)} class="seg-route-casing" />
-								<path d={segSvgPath(seg)} class="seg-route" />
-							</svg>
+							<img class="seg-map-img" src={`/api/fitness/segments/${seg._id}/map.webp`} alt="" loading="eager" decoding="async" use:revealOnLoad onerror={() => segMapFailed(seg._id)} />
 						{/if}
 						{#if st?.rank != null}
 							<span class="seg-rank" class:kom={st.rank === 1} title={t.rank}>
@@ -691,16 +693,17 @@
 			{:else}
 				<div class="seg-card-wrap" class:span-full={full}>
 				<button type="button" class="seg-card" onclick={() => (fastestEditOpen = true)} aria-label={t.dash_fastest}>
-					<div class="seg-map">
-						{#if fastest && !fastestMapFailed}
-							<img class="seg-map-img" src={`/api/fitness/sessions/${fastest.sessionId}/map.webp`} alt="" loading="lazy" decoding="async" onerror={() => (fastestMapFailed = true)} />
-						{:else if fastest?.gpsPreview?.length}
-							<svg class="seg-map-svg" viewBox="0 0 240 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+					<div class="seg-map" class:raster={fastest && !fastestMapFailed}>
+						{#if fastest?.gpsPreview?.length}
+							<svg class="seg-map-svg ghost" class:solo={fastestMapFailed} viewBox="0 0 240 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
 								<path d={svgPath(projectTrack(fastest.gpsPreview, 240, 150, 12))} class="seg-route-casing" />
 								<path d={svgPath(projectTrack(fastest.gpsPreview, 240, 150, 12))} class="seg-route" />
 							</svg>
-						{:else}
+						{:else if !fastest || fastestMapFailed}
 							<div class="seg-map-blank"><Zap size={26} /></div>
+						{/if}
+						{#if fastest && !fastestMapFailed}
+							<img class="seg-map-img" src={`/api/fitness/sessions/${fastest.sessionId}/map.webp`} alt="" loading="eager" decoding="async" use:revealOnLoad onerror={() => (fastestMapFailed = true)} />
 						{/if}
 						<span class="seg-rank dist"><ActivityIcon activity={fastestActivity} size={11} /> {fastestKm}{t.km_short}</span>
 					</div>
@@ -1431,12 +1434,27 @@
 		flex: 0 0 clamp(150px, 38%, 320px);
 		background: var(--color-bg-tertiary);
 	}
+	/* Tile-coloured only while a real map is on its way. */
+	.seg-map.raster {
+		background: var(--map-tone);
+	}
 	.seg-map-img,
 	.seg-map-svg {
 		width: 100%;
 		height: 100%;
 		display: block;
 		object-fit: cover;
+	}
+	.seg-map-svg.ghost {
+		position: absolute;
+		inset: 0;
+		opacity: 0.35;
+	}
+	.seg-map-svg.ghost.solo {
+		opacity: 1;
+	}
+	.seg-map-img {
+		position: relative;
 	}
 	.seg-route-casing {
 		fill: none;
@@ -1649,8 +1667,8 @@
 		background: var(--color-bg-elevated);
 	}
 	.seg-map-blank {
-		width: 100%;
-		height: 100%;
+		position: absolute;
+		inset: 0;
 		display: grid;
 		place-items: center;
 		color: var(--blue);

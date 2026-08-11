@@ -141,6 +141,15 @@
 	--radius-md: 0.5rem;
 	--radius-lg: 0.75rem;
 
+	/* Placeholder behind a route-map raster (the swisstopo "karte" layer we render
+	   the fitness maps on): the mean colour of the generated map images, so a map
+	   fading in reads as detail arriving rather than a block of colour swapping
+	   out. Deliberately theme-independent — the raster looks the same in both
+	   themes, and a dark placeholder would flash on load. Route ghost colour
+	   matches ROUTE_COLOR in $lib/data/mapTiles. */
+	--map-tone: #b2b6ab;
+	--map-route: #f4511e;
+
 	/* Meter thickness. Bars that report a value against a total read as one family
 	   only if they share two weights: `sm` for a bar annotating a single row of a
 	   table, `md` for one summarising a whole section. Past about 8px a bar stops

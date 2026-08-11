@@ -9,6 +9,7 @@
 	import { formatElapsed } from '$lib/fitness/segmentFormat';
 	import { segmentParam } from '$lib/fitness/prettyUrl';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
+	import { revealOnLoad } from '$lib/js/imgReveal';
 
 	interface SegmentSummary {
 		_id: string;
@@ -24,16 +25,20 @@
 
 	// `onselect` turns the card into a selectable button (used by the stats-page
 	// segment picker) instead of a link to the segment detail page.
+	// `eager`: cards on screen at first paint skip lazy scheduling, otherwise the
+	// top of the grid is exactly where the map pops in latest.
 	let {
 		segment,
 		lang = 'en',
 		onselect,
-		selected = false
+		selected = false,
+		eager = false
 	}: {
 		segment: SegmentSummary;
 		lang?: FitnessLang;
 		onselect?: (id: string) => void;
 		selected?: boolean;
+		eager?: boolean;
 	} = $props();
 
 	const t = $derived(m[lang]);
@@ -49,21 +54,32 @@
 	<span class="activity-badge" title={segment.activityType}>
 		<ActivityIcon activity={segment.activityType} size={13} />
 	</span>
-	{#if !mapImgFailed}
-		<img
-			class="mini-map map-img"
-			src={`/api/fitness/segments/${segment._id}/map.webp`}
-			alt=""
-			loading="lazy"
-			decoding="async"
-			onerror={() => (mapImgFailed = true)}
-		/>
-	{:else}
-		<svg class="mini-map" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+	<div class="map-slot" class:raster={!mapImgFailed}>
+		<!-- Route ghost under the raster so a lazily-loaded map fades in over the
+		     right shape rather than over an empty box. -->
+		<svg
+			class="mini-map ghost"
+			class:solo={mapImgFailed}
+			viewBox={`0 0 ${W} ${H}`}
+			preserveAspectRatio="xMidYMid meet"
+			aria-hidden="true"
+		>
 			<path d={path} class="casing" />
 			<path d={path} class="route" />
 		</svg>
-	{/if}
+		{#if !mapImgFailed}
+			<img
+				class="mini-map map-img"
+				src={`/api/fitness/segments/${segment._id}/map.webp`}
+				alt=""
+				loading={eager ? 'eager' : 'lazy'}
+				fetchpriority={eager ? 'high' : 'auto'}
+				decoding="async"
+				use:revealOnLoad
+				onerror={() => (mapImgFailed = true)}
+			/>
+		{/if}
+	</div>
 	<div class="body">
 		<h3 class="name">{segment.name}</h3>
 		<div class="stats">
@@ -136,13 +152,30 @@
 		color: var(--color-text-secondary);
 		box-shadow: var(--shadow-sm);
 	}
-	.mini-map {
-		width: 100%;
+	.map-slot {
+		position: relative;
 		height: 140px;
 		background: var(--color-bg-tertiary);
+	}
+	/* Tile-coloured only while a real map is on its way. */
+	.map-slot.raster {
+		background: var(--map-tone);
+	}
+	.mini-map {
+		width: 100%;
+		height: 100%;
 		display: block;
 	}
+	.ghost {
+		position: absolute;
+		inset: 0;
+		opacity: 0.35;
+	}
+	.ghost.solo {
+		opacity: 1;
+	}
 	.map-img {
+		position: relative;
 		object-fit: cover;
 	}
 	.casing {

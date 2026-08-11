@@ -389,11 +389,11 @@
 		<p class="empty">{loading ? '' : filtersActive ? t.no_results : t.no_workouts_yet}</p>
 	{:else}
 		<div class="list">
-			{#each rows as row (row.type === 'header' ? `h-${row.key}` : row.sess._id)}
+			{#each rows as row, i (row.type === 'header' ? `h-${row.key}` : row.sess._id)}
 				{#if row.type === 'header'}
 					<h2 class="month-header">{row.key}</h2>
 				{:else}
-					<SessionCard session={row.sess} unsynced={queuedIds.has(row.sess._id)} />
+					<SessionCard session={row.sess} unsynced={queuedIds.has(row.sess._id)} eager={i < 3} />
 				{/if}
 			{/each}
 		</div>

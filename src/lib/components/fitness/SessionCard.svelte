@@ -14,6 +14,7 @@
 	import CloudOff from '@lucide/svelte/icons/cloud-off';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { prCount } from '$lib/fitness/prCount';
+	import { revealOnLoad } from '$lib/js/imgReveal';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const sl = $derived(fitnessSlugs(lang));
@@ -40,10 +41,13 @@
 	 *       sets: Array<{ reps?: number, weight?: number, rpe?: number, distance?: number, duration?: number }>
 	 *     }>
 	 *   },
-	 *   unsynced?: boolean
+	 *   unsynced?: boolean,
+	 *   eager?: boolean
 	 * }}
 	 */
-	let { session, unsynced = false } = $props();
+	// `eager`: the cards that are on screen at first paint skip lazy scheduling,
+	// otherwise the top of the list is exactly where the map pops in latest.
+	let { session, unsynced = false, eager = false } = $props();
 
 	// Prefer the server-rendered map screenshot; fall back to the SVG outline
 	// if it fails (unsynced local run, render failure, or offline).
@@ -137,28 +141,41 @@
 	</div>
 
 	{#if gpsPreview}
-		<div class="map-preview">
-			{#if !unsynced && !mapImgFailed}
-				<img
-					class="map-img"
-					src={`/api/fitness/sessions/${session._id}/map.webp${session.updatedAt ? `?v=${new Date(session.updatedAt).getTime()}` : ''}`}
-					alt={t.route_map ?? 'Route map'}
-					loading="lazy"
-					decoding="async"
-					onerror={() => { mapImgFailed = true; }}
-				/>
-			{:else if svgData}
-				<svg viewBox={svgData.viewBox} preserveAspectRatio="xMidYMid meet">
+		{@const showRaster = !unsynced && !mapImgFailed}
+		<div class="map-preview" class:raster={showRaster}>
+			<!-- The preview track is already on the card, so the placeholder under the
+			     raster can show the route itself — faint while the map is still
+			     loading, full strength when it is the only thing we have. -->
+			{#if svgData}
+				<svg
+					class="map-ghost"
+					class:solo={!showRaster}
+					viewBox={svgData.viewBox}
+					preserveAspectRatio="xMidYMid meet"
+					aria-hidden="true"
+				>
 					<polyline
 						points={svgData.points}
 						fill="none"
-						stroke="#f4511e"
+						stroke="var(--map-route)"
 						stroke-width="2.5"
 						stroke-linejoin="round"
 						stroke-linecap="round"
 						vector-effect="non-scaling-stroke"
 					/>
 				</svg>
+			{/if}
+			{#if showRaster}
+				<img
+					class="map-img"
+					src={`/api/fitness/sessions/${session._id}/map.webp${session.updatedAt ? `?v=${new Date(session.updatedAt).getTime()}` : ''}`}
+					alt={t.route_map ?? 'Route map'}
+					loading={eager ? 'eager' : 'lazy'}
+					fetchpriority={eager ? 'high' : 'auto'}
+					decoding="async"
+					use:revealOnLoad
+					onerror={() => { mapImgFailed = true; }}
+				/>
 			{/if}
 		</div>
 	{/if}
@@ -254,11 +271,17 @@
 		color: var(--color-text-secondary);
 	}
 	.map-preview {
+		position: relative;
 		height: 150px;
 		margin-bottom: 0.5rem;
 		background: color-mix(in srgb, var(--color-primary) 6%, transparent);
 		border-radius: 6px;
 		overflow: hidden;
+	}
+	/* Map-toned only where a real map is coming, so the SVG-only fallback keeps
+	   its light tint instead of sitting on a slab of tile colour. */
+	.map-preview.raster {
+		background: var(--map-tone);
 	}
 	/* Cards get wider on larger screens — give the map more room to breathe. */
 	@media (min-width: 560px) {
@@ -267,11 +290,18 @@
 	@media (min-width: 900px) {
 		.map-preview { height: 230px; }
 	}
-	.map-preview svg {
+	.map-ghost {
+		position: absolute;
+		inset: 0;
 		width: 100%;
 		height: 100%;
+		opacity: 0.35;
+	}
+	.map-ghost.solo {
+		opacity: 1;
 	}
 	.map-img {
+		position: relative;
 		display: block;
 		width: 100%;
 		height: 100%;

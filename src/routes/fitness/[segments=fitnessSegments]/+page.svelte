@@ -218,8 +218,8 @@
 		<p class="empty">{t.no_segments}</p>
 	{:else}
 		<div class="grid">
-			{#each shown as segment (segment._id)}
-				<SegmentCard {segment} {lang} />
+			{#each shown as segment, i (segment._id)}
+				<SegmentCard {segment} {lang} eager={i < 6} />
 			{/each}
 		</div>
 	{/if}
