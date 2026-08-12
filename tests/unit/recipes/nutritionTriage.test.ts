@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { triageState, trustLevel, buildRows, coverageOf, unsureReasons } from '$lib/js/nutritionTriage';
+import {
+	triageState, trustLevel, buildRows, coverageOf, unsureReasons, unmappedLines, reviewSummary,
+} from '$lib/js/nutritionTriage';
 
 const matched = {
 	matchMethod: 'embedding',
@@ -219,5 +221,72 @@ describe('unsureReasons', () => {
 
 	it('is empty for a row with nothing to answer for', () => {
 		expect(unsureReasons(matched, '200')).toEqual([]);
+	});
+});
+
+describe('unmappedLines', () => {
+	it('counts the lines the matcher never wrote a mapping for', () => {
+		const ingredients = [
+			{ type: 'section', list: [
+				{ name: 'Mehl', unit: 'g', amount: '500' },
+				{ name: 'Salz', unit: 'g', amount: '10' },
+			] },
+		];
+		expect(unmappedLines(ingredients, [{ sectionIndex: 0, ingredientIndex: 0, ...matched }])).toBe(1);
+		expect(unmappedLines(ingredients, [])).toBe(2);
+	});
+
+	it('ignores a base-recipe section, which has no line to map', () => {
+		const ingredients = [{ type: 'reference', baseRecipeRef: { short_name: 'pizzateig' }, baseMultiplier: 1 }];
+		expect(unmappedLines(ingredients, [])).toBe(0);
+	});
+
+	it('ignores a line that repeats another section\'s name', () => {
+		// "Teig" inside "Belag" is that section listed again, not an ingredient —
+		// the same exclusion computeTotals makes when summing the recipe.
+		const ingredients = [
+			{ name: 'Teig', type: 'section', list: [{ name: 'Mehl', unit: 'g', amount: '500' }] },
+			{ name: 'Belag', type: 'section', list: [{ name: 'Teig', unit: '', amount: '' }] },
+		];
+		expect(unmappedLines(ingredients, [{ sectionIndex: 0, ingredientIndex: 0, ...matched }])).toBe(0);
+	});
+});
+
+describe('reviewSummary', () => {
+	const ingredients = [
+		{ type: 'section', list: [
+			{ name: 'Mehl', unit: 'g', amount: '500' },
+			{ name: 'Hefe', unit: 'g', amount: '10' },
+		] },
+	];
+
+	it('is clean when every line is settled', () => {
+		const summary = reviewSummary(ingredients, [
+			{ sectionIndex: 0, ingredientIndex: 0, ...matched },
+			{ sectionIndex: 0, ingredientIndex: 1, ...matched, excluded: true },
+		]);
+		expect(summary.todo).toBe(0);
+		expect(summary.clean).toBe(true);
+	});
+
+	it('counts an unmapped line as work even though it has no card', () => {
+		const summary = reviewSummary(ingredients, [{ sectionIndex: 0, ingredientIndex: 0, ...matched }]);
+		expect(summary.unmapped).toBe(1);
+		expect(summary.todo).toBe(1);
+		expect(summary.clean).toBe(false);
+	});
+
+	it('counts open and unsure lines', () => {
+		const summary = reviewSummary(ingredients, [
+			{ sectionIndex: 0, ingredientIndex: 0, ...matched, matchMethod: 'none' },
+			{ sectionIndex: 0, ingredientIndex: 1, ...matched, matchConfidence: 0.3 },
+		]);
+		expect(summary.counts.open).toBe(1);
+		expect(summary.counts.unsure).toBe(1);
+		expect(summary.todo).toBe(2);
+	});
+
+	it('treats a recipe with no mappings at all as entirely open', () => {
+		expect(reviewSummary(ingredients, [])).toMatchObject({ unmapped: 2, todo: 2, clean: false });
 	});
 });

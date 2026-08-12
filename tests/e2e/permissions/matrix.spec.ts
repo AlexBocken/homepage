@@ -57,6 +57,13 @@ const GROUP_ROUTES: GroupRoute[] = [
 	// rezepte_users
 	{ path: '/rezepte/add', group: 'rezepte_users', kind: 'page' },
 	{ path: '/rezepte/edit/schokokuchen', group: 'rezepte_users', kind: 'page' },
+	// The nutrition review queue and one recipe of its walk. Both language slugs
+	// are listed: the guard runs before the German redirect, so /recipes/* must
+	// answer a stranger exactly as /rezepte/* does.
+	{ path: '/rezepte/admin/nutrition/review', group: 'rezepte_users', kind: 'page' },
+	{ path: '/recipes/admin/nutrition/review', group: 'rezepte_users', kind: 'page' },
+	{ path: '/rezepte/admin/nutrition/review/e2e_mapping', group: 'rezepte_users', kind: 'page' },
+	{ path: '/recipes/admin/nutrition/review/e2e_mapping', group: 'rezepte_users', kind: 'page' },
 	// POST-only: re-matches one ingredient for the editor's triage list. Writes
 	// nothing, but it reads a recipe and runs the matcher, so it is gated like the
 	// editor that calls it.

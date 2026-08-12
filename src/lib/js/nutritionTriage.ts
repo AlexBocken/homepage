@@ -23,6 +23,12 @@ import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
 /** Below this, an automatic match is a guess worth confirming. */
 export const UNSURE_CONFIDENCE = 0.6;
 
+/** Tags out, nothing else — kept byte-identical to `computeTotals`' own copy,
+ *  because the two compare the same names against the same section headings. */
+function stripHtml(html: string): string {
+	return html.replace(/<[^>]*>/g, '');
+}
+
 export type TriageState =
 	/** Another recipe, counted whole. */
 	| 'ref'
@@ -283,4 +289,65 @@ export function coverageOf(
 	}
 
 	return { coveredGrams, totalGrams, counts };
+}
+
+/**
+ * Ingredient lines the matcher never wrote a mapping for.
+ *
+ * `buildRows` is driven by the mappings — a line without one produces no card,
+ * and so shows up in no count at all. That is invisible rather than harmless: a
+ * recipe whose mappings were never generated, or one that gained an ingredient
+ * after they were, reads as "nothing flagged" while contributing nothing to its
+ * own nutrition. A review queue has to see those lines.
+ *
+ * A line that merely repeats another section's name — "Teig" listed inside
+ * "Belag" — is that section, named again as a component. It is not an ingredient
+ * and needs no mapping, the same exclusion `computeTotals` makes.
+ */
+export function unmappedLines(ingredients: any[], mappings: Mapping[]): number {
+	const byIndex = new Set((mappings ?? []).map((m) => `${m.sectionIndex}-${m.ingredientIndex}`));
+	const sectionNames = new Set<string>();
+	for (const section of ingredients ?? []) {
+		if (section?.name) sectionNames.add(stripHtml(section.name).toLowerCase().trim());
+	}
+
+	let count = 0;
+	(ingredients ?? []).forEach((section: any, si: number) => {
+		if (section?.type === 'reference') return;
+		const ownName = section?.name ? stripHtml(section.name).toLowerCase().trim() : '';
+		(section?.list ?? []).forEach((item: any, ii: number) => {
+			if (byIndex.has(`${si}-${ii}`)) return;
+			const name = stripHtml(item?.name || '').toLowerCase().trim();
+			if (name && sectionNames.has(name) && name !== ownName) return;
+			count++;
+		});
+	});
+	return count;
+}
+
+/** What one recipe's mappings look like as review work. */
+export type ReviewSummary = {
+	counts: Record<TriageState, number>;
+	/** Lines with no mapping at all — work, even though no card exists for them. */
+	unmapped: number;
+	/** Everything a person still has to look at: open, unsure and unmapped. */
+	todo: number;
+	/** Nothing left to check. A skipped line and a base recipe are decisions, not
+	 *  open questions, so they count as done. */
+	clean: boolean;
+};
+
+/**
+ * Read a recipe as a pile of review work: how much is settled, how much is not.
+ *
+ * Deliberately mapping-only — no database, no base-recipe lookup. A referenced
+ * recipe's own lines are that recipe's review work and are counted when the queue
+ * reaches it, so pulling them in here would make one bad line flag every recipe
+ * that builds on it.
+ */
+export function reviewSummary(ingredients: any[], mappings: Mapping[]): ReviewSummary {
+	const { counts } = coverageOf(buildRows(ingredients ?? [], mappings ?? []));
+	const unmapped = unmappedLines(ingredients ?? [], mappings ?? []);
+	const todo = counts.open + counts.unsure + unmapped;
+	return { counts, unmapped, todo, clean: todo === 0 };
 }

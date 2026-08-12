@@ -210,6 +210,31 @@
 		font-size: 0.85rem;
 		color: var(--nord3);
 	}
+
+	.review-link {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		margin-bottom: 2rem;
+		padding: 1rem 1.2rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		text-decoration: none;
+		transition: background var(--transition-fast), border-color var(--transition-fast);
+	}
+	.review-link:hover {
+		background: var(--color-surface-hover);
+		border-color: var(--color-primary);
+	}
+	.review-title {
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+	.review-note {
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+	}
 </style>
 
 <svelte:head>
@@ -223,6 +248,18 @@
 			? 'Generate ingredient-to-calorie mappings using ML embeddings. Manually edited mappings are preserved.'
 			: 'Zutatenzuordnungen zu Kaloriendaten mittels ML-Embeddings generieren. Manuell bearbeitete Zuordnungen bleiben erhalten.'}
 	</p>
+
+	<!-- Manual review: what the generator produced still has to be looked at. -->
+	<a class="review-link" href="/{recipeLang}/admin/nutrition/review">
+		<span class="review-title">
+			{isEnglish ? 'Review mappings recipe by recipe' : 'Zuordnungen Rezept für Rezept prüfen'}
+		</span>
+		<span class="review-note">
+			{isEnglish
+				? 'Walks the recipes that still have open or uncertain lines, skipping the ones already complete.'
+				: 'Geht die Rezepte mit offenen oder unsicheren Zeilen durch — vollständig geprüfte werden übersprungen.'}
+		</span>
+	</a>
 
 	<!-- Single recipe -->
 	<div class="section">

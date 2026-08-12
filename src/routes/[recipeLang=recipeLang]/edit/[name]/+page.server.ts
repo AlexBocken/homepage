@@ -1,9 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { redirect, fail } from "@sveltejs/kit";
 import { Recipe } from '$models/Recipe';
-import { NutritionOverwrite } from '$models/NutritionOverwrite';
 import { dbConnect } from '$utils/db';
-import { invalidateOverwriteCache } from '$lib/server/nutritionMatcher';
+import { syncGlobalOverwrites } from '$lib/server/nutritionOverwriteSync';
 import { IMAGE_DIR } from '$env/static/private';
 import { rename, access, unlink } from 'fs/promises';
 import { join } from 'path';
@@ -258,50 +257,9 @@ export const actions = {
 					}
 				}
 
-				// Drop the global overwrites whose switch was turned off.
-				//
-				// Runs before the upserts below so that a switch flipped off and an
-				// ingredient of the same name mapped afresh in one save ends up mapped,
-				// not deleted. Without this half the switch was one-way: the editor
-				// could create a global mapping — or a global *skip* — and nothing in
-				// the UI could take it back.
-				const removedOverwritesJson = formData.get('globalOverwritesRemoved_json')?.toString();
-				if (removedOverwritesJson) {
-					try {
-						const removed: string[] = JSON.parse(removedOverwritesJson);
-						const names = removed
-							.filter((n): n is string => typeof n === 'string' && n.trim() !== '')
-							.map((n) => n.toLowerCase().trim());
-						if (names.length > 0) {
-							await NutritionOverwrite.deleteMany({ ingredientNameDe: { $in: names } });
-							invalidateOverwriteCache();
-						}
-					} catch (e) {
-						console.error('Failed to remove global overwrites:', e);
-					}
-				}
-
-				// Save global nutrition overwrites
-				const globalOverwritesJson = formData.get('globalOverwrites_json')?.toString();
-				if (globalOverwritesJson) {
-					try {
-						const overwrites = JSON.parse(globalOverwritesJson);
-						for (const ow of overwrites) {
-							if (ow.ingredientNameDe) {
-								await NutritionOverwrite.findOneAndUpdate(
-									{ ingredientNameDe: ow.ingredientNameDe },
-									ow,
-									{ upsert: true, runValidators: true }
-								);
-							}
-						}
-						if (overwrites.length > 0) {
-							invalidateOverwriteCache();
-						}
-					} catch (e) {
-						console.error('Failed to save global overwrites:', e);
-					}
-				}
+				// Both halves of the global-ingredient switch — the ones turned on and
+				// the ones turned off — applied exactly as the review queue applies them.
+				await syncGlobalOverwrites(formData);
 
 				// Redirect to the updated recipe page (might have new short_name)
 				throw redirect(303, `/${params.recipeLang}/${recipeData.short_name}`);
