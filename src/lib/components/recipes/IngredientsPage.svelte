@@ -965,6 +965,7 @@ const nutritionFlatIngredients = $derived.by(() => {
 				referencedNutrition={data.referencedNutrition || []}
 				ingredients={data.ingredients || []}
 				portions={data.portions || ''}
+				finalWeight={data.finalWeight}
 				{isEnglish}
 			/>
 		{/if}

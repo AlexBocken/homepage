@@ -22,7 +22,7 @@ import { FoodLogEntry } from '$models/FoodLogEntry';
 async function computeRecipePer100g(id: string): Promise<Record<string, number>> {
 	const recipeQuery = id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { short_name: id };
 	const recipe = await Recipe.findOne(recipeQuery)
-		.select('ingredients nutritionMappings')
+		.select('ingredients nutritionMappings finalWeight')
 		.lean();
 	if (!recipe) return {};
 

@@ -9,7 +9,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 	await requireGroup(locals, 'rezepte_users');
 	await dbConnect();
 
-	const recipes = await Recipe.find({}).select('name short_name ingredients nutritionMappings').lean();
+	const recipes = await Recipe.find({}).select('name short_name ingredients nutritionMappings finalWeight').lean();
 	const results: { name: string; shortName: string; calories: number; totalGrams: number }[] = [];
 	let skipped = 0;
 

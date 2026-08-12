@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		await dbConnect();
 		const query = id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { short_name: id };
 		const recipe = await Recipe.findOne(query)
-			.select('ingredients nutritionMappings portions')
+			.select('ingredients nutritionMappings portions finalWeight')
 			.lean();
 		if (!recipe) return json({ error: 'Not found' }, { status: 404 });
 

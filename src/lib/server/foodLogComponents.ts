@@ -296,11 +296,15 @@ function directRecipeLeaves(ingredients: any[], mappings: any[]): { leaves: Leaf
 			const item = section.list[ii];
 			const rawName = item?.name || '';
 			const itemName = stripHtml(rawName).toLowerCase().trim();
-			if (/<a\s/i.test(rawName)) continue;
 			if (itemName && sectionNames.has(itemName) && itemName !== currentSectionName) continue;
 
 			const mapping = index.get(`${si}-${ii}`);
 			if (!mapping || mapping.matchMethod === 'none' || mapping.excluded) continue;
+			// Only a link to another *recipe* is a reference, expanded whole below. A
+			// link to an external page is a citation and the line is still an
+			// ingredient — the same distinction computeTotals draws, and dropping every
+			// line with an anchor in it lost those ingredients from the log.
+			if (mapping.recipeRef || parseAnchorRecipeRef(rawName)) continue;
 
 			// A mapping contributes only if it points at a bls/usda leaf — the same gate
 			// resolvePer100g applies in computeRecipeNutritionTotals, expressed purely so
@@ -331,68 +335,81 @@ function mappingLeaf(mapping: any): { source: LeafSource; sourceId: string } | n
  * Decompose a whole recipe into leaf refs scaled to the logged amount.
  *
  * Referenced sub-recipes (base-recipe sections and `<a href>` ingredient anchors)
- * are expanded one level deep and scaled by their multiplier — the same depth
- * resolveReferences uses, so the itemised leaves reproduce the recipe's
- * logged nutrition. Their mass is intentionally *not* added to the denominator, to
- * match how the recipe per-100 g is computed (weight counts direct ingredients
- * only); scaling every leaf by amountGrams/directWeight keeps the totals identical.
+ * are expanded through `recipeReferenceLinks`, the same module the recipe's own
+ * per-100 g goes through, so the itemised leaves name the same recipes at the same
+ * multipliers and reproduce the logged nutrition. Their finished mass joins the
+ * denominator exactly as `computePer100g` adds it: a pizza is mostly dough, and
+ * dividing the dough's calories by the toppings' grams overstated every figure.
  */
 export async function recipeLeaves(recipe: any, amountGrams: number): Promise<LeafRef[]> {
 	const ingredients: any[] = recipe?.ingredients ?? [];
 	const mappings: any[] = recipe?.nutritionMappings ?? [];
 
 	const { leaves: direct, weightGrams } = directRecipeLeaves(ingredients, mappings);
-	if (weightGrams <= 0) return [];
+	const referenced = await referencedRecipeLeaves(ingredients, mappings, new Set());
 
-	const referenced = await referencedRecipeLeaves(ingredients, mappings);
-	const all = [...direct, ...referenced];
+	const sumGrams = weightGrams + referenced.weightGrams;
+	if (sumGrams <= 0) return [];
 
 	// 100 g of the logged dish is 100 g of what came out of the oven, so the share
 	// of each ingredient it represents is measured against the finished weight.
-	const finishedGrams = resolveFinalWeight(weightGrams, recipe?.finalWeight);
+	const finishedGrams = resolveFinalWeight(sumGrams, recipe?.finalWeight);
 	if (finishedGrams <= 0) return [];
 
 	const factor = amountGrams / finishedGrams;
-	return all
+	return [...direct, ...referenced.leaves]
 		.map(l => ({ ...l, amountGrams: l.amountGrams * factor }))
 		.filter(l => l.amountGrams > 0);
 }
 
-/** Leaves from referenced recipes — base-recipe sections and anchor-tag ingredient
- *  refs — each scaled by its own multiplier, at multiplier-1 grams (the outer
- *  recipeLeaves applies the log scale to everything together). */
-async function referencedRecipeLeaves(ingredients: any[], mappings: any[]): Promise<LeafRef[]> {
-	const { Recipe } = await import('$models/Recipe');
-	const out: LeafRef[] = [];
-	const seen = new Set<string>();
+/**
+ * Leaves from the recipes this one builds on — base-recipe sections and anchor-tag
+ * ingredient refs alike — each scaled by its own multiplier, at multiplier-1 grams
+ * (the outer recipeLeaves applies the log scale to everything together), plus the
+ * finished mass they add to the parent's denominator.
+ *
+ * Working out *which* recipe a reference means is `recipeReferenceLinks`' job: a
+ * section stores a bare ObjectId unless the caller populated it, an anchor's
+ * fraction may live on its mapping, and old links still spell slugs with
+ * underscores. Reimplementing that here is what left a whole base-recipe section
+ * out of the log while the recipe page counted it.
+ *
+ * `visited` is the cycle guard and deduplicator, threaded through the recursion the
+ * same way `resolveReferences` threads its own, so both sides count a base named
+ * twice exactly once and attribute a nested base to the same level.
+ */
+async function referencedRecipeLeaves(
+	ingredients: any[],
+	mappings: any[],
+	visited: Set<string>,
+): Promise<{ leaves: LeafRef[]; weightGrams: number }> {
+	const { collectRequests, loadReferencedRecipes } = await import('$lib/server/recipeReferenceLinks');
+	const refs = await loadReferencedRecipes(collectRequests(ingredients, mappings));
 
-	const mappingByRef = new Map(
-		(mappings || []).filter((m: any) => m.recipeRef).map((m: any) => [m.recipeRef, m]),
-	);
+	const leaves: LeafRef[] = [];
+	let weightGrams = 0;
 
-	for (const section of ingredients) {
-		if (section?.type === 'reference' && section.baseRecipeRef?.nutritionMappings?.length) {
-			const ref = section.baseRecipeRef;
-			if (seen.has(ref.short_name)) continue;
-			seen.add(ref.short_name);
-			const mult = section.baseMultiplier || 1;
-			const { leaves } = directRecipeLeaves(ref.ingredients || [], ref.nutritionMappings);
-			out.push(...leaves.map(l => ({ ...l, amountGrams: l.amountGrams * mult })));
-		}
+	for (const { request, doc } of refs) {
+		if (visited.has(doc.short_name)) continue;
+		visited.add(doc.short_name);
 
-		for (const item of section?.list ?? []) {
-			const slug = parseAnchorRecipeRef(item?.name || '');
-			if (!slug || seen.has(slug)) continue;
-			seen.add(slug);
-			const refRecipe = await Recipe.findOne({ short_name: slug })
-				.select('short_name ingredients nutritionMappings').lean();
-			if (!(refRecipe as any)?.nutritionMappings?.length) continue;
-			const mult = (mappingByRef.get(slug) as any)?.recipeRefMultiplier ?? 1;
-			const { leaves } = directRecipeLeaves((refRecipe as any).ingredients || [], (refRecipe as any).nutritionMappings);
-			out.push(...leaves.map(l => ({ ...l, amountGrams: l.amountGrams * mult })));
-		}
+		const own = directRecipeLeaves(doc.ingredients || [], doc.nutritionMappings || []);
+		// The base recipe's own bases, so a dough built on a starter carries it.
+		const nested = await referencedRecipeLeaves(doc.ingredients || [], doc.nutritionMappings || [], visited);
+
+		const sumGrams = own.weightGrams + nested.weightGrams;
+		if (sumGrams <= 0) continue;
+		// What the parent puts in is the finished base, not the raw sum: 1 kg of
+		// dough ingredients goes into the oven and 900 g of bread comes out.
+		const finishedGrams = resolveFinalWeight(sumGrams, doc.finalWeight);
+		if (finishedGrams <= 0) continue;
+
+		const mult = request.baseMultiplier || 1;
+		leaves.push(...[...own.leaves, ...nested.leaves].map(l => ({ ...l, amountGrams: l.amountGrams * mult })));
+		weightGrams += finishedGrams * mult;
 	}
-	return out;
+
+	return { leaves, weightGrams };
 }
 
 // --------------------------------------------------------- shared parsing bits
@@ -437,6 +454,6 @@ export async function decomposeToComponents(input: LogInput): Promise<LeafRef[]>
 	const { Recipe } = await import('$models/Recipe');
 	const query = /^[0-9a-fA-F]{24}$/.test(loggedAs.refId) ? { _id: loggedAs.refId } : { short_name: loggedAs.refId };
 	const recipe = await Recipe.findOne(query)
-		.select('short_name ingredients nutritionMappings').lean();
+		.select('short_name ingredients nutritionMappings finalWeight').lean();
 	return recipe ? recipeLeaves(recipe, amountGrams) : [];
 }

@@ -164,7 +164,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					$or: recipeFavIds.map(id =>
 						id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { short_name: id }
 					)
-				}).select('name short_name icon images ingredients nutritionMappings portions cachedPer100g cachedTotalGrams').lean()
+				}).select('name short_name icon images ingredients nutritionMappings portions finalWeight cachedPer100g cachedTotalGrams').lean()
 				: [];
 			const favRecipeMap = new Map<string, any>();
 			for (const r of favRecipes) {
@@ -225,7 +225,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				{ short_name: { $regex: nameRegex, $options: 'i' } },
 				{ tags: { $regex: escaped, $options: 'i' } },
 			]
-		}).select('name short_name icon images ingredients nutritionMappings portions cachedPer100g cachedTotalGrams').limit(10).lean()
+		}).select('name short_name icon images ingredients nutritionMappings portions finalWeight cachedPer100g cachedTotalGrams').limit(10).lean()
 			.catch(() => [] as any[]),
 		// NOTE: no `.sort({ $meta: 'textScore' })`. Sorting by text score forces
 		// Mongo to score every matching doc before limiting — 100ms–1s+ for common

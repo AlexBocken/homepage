@@ -67,7 +67,7 @@ async function buildComponents(
 	if (source === 'recipe') {
 		if (!sourceId) throw error(400, 'recipe log needs a recipe id');
 		const query = /^[0-9a-fA-F]{24}$/.test(sourceId) ? { _id: sourceId } : { short_name: sourceId };
-		const recipe = await Recipe.findOne(query).select('short_name ingredients nutritionMappings').lean();
+		const recipe = await Recipe.findOne(query).select('short_name ingredients nutritionMappings finalWeight').lean();
 		if (!recipe) throw error(400, 'recipe not found');
 		const components = await recipeLeaves(recipe, amountGrams);
 		if (!components.length) throw error(400, 'recipe resolved to no ingredients');

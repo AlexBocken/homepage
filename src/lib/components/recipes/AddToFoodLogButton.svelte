@@ -6,6 +6,7 @@
 	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
 	import { SPARSELY_MEASURED_KEYS } from '$lib/fitness/nutritionMath';
 	import { ingredientGrams } from '$lib/js/ingredientAmount';
+	import { resolveFinalWeight } from '$lib/js/finalWeight';
 	/** @typedef {import('$lib/js/recipesI18n').RecipesLang} RecipesLang */
 
 	// Blended over the ingredients that report them rather than over the whole pot,
@@ -27,6 +28,7 @@
 		referencedNutrition = [],
 		ingredients = [],
 		portions = '',
+		finalWeight = undefined,
 		isEnglish = true,
 	} = $props();
 	const lang = $derived(/** @type {RecipesLang} */ (isEnglish ? 'en' : 'de'));
@@ -149,9 +151,15 @@
 		return { totals: result, totalWeightGrams, traceTotalsG, traceGrams };
 	});
 
+	// What the dish weighs once it is cooked, which is what a portion is a quarter
+	// of and what "100 g of this" means. The server divides by the same figure when
+	// it decomposes the log, so a recipe with a baking loss set by hand had to have
+	// it here too or the two disagreed by exactly that loss.
+	const finishedWeightGrams = $derived(resolveFinalWeight(recipeTotals.totalWeightGrams, finalWeight));
+
 	// Per-100g for the entire recipe
 	const per100g = $derived.by(() => {
-		const w = recipeTotals.totalWeightGrams;
+		const w = finishedWeightGrams;
 		if (w <= 0) return recipeTotals.totals;
 		/** @type {Record<string, number>} */
 		const result = {};
@@ -172,7 +180,7 @@
 		if (useGrams) return Number(customGrams) || 0;
 		const numPortions = Number(portionAmount) || 0;
 		if (basePortionCount <= 0 || numPortions <= 0) return 0;
-		return (recipeTotals.totalWeightGrams / basePortionCount) * numPortions;
+		return (finishedWeightGrams / basePortionCount) * numPortions;
 	});
 
 	// Preview calories

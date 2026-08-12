@@ -26,7 +26,7 @@ export type NutritionFillResult = {
 export async function fillMissingRecipeNutrition(): Promise<NutritionFillResult> {
 	const missing = await Recipe.find(
 		{ cachedPer100g: { $exists: false } },
-		{ ingredients: 1, nutritionMappings: 1 }
+		{ ingredients: 1, nutritionMappings: 1, finalWeight: 1 }
 	).lean();
 	if (missing.length === 0) return { filled: 0, empty: 0 };
 

@@ -153,6 +153,10 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
       translationStatus: t.translationStatus,
       germanShortName: rawRecipe.short_name,
       nutritionMappings: resolveNutritionData(rawRecipe.nutritionMappings || []),
+      // Language-independent, and the denominator of every per-100 g figure the
+      // page works out for itself — leaving it off made the English page log a
+      // portion of the raw ingredient sum instead of one of the finished dish.
+      finalWeight: rawRecipe.finalWeight,
     };
 
     if (recipe.ingredients) {
