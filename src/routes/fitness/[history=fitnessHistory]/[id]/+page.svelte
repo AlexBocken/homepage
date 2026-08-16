@@ -50,7 +50,7 @@
 	import SegmentEffortsList from '$lib/components/fitness/SegmentEffortsList.svelte';
 	import Flag from '@lucide/svelte/icons/flag';
 	import { onMount } from 'svelte';
-	import { buildGpsView, formatPaceTooltip } from '$lib/fitness/gpsSeries';
+	import { buildGpsView, formatPaceTooltip, formatPaceAxis } from '$lib/fitness/gpsSeries';
 	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	let { data } = $props();
@@ -920,6 +920,7 @@
 									height="160px"
 									yUnit="m"
 									xAxis={gps.xAxis}
+									yAxis={gps.elevation.yAxis}
 									yWidthGroup={yGroup}
 									onHover={(j) => onGraphHover(hov, gps.elevation.points, j, 'elev')}
 									hoverIndex={graphHoverIndex(hov, gps.elevation.points, 'elev')}
@@ -934,7 +935,9 @@
 									title="Pace (min/km)"
 									height="180px"
 									xAxis={gps.xAxis}
+									yAxis={gps.pace.yAxis}
 									yWidthGroup={yGroup}
+									yTickFormatter={formatPaceAxis}
 									tooltipFormatter={(v) => formatPaceTooltip(v)}
 									onHover={(j) => onGraphHover(hov, gps.pace.points, j, 'pace')}
 									hoverIndex={graphHoverIndex(hov, gps.pace.points, 'pace')}
@@ -950,6 +953,7 @@
 									height="160px"
 									yUnit=" spm"
 									xAxis={gps.xAxis}
+									yAxis={gps.cadence.yAxis}
 									yWidthGroup={yGroup}
 									onHover={(j) => onGraphHover(hov, gps.cadence.points, j, 'cadence')}
 									hoverIndex={graphHoverIndex(hov, gps.cadence.points, 'cadence')}

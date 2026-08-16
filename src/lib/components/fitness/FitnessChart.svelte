@@ -18,6 +18,8 @@
 	 *   tooltipLabelColor?: (value: number, datasetIndex: number, dataIndex: number) => string,
 	 *   yMin?: number,
 	 *   yMax?: number,
+	 *   yAxis?: { min: number, max: number, stepSize: number },
+	 *   yTickFormatter?: (value: number) => string,
 	 *   onHover?: (index: number | null) => void,
 	 *   hoverIndex?: number | null,
 	 *   xAxis?: { min: number, max: number, stepSize: number, unit?: string },
@@ -43,6 +45,12 @@
 	 * group's width as blank space, so every plot area in the stack ends at the
 	 * same x too.
 	 *
+	 * `yAxis` pins the y-axis outright — limits *and* gridline step — instead of
+	 * letting Chart.js fit it to the data. The GPS charts use it to keep a minimum
+	 * y extent: a run held at a steady pace varies by a couple of seconds per km,
+	 * and an auto-fitted axis magnifies that noise into a dramatic-looking graph.
+	 * `yTickFormatter` then labels those ticks (pace as `M:SS`, not `6.25`).
+	 *
 	 * `xAxis` switches the x-axis to a numeric *linear* scale (instead of the
 	 * default per-label category axis). Datasets must then carry `{x, y}` points.
 	 * Used to give the GPS pace/elevation/cadence charts one shared distance axis
@@ -54,7 +62,7 @@
 	 * clears it, and `undefined` leaves the chart's native hover untouched (used
 	 * for the chart that currently owns the pointer, so we don't fight Chart.js).
 	 */
-	let { type = 'line', data, title = '', height = '250px', yUnit = '', y2Unit = '', yDecimals = undefined, y2Decimals = undefined, goalLine = undefined, tooltipFormatter = undefined, tooltipLabelColor = undefined, yMin = undefined, yMax = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined, y2WidthGroup = undefined, zoom = false, applyXRange = undefined, onXRangeChange = undefined } = $props();
+	let { type = 'line', data, title = '', height = '250px', yUnit = '', y2Unit = '', yDecimals = undefined, y2Decimals = undefined, goalLine = undefined, tooltipFormatter = undefined, tooltipLabelColor = undefined, yMin = undefined, yMax = undefined, yAxis = undefined, yTickFormatter = undefined, onHover = undefined, hoverIndex = undefined, xAxis = undefined, yWidthGroup = undefined, y2WidthGroup = undefined, zoom = false, applyXRange = undefined, onXRangeChange = undefined } = $props();
 
 	/** @type {HTMLCanvasElement | undefined} */
 	let canvas = $state(undefined);
@@ -157,6 +165,15 @@
 		const n = Number(v);
 		if (decimals != null && Number.isFinite(n)) return `${n.toFixed(decimals)}${unit}`;
 		return `${cleanTick(v)}${unit}`;
+	}
+
+	/** Left-axis tick label. A caller-supplied formatter wins over the unit +
+	 *  decimals pair, so a pace axis can read `6:15` instead of `6.25`.
+	 *  @param {any} v */
+	function yTickLabel(v) {
+		const n = Number(v);
+		if (yTickFormatter && Number.isFinite(n)) return yTickFormatter(n);
+		return tickLabel(v, yDecimals, yUnit);
 	}
 
 	// Strip floating-point drift from an axis tick value so labels read cleanly
@@ -354,12 +371,22 @@
 		const maxTicks = Math.max(2, stepSize
 			? Math.ceil(hi / stepSize) - Math.floor(lo / stepSize) + 1
 			: Math.min(MAX_TICKS_LIMIT, Math.ceil(plotH / TICK_LINE_HEIGHT)));
-		const range = cjsTickRange(lo, hi, maxTicks, stepSize);
+		// A pinned axis skips the fit entirely — its ticks are already decided.
+		const range = yAxis
+			? {
+				min: yAxis.min,
+				max: yAxis.max,
+				values: Array.from(
+					{ length: Math.max(1, Math.round((yAxis.max - yAxis.min) / yAxis.stepSize)) + 1 },
+					(_, i) => yAxis.min + i * yAxis.stepSize
+				)
+			}
+			: cjsTickRange(lo, hi, maxTicks, stepSize);
 		// A second axis pins both sides to a fixed tick count (see createChart).
 		const tickValues = hasY2
 			? Array.from({ length: 6 }, (_, i) => range.min + ((range.max - range.min) * i) / 5)
 			: range.values;
-		const labels = tickValues.map((v) => String(tickLabel(v, yDecimals, yUnit)));
+		const labels = tickValues.map((v) => String(yTickLabel(v)));
 		const widest = Math.max(1, ...labels.map((l) => l.length));
 
 		const gut = cal ?? {
@@ -901,7 +928,8 @@
 						ticks: { color: textColor, font: { size: 11 }, maxTicksLimit: 8 }
 					},
 					y: {
-						beginAtZero: type === 'bar',
+						beginAtZero: !yAxis && type === 'bar',
+						...(yAxis ? { min: yAxis.min, max: yAxis.max } : {}),
 						suggestedMin: yMin,
 						suggestedMax: yMax,
 						grid: { color: gridColor },
@@ -917,7 +945,7 @@
 							ctx.font = `${size}px Helvetica, Arial, "Noto Sans", sans-serif`;
 							let textW = 0;
 							for (const tk of scale.ticks ?? []) {
-								const label = tk.label ?? tickLabel(scale.getLabelForValue(tk.value), yDecimals, yUnit);
+								const label = tk.label ?? yTickLabel(scale.getLabelForValue(tk.value));
 								const w = ctx.measureText(String(label)).width;
 								if (w > textW) textW = w;
 							}
@@ -928,9 +956,12 @@
 						ticks: {
 							color: textColor,
 							font: { size: 11 },
-							stepSize: hasY2 ? undefined : yStepSize,
+							stepSize: yAxis ? yAxis.stepSize : hasY2 ? undefined : yStepSize,
 							count: hasY2 ? Y_TICK_COUNT : undefined,
-							callback: (/** @type {any} */ v) => tickLabel(v, yDecimals, yUnit)
+							// A pinned axis already fits its gridlines to the box height, so
+							// don't let autoskip drop every second one.
+							autoSkip: yAxis ? false : undefined,
+							callback: (/** @type {any} */ v) => yTickLabel(v)
 						}
 					},
 					...(hasY2 ? {

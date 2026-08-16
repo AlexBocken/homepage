@@ -10,9 +10,16 @@ import { computeElevationStats } from '$lib/hikes/elevation';
 
 /** Pace as `M:SS min/km` for graph tooltips. @param {number} minPerKm */
 export function formatPaceTooltip(minPerKm) {
-	const mm = Math.floor(minPerKm);
-	const s = Math.round((minPerKm - mm) * 60);
-	return `${mm}:${s.toString().padStart(2, '0')} min/km`;
+	return `${formatPaceAxis(minPerKm)} min/km`;
+}
+
+/** Pace as `M:SS` for y-axis ticks — a pace is read as minutes and seconds, so
+ *  "6.25" is a small puzzle where "6:15" is not. @param {number} minPerKm */
+export function formatPaceAxis(minPerKm) {
+	const total = Math.round(minPerKm * 60);
+	const mm = Math.floor(total / 60);
+	const ss = total % 60;
+	return `${mm}:${ss.toString().padStart(2, '0')}`;
 }
 
 /** Haversine distance in km. @param {any} a @param {any} b */
@@ -90,6 +97,76 @@ export function niceDistanceStep(maxKm) {
  * get flattened. Nudge toward 0 to show rawer data.
  */
 const SMOOTH_HALF_WINDOW_KM = { elevation: 0.03, pace: 0.03, cadence: 0.04 };
+
+/**
+ * Y-axis shape per chart: the tick steps that read cleanly in that unit, and the
+ * span the axis never zooms in past.
+ *
+ * The minimum span is the point of this: a treadmill-steady run varies by a
+ * couple of seconds per km, and an axis fitted to *that* fills the chart with
+ * what is really GPS noise, drawn as if it were dramatic. Below the minimum the
+ * window is held open and centred, so a flat series is drawn flat.
+ *
+ * Pace steps are 5 s / 10 s / 15 s / 30 s / 1 min / …, expressed in minutes, so
+ * every gridline lands on a whole number of seconds when labelled `M:SS`.
+ */
+export const GPS_Y_AXIS = {
+	pace: { steps: [1 / 12, 1 / 6, 0.25, 0.5, 1, 2, 5], minSpan: 1, floor: 0 },
+	elevation: { steps: [5, 10, 20, 25, 50, 100, 200, 500], minSpan: 50, floor: null },
+	cadence: { steps: [2, 5, 10, 20, 25, 50], minSpan: 20, floor: 0 }
+};
+
+/** Most gridline gaps a GPS chart may draw (they are only 160–180 px tall). */
+const MAX_Y_INTERVALS = 5;
+
+/** Smallest 1 / 2 / 5 × 10ⁿ step that is at least `target` — the fallback for a
+ *  range that outgrows a unit's listed steps (an alpine profile against the
+ *  500 m ceiling). Those decade steps are whole minutes / metres too, so a pace
+ *  gridline still lands on a round number of seconds. @param {number} target */
+function coarseStep(target) {
+	const mag = Math.pow(10, Math.floor(Math.log10(target)));
+	for (const m of [1, 2, 5]) if (m * mag >= target - 1e-9) return m * mag;
+	return 10 * mag;
+}
+
+/**
+ * Fit a y-axis to `values`: never tighter than `minSpan`, always on gridlines
+ * from `steps`, and never opened below `floor` (a pace or a cadence cannot go
+ * negative — clamping there shifts the window up rather than shrinking it).
+ *
+ * @param {Array<number|null>} values
+ * @param {{ steps: number[], minSpan: number, floor: number|null }} cfg
+ * @returns {{ min: number, max: number, stepSize: number } | undefined}
+ */
+export function fitYAxis(values, { steps, minSpan, floor }) {
+	let lo = Infinity;
+	let hi = -Infinity;
+	for (const v of values) {
+		if (v == null || !Number.isFinite(v)) continue;
+		if (v < lo) lo = v;
+		if (v > hi) hi = v;
+	}
+	if (!Number.isFinite(lo) || !Number.isFinite(hi)) return undefined;
+
+	let span = hi - lo;
+	if (span < minSpan) {
+		const mid = (lo + hi) / 2;
+		lo = mid - minSpan / 2;
+		hi = mid + minSpan / 2;
+		span = minSpan;
+	}
+
+	const step = steps.find((s) => span / s <= MAX_Y_INTERVALS + 1e-9) ?? coarseStep(span / MAX_Y_INTERVALS);
+	let min = Math.floor(lo / step + 1e-9) * step;
+	let max = Math.ceil(hi / step - 1e-9) * step;
+	if (max - min < step) max = min + step;
+	if (floor != null && min < floor) {
+		const intervals = Math.round((max - min) / step);
+		min = floor;
+		max = floor + step * intervals;
+	}
+	return { min, max, stepSize: step };
+}
 
 /**
  * Distance-windowed moving average. Averages each point with its neighbours
@@ -184,8 +261,9 @@ export function buildGpsView(track, { dark, elevationLabel, cadenceLabel }) {
 	/**
 	 * @param {Array<number|null>} series @param {string} label
 	 * @param {string} color @param {string} fill @param {boolean} round
+	 * @param {{ steps: number[], minSpan: number, floor: number|null }} axisCfg
 	 */
-	const mk = (series, label, color, fill, round) => {
+	const mk = (series, label, color, fill, round, axisCfg) => {
 		const data = idxs.map((i) => ({
 			x: +cumDist[i].toFixed(3),
 			y: series[i] == null ? null : round ? Math.round(/** @type {number} */ (series[i])) : series[i]
@@ -194,6 +272,9 @@ export function buildGpsView(track, { dark, elevationLabel, cadenceLabel }) {
 		return {
 			has,
 			points,
+			// Fitted to the drawn (subsampled, rounded) values, not the raw series,
+			// so nothing on screen can fall outside the axis.
+			yAxis: fitYAxis(data.map((p) => p.y), axisCfg),
 			data: { datasets: [{ label, data, borderColor: color, backgroundColor: fill, borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: true }] }
 		};
 	};
@@ -204,9 +285,9 @@ export function buildGpsView(track, { dark, elevationLabel, cadenceLabel }) {
 	const altSmooth = smoothByDistance(altAt, cumDist, SMOOTH_HALF_WINDOW_KM.elevation);
 	const cadSmooth = smoothByDistance(cadAt, cumDist, SMOOTH_HALF_WINDOW_KM.cadence);
 
-	const pace = mk(paceSmooth, 'Pace', dark ? '#88C0D0' : '#5E81AC', dark ? 'rgba(136, 192, 208, 0.12)' : 'rgba(94, 129, 172, 0.12)', false);
-	const elevation = mk(altSmooth, elevationLabel, dark ? '#A3BE8C' : '#8FBCBB', dark ? 'rgba(163, 190, 140, 0.18)' : 'rgba(143, 188, 187, 0.18)', true);
-	const cadence = mk(cadSmooth, cadenceLabel, dark ? '#B48EAD' : '#5E81AC', dark ? 'rgba(180, 142, 173, 0.12)' : 'rgba(94, 129, 172, 0.12)', true);
+	const pace = mk(paceSmooth, 'Pace', dark ? '#88C0D0' : '#5E81AC', dark ? 'rgba(136, 192, 208, 0.12)' : 'rgba(94, 129, 172, 0.12)', false, GPS_Y_AXIS.pace);
+	const elevation = mk(altSmooth, elevationLabel, dark ? '#A3BE8C' : '#8FBCBB', dark ? 'rgba(163, 190, 140, 0.18)' : 'rgba(143, 188, 187, 0.18)', true, GPS_Y_AXIS.elevation);
+	const cadence = mk(cadSmooth, cadenceLabel, dark ? '#B48EAD' : '#5E81AC', dark ? 'rgba(180, 142, 173, 0.12)' : 'rgba(94, 129, 172, 0.12)', true, GPS_Y_AXIS.cadence);
 
 	// Elevation gain/loss from the full-resolution (unsmoothed) altitude series.
 	/** @type {Array<{dist: number, altitude: number}>} */

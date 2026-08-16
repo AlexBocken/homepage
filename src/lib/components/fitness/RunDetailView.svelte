@@ -15,7 +15,7 @@
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
 	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
-	import { buildGpsView, formatPaceTooltip } from '$lib/fitness/gpsSeries';
+	import { buildGpsView, formatPaceTooltip, formatPaceAxis } from '$lib/fitness/gpsSeries';
 	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
 	import { formatElapsed, formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import { estimatedOneRepMax } from '$lib/fitness/strength';
@@ -211,14 +211,15 @@
 					{#if gps.hasCharts}
 						{#if gps.elevation.has}
 							<div class="chart-section">
-								<FitnessChart data={gps.elevation.data} title="{t.elevation} ({t.elevation_unit})" height="160px" yUnit="m" xAxis={gps.xAxis} yWidthGroup={yGroup}
+								<FitnessChart data={gps.elevation.data} title="{t.elevation} ({t.elevation_unit})" height="160px" yUnit="m" xAxis={gps.xAxis} yAxis={gps.elevation.yAxis} yWidthGroup={yGroup}
 									onHover={(j) => onGraphHover(hov, gps.elevation.points, j, 'elev')}
 									hoverIndex={graphHoverIndex(hov, gps.elevation.points, 'elev')} />
 							</div>
 						{/if}
 						{#if gps.pace.has}
 							<div class="chart-section">
-								<FitnessChart data={gps.pace.data} title="Pace (min/km)" height="180px" xAxis={gps.xAxis} yWidthGroup={yGroup}
+								<FitnessChart data={gps.pace.data} title="Pace (min/km)" height="180px" xAxis={gps.xAxis} yAxis={gps.pace.yAxis} yWidthGroup={yGroup}
+									yTickFormatter={formatPaceAxis}
 									tooltipFormatter={(v) => formatPaceTooltip(v)}
 									onHover={(j) => onGraphHover(hov, gps.pace.points, j, 'pace')}
 									hoverIndex={graphHoverIndex(hov, gps.pace.points, 'pace')} />
@@ -226,7 +227,7 @@
 						{/if}
 						{#if gps.cadence.has}
 							<div class="chart-section">
-								<FitnessChart data={gps.cadence.data} title="{t.cadence} ({t.cadence_unit}) · {t.avg} {gps.avgCadence}" height="160px" yUnit=" spm" xAxis={gps.xAxis} yWidthGroup={yGroup}
+								<FitnessChart data={gps.cadence.data} title="{t.cadence} ({t.cadence_unit}) · {t.avg} {gps.avgCadence}" height="160px" yUnit=" spm" xAxis={gps.xAxis} yAxis={gps.cadence.yAxis} yWidthGroup={yGroup}
 									onHover={(j) => onGraphHover(hov, gps.cadence.points, j, 'cadence')}
 									hoverIndex={graphHoverIndex(hov, gps.cadence.points, 'cadence')} />
 							</div>
