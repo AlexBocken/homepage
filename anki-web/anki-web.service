@@ -1,0 +1,106 @@
+[Unit]
+Description=Anki study UI gateway (per-user ankiweb instances behind Authentik)
+After=network.target
+# Not Requires=: the gateway starts fine without the bridge and reports the
+# study page as unavailable, which is a better failure than refusing to boot.
+Wants=anki-bridge.service
+After=anki-bridge.service
+
+[Service]
+# The one place the bind address is configured — ANKI_WEB_URL in the website's
+# .env must point at the same value, and so must nginx's proxy_pass.
+Environment=ANKI_WEB_HOST=127.0.0.1
+Environment=ANKI_WEB_PORT=8093
+# Where this service reaches the sync bridge for per-user sync credentials.
+Environment=ANKI_BRIDGE_URL=http://127.0.0.1:8092
+# Per-user children listen on unix sockets named after their owner; nginx
+# routes to $anki_user.sock directly. Short path on purpose — AF_UNIX is capped
+# around 108 bytes, so these cannot live beside the collections under
+# /var/lib/anki-web/<user>/.
+Environment=ANKI_WEB_SOCKET_DIR=/run/anki-web
+RuntimeDirectory=anki-web
+# 0710, not 0750: nginx needs to *traverse* to a socket whose exact path it
+# already knows, never to list the directory. Group execute without group read
+# means a member cannot enumerate who has a session open.
+RuntimeDirectoryMode=0710
+# Each warm instance holds an open collection. Raise only after measuring RSS;
+# this is the first number to revisit if the box starts swapping.
+Environment=ANKI_WEB_MAX_INSTANCES=3
+# Reclaim an instance after this long with no request from its owner.
+Environment=ANKI_WEB_IDLE_EVICT=1800
+Environment=ANKI_WEB_SWEEP_INTERVAL=60
+# Must match the nginx server_name, or the page loads and the WebSocket closes
+# with 1008 — ankiweb re-checks the host guard on the upgrade separately.
+Environment=ANKI_WEB_ALLOWED_HOST=study.bocken.org
+Environment=ANKI_WEB_PUBLIC_URL=https://study.bocken.org
+Environment=ANKI_WEB_SITE_URL=https://bocken.org
+Environment=ANKI_WEB_LANG=de
+# AGPL-3.0: we serve a modified ankiweb over a network, so §13 obliges us to
+# offer its source to the people we serve it to. Rendered on /about.
+Environment=ANKIWEB_SOURCE_URL=https://git.bocken.org/Alexander/ankiweb
+# System Python throughout — no venv. Every dependency is an Arch package
+# (python-fastapi, python-uvicorn, python-httpx) and, crucially, `anki` itself
+# is the host's own package, so the study client is the same build as the sync
+# server it talks to. A venv would either shadow that or have to be told to
+# inherit it.
+Environment=ANKI_WEB_PYTHON=/usr/bin/python3
+# The gateway modules and the ankiweb fork, neither of which is pip-installed.
+Environment=PYTHONPATH=/usr/share/webapps/homepage/anki-web:/usr/share/webapps/homepage/ankiweb
+# Secrets: ANKI_BRIDGE_TOKEN only. Authentication is Authentik's outpost, so
+# there is no session secret, no ticket key and no cookie to sign here.
+# Create it 0600 root:root — see README.
+EnvironmentFile=/etc/anki-web/env
+WorkingDirectory=/usr/share/webapps/homepage/anki-web
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host ${ANKI_WEB_HOST} --port ${ANKI_WEB_PORT}
+Restart=on-failure
+RestartSec=2
+# Per-user ankiweb instances are child processes. Without this, a stop or
+# restart would leave them orphaned holding ports in the range above, and the
+# next start would fail to bind.
+KillMode=mixed
+# Long enough for the shutdown hook to sync every live instance out before the
+# service goes away. Reviews only exist in a child's collection until it syncs.
+TimeoutStopSec=180
+
+# Hardening. Same shape as anki-bridge, with three deliberate differences.
+# 0. NO DynamicUser, unlike every other service here. nginx has to reach the
+#    per-user sockets, and uvicorn creates those world-writable (it hardcodes
+#    0o666), so the directory is the only gate — which needs a *stable* group
+#    for nginx to be a member of. A dynamic uid changes on every start and nginx
+#    can never be in its group, leaving the directory the permissive option.
+#    Create the user once at install; see README.
+User=anki-web
+Group=anki-web
+NoNewPrivileges=yes
+# Implied by DynamicUser, so they have to be stated now it is gone.
+RemoveIPC=yes
+RestrictSUIDSGID=yes
+PrivateUsers=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# 1. Persistent state: one collection per user, which is a full copy of
+#    everything they have ever studied. Treat it as secret material, exactly
+#    like /var/lib/anki-bridge — and note it means each collection now exists
+#    twice on this host. 0700 and owned by anki-web: nginx has no business here,
+#    only in the socket directory above.
+StateDirectory=anki-web
+StateDirectoryMode=0700
+Environment=ANKI_WEB_STATE_DIR=/var/lib/anki-web
+# 2. Loopback is enough here, unlike anki-bridge: Authentik is never contacted
+#    from this service — its outpost does the authenticating in nginx — and the
+#    only things it talks to are the bridge and its own children.
+IPAddressDeny=any
+IPAddressAllow=localhost
+# Bounds the whole cgroup, children included — this is the real per-user memory
+# ceiling, since MAX_INSTANCES only counts processes and not what they hold.
+MemoryMax=8G
+
+[Install]
+WantedBy=multi-user.target
