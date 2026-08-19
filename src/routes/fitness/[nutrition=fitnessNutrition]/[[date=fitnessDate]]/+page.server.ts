@@ -9,9 +9,10 @@ import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { recipeThumbUrl } from '$lib/utils/recipeImage';
 import { calorieTargetForDate, stampDailyTargets } from '$lib/server/dailyTargets';
 import { trendValueOn } from '$lib/fitness/trend';
+import { readHotDrinkPrefs } from '$lib/fitness/hotDrinks';
 import mongoose from 'mongoose';
 
-export const load: PageServerLoad = async ({ fetch, params, locals }) => {
+export const load: PageServerLoad = async ({ fetch, params, locals, cookies }) => {
 	const dateParam = params.date || localDateStr();
 
 	// Run all independent work in parallel: 3 API calls + workout kcal DB query
@@ -179,5 +180,8 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		// What those nudges were built from, so the client can tell whether its own live
 		// numbers still agree and skip an identical refetch on hydration.
 		nudgesRemaining: nudgeData?.remaining ?? null,
+		// Read here rather than on the client so the liquids card paints its mug (or
+		// doesn't) once, instead of showing one and taking it away after hydration.
+		hotDrink: readHotDrinkPrefs(name => cookies.get(name)),
 	};
 };

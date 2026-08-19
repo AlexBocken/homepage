@@ -32,7 +32,14 @@
 	import { entryCalories, energySources, SPARSELY_MEASURED_KEYS, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
 	import { macroGoalGrams } from '$lib/fitness/macroGoals';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
+	import {
+		HOT_DRINKS, HOT_DRINK_ML, HOT_DRINK_GROUP_LABELS, HOT_DRINK_GROUPS,
+		DEFAULT_HOT_DRINK_CODE, resolveHotDrink, isHotDrinkRef,
+		hotDrinkLabel, hotDrinkLogName,
+		HOT_DRINK_ENABLED_COOKIE, HOT_DRINK_CODE_COOKIE, HOT_DRINK_COOKIE_MAX_AGE,
+	} from '$lib/fitness/hotDrinks';
 	import AddButton from '$lib/components/AddButton.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 	import { formatAmountLabel } from '$lib/fitness/portions';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
@@ -374,6 +381,39 @@
 	// --- Water & liquid tracking ---
 	const WATER_CUP_ML = 250;
 
+	/** Tapered tumbler — water and cold drinks. */
+	const GLASS_PATH = 'M4 4 L6 28 C6 30 8 30 8 30 L16 30 C16 30 18 30 18 28 L20 4 Z';
+	/**
+	 * Straight-sided mug — hot drinks, so a tea day reads apart at a glance.
+	 *
+	 * A mug is rightly shorter than a tumbler, but sitting both on the same floor
+	 * put the whole 5-unit difference above the rim as dead space, and the handle
+	 * pushed the silhouette off to the right. So it is centred on the glass's
+	 * midline (y 17) and nudged a unit left, which puts body-plus-handle back over
+	 * the same axis. Height stays honest.
+	 */
+	const MUG_PATH = 'M3 6.5 L3 22.5 C3 25.9 5.4 27.5 8.4 27.5 L13.6 27.5 C16.6 27.5 19 25.9 19 22.5 L19 6.5 Z';
+	const MUG_HANDLE_PATH = 'M19 10.5 C22.6 10.5 22.6 17.5 19 17.5';
+
+	/**
+	 * The three sloshing wave fronts, as a set per vessel. A mug's rim sits 2.5
+	 * units higher than a glass's, so the shared wave band crested straight over it
+	 * and the tea appeared to be painted on the outside of the cup. The mug's set is
+	 * the same shapes dropped 3 units, which also lands the two at a similar
+	 * fullness — a mug poured to the brim next to a two-thirds glass read as a
+	 * different unit rather than the same 250 ml.
+	 */
+	const GLASS_WAVES = [
+		'M-8 10 Q-2 6 4 10 T16 10 T28 10 T40 10 V34 H-8 Z',
+		'M-4 12 Q2 8 8 12 T20 12 T32 12 V34 H-4 Z',
+		'M0 11 Q6 7 12 11 T24 11 T36 11 V34 H0 Z',
+	];
+	const MUG_WAVES = [
+		'M-8 13 Q-2 9 4 13 T16 13 T28 13 T40 13 V34 H-8 Z',
+		'M-4 15 Q2 11 8 15 T20 15 T32 15 V34 H-4 Z',
+		'M0 14 Q6 10 12 14 T24 14 T36 14 V34 H0 Z',
+	];
+
 	/** BLS Trinkwasser (N110000) per100g */
 	const WATER_PER100G = {
 		calories: 0, protein: 0, fat: 0, saturatedFat: 0, carbs: 0, fiber: 0, sugars: 0,
@@ -388,6 +428,9 @@
 	/** @param {FoodLogEntry} e */
 	function isBeverage(e) {
 		if (e.mealType === 'water') return false;
+		// By code first: the milk blends carry `M` codes and an English name the
+		// German-worded patterns below would never match.
+		if (isHotDrinkRef(e.source, e.sourceId)) return true;
 		if (e.source === 'bls' && e.sourceId?.startsWith('N')) return true;
 		return DRINK_PATTERNS.test(e.name);
 	}
@@ -422,11 +465,19 @@
 
 	let waterEntries = $derived(entries.filter((/** @type {FoodLogEntry} */ e) => e.mealType === 'water'));
 	let beverageEntries = $derived(entries.filter(isBeverage));
+	// Hot drinks are drawn as mugs rather than glasses, so they are counted apart
+	// from the cold ones instead of being folded into a single beverage block.
+	let hotDrinkEntries = $derived(beverageEntries.filter((/** @type {FoodLogEntry} */ e) => isHotDrinkRef(e.source, e.sourceId)));
+	let coldBeverageEntries = $derived(beverageEntries.filter((/** @type {FoodLogEntry} */ e) => !isHotDrinkRef(e.source, e.sourceId)));
 	let waterMl = $derived(waterEntries.reduce((/** @type {number} */ s, /** @type {FoodLogEntry} */ e) => s + e.amountGrams, 0));
 	let beverageMl = $derived(beverageEntries.reduce((/** @type {number} */ s, /** @type {FoodLogEntry} */ e) => s + e.amountGrams, 0));
+	let hotDrinkMl = $derived(hotDrinkEntries.reduce((/** @type {number} */ s, /** @type {FoodLogEntry} */ e) => s + e.amountGrams, 0));
+	let coldBeverageMl = $derived(coldBeverageEntries.reduce((/** @type {number} */ s, /** @type {FoodLogEntry} */ e) => s + e.amountGrams, 0));
 	let mealLiquidMl = $derived(entries.reduce((/** @type {number} */ s, /** @type {FoodLogEntry} */ e) => s + (e.liquidMl ?? 0), 0));
 	let totalLiquidMl = $derived(waterMl + beverageMl + mealLiquidMl);
-	let beverageCups = $derived(Math.round(beverageMl / WATER_CUP_ML));
+	let hotDrinkCups = $derived(Math.round(hotDrinkMl / WATER_CUP_ML));
+	let coldBeverageCups = $derived(Math.round(coldBeverageMl / WATER_CUP_ML));
+	let beverageCups = $derived(hotDrinkCups + coldBeverageCups);
 	let waterCups = $derived(Math.round(waterMl / WATER_CUP_ML));
 	let mealLiquidCups = $derived(Math.round(mealLiquidMl / WATER_CUP_ML));
 	let totalCups = $derived(beverageCups + waterCups + mealLiquidCups);
@@ -493,6 +544,71 @@
 			}
 		} catch {
 			toast.error(isEn ? 'Failed to update water' : 'Fehler beim Aktualisieren');
+		}
+	}
+
+	// --- One-tap hot drink ---
+	// Someone who drinks eight cups of tea a day should not walk the food search
+	// eight times. The button logs a fixed 250 ml of one chosen BLS drink into the
+	// slot the clock says we're in, and a second press grows that row instead of
+	// stacking another identical one.
+	// Seeded from the cookies the server already read, so the button is either in the
+	// first paint or absent from it — never rendered and then withdrawn.
+	// svelte-ignore state_referenced_locally
+	let hotDrinkEnabled = $state(data.hotDrink?.enabled ?? true);
+	// svelte-ignore state_referenced_locally
+	let hotDrinkCode = $state(data.hotDrink?.code ?? DEFAULT_HOT_DRINK_CODE);
+	let showDrinkSettings = $state(false);
+	let loggingHotDrink = $state(false);
+
+	const hotDrink = $derived(resolveHotDrink(hotDrinkCode));
+	/** Short form, for the button and the picker. */
+	const hotDrinkName = $derived(hotDrinkLabel(hotDrink, isEn));
+
+	$effect(() => {
+		const enabled = hotDrinkEnabled ? '1' : '0';
+		const code = hotDrinkCode;
+		const attrs = `path=/; max-age=${HOT_DRINK_COOKIE_MAX_AGE}; SameSite=Lax`;
+		document.cookie = `${HOT_DRINK_ENABLED_COOKIE}=${enabled}; ${attrs}`;
+		document.cookie = `${HOT_DRINK_CODE_COOKIE}=${code}; ${attrs}`;
+	});
+
+	async function logHotDrink() {
+		if (loggingHotDrink) return;
+		loggingHotDrink = true;
+		const mealType = defaultMealType();
+		const existing = entries.find((/** @type {FoodLogEntry} */ e) =>
+			e.mealType === mealType && e.source === 'bls' && e.sourceId === hotDrink.code);
+		try {
+			if (existing) {
+				const res = await fetch(`/api/fitness/food-log/${existing._id}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ amountGrams: existing.amountGrams + HOT_DRINK_ML }),
+				});
+				if (!res.ok) throw new Error('update failed');
+				const updated = await res.json();
+				entries = entries.map((/** @type {FoodLogEntry} */ e) => e._id === existing._id ? updated : e);
+			} else {
+				const res = await fetch('/api/fitness/food-log', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						date: currentDate,
+						mealType,
+						name: hotDrinkLogName(hotDrink),
+						source: 'bls',
+						sourceId: hotDrink.code,
+						amountGrams: HOT_DRINK_ML,
+					}),
+				});
+				if (!res.ok) throw new Error('log failed');
+				addEntry(await res.json());
+			}
+		} catch {
+			toast.error(isEn ? 'Failed to log drink' : 'Getränk konnte nicht erfasst werden');
+		} finally {
+			loggingHotDrink = false;
 		}
 	}
 
@@ -1984,6 +2100,27 @@
 	{/if}
 {/snippet}
 
+<!-- The next mug, sitting where the next empty glass sits: right after the last
+     full one of its own kind. Shape carries which drink is being added, so the
+     outline can stay soft — it is an invitation, not an alert. -->
+{#snippet hotDrinkAdd()}
+	{#if hotDrinkEnabled}
+		<button
+			class="water-cup hot-drink-add"
+			onclick={logHotDrink}
+			disabled={loggingHotDrink}
+			title="{hotDrinkName} · +{HOT_DRINK_ML} ml"
+			aria-label={isEn ? `Log ${hotDrinkName}, ${HOT_DRINK_ML} ml` : `${hotDrinkName} erfassen, ${HOT_DRINK_ML} ml`}
+		>
+			<svg viewBox="0 0 24 32" class="cup-svg" overflow="hidden">
+				<path class="mug-handle" d={MUG_HANDLE_PATH} fill="none" stroke="var(--orange)" stroke-width="1.6" stroke-opacity="0.5" />
+				<path d={MUG_PATH} fill="var(--color-bg-tertiary)" stroke="var(--orange)" stroke-width="1.3" stroke-opacity="0.5" />
+				<text x="11" y="20" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--orange)" fill-opacity="0.7">+</text>
+			</svg>
+		</button>
+	{/if}
+{/snippet}
+
 {#snippet roundOffSnippet()}
 	<NudgeCard
 		nudges={nudges}
@@ -2461,20 +2598,64 @@
 						/ {parseFloat((waterGoalMl / 1000).toFixed(2))} L
 					</button>
 				{/if}
+				<button
+					class="drink-settings-btn"
+					class:open={showDrinkSettings}
+					onclick={() => showDrinkSettings = !showDrinkSettings}
+					aria-expanded={showDrinkSettings}
+					aria-label={isEn ? 'Drink settings' : 'Getränke-Einstellungen'}
+					title={isEn ? 'Drink settings' : 'Getränke-Einstellungen'}
+				>
+					<Settings size={13} />
+				</button>
 			</div>
 		</div>
+		{#if showDrinkSettings}
+			<div class="drink-settings">
+				<Toggle
+					bind:checked={hotDrinkEnabled}
+					label={isEn ? 'One-tap hot drink' : 'Heissgetränk auf Tastendruck'}
+				/>
+				{#if hotDrinkEnabled}
+					<label class="drink-select-label">
+						<span>{isEn ? 'Logs' : 'Erfasst'}</span>
+						<select class="drink-select" bind:value={hotDrinkCode}>
+							{#each HOT_DRINK_GROUPS as group}
+								<optgroup label={isEn ? HOT_DRINK_GROUP_LABELS[group].en : HOT_DRINK_GROUP_LABELS[group].de}>
+									{#each HOT_DRINKS.filter(d => d.group === group) as drink}
+										<option value={drink.code}>{hotDrinkLabel(drink, isEn)}</option>
+									{/each}
+								</optgroup>
+							{/each}
+						</select>
+					</label>
+					<p class="drink-settings-hint">
+						{isEn
+							? `${HOT_DRINK_ML} ml per tap, into whichever meal the time of day falls in.`
+							: `${HOT_DRINK_ML} ml pro Tastendruck, in die Mahlzeit der aktuellen Tageszeit.`}
+					</p>
+				{/if}
+			</div>
+		{/if}
 		<div class="water-cups">
+			{#if hotDrinkCups === 0}{@render hotDrinkAdd()}{/if}
 			{#each Array(displayCups) as _, i}
-				{@const isBev = i < beverageCups}
-				{@const isMealLiquid = !isBev && i < beverageCups + mealLiquidCups}
-				{@const isAuto = isBev || isMealLiquid}
+				{@const isHot = i < hotDrinkCups}
+				{@const isBev = !isHot && i < beverageCups}
+				{@const isMealLiquid = !isHot && !isBev && i < beverageCups + mealLiquidCups}
+				{@const isAuto = isHot || isBev || isMealLiquid}
 				{@const isFilled = i < totalCups}
 				{@const showWater = isFilled || drainingCups.has(i)}
 				{@const isNextEmpty = i === totalCups && !drainingCups.has(i)}
+				{@const cupPath = isHot ? MUG_PATH : GLASS_PATH}
+				{@const waveFill = isHot ? 'var(--orange)' : isAuto ? 'var(--nord7)' : 'var(--blue)'}
+				{@const waveFillAlt = isHot ? 'var(--yellow)' : isAuto ? 'var(--nord8)' : 'var(--lightblue)'}
+				{@const waves = isHot ? MUG_WAVES : GLASS_WAVES}
 				<button
 					class="water-cup"
 					class:filled={isFilled}
 					class:beverage={isBev}
+					class:hot-drink={isHot}
 					class:meal-liquid={isMealLiquid}
 					class:filling={fillingCups.has(i)}
 					class:draining={drainingCups.has(i)}
@@ -2486,27 +2667,46 @@
 						const waterTarget = i < totalCups ? i - autoOffset : i - autoOffset + 1;
 						setWaterCups(Math.max(0, waterTarget));
 					}}
-					title="{isAuto ? (isEn ? (isBev ? 'Beverage' : 'From meal') : (isBev ? 'Getränk' : 'Aus Mahlzeit')) : (i + 1) * WATER_CUP_ML + ' ml'}"
+					title="{isHot ? (isEn ? 'Hot drink' : 'Heissgetränk') : isAuto ? (isEn ? (isBev ? 'Beverage' : 'From meal') : (isBev ? 'Getränk' : 'Aus Mahlzeit')) : (i + 1) * WATER_CUP_ML + ' ml'}"
 				>
 					<svg viewBox="0 0 24 32" class="cup-svg" overflow="hidden">
 						<defs>
 							<clipPath id="cup-clip-{i}">
-								<path d="M4 4 L6 28 C6 30 8 30 8 30 L16 30 C16 30 18 30 18 28 L20 4 Z" />
+								<path d={cupPath} />
 							</clipPath>
 						</defs>
-						<path d="M4 4 L6 28 C6 30 8 30 8 30 L16 30 C16 30 18 30 18 28 L20 4 Z" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" stroke-width="1.2" />
+						{#if isHot}
+							<path class="mug-handle" d={MUG_HANDLE_PATH} fill="none" stroke="var(--color-border)" stroke-width="1.6" />
+						{/if}
+						<!-- The next empty glass is an invitation too, so it wears water's colour at
+						     the same muted strength the next mug wears the brew's. -->
+						<path
+							d={cupPath}
+							fill="var(--color-bg-tertiary)"
+							stroke={isNextEmpty ? 'var(--blue)' : 'var(--color-border)'}
+							stroke-width={isNextEmpty ? 1.3 : 1.2}
+							stroke-opacity={isNextEmpty ? 0.5 : 1}
+						/>
 						{#if showWater}
 							<g clip-path="url(#cup-clip-{i})" class="water-body">
-								<path class="water-wave w1" d="M-8 10 Q-2 6 4 10 T16 10 T28 10 T40 10 V34 H-8 Z" fill={isAuto ? 'var(--nord7)' : 'var(--blue)'} opacity="0.85" />
-								<path class="water-wave w2" d="M-4 12 Q2 8 8 12 T20 12 T32 12 V34 H-4 Z" fill={isAuto ? 'var(--nord8)' : 'var(--lightblue)'} opacity="0.5" />
-								<path class="water-wave w3" d="M0 11 Q6 7 12 11 T24 11 T36 11 V34 H0 Z" fill={isAuto ? 'var(--nord7)' : 'var(--blue)'} opacity="0.35" />
+								<path class="water-wave w1" d={waves[0]} fill={waveFill} opacity="0.85" />
+								<path class="water-wave w2" d={waves[1]} fill={waveFillAlt} opacity="0.5" />
+								<path class="water-wave w3" d={waves[2]} fill={waveFill} opacity="0.35" />
+							</g>
+						{/if}
+						{#if isHot && showWater}
+							<!-- Wisps drift on a stagger per cup, so a row of mugs doesn't pulse in lockstep. -->
+							<g class="steam" stroke="var(--orange)" stroke-width="1.2" stroke-linecap="round" fill="none" style="--steam-offset: {(i % 3) * 0.6}s">
+								<path d="M8.5 6 C7 4.6 10 3.2 8.5 1.6" />
+								<path d="M13.5 6 C12 4.8 15 3.5 13.5 2" />
 							</g>
 						{/if}
 						{#if isNextEmpty}
-							<text x="12" y="20" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--color-text-secondary)">+</text>
+							<text x="12" y="20" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--blue)" fill-opacity="0.7">+</text>
 						{/if}
 					</svg>
 				</button>
+				{#if i === hotDrinkCups - 1}{@render hotDrinkAdd()}{/if}
 			{/each}
 		</div>
 		{#if beverageEntries.length > 0 || mealLiquidMl > 0}
@@ -4235,8 +4435,123 @@
 		cursor: default;
 		opacity: 1;
 	}
-	.water-cup.next-empty:hover .cup-svg > path:first-of-type {
+	.water-cup.next-empty:hover .cup-svg > path:first-of-type,
+	.water-cup.next-empty:focus-visible .cup-svg > path:first-of-type {
 		fill: color-mix(in srgb, var(--blue) 20%, var(--color-bg-tertiary));
+	}
+	/* Both ghost vessels come up to full strength only under the pointer. */
+	.water-cup.next-empty:hover .cup-svg path,
+	.water-cup.next-empty:focus-visible .cup-svg path,
+	.water-cup.next-empty:hover .cup-svg text,
+	.water-cup.next-empty:focus-visible .cup-svg text {
+		stroke-opacity: 1;
+		fill-opacity: 1;
+	}
+
+	/* Steam off a filled mug — the only thing on this card that moves on its own,
+	   so it stays slow and faint rather than blinking for attention. */
+	.steam path {
+		transform-box: fill-box;
+		transform-origin: bottom center;
+		opacity: 0;
+		animation: steam-rise 3.2s ease-out infinite;
+		animation-delay: var(--steam-offset, 0s);
+	}
+	.steam path:nth-child(2) {
+		animation-duration: 3.8s;
+		animation-delay: calc(var(--steam-offset, 0s) + 1.3s);
+	}
+	@keyframes steam-rise {
+		0% { opacity: 0; transform: translateY(2.5px) scaleY(0.65); }
+		25% { opacity: 0.65; }
+		65% { opacity: 0.4; }
+		100% { opacity: 0; transform: translateY(-3px) scaleY(1.2); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.steam path {
+			animation: none;
+			opacity: 0.5;
+		}
+	}
+
+	/* Hot drinks: an empty mug you press to log another cup. Same solid outline and
+	   filled body as the next empty glass, drawn in a muted brew colour so shape and
+	   colour agree on what it pours without shouting over the day's record. */
+	.hot-drink-add {
+		cursor: pointer;
+		transition: transform var(--transition-fast);
+	}
+	.hot-drink-add:hover .cup-svg > path:nth-of-type(2),
+	.hot-drink-add:focus-visible .cup-svg > path:nth-of-type(2) {
+		fill: color-mix(in srgb, var(--orange) 20%, var(--color-bg-tertiary));
+	}
+	/* Full strength only under the pointer — the resting state stays quiet. */
+	.hot-drink-add:hover .cup-svg path,
+	.hot-drink-add:focus-visible .cup-svg path,
+	.hot-drink-add:hover .cup-svg text,
+	.hot-drink-add:focus-visible .cup-svg text {
+		stroke-opacity: 1;
+		fill-opacity: 1;
+	}
+	.hot-drink-add:active {
+		transform: scale(0.94);
+	}
+	.hot-drink-add:disabled {
+		opacity: 0.4;
+		cursor: progress;
+	}
+
+	/* Drink settings */
+	.drink-settings-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: none;
+		border: none;
+		padding: 0.15rem;
+		margin-left: 0.3rem;
+		cursor: pointer;
+		color: var(--color-text-secondary);
+		transition: color var(--transition-fast);
+	}
+	.drink-settings-btn:hover,
+	.drink-settings-btn.open {
+		color: var(--color-text-primary);
+	}
+	.drink-settings {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-bottom: 0.6rem;
+		padding: 0.6rem 0.7rem;
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-md);
+	}
+	.drink-select-label {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+	}
+	.drink-select {
+		flex: 1;
+		min-width: 0;
+		padding: 0.3rem 0.4rem;
+		background: var(--color-bg-primary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-primary);
+		font-size: 0.8rem;
+	}
+	.drink-select:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+	.drink-settings-hint {
+		margin: 0;
+		font-size: 0.72rem;
+		color: var(--color-text-secondary);
 	}
 
 	/* Water fill animation — only on newly filled cups */
