@@ -386,6 +386,79 @@ def test_status_reports_provisioning(client, bridge):
     assert body["username"] == "alex"
 
 
+def test_credentials_require_the_token(client, bridge):
+    assert client.post("/internal/sync-credentials?username=alex").status_code == 403
+    assert (
+        client.post(
+            "/internal/sync-credentials?username=alex", headers={"x-bridge-token": "wrong"}
+        ).status_code
+        == 403
+    )
+    assert bridge.accounts.get("alex") is None
+
+
+def test_credentials_provision_and_hand_back_the_session_key(client, bridge):
+    """anki-web's instances never see a password, so this is how they get a key."""
+    res = client.post(
+        "/internal/sync-credentials?username=alex", headers={"x-bridge-token": "test-bridge-token"}
+    )
+
+    assert res.status_code == 200
+    account = bridge.accounts.get("alex")
+    assert account is not None, "a first-time user is provisioned on the way through"
+    body = res.json()
+    assert body["username"] == "alex"
+    # The same key logging in from a desktop client would produce: Anki derives
+    # it from the account's own user:pass, so there is nothing to mint.
+    assert body["hkey"] == hkey_for(account.username, account.sync_secret)
+    assert body["endpoint"] == "http://127.0.0.1:8092/"
+
+
+def test_credentials_never_leak_the_password(client, bridge):
+    res = client.post(
+        "/internal/sync-credentials?username=alex", headers={"x-bridge-token": "test-bridge-token"}
+    )
+    account = bridge.accounts.get("alex")
+    assert account.sync_secret not in json.dumps(res.json())
+
+
+def test_credentials_are_refused_to_a_non_member(client, bridge):
+    """And refusing has to happen before provisioning, or asking for a name that
+    is not a user at all would still create a sync account and restart the
+    server for it."""
+    res = client.post(
+        "/internal/sync-credentials?username=nobody", headers={"x-bridge-token": "test-bridge-token"}
+    )
+
+    assert res.status_code == 403
+    assert bridge.accounts.get("nobody") is None
+    assert bridge.supervisor.restarts == []
+
+
+def test_credentials_fail_closed_when_authentik_is_down(client, bridge):
+    bridge.groups.error = service.AuthentikError("boom")
+
+    res = client.post(
+        "/internal/sync-credentials?username=alex", headers={"x-bridge-token": "test-bridge-token"}
+    )
+
+    assert res.status_code == 503
+    assert bridge.accounts.get("alex") is None
+
+
+def test_credentials_reuse_the_account_on_a_second_ask(client, bridge):
+    """One user, one collection. A second instance start must not re-provision:
+    that would rotate nothing but would restart the sync server under live
+    syncs."""
+    ok = {"x-bridge-token": "test-bridge-token"}
+    first = client.post("/internal/sync-credentials?username=alex", headers=ok).json()
+    restarts = len(bridge.supervisor.restarts)
+    second = client.post("/internal/sync-credentials?username=alex", headers=ok).json()
+
+    assert first == second
+    assert len(bridge.supervisor.restarts) == restarts
+
+
 def test_status_never_exposes_the_secret(client, bridge):
     _provision(client, bridge)
     body = client.get(

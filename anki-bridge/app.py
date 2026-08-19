@@ -52,6 +52,19 @@ BRIDGE_TOKEN = os.environ.get("BRIDGE_TOKEN", "")
 # The URL users paste into Anki. Reported to the website so the settings page
 # has one place to read it from.
 PUBLIC_SYNC_URL = os.environ.get("ANKI_SYNC_PUBLIC_URL", "")
+# Where a process on *this* host should point its sync client — anki-web's
+# per-user instances. Loopback to the bridge rather than the public URL: it keeps
+# the group re-check in the path (the proxy revokes by hkey on every request)
+# without hairpinning a local sync out through nginx and TLS. Defaulted from the
+# bind so the two cannot drift, with a wildcard bind read as loopback, since
+# 0.0.0.0 is an address to listen on and not one to connect to.
+_BIND_HOST = os.environ.get("BRIDGE_HOST", "127.0.0.1")
+if _BIND_HOST in ("0.0.0.0", "::", "*", ""):
+    _BIND_HOST = "127.0.0.1"
+INTERNAL_SYNC_URL = os.environ.get(
+    "ANKI_SYNC_INTERNAL_URL",
+    f"http://{_BIND_HOST}:{os.environ.get('BRIDGE_PORT', '8092')}/",
+)
 
 # Per RFC 7230 these describe a single hop and must not be relayed.
 HOP_BY_HOP = {
@@ -129,10 +142,16 @@ async def health() -> JSONResponse:
     )
 
 
+def _internal_ok(request: Request) -> bool:
+    """The second lock on /internal/*. The first is that it is loopback-only and
+    nginx 404s the prefix; an unset token fails closed rather than open."""
+    return bool(BRIDGE_TOKEN) and request.headers.get("x-bridge-token") == BRIDGE_TOKEN
+
+
 @app.get("/internal/status")
 async def internal_status(request: Request, username: str) -> JSONResponse:
     """Provisioning state for one user, for the website's settings card."""
-    if not BRIDGE_TOKEN or request.headers.get("x-bridge-token") != BRIDGE_TOKEN:
+    if not _internal_ok(request):
         return JSONResponse({"error": "forbidden"}, status_code=403)
 
     account = bridge.accounts.get(username)
@@ -145,6 +164,43 @@ async def internal_status(request: Request, username: str) -> JSONResponse:
             "last_seen": account.last_seen if account else None,
             "collection_bytes": _collection_bytes(username) if account else 0,
         }
+    )
+
+
+@app.post("/internal/sync-credentials")
+async def internal_sync_credentials(request: Request, username: str) -> JSONResponse:
+    """A session key for `username`, provisioning the account if it is new.
+
+    This is for anki-web, which runs one Anki instance per user on this host and
+    has to sync each of them against this server. Those instances never see a
+    password — Authentik's outpost is what vouches for the username, one hop
+    earlier — so there is no `/sync/hostKey` exchange for them to do.
+
+    Nothing is minted here. Anki derives the session key from the account's own
+    `user:pass` string, so the hkey already in the database *is* the key, and
+    handing it over creates no new authority: it is the same one the user's own
+    Anki client gets by logging in.
+    """
+    if not _internal_ok(request):
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+
+    # Authorized before provisioned, so a name that is not a member — or not a
+    # user at all — never creates a sync account or restarts the sync server.
+    try:
+        if not await bridge.groups.is_authorized(username):
+            log.info("refused credentials for %s: not in %s", username, bridge.groups.group)
+            return JSONResponse({"error": "forbidden"}, status_code=403)
+    except AuthentikError:
+        log.exception("Authentik unreachable while authorizing %s", username)
+        return JSONResponse({"error": "auth backend unavailable"}, status_code=503)
+
+    # Slow on a first-time user: a new account means restarting the sync server,
+    # which drains in-flight syncs first. The caller allows for it.
+    await bridge.provision(username)
+    account = bridge.accounts.get(username)
+    assert account is not None
+    return JSONResponse(
+        {"username": account.username, "hkey": account.hkey, "endpoint": INTERNAL_SYNC_URL}
     )
 
 

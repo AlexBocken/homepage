@@ -89,6 +89,31 @@ Session keys never expire on their own, so two mechanisms cover revocation:
   sudo systemctl restart anki-bridge
   ```
 
+### Handing a key to anki-web
+
+`study.bocken.org` runs [anki-web](../anki-web/README.md), one Anki instance per
+user on this same host, and each of those has to sync against this server. They
+never see a password — Authentik's outpost is what vouches for the username, one
+hop earlier — so they cannot do the `/sync/hostKey` exchange a desktop client
+does. Instead:
+
+```
+POST /internal/sync-credentials?username=alex     x-bridge-token: <BRIDGE_TOKEN>
+  → {"username": "alex", "hkey": "...", "endpoint": "http://127.0.0.1:8092/"}
+```
+
+Nothing is minted for it. Anki derives the session key from the account's own
+`user:pass` string, so the hkey already in `accounts.db` *is* the key — the same
+one that user's desktop client gets by logging in. Group membership is checked
+**before** provisioning, so asking for a name that is not a member (or not a user
+at all) neither creates a sync account nor restarts the sync server.
+
+The `endpoint` it hands back is the bridge on loopback, not the public URL:
+syncing a local instance through nginx and TLS to come straight back here buys
+nothing, and going direct to the sync server instead would step around the group
+re-check that revocation depends on. It follows `BRIDGE_HOST`/`BRIDGE_PORT`, or
+`ANKI_SYNC_INTERNAL_URL` if the two are ever not the same thing.
+
 ## Install on the server
 
 The unit expects the service at `/usr/share/webapps/homepage/anki-bridge` (next
