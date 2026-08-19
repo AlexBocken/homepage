@@ -700,6 +700,18 @@ body:has(#add-chrome) .note-editor {
 	margin-inline: auto;
 }
 
+/* The stats page sizes its sticky range bar and its grid in `100vw`, which does
+   not count the vertical scrollbar — so on any screen tall enough to scroll, both
+   are about 15px wider than the room they have and the whole page slides sideways
+   under a horizontal scrollbar. Percentages measure the space that is actually
+   there. */
+body:has(#ankiweb-toolbar[data-embedded]) .range-box {
+	width: 100%;
+}
+body:has(#ankiweb-toolbar[data-embedded]) .graphs-container {
+	width: auto;
+}
+
 /* The Browser is three panes. Give the whole thing the column, and let the
    results take the room the empty editor pane is not using yet. */
 #browser {
