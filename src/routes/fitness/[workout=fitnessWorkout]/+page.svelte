@@ -35,8 +35,11 @@
 
 	const workout = getWorkout();
 	const sync = getWorkoutSync();
+	/** Keep the list alphabetical, matching the order the server hands us. */
+	const byName = (/** @type {any[]} */ list) =>
+		[...list].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 	// svelte-ignore state_referenced_locally
-	let templates = $state(data.templates?.templates ? [...data.templates.templates] : []);
+	let templates = $state(data.templates?.templates ? byName(data.templates.templates) : []);
 	// Library browser
 	let showLibrary = $state(false);
 	/** @type {any[]} */
@@ -201,7 +204,7 @@
 			});
 			if (res.ok) {
 				const { template } = await res.json();
-				templates = [...templates, template];
+				templates = byName([...templates, template]);
 				libTemplate.added = true;
 				libraryTemplates = [...libraryTemplates];
 				toast.success(t.template_added);
@@ -325,7 +328,7 @@
 				});
 				if (res.ok) {
 					const { template } = await res.json();
-					templates = templates.map((t) => t._id === template._id ? { ...template, lastUsed: t.lastUsed } : t);
+					templates = byName(templates.map((t) => t._id === template._id ? { ...template, lastUsed: t.lastUsed } : t));
 				} else {
 					const err = await res.json().catch(() => null);
 					toast.error(err?.error ?? 'Failed to save template');
@@ -338,7 +341,7 @@
 				});
 				if (res.ok) {
 					const { template } = await res.json();
-					templates = [...templates, template];
+					templates = byName([...templates, template]);
 				} else {
 					const err = await res.json().catch(() => null);
 					toast.error(err?.error ?? 'Failed to save template');

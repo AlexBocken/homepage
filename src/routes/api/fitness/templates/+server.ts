@@ -23,7 +23,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
     const query = { $or: orConditions };
 
-    const templates = await WorkoutTemplate.find(query).sort({ updatedAt: -1 });
+    // Alphabetical by name; collation makes it case-insensitive rather than
+    // byte-order (which would put every uppercase name before every lowercase one).
+    const templates = await WorkoutTemplate.find(query)
+      .collation({ locale: 'en', strength: 1 })
+      .sort({ name: 1 });
     
     return json({ templates });
   } catch (error) {
