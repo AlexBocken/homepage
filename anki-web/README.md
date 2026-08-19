@@ -111,10 +111,31 @@ would destroy any theme kept inside it.
 
 Anki's entire design system is ~60 CSS custom properties on `:root` / `:root.night-mode`,
 so redefining those re-skins every screen, including the vendored SvelteKit pages, without
-touching one of Anki's own selectors. On top of that the sheet restyles the header into the
-site's floating glass pill and the two screens you live in — the deck list and the reviewer's
-answer row. The script follows `prefers-color-scheme` (upstream defaults to light and only
-goes dark via the moon button) and puts the mark in the header as a link back to bocken.org.
+touching one of Anki's own selectors. On top of that the sheet rebuilds the header as the
+site's floating glass pill — the mark, Lucide icons on every item, the current page marked,
+the same three-state theme control (system → light → dark) — and restyles the screens you
+live in: the deck list, the reviewer's answer row, the Browser and the editor column.
+
+The icons are Lucide masks rather than images, so one copy of each takes its colour from the
+item and lights up with it. To regenerate the set (or add one), the generator is four lines:
+
+```sh
+python3 - <<'EOF'
+import json, re, pathlib, urllib.parse
+src = pathlib.Path("node_modules/@lucide/svelte/dist/icons")
+nodes = json.loads(re.search(r"iconNode[^=]*=\s*(\[.*?\]\s*\])\s*;",
+                             (src / "layers.svelte").read_text(), re.S).group(1))
+body = "".join("<%s %s/>" % (t, " ".join(f'{k}="{v}"' for k, v in a.items())) for t, a in nodes)
+svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='#000' "
+       "stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'>" + body + "</svg>")
+print('url("data:image/svg+xml,' + urllib.parse.quote(svg, safe="/:=,;()[]{}'.- ") + '")')
+EOF
+```
+
+The script follows `prefers-color-scheme` (upstream defaults to light and only goes dark via
+the moon button), owns the theme button so a press applies immediately instead of reloading,
+and keeps the `#night` hash the vendored SvelteKit pages read in step with it — the three
+disagreeing was what made the old toggle look unreliable.
 
 The one thing the theme must not touch is card content — `#qa`, `.card`, the editor's
 `.field` — which is the user's own note-template CSS.
