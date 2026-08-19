@@ -137,8 +137,35 @@ the moon button), owns the theme button so a press applies immediately instead o
 and keeps the `#night` hash the vendored SvelteKit pages read in step with it — the three
 disagreeing was what made the old toggle look unreliable.
 
-The one thing the theme must not touch is card content — `#qa`, `.card`, the editor's
-`.field` — which is the user's own note-template CSS.
+### Cards
+
+Card content is the user's own note-template CSS and the stylesheet leaves it alone. One
+thing does reach in, in `anki.js`, because leaving it alone did not work: Anki's stock
+notetype hardcodes `color: black; background-color: white`, so in dark mode the study screen
+was a black app around a white slab.
+
+Two steps, in this order:
+
+1. **The theme is handed to the card.** Anki's convention for "this is being shown in the
+   dark" is a `nightMode` / `night_mode` class on the body, which the desktop client sets and
+   ankiweb does not. Setting it turns on three rules the vendored `reviewer.css` was already
+   waiting for — the canvas/foreground body colours, and the LaTeX and drawing inversions —
+   and makes every notetype that follows the documented convention work. It has to be
+   re-applied per card: `reviewer.js` assigns `body.className` wholesale on every question,
+   from the card's own classes, which drops anything else that was there.
+2. **What still fails is repaired, and only that.** A pass measures each colour and moves it
+   only if it is wrong: a background on the wrong side of the theme (by CIE L\*, not by
+   luminance — mid grey sits mid-L\* but low-luminance, so luminance would call almost
+   everything dark), or text below the WCAG contrast threshold against what it actually sits
+   on. The fix keeps the author's hue by flipping lightness in HSL, so a red stays red; the
+   outermost surface instead blends into the app canvas. A notetype that handles both themes
+   measures fine and is never touched.
+
+Images are left alone: Anki already inverts LaTeX and drawings, which are the two cases where
+inverting is always right, and no script can tell a diagram from a photograph. Backgrounds
+that are gradients or images are skipped for the same reason.
+
+The colour decisions are unit-tested in `tests/unit/anki/cardContrast.test.ts`.
 
 ## Install on the server
 

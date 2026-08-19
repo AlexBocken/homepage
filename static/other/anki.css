@@ -15,9 +15,11 @@ all of the design is in this file, next to the src/app.css it mirrors.
 The palette below IS app.css, resolved. Anki cannot see our semantic variables, so the
 values are literal — if the palette in app.css moves, move it here too.
 
-WHAT THIS MUST NEVER DO: style card content — #qa, .card, the editor's .field. That is the
-user's own note-template CSS. Overriding it would silently rewrite how their cards look on
-every device. The theme stops at the chrome.
+WHERE IT STOPS: card content is the user's own note-template CSS, and this sheet does not
+style it. The one thing that does reach in is the contrast repair in anki.js, and only where
+a colour measurably fails — a background on the wrong side of the theme, or text under the
+WCAG threshold against what it sits on. A notetype that handles both themes is left exactly
+as its author wrote it. See "Cards" in anki-web/README.md.
 
 Both backdrop-filter spellings are written out by hand: this file is served straight from
 static/ and never passes through Lightning CSS, so nothing auto-prefixes it. Same exception
@@ -226,15 +228,13 @@ html:root {
    2. PAGE FRAME
    ══════════════════════════════════════════════════════════════════════════════ */
 
-/* The font goes on body rather than on a list of chrome selectors, and #qa hands the
-   card viewport straight back to the browser default. A notetype that sets its own
-   font-family (every stock one does) was never affected either way; one that doesn't
-   keeps exactly the type it had before this sheet existed. */
+/* The chrome font. Anki puts the card's own class on the *body* (`<body class="card
+   card1">`), so a notetype's `.card{font-family:...}` outranks this and wins wherever
+   a card is on screen — which is what we want. The `#qa{font-family:initial}` that
+   used to sit here was doing real damage: the card's font is inherited into #qa, so
+   resetting it there threw away the type every notetype asks for. */
 html body {
 	font-family: var(--bocken-font);
-}
-#qa {
-	font-family: initial;
 }
 
 /* How much room the bar takes at the top of a screen. ankiweb publishes this as
