@@ -61,3 +61,28 @@ test('the home page links here', async ({ page }) => {
 	await page.getByRole('link', { name: 'Anki', exact: true }).click();
 	await expect(page).toHaveURL(/\/anki$/);
 });
+
+test('the demo card runs the review loop and ends it', async ({ page }) => {
+	// The demo is the page's explanation of spaced repetition, so it has to survive
+	// hydration and it has to finish: walking the ladder to the last rung swaps the
+	// card for the conclusion rather than leaving four buttons that all read the
+	// same interval.
+	await gotoHydrated(page, '/anki');
+
+	await page.getByRole('button', { name: 'Antwort zeigen' }).click();
+	await expect(page.locator('.grades .g')).toHaveCount(4);
+	await expect(page.locator('.ladder li.on .tick')).toHaveText('10 Min.');
+
+	// Easy takes two rungs at a time, so three answers clear the six-rung ladder.
+	for (let i = 0; i < 3; i++) {
+		await page.locator('.g.easy').click();
+		const reveal = page.getByRole('button', { name: 'Antwort zeigen' });
+		if (await reveal.count()) await reveal.click();
+	}
+
+	await expect(page.getByText('Das ist die ganze Schleife.')).toBeVisible();
+	await expect(page.locator('.ladder li.on .tick')).toHaveText('3 Monate');
+
+	await page.getByRole('button', { name: 'Nochmal von vorn' }).click();
+	await expect(page.locator('.ladder li.on .tick')).toHaveText('10 Min.');
+});
