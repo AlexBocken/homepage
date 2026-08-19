@@ -207,10 +207,12 @@ html:root.night-mode {
    hover and active states in both themes. Regenerate with the snippet in
    anki-web/README.md if the set changes. */
 html:root {
+	/* Masks nothing in: the fallback for an item with no icon of its own. */
+	--i-none: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E");
 	--i-decks: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z%22/%3E%3Cpath d=%22M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12%22/%3E%3Cpath d=%22M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17%22/%3E%3C/svg%3E");
 	--i-add: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M5 12h14%22/%3E%3Cpath d=%22M12 5v14%22/%3E%3C/svg%3E");
 	--i-browse: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22m21 21-4.34-4.34%22/%3E%3Ccircle cx=%2211%22 cy=%2211%22 r=%228%22/%3E%3C/svg%3E");
-	--i-stats: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M3 3v16a2 2 0 0 0 2 2h16%22/%3E%3Cpath d=%22M18 17V9%22/%3E%3Cpath d=%22M13 17V5%22/%3E%3Cpath d=%22M8 17v-3%22/%3E%3C/svg%3E");
+	--i-stats: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M18 17V9M13 17V5M8 17v-3'/%3E%3C/svg%3E");
 	--i-prefs: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%223%22/%3E%3C/svg%3E");
 	--i-tools: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z%22/%3E%3C/svg%3E");
 	--i-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22m16 18 6-6-6-6%22/%3E%3Cpath d=%22m8 6-6 6 6 6%22/%3E%3C/svg%3E");
@@ -329,17 +331,17 @@ body:has(#ankiweb-toolbar:not([data-spa])):not(:has(#rev-shell)):not(:has(#add-c
 	width: 16px;
 	height: 16px;
 	background: currentColor;
-	-webkit-mask: var(--icon) center / contain no-repeat;
-	mask: var(--icon) center / contain no-repeat;
+	-webkit-mask: var(--icon, var(--i-none)) center / contain no-repeat;
+	mask: var(--icon, var(--i-none)) center / contain no-repeat;
 }
-#ankiweb-toolbar a[href="/deckbrowser"] { --icon: var(--i-decks); }
-#ankiweb-toolbar a[href="/add"] { --icon: var(--i-add); }
-#ankiweb-toolbar a[href="/browse"] { --icon: var(--i-browse); }
-#ankiweb-toolbar a[href="/graphs"] { --icon: var(--i-stats); }
-#ankiweb-toolbar a[href="/preferences"] { --icon: var(--i-prefs); }
-#ankiweb-toolbar a[href="/tools"] { --icon: var(--i-tools); }
-#ankiweb-toolbar a[href="/about"] { --icon: var(--i-source); }
-#ankiweb-toolbar a[href="/notify"] { --icon: var(--i-notify); }
+#ankiweb-toolbar a[href^="/deckbrowser"] { --icon: var(--i-decks); }
+#ankiweb-toolbar a[href^="/add"] { --icon: var(--i-add); }
+#ankiweb-toolbar a[href^="/browse"] { --icon: var(--i-browse); }
+#ankiweb-toolbar a[href^="/graphs"] { --icon: var(--i-stats); }
+#ankiweb-toolbar a[href^="/preferences"] { --icon: var(--i-prefs); }
+#ankiweb-toolbar a[href^="/tools"] { --icon: var(--i-tools); }
+#ankiweb-toolbar a[href^="/about"] { --icon: var(--i-source); }
+#ankiweb-toolbar a[href^="/notify"] { --icon: var(--i-notify); }
 #ankiweb-toolbar .menu > .lbl { --icon: var(--i-extras); }
 #ankiweb-toolbar .sync { --icon: var(--i-sync); }
 /* The cut-down bar anki.js puts on the SvelteKit pages: one way back. */
