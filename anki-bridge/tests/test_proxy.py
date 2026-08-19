@@ -55,6 +55,8 @@ class Upstream:
     def __init__(self):
         self.requests: list[httpx.Request] = []
         self.status = 200
+        #: Set to an async generator to make the response body fail part way.
+        self.body = None
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         # MockTransport has already awaited the request body for us.
@@ -69,6 +71,8 @@ class Upstream:
                 ),
                 headers={"content-type": "application/json"},
             )
+        if self.body is not None:
+            return httpx.Response(self.status, content=self.body())
         return httpx.Response(self.status, content=_stream(b"upstream-said-ok"))
 
     @property
@@ -288,6 +292,34 @@ def test_sync_header_is_forwarded_verbatim(client, bridge):
 def _provision(client, bridge, username="alex"):
     client.post("/sync/hostKey", content=hostkey_body(username, bridge.passwords[username]))
     return bridge.accounts.get(username)
+
+
+def test_a_dying_upstream_is_logged_not_raised(client, bridge, caplog):
+    """A full download is a long response, and the sync server going away part
+    way through it used to surface as an unhandled ASGI exception: sixty frames
+    of httpx and starlette naming neither the request nor how far it got.
+
+    Nothing can rescue the response — the status line went out with the first
+    byte — but the log line has to be the diagnosis, because on the client side
+    all of this looks like an unexplained broken stream.
+    """
+    account = _provision(client, bridge)
+    header = json.dumps({"v": 11, "k": account.hkey, "c": "anki,26.08", "s": "s"})
+
+    async def dies_mid_body():
+        yield b"the first half"
+        raise httpx.ReadError("upstream went away")
+
+    bridge.upstream.body = dies_mid_body
+
+    with caplog.at_level("ERROR"):
+        with client.stream("POST", "/sync/download", headers={"anki-sync": header}) as res:
+            assert res.status_code == 200
+            with contextlib.suppress(httpx.HTTPError):
+                res.read()
+
+    assert any("upstream closed /sync/download" in r.message for r in caplog.records)
+    assert any("14 byte(s)" in r.message for r in caplog.records)
 
 
 def test_collection_requests_stream_through(client, bridge):

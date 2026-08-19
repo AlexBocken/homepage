@@ -325,9 +325,28 @@ async def proxy(request: Request, path: str) -> Response:
         raise
 
     async def body() -> AsyncIterator[bytes]:
+        """Relay the upstream body, and do not turn its failures into tracebacks.
+
+        The status line is already on the wire by the time this runs, so an
+        upstream that dies mid-body cannot be reported as an error code — the
+        client sees a truncated stream whatever we do. What it must not also do
+        is surface as an unhandled ASGI exception: sixty lines of httpx and
+        starlette frames that name neither the request nor how far it got, for a
+        failure whose whole diagnosis is "the sync server went away during a
+        100 MB download".
+        """
+        relayed = 0
         try:
             async for chunk in upstream.aiter_raw():
+                relayed += len(chunk)
                 yield chunk
+        except httpx.HTTPError as exc:
+            log.error(
+                "upstream closed /%s after %d byte(s): %s — the sync server is "
+                "gone or went away mid-response; the client will report a broken "
+                "stream and retry",
+                path, relayed, type(exc).__name__,
+            )
         finally:
             await stack.aclose()
 

@@ -225,6 +225,34 @@ The integration suite boots a real `anki --syncserver` on a temporary
 derivation, and that a restart preserves sessions. Run it after any Anki upgrade;
 it is the thing that will tell you if the protocol moved.
 
+## When a sync breaks mid-transfer
+
+A client reporting a broken or aborted stream, with `upstream closed /sync/... after
+N byte(s)` in this service's log, means the **sync server** went away while its response
+was being relayed. The bridge cannot rescue that response — the status line went out with
+the first byte — so the client will report a truncated stream and retry.
+
+It is not `client_max_body_size`. That governs the request body nginx accepts, and it
+answers 413 *before* proxying; a download's request body is a few hundred bytes, and the
+large payload is the response. It is also not the bridge↔client hop at all: the read that
+fails is the bridge's own connection to `127.0.0.1:27701`.
+
+Two things kill that connection, and both say so in the journal:
+
+```sh
+journalctl -u anki-bridge | grep -E "exited unexpectedly|drain timed out|restarting"
+journalctl -k | grep -i "killed process"     # the sync server holds a whole collection
+df -h /var/lib/anki-bridge                    # and writes it out before sending
+```
+
+* **"sync server exited unexpectedly (code N)"** — it crashed; the watchdog already
+  restarted it. A large collection plus a small machine makes the OOM killer the first
+  suspect.
+* **"draining … before restart"** — someone's first-ever login provisioned an account,
+  which respawns the server with a new user list. The drain waits `DRAIN_TIMEOUT` (60s) for
+  in-flight syncs, then goes ahead regardless, so a full sync slower than that is cut.
+  Raise `DRAIN_TIMEOUT` if that is what happened.
+
 ## Operations
 
 - **State** lives in `/var/lib/anki-bridge`: `accounts.db` plus one collection
