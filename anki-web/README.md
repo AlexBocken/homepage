@@ -30,6 +30,12 @@ session. Eviction also actually returns memory, which CPython would not.
 than inventing a policy: a full sync replaces one side wholesale, and which copy
 survives is the user's decision, not ours.
 
+Both the toolbar's Sync button and this supervisor post to the child's `/_sync`,
+and only `/_activity` takes the per-instance secret. Guarding `/_sync` with it
+too — as it was — 403s every press of the button, and buys nothing: the only
+things that can open a child's socket are nginx, which has already authenticated
+the one user that instance belongs to, and this service.
+
 **Authentik does the authenticating, via a forward-auth outpost.** Not this
 service. The site's own session cookie could never have worked here — Auth.js
 sets it host-only on `bocken.org`, so the browser does not send it to a
