@@ -215,10 +215,7 @@ html:root {
 	--i-stats: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M18 17V9M13 17V5M8 17v-3'/%3E%3C/svg%3E");
 	--i-prefs: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%223%22/%3E%3C/svg%3E");
 	--i-tools: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z%22/%3E%3C/svg%3E");
-	--i-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22m16 18 6-6-6-6%22/%3E%3Cpath d=%22m8 6-6 6 6 6%22/%3E%3C/svg%3E");
-	--i-extras: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z%22/%3E%3Cpath d=%22M12 22V12%22/%3E%3Cpolyline points=%223.29 7 12 12 20.71 7%22/%3E%3Cpath d=%22m7.5 4.27 9 5.15%22/%3E%3C/svg%3E");
 	--i-sync: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8%22/%3E%3Cpath d=%22M21 3v5h-5%22/%3E%3Cpath d=%22M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16%22/%3E%3Cpath d=%22M8 16H3v5%22/%3E%3C/svg%3E");
-	--i-notify: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M10.268 21a2 2 0 0 0 3.464 0%22/%3E%3Cpath d=%22M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326%22/%3E%3C/svg%3E");
 	--i-sun: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%224%22/%3E%3Cpath d=%22M12 2v2%22/%3E%3Cpath d=%22M12 20v2%22/%3E%3Cpath d=%22m4.93 4.93 1.41 1.41%22/%3E%3Cpath d=%22m17.66 17.66 1.41 1.41%22/%3E%3Cpath d=%22M2 12h2%22/%3E%3Cpath d=%22M20 12h2%22/%3E%3Cpath d=%22m6.34 17.66-1.41 1.41%22/%3E%3Cpath d=%22m19.07 4.93-1.41 1.41%22/%3E%3C/svg%3E");
 	--i-moon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401%22/%3E%3C/svg%3E");
 	--i-sunmoon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d=%22M12 2v2%22/%3E%3Cpath d=%22M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715%22/%3E%3Cpath d=%22M16 12a4 4 0 0 0-4-4%22/%3E%3Cpath d=%22m19 5-1.256 1.256%22/%3E%3Cpath d=%22M20 12h2%22/%3E%3C/svg%3E");
@@ -306,7 +303,6 @@ body:has(#ankiweb-toolbar:not([data-spa])):not(:has(#rev-shell)):not(:has(#add-c
 /* One item shape for links, the Extras label and the Sync button alike — they
    read as one row, so they cannot be three different kinds of control. */
 #ankiweb-toolbar a,
-#ankiweb-toolbar .menu > .lbl,
 #ankiweb-toolbar .sync {
 	display: flex;
 	align-items: center;
@@ -324,7 +320,6 @@ body:has(#ankiweb-toolbar:not([data-spa])):not(:has(#rev-shell)):not(:has(#add-c
 	transition: color 150ms, background 150ms;
 }
 #ankiweb-toolbar a::before,
-#ankiweb-toolbar .menu > .lbl::before,
 #ankiweb-toolbar .sync::before {
 	content: "";
 	flex: 0 0 auto;
@@ -340,16 +335,12 @@ body:has(#ankiweb-toolbar:not([data-spa])):not(:has(#rev-shell)):not(:has(#add-c
 #ankiweb-toolbar a[href^="/graphs"] { --icon: var(--i-stats); }
 #ankiweb-toolbar a[href^="/preferences"] { --icon: var(--i-prefs); }
 #ankiweb-toolbar a[href^="/tools"] { --icon: var(--i-tools); }
-#ankiweb-toolbar a[href^="/about"] { --icon: var(--i-source); }
-#ankiweb-toolbar a[href^="/notify"] { --icon: var(--i-notify); }
-#ankiweb-toolbar .menu > .lbl { --icon: var(--i-extras); }
 #ankiweb-toolbar .sync { --icon: var(--i-sync); }
 /* The cut-down bar anki.js puts on the SvelteKit pages: one way back. */
 #ankiweb-toolbar[data-spa] a:not(#bocken-home) { --icon: var(--i-decks); }
 
 #ankiweb-toolbar a:hover,
-#ankiweb-toolbar .sync:hover,
-#ankiweb-toolbar .menu:hover > .lbl {
+#ankiweb-toolbar .sync:hover {
 	color: var(--bocken-nav-text-hover);
 	background: var(--bocken-nav-hover-bg);
 	text-decoration: none;
@@ -435,26 +426,7 @@ body:has(#ankiweb-toolbar:not([data-spa])):not(:has(#rev-shell)):not(:has(#add-c
 	border-color: var(--bocken-nav-btn-border-hover);
 }
 
-/* The "Extras" dropdown hangs off the pill, so it gets the pill's own frosted
-   treatment rather than Anki's flat menu. It is a sibling of the blur, never a
-   child of it — a backdrop-filter inside a backdrop root renders as a flat
-   panel. See CLAUDE.md. */
-#ankiweb-toolbar .menu .sub {
-	margin-top: 0.4rem;
-	border: 1px solid var(--bocken-glass-border);
-	border-radius: 0.75rem;
-	background: var(--bocken-glass-bg);
-	-webkit-backdrop-filter: blur(16px);
-	backdrop-filter: blur(16px);
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
-	padding: 0.3rem;
-}
-#ankiweb-toolbar .menu .sub a {
-	padding: 0.4rem 0.7rem;
-	border-radius: 0.5rem;
-}
-
-/* A phone cannot hold eight labels. Below the breakpoint the bar keeps the
+/* A phone cannot hold seven labels. Below the breakpoint the bar keeps the
    icons and drops the words, which is what the icons were for. */
 @media (max-width: 780px) {
 	#ankiweb-toolbar {
@@ -462,14 +434,10 @@ body:has(#ankiweb-toolbar:not([data-spa])):not(:has(#rev-shell)):not(:has(#add-c
 		padding: 0 0.4rem;
 	}
 	#ankiweb-toolbar a,
-	#ankiweb-toolbar .menu > .lbl,
 	#ankiweb-toolbar .sync {
 		padding: 0.4rem 0.45rem;
 		font-size: 0;
 		gap: 0;
-	}
-	#ankiweb-toolbar .menu > .lbl::after {
-		content: "";
 	}
 }
 
