@@ -46,6 +46,31 @@ test('the mug button logs 250 ml and tops up the same entry on a second tap', as
 	await expect(page.locator('.beverage-item').filter({ hasText: BLACK_TEA })).toHaveCount(0);
 });
 
+test('clicking a mug pours away that cup and every one after it', async ({ page }) => {
+	await gotoHydrated(page, '/fitness/nutrition');
+	await clearTea(page);
+
+	const mugButton = page.locator('button.hot-drink-add');
+	const mugs = page.locator('.water-cup.hot-drink');
+	const teaRow = page.locator('.beverage-item').filter({ hasText: BLACK_TEA });
+
+	for (let i = 0; i < 3; i++) await mugButton.click();
+	await expect(mugs).toHaveCount(3);
+	await expect(teaRow).toContainText('750 ml');
+
+	// The last mug takes only itself.
+	await mugs.nth(2).click();
+	await expect(mugs).toHaveCount(2);
+	await expect(teaRow).toContainText('500 ml');
+
+	// The first takes the lot, same as clicking the first logged glass of water.
+	await mugs.first().click();
+	await expect(mugs).toHaveCount(0);
+	await expect(teaRow).toHaveCount(0);
+	// And the button to pour another is still there.
+	await expect(mugButton).toBeVisible();
+});
+
 test('the drink settings switch the button off and pick another BLS drink', async ({ page }) => {
 	await gotoHydrated(page, '/fitness/nutrition');
 

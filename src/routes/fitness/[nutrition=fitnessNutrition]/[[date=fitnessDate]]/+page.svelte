@@ -32,6 +32,7 @@
 	import { entryCalories, energySources, SPARSELY_MEASURED_KEYS, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
 	import { macroGoalGrams } from '$lib/fitness/macroGoals';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
+	import { cupRowChange } from '$lib/fitness/cupRow';
 	import {
 		HOT_DRINKS, HOT_DRINK_ML, HOT_DRINK_GROUP_LABELS, HOT_DRINK_GROUPS,
 		DEFAULT_HOT_DRINK_CODE, resolveHotDrink, isHotDrinkRef,
@@ -482,31 +483,61 @@
 	let mealLiquidCups = $derived(Math.round(mealLiquidMl / WATER_CUP_ML));
 	let totalCups = $derived(beverageCups + waterCups + mealLiquidCups);
 	let goalCups = $derived(Math.round(waterGoalMl / WATER_CUP_ML));
-	let displayCups = $derived(Math.max(goalCups, totalCups + 1));
 
 	/** @type {Set<number>} cups currently animating fill/drain */
 	let fillingCups = $state(new Set());
 	let drainingCups = $state(new Set());
-	let lastTotalCups = $state(-1);
+	/**
+	 * Runs held at their pre-removal values while cups empty.
+	 *
+	 * Water is the last run, so a glass leaving shifts nothing and the animation
+	 * could play against live counts. A mug is the first: the moment its entry goes,
+	 * every cup behind it slides one place left, the add button jumps with them, and
+	 * the drain plays out over whatever water glass inherited the spot. Holding the
+	 * layout for the 700 ms keeps the cup that is emptying where the user pressed it.
+	 * @type {number[] | null}
+	 */
+	let frozenRuns = $state(null);
+
+	/** The row's four runs, in the order they are drawn — see `cupRowChange`. */
+	const cupRuns = $derived([hotDrinkCups, coldBeverageCups, mealLiquidCups, waterCups]);
+
+	/** What the row draws: frozen mid-drain, live otherwise. */
+	const rowRuns = $derived(frozenRuns ?? cupRuns);
+	const rowHotCups = $derived(rowRuns[0]);
+	const rowBeverageCups = $derived(rowRuns[0] + rowRuns[1]);
+	const rowMealLiquidCups = $derived(rowRuns[2]);
+	const rowTotalCups = $derived(rowRuns[0] + rowRuns[1] + rowRuns[2] + rowRuns[3]);
+	let displayCups = $derived(Math.max(goalCups, rowTotalCups + 1));
+
+	/**
+	 * Last render's runs. A plain `let`, deliberately: nothing in the template reads
+	 * it, and as `$state` the array would be deep-proxied on write, so the next read
+	 * never equalled what was stored and this effect re-triggered itself until
+	 * Svelte gave up with effect_update_depth_exceeded. The old counter got away
+	 * with the same read-write shape only because a number reassigned to its own
+	 * value is a no-op.
+	 * @type {number[] | null}
+	 */
+	let lastCupRuns = null;
 
 	$effect(() => {
-		const cur = totalCups;
-		if (lastTotalCups === -1) {
-			lastTotalCups = cur;
-			return;
-		}
-		if (cur > lastTotalCups) {
-			const s = new Set(fillingCups);
-			for (let i = lastTotalCups; i < cur; i++) s.add(i);
-			fillingCups = s;
+		const cur = cupRuns;
+		const prev = lastCupRuns;
+		lastCupRuns = cur;
+		if (!prev) return;
+
+		const change = cupRowChange(prev, cur);
+		if (!change) return;
+
+		if (change.kind === 'fill') {
+			fillingCups = new Set(change.indices);
 			setTimeout(() => { fillingCups = new Set(); }, 1500);
-		} else if (cur < lastTotalCups) {
-			const s = new Set(drainingCups);
-			for (let i = cur; i < lastTotalCups; i++) s.add(i);
-			drainingCups = s;
-			setTimeout(() => { drainingCups = new Set(); }, 700);
+		} else {
+			frozenRuns = prev;
+			drainingCups = new Set(change.indices);
+			setTimeout(() => { drainingCups = new Set(); frozenRuns = null; }, 700);
 		}
-		lastTotalCups = cur;
 	});
 
 	/** @param {number} target */
@@ -544,6 +575,59 @@
 			}
 		} catch {
 			toast.error(isEn ? 'Failed to update water' : 'Fehler beim Aktualisieren');
+		}
+	}
+
+	/**
+	 * Trim the mugs back to `target`, the way clicking a glass trims the water.
+	 *
+	 * The row shows hot drinks as one run of 250 ml mugs, but underneath it may be
+	 * several entries of several drinks and odd sizes, so this takes the excess off
+	 * the newest end: whole entries go, and the one the boundary lands inside is
+	 * scaled down to meet it.
+	 * @param {number} target
+	 */
+	async function setHotDrinkCups(target) {
+		let excess = hotDrinkMl - target * WATER_CUP_ML;
+		if (excess <= 0) return;
+
+		/** @type {FoodLogEntry[]} */
+		const toRemove = [];
+		/** @type {{ entry: FoodLogEntry, amountGrams: number }[]} */
+		const toShrink = [];
+		for (const entry of [...hotDrinkEntries].reverse()) {
+			if (excess <= 0.5) break;
+			if (entry.amountGrams <= excess + 0.5) {
+				toRemove.push(entry);
+				excess -= entry.amountGrams;
+			} else {
+				toShrink.push({ entry, amountGrams: entry.amountGrams - excess });
+				excess = 0;
+			}
+		}
+
+		try {
+			const removedIds = toRemove.map(e => e._id);
+			const [, ...shrunk] = await Promise.all([
+				Promise.all(removedIds.map(id =>
+					fetch(`/api/fitness/food-log/${id}`, { method: 'DELETE' })
+						.then(r => { if (!r.ok) throw new Error('delete failed'); })
+				)),
+				...toShrink.map(({ entry, amountGrams }) =>
+					fetch(`/api/fitness/food-log/${entry._id}`, {
+						method: 'PUT',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ amountGrams }),
+					}).then(r => r.ok ? r.json() : Promise.reject(new Error('update failed')))
+				),
+			]);
+			/** @type {Map<string, FoodLogEntry>} */
+			const updated = new Map(shrunk.map((/** @type {FoodLogEntry} */ e) => [e._id, e]));
+			entries = entries
+				.filter((/** @type {FoodLogEntry} */ e) => !removedIds.includes(e._id))
+				.map((/** @type {FoodLogEntry} */ e) => updated.get(e._id) ?? e);
+		} catch {
+			toast.error(isEn ? 'Failed to update drinks' : 'Getränke konnten nicht aktualisiert werden');
 		}
 	}
 
@@ -2638,15 +2722,15 @@
 			</div>
 		{/if}
 		<div class="water-cups">
-			{#if hotDrinkCups === 0}{@render hotDrinkAdd()}{/if}
+			{#if rowHotCups === 0}{@render hotDrinkAdd()}{/if}
 			{#each Array(displayCups) as _, i}
-				{@const isHot = i < hotDrinkCups}
-				{@const isBev = !isHot && i < beverageCups}
-				{@const isMealLiquid = !isHot && !isBev && i < beverageCups + mealLiquidCups}
+				{@const isHot = i < rowHotCups}
+				{@const isBev = !isHot && i < rowBeverageCups}
+				{@const isMealLiquid = !isHot && !isBev && i < rowBeverageCups + rowMealLiquidCups}
 				{@const isAuto = isHot || isBev || isMealLiquid}
-				{@const isFilled = i < totalCups}
+				{@const isFilled = i < rowTotalCups}
 				{@const showWater = isFilled || drainingCups.has(i)}
-				{@const isNextEmpty = i === totalCups && !drainingCups.has(i)}
+				{@const isNextEmpty = i === rowTotalCups && !drainingCups.has(i)}
 				{@const cupPath = isHot ? MUG_PATH : GLASS_PATH}
 				{@const waveFill = isHot ? 'var(--orange)' : isAuto ? 'var(--nord7)' : 'var(--blue)'}
 				{@const waveFillAlt = isHot ? 'var(--yellow)' : isAuto ? 'var(--nord8)' : 'var(--lightblue)'}
@@ -2660,14 +2744,16 @@
 					class:filling={fillingCups.has(i)}
 					class:draining={drainingCups.has(i)}
 					class:next-empty={isNextEmpty}
-					disabled={isAuto}
+					disabled={isBev || isMealLiquid}
 					onclick={() => {
-						if (isAuto) return;
-						const autoOffset = beverageCups + mealLiquidCups;
-						const waterTarget = i < totalCups ? i - autoOffset : i - autoOffset + 1;
+						if (isBev || isMealLiquid) return;
+						// Mugs are the first run, so the index is the count to keep.
+						if (isHot) return void setHotDrinkCups(i);
+						const autoOffset = rowBeverageCups + rowMealLiquidCups;
+						const waterTarget = i < rowTotalCups ? i - autoOffset : i - autoOffset + 1;
 						setWaterCups(Math.max(0, waterTarget));
 					}}
-					title="{isHot ? (isEn ? 'Hot drink' : 'Heissgetränk') : isAuto ? (isEn ? (isBev ? 'Beverage' : 'From meal') : (isBev ? 'Getränk' : 'Aus Mahlzeit')) : (i + 1) * WATER_CUP_ML + ' ml'}"
+					title="{isBev ? (isEn ? 'Beverage' : 'Getränk') : isMealLiquid ? (isEn ? 'From meal' : 'Aus Mahlzeit') : (i + 1) * WATER_CUP_ML + ' ml'}"
 				>
 					<svg viewBox="0 0 24 32" class="cup-svg" overflow="hidden">
 						<defs>
@@ -2706,7 +2792,7 @@
 						{/if}
 					</svg>
 				</button>
-				{#if i === hotDrinkCups - 1}{@render hotDrinkAdd()}{/if}
+				{#if i === rowHotCups - 1}{@render hotDrinkAdd()}{/if}
 			{/each}
 		</div>
 		{#if beverageEntries.length > 0 || mealLiquidMl > 0}
