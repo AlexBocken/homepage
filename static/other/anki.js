@@ -32,9 +32,6 @@ break it and this file cannot break an upgrade.
 		"/import-csv", "/import-anki-package", "/image-occlusion", "/congrats"
 	];
 
-	// Anki's own name for the deck list, in the languages this deployment serves.
-	var BACK = { de: "Stapel", fr: "Paquets", it: "Mazzi", es: "Mazos" };
-
 	var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 
 	function store(key, value) {
@@ -199,31 +196,9 @@ break it and this file cannot break an upgrade.
 			return;
 		}
 
-		// ── 3. A header for the SvelteKit pages ───────────────────────────────────
-		// Those pages are vendored whole and have no toolbar, so deck options and
-		// the importers otherwise look like a different application opening on top
-		// of this one. They get the same pill, cut down to the mark and the way
-		// back.
-		//
-		// Only those pages. The other toolbar-less document is /edit, which is a
-		// bare fragment inside the Browser's iframe — a floating pill there would
-		// land on top of the note being edited.
-		if (!document.body || !isSpaPath(location.pathname)) return;
-		var spa = document.createElement("div");
-		spa.id = "ankiweb-toolbar";
-		// Marks it as the cut-down bar: anki.css gives the server-rendered screens
-		// a content column to sit under the pill, and the SPA pages lay themselves
-		// out.
-		spa.dataset.spa = "1";
-		spa.appendChild(markLink());
-		var back = document.createElement("a");
-		back.href = "/deckbrowser";
-		// The app runs in whatever ANKIWEB_LANG says, and this is the one label
-		// that is ours rather than Anki's, so it follows the browser instead of
-		// shipping as English next to a German toolbar.
-		back.textContent = BACK[(navigator.language || "en").slice(0, 2)] || "Decks";
-		spa.appendChild(back);
-		document.body.appendChild(spa);
+		// No bar to decorate: /edit is a bare fragment inside the Browser's iframe
+		// and is meant to have none. The SvelteKit pages get the real toolbar from
+		// ankiweb itself, so there is nothing to build here any more.
 	}
 
 	if (document.readyState === "loading") {
@@ -231,7 +206,7 @@ break it and this file cannot break an upgrade.
 	} else {
 		decorate();
 	}
-	// SvelteKit mounts after DOMContentLoaded and may replace what it finds in
-	// <body>, so the bar is put back if it went away.
+	// SvelteKit mounts after DOMContentLoaded, so the pages it owns are decorated
+	// again once it has settled.
 	window.addEventListener("load", decorate);
 })();
