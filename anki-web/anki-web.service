@@ -38,6 +38,11 @@ Environment=ANKI_WEB_LANG=de
 # AGPL-3.0: we serve a modified ankiweb over a network, so §13 obliges us to
 # offer its source to the people we serve it to. Rendered on /about.
 Environment=ANKIWEB_SOURCE_URL=https://git.bocken.org/Alexander/ankiweb
+# Makes the study client look like bocken.org. Both files ship with the site
+# (homepage:static/other/), so restyling is a site deploy, not a restart here.
+# Empty either one to serve plain upstream Anki.
+Environment=ANKI_WEB_THEME_CSS=https://bocken.org/other/anki.css
+Environment=ANKI_WEB_THEME_JS=https://bocken.org/other/anki.js
 # System Python throughout — no venv. Every dependency is an Arch package
 # (python-fastapi, python-uvicorn, python-httpx) and, crucially, `anki` itself
 # is the host's own package, so the study client is the same build as the sync

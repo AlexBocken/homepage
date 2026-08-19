@@ -90,6 +90,35 @@ The copy follows `ANKI_WEB_LANG` (the language the child itself renders in), so
 the page in front of the app and the app do not disagree about which language
 this is.
 
+## Looking like the site
+
+Stock ankiweb paints Anki's own blue-on-grey with a flat toolbar, which made
+study.bocken.org the one subdomain that reads as a different product. It is themed
+instead of forked: ankiweb takes two URLs,
+
+```
+ANKIWEB_THEME_CSS   an extra stylesheet, linked after every vendored Anki sheet
+ANKIWEB_THEME_JS    an extra script, run before ankiweb's own bootstrap
+```
+
+and the files behind them are **part of this site**, at
+[`static/other/anki.css`](../static/other/anki.css) and `anki.js` — alongside the
+`jellyfin.css` / `gitea.css` / `searxng.css` that theme the other self-hosted services
+here. So the palette lives next to the `src/app.css` it mirrors, restyling the study client
+is a site deploy rather than a restart over here, and — the reason it is done this way —
+ankiweb's frontend is re-vendored wholesale from the aqt wheel on every Anki bump, which
+would destroy any theme kept inside it.
+
+Anki's entire design system is ~60 CSS custom properties on `:root` / `:root.night-mode`,
+so redefining those re-skins every screen, including the vendored SvelteKit pages, without
+touching one of Anki's own selectors. On top of that the sheet restyles the header into the
+site's floating glass pill and the two screens you live in — the deck list and the reviewer's
+answer row. The script follows `prefers-color-scheme` (upstream defaults to light and only
+goes dark via the moon button) and puts the mark in the header as a link back to bocken.org.
+
+The one thing the theme must not touch is card content — `#qa`, `.card`, the editor's
+`.field` — which is the user's own note-template CSS.
+
 ## Install on the server
 
 **No venv, unlike the other services here.** Every dependency is an Arch

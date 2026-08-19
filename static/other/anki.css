@@ -1,0 +1,646 @@
+/*
+This file themes ankiweb (the Anki web client behind study.bocken.org) as bocken.org.
+It is loaded by the deployment, not by the app itself:
+
+    ANKIWEB_THEME_CSS=https://bocken.org/other/anki.css
+    ANKIWEB_THEME_JS=https://bocken.org/other/anki.js
+
+set in anki-web/main.py's _child_env(). See anki-web/README.md → "Looking like the site".
+
+WHY IT LIVES HERE, not in the ankiweb tree: ankiweb vendors Anki's compiled frontend and
+re-fetches it from the aqt wheel on every Anki bump, so anything written into those files
+is destroyed by the next upgrade. The fork only carries a generic "inject this URL" hook;
+all of the design is in this file, next to the src/app.css it mirrors.
+
+The palette below IS app.css, resolved. Anki cannot see our semantic variables, so the
+values are literal — if the palette in app.css moves, move it here too.
+
+WHAT THIS MUST NEVER DO: style card content — #qa, .card, the editor's .field. That is the
+user's own note-template CSS. Overriding it would silently rewrite how their cards look on
+every device. The theme stops at the chrome.
+
+Both backdrop-filter spellings are written out by hand: this file is served straight from
+static/ and never passes through Lightning CSS, so nothing auto-prefixes it. Same exception
+as the offline page in src/service-worker.ts.
+*/
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   1. TOKENS
+
+   Anki's whole design system is ~60 custom properties on :root / :root.night-mode,
+   declared at the top of every one of its stylesheets. Redefining them here — this
+   sheet is linked after all of them — re-skins every screen, including the vendored
+   SvelteKit pages (graphs, deck options, card info, the importers), without touching
+   a single one of Anki's own selectors.
+   The selectors are html:root rather than :root on purpose. Anki's own sheets all use
+   :root, and the SvelteKit pages append their bundles to <head> at runtime — after this
+   file — so on those pages document order would hand the tokens back to Anki. One extra
+   element in the selector settles it everywhere, whatever the load order turns out to be.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+html:root {
+	/* Text */
+	--fg: #2a2a2a;
+	--fg-subtle: #555;
+	--fg-disabled: #aaa;
+	--fg-faint: #bbb;
+	--fg-link: #5E81AC;
+
+	/* Surfaces — app.css's warm off-white, not Anki's cool grey */
+	--canvas: #f8f6f1;
+	--canvas-elevated: #efecea;
+	--canvas-inset: #e8e5e1;
+	--canvas-overlay: #efecea;
+	--canvas-code: #e8e5e1;
+	--canvas-glass: rgba(255, 255, 255, 0.4);
+
+	/* Borders */
+	--border: #ddd;
+	--border-subtle: #e8e5e1;
+	--border-strong: #bbb;
+	--border-focus: #5E81AC;
+
+	/* Buttons. The gradient stops are collapsed onto one value on purpose: the site's
+	   buttons are flat, and a two-stop gradient is the loudest thing Anki draws. */
+	--button-bg: #efecea;
+	--button-gradient-start: #e8e5e1;
+	--button-gradient-end: #e8e5e1;
+	--button-hover-border: #bbb;
+	--button-disabled: rgba(223, 220, 216, 0.5);
+	--button-primary-bg: #5E81AC;
+	--button-primary-gradient-start: #5E81AC;
+	--button-primary-gradient-end: #5E81AC;
+	--button-primary-disabled: #9db3cc;
+
+	--scrollbar-bg: #dfdcd8;
+	--scrollbar-bg-hover: #ccc8c4;
+	--scrollbar-bg-active: #bbb;
+
+	/* Spread shadows, like the site's --shadow-* tokens. --shadow is also used as a
+	   button's border-bottom-color by webview.css, which is why it stays a colour. */
+	--shadow: rgba(0, 0, 0, 0.2);
+	--shadow-inset: rgba(0, 0, 0, 0.3);
+	--shadow-subtle: rgba(0, 0, 0, 0.12);
+	--shadow-focus: #5E81AC;
+
+	/* Accents */
+	--accent-card: #81A1C1;
+	--accent-note: #A3BE8C;
+	--accent-danger: #BF616A;
+
+	/* Flags. Nord ships one purple, and flags need both a pink and a purple, so the
+	   purple is nord15 taken down a few steps. */
+	--flag-1: #BF616A;
+	--flag-2: #D08770;
+	--flag-3: #6f8f57;
+	--flag-4: #5E81AC;
+	--flag-5: #B48EAD;
+	--flag-6: #7fa8a7;
+	--flag-7: #8B6FA8;
+
+	/* Card states. New/learn/review keep Anki's blue/red/green meaning — that mapping is
+	   muscle memory — but in Nord. The light-mode green and yellow are darkened for real
+	   contrast at count-size, the same reason app.css keeps --color-amber-text. */
+	--state-new: #5E81AC;
+	--state-learn: #BF616A;
+	--state-review: #6f8f57;
+	--state-buried: #777;
+	--state-suspended: #9a6f00;
+	--state-marked: #8B6FA8;
+
+	--highlight-bg: rgba(94, 129, 172, 0.3);
+	--highlight-fg: #2a2a2a;
+	--selected-bg: rgba(94, 129, 172, 0.22);
+	--selected-fg: #2a2a2a;
+
+	/* Shape. Anki's three radii map onto the site's --radius-md / -lg / -pill. */
+	--border-radius: 0.5rem;
+	--border-radius-medium: 0.75rem;
+	--border-radius-large: 1000px;
+	--transition: 200ms;
+	--transition-medium: 500ms;
+
+	/* The site's own tokens, for the rules further down. */
+	--bocken-font: Helvetica, Arial, "Noto Sans", sans-serif;
+	--bocken-glass-bg: rgba(46, 52, 64, 0.82);
+	--bocken-glass-border: rgba(255, 255, 255, 0.08);
+	--bocken-nav-text: #999;
+	--bocken-nav-hover-bg: rgba(255, 255, 255, 0.1);
+	--bocken-header-top: max(12px, calc(env(safe-area-inset-top, 0px) + 4px));
+}
+
+html:root.night-mode {
+	--fg: #e5e5e5;
+	--fg-subtle: #aaa;
+	--fg-disabled: #666;
+	--fg-faint: #555;
+	--fg-link: #88C0D0;
+
+	--canvas: #000;
+	--canvas-elevated: #1a1a1a;
+	--canvas-inset: #1a1a1a;
+	--canvas-overlay: #222;
+	--canvas-code: #111;
+	--canvas-glass: rgba(26, 26, 26, 0.4);
+
+	--border: #333;
+	--border-subtle: #222;
+	--border-strong: #444;
+	--border-focus: #88C0D0;
+
+	--button-bg: #222;
+	--button-gradient-start: #2a2a2a;
+	--button-gradient-end: #2a2a2a;
+	--button-hover-border: #444;
+	--button-disabled: rgba(34, 34, 34, 0.5);
+	/* Primary stays nord10 in the dark theme too. The site can afford nord8 there because
+	   it also flips the text on it to black; Anki has no token for that, so a light-blue
+	   button would keep white text and stop being readable. */
+	--button-primary-bg: #5E81AC;
+	--button-primary-gradient-start: #5E81AC;
+	--button-primary-gradient-end: #5E81AC;
+	--button-primary-disabled: #3d5570;
+
+	--scrollbar-bg: #333;
+	--scrollbar-bg-hover: #444;
+	--scrollbar-bg-active: #555;
+
+	--shadow: rgba(0, 0, 0, 0.6);
+	--shadow-inset: rgba(0, 0, 0, 0.7);
+	--shadow-subtle: rgba(0, 0, 0, 0.4);
+	--shadow-focus: #88C0D0;
+
+	--accent-card: #88C0D0;
+	--accent-note: #A3BE8C;
+	--accent-danger: #BF616A;
+
+	--flag-1: #BF616A;
+	--flag-2: #D08770;
+	--flag-3: #A3BE8C;
+	--flag-4: #81A1C1;
+	--flag-5: #B48EAD;
+	--flag-6: #8FBCBB;
+	--flag-7: #a98cc4;
+
+	--state-new: #81A1C1;
+	--state-learn: #BF616A;
+	--state-review: #A3BE8C;
+	--state-buried: #888;
+	--state-suspended: #EBCB8B;
+	--state-marked: #B48EAD;
+
+	--highlight-bg: rgba(136, 192, 208, 0.3);
+	--highlight-fg: #e5e5e5;
+	--selected-bg: rgba(136, 192, 208, 0.22);
+	--selected-fg: #e5e5e5;
+
+	--bocken-glass-bg: rgba(20, 20, 20, 0.78);
+	--bocken-glass-border: rgba(255, 255, 255, 0.06);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   2. PAGE FRAME
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* The font goes on body rather than on a list of chrome selectors, and #qa hands the
+   card viewport straight back to the browser default. A notetype that sets its own
+   font-family (every stock one does) was never affected either way; one that doesn't
+   keeps exactly the type it had before this sheet existed. */
+html body {
+	font-family: var(--bocken-font);
+}
+#qa {
+	font-family: initial;
+}
+
+/* Only the screens that actually have the toolbar get room for it, and only the ones
+   that lay themselves out in normal flow. The editor is served as a bare fragment into an
+   iframe (no toolbar) and padding there would crop it; the reviewer is fixed chrome that
+   sizes itself off --rev-top; the SvelteKit pages own their own layout and get nothing
+   but the headroom. */
+body:has(#ankiweb-toolbar) {
+	padding-top: calc(var(--bocken-header-top) + 4rem);
+}
+body:has(#ankiweb-toolbar:not([data-spa])):not(:has(#rev-shell)) {
+	padding-inline: 1rem;
+	padding-bottom: 2rem;
+	margin: 0 auto;
+	max-width: 1000px;
+}
+body:has(#rev-shell) {
+	padding-top: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   3. THE HEADER
+
+   Anki's toolbar is a flat full-width bar. The site's is a floating glass pill, and
+   this is the same pill: the recipe is lifted from Header.svelte / the --glass-* tokens
+   in app.css. The markup is ankiweb's own (_toolbar_html in screens/page.py); the only
+   thing anki.js adds to it is the mark, as a real link home.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+#ankiweb-toolbar {
+	box-sizing: border-box;
+	/* Stated, not inherited from ankiweb's own toolbar sheet: on the SvelteKit pages the
+	   bar is the one anki.js injects, and none of Anki's chrome CSS is loaded there. */
+	display: flex;
+	align-items: center;
+	z-index: 2000;
+	position: fixed;
+	top: var(--bocken-header-top);
+	left: 50%;
+	right: auto;
+	transform: translateX(-50%);
+	width: max-content;
+	max-width: calc(100% - 1.5rem);
+	height: 3rem;
+	gap: 0.15rem;
+	padding: 0 0.6rem;
+	border: 1px solid var(--bocken-glass-border);
+	border-radius: 1000px;
+	background: var(--bocken-glass-bg);
+	-webkit-backdrop-filter: blur(16px);
+	backdrop-filter: blur(16px);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+	font-size: 0.9rem;
+}
+
+#ankiweb-toolbar a,
+#ankiweb-toolbar .menu > .lbl,
+#ankiweb-toolbar .sync,
+#ankiweb-toolbar .nm {
+	color: var(--bocken-nav-text);
+	padding: 0.4rem 0.65rem;
+	border-radius: 1000px;
+	white-space: nowrap;
+	transition: background var(--transition), color var(--transition);
+}
+#ankiweb-toolbar a {
+	text-decoration: none;
+}
+#ankiweb-toolbar a:hover,
+#ankiweb-toolbar .sync:hover,
+#ankiweb-toolbar .nm:hover,
+#ankiweb-toolbar .menu:hover > .lbl {
+	color: #fff;
+	background: var(--bocken-nav-hover-bg);
+	text-decoration: none;
+}
+#ankiweb-toolbar .sync[disabled],
+#ankiweb-toolbar .sync[disabled]:hover {
+	color: var(--bocken-nav-text);
+	background: none;
+	opacity: 0.6;
+}
+#ankiweb-toolbar .sync.err {
+	color: #BF616A;
+}
+#ankiweb-toolbar .nm {
+	font-size: 1rem;
+	line-height: 1;
+}
+
+/* The mark, injected by anki.js. It is a link back to bocken.org — this is a subdomain,
+   and without it there is no way out of the app. */
+#ankiweb-toolbar #bocken-home {
+	flex: 0 0 auto;
+	width: 5.4rem;
+	height: 1.35rem;
+	margin-right: 0.35rem;
+	padding: 0;
+	background: url("data:image/svg+xml,%3Csvg viewBox=%220 0 330 80.310541%22 xmlns=%22http://www.w3.org/2000/svg%22 fill=%22%23d8dee9%22%3E%3Cg fill=%22none%22 stroke=%22%23d8dee9%22 stroke-width=%223%22 transform=%22translate(-42.033271,-37.145192)%22%3E%3Cpath d=%22m 65.113709,84.638921 c -0.346049,-9.794303 8.85917,-32.693347 8.85917,-32.693347%22/%3E%3Cpath d=%22m 65.108044,84.684262 c 0.346049,-9.794303 -8.85917,-32.693347 -8.85917,-32.693347%22/%3E%3C/g%3E%3Cg%3E%3Cpath d=%22M 0,0 C 6.633,-3.91 14.348,-4.302 20.992,-1.732 20.009,5.333 15.93,11.893 9.31,15.795 2.69,19.697 -5.025,20.088 -11.669,17.519 -10.7,10.462 -6.62,3.901 0,0%22 transform=%22matrix(0.35277777,0,0,-0.35277777,4.116564,13.543871)%22/%3E%3Cpath d=%22m 0,0 c -6.62,3.901 -14.335,4.293 -20.979,1.724 0.97,-7.058 5.049,-13.618 11.669,-17.519 6.633,-3.91 14.348,-4.301 20.992,-1.732 C 10.699,-10.462 6.62,-3.902 0,0%22 transform=%22matrix(0.35277777,0,0,-0.35277777,10.339434,19.278333)%22/%3E%3Cpath d=%22M 0,0 C 6.633,-3.909 14.348,-4.301 20.992,-1.731 20.009,5.333 15.93,11.894 9.31,15.795 2.69,19.697 -5.026,20.088 -11.669,17.52 -10.7,10.461 -6.62,3.902 0,0%22 transform=%22matrix(0.35277777,0,0,-0.35277777,10.903454,36.572256)%22/%3E%3Cpath d=%22M 0,0 C 6.644,-2.57 14.358,-2.178 20.992,1.732 27.612,5.633 31.691,12.194 32.661,19.25 26.017,21.82 18.302,21.429 11.682,17.527 5.062,13.625 0.982,7.065 0,0%22 transform=%22matrix(0.35277777,0,0,-0.35277777,32.871328,24.119748)%22/%3E%3Cpath d=%22M 0,0 C 6.62,3.901 10.699,10.461 11.669,17.519 5.025,20.088 -2.689,19.696 -9.31,15.795 -15.93,11.893 -20.009,5.333 -20.992,-1.732 -14.348,-4.301 -6.633,-3.91 0,0%22 transform=%22matrix(0.35277777,0,0,-0.35277777,35.741597,35.870171)%22/%3E%3Cpath d=%22m -27.40181,13.441787 c 6.644,-2.57 14.359,-2.178 20.9920004,1.731 6.62000002,3.902 10.699,10.461 11.669,17.519 -6.644,2.569 -14.359,2.178 -20.9790004,-1.724 -6.62,-3.901 -10.7,-10.462 -11.682,-17.526%22 transform=%22matrix(0.35277777,0,0,-0.35277777,43.12113,17.474745)%22/%3E%3Cpath d=%22m 0,0 c 1.271,7.579 -1.125,14.922 -5.904,20.205 -6.242,-3.433 -10.906,-9.591 -12.178,-17.169 -1.275,-7.594 1.123,-14.937 5.902,-20.22 C -5.936,-13.736 -1.273,-7.578 0,0%22 transform=%22matrix(0.35277777,0,0,-0.35277777,20.082753,7.127875)%22/%3E%3Cpath d=%22m 0,0 c 1.271,7.579 -1.125,14.922 -5.904,20.206 -6.242,-3.434 -10.906,-9.592 -12.178,-17.17 -1.275,-7.593 1.123,-14.937 5.902,-20.22 C -5.937,-13.736 -1.273,-7.578 0,0%22 transform=%22matrix(0.35277777,0,0,-0.35277777,26.963346,20.756878)%22/%3E%3Cpath d=%22M 0,0 C 4.779,5.283 7.176,12.627 5.901,20.22 4.629,27.798 -0.035,33.956 -6.277,37.39 -11.055,32.106 -13.453,24.763 -12.18,17.184 -10.908,9.606 -6.244,3.448 0,0%22 transform=%22matrix(0.35277777,0,0,-0.35277777,29.06985,14.051408)%22/%3E%3C/g%3E%3Cpath d=%22M 0,0 -9.323,10.862 -3.185,17.76 0,21.339 3.173,17.774 9.324,10.862 Z M 41.228,66.513 C 41.168,66.275 38.492,57.729 32.099,49.53 28.9,45.41 24.801,41.388 19.697,38.388 15.112,35.701 9.727,33.802 3.198,33.324 L 0,36.917 -3.195,33.326 c -6.641,0.491 -12.102,2.451 -16.739,5.216 -7.724,4.607 -13.143,11.62 -16.561,17.559 -1.71,2.961 -2.918,5.631 -3.685,7.529 -0.383,0.949 -0.657,1.703 -0.83,2.204 -0.087,0.251 -0.148,0.438 -0.185,0.554 l -0.037,0.12 -0.006,0.017 -1.095,3.699 H -63.598 V 59.868 h 13.769 c 1.509,-3.763 4.398,-9.908 9.196,-16.216 3.801,-4.982 8.828,-10.072 15.38,-13.996 4.034,-2.422 8.662,-4.371 13.847,-5.556 l -3.872,-4.351 -7.799,-8.764 11.537,-13.441 c -5.22,-1.21 -9.868,-3.199 -13.916,-5.657 -9.751,-5.918 -16.085,-14.346 -20.051,-21.22 -2.011,-3.498 -3.414,-6.613 -4.323,-8.872 h -13.768 v -10.356 h 21.265 l 1.097,3.704 c 0.051,0.212 2.714,8.708 9.07,16.892 3.177,4.106 7.248,8.124 12.313,11.137 4.521,2.682 9.822,4.602 16.234,5.143 L 0,-15.9 l 3.619,4.215 c 6.533,-0.549 11.913,-2.527 16.488,-5.287 7.663,-4.624 13.036,-11.615 16.424,-17.525 1.694,-2.946 2.891,-5.601 3.652,-7.486 0.38,-0.943 0.651,-1.693 0.822,-2.19 0.085,-0.249 0.146,-0.435 0.183,-0.55 l 0.037,-0.119 0.004,-0.016 1.094,-3.703 h 21.268 v 10.356 H 49.825 c -1.499,3.743 -4.361,9.841 -9.105,16.111 -3.768,4.964 -8.752,10.044 -15.248,13.981 -4.052,2.46 -8.703,4.452 -13.928,5.661 l 11.534,13.437 -7.8,8.765 -3.867,4.345 c 5.185,1.183 9.812,3.13 13.845,5.55 9.835,5.899 16.218,14.364 20.21,21.275 2.032,3.529 3.447,6.672 4.36,8.948 H 63.591 V 70.224 H 42.323 Z%22 transform=%22matrix(0.35277777,0,0,-0.35277777,23.308833,63.179301)%22/%3E%3Cpath d=%22m 63.34524,67.259285 h 13.664006 c 7.392004,0 11.573339,-0.821334 15.082674,-2.912001 3.882669,-2.389335 6.197336,-7.242671 6.197336,-12.91734 0,-6.79467 -2.837334,-10.901338 -9.258671,-13.58934 4.256002,-2.389334 6.12267,-5.973336 6.12267,-11.424005 0,-4.778669 -1.792001,-8.810671 -4.928002,-11.125339 -3.136002,-2.240001 -7.242671,-3.210668 -13.962674,-3.210668 H 63.34524 Z m 5.525336,-5.002669 V 40.827272 h 6.57067 c 6.496003,0 9.781338,0.448001 12.096005,1.568001 3.285335,1.642668 5.152003,4.928002 5.152003,9.333338 0,3.808002 -1.717334,7.168003 -4.330669,8.512004 -2.613335,1.418667 -6.34667,2.016001 -11.946672,2.016001 z m 0,-26.432013 V 17.083261 h 6.645336 c 5.67467,0 8.736004,0.522667 10.826672,1.941334 1.941334,1.269334 3.210668,4.181336 3.210668,7.466671 0,3.808001 -1.493334,6.645336 -4.256002,7.91467 -2.314668,1.045334 -4.704002,1.418667 -9.706671,1.418667 z M 125.09456,25.445932 c -12.17067,0 -21.42935,9.184004 -21.42935,21.130676 0,12.618673 9.18401,21.653344 21.87735,21.653344 11.94667,0 20.75734,-9.034671 20.75734,-21.28001 0,-12.469339 -8.88534,-21.50401 -21.20534,-21.50401 z m 0,5.077335 c 9.03467,0 15.60534,6.944004 15.60534,16.501342 0,9.408004 -6.42134,16.128007 -15.30668,16.128007 -9.408,0 -16.128,-6.79467 -16.128,-16.426674 0,-9.258671 6.79467,-16.202675 15.82934,-16.202675 z m 63.46674,24.714679 c -4.256,5.674669 -8.13867,7.91467 -14.03734,7.91467 -9.10933,0 -16.352,-7.168003 -16.352,-16.277341 0,-9.184004 7.09333,-16.352008 16.20267,-16.352008 6.048,0 11.05067,2.912002 14.18667,8.288004 h 6.19734 C 191.4733,30.597934 183.6333,25.445932 174.4493,25.445932 c -12.24534,0 -21.87735,9.408004 -21.87735,21.28001 0,12.170672 9.70667,21.50401 22.25068,21.50401 5.07734,0 9.78134,-1.568001 13.58934,-4.629335 2.61333,-2.090668 4.18134,-4.106669 6.42134,-8.362671 z m 13.66395,12.021339 h 5.52534 v -8.437337 l 6.42133,-7.914671 13.58934,16.352008 h 6.86934 L 217.68126,46.949942 233.58527,26.416599 H 226.7906 L 207.75059,51.205944 V 12.080592 h -5.52534 z m 76.38406,-18.592009 c 0,-5.600003 -0.74667,-9.034671 -2.76267,-12.618673 -3.65867,-6.570669 -10.752,-10.602671 -18.59201,-10.602671 -11.872,0 -21.13068,9.333337 -21.13068,21.205343 0,12.096006 9.48268,21.578677 21.57868,21.578677 8.88534,0 16.87468,-5.749336 19.86134,-14.410673 h -5.74933 c -2.31467,5.600002 -8.06401,9.333337 -14.26134,9.333337 -8.43734,0 -15.45601,-6.421336 -15.90401,-14.48534 z m -36.81069,-5.002669 c 1.49334,-7.840004 7.69067,-13.14134 15.45601,-13.14134 7.91467,0 13.88801,4.928003 15.82934,13.14134 z m 44.42666,23.594678 h 5.52534 V 44.784608 c 0,-4.554669 0.59733,-6.944004 2.16533,-9.258671 2.16534,-3.136002 5.97334,-5.00267 10.30401,-5.00267 4.032,0 7.69067,1.642668 9.93067,4.405336 1.94133,2.538668 2.688,5.525336 2.688,10.901338 v 21.429344 h 5.52533 V 45.829941 c 0,-6.869336 -0.97066,-10.528005 -3.584,-14.03734 -3.21067,-4.106668 -8.13867,-6.346669 -13.888,-6.346669 -5.37601,0 -9.70668,2.016001 -13.14134,6.272003 v -5.301336 h -5.52534 z%22/%3E%3C/svg%3E") left center / contain no-repeat;
+	opacity: 0.85;
+	transition: opacity var(--transition);
+}
+#ankiweb-toolbar #bocken-home:hover {
+	opacity: 1;
+	background-color: transparent;
+}
+
+/* The "Extras" dropdown hangs off the pill, so it gets the pill's own frosted treatment
+   rather than Anki's flat menu. It is a sibling of the blur, never a child of it — a
+   backdrop-filter inside a backdrop root renders as a flat panel. See CLAUDE.md. */
+#ankiweb-toolbar .menu .sub {
+	margin-top: 0.4rem;
+	border: 1px solid var(--bocken-glass-border);
+	border-radius: 0.75rem;
+	background: var(--bocken-glass-bg);
+	-webkit-backdrop-filter: blur(16px);
+	backdrop-filter: blur(16px);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+	padding: 0.3rem;
+}
+#ankiweb-toolbar .menu .sub a {
+	padding: 0.4rem 0.7rem;
+	border-radius: 0.5rem;
+}
+
+/* A phone cannot hold eight labels and a wordmark. Drop the mark, tighten the gaps, and
+   let the rest scroll inside the pill rather than pushing it past the screen. */
+@media (max-width: 700px) {
+	#ankiweb-toolbar #bocken-home {
+		display: none;
+	}
+	#ankiweb-toolbar {
+		gap: 0;
+		padding: 0 0.3rem;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	#ankiweb-toolbar::-webkit-scrollbar {
+		display: none;
+	}
+	#ankiweb-toolbar {
+		font-size: 0.82rem;
+	}
+	#ankiweb-toolbar a,
+	#ankiweb-toolbar .menu > .lbl,
+	#ankiweb-toolbar .sync {
+		padding: 0.4rem 0.35rem;
+	}
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   4. THE DECK LIST
+
+   Anki draws it as a plain table. Here each deck is a card, like every other list on
+   the site — same surface, same radius, same lift on hover.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+table.decks {
+	box-sizing: border-box;
+	/* Fixed layout so the count columns keep the width they are given and the deck name
+	   absorbs whatever is left. Auto layout sizes to content, which on a phone pushed the
+	   last column off the screen no matter what width the table was told to be. */
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 0 0.4rem;
+	width: 100%;
+	max-width: 46rem;
+	margin-inline: auto;
+	text-align: start;
+}
+table.decks .decktd {
+	overflow-wrap: anywhere;
+}
+table.decks th {
+	background: none;
+	border: none;
+	padding: 0 0.6rem 0.2rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--fg-subtle);
+}
+/* webview.css sets `* { box-sizing: content-box }`, which is Anki's global choice and not
+   ours to change — but a fixed column width plus padding then measures wider than it
+   reads, and on a phone the table pushed the last column off screen. Border-box, scoped
+   to the cells we size. */
+table.decks td,
+table.decks th {
+	box-sizing: border-box;
+}
+table.decks td {
+	background: var(--canvas-elevated);
+	border: none;
+	padding: 0.7rem 0.6rem;
+	transition: background var(--transition);
+}
+table.decks tr > td:first-child {
+	border-radius: 0.75rem 0 0 0.75rem;
+	padding-left: 1rem;
+}
+table.decks tr > td:last-child {
+	border-radius: 0 0.75rem 0.75rem 0;
+	padding-right: 1rem;
+}
+table.decks tr:hover td {
+	background: var(--canvas-inset);
+}
+table.decks a.deck {
+	color: var(--fg);
+	font-weight: 500;
+}
+table.decks a.deck:hover {
+	color: var(--fg-link);
+}
+table.decks td.count,
+table.decks th.count {
+	font-variant-numeric: tabular-nums;
+	width: 4rem;
+}
+/* The gear column. Under table-layout:fixed every column but the name needs a width, or
+   the two unsized ones split the leftover space evenly and the gear ends up as wide as
+   the deck it belongs to. */
+table.decks td.opts,
+table.decks tr > *:last-child {
+	width: 3rem;
+}
+table.decks .new-count {
+	color: var(--state-new);
+}
+table.decks .learn-count {
+	color: var(--state-learn);
+}
+table.decks .review-count {
+	color: var(--state-review);
+}
+table.decks .zero-count {
+	color: var(--fg-faint);
+}
+table.decks img.gears {
+	opacity: 0.55;
+	transition: opacity var(--transition);
+}
+table.decks tr:hover img.gears {
+	opacity: 1;
+}
+html:root.night-mode table.decks img.gears {
+	filter: invert(1);
+}
+
+@media (max-width: 560px) {
+	table.decks td {
+		padding: 0.6rem 0.35rem;
+	}
+	table.decks td.count,
+	table.decks th.count {
+		width: 3rem;
+	}
+	table.decks tr > td:first-child {
+		padding-left: 0.7rem;
+	}
+	table.decks tr > td:last-child {
+		padding-right: 0.7rem;
+	}
+}
+
+#studiedToday {
+	margin-top: 1.2rem;
+	text-align: center;
+	color: var(--fg-subtle);
+	font-size: 0.9rem;
+}
+.dyn-buttons {
+	margin-top: 1.2rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: center;
+	align-items: center;
+}
+/* Export is an <a> sitting in a row of <button>s. Upstream leaves it looking like a
+   stray link in the middle of the toolbar; it does the same job as its neighbours, so it
+   should look like them. */
+.dyn-buttons a,
+.bottom-buttons a {
+	color: var(--fg);
+	background: var(--button-bg);
+	border: 1px solid var(--border-subtle);
+	border-bottom-color: var(--shadow);
+	border-radius: var(--border-radius);
+	padding: 8px 10px;
+	font-weight: 500;
+	transition: background var(--transition), border-color var(--transition);
+}
+.dyn-buttons a:hover,
+.bottom-buttons a:hover {
+	background: var(--button-gradient-start);
+	border-color: var(--border-strong);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   5. THE ANSWER ROW
+
+   The one thing here that is touched a few hundred times a day, and the one place this
+   theme spends anything: four grade buttons as a segmented control, each in the Nord
+   colour of the state it puts the card into, the interval underneath in the same ink at
+   lower weight. Thumb-sized on a phone, which stock Anki's small buttons are not.
+
+   Every rule is scoped through two ids. The reviewer ships its own chrome sheet inline
+   in the page body (screens/reviewer.py), which is later in the document than this file
+   — specificity is the only way to be heard over it.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* The floating pill needs more headroom than the 34px bar it replaced. */
+html:root {
+	--rev-top: calc(var(--bocken-header-top) + 3.5rem);
+}
+
+#rev-shell #rev-bottom {
+	background: var(--canvas-elevated);
+	border-top: 1px solid var(--border);
+	font-family: var(--bocken-font);
+	padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+	gap: 0.5rem;
+}
+#rev-shell #ankiweb-answer .ease-row {
+	gap: 0.4rem;
+}
+#rev-shell #ankiweb-answer .ease {
+	box-sizing: border-box;
+	min-height: 3rem;
+	padding: 0.4rem 0.5rem;
+	gap: 0;
+	border: none;
+	border-radius: 1000px;
+	background: var(--ease-tone);
+	/* Nord's accents are pastels: they are built to carry dark text, and dark text on all
+	   four clears AA where white would fail on the green and the yellow. It also means the
+	   row looks identical in both themes — the one fixed landmark in the app. */
+	color: #2E3440;
+	font-weight: 600;
+	box-shadow: none;
+	transition: transform var(--transition-fast, 100ms) ease, filter var(--transition) ease;
+}
+#rev-shell #ankiweb-answer .ease[data-ease="1"] { --ease-tone: #BF616A; }
+#rev-shell #ankiweb-answer .ease[data-ease="2"] { --ease-tone: #EBCB8B; }
+#rev-shell #ankiweb-answer .ease[data-ease="3"] { --ease-tone: #A3BE8C; }
+#rev-shell #ankiweb-answer .ease[data-ease="4"] { --ease-tone: #88C0D0; }
+#rev-shell #ankiweb-answer .ease:hover {
+	background: var(--ease-tone);
+	border: none;
+	filter: brightness(1.06);
+}
+#rev-shell #ankiweb-answer .ease:active {
+	transform: scale(0.97);
+	box-shadow: none;
+}
+#rev-shell #ankiweb-answer .ease-ivl {
+	color: rgba(46, 52, 64, 0.72);
+	font-weight: 400;
+}
+
+/* Show Answer is the same shape, in the site's primary colour. */
+#rev-shell #ankiweb-answer .ansbut {
+	box-sizing: border-box;
+	min-height: 3rem;
+	border: none;
+	border-radius: 1000px;
+	background: var(--button-primary-bg);
+	color: #fff;
+	font-weight: 600;
+	transition: transform var(--transition-fast, 100ms) ease, filter var(--transition) ease;
+}
+#rev-shell #ankiweb-answer .ansbut:hover {
+	background: var(--button-primary-bg);
+	border: none;
+	filter: brightness(1.08);
+}
+#rev-shell #ankiweb-answer .ansbut:active {
+	transform: scale(0.99);
+}
+
+/* The "More" popover picks up the site's card treatment. */
+#rev-shell #rev-more > summary {
+	border-radius: 1000px;
+	padding: 0.55rem 0.9rem;
+}
+#rev-shell #rev-actions {
+	border-radius: 0.75rem;
+	box-shadow: 0 0 1em 0.1em var(--shadow);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   6. EVERYTHING ELSE
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* The deck overview's Study Now button is the primary action of the screen it is on. */
+#study.but {
+	border: none;
+	border-radius: 1000px;
+	padding: 0.7rem 2rem;
+	background: var(--button-primary-bg);
+	color: #fff;
+	font-weight: 600;
+	font-size: 1.05rem;
+	box-shadow: 0 0 0.4em 0.05em var(--shadow-subtle);
+	transition: filter var(--transition);
+}
+#study.but:hover {
+	background: var(--button-primary-bg);
+	border: none;
+	filter: brightness(1.08);
+}
+.studybtn {
+	margin: 1.5rem 0;
+}
+
+button {
+	border-radius: var(--border-radius);
+	transition: background var(--transition), border-color var(--transition);
+}
+
+:focus-visible {
+	outline: 2px solid var(--border-focus);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		transition: none !important;
+		animation: none !important;
+	}
+}

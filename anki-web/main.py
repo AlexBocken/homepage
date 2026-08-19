@@ -35,6 +35,15 @@ SOURCE_URL = os.environ.get("ANKIWEB_SOURCE_URL", "")
 CHILD_LANG = os.environ.get("ANKI_WEB_LANG", "de")
 SWEEP_INTERVAL = float(os.environ.get("ANKI_WEB_SWEEP_INTERVAL", "60"))
 
+#: Makes the study client look like the rest of bocken.org. Both files live in this
+#: repo under `static/other/`, next to the app.css palette they mirror, and reach the
+#: child as URLs — ankiweb only ever gets told where they are. Keeping them out of the
+#: ankiweb tree is the point: its frontend is re-vendored from the aqt wheel on every
+#: Anki bump, so a theme committed there would not survive one. Set either to "" to
+#: serve plain upstream Anki.
+THEME_CSS = os.environ.get("ANKI_WEB_THEME_CSS", "https://bocken.org/other/anki.css")
+THEME_JS = os.environ.get("ANKI_WEB_THEME_JS", "https://bocken.org/other/anki.js")
+
 
 def collection_path(username: str) -> Path:
     return STATE_DIR / username / "collection.anki2"
@@ -65,6 +74,8 @@ def _child_env(inst: Instance, hkey: str, endpoint: str) -> dict[str, str]:
         # AGPL §13: we serve a modified version over a network, so we owe its
         # source to whoever we serve it to. ankiweb renders this on /about.
         "ANKIWEB_SOURCE_URL": SOURCE_URL,
+        "ANKIWEB_THEME_CSS": THEME_CSS,
+        "ANKIWEB_THEME_JS": THEME_JS,
         "ANKI_INSTANCE_KEY": inst.key,
         "ANKI_SYNC_HKEY": hkey,
         "ANKI_SYNC_ENDPOINT": endpoint,
