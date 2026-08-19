@@ -143,6 +143,7 @@ export const de = {
 	anki_sync_desktop_steps: 'Werkzeuge → Einstellungen → Synchronisation → „Eigener Sync-Server“, dort diese Adresse eintragen und Anki neu starten.',
 	anki_sync_mobile: 'AnkiDroid und AnkiMobile',
 	anki_sync_mobile_steps: 'Einstellungen → Synchronisation → „Eigener Sync-Server“, dieselbe Adresse eintragen.',
+	anki_sync_not_study: 'Hier gehört anki.bocken.org hin, nicht study.bocken.org — das ist der Browser-Client und kann nichts damit anfangen.',
 	anki_sync_login: 'Anmelden mit deinem Bocken-Benutzernamen (oder deiner E-Mail-Adresse) und deinem normalen Passwort — dasselbe wie auf dieser Seite.',
 	anki_sync_ankiweb_note: 'Anki schreibt in seiner Oberfläche weiter „AnkiWeb“, auch wenn ein eigener Server eingetragen ist. Das ist Ankis Wortwahl, kein Fehler.',
 	anki_sync_group: 'Auch dafür brauchst du die Gruppe „Anki“.',

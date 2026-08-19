@@ -143,6 +143,7 @@ export const en = {
 	anki_sync_desktop_steps: 'Tools → Preferences → Syncing → “Self-hosted sync server”, put this address in, and restart Anki.',
 	anki_sync_mobile: 'AnkiDroid and AnkiMobile',
 	anki_sync_mobile_steps: 'Settings → Syncing → “Custom sync server”, same address.',
+	anki_sync_not_study: 'This is where anki.bocken.org goes, not study.bocken.org — that one is the browser client and cannot answer a sync.',
 	anki_sync_login: 'Log in with your Bocken username (or your email address) and your normal password — the same one as on this site.',
 	anki_sync_ankiweb_note: 'Anki keeps saying “AnkiWeb” throughout its interface even with a custom server configured. That is Anki\'s wording, not a misconfiguration.',
 	anki_sync_group: 'This needs the “Anki” group as well.',

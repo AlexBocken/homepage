@@ -273,6 +273,7 @@
 			</li>
 		</ol>
 
+		<p class="note warn">{t.anki_sync_not_study}</p>
 		<p>{t.anki_sync_login}</p>
 		<p class="note">{t.anki_sync_ankiweb_note}</p>
 		<p class="note">
@@ -377,6 +378,13 @@
 	.note {
 		font-size: var(--text-sm);
 		color: var(--color-text-secondary);
+	}
+	/* The one mistake this page can actually cause: the study client's address is
+	   the prominent one above, and it is the wrong thing to paste into Anki. */
+	.warn {
+		padding-left: 0.7rem;
+		border-left: 2px solid var(--orange);
+		color: var(--color-text-primary);
 	}
 
 	.cta {

@@ -304,6 +304,18 @@ server {
 
     add_header X-Robots-Tag "noindex, nofollow" always;
 
+    # Desktop Anki pointed at this host instead of anki.bocken.org. Without this
+    # the outpost answers a sync request the only way it can — a redirect into
+    # the SSO flow — and Anki reports the redirect rather than the mistake:
+    # `HttpError { code: 303, context: "reading stream" }`, which names neither
+    # the wrong host nor the right one. Declared before `location /` so it wins,
+    # and scoped to Anki's own sync prefixes: this app's routes are `/_sync` and
+    # `/_anki/…`, so nothing of ours matches.
+    location ~ ^/m?sync/ {
+        default_type text/plain;
+        return 400 "This is the browser study client, not the sync server.\nSet Anki's self-hosted sync server to https://anki.bocken.org/ instead.\n";
+    }
+
     location / {
         auth_request     /outpost.goauthentik.io/auth/nginx;
         error_page       401 = @goauthentik_proxy_signin;
