@@ -61,7 +61,9 @@
 
 	// Snapshot of the English exactly as it was handed to us. A recipe that merely
 	// *has* a translation opens in 'preview' too, so the state alone cannot tell
-	// "user produced something to approve" from "user just opened the page".
+	// "user produced something to approve" from "user just opened the page". Reading
+	// the initial value is the whole point, so the locality warning is expected here.
+	// svelte-ignore state_referenced_locally
 	const initialEditableJson = JSON.stringify(editableEnglish ?? null);
 
 	/** Set once an auto-translate run has replaced the English. */
