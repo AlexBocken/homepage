@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	buildNudges, learnStaples, gapCost, remainingAfter,
-	MIN_DELTA_GRAMS, MAX_DELTA_GRAMS, GRAM_STEP,
+	MIN_DELTA_GRAMS, MAX_DELTA_GRAMS, MAX_RECIPE_GRAMS, GRAM_STEP, RECIPE_SLOTS,
 } from '../../../src/lib/fitness/nudges';
 
 const RICE = { calories: 130, protein: 2.7, fat: 0.3, carbs: 28 };
@@ -151,6 +151,75 @@ describe('buildNudges', () => {
 
 	it('honours the limit', () => {
 		expect(buildNudges(rem(900, 60, 20, 90), logged, [], 1)).toHaveLength(1);
+	});
+});
+
+describe('buildNudges with recipes', () => {
+	const logged = [{ id: 'e1', name: 'Rice', amountGrams: 150, per100g: RICE }];
+
+	// A dish built to land the day: 200 g of it is 300 kcal, 20 g protein, 10 g fat,
+	// 30 g carbs — exactly the gap below.
+	const STEW = { calories: 150, protein: 10, fat: 5, carbs: 15 };
+	const stew = (over = {}) => ({
+		name: 'Stew',
+		sourceId: 'r1',
+		per100g: STEW,
+		meta: { slug: 'eintopf', slugEn: 'stew', ...over },
+	});
+	const exactGap = rem(300, 20, 10, 30);
+
+	it('offers a recipe that lands every macro on target', () => {
+		const [top] = buildNudges(exactGap, logged, [], 5, [stew()]);
+		expect(top).toMatchObject({ kind: 'add', source: 'recipe', sourceId: 'r1', deltaGrams: 200 });
+	});
+
+	// The point of the feature: a dish that finishes the day exactly must not be
+	// pushed off the card by a bump that happens to score marginally higher.
+	it('pins the recipe above the adjustments', () => {
+		const nudges = buildNudges(exactGap, logged, [
+			{ name: 'Chicken', source: 'bls', sourceId: 'S1', per100g: CHICKEN },
+		], 5, [stew()]);
+		expect(nudges[0].source).toBe('recipe');
+		expect(nudges.length).toBeGreaterThan(1); // the rest still get their rows
+	});
+
+	// Cooking is a much bigger ask than a second scoop of rice, so "would help" is
+	// not enough — only a fit that reads as hitting every target is worth showing.
+	it('stays quiet about a recipe that only helps a little', () => {
+		// Pure carbohydrate against a gap that is mostly protein and fat.
+		const carby = { name: 'Bread', sourceId: 'r2', per100g: { calories: 250, protein: 8, fat: 2, carbs: 50 }, meta: { slug: 'brot' } };
+		const nudges = buildNudges(rem(400, 40, 20, 10), logged, [], 5, [carby]);
+		expect(nudges.some(n => n.source === 'recipe')).toBe(false);
+	});
+
+	it('carries the recipe links through untouched, for the card to render', () => {
+		const [top] = buildNudges(exactGap, logged, [], 5, [stew({ portionGrams: 200, image: 'x.webp' })]);
+		expect(top.recipe).toEqual({ slug: 'eintopf', slugEn: 'stew', portionGrams: 200, image: 'x.webp' });
+	});
+
+	it('gives a recipe a plate-sized ceiling rather than a snack-sized one', () => {
+		// Thin soup: closing this gap needs more than a staple would ever be offered in.
+		const soup = { name: 'Soup', sourceId: 'r3', per100g: { calories: 75, protein: 5, fat: 2.5, carbs: 7.5 }, meta: { slug: 'suppe' } };
+		const [top] = buildNudges(rem(300, 20, 10, 30), logged, [], 5, [soup]);
+		expect(top.source).toBe('recipe');
+		expect(top.deltaGrams).toBeGreaterThan(MAX_DELTA_GRAMS);
+		expect(top.deltaGrams).toBeLessThanOrEqual(MAX_RECIPE_GRAMS);
+	});
+
+	it('keeps the card a list of adjustments, not a meal plan', () => {
+		const many = [1, 2, 3, 4].map(i => ({ ...stew(), sourceId: `r${i}`, name: `Stew ${i}` }));
+		const nudges = buildNudges(exactGap, logged, [], 5, many);
+		expect(nudges.filter(n => n.source === 'recipe')).toHaveLength(RECIPE_SLOTS);
+	});
+
+	it('honours the limit with recipes pinned', () => {
+		const nudges = buildNudges(exactGap, logged, [], 1, [stew(), { ...stew(), sourceId: 'r2' }]);
+		expect(nudges).toHaveLength(1);
+		expect(nudges[0].source).toBe('recipe');
+	});
+
+	it('does not offer a recipe when the day has no room left', () => {
+		expect(buildNudges(rem(0, 20, 10, 30), logged, [], 5, [stew()])).toEqual([]);
 	});
 });
 

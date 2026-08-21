@@ -8,17 +8,26 @@
 	 * portion of something already on the plate or a food eaten on at least three
 	 * separate days recently.
 	 *
+	 * A row can also be one of the site's own recipes, which the server only offers
+	 * when a portion of it lands every macro on target. Those carry a link to the
+	 * recipe — a suggestion to cook something is worthless without the instructions —
+	 * and read in portions where the recipe says how many it makes, because nobody
+	 * plans dinner in grams.
+	 *
 	 * Applying is one tap and always reversible: a bump remembers the previous weight
 	 * and a new entry remembers its id, so undo is an exact inverse rather than a
 	 * best guess. The undo stays on screen until the list is refreshed, instead of
 	 * expiring with a toast.
 	 */
+	import { resolve } from '$app/paths';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import Check from '@lucide/svelte/icons/check';
 	import Plus from '@lucide/svelte/icons/plus';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
+	import ChefHat from '@lucide/svelte/icons/chef-hat';
 	import { toast } from '$lib/js/toast.svelte';
 	import { formatGrams as fmt } from '$lib/fitness/nutritionMath';
+	import { portionMultiplier } from '$lib/fitness/portions';
 
 	let {
 		nudges = [],
@@ -105,6 +114,38 @@
 	}
 
 	/**
+	 * How much of the recipe the suggested weight is, when the recipe states its
+	 * yield. "≈ 1 portion" is the actionable form of "265 g" — the grams stay next to
+	 * it, since that is what actually gets logged.
+	 * @param {any} n
+	 */
+	function portionHint(n) {
+		const grams = n.recipe?.portionGrams;
+		if (!grams) return null;
+		const mult = portionMultiplier(n.deltaGrams, { description: '', grams });
+		if (mult == null || mult < 0.1) return null;
+		const count = Number.isInteger(mult) ? String(mult) : mult.toFixed(1);
+		const unit = isEn ? (mult === 1 ? 'portion' : 'portions') : (mult === 1 ? 'Portion' : 'Portionen');
+		return `≈ ${count} ${unit}`;
+	}
+
+	/** The name to show — recipes carry a translated one, other rows do not.
+	 *  @param {any} n */
+	function displayName(n) {
+		return isEn && n.recipe?.nameEn ? n.recipe.nameEn : n.name;
+	}
+
+	/** Route params for the recipe's own page, in the language this card is being
+	 *  read in. A recipe without an English slug keeps its German page.
+	 *  @param {any} n */
+	function recipeRoute(n) {
+		return {
+			recipeLang: /** @type {'recipes' | 'rezepte'} */ (isEn ? 'recipes' : 'rezepte'),
+			name: isEn && n.recipe.slugEn ? n.recipe.slugEn : n.recipe.slug,
+		};
+	}
+
+	/**
 	 * The gaps a suggestion leaves, worded as plain shortfalls. Overshoot is named
 	 * rather than hidden — "3 g over on protein" is the thing worth knowing before
 	 * tapping.
@@ -133,9 +174,15 @@
 	<section class="nudge-card">
 		<h3>{isEn ? 'Finish your day' : 'Tag abschliessen'}</h3>
 		<p class="sub">
-			{isEn
-				? 'Built from what you have already logged and what you eat regularly.'
-				: 'Basierend auf dem, was du bereits erfasst hast und regelmässig isst.'}
+			{#if nudges.some((/** @type {any} */ n) => n.recipe)}
+				{isEn
+					? 'Built from what you have already logged, what you eat regularly, and recipes that fit what is left.'
+					: 'Basierend auf dem, was du bereits erfasst hast, regelmässig isst — und Rezepten, die zum Rest des Tages passen.'}
+			{:else}
+				{isEn
+					? 'Built from what you have already logged and what you eat regularly.'
+					: 'Basierend auf dem, was du bereits erfasst hast und regelmässig isst.'}
+			{/if}
 		</p>
 
 		<ul class="list">
@@ -144,9 +191,13 @@
 				{@const isApplied = !!applied[key]}
 				{@const isBusy = busy === key}
 				<li class="row" class:is-applied={isApplied}>
-					<span class="icon" aria-hidden="true">
+					<span class="icon" class:has-thumb={!isApplied && !!n.recipe?.image} aria-hidden="true">
 						{#if isApplied}
 							<Check size={14} />
+						{:else if n.recipe?.image}
+							<img src={n.recipe.image} alt="" loading="lazy" />
+						{:else if n.recipe}
+							<ChefHat size={14} />
 						{:else if n.kind === 'bump'}
 							<ArrowUp size={14} />
 						{:else}
@@ -156,14 +207,22 @@
 
 					<span class="body">
 						<span class="what">
-							{n.name}
+							{displayName(n)}
 							{#if n.kind === 'bump'}
 								<span class="change">{fmt(n.fromGrams)} g → <strong>{fmt(n.toGrams)} g</strong></span>
 							{:else}
-								<span class="change"><strong>{fmt(n.deltaGrams)} g</strong></span>
+								{@const hint = portionHint(n)}
+								<span class="change">
+									<strong>{hint ?? `${fmt(n.deltaGrams)} g`}</strong>{#if hint}<span class="grams"> · {fmt(n.deltaGrams)} g</span>{/if}
+								</span>
 							{/if}
 						</span>
-						<span class="leaves">{leftLabel(n.after)}</span>
+						<span class="leaves">
+							{leftLabel(n.after)}
+							{#if n.recipe}
+								<a class="recipe-link" href={resolve('/[recipeLang=recipeLang]/[name]', recipeRoute(n))}>{isEn ? 'View recipe' : 'Zum Rezept'}</a>
+							{/if}
+						</span>
 					</span>
 
 					{#if isApplied}
@@ -245,6 +304,17 @@
 		color: var(--color-text-on-primary);
 	}
 
+	/* A recipe row shows the dish instead of a glyph — it is the fastest way to
+	   recognise what is being proposed. */
+	.icon.has-thumb {
+		overflow: hidden;
+	}
+	.icon img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
 	.body {
 		display: flex;
 		flex-direction: column;
@@ -274,6 +344,25 @@
 		font-size: 0.7rem;
 		color: var(--color-text-tertiary);
 		font-variant-numeric: tabular-nums;
+	}
+
+	/* The grams behind a portion count: still there, just not the headline. */
+	.grams {
+		font-weight: 400;
+		color: var(--color-text-secondary);
+	}
+
+	.recipe-link {
+		color: var(--color-primary);
+		text-decoration: none;
+		margin-left: 0.4rem;
+	}
+	.recipe-link::before {
+		content: '· ';
+		color: var(--color-text-tertiary);
+	}
+	.recipe-link:hover {
+		text-decoration: underline;
 	}
 
 	.act {

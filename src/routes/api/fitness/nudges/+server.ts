@@ -7,12 +7,72 @@ import { BodyMeasurement } from '$models/BodyMeasurement';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
-import { buildNudges, learnStaples, type Remaining } from '$lib/fitness/nudges';
+import { Recipe } from '$models/Recipe';
+import { buildNudges, learnStaples, type Remaining, type RecipeFood } from '$lib/fitness/nudges';
+import { parsePortions } from '$lib/js/recipeMacros';
+import { recipeThumbUrl } from '$lib/utils/recipeImage';
 import { resolveEntries } from '$lib/server/foodLogComponents';
 import { entriesCalories, entriesMacroGrams } from '$lib/fitness/nutritionMath';
 import { macroGoalGrams } from '$lib/fitness/macroGoals';
 import { trendValueOn } from '$lib/fitness/trend';
 import { calorieTargetForDate } from '$lib/server/dailyTargets';
+
+/**
+ * Every recipe with usable cached nutrition, as a candidate dish.
+ *
+ * `cachedPer100g` is the figure the recipe's own listing card shows — it includes
+ * the recipes a dish builds on, which summing the mappings here would miss — so a
+ * suggested portion carries the same calories the recipe page states. A recipe whose
+ * cache is unset was never calculated and one set to null has nothing to calculate;
+ * neither can be portioned against a macro gap, so both are left out by the query.
+ *
+ * The names are stripped of the soft hyphens recipe titles carry for layout, exactly
+ * as the food search does — they are invisible in HTML but not in a diary row.
+ */
+async function recipeCandidates(): Promise<RecipeFood[]> {
+	const docs = await Recipe.find(
+		// Base recipes are components — a dough, a starter, a stock. They are eaten as
+		// part of something else, so proposing one as a way to finish the day is
+		// nonsense however well its macros happen to fit.
+		{ cachedPer100g: { $ne: null }, cachedTotalGrams: { $gt: 0 }, isBaseRecipe: { $ne: true } },
+		{
+			name: 1, short_name: 1, portions: 1, cachedTotalGrams: 1,
+			// Only the four macros the portion search reads. A recipe's cached
+			// nutrition is the full nutrient set — projecting it whole would pull a
+			// hundred fields per recipe across the whole collection for four of them.
+			'cachedPer100g.calories': 1, 'cachedPer100g.protein': 1,
+			'cachedPer100g.fat': 1, 'cachedPer100g.carbs': 1,
+			'images.mediapath': 1,
+			'translations.en.name': 1, 'translations.en.short_name': 1,
+		},
+	).lean() as any[];
+
+	const out: RecipeFood[] = [];
+	for (const r of docs) {
+		const per100g = r.cachedPer100g;
+		if (!per100g || !(per100g.calories > 0)) continue;
+
+		const portionCount = parsePortions(r.portions);
+		const mediapath = r.images?.[0]?.mediapath;
+		out.push({
+			name: stripSoftHyphens(r.name),
+			sourceId: String(r._id),
+			per100g,
+			meta: {
+				slug: r.short_name,
+				...(r.translations?.en?.short_name && { slugEn: r.translations.en.short_name }),
+				...(r.translations?.en?.name && { nameEn: stripSoftHyphens(r.translations.en.name) }),
+				...(mediapath && { image: recipeThumbUrl(mediapath) }),
+				...(portionCount > 0 && { portionGrams: r.cachedTotalGrams / portionCount }),
+			},
+		});
+	}
+	return out;
+}
+
+function stripSoftHyphens(name: string): string {
+	return (name ?? '').replace(/&shy;|\u00ad/g, '');
+}
 
 /** How far back to look for foods eaten often enough to count as staples. */
 const STAPLE_WINDOW_DAYS = 90;
@@ -28,6 +88,11 @@ const STAPLE_MIN_DAYS = 3;
  * kitchen, and it is far better evidence than a hardcoded list of foods a
  * nutritionist would pick.
  *
+ * The site's own recipes are the one thing offered that has not been eaten before,
+ * and only when a portion of one lands every macro on target — cooking a dish is a
+ * much bigger ask than a second scoop of rice, so a merely-plausible fit is not
+ * worth proposing. Those rows are pinned above the adjustments; see `GREAT_FIT_COST`.
+ *
  * The remaining macros can be passed in or left out. The nutrition page passes them,
  * because it knows them live — including edits made since the page loaded. Left out,
  * they are derived here from the stored goal and the day's log, which is what lets the
@@ -36,9 +101,10 @@ const STAPLE_MIN_DAYS = 3;
  * for the goal and food log to come back first).
  *
  * No cache. The previous solver was O(n³) over a combined food pool and needed one;
- * this scans a few dozen candidates in 5 g steps, which is not worth the two bugs
- * the cache carried (a key that ignored the requested date, and a date-type mismatch
- * in the recents query).
+ * this scans each candidate independently in 5 g steps — a few hundred of them once
+ * the recipes are in, still a linear pass over a projection Mongo serves from one
+ * indexed read — which is not worth the two bugs the cache carried (a key that
+ * ignored the requested date, and a date-type mismatch in the recents query).
  */
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const user = await requireAuth(locals);
@@ -66,7 +132,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const dayEnd = new Date(dateStr + 'T23:59:59.999Z');
 	const stapleFrom = new Date(localDateOffset(-STAPLE_WINDOW_DAYS) + 'T00:00:00.000Z');
 
-	const [todaysRaw, historyRaw] = await Promise.all([
+	const [todaysRaw, historyRaw, recipes] = await Promise.all([
 		FoodLogEntry.find({
 			createdBy: user.nickname,
 			date: { $gte: dayStart, $lte: dayEnd },
@@ -77,6 +143,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			date: { $gte: stapleFrom },
 			mealType: { $ne: 'water' },
 		}).lean() as any,
+		// Independent of the log, so it rides along rather than waiting for it.
+		recipeCandidates(),
 	]);
 	// Entries are references; resolve to live nutrition (blended per100g, derived
 	// amountGrams, presentation source/sourceId) before the nudge logic reads them.
@@ -100,6 +168,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	);
 	const staples = learnStaples(history, STAPLE_MIN_DAYS)
 		.filter(s => !loggedKeys.has(`${s.source}:${s.sourceId}`));
+	// Same rule for a dish already eaten today: more of it is a bump, not a new row.
+	const dishes = recipes.filter(r => !loggedKeys.has(`recipe:${r.sourceId}`));
 
 	// Not told what is left: work it out from the goal this day was eaten against, the
 	// day's own log and its logged exercise. Deliberately the same shape as the page's
@@ -155,7 +225,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		};
 	}
 
-	const nudges = buildNudges(remaining, logged, staples, 5);
+	const nudges = buildNudges(remaining, logged, staples, 5, dishes);
 
 	// The remainders are echoed back so a caller that did not supply them (the page's
 	// load) can tell whether its own live numbers still match what these were built

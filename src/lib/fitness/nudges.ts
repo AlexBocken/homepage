@@ -11,6 +11,11 @@
  * plate costs nothing to act on. Only when no such adjustment helps does it fall
  * back to suggesting a staple, and then only foods this person eats routinely.
  *
+ * The one exception is the site's own recipes: a dish whose portion lands every macro
+ * on target is worth cooking, so those are pinned above the adjustments rather than
+ * ranked against them. Anything short of that fit is not offered at all — see
+ * `GREAT_FIT_COST`.
+ *
  * Kept free of database and Svelte imports so the ranking rules can be tested.
  */
 
@@ -32,6 +37,30 @@ export type StapleFood = {
 	per100g: Partial<Macros> | null | undefined;
 };
 
+/** What a recipe row needs to render beyond the numbers: the page to link to in
+ *  either language, a thumbnail, and what one stated portion weighs. Carried
+ *  through untouched — the ranking never reads it. */
+export type RecipeMeta = {
+	/** German slug (`/rezepte/<slug>`). */
+	slug: string;
+	/** English slug, when the recipe is translated (`/recipes/<slug>`). */
+	slugEn?: string;
+	nameEn?: string;
+	/** Thumbnail URL. */
+	image?: string;
+	/** Weight of one stated portion, when the recipe says how many it makes. */
+	portionGrams?: number;
+};
+
+/** A recipe from the site's own collection, offered as a whole dish. */
+export type RecipeFood = {
+	name: string;
+	/** The recipe's ObjectId — what the food log stores a recipe against. */
+	sourceId: string;
+	per100g: Partial<Macros> | null | undefined;
+	meta: RecipeMeta;
+};
+
 /**
  * Nothing under this is worth surfacing. It is a relevance floor rather than a
  * precision one: "add 12 g of almonds" is arithmetically right and useless advice,
@@ -40,6 +69,9 @@ export type StapleFood = {
 export const MIN_DELTA_GRAMS = 50;
 /** Beyond this a "nudge" is really a meal, and the portion stops being plausible. */
 export const MAX_DELTA_GRAMS = 300;
+/** A recipe *is* a meal, so it gets a plate-sized ceiling rather than the
+ *  snack-sized one that keeps a staple suggestion from turning into dinner. */
+export const MAX_RECIPE_GRAMS = 450;
 /** Suggestions land on 5 g so they read as instructions, not solver output. */
 export const GRAM_STEP = 5;
 
@@ -100,6 +132,22 @@ export function gapCost(rem: Remaining): number {
  */
 export const MIN_IMPROVEMENT = 5;
 
+/**
+ * How close a recipe has to land before it is worth proposing at all.
+ *
+ * A staple is a spoonful of something already in the cupboard; a recipe is an
+ * evening of cooking, so "would help a bit" is not a good enough reason to put one
+ * on screen. 12 weighted grams is exactly the point where every macro is within the
+ * 3 g the card already calls hitting the target — so a recipe only ever appears when
+ * it reads as "hits every target", and when it does it keeps its place at the top of
+ * the list regardless of how the bumps score.
+ */
+export const GREAT_FIT_COST = 12;
+
+/** At most this many recipes, so the card stays a list of adjustments with the odd
+ *  dish in it rather than a meal planner. */
+export const RECIPE_SLOTS = 2;
+
 export type Nudge = {
 	kind: 'bump' | 'add';
 	name: string;
@@ -117,6 +165,8 @@ export type Nudge = {
 	after: Remaining;
 	/** How much of the weighted shortfall this closes, in grams. */
 	improvement: number;
+	/** Present on a recipe row: how to link to and picture the dish. */
+	recipe?: RecipeMeta;
 };
 
 /**
@@ -157,6 +207,12 @@ function bestAmount(
  * the plate needs nothing the person does not have. An add has to be meaningfully
  * better to outrank a bump, which is what `ADD_PENALTY` encodes.
  *
+ * Recipes are outside that contest. They are only admitted when they land the day
+ * within `GREAT_FIT_COST`, and one that does is pinned to the top instead of being
+ * scored against the bumps — a dish that finishes the day exactly is the best answer
+ * the app has, and it would otherwise lose to a rounding-error-sized bump that
+ * happens to score marginally higher.
+ *
  * Returns an empty array when nothing qualifies. That is a real answer — the caller
  * hides the component rather than inventing a suggestion.
  */
@@ -167,6 +223,7 @@ export function buildNudges(
 	logged: LoggedEntry[] | null | undefined,
 	staples: StapleFood[] | null | undefined,
 	limit = 5,
+	recipes: RecipeFood[] | null | undefined = [],
 ): Nudge[] {
 	// Nothing to close, or the day is already over budget.
 	if (rem.kcal <= 0) return [];
@@ -205,10 +262,35 @@ export function buildNudges(
 		});
 	}
 
+	// Recipes from the site's own collection, admitted only as near-perfect fits.
+	const pinned: Nudge[] = [];
+	for (const r of recipes ?? []) {
+		const best = bestAmount(rem, r.per100g, MAX_RECIPE_GRAMS);
+		if (!best) continue;
+		if (gapCost(best.after) > GREAT_FIT_COST) continue;
+		pinned.push({
+			kind: 'add',
+			name: r.name,
+			source: 'recipe',
+			sourceId: r.sourceId,
+			per100g: r.per100g ?? null,
+			deltaGrams: best.grams,
+			after: best.after,
+			improvement: best.improvement,
+			recipe: r.meta,
+		});
+	}
+	// Ranked by what they leave behind rather than by improvement: among dishes that
+	// all qualify as great fits, the interesting difference is which lands closest,
+	// not which had the most ground to make up.
+	pinned.sort((a, b) => gapCost(a.after) - gapCost(b.after));
+	const recipeRows = pinned.slice(0, Math.min(RECIPE_SLOTS, limit));
+
 	out.sort((a, b) => b.improvement - a.improvement);
 
 	// One row per food: the same staple at two portion sizes is one idea, not two.
-	const seen = new Set<string>();
+	// The pinned recipes seed the set, so a recipe cannot also arrive as a staple.
+	const seen = new Set<string>(recipeRows.map(n => `add:${n.source}:${n.sourceId}`));
 	const deduped: Nudge[] = [];
 	for (const n of out) {
 		const key = n.kind === 'bump' ? `bump:${n.entryId}` : `add:${n.source}:${n.sourceId}`;
@@ -217,7 +299,7 @@ export function buildNudges(
 		deduped.push(n);
 	}
 
-	return deduped.slice(0, limit);
+	return [...recipeRows, ...deduped.slice(0, limit - recipeRows.length)];
 }
 
 /**

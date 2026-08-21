@@ -95,6 +95,68 @@ test('the card is server-rendered, not fetched after hydration', async ({ reques
 	}
 });
 
+test('a recipe that fits what is left is offered, with a way to cook it', async ({ request }) => {
+	// Seeded recipes have no cached nutrition until something asks for the listing —
+	// that endpoint fills the cache, and the nudge query only considers recipes that
+	// have it, because the cached figure is the one that includes any base recipes.
+	expect((await request.get('/api/rezepte/items/all_brief')).ok()).toBeTruthy();
+
+	// Read the fixture's own per-100 g rather than hardcoding a USDA row's macros, so
+	// this stays true when the table is re-imported.
+	const search = await request.get('/api/nutrition/search', {
+		params: { q: 'E2E Bildkuchen', full: 'true', sources: 'recipe' },
+	});
+	expect(search.ok()).toBeTruthy();
+	const cake = (await search.json()).find((r: any) => r.shortName === 'e2e_bildkuchen');
+	expect(cake, 'the image-cake fixture must be searchable with nutrition').toBeTruthy();
+
+	// A day whose remaining macros are exactly 100 g of that cake. Nothing else can
+	// fit better, so if recipes are offered at all this one has to be among them.
+	const per = cake.per100g;
+	const res = await request.get('/api/fitness/nudges', {
+		params: {
+			date: isoDay(0),
+			remainingKcal: Math.round(per.calories),
+			remainingProtein: Math.round(per.protein),
+			remainingFat: Math.round(per.fat),
+			remainingCarbs: Math.round(per.carbs),
+		},
+	});
+	expect(res.ok()).toBeTruthy();
+	const { nudges } = await res.json();
+
+	const row = nudges.find((n: any) => n.recipe?.slug === 'e2e_bildkuchen');
+	expect(row, 'a recipe that lands every macro should be offered').toBeTruthy();
+	expect(row.source).toBe('recipe');
+	// Pinned above the adjustments — that is the whole point of the recipe slot. Which
+	// dish leads is not asserted: the cloned dev recipes are real data and one of them
+	// may fit this particular day just as well.
+	const lastRecipe = nudges.map((n: any) => !!n.recipe).lastIndexOf(true);
+	const firstOther = nudges.findIndex((n: any) => !n.recipe);
+	if (firstOther !== -1) expect(lastRecipe).toBeLessThan(firstOther);
+	// Everything the card needs to render the row: the page in either language, the
+	// thumbnail, and what one of the eight stated portions weighs.
+	expect(row.recipe.slugEn).toBe('e2e_imagecake');
+	expect(row.recipe.image).toContain('e2e-bildkuchen');
+	expect(row.recipe.portionGrams).toBeGreaterThan(0);
+
+	// The row is loggable exactly as the card sends it: a recipe logs by reference,
+	// so the server decomposes it into ingredients rather than trusting per100g.
+	const log = await request.post('/api/fitness/food-log', {
+		data: {
+			date: isoDay(0), mealType: 'dinner', name: row.name,
+			source: row.source, sourceId: row.sourceId, amountGrams: row.deltaGrams,
+		},
+	});
+	expect(log.ok()).toBeTruthy();
+	const created = await log.json();
+	try {
+		expect(created.source).toBe('recipe');
+	} finally {
+		await request.delete(`/api/fitness/food-log/${created._id}`);
+	}
+});
+
 test('copy-day duplicates a day and the copies can be removed again', async ({ request }) => {
 	const from = isoDay(-1);
 	const to = isoDay(0);
