@@ -152,7 +152,11 @@
 		{/if}
 	</header>
 
-	<div class="track-map" {@attach attachTrackMap(mapTrack, hover)}></div>
+	<div class="track-map" {@attach attachTrackMap(mapTrack, hover)}>
+		<!-- The route as the server drew it: the whole of the map where no script
+			 runs, and the backdrop the tiles fade in over everywhere else. -->
+		<img class="track-map-poster" src="/api/fitness/segments/{seg._id}/map.webp" alt={seg.name} />
+	</div>
 
 	<div class="stat-row">
 		<span class="stat"><Route size={15} /> {seg.distance.toFixed(2)} {t.km}</span>
@@ -289,9 +293,23 @@
 		animation: spin 1s linear infinite;
 	}
 	.track-map {
+		position: relative;
 		height: 280px;
 		border-radius: 12px;
 		overflow: hidden;
+	}
+	/* Leaflet's panes start at z-index 400, so the image needs no removing once the
+	   map is up — but the container's own grey has to go, or it covers this. */
+	.track-map-poster {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		z-index: 0;
+	}
+	.track-map :global(.leaflet-container) {
+		background: transparent;
 	}
 	:global(.run-hover-pin) {
 		display: none;

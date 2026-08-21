@@ -56,6 +56,26 @@
 	let { data } = $props();
 
 	const session = $derived(data.session);
+
+	/**
+	 * The pre-rendered route image for this session, and which of its maps it belongs
+	 * under.
+	 *
+	 * The image is what a reader with no script sees in place of the map, and what
+	 * everyone else sees while the tiles are still coming down. The server renders it
+	 * from the session's *first* GPS track, so it is only laid under that same
+	 * exercise's map — under a second route it would be a picture of the wrong run.
+	 *
+	 * A queued offline session has no id on the server yet and so has no image.
+	 */
+	const posterExIdx = $derived(
+		(session?.exercises ?? []).findIndex((/** @type {any} */ ex) => (ex?.gpsTrack?.length ?? 0) >= 2)
+	);
+	const posterSrc = $derived(
+		posterExIdx >= 0 && session?._id && !String(session._id).startsWith('queued-')
+			? `/api/fitness/sessions/${session._id}/map.webp`
+			: null
+	);
 	// Unsynced (offline-queued) run: lives only in the browser outbox, so the
 	// server-only actions (edit, share, snap, GPX, segments, recalculate) don't
 	// apply — only viewing and deleting do.
@@ -826,7 +846,11 @@
 						</button>
 					</div>
 					{#if exData.gpsTrack?.length >= 2}
-						<div class="track-map" {@attach attachTrackMap(exData.gpsTrack, hoverFor(exIdx))}></div>
+						<div class="track-map" {@attach attachTrackMap(exData.gpsTrack, hoverFor(exIdx))}>
+							{#if posterSrc && exIdx === posterExIdx}
+								<img class="track-map-poster" src={posterSrc} alt={t.gps_track_stored} />
+							{/if}
+						</div>
 					{/if}
 				{/if}
 
@@ -909,7 +933,11 @@
 								<span class="gps-stat elev-loss">-{gps.elevStats.loss}{t.elevation_unit}</span>
 							{/if}
 						</div>
-						<div class="track-map" id={`be-map-${exIdx}`} {@attach attachTrackMap(ex.gpsTrack, hov, { highlight: () => mapHighlight(exIdx, efforts) })}></div>
+						<div class="track-map" id={`be-map-${exIdx}`} {@attach attachTrackMap(ex.gpsTrack, hov, { highlight: () => mapHighlight(exIdx, efforts) })}>
+							{#if posterSrc && exIdx === posterExIdx}
+								<img class="track-map-poster" src={posterSrc} alt={t.gps_track_stored} />
+							{/if}
+						</div>
 
 						{#if gps.hasCharts}
 						{#if gps.elevation.has}
@@ -1717,9 +1745,27 @@
 		opacity: 1;
 	}
 	.track-map {
+		position: relative;
 		height: 200px;
 		border-radius: 8px;
 		overflow: hidden;
+	}
+	/*
+	 * The route as the server drew it, sitting under the live map: it is the whole
+	 * of the map for a reader with no script, and the backdrop the tiles fade in
+	 * over for everyone else. Leaflet's panes start at z-index 400, so it needs no
+	 * removing — but the container's own grey has to go, or it would cover this.
+	 */
+	.track-map-poster {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		z-index: 0;
+	}
+	.track-map :global(.leaflet-container) {
+		background: transparent;
 	}
 	/* Best-efforts list — hover/click a row to highlight its split on the map.
 	   Hover is a neutral row highlight; the active (shown-on-map) and pinned

@@ -173,6 +173,7 @@ export const en = {
 	new_sets_added: "new sets",
 	exercises_title: "Exercises",
 	search_exercises: "Search exercises…",
+	search_submit: "Search",
 	no_exercises_match: "No exercises match your search.",
 	type_any: "Any type",
 	type_weights: "Strength",

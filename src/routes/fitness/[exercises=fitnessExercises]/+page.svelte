@@ -1,6 +1,8 @@
 <script>
 	import { resolve } from '$app/paths';
+	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
+	import { toggledParams, withParams } from '$lib/js/queryToggle';
 	import Search from '@lucide/svelte/icons/search';
 	import Cable from '@lucide/svelte/icons/cable';
 	import Cog from '@lucide/svelte/icons/cog';
@@ -26,13 +28,84 @@
 
 	let { data } = $props();
 
-	let query = $state('');
+	/**
+	 * The filters live in the URL, and are read from it here rather than in an effect:
+	 * effects do not run on the server, so a filtered list has to be built while the
+	 * page is rendered or a reader with no script gets the unfiltered one. Everything
+	 * below writes back to the address bar, which also makes a search shareable and
+	 * the back button work through it.
+	 */
+	const TYPES = ['all', 'non-stretch', 'cardio', 'stretch'];
+	const initial = page.url.searchParams;
+	const initialType = initial.get('type');
+
+	let query = $state(initial.get('q') ?? '');
 	/** @type {string[]} */
-	let equipmentFilters = $state([]);
+	let equipmentFilters = $state(initial.getAll('eq'));
 	/** @type {string[]} */
-	let muscleGroups = $state([]);
+	let muscleGroups = $state(initial.getAll('muscle'));
 	/** @type {'all' | 'stretch' | 'non-stretch' | 'cardio'} */
-	let typeFilter = $state('all');
+	let typeFilter = $state(
+		/** @type {any} */ (initialType && TYPES.includes(initialType) ? initialType : 'all')
+	);
+
+	/** The four exercise kinds, as tabs. Cardio draws its own icon component, hence
+	 *  the null: everything else takes the same lucide shape. */
+	const TYPE_TABS = $derived([
+		{ value: 'all', label: t.type_any, icon: Layers },
+		{ value: 'non-stretch', label: t.type_weights, icon: BicepsFlexed },
+		{ value: 'cardio', label: t.type_cardio, icon: null },
+		{ value: 'stretch', label: t.type_stretches, icon: StretchIcon },
+	]);
+
+	/** The filters as they stand, in the order they are written. */
+	function currentParams() {
+		const p = new URLSearchParams();
+		if (query.trim()) p.set('q', query.trim());
+		if (typeFilter !== 'all') p.set('type', typeFilter);
+		for (const eq of [...equipmentFilters].sort()) p.append('eq', eq);
+		for (const g of [...muscleGroups].sort()) p.append('muscle', g);
+		return p;
+	}
+
+	/** Where a filter leads with no script to intercept its click: the same search
+	 *  with that one flipped. With script every one of them calls preventDefault. */
+	function filterHref(/** @type {string} */ key, /** @type {string} */ value, repeated = false) {
+		return withParams(page.url.pathname, toggledParams(currentParams(), key, value, repeated));
+	}
+
+	/**
+	 * Where a muscle on the figure leads. A region covers several groups (the front
+	 * shoulder is two deltoid heads), and the figure toggles them together, so the
+	 * link turns all of them off when they are all on and all of them on otherwise —
+	 * the same rule `toggleRegion` follows.
+	 * @param {string[]} groups
+	 */
+	function muscleRegionHref(groups) {
+		const p = currentParams();
+		const allOn = groups.every((g) => muscleGroups.includes(g));
+		const next = allOn
+			? muscleGroups.filter((g) => !groups.includes(g))
+			: [...new Set([...muscleGroups, ...groups])];
+		p.delete('muscle');
+		for (const g of next.sort()) p.append('muscle', g);
+		return withParams(page.url.pathname, p);
+	}
+
+	/** @param {URLSearchParams} params */
+	function clearedHref(params) {
+		return withParams(page.url.pathname, params);
+	}
+
+	// Keep the address bar in step. `replaceState` rather than `goto`: toggling four
+	// muscles should not leave four back-button stops.
+	$effect(() => {
+		const next = currentParams().toString();
+		if (next === page.url.searchParams.toString()) return;
+		const url = new URL(window.location.href);
+		url.search = next;
+		replaceState(url, page.state);
+	});
 
 	const filterOptions = getFilterOptionsAll();
 
@@ -131,80 +204,73 @@
 	<h1 class="sr-only">{t.exercises_title}</h1>
 
 	<aside class="muscle-card" aria-label={isEn ? 'Filter by muscle' : 'Nach Muskel filtern'}>
-		<MuscleFilter bind:selectedGroups={muscleGroups} {lang} />
+		<!-- Each muscle on the figure is a link to the same search filtered by it, so
+			 the body works as a filter with no script; with script the component's own
+			 click handler takes over. -->
+		<MuscleFilter bind:selectedGroups={muscleGroups} {lang} hrefFor={muscleRegionHref} />
 	</aside>
 
 	<div class="exercises-content">
-		<div class="search-bar">
+		<!-- A real GET form, so the search runs without script; with script the list
+			 filters as you type and this never submits. The other filters ride along as
+			 hidden fields, so searching narrows the list instead of restarting it. -->
+		<form class="search-bar" method="get" action={page.url.pathname}>
 			<Search size={16} />
-			<input type="text" placeholder={t.search_exercises} bind:value={query} />
-		</div>
+			<input type="text" name="q" placeholder={t.search_exercises} bind:value={query} />
+			{#if typeFilter !== 'all'}<input type="hidden" name="type" value={typeFilter} />{/if}
+			{#each equipmentFilters as eq (eq)}<input type="hidden" name="eq" value={eq} />{/each}
+			{#each muscleGroups as g (g)}<input type="hidden" name="muscle" value={g} />{/each}
+			<button type="submit" class="search-submit">{t.search_submit}</button>
+		</form>
 
 		<div class="type-toggle" role="tablist" aria-label={isEn ? 'Exercise type filter' : 'Filter nach Übungsart'}>
-			<button
-				role="tab"
-				aria-selected={typeFilter === 'all'}
-				class="type-btn"
-				class:active={typeFilter === 'all'}
-				onclick={() => typeFilter = 'all'}
-			>
-				<Layers size={14} strokeWidth={2.2} />
-				<span>{t.type_any}</span>
-			</button>
-			<button
-				role="tab"
-				aria-selected={typeFilter === 'non-stretch'}
-				class="type-btn"
-				class:active={typeFilter === 'non-stretch'}
-				onclick={() => typeFilter = 'non-stretch'}
-			>
-				<BicepsFlexed size={14} strokeWidth={2.2} />
-				<span>{t.type_weights}</span>
-			</button>
-			<button
-				role="tab"
-				aria-selected={typeFilter === 'cardio'}
-				class="type-btn"
-				class:active={typeFilter === 'cardio'}
-				onclick={() => typeFilter = 'cardio'}
-			>
-				<ActivityIcon activity="running" size={14} />
-				<span>{t.type_cardio}</span>
-			</button>
-			<button
-				role="tab"
-				aria-selected={typeFilter === 'stretch'}
-				class="type-btn"
-				class:active={typeFilter === 'stretch'}
-				onclick={() => typeFilter = 'stretch'}
-			>
-				<StretchIcon size={14} />
-				<span>{t.type_stretches}</span>
-			</button>
+			{#each TYPE_TABS as tab (tab.value)}
+				{@const active = typeFilter === tab.value}
+				{@const Icon = tab.icon}
+				<a
+					role="tab"
+					aria-selected={active}
+					class="type-btn"
+					class:active
+					href={filterHref('type', tab.value)}
+					onclick={(e) => { e.preventDefault(); typeFilter = /** @type {any} */ (tab.value); }}
+				>
+					{#if Icon}
+						<Icon size={14} strokeWidth={2.2} />
+					{:else}
+						<ActivityIcon activity="running" size={14} />
+					{/if}
+					<span>{tab.label}</span>
+				</a>
+			{/each}
 		</div>
 
 		<section class="pill-group">
 			<div class="pill-group-header">
 				<span class="pill-group-label">{isEn ? 'Equipment' : 'Ausrüstung'}</span>
 				{#if equipmentFilters.length > 0}
-					<button class="mini-clear" onclick={() => equipmentFilters = []}>
-						{isEn ? 'clear' : 'löschen'}
-					</button>
+					{@const bare = currentParams()}
+					<a
+						class="mini-clear"
+						href={clearedHref((bare.delete('eq'), bare))}
+						onclick={(e) => { e.preventDefault(); equipmentFilters = []; }}
+					>{isEn ? 'clear' : 'löschen'}</a>
 				{/if}
 			</div>
 			<div class="pill-scroll">
 				{#each filterOptions.equipment as eq (eq)}
 					{@const active = equipmentFilters.includes(eq)}
 					{@const Icon = equipmentIcon(eq)}
-					<button
+					<a
 						class="chip equipment-chip"
 						class:active
-						aria-pressed={active}
-						onclick={() => toggleEquipment(eq)}
+						aria-current={active ? 'true' : undefined}
+						href={filterHref('eq', eq, true)}
+						onclick={(e) => { e.preventDefault(); toggleEquipment(eq); }}
 					>
 						<Icon size={14} strokeWidth={2.2} />
 						<span>{equipmentLabel(eq)}</span>
-					</button>
+					</a>
 				{/each}
 			</div>
 		</section>
@@ -213,20 +279,24 @@
 			<div class="pill-group-header">
 				<span class="pill-group-label">{isEn ? 'Muscle Group' : 'Muskelgruppe'}</span>
 				{#if muscleGroups.length > 0}
-					<button class="mini-clear" onclick={() => muscleGroups = []}>
-						{isEn ? 'clear' : 'löschen'}
-					</button>
+					{@const bare = currentParams()}
+					<a
+						class="mini-clear"
+						href={clearedHref((bare.delete('muscle'), bare))}
+						onclick={(e) => { e.preventDefault(); muscleGroups = []; }}
+					>{isEn ? 'clear' : 'löschen'}</a>
 				{/if}
 			</div>
 			<div class="pill-scroll no-left-fade">
 				{#each orderedMuscleOptions as group (group)}
 					{@const active = muscleGroups.includes(group)}
-					<button
+					<a
 						class="chip muscle-chip"
 						class:active
-						aria-pressed={active}
-						onclick={() => toggleMuscle(group)}
-					>{muscleLabel(group)}</button>
+						aria-current={active ? 'true' : undefined}
+						href={filterHref('muscle', group, true)}
+						onclick={(e) => { e.preventDefault(); toggleMuscle(group); }}
+					>{muscleLabel(group)}</a>
 				{/each}
 			</div>
 		</section>
@@ -420,6 +490,40 @@
 		border-radius: var(--radius-pill, 100px);
 		padding: 0.2rem;
 	}
+	/* Every filter is a link to the same search with that one flipped, so the link
+	   forms have to look like the controls they replace rather than like prose. */
+	.type-btn,
+	a.chip,
+	a.mini-clear {
+		text-decoration: none;
+	}
+	/* Pressed state came from aria-pressed on a button; a link says it with
+	   aria-current, and the class the click handler sets covers the scripted case. */
+	a.chip[aria-current='true'] {
+		text-decoration: none;
+	}
+
+	/* The search runs as you type where there is script to run; where there is none,
+	   this is how the query is sent. */
+	.search-submit {
+		display: none;
+	}
+	@media (scripting: none) {
+		.search-submit {
+			display: inline-flex;
+			align-items: center;
+			padding: 0.35rem 0.8rem;
+			margin-left: 0.35rem;
+			border: none;
+			border-radius: var(--radius-pill);
+			background: var(--color-primary);
+			color: var(--color-text-on-primary);
+			font-size: 0.8rem;
+			font-weight: 600;
+			cursor: pointer;
+		}
+	}
+
 	.type-btn {
 		all: unset;
 		-webkit-tap-highlight-color: transparent;

@@ -173,6 +173,7 @@ export const de = {
 	new_sets_added: "neue Sätze",
 	exercises_title: "Übungen",
 	search_exercises: "Übungen suchen…",
+	search_submit: "Suchen",
 	no_exercises_match: "Keine Übungen gefunden.",
 	type_any: "Alle Arten",
 	type_weights: "Kraft",

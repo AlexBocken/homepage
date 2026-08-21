@@ -332,16 +332,32 @@
 		}]
 	});
 
-	// Streamed panels. nutrition / periods resolve through $state so the card
-	// shells render immediately with "—" placeholders; muscle heatmap is
-	// wrapped in {#await} below instead because its internal $derived chain
-	// needs the full resolved object in one shot to render correctly.
+	/**
+	 * Streamed panels arrive as promises, so the card shells render at once and fill
+	 * in when the value lands. The same panels arrive already settled when the page
+	 * was asked for in its awaited form (see `?nojs`) — hence `settled()`: a resolved
+	 * value is used as the initial state, which is what puts it in the HTML the
+	 * server sends, and a promise still fills in through the effect below.
+	 *
+	 * @template T
+	 * @param {T | Promise<T>} v
+	 * @returns {T | undefined}
+	 */
+	function settled(v) {
+		return v && typeof (/** @type {any} */ (v).then) === 'function'
+			? undefined
+			: /** @type {any} */ (v);
+	}
+
 	/** @type {any} */
-	let ns = $state({});
+	// svelte-ignore state_referenced_locally
+	let ns = $state(settled(data.nutritionStats) ?? {});
 	/** @type {any[]} */
-	let periodsData = $state([]);
+	// svelte-ignore state_referenced_locally
+	let periodsData = $state(settled(data.periods) ?? []);
 	/** @type {any[]} */
-	let sharedPeriodsData = $state([]);
+	// svelte-ignore state_referenced_locally
+	let sharedPeriodsData = $state(settled(data.sharedPeriods) ?? []);
 	$effect(() => {
 		Promise.resolve(data.nutritionStats)
 			.then(v => { ns = v ?? {}; })
@@ -564,7 +580,20 @@
 	}
 </script>
 
-<svelte:head><title>{t.stats_title} - Bocken</title></svelte:head>
+<svelte:head>
+	<title>{t.stats_title} - Bocken</title>
+	{#if !page.url.searchParams.has('nojs')}
+		<!--
+			The heavy panels on this page are streamed, and a stream is finished by a
+			script in the browser. A browser with none asks once more for the version
+			that waits for them — see the load. Everyone else never sees this, so the
+			fast shell stays fast for them.
+		-->
+		<noscript>
+			<meta http-equiv="refresh" content="0; url={page.url.pathname}?nojs=1" />
+		</noscript>
+	{/if}
+</svelte:head>
 
 <div class="stats-page">
 	<h1 class="sr-only">{t.stats_title}</h1>
@@ -1077,6 +1106,8 @@
 			{#if prefs.muscleBalance}
 			<div class="section-block muscle-heatmap-block">
 				<h2 class="section-title">{t.muscle_balance}</h2>
+				<!-- Renders straight through when the value came with the document; the
+					 pending branch is only ever seen while a stream is in flight. -->
 				{#await data.muscleHeatmap}
 					<div class="muscle-heatmap-pending" aria-hidden="true"></div>
 				{:then muscleHeatmap}

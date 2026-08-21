@@ -17,6 +17,9 @@
  */
 
 import { MACRO_FILTER_DEFAULTS, MACRO_KCAL_CEILING, type MacroFilter } from './recipeMacros';
+// Re-exported: the rail takes its whole vocabulary from this module, while the
+// helper itself is shared with the exercise search.
+export { toggledParams } from './queryToggle';
 import type { RecipeBrowse, RecipeSort } from './recipeBrowse.svelte';
 
 const SORTS = ['season', 'alpha', 'shuffle'] as const;
@@ -181,29 +184,3 @@ export function hasBrowseParams(params: URLSearchParams): boolean {
 	return FILTER_KEYS.some((key) => params.has(key));
 }
 
-/**
- * The same filters with one value flipped — what a facet chip links to when there is
- * no script to handle its click.
- *
- * Repeated keys (`tag`, `month`) toggle the one value; single keys (`category`,
- * `sort`) are set, or removed when they already hold that value, so the chip that
- * turned a filter on is also the one that turns it off.
- */
-export function toggledParams(
-	params: URLSearchParams,
-	key: string,
-	value: string,
-	repeated = false,
-): URLSearchParams {
-	const next = new URLSearchParams(params);
-	if (repeated) {
-		const values = next.getAll(key);
-		next.delete(key);
-		const kept = values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
-		for (const v of kept.sort()) next.append(key, v);
-		return next;
-	}
-	if (next.get(key) === value) next.delete(key);
-	else next.set(key, value);
-	return next;
-}

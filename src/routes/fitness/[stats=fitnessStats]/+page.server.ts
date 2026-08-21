@@ -1,8 +1,25 @@
 import type { PageServerLoad } from './$types';
 import { buildSegStat, type SegStat } from '$lib/fitness/segmentStat';
 
-export const load: PageServerLoad = async ({ fetch, locals }) => {
+export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 	const session = locals.session ?? await locals.auth();
+
+	/**
+	 * Whether to hand back the heavy panels as values rather than as promises.
+	 *
+	 * Streaming is what keeps this page's shell fast: the charts and cards are on
+	 * screen while the slow aggregates are still being worked out. But a stream is
+	 * finished by a script running in the browser, so with scripting off those panels
+	 * never arrive at all — the macro rings, the protein, calorie-balance and
+	 * adherence cards and the muscle heatmap sat empty behind their "nothing logged
+	 * yet" hints, which is a lie told to someone with a full diary.
+	 *
+	 * Rather than make every visitor wait for the case that cannot stream, the page
+	 * carries a `<noscript>` refresh to this flag: a browser with no script asks a
+	 * second time, and only that request waits for everything. One extra round trip
+	 * for the readers who were getting nothing, and none for anyone else.
+	 */
+	const awaitEverything = url.searchParams.has('nojs');
 
 	// stats / goal / latest block the shell because the main charts, goal header,
 	// and body-part cards all depend on them. The heavier panels below stream.
@@ -49,21 +66,27 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 	for (const [id, stat] of statEntries) if (stat) segStats[id] = stat;
 	const fastest = fastestRes.ok ? (await fastestRes.json()).best ?? null : null;
 
-	// Streamed — resolved into $state-backed locals on the client so the card
-	// shells render immediately and fill in once the value arrives. Error
-	// fallbacks keep the previous empty shapes.
-	const muscleHeatmap = fetch('/api/fitness/stats/muscle-heatmap?weeks=8')
+	// Started here either way — only whether they are waited for changes.
+	const muscleHeatmapPromise = fetch('/api/fitness/stats/muscle-heatmap?weeks=8')
 		.then(r => r.ok ? r.json() : { weeks: [], totals: {}, muscleGroups: [] })
 		.catch(() => ({ weeks: [], totals: {}, muscleGroups: [] }));
-	const nutritionStats = fetch('/api/fitness/stats/nutrition')
+	const nutritionStatsPromise = fetch('/api/fitness/stats/nutrition')
 		.then(r => r.ok ? r.json() : null)
 		.catch(() => null);
-	const periods = fetch('/api/fitness/period')
+
+	const periodsPromise = fetch('/api/fitness/period')
 		.then(r => r.ok ? r.json().then(j => j.entries) : [])
 		.catch(() => []);
-	const sharedPeriods = fetch('/api/fitness/period/shared')
+	const sharedPeriodsPromise = fetch('/api/fitness/period/shared')
 		.then(r => r.ok ? r.json().then(j => j.shared) : [])
 		.catch(() => []);
+
+	// Four promises or four values. The page reads both shapes: a settled one becomes
+	// the card's initial state and so lands in the server-rendered HTML, a pending
+	// one fills the card in when it arrives.
+	const [muscleHeatmap, nutritionStats, periods, sharedPeriods] = awaitEverything
+		? await Promise.all([muscleHeatmapPromise, nutritionStatsPromise, periodsPromise, sharedPeriodsPromise])
+		: [muscleHeatmapPromise, nutritionStatsPromise, periodsPromise, sharedPeriodsPromise];
 
 	return {
 		session, stats, goal, latest, dashboard,

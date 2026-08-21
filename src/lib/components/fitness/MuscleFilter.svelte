@@ -7,8 +7,14 @@
 	 * @typedef {{ groups: string[], label: { en: string, de: string } }} MuscleRegion
 	 */
 
-	/** @type {{ selectedGroups?: string[], lang?: string }} */
-	let { selectedGroups = $bindable([]), lang = 'en' } = $props();
+	/**
+	 * @type {{
+	 *   selectedGroups?: string[],
+	 *   lang?: string,
+	 *   hrefFor?: ((groups: string[]) => string) | undefined,
+	 * }}
+	 */
+	let { selectedGroups = $bindable([]), lang = 'en', hrefFor = undefined } = $props();
 
 	const isEn = $derived(lang === 'en');
 
@@ -58,22 +64,51 @@
 	}
 
 	/**
-	 * Inject fill styles into SVG string
+	 * Colour each region for its selection state, and — when the page can express a
+	 * muscle filter as a URL — wrap it in an SVG link.
+	 *
+	 * The link is what makes the figure work with no script: clicking a muscle is a
+	 * navigation to the same search with that muscle filtered, exactly as the chips
+	 * below it are. With script the click handler takes over and the href is never
+	 * followed. Region groups hold nothing but paths, so the first `</g>` after one
+	 * is its own.
+	 *
 	 * @param {string} svgStr
 	 * @param {Record<string, MuscleRegion>} map
 	 */
-	function injectFills(svgStr, map) {
+	function injectRegions(svgStr, map) {
 		let result = svgStr;
 		for (const [svgId, region] of Object.entries(map)) {
 			const fill = regionFill(region.groups);
-			const re = new RegExp(`(<g\\s+id="${svgId}")([^>]*>)`);
-			result = result.replace(re, `$1 style="--region-fill: ${fill}; cursor: pointer;"$2`);
+			const style = `style="--region-fill: ${fill}; cursor: pointer;"`;
+			const open = new RegExp(`(<g\\s+id="${svgId}")([^>]*>)`);
+			if (!hrefFor) {
+				result = result.replace(open, `$1 ${style}$2`);
+				continue;
+			}
+			const label = isEn ? region.label.en : region.label.de;
+			const whole = new RegExp(`(<g\\s+id="${svgId}")([^>]*>)([\\s\\S]*?)(</g>)`);
+			result = result.replace(
+				whole,
+				(_m, /** @type {string} */ head, /** @type {string} */ rest, /** @type {string} */ body, /** @type {string} */ close) =>
+					`<a href="${escapeAttr(hrefFor(region.groups))}" aria-label="${escapeAttr(label)}">` +
+					// A <title> is the one label that needs no script: the browser shows it
+					// as a tooltip on hover, where the card's own label below can only be
+					// written by the hover handler.
+					`<title>${escapeAttr(label)}</title>` +
+					`${head} ${style}${rest}${body}${close}</a>`
+			);
 		}
 		return result;
 	}
 
-	const frontSvg = $derived(injectFills(frontSvgRaw, FRONT_MAP));
-	const backSvg = $derived(injectFills(backSvgRaw, BACK_MAP));
+	/** @param {string} v */
+	function escapeAttr(v) {
+		return v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+	}
+
+	const frontSvg = $derived(injectRegions(frontSvgRaw, FRONT_MAP));
+	const backSvg = $derived(injectRegions(backSvgRaw, BACK_MAP));
 
 	/** Currently hovered region for tooltip */
 	/** @type {MuscleRegion | null} */
@@ -134,6 +169,9 @@
 			const target = /** @type {Element | null} */ (e.target);
 			const g = target?.closest('g[id]');
 			if (g && map[g.id]) {
+				// The region is a link when the page gave us one; with script running,
+				// filtering happens here instead of through a navigation.
+				e.preventDefault();
 				toggleRegion(map[g.id]);
 			}
 		});
@@ -243,7 +281,12 @@
 		transition: fill 0.15s, stroke 0.15s, stroke-width 0.15s;
 	}
 
-	.svg-wrap :global(g.highlighted:not(#body):not(#head) path) {
+	/* Hovering is CSS, so the figure lights up with or without script. The class is
+	   still set by the pointer handlers, which is what keeps a region lit while a
+	   touch is being held. */
+	.svg-wrap :global(g.highlighted:not(#body):not(#head) path),
+	.svg-wrap :global(g:hover:not(#body):not(#head) path),
+	.svg-wrap :global(a:focus-visible g:not(#body):not(#head) path) {
 		fill: color-mix(in srgb, var(--region-fill, var(--color-bg-tertiary)), var(--color-primary) 40%);
 		stroke: var(--color-primary);
 		stroke-width: 3;
