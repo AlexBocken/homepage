@@ -125,20 +125,21 @@ test('a recipe that fits what is left is offered, with a way to cook it', async 
 	expect(res.ok()).toBeTruthy();
 	const { nudges } = await res.json();
 
-	const row = nudges.find((n: any) => n.recipe?.slug === 'e2e_bildkuchen');
+	const row = nudges.find((n: any) => n.dish?.slug === 'e2e_bildkuchen');
 	expect(row, 'a recipe that lands every macro should be offered').toBeTruthy();
 	expect(row.source).toBe('recipe');
 	// Pinned above the adjustments — that is the whole point of the recipe slot. Which
 	// dish leads is not asserted: the cloned dev recipes are real data and one of them
 	// may fit this particular day just as well.
-	const lastRecipe = nudges.map((n: any) => !!n.recipe).lastIndexOf(true);
-	const firstOther = nudges.findIndex((n: any) => !n.recipe);
-	if (firstOther !== -1) expect(lastRecipe).toBeLessThan(firstOther);
+	const lastDish = nudges.map((n: any) => !!n.dish).lastIndexOf(true);
+	const firstOther = nudges.findIndex((n: any) => !n.dish);
+	if (firstOther !== -1) expect(lastDish).toBeLessThan(firstOther);
 	// Everything the card needs to render the row: the page in either language, the
 	// thumbnail, and what one of the eight stated portions weighs.
-	expect(row.recipe.slugEn).toBe('e2e_imagecake');
-	expect(row.recipe.image).toContain('e2e-bildkuchen');
-	expect(row.recipe.portionGrams).toBeGreaterThan(0);
+	expect(row.dish.kind).toBe('recipe');
+	expect(row.dish.slugEn).toBe('e2e_imagecake');
+	expect(row.dish.image).toContain('e2e-bildkuchen');
+	expect(row.dish.portionGrams).toBeGreaterThan(0);
 
 	// The row is loggable exactly as the card sends it: a recipe logs by reference,
 	// so the server decomposes it into ingredients rather than trusting per100g.
@@ -154,6 +155,56 @@ test('a recipe that fits what is left is offered, with a way to cook it', async 
 		expect(created.source).toBe('recipe');
 	} finally {
 		await request.delete(`/api/fitness/food-log/${created._id}`);
+	}
+});
+
+test('a saved meal that fits what is left is offered too', async ({ request }) => {
+	// A meal is built here rather than seeded: it has to reference real base-table rows,
+	// because a meal's nutrition is resolved live from them rather than stored.
+	const search = await request.get('/api/nutrition/search', {
+		params: { q: 'Quark', full: 'true', sources: 'bls' },
+	});
+	expect(search.ok()).toBeTruthy();
+	const foods = (await search.json()).filter((f: any) => f.per100g?.calories > 0);
+	expect(foods.length, 'the BLS table must be loaded').toBeGreaterThan(0);
+	// The most protein-dense match, so the day this stages is a shape almost no recipe
+	// can fit — the assertion below is then about the meal, not about what else exists.
+	const food = foods.sort((a: any, b: any) => b.per100g.protein / b.per100g.calories - a.per100g.protein / a.per100g.calories)[0];
+
+	const create = await request.post('/api/fitness/custom-meals', {
+		data: {
+			name: 'E2E Nudge Meal',
+			ingredients: [{ name: food.name, source: 'bls', sourceId: food.id, amountGrams: 200 }],
+		},
+	});
+	expect(create.ok()).toBeTruthy();
+	const mealId = String((await create.json())._id);
+
+	try {
+		// Exactly 200 g of that meal is what the day has room for.
+		const per = food.per100g;
+		const res = await request.get('/api/fitness/nudges', {
+			params: {
+				date: isoDay(0),
+				remainingKcal: Math.round(per.calories * 2),
+				remainingProtein: Math.round(per.protein * 2),
+				remainingFat: Math.round((per.fat ?? 0) * 2),
+				remainingCarbs: Math.round((per.carbs ?? 0) * 2),
+			},
+		});
+		expect(res.ok()).toBeTruthy();
+		const { nudges } = await res.json();
+
+		const row = nudges.find((n: any) => n.sourceId === mealId);
+		expect(row, 'a saved meal that lands every macro should be offered').toBeTruthy();
+		expect(row.source).toBe('custom');
+		expect(row.dish.kind).toBe('custom');
+		// A meal has one serving — itself — so the card can read it in servings.
+		expect(row.dish.portionGrams).toBe(200);
+		// No recipe page to link to; the row points at the meal's own entry instead.
+		expect(row.dish.slug).toBeUndefined();
+	} finally {
+		await request.delete(`/api/fitness/custom-meals/${mealId}`);
 	}
 });
 

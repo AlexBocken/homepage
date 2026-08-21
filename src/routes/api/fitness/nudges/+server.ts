@@ -8,10 +8,11 @@ import { FitnessGoal } from '$models/FitnessGoal';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
 import { Recipe } from '$models/Recipe';
-import { buildNudges, learnStaples, type Remaining, type RecipeFood } from '$lib/fitness/nudges';
+import { CustomMeal } from '$models/CustomMeal';
+import { buildNudges, learnStaples, type Remaining, type DishFood } from '$lib/fitness/nudges';
 import { parsePortions } from '$lib/js/recipeMacros';
 import { recipeThumbUrl } from '$lib/utils/recipeImage';
-import { resolveEntries } from '$lib/server/foodLogComponents';
+import { resolveEntries, resolveLeaves, blendPer100g } from '$lib/server/foodLogComponents';
 import { entriesCalories, entriesMacroGrams } from '$lib/fitness/nutritionMath';
 import { macroGoalGrams } from '$lib/fitness/macroGoals';
 import { trendValueOn } from '$lib/fitness/trend';
@@ -29,7 +30,7 @@ import { calorieTargetForDate } from '$lib/server/dailyTargets';
  * The names are stripped of the soft hyphens recipe titles carry for layout, exactly
  * as the food search does — they are invisible in HTML but not in a diary row.
  */
-async function recipeCandidates(): Promise<RecipeFood[]> {
+async function recipeCandidates(): Promise<DishFood[]> {
 	const docs = await Recipe.find(
 		// Base recipes are components — a dough, a starter, a stock. They are eaten as
 		// part of something else, so proposing one as a way to finish the day is
@@ -47,7 +48,7 @@ async function recipeCandidates(): Promise<RecipeFood[]> {
 		},
 	).lean() as any[];
 
-	const out: RecipeFood[] = [];
+	const out: DishFood[] = [];
 	for (const r of docs) {
 		const per100g = r.cachedPer100g;
 		if (!per100g || !(per100g.calories > 0)) continue;
@@ -56,9 +57,11 @@ async function recipeCandidates(): Promise<RecipeFood[]> {
 		const mediapath = r.images?.[0]?.mediapath;
 		out.push({
 			name: stripSoftHyphens(r.name),
+			source: 'recipe',
 			sourceId: String(r._id),
 			per100g,
 			meta: {
+				kind: 'recipe',
 				slug: r.short_name,
 				...(r.translations?.en?.short_name && { slugEn: r.translations.en.short_name }),
 				...(r.translations?.en?.name && { nameEn: stripSoftHyphens(r.translations.en.name) }),
@@ -72,6 +75,50 @@ async function recipeCandidates(): Promise<RecipeFood[]> {
 
 function stripSoftHyphens(name: string): string {
 	return (name ?? '').replace(/&shy;|\u00ad/g, '');
+}
+
+/**
+ * The person's own saved meals, as candidate dishes.
+ *
+ * A meal is a list of references, so its nutrition is resolved live rather than read
+ * off the document — one batched pass over every ingredient of every meal, which is a
+ * single Open Food Facts round trip no matter how many meals there are.
+ *
+ * A meal is dropped when any ingredient fails to resolve (a barcode aged out of the
+ * mirror, a USDA id dropped on re-import). Blending what is left would quietly
+ * understate the meal and propose it as a fit it is not — and the whole point of the
+ * fit gate is that the numbers behind it are trustworthy.
+ */
+async function mealCandidates(nickname: string): Promise<DishFood[]> {
+	const meals = await CustomMeal.find({ createdBy: nickname }).lean() as any[];
+	if (!meals.length) return [];
+
+	const resolved = await resolveLeaves(
+		meals.flatMap(m => (m.ingredients ?? []).map((i: any) => ({
+			source: i.source, sourceId: i.sourceId, amountGrams: i.amountGrams ?? 0,
+		}))),
+	);
+
+	const out: DishFood[] = [];
+	let i = 0;
+	for (const meal of meals) {
+		const comps = (meal.ingredients ?? []).map(() => resolved[i++]);
+		if (!comps.length || comps.some((c: any) => !c?.per100g)) continue;
+		const totalGrams = comps.reduce((sum: number, c: any) => sum + (c?.amountGrams ?? 0), 0);
+		if (!(totalGrams > 0)) continue;
+		const per100g = blendPer100g(comps, totalGrams);
+		if (!(per100g.calories > 0)) continue;
+		out.push({
+			name: meal.name,
+			source: 'custom',
+			sourceId: String(meal._id),
+			per100g,
+			// A meal has one serving — itself, as assembled. That is also the portion
+			// the logger offers it in, so the card and the log agree on what "1×" means.
+			meta: { kind: 'custom', portionGrams: totalGrams },
+		});
+	}
+	return out;
 }
 
 /** How far back to look for foods eaten often enough to count as staples. */
@@ -88,10 +135,11 @@ const STAPLE_MIN_DAYS = 3;
  * kitchen, and it is far better evidence than a hardcoded list of foods a
  * nutritionist would pick.
  *
- * The site's own recipes are the one thing offered that has not been eaten before,
- * and only when a portion of one lands every macro on target — cooking a dish is a
- * much bigger ask than a second scoop of rice, so a merely-plausible fit is not
- * worth proposing. Those rows are pinned above the adjustments; see `GREAT_FIT_COST`.
+ * Whole dishes — the site's own recipes and the person's own saved meals — are the
+ * one thing offered that need not have been eaten before, and only when a portion of
+ * one lands every macro on target: making a dish is a much bigger ask than a second
+ * scoop of rice, so a merely-plausible fit is not worth proposing. Those rows are
+ * pinned above the adjustments; see `GREAT_FIT_COST`.
  *
  * The remaining macros can be passed in or left out. The nutrition page passes them,
  * because it knows them live — including edits made since the page loaded. Left out,
@@ -102,8 +150,8 @@ const STAPLE_MIN_DAYS = 3;
  *
  * No cache. The previous solver was O(n³) over a combined food pool and needed one;
  * this scans each candidate independently in 5 g steps — a few hundred of them once
- * the recipes are in, still a linear pass over a projection Mongo serves from one
- * indexed read — which is not worth the two bugs the cache carried (a key that
+ * the recipes and meals are in, still a linear pass over projections Mongo serves
+ * from two reads — which is not worth the two bugs the cache carried (a key that
  * ignored the requested date, and a date-type mismatch in the recents query).
  */
 export const GET: RequestHandler = async ({ url, locals }) => {
@@ -132,7 +180,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const dayEnd = new Date(dateStr + 'T23:59:59.999Z');
 	const stapleFrom = new Date(localDateOffset(-STAPLE_WINDOW_DAYS) + 'T00:00:00.000Z');
 
-	const [todaysRaw, historyRaw, recipes] = await Promise.all([
+	const [todaysRaw, historyRaw, recipes, meals] = await Promise.all([
 		FoodLogEntry.find({
 			createdBy: user.nickname,
 			date: { $gte: dayStart, $lte: dayEnd },
@@ -143,8 +191,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			date: { $gte: stapleFrom },
 			mealType: { $ne: 'water' },
 		}).lean() as any,
-		// Independent of the log, so it rides along rather than waiting for it.
+		// Independent of the log, so they ride along rather than waiting for it.
 		recipeCandidates(),
+		mealCandidates(user.nickname),
 	]);
 	// Entries are references; resolve to live nutrition (blended per100g, derived
 	// amountGrams, presentation source/sourceId) before the nudge logic reads them.
@@ -169,7 +218,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const staples = learnStaples(history, STAPLE_MIN_DAYS)
 		.filter(s => !loggedKeys.has(`${s.source}:${s.sourceId}`));
 	// Same rule for a dish already eaten today: more of it is a bump, not a new row.
-	const dishes = recipes.filter(r => !loggedKeys.has(`recipe:${r.sourceId}`));
+	const dishes = [...recipes, ...meals]
+		.filter(d => !loggedKeys.has(`${d.source}:${d.sourceId}`));
 
 	// Not told what is left: work it out from the goal this day was eaten against, the
 	// day's own log and its logged exercise. Deliberately the same shape as the page's

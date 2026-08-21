@@ -8,11 +8,11 @@
 	 * portion of something already on the plate or a food eaten on at least three
 	 * separate days recently.
 	 *
-	 * A row can also be one of the site's own recipes, which the server only offers
-	 * when a portion of it lands every macro on target. Those carry a link to the
-	 * recipe — a suggestion to cook something is worthless without the instructions —
-	 * and read in portions where the recipe says how many it makes, because nobody
-	 * plans dinner in grams.
+	 * A row can also be a whole dish — one of the site's own recipes, or a meal this
+	 * person saved — which the server only offers when a portion of it lands every
+	 * macro on target. Those link to the thing itself, because a suggestion to make
+	 * something is worthless without what is in it, and read in servings rather than
+	 * grams, because nobody plans dinner in grams.
 	 *
 	 * Applying is one tap and always reversible: a bump remembers the previous weight
 	 * and a new entry remembers its id, so undo is an exact inverse rather than a
@@ -25,9 +25,11 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import ChefHat from '@lucide/svelte/icons/chef-hat';
+	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import { toast } from '$lib/js/toast.svelte';
 	import { formatGrams as fmt } from '$lib/fitness/nutritionMath';
 	import { portionMultiplier } from '$lib/fitness/portions';
+	import { fitnessSlugs } from '$lib/js/fitnessI18n';
 
 	let {
 		nudges = [],
@@ -114,13 +116,13 @@
 	}
 
 	/**
-	 * How much of the recipe the suggested weight is, when the recipe states its
-	 * yield. "≈ 1 portion" is the actionable form of "265 g" — the grams stay next to
-	 * it, since that is what actually gets logged.
+	 * How much of the dish the suggested weight is: one of a recipe's stated portions,
+	 * or a share of a saved meal as assembled. "≈ 1 portion" is the actionable form of
+	 * "265 g" — the grams stay next to it, since that is what actually gets logged.
 	 * @param {any} n
 	 */
 	function portionHint(n) {
-		const grams = n.recipe?.portionGrams;
+		const grams = n.dish?.portionGrams;
 		if (!grams) return null;
 		const mult = portionMultiplier(n.deltaGrams, { description: '', grams });
 		if (mult == null || mult < 0.1) return null;
@@ -132,16 +134,26 @@
 	/** The name to show — recipes carry a translated one, other rows do not.
 	 *  @param {any} n */
 	function displayName(n) {
-		return isEn && n.recipe?.nameEn ? n.recipe.nameEn : n.name;
+		return isEn && n.dish?.nameEn ? n.dish.nameEn : n.name;
 	}
 
-	/** Route params for the recipe's own page, in the language this card is being
-	 *  read in. A recipe without an English slug keeps its German page.
+	/** Route params for a recipe's own page, in the language this card is being read
+	 *  in. A recipe without an English slug keeps its German page.
 	 *  @param {any} n */
 	function recipeRoute(n) {
 		return {
 			recipeLang: /** @type {'recipes' | 'rezepte'} */ (isEn ? 'recipes' : 'rezepte'),
-			name: isEn && n.recipe.slugEn ? n.recipe.slugEn : n.recipe.slug,
+			name: isEn && n.dish.slugEn ? n.dish.slugEn : n.dish.slug,
+		};
+	}
+
+	/** Route params for a saved meal's detail page, which lists what is in it. */
+	/** @param {any} n */
+	function mealRoute(n) {
+		return {
+			nutrition: /** @type {'nutrition' | 'ernaehrung'} */ (fitnessSlugs(isEn ? 'en' : 'de').nutrition),
+			source: n.source,
+			id: n.sourceId,
 		};
 	}
 
@@ -174,10 +186,10 @@
 	<section class="nudge-card">
 		<h3>{isEn ? 'Finish your day' : 'Tag abschliessen'}</h3>
 		<p class="sub">
-			{#if nudges.some((/** @type {any} */ n) => n.recipe)}
+			{#if nudges.some((/** @type {any} */ n) => n.dish)}
 				{isEn
-					? 'Built from what you have already logged, what you eat regularly, and recipes that fit what is left.'
-					: 'Basierend auf dem, was du bereits erfasst hast, regelmässig isst — und Rezepten, die zum Rest des Tages passen.'}
+					? 'Built from what you have already logged, what you eat regularly, and dishes that fit what is left.'
+					: 'Basierend auf dem, was du bereits erfasst hast, regelmässig isst — und Gerichten, die zum Rest des Tages passen.'}
 			{:else}
 				{isEn
 					? 'Built from what you have already logged and what you eat regularly.'
@@ -191,13 +203,15 @@
 				{@const isApplied = !!applied[key]}
 				{@const isBusy = busy === key}
 				<li class="row" class:is-applied={isApplied}>
-					<span class="icon" class:has-thumb={!isApplied && !!n.recipe?.image} aria-hidden="true">
+					<span class="icon" class:has-thumb={!isApplied && !!n.dish?.image} aria-hidden="true">
 						{#if isApplied}
 							<Check size={14} />
-						{:else if n.recipe?.image}
-							<img src={n.recipe.image} alt="" loading="lazy" />
-						{:else if n.recipe}
+						{:else if n.dish?.image}
+							<img src={n.dish.image} alt="" loading="lazy" />
+						{:else if n.dish?.kind === 'recipe'}
 							<ChefHat size={14} />
+						{:else if n.dish}
+							<UtensilsCrossed size={14} />
 						{:else if n.kind === 'bump'}
 							<ArrowUp size={14} />
 						{:else}
@@ -219,8 +233,10 @@
 						</span>
 						<span class="leaves">
 							{leftLabel(n.after)}
-							{#if n.recipe}
-								<a class="recipe-link" href={resolve('/[recipeLang=recipeLang]/[name]', recipeRoute(n))}>{isEn ? 'View recipe' : 'Zum Rezept'}</a>
+							{#if n.dish?.kind === 'recipe'}
+								<a class="dish-link" href={resolve('/[recipeLang=recipeLang]/[name]', recipeRoute(n))}>{isEn ? 'View recipe' : 'Zum Rezept'}</a>
+							{:else if n.dish}
+								<a class="dish-link" href={resolve('/fitness/[nutrition=fitnessNutrition]/food/[source]/[id]', mealRoute(n))}>{isEn ? 'View meal' : 'Zur Mahlzeit'}</a>
 							{/if}
 						</span>
 					</span>
@@ -304,7 +320,7 @@
 		color: var(--color-text-on-primary);
 	}
 
-	/* A recipe row shows the dish instead of a glyph — it is the fastest way to
+	/* A dish row shows the food itself instead of a glyph — it is the fastest way to
 	   recognise what is being proposed. */
 	.icon.has-thumb {
 		overflow: hidden;
@@ -352,16 +368,16 @@
 		color: var(--color-text-secondary);
 	}
 
-	.recipe-link {
+	.dish-link {
 		color: var(--color-primary);
 		text-decoration: none;
 		margin-left: 0.4rem;
 	}
-	.recipe-link::before {
+	.dish-link::before {
 		content: '· ';
 		color: var(--color-text-tertiary);
 	}
-	.recipe-link:hover {
+	.dish-link:hover {
 		text-decoration: underline;
 	}
 
