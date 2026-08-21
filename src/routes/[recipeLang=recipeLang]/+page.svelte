@@ -8,6 +8,8 @@
 	import RecipeBrowse from '$lib/components/recipes/RecipeBrowse.svelte';
 	import RecipeSearchField from '$lib/components/recipes/RecipeSearchField.svelte';
 	import { createRecipeBrowse } from '$lib/js/recipeBrowse.svelte';
+	import { applyParamsToBrowse, browseToParams, hasBrowseParams } from '$lib/js/browseParams';
+	import { recallFilters, rememberFilters } from '$lib/js/filterMemory';
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
 	let { data } = $props<{ data: PageData }>();
@@ -18,32 +20,38 @@
 
 	const browse = createRecipeBrowse(() => data.all_brief);
 
+	// Filters carried between visits, per tab and per language — the category and
+	// keyword values are the translated ones, so a German filter set would filter the
+	// English listing down to nothing.
+	const memoryKey = $derived(`recipes:listing:${lang}`);
+
 	// Deep links from elsewhere on the site (`?q=`, `?category=`, `?tag=`) land
-	// pre-filtered; after that the writer below owns the URL.
+	// pre-filtered; after that the writer below owns the URL. Arriving with no filters
+	// at all — the nav link — reopens the ones from a few minutes ago instead, which
+	// is the case the URL cannot carry: you left this page by following a link.
 	let urlApplied = $state(false);
 	$effect(() => {
 		if (urlApplied || typeof window === 'undefined') return;
 		const params = page.url.searchParams;
-		browse.query = params.get('q') ?? '';
-		browse.category = params.get('category');
-		for (const tag of params.getAll('tag')) browse.tags.add(tag);
-		if (params.get('season') === 'now') browse.inSeasonOnly = true;
+		const remembered = hasBrowseParams(params) ? null : recallFilters(memoryKey);
+		applyParamsToBrowse(browse, remembered != null ? new URLSearchParams(remembered) : params);
 		urlApplied = true;
 	});
 
-	// Keep the address bar in step so a filtered listing is shareable.
+	// Keep the address bar in step so a filtered listing is shareable, and keep the
+	// remembered set in step with it so the two can never disagree.
 	// `replaceState` rather than `goto`: toggling four keywords should not leave
 	// four back-button stops.
 	$effect(() => {
 		if (!urlApplied || typeof window === 'undefined') return;
 		const url = new URL(window.location.href);
-		const next = new URLSearchParams();
-		if (browse.query.trim()) next.set('q', browse.query.trim());
-		if (browse.category) next.set('category', browse.category);
-		for (const tag of [...browse.tags].sort()) next.append('tag', tag);
-		if (browse.inSeasonOnly) next.set('season', 'now');
-		if (next.toString() === url.searchParams.toString()) return;
-		url.search = next.toString();
+		const next = browseToParams(browse).toString();
+		// Written on every change rather than on the way out: there is no reliable
+		// "leaving" event for a link click, and this keeps the idle clock measuring
+		// time since the filters were last touched, which is what it is for.
+		rememberFilters(memoryKey, next);
+		if (next === url.searchParams.toString()) return;
+		url.search = next;
 		replaceState(url, page.state);
 	});
 

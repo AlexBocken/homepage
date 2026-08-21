@@ -130,3 +130,53 @@ test('the sheet closes on Escape and on a tap outside it', async ({ page }) => {
 	await page.locator('.scrim').click({ position: { x: 10, y: 10 } });
 	await expect(sheet).toBeHidden();
 });
+
+// Filters outlive leaving the listing: the address bar carries them while you are
+// here, and a per-tab memory brings them back when you return by a link, which is
+// the one route the URL cannot cover.
+
+test('a nutrition filter reaches the address bar, so a reload keeps it', async ({ page }) => {
+	await gotoHydrated(page, '/rezepte');
+	await page.getByRole('button', { name: 'Nährwerte' }).click();
+	await page.getByRole('button', { name: 'Wenig Kohlenhydrate' }).click();
+
+	await expect(page).toHaveURL(/c=0-30/);
+	const filtered = await cards(page).count();
+
+	await page.reload();
+	await expect.poll(() => cards(page).count()).toBe(filtered);
+	await expect(page.getByRole('button', { name: 'Wenig Kohlenhydrate' })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('filters come back when you leave by a link and return to a bare listing', async ({ page }) => {
+	await gotoHydrated(page, '/rezepte');
+	await page.getByRole('checkbox', { name: /Nur was jetzt Saison hat/ }).check();
+	await expect(page).toHaveURL(/season=now/);
+	const filtered = await cards(page).count();
+
+	// Away to a recipe, then back to the listing with no parameters at all — what
+	// clicking "Rezepte" in the nav does.
+	await gotoHydrated(page, '/rezepte/schokokuchen');
+	await gotoHydrated(page, '/rezepte');
+
+	await expect(page.getByRole('checkbox', { name: /Nur was jetzt Saison hat/ })).toBeChecked();
+	await expect.poll(() => cards(page).count()).toBe(filtered);
+	// The restored set is written back to the URL, so it stays shareable and the
+	// back button still works from here.
+	await expect(page).toHaveURL(/season=now/);
+});
+
+test('a cleared rail stays cleared on the next visit', async ({ page }) => {
+	await gotoHydrated(page, '/rezepte');
+	const all = await cards(page).count();
+
+	await page.getByRole('checkbox', { name: /Nur was jetzt Saison hat/ }).check();
+	await expect(page).toHaveURL(/season=now/);
+	await page.getByRole('checkbox', { name: /Nur was jetzt Saison hat/ }).uncheck();
+
+	await gotoHydrated(page, '/rezepte/schokokuchen');
+	await gotoHydrated(page, '/rezepte');
+
+	await expect(page.getByRole('checkbox', { name: /Nur was jetzt Saison hat/ })).not.toBeChecked();
+	await expect.poll(() => cards(page).count()).toBe(all);
+});
