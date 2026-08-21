@@ -8,10 +8,6 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Settings from '@lucide/svelte/icons/settings';
-	import Coffee from '@lucide/svelte/icons/coffee';
-	import Sun from '@lucide/svelte/icons/sun';
-	import Moon from '@lucide/svelte/icons/moon';
-	import Cookie from '@lucide/svelte/icons/cookie';
 	import Utensils from '@lucide/svelte/icons/utensils';
 	import Info from '@lucide/svelte/icons/info';
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
@@ -45,7 +41,10 @@
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
 	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
 	import MacroBreakdown from '$lib/components/fitness/MacroBreakdown.svelte';
+	import NutrientRow from '$lib/components/fitness/NutrientRow.svelte';
+	import { nutrientRows } from '$lib/fitness/nutrientRows';
 	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
+	import { MEAL_META } from '$lib/components/fitness/mealMeta';
 	import NudgeCard from '$lib/components/fitness/NudgeCard.svelte';
 	import CopyIcon from '@lucide/svelte/icons/copy';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
@@ -1820,45 +1819,19 @@
 				: dayTotals.fats[k] ?? 0;
 		}
 
-		/**
-		 * A row for a nutrient with no requirement of its own, measured against the
-		 * figure it is part of instead — see RELATIVE_TO. Null when nothing was eaten
-		 * to be a share of, which renders as the same dash an unmeasured row does.
-		 * @param {string} k
-		 */
-		function relativeShare(k) {
-			const parent = RELATIVE_TO[/** @type {keyof typeof RELATIVE_TO} */ (k)];
-			if (!parent) return null;
-			const whole = dayValue(parent);
-			if (!(whole > 0)) return { pct: null, parent };
-			return { pct: Math.round((dayValue(k) / whole) * 100), parent };
-		}
-
 		/** @param {string[]} keys */
 		function mkRows(keys) {
-			return keys.map(k => {
-				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
-				const value = dayValue(k);
-				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
-				const rel = relativeShare(k);
-				const pct = rel ? rel.pct : (goal > 0 ? Math.round(value / goal * 100) : null);
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false, relativeTo: rel?.parent ?? null };
-			});
+			// The shares-of-a-parent rows (retinol of vitamin A, starch of carbohydrate)
+			// are handled inside the shared builder, which the recipe pages use too.
+			return nutrientRows(keys, dayValue, dri, isEn);
 		}
 
 		// Trace minerals. A mineral nothing eaten today reported renders as a dash:
 		// counting it as zero would draw an empty bar against the reference intake and
 		// read as a deficiency, when it only means no source measured it.
 		function mkTraceRows() {
-			return TRACE_MINERAL_KEYS.map(k => {
-				const meta = NUTRIENT_META[k];
-				const raw = dayTotals.traces.totals[k];
-				const noData = typeof raw !== 'number';
-				const value = noData ? 0 : raw;
-				const goal = dri[k] ?? 0;
-				const pct = noData || goal <= 0 ? null : Math.round(value / goal * 100);
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData };
-			});
+			const traces = /** @type {Record<string, number | undefined>} */ (dayTotals.traces.totals);
+			return nutrientRows(TRACE_MINERAL_KEYS, k => traces[k], dri, isEn);
 		}
 
 		// Essential amino acids: measured against the WHO requirement
@@ -1896,14 +1869,7 @@
 
 		/** @param {string[]} keys */
 		function mkFatRows(keys) {
-			return keys.map(k => {
-				const meta = NUTRIENT_META[/** @type {keyof typeof NUTRIENT_META} */ (k)];
-				const value = dayValue(k);
-				const goal = dri[/** @type {keyof typeof dri} */ (k)] ?? 0;
-				const rel = relativeShare(k);
-				const pct = rel ? rel.pct : (goal > 0 ? Math.round(value / goal * 100) : null);
-				return { key: k, label: isEn ? meta.label : meta.labelDe, unit: meta.unit, value, goal, pct, bar: pct ?? 0, isMax: meta.isMax, essential: false, noData: false, relativeTo: rel?.parent ?? null };
-			});
+			return nutrientRows(keys, dayValue, dri, isEn);
 		}
 
 		// The shape of the fat eaten, with each omega total heading the acids it sums.
@@ -1941,12 +1907,7 @@
 		];
 	});
 
-	const mealMeta = {
-		breakfast: { icon: Coffee, color: 'var(--yellow)' },
-		lunch:     { icon: Sun, color: 'var(--orange)' },
-		dinner:    { icon: Moon, color: 'var(--purple)' },
-		snack:     { icon: Cookie, color: 'var(--green)' },
-	};
+	const mealMeta = MEAL_META;
 
 	/** @typedef {{ name: string, source: string, sourceId: string }} QuickFavorite */
 	/** @typedef {{ name: string, source: string, sourceId: string, mealType?: string, amountGrams?: number, per100g?: Record<string, number> }} RecentFood */
@@ -2266,27 +2227,13 @@
 					<p class="micro-note">{section.note}</p>
 				{/if}
 				{#each section.rows as row}
-					<a
-						class="micro-row is-link"
-						class:is-child={row.child}
-						class:is-group={row.header}
+					<NutrientRow
+						{row}
 						href={nutrientHref(row.key)}
-						data-sveltekit-noscroll
-					>
-						<span class="micro-label">{row.label}</span>
-						<div class="micro-bar-wrap">
-							<div class="micro-bar" class:is-max={row.isMax} style="width: {Math.min(row.bar, 100)}%"></div>
-						</div>
-						<span class="micro-value" class:is-na={row.noData}>
-							{#if row.noData}—{:else}{fmt(row.value)} {row.unit}{/if}
-						</span>
-						<span
-							class="micro-pct"
-							class:is-na={row.pct === null}
-							class:is-relative={row.relativeTo}
-							title={row.relativeTo ? relativeTitle(row.relativeTo) : null}
-						>{row.pct === null ? 'N/A' : `${row.pct}%`}</span>
-					</a>
+						child={row.child}
+						header={row.header}
+						{relativeTitle}
+					/>
 				{/each}
 			</div>
 		{/each}
@@ -3859,38 +3806,7 @@
 		text-transform: uppercase;
 		color: var(--color-text-secondary);
 	}
-	.micro-row {
-		display: grid;
-		grid-template-columns: 7rem 1fr 4rem 2.5rem;
-		align-items: center;
-		gap: 0.4rem;
-		padding: 0.2rem 0;
-		font-size: 0.78rem;
-	}
-	/* Rows link through to which foods supplied the nutrient — see nutrientHref. */
-	.micro-row.is-link {
-		color: inherit;
-		text-decoration: none;
-		border-radius: var(--radius-sm);
-		padding-inline: 0.3rem;
-		margin-inline: -0.3rem;
-		transition: background var(--transition-fast);
-	}
-	.micro-row.is-link:hover {
-		background: var(--color-bg-elevated);
-	}
-	.micro-label {
-		color: var(--color-text-primary);
-		font-weight: 500;
-	}
-	/* An omega total heads the acids it is the sum of; those sit indented under it. */
-	.micro-row.is-group .micro-label { font-weight: 700; }
-	.micro-row.is-child .micro-label {
-		padding-left: 0.85rem;
-		font-weight: 400;
-		color: var(--color-text-secondary);
-	}
-	.micro-source {
+		.micro-source {
 		display: flex;
 		align-items: center;
 		margin: 0 0 0.2rem;
@@ -3917,49 +3833,7 @@
 		line-height: 1.4;
 		color: var(--color-text-secondary);
 	}
-	.micro-bar-wrap {
-		height: var(--meter-sm);
-		background: var(--color-bg-tertiary);
-		border-radius: 3px;
-		overflow: hidden;
-	}
-	.micro-bar {
-		height: 100%;
-		background: var(--green);
-		border-radius: 3px;
-		transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-	}
-	.micro-bar.is-max {
-		background: var(--orange);
-	}
-	.micro-value {
-		text-align: right;
-		color: var(--color-text-tertiary);
-		font-size: 0.72rem;
-		font-variant-numeric: tabular-nums;
-	}
-	.micro-pct {
-		text-align: right;
-		font-weight: 700;
-		font-size: 0.72rem;
-		font-variant-numeric: tabular-nums;
-	}
-	/* A share of a parent figure, not of a target — lighter, so the eye does not read
-	   it as progress toward a reference intake. */
-	.micro-pct.is-relative {
-		font-weight: 500;
-		color: var(--color-text-secondary);
-	}
-	.micro-pct.is-na {
-		font-weight: 500;
-		color: var(--color-text-tertiary);
-	}
-	/* Nothing logged reported this nutrient — muted so a dash reads as "not
-	   measured" rather than as a value. */
-	.micro-value.is-na {
-		opacity: 0.55;
-	}
-
+	
 	/* ── Empty / No Goal State ── */
 	.no-goal {
 		text-align: center;

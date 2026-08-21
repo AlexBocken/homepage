@@ -1,8 +1,13 @@
 <script>
 	import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 	import X from '@lucide/svelte/icons/x';
+	import Plus from '@lucide/svelte/icons/plus';
 	import { toast } from '$lib/js/toast.svelte';
 	import { m } from '$lib/js/recipesI18n';
+	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
+	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
+	import { defaultMealType } from '$lib/fitness/meals';
+	import { localDateStr } from '$lib/js/localDate';
 	import { TRACE_MINERAL_KEYS } from '$lib/fitness/traceMinerals';
 	import { SPARSELY_MEASURED_KEYS } from '$lib/fitness/nutritionMath';
 	import { ingredientGrams } from '$lib/js/ingredientAmount';
@@ -49,21 +54,20 @@
 	});
 
 	let showDialog = $state(false);
-	let portionAmount = $state('1');
+	/** @type {'breakfast' | 'lunch' | 'dinner' | 'snack'} */
 	let mealType = $state('lunch');
 	let saving = $state(false);
-	let customGrams = $state('');
-	let useGrams = $state(false);
+	/** Canonical amount. The portion basis below is only how it is entered. */
+	let logGrams = $state(0);
+	/** @type {{ description: string, grams: number } | undefined} */
+	let logPortion = $state(undefined);
+	/** @type {HTMLDivElement | undefined} */
+	let dialogEl = $state(undefined);
 
 	const labels = $derived({
 		addToLog: t.add_to_food_log,
-		portions: t.portions_label,
-		grams: t.grams_label,
 		meal: t.meal_label,
-		breakfast: t.breakfast,
-		lunch: t.lunch,
-		dinner: t.dinner,
-		snack: t.snack,
+		amount: t.amount_label,
 		log: t.log_action,
 		cancel: t.cancel
 	});
@@ -175,42 +179,74 @@
 		return result;
 	});
 
-	// Grams for the selected portion
-	const portionGrams = $derived.by(() => {
-		if (useGrams) return Number(customGrams) || 0;
-		const numPortions = Number(portionAmount) || 0;
-		if (basePortionCount <= 0 || numPortions <= 0) return 0;
-		return (finishedWeightGrams / basePortionCount) * numPortions;
+	/**
+	 * How the amount can be entered: one portion as the recipe states it, or the whole
+	 * batch. Plain grams is always offered by the input itself, so a dish that names
+	 * no yield still logs — it just has nothing better to count in.
+	 */
+	const portionOptions = $derived.by(() => {
+		/** @type {{ description: string, grams: number }[]} */
+		const out = [];
+		if (finishedWeightGrams > 0 && basePortionCount > 0) {
+			out.push({ description: t.portion_basis, grams: finishedWeightGrams / basePortionCount });
+		}
+		if (finishedWeightGrams > 0) {
+			out.push({ description: t.whole_recipe, grams: finishedWeightGrams });
+		}
+		return out;
 	});
 
-	// Preview calories
-	const previewCal = $derived(portionGrams > 0 ? (per100g.calories ?? 0) * portionGrams / 100 : 0);
+	/** What the chosen amount adds to the day, in the diary's own terms. */
+	const preview = $derived.by(() => {
+		const f = logGrams / 100;
+		return {
+			calories: Math.round((per100g.calories ?? 0) * f),
+			protein: Math.round((per100g.protein ?? 0) * f),
+			fat: Math.round((per100g.fat ?? 0) * f),
+			carbs: Math.round((per100g.carbs ?? 0) * f),
+		};
+	});
 
 	function openDialog() {
-		portionAmount = '1';
-		mealType = 'lunch';
-		customGrams = '';
-		useGrams = false;
+		mealType = defaultMealType();
+		// Open on one portion, which is what someone about to eat this is logging.
+		const basis = portionOptions[0];
+		logPortion = basis;
+		logGrams = basis ? Math.round(basis.grams) : 100;
 		showDialog = true;
 	}
 
-	async function submit() {
-		const grams = portionGrams;
-		if (grams <= 0) return;
+	function closeDialog() {
+		showDialog = false;
+	}
 
+	/** @param {KeyboardEvent} e */
+	function onWindowKeydown(e) {
+		if (showDialog && e.key === 'Escape') closeDialog();
+	}
+
+	// Focus lands inside the dialog on open, so the keyboard and a screen reader both
+	// follow the thing that just appeared instead of staying on the page behind it.
+	$effect(() => {
+		if (showDialog) dialogEl?.focus();
+	});
+
+	async function submit() {
+		if (saving || !(logGrams > 0)) return;
 		saving = true;
 		try {
-			const today = new Date().toISOString().slice(0, 10);
 			const res = await fetch('/api/fitness/food-log', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					date: today,
+					date: localDateStr(),
 					mealType,
 					name: recipeName,
 					source: 'recipe',
 					sourceId: recipeId,
-					amountGrams: Math.round(grams),
+					amountGrams: Math.round(logGrams),
+					portions: portionOptions,
+					selectedPortion: logPortion,
 					per100g,
 				})
 			});
@@ -228,62 +264,71 @@
 	}
 </script>
 
+<svelte:window onkeydown={onWindowKeydown} />
+
 <button class="add-to-log-btn" onclick={openDialog} title={labels.addToLog}>
 	<UtensilsCrossed size={14} />
 	<span>{labels.addToLog}</span>
 </button>
 
 {#if showDialog}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="dialog-overlay" onclick={() => showDialog = false} onkeydown={(e) => e.key === 'Escape' && (showDialog = false)}>
-		<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-		<div class="dialog" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+	<div class="dialog-overlay">
+		<!-- The backdrop is a real button rather than a div with a click handler, so
+		     dismissing by tapping outside works from the keyboard too. -->
+		<button type="button" class="dialog-scrim" aria-label={labels.cancel} onclick={closeDialog}></button>
+		<div
+			class="dialog"
+			role="dialog"
+			aria-modal="true"
+			aria-label={labels.addToLog}
+			tabindex="-1"
+			bind:this={dialogEl}
+		>
 			<div class="dialog-header">
-				<h3>{labels.addToLog}</h3>
-				<button class="close-btn" onclick={() => showDialog = false}><X size={18} /></button>
+				<div class="dialog-title">
+					<h3>{labels.addToLog}</h3>
+					<p class="dialog-sub">{recipeName}</p>
+				</div>
+				<button class="close-btn" onclick={closeDialog} aria-label={labels.cancel}><X size={18} /></button>
 			</div>
 
 			<div class="dialog-body">
 				<div class="field">
-					<label for="log-meal">{labels.meal}</label>
-					<select id="log-meal" bind:value={mealType}>
-						<option value="breakfast">{labels.breakfast}</option>
-						<option value="lunch">{labels.lunch}</option>
-						<option value="dinner">{labels.dinner}</option>
-						<option value="snack">{labels.snack}</option>
-					</select>
+					<span class="field-label">{labels.meal}</span>
+					<MealTypePicker
+						value={mealType}
+						lang={isEnglish ? 'en' : 'de'}
+						showLabels
+						onchange={(meal) => (mealType = meal)}
+					/>
 				</div>
 
-				<div class="amount-toggle">
-					<button class:active={!useGrams} onclick={() => useGrams = false}>{labels.portions}</button>
-					<button class:active={useGrams} onclick={() => useGrams = true}>{labels.grams}</button>
+				<div class="field">
+					<span class="field-label">{labels.amount}</span>
+					<PortionAmountInput
+						bind:grams={logGrams}
+						bind:selectedPortion={logPortion}
+						portions={portionOptions}
+						onenter={submit}
+					/>
 				</div>
 
-				{#if useGrams}
-					<div class="field">
-						<label for="log-grams">{labels.grams}</label>
-						<input id="log-grams" type="number" bind:value={customGrams} min="1" />
-					</div>
-				{:else}
-					<div class="field">
-						<label for="log-portions">{labels.portions}</label>
-						<input id="log-portions" type="number" bind:value={portionAmount} min="0.25" step="0.25" />
-						{#if basePortionCount > 0}
-							<span class="portion-hint">{Math.round(portionGrams)}g</span>
-						{/if}
-					</div>
-				{/if}
-
-				{#if previewCal > 0}
+				{#if logGrams > 0}
 					<div class="preview">
-						{Math.round(previewCal)} kcal
+						<span class="preview-cal">{preview.calories}<span class="preview-unit">kcal</span></span>
+						<span class="preview-macros">
+							<span class="macro" style="--m: var(--green)">{preview.protein} g {t.protein}</span>
+							<span class="macro" style="--m: var(--orange)">{preview.fat} g {t.fat}</span>
+							<span class="macro" style="--m: var(--lightblue)">{preview.carbs} g {t.carbs}</span>
+						</span>
 					</div>
 				{/if}
 			</div>
 
 			<div class="dialog-actions">
-				<button class="btn-cancel" onclick={() => showDialog = false}>{labels.cancel}</button>
-				<button class="btn-primary" onclick={submit} disabled={saving || portionGrams <= 0}>
+				<button class="btn-cancel" onclick={closeDialog}>{labels.cancel}</button>
+				<button class="btn-primary" onclick={submit} disabled={saving || !(logGrams > 0)}>
+					<Plus size={16} />
 					{saving ? '…' : labels.log}
 				</button>
 			</div>
@@ -292,21 +337,30 @@
 {/if}
 
 <style>
+	/* An offer, not a call to action: an outlined pill in the primary colour, which
+	   reads as a button without competing with the recipe it sits in. It fills in on
+	   hover, arriving at the colour the dialog's own confirm button already uses. */
 	.add-to-log-btn {
-		background: none;
-		border: none;
-		cursor: pointer;
-		color: var(--color-primary, var(--nord10));
-		padding: 0;
 		display: inline-flex;
 		align-items: center;
-		gap: 0.3rem;
-		font-size: 0.85rem;
-		text-decoration: underline;
-		text-decoration-style: dotted;
+		gap: 0.4rem;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--color-text-secondary);
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
 	}
 	.add-to-log-btn:hover {
-		color: var(--nord15);
+		color: var(--color-primary);
+		border-color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+	}
+	.add-to-log-btn:active {
+		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
 	}
 
 	.dialog-overlay {
@@ -316,88 +370,135 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		padding: 1rem;
 		z-index: 1000;
 	}
+	.dialog-scrim {
+		position: absolute;
+		inset: 0;
+		border: none;
+		padding: 0;
+		background: transparent;
+		cursor: default;
+	}
 	.dialog {
+		position: relative;
 		background: var(--color-surface);
-		border-radius: 0.75rem;
-		width: 90%;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-lg);
+		width: 100%;
 		max-width: 360px;
 		overflow: hidden;
 	}
+	.dialog:focus {
+		outline: none;
+	}
+
 	.dialog-header {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		justify-content: space-between;
-		padding: 0.75rem 1rem;
+		gap: 0.5rem;
+		padding: 0.85rem 1rem 0.7rem;
 		border-bottom: 1px solid var(--color-border);
+	}
+	.dialog-title {
+		min-width: 0;
 	}
 	.dialog-header h3 {
 		margin: 0;
-		font-size: 1rem;
+		font-size: var(--text-base);
+		color: var(--color-text-primary);
+	}
+	/* Which dish is being logged, so the dialog stands on its own once it covers the
+	   recipe it was opened from. */
+	.dialog-sub {
+		margin: 0.1rem 0 0;
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.close-btn {
+		flex-shrink: 0;
 		background: none;
 		border: none;
 		color: var(--color-text-secondary);
 		cursor: pointer;
 		padding: 0.25rem;
+		border-radius: var(--radius-sm);
+	}
+	.close-btn:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
 	}
 
 	.dialog-body {
 		padding: 1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 0.9rem;
 	}
 	.field {
 		display: flex;
 		flex-direction: column;
+		gap: 0.35rem;
+	}
+	.field-label {
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--color-text-secondary);
+	}
+
+	/* What this does to the day, before committing to it. The three macro colours are
+	   the ones the diary uses for the same three figures. */
+	.preview {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.6rem;
+		border-radius: var(--radius-md);
+		background: var(--color-bg-tertiary);
+	}
+	.preview-cal {
+		display: flex;
+		align-items: baseline;
+		gap: 0.2rem;
+		font-size: 1.35rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+		font-variant-numeric: tabular-nums;
+	}
+	.preview-unit {
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+	}
+	.preview-macros {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.15rem 0.6rem;
+		font-size: 0.72rem;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	.macro {
+		display: inline-flex;
+		align-items: center;
 		gap: 0.25rem;
 	}
-	.field label {
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-	}
-	.field input,
-	.field select {
-		padding: 0.5rem;
-		background: var(--color-bg-tertiary);
-		border: 1px solid var(--color-border);
-		border-radius: 0.4rem;
-		color: var(--color-text-primary);
-		font-size: 0.9rem;
-	}
-
-	.amount-toggle {
-		display: flex;
-		border: 1px solid var(--color-border);
-		border-radius: 0.4rem;
-		overflow: hidden;
-	}
-	.amount-toggle button {
-		flex: 1;
-		padding: 0.4rem;
-		background: var(--color-bg-tertiary);
-		border: none;
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		font-size: 0.85rem;
-	}
-	.amount-toggle button.active {
-		background: var(--nord8);
-		color: white;
-	}
-
-	.portion-hint {
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-	}
-	.preview {
-		text-align: center;
-		font-size: 1.1rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
+	.macro::before {
+		content: '';
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: 50%;
+		background: var(--m);
 	}
 
 	.dialog-actions {
@@ -408,13 +509,20 @@
 		border-top: 1px solid var(--color-border);
 	}
 	.btn-primary {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 		padding: 0.45rem 1rem;
-		background: var(--nord8);
-		color: white;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
 		border: none;
-		border-radius: 0.4rem;
+		border-radius: var(--radius-pill);
 		cursor: pointer;
 		font-weight: 600;
+		transition: background var(--transition-fast);
+	}
+	.btn-primary:hover:not(:disabled) {
+		background: var(--color-primary-hover);
 	}
 	.btn-primary:disabled {
 		opacity: 0.5;
@@ -422,10 +530,15 @@
 	}
 	.btn-cancel {
 		padding: 0.45rem 1rem;
-		background: var(--color-bg-tertiary);
+		background: transparent;
 		border: 1px solid var(--color-border);
-		border-radius: 0.4rem;
+		border-radius: var(--radius-pill);
 		cursor: pointer;
+		color: var(--color-text-secondary);
+		transition: background var(--transition-fast);
+	}
+	.btn-cancel:hover {
+		background: var(--color-bg-elevated);
 		color: var(--color-text-primary);
 	}
 </style>

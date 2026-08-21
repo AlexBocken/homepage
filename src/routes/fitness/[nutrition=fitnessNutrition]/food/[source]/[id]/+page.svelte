@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { macroCaloriePercent, formatGrams as fmt, ALCOHOL_KCAL } from '$lib/fitness/nutritionMath';
-	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
+	import { defaultMealType } from '$lib/fitness/meals';
 	import { clearFoodSearchCache } from '$lib/components/fitness/FoodSearch.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
@@ -11,10 +11,6 @@
 	import Droplet from '@lucide/svelte/icons/droplet';
 	import Wheat from '@lucide/svelte/icons/wheat';
 	import Plus from '@lucide/svelte/icons/plus';
-	import Coffee from '@lucide/svelte/icons/coffee';
-	import Sun from '@lucide/svelte/icons/sun';
-	import Moon from '@lucide/svelte/icons/moon';
-	import Cookie from '@lucide/svelte/icons/cookie';
 	import Wine from '@lucide/svelte/icons/wine';
 	import ActionButton from '$lib/components/ActionButton.svelte';
 	import { toast } from '$lib/js/toast.svelte';
@@ -34,6 +30,7 @@
 	import CompositionBar from '$lib/components/fitness/CompositionBar.svelte';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import PortionAmountInput from '$lib/components/fitness/PortionAmountInput.svelte';
+	import MealTypePicker from '$lib/components/fitness/MealTypePicker.svelte';
 
 	let { data } = $props();
 
@@ -336,15 +333,6 @@
 	}
 
 	// --- Log to today's diary ---
-	/** @type {Array<'breakfast' | 'lunch' | 'dinner' | 'snack'>} */
-	const mealTypes = [...MEAL_TYPES];
-	const mealMeta = {
-		breakfast: { icon: Coffee, color: 'var(--yellow)' },
-		lunch:     { icon: Sun, color: 'var(--orange)' },
-		dinner:    { icon: Moon, color: 'var(--purple)' },
-		snack:     { icon: Cookie, color: 'var(--green)' },
-	};
-
 	let showLog = $state(false);
 	/** @type {'breakfast' | 'lunch' | 'dinner' | 'snack'} */
 	let logMealType = $state('lunch');
@@ -780,21 +768,7 @@
 			<p class="log-food-name">{food.nameDe ?? food.name}</p>
 
 			<!-- Meal type selector -->
-			<div class="fab-meal-select">
-				{#each mealTypes as meal (meal)}
-					{@const meta = mealMeta[meal]}
-					{@const MealIcon = meta.icon}
-					<button
-						class="fab-meal-btn"
-						class:active={logMealType === meal}
-						style="--mc: {meta.color}"
-						onclick={() => (logMealType = meal)}
-					>
-						<MealIcon size={14} />
-						<span>{t[meal]}</span>
-					</button>
-				{/each}
-			</div>
+			<MealTypePicker value={logMealType} {lang} showLabels onchange={(meal) => (logMealType = meal)} />
 
 			<!-- Amount, in portions or grams -->
 			<div class="log-amount-row">
@@ -1342,34 +1316,6 @@
 		font-size: 0.9rem;
 		font-weight: 600;
 		color: var(--color-text-secondary);
-	}
-	.fab-meal-select {
-		display: flex;
-		gap: 0.35rem;
-	}
-	.fab-meal-btn {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.2rem;
-		padding: 0.55rem 0.25rem;
-		border: 1px solid var(--color-border);
-		border-radius: 10px;
-		background: var(--color-bg-tertiary);
-		cursor: pointer;
-		color: var(--color-text-secondary);
-		font-size: 0.68rem;
-		font-weight: 600;
-		transition: border-color 0.15s, color 0.15s, background 0.15s;
-	}
-	.fab-meal-btn.active {
-		border-color: var(--mc);
-		color: var(--mc);
-		background: color-mix(in srgb, var(--mc) 8%, var(--color-bg-tertiary));
-	}
-	.fab-meal-btn:hover:not(.active) {
-		border-color: var(--color-text-secondary);
 	}
 	.log-amount-row {
 		display: flex;
