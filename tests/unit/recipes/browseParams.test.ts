@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { browseToParams, applyParamsToBrowse, hasBrowseParams } from '../../../src/lib/js/browseParams';
+import { browseToParams, applyParamsToBrowse, hasBrowseParams, canonicalParams } from '../../../src/lib/js/browseParams';
 import { createRecipeBrowse } from '../../../src/lib/js/recipeBrowse.svelte';
 import { MACRO_FILTER_DEFAULTS } from '../../../src/lib/js/recipeMacros';
 
@@ -106,6 +106,31 @@ describe('applyParamsToBrowse', () => {
 		expect(b.macro).toEqual(MACRO_FILTER_DEFAULTS);
 	});
 
+	// The script-free fallback is two separate range inputs, so a person can drag the
+	// lower one past the upper one.
+	it('reads a crossed pair as the range it describes', () => {
+		const b = browse();
+		applyParamsToBrowse(b, new URLSearchParams('pmin=80&pmax=20'));
+		expect(b.macro.proteinMin).toBe(20);
+		expect(b.macro.proteinMax).toBe(80);
+	});
+
+	it('accepts the separate bounds a plain form submits', () => {
+		const b = browse();
+		applyParamsToBrowse(b, new URLSearchParams('kcalmin=100&kcalmax=400'));
+		expect(b.macro.kcalMin).toBe(100);
+		expect(b.macro.kcalMax).toBe(400);
+	});
+
+	// The script-free lower slider runs on a reversed axis so the browser fills the
+	// half the filter keeps; its value arrives negated.
+	it('reads the reversed lower bound the fallback slider submits', () => {
+		const b = browse();
+		applyParamsToBrowse(b, new URLSearchParams('pminneg=-25&pmax=60'));
+		expect(b.macro.proteinMin).toBe(25);
+		expect(b.macro.proteinMax).toBe(60);
+	});
+
 	it('ignores nonsense rather than filtering to nothing', () => {
 		const b = browse();
 		applyParamsToBrowse(b, new URLSearchParams('month=13&month=abc&sort=sideways&p=x-y'));
@@ -113,6 +138,33 @@ describe('applyParamsToBrowse', () => {
 		expect(b.sort).toBe('season');
 		expect(b.macro.proteinMin).toBe(MACRO_FILTER_DEFAULTS.proteinMin);
 		expect(b.macro.proteinMax).toBe(MACRO_FILTER_DEFAULTS.proteinMax);
+	});
+});
+
+describe('canonicalParams', () => {
+	it('leaves a URL the app itself wrote alone', () => {
+		expect(canonicalParams(new URLSearchParams('p=25-60&category=Suppe'))).toBeNull();
+		expect(canonicalParams(new URLSearchParams(''))).toBeNull();
+	});
+
+	it('rewrites what a plain form submits into the spelling the app writes', () => {
+		const out = canonicalParams(new URLSearchParams('pminneg=-25&pmax=60&kcalmax=400'));
+		expect(out?.get('p')).toBe('25-60');
+		expect(out?.get('kcal')).toBe('0-400');
+		expect(out?.has('pminneg')).toBe(false);
+		expect(out?.has('pmax')).toBe(false);
+	});
+
+	it('keeps the filters that came along with it', () => {
+		const out = canonicalParams(new URLSearchParams('category=Suppe&tag=warm&pmax=60'));
+		expect(out?.get('category')).toBe('Suppe');
+		expect(out?.getAll('tag')).toEqual(['warm']);
+	});
+
+	it('drops a range that was submitted at its full extent', () => {
+		const out = canonicalParams(new URLSearchParams('pminneg=0&pmax=100&q=brot'));
+		expect(out?.has('p')).toBe(false);
+		expect(out?.get('q')).toBe('brot');
 	});
 });
 

@@ -3,6 +3,8 @@ import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
 import { getAllBriefRecipes, getBriefRecipesInSeasonOn, isOfflineDataAvailable } from '$lib/offline/db';
 import { rand_array } from '$lib/js/randomize';
 import { isRecipeInSeason } from '$lib/js/seasonRange';
+import { redirect } from '@sveltejs/kit';
+import { canonicalParams } from '$lib/js/browseParams';
 import type { PageLoad } from './$types';
 
 function addFavoriteStatus<T extends { _id: unknown }>(
@@ -30,7 +32,16 @@ async function loadFromIndexedDB() {
 	};
 }
 
-export const load: PageLoad = async ({ params, fetch, parent }) => {
+export const load: PageLoad = async ({ params, url, fetch, parent }) => {
+	// The rail's script-free form submits one field per input, so it arrives as
+	// `?pminneg=-25&pmax=60`. Rewrite it to the spelling the app itself writes before
+	// rendering anything, so nobody has to look at that URL or share it.
+	const canonical = canonicalParams(url.searchParams);
+	if (canonical) {
+		const target = canonical.toString();
+		redirect(307, target ? `${url.pathname}?${target}` : url.pathname);
+	}
+
 	const parentData = await parent();
 	const apiBase = `/api/${params.recipeLang}`;
 	const canUseOffline = browser && canUseOfflineData();

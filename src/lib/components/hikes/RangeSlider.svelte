@@ -287,11 +287,14 @@
 		cursor: pointer;
 	}
 
+	/* Track and thumb match the native range inputs the recipe rail falls back to
+	   when there is no script — same height, same radius, same two colours — so the
+	   two shapes of the same control cannot be told apart. */
 	.rs-rail,
 	.rs-fill {
 		position: absolute;
 		top: 50%;
-		height: 0.3rem;
+		height: 0.35rem;
 		transform: translateY(-50%);
 		border-radius: var(--radius-pill);
 	}
@@ -299,7 +302,7 @@
 	.rs-rail {
 		left: 0;
 		right: 0;
-		background: var(--color-bg-elevated);
+		background: var(--color-bg-tertiary);
 	}
 
 	.rs-fill {
@@ -309,15 +312,14 @@
 	.rs-thumb {
 		position: absolute;
 		top: 50%;
-		width: 1.05rem;
-		height: 1.05rem;
+		width: 0.95rem;
+		height: 0.95rem;
 		margin: 0;
 		padding: 0;
 		transform: translate(-50%, -50%);
 		border-radius: 50%;
-		background: var(--color-surface);
-		border: 2px solid var(--color-primary);
-		box-shadow: var(--shadow-sm);
+		background: var(--color-primary);
+		border: none;
 		cursor: grab;
 		appearance: none;
 		transition: scale var(--transition-fast);

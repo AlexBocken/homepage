@@ -25,16 +25,25 @@
 	// English listing down to nothing.
 	const memoryKey = $derived(`recipes:listing:${lang}`);
 
-	// Deep links from elsewhere on the site (`?q=`, `?category=`, `?tag=`) land
-	// pre-filtered; after that the writer below owns the URL. Arriving with no filters
-	// at all — the nav link — reopens the ones from a few minutes ago instead, which
-	// is the case the URL cannot carry: you left this page by following a link.
+	// Deep links from elsewhere on the site (`?q=`, `?category=`, `?tag=`, and the
+	// nutrition filter) land pre-filtered. Applied at init rather than in an effect, so
+	// the server renders the filtered grid: effects do not run there, and a URL the
+	// rail wrote would otherwise show the whole collection to anyone without
+	// JavaScript — and flash it to everyone else.
+	// svelte-ignore state_referenced_locally
+	applyParamsToBrowse(browse, page.url.searchParams);
+
+	// Arriving with no filters at all — the nav link — reopens the ones from a few
+	// minutes ago instead. That is the case the URL cannot carry, because you left
+	// this page by following a link, and it needs the browser: sessionStorage exists
+	// only on the client, so unlike the deep link above this has to wait for an effect.
 	let urlApplied = $state(false);
 	$effect(() => {
 		if (urlApplied || typeof window === 'undefined') return;
-		const params = page.url.searchParams;
-		const remembered = hasBrowseParams(params) ? null : recallFilters(memoryKey);
-		applyParamsToBrowse(browse, remembered != null ? new URLSearchParams(remembered) : params);
+		if (!hasBrowseParams(page.url.searchParams)) {
+			const remembered = recallFilters(memoryKey);
+			if (remembered) applyParamsToBrowse(browse, new URLSearchParams(remembered));
+		}
 		urlApplied = true;
 	});
 
@@ -277,7 +286,13 @@
 
 			<div class="below-hero">
 				<RecipeSearchField {browse} {lang} recipeLang={data.recipeLang} hero={true} />
-				<RecipeBrowse {browse} {lang} recipeLang={data.recipeLang} isLoggedIn={!!data.session?.user} />
+				<RecipeBrowse
+					facetPath={page.url.pathname}
+					{browse}
+					{lang}
+					recipeLang={data.recipeLang}
+					isLoggedIn={!!data.session?.user}
+				/>
 			</div>
 		</div>
 	</section>
@@ -290,7 +305,13 @@
 		<p class="subheading">{labels.subheading}</p>
 	</div>
 	<RecipeSearchField {browse} {lang} recipeLang={data.recipeLang} />
-	<RecipeBrowse {browse} {lang} recipeLang={data.recipeLang} isLoggedIn={!!data.session?.user} />
+	<RecipeBrowse
+		facetPath={page.url.pathname}
+		{browse}
+		{lang}
+		recipeLang={data.recipeLang}
+		isLoggedIn={!!data.session?.user}
+	/>
 
 	{#if !isEnglish}
 		<AddButton href={resolve('/rezepte/add')}></AddButton>

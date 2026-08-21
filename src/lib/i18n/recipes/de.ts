@@ -223,6 +223,9 @@ export const de = {
 	// Index filter rail
 	filters: 'Filter',
 	filters_reset: 'Alle zurücksetzen',
+	range_from: 'von',
+	range_to: 'bis',
+	filters_apply: 'Filter anwenden',
 	filters_show_results: 'Ergebnisse zeigen',
 	filters_close: 'Filter schliessen',
 	sort_label: 'Reihenfolge',
@@ -242,6 +245,7 @@ export const de = {
 	include_unknown_nutrition: 'Rezepte ohne Nährwerte einschliessen',
 	no_nutrition_data: 'Keine Nährwerte berechnet',
 	recipes_count_suffix: 'Rezepte',
+	show_all_recipes: 'Alle anzeigen',
 	clear_all_filters: 'Filter zurücksetzen',
 	tags_show_more_suffix: 'weitere',
 	tags_show_fewer: 'Weniger anzeigen',

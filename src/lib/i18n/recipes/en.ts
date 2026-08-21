@@ -223,6 +223,9 @@ export const en = {
 	// Index filter rail
 	filters: 'Filters',
 	filters_reset: 'Reset all',
+	range_from: 'from',
+	range_to: 'to',
+	filters_apply: 'Apply filters',
 	filters_show_results: 'Show results',
 	filters_close: 'Close filters',
 	sort_label: 'Order',
@@ -242,6 +245,7 @@ export const en = {
 	include_unknown_nutrition: 'Include recipes without nutrition data',
 	no_nutrition_data: 'No nutrition calculated',
 	recipes_count_suffix: 'recipes',
+	show_all_recipes: 'Show all',
 	clear_all_filters: 'Clear filters',
 	tags_show_more_suffix: 'more',
 	tags_show_fewer: 'Show fewer',

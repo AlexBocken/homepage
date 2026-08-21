@@ -10,6 +10,7 @@
 	 * Everything below is the same for all of them.
 	 */
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
 	import RecipeFilterRail from '$lib/components/recipes/RecipeFilterRail.svelte';
@@ -25,6 +26,12 @@
 		showFavoritesFilter?: boolean;
 		/** Season and icon listings show the icon rather than the photo. */
 		iconOverride?: boolean;
+		/**
+		 * Where the rail's filters link to for a reader with no script — the listing's
+		 * own path. Only pages that apply those parameters while rendering pass one;
+		 * see RecipeFilterRail.
+		 */
+		facetPath?: string | null;
 	}
 
 	let {
@@ -33,7 +40,8 @@
 		recipeLang,
 		isLoggedIn = false,
 		showFavoritesFilter = true,
-		iconOverride = false
+		iconOverride = false,
+		facetPath = null
 	}: Props = $props();
 
 	const t = $derived(m[lang]);
@@ -41,9 +49,18 @@
 
 	// Incremental rendering
 	const BATCH_SIZE = 24;
-	let visibleCount = $state(BATCH_SIZE);
+	// How many are rendered. The URL can ask for more, which is the only way to reach
+	// the second batch when the observer below has no script to run in: each press of
+	// the link at the foot of the grid comes back with a larger number.
+	const askedFor = Number(page.url.searchParams.get('shown'));
+	let visibleCount = $state(
+		Number.isInteger(askedFor) && askedFor > 0 ? Math.min(askedFor, 2000) : BATCH_SIZE
+	);
 	let sentinel = $state<HTMLElement | null>(null);
 	let filtersOpen = $state(false);
+	// The sheet's open state lives in a checkbox inside the rail; this is the id the
+	// trigger below points at, so opening the filters needs no script.
+	const filtersId = $props.id();
 
 	// Any change to the result set starts the page over from the first batch.
 	$effect(() => {
@@ -68,6 +85,23 @@
 	const visibleInSeason = $derived(visible.slice(0, Math.min(visibleCount, browse.inSeason.length)));
 	const visibleRest = $derived(visible.slice(visibleInSeason.length));
 	const hasMore = $derived(visibleCount < browse.results.length);
+
+	/**
+	 * The same listing with every result rendered, for a reader with no script.
+	 *
+	 * All of them rather than one more batch: with script the rest arrive by
+	 * scrolling, so paging through in twenty-fours would only be a way of making
+	 * someone press a link six times to reach what everyone else gets for free. The
+	 * whole set is already in memory either way — only the markup is being held back.
+	 *
+	 * The fragment lands them back at the foot of the grid rather than at the top.
+	 */
+	const moreHref = $derived.by(() => {
+		if (!facetPath || !hasMore) return null;
+		const next = new URLSearchParams(page.url.searchParams);
+		next.set('shown', String(browse.results.length));
+		return `${facetPath}?${next}#more`;
+	});
 
 	// ── Reserved height for the batches not rendered yet ──────────────────────
 	// Every filter's full result set is already in memory; only the DOM is being
@@ -158,6 +192,10 @@
 	   note on .hero-layer in the listing page. */
 	max-height: calc(100vh - 7rem);
 	overflow-y: auto;
+	/* The gutter is reserved whether or not the column currently scrolls: opening a
+	   section is what pushes it past the window's height, and without this the
+	   scrollbar arriving narrows the column and shifts every filter above it left. */
+	scrollbar-gutter: stable;
 	overscroll-behavior: contain;
 	/* Room for the range-slider thumbs, which overhang their track at 0 % and
 	   100 %; without it the scroll container gains a horizontal axis and the
@@ -210,7 +248,11 @@
 	text-align: center;
 	color: var(--color-text-secondary);
 }
-.empty button {
+/* Button or link to the same place, depending on whether the page can honour the
+   link without script — both read as the one way out of an empty listing. */
+.empty button,
+.empty .clear-filters {
+	display: inline-block;
 	margin-top: 1em;
 	background: var(--color-primary);
 	color: var(--color-text-on-primary);
@@ -218,11 +260,35 @@
 	border-radius: var(--radius-pill);
 	padding: 0.6em 1.4em;
 	font-size: 0.9rem;
+	text-decoration: none;
 	cursor: pointer;
 }
 
 .sentinel {
 	height: 1px;
+}
+
+/* The way to the next batch when the observer above cannot run. */
+.more-results {
+	display: none;
+}
+@media (scripting: none) {
+	.more-results {
+		display: block;
+		width: fit-content;
+		margin: 2rem auto 0;
+		padding: 0.6em 1.4em;
+		border-radius: var(--radius-pill);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-primary);
+		font-size: 0.9rem;
+		font-weight: 600;
+		text-decoration: none;
+	}
+	.more-results:hover {
+		background: var(--color-bg-elevated);
+	}
 }
 /* Holds the place of the rows still to come. Empty on purpose: it exists to be
    the right height, and shrinks to nothing as the cards it stands for arrive. */
@@ -300,17 +366,19 @@
 		<RecipeFilterRail
 			{browse}
 			{lang}
+			{facetPath}
 			showFavorites={isLoggedIn && showFavoritesFilter}
+			toggleId={filtersId}
 			bind:open={filtersOpen}
 		/>
 	</div>
 	<div bind:this={resultsEl}>
 		<div class="mobile-bar">
-			<button class="filters-trigger" onclick={() => (filtersOpen = true)}>
+			<label class="filters-trigger" for={filtersId}>
 				<SlidersHorizontal size={16} />
 				{t.filters}
 				{#if browse.activeCount > 0}<span class="badge">{browse.activeCount}</span>{/if}
-			</button>
+			</label>
 			<span class="result-count">{browse.results.length} {t.recipes_count_suffix}</span>
 		</div>
 
@@ -318,7 +386,16 @@
 			<p class="empty">
 				{t.no_recipes_found}<br />{t.try_other_search}
 				<br />
-				<button onclick={() => browse.reset()}>{t.clear_all_filters}</button>
+				<!-- The way out of a listing that shows nothing. A link to the unfiltered
+					 listing where the page can honour one, so it still works with no
+					 script — an empty state whose only escape does nothing is a dead end. -->
+				{#if facetPath}
+					<a class="clear-filters" href={facetPath} onclick={(e) => { e.preventDefault(); browse.reset(); }}>
+						{t.clear_all_filters}
+					</a>
+				{:else}
+					<button class="clear-filters" onclick={() => browse.reset()}>{t.clear_all_filters}</button>
+				{/if}
 			</p>
 		{:else}
 			{#if visibleInSeason.length > 0}
@@ -351,6 +428,13 @@
 			<div class="sentinel" bind:this={sentinel}></div>
 			{#if spacerHeight > 0}
 				<div class="spacer" style:height="{spacerHeight}px" aria-hidden="true"></div>
+			{/if}
+			{#if moreHref}
+				<!-- Only reachable with no script: with it, the sentinel above has
+				     already asked for the next batch by the time this would be read. -->
+				<a id="more" class="more-results" href={moreHref} data-sveltekit-noscroll>
+					{t.show_all_recipes} ({browse.results.length - visibleCount})
+				</a>
 			{/if}
 		{/if}
 	</div>

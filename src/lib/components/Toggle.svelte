@@ -90,7 +90,14 @@
 
 <div class="toggle-wrapper" style="--accent-color: {accentColor}">
 	{#if href}
-		<a {href} onclick={(e) => { e.preventDefault(); checked = !checked; }}>
+		<!-- The link is the no-JS path; the role and state are what make it read as the
+		     same control as the checkbox below rather than as a stray link. -->
+		<a
+			{href}
+			role="checkbox"
+			aria-checked={checked}
+			onclick={(e) => { e.preventDefault(); checked = !checked; onchange?.(); }}
+		>
 			<span class="toggle-track" class:checked></span>
 			<span>{label}</span>
 		</a>
