@@ -1,0 +1,394 @@
+{
+	"20230906_052721_05B0221E.jpg": {
+		"hash": "e1878bed",
+		"de": "Wanderer mit Stöcken auf steilem Pfad, umgeben von grüner Vegetation und gelben Wegweisern rechts im Bild.",
+		"en": "Hiker with poles on steep trail, surrounded by greenery and yellow signposts to the right in this scene.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_052726_E69268FC.jpg": {
+		"hash": "6761e828",
+		"de": "Wanderer auf Waldpfad mit gelben Wegweisern an Felswand, Septemberlicht durch Baumkronen fällt sanft herein.",
+		"en": "Hiker on forest trail beside yellow signposts; soft autumn light filters through trees along rocky slope in Salzburg region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_062430_6F3845CB.jpg": {
+		"hash": "afcac31b",
+		"de": "Der Blick durch Nadelbäume auf schneebedeckten Berggipfel unter klarem Himmel.",
+		"en": "View through pine trees to snow-capped peak under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_062443_9054EA34.jpg": {
+		"hash": "f8b9c2d2",
+		"de": "Blick durch Nadelbäume auf schneebedeckte Gipfel und bewaldete Hänge unter klarem Himmel.",
+		"en": "View through evergreen trees to snow-capped peaks and forested slopes under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_062455_49465CCA.jpg": {
+		"hash": "4422163f",
+		"de": "Zwei Wanderer vor Nadelbäumen mit Berggipfeln im Hintergrund bei klarem Himmel.",
+		"en": "Two hikers in front of evergreen trees with mountain peaks visible under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_070713_E156DA04.heic": {
+		"hash": "e2066a85",
+		"de": "Ein Wanderer sitzt auf einem Baumstamm vor Nadelwald und klarem Himmel im September.",
+		"en": "A hiker sits on a log in front of pine forest under clear blue sky in autumn.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_070715_C0E4521B.heic": {
+		"hash": "59712e43",
+		"de": "Wanderer sitzt auf Baumstamm vor Nadelwald und Felsen unter blauem Himmel.",
+		"en": "Hiker sits on a log in front of pine trees and rocks under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_084740_246D7220.jpg": {
+		"hash": "369abd3e",
+		"de": "Ein sonniger Tag mit grünen Hängen, dunklen Nadelbäumen und fernen Bergketten unter klarem Himmel.",
+		"en": "A sunny day with green slopes, dark evergreens and distant mountain ranges under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_084758_00EF8EA3.heic": {
+		"hash": "eaf25f9a",
+		"de": "Ein Wanderer mit Rucksack fotografiert von einem felsigen Gipfel aus die weite Berglandschaft unter blauem Himmel.",
+		"en": "A hiker with a backpack photographs the expansive mountain landscape from a rocky peak under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_084802_39E2C856.heic": {
+		"hash": "970e542e",
+		"de": "Wanderer mit Rucksack blickt auf steile Felswand und grüne Täler unter blauem Himmel.",
+		"en": "Hiker with backpack gazes at steep rock face and green valleys beneath blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_084802_59003E1F.jpg": {
+		"hash": "47c39b6a",
+		"de": "Steiler Fels links, grüner Hang rechts, weite Berglandschaft im Hintergrund unter blauem Himmel.",
+		"en": "Steep rock face left, green slope right, distant mountain range under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_085330_A22FFC29.heic": {
+		"hash": "c3914d69",
+		"de": "Ein steiler, felsiger Pfad führt über grüne Hänge mit Blick auf weitläufige Bergketten unter klarem blauen Himmel.",
+		"en": "A steep rocky trail winds over green slopes with a view of distant mountain ranges under clear blue skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_085334_4B949206.heic": {
+		"hash": "5ab6963d",
+		"de": "Holzterrasse mit Blick auf schneebedeckte Gipfel und grüne Täler unter blauem Himmel.",
+		"en": "Wooden terrace overlooking snow-capped peaks and green valleys under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_085336_60E582A2.heic": {
+		"hash": "67ec0a13",
+		"de": "Holzterrasse mit Blick auf schroffe Gipfel und grüne Hänge unter klarem Himmel.",
+		"en": "Wooden terrace overlooking rugged peaks and green slopes under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_090802_6C711921.jpg": {
+		"hash": "04ec4964",
+		"de": "Grün bewachsener Hang mit Felsen, dahinter schneebedeckte Gipfel und ein tiefes Tal unter blauem Himmel.",
+		"en": "Grassy slope with rocks overlooks snow-capped peaks and a deep valley under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_090811_450D2CB8.jpg": {
+		"hash": "014f7441",
+		"de": "Ein Wanderer mit Stock steht auf einem grasigen, felsigen Pfad vor bewaldeten Hängen unter blauem Himmel.",
+		"en": "A hiker stands on a grassy, rocky trail before forested slopes under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_092231_468CEDC5.jpg": {
+		"hash": "bc5f4d18",
+		"de": "Lächelnde Wanderin vor Kreuz auf felsigem Gipfel, blauer Himmel im Hintergrund.",
+		"en": "Smiling hiker in front of a cross on rocky summit under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_092246_0A6C9C4C.jpg": {
+		"hash": "a752d215",
+		"de": "Ein Kreuz mit Jesus auf felsigem Gipfel unter blauem Himmel.",
+		"en": "A cross with Jesus on a rocky peak under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_092341_A8877ACC.jpg": {
+		"hash": "d85aaf3f",
+		"de": "Weite Berglandschaft mit grünen Tälern, dunklen Wäldern und fernen Gipfeln unter klarem Himmel.",
+		"en": "Wide mountain landscape with green valleys, dark forests and distant peaks under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_092346_0E6A012D.jpg": {
+		"hash": "4fb5764e",
+		"de": "Felsiger Gipfelgrat mit Gras und Blick auf weite Täler unter blauem Himmel.",
+		"en": "Rocky ridge with grass, overlooking vast valleys under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_092349_8827C778.jpg": {
+		"hash": "cfc9da4e",
+		"de": "Der Gipfel zeigt felsiges Terrain mit grüner Vegetation unter klarem blauen Himmel.",
+		"en": "The summit shows rocky terrain with green vegetation under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_092407_1C24B7A4.jpg": {
+		"hash": "3ea2b7a7",
+		"de": "Untersberg-Gipfel mit 1973m-Plakette, felsiger Hang und grüner Landschaft im Hintergrund.",
+		"en": "Summit marker at Untersberg with plaque showing name and elevation, rocky slope and green valley beyond.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_092411_C65F0EE9.jpg": {
+		"hash": "9b6efece",
+		"de": "Ein Holzkreuz steht auf felsigem Gipfel mit weitem Blick über grüne Täler und Berge unter blauem Himmel.",
+		"en": "A wooden cross stands on a rocky peak with a wide view over green valleys and mountains under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_092932_CAB5896B.jpg": {
+		"hash": "c82f5480",
+		"de": "Grüne Felswände und niedrige Vegetation unter klarem blauen Himmel erstrecken sich über die Berglandschaft.",
+		"en": "Green rocky slopes with low vegetation stretch across the landscape under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_094924_EE6D7EA4.jpg": {
+		"hash": "7575cb1a",
+		"de": "Ein Wanderer steigt auf einem steinigen Pfad durch dichte Nadelbäume unter klarem blauem Himmel.",
+		"en": "A hiker ascends a rocky trail through dense evergreens under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_094926_B486BAD9.jpg": {
+		"hash": "16aaf1c5",
+		"de": "Ein Wanderer geht auf einem steinigen Pfad durch dichte Nadelbäume unter blauem Himmel bei sonnigem Wetter.",
+		"en": "A hiker walks along a rocky trail through dense evergreen trees under a clear blue sky on a sunny day.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_100843_D0C02925.jpg": {
+		"hash": "8e00e182",
+		"de": "Steile, felsige Bergflanken mit spärlicher Vegetation unter klarem Himmel.",
+		"en": "Steep rocky slopes dotted with sparse vegetation under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_100847_6206FA15.jpg": {
+		"hash": "2e3dfb7f",
+		"de": "Felsiger Gipfelhang mit spärlicher Vegetation unter klarem Himmel, im Hintergrund weitere Bergketten sichtbar.",
+		"en": "Rocky ridge with sparse vegetation under clear sky; distant mountain ranges visible in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_100849_64387568.jpg": {
+		"hash": "b19f3f73",
+		"de": "Felsiger Gipfelhang mit grüner Vegetation unter klarem blauen Himmel, im Hintergrund weitere Bergketten sichtbar.",
+		"en": "Rocky summit slope with green vegetation under a clear blue sky; distant mountain ranges visible in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_100855_689BDFB2.jpg": {
+		"hash": "f5fb5451",
+		"de": "Wanderin mit Stock auf felsigem Grat, Nadelgehölz im Vordergrund, weite Berglandschaft unter blauem Himmel.",
+		"en": "Hiker with trekking pole on rocky ridge, coniferous shrubs in foreground, expansive mountain landscape under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_100856_1889E1E6.jpg": {
+		"hash": "9fb55b30",
+		"de": "Wanderer mit Stock blickt auf grüne Täler und fernes Gebirge unter klarem Himmel.",
+		"en": "Hiker with pole gazes over green valleys and distant mountains under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_115449_D9280167.jpg": {
+		"hash": "e5bbb4f4",
+		"de": "Der Blick zeigt eine weite Berglandschaft mit grünen Tälern, felsigen Gipfeln und klarem blauen Himmel unter sonnigem Licht.",
+		"en": "The view shows a vast mountain landscape with green valleys, rocky peaks and clear blue sky under bright sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_115453_FF9FB33D.jpg": {
+		"hash": "e55bb766",
+		"de": "Steiler Felsgrat mit schmalem Wanderweg, grüner Vegetation und weitem Bergpanorama unter blauem Himmel.",
+		"en": "Rugged cliff edge with narrow trail, green vegetation and distant mountain panorama under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_115515_625E98A9.jpg": {
+		"hash": "205c7bff",
+		"de": "Weitläufige Berglandschaft mit grünen Tälern, felsigen Gipfeln und klarem blauen Himmel im Hintergrund.",
+		"en": "Expansive mountain landscape with green valleys, rocky peaks and a clear blue sky in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120305_B3372762.jpg": {
+		"hash": "55009f2f",
+		"de": "Der Eingang zur Schellenberger Eishöhle ragt in eine felsige Wand, umgeben von grüner Vegetation und Steinen.",
+		"en": "The entrance to the cave opens into a rocky cliff face, surrounded by greenery and scattered stones.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120307_4EBFDB9D.jpg": {
+		"hash": "77a2ed4a",
+		"de": "Ein dunkler Höhleneingang in einer felsigen Wand, umgeben von Felsen und grüner Vegetation am Fusse eines Steigs.",
+		"en": "A dark cave entrance framed by rocky cliffs and green vegetation at the base of a trail leading into shadowed depths.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120340_FC23F3BD.jpg": {
+		"hash": "ef7cd5bd",
+		"de": "Zwei Wanderer mit Helmen betreten eine dunkle Höhle an felsigem Gelände im Untersberggebiet.",
+		"en": "Two hikers in helmets enter a dark cave entrance amid rocky terrain on the Untersberg hike.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120413_0636F349.jpg": {
+		"hash": "cd239a60",
+		"de": "Ein Höhleneingang mit steiniger Erde, einem Metallsteg und einer kleinen Wasseransammlung im Vordergrund.",
+		"en": "Cave entrance with rocky ground, metal stairs, and a small pool of water in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120416_42996E9C.jpg": {
+		"hash": "349dc053",
+		"de": "Wanderer steigen in einer Höhle mit Metallgeländern und Felswänden abwärts.",
+		"en": "Hikers descend into a cave with metal railings and rocky walls.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120458_27590A56.jpg": {
+		"hash": "8af36d88",
+		"de": "Wanderer in einer Höhle mit Holzgeländern und grünen Planen an felsigen Wänden.",
+		"en": "Hikers inside a cave with wooden railings and green tarps against rocky walls.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120540_5FAFB03A.jpg": {
+		"hash": "29631fd4",
+		"de": "Ein Wanderer in einer Eishöhle mit Holzgeländern und Steilwänden aus Fels.",
+		"en": "A hiker stands inside an ice cave with wooden railings and steep rock walls.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120700_94E80A93.jpg": {
+		"hash": "38905394",
+		"de": "Ein langer, aus Holzplanken bestehender Weg mit Metallstangen an den Seiten auf einem staubigen Untergrund.",
+		"en": "A long wooden plank path flanked by metal rods on a dusty ground surface.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_120908_31A03092.jpg": {
+		"hash": "6edba8bc",
+		"de": "Wanderer in Eishöhle mit Metalltreppe, Felswänden und Eisblöcken im Vordergrund.",
+		"en": "Hiker stands near ice cave entrance with metal stairs and rock walls visible.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_121451_F6205989.jpg": {
+		"hash": "5980a651",
+		"de": "Wanderer in Eishöhle mit hellem Eis und steilem Gang, Licht von Taschenlampen beleuchtet den Weg.",
+		"en": "Hikers explore an ice cave with bright ice and steep passage, lit by headlamps along the trail.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_121541_AECBB30E.jpg": {
+		"hash": "94416c58",
+		"de": "Wanderer in blauer Jacke und Helm durch enge Eisgrotte mit steinigen Wänden.",
+		"en": "Hiker in blue jacket and helmet navigating narrow ice cave with rocky walls.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_121605_5A0DD8B1.jpg": {
+		"hash": "95f330f4",
+		"de": "Wanderer in Eishöhle mit Stöcken, Felswand rechts, künstliches Licht.",
+		"en": "Hikers inside ice cave using poles; rock wall on right, artificial light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_121832_EB9FD52A.jpg": {
+		"hash": "c136ba2d",
+		"de": "Eishöhle mit glitzerndem Eis, dunklen Wänden und einem kleinen schwarzen Objekt am Boden.",
+		"en": "Ice cave interior with glistening ice walls, dark recesses and a small black object on the floor.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_122022_87ABAD69.jpg": {
+		"hash": "db9e9085",
+		"de": "Dunkle Eishöhle mit schichtiger Struktur und feinem Bodenbelag im Lichtstrahl.",
+		"en": "Dark ice cave interior showing layered walls under a focused beam of light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_122103_A68A48A6.jpg": {
+		"hash": "36be436e",
+		"de": "Eine Eishöhle mit geschichteten Gesteinsschichten und hellem Licht von oben.",
+		"en": "An ice cave featuring layered rock strata illuminated by light from above.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_122138_92DF9D67.jpg": {
+		"hash": "98c8327d",
+		"de": "Ein schmaler, dunkler Höhlengang mit glatter Eiswand und steiniger Decke führt in die Tiefe.",
+		"en": "A narrow cave passage with smooth ice wall and rocky ceiling leads into darkness ahead.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_122147_FA50788F.jpg": {
+		"hash": "f7706022",
+		"de": "Die Eishöhle zeigt geschichtete Eiswände mit braunen und weissen Schichten, umgeben von Felsbrocken im Schatten.",
+		"en": "The ice cave features layered walls of brown and white ice, surrounded by scattered rocks in shadow.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_122612_E4158221.jpg": {
+		"hash": "9318cced",
+		"de": "Riss im Fels mit bläulichem Eisrest, umgeben von rauem Gestein und Schattenfalten.",
+		"en": "A fissure in the rock with a blue-tinged ice remnant surrounded by rough stone and shadow folds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_123017_9F18AFE4.jpg": {
+		"hash": "a1676197",
+		"de": "Eine orange Kletterleine ist an einem Holzbalken in einer felsigen Höhle befestigt, mit kühlem Licht von oben.",
+		"en": "An orange climbing rope is tied to a wooden beam inside a rocky cave, illuminated by cool overhead light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_123112_5BB7148E.jpg": {
+		"hash": "5c7e492d",
+		"de": "Ein heller Lichtkegel beleuchtet rauhe Felswände in einer engen Höhle mit dunklen Spalten im Hintergrund.",
+		"en": "A bright beam of light illuminates rough rock walls inside a narrow cave with dark crevices behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"20230906_123411_1906CD72.jpg": {
+		"hash": "7703356c",
+		"de": "Wanderer halten einen grossen Felsblock in einer Eishöhle, umgebend von Eis und Stein.",
+		"en": "Hikers hold a large rock inside an ice cave surrounded by ice and stone.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"cover.jpg": {
+		"hash": "a2e7d14d",
+		"de": "Wanderer mit Rucksack vor steilem Fels und Bergpanorama unter blauem Himmel. (59 Zeichen)",
+		"en": "Hiker with backpack stands before a cliff and mountain view under blue sky. (73 characters)",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	}
+}

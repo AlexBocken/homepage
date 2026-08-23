@@ -1276,7 +1276,30 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	const { bbox, centroid } = computeBboxAndCentroid(track);
 	const { previewPolyline, previewBreaks } = buildPreview(gpxStages);
 
-	const geo = await reverseGeocode(centroid[0], centroid[1], cache);
+	// Copied, not aliased: reverseGeocode hands back the cache entry itself, and
+	// the frontmatter overrides below must not be written back to the cache.
+	const geo: GeocodeResult = { ...(await reverseGeocode(centroid[0], centroid[1], cache)) };
+
+	// A hike can straddle a border — the Untersberg starts in Bavaria and ends
+	// above Salzburg — and the centroid then files it on whichever side happens
+	// to hold more track. `country`, `state` and `region` in the frontmatter
+	// override the geocode for those cases. Setting a country other than the
+	// one that was found drops the canton with it: a Swiss canton is only
+	// meaningful while the hike is filed in Switzerland.
+	const fmText = (key: string): string | null => {
+		const v = fm[key];
+		return typeof v === 'string' && v.length > 0 ? v : null;
+	};
+	const countryOverride = fmText('country')?.toUpperCase() ?? null;
+	const stateOverride = fmText('state');
+	const regionOverride = fmText('region');
+	if (countryOverride && countryOverride !== geo.country) {
+		geo.canton = null;
+		geo.municipality = null;
+	}
+	geo.country = countryOverride ?? geo.country;
+	geo.state = stateOverride ?? geo.state;
+	geo.region = regionOverride ?? geo.region;
 
 	// Process images
 	const imageFiles: string[] = [];
