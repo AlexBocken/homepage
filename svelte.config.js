@@ -34,13 +34,15 @@ const config = {
 			register: false
 		},
 		prerender: {
-			// The only intentionally-static pages are /hikes (prerender=true) and
-			// the /errors/[status] set (via that route's EntryGenerator). With the
-			// crawler on, it follows the global nav out of /hikes and tries to
-			// prerender the whole dynamic, DB-/ML-backed app — which runs the
-			// forked prerender worker out of heap (ERR_WORKER_OUT_OF_MEMORY) and
-			// fails the build. Disable crawling: the prerendered set is then driven
-			// entirely by `prerender = true` + EntryGenerator.
+			// The only intentionally-static pages are the /errors/[status] set (via
+			// that route's EntryGenerator). /hikes used to be prerendered too, until
+			// that turned out to bake `session: null` into its payload — see the
+			// comment in src/routes/hikes/+page.ts. With the crawler on, it follows
+			// the global nav and tries to prerender the whole dynamic, DB-/ML-backed
+			// app — which runs the forked prerender worker out of heap
+			// (ERR_WORKER_OUT_OF_MEMORY) and fails the build. Disable crawling: the
+			// prerendered set is then driven entirely by `prerender = true` +
+			// EntryGenerator.
 			crawl: false,
 			handleHttpError: ({ path, message }) => {
 				// Defensive: hike image binaries live in `hikes-assets/`, outside

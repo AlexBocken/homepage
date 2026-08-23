@@ -124,8 +124,8 @@
 	// One-shot per mount: set the slider ceilings to the actual data maxes.
 	// Runs once after `data.hikes` is non-empty; the inner reads of every
 	// `distanceKm`/`durationMin`/etc. fall under the same effect so a
-	// subsequent data-only update would also refresh the defaults — but for
-	// this prerendered, static-data page that's effectively a no-op.
+	// subsequent data-only update would also refresh the defaults — but the
+	// hike list comes from a build-time manifest, so that never fires.
 	let filterDefaultsApplied = false;
 	$effect(() => {
 		if (filterDefaultsApplied) return;
