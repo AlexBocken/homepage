@@ -130,7 +130,11 @@
 		//   paired UA transitions handle them).
 		const intoHikesIndex = toId === '/hikes' && fromId !== '/hikes';
 		const outOfHikesIndex = fromId === '/hikes' && toId !== '/hikes';
-		const intoHikeDetail = toId === '/hikes/[slug]';
+		// Excluded for slug → slug the same way `outOfHikeDetail` is: both sides
+		// have a hero and a below-map sheet, so every group is paired and the
+		// push has nothing unpaired to move. Tagging it would shear the pushed
+		// root against those paired groups animating in place.
+		const intoHikeDetail = toId === '/hikes/[slug]' && fromId !== '/hikes/[slug]';
 		const outOfHikeDetail = fromId === '/hikes/[slug]' && toId !== '/hikes/[slug]';
 
 		return new Promise((resolve) => {
