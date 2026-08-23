@@ -1,7 +1,7 @@
 /**
  * Build-time static hero-map renderer for individual hikes.
  *
- * Fetches the Swisstopo raster tiles covering each hike's bbox, composites
+ * Fetches the raster tiles covering each hike's bbox, composites
  * them into one PNG via sharp, draws the trail polyline + start/end markers
  * on top, and emits a single WebP. The result is served as `<img>` in the
  * detail page's hero so the user sees an exact replica of the live map
@@ -15,18 +15,21 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
+import { TILE_BASE } from '../src/lib/data/mapTiles.js';
 
 const TILE_SIZE = 256;
-const TILE_CACHE_DIR = path.resolve(process.cwd(), 'scripts', '.cache', 'swisstopo-tiles');
-// Swisstopo serves the WMTS tiles from wmts10–wmts100. Spread across a
-// couple of sub-domains so we don't hammer a single origin during initial
-// build (browsers see different hosts; the disk cache makes follow-up
-// builds a non-event regardless).
-const SUBDOMAINS = ['wmts10', 'wmts20'] as const;
+const TILE_CACHE_DIR = path.resolve(process.cwd(), 'scripts', '.cache', 'map-tiles');
 const USER_AGENT = 'bocken-homepage build-hikes';
 
-function tileUrl(sub: string, layer: string, z: number, x: number, y: number): string {
-	return `https://${sub}.geo.admin.ch/1.0.0/${layer}/default/current/3857/${z}/${x}/${y}.jpeg`;
+// Same proxy the browser uses (`tile-proxy/`), which picks swisstopo inside
+// CH/LI and a global provider everywhere else. Talking to swisstopo directly —
+// as this did — meant every tile outside Switzerland came back 4xx, so a hike
+// abroad rendered its trail on a blank sheet while Leaflet then drew a real
+// map over it. Going through the proxy also guarantees the prerendered hero
+// and the live map are the same picture, which is the only reason the hero
+// exists.
+function tileUrl(layer: string, z: number, x: number, y: number): string {
+	return `${TILE_BASE}/${layer}/${z}/${x}/${y}`;
 }
 
 /** Web Mercator: lng/lat → absolute pixel coordinate at a given zoom. */
@@ -49,10 +52,10 @@ async function pathExists(p: string): Promise<boolean> {
 }
 
 /** `null` = network failure (we'll count it against the abort threshold).
- * `'blank'` = HTTP 4xx, i.e. the tile is intentionally not served — for
- * the Swisstopo Pixelkarte that means we're outside Switzerland's bbox.
- * The overview hero canvas extends into DE/IT/FR, so we treat blanks as
- * "OK, just nothing there" rather than failures. */
+ * `'blank'` = HTTP 4xx, i.e. the tile is intentionally not served. With the
+ * proxy covering the globe this should be rare — it still happens for the
+ * CH/LI-only `dufour` layer, and for zoom levels a provider doesn't carry —
+ * so blanks stay "OK, just nothing there" rather than failures. */
 type TileResult = Buffer | 'blank' | null;
 
 async function fetchTile(
@@ -61,20 +64,23 @@ async function fetchTile(
 	x: number,
 	y: number
 ): Promise<TileResult> {
+	// Layer name is part of the key, so the switch away from swisstopo's WMTS
+	// ids invalidates the old entries rather than serving them under new
+	// semantics.
 	const key = `${layer.replace(/[^a-z0-9]/gi, '_')}_${z}_${x}_${y}.jpeg`;
 	const cachePath = path.join(TILE_CACHE_DIR, key);
 	try {
 		return await fs.readFile(cachePath);
 	} catch { /* miss */ }
 
-	const sub = SUBDOMAINS[(x + y) % SUBDOMAINS.length];
 	try {
-		const res = await fetch(tileUrl(sub, layer, z, x, y), {
+		const res = await fetch(tileUrl(layer, z, x, y), {
 			headers: { 'User-Agent': USER_AGENT }
 		});
 		if (!res.ok) {
-			// 4xx means "we don't serve this tile" (out-of-bounds for the
-			// Swiss data set). Anything else (5xx) is a real failure.
+			// 4xx means "we don't serve this tile". Anything else (5xx) is a
+			// real failure — including the proxy being down, which would
+			// otherwise quietly reproduce the blank heroes this replaced.
 			if (res.status >= 400 && res.status < 500) return 'blank';
 			if (process.env.STATIC_MAP_DEBUG) {
 				console.warn(`[staticHikeMap] tile ${z}/${x}/${y} HTTP ${res.status}`);
@@ -191,8 +197,8 @@ export interface RenderStaticMapOpts {
 	outputPath: string;
 	width?: number;
 	height?: number;
-	/** Swisstopo WMTS layer ID. Defaults to the schematic Pixelkarte (the
-	 * same base layer Leaflet starts with on the detail page). */
+	/** Proxy layer name — `karte`, `luftbild` or `dufour`. Defaults to the
+	 * schematic map, the same base layer Leaflet starts with. */
 	layer?: string;
 	/** Optional image-point markers to burn into the SVG overlay alongside
 	 * the start/end dots. Pass only the points safe to render in a public-
@@ -284,7 +290,7 @@ async function composeBaseMap(
 export async function renderStaticMap(opts: RenderStaticMapOpts): Promise<boolean> {
 	const width = opts.width ?? 1600;
 	const height = opts.height ?? 1000;
-	const layer = opts.layer ?? 'ch.swisstopo.pixelkarte-farbe';
+	const layer = opts.layer ?? 'karte';
 	const { zoom, originX, originY } = opts.pose;
 
 	if (opts.polyline.length < 2) return false;
@@ -378,7 +384,7 @@ export interface RenderOverviewMapOpts {
 export async function renderOverviewMap(opts: RenderOverviewMapOpts): Promise<boolean> {
 	const width = opts.width ?? 1600;
 	const height = opts.height ?? 1000;
-	const layer = opts.layer ?? 'ch.swisstopo.pixelkarte-farbe';
+	const layer = opts.layer ?? 'karte';
 	const { zoom, originX, originY } = opts.pose;
 
 	const drawable = opts.polylines.filter((p) => p.points.length >= 2);

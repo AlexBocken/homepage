@@ -788,7 +788,10 @@ const HERO_BADGE_ICON_DARK = '#2e3440';
 // stroke widths, marker shapes, ...) so the per-hike hash invalidates and
 // existing files get re-rendered on the next build.
 //   v6: per-hike trail colour switched from Nord red to SAC-tier palette.
-const HERO_RENDER_VERSION = 6;
+//   v7: tiles come from the maps.bocken.org proxy instead of swisstopo
+//       directly, so hikes outside CH/LI finally get a basemap rather than a
+//       blank sheet. Every existing hero has to be re-rendered.
+const HERO_RENDER_VERSION = 7;
 
 // Narrow-viewport variant for phones (≤ 560 px CSS width). Same renderer,
 // but the pose is picked for a phone-sized container so the auto-fit zoom
@@ -849,7 +852,9 @@ const HERO_VARIANT_SPECS: ReadonlyArray<{
 
 // Bump when the overview renderer's output changes — e.g. stroke widths,
 // palette tweaks, framing constants in `processOverview`.
-const OVERVIEW_RENDER_VERSION = 2;
+//   v3: tiles now come from the proxy, which fills in everything the overview
+//       canvas covers outside Switzerland.
+const OVERVIEW_RENDER_VERSION = 3;
 
 type OverviewVariantSpec = {
 	name: HeroVariant;
