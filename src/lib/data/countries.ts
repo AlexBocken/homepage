@@ -4,7 +4,8 @@
  * free-form country name (any common language) and resolves it to a stable
  * record with the code, a German display name, and the flag SVG URL.
  *
- * The flags live in `static/countries/<code>.svg` (lowercase ISO code).
+ * The flags live in `static/regions/<code>/<code>.svg` (lowercase ISO code),
+ * alongside that country's subdivision arms in `<code>/states/`.
  * Swiss hikes are grouped by canton instead — see `resolveHikeArea`.
  */
 
@@ -38,7 +39,8 @@ function normalise(s: string): string {
 
 const BY_NAME = new Map<string, Country>();
 for (const [code, name, ...alts] of COUNTRY_TABLE) {
-	const country: Country = { code, name, flagUrl: `/countries/${code.toLowerCase()}.svg` };
+	const cc = code.toLowerCase();
+	const country: Country = { code, name, flagUrl: `/regions/${cc}/${cc}.svg` };
 	BY_NAME.set(normalise(name), country);
 	BY_NAME.set(normalise(code), country);
 	for (const alt of alts) BY_NAME.set(normalise(alt), country);

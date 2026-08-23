@@ -1,6 +1,6 @@
 /**
  * One-shot fetch of the 26 Swiss cantonal coats of arms (Wappen) from
- * Wikimedia Commons into `static/cantons/<iso-code>.svg`. Files are
+ * Wikimedia Commons into `static/regions/ch/states/<iso-code>.svg`. Files are
  * public-domain Swiss official insignia (PD-CH-coat-of-arms); we keep
  * the source filename in a header comment for traceability.
  *
@@ -51,7 +51,7 @@ const CANTONS: CantonEntry[] = [
 	{ code: 'zh', commonsFile: 'Wappen Zürich matt.svg' }
 ];
 
-const OUT_DIR = path.resolve(process.cwd(), 'static', 'cantons');
+const OUT_DIR = path.resolve(process.cwd(), 'static', 'regions', 'ch', 'states');
 const UA = 'bocken-homepage cantons-downloader (https://bocken.org)';
 
 async function exists(p: string): Promise<boolean> {

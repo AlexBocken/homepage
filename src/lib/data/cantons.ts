@@ -5,14 +5,16 @@
  * carrying the ISO code, a short label for tooltips, and the URL of the
  * pre-downloaded coat-of-arms SVG.
  *
- * The 26 SVGs live in `static/cantons/<iso-code>.svg` — fetched once by
- * `scripts/download-cantons.ts` and committed.
+ * The 26 SVGs live in `static/regions/ch/states/<iso-code>.svg` — fetched once
+ * by `scripts/download-cantons.ts` and committed. That tree holds every
+ * region emblem the site uses: `<cc>/<cc>.svg` is a country flag,
+ * `<cc>/states/<code>.svg` a subdivision's arms.
  */
 
 export type Canton = {
 	/** ISO 3166-2:CH code, lowercase (e.g. 'ar'). */
 	code: string;
-	/** Canonical German name (matches the `static/cantons/` filename map). */
+	/** Canonical German name (matches the `static/regions/ch/states/` filename map). */
 	name: string;
 	/** Short label used in tooltips / compact UIs. */
 	abbr: string;
@@ -69,7 +71,7 @@ for (const [code, name, abbr, ...alts] of CANTON_TABLE) {
 		code,
 		name,
 		abbr,
-		emblemUrl: `/cantons/${code}.svg`
+		emblemUrl: `/regions/ch/states/${code}.svg`
 	};
 	BY_NAME.set(normalise(name), canton);
 	for (const alt of alts) BY_NAME.set(normalise(alt), canton);
