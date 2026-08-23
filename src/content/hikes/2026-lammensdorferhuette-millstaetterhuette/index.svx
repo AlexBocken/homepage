@@ -1,0 +1,143 @@
+---
+title: Rundweg Lammersdorfer Hütte - Millstätterhütte
+date: 2026-06-14
+author: Alexander
+difficulty: T2
+tags: [Österreich, Kärnten, Millstättersee, Höhenweg, Panorama]
+seasons: 4-9
+summary: Aussichtsreiche Runde über der Millstätter Alpe — steiler Auftakt, dann ein langer, windiger Höhenweg und eine gute Einkehr auf halber Strecke.
+heroAlt: Blick über den Millstättersee auf der Wanderung
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+</script>
+
+## Übersicht
+
+Eine Rundwanderung hoch über dem Millstättersee, die ihren einzigen anstrengenden
+Abschnitt gleich zu Beginn abhandelt: knapp 300 Höhenmeter am Stück hinauf auf den
+Grat. Danach wird es entspannt — der Höhenweg zieht in weitem Bogen über die
+Almrücken zur Millstätter Hütte und wieder zurück, fast immer mit Blick auf den
+See auf der einen und die Hohen Tauern auf der anderen Seite.
+
+Windig war es oben durchgehend, auch im Juni. Eine Jacke gehört ins Gepäck, selbst
+wenn es unten am Parkplatz noch windstill ist.
+
+Rund 15 km und etwa 800 Höhenmeter, als Runde mit gleichem Start- und Zielpunkt.
+Mit einer ausgiebigen Einkehr waren wir gut 4.5 Stunden unterwegs.
+
+## Anreise
+
+Nur mit dem Auto — öffentlich ist der Ausgangspunkt nicht erreichbar.
+Über die Millstätter Alpenstrasse hinauf zur Lammersdorfer Hütte auf 1640 m,
+dort sind auch die Parkplätze. Die Alpenstrasse ist mautpflichtig, wir haben
+16 Euro für die Tagesmaut bezahlt.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+## Der steile Auftakt
+
+Direkt hinter der Hütte geht es los, und zwar sofort zur Sache: gut eine halbe
+Stunde durchgehend bergauf durch Lärchen und über offene Almweiden, bis der Grat
+auf knapp 1950 m erreicht ist. Der einzige wirklich fordernde Teil des Tages.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+
+## Auf dem Grat
+
+Oben angekommen wird der Weg flach und breit. Beim grossen Steinmann auf gut
+2060 m lohnt sich die erste längere Pause — von hier sieht man den Millstättersee
+in ganzer Länge.
+
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+
+## Über den Höhenweg
+
+Der Höhenweg ist der gemütliche Teil der Runde: kaum Höhenmeter, dafür durchgehend
+Aussicht. Unterwegs steht das Granattor, ein rostiges Stahltor mit ausgeschnittener
+Inschrift über die Granate, die man rund um den Millstättersee findet.
+
+Was hier oben nie aufhört, ist der Wind. Schön war es trotzdem — oder gerade
+deswegen, denn die Fernsicht bis in die Julischen Alpen war entsprechend klar.
+
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+
+## Einkehr auf der Millstätter Hütte
+
+Nach dem höchsten Punkt auf 2095 m geht es ein Stück hinunter zur Millstätter
+Hütte auf 1880 m, dem Wendepunkt der Runde. Die Einkehr dort ist ausdrücklich zu
+empfehlen: die **Kärntner Kasnudeln** und der **Kaiserschmarrn mit
+Zwetschgenröster** waren beide ausgezeichnet.
+
+Wer sie zuhause nachkochen will, findet die Rezepte hier:
+[Kärntner Kasnudeln](/rezepte/kaerntner-kasnudeln),
+[Kaiserschmarrn](/rezepte/kaiserschmarrn) und
+[Zwetschgenröster](/rezepte/zwetschgen-roester).
+
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+## Zurück über den Höhenweg
+
+Zurück geht es auf demselben Höhenweg, aber mit anderem Licht und Blickwinkel.
+Mitte Juni stand die Almrose in voller Blüte.
+
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+
+Über uns kreiste eine ganze Weile ein Segelflugzeug und nutzte die Aufwinde am
+Grat — auf dieser Höhe war es fast auf Augenhöhe mit uns.
+
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+
+Im Vollbild geht es zwischen den Wolken fast unter, deshalb noch einmal
+herangezoomt — dahinter die Julischen Alpen.
+
+<HikeImage src="segelflugzeug-crop.jpg" />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+
+## Abstieg durch den Wald
+
+Der letzte Abschnitt verlässt den offenen Grat und führt durch Lärchen- und
+Fichtenwald zurück zur Lammersdorfer Hütte — schattig, mit einem Bachlauf
+unterwegs, und ein angenehmer Ausklang nach dem windigen Grat.
+
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+<HikeImage idx={46} />
+<HikeImage idx={47} />
