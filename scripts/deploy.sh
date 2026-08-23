@@ -8,6 +8,7 @@
 #   - Root SSH to $REMOTE works (key-based).
 #
 # Usage: scripts/deploy.sh [--dry-run]
+#   SKIP_ALT_CHECK=1 skips the (advisory) hike alt-text check.
 
 set -euo pipefail
 
@@ -64,6 +65,23 @@ echo "   node $local_node (match)"
 
 echo ":: Installing deps (frozen lockfile)"
 pnpm install --frozen-lockfile
+
+# Hike photo alt text is NOT part of the build: it comes from a local vision
+# model (ollama) via `pnpm run hikes:alt`, which writes
+# src/content/hikes/<slug>/alt-text.json. build-hikes.ts builds happily without
+# it and falls back to "Bild 2", "Bild 3", … — usable, but not for anyone on a
+# screen reader. Advisory only: generating the texts needs the model running,
+# which a deploy shouldn't depend on, so this reports and carries on. The check
+# only hashes files; it never contacts the model itself.
+if [[ -z "${SKIP_ALT_CHECK:-}" ]]; then
+    echo ":: Checking hike alt text"
+    if ! pnpm exec vite-node scripts/generate-hike-alt-text.ts -- --check; then
+        # The check already printed the slugs and the exact command to run.
+        echo "   Those photos ship with a generic \"Bild N\" description instead."
+        echo "   Generating them needs ollama running — stop here if you want that."
+        echo "   Continuing with the deploy."
+    fi
+fi
 
 # Build against production env, NOT the dev .env. SvelteKit's
 # `$env/static/private` (IMAGE_DIR, DB creds, …) is inlined at BUILD time, so a

@@ -109,15 +109,19 @@ type Options = {
 	slugs: string[] | null;
 	force: boolean;
 	dryRun: boolean;
+	/** Report what is missing or stale and exit non-zero. Never contacts the
+	 *  model, so it is cheap enough to gate a deploy on. */
+	check: boolean;
 	model: string;
 	limit: number | null;
 };
 
 function parseArgs(argv: string[]): Options {
-	const opts: Options = { slugs: null, force: false, dryRun: false, model: DEFAULT_MODEL, limit: null };
+	const opts: Options = { slugs: null, force: false, dryRun: false, check: false, model: DEFAULT_MODEL, limit: null };
 	for (const arg of argv) {
 		if (arg === '--force') opts.force = true;
 		else if (arg === '--dry-run') opts.dryRun = true;
+		else if (arg === '--check') opts.check = true;
 		else if (arg.startsWith('--slug=')) {
 			const v = arg.slice('--slug='.length);
 			opts.slugs = (opts.slugs ?? []).concat(v.split(',').map((s) => s.trim()).filter(Boolean));
@@ -125,7 +129,7 @@ function parseArgs(argv: string[]): Options {
 		else if (arg.startsWith('--limit=')) opts.limit = Math.max(0, parseInt(arg.slice('--limit='.length), 10) || 0);
 		else if (arg === '--help' || arg === '-h') {
 			console.log(
-				'Usage: pnpm hikes:alt -- [--slug=<slug>[,<slug>]] [--force] [--dry-run] [--model=<name>] [--limit=N]'
+				'Usage: pnpm hikes:alt -- [--slug=<slug>[,<slug>]] [--force] [--dry-run] [--check] [--model=<name>] [--limit=N]'
 			);
 			process.exit(0);
 		} else if (arg.startsWith('--')) {
@@ -439,7 +443,7 @@ async function encodeForVision(buffer: Buffer): Promise<string> {
 	}
 }
 
-type Stats = { generated: number; retried: number; failed: number; unpublished: number };
+type Stats = { generated: number; retried: number; failed: number; unpublished: number; pending: number };
 
 async function processHike(slug: string, opts: Options, geocode: GeocodeCache, stats: Stats): Promise<void> {
 	const hikeDir = path.join(CONTENT_DIR, slug);
@@ -476,6 +480,20 @@ async function processHike(slug: string, opts: Options, geocode: GeocodeCache, s
 		// stored an empty description.
 		return opts.force || prev.hash !== c.hash || !prev.de || !prev.en;
 	});
+
+	if (opts.check) {
+		// Report only what needs work — a clean hike stays silent so the deploy
+		// log doesn't drown the one line that matters.
+		stats.pending += todo.length;
+		if (todo.length > 0) {
+			const missing = todo.filter((c) => !existing[c.name]).length;
+			console.log(
+				`[hike-alt] ${slug}: ${todo.length} image(s) without usable alt text ` +
+					`(${missing} missing, ${todo.length - missing} stale) of ${candidates.length} published`
+			);
+		}
+		return;
+	}
 
 	console.log(
 		`\n[hike-alt] ${slug} — ${candidates.length} published image(s), ` +
@@ -574,9 +592,11 @@ async function main() {
 		slugs = opts.slugs;
 	}
 
-	await checkOllama(opts.model);
+	// The check never generates anything, so it must not require a running model.
+	if (!opts.check) await checkOllama(opts.model);
 
-	console.log(
+	if (opts.check) console.log(`[hike-alt] checking ${slugs.length} hike(s) for missing or stale alt text`);
+	else console.log(
 		`[hike-alt] ${slugs.length} hike(s) · model=${opts.model} · ${OLLAMA_URL}` +
 			(opts.force ? ' · FORCE' : '') +
 			(opts.dryRun ? ' · DRY RUN (nothing written)' : '') +
@@ -584,12 +604,26 @@ async function main() {
 	);
 
 	const geocode = await loadGeocodeCache();
-	const stats: Stats = { generated: 0, retried: 0, failed: 0, unpublished: 0 };
+	const stats: Stats = { generated: 0, retried: 0, failed: 0, unpublished: 0, pending: 0 };
 	const t0 = Date.now();
 
 	for (const slug of slugs) {
 		if (opts.limit !== null && stats.generated >= opts.limit) break;
 		await processHike(slug, opts, geocode, stats);
+	}
+
+	if (opts.check) {
+		if (stats.pending === 0) {
+			console.log('[hike-alt] all published images have current alt text');
+			return;
+		}
+		console.log(
+			`\n[hike-alt] ${stats.pending} image(s) need alt text. Generate them with:\n` +
+				'             pnpm run hikes:alt\n' +
+				'           (a single hike: pnpm run hikes:alt -- --slug=<slug>)'
+		);
+		process.exitCode = 1;
+		return;
 	}
 
 	const mins = ((Date.now() - t0) / 60000).toFixed(1);
