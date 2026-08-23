@@ -268,6 +268,28 @@
 				});
 			};
 
+			// --- Marker stacking order ------------------------------------
+			// Leaflet derives a marker's z-index from its pixel Y
+			// (`_zIndex = pos.y + zIndexOffset`) and recomputes it on every
+			// zoom. Left to itself that means two photos taken a few metres
+			// apart trade places as you zoom, and two taken from the same spot
+			// tie and fall back to DOM order — flicker either way, and most
+			// obvious where a filled public badge overlaps an outlined private
+			// one, because the two look nothing alike.
+			//
+			// So order the badges chronologically with a step wider than a
+			// badge: two of them can only overlap when their Y differs by less
+			// than the 28px they span, and the step dominates that difference.
+			// Badges further apart than that never overlap, so whichever way Y
+			// sorts them is invisible.
+			const PHOTO_Z_STEP = 100;
+			// Clears the whole photo band, so adding it lifts the hovered or
+			// focused badge out of the stack.
+			const PHOTO_Z_TOP = (imagePoints.length + 1) * PHOTO_Z_STEP;
+			// A lifted badge sits at `idx * STEP + TOP`, so the track cursor has
+			// to clear twice the band to stay on top of every badge as before.
+			const CURSOR_Z = PHOTO_Z_TOP * 2 + PHOTO_Z_STEP;
+
 			// Hovered-vertex marker (driven by the shared hover store). Rendered
 			// as a lucide MapPin in a divIcon so its tip aligns with the actual
 			// track point — circle markers were ambiguous about which lat/lng
@@ -286,7 +308,7 @@
 				icon: hoverIcon,
 				interactive: false,
 				keyboard: false,
-				zIndexOffset: 1000
+				zIndexOffset: CURSOR_Z
 			});
 
 			// Image markers — compact camera badges. The full image lives in the
@@ -297,9 +319,10 @@
 			// Parallel arrays: the visible subset of imagePoints (post visibility
 			// filter) and the Leaflet markers we built for them. Their indices
 			// match what the photo strip is using, so a strip-side `focused.index`
-			// maps directly into `visibleMarkers`.
+			// maps directly into `visibleMarkers`. Sparse — a photo outside the
+			// active stage keeps its slot in the index space but has no marker.
 			let visiblePoints: ImagePoint[] = [];
-			let visibleMarkers: ReturnType<typeof L.marker>[] = [];
+			let visibleMarkers: (ReturnType<typeof L.marker> | undefined)[] = [];
 
 			// Lucide Camera path, inlined so the divIcon stays self-contained.
 			const cameraSvg =
@@ -353,7 +376,15 @@
 						iconSize: [28, 28],
 						iconAnchor: [14, 14]
 					});
-					const marker = L.marker([ip.lat, ip.lng], { icon });
+					const marker = L.marker([ip.lat, ip.lng], {
+						icon,
+						zIndexOffset: visibleIdx * PHOTO_Z_STEP,
+						// The badge scales up on :hover, which does nothing for
+						// stacking — without this it grows underneath whatever
+						// it overlaps.
+						riseOnHover: true,
+						riseOffset: PHOTO_Z_TOP
+					});
 					marker.on('mouseover', () => {
 						// Hover preview → stage. Distinct source so the strip
 						// skips scroll (jerky across dense clusters) and the
@@ -381,9 +412,31 @@
 					// scroll the strip card into view and centre the map.
 					marker.on('click', () => setFocused(visibleIdx, 'map'));
 					marker.addTo(photoLayer);
-					visibleMarkers.push(marker);
+					visibleMarkers[visibleIdx] = marker;
 				}
+				applyRaise();
 			}
+
+			// The badge currently lifted clear of the stack, by strip index. A
+			// focused badge hidden under its neighbour makes the ring pulsing
+			// around it look like it is circling nothing.
+			let raisedIdx: number | null = null;
+
+			function applyRaise() {
+				if (raisedIdx === null) return;
+				// Re-applied after every render: the markers are rebuilt from
+				// scratch whenever the stage or the private filter changes.
+				visibleMarkers[raisedIdx]?.setZIndexOffset(raisedIdx * PHOTO_Z_STEP + PHOTO_Z_TOP);
+			}
+
+			function raiseBadge(idx: number | null) {
+				if (raisedIdx !== null && raisedIdx !== idx) {
+					visibleMarkers[raisedIdx]?.setZIndexOffset(raisedIdx * PHOTO_Z_STEP);
+				}
+				raisedIdx = idx;
+				applyRaise();
+			}
+
 			renderPhotos();
 
 			// Focus ring: a non-vector divIcon (so we can CSS-animate it under
@@ -431,6 +484,7 @@
 					const idx = focused.index;
 					if (focused.source === 'map' || focused.source === 'map-hover') return;
 					if (idx === null || idx < 0 || idx >= visiblePoints.length) {
+						raiseBadge(null);
 						if (focusMarker) {
 							focusMarker.remove();
 							focusMarker = null;
@@ -438,6 +492,7 @@
 						return;
 					}
 					const ip = visiblePoints[idx];
+					raiseBadge(idx);
 					// For inline-scroll focus changes we don't want to fly the map
 					// on every image boundary — the continuous scroll-pin already
 					// shows the reader where they are. Only fly if the focused
