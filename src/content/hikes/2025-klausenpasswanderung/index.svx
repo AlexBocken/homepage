@@ -3,7 +3,7 @@ title: Klausenpasswanderung
 date: 2025-08-17
 author: Alexander
 difficulty: T2
-tags: [Zentralschweiz, Panorama, family, Spätsommer]
+tags: [Panorama, Familie]
 summary: Eine schöne Aussichtstour durch die Zentralschweiz... wenn das Wetter hält
 heroAlt:
 seasons: 5-8

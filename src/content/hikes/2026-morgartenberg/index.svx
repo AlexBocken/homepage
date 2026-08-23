@@ -3,7 +3,7 @@ title: Wanderung auf den Morgartenberg
 date: 2026-04-19
 author: Alexander
 difficulty: T2
-tags: [Schwyz, Zentralschweiz, kurz, leicht]
+tags: [Hügellandschaft, Panorama]
 seasons: 4-9
 summary:
 heroAlt:

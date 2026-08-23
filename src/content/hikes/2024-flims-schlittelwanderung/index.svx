@@ -3,7 +3,7 @@ title: Schlittelausflug Brün
 date: 2024-12-25
 author: Alexander
 difficulty: T1
-tags: [Graubünden, Flims, Winter, Schlitteln]
+tags: [Schlitteln]
 seasons: 12-2
 summary:
 heroAlt:

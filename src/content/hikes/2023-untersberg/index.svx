@@ -3,7 +3,7 @@ title: Untersberg mit Schellenberger Eishöhle
 date: 2023-09-06
 author: Alexander
 difficulty: T3
-tags: [Österreich, Salzburg, Berchtesgaden, Gipfel, Höhle, Panorama]
+tags: [Gipfel, Höhle, Panorama]
 seasons: 6-10
 summary: Langer Grenztag über Salzburg — kalter Aufstieg an der Westwand, Gipfel auf 1973 m, der Thomas-Eder-Steig und zum Schluss die Schellenberger Eishöhle.
 country: AT

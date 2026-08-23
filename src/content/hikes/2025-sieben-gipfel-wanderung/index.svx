@@ -3,7 +3,7 @@ title: Siebengipfelwanderung
 date: 2025-08-11
 author: Alexander
 difficulty: T2
-tags: [St. Gallen, Walensee, Almwanderung]
+tags: [Walensee, Gipfel]
 seasons: 5-8
 summary:
 heroAlt:

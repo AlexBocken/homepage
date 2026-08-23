@@ -3,7 +3,7 @@ title: Spaziergang Uetliberg
 date: 2025-08-07
 author: Alexander
 difficulty: T1
-tags: [Zürich, Spaziergang, Sommer, mittel]
+tags: [Spaziergang]
 seasons: 4-9
 summary:
 heroAlt:

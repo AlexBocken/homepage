@@ -3,7 +3,7 @@ title: Mattstock ab Amden
 date: 2026-08-22
 author: Alexander
 difficulty: T3
-tags: [Amden, Walensee, Ostschweiz, Gipfel, Panorama]
+tags: [Walensee, Gipfel, Panorama]
 seasons: 6-9
 summary: Kurzer, steiler Gipfeltag über dem Walensee — mit dem Sessellift auf Niederschlag, über Alpweiden und Verbauungen auf den Mattstock und zu Fuss zurück nach Amden.
 heroAlt:

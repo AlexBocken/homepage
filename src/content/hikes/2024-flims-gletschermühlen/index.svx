@@ -3,7 +3,7 @@ title: Flims Gletschermühlen
 date: 2024-07-14
 author: Alexander
 difficulty: T2
-tags: [Graubünden, Flims, Sommer]
+tags: [Gletschermühlen]
 seasons: 5-8
 summary:
 heroAlt:

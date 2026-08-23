@@ -3,7 +3,7 @@ title: Wallfahrt Rheinau
 date: 2026-05-14
 author: Alexander
 difficulty: T1
-tags: [winterthur, rheinau, wallfahrt, pilgern]
+tags: [Wallfahrt]
 seasons: 4-9
 summary:
 heroAlt:

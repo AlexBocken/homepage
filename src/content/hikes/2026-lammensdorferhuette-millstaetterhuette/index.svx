@@ -3,7 +3,7 @@ title: Rundweg Lammersdorfer Hütte - Millstätterhütte
 date: 2026-06-14
 author: Alexander
 difficulty: T2
-tags: [Österreich, Kärnten, Millstättersee, Höhenweg, Panorama]
+tags: [Millstättersee, Höhenweg, Panorama]
 seasons: 4-9
 summary: Aussichtsreiche Runde über der Millstätter Alpe — steiler Auftakt, dann ein langer, windiger Höhenweg und eine gute Einkehr auf halber Strecke.
 heroAlt: Blick über den Millstättersee auf der Wanderung
