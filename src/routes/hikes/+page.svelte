@@ -154,7 +154,7 @@
 			if (filter.difficulties.size > 0 && !filter.difficulties.has(h.difficulty)) continue;
 			if (filter.regions.size > 0 && (!h.region || !filter.regions.has(h.region))) continue;
 			if (filter.areas.size > 0) {
-				const area = resolveHikeArea(h.canton, h.country);
+				const area = resolveHikeArea(h.canton, h.country, h.state);
 				if (!area || !filter.areas.has(area.value)) continue;
 			}
 			if (filter.inSeasonOnly && !isInSeason(h.seasonStart, h.seasonEnd, currentMonth)) continue;

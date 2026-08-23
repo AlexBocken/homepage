@@ -1,26 +1,39 @@
 import { resolveCanton } from '$lib/data/cantons';
 import { resolveCountry } from '$lib/data/countries';
+import { resolveSubdivision } from '$lib/data/subdivisions';
 
 /**
  * Geographic grouping for a hike, abstracted over the border: a Swiss hike is
- * grouped by its canton (with the coat-of-arms), a hike abroad by its country
- * (with the flag). Canton wins when present, so existing Swiss manifest
- * entries keep working even before the build adds a `country`.
+ * grouped by its canton, a hike abroad by its sub-national region where we
+ * have the arms for it (Austria's Bundesländer), and by its country otherwise.
+ * Each step is a fallback from the one before, so a hike keeps working with
+ * whatever the build managed to resolve — canton, then state, then country.
  */
 export type HikeArea = {
-	/** Namespaced so canton and country codes can't collide in a filter set. */
+	/** Namespaced so codes from different levels can't collide in a filter set. */
 	value: string;
 	label: string;
 	iconUrl: string;
-	kind: 'canton' | 'country';
+	kind: 'canton' | 'state' | 'country';
 };
 
 export function resolveHikeArea(
 	canton: string | null | undefined,
-	country: string | null | undefined
+	country: string | null | undefined,
+	state?: string | null
 ): HikeArea | null {
 	const c = resolveCanton(canton);
 	if (c) return { value: `canton:${c.code}`, label: c.name, iconUrl: c.emblemUrl, kind: 'canton' };
+	const s = resolveSubdivision(country, state);
+	if (s) {
+		return {
+			// Country-qualified: region names repeat across borders (Tirol).
+			value: `state:${s.country}-${s.code}`,
+			label: s.name,
+			iconUrl: s.emblemUrl,
+			kind: 'state'
+		};
+	}
 	const k = resolveCountry(country);
 	if (k) return { value: `country:${k.code}`, label: k.name, iconUrl: k.flagUrl, kind: 'country' };
 	return null;

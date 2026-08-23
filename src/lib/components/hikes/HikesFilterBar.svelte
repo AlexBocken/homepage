@@ -79,11 +79,12 @@
 	const areaList = $derived.by(() => {
 		const map = new Map<string, HikeArea>();
 		for (const h of hikes) {
-			const a = resolveHikeArea(h.canton, h.country);
+			const a = resolveHikeArea(h.canton, h.country, h.state);
 			if (a && !map.has(a.value)) map.set(a.value, a);
 		}
+		const rank = { canton: 0, state: 1, country: 2 };
 		return [...map.values()].sort((a, b) =>
-			a.kind === b.kind ? a.label.localeCompare(b.label) : a.kind === 'canton' ? -1 : 1
+			a.kind === b.kind ? a.label.localeCompare(b.label) : rank[a.kind] - rank[b.kind]
 		);
 	});
 	const areaValues = $derived(areaList.map((a) => a.value));

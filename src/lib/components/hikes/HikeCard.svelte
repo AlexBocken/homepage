@@ -51,16 +51,18 @@
 	});
 
 	// Canton coat-of-arms at home, country flag abroad.
-	const area = $derived(resolveHikeArea(hike.canton, hike.country));
-	// Swiss hikes read "<region>, <canton>" as before. Abroad there is no
-	// canton, so the country takes that slot — and with no region either (the
-	// Swisstopo geocoder only covers CH) the country name stands alone.
+	const area = $derived(resolveHikeArea(hike.canton, hike.country, hike.state));
+	// Swiss hikes read "<region>, <canton>". Abroad the same slot takes the
+	// Bundesland (or the country, where we have no arms for the region), and
+	// the second half is dropped when it would just repeat the first. The
+	// canton keeps the manifest's own spelling so Ticino and Romandie hikes
+	// read as they always have.
 	const placeLabel = $derived(
 		[
 			hike.region,
 			hike.canton && hike.canton !== hike.region
 				? hike.canton
-				: area?.kind === 'country'
+				: area && area.kind !== 'canton' && area.label !== hike.region
 					? area.label
 					: null
 		]

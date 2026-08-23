@@ -327,6 +327,9 @@ type GeocodeResult = {
 	/** ISO 3166-1 alpha-2 code. 'CH' whenever a Swiss canton matched;
 	 * otherwise resolved via an OSM/Nominatim country lookup. */
 	country: string | null;
+	/** Sub-national region abroad (e.g. an Austrian Bundesland), as OSM names
+	 * it. Null inside Switzerland, where `canton` covers the same level. */
+	state: string | null;
 };
 
 type GeocodeCache = Record<string, GeocodeResult>;
@@ -353,22 +356,51 @@ const NOMINATIM_UA = 'bocken-homepage build-hikes (https://bocken.org)';
  * so when no canton matched we ask OSM/Nominatim for the country at the
  * centroid. Returns an uppercase ISO 3166-1 alpha-2 code, or null on failure.
  */
-async function reverseGeocodeCountry(lat: number, lng: number): Promise<string | null> {
+/**
+ * Country, sub-national region and municipality for a point outside
+ * Switzerland — the counterpart to the Swisstopo identify above.
+ *
+ * `zoom=10` is what fills the address out: the zoom=3 this used to request
+ * returns the country and nothing else, while at municipality level the
+ * response carries `state` and a town/village too. Names come back localised
+ * to the country ("Kärnten", not "Carinthia"), which is what
+ * `resolveSubdivision` expects.
+ */
+async function reverseGeocodeAbroad(
+	lat: number,
+	lng: number
+): Promise<{ country: string | null; state: string | null; municipality: string | null }> {
+	const none = { country: null, state: null, municipality: null };
 	const url =
 		`https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
-		`&lat=${lat}&lon=${lng}&zoom=3&addressdetails=1`;
+		`&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`;
 	try {
 		const res = await fetch(url, { headers: { 'User-Agent': NOMINATIM_UA } });
 		if (!res.ok) {
-			console.warn(`[build-hikes] Nominatim country lookup failed (${res.status})`);
-			return null;
+			console.warn(`[build-hikes] Nominatim lookup failed (${res.status})`);
+			return none;
 		}
-		const json = (await res.json()) as { address?: { country_code?: string } };
-		const cc = json.address?.country_code;
-		return typeof cc === 'string' ? cc.toUpperCase() : null;
+		const json = (await res.json()) as {
+			address?: {
+				country_code?: string;
+				state?: string;
+				town?: string;
+				city?: string;
+				village?: string;
+				municipality?: string;
+			};
+		};
+		const a = json.address ?? {};
+		const text = (v: string | undefined) => (typeof v === 'string' && v.length > 0 ? v : null);
+		return {
+			country: typeof a.country_code === 'string' ? a.country_code.toUpperCase() : null,
+			state: text(a.state),
+			// Whichever of the settlement keys OSM used for this place.
+			municipality: text(a.town) ?? text(a.city) ?? text(a.village) ?? text(a.municipality)
+		};
 	} catch (err) {
-		console.warn('[build-hikes] Nominatim country lookup error:', err);
-		return null;
+		console.warn('[build-hikes] Nominatim lookup error:', err);
+		return none;
 	}
 }
 
@@ -393,8 +425,11 @@ async function reverseGeocode(
 	cache: GeocodeCache
 ): Promise<GeocodeResult> {
 	const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
-	// `country` post-dates the cache format — re-resolve entries that predate it.
-	if (cache[key] && cache[key].country !== undefined) return cache[key];
+	// `country` and `state` were each added after the cache format existed —
+	// an entry missing either predates that field and has to be re-resolved.
+	if (cache[key] && cache[key].country !== undefined && cache[key].state !== undefined) {
+		return cache[key];
+	}
 
 	const layers =
 		'all:ch.swisstopo.swissboundaries3d-kanton-flaeche.fill,' +
@@ -411,7 +446,13 @@ async function reverseGeocode(
 		`&mapExtent=${lng - eps},${lat - eps},${lng + eps},${lat + eps}` +
 		`&tolerance=1&layers=${layers}&sr=4326`;
 
-	const result: GeocodeResult = { canton: null, municipality: null, region: null, country: null };
+	const result: GeocodeResult = {
+		canton: null,
+		municipality: null,
+		region: null,
+		country: null,
+		state: null
+	};
 	try {
 		const res = await fetch(url, { headers: { 'User-Agent': SWISSTOPO_UA } });
 		if (res.ok) {
@@ -439,8 +480,19 @@ async function reverseGeocode(
 	}
 
 	// Country: 'CH' when a Swiss canton matched (no extra request needed),
-	// otherwise an OSM/Nominatim lookup for hikes abroad.
-	result.country = result.canton ? 'CH' : await reverseGeocodeCountry(lat, lng);
+	// otherwise an OSM/Nominatim lookup, which also names the Bundesland or
+	// equivalent. Inside Switzerland `canton` already covers that level.
+	if (result.canton) {
+		result.country = 'CH';
+	} else {
+		const abroad = await reverseGeocodeAbroad(lat, lng);
+		result.country = abroad.country;
+		result.state = abroad.state;
+		result.municipality = abroad.municipality;
+		// Same shape the Swiss branch produces: the finest place name we got,
+		// falling back to the region when there is no settlement.
+		result.region = abroad.municipality ?? abroad.state;
+	}
 
 	cache[key] = result;
 	return result;
@@ -1503,6 +1555,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		canton: geo.canton,
 		municipality: geo.municipality,
 		country: geo.country,
+		state: geo.state,
 		trackUrl: `/hikes/${slug}/track.${trackHash}.json`,
 		pointCount: track.length,
 		cover,
