@@ -857,11 +857,26 @@
 
 	/* The clipping half of the disclosure: nothing but overflow, because padding,
 	   a border or a margin here would keep rendering at row height 0 and leave a
-	   sliver of open panel behind. All of that lives on `.panel-inner`. */
+	   sliver of open panel behind. All of that lives on `.panel-inner`.
+	   
+	   The clip is only wanted while the row is collapsing — once open it would cut
+	   off the typeahead's dropdown, which has to hang over the cards below. */
 	.panel {
 		width: 100%;
 		overflow: hidden;
 		min-height: 0;
+		transition: overflow 0s;
+		transition-behavior: allow-discrete;
+	}
+
+	/* Lifted at the END of the opening animation and restored at the START of the
+	   closing one, so the panel is never both clipping and mid-slide. Browsers
+	   without discrete transitions just flip it immediately: the dropdown still
+	   escapes, the only cost is that the panel does not clip itself for 200ms. */
+	.panel-toggle:checked ~ .panel-wrap > .panel {
+		overflow: visible;
+		transition: overflow 0s var(--transition-normal);
+		transition-behavior: allow-discrete;
 	}
 
 	.panel-inner {

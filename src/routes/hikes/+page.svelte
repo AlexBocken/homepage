@@ -388,5 +388,12 @@
 	.filter-vt-box {
 		view-transition-name: hikes-filter-bar;
 		view-transition-class: hike-fly-in;
+		/* The name makes this a stacking context, which traps the filter panel's
+		   typeahead dropdown inside it — and the cards below are stacking contexts
+		   of their own (each carries a `view-transition-name` too), painted later
+		   in DOM order and therefore on top of it. Lifting the box above them puts
+		   the dropdown back over the listing where it belongs. */
+		position: relative;
+		z-index: 2;
 	}
 </style>
