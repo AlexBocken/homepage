@@ -1,0 +1,352 @@
+{
+	"PXL_20260614_075451205.jpg": {
+		"hash": "9a205262",
+		"de": "Holzzaun im Vordergrund, grüne Wiesen und ferner Bergpanorama unter blauem Himmel mit Wolkenstreifen.",
+		"en": "Wooden fence in foreground, green meadows and distant mountain panorama under blue sky with cloud streaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_075457477.jpg": {
+		"hash": "11a1519d",
+		"de": "Holzhütte mit Sonnenschirmen auf grüner Hangfläche unter blauem Himmel.",
+		"en": "Wooden hut with umbrellas on a grassy hillside under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_075555381.jpg": {
+		"hash": "584b2798",
+		"de": "Blaues Schild zeigt „Almbrunnsteig“ mit Pfeil; darunter gelbe Wegweiser zu Kletter- und Rundwanderwegen.",
+		"en": "Blue sign points to Almbrunnsteig trail, with yellow directional signs below for climbing and loop routes.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_075629501.jpg": {
+		"hash": "8609bd83",
+		"de": "Steiler Weg führt an grüner Hangflanke mit einzelnen Bäumen und Holzgeländer unter blauem Himmel entlang.",
+		"en": "A steep trail winds along a green hillside with scattered trees and wooden fencing under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_075927954.jpg": {
+		"hash": "446f8f22",
+		"de": "Grüner Hang mit Bäumen, blauer See im Tal und Bergen unter blauem Himmel mit Wolkenstreifen.",
+		"en": "Green hillside dotted with trees, blue lake in the valley and mountains under a sky streaked with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_080349142.MP.jpg": {
+		"hash": "8f5be2ee",
+		"de": "Ein schmaler Pfad schlängelt sich durch grüne Hänge mit Nadelbäumen unter blauem Himmel und Sonnenlicht.",
+		"en": "A narrow path winds through green slopes dotted with evergreens under a bright blue sky and sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_080814516.jpg": {
+		"hash": "18159bb2",
+		"de": "Ein Pfad führt durch grüne Hänge mit Nadelbäumen und einem kleinen Holzhaus in der Baumkrone unter blauem Himmel.",
+		"en": "A trail winds through green slopes dotted with conifers and a small wooden box nestled among tree branches under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_081459328.jpg": {
+		"hash": "45bf1cb5",
+		"de": "Ein Wanderer geht auf einem grasigen Höhenweg durch grüne Hänge mit Nadelbäumen unter blauem Himmel und Wolkenstreifen.",
+		"en": "A hiker walks along a grassy ridge path through green slopes with pine trees under blue sky and cloud streaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_081508274.jpg": {
+		"hash": "bc59fa6e",
+		"de": "Ein steiler Pfad führt durch grüne Hänge mit Nadelbäumen unter blauem Himmel mit Wolkenfetzen.",
+		"en": "A steep trail winds through green slopes dotted with evergreens under a blue sky streaked with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_081633359.jpg": {
+		"hash": "d3184ac2",
+		"de": "Ein steiler, grasbewachsener Hang mit Lärchen und einer Kuh unter blauem Himmel.",
+		"en": "A steep grassy slope dotted with larch trees and a cow under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_082301745.jpg": {
+		"hash": "951772ab",
+		"de": "Grüner Hang mit Felsen und Gras unter blauem Himmel, leichte Wolken im Hintergrund.",
+		"en": "Green slope dotted with rocks and grass under a blue sky, faint clouds in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_082305327.jpg": {
+		"hash": "70cec41f",
+		"de": "Steiler, felsiger Hang mit grüner Vegetation unter blauem Himmel und weissen Wolken.",
+		"en": "A steep rocky slope covered in green vegetation under a blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_082309471.jpg": {
+		"hash": "e20333e6",
+		"de": "Wanderer auf grasigem Gipfel mit Blick über See und Berge unter blauem Himmel.",
+		"en": "Hikers on a grassy summit overlooking the lake and mountains under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_083929469.jpg": {
+		"hash": "534c371b",
+		"de": "Grüner Höhenweg mit Zaun, grüne Hügel und blauer Himmel über den Bergen.",
+		"en": "Green ridge trail with fence, rolling hills under a blue sky above the mountains.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_084256926.jpg": {
+		"hash": "94a292ff",
+		"de": "Wanderer steigt steilen Pfad hinauf auf grasbewachsenen Hang unter blauem Himmel mit Wolken.",
+		"en": "Hiker climbs steep dirt trail up grassy hillside under blue sky with scattered clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_084621275.jpg": {
+		"hash": "350c5e31",
+		"de": "Steinhaufen mit Stange auf felsigem Gipfel unter blauem Himmel.",
+		"en": "Stone cairn with pole on rocky peak under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_084626415.jpg": {
+		"hash": "062c6127",
+		"de": "Felsiger Gipfel mit Steinpyramide, weite Bergpanorama unter blauem Himmel mit Wolken.",
+		"en": "Rocky summit with stone cairn overlooking distant mountains under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_084632212.jpg": {
+		"hash": "cd25adad",
+		"de": "Steiler Felsgrat mit Steinhaufen, Blick über Tal und See unter blauem Himmel.",
+		"en": "Rocky ridge with cairn overlooking valley and lake under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_084718741.MP.jpg": {
+		"hash": "f0e23bf8",
+		"de": "Wanderer auf steilem Pfad mit rotem Markierungspunkt vor Bergpanorama unter blauem Himmel.",
+		"en": "Hiker on steep trail with red marker against mountain panorama under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_085330277.jpg": {
+		"hash": "fcbb3bde",
+		"de": "Steiler Felsgrat mit Gras und Büschen, dahinter ein See und grüne Hügel unter blauem Himmel.",
+		"en": "Rocky ridge with grass and shrubs overlooks a lake and green hills under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_085343490.MP.jpg": {
+		"hash": "b77675a1",
+		"de": "Ein rustikales Holzbank und ein roter Metallrahmen mit Gravuren stehen vor einer Berglandschaft unter blauem Himmel.",
+		"en": "A rustic wooden bench stands before a red metal frame with engravings, overlooking mountain peaks under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_085737264.MP.jpg": {
+		"hash": "7fafa289",
+		"de": "Ein Wanderweg führt über eine grüne Wiese unter blauem Himmel mit Wolken.",
+		"en": "A trail winds across a green meadow under blue skies with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_090247567.jpg": {
+		"hash": "4960e117",
+		"de": "Wanderer auf dem Pfad mit Bergpanorama und Fluss im Hintergrund unter blauem Himmel.",
+		"en": "Hiker on a trail with mountain panorama and river under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_090250056.jpg": {
+		"hash": "acc6b9f1",
+		"de": "Wanderer auf Steig über grasiges Hochplateau mit Fluss und Bergen im Hintergrund unter blauem Himmel.",
+		"en": "Hiker on trail across grassy plateau with river and mountains under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_091243084.MP.jpg": {
+		"hash": "b3cd916d",
+		"de": "Wanderer auf einem Pfad mit Bergpanorama und blauem Himmel im Hintergrund.",
+		"en": "Hiker on a path with mountain panorama and blue sky behind them.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_091304029.MP.jpg": {
+		"hash": "05e06420",
+		"de": "Ein steiler Wanderweg führt über grasbewachsenen Berggrat unter blauem Himmel mit Wolken.",
+		"en": "A steep trail winds over a grassy ridge under blue skies with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_092303193.jpg": {
+		"hash": "72f3a842",
+		"de": "Steiler Pfad führt über grasbewachsenen Gipfel unter bewölktem Himmel mit roten Markierungen.",
+		"en": "A steep path leads over a grassy peak under cloudy skies with red trail markers.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_092919217.jpg": {
+		"hash": "c0b754da",
+		"de": "Grün bewachsener Berggrat unter blauem Himmel mit weissen Wolken, ferner Gebirgskette im Hintergrund.",
+		"en": "Green mountain ridge under blue sky with white clouds, distant mountain range in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_092924062.jpg": {
+		"hash": "82c37193",
+		"de": "Ein Wanderer geht auf einem steilen, felsigen Höhenweg unter bewölktem Himmel mit blauen Lücken.",
+		"en": "A hiker walks along a steep, rocky ridge path under cloudy skies with patches of blue.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_094407012.MP.jpg": {
+		"hash": "852e6a08",
+		"de": "Steiler, felsiger Pfad führt über grüne Hänge mit vereinzelten Bäumen unter blauem Himmel und weissen Wolken.",
+		"en": "Rocky trail climbs green slopes dotted with trees under a blue sky and white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_095328218.MP.jpg": {
+		"hash": "500f36c6",
+		"de": "Ein schmaler, steiniger Pfad führt durch grüne Alpenwiesen unter blauem Himmel mit weissen Wolken.",
+		"en": "A narrow rocky trail winds through green alpine meadows under a blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_095718838.jpg": {
+		"hash": "006c24d5",
+		"de": "Ein Wanderweg führt an einer Hütte vorbei, umgeben von grüner Vegetation und Felsen unter blauem Himmel mit Wolken.",
+		"en": "A trail leads past a hut surrounded by green vegetation and rocks under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_105224245.jpg": {
+		"hash": "f13cd717",
+		"de": "Wanderer auf dem Weg, Kuh grasend im Gras unter blauem Himmel mit Wolken.",
+		"en": "Hiker on trail; cow grazing in grass under blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_110150137.jpg": {
+		"hash": "7bd21476",
+		"de": "Wanderer auf steilem, grasbewachsenen Pfad unter blauem Himmel mit Wolken in Österreichs Alpenlandschaft.",
+		"en": "Hiker walks up a grassy trail under blue skies with clouds amid Austria’s alpine landscape.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_110159644.jpg": {
+		"hash": "3c82438e",
+		"de": "Ein steiler, grasbewachsener Berg mit kleinen Bäumen unter blauem Himmel und weissen Wolken.",
+		"en": "A steep grassy hill dotted with small trees under a blue sky and white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_110217196.jpg": {
+		"hash": "f1433738",
+		"de": "Weite Bergpanorama mit grünen Hängen, dunklen Wäldern und schneebedeckten Gipfeln unter blauem Himmel.",
+		"en": "Wide mountain panorama with green slopes, dark forests and snow-capped peaks under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_110515394.jpg": {
+		"hash": "57765147",
+		"de": "Rosa Rhododendron-Blüten auf steilem Hang mit Gras und Bäumen im Hintergrund unter blauem Himmel.",
+		"en": "Pink rhododendrons on a steep slope with grass and trees under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_110527002.jpg": {
+		"hash": "e0c680dd",
+		"de": "Grüner Hang mit vereinzelten Bäumen, schmale Waldweg im Mittelgrund, ferner Bergkette unter blauem Himmel mit Wolken.",
+		"en": "Green slope dotted with trees, narrow forest path in midground, distant mountain range beneath blue sky and clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_112749242.jpg": {
+		"hash": "4a3efe34",
+		"de": "Ein steiler, grasbewachsener Höhenweg führt unter blauem Himmel mit weissen Wolken bergauf.",
+		"en": "A steep grassy trail winds uphill under a blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_113002688.jpg": {
+		"hash": "820112f0",
+		"de": "Grün bedeckter Hang mit Felsen, dahinter Seen und Bergketten unter bewölktem Himmel.",
+		"en": "Grassy slope dotted with rocks overlooks lakes and mountain ranges beneath a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_113020662.jpg": {
+		"hash": "8cfd9094",
+		"de": "Wolkenhaufen über schattigen Berggipfeln, darunter grüne Täler und ein See am Horizont.",
+		"en": "Clouds hover over shadowed peaks; green valleys and a lake lie below in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_114137130.jpg": {
+		"hash": "6cf4ca30",
+		"de": "Wanderer auf breitem Höhenweg mit Blick über Tal und See unter wolkenreichem Himmel.",
+		"en": "Hiker on wide high trail overlooking valley and lake beneath cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_114438704.MP.jpg": {
+		"hash": "23cd27db",
+		"de": "Wanderer auf schmalen Pfad, grüne Hänge, See und Berge im Panorama unter blauem Himmel mit Wolken.",
+		"en": "Hiker on narrow trail overlooking green slopes, lake and mountains under blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_115435507.jpg": {
+		"hash": "175f4189",
+		"de": "Wanderer geht auf einem steilen Pfad durch grüne Wälder mit Bergblick im Hintergrund.",
+		"en": "Hiker walks on a steep trail through green forests with mountain views in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_120645868.jpg": {
+		"hash": "e6313ec7",
+		"de": "Wanderer geht auf steilem Pfad durch grünes Gras und Nadelwald unter bewölktem Himmel.",
+		"en": "Hiker walks along a steep trail through green grass and pine forest under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_121602129.MP.jpg": {
+		"hash": "c6f300f7",
+		"de": "Gelbes Wegweiser-Schild an Metallpfahl, grüner Hang mit Nadelbäumen und bewölkter Himmel im Hintergrund.",
+		"en": "Yellow trail sign on metal pole, green slope with conifers and cloudy sky in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_121912487.jpg": {
+		"hash": "a9787266",
+		"de": "Ein kleiner Wasserfall fliesst über Felsen durch grüne Vegetation auf einem steilen Hang im Wald.",
+		"en": "A small waterfall cascades over rocks through lush greenery on a steep hillside in the forest.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260614_123437639.jpg": {
+		"hash": "0cc437d7",
+		"de": "Ein schwarzes Auto steht vor einer grünen Wiese mit einem Holzhaus und Bäumen im Hintergrund unter bewölktem Himmel.",
+		"en": "A black car sits before a green meadow with a wooden building and trees in the background under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"cover.jpg": {
+		"hash": "446f8f22",
+		"de": "Grün bewachsener Hügel mit Blick auf See und Berge unter blauem Himmel mit Wolkenfetzen.",
+		"en": "Grassy hilltop overlooking a lake and mountains under a blue sky with wispy clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"segelflugzeug-crop.jpg": {
+		"hash": "459801a7",
+		"de": "Wolken über schichtiger Berglandschaft mit grünen Tälern im Vordergrund.",
+		"en": "Clouds hover over layered mountain ranges with green valleys in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	}
+}

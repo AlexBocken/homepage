@@ -229,5 +229,12 @@
 		"en": "Green slopes, trees, a village below — blue sky with clouds above.",
 		"model": "qwen3.5:9b",
 		"generatedAt": "2026-08-23"
+	},
+	"cover.jpg": {
+		"hash": "e84b54b3",
+		"de": "Steiler Felshang mit Metallseil, spärlicher Vegetation und blauem Himmel über Amden.",
+		"en": "Steep rocky slope with metal chain, sparse greenery under blue sky above Amden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
 	}
 }
