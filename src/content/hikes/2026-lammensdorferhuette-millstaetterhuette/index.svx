@@ -71,14 +71,33 @@ in ganzer Länge.
 ## Über den Höhenweg
 
 Der Höhenweg ist der gemütliche Teil der Runde: kaum Höhenmeter, dafür durchgehend
-Aussicht. Unterwegs steht das Granattor, ein rostiges Stahltor mit ausgeschnittener
-Inschrift über die Granate, die man rund um den Millstättersee findet.
+Aussicht.
+
+<HikeImage idx={19} />
+
+Auf gut 2060 m steht das Granattor, ein kubisches Portal aus rostigem Stahl, 2009
+errichtet und mit Granatgestein aus der Millstätter Alpe gefüllt. Die Inschrift ist
+aus dem Stahl geschnitten und läuft über Sturz und Pfeiler:
+
+> Granate, rubinrote Edelsteine, begleiten den Wanderer auf den Pfaden rund um den
+> Millstätter See, oft nur verdeckt von Glimmerschiefer, einem silbrig glänzenden
+> Gestein.
+
+Weiter geht es mit der Legende, Noah habe eine Laterne aus Granat benutzt, um seine
+Arche durch die dunkle Nacht zu steuern. Danach folgen Ägypter, Griechen und Römer,
+die sich mit dem tiefrot leuchtenden Stein schmückten, und schliesslich der
+mittelalterliche Name Karfunkel, unter dem er als Böhmischer Granat an den
+europäischen Adelshäusern getragen wurde.
+
+Der Ort ist mit Bedacht gewählt: die Millstätter Alpe ist das grösste
+Granatvorkommen der Alpen. Wer genau hinsieht, findet die dunkelroten Kristalle
+direkt am Weg im silbrig glänzenden Glimmerschiefer.
+
+<HikeImage idx={20} />
 
 Was hier oben nie aufhört, ist der Wind. Schön war es trotzdem — oder gerade
 deswegen, denn die Fernsicht bis in die Julischen Alpen war entsprechend klar.
 
-<HikeImage idx={19} />
-<HikeImage idx={20} />
 <HikeImage idx={21} />
 <HikeImage idx={22} />
 <HikeImage idx={23} />
