@@ -68,6 +68,15 @@ const MANIFEST_WARN_BYTES = 200_000;
 
 const VALID_DIFFICULTIES: readonly Difficulty[] = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
 
+// sharp's prebuilt binaries ship without an HEVC decoder — the codec is
+// patent-encumbered, so their libheif is AV1-only and `heif` input is limited
+// to `.avif`. An iPhone photo is undecodable by them. `scripts/sharp-heic.mjs`
+// (postinstall) rebuilds sharp against the system libvips, which Arch builds
+// with libheif + libde265. If that ever silently reverts, fail with something
+// actionable instead of "Support for this compression format has not been
+// built in", once per photo.
+const SHARP_READS_HEIC = sharp.format.heif.input.fileSuffix?.includes('.heic') ?? false;
+
 // Sharp pipelines are CPU-heavy but release the JS thread while libvips runs,
 // so a small concurrency pool gives a near-linear speed-up. Cap at 4 to avoid
 // thrashing on smaller boxes (a single AVIF encode can saturate one core).
@@ -1229,6 +1238,13 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		}
 	} catch {
 		// no images dir is fine
+	}
+	if (!SHARP_READS_HEIC && imageFiles.some((f) => /\.(heic|heif)$/i.test(f))) {
+		throw new Error(
+			`[build-hikes:${slug}] this sharp cannot read HEIC (heif input: ` +
+				`${sharp.format.heif.input.fileSuffix?.join(', ') ?? 'unknown'}). ` +
+				'Run `node scripts/sharp-heic.mjs` to rebuild it against the system libvips.'
+		);
 	}
 	// Images addressed inline with `<HikeImage src="…">` in the prose, keyed by
 	// source basename → requested visibility. These are encoded and exposed via

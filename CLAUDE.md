@@ -48,6 +48,38 @@ Svelte 5 removed event modifiers like `on:click|preventDefault`. Use inline hand
 Generates a Svelte Playground link with the provided code.
 After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
 
+## HEIC photos (sharp + libvips)
+
+sharp's **prebuilt** binaries cannot read HEIC. HEVC is patent-encumbered, so
+their bundled libheif is AV1-only — `sharp.format.heif.input.fileSuffix` is
+`['.avif']` and an iPhone photo fails to decode. This is deliberate upstream and
+no sharp release will change it.
+
+The fix is to link sharp against the **system** libvips, which Arch builds with
+libheif + libde265. `scripts/sharp-heic.mjs` does that and runs as
+`postinstall`, because a plain `pnpm install` restores the prebuilt binary and
+would silently take HEIC support away again. It is best-effort: without
+pkg-config/libvips or a C++ toolchain it leaves the prebuilt binary in place and
+says so, and sharp's own loader falls back to `@img/sharp-linux-x64` if the
+from-source addon can't be loaded — so a server without libvips keeps working,
+just without HEIC.
+
+Verify with:
+
+```sh
+node -p "require('sharp').format.heif.input.fileSuffix"   # want ['.heic','.heif','.avif']
+```
+
+Consequences to keep in mind:
+
+- `node-addon-api` and `node-gyp` are devDependencies purely for this build.
+- `scripts/deploy.sh` rsyncs `node_modules/`, so the server runs whatever was
+  built here. It needs `libvips` installed to use it; otherwise it silently
+  falls back and `/api/hikes/route-builder/heic-preview` answers 501.
+- `scripts/build-hikes.ts` refuses to build a hike whose `images/` holds a HEIC
+  when sharp can't read it, naming the fix — rather than failing per photo with
+  "Support for this compression format has not been built in".
+
 # Theming Rules
 
 ## Semantic CSS Variables (ALWAYS use these, NEVER hardcode Nord values for themed properties)

@@ -588,12 +588,18 @@ const RATE_BUCKETS = new Map<string, { tokens: number; refilledAt: number }>();
 const RATE_LIMIT = 30;          // requests per minute
 const RATE_WINDOW_MS = 60_000;
 
-export function rateLimit(key: string): { ok: boolean; retryAfter?: number } {
+/**
+ * `limit` lets a caller run on a more generous budget than the routing default
+ * (e.g. bulk photo import, where one user action legitimately means dozens of
+ * requests). Buckets are keyed by string, so give such callers their own key
+ * prefix — otherwise they'd spend the routing endpoint's tokens.
+ */
+export function rateLimit(key: string, limit = RATE_LIMIT): { ok: boolean; retryAfter?: number } {
 	const now = Date.now();
-	const bucket = RATE_BUCKETS.get(key) ?? { tokens: RATE_LIMIT, refilledAt: now };
-	const refillTokens = Math.floor(((now - bucket.refilledAt) / RATE_WINDOW_MS) * RATE_LIMIT);
+	const bucket = RATE_BUCKETS.get(key) ?? { tokens: limit, refilledAt: now };
+	const refillTokens = Math.floor(((now - bucket.refilledAt) / RATE_WINDOW_MS) * limit);
 	if (refillTokens > 0) {
-		bucket.tokens = Math.min(RATE_LIMIT, bucket.tokens + refillTokens);
+		bucket.tokens = Math.min(limit, bucket.tokens + refillTokens);
 		bucket.refilledAt = now;
 	}
 	if (bucket.tokens <= 0) {

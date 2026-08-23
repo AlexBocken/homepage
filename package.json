@@ -1,10 +1,11 @@
 {
   "name": "homepage",
-  "version": "2.58.1",
+  "version": "2.59.0",
   "private": true,
   "type": "module",
   "scripts": {
     "prepare": "git config core.hooksPath .githooks || true",
+    "postinstall": "node scripts/sharp-heic.mjs",
     "dev": "NODE_OPTIONS='--disable-warning=DEP0205' vite dev",
     "prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts && pnpm exec vite-node scripts/generate-loyalty-cards.ts && pnpm exec vite-node scripts/generate-error-quotes.ts && pnpm exec vite-node scripts/build-hikes.ts && pnpm exec vite-node scripts/build-private-images.ts",
     "build": "vite build",
@@ -49,6 +50,8 @@
     "bwip-js": "^4.10.1",
     "jsdom": "^27.2.0",
     "mdsvex": "^0.12.7",
+    "node-addon-api": "^8.9.2",
+    "node-gyp": "^13.0.1",
     "potrace": "^2.1.8",
     "svelte": "^5.55.7",
     "svelte-check": "^4.4.6",

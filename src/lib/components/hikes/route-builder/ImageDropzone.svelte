@@ -47,6 +47,45 @@
 		);
 	}
 
+	// Only Safari decodes HEIC in an <img>, so the canvas thumbnail and the blob
+	// preview both come up empty. The server (sharp, built against a libvips
+	// with libheif) renders a JPEG stand-in instead — see
+	// `/api/hikes/route-builder/heic-preview`. The original file stays the
+	// source of truth: it is what gets hashed into the GPX and what belongs in
+	// the hike's `images/` dir.
+	function isHeicFile(file: File): boolean {
+		if (/\.(heic|heif)$/i.test(file.name)) return true;
+		return file.type === 'image/heic' || file.type === 'image/heif';
+	}
+
+	// `file.type` is an empty string for `.HEIC` on several platforms, so the
+	// plain `image/*` test would drop them before they ever reach handleFiles.
+	function isImageFile(file: File): boolean {
+		return file.type.startsWith('image/') || isHeicFile(file);
+	}
+
+	async function heicPreview(file: File): Promise<Blob> {
+		const body = new FormData();
+		body.append('image', file, file.name);
+		const res = await fetch('/api/hikes/route-builder/heic-preview', { method: 'POST', body });
+		if (res.ok) return res.blob();
+		if (res.status === 429) throw new Error('HEIC-Vorschau: zu viele Anfragen, kurz warten');
+		if (res.status === 501) throw new Error('Server kann HEIC nicht dekodieren');
+		throw new Error(`HEIC-Vorschau fehlgeschlagen (${res.status})`);
+	}
+
+	// One HEIC at a time: each request ships a multi-megabyte photo and costs a
+	// server-side decode, so a dropped day of photos shouldn't hit the wire all
+	// at once.
+	let heicChain: Promise<unknown> = Promise.resolve();
+
+	function queueHeicPreview(file: File): Promise<Blob> {
+		const run = heicChain.then(() => heicPreview(file));
+		// Keep the chain alive even when one conversion rejects.
+		heicChain = run.catch(() => undefined);
+		return run;
+	}
+
 	let entries = $state<Entry[]>([]);
 	let isDragging = $state(false);
 	let showFailDetails = $state(false);
@@ -76,9 +115,12 @@
 		pendingCount > 0 ? 'pending' : failCount > 0 ? 'fail' : 'info'
 	);
 
+	// `preview` is what the UI renders: the dropped file itself for formats the
+	// browser decodes, a server-rendered JPEG for HEIC. Hash and EXIF always
+	// come from the original file.
 	type Prepared =
-		| { ok: true; kind: 'new'; wp: Waypoint; hasGps: boolean; id: string; file: File }
-		| { ok: true; kind: 'matched'; id: string; file: File }
+		| { ok: true; kind: 'new'; wp: Waypoint; hasGps: boolean; id: string; preview: Blob }
+		| { ok: true; kind: 'matched'; id: string; preview: Blob }
 		| { ok: false };
 
 	// Auto-clear successful entries after 4s so the badge counter doesn't
@@ -103,9 +145,13 @@
 					const exif = await exifr
 						.parse(file, { gps: true, exif: true })
 						.catch(() => null);
+					// A failed HEIC preview is fatal for this file: the browser
+					// can't render the original, so the waypoint would carry a
+					// blank, unidentifiable image.
+					const preview: Blob = isHeicFile(file) ? await queueHeicPreview(file) : file;
 					let thumbnail: string | undefined;
 					try {
-						thumbnail = await readThumbnail(file);
+						thumbnail = await readThumbnail(preview);
 					} catch { /* preview is optional */ }
 					const imageHash = await generateImageHashClient(file);
 
@@ -123,7 +169,7 @@
 							? 'noch nicht auf der Karte platziert'
 							: undefined;
 						scheduleAutoDismiss(entries[entryIdx].id);
-						return { ok: true, kind: 'matched', id: existing.id, file };
+						return { ok: true, kind: 'matched', id: existing.id, preview };
 					}
 
 					const timestamp =
@@ -158,7 +204,7 @@
 
 					entries[entryIdx].status = hasGps ? 'placed' : 'unplaced';
 					if (hasGps) scheduleAutoDismiss(entries[entryIdx].id);
-					return { ok: true, kind: 'new', wp, hasGps, id, file };
+					return { ok: true, kind: 'new', wp, hasGps, id, preview };
 				} catch (err) {
 					entries[entryIdx].status = 'error';
 					entries[entryIdx].message = (err as Error).message;
@@ -174,7 +220,7 @@
 				insertWaypointChronologically(p.wp);
 				if (p.hasGps) placedAny = true;
 			}
-			setFullImage(p.id, p.file);
+			setFullImage(p.id, p.preview);
 		}
 		if (placedAny) requestFitBounds();
 	}
@@ -189,7 +235,7 @@
 			onGpxImport(gpx);
 			return;
 		}
-		const images = files.filter((f) => f.type.startsWith('image/'));
+		const images = files.filter(isImageFile);
 		if (images.length > 0) handleFiles(images);
 	}
 
@@ -249,7 +295,7 @@
 	<input
 		bind:this={fileInput}
 		type="file"
-		accept="image/*,.gpx,application/gpx+xml,application/xml,text/xml"
+		accept="image/*,.heic,.heif,.gpx,application/gpx+xml,application/xml,text/xml"
 		multiple
 		onchange={onFileInput}
 		hidden

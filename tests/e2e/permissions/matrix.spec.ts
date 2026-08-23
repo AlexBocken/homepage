@@ -144,7 +144,12 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	// user, and degrades to `available: false` when the bridge is absent — which
 	// it is in the e2e stack.
 	{ path: '/api/anki/status', kind: 'api' },
-	{ path: '/hikes/route-builder', kind: 'page' }
+	{ path: '/hikes/route-builder', kind: 'page' },
+	// HEIC → JPEG preview for the route-builder's photo dropzone. POST-only, and
+	// login-only like the builder page it serves: it decodes whatever it is
+	// handed, so it must never answer a stranger. An empty body reaches the auth
+	// guard and then fails form parsing with a 400, which expectAllowed accepts.
+	{ path: '/api/hikes/route-builder/heic-preview', kind: 'api', method: 'post' }
 ];
 
 for (const r of GROUP_ROUTES) {
@@ -158,8 +163,8 @@ for (const r of GROUP_ROUTES) {
 
 for (const r of LOGIN_ONLY_ROUTES) {
 	test.describe(`${r.path} [login-only]`, () => {
-		test('logged in (no groups) → allowed', async () => expectAllowed(await fetchAs('none', r.path)));
-		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path)));
+		test('logged in (no groups) → allowed', async () => expectAllowed(await fetchAs('none', r.path, r.method)));
+		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path, r.method)));
 	});
 }
 
