@@ -6,7 +6,7 @@
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import Mountain from '@lucide/svelte/icons/mountain';
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
-	import { resolveCanton } from '$lib/data/cantons';
+	import { resolveHikeArea } from '$lib/hikes/hikeArea';
 	import type { HikeManifestEntry } from '$types/hikes';
 
 	interface Props {
@@ -50,7 +50,24 @@
 		return days >= 0 && days <= 30;
 	});
 
-	const canton = $derived(resolveCanton(hike.canton));
+	// Canton coat-of-arms at home, country flag abroad.
+	const area = $derived(resolveHikeArea(hike.canton, hike.country));
+	// Swiss hikes read "<region>, <canton>" as before. Abroad there is no
+	// canton, so the country takes that slot — and with no region either (the
+	// Swisstopo geocoder only covers CH) the country name stands alone.
+	const placeLabel = $derived(
+		[
+			hike.region,
+			hike.canton && hike.canton !== hike.region
+				? hike.canton
+				: area?.kind === 'country'
+					? area.label
+					: null
+		]
+			.filter(Boolean)
+			.join(', ')
+	);
+
 </script>
 
 <a class="card" href={resolve('/hikes/[slug]', { slug: hike.slug })} style="view-transition-name: hike-{hike.slug}; view-transition-class: hike-fly-in">
@@ -90,22 +107,19 @@
 	<div class="body">
 		<header class="head">
 			<h2 class="title">{hike.title}</h2>
-			{#if hike.region}
+			{#if placeLabel}
 				<p class="region">
-					{#if canton}
+					{#if area}
 						<img
-							class="canton-emblem"
-							src={canton.emblemUrl}
+							class="area-emblem"
+							class:is-flag={area.kind === 'country'}
+							src={area.iconUrl}
 							alt=""
 							aria-hidden="true"
 							loading="lazy"
 							decoding="async"
 						/>
-					{/if}<span class="region-text"
-						>{hike.region}{hike.canton && hike.canton !== hike.region
-							? `, ${hike.canton}`
-							: ''}</span
-					>
+					{/if}<span class="region-text">{placeLabel}</span>
 				</p>
 			{/if}
 		</header>
@@ -301,7 +315,7 @@
 		color: var(--color-text-secondary);
 	}
 
-	.canton-emblem {
+	.area-emblem {
 		flex: 0 0 auto;
 		width: 18px;
 		height: 22px;
@@ -310,6 +324,19 @@
 		 * Solothurn) are squarer — `contain` keeps the proportions correct
 		 * inside the fixed slot so a row of cards stays visually aligned. */
 		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18));
+	}
+
+	/* Flags are 3:2 landscape. Sized off the shield's HEIGHT, not its width:
+	 * contained in the portrait slot a flag comes out half as tall and reads
+	 * as a lesser badge next to a canton's arms. Width follows from the ratio,
+	 * so the box hugs the flag and the border sits on its edge — and that
+	 * border is what keeps a white band (AT, IT, FR) from dissolving into a
+	 * light surface. */
+	.area-emblem.is-flag {
+		width: auto;
+		aspect-ratio: 3 / 2;
+		border: 1px solid rgb(0 0 0 / 0.18);
+		border-radius: 2px;
 	}
 
 	.region-text {

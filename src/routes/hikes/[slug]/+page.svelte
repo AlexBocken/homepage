@@ -4,7 +4,7 @@
 	import HikeStageNav from '$lib/components/hikes/HikeStageNav.svelte';
 	import ElevationProfile from '$lib/components/hikes/ElevationProfile.svelte';
 	import { stage, clearActiveStage } from '$lib/components/hikes/stageStore.svelte';
-	import { isSwissRegion } from '$lib/hikes/hikeArea';
+	import { isSwissRegion, resolveHikeArea } from '$lib/hikes/hikeArea';
 	import Seo from '$lib/components/Seo.svelte';
 	import { setHikeContext } from '$lib/components/hikes/hikeContext.svelte';
 	import { listScrollAnchors } from '$lib/components/hikes/scrollAnchors';
@@ -19,7 +19,6 @@
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
 	import Download from '@lucide/svelte/icons/download';
 	import { buildGpx, type GpxWritePoint } from '$lib/gpx';
-	import { resolveCanton } from '$lib/data/cantons';
 	import { sacTrailColor } from '$lib/data/sacColors';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import type { PageProps } from './$types';
@@ -70,7 +69,24 @@
 		};
 	});
 
-	const canton = $derived(resolveCanton(hike.canton));
+	// Canton coat-of-arms at home, country flag abroad.
+	const area = $derived(resolveHikeArea(hike.canton, hike.country));
+	// Swiss hikes read "<region>, <canton>" as before. Abroad there is no
+	// canton, so the country takes that slot — and with no region either (the
+	// Swisstopo geocoder only covers CH) the country name stands alone.
+	const placeLabel = $derived(
+		[
+			hike.region,
+			hike.canton && hike.canton !== hike.region
+				? hike.canton
+				: area?.kind === 'country'
+					? area.label
+					: null
+		]
+			.filter(Boolean)
+			.join(', ')
+	);
+
 	const trackColor = $derived(sacTrailColor(hike.difficulty));
 	// swisstopo covers CH + LI; abroad the schematic caps lower (OpenTopoMap z17)
 	// and the Dufour layer is unavailable.
@@ -393,23 +409,20 @@
 		{/if}
 		<div class="hero-title">
 			<h1>{hike.title}</h1>
-			{#if hike.region}
+			{#if placeLabel}
 				<p class="region">
-					{#if canton}
+					{#if area}
 						<img
-							class="canton-emblem"
-							src={canton.emblemUrl}
+							class="area-emblem"
+							class:is-flag={area.kind === 'country'}
+							src={area.iconUrl}
 							alt=""
 							aria-hidden="true"
 							loading="eager"
 							decoding="async"
 						/>
 					{/if}
-					<span class="region-text">
-						{hike.region}{hike.canton && hike.canton !== hike.region
-							? `, ${hike.canton}`
-							: ''}
-					</span>
+					<span class="region-text">{placeLabel}</span>
 				</p>
 			{/if}
 		</div>
@@ -757,7 +770,7 @@
 		text-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
 	}
 
-	.canton-emblem {
+	.area-emblem {
 		flex: 0 0 auto;
 		width: 24px;
 		height: 30px;
@@ -765,6 +778,16 @@
 		/* Drop shadow keeps the emblem readable on the gradient overlay
 		 * (which only goes dark from ~50 % down). */
 		filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.5));
+	}
+
+	/* Flags are 3:2 landscape. Sized off the shield's HEIGHT, not its width,
+	 * so a flag stands as tall as a canton's arms instead of half as tall;
+	 * width follows from the ratio and the border sits on the flag's edge. */
+	.area-emblem.is-flag {
+		width: auto;
+		aspect-ratio: 3 / 2;
+		border: 1px solid rgb(255 255 255 / 0.5);
+		border-radius: 2px;
 	}
 
 	.region-text {
