@@ -1514,6 +1514,31 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 // Entry point
 // ---------------------------------------------------------------------------
 
+/**
+ * Delete every slug directory under `dir` that isn't in `keep`. Entries whose
+ * name starts with "_" are reserved for build outputs that aren't hikes (the
+ * overview hero) and are always kept. A missing `dir` is fine — nothing to
+ * sweep on a clean checkout.
+ */
+async function sweepOrphanSlugDirs(dir: string, keep: Set<string>, label: string): Promise<void> {
+	try {
+		const present = await fs.readdir(dir, { withFileTypes: true });
+		const orphans = present.filter(
+			(e) => e.isDirectory() && !e.name.startsWith('_') && !keep.has(e.name)
+		);
+		await Promise.all(
+			orphans.map((e) => fs.rm(path.join(dir, e.name), { recursive: true, force: true }))
+		);
+		if (orphans.length > 0) {
+			console.log(
+				`[build-hikes] removed ${orphans.length} orphan slug dir(s) from ${label}: ${orphans.map((o) => o.name).join(', ')}`
+			);
+		}
+	} catch {
+		// Output tree may not exist yet on a clean checkout — nothing to sweep.
+	}
+}
+
 async function main() {
 	let slugs: string[] = [];
 	try {
@@ -1532,29 +1557,19 @@ async function main() {
 		if (entry) hikes.push(entry);
 	}
 
-	// Sweep whole orphan slug dirs from static/ — e.g. a renamed or deleted
-	// hike. Otherwise its old per-slug track JSON (with the real, un-anonymised
-	// recording times) keeps shipping at a guessable URL. Keep current content
-	// slugs and any special "_*" entry (e.g. the overview hero). Guarded by a
-	// non-empty slug list so a failed content read never wipes everything.
-	if (slugs.length > 0) {
-		try {
-			const keep = new Set(slugs);
-			const present = await fs.readdir(STATIC_DIR, { withFileTypes: true });
-			const orphans = present.filter(
-				(e) => e.isDirectory() && !e.name.startsWith('_') && !keep.has(e.name)
-			);
-			await Promise.all(
-				orphans.map((e) => fs.rm(path.join(STATIC_DIR, e.name), { recursive: true, force: true }))
-			);
-			if (orphans.length > 0) {
-				console.log(
-					`[build-hikes] removed ${orphans.length} orphan slug dir(s) from static/: ${orphans.map((o) => o.name).join(', ')}`
-				);
-			}
-		} catch {
-			// static/hikes may not exist yet on a clean checkout — nothing to sweep.
-		}
+	// Sweep whole orphan slug dirs from both output trees — a renamed, deleted
+	// or unpublished hike (e.g. one parked as `index_tbd.svx`, which buildHike
+	// skips). Left behind, `static/` keeps shipping its per-slug track JSON with
+	// the real, un-anonymised recording times at a guessable URL, and
+	// `hikes-assets/` keeps deploying its photos — deploy.sh rsyncs that tree to
+	// the path nginx serves `/hikes/<slug>/images/` from without any auth.
+	// Keyed on the slugs that actually produced a manifest entry (a content dir
+	// alone is not enough) plus any special "_*" entry (e.g. the overview hero).
+	// Guarded by a non-empty build so a failed content read never wipes anything.
+	if (hikes.length > 0) {
+		const keep = new Set(hikes.map((h) => h.slug));
+		await sweepOrphanSlugDirs(STATIC_DIR, keep, 'static/');
+		await sweepOrphanSlugDirs(HIKES_ASSETS_DIR, keep, 'hikes-assets/');
 	}
 
 	await saveGeocodeCache(cache);
