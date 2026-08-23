@@ -307,10 +307,12 @@
 
 			<figure class="lb-figure">
 				<img src={ip.src} alt={ip.alt} />
+				<!-- Position and elapsed time only. The alt text is machine-generated
+				     for screen readers and already on the <img>; printing it under the
+				     photo reads as a caption nobody wrote. -->
 				<figcaption class="lb-caption">
 					<span class="lb-count">{lightboxIndex + 1} / {images.length}</span>
 					{#if elapsed}<span class="lb-elapsed">nach {elapsed}</span>{/if}
-					{#if ip.alt}<span class="lb-alt">{ip.alt}</span>{/if}
 				</figcaption>
 			</figure>
 		</div>
@@ -680,11 +682,6 @@
 	.lb-elapsed {
 		color: rgb(255 255 255 / 0.7);
 		font-variant-numeric: tabular-nums;
-	}
-
-	.lb-alt {
-		color: rgb(255 255 255 / 0.6);
-		flex-basis: 100%;
 	}
 
 	.lb-btn {
