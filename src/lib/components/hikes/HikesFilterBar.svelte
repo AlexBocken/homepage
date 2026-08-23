@@ -5,7 +5,7 @@
 	import RangeSlider from './RangeSlider.svelte';
 	import ChipTypeahead from './ChipTypeahead.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
-	import { resolveHikeArea, type HikeArea } from '$lib/hikes/hikeArea';
+	import { hikeAreaValues, type HikeArea } from '$lib/hikes/hikeArea';
 	import {
 		hikeFilterBounds,
 		DISTANCE_STEP,
@@ -103,14 +103,16 @@
 		return out.sort((a, b) => a.localeCompare(b));
 	});
 
-	// Geographic areas present in the data: a Swiss hike contributes its canton,
-	// a hike abroad its country. Deduped by namespaced value; cantons listed
-	// first (alphabetical), then countries (alphabetical).
+	// Geographic areas present in the data. A hike contributes every level it
+	// belongs to — its canton or Bundesland AND its country — so the list can
+	// offer "Österreich" next to "Kärnten". Deduped by namespaced value; cantons
+	// first (alphabetical), then regions abroad, then whole countries.
 	const areaList = $derived.by(() => {
 		const map = new Map<string, HikeArea>();
 		for (const h of hikes) {
-			const a = resolveHikeArea(h.canton, h.country, h.state);
-			if (a && !map.has(a.value)) map.set(a.value, a);
+			for (const a of hikeAreaValues(h.canton, h.country, h.state)) {
+				if (!map.has(a.value)) map.set(a.value, a);
+			}
 		}
 		const rank = { canton: 0, state: 1, country: 2 };
 		return [...map.values()].sort((a, b) =>

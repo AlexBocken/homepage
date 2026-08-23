@@ -8,7 +8,7 @@
 	import { HIKES_OVERVIEW } from '$lib/data/hikes.generated';
 	import { hikeFilterBounds } from '$lib/hikes/filterBounds';
 	import { filterToParams, paramsToFilter } from '$lib/hikes/browseParams';
-	import { resolveHikeArea } from '$lib/hikes/hikeArea';
+	import { hikeAreaValues } from '$lib/hikes/hikeArea';
 	import type { Difficulty } from '$types/hikes';
 
 	// True when the current month falls inside the hike's recommended season
@@ -104,8 +104,10 @@
 			if (filter.difficulties.size > 0 && !filter.difficulties.has(h.difficulty)) continue;
 			if (filter.regions.size > 0 && (!h.region || !filter.regions.has(h.region))) continue;
 			if (filter.areas.size > 0) {
-				const area = resolveHikeArea(h.canton, h.country, h.state);
-				if (!area || !filter.areas.has(area.value)) continue;
+				// Any level counts: picking Österreich keeps a hike filed under
+				// Kärnten, picking Kärnten keeps only that one.
+				const areas = hikeAreaValues(h.canton, h.country, h.state);
+				if (!areas.some((a) => filter.areas.has(a.value))) continue;
 			}
 			if (filter.inSeasonOnly && !isInSeason(h.seasonStart, h.seasonEnd, currentMonth)) continue;
 			// Multi-tag = OR (a hike matching ANY selected tag is shown). AND

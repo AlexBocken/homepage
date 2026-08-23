@@ -50,3 +50,29 @@ export function isSwissRegion(
 	const c = resolveCountry(country);
 	return c?.code === 'CH' || c?.code === 'LI';
 }
+
+/**
+ * Every area a hike can be filtered by, most specific first: its canton or
+ * Bundesland, followed by the country containing it.
+ *
+ * The bar offers both, so "Österreich" is a filter even when every Austrian hike
+ * is filed under a Bundesland — otherwise the only way to ask for all of them
+ * would be to tick each region in turn. A hike matches when ANY of these is
+ * selected.
+ */
+export function hikeAreaValues(
+	canton: string | null | undefined,
+	country: string | null | undefined,
+	state?: string | null
+): HikeArea[] {
+	const out: HikeArea[] = [];
+	const specific = resolveHikeArea(canton, country, state);
+	if (specific) out.push(specific);
+	if (specific && specific.kind === 'country') return out;
+
+	// A canton implies Switzerland even for manifest entries built before the
+	// country field existed.
+	const k = resolveCountry(country ?? (resolveCanton(canton) ? 'CH' : null));
+	if (k) out.push({ value: `country:${k.code}`, label: k.name, iconUrl: k.flagUrl, kind: 'country' });
+	return out;
+}

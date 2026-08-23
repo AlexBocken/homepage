@@ -134,6 +134,19 @@ test.describe('without JavaScript', () => {
 		await expect.poll(() => cards(page).count()).toBeGreaterThanOrEqual(both);
 	});
 
+	test('a country keeps the hikes filed under its regions', async ({ page }) => {
+		// Austrian hikes are filed under a Bundesland, so filtering by Österreich
+		// has to catch them — otherwise the only way to ask for all of them would
+		// be to tick each region in turn.
+		await page.goto('/hikes?area=state%3AAT-kaernten');
+		const oneRegion = await cards(page).count();
+		expect(oneRegion).toBeGreaterThan(0);
+
+		await page.goto('/hikes?area=country%3AAT');
+
+		await expect.poll(() => cards(page).count()).toBeGreaterThanOrEqual(oneRegion);
+	});
+
 	test('clearing everything returns the whole listing', async ({ page }) => {
 		await page.goto('/hikes?d=T3');
 		const filtered = await cards(page).count();
