@@ -1,0 +1,233 @@
+{
+	"PXL_20260822_064036144.jpg": {
+		"hash": "d2f77339",
+		"de": "Steiler Grat mit grasbewachsenem Hang, Metalltreppe und weisser Hütte vor schneebedeckten Bergen unter bewölktem Himmel.",
+		"en": "Grassy slope with metal stairs and white hut before snow-capped peaks under cloudy sky on a steep ridge trail.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_064041074.jpg": {
+		"hash": "267a5eb8",
+		"de": "Wanderwegweiser mit Schildern, Karte und grüner Plane an Felswand im Wald.",
+		"en": "Trail signs, map board, green cover on a rocky wall in the forest.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_064816878.jpg": {
+		"hash": "fa56d4e5",
+		"de": "Steiler Hang mit grasbewachsenem Boden, Nadelbäumen und bewölktem Himmel im Hintergrund.",
+		"en": "Sloping grassy hillside dotted with evergreens under a cloudy sky in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_064819913.jpg": {
+		"hash": "7615e254",
+		"de": "Grasige Hänge, Nadelbäume und grüne Täler unter bewölktem Himmel in der Ostschweiz.",
+		"en": "Grassy slopes, pine trees and green valleys under a cloudy sky in eastern Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_065413768.jpg": {
+		"hash": "de02e5b4",
+		"de": "Wanderer mit Rucksack auf steilem Pfad am Walensee.",
+		"en": "Hiker with backpack on steep trail above Lake Walen.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_065741131.MP.jpg": {
+		"hash": "970d6eee",
+		"de": "Steiler grasbewachsener Hang mit Steinpfad, umzäunt von Drahtseilen; bewölkt, kühles Licht.",
+		"en": "Steep grassy slope with rocky trail fenced by wires; cloudy sky, cool light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_070705736.jpg": {
+		"hash": "aa0a0b95",
+		"de": "Ein Wanderer geht auf einem steinigen Pfad durch grasbewachsene Hänge unter blauem Himmel mit Wolken.",
+		"en": "A hiker walks along a rocky trail across grassy slopes under blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_070712435.jpg": {
+		"hash": "0723fcf2",
+		"de": "Grüner Hang mit Felsen, Nadelbäumen und bewölktem Himmel über schroffen Gipfeln.",
+		"en": "Green slope dotted with rocks, pine trees and cloudy sky above rugged peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_071004271.MP.jpg": {
+		"hash": "1727ac16",
+		"de": "Ein schmaler Pfad führt steil durch grüne Vegetation an einem felsigen Hang unter bewölktem Himmel.",
+		"en": "A narrow trail winds steeply through green vegetation along a rocky slope under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_071920353.jpg": {
+		"hash": "8fbc4c34",
+		"de": "Nebel umhüllt die Bergspitzen, grüne Hänge und ein blauer See liegen im Tal darunter.",
+		"en": "Mist clings to mountain peaks; green slopes and a blue lake lie below in the valley.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_072206609.jpg": {
+		"hash": "17d83be3",
+		"de": "Steiler Hang mit Fels, Gras und Nadelbäumen unter grauem Himmel; Holzstufen führen den Weg hinauf.",
+		"en": "Steep slope with rock, grass and evergreens under gray sky; wooden steps lead uphill along the trail.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_072213697.jpg": {
+		"hash": "096564c3",
+		"de": "Steiler, felsiger Hang mit Gras und Nadelbäumen unter bewölktem Himmel in der Ostschweiz.",
+		"en": "A steep rocky slope with grass and conifers under a cloudy sky in eastern Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_073824686.jpg": {
+		"hash": "9978dc93",
+		"de": "Nebel verhüllt steilen, felsigen Pfad mit Holzstangen und grüner Vegetation an Ostschweizer Bergflanke.",
+		"en": "Mist shrouds a steep rocky trail lined with wooden posts and green vegetation on the Swiss eastern Alps slope.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_075114722.jpg": {
+		"hash": "ba1b6b0d",
+		"de": "Metallgeländer vor grünen Hängen, Nebel über dem See und Bergen im Hintergrund bei bewölktem Himmel.",
+		"en": "Metal railing in front of green slopes with mist over the lake and mountains under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_075120482.jpg": {
+		"hash": "47d25e55",
+		"de": "Ein Metallgeländer führt über grasbewachsenen Hang unter bewölktem Himmel mit fernen Berggipfeln im Dunst.",
+		"en": "A metal railing winds along a grassy slope under cloudy skies, with distant mountain peaks fading into mist.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_075125525.jpg": {
+		"hash": "c92b8cbe",
+		"de": "Wanderer steigt auf steinigem Pfad neben Metallgerüst, grasbewachsener Hang im Hintergrund.",
+		"en": "Hiker climbs rocky trail beside metal structure, grassy slope in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_080329696.jpg": {
+		"hash": "9c8b53e3",
+		"de": "Ein Wanderer geht auf einem steilen, felsigen Pfad durch nebliges Hochgebirge mit Nadelbäumen am Hang.",
+		"en": "A hiker walks along a steep rocky trail through misty high mountains with conifers lining the slope.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_080552042.jpg": {
+		"hash": "c4a59619",
+		"de": "Steiler Felsgrat mit Holzstufen, grüner Vegetation und blauem Himmel im Hintergrund.",
+		"en": "Rocky ridge with wooden steps, green vegetation under a blue sky in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_080622769.jpg": {
+		"hash": "fb5dd7ca",
+		"de": "Steiler Grat mit Nadelgehölzen, grüne Hänge und bewölkter Himmel über weiten Berglandschaften.",
+		"en": "Rocky ridge with conifers, green slopes under cloudy sky overlooking vast mountain ranges.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_080626789.jpg": {
+		"hash": "7a511912",
+		"de": "Steiler Felsgrat mit Nadelbäumen, trockenem Gras und weitem Bergpanorama unter bewölktem Himmel in Ostschweiz.",
+		"en": "Rocky ridge with conifers and dry grass overlooking a mountain panorama under cloudy skies in eastern Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_080825177.jpg": {
+		"hash": "e84b54b3",
+		"de": "Steiler Felsgrat mit Metallseil, spärlicher Vegetation und blauem Himmel über Ostschweiz.",
+		"en": "Steep rocky ridge with metal chain and sparse greenery under a blue sky in eastern Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_081255565.jpg": {
+		"hash": "86f79c55",
+		"de": "Steiler Felsgrat mit grüner Vegetation, dahinter bewaldete Täler und Wolken über den Bergen.",
+		"en": "A steep rocky ridge with green vegetation overlooks forested valleys under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_081300346.jpg": {
+		"hash": "c165fe3b",
+		"de": "Steiler Gratpfad mit Metallgeländer, felsige Kante und grüne Hänge unter bewölktem Himmel in Ostschweiz.",
+		"en": "Narrow rocky ridge trail with metal railing overlooking green slopes under cloudy skies over eastern Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_081312160.jpg": {
+		"hash": "b32ffa65",
+		"de": "Nebelhauch über grünen Hängen, Nadelwälder und weite Bergpanorama unter bewölktem Himmel in der Ostschweiz.",
+		"en": "Mist clings to green slopes and pine forests under cloudy skies across a wide mountain panorama in eastern Switzerland.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_081320900.jpg": {
+		"hash": "264bee01",
+		"de": "Ein grosser Holzkreuz auf Berggipfel, Nebel über Walensee und grüne Hügel im Hintergrund unter bewölktem Himmel.",
+		"en": "A large wooden cross atop a mountain peak, with mist over the lake and green hills under cloudy skies in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_081543929.jpg": {
+		"hash": "d5ec0956",
+		"de": "Metalltafel an Holzpfosten mit Kette, Hintergrund zeigt bewaldeten Hang und Nebel über Talgründen.",
+		"en": "Metal plate on wooden post with chain; background shows forested slope and mist over valley bottoms.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_081626000.jpg": {
+		"hash": "d0bac057",
+		"de": "Wanderer steht am Grat neben Kreuz und Metallmast, bewölkt über Walensee-Aussichtspunkt in Ostschweiz.",
+		"en": "Hiker stands on ridge beside cross and metal mast, cloudy sky over view of valley below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_081630000.jpg": {
+		"hash": "db75fb55",
+		"de": "Wanderer steht am Gipfelkreuz mit Blick auf die bewaldeten Berge und den See im Tal unter grauem Himmel.",
+		"en": "Hiker stands at the summit cross, overlooking forested mountains and a lake in the valley beneath gray skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_092230281.jpg": {
+		"hash": "2ffbcfbd",
+		"de": "Wanderer steigt auf steinigem Pfad durch grüne Hänge mit Felswand im Hintergrund unter bewölktem Himmel.",
+		"en": "A hiker ascends a rocky trail along green slopes with a rock face in the background under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_092806163.MP.jpg": {
+		"hash": "4aa2b87e",
+		"de": "Steiler Fels mit grüner Vegetation am Fusse, Nadelzweige oben rechts, grauer Himmel.",
+		"en": "Steep rock face with green vegetation at base, pine branches top right, gray sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_093529994.MP.jpg": {
+		"hash": "7a89ccf6",
+		"de": "Ein schmaler, grasbewachsener Pfad schlängelt sich durch dichten Wald mit hohen Nadelbäumen und grünen Sträuchern.",
+		"en": "A narrow grassy path winds through dense forest with tall evergreens and lush green shrubs.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_095710611.jpg": {
+		"hash": "139df384",
+		"de": "Ein Wanderer geht über grüne Wiesen mit Blick auf Berge und See unter blauem Himmel.",
+		"en": "A hiker walks across green meadows with mountains and lake in view under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	},
+	"PXL_20260822_101012453.jpg": {
+		"hash": "274ec656",
+		"de": "Grüne Hänge, Bäume und ein Dorf unter blauem Himmel mit Wolken.",
+		"en": "Green slopes, trees, a village below — blue sky with clouds above.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-08-23"
+	}
+}

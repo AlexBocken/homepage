@@ -1,0 +1,105 @@
+---
+title: Mattstock ab Amden
+date: 2026-08-22
+author: Alexander
+difficulty: T3
+tags: [Amden, Walensee, Ostschweiz, Gipfel, Panorama]
+seasons: 6-10
+summary: Kurzer, steiler Gipfeltag über dem Walensee — mit dem Sessellift auf Niederschlag, über Alpweiden und Verbauungen auf den Mattstock und zu Fuss zurück nach Amden.
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Übersicht
+
+Eine kurze, aber knackige Gipfelwanderung hoch über dem Walensee.
+Der Sessellift nimmt einem die ersten Höhenmeter ab, danach beginnt es
+als ganz normale Alpwanderung über offene Weiden. Weiter oben führt der Weg
+in Serpentinen durch die Lawinenverbauungen, und erst zuletzt geht es über den
+kurzen Gratabschnitt auf den Mattstock (1935 m).
+
+Ein markierter Bergweg ist durchgehend vorhanden, die oberen Passagen sind aber
+steil und teilweise mit Stufen, Geländern und Seilen entschärft — Trittsicherheit
+und Schwindelfreiheit gehören dazu.
+
+Rund 9 km, ca. 700 Höhenmeter im Aufstieg und knapp 1100 im Abstieg,
+mit Gipfelpause etwa 3.5–4 Stunden.
+
+## Anreise
+
+Mit dem Bus nach Amden, Dorf.
+<JourneyPlanner from="<current location>" to="Amden, Dorf" toFixed time="08:30" target="arrival"/>
+
+Von dort mit dem Sessellift hinauf nach Niederschlag (10 Franken, Betrieb ab 8:00 Uhr).
+Start der Wanderung auf 1290 m direkt bei der Bergstation.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+## Über die Alpweiden
+
+Der erste Teil ist eine gemütliche Alpwanderung: offene Weiden, ein guter Pfad
+und der Blick zurück auf Amden und den Walensee.
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+
+## Serpentinen durch die Verbauungen
+
+Ab etwa 1600 m wird es steiler. Der Weg zieht in engen Serpentinen durch die
+Lawinenverbauungen nach oben, teils über Holzstufen. Bei uns lag hier noch Nebel.
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+## Der Gratabschnitt
+
+Erst ganz oben, auf den letzten rund hundert Höhenmetern, wird der Weg zum Grat.
+Schmal und luftig, aber durchgehend als Weg erkennbar und an den heikelsten
+Stellen mit einem Seil gesichert.
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+
+## Gipfel
+
+Nach gut 1.5 Stunden am Gipfelkreuz des Mattstock, 1935 m.
+Rundumsicht über den Walensee, die Churfirsten und bis in die Glarner Alpen.
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+
+## Abstieg nach Amden
+
+Zurück auf demselben Weg über den Grat und durch die Verbauungen,
+danach weiter hinunter Richtung Amden.
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+
+Die letzten Höhenmeter führen durch Wald und über Alpweiden ins Dorf.
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+## Heimreise
+
+Rückreise ab Amden, Dorf.
+<JourneyPlanner fromFixed from="Amden, Dorf" to="<current location>" time="12:45" target="departure"/>
