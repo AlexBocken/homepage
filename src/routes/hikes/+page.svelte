@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { replaceState } from '$app/navigation';
 	import HikeCard from '$lib/components/hikes/HikeCard.svelte';
-	import HikesFilterBar, { type HikesFilter } from '$lib/components/hikes/HikesFilterBar.svelte';
+	import HikesFilterBar from '$lib/components/hikes/HikesFilterBar.svelte';
 	import HikesOverviewMap from '$lib/components/hikes/HikesOverviewMap.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import { HIKES_OVERVIEW } from '$lib/data/hikes.generated';
 	import { hikeFilterBounds } from '$lib/hikes/filterBounds';
+	import { filterToParams, paramsToFilter } from '$lib/hikes/browseParams';
 	import { resolveHikeArea } from '$lib/hikes/hikeArea';
 	import type { Difficulty } from '$types/hikes';
 
@@ -65,81 +65,31 @@
 		return { center: HIKES_OVERVIEW.center, zoom: HIKES_OVERVIEW.zoom };
 	});
 
-	// Filter ceilings start wide-open so the initial render (SSR + first
-	// hydration pass) shows every hike. `$effect` below clamps them down
-	// to the actual data maxes once `data.hikes` is fully populated —
-	// reading `data.hikes` synchronously at script-init turned out to be
-	// fragile during dev hydration (it sporadically returned a one-hike
-	// subset, which then locked the filter to that one hike until the
-	// next navigation cycle).
-	const filter = $state<HikesFilter>({
-		minDistanceKm: Number.NEGATIVE_INFINITY,
-		maxDistanceKm: Number.POSITIVE_INFINITY,
-		minDurationMin: Number.NEGATIVE_INFINITY,
-		maxDurationMin: Number.POSITIVE_INFINITY,
-		minGainM: Number.NEGATIVE_INFINITY,
-		maxGainM: Number.POSITIVE_INFINITY,
-		minLossM: Number.NEGATIVE_INFINITY,
-		maxLossM: Number.POSITIVE_INFINITY,
-		difficulties: new SvelteSet<Difficulty>(),
-		regions: new SvelteSet<string>(),
-		areas: new SvelteSet<string>(),
-		tags: new SvelteSet<string>(),
-		inSeasonOnly: false
-	});
+	// The filter is read out of the URL while rendering, not applied afterwards in
+	// an effect: an effect never runs on the server, so a script-free browser would
+	// receive the full listing however it had filtered it. Reading it here means the
+	// server renders exactly the subset the address bar asks for.
+	//
+	// Bounds come from the same helper the bar uses for its slider tracks, so an
+	// untouched range sits exactly on its track end and reads as "not narrowed".
+	const bounds = $derived(hikeFilterBounds(data.hikes));
+	const filter = $state(paramsToFilter(page.url.searchParams, hikeFilterBounds(data.hikes)));
 
-	// Tag deep-link: arrival from a detail-page tag chip (`/hikes?tag=winter`)
-	// or any saved URL with `?tag=...` pre-selects those tags. Runs once on
-	// mount; thereafter the URL writer below is the source of truth.
-	let initialTagsApplied = false;
+	// With script, a facet click mutates the filter directly and the address bar
+	// follows — which keeps every link in the bar pointing at the right place, since
+	// those hrefs are built from the filter as it stands. `replaceState` rather than
+	// `goto` keeps history clean: toggling four tags would otherwise leave four
+	// back-button stops.
 	$effect(() => {
-		if (initialTagsApplied) return;
 		if (typeof window === 'undefined') return;
-		const params = page.url.searchParams.getAll('tag');
-		for (const t of params) if (t) filter.tags.add(t);
-		initialTagsApplied = true;
-	});
-
-	// Tag URL sync: every toggle in the filter bar reflects into the URL
-	// so the page is shareable / back-button-restorable. `replaceState`
-	// rather than `goto` keeps history clean — toggling four tags would
-	// otherwise leave four back-button stops.
-	$effect(() => {
-		if (typeof window === 'undefined' || !initialTagsApplied) return;
-		const url = new URL(window.location.href);
-		const wanted = [...filter.tags].sort();
-		const current = url.searchParams.getAll('tag').slice().sort();
-		// Skip the no-op rewrite path — `replaceState` would still touch
-		// history's state object and trigger downstream `page.url` effects
-		// for no UX benefit.
-		if (
-			wanted.length === current.length &&
-			wanted.every((t, i) => t === current[i])
-		) return;
-		url.searchParams.delete('tag');
-		for (const t of wanted) url.searchParams.append('tag', t);
-		replaceState(url, page.state);
-	});
-
-	// One-shot per mount: set the slider ceilings to the actual data maxes.
-	// Runs once after `data.hikes` is non-empty; the inner reads of every
-	// `distanceKm`/`durationMin`/etc. fall under the same effect so a
-	// subsequent data-only update would also refresh the defaults — but the
-	// hike list comes from a build-time manifest, so that never fires.
-	let filterDefaultsApplied = false;
-	$effect(() => {
-		if (filterDefaultsApplied) return;
-		if (data.hikes.length === 0) return;
-		const b = hikeFilterBounds(data.hikes);
-		filter.minDistanceKm = b.distance.min;
-		filter.maxDistanceKm = b.distance.max;
-		filter.minDurationMin = b.duration.min;
-		filter.maxDurationMin = b.duration.max;
-		filter.minGainM = b.gain.min;
-		filter.maxGainM = b.gain.max;
-		filter.minLossM = b.loss.min;
-		filter.maxLossM = b.loss.max;
-		filterDefaultsApplied = true;
+		const next = filterToParams(filter, bounds).toString();
+		const current = new URL(window.location.href);
+		const currentQuery = current.searchParams.toString();
+		// Skip the no-op rewrite — `replaceState` would still touch history's state
+		// object and trigger downstream `page.url` effects for no UX benefit.
+		if (next === currentQuery) return;
+		current.search = next;
+		replaceState(current, page.state);
 	});
 
 	const visible = $derived.by(() => {
@@ -261,6 +211,7 @@
 				totalCount={data.hikes.length}
 				totalKm={totals.km}
 				totalGain={totals.gain}
+				facetPath={page.url.pathname}
 			/>
 		</div>
 

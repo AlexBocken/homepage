@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition';
-	import { SvelteSet } from 'svelte/reactivity';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import X from '@lucide/svelte/icons/x';
@@ -14,26 +12,15 @@
 		DURATION_STEP,
 		ELEVATION_STEP
 	} from '$lib/hikes/filterBounds';
+	import { toggledParams, withParams } from '$lib/js/queryToggle';
+	import {
+		filterToParams,
+		RANGE_KEYS,
+		boundsKey,
+		type HikesFilter,
+		type RangeKey
+	} from '$lib/hikes/browseParams';
 	import type { Difficulty, HikeManifestEntry } from '$types/hikes';
-
-	export type HikesFilter = {
-		minDistanceKm: number;
-		maxDistanceKm: number;
-		minDurationMin: number;
-		maxDurationMin: number;
-		minGainM: number;
-		maxGainM: number;
-		minLossM: number;
-		maxLossM: number;
-		difficulties: SvelteSet<Difficulty>;
-		regions: SvelteSet<string>;
-		/** Namespaced area values — canton (CH) or country (abroad). See
-		 * {@link resolveHikeArea}. */
-		areas: SvelteSet<string>;
-		tags: SvelteSet<string>;
-		/** Show only hikes whose recommended season covers the current month. */
-		inSeasonOnly: boolean;
-	};
 
 	interface Props {
 		hikes: HikeManifestEntry[];
@@ -45,11 +32,54 @@
 		/** Summed distance / ascent over the filtered subset (already rounded). */
 		totalKm: number;
 		totalGain: number;
+		/** Where a control leads with no script running — the listing's own path.
+		 * Absent means the caller cannot honour a filtered URL, so the controls stay
+		 * buttons: a link that looks like it did something and did not is worse. */
+		facetPath?: string | null;
 	}
 
 	const DIFFICULTIES: Difficulty[] = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
 
-	const { hikes, filter, resultCount, totalCount, totalKm, totalGain }: Props = $props();
+	const {
+		hikes,
+		filter,
+		resultCount,
+		totalCount,
+		totalKm,
+		totalGain,
+		facetPath = null
+	}: Props = $props();
+
+	const panelId = $props.id();
+
+	/**
+	 * The URL this control leads to with no script running: the filters as they
+	 * stand, with this one flipped. With script, every one of them calls
+	 * preventDefault and changes the filter directly — the href is the fallback,
+	 * never the mechanism.
+	 */
+	function facetUrl(key: string, value: string, repeated = false): string | undefined {
+		if (!facetPath) return undefined;
+		return withParams(facetPath, toggledParams(filterToParams(filter, bounds), key, value, repeated));
+	}
+
+	/** Same, for a range: dropping the parameter restores its full extent. */
+	function clearRangeUrl(key: RangeKey): string | undefined {
+		if (!facetPath) return undefined;
+		const next = filterToParams(filter, bounds);
+		next.delete(key);
+		return withParams(facetPath, next);
+	}
+
+	const resetUrl = $derived(facetPath ?? undefined);
+
+	/** Everything except the ranges, as hidden fields for the script-free range
+	 *  form — submitting it must narrow the listing, not restart it. */
+	const carriedFilters = $derived.by(() => {
+		const params = filterToParams(filter, bounds);
+		for (const k of RANGE_KEYS) params.delete(k);
+		return [...params.entries()];
+	});
 
 	// Collapsed-by-default: the bar is just a summary + active-filter chips +
 	// a trigger until the user opens the control panel. Keeps the listing's
@@ -106,6 +136,17 @@
 			.map(([t]) => t);
 	});
 
+	/** A handful of evenly spaced marks along a track, snapped to the control's own
+	 *  step so a thumb dragged to a mark lands exactly on it. */
+	function ticksFor(b: { min: number; max: number }, step: number, count = 5): number[] {
+		const span = b.max - b.min;
+		const out: number[] = [];
+		for (let i = 0; i < count; i++) {
+			out.push(Math.round((b.min + (span * i) / (count - 1)) / step) * step);
+		}
+		return [...new Set(out)];
+	}
+
 	function fmtDuration(min: number) {
 		return `${Math.floor(min / 60)}h ${min % 60}m`;
 	}
@@ -138,15 +179,21 @@
 
 	// Active filters, flattened into removable chips for the collapsed bar.
 	// A range counts as "active" only when narrowed below its data ceiling.
-	type Chip = { key: string; label: string; icon?: string; clear: () => void };
+	type Chip = { key: string; label: string; icon?: string; href?: string; clear: () => void };
 	const chips = $derived.by<Chip[]>(() => {
 		const out: Chip[] = [];
 		const { distance, duration, gain, loss } = bounds;
 		if (filter.inSeasonOnly)
-			out.push({ key: 'season', label: 'In Saison', clear: () => (filter.inSeasonOnly = false) });
+			out.push({
+				key: 'season',
+				label: 'In Saison',
+				href: facetUrl('season', 'now'),
+				clear: () => (filter.inSeasonOnly = false)
+			});
 		if (filter.minDistanceKm > distance.min || filter.maxDistanceKm < distance.max)
 			out.push({
 				key: 'dist',
+				href: clearRangeUrl('dist'),
 				label: rangeLabel(filter.minDistanceKm, filter.maxDistanceKm, distance, (v) => `${v}`, 'km'),
 				clear: () => {
 					filter.minDistanceKm = distance.min;
@@ -156,6 +203,7 @@
 		if (filter.minDurationMin > duration.min || filter.maxDurationMin < duration.max)
 			out.push({
 				key: 'dur',
+				href: clearRangeUrl('dur'),
 				label: rangeLabel(filter.minDurationMin, filter.maxDurationMin, duration, fmtDuration, ''),
 				clear: () => {
 					filter.minDurationMin = duration.min;
@@ -165,6 +213,7 @@
 		if (filter.minGainM > gain.min || filter.maxGainM < gain.max)
 			out.push({
 				key: 'gain',
+				href: clearRangeUrl('up'),
 				label: `↑ ${rangeLabel(filter.minGainM, filter.maxGainM, gain, (v) => `${v}`, 'm')}`,
 				clear: () => {
 					filter.minGainM = gain.min;
@@ -174,6 +223,7 @@
 		if (filter.minLossM > loss.min || filter.maxLossM < loss.max)
 			out.push({
 				key: 'loss',
+				href: clearRangeUrl('down'),
 				label: `↓ ${rangeLabel(filter.minLossM, filter.maxLossM, loss, (v) => `${v}`, 'm')}`,
 				clear: () => {
 					filter.minLossM = loss.min;
@@ -182,20 +232,36 @@
 			});
 		for (const d of DIFFICULTIES)
 			if (filter.difficulties.has(d))
-				out.push({ key: `d-${d}`, label: d, clear: () => filter.difficulties.delete(d) });
+				out.push({
+					key: `d-${d}`,
+					label: d,
+					href: facetUrl('d', d, true),
+					clear: () => filter.difficulties.delete(d)
+				});
 		for (const r of filter.regions)
-			out.push({ key: `r-${r}`, label: r, clear: () => filter.regions.delete(r) });
+			out.push({
+				key: `r-${r}`,
+				label: r,
+				href: facetUrl('region', r, true),
+				clear: () => filter.regions.delete(r)
+			});
 		for (const value of filter.areas) {
 			const a = areaByValue.get(value);
 			out.push({
 				key: `a-${value}`,
 				label: a?.label ?? value,
 				icon: a?.iconUrl,
+				href: facetUrl('area', value, true),
 				clear: () => filter.areas.delete(value)
 			});
 		}
 		for (const t of filter.tags)
-			out.push({ key: `t-${t}`, label: `#${t}`, clear: () => filter.tags.delete(t) });
+			out.push({
+				key: `t-${t}`,
+				label: `#${t}`,
+				href: facetUrl('tag', t, true),
+				clear: () => filter.tags.delete(t)
+			});
 		return out;
 	});
 
@@ -270,76 +336,188 @@
 	{#if activeCount > 0}
 		<div class="active-chips" aria-label="Aktive Filter">
 			{#each chips as chip (chip.key)}
-				<button type="button" class="chip" onclick={chip.clear}>
+				<svelte:element
+					this={chip.href ? 'a' : 'button'}
+					role={chip.href ? 'link' : 'button'}
+					href={chip.href}
+					type={chip.href ? undefined : 'button'}
+					class="chip"
+					onclick={(e: Event) => { if (chip.href) e.preventDefault(); chip.clear(); }}
+				>
 					{#if chip.icon}<img class="chip-emblem" src={chip.icon} alt="" aria-hidden="true" />{/if}<span
 							class="chip-label">{chip.label}</span>
 					<X size={13} strokeWidth={2} aria-label="entfernen" />
-				</button>
+				</svelte:element>
 			{/each}
-			<button type="button" class="clear-all" onclick={resetFilters}>Alle löschen</button>
+			<svelte:element
+				this={resetUrl ? 'a' : 'button'}
+				role={resetUrl ? 'link' : 'button'}
+				href={resetUrl}
+				type={resetUrl ? undefined : 'button'}
+				class="clear-all"
+				onclick={(e: Event) => { if (resetUrl) e.preventDefault(); resetFilters(); }}
+			>Alle löschen</svelte:element>
 		</div>
 	{/if}
 
-	<button
-		type="button"
-		class="filter-toggle"
-		class:open
-		aria-expanded={open}
+	<!-- A checkbox behind a label, so the panel opens in CSS and a browser with no
+	     script can still reach the filters. `open` stays bound to it, so the
+	     light-dismiss effect and everything else that drove the old button work
+	     unchanged. -->
+	<input
+		id={panelId}
+		class="panel-toggle"
+		type="checkbox"
+		bind:checked={open}
 		aria-controls="filter-panel"
-		onclick={() => (open = !open)}
-	>
+	/>
+	<label class="filter-toggle" class:open for={panelId}>
 		<SlidersHorizontal size={16} strokeWidth={1.75} aria-hidden="true" />
 		<span>Filter</span>
 		{#if activeCount > 0}<span class="badge">{activeCount}</span>{/if}
 		<ChevronDown class="chev" size={16} strokeWidth={1.75} aria-hidden="true" />
-	</button>
+	</label>
 
-	{#if open}
-		<div id="filter-panel" class="panel" transition:slide={{ duration: 200 }}>
+	<div class="panel-wrap">
+		<div id="filter-panel" class="panel">
+			<div class="panel-inner">
 			<div class="season-row">
-				<Toggle bind:checked={filter.inSeasonOnly} label="Nur Touren in der aktuellen Saison" />
+				<Toggle
+					bind:checked={filter.inSeasonOnly}
+					label="Nur Touren in der aktuellen Saison"
+					href={facetUrl('season', 'now')}
+				/>
 			</div>
 
 			<hr class="divider" />
 
-			<div class="ranges">
-				<RangeSlider
-					label="Distanz"
-					min={bounds.distance.min}
-					max={bounds.distance.max}
-					step={DISTANCE_STEP}
-					bind:low={filter.minDistanceKm}
-					bind:high={filter.maxDistanceKm}
-					format={(v) => `${v} km`}
-				/>
-				<RangeSlider
-					label="Dauer"
-					min={bounds.duration.min}
-					max={bounds.duration.max}
-					step={DURATION_STEP}
-					bind:low={filter.minDurationMin}
-					bind:high={filter.maxDurationMin}
-					format={fmtDuration}
-				/>
-				<RangeSlider
-					label="Aufstieg"
-					min={bounds.gain.min}
-					max={bounds.gain.max}
-					step={ELEVATION_STEP}
-					bind:low={filter.minGainM}
-					bind:high={filter.maxGainM}
-					format={(v) => `${v} m`}
-				/>
-				<RangeSlider
-					label="Abstieg"
-					min={bounds.loss.min}
-					max={bounds.loss.max}
-					step={ELEVATION_STEP}
-					bind:low={filter.minLossM}
-					bind:high={filter.maxLossM}
-					format={(v) => `${v} m`}
-				/>
-			</div>
+			<!--
+				Two halves of the same control. The dual-thumb track needs pointer
+				handlers to move, so with no script it is hidden and the native range
+				inputs below it take over — in a GET form with its own submit button,
+				because a range cannot narrow the listing until it is sent.
+			-->
+			{#snippet nativeRange(key: RangeKey, label: string, low: number, high: number, b: { min: number; max: number }, step: number, fmt: (v: number) => string)}
+				{@const ticks = ticksFor(b, step)}
+				<fieldset class="range-inputs">
+					<legend class="sr-only">{label}</legend>
+					<label class="bound">
+						<span>ab</span>
+						<!--
+							The lower bound runs on a reversed axis: its value is negated and
+							the track laid out right-to-left, which puts the minimum on the
+							left and the maximum on the right exactly as the upper slider has
+							them — while the browser's own fill, which always runs from the
+							track's minimum end, now covers everything to the right of the
+							thumb. That is the half the filter keeps, and it follows the thumb
+							live, with no script and no colour trickery. The negation is undone
+							by the listing's redirect, so the URL never shows it.
+						-->
+						<input
+							class="bound-min"
+							type="range"
+							dir="rtl"
+							name="{key}minneg"
+							value={-low}
+							min={-b.max}
+							max={-b.min}
+							{step}
+							list="{panelId}-ticks-{key}-neg"
+							aria-label="{label} ab"
+						/>
+					</label>
+					<label class="bound">
+						<span>bis</span>
+						<input
+							class="bound-max"
+							type="range"
+							name="{key}max"
+							value={high}
+							min={b.min}
+							max={b.max}
+							{step}
+							list="{panelId}-ticks-{key}"
+							aria-label="{label} bis"
+						/>
+					</label>
+					<!-- The marks the browser draws on the track, and the same values
+					     written out underneath so they can be read as well as felt. -->
+					<datalist id="{panelId}-ticks-{key}">
+						{#each ticks as tick (tick)}<option value={tick}></option>{/each}
+					</datalist>
+					<datalist id="{panelId}-ticks-{key}-neg">
+						{#each ticks as tick (tick)}<option value={-tick}></option>{/each}
+					</datalist>
+					<p class="range-scale" aria-hidden="true">
+						{#each ticks as tick (tick)}<span>{fmt(tick)}</span>{/each}
+					</p>
+				</fieldset>
+			{/snippet}
+
+			{#snippet rangeFields()}
+				<div class="ranges">
+					<div class="range-field">
+						<RangeSlider
+							label="Distanz"
+							min={bounds.distance.min}
+							max={bounds.distance.max}
+							step={DISTANCE_STEP}
+							bind:low={filter.minDistanceKm}
+							bind:high={filter.maxDistanceKm}
+							format={(v) => `${v} km`}
+						/>
+						{@render nativeRange('dist', 'Distanz', filter.minDistanceKm, filter.maxDistanceKm, bounds.distance, DISTANCE_STEP, (v) => `${v} km`)}
+					</div>
+					<div class="range-field">
+						<RangeSlider
+							label="Dauer"
+							min={bounds.duration.min}
+							max={bounds.duration.max}
+							step={DURATION_STEP}
+							bind:low={filter.minDurationMin}
+							bind:high={filter.maxDurationMin}
+							format={fmtDuration}
+						/>
+						{@render nativeRange('dur', 'Dauer', filter.minDurationMin, filter.maxDurationMin, bounds.duration, DURATION_STEP, fmtDuration)}
+					</div>
+					<div class="range-field">
+						<RangeSlider
+							label="Aufstieg"
+							min={bounds.gain.min}
+							max={bounds.gain.max}
+							step={ELEVATION_STEP}
+							bind:low={filter.minGainM}
+							bind:high={filter.maxGainM}
+							format={(v) => `${v} m`}
+						/>
+						{@render nativeRange('up', 'Aufstieg', filter.minGainM, filter.maxGainM, bounds.gain, ELEVATION_STEP, (v) => `${v} m`)}
+					</div>
+					<div class="range-field">
+						<RangeSlider
+							label="Abstieg"
+							min={bounds.loss.min}
+							max={bounds.loss.max}
+							step={ELEVATION_STEP}
+							bind:low={filter.minLossM}
+							bind:high={filter.maxLossM}
+							format={(v) => `${v} m`}
+						/>
+						{@render nativeRange('down', 'Abstieg', filter.minLossM, filter.maxLossM, bounds.loss, ELEVATION_STEP, (v) => `${v} m`)}
+					</div>
+				</div>
+			{/snippet}
+
+			{#if facetPath}
+				<form class="range-form" method="get" action={facetPath}>
+					{#each carriedFilters as [key, value] (key + value)}
+						<input type="hidden" name={key} value={value} />
+					{/each}
+					{@render rangeFields()}
+					<button type="submit" class="range-submit">Anwenden</button>
+				</form>
+			{:else}
+				{@render rangeFields()}
+			{/if}
 
 			<hr class="divider" />
 
@@ -347,16 +525,22 @@
 				<legend>Schwierigkeit (SAC)</legend>
 				<div class="sac-grid">
 					{#each DIFFICULTIES as d (d)}
-						<button
-							type="button"
+						{@const active = filter.difficulties.has(d)}
+						{@const href = facetUrl('d', d, true)}
+						<svelte:element
+							this={href ? 'a' : 'button'}
+							role={href ? 'link' : 'button'}
+							{href}
+							type={href ? undefined : 'button'}
 							class="sac-toggle"
-							class:active={filter.difficulties.has(d)}
-							aria-pressed={filter.difficulties.has(d)}
+							class:active
+							aria-current={href && active ? 'true' : undefined}
+							aria-pressed={href ? undefined : active}
 							aria-label="SAC-Schwierigkeit {d}"
-							onclick={() => toggleDifficulty(d)}
+							onclick={(e: Event) => { if (href) e.preventDefault(); toggleDifficulty(d); }}
 						>
 							<span class="sac-marker sac-marker-{sacBand(d)}">{d}</span>
-						</button>
+						</svelte:element>
 					{/each}
 				</div>
 			</fieldset>
@@ -366,12 +550,19 @@
 					<legend>Region</legend>
 					<div class="pills">
 						{#each regions as r (r)}
-							<button
-								type="button"
+							{@const active = filter.regions.has(r)}
+							{@const href = facetUrl('region', r, true)}
+							<svelte:element
+								this={href ? 'a' : 'button'}
+								role={href ? 'link' : 'button'}
+								{href}
+								type={href ? undefined : 'button'}
 								class="pill"
-								class:active={filter.regions.has(r)}
-								onclick={() => toggleRegion(r)}
-							>{r}</button>
+								class:active
+								aria-current={href && active ? 'true' : undefined}
+								aria-pressed={href ? undefined : active}
+								onclick={(e: Event) => { if (href) e.preventDefault(); toggleRegion(r); }}
+							>{r}</svelte:element>
 						{/each}
 					</div>
 				</fieldset>
@@ -388,6 +579,27 @@
 						iconFor={(value) => areaByValue.get(value)?.iconUrl}
 						labelFor={(value) => areaByValue.get(value)?.label ?? value}
 					/>
+					<!-- The typeahead needs script to filter as you type; without it the
+					     same options are simply all there, as links. -->
+					<div class="pills nojs-pills">
+						{#each areaList as area (area.value)}
+							{@const active = filter.areas.has(area.value)}
+							{@const href = facetUrl('area', area.value, true)}
+							<svelte:element
+								this={href ? 'a' : 'button'}
+								role={href ? 'link' : 'button'}
+								{href}
+								type={href ? undefined : 'button'}
+								class="pill"
+								class:active
+								aria-current={href && active ? 'true' : undefined}
+								aria-pressed={href ? undefined : active}
+								onclick={(e: Event) => { if (href) e.preventDefault(); toggleArea(area.value); }}
+							>
+								<img class="pill-emblem" src={area.iconUrl} alt="" aria-hidden="true" />{area.label}
+							</svelte:element>
+						{/each}
+					</div>
 				</fieldset>
 			{/if}
 
@@ -401,16 +613,42 @@
 						hash
 						placeholder="Schlagwort eingeben oder auswählen…"
 					/>
+					<div class="pills nojs-pills">
+						{#each tags as tag (tag)}
+							{@const active = filter.tags.has(tag)}
+							{@const href = facetUrl('tag', tag, true)}
+							<svelte:element
+								this={href ? 'a' : 'button'}
+								role={href ? 'link' : 'button'}
+								{href}
+								type={href ? undefined : 'button'}
+								class="pill"
+								class:active
+								aria-current={href && active ? 'true' : undefined}
+								aria-pressed={href ? undefined : active}
+								onclick={(e: Event) => { if (href) e.preventDefault(); toggleTag(tag); }}
+							>#{tag}</svelte:element>
+						{/each}
+					</div>
 				</fieldset>
 			{/if}
 
 			<div class="panel-foot">
-				<button type="button" class="reset" onclick={resetFilters} disabled={activeCount === 0}>
-					Zurücksetzen
-				</button>
+				{#if resetUrl && activeCount > 0}
+					<a
+						class="reset"
+						href={resetUrl}
+						onclick={(e) => { e.preventDefault(); resetFilters(); }}
+					>Zurücksetzen</a>
+				{:else}
+					<button type="button" class="reset" onclick={resetFilters} disabled={activeCount === 0}>
+						Zurücksetzen
+					</button>
+				{/if}
+				</div>
 			</div>
 		</div>
-	{/if}
+	</div>
 </div>
 
 <style>
@@ -525,6 +763,7 @@
 
 	.filter-toggle {
 		margin-left: auto;
+		user-select: none;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
@@ -577,8 +816,53 @@
 	 * pushes the card grid down (accordion) rather than overlaying it. The
 	 * top border separates it from the summary row; both it and the vertical
 	 * padding are animated by the `slide` transition. */
+	/* Visually gone, still focusable and still the thing that holds the state —
+	   the label in front of it is what a pointer sees. */
+	.panel-toggle {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		border: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.panel-toggle:focus-visible + .filter-toggle {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
+
+	/* The disclosure animates in CSS rather than through a Svelte transition, so
+	   it still slides with no script running. A 0fr → 1fr grid row is the one way
+	   to animate to a height nobody has measured. */
+	.panel-wrap {
+		width: 100%;
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows var(--transition-normal) ease;
+	}
+
+	.panel-toggle:checked ~ .panel-wrap {
+		grid-template-rows: 1fr;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.panel-wrap { transition: none; }
+	}
+
+	/* The clipping half of the disclosure: nothing but overflow, because padding,
+	   a border or a margin here would keep rendering at row height 0 and leave a
+	   sliver of open panel behind. All of that lives on `.panel-inner`. */
 	.panel {
 		width: 100%;
+		overflow: hidden;
+		min-height: 0;
+	}
+
+	.panel-inner {
 		display: flex;
 		flex-direction: column;
 		gap: 1.1rem;
@@ -773,5 +1057,101 @@
 		.summary {
 			flex: 1 1 100%;
 		}
+	}
+
+	/* The script-free halves of this bar, hidden wherever the script-driven
+	   controls actually work. A browser that does not know the media feature is a
+	   browser running script, which is the case those controls serve. */
+	.range-inputs,
+	.range-submit,
+	.nojs-pills {
+		display: none;
+	}
+
+	/* Every control in the bar is a link now, and a link brings an underline with
+	   it. These read as controls, not as prose. */
+	.chip,
+	.clear-all,
+	.sac-toggle,
+	.pill,
+	.reset {
+		text-decoration: none;
+	}
+
+	@media (scripting: none) {
+		/* The dual-thumb track needs pointer handlers to move, so it goes — but
+		   only it. Its label and readout are plain markup and stay, with the native
+		   inputs taking their place directly underneath. */
+		.range-field :global(.rs-track) { display: none; }
+
+		.range-inputs {
+			display: block;
+			border: none;
+			margin: 0;
+			padding: 0;
+		}
+
+		.bound {
+			display: block;
+			margin-bottom: 0.15rem;
+		}
+
+		.bound span {
+			display: block;
+			font-size: 0.62rem;
+			line-height: 1.4;
+			color: var(--color-text-tertiary);
+		}
+
+		.bound input[type='range'] {
+			width: 100%;
+			accent-color: var(--color-primary);
+		}
+
+		.range-scale {
+			display: flex;
+			justify-content: space-between;
+			margin: 0.1rem 0 0;
+			font-size: 0.62rem;
+			font-variant-numeric: tabular-nums;
+			color: var(--color-text-tertiary);
+		}
+
+		.range-submit {
+			display: inline-block;
+			margin-top: 0.8rem;
+			font: inherit;
+			font-size: 0.85rem;
+			font-weight: 600;
+			padding: 0.45rem 1rem;
+			border: 0;
+			border-radius: var(--radius-pill);
+			background: var(--color-primary);
+			color: var(--color-text-on-primary);
+			cursor: pointer;
+		}
+
+		/* The typeahead cannot filter as you type without script, so the options
+		   are simply all listed instead. */
+		fieldset :global(.tt) { display: none; }
+		.nojs-pills { display: flex; }
+	}
+
+	.pill-emblem {
+		width: 14px;
+		height: 14px;
+		object-fit: contain;
+		margin-right: 0.3rem;
+		vertical-align: -2px;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 </style>
