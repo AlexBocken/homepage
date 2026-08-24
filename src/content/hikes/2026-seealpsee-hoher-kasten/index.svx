@@ -3,6 +3,7 @@ title: Seealpsee, Fählensee und der Grat zum Hohen Kasten
 date: 2026-08-24
 author: Alexander
 difficulty: T3
+region: Alpstein
 tags: [Seealpsee, Gipfel, Höhenweg, Panorama]
 seasons: 6-10
 summary: Die grosse Alpstein-Durchquerung von Wasserauen über Seealpsee, Meglisalp und Fählensee und dann über Saxerlücke und Südgrat auf den Hohen Kasten — 22.7 km und 1854 Höhenmeter in vier ernsthaften Anstiegen.
@@ -290,10 +291,9 @@ laufen, aber diese beiden Orte sind es, wegen denen ich wiederkomme.
 ## Heimreise
 
 Mit der Luftseilbahn hinunter nach Brülisau, von dort mit dem Bus weiter.
-<JourneyPlanner fromFixed from="Brülisau, Luftseilbahn" to="<current location>" time="16:00" target="departure"/>
+<JourneyPlanner fromFixed from="Hoher Kasten" to="<current location>" time="15:30" target="departure"/>
 
-Falls die Verbindungssuche die Bahn nicht sauber mitrechnet: Die Gondel fährt
-alle 20 Minuten, zur vollen Stunde sowie um :20 und :40. Der Bus ab Brülisau
-fährt nur halbstündlich. Es lohnt sich, die Talfahrt danach auszurichten —
-und die Wartezeit lieber oben mit Aussicht zu verbringen als unten an der
-Bushaltestelle.
+Die Gondel fährt alle 20 Minuten, zur vollen Stunde sowie um :20 und :40. Der
+Bus ab Brülisau fährt nur halbstündlich. Es lohnt sich, die Talfahrt danach
+auszurichten — und die Wartezeit lieber oben mit Aussicht zu verbringen als
+unten an der Bushaltestelle.
