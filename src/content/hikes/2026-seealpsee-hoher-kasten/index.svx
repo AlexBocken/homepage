@@ -1,0 +1,299 @@
+---
+title: Seealpsee, Fählensee und der Grat zum Hohen Kasten
+date: 2026-08-24
+author: Alexander
+difficulty: T3
+tags: [Seealpsee, Gipfel, Höhenweg, Panorama]
+seasons: 6-10
+summary: Die grosse Alpstein-Durchquerung von Wasserauen über Seealpsee, Meglisalp und Fählensee und dann über Saxerlücke und Südgrat auf den Hohen Kasten — 22.7 km und 1854 Höhenmeter in vier ernsthaften Anstiegen.
+heroAlt: Der Seealpsee spiegelt am frühen Morgen die Wände des Alpsteins
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Übersicht
+
+Zwei Klassiker hintereinandergehängt: Die erste Hälfte ist die
+[Drei-Seen-Wanderung](https://www.appenzell.ch/de/alpstein/wandern/wandervorschlaege.html)
+von Wasserauen über den Seealpsee, die Meglisalp und den Widderalpsattel an den
+Fählensee. Ab dort geht es nicht wie dort vorgesehen zum Sämtisersee hinunter,
+sondern in die Gegenrichtung auf den
+[Geologischen Wanderweg Alpstein](https://schweizmobil.ch/de/wanderland/route-988)
+(Route 988), den man üblicherweise vom Hohen Kasten herunter läuft — hier also
+rückwärts, von Bollenwees über die Saxerlücke und den ganzen Südgrat hinauf zum
+Hohen Kasten.
+
+22.7 km, 1854 Höhenmeter im Aufstieg, durchgehend markierter Bergweg, T3.
+
+**Das ist keine gemütliche Seenwanderung.** Die Höhenmeter kommen nicht
+gleichmässig, sondern in vier eigenständigen Anstiegen, von denen jeder für sich
+schon eine kleine Tour wäre: hinauf zum Seealpsee, vom Seealpsee über die
+Meglisalp zum Widderalpsattel, vom Fählensee zur Saxerlücke und zuletzt der
+lange Zug über den Grat zum Hohen Stock und Hohen Kasten. Dazwischen wird jedes
+Mal wieder abgestiegen, die Höhenmeter sind also wirklich verdient. Wer keine
+gute Kondition mitbringt, sollte den Tag ehrlich durchrechnen: Mit Start um
+8:45 in Wasserauen kann es sonst knapp werden, den Hohen Kasten noch vor der
+letzten Bahn um 17:00 zu erreichen — und ein Abstieg zu Fuss nach Brülisau
+hängt am Schluss eines solchen Tages nochmal 900 Höhenmeter bergab dran.
+
+Meine Zeiten in diesem Bericht sind bewusst ambitioniert und liegen rund zwei
+Stunden unter den signalisierten Marschzeiten. Bitte nicht als Massstab nehmen.
+
+Und noch etwas zum Budget: Die Talfahrt vom Hohen Kasten kostet stolze
+28 Franken — einfach, und das Halbtax hilft hier nicht.
+
+## Anreise
+
+Mit dem Zug nach Wasserauen, Endstation der Appenzeller Bahnen.
+<JourneyPlanner from="<current location>" to="Wasserauen" toFixed time="08:35" target="arrival"/>
+
+Vom Bahnhof auf 868 m geht es direkt los, auf der Alpstrasse ins Tal des
+Schwendibachs hinein. Der Alpstein steht schon in der Morgensonne, während man
+selbst noch im Schatten läuft.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+Nach einer guten halben Stunde beginnt der erste Anstieg — knapp 300 Höhenmeter
+auf einer teils betonierten, teils geschotterten Alpstrasse, die an einem
+überhängenden Felsen vorbeizieht.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+## Seealpsee und die Bruderklausen-Kapelle
+
+Der See liegt schon vor einem, wenn am Ufer die Bruderklausen-Kapelle auftaucht:
+ein offener Holzbau mit Bänken im Freien, 1967 eingeweiht. Während der Alpzeit wird hier sonntags um
+10:30 Berggottesdienst gefeiert, am letzten Sonntag im September das Kapellfest
+zu Ehren des heiligen Bruder Klaus.
+
+<HikeImage idx={7} />
+
+Passend dazu sein Gebet, das kürzeste und vielleicht kompromissloseste im
+ganzen Repertoire:
+
+> Mein Herr und mein Gott, nimm alles von mir, was mich hindert zu Dir.
+>
+> Mein Herr und mein Gott, gib alles mir, was mich führet zu Dir.
+>
+> Mein Herr und mein Gott, nimm mich mir und gib mich ganz zu eigen Dir.
+
+Der volle Text steht auch bei den [Gebeten](/glaube/gebete/bruder-klaus-gebet).
+
+Und dann der See selbst, um kurz nach halb zehn noch fast spiegelglatt. Die
+Wände des Säntismassivs stehen komplett im Wasser.
+
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+Und dann die schönste Werbetafel des Tages, bei der Seealpkäserei «Spitzig
+Stee»: neben Käseverkauf, Alpschwein und «Neu: Alpkälbchen» wird dort ein
+**Molkebad** angeboten — im Holzzuber unter freiem Himmel, auf telefonische
+Voranmeldung, «oder spontan wenn no frei ischt». Molkebad, anyone? Um halb zehn
+morgens mit noch 1700 Höhenmetern vor sich war die Versuchung zum Glück
+überschaubar.
+
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+
+Am Ostufer entlang, vorbei am flachen, verlandenden Teil des Sees, und dann
+beginnt schon der zweite Anstieg.
+
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+
+## Aufstieg zur Meglisalp
+
+Hier hört die Alpstrasse endgültig auf. Der Weg zieht durch Buchen- und
+Ahornwald, unter Felsbändern durch und in Kehren die Steilstufe hinauf — gut
+400 Höhenmeter am Stück.
+
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+
+Oben öffnet sich der Blick zurück über den Seealpsee und hinüber zu den
+Zacken des Alpsteins.
+
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+
+Kurz vor der Alp steht ein kleines gemauertes Bildstöckli mit vergittertem
+Bild. Die goldene Inschrift bittet um Bewahrung «vor allem Unglück und
+Ungewitter» — auf 1520 m eine sehr praktische Bitte.
+
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+
+## Meglisalp
+
+Die Meglisalp ist ein richtiges kleines Sennendörfli in einer Hochmulde auf
+1517 m, urkundlich schon 1071 erwähnt. Zwischen den Hütten grasen Ziegen, und
+mitten drin steht die Kapelle *Maria zum Schnee* von 1905.
+
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+
+Sie ist offen, und sie ist der eigentliche Höhepunkt der beiden Kapellen des
+Tages. Innen ein heller Raum unter einer hölzernen Faltdecke, davor ein
+Flügelaltar mit einer Kopie des Gnadenbildes von Santa Maria Maggiore in Rom —
+daher auch der Name «Maria zum Schnee». Der geht auf die Gründungslegende jener
+römischen Basilika zurück: In der Nacht auf den 5. August 358 soll die
+Gottesmutter einem römischen Patrizier und Papst Liberius erschienen sein und
+angekündigt haben, sie werde selbst zeigen, wo ihre Kirche zu bauen sei. Am
+Morgen lag mitten im römischen Hochsommer Schnee auf dem Esquilin, und zwar
+genau im Grundriss der künftigen Basilika. Gebaut wurde entlang dieser
+Schneelinie, und der 5. August steht bis heute als «Maria Schnee» im Kalender. Im Tabernakel war das Allerheiligste
+zugegen, aufbewahrt von der Sonntagsmesse davor: hier oben, mitten in den
+Alpweiden, ganz unaufgeregt.
+
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+
+Am Berggasthaus zeigt der Wegweiser, was noch alles möglich wäre. Für uns:
+weiter Richtung Widderalpsattel.
+
+<HikeImage idx={32} />
+
+## Über den Widderalpsattel
+
+Der dritte Anstieg beginnt direkt hinter der Alp und ist der längste am
+Stück: von 1517 m auf gut 1860 m, erst über Weiden, dann über Schutt und
+Grasrücken zum Sattel.
+
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+
+Oben steht man zwischen den Felstürmen und schaut in beide Talkessel
+gleichzeitig — zurück in die Mulde der Meglisalp, vorwärts über die
+Widderalp hinunter Richtung Fählensee.
+
+<HikeImage idx={38} />
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+
+## Hinunter zum Fählensee
+
+Der Abstieg zieht sich: gut 400 Höhenmeter über die Widderalp — wo einen die
+Ziegen begutachten — und dann durch Wald an den See.
+
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+<HikeImage idx={43} />
+
+Der Fählensee liegt fast schwarz zwischen den Wänden, ein schmaler Streifen
+Wasser unter dem Hundstein. Am Nordende das Berggasthaus Bollenwees, die
+naheliegende Mittagspause.
+
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+
+Von der Karte sei allerdings eher etwas anderes als die Rösti empfohlen. Sie kam
+ungewürzt — kein Salz, kein Pfeffer, keine Muskatnuss im Teig, und Nachwürzen am
+Tisch ist eben nicht dasselbe wie mitgebratenes Salz. Auch der Butterschmalz traf
+den Geschmack nicht so recht. Die Lage entschädigt vieles, die Rösti nicht.
+
+## Zur Saxerlücke
+
+Nach der Pause der vierte und letzte grosse Anstieg. Zunächst gemächlich das
+Tal hinaus, dann in Kehren hinauf zur Saxerlücke auf 1649 m.
+
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+<HikeImage idx={48} />
+
+In der Scharte wird es schroff: links und rechts stehen die
+Kreuzberge als senkrechte Platten und Türme, dazwischen der Blick ins
+Rheintal, das plötzlich 1200 Meter tiefer liegt.
+
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+
+## Der Grat — Route 988
+
+Ab hier ist man auf dem Geologischen Wanderweg, dem ersten seiner Art in der
+Schweiz. Der Weg bleibt fast durchgehend auf der Gratkante über dem Rheintal:
+rechts fällt alles ins Tal ab, links liegen die Alpen des Alpsteins.
+
+<HikeImage idx={51} />
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+<HikeImage idx={55} />
+
+Ein paar Stellen sind kurz felsig und mit Stufen entschärft, exponiert wird es
+nirgends wirklich — aber schwindelfrei sollte man sein.
+
+<HikeImage idx={56} />
+<HikeImage idx={57} />
+<HikeImage idx={58} />
+<HikeImage idx={59} />
+<HikeImage idx={60} />
+<HikeImage idx={61} />
+<HikeImage idx={62} />
+<HikeImage idx={63} />
+<HikeImage idx={64} />
+
+Für geologisch Interessierte ist der Grat ein Geschenk: Alle paar hundert Meter
+steht eine grosse Tafel und erklärt, was man gerade vor sich hat — Tafel 7 etwa
+die Verwerfungen am Hohen Kasten, samt Schichtfarben, Zeitstrahl von 150
+Millionen Jahren bis heute und QR-Code zum Quiz. Sogar die Distanz zur nächsten
+Tafel in beide Richtungen steht drauf, was am Ende eines langen Tages die
+ehrlichste Fortschrittsanzeige des Wanderwegs ist.
+
+<HikeImage idx={65} />
+
+## Hoher Kasten
+
+Der Gipfelaufbau mit dem Antennenmast ist schon lange sichtbar und kommt dann
+doch überraschend schnell. Zuletzt noch einmal gut hundert Höhenmeter über den
+Rücken, und man steht auf 1794 m.
+
+<HikeImage idx={66} />
+<HikeImage idx={67} />
+<HikeImage idx={68} />
+<HikeImage idx={69} />
+<HikeImage idx={70} />
+
+Der Blick geht vor allem zurück in den Alpstein: über den Sämtisersee hinein in
+die Kette, die man den ganzen Tag abgelaufen ist, und über die Appenzeller Berge
+und Hügel ringsum.
+
+<HikeImage idx={71} />
+<HikeImage idx={72} />
+
+Das Wetter war den ganzen Tag makellos, und die Appenzeller unterwegs — auf den
+Alpen, im Berggasthaus, an der Bergstation — durchgehend ausgesprochen
+freundlich. Sehr empfehlenswerte Tour.
+
+Die schönsten Stunden waren für mich aber die des Vormittags: der spiegelglatte
+Seealpsee und die Meglisalp mit ihrer Kapelle. Der Grat ist grossartig zu
+laufen, aber diese beiden Orte sind es, wegen denen ich wiederkomme.
+
+## Heimreise
+
+Mit der Luftseilbahn hinunter nach Brülisau, von dort mit dem Bus weiter.
+<JourneyPlanner fromFixed from="Brülisau, Luftseilbahn" to="<current location>" time="16:00" target="departure"/>
+
+Falls die Verbindungssuche die Bahn nicht sauber mitrechnet: Die Gondel fährt
+alle 20 Minuten, zur vollen Stunde sowie um :20 und :40. Der Bus ab Brülisau
+fährt nur halbstündlich. Es lohnt sich, die Talfahrt danach auszurichten —
+und die Wartezeit lieber oben mit Aussicht zu verbringen als unten an der
+Bushaltestelle.
