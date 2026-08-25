@@ -8,6 +8,7 @@
 	// Connections come from the free Swiss transport API (transport.opendata.ch,
 	// which sends CORS headers, so the browser can call it directly).
 	import LocateFixed from '@lucide/svelte/icons/locate-fixed';
+	import LocateOff from '@lucide/svelte/icons/locate-off';
 	import ArrowDownUp from '@lucide/svelte/icons/arrow-down-up';
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
@@ -91,6 +92,60 @@
 
 	let busy = $state(false);
 	let error = $state<string | null>(null);
+	// Aborts the running search: the two /locations calls, the /connections
+	// call, and the wait for a geolocation fix. `getCurrentPosition` can't be
+	// called off — a permission prompt the reader never answers keeps the
+	// callback pending, and its own `timeout` doesn't necessarily run while the
+	// prompt is open — so the abort resolves the wait and the late fix (if it
+	// ever comes) is dropped on the floor.
+	let searchCtl: AbortController | null = null;
+
+	const GEO_DENIED_MSG =
+		'Standortfreigabe ist blockiert — Start oder Ziel eintippen, oder die Freigabe in den Browsereinstellungen erlauben.';
+
+	/** A rejection the search loop recognises as "the reader hit Abbrechen",
+	 * so it stays silent instead of showing an error. */
+	function abortError(): DOMException {
+		return new DOMException('Suche abgebrochen', 'AbortError');
+	}
+	function isAbort(e: unknown): boolean {
+		return e instanceof DOMException && e.name === 'AbortError';
+	}
+
+	/** What the browser will do with a geolocation request, as far as the
+	 * Permissions API will tell us. `'unsupported'` covers both a missing
+	 * Permissions API and a missing geolocation — with either we simply try and
+	 * handle the failure. Knowing it is `'denied'` up front lets us skip a call
+	 * that cannot succeed and say so before the reader waits for it. */
+	let geoPermission = $state<'granted' | 'denied' | 'prompt' | 'unsupported'>('unsupported');
+
+	$effect(() => {
+		if (typeof navigator === 'undefined' || !('geolocation' in navigator)) return;
+		if (!('permissions' in navigator)) {
+			// No Permissions API (Safari): treat as "ask and see".
+			geoPermission = 'prompt';
+			return;
+		}
+		let status: PermissionStatus | null = null;
+		const onChange = () => {
+			if (status) geoPermission = status.state;
+		};
+		navigator.permissions
+			.query({ name: 'geolocation' as PermissionName })
+			.then((s) => {
+				status = s;
+				geoPermission = s.state;
+				s.addEventListener('change', onChange);
+			})
+			.catch(() => {
+				geoPermission = 'prompt';
+			});
+		return () => status?.removeEventListener('change', onChange);
+	});
+
+	/** True when a field asks for the current location but the browser has the
+	 * permission blocked — the search would fail, so the UI says so first. */
+	const geoBlocked = $derived((fromCurrent || toCurrent) && geoPermission === 'denied');
 
 	type Stop = {
 		station: { name: string };
@@ -214,7 +269,7 @@
 		error = null;
 	}
 
-	function getPosition(): Promise<GeolocationPosition> {
+	function getPosition(signal: AbortSignal): Promise<GeolocationPosition> {
 		if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
 			return Promise.reject(new Error('Standort steht in diesem Browser nicht zur Verfügung.'));
 		}
@@ -223,15 +278,29 @@
 		if (typeof window !== 'undefined' && window.isSecureContext === false) {
 			return Promise.reject(new Error('Standort benötigt eine sichere (HTTPS-)Verbindung.'));
 		}
-		return new Promise<GeolocationPosition>((resolve, reject) =>
+		// Already blocked: asking again cannot prompt and cannot succeed, so fail
+		// immediately with the one message that tells the reader what to do.
+		if (geoPermission === 'denied') {
+			return Promise.reject(new Error(GEO_DENIED_MSG));
+		}
+		return new Promise<GeolocationPosition>((resolve, reject) => {
+			if (signal.aborted) {
+				reject(abortError());
+				return;
+			}
+			signal.addEventListener('abort', () => reject(abortError()), { once: true });
 			navigator.geolocation.getCurrentPosition(
 				resolve,
 				// A GeolocationPositionError is NOT an Error instance, so map it to
 				// one with a readable message — otherwise the catch can't surface it.
 				(err) => {
+					// A denial here is the authoritative answer even where the
+					// Permissions API said otherwise — remember it so the next
+					// search fails fast and the hint below appears.
+					if (err.code === err.PERMISSION_DENIED) geoPermission = 'denied';
 					const msg =
 						err.code === err.PERMISSION_DENIED
-							? 'Standortfreigabe wurde verweigert.'
+							? GEO_DENIED_MSG
 							: err.code === err.POSITION_UNAVAILABLE
 								? 'Standort ist derzeit nicht verfügbar.'
 								: err.code === err.TIMEOUT
@@ -244,8 +313,8 @@
 				// high accuracy waits for a GPS fix that never comes and times out.
 				// A generous maximumAge lets a recent cached fix resolve instantly.
 				{ enableHighAccuracy: false, timeout: 20_000, maximumAge: 300_000 }
-			)
-		);
+			);
+		});
 	}
 
 	// A resolved stop: canonical name + the station id (didok/UIC) that SBB's
@@ -253,18 +322,29 @@
 	// resolve the typed text to a real station.
 	type Station = { name: string; id: string | null };
 
-	async function nearestStation(): Promise<Station> {
-		const pos = await getPosition();
+	/** The stop we last located the reader at. Both ends can be "current
+	 * location" (and searches get repeated with a different time), and the fix
+	 * doesn't move meaningfully within a few minutes — so one lookup serves them
+	 * all instead of one geolocation round-trip per field per search. */
+	let nearestCache: { station: Station; at: number } | null = null;
+	const NEAREST_TTL_MS = 5 * 60_000;
+
+	async function nearestStation(signal: AbortSignal): Promise<Station> {
+		const cached = nearestCache;
+		if (cached && Date.now() - cached.at < NEAREST_TTL_MS) return cached.station;
+		const pos = await getPosition(signal);
 		const u = new URL('https://transport.opendata.ch/v1/locations');
 		u.searchParams.set('type', 'station');
 		u.searchParams.set('x', String(pos.coords.latitude));
 		u.searchParams.set('y', String(pos.coords.longitude));
-		const res = await fetch(u);
+		const res = await fetch(u, { signal });
 		if (!res.ok) throw new Error('Haltestellensuche fehlgeschlagen.');
 		const json = (await res.json()) as { stations?: { name?: string; id?: string | number }[] };
 		const st = json.stations?.find((s) => s.name);
 		if (!st?.name) throw new Error('Keine Haltestelle in der Nähe gefunden.');
-		return { name: st.name, id: st.id != null ? String(st.id) : null };
+		const station = { name: st.name, id: st.id != null ? String(st.id) : null };
+		nearestCache = { station, at: Date.now() };
+		return station;
 	}
 
 	// Station typeahead — the same /locations?type=station endpoint sbb-tui uses,
@@ -274,11 +354,11 @@
 	let suggestions = $state<string[]>([]);
 	let suggestTimer: ReturnType<typeof setTimeout> | null = null;
 
-	async function fetchStations(query: string): Promise<Station[]> {
+	async function fetchStations(query: string, signal?: AbortSignal): Promise<Station[]> {
 		const u = new URL('https://transport.opendata.ch/v1/locations');
 		u.searchParams.set('type', 'station');
 		u.searchParams.set('query', query);
-		const res = await fetch(u);
+		const res = await fetch(u, { signal });
 		if (!res.ok) return [];
 		const json = (await res.json()) as { stations?: { name?: string; id?: string | number }[] };
 		return (json.stations ?? [])
@@ -328,12 +408,14 @@
 
 	// Resolve a typed (un-picked) field to its canonical station before the
 	// connections call; fall back to the raw text on miss/error.
-	async function resolveStation(query: string): Promise<Station> {
+	async function resolveStation(query: string, signal: AbortSignal): Promise<Station> {
 		if (!query) return { name: query, id: null };
 		try {
-			const [first] = await fetchStations(query);
+			const [first] = await fetchStations(query, signal);
 			return first ?? { name: query, id: null };
-		} catch {
+		} catch (e) {
+			// A cancelled search must not quietly continue with the raw text.
+			if (isAbort(e)) throw e;
 			return { name: query, id: null };
 		}
 	}
@@ -351,6 +433,22 @@
 		return () => window.removeEventListener('pointerdown', onAway);
 	});
 
+	/** Drops the current-location mode on whichever editable field still asks
+	 * for it, so a blocked permission leaves the reader with a typable field
+	 * instead of a dead end. Fixed fields are the author's choice and stay. */
+	function useManualEntry() {
+		if (fromCurrent && !fromFixed) fromCurrent = false;
+		if (toCurrent && !toFixed) toCurrent = false;
+		error = null;
+	}
+
+	/** Stops the running search. The button turns into this while `busy`, which
+	 * matters most when a field is set to the current location: the browser's
+	 * permission prompt can sit there unanswered with nothing else to click. */
+	function cancelSearch() {
+		searchCtl?.abort();
+	}
+
 	async function search() {
 		activeField = null;
 		suggestions = [];
@@ -365,10 +463,19 @@
 			error = 'Bitte ein Ziel angeben.';
 			return;
 		}
+		// A second search supersedes the first rather than racing it.
+		searchCtl?.abort();
+		const ctl = new AbortController();
+		searchCtl = ctl;
+		const signal = ctl.signal;
 		busy = true;
 		try {
-			const fromR = fromCurrent ? await nearestStation() : await resolveStation(fromText.trim());
-			const toR = toCurrent ? await nearestStation() : await resolveStation(toText.trim());
+			const fromR = fromCurrent
+				? await nearestStation(signal)
+				: await resolveStation(fromText.trim(), signal);
+			const toR = toCurrent
+				? await nearestStation(signal)
+				: await resolveStation(toText.trim(), signal);
 			const u = new URL('https://transport.opendata.ch/v1/connections');
 			u.searchParams.set('from', fromR.name);
 			u.searchParams.set('to', toR.name);
@@ -377,7 +484,7 @@
 			u.searchParams.set('date', dateStr);
 			u.searchParams.set('time', reqTime);
 			if (timeMode === 'arrival') u.searchParams.set('isArrivalTime', '1');
-			const res = await fetch(u);
+			const res = await fetch(u, { signal });
 			if (!res.ok) throw new Error('Verbindungsabfrage fehlgeschlagen.');
 			const json = (await res.json()) as { connections?: Connection[] };
 			connections = json.connections ?? [];
@@ -392,10 +499,22 @@
 			};
 			if (connections.length === 0) error = 'Keine Verbindungen gefunden.';
 		} catch (e) {
+			// Cancelled — either by the reader or by a newer search taking over.
+			// Neither is a failure worth a banner.
+			if (isAbort(e)) return;
 			console.warn('[JourneyPlanner]', e);
-			error = e instanceof Error ? e.message : 'Abfrage fehlgeschlagen.';
+			const msg = e instanceof Error ? e.message : 'Abfrage fehlgeschlagen.';
+			// The blocked-permission case already has its standing hint above the
+			// button; the banner would only say the same thing twice.
+			if (msg === GEO_DENIED_MSG) return;
+			error = msg;
 		} finally {
-			busy = false;
+			// Only the newest search owns the spinner; a superseded one must not
+			// clear it out from under its successor.
+			if (searchCtl === ctl) {
+				searchCtl = null;
+				busy = false;
+			}
 		}
 	}
 
@@ -530,9 +649,31 @@
 		<TimePicker bind:value={timeStr} lang="de" />
 	</div>
 
-	<button type="button" class="go" onclick={search} disabled={busy}>
-		{#if busy}<LoaderCircle size={16} strokeWidth={2} class="spin" />Suche…{:else}<Search size={16} strokeWidth={2} />Verbindungen suchen{/if}
-	</button>
+	{#if geoBlocked}
+		<p class="geo-hint" role="status">
+			<LocateOff size={15} strokeWidth={2} aria-hidden="true" />
+			<span>
+				Standortfreigabe ist für diese Seite blockiert, «Aktueller Standort» kann darum nicht
+				aufgelöst werden.
+				{#if (fromCurrent && !fromFixed) || (toCurrent && !toFixed)}
+					<button type="button" class="geo-fix" onclick={useManualEntry}>Stattdessen eintippen</button>
+				{:else}
+					Erlaube die Freigabe in den Browsereinstellungen.
+				{/if}
+			</span>
+		</p>
+	{/if}
+
+	<div class="go-row">
+		<button type="button" class="go" onclick={search} disabled={busy}>
+			{#if busy}<LoaderCircle size={16} strokeWidth={2} class="spin" />Suche…{:else}<Search size={16} strokeWidth={2} />Verbindungen suchen{/if}
+		</button>
+		{#if busy}
+			<button type="button" class="cancel" onclick={cancelSearch}>
+				<X size={16} strokeWidth={2.25} aria-hidden="true" />Abbrechen
+			</button>
+		{/if}
+	</div>
 
 	{#if error}
 		<p class="err" role="status">{error}</p>
@@ -890,8 +1031,14 @@
 		box-shadow: var(--shadow-md);
 	}
 
-	.go {
+	.go-row {
 		margin-top: 0.75rem;
+		display: flex;
+		align-items: stretch;
+		gap: 0.5rem;
+	}
+
+	.go {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -912,6 +1059,62 @@
 
 	.go:hover:not(:disabled) {
 		background: var(--color-primary-hover);
+	}
+
+	/* Sits beside the spinner while a search runs — the only way out when a
+	   permission prompt or a slow fix keeps the search hanging. */
+	.cancel {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		flex: 0 0 auto;
+		appearance: none;
+		font: inherit;
+		font-size: 0.9rem;
+		font-weight: 600;
+		padding: 0.6rem 0.9rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition:
+			background var(--transition-fast),
+			color var(--transition-fast);
+	}
+
+	.cancel:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
+
+	.geo-hint {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.45rem;
+		margin: 0.6rem 0 0;
+		font-size: 0.85rem;
+		line-height: 1.45;
+		color: var(--color-text-secondary);
+	}
+
+	.geo-hint :global(svg) {
+		flex: 0 0 auto;
+		margin-top: 0.15rem;
+		color: var(--orange);
+	}
+
+	.geo-fix {
+		appearance: none;
+		border: 0;
+		background: none;
+		padding: 0;
+		font: inherit;
+		font-weight: 600;
+		color: var(--color-primary);
+		cursor: pointer;
+		text-decoration: underline;
 	}
 
 	.go:disabled {
