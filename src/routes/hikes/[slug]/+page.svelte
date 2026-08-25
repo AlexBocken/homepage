@@ -8,7 +8,7 @@
 	import Seo from '$lib/components/Seo.svelte';
 	import { setHikeContext } from '$lib/components/hikes/hikeContext.svelte';
 	import { listScrollAnchors } from '$lib/components/hikes/scrollAnchors';
-	import { setHover, clearHover } from '$lib/components/hikes/hoverStore.svelte';
+	import { hover, setHover, clearHover } from '$lib/components/hikes/hoverStore.svelte';
 	import { focused, setFocused } from '$lib/components/hikes/focusedImageStore.svelte';
 	import Route from '@lucide/svelte/icons/route';
 	import Clock from '@lucide/svelte/icons/clock';
@@ -192,6 +192,75 @@
 		showPrivate
 	}));
 
+	// A scroll the page started itself, in response to a map marker click. While
+	// it runs, the sampler below stands down: otherwise it hands the cursor to
+	// every image the page flies past, the pin walks away from the photo that was
+	// clicked, and the map chases each one in turn.
+	//
+	// The latch is event-driven rather than timed. A smooth scroll across a long
+	// article easily runs past two seconds, so any fixed window is either too
+	// short (the sampler wakes up mid-flight — the bug this replaced) or long
+	// enough to swallow the reader's own next scroll. It ends on whichever comes
+	// first: `scrollend`, the reader touching wheel / touch / keyboard — that is
+	// them taking over, and taking over is exactly what should resync — or a
+	// generous safety net for browsers without `scrollend`.
+	let selfScroll = false;
+	let selfScrollTimer: ReturnType<typeof setTimeout> | null = null;
+	const SELF_SCROLL_MAX_MS = 4000;
+	const USER_INTENT_EVENTS = ['wheel', 'touchstart', 'keydown'] as const;
+
+	function selfScrolling(): boolean {
+		return selfScroll;
+	}
+
+	function endSelfScroll(): void {
+		if (!selfScroll) return;
+		selfScroll = false;
+		if (selfScrollTimer !== null) {
+			clearTimeout(selfScrollTimer);
+			selfScrollTimer = null;
+		}
+		window.removeEventListener('scrollend', endSelfScroll);
+		for (const type of USER_INTENT_EVENTS) window.removeEventListener(type, endSelfScroll);
+	}
+
+	function beginSelfScroll(): void {
+		endSelfScroll();
+		selfScroll = true;
+		window.addEventListener('scrollend', endSelfScroll, { once: true });
+		for (const type of USER_INTENT_EVENTS) {
+			window.addEventListener(type, endSelfScroll, { once: true, passive: true });
+		}
+		selfScrollTimer = setTimeout(endSelfScroll, SELF_SCROLL_MAX_MS);
+	}
+
+	/** Bring the inline `<HikeImage>` for a photo into view — the counterpart of
+	 *  a marker click on the map, so clicking a photo on the map takes the reader
+	 *  to the passage that photo belongs to. Only desktop registers anchors, so
+	 *  on narrow screens this finds nothing and does nothing. */
+	function scrollProseTo(visibleIdx: number): void {
+		if (typeof window === 'undefined') return;
+		const anchor = listScrollAnchors().find((a) => a.visibleIdx === visibleIdx);
+		if (!anchor) return;
+		// Pin the trail cursor to the photo that was clicked. Hovering a marker
+		// already puts it there, but a touch tap never hovers — and either way it
+		// has to be re-asserted here, because the scroll we are about to start
+		// would otherwise drag it along to wherever the text lands.
+		setHover(anchor.trackIdx, 'map');
+		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		beginSelfScroll();
+		anchor.element.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+	}
+
+	// Map marker → prose. The marker click writes `focused` with source 'map';
+	// the strip and the map handle their own side of that, this brings the text
+	// column along.
+	$effect(() => {
+		const idx = focused.index;
+		if (focused.source !== 'map' || idx === null) return;
+		scrollProseTo(idx);
+	});
+
 	// Continuous trail-position tracking. As the reader scrolls through the
 	// content column, we sample every registered `<HikeImage>` anchor's
 	// viewport position and linearly interpolate between adjacent images'
@@ -209,6 +278,13 @@
 
 		function sample(): void {
 			frame = null;
+			// Someone else — a strip click, a map marker — took the cursor since
+			// our last write. Drop the memo of what we last published so the next
+			// sample writes unconditionally: without this, scrolling back to the
+			// very image that was clicked would compute the same index, compare
+			// equal, and leave the map parked where the click had put it.
+			if (focused.source !== 'inline') lastFocusIdx = null;
+			if (hover.source !== 'scroll') lastHoverIdx = -1;
 			const anchors = listScrollAnchors();
 			if (anchors.length === 0) return;
 			// Sort by current viewport-top — that's the natural reading order
@@ -251,11 +327,21 @@
 				visibleIdx = frac < 0.5 ? lo.visibleIdx : hi.visibleIdx;
 			}
 
-			if (trackIdx !== lastHoverIdx) {
+			// Both writes stand down during a scroll the page started itself: after
+			// a marker click the pin belongs to the clicked photo, and only the
+			// text travels. The reader's own next scroll takes both back.
+			if (trackIdx !== lastHoverIdx && !selfScrolling()) {
 				lastHoverIdx = trackIdx;
 				setHover(trackIdx, 'scroll');
 			}
-			if (visibleIdx !== lastFocusIdx && focused.source !== 'strip' && focused.source !== 'map') {
+			// The prose leads again as soon as the reader scrolls. The old guard
+			// here skipped the write whenever `focused.source` was 'strip' or
+			// 'map' — but nothing ever reset that source, so a single click on a
+			// marker or a thumbnail muted the scroll driver for the rest of the
+			// visit. What is worth deferring to is a scroll we started ourselves
+			// (see `selfScrolling`), where every image flown past would otherwise
+			// grab the focus and drag the map with it.
+			if (visibleIdx !== lastFocusIdx && !selfScrolling()) {
 				lastFocusIdx = visibleIdx;
 				setFocused(visibleIdx, 'inline');
 			}
@@ -274,6 +360,7 @@
 		return () => {
 			window.removeEventListener('scroll', onScroll);
 			window.removeEventListener('resize', onScroll);
+			endSelfScroll();
 			if (frame !== null) cancelAnimationFrame(frame);
 			// Clear the scroll-driven hover so the pin disappears if the user
 			// navigates away from the page.

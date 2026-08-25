@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getHikeContext } from './hikeContext.svelte';
-	import { focused } from './focusedImageStore.svelte';
+	import { focused, setFocused } from './focusedImageStore.svelte';
 	import { addScrollAnchor } from './scrollAnchors';
 	import { dev } from '$app/environment';
 	import Lock from '@lucide/svelte/icons/lock';
@@ -101,6 +101,16 @@
 
 	let figure: HTMLElement | undefined = $state();
 
+	/** Click a photo in the prose to put it under the map's focus ring: the map
+	 *  flies to where it was taken and the strip centres its card. Source
+	 *  'strip' is the deliberate-pick behaviour the strip's own clicks use — the
+	 *  reader asked for this photo, so the full sync is what they want. Scroll
+	 *  takes the cursor back as soon as they read on. */
+	function focusOnMap(): void {
+		if (visibleIdx < 0) return;
+		setFocused(visibleIdx, 'strip');
+	}
+
 	// Register this image's DOM element as a scroll anchor. The page reads
 	// these anchors on each scroll frame to compute the active trail
 	// position. Desktop-only — there's no sticky map to drive on mobile.
@@ -141,7 +151,9 @@
 		</figure>
 	{/if}
 {:else if ip && visible}
-	<figure class="hike-image" class:active={isActive} bind:this={figure}>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<figure class="hike-image" class:active={isActive} bind:this={figure} onclick={focusOnMap}>
 		<img
 			src={ip.src}
 			alt={ip.alt}
@@ -184,6 +196,14 @@
 		background: var(--color-bg-elevated);
 		box-shadow: var(--shadow-md);
 		transition: box-shadow 280ms ease;
+	}
+
+	/* Only a pointer where the click does something visible: below 1024px the
+	   map isn't beside the prose and the photo is just a photo. */
+	@media (min-width: 1024px) {
+		.hike-image {
+			cursor: pointer;
+		}
 	}
 
 	.hike-image.active {
