@@ -176,7 +176,7 @@ export const en = {
 	administration_title: 'Administration',
 	untranslated_recipes: 'Untranslated Recipes',
 	alt_text_generator: 'Alt-Text Generator',
-	image_colors: 'Image Colors',
+	image_blurs: 'Image Placeholders',
 	nutrition_mappings: 'Nutrition Mappings',
 
 	// Recipe detail page
@@ -205,7 +205,7 @@ export const en = {
 	administration_description: 'Manage recipes and content',
 	untranslated_description: 'View and manage recipes that need translation',
 	alt_text_description: 'Generate alternative text for recipe images using AI',
-	image_colors_description: 'Extract dominant colors from recipe images for loading placeholders',
+	image_blurs_description: 'Generate blurred placeholders shown while a recipe image loads',
 	nutrition_mappings_description: 'Generate or regenerate calorie and nutrition data for all recipes',
 
 	// Smaller filters / pages

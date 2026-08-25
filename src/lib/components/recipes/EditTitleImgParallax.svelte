@@ -16,7 +16,6 @@
 		card_data: CardData;
 		image_preview_url: string;
 		selected_image_file: File | null;
-		color?: string;
 		titleExtras?: Snippet;
 		children?: Snippet;
 	};
@@ -25,7 +24,6 @@
 		card_data = $bindable(),
 		image_preview_url = $bindable(''),
 		selected_image_file = $bindable<File | null>(null),
-		color = '',
 		titleExtras,
 		children
 	}: Props = $props();
@@ -132,7 +130,6 @@
 			type="button"
 			class="image-wrap"
 			onclick={triggerFilePicker}
-			style:background-color={color || 'var(--color-bg-elevated)'}
 			aria-label={image_preview_url ? 'Bild ersetzen' : 'Bild hochladen'}
 		>
 			{#if image_preview_url}
@@ -295,6 +292,7 @@
 	}
 
 	.image-wrap {
+		background-color: var(--color-bg-elevated);
 		all: unset;
 		box-sizing: border-box;
 		display: block;

@@ -49,7 +49,8 @@ export interface RecipeFormData {
 		mediapath: string;
 		alt: string;
 		caption: string;
-		color?: string;
+		/** Blurred `data:` URI placeholder — see $lib/server/lqip. */
+		blur?: string;
 	}>;
 
 	// Finished weight override (denominator only — see $lib/js/finalWeight)

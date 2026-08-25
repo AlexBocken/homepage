@@ -3,8 +3,8 @@
 
 	let stats = $state({
 		totalWithImages: 0,
-		missingColor: 0,
-		withColor: 0,
+		missingBlur: 0,
+		withBlur: 0,
 	});
 
 	let processing = $state(false);
@@ -20,7 +20,7 @@
 
 	async function fetchStats() {
 		try {
-			const response = await fetch('/api/recalculate-image-colors');
+			const response = await fetch('/api/recalculate-image-blurs');
 			if (response.ok) {
 				stats = await response.json();
 			}
@@ -35,7 +35,7 @@
 		results = [];
 
 		try {
-			const response = await fetch('/api/recalculate-image-colors', {
+			const response = await fetch('/api/recalculate-image-blurs', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ filter, limit }),
@@ -175,12 +175,17 @@
 :global(:root[data-theme="dark"]) .result-item {
 	background-color: var(--nord1);
 }
-	.color-swatch {
-		width: 2.5rem;
-		height: 2.5rem;
+	/* The generated placeholder itself, at card scale — the only honest preview
+	   of what a visitor sees before the photo arrives. */
+	.blur-preview {
+		width: 4rem;
+		height: 3rem;
 		border-radius: 0.25rem;
 		border: 1px solid var(--nord4);
 		flex-shrink: 0;
+		background-size: cover;
+		background-position: center;
+		background-repeat: no-repeat;
 	}
 	.result-info {
 		flex: 1;
@@ -198,10 +203,10 @@
 	}
 </style>
 
-<svelte:head><title>Image Dominant Colors - Bocken</title></svelte:head>
+<svelte:head><title>Image Blur Placeholders - Bocken</title></svelte:head>
 
 <div class="container">
-	<h1>Image Dominant Colors</h1>
+	<h1>Image Blur Placeholders</h1>
 
 	<div class="stats">
 		<div class="stat-card">
@@ -209,12 +214,12 @@
 			<div class="stat-value">{stats.totalWithImages}</div>
 		</div>
 		<div class="stat-card">
-			<div class="stat-label">Missing Color</div>
-			<div class="stat-value">{stats.missingColor}</div>
+			<div class="stat-label">Missing Blur</div>
+			<div class="stat-value">{stats.missingBlur}</div>
 		</div>
 		<div class="stat-card">
-			<div class="stat-label">With Color</div>
-			<div class="stat-value">{stats.withColor}</div>
+			<div class="stat-label">With Blur</div>
+			<div class="stat-value">{stats.withBlur}</div>
 		</div>
 	</div>
 
@@ -222,8 +227,8 @@
 		<div class="control-group">
 			<label for="filter">Filter:</label>
 			<select id="filter" bind:value={filter}>
-				<option value="missing">Only Missing Colors</option>
-				<option value="all">All Recipes (Recalculate)</option>
+				<option value="missing">Only Missing Placeholders</option>
+				<option value="all">All Recipes (Regenerate)</option>
 			</select>
 		</div>
 
@@ -233,7 +238,7 @@
 		</div>
 
 		<button onclick={processBatch} disabled={processing}>
-			{processing ? 'Processing...' : 'Extract Colors'}
+			{processing ? 'Processing...' : 'Generate Placeholders'}
 		</button>
 	</div>
 
@@ -247,12 +252,12 @@
 			{#each results as result}
 				<div class="result-item">
 					{#if result.status === 'ok'}
-						<div class="color-swatch" style="background-color: {result.color}"></div>
+						<div class="blur-preview" style="background-image: url('{result.blur}')"></div>
 					{/if}
 					<div class="result-info">
 						<strong>{result.name}</strong> ({result.shortName})
 						{#if result.status === 'ok'}
-							<code>{result.color}</code>
+							<code>{result.bytes} B</code>
 						{/if}
 						{#if result.status === 'error'}
 							<div class="result-error">{result.error}</div>

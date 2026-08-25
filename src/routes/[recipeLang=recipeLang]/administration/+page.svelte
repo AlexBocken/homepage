@@ -22,10 +22,10 @@
 			icon: '🖼️'
 		},
 		{
-			title: t.image_colors,
-			description: t.image_colors_description,
-			href: `/${data.recipeLang}/admin/image-colors`,
-			icon: '🎨'
+			title: t.image_blurs,
+			description: t.image_blurs_description,
+			href: `/${data.recipeLang}/admin/image-blurs`,
+			icon: '🌫️'
 		},
 		{
 			title: t.nutrition_mappings,

@@ -5,7 +5,7 @@ import { IMAGE_DIR } from '$env/static/private';
 import sharp from 'sharp';
 import { generateImageHashFromBuffer, getHashedFilename } from '$utils/imageHash';
 import { validateImageFile } from '$utils/imageValidation';
-import { extractDominantColor } from '$utils/imageProcessing';
+import { blurPlaceholder } from '$lib/server/lqip';
 import { requireGroup } from '$lib/server/middleware/auth';
 
 export const POST = (async ({ request, locals }) => {
@@ -93,10 +93,10 @@ export const POST = (async ({ request, locals }) => {
 		await sharp(thumbBuffer).toFile(thumbUnhashedPath);
 		console.log('[API:ImgAdd] Thumbnail images saved');
 
-		// Extract dominant color
-		console.log('[API:ImgAdd] Extracting dominant color...');
-		const color = await extractDominantColor(buffer);
-		console.log('[API:ImgAdd] Dominant color:', color);
+		// Blurred placeholder, shown until the real image decodes.
+		console.log('[API:ImgAdd] Building blur placeholder...');
+		const blur = (await blurPlaceholder(buffer)) ?? '';
+		console.log('[API:ImgAdd] Blur placeholder:', blur ? blur.length + ' chars' : 'unavailable');
 
 		console.log('[API:ImgAdd] Upload completed successfully');
 		return json({
@@ -104,7 +104,7 @@ export const POST = (async ({ request, locals }) => {
 			msg: 'Image uploaded successfully',
 			filename: hashedFilename,
 			unhashedFilename: unhashedFilename,
-			color
+			blur
 		});
 	} catch (err: unknown) {
 		// Re-throw errors that already have status codes

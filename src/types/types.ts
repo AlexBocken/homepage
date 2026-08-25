@@ -262,7 +262,8 @@ export type RecipeModelType = {
 	  mediapath: string;
 	  alt: string;
 	  caption?: string;
-	  color?: string;
+	  /** Blurred `data:` URI placeholder — see $lib/server/lqip. */
+	  blur?: string;
   }];
   description: string;
   tags: [string];
@@ -320,7 +321,8 @@ export type BriefRecipeType = {
 		mediapath: string;
 		alt: string;
 		caption?: string;
-		color?: string;
+		/** Blurred `data:` URI placeholder — see $lib/server/lqip. */
+		blur?: string;
 	}]
 	description: string;
 	tags: [string];

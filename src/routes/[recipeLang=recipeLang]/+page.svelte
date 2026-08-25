@@ -80,8 +80,9 @@
 	const heroImg = $derived(
 		heroRecipe ? heroRecipe.images[0].mediapath : ''
 	);
-	const heroColor = $derived(
-		heroRecipe ? (heroRecipe.images[0].color || '') : ''
+	// Blurred stand-in for the hero photo — see $lib/server/lqip.
+	const heroBlur = $derived(
+		heroRecipe ? (heroRecipe.images[0].blur || '') : ''
 	);
 
 	const labels = $derived({
@@ -134,6 +135,13 @@
 	top: 0;
 	height: min(65vh, 560px);
 	overflow: hidden;
+	/* Blurred placeholder plus its dither (see --lqip-grain in app.css). The
+	   hero is eager and above the fold, so this is what the first frame shows. */
+	background-color: var(--color-bg-elevated);
+	background-image: var(--lqip-grain), var(--lqip, none);
+	background-size: 96px 96px, cover;
+	background-position: center, center;
+	background-repeat: repeat, no-repeat;
 	max-width: calc(1200px + 2rem);
 	margin: 0 auto;
 	transform-origin: center top;
@@ -257,7 +265,7 @@
 {#if heroRecipe}
 	<section class="hero-section">
 		<div class="hero-layer">
-			<figure class="hero" style:background-color={heroColor}>
+			<figure class="hero" style={heroBlur ? `--lqip:url("${heroBlur}")` : undefined}>
 				<img
 					class="hero-img"
 					src="https://bocken.org/static/rezepte/full/{heroImg}"

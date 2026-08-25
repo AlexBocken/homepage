@@ -51,7 +51,7 @@ export function toBrief(recipe: RecipeModelType, recipeLang: string): BriefRecip
 			name: en?.name ?? '',
 			short_name: en?.short_name ?? '',
 			images: recipe.images?.[0]
-				? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath, color: recipe.images[0].color }]
+				? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath, blur: recipe.images[0].blur }]
 				: [],
 			tags: en?.tags || [],
 			category: en?.category ?? '',
@@ -72,7 +72,7 @@ export function toBrief(recipe: RecipeModelType, recipeLang: string): BriefRecip
 	return {
 		...rest,
 		images: recipe.images?.[0]
-			? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath, color: recipe.images[0].color }]
+			? [{ alt: recipe.images[0].alt, mediapath: recipe.images[0].mediapath, blur: recipe.images[0].blur }]
 			: [],
 		macros: briefMacros(recipe, recipeLang),
 	} as unknown as BriefRecipeType;

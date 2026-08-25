@@ -176,7 +176,7 @@ export const de = {
 	administration_title: 'Administration',
 	untranslated_recipes: 'Unübersetzte Rezepte',
 	alt_text_generator: 'Alt-Text Generator',
-	image_colors: 'Bildfarben',
+	image_blurs: 'Bildplatzhalter',
 	nutrition_mappings: 'Nährwert-Zuordnungen',
 
 	// Recipe detail page (long site title variant)
@@ -205,7 +205,7 @@ export const de = {
 	administration_description: 'Rezepte und Inhalte verwalten',
 	untranslated_description: 'Rezepte ansehen und verwalten, die übersetzt werden müssen',
 	alt_text_description: 'Alternativtext für Rezeptbilder mit KI generieren',
-	image_colors_description: 'Dominante Farben aus Rezeptbildern für Ladeplatzhalter extrahieren',
+	image_blurs_description: 'Unscharfe Platzhalter erzeugen, die angezeigt werden, bis das Rezeptbild geladen ist',
 	nutrition_mappings_description: 'Kalorien- und Nährwertdaten für alle Rezepte generieren oder aktualisieren',
 
 	// Smaller filters / pages

@@ -12,7 +12,11 @@ const RecipeSchema = new mongoose.Schema(
 	    mediapath: {type: String, required: true}, // filename with hash for cache busting: e.g., "maccaroni.a1b2c3d4.webp"
 	    alt: String,
 	    caption: String,
-	    color: String, // dominant color hex e.g. "#a1b2c3", used as loading placeholder
+	    // Blurred stand-in shown until the image decodes: a tiny WebP inside an
+	    // SVG that blurs it, as one data: URI (see $lib/server/lqip). Replaced
+	    // the dominant-colour hex that used to sit here — a blur carries the
+	    // shape of the photo, a flat colour only its average.
+	    blur: String,
     }],
     description: {type: String, required: true},
     note: {type: String},

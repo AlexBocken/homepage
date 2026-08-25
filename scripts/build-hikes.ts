@@ -31,6 +31,7 @@ import {
 } from '../src/lib/server/gpx.js';
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
 import { computeStaticMapPose, lngLatToPx, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
+import { blurPlaceholder as makeBlurPlaceholder, LQIP_BOX, LQIP_VERSION } from '../src/lib/server/lqip.js';
 import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
 import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/elevation.js';
 import type {
@@ -72,29 +73,7 @@ const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikes.generated.ts')
 const PREVIEW_POLYLINE_MAX_POINTS = 40;
 const IMAGE_WIDTHS = [480, 960, 1600] as const;
 const IMAGE_THUMBNAIL_WIDTH = 240;  // popup thumbnail for map markers
-// Inline blur placeholder: a tiny WebP wrapped in an SVG that blurs it with
-// `feGaussianBlur`, delivered as one data: URI. Unlike a BlurHash it needs no
-// decoder and no JavaScript, so it paints with the first frame the server
-// sends.
-//
-// The SVG wrapper is what keeps it from looking cheap. A bare 28 px image
-// stretched across a 1200 px hero is upscaled bilinearly by the browser, which
-// turns every source pixel into a visible soft square — the blur reads as
-// blocking. Blurring inside the SVG happens in user space *after* that scale,
-// so the result is a real gaussian at display size no matter how far it was
-// stretched, and the source can stay tiny. WebP beats AVIF by a wide margin at
-// these dimensions (AVIF's container overhead dominates below ~1 kB).
-//
-// Bump BLUR_VERSION whenever the recipe changes: cache entries are keyed by it,
-// so old placeholders are recomputed instead of lingering.
-const BLUR_VERSION = 3;
-/** Longest side of the source image inside the placeholder, in pixels. */
-const BLUR_BOX = 28;
-const BLUR_QUALITY = 55;
-/** Gaussian radius in placeholder pixels — scales with the display size. */
-const BLUR_SIGMA = 0.85;
 const MANIFEST_WARN_BYTES = 200_000;
-
 const VALID_DIFFICULTIES: readonly Difficulty[] = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
 
 // sharp's prebuilt binaries ship without an HEVC decoder — the codec is
@@ -406,47 +385,27 @@ async function saveBlurCache(): Promise<void> {
 }
 
 function blurCacheKey(hash: string): string {
-	return `v${BLUR_VERSION}:${hash}`;
+	return `v${LQIP_VERSION}:${hash}`;
 }
 
+/**
+ * Cached wrapper around the shared placeholder builder ($lib/server/lqip).
+ *
+ * The encoded variants are skipped when their (hash-named) files already
+ * exist, so a warm build never decodes a photo at all. Recomputing the
+ * placeholder would undo that — decoding 600 full-size JPEGs to produce 600
+ * tiny images that cannot have changed. The cache keeps the build warm; a photo
+ * edited under the same filename gets a new hash and therefore a new entry.
+ */
 async function blurPlaceholder(buffer: Buffer, hash: string): Promise<string | undefined> {
 	const key = blurCacheKey(hash);
 	const hit = blurCache[key];
 	if (hit) return hit;
-	try {
-		// `fit: 'inside'` keeps the aspect ratio and lets the output tell us the
-		// real dimensions — which is also how the EXIF rotation above is
-		// accounted for without reading the orientation tag by hand.
-		const { data, info } = await sharp(buffer)
-			.rotate()
-			.resize({ width: BLUR_BOX, height: BLUR_BOX, fit: 'inside' })
-			.webp({ quality: BLUR_QUALITY })
-			.toBuffer({ resolveWithObject: true });
-		const { width: w, height: h } = info;
-		// `feFuncA` flattens the alpha the blur pulls in at the edges — without
-		// it the placeholder fades out into a translucent frame.
-		const svg =
-			`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">` +
-			// `color-interpolation-filters="sRGB"` matters: the SVG default is
-			// linearRGB, and the 8-bit sRGB→linear→sRGB round-trip a filter does
-			// throws away precision in the shadows, which is where banding shows
-			// first. Staying in sRGB keeps the gradient as smooth as the source.
-			`<filter id="b" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">` +
-			`<feGaussianBlur stdDeviation="${BLUR_SIGMA}"/>` +
-			`<feComponentTransfer><feFuncA type="discrete" tableValues="1 1"/></feComponentTransfer>` +
-			`</filter>` +
-			`<image filter="url(#b)" width="${w}" height="${h}" preserveAspectRatio="none" ` +
-			`href="data:image/webp;base64,${data.toString('base64')}"/></svg>`;
-		// base64 rather than percent-encoding: the result goes into an HTML
-		// style attribute, and base64's alphabet needs no escaping there.
-		const uri = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
-		blurCache[key] = uri;
-		blurCacheDirty = true;
-		return uri;
-	} catch {
-		// A placeholder is a nicety; never fail a build over one.
-		return undefined;
-	}
+	const uri = await makeBlurPlaceholder(buffer, LQIP_BOX);
+	if (!uri) return undefined;
+	blurCache[key] = uri;
+	blurCacheDirty = true;
+	return uri;
 }
 
 const SWISSTOPO_UA = 'bocken-homepage build-hikes';

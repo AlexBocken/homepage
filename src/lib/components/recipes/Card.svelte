@@ -37,7 +37,8 @@ const img_alt = $derived(
 	recipe.images?.[0]?.alt || recipe.name
 );
 
-const img_color = $derived(recipe.images?.[0]?.color || '');
+// Blurred stand-in painted until the thumbnail decodes — see $lib/server/lqip.
+const img_blur = $derived(recipe.images?.[0]?.blur || '');
 
 function preloadHeroImage() {
 	new Image().src = `https://bocken.org/static/rezepte/full/${img_name}`;
@@ -110,6 +111,13 @@ function preloadHeroImage() {
 	position: absolute;
 	top: 0;
 	overflow: hidden;
+	/* Blurred placeholder plus its dither (see --lqip-grain in app.css), shown
+	   until the thumbnail arrives. */
+	background-color: var(--color-bg-elevated);
+	background-image: var(--lqip-grain), var(--lqip, none);
+	background-size: 96px 96px, cover;
+	background-position: center, center;
+	background-repeat: repeat, no-repeat;
 	border-top-left-radius: inherit;
 	border-top-right-radius: inherit;
 }
@@ -236,7 +244,7 @@ function preloadHeroImage() {
 	<a href="{routePrefix}/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}" onpointerenter={preloadHeroImage}>
 		<span class="visually-hidden">View recipe: {recipe.name}</span>
 	</a>
-	<div class="card-image" style:background-color={img_color}>
+	<div class="card-image" style={img_blur ? `--lqip:url("${img_blur}")` : undefined}>
 		<noscript>
 			<img class="image loaded" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{img_alt}"/>
 		</noscript>

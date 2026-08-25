@@ -21,7 +21,8 @@
 		recipe.images?.[0]?.alt || recipe.name
 	);
 
-	const img_color = $derived(recipe.images?.[0]?.color || '');
+	// Blurred stand-in painted until the thumbnail decodes — see $lib/server/lqip.
+	const img_blur = $derived(recipe.images?.[0]?.blur || '');
 
 	const isInSeason = $derived(icon_override || isRecipeInSeason(recipe));
 
@@ -62,6 +63,13 @@
 .img-wrap {
 	aspect-ratio: 3 / 2;
 	overflow: hidden;
+	/* Blurred placeholder plus its dither (see --lqip-grain in app.css), shown
+	   in the box the aspect-ratio already reserves until the thumbnail decodes. */
+	background-color: var(--color-bg-elevated);
+	background-image: var(--lqip-grain), var(--lqip, none);
+	background-size: 96px 96px, cover;
+	background-position: center, center;
+	background-repeat: repeat, no-repeat;
 }
 .img-wrap img {
 	display: block;
@@ -163,7 +171,7 @@
 			<Heart size={18} strokeWidth={2} fill="currentColor" />
 		</span>
 	{/if}
-	<div class="img-wrap" style:background-color={img_color}>
+	<div class="img-wrap" style={img_blur ? `--lqip:url("${img_blur}")` : undefined}>
 		<img
 			src="https://bocken.org/static/rezepte/thumb/{img_name}"
 			alt={img_alt}

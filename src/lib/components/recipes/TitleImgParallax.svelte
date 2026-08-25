@@ -1,7 +1,9 @@
 <script>
 	import { onMount } from "svelte";
 
-	let { src, color = '', alt = "", transitionName = '', children } = $props();
+	// `blur` is the recipe image's placeholder data: URI (see $lib/server/lqip);
+	// it replaced the dominant-colour hex this used to take.
+	let { src, blur = '', alt = "", transitionName = '', children } = $props();
 
 	let isredirected = $state(false);
 
@@ -81,6 +83,13 @@
   width: min(calc(1000px + 2rem), 100dvw);
   height: max(65dvh, 640px);
   overflow: hidden;
+  /* Blurred placeholder plus its dither (see --lqip-grain in app.css). This is
+     the page's LCP image, so it is also where a placeholder earns the most. */
+  background-color: var(--color-bg-elevated);
+  background-image: var(--lqip-grain), var(--lqip, none);
+  background-size: 96px 96px, cover;
+  background-position: center, center;
+  background-repeat: repeat, no-repeat;
 }
 
 .image{
@@ -144,11 +153,11 @@ dialog button{
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
     	<div class:zoom-in={!isredirected} onclick={show_dialog_img}>
-		<div class="image-wrap" style:background-color={color}>
+		<div class="image-wrap" style={blur ? `--lqip:url("${blur}")` : undefined}>
 			<img class="image" {src} {alt} style:view-transition-name={transitionName || null} fetchpriority="high"/>
 		</div>
 		<noscript>
-			<div class="image-wrap" style:background-color={color}>
+			<div class="image-wrap" style={blur ? `--lqip:url("${blur}")` : undefined}>
 				<img class="image" {src} {alt}/>
 			</div>
 		</noscript>

@@ -130,7 +130,7 @@ export const actions = {
 			if (recipeImage && recipeImage.size > 0) {
 				try {
 					// Process and save the new image
-					const { filename, color } = await processAndSaveRecipeImage(
+					const { filename, blur } = await processAndSaveRecipeImage(
 						recipeImage,
 						recipeData.short_name,
 						IMAGE_DIR
@@ -145,7 +145,7 @@ export const actions = {
 						mediapath: filename,
 						alt: existingImagePath ? (recipeData.images?.[0]?.alt || '') : '',
 						caption: existingImagePath ? (recipeData.images?.[0]?.caption || '') : '',
-						color
+						blur
 					}];
 				} catch (imageError: unknown) {
 					console.error('Image processing error:', imageError);

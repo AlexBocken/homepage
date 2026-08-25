@@ -173,11 +173,11 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
     const imagesArray = Array.isArray(rawRecipe.images) ? rawRecipe.images : (rawRecipe.images ? [rawRecipe.images] : []);
     if (imagesArray.length > 0) {
       const translatedImages = t.images || [];
-      recipe.images = imagesArray.map((img: { mediapath: string; alt?: string; caption?: string; color?: string }, index: number) => ({
+      recipe.images = imagesArray.map((img: { mediapath: string; alt?: string; caption?: string; blur?: string }, index: number) => ({
         mediapath: img.mediapath,
         alt: translatedImages[index]?.alt || img.alt || '',
         caption: translatedImages[index]?.caption || img.caption || '',
-        color: img.color || '',
+        blur: img.blur || '',
       }));
     }
 
