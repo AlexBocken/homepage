@@ -1,13 +1,13 @@
 {
   "name": "homepage",
-  "version": "2.72.2",
+  "version": "2.72.3",
   "private": true,
   "type": "module",
   "scripts": {
     "prepare": "git config core.hooksPath .githooks || true",
     "postinstall": "node scripts/sharp-heic.mjs",
     "dev": "NODE_OPTIONS='--disable-warning=DEP0205' vite dev",
-    "prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts && pnpm exec vite-node scripts/generate-loyalty-cards.ts && pnpm exec vite-node scripts/generate-error-quotes.ts && pnpm exec vite-node scripts/build-hikes.ts && pnpm exec vite-node scripts/build-private-images.ts",
+    "prebuild": "bash scripts/subset-emoji-font.sh && pnpm exec vite-node scripts/generate-mystery-verses.ts && pnpm exec vite-node scripts/download-models.ts && pnpm exec vite-node scripts/generate-loyalty-cards.ts && pnpm exec vite-node scripts/generate-error-quotes.ts && pnpm run hikes:build && pnpm exec vite-node scripts/build-private-images.ts",
     "build": "vite build",
     "postbuild": "pnpm exec vite-node scripts/build-error-page.ts && UV_THREADPOOL_SIZE=12 pnpm exec vite-node scripts/precompress.ts",
     "preview": "vite preview",
@@ -26,6 +26,7 @@
     "e2e:seed": "node scripts/e2e/clone-dev.mjs && node scripts/e2e/seed.mjs",
     "deploy": "bash scripts/deploy.sh",
     "deploy:dry": "bash scripts/deploy.sh --dry-run",
+    "hikes:build": "pnpm exec vite-node scripts/build-hikes.ts",
     "hikes:alt": "pnpm exec vite-node scripts/generate-hike-alt-text.ts",
     "photos:push": "bash scripts/hike-photos.sh push",
     "photos:pull": "bash scripts/hike-photos.sh pull",
