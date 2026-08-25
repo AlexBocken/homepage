@@ -85,6 +85,7 @@
 					height={hike.cover.height}
 					loading="lazy"
 					decoding="async"
+					style={hike.cover.blur ? `--lqip:url("${hike.cover.blur}")` : undefined}
 				/>
 			</picture>
 		{:else}
@@ -188,6 +189,14 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		/* Inline blurred placeholder (see ImageVariant.blur) plus its dither —
+		   the cover box has a fixed height, so it fills it until the real cover
+		   decodes. */
+		background-color: var(--color-bg-elevated);
+		background-image: var(--lqip-grain), var(--lqip, none);
+		background-size: 96px 96px, cover;
+		background-position: center, center;
+		background-repeat: repeat, no-repeat;
 	}
 
 	/* Per-route identity icon, top-left of cover. Floats directly on the

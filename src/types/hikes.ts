@@ -8,6 +8,11 @@ export type ImageVariant = {
 	width: number;
 	height: number;
 	dominantColor?: string;
+	/** A blurred stand-in for the image as a `data:` URI, painted as the
+	 * element's background until the real file decodes: a ~28 px WebP inside an
+	 * SVG that blurs it with `feGaussianBlur`, so it stays smooth however far
+	 * the browser stretches it. Around a kilobyte, and needs no JavaScript. */
+	blur?: string;
 	alt: string;
 };
 
@@ -19,6 +24,12 @@ export type ImagePoint = {
 	altitude?: number;
 	timestamp?: number; // unix ms from EXIF DateTimeOriginal
 	alt: string;
+	/** Intrinsic size of `src`, so the page can reserve the right box before
+	 * the photo arrives (and the blur below fills exactly that box). */
+	width?: number;
+	height?: number;
+	/** Blurred `data:` URI placeholder — see `ImageVariant.blur`. */
+	blur?: string;
 	/** `'private'` images are hidden from anonymous viewers; logged-in users
 	 * still see them. Omitted == public. */
 	visibility?: 'public' | 'private';
@@ -153,13 +164,38 @@ export type HikeManifestEntry = {
 	heroMapZoomNarrow?: number;
 	heroMapCenterNarrow?: [number, number];
 
-	// Geo-tagged photos shown as map markers on the detail page:
-	imagePoints: ImagePoint[];
+	/** Per-hike photo payload: `/hikes/<slug>/images.<hash>.json`, shaped as
+	 * `HikeImages`. It used to live inline here, but the manifest is imported
+	 * by every visitor of /hikes — which shows none of these photos — and the
+	 * points of 17 hikes outweighed everything else in it combined. The detail
+	 * page fetches this alongside its track instead. */
+	imagesUrl: string;
+	/** How many route photos that payload holds, for anything that wants the
+	 * count without fetching (the listing card, SEO). Includes private ones. */
+	photoCount: number;
+};
 
+/** The contents of `HikeManifestEntry.imagesUrl`. */
+export type HikeImages = {
+	/** Geo-tagged photos, chronological — the map markers, the photo strip and
+	 * the `<HikeImage idx={N} />` index space. */
+	points: ImagePoint[];
 	/** Images addressable by source filename for inline `<HikeImage src="…">`.
 	 * Contains every encoded route photo plus any non-waypoint image referenced
 	 * by name in the prose (index.svx). Keyed by source basename. */
-	imagesByName?: Record<string, NamedHikeImage>;
+	byName: Record<string, NamedHikeImage>;
+	/** Blurred `data:` placeholders for the pre-rendered hero maps, one per
+	 * theme × viewport variant (the `heroMapUrl*` fields of the manifest
+	 * entry). They ride along here rather than in the manifest because only
+	 * the detail page paints a hero, and it already awaits this payload. */
+	heroBlur?: {
+		light?: string;
+		dark?: string;
+		lightMedium?: string;
+		darkMedium?: string;
+		lightNarrow?: string;
+		darkNarrow?: string;
+	};
 };
 
 /** Pre-rendered hero map for the `/hikes` index page. One image covers
@@ -175,12 +211,15 @@ export type HikesOverview = {
 	zoom: number;
 	/** Centre `[lat, lng]` the wide static was rendered around. */
 	center: [number, number];
+	/** Blurred `data:` placeholder for the wide static — see `ImageVariant.blur`. */
+	blur?: string;
 	/** Medium-viewport variant (561–899 CSS px). Pose picked for a tablet-
 	 * sized container so the static→Leaflet handover doesn't shift the map
 	 * at this width. */
 	urlMedium?: string;
 	zoomMedium?: number;
 	centerMedium?: [number, number];
+	blurMedium?: string;
 	/** Narrow-viewport variant for phones (≤ 560 CSS px). Rendered at a
 	 * phone-sized `fitWidth`/`fitHeight`, so the chosen zoom matches what
 	 * Leaflet picks at the same container size. The page shows it instead
@@ -188,4 +227,5 @@ export type HikesOverview = {
 	urlNarrow?: string;
 	zoomNarrow?: number;
 	centerNarrow?: [number, number];
+	blurNarrow?: string;
 };

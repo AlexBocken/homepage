@@ -126,6 +126,7 @@
 					height={named.height}
 					loading="lazy"
 					decoding="async"
+					style={named.blur ? `--lqip:url("${named.blur}")` : undefined}
 				/>
 			</picture>
 			{#if named.visibility === 'private'}
@@ -144,8 +145,11 @@
 		<img
 			src={ip.src}
 			alt={ip.alt}
+			width={ip.width}
+			height={ip.height}
 			loading="lazy"
 			decoding="async"
+			style={ip.blur ? `--lqip:url("${ip.blur}")` : undefined}
 		/>
 		{#if ip.visibility === 'private'}
 			<span class="private" title="Privates Bild — nur für eingeloggte Benutzer sichtbar">
@@ -177,7 +181,7 @@
 		margin: 2rem auto;
 		border-radius: var(--radius-card);
 		overflow: hidden;
-		background: #14181f;
+		background: var(--color-bg-elevated);
 		box-shadow: var(--shadow-md);
 		transition: box-shadow 280ms ease;
 	}
@@ -197,7 +201,15 @@
 		width: 100%;
 		height: auto;
 		object-fit: cover;
-		background: #14181f;
+		/* The blurred placeholder arrives inline as `--lqip`; it fills the box the
+		   width/height attributes reserve and is covered the moment the photo
+		   decodes. The grain on top dithers its gradients (see --lqip-grain).
+		   The colour underneath is what a photo without a placeholder shows. */
+		background-color: var(--color-bg-elevated);
+		background-image: var(--lqip-grain), var(--lqip, none);
+		background-size: 96px 96px, cover;
+		background-position: center, center;
+		background-repeat: repeat, no-repeat;
 	}
 
 	figcaption {

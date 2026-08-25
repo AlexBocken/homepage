@@ -168,6 +168,7 @@
 				aria-hidden="true"
 				loading="eager"
 				decoding="async"
+				style={HIKES_OVERVIEW.blur ? `--lqip:url("${HIKES_OVERVIEW.blur}")` : undefined}
 			/>
 			{#if HIKES_OVERVIEW.urlMedium}
 				<img
@@ -178,6 +179,7 @@
 					aria-hidden="true"
 					loading="eager"
 					decoding="async"
+					style={HIKES_OVERVIEW.blurMedium ? `--lqip:url("${HIKES_OVERVIEW.blurMedium}")` : undefined}
 				/>
 			{/if}
 			{#if HIKES_OVERVIEW.urlNarrow}
@@ -189,6 +191,7 @@
 					aria-hidden="true"
 					loading="eager"
 					decoding="async"
+					style={HIKES_OVERVIEW.blurNarrow ? `--lqip:url("${HIKES_OVERVIEW.blurNarrow}")` : undefined}
 				/>
 			{/if}
 		{/if}
@@ -294,6 +297,13 @@
 		opacity: 1;
 		transition: opacity 450ms ease;
 		pointer-events: none;
+		/* Blurred stand-in (set inline from `HIKES_OVERVIEW.blur*`) plus its
+		   dither, covering the hero box until the rendered overview WebP
+		   decodes. */
+		background-image: var(--lqip-grain), var(--lqip, none);
+		background-size: 96px 96px, cover;
+		background-position: center, center;
+		background-repeat: repeat, no-repeat;
 	}
 
 	.hero-static.faded {

@@ -141,6 +141,15 @@
 	--radius-md: 0.5rem;
 	--radius-lg: 0.75rem;
 
+	/* Dither for the blurred image placeholders (see `ImageVariant.blur`). A
+	   heavily blurred photo is a very slow gradient, and a slow gradient in 8-bit
+	   sRGB banks into visible bands — the eye reads the steps as contour lines.
+	   This tile is monochrome fractal noise at ~5% alpha, rasterised once by the
+	   browser and repeated over the placeholder, which breaks the steps up the
+	   same way dithering does. Layered ABOVE the placeholder and below the photo,
+	   so it disappears the moment the real image decodes. */
+	--lqip-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiI+PGZpbHRlciBpZD0ibiIgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjxmZUNvbXBvbmVudFRyYW5zZmVyPjxmZUZ1bmNBIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuMDU1IiBpbnRlcmNlcHQ9IjAiLz48L2ZlQ29tcG9uZW50VHJhbnNmZXI+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiBmaWx0ZXI9InVybCgjbikiLz48L3N2Zz4=");
+
 	/* Placeholder behind a route-map raster (the swisstopo "karte" layer we render
 	   the fitness maps on): the mean colour of the generated map images, so a map
 	   fading in reads as detail arriving rather than a block of colour swapping

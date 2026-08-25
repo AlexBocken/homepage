@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { HIKES } from '$lib/data/hikes.generated';
-import type { HikeTrackPoint } from '$types/hikes';
+import type { HikeImages, HikeTrackPoint } from '$types/hikes';
 import type { PageLoad } from './$types';
 
 // Not prerendered: the page needs the live session so private images can be
@@ -25,21 +25,29 @@ export const load: PageLoad = async ({ params, fetch }) => {
 	const loader = mdxModules[modPath];
 	if (!loader) throw error(404, 'Hike content missing');
 
-	// Load the MDX module and the track JSON in parallel. The track was
-	// previously fetched in a client-side $effect; doing it here means the
-	// strip + map + elevation chart all render with real data on first
-	// paint (no async pop-in / layout shift), and crucially the photo
+	// Load the MDX module, the track JSON and the photo payload in parallel.
+	// The track was previously fetched in a client-side $effect; doing it here
+	// means the strip + map + elevation chart all render with real data on
+	// first paint (no async pop-in / layout shift), and crucially the photo
 	// strip exists in the DOM at view-transition snapshot time so the
 	// /hikes → /hikes/[slug] slide-in animation actually has something
-	// to capture.
-	const [mod, trackResp] = await Promise.all([loader(), fetch(hike.trackUrl)]);
+	// to capture. The photos live outside the manifest (see `imagesUrl`) for
+	// the same reason the track does — /hikes must not carry them.
+	const [mod, trackResp, imagesResp] = await Promise.all([
+		loader(),
+		fetch(hike.trackUrl),
+		fetch(hike.imagesUrl)
+	]);
 	if (!trackResp.ok) throw error(500, `Track konnte nicht geladen werden: ${trackResp.status}`);
 	const track = (await trackResp.json()) as HikeTrackPoint[];
+	if (!imagesResp.ok) throw error(500, `Bilddaten konnten nicht geladen werden: ${imagesResp.status}`);
+	const images = (await imagesResp.json()) as HikeImages;
 
 	return {
 		hike,
 		MdxComponent: mod.default,
 		mdxMetadata: mod.metadata ?? {},
-		track
+		track,
+		images
 	};
 };

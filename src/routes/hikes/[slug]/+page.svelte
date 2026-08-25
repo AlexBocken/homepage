@@ -34,6 +34,13 @@
 	// after an async fetch, and the /hikes → /hikes/[slug] view-transition
 	// slide-in (snapshot is captured before client effects run).
 	const track = $derived(data.track);
+	// Route photos + the by-filename map, fetched next to the track rather than
+	// carried in the manifest (see `HikeManifestEntry.imagesUrl`).
+	const imagePoints = $derived(data.images.points);
+	const imagesByName = $derived(data.images.byName);
+	// Blurred placeholders for the pre-rendered hero maps, so the hero shows the
+	// shape of the route instead of an empty box while its WebP arrives.
+	const heroBlur = $derived(data.images.heroBlur ?? {});
 	// Toggled true once Leaflet's first tile batch paints. Drives the
 	// fade-out of the SSR-rendered static hero so the static→interactive
 	// handover is a soft cross-fade rather than a swap.
@@ -170,9 +177,7 @@
 	// operate on the same index space — focused indexes are positions in this
 	// shared array.
 	const visibleImagePoints = $derived(
-		showPrivate
-			? hike.imagePoints
-			: hike.imagePoints.filter((ip) => ip.visibility !== 'private')
+		showPrivate ? imagePoints : imagePoints.filter((ip) => ip.visibility !== 'private')
 	);
 
 	// Expose both the full chronological list and the visibility-filtered
@@ -180,10 +185,10 @@
 	// is exposed too so each HikeImage can resolve its timestamp to a
 	// track index for the scroll-progress pin.
 	setHikeContext(() => ({
-		images: hike.imagePoints,
+		images: imagePoints,
 		visibleImages: visibleImagePoints,
 		track,
-		imagesByName: hike.imagesByName ?? {},
+		imagesByName,
 		showPrivate
 	}));
 
@@ -337,6 +342,7 @@
 				aria-hidden="true"
 				loading="eager"
 				decoding="async"
+				style={heroBlur.light ? `--lqip:url("${heroBlur.light}")` : undefined}
 			/>
 		{/if}
 		{#if hike.heroMapUrlDark}
@@ -348,6 +354,7 @@
 				aria-hidden="true"
 				loading="eager"
 				decoding="async"
+				style={heroBlur.dark ? `--lqip:url("${heroBlur.dark}")` : undefined}
 			/>
 		{/if}
 		{#if hike.heroMapUrlLightMedium}
@@ -359,6 +366,7 @@
 				aria-hidden="true"
 				loading="eager"
 				decoding="async"
+				style={heroBlur.lightMedium ? `--lqip:url("${heroBlur.lightMedium}")` : undefined}
 			/>
 		{/if}
 		{#if hike.heroMapUrlDarkMedium}
@@ -370,6 +378,7 @@
 				aria-hidden="true"
 				loading="eager"
 				decoding="async"
+				style={heroBlur.darkMedium ? `--lqip:url("${heroBlur.darkMedium}")` : undefined}
 			/>
 		{/if}
 		{#if hike.heroMapUrlLightNarrow}
@@ -381,6 +390,7 @@
 				aria-hidden="true"
 				loading="eager"
 				decoding="async"
+				style={heroBlur.lightNarrow ? `--lqip:url("${heroBlur.lightNarrow}")` : undefined}
 			/>
 		{/if}
 		{#if hike.heroMapUrlDarkNarrow}
@@ -392,6 +402,7 @@
 				aria-hidden="true"
 				loading="eager"
 				decoding="async"
+				style={heroBlur.darkNarrow ? `--lqip:url("${heroBlur.darkNarrow}")` : undefined}
 			/>
 		{/if}
 		{#if track && track.length > 0}
@@ -542,6 +553,9 @@
 							aria-hidden="true"
 							loading="lazy"
 							decoding="async"
+							style={(heroBlur.lightMedium ?? heroBlur.light)
+								? `--lqip:url("${heroBlur.lightMedium ?? heroBlur.light}")`
+								: undefined}
 						/>
 					{/if}
 					{#if hike.heroMapUrlDarkMedium ?? hike.heroMapUrlDark}
@@ -553,6 +567,9 @@
 							aria-hidden="true"
 							loading="lazy"
 							decoding="async"
+							style={(heroBlur.darkMedium ?? heroBlur.dark)
+								? `--lqip:url("${heroBlur.darkMedium ?? heroBlur.dark}")`
+								: undefined}
 						/>
 					{/if}
 					<HikeMap
@@ -668,6 +685,15 @@
 		z-index: 1;
 		opacity: 1;
 		transition: opacity 450ms ease;
+		/* Blurred stand-in for the rendered map (set inline from
+		   `images.heroBlur`) plus its dither, covering the hero box until the
+		   WebP decodes. `object-fit: none` above only governs the image itself,
+		   and a hero is the widest surface we stretch a placeholder across —
+		   the one that shows banding first. */
+		background-image: var(--lqip-grain), var(--lqip, none);
+		background-size: 96px 96px, cover;
+		background-position: center, center;
+		background-repeat: repeat, no-repeat;
 	}
 
 	.hero-static.faded {
@@ -1136,6 +1162,14 @@
 		height: 100%;
 		object-fit: cover;
 		object-position: center;
+		/* Same placeholder + dither as the hero above — this map is lazy, so its
+		   WebP arrives well after first paint and the box would otherwise sit
+		   empty until it does. The transform below scales the background with
+		   the image, so the two stay congruent. */
+		background-image: var(--lqip-grain), var(--lqip, none);
+		background-size: 96px 96px, cover;
+		background-position: center, center;
+		background-repeat: repeat, no-repeat;
 		transform: scale(2.25);
 		transform-origin: center;
 		opacity: 1;

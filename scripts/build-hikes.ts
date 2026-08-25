@@ -35,6 +35,7 @@ import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
 import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/elevation.js';
 import type {
 	Difficulty,
+	HikeImages,
 	HikeManifestEntry,
 	HikeStage,
 	HikesOverview,
@@ -59,6 +60,7 @@ const STATIC_DIR = path.join(ROOT, 'static', 'hikes');
 const HIKES_ASSETS_DIR = path.join(ROOT, 'hikes-assets');
 const CACHE_DIR = path.join(ROOT, 'scripts', '.cache');
 const GEOCODE_CACHE_FILE = path.join(CACHE_DIR, 'hikes-geocode.json');
+const BLUR_CACHE_FILE = path.join(CACHE_DIR, 'hikes-blur.json');
 const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikes.generated.ts');
 
 // Points per hike in the manifest's `previewPolyline`. This copy only has to
@@ -70,6 +72,27 @@ const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikes.generated.ts')
 const PREVIEW_POLYLINE_MAX_POINTS = 40;
 const IMAGE_WIDTHS = [480, 960, 1600] as const;
 const IMAGE_THUMBNAIL_WIDTH = 240;  // popup thumbnail for map markers
+// Inline blur placeholder: a tiny WebP wrapped in an SVG that blurs it with
+// `feGaussianBlur`, delivered as one data: URI. Unlike a BlurHash it needs no
+// decoder and no JavaScript, so it paints with the first frame the server
+// sends.
+//
+// The SVG wrapper is what keeps it from looking cheap. A bare 28 px image
+// stretched across a 1200 px hero is upscaled bilinearly by the browser, which
+// turns every source pixel into a visible soft square — the blur reads as
+// blocking. Blurring inside the SVG happens in user space *after* that scale,
+// so the result is a real gaussian at display size no matter how far it was
+// stretched, and the source can stay tiny. WebP beats AVIF by a wide margin at
+// these dimensions (AVIF's container overhead dominates below ~1 kB).
+//
+// Bump BLUR_VERSION whenever the recipe changes: cache entries are keyed by it,
+// so old placeholders are recomputed instead of lingering.
+const BLUR_VERSION = 3;
+/** Longest side of the source image inside the placeholder, in pixels. */
+const BLUR_BOX = 28;
+const BLUR_QUALITY = 55;
+/** Gaussian radius in placeholder pixels — scales with the display size. */
+const BLUR_SIGMA = 0.85;
 const MANIFEST_WARN_BYTES = 200_000;
 
 const VALID_DIFFICULTIES: readonly Difficulty[] = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
@@ -352,6 +375,78 @@ async function loadGeocodeCache(): Promise<GeocodeCache> {
 async function saveGeocodeCache(cache: GeocodeCache): Promise<void> {
 	await fs.mkdir(CACHE_DIR, { recursive: true });
 	await fs.writeFile(GEOCODE_CACHE_FILE, JSON.stringify(cache, null, 2));
+}
+
+// ---------------------------------------------------------------------------
+// Blur placeholders, cached on disk by content hash.
+//
+// The encoded variants are skipped when their (hash-named) files already
+// exist, so a warm build never decodes a photo at all. Recomputing the blur
+// would undo that — decoding 600 full-size JPEGs to produce 600 tiny images
+// that cannot have changed. The cache keeps the build warm; a photo edited
+// under the same filename gets a new hash and therefore a new entry.
+// ---------------------------------------------------------------------------
+
+type BlurCache = Record<string, string>;
+let blurCache: BlurCache = {};
+let blurCacheDirty = false;
+
+async function loadBlurCache(): Promise<void> {
+	try {
+		blurCache = JSON.parse(await fs.readFile(BLUR_CACHE_FILE, 'utf-8'));
+	} catch {
+		blurCache = {};
+	}
+}
+
+async function saveBlurCache(): Promise<void> {
+	if (!blurCacheDirty) return;
+	await fs.mkdir(CACHE_DIR, { recursive: true });
+	await fs.writeFile(BLUR_CACHE_FILE, JSON.stringify(blurCache));
+}
+
+function blurCacheKey(hash: string): string {
+	return `v${BLUR_VERSION}:${hash}`;
+}
+
+async function blurPlaceholder(buffer: Buffer, hash: string): Promise<string | undefined> {
+	const key = blurCacheKey(hash);
+	const hit = blurCache[key];
+	if (hit) return hit;
+	try {
+		// `fit: 'inside'` keeps the aspect ratio and lets the output tell us the
+		// real dimensions — which is also how the EXIF rotation above is
+		// accounted for without reading the orientation tag by hand.
+		const { data, info } = await sharp(buffer)
+			.rotate()
+			.resize({ width: BLUR_BOX, height: BLUR_BOX, fit: 'inside' })
+			.webp({ quality: BLUR_QUALITY })
+			.toBuffer({ resolveWithObject: true });
+		const { width: w, height: h } = info;
+		// `feFuncA` flattens the alpha the blur pulls in at the edges — without
+		// it the placeholder fades out into a translucent frame.
+		const svg =
+			`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">` +
+			// `color-interpolation-filters="sRGB"` matters: the SVG default is
+			// linearRGB, and the 8-bit sRGB→linear→sRGB round-trip a filter does
+			// throws away precision in the shadows, which is where banding shows
+			// first. Staying in sRGB keeps the gradient as smooth as the source.
+			`<filter id="b" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">` +
+			`<feGaussianBlur stdDeviation="${BLUR_SIGMA}"/>` +
+			`<feComponentTransfer><feFuncA type="discrete" tableValues="1 1"/></feComponentTransfer>` +
+			`</filter>` +
+			`<image filter="url(#b)" width="${w}" height="${h}" preserveAspectRatio="none" ` +
+			`href="data:image/webp;base64,${data.toString('base64')}"/></svg>`;
+		// base64 rather than percent-encoding: the result goes into an HTML
+		// style attribute, and base64's alphabet needs no escaping there.
+		const uri = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+		blurCache[key] = uri;
+		blurCacheDirty = true;
+		return uri;
+	} catch {
+		// A placeholder is a nicety; never fail a build over one.
+		return undefined;
+	}
 }
 
 const SWISSTOPO_UA = 'bocken-homepage build-hikes';
@@ -637,6 +732,8 @@ async function encodeImageVariant(
 	const scale = largestW / intrinsicW;
 	const largestH = Math.round((intrinsicH || largestW) * scale);
 
+	const blur = await blurPlaceholder(buffer, hash);
+
 	// Names of every output file this image owns — used by the per-hike
 	// cleanup pass to drop orphaned encodes from previous builds.
 	const outNames = allJobs.map((j) => path.basename(j.filePath));
@@ -648,6 +745,7 @@ async function encodeImageVariant(
 			srcsetWebp: webpEntries.join(', '),
 			width: largestW,
 			height: largestH,
+			...(blur ? { blur } : {}),
 			alt
 		},
 		thumbnailRelUrl: thumbUrl,
@@ -882,6 +980,7 @@ type OverviewVariantResult = {
 	zoom: number;
 	center: [number, number];
 	outName: string;
+	blur?: string;
 };
 
 async function processOverview(
@@ -969,11 +1068,19 @@ async function processOverview(
 			console.log(`[build-hikes:_overview]   ${spec.name} rendered ${outName} in ${Date.now() - renderT0}ms`);
 		}
 
+		// Same placeholder treatment as the per-hike heroes: from the rendered
+		// image, cached by its content hash so a warm build never reads it.
+		const blurKey = `hero:${hash}`;
+		const blur =
+			blurCache[blurCacheKey(blurKey)] ??
+			(await blurPlaceholder(await fs.readFile(outPath), blurKey));
+
 		return {
 			url: `/hikes/${slug}/images/${outName}`,
 			zoom: pose.zoom,
 			center: [pose.centerLat, pose.centerLng],
-			outName
+			outName,
+			blur
 		};
 	}
 
@@ -1006,20 +1113,25 @@ async function processOverview(
 		url: byVariant.wide.url,
 		zoom: byVariant.wide.zoom,
 		center: byVariant.wide.center,
+		blur: byVariant.wide.blur,
 		urlMedium: byVariant.medium?.url,
 		zoomMedium: byVariant.medium?.zoom,
 		centerMedium: byVariant.medium?.center,
+		blurMedium: byVariant.medium?.blur,
 		urlNarrow: byVariant.narrow?.url,
 		zoomNarrow: byVariant.narrow?.zoom,
-		centerNarrow: byVariant.narrow?.center
+		centerNarrow: byVariant.narrow?.center,
+		blurNarrow: byVariant.narrow?.blur
 	};
 }
 
 type HeroVariantResult = {
 	lightUrl: string;
 	lightOutName: string;
+	lightBlur?: string;
 	darkUrl: string;
 	darkOutName: string;
+	darkBlur?: string;
 	zoom: number;
 	center: [number, number];
 };
@@ -1061,7 +1173,9 @@ async function processHero(
 		});
 		if (!pose) return undefined;
 
-		async function renderTheme(theme: 'light' | 'dark'): Promise<{ url: string; outName: string } | undefined> {
+		async function renderTheme(
+			theme: 'light' | 'dark'
+		): Promise<{ url: string; outName: string; blur?: string } | undefined> {
 			const fillColor = theme === 'dark' ? HERO_BADGE_FILL_DARK : HERO_BADGE_FILL_LIGHT;
 			const borderColor = theme === 'dark' ? HERO_BADGE_BORDER_DARK : HERO_BADGE_BORDER_LIGHT;
 			const iconColor = theme === 'dark' ? HERO_BADGE_ICON_DARK : HERO_BADGE_ICON_LIGHT;
@@ -1108,7 +1222,16 @@ async function processHero(
 				if (!ok) return undefined;
 			}
 
-			return { url: `/hikes/${slug}/images/${outName}`, outName };
+			// Placeholder for the hero, from the rendered map itself. The hash
+			// covers pose, colours and render version, so a cached blur can only
+			// belong to these exact bytes — and on a warm build we never touch
+			// the file at all.
+			const blurKey = `hero:${hash}`;
+			const blur =
+				blurCache[blurCacheKey(blurKey)] ??
+				(await blurPlaceholder(await fs.readFile(outPath), blurKey));
+
+			return { url: `/hikes/${slug}/images/${outName}`, outName, blur };
 		}
 
 		const [light, dark] = await Promise.all([renderTheme('light'), renderTheme('dark')]);
@@ -1117,8 +1240,10 @@ async function processHero(
 		return {
 			lightUrl: light.url,
 			lightOutName: light.outName,
+			lightBlur: light.blur,
 			darkUrl: dark.url,
 			darkOutName: dark.outName,
+			darkBlur: dark.blur,
 			zoom: pose.zoom,
 			center: [pose.centerLat, pose.centerLng]
 		};
@@ -1141,7 +1266,12 @@ async function processHero(
 // ---------------------------------------------------------------------------
 
 function extractImagePoint(
-	processed: { thumbnailRelUrl: string; largestRelUrl: string; hash: string },
+	processed: {
+		thumbnailRelUrl: string;
+		largestRelUrl: string;
+		hash: string;
+		variant: ImageVariant;
+	},
 	alt: string,
 	gpxImageRef: GpxImageRef
 ): ImagePoint {
@@ -1159,6 +1289,9 @@ function extractImagePoint(
 		altitude: gpxImageRef.altitude,
 		timestamp: gpxImageRef.timestamp,
 		alt,
+		width: processed.variant.width,
+		height: processed.variant.height,
+		...(processed.variant.blur ? { blur: processed.variant.blur } : {}),
 		visibility: gpxImageRef.visibility ?? 'public'
 	};
 }
@@ -1541,6 +1674,43 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		}
 	}
 
+	// Per-hike photo payload. Same shape of deal as the track JSON: hashed
+	// filename, swept when it changes, fetched by the detail page — and kept
+	// out of the manifest that /hikes ships to everyone.
+	const heroWide = heroResult?.wide;
+	const heroMedium = heroResult?.medium;
+	const heroNarrow = heroResult?.narrow;
+
+	const heroBlur = {
+		light: heroWide?.lightBlur,
+		dark: heroWide?.darkBlur,
+		lightMedium: heroMedium?.lightBlur,
+		darkMedium: heroMedium?.darkBlur,
+		lightNarrow: heroNarrow?.lightBlur,
+		darkNarrow: heroNarrow?.darkBlur
+	};
+	const imagesPayload: HikeImages = {
+		points: imagePoints,
+		byName: imagesByName,
+		...(Object.values(heroBlur).some(Boolean) ? { heroBlur } : {})
+	};
+	const imagesJson = JSON.stringify(imagesPayload);
+	const imagesHash = crypto.createHash('sha256').update(imagesJson).digest('hex').slice(0, 8);
+	const imagesFile = path.join(STATIC_DIR, slug, `images.${imagesHash}.json`);
+	await fs.mkdir(path.dirname(imagesFile), { recursive: true });
+	await fs.writeFile(imagesFile, imagesJson);
+	{
+		const dir = path.dirname(imagesFile);
+		const keep = path.basename(imagesFile);
+		const stale = (await fs.readdir(dir)).filter(
+			(f) => /^images\..*\.json$/.test(f) && f !== keep
+		);
+		await Promise.all(stale.map((f) => fs.unlink(path.join(dir, f)).catch(() => {})));
+		if (stale.length > 0) {
+			console.log(`[build-hikes:${slug}]   removed ${stale.length} stale images JSON(s)`);
+		}
+	}
+
 	const date = typeof fm.date === 'string'
 		? fm.date
 		: (typeof fm.date === 'number' ? new Date(fm.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
@@ -1548,9 +1718,6 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	const tags = Array.isArray(fm.tags) ? fm.tags : [];
 
 	const iconUrl = iconResult?.url;
-	const heroWide = heroResult?.wide;
-	const heroMedium = heroResult?.medium;
-	const heroNarrow = heroResult?.narrow;
 	const heroMapUrlLight = heroWide?.lightUrl;
 	const heroMapUrlDark = heroWide?.darkUrl;
 	const heroMapZoom = heroWide?.zoom;
@@ -1606,8 +1773,8 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		heroMapUrlDarkNarrow,
 		heroMapZoomNarrow,
 		heroMapCenterNarrow,
-		imagePoints,
-		...(Object.keys(imagesByName).length > 0 ? { imagesByName } : {})
+		imagesUrl: `/hikes/${slug}/images.${imagesHash}.json`,
+		photoCount: imagePoints.length
 	};
 
 	return entry;
@@ -1651,6 +1818,7 @@ async function main() {
 		console.warn(`[build-hikes] No content dir at ${CONTENT_DIR}; emitting empty manifest.`);
 	}
 
+	await loadBlurCache();
 	const cache = await loadGeocodeCache();
 	const hikes: HikeManifestEntry[] = [];
 
@@ -1676,6 +1844,7 @@ async function main() {
 	}
 
 	await saveGeocodeCache(cache);
+	await saveBlurCache();
 
 	hikes.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 

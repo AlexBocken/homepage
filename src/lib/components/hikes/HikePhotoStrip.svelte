@@ -230,7 +230,13 @@
 						role="option"
 						aria-selected={active}
 					>
-						<img src={ip.thumbnail} alt={ip.alt} loading="lazy" decoding="async" />
+						<img
+							src={ip.thumbnail}
+							alt={ip.alt}
+							loading="lazy"
+							decoding="async"
+							style={ip.blur ? `--lqip:url("${ip.blur}")` : undefined}
+						/>
 						<div class="overlay">
 							{#if elapsed}
 								<span class="chip-elapsed">nach {elapsed}</span>
@@ -306,7 +312,11 @@
 			{/if}
 
 			<figure class="lb-figure">
-				<img src={ip.src} alt={ip.alt} />
+				<img
+					src={ip.src}
+					alt={ip.alt}
+					style={ip.blur ? `--lqip:url("${ip.blur}")` : undefined}
+				/>
 				<!-- Position and elapsed time only. The alt text is machine-generated
 				     for screen readers and already on the <img>; printing it under the
 				     photo reads as a caption nobody wrote. -->
@@ -498,7 +508,14 @@
 		 * above the stats row without dominating the page. */
 		aspect-ratio: 3 / 2;
 		object-fit: cover;
-		background: var(--color-bg-elevated);
+		/* Inline blurred placeholder (see ImagePoint.blur) plus its dither, shown
+		   in the box the aspect-ratio already reserves until the thumbnail
+		   decodes. */
+		background-color: var(--color-bg-elevated);
+		background-image: var(--lqip-grain), var(--lqip, none);
+		background-size: 96px 96px, cover;
+		background-position: center, center;
+		background-repeat: repeat, no-repeat;
 	}
 
 	.overlay {
@@ -658,6 +675,12 @@
 		max-width: 92vw;
 		max-height: 82vh;
 		object-fit: contain;
+		/* `contain` letterboxes, so the placeholder is sized to match rather
+		   than cropped — a blurred bar around the photo would look like a bug. */
+		background-image: var(--lqip-grain), var(--lqip, none);
+		background-size: 96px 96px, contain;
+		background-position: center, center;
+		background-repeat: repeat, no-repeat;
 		border-radius: var(--radius-md);
 		box-shadow: 0 12px 48px rgb(0 0 0 / 0.55);
 	}
