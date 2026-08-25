@@ -244,7 +244,7 @@ function preloadHeroImage() {
 	<a href="{routePrefix}/{recipe.short_name}" class="card-main-link" aria-label="View recipe: {recipe.name}" onpointerenter={preloadHeroImage}>
 		<span class="visually-hidden">View recipe: {recipe.name}</span>
 	</a>
-	<div class="card-image" style={img_blur ? `--lqip:url("${img_blur}")` : undefined}>
+	<div class="card-image" style:--lqip={img_blur ? `url("${img_blur}")` : null}>
 		<noscript>
 			<img class="image loaded" src="https://bocken.org/static/rezepte/thumb/{img_name}" loading={loading_strat} alt="{img_alt}"/>
 		</noscript>

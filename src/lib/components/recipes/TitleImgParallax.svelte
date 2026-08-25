@@ -83,13 +83,7 @@
   width: min(calc(1000px + 2rem), 100dvw);
   height: max(65dvh, 640px);
   overflow: hidden;
-  /* Blurred placeholder plus its dither (see --lqip-grain in app.css). This is
-     the page's LCP image, so it is also where a placeholder earns the most. */
   background-color: var(--color-bg-elevated);
-  background-image: var(--lqip-grain), var(--lqip, none);
-  background-size: 96px 96px, cover;
-  background-position: center, center;
-  background-repeat: repeat, no-repeat;
 }
 
 .image{
@@ -100,6 +94,15 @@
   height: max(65dvh, 640px);
   object-fit: cover;
   object-position: 50% 20%;
+  /* Placeholder + dither on the <img> itself: this element carries
+     `view-transition-name` into the morph from the card, and a background left
+     on the wrapper would stay behind while the photo flies. It is also the
+     page's LCP image, so this is where a placeholder earns the most.
+     `background-position` mirrors `object-position` so both crop alike. */
+  background-image: var(--lqip-grain), var(--lqip, none);
+  background-size: 96px 96px, cover;
+  background-position: center, 50% 20%;
+  background-repeat: repeat, no-repeat;
 }
 
 .image-container::after {
@@ -153,12 +156,19 @@ dialog button{
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
     	<div class:zoom-in={!isredirected} onclick={show_dialog_img}>
-		<div class="image-wrap" style={blur ? `--lqip:url("${blur}")` : undefined}>
-			<img class="image" {src} {alt} style:view-transition-name={transitionName || null} fetchpriority="high"/>
+		<div class="image-wrap">
+			<img
+				class="image"
+				{src}
+				{alt}
+				style:--lqip={blur ? `url("${blur}")` : null}
+				style:view-transition-name={transitionName || null}
+				fetchpriority="high"
+			/>
 		</div>
 		<noscript>
-			<div class="image-wrap" style={blur ? `--lqip:url("${blur}")` : undefined}>
-				<img class="image" {src} {alt}/>
+			<div class="image-wrap">
+				<img class="image" {src} {alt} style:--lqip={blur ? `url("${blur}")` : null}/>
 			</div>
 		</noscript>
 	</div>

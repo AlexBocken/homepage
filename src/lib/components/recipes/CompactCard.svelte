@@ -63,19 +63,21 @@
 .img-wrap {
 	aspect-ratio: 3 / 2;
 	overflow: hidden;
-	/* Blurred placeholder plus its dither (see --lqip-grain in app.css), shown
-	   in the box the aspect-ratio already reserves until the thumbnail decodes. */
 	background-color: var(--color-bg-elevated);
-	background-image: var(--lqip-grain), var(--lqip, none);
-	background-size: 96px 96px, cover;
-	background-position: center, center;
-	background-repeat: repeat, no-repeat;
 }
 .img-wrap img {
 	display: block;
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+	/* The placeholder rides on the <img>, not on the wrapper: this element is
+	   what carries `view-transition-name` into the card→detail morph, and a
+	   background left behind on the wrapper would stay put while the photo
+	   flies. Same box, so the geometry is unchanged. */
+	background-image: var(--lqip-grain), var(--lqip, none);
+	background-size: 96px 96px, cover;
+	background-position: center, center;
+	background-repeat: repeat, no-repeat;
 	transition: transform 0.4s ease;
 	border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
@@ -171,8 +173,9 @@
 			<Heart size={18} strokeWidth={2} fill="currentColor" />
 		</span>
 	{/if}
-	<div class="img-wrap" style={img_blur ? `--lqip:url("${img_blur}")` : undefined}>
+	<div class="img-wrap">
 		<img
+			style:--lqip={img_blur ? `url("${img_blur}")` : null}
 			src="https://bocken.org/static/rezepte/thumb/{img_name}"
 			alt={img_alt}
 			loading={loading_strat}

@@ -135,13 +135,7 @@
 	top: 0;
 	height: min(65vh, 560px);
 	overflow: hidden;
-	/* Blurred placeholder plus its dither (see --lqip-grain in app.css). The
-	   hero is eager and above the fold, so this is what the first frame shows. */
 	background-color: var(--color-bg-elevated);
-	background-image: var(--lqip-grain), var(--lqip, none);
-	background-size: 96px 96px, cover;
-	background-position: center, center;
-	background-repeat: repeat, no-repeat;
 	max-width: calc(1200px + 2rem);
 	margin: 0 auto;
 	transform-origin: center top;
@@ -152,6 +146,14 @@
 	height: 100%;
 	object-fit: cover;
 	object-position: 50% 30%;
+	/* Placeholder + dither on the <img> itself, because this element carries
+	   `view-transition-name` into the detail-page morph — on the figure it would
+	   stay behind while the photo flies. `background-position` mirrors
+	   `object-position` so the two crop from the same anchor. */
+	background-image: var(--lqip-grain), var(--lqip, none);
+	background-size: 96px 96px, cover;
+	background-position: center, 50% 30%;
+	background-repeat: repeat, no-repeat;
 }
 .hero-overlay {
 	position: absolute;
@@ -265,9 +267,10 @@
 {#if heroRecipe}
 	<section class="hero-section">
 		<div class="hero-layer">
-			<figure class="hero" style={heroBlur ? `--lqip:url("${heroBlur}")` : undefined}>
+			<figure class="hero">
 				<img
 					class="hero-img"
+					style:--lqip={heroBlur ? `url("${heroBlur}")` : null}
 					src="https://bocken.org/static/rezepte/full/{heroImg}"
 					alt=""
 					loading="eager"
