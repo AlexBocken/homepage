@@ -6,7 +6,9 @@
 	import { TILE_URL, TILE_ATTRIBUTION } from '$lib/data/mapTiles';
 	import { isSwissRegion } from '$lib/hikes/hikeArea';
 	import type { HikeManifestEntry } from '$types/hikes';
-	import Map from '@lucide/svelte/icons/map';
+	// Aliased: the bare name would shadow the global `Map` constructor, which
+	// the route-detail caches below rely on.
+	import MapIcon from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
 	import Landmark from '@lucide/svelte/icons/landmark';
 	import Layers from '@lucide/svelte/icons/layers';
@@ -36,8 +38,8 @@
 	const allSwiss = $derived(hikes.every((h) => isSwissRegion(h.canton, h.country)));
 
 	type BaseLayer = 'schematic' | 'aerial' | 'dufour';
-	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof Map; maxZoom: number }> = $derived({
-		schematic: { label: 'Karte', icon: Map, maxZoom: allSwiss ? 19 : 18 },
+	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof MapIcon; maxZoom: number }> = $derived({
+		schematic: { label: 'Karte', icon: MapIcon, maxZoom: allSwiss ? 19 : 18 },
 		aerial: { label: 'Luftbild', icon: Satellite, maxZoom: 19 },
 		dufour: { label: 'Dufour (1864)', icon: Landmark, maxZoom: 16 }
 	});
@@ -165,14 +167,117 @@
 			});
 
 			// One polyline per hike, sourced from the manifest's already-
-			// simplified previewPolyline (≤150 points each). The layer is
+			// simplified previewPolyline (≤40 points each). The layer is
 			// re-populated on every `hikes` prop change (see the $effect
 			// below) so toggling filters updates the visible routes — and
 			// re-fits the camera to the new union bounds.
+			//
+			// Those 40 points are all the overview needs, but they visibly cut
+			// corners once you zoom in on a single valley. From `DETAIL_ZOOM`
+			// up, every route currently on screen therefore swaps its coarse
+			// line for the hike's full `track.<hash>.json` — the same static
+			// file the detail page loads, so it is usually already in the HTTP
+			// cache — and swaps back when it leaves the screen or the reader
+			// zooms out. See `syncDetail` below.
 			const layer = L.layerGroup().addTo(map);
+
+			const DETAIL_ZOOM = 12;
+			/** Same threshold `build-hikes` uses for `previewBreaks`: a jump this
+			 * long is an overnight transfer, not a walked metre. */
+			const GAP_BREAK_KM = 1;
+			/** Full tracks already fetched, split into drawable runs. */
+			const detailBySlug = new Map<string, [number, number][][]>();
+			/** The manifest line for each drawn hike, to swap back to. */
+			const coarseBySlug = new Map<string, [number, number][] | [number, number][][]>();
+			const polyBySlug = new Map<string, ReturnType<typeof L.polyline>>();
+			const detailApplied = new Set<string>();
+			const detailLoading = new Set<string>();
+			// Cancels in-flight track fetches when the map goes away.
+			const detailAbort = new AbortController();
+
+			function gapKm(a: [number, number], b: [number, number]): number {
+				const R = 6371;
+				const dLat = ((b[0] - a[0]) * Math.PI) / 180;
+				const dLng = ((b[1] - a[1]) * Math.PI) / 180;
+				const lat1 = (a[0] * Math.PI) / 180;
+				const lat2 = (b[0] * Math.PI) / 180;
+				const h =
+					Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+				return 2 * R * Math.asin(Math.sqrt(h));
+			}
+
+			/** Split a full track at the transfer gaps, mirroring `previewBreaks`
+			 * so a multi-day hike doesn't gain a straight line across the valley
+			 * the moment it renders in detail. */
+			function splitRuns(points: [number, number][]): [number, number][][] {
+				const runs: [number, number][][] = [];
+				let run: [number, number][] = [];
+				for (let i = 0; i < points.length; i++) {
+					if (i > 0 && gapKm(points[i - 1], points[i]) > GAP_BREAK_KM) {
+						if (run.length >= 2) runs.push(run);
+						run = [];
+					}
+					run.push(points[i]);
+				}
+				if (run.length >= 2) runs.push(run);
+				return runs;
+			}
+
+			async function loadDetail(hike: HikeManifestEntry) {
+				if (detailBySlug.has(hike.slug) || detailLoading.has(hike.slug)) return;
+				detailLoading.add(hike.slug);
+				try {
+					const res = await fetch(hike.trackUrl, { signal: detailAbort.signal });
+					if (!res.ok) return;
+					// Compact tuple format: [lng, lat, ele, timestamp].
+					const tuples = (await res.json()) as [number, number, number | null, number][];
+					const points = tuples.map(([lng, lat]) => [lat, lng] as [number, number]);
+					if (points.length < 2) return;
+					detailBySlug.set(hike.slug, splitRuns(points));
+					syncDetail();
+				} catch {
+					// Aborted, offline or a bad response — the coarse line stays,
+					// which is a perfectly usable map.
+				} finally {
+					detailLoading.delete(hike.slug);
+				}
+			}
+
+			/** Upgrade every on-screen route to its full track once we're zoomed
+			 * in, and downgrade the rest so the canvas never holds more detail
+			 * than is being looked at. */
+			function syncDetail() {
+				const zoomedIn = map.getZoom() >= DETAIL_ZOOM;
+				// Padded so a route entering the viewport is already detailed.
+				const view = map.getBounds().pad(0.3);
+				for (const hike of hikes) {
+					const poly = polyBySlug.get(hike.slug);
+					if (!poly) continue;
+					const [minLat, minLng, maxLat, maxLng] = hike.bbox;
+					const onScreen =
+						zoomedIn && view.intersects(L.latLngBounds([minLat, minLng], [maxLat, maxLng]));
+					if (onScreen) {
+						const detail = detailBySlug.get(hike.slug);
+						if (!detail) {
+							loadDetail(hike);
+						} else if (!detailApplied.has(hike.slug)) {
+							poly.setLatLngs(detail);
+							detailApplied.add(hike.slug);
+						}
+					} else if (detailApplied.has(hike.slug)) {
+						const coarse = coarseBySlug.get(hike.slug);
+						if (coarse) poly.setLatLngs(coarse);
+						detailApplied.delete(hike.slug);
+					}
+				}
+			}
 
 			function renderPolylines(): boolean {
 				layer.clearLayers();
+				// The polylines these referred to are gone with the layer.
+				polyBySlug.clear();
+				coarseBySlug.clear();
+				detailApplied.clear();
 				const b = L.latLngBounds([]);
 				for (const hike of hikes) {
 					if (!hike.previewPolyline || hike.previewPolyline.length < 2) continue;
@@ -216,10 +321,16 @@
 						goto(resolve('/hikes/[slug]', { slug: hike.slug }));
 					});
 
+					polyBySlug.set(hike.slug, poly);
+					coarseBySlug.set(hike.slug, coords);
+
 					for (const [lat, lng] of latLngs) {
 						b.extend([lat, lng]);
 					}
 				}
+				// A filter change can leave the camera zoomed in on a route that
+				// is still (or newly) on screen, so re-apply detail right away.
+				syncDetail();
 				if (b.isValid()) {
 					initialBounds = b;
 					recenterMap = () => {
@@ -244,6 +355,12 @@
 			if (renderPolylines() && (!initialCenter || typeof initialZoom !== 'number') && initialBounds) {
 				map.fitBounds(initialBounds, { padding: [32, 32], maxZoom: 13 });
 			}
+
+			// Detail follows the camera: zooming past DETAIL_ZOOM or panning a
+			// route into view pulls its full track, leaving it drops back to the
+			// manifest line.
+			map.on('zoomend moveend', syncDetail);
+			syncDetail();
 
 			// User location (opt-in). Same Tauri-first / Web-Geolocation-fallback
 			// pattern as HikeMap so the toggle behaves identically across the app.
@@ -350,6 +467,7 @@
 			cleanup = () => {
 				userCleanup?.();
 				stopReactRoot();
+				detailAbort.abort();
 				recenterMap = null;
 				map.remove();
 			};

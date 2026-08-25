@@ -394,7 +394,7 @@ export async function renderOverviewMap(opts: RenderOverviewMapOpts): Promise<bo
 	if (!mapBuf) return false;
 
 	// One <path> per hike polyline. The overview map is rendered fairly
-	// zoomed-out, so even ≤150-point preview polylines stay compact.
+	// zoomed-out, so the ≤40-point preview polylines stay compact.
 	const paths = drawable
 		.map((line) => {
 			const breakSet = new Set(line.breaks ?? []);

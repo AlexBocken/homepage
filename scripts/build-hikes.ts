@@ -61,7 +61,13 @@ const CACHE_DIR = path.join(ROOT, 'scripts', '.cache');
 const GEOCODE_CACHE_FILE = path.join(CACHE_DIR, 'hikes-geocode.json');
 const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikes.generated.ts');
 
-const PREVIEW_POLYLINE_MAX_POINTS = 150;
+// Points per hike in the manifest's `previewPolyline`. This copy only has to
+// read right at overview zooms — the /hikes map swaps in the hike's full
+// `track.<hash>.json` once the reader zooms past its detail threshold (see
+// `HikesOverviewMap.svelte`), and the pre-rendered overview hero is drawn at
+// roughly country scale. Every point here is paid for by every visitor of
+// /hikes in the JS bundle, so it stays small; the detail lives one fetch away.
+const PREVIEW_POLYLINE_MAX_POINTS = 40;
 const IMAGE_WIDTHS = [480, 960, 1600] as const;
 const IMAGE_THUMBNAIL_WIDTH = 240;  // popup thumbnail for map markers
 const MANIFEST_WARN_BYTES = 200_000;
