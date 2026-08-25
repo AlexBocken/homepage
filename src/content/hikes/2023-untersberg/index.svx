@@ -5,7 +5,7 @@ author: Alexander
 difficulty: T3
 tags: [Gipfel, Höhle, Panorama]
 seasons: 6-10
-summary: Langer Grenztag über Salzburg — kalter Aufstieg an der Westwand, Gipfel auf 1973 m, der Thomas-Eder-Steig und zum Schluss die Schellenberger Eishöhle.
+summary: Langer Grenztag über Salzburg — kalter Aufstieg an der Westwand, Gipfel auf 1973 m, der Thomas-Eder-Steig und als Höhepunkt die Schellenberger Eishöhle.
 country: AT
 state: Salzburg
 region: Untersberg
@@ -20,7 +20,8 @@ heroAlt:
 
 Ein langer Tag am Untersberg, dem Bergstock zwischen Berchtesgaden und
 Salzburg. Der Aufstieg beginnt auf deutscher Seite, der Abstieg endet über
-Salzburg — dazwischen liegen der Gipfel, ein schöner Steig und eine Eishöhle.
+Salzburg — dazwischen liegen der Gipfel, ein schöner Steig und, als Höhepunkt,
+die Schellenberger Eishöhle.
 
 Rund 16.5 km, knapp 1400 Höhenmeter im Aufstieg und gut 1600 im Abstieg. Wir
 waren mit allen Pausen und der Höhlenführung gut neun Stunden unterwegs.
@@ -29,18 +30,19 @@ Der Auftakt ist der unangenehmste Teil: die Westwand liegt frühmorgens im
 Schatten, es ist kalt, und der Weg zieht ohne Umschweife nach oben. Ganz am
 Ende wartet ein sehr langer, ziemlich langweiliger Abstieg — wer schnell genug
 für die letzte Fahrt ist, nimmt dafür besser die Seilbahn. Dann bleibt
-allerdings kaum Zeit für die Eishöhle, und die wäre schade.
+allerdings kaum Zeit für die Eishöhle — und damit für den Höhepunkt des Tages.
 
 ## Anreise
 
-Von Salzburg aus umständlich: es geht über die Grenze, und selbst mit den
-frühesten Bussen ist ein Start vor 9 Uhr kaum zu schaffen — für einen so langen
-Tag deutlich zu spät.
+Von Salzburg aus umständlich: es geht über die Grenze, und öffentlich ist das
+eine lange Anfahrt mit Umsteigen. Wir haben sie trotzdem mit dem Bus gemacht
+und standen um halb acht am Ausgangspunkt — der Wecker klingelte dafür um halb
+sechs.
 
-Wir sind deshalb mit dem Taxi gefahren und standen um halb acht am
-Ausgangspunkt. Der Wecker klingelte dafür um halb sechs, und billig ist die
-Fahrt nicht: die Strecke ist weit, und der Fahrpreis fällt entsprechend aus.
-Für den früheren Start war es uns das trotzdem wert.
+Wer sich das sparen will, nimmt ein Taxi: ohne Umsteigen direkt zum
+Ausgangspunkt, und man kann entsprechend später aufstehen. Billig ist es nicht,
+die Strecke ist weit und der Fahrpreis fällt entsprechend aus — aber bei knapp
+neun Stunden Gehzeit ist die Stunde, die man morgens gewinnt, gut angelegt.
 
 <HikeImage idx={0} />
 <HikeImage idx={1} />
@@ -61,6 +63,10 @@ Tages, den man hinter sich bringt, nicht der, den man geniesst.
 
 Oben wird es schlagartig freundlich: Sonne, weiter Blick und ein
 Karstplateau, über das der Weg deutlich gemütlicher weiterführt.
+
+Dazu waren wir fast durchgehend von Dohlen umgeben — in Gruppen unterwegs,
+lautstark und wenig scheu, immer wieder nah genug, um ihnen beim Segeln in den
+Aufwinden über der Kante zuzusehen. Eine der schöneren Überraschungen des Tages.
 
 <HikeImage idx={7} />
 <HikeImage idx={8} />
@@ -105,14 +111,15 @@ Zurück über das Plateau, immer wieder mit Blick hinunter ins Salzburger Becken
 ## Thomas-Eder-Steig
 
 Vom Plateau hinunter zur Eishöhle führt der Thomas-Eder-Steig — ein
-versicherter Steig quer durch die Wand, und für uns das schönste Stück Weg des
-ganzen Tages. Fotos gibt es davon leider keine: dort war die Aufmerksamkeit
-anderweitig gebunden.
+versicherter Steig quer durch die Wand und das schönste Wegstück des Tages.
+Fotos gibt es davon leider keine: dort war die Aufmerksamkeit anderweitig
+gebunden.
 
 ## Schellenberger Eishöhle
 
-Die einzige Eishöhle Deutschlands, auf 1570 m, und der eigentliche Höhepunkt
-der Tour.
+Die einzige Eishöhle Deutschlands, auf 1570 m — und ohne Konkurrenz der
+Höhepunkt des Tages. Der Steig ist ein schöner Weg, der Gipfel eine gute
+Aussicht; die Höhle ist der Grund, warum man diese Runde überhaupt so plant.
 
 Entdeckt wurde sie der Überlieferung nach von Hirten: ihnen fiel auf, dass
 sich die Schafe an heissen Tagen mit Vorliebe am Eingang zusammenlegten — die
