@@ -34,7 +34,7 @@ export const LQIP_SIGMA = 0.85;
  * Bump when anything above changes: callers that cache placeholders key on
  * this, so old ones get recomputed instead of served.
  */
-export const LQIP_VERSION = 4;
+export const LQIP_VERSION = 6;
 
 /**
  * Build a blurred placeholder for an image.
@@ -62,8 +62,15 @@ export async function blurPlaceholder(
 		const { width: w, height: h } = info;
 		// `feFuncA` flattens the alpha the blur pulls in at the edges — without
 		// it the placeholder fades out into a translucent frame.
+		// NOTE the missing `preserveAspectRatio` on the root element — it belongs
+		// on the inner <image> and nowhere else. A root that declares
+		// `preserveAspectRatio="none"` is a stretchable image with no intrinsic
+		// aspect ratio, so CSS has nothing to preserve: `background-size: cover`
+		// silently degrades to filling the box, and the placeholder shows the
+		// whole photo squeezed in while the photo itself crops. Verified in
+		// Chromium against a banded test image.
 		const svg =
-			`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">` +
+			`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">` +
 			`<filter id="b" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">` +
 			`<feGaussianBlur stdDeviation="${LQIP_SIGMA}"/>` +
 			`<feComponentTransfer><feFuncA type="discrete" tableValues="1 1"/></feComponentTransfer>` +
