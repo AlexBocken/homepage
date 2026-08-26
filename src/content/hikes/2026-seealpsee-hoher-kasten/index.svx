@@ -6,7 +6,7 @@ difficulty: T3
 region: Alpstein
 tags: [Seealpsee, Gipfel, Höhenweg, Panorama]
 seasons: 6-10
-summary: Die grosse Alpstein-Durchquerung von Wasserauen über Seealpsee, Meglisalp und Fählensee und dann über Saxerlücke und Südgrat auf den Hohen Kasten — 22.7 km und 1854 Höhenmeter in vier ernsthaften Anstiegen.
+summary: Die grosse Alpstein-Durchquerung von Wasserauen über Seealpsee, Meglisalp und Fählensee und dann über Saxerlücke und Südgrat auf den Hohen Kasten — 20.4 km und 1852 Höhenmeter in vier ernsthaften Anstiegen.
 heroAlt: Der Seealpsee spiegelt am frühen Morgen die Wände des Alpsteins
 ---
 
@@ -27,7 +27,7 @@ sondern in die Gegenrichtung auf den
 rückwärts, von Bollenwees über die Saxerlücke und den ganzen Südgrat hinauf zum
 Hohen Kasten.
 
-22.7 km, 1854 Höhenmeter im Aufstieg, durchgehend markierter Bergweg, T3.
+20.4 km, 1852 Höhenmeter im Aufstieg, durchgehend markierter Bergweg, T3.
 
 **Das ist keine gemütliche Seenwanderung.** Die Höhenmeter kommen nicht
 gleichmässig, sondern in vier eigenständigen Anstiegen, von denen jeder für sich
