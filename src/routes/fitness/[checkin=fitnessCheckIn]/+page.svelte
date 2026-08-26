@@ -36,7 +36,7 @@
 	import { localDateStr } from '$lib/js/localDate';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
 
-	let { data } = $props();
+	let { data, form } = $props();
 	const workout = getWorkout();
 
 	// svelte-ignore state_referenced_locally
@@ -477,10 +477,40 @@
 			<UserCog size={14} />
 			<span>{t.edit_profile}</span>
 		</button>
-		<form class="add-form" onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}>
+		<!--
+			A real POST to the page's own action, so a check-in can be recorded with no
+			script at all. With script the submit is intercepted and goes through fetch
+			exactly as before, which is what keeps the overwrite dialog and the
+			stay-on-the-page behaviour.
+		-->
+		<form
+			class="add-form"
+			method="POST"
+			action="?/save"
+			onsubmit={(e) => { e.preventDefault(); saveMeasurement(); }}
+		>
 		<div class="date-row">
 			<DatePicker bind:value={formDate} {lang} />
+			<!-- The picker is buttons and a calendar grid, so it needs script to work.
+				 This is the field that actually carries the date: bound to the same
+				 value, so the picker writes through it, and shown only where the picker
+				 cannot be used. One control, one name — two would both be submitted. -->
+			<label class="date-fallback">
+				<span>{t.date}</span>
+				<input type="date" name="date" bind:value={formDate} />
+			</label>
 		</div>
+
+		{#if form?.conflicts}
+			<!-- What the dialog says when there is script to open one: this day already
+				 holds these numbers. Confirming re-posts the same values with the
+				 overwrite flag, which is the only difference between the two paths. -->
+			<div class="overwrite-prompt" role="alert">
+				<p>{t.overwrite_message.replace('{fields}', formatConflicts(form.conflicts))}</p>
+				<input type="hidden" name="overwrite" value="1" />
+				<button type="submit" class="overwrite-confirm">{t.overwrite_confirm}</button>
+			</div>
+		{/if}
 
 		<div class="metric-grid">
 			<div class="metric-card">
@@ -492,6 +522,7 @@
 					<div class="metric-input-wrap">
 						<input
 							id="m-weight"
+							name="weight"
 							type="number"
 							step="0.1"
 							bind:value={formWeight}
@@ -523,6 +554,7 @@
 					<div class="metric-input-wrap">
 						<input
 							id="m-bf"
+							name="bodyFatPercent"
 							type="number"
 							step="0.1"
 							bind:value={formBodyFat}
@@ -926,6 +958,56 @@
 		display: flex;
 		justify-content: center;
 		margin-bottom: 1rem;
+	}
+
+	/* The browser's own date field, standing in for the picker where the picker's
+	   buttons cannot work. Hidden wherever script runs. */
+	.date-fallback {
+		display: none;
+	}
+	@media (scripting: none) {
+		.date-fallback {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 0.8rem;
+			color: var(--color-text-secondary);
+		}
+		.date-fallback input {
+			padding: 0.4rem 0.6rem;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-primary);
+			font: inherit;
+		}
+	}
+
+	/* Only ever rendered after a form post came back with a conflict, which only
+	   happens when the page was submitted without script. */
+	.overwrite-prompt {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 0.85rem 1rem;
+		border: 1px solid var(--orange);
+		border-radius: var(--radius-md);
+		background: color-mix(in srgb, var(--orange) 10%, transparent);
+		color: var(--color-text-primary);
+		font-size: 0.85rem;
+	}
+	.overwrite-prompt p {
+		margin: 0;
+	}
+	.overwrite-confirm {
+		align-self: flex-start;
+		padding: 0.45rem 1rem;
+		border: none;
+		border-radius: var(--radius-pill);
+		background: var(--orange);
+		color: var(--color-bg-primary);
+		font-weight: 600;
+		cursor: pointer;
 	}
 
 	.metric-grid {
@@ -1481,10 +1563,141 @@
 		.history-section {
 			max-width: 760px;
 		}
-		.metric-grid {
+		/* The browser's own date field, standing in for the picker where the picker's
+	   buttons cannot work. Hidden wherever script runs. */
+	.date-fallback {
+		display: none;
+	}
+	@media (scripting: none) {
+		.date-fallback {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 0.8rem;
+			color: var(--color-text-secondary);
+		}
+		.date-fallback input {
+			padding: 0.4rem 0.6rem;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-primary);
+			font: inherit;
+		}
+	}
+
+	/* Only ever rendered after a form post came back with a conflict, which only
+	   happens when the page was submitted without script. */
+	.overwrite-prompt {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 0.85rem 1rem;
+		border: 1px solid var(--orange);
+		border-radius: var(--radius-md);
+		background: color-mix(in srgb, var(--orange) 10%, transparent);
+		color: var(--color-text-primary);
+		font-size: 0.85rem;
+	}
+	.overwrite-prompt p {
+		margin: 0;
+	}
+	.overwrite-confirm {
+		align-self: flex-start;
+		padding: 0.45rem 1rem;
+		border: none;
+		border-radius: var(--radius-pill);
+		background: var(--orange);
+		color: var(--color-bg-primary);
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	/*
+	 * The − / + buttons are script's job: without it they cannot change anything, so
+	 * they go and the field's own spinners take over. Those are turned off further up
+	 * by this component, which is why they have to be turned back on here rather than
+	 * in app.css, whose global rule this component's own outranks.
+	 *
+	 * The spinner needs room, so the field stops sizing itself to its content and
+	 * takes a fixed width instead.
+	 */
+	@media (scripting: none) {
+		.step-btn {
+			display: none;
+		}
+		.metric-stepper {
+			justify-content: center;
+		}
+		/* The picker's arrows and calendar are script too; the plain date field below
+		   it is the one that works. */
+		.date-row :global(.dp-pill) {
+			display: none;
+		}
+		.metric-input {
+			field-sizing: auto;
+			width: 7ch;
+			max-width: none;
+			-moz-appearance: auto;
+			appearance: auto;
+		}
+		.metric-input::-webkit-inner-spin-button,
+		.metric-input::-webkit-outer-spin-button {
+			-webkit-appearance: inner-spin-button;
+			opacity: 1;
+			width: 1.5rem;
+			height: 100%;
+			margin-left: 0.2rem;
+		}
+	}
+
+	.metric-grid {
 			grid-template-columns: 1fr 1fr;
 		}
 	}
 
 
+
+	/*
+	 * ── Script-free stepping ──────────────────────────────────────────────────
+	 * Last in the file on purpose: these override rules of the same specificity
+	 * above, and equal specificity is settled by order, not by sitting in a media
+	 * query.
+	 *
+	 * The − / + buttons are script's job: without it they cannot change anything, so
+	 * they go and the field's own spinners take over. Those are turned off further up
+	 * by this component, which is why they have to be turned back on here rather than
+	 * in app.css, whose global rule this component's own outranks.
+	 *
+	 * The spinner needs room, so the field stops sizing itself to its content and
+	 * takes a fixed width instead.
+	 */
+	@media (scripting: none) {
+		.step-btn {
+			display: none;
+		}
+		.metric-stepper {
+			justify-content: center;
+		}
+		/* The picker's arrows and calendar are script too; the plain date field below
+		   it is the one that works. */
+		.date-row :global(.dp-pill) {
+			display: none;
+		}
+		.metric-input {
+			field-sizing: fixed;
+			width: 7ch;
+			max-width: none;
+			-moz-appearance: auto;
+			appearance: auto;
+		}
+		.metric-input::-webkit-inner-spin-button,
+		.metric-input::-webkit-outer-spin-button {
+			-webkit-appearance: inner-spin-button;
+			opacity: 1;
+			width: 1.5rem;
+			height: 100%;
+			margin-left: 0.2rem;
+		}
+	}
 </style>

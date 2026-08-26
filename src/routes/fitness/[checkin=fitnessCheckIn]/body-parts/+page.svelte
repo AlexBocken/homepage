@@ -23,7 +23,7 @@
 	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
 	import { localDateStr } from '$lib/js/localDate';
 
-	let { data } = $props();
+	let { data, form } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
@@ -383,6 +383,52 @@
 <svelte:window onkeydown={onkey} />
 <svelte:head><title>{t.body_parts} - Bocken</title></svelte:head>
 
+<!--
+	The wizard walks one body part at a time, and walking is something script does:
+	the step it shows is state, and the arrows that move it are handlers. Where none
+	of that runs, this asks for the same measurements all at once and posts them to
+	the same endpoint. Only ever one of the two is on screen.
+-->
+<form class="parts-fallback" method="POST" action="?/save">
+	<h1>{t.body_parts}</h1>
+	<p class="parts-fallback-hint">{t.review_numbers}</p>
+
+	{#if form?.conflicts}
+		<div class="parts-conflict" role="alert">
+			<p>{t.overwrite_title}</p>
+			<input type="hidden" name="overwrite" value="1" />
+			<button type="submit">{t.overwrite_confirm}</button>
+		</div>
+	{/if}
+
+	<label class="parts-date">
+		<span>{t.date}</span>
+		<input type="date" name="date" value={formDate} />
+	</label>
+
+	<div class="parts-grid">
+		{#each steps as s (s.key)}
+			{#if s.paired}
+				<label>
+					<span>{t[/** @type {FitnessKey} */ (s.dbRight === 'rightBicep' ? 'r_bicep' : s.dbRight === 'rightForearm' ? 'r_forearm' : s.dbRight === 'rightThigh' ? 'r_thigh' : 'r_calf')]}</span>
+					<input type="number" step="0.1" inputmode="decimal" name={s.dbRight} />
+				</label>
+				<label>
+					<span>{t[/** @type {FitnessKey} */ (s.dbLeft === 'leftBicep' ? 'l_bicep' : s.dbLeft === 'leftForearm' ? 'l_forearm' : s.dbLeft === 'leftThigh' ? 'l_thigh' : 'l_calf')]}</span>
+					<input type="number" step="0.1" inputmode="decimal" name={s.dbLeft} />
+				</label>
+			{:else}
+				<label>
+					<span>{t[s.labelKey]}</span>
+					<input type="number" step="0.1" inputmode="decimal" name={s.dbSingle} />
+				</label>
+			{/if}
+		{/each}
+	</div>
+
+	<button type="submit" class="parts-save">{t.save_measurement}</button>
+</form>
+
 <div class="shell" class:is-done={done} data-fitness-fullbleed>
 	<aside class="rail" aria-label={t.body_parts}>
 		<div class="rail-header">
@@ -685,6 +731,86 @@
 <style>
 	:global(.wrapper:has([data-fitness-fullbleed]) > footer) {
 		display: none;
+	}
+
+	/* Two ways into the same record: the wizard where script runs, the plain form
+	   where it does not. */
+	.parts-fallback {
+		display: none;
+	}
+	@media (scripting: none) {
+		.shell {
+			display: none;
+		}
+		.parts-fallback {
+			display: flex;
+			flex-direction: column;
+			gap: 0.9rem;
+			max-width: 640px;
+			margin: 0 auto;
+			padding: 1rem;
+		}
+		.parts-fallback h1 {
+			margin: 0;
+			font-size: 1.3rem;
+			color: var(--color-text-primary);
+		}
+		.parts-fallback-hint {
+			margin: 0;
+			font-size: 0.85rem;
+			color: var(--color-text-secondary);
+		}
+		.parts-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+			gap: 0.6rem 1rem;
+		}
+		.parts-fallback label {
+			display: flex;
+			flex-direction: column;
+			gap: 0.2rem;
+			font-size: 0.78rem;
+			color: var(--color-text-secondary);
+		}
+		.parts-fallback input {
+			padding: 0.45rem 0.6rem;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-primary);
+			font: inherit;
+		}
+		.parts-save {
+			align-self: flex-start;
+			padding: 0.55rem 1.4rem;
+			border: none;
+			border-radius: var(--radius-pill);
+			background: var(--color-primary);
+			color: var(--color-text-on-primary);
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.parts-conflict {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			padding: 0.8rem 1rem;
+			border: 1px solid var(--orange);
+			border-radius: var(--radius-md);
+			background: color-mix(in srgb, var(--orange) 10%, transparent);
+			font-size: 0.85rem;
+		}
+		.parts-conflict p { margin: 0; }
+		.parts-conflict button {
+			align-self: flex-start;
+			padding: 0.4rem 1rem;
+			border: none;
+			border-radius: var(--radius-pill);
+			background: var(--orange);
+			color: var(--color-bg-primary);
+			font-weight: 600;
+			cursor: pointer;
+		}
 	}
 
 	.shell {
@@ -1091,7 +1217,87 @@
 	}
 
 	@media (min-width: 1024px) {
+		/* Two ways into the same record: the wizard where script runs, the plain form
+	   where it does not. */
+	.parts-fallback {
+		display: none;
+	}
+	@media (scripting: none) {
 		.shell {
+			display: none;
+		}
+		.parts-fallback {
+			display: flex;
+			flex-direction: column;
+			gap: 0.9rem;
+			max-width: 640px;
+			margin: 0 auto;
+			padding: 1rem;
+		}
+		.parts-fallback h1 {
+			margin: 0;
+			font-size: 1.3rem;
+			color: var(--color-text-primary);
+		}
+		.parts-fallback-hint {
+			margin: 0;
+			font-size: 0.85rem;
+			color: var(--color-text-secondary);
+		}
+		.parts-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+			gap: 0.6rem 1rem;
+		}
+		.parts-fallback label {
+			display: flex;
+			flex-direction: column;
+			gap: 0.2rem;
+			font-size: 0.78rem;
+			color: var(--color-text-secondary);
+		}
+		.parts-fallback input {
+			padding: 0.45rem 0.6rem;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-primary);
+			font: inherit;
+		}
+		.parts-save {
+			align-self: flex-start;
+			padding: 0.55rem 1.4rem;
+			border: none;
+			border-radius: var(--radius-pill);
+			background: var(--color-primary);
+			color: var(--color-text-on-primary);
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.parts-conflict {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			padding: 0.8rem 1rem;
+			border: 1px solid var(--orange);
+			border-radius: var(--radius-md);
+			background: color-mix(in srgb, var(--orange) 10%, transparent);
+			font-size: 0.85rem;
+		}
+		.parts-conflict p { margin: 0; }
+		.parts-conflict button {
+			align-self: flex-start;
+			padding: 0.4rem 1rem;
+			border: none;
+			border-radius: var(--radius-pill);
+			background: var(--orange);
+			color: var(--color-bg-primary);
+			font-weight: 600;
+			cursor: pointer;
+		}
+	}
+
+	.shell {
 			display: grid;
 			grid-template-columns: 260px minmax(0, 1fr) 360px;
 			grid-template-rows: auto minmax(0, 1fr) auto;
@@ -1408,7 +1614,87 @@
 	}
 
 	@media (min-width: 1400px) {
+		/* Two ways into the same record: the wizard where script runs, the plain form
+	   where it does not. */
+	.parts-fallback {
+		display: none;
+	}
+	@media (scripting: none) {
 		.shell {
+			display: none;
+		}
+		.parts-fallback {
+			display: flex;
+			flex-direction: column;
+			gap: 0.9rem;
+			max-width: 640px;
+			margin: 0 auto;
+			padding: 1rem;
+		}
+		.parts-fallback h1 {
+			margin: 0;
+			font-size: 1.3rem;
+			color: var(--color-text-primary);
+		}
+		.parts-fallback-hint {
+			margin: 0;
+			font-size: 0.85rem;
+			color: var(--color-text-secondary);
+		}
+		.parts-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+			gap: 0.6rem 1rem;
+		}
+		.parts-fallback label {
+			display: flex;
+			flex-direction: column;
+			gap: 0.2rem;
+			font-size: 0.78rem;
+			color: var(--color-text-secondary);
+		}
+		.parts-fallback input {
+			padding: 0.45rem 0.6rem;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-primary);
+			font: inherit;
+		}
+		.parts-save {
+			align-self: flex-start;
+			padding: 0.55rem 1.4rem;
+			border: none;
+			border-radius: var(--radius-pill);
+			background: var(--color-primary);
+			color: var(--color-text-on-primary);
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.parts-conflict {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			padding: 0.8rem 1rem;
+			border: 1px solid var(--orange);
+			border-radius: var(--radius-md);
+			background: color-mix(in srgb, var(--orange) 10%, transparent);
+			font-size: 0.85rem;
+		}
+		.parts-conflict p { margin: 0; }
+		.parts-conflict button {
+			align-self: flex-start;
+			padding: 0.4rem 1rem;
+			border: none;
+			border-radius: var(--radius-pill);
+			background: var(--orange);
+			color: var(--color-bg-primary);
+			font-weight: 600;
+			cursor: pointer;
+		}
+	}
+
+	.shell {
 			grid-template-columns: 300px minmax(0, 1fr) 400px;
 		}
 		.hero { width: 340px; height: 340px; }

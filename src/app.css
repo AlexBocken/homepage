@@ -371,6 +371,34 @@ input[type="number"] {
 	appearance: textfield;
 }
 
+/*
+ * ...except where nothing runs to step the value for us.
+ *
+ * The spinners are hidden above because every number field on the site is wrapped in
+ * a pair of − / + buttons, which are nicer to hit and which script drives. With
+ * scripting off those buttons do nothing, so the browser's own steppers come back:
+ * they are small and drawn by the browser, but they are the only thing that can
+ * change a number without a round trip.
+ *
+ * They cannot be made to look like ours. Chromium's spinner is reachable only for
+ * hiding and sizing — the arrows themselves are not ours to draw — and Firefox
+ * exposes no pseudo-element for it at all. So it is sized up for a fair hit target
+ * and left as the browser drew it.
+ */
+@media (scripting: none) {
+	input[type="number"] {
+		-moz-appearance: auto;
+		appearance: auto;
+	}
+	input[type="number"]::-webkit-inner-spin-button,
+	input[type="number"]::-webkit-outer-spin-button {
+		-webkit-appearance: inner-spin-button;
+		opacity: 1;
+		width: 1.3rem;
+		height: 100%;
+	}
+}
+
 body {
 	margin: 0;
 	padding: 0;
